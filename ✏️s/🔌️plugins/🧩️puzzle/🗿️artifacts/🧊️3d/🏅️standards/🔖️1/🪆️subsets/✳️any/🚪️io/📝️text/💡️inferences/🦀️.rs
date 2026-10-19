@@ -1,4 +1,4 @@
-//! values are never authored via DSL text (they are always computed from a snapshot, never a
+//! 🚫️ values are never authored via DSL text (they are always computed from a snapshot, never a
 //! 📖️ Puzzle3d inference — the normative handcrafted text grammar for this facet. Inference
 //! source of truth), so — unlike `📸️snapshot/📝️text`'s live `parse_dsl`/`print_dsl` pair — this
 //! leaf declares the wire grammar only, matching the generic header/payload scaffold shape every

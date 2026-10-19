@@ -90,6 +90,7 @@ use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
 
     mod local_interaction_dispatch {
         include!("../../🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs");
@@ -234,7 +235,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
                         more = true;
                     } else {
-                        semio_framework_plugin_runtime_ops::ops_typed_operations::semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.expect("ack exact retained result");
+                        semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.expect("ack exact retained result");
                         more = true;
                     }
                 }
@@ -338,12 +339,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 app_maintenance_turn(&mut app,cx).map_err(|error| format!("maintenance: {error:?}"))?;
                 original_publication_turn(&mut app,&mut identity,&mut publication_caller,mounted_policy.maintenance).map_err(|error| format!("turn {turns}: {error:?}"))?;
                 turns += 1;
-                while let Some(mut page) = crate::app_testing::artifact_app_laws::take_fixture_result_page(&mut app,id,crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
+                while let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(&mut app,id,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
                     if page.lane == TypedOperationResultLane::Fault {
                         return Err(format!("turn {turns}: fault page {}", String::from_utf8_lossy(page.bytes())));
                     }
                     lanes.push(page.lane);
-                    if !app.acknowledge_typed_operation_result(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).map_err(|error| format!("ack: {error:?}"))? {
+                    if !app.acknowledge_typed_operation_result(semio_framework_plugin_testing_laws::artifact_app_laws::close_fixture_result_page(&mut page,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close)).map_err(|error| format!("ack: {error:?}"))? {
                         return Err(format!("turn {turns}: exact result ACK rejected"));
                     }
                 }

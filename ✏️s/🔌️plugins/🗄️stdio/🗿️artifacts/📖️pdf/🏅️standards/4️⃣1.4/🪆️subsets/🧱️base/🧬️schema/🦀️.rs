@@ -21,15 +21,12 @@ impl Default for PdfArtifact {
 }
 
 impl PdfArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> PdfSnapshot {
         PdfSnapshot { schema: self.schema.clone(), pages: self.pages.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: PdfSnapshot) -> Self {
         Self { schema: snapshot.schema, pages: snapshot.pages }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: PdfSnapshot) {
         self.schema = snapshot.schema;
         self.pages = snapshot.pages;

@@ -101,12 +101,12 @@ fn detached_reaper_never_steals_a_live_draining_callers_exact_output() {
 
 #[test]
 fn guest_cold_relay_publication_max_plus_one_selects_retained_fault_without_losing_source() {
-    let mut maximum = GuestRelayPublication::new(GuestRelayPublicationKind::Commit, vec![7; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]);
+    let mut maximum = GuestRelayPublication::new(GuestRelayPublicationKind::Commit, vec![7; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES]);
     assert!(!maximum.oversized);
-    assert_eq!(maximum.source.len(), semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES);
-    let mut plus_one = GuestRelayPublication::new(GuestRelayPublicationKind::Commit, vec![9; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1]);
+    assert_eq!(maximum.source.len(), semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES);
+    let mut plus_one = GuestRelayPublication::new(GuestRelayPublicationKind::Commit, vec![9; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES + 1]);
     assert!(plus_one.oversized);
-    assert_eq!(plus_one.source.len(), semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1);
+    assert_eq!(plus_one.source.len(), semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES + 1);
     assert!(matches!(plus_one.kind, GuestRelayPublicationKind::Fault));
     maximum.begin_close();
     plus_one.begin_close();

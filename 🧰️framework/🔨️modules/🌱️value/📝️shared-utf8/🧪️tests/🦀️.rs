@@ -1,5 +1,6 @@
 use super::*;
-use crate::{value::observe_retirement_allocations as observe,retirement::controlled::ControlledRetirement};
+use crate::{retirement::controlled::ControlledRetirement};
+use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 
 #[test]
 fn shared_utf8_original_lease_close_preserves_actor_bytes_without_allocating_retirement_frames(){

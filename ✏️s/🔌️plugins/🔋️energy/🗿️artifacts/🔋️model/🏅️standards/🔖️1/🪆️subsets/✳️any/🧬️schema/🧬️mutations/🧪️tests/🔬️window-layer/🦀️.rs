@@ -6,6 +6,7 @@ extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_mut_window_layer as window_layer_mutations;
+extern crate semio_s_artifact_energy_model_mut_window_layer_optics as window_layer_optics_mutations;
 
 #[path = "."]
 mod rename_gas_material {
@@ -36,7 +37,7 @@ mod change_glazing_material_conductivity {
 
 #[path = "."]
 mod change_glazing_material_solar_transmittance {
-    pub use crate::window_layer_mutations::change_glazing_material_solar_transmittance::*;
+    pub use crate::window_layer_optics_mutations::change_glazing_material_solar_transmittance::*;
     #[path = "../../🥂️window-layer/🟡️change-glazing-solar-transmittance/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🥂️window-layer/🟡️change-glazing-solar-transmittance/🧪️tests/✅️applies/🦀️.rs"]
@@ -72,7 +73,7 @@ mod change_gas_material_gas {
 
 #[path = "."]
 mod change_glazing_material_visible_transmittance {
-    pub use crate::window_layer_mutations::change_glazing_material_visible_transmittance::*;
+    pub use crate::window_layer_optics_mutations::change_glazing_material_visible_transmittance::*;
     #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🧪️tests/✅️applies/🦀️.rs"]
@@ -81,7 +82,7 @@ mod change_glazing_material_visible_transmittance {
 
 #[path = "."]
 mod change_glazing_material_infrared_emissivity {
-    pub use crate::window_layer_mutations::change_glazing_material_infrared_emissivity::*;
+    pub use crate::window_layer_optics_mutations::change_glazing_material_infrared_emissivity::*;
     #[path = "../../🥂️window-layer/🩻️change-glazing-infrared-emissivity/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🥂️window-layer/🩻️change-glazing-infrared-emissivity/🧪️tests/✅️applies/🦀️.rs"]

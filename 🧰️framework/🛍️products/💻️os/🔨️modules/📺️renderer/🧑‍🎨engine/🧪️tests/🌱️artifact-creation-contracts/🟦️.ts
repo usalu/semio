@@ -20,7 +20,7 @@ import { OwnedShellDialog, type OwnedShellDialogProps } from "../../🧱️eleme
 import { createInstance as createTranslationOracle } from "i18next";
 import type { DialogDefinition } from "@semio-tech/framework";
 import { unresolvedActionArgs } from "@semio-tech/framework";
-import { argumentResolutionChoicesFixture as choiceFixture } from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧪️tests/🧫️fixtures/🟦️.ts";
+import { argumentResolutionChoicesFixture as choiceFixture } from "@semio-tech/framework/action-argument-resolution/testing/fixtures";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
@@ -670,7 +670,6 @@ describe("Space artifact creation host owner", () => {
     }
   });
 
-  // 🐢️ ticket 26/09/23 S15: a creation the hub keeps working on says how long, in the person's language, and keeps its Cancel.
   it("tells how long the hub has been working on a running creation and keeps the Cancel, en and de", () => {
     for (const [locale, elapsed] of [
       ["en", "2 min 5 s"],

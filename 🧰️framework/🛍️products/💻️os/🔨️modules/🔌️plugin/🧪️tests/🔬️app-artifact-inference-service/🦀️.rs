@@ -34,7 +34,7 @@ pub async fn metadata(artifact_kind: &'static str, inference_schema: &'static st
         let axes=source["stock"].as_array().unwrap();
         let stock=semio_framework_value::RetainedCloneGrant{maximum_items:axes[0].as_u64().unwrap()as usize,maximum_copy_bytes:axes[1].as_u64().unwrap()as usize,maximum_capacity_bytes:axes[2].as_u64().unwrap()as usize,maximum_release_bytes:axes[3].as_u64().unwrap()as usize,maximum_depth:axes[4].as_u64().unwrap()as usize};
         let (cancel,born)=semio_framework_job::CancelToken::admit_root(stock).unwrap().unwrap();
-        let (authority,ledger_born)=semio_framework_job::JobPayloadAuthority::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock).unwrap().unwrap();
+        let (authority,ledger_born)=semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock).unwrap().unwrap();
         let mut sequence=0;let mut receipt=born;receipt.copied_items+=ledger_born.copied_items;receipt.retained_capacity_bytes+=ledger_born.retained_capacity_bytes;
         let mut cx=semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),semio_framework_job::StepBudget::new(source["fuel"].as_u64().unwrap(),source["deadlineUs"].as_u64().unwrap(),stock),&cancel,||Some(12000),&mut sequence,&mut receipt,&authority).unwrap();
         let alpha = ArtifactInferenceService::new(metadata("s.test.alpha", "s.test.alpha.inference").await, echo,completed_child_demands);
@@ -87,7 +87,7 @@ pub async fn metadata(artifact_kind: &'static str, inference_schema: &'static st
         let axes=source["stock"].as_array().unwrap();
         let stock=semio_framework_value::RetainedCloneGrant{maximum_items:axes[0].as_u64().unwrap()as usize,maximum_copy_bytes:axes[1].as_u64().unwrap()as usize,maximum_capacity_bytes:axes[2].as_u64().unwrap()as usize,maximum_release_bytes:axes[3].as_u64().unwrap()as usize,maximum_depth:axes[4].as_u64().unwrap()as usize};
         let (cancel,born)=semio_framework_job::CancelToken::admit_root(stock).unwrap().unwrap();
-        let (authority,ledger_born)=semio_framework_job::JobPayloadAuthority::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock).unwrap().unwrap();
+        let (authority,ledger_born)=semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),stock).unwrap().unwrap();
         let mut sequence=0;let mut receipt=born;receipt.copied_items+=ledger_born.copied_items;receipt.retained_capacity_bytes+=ledger_born.retained_capacity_bytes;
         let mut cx=semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(source["operation"].as_u64().unwrap()),semio_framework_job::Generation(source["generation"].as_u64().unwrap()),semio_framework_job::StepBudget::new(source["fuel"].as_u64().unwrap(),source["deadlineUs"].as_u64().unwrap(),stock),&cancel,||Some(12000),&mut sequence,&mut receipt,&authority).unwrap();
         let identity = metadata("s.test.context", "s.test.context.inference").await;

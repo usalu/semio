@@ -10,7 +10,10 @@ members = [
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧱️diff-codecs/📦️packages/🦀️rust",
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️edit-rules/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -109,8 +112,17 @@ path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schem
 [workspace.dependencies.semio-s-artifact-stdio-docx-base-mutations]
 path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-docx-base-edit-rules]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️edit-rules/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-docx-base-xml-address]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-docx-base-model]
 path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-docx-base-diff]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧱️diff-codecs/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-docx-base]
 path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust"

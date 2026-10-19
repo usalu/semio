@@ -22,7 +22,6 @@ fn empty_and_full() {
 
 #[test]
 fn full_respects_boundary_bits() {
-    // 70 patterns spans two words; the second word must not have stray set bits above 70.
     let f = PatternSet::new_full(70);
     assert_eq!(f.count_ones(), 70);
 }
@@ -79,7 +78,7 @@ fn restrict_returning_removed_matches_naive() {
     let allowed = from_indices(10, &[2, 3, 5]);
     let mut removed = PatternSet::new_empty(10);
     let count = s.restrict_returning_removed(&allowed, &mut removed);
-    assert_eq!(count, 3); // 0, 1, 4 removed
+    assert_eq!(count, 3);
     assert_eq!(s.iter_ones().map(|p| p.index()).collect::<Vec<_>>(), vec![2, 3]);
     assert_eq!(removed.iter_ones().map(|p| p.index()).collect::<Vec<_>>(), vec![0, 1, 4]);
 }
@@ -105,14 +104,14 @@ fn freshly_built_sets_are_well_formed() {
 #[test]
 fn wrong_word_count_is_not_well_formed() {
     let mut s = from_indices(70, &[10]);
-    s.words.push(0); // one extra word beyond what 70 patterns needs
+    s.words.push(0);
     assert!(!s.is_well_formed());
 }
 
 #[test]
 fn stray_bits_past_len_in_final_word_are_not_well_formed() {
     let mut s = from_indices(10, &[2]);
-    s.words[0] |= 1 << 20; // bit 20 is past `len = 10`, still within the single backing word
+    s.words[0] |= 1 << 20;
     assert!(!s.is_well_formed());
 }
 

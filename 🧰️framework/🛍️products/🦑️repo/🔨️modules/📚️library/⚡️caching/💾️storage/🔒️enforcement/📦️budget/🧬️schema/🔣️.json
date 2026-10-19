@@ -64,6 +64,11 @@
     }
   },
   "$defs": {
+    "filesystemOverhead": {
+      "const": {
+        "tinyCapacityBytes": 268435456
+      }
+    },
     "ordinaryMaintenance": {
       "const": {
         "version": 1,

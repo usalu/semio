@@ -2,7 +2,9 @@
 
 use semio_s_fem_sparse::{RowContributor, RowContributors, SPARSE_INDEX_SPACE, SparseColumns, advance_contributor_owner, advance_paged_f64_owner, advance_paged_pair_owner, advance_paged_u32_owner, advance_paged_u64_owner, close_paged_owner_step, numerical_grant_covers, numerical_restore_admit, numerical_restore_control, paged_from_values, paged_owner_retirement_demand, rcm_order, restore_contributor_entry, restore_paged_f64_entry, restore_paged_pair_entry, restore_paged_u32_entry, restore_paged_u64_entry, restore_paged_usize_entry, write_numerical_entry};
 use semio_framework_job::InteractiveJob;
-use semio_framework_value::{list::PagedList, HeapSortCursor, HeapSortWork, ValueRefusalKind};
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_edit::{sort::HeapSortCursor, sort::HeapSortWork};
 
 use semio_framework_job::InteractiveJobCloseStep;
 
@@ -15,7 +17,7 @@ use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeView;
 
 
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 
 use semio_framework_job::Operation;
 
@@ -23,9 +25,9 @@ use semio_framework_job::RetainedCloneGrant;
 
 use semio_framework_job::RetainedCloneProgress;
 
-use semio_framework_job::RetainedJobPayload;
+use semio_framework_job_payload::RetainedJobPayload;
 
-use semio_framework_job::RetainedJobPayloadWriter;
+use semio_framework_job_payload::RetainedJobPayloadWriter;
 
 use semio_framework_job::StepContext;
 use semio_framework_value::RetirementDemand;

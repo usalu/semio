@@ -6,7 +6,7 @@ import{acquireResourceLease,captureResourceLeaseWriterProofV1,requireResourceLea
 import{readAcceptedPhysicalCleanupV1,requireAcceptedPhysicalCleanupControlV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import{artifactSourceInventoryV1,type ArtifactSourceInventoryV1}from"../📋️inventory/🟦️.ts";
-import policy from"../🧬️schema/🔣️.json";
+import policy from"../🧬️schema/🔣️.json" with { type: "json" };
 import{withArtifactSourceSetV1,artifactSourceEntriesV1,readArtifactSourceChunkV1,isArtifactSourceNameV1,withArtifactDescriptorSlotV1,type ArtifactSourceEntryV1}from"../🟦️.ts";
 export type ArtifactSourceCaptureV1=Readonly<{readonly artifactSourceCapture:unique symbol}>;
 type Options=Readonly<{owner?:string;control?:ResourceLeaseControl;signal?:AbortSignal;cleanup?:AcceptedPhysicalCleanupV1;leaseDirectory:string;onWait?:(progress:LeaseWait)=>void}>;

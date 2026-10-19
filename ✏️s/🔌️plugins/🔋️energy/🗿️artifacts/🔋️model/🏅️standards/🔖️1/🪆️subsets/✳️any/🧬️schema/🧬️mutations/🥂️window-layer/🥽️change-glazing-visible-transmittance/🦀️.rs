@@ -25,6 +25,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeGlazingMateri
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGlazingMaterialVisibleTransmittance>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "glazing-material", kind: "change-glazing-material-visible-transmittance", record: "ChangedGlazingMaterialVisibleTransmittance" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -46,7 +47,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "glazing-material", kind: "change-glazing-material-visible-transmittance", record: "ChangedGlazingMaterialVisibleTransmittance" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

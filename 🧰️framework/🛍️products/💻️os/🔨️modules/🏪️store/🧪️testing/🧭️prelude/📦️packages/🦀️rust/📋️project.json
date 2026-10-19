@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-store-testing-prelude-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

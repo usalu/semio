@@ -23,7 +23,7 @@ import { registerCommands } from "./⌨️commands/🟦️.ts";
 // Activation MUST handle extension activation, command registration, and lifecycle management.
 
 /**
- * registerSidebarViews holds the data fields for a registerSidebarViews record.
+ * 🗄️ registerSidebarViews holds the data fields for a registerSidebarViews record.
  **/
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   filterProvider.current = new FilterTreeDataProvider();
@@ -37,7 +37,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
 }
 
 /**
- * Activates the repo VS Code extension and registers all providers and commands.
+ * ⚡️ Activates the repo VS Code extension and registers all providers and commands.
  *Implementations MUST register sidebar views, commands, diagnostics, and event handlers.
  **/
 export function activate(context: vscode.ExtensionContext) {
@@ -138,7 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 /**
- * Deactivates the repo VS Code extension and releases resources.
+ * 🗂️ Deactivates the repo VS Code extension and releases resources.
  *Implementations MUST clean up any active subscriptions.
  **/
 export function deactivate() {}

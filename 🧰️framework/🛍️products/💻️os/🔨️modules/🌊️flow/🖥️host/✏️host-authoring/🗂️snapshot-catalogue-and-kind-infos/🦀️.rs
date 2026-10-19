@@ -21,8 +21,6 @@ impl FlowHost {
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         let mut host_snapshot = deduplicated_loaded_widgets(host_snapshot);
         let load = force_reset || self.host_snapshot.widgets != host_snapshot.widgets || self.host_snapshot.synapses != host_snapshot.synapses || self.host_snapshot.layout != host_snapshot.layout;
-        // 🎥️ Camera is ephemeral view state (same as undo/redo) — never snap the live pan/zoom when a
-        // scene resync reloads fixture content (hover, eval tick, remote operations, …).
         let camera = self.host_snapshot.camera.clone();
         host_snapshot.camera = camera;
         std::mem::replace(&mut self.host_snapshot, host_snapshot).retire_cold();

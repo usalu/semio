@@ -2,15 +2,15 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView"> & Pick<typeof import("../../📐️layout-accessibility/🟦️.tsx"), "accessibilityAriaProps"> & Pick<typeof import("react"), "Profiler">, source: TestSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps } = dependencies;
-  type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").AccessibilitySpec;
-  type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").Component;
-  type PatchRejection = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").PatchRejection;
-  type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").StyleSpec;
-  type UiDocumentLimits = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiDocumentLimits;
+  type AccessibilitySpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").AccessibilitySpec;
+  type Component = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").Component;
+  type PatchRejection = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").PatchRejection;
+  type StyleSpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").StyleSpec;
+  type UiDocumentLimits = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiDocumentLimits;
   type UiInterpreterContext = import("../../🧷️interpreter-context/🟦️.ts").UiInterpreterContext;
-  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiNodeRecord;
-  type UiPatch = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiPatch;
-  type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiSnapshot;
+  type UiNodeRecord = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiNodeRecord;
+  type UiPatch = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiPatch;
+  type UiSnapshot = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiSnapshot;
 
   const { describe, expect, it, vi } = vitest;
 
@@ -46,12 +46,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("re-renders only the component whose own record changed", async () => {
       const { act, render, cleanup } = await import("@semio-tech/ui-react/test");
       const store = new UiDocumentStore("s");
-      // 🧭️ `root` owns `a`/`b` as real document children (required — every node must be reachable
-      // from the root or `validateUiDocumentCore` rejects the whole document as `danglingRoot`), but
-      // this test deliberately mounts `a`/`b` as two INDEPENDENT top-level `UiNodeView` trees rather
-      // than rendering `root` and letting `ContainerView` recurse into them — mounting `root` too
-      // would nest `a`/`b` a second time inside it, and `root`'s own `Profiler` would then correctly
-      // fire on any descendant commit, which is not what this test measures.
       store.loadSnapshot(
         snapshot(0, [
           leaf(0, "root", { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }, [1, 2]),
@@ -98,9 +92,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * `applyPatch` rejects with the exact named `PatchRejection` AND that the store's state is left
    * reference-identical (not just value-equal) to before, mirroring `📃️UiDocumentStore`'s own guarantee. */
   describe("conformance corpus", async () => {
-    // 🧭️ Dynamic imports (never static) — this file ships to the browser in production, and
-    // `node:fs`/`node:path`/`node:url` must never enter that bundle. `vitest` dead-code
-    // elimination strips this whole block (dynamic imports included) from non-test builds.
     const { readFileSync } = await import("node:fs");
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");

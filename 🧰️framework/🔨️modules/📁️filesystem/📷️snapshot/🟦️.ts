@@ -4,7 +4,8 @@ export interface SourceChange { readonly path: string; readonly before: string |
 export type SourceProjectionCode = "invalid-path" | "duplicate-change" | "empty-change" | "predecessor-mismatch" | "deleted-reference" | "missing-reference";
 /** ⚠️ An exact source projection refusal without backend types. */
 export class SourceProjectionError extends Error {
-  constructor(readonly code: SourceProjectionCode, readonly path: string) { super(`${code}: ${path}`); this.name = "SourceProjectionError"; }
+  readonly code:SourceProjectionCode;readonly path:string;
+  constructor(code: SourceProjectionCode, path: string) { super(`${code}: ${path}`);this.code=code;this.path=path; this.name = "SourceProjectionError"; }
 }
 function validatePath(path: string): void {
   if (!path || /[\\:\u0000]/u.test(path) || path.split("/").some(part => !part || part === "." || part === "..")) throw new SourceProjectionError("invalid-path", path);

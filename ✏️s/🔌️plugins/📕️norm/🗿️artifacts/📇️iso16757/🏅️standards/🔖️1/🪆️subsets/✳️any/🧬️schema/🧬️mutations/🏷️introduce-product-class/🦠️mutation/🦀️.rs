@@ -1,4 +1,4 @@
-//! `introduce-product-class` — insert into catalogue.product_classes.
+//! ➕️ `introduce-product-class` — insert into catalogue.product_classes.
 
 use semio_s_artifact_norm_iso16757_model::part_1::ProductClass;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

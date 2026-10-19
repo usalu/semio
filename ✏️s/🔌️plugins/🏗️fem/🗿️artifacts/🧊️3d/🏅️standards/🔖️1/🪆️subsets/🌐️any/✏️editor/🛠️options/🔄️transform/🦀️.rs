@@ -1,4 +1,4 @@
-//! Read from that window's captured config (a panel/measure projection binds to the focused pane),
+//! 📥️ Read from that window's captured config (a panel/measure projection binds to the focused pane),
 //! 🔄️ Transform utility options — the gumball handle toggles of the focused fem3d model window.
 //! written through `setTransformGumballFlag`.
 

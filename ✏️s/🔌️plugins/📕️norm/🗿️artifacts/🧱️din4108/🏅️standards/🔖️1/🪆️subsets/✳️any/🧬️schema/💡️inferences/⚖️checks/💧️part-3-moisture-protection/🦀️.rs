@@ -138,7 +138,6 @@ pub fn check_glaser(element: &EnvelopeElement, t_int_c: f64, rh_int: f64, climat
     builder = if condensed > 0.0 {
         builder.utilization(Quantity::new(QuantityKind::Mass, condensed), Quantity::new(QuantityKind::Mass, limit))
     } else {
-        // No condensate: sd must meet orientation-dependent minimum (azimuth enters the limit).
         builder.minimum(Quantity::new(QuantityKind::Dimensionless, sd_total), Quantity::new(QuantityKind::Dimensionless, sd_req))
     };
     let mut builder = builder.annex(AnnexChoice::De)

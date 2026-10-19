@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "project": "probe",
+  "maxCacheSize": "64MB",
+  "namedInputs": {
+    "production": [{ "file": "source.json" }, { "file": "toolchain.json" }, { "file": "📜️script.ts" }, { "env": "CACHE_PROBE_MODE" }],
+    "test": [{ "named": "production" }, { "file": "spec.json" }]
+  },
+  "ignore": ["node_modules", "dist", "state", "*.log"],
+  "targets": [
+    { "name": "build", "cache": true, "inputs": [{ "named": "production" }], "outputs": ["dist"], "command": "bun ./📜️script.ts build" },
+    { "name": "test", "cache": true, "inputs": [{ "named": "test" }], "outputs": [], "command": "bun ./📜️script.ts test" },
+    { "name": "validate", "cache": false, "outputs": [], "command": "bun ./📜️script.ts validate" },
+    { "name": "guarded", "cache": true, "dependsOn": ["validate"], "inputs": [{ "named": "production" }], "outputs": [], "command": "bun ./📜️script.ts guarded" }
+  ]
+}

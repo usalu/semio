@@ -4,24 +4,48 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🧪️tests/🎚️config/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/📏️script-boundary/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏗️mesh-engine/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📄️document/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "window-utility-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": { "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🟦️typescript -- bun ./📜️script.ts window-utility-check", "cwd": "🧰️framework" },
-      "metadata": { "semio": { "workspaceCommand": ["window-utility-check"] } }
+      "metadata": { "semio": { "workspaceCommand": ["verify", "window-utility-check"] } }
     },
     "test-artifact-reference": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
@@ -33,10 +57,14 @@
     },
     "test-io-ports": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔌️ports/**/*"
       ],
@@ -47,10 +75,14 @@
     },
     "test-script-boundary": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/📏️script-boundary/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
@@ -62,6 +94,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
@@ -71,6 +111,13 @@
     },
     "typecheck": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
@@ -80,7 +127,13 @@
     },
     "installation-identity-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts installation-identity-check",
         "cwd": "🧰️framework/📦️packages/🟦️typescript"
@@ -88,7 +141,14 @@
     },
     "test-polygon-mesh": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts test-polygon-mesh",
@@ -97,7 +157,14 @@
     },
     "test-sdk-surface": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts test-sdk-surface",
@@ -106,7 +173,14 @@
     },
     "test-module-package-surface": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts test-module-package-surface",
@@ -115,10 +189,14 @@
     },
     "test-document-scope": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📄️document/🪪️scope/**/*"
       ],
@@ -129,10 +207,14 @@
     },
     "test-source-text": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/📖️source-text/**/*"
       ],

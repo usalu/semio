@@ -50,7 +50,7 @@ impl MutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
+impl semio_framework_os_command::ColdMutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     fn diff(&self, _: &DummySnapshot) -> MutationOutcome<DummyDiff> {
         MutationOutcome::new(DummyDiff { count: Some(self.value) })
     }

@@ -4,9 +4,8 @@
   "rhs": null,
   "parameterBindings": null,
   "ruleLayout": {
-    "entries": [
-      {
-        "key": "c",
+    "entries": {
+      "c": {
         "precondition": "any",
         "operation": {
           "kind": "set",
@@ -20,6 +19,6 @@
           }
         }
       }
-    ]
+    }
   }
 }

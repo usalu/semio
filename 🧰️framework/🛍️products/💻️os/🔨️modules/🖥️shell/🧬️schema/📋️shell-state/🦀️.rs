@@ -11,7 +11,7 @@ use super::*;
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ShellState {
-    /// See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
+    /// 🔖️ See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
     /// a wider integer projection, in the TypeScript mirror.
     pub revision: u64,
 
@@ -24,7 +24,7 @@ pub struct ShellState {
     //#endregion 🔌️PluginRuntime
 
     //#region 🏷️AppLabels
-    /// app_id -> (label_key -> override text). Ephemeral per shell instance (not persisted) —
+    /// 📱️ app_id -> (label_key -> override text). Ephemeral per shell instance (not persisted) —
     /// audit classifies this SEMANTIC but never states a persistence scope; treating it as
     /// session-local is the conservative reading (it is `PluginAppLabelsOverlay`, not a document
     /// or account-level preference).
@@ -34,7 +34,7 @@ pub struct ShellState {
     //#region 🎛️ActionRail
     pub action_pane_folded_by_window: HashMap<String, bool>,
     pub action_pane_expanded_by_window: HashMap<String, Option<String>>,
-    /// window_id -> action_id -> arg_id -> value.
+    /// 🪜️ window_id -> action_id -> arg_id -> value.
     #[value(with = "staged_action_args_bridge")]
     pub staged_action_args: StagedActionArgs,
     pub active_utility_by_window: HashMap<String, Option<String>>,
@@ -43,7 +43,7 @@ pub struct ShellState {
 
     //#region 🎮️CommandPalette
     pub command_panel_expanded: Option<String>,
-    /// command_id -> arg_id -> value.
+    /// 👣️ command_id -> arg_id -> value.
     #[value(with = "staged_command_args_bridge")]
     pub staged_command_args: StagedCommandArgs,
     //#endregion 🎮️CommandPalette
@@ -71,14 +71,14 @@ pub struct ShellState {
     pub introduction_step_index: Option<u32>,
     pub introduction_auto_started_keys: Vec<String>,
     pub introduction_completed_interactions: Vec<u32>,
-    /// Open dialog stack, top-of-stack last. See [`DialogState`] for why this is a stack.
+    /// 💬️ Open dialog stack, top-of-stack last. See [`DialogState`] for why this is a stack.
     pub dialog_stack: Vec<DialogState>,
     pub transient_notice: Option<TransientNotice>,
     pub open_with_focus_role: Option<AppRole>,
     //#endregion 🔔️Overlays
 
     //#region 🎓️Tutorial
-    /// Only the persisted/semantic subset survives here — playback transport state
+    /// 🟢️ Only the persisted/semantic subset survives here — playback transport state
     /// (playing/rate/muted/captions/recording/deviated) is TRANSIENT per the audit and stays in
     /// the renderer.
     pub active_tutorial_id: Option<String>,
@@ -97,7 +97,7 @@ pub struct ShellState {
     //#endregion 🔄️Sync
 
     //#region 💡️InferencePort
-    /// Ephemeral per-document inference-port state, keyed by document id. Never persisted.
+    /// 🔌️ Ephemeral per-document inference-port state, keyed by document id. Never persisted.
     pub inference_port_by_document: HashMap<String, InferencePortStatus>,
     //#endregion 💡️InferencePort
 
@@ -109,7 +109,7 @@ pub struct ShellState {
 
     //#region 💾️Host
     pub storage_scope: ShellScope,
-    /// role -> default dialect/app id (ShellHost `openingPreferences`, audit §2).
+    /// 🕳️ role -> default dialect/app id (ShellHost `openingPreferences`, audit §2).
     pub opening_preferences: HashMap<String, String>,
     //#endregion 💾️Host
 }

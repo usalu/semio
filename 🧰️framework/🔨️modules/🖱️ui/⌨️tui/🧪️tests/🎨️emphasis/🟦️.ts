@@ -1,13 +1,13 @@
 import { expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import chromeSchema from "../../🧬️schema/🖼️chrome-emphasis/🔣️.json";
-import chrome from "../../🧫️fixtures/🖼️chrome-emphasis/🔣️.json";
+import chrome from "../🧫️fixtures/🖼️chrome-emphasis/🔣️.json";
 import treeSchema from "../../🧬️schema/🌳️tree-emphasis/🔣️.json";
-import tree from "../../🧫️fixtures/🌳️tree-emphasis/🔣️.json";
+import tree from "../🧫️fixtures/🌳️tree-emphasis/🔣️.json";
 import contourSchema from "../../🧬️schema/🖼️window-contour/🔣️.json";
-import contour from "../../🧫️fixtures/🖼️window-contour/🔣️.json";
+import contour from "../🧫️fixtures/🖼️window-contour/🔣️.json";
 import dragSchema from "../../🧬️schema/🪟️drag-preview/🔣️.json";
-import drag from "../../🧫️fixtures/🪟️drag-preview/🔣️.json";
+import drag from "../🧫️fixtures/🪟️drag-preview/🔣️.json";
 
 test("language-agnostic terminal emphasis fixtures satisfy their schemas", () => {
   const oracle = new Ajv2020({ strict: false, allErrors: true });
@@ -38,7 +38,7 @@ test("window contour fixtures distinguish body and tab color ownership", () => {
     expect(x + bodyWidth).toBeLessThanOrEqual(width);
     expect(y + bodyHeight).toBeLessThanOrEqual(height);
     if (fixture.mode === "flat") continue;
-    const shown = "rendered" in fixture ? fixture.rendered : fixture.tabs;
+    const shown = fixture.rendered ?? fixture.tabs;
     for (const tab of shown) {
       expect(tab.x + tab.width).toBeLessThanOrEqual(width);
       if (fixture.mode === "full") {

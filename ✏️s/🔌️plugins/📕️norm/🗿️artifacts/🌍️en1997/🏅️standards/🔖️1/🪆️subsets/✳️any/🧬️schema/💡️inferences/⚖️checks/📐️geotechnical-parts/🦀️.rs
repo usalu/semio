@@ -200,7 +200,6 @@ pub mod part_1 {
             let dz = z_bot - z_top;
             let z_mid = 0.5 * (z_top + z_bot);
             let mut dsig = stress_increase_2to1_pa(q_sls_pa, width, length, z_mid);
-            // When GWL is above the mid-layer depth, reduce to effective stress increment (buoyancy on overburden not double-counted on net q).
             let depth_abs = embedment + z_mid;
             if gwl < depth_abs {
                 let gamma_eff = layer.gamma_prime.min((layer.gamma - gamma_w).max(0.0)).max(1.0);
@@ -343,7 +342,7 @@ pub mod part_1 {
                 (base.gamma_b.max(1.10), base.gamma_s.max(1.15), xi3, xi4)
             }
             "cfa" | "sob" | "schnecke" => (base.gamma_b.max(1.15), base.gamma_s.max(1.15), xi3.max(1.40), xi4.max(1.40)),
-            _ => (base.gamma_b.max(1.10), base.gamma_s.max(1.10), xi3, xi4), // bored
+            _ => (base.gamma_b.max(1.10), base.gamma_s.max(1.10), xi3, xi4),
         }
     }
 
@@ -389,7 +388,6 @@ pub mod part_1 {
                 (0.5 * (ka + k0), "Ka*")
             }
             _ => {
-                // Prefer Rankine for smooth; blend Coulomb wall friction when δ provided.
                 if delta_deg.abs() > 1e-6 {
                     (ka_coulomb(phi_deg, delta_deg), "Ka-Coulomb")
                 } else {
@@ -480,7 +478,6 @@ pub mod part_1 {
             let mut used = 0usize;
             for i in 0..n_slices {
                 let x = (i as f64 + 0.5) * dx;
-                // Slope face from crest (0,height) to toe (horiz,0) at angle beta.
                 let y_surface = (height - x * beta.tan()).max(0.0);
                 if x > horiz {
                     continue;

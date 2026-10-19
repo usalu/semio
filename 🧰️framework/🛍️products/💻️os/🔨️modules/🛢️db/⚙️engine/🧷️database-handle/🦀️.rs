@@ -117,10 +117,6 @@ impl Database {
 
     /// 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
     /// over a real file) instead of the default in-memory one.
-    // 🔀️ dedyn-emit-runtime, O1/R11(a): generic over `E: Emit` (the function's own type param, not
-    // `Database`'s default) so the returned `Database<E>` carries the caller's concrete sink type —
-    // this fn has zero callers anywhere in the repo today (public, documented extension seam per
-    // `open_with_emit`'s own doc).
     pub async fn open_with_emit<E: Emit + 'static>(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>, emit: Arc<E>) -> Result<Database<E>, DbError> {
         Database::open_with(pool, config, storage, emit).await
     }

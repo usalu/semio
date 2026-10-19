@@ -1,6 +1,7 @@
 //! 📏️ Borrowed native terrain leaves enforce semantic bytes independently of paid backing.
 use semio_framework_dsl_record::{FieldValue,RecordValue};
-use semio_framework_value::{DslValue,NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 struct Bytes{used:usize,maximum:usize}
 impl Bytes{
  fn add(&mut self,bytes:usize)->Result<(),ValueError>{self.used=self.used.checked_add(bytes).filter(|total|*total<=self.maximum).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"terrain native literal values exceed semantic byte limit"))?;Ok(())}

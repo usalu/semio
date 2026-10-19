@@ -21,7 +21,7 @@ pub fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut Boar
     }
     let snapshot_applied = cache.snapshot_json.as_deref() != Some(board.snapshot_json.as_str());
     if snapshot_applied {
-        {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board.snapshot_json,&mut control)};
+        {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board.snapshot_json,&mut control)};
         cache.granularity_by_id = board2d_granularity_by_id(&board.snapshot_json);
         cache.snapshot_json = Some(board.snapshot_json.clone());
         changed = true;

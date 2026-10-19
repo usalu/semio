@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import Ajv from 'ajv';
 import schema from '../🧬️schema/🔣️.json';
-import fixture from '../🧫️fixtures/🔣️.json';
+import fixture from './🧫️fixtures/🔣️.json';
 /** 👥️ Ajv tuple admission and Buffer JSON roundtrip independently verify heterogeneous original wire values. */
 export function verifyOriginalTupleOracle():void{
  assert(new Ajv({strict:true}).compile(schema)(fixture));

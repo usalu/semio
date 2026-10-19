@@ -231,8 +231,6 @@ async function proveGisInferenceCheckpointControlFixture(repoRoot: string): Prom
   const runtime = readHubInferenceRuntimeSource(repoRoot);
   const hubBin = readHubBinSource(repoRoot);
   const runner = readFileSync(join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "📜️script.ts"), "utf8");
-  // 🧬️The frame TYPE is a `hub.inference` scope export and is declared in the scope module; the
-  // runtime owns only the framing that reads and writes it over the inherited descriptor.
   const scopeModule = readFileSync(join(repoRoot, "🌎️hub", "💡️inference", "🧬️schema", "🦀️.rs"), "utf8");
   for (const symbol of ["pub struct GisInferenceCheckpointControlFrameV1", 'serde(deny_unknown_fields, rename_all = "camelCase")'])
     if (!scopeModule.includes(symbol)) throw new Error(`hub.inference scope module is missing ${symbol}`);
@@ -534,8 +532,6 @@ export async function proveGisMapProposalApprovalFixture(repoRoot: string): Prom
   )
     throw new Error("retained GIS Map committer capacity, write authority, typed journal, or publication-before-apply boundary drifted");
   const hubBin = readHubBinSource(repoRoot);
-  // 🧪️The binary's own laws live beside it in `🌎️hub/🧪️tests/**`, not inside `🏗️bootstrap/🦀️.rs`, so the law
-  // names are asserted against the whole test tree — a further test-layout move cannot silently red this.
   const hubBinLaws = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
   for (const symbol of ["HubGisMapApprovalIngressAuthorityV1", "acquire_gis_map_approval_ingress", "revalidate_gis_map_approval_authority", "InferenceApprovalRouteContextV1", "inference_runtime.close().await", "publish_gis_map_checkpoint_change"])
     if (!hubBin.includes(symbol)) throw new Error(`Hub GIS Map approval ingress source is missing ${symbol}`);

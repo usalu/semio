@@ -116,7 +116,7 @@ fn pcg_reports_not_converged_when_max_iter_is_zero() {
 /// `converged: false` after exactly 1 iteration.
 #[test]
 fn pcg_breaks_on_zero_curvature_direction() {
-    let coo = Coo::new(3); // no entries added: A is the zero operator
+    let coo = Coo::new(3);
     let csr = coo.to_csr();
     let b = VecD::from_vec(vec![1.0, 1.0, 1.0]);
     let mut x0 = VecD::zeros(3);
@@ -470,12 +470,12 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             let zero_items = matches!(close_turn(&mut job, grant_of(0, usize::MAX)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && snapshot(&job) == before;
             let has_pages = job.publication.as_ref().is_some_and(|publication| publication.writer.page_count() != 0 || publication.writer.staged_page_len().is_some());
             let subexact = if has_pages || job.desk.lent.is_some() {
-                matches!(close_turn(&mut job, grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) && snapshot(&job) == before
+                matches!(close_turn(&mut job, grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) && snapshot(&job) == before
             } else {
                 true
             };
             job.begin_close();
-            let (released, exact, bounded, complete) = accounted_close(&mut job, |job| close_turn(job, grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), pcg_physical_bytes);
+            let (released, exact, bounded, complete) = accounted_close(&mut job, |job| close_turn(job, grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), pcg_physical_bytes);
             let terminal = InteractiveJob::terminal_is_empty(&job) && pcg_physical_bytes(&job) == 0;
             if !(yielded && cancelled && zero_items && subexact && bounded && exact && complete && terminal && released == before.5) {
                 failures.push(format!("{kind}/{cut}: yield={yielded}, cancel={cancelled}, zero={zero_items}, subexact={subexact}, bounded={bounded}, exact={exact}, complete={complete}, terminal={terminal}, physical={}/{released}", before.5));
@@ -511,7 +511,7 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
     }
     while !baseline.terminal_is_empty() { let _ = baseline.close_step(grant_of(1, usize::MAX)); }
     assert!(turns > 0 && fields == 0x7ff);
-    let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
+    let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
     let snapshot = |cursor: &PcgRestoreCursor| (cursor.page_slot, cursor.page_entry, cursor.expected_field, format!("{:?}", cursor.owner_cursor), retained(cursor));
     let mut failures = Vec::new();
     for cut in 0..turns {
@@ -551,8 +551,8 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
         let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let sticky = restore.step(&mut later).err() == Some(NumericalCheckpointFault::Cancelled) && snapshot(&restore) == before;
         let zero = matches!(restore.close_step(grant_of(0, usize::MAX)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && snapshot(&restore) == before;
-        let held = matches!(restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.4;
-        let (released, exact, bounded, complete) = accounted_close(&mut restore, |restore| restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), |restore| retained(restore));
+        let held = matches!(restore.close_step(grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.4;
+        let (released, exact, bounded, complete) = accounted_close(&mut restore, |restore| restore.close_step(grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), |restore| retained(restore));
         let terminal = restore.terminal_is_empty() && retained(&restore) == 0;
         if !(pending && cancelled && sticky && zero && held && bounded && exact && complete && terminal && released == before.4) {
             failures.push(format!("cut={cut}, pending={pending}, cancel={cancelled}, sticky={sticky}, zero={zero}, held={held}, bounded={bounded}, exact={exact}, complete={complete}, terminal={terminal}, physical={}/{released}", before.4));
@@ -612,8 +612,8 @@ fn pcg_physical_bytes(job: &PcgJob) -> usize {
     let state = &job.state;
     let vectors = [&state.b.0, &state.x.0, &state.diag.0, &state.r.0, &state.z.0, &state.p.0, &state.ap.0];
     state.a.physical_backing_bytes().into_iter().sum::<usize>() + vectors.into_iter().map(|owner| owner.capacity() * size_of::<f64>()).sum::<usize>()
-        + job.publication.as_ref().map_or(0, |publication| (publication.writer.page_count() + usize::from(publication.writer.staged_page_len().is_some())) * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)
-        + job.desk.lent.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)
+        + job.publication.as_ref().map_or(0, |publication| (publication.writer.page_count() + usize::from(publication.writer.staged_page_len().is_some())) * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
+        + job.desk.lent.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
 }
 
 /// 🧯 Every malformed PCG owner retains its first fault and physically drains the exact candidate.
@@ -652,7 +652,7 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
                 Err(fault) => { error = Some(fault); break; }
             }
         }
-        let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
+        let retained = |cursor: &PcgRestoreCursor| cursor.payload.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) + cursor.job.as_ref().map_or(0, pcg_physical_bytes);
         let before = (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
@@ -660,9 +660,9 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
         let unchanged = before == (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
         let zero_items = matches!(restore.close_step(grant_of(0, usize::MAX)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && retained(&restore) == before.3;
         let subexact = if restore.payload.as_ref().is_some_and(|payload| payload.page_count() != 0) {
-            matches!(restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.3
+            matches!(restore.close_step(grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) && retained(&restore) == before.3
         } else { true };
-        let (released, exact, bounded, complete) = accounted_close(&mut restore, |restore| restore.close_step(grant_of(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), |restore| retained(restore));
+        let (released, exact, bounded, complete) = accounted_close(&mut restore, |restore| restore.close_step(grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)).expect("REASON"), |restore| retained(restore));
         let terminal = restore.terminal_is_empty() && retained(&restore) == 0;
         observations.push((case.clone(), error, sticky, unchanged, zero_items, subexact, bounded && exact && complete, terminal, before.3, released));
     }

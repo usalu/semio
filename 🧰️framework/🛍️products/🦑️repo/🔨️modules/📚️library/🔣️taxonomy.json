@@ -27,7 +27,9 @@
       "html"
     ],
     "ignoredPathPatterns": [
+      "**/.cache",
       "**/.git",
+      "**/.lake",
       "**/.next",
       "**/.nx",
       "**/.pytest_cache",
@@ -44,7 +46,9 @@
       "**/🔌️plugin-modules",
       "**/📦️packages/🦀️rust/pkg",
       "**/📦️packages/🟦️typescript/out",
-      "**/📦️packages/🔷️dotnet/obj"
+      "**/📦️packages/🔷️dotnet/obj",
+      "**/🎤️präsentation/📅️33.projektetage/🌐️public",
+      "**/🪞️preview2-shim"
     ]
   },
   "referenceClosure": {
@@ -6722,16 +6726,24 @@
         "teaching-energy"
       ]
     },
+    "teaching-ventilation": {
+      "emoji": "🌬️",
+      "slugPattern": "^ventilation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
     "teaching-quiz": {
       "emoji": "❓️",
       "slugPattern": "^quiz$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "teaching-architecture",
         "teaching-physics",
         "teaching-heating",
         "teaching-cooling",
-        "teaching-demand"
+        "teaching-demand",
+        "teaching-ventilation"
       ]
     },
     "deploy": {
@@ -8451,36 +8463,44 @@
         "teaching-architecture"
       ]
     },
-    "teaching-quiz-stack": {
+    "teaching-course": {
+      "emoji": "📚️",
+      "slugPattern": "^course$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-course-stack": {
       "emoji": "🧱️",
       "slugPattern": "^stack$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "teaching-quiz"
+        "teaching-course"
       ]
     },
-    "teaching-quiz-catalog": {
+    "teaching-course-content": {
       "emoji": "📚️",
-      "slugPattern": "^catalog$",
+      "slugPattern": "^course$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "teaching-quiz"
+        "teaching-course"
       ]
     },
-    "teaching-quiz-e2e": {
+    "teaching-course-e2e": {
       "emoji": "🎭️",
       "slugPattern": "^e2e$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "teaching-quiz"
+        "teaching-course"
       ]
     },
-    "teaching-quiz-e2e-learner": {
+    "teaching-course-e2e-learner": {
       "emoji": "🚶️",
       "slugPattern": "^learner$",
       "allowEmojiOnly": false,
       "parentKindIds": [
-        "teaching-quiz-e2e"
+        "teaching-course-e2e"
       ]
     },
     "schema-validator-format-policy": {
@@ -13122,7 +13142,7 @@
         "teaching-architecture"
       ],
       "memberNames": [
-        "❓️quiz",
+        "📚️course",
         "⚡️energy"
       ],
       "source": "registry"
@@ -13135,7 +13155,8 @@
         "🧲️physics",
         "🔥️heating",
         "❄️cooling",
-        "📊️demand"
+        "📊️demand",
+        "🌬️ventilation"
       ],
       "source": "registry"
     },
@@ -13144,7 +13165,8 @@
         "teaching-physics",
         "teaching-heating",
         "teaching-cooling",
-        "teaching-demand"
+        "teaching-demand",
+        "teaching-ventilation"
       ],
       "memberNames": [
         "❓️quiz"
@@ -13227,6 +13249,7 @@
         "📐️geometry",
         "📖️playbook",
         "📚️compiler",
+        "📚️course",
         "📚️library",
         "📜️procedure",
         "📝️form-control-presentation",
@@ -17138,6 +17161,43 @@
       ],
       "source": "registry"
     },
+    "members-of-teaching-course": {
+      "ownerKindIds": [
+        "teaching-course"
+      ],
+      "memberNames": [
+        "🔒️sessions",
+        "🎚️mode",
+        "⚖️readiness",
+        "🌐️site",
+        "🎁️stack-bundle",
+        "🏷️release",
+        "🐳️docker-image",
+        "📦️image",
+        "🧱️docker-stack",
+        "🩺️docker-image-check",
+        "🌐️publication",
+        "🌬️ventilation",
+        "🎛️dashboard",
+        "🎚️parameters",
+        "🎭️e2e-output",
+        "🏋️capacity",
+        "🐳️context",
+        "🐳️runtime",
+        "🐾️context-casts",
+        "📚️course",
+        "🔌️port",
+        "🗂️topics",
+        "🪁️runtime",
+        "🪂️canopies",
+        "🪢️presence",
+        "🪧️logo",
+        "🚀️readiness",
+        "🚛️bundle",
+        "🛑️cancellation"
+      ],
+      "source": "registry"
+    },
     "members-of-teaching-pets": {
       "ownerKindIds": [
         "teaching-pets"
@@ -17162,7 +17222,26 @@
         "🫖️kettly",
         "🕯️flamy",
         "🌡️thermy",
-        "🖥️servy"
+        "🖥️servy",
+        "〰️double-curved-surface",
+        "🎚️slider",
+        "🎨️colour-wheel",
+        "🏞️minimized-surface",
+        "📄️worksheet",
+        "📉️pareto",
+        "📊️bar-chart",
+        "📋️execution-plan",
+        "📐️plan-2d",
+        "📚️workbook",
+        "🔢️discrete-parameter",
+        "🔲️cell",
+        "🦏️rhino",
+        "🦗️grasshopper",
+        "🧊️model-3d",
+        "🧮️quantities",
+        "🟧️heatmap",
+        "➗️formula",
+        "♾️continuous-parameter"
       ],
       "source": "registry"
     },
@@ -17509,7 +17588,7 @@
       "rendering": "semantic-member-directory-and-physical-kind-leaf",
       "pathBudgetReserve": {
         "derivation": "longest-rendered-catalog-descendant-suffix",
-        "bytes": 133
+        "utf16Units": 117
       }
     },
     "draw-editor-command-bundle-v1": {
@@ -17531,7 +17610,7 @@
       "realizedNodeCount": 2,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 11
+        "utf16Units": 7
       }
     },
     "mutation-implementation-case-v1": {
@@ -17552,7 +17631,7 @@
       "realizedNodeCount": 2,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 11
+        "utf16Units": 7
       }
     },
     "mutation-fixture-bundle-v1": {
@@ -17711,7 +17790,7 @@
       "realizedNodeCount": 12,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 42
+        "utf16Units": 30
       }
     },
     "stdio-html-source-pair-v1": {
@@ -17793,7 +17872,7 @@
       "realizedNodeCount": 6,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 42
+        "utf16Units": 30
       }
     }
   },
@@ -18185,12 +18264,29 @@
             "size": 7205
           },
           "currentPreimage": {
-            "sha256": "eee6c989f9adf1e317d3389a07a18b7ce85367a5cd19dbe3b69ed0ebd2516f86",
-            "size": 15146,
+            "sha256": "7e449d5e5d9e867f2f78cfecbf9d2dc45f80c90622a1fb6e388197d100069ca5",
+            "size": 15997,
             "mode": "0644"
           },
           "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️current-source-approval/🔣️.json",
-          "approvalSha256": "126f209116d9fb65d0d9481682487c8562e934527caa52efad81a20a2094a130"
+          "approvalSha256": "0a612911ac7e8c28c2714ee17928fdbab2bf807459f52f024fcbccfa3af96f51"
+        },
+        "devcontainer-readme-owner-current": {
+          "sourcePath": ".devcontainer/README.md",
+          "baselineCommit": "101a6b4ea83acc82d6fbdc0607e6ae5d876825ae",
+          "baselineBlob": "bef162d2bd2970294ae0a16469b0250f5f41a030",
+          "baselinePreimage": {
+            "sha256": "97d64e93c8f387fa765c389cda2d14984777e61ea5cf6c90755dcfc4b1b28298",
+            "mode": "0644",
+            "size": 14260
+          },
+          "currentPreimage": {
+            "sha256": "fe75b9b2e68113edc39a0473b540831cce671bca3e2b202d6e72fc673074faab",
+            "size": 9625,
+            "mode": "0644"
+          },
+          "approvalPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🪪️devcontainer-current-source-approval/🔣️.json",
+          "approvalSha256": "2e5880aeaedb257392e0597a99842a14fd8ad3ca77f4a6e2d9eddc8b9d133b3f"
         }
       },
       "sourceFileKindId": "markdown",
@@ -18653,7 +18749,23 @@
     "implementationDescendantContractId": "mutation-implementation-case-v1",
     "fixtureDescendantContractId": "mutation-fixture-bundle-v1",
     "catalogContractId": "mutation-catalog-vectors-v1",
-    "coverage": "every-catalog-vector-has-one-implementation-and-one-fixture-bundle"
+    "coverage": "every-catalog-vector-has-one-fixture-bundle-with-declared-coverage",
+    "fixtureCoverage": {
+      "implementationCase": "mutation-implementation-case-v1",
+      "exhaustiveCase": {
+        "featureFileKindId": "gherkin-feature",
+        "stepUriPrefix": "shared://🧬️mutations/",
+        "bundleFacetDirectoryNames": [
+          "📸️snapshot",
+          "🦠️mutation",
+          "🔺️diff",
+          "🎯️outcome"
+        ]
+      },
+      "fixtureRunner": {
+        "relativePath": "🧬️schema/🧬️mutations/🧪️tests/🗂️fixture-cases/🦀️.rs"
+      }
+    }
   },
   "fixedDirectoryContractSets": {
     "dev-jco-all-interfaces": [
@@ -22263,6 +22375,17 @@
       "verification": "next build",
       "expires": null
     },
+    "next-module-config": {
+      "pathPattern": "**/📦️packages/🟦️typescript/next.config.mjs",
+      "authority": "Next.js configuration discovery",
+      "reason": "Next.js discovers module configuration under the literal next.config.mjs basename",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "next build",
+      "expires": null
+    },
     "reserved-readme": {
       "pathPattern": "**/README",
       "authority": "Repository documentation naming statute",
@@ -24467,6 +24590,138 @@
       "verification": "bun install --frozen-lockfile",
       "expires": null
     },
+    "workspace-package-manifest": {
+      "pathPattern": "*/package.json",
+      "authority": "Node.js",
+      "reason": "Bun workspace manifest of a top-level product workspace that is not the repository root and not a language package root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "bun pm",
+      "expires": null
+    },
+    "workspace-bun-lock": {
+      "pathPattern": "*/bun.lock",
+      "authority": "Bun",
+      "reason": "Dependency lock of a top-level product workspace that is not the repository root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "bun install --frozen-lockfile",
+      "expires": null
+    },
+    "workspace-typescript-config": {
+      "pathPattern": "*/tsconfig.json",
+      "authority": "TypeScript",
+      "reason": "Compiler configuration of a top-level product workspace",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "tsc --showConfig",
+      "expires": null
+    },
+    "workspace-cargo-manifest": {
+      "pathPattern": "**/Cargo.toml",
+      "authority": "cargo",
+      "reason": "Cargo workspace manifest of a workspace root that is not the repository root and not a package root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "cargo metadata",
+      "expires": null
+    },
+    "workspace-cargo-lock": {
+      "pathPattern": "**/Cargo.lock",
+      "authority": "Cargo",
+      "reason": "Cargo dependency lock of a workspace root that is not the repository root and not a package root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "cargo metadata",
+      "expires": null
+    },
+    "cargo-nextest-config": {
+      "pathPattern": "**/.config/nextest.toml",
+      "authority": "cargo-nextest",
+      "reason": "cargo-nextest profile discovery below its workspace root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "cargo nextest show-config",
+      "expires": null
+    },
+    "javascript-module-declaration": {
+      "pathPattern": "**/🟨️.d.mts",
+      "authority": "TypeScript",
+      "reason": "Declaration companion of the sibling JavaScript module leaf, named by that leaf's own kind emoji",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "tsc --noEmit",
+      "expires": null
+    },
+    "sql-module-declaration": {
+      "pathPattern": "**/🗄️.d.ts",
+      "authority": "TypeScript",
+      "reason": "Declaration companion of the sibling SQL module leaf, named by that leaf's own kind emoji",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "tsc --noEmit",
+      "expires": null
+    },
+    "sql-module-extension-declaration": {
+      "pathPattern": "**/🗄️.sql.d.ts",
+      "authority": "TypeScript",
+      "reason": "Declaration companion of the sibling SQL module leaf imported with its extension, named by that leaf's own kind emoji",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "tsc --noEmit",
+      "expires": null
+    },
+    "javascript-module-type-declaration": {
+      "pathPattern": "**/🟨️.d.ts",
+      "authority": "TypeScript",
+      "reason": "Declaration companion of the sibling JavaScript twin leaf: TypeScript pairs a declaration with its JavaScript file by stem, so the stem stays the JavaScript leaf's own kind emoji",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "tsc --noEmit",
+      "expires": null
+    },
+    "sql-module-source": {
+      "pathPattern": "**/🗄️.ts",
+      "authority": "SQLite snapshot schema",
+      "reason": "TypeScript twin of the sibling SQL leaf: it mirrors that SQL leaf's DDL without runtime filesystem access and is paired with it by stem, named by that leaf's own kind emoji beside the module leaf",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "sqlite snapshot schema parity",
+      "expires": null
+    },
+    "go-command-module-manifest": {
+      "pathPattern": "**/📦️packages/🐹️go/*/go.mod",
+      "authority": "Go",
+      "reason": "Nested Go command module manifest below its package module root",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "go list -m",
+      "expires": null
+    },
     "root-bun-config": {
       "pathPattern": "bunfig.toml",
       "authority": "Bun",
@@ -26048,6 +26303,10 @@
         "tests"
       ],
       "glueGrammarId": "rust",
+      "implementationAdmission": {
+        "form": "nested-manifest-unit",
+        "unitManifestContractId": "cargo-manifest"
+      },
       "recursive": true,
       "uncertainRole": "problem",
       "implementationRole": "problem"
@@ -26067,6 +26326,7 @@
         "root-script",
         "next-environment-declaration",
         "next-typescript-config",
+        "next-module-config",
         "next-app-page",
         "next-app-layout",
         "next-app-route"
@@ -26117,6 +26377,10 @@
         "fixtures"
       ],
       "glueGrammarId": "go",
+      "implementationAdmission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
       "recursive": true,
       "uncertainRole": "problem",
       "implementationRole": "problem"
@@ -27899,6 +28163,13 @@
       "authority": "Next.js TypeScript configuration discovery",
       "verification": "next build"
     },
+    "next-module-config": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Next.js module configuration discovery",
+      "verification": "next build"
+    },
     "root-pytest-config": {
       "contractKind": "fixed",
       "disposition": "tool-metadata",
@@ -27983,6 +28254,41 @@
       "validator": "package-glue",
       "authority": "Storybook preview adapter identity without package purity exemption",
       "verification": "storybook build configuration loading"
+    },
+    "javascript-module-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Declaration companion of a JavaScript module leaf without purity exemption",
+      "verification": "tsc --noEmit"
+    },
+    "sql-module-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Declaration companion of an SQL module leaf without purity exemption",
+      "verification": "tsc --noEmit"
+    },
+    "sql-module-extension-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Extension-qualified declaration companion of an SQL module leaf without purity exemption",
+      "verification": "tsc --noEmit"
+    },
+    "javascript-module-type-declaration": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "Declaration companion of a JavaScript twin leaf without purity exemption",
+      "verification": "tsc --noEmit"
+    },
+    "sql-module-source": {
+      "contractKind": "fixed",
+      "disposition": "adapter-source",
+      "validator": "package-glue",
+      "authority": "TypeScript twin of an SQL leaf without purity exemption",
+      "verification": "sqlite snapshot schema parity"
     }
   },
   "generatorContracts": {
@@ -30422,7 +30728,8 @@
       "vs16-fold",
       "same-kind"
     ],
-    "maxPathBytes": 240,
+    "maxPathUtf16Units": 256,
+    "maxComponentUtf8Bytes": 255,
     "rejectWindowsReservedNames": true,
     "rejectTrailingDotsAndSpaces": true
   },
@@ -32405,6 +32712,58 @@
         "✂️unbind": "unbind-morph-target-attribute",
         "🚚️move": "move-morph-target-attribute",
         "🔀️reorder": "reorder-morph-target-attributes"
+      }
+    },
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
+      "✋️selection": {
+        "✋️drag-selection": "drag-selection",
+        "🔄️rotate-selection": "rotate-selection",
+        "🔍️scale-selection": "scale-selection"
+      },
+      "〰️edge": {
+        "🏷️change-edge-kind": "change-edge-kind",
+        "👀change-edge-visible": "change-edge-visible",
+        "🔐change-edge-locked": "change-edge-locked",
+        "🖇️change-edge-tips": "change-edge-tips",
+        "🧮replace-edge-geometry": "replace-edge-geometry"
+      },
+      "🌍️region": {
+        "🌍create-target-region": "create-target-region",
+        "📐resize-target-region": "resize-target-region",
+        "🔏change-target-region-locked": "change-target-region-locked",
+        "🖋️edit-target-region-label": "edit-target-region-label",
+        "🙈change-target-region-hidden": "change-target-region-hidden",
+        "🚀move-target-region": "move-target-region",
+        "🪦delete-target-region": "delete-target-region"
+      },
+      "📚️catalog": {
+        "🆔change-manifest-id": "change-manifest-id",
+        "💔disconnect-kind-compatibility": "disconnect-kind-compatibility",
+        "📚replace-kind-catalogs": "replace-kind-catalogs",
+        "🤝connect-kind-compatibility": "connect-kind-compatibility"
+      },
+      "🔌️handle": {
+        "✂️disconnect-handles": "disconnect-handles",
+        "➕add-node-handle": "add-node-handle",
+        "➖remove-node-handle": "remove-node-handle",
+        "🔌replace-node-handle": "replace-node-handle",
+        "🪢️connect-handles": "connect-handles"
+      },
+      "🟢️node": {
+        "⚓change-node-anchor": "change-node-anchor",
+        "✏️edit-node-text": "edit-node-text",
+        "🌟change-node-root": "change-node-root",
+        "🌱create-node": "create-node",
+        "🎨change-node-icon": "change-node-icon",
+        "🏗️change-node-kind": "change-node-kind",
+        "👁️change-node-visible": "change-node-visible",
+        "🔒change-node-locked": "change-node-locked",
+        "🗑️delete-node": "delete-node",
+        "🧊replace-node-geometry": "replace-node-geometry"
+      },
+      "🧭️pose": {
+        "📍move-node": "move-node",
+        "📏scale-node": "scale-node"
       }
     },
     "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {

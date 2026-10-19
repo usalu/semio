@@ -1,0 +1,39 @@
+{
+ "ws": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml",
+ "old_name": "semio-s-artifact-fem-2d-mesh",
+ "old_pkg": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+ "old_root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs",
+ "subtree": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+ "old_emoji": "🕸️",
+ "old_doc": "`s.fem.fem2d` mesh mutations of node and element changes and the selection move.",
+ "old_desc": "FEM 2d node and element changes and the selection move",
+ "script": null,
+ "new": [
+  {
+   "name": "semio-s-artifact-fem-2d-mesh-sections",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🪚️sections",
+   "emoji": "🪚️",
+   "doc": "`s.fem.fem2d` mesh mutations of sections (create, delete, replace, change).",
+   "desc": "FEM 2d section mutations",
+   "move": [
+    "create_section",
+    "delete_section",
+    "replace_section",
+    "change_section"
+   ]
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-mesh-regions",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🏞️regions",
+   "emoji": "🏞️",
+   "doc": "`s.fem.fem2d` mesh mutations of regions (create, delete, replace, change).",
+   "desc": "FEM 2d region mutations",
+   "move": [
+    "create_region",
+    "delete_region",
+    "replace_region",
+    "change_region"
+   ]
+  }
+ ]
+}

@@ -40,8 +40,6 @@ fn empty_body_is_zero_lines_not_one_empty_line() {
 
 #[test]
 fn bom_survives_as_ordinary_first_line_content() {
-    // 🈁️ This subset does NOT special-case a byte-order mark: it is neither stripped nor
-    // interpreted, only carried as the first three bytes of line 0's content.
     let body = "\u{feff}hello\nworld\n";
     let (lines, trailing, crlf) = independent_split(body);
     assert_eq!(lines[0].chars().next(), Some('\u{feff}'));
@@ -50,9 +48,6 @@ fn bom_survives_as_ordinary_first_line_content() {
 
 #[test]
 fn astral_plane_and_combining_marks_survive_unnormalized() {
-    // 🎉️ An astral-plane emoji (outside the BMP, a 4-byte UTF-8 sequence) plus a variation
-    // selector, and a combining acute accent kept distinct from its precomposed form — this
-    // subset performs no Unicode normalization at all.
     let body = "🎉\n📜️\ne\u{301}\n\u{e9}\n";
     let (lines, trailing, crlf) = independent_split(body);
     assert_eq!(lines, vec!["🎉", "📜️", "e\u{301}", "\u{e9}"]);
@@ -62,10 +57,6 @@ fn astral_plane_and_combining_marks_survive_unnormalized() {
 
 #[test]
 fn nel_ls_ps_are_not_treated_as_line_separators() {
-    // 🈁️ NEL (U+0085), LINE SEPARATOR (U+2028) and PARAGRAPH SEPARATOR (U+2029) are exactly
-    // the characters some Unicode-aware line-breaking algorithms (Python's universal
-    // newlines, ICU) DO split on — this subset declares only Lf/CrLf, so all three must stay
-    // ordinary content of a single line.
     let body = "before\u{85}middle\u{2028}more\u{2029}end\n";
     let (lines, trailing, crlf) = independent_split(body);
     assert_eq!(lines.len(), 1, "NEL/LS/PS must not create extra lines");
@@ -74,15 +65,6 @@ fn nel_ls_ps_are_not_treated_as_line_separators() {
 
 #[test]
 fn mixed_crlf_lf_is_still_a_lossless_round_trip() {
-    // 🧭️ FINDING, not the assumption this test started from: splitting a string on a FIXED
-    // separator and rejoining with that SAME separator is a mathematical identity regardless
-    // of what characters live between the split points — so mixed CRLF/LF input does NOT
-    // break byte-exact round-tripping the way it would for a format with real per-record
-    // structure (RFC 4180 CSV, say). Detecting "is_crlf" from the presence of any `\r\n`
-    // only changes WHERE the split points fall (see the next test for how few that can be on
-    // real mixed content); it never loses information. This is `TxtSnapshot`'s carrier law
-    // (see `📸️snapshot/🦀️.rs`'s own doc comment and its `carrier_native_is_raw`
-    // test) confirmed independently here, not assumed.
     for mixed in ["a\r\nb\nc\r\nd\n", "a\nb\r\nc\n", "\r\nonly one crlf at the start\nthen bare lf\n", "no separators at all"] {
         let (lines, trailing, crlf) = independent_split(mixed);
         let rendered = independent_render(&lines, trailing, crlf);
@@ -149,18 +131,6 @@ fn missing_kind_is_an_error() {
 
 #[test]
 fn csv_cross_check_agrees_with_independent_split_on_the_real_single_style_fixture_non_blank_lines() {
-    // 📄️ The real German interview transcript this subset's case exhaustively mutates — see
-    // `../🧫️fixtures/🎙️interview-transkript.tex` and its provenance note in the
-    // case feature file: 170 real LF-terminated lines (80 of them blank — real LaTeX source
-    // paragraph spacing), genuine umlauts, no CR anywhere.
-    //
-    // 🧭️ FINDING: `csv-core`'s NFA silently treats a zero-byte record as "not a record" and
-    // never emits it — confirmed with a standalone probe (`a\n\nb\n\n\nc\n` yields exactly
-    // three records, `["a","b","c"]`, under BOTH `Terminator::CRLF` and `Terminator::Any(b'\n')`
-    // — the blank-line skip is unconditional, not a terminator-mode artifact). So the crate
-    // can cross-check only the NON-BLANK line count, never the true line count, on any real
-    // prose that has blank lines at all — a narrower substitute than first assumed, recorded
-    // here rather than silently worked around.
     let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🎙️interview-transkript.tex");
     let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
     let (lines, _, _) = independent_split(body);
@@ -181,11 +151,6 @@ fn csv_cross_check_agrees_on_single_style_spec_vectors() {
 
 #[test]
 fn csv_cross_check_genuinely_disagrees_on_mixed_content_and_that_is_documented_not_hidden() {
-    // 🧭️ The csv crate's terminator collapses CR/LF/CRLF into one undifferentiated boundary,
-    // so on mixed content it reports MORE, finer-grained boundaries than this subset's
-    // whole-document rule does — real, honest evidence of exactly the limitation the
-    // manifest's `noOracleDecisions` rationale names: `csv` can confirm line boundaries on
-    // single-style content, but cannot referee this subset's LF-vs-CRLF policy question.
     let mixed = "a\r\nb\nc\r\nd\n";
     let (lines, _, _) = independent_split(mixed);
     let csv_count = csv_independent_line_count(mixed).unwrap();

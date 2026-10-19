@@ -3,7 +3,7 @@
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
 pub use schema::*;
-use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballConfig;
+pub use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::gumball::Fem3dGumballConfig;
 
 impl Default for Fem3dModelWindowConfig {
     fn default() -> Self {

@@ -37,27 +37,27 @@ import {
 } from "../🟦️.ts";
 
 export interface Puzzle5dDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   artifact?: Puzzle5dArtifact;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   domain?: string;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   label?: string | null;
-  /** @state artifact */
+  /** 📇️ @state artifact */
   meta?: Puzzle5dMetaPatch;
-  /** @state artifact */
+  /** 📒️ @state artifact */
   kindCatalogs?: ArtifactChildHandle | null;
-  /** @state artifact */
+  /** 🗃️ @state artifact */
   kindCatalogsExtra?: Puzzle5dKindCatalogsExtra | null;
-  /** @state artifact */
+  /** 🔌️ @state artifact */
   kindCompatibility?: Puzzle5dKindCompatibilityDelta;
-  /** @state artifact */
+  /** 🧩️ @state artifact */
   parts?: Puzzle5dPartsDelta;
-  /** @state artifact */
+  /** 🔩️ @state artifact */
   fasteners?: Puzzle5dFastenersDelta;
-  /** @state artifact */
+  /** 🧊️ @state artifact */
   targetVolumes?: Puzzle5dTargetVolumesDelta;
 }
 

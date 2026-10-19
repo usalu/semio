@@ -99,10 +99,10 @@ impl Drop for Owned {
 /// 🧪️ Cold fixture controls carry explicit caller authority and retire original rejected recipients.
 fn with_native_control<T>(operation:impl FnOnce(&mut store::io::io_mechanism::IoRunControl<'_, '_>)->T)->T{
     let maximum=16<<20;let mut receive=|_|true;let mut publish=|_|true;
-    let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);
+    let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut receive);
     let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
     let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:maximum,maximum_capacity_bytes:maximum,maximum_release_bytes:maximum,maximum_depth:512};
-    let mut decode_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut decode_recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
     let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
     decode.install_retirement_recipient(&mut decode_recipient).expect("the run owns an explicit decode retirement slot");
     encode.install_retirement_recipient(&mut encode_recipient).expect("the run owns an explicit encode retirement slot");
@@ -183,7 +183,8 @@ fn retire_synapse(value: neural::Synapse) {
     crate::retained::FlowRetirement::from_owner(crate::retained::FlowOwner::Synapses(vec![value])).retire_cold();
 }
 fn assert_family<T: ToValue + FromValue>(expected: &T, name: &str, retire: fn(T)) {
-    use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture = family_laws();
     let maximum = fixture["limits"]["successBytes"].as_u64().unwrap() as usize;
     let mut yes = |_| true;
@@ -239,7 +240,8 @@ fn assert_family<T: ToValue + FromValue>(expected: &T, name: &str, retire: fn(T)
     assert_eq!(control.owned_bytes(), 0);
 }
 fn assert_family_interior_stop<T: ToValue + FromValue>(expected: &T) {
-    use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture = family_laws();
     let maximum = fixture["limits"]["successBytes"].as_u64().unwrap() as usize;
     let interior = fixture["limits"]["interiorBytes"].as_u64().unwrap() as usize;
@@ -254,7 +256,7 @@ fn assert_family_interior_stop<T: ToValue + FromValue>(expected: &T) {
     assert!(seen);
     let value = expected.to_value().guard_decoded();
     let mut seen = false;
-    let mut progress = |p: semio_framework_value::native_decoding::NativeDecodeProgress| {
+    let mut progress = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| {
         if p.total > interior && p.completed >= interior && p.completed < p.total { seen = true; false } else { true }
     };
     let mut control = NativeDecodeControl::new(maximum, &mut progress);
@@ -292,7 +294,7 @@ fn sqlite_snapshot_framework_flow_controlled_value_keeps_actual_owned_state() {
         let mut encode = semio_framework_value::NativeEncodeControl::new(16 << 20, &mut yes);
         let value = <FlowHostSnapshot as ToValue>::to_value_controlled(&expected, &mut encode).unwrap().guard_decoded();
         let mut yes = |_| true;
-        let mut decode = semio_framework_value::NativeDecodeControl::new(16 << 20, &mut yes);
+        let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 << 20, &mut yes);
         let actual = Owned::new(<FlowHostSnapshot as FromValue>::from_value_controlled(value.get(), &mut decode).unwrap());
         assert_full(&actual, &expected);
     }
@@ -308,7 +310,7 @@ fn sqlite_snapshot_framework_flow_controlled_value_keeps_actual_owned_state() {
     assert_eq!(tree.get().to_value_controlled(&mut encode).err().unwrap().kind, semio_framework_value::ValueRefusalKind::DepthLimit);
     let value = tree.get().to_value().guard_decoded();
     let mut yes = |_| true;
-    let mut decode = semio_framework_value::NativeDecodeControl::new(16 << 20, &mut yes);
+    let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 << 20, &mut yes);
     assert_eq!(neural::Tree::from_value_controlled(value.get(), &mut decode).err().unwrap().kind, semio_framework_value::ValueRefusalKind::DepthLimit);
 
 }

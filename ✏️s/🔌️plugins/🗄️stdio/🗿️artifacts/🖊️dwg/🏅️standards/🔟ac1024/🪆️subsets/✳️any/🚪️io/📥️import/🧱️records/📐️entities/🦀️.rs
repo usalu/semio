@@ -42,7 +42,6 @@ pub enum DwgObjectLayout {
     R2013,
 }
 impl DwgObjectLayout {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn of(version: &str) -> Result<Self, String> {
         match version {
             "AC1018" => Ok(Self::R2004),
@@ -66,7 +65,6 @@ pub struct DwgObjectRecordFrame<'a> {
     pub end_bit: usize,
 }
 impl<'a> DwgObjectRecordFrame<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn open(layout: DwgObjectLayout, object_data: &'a [u8], handle: u64, address: usize) -> Result<Self, String> {
         let frame = object_data.get(address..).ok_or_else(|| format!("object {handle:#x} address {address:#x} is out of bounds"))?;
         let mut sizer = DwgBitReader::new(frame);
@@ -104,7 +102,6 @@ impl<'a> DwgObjectRecordFrame<'a> {
     }
 
     /// 📝️ A text field: UTF-16 from the string stream (R2007+) or a code-page string inline (R2004).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn text(&mut self) -> Result<String, String> {
         match self.strings.as_mut() {
             Some(strings) => strings.read_tu(),
@@ -113,7 +110,6 @@ impl<'a> DwgObjectRecordFrame<'a> {
     }
 
     /// ⏭️ Steps over extended entity data by its declared record sizes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn skip_extended_data(&mut self) -> Result<(), String> {
         loop {
             let size = self.data.read_bs()? as usize;
@@ -126,7 +122,6 @@ impl<'a> DwgObjectRecordFrame<'a> {
     }
 
     /// 🧾️ Closes the main stream: every entity field was consumed exactly up to the string stream.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn finish_main(&self, class_name: &str) -> Result<(), String> {
         if self.data.bit_position() != self.main_end_bit {
             return Err(format!("{class_name} {:#x} main stream ends at bit {} instead of {}", self.handle, self.data.bit_position(), self.main_end_bit));

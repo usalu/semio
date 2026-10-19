@@ -67,4 +67,32 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
             composition,
         }
     }
+
+    /// 🔢️ Sorted by `(slot, child_id)`: the map's iteration order is not stable, and a
+    /// persisted child list that reshuffles between reads would make every save look like a
+    /// change to anything diffing it.
+    pub async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+
+        let mut entries: Vec<protocol::ChildPackEntry> = Vec::with_capacity(self.children.len());
+        for (key, entry) in self.children.keyed_entries() {
+            let envelope_pack = entry.member.envelope_pack_bytes().await.map_err(|error| error.into_fault())?;
+            let owner = self.children.path_of(key).map(|path| path.owner_text()).unwrap_or_default();
+            entries.push(protocol::ChildPackEntry { slot: entry.owner.slot.clone(), child_id: entry.owner.child_id.clone(), dialect: entry.reference.dialect.to_coordinate(), envelope_pack, owner });
+        }
+        entries.sort_by(|left, right| (&left.owner, &left.slot, &left.child_id).cmp(&(&right.owner, &right.slot, &right.child_id)));
+        Ok(entries)
+    }
+
+    pub async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, semio_framework::Fault> {
+
+        let mut entries: Vec<protocol::ChildHeadPackEntry> = Vec::with_capacity(self.children.len());
+        for (key, entry) in self.children.keyed_entries() {
+            let head_pack = entry.member.document_pack_bytes().await.map_err(|error| error.into_fault())?;
+            let owner = self.children.path_of(key).map(|path| path.owner_text()).unwrap_or_default();
+            entries.push(protocol::ChildHeadPackEntry { slot: entry.owner.slot.clone(), child_id: entry.owner.child_id.clone(), dialect: entry.reference.dialect.to_coordinate(), head_pack, owner });
+        }
+        entries.sort_by(|left, right| (&left.owner, &left.slot, &left.child_id).cmp(&(&right.owner, &right.slot, &right.child_id)));
+        Ok(entries)
+    }
 }

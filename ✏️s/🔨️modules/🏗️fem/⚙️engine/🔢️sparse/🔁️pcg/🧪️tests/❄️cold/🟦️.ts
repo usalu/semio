@@ -5,6 +5,7 @@ import Ajv from "ajv/dist/2020";
 import { lusolve } from "mathjs";
 import corpus from "../🧫️fixtures/❄️cold/🔣️.json";
 import schema from "../🧫️fixtures/❄️cold/🧬️schema.json";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 function arithmetic(sample: typeof corpus.cases[number]) {
   const x = [...sample.initial], n = x.length;
@@ -51,7 +52,7 @@ export function verifyNumericalExecutionOracle(): void {
   console.log(`[DEBUG] ${corpus.cases.length} neutral PCG cases retain convergence, iteration-limit, curvature and scaling semantics; converged outputs match mathjs LU`);
 }
 
-function source(relative: string): string { return readFileSync(new URL(relative, import.meta.url), "utf8"); }
+function source(relative: string): string { return readModuleTreeSource(new URL(relative, import.meta.url)); }
 function body(text: string, name: string): string {
   const start = text.indexOf(`pub fn ${name}(`); assert(start >= 0, name);
   const open = text.indexOf("{", start); let depth = 1, cursor = open + 1;

@@ -51,33 +51,33 @@ pub mod play_snapshot;
                         }
                         #[path = "."]
                         pub mod replace_part_2d_geometry {
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::*;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::diff;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::inverse;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::*;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::diff;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::inverse;
                         }
                         #[path = "."]
                         pub mod edit_part_2d_text {
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::*;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::diff;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::inverse;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::*;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::diff;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::inverse;
                         }
                         #[path = "."]
                         pub mod change_part_2d_icon {
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::*;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::diff;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::inverse;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::*;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::diff;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::inverse;
                         }
                         #[path = "."]
                         pub mod change_part_2d_hidden {
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::*;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::diff;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::inverse;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::*;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::diff;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::inverse;
                         }
                         #[path = "."]
                         pub mod change_part_2d_locked {
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::*;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::diff;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::inverse;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::*;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::diff;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::inverse;
                         }
                         #[path = "."]
                         pub mod move_part_3d {

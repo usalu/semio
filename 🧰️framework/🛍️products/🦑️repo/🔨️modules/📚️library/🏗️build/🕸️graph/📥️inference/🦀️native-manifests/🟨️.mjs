@@ -89,7 +89,7 @@ export function readToml(path) {
     const source=bytes.toString("utf8");
     try{return tomlParsing.parse(source);}catch(cause){
       const integer=value=>Number.isInteger(value)&&value>=0?value:null,tomlObservation={version:1,path:resolve(path),namespace:tomlParsing.namespace,sha256:createHash("sha256").update(bytes).digest("hex"),bytes:bytes.byteLength,line:integer(cause?.line),column:integer(cause?.col),position:integer(cause?.pos),sourceLine:(source.split(/\r?\n/u)[integer(cause?.line)??0]??"").slice(0,512)};
-      const error=Object.assign(new Error("Observed TOML parse refused: "+JSON.stringify(tomlObservation),{cause}),{code:"BUILD_SOURCE_UNPARSEABLE",source:tomlObservation.path,sha256:tomlObservation.sha256});error.tomlObservation=tomlObservation;console.error("[DEBUG] "+error.message);throw error;
+      const error=Object.assign(new Error("Observed TOML parse refused: "+JSON.stringify(tomlObservation),{cause}),{code:"BUILD_SOURCE_UNPARSEABLE",source:tomlObservation.path,sha256:tomlObservation.sha256});error.tomlObservation=tomlObservation;throw error;
     }
   });
 }

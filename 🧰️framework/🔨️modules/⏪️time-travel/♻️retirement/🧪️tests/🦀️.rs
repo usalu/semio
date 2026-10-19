@@ -7,8 +7,8 @@ fn original_discard_demand(owner:&crate::TimeTravelDiscardCursor,session:&TimeTr
 fn text(value:&str,capacity:usize)->String{let mut original=String::with_capacity(capacity);original.push_str(value);original}
 fn input(capacity:usize)->protocol::InputReplacement{let mut payload=Vec::with_capacity(capacity);payload.extend_from_slice(&[0,34,255]);protocol::InputReplacement::Input{schema:text("native.v1",capacity),payload}}
 fn target(capacity:usize)->TimeTravelTarget{TimeTravelTarget{mutation:protocol::MutationId(text("node.α\0😀",capacity)),position:0}}
-fn drafts(capacity:usize,original_grant:RetainedCloneGrant)->semio_framework_value::list::PagedList<TimeTravelDraft,{usize::MAX}>{
- let mut owner=semio_framework_value::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(owner.reserve_exact_capacity_one(8192,original_grant.maximum_capacity_bytes).unwrap().progressed)}}owner
+fn drafts(capacity:usize,original_grant:RetainedCloneGrant)->semio_framework_value_persistent::list::PagedList<TimeTravelDraft,{usize::MAX}>{
+ let mut owner=semio_framework_value_persistent::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(owner.reserve_exact_capacity_one(8192,original_grant.maximum_capacity_bytes).unwrap().progressed)}}owner
 }
 #[test]
 fn time_travel_session_retirement_original_drafts_reports_and_empty_capacities(){
@@ -63,7 +63,7 @@ fn close_event_original<T:semio_framework_value::retirement::RetireOwned>(origin
 #[test]
 fn time_travel_session_paged_accepted_original_growth_and_retirement(){
  let original_grant=original_native_grant();
- use semio_framework_value::list::PagedListEditCursor;
+ use semio_framework_value_persistent::list::PagedListEditCursor;
  for body in [1,17,4096]{
   let(mut session,heap)=observe_heap_allocations_on_this_thread(TimeTravelSession::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));session.stage=TimeTravelStage::Reviewing;let mut held=0;let mut largest=0;
   for index in 0..1025u32{

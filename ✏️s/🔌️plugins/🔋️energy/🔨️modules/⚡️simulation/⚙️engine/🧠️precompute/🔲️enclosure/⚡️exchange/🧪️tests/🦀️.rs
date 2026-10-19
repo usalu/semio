@@ -3,7 +3,7 @@ use super::*;
 /// 🧪️ Independent portable radiosity coefficients include exact blackbodies and enclosures beyond forty-eight faces.
 #[test]
 fn enclosure_exchange_matches_portable_radiosity_without_emissivity_or_size_floors(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("portable exchange corpus");
+ let corpus:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../🔲️enclosure/⚡️exchange/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable exchange corpus");
  let numbers=|value:&serde_json::Value|value.as_array().expect("numeric span").iter().map(|v|v.as_f64().expect("finite fixture scalar")).collect::<Vec<_>>();
  let mut total_turns=0;
  for case in corpus["cases"].as_array().expect("cases"){

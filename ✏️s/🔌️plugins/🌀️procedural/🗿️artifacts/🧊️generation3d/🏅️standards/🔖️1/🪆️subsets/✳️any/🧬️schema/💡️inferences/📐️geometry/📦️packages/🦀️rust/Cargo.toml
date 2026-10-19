@@ -23,6 +23,7 @@ semio-framework-async = { path = "../../../../../../../../../../../../../../🧰
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-analysis-check = { workspace = true }
 semio-s-artifact-procedural-3d-analysis-measure = { workspace = true }
 semio-s-artifact-procedural-3d-brep-boolean = { workspace = true }

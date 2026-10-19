@@ -28,7 +28,6 @@ impl SurfaceShadow {
     /// 🌱️ A reconciler for `surface` with no retained state yet — the next [`Self::reconcile`] call
     /// necessarily emits a full `SetRoot` plus one `Upsert` per node, exactly as [`Self::mark_rejected`]
     /// arranges for an existing reconciler to do again.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(surface: ui_contract::SurfaceId) -> Self {
         Self {
             surface,
@@ -57,7 +56,6 @@ impl SurfaceShadow {
     /// `tree` is structurally and semantically identical to what was last presented, so an idle surface
     /// produces no wire traffic at all. `base_revision` is the revision the receiver is assumed to be
     /// at; `revision` is one past it — this reconciler never emits a gap or a repeat.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(any(test, feature = "testkit"))]
     pub fn reconcile(&mut self, tree: &ComponentTree) -> Option<ui_contract::UiPatch> {
         let mut oracle = SurfaceReconcileOracle::from_current(self);
@@ -70,7 +68,6 @@ impl SurfaceShadow {
     /// receives instead of a patch stream. `root` falls back to [`ui_contract::UiNodeId::default`] when
     /// nothing has ever been reconciled yet; `nodes` is then empty too, so that sentinel never resolves
     /// to a real record.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(any(test, feature = "testkit"))]
     pub fn snapshot(&self) -> ui_contract::UiSnapshot {
         let mut nodes = ui_contract::UiSnapshotNodes::default();
@@ -146,7 +143,6 @@ impl SurfaceShadow {
     /// [`ui_contract::UiNodeIdAllocator`] is deliberately left untouched, so the re-sent nodes get IDs
     /// that continue monotonically rather than reusing any id a stale renderer reference might still
     /// name.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(any(test, feature = "testkit"))]
     pub fn mark_rejected(&mut self) {
         if let Some(document) = self.document.as_mut() { while !document.close_read_step_with_grant(1, 4096).unwrap().complete {} }

@@ -1,5 +1,6 @@
 //! 🔤️ Genuine SFNT byte sources admit Unicode mapping and metrics under bounded record turns.
-use semio_framework_value::{retirement::{RetireOwned,RetirementCursor},list::PagedList};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Copy,Default,Debug)]
 pub struct FontTable{pub offset:usize,pub length:usize}
 #[derive(Clone,Copy,Debug)]

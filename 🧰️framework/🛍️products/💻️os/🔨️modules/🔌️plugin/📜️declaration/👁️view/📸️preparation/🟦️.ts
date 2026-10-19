@@ -1,4 +1,4 @@
-import type { RetainedCloneGrant, RetainedCloneProgress } from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts";
+import type { RetainedCloneGrant, RetainedCloneProgress } from "@semio-tech/value-ts/retained-clone/contract";
 
 /** 🧾️ Readiness and actual retained effects from an original mounted preparation callback. */
 export interface MountedSnapshotReadPreparation { readonly ready: boolean; readonly progress: RetainedCloneProgress }

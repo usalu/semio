@@ -1,4 +1,4 @@
-//! Inverse for `change-storey-permanent-gk-n`.
+//! ↩️ Inverse for `change-storey-permanent-gk-n`.
 use crate::change_storey_permanent_gk_n::ChangeStoreyPermanentGkN;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

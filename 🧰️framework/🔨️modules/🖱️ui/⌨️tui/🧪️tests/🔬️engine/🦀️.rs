@@ -297,22 +297,22 @@ fn dragging_a_tab_onto_another_reports_a_move_on_release() {
     let (_, to_right, _, _) = chip_geometry(&tui, w1, 2);
     assert_eq!(tui.dispatch(&down(from_left + 2, y)), vec![(w1, WidgetSignal::WindowTabActivated(0))]);
     let dragging = tui.dispatch(&mouse(MouseKind::Drag(MouseButton::Left), to_right - 1, y));
-    assert!(dragging.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { source, target, placement: crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), tab_index: Some(2) } if source == "w1" && target == "w3")));
+    assert!(dragging.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { source, target, placement: semio_framework_ui_tui_core::docking::DockPlacement::Corner(semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft), tab_index: Some(2) } if source == "w1" && target == "w3")));
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(w1).content else { panic!("window") };
     assert_eq!(state.drop_target, None, "the actual insertion chip is previewed independently");
     assert!(tui.docking_preview().is_some());
     let signals = tui.dispatch(&mouse(MouseKind::Up(MouseButton::Left), to_right - 1, y));
-    assert!(signals.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDocked { source, target, placement: crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), tab_index: Some(2) } if source == "w1" && target == "w3")));
+    assert!(signals.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDocked { source, target, placement: semio_framework_ui_tui_core::docking::DockPlacement::Corner(semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft), tab_index: Some(2) } if source == "w1" && target == "w3")));
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(w1).content else { panic!("window") };
     assert_eq!(state.drop_target, None);
-    assert!(crate::tui::layout::dock_window(&mut layout, "w1", "w3", crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), Some(2)));
+    assert!(semio_framework_ui_tui_frame::layout::dock_window(&mut layout, "w1", "w3", semio_framework_ui_tui_core::docking::DockPlacement::Corner(semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft), Some(2)));
     let stack = semio_framework_ui_tui_frame::layout::stack_hosting(&layout, "w1").unwrap();
     assert_eq!(stack.children.iter().map(|c| c.window_kind_id.as_str()).collect::<Vec<_>>(), vec!["w3", "w4", "w1"]);
 }
 
 #[test]
 fn dragging_a_tab_between_groups_previews_and_commits_a_docking_signal() {
-    use crate::tui::layout::DockPlacement;
+    use semio_framework_ui_tui_core::docking::DockPlacement;
     let (mut tui, mut built, mut layout, windows) = two_stacks(false);
     let source = windows[0];
     let (left, _, _, y) = chip_geometry(&tui, source, 0);
@@ -328,11 +328,11 @@ fn dragging_a_tab_between_groups_previews_and_commits_a_docking_signal() {
     let signals = tui.dispatch(&mouse(MouseKind::Up(MouseButton::Left), pos.x, pos.y));
     assert!(signals.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDocked { source, target, placement: DockPlacement::Right, .. } if source == "w1" && target == "w2")));
     assert!(tui.docking_preview().is_none());
-    assert!(crate::tui::layout::dock_window(&mut layout, "w1", "w2", DockPlacement::Right, None));
+    assert!(semio_framework_ui_tui_frame::layout::dock_window(&mut layout, "w1", "w2", DockPlacement::Right, None));
     built.remount(&mut tui.scene, &layout);
     tui.render();
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(source).content else { panic!("window") };
-    assert_eq!(crate::tui::chrome::window_tab_rect(state, tui.scene.rect(source), state.active_stack_tab), Some(preview));
+    assert_eq!(semio_framework_ui_tui_frame::chrome::window_tab_rect(state, tui.scene.rect(source), state.active_stack_tab), Some(preview));
     for yy in preview.y..preview.y + preview.height {
         for xx in preview.x..preview.x + preview.width {
             assert_eq!(ghost.get(xx, yy).unwrap().ch, tui.frame().get(xx, yy).unwrap().ch);
@@ -342,8 +342,9 @@ fn dragging_a_tab_between_groups_previews_and_commits_a_docking_signal() {
 
 #[test]
 fn docking_preview_geometry_matches_the_independent_taffy_solver() {
-    use crate::tui::geometry::Rect;
-    use crate::tui::layout::{dock_window, DockPlacement};
+    use semio_framework_ui_tui_core::geometry::Rect;
+    use semio_framework_ui_tui_frame::layout::{dock_window};
+    use semio_framework_ui_tui_core::docking::{DockPlacement};
     use taffy::prelude::{AvailableSpace, FlexDirection, Style, TaffyTree};
     for (width, height) in [(80, 40), (81, 41), (82, 42), (23, 17)] {
         for placement in [DockPlacement::Left, DockPlacement::Right, DockPlacement::Top, DockPlacement::Bottom] {
@@ -372,8 +373,8 @@ fn docking_preview_geometry_matches_the_independent_taffy_solver() {
 
 #[test]
 fn corner_tab_preview_geometry_matches_the_independent_taffy_solver() {
-    use crate::tui::geometry::Rect;
-    use crate::tui::layout::{DockPlacement, WindowStackCorner::*};
+    use semio_framework_ui_tui_core::geometry::Rect;
+    use semio_framework_ui_tui_core::docking::{DockPlacement, WindowStackCorner::*};
     use taffy::prelude::{AvailableSpace, Style, TaffyTree};
     use taffy::style::{Dimension, LengthPercentageAuto, Position};
     for (width, height) in [(80, 40), (81, 41), (23, 17), (3, 3)] {
@@ -531,7 +532,7 @@ fn the_engine_tick_animates_progress_widgets_and_running_tabs() {
     let (mut tui, _built, _layout, windows) = two_stacks(false);
     let w1 = windows[0];
     if let Some(ChromeState::Window(state)) = tui.scene.node_mut(w1).chrome() {
-        state.stack_tabs[0] = WindowStackTabState::new("alpha", semio_framework_ui_tui_frame::layout::WindowStackCorner::TopLeft).with_status(Some(Status::Running));
+        state.stack_tabs[0] = WindowStackTabState::new("alpha", semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft).with_status(Some(Status::Running));
     }
     tui.tick(0);
     tui.render();

@@ -28,7 +28,6 @@ pub enum BooleanPhase {
 
 impl BooleanPhase {
     /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn tag(self) -> &'static str {
         match self {
             Self::Imprint => "imprint",
@@ -160,7 +159,6 @@ impl BooleanJob {
     /// evaluator serves an unchanged input node from cache, the next evaluation of the same graph
     /// answered `missing handle: <digest>` for a node whose own parameters never moved
     /// (`📓️brep-boolean-input-lifetime-2026-09-15.md`).
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn new(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Self, KernelError> {
         let pre_existing_solids: HashSet<SolidId> = body.solids.iter().map(|(id, _)| id).collect();
         let protected_edges: HashSet<EdgeId> = body.edges.iter().map(|(id, _)| id).collect();
@@ -174,10 +172,6 @@ impl BooleanJob {
         let coincident_a: HashMap<FaceId, bool> = coincident.iter().map(|&(fa, _, aligned)| (fa, aligned)).collect();
         let faces_b: Vec<FaceId> = faces_b_all.iter().copied().filter(|f| !coincident_b.contains(f)).collect();
         let faces_a: Vec<FaceId> = faces_a_all;
-        // 🔗 Imprint endpoints are welded against each other AND against both operands' existing
-        // boundary vertices: an intersection segment that ends exactly on a pole (a plane through a
-        // sphere's centre ends its arc there) must reuse that pole's vertex, otherwise the chain's
-        // end is a fresh id that `splice_boundary_vertex` cannot find on the ring.
         let mut weld: Vec<(Pnt3, VertexId)> = Vec::new();
         for &face in faces_a.iter().chain(faces_b_all.iter()) {
             for coedge_id in body.face_coedges(face) {
@@ -223,7 +217,6 @@ impl BooleanJob {
     }
 
     /// 📈 This job's progress right now — safe to read between steps and after termination.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn progress(&self) -> BooleanProgress {
         BooleanProgress {
             units_done: self.units_done,
@@ -237,7 +230,6 @@ impl BooleanJob {
     /// 🛑 Retires this job at the next observable boundary. A completed job is never cancelled —
     /// supersession may only retire work still in flight, never destroy a result already paid for
     /// (the same law `TessellationJob::cancel` states).
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn cancel(&mut self) {
         if matches!(self.phase, BooleanPhase::Complete) {
             return;
@@ -250,13 +242,11 @@ impl BooleanJob {
     }
 
     /// ✅ True once the job reached a terminal phase.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn is_terminal(&self) -> bool {
         matches!(self.phase, BooleanPhase::Complete | BooleanPhase::Cancelled)
     }
 
     /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`boolean_solid`] is.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn run_to_completion(mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
         loop {
             match self.step_unbudgeted(body, rec, usize::MAX)? {
@@ -269,7 +259,6 @@ impl BooleanJob {
 
     /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
     /// performs no work.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub(crate) fn step_unbudgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
         match self.phase {
             BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
@@ -358,11 +347,6 @@ impl BooleanJob {
                 }
                 BooleanPhase::ClassifyA => {
                     if self.classify_a == 0 {
-                        // 🧱 Imprinting can carve a piece of A that coincides exactly with a piece of B
-                        // (the stock's top face over a flush notch, its side faces beside it). Such a
-                        // pair is one boundary, not two: A's piece follows the whole-face coincident
-                        // rule below and B's piece is dropped, or both survived as duplicate topology
-                        // (edges used by three coedges) and the stitch failed validation.
                         for (fa, fb, aligned) in find_coincident_face_pairs(body, &self.pieces_a, &self.pieces_b, self.tol) {
                             self.coincident_a.insert(fa, aligned);
                             self.coincident_b.insert(fb);

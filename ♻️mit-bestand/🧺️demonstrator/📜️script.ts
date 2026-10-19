@@ -4,19 +4,19 @@ import { resolveTestLevel } from "../../🧰️framework/🔨️modules/🏃️p
 /** 🧭️ `@semio-tech/mit-bestand-demonstrator` task router: `bun ./📜️script.ts <test> [args…]`. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runVitest } from "../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { demonstratorRuntimeBuildVariants } from "./🔨️modules/🧩️runtime/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    const { runVitest } = await import("../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts");
     await runVitest(this.root, rest, "./🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
 class RuntimeCatalogTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
-    if(args.length)throw Error("runtime-catalog-test accepts no arguments");
+    if(args.length)throw new Error("runtime-catalog-test accepts no arguments");
     const {runOwnedCommand}=await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     await runOwnedCommand(process.execPath,["test",join(this.root,"🔨️modules/🧩️runtime/🧪️tests/🟦️.ts")],this.repoRoot,"demonstrator-runtime-catalog",120000,{signal:this.invocation.control.signal});
   }

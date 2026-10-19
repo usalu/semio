@@ -67,7 +67,7 @@ pub(super) fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeC
                 3 => {
                     trns_out = Some(PngTransparency::Indexed { alpha: control.copy_bytes(chunk)? });
                 }
-                _ => {} // spec: tRNS shall not appear for 4/6 (already carry alpha) — ignore rather than fail
+                _ => {}
             }
 
         } else if ty == *b"gAMA" {
@@ -164,7 +164,7 @@ pub(super) fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeC
             if chunk[pos + 1] != 0 {
                 return Err("png iTXt: compression method must be zero".into());
             }
-            pos += 2; // compressed flag + compression method
+            pos += 2;
             let nul2 = chunk[pos..].iter().position(|&b| b == 0).ok_or("png iTXt: missing NUL after language tag")?;
             let language_tag_bytes = &chunk[pos..pos + nul2];
             if !language_tag_bytes.is_ascii() {
@@ -194,8 +194,6 @@ pub(super) fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeC
         } else if ty[0].is_ascii_uppercase() {
             return Err(format!("png: unsupported critical chunk {}", String::from_utf8_lossy(&ty)).into());
         } else {
-            // 🗃️ Ancillary chunk the codec doesn't specifically model — typed raw-retention,
-            // verbatim, in position (the recipe's "nothing real on disk silently dropped" rule).
             ancillary_chunks.push(PngAncillaryChunk { kind: ty, data: control.copy_bytes(chunk)?, after_raster: seen_idat });
         }
     }

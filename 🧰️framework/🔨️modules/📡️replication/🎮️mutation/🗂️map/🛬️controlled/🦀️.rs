@@ -1,6 +1,7 @@
 //! 🛬️ Shared map codecs retain typed children under explicit allocation, progress and cancellation.
 use super::*;
-use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 pub(super) fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvalidValue, message) }
 pub(super) fn presence(value: Option<&str>) -> Result<MapPresence, ValueError> {

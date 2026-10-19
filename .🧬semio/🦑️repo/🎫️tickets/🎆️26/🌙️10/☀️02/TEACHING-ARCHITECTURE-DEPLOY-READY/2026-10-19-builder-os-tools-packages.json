@@ -1,0 +1,652 @@
+{
+  "version": 1,
+  "source": "authenticated apt metadata projected before download",
+  "installedPhases": [
+    {
+      "requested": [
+        "git=1:2.39.5-0+deb12u3",
+        "build-essential=12.9",
+        "curl=7.88.1-10+deb12u15"
+      ],
+      "selected": [
+        "perl-base=5.36.0-7+deb12u4",
+        "perl-modules-5.36=5.36.0-7+deb12u4",
+        "libgdbm6=1.23-3",
+        "libgdbm-compat4=1.23-3",
+        "libperl5.36=5.36.0-7+deb12u4",
+        "perl=5.36.0-7+deb12u4",
+        "bzip2=1.0.8-5+b1",
+        "xz-utils=5.4.1-1+deb12u2",
+        "libc-dev-bin=2.36-9+deb12u14",
+        "linux-libc-dev=6.1.190-1",
+        "libcrypt-dev=1:4.4.33-2",
+        "libkrb5support0=1.20.1-2+deb12u5",
+        "libk5crypto3=1.20.1-2+deb12u5",
+        "libkeyutils1=1.6.3-2",
+        "libkrb5-3=1.20.1-2+deb12u5",
+        "libgssapi-krb5-2=1.20.1-2+deb12u5",
+        "libtirpc-common=1.3.3+ds-1",
+        "libtirpc3=1.3.3+ds-1",
+        "libnsl2=1.3.0-2",
+        "libtirpc-dev=1.3.3+ds-1",
+        "libnsl-dev=1.3.0-2",
+        "rpcsvc-proto=1.4.3-1",
+        "libc6-dev=2.36-9+deb12u14",
+        "libstdc++-12-dev=12.2.0-14+deb12u1",
+        "g++-12=12.2.0-14+deb12u1",
+        "g++=4:12.2.0-3",
+        "make=4.3-4.1",
+        "libdpkg-perl=1.21.23",
+        "patch=2.7.6-7",
+        "dpkg-dev=1.21.23",
+        "build-essential=12.9",
+        "libbrotli1=1.0.9-2+b6",
+        "libsasl2-modules-db=2.1.28+dfsg-10",
+        "libsasl2-2=2.1.28+dfsg-10",
+        "libldap-2.5-0=2.5.13+dfsg-5",
+        "libnghttp2-14=1.52.0-1+deb12u3",
+        "libpsl5=0.21.2-1",
+        "librtmp1=2.4+20151223.gitfa8646d.1-2+b2",
+        "libssh2-1=1.10.0-3+deb12u1",
+        "libcurl4=7.88.1-10+deb12u15",
+        "curl=7.88.1-10+deb12u15",
+        "libcurl3-gnutls=7.88.1-10+deb12u15",
+        "libexpat1=2.5.0-1+deb12u4",
+        "liberror-perl=0.17029-2",
+        "git-man=1:2.39.5-0+deb12u3",
+        "git=1:2.39.5-0+deb12u3"
+      ],
+      "records": [
+        {
+          "package": "perl-base",
+          "version": "5.36.0-7+deb12u4",
+          "architecture": "amd64",
+          "archiveBytes": 1609596,
+          "installedBytes": 7826432,
+          "sha256": "d7d1943aec9597629bf73075efcc5ef6dc9bda96d78e80d843156ecd448478b8",
+          "filename": "pool/updates/main/p/perl/perl-base_5.36.0-7+deb12u4_amd64.deb"
+        },
+        {
+          "package": "perl-modules-5.36",
+          "version": "5.36.0-7+deb12u4",
+          "architecture": "all",
+          "archiveBytes": 2817356,
+          "installedBytes": 18248704,
+          "sha256": "3ed38ffa8320e9bf7597cefa01b6a6ace4a08ccc77cdfd15ef7d8b711dea7166",
+          "filename": "pool/updates/main/p/perl/perl-modules-5.36_5.36.0-7+deb12u4_all.deb"
+        },
+        {
+          "package": "libgdbm6",
+          "version": "1.23-3",
+          "architecture": "amd64",
+          "archiveBytes": 72248,
+          "installedBytes": 132096,
+          "sha256": "95fe4a1336532450e67bd067892f46eaa484139919ea8d067a9ffcbf5a4bf883",
+          "filename": "pool/main/g/gdbm/libgdbm6_1.23-3_amd64.deb"
+        },
+        {
+          "package": "libgdbm-compat4",
+          "version": "1.23-3",
+          "architecture": "amd64",
+          "archiveBytes": 48156,
+          "installedBytes": 71680,
+          "sha256": "4af36a590b68d415a78d9238b932b6a4579f515ec8a8016597498acff5b515a4",
+          "filename": "pool/main/g/gdbm/libgdbm-compat4_1.23-3_amd64.deb"
+        },
+        {
+          "package": "libperl5.36",
+          "version": "5.36.0-7+deb12u4",
+          "architecture": "amd64",
+          "archiveBytes": 4207640,
+          "installedBytes": 29568000,
+          "sha256": "ed8480b621ad574c25aea30d36194d0133ea74093756ecbe3dff157d0510ef7f",
+          "filename": "pool/updates/main/p/perl/libperl5.36_5.36.0-7+deb12u4_amd64.deb"
+        },
+        {
+          "package": "perl",
+          "version": "5.36.0-7+deb12u4",
+          "architecture": "amd64",
+          "archiveBytes": 239392,
+          "installedBytes": 686080,
+          "sha256": "67e7a883c5d835939638f89a750799282df243ac1446281aa92ef9e19300940b",
+          "filename": "pool/updates/main/p/perl/perl_5.36.0-7+deb12u4_amd64.deb"
+        },
+        {
+          "package": "bzip2",
+          "version": "1.0.8-5+b1",
+          "architecture": "amd64",
+          "archiveBytes": 49804,
+          "installedBytes": 123904,
+          "sha256": "438871b3f5c5c7a357a9840951dab9dab8db7eb1ff760a563226fafa111b99e5",
+          "filename": "pool/main/b/bzip2/bzip2_1.0.8-5+b1_amd64.deb"
+        },
+        {
+          "package": "xz-utils",
+          "version": "5.4.1-1+deb12u2",
+          "architecture": "amd64",
+          "archiveBytes": 471448,
+          "installedBytes": 1255424,
+          "sha256": "f99fc3fe4b4e5baecf5fd8b53853a82e1e71cb5ec187b36b0ddcf227a8961c8f",
+          "filename": "pool/updates/main/x/xz-utils/xz-utils_5.4.1-1+deb12u2_amd64.deb"
+        },
+        {
+          "package": "libc-dev-bin",
+          "version": "2.36-9+deb12u14",
+          "architecture": "amd64",
+          "archiveBytes": 48056,
+          "installedBytes": 96256,
+          "sha256": "f61d923b703401023bec2ac3d9d1c9ad7341930fbe11736f7f5ef64b489d03c4",
+          "filename": "pool/main/g/glibc/libc-dev-bin_2.36-9+deb12u14_amd64.deb"
+        },
+        {
+          "package": "linux-libc-dev",
+          "version": "6.1.190-1",
+          "architecture": "amd64",
+          "archiveBytes": 2408528,
+          "installedBytes": 7313408,
+          "sha256": "a88a129991cbb7db1715bed232c9808b91ac0fb7149660558b9df0d074348f05",
+          "filename": "pool/updates/main/l/linux/linux-libc-dev_6.1.190-1_amd64.deb"
+        },
+        {
+          "package": "libcrypt-dev",
+          "version": "1:4.4.33-2",
+          "architecture": "amd64",
+          "archiveBytes": 118144,
+          "installedBytes": 349184,
+          "sha256": "81ccd29130f75a9e3adabc80e61921abff42f76761e1f792fa2d1bb69af7f52f",
+          "filename": "pool/main/libx/libxcrypt/libcrypt-dev_4.4.33-2_amd64.deb"
+        },
+        {
+          "package": "libkrb5support0",
+          "version": "1.20.1-2+deb12u5",
+          "architecture": "amd64",
+          "archiveBytes": 33212,
+          "installedBytes": 137216,
+          "sha256": "8b9c05f2d8d461a10d657b118f572af5bf8fd6c8f93dcef81e852c5ab0f428ab",
+          "filename": "pool/main/k/krb5/libkrb5support0_1.20.1-2+deb12u5_amd64.deb"
+        },
+        {
+          "package": "libk5crypto3",
+          "version": "1.20.1-2+deb12u5",
+          "architecture": "amd64",
+          "archiveBytes": 79712,
+          "installedBytes": 267264,
+          "sha256": "7b6e47d15c5c9cdcd456137533d8308aeba608a54cec73b28bd59bfc4b54cf06",
+          "filename": "pool/main/k/krb5/libk5crypto3_1.20.1-2+deb12u5_amd64.deb"
+        },
+        {
+          "package": "libkeyutils1",
+          "version": "1.6.3-2",
+          "architecture": "amd64",
+          "archiveBytes": 8808,
+          "installedBytes": 40960,
+          "sha256": "cfac89e6a7a54ff3c6a4f843310e25efeddaa771baeae470bd98bd588c373563",
+          "filename": "pool/main/k/keyutils/libkeyutils1_1.6.3-2_amd64.deb"
+        },
+        {
+          "package": "libkrb5-3",
+          "version": "1.20.1-2+deb12u5",
+          "architecture": "amd64",
+          "archiveBytes": 332280,
+          "installedBytes": 1102848,
+          "sha256": "c90801be09701af221b54dd502a59cb378b7284ff31e480738baca317d2f7653",
+          "filename": "pool/main/k/krb5/libkrb5-3_1.20.1-2+deb12u5_amd64.deb"
+        },
+        {
+          "package": "libgssapi-krb5-2",
+          "version": "1.20.1-2+deb12u5",
+          "architecture": "amd64",
+          "archiveBytes": 135168,
+          "installedBytes": 435200,
+          "sha256": "d8b87aea91b956b416c01a28c44ff6228315ae3b73de40acddac3dc5043607d2",
+          "filename": "pool/main/k/krb5/libgssapi-krb5-2_1.20.1-2+deb12u5_amd64.deb"
+        },
+        {
+          "package": "libtirpc-common",
+          "version": "1.3.3+ds-1",
+          "architecture": "all",
+          "archiveBytes": 14048,
+          "installedBytes": 35840,
+          "sha256": "3e3ef129b4bf61513144236e15e1b4ec57fa5ae3dc8a72137abdbefb7a63af85",
+          "filename": "pool/main/libt/libtirpc/libtirpc-common_1.3.3+ds-1_all.deb"
+        },
+        {
+          "package": "libtirpc3",
+          "version": "1.3.3+ds-1",
+          "architecture": "amd64",
+          "archiveBytes": 85192,
+          "installedBytes": 231424,
+          "sha256": "2a46d5a5e9486da11ffeff5740931740d6deae4f92cd6098df060dc5dff1e1c7",
+          "filename": "pool/main/libt/libtirpc/libtirpc3_1.3.3+ds-1_amd64.deb"
+        },
+        {
+          "package": "libnsl2",
+          "version": "1.3.0-2",
+          "architecture": "amd64",
+          "archiveBytes": 39480,
+          "installedBytes": 130048,
+          "sha256": "c0d83437fdb016cb289436f49f28a36be44b3e8f1f2498c7e3a095f709c0d6f8",
+          "filename": "pool/main/libn/libnsl/libnsl2_1.3.0-2_amd64.deb"
+        },
+        {
+          "package": "libtirpc-dev",
+          "version": "1.3.3+ds-1",
+          "architecture": "amd64",
+          "archiveBytes": 191428,
+          "installedBytes": 734208,
+          "sha256": "03326473eed54ffa27efae19aa5d6aeb402930968f869f318445513093691d55",
+          "filename": "pool/main/libt/libtirpc/libtirpc-dev_1.3.3+ds-1_amd64.deb"
+        },
+        {
+          "package": "libnsl-dev",
+          "version": "1.3.0-2",
+          "architecture": "amd64",
+          "archiveBytes": 66436,
+          "installedBytes": 353280,
+          "sha256": "bb81a188c119cd7fdebae723cbc95887b6c549b2fe4fb7e268a9c8846444da99",
+          "filename": "pool/main/libn/libnsl/libnsl-dev_1.3.0-2_amd64.deb"
+        },
+        {
+          "package": "rpcsvc-proto",
+          "version": "1.4.3-1",
+          "architecture": "amd64",
+          "archiveBytes": 63268,
+          "installedBytes": 251904,
+          "sha256": "32ac0692694f8a34cc90c895f4fc739680fb2ef0e2d4870a68833682bf1c81a3",
+          "filename": "pool/main/r/rpcsvc-proto/rpcsvc-proto_1.4.3-1_amd64.deb"
+        },
+        {
+          "package": "libc6-dev",
+          "version": "2.36-9+deb12u14",
+          "architecture": "amd64",
+          "archiveBytes": 1903668,
+          "installedBytes": 12262400,
+          "sha256": "0218fc2befcd784c1b0c6292c0a137ce89fad054efaa579ad083bee0f2c01aae",
+          "filename": "pool/main/g/glibc/libc6-dev_2.36-9+deb12u14_amd64.deb"
+        },
+        {
+          "package": "libstdc++-12-dev",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 2047292,
+          "installedBytes": 19912704,
+          "sha256": "d28def6c23630432b57cb38a4c2fd67a79d4e0484027386ca6e8d6005c3d7a73",
+          "filename": "pool/main/g/gcc-12/libstdc++-12-dev_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "g++-12",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 10694076,
+          "installedBytes": 37028864,
+          "sha256": "68b182badae4ace7d472f1393c559d3532a95a2d70817498b10bb481d2627251",
+          "filename": "pool/main/g/gcc-12/g++-12_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "g++",
+          "version": "4:12.2.0-3",
+          "architecture": "amd64",
+          "archiveBytes": 1356,
+          "installedBytes": 14336,
+          "sha256": "26c451a660728cf7c15548a281e17eef2f36fab28499371e83fc2d3accb499d7",
+          "filename": "pool/main/g/gcc-defaults/g++_12.2.0-3_amd64.deb"
+        },
+        {
+          "package": "make",
+          "version": "4.3-4.1",
+          "architecture": "amd64",
+          "archiveBytes": 395632,
+          "installedBytes": 1630208,
+          "sha256": "a1a83af8cbd854af887b72ad196b1f4af58387815e21ced1000253a116a46e2a",
+          "filename": "pool/main/m/make-dfsg/make_4.3-4.1_amd64.deb"
+        },
+        {
+          "package": "libdpkg-perl",
+          "version": "1.21.23",
+          "architecture": "all",
+          "archiveBytes": 603796,
+          "installedBytes": 2034688,
+          "sha256": "3f817fd9266ce2638c64b5df77da11f98f5df4f3301e1c04140be16790f72112",
+          "filename": "pool/main/d/dpkg/libdpkg-perl_1.21.23_all.deb"
+        },
+        {
+          "package": "patch",
+          "version": "2.7.6-7",
+          "architecture": "amd64",
+          "archiveBytes": 127848,
+          "installedBytes": 253952,
+          "sha256": "8c6d49b771530dbe26d7bd060582dc7d2b4eeb603a20789debc1ef4bbbc4ef67",
+          "filename": "pool/main/p/patch/patch_2.7.6-7_amd64.deb"
+        },
+        {
+          "package": "dpkg-dev",
+          "version": "1.21.23",
+          "architecture": "all",
+          "archiveBytes": 1354256,
+          "installedBytes": 1769472,
+          "sha256": "43547075395dbe9290e6a5f34e9ba93aa5dcf7dfc5698c3d30cc3c85e5f7e3de",
+          "filename": "pool/main/d/dpkg/dpkg-dev_1.21.23_all.deb"
+        },
+        {
+          "package": "build-essential",
+          "version": "12.9",
+          "architecture": "amd64",
+          "archiveBytes": 7704,
+          "installedBytes": 20480,
+          "sha256": "bbfd38de41898a06326f2a6ce4cc43e8e399f5566381231065b01d70499d5ba5",
+          "filename": "pool/main/b/build-essential/build-essential_12.9_amd64.deb"
+        },
+        {
+          "package": "libbrotli1",
+          "version": "1.0.9-2+b6",
+          "architecture": "amd64",
+          "archiveBytes": 275248,
+          "installedBytes": 801792,
+          "sha256": "563b4caec1aa5e876bd3355b36e7a38e1484baf5a293b48d1e8bd22db786e4d7",
+          "filename": "pool/main/b/brotli/libbrotli1_1.0.9-2+b6_amd64.deb"
+        },
+        {
+          "package": "libsasl2-modules-db",
+          "version": "2.1.28+dfsg-10",
+          "architecture": "amd64",
+          "archiveBytes": 20336,
+          "installedBytes": 78848,
+          "sha256": "3ac4fd6cbe3b3b06e68d24b931bf3eb9385b42f15604a37ed25310e948ca0ee6",
+          "filename": "pool/main/c/cyrus-sasl2/libsasl2-modules-db_2.1.28+dfsg-10_amd64.deb"
+        },
+        {
+          "package": "libsasl2-2",
+          "version": "2.1.28+dfsg-10",
+          "architecture": "amd64",
+          "archiveBytes": 59712,
+          "installedBytes": 171008,
+          "sha256": "11ee190ad39f8d7af441d2c8347388b9449434c73acc67b4b372445ac4152efa",
+          "filename": "pool/main/c/cyrus-sasl2/libsasl2-2_2.1.28+dfsg-10_amd64.deb"
+        },
+        {
+          "package": "libldap-2.5-0",
+          "version": "2.5.13+dfsg-5",
+          "architecture": "amd64",
+          "archiveBytes": 183248,
+          "installedBytes": 566272,
+          "sha256": "4b6c30f6554149c594628d945edc6003f0eea8d0cc1341638c0e71375db147ed",
+          "filename": "pool/main/o/openldap/libldap-2.5-0_2.5.13+dfsg-5_amd64.deb"
+        },
+        {
+          "package": "libnghttp2-14",
+          "version": "1.52.0-1+deb12u3",
+          "architecture": "amd64",
+          "archiveBytes": 72404,
+          "installedBytes": 225280,
+          "sha256": "5a5736cee57e51c1baed869979e6ecdbc6495e939e33203d6cfe3b6e5a149e3f",
+          "filename": "pool/main/n/nghttp2/libnghttp2-14_1.52.0-1+deb12u3_amd64.deb"
+        },
+        {
+          "package": "libpsl5",
+          "version": "0.21.2-1",
+          "architecture": "amd64",
+          "archiveBytes": 58684,
+          "installedBytes": 98304,
+          "sha256": "4f0d35610204e4e754b057748719744114621f2f6f4202d846c314860a981afb",
+          "filename": "pool/main/libp/libpsl/libpsl5_0.21.2-1_amd64.deb"
+        },
+        {
+          "package": "librtmp1",
+          "version": "2.4+20151223.gitfa8646d.1-2+b2",
+          "architecture": "amd64",
+          "archiveBytes": 60824,
+          "installedBytes": 149504,
+          "sha256": "e1f69020dc2c466e421ec6a58406b643be8b5c382abf0f8989011c1d3df91c87",
+          "filename": "pool/main/r/rtmpdump/librtmp1_2.4+20151223.gitfa8646d.1-2+b2_amd64.deb"
+        },
+        {
+          "package": "libssh2-1",
+          "version": "1.10.0-3+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 175976,
+          "installedBytes": 361472,
+          "sha256": "fff72a194e493f88e100a2567e22472bb4ab828d429c2956965c6f2f134f1b3a",
+          "filename": "pool/updates/main/libs/libssh2/libssh2-1_1.10.0-3+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libcurl4",
+          "version": "7.88.1-10+deb12u15",
+          "architecture": "amd64",
+          "archiveBytes": 392184,
+          "installedBytes": 860160,
+          "sha256": "3042904de01f9c4fbdcf1452b8f81abedcf2b015f9b9deba109063322b5bd68b",
+          "filename": "pool/main/c/curl/libcurl4_7.88.1-10+deb12u15_amd64.deb"
+        },
+        {
+          "package": "curl",
+          "version": "7.88.1-10+deb12u15",
+          "architecture": "amd64",
+          "archiveBytes": 315764,
+          "installedBytes": 500736,
+          "sha256": "0dd9b6bf7a0bd11af2d68a52ec44c2a223fa7c11f9104c36ce1047e1137d4a8f",
+          "filename": "pool/main/c/curl/curl_7.88.1-10+deb12u15_amd64.deb"
+        },
+        {
+          "package": "libcurl3-gnutls",
+          "version": "7.88.1-10+deb12u15",
+          "architecture": "amd64",
+          "archiveBytes": 386008,
+          "installedBytes": 847872,
+          "sha256": "bf430ecf80f7808704e0187cddc582fd57fc98789ea356d4797651edad387ef3",
+          "filename": "pool/main/c/curl/libcurl3-gnutls_7.88.1-10+deb12u15_amd64.deb"
+        },
+        {
+          "package": "libexpat1",
+          "version": "2.5.0-1+deb12u4",
+          "architecture": "amd64",
+          "archiveBytes": 105852,
+          "installedBytes": 406528,
+          "sha256": "ed010cc41577d75ab01cccc6afa93496d9a99f1e16bd469caf58e1b81fddae80",
+          "filename": "pool/updates/main/e/expat/libexpat1_2.5.0-1+deb12u4_amd64.deb"
+        },
+        {
+          "package": "liberror-perl",
+          "version": "0.17029-2",
+          "architecture": "all",
+          "archiveBytes": 29032,
+          "installedBytes": 74752,
+          "sha256": "5a466348531b9c38c8e5ccb18c231f27a98b9fdab61b37ea22592553de5d2ced",
+          "filename": "pool/main/libe/liberror-perl/liberror-perl_0.17029-2_all.deb"
+        },
+        {
+          "package": "git-man",
+          "version": "1:2.39.5-0+deb12u3",
+          "architecture": "all",
+          "archiveBytes": 2053236,
+          "installedBytes": 2157568,
+          "sha256": "904dbd8dbc3db34c6780fb0abfe35816d4a90a490126ef0a055a77a0c5dcab82",
+          "filename": "pool/main/g/git/git-man_2.39.5-0+deb12u3_all.deb"
+        },
+        {
+          "package": "git",
+          "version": "1:2.39.5-0+deb12u3",
+          "architecture": "amd64",
+          "archiveBytes": 7264380,
+          "installedBytes": 45967360,
+          "sha256": "637a85ddd6247fab13bdd0592f2f39aff04ce4dbf0655d3ab553ac359a38ce6f",
+          "filename": "pool/main/g/git/git_2.39.5-0+deb12u3_amd64.deb"
+        }
+      ],
+      "budget": {
+        "archiveBytes": 41727916,
+        "installedBytes": 197585920,
+        "metadataBytes": 20019339,
+        "conservativeInputBytes": 459114728,
+        "conservativeTemporaryBytes": 1329000943
+      }
+    }
+  ],
+  "daemonSimulation": {
+    "requested": [
+      "docker-ce=5:29.9.1-1~debian.12~bookworm",
+      "containerd.io=2.4.2-2~debian.12~bookworm",
+      "iptables=1.8.9-2"
+    ],
+    "selected": [
+      "containerd.io=2.4.2-2~debian.12~bookworm",
+      "libip4tc2=1.8.9-2",
+      "libip6tc2=1.8.9-2",
+      "libxtables12=1.8.9-2",
+      "netbase=6.4",
+      "libmnl0=1.0.4-3",
+      "libnfnetlink0=1.0.2-2",
+      "libnetfilter-conntrack3=1.0.9-3",
+      "libnftnl11=1.2.4-2",
+      "iptables=1.8.9-2",
+      "libnftables1=1.0.6-2+deb12u2",
+      "libbsd0=0.11.7-2",
+      "libedit2=3.1-20221030-2",
+      "nftables=1.0.6-2+deb12u2",
+      "docker-ce=5:29.9.1-1~debian.12~bookworm"
+    ],
+    "records": [
+      {
+        "package": "containerd.io",
+        "version": "2.4.2-2~debian.12~bookworm",
+        "architecture": "amd64",
+        "archiveBytes": 23264076,
+        "installedBytes": 89016320,
+        "sha256": "9100b99aad702b120e8bd5286e378f2fb13317745bd7afaf39be6d64f5bbf8b8",
+        "filename": "dists/bookworm/pool/stable/amd64/containerd.io_2.4.2-2~debian.12~bookworm_amd64.deb"
+      },
+      {
+        "package": "libip4tc2",
+        "version": "1.8.9-2",
+        "architecture": "amd64",
+        "archiveBytes": 19016,
+        "installedBytes": 67584,
+        "sha256": "f2c48b367f9ec13f9aa577e7ccf81b371ce5d5fe22dddf9d7aa99f1e0bb7cfc4",
+        "filename": "pool/main/i/iptables/libip4tc2_1.8.9-2_amd64.deb"
+      },
+      {
+        "package": "libip6tc2",
+        "version": "1.8.9-2",
+        "architecture": "amd64",
+        "archiveBytes": 19416,
+        "installedBytes": 67584,
+        "sha256": "be88db3dfa2fe3345ea343207f7c75345602686121e579023d021c348b9b4f4d",
+        "filename": "pool/main/i/iptables/libip6tc2_1.8.9-2_amd64.deb"
+      },
+      {
+        "package": "libxtables12",
+        "version": "1.8.9-2",
+        "architecture": "amd64",
+        "archiveBytes": 30752,
+        "installedBytes": 103424,
+        "sha256": "cb841d66950a43af4a398625313d2f3da9065299c9738538de6c2c3495857040",
+        "filename": "pool/main/i/iptables/libxtables12_1.8.9-2_amd64.deb"
+      },
+      {
+        "package": "netbase",
+        "version": "6.4",
+        "architecture": "all",
+        "archiveBytes": 12800,
+        "installedBytes": 36864,
+        "sha256": "29b23c48c0fe6f878e56c5ddc9f65d1c05d729360f3690a593a8c795031cd867",
+        "filename": "pool/main/n/netbase/netbase_6.4_all.deb"
+      },
+      {
+        "package": "libmnl0",
+        "version": "1.0.4-3",
+        "architecture": "amd64",
+        "archiveBytes": 12476,
+        "installedBytes": 47104,
+        "sha256": "4581f42e3373cb72f9ea4e88163b17873afca614a6c6f54637e95aa75983ea7c",
+        "filename": "pool/main/libm/libmnl/libmnl0_1.0.4-3_amd64.deb"
+      },
+      {
+        "package": "libnfnetlink0",
+        "version": "1.0.2-2",
+        "architecture": "amd64",
+        "archiveBytes": 15132,
+        "installedBytes": 52224,
+        "sha256": "ae5cbba417ea48f34c1f72c27e8146a81f20614c1296bca2cd7234c8215fddcc",
+        "filename": "pool/main/libn/libnfnetlink/libnfnetlink0_1.0.2-2_amd64.deb"
+      },
+      {
+        "package": "libnetfilter-conntrack3",
+        "version": "1.0.9-3",
+        "architecture": "amd64",
+        "archiveBytes": 40704,
+        "installedBytes": 142336,
+        "sha256": "65f1539238f60fcc85d115acd640474f45c77bfddcf402eb7d75965a783c2bc8",
+        "filename": "pool/main/libn/libnetfilter-conntrack/libnetfilter-conntrack3_1.0.9-3_amd64.deb"
+      },
+      {
+        "package": "libnftnl11",
+        "version": "1.2.4-2",
+        "architecture": "amd64",
+        "archiveBytes": 61632,
+        "installedBytes": 238592,
+        "sha256": "9e619e1470a1915264e906020f3bfc046fd8458043b1342686d997b5078213af",
+        "filename": "pool/main/libn/libnftnl/libnftnl11_1.2.4-2_amd64.deb"
+      },
+      {
+        "package": "iptables",
+        "version": "1.8.9-2",
+        "architecture": "amd64",
+        "archiveBytes": 360192,
+        "installedBytes": 2465792,
+        "sha256": "2928d3ca6ca8a3dc3f423f6752822b1f3614a5ba609ff7806bcba4449ffe90e1",
+        "filename": "pool/main/i/iptables/iptables_1.8.9-2_amd64.deb"
+      },
+      {
+        "package": "libnftables1",
+        "version": "1.0.6-2+deb12u2",
+        "architecture": "amd64",
+        "archiveBytes": 299116,
+        "installedBytes": 942080,
+        "sha256": "3a8223f9bfba99d97bf25296ac83de307ab036e1df63e5965f88809266851947",
+        "filename": "pool/main/n/nftables/libnftables1_1.0.6-2+deb12u2_amd64.deb"
+      },
+      {
+        "package": "libbsd0",
+        "version": "0.11.7-2",
+        "architecture": "amd64",
+        "archiveBytes": 117416,
+        "installedBytes": 206848,
+        "sha256": "bb31cc8b40f962a85b2cec970f7f79cc704a1ae4bad24257a822055404b2c60b",
+        "filename": "pool/main/libb/libbsd/libbsd0_0.11.7-2_amd64.deb"
+      },
+      {
+        "package": "libedit2",
+        "version": "3.1-20221030-2",
+        "architecture": "amd64",
+        "archiveBytes": 92992,
+        "installedBytes": 264192,
+        "sha256": "1cf14abf2716d3279db12d0657a5737cf70074a1e71d3bdf73206625e3c89ce6",
+        "filename": "pool/main/libe/libedit/libedit2_3.1-20221030-2_amd64.deb"
+      },
+      {
+        "package": "nftables",
+        "version": "1.0.6-2+deb12u2",
+        "architecture": "amd64",
+        "archiveBytes": 70292,
+        "installedBytes": 180224,
+        "sha256": "966ff20ce58c17163a771c02ddbca264291408f94c512bd85dd18da0ebdbe88c",
+        "filename": "pool/main/n/nftables/nftables_1.0.6-2+deb12u2_amd64.deb"
+      },
+      {
+        "package": "docker-ce",
+        "version": "5:29.9.1-1~debian.12~bookworm",
+        "architecture": "amd64",
+        "archiveBytes": 24544052,
+        "installedBytes": 116339712,
+        "sha256": "040567cb82687a0439b1f4da0d4e121dcfef237e639ed2aaa3a99da2fb916650",
+        "filename": "dists/bookworm/pool/stable/amd64/docker-ce_29.9.1-1~debian.12~bookworm_amd64.deb"
+      }
+    ],
+    "budget": {
+      "archiveBytes": 90687980,
+      "installedBytes": 407756800,
+      "metadataBytes": 20019339,
+      "conservativeInputBytes": 508074792,
+      "conservativeTemporaryBytes": 1798302767
+    }
+  }
+}

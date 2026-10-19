@@ -29,7 +29,7 @@ impl semio_framework_value::ToValue for StateClass {
     }
 }
 impl semio_framework_value::FromValue for StateClass {
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.scoped_stage(|control| { control.begin_stage(1)?; control.step() })?;
         match value { semio_framework_value::DslValue::String(text) => match text.as_str() { "Artifact" => Ok(Self::Artifact), "Config" => Ok(Self::Config), "Presence" => Ok(Self::Presence), "Transient" => Ok(Self::Transient), _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown StateClass variant")) }, _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a string")) }
     }

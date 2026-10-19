@@ -1,4 +1,4 @@
-//! capture. A region owns no dependents, so nothing cascades.
+//! 📸️ capture. A region owns no dependents, so nothing cascades.
 //! 🔺️ Sparse diff builder for `DeleteTargetRegion` — a real removal, never a whole-snapshot
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dTargetRegionsDelta;

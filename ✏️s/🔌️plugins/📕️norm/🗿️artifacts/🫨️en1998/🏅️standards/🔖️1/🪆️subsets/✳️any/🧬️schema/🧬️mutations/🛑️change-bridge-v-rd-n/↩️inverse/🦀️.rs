@@ -1,4 +1,4 @@
-//! Inverse for `change-bridge-v-rd-n`.
+//! ↩️ Inverse for `change-bridge-v-rd-n`.
 use crate::change_bridge_v_rd_n::ChangeBridgeVRdN;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

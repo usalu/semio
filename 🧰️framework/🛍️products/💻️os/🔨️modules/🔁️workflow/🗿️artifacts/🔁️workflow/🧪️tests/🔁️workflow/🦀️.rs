@@ -4,9 +4,9 @@ use super::*;
 use semio_framework_dsl_record::DslField as _;
 fn assert_workflow_manual_binding<T:semio_framework_dsl_record::DslField+PartialEq+std::fmt::Debug>(value:&T,maximum:usize,tiny:usize){
  let expected=T::to_value(value);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let encoded=value.to_value_controlled(&mut control).expect("owned workflow field projection");let exact=control.owned_bytes();assert_eq!(encoded,expected);assert!(exact>0);assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());
- let mut admitted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);assert_eq!(&T::from_value_controlled(&encoded,&mut control).expect("owned workflow field construction"),value);let decoded_exact=control.owned_bytes();assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(decoded_exact,&mut |_|true)).is_ok());if decoded_exact>0{assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(decoded_exact-1,&mut |_|true)).is_err());}
- let semio_framework_dsl_record::FieldValue::Record(record)=&encoded else{panic!("explicit workflow record")};assert_eq!(value.to_record_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|true)).unwrap(),*record);assert_eq!(&T::from_record_controlled(record,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|true)).unwrap(),value);
- let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(value.to_value_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);if decoded_exact>tiny{assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());}assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(T::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+ let mut admitted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut admitted);assert_eq!(&T::from_value_controlled(&encoded,&mut control).expect("owned workflow field construction"),value);let decoded_exact=control.owned_bytes();assert!(T::from_value_controlled(&encoded,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(decoded_exact,&mut |_|true)).is_ok());if decoded_exact>0{assert!(T::from_value_controlled(&encoded,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(decoded_exact-1,&mut |_|true)).is_err());}
+ let semio_framework_dsl_record::FieldValue::Record(record)=&encoded else{panic!("explicit workflow record")};assert_eq!(value.to_record_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|true)).unwrap(),*record);assert_eq!(&T::from_record_controlled(record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut |_|true)).unwrap(),value);
+ let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(value.to_value_controlled(&mut control).is_err());assert_eq!(control.owned_bytes(),0);if decoded_exact>tiny{assert!(T::from_value_controlled(&encoded,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());}assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(T::from_value_controlled(&encoded,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
 }
 #[test]
 fn sqlite_snapshot_workflow_media_contract_binds_literal_values_under_both_native_controls(){
@@ -24,7 +24,7 @@ fn sqlite_snapshot_workflow_input_binds_literal_values_and_cancels_owned_utf8(){
  let value:WorkflowInput=semio_framework_pack_json::from_json_str(&serde_json::to_string(&fixture["input"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&value)).unwrap(),fixture["input"]);assert_workflow_manual_binding(&value,maximum,tiny);
  let text="😀".repeat(fixture["largeCharacters"].as_u64().unwrap()as usize);let value=WorkflowInput{id:text.clone(),kind_id:text.clone(),selector:text.clone(),required:true,multiplicity:PortMultiplicity::One};let raw=<WorkflowInput as semio_framework_dsl_record::DslField>::to_value(&value);let threshold=fixture["cancelAfterBytes"].as_u64().unwrap()as usize;
  let mut observed=false;let mut cancel=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(value.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
- let mut observed=false;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<WorkflowInput as semio_framework_dsl_record::DslField>::from_value_controlled(&raw,&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
+ let mut observed=false;let mut cancel=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.total==text.len()&&event.completed>=threshold{observed=true;false}else{true}};assert!(<WorkflowInput as semio_framework_dsl_record::DslField>::from_value_controlled(&raw,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut cancel)).is_err());assert!(observed);
 }
 use protocol::MutationDiff;
 #[test]
@@ -32,9 +32,9 @@ fn sqlite_snapshot_workflow_manual_metadata_preserves_neutral_fields_and_enum_la
  let fixture:serde_json::Value=serde_json::from_str(read_node("🧪️tests/🧫️fixtures/🏭️schema/🔣️.json")).unwrap();let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;let tiny=fixture["tinyBytes"].as_u64().unwrap()as usize;
  for index in 0..3{
   let mut admitted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(maximum,&mut admitted);let shape=match index{0=><MediaContract as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding),1=><WorkflowMediaPort as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding),_=><WorkflowInput as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding)}.unwrap();let semio_framework_dsl_record::Shape::Record(producer)=shape else{panic!("declared workflow record")};let encoded=producer.encode(&mut encoding).unwrap();let exact=encoding.owned_bytes();
-  let mut admitted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
+  let mut admitted=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut admitted);let decoded=producer.decode(&mut decoding).unwrap();
   for record in[encoded,decoded]{let fields:Vec<_>=record.fields.iter().map(|field|serde_json::json!([field.id,field.key,field.optional])).collect();assert_eq!(serde_json::json!(fields),fixture["records"][index]["fields"]);let labels:Vec<_>=record.fields.iter().filter_map(|field|match &field.shape{semio_framework_dsl_record::Shape::Enum(labels)=>Some(serde_json::json!([field.id,labels])),_=>None}).collect();assert_eq!(serde_json::json!(labels),fixture["records"][index]["enums"]);}
-  assert!(exact>0);assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
+  assert!(exact>0);assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact,&mut |_|true)).is_ok());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(exact-1,&mut |_|true)).is_err());let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(tiny,&mut admitted);assert!(producer.encode(&mut control).is_err());assert_eq!(control.owned_bytes(),0);assert!(producer.decode(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(tiny,&mut |_|true)).is_err());assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(maximum,&mut |_|false)).is_err());assert!(producer.decode(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut |_|false)).is_err());
  }
 }
 
@@ -213,10 +213,6 @@ pub(crate) async fn sample_workflow_snapshot() -> WorkflowSnapshot {
     let node_b = workflow_node("b", vec![], vec![WorkflowMediaPort { id: "b:in:in".into(), spec: MediaPortSpec { required: true, ..media_port_spec("in", MediaPortDirection::In, Some("kind.a")).await } }]);
     let graph = Workflow { schema: WORKFLOW_SCHEMA.into(), nodes: vec![node_a.await, node_b.await], edges: vec![workflow_edge("e1", "a", "a:out:out", "b", "b:in:in").await] };
     let parameter_bindings = vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "a".into(), field_path: "/zoom".into() }];
-    // 🧷️ Keeps the fixture's node ports in the same synced state `apply_workflow_operation`
-    // maintains as an invariant (every `BindParameterField`/`AddNode`/etc call re-derives parameter
-    // ports from `parameter_bindings`) — an un-synced fixture would make `assert_operation_round_trip`
-    // see a spurious port diff on any op whose apply path re-syncs, not a real bug.
     let graph = sync_workflow_parameter_ports(&graph, &parameter_bindings);
     WorkflowSnapshot {
         schema: S_WORKFLOW_SCHEMA.into(),
@@ -281,12 +277,6 @@ async fn workflow_operation_op_text_round_trips_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn workflow_operation_backwards_restores_pre_state() {
     let document = sample_workflow_snapshot().await;
-    // 🧷️ `Remove*` ops are exercised via `*_backwards_restores_cascade_deleted_dependents` below
-    // instead of this strict-equality helper: `apply`'s `Add*` counterpart appends to the END of
-    // its list, so removing a non-last element and letting `inverse` re-add it changes list
-    // ORDER even though every element is restored — a known, harmless limitation of list-append
-    // state shared by every `Add*`/`Remove*` pair in this codebase (e.g. `space::SpaceMutation`'s
-    // own `inverse` law tests avoid it the same way, by only exercising it on singleton lists).
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode(AddNode { node: workflow_node("c", Vec::new(), Vec::new()).await })).await;
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode(MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 })).await;
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 })).await;
@@ -310,11 +300,8 @@ async fn workflow_operation_backwards_restores_pre_state() {
 #[semio_framework_async_macros::async_test]
 async fn remove_operations_backwards_restores_cascade_deleted_dependents() {
     let mut document = sample_workflow_snapshot().await;
-    // `b` is the last node — removing it also cascade-drops edge `e1` (which targets it).
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveNode(RemoveNode { node_id: "b".into() })).await;
 
-    // `p4` is the last parameter and has no bindings, so this only proves the simple case; add a
-    // binding on it first so the cascade-restoration path is actually exercised.
     document.parameter_bindings.push(WorkflowParameterBinding { parameter_id: "p4".into(), node_id: "a".into(), field_path: "/label".into() });
     document.graph = sync_workflow_parameter_ports(&document.graph, &document.parameter_bindings);
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: "p4".into() })).await;
@@ -374,7 +361,6 @@ async fn workflow_diff_print_parse_and_encode_decode_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn validate_workflow_snapshot_requires_edge_xor_input_binding_on_required_ports() {
     let mut document = sample_workflow_snapshot().await;
-    // 🎯️ Sample fixture wires `a -> b` over `b`'s sole required in-port with NO input binding — ok.
     assert!(validate_workflow_snapshot(&document).await.ok, "wired required port with no binding must validate");
 
     let binding = WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() };

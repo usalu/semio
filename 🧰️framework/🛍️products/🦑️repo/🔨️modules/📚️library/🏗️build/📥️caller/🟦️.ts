@@ -7,7 +7,7 @@ import schema from "../🧬️schema/📥️caller.json";
 import nativeSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
 import executionPolicy from "../../⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json";
 import { canonicalArchitectureEnvironment } from "../../⚡️caching/🦀️cargo/🌿️environment/🟦️.ts";
-import {createNativeWindowsSystemGrantV1, readNativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {readNativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import type { NativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, readIssuedScriptProcessEnvelopeV1, scriptProcessEnvironment, readScriptProcessEnvelope, type ScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -15,16 +15,17 @@ import type { BuildExecutionV1, BuildGraphV1 } from "../🕸️graph/🟦️.ts"
 import type { selectBuildTasksV1 } from "../🧭️selection/🟦️.ts";
 import { resolve } from "node:path";
 import {issueRepositoryCargoExecutionBackendV1} from "../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
+import {isStoreRepairSelectionV1} from "../🧾️store-receipt/🟨️.mjs";
 
 /** 🏛️ Declares actual native resources granted to an owned build invocation. */
-export interface NativeBuildCallerCapabilitiesV1 { readonly tool:"nx"|"bazel"; readonly workspaceRoot:string; readonly arguments:readonly string[]; readonly selection:readonly string[]; readonly buildMode:"prototype"|"release"; readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];windowsSystem?:NativeOwnerCapabilities["windowsSystem"]}>; readonly launches:readonly (readonly string[])[] }
+export interface NativeBuildCallerCapabilitiesV1 { readonly tool:"nx"|"bazel"; readonly workspaceRoot:string; readonly arguments:readonly string[]; readonly selection:readonly string[]; readonly buildMode:"prototype"|"release"; readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>; readonly launches:readonly (readonly string[])[] }
 
 /** 🎟️ Creates the configured native grant before the build process envelope is issued. */
 export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly string[],tool:"nx"|"bazel",environment:NodeJS.ProcessEnv):NativeBuildCallerCapabilitiesV1 {
   if(validateJsonSchemaSubset(nativeSchema.$defs.NativeOwnerExecutionPolicyV1,executionPolicy).length)throw Error("Build native execution policy refused");
   const canonical=canonicalArchitectureEnvironment(root,environment),offline=canonical.CARGO_NET_OFFLINE??"false";
   if(!["true","false"].includes(offline))throw Error("Build native network selection refused");
-  const windowsSystem=createNativeWindowsSystemGrantV1(),capabilities={tool,workspaceRoot:resolve(root),arguments:["repo",...args],selection:["repo",...args],buildMode:(environment.SEMIO_BUILD_MODE??"prototype") as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"},...(windowsSystem?{windowsSystem}:{})},launches:[["repo",...args]]};
+  const capabilities={tool,workspaceRoot:resolve(root),arguments:["repo",...args],selection:["repo",...args],buildMode:(environment.SEMIO_BUILD_MODE??"prototype") as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:[["repo",...args]]};
   if(validateJsonSchemaSubset(schema,capabilities).length)throw Error("Build native caller capabilities refused");
   return capabilities;
 }
@@ -34,7 +35,7 @@ export function readBuildAuthoringCapabilitiesV1(root:string,args:readonly strin
   if(validateJsonSchemaSubset(authoringSchema,value).length)throw Error("Build authoring capabilities refused");
   const declared=value as NativeBuildCallerCapabilitiesV1,request=["repo",...args],workspaceRoot=resolve(root);
   if(resolve(workspaceRoot,declared.workspaceRoot)!==workspaceRoot||declared.tool!==undefined&&declared.tool!==tool||JSON.stringify(declared.arguments)!==JSON.stringify(request)||JSON.stringify(declared.selection)!==JSON.stringify(request)||!declared.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Original authored build request changed");
-  const windowsSystem=createNativeWindowsSystemGrantV1(declared.native.windowsSystem),capabilities={...declared,tool,workspaceRoot,native:{...declared.native,...(windowsSystem?{windowsSystem}:{}),artifactDirectory:resolve(workspaceRoot,declared.native.artifactDirectory)}};
+  const capabilities={...declared,tool,workspaceRoot,native:{...declared.native,artifactDirectory:resolve(workspaceRoot,declared.native.artifactDirectory)}};
   if(validateJsonSchemaSubset(schema,capabilities).length)throw Error("Initial build caller capabilities refused");
   return capabilities;
 }
@@ -64,7 +65,7 @@ function buildTaskEnvironmentV1(root:string,invocation:ScriptInvocation,executio
   if(request!==undefined){
     if(validateJsonSchemaSubset(nativeSchema.properties.command,request).length)throw Error("Discovered native build command required");
     const declared=request as NativeOwnerCapabilities["command"],command={...declared,arguments:[...declared.arguments,...effective]},cargoExecutionBackend=issueRepositoryCargoExecutionBackendV1(root,command,capabilities.native.transport);
-    selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,artifactDirectory:capabilities.native.artifactDirectory,command,transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network,...(capabilities.native.windowsSystem?{windowsSystem:capabilities.native.windowsSystem}:{}),...(cargoExecutionBackend?{cargoExecutionBackend}:{})});
+    selected=readNativeOwnerCapabilities({version:1,buildMode:capabilities.buildMode,repositoryRoot:root,artifactDirectory:capabilities.native.artifactDirectory,command,transport:capabilities.native.transport,child:capabilities.native.child,network:capabilities.native.network,...(cargoExecutionBackend?{cargoExecutionBackend}:{})});
   }
   const result=scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:selected},{...canonical,SEMIO_BUILD_TOOL:capabilities.tool,SEMIO_WORKSPACE_ROOT:root});
   delete result.SEMIO_SCRIPT_CAPABILITIES;
@@ -81,7 +82,7 @@ export function readOwnedBuildInvocationV1(root:string,invocation:ScriptInvocati
 /** 📨️ Serializes only predeclared Nx child data while retaining the exact private parent invocation. */
 export function projectOwnedNxProcessEnvelopeV1(root:string,invocation:ScriptInvocation,selected:readonly string[]):ScriptProcessEnvelope{
  const original=readIssuedScriptProcessEnvelopeV1(invocation),role=original.capabilities as NativeBuildCallerCapabilitiesV1,selection=["nx",...selected];let capabilities:object;
- if(role.tool!==undefined){if(validateJsonSchemaSubset(schema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="repo")throw Error("Original Repo-to-Nx caller required");const launches=role.launches.filter(launch=>launch[0]==="nx");if(!launches.length||!launches.some(launch=>JSON.stringify(launch)===JSON.stringify(selection)))throw Error("Undeclared Repo-to-Nx child selection");capabilities={workspaceRoot:role.workspaceRoot,arguments:launches[0],selection,buildMode:role.buildMode,native:role.native,launches};}
+ if(role.tool!==undefined){if(validateJsonSchemaSubset(schema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="repo")throw Error("Original Repo-to-Nx caller required");const launches=role.launches.filter(launch=>launch[0]==="nx");if(!launches.length||!launches.some(launch=>JSON.stringify(launch)===JSON.stringify(selection))&&!isStoreRepairSelectionV1(selected))throw Error("Undeclared Repo-to-Nx child selection");capabilities={workspaceRoot:role.workspaceRoot,arguments:launches[0],selection,buildMode:role.buildMode,native:role.native,launches};}
  else{const role=original.capabilities as import("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts").NativeNxCallerCapabilitiesV1;if(validateJsonSchemaSubset(nxCallerSchema,role).length||resolve(role.workspaceRoot)!==resolve(root)||role.arguments[0]!=="nx"||!role.launches?.some(launch=>JSON.stringify(launch)===JSON.stringify(selection)))throw Error("Undeclared original Nx child selection");capabilities={...role,selection};}
  if(validateJsonSchemaSubset(nxCallerSchema,capabilities).length)throw Error("Closed original Nx child data required");return readScriptProcessEnvelope({...original,capabilities},Date.now());
 }

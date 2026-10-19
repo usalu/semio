@@ -6,13 +6,13 @@ export type {
 import type { BrepCoedge, BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex } from "./📸️snapshot/🟦️.ts";
 
 export interface SemioBrepArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ vertices: BrepVertex[];
-  /** @state artifact */ edges: BrepEdge[];
-  /** @state artifact */ loops: BrepLoop[];
-  /** @state artifact */ faces: BrepFace[];
-  /** @state artifact */ shells: BrepShell[];
-  /** @state artifact */ solids: BrepSolid[];
-  /** @state artifact */ coedges: BrepCoedge[];
-  /** @state artifact */ nextLabel: import("./📸️snapshot/🟦️.ts").SemioBrepSnapshot["nextLabel"];
+  /** 🧊️ @state artifact */ schema: string;
+  /** 🕸️ @state artifact */ vertices: BrepVertex[];
+  /** ➖️ @state artifact */ edges: BrepEdge[];
+  /** 🔁️ @state artifact */ loops: BrepLoop[];
+  /** 🔲️ @state artifact */ faces: BrepFace[];
+  /** 🐚️ @state artifact */ shells: BrepShell[];
+  /** 🔷️ @state artifact */ solids: BrepSolid[];
+  /** 🧩️ @state artifact */ coedges: BrepCoedge[];
+  /** ⏪️ @state artifact */ nextLabel: import("./📸️snapshot/🟦️.ts").SemioBrepSnapshot["nextLabel"];
 }

@@ -1,4 +1,4 @@
-//! entity at a time, never as a whole board differenced against the document. Each law replays the recorded rows on the
+//! 🧩️ entity at a time, never as a whole board differenced against the document. Each law replays the recorded rows on the
 //! 🧪️ Laws of the kind-emitting recorder: every editor board edit is stated as the concrete kinds it consists of, one
 //! document they were recorded on, then their inverse rows last-to-first, and demands the document back; every row also
 //! passes the framework's inverse-sum law on the state it was applied to.

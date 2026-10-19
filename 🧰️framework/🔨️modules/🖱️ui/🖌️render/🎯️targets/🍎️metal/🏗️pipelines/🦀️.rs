@@ -269,7 +269,6 @@ impl Pipelines {
     /// `scene_view` before `composite_to_swapchain` blits to the real swapchain view). The caller
     /// census is construction-only: `MetalBackend::from_parts` calls this once, while render/event
     /// callbacks only read the retained pipeline states.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &Device, surface_format: MTLPixelFormat, scene_format: MTLPixelFormat) -> Self {
         let ui_library = compile_library(device, "ui_shader", UI_SHADER_MSL);
         let vector_library = compile_library(device, "vector_shader", VECTOR_SHADER_MSL);

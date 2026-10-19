@@ -8,7 +8,7 @@ export interface LayoutTopology {
 }
 
 export interface LayoutInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: LayoutTopology;
 }
 

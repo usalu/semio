@@ -25,6 +25,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for RemoveElectricalLoa
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<RemoveElectricalLoadCenterPv> + From<crate::AddElectricalLoadCenterPv>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "electrical-load-center", kind: "remove-electrical-load-center-pv", record: "RemovedElectricalLoadCenterPv" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -46,7 +47,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "electrical-load-center", kind: "remove-electrical-load-center-pv", record: "RemovedElectricalLoadCenterPv" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

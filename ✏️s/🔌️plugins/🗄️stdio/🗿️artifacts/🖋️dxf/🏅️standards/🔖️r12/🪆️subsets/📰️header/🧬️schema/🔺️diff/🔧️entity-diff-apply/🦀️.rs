@@ -228,7 +228,7 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
                 *group_codes = v.clone();
             }
         }
-        _ => {} // kind mismatch without Replace: contract violation, graceful no-op
+        _ => {}
     }
 }
 
@@ -385,9 +385,6 @@ impl DxfIndexElem for DxfEntity {
                 }
                 DxfEntityDiff::Other(a)
             }
-            // 🧭️ Structurally-inconsistent kind mismatch without a Replace (shouldn't occur when
-            // both diffs came from real `between`/mutation calls against a consistent sequence of
-            // states): fall back to `other`, best-effort, never panics (total per the absorb contract).
             (_, other_diff) => other_diff,
         };
     }

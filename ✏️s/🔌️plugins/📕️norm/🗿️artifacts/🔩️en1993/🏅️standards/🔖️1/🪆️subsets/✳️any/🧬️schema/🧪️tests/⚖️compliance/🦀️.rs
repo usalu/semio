@@ -13,7 +13,6 @@ fn approx(a: f64, b: f64, tol: f64) {
 fn axial_resistance_s355_heb240_matches_hand_calc() {
     let params = AnnexParams::de();
     let n_rd = part_1_1::axial_resistance_n(0.0106, 355.0e6, params);
-    // A·fy/γ_M0 = 0.0106 * 355e6 / 1.0 = 3.763e6 N = 3763 kN
     approx(n_rd / 1000.0, 3763.0, 1.0);
 }
 
@@ -21,7 +20,6 @@ fn axial_resistance_s355_heb240_matches_hand_calc() {
 fn flexural_buckling_chi_from_lambda_never_user_supplied() {
     let curve = part_1_1::BucklingCurve::B;
     let chi = part_1_1::chi(1.0, curve);
-    // φ = 0.5*(1+0.34*(λ̄-0.2)+λ̄²)=0.5*(1+0.272+1)=1.136; χ=1/(φ+√(φ²-λ̄²))≈0.597
     approx(chi, 0.597, 0.01);
 }
 
@@ -31,7 +29,6 @@ fn de_gamma_m1_raises_buckling_utilization_vs_en() {
     de.annex = AnnexChoice::De;
     let mut en = de.clone();
     en.annex = AnnexChoice::En;
-    // Push compression high enough that buckling governs
     de.member_actions[0].action.n = 2_500_000.0;
     en.member_actions[0].action.n = 2_500_000.0;
     let rd_de = check_full_steel_structure(&de);
@@ -49,14 +46,12 @@ fn bolt_bearing_m20_8_8_matches_table_style_value() {
     let alpha_b = part_1_8::bearing_alpha_b(0.040, 0.060, 0.022, f_ub, 510.0e6);
     let k1 = part_1_8::bearing_k1(0.040, 0.060, 0.022);
     let fb = part_1_8::bolt_bearing_resistance_n(k1, alpha_b, 510.0e6, 0.020, 0.010, 2, 1.25);
-    // Fb,Rd = n·k1·αb·fu·d·t/γM2 with n=2 → ≈247.3 kN
     approx(fb / 1000.0, 209.5, 2.0);
 }
 
 #[test]
 fn critical_temperature_eq_4_22() {
     let t = part_1_2::critical_temperature_c(0.5);
-    // EN 1993-1-2 Eq. (4.22): θcr=39.19·ln(1/(0.9674·μ₀^3.833)-1)+482 ≈ 584.7 °C at μ₀=0.5
     approx(t, 584.7, 2.0);
 }
 
@@ -92,7 +87,6 @@ fn noncompliant_example_fails_and_remedies_applicable() {
         assert!(fail.remedies.len() >= 1, "Fail {} missing remedies", fail.id);
         assert!(fail.remedies.iter().filter(|r| r.applicable).count() >= 1, "Fail {} needs applicable remedy", fail.id);
     }
-    // Part-scoped fails with ≥2 applicable remedies where available
     for needle in ["1-8.3.6", "1-9.fat", "1-3.cf", "1-5.plate", "1-11.tc", "3-1.tower", "5.comp", "6.crane", "1-6.shell", "2.fat"] {
         let part_fails: Vec<_> = fails.iter().filter(|c| c.id.contains(needle)).collect();
         if part_fails.is_empty() { continue; }
@@ -137,7 +131,6 @@ fn m_cr_positive_for_rolled_i() {
 #[test]
 fn remedy_law_oneof_section_id_flips_axial_or_buckling_to_pass() {
     let mut doc = En1993Snapshot::compliant_heb240_frame();
-    // Characteristic permanent N_k so EN1990 γ_G·N_k exceeds N_Rd but still fits a catalogue HEB.
     doc.member_actions[0].action.n = 3_000_000.0;
     doc.member_actions[0].action.my = 0.0;
     doc.member_actions[0].action.vz = 0.0;
@@ -541,14 +534,12 @@ fn en1993_combinations_form_uls_from_characteristic_actions() {
     let snap = En1993Snapshot::compliant_heb240_frame();
     let report = check_full_steel_structure(&snap);
     assert!(report.complies());
-    // Governing ULS N ≈ 1.35*100kN + 1.5*43.333kN ≈ 200 kN
     let axial = report.checks.iter().find(|c| c.id.contains("6.2.4")).expect("axial");
     assert!(axial.computed.value > 190_000.0 && axial.computed.value < 210_000.0, "expected ~200 kN design N from EN1990 combo, got {}", axial.computed.value);
 }
 
 #[test]
 fn palmgren_miner_damage_at_two_million_cycles_matches_oracle() {
-    // Δσ = Δσ_C = 71 MPa, N = 2e6 → D = n/N = 1.0 on the m=3 branch (γ_Mf=1)
     let delta_c = part_1_9::detail_category_pa(71);
     let d = part_1_9::miner_damage(&[(delta_c, 2.0e6)], delta_c, 1.0);
     approx(d, 1.0, 0.005);
@@ -559,7 +550,6 @@ fn palmgren_miner_damage_at_two_million_cycles_matches_oracle() {
 #[test]
 fn class4_uses_effective_section_not_class_over_three_tautology() {
     let mut doc = En1993Snapshot::compliant_heb240_frame();
-    // Force a slender fabricated section toward class 4 by thinning flanges/web via catalogue override
     if let Some(sec) = doc.sections.iter_mut().find(|s| s.id == "sec-heb240") {
         sec.tf = 0.006;
         sec.tw = 0.005;
@@ -569,8 +559,6 @@ fn class4_uses_effective_section_not_class_over_three_tautology() {
     }
     let report = check_full_steel_structure(&doc);
     let class_check = report.checks.iter().find(|c| c.id.contains("5.2.class")).expect("class row");
-    // Informational — must not use u = class/3 tautology (limit 3.0 with computed=class)
-    // Must not encode u=class/3 (computed=class, limit=3)
     assert!(
         !(class_check.limit.value == 3.0 && (class_check.computed.value - class_check.computed.value.round()).abs() < 1e-9 && class_check.computed.value >= 1.0 && class_check.computed.value <= 4.0),
         "class row must not use u=class/3 tautology (computed={}, limit={})",
@@ -608,7 +596,6 @@ fn committed_examples_have_distinct_en_and_de_text() {
 
 #[test]
 fn de_na_snow_psi0_differs_from_en_recommended() {
-    // EN 1990 Table A1.1 snow ψ0 = 0.5; DE NA DIN EN 1990/NA ψ0 = 0.7
     let (psi0_en, _, _) = crate::psi_factors("snow", AnnexChoice::En);
     let (psi0_de, _, _) = crate::psi_factors("snow", AnnexChoice::De);
     assert!((psi0_en - 0.5).abs() < 1e-9, "EN snow ψ0");

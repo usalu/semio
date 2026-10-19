@@ -355,9 +355,6 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
     let show_mode = if cfg.show_mode.is_empty() { "solid" } else { cfg.show_mode.as_str() };
     let mut meshes: Vec<semio_framework_pack_json::Value> = Vec::new();
     let mut instances: Vec<semio_framework_pack_json::Value> = Vec::new();
-    // 🔁️ Dedup key is the brep HANDLE, not the widget/channel that emitted it: two channels (even
-    // on different widgets) that resolve to the same handle share one tessellated mesh entry and
-    // still each get their own instance — see the mesh-id lookup below.
     let mut mesh_id_by_handle: HashMap<String, String> = HashMap::new();
     let mut selected_ids: Vec<String> = Vec::new();
     let mut hovered_id: Option<String> = None;

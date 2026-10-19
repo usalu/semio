@@ -125,7 +125,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
       onActiveTabPathChange: (path: readonly string[]) => {
         dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
         const tabId = path[path.length - 1];
-        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
         if (tabId && hostMode && session && session.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
@@ -134,7 +133,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
-      // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
       treeContentRevision: toolPanelTreeContentRevision(activeToolId, focusedToolMeasuresByToolId, actionPaneStagedArgsByKey),
     };
   }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, hostMode, treeOpenStates, hostAppId, activeToolId, focusedToolMeasuresByToolId, actionPaneStagedArgsByKey]);
@@ -155,9 +153,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
   },[session,refreshUi]));
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
-  // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
-  // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
-  // SAME anchor always read/write the exact same controlled state.
   const closePeerRightDockAnchors = useCallback((except: Anchor) => {
     for (const peer of ["top-right", "bottom-right", "right-middle"] as const) {
       if (peer !== except) dispatch({ type: "SET_PANEL_VISIBLE", anchor: peer, value: false });
@@ -182,19 +177,10 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
         }
         const pathChanged = previous.join("/") !== path.join("/");
         dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
-        // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
-        // next hierarchy level up only makes sense under its own category's command list (mirrors the old
-        // dedicated `SET_COMMAND_CATEGORY` reducer case, now expressed at the generic path-change call site
-        // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
-        // the Command branch, so compare the category segment (path[1]), not the shared branch root.
         if (anchor === "bottom-middle" && panels[anchor].path[1] !== path[1]) {
           dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
         }
         const tabId = path[path.length - 1];
-        // 🛠️ Selecting/deselecting a mode-tool leaf (`tool.<id>`) arms or disarms that tool — owned by the
-        // single `reconcileToolTabSelection` pass in 🧭️DockAssembly, never by this press callback, so a
-        // restored or programmatically-set path reaches exactly the same state a press does.
-        // 🌱️ Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
         if (tabId && hostMode && session && session.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
@@ -216,17 +202,12 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
           <ResponsiveLabel full={brand?.windowTitle ?? appBreadcrumb(resolveAppBreadcrumb(session.app, uiTerminology))} short={brand?.shortWindowTitle} />
         </span>
-        {/* 👁️✏️ Window title chip / read-only badge (contract freeze §5) — role read off the resolved
-         * `session.app.role`, never parsed out of `session.app.id`. */}
         <span data-slot="surface-role-chip" data-role={session.app.role} data-app-id={session.app.id} title={session.app.role === "viewer" ? viewerReadOnlyNoticeText(uiLocale) : undefined} className="rounded-sm border border-border px-single text-xs text-muted-foreground">
           {surfaceRoleChipText(session.app.role, uiLocale)}
         </span>
       </div>
     );
     const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!hostMode || focusedApp?.id !== landingAppId);
-    // 📱️ Mobile has no room for tab bars, example selector, or mode switcher in the navbar — just the
-    // logo/title and the single toggle for the merged mobile panel (the two dropped controls resurface as
-    // the panel's synthetic "App" tab, see `mobilePanelTabs`).
     if (mobile) {
       return [
         { key: "logoAndTitle", content: logoAndTitle },
@@ -237,8 +218,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
         },
       ];
     }
-    // Logo/title, example selector, and mode switcher render as one cluster, centered as a group in the navbar
-    // (via `centered`) rather than left-anchored with fill spacers pushing the rest toward the trailing edge.
     const centerContent: ReactNode[] = [logoAndTitle];
     if (showExampleSelect && exampleSelectElement) centerContent.push(exampleSelectElement);
     if (modeSwitcherElement) centerContent.push(modeSwitcherElement);
@@ -282,24 +261,17 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
         onSelect: () => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: kind.id }),
       });
     }
-    // 🎛️ Commands (os/plugin/app/mode) — the footer twin of the window-rail P3 redirect above: an
-    // arg-carrying command never fires from the palette, it opens the bottom-middle command panel at its
-    // category and expands its form instead.
     for (const { definition, address } of resolvedCommands) {
       if (!definition.inPalette) continue;
       const argCarrying = (definition.args?.length ?? 0) > 0;
       items.push({
         id: `command.${commandAddressKey(address).replaceAll(":", ".")}`,
-        // 🩹️ CommandDefinition.label has no owned schema mirror yet (unknown) — resolved the same way every
-        // other manifest label in this file is.
         label: (() => { const resolved = resolveManifestLabel(definition.label as LocalizedLabel | string, uiTerminology, uiLocale); return argCarrying ? `${resolved}…` : resolved; })(),
         description: commandKeybindingChords(definition, detectCommandPlatform(typeof navigator !== "undefined" ? `${navigator.platform} ${navigator.userAgent}` : "")).join(",") || undefined,
         category: commandCategoryLabel(definition.category),
         onSelect: () => {
           if (argCarrying) {
             const commandPath = [FRAMEWORK_CATEGORY_COMMAND_ID, `command.category.${definition.category}`];
-            // 📱️ On mobile every anchor's tabs are merged into the single mobile panel — route the same
-            // path there instead of the (unrendered) bottom-middle anchor, and open the mobile panel itself.
             if (mobile) {
               dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
               dispatch({ type: "SET_MOBILE_PANEL_PATH", value: commandPath });
@@ -316,40 +288,15 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
       });
     }
     if (hostMode && panel) {
-      // 🎛️ One entry per PROGRAM, with an id that is unique and a name a human can type.
-      //
-      // 🧯️ Both halves were measured broken on the live `s` host (ticket 26/09/18 S7 §5). The id was
-      // `spawn.<pluginId>` for EVERY app of that plugin, so `spawn.space` was five different items
-      // and `spawn.stdio` two — a DOM id that names several programs, which is what every probe and
-      // the live agent gate address. And the searchable text was the breadcrumb ALONE, which an
-      // aggregate plugin resolves to another plugin's artifact: `spawn.demonstrator` read
-      // `Spawn semio · cad` and `spawn.playbook-module-procedural` read `Spawn semio · forms`, so
-      // typing either plugin's own name found nothing at all and S6 §3.4 recorded them (plus
-      // `mathematical`) as having no palette entry. They had one; it could not be reached by name.
       const spawnEntryCounts = new Map<string, number>();
       for (const program of spacePrograms) {
         const seen = spawnEntryCounts.get(program.pluginId) ?? 0;
         spawnEntryCounts.set(program.pluginId, seen + 1);
         items.push({
-          // 🪪️ The FIRST program of a plugin keeps the bare `spawn.<pluginId>` id every probe, the
-          // live agent gate's `spawnProgramThroughPalette` and S3's palette route already address;
-          // its siblings take their own app-qualified id instead of colliding with it.
           id: seen === 0 ? `spawn.${program.pluginId}` : `spawn.${program.pluginId}.${program.appId}`,
           label: `${shellLabel("ui.palette.spawnPrefix")} ${appBreadcrumb(resolveArtifactByAppId(loadedPlugins, program.appId, program.breadcrumb, uiTerminology))}`,
-          // 🔎️ `ShellSearch` ranks `label + description + category`, so the plugin's own id belongs
-          // here: it is the name a human (and every probe) types for a program whose breadcrumb
-          // never mentions it.
           description: `${program.pluginId} · ${program.appId}`,
           category: shellLabel("ui.search.category.catalogue"),
-          // 🚀️ Spawning a program from the palette is SHELL chrome, so it calls the shell's own
-          // `spawnProgram` instead of raising a guest action. Raising it as
-          // `{ controllerId: hostControllerId, action: "spawnApp" }` was a dead round trip: the
-          // interceptor below only claims `spawnApp` when the controller is NOT the host's
-          // (`:6913`), so the palette's own item fell through to whichever app owns the active
-          // window — and from the landing window the shell answered `dropped action "spawnApp" …
-          // no window kind declares it (window kinds: s-home-main)`, which is every
-          // `spawn.<plugin>` entry this product offers before a studio is open (measured by S3 and
-          // again by S4, ticket 26/09/18). The guest's own `spawnApp` path is untouched.
           onSelect: () => void spawnProgram(program),
         });
       }
@@ -386,24 +333,16 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
     const actionsFoldedFor = (windowId: string, windowKindId: string = windowId) =>
       introductionTargetsWindow(windowId, windowKindId, null, introductionActionWindowSegment) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
-    // 🎓️ `undefined` keeps the Window's own internal fold state — only windows of the introduction's
-    // target kind (including every open instance) are force-controlled to `false` while its utility step
-    // is active.
     const utilityBarFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
       introductionTargetsWindow(windowId, windowKindId, introductionUtilityWindowId) ? false : undefined;
     const measuresFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
       introductionTargetsWindow(windowId, windowKindId, introductionMeasureWindowId) ? false : undefined;
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
-    // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
       const utilityId = activeUtilityByWindowId[windowId];
       const cursor = utilityId ? (app.utilities ?? []).find((utility) => utility.id === utilityId)?.cursor : undefined;
       return cursor ? { cursor } : undefined;
     };
-    // 🪟️ A spawned program owns the canvas with EVERY window kind it declares — the same projection
-    // the session's own app gets below, under that instance's own window-id namespace. A foreign
-    // editor used to reach here with one hard-coded `windowKinds[0]` body and an id the layout never
-    // held, so nothing was drawn at all (ticket 26/09/18, S4 §5.2 → S5).
     if (hostMode && activeSpawnedEntry && activeSpawnedApp && focusedSpawnedId !== null) {
       const spawned = activeSpawnedEntry;
       const spawnedApp = activeSpawnedApp;
@@ -492,11 +431,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
         ),
       };
     });
-    // 🪟️ Each extra (split/spawned) instance renders its OWN `windowUiByWindowId[instance.id]` body,
-    // measures, and engagement — never the base kind's shared entry — so two instances of the same kind
-    // (e.g. split top/perspective panes) never show or affect each other's options. `data-element-alias`
-    // aliases the instance to its window kind's element id so an introduction `show` target of the kind
-    // (not a specific instance) raises every open instance above the glass, not only the base one.
     const extraWindows = extraWindowInstances.flatMap((instance) => {
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
@@ -551,8 +485,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
     actionPaneFoldedByWindowId,
     actionPaneStagedArgsByKey,
     activeUtilityByWindowId,
-    // 🔢️ Every `resolveUtilityNodes` call above stamps the window's register generation; the revision is
-    // what re-derives the trees after a write that left the rendered VALUE unchanged.
     registerRevision,
     utilityGenerationFor,
     appLabelsOverlay,
@@ -600,10 +532,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
   );
   effectiveModeLayoutRef.current = effectiveModeLayout;
   mountedWindowIdsRef.current = useMemo(() => windowLayoutWindowIdsV1(effectiveModeLayout), [effectiveModeLayout]);
-  // 🪟️ The other half of the mounted-window fetch law: a window the layout has just started mounting
-  // owns no cached body (the pass that skipped it dropped one), so it is fetched here, once, in a scope
-  // that names exactly it. Without this a mode switch whose refresh ran against the previous layout
-  // would leave the newly mounted pane on its pending body until some unrelated pass came along.
   useEffect(() => {
     const live = sessionRef.current;
     const skipped = unmountedSkippedWindowBodiesRef.current;
@@ -625,10 +553,6 @@ export function usePanelHosting(core: ShellCoreAfterDockAssembly) {
     [noteShellCommand],
   );
 
-  // 🪟️ `Mode.onLayoutChange` fires continuously during a live drag/resize (one call per frame) — classify
-  // each delta against the last-seen layout, remember only the latest non-null classification, and note a
-  // single shell command once the drag settles (see `LAYOUT_CHANGE_SETTLE_MS`). A pure active-window-flag
-  // echo classifies `null` and is silently skipped here (handled by `handleActiveWindowChange` instead).
   const layoutChangeSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const layoutChangeClassificationRef = useRef<"resize" | "rearrange" | null>(null);
   const layoutChangePreviousRef = useRef<WindowLayoutNode | null>(effectiveModeLayout);

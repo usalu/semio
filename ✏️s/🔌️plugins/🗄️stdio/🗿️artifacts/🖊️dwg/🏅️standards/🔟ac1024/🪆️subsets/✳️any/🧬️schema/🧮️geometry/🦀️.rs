@@ -60,7 +60,6 @@ pub enum DwgGeometry {
     PolyfaceMesh { vertices: Vec<[f64; 3]>, faces: Vec<[i32; 4]> },
 }
 impl DwgDrawing {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ensure_layer(&mut self, name: &str) -> usize {
         if let Some(index) = self.layers.iter().position(|layer| layer.name == name) {
             return index;
@@ -70,7 +69,6 @@ impl DwgDrawing {
     }
 
     /// 📐️ Recomputes the drawing extents from every entity; the reader calls it after decoding.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn recompute_extents(&mut self) {
         let mut min = [f64::INFINITY; 3];
         let mut max = [f64::NEG_INFINITY; 3];

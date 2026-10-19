@@ -57,7 +57,7 @@ class SourceScript extends BundleScript{
 class SceneWireNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if(segments.length)throw Error("test-scene-wire-native accepts no arguments");
+    if(segments.length)throw new Error("test-scene-wire-native accepts no arguments");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-surface-node-graph"],cwd:this.root,extraArgs:["--lib","retained_scene_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }

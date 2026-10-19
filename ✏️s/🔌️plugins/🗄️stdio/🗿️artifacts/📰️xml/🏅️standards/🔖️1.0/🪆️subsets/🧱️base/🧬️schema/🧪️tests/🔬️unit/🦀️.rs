@@ -113,8 +113,6 @@ async fn declaration_quote_style_survives_a_parse_write_cycle() {
         assert_eq!(xml_document_to_text(&doc), source, "the declaration is written back with the delimiter it came in with");
     }
 
-    // 🫥 The default spelling writes no `quote` key at all, which is what keeps every wire value
-    // that predates this slot byte-identical.
     let double = XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None, ..Default::default() };
     assert_eq!(double.quote, XmlQuote::Double);
     assert!(double.quote.is_double());
@@ -233,7 +231,6 @@ async fn inverse_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
 
-        // Mutation-level round-trip.
         let mut round_tripped = base.clone();
         crate::apply_mutation(&mut round_tripped, &mutation);
         for inverse_mutation in <XmlMutation as Mutation<XmlSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
@@ -241,7 +238,6 @@ async fn inverse_law() {
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
-        // Diff-level round-trip.
         let diff = Mutation::diff(&mutation, &base);
         let next = protocol::apply_diff(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
@@ -289,7 +285,6 @@ fn root_children_diff(diff: &XmlDiff) -> &crate::schema::diff::XmlChildrenDiff {
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
@@ -304,7 +299,6 @@ async fn absorb_law() {
         assert_eq!(name, "f");
     }
 
-    // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
@@ -325,7 +319,6 @@ async fn absorb_law() {
         assert!(names.contains(&"g"));
     }
 
-    // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
@@ -339,7 +332,6 @@ async fn absorb_law() {
         assert!(attrs.iter().any(|a| a.name == "k" && a.value == "v"));
     }
 
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::SetAttribute(SetAttributePayload { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()), index: None }), &base);
@@ -351,7 +343,6 @@ async fn absorb_law() {
         assert_eq!(triple.removed, vec![1]);
     }
 
-    // Associativity over a triple.
     {
         let base = two_child_root("a", "b");
         let d1 = Mutation::diff(&XmlMutation::InsertElement(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }), &base);
@@ -381,9 +372,6 @@ async fn absorb_law() {
 async fn codec_retention_law() {
     let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🏷️.xml");
     let doc = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(fixture_text).expect("fixture parses");
-    // Documented normal form: leading/trailing whitespace around the document is trimmed (the
-    // codec re-emits no trailing newline); the fixture has neither internal whitespace nor
-    // empty elements, so the byte content otherwise round-trips exactly.
     let re_encoded = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&doc);
     assert_eq!(re_encoded, fixture_text.trim());
 

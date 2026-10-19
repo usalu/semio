@@ -68,8 +68,6 @@ async fn box_interaction_commits_after_height() {
 
 #[semio_framework_async_macros::async_test]
 async fn box_interaction_default_mode_is_point_and_requires_length_prompt() {
-    // 📦️box.json's default `boxMode` (set by the `start` transition) is "point", not "diagonal" —
-    // a plain pointer.down after start does NOT reach diagonal_rubber.
     let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
     assert!(apply_event(&mut session, "start", None));
     assert!(apply_event(&mut session, "pointer.down", Some(&vec3_json([0.0, 0.0, 0.0]))));
@@ -194,8 +192,6 @@ async fn parse_repl_line_accepts_raw_forms() {
 
 #[semio_framework_async_macros::async_test]
 async fn parse_repl_line_accepts_shell_normalized_forms() {
-    // The React shell PascalCases every draft (framework/renderer/react `normalizeEngagementCommandText`),
-    // so `set.height 3.5` arrives as `SetHeight3.5` with no separators.
     assert_eq!(parse_repl_line("SetHeight3.5", None), Some(("set.height".into(), Some(DslValue::float(3.5)))));
     assert_eq!(parse_repl_line("setheight0.25", None), Some(("set.height".into(), Some(DslValue::float(0.25)))));
     assert_eq!(parse_repl_line("Dist12.75", None), Some(("set.distance".into(), Some(DslValue::float(12.75)))));
@@ -203,11 +199,8 @@ async fn parse_repl_line_accepts_shell_normalized_forms() {
 
 #[semio_framework_async_macros::async_test]
 async fn parse_repl_line_commits_bare_number_only_in_numeric_entry_state() {
-    // Bare numeric entry (premigration `tryCommitNumericEntry`) only applies while a
-    // numeric-entry state (e.g. box's first_corner_height) is active.
     assert_eq!(parse_repl_line("3.5", Some("first_corner_height")), Some(("set.height".into(), Some(DslValue::float(3.5)))));
     assert_eq!(parse_repl_line("2", Some("column_height")), Some(("set.height".into(), Some(DslValue::float(2.0)))));
-    // Outside a numeric-entry state, a bare number is treated as an (unresolvable) interaction key.
     assert_eq!(parse_repl_line("3.5", None), Some(("3.5".into(), None)));
     assert_eq!(parse_repl_line("3.5", Some("idle")), Some(("3.5".into(), None)));
 }
@@ -230,10 +223,7 @@ async fn box_interaction_commits_via_shell_normalized_repl_line() {
 /// state the first applicable handler — a ground pick (`pointer.down`, walking a diagonal so no two
 /// picks coincide), a scalar entry (`set.*`), the injected selection, or a keyed `confirm`/`close`.
 fn drive_to_commit(session: &mut CadEngagementScratch, selection: &[String]) -> bool {
-    // 🏁️ Most machines open with an explicit `start`; the selection-first ones (measures, anchors)
-    // begin in their selecting state and simply ignore it.
     let _ = apply_event(session, "start", None);
-    // 📦️ The box opens in its length-prompt `point` mode; the diagonal mode is the pick-driven one.
     let _ = apply_event(session, "mode.diagonal", None);
     let mut picks = 0usize;
     let mut selected_in: Option<String> = None;
@@ -262,7 +252,6 @@ fn drive_to_commit(session: &mut CadEngagementScratch, selection: &[String]) -> 
         } else if scalar_in.as_deref() == Some(session.state.as_str()) && events.contains(&"confirm") {
             apply_event(session, "confirm", None)
         } else if picks >= 3 && events.iter().any(|event| ["confirm", "close", "contextmenu"].contains(event)) {
-            // 📈️ Open-ended point lists (polylines, curves) close after three picks.
             let event = ["close", "confirm", "contextmenu"].into_iter().find(|event| events.contains(event)).unwrap();
             apply_event(session, event, None)
         } else if events.contains(&"pointer.down") {
@@ -320,18 +309,12 @@ async fn every_model_definition_interaction_drives_to_a_commit_outcome() {
             None => stuck.push(format!("{}@commit", entry.id)),
         }
     }
-    // 🧩️ Three mode-chooser assets delegate to a nested `interaction.call` (composition the
-    // interpreter does not run yet); `measure.area` gates on a `kernel.query` effect and
-    // `surface.extrudeCrv` on `command.assignExtrusionDistance` over an existing curve — exact, so a
-    // newly runnable one is celebrated here.
     let mut stuck_ids: Vec<&str> = stuck.iter().map(|row| row.split('@').next().unwrap()).collect();
     stuck_ids.sort_unstable();
     assert_eq!(stuck_ids, vec!["curve.construct", "energy.energy.constructBasePlate", "measure.area", "surface.construct", "surface.extrudeCrv"], "every other interaction reaches its commit state: {stuck:?}");
     assert_eq!(reached, 57, "{objects:?} {transforms:?}");
     assert_eq!(objects.len(), 32, "object-producing interactions: {objects:?}");
     assert_eq!(transforms.len(), 6, "selection transforms: {transforms:?}");
-    // 🚧️ The families whose results the persisted `CadObjectSpec` cannot carry (topology edits,
-    // booleans, lofts/sweeps/extrusions on existing curves, measures, anchors).
     let expected_unsupported = [
         "edit.split", "edit.trim", "solid.booleanIntersection", "solid.booleanUnion", "solid.booleanDifference", "surface.sweep1", "surface.sweep2", "edit.fillet", "surface.loft", "edit.explode", "measure.distance",
         "edit.join", "surface.networkSrf", "feature.offsetSurface", "feature.extrudeWire", "edit.chamfer", "entity.createAnchor",

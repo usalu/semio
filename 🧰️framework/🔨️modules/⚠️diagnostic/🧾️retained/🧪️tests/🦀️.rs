@@ -8,7 +8,7 @@ fn original_fault_keeps_actual_failed_progress_through_value_error_conversion_an
  let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:original.capacity(),released_bytes:0};
  let error=ValueError::literal(ValueRefusalKind::InvariantViolated,"original reservation failed").with_retained_progress(progress);let fault=error.into_fault();assert_eq!(fault.retained_progress(),progress);assert_eq!(original.as_ptr(),pointer);
  let wire=fault.to_value();let decoded=Fault::from_value(wire.clone()).unwrap();assert_eq!(decoded.retained_progress(),progress);assert_eq!(decoded,fault);
- let mut callback=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(1048576,&mut callback);let decoded=Fault::from_value_controlled(&wire,&mut control).unwrap();assert_eq!(decoded.retained_progress(),progress);
+ let mut callback=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1048576,&mut callback);let decoded=Fault::from_value_controlled(&wire,&mut control).unwrap();assert_eq!(decoded.retained_progress(),progress);
  let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1048576,&mut callback);assert_eq!(decoded.to_value_controlled(&mut control).unwrap(),wire);
  let DslValue::Object(mut members)=wire else{panic!("original fault wire")};members.retain(|(key,_)|key!="retainedProgress");assert!(Fault::from_value(DslValue::Object(members)).is_err());
 }

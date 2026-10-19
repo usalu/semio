@@ -3,7 +3,7 @@ use crate::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 pub(crate)fn spec()->semio_framework_dsl_record::RecordSpec{ObjSnapshot::__dsl_spec()}
 pub(crate)fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{ObjSnapshot::__dsl_spec_producer()}
-pub(crate)fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<ObjSnapshot,ValueError>{
+pub(crate)fn reconstruct_record_controlled(source:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<ObjSnapshot,ValueError>{
  fn list(source:&semio_framework_dsl_record::RecordValue,id:u16)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match source.fields.get(&id){Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"OBJ native list field differs"))}}
  fn record(value:&semio_framework_dsl_record::FieldValue)->Result<&semio_framework_dsl_record::RecordValue,ValueError>{match value{semio_framework_dsl_record::FieldValue::Record(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"OBJ native typed occurrence differs"))}}
  control.scoped_stage(|control|->Result<(),ValueError>{

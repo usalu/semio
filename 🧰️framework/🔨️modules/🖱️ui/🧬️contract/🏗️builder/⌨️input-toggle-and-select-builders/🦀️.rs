@@ -31,49 +31,42 @@ pub fn input(kind: crate::InputKind) -> InputBuilder {
 
 impl InputBuilder {
     /// ✍️ Sets the current value.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn value(mut self, value: crate::UiText) -> Self {
         self.value = value;
         self
     }
 
     /// 💬️ Sets placeholder copy.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
         self.placeholder = Some(placeholder);
         self
     }
 
     /// 🫳️ Sets the commit convention (e.g. `"blur"`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn commit(mut self, commit: crate::UiText) -> Self {
         self.commit = Some(commit);
         self
     }
 
     /// ⬇️ Sets the minimum value (`InputKind::Number`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn min(mut self, min: f64) -> Self {
         self.min = Some(min);
         self
     }
 
     /// ⬆️ Sets the maximum value (`InputKind::Number`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn max(mut self, max: f64) -> Self {
         self.max = Some(max);
         self
     }
 
     /// 🔢️ Sets the step increment (`InputKind::Number`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn step(mut self, step: f64) -> Self {
         self.step = Some(step);
         self
     }
 
     /// 📎️ Sets the accepted file-type filter (`InputKind::File`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn accept(mut self, accept: crate::UiText) -> Self {
         self.accept = Some(accept);
         self
@@ -134,14 +127,12 @@ impl InputBuilder {
 }
 
 impl HasBase for InputBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<InputBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: InputBuilder) -> Self {
         assemble(
             builder.base,
@@ -175,7 +166,6 @@ impl ToggleBuilder {
     }
 
     /// 🖼️ Sets the icon key.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn icon(mut self, icon: crate::UiText) -> Self {
         self.icon = icon;
         self
@@ -183,7 +173,6 @@ impl ToggleBuilder {
 
     /// 📝️ Sets the visible text, and — unless [`HasBase::label`] already set one explicitly — the
     /// accessible name too, for the same "hard to omit" reason [`button`] auto-derives its own.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn text(mut self, text: crate::Label) -> Self {
         self.base.accessibility.label.get_or_insert_with(|| text.clone());
         self.text = Some(text);
@@ -192,14 +181,12 @@ impl ToggleBuilder {
 }
 
 impl HasBase for ToggleBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<ToggleBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ToggleBuilder) -> Self {
         assemble(builder.base, crate::Component::Toggle(crate::ToggleProps { appearance: builder.appearance, on: builder.on, icon: builder.icon, text: builder.text }))
     }
@@ -224,7 +211,6 @@ pub fn select(value: crate::UiText) -> SelectBuilder {
 
 impl SelectBuilder {
     /// ➕️ Appends one option.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[expect(clippy::result_large_err, reason = "A full select returns its builder and exact bounded option without allocating on refusal.")]
     pub fn try_item(mut self, value: crate::UiText, label: crate::Label) -> Result<Self, (Self, crate::SelectItem)> {
         let item = crate::SelectItem { value, label };
@@ -235,7 +221,6 @@ impl SelectBuilder {
     }
 
     /// 💬️ Sets placeholder copy shown while no option is selected.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
         self.placeholder = Some(placeholder);
         self
@@ -249,14 +234,12 @@ impl SelectBuilder {
 }
 
 impl HasBase for SelectBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<SelectBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: SelectBuilder) -> Self {
         assemble(builder.base, crate::Component::Select(crate::SelectProps { value: builder.value, items: builder.items, placeholder: builder.placeholder, appearance: builder.appearance }))
     }

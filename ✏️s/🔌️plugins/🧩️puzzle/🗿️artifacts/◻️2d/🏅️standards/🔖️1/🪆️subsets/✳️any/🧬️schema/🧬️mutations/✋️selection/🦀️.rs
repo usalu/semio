@@ -1,9 +1,10 @@
-//! selection transform they share: the resolved targets, the per-target outcome and the localized amounts.
+//! 👉️ selection transform they share: the resolved targets, the per-target outcome and the localized amounts.
 //! ✋️ Puzzle2d selection mutations — dragging, rotating and scaling a selection of nodes and target regions, and the
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
-use {semio_framework_value::list::PagedList, semio_framework_value::paged::PagedUtf8};
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value_persistent::list::PagedList;
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_targets_invariant;
 
 /// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the

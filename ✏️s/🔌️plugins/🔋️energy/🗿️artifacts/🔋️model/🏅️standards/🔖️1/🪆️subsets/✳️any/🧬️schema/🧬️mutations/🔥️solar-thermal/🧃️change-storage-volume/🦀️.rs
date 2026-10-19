@@ -25,6 +25,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSolarThermalS
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSolarThermalSystemStorageVolume>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "solar-thermal-system", kind: "change-solar-thermal-system-storage-volume", record: "ChangedSolarThermalSystemStorageVolume" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -46,7 +47,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "solar-thermal-system", kind: "change-solar-thermal-system-storage-volume", record: "ChangedSolarThermalSystemStorageVolume" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

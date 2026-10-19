@@ -75,6 +75,8 @@ impl<A:RetireOwned+Sync> RetainedCloneBorrowAuthority<A>{
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{self.source.next_take_capacity_byte_demand(body)}
  pub fn next_take_release_byte_demand(&self)->Result<usize,crate::ValueError>{self.source.next_take_release_byte_demand()}
  pub fn next_take_depth_demand(&self)->Result<usize,crate::ValueError>{self.source.next_take_depth_demand()}
+ /// 🎯️ Quotes the one actual original-authority return with every independent physical currency.
+ pub fn next_take_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:self.source.next_take_copy_byte_demand()?,capacity_bytes:self.source.next_take_capacity_byte_demand(body)?,release_bytes:self.source.next_take_release_byte_demand()?,depth:self.source.next_take_depth_demand()?})}
  pub fn take_authority(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneSourceTake<A>,crate::ValueError>{self.source.take_authority(grant)}
  pub fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()}
 }

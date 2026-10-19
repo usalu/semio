@@ -453,32 +453,21 @@ describe("Shell components", () => {
       expect(searchControlledLineV1("", { text: "Brush", base: "" })).toBe("Brush");
       expect(searchControlledLineV1("Fill3", { text: "Brush", base: "" })).toBe("Fill3");
       expect(searchControlledLineV1("Brush", { text: "Brush", base: "Brush" })).toBe("Brush");
-      // 🔁️ A program that echoes each keystroke one round trip behind publishes lines this edit already
-      // sent — an echo of "Pl" while the draft reads "PlaceCol" is not the program authoring the line.
       expect(searchControlledLineV1("Pl", { text: "PlaceCol", base: "", sent: ["P", "Pl", "Pla", "Plac", "Place", "PlaceC", "PlaceCo", "PlaceCol"] })).toBe("PlaceCol");
       expect(searchControlledLineV1("Place", { text: "Pla", base: "", sent: ["P", "Pl", "Pla", "Plac", "Place"] })).toBe("Pla");
       expect(searchControlledLineV1("SetHeight3", { text: "PlaceCol", base: "", sent: ["P", "Pl"] })).toBe("SetHeight3");
 
       const sent: string[] = [];
       const submitted: string[] = [];
-      // 🗣️ The puzzle3d window engagement: the guest stores the line and does NOT republish it, so
-      // `value` stays "" across the whole exchange. Before this rule every keystroke snapped the field
-      // back to "" and `onSubmit` carried an empty verb.
       const { rerender } = render(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
       const field = screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement;
       fireEvent.change(field, { target: { value: "brush" } });
       rerender(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
-      // ⌨️ The line reaches the program verbatim; the guest's `strip_engagement_prefix` matches
-      // alphanumerics case-insensitively, so `brush` is the verb.
       await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("brush"));
       expect(sent).toEqual(["brush"]);
       fireEvent.keyDown(field, { key: "Enter" });
       await waitFor(() => expect(submitted).toEqual(["brush"]));
-      // 🧹️ The confirm RELEASES the line — the guest's own `engagement_submit` empties
-      // `engagement_input`, and its published "" leads again from here.
       await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe(""));
-      // 📢️ A program that DOES author the line wins it back: a published value other than the one that
-      // stood when the edit began replaces the draft.
       rerender(<Search active input={{ id: "line", placeholder: uiDataLabel("brush, fill <n>"), value: "fill 3", onChange: (text: string) => sent.push(text), onSubmit: (text: string) => submitted.push(text) }} />);
       await waitFor(() => expect((screen.getByPlaceholderText("brush, fill <n>") as HTMLInputElement).value).toBe("fill 3"));
     });

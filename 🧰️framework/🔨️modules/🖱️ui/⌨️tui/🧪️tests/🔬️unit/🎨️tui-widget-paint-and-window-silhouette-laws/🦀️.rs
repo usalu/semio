@@ -77,7 +77,7 @@ fn window_stack_tabs_paint_on_body_top() {
 #[test]
 fn window_stack_tabs_respect_bottom_corners() {
     use semio_framework_ui_tui_frame::chrome::WindowStackTabState;
-    use semio_framework_ui_tui_frame::layout::WindowStackCorner;
+    use semio_framework_ui_tui_core::docking::WindowStackCorner;
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 50, 8);
     let mut buf = CellBuffer::new(Size { width: 50, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
@@ -109,7 +109,7 @@ fn window_silhouette_keeps_one_continuous_outline_around_the_notch() {
 #[test]
 fn window_bottom_notch_is_outside_the_continuous_outline() {
     use semio_framework_ui_tui_frame::chrome::WindowStackTabState;
-    use semio_framework_ui_tui_frame::layout::WindowStackCorner;
+    use semio_framework_ui_tui_core::docking::WindowStackCorner;
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 50, 8);
     let sentinel = Cell { ch: '.', fg: [1, 2, 3], bg: [4, 5, 6], attrs: 0, width: 1 };
@@ -153,7 +153,7 @@ fn window_hairline_opens_only_under_the_active_tab() {
         let layout = window_chip_layout(&w, rect);
         let mut buf = CellBuffer::new(Size { width: 60, height: 8 }, Cell::blank([0, 0, 0], [0, 0, 0]));
         ChromeState::Window(Box::new(w)).paint(&theme, rect, &mut buf);
-        let group = layout.groups.iter().find(|g| g.corner == semio_framework_ui_tui_frame::layout::WindowStackCorner::TopLeft).expect("top-left tabs");
+        let group = layout.groups.iter().find(|g| g.corner == semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft).expect("top-left tabs");
         for tab in &group.tabs {
             let open = tab.index == active;
                         let role = if open { Role::ActiveBase } else { Role::BorderNormal };
@@ -193,7 +193,7 @@ for x in (tab.x + 1)..(tab.x + tab.interior_width + 1) {
 #[test]
 fn window_bottom_hairline_opens_only_under_the_active_tab() {
     use semio_framework_ui_tui_frame::chrome::WindowStackTabState;
-    use semio_framework_ui_tui_frame::layout::WindowStackCorner;
+    use semio_framework_ui_tui_core::docking::WindowStackCorner;
     let theme = Theme::new(AppearanceName::Dark);
     let rect = Rect::new(0, 0, 60, 8);
     let mut w = WindowState::new("Main").with_stack_tab_states(

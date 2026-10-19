@@ -3,15 +3,49 @@
   "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/⚠️error",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*", "sharedGlobals"],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
   },
   "targets": {
     "test-ownership": {
-      "executor": "repo:script", "cache": false, "inputs": ["default"],
+      "executor": "repo:script",
+      "outputs": [], "cache": true, "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-ownership"}
     },
     "test-native": {
-      "executor": "repo:script", "cache": false, "inputs": ["default"],
+      "executor": "repo:script",
+      "outputs": [], "cache": true, "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {"cwd": "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native"}
     }
   }

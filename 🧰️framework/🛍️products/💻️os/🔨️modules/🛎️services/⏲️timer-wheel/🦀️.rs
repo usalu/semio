@@ -69,11 +69,6 @@ impl WheelCore {
     /// ⏲️ Arms a timer for `plugin`/`actor` firing at `at_ms`, optionally repeating every
     /// `repeat_ms`. The per-plugin quota is checked BEFORE any insertion, so a rejected call leaves
     /// the wheel completely untouched.
-    // 🚫️async: E1-adjacent — identical reasoning to `pop_expired`/`next_expiry_ms` below (R9): pure,
-    // in-memory only, with no suspension point of its own, and reached through a
-    // `std::sync::Mutex<WheelCore>` guard held by an async caller. `async` here forced that
-    // `MutexGuard` (not `Send`) to live across the caller's await point, making
-    // `TimerWheel::arm`'s future non-`Send` and breaking the `HostFuture<()>: Send` bound R3 requires.
     #[allow(clippy::too_many_arguments)]
     pub fn arm(&mut self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
         let count = self.per_plugin_counts.get(&plugin).copied().unwrap_or(0);
@@ -93,7 +88,6 @@ impl WheelCore {
     /// 🔕️ Disarms `id`, returning whether it was actually armed. Lazy: the heap entry is left in
     /// place and skipped when eventually popped by [`WheelCore::pop_expired`], since a `BinaryHeap`
     /// cannot remove an arbitrary interior element faster than O(n).
-    // 🚫️async: E1-adjacent — same reasoning as `arm` above (R9).
     pub fn disarm(&mut self, id: TimerId) -> bool {
         match self.entries.get_mut(&id) {
             Some(entry) if !entry.cancelled => {
@@ -111,8 +105,6 @@ impl WheelCore {
     /// and catching up (rather than drifting) if more than one repeat period has actually elapsed.
     /// Cancelled entries are dropped here rather than rearmed — this is where lazy
     /// [`WheelCore::disarm`] deletion actually reclaims heap/map space.
-    // 🚫️async: E1-adjacent pure computation (in-memory heap only, no suspension point) whose sole
-    // caller holds it behind a `std::sync::Mutex<WheelCore>` inside the finite timer-driver turn.
     pub fn pop_expired(&mut self, now_ms: u64) -> Vec<TimerFired> {
         self.pop_expired_batch(now_ms, usize::MAX)
     }
@@ -159,13 +151,10 @@ impl WheelCore {
 
     /// ⏰️ The earliest heaped expiry. A cancelled head may cause one harmless early driver turn;
     /// bounded expiry processing discards it without an unbounded scan here.
-    // 🚫️async: E1-adjacent — same reasoning as `pop_expired` above (R9): pure, in-memory only, and
-    // held behind a `std::sync::Mutex` across an async caller.
     pub fn next_expiry_ms(&self) -> Option<u64> {
         self.order.peek().map(|Reverse((expiry, _, _))| *expiry)
     }
 
-    // 🚫️async: E1-adjacent — same reasoning as `arm` above (R9).
     pub fn armed_count(&self, plugin: &PackageId) -> u32 {
         self.per_plugin_counts.get(plugin).copied().unwrap_or(0)
     }
@@ -207,8 +196,6 @@ impl TimerWheel {
     /// [`TIMER_DRIVER_BATCH_ITEMS`] firings and schedules its successor without occupying a worker
     /// while it waits. The four-millisecond idle cadence bounds newly-armed-timer latency without a
     /// permanent polling task.
-    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
-    // here). See R9.
     pub fn spawn_driver(&self, pool: &WorkerPool, sink: Arc<dyn CompletionSink>) {
         if self.driver_started.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
             schedule_timer_driver_turn(pool, self.core.clone(), sink);

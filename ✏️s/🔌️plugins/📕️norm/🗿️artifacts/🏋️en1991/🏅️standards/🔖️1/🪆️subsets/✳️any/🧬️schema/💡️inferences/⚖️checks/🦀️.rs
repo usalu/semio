@@ -246,11 +246,9 @@ pub mod part_1_3 {
         let alpha = pitch_deg.max(0.0);
         let mut mu = if alpha <= 30.0 { 0.8 } else if alpha < 60.0 { 0.8 * (60.0 - alpha) / 30.0 } else { 0.0 };
         if roof_type.contains("duo") && (15.0..30.0).contains(&alpha) { mu = mu.max(0.8); }
-        // EN 1991-1-3 §5.3.4 / §5.3.6 — multi-span and multi-bay roofs raise μ.
         if multi_span || roof_type.contains("multi") { mu = mu.max(1.6); }
         let h = parapet_height.max(drift_obstruction_height);
         if has_parapet {
-            // Parapet drift case: flag engages Annex drifting with notional min height when unspecified.
             let h_par = h.max(0.5);
             mu = mu.max((2.0 * h_par).min(2.0));
         } else if h > 0.0 {
@@ -317,7 +315,6 @@ pub mod part_1_4 {
     }
     pub fn peak_velocity_pressure_pa(annex: AnnexChoice, zone: u8, terrain: u8, z_m: f64, vb: f64, rho: f64, orography: f64, mixed_upwind: u8, mixed_distance: f64, coast: bool) -> f64 {
         let co = orography.max(1.0);
-        // DE NA Annex B: coastal / island sites step terrain toward category 0 within the first km.
         let terrain_eff = if coast && annex == AnnexChoice::De { terrain.min(1) } else { terrain };
         if mixed_distance > 0.0 && mixed_distance < 2000.0 {
             let t = (mixed_distance / 2000.0).clamp(0.0, 1.0);
@@ -327,7 +324,6 @@ pub mod part_1_4 {
             let ce = ce_a * (1.0 - t) + ce_b * t;
             return basic_velocity_pressure_pa(rho, vb) * ce * co;
         }
-        // DE NA B.3 tables assume ρ = 1.25 kg/m³ — scale by entered air density (EN 1991-1-4 §4.5).
         if annex == AnnexChoice::De { return na_b3_qp_pa(zone, terrain_eff, z_m) * co * (rho / 1.25); }
         let ce = exposure_factor(z_m, TerrainCategory::from_u8(terrain_eff));
         basic_velocity_pressure_pa(rho, vb) * ce * co
@@ -438,7 +434,7 @@ pub mod part_1_2 {
             FireCurve::Standard => standard_gas_temp_c(t_min),
             FireCurve::External => external_gas_temp_c(t_min),
             FireCurve::Hydrocarbon => hydrocarbon_gas_temp_c(t_min),
-            FireCurve::Parametric => standard_gas_temp_c(t_min), // heating branch uses Γ; caller uses parametric_gas_temp_k
+            FireCurve::Parametric => standard_gas_temp_c(t_min),
         };
         c + 273.15
     }
@@ -448,7 +444,7 @@ pub mod part_1_2 {
         let o = opening_factor_m05.max(0.02);
         let b = thermal_inertia_b.max(100.0);
         let gamma = (o / b).powi(2) / (0.04f64 / 1160.0).powi(2);
-        let t_star = (t_s / 3600.0) * gamma; // hours *
+        let t_star = (t_s / 3600.0) * gamma;
         let c = 1325.0 * (1.0 - 0.324 * (-0.2 * t_star).exp() - 0.204 * (-1.7 * t_star).exp() - 0.472 * (-19.0 * t_star).exp());
         c + 273.15
     }
@@ -503,7 +499,6 @@ pub mod part_1_2 {
 
     fn fire_delta_factors(annex: AnnexChoice, occupancy: &str) -> (f64, f64, f64) {
         let o = occupancy.trim().to_ascii_lowercase();
-        // δ_q1 danger of fire activation; δ_q2 type of occupancy; δ_n active measures product (no sprinklers → 1.0)
         match annex {
             AnnexChoice::De => match o.as_str() {
                 "dwelling" | "residential" => (1.0, 0.8, 1.0),

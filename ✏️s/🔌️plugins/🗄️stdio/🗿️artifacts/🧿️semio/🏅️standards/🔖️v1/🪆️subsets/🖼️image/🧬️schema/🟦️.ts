@@ -3,12 +3,12 @@
 import type { SemioColorspace, SemioImageFrame, SemioImageMetadataEntry } from "./📸️snapshot/🟦️.ts";
 
 export interface SemioImageArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ width: number;
-  /** @state artifact */ height: number;
-  /** @state artifact */ colorspace: SemioColorspace;
-  /** @state artifact */ bitDepth: number;
-  /** @state artifact */ frames: SemioImageFrame[];
-  /** @state artifact */ icc: import("./📸️snapshot/🟦️.ts").SemioImageSnapshot["icc"];
-  /** @state artifact */ metadata: SemioImageMetadataEntry[];
+  /** 🖼️ @state artifact */ schema: string;
+  /** ↔️ @state artifact */ width: number;
+  /** ↕️ @state artifact */ height: number;
+  /** 🏞️ @state artifact */ colorspace: SemioColorspace;
+  /** 📏️ @state artifact */ bitDepth: number;
+  /** 🎞️ @state artifact */ frames: SemioImageFrame[];
+  /** 📷️ @state artifact */ icc: import("./📸️snapshot/🟦️.ts").SemioImageSnapshot["icc"];
+  /** 🏷️ @state artifact */ metadata: SemioImageMetadataEntry[];
 }

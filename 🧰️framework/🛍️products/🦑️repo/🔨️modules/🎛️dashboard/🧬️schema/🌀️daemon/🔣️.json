@@ -240,7 +240,8 @@
             "stopping",
             "exited",
             "failed",
-            "interrupted"
+            "interrupted",
+            "timed_out"
           ]
         },
         "pid": {
@@ -840,6 +841,20 @@
           "additionalProperties": false
         }
       ]
+    },
+    "ProcessDeadlineProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "nonrenewable-selected-process-deadline",
+        "environment": "SEMIO_BUILD_BUDGET_MS",
+        "maximumMilliseconds": 9007199254740991,
+        "unboundedMilliseconds": 0,
+        "capture": "before-spawn",
+        "renewal": "explicit-restart-only",
+        "stop": "owned-interrupt-terminate-kill",
+        "status": "timed_out",
+        "code": 124
+      }
     }
   }
 }

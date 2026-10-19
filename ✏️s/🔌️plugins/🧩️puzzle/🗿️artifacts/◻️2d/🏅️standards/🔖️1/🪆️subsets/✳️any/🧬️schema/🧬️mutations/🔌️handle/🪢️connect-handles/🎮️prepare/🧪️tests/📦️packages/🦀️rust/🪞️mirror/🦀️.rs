@@ -114,6 +114,12 @@ pub mod editor {
             pub use semio_s_artifact_puzzle_2d_engine::editor::puzzle2d::engine::*;
             pub use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::board_host;
         }
+        pub use semio_s_artifact_puzzle_2d_text_inverse::editor::puzzle2d::recorder;
+        #[path = "."]
+        pub mod commands {
+            #[path = "../../../../../../../../../✏️editor/🎮️commands/🧊️document/🔗️proximity-connect/🦀️.rs"]
+            pub mod proximity_connect;
+        }
         #[path = "."]
         pub mod precompute {
             #[path = "../../../../../../../../../✏️editor/⏳️precompute/🪣️fill/🦀️.rs"]

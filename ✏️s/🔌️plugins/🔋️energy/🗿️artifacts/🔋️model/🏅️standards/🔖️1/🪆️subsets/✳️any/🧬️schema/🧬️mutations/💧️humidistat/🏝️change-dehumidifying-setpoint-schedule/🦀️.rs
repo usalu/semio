@@ -25,6 +25,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeHumidistatDeh
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeHumidistatDehumidifyingSetpointSchedule>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "humidistat", kind: "change-humidistat-dehumidifying-setpoint-schedule", record: "ChangedHumidistatDehumidifyingSetpointSchedule" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -46,7 +47,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "humidistat", kind: "change-humidistat-dehumidifying-setpoint-schedule", record: "ChangedHumidistatDehumidifyingSetpointSchedule" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

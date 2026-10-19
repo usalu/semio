@@ -1,4 +1,4 @@
-//! `change-column-kind` mutation leaf.
+//! 🧬️ `change-column-kind` mutation leaf.
 
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 

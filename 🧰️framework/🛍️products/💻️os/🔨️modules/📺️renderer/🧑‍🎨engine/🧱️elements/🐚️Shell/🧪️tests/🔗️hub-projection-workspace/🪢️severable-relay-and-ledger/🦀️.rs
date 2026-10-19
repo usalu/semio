@@ -90,7 +90,7 @@ fn drive<F: std::future::Future>(future: F) -> F::Output {
             return output;
         }
         let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
         if advanced == 0 {
             std::thread::sleep(std::time::Duration::from_millis(1));
         }

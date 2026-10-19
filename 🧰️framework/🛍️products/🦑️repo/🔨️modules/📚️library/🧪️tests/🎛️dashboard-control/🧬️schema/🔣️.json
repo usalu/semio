@@ -9,7 +9,11 @@
     "targets",
     "sources",
     "readerFiles",
-    "instructionAliases"
+    "instructionAliases",
+    "namedInputs",
+    "dashboardRoutes",
+    "dashboardHelp",
+    "sharedProviders"
   ],
   "properties": {
     "absentFiles": {
@@ -100,6 +104,197 @@
       "const": [
         "CLAUDE.md"
       ]
+    },
+    "namedInputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "name",
+          "absent",
+          "present"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "absent": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "present": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "dashboardRoutes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "args",
+          "installed",
+          "mode",
+          "status",
+          "expected"
+        ],
+        "properties": {
+          "args": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "installed": {
+            "type": "boolean"
+          },
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "expected": {
+            "enum": [
+              "native",
+              "build",
+              "failed"
+            ]
+          }
+        }
+      }
+    },
+    "dashboardHelp": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "args",
+          "expected"
+        ],
+        "properties": {
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "enum": [
+              "help",
+              "open"
+            ]
+          }
+        }
+      }
+    },
+    "sharedProviders": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical",
+        "consumer",
+        "locks",
+        "dependencies",
+        "vectors"
+      ],
+      "properties": {
+        "canonical": {
+          "type": "string"
+        },
+        "consumer": {
+          "type": "string"
+        },
+        "locks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "group",
+              "version"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "group": {
+                "enum": [
+                  "dependencies",
+                  "devDependencies"
+                ]
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+              }
+            }
+          }
+        },
+        "vectors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "packages",
+              "expected"
+            ],
+            "properties": {
+              "packages": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "expected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

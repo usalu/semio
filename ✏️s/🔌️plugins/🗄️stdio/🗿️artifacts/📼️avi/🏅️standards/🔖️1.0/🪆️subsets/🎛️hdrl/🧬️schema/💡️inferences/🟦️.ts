@@ -7,7 +7,7 @@ export interface AviDuration {
 }
 
 export interface AviInference {
-  /** @derived */
+  /** ⏱️ @derived */
   duration: AviDuration;
 }
 

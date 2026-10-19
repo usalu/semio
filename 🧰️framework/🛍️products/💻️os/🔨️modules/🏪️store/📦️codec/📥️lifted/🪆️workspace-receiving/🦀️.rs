@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_io_sqlite_snapshot::SqliteSnapshotControl;
 use semio_framework_value::ValueError;
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 /// ♻️ An original receiving owner that can retire a stage workspace under its own grant.
 pub trait StageOwner{fn retire_workspace(&mut self,workspace:NativeDecodeRetirementRecipient)->Result<(),ValueError>;}
 

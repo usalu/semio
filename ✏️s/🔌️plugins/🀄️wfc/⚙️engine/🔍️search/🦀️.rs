@@ -156,10 +156,6 @@ fn backtrack_and_repair<T: Topology>(
     sink: &mut EventSink,
     nogoods: &mut NogoodIndex,
 ) -> RepairOutcome {
-    // The trail's current decision prefix is exactly what caused this contradiction (whether an
-    // ordinary propagation wipeout or a rejected complete assignment) — record it once, before any
-    // unwinding, while it still reflects the combination that actually failed. Guarded on
-    // `is_enabled()` so a disabled (default) store costs not even the `Vec` allocation.
     if nogoods.is_enabled() {
         nogoods.record(trail.active_decisions());
     }
@@ -182,8 +178,6 @@ fn backtrack_and_repair<T: Topology>(
         };
         trail.undo_to(frame.trail_mark, domains, model.weights());
         if domains.any_wiped() {
-            // This frame's decision was not the (sole) cause; keep unwinding without wasting a
-            // repair attempt on a node that can't possibly fix a still-wiped domain elsewhere.
             continue;
         }
         let repair_result = domains.get_mut(frame.node).remove(frame.candidate, model.weights());
@@ -283,8 +277,6 @@ fn drive<T: Topology>(
             if constraints_accept(domains, constraints) {
                 return StepOutcome::Solved;
             }
-            // A global constraint rejected this complete assignment: exactly like a contradiction
-            // needing a backtrack, reusing the same proven repair machinery.
             match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink, nogoods) {
                 RepairOutcome::Repaired => continue,
                 RepairOutcome::Exhausted => return StepOutcome::Exhausted,
@@ -439,7 +431,7 @@ fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
     if let Some(cs) = constraints {
         for c in cs.constraints {
             let Ok(restrictions) = c.initialize(&domains, model.weights(), cs.adjacency) else {
-                continue; // a misconfigured constraint is a build-time concern, not a solve-time one
+                continue;
             };
             for (n, allowed) in restrictions {
                 let mut removed = PatternSet::new_empty(model.pattern_count());
@@ -577,8 +569,6 @@ fn solve_inner<T: Topology>(
     let start = std::time::Instant::now();
     let mut rng = Rng::from_seed(seed);
     let mut restarts = 0u64;
-    // Persists across restarts: every attempt shares the same `init_domains`/`fixed`/constraints,
-    // so a nogood learned in one restart is exactly as valid — and as watchable — in the next.
     let mut nogood_store = NogoodIndex::new(config.nogood);
 
     loop {
@@ -681,10 +671,6 @@ fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &Search
 
     let complete = matches!(step, StepOutcome::Exhausted);
     let fingerprint = model.fingerprint();
-    // Every returned solution shares the same cumulative event trace from the whole exhaustive
-    // search (not a solution-specific slice) — slicing per solution would need each `Solution` to
-    // remember its own trail-position range, which isn't worth the bookkeeping until a caller
-    // actually needs per-solution replay for `solve_all`.
     let events = sink.into_events();
     let solutions: Vec<Solution> = raw_solutions.into_iter().map(|assignment| Solution { assignment, report: RunReport { metrics: init.metrics, model_fingerprint: fingerprint, seed, events: events.clone() } }).collect();
     (solutions, complete)
@@ -703,8 +689,6 @@ fn partial_state(domains: &DomainStore) -> PartialState {
 fn conclude_failed_attempt(config: &SearchConfig, wiped: NodeId, mut metrics: Metrics, seed: u64, restarts: &mut u64, sink: EventSink, fingerprint: u64) -> SolveOutcome {
     match config.mode {
         SearchMode::Backtrack | SearchMode::Backjump => {
-            // A wipeout during the very first propagation (before any decision) with nothing on
-            // the trail to undo means every branch is already excluded: unsatisfiable, proven.
             SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report: report(metrics, seed, fingerprint, sink) })
         }
         SearchMode::RestartOnly => {

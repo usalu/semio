@@ -3,8 +3,6 @@ mod tests {
 
     #[test]
     fn null_inspector_observes_nothing_observable() {
-        // Compile-only smoke test: NullInspector must be constructible and callable
-        // without a concrete Machine — exercised indirectly by kernel tests.
         let _inspector = NullInspector;
     }
 

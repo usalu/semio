@@ -15,6 +15,6 @@ export {
 } from "./📸️snapshot/🟦️.ts";
 
 export interface Grid2dArtifact {
-  /** @state artifact */
+  /** 📸️ @state artifact */
   snapshot: import("./📸️snapshot/🟦️.ts").Grid2dSnapshot;
 }

@@ -17,7 +17,6 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            // 🌱 Terminal format: composes from its own native text/binary representation only.
             &[DIALECT]
         }
 
@@ -192,10 +191,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     IoDeclaration {
         native: NativeCodecs {
-            // 🧭️ Grammar/protocol registration through `LanguagePair`'s `&'static dsl::LanguageSpec`
-            // slots is legal to leave `None` (the type's own doc: plain-codec subsets are a real,
-            // supported shape) — deferred here, not lost: the underlying `ArtifactDsl`/
-            // `ArtifactPack` codecs these would point at are unchanged and independently tested.
             snapshot: LanguagePair { text: None, binary: None },
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
@@ -288,7 +283,6 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
         fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            // 👃️ Any byte sequence is a valid stdio.binary payload -- terminal format, always High.
             semio_framework_plugin::io::Confidence::High
         }
 

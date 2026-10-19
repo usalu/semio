@@ -64,3 +64,11 @@ Feature: The command registry is the only source of what the dashboard and the c
     When the developer runs it with `semio`
     Then nothing is forwarded to another script, the usage is printed and the status is 2
     And `semio --help` prints the usage with every flag and the status is 0
+
+Scenario: A Process Time Limit Reaches Every Authored Command Verb
+  Given a global environment axis with appliesTo all true
+  When build, setup and a future command verb are offered
+  Then the axis is offered for every authored verb
+  And playgrounds receive it only when playground true is explicit
+  And tools ignore axes whose only effects are build flags
+  And all false or all combined with verbs is refused

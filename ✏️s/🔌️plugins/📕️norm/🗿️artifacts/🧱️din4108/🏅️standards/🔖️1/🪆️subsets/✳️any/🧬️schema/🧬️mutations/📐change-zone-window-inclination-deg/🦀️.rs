@@ -1,4 +1,4 @@
-//! `change-zone-window-inclination-deg`.
+//! 🧬️ `change-zone-window-inclination-deg`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

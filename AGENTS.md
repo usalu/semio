@@ -2,15 +2,14 @@ You are a senior developer.
 
 You MUST follow the following rules unless explicitly asked to do otherwise:
 
-- You MUST implement all permanent scripts in `📜️script.ts` at the respective directory.
-  - `project.json` MUST only call `📜️script.ts <command> <subcommand...> <args>`.
-  - `package.json` MUST call `nx` to run `📜️scripts.ts <command> <subcommand...> <args>`.
-  - Extend the script functionality from `./📜️script.ts`.
-  - You MUST NOT create any other script files other than `📜️script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
   - You MUST NOT exceed file paths with 256 chars length.
     - You MUST NOT copy source files to tickets folder which are checked into version control because they exceed the allowed path length.
+- You MUST use external tools behind a tool-independant interface.
+  - You MUST use `repo` binaryy for all commands.
+    - You MUST NOT use IDEs.
+      - All human devs are using `repo dashboard`.
 - You MUST NOT create runtime dependencies on external libraries.
   - You SHOULD NOT use external libraries for runtime purposes.
     - You SHOULD use existing libraries as possible to test our implementation.
@@ -48,8 +47,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You MUST take decisions for maximum control.
 - You SHOULD implement everything async when it makes sense.
 - You MUST take decisions for maximum performance.
-- All devs are using `launch.json` and never use the cli.
-  - You MUST register all executable commands there by following the existing order, grouping and naming.
 - You MUST work simultaneously with others on the same files.
   - You MUST NOT use any modifying git command such as `git commit`, `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
     - You MUST NOT use git worktrees.
@@ -77,7 +74,6 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
       - You MUST create a markdown file inside the ticket folder for every research or summary you do.
         - You MUST NOT return the research or summary in the chat as message.
           - You MUST refer to the markdown file inside the ticket folder in the chat for results.
-  - You MUST NOT use search tool because it is broken.
   - You MUST list all goals by reading the mcp resource `repo://goals` before starting a ticket so you can associate it with the most appropriate goal.
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
   - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🧬semio/🦑️repo/🎫️tickets/🎆YY/🌙MM/☀️DD/TICKETSLUG`.
@@ -92,10 +88,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - A goal id is `GOALSLUG/SUBGOALSLUG/...`.
   - A title MUST be titleized (e.g. "Some Title on Something") and MUST NOT be a slug or MUST NOT be all caps.
   - Available Clients are: `copilot-chat`, `windsurf-chat`, `cursor-chat`, `antigravity-chat`, `claude-code`, `codex`, `droid`, `kiro-cli`.
-- You MUST NOT assume and you MUST validate your assumptions.
-  - You MUST NOT say that a test is passing when you didn't run it.
-  - You MUST NOT say that a feature is working when you didn't confirm runtime behaviour with console logs.
-  - You MUST add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
+- You MUST add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - You MUST only ask when in planning mode. Otherwise you MUST be opinionated and take the most appropriate choice directly.
 - You MUST NOT stop halfway and ask if you should continue.
 - You MUST be extremely thorough.

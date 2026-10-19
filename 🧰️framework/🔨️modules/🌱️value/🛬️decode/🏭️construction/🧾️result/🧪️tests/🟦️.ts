@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 /** 🪢️ Independent relational cases conserve an admitted typed result alongside its refused receipt. */

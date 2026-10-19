@@ -39,14 +39,6 @@ enum UvStatus {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn point_in_loop(body: &Body, face: FaceId, loop_id: LoopId, uv: Pnt2, tol: f64) -> Result<bool, KernelError> {
     let _ = face_surface(body, face)?;
-    // 🐛 FIX (ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME W2-B): used to special-case
-    // `Surface::Plane` to 1 sample per coedge (its own corner only), assuming every planar face's
-    // boundary is a straight-edge polygon — true for `make_box`, false for a planar face bounded
-    // by an imprinted CIRCLE/ELLIPSE p-curve (e.g. a cylinder-through-plane hole, or the small
-    // disk face on the far side of it): a single-coedge circular loop then degenerated to ONE
-    // sample point, `poly.len() < 3`, unconditionally `Outside`. 16 samples/edge is exact for a
-    // straight edge too (extra collinear points don't change the polygon), so this is a safe,
-    // uniform fix, not a special case.
     Ok(point_in_loop_status(body, face, loop_id, uv, tol, 16)? == UvStatus::Inside)
 }
 
@@ -77,10 +69,6 @@ pub fn point_in_face_uv_closure(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -
 fn point_in_face_uv_status(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> Result<UvStatus, KernelError> {
     let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     let _ = face_surface(body, face)?;
-    // 🐛 See the identical fix + rationale on `point_in_loop` above — a planar face is not
-    // guaranteed to have a straight-edge boundary (an imprinted circular hole/disk is planar and
-    // curved), so a fixed 1-sample-per-coedge shortcut for `Surface::Plane` silently degenerated
-    // to a zero-area "polygon" for those. 16 samples/edge is exact for straight edges too.
     let samples = 16;
     let Some(outer) = face_ent.outer else {
         return Ok(UvStatus::Outside);

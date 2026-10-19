@@ -3,7 +3,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::model::*;
 use store::sqlite_snapshot::{self};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use pack::value::DslValue as D;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Clone,Copy)]
 enum Cell<'a>{Null,Int,Real(f64),Text(&'a str),Bytes(usize)}
 use Cell::{Null,Int,Real,Text,Bytes};

@@ -1,6 +1,7 @@
 //! 📑️ Delegating operations and publication: the store operations that delegate to the live, replay, cursor and log components. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

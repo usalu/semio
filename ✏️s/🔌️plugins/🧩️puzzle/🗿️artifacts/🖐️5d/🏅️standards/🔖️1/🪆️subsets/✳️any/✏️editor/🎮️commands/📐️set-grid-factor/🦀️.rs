@@ -1,7 +1,7 @@
 //! 📐️ `set-grid-factor` command.
 
-use crate::editor::puzzle5d::entities::{puzzle5d_absolute_or_delta, PUZZLE5D_GRID_FACTOR_MAX, PUZZLE5D_GRID_FACTOR_MIN};
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{puzzle5d_absolute_or_delta, PUZZLE5D_GRID_FACTOR_MAX, PUZZLE5D_GRID_FACTOR_MIN};
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 /// 📐️ The board pane's snap factor: an absolute `value` (typed entry) or a `delta` (stepper nudge),

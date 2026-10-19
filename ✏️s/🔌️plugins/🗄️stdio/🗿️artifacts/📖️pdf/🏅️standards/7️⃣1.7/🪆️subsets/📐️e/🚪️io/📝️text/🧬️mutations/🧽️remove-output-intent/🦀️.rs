@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-output-intent`.
+//! 🆔️ Direct text identity for `remove-output-intent`.
 
 pub const OPCODE: &str = "remove-output-intent";
 pub const TEXT_OPCODE: &str = OPCODE;

@@ -175,9 +175,6 @@ pub fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnaps
     let bytes = match command {
         Gis3dCommand::SetExaggeration(payload) if payload.exaggeration.is_finite() => 0,
         Gis3dCommand::SetCamera(payload) if serde_json::from_str::<Value>(&payload.camera_json).is_ok_and(|camera| camera.is_object()) => payload.camera_json.len(),
-        // 🎬️ An example id is a catalogue key, not content: the document it resolves to is compiled
-        // into the crate, so the WIRE cost is the id alone and the work is the one reduce step every
-        // other row takes. `example_document` is what rejects an id outside the catalogue.
         Gis3dCommand::SetActiveExample(payload) => payload.example_id.len(),
         _ => return None,
     };
@@ -258,8 +255,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFact
         &[
             ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] },
             ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-            // 🎬️ Terrain's example load touches only the document's own two fields — unlike gismap's,
-            // which also re-frames its map window — so it declares the artifact lane alone.
             ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ];
 }
@@ -628,13 +623,7 @@ impl ArtifactEditor for Gis3dPlayApp {
 pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::GISTERRAIN_DIALECT)
             .document(["semio", "gis", "3d"])
-            // 🔌️ Declared for clarity on both sides of the `map:in` edge (WORKFLOWS-END-TO-END-TYPED-PORTS
-            // Wave 2 port recipe) — the canonical declaration is the gismap artifact's;
-            // identical-shape duplicates are harmless (registry dedupes by id).
             .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
-            // 🧱️ `.artifact_kind(mesh_artifact_kind())` REMOVED — `3d.mesh` duplicate kind deleted
-            // repo-wide (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); mesh is now
-            // canonically `s.stdio.semio@v1/mesh`, composed via `GisTerrainSnapshot.mesh`.
             .media_input(gis3d_map_in_port())
             .media_output(gis3d_scene_out_port())
             .icon_id("gis3d")
@@ -642,11 +631,6 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .default_mode_id(view_mode::GIS3D_PLAY_MODE_VIEW)
             .window_kind_def(terrain::definition())
             .default_layout(view_mode::layout())
-            // 🕹️ The framework-owned "features" interaction domain (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the imported-overlay pin
-            // selection; auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
-            // setSelectionMode/setInteractionGranularity, replacing the deleted bespoke
-            // setSelection/worldSelect view actions below.
             .interaction(InteractionDefinition {
                 id: "features".into(),
                 label: LocalizedLabel::native("Features", "Objekte"),
@@ -664,22 +648,11 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
-            // 🎬️ Loading a bundled example replaces document content through this artifact's own
-            // authored leaves (`change-exaggeration`, `change-imported-features`), each with a real
-            // inverse — so it is a Mutation, never a View action. Declaring it is ALSO what makes the
-            // pane's navbar example picker exist: the host's `appSwitchesExamples` gate reads exactly
-            // this action id, and without it `exampleOptions` is empty and `resolveBootExampleId`
-            // announces nothing, so the curated `📚️examples/🎬️demo` facet stayed inert
-            // (ticket 26/09/19, gis3d's empty-picker defect — gismap declared it, terrain did not).
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![
                 semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
             ])
-            // 📝️ Vertical exaggeration is the terrain's ONE editable document property, so its slider
-            // is also the only argument schema this app needs — without it the palette staged nothing
-            // and `command_from_action` fell back to 1.0, re-applying the value already in the
-            // document and diffing to zero operations.
             .action_args("setExaggeration", vec![
                 semio_framework_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT),
             ])
@@ -691,10 +664,6 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .config(Gis3dPlayApp::config_spec())
             .io(gis3d_io())
             .interactive_jobs(InteractiveJobClassification::Migrated)
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
-            // `.workflow(...)` — the old `"reuse-terrain"` app-level example registration and the
-            // no-op `.workflow("gis3d", …)` call are dropped here (not silently: reported in the
-            // migration notes). The subset's own `📚️examples/🎬️demo` facet is the modern replacement.
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole terrain with one of the plugin's bundled terrain examples, by example id.", "Ersetzt das gesamte Gelände durch eines der mitgelieferten Geländebeispiele, anhand der Beispiel-Id."))
             .action_describe("setExaggeration", LocalizedLabel::native("Sets the vertical exaggeration factor the terrain surface is drawn with.", "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."))
             .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)

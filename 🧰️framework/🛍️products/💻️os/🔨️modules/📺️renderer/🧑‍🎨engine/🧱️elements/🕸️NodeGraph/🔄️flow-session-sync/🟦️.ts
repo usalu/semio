@@ -5,8 +5,8 @@
 
 import { serializeCanvasThemeJson } from "@semio-tech/ui-styling";
 import { type NodeGraphHover, type NodeGraphScene, type AppCatalogue } from "@semio-tech/framework";
-import { parseSceneJsonField } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { type FlowTask, type FlowWasmSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { parseSceneJsonField } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
+import { type FlowTask, type FlowWasmSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
 import { DEFAULT_NODE_GRAPH_VIEWPORT } from "../🧰️graph-core/🟦️.ts";
 import {
   DAG_CONTENT_REFIT_MAX_COVERAGE,
@@ -306,9 +306,6 @@ function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraph
  * workflow window derives one per workflow node). `setNeuronKindInfosJson` replaces the session's whole
  * table, so the two sources are always pushed together, never one after the other. */
 function syncFlowOperatorInfos(session: FlowWasmSession, catalogue: AppCatalogue, scene: NodeGraphScene): void {
-  // 🧩️ The two sources are carried as two PARTS, not concatenated into one body: they arrive
-  // milliseconds apart, so a single body made the whole app-static table cross again just to append
-  // the scene's own records.
   const parts = [catalogue.operators ?? [], scene.operators ?? []].filter((source) => source.length > 0).map((source) => JSON.stringify(source));
   if (parts.length === 0) return;
   sendFlowPayloadPartsOnce(session, "setNeuronKindInfosJson", parts, (json) => session.setNeuronKindInfosJson(json));
@@ -333,9 +330,7 @@ export function syncFlowSessionStructureFromScene(session: FlowWasmSession, scen
       const lod = parseSceneJsonField<{ readonly automatic?: boolean; readonly forcedLabel?: string }>(scene.lodJson);
       observeFlowTask(session, "setAutomaticLod", session.setAutomaticLod(lod.automatic !== false));
       if (lod.forcedLabel) observeFlowTask(session, "setForcedDrawLodLabel", session.setForcedDrawLodLabel(lod.forcedLabel));
-    } catch {
-      /* ignore */
-    }
+    } catch {}
   }
 }
 
@@ -364,9 +359,6 @@ export function refitFlowCameraIfContentLeftView(session: FlowWasmSession, scene
 
 export function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, catalogue: AppCatalogue): void {
   syncFlowSessionStructureFromScene(session, scene, catalogue);
-  // 🧵️ Apply results from the plugin's off-main-thread `flowEvalTick` chain BEFORE computingJson —
-  // applyEvalOutputsJson clears computing chrome, so applying computingJson first would have it
-  // immediately wiped by this call on the same sync pass.
   syncFlowSessionEvalFromScene(session, scene);
 }
 //#endregion Sync

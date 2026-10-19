@@ -7,7 +7,7 @@ export interface StepBounds {
 }
 
 export interface StepInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: StepBounds;
 }
 

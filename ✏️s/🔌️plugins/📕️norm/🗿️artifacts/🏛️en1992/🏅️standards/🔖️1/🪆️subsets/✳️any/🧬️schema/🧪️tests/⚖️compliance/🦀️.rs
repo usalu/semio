@@ -443,7 +443,6 @@ fn no_identical_en_de_explanations_in_committed_examples() {
         let report = evaluate(&snap);
         for c in &report.checks {
             if c.explanation.en == c.explanation.de && !c.explanation.en.is_empty() {
-                // numbers-only exception: strip digits/punctuation/whitespace
                 let stripped: String = c.explanation.en.chars().filter(|ch| ch.is_alphabetic()).collect();
                 if !stripped.is_empty() {
                     identical.push((c.id.clone(), c.explanation.en.clone()));
@@ -451,7 +450,6 @@ fn no_identical_en_de_explanations_in_committed_examples() {
             }
             if c.title.en == c.title.de && !c.title.en.is_empty() {
                 let stripped: String = c.title.en.chars().filter(|ch| ch.is_alphabetic()).collect();
-                // titles may share Latin symbols; require remedy/explanation focus — skip title twins that are clause codes
             }
             if !c.remedies.is_empty() {
                 for rem in &c.remedies {
@@ -564,7 +562,6 @@ fn every_editable_leaf_influences_a_check_scope_aware() {
         let mut leaves = Vec::new();
         walk_leaves("", &value, &mut |path| {
             if path.is_empty() { return; }
-            // Skip null option placeholders (e.g. members[].prestress = null)
             if resolve_json_path(&value, path).map(|v| v.is_null()).unwrap_or(false) { return; }
             leaves.push(path.to_string());
         });
@@ -661,7 +658,7 @@ fn perturb_json_value(tree: &mut serde_json::Value, path: &str) -> bool {
                 serde_json::Value::Number(n) => {
                     let x = n.as_f64().unwrap_or(0.0);
                     let nx = if *seg == "k" {
-                        1.0 // below Annex C minima
+                        1.0
                     } else if *seg == "epsUk" {
                         0.01
                     } else if *seg == "count" || *seg == "legs" || seg.ends_with("Years") {
@@ -675,7 +672,6 @@ fn perturb_json_value(tree: &mut serde_json::Value, path: &str) -> bool {
                     } else {
                         x * 1.35
                     };
-                    // Keep integer-looking values integral for u32 fields
                     if n.as_u64().is_some() || (*seg == "count" || *seg == "legs") {
                         *v = serde_json::json!(nx.round() as u64);
                     } else {

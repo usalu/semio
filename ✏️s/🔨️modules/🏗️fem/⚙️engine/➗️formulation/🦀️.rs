@@ -1,4 +1,4 @@
-//! their parametric derivatives, Jacobians, plane/solid B-matrices, and constitutive D-matrices —
+//! ➗️ their parametric derivatives, Jacobians, plane/solid B-matrices, and constitutive D-matrices —
 //! 🧭️ Shared element-formulation toolkit: Gauss quadrature rules, isoparametric shape functions and
 //! consumed by the continuum/plate/shell elements in `elements2d`/`elements3d`.
 

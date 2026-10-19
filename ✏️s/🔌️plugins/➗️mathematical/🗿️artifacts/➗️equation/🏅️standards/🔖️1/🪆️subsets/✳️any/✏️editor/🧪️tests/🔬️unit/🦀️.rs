@@ -155,9 +155,6 @@ fn drive_retained(work: &mut EquationRetainedCommandWork, command: &EquationComm
     loop {
         match work.step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation }, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut 0, &mut semio_framework_job::RetainedCloneProgress::default())).expect("retained Equation turn") {
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
-            // 🌱️ `ToValue`/`DslValue` in place of the old `serde_json::to_value` oracle: `DslValue`
-            // already implements `PartialEq`, so the two runs compare directly with no JSON text
-            // round trip needed.
             ArtifactCommandWorkStep::Complete(emit) => return semio_framework_value::ToValue::to_value(&emit.artifact_mutations),
             ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("Equation commands do not publish ephemeral state"),
             ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("Equation commands do not publish downloads"),
@@ -420,9 +417,6 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
-    // 🌱️ `AppDefinition` (`semio-framework-plugin`, framework-owned) has not itself gained
-    // `ToValue` — `Debug` gives the same "does the manifest mention X" substring check without
-    // needing `serde_json` for a framework type this batch does not own.
     let debug = format!("{:?}", create_equation_app());
     for id in [graph_window::MATH_PLAY_WINDOW_GRAPH, geometry_window::MATH_PLAY_WINDOW_GEOMETRY] {
         assert!(debug.contains(id), "window kind {id} missing from the manifest: {debug}");

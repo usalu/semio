@@ -1,4 +1,4 @@
-//! `26/08/23/END-TO-END-TESTING-REFACTOR`.
+//! 🧪️ `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //! 🦀️ Puzzle 2d 1 exhaustive mutation case — Rust adapter. Ticket
 //!
 //! Recorded no-oracle decision `puzzle-2d-mutation-semantics`
@@ -425,7 +425,7 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
 /// pretty-printed and the writer is compact, so a handler that returned the input unread would be
 /// caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "shared://🧬️mutations/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/🟢️node/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.input_bytes(SNAPSHOT)?;
     let parsed = ctx.input_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

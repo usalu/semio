@@ -292,21 +292,15 @@ export const ENTWERFEN_MIT_BESTAND_TUTORIAL: TutorialDefinition = {
     ],
     document: [],
     camera: [
-      // 🎬️ Welcome: a slow establishing push toward the seeded "Abbau Aufbau" prototype.
       heroCameraKeyframe(10_000, [34, -32, 22], [7, 0, 3]),
       heroCameraKeyframe(20_000, [30, -30, 20], [7, 0, 3]),
-      // 🎥️ Viewport chapter: the camera itself performs the zoom/pan/orbit gestures being narrated,
-      // timed to match the pointer gestures in `tracks.gestures` below.
       heroCameraKeyframe(50_000, [30, -30, 20], [7, 0, 3]),
       heroCameraKeyframe(56_000, [22, -22, 15], [7, 0, 3]),
       heroCameraKeyframe(62_000, [24, -24, 15], [9, -2, 3.5]),
       heroCameraKeyframe(72_000, [10, -30, 18], [9, -2, 3.5]),
-      // 🧩️ Settle back onto the seeded object for the catalogue/add-object/transform chapters.
       heroCameraKeyframe(100_000, [18, -20, 12], [7, 0, 3]),
       heroCameraKeyframe(118_000, [14, -16, 10], [7, 0, 3]),
-      // 🌐️ Pull back a touch for the fill/distribution chapters to frame the growing assembly.
       heroCameraKeyframe(196_000, [26, -28, 18], [7, 0, 3]),
-      // 👋️ Final pull-back — bookends the opening establishing shot.
       heroCameraKeyframe(230_000, [40, -40, 26], [7, 0, 3]),
     ],
     gestures: [

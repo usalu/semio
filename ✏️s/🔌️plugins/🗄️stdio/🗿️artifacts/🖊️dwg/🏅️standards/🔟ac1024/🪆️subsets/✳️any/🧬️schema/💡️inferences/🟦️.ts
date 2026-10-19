@@ -11,7 +11,7 @@ export interface DwgStructure {
 }
 
 export interface DwgInference {
-  /** @derived */
+  /** 🏗️ @derived */
   structure: DwgStructure;
 }
 

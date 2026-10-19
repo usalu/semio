@@ -24,3 +24,4 @@ semio-s-plugin-energy-engine-site = { workspace = true }
 
 [dev-dependencies]
 csv = { version = "1" }
+serde_json = "1.0.149"

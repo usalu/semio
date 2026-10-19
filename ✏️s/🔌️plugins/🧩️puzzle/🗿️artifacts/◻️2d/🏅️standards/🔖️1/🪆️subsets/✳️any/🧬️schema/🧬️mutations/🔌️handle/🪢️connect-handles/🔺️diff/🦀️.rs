@@ -1,4 +1,4 @@
-//! whole-snapshot capture). No-op when the id already exists in `base`. A payload that states a `tolerance` connects
+//! 🌐️ whole-snapshot capture). No-op when the id already exists in `base`. A payload that states a `tolerance` connects
 //! 🔺️ Sparse diff builder for `ConnectHandles` — an exact ordered insert (never a
 //! on any base and warns `mutation.precondition-drifted` where its two handles are no longer within it.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;

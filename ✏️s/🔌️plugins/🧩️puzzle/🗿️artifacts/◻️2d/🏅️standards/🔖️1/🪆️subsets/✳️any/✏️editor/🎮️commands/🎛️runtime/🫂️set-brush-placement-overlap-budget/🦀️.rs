@@ -1,4 +1,4 @@
-//! placement may spend before it counts as a collision, a shared `Puzzle2dConfig` preference a live
+//! 📍️ placement may spend before it counts as a collision, a shared `Puzzle2dConfig` preference a live
 //! ⚙️ `set-brush-placement-overlap-budget` command — the world-unit footprint overlap a brush/fill
 //! fill run re-reads through `ToolRunSettingsReads`.
 

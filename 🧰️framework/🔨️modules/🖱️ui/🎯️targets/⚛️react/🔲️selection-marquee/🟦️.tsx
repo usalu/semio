@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import type { MergeMode } from "@semio-tech/framework/interaction";
 
-/** @emoji ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
+/** 👉️ ⬚️ Canonical area-select overlay coverage (drag right-to-left = partial). */
 export type SelectionMarqueeCoverage = "partial" | "full";
 
 export type SelectionMarqueeRect = {
@@ -22,7 +22,7 @@ export type SelectionMarqueeProps = {
   readonly className?: string;
 } & ({ readonly shape: "rect"; readonly rect: SelectionMarqueeRect } | { readonly shape: "polygon"; readonly points: readonly SelectionMarqueePoint[] });
 
-/** @emoji ⬚️ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
+/** ☑️ ⬚️ Shared SVG marquee for spatial area selection (primary fill/stroke; dashed when partial). */
 export function SelectionMarquee(props: SelectionMarqueeProps): React.ReactElement {
   const { coverage, className } = props;
   const svgClass = cn("selection-marquee pointer-events-none absolute inset-0 h-full w-full overflow-visible", className);
@@ -46,12 +46,12 @@ export const SELECTION_DRAG_DIRECTION_THRESHOLD_PX = 2;
 
 export type SelectionMarqueeMethod = "lasso" | "rectangle";
 
-/** @emoji 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
+/** 🖱️ Crossing selection when the drag ends left of the start (partial overlap). */
 export function marqueeIsCrossing(startX: number, endX: number): boolean {
   return endX < startX;
 }
 
-/** @emoji 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
+/** 🖱️ Lasso uses the first horizontal step; rectangle compares start vs end. */
 export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): boolean {
   const start = path[0];
   if (!start) return false;
@@ -66,17 +66,17 @@ export function marqueeIsCrossingFromPath(path: readonly SelectionMarqueePoint[]
   return marqueeIsCrossing(start.x, end.x);
 }
 
-/** @emoji 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
+/** 🖱️ Maps drag direction to marquee coverage (rectangle endpoints). */
 export function marqueeCoverageFromDrag(startX: number, endX: number): SelectionMarqueeCoverage {
   return marqueeIsCrossing(startX, endX) ? "partial" : "full";
 }
 
-/** @emoji 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
+/** 🖱️ Maps gesture path to marquee coverage (lasso first horizontal step). */
 export function marqueeCoverageFromPath(path: readonly SelectionMarqueePoint[], method: SelectionMarqueeMethod = "rectangle"): SelectionMarqueeCoverage {
   return marqueeIsCrossingFromPath(path, method) ? "partial" : "full";
 }
 
-/** @emoji 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
+/** 🖱️ Resolves marquee coverage for rectangle or lasso gestures. */
 export function marqueeCoverageFromGesture(input: { readonly method: SelectionMarqueeMethod; readonly startX: number; readonly endX: number; readonly path: readonly SelectionMarqueePoint[] }): SelectionMarqueeCoverage {
   if (input.method === "lasso" && input.path.length > 0) {
     return marqueeCoverageFromPath(input.path, "lasso");
@@ -84,7 +84,7 @@ export function marqueeCoverageFromGesture(input: { readonly method: SelectionMa
   return marqueeCoverageFromDrag(input.startX, input.endX);
 }
 
-/** @emoji 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
+/** 🎯️ Maps shift/ctrl modifiers to a marquee-drag `MergeMode` (ctrl+shift → invertive).
  * `persistentMode` — a shell's own {@link SelectionModeStore} value, e.g. `useShellScope().selection.get()`
  * — takes precedence when set to something other than `"replace"`, mirroring the toolbar toggle in
  * `SelectionUtilityOptions`; omitted, behaves as if the toolbar is at its `"replace"` setting (was: read a
@@ -106,7 +106,7 @@ export function marqueeModeFromModifiers(modifiers: { readonly shiftKey?: boolea
   return "replace";
 }
 
-/** @emoji 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
+/** 🎯️ Applies a marquee-drag `MergeMode` when committing ids — `"range"` has no meaning without
  * an ordered topology here (see `marqueeModeFromModifiers`'s doc), so it falls back to `"replace"`. */
 export function selectionMergeIds(mode: MergeMode, current: readonly string[], incoming: readonly string[]): string[] {
   const currentSet = new Set(current);

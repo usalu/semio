@@ -2,7 +2,7 @@
 //!
 //! A target named twice is what the schema's `uniqueItems` forbids: a Fatal `mutation.invariant`, nothing turns.
 //!
-//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧱️repeated-targets/`
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️selection/🔄️rotate-selection/🧱️repeated-targets/`
 //! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
 
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
@@ -10,11 +10,11 @@ use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
 use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧱️repeated-targets/🦠️mutation/🔣️.json")).expect("committed test data reads"));
-static DIFF_ABSENT: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧱️repeated-targets/🔺️diff/🚫️.absent")).expect("committed test data reads"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔄️rotate-selection/🧱️repeated-targets/🎯️outcome/🔣️.json")).expect("committed test data reads"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔄️rotate-selection/🧱️repeated-targets/🦠️mutation/🔣️.json")).expect("committed test data reads"));
+static DIFF_ABSENT: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔄️rotate-selection/🧱️repeated-targets/🔺️diff/🚫️.absent")).expect("committed test data reads"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔄️rotate-selection/🧱️repeated-targets/🎯️outcome/🔣️.json")).expect("committed test data reads"));
 
 fn before() -> Puzzle3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

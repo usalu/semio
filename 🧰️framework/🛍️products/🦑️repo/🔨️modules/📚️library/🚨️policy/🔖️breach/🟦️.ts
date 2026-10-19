@@ -4,7 +4,7 @@ export type BreachPriority = "high" | "medium" | "low";
 export type BreachRecord = {
   id: string;
   summary: string;
-  /** Statute-style rule id (path or slug) for GraphQL `kindId` / cache round-trip. */
+  /** 🎨️ Statute-style rule id (path or slug) for GraphQL `kindId` / cache round-trip. */
   kind: string;
   scope: string;
   line?: number;

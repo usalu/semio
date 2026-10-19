@@ -319,11 +319,6 @@ pub fn diff_set_points_by_return(counts: [u32; 5]) -> LasDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_insert_vlr(base: &LasSnapshot, index: usize, vlr: LasVlr) -> LasDiff {
-    // 🧭️ Derived from the REAL collection length (`base.vlrs.len()`), never `base.header
-    // .number_of_vlrs` — the header field can be desynced from reality (a raw-decoded fixture,
-    // or a directly-constructed test snapshot), and `apply_mutation`'s imperative body
-    // likewise recomputes from `snapshot.vlrs.len()` post-insert; both sides must agree for
-    // `mutation_diff_law` to hold unconditionally, not just on already-synced fixtures.
     LasDiff { number_of_vlrs: Some((base.vlrs.len() + 1) as u32), vlrs: Some(LasVlrsDiff { removed: vec![], modified: vec![], added: vec![LasVlrAdded { index, vlr }] }), ..Default::default() }
 }
 
@@ -339,8 +334,6 @@ pub fn diff_set_vlr_data(index: usize, data: Vec<u8>) -> LasDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_insert_point(base: &LasSnapshot, index: usize, point: LasPoint) -> LasDiff {
-    // 🧭️ See `diff_insert_vlr`'s doc comment — derived from `base.points.len()`, not the
-    // (possibly-desynced) `base.header.number_of_point_records`.
     LasDiff { number_of_point_records: Some((base.points.len() + 1) as u32), points: Some(LasPointsDiff { removed: vec![], modified: vec![], added: vec![LasPointAdded { index, point }] }), ..Default::default() }
 }
 

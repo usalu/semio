@@ -24,6 +24,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteAnnualSchedul
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteAnnualSchedule> + From<crate::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "annual-schedule", kind: "delete-annual-schedule", record: "DeletedAnnualSchedule" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -45,7 +46,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "annual-schedule", kind: "delete-annual-schedule", record: "DeletedAnnualSchedule" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

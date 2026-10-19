@@ -1,4 +1,4 @@
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import type { TreeWindowRowExtent } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import * as React from "react";
 import { TreeContext } from "../📏️row-alignment/🟦️.tsx";
@@ -45,8 +45,6 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const defaultOpen = hasControl ? !hasNestedTreeItems || getTreeItemDefaultOpen(item) : getTreeItemDefaultOpen(item);
   const treeOpenState = useTreeOpenState(getTreeItemStateId(item.id), defaultOpen);
   const propertyExpandable = hasControl ? hasNestedTreeItems : isExpandable;
-  // 🌀️ An open window that has announced rows it has not streamed yet wears the same ring an async
-  // `getItems` load does — the host is fetching exactly the same thing, one refresh further away.
   const isWindowPending = windowTotal > 0 && childItems.length === 0 && treeOpenState.open;
   const isLoading = (loadingById[getTreeItemLoadingId(item.id)] ?? false) || Boolean(item.loading) || isWindowPending;
 
@@ -147,7 +145,6 @@ export const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionVi
   const childWindow = section.window;
   const windowTotal = Math.max(0, Math.floor(childWindow?.total ?? 0));
   const spacerRows = treeWindowSpacerRows(childWindow, items.length);
-  // 🌀️ See {@link TreeDataItemView}: an announced-but-unstreamed window is a load in flight.
   const isWindowPending = windowTotal > 0 && items.length === 0 && treeOpenState.open;
   const isLoading = (loadingById[getTreeSectionLoadingId(section.id)] ?? false) || Boolean(section.loading) || isWindowPending;
   const isWaiting = Boolean(section.waiting);

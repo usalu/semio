@@ -1,16 +1,31 @@
-use crate::tui::chrome::{shell, window_chip_layout, ChromeMode, ChromeState, FooterState, NavbarState, Shell, TabKind};
-use crate::tui::engine::Tui;
-use crate::tui::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::layout::{create_default_layout, dock_window, push_window_to_stack, WindowLayout, WindowLayoutWindowNode};
-use crate::tui::scene::{NodeContent, NodeId};
-use crate::tui::theme::{GlyphSet, Theme};
-use crate::tui::widget::WidgetSignal;
+use semio_framework_ui_tui_frame::chrome::shell;
+use semio_framework_ui_tui_frame::chrome::window_chip_layout;
+use semio_framework_ui_tui_frame::chrome::ChromeMode;
+use semio_framework_ui_tui_frame::chrome::ChromeState;
+use semio_framework_ui_tui_frame::chrome::FooterState;
+use semio_framework_ui_tui_frame::chrome::NavbarState;
+use semio_framework_ui_tui_frame::chrome::Shell;
+use semio_framework_ui_tui_frame::chrome::TabKind;
+use semio_framework_ui_tui_core::event::Event;
+use semio_framework_ui_tui_core::event::KeyEvent;
+use semio_framework_ui_tui_core::event::MouseButton;
+use semio_framework_ui_tui_core::event::MouseEvent;
+use semio_framework_ui_tui_core::event::MouseKind;
+use semio_framework_ui_tui_core::geometry::{Pos, Size};
+use semio_framework_ui_tui_frame::layout::{create_default_layout, dock_window, push_window_to_stack, WindowLayout, WindowLayoutWindowNode};
+use semio_framework_ui_tui_frame::scene::NodeContent;
+use semio_framework_ui_tui_frame::scene::NodeId;
+use semio_framework_ui_tui_core::theme::GlyphSet;
+use semio_framework_ui_tui_core::theme::Theme;
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use ui_styling::appearance::AppearanceName;
+use crate::Tui;
+use semio_framework_ui_tui_core::geometry::Rect;
+use semio_framework_ui_tui_core::event::Key;
 
 fn fixture() -> Value {
-    parse(include_str!("../../🧫️fixtures/🪟️drag-preview/🔣️.json"), JsonMemberPolicy::Reject).unwrap()
+    parse(include_str!("../🧫️fixtures/🪟️drag-preview/🔣️.json"), JsonMemberPolicy::Reject).unwrap()
 }
 
 fn pointer(kind: MouseKind, pos: Pos) -> Event {
@@ -34,8 +49,8 @@ fn world(size: Size, weights: [f64; 2], peer: bool, same_stack: bool, compact: b
     if overflow { ids.extend((0..8).map(|index| format!("extra{index}"))); }
     let initial = create_default_layout(&ids, "row", None, None);
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &initial);
-    crate::tui::layout::activate_stack_tab(&mut layout, "target");
-    crate::tui::layout::activate_stack_tab(&mut layout, "source");
+    semio_framework_ui_tui_frame::layout::activate_stack_tab(&mut layout, "target");
+    semio_framework_ui_tui_frame::layout::activate_stack_tab(&mut layout, "source");
     for (_, node) in &built.windows {
         if let Some(ChromeState::Window(state)) = tui.scene.node_mut(*node).chrome() { state.compact = compact; } else { unreachable!(); }
     }
@@ -132,7 +147,7 @@ fn window_drag_fixture_previews_the_exact_committed_active_tab_and_seam() {
         if case.get("cap").and_then(Value::as_bool).unwrap_or(false) { pos.y = area.y; }
         let proposed = tui.dispatch(&pointer(MouseKind::Drag(MouseButton::Left), pos));
         if placement == "overflow-next" {
-            assert!(proposed.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { placement: crate::tui::layout::DockPlacement::Corner(crate::tui::layout::WindowStackCorner::TopLeft), .. })), "{name} occupied arrow corner");
+            assert!(proposed.iter().any(|(_, signal)| matches!(signal, WidgetSignal::WindowDockPreview { placement: semio_framework_ui_tui_core::docking::DockPlacement::Corner(semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft), .. })), "{name} occupied arrow corner");
         }
         assert!(tui.docking_preview().is_some(), "{name} must show a destination tab preview");
         let preview_rect = tui.docking_preview().unwrap().1;
@@ -175,7 +190,7 @@ fn cancelling_a_visible_destination_tab_preview_keeps_the_layout() {
     tui.dispatch(&Event::Key(KeyEvent { key: Key::Esc, mods: 0 }));
     assert!(!tui.dragging_window());
     assert!(tui.docking_preview().is_none());
-    assert_eq!(crate::tui::layout::stack_hosting(&layout, "source").unwrap().children.len(), 1);
+    assert_eq!(semio_framework_ui_tui_frame::layout::stack_hosting(&layout, "source").unwrap().children.len(), 1);
 }
 
 #[test]
@@ -206,8 +221,8 @@ fn held_destination_tab_refreshes_after_a_title_status_and_mount_change() {
     tui.dispatch(&pointer(MouseKind::Drag(MouseButton::Left), pos));
     tui.render();
     let original = tui.docking_preview().unwrap().1;
-    assert!(crate::tui::layout::set_window_title(&mut layout, "source", Some("Renamed source".into())));
-    built.set_status(&mut tui.scene, "source", Some(crate::tui::theme::Status::Running));
+    assert!(semio_framework_ui_tui_frame::layout::set_window_title(&mut layout, "source", Some("Renamed source".into())));
+    built.set_status(&mut tui.scene, "source", Some(semio_framework_ui_tui_core::theme::Status::Running));
     built.remount(&mut tui.scene, &layout);
     tui.tick(250);
     tui.render();
@@ -268,7 +283,7 @@ fn repeated_local_window_ids_project_within_their_own_mounted_canvas() {
         }
     }
     assert_eq!(tui.scene.rect(first_source), first_rect);
-    assert_eq!(crate::tui::layout::stack_hosting(&first_layout, "source").unwrap().children.len(), 1);
+    assert_eq!(semio_framework_ui_tui_frame::layout::stack_hosting(&first_layout, "source").unwrap().children.len(), 1);
     let (_, first_grip) = active_chip(&tui, first_source);
     tui.dispatch(&pointer(MouseKind::Down(MouseButton::Left), first_grip));
     assert!(tui.dragging_window());
@@ -289,7 +304,7 @@ fn repeated_local_window_ids_project_within_their_own_mounted_canvas() {
 
 #[test]
 fn narrow_overflow_preserves_the_active_chip_and_its_controls() {
-    let mut state = crate::tui::chrome::WindowState::new("Source").with_stack_tabs(vec!["Target".into(), "Source".into(), "Long neighboring target".into()], 1);
+    let mut state = semio_framework_ui_tui_frame::chrome::WindowState::new("Source").with_stack_tabs(vec!["Target".into(), "Source".into(), "Long neighboring target".into()], 1);
     state.tab_ids = vec!["target".into(), "source".into(), "neighbor".into()];
     state.peers = 3;
     let rect = Rect::new(0, 0, 18, 12);

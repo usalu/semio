@@ -74,9 +74,6 @@ pub fn compute_scene_topology(steps: &[crate::SequenceStep], edges: &[crate::Seq
 
     let cycle_free = topo_order.len() == ids.len();
     if !cycle_free {
-        // 🎯️ Total per `Inference`'s law: append any step a cycle kept out of the queue, in
-        // persisted order, so `topoOrder` still covers every step even though it is no longer a
-        // valid topological order for the cyclic remainder.
         for id in &ids {
             if !topo_order.contains(id) {
                 topo_order.push(id.clone());

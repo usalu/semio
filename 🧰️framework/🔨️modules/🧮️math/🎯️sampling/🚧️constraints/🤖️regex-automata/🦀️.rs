@@ -1,6 +1,6 @@
 //! 🤖️ Byte-level regex parser, NFA builder and lazily memoised DFA.
 
-use semio_framework_math_sampling_vocabulary::{SamplingError, SamplingLimits, TokenBitset, TokenId, TokenTextAdapters};
+use semio_framework_math_sampling_vocabulary::{SamplingError, SamplingLimits, TokenBitset, TokenId, TokenTextAdapter, TokenTextAdapters};
 
 // #region 🔖️Automata
 /// 🤖️ Parsed regex AST. Byte-level throughout (classes/literals match raw bytes, so multi-byte

@@ -5,7 +5,7 @@
       "source": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts",
       "owner": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
       "kind": "typescript",
-      "anchor": "WireTurn"
+      "anchor": "ShardClient.turn()"
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🌐️globals-ui.css",

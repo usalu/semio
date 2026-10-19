@@ -16,7 +16,6 @@ pub struct Part21Decimal {
 }
 
 impl Part21Decimal {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parse(text: &str) -> Result<Self, String> {
         let (negative, unsigned) = match text.as_bytes().first() {
             Some(b'-') => (true, &text[1..]),
@@ -34,14 +33,12 @@ impl Part21Decimal {
         Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32, exponent })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_f64(value: f64) -> Self {
         let text = format!("{value}");
         let normalized = if text.contains('.') || text.contains('e') || text.contains('E') { text } else { format!("{text}.") };
         Self::parse(&normalized).expect("finite f64 has valid STEP decimal form")
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_f64(&self) -> Option<f64> {
         self.to_string().parse().ok()
     }
@@ -97,7 +94,6 @@ pub enum Part21Value {
 }
 
 impl Part21Value {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_ref_id(&self) -> Option<u64> {
         if let Part21Value::Ref(id) = self {
             Some(*id)
@@ -105,7 +101,6 @@ impl Part21Value {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(&self) -> Option<&str> {
         if let Part21Value::Str(s) = self {
             Some(s.as_str())
@@ -113,7 +108,6 @@ impl Part21Value {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_enum(&self) -> Option<&str> {
         if let Part21Value::Enum(s) = self {
             Some(s.as_str())
@@ -121,7 +115,6 @@ impl Part21Value {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_real(&self) -> Option<f64> {
         match self {
             Part21Value::Real(r) => r.to_f64(),
@@ -129,7 +122,6 @@ impl Part21Value {
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_list(&self) -> Option<&[Part21Value]> {
         if let Part21Value::List(items) = self {
             Some(items.as_slice())
@@ -137,7 +129,6 @@ impl Part21Value {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
         if let Part21Value::Typed { name, items } = self {
             Some((name.as_str(), items.as_slice()))
@@ -145,7 +136,6 @@ impl Part21Value {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_unset(&self) -> bool {
         matches!(self, Part21Value::Unset)
     }
@@ -162,15 +152,12 @@ pub struct Part21Instance {
 }
 
 impl Part21Instance {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn entity(&self, type_name: &str) -> Option<&Vec<Part21Value>> {
         self.entities.iter().find(|(name, _)| name.eq_ignore_ascii_case(type_name)).map(|(_, args)| args)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn primary(&self) -> Option<(&str, &Vec<Part21Value>)> {
         self.entities.first().map(|(name, args)| (name.as_str(), args))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_type(&self, type_name: &str) -> bool {
         self.entities.iter().any(|(name, _)| name.eq_ignore_ascii_case(type_name))
     }

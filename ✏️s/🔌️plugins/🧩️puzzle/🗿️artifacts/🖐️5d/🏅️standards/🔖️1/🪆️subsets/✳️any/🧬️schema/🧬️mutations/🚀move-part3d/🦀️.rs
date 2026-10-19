@@ -1,9 +1,9 @@
-//! Puzzle5d mutation — `MovePart3d`: absolute reposition of a part's 3D-projection origin.
+//! 🧩️ Puzzle5d mutation — `MovePart3d`: absolute reposition of a part's 3D-projection origin.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
-/// `move-part3d` payload.
+/// ↔️ `move-part3d` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -32,7 +32,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart3d {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for MovePart3d
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<MovePart3d>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

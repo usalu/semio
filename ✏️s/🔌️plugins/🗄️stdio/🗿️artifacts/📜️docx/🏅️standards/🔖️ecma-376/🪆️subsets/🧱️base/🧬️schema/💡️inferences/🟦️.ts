@@ -7,7 +7,7 @@ export interface DocxOutline {
 }
 
 export interface DocxInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: DocxOutline;
 }
 

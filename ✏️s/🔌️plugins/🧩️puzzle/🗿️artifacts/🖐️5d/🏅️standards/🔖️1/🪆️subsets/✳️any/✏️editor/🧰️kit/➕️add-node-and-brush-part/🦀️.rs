@@ -98,7 +98,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dAddNodeStage::Catalog => {
                 let Some(entry) = catalogs.get(self.catalog_cursor) else {
                     self.stage = Puzzle5dAddNodeStage::Grips;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
                 };
                 let index = self.catalog_cursor;
                 self.catalog_cursor += 1;
@@ -107,7 +107,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.mesh_url = entry.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
                     self.stage = Puzzle5dAddNodeStage::Grips;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-add-node-catalog", "Reading part catalog", "Teilekatalog wird gelesen"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-add-node-catalog", "Reading part catalog", "Teilekatalog wird gelesen"))
             }
             Puzzle5dAddNodeStage::Grips => {
                 let templates = self.catalog_index.and_then(|index| catalogs.get(index)).and_then(|entry| entry.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
@@ -126,7 +126,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     };
                     self.grips.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip { id: format!("v{}", self.grip_cursor), grip_kind: Some(grip_kind), grip_2d, grip_3d });
                     self.grip_cursor += 1;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-add-node-grip", "Reading grip template", "Griffvorlage wird gelesen"));
                 }
                 let x = command.args().and_then(|args| args.get("x")).and_then(Value::as_f64).unwrap_or(120.0);
                 let y = command.args().and_then(|args| args.get("y")).and_then(Value::as_f64).unwrap_or(120.0);
@@ -151,8 +151,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 };
                 self.mutation = Some(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None));
                 self.stage = Puzzle5dAddNodeStage::Complete;
-                // 🕹️ Re-select what this gesture just created — a palette drop that leaves the old selection
-                // standing makes every follow-up verb (patch, transform, delete) act on the wrong part.
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations: self.mutation.take().into_iter().collect(),
                     interaction_writes: vec![InteractionWrite::replace(PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_GRANULARITY_PART, [created_id])],
@@ -365,7 +363,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dAddBrushPartStage::Catalog => {
                 let Some(entry) = catalogs.get(self.catalog_cursor) else {
                     self.stage = Puzzle5dAddBrushPartStage::Grips;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-brush-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-grip", "Reading grip template", "Griffvorlage wird gelesen"));
                 };
                 let index = self.catalog_cursor;
                 self.catalog_cursor += 1;
@@ -374,7 +372,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.mesh_url = entry.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
                     self.stage = Puzzle5dAddBrushPartStage::Grips;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-brush-catalog", "Reading part catalog", "Teilekatalog wird gelesen"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-catalog", "Reading part catalog", "Teilekatalog wird gelesen"))
             }
             Puzzle5dAddBrushPartStage::Grips => {
                 let templates = self.catalog_index.and_then(|index| catalogs.get(index)).and_then(|entry| entry.get("grips")).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
@@ -391,32 +389,32 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.grips.push(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip { id, grip_kind: Some(grip_kind), grip_2d, grip_3d });
                     self.grip_cursor += 1;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-brush-grip", "Reading grip template", "Griffvorlage wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-grip", "Reading grip template", "Griffvorlage wird gelesen"));
                 }
                 self.target_id = self.target(command, interaction);
                 self.stage = if self.target_id.is_some() { Puzzle5dAddBrushPartStage::Target } else { Puzzle5dAddBrushPartStage::Create };
-                Ok(crate::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
             }
             Puzzle5dAddBrushPartStage::Target => {
                 let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
                     self.target_id = None;
                     self.stage = Puzzle5dAddBrushPartStage::Create;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"));
                 };
                 let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.target_grip_cursor)) else {
                     self.part_cursor += 1;
                     self.target_grip_cursor = 0;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"));
                 };
                 self.target_grip_cursor += 1;
-                let Some(part_id) = part.get("id").and_then(Value::as_str) else { return Ok(crate::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht")) };
-                let Some(grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(crate::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht")) };
+                let Some(part_id) = part.get("id").and_then(Value::as_str) else { return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht")) };
+                let Some(grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht")) };
                 if self.target_id.as_deref() == Some(puzzle5d_grip_full_id(part_id, grip_id).as_str()) {
                     self.target_position = Some(Puzzle5dProximityConnectWork::world_position(part, grip));
                     self.target_direction = Some(Self::world_direction(part, grip));
                     self.stage = Puzzle5dAddBrushPartStage::Create;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-target", "Finding target grip", "Zielgriff wird gesucht"))
             }
             Puzzle5dAddBrushPartStage::Create => {
                 let x = self.args(command).and_then(|args| args.get("x").and_then(Value::as_f64)).unwrap_or(120.0);
@@ -442,7 +440,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 self.created_id = Some(id);
                 self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None));
                 self.stage = Puzzle5dAddBrushPartStage::Connect;
-                Ok(crate::puzzle_progress_step!("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-brush-create", "Creating brush part", "Pinselteil wird erstellt"))
             }
             Puzzle5dAddBrushPartStage::Connect => {
                 if let (Some(source), Some(part), Some(grip)) = (self.target_id.as_ref(), self.created_id.as_ref(), self.created_grip_id.as_ref()) {
@@ -454,8 +452,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source.clone(), puzzle5d_grip_full_id(part, grip), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None));
                 }
                 self.stage = Puzzle5dAddBrushPartStage::Complete;
-                // 🕹️ Re-select the placed part so the brush's next gesture chains off it, exactly as puzzle
-                // 3d's `addBrushObject` does.
                 let interaction_writes = self.created_id.take().map(|id| InteractionWrite::replace(PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_GRANULARITY_PART, [id])).into_iter().collect();
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), interaction_writes, ui_scope: UiDirtyScope::Full, ..Default::default() }))
             }

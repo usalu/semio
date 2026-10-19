@@ -1,4 +1,3 @@
-import{nativeFixedWindowsSystemV1,readNativeFixedWindowsSystemV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";
 import {cargoExecutionSchemaV1,type CargoExecutionBackendV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -19,13 +18,7 @@ export interface NativeOwnerCapabilities {
   readonly transport: Readonly<{ maximumBytes: number; maximumLines: number }>;
   readonly child: Readonly<{ maximumElapsedMilliseconds: number }>;
   readonly network: Readonly<{ offline: boolean }>;
-  readonly windowsSystem?:Readonly<{version:1;windows:string;system:string}>;
   readonly cargoExecutionBackend?:CargoExecutionBackendV1;
-}
-
-/** 🪟️ Captures actual fresh OS facts before birth and refuses caller-selected Windows paths. */
-export function createNativeWindowsSystemGrantV1(authored?:unknown):NativeOwnerCapabilities["windowsSystem"]{
- if(process.platform!=="win32"){if(authored!==undefined)throw Error("Windows system facts require actual Windows");return undefined;}const actual=nativeFixedWindowsSystemV1(),facts=Object.freeze({version:1 as const,windows:actual.windows,system:actual.system});if(authored!==undefined){const selected=readNativeFixedWindowsSystemV1(authored);if(selected.windows!==facts.windows||selected.system!==facts.system)throw Error("Authored Windows system facts differ from actual OS");}return facts;
 }
 
 /** 🔐️ Refuses missing caller grants before native input or child acquisition. */
@@ -42,7 +35,7 @@ export interface NativeOrchestrationCallerV1 {
  readonly arguments:readonly string[];
  readonly selection:readonly string[];
  readonly launches?:readonly (readonly string[])[];
- readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];windowsSystem?:NativeOwnerCapabilities["windowsSystem"]}>;
+ readonly native:Readonly<{artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"]}>;
 }
 /** 🔐️ Projects either current native role while retaining its exact declared capabilities. */
 export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"build-orchestration";repositoryRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{

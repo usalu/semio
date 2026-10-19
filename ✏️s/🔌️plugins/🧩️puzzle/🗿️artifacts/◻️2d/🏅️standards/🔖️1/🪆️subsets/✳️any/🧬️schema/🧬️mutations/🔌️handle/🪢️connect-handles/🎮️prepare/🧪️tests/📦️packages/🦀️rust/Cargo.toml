@@ -49,6 +49,7 @@ semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-2d-board-host = { path = "../../../../../../../../✏️editor/⚙️engine/🎲️board-host/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-connect-handles-preparation = { path = "../../../📦️packages/🦀️rust" }
@@ -80,6 +81,8 @@ semio-s-plugin-puzzle-retained = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../../../🔤️text/↩️inverse/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-puzzle-2d-records = { path = "../../../../../../../🧱️records/📦️packages/🦀️rust", features = ["testkit"] }
@@ -101,3 +104,6 @@ serde_json = { workspace = true }
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+
+[features]
+testkit = []

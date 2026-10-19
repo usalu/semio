@@ -1,36 +1,20 @@
-#!/usr/bin/env bun
-import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { runOwnedCommand, startNativeProgress } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-job` task router: `bun ./📜️script.ts <test>`. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runTestScript, runCloseDemandSourceScript, runOriginalTurnFailureScript, runOriginalCloseContextScript, runOriginalCloseContextNativeScript, runOriginalRetainedLoanNativeScript, runOriginalReceivingScript, runOriginalPageReturnScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if (segments[0] === "original-fixture-caller-source" || segments[0] === "original-fixture-caller-native") {
-      if (segments.length !== 1) throw Error("Original fixture caller gate takes one exact cohort");
-      const remaining = this.invocation.control.remainingMilliseconds();
-      if (remaining === null || remaining <= 0) throw Error("Original fixture caller requires its finite original deadline");
-      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts")], this.repoRoot, "job:original-fixture-caller-source", remaining, { env: process.env });
-      if (segments[0] === "original-fixture-caller-native") {
-        const left = this.invocation.control.remainingMilliseconds();
-        if (left === null || left <= 0) throw Error("Original fixture caller exhausted before native admission");
-        await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-job": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-job", cargoArgs: ["--features", "testkit"], target: { kind: "test", name: "original-fixture-caller" }, laws: ["original_fixture_caller_keeps_one_stock_recipient_fuel_and_paid_root_close", "original_fixture_caller_restores_narrowed_loan_after_unwind_and_deadline", "original_fixture_caller_keeps_monotonic_clock_observation_across_turns_and_root_close", "original_fixture_caller_work_loan_preserves_actual_fuel_deadline_clock_and_recipient"] }]});
-      }
-      return;
-    }
-    const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-job"], cwd: this.root, extraArgs: ["--features","testkit",...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+    await runTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
@@ -45,21 +29,14 @@ class CanonicalArchitectureScript extends BundleScript {
 /** 📏️ Validate declared release demand against the independent allocation oracle. */
 class CloseDemandSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { level, rest } = resolveTestLevel(segments, "quick");
-    const controller = new AbortController(), cancel = (): void => controller.abort(), stopProgress = startNativeProgress("job-close-demand");
-    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    try {
-      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📏️close-demand/🟦️.ts"), ...rest], { cwd: this.repoRoot, env: process.env, budgetMs: TEST_LEVEL_BUDGET_MS[level], signal: controller.signal, throwOnFailure: true, captureStdout: { limitBytes: 16 * 1024 * 1024, onChunk: bytes => { process.stdout.write(bytes); } } });
-    } finally {
-      stopProgress(); process.off("SIGINT", cancel); process.off("SIGTERM", cancel);
-    }
+    await runCloseDemandSourceScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 /** 🧪️ Executes every original portable Job retirement, context and budget oracle. */
 class RetainedSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if(segments.length)throw Error("Retained Job source suite takes no filters");
+    if(segments.length)throw new Error("Retained Job source suite takes no filters");
     const paths=["🧪️tests/📏️close-demand/🟦️.ts","🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts","⏱️context/📦️owner/🧪️tests/🟦️.ts","⏱️budget/🧪️tests/🔮️corpus-oracles/🟦️.ts","♻️retirement/📄️payload/🧪️tests/🟦️.ts","⚠️failure/🧪️tests/🟦️.ts"];
     await runOwnedCommand(process.execPath,["test",...paths.map(path=>resolve(this.root,"../..",path))],this.repoRoot,"job:retained-source",600000,{env:process.env});
   }
@@ -67,57 +44,46 @@ class RetainedSourceScript extends BundleScript {
 
 /** 🧯️ Qualifies the defining original semantic and receipt refusal ownership contract. */
 class OriginalTurnFailureScript extends BundleScript {
- async run(segments:string[]):Promise<void>{
-  const mode=segments[0];if(segments.length!==1||mode===undefined||!['source','native'].includes(mode))throw Error("Original turn failure requires source or native");
-  const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original failure requires its finite caller deadline");
-  const source=resolve(this.root,"../../⚠️failure/🧪️tests/🟦️.ts");
-  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"job:original-failure-types",remaining,{env:process.env});
-  await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"job:original-failure-source",this.invocation.control.remainingMilliseconds()??0,{env:process.env});
-  if(segments[0]==="native"){const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original native failure qualification exhausted its caller");await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-turn-failure"},cargoArgs:["--features","testkit"],laws:["original_turn_failure_debit_preserves_both_owned_causes","original_turn_failure_paid_retirement_preserves_denied_sources","original_turn_failure_preserves_full_diagnostic_custody","original_turn_failure_preserves_three_complete_owned_causes","original_turn_failure_receiving_preserves_five_owned_causes","original_turn_failure_domain_admission_preserves_full_source_and_paid_close","original_closure_tests::original_source_closure_full_pair_same_caller_denials_and_paid_close"]}]});}
- }
+  async run(segments:string[]): Promise<void> {
+    await runOriginalTurnFailureScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
 
 /** 🎟️ Verifies the mandatory original-context close contract against its neutral oracle. */
 class OriginalCloseContextScript extends BundleScript {
- async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Original close context source takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original close context requires finite original caller authority");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../⏱️context/📦️return/🪶️weak/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-close-context-source",remaining,{env:process.env,signal:this.invocation.control.signal});
- }
+  async run(args:string[]): Promise<void> {
+    await runOriginalCloseContextScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
+  }
 }
 
 /** 🧪️ Executes the actual close source custody law under the finite original native caller. */
 class OriginalCloseContextNativeScript extends BundleScript {
- async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Original close context native takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original close native requires finite original caller authority");await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-close-context"},laws:["original_close_context_denied_work_and_deadline_preserve_owned_source"]},{package:"semio-framework-job",target:{kind:"test",name:"original-weak-return"},laws:["original_native_weak_return_preserves_denied_source_and_posts_exact_metadata","original_native_weak_nested_unwind_and_context_swap_expire_scope"]}]});
- }
+  async run(args:string[]): Promise<void> {
+    await runOriginalCloseContextNativeScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
+  }
 }
 
 /** 🪙️ Runs the defining five original retained-loan laws under the initial caller envelope. */
 class OriginalRetainedLoanNativeScript extends BundleScript {
- async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Original retained loan native takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original retained loan requires finite original caller authority");
-  await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../⏱️context/📦️return/🪶️weak/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-retained-loan-source",remaining,{env:process.env,signal:this.invocation.control.signal});
-  const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original retained loan caller exhausted before native admission");
-  await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-retained-loan"},laws:["original_retained_loan_matches_neutral_inputs_and_nested_ceiling","original_retained_loan_physical_failure_preserves_owned_cause_and_paid_close","original_retained_loan_unwind_restores_parent_without_new_context","original_retained_loan_swap_and_replace_preserve_both_original_causes","original_retained_loan_swap_unwind_never_promotes_replacement"]}]});
- }
+  async run(args:string[]): Promise<void> {
+    await runOriginalRetainedLoanNativeScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
+  }
 }
 
 
 
 /** 🛬️ Validates original Job decoder custody against the portable independent oracle and exact native law. */
 class OriginalReceivingScript extends BundleScript {
- async run(segments:string[]):Promise<void>{const mode=segments.shift();if(segments.length||!['source','native'].includes(mode??''))throw Error('Expected source or native');const source=resolve(this.root,'../../🛬️receiving/🧪️tests/🟦️.ts');await runOwnedCommand(process.execPath,[resolve(this.repoRoot,'node_modules/typescript/bin/tsc'),'--noEmit','--strict','--skipLibCheck','--allowImportingTsExtensions','--resolveJsonModule','--esModuleInterop','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',source],this.repoRoot,'job:original-receiving:types',Math.min(30000,this.invocation.control.remainingMilliseconds()),{signal:this.invocation.control.signal});const {originalJobReceivingOracle}=await import('../../🛬️receiving/🧪️tests/🟦️.ts');originalJobReceivingOracle();if(mode==='source')return;await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:240000,listMilliseconds:30000,lawMilliseconds:30000},manifestPaths:{'semio-framework-job':resolve(this.root,'Cargo.toml')},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:'semio-framework-job',target:{kind:'lib'},laws:['component::original_receiving::tests::original_job_receiving_preserves_ledger_recipient_and_cumulative_capacity','component::original_receiving::tests::original_context_charges_child_construction_and_enclosing_semantic_once','component::original_receiving::tests::original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact_heap']}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});}
+  async run(segments:string[]): Promise<void> {
+    await runOriginalReceivingScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
 /** 📮️ Executes the original supplied-page corpus and its authentic native custody law. */
 class OriginalPageReturnScript extends BundleScript {
- async run(segments:string[]):Promise<void>{
-  const mode=segments.shift();if(segments.length||!['source','native'].includes(mode??''))throw Error('Expected source or native');
-  const sources=['../../📬️outcome/📮️return/🧪️tests/🟦️.ts','../../📬️outcome/📮️return/📦️bytes/🧪️tests/🟦️.ts'].map(source=>resolve(this.root,source));
-  await runOwnedCommand(process.execPath,['test',...sources],this.repoRoot,'job:original-page-return:source',Math.min(30000,this.invocation.control.remainingMilliseconds()),{signal:this.invocation.control.signal});
-  if(mode==='source')return;
-  const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error('Original page return exhausted its caller');
-  await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{'semio-framework-job':resolve(this.root,'Cargo.toml')},cwd:this.repoRoot,groups:[{package:'semio-framework-job',target:{kind:'test',name:'original-page-return'},cargoArgs:['--features','testkit'],laws:['original_supplied_page_returns_same_backing_before_original_source_close','original_supplied_pages_preserve_ordinals_and_sealed_prefix_during_partial_transfer','original_supplied_page_notification_observes_published_return_without_owner_or_closure_birth','original_contiguous_bytes_keep_exact_birth_fill_and_return_on_the_same_source']}]});
- }
+  async run(segments:string[]): Promise<void> {
+    await runOriginalPageReturnScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
 const router = new ScriptRouter(import.meta.dir).register("test-original-page-return",OriginalPageReturnScript).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript).register("test-close-demand-source", CloseDemandSourceScript).register("test-retained-source", RetainedSourceScript).register("test-original-turn-failure",OriginalTurnFailureScript).register("test-original-close-context-source",OriginalCloseContextScript).register("test-original-close-context-native",OriginalCloseContextNativeScript).register("test-original-retained-loan-native",OriginalRetainedLoanNativeScript).register("test-original-receiving",OriginalReceivingScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

@@ -33,8 +33,6 @@ fn every_shipped_example_document_really_carries_its_content() {
 #[test]
 fn export_import_round_trips_every_shipped_example_byte_for_byte() {
     for document in [concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()] {
-        // 🚦️ Non-vacuity: an EMPTY document round-trips trivially, so this law would pass while proving
-        // nothing the moment the shipped examples regress (see the diagnosis law above).
         assert!(!document.parts.is_empty(), "a round trip over an empty document proves nothing");
         let exported = export_snapshot::puzzle5d_export_json(&document);
         let root = import_snapshot::puzzle5d_decode_document(&exported).expect("the whole export decodes as a puzzle 5d document");
@@ -68,8 +66,6 @@ fn export_publication_picks_its_lane_by_payload_size() {
         };
         assert_eq!(arm, expected, "{} is {bytes} B", document.label.clone().unwrap_or_default());
     }
-    // 🗂️ Concrete Forest is the inline case and Capsule Dream the refusal case; if either stopped being
-    // so the budgets moved, and this law would otherwise pass while proving nothing.
     assert!(export_snapshot::puzzle5d_export_json(&concrete_forest_example_document()).len() <= inline_budget, "Concrete Forest is the inline case");
     assert!(export_snapshot::puzzle5d_export_json(&capsule_dream_example_document()).len() > segmented_budget, "Capsule Dream is the refusal case");
 }
@@ -127,9 +123,7 @@ async fn every_refused_import_publishes_a_notice_and_changes_nothing() {
     let before = projection_of(&app);
     let oversized = "x".repeat(crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES + 1);
     let cases = [
-        // 📦️ One byte above what one export may stream.
         ("capacity", semio_framework_pack_json::json!({ "payload": oversized.as_str(), "name": "huge.json" })),
-        // 🔤️ A whole file that is not a puzzle 5d document.
         ("payload", semio_framework_pack_json::json!({ "payload": "{\"schema\":\"note.v1\",\"body\":\"\"}", "name": "note.json" })),
     ];
     for (case, args) in cases {
@@ -382,8 +376,6 @@ async fn context_menu_rows_follow_the_selected_granularity() {
     let suggest = grip_rows.iter().find(|row| row.id == "suggest").expect("the suggest row");
     assert_eq!(suggest.args.as_ref().and_then(|args| args.get("fullId")).and_then(semio_framework_value::DslValue::as_str), Some(grip_id.as_str()), "the suggest row names the grip it was opened on");
 
-    // 🎯️ A right-click on the grip of a SELECTED part is that grip's menu — grip markers only draw on marked
-    // parts, so the part being selected is the normal case, not an edge case.
     let grip_part = grip_id.split(':').next().expect("full grip id").to_string();
     let on_grip = context_menu_actions(&context_menu_at(&mut app, vec![("object", vec![grip_part.clone()])], Some(("vortex", grip_id.as_str()))));
     assert!(on_grip.contains(&"openVortexSuggestions".to_string()) && !on_grip.contains(&"duplicateSelection".to_string()), "the grip under the pointer is the subject: {on_grip:?}");

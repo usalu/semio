@@ -4,7 +4,8 @@ use crate::standards::v1::subsets::any::schema::manifest::{EdgeKindDef, Manifest
 use crate::standards::v1::subsets::any::schema::content::JackContentChild;
 use crate::standards::v1::subsets::any::schema::snapshot::JackSnapshot;
 use semio_framework_graph_manifest::{PortDirection, PropertyDef, PropertyKind};
-use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, ValueType, ValueError, ValueRefusalKind};
+use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueType, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 #[dsl(id = "trinity.jack", layout = "lines")]
 pub(crate) struct JackPackRecord {

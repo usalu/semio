@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn original_triplet_csr_matches_portable_sparse_matrix_and_closes_every_page() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️triplet-csr/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️triplet-csr/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mut entries = PagedList::default();
         for entry in case["entries"].as_array().unwrap() {

@@ -47,7 +47,7 @@ pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>,
             let options=store::PackDecodeOptions::default();
             let maximum=usize::try_from(options.limits.max_total_alloc).map_err(|_|RunError::Host("intrinsic media allocation ceiling exceeds address space".into()))?;
             let mut accept=|_|true;
-            let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut accept);
+            let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut accept);
             let value=store::pack_rt::decode_wire_value_controlled(&data,&options,&mut control).map_err(|error|RunError::Host(error.into_value_error().into_message()))?;
             MediaPayload::Intrinsic { schema,value }
         }
@@ -92,21 +92,9 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Ephemeral { .. } => None,
         AppFrame::HistorySnapshot { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::TransactionProposal { in_reply_to, .. } => Some(*in_reply_to),
-        // 🔀️ Transaction phase-2 frames correlate by `txn_id`, not by `AppCommand::seq` — this
-        // runner's own frame script never opens a transaction (`compute_node` sends no
-        // `TransactionPrepare`/`Commit`/`Rollback`), so these can never actually appear in a
-        // `SpaceRunner` batch; listed for exhaustiveness (contract-freeze.md §C8's tag table is
-        // frozen — a wildcard arm here would silently swallow a real future addition instead of
-        // failing loud the way this match already does for everything else).
         AppFrame::TransactionPrepared { .. } | AppFrame::TransactionCommitted { .. } | AppFrame::TransactionRolledBack { .. } => None,
-        // ⚔️ Pushed unsolicited (contract-freeze.md §C8/C9) except as the direct reply to
-        // `ResolveConflict`/`ReadConflicts` — this runner's frame script never sends those either, so
-        // `in_reply_to` is `None` in every frame this crate actually sees; still correlate correctly
-        // (not `None` unconditionally) so a future caller that DOES send them gets the real answer.
         AppFrame::MergeReport { in_reply_to, .. } => *in_reply_to,
         AppFrame::Conflicts { in_reply_to, .. } => *in_reply_to,
-        // 🏁️ A terminal typed operation's completion correlates by its own operation id — the command
-        // that started it resolved on an earlier turn, so there is no `AppCommand::seq` awaiting it.
         AppFrame::OperationCompleted { .. } => None,
         AppFrame::DocumentIdentity { in_reply_to, .. } | AppFrame::ChildHeads { in_reply_to, .. } => Some(*in_reply_to),
         AppFrame::DocumentArchive { in_reply_to, .. } => Some(*in_reply_to),

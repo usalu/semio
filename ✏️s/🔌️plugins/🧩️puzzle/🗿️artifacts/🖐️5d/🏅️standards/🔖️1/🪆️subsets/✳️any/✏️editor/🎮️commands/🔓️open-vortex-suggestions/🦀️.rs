@@ -1,8 +1,8 @@
-//! every rim connector a vortex).
+//! 🌪️ every rim connector a vortex).
 //! 🔓️ `open-vortex-suggestions` command — the world host's suggestion verb, aimed at a grip (the host calls
 
-use crate::editor::puzzle5d::window::Puzzle5dSuggestionMenu;
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::window::Puzzle5dSuggestionMenu;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects;
 

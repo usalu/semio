@@ -1,4 +1,5 @@
 //! 🧪️ A paid active field projects wide records and closes every partial original without payload clones.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 macro_rules! wide_record{($($field:ident),*)=>{
  #[derive(crate::RetireOwned,crate::SnapshotProjection)]
@@ -24,6 +25,6 @@ fn run<S:SnapshotProjection>(original:S,cut:usize,verify:impl Fn(&S,&S)){
 fn verify(original:&WideRecord,output:&WideRecord,expected:&serde_json::Value){let values:Vec<_>=output.roots().iter().map(|root|root.get().as_str()).collect();assert_eq!(serde_json::to_value(values).unwrap(),*expected);for(before,after)in original.roots().into_iter().zip(output.roots()){assert_eq!(before.identity(),after.identity());assert_eq!(before.get().as_ptr(),after.get().as_ptr());}}
 #[test]
 fn original_record_projection_stages_one_paid_field_and_preserves_all_cancellation_prefixes(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for law in corpus["cases"].as_array().unwrap(){for cut in corpus["cancelCuts"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;run(WideRecord::new(&law["values"]),cut,|original,output|verify(original,output,&law["expected"]));run(NestedRecord{left:WideRecord::new(&law["values"]),right:WideRecord::new(&law["values"])},cut,|original,output|{verify(&original.left,&output.left,&law["expected"]);verify(&original.right,&output.right,&law["expected"]);});}}
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../📽️projection/🧳️record/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for law in corpus["cases"].as_array().unwrap(){for cut in corpus["cancelCuts"].as_array().unwrap(){let cut=cut.as_u64().unwrap()as usize;run(WideRecord::new(&law["values"]),cut,|original,output|verify(original,output,&law["expected"]));run(NestedRecord{left:WideRecord::new(&law["values"]),right:WideRecord::new(&law["values"])},cut,|original,output|{verify(&original.left,&output.left,&law["expected"]);verify(&original.right,&output.right,&law["expected"]);});}}
  println!("[DEBUG] original 32-field and nested record projection: 2 portable outputs x 8 cancellation cuts, every native copy/capacity frontier<=4096, original backing and all physical receipts preserved");
 }

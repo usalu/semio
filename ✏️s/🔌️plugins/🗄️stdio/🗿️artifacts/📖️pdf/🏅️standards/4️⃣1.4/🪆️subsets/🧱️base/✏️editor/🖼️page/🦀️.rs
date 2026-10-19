@@ -1,4 +1,4 @@
-//! \u{1f4c4}️ PDF 1.4 page rendering and commands over its resolved page domain.
+//! 📄️ PDF 1.4 page rendering and commands over its resolved page domain.
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, InsertPage, RemovePage, MovePage, ResizePage, ReplacePageText};
 use protocol::{Mutation, OpText};
@@ -21,15 +21,15 @@ fn ui_error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "PDF 1.4 page rendering admission failed")
 }
 
-/// \u{1f3f7}️ Resolves the own page command identifier.
+/// 🏷️ Resolves the own page command identifier.
 pub fn static_action(action: &str) -> &'static str {
     PAGE_ACTIONS.into_iter().find(|candidate| *candidate == action).unwrap_or("page-edit")
 }
 
-/// \u{1f9ed}️ Recognizes actions over the own resolved page domain.
+/// 🧭️ Recognizes actions over the own resolved page domain.
 pub fn is_page_action(action: &str) -> bool { PAGE_ACTIONS.contains(&action) }
 
-/// \u{1fa9f}️ Declares addressed text drafts and resolved page structure edits.
+/// 🪟️ Declares addressed text drafts and resolved page structure edits.
 pub fn window_definition() -> WindowKindDefinition {
     let mut definition = DocumentWindowKit::editable_window_kind();
     definition.label = LocalizedLabel::native("Pages", "Seiten");
@@ -51,7 +51,7 @@ pub fn window_definition() -> WindowKindDefinition {
     definition
 }
 
-/// \u{1f4c4}️ Projects each complete own text target with the actual publication revision.
+/// 📄️ Projects each complete own text target with the actual publication revision.
 pub fn editable_view(document: &PdfSnapshot, publication_revision: UiPublicationRevision) -> Result<EditableDocumentView, Fault> {
     let pages = document.pages.iter().enumerate().map(|(index, page)| {
         let index = u32::try_from(index).map_err(|_| refusal("Page index exceeds the document action address"))?;
@@ -60,7 +60,7 @@ pub fn editable_view(document: &PdfSnapshot, publication_revision: UiPublication
     Ok(EditableDocumentView { pages, publication_revision })
 }
 
-/// \u{1f4d0}️ Renders dimensions beside each materialized draft without changing its text revision.
+/// 📐️ Renders dimensions beside each materialized draft without changing its text revision.
 pub fn render_windowed(document: &PdfSnapshot, publication_revision: UiPublicationRevision, windows: &TreeWindows<'_>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let view = editable_view(document, publication_revision).map_err(|error| PluginAssemblyError::new("stdio.pdf.1.4.page-view", error.message))?;
     DocumentWindowKit::render_editable_windowed_with_accessory(&view, windows, locale, |ordinal, _| {
@@ -75,7 +75,7 @@ pub fn render_windowed(document: &PdfSnapshot, publication_revision: UiPublicati
     })
 }
 
-/// \u{1f510}️ Reads the current text token for an explicitly addressed agent action.
+/// 🔐️ Reads the current text token for an explicitly addressed agent action.
 pub fn agent_target_revision(action: &str, document: &PdfSnapshot, args: &DslValue) -> Result<Option<String>, Fault> {
     if !matches!(action, "set-page" | "replace-page-text") { return Ok(None); }
     let page = index(Some(args), "page")?;
@@ -107,7 +107,7 @@ fn number(args: Option<&DslValue>, key: &str) -> Result<f64, Fault> {
     Ok(value)
 }
 
-/// \u{1f9fe}️ Encodes the actual own mutation as the replayable page action payload.
+/// 🧾️ Encodes the actual own mutation as the replayable page action payload.
 pub fn edit_from_action(action: &str, args: Option<&DslValue>) -> Result<String, Fault> {
     let mutation = match action {
         "insert-page" => PdfMutation::InsertPage(InsertPage { index: index(args, "page")?, page: PageDoc { width: number(args, "width")?, height: number(args, "height")?, text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? } }),
@@ -130,7 +130,7 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
     Ok(semio_framework_plugin::Emit { artifact_mutations: vec![mutation], ..Default::default() })
 }
 
-/// \u{1fa9f}️ Places own page drafts beside complete snapshot details.
+/// 🪟️ Places own page drafts beside complete snapshot details.
 pub fn document_layout(main: &str) -> semio_framework_plugin::WindowLayout {
     use semio_framework_plugin::{WindowLayout, WindowLayoutRoot, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutStackNode, WindowLayoutWindowNode};
     let stack = |size, id: &str| WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size), active_window_kind_id: None, children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: id.into(), title: None, instance_id: None, template_id: None, corner: None }] });

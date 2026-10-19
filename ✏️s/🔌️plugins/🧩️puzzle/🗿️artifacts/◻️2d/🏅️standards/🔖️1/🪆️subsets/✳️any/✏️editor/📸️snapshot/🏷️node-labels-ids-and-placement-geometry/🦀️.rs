@@ -1,6 +1,7 @@
 //! 🏷️ Node labels, ids and placement geometry: the display labels, the id allocation, the target regions, the handle geometry and kind compatibility and the clipboard and lock helpers. See [`super`].
 
 use super::*;
+use std::collections::HashSet;
 
 /// 📐️ Upper bound a placement-tuning measure (contact tolerance, overlap budget) is clamped to —
 /// half the default node footprint, past which every candidate would collide or none would.
@@ -324,7 +325,6 @@ pub fn puzzle2d_handle_world_position(node: &Value, handle: &Value) -> (f64, f64
     let point = if node.get("shape").and_then(Value::as_str) == Some("rectangle") {
         handle_position_on_rectangle(centre, node.get("width").and_then(Value::as_f64).unwrap_or(48.0), node.get("height").and_then(Value::as_f64).unwrap_or(48.0), angle)
     } else {
-        // 🧭️ The rim distance is the NODE's radius; a handle's own `radius` is its glyph size.
         handle_position_on_circle(centre, node.get("radius").and_then(Value::as_f64).unwrap_or(24.0), angle)
     };
     (point.x, point.y)

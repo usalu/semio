@@ -16,10 +16,6 @@ pub(super) fn to_kebab(name: &str) -> String {
         if c.is_uppercase() {
             let prev = if i == 0 { None } else { chars.get(i - 1).copied() };
             let next = chars.get(i + 1).copied();
-            // A new word starts at an uppercase letter that follows a lowercase/digit
-            // (`SetCamera` -> boundary before `C`) OR that follows another uppercase letter but
-            // is itself followed by a lowercase one (`HTTPServer` -> boundary before the `S` that
-            // starts "Server", not between every letter of the "HTTP" acronym).
             let boundary = match prev {
                 Some(p) if p.is_lowercase() || p.is_ascii_digit() => true,
                 Some(p) if p.is_uppercase() => next.is_some_and(|n| n.is_lowercase()),

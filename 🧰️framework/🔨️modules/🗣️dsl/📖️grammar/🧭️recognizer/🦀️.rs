@@ -122,11 +122,6 @@ impl Recognizer {
                 let token = tokens.get(pos)?;
                 (token.text.as_str().as_ref() == literal.as_str()).then_some(pos + 1)
             }
-            // P2-M1 item 2: the "raw span" terminal. `LINE`/`REST` don't match ONE token via
-            // `terminal_matches` — they consume a byte SPAN of the original source (read straight
-            // from `text`, not reassembled from tokens, so interior whitespace/punctuation the
-            // shared lexer would otherwise fragment is preserved verbatim) and skip forward past
-            // every already-lexed token that span swallowed, without attempting to re-tokenize it.
             Symbol::Terminal(name) if matches!(name.to_uppercase().as_str(), "LINE" | "REST") => {
                 let end = match name.to_uppercase().as_str() {
                     "LINE" => RawSpanEnd::Newline,
@@ -141,9 +136,6 @@ impl Recognizer {
             }
             Symbol::Ref(name) => {
                 if let Some(production) = self.find_production(name) {
-                    // 🔁 Breaks the `match_symbol_tracked` -> `match_production_tracked` ->
-                    // `match_sequence_tracked` -> `match_symbol_tracked` async recursion cycle
-                    // (E0733: an fn's future can't be infinite-sized) at this one edge.
                     self.match_production_tracked(production, tokens, pos, covered, text)
                 } else if let Some(matcher) = self.macros.iter().find(|m| m.name == name) {
                     self.match_macro_span(matcher, tokens, pos)
@@ -156,8 +148,6 @@ impl Recognizer {
                 self.match_macro_span(matcher, tokens, pos)
             }
             Symbol::Group(alts) => {
-                // 🔁 Was `.find_map(|alt| self.match_sequence_tracked(...))` — `Iterator::find_map`'s
-                // closure can't `` (residue shape 1), so this is a manual loop instead.
                 let mut found = None;
                 for alt in alts {
                     if let Some(next) = self.match_sequence_tracked(&alt.symbols, tokens, pos, covered, text) {
@@ -280,10 +270,6 @@ fn terminal_matches(name: &str, token: &crate::SpannedToken) -> bool {
         "VEC3" | "COLOR" | "POINT" | "UNIT" => {
             matches!(token.kind, CoreKind::Ident | CoreKind::Float | CoreKind::Int | CoreKind::Text)
         }
-        // P2-M1 item 3/5: the promoted single-char tokens + STEP's leading-dot enum literal each
-        // get an explicit named terminal so a grammar can require them positionally (not just via
-        // the generic `other` token-kind-name fallback below, though that still works too since
-        // e.g. `Symbol::Terminal("LT")` already matches `format!("{:?}", TokenKind::Lt)`).
         "DOTENUM" => matches!(token.kind, CoreKind::DotEnum),
         other => format!("{:?}", token.kind).to_uppercase() == other,
     }

@@ -15,16 +15,17 @@ import type {NativeStoragePortV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
-import {readNativeImageRetirementFileV1,requireNativeImageRetirementStateV1,requireNativeImageRetirementExpectationV1} from "../🧱️fixed/🟦️.ts";
+import { requireNativeImageRetirementStateV1, requireNativeImageRetirementExpectationV1 } from "../🧱️fixed/🟦️.ts";
+import { readNativeImageRetirementFileV1 } from "../📄️retirement-file/🟦️.ts";
 const protocol=schema.definitions.ImageProtocol.const;
 
 import {readNativeImageMaintenanceRequestV1,readNativeImageRetirementRequestV1,requireNativeImageEnvelopeV1,nativeImageRootV1,nativeImageDirectoryNamesV1,requireNativeStoragePathV1,type NativeImageStorageV1,type NativeImageMaintenanceRequestV1,type NativeImageRetirementRequestV1} from "../🌐️platform/📋️contract/🟦️.ts";
 
-import {nativeImageInformationV1} from "./📥️information/🟦️.ts";
+import {observeNativeImageInventoryV1} from "./📥️information/🟦️.ts";
 
 /** 📄️ Captures complete bounded system image metadata before strict structural admission. */
 async function readNativeImageInformationV1(directory:string,control:ResourceLeaseControl):Promise<Record<string,unknown>>{
- return nativeImageInformationV1(await captureOwnedCommandV1("hdiutil",["info","-plist"],directory,{control,output:{maximumBytes:protocol.informationMaximumBytes,maximumLines:protocol.informationMaximumLines}}));
+ return observeNativeImageInventoryV1(()=>captureOwnedCommandV1("hdiutil",["info","-plist"],directory,{control,output:{maximumBytes:protocol.informationMaximumBytes,maximumLines:protocol.informationMaximumLines}}),information=>information,{attempts:protocol.informationAttempts,backoffMilliseconds:protocol.informationBackoffMilliseconds,signal:control.signal});
 }
 
 /** 🏪️ Reopens one persistent fixed image under shared custody; its lease directory fixes the sole queue catalog. */

@@ -128,7 +128,6 @@ pub(super) fn push_referential_integrity(report: &mut CheckReport, document: &En
         }
     }
 
-    // Members with no wired effects while the catalogue has effects are orphaned (e.g. renamed id).
     if !document.effects.is_empty() {
         for m in &document.members {
             let wired = document.effects.iter().any(|e| e.member_id == m.id && action_set.contains(e.action_id.as_str()));

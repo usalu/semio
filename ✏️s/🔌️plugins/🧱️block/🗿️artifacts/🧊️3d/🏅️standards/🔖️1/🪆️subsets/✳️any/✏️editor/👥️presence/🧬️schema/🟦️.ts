@@ -1,8 +1,8 @@
 /** 🧬️ Block3dPresence */
 export interface Block3dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   selectedIds: string[];
-  /** @state presence */
+  /** 🖱️ @state presence */
   hoveredVortexFullId?: string;
 }
 

@@ -35,12 +35,12 @@ export async function collabPresenceColors(page: import("playwright").Page): Pro
   return await collabPresenceRows(page).evaluateAll((rows) => rows.map((row) => getComputedStyle((row.firstElementChild as HTMLElement | null) ?? (row as HTMLElement)).borderTopColor));
 }
 
-/** Peer-cursor overlay markers painted by CanvasPresenceOverlayV1 (`data-testid="peer-cursor"`). */
+/** 🛰️ Peer-cursor overlay markers painted by CanvasPresenceOverlayV1 (`data-testid="peer-cursor"`). */
 function collabPeerCursors(page: import("playwright").Page): import("playwright").Locator {
   return page.locator("[data-peer-cursor], [data-testid=\"peer-cursor\"]");
 }
 
-/** Wait until at least one peer cursor marker is painted, returning its CSS left/top. */
+/** 🤝️ Wait until at least one peer cursor marker is painted, returning its CSS left/top. */
 async function collabWaitForPeerCursor(page: import("playwright").Page, deadlineMs: number): Promise<{ left: number; top: number; count: number }> {
   const deadline = Date.now() + deadlineMs;
   let last = { left: 0, top: 0, count: 0 };
@@ -59,7 +59,7 @@ async function collabWaitForPeerCursor(page: import("playwright").Page, deadline
   return last;
 }
 
-/** Move the local pointer and assert the peer's overlay cursor relocates. */
+/** 👀️ Move the local pointer and assert the peer's overlay cursor relocates. */
 export async function collabAssertPeerCursorMoves(opts: {
   readonly mover: import("playwright").Page;
   readonly observer: import("playwright").Page;

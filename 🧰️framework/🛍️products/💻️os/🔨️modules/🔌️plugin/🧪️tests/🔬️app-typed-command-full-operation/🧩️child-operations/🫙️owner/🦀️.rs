@@ -2,7 +2,9 @@
 use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels,nested_grant,grant_funds,deeper,quote,handoff,yielded,settle,pop_demand,release_demand,release_page};
 use super::reader::{ChildGroupDecodeVisitor,ChildGroupText};
 use semio_framework_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,paged_text::{PagedText,TextReadSource},list::PagedList,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, paged_text::{PagedText, TextReadSource}, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_ui_locale::{Terminology,Locale};
 const CAPACITY:usize=isize::MAX as usize;
 
@@ -152,21 +154,21 @@ pub fn decode_paged_groups_span(source:ByteSpan<'_>,options:&semio_framework_os_
 }
 
 impl Text{
-    fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<semio_framework_value::list::PagedListReturnProgress,ValueError>{
-        if maximum_items==0{return Ok(semio_framework_value::list::PagedListReturnProgress::default())}
-        if self.inline.close_one(1){self.complete=false;return Ok(semio_framework_value::list::PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}
-        if self.long{return self.paged.return_one(parent,1)}Ok(semio_framework_value::list::PagedListReturnProgress::default())
+    fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<semio_framework_value_persistent::list::PagedListReturnProgress,ValueError>{
+        if maximum_items==0{return Ok(semio_framework_value_persistent::list::PagedListReturnProgress::default())}
+        if self.inline.close_one(1){self.complete=false;return Ok(semio_framework_value_persistent::list::PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}
+        if self.long{return self.paged.return_one(parent,1)}Ok(semio_framework_value_persistent::list::PagedListReturnProgress::default())
     }
 }
 impl ChildLabelOwner{
-    pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<semio_framework_value::list::PagedListReturnProgress,ValueError>{
-        for row in &mut self.cells{for text in row{if !text.terminal_is_empty(){return text.return_one(parent,maximum_items)}}}Ok(semio_framework_value::list::PagedListReturnProgress::default())
+    pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<semio_framework_value_persistent::list::PagedListReturnProgress,ValueError>{
+        for row in &mut self.cells{for text in row{if !text.terminal_is_empty(){return text.return_one(parent,maximum_items)}}}Ok(semio_framework_value_persistent::list::PagedListReturnProgress::default())
     }
 }
 impl PagedChildOwner{
-    pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_value::list::PagedListReturnProgress,ValueError>{
+    pub fn return_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListReturnProgress,ValueError>{
         use semio_framework_os_kernel::os_spr::operation_bytes::OperationByteReturnStep;
-        use semio_framework_value::list::PagedListReturnProgress;
+        use semio_framework_value_persistent::list::PagedListReturnProgress;
         if maximum_items==0||maximum_bytes==0{return Ok(PagedListReturnProgress::default())}
         if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return schema.return_one(parent,1)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}
         let index=self.operations.len().checked_sub(1);let source=match self.partial_source.as_mut(){Some(source)=>Some(source),None=>index.and_then(|index|self.operations.get_mut(index))};
@@ -222,8 +224,8 @@ impl ChildOperationSourceReceipt<'_>{
 
 impl PagedChildOwner{
     /// 🏠️ Returns only an already replaced schema; accepted sources and labels remain live.
-    pub fn return_committed_scaffold_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<semio_framework_value::list::PagedListReturnProgress,ValueError>{
-        use semio_framework_value::list::PagedListReturnProgress;
+    pub fn return_committed_scaffold_one<const P:usize>(&mut self,parent:&mut semio_framework_value::retirement::allocation_return::ParentAllocationReturn<P>,maximum_items:usize)->Result<semio_framework_value_persistent::list::PagedListReturnProgress,ValueError>{
+        use semio_framework_value_persistent::list::PagedListReturnProgress;
         if maximum_items==0||!self.pending_schema_is_retired{return Ok(PagedListReturnProgress::default())}
         let schema=self.pending_schema.as_mut().ok_or_else(||invalid("committed schema scaffold lacks its actual owner"))?;
         if !schema.terminal_is_empty(){return schema.return_one(parent,1)}

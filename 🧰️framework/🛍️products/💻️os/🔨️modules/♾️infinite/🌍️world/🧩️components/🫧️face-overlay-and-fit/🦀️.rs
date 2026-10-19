@@ -642,7 +642,7 @@ impl World3dSnapshotApplyCursor {
     }
 }
 
-/// Applies hover/selection action payloads to renderer-local world state before the plugin round-trip.
+/// 🗺️ Applies hover/selection action payloads to renderer-local world state before the plugin round-trip.
 ///
 /// 🕹️ An undecodable merge leaves this OPTIMISTIC LOCAL PREVIEW untouched — the word is
 /// outside `🕹️interaction`'s schema enum, so the authoritative path faults on it and the

@@ -37,7 +37,7 @@ test("original cyclic rows use real localized fault owners and the independent g
  expect(new Ajv({strict:true}).validate(cycleSchema,cycle)).toBe(true);
  const graph=new graphlib.Graph({directed:true});cycle.widgets.forEach(widget=>graph.setNode(widget.id));cycle.wires.forEach(wire=>graph.setEdge(wire.from,wire.to));
  const members=graphlib.alg.findCycles(graph).flat().sort();expect(members).toEqual([...cycle.cycleMembers].sort());
- const affected=new Set(members);for(const member of members){graphlib.alg.preorder(graph,member).forEach((id:string)=>affected.add(id));}
+ const affected=new Set(members);for(const member of members){graphlib.alg.preorder(graph,[member]).forEach((id:string)=>affected.add(id));}
  expect([...affected].sort()).toEqual(cycle.faultRows.map(row=>row.id).sort());
  for(const row of cycle.faultRows){expect(row.en).toBe(`Widget “${row.id}” is part of a wiring cycle or depends on one.`);expect(row.de).toBe(`Widget “${row.id}” ist Teil eines Verbindungszyklus oder hängt von einem ab.`);expect(new TextEncoder().encode(row.de).length).toBeGreaterThan(row.de.length);}
  const field=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();const producer=await Bun.file(new URL("../../💎️value/⚠️fault/🦀️.rs",import.meta.url)).text();

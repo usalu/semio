@@ -1,4 +1,4 @@
-//! Deserialize stdio.pdf (1.7) from stdio.deflate (raw file bytes in deflate snapshot).
+//! 📥️ Deserialize stdio.pdf (1.7) from stdio.deflate (raw file bytes in deflate snapshot).
 
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_deflate::DeflateSnapshot;

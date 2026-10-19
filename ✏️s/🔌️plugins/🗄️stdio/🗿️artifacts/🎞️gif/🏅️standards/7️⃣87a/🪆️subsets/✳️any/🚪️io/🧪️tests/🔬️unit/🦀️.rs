@@ -192,7 +192,7 @@ async fn interlace_flag_round_trips_through_real_encode() {
 #[semio_framework_async_macros::async_test]
 async fn encode_gif_rejects_index_past_color_table() {
     let mut image = checkerboard(2, 2);
-    image.indices = vec![250, 250, 250, 250]; // way past the checkerboard's tiny 2-color LCT
+    image.indices = vec![250, 250, 250, 250];
     let snap = GifSnapshot { width: 2, height: 2, images: vec![image], ..GifSnapshot::default() };
     assert!(encode_gif(&snap).is_err());
 }
@@ -202,7 +202,6 @@ async fn interlace_round_trip() {
     let width = 5usize;
     let height = 9usize;
     let rows: Vec<u8> = (0..(width * height) as u32).map(|i| (i % 251) as u8).collect();
-    // Interlace the rows using the same pass order deinterlace_rows expects to invert.
     let mut interlaced = vec![0u8; width * height];
     let mut dst = 0usize;
     for (start, step) in [(0usize, 8usize), (4, 8), (2, 4), (1, 2)] {

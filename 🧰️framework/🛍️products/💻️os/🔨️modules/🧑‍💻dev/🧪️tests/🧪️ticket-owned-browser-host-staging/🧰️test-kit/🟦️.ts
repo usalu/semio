@@ -1,6 +1,6 @@
 /** 🧰️ The shared fixtures of the ticket-owned browser host staging suite: the namespace bag of every owner module the cases drive, the source location, and the helpers several case groups use. */
 import { atTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { spawnSync } from "node:child_process";
 import * as Vm from "node:vm";
 import { APP_CHANNEL_VERSION } from "@semio-tech/framework-os";

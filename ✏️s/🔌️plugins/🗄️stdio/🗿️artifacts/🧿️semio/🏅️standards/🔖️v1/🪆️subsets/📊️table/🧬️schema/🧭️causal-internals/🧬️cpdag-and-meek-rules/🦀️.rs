@@ -13,13 +13,11 @@ pub struct Cpdag {
 }
 
 impl Cpdag {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(names: Vec<String>) -> Self {
         Self { names, directed: BTreeSet::new(), undirected: BTreeSet::new() }
     }
 
     /// 🔀️ A fully undirected complete graph — the PC algorithm's starting skeleton.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn complete(names: Vec<String>) -> Self {
         let n = names.len();
         let mut undirected = BTreeSet::new();
@@ -31,32 +29,26 @@ impl Cpdag {
         Self { names, directed: BTreeSet::new(), undirected }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn n(&self) -> usize {
         self.names.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn names(&self) -> &[String] {
         &self.names
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn has_edge(&self, a: usize, b: usize) -> bool {
         self.directed.contains(&(a, b)) || self.directed.contains(&(b, a)) || self.undirected.contains(&norm_pair(a, b))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_directed(&self, a: usize, b: usize) -> bool {
         self.directed.contains(&(a, b))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_undirected(&self, a: usize, b: usize) -> bool {
         self.undirected.contains(&norm_pair(a, b))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn adjacent(&self, v: usize) -> Vec<usize> {
         let mut out: BTreeSet<usize> = BTreeSet::new();
         for &(a, b) in &self.directed {
@@ -78,7 +70,6 @@ impl Cpdag {
         out.into_iter().collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn remove_edge(&mut self, a: usize, b: usize) {
         self.directed.remove(&(a, b));
         self.directed.remove(&(b, a));
@@ -86,25 +77,21 @@ impl Cpdag {
     }
 
     /// 🔀️ Resolves the undirected edge `(a, b)` to `a -> b`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn orient(&mut self, a: usize, b: usize) {
         self.undirected.remove(&norm_pair(a, b));
         self.directed.insert((a, b));
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn directed_edges(&self) -> Vec<(usize, usize)> {
         self.directed.iter().copied().collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn undirected_edges(&self) -> Vec<(usize, usize)> {
         self.undirected.iter().copied().collect()
     }
 
     /// 🧭️ The CPDAG of `dag`'s Markov equivalence class: skeleton + v-structures, closed under
     /// [`apply_meek_rules`] (sound and complete for this step per Meek 1995).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_dag(dag: &CausalDag) -> Cpdag {
         let mut cpdag = Cpdag::new(dag.names().to_vec());
         for (a, b) in dag.edges() {
@@ -134,7 +121,6 @@ impl Cpdag {
     /// 🧭️ Extends to a consistent member DAG via the Dor–Tarsi (1992) algorithm; `None` if no
     /// consistent extension exists (not possible for a CPDAG built by [`Cpdag::from_dag`] or
     /// [`pc_stable`], but possible for a hand-built [`Cpdag`]).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_dag(&self) -> Option<CausalDag> {
         let n = self.n();
         let mut directed: Vec<(usize, usize)> = self.directed.iter().copied().collect();
@@ -195,7 +181,6 @@ pub fn apply_meek_rules(cpdag: &mut Cpdag) {
     loop {
         let mut changed = false;
 
-        // R1: a->b, b-c undirected, a and c not adjacent => b->c.
         for (a, b) in cpdag.directed_edges() {
             for c in cpdag.adjacent(b) {
                 if c != a && cpdag.is_undirected(b, c) && !cpdag.has_edge(a, c) {
@@ -205,7 +190,6 @@ pub fn apply_meek_rules(cpdag: &mut Cpdag) {
             }
         }
 
-        // R2: a->b->c, a-c undirected => a->c.
         for (a, b) in cpdag.directed_edges() {
             for c in cpdag.adjacent(b) {
                 if cpdag.is_directed(b, c) && cpdag.is_undirected(a, c) {
@@ -215,7 +199,6 @@ pub fn apply_meek_rules(cpdag: &mut Cpdag) {
             }
         }
 
-        // R3: a-b, a-c, a-d undirected, c->b, d->b, c and d not adjacent => a->b.
         for a in 0..n {
             let undirected_neighbors: Vec<usize> = cpdag.adjacent(a).into_iter().filter(|&x| cpdag.is_undirected(a, x)).collect();
             for &b in &undirected_neighbors {

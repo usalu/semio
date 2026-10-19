@@ -57,7 +57,7 @@ export * from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 // family is already re-exported above via `🛂️manifest` (owned-schema-generated mirror of the same Rust types),
 // so a second blanket export of the module root would collide; only its presence-broadcast leaf types,
 // which nothing else exports yet, are pulled in here for `@semio-tech/framework` consumers like the OS Shell.
-export type { PresenceDomain, PresenceInteraction } from "../../🔨️modules/🕹️interaction/🧬️schema/🟦️.ts";
+export type { InteractionTarget, PresenceDomain, PresenceInteraction } from "../../🔨️modules/🕹️interaction/🧬️schema/🟦️.ts";
 export {
   EMPTY_GESTURE_POINTERS,
   GESTURE_MULTI_TOUCH_POINTERS,

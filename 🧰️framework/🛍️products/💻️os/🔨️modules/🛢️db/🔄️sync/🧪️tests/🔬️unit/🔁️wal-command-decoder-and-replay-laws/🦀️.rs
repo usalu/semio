@@ -205,7 +205,6 @@ async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
 use db_storage_memory::MemoryStorage;
 use db_wal::ArtifactWal;
 use db_wal_log::{GroupCommitPolicy, WalRecord};
-use db_ids::ArtifactId;
 
 //#region 🧸️Fixtures
 async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {

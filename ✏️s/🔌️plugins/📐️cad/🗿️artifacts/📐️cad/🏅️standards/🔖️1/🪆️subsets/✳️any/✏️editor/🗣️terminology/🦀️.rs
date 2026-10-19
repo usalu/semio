@@ -10,18 +10,15 @@ use semio_framework_plugin::ViewModel;
 semio_framework_ui_locale::app_labels! {
     /// 🗣️ Complete UI label set for the CAD app; one field per label makes every terminology×locale combination compile-checked.
     pub struct CadLabels {
-        // entity nouns — remapped under the "reuse" terminology
         object: native_en "Object", native_de "Objekt", reuse_en "Building component", reuse_de "Baukomponente";
         objects: native_en "Objects", native_de "Objekte", reuse_en "Building components", reuse_de "Baukomponenten";
         primitive: native_en "Primitive", native_de "Grundkörper", reuse_en "Component part", reuse_de "Bauteil";
-        // model-definition pane / document-tree section names
         pane_shape: native_en "Shape", native_de "Form", reuse_en "Shape", reuse_de "Form";
         pane_building: native_en "Building", native_de "Gebäude", reuse_en "Building", reuse_de "Gebäude";
         pane_energy: native_en "Energy", native_de "Energie", reuse_en "Energy", reuse_de "Energie";
         pane_structure_classic: native_en "Structure Classic", native_de "Tragwerk Klassisch", reuse_en "Structure Classic", reuse_de "Tragwerk Klassisch";
         references: native_en "References", native_de "Referenzen", reuse_en "References", reuse_de "Referenzen";
         nodes: native_en "Nodes", native_de "Knoten", reuse_en "Nodes", reuse_de "Knoten";
-        // catalogue
         typologies: native_en "Typologies", native_de "Typologien", reuse_en "Typologies", reuse_de "Typologien";
         typology_box: native_en "Box", native_de "Quader", reuse_en "Box", reuse_de "Quader";
         typology_slab: native_en "Slab", native_de "Platte", reuse_en "Slab", reuse_de "Platte";
@@ -29,17 +26,14 @@ semio_framework_ui_locale::app_labels! {
         typology_beam: native_en "Beam", native_de "Träger", reuse_en "Beam", reuse_de "Träger";
         typology_wall: native_en "Wall", native_de "Wand", reuse_en "Wall", reuse_de "Wand";
         typology_external_wall: native_en "External Wall", native_de "Außenwand", reuse_en "External Wall", reuse_de "Außenwand";
-        // inspector group titles
         reference: native_en "Reference", native_de "Referenz", reuse_en "Reference", reuse_de "Referenz";
         node: native_en "Node", native_de "Knoten", reuse_en "Node", reuse_de "Knoten";
-        // tree item actions
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
         show: native_en "Show", native_de "Anzeigen", reuse_en "Show", reuse_de "Anzeigen";
         lock: native_en "Lock", native_de "Sperren", reuse_en "Lock", reuse_de "Sperren";
         unlock: native_en "Unlock", native_de "Entsperren", reuse_en "Unlock", reuse_de "Entsperren";
         duplicate: native_en "Duplicate", native_de "Duplizieren", reuse_en "Duplicate", reuse_de "Duplizieren";
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
-        // inspector field chrome
         label: native_en "Label", native_de "Bezeichnung", reuse_en "Label", reuse_de "Bezeichnung";
         typology: native_en "Typology", native_de "Typologie", reuse_en "Typology", reuse_de "Typologie";
         hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
@@ -52,9 +46,7 @@ semio_framework_ui_locale::app_labels! {
         id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
         source: native_en "Source", native_de "Quelle", reuse_en "Source", reuse_de "Quelle";
         width_world: native_en "Width (world)", native_de "Breite (Weltkoordinaten)", reuse_en "Width (world)", reuse_de "Breite (Weltkoordinaten)";
-        // catalogue / tree chrome
         none_placeholder: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
-        // properties fallback + engagement chrome
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
         action_placeholder: native_en "Action", native_de "Aktion", reuse_en "Action", reuse_de "Aktion";

@@ -1,7 +1,8 @@
 //! 📤️ Resumable publication of bounded DEFLATE checkpoint state and committed output bytes.
 
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobPayloadStream, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedPayloadBuilder, StepContext};
+use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
+use semio_framework_job_payload::{JobPayloadStream, RetainedPayloadBuilder};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]
@@ -61,7 +62,7 @@ impl Publication {
 
     /// 🤝️ The sealed commit output payload, readable only after the whole commit was delivered.
     #[cfg(any(test, feature = "testkit"))]
-    pub fn commit_output(&self) -> Option<&semio_framework_job::RetainedJobPayload> {
+    pub fn commit_output(&self) -> Option<&semio_framework_job_payload::RetainedJobPayload> {
         if self.delivered && matches!(self.kind, Kind::Commit) { self.output.published() } else { None }
     }
 

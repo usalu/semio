@@ -99,8 +99,6 @@ fn paint_tree_clears_dirty_paint_but_leaves_layout_dirt_flags_untouched() {
     assert!(!after_first.contains(NodeFlags::DIRTY_LAYOUT), "paint must not touch DIRTY_LAYOUT, that's flex's job");
     assert!(!after_first.contains(NodeFlags::SUBTREE_DIRTY), "flex::compute already cleared SUBTREE_DIRTY before paint ran");
 
-    // Second call must be a no-operation w.r.t. these flags — repeat of the M3 SUBTREE_DIRTY bug class
-    // (calling twice shouldn't set or double-clear something it shouldn't).
     paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
     let after_second = tree.node(root).unwrap().flags;
     assert_eq!(after_first, after_second);

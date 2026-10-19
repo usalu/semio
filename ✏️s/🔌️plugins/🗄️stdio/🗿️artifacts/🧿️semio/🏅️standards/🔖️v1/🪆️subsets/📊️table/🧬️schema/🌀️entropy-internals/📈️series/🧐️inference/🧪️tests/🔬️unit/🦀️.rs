@@ -51,9 +51,6 @@ mod tests {
         let y: Vec<f64> = (0..200).map(|_| rng.next_gaussian()).collect();
         let diff_means = |a: &[f64], b: &[f64]| mean(a) - mean(b);
 
-        // 🔬️ under the true null, permutation p-values are approximately uniform(0,1); a fixed
-        // seed can land anywhere in that range, so assert only "not significant" (p > 0.05)
-        // rather than a specific large value.
         let p_null = permutation_test(&x, &y, diff_means, 1000, 44).unwrap();
         assert!(p_null > 0.05, "p_null={p_null}");
 

@@ -1,4 +1,4 @@
-//! manifest stitch.
+//! 📜️ manifest stitch.
 //! 🖥️ Fem2d play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, window renders in

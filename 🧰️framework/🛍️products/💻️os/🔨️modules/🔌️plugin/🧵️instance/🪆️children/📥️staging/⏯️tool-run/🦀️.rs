@@ -22,6 +22,7 @@ use semio_framework_ui_contract::*;
 use semio_framework_plugin_tool_run::*;
 use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
 use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_framework_value::RetainedCloneGrant;
 
 impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🧩️ The member a run declaring `ToolRunDefinition::member` edits: the one live owned child composed under `slot`, with
@@ -49,7 +50,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
 
     /// 🔁️ [`Self::refresh_tool_run_member`] on a member taken out of its entry: `(fold pending, conflicts, rebased)`, or
     /// `None` when the overlay already shows every op.
-    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<(bool, u32, bool)>, Fault> {
+    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Option<(bool, u32, bool)>, Fault> {
         let stale = std::mem::take(&mut member.stale);
         self.retire_tool_run_views(stale, &mut member.stale)?;
         if !member.rebase && member.shown == member.ops.len() {

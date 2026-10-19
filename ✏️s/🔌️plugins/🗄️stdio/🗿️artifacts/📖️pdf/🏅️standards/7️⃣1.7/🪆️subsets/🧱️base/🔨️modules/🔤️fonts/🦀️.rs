@@ -254,7 +254,6 @@ fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)-
 
 impl FontCodec {
     /// 🏗️ Builds the codec for `font`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(font: &PdfFont,resources:&dyn PdfArtifactResourcePort) -> PResult<Self> {
         let mut codec = Self { composite: false, cid_codec: None, code_to_text: BTreeMap::new(), text_to_code: HashMap::new(), simple_widths: BTreeMap::new(), default_width: 0.0, cid_widths: BTreeMap::new(), cid_to_gid: BTreeMap::new(), cid_to_gid_identity: true, program: None, code_to_gid: BTreeMap::new(), to_unicode: font.to_unicode.clone(), type3_matrix: None };
         match &font.kind {
@@ -283,7 +282,6 @@ impl FontCodec {
                     }
                 }
                 let names = if symbolic && encoding.base.is_none() && encoding.differences.is_empty() {
-                    // 🔣 A symbolic TrueType font with no /Encoding: text is whatever the ToUnicode says.
                     BTreeMap::new()
                 } else {
                     names
@@ -362,15 +360,12 @@ impl FontCodec {
         Ok(codec)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn install_simple(&mut self, names: &BTreeMap<u32, String>, first_char: u32, widths: &[f64], standard: Option<&StandardFontMetrics>, missing_width: Option<f64>, symbolic: bool) {
         for (code, name) in names {
             if let Some(text) = glyph_name_to_unicode(name) {
                 self.text_to_code.entry(text.clone()).or_insert((*code, 1));
                 self.code_to_text.insert(*code, text);
             } else if (0x20..=0x7E).contains(code) && name != ".notdef" {
-                // 🔤 A glyph name outside every list (bitmap `aNN` names of TeX Type 3 fonts, …):
-                // the code is its own Unicode, the fallback poppler and MuPDF apply as well.
                 let text = (*code as u8 as char).to_string();
                 self.text_to_code.entry(text.clone()).or_insert((*code, 1));
                 self.code_to_text.insert(*code, text);
@@ -401,13 +396,11 @@ impl FontCodec {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_composite(&self) -> bool {
         self.composite
     }
 
     /// 📖 Splits `bytes` into the glyphs they show.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn decode(&self, bytes: &[u8]) -> Vec<DecodedGlyph> {
         let codes: Vec<(u32, u32)> = match &self.cid_codec {
             Some(cid_codec) => cid_codec.split(bytes),
@@ -435,7 +428,6 @@ impl FontCodec {
     }
 
     /// 🔤 The Unicode text `bytes` show, when every code is mapped.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn decode_text(&self, bytes: &[u8]) -> Option<String> {
         let glyphs = self.decode(bytes);
         let mut out = String::new();
@@ -447,13 +439,11 @@ impl FontCodec {
 
     /// ✍️ Encodes `text` into the string operand that shows it, when the font can show every
     /// character.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn encode(&self, text: &str) -> Option<Vec<u8>> {
         let mut out = Vec::new();
         let mut cursor = text;
         while !cursor.is_empty() {
             let mut matched = false;
-            // 🧵 Longest multi-character mapping first (ligatures), then single characters.
             for length in (1..=cursor.chars().count().min(4)).rev() {
                 let candidate: String = cursor.chars().take(length).collect();
                 if let Some((code, width)) = self.text_to_code.get(&candidate) {
@@ -475,7 +465,6 @@ impl FontCodec {
     }
 
     /// 📏 Width of a code in 1/1000 text space.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn width_of_code(&self, code: u32) -> f64 {
         if self.composite {
             let cid = self.cid_codec.as_ref().map_or(code, |c| c.cid(code));
@@ -486,20 +475,17 @@ impl FontCodec {
     }
 
     /// 📏 Width of a text run in 1/1000 text space, when encodable.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn text_width(&self, text: &str) -> Option<f64> {
         let bytes = self.encode(text)?;
         Some(self.decode(&bytes).iter().map(|glyph| glyph.width).sum())
     }
 
     /// 🔠 The embedded TrueType program, when the font carries one.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn program(&self) -> Option<&TrueTypeFont> {
         self.program.as_ref()
     }
 
     /// 🈴 The typed `ToUnicode` of the font, if any.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_unicode(&self) -> Option<&PdfToUnicode> {
         self.to_unicode.as_ref()
     }

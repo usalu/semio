@@ -1,4 +1,4 @@
-//! delegated wholesale to the framework's shared `world3d_sun_measures` builder. Genuinely
+//! 📡️ delegated wholesale to the framework's shared `world3d_sun_measures` builder. Genuinely
 //! ☀️ 3D-window option — the sun/environment group (enabled, azimuth, elevation, intensity),
 //! window-specific: only the World3d surface has an environment to light, so this stays under the 3D
 //! window rather than at mode level.

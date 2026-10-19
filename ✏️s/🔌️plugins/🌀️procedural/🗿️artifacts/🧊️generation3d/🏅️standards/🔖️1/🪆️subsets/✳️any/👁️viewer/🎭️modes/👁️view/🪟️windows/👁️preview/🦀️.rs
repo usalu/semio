@@ -279,10 +279,6 @@ fn build_preview_mesh_table(
                 Some(PreviewInlineGeometry::Point { x, y, z }) => Some(preview_eval::point_marker_mesh(x, y, z)),
                 Some(PreviewInlineGeometry::Vector { x, y, z }) => Some(preview_eval::vector_marker_mesh(x, y, z)),
                 Some(PreviewInlineGeometry::Mesh { ref preview, .. }) => preview_eval::decode_preview_mesh_pack(preview),
-                // ⏱️ The CHAIN's answer first: a served guest links no geometry kernel at all, so
-                // `flowTessellateResolve`'s mesh pack is the only mesh a viewer can ever paint.
-                // Reaching the in-process kernel is counted, and only a session-free caller (a law
-                // measuring a cold render) ever gets there.
                 None => match session {
                     Some(session) => preview_eval::mesh_data_for_session_preview_channel(&handle, id, &channel, index, tolerance, session, host_snapshot).or_else(|| {
                         PREVIEW_TESSELLATIONS.with(|count| count.set(count.get() + 1));
@@ -396,10 +392,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     let eval_json = eval_json.unwrap_or_default();
     let payload = preview_payload(eval_json, &document.host_snapshot, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
-    // 📈️ The SAME projection both editor preview windows publish — the surface-neutral
-    // `🧵️preview-eval` one, reached at the artifact level and never through `::editor::`. A viewer
-    // that published no status left the shell with no phase to show and no abort affordance to
-    // offer, while its meshes rendered fine (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let status_json = preview_eval::preview_window_status_json(
         session,
         run,

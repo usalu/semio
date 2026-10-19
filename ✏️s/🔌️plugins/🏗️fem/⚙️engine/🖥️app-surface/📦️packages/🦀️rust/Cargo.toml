@@ -24,3 +24,6 @@ semio-framework-ui-scene = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-fem-model = { workspace = true }
+
+[dev-dependencies]
+serde_json = "1.0.149"

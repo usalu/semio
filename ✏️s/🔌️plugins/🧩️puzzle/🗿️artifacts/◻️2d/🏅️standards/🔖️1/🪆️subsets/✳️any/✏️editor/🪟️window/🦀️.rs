@@ -1,8 +1,7 @@
 //! 🪟️ Exact-instance persisted and ephemeral ownership for Puzzle 2D panes.
 
 use crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu;
-use crate::editor::puzzle2d::modes::edit::windows::overview;
-use crate::editor::puzzle2d::modes::edit::windows::selection;
+use semio_s_artifact_puzzle_2d_graph_manifest::editor::puzzle2d::modes::edit::windows::overview;
 use std::collections::BTreeMap;
 
 /// 🎚️ ONE exact Puzzle 2D pane's persisted-local options. `WindowConfigOwner::State` requires

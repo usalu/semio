@@ -48,7 +48,7 @@ async fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
     }
 }
 
-/// Regression guard: every `interaction/*.json` asset in the tree must parse as
+/// 🤝️ Regression guard: every `interaction/*.json` asset in the tree must parse as
 /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
 #[semio_framework_async_macros::async_test]
 async fn every_interaction_asset_on_disk_parses_as_interaction_spec() {

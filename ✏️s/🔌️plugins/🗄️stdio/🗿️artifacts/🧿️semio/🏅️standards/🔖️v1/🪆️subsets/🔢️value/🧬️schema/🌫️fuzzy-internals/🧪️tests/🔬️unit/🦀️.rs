@@ -460,8 +460,6 @@ fn defuzzifier_bisector_mom_som_lom() {
     assert!((bisector - 3.0).abs() < 1e-9);
     let mom = Defuzzifier::Mom.apply(&univ, &membership, None, None).unwrap();
     assert!((mom - 3.0).abs() < 1e-9);
-    // 🔍️ argmax breaks ties on the *last* max (std max_by semantics), so Som and Lom
-    // coincide here even though "smallest of maximum" would conventionally pick x=2.
     let som = Defuzzifier::Som.apply(&univ, &membership, None, None).unwrap();
     let lom = Defuzzifier::Lom.apply(&univ, &membership, None, None).unwrap();
     assert!((som - 4.0).abs() < 1e-9);

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import ts from "typescript";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import type { AdapterContext, TestAdapter, TestCasePlan } from "@semio-tech/framework/test/adapter";
-import protocol from "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json" with { type: "json" };
+import protocol from "@semio-tech/framework/modules/test/schema.json";
 const root = resolve(import.meta.dir, "../../../../../../../");
 const ajv = semioSchemaAjvV1({ strictRequired: false, allowUnionTypes: true });
 

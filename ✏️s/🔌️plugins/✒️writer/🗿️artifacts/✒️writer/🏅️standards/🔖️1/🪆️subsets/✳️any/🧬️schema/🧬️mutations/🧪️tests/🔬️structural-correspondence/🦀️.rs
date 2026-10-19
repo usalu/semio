@@ -10,10 +10,6 @@ use crate::standards::v1::subsets::any::schema::mutations::*;
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     let mutation_root = fixture_path!("../../../🧬️mutations");
     let descriptor_kinds: Vec<_> = <WriterMutation as protocol::SemanticMutation<WriterSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
-    // 🔮️ The language-neutral oracle catalog lives in the subset's `🔮️oracles/🔣️.json`, not in a
-    // loose `🔣️oracle.json` beside the schema (fleet-brief stale-test bucket 9). The old path has
-    // not existed for some time, so this law failed on `No such file or directory` rather than on
-    // any correspondence it was written to check.
     let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: serde_json::Value = serde_json::from_str(&catalog_source).expect("valid language-neutral oracle catalog");
     let mutation_catalog = &catalog["mutationCatalogs"][0];

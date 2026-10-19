@@ -122,7 +122,6 @@ fn hit_test_respects_clips_children_pruning() {
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     let clipper = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 50.0, 50.0));
     set_flag(&mut tree, clipper, NodeFlags::CLIPS_CHILDREN);
-    // child's own rect extends far outside the clipper's 50x50 bounds.
     let overflowing_child = leaf(&mut tree, Some(clipper), 1, text_ui("overflow"), (0.0, 0.0, 500.0, 500.0));
 
     assert_eq!(hit_test(&tree, root, 400.0, 400.0), None, "point outside the clipper must not match the overflowing child");
@@ -266,7 +265,6 @@ fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_positio
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 50.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture.target.map(|(_, id, _)| id), Some(a));
 
-    // pointer moved far outside `a`'s bounds and into `b`'s — capture must still target `a`.
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 50.0, modifiers: Default::default() });
     assert_eq!(router.hovered, Some(a));
 

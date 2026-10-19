@@ -18,9 +18,5 @@ pub fn handle(payload: &DeleteLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _c
     if payload.layer_id.is_empty() || find_drawing_layer(document, &payload.layer_id).is_none() {
         return Ok(Emit::default());
     }
-    // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM);
-    // `Flat`-hierarchy domains are deliberately never auto-pruned on document change (see the plugin
-    // SDK's `validate_state` doc), so a deleted layer's stale id simply stays selected until the next
-    // real pick — a documented, accepted gap, not routed around here.
     Ok(Emit { artifact_mutations: vec![semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer(payload.layer_id.clone().into())], ..Default::default() })
 }

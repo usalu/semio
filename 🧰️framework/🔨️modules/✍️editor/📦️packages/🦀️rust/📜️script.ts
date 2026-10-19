@@ -11,6 +11,7 @@ import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦�
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedErrorScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
@@ -40,14 +41,11 @@ class TestScript extends BundleScript {
 
 /** 🧫️ Runs the complete shared owner corpus and independent oracle. */
 class OwnedErrorScript extends BundleScript {
- async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-owned-error accepts no arguments");
-  const {runBudgetedTestCommand}=await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"),{testLevelBudgetMs}=await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts");
-  const source=resolve(this.root,"../../⚠️error/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
- }
+  async run(segments:string[]): Promise<void> {
+    await runOwnedErrorScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-owned-error",OwnedErrorScript).register("wasm", WasmScript).register("test", TestScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "wasm" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "wasm" }));

@@ -41,11 +41,6 @@ async fn every_context_menu_row_dispatches_a_declared_action() {
         (PUZZLE3D_GRANULARITY_REFERENCE, "reference-1"),
         (PUZZLE3D_GRANULARITY_ATTRACTION, "attraction-1"),
     ] {
-        // 🧹️ `Puzzle3dContextSelection::fill_from_interaction` fills every granularity the CLIENT
-        // surface did not send from the framework-owned selection, so the object `addObjectKind`
-        // left selected would win every branch and each granularity would build the OBJECT menu.
-        // A real client's document selection is the one it right-clicks in; clear it so the
-        // surface group under test is the only subject and each branch is genuinely exercised.
         dispatch(&mut app, "clearSelection", None, None).await.expect("clearSelection");
         let menu = context_menu_for_selection(&mut app, granularity, id).await;
         let mut rows = Vec::new();
@@ -60,8 +55,6 @@ async fn every_context_menu_row_dispatches_a_declared_action() {
         }
     }
     assert_eq!(zoom_rows, 3, "object, vortex and reference selections each carry a Zoom to Selection row");
-    // 🎯️ Reachability, not just declaration: the id the row carries must be one the typed command
-    // channel actually admits (an unknown id panics inside `dispatch`).
     dispatch(&mut app, "focusSelection", None, None).await.expect("the context menu's zoom row must dispatch");
 }
 
@@ -124,7 +117,6 @@ async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog()
     assert_eq!(visible, vec!["openAddObjectDialog"], "exactly one add-object row may reach a menu");
     let order = |id: &str| actions.iter().position(|action| action.id == id).unwrap_or_else(|| panic!("{id} declared"));
     assert!(order("openAddObjectDialog") < order("addObjectKind"), "the dialog opener must be declared ahead of the verb it drives so the shell menu keeps it at top level");
-    // 🎯️ Reachability, not just declaration: the row's id must be one the typed command channel admits.
     let mut app = app().await;
     let result = dispatch(&mut app, "openAddObjectDialog", None, None).await.expect("the add-object row must dispatch");
     assert!(
@@ -274,12 +266,9 @@ async fn escaping_the_armed_fill_tool_cancels_the_plan_and_disarms_the_tool() {
         aborted.requested_effects,
     );
     let active_utility = |node: &Value| selection_of(node).get("activeUtility").and_then(Value::as_str).unwrap_or_default().to_string();
-    let rendered = render_window(&mut armed, main::WINDOW_KIND_ID).await;
+    let rendered = render_window(&mut armed, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await;
     assert_eq!(active_utility(&rendered), PUZZLE3D_DEFAULT_UTILITY, "the abort leaves no utility armed either: {}", selection_of(&rendered));
 
-    // 🏛️ `active_tool_id` is host-owned (`ViewModel`, `🪟️window/🦀️.rs` `host_activation`), so the guest
-    // keeps reading `fill` until the host answers the disarm. A second Escape in that window therefore
-    // repeats the same idempotent disarm — and still aborts nothing, because no run was ever shown.
     let repeated = dispatch(&mut armed, "engagementAbort", None, None).await.expect("second engagementAbort");
     assert!(
         repeated.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty())),
@@ -318,10 +307,8 @@ async fn a_refused_placement_surfaces_exactly_one_notice() {
             .collect()
     };
     let mut app = app().await;
-    // 🎯️ Nothing selected, no popup open, no `fullId` — the accept has no target at all.
     let orphan = dispatch(&mut app, "acceptSuggestion", None, None).await.expect("acceptSuggestion without a target still completes");
     assert_eq!(notices(&orphan).len(), 1, "an accept with no target must say so: {:?}", orphan.requested_effects);
-    // 🎯️ A brush placement naming a vortex no object owns, on a kind the catalog does not declare.
     let unknown = dispatch(
         &mut app,
         "addBrushObject",
@@ -335,7 +322,6 @@ async fn a_refused_placement_surfaces_exactly_one_notice() {
         assert_ne!(message, PUZZLE3D_LOCALIZATION_UNSUPPORTED, "the test host declares an authored locale/terminology axis, so the notice must be real prose");
         assert!(!message.is_empty(), "a notice must carry text");
     }
-    // 🎯️ The happy path stays quiet.
     let placed = dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
     assert!(notices(&placed).is_empty(), "a successful action must not raise a notice: {:?}", placed.requested_effects);
 }

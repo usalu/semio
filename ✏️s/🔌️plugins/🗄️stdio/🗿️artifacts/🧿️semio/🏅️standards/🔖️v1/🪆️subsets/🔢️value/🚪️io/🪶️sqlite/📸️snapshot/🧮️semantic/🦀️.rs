@@ -2,7 +2,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{SemioValueSnapshot,SqliteDatabaseLimits,ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio value native primitive differs from its authored shape")}

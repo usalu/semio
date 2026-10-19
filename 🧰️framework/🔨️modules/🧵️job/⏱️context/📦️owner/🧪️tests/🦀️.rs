@@ -3,6 +3,9 @@ use semio_framework_job::*;
 static ORIGINAL_CONTEXT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 const TEST_RETAINED_POLICY:RetainedCloneGrant=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:32768,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+#[cfg(test)] use semio_framework_job_payload::payload_writer_and_grant::RetainedJobPayloadWriter;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::RetainedJobPayload;
 
 #[test]
 fn retained_step_context_owner_turns_use_original_ledger_without_heap_birth() {

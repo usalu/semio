@@ -2,12 +2,449 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://process/native-image-publication/witness",
   "definitions": {
-    "LogicalEntryNameCase":{"type":"object","additionalProperties":false,"required":["id","platform","root","current","name","count","reason"],"properties":{"id":{"type":"string","pattern":"^[a-z0-9-]+$"},"platform":{"enum":["posix","win32"]},"root":{"type":"string"},"current":{"type":"string"},"name":{"oneOf":[{"type":"string"},{"type":"integer"},{"type":"null"}]},"count":{"oneOf":[{"type":"integer"},{"const":"unsafe"}]},"reason":{"enum":[null,"count","type","empty","separator","navigation","path"]}}},
-    "LogicalEntryNameRefusal":{"type":"object","additionalProperties":false,"required":["version","reason","directory","directoryTruncated","name","nameTruncated","count","nameUnits","pathUnits","maximumPathUnits","purpose","maximumEntries","authority"],"properties":{"version":{"const":1},"reason":{"enum":["count","type","empty","separator","navigation","path"]},"directory":{"type":"string","maxLength":256},"directoryTruncated":{"type":"boolean"},"name":{"type":["string","null"],"maxLength":256},"nameTruncated":{"type":"boolean"},"count":{"type":["integer","null"]},"nameUnits":{"type":["integer","null"],"minimum":0},"pathUnits":{"type":["integer","null"],"minimum":0},"maximumPathUnits":{"const":256},"purpose":{"const":"logical-publication-name-bound-refusal"},"maximumEntries":{"const":67108864},"authority":{"const":false}}},
-    "LogicalEntryNameCases":{"const":[{"id":"safe-name","platform":"posix","root":"/source/payload","current":"/source/payload","name":"ok.txt","count":1,"reason":null},{"id":"unsafe-count","platform":"posix","root":"/source/payload","current":"/source/payload","name":"ok.txt","count":"unsafe","reason":"count"},{"id":"name-type","platform":"posix","root":"/source/payload","current":"/source/payload","name":3,"count":1,"reason":"type"},{"id":"name-null","platform":"posix","root":"/source/payload","current":"/source/payload","name":null,"count":1,"reason":"type"},{"id":"slash","platform":"posix","root":"/source/payload","current":"/source/payload","name":"a/b","count":1,"reason":"separator"},{"id":"backslash","platform":"posix","root":"/source/payload","current":"/source/payload","name":"a\\b","count":1,"reason":"separator"},{"id":"nul","platform":"posix","root":"/source/payload","current":"/source/payload","name":"a\u0000b","count":1,"reason":"separator"},{"id":"dot","platform":"posix","root":"/source/payload","current":"/source/payload","name":".","count":1,"reason":"navigation"},{"id":"dot-dot","platform":"posix","root":"/source/payload","current":"/source/payload","name":"..","count":1,"reason":"navigation"},{"id":"unicode-safe","platform":"posix","root":"/source/payload","current":"/source/payload","name":"🧪️.txt","count":1,"reason":null},{"id":"path-boundary","platform":"posix","root":"/source/payload","current":"/source/payload","name":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","count":1,"reason":null},{"id":"path-overflow","platform":"posix","root":"/source/payload","current":"/source/payload","name":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","count":1,"reason":"path"},{"id":"bounded-text","platform":"posix","root":"/source/payload","current":"/source/payload","name":"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001","count":1,"reason":"path"},{"id":"win-name","platform":"win32","root":"C:\\source\\payload","current":"C:\\source\\payload","name":"safe.txt","count":1,"reason":null},{"id":"win-overflow","platform":"win32","root":"C:\\source\\payload","current":"C:\\source\\payload","name":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","count":1,"reason":"path"},{"id":"win-utf16","platform":"win32","root":"C:\\source\\payload","current":"C:\\source\\payload","name":"🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪","count":1,"reason":"path"},{"id":"bounded-escaped-text","platform":"posix","root":"/source/payload","current":"/source/payload/\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001","name":"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001","count":1,"reason":"path"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"empty","name":"","count":1,"reason":"empty"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"count-exact","name":"ok","count":67108864,"reason":null},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"count-above","name":"ok","count":67108865,"reason":"count"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"count-and-empty","name":"","count":67108865,"reason":"count"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"type-and-count","name":null,"count":"unsafe","reason":"count"}]},
-    "LogicalEntryWorkProtocol":{"const":{"version":1,"entryCeiling":"cumulative-metadata-work","minimumVisitCharge":1,"counterReset":"none-within-one-observation","unchanged":["maximumMetadataWork","maximumResidentRows","maximumLogicalBytes","maximumResultBytes","physical-funding","original-invocation","native-meter"],"scope":"every-event-prefix-and-complete-tree-without-new-authority"}},
-    "LogicalEntryWorkCase":{"type":"object","required":["id","maximumWork","accepted"],"properties":{"id":{"enum":["complete","hard-alias","wide-pages","work-exhausted","cancel-final","observer-undefined","directory-close-undefined","directory-close-frozen"]},"maximumWork":{"type":"integer","minimum":1,"maximum":65536},"accepted":{"type":"boolean"}},"additionalProperties":false},
-    "LogicalEntryWorkCases":{"const":[{"id":"complete","maximumWork":16384,"accepted":true},{"id":"hard-alias","maximumWork":16384,"accepted":true},{"id":"wide-pages","maximumWork":16384,"accepted":true},{"id":"work-exhausted","maximumWork":32,"accepted":false},{"id":"cancel-final","maximumWork":16384,"accepted":false},{"id":"observer-undefined","maximumWork":16384,"accepted":false},{"id":"directory-close-undefined","maximumWork":16384,"accepted":false},{"id":"directory-close-frozen","maximumWork":16384,"accepted":false}]},
+    "LogicalEntryNameCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "root",
+        "current",
+        "name",
+        "count",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "win32"
+          ]
+        },
+        "root": {
+          "type": "string"
+        },
+        "current": {
+          "type": "string"
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "const": "unsafe"
+            }
+          ]
+        },
+        "reason": {
+          "enum": [
+            null,
+            "count",
+            "type",
+            "empty",
+            "separator",
+            "navigation",
+            "path"
+          ]
+        }
+      }
+    },
+    "LogicalEntryNameRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "reason",
+        "directory",
+        "directoryTruncated",
+        "name",
+        "nameTruncated",
+        "count",
+        "nameUnits",
+        "pathUnits",
+        "maximumPathUnits",
+        "purpose",
+        "maximumEntries",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "reason": {
+          "enum": [
+            "count",
+            "type",
+            "empty",
+            "separator",
+            "navigation",
+            "path"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "directoryTruncated": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "nameTruncated": {
+          "type": "boolean"
+        },
+        "count": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "nameUnits": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "pathUnits": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "maximumPathUnits": {
+          "const": 256
+        },
+        "purpose": {
+          "const": "logical-publication-name-bound-refusal"
+        },
+        "maximumEntries": {
+          "const": 67108864
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "LogicalEntryNameCases": {
+      "const": [
+        {
+          "id": "safe-name",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "ok.txt",
+          "count": 1,
+          "reason": null
+        },
+        {
+          "id": "unsafe-count",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "ok.txt",
+          "count": "unsafe",
+          "reason": "count"
+        },
+        {
+          "id": "name-type",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": 3,
+          "count": 1,
+          "reason": "type"
+        },
+        {
+          "id": "name-null",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": null,
+          "count": 1,
+          "reason": "type"
+        },
+        {
+          "id": "slash",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "a/b",
+          "count": 1,
+          "reason": "separator"
+        },
+        {
+          "id": "backslash",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "a\\b",
+          "count": 1,
+          "reason": "separator"
+        },
+        {
+          "id": "nul",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "a\u0000b",
+          "count": 1,
+          "reason": "separator"
+        },
+        {
+          "id": "dot",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": ".",
+          "count": 1,
+          "reason": "navigation"
+        },
+        {
+          "id": "dot-dot",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "..",
+          "count": 1,
+          "reason": "navigation"
+        },
+        {
+          "id": "unicode-safe",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "🧪️.txt",
+          "count": 1,
+          "reason": null
+        },
+        {
+          "id": "path-boundary",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "count": 1,
+          "reason": null
+        },
+        {
+          "id": "path-overflow",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "count": 1,
+          "reason": "path"
+        },
+        {
+          "id": "bounded-text",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "name": "\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001",
+          "count": 1,
+          "reason": "path"
+        },
+        {
+          "id": "win-name",
+          "platform": "win32",
+          "root": "C:\\source\\payload",
+          "current": "C:\\source\\payload",
+          "name": "safe.txt",
+          "count": 1,
+          "reason": null
+        },
+        {
+          "id": "win-overflow",
+          "platform": "win32",
+          "root": "C:\\source\\payload",
+          "current": "C:\\source\\payload",
+          "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "count": 1,
+          "reason": "path"
+        },
+        {
+          "id": "win-utf16",
+          "platform": "win32",
+          "root": "C:\\source\\payload",
+          "current": "C:\\source\\payload",
+          "name": "🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪",
+          "count": 1,
+          "reason": "path"
+        },
+        {
+          "id": "bounded-escaped-text",
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload/\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001",
+          "name": "\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001",
+          "count": 1,
+          "reason": "path"
+        },
+        {
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "id": "empty",
+          "name": "",
+          "count": 1,
+          "reason": "empty"
+        },
+        {
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "id": "count-exact",
+          "name": "ok",
+          "count": 67108864,
+          "reason": null
+        },
+        {
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "id": "count-above",
+          "name": "ok",
+          "count": 67108865,
+          "reason": "count"
+        },
+        {
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "id": "count-and-empty",
+          "name": "",
+          "count": 67108865,
+          "reason": "count"
+        },
+        {
+          "platform": "posix",
+          "root": "/source/payload",
+          "current": "/source/payload",
+          "id": "type-and-count",
+          "name": null,
+          "count": "unsafe",
+          "reason": "count"
+        }
+      ]
+    },
+    "LogicalEntryWorkProtocol": {
+      "const": {
+        "version": 1,
+        "entryCeiling": "cumulative-metadata-work",
+        "minimumVisitCharge": 1,
+        "counterReset": "none-within-one-observation",
+        "unchanged": [
+          "maximumMetadataWork",
+          "maximumResidentRows",
+          "maximumLogicalBytes",
+          "maximumResultBytes",
+          "physical-funding",
+          "original-invocation",
+          "native-meter"
+        ],
+        "scope": "every-event-prefix-and-complete-tree-without-new-authority"
+      }
+    },
+    "LogicalEntryWorkCase": {
+      "type": "object",
+      "required": [
+        "id",
+        "maximumWork",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "complete",
+            "hard-alias",
+            "wide-pages",
+            "work-exhausted",
+            "cancel-final",
+            "observer-undefined",
+            "directory-close-undefined",
+            "directory-close-frozen"
+          ]
+        },
+        "maximumWork": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LogicalEntryWorkCases": {
+      "const": [
+        {
+          "id": "complete",
+          "maximumWork": 16384,
+          "accepted": true
+        },
+        {
+          "id": "hard-alias",
+          "maximumWork": 16384,
+          "accepted": true
+        },
+        {
+          "id": "wide-pages",
+          "maximumWork": 16384,
+          "accepted": true
+        },
+        {
+          "id": "work-exhausted",
+          "maximumWork": 32,
+          "accepted": false
+        },
+        {
+          "id": "cancel-final",
+          "maximumWork": 16384,
+          "accepted": false
+        },
+        {
+          "id": "observer-undefined",
+          "maximumWork": 16384,
+          "accepted": false
+        },
+        {
+          "id": "directory-close-undefined",
+          "maximumWork": 16384,
+          "accepted": false
+        },
+        {
+          "id": "directory-close-frozen",
+          "maximumWork": 16384,
+          "accepted": false
+        }
+      ]
+    },
     "AncestryBatchCase": {
       "type": "object",
       "additionalProperties": false,
@@ -725,1893 +1162,6 @@
         },
         "accepted": {
           "type": "boolean"
-        }
-      }
-    },
-    "Windows": {
-      "definitions": {
-        "Protocol": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json#/definitions/NativeReadProtocol"
-        },
-        "DirectoryCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "names",
-            "mutation",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "names": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "mutation": {
-              "enum": [
-                "none",
-                "short-header",
-                "odd-name",
-                "partial-name",
-                "unaligned-next",
-                "past-next",
-                "zero-info",
-                "invalid-utf16",
-                "slash",
-                "negative-size"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "NativeCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "effect",
-            "accepted",
-            "unresolved"
-          ],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "effect": {
-              "enum": [
-                "ordinary",
-                "device",
-                "reparse",
-                "hardlink",
-                "named-stream",
-                "foreign-volume",
-                "changed-id",
-                "changed-stamp",
-                "zero-information",
-                "pending",
-                "read-false",
-                "read-overflow",
-                "close-zero",
-                "close-throw",
-                "open-observer",
-                "open-cancel",
-                "body-undefined",
-                "body-frozen",
-                "copied-facts",
-                "escaped-receiver",
-                "copied-control",
-                "pre-cancel",
-                "post-read-cancel",
-                "query-throw",
-                "library-close",
-                "same-body-drain",
-                "unawaited-reject",
-                "directory-cancel",
-                "library-observer",
-                "parallel-admission",
-                "short-then-eof",
-                "root-changed",
-                "ancestor-changed",
-                "directory-open-observer",
-                "changed-high-id",
-                "closed-parent-read",
-                "copied-reader",
-                "growth",
-                "cancel-after-library",
-                "library-close-observer",
-                "file-close-observer",
-                "stream-size",
-                "stream-allocation",
-                "stream-eof-information",
-                "sparse",
-                "standard-allocation"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            },
-            "unresolved": {
-              "type": "boolean"
-            }
-          }
-        },
-        "Root": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json#/definitions/NativeReadRoot"
-        },
-        "RootCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "effect",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "effect": {
-              "enum": [
-                "ordinary",
-                "copy-data",
-                "accessor",
-                "symbol",
-                "extra",
-                "foreign-volume",
-                "mutate-after-birth",
-                "relative",
-                "alias",
-                "long",
-                "extra-prototype"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "Facts": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json#/definitions/NativeReadFacts"
-        },
-        "HostIdentity": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "device",
-            "inode"
-          ],
-          "properties": {
-            "device": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            },
-            "inode": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            }
-          }
-        },
-        "HostRequest": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "directory",
-            "directoryIdentity",
-            "backing",
-            "record"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "directory": {
-              "type": "string",
-              "minLength": 4,
-              "maxLength": 256
-            },
-            "directoryIdentity": {
-              "$ref": "#/definitions/Windows/definitions/HostIdentity"
-            },
-            "backing": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "device",
-                "inode",
-                "bytes",
-                "allocatedBytes"
-              ],
-              "properties": {
-                "device": {
-                  "type": "string",
-                  "pattern": "^[0-9]{1,20}$"
-                },
-                "inode": {
-                  "type": "string",
-                  "pattern": "^[0-9]{1,20}$"
-                },
-                "bytes": {
-                  "type": "integer",
-                  "minimum": 512,
-                  "maximum": 9007199254740991
-                },
-                "allocatedBytes": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 9007199254740991
-                }
-              }
-            },
-            "record": {
-              "enum": [
-                "fixed.vhd",
-                "image.json",
-                ".publication/intent.json",
-                ".publication/receipt.json"
-              ]
-            }
-          }
-        },
-        "HostEvidence": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "record",
-            "directory",
-            "backing",
-            "file",
-            "bytesBase64",
-            "sha256"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "record": {
-              "enum": [
-                "fixed.vhd",
-                "image.json",
-                ".publication/intent.json",
-                ".publication/receipt.json"
-              ]
-            },
-            "directory": {
-              "$ref": "#/definitions/Windows/definitions/Facts"
-            },
-            "backing": {
-              "$ref": "#/definitions/Windows/definitions/Facts"
-            },
-            "file": {
-              "$ref": "#/definitions/Windows/definitions/Facts"
-            },
-            "bytesBase64": {
-              "type": "string",
-              "maxLength": 5464
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            }
-          }
-        },
-        "HostCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "record",
-            "effect",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "record": {
-              "enum": [
-                "fixed.vhd",
-                "image.json",
-                ".publication/intent.json",
-                ".publication/receipt.json"
-              ]
-            },
-            "effect": {
-              "enum": [
-                "ordinary",
-                "unknown",
-                "accessor",
-                "extra-prototype",
-                "alias",
-                "directory-id",
-                "backing-id",
-                "high-id",
-                "legacy-size",
-                "large",
-                "short",
-                "growth",
-                "reparse-parent",
-                "copy-control",
-                "pre-cancel",
-                "post-open-cancel",
-                "close-zero",
-                "close-observer",
-                "changed-options",
-                "zero-record",
-                "short-footer",
-                "changed-parent",
-                "foreign-volume",
-                "native-legacy-inode"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "SessionProtocol": {
-          "const": {
-            "version": 1,
-            "maximumPending": 1,
-            "workUnitsPerLogicalByte": 1,
-            "terminal": "readonly-host",
-            "qualification": false,
-            "resourcePrefix": "native-fixed-image:"
-          }
-        },
-        "SessionCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "effect",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "effect": {
-              "enum": [
-                "ordinary",
-                "cancel-body",
-                "expired-body",
-                "copied-enrollment",
-                "foreign-enrollment",
-                "copied-writer",
-                "foreign-resource",
-                "changed-writer",
-                "copied-receiver",
-                "escaped-receiver",
-                "terminal-before-cleanup",
-                "ordinary-after-cleanup",
-                "changed-options",
-                "changed-parent",
-                "terminal-close",
-                "body-undefined",
-                "body-frozen",
-                "same-body-drain",
-                "work-exhausted",
-                "no-work-reset",
-                "terminal-no-retry",
-                "terminal-observer",
-                "body-undefined-terminal-close",
-                "body-frozen-terminal-close",
-                "admission-sync",
-                "admission-sync-swallowed"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "SessionData": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "directory",
-            "leaseDirectory",
-            "maximumLogicalBytes"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "directory": {
-              "type": "string",
-              "minLength": 3,
-              "maxLength": 256
-            },
-            "leaseDirectory": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 256
-            },
-            "maximumLogicalBytes": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            }
-          }
-        },
-        "SessionReceipt": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "id",
-            "accepted",
-            "bodyReads",
-            "terminalReads",
-            "systemReads",
-            "nativeCalls",
-            "libraries",
-            "closedLibraries",
-            "unresolved",
-            "primaryPreserved",
-            "noRetry",
-            "workExhausted",
-            "sha256",
-            "wireSha256",
-            "exclusiveHeld",
-            "exclusiveReleased"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "id": {
-              "type": "string"
-            },
-            "accepted": {
-              "type": "boolean"
-            },
-            "bodyReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "terminalReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "systemReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "nativeCalls": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "libraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "closedLibraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "unresolved": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "primaryPreserved": {
-              "type": "boolean"
-            },
-            "noRetry": {
-              "type": "boolean"
-            },
-            "workExhausted": {
-              "type": "boolean"
-            },
-            "sha256": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "wireSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "exclusiveHeld": {
-              "type": "boolean"
-            },
-            "exclusiveReleased": {
-              "type": "boolean"
-            }
-          }
-        },
-        "RootObservationEvidence": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "role",
-            "root",
-            "directory",
-            "backing",
-            "mapping",
-            "empty"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "role": {
-              "enum": [
-                "mapped",
-                "underlying"
-              ]
-            },
-            "root": {
-              "$ref": "#/definitions/Windows/definitions/Facts"
-            },
-            "directory": {
-              "$ref": "#/definitions/Windows/definitions/Facts"
-            },
-            "backing": {
-              "$ref": "#/definitions/Windows/definitions/Facts"
-            },
-            "mapping": {
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/Windows/definitions/Root"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "empty": {
-              "type": "boolean"
-            }
-          },
-          "oneOf": [
-            {
-              "properties": {
-                "role": {
-                  "const": "mapped"
-                },
-                "mapping": {
-                  "$ref": "#/definitions/Windows/definitions/Root"
-                },
-                "empty": {
-                  "const": false
-                }
-              }
-            },
-            {
-              "properties": {
-                "role": {
-                  "const": "underlying"
-                },
-                "mapping": {
-                  "type": "null"
-                },
-                "empty": {
-                  "const": true
-                }
-              }
-            }
-          ]
-        },
-        "RootObservationCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "effect",
-            "role",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "effect": {
-              "enum": [
-                "ordinary",
-                "wrong-root",
-                "wrong-volume",
-                "copied-evidence",
-                "foreign-evidence",
-                "changed-root-id",
-                "changed-root-high",
-                "changed-root-acl",
-                "changed-ancestor",
-                "cross-volume",
-                "reparse",
-                "nonempty",
-                "dot-markers",
-                "dot-id",
-                "partial-cursor",
-                "pending-cursor",
-                "zero-cursor-info",
-                "cancel-body",
-                "expired-body",
-                "read-drain",
-                "terminal-sync",
-                "terminal-async",
-                "close-zero",
-                "body-undefined",
-                "body-frozen",
-                "combined-undefined",
-                "combined-frozen",
-                "work-exhausted",
-                "no-work-reset",
-                "changed-input",
-                "old-host-cannot-root",
-                "missing-evidence",
-                "context-combined-undefined",
-                "context-combined-frozen",
-                "context-precheck-undefined",
-                "context-precheck-frozen"
-              ]
-            },
-            "role": {
-              "enum": [
-                "mapped",
-                "underlying"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "RootObservationReceipt": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "id",
-            "accepted",
-            "bodyReads",
-            "terminalReads",
-            "systemReads",
-            "nativeCalls",
-            "libraries",
-            "closedLibraries",
-            "unresolved",
-            "primaryPreserved",
-            "noRetry",
-            "workExhausted",
-            "sha256",
-            "wireSha256",
-            "exclusiveHeld",
-            "exclusiveReleased",
-            "role",
-            "rootFileId",
-            "rootVolume",
-            "rootDevice",
-            "rootInode",
-            "rootSecurity",
-            "empty",
-            "directoryQueries",
-            "receivedWire"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "id": {
-              "type": "string"
-            },
-            "accepted": {
-              "type": "boolean"
-            },
-            "bodyReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "terminalReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "systemReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "nativeCalls": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "libraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "closedLibraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "unresolved": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "primaryPreserved": {
-              "type": "boolean"
-            },
-            "noRetry": {
-              "type": "boolean"
-            },
-            "workExhausted": {
-              "type": "boolean"
-            },
-            "sha256": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "wireSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "exclusiveHeld": {
-              "type": "boolean"
-            },
-            "exclusiveReleased": {
-              "type": "boolean"
-            },
-            "role": {
-              "enum": [
-                "mapped",
-                "underlying"
-              ]
-            },
-            "rootFileId": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "rootVolume": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "rootDevice": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "rootInode": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "rootSecurity": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "empty": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
-            "directoryQueries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "receivedWire": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 65536
-            }
-          }
-        },
-        "PayloadProtocol": {
-          "const": {
-            "version": 1,
-            "bodyOnly": true,
-            "contextConsumers": 1,
-            "maximumPendingObservations": 1,
-            "maximumPendingHandles": 32,
-            "maximumReadBytes": 65536,
-            "sameOwnerSystemWork": true,
-            "hostBackingJournalLinks": 1,
-            "payloadMinimumLinks": 1,
-            "identity": "native-full128-and-volume-serial",
-            "cleanupOrder": [
-              "payload-return",
-              "cleanup-begin"
-            ],
-            "bufferedNameWorkUnits": 1,
-            "cachedEofWorkUnits": 1,
-            "yieldedContinuationWorkUnits": 1
-          }
-        },
-        "PayloadCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "group",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "enum": [
-                "single-link",
-                "same-full128-two-paths",
-                "high128",
-                "maximum-positive-links",
-                "directory-close-before-file",
-                "same-owner-sequential",
-                "sparse-default-stream",
-                "canonical-journal",
-                "copied-evidence",
-                "foreign-evidence",
-                "underlying-evidence",
-                "missing-evidence",
-                "copied-context",
-                "foreign-context",
-                "escaped-context",
-                "double-consumer",
-                "terminal-no-payload",
-                "host-no-payload",
-                "cancel-before-birth",
-                "mapping-mutation",
-                "changed-high128",
-                "changed-serial",
-                "changed-root",
-                "changed-ancestor",
-                "descendant-reparse",
-                "named-stream",
-                "journal-links",
-                "host-links",
-                "backing-links",
-                "zero-links",
-                "cross-volume",
-                "nested-public-read",
-                "late-birth",
-                "unawaited-read",
-                "shared-work-exhausted",
-                "undefined-close",
-                "frozen-pending",
-                "swallowed-undefined-precheck",
-                "frozen-postclose-observer",
-                "birth-after-failure",
-                "journal-uppercase-alias",
-                "journal-directory",
-                "nested-journal-basename",
-                "short-name-alias",
-                "payload-return-before-cleanup"
-              ]
-            },
-            "group": {
-              "enum": [
-                "positive",
-                "authority",
-                "integrity",
-                "lifetime",
-                "journal",
-                "ordering"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "PayloadReceipt": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "id",
-            "accepted",
-            "systemReads",
-            "nativeCalls",
-            "libraries",
-            "closedLibraries",
-            "unresolved",
-            "exclusiveHeld",
-            "exclusiveReleased",
-            "bodyReads",
-            "noRetry",
-            "primaryPreserved",
-            "ordering",
-            "receivedWire",
-            "wireSha256"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "id": {
-              "enum": [
-                "single-link",
-                "same-full128-two-paths",
-                "high128",
-                "maximum-positive-links",
-                "directory-close-before-file",
-                "same-owner-sequential",
-                "sparse-default-stream",
-                "canonical-journal",
-                "copied-evidence",
-                "foreign-evidence",
-                "underlying-evidence",
-                "missing-evidence",
-                "copied-context",
-                "foreign-context",
-                "escaped-context",
-                "double-consumer",
-                "terminal-no-payload",
-                "host-no-payload",
-                "cancel-before-birth",
-                "mapping-mutation",
-                "changed-high128",
-                "changed-serial",
-                "changed-root",
-                "changed-ancestor",
-                "descendant-reparse",
-                "named-stream",
-                "journal-links",
-                "host-links",
-                "backing-links",
-                "zero-links",
-                "cross-volume",
-                "nested-public-read",
-                "late-birth",
-                "unawaited-read",
-                "shared-work-exhausted",
-                "undefined-close",
-                "frozen-pending",
-                "swallowed-undefined-precheck",
-                "frozen-postclose-observer",
-                "birth-after-failure",
-                "journal-uppercase-alias",
-                "journal-directory",
-                "nested-journal-basename",
-                "short-name-alias",
-                "payload-return-before-cleanup"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            },
-            "systemReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "nativeCalls": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "libraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "closedLibraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "unresolved": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "exclusiveHeld": {
-              "const": true
-            },
-            "exclusiveReleased": {
-              "const": true
-            },
-            "bodyReads": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "noRetry": {
-              "type": "boolean"
-            },
-            "primaryPreserved": {
-              "type": "boolean"
-            },
-            "ordering": {
-              "type": "boolean"
-            },
-            "receivedWire": {
-              "type": "string",
-              "minLength": 1
-            },
-            "wireSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
-        },
-        "PayloadMeterProtocol": {
-          "const": {
-            "version": 1,
-            "control": "same-private-reference",
-            "minimumUnits": 0,
-            "maximumUnits": 9007199254740991,
-            "pureAccounting": true,
-            "nativeBirth": false,
-            "workReset": false,
-            "pendingAdmission": false,
-            "bodyOnly": true,
-            "exactReceiver": true,
-            "firstFailureRetained": true,
-            "expectedRoot": "same-private-canonical-root-before-native"
-          }
-        },
-        "PayloadMeterCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "enum": [
-                "zero",
-                "positive",
-                "inside-file",
-                "inside-cursor",
-                "same-account",
-                "copied-control",
-                "refining-control",
-                "sibling-control",
-                "copied-meter",
-                "escaped-meter",
-                "negative-units",
-                "fractional-units",
-                "unsafe-units",
-                "nan-units",
-                "infinite-units",
-                "work-exhausted",
-                "undefined-failure",
-                "frozen-failure",
-                "cancelled-file",
-                "body-meter-failure",
-                "aggregate-body-meter-failure",
-                "wrong-root",
-                "missing-root"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "PayloadMeterReceipt": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "id",
-            "accepted",
-            "wireSha256",
-            "receivedWire",
-            "sameAccount",
-            "noNativeBirth",
-            "noRetry",
-            "primaryPreserved",
-            "unresolved",
-            "closedLibraries",
-            "libraries"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "id": {
-              "enum": [
-                "zero",
-                "positive",
-                "inside-file",
-                "inside-cursor",
-                "same-account",
-                "copied-control",
-                "refining-control",
-                "sibling-control",
-                "copied-meter",
-                "escaped-meter",
-                "negative-units",
-                "fractional-units",
-                "unsafe-units",
-                "nan-units",
-                "infinite-units",
-                "work-exhausted",
-                "undefined-failure",
-                "frozen-failure",
-                "cancelled-file",
-                "body-meter-failure",
-                "aggregate-body-meter-failure",
-                "wrong-root",
-                "missing-root"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            },
-            "wireSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "receivedWire": {
-              "type": "string"
-            },
-            "sameAccount": {
-              "type": "boolean"
-            },
-            "noNativeBirth": {
-              "type": "boolean"
-            },
-            "noRetry": {
-              "type": "boolean"
-            },
-            "primaryPreserved": {
-              "type": "boolean"
-            },
-            "unresolved": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "closedLibraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "libraries": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
-        },
-        "WitnessStrategyProtocol": {
-          "const": {
-            "nameWindow": 64,
-            "chunkBytes": 65536,
-            "maximumDepth": 64,
-            "maximumPathUnits": 256,
-            "censuses": 2,
-            "pending": 1,
-            "bodyOnly": true,
-            "sameContextControl": true,
-            "sameSystem": true,
-            "workReset": false,
-            "journalNames": [
-              "storage-checkpoint.jsonl",
-              "storage-events.jsonl"
-            ],
-            "workUnits": {
-              "next": 1,
-              "cachedEof": 1,
-              "yieldedContinuation": 1,
-              "nativeQuery": 2,
-              "setOffset": 1,
-              "nativeRead": 2,
-              "scan": 1,
-              "frame": 1
-            },
-            "version": 1,
-            "bindingMembers": {
-              "posix": [
-                "platform"
-              ],
-              "win32": [
-                "platform",
-                "context"
-              ]
-            },
-            "context": "private-body-single-consume",
-            "minimumCheckpointUnits": 0,
-            "maximumCheckpointUnits": 9007199254740991,
-            "nativeChargeMinimum": 1,
-            "nativeWindowsRuntimeQualified": false,
-            "expectedRoot": "same-private-canonical-root-before-native",
-            "sourceExecutionCases": [
-              "exact-body-context",
-              "copied-token",
-              "genuine-foreign-phase",
-              "copied-control",
-              "escaped-after-body",
-              "single-consume",
-              "pending-one",
-              "payload-before-cleanup"
-            ],
-            "posixEof": {
-              "version": 1,
-              "originalBeforeChild": true,
-              "cases": [
-                {
-                  "id": "ordinary",
-                  "failure": "none",
-                  "stopAtObserver": 0,
-                  "accepted": true,
-                  "trace": [
-                    "observer",
-                    "fd-stat",
-                    "observer",
-                    "observer",
-                    "eof-read",
-                    "fd-stat",
-                    "observer",
-                    "named-stat",
-                    "observer",
-                    "observer"
-                  ],
-                  "observers": 6,
-                  "work": 4,
-                  "phaseChecks": 14,
-                  "eofReads": 1
-                },
-                {
-                  "id": "frozen-before-eof",
-                  "failure": "frozen",
-                  "stopAtObserver": 3,
-                  "accepted": false,
-                  "trace": [
-                    "observer",
-                    "fd-stat",
-                    "observer",
-                    "observer"
-                  ],
-                  "observers": 3,
-                  "work": 1,
-                  "phaseChecks": 5,
-                  "eofReads": 0
-                },
-                {
-                  "id": "undefined-before-eof",
-                  "failure": "undefined",
-                  "stopAtObserver": 3,
-                  "accepted": false,
-                  "trace": [
-                    "observer",
-                    "fd-stat",
-                    "observer",
-                    "observer"
-                  ],
-                  "observers": 3,
-                  "work": 1,
-                  "phaseChecks": 5,
-                  "eofReads": 0
-                }
-              ]
-            }
-          }
-        },
-        "WitnessDirectoryFrame": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "path",
-            "kind",
-            "platform",
-            "attributes",
-            "securitySha256"
-          ],
-          "properties": {
-            "path": {
-              "type": "string",
-              "maxLength": 256
-            },
-            "kind": {
-              "const": "directory"
-            },
-            "platform": {
-              "const": "win32"
-            },
-            "attributes": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
-            },
-            "securitySha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
-        },
-        "WitnessFileFrame": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "path",
-            "kind",
-            "platform",
-            "attributes",
-            "securitySha256",
-            "bytes",
-            "sha256"
-          ],
-          "properties": {
-            "path": {
-              "type": "string",
-              "maxLength": 256
-            },
-            "kind": {
-              "const": "file"
-            },
-            "platform": {
-              "const": "win32"
-            },
-            "attributes": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
-            },
-            "securitySha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "bytes": {
-              "type": "string",
-              "pattern": "^(0|[1-9][0-9]*)$"
-            },
-            "sha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "fileId": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{32}$"
-            },
-            "volumeSerial": {
-              "type": "string",
-              "pattern": "^(0|[1-9][0-9]{0,19})$"
-            },
-            "links": {
-              "type": "string",
-              "pattern": "^([2-9]|[1-9][0-9]+)$",
-              "maxLength": 10
-            }
-          },
-          "oneOf": [
-            {
-              "not": {
-                "anyOf": [
-                  {
-                    "required": [
-                      "fileId"
-                    ],
-                    "properties": {
-                      "fileId": {
-                        "type": "string",
-                        "pattern": "^[a-f0-9]{32}$"
-                      }
-                    }
-                  },
-                  {
-                    "required": [
-                      "volumeSerial"
-                    ],
-                    "properties": {
-                      "volumeSerial": {
-                        "type": "string",
-                        "pattern": "^(0|[1-9][0-9]{0,19})$"
-                      }
-                    }
-                  },
-                  {
-                    "required": [
-                      "links"
-                    ],
-                    "properties": {
-                      "links": {
-                        "type": "string",
-                        "pattern": "^([2-9]|[1-9][0-9]+)$",
-                        "maxLength": 10
-                      }
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "required": [
-                "fileId",
-                "volumeSerial",
-                "links"
-              ],
-              "properties": {
-                "fileId": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{32}$"
-                },
-                "volumeSerial": {
-                  "type": "string",
-                  "pattern": "^(0|[1-9][0-9]{0,19})$"
-                },
-                "links": {
-                  "type": "string",
-                  "pattern": "^([2-9]|[1-9][0-9]+)$",
-                  "maxLength": 10
-                }
-              }
-            }
-          ]
-        },
-        "WitnessFrameCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "input",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "enum": [
-                "posix-default-directory",
-                "posix-default-file",
-                "posix-hardlink",
-                "native-root-directory",
-                "native-single-link",
-                "native-hardlink",
-                "native-high-half-differs",
-                "native-serial-differs",
-                "native-full128-upper-bound",
-                "native-unicode-stream",
-                "native-zero-byte",
-                "native-zero-links",
-                "native-links-overflow",
-                "native-file-id-overflow",
-                "native-canonical-journal",
-                "native-canonical-checkpoint",
-                "native-journal-uppercase",
-                "native-journal-multilink",
-                "native-journal-directory",
-                "native-nested-journal-name",
-                "native-short-final-name",
-                "native-posix-mode-not-fact",
-                "native-hardlink-beta"
-              ]
-            },
-            "input": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "platform",
-                "path",
-                "kind"
-              ],
-              "properties": {
-                "platform": {
-                  "enum": [
-                    "posix",
-                    "win32"
-                  ]
-                },
-                "path": {
-                  "type": "string",
-                  "maxLength": 256
-                },
-                "kind": {
-                  "enum": [
-                    "directory",
-                    "file"
-                  ]
-                },
-                "mode": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "payload": {
-                  "type": "string"
-                },
-                "attributes": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "securitySha256": {
-                  "type": "string"
-                },
-                "links": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "ino": {
-                  "type": "string"
-                },
-                "fileIdLow": {
-                  "type": "string"
-                },
-                "fileIdHigh": {
-                  "type": "string"
-                },
-                "volumeSerial": {
-                  "type": "string"
-                },
-                "finalName": {
-                  "type": "string"
-                }
-              }
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "WitnessWorkCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "limit",
-            "spent",
-            "units",
-            "expectedSpent",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "enum": [
-                "buffered-name",
-                "fresh-directory-query-name",
-                "fresh-cursor-eof",
-                "cached-cursor-eof",
-                "read-and-real-yield",
-                "read-eof-and-real-yield",
-                "buffered-name-and-skipped-scan",
-                "frame-after-read",
-                "two-censuses-same-account",
-                "host-work-is-not-reset",
-                "cached-eof-tiny-work",
-                "refusal-closes-next-birth",
-                "cancelled-continuation",
-                "cancelled-before-read",
-                "unsafe-volume-bound",
-                "unsafe-charge",
-                "zero-checkpoint"
-              ]
-            },
-            "limit": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "spent": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "units": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 8,
-              "items": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "cancelAt": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "expectedSpent": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "WitnessLifetimeCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "input",
-            "accepted"
-          ],
-          "properties": {
-            "id": {
-              "enum": [
-                "exact-body-context",
-                "copied-token",
-                "foreign-session",
-                "genuine-foreign-phase",
-                "copied-control",
-                "escaped-after-body",
-                "closed-admission",
-                "single-consume",
-                "pending-one",
-                "terminal-has-no-payload",
-                "missing-mapped-evidence",
-                "payload-before-cleanup",
-                "cleanup-before-payload-return",
-                "forged-system-data",
-                "posix-default-no-native-context"
-              ]
-            },
-            "input": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "platform",
-                "context",
-                "control",
-                "owner",
-                "role",
-                "live",
-                "accepting",
-                "consumed",
-                "pending",
-                "mapped",
-                "payloadReturned",
-                "transition",
-                "system"
-              ],
-              "properties": {
-                "platform": {
-                  "type": "string",
-                  "enum": [
-                    "posix",
-                    "win32"
-                  ]
-                },
-                "context": {
-                  "type": "string",
-                  "enum": [
-                    "copied",
-                    "exact",
-                    "none"
-                  ]
-                },
-                "control": {
-                  "type": "string",
-                  "enum": [
-                    "copied",
-                    "exact",
-                    "foreign"
-                  ]
-                },
-                "owner": {
-                  "type": "string",
-                  "enum": [
-                    "foreign",
-                    "same"
-                  ]
-                },
-                "role": {
-                  "type": "string",
-                  "enum": [
-                    "body",
-                    "terminal"
-                  ]
-                },
-                "live": {
-                  "type": "boolean"
-                },
-                "accepting": {
-                  "type": "boolean"
-                },
-                "consumed": {
-                  "type": "boolean"
-                },
-                "pending": {
-                  "type": "boolean"
-                },
-                "mapped": {
-                  "type": "boolean"
-                },
-                "payloadReturned": {
-                  "type": "boolean"
-                },
-                "transition": {
-                  "type": "boolean"
-                },
-                "system": {
-                  "type": "string",
-                  "enum": [
-                    "caller-json",
-                    "captured",
-                    "none"
-                  ]
-                }
-              }
-            },
-            "accepted": {
-              "type": "boolean"
-            }
-          }
-        },
-        "WitnessStreamCase": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "id",
-            "rows"
-          ],
-          "properties": {
-            "id": {
-              "enum": [
-                "posix-default-tree",
-                "windows-complete-journals",
-                "windows-reordered-same-tree",
-                "windows-full128-hardlink-members"
-              ]
-            },
-            "rows": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 64,
-              "uniqueItems": true,
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
-              }
-            }
-          }
-        },
-        "WitnessStrategyReceipt": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "id",
-            "accepted",
-            "sourceOnly",
-            "windowsRuntime",
-            "receivedWire",
-            "wireSha256",
-            "sameControl",
-            "sameAccount",
-            "noReset",
-            "noRetry",
-            "bodyReturnedBeforeCleanup",
-            "primaryPreserved",
-            "libraries",
-            "closedLibraries",
-            "unresolved",
-            "witness"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "id": {
-              "enum": [
-                "exact-body-context",
-                "copied-token",
-                "genuine-foreign-phase",
-                "copied-control",
-                "escaped-after-body",
-                "single-consume",
-                "pending-one",
-                "payload-before-cleanup"
-              ]
-            },
-            "accepted": {
-              "type": "boolean"
-            },
-            "sourceOnly": {
-              "const": true
-            },
-            "windowsRuntime": {
-              "const": false
-            },
-            "receivedWire": {
-              "type": "string",
-              "minLength": 1
-            },
-            "wireSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "sameControl": {
-              "type": "boolean"
-            },
-            "sameAccount": {
-              "type": "boolean"
-            },
-            "noReset": {
-              "type": "boolean"
-            },
-            "noRetry": {
-              "type": "boolean"
-            },
-            "bodyReturnedBeforeCleanup": {
-              "type": "boolean"
-            },
-            "primaryPreserved": {
-              "type": "boolean"
-            },
-            "libraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "closedLibraries": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "unresolved": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "witness": {
-              "anyOf": [
-                {
-                  "type": "null"
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "version",
-                    "digest",
-                    "files",
-                    "directories",
-                    "links",
-                    "sockets",
-                    "bytes",
-                    "journalSha256",
-                    "applicationSha256",
-                    "service"
-                  ],
-                  "properties": {
-                    "version": {
-                      "const": 1
-                    },
-                    "digest": {
-                      "type": "string",
-                      "pattern": "^[a-f0-9]{64}$"
-                    },
-                    "files": {
-                      "type": "integer",
-                      "minimum": 0
-                    },
-                    "directories": {
-                      "type": "integer",
-                      "minimum": 1
-                    },
-                    "links": {
-                      "const": 0
-                    },
-                    "sockets": {
-                      "const": 0
-                    },
-                    "bytes": {
-                      "type": "string",
-                      "pattern": "^(0|[1-9][0-9]*)$"
-                    },
-                    "journalSha256": {
-                      "anyOf": [
-                        {
-                          "type": "null"
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^[a-f0-9]{64}$"
-                        }
-                      ]
-                    },
-                    "applicationSha256": {
-                      "type": "string",
-                      "pattern": "^[a-f0-9]{64}$"
-                    },
-                    "service": {
-                      "type": "null"
-                    }
-                  }
-                }
-              ]
-            }
-          }
         }
       }
     },
@@ -4107,6 +2657,68 @@
           "reason": "entries"
         }
       ]
+    },
+    "PosixEof": {
+      "const": {
+        "version": 1,
+        "originalBeforeChild": true,
+        "cases": [
+          {
+            "id": "ordinary",
+            "failure": "none",
+            "stopAtObserver": 0,
+            "accepted": true,
+            "trace": [
+              "observer",
+              "fd-stat",
+              "observer",
+              "observer",
+              "eof-read",
+              "fd-stat",
+              "observer",
+              "named-stat",
+              "observer",
+              "observer"
+            ],
+            "observers": 6,
+            "work": 4,
+            "phaseChecks": 14,
+            "eofReads": 1
+          },
+          {
+            "id": "frozen-before-eof",
+            "failure": "frozen",
+            "stopAtObserver": 3,
+            "accepted": false,
+            "trace": [
+              "observer",
+              "fd-stat",
+              "observer",
+              "observer"
+            ],
+            "observers": 3,
+            "work": 1,
+            "phaseChecks": 5,
+            "eofReads": 0
+          },
+          {
+            "id": "undefined-before-eof",
+            "failure": "undefined",
+            "stopAtObserver": 3,
+            "accepted": false,
+            "trace": [
+              "observer",
+              "fd-stat",
+              "observer",
+              "observer"
+            ],
+            "observers": 3,
+            "work": 1,
+            "phaseChecks": 5,
+            "eofReads": 0
+          }
+        ]
+      }
     }
   }
 }

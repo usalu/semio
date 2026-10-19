@@ -353,7 +353,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
     }
 
 
-    pub fn advance_original(&mut self,  body:usize, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    pub fn advance_original(&mut self,  body:usize, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=RetainedCloneProgress::default();
         if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
@@ -505,7 +505,7 @@ where
     M: ArtifactCanonicalJsonTree + RetireOwned + Send + Sync + 'static,
     E: RetainedCloneEdit<P, M>,
 {
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         match self.advance_original(body,grant,receiving) {
             Ok(step)=>Ok(step),
             Err(error)=>{self.cancelled=true;if error.retained_progress()!=Default::default(){self.ownership=error.retained_progress();}Err(error.with_retained_progress(self.ownership))}
@@ -685,20 +685,3 @@ where
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-
-impl<P,M,E> crate::os_store::ArtifactReplayPreparationFactory<P,M> for RetainedClonePreparationFactory<P,M,E>
-where P:RetainedClone,M:ArtifactCanonicalJsonTree+RetireOwned+Send+Sync+'static,E:RetainedCloneEdit<P,M>{
- fn preparation_birth_demand(&self)->semio_framework_value::RetirementDemand{
-  type Producer<P,M,E>=crate::os_store::replay_preparation::native::NativeSemanticPreparation<P,M,crate::os_store::replay_preparation::native::ClonedProjection<P>,crate::os_store::replay_preparation::native::ClonedSemanticEdit<P,M,E>>;
-  semio_framework_value::RetirementDemand{copy_bytes:size_of::<crate::os_store::ArtifactReplayPreparationRequest<P,M>>()+size_of::<Producer<P,M,E>>()+size_of::<Arc<E>>(),capacity_bytes:size_of::<Producer<P,M,E>>(),depth:1,..Default::default()}
- }
- fn begin(&self,request:crate::os_store::ArtifactReplayPreparationRequest<P,M>,grant:RetainedCloneGrant)->Result<(Box<dyn crate::os_store::ArtifactReplayPreparation<P,M>>,RetainedCloneProgress),(ValueError,crate::os_store::ArtifactReplayPreparationRequest<P,M>)>{
-  let d=crate::os_store::ArtifactReplayPreparationFactory::preparation_birth_demand(self);
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"semantic retained clone producer birth not funded"),request));}
-  let admitted=request.input.borrow().and_then(|input|self.edit.preflight(input.get(),HistoryLane::Document).map(|_|()).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"semantic retained clone operation footprint refused")));
-  if let Err(error)=admitted{return Err((error,request));}
-  let projection=crate::os_store::replay_preparation::native::ClonedProjection::<P>::new(self.edit.snapshot_cursor_birth_demand());
-  let edit=crate::os_store::replay_preparation::native::ClonedSemanticEdit::<P,M,E>::new(Arc::clone(&self.edit));
-  Ok((Box::new(crate::os_store::replay_preparation::native::NativeSemanticPreparation::new(request,projection,edit)),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
- }
-}

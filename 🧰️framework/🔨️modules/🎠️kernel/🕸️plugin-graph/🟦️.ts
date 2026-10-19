@@ -202,10 +202,6 @@ export function orderPluginRegistryEntries(entries: readonly PluginRegistryEntry
   if (errors.length === 0) {
     return { order: order.map((id) => byId.get(id)).filter((entry): entry is PluginRegistryEntry => entry !== undefined), errors: [] };
   }
-  // 🔁 Retry on the remaining (non-blocked) subset — a single missing/mismatched/cyclic entry must
-  // not degrade every OTHER entry back to plain array order; it only takes itself (and, for a cycle,
-  // its fellow cycle members) out of the graph. Each retry strictly shrinks `entries`, so this always
-  // terminates.
   const blocked = new Set(errors.flatMap((error) => (error.code === "transaction.cycle" ? error.members : [error.pluginId])));
   const remaining = entries.filter((entry) => !blocked.has(entry.pluginId));
   const retried = orderPluginRegistryEntries(remaining);

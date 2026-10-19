@@ -117,10 +117,6 @@ impl Schedule {
     /// 📅️ Inverse of [`Schedule::to_json`]; rejects `"callback"` since function pointers are not
     /// recoverable from serialized data.
     pub async fn from_json(value: &JsonValue) -> Result<Self, SamplingError> {
-        // 🔀️ `let num = |key| value.get(key).and_then(JsonValue::as_f64)` no longer type-checks
-        // once `JsonValue::get`/`as_f64` are `async fn` — `Option::and_then` takes a plain
-        // `FnOnce`, not an async one, and a captured-`value` sync closure cannot itself `.await`.
-        // A nested `async fn` taking `value` explicitly replaces it (O1 de-dyn, math-dedyn).
         async fn num(value: &JsonValue, key: &'static str) -> Result<f64, SamplingError> {
             let found = match value.get(key).await {
                 Some(v) => v.as_f64().await,

@@ -65,7 +65,7 @@ impl<T:semio_framework_value::retirement::RetireOwned> OriginalInferenceSessionO
 /// 🔮️ Original mounted sessions carry their mandatory typed close producer beside the same value.
 #[derive(Default)]
 pub struct InstanceInferenceSessions {
- sessions:semio_framework_value::list::PagedList<(&'static str,Box<dyn OriginalInferenceSessionOwner>),{usize::MAX}>,
+ sessions:semio_framework_value_persistent::list::PagedList<(&'static str,Box<dyn OriginalInferenceSessionOwner>),{usize::MAX}>,
  closed:bool,
  closing:bool,
 }

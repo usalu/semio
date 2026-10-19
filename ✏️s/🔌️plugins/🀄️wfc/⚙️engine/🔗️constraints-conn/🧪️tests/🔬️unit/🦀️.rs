@@ -12,7 +12,7 @@ fn floor_wall_model() -> CompiledModel {
     b.compile().unwrap()
 }
 
-/// A 5-node "H" shape: 0-1-2, 2-3, 2-4 (so node2 is a semio_hub).
+/// 🛞️ A 5-node "H" shape: 0-1-2, 2-3, 2-4 (so node2 is a semio_hub).
 fn hub_adjacency() -> AdjacencyView {
     let edges = [(0, 1), (1, 2), (2, 3), (2, 4)];
     let mut neighbors = vec![Vec::new(); 5];

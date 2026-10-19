@@ -11,7 +11,7 @@ import {
   useState
 } from "react";
 import { GestureRecognizer, nodeGraphActions } from "@semio-tech/framework";
-import { useAppKeybindingsByActionId, useShellContextMenuFallback } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+import { useAppKeybindingsByActionId, useShellContextMenuFallback } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
 import { nodeGraphViewportActionArgs, parseNodeGraphSessionViewport, resolveHostSnapshotWidgetInstanceId } from "../🧰️graph-core/🟦️.ts";
 import { useGraphSliderLanes } from "../🖼️dag-overlays/🟦️.tsx";
 import { observeFlowTask } from "../🔄️flow-session-sync/🟦️.ts";
@@ -25,18 +25,11 @@ export type FlowCoreAfterFlowDispatchAndGestures = FlowCoreAfterFlowSurfaceState
 
 export function useFlowDispatchAndGestures(core: FlowCoreAfterFlowSurfaceState) {
   const { scene, surfaceId, controllerId, onAction, sessionRef, schedulerRef, containerRef } = core;
-  // 🔁️ Returns what `onAction` returns. `ComponentSceneHostProps.onAction` is declared
-  // `void | Promise<void>` — a settling shell answers with the promise, and dropping it here is what
-  // left every continuous gesture (a dragged slider) with no way to know when its last value had
-  // landed, so it could only queue one round trip per tick.
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => onAction({ controllerId, action, args: { surfaceId, ...args } }),
     [controllerId, onAction, surfaceId],
   );
 
-  // 📮️ Effects that must NOT re-run per render (attach, scene sync) reach the dispatcher through this
-  // ref: `dispatch`'s identity follows the `onAction` prop, and depending on it would re-attach the
-  // canvas — and re-issue `synchronizeSnapshotJson` — on every parent render.
   const dispatchRef = useRef(dispatch);
   dispatchRef.current = dispatch;
 

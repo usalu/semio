@@ -24,18 +24,11 @@ describe("Specific original catalog completion", () => {
     expect(audit.manifestCount).toBe(owners.length);
     expect(audit.entries.map(row => row.pluginId).sort()).toEqual(owners);
     expect(audit.order).toHaveLength(owners.length);
-    // 🔗️ `dependsOn` is the DECLARED runtime-actor set, never the crate's Cargo library links:
-    // `sequence` links four `semio-s-plugin-imperative-*` rlibs and `raster` links `stdio`'s codecs,
-    // and none of those crates' actors has to be loaded for them to run.
     expect(audit.entries.find(({ pluginId }) => pluginId === "sequence")?.dependsOn).toEqual([]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "raster")?.dependsOn).toEqual([]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["cad", "gis", "procedural", "process", "puzzle", "sourcing", "flow-extension-bim", "flow-extension-brep", "flow-extension-dictionary", "flow-extension-list", "flow-extension-logic", "flow-extension-math", "flow-extension-primitive", "flow-extension-text"]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
-    // 📇️ Every registry plugin is paired. The list this asserted used to hold 15 ids; A3b/CE1 closed
-    // fourteen of them and `stdio` — the last one, and the only one that had NEVER been described —
-    // landed on 2026-09-21 (`🎫️…/📓️pz1-catalog-zero-diagnostics.md` §1). An empty list is the
-    // contract: a plugin the registry enumerates but cannot read is a plugin agents cannot reach.
     expect(missing).toEqual([]);
   }, 120_000);
 

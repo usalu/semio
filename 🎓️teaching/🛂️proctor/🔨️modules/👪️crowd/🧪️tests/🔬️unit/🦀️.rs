@@ -231,7 +231,7 @@ fn an_empty_tally_views_every_task_with_nobody_answering() {
 
 #[test]
 fn incremental_crowds_match_the_numpy_reference_for_every_shared_vector() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/📚️course/🧫️fixtures/📊️crowd-view/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧰️framework/🛍️products/📚️course/🧫️fixtures/📊️crowd-view/🔣️.json")).unwrap();
     for vector in fixture["vectors"].as_array().unwrap() {
         let quiz: Quiz = serde_json::from_value(fixture["quizzes"].as_array().unwrap().iter().find(|quiz| quiz["id"] == vector["quiz"]).unwrap().clone()).unwrap();
         let results: Vec<RunResult> = serde_json::from_value(vector["results"].clone()).unwrap();

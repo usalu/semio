@@ -6,15 +6,41 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🗿️artifact-reference/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/**/*",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🏛️ownership/🧪️tests/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
     "test-native": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
@@ -23,9 +49,14 @@
     },
     "test-binding": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
@@ -34,7 +65,15 @@
     },
     "test-retained-equality-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality source"
@@ -42,7 +81,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-retained-equality",
+            "verify",
+            "artifact-reference-retained-equality",
             "source"
           ]
         }
@@ -50,7 +90,15 @@
     },
     "test-retained-equality-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust -- bun ./📜️script.ts test-retained-equality native"
@@ -58,7 +106,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-retained-equality",
+            "verify",
+            "artifact-reference-retained-equality",
             "native"
           ]
         }

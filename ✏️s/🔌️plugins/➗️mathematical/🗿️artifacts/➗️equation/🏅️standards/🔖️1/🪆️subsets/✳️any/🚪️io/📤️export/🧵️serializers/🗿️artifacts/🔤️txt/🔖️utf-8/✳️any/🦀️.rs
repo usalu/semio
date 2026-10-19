@@ -1,4 +1,4 @@
-//! txt export via framework `io_mechanism::serialize_dsl_txt` (UTF-8 DSL carrier).
+//! 📤️ txt export via framework `io_mechanism::serialize_dsl_txt` (UTF-8 DSL carrier).
 
 use crate::EquationSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{serialize_dsl_txt, ArchiveChildren, Serializer};

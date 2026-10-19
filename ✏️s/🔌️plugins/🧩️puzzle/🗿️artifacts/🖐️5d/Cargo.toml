@@ -4,12 +4,15 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
   "🏅️standards/🔖️1/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📌️panel-mounts/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️host-admission/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️testkit/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/🎮️command-mounts/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
@@ -26,6 +29,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🔺️diff/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️part2d-leaves/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
 ]
@@ -74,6 +78,10 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 
     [workspace.dependencies.semio-framework-job]
     path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+
+    [workspace.dependencies.semio-framework-job-payload]
+    path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-os-infinite]
     path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust"
@@ -219,3 +227,15 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-kit]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-puzzle-5d-testkit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️testkit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-puzzle-5d-mut-any-part2d]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️part2d-leaves/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-puzzle-5d-store-preparation-commands]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/🎮️command-mounts/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-puzzle-5d-dispatch-panels]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📌️panel-mounts/📦️packages/🦀️rust"

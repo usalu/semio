@@ -1,22 +1,17 @@
 import { GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework";
-import { type TypedOperationToken, typedOperationDiagnosticFragment } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { type TypedOperationToken, typedOperationDiagnosticFragment } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { OperationDiagnosticObservers } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts";
 import { OperationDiagnosticInbox } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts";
-import { NativeDecodeControl } from "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import type { Diagnostic as OwnedOperationDiagnostic } from "../../../../../../../../🔨️modules/⚠️diagnostic/🎛️controlled/🟦️.ts";
-import { yieldPluginUiContinuation } from "../🔁️turn-settle/🟦️.ts";
+import { NativeDecodeControl } from "@semio-tech/framework/value/decode";
+import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework-diagnostic-ts/controlled";
+import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 /** 📬️ Typed-operation result pages: terminal and pending output carriers, the per-instance owner ledger routing fault pages to the host call that owns them, and the effect consumer.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
-import {
-  TYPED_OPERATION_LANE_FAULT,
-  TYPED_OPERATION_LANE_TERMINAL,
-  typedOperationAcknowledgements as wireTypedOperationAcknowledgements,
-  typedOperationResult as wireTypedOperationResult
-} from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
+import { TYPED_OPERATION_LANE_FAULT, TYPED_OPERATION_LANE_TERMINAL, typedOperationAcknowledgements as wireTypedOperationAcknowledgements, typedOperationResult as wireTypedOperationResult } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../../📤️SegmentedDownload/🟦️.ts";
 import { decodeWirePack, DIRECTORY_PROJECTION_RECEIPT_SCHEMA, type WireTurnResult, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 
@@ -206,12 +201,6 @@ export function consumeTypedOperationEffects(effects: readonly WireVariant[], ca
       terminal = true;
       continue;
     }
-    // 🧾️ The receipt's REAL carrier. A retained typed command's `AppEvent` crosses as an ordinary
-    // `publish-event` host effect — topic plus a pack-encoded payload — not as the lane-7
-    // typed-operation result page the rule below expects: measured on the signed-in `s` Home, where the
-    // settled operation's turn carried `["publish-event", "typed-operation-terminal-seen"]` and the
-    // completion's terminal output was therefore `undefined` (ticket 26/09/18 S8). The effect itself is
-    // KEPT, because the event is also a real backbone publication; only its value is lifted.
     if (effect.tag === "publish-event" && (effect.val as { readonly topic?: unknown } | null)?.topic === DIRECTORY_PROJECTION_RECEIPT_SCHEMA) {
       if (terminalOutput !== undefined) throw new Error("typed-operation emitted more than one directory projection receipt");
       terminalOutput = decodeWirePack((effect.val as { readonly payload?: unknown }).payload, "typed-operation.terminal-output");

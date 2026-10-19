@@ -1,4 +1,4 @@
-//! ~300-LOC subset it actually calls out of `🧮️math/➕️algebra`'s 2,875-LOC surface, duplicated rather
+//! 🟢️ ~300-LOC subset it actually calls out of `🧮️math/➕️algebra`'s 2,875-LOC surface, duplicated rather
 //! 🧮️ Dense linear-algebra basics (`Mat2`/`VecD`/`MatD`/`Mat3d`/`vec3d_*`) — FEM's own copy of the
 //! than shared: FEM never touches the sparse/eigen/SVD/CG machinery `📸️remodel` needs (that bulk
 //! moved wholesale into `📸️remodel`'s own `➕️algebra-internals` instead), measured via

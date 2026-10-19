@@ -82,8 +82,6 @@ impl FlowDomainAdapter {
         let fixture = self.host.host_snapshot_json().map_err(domain_error)?;
         let labels = self.host.label_overlay_paint_state_json().map_err(domain_error)?;
         let rgba = clear.to_rgba8();
-        // 🧱️ One retained buffer, cleared and refilled — a guest that allocates a fresh multi-kilobyte
-        // reply every frame fragments its own heap (dlmalloc hands nothing back) until it aborts.
         let payload = &mut self.frame_payload;
         payload.clear();
         use std::fmt::Write as _;

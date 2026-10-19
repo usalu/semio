@@ -59,7 +59,6 @@ fn inverse_law() {
         LasMutation::SetPoint(set_point::SetPoint { index: 0, point: point(42) }),
     ];
     for m in variants {
-        // Mutation-level round trip.
         let mut snap = base.clone();
         apply_mutation(&mut snap, &m);
         for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
@@ -67,7 +66,6 @@ fn inverse_law() {
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
-        // Diff-level round trip.
         let d = m.diff(&base);
         let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
@@ -92,31 +90,22 @@ fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
 fn absorb_law() {
     let base = base_snapshot();
 
-    // Insert+Remove-before (vlrs): canonical shift case.
     assert_absorb_law(&base, LasMutation::InsertVlr(insert_vlr::InsertVlr { index: 1, vlr: vlr("X", 1, b"x") }), LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: 0 }));
 
-    // Insert+Insert-same-index (vlrs): both survive.
     assert_absorb_law(&base, LasMutation::InsertVlr(insert_vlr::InsertVlr { index: 1, vlr: vlr("X", 1, b"x") }), LasMutation::InsertVlr(insert_vlr::InsertVlr { index: 1, vlr: vlr("Y", 2, b"y") }));
 
-    // Add+SetField (vlrs): patches directly into the still-pending added VLR.
     assert_absorb_law(&base, LasMutation::InsertVlr(insert_vlr::InsertVlr { index: 0, vlr: vlr("X", 1, b"x") }), LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: 0, data: b"patched".to_vec() }));
 
-    // Modify+Remove (vlrs): a pending field patch on a since-removed base VLR vanishes.
     assert_absorb_law(&base, LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: 0, data: b"will be dropped".to_vec() }), LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: 0 }));
 
-    // Insert+Remove-before (points): same canonical case, other collection.
     assert_absorb_law(&base, LasMutation::InsertPoint(insert_point::InsertPoint { index: 1, point: point(9) }), LasMutation::RemovePoint(remove_point::RemovePoint { index: 0 }));
 
-    // Insert+Insert-same-index (points): both survive.
     assert_absorb_law(&base, LasMutation::InsertPoint(insert_point::InsertPoint { index: 1, point: point(9) }), LasMutation::InsertPoint(insert_point::InsertPoint { index: 1, point: point(8) }));
 
-    // Add+SetField (points): patches into the pending added point.
     assert_absorb_law(&base, LasMutation::InsertPoint(insert_point::InsertPoint { index: 0, point: point(9) }), LasMutation::SetPoint(set_point::SetPoint { index: 0, point: point(7) }));
 
-    // Insert then annihilate the very same insert (points).
     assert_absorb_law(&base, LasMutation::InsertPoint(insert_point::InsertPoint { index: 0, point: point(9) }), LasMutation::RemovePoint(remove_point::RemovePoint { index: 0 }));
 
-    // Two unrelated scalar sets absorb via LWW.
     assert_absorb_law(
         &base,
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: "first".into() }),
@@ -133,12 +122,10 @@ fn absorb_law_associativity() {
     let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
     let d3 = LasMutation::SetPoint(set_point::SetPoint { index: 0, point: point(7) }).diff(&mid2);
 
-    // (d1∘d2)∘d3
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
     left.absorb(d3.diff().clone());
 
-    // d1∘(d2∘d3)
     let mut d23 = d2.diff().clone();
     d23.absorb(d3.diff().clone());
     let mut right = d1.diff().clone();
@@ -156,9 +143,6 @@ fn codec_retention_law() {
     let snap = crate::engine::decode_las(&bytes).expect("decode fixture");
     let reencoded = crate::engine::encode_las(&snap).expect("re-encode fixture");
     let redecoded = crate::engine::decode_las(&reencoded).expect("re-decode fixture");
-    // Structural fields are always recomputed on encode (see `LasHeader`'s doc comment); the
-    // retained invariant is real content: points, VLR payloads, and the non-structural header
-    // fields (scale/offset/bounds/dates/identifiers/points-by-return).
     assert_eq!(redecoded.points.len(), snap.points.len());
     for (a, b) in snap.points.iter().zip(redecoded.points.iter()) {
         assert!((a.x - b.x).abs() < 1e-6);
@@ -255,14 +239,9 @@ fn sweep_b() -> LasSnapshot {
             min_z: -50.0,
         },
         vlrs: vec![
-            // Index 0 stays "alive" but every field changes (exercises `modified`). `a`'s
-            // index 1 ("gone-user") has no counterpart here -- exercises `removed` forward
-            // (a->b) / `added` backward (b->a), the collection SHRINKS.
             vlr("stay-user-2", 9, b"stay-data-after"),
         ],
         points: vec![
-            // Index 0 stays "alive" but every field changes, incl. both tri-states going
-            // from Some -> None and None -> Some.
             LasPoint {
                 x: 1.0,
                 y: 2.0,
@@ -276,11 +255,10 @@ fn sweep_b() -> LasSnapshot {
                 scan_angle_rank: 5,
                 user_data: 200,
                 point_source_id: 42,
-                gps_time: None,          // tri-state: Some(1000.0) -> None
-                rgb: Some((10, 20, 30)), // tri-state: None -> Some
+                gps_time: None,
+                rgb: Some((10, 20, 30)),
             },
             point(1),
-            // Index 2 is a brand-new point (exercises `added` on the a->b direction).
             point(9),
         ],
     }
@@ -394,8 +372,6 @@ fn kinds_match_enum_and_catalog() {
 /// `mutate-las-1-0::mutate-set-scale-and-offset`).
 #[test]
 fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
-    // 🧫️ Power-of-two scales and coordinates that are exact multiples of them, so every
-    // assertion below is about the mutation rather than about binary floating point.
     let mut base = base_snapshot();
     base.header.x_scale = 0.5;
     base.header.y_scale = 0.5;
@@ -430,8 +406,6 @@ fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
         assert_ne!(moved.points[1].x, base.points[1].x, "so the real-world coordinate must move");
         assert_eq!(moved.points[1].x, before[1].0 as f64 * scale.0 + offset.0, "and it must be exactly `record * scale + offset`");
 
-        // ↩️ Exact in BOTH directions, the coarsening one included — that is the direction a
-        // re-quantizing reading would round away for good.
         let mut restored = moved;
         for step in &<LasMutation as Mutation<LasSnapshot>>::inverse(&kind, &base).expect("valid retained mutation inverse fixture") {
             apply_mutation(&mut restored, step);

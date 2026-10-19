@@ -2,7 +2,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv/dist/2020.js";
 import schema from"../🧬️schema/🔣️.json";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import{NativePersistentListReceiving}from"../🟦️.ts";
 function input(count:number):{label:string;rank:number}[]{return Array.from({length:count},(_,i)=>({label:i===0?fixture.prefix.repeat(fixture.firstRepeat):fixture.prefix+i,rank:i*fixture.stride}));}
 test("persistent native receiving preserves original inputs and ranked typed output",()=>{

@@ -14,7 +14,7 @@
       "sourceFileCount": 229,
       "destinationDirectoryCount": 266,
       "destinationNodeCount": 495,
-      "maxPathBytes": 237,
+      "maxPathUtf16Units": 189,
       "mappingDigest": "b47425503a8ebc2a60120e91a5fd6a7e8a54411bdfc122b87a2ef7d5a7cf2d8f",
       "modelCatalog": {
         "catalogContractId": "cad-model-catalog-v1",
@@ -1068,7 +1068,7 @@
       "sourceFileCount": 9,
       "destinationDirectoryCount": 7,
       "destinationNodeCount": 16,
-      "maxPathBytes": 207,
+      "maxPathUtf16Units": 151,
       "mappingDigest": "2b288fe8537a02cc37b28fc1a8bad5f297db043a8371db0a94b36308de0ed34f",
       "ownerVectors": [
         {

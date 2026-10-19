@@ -1,4 +1,4 @@
-//! shooting -> json
+//! 🧾️ shooting -> json
 //!
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see w5b-close-report.md):
 //! `JsonSnapshot.value` was retyped from `serde_json::Value` to stdio's own lexeme-preserving

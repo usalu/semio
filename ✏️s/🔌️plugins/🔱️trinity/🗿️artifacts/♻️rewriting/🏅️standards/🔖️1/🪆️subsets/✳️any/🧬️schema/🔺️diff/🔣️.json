@@ -19,8 +19,8 @@
               "type": "object",
               "properties": {
                 "entries": {
-                  "type": "array",
-                  "items": {
+                  "type": "object",
+                  "additionalProperties": {
                     "type": "object",
                     "properties": {
                       "operation": {
@@ -66,8 +66,8 @@
               "type": "object",
               "properties": {
                 "entries": {
-                  "type": "array",
-                  "items": {
+                  "type": "object",
+                  "additionalProperties": {
                     "type": "object",
                     "properties": {
                       "operation": {

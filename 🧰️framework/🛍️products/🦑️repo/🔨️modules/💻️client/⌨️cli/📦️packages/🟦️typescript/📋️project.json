@@ -18,6 +18,11 @@
     },
     "build": {
       "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
@@ -33,6 +38,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -55,11 +68,15 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "check-entity-kinds": {
@@ -68,16 +85,22 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-entity-kinds"
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "test-entity-kinds": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-entity-kinds"
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "generate-entity-kinds"
@@ -95,7 +118,13 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   }
 }

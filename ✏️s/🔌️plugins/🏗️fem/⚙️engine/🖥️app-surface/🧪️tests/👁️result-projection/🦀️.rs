@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn result_projection_uses_eigenvectors_and_correct_units_for_both_eigenmodes() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/👁️result-projection/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👁️result-projection/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let mode = ResultMode::try_from(case["mode"].as_str().unwrap()).unwrap().display(case["index"].as_u64().unwrap() as u32);
         assert_eq!(mode.uses_mode_shape(), case["modeShape"].as_bool().unwrap(), "{}", case["id"]);

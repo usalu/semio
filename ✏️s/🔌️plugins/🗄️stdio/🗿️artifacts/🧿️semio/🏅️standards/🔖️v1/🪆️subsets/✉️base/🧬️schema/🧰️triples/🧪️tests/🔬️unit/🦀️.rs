@@ -73,13 +73,9 @@ async fn empty_triples_round_trip_to_empty_brackets() {
 
 #[semio_framework_async_macros::async_test]
 async fn nested_bracket_payload_does_not_confuse_the_top_level_split() {
-    // 🧪️ Depth-awareness proof: an item whose own encoding contains "[a,b]" must not be torn
-    // apart by the outer added-list comma split.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn enc_pair(v: &(u32, u32)) -> String {
         format!("[{},{}]", v.0, v.1)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn dec_pair(s: &str) -> Result<(u32, u32), String> {
         let inner = strip_brackets(s)?;
         let parts = split_top_level(inner, ',');

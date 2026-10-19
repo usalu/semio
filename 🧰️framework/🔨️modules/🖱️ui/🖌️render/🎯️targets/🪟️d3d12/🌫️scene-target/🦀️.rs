@@ -45,7 +45,6 @@ pub struct SceneTarget {
 }
 
 impl SceneTarget {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &Device, width: u32, height: u32, format: DXGI_FORMAT) -> Self {
         let width = width.max(1);
         let height = height.max(1);
@@ -62,7 +61,6 @@ impl SceneTarget {
     /// return. Returns whether a recreation happened, so `D3d12Backend` knows whether to reset its own
     /// per-mip resource-state tracking (a fresh texture is always born in `RENDER_TARGET`; an unchanged
     /// one keeps whatever state the last frame left it in).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn ensure(&mut self, device: &Device, width: u32, height: u32) -> bool {
         let width = width.max(1);
         let height = height.max(1);
@@ -78,41 +76,34 @@ impl SceneTarget {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn texture(&self) -> &ID3D12Resource {
         &self.texture
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn blur_scratch(&self) -> &ID3D12Resource {
         &self.blur_scratch
     }
 
     /// 🖼️ The RTV for `texture`'s mip `level` (`0..SCENE_MIP_LEVELS`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn rtv(&self, level: u32) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         let start = unsafe { self.rtv_heap.GetCPUDescriptorHandleForHeapStart() };
         D3D12_CPU_DESCRIPTOR_HANDLE { ptr: start.ptr + (level as usize) * (self.rtv_stride as usize) }
     }
 
     /// 🔎️ The resident (non-shader-visible) SRV for `texture`'s whole mip chain.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn texture_srv_handle(&self, device: &Device) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         srv_handle_at(device, &self.srv_heap, 0)
     }
 
     /// 🔎️ The resident (non-shader-visible) SRV for `blur_scratch`'s whole mip chain.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn blur_scratch_srv_handle(&self, device: &Device) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         srv_handle_at(device, &self.srv_heap, 1)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn width(&self) -> u32 {
         self.width
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn height(&self) -> u32 {
         self.height
     }

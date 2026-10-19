@@ -75,7 +75,6 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
     assert!((edited.thermostats[0].heating_throttle_range_k - 4.5).abs() < 1e-12, "the thermostat kept the typed range, not 2.0");
     assert_eq!(edited.thermostats[0].cooling_setpoint_schedule_id, thermostat.cooling_setpoint_schedule_id, "the untouched schedule survives");
 
-    // 🎛️ A schedule select goes the same way — that one used to write id 0 and fail loudly.
     let other = model.schedules.constants.iter().map(|schedule| schedule.id).find(|id| *id != thermostat.heating_setpoint_schedule_id).expect("a second constant schedule");
     let mut swapped = borrowed.clone();
     swapped[2] = ("field", "heatingSchedule");
@@ -100,8 +99,6 @@ async fn picking_an_interzone_partner_makes_the_surface_interzone() {
     assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "9999")), "mutation.target-missing");
     assert_eq!(refusal(&snapshot, &surface_property(first.0, "interzonePartner", "0")), "app.command.invalid-payload");
 
-    // 🚧️ And a plain boundary pick on an ALREADY interzone surface keeps its neighbour instead of
-    // refusing for want of a partner it was never given a control for.
     let interzone = applied(&snapshot, &command);
     let held = snapshot_of(&interzone);
     assert_eq!(applied(&held, &surface_property(first.0, "boundary", "interzone")).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(second));
@@ -121,8 +118,6 @@ async fn every_app_level_verb_is_owned_by_every_window_kind() {
             assert!(semio_framework::window_kind_actions(&def, window).iter().any(|declared| declared.id == action.id), "window kind {} does not own app-level action {}", window.id, action.id);
         }
     }
-    // 📚️ `setActiveExample` is app-level through `.mutation(…)` rather than the roster above, and the
-    // shell dispatches it from whatever window has focus, so it is held to the same law.
     for window in &def.window_kinds {
         assert!(semio_framework::window_kind_actions(&def, window).iter().any(|declared| declared.id == SET_ACTIVE_EXAMPLE_ACTION_ID), "window kind {} does not own {SET_ACTIVE_EXAMPLE_ACTION_ID}", window.id);
     }
@@ -134,8 +129,6 @@ async fn every_app_level_verb_is_owned_by_every_window_kind() {
 #[semio_framework_async_macros::async_test]
 async fn every_bound_chord_reaches_a_verb_every_window_kind_owns() {
     let def = definition();
-    // ⌨️ Only this EDITOR's own verbs: the builder also binds framework-reserved chords (history,
-    // tool run) whose actions live outside every window's action list by construction.
     let bound: Vec<(&str, &str)> = def
         .keybindings
         .iter()
@@ -211,9 +204,6 @@ async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
     use semio_framework_plugin::PluginApp as _;
     use crate::editor_config::ResultField;
 
-    // 🪟️ The refresh half. `ToolRunLedger::dirty_scope()` unions `entry.window_bodies`, which the driver
-    // builds as `definition.windows.iter().filter_map(|id| registry.window_body_key(id))` — an id no
-    // window kind declares is silently FILTERED AWAY and the body then never redraws on a tick.
     let def = definition();
     let declared = crate::session::energy_simulation_run_definition().windows;
     assert!(!declared.is_empty(), "the run declares no windows, so no tick can mark a body dirty");
@@ -234,15 +224,10 @@ async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
 
     start(&mut app).await;
 
-    // 🦶️ Pump to `finalized` the way the shell does: drain the UI outbox every turn, so the ledger can
-    // push the next scope, and watch the 3d body's colours while the run is still live.
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(600);
     let mut painted_while_running = std::collections::BTreeSet::new();
     let mut live_caption = false;
     while std::time::Instant::now() < deadline && state_of(&app) != Some("finalized") {
-        // 🏃️ Sample ONLY while the run is still computing. A sample taken after the job settled would be
-        // satisfied by the completing tick's payload and would say nothing about whether the window
-        // recolours DURING the run — which is the half the tick-interval republish exists for.
         let running = matches!(state_of(&app), Some("starting" | "running"));
         app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("driver turn");
         drain_ui_scopes(&mut app, &mut scopes);
@@ -257,19 +242,14 @@ async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
     }
     assert_eq!(state_of(&app), Some("finalized"), "the run never finalized");
 
-    // (c) At least one tick's dirty scope named the 3d body — otherwise the window only ever redraws
-    // by accident, on somebody else's full refresh.
     assert!(scopes.iter().any(|scope| scope_covers(scope, model_window::BODY_KEY)), "no dirty scope during the run covered {}: {scopes:?}", model_window::BODY_KEY);
 
     let after = render_text(&mut app, model_window::BODY_KEY).await;
-    // (a) The legend caption survives finalization.
     assert!(after.contains("kWh"), "the FINALIZED run left no legend caption in the 3d body — `ToolRunView::payload` was cleared on finalize, or the body never re-rendered. Body: {}", &after[..after.len().min(1500)]);
     assert!(ResultField::ALL.iter().any(|field| after.contains(field.label())), "the caption names no published result field");
     assert_ne!(after, before, "the finalized body is byte-identical to the pre-run body: nothing was recoloured");
     assert!(live_caption, "the caption never appeared WHILE the run was live, only after it finalized");
 
-    // (b) Distinct surfaces take distinct bands, during the run and after it. One bucket for every
-    // vertex is what the browser saw and what the rank ramp exists to prevent.
     let bands = painted_bands(&after);
     assert!(bands.len() >= 2, "every surface landed on the same ramp band after finalize ({bands:?}) — the colour map is unreadable. Body: {}", &after[..after.len().min(1500)]);
     assert!(painted_while_running.len() >= 2, "every surface landed on the same ramp band WHILE the run was live ({painted_while_running:?}) — the mid-run payload is the all-zero pre-run map");

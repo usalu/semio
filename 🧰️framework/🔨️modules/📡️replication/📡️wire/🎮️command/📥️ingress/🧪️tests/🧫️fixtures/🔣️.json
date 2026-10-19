@@ -243,6 +243,129 @@
       ]
     },
     {
+      "package": "semio-framework-value-persistent",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml",
+      "edges": [
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-control-contract",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-derive",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-intrinsic",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-native-encoding",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-original-aliases",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️aliases/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-paged-list",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-retained-clone",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-retirement",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-shared-issuance",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
+        }
+      ]
+    },
+    {
+      "package": "semio-framework-value-edit",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/Cargo.toml",
+      "edges": [
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-control-contract",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-derive",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-intrinsic",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-native-decoding",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-native-encoding",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-persistent",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-retained-clone",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-retirement",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-shared-issuance",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
+        }
+      ]
+    },
+    {
+      "package": "semio-framework-value-registry",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust/Cargo.toml",
+      "edges": [
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-control-contract",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-retained-clone",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-retirement",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/Cargo.toml"
+        }
+      ]
+    },
+    {
       "package": "semio-framework-value-paged-text",
       "manifest": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust/Cargo.toml",
       "edges": [
@@ -279,6 +402,11 @@
       "edges": [
         {
           "scope": "normal",
+          "name": "semio-framework-hash",
+          "manifest": "🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
           "name": "semio-framework-io-base64",
           "manifest": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml"
         },
@@ -306,6 +434,11 @@
           "scope": "normal",
           "name": "semio-framework-value-derive",
           "manifest": "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-edit",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/Cargo.toml"
         },
         {
           "scope": "normal",
@@ -349,6 +482,16 @@
         },
         {
           "scope": "normal",
+          "name": "semio-framework-value-persistent",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-registry",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
           "name": "semio-framework-value-retained-clone",
           "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
         },
@@ -366,6 +509,11 @@
           "scope": "normal",
           "name": "semio-framework-value-retirement-queue",
           "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-schema",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️schema/📦️packages/🦀️rust/Cargo.toml"
         },
         {
           "scope": "normal",
@@ -484,6 +632,27 @@
       ]
     },
     {
+      "package": "semio-framework-value-schema",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "edges": [
+        {
+          "scope": "normal",
+          "name": "semio-framework-schema-registry",
+          "manifest": "🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-control-contract",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml"
+        },
+        {
+          "scope": "normal",
+          "name": "semio-framework-value-intrinsic",
+          "manifest": "🧰️framework/🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust/Cargo.toml"
+        }
+      ]
+    },
+    {
       "package": "semio-framework-value-native-encoding",
       "manifest": "🧰️framework/🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust/Cargo.toml",
       "edges": [
@@ -521,9 +690,19 @@
       ]
     },
     {
+      "package": "semio-framework-pack-json-float",
+      "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🎯️float-writer/📦️packages/🦀️rust/Cargo.toml",
+      "edges": []
+    },
+    {
       "package": "semio-framework-pack-json",
       "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml",
       "edges": [
+        {
+          "scope": "normal",
+          "name": "semio-framework-pack-json-float",
+          "manifest": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🎯️float-writer/📦️packages/🦀️rust/Cargo.toml"
+        },
         {
           "scope": "normal",
           "name": "semio-framework-value",

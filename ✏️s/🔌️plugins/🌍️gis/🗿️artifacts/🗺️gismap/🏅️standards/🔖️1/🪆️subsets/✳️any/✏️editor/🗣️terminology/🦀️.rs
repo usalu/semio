@@ -62,7 +62,6 @@ pub fn gis2d_layer_label(layer_id: &str, labels: &Gis2dPlayLabels) -> &'static s
         "positionLabels" => labels.layer_position_labels.as_str(),
         "routes" => labels.layer_routes.as_str(),
         "regions" => labels.layer_regions.as_str(),
-        // 🗣️ unreachable in practice — the arms above already cover every id in GIS_MAP_LAYER_IDS.
         _ => "",
     }
 }

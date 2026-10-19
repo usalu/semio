@@ -16,7 +16,7 @@ async fn arc_length_of_quarter_circle_matches_closed_form() {
     let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
     let c = Curve3::Circle { frame, radius: 2.0 };
     let len = arc_length(&c, 0.0, std::f64::consts::FRAC_PI_2, 1e-9);
-    assert!((len - std::f64::consts::PI).abs() < 1e-6); // quarter of 2*pi*r=4pi, i.e. pi
+    assert!((len - std::f64::consts::PI).abs() < 1e-6);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -145,7 +145,6 @@ async fn split_nurbs_pieces_reproduce_the_original_curve() {
         let t = right_lo + (right_hi - right_lo) * i as f64 / 15.0;
         assert!(de_boor_pnt(&right, t).distance(de_boor_pnt(&curve, t)) < 1e-7, "right mismatch at t={t}");
     }
-    // The split point itself must match exactly from both sides.
     assert!(de_boor_pnt(&left, left_hi).distance(de_boor_pnt(&right, right_lo)) < 1e-9);
 }
 
@@ -177,7 +176,6 @@ async fn interpolate_curve_honours_specified_end_tangents() {
 
 #[semio_framework_async_macros::async_test]
 async fn interpolate_curve_closed_passes_through_points_and_is_c_degree_minus_one_at_the_seam() {
-    // A regular pentagon's vertices — a natural closed loop.
     let n = 5;
     let radius = 3.0;
     let points: Vec<Pnt3> = (0..n)
@@ -195,8 +193,6 @@ async fn interpolate_curve_closed_passes_through_points_and_is_c_degree_minus_on
         let t = lo + (hi - lo) * i as f64 / n as f64;
         assert!(eval_nurbs_curve3(&curve, t).distance(*p) < 1e-8, "vertex {i} not interpolated at t={t}");
     }
-    // C^(degree-1) continuity at the seam: derivatives up to order degree-1 must agree when
-    // approached from just below `hi` and just above `lo` (mod period).
     let h = 1e-5;
     for order in 1..degree {
         let before = finite_diff_order(&curve, hi - h, order, h);
@@ -278,7 +274,6 @@ async fn closest_parameter_of_a_point_on_the_curve_recovers_its_own_parameter() 
 async fn closest_parameter_on_circle_handles_seam_crossing_targets() {
     let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
     let c = Curve3::Circle { frame, radius: 3.0 };
-    // Target angularly just past the 0/2π seam — the true closest point sits at t≈2π-ε.
     let angle = -0.02_f64;
     let target = Pnt3::from_array((c.eval(angle).to_vec() * 1.5).to_array());
     let cp = closest_parameter(&c, (0.0, std::f64::consts::TAU), target, 1e-9);

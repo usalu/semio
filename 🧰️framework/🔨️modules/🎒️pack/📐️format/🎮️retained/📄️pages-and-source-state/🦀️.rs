@@ -2,7 +2,7 @@
 
 use super::*;
 
-pub fn retained_page_close_demands<T, const N: usize>(pages: &semio_framework_value::list::PagedList<T, N>) -> Result<RetirementDemand, ValueError> {
+pub fn retained_page_close_demands<T, const N: usize>(pages: &semio_framework_value_persistent::list::PagedList<T, N>) -> Result<RetirementDemand, ValueError> {
     let error = |error: PagedListError| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason);
     if !pages.is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<T>(), depth: pages.next_pop_depth_demand().map_err(error)?, ..Default::default() }); }
     Ok(RetirementDemand { release_bytes: pages.next_release_allocation_bytes().map_err(error)?, depth: pages.next_release_depth_demand().map_err(error)?.max(1), ..Default::default() })
@@ -19,7 +19,7 @@ pub struct RetainedPackPage {
 
 pub const RETAINED_PACK_MAXIMUM_PAGES: usize = isize::MAX as usize / size_of::<RetainedPackPage>();
 
-pub(super) type RetainedPackPages = semio_framework_value::list::PagedList<RetainedPackPage, RETAINED_PACK_MAXIMUM_PAGES>;
+pub(super) type RetainedPackPages = semio_framework_value_persistent::list::PagedList<RetainedPackPage, RETAINED_PACK_MAXIMUM_PAGES>;
 
 impl RetainedPackPage {
     pub fn is_empty(&self) -> bool {

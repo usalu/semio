@@ -50,8 +50,6 @@ async fn document_panel_lists_every_step_payload_in_order() {
     };
     let fixture = process_working_scene_to_snapshot(&scene, Workshop::default());
     let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
-    // node's `BuiltChildren` only serialises through the retained page transport.
     let rendered = project(&fixture, &semio_framework_plugin::TreeWindows::unhosted());
     let rip_index = rendered.find("step-rip").expect("step-rip present");
     let bore_index = rendered.find("step-bore").expect("step-bore present");

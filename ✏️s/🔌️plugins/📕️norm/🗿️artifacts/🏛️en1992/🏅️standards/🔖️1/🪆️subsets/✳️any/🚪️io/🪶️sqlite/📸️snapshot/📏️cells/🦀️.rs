@@ -6,7 +6,8 @@ use semio_s_artifact_norm_en1992_model::{MemberKind, SupportCondition, ExposureC
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl as N};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 type Result<T>=std::result::Result<T,ValueError>;
 #[derive(Clone,Copy)]enum Role{Text,Float,UInt,Bool,Annex,Member,Support,Exposure,Ductility,Fire,OptionalTightness}
 use Role::*;

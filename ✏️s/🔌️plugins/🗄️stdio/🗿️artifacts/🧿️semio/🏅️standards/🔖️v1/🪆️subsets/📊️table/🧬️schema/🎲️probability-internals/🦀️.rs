@@ -376,7 +376,6 @@ impl Normal {
     /// 🔔️ Standard normal, `mean = 0`, `std_dev = 1`.
     pub const STANDARD: Self = Self { mean: 0.0, std_dev: 1.0 };
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(mean: f64, std_dev: f64) -> Result<Self, ProbabilityError> {
         if std_dev.is_nan() || std_dev <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "std_dev", value: std_dev });
@@ -432,7 +431,6 @@ pub struct Uniform {
 }
 
 impl Uniform {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(low: f64, high: f64) -> Result<Self, ProbabilityError> {
         if low.is_nan() || high.is_nan() || low >= high {
             return Err(ProbabilityError::InvalidParameter { name: "high", value: high });
@@ -485,7 +483,6 @@ pub struct ChiSquared {
 }
 
 impl ChiSquared {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(dof: f64) -> Result<Self, ProbabilityError> {
         if dof.is_nan() || dof <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof", value: dof });
@@ -555,7 +552,6 @@ pub struct StudentT {
 }
 
 impl StudentT {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(dof: f64) -> Result<Self, ProbabilityError> {
         if dof.is_nan() || dof <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof", value: dof });
@@ -620,7 +616,6 @@ pub struct FisherF {
 }
 
 impl FisherF {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(dof1: f64, dof2: f64) -> Result<Self, ProbabilityError> {
         if dof1.is_nan() || dof1 <= 0.0 {
             return Err(ProbabilityError::InvalidParameter { name: "dof1", value: dof1 });
@@ -693,7 +688,6 @@ pub struct Bernoulli {
 }
 
 impl Bernoulli {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(p: f64) -> Result<Self, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::InvalidParameter { name: "p", value: p });
@@ -744,7 +738,6 @@ pub struct Binomial {
 }
 
 impl Binomial {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(n: u64, p: f64) -> Result<Self, ProbabilityError> {
         if !(0.0..=1.0).contains(&p) {
             return Err(ProbabilityError::InvalidParameter { name: "p", value: p });
@@ -824,7 +817,6 @@ pub struct Multinomial {
 }
 
 impl Multinomial {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(n: u64, probs: Vec<f64>) -> Result<Self, ProbabilityError> {
         let sum: f64 = probs.iter().sum();
         if (sum - 1.0).abs() > 1e-9 {
@@ -836,7 +828,6 @@ impl Multinomial {
         Ok(Self { n, probs })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ln_pmf(&self, counts: &[u64]) -> f64 {
         if counts.len() != self.probs.len() || counts.iter().sum::<u64>() != self.n {
             return f64::NEG_INFINITY;
@@ -851,14 +842,12 @@ impl Multinomial {
         result
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn pmf(&self, counts: &[u64]) -> f64 {
         self.ln_pmf(counts).exp()
     }
 
     /// 🎲️ Sequential conditional binomial draws: category `i`'s count is `Binomial(remaining,
     /// p_i / (1 - sum of earlier p's))`, decrementing `remaining` after each draw.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> Vec<u64> {
         let mut remaining = self.n;
         let mut remaining_prob = 1.0;

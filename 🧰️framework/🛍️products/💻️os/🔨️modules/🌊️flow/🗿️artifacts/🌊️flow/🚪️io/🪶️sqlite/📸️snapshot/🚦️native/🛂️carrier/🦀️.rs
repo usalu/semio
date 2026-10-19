@@ -1,6 +1,7 @@
 //! 🌊️ Flow carrier bridge using its existing record schema authority.
 use super::*;
-use semio_framework_value::{ValueError,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{ValueError, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 /// 🛬️ Decodes the physical carrier under the shared cumulative controller, then binds actual fields.
 pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut crate::os_store::NativeSnapshotDecodeOwner<'_,'_>)->Result<FlowHostSnapshot,ValueError>{crate::os_store::decode_sqlite_snapshot_record_native(payload,<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),FlowHostSnapshotDsl::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {flow_native_decoding::decode_record(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_owner)}

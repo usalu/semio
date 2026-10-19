@@ -29,6 +29,7 @@ semio-framework-value-shared-issuance = { path="../../../../♻️retirement/�
 semio-framework-value-paged-list = { path="../../../../📋️list/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { workspace = true }
 semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

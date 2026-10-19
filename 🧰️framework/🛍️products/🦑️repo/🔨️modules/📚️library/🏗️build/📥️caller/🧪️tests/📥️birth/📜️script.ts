@@ -7,7 +7,7 @@ import {projectOwnedNxProcessEnvelopeV1} from "../../🟦️.ts";
 import fixture from "./🔣️.json";
 
 const root=process.env.SEMIO_WORKSPACE_ROOT!,receipt=resolve(process.argv[2]??""),artifact=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??"");
-if(process.argv.length!==3||!root||basename(receipt)!=='birth.json'||!relative(artifact,receipt)||relative(artifact,receipt).startsWith('..'))throw Error('Owned prebirth receipt path required');
+if(process.argv.length!==3||!root||basename(receipt)!=='birth.json'||!relative(artifact,receipt)||relative(artifact,receipt).startsWith('..'))throw new Error('Owned prebirth receipt path required');
 await receiveScriptProcessInvocation(process.env,async original=>{
  const before=readIssuedScriptProcessEnvelopeV1(original),control=original.control,caps=original.capabilities,selected=fixture.childArguments,child=projectOwnedNxProcessEnvelopeV1(root,original,selected),env=scriptProcessEnvironment(child,process.env);
  requireIssuedScriptInvocationV1(original);assert.equal(original.control,control);assert.equal(original.capabilities,caps);assert.equal(child.deadlineEpochMilliseconds,before.deadlineEpochMilliseconds);assert.deepEqual((child.capabilities as any).native,(caps as any).native);assert.throws(()=>projectOwnedNxProcessEnvelopeV1(root,{...original},selected),/Live Original/);assert.throws(()=>projectOwnedNxProcessEnvelopeV1(root,original,['reset']),/Undeclared/);

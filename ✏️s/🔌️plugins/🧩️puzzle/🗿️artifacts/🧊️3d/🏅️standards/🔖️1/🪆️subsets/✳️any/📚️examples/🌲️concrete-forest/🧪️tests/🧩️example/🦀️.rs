@@ -1,4 +1,4 @@
-//! ️tests for example `🌲️concrete-forest`.
+//! 🧪️tests for example `🌲️concrete-forest`.
 
 #[test]
 fn dsl_asset_parses_and_round_trips() {

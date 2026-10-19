@@ -3,7 +3,7 @@
 //! (including its composed `structure`/`results` child handles) round-trips through `serde_json`
 //! untouched — the same guarantee the native codec itself gives — so this hop is `IoFidelity::Exact`.
 
-use crate::FormsSnapshot;
+use semio_s_artifact_forms_forms_snapshot::FormsSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};

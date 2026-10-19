@@ -15,13 +15,6 @@ pub struct ArtifactEngineConfig {
     /// tenant) — `SubmitOptions` stays durability-only (see its doc) so this crate's dedupe/authz
     /// story does not require a caller to separately authenticate every submit call.
     pub security: db_security::SecurityGate,
-    // 🔀️ dedyn-emit-runtime, O1/R11(c): every real call site (this crate's own `default()`,
-    // `db_engine::document_engine_config`'s `other_defaults.emit` spread) constructs `NullEmit` and
-    // nothing else — the field is stored but never actually called (`grep '.emit(' this crate: zero
-    // hits). Unlike `db_security::SecurityGate` (which genuinely needs `E: Emit` generic so its own
-    // tests can inject a `RecordingEmit`), there is no second implementor anywhere in this crate's
-    // call graph, so O1 takes the "exactly one impl" branch: concrete `NullEmit`, no `dyn`, no
-    // generic param added to this config type.
     pub emit: Arc<NullEmit>,
     pub preview_ttl_ms: u64,
     /// 🧬️ Projection factory: `submit`'s project step registers a fresh

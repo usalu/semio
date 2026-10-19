@@ -167,7 +167,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
     fn terminal_is_empty(&self)->bool{self.closing&&self.tessellate.terminal_is_empty()&&self.evaluation.terminal_is_empty()}
 }
 
-/// that address an extension ACTOR rather than a preview window, and so publish no store lane at all
+/// 🪄️ that address an extension ACTOR rather than a preview window, and so publish no store lane at all
 /// (`HostOnly`). The window-addressed folds live on [`Generation3dViewFlowEvalWindowWork`] instead,
 /// because they continue the chain and owe their window a publication.
 pub(super) struct Generation3dViewFlowResolveWork {

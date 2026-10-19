@@ -1,9 +1,21 @@
 {
   "name": "@semio-tech/ui-styling-py",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts generate"
@@ -45,6 +57,7 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test"
@@ -55,13 +68,14 @@
       ],
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
         "^production",
-        {
-          "dependentTasksOutputFiles": "**/*"
-        }
+        { "dependentTasksOutputFiles": "**/*" }
       ]
     },
     "deps": {
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {

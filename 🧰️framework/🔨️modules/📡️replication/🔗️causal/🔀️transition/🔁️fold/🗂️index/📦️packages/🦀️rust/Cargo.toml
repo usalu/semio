@@ -24,7 +24,9 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-persistent.workspace = true
 serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-replication-error = { path = "../../../../../../⚠️error/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../⏱️trace/📦️packages/🦀️rust" }

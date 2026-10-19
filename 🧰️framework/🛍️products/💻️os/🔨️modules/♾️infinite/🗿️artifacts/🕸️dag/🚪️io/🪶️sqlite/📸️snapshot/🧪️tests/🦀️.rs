@@ -166,7 +166,7 @@ fn sqlite_snapshot_framework_dag_controlled_value_keeps_actual_owned_state() {
     let mut encode = semio_framework_value::NativeEncodeControl::new(16 << 20, &mut yes);
     let value = <DagSnapshot as ToValue>::to_value_controlled(&expected, &mut encode).unwrap();
     let mut yes = |_| true;
-    let mut decode = semio_framework_value::NativeDecodeControl::new(16 << 20, &mut yes);
+    let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 << 20, &mut yes);
     let actual = Owned::new(<DagSnapshot as FromValue>::from_value_controlled(&value, &mut decode).unwrap());
     assert_full(&actual, &expected);
 }

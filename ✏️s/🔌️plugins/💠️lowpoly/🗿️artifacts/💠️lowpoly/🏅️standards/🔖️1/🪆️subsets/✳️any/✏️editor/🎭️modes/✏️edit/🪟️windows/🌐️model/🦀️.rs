@@ -64,13 +64,9 @@ pub fn definition() -> WindowKindDefinition {
         body_key: LOWPOLY_PLAY_BODY_MAIN.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "lowpoly-model".into(),
-        // 🎚️ `measures` stays empty here: measures are config-derived per frame by
-        // `ArtifactApp::window_measures`, never frozen into the manifest.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["move", "rotate", "scale", "brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
-        // only the Model window selects/hovers mesh components; the UV window paints textures.
         interactions: vec![InteractionRef::new(MESH_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -131,8 +127,6 @@ fn world_selection_json_for(view: LowpolyView<'_>, loaded: &LowpolyDocument, act
     if let Some(pivot) = pivot {
         entries.push(("gumballTarget".to_string(), semio_framework_value::ToValue::to_value(&pivot)));
     }
-    // 🧲️ The composable gumball: every handle group the window toggles left on shows at once
-    // (`UnifiedGumball` reads `gumballConfig` over the single-mode `transformMode` fallback).
     let handles = semio_s_artifact_lowpoly_lowpoly_options::gumball::GumballHandles::from_config(config);
     entries.push((
         "gumballConfig".to_string(),
@@ -145,8 +139,6 @@ fn world_selection_json_for(view: LowpolyView<'_>, loaded: &LowpolyDocument, act
             ("scaleUniform".to_string(), semio_framework_value::DslValue::Bool(handles.scale)),
         ]),
     ));
-    // 🖱️ The mesh domain's pointer hover, echoed for the host's overlays: the hovered instance and,
-    // when the pointer is over a component, `{objectId, mode, id}` for its vertex/edge/face highlight.
     if let Some(hovered) = &selection.hovered_object_id {
         entries.push(("hoveredId".to_string(), semio_framework_value::DslValue::String(hovered.clone())));
     }
@@ -265,8 +257,6 @@ pub fn render(view: LowpolyView<'_>, loaded: Option<&LowpolyDocument>, active_ut
                 world_selection_json_for(view, loaded, active_utility, selection),
                 &semio_s_artifact_lowpoly_lowpoly_config::lowpoly_sun_config(config),
             );
-            // 🕹️ Bound to the "mesh" domain: object hits resolve through each instance's `interactionId`,
-            // component hits through `<interactionId>.<granularity>.<id>` (`World3dHost`).
             scene.domain_id = Some(MESH_INTERACTION_DOMAIN.into());
             scene.domain_granularity_id = Some(MESH_GRANULARITY_OBJECT.into());
             scene_surface(LOWPOLY_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::World3d, &scene)

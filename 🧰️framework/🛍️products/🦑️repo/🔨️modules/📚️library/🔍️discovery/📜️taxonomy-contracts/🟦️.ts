@@ -1,3 +1,4 @@
+import type { PackageImplementationAdmission } from "../🧱️package-implementation-admission/🟦️.ts";
 /** 🗺️ Repository-wide enforcement state; version 7 has no quiet or transitional area mode. */
 /** 🧭️ `clean` is the enforced state of every production area; `exempt` names a subtree the discovery library itself skips. */
 export type AreaState = "clean" | "exempt";
@@ -177,7 +178,7 @@ export interface SemanticExactDescendantContract {
   readonly requiredNodes: readonly SemanticDescendantNode[];
   readonly exclusiveAlternatives: readonly SemanticDescendantAlternative[];
   readonly realizedNodeCount: number;
-  readonly pathBudgetReserve: Readonly<{ derivation: "longest-canonical-descendant-suffix"; bytes: number }>;
+  readonly pathBudgetReserve: Readonly<{ derivation: "longest-canonical-descendant-suffix"; utf16Units: number }>;
 }
 
 /** 📚️ A manifest-owned recursive catalog whose realized descendants are data-driven. */
@@ -187,7 +188,7 @@ export interface SemanticCatalogDescendantContract {
   readonly catalogContractId: string;
   readonly leafFileKindId: string;
   readonly rendering: "semantic-member-directory-and-physical-kind-leaf";
-  readonly pathBudgetReserve: Readonly<{ derivation: "longest-rendered-catalog-descendant-suffix"; bytes: number }>;
+  readonly pathBudgetReserve: Readonly<{ derivation: "longest-rendered-catalog-descendant-suffix"; utf16Units: number }>;
 }
 
 export type SemanticDescendantContract = SemanticExactDescendantContract | SemanticCatalogDescendantContract;
@@ -432,6 +433,13 @@ export interface SemanticPathProjectionReferenceConsumerContract {
   readonly staleMarkers: readonly string[];
 }
 
+/** 🥒️ How a committed fixture bundle is covered when no per-case implementation case holds it: the subset's exhaustive mutation case declares it in a feature, or the subset's fixture runner discovers it at run time. */
+export interface MutationFixtureCoverageContract {
+  readonly implementationCase: string;
+  readonly exhaustiveCase: Readonly<{ featureFileKindId: string; stepUriPrefix: string; bundleFacetDirectoryNames: readonly string[] }>;
+  readonly fixtureRunner: Readonly<{ relativePath: string }>;
+}
+
 /** 🔗️ Exact canonical implementation/fixture pair consumed by MutationCatalog validation. */
 export interface MutationCatalogProjectionContractIds {
   readonly contractKind: "canonical-mutation-case-pair";
@@ -443,7 +451,8 @@ export interface MutationCatalogProjectionContractIds {
   readonly implementationDescendantContractId: string;
   readonly fixtureDescendantContractId: string;
   readonly catalogContractId: string;
-  readonly coverage: "every-catalog-vector-has-one-implementation-and-one-fixture-bundle";
+  readonly coverage: "every-catalog-vector-has-one-fixture-bundle-with-declared-coverage";
+  readonly fixtureCoverage: MutationFixtureCoverageContract;
 }
 
 /** 🧭️ Tagged scope predicate for an exact externally-authoritative path contract. */
@@ -508,6 +517,7 @@ export interface PackageBoundaryRule {
   readonly recursive: true;
   readonly uncertainRole: "problem";
   readonly implementationRole: "problem";
+  readonly implementationAdmission: PackageImplementationAdmission | null;
 }
 
 /** 🧠️ Conservative source-role grammar selected by ecosystem. */

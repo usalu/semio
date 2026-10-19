@@ -1,4 +1,5 @@
 use semio_framework_3d::mesh::*;
+use semio_framework_3d_mesh_quality::{analyze_polygon_soup, MeshQualityReport};
 use std::collections::{BTreeMap,HashMap,HashSet};
 use semio_framework_value::{ToValue,FromValue};
 use semio_framework_3d::mesh::FaceId;

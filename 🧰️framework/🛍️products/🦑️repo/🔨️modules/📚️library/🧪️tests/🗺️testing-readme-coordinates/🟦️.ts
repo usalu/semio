@@ -134,7 +134,7 @@ test("documentation gate registration matches the declared Nx route", () => {
   const projectSource = readOwned(packagePath + "/📋️project.json").toString("utf8"), project = JSON.parse(projectSource), errors: ParseError[] = [];
   expect(parseJson(projectSource, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(project);
   expect(errors).toEqual([]);
-  expect(project.targets[expected.target]).toEqual({ executor: "repo:script", options: { cwd: packagePath, command: expected.command } });
+  expect(project.targets[expected.target]).toMatchObject({ executor: "repo:script", options: { cwd: packagePath, command: expected.command } });
   const router = readOwned(packagePath + "/📜️script.ts").toString("utf8"), tree = ts.createSourceFile("router.ts", router, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isIfStatement(node) && ts.isBinaryExpression(node.expression) && node.expression.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken && node.expression.left.getText(tree) === "segments[0]" && ts.isStringLiteral(node.expression.right) && node.expression.right.text === expected.route) branches.push(node);

@@ -104,7 +104,7 @@
             ],
             "edges": [{ "id": "e0", "edgeKind": "link", "source": "a:h0", "target": "b:h0" }]
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)}, "the two-node snapshot must parse");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)}, "the two-node snapshot must parse");
         let _ = h.outbox.drain_events_json();
 
         h.brush_open_slot("a:h0");

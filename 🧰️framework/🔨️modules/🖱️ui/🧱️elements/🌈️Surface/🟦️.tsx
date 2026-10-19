@@ -214,8 +214,6 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
     return () => {
       surfaceActiveRoots.delete(element);
       surfaceActiveSubscribers.delete(notify);
-      // 🎯️ Effect re-runs every commit (ref may attach late). Defer the clear so a same-commit
-      // re-register can reclaim the root before we drop the active stroke.
       queueMicrotask(() => {
         if (surfaceActiveRoot.current === element && !surfaceActiveRoots.has(element)) setSurfaceActiveRoot(null);
       });

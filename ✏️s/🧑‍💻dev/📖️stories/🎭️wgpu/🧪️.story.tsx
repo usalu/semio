@@ -13,7 +13,7 @@ const meta = {
   title: "🛠️framework🖥️os/Wgpu",
   component: WgpuBootHost,
   parameters: { layout: "fullscreen" },
-  tags: [], // heavy WASM + WebGPU boot — no autodocs page
+  tags: [],
   argTypes: {
     plugin: { control: "select", options: PLUGIN_BUILD_TARGETS.map((t) => t.pluginId) },
   },

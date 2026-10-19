@@ -1,11 +1,12 @@
 //! 🧪️ Canonical intrinsic Pack boundaries preserve literal bytes and physical caller admission.
 use crate::record::{self,intrinsic,EncodeOptions,DecodeOptions};
-use semio_framework_value::{DslValue,NativeEncodeControl,NativeDecodeControl,ValueRefusalKind};
+use semio_framework_value::{DslValue, NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn octets(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|word|u8::from_str_radix(std::str::from_utf8(word).unwrap(),16).unwrap()).collect()}
-fn tagged(value:&DslValue)->serde_json::Value{serde_json::Value::from(semio_framework_value::intrinsic_json::encode(value))}
+fn tagged(value:&DslValue)->serde_json::Value{serde_json::Value::from(semio_framework_value_schema::intrinsic_json::encode(value))}
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
-fn literal(row:&serde_json::Value)->DslValue{semio_framework_value::intrinsic_json::decode(&DslValue::from(&row["value"])).unwrap()}
+fn literal(row:&serde_json::Value)->DslValue{semio_framework_value_schema::intrinsic_json::decode(&DslValue::from(&row["value"])).unwrap()}
 fn reference_record(value:&DslValue)->(semio_framework_dsl_record::RecordSpec,semio_framework_dsl_record::RecordValue){
     use semio_framework_dsl_record::{RecordSpec,RecordLayout,FieldSpec,Shape,RecordFields,RecordValue,FieldValue};
     let spec=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Value)]);
@@ -32,7 +33,7 @@ fn close_output(output:&mut semio_framework_replication_codec::io::binary::opera
 #[test]
 fn intrinsic_borrowed_object_order_preserves_original_payload_and_every_equal_key_occurrence(){
     for row in occurrence_order_fixture()["cases"].as_array().unwrap(){
-        let value=semio_framework_value::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();let source=OriginalIntrinsic(&value);let(spec,_)=reference_record(&DslValue::Null);let expected=octets(row["bodyHex"].as_str().unwrap());
+        let value=semio_framework_value_schema::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();let source=OriginalIntrinsic(&value);let(spec,_)=reference_record(&DslValue::Null);let expected=octets(row["bodyHex"].as_str().unwrap());
         let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(expected.len(),65536).unwrap();let mut allow=|_|true;let mut control=NativeEncodeControl::new(16_777_216,&mut allow);
         assert_eq!(record::encode_projected_record_body_into(&spec,&source,&EncodeOptions::default(),&mut output,&mut control).unwrap(),expected.len());assert!(output.iter().eq(expected.iter().copied()),"{}",row["id"]);close_output(&mut output);assert_eq!(tagged(&value),row["source"]);
     }
@@ -44,7 +45,7 @@ fn intrinsic_static_borrowed_object_order_keeps_paid_scratch_until_physical_clos
     static FIELDS:[F;1]=[F::new(1,"value",B::Value)];
     let options=EncodeOptions::default();
     for row in occurrence_order_fixture()["cases"].as_array().unwrap(){
-        let value=semio_framework_value::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();let source=OriginalIntrinsic(&value);let expected=octets(row["bodyHex"].as_str().unwrap());let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
+        let value=semio_framework_value_schema::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();let source=OriginalIntrinsic(&value);let expected=octets(row["bodyHex"].as_str().unwrap());let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
         assert_eq!(output.allocated_bytes(),0);let mut capsule=record::BorrowedProjectedPackOperation::from_source(&source,S{keyword:None,layout:RecordLayout::Lines,fields:&FIELDS});let mut allow=|_|true;let mut control=NativeEncodeControl::new(16_777_216,&mut allow);
         let(result,birth,free)=crate::test_allocation::observe_backing(||capsule.write_body(&options,&mut output,&mut control));assert_eq!(result.unwrap(),expected.len());assert_eq!(birth,capsule.allocated_bytes()+output.allocated_bytes());assert_eq!(free,0);assert_eq!(control.owned_bytes(),birth);assert!(output.iter().eq(expected.iter().copied()),"{}",row["id"]);
         let scratch=capsule.allocated_bytes();let mut retired=0;for _ in 0..32768{let(step,birth,free)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(birth,0);assert_eq!(free,step.2);assert!(step.1<=1&&free<=4096);retired+=free;if !step.0{break}}assert_eq!(retired,scratch);assert_eq!(capsule.allocated_bytes(),0);close_output(&mut output);assert_eq!(tagged(&value),row["source"]);
@@ -56,7 +57,7 @@ fn intrinsic_boundary_original_object_order_preserves_every_equal_key_occurrence
     let fixture=occurrence_order_fixture();
     let output=EncodeOptions::default();let input=DecodeOptions::default();
     for row in fixture["cases"].as_array().unwrap(){
-        let source=semio_framework_value::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();
+        let source=semio_framework_value_schema::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();
         let expected=octets(row["bodyHex"].as_str().unwrap());let mut allow=|_|true;
         let mut control=NativeEncodeControl::new(16_777_216,&mut allow);
         let body=intrinsic::encode_body(&source,&output,&mut control).unwrap();assert_eq!(body,expected,"{}",row["id"]);
@@ -88,7 +89,7 @@ fn intrinsic_boundary_literal_body_and_document_match_the_owned_schema(){
 fn intrinsic_object_order_scratch_is_paid_by_exact_cumulative_caller_authority(){
     let options=EncodeOptions::default();
     for row in occurrence_order_fixture()["cases"].as_array().unwrap(){
-        let value=semio_framework_value::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();let expected=octets(row["bodyHex"].as_str().unwrap());let mut allow=|_|true;let mut control=NativeEncodeControl::new(16_777_216,&mut allow);
+        let value=semio_framework_value_schema::intrinsic_json::decode(&DslValue::from(&row["source"])).unwrap();let expected=octets(row["bodyHex"].as_str().unwrap());let mut allow=|_|true;let mut control=NativeEncodeControl::new(16_777_216,&mut allow);
         let(body,requested)=crate::test_allocation::observe(||intrinsic::encode_body(&value,&options,&mut control));assert_eq!(body.unwrap(),expected);assert_eq!(control.owned_bytes(),requested,"{}",row["id"]);
         let mut exact=NativeEncodeControl::new(requested,&mut allow);let(body,actual)=crate::test_allocation::observe(||intrinsic::encode_body(&value,&options,&mut exact));assert_eq!(body.unwrap(),expected);assert_eq!(actual,requested);
         let mut short=NativeEncodeControl::new(requested-1,&mut allow);assert_eq!(intrinsic::encode_body(&value,&options,&mut short).unwrap_err().kind(),ValueRefusalKind::OwnershipLimit);

@@ -3,7 +3,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::snapshot::{SemioObjectSnapshot, STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
 use {semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity, semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion}};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.

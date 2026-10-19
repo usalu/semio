@@ -231,7 +231,7 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::io::text::diff::hex_decode_string;
 use crate::schema::diff::*;
 use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::self;
+use semio_s_artifact_stdio_semio_base::schema::triples;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;

@@ -9,7 +9,6 @@ fn lines(v: &[&str]) -> Vec<String> {
 
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_before_matches_canonical_shape() {
-    // Insert("f") at 2, then Remove(0) — canonical case: {removed:[0], added:[(1,f)]}.
     let d1 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: 2, text: "f".into() }] }), ..Default::default() };
     let d2 = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![] }), ..Default::default() };
     let mut merged = d1.clone();

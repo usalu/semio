@@ -1,10 +1,31 @@
 {
   "name": "@semio-tech/dsl-derive-rs",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "$schema": "../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "generate": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"
@@ -13,7 +34,13 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -22,7 +49,7 @@
     },
     "check-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-generated"
@@ -31,7 +58,7 @@
     },
     "generate-schema-index": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate-schema-index"
@@ -40,7 +67,13 @@
     },
     "preview-schema-index": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts schema-index preview"
@@ -49,7 +82,7 @@
     },
     "check-schema-index": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-schema-index"
@@ -58,6 +91,15 @@
     },
     "test-schema-index-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-schema-index-source",
@@ -66,12 +108,19 @@
     },
     "test-source-authority-source": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source-authority-source",
         "forwardAllArgs": true
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
@@ -79,12 +128,19 @@
     },
     "test-exports-source": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-exports-source",
         "forwardAllArgs": true
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
@@ -92,12 +148,19 @@
     },
     "test-exports": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-exports",
         "forwardAllArgs": true
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
@@ -105,12 +168,19 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
@@ -118,12 +188,19 @@
     },
     "test-cold-reference": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-cold-reference",
         "forwardAllArgs": true
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production"
       ]

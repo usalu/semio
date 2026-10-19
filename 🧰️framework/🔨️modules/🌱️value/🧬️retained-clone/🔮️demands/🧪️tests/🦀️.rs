@@ -1,10 +1,11 @@
 //! 🧪️ Generic compound clone effects agree with Serde and retain every cancellation frontier under original grants.
+use semio_framework_test_fixtures::fixture_text;
 use crate::{observe_retirement_allocations,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneSource,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use serde::{Serialize,Deserialize,de::DeserializeOwned};
 
-#[derive(Debug,PartialEq,Serialize,Deserialize,crate::RetireOwned,crate::RetainedClone)]
+#[derive(Debug,PartialEq,Serialize,Deserialize,crate::RetireOwned,crate::RetainedClone)]#[value(crate="crate")]
 struct Record { name:String, values:Vec<String> }
-#[derive(Debug,PartialEq,Serialize,Deserialize,crate::RetireOwned,crate::RetainedClone)]
+#[derive(Debug,PartialEq,Serialize,Deserialize,crate::RetireOwned,crate::RetainedClone)]#[value(crate="crate")]
 #[serde(tag="kind",rename_all="kebab-case")]
 enum Variant { Unit, Record {label:String,values:Vec<i32>} }
 
@@ -62,7 +63,7 @@ fn law<T:RetainedClone+Serialize+DeserializeOwned>(row:&serde_json::Value,policy
 
 #[test]
 fn retained_clone_normal_demand_generic_compounds(){
-    let policy:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let policy:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔮️demands/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in policy["cases"].as_array().unwrap(){match row["kind"].as_str().unwrap(){
         "vec-scalar"=>law::<Vec<i32>>(row,&policy),"vec-string"=>law::<Vec<String>>(row,&policy),"array-string"=>law::<[String;3]>(row,&policy),"record"=>law::<Record>(row,&policy),"enum"=>law::<Variant>(row,&policy),"option-box"=>law::<Option<Box<String>>>(row,&policy),"tuple"=>law::<(String,Vec<i32>)>(row,&policy),_=>unreachable!()
     }}

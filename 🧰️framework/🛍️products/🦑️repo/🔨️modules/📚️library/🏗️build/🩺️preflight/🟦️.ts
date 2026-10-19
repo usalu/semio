@@ -1,57 +1,48 @@
-import {access,readFile,readdir,stat,statfs} from "node:fs/promises";
-import {readFileSync,constants} from "node:fs";
-import {delimiter,isAbsolute,join,relative,resolve} from "node:path";
+import {access,stat} from "node:fs/promises";
+import {constants} from "node:fs";
+import {delimiter,dirname,join,resolve} from "node:path";
 import schema from "./🧬️schema/🔣️.json";
-import registry from "./🔣️policy.json";
+import policy from "./🔣️policy.json";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {nativeDirectoryHostAvailableBytesV1,probeNativeDirectoryCaseCapabilityV1,probeNativeDirectoryExchangeV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {checkScriptInvocation,requireIssuedScriptInvocationV1,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-/** 🩺️ Declares finite OS requirements before a repository store can be provisioned. */
-export interface BuildPreflightRequirementsV1 {version:1;platform:"linux";architecture:"x64"|"arm64";distribution:string;distributionVersion:string;minimumAvailableBytes:number;minimumFreeLoops:number;tools:string[]}
-/** 🔬️ Captures read-only facts from the actual invoking process and its workspace filesystem. */
-export interface BuildPreflightFactsV1 {platform:string;architecture:string;distribution:string;distributionVersion:string;capEff:string;availableBytes:number;loopControl:boolean;freeLoops:number;tools:string[]}
+/** 🩺️ Declares the finite per-platform requirements of the whole workspace before any store is provisioned. */
+export type BuildPreflightPlatformV1 = Readonly<{architectures:readonly("x64"|"arm64")[];minimumAvailableBytes:number;tools:readonly string[];exchange:boolean}>;
+/** 🔬️ Captures read-only facts from the actual invoking process and the filesystem that will hold the stores. */
+export type BuildPreflightFactsV1 = Readonly<{platform:string;architecture:string;availableBytes:number;tools:readonly string[];exchange:"supported"|"unsupported"|"unprobed";caseSensitive:"yes"|"no"|"unprobed"}>;
 
-/** 🎯️ Accepts only the authored owner selection; preflight has no bypass or provisioning options. */
-export function readBuildPreflightScopeV1(args:readonly string[]):string {
- if(args.length!==3||args[0]!=="preflight"||args[1]!=="--scope"||!/^@[a-z0-9-]+\/[a-z0-9-]+$/u.test(args[2]!))throw Error("Expected repo preflight --scope <owner>");return args[2]!;
+/** 🎯️ Accepts only the bare command; preflight has no scope, bypass or provisioning options. */
+export function readBuildPreflightArgumentsV1(args:readonly string[]):void {
+ if(args.length!==1||args[0]!=="preflight")throw Error("Expected repo preflight without arguments");
 }
-/** 📋️ Resolves one registered owner's closed requirement metadata without invoking discovery or opening stores. */
-export function readBuildPreflightRequirementsV1(root:string,owner:string):BuildPreflightRequirementsV1 {
- if(validateJsonSchemaSubset(schema.definitions.Registry,registry).length)throw Error("Closed build preflight registry required");
- const rows=registry.scopes.filter(row=>row.owner===owner);if(rows.length!==1)throw Error(`Unknown build preflight scope: ${owner}`);
- const path=resolve(root,rows[0]!.project),local=relative(resolve(root),path);if(isAbsolute(local)||local===".."||local.startsWith("..\\")||local.startsWith("../")||path.length>256)throw Error("Owned build preflight project required");
- const project=JSON.parse(readFileSync(path,"utf8")),requirements=project.metadata?.semio?.preflight;
- if(project.name!==owner||validateJsonSchemaSubset(schema.definitions.Requirements,requirements).length)throw Error("Closed build preflight requirements required");return requirements;
+/** 📋️ Resolves the authored closed requirement metadata without invoking discovery or opening stores. */
+export function readBuildPreflightPolicyV1():{version:1;platforms:Record<"linux"|"darwin"|"win32",BuildPreflightPlatformV1>} {
+ if(validateJsonSchemaSubset(schema.definitions.Policy,policy,schema).length)throw Error("Closed build preflight policy required");return policy as never;
 }
-/** ⚖️ Reports every unmet authored OS requirement without pretending that observations grant compiler authority. */
+/** ⚖️ Reports every unmet authored requirement without pretending that observations grant compiler authority. */
 export function buildPreflightProblemsV1(requirements:unknown,facts:unknown):string[] {
- if(validateJsonSchemaSubset(schema.definitions.Requirements,requirements).length)throw Error("Closed build preflight requirements required");if(validateJsonSchemaSubset(schema.definitions.Facts,facts).length)throw Error("Closed build preflight facts required");
- const required=requirements as BuildPreflightRequirementsV1,actual=facts as BuildPreflightFactsV1,problems:string[]=[];
- if(actual.platform!==required.platform)problems.push(`platform ${actual.platform} differs from required ${required.platform}`);
- if(actual.architecture!==required.architecture)problems.push(`architecture ${actual.architecture} differs from required ${required.architecture}`);
- if(actual.distribution!==required.distribution||actual.distributionVersion!==required.distributionVersion)problems.push(`distribution ${actual.distribution} ${actual.distributionVersion} differs from required ${required.distribution} ${required.distributionVersion}`);
- if((BigInt("0x"+actual.capEff)&(1n<<21n))===0n)problems.push("CAP_SYS_ADMIN is absent from the invoking process");
+ if(validateJsonSchemaSubset(schema.definitions.Platform,requirements,schema).length)throw Error("Closed build preflight requirements required");if(validateJsonSchemaSubset(schema.definitions.Facts,facts,schema).length)throw Error("Closed build preflight facts required");
+ const required=requirements as BuildPreflightPlatformV1,actual=facts as BuildPreflightFactsV1,problems:string[]=[];
+ if(!(required.architectures as readonly string[]).includes(actual.architecture))problems.push(`architecture ${actual.architecture} is not one of ${required.architectures.join(", ")}`);
  if(actual.availableBytes<required.minimumAvailableBytes)problems.push(`available bytes ${actual.availableBytes} are below required ${required.minimumAvailableBytes}`);
- if(!actual.loopControl)problems.push("writable /dev/loop-control is unavailable");
- if(actual.freeLoops<required.minimumFreeLoops)problems.push(`writable unused loop devices ${actual.freeLoops} are below required ${required.minimumFreeLoops}`);
+ if(required.exchange&&actual.exchange!=="supported")problems.push("atomic or journaled directory swap is unsupported by the host or the workspace filesystem");
+ if(required.exchange&&actual.caseSensitive!=="yes")problems.push("a case-sensitive workspace filesystem is required for directory-backed partitions");
  for(const tool of required.tools)if(!actual.tools.includes(tool))problems.push(`missing executable: ${tool}`);return problems;
 }
-/** 🧭️ Checks actual Linux capabilities and finite capacity before any managed allocation is attempted. */
+/** 🧭️ Checks the actual host and its finite capacity before any managed allocation is attempted. */
 export async function runBuildPreflightV1(root:string,args:readonly string[],invocation:ScriptInvocation):Promise<void> {
- requireIssuedScriptInvocationV1(invocation);checkScriptInvocation(invocation);const owner=readBuildPreflightScopeV1(args),required=readBuildPreflightRequirementsV1(root,owner);
- await advanceScriptInvocation(invocation,`preflight:${owner}`,"running");
- const readable=async(path:string)=>{try{return await readFile(path,"utf8");}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return "";throw error;}};
- const writable=async(path:string,kind:"block"|"character")=>{try{const entry=await stat(path);await access(path,constants.R_OK|constants.W_OK);return kind==="block"?entry.isBlockDevice():entry.isCharacterDevice();}catch{return false;}};
- const tools:string[]=[];for(const tool of required.tools){for(const directory of(process.env.PATH??"").split(delimiter)){if(!directory)continue;try{const path=join(directory,tool);if(!(await stat(path)).isFile())continue;await access(path,constants.X_OK);tools.push(tool);break;}catch{}}checkScriptInvocation(invocation);}
- const disk=await statfs(root,{bigint:true}),availableBytes=Number(disk.bavail*disk.bsize);let distribution="",distributionVersion="",capEff="0",freeLoops=0,loopControl=false;
- if(process.platform==="linux"){
-  const release=await readable("/etc/os-release"),field=(name:string)=>release.match(new RegExp(`^${name}=(?:"([^"]*)"|([^\\r\\n]*))$`,"mu"))?.slice(1).find(value=>value!==undefined)??"";
-  distribution=field("ID");distributionVersion=field("VERSION_ID");capEff=(await readable("/proc/self/status")).match(/^CapEff:\s*([0-9a-f]+)$/mu)?.[1]??"0";
-  loopControl=await writable("/dev/loop-control","character");const devices=(await readdir("/sys/class/block")).filter(name=>/^loop[0-9]{1,3}$/u.test(name));
-  for(const device of devices){checkScriptInvocation(invocation);if(await writable(join("/dev",device),"block")&&!(await readable(join("/sys/class/block",device,"loop/backing_file"))).trim())freeLoops++;}
- }
- checkScriptInvocation(invocation);const facts={platform:process.platform,architecture:process.arch,distribution,distributionVersion,capEff,availableBytes,loopControl,freeLoops,tools},problems=buildPreflightProblemsV1(required,facts);
- console.log(`[DEBUG] Repository preflight ${owner} ${JSON.stringify({requirements:required,facts,problems})}`);
- if(problems.length)throw Error(`Repository preflight refused before store allocation:\n${problems.join("\n")}`);
- await advanceScriptInvocation(invocation,`preflight:${owner}`,"complete");
+ requireIssuedScriptInvocationV1(invocation);checkScriptInvocation(invocation);readBuildPreflightArgumentsV1(args);
+ const platform=process.platform,rows=readBuildPreflightPolicyV1().platforms as Record<string,BuildPreflightPlatformV1>,required=rows[platform];
+ if(!required)throw Error(`Repository preflight refused before store allocation:\nplatform ${platform} is not supported`);
+ await advanceScriptInvocation(invocation,"preflight","running");
+ const tools:string[]=[],extensions=platform==="win32"?(process.env.PATHEXT??".EXE").split(";"):[""];
+ for(const tool of required.tools){search:for(const directory of(process.env.PATH??"").split(delimiter)){if(!directory)continue;for(const extension of extensions){try{const path=join(directory,tool+extension);if(!(await stat(path)).isFile())continue;await access(path,constants.X_OK);tools.push(tool);break search;}catch{}}}checkScriptInvocation(invocation);}
+ const cache=resolve(root,".cache");let host=cache;for(;;){try{await stat(host);break;}catch{const parent=dirname(host);if(parent===host)break;host=parent;}}
+ const availableBytes=nativeDirectoryHostAvailableBytesV1(host);let exchange:BuildPreflightFactsV1["exchange"]="unprobed",caseSensitive:BuildPreflightFactsV1["caseSensitive"]="unprobed";
+ const details:string[]=[];
+ if(required.exchange){try{probeNativeDirectoryExchangeV1(host);exchange="supported";}catch(error){exchange="unsupported";details.push(`exchange probe beneath ${host}: ${error instanceof Error?error.message:String(error)}`);}checkScriptInvocation(invocation);try{caseSensitive=probeNativeDirectoryCaseCapabilityV1(host)?"yes":"no";}catch(error){caseSensitive="no";details.push(`case probe beneath ${host}: ${error instanceof Error?error.message:String(error)}`);}}
+ checkScriptInvocation(invocation);const facts={platform,architecture:process.arch,availableBytes,tools,exchange,caseSensitive},problems=buildPreflightProblemsV1(required,facts);
+ if(problems.length)throw Error(`Repository preflight refused before store allocation:\n${[...problems,...details].join("\n")}`);
+ await advanceScriptInvocation(invocation,"preflight","complete");
 }

@@ -6,13 +6,13 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { parse, buildASTSchema } from "graphql";
 import { Root } from "protobufjs";
-import { binary64, binary64Value, type Binary64 } from "../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
 import { parseFem2dMaterialPatch, parseFem2dMaterialsDelta } from "../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 import { parseFem3dMaterialPatch, parseFem3dMaterialsDelta } from "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 
 const owner = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 console.log("[DEBUG] FEM material field-intent mirror suite loaded");
-const fixture = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🧱️field-intent/🔣️.json"), "utf8")) as { cases: { dimension: "2d" | "3d"; before: Record<string, unknown>; events: { mutation: string; id: string; patch: Record<string, unknown> }[]; after: Record<string, unknown> }[]; refusedPatches: unknown[] };
+const fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🧱️field-intent/🔣️.json"), "utf8")) as { cases: { dimension: "2d" | "3d"; before: Record<string, unknown>; events: { mutation: string; id: string; patch: Record<string, unknown> }[]; after: Record<string, unknown> }[]; refusedPatches: unknown[] };
 const capturePatch = (patch: unknown): unknown => patch && typeof patch === "object" ? Object.fromEntries(Object.entries(patch).map(([key, value]) => [key, typeof value === "number" ? binary64(value) : value])) : patch;
 
 describe("material field intent mirrors", () => {

@@ -1,6 +1,11 @@
 //! 🪄️ Supersede authoring and extension of the instance time-travel turns: the supersede authoring steps and results, the history edit row revert, the frozen action fault and the time-travel extension that registers the turns with the instance. See [`super`].
 
 use super::*;
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework::Fault;
+use semio_framework::FaultOrigin;
+use semio_framework::FaultCode;
+use semio_framework::InvocationResult;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ✍️ Authors `inputs` within `scope` (unscoped: every line) resumably (design §16.6) — the restore of an undo or the
@@ -27,7 +32,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// ⏭️ One turn of the undo or redo of a finalize being authored: steps its replay until the turn deadline, then commits
     /// the finished replay in its scope; a store that moved meanwhile replays the same inputs again from the new base.
-    pub(super)  async fn step_supersede_authoring(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<SupersedeAuthored, Fault> {
+    pub(super)  async fn step_supersede_authoring(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SupersedeAuthored, Fault> {
         let stepped = {
             let TimeTravelCtx { stores, time_travel, .. } = self;
             let store = &mut stores.store;

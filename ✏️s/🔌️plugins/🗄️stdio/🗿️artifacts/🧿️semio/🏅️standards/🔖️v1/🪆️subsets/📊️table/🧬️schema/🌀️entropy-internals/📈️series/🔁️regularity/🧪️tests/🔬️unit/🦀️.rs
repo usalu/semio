@@ -21,7 +21,6 @@ mod tests {
 
     #[test]
     fn resolve_tolerance_auto_matches_hand_computation() {
-        // 🔐️ [1,2,3,4,5]: mean=3, sample variance=(4+1+0+1+4)/4=2.5, sd=sqrt(2.5).
         let x = [1.0, 2.0, 3.0, 4.0, 5.0];
         let expected = 0.2 * 2.5_f64.sqrt();
         let r = resolve_tolerance(&x, Tolerance::Auto).unwrap();
@@ -44,8 +43,6 @@ mod tests {
 
     #[test]
     fn sample_entropy_reports_infinity_when_no_higher_order_matches_exist() {
-        // 🔐️ Hand-verified: at m=1 the pairs (0,1),(0,3),(1,3) match within r=1.0, but every one
-        // of those pairs diverges by 4-8 at m+1=2, so A=0 while B=3 — SampEn must be +infinity.
         let x = [1.0, 1.0, 5.0, 1.0, 9.0];
         let cfg = RegularityConfig::new(1, Tolerance::Absolute(1.0)).unwrap();
         let est = sample_entropy(&x, cfg, LogBase::Nats).unwrap();
@@ -55,10 +52,6 @@ mod tests {
 
     #[test]
     fn near_constant_signal_under_generous_tolerance_has_near_zero_regularity_entropy() {
-        // 🔐️ A constant plus a 1e-10-scale perturbation, compared against a tolerance orders of
-        // magnitude larger than the perturbation: virtually every template matches every other
-        // template at both m and m+1, so Phi(m) ~= Phi(m+1) and all three measures collapse to
-        // ~0 — the "this series is maximally predictable at this resolution" case.
         let mut rng = Xorshift64::new(11);
         let x: Vec<f64> = (0..300).map(|_| 5.0 + 1e-10 * rng.next_f64()).collect();
         let cfg = RegularityConfig::new(2, Tolerance::Absolute(0.5)).unwrap();
@@ -70,9 +63,6 @@ mod tests {
 
     #[test]
     fn regular_sine_has_much_lower_regularity_entropy_than_white_noise() {
-        // 🔐️ THE canonical ApEn/SampEn/FuzzyEn sanity check: a smooth periodic signal is far more
-        // "regular" (predictable from its own past) than i.i.d. noise of the same length, so all
-        // three measures must be substantially lower on the sine than on the noise.
         let n = 1000;
         let sine = sine_series(n, 50.0);
         let noise = white_noise_series(n, 42);

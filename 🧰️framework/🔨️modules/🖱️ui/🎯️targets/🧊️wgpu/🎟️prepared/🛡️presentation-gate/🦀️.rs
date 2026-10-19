@@ -185,8 +185,6 @@ pub struct OffscreenPresentToken {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl OffscreenPresentToken {
     pub fn mint_for_dedicated_worker() -> Result<Self, &'static str> {
-        // 🛡️ `web_sys` is target-gated; detect the UI isolate via `js_sys` only so `wgpu-engine`
-        // wasm builds do not require the `Window` binding to resolve at compile time.
         #[cfg(feature = "browser-presenter")]
         {
             let global = js_sys::global();

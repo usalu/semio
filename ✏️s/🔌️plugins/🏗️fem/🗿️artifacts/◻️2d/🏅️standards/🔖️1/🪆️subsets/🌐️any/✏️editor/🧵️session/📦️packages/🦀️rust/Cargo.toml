@@ -17,15 +17,18 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-ui-scene = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d-editor-session-catalog = { path = "../../🪪️session-constants-and-owner-catalog/📦️packages/🦀️rust" }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 semio-s-fem-app-surface = { path = "../../../../../../../../../../⚙️engine/🖥️app-surface/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-results-state = { path = "../../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-registry = { workspace = true }
 semio-s-artifact-fem-2d-editor-model-window = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-fem-analyses = { workspace = true }

@@ -111,8 +111,6 @@ pub mod loop_cut {
         let cuts = payload.loop_cuts.unwrap_or_else(|| utility_param_u32(&params, "loopCuts", 1));
         mesh_edit(projection, config, ctx, move |doc| {
             let edges = doc.selected_edge_ids();
-            // ✂️ The kernel's `loop_cut` still ignores `edges` and cuts every face (a kernel gap); at least a
-            // cut is only run on purpose, never as a whole-mesh rewrite from an empty selection.
             if edges.is_empty() {
                 return Err("no edges selected".into());
             }

@@ -70,8 +70,8 @@ test("job contract dashboard targets declare source and native execution", () =>
   expect(target.targets[fixture.commands.native].metadata.semio.execution).toEqual({ version: 1, kind: "native", scope: "test" });
   const registry=JSON.parse(readFileSync(resolve(root,"📋️build-owners.json"),"utf8")),registered=registry.owners.filter((row:any)=>row.name===target.name);expect(registered).toHaveLength(1);const parsed=ts.parseConfigFileTextToJson(registered[0].manifest,readFileSync(resolve(root,registered[0].manifest),"utf8"));expect(parsed.error).toBeUndefined();expect(parsed.config).toEqual(target);const dashboard=JSON.parse(readFileSync(resolve(root,"📋️project.json"),"utf8")).metadata.semio.dashboard;expect(dashboard.tools.find((row:any)=>row.id==="build-task").command).toEqual(["bun","repo","run","{task}","--output=stream"]);
   const bootstrap = readFileSync(resolve(library, "⚡️caching/🚀️bootstrap/📜️script.ts"), "utf8");
-  expect(bootstrap).toContain("createScriptProcessEnvelope(policy, capabilities, Date.now())");
-  expect(bootstrap).toContain("const encoded = process.env.SEMIO_SCRIPT_POLICY");
+  expect(bootstrap).toContain("readScriptProcessEnvelope(JSON.parse(env[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now())");
+  expect(bootstrap).not.toContain("process.env.SEMIO_SCRIPT_POLICY");
 });
 
 /** 🕸️ The independent system engine validates and executes the authored shared job core type. */

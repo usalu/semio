@@ -99,12 +99,12 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         use crate::RetirementDemand;
         if self.value.is_some()&&!T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled retirement authority"))}
         if self.terminal_is_empty(){return Ok(Default::default());}
-        if let Some(value)=self.value.as_ref(){let capacity_bytes=if !self.cursors.has_reserved_slot(){self.cursors.next_capacity_allocation_bytes(self.cursors.len()+1).map_err(ValueError::from)?.ok_or_else(||refusal("retirement frontier lost its capacity demand"))?}else{value.retirement_birth_bytes().ok_or_else(||refusal("retirement owner has no controlled birth authority"))?};return Ok(RetirementDemand{capacity_bytes,depth:1,..Default::default()});}
+        if let Some(value)=self.value.as_ref(){let capacity_bytes=if !self.cursors.has_reserved_slot(){self.cursors.next_allocation_bytes().map_err(ValueError::from)?}else{value.retirement_birth_bytes().ok_or_else(||refusal("retirement owner has no controlled birth authority"))?};return Ok(RetirementDemand{capacity_bytes,depth:1,..Default::default()});}
         if self.cursors.is_empty(){return Ok(RetirementDemand{release_bytes:self.cursors.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()});}
         let cursor=self.cursors.get(self.cursors.len()-1).unwrap();
         if cursor.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:cursor.terminal_release_bytes().ok_or_else(||refusal("retirement owner has no controlled terminal release authority"))?,depth:1,..Default::default()});}
         let mut d=cursor.next_demand(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"retirement frontier depth overflow"))?;
-        if !self.cursors.has_reserved_slot(){return Ok(RetirementDemand{capacity_bytes:self.cursors.next_capacity_allocation_bytes(self.cursors.len()+1).map_err(ValueError::from)?.ok_or_else(||refusal("retirement frontier lost its capacity demand"))?,depth:d.depth,..Default::default()});}Ok(d)
+        if !self.cursors.has_reserved_slot(){return Ok(RetirementDemand{capacity_bytes:self.cursors.next_allocation_bytes().map_err(ValueError::from)?,depth:d.depth,..Default::default()});}Ok(d)
     }
 
     /// 🧩️ Borrows all currencies from the same selected source, structural birth, payload or physical release event.

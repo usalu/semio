@@ -129,7 +129,6 @@ pub fn rewriting_io() -> semio_framework_plugin::AppIo {
 /// already parses, carried as an opaque string field.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum TrinityRewritingCommand {
-    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "node-graph-edit")]
     NodeGraphEdit { surface_id: String, operations_json: String },
     #[dsl(key = "set-lhs-json")]
@@ -147,7 +146,6 @@ pub enum TrinityRewritingCommand {
     #[dsl(key = "patch-nodes")]
     PatchNodes { node_ids: Vec<String>, field: String, value: String },
 
-    // 👁️ Config-only — was ephemeral `RewritingPlayRuntime` state, now emits `config_mutations`.
     #[dsl(key = "node-graph-viewport")]
     SetViewport {
         surface_id: Option<String>,

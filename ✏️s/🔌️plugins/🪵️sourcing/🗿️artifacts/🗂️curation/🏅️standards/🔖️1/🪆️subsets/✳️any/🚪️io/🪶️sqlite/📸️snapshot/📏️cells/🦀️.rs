@@ -1,4 +1,4 @@
-//! \u{1f4cf}\uFE0F Exact Curation domain SQL cells are distinct from native backing requests.
+//! 📏️ Exact Curation domain SQL cells are distinct from native backing requests.
 use super::{CurationSnapshot,GeometryRecipe,ValueError,invalid};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
@@ -22,7 +22,7 @@ pub(super) fn typed(snapshot:&CurationSnapshot,control:&mut SqliteSnapshotContro
 fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{match value{Some(FieldValue::Record(value))=>Ok(value),_=>Err(invalid("Curation semantic cell owner requires a literal Record"))}}
 fn text(value:Option<&FieldValue>)->Result<&str,ValueError>{match value{Some(FieldValue::Text(value))=>Ok(value),_=>Err(invalid("Curation semantic cell owner requires literal Text"))}}
 fn scalar(value:Option<&FieldValue>)->Result<f64,ValueError>{match value{Some(FieldValue::Float(value))=>Ok(*value),_=>Err(invalid("Curation semantic cell owner requires native Float"))}}
-pub(super) fn borrowed(value:&RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<(),ValueError>{
+pub(super) fn borrowed(value:&RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum:usize)->Result<(),ValueError>{
  let mut extent=Extent{bytes:0,maximum};extent.add(24)?;let child=record(value.get(0))?;extent.text(text(child.get(0))?)?;let target=record(child.get(1))?;for field in 0..4{extent.text(text(target.get(field))?)?;}
  let stock=super::list(value.get(1))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(stock.len())?;for value in stock{let row=record(Some(value))?;extent.add(32)?;for field in 0..3{extent.text(text(row.get(field))?)?;}
   let path=super::list(row.get(3))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(path.len())?;for segment in path{extent.add(24)?;extent.text(text(Some(segment))?)?;native.step()?;}Ok(())})?;

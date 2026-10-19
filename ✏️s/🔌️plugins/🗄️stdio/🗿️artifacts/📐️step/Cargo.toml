@@ -76,7 +76,6 @@ path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/�
 [workspace.dependencies.semio-framework-3d-brep-offset]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust"
 
-
 [workspace.dependencies.semio-framework-3d-brep-queries]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
 
@@ -112,6 +111,7 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️pack
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
 
 [workspace.dependencies.semio-s-artifact-stdio-binary]
 path = "../💾️binary/📦️packages/🦀️rust"

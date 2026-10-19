@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { Root } from "protobufjs";
-import { binary64, binary64Value, type Binary64 } from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
 import { parseFem2dRegionPatch } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 import { parseFem3dSolidPatch } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 
@@ -20,7 +20,7 @@ describe("region and solid field intent mirrors", () => {
     const title = dimension === "2d" ? "Region" : "Solid";
     const collection = dimension === "2d" ? "regions" : "solids";
     const subsets = resolve(owner, `🗿️artifacts/${dimension === "2d" ? "◻️2d" : "🧊️3d"}/🏅️standards/🔖️1/🪆️subsets`);
-    const fixtures = resolve(subsets, `🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-${entity}`);
+    const fixtures = resolve(subsets, `🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-${entity}`);
     const validate = new Ajv({ strict: false, strictNumbers: true, validateFormats: false }).compile(read(resolve(subsets, `🕸️mesh/🧬️schema/🧬️mutations/🩹️change-${entity}/🧬️schema/🔣️.json`)));
     const parsePatch = dimension === "2d" ? parseFem2dRegionPatch : parseFem3dSolidPatch;
 

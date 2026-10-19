@@ -176,7 +176,7 @@ async fn box_union_cylinder_through_exact_volume_and_validates() {
     let vol = solid_volume(&body, united, 1e-4).unwrap();
     let box_vol = 4.0 * 4.0 * 2.0;
     let cyl_vol = std::f64::consts::PI * 0.5 * 0.5 * 4.0;
-    let overlap_vol = std::f64::consts::PI * 0.5 * 0.5 * 2.0; // the cylinder segment inside the box's height
+    let overlap_vol = std::f64::consts::PI * 0.5 * 0.5 * 2.0;
     let expected = box_vol + cyl_vol - overlap_vol;
     assert!((vol - expected).abs() / expected < 5e-3, "expected≈{expected}, got {vol}");
 }
@@ -213,8 +213,6 @@ async fn sphere_union_sphere_lens_exact_volume_and_validates() {
     let issues = validate_body(&body);
     assert!(issues.is_empty(), "validate_body issues: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
     let sphere_vol = 4.0 / 3.0 * std::f64::consts::PI;
-    // Spherical-cap overlap volume for two equal spheres radius r, center distance d:
-    // V_lens = π (4r + d)(2r − d)² / 12.
     let (r, d) = (1.0_f64, 1.2_f64);
     let lens = std::f64::consts::PI * (4.0 * r + d) * (2.0 * r - d).powi(2) / 12.0;
     let expected = 2.0 * sphere_vol - lens;

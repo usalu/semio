@@ -1,7 +1,8 @@
 //! 📏️ Exact authored Architect storage cells are admitted from the borrowed native record.
 use super::*;
 use semio_framework_dsl_record::{DslField,FieldValue,RecordSpec,RecordValue};
-use semio_framework_value::{NativeDecodeControl,ValueRefusalKind};
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub(super)trait NativeSqlField:Sized{
  const OPTIONAL_PRESENCE:usize=0;
  fn size(value:Option<&FieldValue>,native:&mut NativeDecodeControl<'_>)->Result<usize,ValueError>;

@@ -3,7 +3,8 @@ mod child_member_registry_tests {
     /// 🧪️ Uses the actual funded payload producer and bounded capture to witness original identity and every native effect.
     #[test]
     fn original_mounted_fault_capture_preserves_native_payload_and_independent_copy_turns(){
-        use semio_framework_job::{JobPayloadAuthority,RetainedPayloadBuilder,JobPayloadStream,OperationId,Generation,StepContext,StepBudget};
+        use semio_framework_job::{OperationId, Generation, StepContext, StepBudget};
+        use semio_framework_job_payload::{JobPayloadAuthority, RetainedPayloadBuilder, JobPayloadStream};
         use semio_framework_async::{CancelToken,CancelTokenRetirement};
         use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
         let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🪟️outcome-borrow/🔣️.json")).unwrap();

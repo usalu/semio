@@ -1,0 +1,321 @@
+{
+  "version": 1,
+  "states": [
+    {
+      "id": "s0-nothing-done",
+      "layout": {
+        "m": "A",
+        "v": "B",
+        "m.old": null
+      },
+      "intent": "canonical",
+      "outcome": "rolled-back",
+      "final": {
+        "m": "A",
+        "v": "B"
+      }
+    },
+    {
+      "id": "s1-first-renamed-away",
+      "layout": {
+        "m": null,
+        "v": "B",
+        "m.old": "A"
+      },
+      "intent": "canonical",
+      "outcome": "completed",
+      "final": {
+        "m": "B",
+        "v": "A"
+      }
+    },
+    {
+      "id": "s2-second-renamed-in",
+      "layout": {
+        "m": "B",
+        "v": null,
+        "m.old": "A"
+      },
+      "intent": "canonical",
+      "outcome": "completed",
+      "final": {
+        "m": "B",
+        "v": "A"
+      }
+    },
+    {
+      "id": "s3-all-renamed-receipt-left",
+      "layout": {
+        "m": "B",
+        "v": "A",
+        "m.old": null
+      },
+      "intent": "canonical",
+      "outcome": "completed",
+      "final": {
+        "m": "B",
+        "v": "A"
+      }
+    },
+    {
+      "id": "torn-receipt-before-any-rename",
+      "layout": {
+        "m": "A",
+        "v": "B",
+        "m.old": null
+      },
+      "intent": "torn",
+      "outcome": "rolled-back",
+      "final": {
+        "m": "A",
+        "v": "B"
+      }
+    },
+    {
+      "id": "empty-receipt-before-any-rename",
+      "layout": {
+        "m": "A",
+        "v": "B",
+        "m.old": null
+      },
+      "intent": "empty",
+      "outcome": "rolled-back",
+      "final": {
+        "m": "A",
+        "v": "B"
+      }
+    },
+    {
+      "id": "no-receipt-is-clean",
+      "layout": {
+        "m": "B",
+        "v": "A",
+        "m.old": null
+      },
+      "intent": "absent",
+      "outcome": "clean",
+      "final": {
+        "m": "B",
+        "v": "A"
+      }
+    }
+  ],
+  "refused": [
+    {
+      "id": "torn-receipt-with-temporary",
+      "layout": {
+        "m": null,
+        "v": "B",
+        "m.old": "A"
+      },
+      "intent": "torn"
+    },
+    {
+      "id": "torn-receipt-with-missing-volume",
+      "layout": {
+        "m": "A",
+        "v": null,
+        "m.old": null
+      },
+      "intent": "torn"
+    },
+    {
+      "id": "foreign-directory-at-root",
+      "layout": {
+        "m": "X",
+        "v": "B",
+        "m.old": "A"
+      },
+      "intent": "canonical"
+    },
+    {
+      "id": "foreign-directory-at-volume",
+      "layout": {
+        "m": "A",
+        "v": "X",
+        "m.old": null
+      },
+      "intent": "canonical"
+    },
+    {
+      "id": "both-names-hold-the-original",
+      "layout": {
+        "m": "A",
+        "v": "B",
+        "m.old": "A2"
+      },
+      "intent": "canonical"
+    },
+    {
+      "id": "temporary-name-not-the-protocol-name",
+      "layout": {
+        "m": null,
+        "v": "B",
+        "m.old": "A"
+      },
+      "intent": "wrong-temporary"
+    },
+    {
+      "id": "receipt-is-a-symbolic-link",
+      "layout": {
+        "m": "A",
+        "v": "B",
+        "m.old": null
+      },
+      "intent": "symlink"
+    },
+    {
+      "id": "receipt-with-foreign-field",
+      "layout": {
+        "m": null,
+        "v": "B",
+        "m.old": "A"
+      },
+      "intent": "extra-field"
+    }
+  ],
+  "failures": [
+    {
+      "id": "first-rename-refused-sharing-violation",
+      "call": 1,
+      "error": 32,
+      "restores": true,
+      "message": "Win32 error 32",
+      "hint": true
+    },
+    {
+      "id": "first-rename-refused-access-denied",
+      "call": 1,
+      "error": 5,
+      "restores": true,
+      "message": "Win32 error 5",
+      "hint": true
+    },
+    {
+      "id": "second-rename-refused",
+      "call": 2,
+      "error": 183,
+      "restores": true,
+      "message": "Win32 error 183",
+      "hint": false
+    },
+    {
+      "id": "third-rename-refused-then-recovered",
+      "call": 3,
+      "error": 32,
+      "restores": false,
+      "message": "Win32 error 32",
+      "hint": true
+    }
+  ],
+  "flush": [
+    {
+      "id": "invalid-function-is-tolerated",
+      "error": 1,
+      "tolerated": true
+    },
+    {
+      "id": "access-denied-is-tolerated",
+      "error": 5,
+      "tolerated": true
+    },
+    {
+      "id": "other-errors-refuse",
+      "error": 6,
+      "tolerated": false
+    }
+  ],
+  "hostSequence": [
+    "flush:p",
+    "move:m>m.old",
+    "move:v>m",
+    "move:m.old>v",
+    "flush:p"
+  ],
+  "crashMatrix": [
+    {
+      "call": 1,
+      "when": "before",
+      "pending": true,
+      "outcome": "rolled-back",
+      "swapped": false
+    },
+    {
+      "call": 1,
+      "when": "after",
+      "pending": true,
+      "outcome": "rolled-back",
+      "swapped": false
+    },
+    {
+      "call": 2,
+      "when": "before",
+      "pending": true,
+      "outcome": "rolled-back",
+      "swapped": false
+    },
+    {
+      "call": 2,
+      "when": "after",
+      "pending": true,
+      "outcome": "completed",
+      "swapped": true
+    },
+    {
+      "call": 3,
+      "when": "before",
+      "pending": true,
+      "outcome": "completed",
+      "swapped": true
+    },
+    {
+      "call": 3,
+      "when": "after",
+      "pending": true,
+      "outcome": "completed",
+      "swapped": true
+    },
+    {
+      "call": 4,
+      "when": "before",
+      "pending": true,
+      "outcome": "completed",
+      "swapped": true
+    },
+    {
+      "call": 4,
+      "when": "after",
+      "pending": true,
+      "outcome": "completed",
+      "swapped": true
+    },
+    {
+      "call": 5,
+      "when": "before",
+      "pending": false,
+      "outcome": "clean",
+      "swapped": true
+    },
+    {
+      "call": 5,
+      "when": "after",
+      "pending": false,
+      "outcome": "clean",
+      "swapped": true
+    }
+  ],
+  "readerWindow": [
+    {
+      "before": "move:m>m.old",
+      "rootExists": true
+    },
+    {
+      "before": "move:v>m",
+      "rootExists": false
+    },
+    {
+      "before": "move:m.old>v",
+      "rootExists": true
+    }
+  ]
+}

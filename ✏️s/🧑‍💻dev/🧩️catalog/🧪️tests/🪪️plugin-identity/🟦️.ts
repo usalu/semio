@@ -75,9 +75,6 @@ describe("plugin identity is the same in every authority", () => {
 
       const declaredPackageId = source.text.match(PACKAGE_ID_CALL)?.[1];
       if (declaredPackageId === undefined) {
-        // 🗄️ `stdio` is the one crate that computes its package id at runtime from its own embedded
-        // Cargo.toml, and no extension bundle declares one at all (`ExtensionBundle::package_id` is
-        // unused repo-wide) — both are recorded here rather than silently skipped.
         expect(entry.role === "extension" || source.text.includes("component_package_id"), `${entry.pluginId} declares neither a package_id literal nor a runtime derivation`).toBe(true);
       } else {
         expect(declaredPackageId, entry.pluginId).toBe(packageId);

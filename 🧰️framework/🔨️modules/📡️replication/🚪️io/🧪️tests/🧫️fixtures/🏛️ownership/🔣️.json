@@ -115,7 +115,7 @@
     ]
   },
   "primitives": {
-    "semanticOwner": "🟦️.ts",
+    "semanticOwner": "🔖️sync-protocol/🟦️.ts",
     "binaryOwner": "🚪️io/💾️binary/🟦️.ts",
     "functions": [
       "writeVarintU64",
@@ -137,7 +137,7 @@
     ]
   },
   "presence": {
-    "semanticOwner": "🟦️.ts",
+    "semanticOwner": "🔖️sync-protocol/🟦️.ts",
     "binaryOwner": "🚪️io/💾️binary/👥️presence/🟦️.ts",
     "functions": [
       "encodePresencePeer",
@@ -163,7 +163,7 @@
     ]
   },
   "typescriptCausal": {
-    "semanticOwner": "🟦️.ts",
+    "semanticOwner": "🔖️sync-protocol/🟦️.ts",
     "binaryOwner": "🚪️io/💾️binary/🔗️causal/🟦️.ts",
     "functions": [
       "writeOptStr",
@@ -198,7 +198,8 @@
     "codecInterface": "ReplicationPackCodec"
   },
   "typescriptBackbone": {
-    "semanticOwner": "🟦️.ts",
+    "semanticOwner": "🔖️sync-protocol/🟦️.ts",
+    "constantsOwner": "🟦️.ts",
     "binaryOwner": "🚪️io/💾️binary/🔗️causal/🧮️backbone/🟦️.ts",
     "functions": [
       "documentBackboneBatchLimit",
@@ -228,7 +229,7 @@
     ]
   },
   "typescriptBootstrap": {
-    "semanticOwner": "🟦️.ts",
+    "semanticOwner": "🔖️sync-protocol/🟦️.ts",
     "owner": "🚪️io/📥️bootstrap/🟦️.ts",
     "functions": [
       "artifactBootstrapError",
@@ -266,7 +267,7 @@
     ]
   },
   "typescriptWire": {
-    "semanticOwner": "🟦️.ts",
+    "semanticOwner": "🔖️sync-protocol/🟦️.ts",
     "owner": "🚪️io/💾️binary/📡️wire/🟦️.ts",
     "functions": [
       "encodeArtifactBootstrap",

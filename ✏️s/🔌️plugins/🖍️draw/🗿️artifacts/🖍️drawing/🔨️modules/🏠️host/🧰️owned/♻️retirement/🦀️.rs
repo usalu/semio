@@ -10,7 +10,7 @@ pub enum DrawingRetirementOwner {
     Fill(FillStyle),
     Stroke(StrokeStyle),
     String(semio_framework_value::paged::PagedUtf8<{usize::MAX}>),
-    Segments(semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>),
-    SegmentCollections(semio_framework_value::list::PagedList<semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}>),
+    Segments(semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>),
+    SegmentCollections(semio_framework_value_persistent::list::PagedList<semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}>),
     HistoryId(String),
 }

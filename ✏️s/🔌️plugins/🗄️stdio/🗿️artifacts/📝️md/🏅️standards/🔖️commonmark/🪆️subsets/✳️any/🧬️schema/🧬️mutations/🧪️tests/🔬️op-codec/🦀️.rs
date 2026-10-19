@@ -24,7 +24,6 @@ async fn op_text_binary_roundtrip_law() {
 /// enum, so this test is the only thing tying the two declarations together.
 #[semio_framework_async_macros::async_test]
 async fn kinds_match_enum_variants_and_catalog() {
-    // 🚫️async: E1 pure inherent helper, no I/O — see R9
     fn kebab_of(mutation: &MdMutation) -> &'static str {
         match mutation {
             MdMutation::InsertBlock(_) => "insert-block",
@@ -38,12 +37,6 @@ async fn kinds_match_enum_variants_and_catalog() {
     let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
     assert_eq!(variant_kinds, declared_kinds, "KINDS must list every MdMutation variant exactly once");
 
-    // 🧭️ Containment, not equality: the manifest's `kinds` ALSO carries `no-mutation`, the
-    // identity-probe row `🧪️tests/📝️mutate-md-commonmark/🦀️.rs` registers directly
-    // (real `mutate-no-mutation`/`inverse-no-mutation` scenario rows in that case's own feature
-    // file) — it names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END`
-    // mutation-leaf migration: `no` is not an approved semantic verb) and so cannot appear in
-    // `KINDS`, which is exhaustively derived from the enum's own variants above.
     let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../🔮️oracles/🔣️.json")).expect("valid catalog JSON");
     let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
     for kind in KINDS {

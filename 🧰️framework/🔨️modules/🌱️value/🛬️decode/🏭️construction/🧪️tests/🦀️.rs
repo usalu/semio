@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::retirement::{RetireOwned,controlled::ControlledRetirement};
 struct Recipient{axis:Option<&'static str>,accept:bool,calls:usize,receipts:usize}
@@ -9,15 +10,15 @@ fn close<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).
 /// 🧫️ Portable refusal and receipt cases conserve original payload identity and born physical custody.
 #[test]
 fn native_owned_construction_preserves_original_and_born_slots_under_all_admission_axes(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🏭️construction/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus.as_array().unwrap(){let id=case["id"].as_str().unwrap();let axis=match id{"denied-items"=>Some("items"),"denied-copy"=>Some("copy"),"denied-capacity"=>Some("capacity"),"denied-depth"=>Some("depth"),_=>None};let mut recipient=Recipient{axis,accept:case["receiptAccepted"].as_bool().unwrap(),calls:0,receipts:0};let mut input=Some("original owned payload".to_owned());let address=input.as_ref().unwrap().as_ptr();let mut output=None;let mut callback=|_|true;let mut original=NativeDecodeControl::new(4096,&mut callback);let mut control=NativeOwnedDecodeControl::new(&mut original,&mut recipient);
-  let(result,heap)=crate::value::observe_retirement_allocations(||control.receive_shared(&mut input,&mut output,SharedIssuer::owned()));assert_eq!(result.is_ok(),case["success"].as_bool().unwrap());let born=case["admitted"].as_bool().unwrap();assert_eq!(output.is_some(),born);assert_eq!(input.is_some(),!born);assert_eq!(heap,(if born{SealedShared::<String>::birth_bytes()}else{0},0));assert_eq!(original.owned_bytes(),heap.0);assert_eq!(recipient.calls,1);assert_eq!(recipient.receipts,usize::from(born));
+  let(result,heap)=crate::observe_retirement_allocations(||control.receive_shared(&mut input,&mut output,SharedIssuer::owned()));assert_eq!(result.is_ok(),case["success"].as_bool().unwrap());let born=case["admitted"].as_bool().unwrap();assert_eq!(output.is_some(),born);assert_eq!(input.is_some(),!born);assert_eq!(heap,(if born{SealedShared::<String>::birth_bytes()}else{0},0));assert_eq!(original.owned_bytes(),heap.0);assert_eq!(recipient.calls,1);assert_eq!(recipient.receipts,usize::from(born));
   if let Some(row)=input.take(){assert_eq!(row.as_ptr(),address);close(row);}if let Some(row)=output.take(){assert_eq!(row.get().as_ptr(),address);if let Err(error)=result{assert_eq!(error.retained_progress().retained_capacity_bytes,heap.0);}close(row);}eprintln!("[DEBUG] native owned construction {id}: originalPayload identity conserved, keeper={}, actual born={} receipt accepted={}",case["keeper"],heap.0,case["receiptAccepted"]);
  }
 }
 /// 🛑️ Original cancellation refuses before grant acquisition, payload movement or sealed backing birth.
 #[test]
-fn native_owned_construction_cancellation_keeps_original_slot_without_requesting_grants(){let mut recipient=Recipient{axis:None,accept:true,calls:0,receipts:0};let mut callback=|_|false;let mut original=NativeDecodeControl::new(4096,&mut callback);let mut control=NativeOwnedDecodeControl::new(&mut original,&mut recipient);let mut input=Some(7i64);let mut output=None;let(result,heap)=crate::value::observe_retirement_allocations(||control.receive_shared(&mut input,&mut output,SharedIssuer::owned()));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(input,Some(7));assert!(output.is_none());assert_eq!((recipient.calls,recipient.receipts),(0,0));}
+fn native_owned_construction_cancellation_keeps_original_slot_without_requesting_grants(){let mut recipient=Recipient{axis:None,accept:true,calls:0,receipts:0};let mut callback=|_|false;let mut original=NativeDecodeControl::new(4096,&mut callback);let mut control=NativeOwnedDecodeControl::new(&mut original,&mut recipient);let mut input=Some(7i64);let mut output=None;let(result,heap)=crate::observe_retirement_allocations(||control.receive_shared(&mut input,&mut output,SharedIssuer::owned()));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(input,Some(7));assert!(output.is_none());assert_eq!((recipient.calls,recipient.receipts),(0,0));}
 /// 🔗️ Scoped observers and typed retirement children keep the same original construction port and cumulative ledger.
 #[test]
 fn native_owned_construction_scoped_children_preserve_original_grant_recipient(){
@@ -28,11 +29,11 @@ fn native_owned_construction_scoped_children_preserve_original_grant_recipient()
 /// 🪢️ The actual typed receiver preserves output or semantic error on a simultaneous recipient refusal.
 #[test]
 fn native_construction_typed_result_preserves_original_owners_on_receipt_refusal(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧾️result/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🏭️construction/🧾️result/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let admitted=row["admitted"].as_bool().unwrap();let fail=row["primary"].as_bool().unwrap();let mut recipient=Recipient{axis:if admitted{None}else{Some("items")},accept:row["accept"].as_bool().unwrap(),calls:0,receipts:0};
   let mut input=Some("original typed payload 源".to_owned());let pointer=input.as_ref().unwrap().as_ptr();let mut primary=Some(ValueError::new(ValueRefusalKind::InvalidValue,"original typed primary 拒"));let primary_pointer=primary.as_ref().unwrap().message.as_ptr();let mut callback=|_|true;let mut control=NativeDecodeControl::new(4096,&mut callback);let mut calls=0;
-  let(outcome,heap)=crate::value::observe_retirement_allocations(||control.with_construction_recipient(&mut recipient,|control|Ok::<_,ValueError>(control.receive_construction_step_typed(RetirementDemand{depth:1,..Default::default()},|_,_|{calls+=1;NativeConstructionStepResult { result:if fail{Err(primary.take().unwrap())}else{Ok(input.take().unwrap())},progress:RetainedCloneProgress{copied_items:1,..Default::default()} }}))).unwrap());
+  let(outcome,heap)=crate::observe_retirement_allocations(||control.with_construction_recipient(&mut recipient,|control|Ok::<_,ValueError>(control.receive_construction_step_typed(RetirementDemand{depth:1,..Default::default()},|_,_|{calls+=1;NativeConstructionStepResult { result:if fail{Err(primary.take().unwrap())}else{Ok(input.take().unwrap())},progress:RetainedCloneProgress{copied_items:1,..Default::default()} }}))).unwrap());
   assert_eq!(heap,(0,0));assert_eq!(calls,usize::from(admitted));assert_eq!(recipient.receipts,usize::from(admitted));assert_eq!(outcome.receipt_refusal.is_some(),row["receipt"].as_bool().unwrap());assert_eq!(outcome.progress.copied_items,usize::from(admitted));
   match outcome.result { Some(Ok(value))=>{assert_eq!(value.as_ptr(),pointer);close(value)},Some(Err(error))=>{assert_eq!(error.message.as_ptr(),primary_pointer);close(error)},None=>assert!(!admitted) }
   if let Some(error)=outcome.receipt_refusal {assert_eq!(error.retained_progress(),outcome.progress);close(error)}

@@ -63,15 +63,11 @@ async fn model_to_ifc_to_model_round_trips() {
     assert_eq!(back.geometry, GeometryRef::None);
     assert_eq!(back.psets, original.psets, "pset name/key/value round-trips through the IFCTEXT/IFCREAL/IFCBOOLEAN rewrap");
 
-    // relations are re-derived (not read) on serialize, and re-derived identically on
-    // deserialize — the ContainedIn edge from s1 (hand-authored) still exists in s2, now
-    // via the SAME deterministic id-synthesis formula the deserializer always uses.
     assert!(s2.relations.iter().any(|r| r.kind == RelationKind::ContainedIn && r.from == "wall-1" && r.to == "storey-1"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn non_unit_rotation_round_trips_through_the_quaternion_matrix_conversion() {
-    // 45 degree rotation about Z: (0, 0, sin(22.5deg), cos(22.5deg)).
     let half = std::f64::consts::FRAC_PI_8;
     let rotation = SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() };
     let s1 = SemioModelSnapshot {

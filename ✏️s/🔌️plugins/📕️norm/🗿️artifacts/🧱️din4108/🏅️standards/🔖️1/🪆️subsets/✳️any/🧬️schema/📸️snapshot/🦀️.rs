@@ -249,19 +249,19 @@ pub struct LayerDocument {
     pub lambda: f64,
     pub mu: f64,
     pub density: f64,
-    /// DIN 4108-10 Table 1 application-type code (DAD, WAB, …).
+    /// 📱️ DIN 4108-10 Table 1 application-type code (DAD, WAB, …).
     #[cfg_attr(test, serde(default))]
     pub application_type: String,
-    /// DIN 4108-10 compressive / mechanical property class (dh/ds/dm/dk/dx).
+    /// 🏷️ DIN 4108-10 compressive / mechanical property class (dh/ds/dm/dk/dx).
     #[cfg_attr(test, serde(default))]
     pub compressive_class: String,
-    /// DIN 4108-10 water-absorption class (wk/wf/wd).
+    /// 💧️ DIN 4108-10 water-absorption class (wk/wf/wd).
     #[cfg_attr(test, serde(default))]
     pub water_class: String,
-    /// DIN 4108-10 tensile class (tk/tf).
+    /// 🗂️ DIN 4108-10 tensile class (tk/tf).
     #[cfg_attr(test, serde(default))]
     pub tensile_class: String,
-    /// DIN 4108-10 acoustic class (sh/sm/sg).
+    /// 🔊️ DIN 4108-10 acoustic class (sh/sm/sg).
     #[cfg_attr(test, serde(default))]
     pub acoustic_class: String,
     #[dsl(table)]

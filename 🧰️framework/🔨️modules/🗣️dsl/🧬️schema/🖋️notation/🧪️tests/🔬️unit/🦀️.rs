@@ -31,7 +31,6 @@ async fn back_arrow_is_sugar_normalized_by_endpoint_swap() {
     assert_eq!(value.from, node("a"));
     assert_eq!(value.link.as_ref().unwrap().to, node("b"));
     assert!(value.link.as_ref().unwrap().directed);
-    // Canonical print never re-emits `<-`.
     assert_eq!(print_edge(&value), "a->b");
 }
 
@@ -127,7 +126,6 @@ async fn parses_quantity_in_native_unit() {
 #[semio_framework_async_macros::async_test]
 async fn converts_a_compatible_alien_unit_into_native_scale() {
     let gpa = semio_framework_dsl::unit_by_symbol("GPa").unwrap();
-    // 210000 MPa == 210 GPa
     let value = parse_quantity_text("210000MPa", gpa).expect("parse_quantity_text");
     assert!((value - 210.0).abs() < 1e-6, "got {value}");
 }

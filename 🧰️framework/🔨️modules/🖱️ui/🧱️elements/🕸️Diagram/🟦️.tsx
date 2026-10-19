@@ -9,7 +9,7 @@
 import * as React from "react";
 import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal } from "@xyflow/react";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
@@ -27,7 +27,7 @@ export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, getBezierPat
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection };
 
 /**
- * Diagram holds the data fields for a Diagram record.
+ * 📊️ Diagram holds the data fields for a Diagram record.
  **/
 const Diagram: React.FC<DiagramProps> = (props) => {
   return (
@@ -41,7 +41,7 @@ export { Diagram, SelectionMode };
 export type { OnSelectionChangeParams };
 
 /**
- * DiagramSkeletonProps holds the data fields for a DiagramSkeletonProps record.
+ * 📈️ DiagramSkeletonProps holds the data fields for a DiagramSkeletonProps record.
  **/
 interface DiagramSkeletonProps {
   nodeCount?: number;
@@ -50,7 +50,7 @@ interface DiagramSkeletonProps {
 }
 
 /**
- * Skeleton loading placeholder for a diagram.
+ * 📉️ Skeleton loading placeholder for a diagram.
  **/
 export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, className = "" }) => {
   const skeletonNodes: Node[] = reactHostPort.useMemo(

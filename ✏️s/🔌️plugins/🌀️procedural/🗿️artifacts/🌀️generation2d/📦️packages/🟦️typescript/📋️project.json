@@ -7,6 +7,12 @@
     "role:artifact",
     "family:procedural"
   ],
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/**/*"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
@@ -26,7 +32,7 @@
         "forwardAllArgs": true
       },
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/.🧾️store/build.json"
       ]
     },
     "check": {
@@ -67,7 +73,7 @@
     },
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify snapshot-sqlite-source",

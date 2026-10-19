@@ -121,8 +121,6 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
     let row_id = insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
-    // `paint::sync_tree_row_layout` is what would normally flip this on (mirroring `item.draggable`)
-    // — these tests build the retained tree by hand (no `paint_tree` call), so it's set directly.
     tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     let mut router = EventRouter::new("main");
     router.set_tree_drag_policy(&mut tree, UiDriverDrag::Surface, TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default()));
@@ -300,7 +298,6 @@ fn a_component_scene_nested_under_a_container_resolves_its_absolute_rect() {
     let scene_id = leaf(&mut tree, Some(container), 2, component_scene_ui("s1", SurfaceKind::Paint2d), (5.0, 5.0, 100.0, 100.0));
     let mut router = EventRouter::new("main");
 
-    // Absolute position is (20+5, 30+5) = (25, 35); a point inside that rect must hit-test to the scene.
     let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 40.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     let rect = commands.iter().find_map(|cmd| match cmd {

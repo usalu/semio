@@ -240,7 +240,7 @@ pub struct DwgRawPage {
     pub page_number: i32,
     pub file_address: u64,
     pub start_offset: u64,
-    /// Empty iff this page's decompression failed; never retained by an artifact snapshot.
+    /// 📥️ Empty iff this page's decompression failed; never retained by an artifact snapshot.
     pub decoded: Vec<u8>,
     pub error: Option<String>,
 }

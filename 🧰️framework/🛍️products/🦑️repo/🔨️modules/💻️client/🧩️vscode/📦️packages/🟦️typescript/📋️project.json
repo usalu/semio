@@ -6,7 +6,13 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🎚️config/🟨️.mjs",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
@@ -31,6 +37,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -67,6 +81,12 @@
     },
     "lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts lint",
@@ -75,6 +95,11 @@
     },
     "build-vsix": {
       "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "dependsOn": [
         "build"
       ],
@@ -90,13 +115,14 @@
     },
     "compile-extension": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [
         "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
       ],
       "inputs": [
         "default",
-        "^default"
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
       ],
       "dependsOn": [
         {
@@ -180,20 +206,29 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "check-graphql-types": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-graphql-types"
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "generate-graphql-types"
@@ -201,11 +236,17 @@
     },
     "test-graphql-types": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-graphql-types"
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "generate-graphql-types"
@@ -213,10 +254,12 @@
     },
     "test-custody": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv"
       ],
       "outputs": [],
       "options": {
@@ -239,6 +282,7 @@
     },
     "test-dashboard-only": {
       "executor": "repo:script",
+      "outputs": [],
       "cache": true,
       "inputs": [
         "default",

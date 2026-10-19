@@ -188,7 +188,6 @@ pub fn dec_value(s: &str) -> Result<PlyValue, String> {
     }
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_i<T: std::str::FromStr<Err = std::num::ParseIntError>>(s: &str) -> Result<T, String> {
         s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
     }

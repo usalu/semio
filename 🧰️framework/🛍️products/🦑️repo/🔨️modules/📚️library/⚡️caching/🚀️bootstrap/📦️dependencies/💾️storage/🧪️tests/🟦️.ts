@@ -259,3 +259,52 @@ test("unready store generations are discarded only when exact, unready and direc
   rmSync(join(directory,"bindings.json"));discard(root,directory);expect(existsSync(directory)).toBe(false);expect(existsSync(join(root,"j"))).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("a displaced lock keeps its identity while the operating system stamps its change time",async()=>{
+ const {sameDisplacedJavascriptDependencyFileIdentityV1:same}=await import("../🟦️.ts"),base={dev:1n,ino:7n,mode:33152n,size:660020n,nlink:1n,mtimeNs:5n,ctimeNs:9n};
+ expect(same(base,{...base})).toBe(true);
+ expect(same({...base,ctimeNs:11n},base)).toBe(true);
+ for(const field of["dev","ino","mode","size","nlink","mtimeNs"]as const)expect(same({...base,[field]:base[field]+1n},base)).toBe(false);
+});
+
+/** 🧯 Checks the installer EPERM classification against portable DATA and an independent Python regular-expression oracle. */
+test("installer cache link refusal is classified from the complete stderr",async()=>{
+ const {classifyJavascriptDependencyInstallerFailureV1:classify}=await import("../🟦️.ts"),policy=installSchema.$defs.CacheLinkRefusalProtocol.const;
+ for(const row of installCorpus.cacheLinkRefusals){
+  expect(classify({status:row.status,signal:row.signal,stderr:row.stderr})).toBe(row.expected);
+  expect(classify({status:row.status,signal:row.signal,stderr:Buffer.from(row.stderr)})).toBe(row.expected);
+  const python=Bun.spawnSync(["python3","-I","-c","import re,sys;d=sys.stdin.buffer.read().decode();print(1 if re.search(sys.argv[1],d,re.M) else 0)",policy.pattern],{stdin:Buffer.from(row.stderr)}),matched=python.stdout.toString().trim()==="1";
+  expect(classify({status:row.status,signal:row.signal,stderr:row.stderr})).toBe(matched&&!(row.status===0&&row.signal===null)?"cache-link-refused":"other");
+ }
+});
+
+/** 🗑️ Checks obsolete generation selection against portable DATA and an independent Python oracle. */
+test("obsolete store generations are selected unless current or still bound",async()=>{
+ const {selectObsoleteJavascriptDependencyGenerationsV1:select}=await import("../🟦️.ts"),policy=installSchema.$defs.ObsoleteGenerationProtocol.const;
+ for(const row of installCorpus.obsoleteGenerations){
+  expect(select(row.names,row.current,row.targets)).toEqual(row.expected);
+  const script="import re,json,sys;r=json.load(sys.stdin);p=re.compile(sys.argv[1]);t=re.compile(sys.argv[2]);k=set(r['current'])\nfor v in r['targets']:\n m=t.search(v)\n if m:k.add(m.group(1))\nprint(json.dumps(sorted(n for n in r['names'] if p.search(n) and n not in k)))",
+   python=Bun.spawnSync(["python3","-I","-c",script,policy.prefixPattern,policy.targetPattern],{stdin:Buffer.from(JSON.stringify(row))});
+  expect(JSON.parse(python.stdout.toString())).toEqual(row.expected);
+ }
+});
+
+/** 🪓 Checks tree removal never follows links, reports progress, honours cancellation and matches an independent find count. */
+test("dependency tree removal and Bun cache purge keep the cache directory and never follow links",async()=>{
+ const {removeJavascriptDependencyTreeV1:remove,purgeJavascriptDependencyBunCacheV1:purge}=await import("../🟦️.ts"),{existsSync,readdirSync,chmodSync}=await import("node:fs"),every=installSchema.$defs.CacheLinkRefusalProtocol.const.progressEntries,base=mkdtempSync(join(process.env.TMPDIR??"/tmp","dep-purge-")),outside=join(base,"outside");
+ try{
+  mkdirSync(outside);writeFileSync(join(outside,"keep"),"x");
+  const cache=join(base,"store","bun-cache");mkdirSync(join(cache,"pkg","deep"),{recursive:true});mkdirSync(join(cache,"locked"));
+  for(let index=0;index<every*2+3;index++)writeFileSync(join(cache,"pkg","deep","f"+index),"x");
+  writeFileSync(join(cache,"locked","file"),"x");chmodSync(join(cache,"locked"),0o555);
+  symlinkSync(outside,join(cache,"link"),process.platform==="win32"?"junction":"dir");
+  const counted=Number(Bun.spawnSync(["sh","-c","find \"$1\" | wc -l","sh",cache]).stdout.toString().trim())-1,ticks:number[]=[];
+  const removed=await purge(join(base,"store"),async count=>{ticks.push(count);});
+  expect(removed).toBe(counted);expect(ticks.length).toBeGreaterThanOrEqual(2);expect(ticks.every(count=>count%every===0)).toBe(true);
+  expect(readdirSync(cache)).toEqual([]);expect(existsSync(join(outside,"keep"))).toBe(true);
+  mkdirSync(join(cache,"again"));for(let index=0;index<every+1;index++)writeFileSync(join(cache,"again","g"+index),"x");
+  await expect(remove(join(cache,"again"),async()=>{throw Error("cancelled");})).rejects.toThrow("cancelled");
+  expect(existsSync(join(cache,"again"))).toBe(true);
+  writeFileSync(join(base,"store","plain"),"x");await expect(remove(join(base,"store","plain"),async()=>{})).rejects.toThrow("Physical directory tree required");
+ }finally{rmSync(base,{recursive:true,force:true});}
+});

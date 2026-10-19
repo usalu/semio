@@ -18,7 +18,6 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-server",
     cache: false,
-    mode: "test",
     environment: "node",
     include: ["../../🧪️tests/🔬️wire/🟦️.ts"],
     coverage: { include: ["../../🟦️.ts"] },

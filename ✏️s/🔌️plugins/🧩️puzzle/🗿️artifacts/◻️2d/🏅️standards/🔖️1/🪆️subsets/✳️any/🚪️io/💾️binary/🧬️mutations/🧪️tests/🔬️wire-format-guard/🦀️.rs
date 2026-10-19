@@ -1,4 +1,4 @@
-//! (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert / whole-document-replace wire
+//! 🎫️ (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`). The pre-overhaul whole-record-upsert / whole-document-replace wire
 //! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul vocabulary
 //! bytes this guard used to freeze no longer exist — that vocabulary is banned outright, not
 //! preserved — so this now asserts the NEW operations' `OpText`/`OpBinary` round-trip

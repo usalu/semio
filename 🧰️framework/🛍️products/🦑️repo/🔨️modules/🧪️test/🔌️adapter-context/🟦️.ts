@@ -91,10 +91,6 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
       const source = lookup(uri);
       const target = join(workDir, as ?? basename(source));
       mkdirSync(dirname(target), { recursive: true });
-      // 🧫️Clone-on-write where the filesystem offers it. Real-world fixtures are megabytes and every
-      // work directory takes its own copy, so this is the difference between a constant and a linear
-      // cost. It must stay a COPY and never a hard link — the caller is handed a MUTABLE path, and a
-      // link would let a mutation scenario write through into the committed fixture.
       cpSync(source, target, { mode: constants.COPYFILE_FICLONE });
       return target;
     },

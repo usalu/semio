@@ -66,7 +66,6 @@ impl Body {
     /// ♻️ Every entity transitively reachable from `roots`, walking solid→shell→face→(surface,
     /// loop)→coedge→(pcurve, edge)→(curve, vertex). The complement of this set is exactly what
     /// [`Body::compact`] is safe to free — see its own docstring.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn reachable_from(&self, roots: &[EntityRef]) -> ReachSet {
         let mut job=ReachabilityJob::new();
         for &root in roots {
@@ -83,7 +82,6 @@ impl Body {
     /// entities are left completely untouched (same index, same generation), so no caller ever
     /// needs to translate an id across a compaction; that is why the return value only reports
     /// counts, not a remap.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compact(&mut self, keep: ReachSet) -> Remap {
         let mut job=BodyCompactionJob::new(keep).unwrap_or_else(|(error,_)|panic!("cold original compaction admission: {error}"));
         while !job.terminal_is_empty(){let copy=job.next_copy_byte_demand(self).expect("cold original compact copy");let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:job.next_capacity_byte_demand(self,copy).expect("cold original compact capacity"),maximum_release_bytes:job.next_release_byte_demand(self).expect("cold original compact release"),maximum_depth:job.next_depth_demand(self).expect("cold original compact depth")};job.step(self,grant).expect("cold original compact turn");}
@@ -91,7 +89,6 @@ impl Body {
     }
 
     /// ♻️ Live counts per store, e.g. to assert a compaction actually shrank the body.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn entity_counts(&self) -> EntityCounts {
         EntityCounts {
             vertices: self.vertices.len(),
@@ -113,7 +110,6 @@ impl Body {
     /// lifecycle a re-import needs so handles minted before the import stay resolvable. Loses
     /// nothing `other` carried (pcurves, tolerances, flip flags all copy verbatim), unlike the
     /// lossy [`Body::from_seed`]/[`Body::to_seed`] round trip which drops pcurves.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn merge(&mut self, other: &Body) -> MergeMap {
         self.merge_selected(other, None)
     }
@@ -121,7 +117,6 @@ impl Body {
     /// ♻️ [`Body::merge`] restricted to the entities of `other` inside `keep` (everything when
     /// `None`) — the extraction primitive behind a minimal standalone shape value. Labels shift by
     /// `self`'s high-water mark exactly like a full merge, so a fresh `self` preserves them verbatim.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn merge_selected(&mut self, other: &Body, keep: Option<&ReachSet>) -> MergeMap {
         let offset = self.labels.next();
         self.labels = LabelSource::from_next(offset + other.labels.next());
@@ -131,7 +126,6 @@ impl Body {
     /// ♻️ The one copy walk [`Body::merge_selected`], [`Body::extract`] and [`Body::absorb`] share:
     /// copies the entities of `other` inside `keep` (all when `None`), each carrying `relabel` of its
     /// label. Never touches `self`'s label counter — the caller owns that bookkeeping.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn copy_in(&mut self, other: &Body, keep: Option<&ReachSet>, mut relabel: impl FnMut(PersistentLabel) -> PersistentLabel) -> MergeMap {
         let mut curve3_map: HashMap<Curve3Id, Curve3Id> = HashMap::with_capacity(other.curves3.len());
         for (id, c) in other.curves3.iter().filter(|(id, _)| keep.is_none_or(|set| set.curves3.contains(id))) {
@@ -210,7 +204,6 @@ impl Body {
     /// label counter continuing at `self`'s — the isolation an operation job runs in, so a cancelled
     /// or failed job leaves `self` untouched by construction. The [`MergeMap`] translates this body's
     /// ids into the copy's.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn extract(&self, roots: &[EntityRef]) -> (Body, MergeMap) {
         let keep = self.reachable_from(roots);
         let mut out = Body::new();
@@ -225,7 +218,6 @@ impl Body {
     /// from `scratch_base` above this body's counter *now* (identical to its own number when nothing
     /// else was minted meanwhile); a label that was copied in from this body and survived into the
     /// result gets a fresh one, so two live entities never share a label.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(&mut self, scratch: &Body, roots: &[EntityRef], scratch_base: u64) -> MergeMap {
         let keep = scratch.reachable_from(roots);
         let first = self.labels.next();

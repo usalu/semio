@@ -228,7 +228,7 @@ mod imp {
                     if packed2 & 0x80 != 0 {
                         cursor += (2usize << (packed2 & 0x07)) * 3;
                     }
-                    cursor += 1; // LZW minimum code size
+                    cursor += 1;
                     loop {
                         let size = *data.get(cursor).ok_or("truncated GIF image data")? as usize;
                         cursor += 1;
@@ -308,9 +308,6 @@ mod imp {
                 encoder.write_raw_extension(gif::AnyExtension(0xFF), &[&header[..], &extension.data[..]]).map_err(|error| format!("gif application extension: {}", error))?;
             }
             for frame in &snap.frames {
-                // 🔀️ `indices` is natural row order throughout this model; GIF stores an interlaced
-                // image's rows in four passes and `write_frame` writes the buffer verbatim, so the
-                // re-interleaving is the caller's job (see the module docstring).
                 let stored = if frame.interlaced { semio_s_plugin_stdio_raster_test_oracle::gif_reorder_rows(&frame.indices, frame.width as usize, frame.height as usize, true) } else { frame.indices.clone() };
                 let gif_frame = gif::Frame {
                     delay: frame.delay,
@@ -331,11 +328,6 @@ mod imp {
         if out.len() < 13 {
             return Err("gif encoder produced a truncated stream".to_string());
         }
-        // 🩹️ `gif::Encoder::new` unconditionally sets the GCT flag bit and writes a minimum 2-entry
-        // padding table even for an empty palette slice — `write_global_palette` has no way to omit
-        // the table outright, only to shrink it. When this subset's own snapshot says "no GCT"
-        // (`global_palette: None`, real of e.g. the 💃️dancing fixture), strip that phantom table
-        // back out: clear the flag bit and remove the 6 padding bytes the encoder wrote regardless.
         if snap.global_palette.is_none() {
             if out.len() < 19 {
                 return Err("gif encoder produced a truncated stream".to_string());

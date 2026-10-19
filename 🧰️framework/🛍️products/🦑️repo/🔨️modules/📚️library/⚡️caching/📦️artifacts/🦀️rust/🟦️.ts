@@ -7,7 +7,7 @@ import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️pro
 import { startNativeProgress } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { relative, resolve } from "node:path";
 import type { ArtifactRustPackageOptions } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter, scriptInvocationBudget, type ScriptCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { artifactRustCargoArguments, validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
@@ -52,10 +52,8 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   }
   class TestScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] && options.testCommands && Object.hasOwn(options.testCommands, segments[0])) {
-        const router = new ScriptRouter(this.root, this.repoRoot);
-        for (const [name, Command] of Object.entries(options.testCommands)) router.register(name, Command);
-        await router.run(segments, this.invocation);
+      if (segments[0] && options.testCommands?.has(segments[0])) {
+        await options.testCommands.run(segments, this.invocation);
         return;
       }
       for (const twin of options.twins ?? []) console.log(`[TRACE] ${twin.name}-twin checks=${twin.run()}`);
@@ -80,7 +78,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   }
   const packageRouter = new ScriptRouter(packageRoot).register("build", BuildScript).register("check", CheckScript).register("test", TestScript);
   if (options.snapshotSqliteTests?.length) packageRouter.register("test-snapshot-sqlite", SnapshotSqliteTestScript);
-  for (const [name, Command] of Object.entries(options.commands ?? {})) packageRouter.register(name, Command);
+  if (options.commands) packageRouter.adopt(options.commands);
   if (options.twins?.length) packageRouter.register("canonical-architecture", CanonicalArchitectureScript);
   const segments = process.argv.slice(2);
   await packageRouter.run(segments.length ? segments : ["test"], original);

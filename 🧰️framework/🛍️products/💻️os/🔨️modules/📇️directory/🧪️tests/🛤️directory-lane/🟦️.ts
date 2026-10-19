@@ -201,7 +201,6 @@ export async function registerDirectoryLaneTests(vitest: Vitest, dependencies: B
         expect(directoryCommandQueue).toHaveLength(1);
         expect(directoryCommandQueue[0]!.request.requestId).toBe(commandRequestId(1));
 
-        // 🟢️ Hub becomes reachable — any live signal on the stream (a heartbeat here) triggers a flush.
         reachable = true;
         FakeDirectoryWebSocket.instances.at(-1)!.triggerMessage({ kind: "heartbeat", headSeq: 0 });
         await settleDirectoryTransport();
@@ -209,10 +208,6 @@ export async function registerDirectoryLaneTests(vitest: Vitest, dependencies: B
         expect(directoryCommandQueue).toHaveLength(0);
         expect(directoryCommandOperations.size).toBe(0);
       } finally {
-        // 🧹️ Restores the real global — an un-restored `FakeDirectoryWebSocket` (no `OPEN` static)
-        // previously leaked into every later test's `WebSocket.OPEN` comparisons, silently making
-        // `relayMutationsToHub`/`sendWireFrame`'s "is the socket actually open" checks pass when
-        // `state.socket` was `null`.
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         closeDirectory();
       }

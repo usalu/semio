@@ -74,7 +74,6 @@ pub mod derived_composition {
             }
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn walk(node: &DrawNode, style_names: &std::collections::HashSet<&str>, diagnostics: &mut Vec<semio_framework_diagnostic::Diagnostic>) {
             match node {
                 DrawNode::Path { style: Some(name), .. } | DrawNode::Text { style: Some(name), .. } => {

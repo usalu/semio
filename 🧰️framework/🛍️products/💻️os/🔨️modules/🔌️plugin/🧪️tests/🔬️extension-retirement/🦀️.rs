@@ -1,4 +1,8 @@
 mod extension_retirement_tests {
+    use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep;
+    use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
+    use semio_framework_plugin_extension::extension_runtime_lift::ExtensionBundle;
+    use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionBundleRegistry;
     use super::*;
     use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};

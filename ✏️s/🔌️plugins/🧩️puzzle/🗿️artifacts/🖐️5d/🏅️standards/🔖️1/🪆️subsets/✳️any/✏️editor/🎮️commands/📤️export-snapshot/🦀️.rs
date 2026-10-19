@@ -1,4 +1,4 @@
-//! `🧊️3d/…/📤️export-snapshot` and `◻️2d/…/📤️export-snapshot`: inline under one guest wire page,
+//! 📎️ `🧊️3d/…/📤️export-snapshot` and `◻️2d/…/📤️export-snapshot`: inline under one guest wire page,
 //! 📤 Downloads the live document as round-trippable JSON — the 5d twin of
 //! the framework's segmented-download lane above it, a notice above what one segmented download
 //! may carry.

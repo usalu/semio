@@ -22,11 +22,6 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let mutations = semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
     assert_eq!(mutations.len(), semio_s_artifact_process_process3d_mutations::KINDS.len(), "production ingress carries every Process3d mutation variant");
     let mutation_hex: Vec<String> = mutations.iter().map(|mutation| semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
-    // 🪪️ Every workshop mutation addresses a machine by ID, so the expectation must locate the same
-    // machine the replay does. It used to edit `machines.first_mut()` — the initial workshop already
-    // carries the three generic machines (saw, drill, attacher) BEFORE the one this law appends, so a
-    // positional expectation renamed `saw` while the real id-keyed replay renamed `machine`. The
-    // label, icon and capability are read off the mutations themselves for the same reason.
     let mut expected = production_initial_snapshot(label);
     let (expected_machine_id, expected_machine_label) = match &mutations[9] {
         Process3dMutation::RenameMachine(value) => (value.id.clone(), value.new_label.clone()),
@@ -147,9 +142,6 @@ fn drive_production_envelope(app: &mut crate::context::Process3dApp, handle: sem
 /// atomic authority hook; accepted and every hostile lease retire their displaced/candidate owner.
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed() {
-    // 🛣️ The publication lease table is a process-global four-slot DIRECT-MAPPED registry shared by the
-    // whole test binary; two laws admitting concurrently collide on a slot and report
-    // `process3d-publication.saturated`, which is scheduling, never the property under test.
     let _lane = semio_s_artifact_process_process3d_host::process3d_publication_authority_lane();
     let accepted_label = "accepted-production-swap";
     let mut accepted = crate::context::unseeded_app_with_registry();
@@ -161,10 +153,6 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     let accepted_snapshot = accepted.snapshot().expect("accepted Process3d production snapshot");
     assert_eq!(&accepted_snapshot, &expected_snapshot, "real maintenance replay must publish the complete deep semantic state");
     assert_eq!(production_semantic_digest(&accepted_snapshot), expected_digest, "real maintenance replay must publish the deterministic semantic digest");
-    // 🪪️ The SAME id-keyed lookup `production_envelope_wire` builds its expectation with: the initial
-    // workshop declares three generic machines (saw, drill, attacher) BEFORE the one this law renames,
-    // so `machines.first()` reads `saw` — a machine the replay never touches — and the literal
-    // `("machine", "Renamed Machine", "drill")` was a positional accident, not the published state.
     let fixtures = semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::process3d_all_retained_mutation_fixtures_for_test();
     let (renamed_id, renamed_label) = match &fixtures[9] {
         Process3dMutation::RenameMachine(value) => (value.id.clone(), value.new_label.clone()),

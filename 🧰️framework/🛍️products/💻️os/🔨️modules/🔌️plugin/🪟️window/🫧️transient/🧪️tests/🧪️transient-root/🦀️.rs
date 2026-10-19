@@ -32,7 +32,7 @@ semio_framework_plugin::transient_root! {
     fields: { label: String, count: u32 },
 }
 
-semio_framework_plugin_testing_fixtures_publication::window_transient_owners! {
+semio_framework_plugin::window_transient_owners! {
     state: ProbeTransient,
     mutation: ProbeTransientMutation,
     windows: { ProbeMainOwner => "probe.main", ProbeSideOwner => "probe.side" },

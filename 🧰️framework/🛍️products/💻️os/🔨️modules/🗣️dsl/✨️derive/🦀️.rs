@@ -24,3 +24,7 @@ use document_diff_and_composite_expansion::to_kebab;
 #[path = "🔁️mutations-expansion/🦀️.rs"]
 pub(crate) mod mutations_expansion;
 
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

@@ -12,7 +12,7 @@ import { createBrowserStoragePort, type StoragePort } from "../../../🔨️modu
 import { clearStylingAppearanceRoot, setStylingAppearanceRoot, stylingAppearanceRootElement, subscribeStylingAppearanceRoot } from "@semio-tech/ui-styling";
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework/transient";
 import { availableViewportHeightPx, type ElementsSurfaceDevice } from "../../../📱️device/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { readStoredUiDriver, setUiDriverProvider, type UiDriver, type UiDriverReveal } from "../../../🧱️elements/🚗️UiDriver/🟦️.tsx";
 import { createDOMEventBinding } from "../../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 import { applyUiFormControlBrowserDefaults } from "../../../🔨️modules/📝️form-control-presentation/🟦️.ts";
@@ -183,8 +183,6 @@ function ensureUiChromeRevealController(root: HTMLElement): void {
   if (chromeRevealBindingsByRoot.has(root) || typeof window === "undefined") return;
   const bindings = createDOMEventBinding();
   bindings.listen(window, "pointermove", (event: PointerEvent) => {
-    // 🐚️ `pointermove` only ever bubbles to `window` (never scoped to a subtree), so this root only
-    // reacts to points actually over its own DOM — otherwise hovering shell B would reveal shell A's chrome.
     if (!(event.target instanceof globalThis.Node) || !root.contains(event.target)) return;
     chromeRevealLastPointByRoot.set(root, { x: event.clientX, y: event.clientY });
     scheduleChromeRevealUpdate(root);

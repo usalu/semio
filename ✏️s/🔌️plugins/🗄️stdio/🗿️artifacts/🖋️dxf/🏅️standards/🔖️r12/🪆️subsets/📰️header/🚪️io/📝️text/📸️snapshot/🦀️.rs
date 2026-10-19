@@ -53,11 +53,11 @@ pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Resu
     DxfSnapshot::from_value(DslValue::Object(fields)).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1,1)))
 }
 
-fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,ValueError>{
+fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,ValueError>{
     let Some(semio_framework_dsl_record::FieldValue::Value(value))=record.get(id)else{return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("DXF snapshot field {key} is missing or has a different shape")))};
     let value=T::from_value_controlled(value,control).map_err(|error|error.under(key))?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)
 }
-pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DxfSnapshot,ValueError>{
+pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<DxfSnapshot,ValueError>{
     control.scoped_stage(|control|->Result<_,ValueError>{
         control.begin_stage(6)?;if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field"));}
         let Some(semio_framework_dsl_record::FieldValue::Text(schema))=record.get(1)else{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot schema is missing or has a different shape"));};let schema=control.copy_text(schema)?;control.step()?;
@@ -192,8 +192,6 @@ pub(crate) fn parse_header_var(name: String, tags: &[DxfTag]) -> DxfHeaderVar {
     if tags.is_empty() {
         return DxfHeaderVar { name, group_code: 0, value: DxfValue::default(), extra_group_codes: Vec::new() };
     }
-    // 🧭️ Point-component detection: an adjacent 3-code (or 2-code, z=0) run at +10/+20 offsets
-    // from the primary code (the DXF convention for $INSBASE/$EXTMIN/$EXTMAX/… point vars).
     if tags.len() >= 3 && tags[1].code == tags[0].code + 10 && tags[2].code == tags[0].code + 20 {
         let value = DxfValue::Point { value: [parse_f64(&tags[0].value), parse_f64(&tags[1].value), parse_f64(&tags[2].value)] };
         let extra = tags[3..].iter().map(|t| (t.code, classify_group_code_value(t.code, &t.value))).collect();
@@ -347,8 +345,6 @@ pub(crate) fn parse_tables_section(tags: &[DxfTag]) -> (DxfTables, Vec<DxfOtherT
             }
             match table_name.as_str() {
                 "LAYER" | "STYLE" | "LTYPE" => {
-                    // 🧭️ Known kinds: skip table-level fields (70 count, 5 handle, …) up to the
-                    // first entry's `0/<KIND>` marker before splitting into per-entry slices.
                     let mut entries_start = raw_body_start;
                     while entries_start < body_end && tags[entries_start].code != 0 {
                         entries_start += 1;
@@ -361,9 +357,6 @@ pub(crate) fn parse_tables_section(tags: &[DxfTag]) -> (DxfTables, Vec<DxfOtherT
                         _ => unreachable!(),
                     }
                 }
-                // 🕳️ Unknown kinds: capture the WHOLE raw span (informational fields AND any
-                // entry markers alike) verbatim — no skip, so hand-built and real-parsed
-                // `DxfOtherTable.tags` are both trivially lossless round-trip fixed points.
                 _ => others.push(DxfOtherTable { name: table_name, tags: tags[raw_body_start..body_end].to_vec() }),
             }
             i = body_end;
@@ -424,15 +417,6 @@ pub(crate) fn print_table_block(out: &mut String, name: &str, count: usize, mut 
 pub(crate) fn print_tables_section(tables: &DxfTables, others: &[DxfOtherTable], out: &mut String) {
     push_tag(out, 0, "SECTION");
     push_tag(out, 2, "TABLES");
-    // 📐️ LTYPE MUST precede LAYER. A LAYER record names its linetype by string (group code 6), so
-    // a reader that meets the LAYER table first has to invent the linetype it cannot yet resolve —
-    // which is exactly what the registered `dxf` 0.6 reference reader does: fed this writer's
-    // former LAYER-then-LTYPE order it reported EIGHT linetypes for the real `🚏️bus-shelter`
-    // drawing, an extra `CONTINUOUS` ahead of the real seven, and all 39 `📰️mutate-dxf-r12` parity
-    // comparisons diverged on `$.linetypes` alone. Confirmed by experiment rather than inferred:
-    // reordering nothing but these two blocks in the very bytes this writer had produced took the
-    // same reader from eight linetypes back to the real seven. The order below is the AutoCAD DXF
-    // reference's own table order for R12, of which that constraint is the load-bearing part.
     print_table_block(out, "LTYPE", tables.linetypes.len(), |out| {
         for l in &tables.linetypes {
             print_linetype(out, l);
@@ -597,7 +581,7 @@ pub(crate) fn parse_polyline(tags: &[DxfTag], mut i: usize) -> (DxfEntity, usize
         match t.code {
             8 => layer = t.value.clone(),
             70 => closed = parse_i64(&t.value) & 1 == 1,
-            66 => {} // "entities follow" flag — implicit in this model, not retained
+            66 => {}
             _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
         }
     }
@@ -635,7 +619,7 @@ pub(crate) fn parse_entities_until(tags: &[DxfTag], mut i: usize, stop_kind: &st
             break;
         }
         if tags[i].code != 0 {
-            i += 1; // defensive skip of a stray non-header tag
+            i += 1;
             continue;
         }
         let kind = tags[i].value.clone();
@@ -706,10 +690,6 @@ pub(crate) fn print_entity(e: &DxfEntity, out: &mut String) {
             print_unknown(out, unknown_group_codes);
             for v in vertices {
                 push_tag(out, 0, "VERTEX");
-                // 🧭️ No hardcoded `8/<layer>` here: a real vertex's own `8` code (if present in
-                // the source — it's optional, inheriting the polyline's layer when absent) is
-                // already captured in `unknown_group_codes` by `build_vertex`; emitting it again
-                // here would duplicate the tag on decode(encode(...)).
                 push_tag(out, 10, &format_f64(v.x));
                 push_tag(out, 20, &format_f64(v.y));
                 push_tag(out, 30, &format_f64(v.z));
@@ -857,7 +837,7 @@ pub fn parse_dxf_document(text: &str) -> Result<DxfSnapshot, String> {
                     let (e, _) = parse_entities_until(body, 0, "ENDSEC");
                     snap.entities = e;
                 }
-                _ => {} // R12 has no other section kinds
+                _ => {}
             }
             i = body_end;
             if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDSEC" {

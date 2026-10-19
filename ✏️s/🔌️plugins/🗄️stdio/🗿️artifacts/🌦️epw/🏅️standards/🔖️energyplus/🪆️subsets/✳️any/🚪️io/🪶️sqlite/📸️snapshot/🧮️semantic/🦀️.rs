@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue};
 use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::RowWriter};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const TABLES:[(&str,usize);5]=[("epw_document",8),("epw_location",10),("epw_data_periods",2),("epw_data_period",7),("epw_record",38)];
 fn refusal(kind:ValueRefusalKind,message:&str)->ValueError{ValueError::new(kind,message)}
 pub(super) fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{

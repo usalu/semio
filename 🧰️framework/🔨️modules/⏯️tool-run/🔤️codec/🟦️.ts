@@ -2,6 +2,7 @@
 
 import { TOOL_RUN_COUNTERS_MAX, TOOL_RUN_STEP_ARGS_MAX, TOOL_RUN_STEP_RING_CAPACITY, TOOL_RUN_TICK_BYTES_MAX, TOOL_RUN_TRACE_PAGE_BYTES_MAX, TOOL_RUN_TRACE_PAGE_OPS_MAX, ToolRunCodecError, type ToolRunIdentity } from "../🟦️.ts";
 import { TOOL_RUN_STATES } from "../🚦️lifecycle/🟦️.ts";
+import { validatePayloadUpdate, type PayloadUpdate } from "../📨️payload/🌊️stream/🟦️.ts";
 import { TOOL_RUN_STEP_KINDS, TOOL_RUN_VERDICTS, type ToolRunCounter, type ToolRunProgress, type ToolRunStep, type ToolRunStepArg } from "../📊️progress/🟦️.ts";
 import type { ToolRunTraceDelta, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject } from "../🗄️trace-store/🟦️.ts";
 import type { ToolRunTick } from "../🎞️tick/🟦️.ts";
@@ -492,7 +493,7 @@ export function decodeToolRunTraceDelta(bytes: Uint8Array): ToolRunTraceDelta {
 /** 🧳️ Pack record body of a tick; rejects ticks over `TOOL_RUN_TICK_BYTES_MAX`. */
 function payloadUpdateRecord(update:PayloadUpdate):PackValue{const value:PackRecord=new Map([[1,uintValue(update.kind==="replace"?0:1)]]);if(update.kind==="range"){value.set(2,uintValue(update.publication));value.set(3,uintValue(update.totalBytes));value.set(4,uintValue(update.offset));value.set(5,uintValue(update.chunkBytes));value.set(6,uintValue(update.final?1:0));}return{t:"record",v:value};}
 function payloadUpdateFrom(value:PackValue|undefined):PayloadUpdate{const record=getRecord(value,"payloadUpdate",[1,2,3,4,5,6]),kind=getUint(record,1);if(kind===0n&&record.size===1)return{kind:"replace"};if(kind!==1n||record.size!==6)throw new ToolRunCodecError("malformed","payloadUpdate");const final=getUint(record,6);if(final>1n)throw new ToolRunCodecError("malformed","payload finality");return{kind:"range",publication:getUint(record,2),totalBytes:getUint(record,3),offset:getUint(record,4),chunkBytes:narrow(getUint(record,5),65536,"payload chunk bytes"),final:final===1n};}
-function validateTickPayload(payload:Uint8Array|undefined,update:PayloadUpdate|undefined):void{if((payload===undefined)!==(update===undefined))throw new ToolRunCodecError("malformed","payload and update must be paired");if(payload!==undefined&&update!==undefined)validatePayloadUpdate(update,payload.length);}
+export function validateTickPayload(payload:Uint8Array|undefined,update:PayloadUpdate|undefined):void{if((payload===undefined)!==(update===undefined))throw new ToolRunCodecError("malformed","payload and update must be paired");if(payload!==undefined&&update!==undefined)validatePayloadUpdate(update,payload.length);}
 export function encodeToolRunTick(tick: ToolRunTick): Uint8Array {
     validateTickPayload(tick.payload,tick.payloadUpdate);
 const record: PackRecord = new Map([[1, identityRecord(tick.identity)], [2, uintValue(tick.sequence)]]);

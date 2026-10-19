@@ -22,7 +22,7 @@ impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
     pub fn phase(&self)->&'static str{self.parser.phase()}
     pub fn normal_step_progress(&self)->super::RetainedCloneProgress{self.parser.normal_step_progress()}
     pub fn normal_step_demands(&self)->Result<super::RetirementDemand,JsonError>{self.parser.normal_step_demands(&self.source)}
-    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:super::RetainedCloneGrant)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,grant,false)}
+    pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:super::RetainedCloneGrant)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,grant,false)}
     /// 🎟️ Admits the native grammar retirement frame before transferring its original owner.
     pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<super::JsonGrammarCursor<V>>()}
     pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
@@ -47,7 +47,7 @@ impl JsonReadSource for [u8] {
     fn byte_len(&self)->usize{self.len()}
     fn byte_at(&self,index:usize)->Option<u8>{self.get(index).copied()}
 }
-impl<const N:usize> JsonReadSource for semio_framework_value::list::PagedList<u8,N> {
+impl<const N:usize> JsonReadSource for semio_framework_value_persistent::list::PagedList<u8,N> {
     fn byte_len(&self)->usize{self.len()}
     fn byte_at(&self,index:usize)->Option<u8>{self.get(index).copied()}
 }

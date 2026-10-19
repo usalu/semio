@@ -99,10 +99,6 @@ pub fn decode_drawing(bytes: &[u8]) -> Result<DwgLogicalDrawing, String> {
 pub fn decode_dwg(bytes: &[u8]) -> Result<DwgSnapshot, String> {
     let version = dwg_version_sentinel(bytes)?;
     let (maintenance_version, codepage) = parse_version_header_fields(bytes)?;
-    // 🫙️ The empty document. A stream that stops at the end of the preamble carries no section map,
-    // no page map and no encrypted file header, so there is nothing behind it to decode — and the
-    // R2004 reader's "file too short for encrypted header" is the wrong answer to give about a
-    // document this artifact itself writes and commits as an example.
     if bytes.len() == DWG_PREAMBLE_LEN {
         return Ok(DwgSnapshot { schema: STDIO_DWG_DOCUMENT_SCHEMA.into(), version, maintenance_version, codepage, ..Default::default() });
     }

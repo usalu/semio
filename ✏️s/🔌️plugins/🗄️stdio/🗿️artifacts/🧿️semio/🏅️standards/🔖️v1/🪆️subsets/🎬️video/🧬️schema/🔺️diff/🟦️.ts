@@ -19,7 +19,7 @@ export interface IndexedTripleDiff<D, T> {
 export interface SemioVideoSampleDiff {
   pts?: import("../📸️snapshot/🟦️.ts").SemioVideoSample["pts"];
   key?: boolean;
-  /** hex-encoded opaque bytes, whole-value replace only */
+  /** 🔢️ hex-encoded opaque bytes, whole-value replace only */
   data?: number[];
 }
 

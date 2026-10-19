@@ -63,7 +63,7 @@ fn multi_start_finds_a_valid_solution() {
 
 #[test]
 fn multi_start_proves_unsat_when_every_attempt_would() {
-    let (model, topo) = k_graph(5, 4); // pigeonhole unsat regardless of seed
+    let (model, topo) = k_graph(5, 4);
     let config = SearchConfig::default();
     let outcome = multi_start(&model, &topo, &config, 7, None, &[], 6);
     match outcome {

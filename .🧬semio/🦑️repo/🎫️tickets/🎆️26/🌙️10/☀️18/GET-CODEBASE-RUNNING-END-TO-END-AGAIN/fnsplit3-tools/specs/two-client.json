@@ -1,0 +1,124 @@
+{
+ "file": "🌎️hub/🧪️tests/🤝️two-client-document/🟦️.ts",
+ "scopeLine": 58,
+ "scopeParam": "invocation",
+ "allowAny": true,
+ "types": {
+  "run": "Awaited<ReturnType<typeof startLocalHub>>",
+  "run2": "Awaited<ReturnType<typeof startLocalHub>>",
+  "waitReady": "(hubRun: Awaited<ReturnType<typeof startLocalHub>>, label: string) => Promise<Record<string, any>>",
+  "exitOf": "(hubRun: Awaited<ReturnType<typeof startLocalHub>>, ms: number) => Promise<{ code: number | null; signal: string | null }>",
+  "context": "Parameters<Parameters<typeof withLocalHubHostTaskV1>[2]>[0]",
+  "validateTraceLine": "ReturnType<InstanceType<typeof Ajv>[\"compile\"]>",
+  "host": "Parameters<Parameters<typeof withBuiltLocalHubHostV1>[2]>[0]"
+ },
+ "files": [
+  {
+   "id": "harness",
+   "dir": "🧰️scenario-harness",
+   "doc": "🧰️ The scenario harness: the sign in, timed fetch, directory command and socket helpers the phases share.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | the two-client document e2e}: a phase of the scenario over the same bindings, moved verbatim."
+  },
+  {
+   "id": "setup",
+   "dir": "🌱️space-and-artifact-setup",
+   "doc": "🌱️ Signing in both authors, creating the space, measuring the directory pages and creating the artifact.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | the two-client document e2e}: a phase of the scenario over the same bindings, moved verbatim."
+  },
+  {
+   "id": "sockets",
+   "dir": "🔌️sockets-presence-and-commands",
+   "doc": "🔌️ Opening both sockets, presence replay, the first command, its remote delivery and the late join.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | the two-client document e2e}: a phase of the scenario over the same bindings, moved verbatim."
+  },
+  {
+   "id": "agent",
+   "dir": "🤖️agent-delegation-and-resume",
+   "doc": "🤖️ The agent delegation and revocation, presence lease expiry, resume and edit growth.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | the two-client document e2e}: a phase of the scenario over the same bindings, moved verbatim."
+  },
+  {
+   "id": "down",
+   "dir": "🛑️shutdown-and-crash-recovery",
+   "doc": "🛑️ The receipt, the graceful shutdown and restart and the crash recovery of the hub.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | the two-client document e2e}: a phase of the scenario over the same bindings, moved verbatim."
+  }
+ ],
+ "items": [
+  {
+   "id": "h1",
+   "kind": "range",
+   "line": 130,
+   "to": 162,
+   "name": "prepareScenarioHarness",
+   "emoji": "🧪",
+   "doc": "Waits for the hub and builds the sign in, timed fetch and directory command helpers.",
+   "file": "harness"
+  },
+  {
+   "id": "h2",
+   "kind": "range",
+   "line": 164,
+   "to": 233,
+   "name": "createSpaceAndArtifact",
+   "emoji": "🧬",
+   "doc": "Signs in both authors, creates the space and artifact and measures the directory pages.",
+   "file": "setup"
+  },
+  {
+   "id": "h3",
+   "kind": "range",
+   "line": 235,
+   "to": 336,
+   "name": "prepareSocketHelpers",
+   "emoji": "🔧",
+   "doc": "Builds the frame wait, grant mint and document socket open helpers.",
+   "file": "harness"
+  },
+  {
+   "id": "h4",
+   "kind": "range",
+   "line": 338,
+   "to": 397,
+   "name": "runFirstCommandAndLateJoin",
+   "emoji": "📨",
+   "doc": "Opens both sockets, replays presence, delivers the first command and checks the late join.",
+   "file": "sockets"
+  },
+  {
+   "id": "h5",
+   "kind": "range",
+   "line": 399,
+   "to": 479,
+   "name": "runAgentDelegationAndRevocation",
+   "emoji": "🔑",
+   "doc": "Delegates an agent session, commits its edit and checks revocation closes its socket and roster entry.",
+   "file": "agent"
+  },
+  {
+   "id": "h6",
+   "kind": "range",
+   "line": 481,
+   "to": 544,
+   "name": "runPresenceExpiryAndGrowth",
+   "emoji": "📈",
+   "doc": "Checks presence lease expiry, resumes a closed socket and grows the edit history before the restart.",
+   "file": "agent"
+  },
+  {
+   "id": "h7",
+   "kind": "range",
+   "line": 546,
+   "to": 592,
+   "name": "runGracefulShutdown",
+   "emoji": "🧯",
+   "doc": "Writes the receipt notes, stops the hub gracefully and times its exit and restart spawn.",
+   "file": "down"
+  },
+  {
+   "id": "h8",
+   "kind": "range",
+   "line": 593,
+   "to": 680,
+   "name": "runCrashRecovery",
+   "emoji": "💥",
+   "doc": "Kills the restarted hub and checks the writer release, the reopen and the recovered frontier.",
+   "file": "down"
+  }
+ ]
+}

@@ -103,7 +103,7 @@ impl IoError {
     }
 
     /// 🛬️ Constructs exact owned causes and source diagnostics without an unchecked codec.
-    pub fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    pub fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| {
             control.checkpoint()?;
             let semio_framework_value::DslValue::Object(fields) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected IO error object")) };

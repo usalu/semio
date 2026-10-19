@@ -1,4 +1,4 @@
-//! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `Puzzle3dPlayApp::render_with_request_context`
+//! 🌳️ 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `Puzzle3dPlayApp::render_with_request_context`
 //! 🔍️ Puzzle 3d play app panel — the field inspector for whatever is selected. 🕹️ ticket
 //! resolves the live `vortex` domain once per render and hands the selection here as a
 //! [`Puzzle3dInteractionSnapshot`], so this panel switches on the granularity the user actually

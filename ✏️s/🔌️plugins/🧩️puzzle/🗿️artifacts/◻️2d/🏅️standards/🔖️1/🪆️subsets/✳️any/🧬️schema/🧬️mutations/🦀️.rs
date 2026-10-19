@@ -1,4 +1,4 @@
-//! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! ☝️ single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
 //! 🧬️ Puzzle 2d artifact — semantic document mutation dispatch enum. Every variant is a
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Puzzle2dSnapshot>` and `impl protocol::SemanticMutation<Puzzle2dSnapshot>`
@@ -16,7 +16,7 @@ use protocol::ColdMutation;
 use protocol::ColdDiffAlgebra;
 use protocol::DiffAlgebra;
 use protocol::Mutation;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged::PagedUtf8;
 
 //#region 🔖️Mutations

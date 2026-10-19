@@ -1,4 +1,4 @@
-//! this mode with the scalar `.mode(FEM3D_VIEW_MODE_VIEW, ..)` builder call directly (see
+//! 🔢️ this mode with the scalar `.mode(FEM3D_VIEW_MODE_VIEW, ..)` builder call directly (see
 //! 👁️ FEM 3D viewer — the (sole) `view` mode. Mirrors fem3d's own editor style: the manifest declares
 //! `crate::viewer::fem3d::create_fem3d_viewer`) — no `ModeDefinition` object is built anywhere, so this
 //! node exists only to give the mode id a home, mirroring the taxonomy's requirement that every mode

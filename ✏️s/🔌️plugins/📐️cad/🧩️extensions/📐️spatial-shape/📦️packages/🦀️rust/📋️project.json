@@ -5,6 +5,10 @@
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/**/*.rs",
       "{projectRoot}/**/*"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {

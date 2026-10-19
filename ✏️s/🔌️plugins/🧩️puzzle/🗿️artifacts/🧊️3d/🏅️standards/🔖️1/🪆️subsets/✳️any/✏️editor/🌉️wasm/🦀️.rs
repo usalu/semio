@@ -23,7 +23,7 @@ const PUZZLE3D_ENVELOPE_MAXIMUM_PAGES: usize = store::os_store::owned_schema_dec
 const PUZZLE3D_ENVELOPE_MAXIMUM_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
 /// 🪪️ Fixed identity-authoring ceiling the browser handle admits once before it authors its first command.
-const PUZZLE3D_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+const PUZZLE3D_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
 fn js_fault(error: impl ToString) -> JsValue {
     JsValue::from_str(&error.to_string())

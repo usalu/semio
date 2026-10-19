@@ -185,13 +185,8 @@ export function useShellCoreState({
   const [localDocumentOwnerRegistry] = useState(() => new LocalDocumentOwnerRegistryV1());
   useEffect(() => () => localDocumentOwnerRegistry.retireAll(), [localDocumentOwnerRegistry]);
   const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
-  // 🏠️🧳️ `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
-  // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
-  // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
   const hostConfig = pluginFilter ? resolvePluginHostConfig(catalog, pluginFilter) : undefined;
   const hostMode = hostConfig !== undefined;
-  // 📱️ `measuredDevice` is the THREE-way viewport read (`🖱️ui/📱️device/🟦️.ts`, shared byte-for-byte with
-  // the wgpu dock); `mobile` stays the binary flag every panel-collapse call site below already reads.
   const measuredDevice = useUiDevice();
   const mobile = elementsSurfaceDeviceIsMobile(measuredDevice);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
@@ -220,17 +215,7 @@ export function useShellCoreState({
   /** 🔌️ The device's own programs ({@link localProgramsV1}): hub documents' catalog-resolved programs run beside them and
    * never enter routing, the program launcher, contributions or the dialect index. */
   const localPrograms = useMemo(() => localProgramsV1(loadedPlugins), [loadedPlugins]);
-  // 🌐️ Read with the other render-time `shellState` slice above the memo block below: `spacePrograms`'s dependency
-  // array reads `uiLocale`/`uiTerminology` during this render, and a `const` declared after it is still in its
-  // temporal dead zone there — the shell then throws `Cannot access 'uiLocale' before initialization` on first paint.
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
-  // 🌐️ The shared `shellLabel` port moves HERE, in render, not in the appearance effect below that
-  // also calls it: every builder memo under this line (`osCommands`, the command/tool category
-  // trees, the panel tab names) calls `shellLabel` while rendering, so a port moved in a post-paint
-  // effect is one render too late — those memos recompute against the previous language and, since
-  // `uiLocale` does not change again, keep that text for good. The effect's call stays: it is what
-  // moves the scope's own i18n instance and `documentElement.lang`, and the two ports must move
-  // together (`syncShellLabelLocale`'s own doc). Guarded so an unchanged locale costs one compare.
   if (shellLabelLocale() !== uiLocale) syncShellLabelLocale(uiLocale);
   /** 🧾️ Applies one `HistoryPatch` to the projection of the program that produced it. `owner` is that
    * program — the dispatch's target session, the completion's spawned instance, the snapshot's
@@ -249,8 +234,6 @@ export function useShellCoreState({
         (current) => {
           historyOrderByProgramRef.current.set(key, ++historyOrderRef.current);
           localHistoryOrderRef.current = historyOrderRef.current;
-          // 📌️ §C5 — `currentCheckpointId` rides every patch; `🔖️CheckIn` below watches it change to know a
-          // checkpoint it asked for actually landed (see `touchSpaceIndexArtifact`'s call site).
           return shellHistoryProjectionAfterPatchV1(current, patch, replace);
         },
       );
@@ -283,10 +266,6 @@ export function useShellCoreState({
     }
     storeCache.flushPendingReloads();
   };
-  // 🪟️ `windowId` is the pane the action that produced `output` addressed. A leftover carries per-window
-  // state (hover, the armed utility), so it is published under THAT pane and never
-  // over every pane's record (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B39); a windowless action
-  // publishes the document's shared fields only and leaves every pane's own fields untouched.
   const applyLeftoverInteractionView = useCallback((output: unknown, addressedWindowId?: string) => {
     const published = interactionViewFromLeftoverOutput(output);
     const windowId = addressedWindowId ?? published?.windowId ?? undefined;
@@ -375,15 +354,6 @@ export function useShellCoreState({
   }, [hostAppsResolution.error]);
   useEffect(() => {
     if (!session) return;
-    // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-A — reads `loadedPluginsRef`
-    // (kept in sync every render, line ~1124), NOT the `loadedPlugins` array itself: this effect only
-    // needs to look up `session.pluginId`'s already-loaded handle, never to refire because some
-    // UNRELATED plugin finished loading in the background. Depending on `loadedPlugins` directly made
-    // this effect refire on every one of the ~50+ sequential catalogue plugin loads during boot,
-    // dispatching a fresh `readHistory` exchange call each time for the SAME session/instance — a real
-    // contributor to the `readHistory: missing HistorySnapshot frame` / `plugin instance busy` storm
-    // observed live in `🧪️5-a-collab-e2e-run1.txt` (lines 29478-29708, correlating almost 1:1 with
-    // `plugin worker + <name>` catalogue-load lines in the same window).
     const plugin = core.loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     if (!plugin) return;
     let cancelled = false;
@@ -399,10 +369,6 @@ export function useShellCoreState({
     return () => {
       cancelled = true;
     };
-    // 🧾️ Keyed on the plugin INSTANCE, not the `session` object: a full history snapshot is only ever
-    // owed when the instance being shown changes. Depending on the whole session re-read the projection
-    // on every session mint — see `applyHostEffects`'s `viewStateRewrittenByEffects` for the churn that
-    // used to produce (one `readHistory` guest round trip per dispatch).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHistoryPatch, session?.pluginId, session?.instanceId]);
   const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelBodyStoreByKey, appLabelsOverlay, appCatalogue } = shellState.windowUi;
@@ -472,15 +438,7 @@ export function useShellCoreState({
   const externalSlotNodesRef = useRef<Map<string, BuiltNode>>(new Map());
   const layoutSeedKeyRef = useRef<string | null>(null);
   const extraWindowCounterRef = useRef(0);
-  // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
-  // (every existing per-surface `onContextMenu` now calls `stopPropagation()` once it decides to show
-  // its own menu — see the `🖱️ShellContextMenu` region below). Covers window-level declared actions
-  // plus the OS command palette, so every window/background always shows *something*.
   const [shellContextMenu, setShellContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
-  // 🪟️ Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
-  // instead of the render-closure `extraWindowInstances` so a concurrent action refresh (e.g. boot
-  // `setActiveExample`) that starts after the session-switch refresh wrote extras but before React
-  // re-rendered cannot fetch with `[]` and wipe Top/Perspective bodies to "missing window".
   const extraWindowInstancesRef = useRef<readonly ExtraWindowInstance[]>([]);
   extraWindowInstancesRef.current = extraWindowInstances;
   //#region 🏁️OperationSettle
@@ -566,11 +524,7 @@ export function useShellCoreState({
   const setWindowIcon = useCallback((windowId: string, iconId: IconName) => {
     dispatch({ type: "SET_WINDOW_ICON", windowId, iconId });
   }, []);
-  // 🐢️ Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
-  // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
   const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
-  // 🐢️ Same idea for the studio-mode spawned-instance view, keyed by spawned instanceId — cleared when
-  // the spawned instance itself changes (tracked via `spawnedLayoutSeedRef`).
   const spawnedUiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
   const spawnedLayoutSeedRef = useRef<string | null>(null);
   const openSpaceIdRef = useRef<string | null>(null);
@@ -672,9 +626,6 @@ export function useShellCoreState({
    * where a hook call would violate the Rules of Hooks. */
   const builtNodeStoreCacheRef = useRef(createBuiltNodeStoreCacheV1());
   const builtNodeStoreFor = useCallback((key: string, node: BuiltNode): UiDocumentStore => builtNodeStoreCacheRef.current.storeFor(key, node), []);
-  // 🎬️ Drains the reloads `storeFor` deferred out of this render — a layout effect, so the store is
-  // current before the browser paints, and the `UiNodeView` subscribers it notifies are updated from a
-  // committed tree instead of from inside `FrameworkOsShellInner`'s render.
   useLayoutEffect(() => builtNodeStoreCacheRef.current.flushPendingReloads());
   //#endregion 🔖️BuiltNodeStores
 

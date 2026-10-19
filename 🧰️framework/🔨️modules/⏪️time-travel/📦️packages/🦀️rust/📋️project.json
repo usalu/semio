@@ -3,11 +3,39 @@
   "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏪️time-travel/**/*", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏪️time-travel/**/*", "{projectRoot}/**/*", "sharedGlobals"],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
   },
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -15,6 +43,14 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"

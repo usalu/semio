@@ -44,6 +44,7 @@ dashboard_labels! {
     status_exited: "exited", "beendet";
     status_failed: "failed", "fehlgeschlagen";
     status_interrupted: "interrupted", "unterbrochen";
+    status_timed_out: "time limit exceeded", "Zeitlimit überschritten";
     exit_code: "exit {code}", "Code {code}";
     setting_language: "Language", "Sprache";
     setting_appearance: "Appearance", "Darstellung";

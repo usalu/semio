@@ -61,7 +61,6 @@ pub struct NurbsCurve3 {
 }
 
 impl Curve3 {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn domain(&self) -> (f64, f64) {
         match self {
             Curve3::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
@@ -69,7 +68,6 @@ impl Curve3 {
             Curve3::Nurbs { knots, .. } => knots.domain(),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_periodic(&self) -> bool {
         match self {
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => true,
@@ -77,7 +75,6 @@ impl Curve3 {
             Curve3::Line { .. } => false,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn period(&self) -> Option<f64> {
         match self {
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => Some(std::f64::consts::TAU),
@@ -88,7 +85,6 @@ impl Curve3 {
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, t: f64) -> Pnt3 {
         match self {
             Curve3::Line { origin, dir } => *origin + *dir * t,
@@ -98,7 +94,6 @@ impl Curve3 {
         }
     }
     /// 🌀️ First derivative `dC/dt`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn d1(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { dir, .. } => *dir,
@@ -108,7 +103,6 @@ impl Curve3 {
         }
     }
     /// 🌀️ Second derivative `d²C/dt²`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn d2(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { .. } => Vec3::ZERO,
@@ -120,7 +114,6 @@ impl Curve3 {
     /// 🌀️ All derivatives `d^0C/dt^0 .. d^orderC/dt^order` (index 0 = position) in one pass — exact
     /// through the rational de Boor `A_k(u)` recurrence for [`Curve3::Nurbs`] (any `order`, not
     /// just 1/2), closed-form for the analytic kinds. `d1`/`d2` are thin wrappers over this.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn derivatives(&self, t: f64, order: usize) -> Vec<Vec3> {
         match self {
             Curve3::Nurbs { knots, controls, weights } => {
@@ -140,7 +133,6 @@ impl Curve3 {
     /// 🌀️ First derivative for the non-`Nurbs` (analytic) variants only — factored out of
     /// [`Self::d1`]/[`Self::derivatives`] so the latter can call it without recursing back into
     /// itself for the `Nurbs` case.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn d1_analytic(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { dir, .. } => *dir,
@@ -150,7 +142,6 @@ impl Curve3 {
         }
     }
     /// 🌀️ Second derivative for the non-`Nurbs` (analytic) variants only, see [`Self::d1_analytic`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn d2_analytic(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { .. } => Vec3::ZERO,
@@ -159,12 +150,10 @@ impl Curve3 {
             Curve3::Nurbs { .. } => Vec3::ZERO,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tangent(&self, t: f64) -> Option<Vec3> {
         self.d1(t).normalized()
     }
     /// 🌀️ Signed curvature magnitude `|C' × C''| / |C'|³` (the standard space-curve formula).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn curvature(&self, t: f64) -> f64 {
         let d1 = self.d1(t);
         let d2 = self.d2(t);
@@ -182,7 +171,6 @@ impl Curve3 {
     /// quadratic circle/ellipse representation, its *own* parametrization is not angle-linear
     /// except at those breakpoints (a well-known property of the construction, not an
     /// approximation: every point it produces still lies exactly on the circle/ellipse).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_nurbs(&self, domain: (f64, f64)) -> NurbsCurve3 {
         match self {
             Curve3::Line { origin, dir } => {
@@ -286,7 +274,6 @@ impl Curve2 {
     /// inversion that produced it happened to return) need not be the branch the face's own
     /// boundary ring is written in; imprinting one into the other without re-aligning it produces a
     /// UV polygon whose pieces sit periods apart, which has no interior at all.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn translated(&self, delta: Vec2) -> Curve2 {
         match self {
             Curve2::Line { origin, dir } => Curve2::Line { origin: *origin + delta, dir: *dir },
@@ -295,7 +282,6 @@ impl Curve2 {
             Curve2::Nurbs { knots, controls, weights } => Curve2::Nurbs { knots: knots.clone(), controls: controls.iter().map(|p| *p + delta).collect(), weights: weights.clone() },
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn domain(&self) -> (f64, f64) {
         match self {
             Curve2::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
@@ -303,7 +289,6 @@ impl Curve2 {
             Curve2::Nurbs { knots, .. } => knots.domain(),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, t: f64) -> Pnt2 {
         match self {
             Curve2::Line { origin, dir } => *origin + *dir * t,
@@ -316,7 +301,6 @@ impl Curve2 {
             Curve2::Nurbs { knots, controls, weights } => eval_nurbs_curve2(knots, controls, weights, t),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn d1(&self, t: f64) -> Vec2 {
         match self {
             Curve2::Line { dir, .. } => *dir,
@@ -335,7 +319,6 @@ impl Curve2 {
     }
     /// 🌀️ Second derivative `d²C/dt²`, exact via the rational de Boor recurrence for
     /// [`Curve2::Nurbs`], closed-form for the analytic kinds.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn d2(&self, t: f64) -> Vec2 {
         match self {
             Curve2::Line { .. } => Vec2::ZERO,
@@ -384,7 +367,6 @@ impl Curve3 {
     /// ([`Self::to_nurbs`] over the curve's own bounded natural domain) and transforms its control
     /// points (rational weights are affine-invariant, so they carry over unchanged either way).
     /// `Nurbs` always just transforms its control points.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transformed(&self, map: &Affine3) -> Curve3 {
         match self {
             Curve3::Line { origin, dir } => Curve3::Line { origin: map.apply_point(*origin), dir: map.apply_vector(*dir) },
@@ -405,7 +387,6 @@ impl Curve3 {
     /// within `1e-9` of `map.apply_point(self.eval(t))` at every `t`, not just at span boundaries
     /// — required because [`Self::transformed`]'s own contract is a pointwise pushforward
     /// (`transformed.eval(t) == map(self.eval(t))`), not merely a shape-preserving conversion.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn transformed_via_nurbs(&self, map: &Affine3) -> Curve3 {
         let nurbs = match self {
             Curve3::Circle { frame, radius } => arc_to_nurbs_with_span(frame, *radius, *radius, self.domain(), refined_max_span(*radius)),

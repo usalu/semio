@@ -1,4 +1,4 @@
-//! `change-element-orientation-deg`.
+//! 🧬️ `change-element-orientation-deg`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

@@ -1,13 +1,13 @@
 import { defineScriptProviderV1, loadScriptProviderV1 } from "../🔌️providers/🟦️.ts";
-import type { ScriptCommand } from "../🧭️routing/🟦️.ts";
+import type { ScriptRouter } from "../🧭️routing/🟦️.ts";
 import type { ScriptInvocation } from "../🧭️routing/📥️invocation/🟦️.ts";
 
 /** 🔬️ One artifact's TypeScript twin: the second, independent implementation of a law whose fixture the Rust suite also answers; it returns how many assertions it carried. */
 export type ArtifactTwinSelfTest = { readonly name: string; readonly run: () => number };
 /** 📦️ Declares the packages, twins and extra commands of an independently owned Rust artifact package. */
-export type ArtifactRustPackageOptions = { readonly packages?: readonly string[]; readonly testPackages?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: Readonly<Record<string, ScriptCommand>>; readonly testCommands?: Readonly<Record<string, ScriptCommand>>; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] };
+export type ArtifactRustPackageOptions = { readonly packages?: readonly string[]; readonly testPackages?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: ScriptRouter; readonly testCommands?: ScriptRouter; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] };
 /** 🧪️ Declares artifact-owned suites and commands under the actual package Source owner. */
-export interface ArtifactTypeScriptPackageOptions { readonly suites?: readonly string[]; readonly bundleRuntime?: "javascript" | "bun"; readonly afterTest?: (invocation: ScriptInvocation) => Promise<void>; readonly commands?: Readonly<Record<string, ScriptCommand>> }
+export interface ArtifactTypeScriptPackageOptions { readonly suites?: readonly string[]; readonly bundleRuntime?: "javascript" | "bun"; readonly afterTest?: (invocation: ScriptInvocation) => Promise<void>; readonly commands?: ScriptRouter }
 
 /** 🔌️ Runs the build, check and test commands of independently owned artifact packages under the repository's compiler admission. */
 export interface ArtifactPackageProviderV1 {

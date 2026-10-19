@@ -22,7 +22,7 @@ async fn serialize_builds_one_synthetic_track_with_real_derived_durations() {
     assert_eq!(mp4.tracks.len(), 1);
     assert_eq!(mp4.tracks[0].timescale, SYNTHETIC_TIMESCALE);
     assert_eq!(mp4.tracks[0].samples.len(), 3);
-    assert_eq!(mp4.tracks[0].samples[0].duration, 500); // 0.5s * 1000
+    assert_eq!(mp4.tracks[0].samples[0].duration, 500);
     assert_eq!(mp4.tracks[0].samples[1].duration, 500);
     assert!(mp4.tracks[0].samples.iter().all(|s| s.data.is_empty()), "no fabricated frame bytes");
 }

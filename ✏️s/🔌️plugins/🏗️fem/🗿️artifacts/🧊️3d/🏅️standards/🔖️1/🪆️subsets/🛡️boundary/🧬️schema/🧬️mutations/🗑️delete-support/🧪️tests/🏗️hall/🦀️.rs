@@ -13,7 +13,7 @@
 //! The reserved clamp on the extension set-out point is released.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation_cold;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -67,7 +67,7 @@ fn touches_only_its_own_member() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_fem3d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_fem3d_mutation_cold(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_fem3d_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

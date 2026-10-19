@@ -4,7 +4,7 @@ name = "semio-framework-course-primitives-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Companion tests of the quiz primitives: Mersenne Twister, shuffle and presence tags"
+description = "Companion tests of the quiz primitives: Mersenne Twister and shuffle"
 publish = false
 
 [package.metadata.semio]

@@ -4,7 +4,7 @@ import { Buffer } from "node:buffer";
 
 /** ⛽️ Checks portable row contributor wire words through independent system Buffer primitives. */
 export function testNumericalRestoreFundingWire(): void {
-  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/⛽️restore-funding/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/⛽️restore-funding/🔣️.json"), "utf8"));
   const bytes = Buffer.alloc(fixture.count * fixture.scalarWidth);
   fixture.columns.forEach((column: number, index: number) => {
     bytes.writeUInt32LE(column, index * fixture.scalarWidth);

@@ -4,7 +4,7 @@ import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WO
 import { kernelDescriptorLoadFixture as descriptorLoadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
-import { tutorialDocumentTrackFixture as tutorialDocumentFixture } from "../../../../../../../🔨️modules/🎓️onboarding/🧪️tests/🧫️fixtures/🟦️.ts";
+import { tutorialDocumentTrackFixture as tutorialDocumentFixture } from "@semio-tech/framework/onboarding/testing/fixtures";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
 import type { TutorialDefinition } from "@semio-tech/framework";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -22,7 +22,8 @@ function readGeneratedShardWorkerOwnerSource(leaf: "🧾️contract" | "🧵️s
   let root = process.cwd();
   for (let hop = 0; hop < 12 && !existsSync(`${root}/${relative}`); hop += 1) root = `${root}/..`;
   expect(existsSync(`${root}/${relative}`)).toBe(true);
-  return readFileSync(`${root}/${relative}`, "utf8");
+  const chunks = leaf === "🧵️shard-worker-source" ? ["🥾️worker-bootstrap-and-faults", "🎬️actor-state-and-lanes", "🚦️request-beats-and-drive-pacing", "🔌️actor-loading-and-replies", "📨️message-handler"] : [];
+  return ["", ...chunks].map((chunk) => readFileSync(`${root}/${relative.replace(`/${leaf}/`, `/${leaf}/${chunk}${chunk ? "/" : ""}`)}`, "utf8")).join("\n");
 }
 
 describe("shell runtime diagnostics switch", () => {
@@ -31,29 +32,17 @@ describe("shell runtime diagnostics switch", () => {
   });
 
   it("is off by default and names the same key the guest switch does", () => {
-    // 🪞️ `RUNTIME_DIAGNOSTICS_ENV` in `🧰️framework/🔨️modules/⏱️trace/🦀️.rs` — one name, two languages.
     expect(RUNTIME_DIAGNOSTICS_KEY).toBe("SEMIO_RUNTIME_DIAGNOSTICS");
     expect(runtimeDiagnosticsEnabled()).toBe(false);
   });
 
-  // ⚖️ LAW: the key is spelled once per realm that has to resolve it — the shell, the shard-worker
-  // bootstrap, and the generated worker/host-shim source — and all of them must agree, because the
-  // guest's own `RUNTIME_DIAGNOSTICS_ENV` is the only reader and it matches on the exact string
-  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §4 rank 1).
   it("spells the same diagnostics key in every realm that resolves it", () => {
     expect(SHARD_RUNTIME_DIAGNOSTICS_KEY).toBe(RUNTIME_DIAGNOSTICS_KEY);
-    // 🔌️ The generated shard worker's own copy lives in `🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts`,
-    // which this jsdom suite cannot import (it reaches the repo library's `bun:sqlite` lease store),
-    // so it is read as text — the same shape `⏱️wgpu-ui-turn-budget` uses for `ShellHost`.
     const pluginPackage = readGeneratedShardWorkerOwnerSource("🧾️contract");
     expect(pluginPackage).toContain(`export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "${RUNTIME_DIAGNOSTICS_KEY}"`);
     expect(pluginPackage).toContain(`export const SHARD_WORKER_DIAGNOSTICS_PARAM = "${SHARD_WORKER_DIAGNOSTICS_PARAM}"`);
   });
 
-  // ⚖️ LAW: an unarmed page boots the shard worker at the bare url, and an armed one stamps the
-  // parameter the worker reads back — the ONLY channel the switch has into a Worker realm, which
-  // owns no `localStorage`. The generated worker must read that same parameter and seed
-  // `wasi:cli/environment` from it, which is what makes the guest's `[TRACE]` sites reachable.
   it("carries the armed switch into the worker realm on the worker url", () => {
     const stored = new Map<string, string>();
     const original = globalThis.localStorage;

@@ -1,5 +1,5 @@
 /** 📍️ Names the graph library's paths, authored policy data and physical Source reads that every inference component shares. */
-import { componentModelDirectoryKeyV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts";
+import { componentModelDirectoryKeyV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/📋️contract/🟦️.ts";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
@@ -17,6 +17,8 @@ export const SCRIPT_BASENAME = "📜️script.ts";
 export const DEFAULT_EXECUTOR = "repo:script";
 export const TARGET_EXECUTION_SCHEMA = "🏗️build/🏃️execution/🧬️schema/🔣️.json";
 export const targetExecutionSchema = JSON.parse(readFileSync(new URL(`../../../../${TARGET_EXECUTION_SCHEMA}`, import.meta.url), "utf8"));
+export const TARGET_CACHE_SCHEMA = "🏗️build/🏃️execution/🧬️schema/💾️cache.json";
+export const targetCacheSchema = JSON.parse(readFileSync(new URL(`../../../../${TARGET_CACHE_SCHEMA}`, import.meta.url), "utf8"));
 
 export const LIBRARY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 export const LIBRARY_URL = pathToFileURL(join(LIBRARY_ROOT,"🟨️.mjs")).href;

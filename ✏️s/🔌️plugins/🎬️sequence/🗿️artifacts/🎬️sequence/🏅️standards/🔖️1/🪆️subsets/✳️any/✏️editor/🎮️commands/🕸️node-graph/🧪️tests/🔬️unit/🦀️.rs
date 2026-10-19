@@ -15,14 +15,8 @@ use crate::editor::sequence::commands::node_graph::set_viewport::SetViewport;
 #[semio_framework_async_macros::async_test]
 async fn set_viewport_writes_config_not_operations() {
     let mut app = new_app().await;
-    // 🔁️ A mounted app publishes AFTER it answers, so the config write is only visible once the
-    // retained operation has settled — `context::dispatch` drives that continuation the way the host
-    // does. `result.mutations` is always empty on a mounted app; the no-VCS-edit claim is proven by
-    // the settled receipt carrying no `Artifact` lane.
     let result = dispatch(&mut app, SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } })).await;
     assert!(result.mutations.is_empty(), "setViewport must not emit a VCS operation");
-    // 🪟️ The camera lives in the MAIN window's own config, so the read has to come through the same
-    // window instance the write was addressed at — an unaddressed render sees the default camera.
     let view = main_window_meta().view_state.expect("main window view");
     let scene: semio_framework_plugin::NodeGraphScene = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, &view, app.1.cx(), |root| {
         let semio_framework_plugin::Component::Surface(props) = &root.component else { panic!("semantic graph") };

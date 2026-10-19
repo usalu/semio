@@ -73,7 +73,7 @@ fn attributes(style:&Style)->Result<DrawingAttributes,String> {
     let fill_rule=FillRule::parse(value("fill-rule").unwrap_or("nonzero")).map_err(str::to_owned)?;
     let fill=match value("fill").unwrap_or("black") {"none"=>None,paint=>Some(FillStyle::Solid {color:color(&resolve(paint),fraction(field("fill-opacity"))?)?})};
     let stroke=match value("stroke") {None|Some("none")=>None,Some(paint)=>{
-        let dash=match value("stroke-dasharray"){None|Some("none")=>None,Some(source)=>Some(source.split(|ch:char|ch==','||ch.is_ascii_whitespace()).filter(|value|!value.is_empty()).map(|value|nonnegative(text_length(value)?)).collect::<Result<semio_framework_value::list::PagedList<f64,{usize::MAX}>,_>>()?)};
+        let dash=match value("stroke-dasharray"){None|Some("none")=>None,Some(source)=>Some(source.split(|ch:char|ch==','||ch.is_ascii_whitespace()).filter(|value|!value.is_empty()).map(|value|nonnegative(text_length(value)?)).collect::<Result<semio_framework_value_persistent::list::PagedList<f64,{usize::MAX}>,_>>()?)};
         Some(StrokeStyle {color:color(&resolve(paint),fraction(field("stroke-opacity"))?)?,width:nonnegative(length(field("stroke-width"),1.0)?)?,cap:StrokeCap::parse(value("stroke-linecap").unwrap_or("butt")).map_err(str::to_owned)?,join:StrokeJoin::parse(value("stroke-linejoin").unwrap_or("miter")).map_err(str::to_owned)?,dash})
     }};
     Ok(DrawingAttributes {fill_rule,fill,stroke})
@@ -140,7 +140,7 @@ fn gradient_fill(reference:&str,definitions:&BTreeMap<String,SvgNode>,segments:&
         current=href.strip_prefix('#').ok_or("SVG gradient references must be local")?.to_owned();
     }
     if values.get("spreadMethod").is_some_and(|value|value.text()!=Some("pad")){return Err("Unsupported SVG gradient spread".into());}
-    let mut stops=semio_framework_value::list::PagedList::new();let mut last:f64=0.0;
+    let mut stops=semio_framework_value_persistent::list::PagedList::new();let mut last:f64=0.0;
     for attrs in source_stops {
         let mut style=Style::new();for declaration in text_attr(attrs,"style").unwrap_or("").split(';'){if let Some((key,value))=declaration.split_once(':'){style.insert(key.trim().into(),bind_svg_attribute(key.trim(),value.trim())?);}}
         let source=text_attr(attrs,"offset").unwrap_or("0");let offset=if let Some(value)=source.strip_suffix('%'){scalar(value)?/100.0}else{scalar(source)?};last=last.max(offset.clamp(0.0,1.0));
@@ -181,7 +181,7 @@ impl SvgImportJob {
         if local(name)!="svg"{return Err("Invalid SVG document".into());}
         let (width,height,_)=viewport(attrs)?;
         let title=children.iter().find_map(|child|match child{SvgNode::Element {name,children,..} if local(name)=="title"=>Some(children.iter().filter_map(|child|match child{SvgNode::Text {text}|SvgNode::CData {text}=>Some(text.as_str()),_=>None}).collect::<String>()),_=>None}).filter(|value|!value.trim().is_empty()).unwrap_or_else(||"SVG".into());
-        let document=DrawingSnapshot {id:id.into(),title:Some(title.trim().into()),layers:semio_framework_value::list::PagedList::new(),artboard:Some(semio_s_artifact_draw_drawing_model::DrawingArtboard {width,height}),..Default::default()};
+        let document=DrawingSnapshot {id:id.into(),title:Some(title.trim().into()),layers:semio_framework_value_persistent::list::PagedList::new(),artboard:Some(semio_s_artifact_draw_drawing_model::DrawingArtboard {width,height}),..Default::default()};
         let user_viewport=if let Some(SvgAttributeValue::ViewBox(value))=attr(attrs,"viewBox"){[value.width,value.height]}else{[width,height]};
         let mut gradients=BTreeMap::new();let mut nodes=vec![&root];
         while let Some(node)=nodes.pop(){if let SvgNode::Element {name,attrs,children}=node{
@@ -219,7 +219,7 @@ impl SvgImportJob {
         let mut base=DrawingLayerBase {id:id.as_str().into(),name,visible:value("display")!=Some("none")&&(["g","svg"].contains(&tag)||!matches!(value("visibility"),Some("hidden"|"collapse"))),locked:false,opacity:fraction(field("opacity"))?,blend_mode:blend_mode(value("mix-blend-mode"))?.into(),transform,attributes:attributes(&solid_style)?};
         let isolated=isolation(value("isolation"))?;
         if tag=="g"||id=="svg" {
-            self.groups.push(DrawingGroupBody {isolation:isolated,base,children:semio_framework_value::list::PagedList::new()});self.pending.push(Work::FinishGroup);
+            self.groups.push(DrawingGroupBody {isolation:isolated,base,children:semio_framework_value_persistent::list::PagedList::new()});self.pending.push(Work::FinishGroup);
             let children=children.into_iter().filter(|node|matches!(node,SvgNode::Element {..})).collect::<Vec<_>>();
             for (index,node) in children.into_iter().enumerate().rev(){self.pending.push(Work::Element {node,style:style.clone(),id:format!("{id}.{index}")});}
         }else if tag=="text" {

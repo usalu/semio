@@ -66,6 +66,7 @@
         "ajv": "8.20.0",
         "brepjs": "^18.20.3",
         "brepjs-opencascade": "^0.15.6",
+        "d3-dsv": "3.0.1",
         "d3-geo": "3.1.1",
         "d3-hierarchy": "3.1.2",
         "fast-check": "3.23.2",
@@ -85,9 +86,9 @@
         "saxes": "6.0.0",
         "three": "^0.182.0",
         "three-mesh-bvh": "^0.9.14",
+        "tree-sitter-wasms": "0.1.13",
         "web-tree-sitter": "0.20.8",
-        "xstate": "5.33.3",
-        "manifold-3d": "^3.5.1"
+        "xstate": "5.33.3"
       }
     },
     "../✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript": {
@@ -106,28 +107,23 @@
     },
     "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript": {
       "name": "@semio-tech/wfc-3d",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-epw",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-zip",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-gif",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-mp4",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-svg",
@@ -139,7 +135,6 @@
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-mp3",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
         "@semio-tech/framework": "workspace:*"
       }
@@ -149,41 +144,34 @@
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/stdio-registry-ts": "workspace:*"
-      },
-      "dependencies": {}
+      }
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-bcf",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-binary",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-inventory-ts"
     },
     "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript": {
       "name": "@semio-tech/wfc-grid3d",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-csv",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-step",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-tsv",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-xlsx",
@@ -199,7 +187,6 @@
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-pdf",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
         "@semio-tech/framework": "workspace:*"
       }
@@ -224,13 +211,11 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-md",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-xml",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-png",
@@ -260,13 +245,11 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-jpg",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-avi",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-pptx",
@@ -278,26 +261,22 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-wav",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-txt",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
         "@semio-tech/framework": "workspace:*"
       }
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-stl",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-dwg",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust": {
       "name": "@semio-tech/stdio-dwg-rs",
@@ -307,8 +286,7 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-dxf",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-tiff",
@@ -331,31 +309,26 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-deflate",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-obj",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-gltf",
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/stdio-registry-ts": "workspace:*"
-      },
-      "dependencies": {}
+      }
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-ply",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-json",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-semio",
@@ -376,8 +349,7 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-bmp",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript": {
       "name": "@semio-tech/note-note-js",
@@ -470,10 +442,9 @@
     "../✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript": {
       "name": "@semio-tech/block-js",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
-        "typescript": "^5.9.3",
-        "@semio-tech/framework": "workspace:*"
+        "@semio-tech/framework": "workspace:*",
+        "typescript": "^5.9.3"
       }
     },
     "../✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript": {
@@ -528,8 +499,7 @@
     },
     "../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript": {
       "name": "@semio-tech/space-home",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust": {
       "name": "@semio-tech/space-home-rs",
@@ -540,8 +510,7 @@
     },
     "../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🟦️typescript": {
       "name": "@semio-tech/space-space",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript": {
       "name": "@semio-tech/sourcing-js",
@@ -743,8 +712,8 @@
       "name": "@semio-tech/flow-js",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/ui-react": "workspace:*",
-        "@semio-tech/framework": "workspace:*"
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*"
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1195,9 +1164,9 @@
       "name": "@semio-tech/machine",
       "version": "0.1.0",
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "@semio-tech/process": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript": {
@@ -1241,57 +1210,57 @@
         "tailwindcss": "^4.0.0"
       },
       "devDependencies": {
-        "typescript": "^5.9.3",
         "@csstools/css-calc": "2.1.4",
-        "ajv": "8.20.0",
         "@csstools/css-tokenizer": "3.0.4",
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
+        "typescript": "^5.9.3"
       }
     },
     "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/ui-react",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/assets": "workspace:*",
-        "@semio-tech/ui-styling": "workspace:*",
-        "@semio-tech/framework": "workspace:*",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
         "@react-three/drei": "^10.7.7",
         "@react-three/fiber": "^9.5.0",
+        "@semio-tech/assets": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*",
         "@xyflow/react": "^12.10.0",
         "i18next": "^25.7.4",
         "pdfjs-dist": "^5.4.296",
         "react": "^19.2.3",
         "react-dom": "^19.2.3",
         "react-i18next": "^16.5.2",
-        "react-resizable-panels": "^4.2.1",
+        "react-resizable-panels": "4.14.5",
         "three": "^0.182.0",
         "three-mesh-bvh": "^0.9.14",
         "xstate": "^5.25.0"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "@tailwindcss/postcss": "^4.1.18",
         "@tailwindcss/typography": "^0.5.19",
         "@tailwindcss/vite": "^4.1.18",
+        "@testing-library/react": "^16.3.0",
         "@types/d3-color": "3.1.3",
         "@types/d3-ease": "3.0.2",
         "@types/node": "^25.0.8",
         "@types/react": "^19.2.8",
         "@types/react-dom": "^19.2.3",
-        "@testing-library/react": "^16.3.0",
         "@vitejs/plugin-react": "^5.1.2",
         "@vitest/coverage-v8": "^4.0.17",
         "d3-color": "3.1.0",
         "d3-ease": "3.0.1",
         "polygon-clipping": "0.15.7",
-        "postcss": "^8.5.6",
+        "postcss": "8.5.30",
         "tailwindcss": "^4.0.0",
         "terser": "5.49.1",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "@semio-tech/process": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript": {
@@ -1313,9 +1282,9 @@
         "@semio-tech/ui-react": "workspace:*"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "@types/node": "^22.19.6",
-        "jsdom": "^24.1.3",
-        "@semio-tech/process": "workspace:*"
+        "jsdom": "^24.1.3"
       }
     },
     "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust": {
@@ -1597,57 +1566,6 @@
         "@semio-tech/schema-ts": "workspace:*"
       }
     },
-    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/course-react",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-server": "workspace:*",
-        "@semio-tech/pets": "workspace:*",
-        "@semio-tech/pets-react": "workspace:*",
-        "@semio-tech/course": "workspace:*",
-        "@semio-tech/ui-react": "workspace:*",
-        "react": "^19.2.3",
-        "react-dom": "^19.2.3"
-      },
-      "devDependencies": {
-        "@testing-library/react": "^16.3.0",
-        "@testing-library/user-event": "^14.6.3",
-        "@types/aria-query": "5.0.4",
-        "@types/d3-scale": "^4.0.9",
-        "@types/lodash": "4.17.24",
-        "@types/opentype.js": "1.3.9",
-        "@types/react": "^19.2.8",
-        "@types/react-dom": "^19.2.3",
-        "@vitejs/plugin-react": "^5.1.2",
-        "aria-query": "5.3.0",
-        "colord": "2.10.0",
-        "d3-scale": "4.0.2",
-        "i18next": "25.10.10",
-        "jsdom": "^24.1.3",
-        "lightningcss": "1.32.0",
-        "lodash": "4.18.1",
-        "opentype.js": "1.3.4",
-        "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "@semio-tech/process": "workspace:*"
-      }
-    },
-    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/course",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@semio-tech/assets": "workspace:*",
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/pets": "workspace:*",
-        "@semio-tech/process": "workspace:*",
-        "ajv": "8.20.0",
-        "jstat": "1.9.6",
-        "mathjs": "14.0.0",
-        "typescript": "^5.9.3",
-        "vitest": "^4.0.17"
-      }
-    },
     "../🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript": {
       "name": "@semio-tech/presentation",
       "version": "0.1.0",
@@ -1671,6 +1589,7 @@
         "reveal.js": "^5.2.1"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "@types/react": "^19.2.8",
         "@types/react-dom": "^19.2.3",
         "@types/reveal.js": "^5.2.0",
@@ -1682,8 +1601,7 @@
         "remark-rehype": "11.1.2",
         "typescript": "^5.9.3",
         "unified": "11.0.5",
-        "vitest": "^4.0.17",
-        "@semio-tech/process": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
@@ -1694,6 +1612,7 @@
         "react": "^19.2.3"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "@testing-library/react": "^16.3.0",
         "@testing-library/user-event": "^14.6.3",
         "@types/aria-query": "5.0.4",
@@ -1706,8 +1625,7 @@
         "react-dom": "^19.2.3",
         "typescript": "^5.9.3",
         "vite": "^7.3.1",
-        "vitest": "^4.0.17",
-        "@semio-tech/process": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript": {
@@ -1730,16 +1648,6 @@
       "name": "@semio-tech/framework-os-compute-ownership",
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
-      }
-    },
-    "../✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust": {
-      "name": "@semio-tech/animate-presentation-rs",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/framework-os": "workspace:*"
-      },
-      "devDependencies": {
-        "@semio-tech/framework": "workspace:*"
       }
     },
     "../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript": {
@@ -1791,6 +1699,16 @@
         "crc-32": "^1.2.2"
       }
     },
+    "../✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust": {
+      "name": "@semio-tech/animate-presentation-rs",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework-os": "workspace:*"
+      },
+      "devDependencies": {
+        "@semio-tech/framework": "workspace:*"
+      }
+    },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os-mcp",
       "version": "0.1.0",
@@ -1830,19 +1748,19 @@
       "version": "0.1.0",
       "dependencies": {
         "@react-three/fiber": "^9.5.0",
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-os": "workspace:*",
-        "@semio-tech/framework-editor-rs": "workspace:*",
-        "@semio-tech/framework-surface-rs": "workspace:*",
-        "@semio-tech/canvas-react-renderer": "workspace:*",
-        "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/assets": "workspace:*",
+        "@semio-tech/canvas-react-renderer": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-editor-rs": "workspace:*",
+        "@semio-tech/framework-os": "workspace:*",
+        "@semio-tech/framework-os-node-graph-rs": "workspace:*",
+        "@semio-tech/framework-surface-rs": "workspace:*",
+        "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "katex": "^0.16.22",
         "react": "^19.2.3",
-        "react-dom": "^19.2.3",
-        "@semio-tech/framework-os-node-graph-rs": "workspace:*"
+        "react-dom": "^19.2.3"
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
@@ -1861,15 +1779,15 @@
       "name": "@semio-tech/framework-renderer-wgpu",
       "version": "0.1.0",
       "dependencies": {
+        "@semio-tech/assets": "workspace:*",
         "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-os": "workspace:*",
-        "@semio-tech/assets": "workspace:*"
+        "@semio-tech/framework-os": "workspace:*"
       },
       "devDependencies": {
-        "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
+        "@semio-tech/process": "workspace:*",
         "graphlib": "2.1.8",
-        "@semio-tech/process": "workspace:*"
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust": {
@@ -1882,21 +1800,6 @@
       "name": "@semio-tech/framework-plugin-compute-ownership",
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
-      }
-    },
-    "../✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/shooting-js",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-3d-js": "workspace:*",
-        "@semio-tech/framework-os": "workspace:*",
-        "@semio-tech/infinite-world-r3f": "workspace:*",
-        "@semio-tech/ui-react": "workspace:*",
-        "@semio-tech/ui-styling": "workspace:*"
-      },
-      "devDependencies": {
-        "typescript": "^5.9.3"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store": {
@@ -1934,6 +1837,21 @@
         "string-argv": "0.4.0",
         "whatwg-url": "14.2.0",
         "yargs-parser": "21.1.1"
+      }
+    },
+    "../✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/shooting-js",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-3d-js": "workspace:*",
+        "@semio-tech/framework-os": "workspace:*",
+        "@semio-tech/infinite-world-r3f": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*"
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust": {
@@ -1979,9 +1897,9 @@
         "@semio-tech/framework": "workspace:*"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "@semio-tech/process": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript": {
@@ -2032,20 +1950,6 @@
         "@semio-tech/value-ts": "workspace:*"
       }
     },
-    "../✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/demonstrator-js",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/framework-3d-js": "workspace:*",
-        "@semio-tech/infinite-world-r3f": "workspace:*",
-        "@semio-tech/ui-react": "workspace:*",
-        "@semio-tech/ui-styling": "workspace:*"
-      },
-      "devDependencies": {
-        "typescript": "^5.9.3"
-      }
-    },
     "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg": {
       "name": "@semio-tech/framework-os-rs",
       "version": "0.1.0"
@@ -2064,6 +1968,7 @@
         "sharp": "^0.34.5"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "@types/d3": "7.4.3",
         "@types/d3-hexbin": "0.2.5",
         "@types/d3-sankey": "0.12.5",
@@ -2098,8 +2003,21 @@
         "jstat": "1.9.6",
         "markdown-it": "14.3.0",
         "mathjs": "14.0.0",
-        "suncalc": "1.9.0",
-        "@semio-tech/process": "workspace:*"
+        "suncalc": "1.9.0"
+      }
+    },
+    "../✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/demonstrator-js",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-3d-js": "workspace:*",
+        "@semio-tech/infinite-world-r3f": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*"
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3"
       }
     },
     "../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript": {
@@ -2136,15 +2054,66 @@
         "d3-time-format": "4.1.0"
       }
     },
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/course": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/framework-server": "workspace:*",
+        "@semio-tech/pets": "workspace:*",
+        "@semio-tech/pets-react": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.3",
+        "@types/aria-query": "5.0.4",
+        "@types/d3-scale": "^4.0.9",
+        "@types/lodash": "4.17.24",
+        "@types/opentype.js": "1.3.9",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "aria-query": "5.3.0",
+        "colord": "2.10.0",
+        "d3-scale": "4.0.2",
+        "i18next": "25.10.10",
+        "jsdom": "^24.1.3",
+        "lightningcss": "1.32.0",
+        "lodash": "4.18.1",
+        "opentype.js": "1.3.4",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/course",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/assets": "workspace:*",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/pets": "workspace:*",
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
+        "jstat": "1.9.6",
+        "mathjs": "14.0.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
     "../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-server",
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/framework-compiler-ts": "workspace:*",
         "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "ajv": "8.20.0"
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript": {
@@ -2164,14 +2133,14 @@
         "@semio-tech/schema-ts": "workspace:*"
       },
       "devDependencies": {
-        "@vscode/vsce": "^3.5.0",
+        "@semio-tech/process": "workspace:*",
         "@types/node": "^24.10.1",
         "@types/vscode": "^1.104.0",
         "@vscode/test-cli": "^0.0.10",
         "@vscode/test-electron": "^2.5.2",
+        "@vscode/vsce": "^3.5.0",
         "typescript": "^5.9.3",
-        "vite": "^7.3.1",
-        "@semio-tech/process": "workspace:*"
+        "vite": "^7.3.1"
       }
     },
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript": {
@@ -2184,14 +2153,16 @@
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools": {
       "name": "@semio-tech/nx-bootstrap-tools",
       "dependencies": {
-        "nx": "23.2.0",
         "@nx/js": "23.2.0",
         "@nxlv/python": "23.0.2",
+        "nx": "23.2.0",
         "typescript": "5.9.3"
       },
       "devDependencies": {
+        "@semio-tech/process": "workspace:*",
         "ajv": "8.20.0",
-        "diff": "8.0.4"
+        "diff": "8.0.4",
+        "tree-sitter-wasms": "0.1.13"
       }
     },
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript": {
@@ -2236,7 +2207,6 @@
     "../✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript": {
       "name": "@semio-tech/demonstrator-playground",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
         "@semio-tech/framework": "workspace:*"
       }
@@ -2304,11 +2274,10 @@
     "../✏️s/🔌️plugins/🎬️sequence/📦️packages/🟦️typescript": {
       "name": "@semio-tech/sequence-tests",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
         "@semio-tech/sequence-sequence": "workspace:*",
-        "ajv": "8.20.0",
-        "@semio-tech/framework": "workspace:*"
+        "ajv": "8.20.0"
       }
     },
     "../✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🟦️typescript": {
@@ -2328,14 +2297,13 @@
     "../✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript": {
       "name": "@semio-tech/fem-js",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
         "manifold-3d": "^3.5.1",
         "three": "^0.182.0",
         "three-mesh-bvh": "^0.9.14",
         "typescript": "^5.9.3",
-        "vitest": "^4.1.10",
-        "@semio-tech/framework": "workspace:*"
+        "vitest": "^4.1.10"
       }
     },
     "../✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🟦️typescript": {
@@ -2394,9 +2362,9 @@
       "name": "@semio-tech/mathematical-js",
       "version": "0.1.0",
       "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
         "ajv": "^8.20.0",
-        "typescript": "^5.9.3",
-        "@semio-tech/framework": "workspace:*"
+        "typescript": "^5.9.3"
       }
     },
     "../✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript": {
@@ -2417,9 +2385,9 @@
       "name": "@semio-tech/lowpoly-js",
       "version": "0.1.0",
       "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
         "ajv": "^8.20.0",
-        "typescript": "^5.9.3",
-        "@semio-tech/framework": "workspace:*"
+        "typescript": "^5.9.3"
       }
     },
     "../✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript": {
@@ -2618,11 +2586,10 @@
     "../✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript": {
       "name": "@semio-tech/wfc-js",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "@semio-tech/framework": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
     "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🟦️typescript": {
@@ -2796,10 +2763,9 @@
     "../✏️s/🔌️plugins/📸️remodel/📦️packages/🟦️typescript": {
       "name": "@semio-tech/remodel-js",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
-        "typescript": "^5.9.3",
-        "@semio-tech/framework": "workspace:*"
+        "@semio-tech/framework": "workspace:*",
+        "typescript": "^5.9.3"
       }
     },
     "../✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust": {
@@ -2815,10 +2781,9 @@
     "../✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript": {
       "name": "@semio-tech/energy-js",
       "version": "0.1.0",
-      "dependencies": {},
       "devDependencies": {
-        "typescript": "^5.9.3",
-        "@semio-tech/framework": "workspace:*"
+        "@semio-tech/framework": "workspace:*",
+        "typescript": "^5.9.3"
       }
     },
     "../✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript": {
@@ -2846,16 +2811,14 @@
       "name": "@semio-tech/trinity-jack-lsp-worker",
       "version": "0.1.0",
       "devDependencies": {
+        "@semio-tech/framework": "workspace:*",
         "typescript": "^5.9.3",
-        "vitest": "^4.0.17",
-        "@semio-tech/framework": "workspace:*"
+        "vitest": "^4.0.17"
       }
     },
-    "../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust": {
+    "../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/pkg": {
       "name": "@semio-tech/trinity-jack-lsp",
-      "devDependencies": {
-        "@semio-tech/framework": "workspace:*"
-      }
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript": {
       "name": "@semio-tech/trinity-rewriting",
@@ -2886,8 +2849,7 @@
     },
     "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript": {
       "name": "@semio-tech/wfc-bitmap",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust": {
       "name": "@semio-tech/trinity-jack-rs",
@@ -2934,8 +2896,7 @@
         "@semio-tech/framework": "workspace:*",
         "ajv": "8.20.0",
         "typescript": "^5.9.3"
-      },
-      "dependencies": {}
+      }
     },
     "../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust": {
       "name": "@semio-tech/draw-drawing-rs",
@@ -2951,8 +2912,8 @@
         "@semio-tech/framework-os": "workspace:*"
       },
       "devDependencies": {
-        "typescript": "^5.9.3",
-        "@semio-tech/framework": "workspace:*"
+        "@semio-tech/framework": "workspace:*",
+        "typescript": "^5.9.3"
       }
     },
     "../✏️s/🔌️plugins/🗄️stdio/📇️registry/📦️packages/🟦️typescript": {
@@ -2960,13 +2921,11 @@
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-las",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     },
     "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript": {
       "name": "@semio-tech/stdio-html",
-      "version": "0.1.0",
-      "dependencies": {}
+      "version": "0.1.0"
     }
   },
   "patchedDependencies": {
@@ -5764,6 +5723,17 @@
       {},
       "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw=="
     ],
+    "@jridgewell/source-map": [
+      "@jridgewell/source-map@0.3.11",
+      "",
+      {
+        "dependencies": {
+          "@jridgewell/gen-mapping": "^0.3.5",
+          "@jridgewell/trace-mapping": "^0.3.25"
+        }
+      },
+      "sha512-ZMp1V8ZFcPG5dIWnQLr3NSI1MiCU7UETdS/A0G8V/XWHvJv3ZsFqutJn1Y5RPmAPX6F3BiE397OqveU/9NCuIA=="
+    ],
     "@jridgewell/sourcemap-codec": [
       "@jridgewell/sourcemap-codec@1.6.0",
       "",
@@ -7433,6 +7403,12 @@
     "@semio-tech/compute-ownership-runner": [
       "@semio-tech/compute-ownership-runner@workspace:../🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution"
     ],
+    "@semio-tech/course": [
+      "@semio-tech/course@workspace:../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript"
+    ],
+    "@semio-tech/course-react": [
+      "@semio-tech/course-react@workspace:../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+    ],
     "@semio-tech/dag-dag": [
       "@semio-tech/dag-dag@workspace:../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript"
     ],
@@ -7904,12 +7880,6 @@
     "@semio-tech/puzzle-js": [
       "@semio-tech/puzzle-js@workspace:../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"
     ],
-    "@semio-tech/course": [
-      "@semio-tech/course@workspace:../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript"
-    ],
-    "@semio-tech/course-react": [
-      "@semio-tech/course-react@workspace:../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript"
-    ],
     "@semio-tech/raster-js": [
       "@semio-tech/raster-js@workspace:../✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript"
     ],
@@ -8166,7 +8136,7 @@
       "@semio-tech/trinity-jack@workspace:../✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript"
     ],
     "@semio-tech/trinity-jack-lsp": [
-      "@semio-tech/trinity-jack-lsp@workspace:../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust"
+      "@semio-tech/trinity-jack-lsp@workspace:../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/pkg"
     ],
     "@semio-tech/trinity-jack-lsp-worker": [
       "@semio-tech/trinity-jack-lsp-worker@workspace:../✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript"
@@ -11862,6 +11832,12 @@
       },
       "sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg=="
     ],
+    "fast-json-patch": [
+      "fast-json-patch@3.1.1",
+      "",
+      {},
+      "sha512-vf6IHUX2SBcA+5/+4883dsIjpBTqmfBjmYiWK1savxQmFk4JfBMLa7ynTYOs1Rolp/T1betJxHiGD3g1Mn8lUQ=="
+    ],
     "fast-json-stable-stringify": [
       "fast-json-stable-stringify@2.1.0",
       "",
@@ -14961,7 +14937,7 @@
       "sha512-nhfdr83ECBg6xtqOAJab1tbksbBAOMUltN60bU+llHVOL0e5Onm1WpAXXWXVB39L8AJFssoIhEVuy/S90MmotA=="
     ],
     "postcss": [
-      "postcss@8.5.31",
+      "postcss@8.5.30",
       "",
       {
         "dependencies": {
@@ -14970,7 +14946,7 @@
           "source-map-js": "^1.2.2"
         }
       },
-      "sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg=="
+      "sha512-zkd+e9S1AQHhmaBKye9zlFHWjOwVgqXl1q3ECYy8561K7qxR2cREf/STLskulBFd78k6AOFeA+ff1TtEzk9bAA=="
     ],
     "postcss-selector-parser": [
       "postcss-selector-parser@6.0.10",
@@ -15287,7 +15263,7 @@
       "sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw=="
     ],
     "react-resizable-panels": [
-      "react-resizable-panels@4.14.6",
+      "react-resizable-panels@4.14.5",
       "",
       {
         "peerDependencies": {
@@ -15295,7 +15271,7 @@
           "react-dom": "^18.0.0 || ^19.0.0"
         }
       },
-      "sha512-YqkTuTDV1ncknnR5YN/iI8icpClippc9/10job9zJIppt2r8yUwaVfVxhzFNO+3DIxrnAwhcMMs1FdX5xt9C9A=="
+      "sha512-AoHgoq3sGOfciPn2ahddFrBCqsitZLse8cJIYWblvE3kQ9z39IrhdlHCjnVRrDL8XcWqvA0u/t9nLZTfWePJ5A=="
     ],
     "react-use-measure": [
       "react-use-measure@2.1.7",
@@ -16388,6 +16364,22 @@
         }
       },
       "sha512-lk+vH+MccxNqgVqSnkMVKx4VLJfnLjDBGzH16JVZjKE2DoxP57s6/vt6JmXV5I3jBcfGrxNrYtC+mPtU7WJztA=="
+    ],
+    "terser": [
+      "terser@5.49.1",
+      "",
+      {
+        "dependencies": {
+          "@jridgewell/source-map": "^0.3.3",
+          "acorn": "^8.15.0",
+          "commander": "^2.20.0",
+          "source-map-support": "~0.5.20"
+        },
+        "bin": {
+          "terser": "bin/terser"
+        }
+      },
+      "sha512-7A2xlQ5EnGT8KPA92dUh6RbRYTVw8hEaEN9L1K68l4UOXFuV511NnAqObGoRqGOQofQcMypisu1s3xawCEHrvA=="
     ],
     "test-exclude": [
       "test-exclude@6.0.0",
@@ -17977,6 +17969,18 @@
       },
       "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
     ],
+    "@tailwindcss/postcss/postcss": [
+      "postcss@8.5.31",
+      "",
+      {
+        "dependencies": {
+          "nanoid": "^3.3.20",
+          "picocolors": "^1.1.1",
+          "source-map-js": "^1.2.2"
+        }
+      },
+      "sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg=="
+    ],
     "@textlint/linter-formatter/pluralize": [
       "pluralize@2.0.0",
       "",
@@ -18762,6 +18766,23 @@
       {},
       "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="
     ],
+    "terser/commander": [
+      "commander@2.20.3",
+      "",
+      {},
+      "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ=="
+    ],
+    "terser/source-map-support": [
+      "source-map-support@0.5.21",
+      "",
+      {
+        "dependencies": {
+          "buffer-from": "^1.0.0",
+          "source-map": "^0.6.0"
+        }
+      },
+      "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="
+    ],
     "test-exclude/glob": [
       "glob@7.2.3",
       "",
@@ -18828,6 +18849,18 @@
         }
       },
       "sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A=="
+    ],
+    "vite/postcss": [
+      "postcss@8.5.31",
+      "",
+      {
+        "dependencies": {
+          "nanoid": "^3.3.20",
+          "picocolors": "^1.1.1",
+          "source-map-js": "^1.2.2"
+        }
+      },
+      "sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg=="
     ],
     "yargs-unparser/is-plain-obj": [
       "is-plain-obj@2.1.0",
@@ -19659,56 +19692,6 @@
       "",
       {},
       "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw=="
-    ],
-    "@jridgewell/source-map": [
-      "@jridgewell/source-map@0.3.11",
-      "",
-      {
-        "dependencies": {
-          "@jridgewell/gen-mapping": "^0.3.5",
-          "@jridgewell/trace-mapping": "^0.3.25"
-        }
-      },
-      "sha512-ZMp1V8ZFcPG5dIWnQLr3NSI1MiCU7UETdS/A0G8V/XWHvJv3ZsFqutJn1Y5RPmAPX6F3BiE397OqveU/9NCuIA=="
-    ],
-    "terser": [
-      "terser@5.49.1",
-      "",
-      {
-        "dependencies": {
-          "@jridgewell/source-map": "^0.3.3",
-          "acorn": "^8.15.0",
-          "commander": "^2.20.0",
-          "source-map-support": "~0.5.20"
-        },
-        "bin": {
-          "terser": "bin/terser"
-        }
-      },
-      "sha512-7A2xlQ5EnGT8KPA92dUh6RbRYTVw8hEaEN9L1K68l4UOXFuV511NnAqObGoRqGOQofQcMypisu1s3xawCEHrvA=="
-    ],
-    "terser/commander": [
-      "commander@2.20.3",
-      "",
-      {},
-      "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ=="
-    ],
-    "terser/source-map-support": [
-      "source-map-support@0.5.21",
-      "",
-      {
-        "dependencies": {
-          "buffer-from": "^1.0.0",
-          "source-map": "^0.6.0"
-        }
-      },
-      "sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w=="
-    ],
-    "fast-json-patch": [
-      "fast-json-patch@3.1.1",
-      "",
-      {},
-      "sha512-vf6IHUX2SBcA+5/+4883dsIjpBTqmfBjmYiWK1savxQmFk4JfBMLa7ynTYOs1Rolp/T1betJxHiGD3g1Mn8lUQ=="
     ]
   }
 }

@@ -92,7 +92,6 @@ impl DwgLogicalDrawing {
     /// the named-object dictionary with the dictionaries AutoCAD requires, and every entity owned by
     /// model space. Handles follow [`new_document_handles`]; entities start at its `FIRST_FREE`.
     /// See <https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf> §20.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_native(drawing: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<Self, String> {
         use new_document_handles as h;
         let mut layers = drawing.layers.clone();
@@ -527,7 +526,6 @@ impl DwgLogicalDrawing {
     }
 
     /// 0️⃣ The handle of layer `0`, the layer a new document's header makes current.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn layer_zero_handle(&self) -> Result<u64, String> {
         self.objects
             .iter()
@@ -539,12 +537,10 @@ impl DwgLogicalDrawing {
     }
 
     /// 🔢️ The next handle a new object of this drawing would take (the header's `HANDSEED`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn handle_seed(&self) -> u64 {
         self.objects.iter().map(|object| object.handle).max().unwrap_or_default() + 1
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn entities(&self) -> Vec<DwgLogicalEntity> {
         let by_handle: std::collections::HashMap<u64, &DwgEntityBody> = self
             .objects
@@ -635,7 +631,6 @@ impl DwgLogicalDrawing {
             .collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_native(&self) -> Result<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing, String> {
         Ok(semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing {
             layers: self.layers.iter().map(|layer| semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer { name: layer.name.clone(), color: layer.color }).collect(),

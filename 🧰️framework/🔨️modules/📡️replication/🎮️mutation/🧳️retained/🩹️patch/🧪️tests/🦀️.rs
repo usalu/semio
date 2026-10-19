@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::retained::retained_mutation_demand_fits;
 #[path="🎟️demand/🦀️.rs"]mod close_demand;
@@ -18,7 +19,7 @@ fn row(value:&serde_json::Value)->Row{Row{name:value["name"].as_str().unwrap().i
 /// 🧫️ Shared retained sparse inverses agree with the language-neutral setters and preserve sibling edits.
 #[test]
 fn retained_row_patch_inverse_and_owned_exchange_match_neutral_sparse_fields(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus.as_array().unwrap(){
   let mut original=source(row(&case["before"]));let mut authored=source(serde_json::from_value::<Patch>(case["patch"].clone()).unwrap());let mut inverse=inverse_fields::Fields::new(RetainedPatchSource::Inverse);let mut turns=0;
   loop{turns+=1;assert!(turns<1000);let quote=grant(inverse.demand(authored.borrow(),original.borrow(),4).unwrap());
@@ -54,7 +55,7 @@ fn retained_row_patch_inverse_cancellation_closes_every_original_field(){
 /// 🚚️ Generic authored-field application keeps original sources and displaced fields through funded closure.
 #[test]
 fn retained_row_patch_apply_preserves_portable_rows_and_every_cancelled_frontier(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🩹️patch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus.as_array().unwrap(){
   for cut in (0..40).map(Some).chain([None]){
    let mut original=source(row(&case["before"]));let mut authored=source(serde_json::from_value::<Patch>(case["patch"].clone()).unwrap());let mut post=row(&case["before"]);let pointer=post.untouched.as_ptr();let name=post.name.as_ptr();

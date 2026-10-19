@@ -133,14 +133,11 @@ describe("🎛️ UtilityTree dispatches only from an explicit press", () => {
   it("dispatches nothing on a controlled resync that takes the pressed chip's value to empty", () => {
     const { dispatched, rerender } = mount(tree());
     expect(chip("pick").getAttribute("aria-pressed")).toBe("true");
-    // 🔁️ The guest re-publishes the same tree under a new register generation: no dispatch.
     rerender(tree({ generation: 4 }));
     expect(dispatched.length).toBe(0);
-    // 🔁️ The pressed leaf's collection goes away: the picker's value resyncs to "" — still no dispatch.
     rerender(tree({ pickDisabled: true }));
     expect(chip("pick")).toBeNull();
     expect(dispatched.length).toBe(0);
-    // 🔁️ The guest clears the pressed leaf: no dispatch either.
     rerender(tree({ pressed: null }));
     expect(dispatched.length).toBe(0);
   });
@@ -151,7 +148,6 @@ describe("🎛️ UtilityTree dispatches only from an explicit press", () => {
     fireEvent.click(chip("pick"));
     expect(dispatched.length).toBe(1);
     expect(dispatched[0]).toEqual({ controllerId: "fem2d", action: "setActiveUtility", args: { utilityId: "", windowId: WINDOW_ID, expectedGeneration: 7 } });
-    // 🎀️ The ribbon folded with it, and the fold did not echo a second deactivation.
     expect(chip("pick").getAttribute("aria-pressed")).toBe("false");
     expect(dispatched.length).toBe(1);
   });
@@ -172,13 +168,10 @@ describe("🎛️ UtilityTree dispatches only from an explicit press", () => {
     expect(toggle("pickDirect").getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(toggle("pickLasso"));
     expect(dispatched).toEqual([setActive("pickLasso", 11)]);
-    // 🔁️ The guest answers with a pressed set that differs for TWO entries at once: nothing is dispatched.
     rerender(tree({ pressed: "pickLasso", generation: 12 }));
     expect(toggle("pickLasso").getAttribute("aria-pressed")).toBe("true");
     expect(toggle("pickDirect").getAttribute("aria-pressed")).toBe("false");
     expect(dispatched.length).toBe(1);
-    // 🖱️ Pressing the pressed toggle dispatches its own descriptor once (the shell resolves it to a
-    // deactivation against the register) — never a synthesized one.
     fireEvent.click(toggle("pickLasso"));
     expect(dispatched.length).toBe(2);
     expect(dispatched[1]).toEqual(setActive("pickLasso", 12));

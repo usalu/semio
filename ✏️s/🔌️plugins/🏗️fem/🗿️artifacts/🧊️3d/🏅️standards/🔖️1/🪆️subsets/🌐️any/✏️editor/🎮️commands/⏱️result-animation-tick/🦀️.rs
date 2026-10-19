@@ -1,4 +1,4 @@
-//! payload and the frame step are the ONE FEM implementation in the fem 2d crate
+//! 📦️ payload and the frame step are the ONE FEM implementation in the fem 2d crate
 //! ⏱️ Fem3d play app command — `result-animation-tick`: one playback clock tick of a fem 3d results window. The
 //! (`semio_s_artifact_fem_2d_editor::editor::fem2d::commands::result_animation_tick`), driven over
 //! [`crate::editor::fem3d::commands::set_result_animation::Fem3dResultsPlayback`].

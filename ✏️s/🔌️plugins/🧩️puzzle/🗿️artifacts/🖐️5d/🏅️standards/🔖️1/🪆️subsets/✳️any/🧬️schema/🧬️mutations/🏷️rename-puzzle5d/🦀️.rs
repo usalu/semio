@@ -1,4 +1,4 @@
-//! thing this fixture has to an identity field).
+//! 🧪️ thing this fixture has to an identity field).
 //! 🏷 Puzzle5d mutation — `RenamePuzzle5d`: changes the document's display label (the closest
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -37,7 +37,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RenamePuzzle5d {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for RenamePuzzle5d
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RenamePuzzle5d>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

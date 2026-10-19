@@ -6,29 +6,6 @@ import { adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRunt
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
 describe("framework plugin runtime", () => {
-  // 🔌️ HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS: the WIT ABI flipped from 14
-  // per-verb `{json: string}` calls to `manifest`/`createApp`/`destroyApp` plus `protocol_channel::
-  // AppCommand`/`AppFrame` bytes carried over the turn ABI, instead of the old flat `semio_plugin_*`
-  // wasm-bindgen JSON exports, which no longer exist anywhere in the ABI
-  // (`loadPluginModuleUncached`'s doc comment).
-  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react, absorbing A4-channel's lease against this
-  // file): channel v12 retired `AppCommand::RefreshUi`/`SectionProbe` and `AppFrame::UiSection` —
-  // window-body refresh is no longer a request/response round trip at all, it is a
-  // `Event::SurfaceVisible` submission read back through `TurnResult.uiPatches` via the
-  // `ActivationRegistry`/`ShardClient` pair `loadPluginModule` owns (`🧱️elements/PluginRuntime/🟦️.tsx`'s
-  // `🔖️ActorAdapter` region). `adaptPluginHandle` alone (what this test constructs, via a bare
-  // fake with no actor and no ShardClient) genuinely has no wire path left to ask for a
-  // section body over, so its own `refreshUi` is an honest empty result — asserted here rather than
-  // deleted, since "no wire path here anymore" is itself real, worth-pinning behavior.
-  //
-  // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (`exchange-removal`): the raw
-  // `KernelPluginWasmHandle`'s old synchronous `exchange(instanceId, frames) -> Promise<frames>`
-  // per-call RPC is gone (`📌️important.md`'s "Replace, never wrap" list) — split into fire-and-forget
-  // `enqueue(instanceId, events): void` plus the handle-wide `outcomes: AsyncIterable<TurnOutcome>`
-  // broadcast `AppChannelClient` correlates FIFO against (`🎠️kernel/🪝️plugin-wasm-handle/🟦️.ts`'s
-  // `PluginWasmHandle` header doc). This helper re-creates `exchange`'s old request/reply shape on
-  // top of the two new primitives, purely for these fakes' own convenience — production code never
-  // has a synchronous responder like this to call.
   function exchangeStyleChannel(respond: (instanceId: number, frames: Uint8Array[]) => Uint8Array[] | Promise<Uint8Array[]>): {
     readonly enqueue: (instanceId: number, events: readonly Uint8Array[]) => void;
     readonly outcomes: AsyncIterable<TurnOutcome>;
@@ -98,11 +75,6 @@ describe("framework plugin runtime", () => {
     expect(resolved).toEqual({ manifest: "manifest", runtime: "shards" });
   });
 
-  // 🧬️ H1-react — design-runtime.md §1 `SceneStore` / packet brief item 2: the retained-tree
-  // reconciliation `PluginRuntime`'s `loadPluginModule` applies every `TurnResult.uiPatches` entry
-  // through. Exercised directly (not through a fake wasm turn) since it is a pure function — real
-  // coverage of "apply a `UiPatch` to a retained tree, honour `baseRevision`" that does not depend on
-  // the unverified jco wasm boundary this file's `🔖️ActorAdapter` doc flags.
   describe("applyUiPatchToRetained", () => {
     const leaf = (id: number, value: string): UiNodeRecord => ({
       id,
@@ -228,14 +200,6 @@ describe("framework plugin runtime", () => {
     expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } });
   });
 
-  // 🧬️ H1-react — `withSerializedPluginWasmHandle` (which queued concurrent per-call requests
-  // transparently against the old synchronous wasm handle) is deleted alongside `PluginWorkerClient`
-  // (`🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts`'s own doc comment names it). The reason it existed still applies:
-  // `🟨️shard-worker.js` REJECTS (does not queue) a second in-flight `turn` for the same actor
-  // (`inFlightTurnActors` guard, `🟦️.ts`). `serializePerActor`
-  // (`PluginRuntime/🟦️.tsx`'s `🔖️ActorAdapter` region) is `loadPluginModule`'s real
-  // replacement — every `submitTurn` call for one actor funnels through it — exercised directly here
-  // since it is a plain, generic per-key promise queue.
   it("serializePerActor queues concurrent turns for the same actor one at a time, never overlapping", async () => {
     let inFlight = 0;
     let maxInFlight = 0;
@@ -310,10 +274,6 @@ describe("framework plugin runtime", () => {
     expect(order).toEqual(["first-page", "first-terminal", "second-page", "second-terminal"]);
   });
 
-  // 🔗️ INPUT-CAUSALITY-LEDGER §2 B / §6 phase 4, law L2: `serializeCommandIngressForActor`'s `order`
-  // is the ledger's causal key (`causedBy ?? inputSeq`); the mailbox's `## causal order` rule inserts
-  // an ordered call before the earliest queued call with a strictly larger `order`, so a follow-up of
-  // input N (order N) overtakes the already-queued input N+1 while the in-flight call is never touched.
   it("serializeCommandIngressForActor dequeues queued calls by ascending order — a later call with a smaller order overtakes a larger one behind the held call", async () => {
     const ran: string[] = [];
     let releaseHeld!: () => void;
@@ -393,13 +353,6 @@ describe("framework plugin runtime", () => {
     expect(ran).toEqual(["held", "first", "second", "third"]);
   });
 
-  // 🧬️ H1-react — `AppFrame::Effects`/`Events` no longer exist (channel v12, A4-channel). Effects
-  // now travel as real `kernel::Effect` values directly on `TurnResult.effects`
-  // (`⚛️reactor/🦀️.rs`'s `poll`), demuxed by `loadPluginModule`'s turn loop into
-  // `pendingTurnEffects`/drained by `performInvocation` — a mechanism a bare command-only fake (no
-  // ShardClient turn ever runs) has nothing to populate, so `requestedEffects` is honestly `[]` here.
-  // `output`/`uiScope`/`historyPatch` still arrive on the SAME `AppFrame::Invocation` frame, unchanged
-  // by the flip — real wire coverage, kept.
   it("adaptPluginHandle.handleAction round-trips an action's output/uiScope/historyPatch from AppFrame::Invocation; requestedEffects is honestly empty for a bare command-only handle", async () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
@@ -470,11 +423,9 @@ describe("framework plugin runtime", () => {
     expect(typeof handle.readConflicts).toBe("function");
     const instanceId = await handle.createApp("main");
 
-    // ⚖️ Same call the Settings merge-policy `Select`'s `dispatchSetMergePolicy` makes (`ShellHost/🟦️.tsx`).
     await handle.setMergePolicy(instanceId, "Vigilant");
     expect(sentCommands[0]).toEqual({ setMergePolicy: { seq: 1, policy: 2 } });
 
-    // ⚔️ Same call the Conflicts panel's Accept button makes (`ChromePanels`'s `onResolve` → `dispatchResolveConflict`).
     const resolved = await handle.resolveConflict(instanceId, "conflict-abc", "accept");
     expect(sentCommands[1]).toEqual({ resolveConflict: { seq: 2, conflict_id: "conflict-abc", resolution: 0 } });
     expect(resolved.mergeReport?.accepted).toBe(true);
@@ -505,9 +456,6 @@ describe("framework plugin runtime", () => {
         const seq = command.ApplyEnvelopes.seq;
         return [
           encodeAppFrame({ Done: { in_reply_to: seq } }),
-          // ⚖️ Unsolicited: the command was ApplyEnvelopes, not ReadConflicts/ResolveConflict — this
-          // is exactly the "pushed unsolicited after every ingest" reply shape contract freeze §C8
-          // describes, alongside whatever `DocumentChanged`/effect frames a real ingest would also carry.
           encodeAppFrame({ MergeReport: { in_reply_to: null, report: Array.from(encodePackValue({ policy: "Normal", accepted: false, insertionIndex: 0, replayed: [], worst: "error", conflict: remoteConflict.id })) } }),
           encodeAppFrame({ Conflicts: { in_reply_to: null, conflicts: Array.from(encodePackValue([remoteConflict])) } }),
         ];
@@ -517,25 +465,14 @@ describe("framework plugin runtime", () => {
     const handle = await adaptPluginHandle("mock-remote-merge", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
 
-    // 🐛 Pre-fix, `applyMutations` returned `Promise<void>` and this whole roster was thrown away.
     if (!handle.applyMutations) throw new Error("Mutation fixture requires its owned mutation handler");
     const result = await handle.applyMutations(instanceId, encodeMutationEnvelopesPack([]));
     expect(result.mergeReport?.accepted).toBe(false);
     expect(result.mergeReport?.worst).toBe("error");
     expect(result.conflicts).toEqual([remoteConflict]);
 
-    // ⚖️ The other half of the gap: ShellHost's `applyRemoteMerge` (fed by `applyRemoteMergeRef` from
-    // the `remoteMutations` worker-event branch) just dispatches `SET_CONFLICTS` with this roster —
-    // reproduced here at the reducer level so the assertion doesn't need a mounted `ShellHost`.
     const state = shellReducer(initialShellState({ locale: "en", plugins: [], storage: createMemoryStoragePort() }), { type: "SET_CONFLICTS", value: result.conflicts ?? [] });
     expect(selectOpenConflicts(state)).toEqual([remoteConflict]);
     expect(selectQuarantinedConflicts(state)).toEqual([remoteConflict]);
   });
-
-  // 🪦️ H1-react — `isPluginInstanceBusyError`/`pluginErrorText` (detecting a jco "plugin instance
-  // busy" error after a concurrent call raced past `withSerializedPluginWasmHandle`) are deleted
-  // alongside it and `INSTANCE_GUARD`/`clear-instance-guard` (packet H2's/`📌️important.md`'s "must
-  // not exist" list). Not a dropped-coverage gap: `serializePerActor` (tested above) makes a "busy"
-  // race structurally impossible at this layer — every turn for one actor is queued, never
-  // concurrent — so there is no busy-error shape left to detect. Prevention replaced detection.
 });

@@ -38,7 +38,7 @@ fn op_binary_round_trips_and_agrees_with_text() {
 /// 🩹️ Typed field intent remains sparse through both mutation protocol representations.
 #[test]
 fn material_field_intent_binary_round_trips_and_agrees_with_text() {
-    let operation = Fem2dMutation::ChangeMaterial(schema::mutations::change_material::ChangeMaterial {
+    let operation = Fem2dMutation::ChangeMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial {
         id: "steel".into(),
         patch: schema::diff::Fem2dMaterialPatch { e: Some(190e9), ..Default::default() }
     });
@@ -54,7 +54,7 @@ fn material_field_intent_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn fem2d_document_text_round_trips_through_the_store() {
     let fixture = simply_supported_beam_doc();
-    let mut store = ::semio_framework_async::poll::resolve_ready(schema::mutations::Fem2dStore::new(create_document_envelope(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "fem2d", semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
+    let mut store = ::semio_framework_async::poll::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem2dStore::new(create_document_envelope(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "fem2d", semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
     store.install_document_store_owners_exact(semio_framework_os_kernel::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, Fem2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     let mutations = vec![
         Fem2dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone(), index: None }),

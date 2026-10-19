@@ -275,7 +275,6 @@ async fn a_closed_container_stamps_its_total_and_materialises_no_child() {
     assert_eq!(window_of(zone).0, DEMO_ZONE_CHILDREN, "a closed zone still reports everything it owns: {zone}");
     assert!(child_keys(zone).is_empty(), "and materialises none of it: {zone}");
 
-    // 🧾️ A section closed by AUTHOR default behaves identically without any host state at all.
     let first_paint = tree_of(&english(&demo()));
     let materials = node_at(&first_paint, &section_key("materials")).expect("the materials section");
     assert!(child_keys(materials).is_empty(), "a section that opens closed builds nothing: {materials}");
@@ -314,8 +313,6 @@ async fn a_wide_zone_keeps_every_surface_reachable_and_no_window_is_ever_collaps
     let surfaces = model.surfaces.len();
     let snapshot = snapshot_of(&model);
 
-    // 🧭️ The reader scrolls to the tail of the zone: the last surfaces are built, the zone's total is
-    // unchanged, and the east wall reached through its own window still owns its opening.
     let view = hosted(vec![request(&zone_path("1"), Some(true), (surfaces - 4) as u32, 4), opened(&surface_path("1", "41"))]);
     let json = panel(&snapshot, &nothing(), Locale::En, &view);
     let tree = tree_of(&json);

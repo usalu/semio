@@ -64,9 +64,6 @@ pub fn dkt_b_matrix(coords: &[[f64; 2]; 3], xi: f64, eta: f64) -> MatD {
     let dn6dx = 4.0 * (gx[0] * l2v + l1 * gx[1]);
     let dn6dy = 4.0 * (gy[0] * l2v + l1 * gy[1]);
 
-    // The Hx3/Hx6/Hx9 and Hy2/Hy5/Hy8 "direct" terms use the QUADRATIC Tri6 corner shape functions
-    // `Ni = Li*(2Li-1)` (matching `formulation::shape_tri6`'s convention), NOT the linear area
-    // coordinates `Li` themselves — `dNi/dx = (4Li-1) * dLi/dx`.
     let dn1qdx = (4.0 * l1 - 1.0) * gx[0];
     let dn1qdy = (4.0 * l1 - 1.0) * gy[0];
     let dn2qdx = (4.0 * l2v - 1.0) * gx[1];
@@ -74,7 +71,6 @@ pub fn dkt_b_matrix(coords: &[[f64; 2]; 3], xi: f64, eta: f64) -> MatD {
     let dn3qdx = (4.0 * l3 - 1.0) * gx[2];
     let dn3qdy = (4.0 * l3 - 1.0) * gy[2];
 
-    // Batoz-order (w1,βx1,βy1,w2,βx2,βy2,w3,βx3,βy3) partial derivatives of the Hx/Hy shape combinations.
     let dhx_dx = [
         1.5 * (edge6.a * dn6dx - edge5.a * dn5dx),
         edge5.b * dn5dx + edge6.b * dn6dx,
@@ -120,8 +116,6 @@ pub fn dkt_b_matrix(coords: &[[f64; 2]; 3], xi: f64, eta: f64) -> MatD {
         -edge4.b * dn4dx - edge5.b * dn5dx,
     ];
 
-    // Batoz's Hx/Hy columns land directly on our (w,Rx,Ry) triple with no permutation, but with an
-    // overall sign flip (see the doc comment above): κx=-∂Hx/∂x, κy=-∂Hy/∂y, κxy=-(∂Hx/∂y+∂Hy/∂x).
     let mut b = MatD::zeros(3, 9);
     for i in 0..3 {
         let (bw, bbx, bby) = (3 * i, 3 * i + 1, 3 * i + 2);

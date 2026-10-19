@@ -1,4 +1,4 @@
-//! Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🧱️material/🧪️tests/🧱️mutate-fem2d-1-material/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem2d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
+//! 🐑️ Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🧱️material/🧪️tests/🧱️mutate-fem2d-1-material/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem2d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
 //! 🏗️ `s.fem.fem2d` material mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem2d-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
@@ -59,11 +59,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-material" => Vector {
-            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🎯️outcome/🔣️.json"),
         },
         "create-material" => Vector {
             before: include_str!("../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/📸️snapshot/⬅️before/🔣️.json"),

@@ -4,8 +4,7 @@ import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/�
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryTestCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import contract from "./🧪️tests/🧫️fixtures/🔮️ownership/🔣️.json";
-import { resolve } from "node:path";
+import { runNativeTestScript } from "./🟦️.ts";
 
 /** 🪐️ Proves source ownership and caller-owned document admission against real inputs. */
 class OwnershipTestScript extends BundleScript {
@@ -18,13 +17,9 @@ class OwnershipTestScript extends BundleScript {
 /** 🦀️ Requires all original host, Space, Home and higher composition native cohorts. */
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
-    if (rest.length) throw new Error("The complete Space document native gate accepts no cohort filters.");
-    for (const project of contract.nativeProjects) {
-      await runRepositoryTestCommand(process.execPath, ["repo", "run", `${project}:test`, "--skip-cache"], { cwd: resolve(this.root, "../../../.."), budgetMs: 3_600_000 });
-    }
+    await runNativeTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-ownership", OwnershipTestScript).register("test-native", NativeTestScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test-ownership" }) }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

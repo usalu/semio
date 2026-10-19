@@ -204,8 +204,6 @@ fn result_json(plan: &Plan, scenario: &Scenario, status: &str, duration_ms: u128
     let projection = outcome.map(|value| value.projection.clone()).unwrap_or(Json::Null);
     let raw_hash = outcome.and_then(|value| value.raw.as_ref()).map(|bytes| digest(bytes)).unwrap_or_else(|| digest(b""));
     let mut output = vec![("rawHash".to_string(), Json::String(raw_hash)), ("projectionHash".to_string(), Json::String(digest(projection.to_string().as_bytes()))), ("projection".to_string(), projection)];
-    // 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the digest a
-    // comparison stage keys on must describe the bytes that actually reached disk.
     let artifacts: Vec<Json> = outcome
         .map(|value| {
             value
@@ -249,8 +247,6 @@ fn result_json(plan: &Plan, scenario: &Scenario, status: &str, duration_ms: u128
         ("output".to_string(), Json::Object(output)),
         ("diagnostics".to_string(), Json::Array(diagnostics.into_iter().map(|(severity, message)| Json::Object(vec![("severity".to_string(), Json::String(severity)), ("message".to_string(), Json::String(message))])).collect())),
     ];
-    // 🏭️Only a handler that actually reached production dispatch gets this field. Emitting it
-    // unconditionally would make every replaying adapter look like a real subject.
     if let Some(dispatch) = outcome.and_then(|value| value.production_dispatch.as_ref()) {
         record.push((
             "productionDispatch".to_string(),

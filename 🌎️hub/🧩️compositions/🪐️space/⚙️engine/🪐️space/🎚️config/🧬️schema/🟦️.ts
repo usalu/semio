@@ -1,30 +1,30 @@
 /** 🎚️ Hub Studio configuration. @see https://json.schemas.assets.semio-tech.com/hub/compositions/space/engine/space/config/schema.json */
 export interface SpaceConfig {
-  /** @state config */
+  /** 📷️ @state config */
   camera: Record<string, SpaceWindowCamera>;
-  /** @state config */
+  /** 🔘️ @state config */
   collapsedNodeIds: string[];
-  /** @state config */
+  /** 👻️ @state config */
   previewOffNodeIds: string[];
-  /** @state config */
+  /** 🟢️ @state config */
   activeNodeId?: string;
-  /** @state config */
+  /** 🎯️ @state config */
   focusedNodeId?: string;
-  /** @state config */
+  /** 📍️ @state config */
   clipboardNodeIds: string[];
-  /** @state config */
+  /** 📖️ @state config */
   workflowEngagementInput: string;
-  /** @state config */
+  /** 🏗️ @state config */
   compiledDagEngagementInput: string;
-  /** @state config */
+  /** ⏳️ @state config */
   pendingImportNodeId?: string;
-  /** @state config */
+  /** 🚦️ @state config */
   pendingImportFormat?: string;
-  /** @state config */
+  /** ⚡️ @state config */
   activePanelTab: string;
-  /** @state config */
+  /** 🛋️ @state config */
   spaceId?: string;
-  /** @state config */
+  /** ⚙️ @state config */
 }
 
 export interface SpaceWindowCamera {

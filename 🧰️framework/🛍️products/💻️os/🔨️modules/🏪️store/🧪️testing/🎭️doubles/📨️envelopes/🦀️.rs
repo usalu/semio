@@ -2,7 +2,7 @@
 //!
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
-use semio_framework_os_store_testing_fixtures::prelude::*;
+use semio_framework_os_store_testing_prelude::*;
 use semio_framework_os_store_testing_fixtures::*;
 use crate::*;
 use semio_framework_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
@@ -35,7 +35,7 @@ pub fn batch_turn_grant() -> ArtifactStoreOneItemGrant {
 
 /// 🛰️ Builds a foreign {@link MutationEnvelope} (as if authored by `actor` on another peer) by
 
-/// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
+/// 🧬️ applying `operation` in a throwaway peer store and stamping the envelope's actor id.
 pub async fn foreign_mutation_envelope(actor: &str, operation: DemoMutation) -> semio_framework_os_spr::MutationEnvelope {
     let mut peer = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &crate::DemoMemberStoreProducer::<_>::new()).await;
     test_support::dispatch_test_command(&mut peer, ArtifactCommand::Apply { mutations: vec![operation], transaction: None }).await.expect("peer apply");

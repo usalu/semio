@@ -230,7 +230,6 @@ pub mod part_en1990 {
 
         match mode {
             "uls" | "uls_construction" => {
-                // Leading variable: max γ_Q Q_k,i; accompanying γ_Q ψ₀ Q_k,j
                 let mut best = DesignEffects::default();
                 if variables.is_empty() {
                     label_en = format!("ULS 6.10 ({stage}, G only)");
@@ -335,13 +334,11 @@ pub mod part_en1990 {
 
     /// 🌉️ EN 1991-2 FLM3 — simplified mid-span stress range for a simply-supported girder.
     pub fn flm3_delta_sigma_pa(span_m: f64, w_el_m3: f64) -> f64 {
-        // Two 120 kN axles at 1.2 m — equivalent midspan moment ≈ 120e3 * span/4 for dominant axle pair.
         let m = 240e3 * (span_m / 4.0);
         m / w_el_m3.max(1e-9)
     }
 
     pub fn flm3_delta_tau_pa(stud_d_m: f64) -> f64 {
-        // Characteristic stud shear range from FLM3 axle (~60 kN / stud group surrogate).
         let f = 60e3;
         let a = std::f64::consts::PI * (stud_d_m * 0.5).powi(2);
         f / a.max(1e-9)
@@ -413,7 +410,7 @@ pub mod part_1_1 {
         let alpha = stud_alpha(h_sc_mm, d_mm);
         let p_pl = 0.8 * f_u * std::f64::consts::PI * d_mm * d_mm / 4.0;
         let p_b = 0.29 * alpha * d_mm * d_mm * (f_ck * e_cm).sqrt();
-        let p_rd_n = p_pl.min(p_b) / p.gamma_v; // N (since MPa·mm² = N)
+        let p_rd_n = p_pl.min(p_b) / p.gamma_v;
         p_rd_n * sheeting_kt(beam)
     }
 
@@ -537,7 +534,6 @@ pub mod part_1_1 {
         let tf = steel.tf_m;
         let tw = steel.tw_m;
         let hw = steel.h_w_m();
-        // Two flanges + web about major axis
         let m_flanges = 2.0 * (bf * tf) * fy * (hw / 2.0 + tf / 2.0);
         let m_web = (tw * hw) * fy * (hw / 4.0);
         m_flanges + m_web
@@ -547,7 +543,6 @@ pub mod part_1_1 {
     pub fn sheeting_construction_mrd_nm_per_m(sheeting: &semio_s_artifact_norm_en1994_model::ProfiledSheeting, f_y_pa: f64) -> f64 {
         let t = sheeting.thickness_m;
         let h = sheeting.height_m.max(t);
-        // Approximate elastic section modulus of profiled sheet per m ≈ t*h/4 * developed
         let wel = sheeting.a_p_m2_per_m() * h / 4.0;
         wel * f_y_pa / 1.0
     }
@@ -618,8 +613,6 @@ pub mod part_1_2 {
     /// 🔥️ Required board insulation [m] — EN 1994-1-2 Table 4.2 (I-beams with composite slabs).
     /// Profile and section-height class select the row; DIN EN 1994-1-2/NA does not amend these values.
     pub fn insulation_thickness_m(rating: FireRating, deck_profile: &str, steel_height_m: f64, _annex: AnnexChoice) -> f64 {
-        // Table 4.2 — gypsum board / sprayed insulation on beams with slabs (mm).
-        // Columns: R30 / R60 / R90 / R120 for trapezoidal; re-entrant uses the adjacent denser row.
         let (r30, r60, r90, r120) = if deck_profile == "re-entrant" {
             if steel_height_m >= 0.400 {
                 (12.0, 22.0, 33.0, 48.0)
@@ -664,8 +657,7 @@ pub mod part_1_2 {
     pub fn steel_temperature_c(rating: FireRating, section_factor_m_inv: f64, insulation_m: f64) -> f64 {
         let t_min = rating_minutes(rating);
         let am_v = section_factor_m_inv.max(10.0);
-        let d_ins = insulation_m.max(1e-4) * 1000.0; // mm
-        // Annex D-type: section factor / insulation thickness governs the heating rate.
+        let d_ins = insulation_m.max(1e-4) * 1000.0;
         let phi = (am_v / d_ins).clamp(0.5, 80.0);
         let protect = (d_ins / 10.0).max(1.0);
         let theta = 20.0 + (345.0 * (0.085 * t_min + 1.0).ln() / (protect * (1.0 + 0.04 * phi).sqrt())).min(1200.0);
@@ -732,7 +724,7 @@ pub mod part_column {
                 eta_a * n_a + eta_c * n_c + n_s
             }
             "partially_encased" => n_a + 0.85 * n_c + n_s,
-            _ => n_a + n_c + n_s, // fully encased
+            _ => n_a + n_c + n_s,
         }
     }
 
@@ -744,7 +736,6 @@ pub mod part_column {
         let d = col.outer_size_m.max(1e-3);
         let t = col.wall_thickness_m.max(1e-4);
         let rel = d / t;
-        // Table 6.3 local buckling limit ~90 ε² for CHS; reduce η when slender
         let eps = (235e6 / col.steel_f_y_pa.max(1.0)).sqrt();
         let limit = 90.0 * eps * eps;
         if rel > limit {
@@ -761,9 +752,9 @@ pub mod part_column {
         let eps = (235e6 / col.steel_f_y_pa.max(1.0)).sqrt();
         let d_over_t = col.outer_size_m / col.wall_thickness_m.max(1e-6);
         let limit = match col.kind.as_str() {
-            "concrete_filled" => 90.0 * eps * eps, // CHS
-            "partially_encased" => 44.0 * eps,     // web
-            _ => 40.0 * eps,                       // encased flange outstand surrogate
+            "concrete_filled" => 90.0 * eps * eps,
+            "partially_encased" => 44.0 * eps,
+            _ => 40.0 * eps,
         };
         d_over_t / limit.max(1e-6)
     }
@@ -838,7 +829,6 @@ pub mod part_column {
         let f_cd = 0.85 * col.concrete_f_ck_pa / p.gamma_c;
         let f_sd = col.reinforcement_f_yk_pa / p.gamma_s;
         let h_i = (h - 2.0 * t).max(0.0);
-        // At N = N_pm the concrete is fully compressed; steel couple + reinf about mid-depth.
         let w_pa = col.steel_a_m2 * ((h - t) / 4.0).max(1e-6);
         let m_a = f_yd * w_pa;
         let m_c = f_cd * h_i * h_i * h_i / 12.0;
@@ -939,7 +929,6 @@ pub mod part_slab {
         let d = (slab.concrete_thickness_m - 0.02).max(0.05);
         let f_yd = 500e6 / p.gamma_s;
         let m_reinf = slab.as_m2_per_m * f_yd * 0.9 * d;
-        // Profiled sheeting contribution (partial connection / sagging) using A_p from thickness
         let a_p = slab.sheeting.a_p_m2_per_m();
         let f_yp = 280e6 / p.gamma_m0.max(1.0);
         let m_sheet = a_p * f_yp * (slab.sheeting.height_m / 2.0);

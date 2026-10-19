@@ -104,10 +104,6 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
       const seen: unknown[] = [];
       const alsoSeen: unknown[] = [];
       const unsubscribe = adapted.subscribeOperationCompletions(instanceId, (completion) => seen.push(completion));
-      // 🏁️ A SECOND subscriber on the SAME instance is the real shell (the visible session's completion
-      // pass and Home's directory-bootstrap receipt settle both bind `session.instanceId`). One channel
-      // registration fans out to both: two registrations would race for the leftover map, and whichever
-      // drained it first would leave the other a completion with no effects and no terminal output.
       const unsubscribeSecond = adapted.subscribeOperationCompletions(instanceId, (completion) => alsoSeen.push(completion));
       pendingCompletionEffects.set(instanceId, [
         { tag: "notify", val: { message: "done" } },
@@ -118,8 +114,6 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
       for (let tick = 0; tick < 8 && seen.length === 0; tick += 1) await Promise.resolve();
       expect(seen).toHaveLength(1);
       expect(seen[0]).toMatchObject({ instanceId, operation: 9n, revision: 3n, requestedEffects: [{ notify: { message: "done" } }] });
-      // 🧾️ The terminal value the operation published is the completion's own carrier — a job-routed
-      // verb never drains it inside a host call, so without this field it was decoded and then dropped.
       expect(seen[0]).toMatchObject({ terminalOutput: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } });
       expect(alsoSeen).toEqual(seen);
       expect(pendingCompletionEffects.has(instanceId)).toBe(false);
@@ -146,8 +140,6 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
     for (const row of fixture.unowned) {
       expect(commandIngressUnownedV1(row.ingress ?? undefined, row.actor ?? undefined), row.id).toBe(row.unowned);
     }
-    // 🧾️ The drain's own loop, replayed: a reactor that owns nothing answers `idle` forever, and the
-    // shape this law pins is that the host asks exactly ONCE more, not `ceiling` times.
     const ceiling = commandIngressContinuationCeilingV1(1);
     let asked = 0;
     let terminal: string | undefined = "idle";
@@ -179,8 +171,6 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
     const instance = await handle.createApp("fixture");
     await handle.destroyApp(instance);
 
-    // 🧯️ The shape `ShellHost.onAction` uses: build the promise, attach `.catch`, never wrap in try.
-    // A synchronous throw escapes this entirely and reaches React's error boundary.
     for (const [what, call] of [
       ["handleAction", () => handle.handleAction(instance, JSON.stringify({ controllerId: "c", action: "a" }), {} as never)],
       ["handleCommand", () => handle.handleCommand!(instance, JSON.stringify({ controllerId: "c", action: "a" }), {} as never)],

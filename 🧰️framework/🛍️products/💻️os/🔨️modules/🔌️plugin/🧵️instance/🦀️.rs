@@ -367,6 +367,3 @@ pub use semio_framework_plugin_instance_ladders::ladder_bundle::{LadderCtx, Ladd
 pub use semio_framework_plugin_instance_render::render_history_view::history_command;
 //#endregion 📥️StagedInstanceMounts
 
-#[path = "🛬️lifted/🌳️tree/🦀️.rs"]
-pub mod lifted_tree;
-pub use lifted_tree::*;

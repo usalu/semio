@@ -1,4 +1,4 @@
-//! Inverse for `change-assessment-r-k-n`.
+//! ↩️ Inverse for `change-assessment-r-k-n`.
 use crate::change_assessment_rkn::ChangeAssessmentRKN;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

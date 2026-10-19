@@ -21,12 +21,10 @@ pub struct GltfClearanceIndicators {
 pub struct GltfClearanceInference;
 
 impl GltfClearanceInference {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> (GltfMeasure<f64>, GltfMeasure<GltfStatistics>, GltfMeasure<f64>, GltfMeasure<f64>) {
         (minimum_distance_to_neighbors::infer_pair(pair), clearance_distribution::infer_pair(pair, policy), interference_volume::infer_pair(pair), overlap_volume::infer_pair(pair))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer_assembly(indicators: &mut GltfClearanceIndicators, distances: &[f64], (overlap_volume, overlap_complete): (f64, bool), pair_count: usize, policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) {
         if let Some(measure) = minimum_distance_to_neighbors::from_assembly(distances, sample_count, topology) {
             indicators.minimum_distance_to_neighbors = measure;

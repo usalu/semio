@@ -47,12 +47,6 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
-        // 🗄️ `AppIo.export_formats`/`import_formats` stay enum-of-legacy-formats-typed in the framework
-        // (no string-based sibling field exists here the way `ArtifactKindSpec::export_stdio_kinds`
-        // does) and `negotiate_wire_format` never reads `AppIo`'s copies (only `ArtifactKindSpec`'s,
-        // via `OsArtifactDescriptor`) — this is still-scaffolding per `AppIo`'s own doc comment
-        // ("apps don't populate this yet"). Left empty rather than fabricating a legacy-enum value
-        // for a field nothing consumes; see ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6 report.
         export_formats: vec![],
         import_formats: vec![],
         artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.layout".into(), name: "2D Layout".into(), dimension: "2d".into(), component_kind: "layout".into() },

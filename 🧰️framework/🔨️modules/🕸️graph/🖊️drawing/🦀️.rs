@@ -157,8 +157,6 @@ pub mod force {
         if n == 0 {
             return Vec::new();
         }
-        // 🔀️ Rewritten from `.map(..).collect()` — the closure was sync and could not `.await`
-        // the per-point `Vec2::new` constructor (R10 residue shape #1).
         let mut points = Vec::with_capacity(n);
         for i in 0..n {
             let angle = (i as f64 / n as f64) * std::f64::consts::TAU;
@@ -172,7 +170,6 @@ pub mod force {
         if n == 0 || cols == 0 {
             return Vec::new();
         }
-        // 🔀️ Rewritten from `.map(..).collect()` — same sync-closure constraint as `circular_layout`.
         let mut points = Vec::with_capacity(n);
         for i in 0..n {
             let col = (i % cols) as f64;

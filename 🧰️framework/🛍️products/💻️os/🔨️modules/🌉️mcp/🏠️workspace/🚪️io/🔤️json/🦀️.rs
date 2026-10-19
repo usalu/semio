@@ -5,7 +5,7 @@ use semio_framework_pack_json::JsonError;
 use semio_framework_pack_json::JsonGrammarCursor;
 use semio_framework_pack_json::JsonMemberPolicy;
 use semio_framework_value::DslValue;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value::RetainedCloneProgress;
@@ -105,7 +105,7 @@ pub(crate) fn write(value:&DslValue,maximum_bytes:usize,owner:&mut NativeSnapsho
 pub(crate) fn parse(text:&str)->Result<DslValue,ValueError>{
  if text.len()>33_554_432{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe JSON input exceeds synchronous caller policy"))}
  let mut accepted=|_|true;
- let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+ let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
  let mut native=NativeDecodeControl::new(268_435_456,&mut accepted);
  native.install_retirement_recipient(&mut recipient)?;
  let result={let mut owner=NativeSnapshotDecodeOwner::new(&mut native,PLAIN_GRANT);read(text,&mut owner)};

@@ -9,7 +9,7 @@
 use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
 use crate::chrome::{window_chip_layout, window_drag_glyph, ChromeMode, TabKind, WindowChipLayout, WindowCornerTab, WindowHit, WindowState, WindowTab};
 use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use crate::layout::WindowStackCorner;
+use semio_framework_ui_tui_core::docking::WindowStackCorner;
 use semio_framework_ui_tui_core::theme::{Glyph, GlyphSet, Rgb, Role, Surface, Theme};
 
 /// 🖋️ The line-drawing set a window outline uses: heavy for the focused stack so focus shows without colour.
@@ -144,7 +144,7 @@ fn paint_chip_text(buf: &mut CellBuffer, w: &WindowState, theme: &Theme, tab: &W
 }
 
 /// 🔮️ Paints only the projected selected tab with the same cap, grip, controls and open seam as its committed window.
-pub(crate) fn paint_window_tab_preview(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_window_tab_preview(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let layout = window_chip_layout(w, rect);
     if layout.mode == ChromeMode::Flat { return; }
     let g = lines(w.focused);

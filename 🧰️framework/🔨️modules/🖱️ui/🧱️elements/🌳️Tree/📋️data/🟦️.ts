@@ -73,7 +73,7 @@ export interface TreeDataItem {
   control?: React.ReactNode;
   items?: TreeDataItem[];
   getItems?: () => Promise<TreeDataItem[]>;
-  /** Alternative branches for this item. Each branch is an array of child items. Navigation < > switches between branches. */
+  /** 🌿️ Alternative branches for this item. Each branch is an array of child items. Navigation < > switches between branches. */
   alternatives?: TreeDataItem[][];
   actions?: TreeHeaderAction[];
   className?: string;

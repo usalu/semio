@@ -1,7 +1,8 @@
 //! 🔺️ Central fixture plans preflight every index and stage shared roots before capability-authorized exchange.
 use super::*;
 use protocol::{RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance};
-use semio_framework_value::{list::persistent::{PersistentList,PersistentSet,PersistentSplice,PersistentSpliceKind},retirement::shared::sealed::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneSource,RetainedCloneSourceTake}};
+use semio_framework_value::{retirement::shared::sealed::{SealedShared, SharedIssuer}, retained_clone::{RetainedCloneSource, RetainedCloneSourceTake}};
+use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PersistentSet, list::persistent::PersistentSplice, list::persistent::PersistentSpliceKind};
 impl RetainedDiff<Document> for Diff{type Apply=Plan;}
 pub(crate) struct Plan{
  fields:[RetainedFieldPreparation<String>;2],strings:ManuallyDrop<[Option<String>;2]>,sealed:ManuallyDrop<[Option<SealedShared<String>>;2]>,node:ManuallyDrop<Option<Node>>,row:ManuallyDrop<Option<SealedShared<Node>>>,row_source:ManuallyDrop<Option<RetainedCloneSource<SealedShared<Node>>>>,
@@ -50,7 +51,7 @@ impl RetainedDiffApply<Document,Diff> for Plan{
   16=>{let s=self.list_source.as_ref().unwrap();RetirementDemand{copy_bytes:s.next_take_copy_byte_demand()?+Self::fixed(),capacity_bytes:s.next_take_capacity_byte_demand(body)?,release_bytes:s.next_take_release_byte_demand()?,depth:s.next_take_depth_demand()?}},
   _=>demand(Self::fixed(),0),
  })}
- fn preflight(&mut self,d:RetainedCloneRef<'_,Diff>,p:RetainedCloneRef<'_,Document>,post:&Document,g:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{let q=self.preflight_demand(d,p,post,g.maximum_copy_bytes)?;if !fits(q,g){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}let mut r=progress(q);match self.phase{
+ fn preflight(&mut self,d:RetainedCloneRef<'_,Diff>,p:RetainedCloneRef<'_,Document>,post:&Document,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{let q=self.preflight_demand(d,p,post,g.maximum_copy_bytes)?;if !fits(q,g){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}let mut r=progress(q);match self.phase{
   0=>{if self.index==0{self.length=post.nodes.len();}if let Some(op)=d.get().ops.get(self.index){match op{Op::Insert{index,..}if *index<=self.length=>self.length+=1,Op::Remove{index}if *index<self.length=>self.length-=1,Op::SetText{index,..}if *index<self.length=>{},_=>self.valid=false};self.index+=1;if !self.valid{self.phase=17;return Ok(RetainedDiffPreflightAdvance::Ready(r,false));}}else{self.index=0;self.phase=1;}},
   1=>{let original=p.project(0,|p|&p.nodes);let(candidate,receipt)=PersistentList::project(original,child(g,Self::fixed()))?.unwrap();*self.candidate=Some(candidate);self.phase=2;r=add(receipt,Self::fixed());},
   2|15=>{let value=self.candidate.take().unwrap();let fixed=Self::fixed()+2*size_of::<PersistentList<Node>>();match RetainedCloneSource::admit_owned(value,(),child(g,fixed)){Ok((s,receipt))=>{*self.list_source=Some(s);self.phase=if self.index==d.get().ops.len(){16}else{3};r=add(receipt,fixed);},Err((e,value,()))=>{*self.candidate=Some(value);return Err(e);}}},

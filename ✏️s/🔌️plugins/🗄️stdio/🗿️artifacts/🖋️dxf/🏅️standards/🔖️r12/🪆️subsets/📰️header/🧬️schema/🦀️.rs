@@ -41,19 +41,16 @@ impl Default for DxfArtifact {
 
 impl DxfArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> DxfSnapshot {
         DxfSnapshot { schema: self.schema.clone(), header_vars: self.header_vars.clone(), tables: self.tables.clone(), other_tables: self.other_tables.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: DxfSnapshot) -> Self {
         Self { schema: snapshot.schema, header_vars: snapshot.header_vars, tables: snapshot.tables, other_tables: snapshot.other_tables, blocks: snapshot.blocks, entities: snapshot.entities }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: DxfSnapshot) {
         self.schema = snapshot.schema;
         self.header_vars = snapshot.header_vars;

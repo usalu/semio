@@ -2,7 +2,8 @@
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_views::media_contract::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportHandle, ArtifactMediaExportPoll, ArtifactMediaExportResult, ArtifactOutputChunks};
 use semio_framework::{MediaError, MediaType};
-use semio_framework_job::{OriginalCallerSourceParent, JobPayloadAuthority, OperationId, Generation, StepBudget, close_original_retained_step};
+use semio_framework_job::{OriginalCallerSourceParent, OperationId, Generation, StepBudget, close_original_retained_step};
+use semio_framework_job_payload::{JobPayloadAuthority};
 use semio_framework_value::RetainedCloneGrant;
 #[doc(hidden)]
 pub fn now_us()->Option<u64>{Some(1000)}

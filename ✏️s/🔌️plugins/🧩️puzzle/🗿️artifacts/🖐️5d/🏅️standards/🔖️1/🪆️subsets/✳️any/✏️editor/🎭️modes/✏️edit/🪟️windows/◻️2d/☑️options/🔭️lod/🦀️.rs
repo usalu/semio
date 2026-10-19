@@ -1,4 +1,4 @@
-//! (minimap…micro), persisted through `setLodMode`. Genuinely window-specific: only the Board2d
+//! 📸️ (minimap…micro), persisted through `setLodMode`. Genuinely window-specific: only the Board2d
 //! 🔭️ 2D-window option — the level-of-detail select: "Automatic" plus every board scale tier
 //! surface has LOD tiers, so this stays under the 2D window rather than at mode level.
 

@@ -251,17 +251,12 @@ fn symbol_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
 const EMOJI_PIXELS_PER_EM: u16 = 96;
 
 fn raster_glyph_box(raster: crate::text::RasterGlyph) -> MathBox {
-    // CBDT strikes are square raster images meant to sit on the baseline at roughly cap-height —
-    // approximate as a 1em x 1em box (matches how NotoColorEmoji is used elsewhere in this repo's
-    // icon codec: a fixed square glyph slot), scaled from the strike's own pixel size.
     let size_em = raster.pixels_per_em as f32 / EMOJI_PIXELS_PER_EM as f32;
     MathBox { width: size_em, height: size_em * 0.8, depth: size_em * 0.2, items: vec![PlacedItem::Image { data: raster.data, x: 0.0, y: -size_em * 0.2, width: size_em, height: size_em }] }
 }
 
 fn emoji_box(fonts: &FontContext<'_>, name: &str) -> MathBox {
     let Some(ch) = emoji_codepoint(name) else {
-        // Unknown shortcode: render the `:name:` source literally via the serif font rather than
-        // silently dropping it — a visible fallback beats a blank box.
         return text_box(fonts.serif, FontKind::Serif, &format!(":{name}:"));
     };
     let Some(glyph_id) = fonts.emoji.glyph_index(ch) else {
@@ -356,8 +351,6 @@ fn vstack_centered(top: MathBox, bottom: MathBox, gap: f32, axis_y: f32) -> Math
     let top_height = top.height;
     let bottom_height = bottom.height;
     let bottom_depth = bottom.depth;
-    // Place bottom's baseline first (relative to the shared axis), then derive top's baseline from
-    // the required gap between top's descent and bottom's ascent.
     let bottom_baseline_y = axis_y - gap / 2.0 - bottom_height;
     let top_baseline_y = bottom_baseline_y + bottom_height + gap + top_depth;
     let mut out = MathBox::empty();
@@ -373,8 +366,6 @@ fn vstack_centered(top: MathBox, bottom: MathBox, gap: f32, axis_y: f32) -> Math
 //#region 🔖️Scripts
 fn layout_scripted(fonts: &FontContext<'_>, base: MathBox, script: MathBox, superscript: bool) -> MathBox {
     let Some(constants) = crate::text::math_constants(fonts.math) else {
-        // No MATH table (shouldn't happen with the vendored Math font, but never panic on a
-        // missing optional table): fall back to a fixed 60% scale-down and a simple half-height shift.
         let scaled = scale_box(script, 0.6);
         let shift = if superscript { base.height * 0.6 } else { -base.depth * 0.4 };
         return hbox(vec![base, scaled.translated(0.0, shift).with_extent_from_shift(shift)]);
@@ -556,7 +547,7 @@ fn layout_fraction(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
 fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: Option<&MathNode>) -> MathBox {
     let inner = radicand.map_or_else(MathBox::empty, |n| layout(fonts, n));
     let Some(constants) = crate::text::math_constants(fonts.math) else {
-        return delimited(fonts, '(', ')', inner); // never reached with the vendored Math font
+        return delimited(fonts, '(', ')', inner);
     };
     let gap = mc_em(fonts.math, constants.radical_vertical_gap);
     let rule_thickness = mc_em(fonts.math, constants.radical_rule_thickness);
@@ -568,16 +559,9 @@ fn layout_radical(fonts: &FontContext<'_>, degree: Option<&MathNode>, radicand: 
     let mut out = MathBox::empty();
     let mut x = 0.0f32;
     if let Some(degree_node) = degree {
-        // `RadicalKernAfterDegree` (Libertinus Math: -0.38em) is tuned for the font's own precise
-        // glyph-shape notch — trusting it naively here (a single-em-box approximation of the degree,
-        // not the font's true ink-aware kerning model) pulled the sign back far enough to overlap
-        // the degree outright. A small fixed positive gap is a robust v1 substitute: never
-        // overlapping, at the cost of a slightly wider gap than a fully spec-accurate layout would use.
         const DEGREE_GAP_EM: f32 = 0.05;
         let raise_percent = constants.radical_degree_bottom_raise_percent as f32 / 100.0;
         let degree_box = scale_box(layout(fonts, degree_node), scale_down(constants.script_percent_scale_down));
-        // Raised from the baseline toward the radicand's own height — always positive and scales
-        // with the radicand, unlike a formula anchored to the independently-computed sign position.
         let degree_y = inner.height * raise_percent;
         out.items.extend(degree_box.clone().translated(x, degree_y).items);
         x += degree_box.width + DEGREE_GAP_EM;
@@ -606,11 +590,6 @@ fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNod
         _ => return base,
     };
     let Some(accent_id) = fonts.math.glyph_index(accent_ch) else { return base };
-    // Combining accents conventionally have ZERO horizontal advance (`glyph_hor_advance`) and a
-    // bounding box offset well away from their own origin — e.g. Libertinus Math's `hat` glyph has
-    // advance `0` and bbox x in `[-266, -14]` font units. Centering/placing by advance (as an
-    // earlier version of this function did) silently produces an invisible-or-mispositioned accent;
-    // the glyph's real bounding box is the only correct basis for both axes.
     let (x_min, y_min, x_max, y_max) = fonts.math.glyph_bounding_box(accent_id).unwrap_or((0, 0, 0, 0));
     let accent_width = em(fonts.math, (x_max - x_min) as i32).max(0.05);
     let accent_center_offset = em(fonts.math, x_min as i32 + x_max as i32) / 2.0;
@@ -619,8 +598,6 @@ fn layout_accent(fonts: &FontContext<'_>, kind: &str, base_node: Option<&MathNod
     let accent_x = base_center - accent_center_offset;
     let accent_bottom_offset = em(fonts.math, y_min as i32);
     let accent_top_offset = em(fonts.math, y_max as i32);
-    // The glyph's own origin, not its bbox bottom, is what gets placed — so back out where the
-    // origin must sit for the bbox's bottom edge to land exactly `gap` above the base.
     let origin_y = base.height + gap - accent_bottom_offset;
     let mut out = base;
     out.items.push(PlacedItem::Glyph { font: FontKind::Math, glyph_id: accent_id, x: accent_x, y: origin_y, scale_y: 1.0 });
@@ -679,8 +656,6 @@ fn layout_grid(fonts: &FontContext<'_>, rows: &[Vec<MathNode>]) -> MathBox {
     }
     let mut out = MathBox::empty();
     let mut y = 0.0f32;
-    // Lay out top row first, walking downward, then re-center on the vertical midpoint at the end —
-    // simpler than tracking a running axis offset while row heights are still unknown.
     let mut row_tops = Vec::with_capacity(cell_boxes.len());
     for row in &cell_boxes {
         let row_height = row.iter().map(|c| c.height).fold(0.0f32, f32::max);

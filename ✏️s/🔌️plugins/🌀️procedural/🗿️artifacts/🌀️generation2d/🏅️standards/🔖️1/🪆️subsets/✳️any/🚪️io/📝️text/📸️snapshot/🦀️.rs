@@ -151,7 +151,7 @@ impl semio_s_procedural_core_generation_sqlite_native::GenerationNative for Gene
     fn spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
         Generation2dSnapshotDsl::__dsl_spec_producer()
     }
-    fn fields(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<semio_s_procedural_core_generation_sqlite_native::GenerationFields, semio_framework_value::ValueError> {
+    fn fields(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<semio_s_procedural_core_generation_sqlite_native::GenerationFields, semio_framework_value::ValueError> {
         let parsed = Generation2dSnapshotDsl::__dsl_from_record_controlled(record, control)?;
         Ok(semio_s_procedural_core_generation_sqlite_native::GenerationFields {
             schema: parsed.schema,

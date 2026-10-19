@@ -616,7 +616,7 @@ export function toolJobReactorCloseBounded(reactor: string, requests: string, ex
   );
 }
 
-/** \ud83d\udcbc\ufe0f There is no opaque-future job path left to fail closed: the reactor's job module admits
+/** 💼️ There is no opaque-future job path left to fail closed: the reactor's job module admits
  * ONE registry of `BoundedJobFactory` entries and nothing else, so a test build and a shipped
  * component admit the same kinds. The oracle used to require the opposite shape — a `JobFn`
  * registry parked as `JobBody::ExplicitStateMachineRequired` under `#[cfg(not(test))]` — which is

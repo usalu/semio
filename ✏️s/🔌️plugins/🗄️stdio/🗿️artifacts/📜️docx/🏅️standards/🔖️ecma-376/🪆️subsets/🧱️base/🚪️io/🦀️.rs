@@ -30,10 +30,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_ZIP)
@@ -78,7 +74,7 @@ pub mod derived_construction {
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxRun;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxStyle;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -196,9 +192,6 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            // 🕵️ Real sniff: OPC-shaped bytes (real `[Content_Types].xml`) whose root officeDocument
-            // relationship resolves under `word/` — disambiguates from xlsx/pptx, which share the
-            // same zip magic and OPC shape but resolve under `xl/`/`ppt/` instead.
             match source {
                 AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_docx_bytes(bytes) => semio_framework_plugin::io::Confidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => semio_framework_plugin::io::Confidence::Low,

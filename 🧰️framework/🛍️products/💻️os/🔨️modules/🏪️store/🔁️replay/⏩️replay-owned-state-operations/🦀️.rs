@@ -168,7 +168,7 @@ where
         self.step_with_operation_cap(edits, maximum_operations, None, None, deadline)
     }
 
-    fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value::NativeDecodeControl<'_>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if maximum_operations == 0 && !self.finished { return Ok(ReplayStep::Pending(self.progress)); }
         let mut completed_operations = 0usize;
         while !self.finished {

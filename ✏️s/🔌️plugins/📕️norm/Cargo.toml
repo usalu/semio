@@ -71,6 +71,9 @@ path = "../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦�
 [workspace.dependencies.semio-framework-value]
 path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
 

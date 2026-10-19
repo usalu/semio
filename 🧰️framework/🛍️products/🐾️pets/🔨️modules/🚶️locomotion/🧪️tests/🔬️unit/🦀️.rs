@@ -3,8 +3,8 @@
 //! @see ../../🦀️.rs — the implementation under test
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, the events and time passing
 
-use super::*;
-use crate::draft::{draft_of, sealed};
+use semio_framework_pets_staging_draft::locomotion::*;
+use semio_framework_pets_staging_draft::draft::{draft_of, sealed};
 use crate::stage::tests::{actor_of, summoned, surveyed, ticked, troupe};
 use crate::stage::{advance, open_stage};
 use semio_framework_pets_contract::schema::{Facing, StageEvent, Ticked};

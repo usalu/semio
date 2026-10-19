@@ -84,14 +84,14 @@ test("debug custody preserves immutable arguments, cancellation and physical wor
 
 for(const profile of["node-inspect","python-pdb"] as const)test.skipIf(!developerDebuggers(process.platform,program=>Bun.which(program)).find(entry=>entry.profile===profile)?.installed)(`debug runtime ${profile}`,async()=>{
  const program=profile==="node-inspect"?"app/debug-target.js":"app/debug-target.py";writeFileSync(join(root,program),profile==="node-inspect"?fixture.debugPrograms.node:fixture.debugPrograms.python);
- const arguments_=["value with spaces",'quote"mark',"trailing\\","; $(literal)","🧪"],plan=await planDeveloperRequest(root,{command:"debug",profile,program,arguments:arguments_},process.platform,{}),{runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),controller=new AbortController(),output:string[]=[];
+ const arguments_=["value with spaces",'quote"mark',"trailing\\","; $(literal)","🧪"],plan=await planDeveloperRequest(root,{command:"debug",profile,program,arguments:arguments_},process.platform,{}),{runOwnedCommand}=await import("@semio-tech/process/execution"),controller=new AbortController(),output:string[]=[];
  const run=runOwnedCommand(plan.command,plan.args,plan.cwd,"debugger-fixture",15_000,{signal:controller.signal,input:profile==="node-inspect"?"":"p 6*7\nc\nq\n",stdout:"ignore",output:{maximumBytes:65536,maximumLines:1000},outputConsumer:bytes=>{output.push(Buffer.from(bytes).toString());if(profile==="node-inspect"&&output.join("").includes("Break on start"))controller.abort();},onProgress:()=>{}});
  if(profile==="node-inspect"){await expect(run).rejects.toThrow("cancelled");expect(output.join("")).toContain("Debugger attached");expect(output.join("")).toContain("Break on start");console.log("[DEBUG] Actual Node inspector attached on a random local port, paused the fixture and was cancelled with its child");}
  else{await run;expect(output.join("")).toMatch(/(?:^|\n)(?:\(Pdb\) )?42\r?(?:\n|$)/u);expect(output.join("")).not.toContain("UnicodeEncodeError");const encoded=/DEBUGGER_ARGV:([^\r\n]+)/u.exec(output.join(""));expect(encoded).not.toBeNull();expect(JSON.parse(encoded![1]!)).toEqual(arguments_);console.log("[DEBUG] Actual Python Pdb evaluated 6*7 as42 and exited with Unicode workspace paths");}
 },20_000);
 
 test.skipIf(!Bun.which("gdb")||(process.platform!=="win32"&&!Bun.which("gcc")))(process.platform==="win32"?"debug runtime gdb installed frontend":"debug runtime gdb native breakpoint and arguments",async()=>{
- const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"),controller=new AbortController(),output:string[]=[];
+ const {runOwnedCommand}=await import("@semio-tech/process/execution"),controller=new AbortController(),output:string[]=[];
  if(process.platform==="win32"){
   await runOwnedCommand("gdb",["--nx","--quiet"],root,"debugger-native-frontend",15_000,{signal:controller.signal,input:"print 6*7\nquit\n",stdout:"ignore",output:{maximumBytes:65536,maximumLines:1000},outputConsumer:bytes=>{output.push(Buffer.from(bytes).toString());},onProgress:()=>{}});expect(output.join("")).toMatch(/\$1 = 42/u);console.log("[DEBUG] Installed Windows GDB frontend evaluated42; native Unicode targets are refused with LLDB guidance");return;
  }
@@ -103,6 +103,45 @@ test.skipIf(!Bun.which("gdb")||(process.platform!=="win32"&&!Bun.which("gcc")))(
 },45_000);
 
 
+test.skipIf(process.platform==="win32"||!Bun.which("lldb")||!Bun.which("clang"))("debug runtime lldb native breakpoint and arguments",async()=>{
+ const row=fixture.lldbRuntime;expect(oracle(row.request)).toBe(true);expect(readDeveloperRequest(row.request)).toEqual(row.request);
+ const source=join(root,"app/debug-native-lldb.c"),program=row.request.program;writeFileSync(source,fixture.debugPrograms.native);
+ const {runOwnedCommand}=await import("@semio-tech/process/execution"),controller=new AbortController(),output:string[]=[];
+ await runOwnedCommand("clang",["-g","-O0","app/debug-native-lldb.c","-o",program],root,"debugger-lldb-build",20_000,{signal:controller.signal,output:{maximumBytes:65536,maximumLines:1000},onProgress:()=>{}});
+ const plan=await planDeveloperRequest(root,row.request,process.platform,{});
+ await runOwnedCommand(plan.command,plan.args,plan.cwd,"debugger-lldb-fixture",30_000,{signal:controller.signal,input:row.input,stdout:"ignore",output:{maximumBytes:131072,maximumLines:2000},outputConsumer:bytes=>{output.push(Buffer.from(bytes).toString());},onProgress:()=>{}});
+ for(const pattern of row.patterns)expect(output.join("")).toMatch(new RegExp(pattern,"u"));
+ console.log("[DEBUG] Actual LLDB hit main, preserved a spaced argument, evaluated42 and continued the native fixture");
+},55_000);
+
 test.skipIf(/[^\u0020-\u007e]/u.test(process.cwd()))("debug Windows GDB keeps an ASCII workspace target and root cwd without relocation",async()=>{
  const workspace=process.cwd(),plan=await planDeveloperRequest(workspace,{command:"debug",profile:"gdb",program:"package.json",directory:"."},"win32",{});expect(plan.args).toEqual(["--nx","--quiet","--args","./package.json"]);expect(plan.cwd).toBe(workspace);expect(plan.detached).toBe(false);
 });
+
+
+for(const row of fixture.nativeSetupCases)test(`native debugger setup plan ${row.name}`,async()=>{
+ const {planNativeDebuggerProvisionV1}=await import("../📜️script.ts"),{Database}=await import("bun:sqlite"),steps=planNativeDebuggerProvisionV1(row,root),db=new Database(":memory:");
+ try{const policy=schema.$defs.NativeDebuggerSetupPolicy.const,selected=policy.installers.find((entry:any)=>entry.platform===row.platform&&entry.manager===row.manager);expect(selected).toBeDefined();db.exec("create table steps(id text,command text,args text)");for(const step of steps)db.query("insert into steps values(?,?,?)").run(step.id,step.command,JSON.stringify(step.args));expect(steps.map(({cwd,detached,...step}:any)=>step)).toEqual(row.expected);const supplied=db.query("select count(*) as n from steps where command=? or command='sudo'").get(row.manager)as{n:number};expect(supplied.n).toBe(steps.length);for(const step of steps)expect(step.cwd).toBe(root);const actual=db.query("select value from steps,json_each(steps.args) where value in ('lldb','python3-lldb','Python.Python.3.11','LLVM.LLVM') order by value").all();const expected=db.query("select arg.value from json_each(?,'$.steps') as step,json_each(step.value,'$.args') as arg where arg.value in ('lldb','python3-lldb','Python.Python.3.11','LLVM.LLVM') order by arg.value").all(JSON.stringify(selected));expect(actual).toEqual(expected);for(let index=0;index<selected.steps.length;index++){const step=selected.steps[index],offset=row.platform==="linux"&&row.privilege==="sudo"?1:0,windows=policy.windows,python=(row.environment.LOCALAPPDATA??"")+"\\"+windows.pythonDirectory.replaceAll("/","\\"),llvm=(row.environment.ProgramFiles??"")+"\\"+windows.llvmDirectory.replaceAll("/","\\"),args=db.query("select replace(replace(value,'{pythonRoot}',?),'{llvmRoot}',?) as word from json_each(?) order by cast(key as integer)").all(python,llvm,JSON.stringify(step.args))as{word:string}[];const variables=db.query("select key || '=' || value as word from json_each(?) order by key").all(JSON.stringify(step.environment??{}))as{word:string}[];expect(steps[index+offset].args).toEqual([...(offset?["-n",...(variables.length?[policy.privilegeEnvironmentCommand,...variables.map(row=>row.word)]:[]),step.command]:[]),...args.map(row=>row.word)]);}}finally{db.close();}
+});
+for(const row of fixture.nativeSetupRefusals)test(`native debugger setup refuses ${JSON.stringify(row)}`,async()=>{const {planNativeDebuggerProvisionV1}=await import("../📜️script.ts");expect(()=>planNativeDebuggerProvisionV1(row,root)).toThrow();});
+
+test("native setup actual dispatch, lifecycle, cancellation and production no-install frontend",async()=>{
+ const {SetupDebuggerScript,setupNativeDebugger,createNativeDebuggerSetupHostV1}=await import("../📜️script.ts"),{receiveScriptProcessInvocation,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1}=await import("@semio-tech/process/routing");
+ await receiveScriptProcessInvocation(process.env,async original=>{
+  const records:any[]=[],host:any={platform:"linux",manager:"apt-get",privilege:"sudo",environment:{},find:(program:string)=>program==="lldb"||program==="/usr/bin/lldb"?"/usr/bin/lldb":null,run:async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);records.push(plan);},capture:async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);records.push(plan);return "(lldb) script print(6*7)\n42\n";}};
+  await new SetupDebuggerScript(owner,root,original,host).run([]);expect(records).toHaveLength(1);expect(records[0].args).toEqual(schema.$defs.NativeDebuggerSetupPolicy.const.probeArguments);
+  records.length=0;host.capture=async()=>{throw Error("frontend unavailable");};host.run=async(plan:any)=>{records.push(plan);throw Error("sudo requires OS authentication");};await expect(new SetupDebuggerScript(owner,root,original,host).run([])).rejects.toThrow();expect(records).toHaveLength(1);expect(records[0].command).toBe("sudo");expect(records[0].args).toEqual(["-n","true"]);
+  records.length=0;let ready=false;host.capture=async()=>ready?"42\n":Promise.reject(Error("not installed"));host.run=async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);records.push(plan);if(plan.command==="sudo"&&plan.args.includes("install"))ready=true;};await new SetupDebuggerScript(owner,root,original,host).run([]);expect(records.map(row=>row.args)).toEqual(fixture.nativeSetupCases.find((row:any)=>row.name==="linux-sudo").expected.map((row:any)=>row.args));
+  for(const row of fixture.nativeSetupLifecycleCases){
+   const selection=fixture.nativeSetupCases.find((entry:any)=>entry.name===row.host);let ready=false;const installs:string[]=[],host={...selection,find:(program:string)=>/lldb(?:\.exe)?$/u.test(program)?program:null,capture:async(_plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);if(!ready)throw Error("scripting runtime unavailable");return "42\n";},run:async(plan:any,signal:AbortSignal)=>{expect(signal).toBe(original.control.signal);const id=plan.args.includes("Python.Python.3.11")?"python":"lldb";installs.push(id);if(id===row.readyAfter)ready=true;}};const result=await setupNativeDebugger(root,original,host);expect(result.installed,row.name).toBe(true);expect(installs,row.name).toEqual(row.expectedInstallIds);
+  }
+  const controller=new AbortController();await withScriptInvocationSignalV1(original,controller.signal,async cancelled=>{let effects=0;const host:any={platform:"linux",manager:"apt-get",privilege:"root",environment:{},find:(program:string)=>program==="lldb"||program==="/usr/bin/lldb"?"/usr/bin/lldb":null,capture:async()=>{controller.abort(Error("fixture native setup stop"));throw Error("probe interrupted");},run:async()=>{effects++;throw Error("Cancelled setup must never install");}};await expect(setupNativeDebugger(root,cancelled,host)).rejects.toThrow("fixture native setup stop");expect(effects).toBe(0);acknowledgeScriptInvocationSignalStopV1(cancelled);});
+  const actualHost=createNativeDebuggerSetupHostV1(root,original),actual=await setupNativeDebugger(root,original,{...actualHost,run:async()=>{throw Error("Installed native debugger must not trigger installation");}});expect(actual.path).toBeTruthy();expect(actual.installed).toBe(false);console.log("[DEBUG] Production owned native debugger setup verified full LLDB Python startup and42 without installing packages: "+actual.path);
+ });
+},60_000);
+
+test("managed Windows LLDB preserves the default Python and supplies its private scripting runtime to children",async()=>{
+ const {nativeDebuggerLocations}=await import("../🟦️.ts"),row=fixture.nativeSetupCases.find((row:any)=>row.platform==="win32"),environment={...row.environment,Path:"C:\\Python314"},before=JSON.stringify(environment),locations=nativeDebuggerLocations("win32",environment);expect(locations.candidates).toEqual(["C:\\Program Files\\semio\\LLVM\\22.1.8\\bin\\lldb.exe"]);expect(locations.environment.PATH).toStartWith("C:\\Program Files\\semio\\LLVM\\22.1.8\\bin;C:\\Users\\Dev\\AppData\\Local\\semio\\Python\\3.11.9;");expect(JSON.stringify(environment)).toBe(before);expect(Object.keys(locations.environment).filter(key=>key.toLowerCase()==="path")).toEqual(["PATH"]);
+});
+
+

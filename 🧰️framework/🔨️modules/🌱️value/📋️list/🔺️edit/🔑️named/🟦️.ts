@@ -1,10 +1,11 @@
 import {HeapSortCursor} from "../../../📶️sort/🟦️.ts";
 import {IndexedEditPlan} from "../🟦️.ts";
-import type {AdmittedNamedKeyIndex} from "./📇️index/🟦️.ts";
 
 export type NamedEditLane="base"|"removed"|"modified"|"added";
 export type NamedEditShape={baseLen:number;removed:number;modified:number;added:number};
-export interface NamedEditSource{readonly originalBase:object;readonly keyProjection?:object;readonly shape:NamedEditShape;readonly admittedBase?:AdmittedNamedKeyIndex;keyDemand(lane:NamedEditLane,ordinal:number):NamedEditDemand;observeKey(lane:NamedEditLane,ordinal:number,grant:NamedEditGrant):{key:Uint8Array;receipt:NamedEditReceipt}|undefined;addedIndex(ordinal:number):number}
+/** 🔐️ What the named plan needs from an admitted original key directory; the index owner implements it. */
+export interface NamedEditAdmittedBase{readonly length:number;readonly order:readonly number[];checkSource(source:NamedEditSource):void}
+export interface NamedEditSource{readonly originalBase:object;readonly keyProjection?:object;readonly shape:NamedEditShape;readonly admittedBase?:NamedEditAdmittedBase;keyDemand(lane:NamedEditLane,ordinal:number):NamedEditDemand;observeKey(lane:NamedEditLane,ordinal:number,grant:NamedEditGrant):{key:Uint8Array;receipt:NamedEditReceipt}|undefined;addedIndex(ordinal:number):number}
 export type NamedEditGrant={maximumItems:number;maximumCopyBytes:number;maximumCapacityBytes:number;maximumDepth:number};
 export type NamedEditDemand={copyBytes:number;capacityBytes:number;depth:number};
 export type NamedEditReceipt={copiedItems:number;copiedBytes:number;retainedCapacityBytes:number};
@@ -28,7 +29,7 @@ export class NamedEditPlan{
  private sort=new HeapSortCursor(0);
  private baseActions=0;
  fault:string|null=null;
- constructor(readonly shape:NamedEditShape,private readonly baseIndex?:AdmittedNamedKeyIndex){if(Object.values(shape).some(n=>!Number.isSafeInteger(n)||n<0))throw new RangeError("named cardinalities must be exact and nonnegative");if(baseIndex){if(baseIndex.length!==shape.baseLen)throw Error("admitted original named cardinality changed");this.phase=4;}}
+ constructor(readonly shape:NamedEditShape,private readonly baseIndex?:NamedEditAdmittedBase){if(Object.values(shape).some(n=>!Number.isSafeInteger(n)||n<0))throw new RangeError("named cardinalities must be exact and nonnegative");if(baseIndex){if(baseIndex.length!==shape.baseLen)throw Error("admitted original named cardinality changed");this.phase=4;}}
  get baseAdmissionActions():number{return this.baseActions;}
  private get baseOrder():readonly number[]{return this.baseIndex?.order??this.directories[0];}
  takeBaseOrder():number[]{if(!this.ready||this.baseIndex||this.shape.removed+this.shape.modified+this.shape.added!==0)throw Error("original base directory is not transferable");const order=this.directories[0];this.directories[0]=[];return order;}

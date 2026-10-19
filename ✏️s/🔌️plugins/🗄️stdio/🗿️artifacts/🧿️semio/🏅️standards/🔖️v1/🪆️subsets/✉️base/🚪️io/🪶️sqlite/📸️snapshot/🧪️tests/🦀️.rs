@@ -59,7 +59,7 @@ use store::{pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack};let fixtur
 fn sqlite_snapshot_semio_base_late_reconstruction_cancellation_retires_owned_tree(){let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let limits=&corpus["reconstructionRetirement"];let depth=limits["depth"].as_u64().unwrap() as usize;let stack=limits["stackBytes"].as_u64().unwrap() as usize;let bytes=limits["schemaBytes"].as_u64().unwrap() as usize;let mut root=semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Null;for _ in 0..depth{root=semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::List{items:vec![root]};}let snapshot=SemioSnapshot{schema:"x".repeat(bytes),subset:SemioSubsetSnapshot::Value(SemioValueSnapshot{root,..SemioValueSnapshot::default()})};semio_s_artifact_stdio_contract::testing::assert_reconstruction(snapshot,bytes,stack);}
 #[test]
 fn sqlite_snapshot_semio_base_controlled_refusals_preserve_owner_categories(){
-use semio_framework_value::native_decoding::NativeDecodeControl as N;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let cases=&fixture["controlledRefusals"];
 let malformed=native_decoding::record::<2>(cases["malformedRecord"]["source"].as_str().unwrap(),&mut N::new(usize::MAX,&mut |_|true)).unwrap_err();assert_eq!(malformed.kind.as_str(),cases["malformedRecord"]["kind"].as_str().unwrap());
 let canceled=native_decoding::float(cases["cancellation"]["source"].as_str().unwrap(),&mut N::new(usize::MAX,&mut |_|false)).unwrap_err();assert_eq!(canceled.kind.as_str(),cases["cancellation"]["kind"].as_str().unwrap());
@@ -131,7 +131,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let demand=&fixture["nativeAdmission"];
 let text=demand["schema"].as_str().unwrap();let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:text.len(),..SqliteDatabaseLimits::default()});
 let payload=store::io::IoPayload::Text("semio stdio.semio.dsl v1\n".into());
-let mut native_callback=|_|true;let mut native_control=semio_framework_value::NativeDecodeControl::new(semio_s_artifact_stdio_contract::testing::NATIVE_MAXIMUM_BYTES,&mut native_callback);
+let mut native_callback=|_|true;let mut native_control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(semio_s_artifact_stdio_contract::testing::NATIVE_MAXIMUM_BYTES,&mut native_callback);
 let error=native_decoding::with_body::<String>(&payload,STDIO_SEMIO_DOCUMENT_SCHEMA,&mut control,&mut native_control,|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,"authored refusal after field allocation"))}).unwrap_err();
 assert_eq!(error.kind,ValueRefusalKind::InvalidValue);assert_eq!(error.message,"authored refusal after field allocation");
 assert_eq!(control.allocation_remaining_bytes(),0,"a failed native construction settles its actual admitted field backing");

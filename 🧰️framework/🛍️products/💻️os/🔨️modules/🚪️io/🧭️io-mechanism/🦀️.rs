@@ -361,10 +361,6 @@ pub enum IoRegistryError {
 }
 
 impl std::fmt::Display for IoRegistryError {
-    // 🐛️ terra-io-thunks: `Display::fmt` is E1 (fixed sync signature) so it cannot `.await`
-    // the now-`async` `ArtifactDialect::to_coordinate` — `resolve_ready` bridges it exactly
-    // like every other forced-sync call site in this file (`to_coordinate` never truly
-    // suspends).
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
@@ -562,7 +558,7 @@ pub(crate) fn export_sqlite_snapshot_receiving<P:semio_framework_os_store_space_
         typed_snapshot_codec::<P>(dialect)?;native.native().checkpoint().map_err(IoError::from_value_error)?;
         let before=native.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"typed snapshot original SQL ceiling overflow"))?;
         let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::WritePages);
-        let mut observer=|event:semio_framework_value::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+        let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
         let received=native.scoped_native(maximum,&mut observer,|native|native.receive_nested::<TypedSnapshotExportFrame,IoResult<Vec<u8>>>(|slot,native|{
             let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;
             typed_file_work!(native,control,Decode,size_of::<TypedSnapshotExportFrame>())?;*slot=Some(TypedSnapshotExportFrame::new());let frame=slot.as_mut().unwrap();
@@ -712,7 +708,7 @@ fn run_snapshot_hop(snapshots:&NativeSnapshotMap,hop:&IoEntryDescriptor,input:&m
     if is_sqlite_snapshot(&hop.into){
         let mut original=native.snapshot_decode().map_err(IoError::from_value_error)?;
         let before=original.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"snapshot hop original SQL ceiling overflow"))?;
-        let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::WritePages);let mut observer=|event:semio_framework_value::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+        let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::WritePages);let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
         let received=original.scoped_native(maximum,&mut observer,|native|native.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
             let mut borrowed=settlement.control.borrow_mut();let control=&mut **borrowed;
             typed_file_work!(native,control,Decode,size_of::<SnapshotHopFrame>())?;
@@ -948,9 +944,6 @@ fn deserializer_sniff<S, T: Deserializer<S>>(payload: &IoPayload) -> Confidence 
 /// folding its diagnostics into the returned `IoOutcome` — `conformance_runs_after_deserialize`
 /// below proves the diagnostics reach the caller.
 pub fn deserializer_entry<S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
-    // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above; `T::CONFORMANCE` is
-    // already a plain `fn(&S) -> Vec<Diagnostic>` (never async, see `Deserializer`'s own doc
-    // comment) so it needs no `resolve_ready` wrapping, only `T::deserialize`.
     fn run<S: pack::snapshot::ArtifactPack + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload, control))?;
         let mut diagnostics = outcome.diagnostics;
@@ -964,7 +957,6 @@ pub fn deserializer_entry<S: pack::snapshot::ArtifactPack + pack::snapshot::Arti
 
 /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
 pub fn deserializer_entry_text<S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
-    // 🚫️async: E4 fn-pointer slot — see `deserializer_entry` above.
     fn run<S: pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload, control))?;
         let mut diagnostics = outcome.diagnostics;

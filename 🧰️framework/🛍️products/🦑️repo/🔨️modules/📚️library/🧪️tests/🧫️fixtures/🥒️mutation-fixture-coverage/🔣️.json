@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "contractId": "mutation-fixture-coverage-v1",
+  "semantics": {
+    "feature": "Lines of a restricted Gherkin feature source.",
+    "expected": "Bundles `<directory>/<fixture>` the feature declares, U+FE0F removed, in first-declaration order.",
+    "policy": "The mutationCatalogProjection.fixtureCoverage.exhaustiveCase step grammar."
+  },
+  "policy": {
+    "stepUriPrefix": "shared://🧬️mutations/",
+    "bundleFacetDirectoryNames": [
+      "📸️snapshot",
+      "🦠️mutation",
+      "🔺️diff",
+      "🎯️outcome"
+    ]
+  },
+  "cases": [
+    {
+      "id": "outline-dir-and-fixture-columns",
+      "note": "Examples rows substitute <dir> and <fixture> into the step URI; U+FE0F is folded away",
+      "feature": [
+        "Feature: Apply every mutation",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario Outline: Apply <id>",
+        "    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json",
+        "    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json",
+        "    Examples:",
+        "      | id | dir | fixture |",
+        "      | change-annex | 🌍️change-annex | ✅apply |",
+        "      | change-year | 📆change-year | ✅️apply |"
+      ],
+      "expected": [
+        "🌍change-annex/✅apply",
+        "📆change-year/✅apply"
+      ]
+    },
+    {
+      "id": "outline-single-vector-column",
+      "note": "a single <vector> column carries the whole directory/fixture pair, domain-nested included",
+      "feature": [
+        "Feature: Apply",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario Outline: Apply <id>",
+        "    Given the committed mutation shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
+        "    Examples:",
+        "      | id | vector |",
+        "      | create-node | 🟢️node/🌱create-node/🌱️appends |",
+        "      | delete-node | 🟢️node/🗑️delete-node/🚫️deletes |"
+      ],
+      "expected": [
+        "🟢node/🌱create-node/🌱appends",
+        "🟢node/🗑delete-node/🚫deletes"
+      ]
+    },
+    {
+      "id": "plain-scenario-literal-uri",
+      "note": "a plain Scenario names its bundle literally",
+      "feature": [
+        "Feature: Literal",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario: One bundle",
+        "    Given the committed diff shared://🧬️mutations/🏷️rename/🏷️code/🔺️diff/🔣️.json"
+      ],
+      "expected": [
+        "🏷rename/🏷code"
+      ]
+    },
+    {
+      "id": "outline-without-examples-declares-nothing",
+      "note": "an outline without Examples expands to no scenario",
+      "feature": [
+        "Feature: Empty",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario Outline: Apply <id>",
+        "    Given the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json"
+      ],
+      "expected": []
+    },
+    {
+      "id": "uri-without-facet-is-not-a-bundle",
+      "note": "a URI that never reaches a bundle facet declares nothing",
+      "feature": [
+        "Feature: Partial",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario: Directory only",
+        "    Given a directory shared://🧬️mutations/🏷️rename/"
+      ],
+      "expected": []
+    },
+    {
+      "id": "comments-and-tags-are-ignored",
+      "note": "comment and tag lines never declare bundles",
+      "feature": [
+        "# shared://🧬️mutations/🏷️rename/🏷️code/🎯️outcome/🔣️.json",
+        "@tag",
+        "Feature: Tagged",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario: None",
+        "    Given nothing"
+      ],
+      "expected": []
+    },
+    {
+      "id": "column-order-does-not-matter",
+      "note": "columns are matched by header name, not position",
+      "feature": [
+        "Feature: Pipes",
+        "  @id-mutate",
+        "  @level-quick",
+        "  @mode-differential",
+        "  Scenario Outline: Apply <id>",
+        "    Given x shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json",
+        "    Examples:",
+        "      | fixture | id | dir |",
+        "      | ✅apply | a | 🅰️a-or-b |"
+      ],
+      "expected": [
+        "🅰a-or-b/✅apply"
+      ]
+    }
+  ]
+}

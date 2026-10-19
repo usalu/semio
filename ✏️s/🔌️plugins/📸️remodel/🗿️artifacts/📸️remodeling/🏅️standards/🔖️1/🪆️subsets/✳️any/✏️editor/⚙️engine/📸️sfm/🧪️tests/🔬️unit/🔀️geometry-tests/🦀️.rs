@@ -216,19 +216,7 @@ fn epnp_and_refine_pose_lm_recover_pose_within_tolerance_at_one_pixel_noise() {
     let initial = epnp(&intr, &world_pts, &obs).expect("epnp should recover an initial pose");
     let refined = refine_pose_lm(&intr, &world_pts, &obs, initial);
     let rot_err = vec3d_length(refined.r.inverse().semio_compose_rs(&true_pose.r).log());
-    // 0.2deg is tight for a 10-point/1px-noise PnP MLE: verified `refined`'s summed-squared
-    // reprojection error is *lower* than the true pose's for this seed (12.95 vs 18.77), i.e. LM
-    // converged correctly to the maximum-likelihood pose — the residual rotation error here is exactly
-    // the noise-induced MLE bias for this draw, not a solver bug, so the tolerance is widened to give
-    // that expected statistical variation headroom.
     assert!(rot_err < 0.3_f64.to_radians(), "rotation error {rot_err} rad");
-    // Same MLE-bias reasoning as the rotation tolerance above applies to translation, only more so:
-    // this scene's points sit far from the camera relative to the baseline (weak-perspective-ish
-    // depth/translation conditioning), so the along-view-axis translation component is the
-    // slowest-converging DOF — confirmed by rerunning this exact fixture with 20x the points (200
-    // instead of 10), which only brought the relative translation error down to ~0.023, not the ~50x
-    // a purely noise-averaging (no geometric conditioning) effect would predict. 0.06 keeps this a real
-    // regression guard while accommodating that conditioning-limited convergence rate.
     let t_err = vec3d_length(vec3d_sub(refined.t, true_pose.t)) / vec3d_length(true_pose.t);
     assert!(t_err < 0.06, "relative translation error {t_err}");
 }

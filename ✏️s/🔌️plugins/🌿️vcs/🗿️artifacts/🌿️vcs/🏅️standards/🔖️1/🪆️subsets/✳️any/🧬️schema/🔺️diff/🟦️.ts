@@ -1,17 +1,17 @@
 /** 🧬️ VCS diff schema — sparse field delta over the artifact. */
 
 export interface VcsDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string;
-  /** @state artifact */
+  /** 🔢️ @state artifact */
   counter?: number;
-  /** @state artifact */
+  /** 💬️ @state artifact */
   notes?: string;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   status?: string;
-  /** @state artifact */
+  /** 🔖️ @state artifact */
   tags?: VcsTagsDelta;
 }
 

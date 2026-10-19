@@ -251,9 +251,6 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   }
   if (feature.scenarios.length === 0) breaches.push(breach("testing/contract", "no-scenarios", discovered.featurePath, "Feature declares no scenarios", "An empty feature reports as green while testing nothing.", "Add at least one scenario with @id, @level and @mode tags."));
 
-  // 🧭️A differential scenario compares two producers. Without an oracle it therefore needs a second
-  // independently written implementation, and the recorded decision has to actually claim that
-  // substitute — otherwise the scenario would be comparing one implementation with nothing.
   const decision = registry.noOracleDecisions.find((entry) => entry.id === feature.noOracleDecision);
   if (feature.oracle === null && decision !== undefined) {
     const differential = feature.scenarios.filter((scenario) => scenario.mode === "differential");

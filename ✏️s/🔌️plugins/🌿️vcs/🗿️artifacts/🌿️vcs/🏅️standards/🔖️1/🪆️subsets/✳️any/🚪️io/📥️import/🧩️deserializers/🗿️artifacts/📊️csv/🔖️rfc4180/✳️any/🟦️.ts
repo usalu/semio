@@ -1,2 +1,2 @@
-/** vcs import csv */
+/** 🍴️ vcs import csv */
 export function register(): void {}

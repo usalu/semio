@@ -11,52 +11,56 @@
           "attach",
           "verify"
         ],
-        "metadata": [
-          "pending",
-          "published",
-          "settled"
-        ],
         "platforms": [
           "linux",
           "win32"
         ]
       }
     },
-    "LinuxMapping": {
+    "DirectoryMapping": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
-        "device",
-        "source",
-        "backing",
-        "offset",
-        "sizelimit"
+        "kind",
+        "anchor",
+        "volume"
       ],
       "properties": {
-        "id": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
+        "kind": {
+          "const": "directory-partition"
         },
-        "device": {
-          "type": "string",
-          "pattern": "^7:[0-9]+$"
+        "anchor": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
-        "source": {
-          "type": "string",
-          "pattern": "^/dev/loop[0-9]+$"
-        },
-        "backing": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 256
-        },
-        "offset": {
-          "const": "0"
-        },
-        "sizelimit": {
-          "const": "0"
+        "volume": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            },
+            "mode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          }
         }
       }
     },
@@ -82,15 +86,10 @@
         "change": {
           "enum": [
             "none",
-            "offset",
-            "sizelimit",
             "backing",
-            "bytes",
             "image",
-            "extra",
             "volume",
-            "disk",
-            "partition"
+            "extra"
           ]
         },
         "accepted": {
@@ -124,14 +123,8 @@
             "inactive",
             "duplicate",
             "missing-association",
-            "foreign-mount",
-            "offset",
             "observer",
-            "changed-mapping",
-            "short-footer",
-            "wrong-image",
-            "wrong-volume",
-            "changed-footer"
+            "foreign-text"
           ]
         },
         "accepted": {
@@ -142,28 +135,6 @@
             "mounted",
             "inactive"
           ]
-        }
-      }
-    },
-    "Inactive": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "state",
-        "image"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
-        },
-        "state": {
-          "const": "inactive"
-        },
-        "image": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 256
         }
       }
     }

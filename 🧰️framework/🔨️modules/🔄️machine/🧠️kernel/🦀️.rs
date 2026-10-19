@@ -27,13 +27,13 @@ pub struct NodeDef {
     pub stable_id: &'static str,
     pub kind: NodeKind,
     pub parent: Option<NodeId>,
-    /// Compound: default child to enter. History: fallback target when no history is recorded.
+    /// 🌱️ Compound: default child to enter. History: fallback target when no history is recorded.
     pub initial: Option<NodeId>,
     pub children: &'static [NodeId],
     pub entry_actions: &'static [ActionId],
     pub exit_actions: &'static [ActionId],
     pub invokes: &'static [InvokeId],
-    /// `after` delayed transitions owned by this state: `(timer, delay_ms)`.
+    /// ⏰️ `after` delayed transitions owned by this state: `(timer, delay_ms)`.
     pub timers: &'static [(TimerId, u64)],
     pub doc_index: u16,
 }
@@ -43,9 +43,9 @@ pub struct NodeDef {
 pub enum Trigger {
     Event(EventId),
     Eventless,
-    /// Fires once every descendant of `NodeId` reaches a final state (`on_done`).
+    /// ⚡️ Fires once every descendant of `NodeId` reaches a final state (`on_done`).
     Done(NodeId),
-    /// Fires when the named `after` timer elapses (delivered via [`timer_elapsed`]).
+    /// 🕰️ Fires when the named `after` timer elapses (delivered via [`timer_elapsed`]).
     Timer(TimerId),
 }
 
@@ -98,7 +98,7 @@ pub struct MachineDefinition<M: Machine> {
     pub make_output: Option<OutputFn<M>>,
     pub guards: &'static [GuardFn<M>],
     pub actions: &'static [ActionFn<M>],
-    /// Stable hash of the compiled structure — used to gate [`super::persist::restore`].
+    /// 👆️ Stable hash of the compiled structure — used to gate [`super::persist::restore`].
     pub fingerprint: u64,
     pub manifest_json: &'static str,
 }

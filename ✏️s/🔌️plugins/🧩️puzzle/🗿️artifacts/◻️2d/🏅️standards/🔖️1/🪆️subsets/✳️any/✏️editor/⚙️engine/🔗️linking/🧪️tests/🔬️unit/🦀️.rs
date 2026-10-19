@@ -1,4 +1,4 @@
-use crate::board_set_camera;
+use semio_framework_os_infinite::board_set_camera;
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
 
@@ -9,11 +9,11 @@ mod tests {
     use crate::editor::puzzle2d::engine::BoardHost;
     use crate::editor::puzzle2d::engine::EdgeDescriptor;
     use crate::editor::puzzle2d::engine::EdgeStrokePattern;
-    use crate::editor::puzzle2d::engine::EdgeTipGeometry;
+    use semio_framework_os_infinite::board::schema::edge_tip::EdgeTipGeometry;
     use crate::editor::puzzle2d::engine::GraphPortMode;
     use crate::editor::puzzle2d::engine::HandleDescriptor;
     use crate::editor::puzzle2d::engine::Interaction;
-    use crate::editor::puzzle2d::engine::NodeDescriptor;
+    use semio_framework_os_infinite::board::NodeDescriptor;
     use crate::editor::puzzle2d::engine::NodeShape;
     use crate::editor::puzzle2d::engine::SceneDescriptor;
     use semio_framework_pack_json::json;
@@ -236,7 +236,7 @@ mod tests {
                 { "id": "e1", "source": "a", "target": "b", "edgeKind": "wires.owns" }
             ]
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
         assert_eq!(h.style.port_mode, GraphPortMode::Normal);
         assert!(h.scene.handles.is_empty());
         assert_eq!(h.scene.edges.len(), 1);
@@ -368,7 +368,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
         let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -412,7 +412,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
         let _ = h.outbox.drain_events_json();
         set_selection_ids(&mut h.scene, &mut h.focus, &mut h.outbox, &["a".into()]);
         let inside_a = h.scene.world_to_screen(Point::new(0.0, 0.0));
@@ -465,7 +465,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut h.scene, &mut h.focus, &mut h.style, &mut h.outbox,&snapshot.to_string(),&mut control)});
         let _ = h.outbox.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);

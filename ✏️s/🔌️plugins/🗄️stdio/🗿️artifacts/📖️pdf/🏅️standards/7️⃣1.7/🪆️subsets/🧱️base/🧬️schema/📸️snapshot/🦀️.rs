@@ -140,33 +140,26 @@ impl Default for PdfSnapshot {
 }
 
 impl PdfSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn font(&self, id: &str) -> Option<&PdfFont> {
         self.fonts.iter().find(|font| font.id == id)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn image(&self, id: &str) -> Option<&PdfImage> {
         self.images.iter().find(|image| image.id == id)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn form(&self, id: &str) -> Option<&PdfFormXObject> {
         self.forms.iter().find(|form| form.id == id)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ext_g_state(&self, id: &str) -> Option<&PdfExtGState> {
         self.ext_g_states.iter().find(|state| state.id == id)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn shading(&self, id: &str) -> Option<&PdfShading> {
         self.shadings.iter().find(|shading| shading.id == id)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn pattern(&self, id: &str) -> Option<&PdfPattern> {
         self.patterns.iter().find(|pattern| pattern.id == id)
     }
     /// 🆔 Every id the document-level collections currently use (fonts, XObjects, graphics
     /// states, shadings, patterns, embedded files, optional content groups).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resource_ids(&self) -> std::collections::BTreeSet<String> {
         let mut ids = std::collections::BTreeSet::new();
         ids.extend(self.fonts.iter().map(|font| font.id.clone()));
@@ -184,7 +177,6 @@ impl PdfSnapshot {
         ids
     }
     /// 🆔 A fresh id of the form `{prefix}{n}` not yet used by any collection.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fresh_id(&self, prefix: &str) -> String {
         let ids = self.resource_ids();
         (1..).map(|index| format!("{prefix}{index}")).find(|candidate| !ids.contains(candidate)).expect("an unbounded id sequence has a free member")

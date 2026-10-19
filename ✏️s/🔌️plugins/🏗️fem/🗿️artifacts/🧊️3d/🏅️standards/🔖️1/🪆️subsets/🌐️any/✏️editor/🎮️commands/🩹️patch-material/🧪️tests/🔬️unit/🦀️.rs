@@ -12,6 +12,7 @@ use semio_framework_value_derive::ToValue;
 use crate::context::dispatch;
 use crate::context::fem3d_demo_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 fn demo() -> Fem3dSnapshot {
     Fem3dSnapshot { materials: vec![semio_s_fem_material::volumetric::FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80e9, nu: 0.3, rho: 7850.0 }], ..Default::default() }

@@ -74,11 +74,17 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu"
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/**/*"
+      ]
     }
   },
   "tags": [

@@ -391,19 +391,12 @@ fn write_tiff(doc: &OracleDoc) -> Vec<u8> {
     write_u16(&mut out, 42, little);
     write_u32(&mut out, 8, little);
 
-    // First pass: every IFD's full entry list (incl. fresh strip tags), so directory sizes are
-    // known before any offset is computed.
     let mut full: Vec<Vec<OracleTag>> = doc
         .ifds
         .iter()
         .map(|ifd| {
             let mut entries = ifd.entries.clone();
             if let Some(strip) = &ifd.strip {
-                // Always re-laid-out as ONE combined strip covering every row (never the
-                // possibly-multi-strip layout the source may have used) — so `RowsPerStrip` MUST
-                // be forced to the full `ImageLength`, or a conformant reader (rightly) expects as
-                // many `StripOffsets`/`StripByteCounts` entries as `ceil(height/rowsPerStrip)`
-                // and finds only the one this writer ever emits.
                 if let Some(height) = entries.iter().find(|t| t.tag == TAG_IMAGE_LENGTH).and_then(|t| t.value.first_u32()) {
                     entries.retain(|t| t.tag != TAG_ROWS_PER_STRIP);
                     entries.push(OracleTag { tag: TAG_ROWS_PER_STRIP, value: OracleValue::Long(vec![height]) });
@@ -433,7 +426,6 @@ fn write_tiff(doc: &OracleDoc) -> Vec<u8> {
             .sum();
         cursor += dir_size(entries.len()) + out_of_line;
     }
-    // Strip payloads are appended after ALL directories + out-of-line data, in IFD order.
     let mut strip_offsets = Vec::with_capacity(full.len());
     for ifd in &doc.ifds {
         strip_offsets.push(cursor);

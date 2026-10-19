@@ -5,6 +5,6 @@ export interface Semio_semio_image_snapshotEntry {
   value: string;
 }
 export interface Semio_semio_image_snapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Semio_semio_image_snapshotEntry[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 📚️ @state artifact */ entries: Semio_semio_image_snapshotEntry[];
 }

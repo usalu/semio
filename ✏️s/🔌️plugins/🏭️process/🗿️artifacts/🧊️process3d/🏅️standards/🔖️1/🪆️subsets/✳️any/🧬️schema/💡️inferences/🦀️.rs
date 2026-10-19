@@ -200,8 +200,6 @@ fn solid_for_spec(kernel: &mut Brep, spec: &WorkingSolid, pose: &Pose) -> Option
             handle
         }
         WorkingSolid::Reference { reference_id } => semio_s_artifact_process_process3d_model::snapshot::reference_solid(reference_id)?.import(kernel)?,
-        // 🖼️ A GLB-imported reference mesh has no real B-Rep topology in the kernel, so it cannot
-        // serve as a CSG operand (stock or tool); the stock-level fallback handles display instead.
         WorkingSolid::ImportedMesh { .. } => return None,
     };
     let base = match primitive_centre_offset(spec) {

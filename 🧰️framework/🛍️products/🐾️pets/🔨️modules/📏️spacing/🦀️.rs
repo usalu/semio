@@ -10,14 +10,17 @@ use crate::draft::{carve, crowd_on, shoulders, Draft, Room, RATE};
 use semio_framework_pets_contract::schema::{Activity, Perch, Point, Species, Ticks};
 use semio_framework_pets_kinematics::terrain::{hop_step, larger, perch_at, smaller, Flight, Hop};
 use semio_framework_pets_kinematics::trigonometry::clamp;
+use semio_framework_pets_contract::schema::Footing;
+use semio_framework_pets_contract::schema::Actor;
+use semio_framework_pets_contract::schema::Extent;
 
 //#region 🔖️Constants
-pub(crate) const MEET_GAP: f64 = 6.0;
-pub(crate) const COMFORT_GAP: f64 = 8.0;
+pub const MEET_GAP: f64 = 6.0;
+pub const COMFORT_GAP: f64 = 8.0;
 //#endregion 🔖️Constants
 
 /// 🦎️ The body's lean towards its wall, given up as its feet leave the line they cling to.
-pub fn wall_lean_of(kind: &Species, footing: Footing, pitch: Option<&crate::schema::Pitch>, x: f64) -> f64 {
+pub fn wall_lean_of(kind: &Species, footing: Footing, pitch: Option<&semio_framework_pets_contract::schema::Pitch>, x: f64) -> f64 {
     let Some(pitch) = pitch.filter(|_| footing == Footing::Wall) else { return 0.0; };
     let share = clamp(1.0 - (x - cling_of(pitch, kind.size)).abs() / (kind.size.width / 2.0), 0.0, 1.0);
     (if pitch.side.sign() > 0.0 { -1.0 } else { 1.0 }) * 0.04 * share
@@ -105,7 +108,7 @@ pub(crate) fn soars(draft: &Draft<'_>, kind: &Species, from: Point, to: Point, h
 }
 
 /// 🛣️ The stretch `[low, high]` of its perch an actor can walk on without its body coming closer than `gap` to anybody else on that surface (`except` aside; a walker counts for the whole way it still has to go). The stretch always holds the place where the actor stands, and is that place alone for an actor without a perch.
-pub(crate) fn clearway(draft: &Draft<'_>, index: usize, gap: f64, except: Option<usize>) -> [f64; 2] {
+pub fn clearway(draft: &Draft<'_>, index: usize, gap: f64, except: Option<usize>) -> [f64; 2] {
     let body = &draft.stage.actors[index];
     let kind = draft.kinds[index];
     let Some(perch) = (body.footing == Footing::Perch).then_some(body.perch.as_deref()).flatten().and_then(|surface| perch_at(&draft.stage.perches, surface, body.x)) else {
@@ -134,7 +137,7 @@ pub(crate) fn clearway(draft: &Draft<'_>, index: usize, gap: f64, except: Option
 }
 
 /// 🛏️ Where a species could arrive: per perch that carries it the stretches it can stand on a comfortable gap away from the actors already there (half of both widths plus 8 px), and how many stand there. A perch without such a stretch is full.
-pub(crate) fn rooms_for(draft: &Draft<'_>, kind: &Species) -> Vec<Room> {
+pub fn rooms_for(draft: &Draft<'_>, kind: &Species) -> Vec<Room> {
     let mut rooms = Vec::new();
     let half = kind.size.width / 2.0;
     let hover = hover_of(kind);
@@ -162,7 +165,7 @@ pub(crate) fn rooms_for(draft: &Draft<'_>, kind: &Species) -> Vec<Room> {
 }
 
 /// 🏘️ The rooms a newcomer chooses among, so that a company spreads out over what the stage offers: those that hold the fewest actors, and of these the ones on the ground — the lowest perches of the stage — only when no higher one is as empty. Pets stand on things before they stand beneath them.
-pub(crate) fn quarters(draft: &Draft<'_>, rooms: Vec<Room>) -> Vec<Room> {
+pub fn quarters(draft: &Draft<'_>, rooms: Vec<Room>) -> Vec<Room> {
     let mut fewest = usize::MAX;
     for room in &rooms {
         if room.crowd < fewest {

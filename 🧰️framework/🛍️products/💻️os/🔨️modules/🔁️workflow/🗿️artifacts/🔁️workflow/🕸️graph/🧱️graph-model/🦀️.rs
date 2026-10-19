@@ -85,9 +85,6 @@ pub async fn workflow_node_for_app(app: &AppDefinition, plugin_id: &str, node_id
         id: node_id.into(),
         plugin_id: plugin_id.into(),
         app_id: app.id.clone(),
-        // 🚧️ `workflow_node_for_app` carries no locale/terminology context (this node-graph node
-        // builder isn't rendered per-request the way UiNode trees are); resolves native/English
-        // pending a locale plumbed through the workflow canvas API.
         label: app.label.resolve(Terminology::Native, Locale::En).to_string(),
         yields,
         artifact_ref: format!("artifacts/{node_id}"),

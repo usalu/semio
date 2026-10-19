@@ -192,11 +192,6 @@ impl ArtifactEditor for RemodelingPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, RemodelingSnapshot>) -> Result<Media, MediaError> {
         match port {
             "mesh:out" => {
-                // 🧩️ `results.mesh.mesh` is now a composed `s.stdio.semio/v1/mesh` CHILD handle
-                // (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`) — the real `MeshData` reads
-                // through the working-scene cache, honestly `Err` on a cold cache (documented
-                // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
-                // fabricated empty mesh.
                 let mesh =
                     semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh).ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;

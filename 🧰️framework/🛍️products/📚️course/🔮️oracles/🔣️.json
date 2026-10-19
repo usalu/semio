@@ -209,7 +209,7 @@
       "networkDuringExecution": false,
       "homepage": "https://lodash.com/docs/#throttle",
       "hostPath": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-      "rationale": "Judges the presence frame throttle of @semio-tech/course-react inside its unit suite `🧪️tests/📡️presence-client` (vitest, devDependency of the react package): for every shared call schedule whose states are pairwise distinct, the frames a presence room sends (time and state, under fake timers) must equal the invocations of lodash's throttle with the same interval — the reference leading-and-trailing-edge throttle. Schedules that repeat a state are judged by the shared vectors alone, since the room never resends the state it sent last. The drafts a thinking room sends (at most every 500 ms) must be the drafts lodash's throttle invokes with the same interval, each sent no later than lodash's (the room times from its last frame, lodash from its timer)."
+      "rationale": "Judges the presence frame throttle of @semio-tech/course-react inside its unit suites `🧪️tests/🚪️presence-room` and `🧪️tests/🧭️presence-places-and-rooms` (vitest, devDependency of the react package): for every shared call schedule whose states are pairwise distinct, the frames a presence room sends (time and state, under fake timers) must equal the invocations of lodash's throttle with the same interval — the reference leading-and-trailing-edge throttle. Schedules that repeat a state are judged by the shared vectors alone, since the room never resends the state it sent last. The drafts a thinking room sends (at most every 500 ms) must be the drafts lodash's throttle invokes with the same interval, each sent no later than lodash's (the room times from its last frame, lodash from its timer)."
     },
     {
       "id": "course-react-lodash-crowd",
@@ -325,5 +325,13 @@
     { "implementation": "python", "package": "numpy", "version": "2.5.0", "module": "numpy", "rationale": "🌀️ MT19937 stream of the randomness oracle and of every Python reference that draws a sheet; pair matrices of the scoring cross-checks." },
     { "implementation": "python", "package": "scipy", "version": "1.18.0", "module": "scipy", "rationale": "📊️ Kendall τ and Euclidean distances of the scoring cross-checks." },
     { "implementation": "python", "package": "jsonschema", "version": "4.26.0", "module": "jsonschema", "rationale": "🧬️ Draft 7 validation of every quiz document against the normative schema." }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-framework-course-presence",
+      "path": "🧰️framework/🛍️products/📚️course/🔨️modules/👥️presence/📦️packages/🦀️rust",
+      "rationale": "👥️ The shared-presence subject half drives the scopes and the admission rules of the presence crate, which owns them below the course core."
+    }
   ]
 }

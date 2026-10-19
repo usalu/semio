@@ -1,0 +1,780 @@
+{
+ "version": 1,
+ "metrics": [
+  {
+   "name": "cold",
+   "source": "bazel 8.4.2 empty disk cache, three genrules",
+   "event": {
+    "id": {
+     "buildMetrics": {}
+    },
+    "lastMessage": true,
+    "buildMetrics": {
+     "actionSummary": {
+      "actionsCreated": "4",
+      "actionsExecuted": "4",
+      "runnerCount": [
+       {
+        "name": "total",
+        "count": 4
+       },
+       {
+        "name": "internal",
+        "count": 1
+       },
+       {
+        "name": "darwin-sandbox",
+        "count": 3,
+        "execKind": "Local"
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "actions": 4,
+    "executed": 3,
+    "cacheHits": 0
+   }
+  },
+  {
+   "name": "disk-cache-restore",
+   "source": "bazel 8.4.2 after bazel clean, same disk cache",
+   "event": {
+    "id": {
+     "buildMetrics": {}
+    },
+    "lastMessage": true,
+    "buildMetrics": {
+     "actionSummary": {
+      "actionsCreated": "4",
+      "actionsExecuted": "4",
+      "runnerCount": [
+       {
+        "name": "total",
+        "count": 4
+       },
+       {
+        "name": "disk cache hit",
+        "count": 3,
+        "execKind": "Remote"
+       },
+       {
+        "name": "internal",
+        "count": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "actions": 4,
+    "executed": 0,
+    "cacheHits": 3
+   }
+  },
+  {
+   "name": "up-to-date",
+   "source": "bazel 8.4.2 nothing to do",
+   "event": {
+    "id": {
+     "buildMetrics": {}
+    },
+    "lastMessage": true,
+    "buildMetrics": {
+     "actionSummary": {
+      "actionsExecuted": "1",
+      "runnerCount": [
+       {
+        "name": "total",
+        "count": 1
+       },
+       {
+        "name": "internal",
+        "count": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "actions": 1,
+    "executed": 0,
+    "cacheHits": 0
+   }
+  },
+  {
+   "name": "remote-mix",
+   "source": "synthetic runner names documented by Bazel",
+   "event": {
+    "id": {
+     "buildMetrics": {}
+    },
+    "buildMetrics": {
+     "actionSummary": {
+      "runnerCount": [
+       {
+        "name": "total",
+        "count": 10
+       },
+       {
+        "name": "internal",
+        "count": 2
+       },
+       {
+        "name": "remote cache hit",
+        "count": 3
+       },
+       {
+        "name": "disk cache hit",
+        "count": 1
+       },
+       {
+        "name": "remote",
+        "count": 1
+       },
+       {
+        "name": "worker",
+        "count": 1
+       },
+       {
+        "name": "linux-sandbox",
+        "count": 1
+       },
+       {
+        "name": "local",
+        "count": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "actions": 10,
+    "executed": 4,
+    "cacheHits": 4
+   }
+  },
+  {
+   "name": "no-runners",
+   "source": "synthetic: metrics event without an action summary",
+   "event": {
+    "id": {
+     "buildMetrics": {}
+    },
+    "buildMetrics": {}
+   },
+   "expected": {
+    "actions": 0,
+    "executed": 0,
+    "cacheHits": 0
+   }
+  }
+ ],
+ "ignoredLines": [
+  "",
+  "not json but mentions \"buildMetrics\"",
+  "{\"id\":{\"buildFinished\":{}},\"children\":[{\"buildMetrics\":{}}]}"
+ ],
+ "census": {
+  "files": [
+   {
+    "path": "ac/5c/5ce4a9",
+    "bytes": 10
+   },
+   {
+    "path": "ac/f7/f79a09",
+    "bytes": 20
+   },
+   {
+    "path": "ac/ce/ce55db",
+    "bytes": 30
+   },
+   {
+    "path": "cas/87/874285",
+    "bytes": 1
+   },
+   {
+    "path": "cas/88/880553",
+    "bytes": 2
+   },
+   {
+    "path": "cas/88/88aaaa",
+    "bytes": 3
+   },
+   {
+    "path": "cas/5c/5ce4a9",
+    "bytes": 4
+   },
+   {
+    "path": "cas/ff/aa/ffaa11",
+    "bytes": 5
+   },
+   {
+    "path": "tmp/pending",
+    "bytes": 100
+   },
+   {
+    "path": "tmp/pending2",
+    "bytes": 100
+   },
+   {
+    "path": "gc/lock",
+    "bytes": 0
+   }
+  ],
+  "expected": {
+   "entries": 8,
+   "bytes": 75
+  }
+ },
+ "ledger": {
+  "first": {
+   "actions": 4,
+   "executed": 3,
+   "cacheHits": 0
+  },
+  "second": {
+   "actions": 4,
+   "executed": 0,
+   "cacheHits": 3
+  },
+  "expected": {
+   "version": 1,
+   "builds": 2,
+   "actions": 8,
+   "executed": 3,
+   "cacheHits": 3
+  }
+ },
+ "refusedLedgers": [
+  {
+   "version": 1,
+   "builds": -1,
+   "actions": 0,
+   "executed": 0,
+   "cacheHits": 0
+  },
+  {
+   "version": 1,
+   "builds": 1,
+   "actions": 0,
+   "executed": 0
+  },
+  {
+   "version": 1,
+   "builds": 1,
+   "actions": 0,
+   "executed": 0,
+   "cacheHits": 0,
+   "extra": 1
+  },
+  {
+   "version": 2,
+   "builds": 0,
+   "actions": 0,
+   "executed": 0,
+   "cacheHits": 0
+  }
+ ],
+ "cases": [
+  {
+   "name": "dependents follow a changed library",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      }
+     }
+    },
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {}
+     }
+    },
+    "tool": {
+     "root": "tool",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [
+    [
+     "app",
+     "lib"
+    ]
+   ],
+   "files": [
+    "lib/src/a.ts"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [
+     "app",
+     "lib"
+    ],
+    "roots": [
+     "lib:build"
+    ],
+    "dependencies": {
+     "app:build": [
+      "lib:build"
+     ],
+     "lib:build": []
+    },
+    "continuousDependencies": {
+     "app:build": [],
+     "lib:build": []
+    }
+   }
+  },
+  {
+   "name": "the deepest project root owns a file",
+   "projects": {
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {}
+     }
+    },
+    "nested": {
+     "root": "lib/nested",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      }
+     }
+    }
+   },
+   "edges": [
+    [
+     "nested",
+     "lib"
+    ]
+   ],
+   "files": [
+    "lib/nested/x.ts"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [
+     "nested"
+    ],
+    "roots": [
+     "lib:build"
+    ],
+    "dependencies": {
+     "nested:build": [
+      "lib:build"
+     ],
+     "lib:build": []
+    },
+    "continuousDependencies": {
+     "nested:build": [],
+     "lib:build": []
+    }
+   }
+  },
+  {
+   "name": "a file outside every project affects nothing",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [],
+   "files": [
+    "docs/readme.md"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [],
+    "roots": [],
+    "dependencies": {},
+    "continuousDependencies": {}
+   }
+  },
+  {
+   "name": "no changed file affects nothing",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [],
+   "files": [],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [],
+    "roots": [],
+    "dependencies": {},
+    "continuousDependencies": {}
+   }
+  },
+  {
+   "name": "a workspace root input touches only the projects that declare it",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {
+       "inputs": [
+        "default",
+        "shared"
+       ]
+      }
+     }
+    },
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {
+       "inputs": [
+        "default"
+       ]
+      }
+     }
+    }
+   },
+   "namedInputs": {
+    "default": [
+     "{projectRoot}/**/*"
+    ],
+    "shared": [
+     "{workspaceRoot}/config/**"
+    ]
+   },
+   "edges": [],
+   "files": [
+    "config/x.json"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": false,
+   "expected": {
+    "affected": [
+     "app"
+    ],
+    "roots": [
+     "app:build"
+    ],
+    "dependencies": {
+     "app:build": []
+    },
+    "continuousDependencies": {
+     "app:build": []
+    }
+   }
+  },
+  {
+   "name": "nx.json touches every project",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {}
+     }
+    },
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [],
+   "files": [
+    "nx.json"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": false,
+   "expected": {
+    "affected": [
+     "app",
+     "lib"
+    ],
+    "roots": [
+     "app:build",
+     "lib:build"
+    ],
+    "dependencies": {
+     "app:build": [],
+     "lib:build": []
+    },
+    "continuousDependencies": {
+     "app:build": [],
+     "lib:build": []
+    }
+   }
+  },
+  {
+   "name": "the root project owns the unowned files and its dependents follow",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      }
+     }
+    },
+    "core": {
+     "root": ".",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [
+    [
+     "app",
+     "core"
+    ]
+   ],
+   "files": [
+    "README.md"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [
+     "app",
+     "core"
+    ],
+    "roots": [
+     "core:build"
+    ],
+    "dependencies": {
+     "app:build": [
+      "core:build"
+     ],
+     "core:build": []
+    },
+    "continuousDependencies": {
+     "app:build": [],
+     "core:build": []
+    }
+   }
+  },
+  {
+   "name": "dependents propagate through a chain",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      }
+     }
+    },
+    "mid": {
+     "root": "mid",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      }
+     }
+    },
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [
+    [
+     "app",
+     "mid"
+    ],
+    [
+     "mid",
+     "lib"
+    ]
+   ],
+   "files": [
+    "lib/a.ts"
+   ],
+   "targets": [
+    "build"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [
+     "app",
+     "lib",
+     "mid"
+    ],
+    "roots": [
+     "lib:build"
+    ],
+    "dependencies": {
+     "app:build": [
+      "mid:build"
+     ],
+     "mid:build": [
+      "lib:build"
+     ],
+     "lib:build": []
+    },
+    "continuousDependencies": {
+     "app:build": [],
+     "mid:build": [],
+     "lib:build": []
+    }
+   }
+  },
+  {
+   "name": "continuous dependencies are kept apart from ordering dependencies",
+   "projects": {
+    "web": {
+     "root": "web",
+     "targets": {
+      "serve": {
+       "dependsOn": [
+        "^build",
+        "api:serve"
+       ]
+      }
+     }
+    },
+    "api": {
+     "root": "api",
+     "targets": {
+      "serve": {
+       "continuous": true
+      }
+     }
+    },
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [
+    [
+     "web",
+     "lib"
+    ]
+   ],
+   "files": [
+    "web/a.ts"
+   ],
+   "targets": [
+    "serve"
+   ],
+   "bazelQuery": true,
+   "expected": {
+    "affected": [
+     "web"
+    ],
+    "roots": [
+     "api:serve",
+     "lib:build"
+    ],
+    "dependencies": {
+     "web:serve": [
+      "lib:build"
+     ],
+     "api:serve": [],
+     "lib:build": []
+    },
+    "continuousDependencies": {
+     "web:serve": [
+      "api:serve"
+     ],
+     "api:serve": [],
+     "lib:build": []
+    }
+   }
+  },
+  {
+   "name": "excluding task dependencies keeps only the affected tasks",
+   "projects": {
+    "app": {
+     "root": "app",
+     "targets": {
+      "build": {
+       "dependsOn": [
+        "^build"
+       ]
+      }
+     }
+    },
+    "lib": {
+     "root": "lib",
+     "targets": {
+      "build": {}
+     }
+    }
+   },
+   "edges": [
+    [
+     "app",
+     "lib"
+    ]
+   ],
+   "files": [
+    "app/a.ts"
+   ],
+   "targets": [
+    "build"
+   ],
+   "excludeDependencies": true,
+   "bazelQuery": true,
+   "expected": {
+    "affected": [
+     "app"
+    ],
+    "roots": [
+     "app:build"
+    ],
+    "dependencies": {
+     "app:build": []
+    },
+    "continuousDependencies": {
+     "app:build": []
+    }
+   }
+  }
+ ]
+}

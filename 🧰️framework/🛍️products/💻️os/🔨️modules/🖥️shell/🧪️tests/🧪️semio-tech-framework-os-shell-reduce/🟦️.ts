@@ -1,10 +1,10 @@
-import * as ModuleUnderTest from "../../../../../../🔨️modules/🐚️shell/🟦️.ts";
+import * as ModuleUnderTest from "@semio-tech/framework/shell";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🐚️shell/🟦️.ts"), "reduce" | "defaultShellState">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/framework/shell"), "reduce" | "defaultShellState">, source: TestSource): Promise<void> {
   const { reduce, defaultShellState } = dependencies;
 
   const { describe, expect, it } = vitest;
@@ -17,7 +17,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (!result.ok) throw new Error("unreachable");
       expect(result.state.revision).toBe(state.revision + 1);
       expect(result.state.searchOpen).toBe(true);
-      expect(state.searchOpen).toBe(false); // input untouched
+      expect(state.searchOpen).toBe(false);
     });
 
     it("rejects leave state untouched and report a typed error", () => {

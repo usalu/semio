@@ -11,7 +11,7 @@
 
 import { type Activity, type Deed, type Menagerie, type Pledge, type Rapport, type Slug, type Ticks } from "../../🧬️schema/🟦️.ts";
 import { randomPick, randomWords, unitOf, weightedIndex } from "../🎲️randomness/🟦️.ts";
-import { PURR_TICKS, hail, heed, loose, shrug } from "../👀️attention/🟦️.ts";
+import { PURR_TICKS, cued, hail, heed, loose, shaken, shrug } from "../👀️attention/🟦️.ts";
 import { warmthAfter } from "../👆️gesture/🟦️.ts";
 import { CONTAGION_REACH, LEAN_TICKS, caught, clickTrick, encounterBias, showTrick, swayedShares, whimTrick } from "../💗️feeling/🟦️.ts";
 import { SEAM } from "../🚧️clearance/🟦️.ts";
@@ -329,13 +329,15 @@ export function clicked(draft: Draft, species: Slug, x: number): void {
   heed(draft, index, x, now);
 }
 
-/** 🎮️ The learner asked a pet for a deed without the pointer (the keyboard's "Play with the pets"): `hello` greets the learner (`greeted`), `trick` performs the next of its click tricks in authored order (a trick on a whim when it has none, a hello when it has neither), `pet` makes it purr (`purred`). `toss` is the hand's. Only a pet that is free for it ({@link loose}) answers; ignored on a still stage and while play is not permitted. */
+/** 🎮️ The learner asked a pet for a deed without the pointer: `hello` greets, `trick` cycles click tricks (a willing whim when none), `pet` purrs; explicit circles, strokes and shakes use the hand's own handlers. `toss` is the hand's. Only a free pet ({@link loose}) answers, while play is permitted and the stage moves. */
 export function played(draft: Draft, species: Slug, deed: Deed): void {
   const index = indexOf(draft.actors, species);
   if (index < 0 || draft.mode === "still" || !draft.play || deed === "toss") return;
   const body = draft.actors[index]!;
   if (!loose(body)) return;
   const now = draft.tick;
+  if (deed === "shake") return shaken(draft, index, now);
+  if (deed === "circle" || deed === "countercircle" || deed === "stroke") return cued(draft, index, deed, now);
   const kind = draft.kinds[index]!;
   if (deed === "pet") {
     feel(draft, index, "purred", now);

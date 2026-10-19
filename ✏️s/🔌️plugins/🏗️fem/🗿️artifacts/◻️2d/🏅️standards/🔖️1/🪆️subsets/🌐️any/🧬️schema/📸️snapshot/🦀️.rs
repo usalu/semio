@@ -21,13 +21,13 @@ pub use reference::Fem2dSnapshotValue;
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dSnapshot {
     #[state(artifact)]
-    pub nodes: semio_framework_value::list::persistent::PersistentList<semio_s_fem_node::planar::FemNode>,
+    pub nodes: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::planar::FemNode>,
     #[state(artifact)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
     pub regions: Vec<FemRegion>,
     #[state(artifact)]
-    pub materials: semio_framework_value::list::persistent::PersistentList<semio_s_fem_material::planar::FemMaterial>,
+    pub materials: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_material::planar::FemMaterial>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[state(artifact)]

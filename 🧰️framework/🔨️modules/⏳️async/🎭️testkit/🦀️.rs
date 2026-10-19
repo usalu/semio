@@ -193,11 +193,6 @@ impl HostAsyncRuntime for ManualRuntime {
     async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport {
         let _ = grace_ms;
         let mut report = ScopeDrainReport::default();
-        // 🌉️ R15: `cancel_scope` is now `Send`-bound at the trait (an explicit RPITIT bound,
-        // not the implicit auto-trait rustc could not previously prove for a generic `R`), so a
-        // `std::sync::MutexGuard` — itself never `Send` — can no longer be held across the
-        // `.await`s below. Snapshot both maps into owned, lock-free data first, then await, then
-        // take the locks back out only for the plain-synchronous mutation at the end.
         let snapshot: Vec<(u64, ManualScopeRecord)> = {
             let scopes = self.0.scopes.lock().expect("ManualRuntime scopes mutex poisoned");
             scopes.iter().map(|(id, record)| (*id, record.clone())).collect()

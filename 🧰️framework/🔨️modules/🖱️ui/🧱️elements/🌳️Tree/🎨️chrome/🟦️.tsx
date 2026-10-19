@@ -5,7 +5,7 @@ import { ChevronUpIcon, ChevronDownIcon, ChevronRightIcon, ChevronLeftIcon, Icon
 import { domSizePx, uiSpacingLen, STYLING_DOM } from "@semio-tech/ui-styling";
 import type { IconName } from "@semio-tech/assets";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, interactiveActiveFillClass, groupHoverExcludingHandleBgFillClass } from "../../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import type { TreeDataItem, TreeDataSection } from "../📋️data/🟦️.ts";
@@ -56,7 +56,7 @@ export const treeBranchContentStyle = (topPaddingPx = 0): React.CSSProperties =>
 });
 export const getTreeSiblingGapPx = (_previousKind: string, _currentKind: string): number => treeCompactSiblingGapPx;
 
-/** IndentationLines holds the data fields for a IndentationLines record.
+/** 📏️ IndentationLines holds the data fields for a IndentationLines record.
  **/
 /**
  **/

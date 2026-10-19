@@ -7,7 +7,7 @@ import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 import {withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,type ScriptInvocation} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {readPhysicalCargoSourceV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "@semio-tech/process/artifacts/native-build/source/admission/read";
 const schema=structuredClone(schemaDocument),protocol=Object.freeze({...producerDocument.definitions.Protocol.const});
 export interface ObservedCargoConfigurationFileV1{readonly path:string;readonly sha256:string;readonly bytes:number}
 export interface ObservedCargoConfigurationPlanV1 extends ObservedCargoConfigurationFileV1{readonly resource:string}

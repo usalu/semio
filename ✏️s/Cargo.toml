@@ -292,6 +292,10 @@ path = "../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packag
 [workspace.dependencies.semio-framework-job]
 path = "../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-framework-job-payload]
+path = "../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-async]
 path = "../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
 
@@ -307,6 +311,12 @@ package = "semio-framework-replication"
 
 [workspace.dependencies.semio-framework-value]
 path = "../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-edit]
+path = "../🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-persistent]
+path = "../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"

@@ -70,10 +70,10 @@ fn close_lookup<K:BoundedOrd>(cursor:&mut RetainedOrderedMapLookupCursor<K>){
         for axis in 0..5{
             if (axis==1&&minimum==0)||(axis==2&&grant.maximum_capacity_bytes==0)||(axis==3&&grant.maximum_release_bytes==0)||(axis==4&&grant.maximum_depth==0){continue;}
             let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..grant},1=>RetainedCloneGrant{maximum_copy_bytes:minimum-1,..grant},2=>RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant},3=>RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant},_=>RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}};
-            let(step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(denied).unwrap());
+            let(step,heap)=crate::observe_retirement_allocations(||cursor.close_step(denied).unwrap());
             assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert_eq!(cursor.next_close_copy_byte_demand().unwrap(),minimum);
         }
-        let(step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(grant).unwrap());
+        let(step,heap)=crate::observe_retirement_allocations(||cursor.close_step(grant).unwrap());
         assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());}
     }

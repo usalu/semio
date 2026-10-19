@@ -257,19 +257,9 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
-    // 🔌️ One-time registration of every framework-builtin `MediaConvertFn` this crate ships a real
-    // body for (Vector→Raster today) — mirrors `register_artifact_descriptors`'s "call at
-    // composition-root startup, beside plugin resolution" placement (`os-core`'s `PluginHost::
-    // load_plugin` can't call this itself: it would be a reverse dependency on this crate).
     register_builtin_converters();
     let bundle = SpaceBundle::open(&args.bundle);
     let (space_pack, space_spr) = bundle.read_space_document()?;
-    // 🧬️ `OsSnapshot`/`OsMutation` are dissolved (os-core dissolve, `## The inversion`) — the
-    // studio bundle's root `space.space.pack`/`.spr` files (renamed from `space.os.pack`/`.spr` by
-    // W4's canonical on-disk layout rewrite, see `SpaceBundle`'s own doc comment) carry a
-    // `workflow::WorkflowSnapshot`/`WorkflowMutation` pair (the `s.workflow` artifact document)
-    // instead — only the typed decode target moved, wiring the root slot to a real
-    // `space::SpaceSnapshot` manifest is later-wave work.
     let parsed: protocol::os_store::text_format::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::os_store::text_format::parse_document_pack(&space_pack, &space_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
@@ -279,8 +269,6 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         graph.edges.retain(|edge| &edge.source_node_id == node_id || &edge.target_node_id == node_id);
     }
 
-    // 🔒️ READONLY source maps for the whole run — `SpaceRunner::run` never writes back into these (see
-    // `semio_framework_os_run`'s module doc, "non-destructive rework").
     let mut documents: BTreeMap<String, (Vec<u8>, Vec<u8>)> = BTreeMap::new();
     let mut configs: BTreeMap<String, (Vec<u8>, Vec<u8>)> = BTreeMap::new();
     for node in &graph.nodes {
@@ -290,9 +278,6 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
     let parameter_values: Vec<semio_framework_artifact_workflow_run::RunParameterValue> = args.params.iter().map(|(parameter_id, value)| semio_framework_artifact_workflow_run::RunParameterValue { parameter_id: parameter_id.clone(), value: value.clone() }).collect();
 
-    // 🗄️ Memoization ground truth: the PRIOR SEALED run's own `node_records`, keyed by node id — empty
-    // (first run ever, or the prior run never sealed) means every node computes fresh. Replaces the
-    // deleted `run/state.json`-backed `RunState`.
     let prior_node_records: BTreeMap<String, semio_framework_artifact_workflow_run::RunNodeRecord> = {
         let (run_pack, run_spr) = bundle.read_run_document(RUN_ID)?;
         if run_pack.is_empty() {
@@ -338,14 +323,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     })).await
     .map_err(|error| error.to_string())?;
 
-    // 🌀️ `SpaceRunner::run` is `async fn` since the async-first rewrite (ticket
-    // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) — awaited directly now (`run_async`'s own
-    // caller, `run`, is this file's one `block_on` bridge — see that fn's own doc); tokio stays
-    // confined to `semio-framework-os-services` (see that crate's own module doc).
     let run_result = runner.run(&graph, &documents, &configs, &parameter_values, &snapshot.parameter_bindings, &prior_node_records, &mut cache, &mut sink).await;
-    // 📊️ Dev-boot smoke line (W7): real `io_router_stats()` numbers, not hardcoded — a zero-plugin or
-    // zero-key router (the shared cross-plugin `IoRouter` silently doing nothing) is visible right
-    // here, regardless of whether the run itself succeeded or failed partway through.
     let (io_router_plugins, io_router_keys) = runner.into_host().io_router_stats().await;
     eprintln!("[os run] io-router: {io_router_plugins} plugins / {io_router_keys} keys");
     eprintln!("[os run] merge-policy: {:?}", args.policy);
@@ -358,8 +336,6 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
         Err(error) => {
-            // 🧾️ A failed run still gets a real, sealed audit trail — readonly-over-source holds even
-            // on failure, and a later invocation can see WHY the last run failed.
             let _ = sink.record(semio_framework_artifact_workflow_run::RunMutation::AppendRunLog(semio_framework_artifact_workflow_run::AppendRunLog { node_id: String::new(), level: "error".into(), message: error.to_string(), at: protocol::os_store::document_materialize::now_iso() })).await;
             let _ = sink.record(semio_framework_artifact_workflow_run::RunMutation::SealRun(semio_framework_artifact_workflow_run::SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Failed })).await;
             persist_run(&bundle, &sink).await?;

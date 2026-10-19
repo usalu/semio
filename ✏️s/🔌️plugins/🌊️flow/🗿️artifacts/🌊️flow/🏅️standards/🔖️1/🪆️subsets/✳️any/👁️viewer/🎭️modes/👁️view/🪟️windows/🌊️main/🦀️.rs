@@ -97,8 +97,6 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));
     let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
-    // 🧹️ The host, its source projection and the throwaway session all refuse a bare drop (layout
-    // `OrderedMap` roots and the session's close witness) — each is closed once the scene is read.
     host.retire_cold();
     live.retire_cold();
     session.retire_cold();

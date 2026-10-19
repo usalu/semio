@@ -33,7 +33,6 @@ pub struct JpgStepDecoder {
 impl JpgStepDecoder {
     /// 🧾️ Transfers exact native observations after the decoded content completed.
     pub fn take_observations(&mut self)->Option<JpgNativeObservations>{self.observations.take()}
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &dyn JpgByteSource) -> Result<Self, JpgError> {
         Self::from_header(parse_jpg_header(data,false)?, true)
     }
@@ -67,7 +66,6 @@ impl JpgStepDecoder {
     }
 
     /// ⏱️ One bounded unit of work: `Ok(None)` while decoding continues, `Ok(Some(snapshot))` once.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn step_entropy(&mut self, data: &dyn JpgByteSource, unit_budget: usize) -> Result<bool, JpgError> {
         let budget = unit_budget.max(1);
         let header = self.header.as_deref().ok_or_else(|| JpgError::Malformed("JPEG decoder stepped after completion".into()))?;

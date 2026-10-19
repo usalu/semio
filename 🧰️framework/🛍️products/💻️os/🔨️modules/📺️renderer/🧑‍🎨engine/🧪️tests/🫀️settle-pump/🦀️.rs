@@ -108,7 +108,7 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
     let fixture = fixture();
     for row in fixture["frameRows"].as_array().expect("the fixture declares its frame rows") {
         let id = row["id"].as_str().expect("every row is named");
-        let mut caller = crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+        let mut caller = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
         let mut actions = FrameActionOwners::default();
         for index in 0..row["actions"].as_u64().expect("actions") {
             let descriptor = ActionDescriptor { controller_id: "s.procedural.generation3d@1/*#editor".to_string(), action: format!("setNodeInput{index}"), args: None };

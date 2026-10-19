@@ -1,4 +1,4 @@
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
 import type { IntroductionPlacement } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
@@ -27,9 +27,6 @@ export function introductionPointRelativeToHost(point: { readonly x: number; rea
  * late-arriving aliases (extra window instances) join the pulse set. */
 export function useIntroductionAnchorRect(selector: string | null): IntroductionRect | null {
   const [rect, setRect] = reactHostPort.useState<IntroductionRect | null>(null);
-  // 🐚️ Falls back to `document`/`document.body` outside any shell (e.g. the mit-bestand demonstrator's
-  // own standalone tour) — inside one, scopes the search+observe to that shell's own root so an id/alias
-  // shared across two mounted shells only anchors within the one actually running this introduction.
   const shellScope = useShellScopeOptional();
 
   reactHostPort.useEffect(() => {
@@ -142,7 +139,6 @@ export function useIntroductionAnchorRect(selector: string | null): Introduction
  * are undone on id-list change and unmount. */
 export function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
   const [resolved, setResolved] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
-  // 🐚️ See `useIntroductionAnchorRect`'s doc for why this is scoped to a shell's own root when one exists.
   const shellScope = useShellScopeOptional();
 
   reactHostPort.useEffect(() => {

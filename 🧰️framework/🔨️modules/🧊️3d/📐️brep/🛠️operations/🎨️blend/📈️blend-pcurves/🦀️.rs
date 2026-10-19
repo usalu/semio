@@ -25,10 +25,6 @@ fn affine_uv_pcurve(surface: &Surface, curve: &Curve3, range: (f64, f64)) -> Opt
         let raw = closest_uv(surface, surface.domain(), curve.eval(t), BLEND_EPS);
         uvs.push((raw.u, raw.v, surface.is_degenerate_uv(raw.u, raw.v)));
     }
-    // 🧭️ A pole's `u` is meaningless (its inversion returns an arbitrary branch), and a boundary
-    // ENDING at one — every meridian of a spherical corner does — would otherwise be fitted through
-    // that arbitrary value and come out slanted. Carry `u` in from the nearest sample that has one,
-    // in both directions, before anything is unwrapped or fitted.
     let first_good = uvs.iter().position(|entry| !entry.2)?;
     for i in (0..first_good).rev() {
         uvs[i].0 = uvs[i + 1].0;
@@ -131,11 +127,6 @@ pub(super) fn blend_pcurve(surface: &Surface, curve: &Curve3, range: (f64, f64))
             return Ok(pcurve);
         }
     }
-    // 🧭️ The ONE interpolated p-curve in this engine, deliberately reachable only here: a variable
-    // fillet's cap plane cuts its cone in a conic whose `(u, v)` image is transcendental in the
-    // conic's own parameter, so no closed form exists. It is affordable exactly because the support
-    // is analytic — its inversion is a closed form, unlike the NURBS patches whose sampled fits
-    // this rewrite exists to eliminate.
     if !matches!((surface, curve), (Surface::Cone { .. }, Curve3::Nurbs { .. })) {
         return Err(KernelError::Operation(format!("blend: no closed-form p-curve exists for {} / {}", surface_kind(surface), curve_kind(curve))));
     }

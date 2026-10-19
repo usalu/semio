@@ -26,8 +26,6 @@ mod tests {
     #[test]
     fn wire_literal_roundtrip_simple() {
         block_on_test(async {
-            // 🩹️ unified grammar: port names are `dsl_core` idents (must start with a letter or
-            // `_`, never a digit) — the old port name `"3d"` is no longer lexable, renamed `"d3"`.
             let nodes = vec![WireNode { id: "p".into(), kind: "Puzzle3d".into(), port: None, properties: PropertyBag::new() }];
             let edges = vec![WireEdge { from: "p".into(), from_port: "d3".into(), to: "s".into(), to_port: "d3".into(), directed: true, properties: PropertyBag::new() }];
             let text = wire_literal_from_dag(&nodes, &edges);
@@ -55,9 +53,6 @@ mod tests {
             props.insert("value".into(), PropertyValue::Number(3.0));
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
             let text = wire_literal_from_dag(&nodes, &[]);
-            // 🩹️ unified syntax: `key=value` (never `key: value`), space-padded braces when glued
-            // onto a preceding atom, per `dsl_core::Writer`'s canonical spacing law; a
-            // `PropertyValue::Number` is an f64 and prints in the canonical float form `3.0`.
             assert!(text.contains("{ value=3.0 }"), "expected unified {{ value=3.0 }} properties, got: {text}");
         });
     }
@@ -89,7 +84,6 @@ mod tests {
     #[test]
     fn dag_from_wire_literal_rejects_unterminated_string() {
         block_on_test(async {
-            // 🩹️ unified syntax: double-quoted properties, `key="value"` (never `key: 'value'`).
             let err = dag_from_wire_literal("n:kind{prop=\"unterminated").unwrap_err();
             assert!(matches!(err, GraphDslError::Lex(_)));
             assert!(err.to_string().contains("unterminated string literal"), "got: {err}");
@@ -99,9 +93,6 @@ mod tests {
     #[test]
     fn dag_from_wire_literal_rejects_unexpected_char() {
         block_on_test(async {
-            // 🩹️ `#` is now a legitimate comment starter (unified with the rest of the DSL engine),
-            // so the "genuinely unrecognized character" trigger moved to `?`, which is outside
-            // `dsl_core`'s alphabet in every mode.
             let err = dag_from_wire_literal("n:kind?bad").unwrap_err();
             assert!(matches!(err, GraphDslError::Lex(_)));
             assert!(err.to_string().contains("unexpected character '?'"), "got: {err}");
@@ -119,9 +110,6 @@ mod tests {
     #[test]
     fn dag_from_wire_literal_rejects_edge_missing_source_port() {
         block_on_test(async {
-            // 🆕️ the unified grammar itself leaves the source port optional (unlike the old
-            // hand-rolled parser, which could never even reach an edge without one) — this
-            // module's own DAG domain rule must now catch it explicitly.
             let err = dag_from_wire_literal("a:kind->b:kind@in").unwrap_err();
             assert!(matches!(err, GraphDslError::EdgeTargetMissingPort));
         });
@@ -130,7 +118,6 @@ mod tests {
     #[test]
     fn dag_from_wire_literal_parses_bool_and_null_properties() {
         block_on_test(async {
-            // 🩹️ unified syntax: space-separated `key=value` pairs, no commas, no colons.
             let (nodes, _) = dag_from_wire_literal("n:kind{on=true off=false empty=null}").unwrap();
             let props = &nodes[0].properties;
             assert_eq!(props.get("on"), Some(&PropertyValue::Bool(true)));
@@ -158,8 +145,6 @@ mod tests {
     #[test]
     fn dag_from_wire_literal_accepts_back_arrow_sugar_and_normalizes_direction() {
         block_on_test(async {
-            // 🆕️ `<-` is accepted sugar, normalized to the same stored/parsed shape as `->` with
-            // endpoints swapped — `dsl_core::parse_wire`'s law, inherited for free.
             let (_, edges) = dag_from_wire_literal("b:kind@in<-a:kind@out").unwrap();
             assert_eq!(edges.len(), 1);
             let edge = &edges[0];
@@ -174,7 +159,6 @@ mod tests {
     #[test]
     fn dag_from_wire_literal_parses_undirected_dash_dash_edge() {
         block_on_test(async {
-            // 🆕️ unified undirected sigil is `--`, not the old single `-`.
             let (_, edges) = dag_from_wire_literal("a:x@out--b:y@in").unwrap();
             assert_eq!(edges.len(), 1);
             assert!(!edges[0].directed);

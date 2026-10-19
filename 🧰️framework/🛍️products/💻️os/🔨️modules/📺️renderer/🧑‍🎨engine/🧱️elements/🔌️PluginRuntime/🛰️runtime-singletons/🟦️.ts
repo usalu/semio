@@ -5,11 +5,11 @@
 
 import { rendererOriginalWorkStock } from "@semio-tech/framework/canvas/renderer-work";
 import { ActivationRegistry } from "@semio-tech/framework";
-import { assertShardJspiAvailable } from "@semio-tech/framework-actor/shard-client/heartbeat";
-import { ShardClient } from "@semio-tech/framework-actor/shard-client";
-import { type ShardBudget } from "@semio-tech/framework-actor/shard-client/wire";
-import { type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client/quota";
-import { shardWorkerUrl,DEFAULT_SHARD_BUDGET } from "@semio-tech/framework-actor/shard-runtime";
+import { assertShardJspiAvailable } from "@semio-tech/framework/actor/shard-client/heartbeat";
+import { ShardClient } from "@semio-tech/framework/actor/shard-client";
+import { type ShardBudget } from "@semio-tech/framework/actor/shard-client/wire";
+import { type ShardWorkerLike } from "@semio-tech/framework/actor/shard-client/quota";
+import { shardWorkerUrl,DEFAULT_SHARD_BUDGET } from "@semio-tech/framework/actor/shard-runtime";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 import { rendererResidentLedger } from "@semio-tech/framework/canvas/renderer-resident";
 import { notePluginLoadProgressForInFlightV1 } from "../🫀️load-progress/🟦️.ts";
@@ -132,17 +132,6 @@ export function poolConcurrency(): number {
  * directly against a monkey-patched {@link sharedActivationRegistry} without constructing a real
  * `ShardClient`/`Worker`. */
 export function handlePluginShardLost(shardIndex: number, actorIds: readonly string[]): void {
-  // 🚑️ Restoring the ACTOR is not restoring the APP. `ActivationRegistry.restoreActor` re-activates
-  // the program on a rebuilt shard and restores whatever checkpoint it has — and a watchdog kill
-  // takes no checkpoint, so the guest comes back EMPTY: no `createApp` instance, no open document,
-  // no lifecycle slot. Every later command page then fails the guest's own liveness check with
-  // `plugin.command-page-invalid` and the session is dead until the user reloads, which is exactly
-  // what was measured on 2026-09-12 after a 16 s `brep.bool.cut` tripped the watchdog
-  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
-  //
-  // So the instances those actors owned are retired HERE, before the restore, and announced — the
-  // runtime never keeps serving an instance whose guest state no longer exists, and whoever created
-  // the instance (the shell) is told it must create it again.
   const lost = releaseInstancesForLostActors(actorIds);
   getActivationRegistry().handleShardLost(shardIndex, actorIds);
   if (lost.length > 0) notifyPluginInstancesLost(shardIndex, lost);
@@ -236,18 +225,10 @@ export function buildShardClientOptions(createWorker: () => ShardWorkerLike = ()
     residentLedger: rendererResidentLedger(),
     originalWorkStock: rendererOriginalWorkStock(),
     shardCount: poolConcurrency(),
-    // 🎭️ A real DOM `Worker` satisfies `ShardWorkerLike` structurally at runtime (same claim
-    // `🟦️.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s
-    // wider native `MessageEvent`/`ErrorEvent` handler types down to the interface's minimal
-    // `{data: unknown}`/`unknown` shape, which a `MessageEvent`/`ErrorEvent` handler always satisfies.
     createWorker,
-    // [TRACE] temporary watchdog widening — measures whether the setContributions turn is a HANG or a
-    // long-but-finite install. REMOVE with the measurement (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     heartbeatTimeoutMs: 120_000,
     onActorTrap: (actorId, message) => undefined,
     onShardLost: handlePluginShardLost,
-    // 🫀️ Every proof a shard is alive is also proof for the loads queued behind its module fetch —
-    // see `notePluginLoadProgressForInFlightV1`.
     onLiveness: () => void notePluginLoadProgressForInFlightV1(),
   };
 }
@@ -268,17 +249,8 @@ export class PluginBootShardLostError extends Error {
 let sharedShardClient: ShardClient | null = null;
 export function getShardClient(): ShardClient {
   if (sharedShardClient) return sharedShardClient;
-  // 🧪️ Probed ONCE on the main thread before the first worker exists. Without JSPI every shard's
-  // script throws at module top level, `worker.onerror` fires for all of them, and the boot degrades
-  // into dozens of unrelated-looking `timeout loading <plugin>` lines with the real cause nowhere in
-  // the log — observed verbatim on 2026-09-05 (four `shard N worker error Event` lines, no beacon).
   assertShardJspiAvailable();
   sharedShardClient = new ShardClient(buildShardClientOptions());
-  // 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before this packet, neither
-  // `checkHeartbeats` nor `pollHeartbeatSab` had a production caller anywhere in the repo (`ShardClient`'s
-  // own doc on `startWatchdog` — "the watchdog's whole failure ladder was wired but nothing in
-  // production ever turned the crank"), so a wedged shard went undetected forever in the real app.
-  // Self-ticks at `startWatchdog`'s own default cadence (`heartbeatTimeoutMs`) — see that method's doc.
   sharedShardClient.startWatchdog();
   return sharedShardClient;
 }

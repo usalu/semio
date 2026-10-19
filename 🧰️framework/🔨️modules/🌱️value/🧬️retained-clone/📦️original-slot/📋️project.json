@@ -7,7 +7,12 @@
   "targets": {
     "verify-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
         "command": "bun ./📜️script.ts verify source"
@@ -15,7 +20,12 @@
     },
     "verify-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot",
         "command": "bun ./📜️script.ts verify native"

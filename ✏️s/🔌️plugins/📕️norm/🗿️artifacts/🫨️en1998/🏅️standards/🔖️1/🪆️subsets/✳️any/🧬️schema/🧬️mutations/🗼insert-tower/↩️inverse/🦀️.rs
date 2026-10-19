@@ -1,4 +1,4 @@
-//! Inverse for `insert-tower`.
+//! ↩️ Inverse for `insert-tower`.
 use crate::insert_tower::InsertTower;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::remove_tower;

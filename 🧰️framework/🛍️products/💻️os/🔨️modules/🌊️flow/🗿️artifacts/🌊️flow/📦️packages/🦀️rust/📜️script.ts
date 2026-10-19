@@ -1,10 +1,9 @@
-import { runBudgetedTestCommand } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+
 import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { runCmd } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runRepositoryTestCommand } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { BundleScript } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { join, resolve } from "node:path";
-import { flowTypedRetirementSelfTests } from "../../🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolve } from "node:path";
+import { runOwnedVerifyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🪶️ Runs the authored Flow snapshot ownership laws through the existing task budgets. */
 class FlowSqliteTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -15,28 +14,9 @@ class FlowSqliteTestScript extends BundleScript {
   }
 }
 class OwnedVerifyScript extends BundleScript {
- async run(segments: string[]): Promise<void> {
-    if(segments[0]==="selected-copy-source"){if(segments.length!==1)throw Error("selected-copy-source accepts no arguments");const{flowSelectedCopySelfTests}=await import("../../🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts");return;}
-    if (segments[0] === "slider-labels-fixture") {
-      if (segments.length !== 1) throw new Error("verify slider-labels-fixture accepts no arguments");
-    await runBudgetedTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🏷️slider-labels/🟦️.ts")], { cwd: this.repoRoot, env: process.env, budgetMs: 15_000, throwOnFailure: true });
-      return;
-    }
-if (segments[0] === "framework-flow-physical-retirement") {
-      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("framework-flow-physical-retirement accepts only optional native");
-      const testPath = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts");
-      if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-replication", "--lib", "ordered_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-kernel-neural-engine", "--lib", "neural_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-artifact-flow-flow-copy", "--lib", "flow_physical_retirement_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
-      } else {
-        flowTypedRetirementSelfTests();
-        runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
-      }
-      return;
-    }
- throw new Error("Unknown Flow artifact verification");
- }
+  async run(segments: string[]): Promise<void> {
+    await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-flow-flow", { packages: ["semio-framework-artifact-flow-flow", "semio-framework-artifact-flow-flow-model", "semio-framework-artifact-flow-flow-document", "semio-framework-artifact-flow-flow-copy", "semio-framework-artifact-flow-flow-mutation-laws", "semio-framework-artifact-flow-flow-snapshot-laws"], commands: { "test-snapshot-sqlite": FlowSqliteTestScript, verify: OwnedVerifyScript } });
+const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite", FlowSqliteTestScript).register("verify", OwnedVerifyScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-framework-artifact-flow-flow", { packages: ["semio-framework-artifact-flow-flow", "semio-framework-artifact-flow-flow-model", "semio-framework-artifact-flow-flow-document", "semio-framework-artifact-flow-flow-copy", "semio-framework-artifact-flow-flow-mutation-laws", "semio-framework-artifact-flow-flow-snapshot-laws"], commands: router });

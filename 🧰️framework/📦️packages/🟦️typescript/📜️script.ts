@@ -9,7 +9,7 @@ import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { runVitestV1, readVitestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
-import { runOwnedCommand } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -361,7 +361,7 @@ function retainedUiNativeStripOnly(): void {
 /** 🥽️ Executes portable polygon geometry with independent Three.js and schema oracles. */
 class PolygonMeshScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-polygon-mesh accepts no arguments");
+    if (args.length) throw new Error("test-polygon-mesh accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🔬️unit/🟦️.ts", import.meta.url))], this.root, "framework:polygon-mesh", 30_000);
   }
 }
@@ -369,7 +369,7 @@ class PolygonMeshScript extends BundleScript {
 /** 🔌️ Executes the SDK surface law: explicit facades, resolvable names, loadable specifiers. */
 class SdkSurfaceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-sdk-surface accepts no arguments");
+    if (args.length) throw new Error("test-sdk-surface accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("./🧪️tests/🔌️sdk-surface/🟦️.ts", import.meta.url))], this.root, "framework:sdk-surface", 300_000);
   }
 }
@@ -377,7 +377,7 @@ class SdkSurfaceScript extends BundleScript {
 /** 📤️ Executes the module package surface law for the value, schema validator and schema TypeScript packages. */
 class ModulePackageSurfaceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-module-package-surface accepts no arguments");
+    if (args.length) throw new Error("test-module-package-surface accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("./🧪️tests/📤️module-package-surface/🟦️.ts", import.meta.url))], this.root, "framework:module-package-surface", 300_000);
   }
 }
@@ -385,7 +385,7 @@ class ModulePackageSurfaceScript extends BundleScript {
 /** 📏️ Executes the closed general command-owner boundary. */
 class ScriptBoundaryScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-script-boundary accepts no arguments");
+    if (args.length) throw new Error("test-script-boundary accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../📏️script-boundary/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:script-boundary", 30_000);
   }
 }
@@ -393,7 +393,7 @@ class ScriptBoundaryScript extends BundleScript {
 /** 🔗️ Executes literal artifact-reference admission against the independent SQLite oracle. */
 class ArtifactReferenceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-artifact-reference accepts no arguments");
+    if (args.length) throw new Error("test-artifact-reference accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🧬️schema/🗿️artifact-reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference-value", cmdBudgetMs(process.env));
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:artifact-reference", cmdBudgetMs(process.env));
   }
@@ -402,7 +402,7 @@ class ArtifactReferenceScript extends BundleScript {
 /** 🔌️ Executes the embedded child slot port law. */
 class IoPortsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-io-ports accepts no arguments");
+    if (args.length) throw new Error("test-io-ports accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🚪️io/🔌️ports/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:io-ports", cmdBudgetMs(process.env));
   }
 }
@@ -410,7 +410,7 @@ class IoPortsScript extends BundleScript {
 /** 📖️ Executes the framework source-text access law. */
 class SourceTextScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-source-text accepts no arguments");
+    if (args.length) throw new Error("test-source-text accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🧪️test/📖️source-text/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:source-text", cmdBudgetMs(process.env));
   }
 }
@@ -418,7 +418,7 @@ class SourceTextScript extends BundleScript {
 /** 🪪️ Executes the document scope and frontier law. */
 class DocumentScopeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test-document-scope accepts no arguments");
+    if (args.length) throw new Error("test-document-scope accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/📄️document/🪪️scope/🧪️tests/🟦️.ts", import.meta.url))], this.root, "framework:document-scope", cmdBudgetMs(process.env));
   }
 }
@@ -426,9 +426,9 @@ class DocumentScopeScript extends BundleScript {
 /** 🪟️ Verifies shared utility routing and window ownership against the neutral context corpus. */
 class WindowUtilityScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("window-utility-check accepts no arguments");
+    if (args.length) throw new Error("window-utility-check accepts no arguments");
     const source = fileURLToPath(new URL("../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts", import.meta.url));
-    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], this.root, "framework:window-utility-types", 120_000, { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", source], this.root, "framework:window-utility-types", 120_000, { signal: this.invocation.control.signal });
     const { testWindowViewContext } = await import("../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts");
     testWindowViewContext();
   }
@@ -460,4 +460,4 @@ class InstallationIdentityScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

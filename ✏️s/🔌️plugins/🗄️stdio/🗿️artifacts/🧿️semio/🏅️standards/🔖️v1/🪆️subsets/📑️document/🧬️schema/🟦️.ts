@@ -3,9 +3,9 @@
 import type { DocBlock, DocImage, DocStyle } from "./📸️snapshot/🟦️";
 
 export interface SemioDocumentArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ styles: DocStyle[];
-  /** @state artifact */ images: DocImage[];
-  /** @state artifact */ blocks: DocBlock[];
+  /** 📄️ @state artifact */ schema: string;
+  /** 🎨️ @state artifact */ styles: DocStyle[];
+  /** 🖼️ @state artifact */ images: DocImage[];
+  /** 🧱️ @state artifact */ blocks: DocBlock[];
 }
 

@@ -111,9 +111,8 @@ pub fn media_contract_from_record(record: &semio_framework_dsl_record::RecordVal
 impl semio_framework_dsl_record::DslField for MediaContract {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{media_contract_to_record_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Record)}
     fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,semio_framework_value::ValueError>{media_contract_to_record_controlled(self,control)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>media_contract_from_record_controlled(record,control),_=>Err(workflow_invalid("expected declared record"))}}
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{media_contract_from_record_controlled(record,control)}
-    // 🚫️async: E4 fn-pointer transitivity — see `DslField::shape`'s tag (R9).
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>media_contract_from_record_controlled(record,control),_=>Err(workflow_invalid("expected declared record"))}}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{media_contract_from_record_controlled(record,control)}
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(media_contract_spec_producer())
     }

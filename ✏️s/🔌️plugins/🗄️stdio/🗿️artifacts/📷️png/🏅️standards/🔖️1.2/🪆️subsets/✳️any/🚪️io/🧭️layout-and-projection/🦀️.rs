@@ -148,12 +148,6 @@ pub fn author_png_projection(snap: &PngProjection) -> Result<Vec<u8>, String> {
                     write_chunk(&mut out, b"PLTE", &data);
                 }
             }
-            // 🚫 §11.3.3: "a tRNS chunk shall not appear for colour types 4 and 6". This encoder
-            // always writes colour type 6 (the EncodeScopeNote above), so a tRNS chunk here would
-            // make the output non-conforming and unreadable — the reference `png` decoder rejects
-            // it outright with `ColorWithBadTrns`. Alpha decoded from the source's own tRNS is
-            // already folded into `pixels`, so nothing is lost by omitting the chunk; what would be
-            // lost by writing it is the whole file.
             PngChunkMarker::Trns => {}
             PngChunkMarker::Gama => {
                 if let Some(g) = snap.gama {
@@ -220,9 +214,6 @@ pub fn author_png_projection(snap: &PngProjection) -> Result<Vec<u8>, String> {
             }
         }
     }
-    // 🛟 Structural fallback: a snapshot whose `chunk_order` doesn't (yet) carry IDAT/IEND
-    // markers — e.g. hand-built in a test without going through `PngSnapshot::default()` —
-    // still produces a valid, decodable file.
     if !idat_written {
         write_chunk(&mut out, b"IDAT", &compressed);
     }

@@ -177,7 +177,7 @@ pub fn invert(matrix:[f64;6])->Result<[f64;6],ClipboardError>{
     Ok([d/determinant,-b/determinant,-c/determinant,a/determinant,(c*y-d*x)/determinant,(b*x-a*y)/determinant])
 }
 
-fn paste_identity(kind:crate::schema::identity::DrawingIdentityKind,document:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,source:&str,ordinal:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<String,ClipboardError>{
+fn paste_identity(kind:semio_s_artifact_draw_drawing_model::identity::DrawingIdentityKind,document:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,source:&str,ordinal:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<String,ClipboardError>{
  let mut material=[0u8;4096];let mut output=[0u8;76];
  let text=semio_s_artifact_draw_drawing_io::text::identity::paste::prepare_paste_identity(kind,document,source,ordinal,&mut material,&mut output,control).map_err(|error|invalid(&error.to_string()))?;control.copy_text(text).map_err(|error|invalid(&error.to_string()))
 }

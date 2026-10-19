@@ -230,7 +230,7 @@ impl En1992Snapshot {
         }
         if let Some(ps) = snap.members.iter_mut().find(|m| m.id == "beam-PS1") {
             if let Some(pre) = &mut ps.prestress {
-                pre.force = 3500.0e3; // overstress at transfer
+                pre.force = 3500.0e3;
                 pre.eccentricity = 0.280;
                 pre.loss_ratio = 0.05;
             }

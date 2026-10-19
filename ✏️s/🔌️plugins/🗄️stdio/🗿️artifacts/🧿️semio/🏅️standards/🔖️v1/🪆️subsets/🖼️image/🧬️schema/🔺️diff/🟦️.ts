@@ -26,7 +26,7 @@ export interface SemioImageDiff {
   height?: number;
   colorspace?: SemioColorspace;
   bitDepth?: number;
-  /** tri-state: absent = unchanged, null = cleared, string = set (hex) */
+  /** 🫥️ tri-state: absent = unchanged, null = cleared, string = set (hex) */
   icc?: number[] | null;
   frames?: SemioImageFramesDiff;
   metadata?: SemioImageMetadataDiff;

@@ -52,10 +52,6 @@ export class ShardWatchdog {
     if (!this.state.heartbeatSabView) return;
     for (const slot of this.state.shards) {
       const seq = Atomics.load(this.state.heartbeatSabView, slot.index);
-      /** 🫀️ Only a MONOTONIC ADVANCE is proof of life. `!==` used to accept a REGRESSION too, which a
-       * worker that never processed `attachHeartbeatSab` produces on every tick (its slot stays `0`
-       * while `postMessage` beats advance `lastHeartbeatTurnSeq`) — under the liveness rule that would
-       * refresh a dead shard's clock forever and disarm the watchdog entirely. */
       if (seq > slot.heartbeat.lastHeartbeatTurnSeq || slot.heartbeat.oldestPendingStartedAtMs === null) {
         this.recordHeartbeat(slot, seq, nowMs);
       }

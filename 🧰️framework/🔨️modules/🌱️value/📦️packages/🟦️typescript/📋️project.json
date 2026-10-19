@@ -1,6 +1,13 @@
 {
   "name": "@semio-tech/value-ts",
   "projectType": "library",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "sourceRoot": "🧰️framework/🔨️modules/🌱️value",
   "tags": [
     "lang:typescript",
@@ -9,10 +16,13 @@
   "targets": {
     "test-numeric-api": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
         "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*",
         "sharedGlobals"
@@ -24,10 +34,13 @@
     },
     "test-dictionary": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧾️dictionary/**/*",
         "sharedGlobals"
       ],
@@ -38,10 +51,13 @@
     },
     "test-scalars-api": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
         "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*",
         "sharedGlobals"
@@ -53,10 +69,13 @@
     },
     "test-scratch-hash": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
         "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/🌱️value/**/*",
         "sharedGlobals"

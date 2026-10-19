@@ -1,7 +1,8 @@
 //! 📇️ Captured source bytes cover a complete mapped grapheme before any font layout is published.
 use semio_framework_2d_text_font::{AdmittedFont,FontSource,FontFace,FontOutlineLimits,FontProgress};
 use semio_framework_2d_text_font_shape_unicode::{UnicodeLayout,UnicodeProperty,normalize::NormalizedScalar,cluster::UnicodeCluster};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[path="🧵️scalar/🦀️.rs"]
 pub mod scalar;
 use scalar::FontCanonicalScalarCursor;

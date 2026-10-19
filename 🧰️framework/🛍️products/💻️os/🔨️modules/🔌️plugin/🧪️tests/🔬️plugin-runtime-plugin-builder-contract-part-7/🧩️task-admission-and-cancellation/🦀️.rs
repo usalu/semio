@@ -15,10 +15,10 @@
         });
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, task).expect("original task admitted");
         assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), usize::from(expected("admission")));
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 1);
-        semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 1);
+        crate::reactor_driver::run_until_idle(8).await;
         assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), usize::from(expected("execution")));
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 0);
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 0);
     }
 
     impl<F, Fut> AsyncTaskSource<TestMutation, TestConfigMutation, NoDraftMutation> for TestTaskSource<F>
@@ -38,25 +38,25 @@
     async fn spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it() {
         let instance = 502;
         let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
-        semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::set_instance_quota(instance, 2).await;
+        crate::reactor_driver::set_instance_quota(instance, 2).await;
 
         for label in ["first", "second"] {
             let task = test_task(label, |_ctx| async move { Ok(TaskResolution::Done) });
             semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, task).unwrap_or_else(|error| panic!("task '{label}' must be admitted under quota 2: {error:?}"));
         }
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 2);
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 2);
 
         let third = test_task("third", |_ctx| async move { Ok(TaskResolution::Done) });
         let error = semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, third).expect_err("the 3rd task must be refused — quota is 2, not a silent drop");
         assert_eq!(error.code.0, "plugin.task.quota-exceeded");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 2, "a refused spawn must not have added a 3rd record");
 
         let other_instance = 503;
         let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
         let task = test_task("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(other_instance, &other_meta, task).expect("a different instance must not be affected by 502's quota exhaustion");
-        semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 0, "the admitted tasks retire their owners before the thread ends");
+        crate::reactor_driver::run_until_idle(8).await;
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 0, "the admitted tasks retire their owners before the thread ends");
     }
 
     /// 🔑️ Spawning a second task under the SAME `(instance, key)` cancels the first — its
@@ -74,8 +74,8 @@
         })
         .keyed("search");
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, first).expect("first must be admitted");
-        assert!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_key_is_live(instance, "search").await);
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 1);
+        assert!(crate::reactor_driver::task_key_is_live(instance, "search").await);
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 1);
 
         let second_ran = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let second_ran_inner = second_ran.clone();
@@ -85,12 +85,12 @@
         })
         .keyed("search");
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, second).expect("second must be admitted, cancelling the first");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 1, "the SAME key must never have two live tasks at once");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 1, "the SAME key must never have two live tasks at once");
 
-        semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
+        crate::reactor_driver::run_until_idle(8).await;
         assert!(!first_ran.load(std::sync::atomic::Ordering::SeqCst), "the cancelled first task must never have run its body");
         assert!(second_ran.load(std::sync::atomic::Ordering::SeqCst), "the surviving second task must have run");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 0, "the second task completed with TaskResolution::Done — no follow-up, cleaned up");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 0, "the second task completed with TaskResolution::Done — no follow-up, cleaned up");
     }
 
     /// 🚫️ `Event::InstanceClose` cancellation: every task an instance owns is dropped from the
@@ -125,19 +125,19 @@
         });
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(survivor, &survivor_meta, survivor_task).expect("survivor instance's task must spawn");
 
-        let pending = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
+        let pending = crate::reactor_driver::run_until_idle(8).await;
         assert!(pending, "both tasks must have parked on their own storage_read");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pending_request_count().await, 2, "one RequestRegistry slot per parked task");
+        assert_eq!(crate::reactor_driver::pending_request_count().await, 2, "one RequestRegistry slot per parked task");
 
         semio_framework_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks(dying);
-        let removed = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::cancel_instance_registry_requests(dying);
+        let removed = crate::reactor_driver::cancel_instance_registry_requests(dying);
         assert_eq!(removed.await, 0, "cancel_instance_tasks already dropped the task's own RequestFuture — nothing left for the registry sweep to remove");
 
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(dying).await, 0, "the dying instance's task record must be gone");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pending_request_count().await, 1, "only the SURVIVOR's request may remain pending");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(survivor).await, 1, "the survivor's task must be untouched");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(dying).await, 0, "the dying instance's task record must be gone");
+        assert_eq!(crate::reactor_driver::pending_request_count().await, 1, "only the SURVIVOR's request may remain pending");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(survivor).await, 1, "the survivor's task must be untouched");
 
-        let still_pending = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
+        let still_pending = crate::reactor_driver::run_until_idle(8).await;
         assert!(still_pending, "the survivor's task is still legitimately parked");
         assert!(!dying_ran.load(std::sync::atomic::Ordering::SeqCst), "the cancelled task must never observe its await resolving, because it never runs again");
     }

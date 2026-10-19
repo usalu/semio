@@ -32,6 +32,24 @@
     "required": ["LongPathsEnabled", "[en]", "[de]", "\"toolchain\", \"install\"", "[Console]::OutputEncoding"],
     "forbidden": ["git config --global", "\"config.toml\"", "\"target\", \"add\""]
   },
+  "nativePins": {
+    "hosts": ["nodejs.org", "dl.google.com", "static.rust-lang.org", "github.com", "raw.githubusercontent.com"],
+    "tools": ["node", "go", "rustup", "uv"],
+    "platforms": ["darwin", "linux", "win32"],
+    "architectures": ["x64", "arm64"],
+    "rowShape": "^\\{\"tool\":\"[a-z-]+\",\"version\":\"[0-9a-f.]+\",\"platform\":\"[a-z0-9]+\",\"arch\":\"[a-z0-9]+\",\"url\":\"https://[^\"]+\",\"sha256\":\"[a-f0-9]{64}\"\\},?$",
+    "forbiddenInstallers": ["bun.sh/install", "sh.rustup.rs", "astral.sh/uv/install", "dot.net/v1/dotnet-install", "go.dev/VERSION", "winget upgrade", "Invoke-Expression", "iex ", "| sh", "| bash", "|sh", "|bash"],
+    "playwrightCache": "tools\\ms-playwright"
+  },
+  "windowsLongPaths": {
+    "cases": [
+      { "output": "\r\nHKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\r\n    LongPathsEnabled    REG_DWORD    0x1\r\n\r\n", "expected": true },
+      { "output": "\r\nHKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\r\n    LongPathsEnabled    REG_DWORD    0x0\r\n\r\n", "expected": false },
+      { "output": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\n    LongPathsEnabled    REG_DWORD    0x00000001\n", "expected": true },
+      { "output": "\r\nERROR: The system was unable to find the specified registry key or value.\r\n", "expected": null },
+      { "output": "", "expected": null }
+    ]
+  },
   "nodePin": {
     "manifest": "package.json",
     "dockerfile": ".devcontainer/Dockerfile",

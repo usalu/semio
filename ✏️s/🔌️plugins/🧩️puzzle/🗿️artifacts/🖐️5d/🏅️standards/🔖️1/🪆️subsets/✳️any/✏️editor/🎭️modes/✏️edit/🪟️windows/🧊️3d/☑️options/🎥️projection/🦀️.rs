@@ -1,4 +1,4 @@
-//! one-two-three-point / curvilinear plus their parameters), delegated wholesale to the framework's
+//! 🔘️ one-two-three-point / curvilinear plus their parameters), delegated wholesale to the framework's
 //! 🎥️ 3D-window option — the world projection picker (orthographic / axonometric / oblique /
 //! shared `world3d_projection_measures` builder over this pane's own `Puzzle5dCamera3d::projection`.
 use crate::editor::puzzle5d::entities::puzzle5d_action;

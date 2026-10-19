@@ -1,6 +1,6 @@
 //! 🔁️ Whole-record replace edit for fixed-size window configs: copies the replacement into the post record, boxes the previous record as the inverse row, and retires both through original custody.
-use crate::store::snapshot_clone_preparation::RetainedEditCustody;
-use crate::store;
+extern crate semio_framework_os_kernel as store;
+use store::snapshot_clone_preparation::RetainedEditCustody;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 use semio_framework_value::retirement::RetireOwned;
 use std::{marker::PhantomData,mem::size_of};
@@ -31,7 +31,7 @@ where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowCo
     type Cursor = WindowConfigReplaceCursor<S, M>;
     fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
         if lane != store::os_store::store_schema::HistoryLane::Document || !mutation.admissible() { return Err("window config replace mutation has invalid lane or record authority".into()); }
-        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::snapshot_clone_preparation::CONFIG_EDIT_RETAINED_BASELINE_BYTES })
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_point_invertible_item(store::snapshot_clone_preparation::CONFIG_EDIT_RETAINED_BASELINE_BYTES))
     }
     fn begin_demand(&self) -> RetainedCloneBirthDemand { RetainedCloneBirthDemand { capacity_bytes: 0, depth: 1 } }
     fn snapshot_cursor_birth_demand(&self) -> RetainedCloneBirthDemand { RetainedCloneBirthDemand { capacity_bytes: 0, depth: 1 } }

@@ -3,11 +3,13 @@ import { checkResourceLeaseControl } from "../../../../../../../../🔨️module
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, posix } from "node:path";
 import { loadCatalogBuildProvidersV1, catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
 import { observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { pathToFileURL } from "node:url";
 import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/🟨️.mjs";
+import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
+import { buildRelativeImportProjectV1, buildInputSourceRoleV1 } from "../../🚪️admission/🟦️.ts";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -134,11 +136,19 @@ export async function discoverNativeBuildOwnersV1(configFiles,workspaceRoot,cont
   return {files:inferenceCandidates([...nativeCandidates],workspaceRoot),nativeCache,nativeClosures};
 }
 
+/** 🏭️ Resolves only one exact ignored output contract to its physical authored task owner. */
+export function readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,registry){
+ const local=buildPath(relative(workspaceRoot,path)),safe=value=>typeof value==="string"&&value!=="."&&value!==""&&!isAbsolute(value)&&posix.normalize(value)===value&&!value.startsWith("../")&&!/[\\%*?#[\]{}]/u.test(value);if(!safe(local))throw Error("Canonical generated import path required");const matches=[],declared=new Set();
+ const resolution=ownerAdmissionSchema.$defs.generatedImportResolution.const,extensionless=posix.extname(local)==="";
+ for(const contract of Object.values(contracts)){if(contract.ownership!=="owned")continue;for(const output of contract.outputRoots??[]){if(output.inclusion!=="ignored")continue;if(!safe(output.path))throw Error("Canonical generated output root required");declared.add(output.path);const exact=local===output.path||local.startsWith(output.path+"/"),inferred=extensionless&&resolution.files.some(suffix=>local+suffix===output.path);if(exact||inferred)matches.push({output,producer:output.producer??contract,inferred:!exact});}}
+ if(!matches.length)return undefined;if(matches.length!==1)throw Error("Ambiguous generated compile output producer");const {output,producer,inferred}=matches[0];if(inferred&&resolution.probes.some(suffix=>{const candidate=local+suffix;if(candidate===output.path)return false;const absolute=join(workspaceRoot,candidate);return declared.has(candidate)||existsSync(absolute)&&!lstatSync(absolute).isDirectory();}))throw Error("Ambiguous generated compile output resolution");const separator=producer.target?.lastIndexOf(":"),project=producer.target?.slice(0,separator),target=producer.target?.slice(separator+1);if(!project||!target||!safe(producer.ownerPath)&&producer.ownerPath!==".")throw Error("Exact generated task owner required");const manifest=buildPath(join(producer.ownerPath,PROJECT_BASENAME)),owner=registry?.owners.find(owner=>owner.name===project);if(registry&&(!owner||owner.root!==producer.ownerPath||owner.manifest!==manifest))throw Error("Canonical generated task owner absent");const declaration=JSON.parse(readPhysicalSource(join(workspaceRoot,manifest)).toString("utf8"));if(declaration.name!==project||!declaration.targets?.[target])throw Error("Authored generated producer task absent");return Object.freeze({project,target:producer.target,manifest,output:output.path});
+}
+
 /** 🚪️ Observes one canonical owner and only its selected executable source closures. */
 export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,context,inputNames=[]){
  await libraryBootstrap;const {workspaceRoot}=context,nativeCache=context.nativeCache??new Map(),nativeClosures=context.nativeClosures??new Map();
  if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);checkScriptInvocation(context.invocation);}
- const stage=async phase=>{if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] selected-owner-stage "+JSON.stringify({owner:owner.name,phase}));await yieldInferenceV1(context,"build:selected-"+phase,0,true);};
+ const stage=async phase=>{await yieldInferenceV1(context,"build:selected-"+phase,0,true);};
  await stage("declaration");
  const path=join(workspaceRoot,owner.manifest),source=readPhysicalSource(path);
  const declaration=owner.manifest.endsWith("Cargo.toml")?readToml(path):JSON.parse(source.toString("utf8"));
@@ -146,6 +156,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  if(json.name!==owner.name)throw Error("Admitted canonical build owner differs: "+owner.manifest);
  json.targets={...await cargoTargets(owner.root,workspaceRoot,undefined,scripts),...json.targets,...componentBuildTargets(owner.root,workspaceRoot)};
  const contractsPath=join(workspaceRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),contracts=existsSync(contractsPath)?readTaxonomyProjectionV1(contractsPath).generatorContracts:{},providers=registry.catalogProviders.filter(provider=>targets.length&&provider.consumerRoots.some(root=>owned(owner.root,root))||inputNames.includes("{workspaceRoot}/"+provider.sourcePath)),catalogContributions=providers.length?await catalogBuildContributionsV1(workspaceRoot,providers.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath}))):[];
+ scripts.generatedOutput=path=>readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,registry);
  const catalogFiles=catalogContributions.length?await catalogNativeManifestCandidatesV1(workspaceRoot,registry,path=>catalogBuildContributionForManifestV1(catalogContributions,path),context):[];
  await stage("catalog-targets");
  if(catalogContributions.length&&targets.length){
@@ -155,7 +166,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
  }
  const selected=Object.fromEntries(targets.map(name=>{if(!json.targets?.[name])throw Error("Unknown admitted build target: "+owner.name+":"+name);const target=targetWithDefaults(json.targets[name],owner.root,existsSync(join(workspaceRoot,owner.root,SCRIPT_BASENAME))),modes=loaded.targetBuildModes(name,target),configuration=(context.selection?.kind==="tasks"?context.selection.tasks.find(task=>task.project===owner.name&&task.target===name)?.configuration:undefined)??modes.defaultConfiguration,overrides=modes.configurations?.[configuration];if(!overrides)throw Error("Unknown selected build configuration: "+configuration);if(Object.keys(overrides).some(key=>["dependsOn","inputs","outputs","configurations","executor"].includes(key)))throw Error("Build configuration cannot change task identity");return [name,target];})),files=new Set([owner.manifest]),dependencies=new Set(),dependencyInputs=new Map(),caretInputs=new Set();
  const byPackage=new Map(registry.owners.flatMap(owner=>owner.packages.map(name=>[name,owner.name]))),byRoot=new Map(registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>[root,owner.name]))),owners=registry.owners.flatMap(owner=>[owner.root,...owner.nativeRoots??[]].map(root=>({name:owner.name,root}))).sort((a,b)=>b.root.length-a.root.length);
- const addFile=path=>files.add(path),addDependency=path=>{const owner=owners.find(owner=>owned(path,owner.root));if(owner&&owner.name!==json.name)dependencies.add(owner.name);},addInput=(project,input)=>{if(!registry.owners.some(owner=>owner.name===project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
+ const addFile=path=>files.add(path),addDependency=path=>{const name=buildRelativeImportProjectV1(owners,path);if(name&&name!==json.name)dependencies.add(name);},addInput=(project,input)=>{if(!registry.owners.some(owner=>owner.name===project)||typeof input!=="string"||!input)throw Error("Canonical named input owner required");const selected=dependencyInputs.get(project)??new Set();selected.add(input);dependencyInputs.set(project,selected);};
  for(const provider of providers)addFile(provider.sourcePath);for(const file of catalogFiles){readPhysicalSource(join(workspaceRoot,file));addFile(file);}for(const contribution of catalogContributions){for(const input of contribution.inputs)addFile(input);addFile(contribution.projectRoot+"/"+PROJECT_BASENAME);if(contribution.project!==json.name)dependencies.add(contribution.project);}
  await stage("command-sources");
  for(const target of Object.values(selected)){
@@ -163,10 +174,12 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   for(const input of sources.closure??[])if(typeof input==="string"&&input.startsWith("{workspaceRoot}/"))addFile(input.slice("{workspaceRoot}/".length));
 
  }
+ const commandModules=new Set(scripts.modules);
  const packageFile=join(workspaceRoot,owner.root,"package.json");if(existsSync(packageFile)){const manifest=JSON.parse(readFileSync(packageFile,"utf8"));addFile(buildPath(relative(workspaceRoot,packageFile)));for(const name of Object.keys({...manifest.dependencies,...manifest.peerDependencies,...manifest.optionalDependencies})){const owner=byPackage.get(name);if(owner&&owner!==json.name)dependencies.add(owner);}}
  const nativeRoot=json.metadata?.nativeRoot??owner.root,nativeManifest=join(workspaceRoot,nativeRoot,"Cargo.toml");
  await stage("native-closure");
  if(existsSync(nativeManifest))for(const root of nativeDependencyRoots(nativeRoot,workspaceRoot,true,nativeCache,nativeClosures)){addFile(root+"/Cargo.toml");const dependency=byRoot.get(root);if(!dependency)throw Error("Canonical native dependency owner required: "+root);if(dependency!==json.name)dependencies.add(dependency);}
+ const declaredCompileEntries=new Set();
  if(targets.length||inputNames.length){
   await stage("normalization");const normalized=await projectWithDefaults({...json,targets:{...json.targets,...selected}},owner.root,join(workspaceRoot,owner.root),workspaceRoot,contracts,new Map(),undefined,scripts,undefined,"source",targets);await stage("native-preparation");withNativePreparation(normalized,workspaceRoot,contracts,nativeCache,byRoot,nativeClosures);
   const named={...JSON.parse(readFileSync(join(LIBRARY_ROOT,"🏗️build/🔣️policy.json"),"utf8")).namedInputs,...normalized.namedInputs},patterns=[],active=new Set();
@@ -179,7 +192,7 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
    else if(typeof value.dependentTasksOutputFiles==="string"&&keys.every(key=>["dependentTasksOutputFiles","transitive"].includes(key))&&(value.transitive===undefined||typeof value.transitive==="boolean"))continue;
    else throw Error("Unsupported selected source input object");
    continue;
-  }if(value.startsWith("^")){caretInputs.add(value.slice(1));continue;}if(Object.hasOwn(named,value)){if(active.has(value))throw Error("Selected named input cycle: "+value);active.add(value);expand(named[value]);active.delete(value);}else if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))patterns.push(value.replaceAll("{workspaceRoot}/","").replaceAll("{projectRoot}",owner.root));else throw Error("Unknown selected named source input: "+value);}};
+  }if(value.startsWith("^")){caretInputs.add(value.slice(1));continue;}if(Object.hasOwn(named,value)){const contract=json.metadata?.sourceInputs?.[value];if(contract)for(const entry of loaded.readSourceInputContract(join(workspaceRoot,contract)).entries)declaredCompileEntries.add(join(workspaceRoot,entry));if(active.has(value))throw Error("Selected named input cycle: "+value);active.add(value);expand(named[value]);active.delete(value);}else if(value.includes("{workspaceRoot}")||value.includes("{projectRoot}"))patterns.push(value.replaceAll("{workspaceRoot}/","").replaceAll("{projectRoot}",owner.root));else throw Error("Unknown selected named source input: "+value);}};
   for(const name of targets){json.targets[name]=normalized.targets[name];expand(normalized.targets[name].inputs??["default"]);}
   expand(inputNames);
   const exclusions=patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1)),matched=new Set(),walked=new Map(),matchers=new Map(),matches=(path,pattern)=>{let matcher=matchers.get(pattern);if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}return matcher(path);};let visited=0;
@@ -187,22 +200,23 @@ export async function discoverBuildOwnerAdmissionFactsV1(owner,targets,registry,
   for(const pattern of patterns.filter(value=>!value.startsWith("!"))){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const index=pattern.search(/[?*[{(!]/u),prefix=index<0?pattern:pattern.slice(0,index),root=index<0?dirname(prefix):prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix),candidates=index<0?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root||".");for(const path of candidates){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);if(matches(path,pattern)&&!exclusions.some(pattern=>matches(path,pattern)))matched.add(path);}}
   for(const path of matched)addFile(path);
   await stage("source-closure");
-  const modules=[...matched].filter(path=>/\.[cm]?[jt]sx?$/u.test(path)).map(path=>join(workspaceRoot,path)).filter(path=>!scripts.resources.has(path)||scripts.modules.has(path));
+  const modules=[...new Set([...(buildInputSourceRoleV1(targets.length>0)==="compile"?matched:[]),...[...declaredCompileEntries].map(path=>buildPath(relative(workspaceRoot,path)))])].filter(path=>/\.[cm]?[jt]sx?$/u.test(path)).map(path=>join(workspaceRoot,path)).filter(path=>declaredCompileEntries.has(path)||!scripts.resources.has(path)||scripts.modules.has(path));
   for(const input of modules.length?await relativeScriptInputs(modules,workspaceRoot,scripts):[])if(typeof input==="string"&&input.startsWith("{workspaceRoot}/"))addFile(input.slice("{workspaceRoot}/".length));
  }
+ const generatedDependencies={},demandedCompileModules=new Set([...commandModules,...declaredCompileEntries]),generated=(path,producer,executable)=>{addFile(producer.manifest);if(producer.project!==json.name)dependencies.add(producer.project);for(const name of targets){if(producer.target===json.name+":"+name){if(executable)throw Error("Generated task cannot consume its own output");continue;}addInput(producer.project,"default");const rows=generatedDependencies[name]??=[];if(!rows.includes(producer.target))rows.push(producer.target);}};for(const[path,rows]of scripts.generatedImports)for(const producer of rows)generated(path,producer,demandedCompileModules.has(path));
  const compiler=createRequire(import.meta.url)("typescript"),host=observedTypeScriptHost(compiler.sys),pending=[...scripts.modules].map(path=>buildPath(relative(workspaceRoot,path))),visited=new Set();let index=0;
  await stage("compile-closure");
  while(pending.length){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const path=pending.pop();if(visited.has(path))continue;visited.add(path);const absolute=join(workspaceRoot,path);readPhysicalSource(absolute);
   for(const specifier of observedSourceAnalysisV1(prepareSourceAnalysesV1().module,absolute).imports){
    await yieldInferenceV1(context,"build:selected-compile-imports",++index);
-   if(!specifier.startsWith(".")){const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],dependency=byPackage.get(name);if(dependency&&dependency!==json.name)dependencies.add(dependency);continue;}
-   const resource=buildImportResourceV1(absolute,specifier);let resolved;try{resolved=observedRequireResolve(absolute,resource.specifier);}catch(error){if(error.code!=="MODULE_NOT_FOUND")throw error;resolved=compiler.resolveModuleName(resource.specifier,absolute,{moduleResolution:compiler.ModuleResolutionKind.Bundler,allowJs:true,resolveJsonModule:true},host).resolvedModule?.resolvedFileName;if(!resolved)throw Error("Selected compile source import missing: "+path+" -> "+specifier,{cause:error});}
+   const relativeImport=specifier.startsWith(".");if(!relativeImport){const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],dependency=byPackage.get(name);if(!dependency)continue;if(dependency!==json.name)dependencies.add(dependency);}
+   const resource=buildImportResourceV1(absolute,specifier),producer=relativeImport?scripts.generatedOutput(resource.specifier):undefined;if(producer){generated(absolute,producer,demandedCompileModules.has(absolute));continue;}let resolved;try{resolved=observedRequireResolve(absolute,resource.specifier);}catch(error){if(error.code!=="MODULE_NOT_FOUND")throw error;resolved=compiler.resolveModuleName(resource.specifier,absolute,{moduleResolution:compiler.ModuleResolutionKind.Bundler,allowJs:true,resolveJsonModule:true},host).resolvedModule?.resolvedFileName;if(!resolved)throw Error("Selected compile source import missing: "+path+" -> "+specifier,{cause:error});}
    const typed=resource.source?compiler.resolveModuleName(resource.specifier,absolute,{moduleResolution:compiler.ModuleResolutionKind.Bundler,allowJs:true,resolveJsonModule:true},host).resolvedModule?.resolvedFileName:undefined;
-   for(const file of new Set([resolved,...typed?[typed]:[]])){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const local=buildPath(relative(workspaceRoot,file));if(local===".."||local.startsWith("../")||isAbsolute(local))throw Error("Selected compile source escapes workspace: "+local);readPhysicalSource(file);addFile(local);if(resource.source&&/\.[cm]?[jt]sx?$/u.test(local)){addDependency(local);pending.push(local);}}
+   for(const file of new Set([resolved,...typed?[typed]:[]])){await yieldInferenceV1(context,"build:selected-compile-imports",++index);const local=buildPath(relative(workspaceRoot,file));if(local===".."||local.startsWith("../")||isAbsolute(local))throw Error("Selected compile source escapes workspace: "+local);const produced=scripts.generatedOutput(file);if(produced){generated(absolute,produced,demandedCompileModules.has(absolute));continue;}readPhysicalSource(file);addFile(local);if(resource.source&&/\.[cm]?[jt]sx?$/u.test(local)){if(demandedCompileModules.has(absolute))demandedCompileModules.add(file);addDependency(local);pending.push(local);}}
   }
  }
  for(const dependency of dependencies)for(const input of caretInputs)addInput(dependency,input);
- return {project:json,files:[...files].sort(),dependencies:[...dependencies].sort(),dependencyInputs:Object.fromEntries([...dependencyInputs].sort(([a],[b])=>a.localeCompare(b)).map(([name,inputs])=>[name,[...inputs].sort()]))};
+ return {project:json,files:[...files].sort(),dependencies:[...dependencies].sort(),...(Object.keys(generatedDependencies).length?{generatedDependencies}:{}),dependencyInputs:Object.fromEntries([...dependencyInputs].sort(([a],[b])=>a.localeCompare(b)).map(([name,inputs])=>[name,[...inputs].sort()]))};
 }
 
 /** 📜️ Reads the workspace's canonical owner declaration through original physical Source ancestry. */

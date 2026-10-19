@@ -37,9 +37,6 @@ impl<E: Emit + 'static> Database<E> {
         };
         let (storage, storage_capabilities) = capability_probe.await?.into_parts();
         let capabilities = DbCapabilities {
-            // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
-            // aren't reachable through `ArtifactAuthority`'s current mailbox surface, and why
-            // `db_cluster` is still an empty stub upstream of this wave.
             preview: false,
             historical_query: true,
             live_query: false,

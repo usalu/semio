@@ -1,4 +1,4 @@
-//! last-placed node, framed by `🎭️modes/✏️edit`'s triptych camera.
+//! 🍃️ last-placed node, framed by `🎭️modes/✏️edit`'s triptych camera.
 //! 🔍️ Puzzle 2d play app — the Detail window: a non-interactive canvas pane zoomed into the
 
 use crate::editor::puzzle2d::engine::BoardHost;

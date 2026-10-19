@@ -27,8 +27,10 @@ semio-framework-mutation-diff = { path = "../../../🔺️diff/📦️packages/�
 semio-framework-replication-conflict = { path = "../../../../⚔️conflict/📦️packages/🦀️rust" }
 semio-framework-replication-mutation = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-persistent.workspace = true
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }

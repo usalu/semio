@@ -27,8 +27,8 @@ export interface SlideLayout { id: string; masterId: string; shapes: SlideShape[
 export interface Slide { id: string; layoutId: string | null; shapes: SlideShape[]; notes: DocBlock[]; }
 
 export interface SemioPresentationSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ masters: SlideMaster[];
-  /** @state artifact */ layouts: SlideLayout[];
-  /** @state artifact */ slides: Slide[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 📐️ @state artifact */ masters: SlideMaster[];
+  /** 🔳️ @state artifact */ layouts: SlideLayout[];
+  /** 📽️ @state artifact */ slides: Slide[];
 }

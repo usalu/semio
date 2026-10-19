@@ -1,4 +1,6 @@
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::*;
 use protocol::Mutation;
 

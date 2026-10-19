@@ -12,6 +12,8 @@ use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::PluginApp;
+#[cfg(test)] use semio_framework::kernel::UiDirtyScope;
+#[cfg(test)] use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 
 const SLIDER_GESTURE_FIXTURE_JSON: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🎚️slider-gesture.json");
 

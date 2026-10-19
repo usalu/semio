@@ -86,7 +86,7 @@ fn sqlite_snapshot_dag_controlled_value_constructs_only_actual_parent_fields() {
         let mut output = semio_framework_value::NativeEncodeControl::new(4 << 20, &mut yes);
         let value = <DagSnapshot as ToValue>::to_value_controlled(&expected, &mut output).unwrap();
         let mut yes = |_| true;
-        let mut input = semio_framework_value::NativeDecodeControl::new(4 << 20, &mut yes);
+        let mut input = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4 << 20, &mut yes);
         let actual = Owned::new(<DagSnapshot as FromValue>::from_value_controlled(&value, &mut input).unwrap());
         assert_full(&actual, &expected);
     }

@@ -5,7 +5,7 @@ use semio_framework_value::{DslValue};
 use semio_framework_diagnostic::{Limits};
 use semio_framework_dsl::{unit_by_symbol};
 use semio_framework_diagnostic as diagnostic;
-use semio_framework_value::native_decoding::*;
+use semio_framework_value_native_owned::native_decoding::*;
 use semio_framework_dsl_record::*;
 use semio_framework_os_kernel::os_dsl::*;
 use semio_framework_os_kernel::PackEncodeOptions;

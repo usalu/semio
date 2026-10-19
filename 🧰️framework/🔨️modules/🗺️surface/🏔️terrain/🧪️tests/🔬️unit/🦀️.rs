@@ -12,8 +12,6 @@ fn tile_key_roundtrip() {
 fn lonlat_tile_xy_roundtrip_is_stable() {
     let (x, y) = projection::lonlat_to_tile_xy(9.7382, 52.3759, 12);
     let (lon, lat) = projection::tile_xy_to_lonlat(x.floor(), y.floor(), 12);
-    // Round-tripping the tile's top-left corner should land close to (not equal to, since we
-    // floor to the tile origin) the original point.
     assert!((lon - 9.7382).abs() < 1.0);
     assert!((lat - 52.3759).abs() < 1.0);
 }
@@ -67,7 +65,6 @@ fn upload_and_mesh_a_flat_tile_produces_grid_geometry() {
     assert_eq!(mesh.normals.len(), n * n * 3);
     assert_eq!(mesh.uvs.len(), n * n * 2);
     assert_eq!(mesh.indices.len(), (n - 1) * (n - 1) * 6);
-    // A uniform-elevation tile should have (near-)zero elevation variance across the grid.
     let first_elevation = mesh.positions[2];
     for chunk in mesh.positions.chunks_exact(3) {
         assert!((chunk[2] - first_elevation).abs() < 5.0, "expected uniform elevation, got {} vs {}", chunk[2], first_elevation);

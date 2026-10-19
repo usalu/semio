@@ -15,7 +15,6 @@ export class CleanScript extends Script {
     const liveTestIds = new Set(discoverTestCases(this.repoRoot).map((entry) => `${entry.owner}::${entry.case}`));
     const report = cleanTestOutputs(this.repoRoot, { dry, stale, over, liveTestIds: stale ? liveTestIds : undefined });
     console.log(formatCleanReport(this.repoRoot, report));
-    // 🚫️Which areas may never be touched is taxonomy vocabulary; this router names none of them.
     const leaked = report.removals.filter((row) => isExcludedTestPath(this.repoRoot, row.path));
     if (leaked.length > 0) {
       console.error(`[clean test] refusing: ${leaked.length} candidate(s) resolved inside an excluded area`);

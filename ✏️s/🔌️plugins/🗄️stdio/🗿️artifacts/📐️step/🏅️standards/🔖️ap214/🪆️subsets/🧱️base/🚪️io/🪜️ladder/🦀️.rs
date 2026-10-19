@@ -79,7 +79,6 @@ pub fn ladder_violations(doc: &Part21Document, max_rung: u8) -> Vec<(u64, String
 /// retained structure rather than assuming its exact nesting depth.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bool {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn walk(value: &Part21Value, schema_name: &str) -> bool {
         match value {
             Part21Value::Str(s) => s.eq_ignore_ascii_case(schema_name),
@@ -194,7 +193,6 @@ pub struct ProductIdentity {
 /// 🏷️ The schema names `FILE_SCHEMA` declares, flattened out of its nested argument lists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn file_schema_names(doc: &Part21Document) -> Vec<String> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn walk(value: &Part21Value, out: &mut Vec<String>) {
         match value {
             Part21Value::Str(text) => out.push(text.clone()),

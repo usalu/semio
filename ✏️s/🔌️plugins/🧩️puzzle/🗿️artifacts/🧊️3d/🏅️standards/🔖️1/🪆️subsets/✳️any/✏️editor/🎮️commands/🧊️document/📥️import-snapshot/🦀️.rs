@@ -1,4 +1,4 @@
-//! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per `IMPORT_CHUNK_BYTES` page)
+//! 📄️ (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per `IMPORT_CHUNK_BYTES` page)
 //! 📥 Loads an imported scene_snapshot JSON file as the whole document (`Effect::LoadDocument`, outside history). The host's chunked inbound lane
 //! is reassembled by the framework before this action runs (`semio_framework::kernel::ImportStaging`, admitted in the
 //! SDK's `dispatch_action`), so the action reads ONE whole `payload`; an agent may hand the scene_snapshot inline as a

@@ -195,9 +195,6 @@ mod oracles {
             }
             NodeData::Text { contents } => Some(HNode::Text(contents.borrow().to_string())),
             NodeData::Comment { contents } => Some(HNode::Comment(contents.to_string())),
-            // 🚫️ Document/Doctype/ProcessingInstruction never appear as an ELEMENT's child in a
-            // conformant HTML5 tree — a PI can only occur at the (skipped) document top level, since
-            // HTML5 (unlike XML) has no processing-instruction content model inside elements.
             NodeData::Document | NodeData::Doctype { .. } | NodeData::ProcessingInstruction { .. } => None,
         }
     }

@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import jsonPatch from 'fast-json-patch';
-import corpus from '../🧫️fixtures/🔣️.json';
+import corpus from './🧫️fixtures/🔣️.json';
 import schema from '../🧬️schema/🔣️.json';
 /** 🧳️ Verifies complete original field outputs with independent RFC 6902 and UTF-8 bytes. */
 export function verifyOriginalRecordProjectionOracle(){

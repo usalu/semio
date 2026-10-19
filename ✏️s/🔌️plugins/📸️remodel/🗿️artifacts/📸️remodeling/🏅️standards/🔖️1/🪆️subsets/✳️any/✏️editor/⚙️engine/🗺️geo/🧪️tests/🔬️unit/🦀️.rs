@@ -120,11 +120,6 @@ fn dsm_dtm_match_known_terrain_and_idw_fills_holes() {
 fn orthomosaic_blends_smoothly_across_camera_overlap() {
     let dsm = Raster { width: 40, height: 4, cell_size: 0.5, origin: [0.0, 0.0], values: vec![0.0; 160], valid: vec![true; 160] };
     let intr = Intrinsics { fx: 200.0, fy: 200.0, cx: 100.0, cy: 100.0, skew: 0.0, distortion: remodeling_camera::Distortion::None };
-    // `p_cam = p_world + t` (identity rotation): a raster point at world `(wx, wy, 0)` needs
-    // `t` chosen so `p_cam.z = t.z > 0` (in front of the camera) and `(wx, wy) + (t.x, t.y) = (0,
-    // 0)` when the camera is centered over `(cx_world, cy_world)` — i.e. `t = (-cx_world,
-    // -cy_world, height)`. Camera A centers over world x=5, camera B over world x=15, giving a
-    // ~10m-wide overlap band in the middle of the 20m-wide raster.
     let pose_a = CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: So3::identity(), t: [-5.0, -1.0, 20.0] });
     let pose_b = CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: So3::identity(), t: [-15.0, -1.0, 20.0] });
     let mut img_a = ImageRgba8::new(200, 200);

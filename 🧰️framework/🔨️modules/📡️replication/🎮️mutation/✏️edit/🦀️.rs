@@ -205,7 +205,7 @@ pub struct Edit<Op> {
     /// 🌿️ Authored branch identity; explicit null identifies trunk or unknown provenance.
     pub line: Option<String>,
     pub forwards: Vec<Op>,
-    pub inverse: semio_framework_value::list::PagedList<Op, {usize::MAX}>,
+    pub inverse: semio_framework_value_persistent::list::PagedList<Op, {usize::MAX}>,
     pub mutation_meta: Vec<MutationMeta>,
     /// 🏷️ The id of the action or command that authored this edit — never display text: history resolves it through
     /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
@@ -269,7 +269,7 @@ impl<Op: semio_framework_value::FromValue> semio_framework_value::FromValue for 
                 }
                 "actor" => actor = <Option<semio_framework_value::SharedUtf8> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
                 "forwards" => forwards = Some(<Vec<Op> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
-                "inverse" => inverse = Some(<semio_framework_value::list::PagedList<Op, {usize::MAX}> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
+                "inverse" => inverse = Some(<semio_framework_value_persistent::list::PagedList<Op, {usize::MAX}> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
                 "mutationMeta" => mutation_meta = <Vec<MutationMeta> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
                 "verb" => verb = <Option<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("verb"))?,
                 "sequenceNumber" => sequence_number = Some(<i32 as semio_framework_value::FromValue>::from_value(entry).map_err(|error| error.under("sequenceNumber"))?),
@@ -321,8 +321,6 @@ pub enum MutationOrigin {
 }
 impl MutationOrigin {
     /// 🕳️ Whether this is the (wire-omitted) default owner origin.
-    // 🚫️async: E1 — called by name from `#[serde(skip_serializing_if = "...")]`, whose generated
-    // call site is sync.
     pub fn is_owner(&self) -> bool {
         matches!(self, Self::Owner)
     }

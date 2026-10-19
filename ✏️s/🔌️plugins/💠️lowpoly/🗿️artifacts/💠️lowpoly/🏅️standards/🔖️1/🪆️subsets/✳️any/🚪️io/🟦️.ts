@@ -1,4 +1,4 @@
-/** Lowpoly IO facet — curated stdio matrix, mirrors `import_stdio_kinds()` / `export_stdio_kinds()` in `🦀️.rs`. */
+/** 🔺️ Lowpoly IO facet — curated stdio matrix, mirrors `import_stdio_kinds()` / `export_stdio_kinds()` in `🦀️.rs`. */
 export const LOWPOLY_IO_FORMATS = ["dwg", "gltf", "json", "las", "obj", "ply", "png", "stl", "txt"] as const;
 export type LowpolyIoFormat = (typeof LOWPOLY_IO_FORMATS)[number];
 

@@ -11,7 +11,7 @@ export interface FlattenedNode {
 }
 
 export interface SemioDrawingInference {
-  /** @derived */
+  /** 🎬️ @derived */
   flattenedScene: Record<string, FlattenedNode>;
 }
 

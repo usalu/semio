@@ -1,4 +1,4 @@
-//! `Puzzle3dMutation`'s binary wire form, `encode_engine_command`/`decode_engine_command` for the
+//! 🧱️ `Puzzle3dMutation`'s binary wire form, `encode_engine_command`/`decode_engine_command` for the
 //! 📡️ Puzzle 3d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
 //! headless engine's own `Puzzle3dEngineCommand` envelope, plus the `ArtifactEnvelope`/
 //! `ArtifactStore` aliases every puzzle-3d host binds. Renamed from the pre-consolidation
@@ -61,7 +61,6 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use semio_s_artifact_puzzle_3d_model::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
@@ -73,23 +72,22 @@ use protocol::MutationDiff;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle3d_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::Puzzle3dPlaySnapshot;
+use crate::inverse_puzzle3d_mutation;
+use crate::Puzzle3dMutation;
 pub use mutations_codec::*;
 
 impl OpBinary for Puzzle3dMutation {
-    pub fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
     }
-    pub fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
     }
 }
 }
 
 /// 🫳️ Borrows the original concrete leaf of a mutation and its canonical protocol tag before publication: the authoring wire source the artifact store requires.
-pub fn prepared_operation_wire_source(operation: &crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
+pub fn prepared_operation_wire_source(operation: &crate::Puzzle3dMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
     fn source<T: semio_framework_dsl_record::DslField + semio_framework_dsl_record::BorrowedDslRecord>(value: &T) -> Option<store::ArtifactPreparedOperationSource<'_>> {
         let spec = T::RECORD;
         let keyword = spec.keyword?;
@@ -97,43 +95,43 @@ pub fn prepared_operation_wire_source(operation: &crate::standards::v1::subsets:
         Some(store::ArtifactPreparedOperationSource::Pack { tag, body: value, spec })
     }
     match operation {
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::CreateObject(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::DeleteObject(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::MoveObject(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::RotateObject(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ScaleObject(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeObjectMesh(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::EditObjectLabel(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeObjectKind(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeObjectAnchor(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeObjectHidden(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeObjectLocked(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::AddObjectVortex(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::RemoveObjectVortex(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ReplaceObjectVortex(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ConnectVortices(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::DisconnectVortices(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ReplaceAttractionGeometry(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::CreateTargetVolume(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::DeleteTargetVolume(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::MoveTargetVolume(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::RotateTargetVolume(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ScaleTargetVolume(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeTargetVolumeHidden(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeTargetVolumeLocked(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::CreateReference(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::DeleteReference(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::MoveReference(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ResizeReference(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ReplaceReferenceSource(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeReferenceHidden(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeReferenceLocked(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ChangeDomain(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ConnectKindCompatibility(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::DisconnectKindCompatibility(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ReplaceKindCatalogs(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::DragSelection(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::RotateSelection(value) => source(value),
-        crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation::ScaleSelection(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::CreateObject(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::DeleteObject(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::change_object_mesh::mutation::ChangeObjectMesh(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::edit_object_label::mutation::EditObjectLabel(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::change_object_kind::mutation::ChangeObjectKind(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::change_object_anchor::mutation::ChangeObjectAnchor(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation::ChangeObjectHidden(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_object::change_object_locked::mutation::ChangeObjectLocked(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_vortex::add_object_vortex::mutation::AddObjectVortex(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_vortex::remove_object_vortex::mutation::RemoveObjectVortex(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_vortex::replace_object_vortex::mutation::ReplaceObjectVortex(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_vortex::disconnect_vortices::mutation::DisconnectVortices(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::CreateTargetVolume(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::DeleteTargetVolume(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::MoveTargetVolume(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::RotateTargetVolume(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::ScaleTargetVolume(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::ChangeTargetVolumeHidden(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::ChangeTargetVolumeLocked(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::create_reference::mutation::CreateReference(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::delete_reference::mutation::DeleteReference(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::move_reference::mutation::MoveReference(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::resize_reference::mutation::ResizeReference(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::replace_reference_source::mutation::ReplaceReferenceSource(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::change_reference_hidden::mutation::ChangeReferenceHidden(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_reference::change_reference_locked::mutation::ChangeReferenceLocked(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_catalog::change_domain::mutation::ChangeDomain(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_catalog::connect_kind_compatibility::mutation::ConnectKindCompatibility(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_catalog::disconnect_kind_compatibility::mutation::DisconnectKindCompatibility(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_catalog::replace_kind_catalogs::mutation::ReplaceKindCatalogs(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_selection::drag_selection::mutation::DragSelection(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_selection::rotate_selection::mutation::RotateSelection(value) => source(value),
+        semio_s_artifact_puzzle_3d_mutations_selection::scale_selection::mutation::ScaleSelection(value) => source(value),
     }
 }

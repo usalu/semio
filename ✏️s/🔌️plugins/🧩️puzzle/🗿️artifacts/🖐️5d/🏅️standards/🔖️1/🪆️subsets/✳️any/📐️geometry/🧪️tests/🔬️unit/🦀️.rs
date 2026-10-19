@@ -1,4 +1,4 @@
-//! 26/09/17/WGPU-RENDERER-REACT-PARITY packet W2k. The load-bearing oracle is React's own single
+//! 🌐️ 26/09/17/WGPU-RENDERER-REACT-PARITY packet W2k. The load-bearing oracle is React's own single
 //! 📐️ The 5D flatten solver against the numbers the React target produces — ticket
 //! test (`✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧪️compose5d-preparetopologymodel/🟦️.tsx:9`): a `fixed` root
 //! at `[1,2,3]` with a `derived` child fastened through one z-facing grip pair, fastener `x: 0.5`,
@@ -10,9 +10,9 @@ use crate::standards::v1::subsets::any::schema::document_records::{Puzzle5dFaste
 use std::collections::{HashMap, HashSet, VecDeque};
 use crate::standards::v1::subsets::any::geometry::*;
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip2d;
-use crate::Puzzle5dGrip3d;
-use crate::Puzzle5dPart2d;
-use crate::Puzzle5dPart3d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip3d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d;
 
 fn grip(id: &str, position: [f64; 3], direction: [f64; 3], angle: f64) -> Puzzle5dGrip {
     Puzzle5dGrip { id: id.to_string(), grip_kind: None, grip_2d: Puzzle5dGrip2d { angle, grip_kind: None, radius: None }, grip_3d: Puzzle5dGrip3d { position, direction: Some(direction), radius: None, label: None } }

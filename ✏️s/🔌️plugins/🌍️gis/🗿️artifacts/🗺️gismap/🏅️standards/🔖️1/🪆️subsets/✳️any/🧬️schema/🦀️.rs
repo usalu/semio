@@ -64,7 +64,7 @@ impl GisMapArtifact {
         Self { positions: snapshot.positions, routes: snapshot.routes, regions: snapshot.regions, drawing: snapshot.drawing, image: snapshot.image, value: snapshot.value }
     }
 
-    /// Writes persistent fields from a snapshot into this artifact.
+    /// 📤️ Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: GisMapSnapshot) {
         self.positions = snapshot.positions;
         self.routes = snapshot.routes;

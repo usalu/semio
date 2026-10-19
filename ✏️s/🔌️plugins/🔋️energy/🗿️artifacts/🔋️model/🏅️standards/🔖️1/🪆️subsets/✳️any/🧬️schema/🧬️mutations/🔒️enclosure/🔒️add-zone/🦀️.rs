@@ -26,6 +26,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddThermalEnclosure
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddThermalEnclosureZone> + From<crate::RemoveThermalEnclosureZone>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "thermal-enclosure", kind: "add-thermal-enclosure-zone", record: "AddedThermalEnclosureZone" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -47,7 +48,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "thermal-enclosure", kind: "add-thermal-enclosure-zone", record: "AddedThermalEnclosureZone" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

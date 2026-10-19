@@ -26,6 +26,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeWeeklySchedul
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeWeeklyScheduleDay>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "weekly-schedule", kind: "change-weekly-schedule-day", record: "ChangedWeeklyScheduleDay" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -47,7 +48,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "weekly-schedule", kind: "change-weekly-schedule-day", record: "ChangedWeeklyScheduleDay" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

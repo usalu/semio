@@ -249,30 +249,30 @@ pub fn detect_harris_keypoints(image: &ImageGray, target_count: usize) -> Vec<Ke
 /// 🧭️ Which corner candidates a bounded detection scores.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum BoundedDetector {
-    /// FAST-9 corners rescored by Harris across the pyramid, oriented by the intensity centroid
+    /// ⚽️ FAST-9 corners rescored by Harris across the pyramid, oriented by the intensity centroid
     /// (the [`detect_orb_keypoints`] policy).
     Orb,
-    /// Every positive Harris response on the base level (the [`detect_harris_keypoints`] policy).
+    /// 🔍️ Every positive Harris response on the base level (the [`detect_harris_keypoints`] policy).
     Harris,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum BoundedDetectionPhase {
-    /// Building pyramid level `level + 1` from level `level`, `row` rows of it done.
+    /// 📶️ Building pyramid level `level + 1` from level `level`, `row` rows of it done.
     Level { level: usize, row: u32 },
-    /// Scharr gradient products of `level`, `row` rows done.
+    /// 📱️ Scharr gradient products of `level`, `row` rows done.
     Gradients { level: usize, row: u32 },
-    /// Horizontal pass of the structure-tensor blur, `row` rows done.
+    /// 🫧️ Horizontal pass of the structure-tensor blur, `row` rows done.
     BlurRows { level: usize, row: u32 },
-    /// Vertical pass of the blur and the Harris score, `row` rows done.
+    /// 🪟️ Vertical pass of the blur and the Harris score, `row` rows done.
     BlurColumns { level: usize, row: u32 },
-    /// Testing the corners of `level`, `row` rows of it done (positions and scores kept per row).
+    /// 📐️ Testing the corners of `level`, `row` rows of it done (positions and scores kept per row).
     Corners { level: usize, row: u32 },
-    /// Suppressing non-maxima among the kept corners of `level`, `row` rows of it done.
+    /// 🗄️ Suppressing non-maxima among the kept corners of `level`, `row` rows of it done.
     Suppress { level: usize, row: u32 },
-    /// Spreading and ranking the candidates of each level.
+    /// 👉️ Spreading and ranking the candidates of each level.
     Select,
-    /// Assigning intensity-centroid orientations, `cursor` keypoints done.
+    /// 🔆️ Assigning intensity-centroid orientations, `cursor` keypoints done.
     Orient { cursor: usize },
     Done,
 }
@@ -319,15 +319,15 @@ const CORNER_HALO_ROWS: u32 = 3;
 struct HarrisStream {
     pub(super) width: u32,
     pub(super) height: u32,
-    /// Scharr products `gx²`, `gy²`, `gx·gy`, then (in place) their horizontally blurred versions.
+    /// 🖥️ Scharr products `gx²`, `gy²`, `gx·gy`, then (in place) their horizontally blurred versions.
     xx: Vec<f32>,
     yy: Vec<f32>,
     xy: Vec<f32>,
-    /// Horizontally blurred products, source of the vertical pass.
+    /// ↔️ Horizontally blurred products, source of the vertical pass.
     hxx: Vec<f32>,
     hyy: Vec<f32>,
     hxy: Vec<f32>,
-    /// Per-pixel Harris response.
+    /// 🎮️ Per-pixel Harris response.
     pub(super) score: Vec<f32>,
     kernel: Vec<f32>,
 }
@@ -357,7 +357,7 @@ impl HarrisStream {
         Self { width, height, xx: vec![0.0; pixels], yy: vec![0.0; pixels], xy: vec![0.0; pixels], hxx: vec![0.0; pixels], hyy: vec![0.0; pixels], hxy: vec![0.0; pixels], score: vec![0.0; pixels], kernel }
     }
 
-    /// Scharr gradient products of rows `[first, last)`.
+    /// 🚀️ Scharr gradient products of rows `[first, last)`.
     fn gradients(&mut self, image: &ImageGray, first: u32, last: u32) {
         let (w, h) = (i64::from(self.width), i64::from(self.height));
         for y in i64::from(first)..i64::from(last) {
@@ -373,7 +373,7 @@ impl HarrisStream {
         }
     }
 
-    /// Horizontal blur of rows `[first, last)`.
+    /// 👻️ Horizontal blur of rows `[first, last)`.
     fn blur_rows(&mut self, first: u32, last: u32) {
         let w = i64::from(self.width);
         let radius = (self.kernel.len() / 2) as i64;
@@ -394,7 +394,7 @@ impl HarrisStream {
         }
     }
 
-    /// Vertical blur and Harris score of rows `[first, last)` (reads the finished horizontal pass).
+    /// 💧️ Vertical blur and Harris score of rows `[first, last)` (reads the finished horizontal pass).
     fn blur_columns(&mut self, first: u32, last: u32) {
         let (w, h) = (i64::from(self.width), i64::from(self.height));
         let radius = (self.kernel.len() / 2) as i64;

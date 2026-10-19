@@ -2,6 +2,7 @@
 import { expect, test } from "bun:test";
 import { create, all } from "mathjs";
 import fixture from "./🧫️fixtures/🔣️.json";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const math = create(all, {});
 test("Puzzle3D borrowed focus preserves independent Set membership", async () => {
   for (const row of fixture.selectionCases) {
@@ -10,8 +11,8 @@ test("Puzzle3D borrowed focus preserves independent Set membership", async () =>
   }
   expect(math.sum(fixture.buffers.map(row => Number("vortices" in row ? row.vortices : 0)))).toBe(192);
   expect(math.sum(fixture.buffers.map(row => Number("mutations" in row ? row.mutations : 0)))).toBe(8196);
-  const action = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
-  const document = await Bun.file(new URL("../../🗂️document/🦀️.rs", import.meta.url)).text();
+  const action = readModuleTreeSource(new URL("../🦀️.rs", import.meta.url));
+  const document = readModuleTreeSource(new URL("../../🗂️document/🦀️.rs", import.meta.url));
   expect(action).not.toContain("HashSet::with_capacity");
   expect(document).not.toContain("HashSet::with_capacity");
   expect(document).not.toContain("self.result");
@@ -26,7 +27,7 @@ test("Puzzle original fixture keeps one finite stock through work and close", as
   const fixture = await Bun.file(new URL("../../../../../../../../../../🎮️commands/📤️jobs/🧪️tests/🧫️fixtures/🎟️source/🔣️.json", import.meta.url)).json();
   const totals = math.sum(fixture.receipts, 0);
   expect(math.subtract([fixture.stock.items, fixture.stock.copyBytes, fixture.stock.capacityBytes, fixture.stock.releaseBytes], totals)).toEqual(fixture.remaining);
-  const source = await Bun.file(new URL("../../../../../../../../../../🎮️commands/📤️jobs/🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../../../../../../../🎮️commands/📤️jobs/🦀️.rs", import.meta.url));
   expect(source).not.toContain("Box::leak");
   expect(source).not.toContain("StepContext::new");
   expect(source).not.toContain("test_payload_authority");
@@ -40,13 +41,14 @@ test("Puzzle original fixture keeps one finite stock through work and close", as
 
 
 test("Puzzle native app and brush fixtures preserve original close custody", async () => {
-  const app = await Bun.file(new URL("../../../🧪️tests/🧰️context/🦀️.rs", import.meta.url)).text();
-  const brush = await Bun.file(new URL("../../../⏳️precompute/🖌️brush/🧪️tests/🔬️unit/🦀️.rs", import.meta.url)).text();
-  expect(app).toContain("original: Option<semio_s_plugin_puzzle_jobs::testing::OriginalFixture>");
+  const app = readModuleTreeSource(new URL("../../../🧪️tests/🧰️context/🦀️.rs", import.meta.url));
+  const brushFiles = ["🦀️.rs", "🍓️placement-compatibility-and-fill-laws/🦀️.rs", "🥦️suggestions-run-laws/🦀️.rs"];
+  const brush = (await Promise.all(brushFiles.map((file) => Promise.resolve(readModuleTreeSource(new URL(`../../../⏳️precompute/🖌️brush/🧪️tests/🔬️unit/${file}`, import.meta.url)))))).join("\n");
+  expect(app).toContain("scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope");
   expect(app).toContain("pub fn close_witness(app: &mut Puzzle3dApp)");
   expect(app).not.toContain("std::mem::forget(raw)");
   expect(app).toContain("PluginApp::maintenance_step(raw, cx, loan)");
-  expect(app).toContain("PluginApp::close_step(app, cx, loan)");
+  expect(app).toContain("artifact_app_laws::close_registered_fixture_app(");
   expect(brush).toContain("cx.with_original_work_loan(fuel, deadline");
   expect(brush).not.toContain("StepContext::new");
   expect(brush).not.toContain("narrow_original_work_budget");

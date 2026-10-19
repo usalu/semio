@@ -1,4 +1,4 @@
-//! delegated wholesale to the framework's shared `world3d_sun_measures` builder. Per window
+//! 📡️ delegated wholesale to the framework's shared `world3d_sun_measures` builder. Per window
 //! ☀️ Edit-mode window option — the sun/environment group (enabled, azimuth, elevation, intensity),
 //! instance: each keeps its own `WorldSunConfig` (see `🦀️config.rs`).
 

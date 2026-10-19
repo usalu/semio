@@ -577,10 +577,6 @@ impl ArtifactEditor for Block2dPlayApp {
     /// other port (`"artifact:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block2dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"artifact:out"` behavior
-            // verbatim — overriding the trait method forfeits the ability to delegate back to its
-            // own default body, so the whole-document pack export is duplicated here rather than
-            // left unreachable for this app.
             if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
@@ -599,17 +595,11 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_block_2d_model::BLOCK2D_DIALECT)
             .document(["semio", "block", "2d"])
             .artifact_kind(artifact_kind())
-            // 🗂️ The puzzle2d catalog artifact this app's new `"catalog:out"` port produces — see
-            // `block2d_io`/`Block2dPlayApp::export_media`.
             .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
             .icon_id("layout-grid")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK2D_PLAY_MODE_EDIT)
             .window_kind_def(board::definition())
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `handle` domain
-            // replaces the deleted `setSelection` view action — the framework auto-injects
-            // `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
-            // `setInteractionGranularity` for it.
             .interaction(InteractionDefinition {
                 id: BLOCK2D_INTERACTION_HANDLE.into(),
                 label: LocalizedLabel::native("Handles", "Griffe"),
@@ -648,14 +638,6 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("edit", InteractiveJobClassification::Migrated)
             .io(block2d_io())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old
-            // `BLOCK2D_EXAMPLE_LEFT`/`BLOCK2D_EXAMPLE_RIGHT` app-level example registrations and the
-            // no-op `.workflow("block2d", …)` call are dropped here (not silently: reported in the
-            // packet's migration report). The subset's own pre-existing
-            // `🗿️artifacts/◻️2d/…/📚️examples/🎬️hexagonal-cut-concrete-forest-{left,right}` facet is
-            // the modern, role-agnostic replacement surface for this.
             .action_describe("patchNodeKind", LocalizedLabel::native("Sets one field of the 2D block's node kind: its name, label, variant, description or icon.", "Setzt ein Feld der Knotenart des 2D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."))
             .action_describe("addHandleKind", LocalizedLabel::native("Adds a new handle kind (a named, coloured connector type with a default wire kind) to the 2D block.", "Fügt dem 2D-Block eine neue Griffart hinzu (einen benannten, farbigen Verbindertyp mit Standard-Leitungsart)."))
             .action_describe("removeHandleKind", LocalizedLabel::native("Removes one handle kind by id from the 2D block.", "Entfernt eine Griffart anhand ihrer Id aus dem 2D-Block."))

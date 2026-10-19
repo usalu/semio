@@ -77,4 +77,4 @@ const router = new ScriptRouter(dirname(fileURLToPath(import.meta.url)))
   .registerLazy("dev", async () => (await import("../../🎛️commands/🏗️build-and-dev/🟦️.ts")).DevScript)
   .registerLazy("secure-local-smoke", async () => (await import("../../🧪️tests/🔐️secure-local-smoke/🟦️.ts")).SecureLocalSmokeScript);
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "dev" }) }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "dev" }));

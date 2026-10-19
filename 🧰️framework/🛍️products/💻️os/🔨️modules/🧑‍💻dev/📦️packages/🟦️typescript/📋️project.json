@@ -15,12 +15,13 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🔤️guestslim-fonts/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/**/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+      "sharedGlobals"
     ],
     "stagingRootSources": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
@@ -101,11 +102,20 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔌️staging-root/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️testing/🚶️journey/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🧪️tests/🧫️fixtures/🚶️shell-interaction/🔣️.json"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "canonical-bootstrap-folder-mirror-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -115,6 +125,10 @@
     },
     "canonical-bootstrap-folder-mirror-process-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -138,6 +152,10 @@
     },
     "closed-browser-component-factory-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -161,6 +179,8 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -169,11 +189,18 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
         "stagingRootSources"
       ]
     },
     "verify": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify",
@@ -192,6 +219,12 @@
     },
     "plugin": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "dependsOn": [
         "@semio-tech/os-plugin-describe-rs:build",
         "@semio-tech/framework-plugin-web:support"
@@ -223,6 +256,11 @@
     },
     "index-lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -232,6 +270,11 @@
     },
     "host-handle-lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -501,6 +544,10 @@
     },
     "catalog-smoke": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -561,6 +608,7 @@
     },
     "generate-distribution": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts distribution generate",
@@ -569,6 +617,11 @@
     },
     "preview-distribution": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -578,6 +631,7 @@
     },
     "check-distribution": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts distribution check",
@@ -598,6 +652,10 @@
     },
     "preview-playground-session": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -618,6 +676,7 @@
     },
     "generate-scale-fixture": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate scale-fixture",
@@ -626,6 +685,11 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -635,6 +699,7 @@
     },
     "scale-fixture-check": {
       "executor": "repo:script",
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -684,6 +749,10 @@
     },
     "build-inputs": {
       "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -693,7 +762,12 @@
     },
     "channel-version-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts channel-version check",
@@ -702,7 +776,12 @@
     },
     "channel-version-generate": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts channel-version generate",
@@ -721,7 +800,12 @@
     },
     "verify-home": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify home",
@@ -804,6 +888,7 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts canonical-architecture",
@@ -952,7 +1037,11 @@
     },
     "channel-version-ownership-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -962,7 +1051,11 @@
     },
     "channel-version-contributions-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -972,7 +1065,12 @@
     },
     "distribution-output-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts distribution-output-check",
@@ -987,7 +1085,12 @@
     },
     "source-watch-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts source-watch-check",
@@ -1002,9 +1105,12 @@
     },
     "test-publication": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv"
       ],
       "options": {
         "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts publication-check",
@@ -1013,7 +1119,11 @@
     },
     "verify-staged": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",

@@ -11,7 +11,7 @@
 // #region 📷️MissingEnd
 // MissingEnd MUST provide the missingend functionality.
 
-/** missingEnd holds the data fields for a missingEnd record.
+/** 🫥️ missingEnd holds the data fields for a missingEnd record.
  * missingEnd MUST hold an integer.
  **/
 const missingEnd = 1;
@@ -21,7 +21,7 @@ const missingEnd = 1;
 // #region 🧩️Alpha
 // Alpha MUST provide the alpha functionality.
 
-/** mismatchName holds the data fields for a mismatchName record.
+/** 📦️ mismatchName holds the data fields for a mismatchName record.
  * mismatchName MUST hold an integer.
  **/
 const mismatchName = 2;

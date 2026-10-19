@@ -5,7 +5,7 @@ import {readFileSync,existsSync,mkdirSync,mkdtempSync,writeFileSync,rmSync} from
 import {join,resolve} from "node:path";
 import {receiveScriptProcessInvocation,withIssuedResourceOperationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandResultV1,captureOwnedCommandV1} from "@semio-tech/process/execution";
-import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {resourceLeasePathV1} from "@semio-tech/process/leases";
 import {openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";

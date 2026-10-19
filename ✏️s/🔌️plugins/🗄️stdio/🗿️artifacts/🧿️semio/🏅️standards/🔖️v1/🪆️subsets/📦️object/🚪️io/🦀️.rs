@@ -180,18 +180,15 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioObjectBuilderConstruction {
         /// 🏗️ Starts a fresh object at the identity transform, no geometry/properties children.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: SemioObjectSnapshot::default() }
         }
         /// 🧭️ Overrides the object's placement.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_transform(mut self, transform: SemioTransform) -> Self {
             self.snapshot.transform = transform;
             self
         }
         /// 🧱️ Attaches an owned brep CHILD handle (never embedded content).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_brep(mut self, child_id: impl Into<String>, target: semio_framework_artifact_reference::ArtifactRef) -> Result<Self, String> {
             let child_id = child_id.into();
             semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity(&child_id, &target, "brep")?;

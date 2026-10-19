@@ -42,7 +42,7 @@ pub struct BoardSceneState {
 
 /// 🧩️ BoardHost style component: style catalogs, themes, LOD and grid policy.
 pub struct BoardStyleState {
-    /// Catalog keyed by `handle_kind` id (see `set_board_kind_catalogs_from_json`).
+    /// 🤚️ Catalog keyed by `handle_kind` id (see `set_board_kind_catalogs_from_json`).
     pub handle_kinds: BTreeMap<String, HandleKindDef>,
     pub wire_kinds: BTreeMap<String, WireKindDef>,
     pub node_kinds: BTreeMap<String, NodeKindDef>,

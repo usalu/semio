@@ -1,4 +1,4 @@
-//! artifact is a schema + io system, never an engine). Errors and the top-level `build_model`/
+//! 💽️ artifact is a schema + io system, never an engine). Errors and the top-level `build_model`/
 //! ⚙️ FEM 3D module engine — headless compute (pure FE algorithm, moved out of the artifact tree: an
 //! `fem3d_solve`/`fem3d_solve_all` entry points live here. Solid meshing lives in `🕸️meshing`,
 //! modal/buckling in `🎵️modal-buckling`, mesh preview + nodal stress in `🗺️mesh-preview`.

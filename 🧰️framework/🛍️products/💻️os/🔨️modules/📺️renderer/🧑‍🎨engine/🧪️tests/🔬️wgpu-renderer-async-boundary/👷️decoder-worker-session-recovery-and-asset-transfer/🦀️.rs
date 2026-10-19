@@ -1,6 +1,11 @@
 /// 👷️ Decoder worker, session recovery and asset transfer: the worker session saturation child, the unadmitted session recovery, the decoder worker boundary, the ready response cancel and return, the credited page transfer and the frame candidate that never advances the decoder.
 
 /// 🧫️ Marks the child process that runs [`an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session`] alone.
+use semio_framework_value::RetainedCloneStep;
+use semio_framework_trace::InteractiveStage;
+use semio_framework_job::StepContext;
+use semio_framework_job::OriginalTurnFailure;
+use semio_framework_job::JobOutcomeDescriptor;
 #[cfg(not(target_arch = "wasm32"))]
 const WORKER_SESSION_SATURATION_CHILD: &str = "SEMIO_RENDERER_WORKER_SESSION_SATURATION_CHILD";
 

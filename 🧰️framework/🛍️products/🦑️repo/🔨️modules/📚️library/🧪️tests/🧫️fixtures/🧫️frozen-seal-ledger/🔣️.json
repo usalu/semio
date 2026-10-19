@@ -4,12 +4,6 @@
   "pinnedAt": "9b605a4550f",
   "pinnedFor": "energy-history-fixture-audit",
   "contracts": {
-    "cad-draw-projection-vectors-v1": { "seal": "2da20ce17ebe0db9f12f20eb02bbb4c28964e219cb1f9aeb495f1afc833f534a", "coordinatesSha256": "5417dfd5c840977e53d86531147c9680d7dc6132dcdf43ce6fe83067b6dbe25d", "reseals": [
-      { "seal": "036c10f738537a4acecf429e6e6e60f2a91a24e2bd74ad5448874cb702375647", "coordinates": "changed", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "13163ff3ae2", "reason": "Golden re-authored for the Draw `🖍️drawing` artifact rename and the 229-member CAD model catalog: coordinate pointers and values changed, `liveBindings` introduced." },
-      { "seal": "d09828ca39594693b6b849fc34993664f46bcaae84188d68901916d0fb76bafd", "coordinates": "unchanged", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "3eeee4f9119", "reason": "`liveBindings` rebound to 7 renamed CAD carriers." },
-      { "seal": "838125bd676e82b0ca1aa5c5241b3685a12cdc98ec991c60baf2b258fe932d77", "coordinates": "unchanged", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "25bb77059d6", "reason": "`liveBindings` rebound to 43 REPO-PATH-BUDGET carrier renames." },
-      { "seal": "9fcae9b81ab088b27b15665751b706d3827aa5b76b23765486845d2b50cbe2bf", "coordinates": "unchanged", "coordinatesSha256": "51393583b5a086a5b73119895d571fdc898ad499bc37c19a2ac5e43054c7dd52", "recordedBy": "2026/09/30/NON-DESTRUCTIVE-HISTORY-EDITING", "reason": "`liveBindings` moved out of the sealed golden into the unsealed `🧫️cad-draw-live-bindings` fixture, so carrier renames never touch sealed bytes again." }
-    ] },
     "draw-evidence-async-test-attr-scan-repo-wide": { "seal": "9281e8148ef06f5d30eb94d44459ef8639fcf2f73983fec5264b04194750c6ca" },
     "draw-evidence-coordinator-official-tool-jobs-live-2026-08-26": { "seal": "118d381cdef29629a814d56c7032f542f288d70817b38f5aa99d3ba63761aac2" },
     "draw-evidence-coordinator-writer-set-locale-tool-jobs": { "seal": "7016a45cc696f63985e08e07de5b3f429666c077622771296da7dc0e6c691d27" },
@@ -45,19 +39,7 @@
     "draw-evidence-sol-universal-retained-after-2026-08-26": { "seal": "480a3f76e10e8db4aa67db1998aa81b11811fb9e551214976751230757e5a817" },
     "draw-evidence-sol-universal-retained-baseline-2026-08-26": { "seal": "c2ff72b0829fe06d0a3f8a64456b5fca855ef102b1e0fefc2206b6483352bb61" },
     "draw-evidence-writer-official-tool-jobs-2026-08-26": { "seal": "3cdf3bad8c13a0dc33e778a46adb68c56dd574bee5bc71bbef23ef43a01e3411" },
-    "readme-authored-correction-vector-v1": { "seal": "1044f4a170f113d5c07314bcf6de9e54d324614d00952e9267c0e17e838fb6e8" },
-    "readme-current-source-revision-input": { "seal": "b0e8738bb09a05691270e20d79d7c2791e071ae17b939399ef0a5169c77f18ce", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "reseals": [
-      { "seal": "391975e42f0fdf2b3210b184bf3260478d789a8cff8864be220fe25f489a2157", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "ebbace9b320", "reason": "License-owner catalog and testing-readme expectations moved from `🧫️fixtures` to `🖼️assets`; input paths and digests re-pinned." },
-      { "seal": "4e9e941da04772c48096c4bc94980058653e1aa6a7c1c313d7398b65cfdb8ffa", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "8add1df1473", "reason": "Fixture-input manifest and license-owner catalog digests re-pinned after their upstream edits." },
-      { "seal": "5c63712df095b212637097827659996a200cbe32d89e9856caf4054128fd8184", "coordinates": "unchanged", "coordinatesSha256": "fcb1623ad9c52f9d0b6e4b8b0c73b9b9aedbebadf3e5acd9e5e1b4bed8fdb6a6", "recordedBy": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "reason": "Editor launch registration keys removed from the revision gate `execution` block; the fixture digest re-pinned." }
-    ] },
-    "readme-reviewed-expectation-input": { "seal": "9cd32b7ec16ebcfb30b537da157add640847dd434fa496bac8950da806497ff4", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "reseals": [
-      { "seal": "1d587dbf013d3462143e20f5f459964e33ace67697bbd59f451d1f8428d6907e", "coordinates": "unchanged", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "recordedBy": "ebbace9b320", "reason": "License-owner catalog moved from `🧫️fixtures` to `🖼️assets`; its path re-pinned." },
-      { "seal": "952d2ea05c4f68fc94dadd0a782652e7b6c79ce79b985c546341e9e6f6d7fe1e", "coordinates": "unchanged", "coordinatesSha256": "e7661a51daf71137f83ee440721e969bb8f58be1396047598d37a2c007a44995", "recordedBy": "8add1df1473", "reason": "License-owner catalog digest re-pinned after its upstream edit." }
-    ] },
-    "remaining-package-purity-history-v1": { "seal": "b256184d693ca982f19364c6b17a717a17eab24eb66257130f613f88338341c3", "reseals": [
-      { "seal": "9d425633770529af52e49bf3a740355cbb84bcff727900c1bb3adb6107fea41f", "coordinates": "changed", "coordinatesSha256": "ca3f7d4566573c79e62b51219a703f3c7ecf2cabc249b428a6600087caffb39b", "recordedBy": "cd96692e52f", "reason": "Census source-set digest re-pinned; the bytes sealed at the pin are not recoverable from history, so the coordinates are not claimed unchanged." }
-    ] }
+    "readme-authored-correction-vector-v1": { "seal": "1044f4a170f113d5c07314bcf6de9e54d324614d00952e9267c0e17e838fb6e8" }
   },
   "later": {},
   "catalogs": {

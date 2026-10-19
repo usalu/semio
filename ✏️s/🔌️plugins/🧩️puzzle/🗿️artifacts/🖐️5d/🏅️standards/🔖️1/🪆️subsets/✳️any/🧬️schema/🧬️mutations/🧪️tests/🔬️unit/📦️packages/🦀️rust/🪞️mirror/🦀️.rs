@@ -103,6 +103,7 @@ pub mod editor {
         }
 
         pub use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities;
+        pub use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::*;
         #[path = "../../../../../../../✏️editor/🧭️view/🦀️.rs"]
         pub mod view;
         #[path = "."]

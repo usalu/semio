@@ -35,11 +35,9 @@ pub struct SemioImageFrameDiff {
 }
 
 impl SemioImageFrameDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.delay_ms.is_none() && self.rgba8.is_none()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_row(&self, base: &SemioImageFrame) -> SemioImageFrame {
         let mut next = base.clone();
         if let Some(v) = self.delay_ms {
@@ -50,11 +48,9 @@ impl SemioImageFrameDiff {
         }
         next
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &SemioImageFrame) -> Self {
         Self { delay_ms: self.delay_ms.map(|_| base.delay_ms), rgba8: self.rgba8.as_ref().map(|_| base.rgba8.clone()) }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(&mut self, other: Self) {
         if other.delay_ms.is_some() {
             self.delay_ms = other.delay_ms;
@@ -386,7 +382,6 @@ pub struct SemioImageDiff {
 }
 
 impl SemioImageDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.width.is_none() && self.height.is_none() && self.colorspace.is_none() && self.bit_depth.is_none() && self.icc.is_none() && self.frames.is_none() && self.metadata.is_none()
     }

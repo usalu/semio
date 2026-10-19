@@ -7,7 +7,7 @@ export interface JsonOutline {
 }
 
 export interface JsonInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: JsonOutline;
 }
 

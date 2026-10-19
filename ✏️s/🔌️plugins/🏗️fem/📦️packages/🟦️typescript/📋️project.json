@@ -2,17 +2,17 @@
   "name": "@semio-tech/fem-js",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🧪️tests/🎚️config/🟦️.ts"]
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🧪️tests/🎚️config/🟦️.ts", "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/**/*.{ts,tsx,json,semio,wit,sql}", "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/⚖️combination-stress/**/*"]
   },
   "targets": {
     "verify-combination-stress": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify-combination-stress"
       },
-      "metadata": { "semio": { "workspaceCommand": ["verify-combination-stress"] } }
+      "metadata": { "semio": { "workspaceCommand": ["verify", "fem-combination-stress"] } }
     },
     "test": {
       "executor": "repo:script",

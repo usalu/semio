@@ -58,7 +58,7 @@ test("retained context constructor accepts the original full grant and returns i
 });
 
 test("original refused Job close retains all actual failed currencies",()=>{
- const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));expect(source).toContain("Result<InteractiveJobCloseStep,OriginalTurnFailure>");expect(source).toContain("Err(failure)=>failure.primary.retained_progress()");
+ const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));expect(source).toContain("Result<InteractiveJobCloseStep,OriginalTurnFailure>");expect(source).toContain("Err(failure)=>failure.retained_progress()");
  const actual=applyPatch({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0},[{op:"replace",path:"/copiedItems",value:1},{op:"replace",path:"/retainedCapacityBytes",value:64}],true).newDocument;expect(actual).toEqual(fixture.failedCloseReceipt);
 });
 

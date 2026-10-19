@@ -1,7 +1,7 @@
 //! ⚖️ Original canonical source comparison advances one funded scalar or frontier transition.
 use super::*;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text,ArtifactCanonicalJsonTree as Canonical};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 
 #[derive(Clone,Copy,semio_framework_value::RetireOwned)]
 struct Frame{ordinal:usize,index:usize,count:usize,phase:u8,object:bool,chunks:[usize;2],offsets:[usize;2]}

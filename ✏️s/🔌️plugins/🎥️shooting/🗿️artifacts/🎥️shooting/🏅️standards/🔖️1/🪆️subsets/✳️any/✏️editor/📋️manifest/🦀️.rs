@@ -10,9 +10,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::SHOOTING_DIALECT)
             .document(["semio", "shooting"])
             .artifact_kind(crate::artifact_kind())
-            // 🖼️ `2d.image` — the interchange kind `photos:out` produces (WORKFLOWS-END-TO-END-TYPED-PORTS
-            // Wave 2 port recipe); a sibling agent may declare the identical shape on the raster app too
-            // — identical-shape duplicates are harmless (registry dedupes by id).
             .artifact_kind(semio_framework_plugin::ArtifactKindSpec {
                 id: "2d.image".into(),
                 label: LocalizedLabel::native("2D Image", "2D-Bild"),
@@ -37,8 +34,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
-            // 🛠️ Dev-only whole-document import — kept out of the command palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
@@ -67,18 +62,12 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
-            // 👁️ Ephemeral view state — shot gallery selection, transform utility.
             .view_action("setShotSelection", LocalizedLabel::native("Set Shot Selection", "Aufnahmeauswahl festlegen"))
             .view_action("setCenterModel", LocalizedLabel::native("Set Center Model", "Modellzentrierung festlegen"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"))
             .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
-            // 🕹️ The framework-owned "assets" interaction domain (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the 3d scene's asset pick/marquee
-            // selection and pointer hover; auto-injects interactionSelect/interactionHover/
-            // clearSelection/selectAll/setSelectionMode/setInteractionGranularity, replacing the deleted
-            // bespoke setSelection/setSelectionMethod/worldSelect/setHover/worldPick actions above.
             .interaction(InteractionDefinition {
                 id: SHOOTING_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Assets", "Objekte"),
@@ -94,13 +83,10 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(SHOOTING_PLAY_WINDOW_SCENE, vec![InteractionRef::new(SHOOTING_INTERACTION_DOMAIN)])
-            // 🐚️ Shell effects — export/import round-trips through the host.
             .shell_action("saveDownload", LocalizedLabel::native("Save Download", "Download speichern"))
             .shell_action("importAssetRequest", LocalizedLabel::native("Import Asset Request", "Objekt-Importanfrage"))
             .shell_action("exportActiveShot", LocalizedLabel::native("Export Active Shot", "Aktive Aufnahme exportieren"))
             .shell_action("exportAllShots", LocalizedLabel::native("Export All Shots", "Alle Aufnahmen exportieren"))
-            // 🧵️ Every verb is a bounded first-step tool with an exact publication contract
-            // (`ShootingCommandJobFactory::PUBLICATION_CONTRACTS`) — UI dispatch refuses anything else.
             .action_interactive_job("importSnapshotJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveShot", InteractiveJobClassification::Migrated)
@@ -140,7 +126,6 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("exportActiveShot")
             .action_interactive_job("exportAllShots", InteractiveJobClassification::Migrated)
             .action_destructive("exportAllShots")
-            // 📝️ Staged argument forms for the panel-visible create actions (defaults materialized host-side).
             .action_args("addShot", vec![
                 ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")), ActionArgOption::new("png", LocalizedLabel::native("PNG", "PNG"))]).default_value(&"png"),
                 ActionArgDef::select("shape", LocalizedLabel::native("Shape", "Form"), vec![ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("ellipse", LocalizedLabel::native("Ellipse", "Ellipse"))]).default_value(&"rectangle"),
@@ -157,24 +142,12 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
                     ),
                 ]).required(),
             ])
-            // 🧰️ Transform gumball — an exclusive utility group scoped to the scene window (active utility is host-owned).
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
             .window_kind_utilities(SHOOTING_PLAY_WINDOW_SCENE, vec!["move".into(), "rotate".into(), "scale".into()])
-            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
-            // `config_spec()`/`shooting_io()` are this same information's single source of truth, reused
-            // here rather than duplicated (`command_grammar` stays `CommandGrammar::empty()`: this app's
-            // typed commands are dispatched via `ShootingCommand`'s `OpBinary` codec directly, not a
-            // keyword-parsed text grammar).
             .config(ShootingPlayApp::config_spec())
             .io(shooting_io())
-            // 🚧️ SDK GAP (contract §2.4): `Editor::builder(...).build_definition()` returns a bare
-            // `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old app-level
-            // `SHOOTING_EXAMPLE_DEFAULT_ID` example registration and the no-op `.workflow("shooting",
-            // …)` call are dropped here, not silently: reported in this packet's migration notes. The
-            // subset's own `📚️examples/🎬️demo` facet is the modern, role-agnostic replacement surface.
             .action_describe("importSnapshotJson", LocalizedLabel::native("Replaces the whole shooting document (shots, assets, cameras and scene lighting) with one parsed from the given JSON; invalid JSON changes nothing.", "Ersetzt das gesamte Shooting-Dokument (Aufnahmen, Objekte, Kameras und Szenenlicht) durch eines aus dem angegebenen JSON; ungültiges JSON ändert nichts."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole shooting document with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Shooting-Dokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
             .action_describe("setActiveShot", LocalizedLabel::native("Makes the shot with the given id the active one that shot edits and Export Active Shot apply to.", "Macht die Aufnahme mit der angegebenen Id zur aktiven, auf die Aufnahmeänderungen und Aktive Aufnahme exportieren wirken."))

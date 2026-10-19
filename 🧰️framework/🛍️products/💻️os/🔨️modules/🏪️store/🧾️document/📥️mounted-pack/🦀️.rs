@@ -388,9 +388,9 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             if let Some(step) = retained(catalog.close_step(1, maximum_bytes).map_err(|error| {
                 semio_framework_value::ValueError::new(
                     match error.kind {
-                        semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
-                        semio_framework_value::list::PagedListRefusalKind::AllocationFailed => semio_framework_value::ValueRefusalKind::AllocationFailed,
-                        semio_framework_value::list::PagedListRefusalKind::InvariantViolated => semio_framework_value::ValueRefusalKind::InvariantViolated,
+                        semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
+                        semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed => semio_framework_value::ValueRefusalKind::AllocationFailed,
+                        semio_framework_value_persistent::list::PagedListRefusalKind::InvariantViolated => semio_framework_value::ValueRefusalKind::InvariantViolated,
                     },
                     error.reason,
                 )
@@ -416,9 +416,9 @@ impl<O: RetainedTypedPackOwner> RetainedTypedPackSession<O> {
             if let Some(step) = retained(source.close_step(1, maximum_bytes).map_err(|error| {
                 semio_framework_value::ValueError::new(
                     match error.kind {
-                        semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
-                        semio_framework_value::list::PagedListRefusalKind::AllocationFailed => semio_framework_value::ValueRefusalKind::AllocationFailed,
-                        semio_framework_value::list::PagedListRefusalKind::InvariantViolated => semio_framework_value::ValueRefusalKind::InvariantViolated,
+                        semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit => semio_framework_value::ValueRefusalKind::OwnershipLimit,
+                        semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed => semio_framework_value::ValueRefusalKind::AllocationFailed,
+                        semio_framework_value_persistent::list::PagedListRefusalKind::InvariantViolated => semio_framework_value::ValueRefusalKind::InvariantViolated,
                     },
                     error.reason,
                 )

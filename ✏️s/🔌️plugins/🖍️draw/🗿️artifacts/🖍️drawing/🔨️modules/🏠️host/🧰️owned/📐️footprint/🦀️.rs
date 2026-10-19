@@ -84,7 +84,7 @@ impl DrawingLayerFootprintCursor {
         Ok(())
     }
 
-    pub fn list<T, const N: usize>(&mut self, value: &semio_framework_value::list::PagedList<T, N>) -> Result<(), &'static str> {
+    pub fn list<T, const N: usize>(&mut self, value: &semio_framework_value_persistent::list::PagedList<T, N>) -> Result<(), &'static str> {
         self.add(value.capacity().checked_add(1).ok_or("drawing-store.layer-footprint-item-overflow")?, value.allocated_bytes())
     }
 

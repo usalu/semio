@@ -44,12 +44,10 @@ struct PresenceEntry {
 }
 
 impl PresenceEntry {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn empty(ttl_ms: u32) -> Self {
         Self { own: OwnPresence::default(), peers: BTreeMap::new(), ttl_ms }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn is_empty(&self) -> bool {
         self.own == OwnPresence::default() && self.peers.is_empty()
     }
@@ -67,7 +65,6 @@ pub struct PresenceHub {
 
 impl PresenceHub {
     /// 🏭️ An empty hub.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self::default()
     }
@@ -75,7 +72,6 @@ impl PresenceHub {
     /// 🙋️ Records this session's own hover/selection/preview/color state for `(surface, node_key)`,
     /// overwriting whatever was there. Own presence never expires by itself — it stands until the next
     /// `record_own` call for the same key.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn record_own(&mut self, surface: SurfaceId, node_key: impl Into<String>, own: OwnPresence, ttl_ms: u32) {
         let key = PresenceKey { surface, node_key: node_key.into() };
         let entry = self.entries.entry(key.clone()).or_insert_with(|| PresenceEntry::empty(ttl_ms));
@@ -88,7 +84,6 @@ impl PresenceHub {
     /// [`PeerMark::actor`] — a second call for the same actor overwrites the first and resets its
     /// expiry to `now_ms + ttl_ms`, which is how a peer's live cursor keeps renewing itself as long as
     /// that peer keeps sending updates.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn record_peer(&mut self, surface: SurfaceId, node_key: impl Into<String>, mark: PeerMark, ttl_ms: u32, now_ms: u64) {
         let key = PresenceKey { surface, node_key: node_key.into() };
         let entry = self.entries.entry(key.clone()).or_insert_with(|| PresenceEntry::empty(ttl_ms));
@@ -100,7 +95,6 @@ impl PresenceHub {
     /// ⏳️ Drops every peer mark whose expiry is at or before `now_ms` — exactly at a mark's own TTL
     /// boundary, it is gone. Own presence is never touched here; it has no expiry. A key whose peer set
     /// shrinks is marked dirty so the next [`Self::flush`] reports the loss.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn expire(&mut self, now_ms: u64) {
         for (key, entry) in self.entries.iter_mut() {
             let before = entry.peers.len();
@@ -117,7 +111,6 @@ impl PresenceHub {
     /// presence set, no peers left) is garbage-collected after being reported once, so a flush after
     /// every peer on a key has expired still reports the now-empty `peers` list before the slot is
     /// forgotten entirely.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn flush(&mut self) -> Vec<PresenceUpdate> {
         let dirty = std::mem::take(&mut self.dirty);
         let mut updates = Vec::with_capacity(dirty.len());

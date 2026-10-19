@@ -9,7 +9,7 @@ use serde_json::json;
 
 #[test]
 fn history_edit_puzzle2d_edge_restoration_preserves_original_ordinals_and_optional_flags() {
-    let corpus: Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/↩️inverse/📑️ordered-restoration/🔣️.json")).expect("committed edge order corpus");
+    let corpus: Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/🪢️connect-handles/↩️inverse/📑️ordered-restoration/🔣️.json")).expect("committed edge order corpus");
     for row in corpus["cases"].as_array().expect("cases") {
         let mut base = empty_puzzle2d_snapshot();
         let node: Puzzle2dNode = serde_json::from_value(json!({"id":"node","anchor":"fixed","x":3.0,"y":-4.0,"handles":[{"id":"retained-handle","angle":1.0},{"id":"handle","angle":2.0}],"text":"😀\u{0}"})).expect("native node");

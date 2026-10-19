@@ -3,18 +3,18 @@ import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-refere
 import type { WriterArtifact } from "../🟦️.ts";
 
 export interface WriterDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   artifact: WriterArtifact | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   schema: string | null;
-  /** @state artifact */
+  /** 📝️ @state artifact */
   id: string | null;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   languageId: string | null;
-  /** @state artifact */
+  /** 🛰️ @state artifact */
   uri: string | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   text: string | null;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 📄️ @state artifact @child kind=s.stdio.semio */
   document: ArtifactChild | null;
 }

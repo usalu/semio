@@ -36,9 +36,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `BlockListScene` has no
-        // `interaction_domain` field for the wrapper to stamp, so this window is not scoped to the
-        // "program" domain (mirrors the graph window's declaration, not this one).
         interactions: Vec::new(),
     }
 }
@@ -61,10 +58,6 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectRegisterWindowCo
         })
         .collect();
     let palette=vec![BlockListPaletteEntry {block_kind:register.into(),label:register.into(),icon_id:"square".into()}];
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
-    // `InteractionView` and `BlockListScene` has no `interaction_domain` field for the wrapper to
-    // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching
-    // `dag`'s/`space`'s identical `NodeGraphScene` gap.
     let scene = BlockListScene { steps, palette, selected_id: None, dragging_id: None, domain_id: None };
     semio_framework_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_framework_ui_contract::SurfaceKind::BlockList, &scene)
 }

@@ -25,6 +25,10 @@ path = "../../🦀️.rs"
 name = "history_supersede_fold"
 path = "../../🧪️tests/🔬️supersede-fold/🦀️.rs"
 
+[[test]]
+name = "history_transition_unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
 [dependencies]
 semio-framework-replication-causal = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-replication-crypto = { path = "../../../../🔐️crypto/📦️packages/🦀️rust" }
@@ -34,6 +38,8 @@ semio-framework-replication-history-index = { path = "../../🔁️fold/🗂️i
 semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-persistent.workspace = true
+semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
 blake3 = "1.8.2"

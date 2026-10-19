@@ -190,12 +190,10 @@ pub struct EvolvingFuzzySystem {
 }
 
 impl EvolvingFuzzySystem {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(system: MimoSystem, learning_rate: f64, prune_threshold: f64, max_rules: usize) -> Self {
         Self { system, learning_rate, prune_threshold, max_rules }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn observe(&mut self, x: &[f64], y: &[f64]) -> FuzzyResult<Explanation> {
         let (pred, mut explanation) = self.system.infer(x)?;
         for (rule, trace) in self.system.rules.rules.iter_mut().zip(explanation.traces.iter()) {

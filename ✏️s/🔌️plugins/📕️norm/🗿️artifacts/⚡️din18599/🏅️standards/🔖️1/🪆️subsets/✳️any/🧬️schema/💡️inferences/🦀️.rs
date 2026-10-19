@@ -108,7 +108,7 @@ pub fn balance_annual(inputs: &Din18599Snapshot) -> CheckReport {
     evaluate_document(inputs)
 }
 
-/// � tang `Din18599Snapshot -> CheckReport` conformance law — building energy / GEG evaluation.
+/// 🧮️ tang `Din18599Snapshot -> CheckReport` conformance law — building energy / GEG evaluation.
 pub fn evaluate(document: &Din18599Snapshot) -> CheckReport {
     evaluate_document(document)
 }

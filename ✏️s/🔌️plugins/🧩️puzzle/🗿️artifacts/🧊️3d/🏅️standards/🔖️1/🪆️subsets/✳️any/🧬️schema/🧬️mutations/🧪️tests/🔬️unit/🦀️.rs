@@ -81,8 +81,8 @@ fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
 }
 
 //#region 🔖️MutationLaws
-use protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
-use protocol::os_spr::protocol_laws::assert_mutation_inverse_law;
+use semio_framework_os_spr::protocol_laws::assert_mutation_diff_absorb_law;
+use semio_framework_os_spr::protocol_laws::assert_mutation_inverse_law;
 
 #[semio_framework_async_macros::async_test]
 async fn move_object_diff_absorb_law() {
@@ -233,7 +233,7 @@ async fn document_scalar_mutations_inverse_law() {
 #[test]
 fn dispatch_registers_semantic_descriptors() {
     register_puzzle3d_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
-    for kind in <Puzzle3dMutation as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds() {
+    for kind in <Puzzle3dMutation as semio_framework_os_command::SemanticMutation<Puzzle3dSnapshot>>::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
     assert_eq!(<Puzzle3dMutation as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds().len(), 38);
@@ -243,19 +243,18 @@ fn dispatch_registers_semantic_descriptors() {
 //#region 🔖️OutcomeLaws
 // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
-use protocol::os_spr::protocol_laws::assert_fatal_never_applies;
-use protocol::os_spr::protocol_laws::assert_missing_target_is_error;
+use semio_framework_os_spr::protocol_laws::assert_fatal_never_applies;
+use semio_framework_os_spr::protocol_laws::assert_missing_target_is_error;
 
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {
     let base = empty();
-    (assert_missing_target_is_error(&base, &delete_object("missing".into()))).await; // delete
-    (assert_missing_target_is_error(&base, &remove_object_vortex("missing".into(), "v0".into()))).await; // remove
-    (assert_missing_target_is_error(&base, &change_object_hidden("missing".into(), true))).await; // change/set/update
-    (assert_missing_target_is_error(&base, &move_object("missing".into(), [1.0, 1.0, 1.0]))).await; // move/drag/rotate/scale/resize
-    (assert_missing_target_is_error(&base, &edit_object_label("missing".into(), Some("x".into())))).await; // edit/replace
+    (assert_missing_target_is_error(&base, &delete_object("missing".into()))).await;
+    (assert_missing_target_is_error(&base, &remove_object_vortex("missing".into(), "v0".into()))).await;
+    (assert_missing_target_is_error(&base, &change_object_hidden("missing".into(), true))).await;
+    (assert_missing_target_is_error(&base, &move_object("missing".into(), [1.0, 1.0, 1.0]))).await;
+    (assert_missing_target_is_error(&base, &edit_object_label("missing".into(), Some("x".into())))).await;
     (assert_missing_target_is_error(&base, &disconnect_vortices("missing".into()))).await;
-    // disconnect/unbind
 }
 
 #[semio_framework_async_macros::async_test]
@@ -304,7 +303,7 @@ fn selection_leaves_replay_on_a_moved_base() {
 /// 🗣️ Every selection leaf's history label is a real sentence in both locales.
 #[test]
 fn selection_labels_are_localized() {
-    let label = |mutation: Puzzle3dMutation| serde_json::to_string(&<Puzzle3dMutation as protocol::SemanticMutation<Puzzle3dSnapshot>>::label(&mutation)).expect("label serializes");
+    let label = |mutation: Puzzle3dMutation| serde_json::to_string(&<Puzzle3dMutation as semio_framework_os_command::SemanticMutation<Puzzle3dSnapshot>>::label(&mutation)).expect("label serializes");
     let drag = label(drag_selection(vec!["o1".into(), "v1".into()], [1.5, -2.0, 0.0]));
     assert!(drag.contains("Drag 2 items by (1.5, -2, 0)") && drag.contains("2 Elemente um (1,5; -2; 0) ziehen"), "{drag}");
     let turn = label(rotate_selection(vec!["o1".into()], [0.0, 0.0, 1.0], std::f64::consts::FRAC_PI_2));
@@ -341,7 +340,7 @@ fn selection_leaves_are_editable_through_their_payload_value() {
 /// declared vocabulary and the measured one from drifting apart.
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
-    let descriptors = <Puzzle3dMutation as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds();
+    let descriptors = <Puzzle3dMutation as semio_framework_os_command::SemanticMutation<Puzzle3dSnapshot>>::kinds();
     assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared Puzzle3dMutation variant");
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
@@ -358,7 +357,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 #[semio_framework_async_macros::async_test]
 async fn middle_row_removals_restore_their_position() {
     use {semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity, semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dReference, semio_s_artifact_puzzle_3d_model::Puzzle3dReferenceSource, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
-    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
+    use semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law;
     let step = |base: Puzzle3dSnapshot, mutation: Puzzle3dMutation| protocol::apply_diff_cold(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     let vortex = |id: &str| Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false };
     let object = |id: &str| Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![vortex("v1"), vortex("v2"), vortex("v3")], hidden: false, locked: false };

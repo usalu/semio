@@ -213,7 +213,6 @@ export function useWorldPointerAndDrop(core: WorldCore6) {
 
   const handleEmptyClick = useCallback(
     (event: globalThis.MouseEvent) => {
-      // 🧹️ Consume the post-marquee suppress flag so a stale `true` cannot permanently no-operation background deselect.
       if (wasMarqueeDragRef.current) {
         wasMarqueeDragRef.current = false;
         return;
@@ -224,16 +223,6 @@ export function useWorldPointerAndDrop(core: WorldCore6) {
         handleSuggestionClose();
       }
       const merge = resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode);
-      // 🎯️ A pane must not CLEAR its selection at a point where it is publishing a hover target. The
-      // two hit tests are not the same code — hover rides R3F's raycast against the real geometry, the
-      // click's "did I hit anything" is R3F's own `onPointerMissed` bookkeeping — and on the
-      // generation3d preview they disagree: sweeping the pointer resolves `extrude@solid` and clicking
-      // that same point ten milliseconds later arrives here, so the pick dispatched
-      // `interactionSelect targets:[]` and the object was never selectable at all
-      // (measured 26/09/15 on :6023, `📓️hot-swap-board-remount-2026-09-15.md` §3;
-      // `🐍️world-pick-recon.mjs` records both halves). The hover this pane published IS the target under
-      // the pointer, so a click there is a pick of it; a click on genuinely empty canvas has no hover
-      // and still clears.
       const hovered = hoveredInteractionTargetV1(hoveredInstanceInteractionTargetRef.current);
       if (interactionDomainId && hovered) {
         dispatch("interactionSelect", world3dSelectionTargetsActionArgs(interactionDomainId, [hovered], merge));
@@ -287,7 +276,6 @@ export function useWorldPointerAndDrop(core: WorldCore6) {
       const rect = hostRef.current.getBoundingClientRect();
       const origin = resolveCatalogueDropOrigin(clientX, clientY, rect, cameraRef.current, gridSnapEnabled, gridFactor);
       if (!origin) return;
-      // 🎉️ Stamp the pre-drop instance set so the next scene update can celebrate the newly placed object(s).
       pendingCelebrateCatalogueDropIdsRef.current = new Set(instancesRef.current.map((instance) => instance.id));
       dispatch("addObjectKind", { objectKind: payload.objectKind, origin });
     },
@@ -359,8 +347,6 @@ export function useWorldPointerAndDrop(core: WorldCore6) {
   }, [node.controllerId, node.surfaceId, windowInstanceId]);
 
   useEffect(() => {
-    // 🧭️ The DOM `DragEvent`, not React's synthetic one (imported above for JSX props): this listener
-    // is installed on `window`, which delivers the browser's own event.
     const onWindowDragOver = (event: globalThis.DragEvent) => {
       if (!getActiveCatalogueDragPayload() && !event.dataTransfer?.types.includes(CATALOGUE_DRAG_MIME)) return;
       if (!parsePuzzle3dCatalogueDragPayload(getActiveCatalogueDragPayload()) && !event.dataTransfer?.types.includes(CATALOGUE_DRAG_MIME)) return;

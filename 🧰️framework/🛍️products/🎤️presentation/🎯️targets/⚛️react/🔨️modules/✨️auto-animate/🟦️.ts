@@ -452,9 +452,7 @@ export function relaxHiddenPreflight(): void {
   for (const sheet of [...Array.from(document.styleSheets), ...adopted]) {
     try {
       visit(sheet.cssRules);
-    } catch {
-      // cross-origin stylesheet rules are not readable
-    }
+    } catch {}
   }
 }
 //#endregion 🔖️HiddenPreflight
@@ -490,9 +488,7 @@ export function syncManyToOneGhostMorphFramesFromDom(fromSlide: HTMLElement, toS
       try {
         const crop = JSON.parse(cropRaw) as DispositionPosition;
         applyFigureCropCssVars(slot, figureCropBackgroundVarsTargetGhost({ kind: "figure", id: "", src: "", crop }, crop, sourceFrame, labelFrame));
-      } catch {
-        // skip invalid crop payload
-      }
+      } catch {}
     }
     void ghost.offsetHeight;
   }

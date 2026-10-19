@@ -1,6 +1,7 @@
 //! 🏛️ Original schema tokens and scalar declarations retained through caller-funded close.
 use super::{Result,SqliteDatabase,SqliteTable,SqliteSnapshotControl,SqliteSnapshotPhase,ascii_compare,heap_sort};
-use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::PagedList;
 
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn overflow()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"SQLite schema storage limit")}

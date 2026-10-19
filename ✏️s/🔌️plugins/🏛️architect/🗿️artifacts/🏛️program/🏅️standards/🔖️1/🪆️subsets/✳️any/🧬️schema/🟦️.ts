@@ -15,149 +15,149 @@ export const PROGRAM_ARTIFACT_FIELDS = [
 ] as const;
 
 export interface ProgramArtifact {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta: ProgramMeta;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   project: ProjectDefinition;
-  /** @state artifact */
+  /** 👥️ @state artifact */
   stakeholders: Stakeholder[];
-  /** @state artifact */
+  /** 📜️ @state artifact */
   users: UserProfile[];
-  /** @state artifact */
+  /** 🏃️ @state artifact */
   activities: Activity[];
-  /** @state artifact */
+  /** ⚙️ @state artifact */
   functions: Function[];
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   elements: ProgramElement[];
-  /** @state artifact */
+  /** 📦️ @state artifact */
   quantities: QuantityRequirement[];
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   relationships: Relationship[];
-  /** @state artifact */
+  /** 🤝️ @state artifact */
   adjacencies: Adjacency[];
-  /** @state artifact */
+  /** 🏭️ @state artifact */
   processes: Process[];
-  /** @state artifact */
+  /** 🌊️ @state artifact */
   flows: FlowRequirement[];
-  /** @state artifact */
+  /** 🛂️ @state artifact */
   accessRules: AccessRule[];
-  /** @state artifact */
+  /** 🧪️ @state artifact */
   operations: OperationalRequirement[];
-  /** @state artifact */
+  /** 🖨️ @state artifact */
   equipment: Equipment[];
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   resources: Resource[];
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   storage: StorageRequirement[];
-  /** @state artifact */
+  /** 🌿️ @state artifact */
   environmental: EnvironmentalRequirement[];
-  /** @state artifact */
+  /** 🧑️ @state artifact */
   humanFactors: HumanFactorRequirement[];
-  /** @state artifact */
+  /** ♿️ @state artifact */
   accessibility: AccessibilityRequirement[];
-  /** @state artifact */
+  /** 🤫️ @state artifact */
   privacy: PrivacyRequirement[];
-  /** @state artifact */
+  /** 🦺️ @state artifact */
   safety: SafetyRequirement[];
-  /** @state artifact */
+  /** 🛡️ @state artifact */
   security: SecurityRequirement[];
-  /** @state artifact */
+  /** ⚖️ @state artifact */
   regulatory: RegulatoryRequirement[];
-  /** @state artifact */
+  /** 🏞️ @state artifact */
   siteContext: SiteContext[];
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   organizational: OrganizationalRequirement[];
-  /** @state artifact */
+  /** 🛎️ @state artifact */
   services: ServiceRequirement[];
-  /** @state artifact */
+  /** 🛣️ @state artifact */
   infrastructure: InfrastructureRequirement[];
-  /** @state artifact */
+  /** ℹ️ @state artifact */
   information: InformationRequirement[];
-  /** @state artifact */
+  /** 📡️ @state artifact */
   communication: CommunicationRequirement[];
-  /** @state artifact */
+  /** 🧭️ @state artifact */
   wayfinding: WayfindingRequirement[];
-  /** @state artifact */
+  /** ⏱️ @state artifact */
   schedules: ScheduleRequirement[];
-  /** @state artifact */
+  /** 🤸️ @state artifact */
   flexibility: FlexibilityRequirement[];
-  /** @state artifact */
+  /** 📈️ @state artifact */
   growth: GrowthPlan[];
-  /** @state artifact */
+  /** ♻️ @state artifact */
   sustainability: SustainabilityRequirement[];
-  /** @state artifact */
+  /** 💪️ @state artifact */
   resilience: ResilienceRequirement[];
-  /** @state artifact */
+  /** 💰️ @state artifact */
   costs: CostRequirement[];
-  /** @state artifact */
+  /** 🚚️ @state artifact */
   delivery: DeliveryConstraint[];
-  /** @state artifact */
+  /** ⚠️ @state artifact */
   risks: Risk[];
-  /** @state artifact */
+  /** 💥️ @state artifact */
   conflicts: Conflict[];
-  /** @state artifact */
+  /** ❗️ @state artifact */
   requirements: Requirement[];
-  /** @state artifact */
+  /** 📶️ @state artifact */
   priorities: PriorityRecord[];
-  /** @state artifact */
+  /** 🎬️ @state artifact */
   scenarios: Scenario[];
-  /** @state artifact */
+  /** 🎚️ @state artifact */
   options: OptionEvaluation[];
-  /** @state artifact */
+  /** 🗳️ @state artifact */
   decisions: Decision[];
-  /** @state artifact */
+  /** ✅️ @state artifact */
   validations: ValidationRecord[];
-  /** @state artifact */
+  /** 🏎️ @state artifact */
   performance: PerformanceCriterion[];
-  /** @state artifact */
+  /** 💎️ @state artifact */
   quality: QualityRecord[];
-  /** @state artifact */
+  /** 🏺️ @state artifact */
   artifacts: ArtifactRecord[];
-  /** @state artifact */
+  /** 🤔️ @state artifact */
   assumptions: Assumption[];
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   constraints: ConstraintRecord[];
-  /** @state artifact */
+  /** 📋️ @state artifact */
   complianceRecords: ComplianceRecord[];
-  /** @state artifact */
+  /** 👍️ @state artifact */
   approvals: ApprovalRecord[];
-  /** @state artifact */
+  /** 📅️ @state artifact */
   meetings: MeetingRecord[];
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   changes: ChangeRecord[];
-  /** @state artifact */
+  /** 🫂️ @state artifact */
   collaboration: CollaborationRecord[];
-  /** @state artifact */
+  /** 🔭️ @state artifact */
   analyses: AnalysisRecord[];
-  /** @state artifact */
+  /** 📊️ @state artifact */
   reports: ReportRecord[];
-  /** @state artifact */
+  /** 🔍️ @state artifact */
   searchFilters: SearchFilter[];
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   statusRecords: StatusRecord[];
-  /** @state artifact */
+  /** 🛠️ @state artifact */
   workshops: Workshop[];
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   surveys: Survey[];
-  /** @state artifact */
+  /** 🩺️ @state artifact */
   issues: Issue[];
-  /** @state artifact */
+  /** 🕰️ @state artifact */
   auditEvents: AuditEvent[];
-  /** @state artifact */
+  /** 🪆️ @state artifact */
   templates: TemplateRecord[];
-  /** @state artifact */
+  /** 🧠️ @state artifact */
   knowledgePayload: KnowledgeRecord[];
-  /** @state artifact */
+  /** 🎓️ @state artifact */
   knowledge: ArtifactChild;
-  /** @state artifact */
+  /** 🏁️ @state artifact */
   benchmarksPayload: BenchmarkRecord[];
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   benchmarks: ArtifactChild;
-  /** @state artifact */
+  /** 📒️ @state artifact */
   traces: TraceLink[];
-  /** @state artifact */
+  /** 🪪️ @state artifact */
   governance: Governance;
 }
 

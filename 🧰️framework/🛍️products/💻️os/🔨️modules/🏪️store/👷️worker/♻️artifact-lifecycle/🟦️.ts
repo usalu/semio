@@ -4,6 +4,7 @@ import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1 } from "../🚑️actor-recovery/🟦�
 import type { MutationEnvelope, ExactWireMutationEnvelope } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_RETENTION_LIMITS, encodePresencePeer } from "@semio-tech/framework-replication";
 import { type ArtifactState, artifactRuntimeKey, artifacts } from "../🧾️document-state/🟦️.ts";
+import { CONFIG_FACETS, foldConfigFacet } from "../🗂️config-lane/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { closeArtifactRuntime } from "../🛑️session-teardown/🟦️.ts";
 import { documentBackboneAdmissionReady, rejectDocumentBackboneBootstrapAdmission, rejectDocumentBackboneCapacity, rejectLocally, rejectMutationQueueOverflow, rejectReadOnlyExecutionTarget, releaseDocumentBackboneOwnership } from "../📮️hub-outbox/🟦️.ts";
@@ -11,7 +12,7 @@ import { PENDING_MUTATIONS_QUEUE_LIMIT } from "../⚙️constants/🟦️.ts";
 import { folderBinding, setStatus } from "../🎭️actor-lifecycle/🟦️.ts";
 import { relayMutationsToHub, sendWireFrame } from "../🛰️hub-relay/🟦️.ts";
 import { opaqueEnvelopeFromWire, stampSession } from "../🌉️wire-bridge/🟦️.ts";
-import { writeFolder } from "../📁️folder/🟦️.ts";
+import { writeFolder } from "../📁️folder/✍️write/🟦️.ts";
 
 /** 🌱️ A just-opened document's runtime state: nothing linked, nothing pending, no pair, no lease. The ONE constructor —
  * {@link openArtifact} and every law's hand-built state go through it, so a new field is never missing from a test state.
@@ -170,10 +171,6 @@ const folder = folderBinding(state.config);
           console.error("[backbone-worker] folder write failed", state.config.documentId, error);
         }
       }
-      // 📸️ No client -> hub whole-envelope push exists in wire v2 (`ClientFrame` has no snapshot-put
-      // variant, only causally-ordered `Commands`) — mirrors the Rust actor's identical deferral
-      // (`framework/sync/rs/lib.rs` `drain_and_relay`'s `BackboneMessage::Snapshot` arm) rather than
-      // a bug here; the folder write above still persists it.
       break;
     }
     case "presenceHeartbeat":
@@ -183,7 +180,6 @@ const folder = folderBinding(state.config);
       sendWireFrame(state, { PreviewPublish: { key: message.key, seq: message.seq, payload: message.payload } }, "preview");
       break;
     case "externalChanged": {
-      // 🥇️ Routed through the same single-flight guard as the SSE wake / sanity poll (finding 1).
       if (folderBinding(state.config)) void state.revalidateFolder();
       break;
     }

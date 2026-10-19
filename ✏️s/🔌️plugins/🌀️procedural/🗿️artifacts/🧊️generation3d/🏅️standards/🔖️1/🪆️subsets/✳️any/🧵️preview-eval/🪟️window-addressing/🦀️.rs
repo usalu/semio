@@ -231,11 +231,6 @@ pub fn owe_attached_previews_for_mutations<M, C, D>(session: &mut FlowEvalSessio
 /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
 pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], servable: bool, emit: &mut semio_framework_plugin::Emit<M, C, D>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     owe_attached_previews(session, link, windows, grant)?;
-    // ⏰️ Only a job that has NOT settled can be woken into more work: a settled one answers `Complete`
-    // to every wake, so a surface holding one is exactly as unable to pay a fresh debt as a surface
-    // holding none. Reading "a job is attached" as "a run will pick this up" left the edit preview
-    // stale after every gesture that followed a settled evaluation
-    // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
     let woken = link.port.is_some() && link.settled.is_none();
     if !windows.is_empty() && servable && !woken && link.requested.is_none() {
         link.requested = Some((PreviewEvalRunRequest::Start, None));

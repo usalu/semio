@@ -109,7 +109,7 @@ export const terminalStdout = {
         return undefined;
     },
 };
-/** Create isolated browser CLI interfaces without changing compatibility globals. */
+/** ➕️ Create isolated browser CLI interfaces without changing compatibility globals. */
 export function createCli(config = {}) {
     const stdinInstance = inputStreamCreate(config.stdin ?? {
         blockingRead() {

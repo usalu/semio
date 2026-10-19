@@ -104,12 +104,6 @@
       "definition": "pub struct ParentAllocationReturn<const N:usize>"
     },
     {
-      "producer": "semio-framework-value-paged-list",
-      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
-      "canonical": "pub use semio_framework_value_paged_list::list;",
-      "definition": "pub mod list;"
-    },
-    {
       "producer": "semio-framework-value-retirement",
       "consumer": "../../🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
       "canonical": "pub use semio_framework_value_retirement::retirement;",
@@ -144,12 +138,6 @@
       "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
       "canonical": "pub use semio_framework_value_native_encoding::native_encoding;",
       "definition": "pub mod native_encoding;"
-    },
-    {
-      "producer": "semio-framework-value-native-decoding",
-      "consumer": "../../🔨️modules/🌱️value/🦀️.rs",
-      "canonical": "pub use semio_framework_value_native_decoding::native_decoding;",
-      "definition": "pub mod native_decoding;"
     },
     {
       "producer": "semio-framework-value-paged-text",

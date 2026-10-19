@@ -349,12 +349,6 @@ describe("UIIntroduction appearance", () => {
     });
 
     it("keeps a centered box inside the viewport, so its Skip and Next controls stay clickable", () => {
-      // 🧲️ Measured on a 1440×900 boot of the puzzle3d welcome step (`introduce == null`, so the step's
-      // veil holds `pointer-events: auto` over the whole application): the info box landed at
-      // `[-80, -78, 422, 108]` with its `ui.introduction.skip` control at `[287, -78, 55, 31]` — centre
-      // above the top edge, `elementFromPoint` `null`, hence unclickable by a user and by every
-      // actionability-checked click, leaving the app inert (B49 §1). Centering a box measured LARGER than
-      // its viewport is exactly that case, and it must clamp like every anchored branch does.
       const oversized = resolveIntroductionPlacement("center", null, { width: 1585, height: 1041 }, { width: 1425, height: 885 });
       expect(oversized.top).toBeGreaterThanOrEqual(0);
       expect(oversized.left).toBeGreaterThanOrEqual(0);
@@ -364,7 +358,6 @@ describe("UIIntroduction appearance", () => {
     });
 
     it("auto picks the side with the most free space", () => {
-      // 🎓️ Anchor near the top: most free space is below it, so auto should place the box below.
       const nearTop = { top: 0, left: 350, width: 100, height: 20 };
       const placedBelow = resolveIntroductionPlacement("auto", nearTop, boxSize, viewport);
       expect(placedBelow.top).toBeGreaterThan(nearTop.top + nearTop.height);
@@ -475,7 +468,6 @@ describe("UIIntroduction appearance", () => {
       expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 0 })).toEqual({ x: 50, y: 50 });
       expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 10 })).toEqual({ x: 150, y: 50 });
       expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 5 })).toEqual({ x: 100, y: 50 });
-      // 🎚️ Out-of-range values clamp into [min, max] rather than extrapolating past the rect.
       expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 999 })).toEqual({ x: 150, y: 50 });
       unregister();
     });
@@ -495,9 +487,7 @@ describe("UIIntroduction appearance", () => {
       ];
       expect(polylinePointAt(points, 0)).toEqual({ x: 0, y: 0 });
       expect(polylinePointAt(points, 1)).toEqual({ x: 10, y: 10 });
-      // 🪡️ Total length 20 (10 + 10); t=0.25 lands exactly at the corner (5 units along the first segment).
       expect(polylinePointAt(points, 0.25)).toEqual({ x: 5, y: 0 });
-      // t=0.75 is 5 units into the second segment.
       expect(polylinePointAt(points, 0.75)).toEqual({ x: 10, y: 5 });
     });
 
@@ -540,7 +530,6 @@ describe("UIIntroduction appearance", () => {
         ],
         2,
       );
-      // 🪡️ 2 samples of a quad from (0,0) via ctrl (5,10) to (10,0): t=0.5 is the curve's own midpoint.
       expect(quadPoints).toHaveLength(3);
       expect(quadPoints[1].x).toBeCloseTo(5, 5);
       expect(quadPoints[1].y).toBeCloseTo(5, 5);

@@ -11,19 +11,19 @@ use super::*;
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ActionKind {
-    /// Mutates the document — dispatched as VCS mutations with a true inverse, recorded in history.
+    /// 🧬️ Mutates the document — dispatched as VCS mutations with a true inverse, recorded in history.
     Mutation,
-    /// Ephemeral window or session state — recorded in the session command log, never as a VCS edit.
+    /// 📷️ Ephemeral window or session state — recorded in the session command log, never as a VCS edit.
     View,
-    /// Moves the applied stack, the head of the artifact or a reserved history session — injected by the framework or
+    /// 📜️ Moves the applied stack, the head of the artifact or a reserved history session — injected by the framework or
     /// a [`ReservedContribution`], never app-declared.
     History,
-    /// Copies, cuts or pastes through the shell clipboard — framework-injected, never app-declared.
+    /// 📋️ Copies, cuts or pastes through the shell clipboard — framework-injected, never app-declared.
     Clipboard,
-    /// Shell-only effect without a document mutation — recorded in the session command log via dispatch or the
+    /// 🐚️ Shell-only effect without a document mutation — recorded in the session command log via dispatch or the
     /// `noteShellCommand` mechanism.
     Shell,
-    /// Raw pointer interaction of a declared interaction domain — framework-injected, never app-declared.
+    /// 🤝️ Raw pointer interaction of a declared interaction domain — framework-injected, never app-declared.
     Interaction,
 }
 

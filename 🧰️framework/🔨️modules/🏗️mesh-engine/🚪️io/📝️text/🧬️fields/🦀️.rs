@@ -1,7 +1,8 @@
 //! 🎨️ Canonical mesh channel enums own their explicit native spec and ordinal field factories.
 use crate::{MeshAttributeDomain,MeshAttributeSemantic,MeshAttributeInterpolation};
 use semio_framework_dsl_record::{DslField,FieldValue,Shape,NativeSchemaControl};
-use pack::value::{ValueError,ValueRefusalKind,NativeEncodeControl,NativeDecodeControl};
+use pack::value::{ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 macro_rules! channel {
  ($ty:ty,$count:expr,$($case:ident=>$ordinal:literal,$name:literal);+)=>{
   impl DslField for $ty{

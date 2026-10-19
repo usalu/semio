@@ -14,7 +14,7 @@ pub enum ArtifactEphemeralPreparationTaskStep<P> {
 
 /// 🛠️ Constructs one root within each grant; consumed mutations remain in the task or result.
 pub trait ArtifactEphemeralPreparationTask<P, M>: ErasedSnapshotRetirement {
-    fn advance(&mut self, base: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError>;
+    fn advance(&mut self, base: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError>;
     fn begin_close(&mut self);
 }
 
@@ -115,7 +115,7 @@ impl<P, M> ArtifactEphemeralTaskPreparation<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPreparation<P, M> for ArtifactEphemeralTaskPreparation<P, M> {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if self.cancelled || self.closing || !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }

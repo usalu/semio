@@ -167,7 +167,7 @@ fn sqlite_snapshot_rewriting_genuine_controlled_record_covers_actual_recursive_p
         (producer.encoding)(&mut output).unwrap();
         let record = expected.__dsl_to_record_controlled(&mut output).unwrap();
         let mut yes = |_| true;
-        let mut input = semio_framework_value::NativeDecodeControl::new(32 << 20, &mut yes);
+        let mut input = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(32 << 20, &mut yes);
         (producer.decoding)(&mut input).unwrap();
         let actual = Owned::new(RewritingSnapshot::__dsl_from_record_controlled(&record, &mut input).unwrap());
         assert_full(&actual, &expected)

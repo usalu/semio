@@ -79,8 +79,6 @@ fn evaluate_runs_after_tree_change() {
 fn dirty_propagation_only_dispatches_affected_branch() {
     use std::sync::Arc;
     use std::sync::Mutex as StdMutex;
-    // Branch A (default fixture): slider -> add -> preview. Branch B (added here): a second,
-    // disconnected slider -> passThrough, sharing no synapse with branch A.
     let calls: Arc<StdMutex<Vec<String>>> = Arc::new(StdMutex::new(Vec::new()));
     let calls_for_bridge = calls.clone();
     let mut host = FlowHost::default();
@@ -228,11 +226,6 @@ fn image_input_seed_and_preview_content() {
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
-    // 🧵️ A live drag firing many pointer-move ticks used to re-evaluate the whole graph on every
-    // one of them (fine for cheap graphs, a repeated multi-second stall for a heavy one, e.g. a
-    // brep boolean). Dragging alone must never evaluate now — the off-main-thread ticker (outside
-    // `flow`) picks up the changed slider value at its own pace; an explicit `evaluate`
-    // (simulated here) still updates the preview once it runs.
     let mut host = host_with_test_bridge();
     host.set_viewport(800, 600, 1.0);
     let (sx, sy) = widget_slider_track_screen_point(&host, "slider");

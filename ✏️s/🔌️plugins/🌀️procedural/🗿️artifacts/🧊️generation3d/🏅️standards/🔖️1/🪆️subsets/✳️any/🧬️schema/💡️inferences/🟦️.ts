@@ -35,9 +35,9 @@ export interface Generation3dGeometryRecord {
 }
 
 export interface Generation3dInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: Generation3dTopology;
-  /** @derived */
+  /** 🧊️ @derived */
   geometry: Generation3dGeometryRecord;
 }
 

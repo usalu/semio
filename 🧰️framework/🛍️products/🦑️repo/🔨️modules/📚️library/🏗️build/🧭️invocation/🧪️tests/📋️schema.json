@@ -1,5 +1,10 @@
 {
  "$schema":"http://json-schema.org/draft-07/schema#",
- "type":"object","additionalProperties":false,"required":["version","help"],
- "properties":{"version":{"const":1},"help":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["args","expected"],"properties":{"args":{"type":"array","items":{"type":"string"}},"expected":{"type":"boolean"}}}}}
+ "type":"object","additionalProperties":false,"required":["version","help","originalModeCases","fixedTargetCases"],
+ "properties":{
+  "version":{"const":1},
+  "help":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["args","expected"],"properties":{"args":{"type":"array","items":{"type":"string"}},"expected":{"type":"boolean"}}}},
+  "originalModeCases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","args","authored","inherited","expected"],"properties":{"id":{"type":"string","minLength":1},"args":{"type":"array","minItems":2,"items":{"type":"string"}},"authored":{"enum":["prototype","release",null]},"inherited":{"enum":["prototype","release",null]},"expected":{"enum":["prototype","release",null]}}}},
+  "fixedTargetCases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","mode"],"properties":{"name":{"type":"string"},"mode":{"enum":["prototype","release",null]}}}}
+ }
 }

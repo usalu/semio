@@ -1,15 +1,15 @@
-//! part rows draggable onto the board (and clickable to place through `addPartKind`) — a catalogue
+//! 🧩️ part rows draggable onto the board (and clickable to place through `addPartKind`) — a catalogue
 //! 🛍️ Puzzle 5d play app panel — the kind catalogue: the part/grip/fastener/rope kind rows, with the
 //! row owns its own binding, so it stays an ordinary interactive row.
 //!
 //! 🪟️ All four sections are windowed: each publishes its full `total` and materialises only the
 //! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
-use crate::editor::puzzle5d::interaction::ui_label;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::ui_label;
 
-use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::catalog::{catalog_kind_label, puzzle5d_inferred_kind_rows};
-use crate::editor::puzzle5d::view::Puzzle5dScene;
-use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::Puzzle5dLabels;
+use semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::catalog::{catalog_kind_label, puzzle5d_inferred_kind_rows};
+use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::Puzzle5dScene;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::ActionFactory;

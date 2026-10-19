@@ -2,16 +2,6 @@
   "name": "@teaching/architecture-course",
   "metadata": {
     "semio": {
-      "preflight": {
-        "version": 1,
-        "platform": "linux",
-        "architecture": "x64",
-        "distribution": "debian",
-        "distributionVersion": "12",
-        "minimumAvailableBytes": 77309411328,
-        "minimumFreeLoops": 7,
-        "tools": ["fallocate", "mkfs.ext4", "mount", "umount", "losetup", "cc", "pkg-config", "docker"]
-      },
       "dashboard": {
         "compounds": [
           {
@@ -35,6 +25,22 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**",
+      "sharedGlobals",
+      {
+        "externalDependencies": [
+          "@noble/hashes",
+          "ajv",
+          "jsonc-parser",
+          "picomatch",
+          "resolve.exports",
+          "tar-stream",
+          "typescript",
+          "vite",
+          "vitest",
+          "yaml"
+        ]
+      },
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🟦️.ts",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🌐️.html",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🎨️.css",
@@ -58,7 +64,17 @@
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
-      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*"
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/README.md",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/README.md",
+      "{workspaceRoot}/.github/workflows/architecture-course.yml",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"
     ]
   },
   "targets": {
@@ -207,6 +223,9 @@
         "forwardAllArgs": true
       },
       "cache": true,
+      "inputs": [
+        "default"
+      ],
       "outputs": []
     },
     "test-e2e": {
@@ -249,7 +268,14 @@
         "command": "bun ./📜️script.ts typecheck",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
+      "inputs": [
+        "default",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": false
+        }
+      ],
       "outputs": []
     },
     "check": {

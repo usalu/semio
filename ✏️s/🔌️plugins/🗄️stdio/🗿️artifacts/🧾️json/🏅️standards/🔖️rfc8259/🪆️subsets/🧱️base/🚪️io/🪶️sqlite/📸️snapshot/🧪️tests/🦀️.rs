@@ -190,12 +190,12 @@ fn sqlite_snapshot_json_controlled_flat_binding_admits_storage_and_topology_befo
  let(fixture,_)=fixture();let count=fixture["controlledNative"]["nodes"].as_u64().unwrap()as usize;
  let source=JsonSnapshot{schema:fixture["logicalNative"]["schema"].as_str().unwrap().into(),value:JsonValue::Array{items:(0..count).map(|_|JsonValue::Number{lexeme:"NaN".into()}).collect()}};
  let payload=pack::snapshot::ArtifactDsl::print_dsl(&source);let(_,body)=store::semio_format::split_text_preamble(&payload).unwrap();let record=semio_framework_dsl_record::parse(body,&<JsonSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap(),&semio_framework_dsl_record::ParseOptions::default()).unwrap();
- let mut proceed=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;
- assert_eq!(owned_pack::reconstruct_record(&record,&mut semio_framework_value::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10_000).unwrap(),source);
- assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10).is_err());
- assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value::native_decoding::NativeDecodeControl::new(4096,&mut proceed),10_000).is_err());
- let mut observed=0;let mut cancel=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{observed=event.completed;event.completed<256};assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value::native_decoding::NativeDecodeControl::new(1_000_000,&mut cancel),10_000).is_err());assert_eq!(observed,256);
- let payload="schema=owned nodes=[{kind=array items=[0] members=[]}]";let record=semio_framework_dsl_record::parse(payload,&<JsonSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap(),&semio_framework_dsl_record::ParseOptions::default()).unwrap();assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10_000).is_err());
+ let mut proceed=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+ assert_eq!(owned_pack::reconstruct_record(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10_000).unwrap(),source);
+ assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10).is_err());
+ assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut proceed),10_000).is_err());
+ let mut observed=0;let mut cancel=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{observed=event.completed;event.completed<256};assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1_000_000,&mut cancel),10_000).is_err());assert_eq!(observed,256);
+ let payload="schema=owned nodes=[{kind=array items=[0] members=[]}]";let record=semio_framework_dsl_record::parse(payload,&<JsonSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap(),&semio_framework_dsl_record::ParseOptions::default()).unwrap();assert!(owned_pack::reconstruct_record(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1_000_000,&mut proceed),10_000).is_err());
 }
 
 #[test]

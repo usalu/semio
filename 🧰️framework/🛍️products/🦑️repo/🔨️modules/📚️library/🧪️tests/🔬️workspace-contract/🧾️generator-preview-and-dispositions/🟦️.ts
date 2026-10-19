@@ -14,6 +14,7 @@ import { planTaxonomy } from "../../../🧹️normalization/🧠️planning/🟦
 import { repositoryLocalSymlinkTargetPath } from "../../../🧹️normalization/➰️symlink-targets/🟦️.ts";
 import { taxonomyPlanDigest } from "../../../🧹️normalization/🗃️affected-state/🟦️.ts";
 import { taxonomyPlatformPathViolationCodes } from "../../../🧹️normalization/👥️mutation-projection/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { type TaxonomyPlan } from "../../../🧹️normalization/📜️plan-contracts/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort } from "../../🔍️filesystem/🟦️.ts";
@@ -216,7 +217,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy transaction dispositions v2", ()
     expect(Object.keys(sentinelCases).sort()).toEqual(["schemaVersion", "symlinkFlavorCases", "virtualPathPolicyCases"]);
     expect(Object.keys(dispositionOutcomes).sort()).toEqual(["affectedStateCases", "expectedDispositionOperations", "negativeDispositionCases", "schemaVersion"]);
     expect(Object.keys(protocol).sort()).toEqual(["failureStages", "journalStates", "schemaVersion", "virtualPreimageNodes"]);
-    for (const row of sentinelCases.virtualPathPolicyCases) expect(taxonomyPlatformPathViolationCodes(row.inputPath)).toContain(row.expectedViolationCode);
+    for (const row of sentinelCases.virtualPathPolicyCases) expect(taxonomyPlatformPathViolationCodes(row.inputPath, loadCatalogTaxonomy().collisionPolicy)).toContain(row.expectedViolationCode);
     for (const row of sentinelCases.symlinkFlavorCases) expect(repositoryLocalSymlinkTargetPath(row.repositoryRoot, row.target) !== null).toBe(row.owned);
     expect(dispositionOutcomes.expectedDispositionOperations).toEqual({ embeddedTicketRoots: 3, embeddedTicketRootRelocations: 4, evidenceRemovals: 2, operationFamilies: ["moves", "embeddedTicketRoots", "embeddedTicketRootRelocations", "symlinkTargetEdits", "evidenceRemovals", "edits", "regenerations"] });
     expect(protocol.failureStages).toEqual(["after-staging", "after-embedded-root-staging", "after-moves", "after-relocations", "after-symlink-retargeting", "after-edits", "after-regenerations", "before-verify"]);

@@ -239,7 +239,6 @@ fn table_soa_round_trips_with_sparse_columns() {
     row0.insert(4, FieldValue::Bool(true));
     let mut row1 = RecordValue::default().fields;
     row1.insert(1, FieldValue::UInt(20));
-    // row1 omits "name" (sparse Text column) and "active" (sparse Bool column).
     row1.insert(3, FieldValue::Float(-9.5));
     let mut fields = RecordValue::default().fields;
     fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row0 }), FieldValue::Record(RecordValue { fields: row1 })]));
@@ -267,8 +266,6 @@ fn table_soa_nested_record_column_backfills_absent_option_subfield() {
     let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(ordinary_fixture_spec!(table_row_with_nested_record_spec)))]);
     let mut header_fields = RecordValue::default().fields;
     header_fields.insert(1, FieldValue::Text("Stakeholder A".to_string()));
-    // "description" (field 2, Option<Text>) is intentionally omitted from the fixture — it
-    // encodes as `Absent` and canonical-mode compaction drops it from the wire entirely.
     let mut row = RecordValue::default().fields;
     row.insert(1, FieldValue::UInt(1));
     row.insert(2, FieldValue::Record(RecordValue { fields: header_fields }));
@@ -329,9 +326,6 @@ fn wire_literal_round_trips_bare_node_and_undirected_edge() {
 fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
     let spec = full_spec();
     let record_a = full_record();
-    // Rebuild an equal `RecordValue` by inserting fields in a deliberately different order —
-    // `HashMap` insertion order never affects iteration order anyway, but this at minimum
-    // proves two independent builds of an equal value encode identically, twice in a row.
     let mut shuffled_fields = RecordValue::default().fields;
     let mut ids: Vec<u16> = record_a.fields.keys().copied().collect();
     ids.sort_unstable_by(|a, b| b.cmp(a));
@@ -365,8 +359,6 @@ fn schema_hash_is_order_independent_and_content_sensitive() {
 fn unknown_field_round_trips_through_decode_then_reencode() {
     let full = full_spec();
     let mut record = full_record();
-    // Add a field id absent from `narrow_spec` below but present in `full` for the initial
-    // encode, simulating "a writer on a newer schema version wrote an extra field".
     record.fields.insert(200, FieldValue::Text("extra field payload".to_string()));
     record.fields.insert(201, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
 
@@ -377,8 +369,6 @@ fn unknown_field_round_trips_through_decode_then_reencode() {
 
     let bytes = encode_document(&widened_spec, &record, &EncodeOptions::default()).expect("encode with widened spec");
 
-    // Decode against the NARROW spec (doesn't know fields 200/201) — they must still decode
-    // and be reported as unknown.
     let (decoded, report) = decode_document(&bytes, &full, &DecodeOptions::default()).expect("decode with narrow spec");
     let mut unknown_sorted = report.unknown_field_ids;
     unknown_sorted.sort_unstable();
@@ -386,7 +376,6 @@ fn unknown_field_round_trips_through_decode_then_reencode() {
     assert_eq!(decoded.get(200), Some(&FieldValue::Text("extra field payload".to_string())));
     assert_eq!(decoded.get(201), Some(&FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)])));
 
-    // Re-encode the decoded (narrow-spec) RecordValue — the unknown fields must survive.
     let reencoded = encode_document(&full, &decoded, &EncodeOptions::default()).expect("re-encode");
     let (decoded_again, report_again) = decode_document(&reencoded, &full, &DecodeOptions::default()).expect("decode again");
     assert_eq!(decoded_again.get(200), Some(&FieldValue::Text("extra field payload".to_string())));

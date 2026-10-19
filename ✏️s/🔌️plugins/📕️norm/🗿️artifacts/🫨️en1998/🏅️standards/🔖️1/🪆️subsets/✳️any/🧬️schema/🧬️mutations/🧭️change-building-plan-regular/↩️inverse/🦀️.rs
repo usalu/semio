@@ -1,4 +1,4 @@
-//! Inverse for `change-building-plan-regular`.
+//! ↩️ Inverse for `change-building-plan-regular`.
 use crate::change_building_plan_regular::ChangeBuildingPlanRegular;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

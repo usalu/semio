@@ -1,4 +1,4 @@
-//! Diff for `insert-column`.
+//! 🔺️ Diff for `insert-column`.
 use crate::insert_column::InsertColumn;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994ColumnsRows, En1994ColumnsInserted};

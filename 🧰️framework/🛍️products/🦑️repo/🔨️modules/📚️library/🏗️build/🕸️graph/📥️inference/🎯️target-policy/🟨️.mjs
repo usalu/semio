@@ -3,11 +3,11 @@ import { conformsOwnerContractV1 } from "../../../📤️arguments/🟨️.mjs";
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "target-policy";
-let POLICY, targetExecutionSchema, DEFAULT_EXECUTOR;
+let POLICY, targetExecutionSchema, targetCacheSchema, DEFAULT_EXECUTOR;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({ POLICY, targetExecutionSchema, DEFAULT_EXECUTOR } = registry.coordinates);
+  ({ POLICY, targetExecutionSchema, targetCacheSchema, DEFAULT_EXECUTOR } = registry.coordinates);
 }
 
 const matchesCommand = (name, commands) => commands.some((command) => name === command || name.startsWith(`${command}-`));
@@ -17,13 +17,39 @@ export const liveName = (name) => /(?:^|-)(?:e2e|live)(?:-|$)/.test(name);
 export const verifyCommand = (target) => /(?:^|[\s"'])verify(?:[\s"']|$)/.test(target?.options?.command ?? "");
 export const cacheableFamily = (name) => /^(test(?:-|$)|check(?:-|$)|lint(?:-|$)|typecheck(?:-|$)|format-check(?:-|$)|generate(?:-|$)|schema(?:-|$)|verify(?:-|$)|stdio(?:-|$)|build(?:-|$)|wasm$|native-build$|package$|extension-package$|cpp-(?:configure|build|test)$|graph-check$|policy-check$|artifact-check$|artifact-package-contract$|toolchain$)/.test(name) || /(?:^|-)contract(?:-|$)/.test(name) || /^generator(?:-|$)/.test(name) && !name.includes("generator-inputs");
 
+const cacheDecisions = new Map();
+
+/** 💾️ Admits one cache decision against the closed schema once and shares the frozen record between every target that carries it.
+ * @see ../../../../🏗️build/🏃️execution/🧬️schema/💾️cache.json */
+export function cacheDecisionV1(decisionClass, reason) {
+  const key = decisionClass + "\0" + reason, known = cacheDecisions.get(key);
+  if (known) return known;
+  const value = Object.freeze({ version: 1, class: decisionClass, reason }), schema = Object.values(targetCacheSchema.definitions).find(definition => definition.properties.class.const === decisionClass);
+  if (!schema || !conformsOwnerContractV1(schema, value)) throw Error(`Repository target cache decision refused: ${decisionClass}/${reason}`);
+  cacheDecisions.set(key, value);
+  return value;
+}
+
+/** 🔖️ Records why a target replays or always executes next to its execution contract. */
+export function withCacheDecision(target, decisionClass, reason) {
+  return { ...target, metadata: { ...target.metadata, semio: { ...target.metadata?.semio, cache: cacheDecisionV1(decisionClass, reason) } } };
+}
+
+/** 🧭️ Names the physical fact behind a workspace-policy refusal to replay. */
+export function uncachedDecisionV1(name) {
+  if (/(?:^|-)(?:e2e|live)(?:-|$)/.test(name) || name === "os" || name === "semio") return ["live", "drives-running-process"];
+  if (/^(?:audit|bench|cache-report|cache-verify|ci-baseline|disk-report|doctor|perf-baseline|test-doctor|test-inventory|parity)(?:-|$)/.test(name)) return ["diagnostic", "measures-environment"];
+  if (/^(?:publish|deploy)(?:-|$)/.test(name)) return ["side-effecting", "publishes-remote"];
+  return ["side-effecting", "mutates-workspace"];
+}
+
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
 export function targetPolicy(name, target, policy = POLICY) {
-  if (matchesCommand(name, policy.continuous)) return { ...target, cache: false, continuous: true };
+  if (matchesCommand(name, policy.continuous)) return withCacheDecision({ ...target, cache: false, continuous: true }, "continuous", "serves-until-stopped");
   if (target.cache === false) return { inputs: ["default"], outputs: [], ...target, cache: false };
-  if (matchesUncached(name, policy)) return { ...target, cache: false };
+  if (matchesUncached(name, policy)) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(name));
   if (policy.cachedExact.includes(name)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
-  if (mutatingName(name) || liveName(name)) return { ...target, cache: false };
+  if (mutatingName(name) || liveName(name)) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(name));
   if (cacheableFamily(name) || verifyCommand(target)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
   return { ...target, cache: target.cache !== false };
 }

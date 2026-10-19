@@ -429,9 +429,6 @@ class Writer {
 
 /** 🎒️ The committed binary envelope and the pack frame the Kaitai mirror describes. */
 export function parsePack(input: Uint8Array): Snapshot {
-  // 🧷️ A host hands these bytes over as a Node `Buffer`, whose `slice` is a VIEW into a shared pool
-  // rather than a copy — reading a `DataView` off `.buffer` would then read from the pool's start.
-  // One copy up front makes every offset below mean what it says.
   const data = Uint8Array.from(input);
   for (let at = 0; at < BINARY_MAGIC.length; at += 1) if (data[at] !== BINARY_MAGIC[at]) throw new Error("the binary envelope magic is not the semio magic");
   const tokenLength = new DataView(data.slice(8, 12).buffer).getUint32(0, true);

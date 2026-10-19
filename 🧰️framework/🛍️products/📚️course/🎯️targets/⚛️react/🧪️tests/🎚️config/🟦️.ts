@@ -11,7 +11,7 @@ const root = resolve(target, "📦️packages/🟦️typescript");
 const product = resolve(target, "../..");
 const repoRoot = resolve(product, "../../..");
 
-/** @emoji 🧪️ Vitest for `@semio-tech/course-react`: the web client's cases under the product's `🧪️tests`, run in jsdom. */
+/** 🧪️ Vitest for `@semio-tech/course-react`: the web client's cases under the product's `🧪️tests`, run in jsdom. */
 export default defineConfig(async () => ({
   root,
   cacheDir: process.env.SEMIO_TICKET_DIR ? resolve(process.env.SEMIO_TICKET_DIR, "🗑️generated", "vitest-course-react-cache") : undefined,
@@ -42,7 +42,10 @@ export default defineConfig(async () => ({
       "../../../../🧪️tests/🥇️home-leaderboards/🟦️.tsx",
       "../../../../🧪️tests/📱️home-text-and-viewport/🟦️.tsx",
       "../../../../🧪️tests/🖼️task-icons/🟦️.tsx",
-      "../../../../🧪️tests/📡️presence-client/🟦️.tsx",
+      "../../../../🧪️tests/🚪️presence-room/🟦️.tsx",
+      "../../../../🧪️tests/🧭️presence-places-and-rooms/🟦️.tsx",
+      "../../../../🧪️tests/🖱️pointer-and-focus/🟦️.tsx",
+      "../../../../🧪️tests/🪟️presence-screens/🟦️.tsx",
       "../../../../🧪️tests/👀️follow/🟦️.tsx",
       "../../../../🧪️tests/💭️crowd-client/🟦️.tsx",
       "../../../../🧪️tests/🌍️language-choice/🟦️.tsx",

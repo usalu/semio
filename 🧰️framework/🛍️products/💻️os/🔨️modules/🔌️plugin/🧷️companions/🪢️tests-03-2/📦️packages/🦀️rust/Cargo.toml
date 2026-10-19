@@ -37,6 +37,7 @@ semio-framework-plugin-reactor-patches = { path = "../../../../⚛️reactor/�
 semio-framework-plugin-reactor-surfaces = { path = "../../../../⚛️reactor/📥️cold-pair/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-reactor-turn = { path = "../../../../⚛️reactor/🔄️turn/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-turn-limits = { path = "../../../../⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-wit-bridge = { path = "../../../../⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust" }
 semio-framework-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
 semio-framework-plugin-test-support = { path = "../../../🧯️test-support/📦️packages/🦀️rust" }
@@ -58,6 +59,9 @@ serde_json = "1.0.140"
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-core = { path = "../../../../⚛️reactor/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-reconcile = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-presentation = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/🖼️presentation/📦️packages/🦀️rust" }
 
 [features]
 media-turn-testing = []

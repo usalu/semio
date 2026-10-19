@@ -215,7 +215,7 @@ const FLOW_STORE_COLD_CLOSE_STEPS: usize = 1_000_000;
 const FLOW_STORE_COLD_CLOSE_PAGE_BYTES: usize = 4_096;
 
 //// 🧊️ Explicit cold-only disposal of a detached flow store — the store-level twin of
-/// [`FlowHostSnapshot::retire_cold`].
+/// ➖️ [`FlowHostSnapshot::retire_cold`].
 ///
 /// 🐛️ `ArtifactStore`'s `Drop` asserts a terminal-empty shallow shell, and only the owner-supplied
 /// disposer installed by [`FlowHostSnapshot::member_store_owners`] empties it, so a store built for the

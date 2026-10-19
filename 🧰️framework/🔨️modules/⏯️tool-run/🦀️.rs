@@ -21,21 +21,6 @@ use semio_framework_ui_locale::LocalizedLabel;
 #[path="🎞️tick/🛬️receive/🎟️limits/🦀️.rs"]
 mod receiving_limits;
 pub use receiving_limits::{ToolRunRecordReadLimits,ToolRunHistoryReadLimits,ToolRunReceivingLimits};
-#[path="🎞️tick/🛬️receive/🪪️identity/🦀️.rs"]
-mod identity_receiving;
-pub use identity_receiving::ToolRunIdentityReceiving;
-#[path="🎞️tick/🛬️receive/📝️step/🦀️.rs"]
-mod step_receiving;
-pub use step_receiving::ToolRunStepReceiving;
-#[path="🎞️tick/🛬️receive/🏗️native/🦀️.rs"]
-mod native_tick_preparation;
-pub use native_tick_preparation::{ToolRunNativeTickPreparation,ToolRunReceivedTick,ToolRunReceivedTickSource,ToolRunReceivedProgress,ToolRunReceivedTracePage};
-#[path="🎞️tick/🛬️receive/🔢️entities/🦀️.rs"]
-mod entity_column_receiving;
-pub use entity_column_receiving::ToolRunEntityColumnReceiving;
-#[path="🎞️tick/🛬️receive/📊️progress/🦀️.rs"]
-mod progress_receiving;
-pub use progress_receiving::{ToolRunProgressReceiving,ToolRunReceivedProgressSource};
 
 #[path="📊️progress/📸️clone/🦀️.rs"]
 pub mod progress_clone;
@@ -49,20 +34,10 @@ pub mod tick_source;
 #[doc(hidden)]
 pub mod testkit {
     pub use super::tick_source;
-
-    pub mod progress_receiving {
-        pub use super::super::progress_receiving::Phase;
-    }
-
-    pub mod entity_column_receiving {
-        pub use super::super::entity_column_receiving::Phase;
-    }
 }
 #[path="📨️payload/🌊️stream/🦀️.rs"]
 pub mod payload_stream;
 use payload_stream::ToolRunPayloadUpdate;
-#[path="🎞️tick/🛬️receive/🦀️.rs"]
-pub mod tick_receive;
 //#region 🔖️Limits
 /// 💍️ Newest steps kept by a `ToolRunStepRing`.
 pub const TOOL_RUN_STEP_RING_CAPACITY: usize = 64;
@@ -181,6 +156,3 @@ pub use actions_labels::*;
 #[path="♻️retirement/🦀️.rs"]
 mod original_retirement;
 
-#[path="🎞️tick/🛫️encode/🦀️.rs"]
-mod original_tick_encoding;
-pub use original_tick_encoding::{ToolRunTickWireCursor,ToolRunTickPayloadSource};

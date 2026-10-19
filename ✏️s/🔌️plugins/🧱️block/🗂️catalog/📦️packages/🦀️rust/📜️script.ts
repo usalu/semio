@@ -1,7 +1,12 @@
 #!/usr/bin/env bun
 /** 🗂️ Runs Block catalog native and portable ownership laws. */
-import {resolve} from "node:path";
-import { runArtifactRustPackageMain } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {runOwnedCommand} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-const [command,...args]=process.argv.slice(2);
-if(command==="conformance"){if(args.length)throw Error("conformance accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(import.meta.dir,"../../🧪️tests/🟦️.ts")],resolve(import.meta.dir,"../../../../../.."),"block-catalog-conformance",45000,{env:process.env});}else await runArtifactRustPackageMain(import.meta.dir,"semio-s-plugin-block-catalog");
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+/** 🚪️ `conformance` — runs the program of this script. */
+class ConformanceScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("conformance", ConformanceScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

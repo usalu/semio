@@ -1,7 +1,7 @@
 //! 🗂️ Paid borrowed row indexes preserve literal ownership and dense authored relationship order.
 use super::*;
 use store::sqlite_snapshot::SqliteTable;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::cmp::Ordering;
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Key{Body,List,Header}

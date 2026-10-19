@@ -36,7 +36,7 @@ impl RunSink {
     }
 
     pub async fn record(&mut self, operation: RunMutation) -> Result<(), RunError> {
-        self.document = semio_framework_artifact_workflow_run::apply_run_operation_checked(&self.document, operation.clone()).await.map_err(RunError::MutationRefused)?;
+        self.document = semio_framework_artifact_workflow_run_admission::apply_run_operation_checked(&self.document, operation.clone()).await.map_err(RunError::MutationRefused)?;
         self.mutations.push(operation);
         Ok(())
     }

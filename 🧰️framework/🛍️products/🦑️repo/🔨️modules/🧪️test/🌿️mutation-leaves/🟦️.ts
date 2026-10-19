@@ -143,9 +143,7 @@ export function readLeafDescriptors(repoRoot: string, owner: string): Map<string
     try {
       const parsed = JSON.parse(readFileSync(descriptorPath, "utf8")) as MutationLeafDescriptor;
       if (typeof parsed.semanticKind === "string" && Array.isArray(parsed.outcomeClasses)) found.set(parsed.semanticKind, parsed);
-    } catch {
-      /* 🧭️A malformed descriptor is the derive's own gate to report; it fails the build. */
-    }
+    } catch {}
   }
   return found;
 }
@@ -265,10 +263,6 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   const vocabulary = join(repoRoot, ownerRel, schemaModuleDirName(repoRoot), taxonomy.testMutationVocabularyDirName);
   const leafAbs = join(vocabulary, leafDirName);
   const leafRel = `${ownerRel}/${schemaModuleDirName(repoRoot)}/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
-  // 🍃️A two-segment leaf (`<domain>/<verb>`) is named by its OWN directory, never by the grouping
-  // directory above it: `🌳️node/⚖️change-weights` declares `change-node-morph-weights`, which no
-  // concatenation of the two segments produces. The scaffolder therefore refuses such a leaf rather
-  // than inventing a kind — the leaf's descriptor is the authority, and this tool exists to write one.
   const leafName = leafDirName.split("/").at(-1) ?? leafDirName;
   const kind = leafName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
   const emoji = kind.length > 0 ? leafName.slice(0, leafName.length - kind.length) : "";
@@ -278,17 +272,10 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   if (kind.length === 0) refused.push("semanticKind: the directory name does not end in a two-or-more-segment kebab identifier");
   if (emoji.length === 0) refused.push("emoji: the directory name carries no leading emoji");
 
-  // 🦀️The payload struct, and therefore the aggregate variant, is whatever the leaf actually declares.
-  // 🧭️`🧬️operation` is the same payload directory under a rename a concurrent session is applying; both
-  // spellings are READ here so a half-migrated tree is still measurable. Nothing is written under either.
   const mutationSource = readFirst([join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️.rs")]);
   let aggregateVariant = "";
   if (mutationSource === null) refused.push("aggregateVariant: the leaf declares no Rust source");
   else {
-    // 📄️`set-snapshot` is the whole-document replace, and its payload IS the artifact's snapshot type —
-    // there is no dedicated struct to find, which is why all 50 of these refused. The type is stated in
-    // the leaf's own apply signature (`apply(projection: &mut DwgSnapshot, …)`), so it is read from
-    // there rather than assumed, and the variant follows the name the aggregate already uses for it.
     const snapshotApply = mutationSource.text.match(/fn apply\s*\(\s*[a-z_]+\s*:\s*&mut\s+([A-Za-z0-9_]+)/)?.[1] ?? "";
     const declared = mutationSource.text.match(/^pub struct ([A-Za-z0-9_]+)/m)?.[1] ?? mutationSource.text.match(/^pub enum ([A-Za-z0-9_]+)/m)?.[1] ?? (kind === "set-snapshot" && snapshotApply.length > 0 ? "SetSnapshot" : "");
     if (declared.length === 0) refused.push(`aggregateVariant: no \`pub struct\` in ${relative(repoRoot, mutationSource.path).split(sep).join("/")}`);
@@ -299,11 +286,6 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
     }
   }
 
-  // 🎯️OUTCOME CLASSES, from the diff implementation. This is the field the whole exercise exists for.
-  // 🔺️The diff is not always a SUBDIRECTORY. In the taxonomy's canonical leaf layout — the one the
-  // `MutationLeaf` derive requires, and the one this migration produces — payload, diff and inverse all
-  // live in the leaf's single `🦀️.rs`. 315 leaves are already in that shape, and reading only
-  // `🔺️diff/` refused every one of them for evidence that was sitting in the file next door.
   const diffSource = readFirst([join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️.rs")]);
   const outcomes = new Set<MutationOutcomeClass>();
   if (diffSource === null) refused.push("outcomeClasses: the leaf declares no 🔺️diff implementation to read them from");
@@ -328,11 +310,6 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
     else evidence.outcomeClasses = `${relative(repoRoot, diffSource.path).split(sep).join("/")} — ${cite.join(", ")}`;
   }
 
-  // 🎯️SECOND EVIDENCE SOURCE, used when the leaf has no 🔺️diff to read: the committed mutation vectors.
-  // Every scenario bundle records what the implementation ACTUALLY produced in its `🎯️outcome`, so the
-  // union across a leaf's scenarios is a lower bound on the classes it reaches — observed behaviour
-  // rather than inferred behaviour. It is a LOWER bound and the evidence string says so, because a
-  // class no committed scenario exercises is invisible here.
   if (outcomes.size === 0) {
     const scenarios = join(leafAbs, taxonomy.testsDirName);
     if (existsSync(scenarios)) {
@@ -347,9 +324,7 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
             outcomes.add(status);
             observed.push(`${scenario.name}=${status}`);
           }
-        } catch {
-          /* 🧭️A malformed vector is the vector audit's finding, not this one's. */
-        }
+        } catch {}
       }
       if (observed.length > 0) {
         const index = refused.findIndex((why) => why.startsWith("outcomeClasses"));
@@ -359,7 +334,6 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
     }
   }
 
-  // 🔢️The binary tag is declared once, in the owner's binary protocol, and must stay that number.
   const binaryProtocol = readFirst([join(vocabulary, "💾️binary", "📡️.protocol.semio"), join(vocabulary, "💾️binary", "📡️.protocol.semio")]);
   let binaryTag: number | null = null;
   if (binaryProtocol !== null) {
@@ -369,22 +343,11 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
       binaryTag = Number(lines[line]!.match(/tag=(\d+)/)![1]);
       evidence.binaryTag = `${relative(repoRoot, binaryProtocol.path).split(sep).join("/")}:${line + 1}`;
     } else {
-      // 🔢️A binary surface that does not carry this kind is STALE, and inventing a tag would put a
-      // wire number into production registration that nothing on the wire agrees with. The CAD binary
-      // protocol is exactly this case: it still lists the fourteen verbs retired in ticket
-      // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 3 and none of the twenty that replaced them.
-      // 🔢️A STALE wire protocol is real drift and is reported as such — every one of the hundred owners
-      // that has a binary protocol is missing records, 1 361 kinds in total. But it is NOT a reason to
-      // block this mutation from being testable: the descriptor contract permits a null `binaryTag`,
-      // the two concerns are orthogonal, and conflating them would hold subset-scoped external-oracle
-      // coverage hostage to a wire format nothing in the test path reads. The drift is surfaced by
-      // `binaryProtocolDriftBreaches` instead, where it can be acted on without blocking anything.
       const declared = lines.filter((candidate) => /^record\s/.test(candidate)).length;
       evidence.binaryTag = `null — ${relative(repoRoot, binaryProtocol.path).split(sep).join("/")} declares ${declared} record(s) and none is ${JSON.stringify(kind)}; the wire protocol is stale for this vocabulary`;
     }
   }
 
-  // 🔤️The text opcode is the DSL keyword the payload declares, not an assumption about its name.
   let textOpcode: string | null = null;
   if (mutationSource !== null) {
     const keyword = mutationSource.text.match(/#\[dsl\(keyword\s*=\s*"([a-z0-9-]+)"\)\]/)?.[1];
@@ -399,10 +362,6 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   const hasPlan = existsSync(join(leafAbs, "🧩️plan"));
   const hasText = existsSync(join(vocabulary, "📝️text"));
   const hasBinary = binaryProtocol !== null;
-  // 🧬️ONE payload-schema convention, and it is the taxonomy's: `mutationPayloadSchemaLocation` puts a
-  // leaf's payload contract at `🧬️schema/<json>` beside the leaf, and the descriptor points at exactly
-  // that path. A second accepted spelling made "which file is the contract" depend on which one
-  // happened to exist, which is the same as having no owner at all.
   const canonicalPayloadSchema = payloadSchemaRelativePath(repoRoot);
   const hasSchema = existsSync(join(leafAbs, canonicalPayloadSchema));
   const payloadSchema = hasSchema ? canonicalPayloadSchema : "";
@@ -411,8 +370,6 @@ export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafD
   evidence.diffParticipation = diffSource === null ? "no 🔺️diff facet" : "🔺️diff facet present";
   evidence.requiredLanguageSurfaces = `facets present: rust${hasSchema ? `, ${payloadSchema}` : ""}${hasText ? ", 📝️text" : ""}${hasBinary ? ", 💾️binary" : ""}`;
 
-  // 🧬️The payload schema is a taxonomy LOCATION, not a guess. A leaf without one has no payload
-  // contract to point at, and that absence is reported rather than filled in from somewhere else.
   if (!hasSchema) refused.push(`payloadSchema: the leaf carries no ${canonicalPayloadSchema}, so there is no payload contract to reference`);
   if (refused.length > 0) return { leaf: leafRel, kind, descriptor: null, evidence, refused };
 
@@ -533,9 +490,6 @@ export function resolvePayloadSchema(repoRoot: string, ownerRel: string, leafDir
   const descriptorFile = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
   const leafRel = `${ownerRel}/${schemaModuleDirName(repoRoot)}/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
   const descriptor = readJson(join(repoRoot, leafRel, descriptorFile)) as MutationLeafDescriptor | undefined;
-  // 🧬️The DESCRIPTOR names the kind; the directory only hints at it. A two-segment leaf
-  // (`🌳️node/⚖️change-weights` → `change-node-morph-weights`) has no kind derivable from its path at all,
-  // so reading the declaration first is what makes such a leaf reportable under its own name.
   const kind = typeof descriptor?.semanticKind === "string" && descriptor.semanticKind.length > 0 ? descriptor.semanticKind : leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
   if (descriptor === undefined) return { leaf: leafRel, kind, declared: "", path: null, schema: null, refused: [`the leaf carries no ${descriptorFile} descriptor, so nothing declares its payload contract`] };
   const declared = typeof descriptor.payloadSchema === "string" ? descriptor.payloadSchema : "";

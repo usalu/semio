@@ -9,7 +9,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
 import { mkdir, readFile, readdir, rename, writeFile, rm } from "node:fs/promises";
 import { createServer, type Socket } from "node:net";
-import { tmpdir } from "node:os";
+import { tmpdir, totalmem } from "node:os";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,19 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🎟️ The admission policy constants: reserve, prediction headroom, cold-start model and feedback thresholds. */
 export const ADMISSION_POLICY_V1 = schema.definitions.Policy.const;
+
+/** 🧠️ Bounds physical memory by an actual positive process constraint; zero reports no known bound. */
+export function admissionMemoryBytesV1(physicalBytes=totalmem(),constrainedBytes=process.constrainedMemory()):number{
+ if(!Number.isSafeInteger(physicalBytes)||physicalBytes<1||!Number.isSafeInteger(constrainedBytes)||constrainedBytes<0)throw Error("Actual finite memory capacity required");
+ return constrainedBytes>0?Math.min(physicalBytes,constrainedBytes):physicalBytes;
+}
+
+/** ⚖️ Shares effective memory after the unchanged reserve without reconstructing capacity above its real bound. */
+export function admissionMemoryShareV1(effectiveBytes:number,tokens:number,parallelism:number):number{
+ if(![effectiveBytes,tokens,parallelism].every(value=>Number.isSafeInteger(value)&&value>0)||tokens>parallelism)throw Error("Actual bounded memory share required");
+ return Math.min(effectiveBytes,ADMISSION_POLICY_V1.reserveBytes+Math.floor((effectiveBytes-ADMISSION_POLICY_V1.reserveBytes)*tokens/parallelism));
+}
+
 
 /** 📨️ The wrapper's admission request (`AdmitRequestV1`). */
 export type AdmitRequestV1 = Readonly<{ v: 1; op: "admit"; pass: string; pid: number; crate: string; package: string; version: string; target: string; crateTypes: readonly string[]; outDir: string; extraFilename: string; source: string; manifestDir: string; primary: boolean; buildScriptOutDir: string | null; externs: readonly string[] }>;

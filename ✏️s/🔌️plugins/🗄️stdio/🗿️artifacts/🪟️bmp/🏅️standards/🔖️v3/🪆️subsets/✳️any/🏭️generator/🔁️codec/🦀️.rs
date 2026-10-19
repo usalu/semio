@@ -1,4 +1,4 @@
-//! image-bmp-codec — standalone BMP v3 fixture builder + reader projection on top of `image`
+//! 🏞️ image-bmp-codec — standalone BMP v3 fixture builder + reader projection on top of `image`
 //! 0.25's own `bmp` feature (`image::codecs::bmp::{BmpEncoder, BmpDecoder}`). Zero dependencies
 //! beyond `image` itself (see this crate's own Cargo.toml — its own `[workspace]`, isolated from
 //! the repository's root workspace and Cargo.lock).

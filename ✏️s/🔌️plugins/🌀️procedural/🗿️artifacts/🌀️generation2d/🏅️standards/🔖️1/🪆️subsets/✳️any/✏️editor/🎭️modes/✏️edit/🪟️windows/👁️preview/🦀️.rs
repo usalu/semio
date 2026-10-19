@@ -61,9 +61,6 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
             layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
         }
     }
-    // 🕹️ `render` carries no `InteractionView` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM),
-    // so the schematic wire overlay always shows every widget now (the pre-migration "nothing
-    // selected" fallback), rather than filtering to a selection it can no longer read.
     if app_config.show_mode == "wire" {
         for widget in &fixture.widgets {
             let id = semio_s_artifact_procedural_2d_model::widget_id(widget).to_string();

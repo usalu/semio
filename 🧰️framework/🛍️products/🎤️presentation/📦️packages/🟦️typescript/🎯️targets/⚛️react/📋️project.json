@@ -8,12 +8,25 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🔌️pdf-canvas-port/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️owned-markdown-compiler/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📝️owned-markdown-compiler/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react",
         "command": "bun ./📜️script.ts test",

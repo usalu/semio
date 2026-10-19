@@ -1,5 +1,6 @@
 use crate::{Atom,ColdOwner,Dictionary};
-use semio_framework_value::{DslValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl,native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
+use semio_framework_value::{DslValue, FromValue, ToValue, NativeEncodeControl, native_encoding::NativeEncodeProgress};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🚦️owned-controls.json")).unwrap()}
 
 fn input_grant(owner:&crate::retirement::RetainedDictionaryInput,copy:usize,closing:bool)->crate::RetainedCloneGrant {

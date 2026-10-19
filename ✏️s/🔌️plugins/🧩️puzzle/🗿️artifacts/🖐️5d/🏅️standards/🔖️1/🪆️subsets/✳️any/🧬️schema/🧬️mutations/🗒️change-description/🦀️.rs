@@ -36,7 +36,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDescription {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ChangeDescription
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ChangeDescription>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

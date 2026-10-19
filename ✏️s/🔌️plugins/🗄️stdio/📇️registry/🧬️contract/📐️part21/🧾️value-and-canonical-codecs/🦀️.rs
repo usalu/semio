@@ -6,19 +6,19 @@ use super::*;
 /// 🔎️ Takes one member out of a Part-21 JSON record, naming the record and the member when it is missing.
 
 impl FromValue for Part21Decimal{
- fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_decimal(value,control)}
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_decimal(value,control)}
  fn from_value(value:DslValue)->Result<Self,ValueError>{let mut entries=value.into_object()?;let negative=bool::from_value(part21_member(&mut entries,"decimal","negative")?)?;let scale=u32::from_value(part21_member(&mut entries,"decimal","scale")?)?;let exponent=entries.iter().position(|(key,_)|key=="exponent").map(|index|Option::<i32>::from_value(entries.swap_remove(index).1)).transpose()?.flatten();let coefficient=String::from_value(part21_member(&mut entries,"decimal","coefficient")?)?;part21_exhausted(&entries,"decimal")?;Ok(Self{negative,coefficient,scale,exponent})}
  fn edit_value_at_path(&mut self,path:&[&str],edit:ValueEdit)->Result<(),ValueError>{edit_through_value(self,path,edit)}
 }
 
 impl FromValue for Part21Header{
- fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_header(value,control)}
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_header(value,control)}
  fn from_value(value:DslValue)->Result<Self,ValueError>{let mut entries=value.into_object()?;let file_description=Vec::from_value(part21_member(&mut entries,"header","fileDescription")?)?;let file_name=Vec::from_value(part21_member(&mut entries,"header","fileName")?)?;let file_schema=Vec::from_value(part21_member(&mut entries,"header","fileSchema")?)?;part21_exhausted(&entries,"header")?;Ok(Self{file_description,file_name,file_schema})}
  fn edit_value_at_path(&mut self,path:&[&str],edit:ValueEdit)->Result<(),ValueError>{edit_through_value(self,path,edit)}
 }
 
 impl FromValue for Part21Document{
- fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_document(value,control)}
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::input::decode_document(value,control)}
  fn from_value(value:DslValue)->Result<Self,ValueError>{let mut entries=value.into_object()?;let header=Part21Header::from_value(part21_member(&mut entries,"document","header")?)?;let instances=Vec::from_value(part21_member(&mut entries,"document","instances")?)?;part21_exhausted(&entries,"document")?;Ok(Self{header,instances})}
  fn edit_value_at_path(&mut self,path:&[&str],edit:ValueEdit)->Result<(),ValueError>{edit_through_value(self,path,edit)}
 }
@@ -58,7 +58,7 @@ impl ToValue for Part21Value {
 
 /// 🔀️ Decodes exactly the projection [`ToValue`] emits; an unknown kind or member is refused.
 impl FromValue for Part21Value {
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         controlled::input::decode_value(value, control)
     }
 
@@ -103,7 +103,7 @@ impl ToValue for Part21Instance {
 
 /// 🔀️ Decodes exactly the projection [`ToValue`] emits; an unknown member is refused.
 impl FromValue for Part21Instance {
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         controlled::input::decode_instance(value, control)
     }
 

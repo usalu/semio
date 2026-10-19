@@ -117,10 +117,6 @@ export class PlaygroundBootPlanner {
       return true;
     }
     if (this.phase === "order") {
-      // 🎯️ Boot activates in dependency order, not array order (scout-2 §4) — entries a dependency-graph
-      // fault blocks are simply left out of THIS list (best-effort degrade, contract freeze §4 rule 5);
-      // the caller surfaces `errors` through `pluginGraphErrorMessage` for the dependency-fault UI rather
-      // than this resolver throwing and taking the whole boot down with it.
       const resolved = orderPluginRegistryEntries(this.expanded);
       this.order = resolved.order;
       this.errors = resolved.errors;

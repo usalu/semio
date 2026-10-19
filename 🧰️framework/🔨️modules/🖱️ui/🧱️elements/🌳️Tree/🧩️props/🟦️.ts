@@ -3,14 +3,14 @@ import type { ContextMenuItem } from "../../🖱️ContextMenu/🎨️item-rende
 import type { UiLabel } from "../../🎗️UiLabel/🟦️.tsx";
 import type { TreeWindowRowExtent, TreePresentation } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { TreeDirection } from "../📏️row-alignment/🟦️.tsx";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import type { TreeDragRole, TreeHeaderAction } from "../⚡️actions/🟦️.tsx";
 import type { TreeWindowDomAttributes } from "../🔭️virtual-window/🟦️.tsx";
 import type { TreeDataItem, TreeDataSection, TreeSelectionMode } from "../📋️data/🟦️.ts";
 import type { TreeDragAndDropController, TreeDropPosition } from "../🧲️drag-drop/🟦️.tsx";
 
 /**
- * TreeSectionProps holds the data fields for a TreeSectionProps record.
+ * 🌳️ TreeSectionProps holds the data fields for a TreeSectionProps record.
  **/
 export interface TreeSectionProps {
   label?: React.ReactNode;
@@ -46,7 +46,7 @@ export interface TreeSectionProps {
 }
 
 /**
- * SortableTreeItemProps holds the data fields for a SortableTreeItemProps record.
+ * 🪾️ SortableTreeItemProps holds the data fields for a SortableTreeItemProps record.
  **/
 export interface SortableTreeItemProps {
   id: string;
@@ -73,7 +73,7 @@ export interface SortableTreeItemProps {
 }
 
 /**
- * TreeItemProps holds the data fields for a TreeItemProps record.
+ * 🌴️ TreeItemProps holds the data fields for a TreeItemProps record.
  **/
 export interface TreeItemProps {
   focusPath?: readonly string[];
@@ -104,11 +104,11 @@ export interface TreeItemProps {
   onDragOver?: React.DragEventHandler<HTMLDivElement>;
   onDragLeave?: React.DragEventHandler<HTMLDivElement>;
   onDrop?: React.DragEventHandler<HTMLDivElement>;
-  /** Total number of alternative branches. When > 0, shows branch navigation. */
+  /** 🌿️ Total number of alternative branches. When > 0, shows branch navigation. */
   branchCount?: number;
-  /** Currently active branch index (0-based). */
+  /** 🟢️ Currently active branch index (0-based). */
   activeBranchIndex?: number;
-  /** Callback when the user navigates to a different branch. */
+  /** 🍴️ Callback when the user navigates to a different branch. */
   onBranchChange?: (index: number) => void;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
@@ -154,7 +154,7 @@ export interface TreeItemProps {
 }
 
 /**
- * SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
+ * 🎄️ SortableTreeItemsProps holds the data fields for a SortableTreeItemsProps record.
  **/
 export interface SortableTreeItemsProps {
   items: { id: string; [key: string]: any }[];
@@ -163,7 +163,7 @@ export interface SortableTreeItemsProps {
 }
 
 /**
- * TreeRootProps holds the data fields for a TreeRootProps record.
+ * 🫥️ TreeRootProps holds the data fields for a TreeRootProps record.
  **/
 export const EMPTY_TREE_SECTIONS: TreeDataSection[] = [];
 
@@ -268,7 +268,7 @@ export const getTreeSectionItems = (section: TreeDataSection, loadedSectionItems
 export const getTreeItemItems = (item: TreeDataItem, itemItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => itemItemsById[item.id] ?? item.items ?? [];
 
 /**
- * Data interface for a node in a file tree.
+ * 📄️ Data interface for a node in a file tree.
  **/
 export interface FileTreeNode {
   title: string;
@@ -279,7 +279,7 @@ export interface FileTreeNode {
 }
 
 /**
- * TreeFilesProps holds the data fields for a TreeFilesProps record.
+ * 📃️ TreeFilesProps holds the data fields for a TreeFilesProps record.
  **/
 export interface TreeFilesProps {
   title?: UiLabel;

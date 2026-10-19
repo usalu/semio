@@ -27,19 +27,16 @@ impl Default for JsonArtifact {
 
 impl JsonArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> JsonSnapshot {
         JsonSnapshot { schema: self.schema.clone(), value: self.value.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: JsonSnapshot) -> Self {
         Self { schema: snapshot.schema, value: snapshot.value }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: JsonSnapshot) {
         self.schema = snapshot.schema;
         self.value = snapshot.value;

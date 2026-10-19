@@ -4,25 +4,25 @@ import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-refere
 import { parseShootingAsset, parseShootingCamera, parseShootingSavedCamera, parseShootingShot } from "../🟦️.ts";
 
 export interface ShootingDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets?: ShootingAssetsDelta;
-  /** @state artifact */
+  /** 📤️ @state artifact */
   savedCameras?: ShootingSavedCamerasDelta;
-  /** @state artifact */
+  /** 🎬️ @state artifact */
   scene?: ShootingScenePatch;
-  /** @state artifact */
+  /** 🎥️ @state artifact */
   shots?: ShootingShotsDelta;
-  /** @state artifact */
+  /** 🟢️ @state artifact */
   activeShotId?: string;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   activeAssetId?: string;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 🎖️ @state artifact @child kind=s.stdio.semio */
   emblem?: ShootingAssigned<ArtifactChild | null>;
 }
 
-/** An explicitly assigned optional value: assigning `null` stays distinct from leaving the slot untouched. */
+/** 📢️ An explicitly assigned optional value: assigning `null` stays distinct from leaving the slot untouched. */
 export interface ShootingAssigned<T> {
   value: T;
 }

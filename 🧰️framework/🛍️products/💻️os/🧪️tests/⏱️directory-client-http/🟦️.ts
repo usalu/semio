@@ -19,15 +19,14 @@ describe("DirectoryClient http (getJson/postJson timeout + abort)", () => {
         });
       }) as unknown as typeof fetch;
       const client = new DirectoryClient("http://hub.test");
-      const promise = client.me(); // 🪪️ the identity/boot-path call finding 1 is about.
+      const promise = client.me();
       let settled = false;
       promise.then(
         () => (settled = true),
         () => (settled = true),
       );
       await vi.advanceTimersByTimeAsync(DIRECTORY_HTTP_TIMEOUT_MS + 1_000);
-      expect(settled).toBe(true); // never hangs — this is what lets the boot path's own
-      // catch-all ("hub unreachable, staying offline") actually run instead of awaiting forever.
+      expect(settled).toBe(true);
       await expect(promise).rejects.toThrow();
     } finally {
       globalThis.fetch = originalFetch;
@@ -47,8 +46,6 @@ describe("DirectoryClient http (getJson/postJson timeout + abort)", () => {
       const controller = new AbortController();
       const promise = client.spaces({ signal: controller.signal });
       controller.abort(new Error("caller cancelled"));
-      // no `vi.advanceTimersByTime*` call at all: if this depended on the timeout timer firing,
-      // fake timers would leave it pending forever and this await would hang the test.
       await expect(promise).rejects.toThrow("caller cancelled");
     } finally {
       globalThis.fetch = originalFetch;

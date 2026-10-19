@@ -4,7 +4,7 @@ import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦�
 import { loadingBorderStateClass, waitingBorderStateClass } from "../../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { type FlowBlock, FlowProvider, useFlow } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { TreeContext, TreeAlignedRow, treeItemLabelStyle } from "../📏️row-alignment/🟦️.tsx";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { windowMeasureTreeGroupLabelClass, windowMeasureTreeLeafLabelClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import type { UiLabel } from "../../🎗️UiLabel/🟦️.tsx";
 import { useTreeHoverPathRootHandlers } from "../🧷️path-marking/🟦️.ts";

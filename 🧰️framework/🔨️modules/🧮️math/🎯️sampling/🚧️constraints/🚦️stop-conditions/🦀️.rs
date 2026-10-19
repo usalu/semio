@@ -1,9 +1,9 @@
 //! 🚦️ Stop conditions: Aho-Corasick byte matcher and the token and text stop conditions.
 
-use semio_framework_math_sampling_vocabulary::{FinishReason, TokenId};
+use semio_framework_math_sampling_vocabulary::{FinishReason, TokenId, TokenTextAdapter};
 use semio_framework_math_sampling_config::StopTextMode;
 use semio_framework_math_sampling_workspace::{StepView, StopMark};
-use super::{StopCondition, StopPoll};
+use super::{StopCondition, StopConditions, StopPoll};
 
 // #region 🔖️Stops
 #[derive(Clone, Default)]

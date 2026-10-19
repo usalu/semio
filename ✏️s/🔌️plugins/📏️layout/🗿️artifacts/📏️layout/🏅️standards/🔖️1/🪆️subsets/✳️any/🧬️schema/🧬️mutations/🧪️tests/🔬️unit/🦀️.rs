@@ -201,8 +201,6 @@ async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
     let Frame::Text { columns, .. } = columned.pages[0].frames.iter().find(|frame| frame.id() == "frame-text").unwrap() else { panic!("expected text frame") };
     assert_eq!(*columns, 3);
 
-    // 🖼️ Fill/stroke are Rect-only fields — a change against a text frame is a no-op, and its
-    // inverse (nothing captured) is therefore empty.
     let fill_on_text = LayoutMutation::ChangeFrameFill(semio_s_artifact_layout_layout_mutations_frames::change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-text".into(), new_fill: Some([1.0, 0.0, 0.0, 1.0]) });
     let unchanged = protocol::apply_diff(fill_on_text.diff(&columned).diff(), &columned).expect("valid mutation diff");
     assert_eq!(unchanged, columned, "fill patch on a text frame must be a no-op");

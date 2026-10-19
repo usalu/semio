@@ -10,7 +10,7 @@
   "targets": {
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts check",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
@@ -19,7 +19,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
@@ -28,7 +28,7 @@
     },
     "test-surface": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-surface",
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",

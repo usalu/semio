@@ -180,10 +180,6 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
     let args = (None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
 
-    // (1) Empty pins must reproduce the pre-pins hash bytes EXACTLY — recomputed here via the
-    // same blake3(parent||changes||message||authors||timestamp) formula
-    // `content_addressed_checkpoint_id` used before the `pins` parameter was added, so this is
-    // a byte-level backward-compatibility proof, not just "doesn't panic".
     let mut legacy_input = Vec::new();
     legacy_input.extend_from_slice(args.0.unwrap_or("").as_bytes());
     legacy_input.push(0);
@@ -206,24 +202,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     let id_no_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &[]).await;
     assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
 
-    // (2) A non-empty pin set changes the id relative to no pins at all.
     let child_a_ref = semio_framework_artifact_reference::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").expect("valid test fixture uri");
     let child_b_ref = semio_framework_artifact_reference::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").expect("valid test fixture uri");
     let pins_one = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }];
     let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one).await;
     assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");
 
-    // (3) Identical pins in identical order converge on the identical id.
     let id_with_pins_again = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one).await;
     assert_eq!(id_with_pins, id_with_pins_again, "identical pins in identical order converge on the identical id");
 
-    // (4) A different pin CONTENT (same child, different pinned checkpoint) changes the id.
     let pins_one_moved = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-2".into() }];
     let id_pin_moved = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one_moved);
     assert_ne!(id_with_pins, id_pin_moved.await, "a different pinned checkpoint_id for the same child must change the id");
 
-    // (5) Two peers that discover the same pin SET in different order (e.g. concurrent
-    // parallel-child dispatch) still converge — the function sorts by `child_ref.to_uri()` internally.
     let pins_two_ordered = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }, CompositionPin { child_ref: child_b_ref.clone(), checkpoint_id: "ck-child-b-1".into() }];
     let pins_two_reordered = vec![CompositionPin { child_ref: child_b_ref, checkpoint_id: "ck-child-b-1".into() }, CompositionPin { child_ref: child_a_ref, checkpoint_id: "ck-child-a-1".into() }];
     let id_ordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_ordered);

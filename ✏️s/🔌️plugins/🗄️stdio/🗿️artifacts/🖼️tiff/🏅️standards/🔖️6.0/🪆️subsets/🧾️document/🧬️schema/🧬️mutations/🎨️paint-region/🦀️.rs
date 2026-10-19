@@ -23,11 +23,9 @@ pub struct PaintRegionMutation {
 }
 
 impl PaintRegionMutation {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn region(&self) -> TiffRegion {
         TiffRegion { x: self.x, y: self.y, width: self.width, height: self.height }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn color(&self) -> [u8; 4] {
         [self.red, self.green, self.blue, self.alpha]
     }

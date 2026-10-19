@@ -4,7 +4,7 @@ import canvasClearance from "../../🧱️elements/🗣️Interpreter/🧪️tes
 import { createElement } from "react";
 import { uiI18n } from "@semio-tech/ui-react";
 import { type UiDirtyScope } from "@semio-tech/framework";
-import { panelViewContext } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
+import { panelViewContext } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type UtilityNode } from "@semio-tech/framework";
@@ -223,9 +223,7 @@ describe("live measure dispatch", () => {
         }),
     );
 
-    dispatch(0); // starts immediately, in flight
-    // Many alternating up/down values while the first dispatch is still in flight — each reversal used
-    // to push a new entry onto `queued` with no bound.
+    dispatch(0);
     for (let i = 1; i <= 40; i += 1) {
       dispatch(i % 2 === 0 ? 100 + i : -100 - i);
     }
@@ -236,8 +234,6 @@ describe("live measure dispatch", () => {
     finishes.shift()?.();
     await vi.waitFor(() => expect(values).toHaveLength(3));
     finishes.shift()?.();
-    // Never more than 3 total dispatches (the in-flight one plus at most the capped 2 queued) despite
-    // 40 requested reversals.
     expect(values).toHaveLength(3);
   });
 });
@@ -274,17 +270,9 @@ describe("in-flight skipping interval", () => {
   });
 
   it("gates on exactly what run returns — a discarded dispatch promise gates nothing", async () => {
-    // 🏁️ The measured 2026-09-09 20:55 defect: `World3dHost`'s background tick body was
-    // `() => { if (busy) return; dispatch(tick); }`, whose block form DISCARDS the dispatch
-    // promise, so the in-flight flag cleared on the same microtask and 120 ms ticks queued into the
-    // serialized guest until the per-actor turn queue overflowed. This pins the difference so the shape
-    // cannot silently regress: same slow work, only the return value differs.
     const started: number[] = [];
     const timers: Array<() => void> = [];
     const never = new Promise<void>(() => {});
-    // 🕰️ Ticks 120 ms apart are many microtask turns apart, so each `Promise.resolve(undefined)` the
-    // swallowing form produces has long since cleared the flag by the next tick — the awaits below are
-    // what make this test see the real interval, not one synchronous burst.
     const drive = async (run: () => unknown) => {
       timers.length = 0;
       const stop = createInFlightSkippingInterval(
@@ -335,13 +323,6 @@ describe("coalescing action dispatcher", () => {
     expect(calls).toEqual(["a", "b"]);
   });
 
-  // 🏁️ The hover twin of the fill tick's "a discarded dispatch promise gates nothing" law. `World3dHost`'s
-  // `dispatch` returns void — it drops the `onAction` promise that settles on the guest's
-  // `OperationCompleted` frame — so a hover dispatcher wired to it coalesced NOTHING: wave B33 measured one
-  // 70-move brush hover storm enqueuing 72 `interactionHover` + 85 `suggestionsTick` guest turns with 11/10
-  // of them settled, after which the next user command (`addTargetVolume`) waited behind the whole backlog
-  // and lost its 30 s budget (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). Same storm, same slow
-  // guest, only the return value differs — so the shape cannot silently regress.
   it("gates on exactly what the dispatch returns — a swallowed round trip coalesces nothing", async () => {
     const storm = ["a", "b", "c", "d", "e"] as const;
     const drive = async (shape: (value: string, sent: readonly string[]) => unknown) => {
@@ -365,8 +346,6 @@ describe("coalescing action dispatcher", () => {
     expect(awaited, "returning the round trip is what keeps exactly ONE hover outstanding while the guest is busy").toEqual(["a"]);
   });
 
-  // 🩹️ A refused round trip must free the gate rather than wedge the lane closed — and must not surface as an
-  // unhandled rejection now that the caller hands over a real awaitable (wave B33 §4).
   it("keeps flushing after a rejected round trip", async () => {
     const calls: string[] = [];
     const send = createCoalescingActionDispatcher<string>((value) => {
@@ -411,9 +390,6 @@ describe("ui refresh coalescing lane", () => {
   const partial = (windowBodies: readonly string[], flags: Partial<UiDirtyScope & { readonly utilities: boolean }> = {}): UiDirtyScope => ({ kind: "partial", windowBodies: [...windowBodies], ...flags }) as UiDirtyScope;
 
   it("turns every refresh asked for during an in-flight pass into exactly ONE follow-up carrying their union", async () => {
-    // 🤝️ Wave B37. The predecessor read its owed slot AFTER `await pass` with no `catch` between, and
-    // joiners awaited the RUNNING pass rather than the one that covers them — so "my scope was re-taken"
-    // was never true for a joiner, and one throw dropped the follow-up entirely.
     const { coalescer, taken, settle } = lane();
     const first = coalescer.request({ scope: partial(["world"]), utilities: {}, replaceBodies: false });
     expect(
@@ -456,11 +432,6 @@ describe("ui refresh coalescing lane", () => {
   });
 
   it("carries a utility armed by a host effect while a pass was in flight into the very next pass", async () => {
-    // 🧰️ The measured defect: `engagementSubmit`'s typed `brush` verb emits `Effect::SetActiveUtility`,
-    // `applyHostEffects` arms the host's utility map and then asks for the refresh that publishes it. With
-    // a pass already crossing into the guest, that request is a JOIN — and the follow-up it is owed is the
-    // only thing that can ever push the armed map. `runUiRefreshPass` re-derives
-    // `activeUtilityByWindowId` from the live ref, so the union pass carries `brush` as long as it runs.
     const { coalescer, taken, settle } = lane();
     const armed: Record<string, string> = {};
     void coalescer.request({ scope: { kind: "full" }, utilities: { ...armed }, replaceBodies: false });
@@ -495,8 +466,6 @@ describe("ui refresh coalescing lane", () => {
     const joinerOutcome = joiner.then(() => "resolved" as const).catch((error: unknown) => `rejected:${String(error)}`);
 
     await settle(new Error("guest refused the refresh"));
-    // 🧯️ Asserted BEFORE awaiting either outcome: a lane that drops its owed work on a throw leaves both
-    // promises pending forever, and this is what makes that a failed assertion instead of a hung suite.
     expect(taken, "a failed pass may not take the lane down with it").toHaveLength(2);
     expect(taken[1]!.scope).toEqual(partial(["panel"]));
     expect(await starterOutcome, "the boot refresh turns its own rejection into the session fault card — it must still arrive").toBe("rejected:Error: guest refused the refresh");
@@ -505,9 +474,6 @@ describe("ui refresh coalescing lane", () => {
   });
 
   it("serves a request made from INSIDE a pass with the next pass instead of wedging the lane", async () => {
-    // 🔁️ `runUiRefreshPass`'s own `requestedEffects` (a `flowEvalTick`, a `SetActiveUtility`) re-enter
-    // this lane from inside the pass. A re-entrant caller that joined the RUNNING pass was waiting on the
-    // promise its own pass resolves: the in-flight marker stayed pinned and nothing repainted again.
     const taken: UiDirtyScope[] = [];
     const finishers: Array<() => void> = [];
     let reentrant: Promise<void> | null = null;
@@ -653,8 +619,6 @@ it("buildUiRefreshRequest forwards per-window utility map on viewState without a
   });
 
   it("buildActiveUtilityByWindowId makes a just-activated transform visible to refresh before the next React render", () => {
-    // Regression: setActiveUtility must sync activeUtilityByWindowIdRef before refreshUi; otherwise the
-    // program never stamps transform and the gumball stays hidden.
     const map: Record<string, string | null> = { "puzzle3d-main-top": null };
     map["puzzle3d-main-top"] = "transform";
     const activeUtilityByWindowId = buildActiveUtilityByWindowId(map);
@@ -682,16 +646,6 @@ it("buildUiRefreshRequest forwards per-window utility map on viewState without a
     expect(request?.labels).toBeDefined();
   });
 
-  // 📌️ The panel half of the same protocol: `buildUiRefreshRequest` names the panel bodies, and
-  // `PluginRuntime` mounts each of them under `panelViewContext(request.viewState)`. A panel is not
-  // rendered FOR a window, so that projection strips `windowId`/`activeWindowKindId`/`activeUtilityId`
-  // and keeps `focusedWindowId` — but only while the roster still carries that pane. A shell publishes
-  // the new mode's roster before it refocuses, and the guest's window-config capture faults on a
-  // focused pane the roster does not list BEFORE it ever matches the panel's body key: on the wgpu
-  // shell, booting straight into generate mode with the edit-mode `procedural-main` still focused left
-  // Artifact/Catalogue/Inspection publishing nothing at all
-  // (`wgpu-ui.surface-not-published:framework.panel.*`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-  // Twin of `ViewModel::for_panel`'s own Rust law.
   const generateRoster = [
     { id: "generation3d-generations", windowKindId: "generation3d-generations" },
     { id: "generation3d-generate-form", windowKindId: "generation3d-generate-form" },
@@ -754,9 +708,6 @@ it("buildUiRefreshRequest forwards per-window utility map on viewState without a
     expect(request?.windows?.find((w) => w.key === "detail")?.hash).toBeUndefined();
   });
 
-  // 🪟️ Two window INSTANCES of the same kind (e.g. a split top/perspective pane pair both rendering
-  // `puzzle3d.play.main`) must get distinct request entries and distinct cache keys — never collapse
-  // onto one shared entry, which is exactly the bug this ticket fixes.
   it("buildUiRefreshRequest gives two instances of the same window kind distinct keys and independent cached hashes", () => {
     const splitInstances = [
       { id: "puzzle3d-main", bodyKey: "puzzle3d.play.main" },
@@ -774,12 +725,11 @@ it("buildUiRefreshRequest forwards per-window utility map on viewState without a
     applyUiRefreshResponseToCache(cache, {
       windows: [
         { key: "overview", hash: "new-hash", value: { type: "text", value: "fresh" } },
-        { key: "detail", hash: "old-hash" }, // unchanged: no `value` in the response
+        { key: "detail", hash: "old-hash" },
       ],
       engagements: { key: "engagements", hash: "eng-hash", value: { overview: {} } },
     });
     expect(cache.get("window:overview")).toEqual({ hash: "new-hash", value: { type: "text", value: "fresh" } });
-    // Unchanged section: cache entry is untouched (still the old hash/value, not overwritten with nothing).
     expect(cache.get("window:detail")).toEqual({ hash: "old-hash", value: { type: "text", value: "stale-should-not-be-touched" } });
     expect(cache.get("engagements")).toEqual({ hash: "eng-hash", value: { overview: {} } });
   });
@@ -802,10 +752,6 @@ it("buildUiRefreshRequest forwards per-window utility map on viewState without a
     expect(cache.get("tools")).toEqual({ hash: "tools-hash", value: { fill: [] } });
   });
 
-  // 🛍️ The app-static operator/palette catalogue rides its OWN reserved section, never a node-graph
-  // scene payload — with the real `brep`/`math` operator sets installed it is ~100 KB against the fixed
-  // 32 KiB per-surface admission (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1). It is app-static, so it
-  // has no `UiDirtyScope` flag: only a full scope asks for it, and the cached hash makes the repeat free.
   it("buildUiRefreshRequest asks for the app catalogue on a full scope only, carrying its cached hash", () => {
     const full = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
     expect(full?.catalogue).toBeDefined();

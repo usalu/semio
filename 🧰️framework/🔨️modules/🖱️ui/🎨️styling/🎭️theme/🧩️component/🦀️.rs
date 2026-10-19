@@ -28,7 +28,6 @@ impl Rgba {
         Self { r, g, b, a }
     }
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn from_srgb8(r: u8, g: u8, b: u8, a: u8) -> Self {
         let [lr, lg, lb, la] = ui_styling::color::rgba8_to_linear(r, g, b, a);
         Self::new(lr, lg, lb, la)
@@ -38,12 +37,10 @@ impl Rgba {
     /// authored sRGB hex by the styling codegen) into a `Rgba`. Every themed color in this target
     /// MUST come through here or [`Rgba::from_srgb8`] — a hand-written channel literal is a drift
     /// bug, and `🧪️tests/🔬️targets-wgpu-theme-token-parity` fails the build on one.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub const fn from_token(c: &[f32; 4]) -> Self {
         Self::new(c[0], c[1], c[2], c[3])
     }
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn with_alpha(self, a: f32) -> Self {
         Self::new(self.r, self.g, self.b, a)
     }
@@ -378,12 +375,10 @@ impl Theme {
         }
     }
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn light() -> Self {
         from_chrome(&CHROME_LIGHT, &OUTCOME_LIGHT, &DIAGRAM_LIGHT, PresenceAppearance::Light)
     }
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn dark() -> Self {
         from_chrome(&CHROME_DARK, &OUTCOME_DARK, &DIAGRAM_DARK, PresenceAppearance::Dark)
     }
@@ -395,7 +390,6 @@ impl Theme {
     /// wgpu Shell hand-ported 20 `Rgba::from_srgb8` literals here, because mono's `chrome` group
     /// declared seven keys the default theme lacked and so could not share `ChromePalette`; the two
     /// key sets are now reconciled and the premade is projected like any other palette.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn mono(dark: bool) -> Self {
         if dark {
             from_chrome(&CHROME_MONO_DARK, &OUTCOME_MONO_DARK, &DIAGRAM_MONO_DARK, PresenceAppearance::Dark)
@@ -404,7 +398,6 @@ impl Theme {
         }
     }
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn for_name(name: AppearanceName) -> Self {
         match name {
             AppearanceName::Light => Self::light(),
@@ -414,7 +407,6 @@ impl Theme {
 
     //#region 🔖️LevelSurfaces
     /// 🪜️ Plain per-level fill (no blur/alpha) — `ui-surface`'s wgpu counterpart.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn surface(&self, level: Level) -> Rgba {
         self.level_bg[level.index()]
     }
@@ -423,7 +415,6 @@ impl Theme {
     /// and blur steps up per level index (`ui/styling/🔣️tokens.json`'s `levels` block:
     /// `alpha(k) = 1 - k * glassAlphaStep`, `blur(k) = k * glassBlurStepPx`), read from
     /// `ui_styling::levels` constants — never a per-tier lookup table.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn glass(&self, level: Level) -> GlassStyle {
         let k = level.index() as f32;
         GlassStyle { tint: self.level_bg[level.index()], alpha: 1.0 - k * levels::GLASS_ALPHA_STEP as f32, blur_px: k * levels::GLASS_BLUR_STEP_PX as f32, saturate: self.glass_saturate }
@@ -433,13 +424,11 @@ impl Theme {
     /// `color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent)` over a
     /// host that must carry `data-level="dialog"`, so this is the level's own surface fill at
     /// `levels::VEIL_ALPHA` — never a theme-agnostic black.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn veil(&self, level: Level) -> Rgba {
         self.surface(level).with_alpha(levels::VEIL_ALPHA as f32)
     }
 
     /// 🌫️ Blur radius `ui-veil` applies behind the scrim — `levels::VEIL_BLUR_PX` (`--veil-blur`).
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn veil_blur_px() -> f32 {
         levels::VEIL_BLUR_PX as f32
     }
@@ -450,7 +439,6 @@ impl Theme {
     /// plain [`Self::veil`] quad is only half of it: everything behind stayed razor sharp while the
     /// reference blurred the entire page. Pushing this through `DrawList::push_glass` is what gives
     /// [`Self::veil_blur_px`] its first production consumer (`📓️w4a`/`📓️w7a` hand-off 2).
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn veil_glass(&self, level: Level) -> GlassStyle {
         GlassStyle { tint: self.surface(level), alpha: levels::VEIL_ALPHA as f32, blur_px: Self::veil_blur_px(), saturate: self.glass_saturate }
     }
@@ -463,13 +451,11 @@ impl Theme {
     /// (`light()`/`dark()`), so the swatches are already correct for whichever `self` is; the full
     /// per-cycle desaturate/lighten shift for `index / 12 >= 1` is `presence_bar::presence_color`'s job
     /// for callers that need it directly.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn presence_color(&self, index: u8) -> Rgba {
         self.presence[(index % 12) as usize]
     }
     //#endregion 🔖️Presence
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
     pub fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {
         (blur_px / 4.0).log2().max(0.0).min(max_mip as f32)
     }

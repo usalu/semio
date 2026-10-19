@@ -49,7 +49,7 @@
     },
     {
       "id": "tools-headroom",
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
       "tokens": [
         "withRepositoryCacheStoreQueuedMaintenanceV1(workspace,\"tools\"",
         "repositoryCacheOrdinaryMaintenanceV1()"

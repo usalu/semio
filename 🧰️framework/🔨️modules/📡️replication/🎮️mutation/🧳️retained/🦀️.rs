@@ -1,5 +1,5 @@
 //! 🧳️ Required immutable decision and inverse owners yield typed diffs for the central applier.
-use semio_framework_value::FactoryIssuerIdentity;
+use semio_framework_value_factory::vector::FactoryIssuerIdentity;
 use super::{ColdMutation, Mutation,MutationMessage,MutationMessageLedgerRetirement};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,admit_retained_clone_progress,admit_retained_clone_close};

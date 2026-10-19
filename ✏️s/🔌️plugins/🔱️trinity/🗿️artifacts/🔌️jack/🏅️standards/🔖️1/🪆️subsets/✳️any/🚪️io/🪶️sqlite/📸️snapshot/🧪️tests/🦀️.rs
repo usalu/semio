@@ -151,7 +151,7 @@ fn sqlite_snapshot_jack_actual_controlled_typed_value_construction_preserves_all
     let mut output = semio_framework_value::NativeEncodeControl::new(32 << 20, &mut yes);
     let v = <JackSnapshot as ToValue>::to_value_controlled(&expected, &mut output).unwrap();
     let mut yes = |_| true;
-    let mut input = semio_framework_value::NativeDecodeControl::new(32 << 20, &mut yes);
+    let mut input = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(32 << 20, &mut yes);
     let actual = Owned::new(<JackSnapshot as FromValue>::from_value_controlled(&v, &mut input).unwrap());
     assert_full(&actual, &expected, 0);
 }
@@ -165,7 +165,7 @@ fn sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact() {
         for field in ["x", "y", "zoom"] {
             assert_eq!(oracle["camera"][field]["bits"].as_str(), Some(format!("{word:016x}").as_str()));
         }
-        let mut accept=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(32<<20,&mut accept);let actual=Owned::new(json_native::decode_controlled(std::str::from_utf8(&bytes).unwrap(),&mut control).unwrap());
+        let mut accept=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(32<<20,&mut accept);let actual=Owned::new(json_native::decode_controlled(std::str::from_utf8(&bytes).unwrap(),&mut control).unwrap());
         assert_full(&actual, &expected, word);
     }
 }

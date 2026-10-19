@@ -1,7 +1,8 @@
 /** 🧪️ Buffer varints and Ajv verify explicit paired closed payload metadata on the real tick codec. */
 import{test}from"bun:test";import assert from"node:assert/strict";import Ajv from"ajv";
-import law from"../🧫️fixtures/🔣️.json";import schema from"../../../../🧬️schema/🔣️.json";
-import{encodeToolRunTick,decodeToolRunTick,type ToolRunTick}from"../../../../🟦️.ts";
+import law from"./🧫️fixtures/🔣️.json";import schema from"../../../../🧬️schema/🔣️.json";
+import{encodeToolRunTick,decodeToolRunTick}from"../../../../🔤️codec/🟦️.ts";
+import type{ToolRunTick}from"../../../../🎞️tick/🟦️.ts";
 import type{PayloadUpdate}from"../../🟦️.ts";
 function variable(value:bigint):number[]{const bytes:number[]=[];do{const low=Number(value&127n);value>>=7n;bytes.push(low|(value>0n?128:0));}while(value>0n);return bytes;}
 test("closed payload metadata matches independent Buffer and rejects missing pairing",()=>{

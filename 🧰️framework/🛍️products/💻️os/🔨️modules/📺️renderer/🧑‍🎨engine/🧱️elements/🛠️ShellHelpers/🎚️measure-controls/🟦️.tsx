@@ -26,11 +26,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Stepper,
  */
 function useWindowMeasureDraft<T>(published: T): readonly [T, (next: T) => void] {
   const [draft, setDraft] = useState<{ readonly value: T; readonly published: T } | null>(null);
-  // 🏛️ Retire the draft the moment the program publishes ANYTHING other than the value the draft was
-  // made against — whether that is the draft's own value (the round trip landed) or a third one (the
-  // program refused, or someone else moved this option). Retiring on inequality rather than on a match
-  // is what stops a draft from resurrecting when the published value later happens to return to what it
-  // was when the draft was taken.
   useEffect(() => setDraft((current) => (current !== null && current.published !== published ? null : current)), [published]);
   const live = draft !== null && draft.published === published ? draft : null;
   return [live === null ? published : live.value, (next: T) => setDraft(next === published ? null : { value: next, published })];

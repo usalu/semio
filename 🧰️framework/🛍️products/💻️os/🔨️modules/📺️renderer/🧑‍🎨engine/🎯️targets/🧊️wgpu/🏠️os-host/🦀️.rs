@@ -118,7 +118,7 @@ struct AssetDecodeOwner {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     cancel: Option<semio_framework_job::CancelToken>,
-    authority: Option<semio_framework_job::JobPayloadAuthority>,
+    authority: Option<semio_framework_job_payload::JobPayloadAuthority>,
     cancel_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_job::CancelToken>>,
     sequence: u64,
     closing: bool,
@@ -587,7 +587,7 @@ impl OsHost {
             owner.cancel = Some(cancel);
         }
         if owner.authority.is_none() {
-            let Some((authority, _)) = semio_framework_job::JobPayloadAuthority::admit(owner.operation, owner.generation, ASSET_DECODE_TURN_GRANT)? else { return Ok(None) };
+            let Some((authority, _)) = semio_framework_job_payload::JobPayloadAuthority::admit(owner.operation, owner.generation, ASSET_DECODE_TURN_GRANT)? else { return Ok(None) };
             owner.authority = Some(authority);
         }
         self.run_asset_decode_turn(run)
@@ -728,7 +728,7 @@ impl OsHost {
             raster_uploads: Some(semio_framework_os_renderer_wgpu_scene_state::begin_pending_raster_authority_close()),
             cursor_wake_requested,
             #[cfg(not(target_arch = "wasm32"))]
-            kernel_progress_close: semio_framework_os_renderer_wgpu_kernel_runtime::KernelClient::get().begin_close_realm().ok(),
+            kernel_progress_close: semio_framework_os_renderer_wgpu_kernel_pool::KernelClient::get().begin_close_realm().ok(),
         };
         Ok(Some(OsHostRetirement { state: Some(Box::new(state)), abandonment: Some(abandonment) }))
     }
@@ -983,7 +983,7 @@ impl<T> RetirementOwner for Option<T> {
 
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧰️fixtures/🦀️.rs"]
-mod fixtures;
+pub(crate) mod fixtures;
 #[cfg(any(test, feature = "testkit"))]
 pub use fixtures::{finish_cpu_only_fixture_component_close, finish_retired_cpu_only_map_fixture_close, finish_world_fixture_component_close, runtime_with_shell};
 

@@ -5,6 +5,7 @@ use semio_framework_job_worker_authority::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::size_of;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 struct OriginalTurnProbe{source:[u8;17],output:[u8;17],copied:bool,closing:bool}

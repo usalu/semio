@@ -2,32 +2,40 @@
   "name": "@semio-tech/fixture-generator-stdio-png-1-2-any",
   "targets": {
     "🏭️generator": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator",
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-chunks": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator",
         "command": "bun ./📜️script.ts chunks",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-chunks-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🏭️generator",
         "command": "bun ./📜️script.ts chunks-manifests",
         "forwardAllArgs": true
       },

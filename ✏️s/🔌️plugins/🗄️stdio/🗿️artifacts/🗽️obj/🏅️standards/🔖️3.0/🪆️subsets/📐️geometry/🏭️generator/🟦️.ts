@@ -1,0 +1,261 @@
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { currentPlatform } from "@semio-tech/framework/test/adapter";
+
+//#endregion 🔌️Adapters
+
+//#region 🧬️Contract
+const HERE = import.meta.dir;
+const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
+
+const REFERENCE_ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
+const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
+const LEGACY_RECIPE = "pattern-shell";
+const LEGACY_DIRECTORY = "🐚️pattern-shell";
+const LEGACY_FIXTURE_FILE = "🐚️pattern-shell.obj";
+
+const READER_MANIFEST = join(HERE, "📖️reader", "📦️packages", "🦀️rust", "Cargo.toml");
+const READER_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
+
+/** 🍳️ One entry per reader-oracle corpus recipe — mirrors `📖️reader/🦀️.rs`'s own
+ *  `RECIPES` table (id + whether it has an `after.obj`), kept in sync by hand since this file never
+ *  parses Rust. */
+type ReaderRecipe = Readonly<{ id: string; directoryName: string; hasAfter: boolean }>;
+const READER_RECIPES: readonly ReaderRecipe[] = [
+  { id: "no-mutation-no-op", directoryName: "⏸️no-mutation-no-op", hasAfter: true },
+  { id: "set-vertex-applied", directoryName: "📍️set-vertex-applied", hasAfter: true },
+  { id: "set-vertex-rejected-out-of-bounds", directoryName: "⛔️set-vertex-rejected-out-of-bounds", hasAfter: false },
+  { id: "set-texcoord-applied", directoryName: "🧭️set-texcoord-applied", hasAfter: true },
+  { id: "set-texcoord-rejected-out-of-bounds", directoryName: "🗺️set-texcoord-rejected-out-of-bounds", hasAfter: false },
+  { id: "set-normal-applied", directoryName: "🧲️set-normal-applied", hasAfter: true },
+  { id: "set-normal-rejected-out-of-bounds", directoryName: "🚧️set-normal-rejected-out-of-bounds", hasAfter: false },
+  { id: "insert-face-applied", directoryName: "🔷️insert-face-applied", hasAfter: true },
+  { id: "insert-face-rejected-out-of-bounds", directoryName: "🚷️insert-face-rejected-out-of-bounds", hasAfter: false },
+  { id: "remove-face-applied", directoryName: "🗑️remove-face-applied", hasAfter: true },
+  { id: "remove-face-rejected-missing", directoryName: "🕵️remove-face-rejected-missing", hasAfter: false },
+  { id: "set-face-applied", directoryName: "🔶️set-face-applied", hasAfter: true },
+  { id: "set-face-rejected-out-of-bounds", directoryName: "🛑️set-face-rejected-out-of-bounds", hasAfter: false },
+  { id: "set-group-applied", directoryName: "🏷️set-group-applied", hasAfter: true },
+  { id: "remove-group-applied", directoryName: "🪓️remove-group-applied", hasAfter: true },
+  { id: "remove-group-rejected-missing", directoryName: "📭️remove-group-rejected-missing", hasAfter: false },
+  { id: "set-object-applied", directoryName: "📦️set-object-applied", hasAfter: true },
+  { id: "remove-object-applied", directoryName: "🗃️remove-object-applied", hasAfter: true },
+  { id: "remove-object-rejected-missing", directoryName: "👻️remove-object-rejected-missing", hasAfter: false },
+];
+const DOCUMENT_COORDINATES: Readonly<Record<string, readonly [string, string]>> = {
+  "set-mtllib": ["🎨️material", "🎨️set-mtllib"],
+  "set-usemtl": ["🎨️material", "🖌️set-usemtl"],
+  "set-smoothing-groups": ["📐️geometry", "🧵️set-smoothing-groups"],
+  "insert-vertex": ["📐️geometry", "➕️insert-vertex"],
+  "remove-vertex": ["📐️geometry", "➖️remove-vertex"],
+  "insert-texcoord": ["📐️geometry", "🧷️insert-texcoord"],
+  "remove-texcoord": ["📐️geometry", "🚮️remove-texcoord"],
+  "insert-normal": ["📐️geometry", "📐️insert-normal"],
+  "remove-normal": ["📐️geometry", "🚫️remove-normal"],
+  "set-unknown-statements": ["📐️geometry", "🕳️set-unknown-statements"],
+};
+//#endregion 🧬️Contract
+
+//#region 🔨️Build
+function ensureLegacyBuilt(): void {
+  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(REFERENCE_ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`cargo build (legacy engine) failed with status ${result.status}`);
+}
+
+function ensureReaderBuilt(): void {
+  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", READER_MANIFEST], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`cargo build (tobj-obj-reader) failed with status ${result.status}`);
+}
+
+async function sha256(path: string): Promise<string> {
+  const bytes = readFileSync(path);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+}
+//#endregion 🔨️Build
+
+//#region 🚪️Generate
+async function generateLegacy(outDir: string): Promise<void> {
+  ensureLegacyBuilt();
+  mkdirSync(outDir, { recursive: true });
+  const outPath = join(outDir, LEGACY_FIXTURE_FILE);
+  const result = spawnSync(LEGACY_ENGINE_BIN, [outPath], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`legacy generator binary failed with status ${result.status}`);
+  const digest = await sha256(outPath);
+  console.log(`${outPath}\n${digest}`);
+}
+
+function generateReaderRecipe(recipe: ReaderRecipe, fixturesRoot: string): void {
+  ensureReaderBuilt();
+  mkdirSync(fixturesRoot, { recursive: true });
+  const result = spawnSync(READER_BIN, ["build", recipe.id, join(fixturesRoot, recipe.directoryName)], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`tobj-obj-reader build ${recipe.id} failed with status ${result.status}`);
+}
+
+/** 🚪️ `--only <id>` dispatches to whichever family owns that id; NO `--only` rebuilds ONLY the
+ *  legacy `pattern-shell` recipe — the exact behavior its own committed `testEvidence` entry's
+ *  `generator.command` (`generate`, no flags) has always invoked, unchanged. The 20 reader-oracle
+ *  corpus recipes are only ever built when named explicitly via `--only` (each carries its own
+ *  `testEvidence` entry whose `generator.command` always names one), so a bare `generate` never
+ *  grows to rebuild the whole corpus underneath the one recorded pattern-shell invocation. */
+async function generate(outFlagDir: string | null, only: string | null): Promise<void> {
+  const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
+  const root = outFlagDir ?? (fixtureOutRoot !== undefined && fixtureOutRoot.length > 0 ? fixtureOutRoot : FIXTURES_DIR);
+  if (only === null || only === LEGACY_RECIPE) {
+    await generateLegacy(join(root, LEGACY_DIRECTORY));
+    return;
+  }
+  const recipe = READER_RECIPES.find((entry) => entry.id === only);
+  if (recipe === undefined) {
+    throw new Error(`unknown recipe ${JSON.stringify(only)} — known: ${[LEGACY_RECIPE, ...READER_RECIPES.map((r) => r.id)].join(", ")}`);
+  }
+  generateReaderRecipe(recipe, root);
+}
+//#endregion 🚪️Generate
+
+//#region 🚪️Manifests
+async function fileEntry(role: string, dir: string, filename: string, recipeId: string): Promise<{ role: string; path: string; mediaType: string; sha256: string; bytes: number }> {
+  const abs = join(dir, filename);
+  return { role, path: `../🧫️fixtures/${recipeId}/${filename}`, mediaType: "model/obj", sha256: await sha256(abs), bytes: statSync(abs).size };
+}
+
+async function manifestForLegacy(): Promise<Record<string, unknown>> {
+  const dir = join(FIXTURES_DIR, LEGACY_DIRECTORY);
+  const outPath = join(dir, LEGACY_FIXTURE_FILE);
+  if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
+  return {
+    id: LEGACY_RECIPE,
+    class: "third-party-generated",
+    target: { artifact: "s.stdio.obj", standard: "3.0", subset: "geometry" },
+    units: { length: "unitless", angle: "degree" },
+    files: [await fileEntry("primary-obj", dir, LEGACY_FIXTURE_FILE, LEGACY_DIRECTORY)],
+    generator: { oracle: "tobj-obj-3-0-mutate", packageVersion: "4", engineFamily: "tobj", engineVersion: "4", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate`, platform: `${process.platform}-${process.arch}` },
+    provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+    comparisonProfile: "semantic-obj-3-0-v1",
+    reproducible: true,
+    family: "mechanical",
+  };
+}
+
+async function manifestForReaderRecipe(recipe: ReaderRecipe): Promise<Record<string, unknown>> {
+  const dir = join(FIXTURES_DIR, recipe.directoryName);
+  const beforePath = join(dir, "⬅️before.obj");
+  if (!existsSync(beforePath)) throw new Error(`${beforePath} does not exist — run "generate --only ${recipe.id}" first`);
+  const files = [await fileEntry("expected-before-obj", dir, "⬅️before.obj", recipe.directoryName)];
+  if (recipe.hasAfter) files.push(await fileEntry("expected-after-obj", dir, "➡️after.obj", recipe.directoryName));
+  return {
+    id: recipe.id,
+    class: "third-party-generated",
+    target: { artifact: "s.stdio.obj", standard: "3.0", subset: "geometry" },
+    units: { length: "unitless", angle: "degree" },
+    files,
+    generator: { oracle: "tobj-obj-3-0-mutate-reader", packageVersion: "4", engineFamily: "tobj", engineVersion: "4", command: `bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only ${recipe.id}`, platform: `${process.platform}-${process.arch}` },
+    provenance: { source: "generated", license: "public-domain (synthetic, no third-party content embedded)" },
+    comparisonProfile: "semantic-obj-3-0-v1",
+    reproducible: true,
+    family: "structural",
+  };
+}
+
+async function manifests(only: string | null): Promise<void> {
+  const entries: Record<string, unknown>[] = [];
+  if (only === null || only === LEGACY_RECIPE) entries.push(await manifestForLegacy());
+  const readerTargets = only === null ? READER_RECIPES : READER_RECIPES.filter((recipe) => recipe.id === only);
+  for (const recipe of readerTargets) entries.push(await manifestForReaderRecipe(recipe));
+  console.log(JSON.stringify(only === null ? entries : entries[0], null, 2));
+}
+//#endregion 🚪️Manifests
+
+//#region 🚪️Entry
+async function main(argv: readonly string[]): Promise<number> {
+  const [command = "", ...rest] = argv;
+  const outFlagIndex = rest.indexOf("--out");
+  const outFlagDir = outFlagIndex >= 0 ? (rest[outFlagIndex + 1] ?? null) : null;
+  const onlyFlagIndex = rest.indexOf("--only");
+  const only = onlyFlagIndex >= 0 ? (rest[onlyFlagIndex + 1] ?? null) : null;
+  if (command === "generate") {
+    await generate(outFlagDir, only);
+    return 0;
+  }
+  if (command === "manifests") {
+    await manifests(only);
+    return 0;
+  }
+  if (command === "list-recipes") {
+    console.log([LEGACY_RECIPE, ...READER_RECIPES.map((r) => r.id)].join("\n"));
+    return 0;
+  }
+  if (command === "document" || command === "document-manifests") {
+    const BASE = ["mtllib base.mtl", "v 0 0 0", "v 1 0 0", "v 0 1 0", "vt 0 0", "vt 1 0", "vt 0 1", "vn 0 0 1", "vn 1 0 0", "usemtl red", "s 1", "f 1/1/1 2/2/1 3/3/1", ""].join("\n");
+    const PAIRS: Record<string, string> = {
+      "set-mtllib": BASE.replace("mtllib base.mtl", "mtllib other.mtl"),
+      "set-usemtl": BASE.replace("usemtl red", "usemtl blue"),
+      "set-smoothing-groups": BASE.replace("s 1", "s off"),
+      "insert-vertex": BASE.replace("v 0 0 0", "v 9 9 9\nv 0 0 0"),
+      "remove-vertex": BASE.replace("v 0 0 0\n", "").replace("f 1/1/1 2/2/1 3/3/1", "f 1/1/1 2/2/1 2/3/1"),
+      "insert-texcoord": BASE.replace("vt 0 0", "vt 0.7 0.7\nvt 0 0"),
+      "remove-texcoord": BASE.replace("vt 0 0\n", "").replace("f 1/1/1 2/2/1 3/3/1", "f 1/1/1 2/2/1 3/2/1"),
+      "insert-normal": BASE.replace("vn 0 0 1", "vn 0 1 0\nvn 0 0 1"),
+      "remove-normal": BASE.replace("vn 0 0 1\n", ""),
+      "set-unknown-statements": BASE + "l 1 2 3\n",
+    };
+    const probes = join(HERE, "..", "🔬️probes", "📜️script.ts");
+    const projectionOf = (path: string): string => {
+      const result = spawnSync("bun", [probes, "obj-document-project", "--input", path], { encoding: "utf8" });
+      if (result.status !== 0) throw new Error(`document reader refused ${path}: ${result.stdout}${result.stderr}`);
+      return JSON.stringify(JSON.parse(result.stdout).measurements);
+    };
+    if (command === "document") {
+      const failures: string[] = [];
+      for (const [kind, after] of Object.entries(PAIRS)) {
+        const [subset, name] = DOCUMENT_COORDINATES[kind]!;
+        const dir = join(outFlagDir ?? process.env.SEMIO_FIXTURE_OUT ?? join(HERE, "..", "..", subset, "🧪️tests/🧫️fixtures"), name);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, "⬅️before.obj"), BASE);
+        writeFileSync(join(dir, "➡️after.obj"), after);
+        if (projectionOf(join(dir, "⬅️before.obj")) === projectionOf(join(dir, "➡️after.obj"))) failures.push(`${kind}: not observable in the document projection`);
+        else console.error(`[generator] ${kind}: observable`);
+      }
+      for (const failure of failures) console.error(`[generator] ${failure}`);
+      return failures.length > 0 ? 1 : 0;
+    }
+    const entries = [];
+    for (const kind of Object.keys(PAIRS)) {
+      const [subset, directoryName] = DOCUMENT_COORDINATES[kind]!;
+      const dir = join(HERE, "..", "..", subset, "🧪️tests/🧫️fixtures", directoryName);
+      if (!existsSync(dir)) throw new Error(`missing fixture directory for ${kind} — run document first`);
+      const files = [];
+      for (const [role, name] of [["expected-before-obj", "⬅️before.obj"], ["expected-after-obj", "➡️after.obj"]] as const) {
+        const path = join(dir, name);
+        files.push({ role, path: `../🧫️fixtures/${directoryName}/${name}`, mediaType: "model/obj", sha256: await sha256(path), bytes: statSync(path).size });
+      }
+      entries.push({
+        id: `document-${kind}`,
+        class: "handcrafted",
+        target: { artifact: "s.stdio.obj", standard: "3.0", subset: subset === "🎨️material" ? "material" : "geometry" },
+        mutation: kind,
+        outcome: "applied",
+        units: { length: "unitless", angle: "radian" },
+        files,
+        provenance: { source: "handcrafted", license: "public-domain (synthetic, no third-party content embedded)" },
+        generator: { oracle: "three-obj-3-0-document-reader", packageVersion: "0.182.0", engineFamily: "threejs", engineVersion: "0.182.0", command: "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts document", platform: currentPlatform() },
+        comparisonProfile: "semantic-obj-document-v1",
+        reproducible: true,
+        family: "mechanical",
+        notes: `A minimal handcrafted OBJ document with the ${kind} statement changed. tobj, this subset's other reader, is a MESH reader and discards this statement entirely; three's OBJLoader parses and keeps it. Observability was checked through that reader before the pair was written.`,
+      });
+    }
+    process.stdout.write(`${JSON.stringify(entries, null, 2)}\n`);
+    return 0;
+  }
+  console.error(`usage: 📜️script.ts <generate|manifests|list-recipes|document|document-manifests> [--only <recipe-id>] [--out <dir>]`);
+  return 2;
+}
+/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
+export async function runScriptProgram(): Promise<void> {
+  
+  if (true) process.exit(await main(process.argv.slice(2)));
+}

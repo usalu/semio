@@ -7,10 +7,16 @@
     "role:artifact",
     "family:stdio"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"
+    ]
+  },
   "targets": {
     "test-snapshot-subset-validation-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long --lib sqlite_snapshot_csv_receiving_original_subset_validation -- --nocapture",
@@ -25,7 +31,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",

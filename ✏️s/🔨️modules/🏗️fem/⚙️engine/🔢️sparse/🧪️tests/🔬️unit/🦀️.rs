@@ -1,10 +1,10 @@
 use super::*;
 use semio_framework_job::StepBudget;
-use semio_s_fem_test_support::{close_payload_page_bytes, close_writer_released, test_operation, TEST_GRANT};
+use semio_s_fem_test_support::{close_payload_page_bytes, close_writer_released, TEST_GRANT};
 
 #[test]
 fn numerical_restore_funds_each_original_contributor_frontier_separately() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⛽️restore-funding/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⛽️restore-funding/🔣️.json")).unwrap();
     let count = fixture["count"].as_u64().unwrap() as usize;
     let mut bytes = numerical_page_header(b"FEMLCP1\0", 11, NumericalPageCursor { field: 9, owner: 0, item: 0 }).to_vec();
     bytes.extend_from_slice(&(count as u64).to_le_bytes());
@@ -223,7 +223,7 @@ fn numerical_page_restore_accepts_every_declared_paged_scalar_continuation() {
 
 #[test]
 fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
-    use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📦️numerical-pages/🔣️.json")).unwrap();
     let mut observations = Vec::new();
     assert_eq!(corpus["pageBytes"].as_u64().unwrap() as usize, JOB_PAYLOAD_PAGE_BYTES);
@@ -298,7 +298,7 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
 
 #[test]
 fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
-    use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
     fn advance(kind: &str, writer: &mut RetainedJobPayloadWriter, cursor: &mut NumericalPageCursor, matrix: &MatD, integers: &PagedList<u32, 1>, scalars: &PagedList<f64, 1>) -> Result<bool, JobPayloadAdmissionFault> {
         match kind {

@@ -128,11 +128,6 @@ async function pumpAsset(): Promise<void> {
       responseCurrent();
       if (!ownedStep("reference-image-seal", () => runtime!.sealReferenceImage())) throw new Error("reference-image-seal-busy");
     }
-    // 🔏️ The seal needs the renderer's own interaction state, which a live apply owns for the length
-    // of that apply. `sealAssetResponse` answers `false` for exactly that — back-pressure, not a
-    // refusal — and leaves the request untouched, so this comes back on the next macrotask instead of
-    // raising `asset-stream-fault` and quarantining the whole shell over a lock that is already free
-    // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
     let sealed = false;
     for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !sealed; attempt++) {
       responseCurrent();

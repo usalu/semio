@@ -479,15 +479,15 @@ impl DeGroundCombo {
 #[value(rename_all = "camelCase")]
 pub struct En1998Site {
     pub seismic_zone: DeSeismicZone,
-    /// EN annex reference PGA [m/s²]. For DE annex, evaluate derives a_gR from `seismic_zone` (Table NA.1).
+    /// 📏️ EN annex reference PGA [m/s²]. For DE annex, evaluate derives a_gR from `seismic_zone` (Table NA.1).
     #[dsl(unit = "m/s2")]
     pub a_gr: f64,
     pub de_ground_combo: DeGroundCombo,
-    /// EN annex ground type A–E (EN 1998-1 Table 3.1). Empty under DE annex.
+    /// 🏛️ EN annex ground type A–E (EN 1998-1 Table 3.1). Empty under DE annex.
     #[cfg_attr(test, serde(default, skip_serializing_if = "String::is_empty"))]
     #[value(default, skip_serializing_if = "String::is_empty")]
     pub en_ground_type: String,
-    /// EN annex spectrum type (`type1` | `type2`). Empty under DE annex.
+    /// 📜️ EN annex spectrum type (`type1` | `type2`). Empty under DE annex.
     #[cfg_attr(test, serde(default, skip_serializing_if = "String::is_empty"))]
     #[value(default, skip_serializing_if = "String::is_empty")]
     pub en_spectrum_type: String,
@@ -521,7 +521,7 @@ pub struct En1998System {
 #[value(rename_all = "camelCase")]
 pub struct En1998VariableAction {
     pub id: String,
-    /// Imposed-load category (A–H / snow / wind) for ψ₂.
+    /// 🚦️ Imposed-load category (A–H / snow / wind) for ψ₂.
     pub category: String,
     #[dsl(unit = "N")]
     pub qk_n: f64,
@@ -537,10 +537,10 @@ pub struct En1998Storey {
     pub id: String,
     #[dsl(unit = "m")]
     pub height_m: f64,
-    /// Characteristic permanent action ΣG_k [N] on the storey.
+    /// 🎮️ Characteristic permanent action ΣG_k [N] on the storey.
     #[dsl(unit = "N")]
     pub permanent_gk_n: f64,
-    /// EN 1998-1 Table 4.2 correlated occupancies (φ = 0.8 storeys / 1.0 roof).
+    /// 🧑️ EN 1998-1 Table 4.2 correlated occupancies (φ = 0.8 storeys / 1.0 roof).
     pub correlated_occupancy: bool,
     #[dsl(table)]
     pub variables: Vec<En1998VariableAction>,
@@ -558,7 +558,7 @@ pub struct En1998Storey {
     pub drift_x_m: f64,
     #[dsl(unit = "m")]
     pub drift_y_m: f64,
-    /// Per-storey shear resistance V_Rd,i [N] for storey-force verification.
+    /// 🪢️ Per-storey shear resistance V_Rd,i [N] for storey-force verification.
     #[dsl(unit = "N")]
     pub shear_resistance_n: f64,
 }
@@ -574,16 +574,16 @@ pub struct En1998Member {
     pub material: String,
     pub role: String,
     pub detailing_compatible_with_q: bool,
-    /// RC column min cross-section dimension b [m] (§5.4.3 / §5.5.3).
+    /// ↔️ RC column min cross-section dimension b [m] (§5.4.3 / §5.5.3).
     #[dsl(unit = "m")]
     pub min_dimension_m: f64,
-    /// RC longitudinal reinforcement ratio ρ.
+    /// 🔍️ RC longitudinal reinforcement ratio ρ.
     pub rho: f64,
-    /// RC compression reinforcement ratio ρ′ (beams).
+    /// 🗜️ RC compression reinforcement ratio ρ′ (beams).
     pub rho_prime: f64,
-    /// RC confinement mechanical volumetric ratio ω_wd.
+    /// ⚙️ RC confinement mechanical volumetric ratio ω_wd.
     pub omega_wd: f64,
-    /// Steel cross-section class (1–4) for q-compatibility (§6.5 / §6.6).
+    /// 🔩️ Steel cross-section class (1–4) for q-compatibility (§6.5 / §6.6).
     pub steel_section_class: u8,
 }
 
@@ -596,10 +596,10 @@ pub struct En1998Member {
 pub struct En1998Building {
     pub id: String,
     pub name: String,
-    /// Plan dimension Lx [m] for accidental eccentricity (§4.3.2).
+    /// 🗓️ Plan dimension Lx [m] for accidental eccentricity (§4.3.2).
     #[dsl(unit = "m")]
     pub plan_width_m: f64,
-    /// Plan dimension Ly [m] for accidental eccentricity (§4.3.2).
+    /// 📋️ Plan dimension Ly [m] for accidental eccentricity (§4.3.2).
     #[dsl(unit = "m")]
     pub plan_length_m: f64,
     #[dsl(table)]
@@ -629,19 +629,19 @@ pub struct En1998Building {
 #[value(rename_all = "camelCase")]
 pub struct En1998Bridge {
     pub id: String,
-    /// Isolation period ratio T_isol/T_fixed (EN 1998-2).
+    /// ⏱️ Isolation period ratio T_isol/T_fixed (EN 1998-2).
     pub period_ratio: f64,
-    /// Fundamental period T [s] for displacement / shear (EN 1998-2 §4.2).
+    /// 🔁️ Fundamental period T [s] for displacement / shear (EN 1998-2 §4.2).
     #[dsl(unit = "s")]
     pub fundamental_period_s: f64,
     #[dsl(unit = "N")]
     pub v_rd_n: f64,
     #[dsl(unit = "m")]
     pub bearing_d_rd_m: f64,
-    /// Characteristic permanent action ΣG_k [N] (deck + self-weight).
+    /// ⌨️ Characteristic permanent action ΣG_k [N] (deck + self-weight).
     #[dsl(unit = "N")]
     pub permanent_gk_n: f64,
-    /// EN 1998-1 Table 4.2 correlated occupancy flag for φ on variable actions.
+    /// 👥️ EN 1998-1 Table 4.2 correlated occupancy flag for φ on variable actions.
     pub correlated_occupancy: bool,
     #[dsl(table)]
     pub variables: Vec<En1998VariableAction>,
@@ -656,9 +656,9 @@ pub struct En1998Bridge {
 pub struct En1998Assessment {
     pub id: String,
     pub knowledge_level: String,
-    /// EN 1998-3 limit state: nc | sd | dl (Table 2.1 + DE NA).
+    /// 🎚️ EN 1998-3 limit state: nc | sd | dl (Table 2.1 + DE NA).
     pub limit_state: String,
-    /// Building id providing seismic demand (spectrum × mass model).
+    /// 🪝️ Building id providing seismic demand (spectrum × mass model).
     pub supported_building_id: String,
     #[dsl(unit = "N")]
     pub r_k_n: f64,
@@ -677,15 +677,15 @@ pub struct En1998Silo {
     pub height_m: f64,
     #[dsl(unit = "m")]
     pub radius_m: f64,
-    /// Structure permanent action ΣG_k [N].
+    /// ⛓️ Structure permanent action ΣG_k [N].
     #[dsl(unit = "N")]
     pub permanent_gk_n: f64,
-    /// Characteristic content action Q_k [N] at full fill.
+    /// 📄️ Characteristic content action Q_k [N] at full fill.
     #[dsl(unit = "N")]
     pub content_qk_n: f64,
-    /// Content category for ψ₂ (typically E storage).
+    /// 📦️ Content category for ψ₂ (typically E storage).
     pub content_category: String,
-    /// Design filling ratio 0…1 (EN 1998-4).
+    /// 🪣️ Design filling ratio 0…1 (EN 1998-4).
     pub filling_ratio: f64,
     #[dsl(unit = "N")]
     pub n_rd_n: f64,
@@ -706,15 +706,15 @@ pub struct En1998Tank {
     pub height_m: f64,
     #[dsl(unit = "m")]
     pub radius_m: f64,
-    /// Structure permanent action ΣG_k [N].
+    /// 🕹️ Structure permanent action ΣG_k [N].
     #[dsl(unit = "N")]
     pub permanent_gk_n: f64,
-    /// Characteristic content action Q_k [N] at full fill.
+    /// 🧾️ Characteristic content action Q_k [N] at full fill.
     #[dsl(unit = "N")]
     pub content_qk_n: f64,
-    /// Content category for ψ₂ (typically E storage / liquid).
+    /// 📝️ Content category for ψ₂ (typically E storage / liquid).
     pub content_category: String,
-    /// Design filling ratio 0…1 (EN 1998-4).
+    /// 🟦️ Design filling ratio 0…1 (EN 1998-4).
     pub filling_ratio: f64,
     #[dsl(unit = "N")]
     pub v_rd_n: f64,
@@ -728,7 +728,7 @@ pub struct En1998Tank {
 #[value(rename_all = "camelCase")]
 pub struct En1998Foundation {
     pub id: String,
-    /// Building id whose seismic base shear drives foundation demand (EN 1998-5 §5.3).
+    /// 🤝️ Building id whose seismic base shear drives foundation demand (EN 1998-5 §5.3).
     pub supported_building_id: String,
     #[dsl(unit = "m2")]
     pub area_m2: f64,
@@ -769,7 +769,7 @@ pub struct En1998Tower {
     pub m_rd_nm: f64,
     pub is_chimney: bool,
     pub q_nominal: f64,
-    /// Characteristic permanent action ΣG_k [N].
+    /// 🎬️ Characteristic permanent action ΣG_k [N].
     #[dsl(unit = "N")]
     pub permanent_gk_n: f64,
     pub correlated_occupancy: bool,

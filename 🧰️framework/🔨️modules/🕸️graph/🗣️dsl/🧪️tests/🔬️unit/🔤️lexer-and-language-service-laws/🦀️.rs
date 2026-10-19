@@ -25,8 +25,6 @@ fn tokenize_marks_unterminated_string_as_error_class() {
 #[test]
 fn tokenize_never_panics_on_stray_symbols() {
     block_on_test(async {
-        // 🩹️ `#` is now a legitimate comment starter (unified with the rest of the DSL engine, so
-        // it swallows the remainder of the line) — the stray-symbol probes moved off it.
         let spans = tokenize("MATCH (a:x) ~ ^ RETURN a");
         assert!(spans.iter().any(|s| s.class == TokenClass::Ident && s.end - s.start == 1));
     });
@@ -133,8 +131,6 @@ fn hover_reports_keyword_and_bound_variable() {
         let source = "MATCH (a:computation) WHERE a.score = 1 RETURN a";
         let match_pos = source.find("MATCH").unwrap();
         assert!(hover(&graph, source, match_pos + 1).unwrap().contents.contains("keyword"));
-        // 🩹️ `hover_word_at` folds `:`/`.` into the word span, so a bound variable only resolves
-        // in isolation when nothing follows it — the trailing standalone `a` in `RETURN a`.
         let var_pos = source.rfind('a').unwrap();
         assert!(hover(&graph, source, var_pos + 1).unwrap().contents.contains("Bound variable"));
     });

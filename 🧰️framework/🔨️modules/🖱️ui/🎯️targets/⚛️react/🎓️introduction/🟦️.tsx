@@ -1,5 +1,5 @@
 import type { IntroductionDefinition, IntroductionLogo, IntroductionStepDefinition, IntroductionDemonstration } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import * as React from "react";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useShellScopeOptional, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
@@ -110,13 +110,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const introduceRect = useIntroductionAnchorRect(introduceSelector);
   const elevationIds = reactHostPort.useMemo((): readonly string[] => [...(step?.introduce ? [step.introduce] : []), ...(step?.show ?? [])], [step]);
   const elevated = useIntroductionElevation(elevationIds);
-  // 🎬️ A step that declares no `demonstrations` still gets one automatically when Next/Done is its only
-  // way forward — see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`. Memoized on `step` (not recomputed
-  // fresh every render) so `IntroductionDemonstrationOverlay`'s effect — keyed on this array — doesn't
-  // restart the demonstration loop on every unrelated re-render (viewport resize, box measure, …).
   const effectiveDemonstrations = reactHostPort.useMemo((): readonly IntroductionDemonstration[] => {
     if (!step) return [];
-    // 🎬️ Hand-written brands may omit `demonstrations` (Rust `#[serde(default)]`); treat missing as empty.
     const demonstrations = step.demonstrations ?? [];
     if (demonstrations.length === 0) return (step.interactions ?? []).length === 0 ? [INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION] : [];
     const interactions = step.interactions ?? [];
@@ -128,11 +123,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(boxRef);
-  // 🎯️ Once the step chrome is activated the introduced pulse is gone for this step — active while
-  // selected, then normal after a background click (same lifecycle as panels/panes/windows).
   const [introductionActivated, setIntroductionActivated] = reactHostPort.useState(false);
-  // 🫳️ User-dragged absolute position — `null` keeps auto/`placement` until the top-center handle moves the box;
-  // reset on every step so each card starts at its authored placement again.
   const [dragPosition, setDragPosition] = reactHostPort.useState<IntroductionInfoBoxPosition | null>(null);
   const [dragging, setDragging] = reactHostPort.useState(false);
   const dragPositionRef = reactHostPort.useRef(dragPosition);
@@ -159,8 +150,6 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   }, [overlayHost]);
 
   reactHostPort.useEffect(() => {
-    // Stamp the shell root (or documentElement for the landing-page tour outside any ShellScope) so
-    // elevated-chrome CSS stays scoped to the introducing shell instead of every co-hosted shell.
     const root = shellScope?.rootRef.current ?? document.documentElement;
     root.setAttribute("data-introduction-active", "true");
     return () => root.removeAttribute("data-introduction-active");
@@ -216,9 +205,6 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const interactions = step?.interactions ?? [];
   const advanceByButton = interactions.length === 0;
 
-  // 🎉️ Celebrates a checklist row's own label text (conic-gradient ring, see `[data-celebrated="true"]`
-  // in `🎨️ui.css`) the instant its interaction flips from pending to done — on top of whatever app element
-  // `interaction.celebrate`/`step.introduce` celebrates, so the completed line item itself visibly glows.
   const interactionLabelRefs = reactHostPort.useRef<Map<number, HTMLSpanElement>>(new Map());
   const prevCompletedRef = reactHostPort.useRef<{ stepIndex: number; indices: readonly number[] }>({ stepIndex, indices: [] });
   reactHostPort.useEffect(() => {
@@ -277,28 +263,16 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   const stepTitle = resolveUiLocalizedText(step.title, terminology, locale);
   const bodyParagraphs = splitIntroductionBodyParagraphs(resolveUiLocalizedText(step.body, terminology, locale));
-  // When the overlay is absolutely positioned inside the shell portal layer (multi-shell hosts that
-  // CSS-transform their shells, e.g. the demonstrator grid), placement must use host-local coords —
-  // getBoundingClientRect is viewport-space and would otherwise land the box on the wrong pane.
   const hostRect = overlayHost?.getBoundingClientRect() ?? null;
   const placementAnchor = introduceRect && hostRect ? introductionRectRelativeToHost(introduceRect, hostRect) : introduceRect;
   const boxPosition = resolveIntroductionPlacement(step.placement, placementAnchor, boxSize, viewport);
   dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
   const position = dragPosition ?? boxPosition;
   const overlayPositionClass = overlayPositioned ? "absolute" : "fixed";
-  // 🎓️ A targeted element that hasn't mounted yet (a folded utility bar/panel the shell is still revealing)
-  // must not trap the user behind an opaque-to-clicks veil — only screen-style steps (`introduce == null`)
-  // and steps whose target did resolve block pointer events; an unresolved `introduce` lets clicks through
-  // so the user can reveal it themselves. A resolved `show` target also counts (e.g. a drop window while
-  // the drag source mounts).
   const veilBlocksPointer = step.introduce == null || elevated.has(step.introduce) || (step.show ?? []).some((id) => elevated.has(id));
 
   const overlay = (
     <>
-      {/* 🧯️ A blocking veil owns every pointer in the app, so pressing it MUST end the tour — otherwise a
-          Skip press that never lands (covered, animating, off-viewport) leaves the whole application inert
-          with no way out but the keyboard. Keyboard parity is `ui.introduction.skip` ("escape", bound
-          above); the scrim itself stays `aria-hidden` so no assistive technology announces a bare div. */}
       <div
         data-slot="introduction-veil"
         data-level="dialog"

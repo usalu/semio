@@ -6,7 +6,7 @@ import { buildAdmittedCargoArtifactsV1 } from "../../../../../../../../../../../
 /** 🦀️ Builds the authored Native reader through canonical compiler input and capture ownership. */
 class BuildScript extends BundleScript {
  async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Native reader build accepts no arguments");const control=createIssuedResourceControlV1(this.invocation,"native:reader-build",0);
+  if(args.length)throw new Error("Native reader build accepts no arguments");const control=createIssuedResourceControlV1(this.invocation,"native:reader-build",0);
   await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["-p","semio-framework-os-native-runtime-reader","--bin","semio-native-runtime-reader"],this.repoRoot,{invocation:this.invocation,producer:"artifact",control,consume:verifyCapturedCargoArtifactsV1,environment:process.env});
  }
 }

@@ -349,14 +349,14 @@ fn sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_f
             };
             Retained::retire_decoded(value);
             let required = fields.fields.remove(&1).unwrap();
-            let mut callback = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
-            let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024 * 1024, &mut callback);
+            let mut callback = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
+            let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024 * 1024, &mut callback);
             let error = Retained::from_record_controlled(&fields, &mut control).err().expect("missing later field must reject");
             assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::InvalidValue);
             assert!(error.message.contains("required"), "{error}");
             fields.fields.insert(1, required);
             let mut reached = false;
-            let mut callback = |progress: semio_framework_value::native_decoding::NativeDecodeProgress| {
+            let mut callback = |progress: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| {
                 if progress.total == depth * 2 + 1 && progress.completed >= 256 {
                     reached = true;
                     false
@@ -364,11 +364,11 @@ fn sqlite_snapshot_gltf_controlled_binding_retires_deep_completed_fields_after_f
                     true
                 }
             };
-            let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024 * 1024, &mut callback);
+            let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024 * 1024, &mut callback);
             assert!(Retained::from_record_controlled(&fields, &mut control).is_err());
             assert!(reached, "cancel inside actual extras reconstruction");
-            let mut callback = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
-            let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024 * 1024, &mut callback);
+            let mut callback = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
+            let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024 * 1024, &mut callback);
             let value = Retained::from_record_controlled(&fields, &mut control).unwrap();
             let mut current = value.primitive.extensions.as_ref().unwrap();
             for _ in 0..depth {

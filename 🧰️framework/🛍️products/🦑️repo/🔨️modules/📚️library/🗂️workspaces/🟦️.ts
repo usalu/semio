@@ -136,7 +136,7 @@ export function computeWorkspaces(repoRoot: string, options: WorkspaceDiscoveryO
     let parent = dirname(candidate.absDir);
     while (parent !== repoRoot && parent !== dirname(parent)) {
       const owner = byDirectory.get(parent);
-      if (owner) return !ownsPayload(owner, candidate, operations);
+      if (owner) return !ownsPayload(owner, candidate);
       parent = dirname(parent);
     }
     return true;

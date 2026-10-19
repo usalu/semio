@@ -175,8 +175,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         schema: "generation.2d".into(),
         export_formats: vec![],
         import_formats: vec![],
-        // 🖊️ "stdio.dwg" stays out of exports (generation3d owns that EXPORT claim, D3) but stays in
-        // imports below — see `🚪️io/🦀️.rs`'s `🚪️IoRegistry` region for the ownership rule.
         export_stdio_kinds: vec!["stdio.dxf".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into()],
         import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.dxf".into(), "stdio.json".into(), "stdio.pdf".into(), "stdio.png".into(), "stdio.svg".into()],
     }

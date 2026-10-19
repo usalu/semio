@@ -1,4 +1,4 @@
-//! `change-slab-action-q-area-pa` mutation leaf.
+//! 🧬️ `change-slab-action-q-area-pa` mutation leaf.
 
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 

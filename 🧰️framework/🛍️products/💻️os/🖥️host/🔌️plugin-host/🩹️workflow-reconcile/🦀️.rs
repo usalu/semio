@@ -104,10 +104,6 @@ pub(super) fn reconcile_workflow_snapshot(mut document: workflow::WorkflowSnapsh
     //#endregion CycleDrop
 
     //#region ParameterBindingValidation
-    // 🛡️ A binding's target `ConfigSpec` field (a concurrent app swap/downgrade removed or
-    // re-shaped the field) or the bound parameter's own type (a concurrent `PatchParameter`
-    // re-typed it) can go stale exactly like an edge's contract can — same defense-in-depth spirit
-    // as `TypeMismatchDrop`, ported from os-core's dissolved `OsSnapshot`-based reconcile.
     let parameters = document.parameters.clone();
     let nodes = document.graph.nodes.clone();
     document.parameter_bindings.retain(|binding| {

@@ -1,0 +1,2 @@
+export type CargoSourceAdmissionRecheckPhaseV1="unit"|"complete";
+export interface CargoSourceAdmissionPortV1 {cfg(unit:CargoCompilationUnitV1,control:ResourceLeaseControl):Promise<readonly string[]>;read(path:string,control:ResourceLeaseControl,request:CargoSourceReadRequestV1):Promise<Uint8Array|null>;recheck?(control:ResourceLeaseControl,phase:CargoSourceAdmissionRecheckPhaseV1):Promise<void>}

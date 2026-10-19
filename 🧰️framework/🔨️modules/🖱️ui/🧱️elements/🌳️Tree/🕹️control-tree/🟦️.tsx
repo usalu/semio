@@ -8,7 +8,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from ".
 import { Textarea } from "../../🔤️Textarea/🟦️.tsx";
 import { domSizePx, uiSpacingLen, STYLING_DOM } from "@semio-tech/ui-styling";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { TreeContext, TreeAlignedRow } from "../📏️row-alignment/🟦️.tsx";
 import { useFlow, FlowProvider } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { TreeStateProvider, hasNonEmptyChildren, useTreeOpenState } from "../🌿️state/🟦️.tsx";
@@ -19,7 +19,7 @@ import { TreeBranchContent } from "../🌲️branch/🟦️.tsx";
 // Consumers MUST provide ControlDef[] and optional ControlTreeFolderSettings.
 
 /**
- * Leaf control definition for the ControlTree.
+ * 🎚️ Leaf control definition for the ControlTree.
  **/
 export interface ControlDef {
   path: string;
@@ -32,7 +32,7 @@ export interface ControlDef {
 }
 
 /**
- * Folder settings for the ControlTree.
+ * 🎛️ Folder settings for the ControlTree.
  **/
 export interface ControlTreeFolderSettings {
   path: string;
@@ -42,7 +42,7 @@ export interface ControlTreeFolderSettings {
 }
 
 /**
- * Styling classname overrides for ControlTree visual slots.
+ * 🕹️ Styling classname overrides for ControlTree visual slots.
  **/
 export interface ControlTreeClassNames {
   panel?: string;
@@ -65,7 +65,7 @@ interface ControlTreeNode {
 }
 
 /**
- * Pure function converting flat ControlDef[] paths into a nested tree. Filtering matches leaf keys case-insensitively.
+ * 🏗️ Pure function converting flat ControlDef[] paths into a nested tree. Filtering matches leaf keys case-insensitively.
  **/
 export function buildControlTree(controls: ControlDef[], filterText: string, folderSettings?: Record<string, ControlTreeFolderSettings>): Record<string, ControlTreeNode> {
   const root: Record<string, ControlTreeNode> = {};
@@ -112,7 +112,7 @@ function sortControlTreeNodes(nodes: Record<string, ControlTreeNode>): ControlTr
 }
 
 /**
- * Default control renderer mapping controlKind to built-in components.
+ * 🔧️ Default control renderer mapping controlKind to built-in components.
  **/
 export const defaultControlRenderer = (def: ControlDef): React.ReactNode => {
   const controlId = def.path.replace(/\//g, ".");
@@ -282,7 +282,7 @@ const ControlTreeFolder: React.FC<ControlTreeFolderProps> = ({ node, folderSetti
 };
 
 /**
- * Props interface for the ControlTree component.
+ * 🧰️ Props interface for the ControlTree component.
  **/
 export interface ControlTreeProps {
   controls: ControlDef[];
@@ -295,7 +295,7 @@ export interface ControlTreeProps {
 }
 
 /**
- * Leva-like nested folder+controls tree panel using existing design system components.
+ * 🌳️ Leva-like nested folder+controls tree panel using existing design system components.
  **/
 export const ControlTree: React.FC<ControlTreeProps> = ({ controls, filterText = "", folderSettings, onToggleFolder, renderControl = defaultControlRenderer, classNames, className }) => {
   const tree = reactHostPort.useMemo(() => buildControlTree(controls, filterText, folderSettings), [controls, filterText, folderSettings]);

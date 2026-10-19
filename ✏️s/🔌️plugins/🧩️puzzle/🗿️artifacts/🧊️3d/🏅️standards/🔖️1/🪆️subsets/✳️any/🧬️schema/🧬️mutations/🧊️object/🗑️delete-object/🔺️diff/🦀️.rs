@@ -1,4 +1,4 @@
-//! attraction that touches one of its vortices), never a whole-snapshot capture. Full vortex ids
+//! 🧲️ attraction that touches one of its vortices), never a whole-snapshot capture. Full vortex ids
 //! 🔺️ Sparse diff builder for `DeleteObject` — a real cascade-aware removal (object + any
 //! are `object_id:vortex_id`.
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionsDelta;

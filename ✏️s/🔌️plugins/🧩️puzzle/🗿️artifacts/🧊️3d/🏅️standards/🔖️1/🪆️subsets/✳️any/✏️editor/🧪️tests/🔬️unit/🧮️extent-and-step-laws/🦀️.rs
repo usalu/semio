@@ -10,7 +10,7 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
-    let pages = NAKAGIN_EXAMPLE_SNAPSHOT.objects.len().div_ceil(utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
+    let pages = NAKAGIN_EXAMPLE_SNAPSHOT.objects.len().div_ceil(semio_s_artifact_puzzle_3d_editor_transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
     assert_eq!(work.extent(&command, &snapshot, &interaction, None), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
     assert!(2 + pages <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS);
 }
@@ -314,9 +314,6 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     };
     assert!(progress_steps > 1, "setActiveExample must require multiple bounded step() calls for the nakagin example, not a single-shot reducer; observed {progress_steps}");
     assert!(emit.artifact_mutations.len() > 1, "the completed emit must carry every incrementally-collected mutation, one per deleted/created item; observed {}", emit.artifact_mutations.len());
-    // 🏷️ Example loading publishes exactly ONE config row, and it moves exactly ONE field: the id of
-    // the example just loaded, which is what `export_snapshot` names its download after. The user's own
-    // shared preferences (fill count, contact tolerance, kind weights) ride through untouched.
     let Some(Puzzle3dConfigMutation::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId { value: published })) = emit.config_mutations.first().cloned() else {
         panic!("example loading must stamp the active example id on the shared config: {:?}", emit.config_mutations);
     };

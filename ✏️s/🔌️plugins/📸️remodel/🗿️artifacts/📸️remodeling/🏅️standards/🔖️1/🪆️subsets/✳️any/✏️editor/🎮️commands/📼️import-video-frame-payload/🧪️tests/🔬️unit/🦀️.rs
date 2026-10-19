@@ -31,8 +31,6 @@ async fn import_frame_payload_creates_a_stream_and_asset() {
 #[semio_framework_async_macros::async_test]
 async fn import_video_bytes_payload_extracts_frames_in_process() {
     let mut app = app().await;
-    // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
-    // frames are kept (a stride-sampling test belongs to the video engine topic file, not here).
     dispatch(&mut app, RemodelingCommand::SetIngestParams(semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 })).await;
     dispatch(&mut app, RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4).await, name: "clip.mp4".into() })).await;
     let scene = app.snapshot().expect("projection");

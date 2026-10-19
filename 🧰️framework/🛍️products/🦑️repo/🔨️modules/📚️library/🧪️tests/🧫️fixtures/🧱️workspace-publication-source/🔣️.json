@@ -636,7 +636,7 @@
       "externalFiles": []
     },
     {
-      "name": "symlink-entry-is-not-physical-authority",
+      "name": "generated-entry-link-does-not-change-source-identity",
       "manifests": [
         {
           "directory": "owner",
@@ -663,13 +663,25 @@
           "kind": "file"
         }
       ],
-      "expected": [],
-      "duplicate": true,
-      "resolutions": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./payload/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        }
+      ],
       "externalFiles": []
     },
     {
-      "name": "missing-entry-is-not-authority",
+      "name": "missing-generated-entry-retains-source-owner",
       "manifests": [
         {
           "directory": "owner",
@@ -687,9 +699,21 @@
       ],
       "files": [],
       "links": [],
-      "expected": [],
-      "duplicate": true,
-      "resolutions": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./payload/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        }
+      ],
       "externalFiles": []
     },
     {
@@ -797,7 +821,7 @@
       "externalFiles": []
     },
     {
-      "name": "intermediate-directory-link-is-not-physical-authority",
+      "name": "generated-directory-link-does-not-change-source-identity",
       "manifests": [
         {
           "directory": "owner",
@@ -825,9 +849,21 @@
           "kind": "directory"
         }
       ],
-      "expected": [],
-      "duplicate": true,
-      "resolutions": []
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./payload/link/🟨️.js"
+          ],
+          "payload": "owner/payload"
+        }
+      ]
     },
     {
       "name": "default-blocks-later-condition",
@@ -948,6 +984,136 @@
           "payload": ""
         }
       ]
+    },
+    {
+      "name": "malformed-dot-prefix-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": ".apayload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "outside-export-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "../payload/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "encoded-traversal-is-not-authority",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./payload/%2e%2e/🟨️.js"
+          }
+        },
+        {
+          "directory": "owner/payload",
+          "document": {
+            "name": "@fixture/owner"
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [],
+      "duplicate": true,
+      "resolutions": [],
+      "externalFiles": []
+    },
+    {
+      "name": "private-generated-pkg-manifest-without-output",
+      "manifests": [
+        {
+          "directory": "owner",
+          "document": {
+            "name": "@fixture/owner",
+            "exports": "./pkg/runtime.js",
+            "private": true
+          }
+        },
+        {
+          "directory": "owner/pkg",
+          "document": {
+            "name": "@fixture/owner",
+            "private": true
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [
+        "owner"
+      ],
+      "duplicate": false,
+      "resolutions": [
+        {
+          "owner": "owner",
+          "entry": ".",
+          "conditions": [],
+          "targets": [
+            "./pkg/runtime.js"
+          ],
+          "payload": "owner/pkg"
+        }
+      ],
+      "externalFiles": []
+    },
+    {
+      "name": "private-pkg-source-without-wrapper-is-retained",
+      "manifests": [
+        {
+          "directory": "owner/pkg",
+          "document": {
+            "name": "@fixture/payload",
+            "private": true
+          }
+        }
+      ],
+      "files": [],
+      "links": [],
+      "expected": [
+        "owner/pkg"
+      ],
+      "duplicate": false,
+      "resolutions": [],
+      "externalFiles": []
     }
   ],
   "publicationConflicts": [

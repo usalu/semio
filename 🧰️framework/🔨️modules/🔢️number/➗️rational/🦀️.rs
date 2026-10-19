@@ -189,7 +189,7 @@ impl Rational {
         let exponent_bits = ((bits >> 52) & 0x7FF) as i64;
         let mantissa_bits = bits & 0x000F_FFFF_FFFF_FFFF;
         let (mantissa, exponent) = if exponent_bits == 0 {
-            (mantissa_bits, -1074i64) // subnormal
+            (mantissa_bits, -1074i64)
         } else {
             (mantissa_bits | (1 << 52), exponent_bits - 1075)
         };
@@ -265,7 +265,6 @@ impl std::fmt::Display for Rational {
 
 impl Ord for Rational {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        // Cross-multiplication comparison: a/b vs c/d, with b, d > 0, compares a*d vs c*b.
         let lhs = self.numer.mul(&Integer::from_natural(other.denom.clone()));
         let rhs = other.numer.mul(&Integer::from_natural(self.denom.clone()));
         lhs.cmp(&rhs)

@@ -47,7 +47,6 @@ pub fn definition() -> PanelTabDefinition {
 /// 🪟️ Both sections are windowed: the host's `TreeWindows` decide which slice of an unbounded widget
 /// or synapse list this render materialises, and every section stamps its full `total`.
 pub fn render(snapshot: &FlowSnapshot, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    // 🧹️ The live projection owns a layout `OrderedMap` root and widget payloads that refuse a bare drop.
     with_live_host_snapshot(snapshot, |live| render_live(live, labels, windows))
 }
 

@@ -85,7 +85,7 @@ pub(super) struct PairMatchPreparation {
 struct PairVerification {
     correspondences: Vec<([f64; 2], [f64; 2])>,
     attempts: usize,
-    /// The best polished model so far, by explained correspondences.
+    /// 🕳️ The best polished model so far, by explained correspondences.
     pub(super) best: Option<semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::TwoViewResult>,
 }
 
@@ -132,7 +132,7 @@ pub(super) struct TrackPreparation {
     pub phase: TrackPhase,
     pub pair: usize,
     pub matched: usize,
-    /// Sized once for every observation the pair table can name (see [`Self::with_capacity`]): a
+    /// 🔘️ Sized once for every observation the pair table can name (see [`Self::with_capacity`]): a
     /// table growing past 2¹⁵ keypoint nodes rehashed every one of them inside a single bounded union
     /// step (10 ms on the adversarial law's 200 000-match pair), and an ordered map instead spends as
     /// long freeing its nodes in the step that completes the tracks.

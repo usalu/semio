@@ -3,7 +3,8 @@ pub use semio_framework_dsl_record::BorrowedDslVariants;
 use semio_framework_dsl_record::{FieldValue,receiving::{DslOwnedReceivingVariants,OwnedFieldReceiving,OwnedSlot}};
 pub use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError};
 pub use protocol::{OpBinaryReceiving,OpBinaryReceivingCursor};
-use semio_framework_value::{NativeDecodeControl,RetainedCloneStep,RetirementDemand,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use semio_framework_value::{RetainedCloneStep, RetirementDemand, ValueRefusalKind, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_os_pack::record::RetainedRecordReceiving;
 use std::mem::{ManuallyDrop,size_of};
 /// 🎞️ Implements an authored ordinal operation only through its actual owned receiving capability.

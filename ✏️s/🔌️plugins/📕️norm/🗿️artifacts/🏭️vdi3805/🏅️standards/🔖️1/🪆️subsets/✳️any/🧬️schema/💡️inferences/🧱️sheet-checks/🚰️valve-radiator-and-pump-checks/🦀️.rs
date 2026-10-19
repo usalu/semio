@@ -86,7 +86,6 @@ pub(super) fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct
     }
     out.push(ct_check.build());
 
-    // PN domain (not just presence) — VDI 3805-2 §4.2.3 / DIN EN 1092.
     if !attrs.pressure_class.is_empty() && !PRESSURE_CLASS_CODES.iter().any(|c| *c == attrs.pressure_class.as_str()) {
         out.push(
             CheckResult::assess(format!("vdi3805.2.pn.domain.{article}"), part.clone(), clause("2", "4.2.3"), subject.clone(), copy("Pressure class domain", "Druckstufen-Wertebereich"))

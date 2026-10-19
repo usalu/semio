@@ -142,11 +142,6 @@ semio_framework_plugin::app_commands! {
         "addBlock" as "add-question" => add_question::AddQuestion,
         "removeBlock" as "remove-question" => remove_question::RemoveQuestion,
         "patchQuestions" as "patch-questions" => patch_questions::PatchQuestions,
-        // 🩹️ `patchQuestionOptions`..`removeVectorField` (rows 18-23) come BEFORE `moveQuestion`/
-        // `dropQuestionKind` (rows 24-25) here, even though all 5 live in the same `🎮️commands/*` files —
-        // this row order is the pre-migration `forms_protocol::FormsCommand`'s exact binary variant
-        // ordinal and must not be re-sorted by file grouping (see the doc comment above: reordering is a
-        // wire-format break no round-trip test catches, since every row still round-trips fine on its own).
         "patchQuestionOptions" as "patch-question-options" => patch_question_options::PatchQuestionOptions,
         "addQuestionOption" as "add-question-option" => add_question_option::AddQuestionOption,
         "removeQuestionOption" as "remove-question-option" => remove_question_option::RemoveQuestionOption,

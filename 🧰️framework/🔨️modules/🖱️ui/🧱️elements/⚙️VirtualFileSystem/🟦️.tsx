@@ -13,7 +13,7 @@ import { type IconName } from "@semio-tech/assets";
 // requires a non-circular import (see 🧱️elements/🎗️UiLabel/🟦️.tsx's header comment for why
 // the barrel import caused a real bug).
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { TableAvatar } from "../📻️TableAvatar/🟦️.tsx";
 import { Table, type TableColumn, type TableProps, type HierarchicalRowData, type DragDropConfig } from "../📊️Table/🟦️.tsx";
 import { type TreeSelectionMode } from "../🌳️Tree/📋️data/🟦️.ts";

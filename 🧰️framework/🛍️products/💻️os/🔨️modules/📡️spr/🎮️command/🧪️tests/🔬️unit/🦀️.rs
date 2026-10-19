@@ -33,7 +33,6 @@ struct Item {
     value: i64,
 }
 impl Identified<String> for Item {
-    // 🚫️async: E1 pure accessor — Identified::id must stay sync, see the trait's own tag.
     fn id(&self) -> &String {
         &self.id
     }
@@ -180,8 +179,6 @@ fn named_triple_diff_is_empty_holds() {
 #[test]
 fn indexed_apply_modifies_removes_descending_then_inserts_ascending() {
     let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }, Item { id: "c".into(), value: 3 }];
-    // BASE state: [a, b, c]. modified targets base index 0 (a). removed targets base index 2 (c).
-    // added targets FINAL indices 0 and 2 in the post-remove/pre-add state [a', b].
     let diff = IndexedTripleDiff::<Item, i64> { removed: vec![2], modified: vec![(0, 100)], added: vec![(0, Item { id: "z".into(), value: 9 }), (2, Item { id: "y".into(), value: 8 })] };
     indexed_apply(&mut items, &diff).expect("valid indexed diff");
     assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["z", "a", "y", "b"]);

@@ -39,7 +39,6 @@ fn lzw_round_trips_both_early_change_settings() {
     for early_change in [true, false] {
         assert_eq!(lzw_decode(&lzw_encode(&data, early_change), early_change).unwrap(), data);
     }
-    // 🔤 The spec's own example (§7.4.4.2 Table 8 / Example): input 45 45 45 45 45 65 45 45 45 66.
     let spec = [45u8, 45, 45, 45, 45, 65, 45, 45, 45, 66];
     let encoded = lzw_encode(&spec, true);
     assert_eq!(encoded, vec![0x80, 0x0B, 0x60, 0x50, 0x22, 0x0C, 0x0C, 0x85, 0x01]);

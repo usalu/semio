@@ -10,6 +10,7 @@ use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
+use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields, validate = "Self::validate_interaction_identities", validate_controlled = "Self::validate_interaction_identities_controlled")]
 #[dsl(id = "fem.fem2d", layout = "lines")]
@@ -45,7 +46,7 @@ pub struct Fem2dSnapshotValue {
 }
 impl Fem2dSnapshotValue {
  /// 🛂️ Explicit reference decoding validates plain authoring identities under its original decoder control.
- pub fn validate_interaction_identities_controlled(&self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{super::interaction_identity::validate_typed(self,control)}
+ pub fn validate_interaction_identities_controlled(&self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{super::interaction_identity::validate_typed(self,control)}
     pub fn validate_interaction_identities(&self) -> Result<(), semio_framework_value::ValueError> {
         let invalid = || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "FEM2d identity is empty, repeated in its namespace, or exceeds shared scoped identity bounds");
         let rows = self.nodes.iter().map(|row| ("node", row.id.as_str()))

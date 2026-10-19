@@ -1,4 +1,4 @@
-//! lowpoly <- stl
+//! 🔺️ lowpoly <- stl
 //!
 //! Geometry over the real STL codecs: ASCII (`engine::decode_stl_ascii`) or binary (`engine::decode_stl_binary`), picked
 //!    by content. Triangles are welded on bit-identical vertex positions and become ONE lowpoly

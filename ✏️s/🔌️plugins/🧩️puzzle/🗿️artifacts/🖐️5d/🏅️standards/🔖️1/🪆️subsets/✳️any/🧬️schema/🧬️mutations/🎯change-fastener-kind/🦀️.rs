@@ -1,9 +1,9 @@
-//! Puzzle5d mutation — `ChangeFastenerKind`: changes a fastener's `fastener_kind` catalog reference.
+//! 🧩️ Puzzle5d mutation — `ChangeFastenerKind`: changes a fastener's `fastener_kind` catalog reference.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
-/// `change-fastener-kind` payload.
+/// 🔩️ `change-fastener-kind` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -32,7 +32,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeFastenerKind {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ChangeFastenerKind
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ChangeFastenerKind>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

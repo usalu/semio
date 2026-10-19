@@ -111,7 +111,7 @@ fn default_transform()->TransformJson {TransformJson {x:0.0,y:0.0,a:1.0,b:0.0,c:
 #[derive(Clone, Debug, Default, Deserialize, semio_framework_value::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-struct AdjustmentParamsJson {
+pub(super) struct AdjustmentParamsJson {
     pub(super) brightness: Option<f32>,
     pub(super) contrast: Option<f32>,
 }

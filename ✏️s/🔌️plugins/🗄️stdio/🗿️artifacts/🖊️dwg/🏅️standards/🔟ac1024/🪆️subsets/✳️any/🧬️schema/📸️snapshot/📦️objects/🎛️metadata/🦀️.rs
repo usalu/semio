@@ -103,11 +103,11 @@ macro_rules! dwg_controlled_payloads {
                 Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
             })
         }
-        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{
             let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload requires a record"))};
             Self::from_record_controlled(record,control)
         }
-        fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+        fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{
             control.scoped_stage(|control|{
                 control.begin_stage(record.fields.len())?;
                 let kind=match record.get($tag_field){Some(semio_framework_dsl_record::FieldValue::Enum(value))=>*value,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed payload requires its authored kind"))};

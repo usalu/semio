@@ -1,10 +1,10 @@
 /** 🪪 Window action panel staging and the palette redirect and keybinding rule. */
 import utilityActionPolicy from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧰️utility-action-policy/🔣️.json";
 import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️utility-assignment/🧪️tests/🧫️fixtures/🔣️.json";
-import { manifestUtilitiesInitialFixture as initialWindowUtilityCases } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { manifestUtilitiesInitialFixture as initialWindowUtilityCases } from "@semio-tech/framework/manifest/testing/fixtures";
 import { resolveUtilityActivationV1 as resolveAssignmentPress } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { createElement, useState, type ReactElement } from "react";
-import { parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
+import { parseResolvedPluginViewState, windowViewContext } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
 import Ajv2020 from "ajv/dist/2020";
 import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/⌨️chord-key-tokens.json";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
@@ -63,9 +63,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     return match as HTMLButtonElement;
   };
 
-  // 🌳️ Action rows render as Tree items (`role="treeitem"`), not `<button>`s — only the Execute/Reset
-  // form actions render as real buttons. Row clicks (fire a zero-arg action, toggle an arg-carrying one)
-  // go through this helper instead of `buttonByText`.
   const rowByText = (container: HTMLElement, text: string): HTMLElement => {
     const match = [...container.querySelectorAll('[role="treeitem"]')].find((row) => row.querySelector('[data-slot="tree-label"]')?.textContent?.trim() === text);
     if (!match) throw new Error(`tree row "${text}" not found`);
@@ -84,7 +81,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     fireEvent.click(buttonByText(container, "Execute"));
     expect(onExecute).toHaveBeenCalledTimes(1);
     expect(onExecute).toHaveBeenCalledWith({ controllerId: "c", action: "extrude", args: { depth: 3, segments: 2 } });
-    // staged values survive Execute (tweak-and-repeat): the inputs still hold their values
     expect((container.querySelectorAll('input[type="number"]')[0] as HTMLInputElement).value).toBe("3");
     fireEvent.click(buttonByText(container, "Execute"));
     expect(onExecute).toHaveBeenCalledTimes(2);
@@ -121,7 +117,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     fireEvent.change(input(), { target: { value: "9" } });
     expect(input().value).toBe("9");
     fireEvent.click(buttonByText(container, "Reset"));
-    // still expanded (Execute/Reset buttons present) and back to the default effective value
     expect(input().value).toBe("2");
     expect([...container.querySelectorAll("button")].some((b) => b.textContent?.includes("Execute"))).toBe(true);
   });
@@ -148,7 +143,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it.each(["en", "de"] as const)("initial window utility decisions follow declared arms and preserve resolved registers (%s)", async (locale) => {
-    const { resolveInitialWindowUtility } = await import("../../../../../../../🔨️modules/🛂️manifest/🪛️utilities/🌅️initial/🟦️.ts");
+    const { resolveInitialWindowUtility } = await import("@semio-tech/framework/manifest/utilities/initial");
     const { createVersionedRegisterV1 } = await import("../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts");
     const ajv = new Ajv2020({ strict: true, $data: true });
     const fixture = {...initialWindowUtilityCases,cases:initialWindowUtilityCases.cases.map(row=>{
@@ -200,7 +195,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   });
 
   it("initial utility nullable admission preserves the resolved host context contract", async () => {
-    const { testResolvedHostContext } = await import("../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts");
+    const { testResolvedHostContext } = await import("@semio-tech/framework/manifest/view-context/testing/resolved-host-context");
     testResolvedHostContext();
   });
 
@@ -261,11 +256,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     expect(rowByText(container, "Flatten2")).toBeTruthy();
   });
 
-  // 🧹️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B53: the rail is a user-facing surface, so it carries the
-  // SAME curation the command palette and the shell fallback menu already apply (`if (!action.inPalette)
-  // continue`). Without it the puzzle3d rail rendered 96 rows — `worldPointerDown`, `suggestionsTick`,
-  // `registerBrushMesh`, `interactionSelect`, `noteShellCommand`, … — and pushed `Export` to row 79 at
-  // y=1990 inside an 807 px band, 1 125 px below the fold (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §3).
   const paneRowIds = (actions: readonly ActionDefinition[]): string[] => {
     const windowKind = { id: "main", actions } as unknown as AppWindowKindDefinition;
     const app = { controllerId: "c", windowKinds: [windowKind], utilities: [] } as unknown as AppDefinition;
@@ -274,13 +264,6 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     return [...render(createElement("div", null, node)).container.querySelectorAll('[id^="action."]')].map((row) => row.id);
   };
 
-  // 📜️ A LONG rail must still reach its staged-argument form. `Tree` clips itself, so a rail taller than
-  // the pane used to hide its own last rows: generation3d's 32-row rail rendered a 960 px tree inside a
-  // 901 px pane body at 1600×1000 and put the expanded `addWidget` form's `kind` combobox at y=1038 —
-  // outside the viewport, `click` timed out, and the verb dispatched with no staged argument
-  // (ticket 26/09/18 B3c §4.3, re-measured by FL1). jsdom lays nothing out, so what this law can hold is
-  // the structure that makes the band reachable: the rail is the scroll container, it may shrink inside
-  // its pane, and the staged form — control AND execute — renders inside it rather than beside it.
   it("a 32-row rail scrolls its own band and keeps the staged-argument form inside it", () => {
     const rows: ResolvedActionDefinition[] = Array.from({ length: 32 }, (_, index) => ({
       id: `row${index}`,
@@ -374,12 +357,9 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
   it("keybinding intent: arg-less fires, arg-action opens unless already expanded and valid then executes (P4)", () => {
     expect(resolveKeybindingIntent(zeroAction, null, {})).toEqual({ kind: "fire" });
     expect(resolveKeybindingIntent(undefined, null, {})).toEqual({ kind: "fire" });
-    // not expanded → open
     expect(resolveKeybindingIntent(argAction, null, {})).toEqual({ kind: "open", actionId: "extrude" });
     expect(resolveKeybindingIntent(argAction, "other", { depth: 3 })).toEqual({ kind: "open", actionId: "extrude" });
-    // expanded but required arg missing → stays open, never silent-fires
     expect(resolveKeybindingIntent(argAction, "extrude", {})).toEqual({ kind: "open", actionId: "extrude" });
-    // expanded and valid → execute with merged effective args
     expect(resolveKeybindingIntent(argAction, "extrude", { depth: 4 })).toEqual({ kind: "execute", actionId: "extrude", args: { depth: 4 } });
   });
 

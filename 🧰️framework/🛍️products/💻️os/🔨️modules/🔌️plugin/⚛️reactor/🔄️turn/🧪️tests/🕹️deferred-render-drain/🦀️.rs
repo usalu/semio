@@ -7,6 +7,7 @@
 //! body. Wave B48, ticket 26/09/02/PUZZLE-3D-END-TO-END.
 use semio_framework_plugin_reactor_patches as patches;
 use semio_framework_ui_contract as ui_contract;
+use semio_framework_plugin_reactor_turn::DirtyPollOwners;
 
 #[doc(hidden)]
 pub fn surface_id(text: &str) -> ui_contract::SurfaceId {

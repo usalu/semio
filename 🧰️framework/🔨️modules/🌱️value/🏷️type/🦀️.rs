@@ -75,7 +75,7 @@ impl ToValue for ValueType {
 }
 
 impl FromValue for ValueType {
-    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         controlled::decode(value, control)
     }
     fn retire_decoded(self) {

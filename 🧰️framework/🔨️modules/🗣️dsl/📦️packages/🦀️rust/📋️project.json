@@ -7,15 +7,42 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
     "test-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
@@ -24,9 +51,14 @@
     },
     "test-native": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",
@@ -35,9 +67,14 @@
     },
     "test-reference": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust",

@@ -1,0 +1,6401 @@
+{
+ "glueReport": [
+  {
+   "glue": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts",
+   "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
+   "added": [
+    "hostBuildPlugins"
+   ],
+   "types": [],
+   "conflicts": []
+  }
+ ],
+ "unplannedGaps": [
+  {
+   "to": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DomainHover",
+    "DomainSelection",
+    "DomainTopology"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DomainHover",
+    "DomainSelection",
+    "parseInteractionTarget",
+    "parseMergeMode"
+   ]
+  },
+  {
+   "to": "@semio-tech/puzzle-wasm",
+   "pkg": "@semio-tech/puzzle-wasm",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/puzzle-wasm",
+   "pkg": "@semio-tech/puzzle-wasm",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/puzzle-wasm",
+   "pkg": "@semio-tech/puzzle-wasm",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "buildRepositoryWasmWebV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "runBun"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "runBun"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "buildRepositoryWasmWebV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "policyReadMemberStoreProducerSources"
+   ]
+  },
+  {
+   "to": "@semio-tech/stdio-docx",
+   "pkg": "@semio-tech/stdio-docx",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/stdio-docx",
+   "pkg": "@semio-tech/stdio-docx",
+   "names": "*"
+  },
+  {
+   "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/stdio-semio,@semio-tech/stdio-semio-rs",
+   "names": [
+    "semioMemberStoreProducerSourceSelfTests"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "uiAxesTargets"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "publishUiAxes"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "readUiAxes"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": [
+    "openNxSdkV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": [
+    "openNxSdkV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": [
+    "nativeSelectedTaskPlannerV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": [
+    "requireBazelPlatformV1",
+    "bazelProgressLineV1",
+    "describeBazelReadinessV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts",
+   "pkg": "@semio-tech/nx-bootstrap-tools",
+   "names": [
+    "nxOperationArgumentsV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧬️schema/📣️contribution/🔣️.json",
+   "pkg": "@semio-tech/plugin-registry",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/plugin-registry",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📏️capacity/🟦️.ts",
+   "pkg": "@semio-tech/process",
+   "names": [
+    "nativeImageUsableBytesV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🪟️host/🟦️.ts",
+   "pkg": "@semio-tech/process",
+   "names": [
+    "readNativeWindowsLongPathsEnabledV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts",
+   "pkg": "@semio-tech/process",
+   "names": [
+    "probeNativeDirectoryCaseCapabilityV1",
+    "probeNativeDirectoryExchangeV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts",
+   "pkg": "@semio-tech/process",
+   "names": [
+    "nativeDirectoryHostAvailableBytesV1",
+    "probeNativeDirectoryCaseCapabilityV1",
+    "probeNativeDirectoryExchangeV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts",
+   "pkg": "@semio-tech/process",
+   "names": [
+    "withIssuedLawStorageV1",
+    "lawSourceBoundaryV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "defineLint",
+    "TechnologyLinter"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "createBuildBootstrapCapabilitiesV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "createNativeBuildCallerCapabilitiesV1",
+    "NativeBuildCallerCapabilitiesV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️caller.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "buildChangedFilesCommandsV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "BuildCacheContextV1",
+    "BuildCacheStatusV1",
+    "BuildCacheToolV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "nxBuildArgumentsV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingStoreV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1",
+    "withRepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingStoreV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📐️phases/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "ToolingRetirementReadContextV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "ToolingRetirementReadContextV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingStoreV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryToolingReadContextV1",
+    "ToolingRetirementReadContextV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/🔣️probe.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔁️verification/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⚙️operations/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "CacheProbeInputV1",
+    "CacheProbeToolV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "SelectedTaskPlannerV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "sourceClosureTaskEnvironments",
+    "sourceClosureReceiptHolds"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "requireNxGraphNativeDirectoryV1",
+    "withOriginalNxGraphNativeStorageV1",
+    "requireNxGraphDiagnosticDirectoryV1",
+    "nxGraphDaemonDisabledMarkerV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🦀️promotion/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "readNxRustCacheExpectationV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withOriginalNxFixedCacheV1",
+    "requireOriginalNxRustCachePromotionV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withNxDaemonServiceV1",
+    "withNxDaemonRequestV1",
+    "requestNxDaemonShutdownV1",
+    "completeNxDaemonShutdownV1",
+    "beginNxDaemonShutdownV1",
+    "markNxDaemonServerClosedV1",
+    "registerNxDaemonServerV1",
+    "nxDaemonPinnedEnvironmentV1",
+    "retainNxDaemonWorkerV1",
+    "createNxDaemonJournalWorkerV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withNxDaemonStartupV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️export/🟨️.mjs",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "compactTaskPlans"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "publishGraphFilesV1",
+    "withGraphPublisherControlV1",
+    "readGraphPublicationSnapshotV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📤️publisher/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "writeSelectedGraphPublisherReceiptV1",
+    "selectedGraphPublisherReceiptHoldsV1",
+    "captureSelectedGraphReuseReceiptV1",
+    "selectedGraphReuseReceiptHoldsV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "writeSelectedGraphHandoffV1",
+    "selectedGraphHandoffHoldsV1",
+    "SELECTED_GRAPH_HANDOFF_ENV"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "selectedTaskScopeV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "selectedTaskSelectionV1",
+    "selectedGraphSdkPortsV1",
+    "originalSelectedGraphHandoffHoldsV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "createSelectedGraphSourceReceiptV1",
+    "selectedGraphSourceReceiptHoldsV1",
+    "isGlobalGraphIdentityPathV1",
+    "validateSelectedGraphValueV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "readNxGraphSourceProofV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "readFilesystemJournalRpcRequestV1",
+    "readFilesystemJournalRpcResponseV1",
+    "loadedFilesystemJournalToolingIdentityV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "createRepositoryFilesystemJournalV1",
+    "repositoryFilesystemJournalPolicyV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "writeNxGraphSeal",
+    "nxGraphSealHolds",
+    "nxGraphSourceMembershipV2"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withOriginalSelectedNativeSnapshotV1",
+    "selectedNativeWorkspaceRootV1",
+    "selectedNativeWorkspaceInventoryV1",
+    "requireSelectedNativeFileCoverageV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧬️schema/📜️receipt.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingStoreV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "runTool"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingOperationV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingOperationV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingOperationV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingOperationV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "openRepositoryCachePartitionV1",
+    "repositoryLeaseDirectoryV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryCacheStoreQueuedMaintenanceV1",
+    "withRepositoryCacheStoreV1",
+    "withRepositoryCacheStoreMaintenanceV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryCachePartitionRootV1",
+    "repositoryLeaseDirectoryV1",
+    "openRepositoryCachePartitionV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryCacheBudgetV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryLeaseDirectoryV1",
+    "openRepositoryCachePartitionV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryCacheBudgetV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "readDefaultBuildCliPolicyV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryCacheStoreQueuedMaintenanceV1",
+    "withRepositoryCacheStoreMaintenanceTaskV1",
+    "requireRepositoryCacheStoreMaintenanceV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "openRepositoryCachePartitionV1",
+    "repositoryCachePartitionRootV1",
+    "repositoryLeaseDirectoryV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryCacheOrdinaryMaintenanceV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "withRepositoryToolingOperationV1",
+    "ToolingRetirementReadContextV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "openRepositoryCachePartitionV1",
+    "repositoryLeaseDirectoryV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "repositoryToolingReadContextV1",
+    "ToolingRetirementReadContextV1",
+    "RepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
+   "pkg": "@semio-tech/ui-styling",
+   "names": [
+    "STYLING_PYTHON_PROVIDER_V1"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧪️tests/🔬️unit/🟦️.ts",
+   "pkg": "@semio-tech/energy-js",
+   "names": [
+    "runWeatherChecks"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🧪️tests/🔆️pv-plane/🟦️.ts",
+   "pkg": "@semio-tech/energy-js",
+   "names": "*"
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🧪️tests/🌡️thermal/🟦️.ts",
+   "pkg": "@semio-tech/energy-js",
+   "names": "*"
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/📅️chronology/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/energy-js",
+   "names": [
+    "runWeatherChronologyChecks"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🔲️enclosure/⚡️exchange/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/energy-js",
+   "names": "*"
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧪️tests/🔬️unit/🟦️.ts",
+   "pkg": "@semio-tech/energy-js",
+   "names": [
+    "runWeatherChecks"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/✨️create/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/energy-model",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🌡️change-temperature/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/energy-model",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🏠️change-mounting/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/energy-model",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/💨️change-wind-loss/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/energy-model",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system/🧊️change-heat-loss/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/energy-model",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DenseSolveCursor"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/↔️inverse/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DenseInverseCursor"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DenseSolveBudget"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "restoreSelection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🟦️.ts",
+   "pkg": "@semio-tech/framework-tool-run-rs,@semio-tech/framework-tool-run-ts",
+   "names": [
+    "PayloadReadView",
+    "validatePayloadUpdate",
+    "validatePayloadContinuation",
+    "PayloadIndexedSource",
+    "PayloadUpdate"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "runRepositoryCargoCommandV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "buildRepositoryWasmWebV1"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-2d",
+   "names": [
+    "parseFem2dLoadPatch",
+    "parseFem2dCombinationPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-2d",
+   "names": [
+    "parseFem2dNodePatch",
+    "parseFem2dSectionPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-2d",
+   "names": [
+    "parseFem2dRegionPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts",
+   "pkg": "@semio-tech/fem-2d",
+   "names": [
+    "parseFemSupport"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-2d",
+   "names": [
+    "parseFem2dSupportPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-2d",
+   "names": [
+    "parseFem2dMaterialPatch",
+    "parseFem2dMaterialsDelta"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFemFixedDofs"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFem3dLoadPatch",
+    "parseFem3dCombinationPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFem3dNodePatch",
+    "parseFem3dSectionPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFem3dSolidPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFemSupport"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFem3dSupportPatch"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts",
+   "pkg": "@semio-tech/fem-3d,@semio-tech/fem-3d-rs",
+   "names": [
+    "parseFem3dMaterialPatch",
+    "parseFem3dMaterialsDelta"
+   ]
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📋️table/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/fem-js",
+   "names": "*"
+  },
+  {
+   "to": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📋️table/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/fem-js",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧪️color-input/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "colorInputSelfTests"
+   ]
+  },
+  {
+   "to": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "worldProjectionFamily",
+    "WorldProjectionSpec"
+   ]
+  },
+  {
+   "to": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WORLD_LOCKED_OPACITY_SCALE"
+   ]
+  },
+  {
+   "to": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "worldEntitySelectable"
+   ]
+  },
+  {
+   "to": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "createTemplatePool",
+    "ViewRadiusLayer"
+   ]
+  },
+  {
+   "to": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WorldProjectionKindSwitch",
+    "worldProjectionSpecIconId",
+    "WorldProjectionSpec",
+    "WorldReferenceProps",
+    "WorldReferenceRelocatePayload"
+   ]
+  },
+  {
+   "to": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DEFAULT_LOD_GRID_FACTOR",
+    "DEFAULT_MANUAL_LOD",
+    "WorldCameraInvalidator",
+    "WorldCanvas",
+    "WorldLayer",
+    "WorldLodBridge",
+    "WorldLodGridHelper",
+    "WorldOrbitCameraViewApplier",
+    "WorldOrbitGated",
+    "WorldOrbitViewControls",
+    "WorldOrbitViewSnapGateProvider",
+    "orbitCameraViewGumballPlane",
+    "OrbitCameraProjection",
+    "WorldProjectionSpec",
+    "WorldReferenceLayer",
+    "WorldReferenceProps",
+    "WorldReferenceRelocatePayload",
+    "OrbitCameraViewId",
+    "WorldCanvasProps",
+    "WorldCameraState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts",
+   "pkg": "@semio-tech/framework-dsl-record-rs,@semio-tech/framework-dsl-record-ts",
+   "names": [
+    "testDeclaredVariantFieldOracle"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "resolveBootPrimaryAppV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "paintCompositedLayers",
+    "drawSceneNode",
+    "CanvasSceneNode"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "boardTestSession"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️entity-id/🔣️.json",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧫️fixtures/🪪️render-revision/🔣️.json",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️entity-id/🟦️.ts",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "operationEntityId"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🔣️.json",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🧬️schema/🪪️render-revision/🟦️.ts",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "renderRevisionMatches"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "testCameraPresenceContract"
+   ]
+  },
+  {
+   "to": "@semio-tech/puzzle-wasm",
+   "pkg": "@semio-tech/puzzle-wasm",
+   "names": "*"
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🏷️result-source/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "testResultSourceIdentity"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🏷️result-source/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "decodeResultSourceIdentity"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️restore-funding/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "testNumericalRestoreFundingWire"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎯️positive-spectrum/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyPositiveSpectrumOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️pencil/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifySymmetricPencilOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️shape/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "testSubspaceShapeOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-ldlt/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyPagedLdltOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🧮️triplet-csr/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyTripletCsrOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🌀️geometric-cells/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyGeometricCellOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/⚖️combination-stress/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyCombinationStressOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🌀️geometric-cells/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyGeometricCellOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️pencil/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifySymmetricPencilOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-ldlt/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyPagedLdltOracle"
+   ]
+  },
+  {
+   "to": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🧮️triplet-csr/🟦️.ts",
+   "pkg": "@semio-tech/s-fem-engine-ts",
+   "names": [
+    "verifyTripletCsrOracle"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "verifyRetainedIndexSortOracle"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🟦️.ts",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "verifyRetainedIndexSortOracle"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CompareHint",
+    "Hint",
+    "SheetSortingTask",
+    "Slug",
+    "SortingAnswer"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "answerComplete",
+    "challengeRules",
+    "thinkingScope",
+    "Answer",
+    "Hint",
+    "Id",
+    "RunView",
+    "SheetTask",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Challenge"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CHALLENGES",
+    "challengeRules",
+    "Challenge"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CompareHint",
+    "Hint",
+    "MatchingAnswer",
+    "SheetDimension",
+    "SheetMatchingTask",
+    "SheetItem",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "LANGUAGES",
+    "Rejection",
+    "ShortText",
+    "TaskKind",
+    "Text"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "isSlug",
+    "roomScope",
+    "Challenge",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "reach",
+    "Answer",
+    "CrowdView",
+    "Icon",
+    "Id",
+    "MatchingTaskResult",
+    "Quantity",
+    "SheetClassificationTask",
+    "SheetMatchingTask",
+    "SheetSortingTask",
+    "SheetTask",
+    "Slug",
+    "SortingTaskResult",
+    "TaskResult",
+    "Text",
+    "Challenge",
+    "ClassificationTaskResult"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "roomScope",
+    "BadgeAward",
+    "CourseBadgeView",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "LEADERBOARD_PERIODS",
+    "learnerTag",
+    "roomScope",
+    "CourseView",
+    "Leaderboard",
+    "LeaderboardPeriod",
+    "LeaderboardRow",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "learnerTag",
+    "CourseView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "presenceRun",
+    "Place",
+    "PresencePreferences",
+    "PresencePresentation",
+    "PresenceState",
+    "RunView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CourseView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "learnerTag",
+    "presenceRoster",
+    "Anchor",
+    "CourseView",
+    "Cursor",
+    "CursorState",
+    "Identity",
+    "Place",
+    "PresenceRoster",
+    "PresenceState",
+    "ThinkingState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "cursorProblem",
+    "presenceProblem",
+    "roomScope",
+    "rosterScope",
+    "thinkingAnswer",
+    "thinkingProblem",
+    "thinkingScope",
+    "Anchor",
+    "Cursor",
+    "CursorState",
+    "Identity",
+    "Place",
+    "PresencePresentation",
+    "PresenceState",
+    "RunView",
+    "ThinkingAnswer",
+    "ThinkingState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Anchor",
+    "CourseView",
+    "Cursor",
+    "Place",
+    "PresenceState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CHALLENGES",
+    "courseViewIssues",
+    "CourseView",
+    "Challenge",
+    "Id",
+    "LearnerView",
+    "RunView",
+    "isTimestamp"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "challengeRules",
+    "learnerTag",
+    "roomScope",
+    "RunSummary"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Quantity"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "challengeRules",
+    "roomScope",
+    "thinkingScope",
+    "CourseQuizView",
+    "Challenge",
+    "RunView",
+    "ThinkingState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "presenceProfile",
+    "PresencePreferences",
+    "PresencePresentation"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Answer",
+    "Command",
+    "Id",
+    "RecordAnswerCommand",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Category",
+    "ClassificationAnswer",
+    "Hint",
+    "SheetClassificationTask",
+    "SheetItem",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CROWD_SCORE_BINS",
+    "challengeRules",
+    "placeBin",
+    "scoreBin",
+    "thinkingCrowd",
+    "valueKey",
+    "Answer",
+    "CrowdItem",
+    "CrowdView",
+    "Icon",
+    "RunView",
+    "SheetTask",
+    "Slug",
+    "TaskKind",
+    "TaskResult",
+    "ThinkingItem",
+    "ThinkingState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Answer",
+    "CompareHint",
+    "Hint",
+    "Quantity",
+    "SheetTask",
+    "Slug",
+    "Text"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Answer",
+    "BadgeAwardedEvent",
+    "Challenge",
+    "Id",
+    "OpenTaskCommand",
+    "RunSubmittedEvent",
+    "Slug",
+    "StartRunCommand",
+    "SubmitRunCommand"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Command",
+    "HandleView",
+    "Id"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CourseView",
+    "Id",
+    "Identity",
+    "LearnerView",
+    "RunView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Command",
+    "Event",
+    "LearnerRegisteredEvent",
+    "Rejection"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Id",
+    "LearnerView",
+    "RunView",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "challengeRules",
+    "Command",
+    "Id",
+    "Identity",
+    "IdentifyLearnerCommand"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Id"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "acted",
+    "Answer",
+    "CourseView",
+    "Challenge",
+    "CrowdView",
+    "Hint",
+    "Id",
+    "Identity",
+    "Leaderboard",
+    "LeaderboardPeriod",
+    "LearnerView",
+    "Rejection",
+    "RunResult",
+    "RunSummary",
+    "RunView",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Id",
+    "RunView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Id"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "emptyLearnerState",
+    "evolveLearner",
+    "challengeRules",
+    "Command",
+    "Event",
+    "HandleView",
+    "Id",
+    "LearnerState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "emptyLearnerState",
+    "HandleView",
+    "Id",
+    "Identity",
+    "IdentityClaim",
+    "IdentifyLearnerCommand"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Answer",
+    "Challenge",
+    "Id",
+    "IdentityClaim",
+    "RunView",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "Icon",
+    "Motion",
+    "TaskKind"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "HANDLE_INPUT_MAX",
+    "HANDLE_MAX",
+    "normalizeHandle",
+    "Identity",
+    "IdentityClaim",
+    "Rejection"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "DEFAULT_LIMITS",
+    "courseView",
+    "decideHandle",
+    "decideLearner",
+    "emptyHandleState",
+    "fnv1a32",
+    "leaderboard",
+    "learnerView",
+    "normalizeHandle",
+    "points",
+    "runSeed",
+    "runView",
+    "sheetOf",
+    "transcript",
+    "Course",
+    "CourseView",
+    "Command",
+    "Decision",
+    "HandleView",
+    "Hint",
+    "Id",
+    "Identity",
+    "Leaderboard",
+    "LeaderboardPeriod",
+    "LearnerState",
+    "LearnerView",
+    "Limits",
+    "LoadedQuiz",
+    "Quiz",
+    "RunState",
+    "RunSummary",
+    "RunView",
+    "Slug",
+    "Timestamp"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "REJECTIONS",
+    "WIRE_VERSION",
+    "handleActorId",
+    "normalizeHandle",
+    "CourseView",
+    "Command",
+    "CrowdView",
+    "Event",
+    "HandleView",
+    "Id",
+    "Leaderboard",
+    "LeaderboardPeriod",
+    "LearnerView",
+    "Query",
+    "Rejection",
+    "RunView",
+    "Slug"
+   ]
+  },
+  {
+   "to": "@semio-tech/course",
+   "pkg": "@semio-tech/course",
+   "names": [
+    "CourseView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ClassificationTaskView",
+    "MatchingTaskView",
+    "SortingTaskView",
+    "ordered",
+    "courseText",
+    "TaskViewProps"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "formatCountdown",
+    "formatDuration",
+    "initialCourseState",
+    "courseText",
+    "OthersChoice",
+    "CourseSession",
+    "CourseText"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "RunScreen",
+    "clockStage"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "COURSE_LOCALES",
+    "CourseApp",
+    "documentTitle",
+    "initialCourseState",
+    "localStore",
+    "memoryStorageOrigin",
+    "mountCourse",
+    "preferredLocale",
+    "courseInstance",
+    "readPreferences",
+    "PresenceConnect",
+    "CourseState",
+    "StorageArea"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "EMPTY_PRESENCE_VIEW",
+    "PresenceOverlay",
+    "paintStyle",
+    "peerInk",
+    "PeerCursor"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "HomeScreen",
+    "IdentityScreen",
+    "ProctorUnavailable",
+    "CourseApp",
+    "CourseIntroduction",
+    "evolveCourseState",
+    "homePages",
+    "initialCourseState",
+    "localStore",
+    "memoryStorageOrigin",
+    "courseIntroduction",
+    "courseText",
+    "readPreferences",
+    "CourseSession"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "usePetQuestion",
+    "CoursePets",
+    "CoursePetsProvider",
+    "evolveCourseState",
+    "shinyPetSpecies",
+    "CoursePetsSource",
+    "CardIcon",
+    "ClassificationTaskView",
+    "HomeScreen",
+    "PET_DEEDS",
+    "PET_DEED_LABELS",
+    "PET_DEED_SAID",
+    "PetTopic",
+    "PreferencesPanel",
+    "COURSE_LOCALES",
+    "COURSE_PET_CONTROLS",
+    "COURSE_PET_PROPS",
+    "CourseCard",
+    "initialCourseState",
+    "localStore",
+    "memoryStorageOrigin",
+    "petPlayers",
+    "petProp",
+    "courseText",
+    "readPreferences",
+    "switchedPets",
+    "withPets",
+    "writePreferences",
+    "PetChoice",
+    "CoursePreferences",
+    "CourseSession",
+    "CourseState",
+    "CourseStep"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/results/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ResultsScreen"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "RunScreen"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "PET_CHOICES",
+    "PreferencesPanel",
+    "COURSE_LOCALES",
+    "COURSE_PET_KEEPOUTS",
+    "COURSE_PET_SURFACES",
+    "CourseApp",
+    "localStore",
+    "memoryStorageOrigin",
+    "petNames",
+    "courseInstance",
+    "courseText",
+    "readPreferences",
+    "writePreferences",
+    "PetChoice",
+    "PresenceConnect",
+    "CoursePetsSource",
+    "CoursePreferences"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "HOME_GRID_ROW_HEIGHT_PX",
+    "HomeScreen",
+    "LeaderboardPage",
+    "challengeOf",
+    "courseText",
+    "CoursePreferences",
+    "CourseSession"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "memoryStorageOrigin",
+    "CourseSession",
+    "CourseState",
+    "CourseStep",
+    "SubmissionPhase"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "IdentityScreen",
+    "ProctorClient",
+    "ProctorThrottled",
+    "COURSE_LOCALES",
+    "CourseSession",
+    "failureProblem",
+    "handleFault",
+    "handleFaultMessage",
+    "localStore",
+    "memoryStorageOrigin",
+    "courseInstance",
+    "courseText",
+    "HandleFault",
+    "SessionFailure"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "isChallenge",
+    "keysHidden",
+    "localStore",
+    "memoryStorageOrigin",
+    "newId",
+    "openChallengeOf",
+    "openRunOf",
+    "restoreCourseState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "HomeGrid",
+    "FollowProvider",
+    "addressPages",
+    "parentPage",
+    "pagesWithin",
+    "previewCamera",
+    "placePeers",
+    "EMPTY_PRESENCE_VIEW",
+    "Glyph",
+    "HOME_GRID_TRACKS",
+    "HomeScreen",
+    "LEADERBOARD_POLL_MS",
+    "LeaderboardCard",
+    "LeaderboardPage",
+    "PresenceProvider",
+    "boardExcerpt",
+    "homeCells",
+    "homeLayout",
+    "homePages",
+    "homeTrackTemplate",
+    "courseText",
+    "textPresentation",
+    "PeerCursor",
+    "PresenceView",
+    "CourseSession",
+    "CourseState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "CardIcon",
+    "ClassificationTaskView",
+    "EMPTY_PRESENCE_VIEW",
+    "PET_CHOICES",
+    "PET_CHOICE_LABELS",
+    "PET_HOME_SCENE",
+    "PetsSwitch",
+    "PreferencesPanel",
+    "PresenceOverlay",
+    "COURSE_LOCALES",
+    "COURSE_PET_CONTROLS",
+    "COURSE_PET_KEEPOUTS",
+    "COURSE_PET_PROPS",
+    "COURSE_PET_SURFACES",
+    "CourseCard",
+    "CoursePetsProvider",
+    "effectivePetMode",
+    "localStore",
+    "memoryStorageOrigin",
+    "COURSE_PETS_TEMPO",
+    "peerGlances",
+    "petScene",
+    "petsTempo",
+    "courseText",
+    "readPreferences",
+    "switchedPets",
+    "withPets",
+    "writePreferences",
+    "PeerCursor",
+    "PetChoice",
+    "CoursePetsSource",
+    "CoursePetsStage",
+    "CourseStep"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "EMPTY_PRESENCE_VIEW",
+    "FOLLOW_DEPARTURE_GRACE_MS",
+    "FOLLOW_REJOIN_GRACE_MS",
+    "Dialog",
+    "FollowProvider",
+    "LeaderboardCard",
+    "PresenceFooter",
+    "PresenceProvider",
+    "followedPreferences",
+    "initialCourseState",
+    "localStore",
+    "memoryStorageOrigin",
+    "observerSession",
+    "courseText",
+    "readPreferences",
+    "useFollow",
+    "CoursePresenceSnapshot",
+    "CourseSession",
+    "RoomStatus"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "RunScreen"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/👀️follow/🟦️.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "evolveFollow",
+    "followStep",
+    "publicPresenceRun",
+    "followedCourseState",
+    "usePresenceCapture",
+    "usePresenceViewport",
+    "FollowEvent"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ClassificationTaskView",
+    "MatchingTaskView",
+    "SortingTaskView",
+    "classificationHintText",
+    "formatScore",
+    "hintTerm",
+    "courseText"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "TaskView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "AnswerFigure",
+    "CROWD_DOTS",
+    "CrowdDoor",
+    "EMPTY_PRESENCE_VIEW",
+    "OTHERS_CHOICES",
+    "PreferencesPanel",
+    "PresenceOverlay",
+    "PresenceProvider",
+    "QuizPage",
+    "ScoreFigure",
+    "answerFigure",
+    "columnShare",
+    "crowdGate",
+    "crowdPlace",
+    "crowdShown",
+    "evolveCourseState",
+    "initialCourseState",
+    "keysHidden",
+    "formatQuantity",
+    "formatScore",
+    "formatShare",
+    "livePlace",
+    "localStore",
+    "memoryStorageOrigin",
+    "peakOf",
+    "presenceDrafts",
+    "courseText",
+    "readPreferences",
+    "scoreFigure",
+    "AnswerFigureInput",
+    "CrowdGate",
+    "CrowdPlace",
+    "OthersChoice",
+    "PeerCursor",
+    "CourseLocale",
+    "CourseSession",
+    "CourseState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/results/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ResultsScreen"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "RunScreen"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "BadgesCard",
+    "BadgesPage",
+    "LearnerCard",
+    "LearnerPage",
+    "COURSE_LOCALES",
+    "formatScore",
+    "courseText",
+    "CourseSession",
+    "CourseState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ClassificationTaskView",
+    "MatchingTaskView",
+    "Records",
+    "SortingTaskView",
+    "TABLE",
+    "plotFold",
+    "courseText"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "GuessField",
+    "COURSE_LOCALES",
+    "SIGNIFICANT_DIGITS",
+    "SI_PREFIXES",
+    "ceilSignificant",
+    "engineering",
+    "floorSignificant",
+    "formatCount",
+    "formatCountdown",
+    "formatDuration",
+    "formatFactor",
+    "formatNumber",
+    "formatPoints",
+    "formatQuantity",
+    "formatScore",
+    "formatTimes",
+    "parseQuantity",
+    "quantityUnits",
+    "courseText",
+    "withMinusSign",
+    "withUnit",
+    "CourseLocale",
+    "Toward"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ConnectionStatus",
+    "COURSE_LOCALES",
+    "connectionMessage",
+    "formatDuration",
+    "courseText",
+    "CourseConnection"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "TaskClock"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "Outbox",
+    "ProctorClient",
+    "ProctorUnavailable",
+    "abortable",
+    "commandEnvelope",
+    "isTransient",
+    "localStore",
+    "memoryStorageOrigin",
+    "newId",
+    "queryEnvelope",
+    "courseInstance",
+    "courseRejection",
+    "retryTransient",
+    "CommandVerdict",
+    "OutboxActivity",
+    "StorageArea"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "PreferencesPanel",
+    "localStore",
+    "memoryStorageOrigin",
+    "courseText",
+    "readPreferences",
+    "writePreferences",
+    "CoursePreferences"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "HOME_CHROME_HEIGHT_PX",
+    "HOME_GRID_ROW_HEIGHT_PX",
+    "HOME_GRID_TRACKS",
+    "HomeScreen",
+    "TEXT_SIZES",
+    "homeCells",
+    "homeGridMinHeight",
+    "homeLayoutQueries",
+    "courseText",
+    "CourseSession"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "LegalFooter",
+    "COURSE_LOCALES",
+    "CourseApp",
+    "legalLink",
+    "memoryStorageOrigin",
+    "courseText",
+    "PresenceConnect"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "RADAR_LABEL_EM",
+    "RADAR_METRICS",
+    "RadarChart",
+    "estimateTextWidth",
+    "formatNumber",
+    "courseText",
+    "radarAngle",
+    "radarFraction",
+    "radarLayout",
+    "radarPoint",
+    "radarPolygon",
+    "withUnit",
+    "wrapLabel",
+    "RadarFrame",
+    "RadarLayout",
+    "TextMeasure"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "CoursePresence",
+    "cursorAt",
+    "viewportCursor",
+    "usePresencePointer"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ICON_HOSTS",
+    "ICON_LOOP_MS",
+    "IconLabel",
+    "PreferencesPanel",
+    "TaskGlyph",
+    "effectiveIconMotion",
+    "playTappedIcons",
+    "localStore",
+    "memoryStorageOrigin",
+    "courseText",
+    "readPreferences",
+    "textPresentation",
+    "withIcons"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "TaskView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "COURSE_BUNDLE_DE",
+    "COURSE_BUNDLE_EN",
+    "COURSE_LOCALES",
+    "REJECTION_LABELS",
+    "TASK_KIND_LABELS",
+    "preferredLocale",
+    "courseText",
+    "CourseLabelKey"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "HomeScreen",
+    "LeaderboardCard",
+    "LeaderboardPage",
+    "boardKey",
+    "evolveCourseState",
+    "leaderboardColumns",
+    "nextSort",
+    "shownLeaderboard",
+    "courseText",
+    "textPresentation",
+    "CourseSession",
+    "CourseState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "AGREEMENT_RECHECK_MS",
+    "Deputy",
+    "ProctorClient",
+    "ProctorUnavailable",
+    "COURSE_LOCALES",
+    "CourseSession",
+    "ScreenBoundary",
+    "connectionMessage",
+    "keysHidden",
+    "localStore",
+    "memoryStorageOrigin",
+    "newId",
+    "openRunOf",
+    "courseText",
+    "shownLeaderboard",
+    "waitingMessage",
+    "StorageArea"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧭️session/📡️proctor-link/🟦️.ts",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ProctorLink"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "PRESENCE_FRAME_INTERVAL_MS",
+    "CoursePresence",
+    "THINKING_FRAME_INTERVAL_MS",
+    "WATCH_INTERVAL_MS",
+    "homeWatchScopes",
+    "presencePlace",
+    "CourseState",
+    "CourseStep"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "Deputy",
+    "ProctorClient",
+    "ProctorUnavailable",
+    "CourseApp",
+    "CourseSession",
+    "commandTarget",
+    "formatQuantity",
+    "localStore",
+    "newId",
+    "courseInstance",
+    "PresenceConnect",
+    "CourseMaterial",
+    "StorageArea"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "PresenceConnect",
+    "PresenceSocket",
+    "CoursePresenceSnapshot",
+    "CourseState"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ProctorClient",
+    "CourseSession",
+    "evolveCourseState",
+    "initialCourseState",
+    "localStore",
+    "memoryStorageOrigin",
+    "mergeRunViews",
+    "newId",
+    "openRunOf",
+    "CourseMaterial"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "CoursePets",
+    "CoursePetsProvider",
+    "PetChoice",
+    "CoursePetsSource",
+    "CoursePetsStage",
+    "CoursePreferences",
+    "CourseState",
+    "CourseStep"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ClassificationTaskView",
+    "SortingTaskView",
+    "formatQuantity",
+    "formatScore",
+    "initialCourseState",
+    "courseText",
+    "CourseLocale",
+    "CourseSession"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/results/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "ResultsScreen",
+    "offersDirectRetry"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "TaskView"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "courseText",
+    "CourseLocale"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "LeaderboardCard",
+    "CardPresence",
+    "LeaderboardPage",
+    "LearnerCard",
+    "PreferencesPanel",
+    "PresenceOverlay",
+    "PresenceProvider",
+    "QuizCardView",
+    "PEER_LABEL_CLEARANCE_PX",
+    "placePeers",
+    "presenceView",
+    "courseText",
+    "readPreferences",
+    "challengeOf",
+    "localStore",
+    "memoryStorageOrigin",
+    "PresenceView",
+    "CourseSession"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "Deputy",
+    "REVISED",
+    "materialRevision",
+    "HeldLearner"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "EMPTY_TRAIL",
+    "NAVIGATION_WAYS",
+    "CourseApp",
+    "TRAIL_LIMIT",
+    "addressPage",
+    "addressPages",
+    "evolveCourseState",
+    "initialCourseState",
+    "localStore",
+    "memoryStorageOrigin",
+    "navigationWays",
+    "placeName",
+    "courseInstance",
+    "courseText",
+    "sameStep",
+    "stepAbove",
+    "stepAddress",
+    "stepAfter",
+    "stepBefore",
+    "PresenceConnect",
+    "CourseState",
+    "CourseStep",
+    "StorageArea"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/results/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "Outbox",
+    "POLL_BACKOFF_MAX_MS",
+    "PRESENCE_STABLE_MS",
+    "PresenceRoom",
+    "ProctorClient",
+    "ProctorThrottled",
+    "ProctorUnavailable",
+    "RETRY_AFTER_MAX_MS",
+    "SIGN_UP_ALLOWANCE",
+    "connectionMessage",
+    "isThrottled",
+    "isTransient",
+    "localStore",
+    "memoryStorageOrigin",
+    "newId",
+    "pollDelay",
+    "proctorTransport",
+    "courseInstance",
+    "courseText",
+    "rejoinDelay",
+    "retryAfterMs",
+    "retryTransient",
+    "signUpsSpent",
+    "usePolling",
+    "waitingMessage",
+    "CommandVerdict",
+    "PresenceSocket",
+    "CourseConnection",
+    "RefreshOutcome"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "MAX_WATCHED_ROOMS",
+    "PRESENCE_FRAME_HZ",
+    "PRESENCE_FRAME_INTERVAL_MS",
+    "PresenceRoom",
+    "WATCH_INTERVAL_MS"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "DEFAULT_BOARD",
+    "ProctorClient",
+    "ProctorUnavailable",
+    "CourseApp",
+    "CourseSession",
+    "lastSubmittedRunOf",
+    "learnerName",
+    "localStore",
+    "memoryStorageOrigin",
+    "newId",
+    "openRunOf",
+    "overallLeaderboard",
+    "courseText",
+    "shownLeaderboard",
+    "PresenceConnect",
+    "PresenceSocket"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react/modules/results/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/course-react/modules/run/.tsx",
+   "pkg": "@semio-tech/course-react",
+   "names": "*"
+  },
+  {
+   "to": "@semio-tech/course-react/stylesheet",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "quizStylesheet"
+   ]
+  },
+  {
+   "to": "@semio-tech/course-react",
+   "pkg": "@semio-tech/course-react",
+   "names": [
+    "HomeScreen",
+    "boardKey",
+    "courseText",
+    "CoursePreferences",
+    "CourseSession",
+    "CourseState",
+    "CourseStep",
+    "HomeGrid"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-3d-js",
+   "names": [
+    "loadEngineVertexProvenanceFixture"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts",
+   "pkg": "@semio-tech/framework-actor,@semio-tech/framework-actor-rs",
+   "names": [
+    "INBOUND_REQUEST_TURN_BUDGET",
+    "driveInboundRequest"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "pkg": "@semio-tech/framework-actor,@semio-tech/framework-actor-rs",
+   "names": [
+    "TYPED_OPERATION_ACK_MAGIC",
+    "TYPED_OPERATION_LANE_FAULT",
+    "TYPED_OPERATION_LANE_TERMINAL",
+    "TYPED_OPERATION_PAGE_MAGIC",
+    "WIRE_SEND_MESSAGE_ROUTED_TARGETS",
+    "drainTypedOperationTurns",
+    "isRoutedWireSendMessage",
+    "leftoverShellInvocationFrames",
+    "shellFrameBytes",
+    "typedOperationAcknowledgements",
+    "typedOperationResult",
+    "wireSendMessageTargetTag",
+    "wireTurnStatusTag"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-diagnostic-rs,@semio-tech/framework-diagnostic-ts",
+   "names": [
+    "diagnosticControlledSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "loadPrimaryGeometryStyleFixture"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "agentDelegationListFixture",
+    "directoryLocalSessionDocument",
+    "directoryLocalSessionSchema",
+    "directorySchema",
+    "directorySignInFixture",
+    "directorySpacesFixture",
+    "mcpClientConfigFixture"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🔗️hub-projection/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🤏️surface-pinch/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🪟️body-window-reports/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-os-mcp",
+   "names": [
+    "channelAppPayloadsFixtureUrl",
+    "policyApprovalWithdrawalFixtureUrl"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-os-shell",
+   "names": [
+    "documentInferencePortFixtureUrl"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/⏯️tool-run/🪧️panel-running.json",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/history-panel-command-window/🔣️.json",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-surface-rs,@semio-tech/framework-surface-ts",
+   "names": [
+    "nodeGraphSceneSchema",
+    "paintMaskStrokeFixture",
+    "paintStrokeRevisionFixture",
+    "surfacePaintEditingFixture"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/🟦️.ts",
+   "pkg": "@semio-tech/framework-tool-run-rs,@semio-tech/framework-tool-run-ts",
+   "names": [
+    "runTracePagesFixture"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📦️workspace-exports/🟦️.ts",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "workspaceTestAliasesV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "uiInputHost"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "returnContentMatches"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "bindUiInputHost"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "bindReturnContentMatcher"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiResidentComposition"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "returnContentMatches"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "uiResidentComposition"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "uiPatchAuthority"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "bindUiPatchAuthority",
+    "UiActivationLease",
+    "UiPatchSource"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "bindUiResidentComposition"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🎯️set-laws/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "testInteractionSetLaws"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiRibbonParentEntries",
+    "UiTranslationSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiTranslationSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiTranslationSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiTranslationSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiTranslationSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "resolveUiLabel",
+    "DeepUiTranslationKeys",
+    "UiI18nPort",
+    "UiLabelPair",
+    "UiLabelValue",
+    "UiTranslationKey",
+    "UiLocale",
+    "UiRegisteredTranslationKey",
+    "UiRibbonParentEntries",
+    "UiTranslateFn",
+    "UiTranslationSchema"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "availableViewportHeightPx",
+    "ElementsSurfaceDevice"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/👂️dom-event-binding/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "createDOMEventBinding"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📝️form-control-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "applyUiFormControlBrowserDefaults"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "readStoredUiDriver",
+    "setUiDriverProvider",
+    "UiDriver",
+    "UiDriverReveal"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "availableViewportHeightPx"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌈️surface-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "veilClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗣️ui-terminology/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useUiTerminology",
+    "resolveUiLocalizedText"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useSurfaceActive"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useShellScopeOptional",
+    "useIsActiveShellRoot",
+    "NULL_SHELL_ROOT_REF"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Button"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "CloseIcon",
+    "Icon"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "usePointerDrag"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WindowChrome",
+    "windowChromeTitleChipClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DragHandle"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "elementIdSelector"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "GLASS_OVERLAY_BOX_CLASS"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏠️shell-floor-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "shellFloorPaints",
+    "shellFloorFillClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useSurface",
+    "SurfaceScope",
+    "Surface"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Slider"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useShellScopeOptional"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Button"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌈️surface-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "glassClass",
+    "surfaceClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "borderNormalClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧭️flow-direction-context/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "FlowInline"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useShellScopeOptional"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "GLASS_OVERLAY_BOX_CLASS"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗣️ui-terminology/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "resolveUiLocalizedText"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "floatingMenuItemClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useShellScopeOptional"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useShellScopeOptional"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "elementIdSelector"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Anchor",
+    "flowFromAnchor"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧲️panel-dock/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "usePanelDockContext"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LevelProvider"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👻️PanelGhost/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "GhostRegionShell"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PanelEmptyDockZone"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WindowChrome"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PanelTabSelectionOptions",
+    "usePanelTabSelection",
+    "PanelTabBar"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↔️Resizable/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "RESIZABLE_HIT_TARGET_MIN_FINE_PX",
+    "RESIZABLE_HIT_TARGET_MIN_COARSE_PX",
+    "RESIZABLE_CORNER_GRAB_PX",
+    "ResizableJoinEdgeSide",
+    "ResizableJoinCornerSpec",
+    "ResizableJoinCornerResizeHandler",
+    "resizableJoinCornerPlacementStyle",
+    "readResizableJoinCornerSpec",
+    "ResizableHandle",
+    "ResizablePanel",
+    "ResizablePanelGroup"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Collapsible/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Collapsible",
+    "CollapsibleContent",
+    "CollapsibleTrigger",
+    "CollapsibleContentProps",
+    "CollapsibleProps",
+    "CollapsibleTriggerProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Checkbox/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Checkbox",
+    "CheckboxProps",
+    "CheckboxState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Action",
+    "ActionDropdown",
+    "ActionGroup",
+    "ActionGroupItem",
+    "actionGroupItemVariants",
+    "ActionDropdownOption",
+    "ActionDropdownProps",
+    "ActionProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Input",
+    "CollapsedFieldDisplay",
+    "fitCollapsedFieldText",
+    "resolveCollapsedFieldDisplayState",
+    "COLLAPSED_FIELD_ELLIPSIS",
+    "formatNumber"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⭕️Ring/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Ring",
+    "RingOrbData",
+    "RingProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/↕️sortable-item/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "SortableTreeItems"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/⚡️actions/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreeCheckbox",
+    "deriveTreeDragRoles",
+    "mergeTreeRowContextMenu",
+    "treeRowDragPayloadAttributes",
+    "TreeActionPlacement",
+    "TreeCheckboxAction",
+    "TreeCheckboxProps",
+    "TreeDragRole",
+    "TreeHeaderAction",
+    "TreeSectionAction"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌱️section/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreeSection",
+    "shouldDispatchTreeRowPointerLeave"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌲️branch/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreeContent"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌿️state/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreeStateProvider",
+    "useTreeState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🍃️item/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreeItem",
+    "TreeItems"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎚️selection/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "createTreeHighlightStore",
+    "createTreeSelectionStore",
+    "getTreeNextSelectionState",
+    "normalizeTreeSelectedIds"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎨️chrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "getTreeItemOrderedIds",
+    "getTreeSiblingGapPx",
+    "treeCompactSiblingGapPx",
+    "treeFoldChevronIcon",
+    "treeItemSecondaryTextClassName",
+    "treeRowChromeClasses",
+    "treeRowChromeContentFillClasses",
+    "treeRowChromeShellClasses"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📄️row/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "HelperRow",
+    "TreeRow"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📋️data/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreeItemCollapsibleState",
+    "treeDataActivation",
+    "TreeDataActivationContext",
+    "TreeDataItem",
+    "TreeDataSection",
+    "TreeSelectionMode"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📏️row-alignment/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PropertyValueColumnContext",
+    "TreeAlignedRow",
+    "TreeContext",
+    "TreeRowAlignmentContext",
+    "detailPanelHeaderLineCenterPx",
+    "detailPanelIndentLen",
+    "detailPanelIndentPx",
+    "detailPanelPropertyControlClassName",
+    "detailPanelPropertyInlineGapPx",
+    "detailPanelPropertyRowClassName",
+    "detailPanelPropertyStackedToInlineHysteresisPx",
+    "treeHeaderMainClassName",
+    "treeHeaderRowClassName",
+    "treeInspectorInnerRowClassName",
+    "treeItemLabelStyle",
+    "treeRowHeightPx",
+    "TreeDirection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📚️catalogue/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Catalogue",
+    "CatalogueItem",
+    "CatalogueProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔀️pane-chrome-toggle/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WindowPaneChromeToggle",
+    "WindowPaneChromeToggleProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔢️window-measures/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WindowMeasureTreeGroup",
+    "WindowMeasureTreeLeaf",
+    "WindowMeasuresTree",
+    "WindowMeasureTreeGroupProps",
+    "WindowMeasureTreeLeafProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔭️virtual-window/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "capTreeWindowRequests",
+    "treeWindowDomAttributes",
+    "treeWindowPathOf",
+    "treeWindowRequestsForViewport",
+    "treeWindowRowIndexOf",
+    "treeWindowSpacerRows",
+    "treeWindowVisibleRowsForViewport",
+    "TREE_WINDOW_BODY_NODE_BUDGET",
+    "TREE_WINDOW_OVERSCAN_ROWS",
+    "TREE_WINDOW_PATH_SEPARATOR",
+    "TREE_WINDOW_ROWS_MAX",
+    "TREE_WINDOW_ROW_EXTENTS",
+    "TreeDataWindow",
+    "TreeWindowContainerMeasure",
+    "TreeWindowRowMeasure",
+    "TreeWindowDomAttributes",
+    "TreeWindowRequest",
+    "TreeWindowVisibleRows"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🕹️control-tree/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ControlTree",
+    "buildControlTree",
+    "defaultControlRenderer",
+    "ControlDef",
+    "ControlTreeClassNames",
+    "ControlTreeFolderSettings",
+    "ControlTreeProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧩️props/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "mergeTreeSectionOrder"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧭️hover-path/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "markGhostTreeInteraction",
+    "resolveHoverRow"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧲️drag-drop/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "CATALOGUE_DRAG_MIME",
+    "catalogueTreeDragController",
+    "getActiveCatalogueDragPayload",
+    "getActiveCataloguePointerDragData",
+    "isTreeReorderDragEvent",
+    "resolveTreeDropPosition",
+    "treeReorderDragController",
+    "useTreeReorder",
+    "TreeDragAndDropController",
+    "TreeDropPosition",
+    "TreePointerPaletteDragController",
+    "TreeReorderControllerOptions",
+    "TreeReorderMove",
+    "UseTreeReorderResult"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧷️path-marking/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "syncTreeSelectionPath"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "FileTree",
+    "Tree",
+    "uiSpacingLen",
+    "FileTreeNode",
+    "TreeWindowRowExtent"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎀️Ribbon/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "RibbonZone",
+    "RibbonDivider",
+    "RibbonGroup",
+    "RibbonItem",
+    "Ribbon",
+    "RibbonDirection",
+    "RibbonRow",
+    "RibbonProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Slider",
+    "sliderValuesMatch",
+    "resolveSliderDraftClear",
+    "clampSliderValuesToReady",
+    "normalizeSliderRange",
+    "normalizeSliderValues",
+    "SliderDirection",
+    "SliderOrientation",
+    "SliderProps",
+    "SliderRange",
+    "SliderValue"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ToggleGroup",
+    "ToggleGroupItem",
+    "ToggleGroupProps",
+    "ToggleGroupSingleProps",
+    "ToggleGroupMultipleProps",
+    "ToggleGroupItemProps",
+    "ToggleGroupOrientation",
+    "ToggleGroupDirection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎴️IconSelector/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "IconSelector",
+    "IconSelectorProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Dialog",
+    "DialogClose",
+    "DialogContent",
+    "DialogDescription",
+    "DialogFooter",
+    "DialogHeader",
+    "DialogOverlay",
+    "DialogPortal",
+    "DialogTitle",
+    "DialogTrigger",
+    "DialogCloseProps",
+    "DialogContentProps",
+    "DialogDescriptionProps",
+    "DialogOverlayProps",
+    "DialogPortalProps",
+    "DialogPreventableEvent",
+    "DialogProps",
+    "DialogTitleProps",
+    "DialogTriggerProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Tabs",
+    "TabsContent",
+    "TabsList",
+    "TabsTrigger",
+    "TabsProps",
+    "TabsListProps",
+    "TabsTriggerProps",
+    "TabsContentProps",
+    "TabsOrientation",
+    "TabsDirection",
+    "TabsActivationMode"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Scrollable"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Toggle",
+    "ToggleItem",
+    "ToggleProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Button",
+    "ButtonProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Navbar",
+    "NavbarItem",
+    "NavbarProps",
+    "NavbarSpanV1",
+    "NavbarTrailingChrome",
+    "SemioLogo",
+    "ShellBrandLogo",
+    "navbarCenteredLeftV1",
+    "navbarFillItem",
+    "navbarFlowChildOccupiesV1",
+    "navbarFreeBandV1",
+    "setNavbarTrailingChrome"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Textarea"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔳️ButtonGroup/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ButtonGroup",
+    "ButtonGroupItem",
+    "buttonGroupItemVariants"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Select",
+    "SelectContent",
+    "SelectGroup",
+    "SelectItem",
+    "SelectLabel",
+    "SelectScrollDownButton",
+    "SelectScrollUpButton",
+    "SelectSeparator",
+    "SelectTrigger",
+    "SelectValue",
+    "resolveSelectPlacement",
+    "SelectAlign",
+    "SelectContentProps",
+    "SelectGroupProps",
+    "SelectItemProps",
+    "SelectLabelProps",
+    "SelectPosition",
+    "SelectPreventableEvent",
+    "SelectProps",
+    "SelectScrollButtonProps",
+    "SelectSeparatorProps",
+    "SelectSide",
+    "SelectTriggerProps",
+    "SelectValueProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🌲️tree-source/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TreePanelConfig",
+    "TreePanelDefinition",
+    "TreePanelSource"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Panel",
+    "staticTreePanelDefinition",
+    "usePointerDrag",
+    "useNativeDragAndDrop",
+    "PanelTreeUnitsPane",
+    "PanelEmptyDockZone",
+    "PanelProps",
+    "liveTreePanelDefinition"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧪️NavbarExampleSelect/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "NavbarExampleSelect",
+    "NavbarExampleOption",
+    "NavbarExampleSelectProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧾️Form/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Form",
+    "FormProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Stepper"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "InfoIcon",
+    "LightbulbIcon",
+    "TriangleAlertIcon",
+    "AlertCircleIcon",
+    "ChevronLeftIcon"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ControlHotkeyBadge",
+    "ControlHotkeyBadgeProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌀️status-border-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "waitingBorderClass",
+    "waitingBorderActiveClass",
+    "loadingBorderClass",
+    "loadingBorderActiveClass",
+    "waitingBorderStateClass",
+    "loadingBorderStateClass",
+    "chromeStatusBorderClass",
+    "loadingBorderElementClass",
+    "waitingBorderElementClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌈️surface-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "veilClass",
+    "glassClass",
+    "surfaceClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎛️chrome-control-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "chromeControlItemBaseClass",
+    "chromeControlItemClass",
+    "chromeControlTabItemClass",
+    "modeDockTabClassName",
+    "windowPaneChromeToggleClass",
+    "chromeControlGroupShellClass",
+    "chromeControlGroupClass",
+    "chromeControlItemOnClass",
+    "chromeControlTabActiveClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏠️shell-floor-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "shellFloorPaints",
+    "shellFloorFillClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💡️control-tooltip-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "formatControlTooltipText"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "readStoredUiKeybindingOverrides",
+    "writeStoredUiKeybindingOverrides"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📋️menu-item-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "menuListItemClassName"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "borderNormalBottomClass",
+    "borderNormalClass",
+    "borderElementClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📝️form-control-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "applyUiFormControlBrowserDefaults",
+    "formControlFocusBorderClass",
+    "uiFormControlBrowserDefaultProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🖱️interaction-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "interactiveControlTransitionClass",
+    "interactiveOnClass",
+    "interactiveTabActiveClass",
+    "groupHoverExcludingHandleBgFillClass",
+    "hoverExcludingHandleTextEmphasizedClass",
+    "hoverExcludingHandleBgFillClass",
+    "interactiveHoverClass",
+    "interactiveHoverFillClass",
+    "interactiveActiveFillClass",
+    "interactiveActiveBorderClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "SelectionModeStore",
+    "ShellScope",
+    "createShellScope",
+    "ShellScopeContext",
+    "ShellScopeProvider",
+    "useShellFloatingSurfaceHost",
+    "useShellScope",
+    "useShellScopeOptional",
+    "shellScopeStorageOrBrowserFallback",
+    "registerShellActivityRoot",
+    "activeShellRoot",
+    "useShellKeydown",
+    "useIsActiveShellRoot",
+    "NULL_SHELL_ROOT_REF"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "setThemedIconCatalog",
+    "ThemedIconCatalog",
+    "resolveIconSizePx",
+    "decodeIcon",
+    "encodeIcon",
+    "classifyIconSelectorMode",
+    "resolveCatalogIconSvg",
+    "resolveMetabolismIconSvg",
+    "renderControlIcon",
+    "iconSvgMarkup",
+    "iconMaskImage",
+    "Icon",
+    "createIconComponent",
+    "AddIcon",
+    "AlertCircleIcon",
+    "ArrowLeftIcon",
+    "AwardIcon",
+    "BookIcon",
+    "BoxIcon",
+    "CameraIcon",
+    "ChatIcon",
+    "CheckIcon",
+    "CheckIconAlt",
+    "ChevronDownIcon",
+    "ChevronDownIconAlt",
+    "ChevronLeftIcon",
+    "ChevronRightIcon",
+    "ChevronUpIcon",
+    "ChevronsUpDownIcon",
+    "CircleDotIcon",
+    "CloseIcon",
+    "CloseIconAlt",
+    "CodeIcon",
+    "ComponentIcon",
+    "ConnectionIcon",
+    "ConnectorIcon",
+    "CopyIcon",
+    "DetailsIcon",
+    "DiagramIcon",
+    "DisconnectIcon",
+    "DocumentIcon",
+    "ExternalLinkIcon",
+    "FileArchiveIcon",
+    "FileCodeIcon",
+    "FileImageIcon",
+    "FileJsonIcon",
+    "FileSpreadsheetIcon",
+    "FileTypeIcon",
+    "FileVideoIcon",
+    "FilterIcon",
+    "FindInViewIcon",
+    "FocusIcon",
+    "FolderIcon",
+    "FolderOpenIcon",
+    "GlobeIcon",
+    "GripVerticalIcon",
+    "HandIcon",
+    "HashIcon",
+    "HomeIcon",
+    "HudIcon",
+    "HudPanelIcon",
+    "InfoIcon",
+    "IntersectIcon",
+    "LandmarkIcon",
+    "LassoIcon",
+    "LayoutIcon",
+    "LayoutGridIcon",
+    "LeftSidePanelIcon",
+    "LightbulbIcon",
+    "LinkIcon",
+    "LoaderIcon",
+    "LocalKitIcon",
+    "Maximize2Icon",
+    "MessageCircle",
+    "MessageSquareIcon",
+    "Minimize2Icon",
+    "MonitorIcon",
+    "MoonIcon",
+    "MoreHorizontalIcon",
+    "MousePointerIcon",
+    "MoveIcon",
+    "NavigateBackIcon",
+    "NavigateForwardIcon",
+    "NavigateUpIcon",
+    "PanelRightIcon",
+    "PauseIcon",
+    "PieceIcon",
+    "PlayIcon",
+    "PlugIcon",
+    "PlusIcon",
+    "PortIcon",
+    "Puzzle2dIconFileImportIcon",
+    "Puzzle2dIconMathGlyphIcon",
+    "Puzzle2dIconRasterGlyphIcon",
+    "RecordIcon",
+    "RemoteKitIcon",
+    "RemoveIcon",
+    "ResetIcon",
+    "RightSidePanelIcon",
+    "SceneIcon",
+    "SearchIcon",
+    "SelectUtilityIcon",
+    "Settings2Icon",
+    "SettingsIcon",
+    "SkipBackIcon",
+    "SkipForwardIcon",
+    "SmartphoneIcon",
+    "SortAscendingIcon",
+    "SortDescendingIcon",
+    "StatsIcon",
+    "StopIcon",
+    "SunIcon",
+    "TabletIcon",
+    "TableViewIcon",
+    "TemporaryKitIcon",
+    "TriangleAlertIcon",
+    "TutorialIcon",
+    "TypeIcon",
+    "UserIcon",
+    "UsersIcon",
+    "UtilitiesIcon",
+    "UtilityBarIcon",
+    "WorkbenchIcon",
+    "Cursor",
+    "IconSizeToken",
+    "IconSelectorMode",
+    "IconSource",
+    "ControlIcon",
+    "IconProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/📝️text-selection/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "readDomTextSelection",
+    "isPointerEventOnDomTextSelection",
+    "isDomTextEditableTarget",
+    "buildTextSelectionContextMenuItems",
+    "copyDomTextSelection",
+    "cutDomTextSelection",
+    "pasteDomTextSelection",
+    "selectAllDomText",
+    "TextSelectionContextMenuLabels",
+    "TextSelectionContextMenuActions"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🧭️navigation/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "contextMenuOrdinals",
+    "contextMenuItemsAtLevel",
+    "contextMenuItemAtPath",
+    "findContextMenuCheckedPath",
+    "contextMenuNavigationFromKey",
+    "moveContextMenuActivePath",
+    "contextMenuPathForOrdinal",
+    "contextMenuOpenSubmenuPath",
+    "ContextMenuNavDirection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "createDOMEventBinding",
+    "ContextMenu",
+    "isContextMenuPointerTarget",
+    "contextMenuDigitFromKey",
+    "findCheckedContextMenuItem",
+    "ContextMenuController",
+    "TextSelectionContextMenuHost",
+    "ContextMenuProps",
+    "ContextMenuControllerProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiDriverLabels",
+    "UiDriverLabelTier",
+    "UiDriverDrag",
+    "UiDriverReveal",
+    "UiDriverTooltips",
+    "UiDriverHotkeys",
+    "UiDriver",
+    "DEFAULT_UI_DRIVER",
+    "COMPACT_UI_DRIVER",
+    "builtinUiDrivers",
+    "parseUiDriver",
+    "serializeUiDriver",
+    "resolveUiDriver",
+    "UI_CHROME_DRIVER_STORAGE_KEY",
+    "readStoredUiDriverId",
+    "writeStoredUiDriverId",
+    "UI_CUSTOM_DRIVERS_STORAGE_KEY",
+    "readStoredUiCustomDrivers",
+    "writeStoredUiCustomDrivers",
+    "readStoredUiDriver",
+    "setUiDriverProvider",
+    "activeUiDriver",
+    "useUiDriver",
+    "UiDriverProvider",
+    "useUiDriverDragSurface",
+    "useNativeDragArm",
+    "useUiDriverTooltips",
+    "setControlLabelIdResolver",
+    "resolveControlLabelId",
+    "panelKindFromPanelToggleControlId",
+    "isInternalChromeControlId",
+    "humanizeControlSegment",
+    "humanizeControlId",
+    "humanizeEngagementStepId"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ElementsSurfaceDevice",
+    "elementsSurfaceDeviceIsMobile",
+    "UI_MOBILE_MEDIA_QUERY",
+    "UI_TABLET_MEDIA_QUERY",
+    "elementsSurfaceDeviceForMatches"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📱️ui-mobile-context/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiMobileProvider",
+    "UiMobileContext"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👻️PanelGhost/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "InteractionCommands",
+    "InteractionContext",
+    "ActiveInteractionContext"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "sceneHostPort",
+    "reactHostPort",
+    "flowHostPort",
+    "ReactHostPort",
+    "FlowHostPort",
+    "SceneHostPort",
+    "setReactHostPort",
+    "setFlowHostPort",
+    "setSceneHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔍️WindowSearch/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "normalizeEngagementActionText",
+    "SearchPossible",
+    "searchInlineCompletion",
+    "searchActiveInlineCompletion"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "borderNormalBottomClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "shellNavbarTrailingEndWidthByRoot",
+    "shellNavbarTrailingEndWidthListenersByRoot"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useShellScopeOptional"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Toggle"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "setNavbarTrailingChrome"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Minimize2Icon",
+    "Maximize2Icon",
+    "Icon"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗣️ui-terminology/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UI_TERMINOLOGY_NATIVE"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "AssertUiRibbonParentKeysCovered",
+    "UiRibbonParentCategory",
+    "AssertUiSettingsLanguageKeysCovered",
+    "UiLocale",
+    "AssertUiSettingsTerminologyKeysCovered",
+    "UiChromeTerminologyId"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "shellScopeStorageOrBrowserFallback",
+    "useShellScopeOptional"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ANCHORS",
+    "Anchor",
+    "anchorVertical",
+    "anchorHorizontal",
+    "flowFromAnchor",
+    "anchorPositionStyle",
+    "chromeHostedOpenPanelPositionStyle",
+    "nearestAnchor"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "windowMeasureTreeLeafLabelClass",
+    "windowMeasureTreeGroupLabelClass",
+    "panelTabLabelClass",
+    "panelTabIconSlotClass",
+    "dropZoneReadyTextClass",
+    "dropZoneReadyFillClass",
+    "dropZoneReadyClass",
+    "GLASS_OVERLAY_BOX_CLASS",
+    "borderNormalTopClass",
+    "shellChromeFrameLayerClass",
+    "floatingMenuItemClass",
+    "panelTabBarClass",
+    "panelTabButtonDividerClass",
+    "panelTabButtonClass",
+    "panelAnchorTabBarClass",
+    "panelAnchorTabButtonClass",
+    "mobilePanelTabBarClass",
+    "mobilePanelTabButtonClass",
+    "panelResizeEdgeAccentClass",
+    "windowBodyFrameClass",
+    "modeDockInactiveTabClass",
+    "modeDockInactiveTabBeforeGapClass",
+    "panelWindowInactiveTabClass",
+    "modeDockTabLabelClassName",
+    "modeDockActiveTabFillClass",
+    "modeDockActiveTabClass",
+    "windowEngagementBodyClass",
+    "utilityBarBodyClass",
+    "windowMeasuresBodyClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📐️window-measures/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "windowMeasuresDefaultWidthPx",
+    "windowMeasuresMinWidthPx",
+    "windowMeasuresMaxWidthPx",
+    "windowChromeClearedTopOffset",
+    "WINDOW_PANE_MEASURES_ICON",
+    "WINDOW_PANE_ACTIONS_ICON",
+    "WINDOW_PANE_SEARCH_ICON",
+    "WINDOW_PANE_UTILITIES_ICON"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📱️ui-mobile-context/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiMobileProvider",
+    "useUiMobile"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "rankFuzzyItems",
+    "FuzzySearchField",
+    "FuzzySearchOptions",
+    "FuzzySearchResult"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗣️ui-terminology/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UI_TERMINOLOGY_NATIVE",
+    "UI_CHROME_TERMINOLOGY_STORAGE_KEY",
+    "readStoredUiChromeTerminology",
+    "writeStoredUiChromeTerminology",
+    "resolveUiLocalizedText",
+    "useUiTerminology"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗺️window-layout/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WindowStackCorner",
+    "WindowLayoutWindowNode",
+    "WindowLayoutStackNode",
+    "WindowLayoutAxisNode",
+    "WindowLayoutNode",
+    "createEvenWindowLayout"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧬️style-variants/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "styleVariants",
+    "StyleCompoundVariant",
+    "StyleVariantCompiler",
+    "StyleVariantConfiguration",
+    "StyleVariantProps",
+    "StyleVariantSchema",
+    "StyleVariantSelection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧲️panel-dock/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PanelTabDockTarget",
+    "PanelTreeUnitDockTarget",
+    "PanelTreeUnitDockMove",
+    "PANEL_TREE_UNIT_MIME",
+    "TREE_SECTION_REORDER_MIME",
+    "PanelTreeUnitDragSession",
+    "beginPanelTreeUnitDrag",
+    "endPanelTreeUnitDrag",
+    "readActivePanelTreeUnitDrag",
+    "usePanelTreeUnitDragActive",
+    "PanelDockContextValue",
+    "PanelDockContext",
+    "usePanelDockContext"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "shellNavbarTrailingEndWidthByRoot",
+    "useShellNavbarTrailingEndWidthPx",
+    "shellNavbarTrailingEndReserveStyle",
+    "chromeHostedPanelCapRowStyle",
+    "SafeAreaBox",
+    "ChromePanelOccupancy",
+    "SafeAreaYield",
+    "ChromePanelSafeArea",
+    "safeAreaBoxFromRect",
+    "publishShellChromePanelBox",
+    "useShellChromePanelBoxes",
+    "chromePanelSafeArea",
+    "chromePanelSafeAreaStyle",
+    "useChromePanelSafeArea"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS",
+    "VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS",
+    "VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA",
+    "getVirtualFileSystemOrderedRowIds",
+    "normalizeVirtualFileSystemSelectedRowIds",
+    "getVirtualFileSystemNextSelectionState",
+    "resolveVirtualFileSystemFileNodeKind",
+    "resolveVirtualFileSystemDescriptorKind",
+    "resolveVirtualFileSystemDescriptorBinding",
+    "buildVirtualFileSystemDescriptorValues",
+    "formatVirtualFileSystemTime",
+    "renderVirtualFileSystemDescriptorCell",
+    "buildVirtualFileSystemDescriptorColumns",
+    "resolveVirtualFileSystemSchemaIcon",
+    "virtualFileSystemKindIcon",
+    "isVirtualFileSystemRemoteIcon",
+    "buildVirtualFileSystemSceneRows",
+    "buildVirtualFileSystemVisibleRows",
+    "VirtualFileSystem",
+    "DescriptorKind",
+    "FileNodeDescriptor",
+    "FileNodeKind",
+    "FileNodeDescriptorValue",
+    "VirtualFileSystemSchema",
+    "FileNode",
+    "VirtualFileSystemNode",
+    "VirtualFileSystemRow",
+    "VirtualFileSystemProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🎯️drop/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "insertWindowAtDropZone",
+    "applyModeDrop",
+    "computeModeDropZone",
+    "computeModeSplitPreviewInBody",
+    "resolveModeSplitSideInBody",
+    "computeTabInsertPreview",
+    "modeDockOutLayout",
+    "modeDockTabsWithInsertPreview",
+    "modeDockDragInsertTabs",
+    "resolveModeTabInsertPreview"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/📐️corners/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "splitWithWindow",
+    "splitWithStack",
+    "extractStackFromLayout",
+    "mergeStackTabsIntoStack",
+    "WINDOW_STACK_CORNERS",
+    "resolveWindowCorner",
+    "modeStackTabsByCorner",
+    "insertWindowAsTabAtCorner",
+    "setWindowCornerInLayout"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🔗️join-corners/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "modeAxisIsPerpendicularChild",
+    "modePerpendicularJoinSeparators",
+    "modeJoinCornerSpecsForSeparator",
+    "modeJoinCornerSpecsForCrossSeparator",
+    "MODE_JOIN_CORNER_TOUCH_EPS",
+    "resolveJoinCornerPeerCrossAxes",
+    "applyAxisResizeDelta",
+    "resolveJoinCornerResizeDeltas",
+    "applyAxisGroupLayoutDelta",
+    "modeAxisGroupLayout",
+    "applyModeJoinCornerResize",
+    "ModeJoinCornerCrossAxis"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🗺️layout/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "modeCollectWindowIds",
+    "removeWindowFromLayout",
+    "resolveStackPathForWindowId",
+    "reconcileWindows",
+    "normalizeLayoutToStacks",
+    "collapseLayout"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🪟️template-drag/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "COMPOSE_WINDOW_TEMPLATE_MIME",
+    "MODE_TEMPLATE_PREVIEW_WINDOW_ID",
+    "beginWindowTemplateDrag",
+    "endWindowTemplateDrag",
+    "readActiveWindowTemplateDragSession",
+    "windowTemplatePointerDragRef",
+    "beginWindowTemplatePointerDrag",
+    "cancelWindowTemplatePointerDrag",
+    "windowTemplatePaletteTreeDragController",
+    "ModeWindowDescriptor",
+    "WindowTemplateDragSession",
+    "ModeCanvasDropTarget",
+    "WindowTemplateDropPayload"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Canvas",
+    "HorizontalWindows",
+    "VerticalWindows",
+    "App",
+    "Ui",
+    "AppModeDescriptor",
+    "AppProps",
+    "UiAppDescriptor",
+    "UiProps",
+    "MODE_CANVAS_INSET_CLASS",
+    "Mode",
+    "ModeProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🎨️gumball-visual/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "GUMBALL_PREVIEW_RING_RADIUS",
+    "GUMBALL_PREVIEW_DISK_RADIUS",
+    "gumballPreviewWorldExtent",
+    "resolveGumballVisualPalette",
+    "gumballHandleVisualState",
+    "gumballResolveHandleVisual",
+    "GumballVisualPalette",
+    "GumballHandleVisualState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🎯️gumball-pick/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "gumballHandleRaycast",
+    "gumballRaycastOwnedAtClientPoint",
+    "gumballRayFromNdc",
+    "gumballPointerConsumesCanvasEventRef",
+    "gumballKindFromRaycastObject",
+    "gumballRaycastAtClientPoint",
+    "gumballRaycastKindAtClientPoint"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/📐️geometry/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Point",
+    "Vector",
+    "Plane",
+    "Camera"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🔩️gumball-handles/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "GUMBALL_PLANE_OFFSET",
+    "GUMBALL_PLANE_SIZE",
+    "GUMBALL_RING_RADIUS",
+    "GUMBALL_PREVIEW_MIN_EXTENT",
+    "gumballScalePlaneAxisIndices",
+    "gumballPlaneScaleCorner",
+    "gumballPlaneScaleFactors",
+    "gumballScaleAxisOffset"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🕹️gumball/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "gumballApplyHandleVisualMaterial",
+    "UnifiedGumball",
+    "UnifiedGumballProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🗿️objects/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "sceneFrameControlRef",
+    "planeFromPointAndDirection",
+    "getPlanePosition",
+    "hasValidPlane",
+    "isGeometryFocusable",
+    "Geometry",
+    "SceneGeometry",
+    "TransformableGeometry",
+    "PlaneTransformDelta",
+    "OnPlaneUpdate",
+    "OnMultiPlaneUpdate"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧭️gizmo-snap/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "SCENE_GIZMO_LABELS",
+    "resolveSceneGizmoSnapTarget",
+    "resolveSceneGizmoViewportPlacement"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧿️gumball-model/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "GumballVec3",
+    "GUMBALL_PLANE_HANDLES",
+    "DEFAULT_GUMBALL_CONFIG",
+    "resolveGumballConfig",
+    "gumballHandleAllowedByPlane",
+    "gumballHandleGroupEnabled",
+    "gumballHandleEnabled",
+    "gumballConfigVisible",
+    "gumballHandleKindToTransformMode",
+    "gumballPoseFromObject3D",
+    "applyGumballPose",
+    "gumballRayAxisParameter",
+    "gumballEyeFromPivot",
+    "gumballAxisDragPlaneNormal",
+    "gumballProjectRayOntoAxis",
+    "gumballRayPlanePoint",
+    "gumballAxisRotateAngle",
+    "gumballAxisScaleFactor",
+    "gumballSnapScalar",
+    "GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP",
+    "GUMBALL_DEFAULT_SHIFT_SCALE_SNAP",
+    "gumballEffectiveSnapValue",
+    "gumballResolveDragSnaps",
+    "GumballPose",
+    "GumballHandleKind",
+    "GumballPlaneId",
+    "GumballConfig"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Scene",
+    "SceneSkeleton"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎮️Engagement/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "EngagementOption",
+    "EngagementStatus",
+    "EngagementRingOption",
+    "EngagementSliderControl",
+    "EngagementStepperControl",
+    "EngagementRingControl",
+    "EngagementToggleGroupOption",
+    "EngagementToggleGroupControl",
+    "EngagementSelectItem",
+    "EngagementSelectControl",
+    "EngagementControl",
+    "UI_ENGAGEMENT",
+    "ENGAGEMENT_USER",
+    "EngagementSpec",
+    "EngagementProps",
+    "Engagement"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👻️PanelGhost/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "panelGhostSessionBridge",
+    "setPanelGhostSessionBridge",
+    "interactionMergeFromModifiers",
+    "PanelGhostValue",
+    "usePanelGhost",
+    "useInteractionCommands",
+    "shouldBeginAutomaticGhostInteraction",
+    "GhostProvider",
+    "GhostRegionShell",
+    "PanelGhostRoot"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "SortDirection",
+    "TableColumn",
+    "HierarchicalRowData",
+    "DragDropConfig",
+    "TableProps",
+    "Table",
+    "TableSkeletonProps",
+    "TableSkeleton"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📌️WindowPane/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PaneHostProps",
+    "PaneHost",
+    "PaneProps",
+    "Pane"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔍️WindowSearch/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UI_WINDOW_SEARCH",
+    "SearchInput",
+    "SearchPossible",
+    "filterSearchPossibles",
+    "SearchInlineCompletion",
+    "searchInlineCompletion",
+    "searchActiveInlineCompletion",
+    "searchHighlightedLabel",
+    "isUiTypingTarget",
+    "isWindowSearchTypingTarget",
+    "shouldRouteKeysToWindowSearch",
+    "queryWindowSearchInput",
+    "focusActiveSearchInput",
+    "SearchLineEdit",
+    "SEARCH_LINE_EDIT_SENT_LIMIT",
+    "searchControlledLineV1",
+    "shouldActivateSearchPossibleOnConfirm",
+    "searchSpaceConfirmsLine",
+    "applySearchSpaceAction",
+    "routeWindowSearchSpace",
+    "routeWindowSearchKeydown",
+    "routeWindowSearchEscape",
+    "SearchSpec",
+    "SearchProps",
+    "normalizeEngagementActionText",
+    "Search"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕰️HistoryTable/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "HistoryColumnAuthor",
+    "HistoryColumn",
+    "HistoryTableProps",
+    "HistoryTable"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/⌨️keyboard/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DIAGRAM_KEYBOARD_FOCUS_CLASS",
+    "DiagramLiveRegion",
+    "diagramKeyboardAnnouncement",
+    "diagramKeyboardStep",
+    "diagramReadingOrderPosition",
+    "useDiagramTranslate",
+    "DiagramKeyboardStep",
+    "DiagramNavigableNode",
+    "DiagramTranslate"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📋️force-model/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DiagramForceConfig",
+    "defaultDiagramForceConfig"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧩️inner/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DiagramProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🪢️layout-hook/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useDiagramLayout"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DIAGRAM_UNIT",
+    "DiagramLayoutDirection",
+    "DiagramLayoutOptions",
+    "Diagram",
+    "DiagramSkeleton"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ContextMenuChrome"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Window",
+    "WindowConfig"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "isElementId"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "elementIdSelector"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "borderElementClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🖱️interaction-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "interactiveHoverClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ContextMenuChrome"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useWindowContentDeadLineInset",
+    "windowContentDeadLineScrollClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Anchor",
+    "ANCHORS"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌈️surface-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "surfaceClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "borderNormalClass"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧲️panel-dock/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PanelTabDockTarget",
+    "PanelTreeUnitDockMove",
+    "PanelDockContextValue",
+    "PanelDockContext"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👻️PanelGhost/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "usePanelGhost"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reactHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PanelTabNode",
+    "PanelDock",
+    "findPanelTabPath",
+    "findPanelTabNode",
+    "PanelTreeUnit"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/👥️presence-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "presencePaint"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LAYERED_DEFAULT_LIFECYCLE",
+    "LAYERED_FOLLOW_EPSILON",
+    "LAYERED_FOLLOW_LERP",
+    "LAYERED_GLIDE_MS",
+    "cellOffset",
+    "centeredLastRowCells",
+    "centeredRowSpan",
+    "clampOffset",
+    "easeInOutCubic",
+    "followStep",
+    "glideOffset",
+    "inWindow",
+    "LAYERED_FOLLOW_FRAME_MS",
+    "followFactor",
+    "lerpOffset",
+    "nearSquareGrid",
+    "nextWarmBoot",
+    "occupiedColumns",
+    "paneAxisBounds",
+    "panesOverBudget",
+    "panesToRelease",
+    "pointerOffset",
+    "resolveLifecycle",
+    "scheduleIdle",
+    "stripGrid",
+    "stripTransform",
+    "veilClip",
+    "veilClipPath",
+    "veilPolygon",
+    "warmDelay",
+    "windowAround",
+    "LayeredCell",
+    "LayeredGrid",
+    "LayeredIdleScheduler",
+    "LayeredLifecycle",
+    "LayeredLivePane",
+    "LayeredOffset",
+    "LayeredSpan",
+    "LayeredVeil",
+    "LayeredWarmStep",
+    "LayeredWindow",
+    "PaneAxisBounds"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧭️flow-direction-context/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "FlowInline",
+    "FlowBlock",
+    "Flow",
+    "FlowProvider",
+    "useFlow"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ElementProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Command",
+    "CommandDialog",
+    "CommandEmpty",
+    "CommandGroup",
+    "CommandInput",
+    "CommandItem",
+    "CommandList",
+    "CommandShortcut"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "OverviewCard",
+    "OverviewCardAction",
+    "OverviewCardOpenChip",
+    "overviewCardChipClass",
+    "OverviewCardActionProps",
+    "OverviewCardBaseProps",
+    "OverviewCardButtonProps",
+    "OverviewCardProps",
+    "OverviewCardSectionProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Level",
+    "LEVELS",
+    "LevelProvider",
+    "useLevel",
+    "getLevelZClass",
+    "SurfaceFill",
+    "surfaceFillClass",
+    "SurfaceScopeValue",
+    "SurfaceScope",
+    "useSurface",
+    "SurfaceProps",
+    "Surface",
+    "isSurfaceActiveBackgroundPointer",
+    "SurfaceActiveBindProps",
+    "useSurfaceActive",
+    "setSurfaceActiveRoot"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Label",
+    "useLabel",
+    "useLabelFormatter",
+    "useIdLabel",
+    "useControlAccessibleLabel",
+    "useControlInlineText",
+    "useControlTooltipText",
+    "resolveTranslationLabel",
+    "useUiTranslation",
+    "ControlTooltipTextOptions"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👥️PresenceBar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "PresenceBar",
+    "presenceColor",
+    "presenceCssVar",
+    "PRESENCE_BAR_DEFAULT_MAX",
+    "PresenceAppearance",
+    "PresenceBarProps",
+    "PresenceHsl",
+    "PresencePeer",
+    "PresenceRole"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📋️MenuItem/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "MenuItem",
+    "menuItemClassName",
+    "MenuItemProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Layout",
+    "LayoutMobilePanelProps",
+    "LayoutProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📝️Field/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Field",
+    "FieldProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UIDialog",
+    "UIDialogProps",
+    "UIDialogFieldBinding"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📻️TableAvatar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "TableAvatar",
+    "TableAvatarProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Footer",
+    "FooterProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WINDOW_CHROME_BODY_PLANE_STYLE",
+    "WINDOW_CHROME_CHIP_ROW_STYLE",
+    "WINDOW_SILHOUETTE_BORDER_KINDS",
+    "WindowChrome",
+    "WindowChromeSilhouetteBorder",
+    "isWindowChromeIntroducedTarget",
+    "measureWindowSilhouetteMetrics",
+    "resolveWindowSilhouetteBorderKind",
+    "useWindowSilhouetteGeometry",
+    "windowCapFrameClass",
+    "windowChromeTitleChipClass",
+    "windowControlsCapClass",
+    "windowGapFrameClass",
+    "windowSilhouetteBorderPaint",
+    "WindowChromeControlAction",
+    "WindowChromeProps",
+    "WindowSilhouetteBorderKind"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗨️Popover/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Popover",
+    "PopoverAnchor",
+    "PopoverContent",
+    "PopoverTrigger",
+    "resolvePopoverPlacement",
+    "PopoverAlign",
+    "PopoverAnchorProps",
+    "PopoverContentProps",
+    "PopoverPreventableEvent",
+    "PopoverProps",
+    "PopoverSide",
+    "PopoverTriggerProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LayeredCardState",
+    "LayeredChromeState",
+    "LayeredInsets",
+    "LayeredLabels",
+    "LayeredMode",
+    "LayeredOverviewProps",
+    "LayeredPane",
+    "LayeredPaneState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "capturePosterFromCanvases"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LayeredOverview",
+    "LayeredDirection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "skeletonPulseClass",
+    "SkeletonBlock",
+    "elementSkeleton",
+    "WindowBodySkeleton",
+    "PanelTreeSkeleton",
+    "CanvasSkeleton",
+    "ElementSkeletonKind"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "reconcileActivePath",
+    "singleTreeLeaf",
+    "panelTabChildren",
+    "findPanelTabNode",
+    "findPanelTabPath",
+    "resolvePanelBranchBodyLeaf",
+    "progressPanelTabSelection",
+    "usePanelTabSelection",
+    "dockSkeletonOf",
+    "dockSkeletonsEqual",
+    "applyDockSkeleton",
+    "PanelTabBar",
+    "PanelTabBarVariant",
+    "PanelTreeUnit",
+    "PanelTabLeaf",
+    "PanelTabBranch",
+    "PanelTabNode",
+    "PanelTabSelectionResult",
+    "PanelTabSelectionOptions",
+    "PanelDock",
+    "PanelTabBarProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DragHandle",
+    "HANDLE_HOVER_SCOPE_ATTR"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "windowChromeScrollClearanceVar",
+    "windowContentDeadLineVar",
+    "windowContentDeadLineScrollClass",
+    "readWindowChromeScrollClearancePx",
+    "measureWindowChromeScrollClearancePx",
+    "isWindowContentDeadLineHost",
+    "readWindowContentDeadLinePx",
+    "readScrollerContentOverflows",
+    "useWindowContentDeadLineInset"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "ELEMENT_ID_PATTERN",
+    "isElementId",
+    "elementIdSegment",
+    "childElementId",
+    "assertElementId",
+    "elementIdSelector",
+    "useFirstDraggableElementAlias"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UI_AVAILABLE_HEIGHT",
+    "UI_MOBILE_MAX_WIDTH_PX",
+    "UI_MOBILE_MEDIA_QUERY",
+    "UI_TABLET_MAX_WIDTH_PX",
+    "UI_TABLET_MEDIA_QUERY",
+    "availableViewportHeightPx",
+    "elementsSurfaceDeviceForMatches",
+    "elementsSurfaceDeviceForWidth",
+    "elementsSurfaceDeviceIsMobile",
+    "elementsSurfaceDeviceSupportsTabDrag",
+    "ElementsSurfaceDevice"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "uiDataLabel",
+    "UiLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "CHROME_CONTROL_TOOLTIP_DELAY_MS",
+    "ChromeControlHint",
+    "DisabledReasonHint"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiLocale",
+    "UiLabelPair",
+    "UiLabelValue",
+    "UiRibbonParentCategory",
+    "UiRibbonParentEntries",
+    "DeepUiTranslationKeys",
+    "UiTranslationSchema",
+    "UiTranslationKey",
+    "AssertUiRibbonParentKeysCovered",
+    "AssertUiSettingsLanguageKeysCovered",
+    "UiChromeTerminologyId",
+    "AssertUiSettingsTerminologyKeysCovered",
+    "UiTranslateFn",
+    "UiI18nPort",
+    "UiRegisteredTranslationKey",
+    "UI_RIBBON_PARENT_CATEGORIES"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WINDOW_SILHOUETTE_GEOMETRY_SCHEMA",
+    "WINDOW_SILHOUETTE_PATH_INSET",
+    "WINDOW_SILHOUETTE_CHIP_EPSILON",
+    "normalizeWindowSilhouetteChips",
+    "normalizeWindowSilhouetteMetrics",
+    "windowSilhouetteEdgePoints",
+    "windowSilhouetteEdgePointsRtl",
+    "windowSilhouetteOutline",
+    "simplifyWindowSilhouetteOutline",
+    "windowSilhouetteOutlineViolations",
+    "windowSilhouettePathFromOutline",
+    "windowSilhouettePath",
+    "windowSilhouetteContentClipPath",
+    "windowSilhouetteSafeClearances",
+    "windowSilhouetteBodyRegion",
+    "windowSilhouetteGlassRegions",
+    "windowSilhouetteContentRegions",
+    "windowSilhouetteRegionContains",
+    "windowSilhouetteContains",
+    "pendingWindowSilhouetteMetrics",
+    "createWindowSilhouetteGeometry",
+    "WindowSilhouetteChip",
+    "WindowSilhouetteEdge",
+    "WindowSilhouetteMetrics",
+    "WindowSilhouettePoint",
+    "WindowSilhouetteDock",
+    "WindowSilhouetteRegion",
+    "WindowSilhouetteSafeClearances",
+    "PendingWindowSilhouetteMetrics",
+    "WindowSilhouetteGeometry"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UI_AVAILABLE_HEIGHT",
+    "UI_MOBILE_MAX_WIDTH_PX",
+    "UI_MOBILE_MEDIA_QUERY",
+    "UI_TABLET_MAX_WIDTH_PX",
+    "UI_TABLET_MEDIA_QUERY",
+    "elementsSurfaceDeviceForLayout",
+    "elementsSurfaceDeviceForMatches",
+    "ElementsSurfaceDevice",
+    "ElementsSurfaceLayout"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/👥️presence-presentation/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "presenceColor",
+    "presenceCssVar",
+    "presencePaint",
+    "PresenceAppearance",
+    "PresenceHsl"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LAYERED_DEFAULT_LIFECYCLE",
+    "LAYERED_FOLLOW_EPSILON",
+    "LAYERED_FOLLOW_LERP",
+    "LAYERED_GLIDE_MS",
+    "cellOffset",
+    "centeredLastRowCells",
+    "centeredRowSpan",
+    "clampOffset",
+    "easeInOutCubic",
+    "followStep",
+    "glideOffset",
+    "lerpOffset",
+    "nearSquareGrid",
+    "nextWarmBoot",
+    "occupiedColumns",
+    "paneAxisBounds",
+    "panesOverBudget",
+    "panesToRelease",
+    "pointerOffset",
+    "resolveLifecycle",
+    "scheduleIdle",
+    "stripGrid",
+    "stripTransform",
+    "veilClip",
+    "veilClipPath",
+    "veilPolygon",
+    "warmDelay",
+    "windowAround",
+    "inWindow",
+    "LAYERED_FOLLOW_FRAME_MS",
+    "followFactor",
+    "LayeredCell",
+    "LayeredGrid",
+    "LayeredIdleScheduler",
+    "LayeredLifecycle",
+    "LayeredLivePane",
+    "LayeredOffset",
+    "LayeredSpan",
+    "LayeredVeil",
+    "LayeredWarmStep",
+    "LayeredWindow",
+    "PaneAxisBounds"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "OverviewCard",
+    "OverviewCardAction",
+    "OverviewCardOpenChip",
+    "overviewCardChipClass",
+    "OverviewCardActionProps",
+    "OverviewCardBaseProps",
+    "OverviewCardButtonProps",
+    "OverviewCardProps",
+    "OverviewCardSectionProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "Navbar",
+    "SemioLogo",
+    "ShellBrandLogo",
+    "navbarFillItem",
+    "NavbarItem",
+    "NavbarProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "CatalogIcon",
+    "IconName",
+    "CatalogIconProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "WindowChrome",
+    "windowChromeTitleChipClass",
+    "WindowChromeControlAction",
+    "WindowChromeProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LayeredCardState",
+    "LayeredChromeState",
+    "LayeredInsets",
+    "LayeredLabels",
+    "LayeredMode",
+    "LayeredOverviewProps",
+    "LayeredPane",
+    "LayeredPaneState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "capturePosterFromCanvases"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "LayeredOverview",
+    "LayeredDirection"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "DEFAULT_UI_DRIVER",
+    "UiDriver"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "cn"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "UiLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "useLabel"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "BoxIcon",
+    "AlertCircleIcon"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📌️WindowPane/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "usePaneHostContext"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "sceneHostPort"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "CatalogIcon",
+    "CatalogIconProps"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🧫️fixtures/🏷️mutation-attributes/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts",
+   "pkg": "@semio-tech/pack-json-decode-ts",
+   "names": [
+    "decodeJsonSyntaxSegments",
+    "JsonSyntaxControl",
+    "JsonSyntaxNode"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🟦️.ts",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "RetainedTypedEquality",
+    "Node",
+    "Grant"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🟦️.ts",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "RetainedUtf8Buffer",
+    "Utf8Grant",
+    "Utf8Progress"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🟦️.ts",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "RetainedTypedEquality",
+    "Node",
+    "Demand",
+    "Grant"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🟦️.ts",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "OriginalReceivingPrimary"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🔮️oracles/🖱️mounted-input/🟦️.tsx",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "mountedHost",
+    "canvasInputSessions",
+    "settle"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧪️tests/🧫️fixtures/🖱️input-contract/🔣️.json",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🔏️hash/🧪️tests/🧫️fixtures/🧮️blake3/🔣️.json",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework,@semio-tech/framework-rs",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🗃️state/🟦️.ts",
+   "pkg": "@semio-tech/framework-actor,@semio-tech/framework-actor-rs",
+   "names": [
+    "ShardClientState"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts",
+   "pkg": "@semio-tech/framework-io-base64-rs,@semio-tech/framework-io-base64-ts",
+   "names": [
+    "Base64DecodeCursor"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.ts",
+   "pkg": "@semio-tech/framework-os,@semio-tech/framework-os-kernel",
+   "names": [
+    "publishLocalPresenceWindowViewV1",
+    "collectLocalPresenceWindowViewsV1",
+    "clearLocalPresenceWindowViewV1",
+    "publishArtifactPresenceRosterV1",
+    "artifactPresenceRosterV1",
+    "clearArtifactPresenceRosterV1",
+    "publishLocalPresenceActorV1",
+    "localPresenceActorV1",
+    "publishLocalActiveToolV1",
+    "collectLocalActiveToolV1"
+   ]
+  },
+  {
+   "to": "@semio-tech/framework-os-node-graph-rs/framework_os_node_graph.js",
+   "pkg": "@semio-tech/framework-os-node-graph-rs",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/✂️worker-vm-source/🟦️.ts",
+   "pkg": "@semio-tech/framework-plugin",
+   "names": [
+    "classicShardWorkerSource",
+    "vmOriginalSource"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework-schema,@semio-tech/schema-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework-schema,@semio-tech/schema-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/framework-schema,@semio-tech/schema-ts",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/⏪️time-travel/🟦️.ts",
+   "pkg": "@semio-tech/framework-time-travel-rs,@semio-tech/framework-time-travel-ts",
+   "names": [
+    "applyTimeTravel",
+    "timeTravelFinalizeRefusal",
+    "timeTravelSession",
+    "TimeTravelEvent",
+    "TimeTravelSession"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📁️copy/🟦️.ts",
+   "pkg": "@semio-tech/process",
+   "names": [
+    "RetainedCompilationFileV1"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": "*"
+  },
+  {
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/repo-lib",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "to": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json",
+   "pkg": "@semio-tech/value-rs,@semio-tech/value-ts",
+   "names": [
+    "default"
+   ]
+  }
+ ]
+}

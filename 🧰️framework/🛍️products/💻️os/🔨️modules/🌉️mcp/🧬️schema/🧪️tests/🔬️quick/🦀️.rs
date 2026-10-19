@@ -187,6 +187,9 @@ fn a_tool_output_schema_admits_its_success_shape_and_the_typed_tool_error() {
         validate(&validator, &GatewayError::new(code, "refused").to_tool_error_payload()).unwrap_or_else(|error| panic!("{code:?} as a tool error: {error}"));
     }
     assert!(validate(&validator, &serde_json::json!({ "code": "NOT_A_CODE", "message": "x", "details": null, "retryable": false })).is_err(), "an unknown code is neither shape");
+    for wrapped in [serde_json::json!({ "result": [1, 2] }), serde_json::json!({ "result": "ok" }), serde_json::json!({ "result": false })] {
+        validate(&validator, &wrapped).unwrap_or_else(|error| panic!("{wrapped} as the result wrapper: {error}"));
+    }
 }
 
 #[test]

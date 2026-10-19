@@ -1,4 +1,4 @@
-//! per-kind placement distribution trees, and (once the host has candidates) the placement picker.
+//! 📍️ per-kind placement distribution trees, and (once the host has candidates) the placement picker.
 //! 🖌️ Edit-mode window option — the Brush utility's options group: the suggestion-offset slider, the
 //! Tagged `active_utility_id: Some("brush")`, so the chrome only shows it while Brush is active.
 //! Shared by all three canvas windows.
@@ -9,7 +9,7 @@ use semio_framework_plugin::MeasureSelectItem;
 use semio_framework_plugin::WindowMeasure;
 #[cfg(test)] use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_SUGGESTION_OFFSET_MIN: f64 = 0.0;

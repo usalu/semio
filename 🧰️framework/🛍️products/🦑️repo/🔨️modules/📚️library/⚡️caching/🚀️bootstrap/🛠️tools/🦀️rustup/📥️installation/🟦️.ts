@@ -11,9 +11,9 @@ import {captureOwnedCommandV1,runOwnedCommand} from "../../../../../../../../../
 import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {readPhysicalCargoSourceV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {provisionRustupBootstrapV1,downloadRustupBytesV1,hashRustupFileV1,synchronizeRustupDirectoryV1} from "../📥️bootstrap/🟦️.ts";
 import {captureRustupToolchainGenerationV1,withRustupGenerationCustodyV1,type RustupGenerationCustodyV1} from "../📥️capture/🟦️.ts";

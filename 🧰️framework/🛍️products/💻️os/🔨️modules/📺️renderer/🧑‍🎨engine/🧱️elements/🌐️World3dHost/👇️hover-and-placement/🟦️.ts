@@ -52,8 +52,6 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
     dispatch("closeVortexSuggestions");
   }, [dispatch]);
 
-  // 🪟️ Sibling split panes do not mount the suggestion ContextMenuController, so they need their own
-  // Escape / outside-dismiss path — otherwise `suggestionMenu.open` gates them with no way to clear it.
   useEffect(() => {
     if (!suggestionMenuOpen || suggestionMenuOwnsThisWindow) return undefined;
     const handlePointerDown = (event: globalThis.PointerEvent): void => {
@@ -97,10 +95,6 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
     [dispatch, instances, interactionDomainId, interactionGranularity, persistentSelectionMode, selection.selectionMergeMode, selectionMode],
   );
 
-  // 🏁️ Both hover dispatchers RETURN their round trip: `createCoalescingActionDispatcher` keeps at most one
-  // outstanding and coalesces the rest onto the latest target, and it can only do that for a `dispatch`
-  // whose promise it can see — `dispatch` discards `onAction`'s, so the awaitable twin is the only shape
-  // that arms the gate (wave B33 §3: 72 hover turns enqueued by one 70-move storm, 11 settled).
   const dispatchInstanceHover = useMemo(
     () =>
       createCoalescingActionDispatcher<string | null>((id) => {
@@ -131,8 +125,6 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
     [activeUtility, dispatchSettled, interactionDomainId, windowInstanceId],
   );
 
-  // 🎯️ Listeners the instances layer registers to withdraw its local hover claim when the pointer
-  // leaves this pane's canvas (`onPointerLeave` on the root below).
   const localHoverReleaseListeners = useRef(new Set<() => void>());
   const subscribeLocalHoverRelease = useCallback((listener: () => void) => {
     localHoverReleaseListeners.current.add(listener);
@@ -144,7 +136,6 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
     hoveredInstanceInteractionTargetRef.current = null;
     for (const listener of localHoverReleaseListeners.current) listener();
   }, []);
-  // 🩺️ Imperative mirror of the painted hover — no React state, so a hover never re-renders the host.
   const publishHoverPaint = useCallback((id: string | null) => {
     const root = hostRef.current;
     if (!root) return;
@@ -154,23 +145,12 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
 
   const handleInstancePointerMove = useCallback(
     (id: string | null) => {
-      // 🎯️ What THIS pane's own raycast last resolved, kept locally. `selection.hoveredId` is the
-      // guest's echo of it: it lags a round trip and any unrelated refresh can clear it, so a
-      // background click that consulted it raced the refresh and cleared a live selection instead of
-      // re-picking the object under the pointer (`📓️hot-swap-board-remount-2026-09-15.md` §3).
       hoveredInstanceInteractionTargetRef.current = id == null ? null : world3dInstanceInteractionTarget(instancesRef.current, id, interactionGranularity);
       dispatchInstanceHover(id);
     },
     [dispatchInstanceHover, interactionGranularity],
   );
 
-  // 🧭️ `setHover` is the DOMAINLESS hover lane. An app that declares an interaction domain declares
-  // `interactionHover` instead and never `setHover`, so dispatching it there is an action no window
-  // kind owns: the shell drops it and logs `dropped action "setHover" dispatched from window kind
-  // "procedural-preview"` on every component hit, while the hover the user made is simply lost
-  // (measured on the generation3d edit preview, ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The
-  // instance dispatcher already carries the domain, the window's declared granularity and the
-  // coalescing gate, so a component hit publishes through it on the id it names.
   const dispatchComponentHover = useMemo(
     () =>
       createCoalescingActionDispatcher<{ objectId: string; mode: string; id: number }>((args) => {
@@ -324,8 +304,6 @@ export function useWorldHoverAndPlacement(core: WorldCore3) {
     if (fullId) dispatch("acceptSuggestion", { fullId });
   }, [dispatch]);
 
-  // 🎯️ A component (face/edge/vertex) hit under a declared domain selects through `interactionSelect`
-  // like an instance hit does; the plugin-private `worldPick` lane is for domainless scenes only.
   const handleWorldPick = useCallback(
     (args: { granularity: string; id: number; merge: string; objectId?: string }) => {
       if (interactionDomainId && args.objectId != null && args.id != null) {

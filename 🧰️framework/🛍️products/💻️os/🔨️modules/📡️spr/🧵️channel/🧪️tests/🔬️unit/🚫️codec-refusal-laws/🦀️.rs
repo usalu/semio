@@ -92,11 +92,6 @@ async fn paged_generic_decoder_crosses_a_two_page_field_boundary_without_concate
 
 #[semio_framework_async_macros::async_test]
 async fn paged_generic_decoder_admits_document_config_and_projection_commands_used_during_browser_boot() {
-    // 🧮️ Each row carries the EXACT number of bounded cursor turns its paged decode costs: one
-    // header turn plus one turn per length-prefixed field. A two-member document archive is
-    // 1 + 3 (parent pack, parent spr, member count) + 2 x 12 member phases = 28 — a shape the
-    // earlier uniform four-turn budget could never reach, which is why this law read red from the
-    // day the archive rows were admitted into it.
     let commands = vec![
         (AppCommand::ReadDocument { seq: 2 }, 2),
         (AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() }, 28),

@@ -1,5 +1,5 @@
 import compilerInventory from "@semio-tech/process/artifacts/publication/sources/schema.json";
-import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
 import {isAbsolute,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";

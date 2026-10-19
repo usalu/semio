@@ -73,9 +73,9 @@ use std::collections::VecDeque;
     struct ScriptJob {
         outcomes: VecDeque<JobStepOutcome>,
         calls: usize,
-        pending_state: Option<semio_framework_job::RetainedJobPayload>,
+        pending_state: Option<semio_framework_job_payload::RetainedJobPayload>,
         pending_complete: Option<JobCommitCandidate>,
-        pending_output: Option<semio_framework_job::RetainedJobPayload>,
+        pending_output: Option<semio_framework_job_payload::RetainedJobPayload>,
         original_current: Option<JobStepOutcome>,
         current_copied: bool,
         published_kind: Option<semio_framework_job::JobOutcomeKind>,
@@ -121,9 +121,9 @@ use std::collections::VecDeque;
             if let Some(candidate) = self.pending_complete.as_ref() {
                 let bytes = &candidate.output;
                 let grant = cx.retained_grant();
-                if grant.maximum_items < 2 || grant.maximum_copy_bytes < bytes.len() || grant.maximum_capacity_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES || grant.maximum_depth == 0 { return Ok(None); }
-                self.pending_output = Some(cx.payload_from_bytes(semio_framework_job::JobPayloadStream::CommitOutput, bytes).expect("fixture original page admission"));
-                cx.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
+                if grant.maximum_items < 2 || grant.maximum_copy_bytes < bytes.len() || grant.maximum_capacity_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES || grant.maximum_depth == 0 { return Ok(None); }
+                self.pending_output = Some(cx.payload_from_bytes(semio_framework_job_payload::JobPayloadStream::CommitOutput, bytes).expect("fixture original page admission"));
+                cx.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
                 self.published_kind = Some(semio_framework_job::JobOutcomeKind::Complete);
                 return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, self.pending_state.as_ref(), self.pending_output.as_ref()).map_err(Into::into);
             }
@@ -132,15 +132,15 @@ use std::collections::VecDeque;
             let (kind, stream, bytes) = match original {
                 JobStepOutcome::Yield => { let outcome = semio_framework_job::JobOutcomeBorrow::admit_yield(cx)?; self.current_copied = outcome.is_some(); return Ok(outcome); },
                 JobStepOutcome::Cancelled => { let outcome = semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx)?; self.current_copied = outcome.is_some(); return Ok(outcome); },
-                JobStepOutcome::PreviewReady { preview } => (semio_framework_job::JobOutcomeKind::PreviewReady, semio_framework_job::JobPayloadStream::Preview, preview.as_slice()),
-                JobStepOutcome::CheckpointReady { checkpoint } => (semio_framework_job::JobOutcomeKind::CheckpointReady { applied_progress: checkpoint.applied_progress }, semio_framework_job::JobPayloadStream::CheckpointState, checkpoint.state.as_slice()),
-                JobStepOutcome::Complete { candidate } => (semio_framework_job::JobOutcomeKind::Complete, semio_framework_job::JobPayloadStream::CommitState, candidate.state.as_slice()),
-                JobStepOutcome::Fault { detail } => (semio_framework_job::JobOutcomeKind::Fault, semio_framework_job::JobPayloadStream::Fault, detail.as_slice()),
+                JobStepOutcome::PreviewReady { preview } => (semio_framework_job::JobOutcomeKind::PreviewReady, semio_framework_job_payload::JobPayloadStream::Preview, preview.as_slice()),
+                JobStepOutcome::CheckpointReady { checkpoint } => (semio_framework_job::JobOutcomeKind::CheckpointReady { applied_progress: checkpoint.applied_progress }, semio_framework_job_payload::JobPayloadStream::CheckpointState, checkpoint.state.as_slice()),
+                JobStepOutcome::Complete { candidate } => (semio_framework_job::JobOutcomeKind::Complete, semio_framework_job_payload::JobPayloadStream::CommitState, candidate.state.as_slice()),
+                JobStepOutcome::Fault { detail } => (semio_framework_job::JobOutcomeKind::Fault, semio_framework_job_payload::JobPayloadStream::Fault, detail.as_slice()),
             };
             let grant = cx.retained_grant();
-            if grant.maximum_items < 2 || grant.maximum_copy_bytes < bytes.len() || grant.maximum_capacity_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES || grant.maximum_depth == 0 { return Ok(None); }
+            if grant.maximum_items < 2 || grant.maximum_copy_bytes < bytes.len() || grant.maximum_capacity_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES || grant.maximum_depth == 0 { return Ok(None); }
             self.pending_state = Some(cx.payload_from_bytes(stream, bytes).expect("fixture original page admission"));
-            cx.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
+            cx.consume_retained(semio_framework_job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
             self.current_copied = true;
             if kind == semio_framework_job::JobOutcomeKind::Complete {
                 let Some(JobStepOutcome::Complete { candidate }) = self.original_current.take() else { unreachable!() };
@@ -225,7 +225,7 @@ use std::collections::VecDeque;
         }
     }
 
-    struct UnsequencedPreviewJob { original: semio_framework_job::RetainedJobPayload }
+    struct UnsequencedPreviewJob { original: semio_framework_job_payload::RetainedJobPayload }
 
     impl semio_framework_job::InteractiveJob for UnsequencedPreviewJob {
         fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> { semio_framework_job::JobOutcomeBorrow::admit_preview(cx, &self.original).map_err(Into::into) }
@@ -350,7 +350,7 @@ use std::collections::VecDeque;
         let mut bridge = JobTurnBridge::new(operation, original_bridge_grant()).unwrap();
         assert!(matches!(
             bridge.step(
-                &mut UnsequencedPreviewJob { original: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview) },
+                &mut UnsequencedPreviewJob { original: semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Preview) },
                 bridge_turn(0, 0),
                 operation.operation,
                 operation.base_revision,

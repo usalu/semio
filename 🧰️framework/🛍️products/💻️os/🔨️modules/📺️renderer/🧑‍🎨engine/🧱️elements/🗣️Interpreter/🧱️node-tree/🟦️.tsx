@@ -111,11 +111,6 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   const role = component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined;
   const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
 
-  // 🪪️ A section and a field carry the SAME stable DOM id every other interpreted node gets. Both
-  // wrappers accept `id` and both dropped it here, so an app that authored `ui::section(...).try_id(…)`
-  // / `ui::field(...).try_id(…)` — puzzle 3d's whole Settings panel does — rendered a tree whose only
-  // addressable node was the innermost control, with no row or section to reach from a keybinding, an
-  // introduction anchor, a scripted driver or assistive technology (ticket 26/09/02 wave B12).
   if (component.role === "section" || component.role === "group") {
     return (
       <Section id={nodeDomId(store, record, context.domScope)} title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
@@ -161,14 +156,7 @@ function renderTreeItemControls(store: UiDocumentStore, controls: readonly UiNod
 
 export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string, rowAdmission?: RowActionAdmissionControllerV1): TreeDataItem {
   const { record, props } = node;
-  // 🪟️ A WINDOW is identified by its path; an unwindowed row has no window identity and keeps its authored
-  // key, which is the only thing the host ever holds for it (a fold).
   const windowPath = props.window ? treeWindowPathOf(parentWindowPath, record.key) : undefined;
-  // 🔑️ …and the window's ROW id is the path too, because `🌳️Tree` keys its expansion map by row id and the
-  // authored key is legitimately shared across a body (`📐️cad`'s one `object.id` under four pane sections):
-  // two rows under one id would fold together. Identical to the key for a top-level container, so nothing
-  // flat changes; `walk.pickTargets` still resolves this id back to the bare `record.key`, so picks do not
-  // notice (📓️f2-sdk-body-node-ledger.md §10).
   const domId = uiNodeDomId(state.surface, windowPath ?? record.key, record.id);
   registerTreeWalkRow(walk, windowPath ?? record.key, domId);
   const presence = overlay.byKey.get(record.key) ?? {};
@@ -229,7 +217,6 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
       const sectionProps = sectionRecord.component as Extract<Component, { type: "treeSection" }>;
       const items = collectTreeItems(state, sectionRecord.children ?? []);
       const domId = uiNodeDomId(state.surface, sectionRecord.key, sectionRecord.id);
-      // 🪟️ A section is top-level, so its window path IS its key — a flat body is unchanged by path identity.
       const windowPath = sectionProps.window ? treeWindowPathOf(undefined, sectionRecord.key) : undefined;
       registerTreeWalkRow(walk, windowPath ?? sectionRecord.key, domId);
       return {
@@ -247,10 +234,6 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
     return { sections, walk };
   }, [store, record, revision, context, overlay, leftoverIds, windows, rowAdmission]);
   const sections = walked.sections;
-  // 🔑️ `TreeSection`/`TreeItem` each route a fold through the provider TWICE — once from the data view
-  // that owns the controlled `open` prop and once from the row component's own `useTreeOpenState`, both
-  // under the same state id. The host's map is idempotent (`createTreeWindowSchedulerV1.setOpen` returns
-  // on an unchanged value), so the duplicate costs nothing and is deliberately not filtered here.
   const handleOpenStateChange = useCallback((stateId: string, open: boolean) => windows?.setOpen(walked.walk.keysByDomId?.get(treeDomIdFromOpenStateIdV1(stateId)) ?? stateId, open), [windows, walked]);
   useTreeWindowObserver(rootRef, windows, revision, store);
   const dragController: TreeDragAndDropController | undefined = useMemo(() => {
@@ -556,8 +539,6 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
       return <TreeView store={store} record={record} context={context} />;
     case "treeSection":
     case "treeItem":
-      // 🌲️ Reached only when a section/item is rendered OUTSIDE a `tree` parent (malformed document) —
-      // `TreeView` walks these directly, never through `UiNodeView`, in the well-formed case.
       return <ContainerView store={store} record={record} context={context} />;
     case "image":
       return <ImageView record={record} />;

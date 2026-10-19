@@ -8,7 +8,7 @@
     "build": {
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "inputs": [
         "production",

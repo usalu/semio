@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "contractId": "path-budget-v1",
+  "semantics": {
+    "maxPathUtf16Units": "A tracked repo-relative path may have at most this many UTF-16 code units (Windows MAX_PATH semantics). U+FE0F counts one unit, an astral emoji two.",
+    "maxComponentUtf8Bytes": "Every path component, split at slash or backslash, may have at most this many UTF-8 bytes (Linux and macOS NAME_MAX).",
+    "parts": "The path is the concatenation of every part text repeated count times.",
+    "reserve": "A canonical root fits when its units plus the reserved descendant suffix units stay within maxPathUtf16Units and its components stay within maxComponentUtf8Bytes."
+  },
+  "policy": {
+    "maxPathUtf16Units": 256,
+    "maxComponentUtf8Bytes": 255
+  },
+  "cases": [
+    {
+      "id": "ascii-256-units",
+      "note": "ASCII path of exactly 256 UTF-16 units passes",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+          "count": 5
+        },
+        {
+          "text": "a",
+          "count": 1
+        }
+      ],
+      "utf16Units": 256,
+      "longestComponentUtf8Bytes": 50,
+      "codes": []
+    },
+    {
+      "id": "ascii-257-units",
+      "note": "one unit more is too long",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+          "count": 5
+        },
+        {
+          "text": "aa",
+          "count": 1
+        }
+      ],
+      "utf16Units": 257,
+      "longestComponentUtf8Bytes": 50,
+      "codes": [
+        "path-too-long"
+      ]
+    },
+    {
+      "id": "ascii-component-255-bytes",
+      "note": "single ASCII component of 255 bytes passes",
+      "parts": [
+        {
+          "text": "a",
+          "count": 255
+        }
+      ],
+      "utf16Units": 255,
+      "longestComponentUtf8Bytes": 255,
+      "codes": []
+    },
+    {
+      "id": "ascii-component-256-bytes",
+      "note": "single ASCII component of 256 bytes is too long",
+      "parts": [
+        {
+          "text": "a",
+          "count": 256
+        }
+      ],
+      "utf16Units": 256,
+      "longestComponentUtf8Bytes": 256,
+      "codes": [
+        "path-component-too-long"
+      ]
+    },
+    {
+      "id": "emoji-vs16-component-252-bytes",
+      "note": "36 crab+VS16 graphemes: 252 bytes in 108 units",
+      "parts": [
+        {
+          "text": "🦀️",
+          "count": 36
+        }
+      ],
+      "utf16Units": 108,
+      "longestComponentUtf8Bytes": 252,
+      "codes": []
+    },
+    {
+      "id": "emoji-vs16-component-259-bytes",
+      "note": "37 crab+VS16 graphemes: 259 bytes exceed the component limit",
+      "parts": [
+        {
+          "text": "🦀️",
+          "count": 37
+        }
+      ],
+      "utf16Units": 111,
+      "longestComponentUtf8Bytes": 259,
+      "codes": [
+        "path-component-too-long"
+      ]
+    },
+    {
+      "id": "emoji-vs16-path-255-units",
+      "note": "crab+VS16 components joined by slash: 255 units but 595 bytes in total passes (bytes are only limited per component)",
+      "parts": [
+        {
+          "text": "🦀️/",
+          "count": 63
+        },
+        {
+          "text": "🦀️",
+          "count": 1
+        }
+      ],
+      "utf16Units": 255,
+      "longestComponentUtf8Bytes": 7,
+      "codes": []
+    },
+    {
+      "id": "emoji-vs16-path-256-units",
+      "note": "one more unit: 63 components of 3 units plus separators and a final 'a' reaches exactly 256",
+      "parts": [
+        {
+          "text": "🦀️/",
+          "count": 63
+        },
+        {
+          "text": "🦀️a",
+          "count": 1
+        }
+      ],
+      "utf16Units": 256,
+      "longestComponentUtf8Bytes": 8,
+      "codes": []
+    },
+    {
+      "id": "emoji-vs16-path-257-units",
+      "note": "257 units is too long although only 96 code points",
+      "parts": [
+        {
+          "text": "🦀️/",
+          "count": 63
+        },
+        {
+          "text": "🦀️aa",
+          "count": 1
+        }
+      ],
+      "utf16Units": 257,
+      "longestComponentUtf8Bytes": 9,
+      "codes": [
+        "path-too-long"
+      ]
+    },
+    {
+      "id": "emoji-without-vs16-counts-two-units",
+      "note": "an astral emoji without VS16 is two units and four bytes",
+      "parts": [
+        {
+          "text": "🦀",
+          "count": 1
+        }
+      ],
+      "utf16Units": 2,
+      "longestComponentUtf8Bytes": 4,
+      "codes": []
+    },
+    {
+      "id": "bmp-emoji-with-vs16",
+      "note": "a BMP emoji with VS16 (U+2B05 U+FE0F) is two units and six bytes",
+      "parts": [
+        {
+          "text": "⬅️",
+          "count": 1
+        }
+      ],
+      "utf16Units": 2,
+      "longestComponentUtf8Bytes": 6,
+      "codes": []
+    },
+    {
+      "id": "two-byte-letters",
+      "note": "e-acute is one unit and two bytes: 127 of them are 254 bytes",
+      "parts": [
+        {
+          "text": "é",
+          "count": 127
+        }
+      ],
+      "utf16Units": 127,
+      "longestComponentUtf8Bytes": 254,
+      "codes": []
+    },
+    {
+      "id": "three-byte-cjk-boundary",
+      "note": "85 CJK characters are 255 bytes and 85 units",
+      "parts": [
+        {
+          "text": "語",
+          "count": 85
+        }
+      ],
+      "utf16Units": 85,
+      "longestComponentUtf8Bytes": 255,
+      "codes": []
+    },
+    {
+      "id": "three-byte-cjk-over",
+      "note": "86 CJK characters are 258 bytes",
+      "parts": [
+        {
+          "text": "語",
+          "count": 86
+        }
+      ],
+      "utf16Units": 86,
+      "longestComponentUtf8Bytes": 258,
+      "codes": [
+        "path-component-too-long"
+      ]
+    },
+    {
+      "id": "old-byte-budget-regression",
+      "note": "a path the previous 240 UTF-8 byte budget refused: 60 crab+VS16 components are 240+ bytes but only 239 units",
+      "parts": [
+        {
+          "text": "🦀️/",
+          "count": 59
+        },
+        {
+          "text": "🦀️",
+          "count": 1
+        }
+      ],
+      "utf16Units": 239,
+      "longestComponentUtf8Bytes": 7,
+      "codes": []
+    },
+    {
+      "id": "both-violations",
+      "note": "a single 300-unit component breaks both limits",
+      "parts": [
+        {
+          "text": "x",
+          "count": 300
+        }
+      ],
+      "utf16Units": 300,
+      "longestComponentUtf8Bytes": 300,
+      "codes": [
+        "path-too-long",
+        "path-component-too-long"
+      ]
+    },
+    {
+      "id": "empty-path",
+      "note": "the empty path is within budget",
+      "parts": [
+        {
+          "text": "",
+          "count": 0
+        }
+      ],
+      "utf16Units": 0,
+      "longestComponentUtf8Bytes": 0,
+      "codes": []
+    },
+    {
+      "id": "backslash-separator",
+      "note": "Windows separators split components too: 200 and 60 byte components in 261 units",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "count": 1
+        }
+      ],
+      "utf16Units": 261,
+      "longestComponentUtf8Bytes": 200,
+      "codes": [
+        "path-too-long"
+      ]
+    },
+    {
+      "id": "two-byte-letters-over-component",
+      "note": "128 two-byte letters are 256 bytes and exceed the component limit",
+      "parts": [
+        {
+          "text": "é",
+          "count": 128
+        }
+      ],
+      "utf16Units": 128,
+      "longestComponentUtf8Bytes": 256,
+      "codes": [
+        "path-component-too-long"
+      ]
+    }
+  ],
+  "reserveCases": [
+    {
+      "id": "reserve-exact-fit",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+          "count": 4
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "count": 1
+        }
+      ],
+      "reserveUtf16Units": 7,
+      "rootUtf16Units": 249,
+      "fits": true
+    },
+    {
+      "id": "reserve-one-over",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+          "count": 4
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "count": 1
+        }
+      ],
+      "reserveUtf16Units": 7,
+      "rootUtf16Units": 250,
+      "fits": false
+    },
+    {
+      "id": "reserve-fixture-bundle-exact",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+          "count": 4
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaa",
+          "count": 1
+        }
+      ],
+      "reserveUtf16Units": 30,
+      "rootUtf16Units": 226,
+      "fits": true
+    },
+    {
+      "id": "reserve-fixture-bundle-over",
+      "parts": [
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/",
+          "count": 4
+        },
+        {
+          "text": "aaaaaaaaaaaaaaaaaaaaaaa",
+          "count": 1
+        }
+      ],
+      "reserveUtf16Units": 30,
+      "rootUtf16Units": 227,
+      "fits": false
+    }
+  ]
+}

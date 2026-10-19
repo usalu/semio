@@ -21,7 +21,6 @@ fn ticket_generated() -> PathBuf {
 
 #[test]
 fn office_ventilation_table_b6_b7_ida_cat_ii_low_pollution() {
-    // 20 persons × 7 l/s + 200 m² × 0.7 l/(s·m²) = 280 l/s = 1008 m³/h
     let q = part_1::required_outdoor_air_m3_h(20, 200.0, ComfortCategory::II, PollutionClass::Low);
     assert!((q - 1008.0).abs() < 1e-6, "q={q}");
 }
@@ -101,7 +100,7 @@ fn adaptive_model_runs_annex_b2_and_skips_pmv_ppd() {
     let mut doc = Din16798Snapshot::compliant_office();
     doc.zones[0].comfort_model = ComfortModel::Adaptive.as_str().into();
     doc.theta_rm_c = 15.0;
-    doc.zones[0].t_op_summer_c = 24.5; // |24.5 - 23.75| = 0.75 < Cat II band 3 K
+    doc.zones[0].t_op_summer_c = 24.5;
     let report = check_full_environment(&doc);
     let adaptive = report.checks.iter().find(|c| c.id.contains("adaptive")).expect("adaptive check");
     assert_ne!(adaptive.status, CheckStatus::NotApplicable, "adaptive must run when comfortModel=adaptive");
@@ -166,7 +165,6 @@ fn collect_leaf_paths(value: &semio_framework_value::DslValue, prefix: &str, out
                 out.push(format!("{prefix}[]"));
                 return;
             }
-            // Prefer id selectors when present
             for (i, item) in items.iter().enumerate() {
                 let selector = match item {
                     semio_framework_value::DslValue::Object(fields) => fields
@@ -197,10 +195,9 @@ fn default_snapshot_editable_leaves_have_en_de_field_meta() {
     let mut paths = Vec::new();
     collect_leaf_paths(&root, "", &mut paths);
     assert!(!paths.is_empty());
-    // Also assert wildcard coverage for list containers
     for wild in ["zones[]", "ventSystems[]"] {
         let meta = din16798_field_meta(wild.trim_end_matches("[]")).or_else(|| din16798_field_meta(wild));
-        let _ = meta; // container meta via exact("zones") / exact("ventSystems")
+        let _ = meta;
     }
     assert!(din16798_field_meta("zones").is_some());
     assert!(din16798_field_meta("ventSystems").is_some());
@@ -208,7 +205,6 @@ fn default_snapshot_editable_leaves_have_en_de_field_meta() {
         let meta = din16798_field_meta(path).unwrap_or_else(|| panic!("missing field meta for editable leaf '{path}'"));
         assert!(!meta.label_en.trim().is_empty(), "{path} missing label_en");
         assert!(!meta.label_de.trim().is_empty(), "{path} missing label_de");
-        // Quantity-ish leaves must declare a unit
         let leaf = path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']');
         let needs_unit = matches!(
             leaf,

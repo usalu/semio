@@ -5,7 +5,7 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/p
 import {componentModelRequestV1,readComponentModelIntentV1,type ComponentModelIntentV1} from "../📋️contract/🟦️.ts";
 import {readArtifactBytesV1,readArtifactPrefixV1,fileDigest} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { COMPONENT_RECEIPT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
-import { type ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
+import { type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 import { CATALOG_DESCRIPTOR_MAX_BYTES, type OwnerDescriptorPairV1 } from "@semio-tech/plugin-registry/catalog-verification";
 import { verifySemanticDescriptorPairBytesV1 } from "@semio-tech/plugin-registry/catalog-verification/descriptor-pair";
 import nativeSchema from "@semio-tech/process/artifacts/native-build/component-pass/schema.json";

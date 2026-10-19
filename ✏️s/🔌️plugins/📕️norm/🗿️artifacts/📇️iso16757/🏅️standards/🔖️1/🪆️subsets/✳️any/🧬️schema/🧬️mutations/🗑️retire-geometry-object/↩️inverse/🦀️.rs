@@ -1,4 +1,4 @@
-//! Inverse for `retire-geometry-object`.
+//! ↪️ Inverse for `retire-geometry-object`.
 
 use crate::introduce_geometry_object;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

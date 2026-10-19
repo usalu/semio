@@ -109,17 +109,12 @@ struct SharedState {
 }
 
 impl SharedState {
-    // 🚫️async: no suspension point — construction only; kept sync so it can be called directly
-    // from `HttpPackSource::with_retry_policy` below, itself sync for the same reason that
-    // function is tagged.
     fn new() -> Self {
         Self { last_etag: Mutex::new(None), known_len: AtomicU64::new(LEN_UNKNOWN) }
     }
 
     /// 📏️ The best length known so far, or `0` if nothing has been observed yet — mirrors
     /// `AsyncPackSource::len`'s infallible-`u64` contract.
-    // 🚫️async: no suspension point — `AsyncPackSource::len` (see `⏳️async/🦀️.rs`) is
-    // deliberately sync by contract, so every path reaching it must stay sync too.
     fn len(&self) -> u64 {
         match self.known_len.load(Ordering::SeqCst) {
             LEN_UNKNOWN => 0,
@@ -142,9 +137,6 @@ struct InnerSource<T: RangeTransport> {
 
 impl<T: RangeTransport> InnerSource<T> {
     /// 🔁️ Only the provider's explicit transient disposition authorizes a retry.
-    // 🚫️async: the only call site is the `match` guard in `fetch_with_retry` below
-    // (`Err(error) if Self::is_transient(&error) && ...`) — `.await` is not permitted inside a
-    // `match` guard, a hard syntactic restriction independent of this fn's own design.
     fn is_transient(error: &PackError) -> bool {
         match error{PackError::Refusal(semio_framework_pack_error::PackRefusal::Io{retry,..})=>*retry==PackRetryDisposition::Transient,PackError::TransportFailure(error)=>error.retry()==PackRetryDisposition::Transient,_=>false}
     }
@@ -190,8 +182,6 @@ impl<T: RangeTransport> InnerSource<T> {
 }
 
 impl<T: RangeTransport> AsyncPackSource for InnerSource<T> {
-    // 🚫️async: `AsyncPackSource::len` is declared sync by contract (see
-    // `⏳️async/🦀️.rs`); this impl just mirrors that.
     fn len(&self) -> u64 {
         self.shared.len()
     }
@@ -218,14 +208,11 @@ pub struct HttpPackSource<T: RangeTransport> {
 impl<T: RangeTransport> HttpPackSource<T> {
     /// 🆕️ A source fetching `url` through `transport`, with default retry policy and no
     /// known length or etag yet.
-    // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
-    // call sites (`let source = HttpPackSource::new(...);`, unawaited) keep compiling.
     pub fn new(url: String, transport: T, runtime: RetryRuntime) -> Self {
         Self::with_retry_policy(url, transport, RetryPolicy::default(), runtime)
     }
 
     /// 🆕️ As `new`, but with an explicit `RetryPolicy`.
-    // 🚫️async: no suspension point — same constructor reasoning as `new` above.
     pub fn with_retry_policy(url: String, transport: T, retry_policy: RetryPolicy, runtime: RetryRuntime) -> Self {
         let shared = Arc::new(SharedState::new());
         let inner = InnerSource { url, transport, retry_policy, shared: shared.clone(), runtime };
@@ -234,8 +221,6 @@ impl<T: RangeTransport> HttpPackSource<T> {
 }
 
 impl<T: RangeTransport> AsyncPackSource for HttpPackSource<T> {
-    // 🚫️async: `AsyncPackSource::len` is declared sync by contract (see
-    // `⏳️async/🦀️.rs`); this impl just mirrors that.
     fn len(&self) -> u64 {
         self.shared.len()
     }

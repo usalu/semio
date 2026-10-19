@@ -300,13 +300,13 @@ pub struct DocumentCheckInKey {
 
 /// 🎫️ The outcome of admitting one Check In request.
 pub enum DocumentCheckInAdmission {
-    /// This request owns a fresh job and must run it.
+    /// 👪️ This request owns a fresh job and must run it.
     Owner(Arc<DocumentCheckInJob>),
-    /// The same request is already known; answer its status.
+    /// 📨️ The same request is already known; answer its status.
     Existing(Arc<DocumentCheckInJob>),
-    /// The same request id already names a different request.
+    /// 💥️ The same request id already names a different request.
     Conflict,
-    /// Too many live Check Ins.
+    /// 🟢️ Too many live Check Ins.
     Unavailable,
 }
 

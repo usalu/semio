@@ -399,9 +399,6 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_COMPILED => compiled::render(&live),
             SEQUENCE_PLAY_BODY_ARTIFACT => document_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_ARTIFACT)),
             SEQUENCE_PLAY_BODY_CATALOGUE => catalogue_panel::render(&live, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, SEQUENCE_PLAY_BODY_CATALOGUE)),
-            // 🕹️ `render` carries no `InteractionView` (same gap as `context_menu` below — see ticket
-            // 26/08/14's w3b-summary.md), so this always takes the "nothing selected" branch rather
-            // than reading a stale/wrong selection.
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
         }
@@ -499,7 +496,6 @@ pub fn create_sequence_app() -> AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .action_with(ActionDefinition::bounded_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
             .mutation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
@@ -516,18 +512,11 @@ pub fn create_sequence_app() -> AppDefinition {
             .action_with(ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .view_action("setViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
-            // 👁️ Main-window orientation is persisted by its exact config owner; run output is
-            // ephemeral on the invoking Script window.
             .view_action("setOrientation", LocalizedLabel::native("Set Orientation", "Ausrichtung festlegen"))
             .action_with(ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play").with_category("actions"))
             .action_with(ActionDefinition::new("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View, "play").with_category("actions"))
-            // 📚️ The playground navbar dispatches `setActiveExample` on boot for its example
-            // combobox, and the shell offers that combobox only to an app that declares the verb.
-            // Undeclared, it was dropped before dispatch — this app's console ERROR at boot, and the
-            // reason its committed example never reached the document store at all.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
-            // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("state.set", LocalizedLabel::native("Set State", "Zustand setzen")),
@@ -567,11 +556,6 @@ pub fn create_sequence_app() -> AppDefinition {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-            // one domain over the step graph, `HierarchyProvider::Topology` (see
-            // `SequencePlayApp::interaction_topology` above) from each step's own control-flow slot
-            // nesting — `transitive: false` matches the pre-migration behavior exactly (deleting a
-            // selected control step never cascaded into its `then`/`else`/`body` children).
             .interaction(InteractionDefinition {
                 id: SEQUENCE_INTERACTION_STEPS.into(),
                 label: LocalizedLabel::native("Steps", "Schritte"),
@@ -592,14 +576,6 @@ pub fn create_sequence_app() -> AppDefinition {
             ])
             .window_kind_action_refs(script::SEQUENCE_PLAY_WINDOW_SCRIPT, vec!["run".into(), "stop".into()])
             .io(sequence_io())
-            // 🕳️ SDK gap (contract §2.4, confirmed absent on `EditorBuilder` as of this packet): the
-            // pre-migration chain's trailing `.example_source(art_sequence_demo::source())` /
-            // `.workflow("sequence", "Sequence", "graph")` calls are dropped here, not silently ported
-            // — `Editor::builder(...)` has no such methods, and `PluginBuilder::editor::<E>(def)`
-            // wraps `def` in `App { definition: def, examples: Vec::new() }`, discarding `App.examples`
-            // even if it were populated. The subset's own `📚️examples/🎬️demo` facet (mounted at the
-            // plugin root as `artifacts::sequence::examples::demo`) is the closest surviving carrier of this
-            // content today.
             .action_describe("reorganize", LocalizedLabel::native("Lays out every step of the sequence automatically along the window's flow direction, overwriting their manual positions.", "Ordnet alle Schritte der Sequenz automatisch entlang der Flussrichtung des Fensters an und überschreibt ihre manuellen Positionen."))
             .action_describe("setOrientation", LocalizedLabel::native("Sets the flow direction (such as left to right or top to bottom) that Reorganize lays the steps out along; only the window's setting changes.", "Legt die Flussrichtung fest (etwa links nach rechts oder oben nach unten), entlang der Neu anordnen die Schritte auslegt; nur die Einstellung des Fensters ändert sich."))
             .action_describe("run", LocalizedLabel::native("Runs the sequence's compiled path once from its first step; the document is not changed.", "Führt den kompilierten Pfad der Sequenz einmal ab dem ersten Schritt aus; das Dokument ändert sich nicht."))

@@ -1,0 +1,23 @@
+{
+ "ws": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml",
+ "old_dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️pv-system",
+ "new_dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️pv-system-performance",
+ "old_name": "semio-s-artifact-energy-model-mut-pv-system",
+ "new_name": "semio-s-artifact-energy-model-mut-pv-system-performance",
+ "old_alias": "pv_system_mutations",
+ "new_alias": "pv_system_performance_mutations",
+ "old_slug": "pv-system",
+ "new_slug": "pv-system-performance",
+ "new_emoji": "⚡️",
+ "new_desc": "Energy model mutation domain pv-system-performance: electrical and thermal performance payloads, builders, diff and inverse of its operations",
+ "script": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📜️script.ts",
+ "subtree": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+ "move": [
+  "change_pv_system_inverter_efficiency",
+  "change_pv_system_dc_capacity",
+  "change_pv_system_module_efficiency",
+  "change_pv_system_temperature_coefficient",
+  "change_pv_system_faiman_heat_loss_constant",
+  "change_pv_system_faiman_heat_loss_wind"
+ ]
+}

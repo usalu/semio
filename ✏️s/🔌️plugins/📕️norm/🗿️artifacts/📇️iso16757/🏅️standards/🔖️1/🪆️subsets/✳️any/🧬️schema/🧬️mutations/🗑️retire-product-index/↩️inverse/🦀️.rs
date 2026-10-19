@@ -1,4 +1,4 @@
-//! Inverse for `retire-product-index`.
+//! ↪️ Inverse for `retire-product-index`.
 
 use crate::introduce_product_index;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

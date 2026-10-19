@@ -209,8 +209,6 @@ fn process3d_publication_key(operation: semio_framework_job::OperationId, genera
 pub fn process3d_publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
     static LANE: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let guard = LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    // 🔒️ Leases BEFORE admissions — the same order `process3d_admit_publication_authority` and
-    // `process3d_release_publication_authority` take them in, so the drain can never invert a lock pair.
     if let Ok(mut leases) = process3d_publication_leases().try_lock() {
         let mut admitted = process3d_publication_test_admissions().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for key in admitted.drain(..) {

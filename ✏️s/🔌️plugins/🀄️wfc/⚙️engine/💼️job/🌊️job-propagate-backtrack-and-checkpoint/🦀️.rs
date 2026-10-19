@@ -279,7 +279,7 @@ impl<T: Topology + Clone> WfcJob<T> {
     }
 
     /// 🤝️ The sealed commit state payload this job lent with its completion, still owned here until close.
-    pub fn commit_state(&self) -> Option<&semio_framework_job::RetainedJobPayload> {
+    pub fn commit_state(&self) -> Option<&semio_framework_job_payload::RetainedJobPayload> {
         self.publication.as_ref().and_then(|publication| publication.commit_state())
     }
 

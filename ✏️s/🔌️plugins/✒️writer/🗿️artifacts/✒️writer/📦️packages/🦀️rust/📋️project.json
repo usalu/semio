@@ -7,6 +7,12 @@
     "role:artifact",
     "family:writer"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
@@ -16,7 +22,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
@@ -51,7 +57,7 @@
     },
     "verify-writer-window-state": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify writer-window-state",
@@ -88,7 +94,12 @@
     },
     "graph-wire-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock"
+      ],
+      "cache": true,
       "dependsOn": [
         "graph-generate"
       ],
@@ -157,7 +168,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",

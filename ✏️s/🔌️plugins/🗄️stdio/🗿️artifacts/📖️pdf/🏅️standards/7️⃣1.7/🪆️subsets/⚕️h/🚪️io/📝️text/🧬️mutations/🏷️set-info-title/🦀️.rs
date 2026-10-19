@@ -1,4 +1,4 @@
-//! Direct text identity for `set-info-title`.
+//! 🆔️ Direct text identity for `set-info-title`.
 
 pub const OPCODE: &str = "set-info-title";
 pub const TEXT_OPCODE: &str = OPCODE;

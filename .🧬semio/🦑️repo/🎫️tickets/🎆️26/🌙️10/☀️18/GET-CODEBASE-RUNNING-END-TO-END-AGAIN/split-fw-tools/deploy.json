@@ -1,0 +1,88 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/split-fw-tools/orig/deploy.ts",
+ "origDir": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/",
+ "parts": [
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🟦️.ts",
+   "header": "@range:9-40",
+   "ranges": [
+    [
+     62,
+     324
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🌐️site/🟦️.ts",
+   "header": "/** 🌐️ The `publish` verb: the site built with the proctor origin baked in, the CDN artifact verified (entry points, sealed document, hashed assets, no development leftovers, size budget) and staged with `_headers`.\n * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */",
+   "ranges": [
+    [
+     326,
+     444
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🐳️docker-image/🟦️.ts",
+   "header": "/** 🐳️ The proctor image verbs `docker-image-build` (the original native Linux release packaged with its version, revision and commit time as OCI labels) and `docker-image-publish` (checks that image and the stack, then pushes it as `sha-<revision>-<image digest>`, the workspace version and `latest` with the developer's own `docker login`, and prints the digest).\n * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs\n * @see ../📦️image/🟦️.ts — the image content */",
+   "ranges": [
+    [
+     446,
+     513
+    ]
+   ],
+   "suffix": [
+    "//#endregion 🐳️Image"
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🩺️docker-image-check/🟦️.ts",
+   "ranges": [
+    [
+     514,
+     824
+    ]
+   ],
+   "prefix": [
+    "//#region 🐳️Image"
+   ],
+   "header": "/** 🩺️ The `docker-image-check` verb: runs the image as the stack does (no configuration, read-only root, no capabilities) and checks what it is (labels, user, no shell, the stack files it carries) and the API as the CDN-hosted site meets it — ready behind the proxy, cleartext refused, cross-origin preflight and POST granted to the site origin only, the request body limit, shared presence between two learners, `docker stop` draining with exit code 0 while a socket is open, the WAL folded into `proctor.sqlite` on the volume.\n * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */",
+   "replace": [
+    [
+     "import(\"../../../../🧰️framework",
+     "import(\"../../../../../🧰️framework"
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🧱️docker-stack/🟦️.ts",
+   "header": "/** 🧱️ The `docker-stack-check` verb: the stack exactly as a host gets it, proven on a throw-away project with Caddy's internal CA, from update to restore and erasure.\n * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */",
+   "ranges": [
+    [
+     826,
+     991
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/🎁️stack-bundle/🟦️.ts",
+   "header": "/** 🎁️ The `docker-stack-bundle` verb: what the proctor host needs without a registry — the stack files out of the image, an empty `certificates` directory, an `.env` that pins the tag, the image as `proctor-image.tar` and the host's steps.\n * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */",
+   "ranges": [
+    [
+     993,
+     1110
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/📚️course/🚀️deploy/⚖️readiness/🟦️.ts",
+   "header": "/** ⚖️ The `deploy-check` verb: the readiness gate over drift, the course, `publish`, the image build, both checks and the end-to-end gate when the package has one.\n * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */",
+   "ranges": [
+    [
+     1112,
+     1163
+    ]
+   ]
+  }
+ ]
+}

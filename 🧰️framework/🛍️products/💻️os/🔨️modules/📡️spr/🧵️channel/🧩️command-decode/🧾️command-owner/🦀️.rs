@@ -118,10 +118,6 @@ impl DecodedAppCommandOwner {
         let Some(command) = self.command.as_mut() else {
             return (true, 0, 0);
         };
-        // 🔒️ `close_stage == 0` is the latch. Without it a drained archive was rebuilt from the
-        // emptied `DocumentArchivePack` on the very next turn, reported terminal, was dropped, and
-        // was rebuilt again — so `LoadDocumentArchive` never reached the shell release below and no
-        // decoded archive owner ever became terminal.
         if self.archive_close.is_none() && self.close_stage == 0 {
             if let AppCommand::LoadDocumentArchive { archive, .. } | AppCommand::MergeDocumentArchive { archive, .. } = command {
                 self.archive_close = Some(PagedDocumentArchiveDecode::closing(std::mem::take(archive)));
@@ -136,9 +132,6 @@ impl DecodedAppCommandOwner {
             self.close_stage = self.close_stage.saturating_add(1);
             return (false, 1, 0);
         }
-        // 🧾️ A prepared-op roster is a LIST, not a fixed field slot, so it drains before the flat
-        // stages below rather than inside them — one op per step, and an op too large for this
-        // step's grant stays retained instead of being released unbounded.
         if let AppCommand::TransactionPrepare { prepared_ops, .. } = command {
             if let Some(op) = prepared_ops.last() {
                 if op.len() > maximum_bytes {

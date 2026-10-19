@@ -7,7 +7,7 @@ use super::*;
 pub struct EvaluationInputPreparation {
     pub(super) input:Option<String>,dependency:Option<String>,pub(super) operator:Option<String>,pub(super) version:Option<String>,
     pub parser:Option<semio_framework_pack_json::JsonParseCursor>,pub(super) projection:Option<semio_framework_pack_json::JsonValueProjection>,
-    pub writer:Option<semio_framework_pack_json::JsonWriteCursor<DslValue>>,pub(super) encoding:Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,pub(super) decoding:Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
+    pub writer:Option<semio_framework_pack_json::JsonWriteCursor<DslValue>>,pub(super) encoding:Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,pub(super) decoding:Option<semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation>,
     pub binding:Option<neural_engine::retirement::RetainedDictionaryInput>,pub(super) dictionary:Option<Dictionary>,
     canonical_input:Option<String>,canonical_dependency:Option<String>,pub(super) identity:Option<String>,
     pub(super) retirement:neural_engine::ValueRetirement,pub(super) stage:u8,pub(super) units:usize,pub(super) cancelled:bool,closing_fields:u16,fault_member:Option<String>,pub(super) normal_progress:RetainedCloneProgress,
@@ -71,7 +71,7 @@ impl EvaluationInputPreparation {
             0|4=>{
                 let source=if self.stage==0{self.input.as_deref().unwrap()}else{self.dependency.as_deref().unwrap()};
                 if source.len()>16*1024*1024{return Err("evaluation source exceeds admission limit".into());}
-                let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>semio_framework_value::NativeDecodeControl::resume(receipt,&mut accepted),None=>Ok(semio_framework_value::NativeDecodeControl::new_retained(&mut accepted))}.map_err(EvaluationFailure::from)?;
+                let mut accepted=|_|true;let mut control=match self.decoding.take(){Some(receipt)=>semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt,&mut accepted),None=>Ok(semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted))}.map_err(EvaluationFailure::from)?;
                 let parsed=self.parser.as_mut().unwrap().step(source,1,&mut control,grant);let progress=self.parser.as_ref().unwrap().normal_step_progress();self.normal_progress=progress;self.decoding=Some(control.pause().map_err(EvaluationFailure::from)?);
                 match parsed{
                     Ok(Some(value))=>{self.projection=Some(semio_framework_pack_json::JsonValueProjection::new_ordered(value));self.closing_fields=1|if self.stage==0{8}else{16};self.stage+=1;},
@@ -82,7 +82,7 @@ impl EvaluationInputPreparation {
                 self.units=self.units.saturating_add(progress.copied_items);return Ok((None,progress));
             },
             1|5=>{
-                let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::resume(self.decoding.take().unwrap(),&mut accepted).map_err(EvaluationFailure::from)?;
+                let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(self.decoding.take().unwrap(),&mut accepted).map_err(EvaluationFailure::from)?;
                 let projected=self.projection.as_mut().unwrap().step(1,maximum_bytes,&mut control,grant);let progress=self.projection.as_ref().unwrap().normal_step_progress();self.normal_progress=progress;self.decoding=Some(control.pause().map_err(EvaluationFailure::from)?);
                 if let Some(value)=projected.map_err(EvaluationFailure::from)?{self.writer=Some(semio_framework_pack_json::JsonWriteCursor::new(value));self.closing_fields=2|64;self.stage+=1;}
                 self.units=self.units.saturating_add(progress.copied_items);return Ok((None,progress));

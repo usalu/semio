@@ -9,7 +9,7 @@ import { getTreeRoot, type TreeNodeData } from "../🏬️uri-resolution/🟦️
 // #region 🗺️Source Navigation & Language Diagnostics
 // Source navigation maintains bundle caches.
 
-/** updateBundleCache holds the data fields for a updateBundleCache record.
+/** 🔺️ updateBundleCache holds the data fields for a updateBundleCache record.
  **/
 export async function updateBundleCache() {
   const root = await getTreeRoot();

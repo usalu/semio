@@ -180,9 +180,6 @@ async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
     let node_id = document.nodes.first().map(|node| node.id.clone()).expect("node");
     let labels = crate::editor::dag::terminology::dag_play_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");
-    // 🖼️ A `BuiltNode`'s children live on the retained page transport — `serde_json` of the node
-    // itself refuses them ("BuiltChildren requires retained page transport"); the fixture projection
-    // is what materialises and then retires them.
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("inspector tree projection");
     assert!(json.contains(&node_id));
     assert!(json.contains("Name") || json.contains("Kind"));

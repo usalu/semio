@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "name": "semio-course-os-builder-sol-20261019",
+  "image": "semio-course-preflight-os:sol-builder-20261019",
+  "baseImage": "sha256:3b79ef2921a597b6e0906f5627fd0b283273748f79235eac11464cdfe5fe43cf",
+  "platform": "linux/amd64",
+  "maximumMilliseconds": 900000,
+  "maximumCompressedInputBytes": 1073741824,
+  "maximumTemporaryBytes": 4294967296,
+  "conservativeInputBytes": 459114728,
+  "conservativeTemporaryBytes": 1107321365,
+  "preserveOperatingSystem": true,
+  "compose": true,
+  "existingRepository": true,
+  "installTools": [
+    "docker-ce",
+    "containerd.io",
+    "iptables"
+  ],
+  "auditDaemon": false,
+  "installNode": true,
+  "sourceFiles": 0,
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "completedAt": "2026-10-19T12:51:13.443Z",
+  "imageId": "sha256:7bafa7e94d9bdf474fe7dac822dcc027bd938fe0bd08d54a59f0bef5c28e31ea",
+  "imageBytes": 295694427,
+  "containerWritableBytes": 334708736,
+  "containerRootBytes": 860987392,
+  "packageBudget": {
+    "archiveBytes": 48960064,
+    "installedBytes": 210170880,
+    "metadataBytes": 20019339,
+    "conservativeInputBytes": 619316608,
+    "conservativeTemporaryBytes": 2267731168
+  },
+  "packageInput": "2026-10-19-builder-os-builder-packages.json",
+  "node": {
+    "version": "24.15.0",
+    "platform": "linux",
+    "architecture": "x64",
+    "archiveBytes": 31164460,
+    "executableBytes": 122889056,
+    "executableSha256": "d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c"
+  },
+  "daemonProcesses": {
+    "running": []
+  }
+}

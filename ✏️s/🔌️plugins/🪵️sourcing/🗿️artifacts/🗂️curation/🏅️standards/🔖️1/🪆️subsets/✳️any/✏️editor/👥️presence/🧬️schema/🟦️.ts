@@ -1,10 +1,10 @@
 /** 🧬️ SourcingCurationPresence */
 export interface SourcingCurationPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   worldCameraPosition: number[];
-  /** @state presence */
+  /** 🗺️ @state presence */
   worldCameraTarget: number[];
-  /** @state presence */
+  /** 🌍️ @state presence */
   worldCameraFov: number;
 }
 

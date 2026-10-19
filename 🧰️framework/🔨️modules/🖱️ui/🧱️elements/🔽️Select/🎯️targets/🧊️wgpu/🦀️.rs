@@ -85,10 +85,6 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
     let viewport_h = ctx.viewport_height;
     let inset = ctx.theme.padding_standard;
     let font_size = ctx.theme.font_size_body;
-    // 🔼️ Resolve this frame's scroll offset BEFORE anything paints: take whatever direction the
-    // press handler left pending, price it in `select_scroll_step` pixels against the popup's own
-    // viewport, clamp it to what the popup can actually scroll, and write both slots back. A popup
-    // that fits clamps straight to `0.0`, so the chevrons stay inert exactly as React's do.
     let pending = ctx.scroll_offsets.remove(&select_scroll_pending_key(id)).unwrap_or(0.0);
     let scroll_key = select_scroll_key(id);
     let stored = ctx.scroll_offsets.get(&scroll_key).copied().unwrap_or(0.0);
@@ -113,8 +109,6 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
             ctx.input.register_hit(HitTarget { rect: select_popup_row_hit_rect(bounds, index, popup, ctx.theme), event: None, control_id: Some(format!("{id}.item.{}", item.value())), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
         }
         draw.pop_scissor();
-        // 🔼️ The chevrons paint and register LAST so their bands win the hit resolve (`HitRegistry`
-        // resolves the most recently registered target first) over the rows they sit on top of.
         if let (Some(up), Some(down)) = (popup.up, popup.down) {
             let chevron = semio_framework_ui_wgpu_layout::chrome::SIZE_TINY;
             let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;

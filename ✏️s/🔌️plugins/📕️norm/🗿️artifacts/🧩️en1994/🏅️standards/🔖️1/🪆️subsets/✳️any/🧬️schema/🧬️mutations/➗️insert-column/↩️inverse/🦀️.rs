@@ -1,4 +1,4 @@
-//! Inverse for `insert-column`.
+//! ↩️ Inverse for `insert-column`.
 use crate::insert_column::InsertColumn;
 use crate::remove_column::RemoveColumn;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

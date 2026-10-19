@@ -14,7 +14,8 @@ use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
-use semio_framework_value::{list::PagedList,paged::PagedUtf8};
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value_persistent::list::PagedList;
 
 
 /// 🧮️ The one parametric leaf a nudge of the current selection by `delta` yields — `drag-path-points` under `editNodes`,

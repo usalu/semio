@@ -4,7 +4,8 @@ use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 use crate::schema::snapshot::{SemioPresentationSnapshot, SlideShape, SlideFrame, SlidePictureImage, PlaceholderKind, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
 use semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_decoding as document_native;
-use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.
 pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioPresentationSnapshot,ValueError>{

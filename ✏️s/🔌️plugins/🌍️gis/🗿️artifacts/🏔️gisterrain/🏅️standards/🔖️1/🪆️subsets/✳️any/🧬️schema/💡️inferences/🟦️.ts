@@ -9,9 +9,9 @@ export interface GisTerrainBounds {
 }
 
 export interface GisTerrainInference {
-  /** @derived */
+  /** 📍️ @derived */
   positionCount: number;
-  /** @derived */
+  /** 📦️ @derived */
   bounds: GisTerrainBounds | null;
 }
 

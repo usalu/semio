@@ -1,6 +1,6 @@
 /// 🧰️ Supersede replay harness fixtures: the identity byte ceiling, the hydration grant, the demo owners, the author, planning and retirement policies, the finalize helper and the apply, set, add, draft and outcome helpers.
 
-const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
 fn fixture_hydration_grant()->RetainedCloneGrant {RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:128}}
 
@@ -29,7 +29,7 @@ where
     result
 }
 
-fn fixture_planning_policy()->RetainedCloneGrant { RetainedCloneGrant { maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,..physical_test_close_grant() } }
+fn fixture_planning_policy()->RetainedCloneGrant { RetainedCloneGrant { maximum_copy_bytes:semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES,..physical_test_close_grant() } }
 
 /// 🎟️ Finalizes the original replay through the fixture caller's existing identity authority.
 async fn fixture_finalize<P,M>(store:&mut ArtifactStore<P,M>,finished:EditReplayResult<P,M>,finalization:HistoryFinalization)->Result<CommandReceipt,VcsError>

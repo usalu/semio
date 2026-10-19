@@ -283,15 +283,12 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
           return loaded;
         });
       })
-      .catch(() => {
-        // texture load failure — plane stays hidden
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [props.reference.id, props.reference.source.url, props.reference.source.mediaKind, props.reference.source.page]);
   const invalidate = useThree((state) => state.invalidate);
-  // 🎞️ `WorldCanvas` uses `frameloop="demand"` — async texture arrival must kick a draw or panes stay transparent.
   reactHostPort.useLayoutEffect(() => {
     if (media) invalidate();
   }, [invalidate, media]);

@@ -707,7 +707,7 @@ export class DirectoryClient {
     const abort = new AbortController();
     let socket: WebSocket | null = null;
     let lastSeq = since;
-    let healthy = false; // 🩺️ set once THIS cycle's socket has been open for HUB_HEALTHY_RESET_MS.
+    let healthy = false;
 
     const wsUrl = (): string => {
       const wsBase = this.baseUrl.replace(/^http/, "ws");
@@ -763,9 +763,7 @@ export class DirectoryClient {
             if (trackObservedFrontier && message.kind === "event") lastSeq = Math.max(lastSeq, message.event.seq);
             if (trackObservedFrontier && !scope && message.kind === "heartbeat") lastSeq = Math.max(lastSeq, message.headSeq);
             onMessage(message);
-          } catch {
-            // 🛟️ malformed frame — dropped, never thrown into the caller.
-          }
+          } catch {}
         };
         ws.onclose = (event: CloseEvent) => {
           abort.signal.removeEventListener("abort", onAbort);
@@ -786,9 +784,7 @@ export class DirectoryClient {
         ws.onerror = () => {
           try {
             ws.close();
-          } catch {
-            // 🛟️ already closing.
-          }
+          } catch {}
         };
       });
     };
@@ -816,10 +812,10 @@ export class DirectoryClient {
         try {
           await retryWithJitteredBackoff(fn, { minMs: HUB_RECONNECT_MIN_MS, maxMs: HUB_RECONNECT_MAX_MS, signal: abort.signal });
         } catch {
-          return; // 🛑 only reachable via an aborted signal — `close()` was called.
+          return;
         }
-        if (abort.signal.aborted) return; // 🛑 resolved via the manual-close path above.
-        primeNextCycle = healthy; // 🩺️ resolved via the health-reset path — start the next cycle primed.
+        if (abort.signal.aborted) return;
+        primeNextCycle = healthy;
       }
     }
 

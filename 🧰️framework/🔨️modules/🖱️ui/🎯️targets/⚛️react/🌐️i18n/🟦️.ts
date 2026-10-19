@@ -154,8 +154,6 @@ function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
 export const detectShellLocale = normalizeUiLocale as (language?: string) => ShellLocale;
 
 function resolveRequestedUiLocale(): UiTranslationLocaleCode {
-  // 🐚️ The legacy shared `uiI18n` singleton (kept only for callers not yet wrapped in a `ShellScopeProvider`)
-  // is inherently page-global, so a plain browser-backed port is the correct (and only sensible) storage here.
   const storedLocale = readStoredUiChromeLocale(createBrowserStoragePort());
   if (storedLocale) return storedLocale;
   return normalizeUiLocale(i18next.resolvedLanguage || i18next.language || (typeof navigator !== "undefined" ? navigator.language : undefined));
@@ -204,10 +202,6 @@ function initializeUiI18n(): UiI18nPort {
     lng: requestedLocale,
     showSupportNotice: false,
     returnObjects: true,
-    // 🚀️ Resources are bundled inline above (no backend fetch), so there is nothing to await —
-    // forces synchronous readiness instead of deferring to a microtask, which is what let the
-    // very first paint render with i18next still uninitialized (the English-chrome flash this
-    // ticket fixes; see `initUiLocaleSync`).
     initImmediate: false,
     interpolation: {
       escapeValue: false,
@@ -242,8 +236,6 @@ export function setUiLocale(locale: UiLocale): Promise<unknown> {
  * already-initialized i18next instance in case this runs after `uiI18n`'s own module-load default
  * resolved differently. */
 export function initUiLocaleSync(locale: ShellLocale): void {
-  // 🐚️ Page-owning boot code only (renderer/demonstrator, before `createRoot(...).render(...)`) — a
-  // plain browser-backed port is correct here, same as `resolveRequestedUiLocale`.
   writeStoredUiChromeLocale(createBrowserStoragePort(), locale);
   if (typeof document !== "undefined") document.documentElement.lang = locale;
   if (i18next.language !== locale) void i18next.changeLanguage(locale);

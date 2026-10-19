@@ -8,7 +8,7 @@ import { flushMutationsToHubIfReady, requeuePendingBatches } from "../📮️hub
 import { documentAwaitsBrowserActor, retainBackboneBeforeBrowserActor, setRemote } from "../🎭️actor-lifecycle/🟦️.ts";
 import { abortArtifactBootstrap, abortArtifactRebootstrap, clearArtifactRebootstrapDeadline } from "../🛑️session-teardown/🟦️.ts";
 import { bootstrapControl, finishCatchupIfReady, installArtifactBootstrap, rejectArtifactBootstrap, requireArtifactRebootstrap, startArtifactBootstrap } from "../🚀️artifact-bootstrap/🟦️.ts";
-import { retireCurrentFolderCanonicalBootstrapMirror } from "../📁️folder/🟦️.ts";
+import { retireCurrentFolderCanonicalBootstrapMirror } from "../📁️folder/✍️write/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { handleAck, settleCommittedEnvelopes } from "../🧮️hub-ack/🟦️.ts";
 import { wireEnvelopeId } from "../🌉️wire-bridge/🟦️.ts";
@@ -23,7 +23,7 @@ export async function handleHubFrame(
   commandBatch: Uint8Array | null = null,
 ): Promise<void> {
   if (sourceSocket !== null && state.socket !== sourceSocket) return;
-  if (typeof frame === "string") return; // no unit-variant `ServerFrame` exists today; defensive.
+  if (typeof frame === "string") return;
   if ("Welcome" in frame) {
     requeuePendingBatches(state);
     const bootstrap = frame.Welcome.bootstrap;
@@ -157,10 +157,6 @@ export async function handleHubFrame(
     return;
   }
   if ("Presence" in frame) {
-    // 📡️ `ServerFrame::Presence.peers` is `Vec<Vec<u8>>` of `encode_presence_peer` blobs on the wire
-    // (real binary — see `decodePresencePeer`'s doc). A malformed entry is dropped rather than
-    // failing the whole roster, mirroring the Rust actor's `presence_from_bytes` (`Option`-returning,
-    // never panics on a bad peer) at the same trust boundary.
     const peers = frame.Presence.peers.flatMap((bytes) => {
       try {
         return [decodePresencePeer(new Uint8Array(bytes), [0])];
@@ -175,15 +171,9 @@ export async function handleHubFrame(
     return;
   }
   if ("CreditGrant" in frame) {
-    // 🪙️ Command-lane credit-based flow control: no client-side backpressure implemented this wave
-    // (scope is frame plumbing, not congestion control) — accepted and ignored.
     return;
   }
   if ("Session" in frame) {
-    // 🎨️ Flows through the SAME generic `{kind:"event",...}` wrapping every other `ArtifactEvent`
-    // gets — the real wasm host (`👷️worker/🦀️.rs`) wraps every `ArtifactEvent` uniformly
-    // with zero per-variant special-casing, so this fallback must match rather than post a
-    // one-off top-level `BackboneWorkerResponse` shape the wasm path would never produce.
     const expectedActor = state.pendingSocketActorId;
     if (expectedActor === null || frame.Session.actor !== expectedActor) {
       state.actor = "";

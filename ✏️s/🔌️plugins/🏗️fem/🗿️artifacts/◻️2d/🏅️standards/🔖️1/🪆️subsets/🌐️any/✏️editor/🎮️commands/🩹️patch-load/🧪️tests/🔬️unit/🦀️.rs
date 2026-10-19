@@ -1,14 +1,23 @@
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use super::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
-use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
 use crate::context::dispatch;
 use crate::context::fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+#[cfg(test)] use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadPatch;
+#[cfg(test)] use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_load::PatchLoad;
+#[cfg(test)] use semio_framework_plugin::component::Emit;
+#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_framework::Fault;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchLoad) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
@@ -61,12 +70,12 @@ async fn patch_load_with_the_current_value_emits_nothing_2d() {
 /// 👥️ Same-base field commands preserve both nodal edits and undo only their authored field.
 #[test]
 fn sibling_load_commands_preserve_independent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let first=emit(&base,PatchLoad{id:"l1".into(),field:"value".into(),value:"20".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchLoad{id:"l1".into(),field:"nodeId".into(),value:"n2".into()}).unwrap().artifact_mutations.remove(0);
     let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
     assert_eq!(combined,vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0);
-    let crate::FemLoad::Nodal{node_id,value,..}=&combined.load_cases[0].loads[0] else{panic!("nodal variant preserved")};
+    let semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal{node_id,value,..}=&combined.load_cases[0].loads[0] else{panic!("nodal variant preserved")};
     assert_eq!(node_id,"n2");assert_eq!(*value,20.0);
     let mut undone=combined.clone();for inverse in protocol::Mutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
     assert_eq!(undone,vcs::apply_mutation(&base,&second).unwrap().0);

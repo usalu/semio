@@ -181,8 +181,6 @@ pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active
     let volume = processed_volume_cached(snapshot, config.resolved_up_to);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
-        // 🧰️ The select/cut/drill/attach switcher lives in the framework utility bar (declared via
-        // `.utility` + `.window_kind_utilities`), so the engagement never duplicates it as options.
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("process3d-engagement".into()),

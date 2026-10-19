@@ -191,7 +191,7 @@ async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index()
 
     let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtCheckpoint("cp-1".to_string()), &ProtocolLimits::default()).await.unwrap();
     assert_eq!(plan.target_edit_ordinal, Some(1));
-    assert_eq!(plan.base.applied_edits, 0); // no REC_PROJECTION in this stream at all
+    assert_eq!(plan.base.applied_edits, 0);
 
     let (result, _report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).await.unwrap();
     assert_eq!(result.0, initial_pack);
@@ -209,7 +209,6 @@ async fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() 
     flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
     writer.write_record(crate::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
-    // A snapshot whose stored body_hash does not match its body — must be treated as corrupt.
     let mut bad_record = sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3])).await;
     bad_record.body_hash = [0xFFu8; 32];
     writer.write_record(crate::REC_PROJECTION, false, &encode_snapshot(&bad_record).await, CodecId(0)).await.unwrap();

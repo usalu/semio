@@ -2,9 +2,37 @@
   "name": "@semio-tech/repo-mcp-rs",
   "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "application",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
+      "outputs": ["{projectRoot}/.🧾️store/build.json"],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
@@ -12,6 +40,15 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -19,6 +56,7 @@
     },
     "run": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts run",

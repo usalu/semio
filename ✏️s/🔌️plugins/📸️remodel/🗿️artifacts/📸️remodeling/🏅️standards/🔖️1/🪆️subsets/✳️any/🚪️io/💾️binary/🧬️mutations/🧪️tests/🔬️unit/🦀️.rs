@@ -17,8 +17,6 @@ async fn store_roundtrips_through_document_text() {
     let initial = default_remodeling_scene();
     let envelope = store::os_store::document_materialize::create_document_envelope("test/v1", "test", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    // 🏪️ A bare store carries no owner catalog and refuses its first edit; install the exact owners
-    // production installs through `RemodelingPlayApp::build_document_store_owners`.
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot, RemodelingMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut feature_params = store.snapshot().expect("initial projection").params.feature;
     feature_params.target_count = 12345;

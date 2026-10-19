@@ -126,13 +126,10 @@ fn dsl_machine_cancel_resume_round_trips_via_shallow_history() {
     crate::macrostep(&mut snapshot, checkout::Event::SelectMethod, &mut sink, &mut inspector);
     assert!(snapshot.matches("processing"));
 
-    // Cancelling from `processing` exits `payment` entirely (recording shallow
-    // history), landing back in `cart`.
     crate::macrostep(&mut snapshot, checkout::Event::Cancel, &mut sink, &mut inspector);
     assert!(snapshot.matches("cart"));
     assert!(!snapshot.matches("payment"));
 
-    // Resuming must restore `processing`, not `payment`'s default `selecting`.
     crate::macrostep(&mut snapshot, checkout::Event::Resume, &mut sink, &mut inspector);
     assert!(snapshot.matches("processing"), "shallow history must restore into processing, not the default selecting");
     assert!(!snapshot.matches("selecting"));

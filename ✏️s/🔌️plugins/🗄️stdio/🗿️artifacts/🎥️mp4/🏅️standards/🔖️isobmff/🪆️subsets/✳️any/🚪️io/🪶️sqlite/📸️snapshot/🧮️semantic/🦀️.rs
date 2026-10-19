@@ -1,7 +1,7 @@
 //! 🎥️ Handcrafted MP4 borrowed roles admit all relational cells before owned binding.
 use super::*;
 use semio_framework_dsl_record::{DslField,FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl as N;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::RowWriter};
 const WIDTHS:[(&str,usize);23]=[("mp4_document",2),("mp4_ftyp",3),("mp4_compatible_brand",4),("mp4_movie",10),("mp4_movie_matrix",4),("mp4_track",7),("mp4_codec",3),("mp4_avc_sps",4),("mp4_avc_pps",4),("mp4_avc_extension",4),("mp4_avc_sps_extension",4),("mp4_hevc_config",16),("mp4_hevc_array",5),("mp4_hevc_nal",4),("mp4_track_metadata",14),("mp4_track_matrix",4),("mp4_edit",7),("mp4_visual_sample_entry",13),("mp4_color",6),("mp4_pixel_aspect_ratio",3),("mp4_bitrate",4),("mp4_chunk_sample_count",4),("mp4_sample",7)];
 fn add(a:usize,b:usize)->Result<usize,ValueError>{a.checked_add(b).ok_or_else(||ownership("MP4 semantic cell extent overflow"))}

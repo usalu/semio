@@ -7,7 +7,7 @@ export interface PptxOutline {
 }
 
 export interface PptxInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: PptxOutline;
 }
 

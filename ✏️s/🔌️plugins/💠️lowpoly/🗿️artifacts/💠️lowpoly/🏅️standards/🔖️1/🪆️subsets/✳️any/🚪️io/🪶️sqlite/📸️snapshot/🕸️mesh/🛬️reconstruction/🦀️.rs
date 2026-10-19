@@ -1,6 +1,7 @@
 //! 🕸️ Complete managed topology and intrinsic owners use the caller's admitted backing.
 use crate::{managed_mesh::LowpolyMeshState, managed_mesh::LowpolyMeshVertex, managed_mesh::LowpolyMeshHalfedge, managed_mesh::LowpolyMeshFace, managed_mesh::LowpolyMeshAttribute, managed_mesh::LowpolyMeshMaterial, managed_mesh::LowpolyMeshTexture, managed_mesh::LowpolyMeshAttributeDomain as Domain, managed_mesh::LowpolyMeshAttributeSemantic as Semantic, managed_mesh::LowpolyMeshAttributeInterpolation as Interpolation};
-use semio_framework_value::{DecodedValue,DslValue as Value,FromValue,NativeDecodeControl,Number,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, DslValue as Value, FromValue, Number, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteRow,SqliteValue,artifact::{FloatColumn,FloatRow}};
 use super::rows::{Rows,sort};
 type Result<T>=std::result::Result<T,ValueError>;

@@ -67,7 +67,7 @@ fn durable_test_fixture_denied_frame_restores_exact_candidates_and_issuers() {
     let post_pointer = Arc::as_ptr(&member.post_snapshot);
     let mutation_pointer = Arc::as_ptr(&member.mutation_retirement);
     let snapshot_pointer = Arc::as_ptr(&member.snapshot_retirement);
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| super::super::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement, denied));
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_os_store_one_item_publication::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement, denied));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let Err((error, edit, post_snapshot, mutation_retirement, snapshot_retirement)) = result else { panic!("unfunded returned fixture frame admitted"); };
     assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);

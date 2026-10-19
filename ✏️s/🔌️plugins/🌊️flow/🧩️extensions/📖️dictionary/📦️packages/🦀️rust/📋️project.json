@@ -5,6 +5,10 @@
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/**/*.rs",
       "{projectRoot}/**/*"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {

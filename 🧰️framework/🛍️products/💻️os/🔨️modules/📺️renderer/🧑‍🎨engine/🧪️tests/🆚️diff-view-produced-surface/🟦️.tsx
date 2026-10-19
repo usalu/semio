@@ -10,7 +10,7 @@ import { chromium } from "playwright";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { DiffViewHost } from "../../🧱️elements/🔺️DiffViewHost/🟦️.tsx";
-import { viewProducedSurfaceFixtureUrl, diffViewPresentationFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { viewProducedSurfaceFixtureUrl, diffViewPresentationFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
 
 type ExpectedLine = { readonly kind: "equal" | "remove" | "add"; readonly text: string };
 type Fixture = {

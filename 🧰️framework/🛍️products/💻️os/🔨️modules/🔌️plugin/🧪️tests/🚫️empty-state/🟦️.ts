@@ -1,12 +1,12 @@
-import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
+import { it } from "vitest";
 import { parseSchemaRecord } from "@semio-tech/schema-ts/record";
 
 type EmptyStateFixture = Record<"json" | "text" | "pack", readonly { value: unknown; accepted: boolean }[]>;
 
-export function testFrameworkEmptyStateContract(): void {
+function testFrameworkEmptyStateContract(): void {
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🫙️empty-state/🔣️.json", import.meta.url), "utf8"));
   const fixture: EmptyStateFixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🚫️empty-state/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true });
@@ -22,4 +22,4 @@ export function testFrameworkEmptyStateContract(): void {
   }
 }
 
-test("actual empty state values agree with canonical domain schemas and independent Ajv", testFrameworkEmptyStateContract);
+it("keeps the empty-state record, text and pack lanes on their schema and fixture", testFrameworkEmptyStateContract);

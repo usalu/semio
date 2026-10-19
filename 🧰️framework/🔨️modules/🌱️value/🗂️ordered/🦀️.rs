@@ -197,9 +197,9 @@ impl<V, const N: usize> From<[(String, V); N]> for OrderedMap<V> { fn from(entri
 /// 🗑️ What a completed [`OrderedMap::remove`] took out of the map: the key was present either way.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Removal<V> {
-    /// The payload had no other owner, so its value moves to the caller (who retires it if it owns a fail-closed root).
+    /// 👪️ The payload had no other owner, so its value moves to the caller (who retires it if it owns a fail-closed root).
     Owned(V),
-    /// Another clone of the map still shares the payload; the caller has nothing to retire.
+    /// 🌐️ Another clone of the map still shares the payload; the caller has nothing to retire.
     Shared,
 }
 impl<V> Removal<V> {

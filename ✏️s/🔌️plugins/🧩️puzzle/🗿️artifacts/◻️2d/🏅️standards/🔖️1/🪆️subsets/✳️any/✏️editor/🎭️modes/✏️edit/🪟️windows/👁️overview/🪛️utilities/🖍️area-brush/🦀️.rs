@@ -1,4 +1,4 @@
-//! constrain where the Fill tool may place. Its Utility Options are the width/height steppers that
+//! 🪣️ constrain where the Fill tool may place. Its Utility Options are the width/height steppers that
 //! 🖍️ Overview-window utility — Area Brush: alt+click paints grid-snapped target regions that
 //! size each painted region (in grid cells) — the 2d twin of puzzle3d's `🧊️volume-brush`, whose
 //! voxel W/D/H trio collapses to a W/H pair on a flat board.
@@ -11,7 +11,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub const UTILITY_ID: &str = "areaBrush";
 

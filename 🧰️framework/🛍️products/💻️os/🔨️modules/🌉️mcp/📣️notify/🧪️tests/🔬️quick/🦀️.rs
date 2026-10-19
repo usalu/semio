@@ -240,7 +240,7 @@ fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
     }
     sink.taken();
     let called = result_of(&mut server, request(9, "tools/call", serde_json::json!({ "name": "action_prepare", "arguments": { "capabilityId": "note.insert-text", "input": { "text": "hello" } } })));
-    let _ = called;
+    assert!(called.get("structuredContent").map_or(true, serde_json::Value::is_object), "structuredContent is omitted or an object, never null: {called}");
     let invoked = result_of(&mut server, request(10, "tools/call", serde_json::json!({ "name": "action_invoke", "arguments": { "capabilityId": "note.insert-text", "input": { "text": "hello" } } })));
     let structured = invoked.get("structuredContent").cloned().unwrap_or(serde_json::Value::Null);
     let artifact_id = structured.get("revisionAfter").and_then(|revision| revision.get("artifactId")).and_then(serde_json::Value::as_str);

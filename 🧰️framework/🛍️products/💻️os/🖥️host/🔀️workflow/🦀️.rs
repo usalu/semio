@@ -114,9 +114,6 @@ pub fn validate_workflow(graph: &Workflow) -> WorkflowValidation {
     let mut validation = resolve_kernel_future(kernel_validate_workflow(graph));
 
     //#region ContractConsistency
-    // 🛡️ Defense in depth for merged/imported studio documents: re-negotiate each edge's endpoints
-    // against the *current* artifact registry and flag any edge whose stored `contract` no longer
-    // matches — a concurrent re-typing or a stale import can leave a wire's contract behind.
     let node_by_id: HashMap<&str, &WorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     for edge in &graph.edges {
         let Some(source_port) = node_by_id.get(edge.source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == edge.source_port_id)) else { continue };
@@ -237,9 +234,6 @@ pub fn apply_flow_host_snapshot_to_os_workflow(graph: &Workflow, snapshot_json: 
             continue;
         }
         let (source_node_id, source_port_id, target_node_id, target_port_id) = endpoints;
-        // 🤝️ Only wire the edge if the endpoints still negotiate a valid contract — a stale/hand-edited
-        // snapshot referencing an incompatible or now-removed port silently drops the synapse instead of
-        // producing an untyped edge (see `negotiate_media_contract`).
         let Some(source_port) = node_by_id.get(source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)) else { continue };
         let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
         let Ok(contract) = negotiate_media_contract(source_port, target_port) else { continue };
@@ -568,7 +562,7 @@ fn host_io_run(route: &semio_framework::io_schema::IoRoute, payload: semio_frame
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: bytes / HOST_IO_BYTES_PER_ITEM, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 };
     let mut decode_callback = |_| !cancel.is_cancelled_now();
     let mut encode_callback = |_| !cancel.is_cancelled_now();
-    let mut decode = semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
+    let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
     let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
     let mut control = IoRunControl::new(&mut decode, &mut encode, grant);
     let mut snapshot_callback = |_| !cancel.is_cancelled_now();
@@ -607,15 +601,6 @@ fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
     let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
     let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
     let route = resolve_kernel_future(io_route(artifact_dialect, &carrier, 3)).ok()?.value;
-    // 🌉️ `source_document` is this artifact's own JSON-shaped snapshot as the OS document store
-    // already carries it -- a legitimate `IoPayload::Text` reading of `artifact_dialect`'s own
-    // native encoding whenever that dialect's `NativeCodecs.snapshot.text` is a plain-serde-json
-    // `ArtifactDsl` impl (the common case today, D7), NOT a re-introduction of the deleted
-    // `s.stdio.json` bridge dialect -- the dialect claimed here is the artifact's REAL dialect, not
-    // a fake stand-in. If a migrated subset's real DSL grammar differs, the first hop's
-    // `Deserializer::deserialize` fails to parse and `io_run` returns `Err`, `.ok()?` below yields
-    // `None`, and `registry_export_media` safely falls through to the OLD path -- never a silent
-    // wrong-content export.
     let json_text = serde_json::to_string(source_document).ok()?;
     let outcome = match host_io_run(&route, NewIoPayload::Text(json_text), cancel) {
         HostIoRun::Done(outcome) => outcome,
@@ -740,8 +725,6 @@ fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, fo
         HostIoRun::Failed => return None,
         HostIoRun::Cancelled => return Some(Err("media import was cancelled".into())),
     };
-    // 🌉️ Mirrors the export side: the JSON text this yields is read back as this artifact's own
-    // OS-document-store shape, not re-wrapped through the deleted `s.stdio.json` bridge dialect.
     let json_text = match outcome {
         NewIoPayload::Text(t) => t,
         NewIoPayload::Binary(b) => String::from_utf8(b).ok()?,

@@ -12,12 +12,12 @@ export interface SemioImageMetadataEntry {
 }
 
 export interface SemioImageSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ width: number;
-  /** @state artifact */ height: number;
-  /** @state artifact */ colorspace: SemioColorspace;
-  /** @state artifact */ bitDepth: number;
-  /** @state artifact */ frames: SemioImageFrame[];
-  /** @state artifact */ icc: number[] | null;
-  /** @state artifact */ metadata: SemioImageMetadataEntry[];
+  /** 📐️ @state artifact */ schema: string;
+  /** ↔️ @state artifact */ width: number;
+  /** ↕️ @state artifact */ height: number;
+  /** 📜️ @state artifact */ colorspace: SemioColorspace;
+  /** 📏️ @state artifact */ bitDepth: number;
+  /** 🎞️ @state artifact */ frames: SemioImageFrame[];
+  /** 🧱️ @state artifact */ icc: number[] | null;
+  /** 📇️ @state artifact */ metadata: SemioImageMetadataEntry[];
 }

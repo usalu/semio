@@ -1,6 +1,8 @@
 //! ✍️ Draft inputs of the instance time-travel turns: the drafted input and the drafted selection of a history edit session. See [`super`].
 
 use super::*;
+use semio_framework::Effect;
+use semio_framework::Fault;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 🎚️ Drafts one input: the host value coerced to the shape of the input `path` addresses in the variant the draft is

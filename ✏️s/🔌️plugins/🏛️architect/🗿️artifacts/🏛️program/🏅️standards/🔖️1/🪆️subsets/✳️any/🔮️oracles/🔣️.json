@@ -1764,6 +1764,10 @@
             {
               "id": "reception-waiting",
               "directoryName": "🫷️reception"
+            },
+            {
+              "id": "disconnects-middle",
+              "directoryName": "🫷️disconnects-middle"
             }
           ]
         },
@@ -1775,6 +1779,10 @@
             {
               "id": "requirement-decision",
               "directoryName": "✂️requirement"
+            },
+            {
+              "id": "disconnects-middle",
+              "directoryName": "✂️disconnects-middle"
             }
           ]
         },

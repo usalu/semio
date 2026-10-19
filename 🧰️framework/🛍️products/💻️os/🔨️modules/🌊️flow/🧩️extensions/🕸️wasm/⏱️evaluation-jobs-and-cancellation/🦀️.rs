@@ -30,7 +30,7 @@ pub fn evaluation_dependency_identity(request: &EvaluateRequest) -> String {
     let canonical=|text:&str| {
         let value=match semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject) {Ok(value)=>value,Err(_)=>return text.to_string()};
         let mut projection=semio_framework_pack_json::JsonValueProjection::new_ordered(value);
-        let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut accepted);let value=loop {if let Some(value)=projection.step(4096,usize::MAX,&mut decode,COLD_EVALUATION_IDENTITY_POLICY).expect("canonical identity projection"){break value;}};
+        let mut accepted=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut accepted);let value=loop {if let Some(value)=projection.step(4096,usize::MAX,&mut decode,COLD_EVALUATION_IDENTITY_POLICY).expect("canonical identity projection"){break value;}};
         let mut writer=semio_framework_pack_json::JsonWriteCursor::new(value);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut admitted);
         let text=loop {if let Some(text)=writer.step(4096,&mut control,COLD_EVALUATION_IDENTITY_POLICY).expect("canonical identity writer"){break text;}};
         evaluation_retire_cold(projection);evaluation_retire_cold(writer);text

@@ -150,8 +150,6 @@ impl LogitsWorkspace {
     /// 🧰️ Removes every `live` entry whose mask bit is unset — call once after all hard-mask
     /// processors have run, before any soft-penalty or truncation processor.
     pub async fn sync_live_with_mask(&mut self) {
-        // 🔀️ `Vec::retain`'s predicate is a sync `FnMut` — cannot `.await` inside it (E0728/
-        // E0308) — an explicit rebuild loop replaces it (O1 de-dyn, math-dedyn).
         let mut kept = Vec::with_capacity(self.live.len());
         for &idx in &self.live {
             if self.mask.get(TokenId::new(idx)).await {

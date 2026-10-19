@@ -87,6 +87,10 @@ path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️
 [workspace.dependencies.semio-framework-job]
 path = "../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-framework-job-payload]
+path = "../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-pack-json]
 path = "../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
 
@@ -95,6 +99,9 @@ path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌�
 
 [workspace.dependencies.semio-framework-value]
 path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"

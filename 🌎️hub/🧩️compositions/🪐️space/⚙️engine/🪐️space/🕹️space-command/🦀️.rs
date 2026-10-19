@@ -9,7 +9,6 @@ app_commands! {
     /// 🎯️ `SpaceApp::Command` — the SOLE dispatch surface for the studio app's own behavior, one
     /// variant per action declared in `create_space_app`'s manifest.
     pub enum SpaceCommand for WorkflowSnapshot, WorkflowMutation, SpaceConfig, SpaceConfigMutation {
-        // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "patchParameter" as "patch-parameter" => patch_parameter::PatchParameter,
         "addParameter" as "add-parameter" => add_parameter::AddParameter,
         "removeParameter" as "remove-parameter" => remove_parameter::RemoveParameter,
@@ -32,14 +31,12 @@ app_commands! {
         "compiledDagEngagementSubmit" as "compiled-dag-engagement-submit" => compiled_dag_engagement_submit::CompiledDagEngagementSubmit,
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
 
-        // 👁️ Config-only — emit `config_mutations`, never document operations.
         "setActivePanelTab" as "active-panel-tab" => set_active_panel_tab::SetActivePanelTab,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "presenceHeartbeat" as "presence-heartbeat" => presence_heartbeat::PresenceHeartbeat,
         "workflowEngagementInput" as "workflow-engagement-input" => workflow_engagement_input::WorkflowEngagementInput,
         "compiledDagEngagementInput" as "compiled-dag-engagement-input" => compiled_dag_engagement_input::CompiledDagEngagementInput,
 
-        // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "exportMedia" as "export-media" => export_media::ExportMedia,
         "importMedia" as "import-media" => import_media::ImportMedia,

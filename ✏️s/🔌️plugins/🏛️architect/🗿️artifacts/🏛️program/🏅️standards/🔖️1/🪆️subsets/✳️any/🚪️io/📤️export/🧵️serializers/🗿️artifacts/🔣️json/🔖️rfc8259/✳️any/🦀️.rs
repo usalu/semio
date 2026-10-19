@@ -1,4 +1,4 @@
-//! program -> json
+//! 🗓️ program -> json
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's csv/tsv scope): `JsonSnapshot.value`
 //! was retyped from `serde_json::Value` to stdio's own lexeme-preserving `JsonValue`

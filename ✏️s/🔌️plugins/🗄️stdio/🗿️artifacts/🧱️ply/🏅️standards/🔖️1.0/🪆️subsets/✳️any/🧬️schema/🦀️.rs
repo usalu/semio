@@ -33,19 +33,16 @@ impl Default for PlyArtifact {
 
 impl PlyArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> PlySnapshot {
         PlySnapshot { schema: self.schema.clone(), format: self.format, comments: self.comments.clone(), elements: self.elements.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: PlySnapshot) -> Self {
         Self { schema: snapshot.schema, format: snapshot.format, comments: snapshot.comments, elements: snapshot.elements }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: PlySnapshot) {
         self.schema = snapshot.schema;
         self.format = snapshot.format;

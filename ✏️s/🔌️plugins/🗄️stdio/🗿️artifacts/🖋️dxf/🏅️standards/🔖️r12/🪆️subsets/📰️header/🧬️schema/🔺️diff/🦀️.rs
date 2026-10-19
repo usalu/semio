@@ -28,11 +28,7 @@
 //! for enums, `name{[removed];[modified];[added]}` for collection triples) — see
 //! `f6-recon-report.md` in this ticket folder.
 
-/// 🧩 Ordered removed keys, modified values, and inserted items.
-pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
-
-/// 🧩 Ordered removed keys, modified values, and inserted items.
-pub(crate) type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usize, T)>);
+pub(crate) use semio_s_artifact_stdio_dxf_diff_algebra::{IndexedDiffParts, NamedDiffParts};
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -42,9 +38,7 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
-#[path = "🧮️collection-algebra-core/🦀️.rs"]
-pub mod collection_algebra_core;
-use collection_algebra_core::*;
+use semio_s_artifact_stdio_dxf_diff_algebra::{generic_absorb_pair, generic_apply, generic_inverse, named_absorb_pair, named_apply, named_inverse, DxfIndexElem, DxfNamedElem};
 
 #[path = "🏷️header-and-layer-diffs/🦀️.rs"]
 mod header_and_layer_diffs;
@@ -141,11 +135,9 @@ pub use diff_builders::*;
 /// conformance tests.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_diff_cases() -> Vec<DxfDiff> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn line_entity() -> DxfEntity {
         DxfEntity::Line(DxfLine { start: [0.0, 0.0, 0.0], end: [1.0, 2.0, 3.0], layer: "0".into(), unknown_group_codes: vec![(40, DxfValue::Double { value: 1.5 })] })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn block_with_entity() -> DxfBlock {
         DxfBlock { name: "B1".into(), base_point: [1.0, 2.0, 3.0], entities: vec![line_entity()], unknown_group_codes: vec![(5, DxfValue::Str { value: "handle".into() })] }
     }

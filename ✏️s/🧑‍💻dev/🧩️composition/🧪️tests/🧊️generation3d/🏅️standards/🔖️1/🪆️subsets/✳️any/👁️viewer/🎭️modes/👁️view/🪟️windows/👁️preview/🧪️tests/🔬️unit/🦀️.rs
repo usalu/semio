@@ -116,9 +116,6 @@ fn render_uses_the_configured_preview_camera() {
     let document = default_document();
     let config = Generation3dViewConfig { preview_camera: Generation3dViewCamera { position: [9.0, 8.0, 7.0], target: [1.0, 1.0, 1.0], fov: 33.0 }, ..Generation3dViewConfig::default() };
     let node = render(&document, &config, None, None, None, &Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))).expect("render");
-    // 🚚️ `cameraJson` is an out-of-doc scene LANE since the paged-scene wave (26/09/02 P) and the
-    // spine itself rides the surface `doc` as pack BYTES, so a `{node:?}` substring scan reads
-    // neither — the assembled scene has to be decoded back out of the built surface node.
     let scene: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("viewer preview body must decode as an assembled world-3d scene");
     assert!(scene.camera_json.contains("\"fov\":33"), "the configured fov must reach the rendered scene: {}", scene.camera_json);
     document.retire_cold();

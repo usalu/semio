@@ -1,4 +1,4 @@
-//! \u{1f4b0}\uFE0F Curation indexes retain paid borrowed rows and reconstruct under the same allocation authority.
+//! 💰️ Curation indexes retain paid borrowed rows and reconstruct under the same allocation authority.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{CurationSnapshot,ObjectKindExtra,GeometryRecipe,CuratedItem,ValueError,invalid,literal_catalog,uint,BOX,FRAME,GLB,MESH,read_binary64,read_binary32};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,transfer::{reserve,heap_sort},validate_sqlite_database_schema_controlled};
@@ -20,7 +20,7 @@ impl<'a>Rows<'a>{
  fn members(&self,table:usize,parent:i64)->&[&'a SqliteRow]{let rows=&self.tables[table];let start=rows.partition_point(|row|row.integer(1).expect("validated Curation parent INTEGER")<parent);let end=rows.partition_point(|row|row.integer(1).expect("validated Curation parent INTEGER")<=parent);&rows[start..end]}
 }
 fn retire(value:CurationSnapshot){semio_framework_dsl_record::DslField::retire_decoded(value)}
-fn construct(rows:&Rows<'_>,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<semio_framework_dsl_record::__rt::DecodedFieldOwner<CurationSnapshot>,ValueError>{
+fn construct(rows:&Rows<'_>,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<semio_framework_dsl_record::__rt::DecodedFieldOwner<CurationSnapshot>,ValueError>{
  native.begin_stage(rows.tables[2].len().checked_add(rows.tables[13].len()).ok_or_else(||invalid("Curation native workload overflow"))?)?;let catalog=literal_catalog(rows.one(1,1)?,native)?;
  let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(CurationSnapshot{catalog,stock_extra:Vec::new(),curated:Vec::new()},retire);let value=owner.as_mut();value.stock_extra=native.allocate_vec(rows.tables[2].len())?;
  for row in&rows.tables[2]{let recipe=rows.one(4,row.rowid)?;let geometry=match recipe.text(2)?{
@@ -35,5 +35,5 @@ fn construct(rows:&Rows<'_>,native:&mut semio_framework_value::NativeDecodeContr
 }
 pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<CurationSnapshot,ValueError>{
  validate_sqlite_database_schema_controlled(database,<CurationSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,PHASE,control)?;control.check_database(database,PHASE)?;let rows=Rows::new(database,control)?;
- let owner=control.allocation_stage(PHASE,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=construct(&rows,&mut native);(result,native.owned_bytes())})??;control.checkpoint(PHASE,rows.tables[2].len(),rows.tables[2].len())?;Ok(owner.take())
+ let owner=control.allocation_stage(PHASE,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=construct(&rows,&mut native);(result,native.owned_bytes())})??;control.checkpoint(PHASE,rows.tables[2].len(),rows.tables[2].len())?;Ok(owner.take())
 }

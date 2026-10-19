@@ -22,7 +22,6 @@ import {
   addressPage,
   addressPages,
   evolveCourseState,
-  evolveCourseState,
   initialCourseState,
   localStore,
   memoryStorageOrigin,

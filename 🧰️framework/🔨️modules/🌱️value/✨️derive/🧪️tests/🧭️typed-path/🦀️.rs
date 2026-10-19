@@ -314,5 +314,5 @@ mod decoding_trait_collision {
 #[test]
 fn controlled_empty_enum_corpus_refuses_every_uninhabited_wire(){
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🔁️codec/🧪️tests/🧫️fixtures/🛫️controlled/🔣️.json")).unwrap();
- for row in fixture["emptyEnums"].as_array().unwrap(){assert_eq!(row["inhabited"],false);for input in row["inputs"].as_array().unwrap(){let mut callback=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(10000,&mut callback);let value=DslValue::from(input);match row["id"].as_str().unwrap(){"external-empty"=>assert!(EmptyExternal::from_value_controlled(&value,&mut control).is_err()),"tagged-empty"=>assert!(EmptyTagged::from_value_controlled(&value,&mut control).is_err()),_=>panic!("unknown empty enum identity")};}}
+ for row in fixture["emptyEnums"].as_array().unwrap(){assert_eq!(row["inhabited"],false);for input in row["inputs"].as_array().unwrap(){let mut callback=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(10000,&mut callback);let value=DslValue::from(input);match row["id"].as_str().unwrap(){"external-empty"=>assert!(EmptyExternal::from_value_controlled(&value,&mut control).is_err()),"tagged-empty"=>assert!(EmptyTagged::from_value_controlled(&value,&mut control).is_err()),_=>panic!("unknown empty enum identity")};}}
 }

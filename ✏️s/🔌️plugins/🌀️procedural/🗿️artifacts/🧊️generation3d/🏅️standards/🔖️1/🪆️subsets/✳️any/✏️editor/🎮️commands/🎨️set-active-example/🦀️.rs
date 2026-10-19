@@ -76,8 +76,6 @@ pub fn emit(payload: &SetActiveExample, _doc: &ArtifactView<'_, Generation3dSnap
     };
     let effect = crate::set_active_example::reset_generation3d_document_effect(&target);
     let config_mutations = config_load_mutations(cfg.snapshot, &target.host_snapshot.camera, target.generation.selected_generation_id.clone());
-    // 🧹️ The loaded example projection is dead once its camera and selection are read — close it
-    // through its explicit ladder, never leave the fixture's ordered layout root to drop glue.
     target.retire_cold();
     Ok(Emit { effects: vec![effect], config_mutations, ..Default::default() })
 }

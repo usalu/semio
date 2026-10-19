@@ -46,7 +46,6 @@ pub struct GraphNodeId {
 }
 
 impl GraphNodeId {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }
@@ -63,7 +62,6 @@ pub struct GraphEdgeId {
 }
 
 impl GraphEdgeId {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }

@@ -102,10 +102,10 @@ pub mod editor {
         pub mod retained_wiring_tests;
         #[path = "."]
         pub mod panels {
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::catalogue;
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::artifact;
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::inspection;
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::settings;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::catalogue;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::artifact;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::inspection;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::settings;
         }
         #[path = "."]
         pub mod modes {

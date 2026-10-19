@@ -100,9 +100,9 @@ fn to_undirected_reciprocal_keeps_only_mutual_pairs() {
     let c = g.add_node();
     g.add_edge(a, b);
     g.add_edge(b, a);
-    g.add_edge(a, c); // not reciprocated
+    g.add_edge(a, c);
     let u = g.to_undirected(true);
-    assert_eq!(u.edge_count(), 2); // a<->b pair survives as two edges, a-c dropped
+    assert_eq!(u.edge_count(), 2);
     assert_eq!(GraphView::degree(&u, a), 2);
     assert_eq!(GraphView::degree(&u, c), 0);
 }
@@ -118,7 +118,7 @@ fn to_simple_sums_weights() {
     let mut attrs2 = PropertyBag::new();
     attrs2.insert("weight".to_string(), PropertyValue::Number(3.5));
     g.add_edge_with(a, b, attrs2);
-    g.add_edge(b, a); // unweighted -> defaults to 1.0, separate pair
+    g.add_edge(b, a);
     let s = g.to_simple();
     assert_eq!(s.edge_count(), 2);
     let ab = s.edges_between(a, b).next().expect("a->b collapsed edge exists");

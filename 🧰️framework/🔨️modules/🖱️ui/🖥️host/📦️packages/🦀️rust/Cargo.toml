@@ -33,6 +33,7 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 arboard = "3"
 rfd = "0.15.4"
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-payload = { path = "../../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 backend_metal = { path = "../../../🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust", package = "semio-framework-ui-backend-metal" }
@@ -53,3 +54,6 @@ backend_vulkan = { path = "../../../🖌️render/🎯️targets/🌋️vulkan/�
 # unresolved for wasip2 deliberately; fixing it is out of this slice's scope.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 backend_webgpu = { path = "../../../🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

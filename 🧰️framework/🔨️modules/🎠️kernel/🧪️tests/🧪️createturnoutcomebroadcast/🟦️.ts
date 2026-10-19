@@ -53,8 +53,6 @@ async function registerTests1(vitest: Vitest, dependencies: Pick<typeof import("
       expect(await iterator.return?.()).toEqual({ value: undefined, done: true });
       const pending = iterator.next();
       broadcast.push({ instanceId: 4, frames: [] });
-      // 🎯️ an unsubscribed iterator's next() must NOT resolve from this push — racing it against an
-      // already-resolved promise proves it is still pending, not that it settled "not yet" by luck.
       const raceResult = await Promise.race([pending.then(() => "resolved" as const), Promise.resolve("not-yet" as const)]);
       expect(raceResult).toBe("not-yet");
     });
@@ -246,7 +244,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
 
       expect(registry.isResident("actor-1")).toBe(false);
       expect(registry.runtimeMetricsActorRows()).toEqual([]);
-      expect(shardClient.shardIndexFor("actor-1")).toBeUndefined(); // dispose() cleared the routing entry
+      expect(shardClient.shardIndexFor("actor-1")).toBeUndefined();
       await expect(registry.resume("actor-1")).rejects.toThrow(/unknown actor/);
     });
 
@@ -347,7 +345,6 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       await registry.suspend("actor-1");
       expect(registry.isResident("actor-1")).toBe(false);
       expect(registry.isResident("actor-1::p1-ext")).toBe(false);
-      // still tracked (suspended, not cancelled) — resume must find both again.
       expect(registry.runtimeMetricsActorRows().map((r) => r.actorId).sort()).toEqual(["actor-1", "actor-1::p1-ext"]);
 
       await registry.resume("actor-1");
@@ -382,9 +379,6 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       const registry = new ActivationRegistry({ shardClient: client, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
       registry.registerCatalog(catalogWithOneExtension());
       const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
-      // Override the parent's manifest (registerCatalog seeds `caps: []`) so there is something real
-      // to intersect against, and the extension's own manifest with a request that only PARTIALLY
-      // overlaps — `fs.read` must survive, `fs.admin` must not, the parent never held it.
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1/p1.wasm", caps: [grant("fs.read")] });
       registry.registerManifest({ pluginId: "p1-ext", moduleUrl: "https://x/ext/p1-ext/p1-ext.wasm", caps: [grant("fs.read"), grant("fs.admin")] });
 
@@ -423,15 +417,15 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
       await registry.activate("p1", "actor-1", "manual");
 
-      registry.enqueueTurn("actor-1", "Interactive", []); // queued but not yet dispatched
-      await registry.suspend("actor-1"); // cancels it synchronously, before checkpoint/dispose even starts
+      registry.enqueueTurn("actor-1", "Interactive", []);
+      await registry.suspend("actor-1");
 
       await flushMicrotasks();
       expect(delivered).toEqual([]);
 
       await registry.resume("actor-1");
       await flushMicrotasks();
-      expect(delivered).toEqual([]); // still nothing — the cancelled turn never resurfaces after resume
+      expect(delivered).toEqual([]);
     });
   });
   //#endregion 🧪️TurnDispatchTests
@@ -460,17 +454,15 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       expect(shardClient.shardIndexFor("on-shard-0")).toBe(0);
       expect(shardClient.shardIndexFor("on-shard-1")).toBe(1);
 
-      // simulate what checkHeartbeats' own 3-strike ladder does — terminate + rebuild shard 0 only,
-      // then hand its actorIds to the registry exactly as ShardClient's own onShardLost callback would.
       const lostActorIds = shardClient.terminate(0);
       shardClient.rebuild(0);
       expect(lostActorIds).toEqual(["on-shard-0"]);
 
       await registry.restoreActors(lostActorIds);
 
-      expect(registry.isResident("on-shard-0")).toBe(true); // restored
-      expect(registry.isResident("on-shard-1")).toBe(true); // never touched — different shard
-      expect(shardClient.shardIndexFor("on-shard-0")).toBe(0); // re-activated on the rebuilt shard
+      expect(registry.isResident("on-shard-0")).toBe(true);
+      expect(registry.isResident("on-shard-1")).toBe(true);
+      expect(shardClient.shardIndexFor("on-shard-0")).toBe(0);
     });
   });
 
@@ -482,19 +474,17 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
       await registry.activate("p1", "actor-1", "manual");
 
-      // Enqueue, then lose the shard, all synchronously — nothing yields to the scheduler's own
-      // microtask pump until after `restoreActors` has already cancelled the queue below.
       registry.enqueueTurn("actor-1", "Interactive", []);
       const lostActorIds = shardClient.terminate(0);
       shardClient.rebuild(0);
 
       await registry.restoreActors(lostActorIds);
       await flushMicrotasks();
-      expect(delivered).toEqual([]); // the pre-restart turn never ran
+      expect(delivered).toEqual([]);
 
-      registry.enqueueTurn("actor-1", "Interactive", []); // enqueued AFTER the restore completed
+      registry.enqueueTurn("actor-1", "Interactive", []);
       await flushMicrotasks();
-      expect(delivered).toEqual(["delivered"]); // proves the actor is alive again, not permanently dropped
+      expect(delivered).toEqual(["delivered"]);
     });
   });
   //#endregion 🧪️ShardLossRestoreTests
@@ -528,13 +518,13 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
 
     it("a small deviceMemoryGiB reading evicts down to its (small) derived cap", async () => {
       const resident = await activateAndCountResident(() => ({ deviceMemoryGiB: 1 }), 10);
-      expect(resident).toBe(residentActorCapFromMemory({ deviceMemoryGiB: 1 })); // 6
+      expect(resident).toBe(residentActorCapFromMemory({ deviceMemoryGiB: 1 }));
       expect(resident).toBeLessThan(10);
     });
 
     it("a large deviceMemoryGiB reading keeps every one of the same 10 activations resident", async () => {
       const resident = await activateAndCountResident(() => ({ deviceMemoryGiB: 16 }), 10);
-      expect(resident).toBe(10); // well under the derived 96 cap — nothing evicted
+      expect(resident).toBe(10);
     });
   });
   //#endregion 🧪️MemoryPressureCapTests
@@ -567,7 +557,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
 
         registry.dispose();
         vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS * 5);
-        expect(received).toHaveLength(2); // dispose() stopped the loop
+        expect(received).toHaveLength(2);
       } finally {
         vi.useRealTimers();
       }
@@ -582,7 +572,7 @@ async function registerTests3(vitest: Vitest, dependencies: Pick<typeof import("
         registry.metricsBus.addEventListener("os.runtime.metrics", (event) => received.push((event as CustomEvent<RuntimeMetricsSnapshot>).detail));
         vi.advanceTimersByTime(RUNTIME_METRICS_PUBLISH_INTERVAL_MS * 10);
         expect(received).toEqual([]);
-        registry.dispose(); // no-op, nothing was started — must not throw
+        registry.dispose();
       } finally {
         vi.useRealTimers();
       }
@@ -626,9 +616,6 @@ async function registerTests5(vitest: Vitest, dependencies: Pick<typeof import("
 
   const { describe, expect, it } = vitest;
   describe("IoEntryGraph", () => {
-    // 🧭️ SAME fixture as the Rust twin (`💻️os/🔌️plugin/🖥️host/🦀️.rs`,
-    // `io_router_w1d_fixture_entries`) and `🧪️w1d-io-router-parity.ts` — `stdio` owns one Exact
-    // hop, `gif` owns a Canonical migration hop AND a competing Lossy direct shortcut.
     const binaryRaw: ArtifactDialect = { artifactKind: "framework.io.binary", standard: "raw", subset: "*" };
     const gif87a: ArtifactDialect = { artifactKind: "s.stdio.gif", standard: "87a", subset: "*" };
     const gif89a: ArtifactDialect = { artifactKind: "s.stdio.gif", standard: "89a", subset: "*" };

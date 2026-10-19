@@ -15,7 +15,6 @@ pub(super) fn handle_export_solid(owner: &mut ModuleGeometryOwner, payload: &mut
     if let Ok(imported) = imported_geometry_handles(owner, &params) {
         for handle in imported { if !handles.contains(&handle) { handles.push(handle); } }
     }
-    // 🧊️ Closed, never dropped — see `evaluated_preview_payload`.
     host_snapshot.retire_cold();
     owner.retain_current(&handles);
     let result_json =

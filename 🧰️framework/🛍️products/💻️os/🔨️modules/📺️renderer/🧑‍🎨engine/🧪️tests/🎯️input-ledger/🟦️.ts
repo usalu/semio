@@ -145,7 +145,7 @@ describe("input ledger", () => {
     const a = ledger.issue({ controllerId: "c", action: "a" });
     const b = ledger.issue({ controllerId: "c", action: "a" });
     const c = ledger.issue({ controllerId: "c", action: "a" });
-    ledger.issue({ controllerId: "c", action: "a" }); // left pending
+    ledger.issue({ controllerId: "c", action: "a" });
     ledger.settle(inputAppliedV1(a.provenance.inputSeq));
     ledger.settle(inputSupersededV1(b.provenance.inputSeq, c.provenance.inputSeq));
     ledger.settle(inputRefusedV1(c.provenance.inputSeq, "queue-full"));
@@ -221,7 +221,7 @@ describe("causal order", () => {
   });
 
   it("sorts a shuffled array deterministically, every follow-up landing after its cause and before any later root (a few hundred random arrays)", () => {
-    const rand = mulberry32(0x494e5055); // "INPU"
+    const rand = mulberry32(0x494e5055);
     for (let trial = 0; trial < 300; trial += 1) {
       const items = buildCausalItems(rand, 10 + (trial % 12));
       const canonical = [...items].sort(compareCausalV1).map((item) => item.inputSeq);

@@ -59,7 +59,6 @@ fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
 }
 
 impl JsonOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &JsonSnapshot) -> Self {
         let (node_count, max_depth) = walk(&snapshot.value, 1);
         Self { node_count, max_depth, root_kind: root_kind_name(&snapshot.value).to_string() }

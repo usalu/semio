@@ -49,7 +49,8 @@ fn paged_native_drawing_snapshot_initialization_catalog_admits_one_original_page
 #[test]
 fn paged_native_drawing_snapshot_retirement_keeps_original_variants_and_exact_grants() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+    use semio_framework_value::paged::PagedUtf8;
+    use semio_framework_value_persistent::list::PagedList;
     let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧰️owned/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let snapshot: DrawingSnapshot = serde_json::from_str(fixture_text!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let layer = snapshot.layers[0].clone();

@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyTimeTravel, timeTravelFinalizeRefusal, timeTravelSession, type TimeTravelEvent, type TimeTravelSession } from "../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
-import { replayReportBlocksFinalize, type InputReplacement, type ReplayReport } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
+import { replayReportBlocksFinalize, type InputReplacement, type ReplayReport } from "@semio-tech/framework-replication";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type Step = Readonly<Record<string, unknown>>;

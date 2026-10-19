@@ -29,6 +29,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateDaylightZone
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateDaylightZone> + From<crate::DeleteDaylightZone>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "daylight-zone", kind: "create-daylight-zone", record: "CreatedDaylightZone" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -50,7 +51,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "daylight-zone", kind: "create-daylight-zone", record: "CreatedDaylightZone" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

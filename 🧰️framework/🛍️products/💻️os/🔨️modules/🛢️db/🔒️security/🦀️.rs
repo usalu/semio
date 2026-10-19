@@ -64,7 +64,6 @@ pub struct Principal {
 
 impl Principal {
     /// 🆕️ Builds a principal from its three parts.
-    // 🚫️async: E1 pure constructor, used inside a sync `Fn(&ActorId) -> Principal` closure slot — see R9
     pub fn new(actor: protocol::ActorId, tenant: TenantId, roles: Vec<String>) -> Self {
         Self { actor, tenant, roles }
     }
@@ -171,7 +170,6 @@ pub enum Decision {
 }
 
 impl Decision {
-    // 🚫️async: E1 pure accessor consumed synchronously by dozens of test/production call sites — see R9
     pub fn is_allowed(&self) -> bool {
         matches!(self, Decision::Allow)
     }
@@ -204,7 +202,6 @@ impl Grant {
 
     /// 🚫️ A deny rule — see `RoleBasedPolicy::evaluate`: any matching deny short-circuits
     /// to `Decision::Deny` regardless of any allow grant, matched or not yet evaluated.
-    // 🚫️async: E1 pure constructor consumed synchronously by `impl Default` — see R9
     pub fn deny(role: impl Into<String>, pattern: &[&str], actions: &[Action]) -> Self {
         Self { role: role.into(), pattern: pattern.iter().map(|s| s.to_string()).collect(), actions: actions.iter().copied().collect(), effect: Effect::Deny }
     }
@@ -235,15 +232,11 @@ pub struct RoleBasedPolicy {
 }
 
 impl RoleBasedPolicy {
-    // 🚫️async: E1 pure constructor — used as a bare `fold`/`Default`-adjacent builder
-    // (`RoleBasedPolicy::with_grant` as an `Iterator::fold` fn-pointer accumulator, and
-    // `ArtifactEngineConfig`'s `impl Default`, itself E1) throughout this crate — see R9
     pub fn new() -> Self {
         Self::default()
     }
 
     /// ➕️ Adds one grant (builder-style).
-    // 🚫️async: E1 pure builder, used as a bare `Iterator::fold` fn-pointer accumulator — see R9
     pub fn with_grant(mut self, grant: Grant) -> Self {
         self.grants.push(grant);
         self
@@ -350,8 +343,6 @@ impl ReplayGuard {
     /// rejects with `DbError::Conflict` if `mutation_id` is still tracked. Records nothing: an
     /// operation is tracked only once its command committed ([`Self::record`]), so a batch refused
     /// after admission (a transient refusal, a policy rejection) is resent without tripping the guard.
-    // 🚫️async: E1 pure accessor, no suspension in its body — see R9; `SecurityGate` calls it under
-    // its mutex, which must never be held across an `.await` (R7).
     pub fn check(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
         let deque = self.order.entry(actor.clone()).or_default();
         let set = self.seen.entry(actor.clone()).or_default();
@@ -432,7 +423,6 @@ impl BudgetRegistry {
 
     /// 🎟️ Attempts to consume `cost` tokens from `key`'s bucket at `now_ms`. Returns
     /// `DbError::LimitExceeded` if the bucket doesn't have enough tokens yet.
-    // 🚫️async: E1 pure accessor, `TokenBucket`'s own methods are sync — see R9
     pub fn try_consume(&mut self, key: &str, cost: u32, now_ms: u64) -> Result<(), DbError> {
         let (capacity, refill_per_sec) = (self.capacity, self.refill_per_sec);
         let bucket = self.buckets.entry(key.to_string()).or_insert_with(|| TokenBucket::new(capacity, refill_per_sec, now_ms));

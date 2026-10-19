@@ -69,8 +69,6 @@ pub(super) async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
 
 pub(super) async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, protocol::ProtocolError> {
     let count = protocol::read_varint_u64(bytes, pos)?;
-    // 🚫️async: R10 shape 2 — `read_bytes` is async but `Iterator::map`'s closure is sync; hoisted
-    // into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(protocol::read_bytes(bytes, pos)?);
@@ -94,8 +92,6 @@ pub(super) async fn write_vec_envelope(out: &mut Vec<u8>, values: &[protocol::ca
 
 pub(super) async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<protocol::causal::MutationEnvelope>, protocol::ProtocolError> {
     let count = protocol::read_varint_u64(bytes, pos)?;
-    // 🚫️async: R10 shape 2 — `decode_envelope` is async but `Iterator::map`'s closure is sync;
-    // hoisted into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(protocol::io::binary::causal::decode_envelope(bytes, pos)?);

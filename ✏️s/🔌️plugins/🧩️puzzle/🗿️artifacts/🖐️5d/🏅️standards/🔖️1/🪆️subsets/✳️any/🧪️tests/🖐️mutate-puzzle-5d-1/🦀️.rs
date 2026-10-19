@@ -1,4 +1,4 @@
-//! `26/08/23/END-TO-END-TESTING-REFACTOR`.
+//! 🧪️ `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //! 🦀️ Puzzle 5d 1 exhaustive mutation case — Rust adapter. Ticket
 //!
 //! Recorded no-oracle decision `puzzle-5d-mutation-semantics`

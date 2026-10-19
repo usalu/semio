@@ -31,30 +31,25 @@ pub(super) struct OverlayStack {
 }
 
 impl OverlayStack {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn open(&mut self, overlay: OpenOverlay) {
         if self.open.len() < 16 {
             self.open.push(overlay);
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn topmost(&self) -> Option<&OpenOverlay> {
         self.open.last()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn close_root(&mut self, root: ElementId) -> Option<OpenOverlay> {
         let position = self.open.iter().position(|overlay| overlay.root == root)?;
         Some(self.open.remove(position))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn close_topmost(&mut self) -> Option<OpenOverlay> {
         self.open.pop()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn topmost_focus_trap_root(&self) -> Option<ElementId> {
         self.open.iter().rev().find(|overlay| overlay.focus_trap).map(|overlay| overlay.root)
     }

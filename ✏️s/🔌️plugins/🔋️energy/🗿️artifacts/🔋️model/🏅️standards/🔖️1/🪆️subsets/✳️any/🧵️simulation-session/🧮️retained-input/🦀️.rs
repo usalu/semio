@@ -347,8 +347,6 @@ impl ModelCapture {
                 {
                     match self.substage {
                         0 => text!(&mut target_item.name, &source_item.name),
-                        // 🔶️ The aperture's own polygon is variable-length, so it copies in its own
-                        // step exactly as a surface's does (lane 5, substage 1).
                         1 => items!(&mut target_item.vertices_m, &source_item.vertices_m),
                         _ => finish_record!(),
                     }

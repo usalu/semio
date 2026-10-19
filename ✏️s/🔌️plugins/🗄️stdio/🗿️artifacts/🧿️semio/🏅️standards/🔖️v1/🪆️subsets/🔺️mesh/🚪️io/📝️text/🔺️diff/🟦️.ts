@@ -5,7 +5,7 @@
 export interface SemioMeshDiffTextToken {
   key: "meshes" | "materials" | "textures";
   removed: string[];
-  modified: string[]; // "key:diff" encoded
+  modified: string[];
   added: string[];
 }
 export interface SemioMeshDiffText {

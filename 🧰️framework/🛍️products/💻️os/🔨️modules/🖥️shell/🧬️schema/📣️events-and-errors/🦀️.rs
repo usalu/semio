@@ -15,25 +15,25 @@ use super::*;
 #[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(crate = "::protocol::value", tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellEvent {
-    /// Always emitted, exactly once, as the last event of every accepted command. `revision` is
+    /// 🎯️ Always emitted, exactly once, as the last event of every accepted command. `revision` is
     /// `number` — see [`PluginSupervisorState::last_signal_ms`].
     Applied {
         capability_id: String,
         revision: u64,
     },
-    /// Focus moved — either directly (`FocusWindow`) or automatically (the previously-focused
+    /// 🪟️ Focus moved — either directly (`FocusWindow`) or automatically (the previously-focused
     /// window disappeared from `SetExtraWindows`'s new list).
     WindowFocusChanged {
         previous: Option<String>,
         current: Option<String>,
     },
-    /// `SetActiveTool` cleared a window's active utility for mode↔tool mutual exclusion.
+    /// 🟢️ `SetActiveTool` cleared a window's active utility for mode↔tool mutual exclusion.
     ActiveUtilityChanged {
         window_id: String,
         previous: Option<String>,
         current: Option<String>,
     },
-    /// `SetActiveUtility` cleared the active tool for mode↔tool mutual exclusion.
+    /// ⚡️ `SetActiveUtility` cleared the active tool for mode↔tool mutual exclusion.
     ActiveToolChanged {
         previous: Option<String>,
         current: Option<String>,

@@ -39,8 +39,6 @@ fn build_las() -> Vec<u8> {
         Vlr { reserved: 0, user_id: fixed(b"SEMIOFIX"), record_id: 101, record_length_after_header: RecordLength::Vlr(20), description: fixed(b"survey-strip-b"), data: b"survey-strip-vlr-two".to_vec() },
     ];
 
-    // 📏️ Scale/offset chosen so real-world coordinates are non-trivial: x = record*0.01 + 500000,
-    // y = record*0.01 + 4000000, z = record*0.01 + 100.
     let x_scale = 0.01;
     let y_scale = 0.01;
     let z_scale = 0.01;
@@ -50,11 +48,11 @@ fn build_las() -> Vec<u8> {
 
     let points: Vec<Point> = (0..6i32)
         .map(|i| {
-            let return_number = ((i % 3) + 1) as u8; // 1..=3
+            let return_number = ((i % 3) + 1) as u8;
             let number_of_returns = 3u8;
             let scan_direction_flag = i % 2 == 0;
             let edge_of_flight_line = i == 5;
-            let classification = 2 + (i as u8 % 4); // varies 2..=5
+            let classification = 2 + (i as u8 % 4);
             let a = (return_number & 0x07) | ((number_of_returns & 0x07) << 3) | ((scan_direction_flag as u8) << 6) | ((edge_of_flight_line as u8) << 7);
             Point {
                 x: 1000 * i,
@@ -88,9 +86,6 @@ fn build_las() -> Vec<u8> {
         point_data_record_format: 0,
         point_data_record_length: 20,
         number_of_point_records: points.len() as u32,
-        // 🎯️ Deliberately NOT the real min/max of the points above — non-structural, directly
-        // retained content per the oracle's own doc comment, so `set-bounds`/`set-points-by-return`
-        // are genuinely checked mutations rather than accidentally matching the real distribution.
         number_of_points_by_return: [2, 2, 2, 0, 0],
         x_scale_factor: x_scale,
         y_scale_factor: y_scale,

@@ -1,4 +1,4 @@
-//! staged placement works (transform, brush placement, suggestion acceptance, focus, precompute commands) that each spend
+//! 🪜️ staged placement works (transform, brush placement, suggestion acceptance, focus, precompute commands) that each spend
 //! 🎬️ Puzzle 3d retained action works — the one-action-per-window route through the shared action prologue, and the
 //! bounded turns. Every work is written against the [`Puzzle3dEditor`] contract, not the concrete editor.
 
@@ -125,6 +125,3 @@ pub use self::precompute_command_work::*;
 #[path = "🧪️tests/🦀️.rs"]
 mod original_construction_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod original_construction_tests;

@@ -266,7 +266,7 @@ impl<S> FromValue for ArtifactChild<S> {
             _snapshot: PhantomData,
         })
     }
-    fn from_value_controlled(value: &DslValue, control: &mut protocol::value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let DslValue::Object(fields) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for ArtifactChild")) };
         control.scoped_depth(64, |control| {
             control.scoped_stage(|control| {
@@ -410,13 +410,13 @@ impl<S> semio_framework_dsl_record::DslField for ArtifactChild<S> {
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child Record"));
         };
         Self::from_record_controlled(record, control)
     }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| {
             control.begin_stage(2)?;
             if record.fields.len() != 2 || record.fields.keys().any(|id| *id > 1) {

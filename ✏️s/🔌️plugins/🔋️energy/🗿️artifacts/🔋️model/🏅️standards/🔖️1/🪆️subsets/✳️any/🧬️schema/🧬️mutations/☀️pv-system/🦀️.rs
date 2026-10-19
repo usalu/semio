@@ -1,4 +1,4 @@
-//! ☀️ Energy model mutation domain `pv-system`: `change-pv-system-inverter-efficiency`, `change-pv-system-dc-capacity`, `create-pv-system`, `delete-pv-system`, `change-pv-system-module-efficiency`, `change-pv-system-tilt`, `change-pv-system-area`, `change-pv-system-azimuth`.
+//! ☀️ Energy model mutation domain `pv-system`: `create-pv-system`, `delete-pv-system`, `change-pv-system-tilt`, `change-pv-system-area`, `change-pv-system-azimuth`, `change-pv-system-mounting`.
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
@@ -12,28 +12,6 @@ extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 use crate::diff::EnergyModelDiff;
 use crate::snapshot::EnergyModelSnapshot;
-
-#[path = "."]
-pub mod change_pv_system_inverter_efficiency {
-    #[path = "♌️change-inverter-efficiency/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "♌️change-inverter-efficiency/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "♌️change-inverter-efficiency/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_pv_system_dc_capacity {
-    #[path = "⚛️change-dc-capacity/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "⚛️change-dc-capacity/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "⚛️change-dc-capacity/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
 
 #[path = "."]
 pub mod create_pv_system {
@@ -54,17 +32,6 @@ pub mod delete_pv_system {
     #[path = "🌒️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌒️delete/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_pv_system_module_efficiency {
-    #[path = "🎖️change-module-efficiency/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🎖️change-module-efficiency/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🎖️change-module-efficiency/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 
@@ -100,51 +67,11 @@ pub mod change_pv_system_azimuth {
     #[path = "🧿️change-azimuth/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
-
-pub use change_pv_system_inverter_efficiency::{change_pv_system_inverter_efficiency, ChangePvSystemInverterEfficiency};
-pub use change_pv_system_dc_capacity::{change_pv_system_dc_capacity, ChangePvSystemDcCapacity};
 pub use create_pv_system::{create_pv_system, CreatePvSystem};
 pub use delete_pv_system::{delete_pv_system, DeletePvSystem};
-pub use change_pv_system_module_efficiency::{change_pv_system_module_efficiency, ChangePvSystemModuleEfficiency};
 pub use change_pv_system_tilt::{change_pv_system_tilt, ChangePvSystemTilt};
 pub use change_pv_system_area::{change_pv_system_area, ChangePvSystemArea};
 pub use change_pv_system_azimuth::{change_pv_system_azimuth, ChangePvSystemAzimuth};
-
-#[path = "."]
-pub mod change_pv_system_temperature_coefficient {
-    #[path = "🌡️change-temperature/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🌡️change-temperature/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🌡️change-temperature/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-pub use change_pv_system_temperature_coefficient::{change_pv_system_temperature_coefficient, ChangePvSystemTemperatureCoefficient};
-
-#[path = "."]
-pub mod change_pv_system_faiman_heat_loss_constant {
-    #[path = "🧊️change-heat-loss/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🧊️change-heat-loss/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🧊️change-heat-loss/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-pub use change_pv_system_faiman_heat_loss_constant::{change_pv_system_faiman_heat_loss_constant, ChangePvSystemFaimanHeatLossConstant};
-
-#[path = "."]
-pub mod change_pv_system_faiman_heat_loss_wind {
-    #[path = "💨️change-wind-loss/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "💨️change-wind-loss/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "💨️change-wind-loss/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-pub use change_pv_system_faiman_heat_loss_wind::{change_pv_system_faiman_heat_loss_wind, ChangePvSystemFaimanHeatLossWind};
 
 #[path = "."]
 pub mod change_pv_system_mounting {

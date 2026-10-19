@@ -38,6 +38,13 @@
     },
     "test-contract": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts contract",
         "forwardAllArgs": true
@@ -45,6 +52,8 @@
     },
     "test-oracle": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts oracle",
         "forwardAllArgs": true
@@ -52,11 +61,19 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
         "normOracleSources"
       ]
     },
     "test-subject": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts subject",
         "forwardAllArgs": true
@@ -64,6 +81,8 @@
     },
     "test-parity": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts parity",
         "forwardAllArgs": true
@@ -71,6 +90,7 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
         "normOracleSources"
       ]
     },
@@ -102,6 +122,13 @@
     },
     "test-dependency": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts dependency",
         "forwardAllArgs": true
@@ -143,6 +170,12 @@
     },
     "test-schema-mutation-inputs": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-inputs",
@@ -152,6 +185,12 @@
     },
     "test-schema-mutation-inputs-census": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-inputs --census",
@@ -161,6 +200,12 @@
     },
     "test-schema-mutation-payloads": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-payloads",
@@ -170,6 +215,12 @@
     },
     "test-schema-mutation-payloads-census": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-payloads --census",
@@ -179,6 +230,12 @@
     },
     "test-schema-mutation-labels": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-labels",
@@ -188,6 +245,12 @@
     },
     "test-schema-mutation-labels-census": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-labels --census",
@@ -197,6 +260,12 @@
     },
     "test-schema-fault-notices": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema fault-notices",
@@ -206,6 +275,12 @@
     },
     "test-schema-fault-notices-census": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema fault-notices --census",
@@ -215,6 +290,12 @@
     },
     "test-schema-mutation-editability": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-editability",
@@ -224,6 +305,12 @@
     },
     "test-schema-mutation-editability-census": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-editability --census",
@@ -233,6 +320,12 @@
     },
     "test-mutation-payload-parity": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test mutation-payload-parity",
@@ -242,6 +335,12 @@
     },
     "test-fault-notices-gate": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test fault-notices-gate",
@@ -251,6 +350,12 @@
     },
     "test-mutation-history-gates": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test mutation-history-gates",
@@ -260,6 +365,8 @@
     },
     "test-fixture-verify": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts fixture verify",
         "forwardAllArgs": true
@@ -267,11 +374,19 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
         "htmlSourcePairs"
       ]
     },
     "test-fixture-audit": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts fixture audit",
         "forwardAllArgs": true
@@ -295,6 +410,7 @@
     },
     "test-probe": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "command": "bun ./📜️script.ts probe",
         "forwardAllArgs": true
@@ -302,6 +418,11 @@
     },
     "test-matrix": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts matrix",
@@ -319,6 +440,8 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts run",
         "forwardAllArgs": true
@@ -326,6 +449,7 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
         "normOracleSources"
       ]
     },
@@ -359,7 +483,11 @@
         }
       },
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts acceptance goal",
@@ -369,7 +497,11 @@
     },
     "acceptance-plan": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts acceptance plan",
@@ -379,7 +511,12 @@
     },
     "inventory-provider-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts inventory-provider-check"
@@ -387,14 +524,15 @@
     },
     "test-artifact-root-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test artifact-root-source",
         "forwardAllArgs": true
       },
       "inputs": [
         "default",
-        "^default"
+        "^default",
+        "testEnv"
       ],
       "outputs": [],
       "configurations": {
@@ -507,6 +645,11 @@
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪵️mutate-en1995-1/🐍️.py",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🪶️mutate-en1999-1/🐍️.py",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🫨️mutate-en1998-1/🐍️.py"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   }
 }

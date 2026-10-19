@@ -421,13 +421,11 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(main::definition())
         .panel_tab_def(members_panel::definition())
         .default_layout(edit::layout())
-        // 🌱 Document mutations — palette-visible.
         .mutation("createArtifact", LocalizedLabel::native("Create Artifact", "Artefakt erstellen"))
         .mutation("deleteArtifact", LocalizedLabel::native("Delete Artifact", "Artefakt löschen"))
         .action_destructive("deleteArtifact")
         .mutation("renameArtifact", LocalizedLabel::native("Rename Artifact", "Artefakt umbenennen"))
         .mutation("touchArtifact", LocalizedLabel::native("Touch Artifact", "Artefakt aktualisieren"))
-        // 🐚 Shell-effect relays — no document mutation of their own (contract §C6).
         .shell_action("requestDeleteArtifact", LocalizedLabel::native("Delete Artifact…", "Artefakt löschen…"))
         .shell_action("openArtifact", LocalizedLabel::native("Open Artifact", "Artefakt öffnen"))
         .shell_action("openArtifactWith", LocalizedLabel::native("Open Artifact With…", "Artefakt öffnen mit…"))
@@ -438,18 +436,7 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .shell_action("copyInviteLink", LocalizedLabel::native("Copy Invite Link", "Einladungslink kopieren"))
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse übernehmen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
-        // 🧵️ Blanket pass FIRST: `action_interactive_job` only reaches `self.actions`, while the
-        // window kinds re-expose the same commands under `framework.window.table:<id>` — those stay
-        // `Unclassified` and abort `build_definition` at runtime unless something covers them. This
-        // is the same idiom the `🌍️gis` editors use. The per-action calls below then refine it.
         .interactive_jobs(InteractiveJobClassification::Migrated)
-        // 🧵️ Phase-8 interactive-job disposition. `validate_interactive_job_classification` rejects a
-        // catalog containing any `Unclassified` action, and the default IS `Unclassified`, so every
-        // action above needs an entry here. Dispositions mirror the sibling `🏠️home` editor for the
-        // three names it also declares (`copyInviteLink`/`presenceHeartbeat` migrated,
-        // `foldDirectoryEvents` batch-only) and follow its closest analogue otherwise: one-turn
-        // interactive commands are `Migrated`, and `renameArtifact` is `BatchOnlyPendingRewrite`
-        // because `home` classifies its own `renameSpace` that way.
         .action_interactive_job("createArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("deleteArtifact", InteractiveJobClassification::Migrated)
         .action_interactive_job("renameArtifact", InteractiveJobClassification::Migrated)
@@ -466,23 +453,10 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::Migrated)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
-        // 👁️ View actions — fold host-pushed state into `Config`, never in the palette.
-        // 📝️ The SAME two arguments, declared on the ACTION as well as on the dialog below.
-        // `actionRequiresStagedForm` (`🛠️ShellHelpers/🟦️.tsx:4169`) reads `action.args` and nothing
-        // else, so a verb whose only form lives in a `DialogDefinition` is fired BARE from the
-        // Actions rail, the command palette and the MCP lane — measured inside `s` on 2026-09-22:
-        // `createArtifact` dispatched with `staged controls []`, no refusal at all, and the space
-        // index still listed zero artifacts, because the guest received an empty payload and
-        // created nothing. The dialog stays: it is the nicer human surface and the rail is the
-        // other lane, and both now carry the same declaration (ticket 26/09/18 S11).
         .action_args(
             "createArtifact",
             vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_framework_plugin::AppRole::Editor]).required()],
         )
-        // 🗨️ Dialogs (worker-brief tasks 2–3). `createArtifact`'s submit re-dispatches the real
-        // mutation directly (its own payload has no field the staged form can't supply); the delete
-        // confirm and the invite form each go through a `request*` opener (see those commands' own
-        // doc comments for why).
         .dialog(
             DialogDefinition::new("createArtifact", LocalizedLabel::native("Create Artifact", "Artefakt erstellen"), ActionRef::new("createArtifact"))
                 .args(vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_framework_plugin::AppRole::Editor]).required()])

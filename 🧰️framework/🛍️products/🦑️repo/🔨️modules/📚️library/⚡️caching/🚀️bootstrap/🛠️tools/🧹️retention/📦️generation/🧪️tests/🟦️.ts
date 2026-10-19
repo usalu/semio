@@ -7,7 +7,7 @@ test("copied generation retirement classifies only authored closed material",asy
 
 import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
-import{openNativeImageStorageV1,retireNativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import{openNativeImageStorageV1,retireNativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
 import{acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{resourceLeasePathV1}from"@semio-tech/process/leases";

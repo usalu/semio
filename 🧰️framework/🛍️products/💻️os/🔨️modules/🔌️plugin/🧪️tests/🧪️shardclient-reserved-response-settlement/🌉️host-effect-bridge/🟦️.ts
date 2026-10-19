@@ -32,11 +32,10 @@ export function registerHostEffectBridgeTests(kit: ShardClientSettlementTestKit)
   });
   describe("ShardClient host-effect bridge — no handler installed", () => {
     it("fails FAST with an explicit effect-error, synchronously, never a silent hang", async () => {
-      const { client, workers } = harness(1); // no onHostEffect
+      const { client, workers } = harness(1);
       await activateActor(client, workers, "a");
 
       workers[0]!.deliver(makeEffectRequestFrame("a", "storage-read", "a:storage-read:1", {}));
-      // no `await flushMicrotasks()` — the reply must already be sent, proving this path never touches a Promise chain
       const reply = findEffectReply(workers[0]!.sent, "a:storage-read:1", "effect-error");
       expect(reply?.frame.envelope.payload.payload.message).toBe("no host effect handler installed");
     });
@@ -75,7 +74,7 @@ export function registerHostEffectBridgeTests(kit: ShardClientSettlementTestKit)
 
       const sentBeforeLateResolve = workers[0]!.sent.length;
       await flushMicrotasks();
-      expect(workers[0]!.sent.length).toBe(sentBeforeLateResolve); // the abort-triggered resolve did NOT produce a late effect-complete/effect-error post
+      expect(workers[0]!.sent.length).toBe(sentBeforeLateResolve);
       expect(findEffectReply(workers[0]!.sent, "a:http-fetch:1", "effect-complete")).toBeUndefined();
       expect(findEffectReply(workers[0]!.sent, "a:http-fetch:1", "effect-error")).toBeUndefined();
     });

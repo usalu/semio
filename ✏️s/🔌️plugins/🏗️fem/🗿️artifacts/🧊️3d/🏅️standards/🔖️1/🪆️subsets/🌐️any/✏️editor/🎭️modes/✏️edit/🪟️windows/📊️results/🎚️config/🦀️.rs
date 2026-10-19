@@ -185,7 +185,7 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> Fem3dResu
 
 /// 🎞️ The configuration the results window DRAWS: the persisted transport with the running clock's
 /// phase and direction folded in while the window plays, the resting phase otherwise.
-pub fn effective(config: &Fem3dResultsWindowConfig, clock: Option<&super::transient::FemPlaybackClock>) -> Fem3dResultsWindowConfig {
+pub fn effective(config: &Fem3dResultsWindowConfig, clock: Option<&semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock>) -> Fem3dResultsWindowConfig {
     match clock {
         Some(clock) => Fem3dResultsWindowConfig { animation: clock.parked_into(&config.animation), ..config.clone() },
         None => config.clone(),

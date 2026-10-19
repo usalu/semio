@@ -5,11 +5,11 @@ import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../🧫️fixtures/🖱️input-contract/🔣️.json" with { type: "json" };
-import surfaceBehavior from "../../../../🧪️tests/🧫️fixtures/🎬️surface-behavior/🔣️.json" with { type: "json" };
+import surfaceBehavior from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/surface-behavior.json";
 
 import Ajv2020 from "ajv/dist/2020";
 
-import { canvasCatalogueTerminalFixture as catalogueTerminal, cataloguePointerTransferFixture as cataloguePointerTransfer, canvas2dCameraGesturesFixture as cameraGestures, uiSceneFramingFixture as framingFixture, uiArrowChordsFixture as arrowChords } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { canvasCatalogueTerminalFixture as catalogueTerminal, cataloguePointerTransferFixture as cataloguePointerTransfer, canvas2dCameraGesturesFixture as cameraGestures, uiSceneFramingFixture as framingFixture, uiArrowChordsFixture as arrowChords } from "@semio-tech/framework/ui/testing/fixtures";
 import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 
 
@@ -485,9 +485,6 @@ describe("🖱️ Canvas2d mounted input contract", () => {
   });
 
   it.each(catalogueTerminal.cases)("serializes $terminal catalogue cleanup before the terminal raw drop", async row => {
-    // 🧯️ Held on an object, not a `let`: a resolver assigned only inside the dispatch callback leaves
-    // the local narrowed to its `null` initialiser at the call below, while the property keeps its
-    // declared type — which is what this law actually holds (the cleanup finishes out of band).
     const leave: { finish?: () => void } = {};
     const starts: string[] = [];
     const { actions, host } = mountedHost(catalogueTerminal.surface, action => {

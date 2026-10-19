@@ -1,5 +1,5 @@
 import{types}from"node:util";
-import{compileJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{compileJsonSchemaSubset}from"../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with{type:"json"};
 
 /** 🔣️ Represents bounded immutable JSON DATA without external runtime types. */

@@ -3,7 +3,9 @@ use super::{CsvSnapshot,CsvRecord,CsvField};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[cfg(test)]
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
+#[cfg(test)]
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::NativeSnapshotBodyWallet;
 use std::mem::size_of;
 type Result<T>=std::result::Result<T,ValueError>;

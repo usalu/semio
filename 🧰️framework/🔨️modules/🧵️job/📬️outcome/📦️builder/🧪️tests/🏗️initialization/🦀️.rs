@@ -1,6 +1,8 @@
 //! 🏗️ Each actual scalar prefix and final header remains under the same finite original source.
 use semio_framework_job::*;
 use semio_framework_value::RetirementDemand;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}

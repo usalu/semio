@@ -1,5 +1,6 @@
 //! 📠️ CCITT terminating and makeup codewords.
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 struct Bits<'a>{source:&'a[u8],at:usize,fill:u32}
 impl Bits<'_>{fn bit(&mut self)->Result<u32,ValueError>{let byte=*self.source.get(self.at/8).ok_or_else(||invalid("TIFF CCITT truncated codeword"))?;let bit=u32::from((byte>>if self.fill==2{self.at%8}else{7-self.at%8})&1);self.at+=1;Ok(bit)}fn align(&mut self){self.at=self.at.div_ceil(8)*8;}fn eol(&mut self)->Result<(),ValueError>{let mut zeros=0;while self.bit()?==0{zeros+=1;if zeros>64{return Err(invalid("TIFF CCITT EOL fill extent"))}}if zeros<11{return Err(invalid("TIFF CCITT EOL"))}Ok(())}fn run(&mut self,color:bool)->Result<usize,ValueError>{let table=if color{BLACK}else{WHITE};let mut total=0usize;loop{let mut code=0u32;let mut found=None;for length in 1..=13{code=code*2+self.bit()?;let key=(length<<13)|code;if let Ok(index)=table.binary_search_by_key(&key,|entry|entry.0){found=Some(table[index].1 as usize);break;}}let value=found.ok_or_else(||invalid("TIFF CCITT run code"))?;total=total.checked_add(value).ok_or_else(||invalid("TIFF CCITT run overflow"))?;if value<64{return Ok(total)}}}}

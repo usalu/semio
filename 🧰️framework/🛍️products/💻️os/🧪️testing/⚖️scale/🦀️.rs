@@ -178,10 +178,6 @@ pub mod guest {
                             profile::on_completed(completed.req);
                         }
                     }
-                    // 🔻️ Bench budget 8 (design-workforce.md §4): "capability revoked at runtime ->
-                    // denied completion, actor stays alive, quota counters zero" — only `revoked`
-                    // needs a reaction here (`granted`/`narrowed` don't change what the `io` profile
-                    // already assumed once its `event.completed` arrived).
                     WitEvent::CapabilityChanged(changed) => {
                         if let CapabilityChange::Revoked(id) = changed.change {
                             profile::on_capability_revoked(&id);
@@ -223,9 +219,6 @@ pub mod guest {
             Ok(WitTurnResult {
                 ui_patches,
                 effects,
-                // 👥️ This fixture is pure synthetic profile bookkeeping with no interaction state,
-                // so it genuinely emits no render-plane presence — an empty list is the correct
-                // value here, not a placeholder.
                 presence: Vec::new(),
                 next_wake: outcome.next_wake_ms,
                 status: if outcome.status_more_work { WitTurnStatus::MoreWork } else { WitTurnStatus::Idle },
@@ -272,10 +265,6 @@ pub mod guest {
 
     impl DescribeGuest for FixtureGuest {
         async fn describe() -> Vec<u8> {
-            // 🚧️ Placeholder — a real packed `PackageDescriptor` is packet E1-describe's job. F1
-            // only proves `reactor`/`jobs`/`checkpoint`/`describe`/`codec` are wired and the crate builds
-            // for `wasm32-wasip2`; nothing in this ticket's V1 bench reads this actor's `describe()`
-            // output (the generated `🔣️registry.json`/`🔣️catalog.json` are what the bench parses).
             Vec::new()
         }
     }

@@ -24,7 +24,6 @@ mod tests {
 
     #[test]
     fn bald_of_unanimous_ensemble_is_near_zero() {
-        // 🔐️ every member gives the same confident prediction: no epistemic disagreement.
         let ensemble = [1.0, 0.0, 1.0, 0.0, 1.0, 0.0];
         let est = bald_mutual_information(&ensemble, 3, 2, LogBase::Bits).unwrap();
         assert!(est[0].value.abs() < 1e-9);
@@ -32,7 +31,6 @@ mod tests {
 
     #[test]
     fn bald_of_disagreeing_ensemble_is_positive() {
-        // 🔐️ members confidently disagree with each other but each is individually confident.
         let ensemble = [1.0, 0.0, 0.0, 1.0];
         let est = bald_mutual_information(&ensemble, 2, 2, LogBase::Bits).unwrap();
         assert!(est[0].value > 0.9, "got {}", est[0].value);

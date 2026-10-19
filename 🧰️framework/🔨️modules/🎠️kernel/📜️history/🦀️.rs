@@ -351,9 +351,9 @@ pub struct HistoryReprojection {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct HistoryPatch {
-    /// Monotonic command-log cursor after applying this patch.
+    /// 🖱️ Monotonic command-log cursor after applying this patch.
     pub cursor: u64,
-    /// Upserts, ordered newest-first to match the logical history projection.
+    /// 📶️ Upserts, ordered newest-first to match the logical history projection.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub upserts: Vec<HistoryEntry>,

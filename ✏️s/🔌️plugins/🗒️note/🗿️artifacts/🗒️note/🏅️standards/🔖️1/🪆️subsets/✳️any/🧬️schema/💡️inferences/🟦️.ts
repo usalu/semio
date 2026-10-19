@@ -7,7 +7,7 @@ export interface NoteOutline {
 }
 
 export interface NoteInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: NoteOutline;
 }
 

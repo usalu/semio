@@ -135,7 +135,7 @@ use super::*;
 use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview::*;
 use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_s_artifact_procedural_3d_preview_eval::self;
+use semio_s_artifact_procedural_3d_preview_eval;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]

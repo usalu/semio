@@ -1,7 +1,7 @@
 /** 🔎 Renderer twins of language-neutral contracts: label fit, camera, boot example, cancel, safe area, compute status and port types. */
-import { chromePanelSafeAreaFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { chromePanelSafeAreaFixture } from "@semio-tech/framework/ui/testing/fixtures";
 import { chromePanelSafeArea, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
-import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts";
+import { world3dComputeStatusV1 } from "@semio-tech/framework/modules/ui/scene/world3d";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json";
 import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️boot-example/🔣️.json";
 import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "@semio-tech/framework-os-dev/boot-query";
@@ -69,8 +69,6 @@ describe("node-graph caption clipping (2D replay twin)", () => {
   });
 
   it("draws a node title clipped at its measured width instead of shrinking the font into a smudge", () => {
-    // 🏷️ The live defect's shape: a 40-world-unit node at zoom 1.78 gives a ~63px caption budget and
-    // the title is far wider. Before the fix the overlay binary-searched the font down to 4px.
     const stub = labelCanvasStub(0.6);
     const state = JSON.stringify({
       camera: { x: 0, y: 0, zoom: 1.7844325616011099 },
@@ -89,9 +87,6 @@ describe("node-graph caption clipping (2D replay twin)", () => {
   });
 
   it("centres captions on the measured overlay, not on a stale session size", () => {
-    // 🏷️ The live defect: the session reported `width: 1, height: 1` (painted at hand-over, before the
-    // engine canvas was attached) beside an 852×807 overlay, so a node at the world origin was captioned
-    // at (0.5, 0.5) instead of the canvas centre.
     const stub = labelCanvasStub(0.6);
     const state = JSON.stringify({
       camera: { x: 0, y: 0, zoom: 1 },
@@ -350,10 +345,6 @@ describe("⏳️ world3d compute status pane", () => {
   });
 
   it("carries the producer's own empty-surface hint, and an idle surface that HAS one is not silent", () => {
-    // 🕳️ `preview_hint` reached `data-status-json` and stopped there: this reader dropped the field
-    // and nothing painted it, so a user looking at an empty generate preview was told nothing
-    // (`panel-i18n · de:preview_hint`). The pane's own gate is `computing || cancellable ||
-    // phase === "cancelled"`; the hint branch is what an IDLE surface with something to say uses.
     const german = "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
     const withHint = world3dComputeStatusV1(JSON.stringify({ computing: false, phase: "idle", hint: german }));
     expect(withHint.hint).toBe(german);

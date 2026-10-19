@@ -105,7 +105,6 @@ async fn foreign_string_ids_mint_fresh_labels() {
     make_box(&mut original, 2.0, 3.0, 4.0, &mut rec).unwrap();
     let numeric = snapshot_from_body(&original);
 
-    // 🐼️ Re-key EVERY id and every reference to it — nothing in the document parses as `u64` any more.
     let foreign = |id: &str| if id.is_empty() { String::new() } else { format!("🐼️{id}") };
     let mut snap = numeric.clone();
     for v in &mut snap.vertices {
@@ -158,9 +157,6 @@ async fn foreign_string_ids_mint_fresh_labels() {
     let issues = semio_framework_3d_brep_validation::validate_body(&rebuilt);
     assert!(issues.is_empty(), "{issues:?}");
 
-    // 🧱️ The pre-`coedges` shape of the same document (STEP import, older fixtures) still rebuilds
-    // its whole topology from `BrepLoop.edges` alone — carrying no p-curves, exactly as
-    // `SemioBrepSnapshot::coedges`' own doc comment states.
     let mut without_coedges = snap.clone();
     without_coedges.coedges.clear();
     let fallback = body_from_snapshot(&without_coedges).expect("from_snapshot on the pre-coedges fallback path");

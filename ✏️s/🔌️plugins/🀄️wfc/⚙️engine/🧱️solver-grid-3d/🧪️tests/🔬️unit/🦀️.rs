@@ -73,8 +73,6 @@ fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
 
 #[test]
 fn graph_vs_grid3d_strict_equivalence_face6_open() {
-    // Independently hand-enumerated arcs for a 2x2x3 Face6/Open grid, fed into a
-    // GraphTopology, compared against the same model solved through Grid3dTopology.
     let width = 2usize;
     let height = 2usize;
     let depth = 3usize;

@@ -110,7 +110,6 @@ export function testWindowScope(): void {
     assert.equal(dockSeedActiveWindowIdV1(modeLayoutStacksV1(layout), row.activeWindowId), row.expected, `${row.id}: seed`);
     assert.equal(oracleSeed(layout, row.activeWindowId), row.expected, `${row.id}: oracle`);
     if (row.expected !== null) {
-      // 🔁️ Idempotent: re-seeding over the answer it just gave must leave the layout alone.
       assert.equal(dockSeedActiveWindowIdV1(modeLayoutStacksV1(layout), row.expected), null, `${row.id}: idempotent`);
     }
   }
@@ -126,8 +125,6 @@ export function testWindowScope(): void {
     assert.equal(target.kind, row.expectedKind, `${row.id}: kind`);
     assert.equal(target.windowId, row.expectedWindowId, `${row.id}: window`);
     assert.deepEqual(oracleTarget(row.app, row.mode, row.focusedWindowId, row.actionId), { kind: row.expectedKind, windowId: row.expectedWindowId }, `${row.id}: oracle`);
-    // 🎯️ A resolved target always names a window the active mode actually mounts, and that window's
-    // kind always declares the verb — otherwise the dispatch dies on the undeclared-action gate.
     if (target.windowId !== null) {
       assert.ok(mountedOf(row.app, row.mode).some((instance) => instance.id === target.windowId), `${row.id}: target is mounted`);
       assert.ok(appOf(row.app).kinds.find((kind) => kind.id === target.windowId)?.actionIds.includes(row.actionId), `${row.id}: target declares the verb`);
@@ -145,13 +142,9 @@ export function testWindowScope(): void {
   for (const row of fixture.reservedChords.cases) {
     assert.equal(chordCarriesAcceleratorV1(row.chord), row.accelerator, `${row.chord}: accelerator`);
     assert.equal(reserved.has(row.chord), row.reserved, `${row.chord}: reserved`);
-    // ⚖️ Oracle: a chord is reserved exactly when the shell table (after overrides) names it AND it
-    // carries an accelerator — restated here without the shipped helper.
     const named = new Set(Object.keys(fixture.reservedChords.shellTable).flatMap((controlId) => (fixture.reservedChords.overrides[controlId] ?? fixture.reservedChords.shellTable[controlId]!).split(",").map((key) => key.trim())));
     assert.equal(named.has(row.chord) && row.chord.split("+").slice(0, -1).some((segment) => ["mod", "ctrl", "meta", "cmd"].includes(segment)), row.reserved, `${row.chord}: oracle`);
   }
-  // 🧨️ The collision is REAL, not hypothetical: the shell's own mode-step chord is the chord
-  // `build_definition` mints for `toolRunStep` on every app that declares a tool run.
   assert.equal(SHELL_KEYBINDINGS[fixture.reservedChords.collision.shellControlId], fixture.reservedChords.collision.chord, "the shell table still owns the chord the fixture names");
   assert.equal(TOOL_RUN_STEP_CHORD, fixture.reservedChords.collision.chord, "the tool-run step chord still collides with it");
   assert.ok(reservedShellChordsV1(SHELL_KEYBINDINGS).has(TOOL_RUN_STEP_CHORD), "the live shell table reserves the colliding chord from the app loop");

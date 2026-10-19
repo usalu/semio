@@ -93,7 +93,7 @@ pub use native::{ArtifactReplayPreparationRequest,ArtifactMutationSource};
 /// 🧩️ A domain cursor splits input admission, cloning, inverse, apply and settlement into granted turns.
 pub trait ArtifactReplayPreparation<P, M>: Send {
     fn advance_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError>;
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError>;
     fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<P, M>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
@@ -102,7 +102,7 @@ pub trait ArtifactReplayPreparation<P, M>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_depth_demand(&self) -> Result<usize, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -126,7 +126,7 @@ impl<P, M> ArtifactReplayPreparationTask<P, M> {
         Self { context, cursor, completed: ArtifactReplayPreparationProgress::default(), cancelled: false, ready: false }
     }
 
-    pub fn step(&mut self, generation: u64, revision: [u8; 32], body:usize, grant: ArtifactStoreOneItemGrant, control:&mut semio_framework_value::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ArtifactReplayPreparationStep, ValueError> {
+    pub fn step(&mut self, generation: u64, revision: [u8; 32], body:usize, grant: ArtifactStoreOneItemGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ArtifactReplayPreparationStep, ValueError> {
         if generation != self.context.generation || revision != self.context.base_revision {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history.operation.stale-preparation"));
         }
@@ -189,7 +189,7 @@ impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
 
 impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
     pub fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let Some(cursor)=self.cursor.as_ref()else{return Ok(Default::default())};if cursor.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(cursor.as_ref()),depth:1,..Default::default()});}let mut demand=cursor.close_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"operation preparation cleanup depth overflow"))?;Ok(demand)}
-    pub fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         let Some(cursor) = self.cursor.as_ref() else { return Ok(RetainedCloneStep::Complete(empty)) };
         let demand=self.next_demand(grant.maximum_copy_bytes)?;
@@ -237,7 +237,7 @@ where M: semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::OpBinary 
         } else { semio_framework_os_store_projection::retire_shared_projection::<P, M>(owner); }
     }
 
-    pub(super) fn begin_replay_mutations_retirement(&mut self, owners: semio_framework_value::list::PagedList<M, {usize::MAX}>) {
+    pub(super) fn begin_replay_mutations_retirement(&mut self, owners: semio_framework_value_persistent::list::PagedList<M, {usize::MAX}>) {
         if let Some(factory) = self.replay_retirement_factory.as_ref() {
             self.replay_retirement.get_or_insert_with(|| ReplayRetirement::new(Arc::clone(factory))).stage_mutations(owners);
         } else { semio_framework_os_store_command::retire_scratch_operations::<P, M>(owners); }
@@ -255,7 +255,7 @@ where M: semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::OpBinary 
         ArtifactReplayPreparationProgress { items: self.preparation_completed.items.saturating_add(active.items), bytes: self.preparation_completed.bytes.saturating_add(active.bytes) }
     }
 
-    pub(super) fn step_prepared_operation(&mut self, edit: &semio_framework_os_spr::Edit<M>, prefix: bool, original:Option<RetainedCloneGrant>, control:Option<&mut semio_framework_value::NativeDecodeControl<'_>>, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, semio_framework_os_vcs::VcsError> {
+    pub(super) fn step_prepared_operation(&mut self, edit: &semio_framework_os_spr::Edit<M>, prefix: bool, original:Option<RetainedCloneGrant>, control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, semio_framework_os_vcs::VcsError> {
         use crate::ReplayMode;
 use semio_framework_os_store_ledger::CursorRevisionAccumulator;
         use semio_framework_os_vcs::VcsError;

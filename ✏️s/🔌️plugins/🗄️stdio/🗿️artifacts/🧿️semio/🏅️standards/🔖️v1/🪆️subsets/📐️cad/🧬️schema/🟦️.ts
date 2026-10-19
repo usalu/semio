@@ -3,8 +3,8 @@
 import type { CadLayer, CadBlock, CadEntityRecord } from "./📸️snapshot/🟦️";
 
 export interface SemioCadArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ layers: CadLayer[];
-  /** @state artifact */ blocks: CadBlock[];
-  /** @state artifact */ entities: CadEntityRecord[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🥞️ @state artifact */ layers: CadLayer[];
+  /** 🧱️ @state artifact */ blocks: CadBlock[];
+  /** 🧩️ @state artifact */ entities: CadEntityRecord[];
 }

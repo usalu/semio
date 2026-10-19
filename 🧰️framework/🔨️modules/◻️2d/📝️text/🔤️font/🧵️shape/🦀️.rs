@@ -1,6 +1,7 @@
 //! 🪄️ Bounded actual OpenType feature records select borrowed lookup authority in original table order.
 use semio_framework_2d_text_font::{FontFace,FontProgress,FontReader,reserve_slot};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct FontLookup{pub index:u16,pub kind:u16,pub flags:u16,pub offset:usize,pub subtables:usize}
 semio_framework_value::artifact_retire_leaf!(FontLookup);

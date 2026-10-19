@@ -8,8 +8,7 @@ use semio_framework_plugin::WorldProjectionConfig;
 
 use semio_framework_plugin::WorldSunConfig;
 use std::collections::BTreeMap;
-/// ⚖️ Published kind-weight dictionaries own first-party fixed pages across native admission and retirement.
-pub type Puzzle5dKindWeights = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>;
+pub use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::config::Puzzle5dKindWeights;
 
 //#region 🔖️Defaults
 fn one_f64() -> f64 {

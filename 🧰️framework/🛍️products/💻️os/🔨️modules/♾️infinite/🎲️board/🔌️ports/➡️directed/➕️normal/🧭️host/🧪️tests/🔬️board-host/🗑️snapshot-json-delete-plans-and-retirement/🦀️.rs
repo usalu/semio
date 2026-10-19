@@ -6,7 +6,7 @@
         let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔣️board-ingress.json")).unwrap();
         for fixture in vectors.as_array().unwrap() {
             let mut host = BoardHost::default();
-            assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
+            assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
             assert_eq!(host.scene.nodes.len(), fixture["nodes"].as_array().unwrap().len());
             for node in fixture["nodes"].as_array().unwrap() {
                 let actual = &host.scene.nodes[node["id"].as_str().unwrap()];
@@ -14,7 +14,7 @@
                 assert_eq!(actual.y, node["y"].as_f64().unwrap());
             }
             let count = host.scene.nodes.len();
-            assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,"{",&mut control)});
+            assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,"{",&mut control)});
             assert_eq!(host.scene.nodes.len(), count);
         }
     }
@@ -31,7 +31,7 @@
             ],
             "edges": [{ "id": "edge-a-b", "source": node_id, "target": "node-b" }]
         });
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
         while host.outbox.pop_owned_event().is_some() {}
         set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &[node_id.to_string()]);
         host
@@ -309,7 +309,7 @@
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": nodes, "edges": [] }).to_string()
         };
         let mut host = BoardHost::default();
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(100, 11),&mut control)}, "1 200 entities must parse past the {BOARD_POINTER_ITEM_CAPACITY} pointer credits");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(100, 11),&mut control)}, "1 200 entities must parse past the {BOARD_POINTER_ITEM_CAPACITY} pointer credits");
         let refused = BOARD_DESCRIPTOR_ITEM_CAPACITY / 12 + 1;
-        assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(refused, 11),&mut control)}, "a descriptor past {BOARD_DESCRIPTOR_ITEM_CAPACITY} entities must be refused");
+        assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(refused, 11),&mut control)}, "a descriptor past {BOARD_DESCRIPTOR_ITEM_CAPACITY} entities must be refused");
     }

@@ -86,7 +86,6 @@ fn decode<T: semio_framework_value::FromValue>(action: &str, value: semio_framew
 }
 
 pub fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<RasterCommand, Fault> {
-    // 🧱️ Tree rows and context menus address a layer by its bare `id`; the payloads spell `layer_id`.
     const LAYER: &[(&str, &str)] = &[("id", "layer_id")];
     let plain = || fold(args, &[]);
     let layer = || fold(args, LAYER);

@@ -1,4 +1,4 @@
-//! of the editor's single `🧊️main` split-pane window. Ticket
+//! ⌨️ of the editor's single `🧊️main` split-pane window. Ticket
 //! 👁️ Puzzle 3d viewer — the `view` mode: a single full-pane Mesh window, the read-only counterpart
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires one real window per
 //! viewer packet.

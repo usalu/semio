@@ -1,4 +1,4 @@
-//! edge) a pick may even reach. Per window instance (`Puzzle2dWindowConfig`), mirroring puzzle3d's
+//! 🔗️ edge) a pick may even reach. Per window instance (`Puzzle2dWindowConfig`), mirroring puzzle3d's
 //! 🎯️ Edit-mode window option — the selection group: which `vortex` granularity (node / handle /
 //! `☑️options/🎯️select` over objects/vortices/attractions. 🕹️ The marquee method and the default merge
 //! mode are framework-owned (`interactionSelect`'s `method`/`merge` args) and deliberately absent here.
@@ -7,7 +7,7 @@ use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::{puzzle2d_action, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE};
 use semio_framework_plugin::WindowMeasure;
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> WindowMeasure {
     let kinds = runtime.selectable_kinds;

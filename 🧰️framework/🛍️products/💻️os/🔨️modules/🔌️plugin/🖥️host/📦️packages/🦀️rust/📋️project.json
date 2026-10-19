@@ -3,6 +3,40 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host",
   "projectType": "library",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔗️wit-bindings/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔧️engine/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io/🎛️operation/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧭️routers/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🚚️process-transport/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "tags": [
     "lang:rust",
     "role:framework",
@@ -11,6 +45,14 @@
   "targets": {
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "{projectRoot}",
@@ -19,6 +61,16 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}",
@@ -37,6 +89,13 @@
     },
     "service-operation-conversion-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun 📜️script.ts service-operation-conversion-check",
         "cwd": "{projectRoot}"
@@ -45,6 +104,13 @@
     },
     "lifecycle-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun 📜️script.ts lifecycle-check",
         "cwd": "{projectRoot}"
@@ -53,6 +119,13 @@
     },
     "guest-fault-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun 📜️script.ts guest-fault-check",
         "cwd": "{projectRoot}",
@@ -62,6 +135,12 @@
     },
     "ui-patch-marshalling-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun 📜️script.ts ui-patch-marshalling-check",
@@ -71,6 +150,13 @@
     },
     "ui-patch-marshalling-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun 📜️script.ts ui-patch-marshalling-check --native",
@@ -84,6 +170,13 @@
     },
     "owned-instance-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts owned-instance-check",
         "cwd": "{projectRoot}"
@@ -102,10 +195,17 @@
           "target": "component"
         }
       ],
-      "cache": false
+      "cache": true
     },
     "count-component-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts count-component-check",
         "cwd": "{projectRoot}"
@@ -118,10 +218,18 @@
           "target": "component"
         }
       ],
-      "cache": false
+      "cache": true
     },
     "sqlite-observation-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts sqlite-observation-check",
         "cwd": "{projectRoot}",
@@ -136,6 +244,13 @@
     },
     "router-effect-source-custody": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun 📜️script.ts router-effect-source-custody",
         "cwd": "{projectRoot}",
@@ -145,6 +260,13 @@
     },
     "runtime-ports-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun 📜️script.ts runtime-ports-check",
         "cwd": "{projectRoot}"
@@ -153,17 +275,32 @@
     },
     "test-original-driver-policy-native": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts test-original-driver-policy-native",
         "cwd": "{projectRoot}",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "test-original-actor-boundary-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-actor-boundary-source",

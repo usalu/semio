@@ -656,6 +656,14 @@ pub struct PagedListRetirement<T: RetireOwned, const N: usize> {
 }
 
 impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T, N> {
+    fn next_demand(&self, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
+        Ok(crate::RetirementDemand {
+            copy_bytes: if !std::mem::needs_drop::<T>() && !self.released && !self.owner.is_empty() { T::retirement_element_copy_bytes() } else { 0 },
+            capacity_bytes: self.next_birth_bytes(body).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "original paged child lacks a birth quote"))?,
+            release_bytes: self.next_close_byte_demand().unwrap_or(0),
+            depth: self.next_depth_demand()?,
+        })
+    }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         let maximum_bytes = if self.owner.is_empty() { grant.maximum_release_bytes } else { grant.maximum_copy_bytes };

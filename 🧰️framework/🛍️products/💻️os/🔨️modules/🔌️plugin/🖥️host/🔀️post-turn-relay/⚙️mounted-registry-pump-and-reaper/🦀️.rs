@@ -136,7 +136,7 @@ impl GuestRelayMountedRegistry {
                     }
                     Ok((Some(page), kind)) => {
                         let bytes = page.len() + 2 * size_of::<usize>();
-                        if grant.maximum_items > 0 && grant.maximum_copy_bytes >= bytes && grant.maximum_depth > 0 && session.output.length.checked_add(page.len()).is_some_and(|length| length <= semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES) {
+                        if grant.maximum_items > 0 && grant.maximum_copy_bytes >= bytes && grant.maximum_depth > 0 && session.output.length.checked_add(page.len()).is_some_and(|length| length <= semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES) {
                             if matches!(kind, GuestRelayOutcomeKind::Complete | GuestRelayOutcomeKind::Fault) {
                                 session.output.write_page(page).expect("original output capacity was admitted before page effects");
                             }

@@ -7,6 +7,14 @@
     "role:artifact",
     "family:norm"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/**/*"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
@@ -21,7 +29,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust",

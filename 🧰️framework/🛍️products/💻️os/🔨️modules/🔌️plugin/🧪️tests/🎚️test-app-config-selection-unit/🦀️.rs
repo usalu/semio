@@ -56,7 +56,8 @@ fn close_config_original<T:semio_framework_value::retirement::RetireOwned>(origi
 #[test]
 fn test_config_original_record_receiving_preserves_nullable_selection() {
     use replication::{OpBinary, OpBinaryReceiving, OpBinaryReceivingCursor};
-    use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
+    use semio_framework_value::RetainedCloneGrant;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🎚️test-app-config-selection-unit/🧫️fixtures/🔣️receiving.json")).unwrap();
     let turn = &fixture["turn"];
     let grant = RetainedCloneGrant { maximum_items: turn["items"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: turn["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: turn["depth"].as_u64().unwrap() as usize };

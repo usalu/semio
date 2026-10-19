@@ -54,9 +54,6 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
 
     let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
-    // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
-    // built with the artifact's own `raster_document_store_owners`, never bare.
     store.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(store::os_store::store_schema::ArtifactCommand::Apply {
@@ -279,11 +276,6 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
     assert_eq!(rejected.reason, "raster-map.item-capacity");
 
-    // 🗂️ The whole-map DSL projection is REAL (the map is FIXED-capacity — 64 entries over 8 pages —
-    // so a whole-map projection is bounded by construction and owes no paging authority; see
-    // `RasterOwnedMap`'s own doc comment). It used to refuse a populated map outright, which trapped
-    // every whole-document route. What this law still pins is the OWNERSHIP half: projecting the map
-    // leaves every key, value and page owner exactly where it was.
     let output = semio_framework_dsl_record::DslField::to_value(&params);
     let semio_framework_dsl_record::FieldValue::Map(projected) = &output else { panic!("a populated Raster owned map projects as a map") };
     assert_eq!(projected.len(), semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY);
@@ -291,7 +283,6 @@ fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_a
     assert_eq!(params.entry_at(0).expect("the projection keeps the first exact key/value/page owner installed").0.as_ptr(), first_key_pointer);
     retire_raster_value_cold((rejected.key, rejected.value));
 
-    // 🗂️ …and the input direction recovers that same real content rather than faulting on it.
     let mut parsed = <RasterOwnedMap<semio_framework_value::DslValue> as semio_framework_dsl_record::DslField>::from_value(&output).expect("a populated Raster owned map parses its own projection");
     assert_eq!(parsed.len(), semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY);
     parsed.retire();
@@ -323,9 +314,6 @@ fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_clos
     retire_raster_value_cold((rejected.key, rejected.value));
 
     let layer = RasterLayerNode::Adjustment { id: "serde-output".into(), name: "Serde Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
-    // 🗂️ The public `ToValue` projection of a layer READS its populated parameter map whole (it used
-    // to refuse it, which trapped every whole-document route) and must not consume, move or
-    // reallocate a single owner while doing so — the pointer identity below is what proves it.
     let output = semio_framework_value::ToValue::to_value(&layer);
     let semio_framework_value::DslValue::Object(fields) = &output else { panic!("an adjustment layer projects as an object") };
     let projected = fields.iter().find(|(key, _)| key == "params").map(|(_, value)| value).expect("the projection carries the parameter map");
@@ -404,9 +392,6 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
 
     let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
-    // 🗜️ The whole-document pack codec READS the populated forest and asset pool (it used to refuse
-    // them outright) and must not consume, move or reallocate a single owner while doing so — the
-    // pointer identities asserted below are what prove it.
     let packed = <RasterSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let decoded = <RasterSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("a populated Raster snapshot packs and decodes whole");
     assert_eq!(decoded.assets.len(), snapshot.assets.len(), "the whole-document pack carries every asset handle");
@@ -537,9 +522,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
-    // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
-    // built with the artifact's own `raster_document_store_owners`, never bare.
     store.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(store::os_store::store_schema::ArtifactCommand::Apply {

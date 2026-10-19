@@ -1,10 +1,10 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 test("original delivery descriptor agrees with Buffer wire ABI and preserves its body view",()=>{expect(corpus.delivery.actorMaximumCapacityBytes).toBe(corpus.originalDriver.maximumCapacityBytes);expect(corpus.delivery.physicalBodyCopy).toBe(false);const token={receiver:1,operation:7n,generation:2n,sequence:3,attempt:1},body=Buffer.alloc(4096,0x5a),header=Buffer.alloc(TYPED_OPERATION_PAGE_MAGIC.length+30);body.writeUInt32LE(0);body[4]=1;Buffer.from(TYPED_OPERATION_PAGE_MAGIC).copy(header);let offset=TYPED_OPERATION_PAGE_MAGIC.length;header.writeUInt32LE(token.receiver,offset);header.writeBigUInt64LE(token.operation,offset+4);header.writeBigUInt64LE(token.generation,offset+12);header.writeUInt32LE(token.sequence,offset+20);header[offset+24]=token.attempt;header[offset+25]=corpus.delivery.laneTag;header.writeUInt32LE(body.length,offset+26);const descriptor={header,body:body.subarray()};expect(descriptor.body.buffer).toBe(body.buffer);expect(descriptor.header.length+descriptor.body.length).toBeGreaterThan(corpus.originalDriver.maximumCapacityBytes);const scan=scanTypedOperationPages([{tag:"send-message",val:{target:{tag:"shell",val:token.receiver},payload:Buffer.concat([descriptor.header,descriptor.body])}}]);expect(scan.pages).toHaveLength(1);expect(scan.pages[0]!.token).toEqual(token);expect(scan.pages[0]!.lane).toBe(corpus.delivery.laneTag);expect(Buffer.compare(Buffer.from(scan.pages[0]!.payload),body)).toBe(0);console.log("[DEBUG] original delivery descriptor Buffer wire oracle: exact magic+30 header, full4096 body, original alias identity and existing production decoder agreement");});
 test("retained original page framing preserves fixed capacity and exact alias retirement order",()=>{const law=corpus.retainedPage;expect(law.capacity).toBe(corpus.maximumPageBytes);expect(law.initializeBytes).toBe(2048);expect(law.ordinaryClone).toBe(false);const backing=Buffer.allocUnsafe(law.capacity);for(let offset=0;offset<backing.length;offset+=law.initializeBytes){backing.fill(0,offset,Math.min(backing.length,offset+law.initializeBytes));expect(Math.min(law.initializeBytes,backing.length-offset)).toBeLessThan(corpus.originalDriver.maximumCopyBytes);}const original=backing.subarray(0,257),receiver=original.subarray();expect(receiver.buffer).toBe(original.buffer);const db=new Database(":memory:");try{db.exec("CREATE TABLE custody(original INTEGER,receiver INTEGER,ack INTEGER);INSERT INTO custody VALUES(1,1,0)");expect(db.query("UPDATE custody SET ack=1 WHERE receiver=0").run().changes).toBe(0);db.exec("UPDATE custody SET receiver=0");expect(db.query("UPDATE custody SET ack=1 WHERE receiver=0 AND ack=0").run().changes).toBe(1);db.exec("UPDATE custody SET original=0 WHERE ack=1");expect(db.query("SELECT original,receiver,ack FROM custody").get()).toEqual({original:0,receiver:0,ack:1});console.log("[DEBUG] retained page Buffer/SQLite oracle: fixed4096 backing, staged2048 initialization, original alias identity and receiver-close/exact-ACK/original-close order");}finally{db.close();}});
-import {semioSchemaAjvV1} from "../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
 
 test("original operation diagnostics have exact ACK custody and lossless bounded fragments",()=>{
  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);expect(validate(corpus)).toBe(true);
@@ -25,7 +25,7 @@ test("original operation diagnostics have exact ACK custody and lossless bounded
  }finally{db.close();}
 });
 
-import {typedOperationDiagnosticFragment,typedOperationPageAnswerV1,scanTypedOperationPages,TYPED_OPERATION_PAGE_MAGIC} from "../../🟦️.ts";
+import {typedOperationDiagnosticFragment,typedOperationPageAnswerV1,scanTypedOperationPages,TYPED_OPERATION_PAGE_MAGIC} from "../../🔖️turn-result/🟦️.ts";
 
 test("shared host preserves original diagnostic fragments and acknowledges without terminal refusal",()=>{
  const token={receiver:1,operation:7n,generation:2n,sequence:3,attempt:1};const payload=new Uint8Array([0,0,0,0,1,123,125]);const acknowledgement={kind:"message" as const,payload:{source:{tag:"shell" as const,val:"1"},payload:[]}};const page={token,lane:15,payload,acknowledgement};const decoded=typedOperationDiagnosticFragment(page)!;expect(decoded.token).toBe(token);expect(decoded.row).toBe(0);expect(decoded.complete).toBe(true);expect(decoded.bytes.buffer).toBe(payload.buffer);expect([...decoded.bytes]).toEqual([123,125]);expect(typedOperationPageAnswerV1(page).refused).toBe(false);expect(typedOperationDiagnosticFragment({...page,lane:10})).toBeNull();for(const malformed of[new Uint8Array(4),new Uint8Array([0,0,0,0,2])])expect(()=>typedOperationDiagnosticFragment({...page,payload:malformed})).toThrow();
@@ -33,7 +33,7 @@ test("shared host preserves original diagnostic fragments and acknowledges witho
 });
 
 import {OperationDiagnosticReceiver} from "../🟦️.ts";
-import {NativeDecodeControl} from "../../../../🌱️value/🛬️decode/🟦️.ts";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 
 function hostControl(cancelled=()=>false){let yields=0;return{syntax:{maximumBytes:corpus.host.maximumBytes,maximumNodes:corpus.host.maximumNodes,maximumDepth:corpus.host.maximumDepth,chunk:corpus.host.chunk,cancelled,progress:()=>{},yield:async()=>{yields++;}},ownership:new NativeDecodeControl(corpus.host.maximumBytes*32,()=>!cancelled()),yields:()=>yields};}
 function fragment(bytes:Uint8Array,sequence:number,row=0,complete=false){return{token:{receiver:1,operation:7n,generation:2n,sequence,attempt:0},row,complete,bytes};}

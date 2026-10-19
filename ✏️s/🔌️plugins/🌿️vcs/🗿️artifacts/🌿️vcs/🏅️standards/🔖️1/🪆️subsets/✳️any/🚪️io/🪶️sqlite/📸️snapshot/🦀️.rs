@@ -15,7 +15,7 @@ fn visit_rows(snapshot:&VcsSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueE
  for(ordinal,tag)in snapshot.tags.iter().enumerate(){out.insert("vcs_tag",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|e|invalid(e.to_string()))?),Cell::Text(tag)])?;}Ok(())
 }
 fn admit_typed(snapshot:&VcsSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{extent(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
-fn admit_record(record:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{
+fn admit_record(record:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{
  use semio_framework_dsl_record::FieldValue as F;
  extent(limits)?;native.scoped_stage(|native|{
   if record.fields.len()!=6||record.fields.keys().any(|id|*id>=6){return Err(invalid("VCS native record requires six authored fields"))}
@@ -23,7 +23,7 @@ fn admit_record(record:&semio_framework_dsl_record::RecordValue,limits:SqliteDat
   let rows=tags.len().checked_add(1).ok_or_else(||invalid("VCS semantic row count overflow"))?;if rows>limits.max_rows{return Err(invalid("VCS semantic row limit exceeded"))}
   if !matches!(record.get(2),Some(F::Int(_))){return Err(invalid("VCS counter requires signed64"))}
   native.begin_stage(rows)?;let mut bytes=16usize;
-  let text=|value:&str,native:&mut semio_framework_value::NativeDecodeControl<'_>|->Result<(),ValueError>{native.scoped_stage(|native|{native.begin_stage(value.len())?;for part in value.as_bytes().chunks(256){native.advance(part.len())?;}Ok(())})};
+  let text=|value:&str,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>|->Result<(),ValueError>{native.scoped_stage(|native|{native.begin_stage(value.len())?;for part in value.as_bytes().chunks(256){native.advance(part.len())?;}Ok(())})};
   for id in[0,1,3,4]{let Some(F::Text(value))=record.get(id)else{return Err(invalid("VCS authored document field requires literal text"))};bytes=bytes.checked_add(value.len()).ok_or_else(||invalid("VCS semantic cell byte count overflow"))?;text(value,native)?;}
   if bytes>limits.max_value_bytes{return Err(invalid("VCS document semantic value limit exceeded"))}native.step()?;
   for tag in tags{let F::Text(value)=tag else{return Err(invalid("VCS tag requires literal text"))};bytes=bytes.checked_add(24).and_then(|bytes|bytes.checked_add(value.len())).ok_or_else(||invalid("VCS tag semantic cell byte count overflow"))?;if bytes>limits.max_value_bytes{return Err(invalid("VCS tag semantic value limit exceeded"))}text(value,native)?;native.step()?;}native.checkpoint()

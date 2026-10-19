@@ -12,7 +12,7 @@ export interface MdOutline {
 }
 
 export interface MdInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: MdOutline;
 }
 

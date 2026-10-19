@@ -29,6 +29,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🧾️play-model/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
@@ -165,12 +166,16 @@ path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/�
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 package = "semio-framework-os-kernel"
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
 package = "semio-framework-value-derive"
 
 [workspace.dependencies.semio-framework-schema]
@@ -200,7 +205,10 @@ package = "semio-framework"
 
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
-package = "semio-framework-job"
+
+
+[workspace.dependencies.semio-framework-job-payload]
+path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
 [workspace.dependencies.base64_codec]
 path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"
@@ -251,6 +259,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️pack
 
 [workspace.dependencies.semio-s-artifact-cad-cad-play]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-cad-cad-play-model-document]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🧾️play-model/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-cad-cad-examples]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust"

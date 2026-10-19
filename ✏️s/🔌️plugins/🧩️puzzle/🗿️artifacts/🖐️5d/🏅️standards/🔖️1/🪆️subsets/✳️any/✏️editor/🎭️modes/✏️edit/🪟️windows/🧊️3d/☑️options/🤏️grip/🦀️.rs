@@ -1,4 +1,4 @@
-//! (always, or only for the hovered/selected parts the live `vortex` interaction names) and HOW their
+//! 🖱️ (always, or only for the hovered/selected parts the live `vortex` interaction names) and HOW their
 //! 🤏️ 3D-window options — how grip markers are surfaced in the world pane: WHEN they are emitted
 //! direction arrows point (outwards from the grip point, or inwards onto it). Both are per-window
 //! chrome, never document state.

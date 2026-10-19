@@ -194,6 +194,34 @@
       "forbidden": false
     },
     {
+      "id": "host-declared-ui-contract-entry",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "forbidden": false
+    },
+    {
+      "id": "host-undeclared-os-internal-entry",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "host-declared-entry-outside-ui-contract",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎬️media/📡️channel/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "host-wgpu-public-entry",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+      "to": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🟦️.ts",
+      "forbidden": true
+    },
+    {
       "id": "store-react",
       "rule": "renderer-hosts-only-ui",
       "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",

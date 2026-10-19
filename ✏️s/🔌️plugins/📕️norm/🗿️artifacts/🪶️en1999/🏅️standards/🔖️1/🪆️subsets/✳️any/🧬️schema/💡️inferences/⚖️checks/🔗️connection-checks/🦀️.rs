@@ -44,7 +44,6 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
     let v_ed = gov.v_y_ed.abs() + gov.v_z_ed.abs() + (gov.m_y_ed.abs() + gov.m_z_ed.abs()) / lever;
     let m_ed = gov.m_y_ed.abs() + gov.m_z_ed.abs();
     let conn_dig = actions_digest(&conn.actions);
-    // memberId must resolve for connection checks that use governing effects
     if member.is_none() {
         return vec![CheckResult::assess(
             format!("en1999.8.ref.{}", conn.id),

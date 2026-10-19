@@ -1,28 +1,15 @@
 #!/usr/bin/env bun
-import{createIssuedResourceControlV1}from"../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { completeCargoPreparationObservationV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-/** 📦️ semio Rust artifact package router. */
-import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { retainedExtrusionOracle } from "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { prepareSemioConversionDefinitionV1 } from "../../🧩️composition/🔗️conversions/🟦️.ts";
 import { runCargoCapabilityContributionChecks } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { runSemioConversionDefinitionChecks } from "../../🧩️composition/🔗️conversions/🧪️tests/🟦️.ts";
-import {scriptInvocationBudget} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import {runBudgetedTestCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { OwnedVerifyScript, TextReceivingSource, TextReceivingNative, familyPackages } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
-/** 🔤️ Qualifies complete Text field witnesses under the original caller invocation. */
-class TextReceivingSource extends BundleScript{
- async run(args:string[]):Promise<void>{if(args.length)throw Error("original Text receiving accepts no arguments");const source=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts");const execute=(args:string[])=>runBudgetedTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source]);await execute(["test",source]);}
-}
-/** 🦀️ Executes genuine original complete Text receiving in its actual owning package. */
-class TextReceivingNative extends TextReceivingSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runArtifactRustTests("semio-s-artifact-stdio-semio-text",this.repoRoot,["--lib","semio_text_original_receiving_","--no-fail-fast"],this.invocation);}
-}
 
 class CompositionScript extends BundleScript {
 run(segments: string[]): void {
@@ -33,44 +20,8 @@ completeCargoPreparationObservationV1();
 }
 }
 
-/** 🧪️ Executes the contracts owned by this component. */
-class OwnedVerifyScript extends BundleScript {
-async run(segments: string[]): Promise<void> {
-if(segments[0]==="drawing-original"&&segments[1]==="source"){
-const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧪️tests/🟦️.ts");
-runCmd(process.execPath,["test",path],{cwd:this.repoRoot});
-runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",path],{cwd:this.repoRoot});return;
-}if(segments[0]==="value-path"&&segments[1]==="source"){
-const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/💾️binary/🧬️mutations/🧭️path");
-runCmd(process.execPath,["test",join(path,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});
-runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",join(path,"🟦️.ts"),join(path,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});return;
-}if(["flow-original","native-prefix"].includes(segments[0]!)&&segments[1]==="source"){
-const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/"+(segments[0]==="native-prefix"?"✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts":"🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/🧾️original/🟦️.ts"));runCmd(process.execPath,["test",path],{cwd:this.repoRoot});
-runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",path],{cwd:this.repoRoot});return;
-}if (segments[0] === "stdio-document-contract") {
-const { testSemioObjectDocumentContract } = await import("../../🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-testSemioObjectDocumentContract();
-const { testSemioKitDocumentContract } = await import("../../🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-testSemioKitDocumentContract();
-const { testSemioGeometryContract } = await import("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🧪️tests/🔬️unit/🟦️.ts");
-testSemioGeometryContract();
-const stdioSchemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets");
-runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${stdioSchemaRoot}/✉️base/🧬️schema/🧮️geometry/🟦️.ts`, ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts"].map((file) => `${stdioSchemaRoot}/📦️object/🧬️schema/${file}`), ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${stdioSchemaRoot}/🧰️kit/🧬️schema/${file}`)], { cwd: this.repoRoot });
-if (segments[1] === "native") {
-const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-for (const [crate, filter] of [["semio-s-artifact-stdio-semio-base", "stdio_document_contract"], ["semio-s-artifact-stdio-semio-object", ""], ["semio-s-artifact-stdio-semio-kit", ""]] as const) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", crate, "--lib", ...(filter ? [filter] : []), "--", "--nocapture"], this.repoRoot);
-}
-return;
-}
-throw new Error('Unknown owned verification '+segments.join(' '));
-}
-}
-
-/** 📦️ Every Cargo package the semio artifact family is cut into: the members of its own workspace. */
-const familyRoot = resolve(import.meta.dir, "../..");
-const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
-
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio", { packages: familyPackages, ...{ twins: [{ name: "retained-extrusion", run: retainedExtrusionOracle }, { name: "conversion-contributions", run: runCargoCapabilityContributionChecks }] }, commands: { verify: OwnedVerifyScript, composition: CompositionScript, "test-text-receiving-source":TextReceivingSource, "test-text-receiving-native":TextReceivingNative }, snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTests: [
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript).register("composition", CompositionScript).register("test-text-receiving-source", TextReceivingSource).register("test-text-receiving-native", TextReceivingNative);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio", { packages: familyPackages, ...{ twins: [{ name: "retained-extrusion", run: retainedExtrusionOracle }, { name: "conversion-contributions", run: runCargoCapabilityContributionChecks }] }, commands: router, snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTests: [
 "../../🧪️tests/🪶️sqlite/🛬️native/🟦️.ts",
 "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
 "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔺️geometry/🟦️.ts",
@@ -133,4 +84,3 @@ await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio"
 "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
 ],
 ] });
-                                                                                                                                                                                                

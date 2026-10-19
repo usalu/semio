@@ -37,8 +37,6 @@ pub fn ui_error_state(id: &str, message: Label, retry: Option<ActionDescriptor>)
             menu: None,
             id: Some(format!("{id}.retry")),
             icon_id: IconName::RotateCw,
-            // 🚧️ Framework-level fallback copy (not app content); not yet routed through app_labels!
-            // since this SDK-level builder predates the two-axis macro — flagged for a follow-up pass.
             label: Label::data("Retry"),
             action: retry,
             style: None,

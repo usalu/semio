@@ -7,8 +7,8 @@
 #             (the content-addressed rollback target), `<workspace version>` and `latest`, printing the digest and rollback tag.
 # Release jobs run only on the repository's configured default branch. A run started from another branch skips them.
 # Each input deploys one part; both are on by default.
-# Managed release commands inherit SEMIO_BUILD_MODE=release from this workflow. Their capable Debian 12 x64 runner
-# must pass the authored preflight: at least 72 GiB available and seven writable unused loop devices, before stores open.
+# Managed release commands inherit SEMIO_BUILD_MODE=release from this workflow. The selected Debian 12 x64 runner
+# first passes generic host preflight; image production separately validates its native ELF and pinned-runtime ABI.
 # The shared check job gates either release on unit tests, course typechecking and the learner release rehearsal
 # against the current checkout's proctor. Its isolated cross-origin artifact is separate from the production CDN build.
 # One-time repository settings (the runbook lists them in order): Settings → Pages → Source "GitHub Actions", custom
@@ -74,8 +74,8 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
-      - name: Check process capabilities, ABI and finite storage before allocation
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight --scope @teaching/architecture-course
+      - name: Check generic host tools, capacity and filesystem support before allocation
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight
       - name: Install the authored dependency scopes into their owned storage
         run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
       - name: Test the course and the deployment files
@@ -103,8 +103,8 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
-      - name: Check process capabilities, ABI and finite storage before allocation
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight --scope @teaching/architecture-course
+      - name: Check generic host tools, capacity and filesystem support before allocation
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight
       - name: Install the authored dependency scopes into their owned storage
         run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
       - name: Build and verify the CDN artifact
@@ -146,8 +146,8 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
-      - name: Check process capabilities, ABI and finite storage before allocation
-        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight --scope @teaching/architecture-course
+      - name: Check generic host tools, capacity and filesystem support before allocation
+        run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo preflight
       - name: Install the authored dependency scopes into their owned storage
         run: sudo --non-interactive env "PATH=$PATH" "HOME=$HOME" "SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE" CI=true bun repo dependencies sync --all
       - name: Build the proctor image

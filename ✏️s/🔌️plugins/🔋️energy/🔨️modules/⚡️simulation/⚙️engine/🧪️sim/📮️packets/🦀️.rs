@@ -176,7 +176,7 @@ impl EnergyJobAuthority {
             return Err(EnergyWireRejection::Saturated);
         }
         if kind == EnergyWireKind::Checkpoint && self.input_identity.digest().is_none() { return Err(EnergyWireRejection::Identity); }
-        self.wire_build = Some(EnergyWireBuild { kind, identity: self.wire_identity(sequence), writer: semio_framework_job::RetainedJobPayloadWriter::new(stream), field: 0 });
+        self.wire_build = Some(EnergyWireBuild { kind, identity: self.wire_identity(sequence), writer: semio_framework_job_payload::RetainedJobPayloadWriter::new(stream), field: 0 });
         Ok(())
     }
 

@@ -1,4 +1,4 @@
-//! binary rep for stdio.gltf 🔺️diff
+//! 🧱️ binary rep for stdio.gltf 🔺️diff
 
 use crate::standards::v2_0::subsets::any::schema::diff::*;
 use crate::standards::v2_0::subsets::any::schema::diff_aggregate::*;

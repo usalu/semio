@@ -122,15 +122,12 @@ struct Resolver<'a> {
 }
 
 impl<'a> Resolver<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(step: &'a StepSnapshot) -> Self {
         Self { by_id: step.entities.iter().map(|e| (e.id, e)).collect() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn get(&self, id: u64) -> Option<&'a StepEntity> {
         self.by_id.get(&id).copied()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn point(&self, id: u64) -> Result<SemioPoint3, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling CARTESIAN_POINT reference #{id}"))?;
         let args = args_for_type(e, "CARTESIAN_POINT").ok_or_else(|| format!("#{id} is not a CARTESIAN_POINT"))?;
@@ -141,7 +138,6 @@ impl<'a> Resolver<'a> {
             z: coords.get(2).and_then(as_real).unwrap_or(0.0),
         })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn direction(&self, id: u64) -> Result<SemioPoint3, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling DIRECTION reference #{id}"))?;
         let args = args_for_type(e, "DIRECTION").ok_or_else(|| format!("#{id} is not a DIRECTION"))?;
@@ -152,14 +148,12 @@ impl<'a> Resolver<'a> {
             z: coords.get(2).and_then(as_real).unwrap_or(0.0),
         })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn vector_direction(&self, id: u64) -> Result<SemioPoint3, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling VECTOR reference #{id}"))?;
         let args = args_for_type(e, "VECTOR").ok_or_else(|| format!("#{id} is not a VECTOR"))?;
         let dir_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("VECTOR #{id}: orientation not a reference"))?;
         self.direction(dir_ref)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn axis_placement(&self, id: u64) -> Result<(SemioPoint3, SemioPoint3), String> {
         let e = self.get(id).ok_or_else(|| format!("dangling AXIS2_PLACEMENT_3D reference #{id}"))?;
         let args = args_for_type(e, "AXIS2_PLACEMENT_3D").ok_or_else(|| format!("#{id} is not an AXIS2_PLACEMENT_3D"))?;
@@ -174,7 +168,6 @@ impl<'a> Resolver<'a> {
 
     /// 🧵️ `LINE`/`CIRCLE`/`ELLIPSE`/`B_SPLINE_CURVE_WITH_KNOTS` (+ `RATIONAL_B_SPLINE_CURVE`) ->
     /// `BrepCurve`. `Err` for any other curve entity — see module doc comment.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn curve(&self, id: u64) -> Result<BrepCurve, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling curve reference #{id}"))?;
         if let Some(args) = args_for_type(e, "LINE") {
@@ -221,7 +214,6 @@ impl<'a> Resolver<'a> {
     /// 🗺️ `PLANE`/`CYLINDRICAL_SURFACE`/`CONICAL_SURFACE`/`SPHERICAL_SURFACE`/
     /// `TOROIDAL_SURFACE`/`B_SPLINE_SURFACE_WITH_KNOTS` (+ `RATIONAL_B_SPLINE_SURFACE`) ->
     /// `BrepSurface`. `Err` for any other surface entity — see module doc comment.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn surface(&self, id: u64) -> Result<BrepSurface, String> {
         let e = self.get(id).ok_or_else(|| format!("dangling surface reference #{id}"))?;
         if let Some(args) = args_for_type(e, "PLANE") {

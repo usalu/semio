@@ -9,7 +9,7 @@ export interface GifDimensions {
 }
 
 export interface GifInference {
-  /** @derived */
+  /** 📏️ @derived */
   dimensions: GifDimensions;
 }
 

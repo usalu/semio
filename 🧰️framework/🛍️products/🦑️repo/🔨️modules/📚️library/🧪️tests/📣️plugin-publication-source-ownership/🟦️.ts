@@ -11,6 +11,7 @@ const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
 
 type Owner = Readonly<{ path: string; exports: readonly string[] }>;
 type Fixture = Readonly<{
+  packageManifests: readonly string[];
   owners: readonly Owner[];
   routers: readonly Readonly<{ path: string; maximumLines: number }>[];
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
@@ -42,13 +43,31 @@ function exportedNames(path: string): ReadonlySet<string> {
   return names;
 }
 
+function facadeOwners(facade: string): readonly string[] {
+  const own = relative(repoRoot, facade).replaceAll("\\", "/");
+  if (!existsSync(facade)) return [own];
+  const body = readFileSync(facade, "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/gu, "").trim();
+  const reexports = [...body.matchAll(/export\s+(?:type\s+)?(?:\*|\{[^}]*\})\s+from\s+"(\.[^"]+)";?/gu)];
+  const pure = reexports.length > 0 && reexports.map((match) => match[0]).join("").replace(/\s+/gu, "") === body.replace(/\s+/gu, "");
+  return pure ? reexports.map((match) => relative(repoRoot, resolve(dirname(facade), match[1]!)).replaceAll("\\", "/")) : [own];
+}
+
+const packageSpecifierOwners: ReadonlyMap<string, readonly string[]> = new Map(fixture.packageManifests.flatMap((manifestPath) => {
+  const manifestFile = resolve(repoRoot, manifestPath);
+  const manifest = JSON.parse(readFileSync(manifestFile, "utf8")) as { name: string; exports: Record<string, string> };
+  return Object.entries(manifest.exports).filter((entry): entry is [string, string] => typeof entry[1] === "string").map(([subpath, target]) => [manifest.name + subpath.slice(1), facadeOwners(resolve(dirname(manifestFile), target))] as const);
+}));
+
 function directRelativeModules(path: string): ReadonlySet<string> {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   expect(parsedDiagnostics(source), path).toHaveLength(0);
   const modules = new Set<string>();
   const add = (specifier: ts.Expression | undefined) => {
-    if (!specifier || !ts.isStringLiteral(specifier) || !specifier.text.startsWith(".")) return;
-    modules.add(relative(repoRoot, resolve(dirname(path), specifier.text)).replaceAll("\\", "/"));
+    if (!specifier || !ts.isStringLiteral(specifier)) return;
+    const packaged = packageSpecifierOwners.get(specifier.text);
+    for (const owner of packaged ?? []) modules.add(owner);
+    if (!specifier.text.startsWith(".")) return;
+    for (const owner of facadeOwners(resolve(dirname(path), specifier.text))) modules.add(owner);
   };
   const visit = (node: ts.Node) => {
     if (ts.isImportDeclaration(node)) add(node.moduleSpecifier);

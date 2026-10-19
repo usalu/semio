@@ -1,5 +1,6 @@
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_region::*;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::replace_region;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -16,7 +17,7 @@ use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchRegion) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
@@ -64,7 +65,7 @@ async fn patch_region_with_the_current_value_emits_nothing_2d() {
 /// 👥️ Two inspector commands authored on one base compose their independent intent in either replay order.
 #[test]
 fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
+    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
     let first=emit(&base,PatchRegion{id:"r1".into(),field:"name".into(),value:"Mine".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchRegion{id:"r1".into(),field:"thickness".into(),value:"0.3".into()}).unwrap().artifact_mutations.remove(0);
     let first_then_second=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;

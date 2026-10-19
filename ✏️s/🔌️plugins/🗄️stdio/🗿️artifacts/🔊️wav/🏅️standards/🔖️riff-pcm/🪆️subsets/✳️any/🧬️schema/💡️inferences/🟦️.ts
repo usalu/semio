@@ -7,7 +7,7 @@ export interface WavDuration {
 }
 
 export interface WavInference {
-  /** @derived */
+  /** ⏱️ @derived */
   duration: WavDuration;
 }
 

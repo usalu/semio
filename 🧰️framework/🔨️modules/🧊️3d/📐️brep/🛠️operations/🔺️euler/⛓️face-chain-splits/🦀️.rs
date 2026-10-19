@@ -53,10 +53,10 @@ pub fn split_face_by_chain(body: &mut Body, face: FaceId, chain: &[ParametricEdg
         return Err(KernelError::Operation("imprint edge does not partition the outer loop into two non-empty chains".into()));
     }
 
-    let mut members_a = chain_ab; // va -> vb along the boundary
-    members_a.extend(chain.iter().rev().map(|&(edge, forward, pcurve, prange)| (edge, !forward, pcurve, prange))); // vb -> va along the chain
-    let mut members_b = chain_ba; // vb -> va along the boundary
-    members_b.extend_from_slice(chain); // va -> vb along the chain
+    let mut members_a = chain_ab;
+    members_a.extend(chain.iter().rev().map(|&(edge, forward, pcurve, prange)| (edge, !forward, pcurve, prange)));
+    let mut members_b = chain_ba;
+    members_b.extend_from_slice(chain);
 
     for cid in body.loop_coedges(outer) {
         body.coedges.remove(cid);
@@ -158,8 +158,6 @@ pub fn split_face_by_interior_chain(body: &mut Body, face: FaceId, chain: &[Para
     let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
     let outer = face_data.outer.ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
     let (outer_sign, chain_sign) = match body.surfaces.get(face_data.surface).and_then(|surface| surface.normal(0.0, 0.0)) {
-        // 🧭️ A ring on a plane (a box face) carries no p-curves, so its UV area reads 0; both windings
-        // are measured in 3D about the plane's own normal instead — the same reference for both.
         Some(normal) if matches!(body.surfaces.get(face_data.surface), Some(Surface::Plane { .. })) => {
             (points_signed_area_about(&loop_3d_points(body, outer), normal).signum(), points_signed_area_about(&chain_3d_points(body, chain), normal).signum())
         }

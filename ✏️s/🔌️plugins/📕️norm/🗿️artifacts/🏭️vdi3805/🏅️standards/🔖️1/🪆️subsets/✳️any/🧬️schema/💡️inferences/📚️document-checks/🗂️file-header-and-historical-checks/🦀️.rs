@@ -4,7 +4,6 @@ use super::*;
 
 /// 🗂️ Catalog file header checks of [`check_catalog_integrity`] (header version, building-system number, created date, manufacturer, charset), moved out unchanged.
 pub(super) fn check_catalog_file_header(document: &Vdi3805Snapshot, out: &mut Vec<CheckResult>) {
-    // Header version / building-system / created (VDI 3805-1 §4.1–4.3) — single header at catalog.file.
     let file = &document.catalog.file;
     let expected_hv = "3805";
     let hv_ok = file.header_version == expected_hv;
@@ -32,7 +31,6 @@ pub(super) fn check_catalog_file_header(document: &Vdi3805Snapshot, out: &mut Ve
     out.push(hv.build());
 
     let sheets: BTreeSet<u16> = document.catalog.products.iter().map(|p| p.sheet.0).collect();
-    // Building-system (Gewerk) number must be consistent with product sheets' domain (VDI 3805-1 §4.2).
     let bsn = &file.building_system_number;
     let bsn_ok = !bsn.system_code.is_empty()
         && !bsn.subsystem.is_empty()
@@ -69,7 +67,6 @@ pub(super) fn check_catalog_file_header(document: &Vdi3805Snapshot, out: &mut Ve
     }
     out.push(bs.build());
 
-    // created vs correctionAsOf / edition dates (VDI 3805-1 §4.3).
     let created_ok = {
         let parts: Vec<_> = file.created.split('-').collect();
         if parts.len() == 3 && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit())) {

@@ -1,13 +1,59 @@
 {
   "cases": [
-    {"name": "Inactive Unpublished Generation Is Retained", "fault": "none", "retained": true},
-    {"name": "Associated Image Is Retained In Place", "fault": "associated", "retained": false},
-    {"name": "Underlying Mount Payload Is Retained In Place", "fault": "mount-payload", "retained": false},
-    {"name": "Unknown Envelope Entry Is Retained In Place", "fault": "foreign-entry", "retained": false},
-    {"name": "Existing Quarantine Is Never Replaced", "fault": "collision", "retained": false},
-    {"name": "Replaced Backing Is Retained In Place", "fault": "changed-backing", "retained": false},
-    {"name": "Replaced Parent Is Refused", "fault": "changed-parent", "retained": false},
-    {"name": "Writer Proof Is Required", "fault": "writer", "retained": false},
-    {"name": "Funded Child Claim Cannot Be Replaced", "fault": "child", "retained": false}
+    {
+      "name": "Inactive Unpublished Generation Is Retained",
+      "fault": "none",
+      "retained": true
+    },
+    {
+      "name": "Associated Image Is Retained In Place",
+      "fault": "associated",
+      "retained": false
+    },
+    {
+      "name": "Underlying Mount Payload Is Retained In Place",
+      "fault": "mount-payload",
+      "retained": false
+    },
+    {
+      "name": "Unknown Envelope Entry Is Retained In Place",
+      "fault": "foreign-entry",
+      "retained": false
+    },
+    {
+      "name": "Existing Quarantine Is Never Replaced",
+      "fault": "collision",
+      "retained": false
+    },
+    {
+      "name": "Replaced Backing Is Retained In Place",
+      "fault": "changed-backing",
+      "retained": false
+    },
+    {
+      "name": "Replaced Parent Is Refused",
+      "fault": "changed-parent",
+      "retained": false
+    },
+    {
+      "name": "Writer Proof Is Required",
+      "fault": "writer",
+      "retained": false
+    },
+    {
+      "name": "Funded Child Claim Cannot Be Replaced",
+      "fault": "child",
+      "retained": false
+    },
+    {
+      "name": "Interrupted Swap Is Recovered Then Retained",
+      "fault": "swap-pending",
+      "retained": true
+    },
+    {
+      "name": "Interrupted Swap Completed Attached Is Detached Then Retained",
+      "fault": "swap-pending-attached",
+      "retained": true
+    }
   ]
 }

@@ -14,8 +14,6 @@ use semio_hub_space_commands_authoring::delete_selection::DeleteSelection;
 async fn delete_selection_removes_the_live_selected_node() {
     seed_draw_plugin().await;
     let mut app = app_with_registry().await;
-    // 🔁️ A retained tool command only returns an admission receipt — the document is not published
-    // until the operation settles, so every dispatch here is followed by its settle step.
     let receiver = meta("local").instance_id;
     dispatch(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 10.0, y: 10.0 })).await;
     let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("spawnApp publication");

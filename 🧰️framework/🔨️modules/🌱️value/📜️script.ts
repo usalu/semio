@@ -1,24 +1,13 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runTestScript } from "./🧪️tests/🔬️script-commands/🟦️.ts";
 
 /** 🌱️ Runs the schema-first neutral value ownership and actual products-absent compiler laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const suite=args.shift();
-    if(suite==="std-copy-selection"||suite==="clone-source-custody"){const file=resolve(this.root,suite==="std-copy-selection"?"🧬️retained-clone/🧺️std-collections/🧪️tests/🟦️.ts":"🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts");await runOwnedCommand(process.execPath,["test",file],this.root,`value:${suite}`,120000);await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,`value:${suite}:types`,120000);return;}
-    if(suite==="scalar-retained"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts"),...args],this.root,"value:scalar-retained",120000);return;}
-    if(suite==="uncontrolled-owners"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"♻️retirement/🔓️uncontrolled-owners/🧪️tests/🟦️.ts"),...args],this.root,"value:uncontrolled-owners",120000);return;}
-    if(suite==="bulk-vec-retained"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts"),...args],this.root,"value:bulk-vec-retained",120000);return;}
-    if(suite==="dynamic-retained"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧬️retained-clone/🌱️dynamic/🧪️tests/🟦️.ts"),...args],this.root,"value:dynamic-retained",120000);return;}
-    if(suite==="list-reservation"||suite==="ordered-wire"||suite==="ordered-remove"){const file=resolve(this.root,suite==="list-reservation"?"📋️list/🧪️tests/📋️list/🟦️.ts":suite==="ordered-remove"?"🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🟦️.ts":"🧬️retained-clone/🗺️ordered-map/🧪️tests/📋️wire/🟦️.ts");await runOwnedCommand(process.execPath,["test",file],this.root,"value:ordered-wire",120000);await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,"value:ordered-wire:types",120000);return;}
-    if(suite==="boxed-factory"||suite==="shared-unique"){const file=resolve(this.root,suite==="shared-unique"?"♻️retirement/🔗️arc-custody/🔐️unique/🧪️tests/🟦️.ts":"♻️retirement/🏭️factory/📦️boxed/🧪️tests/🟦️.ts");await runOwnedCommand(process.execPath,["test",file,...args],this.root,`value:${suite}`,120000);await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],this.repoRoot,`value:${suite}:types`,120000);return;}
-    if(suite==="heap-owner"){await runOwnedCommand(process.execPath,["test",resolve(this.root,"♻️retirement/🧪️tests/🧺️heap.ts"),...args],this.root,"value:heap-owner",120000);return;}
-    if(suite!=="neutral-owner"&&suite!=="controlled-construction")throw new Error("value test requires an explicitly owned suite");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root,suite==="neutral-owner"?"🧪️tests/🧩️neutral-owner/🟦️.ts":"🔁️codec/🧪️tests/🛬️controlled/🟦️.ts"), ...args], this.root, "value:neutral-owner", 120000);
+    await runTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, defaultCommand: "test" }));

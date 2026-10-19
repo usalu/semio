@@ -128,7 +128,6 @@ fn absorb_law_insert_then_set_field_patches_into_added() {
 #[test]
 fn absorb_law_remove_then_modify_transports_to_correct_surviving_item() {
     let mut d1 = GltfNodesDiff { removed: vec![0], ..Default::default() };
-    // after d1, base[1] is now at position 0 -- d2 modifies position 0 (== base[1]).
     let d2 = GltfNodesDiff { modified: vec![GltfModified { index: 0, diff: GltfNodeDiff { name: Some(Some("x".into())), ..Default::default() } }], ..Default::default() };
     d1.absorb(d2);
     assert_eq!(d1.removed, vec![0]);

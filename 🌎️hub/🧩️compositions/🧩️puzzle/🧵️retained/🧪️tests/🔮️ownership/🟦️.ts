@@ -27,7 +27,8 @@ describe("Puzzle retained laws belong to their actual selected owner", () => {
     });
 
     test(`${artifact.name} retains its actual fixture and full package route`, () => {
-      expect(read(artifact.script)).not.toContain('"--features"');
+      const route = read(artifact.script);
+      expect(route.slice(route.indexOf("await runArtifactRustPackageMain"))).not.toContain('"--features"');
       expect(read("🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts")).not.toContain('"--features"');
       const actual = evaluate(read(artifact.fixture));
       expect(actual.vectorIds.slice(0, vectorIds.length)).toEqual(vectorIds);

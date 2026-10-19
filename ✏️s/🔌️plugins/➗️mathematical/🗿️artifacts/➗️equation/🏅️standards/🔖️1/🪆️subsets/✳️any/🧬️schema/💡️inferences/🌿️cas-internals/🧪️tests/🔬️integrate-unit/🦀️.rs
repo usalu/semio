@@ -42,7 +42,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn integrate_simple_partial_fraction() {
         let x = Expr::symbol("x");
-        // 1/((x-1)(x+1)) integrates to (1/2)ln|x-1| - (1/2)ln|x+1| (up to grouping)
         let den = (x.clone() - Expr::integer(1)) * (x.clone() + Expr::integer(1));
         let e = Expr::pow(den, Expr::integer(-1));
         let result = integrate(&e, &x).unwrap();
@@ -52,7 +51,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn integrate_u_substitution() {
         let x = Expr::symbol("x");
-        // 2x * cos(x^2) -> sin(x^2)
         let inner = Expr::pow(x.clone(), Expr::integer(2));
         let e = Expr::mul(vec![Expr::integer(2), x.clone(), Expr::func(FnKind::Cos, vec![inner])]);
         let result = integrate(&e, &x).unwrap();
@@ -78,7 +76,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn integrate_irreducible_quadratic_denominator() {
         let x = Expr::symbol("x");
-        // 1/(x^2+1) -> atan(x)
         let e = Expr::pow(Expr::pow(x.clone(), Expr::integer(2)) + Expr::integer(1), Expr::integer(-1));
         let result = integrate(&e, &x).unwrap();
         assert!(diff_matches(&e, &x, &result));
@@ -95,7 +92,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn residue_at_simple_pole() {
         let x = Expr::symbol("x");
-        // 1/(x-2) has residue 1 at x=2
         let e = Expr::pow(x.clone() - Expr::integer(2), Expr::integer(-1));
         assert_eq!(residue(&e, &x, &Expr::integer(2)), Some(Expr::integer(1)));
     }

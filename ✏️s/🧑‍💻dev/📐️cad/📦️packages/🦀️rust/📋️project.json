@@ -9,7 +9,12 @@
   "targets": {
     "source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
@@ -18,7 +23,7 @@
     },
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts check",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
@@ -27,7 +32,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
@@ -50,7 +55,7 @@
           }
         }
       },
-      "outputs": []
+      "outputs": ["{projectRoot}/.🧾️store/wasm.json"]
     },
     "browser-test": {
       "executor": "repo:script",

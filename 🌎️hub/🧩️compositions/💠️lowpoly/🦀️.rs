@@ -35,8 +35,6 @@ pub fn plugin() -> Result<Plugin<LowpolyApps>, PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::lowpoly::LowpolyPlayApp>()
         .viewer::<crate::viewer::lowpoly::LowpolyViewer>(crate::viewer::lowpoly::create_lowpoly_viewer())
         .viewer_mutation_roster::<crate::viewer::lowpoly::LowpolyViewer>()
-        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
-        // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed.
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::lowpoly::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {

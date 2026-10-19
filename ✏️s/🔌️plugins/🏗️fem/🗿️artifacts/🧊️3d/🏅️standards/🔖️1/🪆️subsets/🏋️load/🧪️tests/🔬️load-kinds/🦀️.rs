@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` load mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/⏸️dup-load-id-4f4a0a/🦀️.rs"]
 mod add_load_edge_dup_load_id;
@@ -32,3 +33,5 @@ mod replace_load_no_such_case;
 mod replace_load_no_such_load;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🪪️renames-load-a535c9/🦀️.rs"]
 mod replace_load_renames_load;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-load/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_load_field_intent;

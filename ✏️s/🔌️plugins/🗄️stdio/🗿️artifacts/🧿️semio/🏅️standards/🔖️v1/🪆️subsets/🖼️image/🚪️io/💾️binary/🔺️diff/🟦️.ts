@@ -5,6 +5,6 @@ export interface Semio_semio_image_diffEntry {
   value: string;
 }
 export interface Semio_semio_image_diff {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Semio_semio_image_diffEntry[];
+  /** 🧱️ @state artifact */ schema: string;
+  /** 🔢️ @state artifact */ entries: Semio_semio_image_diffEntry[];
 }

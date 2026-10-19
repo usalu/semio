@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {parseFemFixedDofs as planar} from "../../../📸️snapshot/🟦️.ts";
 import {parseFemFixedDofs as volumetric} from "../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/🎟️fixed-dofs/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 /** 🔒️ Every canonical restraint subset agrees across actual dimensions and independent SQLite. */

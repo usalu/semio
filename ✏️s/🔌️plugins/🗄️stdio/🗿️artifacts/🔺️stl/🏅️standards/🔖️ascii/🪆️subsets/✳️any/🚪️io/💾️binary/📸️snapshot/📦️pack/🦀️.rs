@@ -29,7 +29,7 @@ pub(crate)fn record_controlled(snapshot:&StlSnapshot,control:&mut semio_framewor
  for value in &snapshot.triangles{control.step()?;triangles.push(Facet{normal:value.normal.into(),vertex0:value.vertices[0].into(),vertex1:value.vertices[1].into(),vertex2:value.vertices[2].into()});}
  Snapshot{schema,solid_name,triangles}.__dsl_to_record_controlled(control)
 }
-pub(crate)fn reconstruct_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<StlSnapshot,ValueError>{
+pub(crate)fn reconstruct_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<StlSnapshot,ValueError>{
  control.checkpoint()?;let count=match record.fields.get(&2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"STL native facet list differs"))};
  let rows=count.checked_mul(4).and_then(|n|n.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"STL native row count overflow"))?;if rows>maximum_rows{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"STL native row limit"))}
  let Snapshot{schema,solid_name,triangles}=Snapshot::__dsl_from_record_controlled(record,control)?;

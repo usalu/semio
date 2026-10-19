@@ -13,6 +13,13 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -21,6 +28,7 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -29,6 +37,15 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -37,7 +54,14 @@
     },
     "test-subset-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -47,7 +71,15 @@
     },
     "test-entity-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "generate"
@@ -59,9 +91,14 @@
     },
     "test-mutation-leaf-registration": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/**/*"
       ],
@@ -73,9 +110,14 @@
     },
     "test-neutrality": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{projectRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🧾️wire/🦀️.rs",
@@ -108,7 +150,29 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧫️fixtures/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🏷️entity-kinds/📏️ownership/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   }
 }

@@ -5,6 +5,10 @@
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/**/*.rs",
       "{projectRoot}/**/*"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {

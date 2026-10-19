@@ -1,4 +1,4 @@
-import {encodeScopedIdentity} from "../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts";
+import {encodeScopedIdentity} from "@semio-tech/framework-replication";
 import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
 import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 
@@ -102,23 +102,23 @@ export interface FemAnalysisSettings {
 //#endregion 🔖️Entities
 
 export interface Fem2dSnapshot {
-  /** @state artifact */
+  /** 🔘️ @state artifact */
   nodes: FemNode[];
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   elements: FemElement[];
-  /** @state artifact */
+  /** 🗾️ @state artifact */
   regions: FemRegion[];
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   materials: FemMaterial[];
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections: FemSection[];
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   supports: FemSupport[];
-  /** @state artifact */
+  /** ⚖️ @state artifact */
   loadCases: FemLoadCase[];
-  /** @state artifact */
+  /** 🗃️ @state artifact */
   combinations: FemCombination[];
-  /** @state artifact */
+  /** 🔭️ @state artifact */
   analysis: FemAnalysisSettings;
 }
 

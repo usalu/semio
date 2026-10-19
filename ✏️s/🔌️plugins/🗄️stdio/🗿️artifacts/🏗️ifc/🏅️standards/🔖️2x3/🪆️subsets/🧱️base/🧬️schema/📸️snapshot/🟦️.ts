@@ -20,7 +20,7 @@ export interface Ifc2x3EdmPreamble {
   headerModelCreationDate: string; user: string; group: string; license: string; options: string;
 }
 export interface Ifc2x3Snapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ document: Part21Document;
-  /** @state artifact */ edmPreamble?: Ifc2x3EdmPreamble;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📄️ @state artifact */ document: Part21Document;
+  /** 🔝️ @state artifact */ edmPreamble?: Ifc2x3EdmPreamble;
 }

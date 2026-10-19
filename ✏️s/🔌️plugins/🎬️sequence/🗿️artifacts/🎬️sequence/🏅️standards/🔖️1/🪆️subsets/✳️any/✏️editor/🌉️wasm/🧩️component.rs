@@ -71,7 +71,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_POINTER_UP => self.pointer_up(payload),
             SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
             SEQUENCE_OPERATION_REORGANIZE => {
-                let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
+                let mut progress=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
                 let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.reorganize(&options,&mut control).map_err(domain_error)?;
                 self.host.sync_from_dag();
                 self.host.layout_expanded_slots();
@@ -90,7 +90,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_SET_THEME => {
                 let json = std::str::from_utf8(payload).map_err(|_| abi_failure(AbiErrorCode::InvalidUtf8))?;
                 let mut accepted = |_| true;
-                let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+                let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
                 let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(domain_error)?;
                 self.host.dag.set_canvas_palette(&overlay);
                 Ok(Vec::new())

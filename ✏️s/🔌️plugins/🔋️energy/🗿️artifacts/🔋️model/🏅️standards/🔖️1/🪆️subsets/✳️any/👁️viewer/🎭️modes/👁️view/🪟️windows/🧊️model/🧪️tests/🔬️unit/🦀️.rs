@@ -11,7 +11,6 @@ async fn definition_declares_a_world3d_window() {
     assert_eq!(def.id, WINDOW_KIND_ID);
     assert_eq!(def.body_key, BODY_KEY);
     assert_eq!(def.surface_kind, SurfaceKind::World3d);
-    // 🎥️ The ONE verb a read-only 3d window owns: the orbit pose the host dispatches on its own.
     assert_eq!(def.actions.len(), 1, "a viewer window declares its camera and nothing else");
     assert_eq!(def.actions[0].id, SET_CAMERA_ACTION_ID);
     assert_eq!(def.actions[0].kind, ActionKind::View, "a camera is never a document mutation");
@@ -29,7 +28,6 @@ async fn a_stored_camera_replaces_the_model_derived_one_and_changes_nothing_else
 
     assert_ne!(bare.camera_json, stored.camera_json, "a retained pose really replaces the model-derived camera");
     assert_eq!(stored.camera_json, pose.scene_camera_json());
-    // 🎥️ …and NOTHING else moves, so republishing the host's own echo never re-arms the auto fit.
     assert_eq!(bare.meshes_json, stored.meshes_json);
     assert_eq!(bare.instances_json, stored.instances_json);
     assert_eq!(bare.fit_json, stored.fit_json);
@@ -50,7 +48,6 @@ async fn render_shows_the_same_geometry_as_the_editor_twin_without_a_domain() {
         assert!(scene.instances_json.contains(&format!("\"id\":\"{}\"", window.id.0)), "window {} has no instance: {}", window.id.0, scene.instances_json);
     }
 
-    // 🧊️ The two surfaces must publish byte-identical geometry: one builder, two windows.
     let (meshes_json, instances_json) = crate::scene::energy_model_scene_parts(&model, &EnergySceneStyle::default());
     assert_eq!(scene.meshes_json, meshes_json);
     assert_eq!(scene.instances_json, instances_json);

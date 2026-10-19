@@ -1,4 +1,4 @@
-//! `upsert-bridge-fatigue` — upsert a `BridgeFatigue` by id into `bridge_fatigue`.
+//! 🧬️ `upsert-bridge-fatigue` — upsert a `BridgeFatigue` by id into `bridge_fatigue`.
 
 use semio_s_artifact_norm_en1993_model::{BridgeFatigue, En1993Snapshot};
 

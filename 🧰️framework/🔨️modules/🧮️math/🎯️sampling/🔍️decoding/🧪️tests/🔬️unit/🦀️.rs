@@ -75,12 +75,6 @@ async fn beam_search_finds_the_highest_probability_short_sequence() {
     let vocab = Vocabulary::new(4).await.with_eos(vec![TokenId::new(3)]).await;
     let beam_config = BeamSearchConfig { width: 4, length_penalty: 1.0, max_steps: 3 };
     let initial = SequenceState::new(SequenceId::new(1), Vec::new(), &config, CounterRng::from_seed(0).await.into()).await.unwrap();
-    // 🌳️ Token 1 dominates for the first two steps (building the best possible 2-token prefix);
-    // from step 2 on, EOS (token 3) overwhelmingly dominates every beam alike, so whichever beam
-    // carries the best prefix into that step produces the overall best-scoring finished
-    // hypothesis: "1, 1, 3". Raw (non-length-normalized) cumulative log-probability would instead
-    // favor never stopping ("1, 1, 1, ...") — this scenario is deliberately shaped so the length
-    // penalty isn't what's under test, only "beam search finds the argmax-per-step path".
     let hypotheses = beam_search(&config, &beam_config, &vocab, None, initial, async |state| if state.generated().await.len() < 2 { vec![0.0, 3.0, -5.0, -5.0] } else { vec![-5.0, -5.0, -5.0, 10.0] }).await.unwrap();
     assert!(!hypotheses.is_empty());
     let best = &hypotheses[0];
@@ -95,7 +89,6 @@ async fn beam_search_hypotheses_have_independent_state() {
     let initial = SequenceState::new(SequenceId::new(1), Vec::new(), &config, CounterRng::from_seed(0).await.into()).await.unwrap();
     let hypotheses = beam_search(&config, &beam_config, &vocab, None, initial, async |_state| vec![1.0, 2.0, 3.0, 0.5]).await.unwrap();
     assert!(hypotheses.len() >= 2);
-    // 🌳️ Every surviving hypothesis's fork is a distinct SequenceState with its own id-derived RNG.
     let mut ids: std::collections::HashSet<u64> = std::collections::HashSet::new();
     for h in &hypotheses {
         ids.insert(h.state.id().await.get());
@@ -169,8 +162,6 @@ async fn speculative_decode_rejects_and_resamples_when_draft_disagrees_with_targ
     let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, CounterRng::from_seed(0).await.into()).await.unwrap();
     let mut ws = LogitsWorkspace::new(4).await;
     let mut observer: SamplingObservers = NullObserver.into();
-    // 🎲️ Draft proposes token 0 with high confidence, but the target model overwhelmingly
-    // prefers token 1 — acceptance probability is near zero, so this should almost always reject.
     let draft_tokens = [TokenId::new(0)];
     let draft_distributions = vec![vec![0.99f32, 0.01, 0.0, 0.0]];
     let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_distributions, async |_state| vec![-10.0, 10.0, -10.0, -10.0], &mut observer).await.unwrap();
@@ -182,13 +173,10 @@ async fn speculative_decode_rejects_and_resamples_when_draft_disagrees_with_targ
 
 #[semio_framework_async_macros::async_test]
 async fn speculative_decode_matches_direct_target_sampling_distribution() {
-    // ⚡️ Statistical check: over many trials, the *marginal* distribution of the first token
-    // speculative decoding produces should match sampling directly from the target logits —
-    // the defining correctness property of exact speculative decoding.
     let config = SamplingConfig { method: SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch }, ..SamplingConfig::default() };
     let vocab = Vocabulary::new(3).await;
     let target = [0.0f32, 1.0, 2.0];
-    let draft_probs_dist = [0.5f32, 0.3, 0.2]; // a plausible, imperfect draft distribution
+    let draft_probs_dist = [0.5f32, 0.3, 0.2];
 
     let trials = 4_000;
     let mut counts_spec = [0u32; 3];
@@ -196,7 +184,6 @@ async fn speculative_decode_matches_direct_target_sampling_distribution() {
         let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, CounterRng::from_seed(seed).await.into()).await.unwrap();
         let mut ws = LogitsWorkspace::new(3).await;
         let mut observer: SamplingObservers = NullObserver.into();
-        // Draft token drawn from the (imperfect) draft distribution using a simple counter rng.
         let mut draft_rng = CounterRng::from_seed(seed ^ 0xD3AF).await;
         let cdf = cumulative_from_probs(&draft_probs_dist).await;
         let draft_token = TokenId::new(cdf_binary_search(&cdf, draft_rng.next_f64().await).await as u32);
@@ -231,9 +218,6 @@ async fn sharded_softmax_matches_unsharded_softmax() {
     let full_logits = [1.0f32, 2.0, 0.5, 3.0, -1.0, 0.2, 4.0, 0.1];
     let mut ws = LogitsWorkspace::new(8).await;
     ws.reset_for_step(&full_logits, SanitizePolicy::NegInfNan).await.unwrap();
-    // 📐️ `softmax_over_live`'s return value is the raw pre-normalization partition sum (useful
-    // for e.g. logsumexp), not the post-normalization probability sum — check `ws.probs()` for
-    // that instead.
     ws.softmax_over_live().await;
     let mut unsharded_probs = [0.0f32; 8];
     for (&tok, &p) in ws.live().await.iter().zip(ws.probs().await.iter()) {
@@ -247,7 +231,6 @@ async fn sharded_softmax_matches_unsharded_softmax() {
     let mut ranks = LocalCollective::new_group(2).await;
     let mut rank1 = ranks.pop().unwrap();
     let mut rank0 = ranks.pop().unwrap();
-    // 🗂️ Two-phase mailbox convention: call every rank once, then again to read the merged result.
     let _ = sharded_softmax(&mut rank0, shard0).await;
     let _ = sharded_softmax(&mut rank1, shard1).await;
     let sharded0 = sharded_softmax(&mut rank0, shard0).await;

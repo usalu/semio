@@ -10,7 +10,7 @@ use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::Shape;
 use semio_framework_dsl_record::NativeSchemaControl;
 use semio_framework_value::NativeEncodeControl;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::ValueError;
 use semio_framework_value::{FromValue,ValueRefusalKind,ValueType,DecodedValue};
 macro_rules! scalar {

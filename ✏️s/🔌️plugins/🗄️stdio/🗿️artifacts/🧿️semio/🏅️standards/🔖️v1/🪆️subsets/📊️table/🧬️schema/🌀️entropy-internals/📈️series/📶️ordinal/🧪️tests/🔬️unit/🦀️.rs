@@ -15,7 +15,7 @@ mod tests {
         let x: Vec<f64> = (0..3000).map(|_| rng.next_f64()).collect();
         let cfg = OrdinalConfig::new(3, 1).unwrap();
         let est = permutation_entropy(&x, cfg, LogBase::Bits).unwrap();
-        let max = 6.0_f64.log2(); // 3! = 6 patterns
+        let max = 6.0_f64.log2();
         assert!(est.value > 0.9 * max, "got {} max {}", est.value, max);
     }
 
@@ -36,7 +36,6 @@ mod tests {
     #[test]
     fn increment_entropy_of_constant_series_is_zero() {
         let x = vec![5.0; 100];
-        // 🔐️ all increments are exactly zero -> single symbol -> zero entropy.
         let est = increment_entropy(&x, 2, 3, LogBase::Bits).unwrap();
         assert!(est.value.abs() < 1e-9);
     }

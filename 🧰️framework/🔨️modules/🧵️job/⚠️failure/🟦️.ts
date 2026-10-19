@@ -22,8 +22,8 @@ export function faultFromOriginalTurnFailure(error:OriginalTurnFailure):Fault {
 }
 
 /** 🛬️ Receiving roles retain their exact typed causes and independent physical effects. */
-function faultFromOriginalReceiving(original:import("../../🧵️job/⚠️failure/🟦️.ts").OriginalReceivingPrimary):Fault {
- const progress=(value:typeof original.retainedProgress):import("../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts").IntrinsicValue=>({kind:"object",members:Object.entries(value).map(([name,number])=>({name,value:{kind:"unsigned" as const,value:BigInt(number)}}))});
+function faultFromOriginalReceiving(original:OriginalReceivingPrimary):Fault {
+ const progress=(value:typeof original.retainedProgress):import("@semio-tech/value-ts/schema/intrinsic").IntrinsicValue=>({kind:"object",members:Object.entries(value).map(([name,number])=>({name,value:{kind:"unsigned" as const,value:BigInt(number)}}))});
  const causes=(["primary","quoteRefusal","allocationRefusal"] as const).flatMap(name=>{const cause=original[name];return cause?[{name,value:{kind:"object" as const,members:[{name:"kind",value:{kind:"text" as const,value:cause.kind}},{name:"message",value:{kind:"text" as const,value:cause.message}},{name:"retainedProgress",value:progress(cause.retainedProgress)}]}}]:[]});
  const first=original.primary??original.quoteRefusal??original.allocationRefusal;
  return {origin:"framework",code:"original.receiving",severity:"error",message:first?.message??"Original receiving receipt refused",scope:{},retryable:false,retainedProgress:original.retainedProgress,domain:{kind:"object",members:[...causes,{name:"retainedProgress",value:progress(original.retainedProgress)}]}};

@@ -53,7 +53,7 @@ pub fn limit(e: &Expr, x: &Expr, at: &Expr, dir: Direction) -> Option<Expr> {
         return Some(series_result);
     }
 
-    let _ = dir; // one-sided refinement over the series/L'Hopital path is a documented follow-up
+    let _ = dir;
     lhopital(e, x, at, 0)
 }
 
@@ -68,7 +68,7 @@ fn limit_via_series(e: &Expr, x: &Expr, at: &Expr) -> Option<Expr> {
     match num_ord.cmp(&den_ord) {
         std::cmp::Ordering::Greater => Some(Expr::integer(0)),
         std::cmp::Ordering::Equal => Some(num_coeff * Expr::pow(den_coeff, Expr::integer(-1))),
-        std::cmp::Ordering::Less => None, // denominator vanishes to lower order: signed infinity, not resolved here
+        std::cmp::Ordering::Less => None,
     }
 }
 

@@ -1,4 +1,4 @@
-//! export leaf, the one png writer every owner shares.
+//! 📤️ export leaf, the one png writer every owner shares.
 //! puzzle2d → png — the page drawing (`puzzle2d_board_drawing`) written as an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no png import.

@@ -185,8 +185,8 @@ impl<V: FromValue> FromValue for MapDelta<V> {
         }
         Ok(result)
     }
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode(value, control) }
-    fn default_value_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::default()) }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode(value, control) }
+    fn default_value_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::default()) }
     fn retire_decoded(self) { for (_, entry) in self.entries { if let MapEntryOperation::Set(value) = entry.operation { V::retire_decoded(value); } } }
 }
 

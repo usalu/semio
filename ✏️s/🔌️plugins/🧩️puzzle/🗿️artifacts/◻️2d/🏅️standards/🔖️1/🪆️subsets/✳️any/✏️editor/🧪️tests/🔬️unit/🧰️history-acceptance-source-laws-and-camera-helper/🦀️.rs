@@ -69,10 +69,6 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
         "Puzzle2dForceStage::Integrate",
         "Puzzle2dForceStage::Emit",
     ] {
-        // 🧨️ EVERY occurrence, not the first: a stage marker like `Puzzle2dForceStage::Nodes` appears
-        // more than once in the source (its declaration and each arm that advances to it), so
-        // `replacen(.., 1)` left one behind and `cohort_routes_are_cursorized` still found it — the
-        // negative snapshot could not bite and the law proved nothing about that cursor.
         assert!(!cohort_routes_are_cursorized(&source.replace(marker, "cursor-removed")), "missing retained cursor was falsely accepted: {marker}");
     }
 }

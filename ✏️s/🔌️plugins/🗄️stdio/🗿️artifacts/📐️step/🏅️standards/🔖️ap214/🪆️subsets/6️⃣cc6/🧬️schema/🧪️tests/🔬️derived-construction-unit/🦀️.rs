@@ -22,9 +22,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn top_of_ladder_representation_injected_via_raw_mutate_still_builds() {
-        // CC6 is the top rung -- ADVANCED_BREP_SHAPE_REPRESENTATION (rung 6) is never a
-        // violation here, however it entered the snapshot; this documents that invariant
-        // honestly rather than asserting a hard failure that can never happen at cc6.
         let mut snapshot = conforming_snapshot();
         let mut doc = snapshot.to_part21_document();
         doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });

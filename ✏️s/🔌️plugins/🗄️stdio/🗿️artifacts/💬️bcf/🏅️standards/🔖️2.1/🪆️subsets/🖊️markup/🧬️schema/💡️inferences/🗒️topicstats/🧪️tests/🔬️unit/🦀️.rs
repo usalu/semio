@@ -50,7 +50,6 @@ async fn counts_topics_comments_viewpoints_and_distinct_authors() {
     assert_eq!(stats.topic_count, 2);
     assert_eq!(stats.comment_count, 3);
     assert_eq!(stats.viewpoint_count, 3);
-    // alice, bob, carol — 3 distinct authors across creation_author + comment.author.
     assert_eq!(stats.author_count, 3);
 }
 

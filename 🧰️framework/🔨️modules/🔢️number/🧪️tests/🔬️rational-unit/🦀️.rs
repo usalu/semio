@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn continued_fraction_reconstructs_convergents() {
-        let x = r(355, 113); // close approximation of pi
+        let x = r(355, 113);
         let convergents = x.convergents();
         assert_eq!(*convergents.last().unwrap().numer(), *x.numer());
         assert_eq!(*convergents.last().unwrap().denom(), *x.denom());

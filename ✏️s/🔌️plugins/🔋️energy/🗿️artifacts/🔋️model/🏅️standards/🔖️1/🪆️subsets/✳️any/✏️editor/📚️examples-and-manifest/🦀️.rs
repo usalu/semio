@@ -1,6 +1,7 @@
 //! 📚️ The registered examples, the app-level action definitions and the editor manifest constructor.
 
 use super::*;
+use semio_s_artifact_stdio_semio::editor::modes::edit;
 
 //#region 📚️Examples
 /// 📚️ The bundled `📚️examples/🎬️<slug>` fixtures, table-driven — a new example is ONE row here plus
@@ -82,20 +83,13 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .terminology_document("reuse", ["Entwerfen mit Bestand", "Energie"])
         .icon_id("battery")
         .mode_def(edit::definition())
-        .default_mode_id(edit::ENERGY_MODEL_EDIT_MODE_ID)
+        .default_mode_id(semio_s_artifact_energy_model_editor_edit::ENERGY_MODEL_EDIT_MODE_ID)
         .window_kind_def(structure::definition())
         .window_kind_def(zones::definition())
         .window_kind_def(simulation::definition())
         .window_kind_def(model_window::definition())
-        // 🕹️ The one framework-owned selection/hover domain the tree panel, the inspector and the 3d
-        // model window share (`✏️editor/🕹️interaction/🦀️.rs`).
         .interaction(crate::editor_interaction::energy_model_interaction_definition())
-        // 🧊️ Binding the 3d window to that domain is what lets the react `World3dHost` dispatch the
-        // framework-reserved `interactionSelect`/`interactionHover` on its own pick — no plugin
-        // pointer command exists, and none is needed.
         .window_kind_interactions(model_window::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(ENERGY_MODEL_INTERACTION_DOMAIN)])
-        // 📌️ The two dock panels: the artifact tree marks and picks into that same domain, the
-        // inspector edits whatever it resolves to.
         .panel_tab_def(artifact_panel::definition())
         .panel_tab_def(inspection_panel::definition())
         .tool(tools::simulation::definition())
@@ -105,16 +99,12 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
         .keybinding("mod+shift+s", CREATE_SURFACE_ACTION_ID)
         .keybinding("mod+shift+g", SET_SITE_ACTION_ID)
         .default_layout(edit::layout());
-    // 🔍️ App-level, NOT per-window: `build_definition` copies these onto every window kind, which is
-    // what makes an inspector control dispatchable while the 3d window (or any other) is active.
     for action in app_level_action_definitions() {
         builder = builder.action_with(action);
     }
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
         builder = builder.action_interactive_job(*tool_id, InteractiveJobClassification::Migrated);
     }
-    // ⚠️ Declared after every action is on the builder: `action_destructive` rewrites an
-    // already-declared id, and the two inspector deletes only arrive with the loop above.
     for destructive_id in ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS {
         builder = builder.action_destructive(*destructive_id);
     }

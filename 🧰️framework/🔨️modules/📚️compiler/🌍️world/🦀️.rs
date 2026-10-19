@@ -16,16 +16,16 @@ use std::{fs, io, path::Path};
 /// (`compiler_text`) key off, never a file path or index.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum FontRole {
-    /// Libertinus Math — variables, symbols, and everything laid out via the OpenType MATH table.
+    /// ➗️ Libertinus Math — variables, symbols, and everything laid out via the OpenType MATH table.
     Math,
-    /// Libertinus Serif Regular — upright text-in-math, numbers, function names.
+    /// 🧮️ Libertinus Serif Regular — upright text-in-math, numbers, function names.
     Serif,
-    /// Libertinus Serif Italic — reserved for future prose/emphasis use; unused by math layout
+    /// 🔖️ Libertinus Serif Italic — reserved for future prose/emphasis use; unused by math layout
     /// today (the Math font's own glyphs are already italic for Latin/Greek letters).
     SerifItalic,
-    /// Libertinus Mono — reserved for future `Code` snippet rendering.
+    /// 🅿️ Libertinus Mono — reserved for future `Code` snippet rendering.
     Mono,
-    /// Noto Color Emoji (CBDT bitmap subset) — `:shortcode:` atoms.
+    /// 🎨️ Noto Color Emoji (CBDT bitmap subset) — `:shortcode:` atoms.
     Emoji,
 }
 

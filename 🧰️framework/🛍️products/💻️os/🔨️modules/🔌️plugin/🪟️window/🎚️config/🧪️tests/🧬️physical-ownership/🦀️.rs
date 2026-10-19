@@ -19,7 +19,7 @@ fn window_config_paged_registry_actual_authored_root_metadata_producer() {
     assert_eq!((getter.requested_bytes, getter.released_bytes), (law["getterAllocationBytes"].as_u64().unwrap() as usize, law["getterReleaseBytes"].as_u64().unwrap() as usize));
     assert_eq!(<RetainedLoadCameraConfig as pack::snapshot::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
     let mut accepted = |_| true;
-    let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted);
     native.admit_turn_capacity(law["maximumCapacityBytes"].as_u64().unwrap() as usize).unwrap();
     let (spec, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| producer.unwrap().decode(&mut native).unwrap());
     assert_eq!(birth.requested_bytes, native.owned_bytes());
@@ -84,7 +84,7 @@ fn window_config_paged_registry_actual_inline_parser_retains_original_backing() 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🗂️registry/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
     let mut accepted = |_| true;
-    let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted);
     let (mut parser, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
         let mut parser = RetainedWindowConfigTypedState::<IdentityWindowOwner>::new(&mut native).unwrap();
         let original_fields = parser.spec.fields.as_ptr();

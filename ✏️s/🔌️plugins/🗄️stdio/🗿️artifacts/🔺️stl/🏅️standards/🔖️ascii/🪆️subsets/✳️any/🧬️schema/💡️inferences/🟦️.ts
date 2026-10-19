@@ -7,7 +7,7 @@ export interface StlBounds {
 }
 
 export interface StlInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: StlBounds;
 }
 

@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import Ajv from "ajv";
 import {applyPatch,type Operation} from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧳️state/🔣️.json";
 type Json=null|boolean|number|string|Json[]|{[key:string]:Json};
 function coldReference(root:Json,operation:{op:string;path:string;value?:Json}):Json{
  const path=operation.path.split("/").slice(1).map(part=>part.replaceAll("~1","/").replaceAll("~0","~"));

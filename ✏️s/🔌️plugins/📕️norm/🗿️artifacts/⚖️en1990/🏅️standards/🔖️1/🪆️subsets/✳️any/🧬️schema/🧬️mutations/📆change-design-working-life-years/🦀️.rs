@@ -1,4 +1,4 @@
-//! `change-design-working-life-years` mutation for EN 1990.
+//! 🧬️ `change-design-working-life-years` mutation for EN 1990.
 
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 

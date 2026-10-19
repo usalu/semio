@@ -1,0 +1,542 @@
+{
+  "version": 1,
+  "previews": [
+    {
+      "placement": "tabs",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        10,
+        20,
+        100,
+        40
+      ]
+    },
+    {
+      "placement": "left",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        10,
+        20,
+        50,
+        40
+      ]
+    },
+    {
+      "placement": "right",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        61,
+        20,
+        49,
+        40
+      ]
+    },
+    {
+      "placement": "top",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        10,
+        20,
+        100,
+        20
+      ]
+    },
+    {
+      "placement": "bottom",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        10,
+        41,
+        100,
+        19
+      ]
+    },
+    {
+      "placement": "top-left",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        10,
+        20,
+        24,
+        2
+      ]
+    },
+    {
+      "placement": "top-right",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        86,
+        20,
+        24,
+        2
+      ]
+    },
+    {
+      "placement": "bottom-left",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        10,
+        58,
+        24,
+        2
+      ]
+    },
+    {
+      "placement": "bottom-right",
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "expected": [
+        86,
+        58,
+        24,
+        2
+      ]
+    },
+    {
+      "placement": "tabs",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        2,
+        3,
+        5,
+        3
+      ]
+    },
+    {
+      "placement": "left",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        2,
+        3,
+        2,
+        3
+      ]
+    },
+    {
+      "placement": "right",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        5,
+        3,
+        2,
+        3
+      ]
+    },
+    {
+      "placement": "top",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        2,
+        3,
+        5,
+        1
+      ]
+    },
+    {
+      "placement": "bottom",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        2,
+        5,
+        5,
+        1
+      ]
+    },
+    {
+      "placement": "top-left",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        2,
+        3,
+        3,
+        2
+      ]
+    },
+    {
+      "placement": "top-right",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        5,
+        3,
+        2,
+        2
+      ]
+    },
+    {
+      "placement": "bottom-left",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        2,
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "placement": "bottom-right",
+      "area": [
+        2,
+        3,
+        5,
+        3
+      ],
+      "expected": [
+        5,
+        4,
+        2,
+        2
+      ]
+    },
+    {
+      "placement": "tabs",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "left",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "right",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "top",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "bottom",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "top-left",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "top-right",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "bottom-left",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "placement": "bottom-right",
+      "area": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "hits": [
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        10,
+        20
+      ],
+      "expected": "top-left"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        109,
+        20
+      ],
+      "expected": "top-right"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        10,
+        59
+      ],
+      "expected": "bottom-left"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        109,
+        59
+      ],
+      "expected": "bottom-right"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        11,
+        39
+      ],
+      "expected": "left"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        108,
+        39
+      ],
+      "expected": "right"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        60,
+        23
+      ],
+      "expected": "top"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        60,
+        57
+      ],
+      "expected": "bottom"
+    },
+    {
+      "area": [
+        10,
+        20,
+        100,
+        40
+      ],
+      "point": [
+        9,
+        20
+      ],
+      "expected": null
+    },
+    {
+      "area": [
+        0,
+        0,
+        2,
+        2
+      ],
+      "point": [
+        0,
+        0
+      ],
+      "expected": null
+    }
+  ]
+}

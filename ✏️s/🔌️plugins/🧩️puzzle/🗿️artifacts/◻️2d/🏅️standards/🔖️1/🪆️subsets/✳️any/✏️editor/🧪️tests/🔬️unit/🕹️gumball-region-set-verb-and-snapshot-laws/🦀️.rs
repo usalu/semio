@@ -75,7 +75,7 @@ fn a_rotate_record_orbits_a_two_node_selection_about_its_recorded_pivot() {
     let yields = select_utility::puzzle2d_selection_yields(&base, std::slice::from_ref(&record), 0.0);
     assert_eq!(yields.len(), 1, "a rotate yields its one leaf and no connection");
     let mut after = base.clone();
-    crate::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
+    semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation(&mut after, &yields[0].1).expect("the leaf applies");
     let snapshot = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(semio_framework_value::ToValue::to_value(&after))));
     let a = transform_law_node(&snapshot, "node-a");
     assert!(a.get("x").and_then(Value::as_f64).expect("x").abs() < 1e-6 && (a.get("y").and_then(Value::as_f64).expect("y") + 40.0).abs() < 1e-6, "node-a orbits to (0,-40): {a}");

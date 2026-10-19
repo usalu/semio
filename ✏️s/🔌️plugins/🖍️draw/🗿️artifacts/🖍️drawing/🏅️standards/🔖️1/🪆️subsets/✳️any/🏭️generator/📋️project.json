@@ -2,16 +2,20 @@
   "name": "@semio-tech/fixture-generator-drawing-1-any",
   "targets": {
     "🏭️generator": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator",
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
       },

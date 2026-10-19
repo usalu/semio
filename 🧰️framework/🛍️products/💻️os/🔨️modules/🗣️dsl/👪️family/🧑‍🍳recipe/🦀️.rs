@@ -68,9 +68,6 @@ async fn arg_text(token: &semio_framework_dsl::SpannedToken) -> Result<String, T
 /// dotted call path (`state.set`) since `.` is `dsl_core` ident-continue — it lexes as one `Ident`.
 pub async fn parse_step_text(text: &str) -> Result<RecipeStep, TextError> {
     let limits = Limits::default();
-    // Keeps the `Eof` sentinel (only trivia is filtered) — `Cursor::advance`'s clamp-at-last-index
-    // logic needs a real final token to land on and stay at once input is exhausted; dropping it
-    // makes `peek()` re-return whatever the last REAL token was forever instead of signaling Eof.
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia()).collect();
     let mut cursor = Cursor { tokens, pos: 0 };
 

@@ -1,4 +1,5 @@
 //! 🚚️ Bitwise vector clones move whole pages per turn: equal to the `Clone` oracle, O(bytes/page) turns, exact capacity accounting and leak-free cancellation at every turn.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::observe_retirement_allocations as observe;
 use std::{fmt::Debug, ops::Deref};
@@ -32,7 +33,7 @@ impl<T: RetainedClone> Drop for Held<T> {
     }
 }
 
-fn law() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
+fn law() -> serde_json::Value { serde_json::from_str(fixture_text!("../../../🚚️bulk-vec/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 
 fn number(value: &serde_json::Value, name: &str) -> usize { value[name].as_u64().unwrap() as usize }
 

@@ -25,7 +25,6 @@ pub(crate) struct SceneColorTarget {
 }
 
 impl SceneColorTarget {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(device: &wgpu::Device, width: u32, height: u32, format: wgpu::TextureFormat) -> Self {
         let width = width.max(1);
         let height = height.max(1);
@@ -85,32 +84,26 @@ impl SceneColorTarget {
         Self { texture, blur_scratch, blur_scratch_mip_views, sample_view, mip_views, sampler, width, height }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn matches(&self, width: u32, height: u32) -> bool {
         self.width == width.max(1) && self.height == height.max(1)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn mip_view(&self, level: u32) -> &wgpu::TextureView {
         &self.mip_views[level as usize]
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn sample_view(&self) -> &wgpu::TextureView {
         &self.sample_view
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn sampler(&self) -> &wgpu::Sampler {
         &self.sampler
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn blur_scratch_mip_view(&self, level: u32) -> &wgpu::TextureView {
         &self.blur_scratch_mip_views[level as usize]
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn copy_mip_to_blur_scratch(&self, encoder: &mut wgpu::CommandEncoder, src_mip: u32) {
         let (width, height) = mip_extent(self.width, self.height, src_mip);
         encoder.copy_texture_to_texture(

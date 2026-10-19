@@ -23,7 +23,6 @@ mod tests {
 
     #[test]
     fn miller_madow_correction_matches_hand_computation() {
-        // 🔐️ 3 bins, all occupied, N=6: correction = (3-1)/(2*6) = 1/6.
         let counts = [3u64, 2, 1];
         let est = entropy_discrete(&counts, DiscreteMethod::MillerMadow, LogBase::Nats).unwrap();
         let plugin = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
@@ -32,7 +31,6 @@ mod tests {
 
     #[test]
     fn bias_corrected_methods_closer_to_truth_than_plugin_on_undersampled_uniform() {
-        // 🔐️ K=64 uniform, N=100: plug-in should underestimate ln(64) more than Miller-Madow.
         let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(7);
         let k = 64;
         let mut counts = vec![0u64; k];
@@ -63,7 +61,6 @@ mod tests {
         let counts = [50u64, 1, 1, 1];
         let est = entropy_discrete(&counts, DiscreteMethod::JamesStein, LogBase::Nats).unwrap();
         let program = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
-        // 🔐️ shrinkage toward uniform increases entropy relative to the concentrated plug-in estimate.
         assert!(est.value >= program.value - 1e-9);
     }
 
@@ -86,7 +83,6 @@ mod tests {
 
     #[test]
     fn jackknife_matches_hand_computation_on_small_example() {
-        // 🔐️ 2 bins [3,1]: N=4.
         let counts = [3u64, 1];
         let est = entropy_discrete(&counts, DiscreteMethod::Jackknife, LogBase::Nats).unwrap();
         assert!(est.value.is_finite());
@@ -112,7 +108,6 @@ mod tests {
 
     #[test]
     fn gauss_legendre_integrates_polynomial_exactly() {
-        // 🔐️ 20-point GL is exact for polynomials up to degree 39; integrate x^4 over [-1,1] = 2/5.
         let (nodes, weights) = gauss_legendre(20);
         let integral: f64 = nodes.iter().zip(weights.iter()).map(|(&x, &w)| w * x.powi(4)).sum();
         assert!((integral - 0.4).abs() < 1e-9);

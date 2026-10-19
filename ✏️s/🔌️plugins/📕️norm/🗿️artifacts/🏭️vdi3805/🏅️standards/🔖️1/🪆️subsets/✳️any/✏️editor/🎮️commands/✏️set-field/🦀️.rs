@@ -1,4 +1,4 @@
-//! Norm command — `set-field`.
+//! 📜️ Norm command — `set-field`.
 
 use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;

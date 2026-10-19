@@ -17,7 +17,6 @@ mod tests {
 
     #[test]
     fn digamma_matches_known_value_at_one() {
-        // 🔬️ psi(1) = -gamma (Euler-Mascheroni constant).
         let euler_mascheroni = 0.577_215_664_901_532_9;
         assert!((digamma(1.0) - (-euler_mascheroni)).abs() < 1e-9);
     }
@@ -35,7 +34,6 @@ mod tests {
 
     #[test]
     fn erf_endpoints() {
-        // 🔬️ A&S 7.1.26 has a stated max absolute error of ~1.5e-7; it is not exact at x=0.
         assert!((erf(0.0)).abs() < 1e-6);
         assert!((erf(10.0) - 1.0).abs() < 1e-6);
         assert!((erf(-10.0) + 1.0).abs() < 1e-6);
@@ -79,7 +77,7 @@ mod tests {
         let mut values = vec![1e16, 1.0, -1e16];
         let naive: f64 = values.iter().sum();
         let stable = neumaier_sum(values.iter().copied());
-        assert_eq!(naive, 0.0); // 🔬️ naive loses the 1.0 entirely
+        assert_eq!(naive, 0.0);
         assert!((stable - 1.0).abs() < 1e-9);
         values.reverse();
         assert!((neumaier_sum(values) - 1.0).abs() < 1e-9);
@@ -148,8 +146,6 @@ mod tests {
     #[test]
     fn checked_state_count_detects_overflow() {
         assert_eq!(checked_state_count(&[2, 3, 4]), Some(24));
-        // 🔬️ usize::MAX * 2 (~3.6e19) fits comfortably inside u128 (~3.4e38); an overflow needs
-        // enough factors that their product exceeds u128::MAX.
         assert_eq!(checked_state_count(&[usize::MAX; 8]), None);
     }
 

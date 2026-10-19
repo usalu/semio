@@ -26,9 +26,6 @@ fn default_fixture_evaluates_add_preview() {
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn slider_updates_preview() {
-    // 🧵️ Mutating a widget never auto-evaluates anymore (see `evaluate_step`'s doc comment) — an
-    // off-main-thread ticker outside `flow` is responsible for that; this simulates one tick
-    // with a direct `evaluate_internal` call.
     let mut host = host_with_test_bridge();
     host.set_slider_value("slider", 5.0);
     host.evaluate_internal();
@@ -172,15 +169,10 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     assert_eq!(host.preview_text(), "3", "chain settles to the same value as the direct add->preview link");
     host.set_slider_value("slider", 6.0);
-    // ⏳️ Nothing evaluates until stepped — mirrors a mutation with no tick chain run yet.
     assert_eq!(host.preview_text(), "3");
-    // ⏱️ Tick 1: budget for one cache-missed node — computes "add" for free-riding boundary nodes
-    // plus that one dispatch, then stops right before the next miss ("pass"). `remaining[0]` is
-    // the blocking node; anything after it (here, "preview") is just downstream-and-untouched.
     let remaining_after_tick1 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
     assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
-    // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
     let remaining_after_tick2 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
     assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");

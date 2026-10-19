@@ -1,5 +1,5 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { useShellScopeOptional, useShellFloatingSurfaceHost } from "../../🐚️ShellScope/🟦️.tsx";
 import { createPortal } from "react-dom";
 import { ephemeralBox } from "../../../../🫧️transient/🟦️.ts";
@@ -41,9 +41,6 @@ export function isTreeReorderDragEvent(event: React.DragEvent): boolean {
 /** 👁️ Fixed overlay showing where a tree reorder drop will land. */
 export function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: string; readonly position: TreeDropPosition } | null }): React.ReactElement | null {
   const [frame, setFrame] = reactHostPort.useState<DOMRect | null>(null);
-  // 🐚️ Falls back to `document`/`document.body` outside any shell — inside one, scopes the id lookup and
-  // portal target to that shell's own root/overlay layer (a tree row id is not guaranteed unique across
-  // several mounted shells of the same plugin).
   const shellScope = useShellScopeOptional();
   reactHostPort.useLayoutEffect(() => {
     if (!props.preview || typeof document === "undefined") {

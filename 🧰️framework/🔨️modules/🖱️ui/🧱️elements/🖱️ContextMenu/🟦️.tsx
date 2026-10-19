@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 import * as React from "react";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import type { UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import type { IconSource } from "../🔣️Icons/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
@@ -98,8 +98,6 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title, titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
-  // 🐚️ Falls back to `document.body` outside any shell — inside one, portals into that shell's own
-  // overlay layer so a context menu never escapes that shell's stacking context OR its appearance scope.
   const floatingHost = useShellFloatingSurfaceHost();
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -113,9 +111,6 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const activePathRef = reactHostPort.useRef(activePath);
   activePathRef.current = activePath;
   const previousHoverItemRef = reactHostPort.useRef<ContextMenuItem | undefined>(undefined);
-  // ⌨️ Rows hand their element in here so the active row can take REAL DOM focus wherever it was
-  // portaled to. Before this the active row lived in React state alone: `document.activeElement`
-  // stayed `<body>` through a whole arrow walk, so a screen reader was told nothing at all.
   const rowNodesRef = reactHostPort.useRef<Map<string, HTMLButtonElement>>(new Map());
   const registerRow = reactHostPort.useCallback((pathKey: string, node: HTMLButtonElement | null): void => {
     if (node) {
@@ -143,10 +138,6 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     const node = activePath.length ? rowNodesRef.current.get(contextMenuPathKey(activePath)) : undefined;
     (node ?? menuRef.current)?.focus({ preventScroll: true });
   }, [open, activePath]);
-  // ⌨️ The active path is SEEDED when the menu opens and only re-seeded when a new `items` no longer holds the
-  // row the user is on. A live menu (a suggestion submenu whose candidates stream in) republishes its rows
-  // while open; re-seeding on every one threw the pointer/keyboard position back to the checked row, so an
-  // Escape that collapsed a submenu was undone by the next republish and the menu could never be closed.
   const seededRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
     if (!open) {
@@ -272,8 +263,6 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       bindings.dispose();
     };
   }, [applyActivePath, close, closeOnSelect, items.length, onOpenChange, open, position?.x, position?.y]);
-  // 🖥️ Clamp the rendered menu surface fully on-screen — a right-click near a viewport edge would otherwise open a
-  // menu that spills past it.
   reactHostPort.useLayoutEffect(() => {
     if (!open || !position) {
       return;
@@ -431,7 +420,6 @@ export const TextSelectionContextMenuHost: React.FC = () => {
       event.stopPropagation();
       targetRef.current = event.target;
       const editable = isDomTextEditableTarget(event.target);
-      // 📋️ Read the selection HERE, while it still exists: opening the menu moves focus onto it.
       const captured = readDomTextSelection();
       selectionRef.current = captured;
       const hasSelection = Boolean(captured);

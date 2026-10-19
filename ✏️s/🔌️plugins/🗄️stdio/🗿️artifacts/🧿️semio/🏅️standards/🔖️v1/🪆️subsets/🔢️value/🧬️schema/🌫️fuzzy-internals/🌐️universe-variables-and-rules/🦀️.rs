@@ -12,7 +12,6 @@ pub struct Universe {
 }
 
 impl Universe {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(min: f64, max: f64, n: usize) -> FuzzyResult<Self> {
         if min >= max || n == 0 {
             return Err(FuzzyError::InvalidDomain("universe bounds".into()));
@@ -20,17 +19,14 @@ impl Universe {
         Ok(Self { min, max, samples: linspace(min, max, n) })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sample(&self, index: usize) -> f64 {
         self.samples[index]
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn len(&self) -> usize {
         self.samples.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.samples.is_empty()
     }
@@ -47,17 +43,14 @@ pub struct LinguisticVariable {
 }
 
 impl LinguisticVariable {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(name: impl Into<String>, universe: Universe, terms: Vec<FuzzySet>) -> Self {
         Self { name: name.into(), universe, terms }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fuzzify(&self, x: f64) -> Vec<f64> {
         self.terms.iter().map(|t| t.grade(x)).collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn term_index(&self, name: &str) -> Option<usize> {
         self.terms.iter().position(|t| t.name == name)
     }
@@ -94,7 +87,6 @@ pub struct Rule {
 }
 
 impl Rule {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn firing_strength(&self, inputs: &[LinguisticVariable], values: &[f64], tnorm: TNorm) -> f64 {
         let strengths: Vec<f64> = self
             .antecedents
@@ -115,12 +107,10 @@ pub struct RuleBase {
 }
 
 impl RuleBase {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(rules: Vec<Rule>) -> Self {
         Self { rules }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.rules.is_empty()
     }

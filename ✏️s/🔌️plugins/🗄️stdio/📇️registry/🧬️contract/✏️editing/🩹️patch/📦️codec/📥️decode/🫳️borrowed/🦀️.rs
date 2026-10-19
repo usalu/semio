@@ -1,7 +1,8 @@
 //! 🩹️ Original patch JSON retains its exact source view and decoded cells until typed admission or retirement.
 use super::super::{kernel,SnapshotPatch,SNAPSHOT_PATCH_MAX_BYTES,SNAPSHOT_PATCH_MAX_INDEX,SNAPSHOT_PATCH_MAX_SEGMENTS};
 use semio_framework_pack_json::{JsonReadSource,JsonReadLimits,JsonMemberPolicy,JsonSourceCursor};
-use semio_framework_value::{DslValue,Number,NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, Number, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[derive(Clone,Copy)]
 struct PatchSource<'source>(kernel::codec::ByteSpan<'source>);

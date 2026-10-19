@@ -33,6 +33,7 @@ semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦�
 semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }

@@ -1,4 +1,4 @@
-//! ️ `change-crane-claimed`.
+//! 🧬️ `change-crane-claimed`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

@@ -20,9 +20,9 @@ import {
   type NodeGraphScene,
   type PluginContextMenuRequest
 } from "@semio-tech/framework";
-import { type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { useAppCatalogue, WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { type FlowWasmSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { type SurfaceContextMenuResult } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
+import { useAppCatalogue, WindowInstanceIdContext } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
+import { type FlowWasmSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
 import { DEFAULT_NODE_GRAPH_VIEWPORT, type GraphKeyboardPort, usePortTypeLabels, wireRefusalLabelOptions } from "../🧰️graph-core/🟦️.ts";
 import { type FlowCatalogueSection, type FlowSpotlightState } from "../🪄️catalogue-spotlight/🟦️.tsx";
 import { computeDagMarqueeOverlay, dagIntroductionResolver, type FlowGraphSurfaceProbe, parseDagSelectionUnionBoundsScreen } from "../🖼️dag-overlays/🟦️.tsx";
@@ -65,10 +65,7 @@ export function useFlowSurfaceState({
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // 🔁️ One presentation decision per canvas ELEMENT: bumping the generation mints a new element,
-  // which re-runs the attach effect and lets the guest decide GPU-or-replay again for it.
   const [canvasGeneration, setCanvasGeneration] = useState(0);
-  // 🖼️ The layout the live camera was last framed against — see `nodeGraphContentSignature`.
   const framedGraphSignatureRef = useRef<string | null>(null);
   const attachedSurfaceRef = useRef<{ readonly surface: number; readonly surfaceGeneration: number; readonly presentsOnGpu: boolean } | null>(null);
   const replaceUnpresentableCanvasRef = useRef<() => void>(() => {});
@@ -91,12 +88,10 @@ export function useFlowSurfaceState({
   const [spotlight, setSpotlight] = useState<FlowSpotlightState | null>(null);
   const [spotlightSections, setSpotlightSections] = useState<readonly FlowCatalogueSection[]>([]);
   const appCatalogue = useAppCatalogue();
-  // Always holds the latest app catalogue without forcing the scene-sync effects to depend on it.
   const appCatalogueRef = useRef(appCatalogue);
   appCatalogueRef.current = appCatalogue;
   const pickTargetsRef = useRef<readonly CanvasPickTarget[]>([]);
   const sceneSignature = useMemo(() => JSON.stringify(scene), [scene]);
-  // Always holds the latest `scene` without forcing effects to depend on (and re-run per) it.
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
 
@@ -105,16 +100,6 @@ export function useFlowSurfaceState({
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
   }, [windowInstanceId]);
 
-  // 🔬️ `window.__semioFlowGraphProbe[surfaceId]` — the graph canvas's geometry read-back, modelled on
-  // `ShellHost`'s `__semioOsCatalogProbe`/`__semioMountedGisMapProbe`. The canvas paints ITSELF (wasm,
-  // one `<canvas>`, no per-node DOM), so a scripted or assistive caller has no way to find the screen
-  // position of a node or a port `handle` and therefore no way to drive the one gesture only this
-  // surface offers: dragging a wire from an output port to an input port. That gesture was the single
-  // interaction in this app with no runtime proof of any kind
-  // (`📓️audit-user-journey-gaps-2026-09-13.md` gap #3). Reuses `dagIntroductionResolver` verbatim —
-  // the same resolver demonstration targeting already registers — so there is ONE entity→screen
-  // implementation, not a probe-only second one. Warm-up is asynchronous (the first call for an entity
-  // starts the session read and returns `null`); callers poll.
   useEffect(() => {
     const resolver = dagIntroductionResolver(sessionRef, containerRef);
     const host = window as unknown as { __semioFlowGraphProbe?: Record<string, FlowGraphSurfaceProbe> };

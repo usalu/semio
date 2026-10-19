@@ -116,9 +116,6 @@ async fn ols_recovers_exact_line() {
 // #region 🔖️LogisticTests
 #[semio_framework_async_macros::async_test]
 async fn logistic_symmetric_data_has_near_zero_intercept() {
-    // Two labels flipped near the boundary (x=-1 -> y=1, x=1 -> y=0) so the data is not
-    // perfectly linearly separable — a perfectly separable fixture has no finite MLE and
-    // would make IRLS diverge by construction, which is correct behavior, not a bug.
     let xs = [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0];
     let ys = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0];
     let mut design = MatD::zeros(6, 1);
@@ -138,7 +135,6 @@ async fn logistic_perfect_separation_returns_error_not_panic() {
     for (row, &x) in xs.iter().enumerate() {
         design.set(row, 0, x);
     }
-    // perfectly separable data either fails to converge or returns a large-but-finite fit — must not panic
     match logistic(&design, &ys, true) {
         Ok(fit) => assert!(fit.coefficients.iter().all(|c| c.is_finite())),
         Err(StatisticsError::NoConvergence { .. }) => {}
@@ -207,7 +203,6 @@ async fn mutual_information_of_variable_with_itself_is_its_entropy() {
 
 #[semio_framework_async_macros::async_test]
 async fn conditional_mutual_information_is_zero_on_markov_chain() {
-    // X -> Z -> Y: within each Z stratum, X and Y are independently uniform over {0,1}.
     let z: Vec<u32> = [0u32, 0, 0, 0, 1, 1, 1, 1].repeat(20);
     let x: Vec<u32> = [0u32, 0, 1, 1, 0, 0, 1, 1].repeat(20);
     let y: Vec<u32> = [0u32, 1, 0, 1, 0, 1, 0, 1].repeat(20);

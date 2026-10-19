@@ -27,6 +27,7 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-editor-results-window = { workspace = true }
 semio-s-artifact-fem-3d-editor-interaction = { workspace = true }
@@ -36,6 +37,7 @@ semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-artifact-fem-3d-scene = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
 semio-s-fem-model = { workspace = true }
+semio-s-artifact-fem-2d-results-state = { path = "../../../../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

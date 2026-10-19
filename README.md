@@ -686,6 +686,9 @@ available in English and German; Settings chooses the language, appearance and k
 | Inspect a revision | `@semio-tech/repo-developer-tools:git-show` | Single revision, path, summary or patch |
 | Inspect line history | `@semio-tech/repo-developer-tools:git-blame` | File, optional revision, starting line and line count |
 | Use an interactive terminal | `@semio-tech/repo-developer-tools:terminal` | Working directory and system shell |
+| Check installed debuggers | `@semio-tech/repo-developer-tools:debuggers` | Availability and executable paths |
+| Set up native debugging | `@semio-tech/repo-developer-tools:setup-debugger` | Verify LLDB's scripting runtime and repair fixed host packages |
+| Debug a program | `@semio-tech/repo-developer-tools:debug` | Debugger profile, program file, working directory and program arguments |
 | Run several project targets | `tool:workspace/run-targets` | Targets, projects, parallel tasks and cache |
 | Run a particular test file | `tool:workspace/bun-test` | Test file and owning project |
 | Setup, build, test and check | `workspace:setup`, `workspace:build`, `workspace:test`, `workspace:verify` | Owner, scope and command-specific choices |
@@ -694,7 +697,7 @@ available in English and German; Settings chooses the language, appearance and k
 | Manage tickets and goals | `repo:<action>` | Select the named repo action and complete its form |
 
 The source-file action opens a passive editor; build, test and process controls remain in the dashboard.
-For debugging, select **Workspace Terminal**, choose the working directory and system shell, and invoke the installed debugger inside that task. Toggle input with `Ctrl+B t`; its task menu provides **Restart**, **Stop** and **Kill**. The [daily dashboard guide](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers setup, testing, checks, build, serve and repository operations.
+For debugging, select **Debugger Availability**, then **Debug a Program**. **Set Up Native Debugger** verifies LLDB with its Python runtime before installing anything and repairs fixed host packages when needed. Choose an installed debugger profile, the program file and working directory, and review the literal program arguments before starting. Toggle task input with `Ctrl+B t` to enter breakpoints and step commands; its task menu provides **Restart**, **Stop** and **Kill**. The [daily dashboard guide](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers setup, testing, checks, build, serve and repository operations.
 Task output, restart, stop and cancellation use the same dashboard controls. A ready service offers
 **Open ready address** in its task menu and overview; the default binding is `Ctrl+B u`.
 
@@ -712,8 +715,8 @@ script overrides it.
 
 ## 🪟️ Windows Setup [↑](#-development)
 
-Native Windows development is zero-touch through the checked-in bootstrap script. Clone with long paths enabled
-(tracked fixture paths reach 210 characters below the clone root; `setup git` keeps `core.longpaths` in the clone's own
+Native Windows development is zero-touch through the checked-in bootstrap script, started from an elevated (Administrator) terminal: the script refuses before it installs anything otherwise (`Test-ElevatedSession` in the script; `-SkipRepoBootstrap` skips the check). The reason it prints is the earlier VHD attach through `Mount-DiskImage`, which the cache partitions no longer use (see the Windows row of the repo docs), so this requirement is under review. Clone with long paths enabled
+(tracked paths reach 226 characters below the clone root, measured with `git ls-files` on 2026-10-19; `setup git` keeps `core.longpaths` in the clone's own
 `.git/config` afterwards) and run the script with the Windows PowerShell 5.1 that ships with Windows — no Bun needed yet:
 
 ```powershell
@@ -725,15 +728,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️pro
 Native C/C++ builds use Ninja. The registered build commands activate the installed Build Tools compiler environment automatically on Windows; no editor session or solution launch is required.
 
 After initial bootstrap, `bun run dashboard run workspace:setup-native` re-runs the same script. It never writes user-global tool
-configuration (`~/.cargo/config.toml`, global git config). It reports, in English and German, when the machine-wide
+configuration files (`~/.cargo/config.toml`, global git config); it does set the user-level environment variable `PLAYWRIGHT_BROWSERS_PATH` and moves the tool directories to the front of the user `PATH`. It reports, in English and German, when the machine-wide
 `LongPathsEnabled` switch is off and prints the one elevated command that enables it: Python, CMake and every other tool
-that relies on that switch fail past 260 characters, and Rust build outputs reach ~246 characters below the clone root, so
+that relies on that switch fail past 260 characters, and Rust build outputs reach 240+ characters below the clone root (the script's own warning), so
 keep the clone root short (for example `C:\src\semio`).
 
-The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
+The script installs Bun, Node.js, Go, uv and rustup from checksum-verified downloads (pins in `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json`; it runs no installer script from the network) and the same baseline toolchain the devcontainer provides on a fresh machine, the rest through winget when missing and not version-pinned:
 
 - Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
-- Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
+- Node.js 24.15.0, Go 1.26.9, Python 3.14, uv, rustup, .NET SDK 8/9/10
 - GitKraken Desktop + CLI and F3D
 - Gemini CLI, TypeScript LSP, Pyright
 - dashboard-declared agent client configuration, Python/Rust/Playwright setup and Bun/uv dependencies
@@ -752,8 +755,8 @@ repository-pinned Bun, rustup with the `rust-toolchain.toml` toolchain, Go, the 
 `bun repo run workspace:setup`. Linux links with the `rust-lld` that ships inside the pinned toolchain, so no distribution
 linker package is required.
 
-Every `bun repo` call first publishes the declared bootstrap sources
-(`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json`): generated files a fresh
+Every `bun repo` task or graph call (`run`, `run-many`, `affected`, `exec`, `watch`, `graph`, `show`) first publishes the declared bootstrap sources
+(`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🔣️.json`): generated files a fresh
 clone lacks but that Bun or the repository scripts need before a build tool can run anything — the UI axis projections every script
 imports through `@semio-tech/framework`, and the `@semio-tech/flow-core` workspace manifest `bun install` requires.
 
@@ -764,6 +767,11 @@ Every build, test and run goes through one tool-neutral entry, `bun repo`. Nx is
 ```bash
 bun repo run <project>:<target>                 # one task, e.g. bun repo run workspace:setup
 bun repo run-many --targets=test --projects=<projects>
+bun repo affected --targets=test                # changed projects and their dependents
+bun repo exec --projects=<projects> -- <command>  # a command once per project (add --dry-run to print the plan)
+bun repo run <project>:<target> --dry-run       # print the task graph, run nothing
+bun repo cache status|clear                     # entries and bytes of the task cache of the selected tool, or empty it
+bun repo preflight                              # host check before any cache partition is created
 bun repo show projects                          # the neutral build graph
 bun repo tools setup all                        # pinned Nx and Bazel for this host (part of workspace:setup)
 bun repo dependencies lock --all                # after editing a package.json
@@ -771,8 +779,9 @@ bun repo dependencies sync --all                # install; node_modules is a sym
 bun repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
 ```
 
+- **Neutral model and two implementations.** Manifests declare inputs, outputs, `cache` and `continuous` once; Nx (default) and Bazel execute the same graph. Bazel turns every selected task into a real action with declared inputs and outputs, uses its own action cache and disk cache (`SEMIO_BAZEL_REMOTE_CACHE` switches an optional remote cache on), and builds only what the selected target needs. A target without `cache: true` and an `outputs` array, or whose plugin cache class forbids replay, always reruns under Bazel. Targets that publish into a leased store declare a store receipt (`.🧾️store/<target>.json`) and rerun alone when their store content is gone. Bazel on macOS needs an ASCII checkout path. The [repo docs](🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run) cover the operations, the manifest and cache rules, both implementations, setup per platform (`tools setup`, readiness, Windows, Linux, devcontainer), the command registry that the dashboard uses (tool selector `nx`/`bazel`, cache and `exec --dry-run` tools), the build owner registry law (`bun ./📜️script.ts verify build-owners`) and the course, play and demonstrator chains, with a German version (`Deutsch`) at the end of that chapter. Anything not yet run on a real host is marked there as not yet verified.
 - **Cargo** is only reachable through `bun repo cargo`: raw `cargo` and `rustc` are refused at the compiler ingress gate in `.cargo/config.toml`, and private target directories are not allowed.
-- **Caches** are fixed-capacity partitions `.cache/b/<d,t,g,o,p,l,n>` (dependencies, tools, graph, observations, products, leases, Nx). On macOS each one is a case-sensitive APFS disk image `fixed.dmg` mounted at `m`. If every `bun repo` call refuses at startup (pending publication, ambiguous image association), follow the [recovery steps](🧰️framework/🛍️products/🦑️repo/README.md#-recovery) instead of deleting files by hand.
+- **Caches** are fixed-capacity partitions `.cache/b/<d,t,g,o,p,l,n>` (dependencies, tools, graph, observations, products, leases, Nx). On macOS each one is a case-sensitive APFS disk image `fixed.dmg` mounted at `m`; on Linux it is an unprivileged directory (`fixed.dir`, swapped atomically with `renameat2`, so `.cache` must sit on a native case-sensitive file system, in the devcontainer on its own volume); on Windows too a directory (journaled write-through swap, NTFS per-directory case sensitivity; provisional, the bootstrap script and the Bazel readiness check still demand an elevated terminal). `bun repo preflight` checks the host first. If every `bun repo` call refuses at startup (pending publication, ambiguous image association), follow the [recovery steps](🧰️framework/🛍️products/🦑️repo/README.md#-recovery) instead of deleting files by hand.
 - **Developer dashboard.** Open the dashboard, choose **New Task**, select the owning command and complete its typed form. The dashboard controls startup, output, readiness, cancellation and restart. Add recurring operations to their project target or ticket `🎮️commands.json`; the [daily workflow](🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/README.md#-daily-work) covers tests, builds, servers, debugging and source navigation.
 - **Go** code lives in member directories with one `🐹️.go` leaf (`📦️packages/🐹️go/<member>/🐹️.go`, tests in `🧪️tests/<case>/🐹️.go`); run it through the package `📜️script.ts` or `bun repo run <project>:test`, not plain `go test`.
 - **Zero-touch.** The build CLI boots from a fresh clone without `node_modules`, so its import closure uses relative imports only; check it with `bun repo --help` after touching the build library. Bootstrap works unchanged in the devcontainer and on native Windows, macOS and Linux.
@@ -857,7 +866,7 @@ Run `bun run dashboard run workspace:setup` after the initial toolchain bootstra
 
 [!NOTE] Free plan includes 15 tasks per day, 3 concurrent tasks and powered by Gemini 2.5 Pro 🚀️
 
-Used on the phone when no IDE is available 📱️
+Used from the phone for cloud tasks 📱️
 
 ### 🔍️ Agents [↑](#-ai-)
 

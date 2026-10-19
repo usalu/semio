@@ -1,6 +1,7 @@
 //! 🧹️ Hydration retirement, drop and completion: the remaining hydration operations, the erased snapshot retirement with its controlled closes, the drop and the completed hydration accessors. See [`super`].
 
 use super::*;
+use crate::retained_config_hydration::hydration_types_constructor_and_drive::ReferenceConfigStoreHydration;
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where

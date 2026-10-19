@@ -1,4 +1,4 @@
-//! origin moves by the payload offset, read off the BASE origin, so the leaf replays on any base. A part's board pin
+//! 🌳️ origin moves by the payload offset, read off the BASE origin, so the leaf replays on any base. A part's board pin
 //! 🔺️ Sparse diff builder for `DragSelection3d` — every unlocked addressed part's world origin and target volume's
 //! tracks the same ground-plane motion through [`PUZZLE5D_FLAT_TO_WORLD`] (board y points the other way), so the two
 //! poses of a part never drift apart.

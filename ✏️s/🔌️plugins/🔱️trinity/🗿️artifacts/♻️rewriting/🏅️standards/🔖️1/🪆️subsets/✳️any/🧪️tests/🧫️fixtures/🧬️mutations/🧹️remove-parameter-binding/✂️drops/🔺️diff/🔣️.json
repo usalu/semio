@@ -3,15 +3,14 @@
   "lhs": null,
   "rhs": null,
   "parameterBindings": {
-    "entries": [
-      {
-        "key": "repeat",
+    "entries": {
+      "repeat": {
         "precondition": "present",
         "operation": {
           "kind": "remove"
         }
       }
-    ]
+    }
   },
   "ruleLayout": null
 }

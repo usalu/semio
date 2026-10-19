@@ -19,8 +19,6 @@ mod tests {
 
     #[test]
     fn te_detects_coupling_discrete() {
-        // 🔐️ target[i] = source[i-1] (with some noise mixed via binning): TE(source->target)
-        // should be clearly larger than TE(target->source).
         let mut rng = semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::numeric::Xorshift64::new(2);
         let n = 4000;
         let source: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();

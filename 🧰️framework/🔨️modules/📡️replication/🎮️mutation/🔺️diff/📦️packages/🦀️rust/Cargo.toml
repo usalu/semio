@@ -23,6 +23,7 @@ path="🦀️.rs"
 [dependencies]
 semio-framework-value-retirement={path="../../../../../🌱️value/♻️retirement/📦️packages/🦀️rust"}
 semio-framework-value-intrinsic={path="../../../../../🌱️value/🌳️intrinsic/📦️packages/🦀️rust"}
+semio-framework-value-clone-source={path="../../../../../🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust"}
 
 [dev-dependencies]
 serde_json={workspace=true}

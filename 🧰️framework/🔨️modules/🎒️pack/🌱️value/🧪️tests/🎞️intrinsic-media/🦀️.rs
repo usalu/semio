@@ -6,7 +6,8 @@ macro_rules! intrinsic_media_wire_laws {
 
 #[test]
 fn intrinsic_media_wire_neutral_materialization_uses_observed_physical_allowances(){
-    use semio_framework_value::{NativeDecodeControl,ValueRefusalKind};
+    use semio_framework_value::ValueRefusalKind;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str($wire).unwrap();
     let octets=|text:&str|text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect::<Vec<_>>();
     for row in fixture["cases"].as_array().unwrap(){
@@ -40,7 +41,8 @@ fn intrinsic_media_wire_neutral_materialization_uses_observed_physical_allowance
 
 #[test]
 fn intrinsic_media_wire_direct_helpers_settle_complete_allocator_requests(){
-    use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+    use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str($media).unwrap();
     let depths:serde_json::Value=serde_json::from_str($depth).unwrap();
     let word=u64::from_str_radix(depths["leafWord"].as_str().unwrap(),16).unwrap();
@@ -115,7 +117,8 @@ fn intrinsic_media_wire_preserves_actual_order_duplicate_keys_and_full_literal_w
 
 #[test]
 fn intrinsic_media_wire_direct_helpers_share_semantic_depth_and_typed_control(){
-    use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+    use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let value=DslValue::Array(vec![DslValue::Null]);let mut options=EncodeOptions::default();options.limits.max_depth=1;
     let mut accept=|_|true;let mut decode_accept=|_|true;let mut output=NativeEncodeControl::new(usize::MAX,&mut accept);
     let bytes=encode_value_record_body_controlled(1,&value,&options,&mut output).expect("one intrinsic array edge is semantic depth one");
@@ -133,12 +136,13 @@ fn intrinsic_media_wire_direct_helpers_share_semantic_depth_and_typed_control(){
     let mut refuse=|_|false;let mut output=NativeEncodeControl::new(usize::MAX,&mut refuse);assert!(matches!(encode_value_record_body_controlled(1,&value,&EncodeOptions::default(),&mut output),Err(PackRefusal::ValueRefusal(error)) if error.kind==ValueRefusalKind::Canceled));
     let mut decode_refuse=|_|false;let mut input=NativeDecodeControl::new(usize::MAX,&mut decode_refuse);assert!(matches!(decode_value_record_body_exact_controlled(&bytes,1,&DecodeOptions::default(),&mut input),Err(PackRefusal::ValueRefusal(error)) if error.kind==ValueRefusalKind::Canceled));
     let text=DslValue::String("ä".repeat(70000));let mut output=NativeEncodeControl::new(usize::MAX,&mut accept);let bytes=encode_value_record_body_controlled(1,&text,&EncodeOptions::default(),&mut output).unwrap();
-    let mut stop=|progress:semio_framework_value::native_decoding::NativeDecodeProgress|!(progress.total>=65536&&progress.completed>=65536);let mut input=NativeDecodeControl::new(usize::MAX,&mut stop);assert!(matches!(decode_value_record_body_exact_controlled(&bytes,1,&DecodeOptions::default(),&mut input),Err(PackRefusal::ValueRefusal(error)) if error.kind==ValueRefusalKind::Canceled));
+    let mut stop=|progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|!(progress.total>=65536&&progress.completed>=65536);let mut input=NativeDecodeControl::new(usize::MAX,&mut stop);assert!(matches!(decode_value_record_body_exact_controlled(&bytes,1,&DecodeOptions::default(),&mut input),Err(PackRefusal::ValueRefusal(error)) if error.kind==ValueRefusalKind::Canceled));
 }
 
 #[test]
 fn intrinsic_media_wire_direct_helpers_honor_the_complete_declared_depth_frontier(){
-    use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+    use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str($depth).unwrap();
     let word=u64::from_str_radix(fixture["leafWord"].as_str().unwrap(),16).unwrap();
     for row in fixture["cases"].as_array().unwrap(){

@@ -1,4 +1,4 @@
-//! Diff for `remove-column`.
+//! 🔺️ Diff for `remove-column`.
 use crate::remove_column::RemoveColumn;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994ColumnsRows};

@@ -83,7 +83,7 @@ fn odd_cycle_pin_propagates_to_wipeout() {
     assert!(engine.propagate(&model, &topo, &mut domains, &seed, &mut metrics).is_err());
 }
 
-/// A random model whose one relation is genuinely symmetric (`allowed(r,a,c) == allowed(r,c,a)`)
+/// 🎲️ A random model whose one relation is genuinely symmetric (`allowed(r,a,c) == allowed(r,c,a)`)
 /// and therefore self-consistent under its default self-inverse declaration (`model.validate()`
 /// passes). [`crate::model_vectors::random_model`] does *not* guarantee this — it independently
 /// coin-flips each ordered pair — which is fine for oracle-vs-search differential tests (the
@@ -109,7 +109,7 @@ fn random_symmetric_model(rng: &mut semio_framework_geometry::random::Rng, patte
     (model, r)
 }
 
-/// Regression test for a real bug: `Ac4Engine::new`'s initial "already unsupported" sweep can
+/// 🌱️ Regression test for a real bug: `Ac4Engine::new`'s initial "already unsupported" sweep can
 /// discover the same `(node, pattern)` pair via more than one incoming-arc slot, and feeding
 /// that list into `propagate` without deduplicating caused some support counters to be decremented
 /// twice for a single logical removal — over-pruning patterns that still had support. Applying
@@ -185,7 +185,7 @@ fn sequential_and_batch_seed_application_agree() {
 mod quick {
     use super::*;
 
-    /// The P6 gate: AC-3 and AC-4 must reach byte-identical fixed points (or agree that the
+    /// ⚖️ The P6 gate: AC-3 and AC-4 must reach byte-identical fixed points (or agree that the
     /// state is contradictory) from the same random starting domains. Uses a validated,
     /// symmetric relation (see [`random_symmetric_model`]) — AC-3's forward-only restriction is
     /// only a full arc-consistency algorithm for well-formed models; comparing it against AC-4

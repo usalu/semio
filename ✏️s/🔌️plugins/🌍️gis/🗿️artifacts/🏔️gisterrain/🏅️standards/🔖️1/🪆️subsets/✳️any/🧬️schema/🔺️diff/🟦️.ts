@@ -6,8 +6,8 @@ import { parseGisTerrainArtifact,parseImportedMap,type ImportedMap, type GisTerr
 export type { GisTerrainArtifact } from "../🟦️.ts";
 
 export interface GisTerrainDiff {
-  /** @state artifact */ exaggeration: Binary64 | null;
-  /** @state artifact */ importedMap: {value?:ImportedMap} | null;
+  /** ✏️ @state artifact */ exaggeration: Binary64 | null;
+  /** 🔄️ @state artifact */ importedMap: {value?:ImportedMap} | null;
 }
 
 /** 🪪️ Applies parent field deltas while retaining independently owned mesh identity. */

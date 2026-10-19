@@ -134,9 +134,7 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
       bootSyncedRef.current = true;
       try {
         session.drainEventsJson();
-      } catch {
-        /* session not ready */
-      }
+      } catch {}
     }
   }, [peerScope, recordSnapshotVerdict, sessionEpoch, scene?.snapshotJson, node.controllerId, node.surfaceId]);
 
@@ -177,10 +175,6 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
     });
   }, [sessionEpoch, scene?.cameraJson]);
 
-  // 🐁️ The guest's hover echo paints the panes the pointer is NOT over — an outliner or catalogue row
-  // hovered in a panel highlights the node on every canvas this way. It is deliberately NOT applied to
-  // the pane under the pointer: that pane's engine already painted its own raycast this frame, and an
-  // echo lagging a round trip behind would blink the live hover off and back on.
   useEffect(() => {
     if (!scene || hoverActiveRef.current) return;
     publishHoverPaint(scene.hoveredId ?? null);
@@ -201,8 +195,6 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
     if (!scene || !board2dHostShellScope) return;
     const updateOptions = () => {
       const mode = board2dHostShellScope.selection.get();
-      // 🎯️ The owning app's selectable-kind filter; an older scene omits the flags and reads as on.
-      // Engine argument order is (nodes, edges, handles).
       applyToSession(sessionRef.current, (session) =>
         session.setSelectionOptions?.(scene.selectionMethod, mode, scene.selectableNodes !== false, scene.selectableEdges !== false, scene.selectableHandles !== false),
       );
@@ -221,8 +213,6 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
     applyToSession(sessionRef.current, (session) => session.setGridSnapEnabled?.(scene.gridSnapEnabled));
   }, [sessionEpoch, scene?.gridSnapEnabled]);
 
-  // 🕹️ `setTransformGumballFlag` composes which gumball handles the select utility offers; a scene
-  // that declares none leaves the engine's own default (move + rotate, never scale).
   useEffect(() => {
     if (!scene) return;
     const flags = parseBoard2dTransformFlags(scene.transformFlags);
@@ -235,14 +225,12 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
     applyToSession(sessionRef.current, (session) => session.setGridFactor?.(scene.gridFactor));
   }, [sessionEpoch, scene?.gridFactor]);
 
-  // 🖍️ What ONE area-brush click paints; a click-drag states its own rectangle and ignores this.
   useEffect(() => {
     if (!scene) return;
     const size = parseBoard2dAreaBrushSize(scene.areaBrushSize);
     applyToSession(sessionRef.current, (session) => session.setAreaBrushExtent?.(size.width, size.height));
   }, [sessionEpoch, scene?.areaBrushSize]);
 
-  // 🏷️ The owning domain's brush placement naming, so this lane mints the same ids as the wgpu lane and the domain's own boards.
   useEffect(() => {
     if (!scene) return;
     applyToSession(sessionRef.current, (session) => session.setPlacementNamingJson?.(scene.placementNaming ?? null));
@@ -271,8 +259,6 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
   }, [sessionEpoch, scene?.lodMode]);
   //#endregion SceneSync
 
-  // 🩺️ `data-board-interaction-json`/`data-board-transform-json` are written ONLY here and from
-  // `scheduleRender`, never from JSX — a React re-render must not stamp a stale frame over the live one.
   useEffect(() => {
     publishBoardVitals();
   });
@@ -282,9 +268,7 @@ export function useBoardLifecycleAndSync(core: BoardCore2) {
       syncSessionCanvasTheme(sessionRef.current);
       try {
         sessionRef.current?.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      } catch {}
     },
     true,
     board2dHostShellScope?.rootRef.current ?? undefined,

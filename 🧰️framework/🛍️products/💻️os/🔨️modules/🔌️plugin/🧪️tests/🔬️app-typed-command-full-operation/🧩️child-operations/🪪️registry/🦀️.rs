@@ -1,5 +1,6 @@
 // 🪪️ Ledger clones retain scalar identities while the paged registry owns every original source once.
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,list::PagedList};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
+use semio_framework_value_persistent::list::PagedList;
 const CAPACITY:usize=isize::MAX as usize;
 /// 🪪️ A runtime-local monotone identity never contains or clones source bytes.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

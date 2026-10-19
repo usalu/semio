@@ -147,7 +147,7 @@ impl DagSession {
     #[wasm_bindgen(js_name = reorganize)]
     pub fn reorganize(&self,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<(),JsValue>{
         let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|v|v.as_bool().unwrap_or(false)).unwrap_or(false);
-        let mut decoding=|p:semio_framework_value::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
+        let mut decoding=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
         let opts=decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
         let mut working=|p:LayoutProgress|report("layout",p.completed);let mut work=LayoutControl::new(maximum_work as u64,&mut working);
         self.state.borrow_mut().host.graph.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))
@@ -156,7 +156,7 @@ impl DagSession {
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
     pub fn set_canvas_theme_json(&mut self, json: &str) {
         let mut accepted=|_|true;
-        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);
+        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut accepted);
         if let Ok(overlay)=decode_board_palette_overlay_json(json,&mut control){match &mut self.state.borrow_mut().host { __host => dag_set_canvas_palette(&mut __host.viewport, &mut __host.paint, &overlay) };}
     }
 

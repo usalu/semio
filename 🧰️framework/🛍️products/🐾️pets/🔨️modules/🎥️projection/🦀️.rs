@@ -6,9 +6,9 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../🎥️projection/🟦️.ts — the TypeScript twin
 
-use crate::attention::{gaze_rests, leant, presence_of, squeeze_of, PERK_LINGER, POINTER_TICKS, TURN_REST};
-use crate::draft::{breath_of, clip_of, RATE};
-use crate::schedule::{arrival_tick, pairing_tick};
+use semio_framework_pets_staging_draft::attention::{gaze_rests, leant, presence_of, squeeze_of, PERK_LINGER, POINTER_TICKS, TURN_REST};
+use semio_framework_pets_staging_draft::draft::{breath_of, clip_of, RATE};
+use semio_framework_pets_staging_draft::schedule::{arrival_tick, pairing_tick};
 use semio_framework_pets_character::feeling::{settled, settles_at, spirits_of};
 use semio_framework_pets_contract::schema::{Activity, Actor, ActorFrame, EyeFrame, Facing, Frame, Menagerie, PetMode, Point, Rate, Rect, Species, Stage, Ticks};
 use semio_framework_pets_kinematics::animation::{blend_pose, clip_ticks, lid_at, sample_clip, BLINK_TICKS};
@@ -16,6 +16,18 @@ use semio_framework_pets_kinematics::rig::{pupil_reach, rest_pose, solve_rig, Bo
 use semio_framework_pets_kinematics::terrain::{larger, smaller};
 use semio_framework_pets_kinematics::trigonometry::clamp;
 use std::borrow::Borrow;
+use semio_framework_pets_contract::schema::Footing;
+use semio_framework_pets_contract::schema::Channel;
+use semio_framework_pets_contract::schema::ToolFrame;
+use semio_framework_pets_contract::schema::Drift;
+use semio_framework_pets_contract::schema::PressPhase;
+use semio_framework_pets_contract::schema::Clip;
+use semio_framework_pets_character::feeling::Standing;
+use semio_framework_pets_interaction::effects::Particle;
+use semio_framework_pets_contract::schema::ParticleFrame;
+use semio_framework_pets_contract::schema::LadderFrame;
+use semio_framework_pets_contract::schema::LiftFrame;
+use semio_framework_pets_contract::schema::PuffFrame;
 
 //#region 🔖️Constants
 const BLEND_TICKS: Ticks = 8;
@@ -80,11 +92,11 @@ fn clinging(actor: &Actor) -> bool {
 fn clip_time(stage: &Stage, kind: &Species, actor: &Actor, clip: &Clip, tick: Ticks) -> Ticks {
     if !clinging(actor) { return tick - actor.since; }
     let phase = if actor.footing == Footing::Wall {
-        actor.pitch.as_ref().map_or(0.0, |pitch| crate::climbing::climb_phase(pitch, actor.y, kind.size))
+        actor.pitch.as_ref().map_or(0.0, |pitch| semio_framework_pets_traversal::climbing::climb_phase(pitch, actor.y, kind.size))
     } else {
         stage.ladders.iter().find(|ladder| ladder.rider.as_ref() == Some(&actor.species)).map_or(0.0, |ladder| {
             let stand = LadderStand { wall: ladder.wall.clone(), surface: ladder.surface.clone(), side: ladder.side, foot: ladder.foot, top: ladder.top };
-            crate::climbing::ladder_phase(clamp((actor.y - ladder.foot.y) / (ladder.top.y - ladder.foot.y), 0.0, 1.0) * crate::climbing::ladder_length(&stand))
+            semio_framework_pets_traversal::climbing::ladder_phase(clamp((actor.y - ladder.foot.y) / (ladder.top.y - ladder.foot.y), 0.0, 1.0) * semio_framework_pets_traversal::climbing::ladder_length(&stand))
         })
     };
     (phase * clip_ticks(clip) as f64).floor() as Ticks
@@ -390,7 +402,7 @@ pub fn frame_of(menagerie: &Menagerie, stage: &Stage) -> Frame {
                 }
             }
             let tilt = if still { 0.0 } else { actor.tilt + wall_lean_of(kind, actor.footing, actor.pitch.as_ref(), actor.x) };
-            let pivot = if actor.footing == Footing::Rope { Point { x: crate::climbing::MUZZLE_FORWARD * kind.size.width, y: 0.0 - crate::climbing::MUZZLE_HEIGHT * kind.size.height } } else { Point { x: 0.0, y: -kind.grip } };
+            let pivot = if actor.footing == Footing::Rope { Point { x: semio_framework_pets_traversal::climbing::MUZZLE_FORWARD * kind.size.width, y: 0.0 - semio_framework_pets_traversal::climbing::MUZZLE_HEIGHT * kind.size.height } } else { Point { x: 0.0, y: -kind.grip } };
             let origin = placed(Point { x: actor.x, y: actor.y }, actor.facing, tilt, pivot);
             let extent = extent_of(actor, kind);
             ActorFrame {

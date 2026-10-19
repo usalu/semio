@@ -3,14 +3,14 @@ import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/sc
 import { parseCamera, parseManifest, type Camera, type Manifest } from "../🟦️.ts";
 
 export interface JackDiff {
-  /** @state artifact */ schema: string | null;
-  /** @state artifact */ name: string | null;
-  /** @state artifact — a missing key leaves the id unchanged, `null` clears it */ manifestId?: string | null;
-  /** @state artifact */ manifest: Manifest | null;
-  /** @state artifact */ camera: Camera | null;
-  /** @state artifact @child capability=s.trinity.jack.graph */ content: ArtifactChild | null;
-  /** @state artifact — a missing key leaves the id unchanged, `null` clears it */ rootNodeId?: string | null;
-  /** @state artifact */ query: string | null;
+  /** 🔄️ @state artifact */ schema: string | null;
+  /** ✏️ @state artifact */ name: string | null;
+  /** 📜️ @state artifact — a missing key leaves the id unchanged, `null` clears it */ manifestId?: string | null;
+  /** 🧾️ @state artifact */ manifest: Manifest | null;
+  /** 📷️ @state artifact */ camera: Camera | null;
+  /** 📄️ @state artifact @child capability=s.trinity.jack.graph */ content: ArtifactChild | null;
+  /** 🌳️ @state artifact — a missing key leaves the id unchanged, `null` clears it */ rootNodeId?: string | null;
+  /** 🔍️ @state artifact */ query: string | null;
 }
 
 const nullableString = (value: unknown, at: string): string | null => {

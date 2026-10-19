@@ -12,8 +12,9 @@ fn ceiling(owned: usize, body: &NativeSnapshotBodyWallet) -> Result<usize, Value
 fn typed_receipt<T>(charged: usize) -> RetainedCloneProgress { RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), retained_capacity_bytes: charged, released_bytes: 0 } }
 
 /// 🛬️ Parses the borrowed presence pack through the original grammar cursor, then binds it into the original typed owner.
-pub fn decode_presence_json<P: semio_framework_value::native_decoding::NativeReceive<DslValue>>(bytes:&[u8],owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<P,ValueError>{
-    use semio_framework_value::{native_decoding::owned::NativeReceivingOriginal,retained_clone::RetainedCloneSource};
+pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decoding::NativeReceive<DslValue>>(bytes:&[u8],owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<P,ValueError>{
+    use semio_framework_value::retained_clone::RetainedCloneSource;
+    use semio_framework_value_native_owned::native_decoding::owned::NativeReceivingOriginal;
     type Source=RetainedCloneSource<DslValue>;
     type Receiving<P>=(JsonGrammarCursor<DslValue>,Option<DslValue>,Option<JsonError>,Option<NativeReceivingOriginal<DslValue,P>>,(Option<Source>,Option<P>));
     let text=std::str::from_utf8(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"presence pack is not UTF-8 JSON"))?;

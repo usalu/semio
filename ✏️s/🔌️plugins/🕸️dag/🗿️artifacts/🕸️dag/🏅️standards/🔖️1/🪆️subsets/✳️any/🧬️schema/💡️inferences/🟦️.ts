@@ -8,7 +8,7 @@ export interface DagTopology {
 }
 
 export interface DagInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: DagTopology;
 }
 

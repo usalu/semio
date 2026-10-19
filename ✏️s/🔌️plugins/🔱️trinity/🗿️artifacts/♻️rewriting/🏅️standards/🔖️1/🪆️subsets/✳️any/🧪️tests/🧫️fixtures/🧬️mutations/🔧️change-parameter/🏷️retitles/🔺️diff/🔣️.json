@@ -3,9 +3,8 @@
   "lhs": null,
   "rhs": null,
   "parameterBindings": {
-    "entries": [
-      {
-        "key": "caption",
+    "entries": {
+      "caption": {
         "precondition": "any",
         "operation": {
           "kind": "set",
@@ -15,7 +14,7 @@
           }
         }
       }
-    ]
+    }
   },
   "ruleLayout": null
 }

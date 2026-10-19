@@ -1,4 +1,3 @@
-import{createNativeWindowsSystemGrantV1}from"../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import callerSchema from"../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";
@@ -23,5 +22,5 @@ export function resolveNxBootstrapLaunchesV1(root:string,args:readonly string[],
 
 /** 🪟️ Checks editor facts against the actual fresh OS before issuing an Nx Original. */
 export function readNxBootstrapAuthoringCapabilitiesV1(value:unknown):ReturnType<typeof createNativeNxCallerCapabilitiesV1>{
- if(validateJsonSchemaSubset(callerSchema,value).length)throw Error("Authored Nx caller capabilities refused");const declared=value as ReturnType<typeof createNativeNxCallerCapabilitiesV1>,windowsSystem=createNativeWindowsSystemGrantV1(declared.native.windowsSystem);return{...declared,native:{...declared.native,...(windowsSystem?{windowsSystem}:{})}};
+ if(validateJsonSchemaSubset(callerSchema,value).length)throw Error("Authored Nx caller capabilities refused");return value as ReturnType<typeof createNativeNxCallerCapabilitiesV1>;
 }

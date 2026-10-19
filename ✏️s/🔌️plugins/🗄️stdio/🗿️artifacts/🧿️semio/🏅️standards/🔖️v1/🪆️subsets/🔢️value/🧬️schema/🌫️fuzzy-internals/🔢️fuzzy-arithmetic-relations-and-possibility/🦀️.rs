@@ -12,12 +12,10 @@ pub struct FuzzyNumber {
 }
 
 impl FuzzyNumber {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn triangular(a: f64, b: f64, c: f64) -> Self {
         Self { a, b, c }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn alpha_cut(&self, alpha: f64) -> (f64, f64) {
         let alpha = clamp01(alpha);
         if alpha <= 0.0 {
@@ -28,7 +26,6 @@ impl FuzzyNumber {
         (left.min(right), left.max(right))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn defuzzify_centroid(&self, samples: usize) -> f64 {
         let mut num = 0.0;
         let mut den = 0.0;
@@ -46,18 +43,15 @@ impl FuzzyNumber {
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics add used pervasively as a plain method by fuzzy arithmetic callers")]
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add(self, other: Self) -> Self {
         Self { a: self.a + other.a, b: self.b + other.b, c: self.c + other.c }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics sub used pervasively as a plain method by fuzzy arithmetic callers")]
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sub(self, other: Self) -> Self {
         Self { a: self.a - other.c, b: self.b - other.b, c: self.c - other.a }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scale(self, k: f64) -> Self {
         if k >= 0.0 {
             Self { a: self.a * k, b: self.b * k, c: self.c * k }
@@ -89,22 +83,18 @@ pub struct FuzzyRelation {
 }
 
 impl FuzzyRelation {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(rows: usize, cols: usize) -> Self {
         Self { values: vec![vec![0.0; cols]; rows] }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set(&mut self, row: usize, col: usize, value: f64) {
         self.values[row][col] = clamp01(value);
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get(&self, row: usize, col: usize) -> f64 {
         self.values[row][col]
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose_max_min(&self, other: &Self) -> FuzzyResult<Self> {
         if self.values[0].len() != other.values.len() {
             return Err(FuzzyError::DimensionMismatch("relation composition".into()));
@@ -125,7 +115,6 @@ impl FuzzyRelation {
         Ok(out)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose_max_product(&self, other: &Self) -> FuzzyResult<Self> {
         if self.values[0].len() != other.values.len() {
             return Err(FuzzyError::DimensionMismatch("relation composition".into()));
@@ -157,7 +146,6 @@ pub struct PossibilityMeasure {
 }
 
 impl PossibilityMeasure {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(universe: Vec<f64>, membership: Vec<f64>) -> FuzzyResult<Self> {
         if universe.len() != membership.len() || universe.is_empty() {
             return Err(FuzzyError::InvalidDomain("possibility universe".into()));
@@ -165,17 +153,14 @@ impl PossibilityMeasure {
         Ok(Self { universe, membership: membership.into_iter().map(clamp01).collect() })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn possibility(&self, predicate: impl Fn(f64) -> bool) -> f64 {
         self.universe.iter().zip(self.membership.iter()).filter(|(x, _)| predicate(**x)).map(|(_, mu)| *mu).fold(0.0, f64::max)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn necessity(&self, predicate: impl Fn(f64) -> bool) -> f64 {
         1.0 - self.possibility(|x| !predicate(x))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_scores(universe: Vec<f64>, scores: Vec<f64>) -> FuzzyResult<Self> {
         let max_score = scores.iter().copied().fold(0.0_f64, f64::max).max(1e-12);
         Self::new(universe, scores.into_iter().map(|s| s / max_score).collect())

@@ -307,7 +307,6 @@ mod tests {
     /// ops — the same "adding a variant silently goes untested" guard, for patches instead of nodes.
     #[test]
     fn every_ui_patch_op_variant_appears_in_a_patch_case() {
-        // 🏷️ The wire `type` tag every `crate::UiPatchOp` variant serializes to.
         fn op_type_tag(op: &crate::UiPatchOp) -> &'static str {
             match op {
                 crate::UiPatchOp::Upsert(_) => "upsert",

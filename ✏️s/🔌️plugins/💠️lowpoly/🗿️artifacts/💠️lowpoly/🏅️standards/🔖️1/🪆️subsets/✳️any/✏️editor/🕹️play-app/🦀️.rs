@@ -116,8 +116,6 @@ impl ArtifactEditor for LowpolyPlayApp {
         Some(std::sync::Arc::new(LowpolyConfigStorePreparationFactory))
     }
 
-    // 🧹️ Registered-app store ownership: without owners + disposers for every lane the mounted instance
-    // faults `interactive-job.close-owned-disposer-missing` and threaded commands cannot republish scratch.
     /// 🎯️ What a mesh-domain interaction verb repaints. Hover: the Model scene only (the guest echoes
     /// `hoveredComponent` there; the rail and panels never show a hover). A moved selection: the scene,
     /// the Artifact tree and Inspection panels, the engagement rail (`N faces selected`) and the
@@ -178,9 +176,6 @@ impl ArtifactEditor for LowpolyPlayApp {
             "replaceSnapshotJson" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "exportMesh" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "loadMeshRequest" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
-            // 📥️ Every row must equal the ONE contract `LowpolyCommandJobFactory` registers
-            // (`registration.contract == row.contract`, else the boot-time proof join refuses the tool);
-            // the mesh file rides inside that shared wire budget.
             "importMeshFile" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "deleteSelection" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),
             "duplicateObject" => ToolExecutionContract::resumable(16_384, 258, 1, 33_554_432, 7_500, 1, 1),

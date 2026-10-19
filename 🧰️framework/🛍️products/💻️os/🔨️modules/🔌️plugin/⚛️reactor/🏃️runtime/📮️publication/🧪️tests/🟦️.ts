@@ -2,7 +2,7 @@
 import {test,expect} from 'bun:test';
 import {Database} from 'bun:sqlite';
 import {readFileSync} from 'node:fs';
-import {semioSchemaAjvV1} from '../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts';
+import {semioSchemaAjvV1} from '@semio-tech/schema-ts/oracles/validator';
 const fixture=JSON.parse(readFileSync(new URL('../🧪️.json',import.meta.url),'utf8'));
 const schema=JSON.parse(readFileSync(new URL('../🧬️.json',import.meta.url),'utf8'));
 test('original native publication batch fixture preserves all five independent currencies',()=>{

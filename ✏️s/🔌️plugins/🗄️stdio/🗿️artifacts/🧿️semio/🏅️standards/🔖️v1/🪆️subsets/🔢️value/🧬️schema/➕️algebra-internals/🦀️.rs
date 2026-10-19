@@ -18,67 +18,54 @@
 pub struct VecD(pub Vec<f64>);
 
 impl VecD {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn zeros(n: usize) -> Self {
         Self(vec![0.0; n])
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_vec(data: Vec<f64>) -> Self {
         Self(data)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get(&self, i: usize) -> f64 {
         self.0[i]
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set(&mut self, i: usize, value: f64) {
         self.0[i] = value;
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add_at(&mut self, i: usize, value: f64) {
         self.0[i] += value;
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn dot(&self, other: &Self) -> f64 {
         self.0.iter().zip(other.0.iter()).map(|(a, b)| a * b).sum()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scale(&self, s: f64) -> Self {
         Self(self.0.iter().map(|v| v * s).collect())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add(&self, other: &Self) -> Self {
         Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a + b).collect())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sub(&self, other: &Self) -> Self {
         Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a - b).collect())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn norm2(&self) -> f64 {
         self.dot(self).sqrt()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn norm_inf(&self) -> f64 {
         self.0.iter().fold(0.0_f64, |acc, v| acc.max(v.abs()))
     }
@@ -95,12 +82,10 @@ pub struct MatD {
 }
 
 impl MatD {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn zeros(rows: usize, cols: usize) -> Self {
         Self { rows, cols, data: vec![0.0; rows * cols] }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn identity(n: usize) -> Self {
         let mut m = Self::zeros(n, n);
         for i in 0..n {
@@ -109,22 +94,18 @@ impl MatD {
         m
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get(&self, row: usize, col: usize) -> f64 {
         self.data[row * self.cols + col]
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set(&mut self, row: usize, col: usize, value: f64) {
         self.data[row * self.cols + col] = value;
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add_at(&mut self, row: usize, col: usize, value: f64) {
         self.data[row * self.cols + col] += value;
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transpose(&self) -> Self {
         let mut out = Self::zeros(self.cols, self.rows);
         for row in 0..self.rows {
@@ -135,7 +116,6 @@ impl MatD {
         out
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn matmul(&self, other: &Self) -> Self {
         assert_eq!(self.cols, other.rows, "matmul dimension mismatch");
         let mut out = Self::zeros(self.rows, other.cols);
@@ -153,7 +133,6 @@ impl MatD {
         out
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mul_vec(&self, x: &VecD) -> VecD {
         assert_eq!(self.cols, x.len(), "mul_vec dimension mismatch");
         let mut out = VecD::zeros(self.rows);
@@ -168,7 +147,6 @@ impl MatD {
     }
 
     /// 🧮️ `Bᵀ D B` scaled by `weight`, accumulated into `self` — the element-stiffness Gauss-point kernel.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
         let btdb = b.transpose().matmul(d).matmul(b);
         for i in 0..self.data.len() {
@@ -177,7 +155,6 @@ impl MatD {
     }
 
     /// 🧮️ Solves `Ax = b` via Gaussian elimination with partial pivoting; `None` if `A` is singular.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn lu_solve(&self, b: &VecD) -> Option<VecD> {
         assert_eq!(self.rows, self.cols, "lu_solve requires a square matrix");
         assert_eq!(self.rows, b.len(), "lu_solve dimension mismatch");

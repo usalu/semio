@@ -88,7 +88,6 @@ pub struct MultiscaleConfig {
 }
 
 impl MultiscaleConfig {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(scales: usize, grain: Grain, inner: MsInner) -> Result<Self, EntropyError> {
         if scales == 0 {
             return Err(EntropyError::InvalidConfig { field: "scales", reason: "must be at least 1" });

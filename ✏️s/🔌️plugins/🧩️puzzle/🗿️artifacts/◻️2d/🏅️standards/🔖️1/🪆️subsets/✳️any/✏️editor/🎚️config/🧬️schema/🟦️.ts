@@ -1,14 +1,14 @@
 /** 🧬️ Shared Puzzle 2D generator preferences and the fill tool's requested count. */
 export interface Puzzle2dConfig {
-  /** @state config */
+  /** 🔘️ @state config */
   nodeKindWeights: Record<string, number>;
-  /** @state config */
+  /** 🤚️ @state config */
   handleKindWeights: Record<string, number>;
-  /** @state config */
+  /** 🪣️ @state config */
   fillCount: number;
-  /** @state config */
+  /** 🤝️ @state config */
   contactTolerance: number;
-  /** @state config */
+  /** 🖌️ @state config */
   brushPlacementOverlapBudget: number;
 }
 

@@ -71,18 +71,18 @@ export interface Grid2dPinnedPatch {
 export type Grid2dMaskedPatch = Record<string, never>;
 
 export interface Grid2dDiff {
-  /** @state artifact */ schema?: string | null;
-  /** @state artifact */ seed?: bigint | null;
-  /** @state artifact */ width?: number | null;
-  /** @state artifact */ height?: number | null;
-  /** @state artifact */ cellWidth?: Binary64 | null;
-  /** @state artifact */ cellHeight?: Binary64 | null;
-  /** @state artifact */ periodicX?: boolean | null;
-  /** @state artifact */ periodicY?: boolean | null;
-  /** @state artifact */ tiles: Grid2dRows<WfcTile2d, Grid2dTilePatch>;
-  /** @state artifact */ rules: Grid2dRows<WfcAdjacencyRule2d, Grid2dRulePatch>;
-  /** @state artifact */ pinned: Grid2dRows<WfcPinnedCell2d, Grid2dPinnedPatch>;
-  /** @state artifact */ masked: Grid2dRows<WfcCell2d, Grid2dMaskedPatch>;
+  /** 🔄️ @state artifact */ schema?: string | null;
+  /** 🌱️ @state artifact */ seed?: bigint | null;
+  /** ↔️ @state artifact */ width?: number | null;
+  /** ↕️ @state artifact */ height?: number | null;
+  /** 🧩️ @state artifact */ cellWidth?: Binary64 | null;
+  /** 🀄️ @state artifact */ cellHeight?: Binary64 | null;
+  /** 🔁️ @state artifact */ periodicX?: boolean | null;
+  /** 🌀️ @state artifact */ periodicY?: boolean | null;
+  /** 🗺️ @state artifact */ tiles: Grid2dRows<WfcTile2d, Grid2dTilePatch>;
+  /** 📜️ @state artifact */ rules: Grid2dRows<WfcAdjacencyRule2d, Grid2dRulePatch>;
+  /** 📌️ @state artifact */ pinned: Grid2dRows<WfcPinnedCell2d, Grid2dPinnedPatch>;
+  /** ✏️ @state artifact */ masked: Grid2dRows<WfcCell2d, Grid2dMaskedPatch>;
 }
 
 /** 🔑️ The removal key of a grid cell — the same `"<x>,<y>"` spelling both cell lanes use. */

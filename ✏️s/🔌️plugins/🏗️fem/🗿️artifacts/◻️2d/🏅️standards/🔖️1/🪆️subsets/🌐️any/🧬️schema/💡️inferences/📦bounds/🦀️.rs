@@ -1,4 +1,4 @@
-//! fem2d snapshot's `nodes`/`elements` alone. A whole-snapshot scalar (not per-entity), so this
+//! 🧮️ fem2d snapshot's `nodes`/`elements` alone. A whole-snapshot scalar (not per-entity), so this
 //! 📦 `bounds` — one named inference: the plan-view extent and entity counts derivable from a
 //! leaf holds a plain pure function rather than an `InferredField` dependency chain — nothing here
 //! benefits from per-entity incremental caching, unlike `puzzle3d`'s `flatPosition`.

@@ -2,8 +2,12 @@ use crate::solve_linear_static;
 use crate::Elements;
 use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Dof;
+use semio_s_fem_elements2d::PlaneKind;
+use semio_s_fem_model::Element;
+use semio_s_fem_model::ElementContext;
+use semio_s_fem_model::Node;
 
 fn assert_mounted_stiffness_cells_match_batch(element: &dyn Element, context: &ElementContext, tolerance: f64) {
     let batch = element.stiffness_global(context);
@@ -40,8 +44,6 @@ fn bar2_axial_matches_hand_calc() {
     let model = Model {
         nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
         elements: vec![Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 }.into()],
-        // A single bar only resists motion along its own axis, so `b`'s transverse (Ty) DOF must
-        // also be restrained here — otherwise it's a mechanism (zero stiffness, singular system).
         supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "b".into(), fixed: vec![Dof::Ty] }],
         nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Tx, value: p }],
         member_loads: vec![],
@@ -239,8 +241,6 @@ fn beam_eb2_geometric_stiffness_rigid_translation_gives_zero_force() {
     let (e, iy, area, l) = (200e9, 1e-5, 0.01, 2.0);
     let beam = BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 };
     let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [l, 0.0, 0.0]] };
-    // A pure translation along +x produces a nonzero axial force n = EA/L * dx; geometric
-    // stiffness only touches the bending block, so a pure translation still gives zero force there.
     let u = VecD::from_vec(vec![0.0, 0.0, 0.0, 0.001, 0.0, 0.0]);
     let kg = beam.geometric_stiffness(&ctx, &u).expect("beam_eb2 reports geometric stiffness");
     let rigid = VecD::from_vec(vec![3.0, 4.0, 0.0, 3.0, 4.0, 0.0]);
@@ -303,7 +303,6 @@ fn bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric(
     for i in 0..4 {
         assert!(f.get(i).abs() < 1e-6, "rigid-body geometric force[{i}] = {}", f.get(i));
     }
-    // Axial member here runs along global X, so `Kg`'s axial (Tx) rows/columns must be zero.
     for i in [0usize, 2] {
         for j in 0..4 {
             assert!(kg.get(i, j).abs() < 1e-6, "Kg({i},{j}) should be zero along the bar's own axis");
@@ -313,7 +312,7 @@ fn bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric(
 
 #[test]
 fn mounted_load_rows_match_independent_quadrature_and_consistent_mass() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📏️elements2d/🧫️fixtures/🌬️mounted-loads/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📏️elements2d/🧪️tests/🧫️fixtures/🌬️mounted-loads/🔣️.json")).expect("fixture");
     let expected = fixture.get("line").unwrap().get("expected").unwrap().as_array().unwrap();
     let positions = [[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
     let context = ElementContext { positions: positions.to_vec() };

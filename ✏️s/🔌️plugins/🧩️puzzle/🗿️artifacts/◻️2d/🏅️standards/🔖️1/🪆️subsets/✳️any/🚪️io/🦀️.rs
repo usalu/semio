@@ -1,4 +1,4 @@
-//! (called once from ⚙️engine::register), not per-leaf register().
+//! 📨️ (called once from ⚙️engine::register), not per-leaf register().
 //! 🚪️ IO s.puzzle2d (1/✳️any) — registration now flows through 🎹️composer::register
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json", "stdio.txt"]

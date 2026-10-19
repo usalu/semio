@@ -49,8 +49,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 🕹️ Populated post-hoc by `create_architect_app`'s `.window_kind_interactions(..)` call —
-        // the "program" domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         interactions: Vec::new(),
     }
 }
@@ -74,7 +72,6 @@ pub fn graph_ring_radius(count: usize) -> f64 {
 pub fn graph_media_json(program: &ProgramSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
     let radius = graph_ring_radius(count);
-    // 📍 Anchors the node BOUNDING BOX at (margin, margin) so an untouched viewport frames it.
     let center_x = ARCHITECT_GRAPH_MARGIN + radius + ARCHITECT_GRAPH_NODE_WIDTH / 2.0;
     let center_y = ARCHITECT_GRAPH_MARGIN + radius + ARCHITECT_GRAPH_NODE_HEIGHT / 2.0;
     let nodes: Vec<NodeGraphNodeRecord> = program

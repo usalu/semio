@@ -24,6 +24,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteIdealLoadsSys
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteIdealLoadsSystem> + From<crate::CreateIdealLoadsSystem>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "ideal-loads-system", kind: "delete-ideal-loads-system", record: "DeletedIdealLoadsSystem" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -45,7 +46,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "ideal-loads-system", kind: "delete-ideal-loads-system", record: "DeletedIdealLoadsSystem" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

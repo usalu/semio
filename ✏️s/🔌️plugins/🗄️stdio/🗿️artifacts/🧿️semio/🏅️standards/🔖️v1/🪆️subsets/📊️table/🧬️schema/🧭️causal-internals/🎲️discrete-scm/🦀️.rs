@@ -26,7 +26,6 @@ pub struct DiscreteScm {
 
 impl DiscreteScm {
     /// 📊️ MLE CPTs from categorical columns with additive (Laplace) smoothing `pseudocount` (`0.0` = pure MLE).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fit(dag: &CausalDag, data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, pseudocount: f64) -> Result<Self, CausalError> {
         let n = dag.n();
         let columns: Vec<&semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::CategoricalColumn> = (0..n).map(|i| data.categorical(i)).collect::<Result<_, _>>()?;
@@ -74,7 +73,6 @@ impl DiscreteScm {
 
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
         let mut codes = vec![vec![0u32; n_samples]; n];
@@ -107,7 +105,6 @@ impl DiscreteScm {
     }
 
     /// ✂️ `do(v := value)` for each entry: replaces `v`'s CPT with a point mass and drops its parents.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn intervened(&self, interventions: &[(usize, u32)]) -> Result<Self, CausalError> {
         let intervened_map: HashMap<usize, u32> = interventions.iter().copied().collect();
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_map.contains_key(&child)).collect();
@@ -124,7 +121,6 @@ impl DiscreteScm {
 
     /// 🔢️ `P(target | evidence)` by variable elimination (Zhang & Poole 1994) over a
     /// min-remaining-factors ordering, guarded against blow-up.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn posterior(&self, target: usize, evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
         const MAX_FACTOR_ENTRIES: usize = 1_000_000;
         let n = self.dag.n();
@@ -166,7 +162,6 @@ impl DiscreteScm {
     }
 
     /// 🔮️ `P(target | do(interventions), evidence)`: posterior on the intervened network.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn interventional_distribution(&self, target: usize, interventions: &[(usize, u32)], evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
         self.intervened(interventions)?.posterior(target, evidence)
     }
@@ -181,7 +176,6 @@ struct Factor {
 }
 
 impl Factor {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn from_cpt(cpt: &Cpt, cardinalities: &[usize]) -> Self {
         let mut vars = vec![cpt.node];
         vars.extend_from_slice(&cpt.parents);
@@ -189,7 +183,6 @@ impl Factor {
         Self { vars, cards, values: cpt.probs.clone() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn encode(&self, assignment: &HashMap<usize, u32>) -> usize {
         let mut idx = 0usize;
         let mut stride = 1usize;
@@ -200,7 +193,6 @@ impl Factor {
         idx
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn restrict(&self, var: usize, value: u32) -> Self {
         let Some(pos) = self.vars.iter().position(|&v| v == var) else {
             return self.clone();
@@ -217,7 +209,6 @@ impl Factor {
         Factor { vars: new_vars, cards: new_cards, values }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn multiply(&self, other: &Factor) -> Factor {
         let mut vars = self.vars.clone();
         let mut cards = self.cards.clone();
@@ -236,7 +227,6 @@ impl Factor {
         Factor { vars, cards, values }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn marginalize(&self, var: usize) -> Factor {
         let Some(pos) = self.vars.iter().position(|&v| v == var) else {
             return self.clone();

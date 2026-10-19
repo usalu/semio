@@ -14,7 +14,7 @@ import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runAdmittedCargoPackageTestsV1(["semio-framework-course-schema", "semio-framework-course", "semio-framework-course-tests", "semio-framework-course-primitives-tests"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-framework-course-schema", "semio-framework-course", "semio-framework-course-presence", "semio-framework-course-tests", "semio-framework-course-primitives-tests"], this.repoRoot, this.invocation, rest);
   }
 }
 

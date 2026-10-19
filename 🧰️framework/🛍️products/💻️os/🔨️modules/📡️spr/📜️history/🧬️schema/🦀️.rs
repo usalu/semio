@@ -1,6 +1,6 @@
 //! 🎞️ Persisted History records and canonical fold ownership.
 use protocol::ProtocolError;
-pub type HistoryEdits=semio_framework_value::list::PagedList<HistoryEdit,{usize::MAX}>;
+pub type HistoryEdits=semio_framework_value_persistent::list::PagedList<HistoryEdit,{usize::MAX}>;
 #[path="../🔁️fold/🦀️.rs"]
 mod retained_fold;
 pub use retained_fold::RetainedHistoryFold;

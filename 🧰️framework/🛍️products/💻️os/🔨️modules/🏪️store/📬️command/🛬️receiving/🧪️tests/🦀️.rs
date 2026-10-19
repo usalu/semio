@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, retirement::controlled::ControlledRetirement};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::cell::Cell;
 
 #[derive(Debug,PartialEq,semio_framework_value::RetireOwned)]

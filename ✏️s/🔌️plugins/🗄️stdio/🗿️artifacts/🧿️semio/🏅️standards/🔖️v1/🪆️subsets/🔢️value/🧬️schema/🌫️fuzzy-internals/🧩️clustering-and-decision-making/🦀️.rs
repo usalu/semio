@@ -127,12 +127,10 @@ pub struct FuzzyAhp {
 }
 
 impl FuzzyAhp {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(matrix: Vec<Vec<FuzzyNumber>>) -> Self {
         Self { matrix }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn weights(&self) -> Vec<f64> {
         let n = self.matrix.len();
         let mut scores = vec![0.0; n];
@@ -161,7 +159,6 @@ pub struct FuzzyTopsis {
 }
 
 impl FuzzyTopsis {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();
@@ -203,7 +200,6 @@ pub struct FuzzyVikor {
 }
 
 impl FuzzyVikor {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rank(&self) -> Vec<(usize, f64)> {
         let m = self.alternatives.len();
         let n = self.criteria.len();

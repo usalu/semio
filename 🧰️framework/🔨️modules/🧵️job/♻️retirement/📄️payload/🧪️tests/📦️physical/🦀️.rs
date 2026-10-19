@@ -1,5 +1,6 @@
 //! 📦️ Actual empty, short and full native backing remains with its funded Original caller until exact release.
 use semio_framework_job::*;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 #[path="../../../../🧪️testing/📬️payload/🦀️.rs"]
 mod original_payload;
 #[global_allocator]

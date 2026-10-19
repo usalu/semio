@@ -1,5 +1,6 @@
 /// 🤝️ Hub hello, bootstrap and receive laws: the bootstrap frontier identity, the hub actor hello at the canonical pair baseline, the terminal connection failure, the concurrent supersessions, the native bootstrap and the received envelope materialization.
 
+use semio_framework_os_store_sync_native::native_actor;
 #[test]
 fn bootstrap_frontier_identity_rejects_same_ordinals_with_wrong_authenticated_head() {
     let required = bootstrap_frontier("demo", 9, "edit-9", 4, 0x44);
@@ -186,7 +187,7 @@ async fn confirmed_hub_actor(name: &str, socket_actor: &str) -> (native_actor::A
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_socket() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const LEFT: &str = "hub.v1.1111111111111111111111111111111111111111111111111111111111111111";
@@ -475,7 +476,7 @@ async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
 
 /// 🪪️ Admits the fixture caller's independent byte ceiling and observes the original cumulative identity operation.
 async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, DemoMutation>, envelope: MutationEnvelope) -> Result<(), SyncError> {
-    const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut observed = 0;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
         assert!(progress.owned_bytes <= CEILING);

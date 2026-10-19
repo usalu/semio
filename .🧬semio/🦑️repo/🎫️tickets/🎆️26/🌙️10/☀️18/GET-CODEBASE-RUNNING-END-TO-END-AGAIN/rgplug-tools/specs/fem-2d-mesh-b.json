@@ -1,0 +1,23 @@
+{
+ "ws": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml",
+ "old_name": "semio-s-artifact-fem-2d-mesh",
+ "old_pkg": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+ "old_root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs",
+ "subtree": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+ "old_emoji": "🕸️",
+ "old_doc": "`s.fem.fem2d` mesh mutations of node changes and the selection move.",
+ "old_desc": "FEM 2d node changes and the selection move",
+ "script": null,
+ "new": [
+  {
+   "name": "semio-s-artifact-fem-2d-mesh-elements",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔩️elements",
+   "emoji": "🔩️",
+   "doc": "`s.fem.fem2d` mesh mutations of element changes.",
+   "desc": "FEM 2d element change mutations",
+   "move": [
+    "change_element"
+   ]
+  }
+ ]
+}

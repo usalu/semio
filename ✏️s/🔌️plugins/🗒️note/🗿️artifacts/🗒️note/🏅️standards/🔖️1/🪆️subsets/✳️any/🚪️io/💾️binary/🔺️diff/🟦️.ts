@@ -1,2 +1,2 @@
-/** binary diff_binary */
+/** 💾️ binary diff_binary */
 export {};

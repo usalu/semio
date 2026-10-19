@@ -28,7 +28,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringRetirement {
 
 pub struct ArtifactStoreEditRetirement<Mutation> {
     pub forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
-    pub inverse: std::mem::ManuallyDrop<Option<semio_framework_value::list::PagedList<Mutation, {usize::MAX}>>>,
+    pub inverse: std::mem::ManuallyDrop<Option<semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>>>,
     pub state: std::mem::ManuallyDrop<Option<ArtifactStoreEditRetirementState>>,
 }
 
@@ -47,7 +47,7 @@ impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
         use semio_framework_value::RetirementDemand;
         if let Some(state)=self.state.as_ref(){if state.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ArtifactStoreEditRetirementState>>(),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:state.next_copy_byte_demand()?,capacity_bytes:state.next_capacity_byte_demand(copy)?,release_bytes:state.next_release_byte_demand()?,depth:state.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original edit metadata depth overflow"))?});}
         if let Some(forwards)=self.forwards.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<Vec<Mutation>>(),release_bytes:std::alloc::Layout::array::<Mutation>(forwards.capacity()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original empty forward backing overflow"))?.size(),depth:1,..Default::default()});}
-        if let Some(inverse)=self.inverse.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::list::PagedList<Mutation,{usize::MAX}>>(),release_bytes:inverse.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()});}
+        if let Some(inverse)=self.inverse.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value_persistent::list::PagedList<Mutation,{usize::MAX}>>(),release_bytes:inverse.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()});}
         Ok(Default::default())
     }
 }
@@ -177,7 +177,7 @@ impl Drop for ArtifactStoreHistoryMetadataRetirement {
 /// 🧾️ Retains the actual native forward or inverse collection without rebuilding its scaffold.
 pub enum ArtifactStoreOperationRowOwners<Mu> {
     Forwards(Vec<Mu>),
-    Inverse(semio_framework_value::list::PagedList<Mu, {usize::MAX}>),
+    Inverse(semio_framework_value_persistent::list::PagedList<Mu, {usize::MAX}>),
 }
 
 impl<Mu> From<Vec<Mu>> for ArtifactStoreOperationRowOwners<Mu> {

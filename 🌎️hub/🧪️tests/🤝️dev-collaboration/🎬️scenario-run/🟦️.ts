@@ -22,7 +22,6 @@ export async function collabRunScenario(
   let spaceId: string | undefined;
   let artifactId: string | undefined;
 
-  // STEP 1
   try {
     const spaceName = `Collab Studio ${Date.now()}`;
     await collabClickToolbarButton(user1, "s-home-create-space");
@@ -39,7 +38,6 @@ export async function collabRunScenario(
     record(1, false, error instanceof Error ? error.message : String(error));
   }
 
-  // STEP 2
   if (spaceId) {
     try {
       await collabRowAction(user1, "space", spaceId, "share");
@@ -69,7 +67,6 @@ export async function collabRunScenario(
     record(2, false, "skipped — no space id from STEP 1");
   }
 
-  // STEP 3
   if (spaceId) {
     try {
       await collabOpenSpace(user1, spaceId);
@@ -90,7 +87,6 @@ export async function collabRunScenario(
     record(3, false, "skipped — no space id from STEP 1");
   }
 
-  // STEP 4
   if (spaceId && artifactId) {
     try {
       await collabRowAction(user2, "artifact", artifactId, "open");
@@ -129,7 +125,6 @@ export async function collabRunScenario(
     record(4, false, "skipped — no artifact id from STEP 3");
   }
 
-  // STEP 5
   try {
     const peers1 = user1.locator('[id="s-presence-peers"]');
     const peers2 = user2.locator('[id="s-presence-peers"]');
@@ -161,7 +156,6 @@ export async function collabRunScenario(
     record(5, false, error instanceof Error ? error.message : String(error));
   }
 
-  // STEP 6
   if (spaceId && artifactId) {
     try {
       await collabOpenSpace(user1, spaceId);
@@ -207,7 +201,6 @@ export async function collabRunScenario(
     record(6, false, "skipped — no space/artifact id from earlier steps");
   }
 
-  // STEP 7
   const capability = adminCapability();
   if (capability === "") record(7, null, "skipped — this run joined an external hub without an admin-relay capability");
   else try {
@@ -241,7 +234,6 @@ export async function collabRunScenario(
     record(7, false, error instanceof Error ? error.message : String(error));
   }
 
-  // STEP 8
   if (spaceId && artifactId) {
     try {
       await collabOpenSpace(user1, spaceId);

@@ -6,7 +6,7 @@ import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetach
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 import { OwnedUiInstance } from "../🏘️instance/🟦️.ts";
 import { bindResidentScopeMatcher } from "../🏘️instance/🪪️resident-scope/🟦️.ts";
-import { OwnedUiOperationPayloadBuilder, type OwnedUiOperationInputCopied, type OwnedUiOperationInputCancelled } from "../🩹️operations/📥️wire/📃️pages/🟦️.ts";
+import { OwnedUiOperationPayloadBuilder, bindUiOperationResidentHost, type OwnedUiOperationInputCopied, type OwnedUiOperationInputCancelled, type OwnedUiOperationPayloadReadStep } from "../🩹️operations/📥️wire/📃️pages/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "./🪪️metadata/🟦️.ts";
 import { uiInputHost, type UiInputField, type UiPayloadDetachment } from "../🔌️host/📥️input/🟦️.ts";
 
@@ -32,7 +32,7 @@ type Page = { payload: Payload | null; facade: OwnedUiResidentPage | null; previ
 type ReaderSlot = { requestOwner: OwnedUiResidentPayload | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: Reader | null; phase: SlotPhase | "reader-state" | "reader-shell" | "reader-witness" | "builder-installing" | "builder-installed" | "reader-finalized" | "binding-detaching" | "binding-settling" | "binding-settled"; failure: unknown; witness: OwnedUiResidentReaderRetirement | null };
 type Reader = { payload: Payload | null; facade: OwnedUiResidentPayloadReader | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; page: Page | null; storageCell: OwnedResidentAdmission | null; offset: number; phase: "constructing" | "live" | "page-held" | "alias-preparing" | "alias-rejected" | "alias-held" | "alias-claiming" | "alias-claimed" | "alias-admitting" | "reading" | "alias-closing" | "page-detaching" | "page-retiring" | "page-observing" | "closing" | "body-retired" | "domain-retired" | "registration-retired"; witness: OwnedUiResidentReaderRetirement | null; failure: unknown; consumed: bigint };
 export type OwnedUiResidentReaderAdmission = { readonly step: RetainedUiWireStep; readonly reader: OwnedUiResidentPayloadReader | null };
-export type OwnedUiResidentReaderStep = RetainedUiWireStep | { readonly kind: "byte"; readonly value: number; readonly items: number; readonly bytes: number };
+export type OwnedUiResidentReaderStep = OwnedUiOperationPayloadReadStep;
 let readerState: (reader: unknown) => Reader | null;
 let createReader: (state: Reader) => OwnedUiResidentPayloadReader;
 let createReaderWitness: (state: Reader) => OwnedUiResidentReaderRetirement;
@@ -802,3 +802,5 @@ function closeReaderSlot(state: Payload, grant: UiIndexGrant, requested: Reader 
   } catch (error) { builderFault(slot, error); return step("rejected", "resident-reader-close-fault"); }
 }
 //#endregion 📖️RegisteredStreamingReader
+declare module "../🩹️operations/📥️wire/📃️pages/🟦️.ts" { interface UiResidentTypes { readonly reader: OwnedUiResidentPayloadReader } }
+bindUiOperationResidentHost({ payload: OwnedUiResidentPayload, readerRetirement: OwnedUiResidentReaderRetirement, isReader: (value): value is OwnedUiResidentPayloadReader => value instanceof OwnedUiResidentPayloadReader });

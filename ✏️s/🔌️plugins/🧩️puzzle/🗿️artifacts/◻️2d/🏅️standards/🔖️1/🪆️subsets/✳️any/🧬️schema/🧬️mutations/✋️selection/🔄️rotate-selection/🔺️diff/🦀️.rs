@@ -1,4 +1,4 @@
-//! position and each of its handle angles), read off the BASE, so the leaf replays on any base. Target
+//! 📍️ position and each of its handle angles), read off the BASE, so the leaf replays on any base. Target
 //! 🔺️ Sparse diff builder for `RotateSelection` — every unlocked addressed node turns about the pivot (its
 //! regions are axis-aligned rectangles and are skipped.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;

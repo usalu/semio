@@ -91,7 +91,7 @@ pub struct InteractionCatalogEntry {
 //#endregion 🔖️Types
 
 //#region 🔖️Registry
-/// `(modelDefinitionId, raw JSON)` for every `🕹️interactions/*.json` asset, one slice per catalog (`✏️editor/🗂️catalog`) —
+/// 💾️ `(modelDefinitionId, raw JSON)` for every `🕹️interactions/*.json` asset, one slice per catalog (`✏️editor/🗂️catalog`) —
 /// pinned against the on-disk tree by `every_interaction_asset_on_disk_parses_as_interaction_spec`. `spatial.shape`'s
 /// slices are re-merged into the asset names' order once parsed.
 const RAW_INTERACTION_ASSETS: &[&[(&str, &str)]] = &[semio_s_artifact_cad_cad_catalog_shape_curves::INTERACTIONS, semio_s_artifact_cad_cad_catalog_shape_surfaces::INTERACTIONS, semio_s_artifact_cad_cad_catalog_shape_solids::INTERACTIONS, semio_s_artifact_cad_cad_catalog_shape_edits::INTERACTIONS, semio_s_artifact_cad_cad_catalog_building::INTERACTIONS, semio_s_artifact_cad_cad_catalog_energy::INTERACTIONS, semio_s_artifact_cad_cad_catalog_structure::INTERACTIONS, semio_s_artifact_cad_cad_catalog_fem::INTERACTIONS];
@@ -215,7 +215,7 @@ fn context_target_field(target: &ExprPathTarget) -> Option<&str> {
     }
 }
 
-/// Wraps a raw event payload into the shape the JSON specs' `event.*` path expressions expect:
+/// 🧼️ Wraps a raw event payload into the shape the JSON specs' `event.*` path expressions expect:
 /// `pointer.down`/`pointer.move` read `event.point`, `set.*` events read `event.value`. Callers
 /// (both `lib.rs`'s command handlers and this module's own tests) pass raw values (a `[x,y,z]`
 /// array, a bare number) for brevity — already-wrapped objects pass through unchanged.
@@ -233,7 +233,7 @@ fn normalize_event_payload(event_kind: &str, payload: Option<&DslValue>) -> Opti
     Some(payload.clone())
 }
 
-/// Executes an `action` effect by name.
+/// 🏃️ Executes an `action` effect by name.
 ///
 /// `command.addPoint` (used by sphere/circle/etc.) records a named point into a
 /// `context[field][key]` map. `box.aabbFromDiagonalCorners` (box's default diagonal-mode second
@@ -413,7 +413,7 @@ pub fn apply_event(session: &mut CadEngagementScratch, event_kind: &str, payload
     apply_event_generic(session, event_kind, payload, 0)
 }
 
-/// States where a numeric-only line commits the pending height (premigration `tryCommitNumericEntry`).
+/// ➕️ States where a numeric-only line commits the pending height (premigration `tryCommitNumericEntry`).
 const NUMERIC_ENTRY_STATES: &[&str] = &["first_corner_height", "two_points_height", "slab_height", "column_height", "radius", "curve_height"];
 
 /// 🔢️ The `set.*` event a bare number means in `session`'s current state — the spec's own
@@ -477,7 +477,7 @@ fn strip_prefix_ignore_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> 
     head.eq_ignore_ascii_case(prefix).then_some(tail)
 }
 
-/// Parses a REPL command line into an `(event_kind, payload)` pair.
+/// 📥️ Parses a REPL command line into an `(event_kind, payload)` pair.
 ///
 /// `current_state` is the active engagement session's state (if any) — required to disambiguate a
 /// bare numeric line (e.g. `"3.5"`) as a height commit only while a numeric-entry state is active,
@@ -563,7 +563,7 @@ fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, DslValue>, l
     })
 }
 
-/// Generic commit for the "2 points + height" family shared by every `aec.building.energy`,
+/// 🌿️ Generic commit for the "2 points + height" family shared by every `aec.building.energy`,
 /// `aec.building.structure.classic`, and `aec.building.structure.fem.*` construction interaction
 /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
 /// by the `typology` commit param.
@@ -730,7 +730,7 @@ fn context_targets(context: &HashMap<String, DslValue>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-/// `command.finish` dispatches by the commit's `resultKind` param, reading whatever context fields
+/// 🍴️ `command.finish` dispatches by the commit's `resultKind` param, reading whatever context fields
 /// that interaction's machine populated (`points.<key>`, `radius`, `height`, `angle`, …).
 fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, context: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
     let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;

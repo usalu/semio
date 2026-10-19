@@ -7,7 +7,8 @@
 /// 🧩 Borrowed PNG chunk type tag and payload.
 type PngChunkView<'a> = ([u8; 4], &'a [u8]);
 
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_png_snapshot::standards::v1_2::subsets::any::schema::snapshot::{PngAncillaryChunk, PngImage, PngBackground, PngChromaticities, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency, PngSnapshot};
 
 #[path = "🧾️records-and-chunk-io/🦀️.rs"]

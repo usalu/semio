@@ -96,7 +96,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
 
     /// 🚦️ Starts, wakes or aborts the brush suggestions run for the grip the link points at.
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Puzzle5dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle5dConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
-        owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
+        owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects(&mut owner.brush_suggestions, doc.tool_run()))).unwrap_or_default()
     }
 
 
@@ -137,7 +137,6 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         }
         let nonce=puzzle5d_operation_nonce(&original.operation);
         match tool_id {
-            // ⏯️ The verbs that start, retarget or abort a run read the instance's live run as of admission.
             "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions" => seed!(|request, seed| Puzzle5dWindowCommandWork::new(tool_id, seed).bound(request.instance_operation_owner.clone())),
             window if PUZZLE5D_WINDOW_TOOL_IDS.contains(&window) => seed!(|request, seed| Puzzle5dWindowCommandWork::new(window, seed).bound(request.instance_operation_owner.clone())),
             "addBrushPart" | "addPartKind" => owned!(Puzzle5dAddBrushPartWork, |request, scope| Puzzle5dAddBrushPartWork::from_original_construction(tool_id, scope).map(|(work, progress)| (work.bound(nonce), progress))),
@@ -359,9 +358,6 @@ impl ArtifactEditor for Puzzle5dPlayApp {
                 id: "design:out".into(),
                 label: "5D Puzzle Design".into(),
                 direction: MediaPortDirection::Out,
-                // 🔁️ Reuses the exact `id`/`media_type` already declared on the artifact's own
-                // `artifact_kind()` — the same design artifact this app's document already
-                // publishes, just exposed as an explicit workflow output port.
                 media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Design },
                 kind_id: Some("5d.puzzle".into()),
                 required: false,
@@ -384,8 +380,6 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
         let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
-        // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
-        // the body being rendered — every panel container below shares its first-paint row budget.
         let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope, labels, None),
@@ -415,15 +409,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let window_id = view_state.window_id.as_deref().unwrap_or(window_kind);
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::transient_from_view(transient), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
-        // 🕹️ The ONE live read of the framework-owned `vortex` domain: both panes' paint, the gumball
-        // and the inspection panel's per-entity field groups all render against this snapshot.
         let envelope = scene_from_projection_with_interaction(&projection, runtime, &active_utility, Puzzle5dInteractionSnapshot::from_interaction(interaction));
         let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d has no authored label set for the host's locale/terminology axes"))?;
-        // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
-        // the body being rendered — every panel container below shares its first-paint row budget.
         let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
-        // 🎣️ What the brush suggestions run resolved for the open menu's grip — the instance owner holds it, and both
-        // panes list it.
         let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
         let suggestions = menu_target.and_then(|target| owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
         let node = match body_key {

@@ -31,7 +31,7 @@ pub const MIN_DISTANCE: f64 = 4.0;
 pub struct ViewClash {
     pub first: String,
     pub second: String,
-    /// `zoom` frames the pair, `isolate` shows only the pair, `both` does both and `clear` shows everything again.
+    /// 🎞️ `zoom` frames the pair, `isolate` shows only the pair, `both` does both and `clear` shows everything again.
     pub mode: String,
 }
 

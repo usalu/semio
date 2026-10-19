@@ -8,7 +8,8 @@ import { admitCheckpointSelectionV1 } from "../../../📇️directory/🚪️io/
 import { type ArtifactState, artifactScope, artifacts, documentServices, dropVerifiedColdDocumentPair, emitEvent, post } from "../🧾️document-state/🟦️.ts";
 import type { FolderCanonicalBootstrapMirrorOwner } from "../📁️folder/🏷️mirror-owner/🟦️.ts";
 import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "./🏷️owners/🟦️.ts";
-import { publishFolderCanonicalBootstrapMirror, reserveFolderCanonicalBootstrapMirror, retireCurrentFolderCanonicalBootstrapMirror, stageFolderCanonicalBootstrapMirror } from "../📁️folder/🟦️.ts";
+import { publishFolderCanonicalBootstrapMirror, reserveFolderCanonicalBootstrapMirror, stageFolderCanonicalBootstrapMirror } from "../📁️folder/🟦️.ts";
+import { retireCurrentFolderCanonicalBootstrapMirror } from "../📁️folder/✍️write/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { folderBinding, setRemote } from "../🎭️actor-lifecycle/🟦️.ts";
 import { equalByteArrays, equalFrontiers, flushMutationsToHubIfReady, requeuePendingBatches } from "../📮️hub-outbox/🟦️.ts";
@@ -228,11 +229,6 @@ function validateArtifactBootstrapIdentity(state: ArtifactState, bootstrap: Wire
   if (bootstrap.artifact_schema !== state.config.schema) throw new Error("artifact bootstrap schema mismatch");
   if (bootstrap.baseline_frontier.document_id !== state.config.documentId || bootstrap.required_tail_frontier.document_id !== state.config.documentId || serverFrontier.document_id !== state.config.documentId)
     throw new Error("artifact bootstrap document mismatch");
-  // 🧬️ The pack schema hash's AUTHORITY is the verified open plan, mirrored onto the execution-target
-  // lease; `ArtifactActorConfig.packSchemaHash` is the shell's OPTIONAL cross-check, supplied only by
-  // the wasm renderer's `document_pack_schema_hash` export and absent in every React host — exactly
-  // the rule `documentOpenPlanAuthority` already applies to the same pair of values. Demanding the
-  // optional one here made a React host refuse every artifact bootstrap it could ever be offered.
   const packSchemaHash = state.config.packSchemaHash;
   const configuredPackSchemaHash = packSchemaHash !== undefined && packSchemaHash !== null && packSchemaHash.some((byte) => byte !== 0);
   if (bootstrap.pack_schema_hash.length !== 32 || bootstrap.pack_schema_hash.every((byte) => byte === 0)) throw new Error("artifact bootstrap pack schema mismatch");

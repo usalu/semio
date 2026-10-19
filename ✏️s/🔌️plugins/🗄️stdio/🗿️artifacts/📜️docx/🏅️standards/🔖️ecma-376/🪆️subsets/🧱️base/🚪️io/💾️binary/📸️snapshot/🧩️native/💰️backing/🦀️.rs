@@ -1,6 +1,7 @@
 //! 💰️ DOCX complete literal native fields settle one persistent backing stage.
 use super::*;
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeEncodeControl,NativeDecodeControl,DecodedValue};
+use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl, DecodedValue};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
 fn retire(value:DocxSnapshot){value.retire_sqlite_snapshot();}
 fn measured(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,limits:SqliteDatabaseLimits,native:&mut NativeEncodeControl<'_>)->Result<usize,ValueError>{
@@ -29,7 +30,7 @@ pub(super) fn encode(snapshot:&DocxSnapshot,encoding:SnapshotEncoding,control:&m
 pub(super) fn input(bytes:&[u8],binary:bool,control:&mut SqliteSnapshotControl<'_>)->Result<DocxSnapshot,ValueError>{
  let limits=control.limits();if bytes.len()>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"DOCX native input exceeds caller file ceiling"));}
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=NativeDecodeControl::new(remaining,&mut callback);
+  let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=NativeDecodeControl::new(remaining,&mut callback);
   let result=(||{let body=if binary{store::semio_format::unwrap_binary_controlled(bytes,"stdio.docx",store::semio_format::Component::Pack,1,&mut native)?}
    else{let text=native.borrow_text(bytes)?;store::semio_format::split_text_preamble_controlled(text,"stdio.docx",store::semio_format::Component::Dsl,1,&mut native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()};
    native.begin_stage(body.len())?;let snapshot=DecodedValue::new(read(&mut OpcNativeReader{bytes:body,position:0,rows:0,limits,binary,control:&mut native})?,retire);native.checkpoint()?;Ok(snapshot.take())

@@ -2,6 +2,11 @@
   "name": "@semio-tech/cargo-workspaces",
   "$schema": "../../🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ]
+  },
   "tags": [
     "language:typescript",
     "role:tool"
@@ -9,7 +14,13 @@
   "targets": {
     "members-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts members --check",
@@ -27,7 +38,13 @@
     },
     "contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts contract-check",
@@ -36,7 +53,13 @@
     },
     "original-control-contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts original-control-contract-check"
@@ -44,7 +67,13 @@
     },
     "queued-contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts queued-contract-check"
@@ -52,7 +81,13 @@
     },
     "bun-contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts bun-contract-check"
@@ -60,7 +95,13 @@
     },
     "runtime-contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts runtime-contract-check"
@@ -68,7 +109,13 @@
     },
     "capability-contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts capability-contract-check"
@@ -76,7 +123,13 @@
     },
     "controlled-contract-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts contract-check controlled-owner"

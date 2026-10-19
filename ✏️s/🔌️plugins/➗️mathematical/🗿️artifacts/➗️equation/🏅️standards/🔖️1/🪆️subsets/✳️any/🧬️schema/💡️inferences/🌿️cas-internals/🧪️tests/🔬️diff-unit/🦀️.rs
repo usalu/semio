@@ -57,7 +57,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn general_power_logarithmic_differentiation() {
-        // d/dx x^x = x^x * (ln(x) + 1)
         let x = Expr::symbol("x");
         let e = Expr::pow(x.clone(), x.clone());
         let result = diff(&e, &x).unwrap();

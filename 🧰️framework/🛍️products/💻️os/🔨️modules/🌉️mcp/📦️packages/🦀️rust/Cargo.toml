@@ -45,6 +45,7 @@ semio-framework-ui-contract-validation = { path = "../../../../../../🔨️modu
 
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-pack-json-float = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/🎯️float-writer/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-os-mcp-foundation = { path = "../../🧱️foundation/📦️packages/🦀️rust" }
 semio-framework-os-mcp-wire = { path = "../../📡️wire/📦️packages/🦀️rust" }
@@ -65,6 +66,7 @@ semio-framework-os-mcp-tools-inference = { path = "../../🔭️inference-tools/
 semio-framework-os-mcp-tools-gateway = { path = "../../🧳️gateway-tools/📦️packages/🦀️rust" }
 semio-framework-os-mcp-server = { path = "../../🎯️server/📦️packages/🦀️rust" }
 semio-framework-os-mcp-http-transport = { path = "../../📮️http-transport/📦️packages/🦀️rust" }
+semio-framework-plugin-host-wake = { path = "../../../🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
@@ -79,6 +81,7 @@ semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/�
 semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 tokio = { workspace = true, features = ["full"] }
 semio-framework-trace-memory-testing = { path = "../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-os-mcp-capabilities = { path = "../../🧰️capabilities/📦️packages/🦀️rust", features = ["testkit"] }
@@ -88,3 +91,6 @@ semio-framework-os-mcp-probe-document = { path = "../../🔬️probe-document/�
 semio-framework-os-mcp-plugin-runtime = { path = "../../⚙️plugin-runtime/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-mcp-routing = { path = "../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-mcp-hub-remote = { path = "../../🌍️hub-remote/📦️packages/🦀️rust", features = ["testkit"] }
+
+[features]
+testkit = []

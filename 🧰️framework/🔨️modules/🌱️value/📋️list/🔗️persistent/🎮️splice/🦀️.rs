@@ -5,14 +5,14 @@ use std::mem::ManuallyDrop;
 /// 🎮️ Each structural event owns one insertion or one removal at its original rank.
 #[derive(Clone,Copy,PartialEq,Eq)]
 pub enum PersistentSpliceKind{Insert,Remove}
-#[derive(crate::RetireOwned)]
-enum Scratch<T:Send+Sync+'static>{Leaf{rows:[Option<SealedShared<T>>;17],count:usize},Branch{children:[Option<SealedShared<Page<T>>>;17],count:usize,height:u8}}
+#[derive(crate::RetireOwned)]#[value(crate="crate")]
+enum Scratch<T:crate::retirement::RetireOwned+Send+Sync+'static>{Leaf{rows:[Option<SealedShared<T>>;17],count:usize},Branch{children:[Option<SealedShared<Page<T>>>;17],count:usize,height:u8}}
 /// 🧳️ Original pages, split candidates and authored row aliases retain typed cancellation custody.
-pub struct PersistentSplice<T:Send+Sync+'static>{
+pub struct PersistentSplice<T:crate::retirement::RetireOwned+Send+Sync+'static>{
  original:Option<RetainedCloneBinding>,authored:Option<RetainedCloneBinding>,scratch:ManuallyDrop<Option<Scratch<T>>>,candidate:ManuallyDrop<[Option<SealedShared<Page<T>>>;2]>,retirement:RetainedCloneClose,
  kind:PersistentSpliceKind,index:usize,len:usize,height:u8,level:u8,slot:usize,count:usize,rank:usize,changed:usize,pair_count:usize,phase:u8,root_split:bool,closing:bool,
 }
-impl<T:Send+Sync+'static> PersistentSplice<T>{
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentSplice<T>{
  /// 🌱️ Fixed metadata captures no original row, page or heap allocation.
  pub fn new(kind:PersistentSpliceKind,index:usize)->Self{Self{original:None,authored:None,scratch:ManuallyDrop::new(None),candidate:ManuallyDrop::new(std::array::from_fn(|_|None)),retirement:Default::default(),kind,index,len:0,height:0,level:0,slot:0,count:0,rank:0,changed:0,pair_count:0,phase:0,root_split:false,closing:false}}
  fn fixed(&self)->usize{size_of::<usize>()*(16*usize::from(self.height)+12)+size_of::<u8>()*4+size_of::<bool>()}
@@ -69,7 +69,7 @@ impl<T:Send+Sync+'static> PersistentSplice<T>{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable splice close not started"));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.scratch,grant)?{return Ok(RetainedCloneStep::Progress(s.progress()));}for c in self.candidate.iter_mut(){if let Some(s)=self.retirement.begin_granted(c,grant)?{return Ok(RetainedCloneStep::Progress(s.progress()));}}let s=RetainedCloneBinding::close_one(if self.authored.is_some(){&mut self.authored}else{&mut self.original},grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})}
  pub fn terminal_is_empty(&self)->bool{self.scratch.is_none()&&self.candidate.iter().all(Option::is_none)&&self.retirement.is_empty()&&self.original.is_none()&&self.authored.is_none()}
 }
-impl<T:Send+Sync+'static> Drop for PersistentSplice<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"immutable splice requires funded original custody closure");if empty{unsafe{ManuallyDrop::drop(&mut self.scratch);ManuallyDrop::drop(&mut self.candidate);}}}}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Drop for PersistentSplice<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"immutable splice requires funded original custody closure");if empty{unsafe{ManuallyDrop::drop(&mut self.scratch);ManuallyDrop::drop(&mut self.candidate);}}}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"] mod tests;

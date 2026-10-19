@@ -131,10 +131,6 @@ impl InteractiveJob for LayoutExportToolJob {
             return self.slot.advance(context);
         };
         if inner.commit_ready() && !self.completed && self.completion.is_some() {
-            // 📤️ The download OWNS the sealed chunk queue from here: `ArtifactOutputChunks` clones
-            // share one queue, and the job's own close (`LayoutExportCloseStage::OutputChunks`) pops it —
-            // which drained every export to a 0-byte `Demo.pdf` before the host could take a single
-            // chunk (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). The job keeps an empty stand-in.
             let chunks = inner.output_chunks.take().expect("layout publication owns its admitted output");
             let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), chunks);
             if let Some(completion) = &self.completion {

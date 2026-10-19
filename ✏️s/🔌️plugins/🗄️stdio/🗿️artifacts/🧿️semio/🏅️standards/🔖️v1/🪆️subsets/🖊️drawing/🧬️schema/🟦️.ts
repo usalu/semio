@@ -4,8 +4,8 @@
 import type { DrawCanvas, DrawLayer, DrawStyle } from "./📸️snapshot/🟦️";
 
 export interface SemioDrawingArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ canvas: DrawCanvas;
-  /** @state artifact */ styles: DrawStyle[];
-  /** @state artifact */ layers: DrawLayer[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🌐️ @state artifact */ canvas: DrawCanvas;
+  /** 🎨️ @state artifact */ styles: DrawStyle[];
+  /** 🥞️ @state artifact */ layers: DrawLayer[];
 }

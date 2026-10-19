@@ -305,7 +305,7 @@ fn part21_cohort_controlled_partial_named_owner_retains_paid_copy_and_invalid_re
     let name = f["longText"]["unit"].as_str().unwrap().repeat(usize::try_from(f["longText"]["repeat"].as_u64().unwrap()).unwrap());
     let input = DslValue::object([("kind".into(), "typed".to_value()), ("typeName".into(), name.to_value()), ("values".into(), DslValue::Array(vec![DslValue::object([("kind".into(), "unknown".to_value())])]))]);
     let mut copied = false;
-    let mut callback = |p: semio_framework_value::native_decoding::NativeDecodeProgress| {
+    let mut callback = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| {
         if p.total == name.len() && p.completed == p.total {
             copied = true;
         }

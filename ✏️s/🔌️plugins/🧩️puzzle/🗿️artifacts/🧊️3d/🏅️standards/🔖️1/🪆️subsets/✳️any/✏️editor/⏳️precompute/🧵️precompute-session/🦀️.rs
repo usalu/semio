@@ -48,9 +48,6 @@ impl Puzzle3dPrecomputeSession {
     /// 8 192 raw bytes. `Ok(None)` is a closed, digest-verified, installed mesh; `Ok(Some(next))` is an
     /// open run waiting for page `next`. See [`stage_brush_mesh_page`].
     pub fn stage_mesh_page(&mut self, url: &str, digest: &str, page: u32, page_count: u32, positions: &[f32], indices: &[u32]) -> Result<Option<u32>, Puzzle3dMeshUploadFault> {
-        // 🪢️ A run that opens on geometry this process ALREADY derived — under this id or any other id
-        // with the same digest — closes on its first page and the remaining `pageCount - 1` commands are
-        // never needed. Checked at page 0 only, so a live run costs no store lookup per page.
         if page == 0 && !digest.is_empty() && self.adopt_shared_mesh(url, Some(digest)) {
             return Ok(None);
         }

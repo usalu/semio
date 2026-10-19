@@ -1,4 +1,4 @@
-//! Direct binary identity for `set-info-author`.
+//! 💾️ Direct binary identity for `set-info-author`.
 
 pub const TAG: u8 = 1;
 pub const BINARY_TAG: u8 = TAG;

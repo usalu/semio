@@ -105,7 +105,8 @@ mod emission;
 
 #[test]
 fn original_controlled_binary_refusal_keeps_borrowed_wire_and_zero_system_allocation() {
-    use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+    use semio_framework_value::{ValueError, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️controlled/🔣️.json")).unwrap();
     let id=fixture["id"].as_str().unwrap();let version=fixture["version"].as_u64().unwrap()as u16;
     let wire=wrap_binary(&SemioEnvelope::from_envelope_id(id,Component::Pack,version).unwrap(),fixture["textBody"].as_str().unwrap().as_bytes());

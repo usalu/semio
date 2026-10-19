@@ -1,7 +1,8 @@
 //! 🗂️ Original ordered window addresses in individually releasable semantic pages.
 
 use std::borrow::Borrow;
-use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, list::PagedList, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_persistent::list::PagedList;
 
 #[doc(hidden)]
 pub struct WindowRegistry<K, V> { entries: PagedList<(K, V), {usize::MAX}> }
@@ -95,7 +96,7 @@ impl<K: Ord + Borrow<str>, V> WindowRegistry<K, V> {
     }
 }
 
-fn page_error(error: semio_framework_value::list::PagedListError) -> ValueError { ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason) }
+fn page_error(error: semio_framework_value_persistent::list::PagedListError) -> ValueError { ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason) }
 #[doc(hidden)]
 pub fn fits(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool { grant.maximum_items > 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth }
 

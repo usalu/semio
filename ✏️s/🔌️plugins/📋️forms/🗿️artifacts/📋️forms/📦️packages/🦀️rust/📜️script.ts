@@ -1,30 +1,14 @@
 #!/usr/bin/env bun
 /** 📦️ forms forms Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { runOwnedVerifyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-if (segments[0] === "forms-document-contract") {
-      const schemaRoot = `${this.repoRoot}/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema`;
-      const { testFormsDocumentContractOracle } = await import(`${schemaRoot}/🧪️tests/🪪️document/🟦️.ts`);
-      testFormsDocumentContractOracle();
-      const { runCmd } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-      runCmd("bun", [`${this.repoRoot}/node_modules/typescript/bin/tsc`, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.repoRoot });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-forms-forms", "--lib", ...(segments[2] === "all" ? [] : ["forms_document_contract_"]), "--", "--nocapture"], this.repoRoot);
-      }
-      return;
-    }
-    throw new Error('Unknown owned verification '+segments.join(' '));
+    await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-forms-forms", { packages: ["semio-s-artifact-forms-forms", "semio-s-artifact-forms-forms-commands", "semio-s-artifact-forms-forms-config", "semio-s-artifact-forms-forms-config-tests", "semio-s-artifact-forms-forms-definition", "semio-s-artifact-forms-forms-diff", "semio-s-artifact-forms-forms-forms", "semio-s-artifact-forms-forms-inferences", "semio-s-artifact-forms-forms-mutations", "semio-s-artifact-forms-forms-questions", "semio-s-artifact-forms-forms-schema", "semio-s-artifact-forms-forms-snapshot", "semio-s-artifact-forms-forms-terminology-tests", "semio-s-artifact-forms-forms-tests", "semio-s-artifact-forms-forms-tests-2", "semio-s-artifact-forms-forms-tests-3"], snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { verify: OwnedVerifyScript } });
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-forms-forms", { packages: ["semio-s-artifact-forms-forms", "semio-s-artifact-forms-forms-commands", "semio-s-artifact-forms-forms-config", "semio-s-artifact-forms-forms-config-tests", "semio-s-artifact-forms-forms-definition", "semio-s-artifact-forms-forms-diff", "semio-s-artifact-forms-forms-archive-codecs", "semio-s-artifact-forms-forms-forms", "semio-s-artifact-forms-forms-inferences", "semio-s-artifact-forms-forms-mutations", "semio-s-artifact-forms-forms-questions", "semio-s-artifact-forms-forms-schema", "semio-s-artifact-forms-forms-snapshot", "semio-s-artifact-forms-forms-terminology-tests", "semio-s-artifact-forms-forms-tests", "semio-s-artifact-forms-forms-tests-2", "semio-s-artifact-forms-forms-tests-3"], snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: router });

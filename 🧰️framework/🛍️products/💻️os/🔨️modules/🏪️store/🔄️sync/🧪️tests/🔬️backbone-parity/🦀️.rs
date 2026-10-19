@@ -1,9 +1,10 @@
 use semio_framework_test_fixtures::fixture_path;
 
 use super::{
-    artifact_mailbox_pair, ensure_demo_codec_registered, native_actor, presence_to_bytes, ActorId, ArtifactActorConfig, ArtifactEvent, Bootstrap, ChannelBackbone, ClientFrame, CommandAckOutcome, DemoMutation, DemoSnapshot, MutationEnvelope,
+    artifact_mailbox_pair, ensure_demo_codec_registered, presence_to_bytes, ActorId, ArtifactActorConfig, ArtifactEvent, Bootstrap, ChannelBackbone, ClientFrame, CommandAckOutcome, DemoMutation, DemoSnapshot, MutationEnvelope,
     PersistenceBinding, PresencePeer, RemoteState, RuntimeFrontierSummary, ServerFrame, AckStage, ApplyOutcome,
 };
+use semio_framework_os_store_sync_native::native_actor;
 use semio_framework_os_spr::wire::RebootstrapRequired;
 use semio_framework_os_spr::ArtifactId; use semio_framework_os_spr::Edit;
 use futures::StreamExt;

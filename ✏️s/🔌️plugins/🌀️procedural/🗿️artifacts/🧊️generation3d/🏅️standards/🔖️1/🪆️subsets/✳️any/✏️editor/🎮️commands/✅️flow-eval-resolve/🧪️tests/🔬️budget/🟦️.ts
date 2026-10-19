@@ -84,7 +84,6 @@ function surfacePhaseFor(jobTag: string): string {
   if (jobTag === "complete") return "complete";
   if (jobTag === "cancelled") return "cancelled";
   if (jobTag === "idle") return "idle";
-  // 🩺️ `anUnknownPhaseIsComputing`: the envelope that carried it said the job is still working.
   return "computing";
 }
 
@@ -110,14 +109,11 @@ class BudgetSession {
     const envelope = parsed as Envelope;
     const phase = surfacePhaseFor(envelope.phase ?? "computing");
     if (envelope.done !== true) {
-      // 🚧️ `workingSeedsNothing` + `oneRequestOneStep`: park the progress and owe one more identical
-      // round trip.
       this.progress = { unitsDone: envelope.unitsDone ?? 0, unitsTotal: envelope.unitsTotal ?? 0, phase };
       return "working";
     }
     this.progress = null;
     if (phase === "cancelled") {
-      // 🛑️ `cancelledOwesNothing`.
       this.owesHop = false;
       return "cancelled";
     }
@@ -171,7 +167,6 @@ export function testGeneration3dEvaluateBudgetContract(): void {
   for (const field of ["done", "phase", "unitsDone", "unitsTotal", "outputJson"]) {
     assert.ok(loaded.envelopeFields.includes(field), `the envelope declares ${field}`);
   }
-  // 🏷️ The declared job→surface phase table must agree with the independently written vocabulary.
   for (const [jobTag, surfaceTag] of Object.entries(loaded.jobPhaseTags)) {
     assert.equal(surfacePhaseFor(jobTag), surfaceTag, `job phase ${jobTag} projects to ${surfaceTag}`);
   }
@@ -197,7 +192,6 @@ export function testGeneration3dEvaluateBudgetContract(): void {
     assert.ok(labels, `${row.id}: the fixture declares a label for ${row.status.phase}`);
     assert.ok(labels.en.length > 0 && labels.de.length > 0, `${row.id}: both languages, with no default`);
   }
-  // 📈️ `progressIsMonotone`, replayed as a SEQUENCE — monotonicity is a property of the sequence.
   const session = new BudgetSession();
   const order = loaded.steppedOperator.phaseOrder;
   assert.ok(order.length >= loaded.steppedOperator.minimumRoundTripsUnderATightBudget, "the declared phase order admits the declared minimum of round trips");

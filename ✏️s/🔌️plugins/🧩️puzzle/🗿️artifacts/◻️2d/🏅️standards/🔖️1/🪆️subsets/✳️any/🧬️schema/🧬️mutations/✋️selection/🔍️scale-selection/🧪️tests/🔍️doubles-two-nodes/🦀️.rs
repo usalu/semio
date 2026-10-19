@@ -2,7 +2,7 @@
 //!
 //! Factor 2 about (20, 10): `node-a` and `node-b` spread away from the pivot while their own sizes stay.
 //!
-//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️doubles-two-nodes/`
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/`
 //! (contract D1); the board is the synthetic selection board shared by every selection-transform vector.
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
@@ -13,11 +13,11 @@ use semio_framework_test_fixtures::fixture_text;
 
 use crate::Puzzle2dSnapshot;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/⬅️before/🔣️.json"));
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/➡️after/🔣️.json"));
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️doubles-two-nodes/🦠️mutation/🔣️.json"));
-static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️doubles-two-nodes/🔺️diff/🔣️.json"));
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/🔍️doubles-two-nodes/🎯️outcome/🔣️.json"));
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/🦠️mutation/🔣️.json"));
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/🔺️diff/🔣️.json"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/🎯️outcome/🔣️.json"));
 
 fn before() -> Puzzle2dSnapshot {
     semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

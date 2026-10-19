@@ -128,14 +128,14 @@ pub fn assert_is_unit_cube(format: &str, projection: &MeshProjection) {
 /// block), so `parse_dsl`'s callers carry the same obligation; the example-geometry lane discharges
 /// it by moving the fixture into a `FlowHost` and retiring the generation half. A test that only
 /// looks at a document has to do it by hand.
-pub fn retire_document(document: semio_s_artifact_procedural_generation3d::Generation3dSnapshot) {
-    let semio_s_artifact_procedural_generation3d::Generation3dSnapshot { host_snapshot, generation } = document;
+pub fn retire_document(document: semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot) {
+    let semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot { host_snapshot, generation } = document;
     generation.retire_cold();
     host_snapshot.retire_cold();
 }
 
 /// 🧊️ Checks the editable polygon payload planted by a surface import against the independent cube oracle.
-pub fn assert_imported_polygon_is_unit_cube(format: &str, document: semio_s_artifact_procedural_generation3d::Generation3dSnapshot) {
+pub fn assert_imported_polygon_is_unit_cube(format: &str, document: semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot) {
     use semio_s_artifact_procedural_3d_mesh_bridge as mesh_bridge;
     let (kind, payload) = mesh_bridge::imported_source(&document).expect("import plants a source and constructor");
     let kind = kind.to_owned();

@@ -41,20 +41,12 @@ export function useContinuousTriggerLane(context: UiInterpreterContext, record: 
   const laneRef = useRef<ContinuousGestureLane<UiValue> | null>(null);
   if (laneRef.current === null) {
     laneRef.current = createContinuousGestureLane<UiValue>({
-      // 🎚️ A continuous control's `Change` payload is a RECORD, not a bare scalar: the value the
-      // program reads as `value` exactly as before, plus the identity of the press it belongs to and
-      // whether this is the release. `uiIntentPayload` merges a record input's own keys into the
-      // binding's args, so `value` still arrives under its own name for every existing consumer,
-      // while a program that cares can fold a whole press into ONE undoable edit
-      // (`📓️slider-preview-update-2026-09-15.md`).
       send: (value, phase) => {
         if (gestureRef.current === null) gestureRef.current = continuousPressIdentity(bindingRef.current.record.key);
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
         return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue)?.then(() => undefined);
       },
-      // 🧯️ The scrub protocol's host cancel (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the
-      // guest drops the open press with zero trace and never sees a value.
       abort: (reason) => {
         const gesture = gestureRef.current;
         gestureRef.current = null;

@@ -5,7 +5,7 @@ fn push_dedups_and_fifo_orders() {
     let mut q = PropQueue::new(4);
     q.push(NodeId(1));
     q.push(NodeId(2));
-    q.push(NodeId(1)); // dedup
+    q.push(NodeId(1));
     assert_eq!(q.pop(), Some(NodeId(1)));
     assert_eq!(q.pop(), Some(NodeId(2)));
     assert_eq!(q.pop(), None);

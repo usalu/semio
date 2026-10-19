@@ -6,9 +6,9 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../👥️population/🟦️.ts — the TypeScript twin
 
-use crate::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, shoulders, stage_key, surface_of, Draft};
-use crate::locomotion::{crowd_out, drop, leave, vanish};
-use crate::spacing::{quarters, rooms_for, COMFORT_GAP};
+use semio_framework_pets_staging_draft::draft::{actor_key, blink_at, clip_at, crowd_on, hover_of, index_of, release, remove, settle, shift, shoulders, stage_key, surface_of, Draft};
+use semio_framework_pets_staging_draft::locomotion::{crowd_out, drop, leave, vanish};
+use semio_framework_pets_staging_draft::spacing::{quarters, rooms_for, COMFORT_GAP};
 use semio_framework_pets_character::behavior::{dwell_of, needs_of, MODE_LIMITS};
 use semio_framework_pets_character::feeling::at_rest;
 use semio_framework_pets_contract::schema::{Activity, Actor, Facing, Footing, Gaze, Menagerie, Perch, PetMode, Slug, Species, Surface, Surveyed, Ticks};
@@ -16,6 +16,8 @@ use semio_framework_pets_interaction::gesture::{no_hover, COLD};
 use semio_framework_pets_kinematics::randomness::{random_words, unit_of};
 use semio_framework_pets_kinematics::terrain::{landing_of, larger, perches_of, smaller};
 use semio_framework_pets_kinematics::trigonometry::clamp;
+use semio_framework_pets_character::feeling::Occasion;
+use semio_framework_pets_contract::schema::Wall;
 
 //#region 🔖️Constants
 pub(crate) const CENTRED: Gaze = Gaze { x: 0.0, y: 0.0, vx: 0.0, vy: 0.0 };
@@ -152,7 +154,7 @@ fn hold_on(menagerie: &Menagerie, draft: &mut Draft<'_>, walls: &[Wall], now: Ti
                 body.x = next.foot.x + (next.top.x - next.foot.x) * share;
                 body.y = next.foot.y + (next.top.y - next.foot.y) * share;
             }
-            kept.push(crate::schema::Ladder { wall: next.wall, surface: next.surface, side: next.side, foot: next.foot, top: next.top, ..ladder });
+            kept.push(semio_framework_pets_contract::schema::Ladder { wall: next.wall, surface: next.surface, side: next.side, foot: next.foot, top: next.top, ..ladder });
         } else if let Some(rider) = rider {
             let toss = spill_of(&stand, draft.stage.actors[rider].y, draft.kinds[rider].size);
             feel(draft, rider, Occasion::Startled, now);

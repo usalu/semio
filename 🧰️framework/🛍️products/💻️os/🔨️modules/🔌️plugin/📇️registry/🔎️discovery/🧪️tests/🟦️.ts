@@ -10,7 +10,7 @@ import { discoverPluginBuildTargets, generatePluginRegistry, generatePluginRegis
 import { REGISTRY_HOST_APP_CHANNEL_VERSION } from "../../🧬️schema/🟦️.ts";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "./🧫️fixtures/🔣️.json";
-import { identityInstallationSchema as identity } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
+import { identityInstallationSchema as identity } from "@semio-tech/framework/identity/installation/schema";
 import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1 } from "../🧬️schema/🟦️.ts";
 
 const parsers = { source: parseComponentSourceRowV1, target: parsePluginBuildTargetV1, compiled: parseCompiledComponentRowV1, deployed: parseDeployedRegistryEntryV1 };
@@ -107,7 +107,7 @@ test("a withheld stale-channel row is still a build target while deployment keep
   if (!output) throw Error("Stale-channel build-target law requires ticket artifacts");
   mkdirSync(output, { recursive: true });
   const root = mkdtempSync(join(output, "stale-build-target-"));
-  const { resolvePluginBuildTargets } = await import("../../../🏗️build/📋️plan/🟦️.ts");
+  const { resolvePluginBuildTargets } = await import("@semio-tech/framework-plugin/build/plan");
   const previousOnly = process.env.SEMIO_PLUGIN_ONLY;
   delete process.env.SEMIO_PLUGIN_ONLY;
   try {
@@ -174,7 +174,7 @@ test("pure session file DATA carries its supplied catalog independently of the g
 });
 
 test("descriptor emitter product request is selected-mode DATA without a checkout binary probe",async()=>{
- const {descriptorEmitterRequestV1}=await import("../../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe((await import("@semio-tech/process/artifacts/publication/sources/schema.json")).default.properties.maximumFiles.const);}
+ const {descriptorEmitterRequestV1}=await import("@semio-tech/framework-plugin/describe/emitter/contract");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe((await import("@semio-tech/process/artifacts/publication/sources/schema.json")).default.properties.maximumFiles.const);}
 });
 
 

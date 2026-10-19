@@ -22,7 +22,9 @@ testing = ["semio-framework-job/testkit"]
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-energy-engine-calendar = { workspace = true }
 semio-s-plugin-energy-engine-error = { workspace = true }
@@ -39,4 +41,9 @@ semio-s-plugin-energy-engine-site = { workspace = true }
 semio-s-plugin-energy-engine-sizing = { workspace = true }
 semio-s-plugin-energy-engine-units = { workspace = true }
 serde = { workspace = true }
+semio-framework-os-store-canonical-json = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
 
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

@@ -156,11 +156,6 @@ pub(super) fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: 
             return Some(hit);
         }
     }
-    // A bare `Stack` is a layout-only container with no interaction semantics of its own — it
-    // must never be the hit result itself, only a pass-through to its children (same intent as
-    // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven) — *unless* W2
-    // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, or is
-    // a registered drag source — any of those make it a real interaction target.
     let inside_self = if tree.disclosure_is_interactive(id) { disclosure_header_band(tree, id, Rect::new(abs_x, abs_y, layout.width, layout.height), reversed, tree_metrics).contains(x, y) } else { inside };
     let is_plain_container = is_plain_stack_container(tree, id, node);
     if inside_self && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {

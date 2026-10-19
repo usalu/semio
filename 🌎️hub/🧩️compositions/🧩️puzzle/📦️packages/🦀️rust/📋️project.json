@@ -26,7 +26,7 @@
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": [],
+      "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "cache": true,
       "metadata": {
         "semio": {
@@ -43,7 +43,9 @@
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "fixtures-lint": {
       "executor": "repo:script",
@@ -52,7 +54,8 @@
         "command": "bun ./📜️script.ts fixtures lint",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "canonical-architecture": {
       "executor": "repo:script",

@@ -72,8 +72,6 @@ app_commands! {
         "navigateVirtualFileSystemNode" as "navigate-vfs-node" => navigate_virtual_file_system_node::NavigateVirtualFileSystemNode,
         "deleteVirtualFileSystemNode" as "delete-vfs-node" => delete_virtual_file_system_node::DeleteVirtualFileSystemNode,
         "goHome" as "go-home" => go_home::GoHome,
-        // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: Home = a real table of
-        // every space, fed by the event-sourced hub directory read model (contract §C1/§C6).
         "createSpace" as "create-space" => create_space::CreateSpace,
         "deleteSpace" as "delete-space" => delete_space::DeleteSpace,
         "renameSpace" as "rename-space" => rename_space::RenameSpace,
@@ -94,11 +92,6 @@ pub const HOME_RETAINED_RAW_BYTES: usize = crate::editor::home::config::HOME_DIR
 pub const HOME_RETAINED_SCALAR_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 pub const HOME_RETAINED_WORK_ITEMS: usize = 1;
 pub const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    // 🛣️ The typed-operation terminal refuses any emit whose store lane is absent from this contract ("typed-operation
-    // emitted a store lane absent from its exact factory publication contract"), so every writing route names its lane
-    // and only the pure-`Effect` relays are `HostOnly`. `applyDirectoryEventPage` folds one page into the TRANSIENT
-    // directory projection (derived hub state: no history, no persistence); the catalog routes bump the catalog
-    // generation in the ARTIFACT store; the tombstone lands in the CONFIG store.
     ArtifactToolPublicationContract { tool_id: "applyDirectoryEventPage", lanes: &[ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "applyLocalCatalogDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "createStudio", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -165,9 +158,6 @@ fn home_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
     let row = |space_id: &str| context.and_then(|context| context.transient.directory().space(space_id));
-    // 🪪️ `createStudio` needs the signed-in human (it names the studio's owner); rename/share/remove read the ONE folded
-    // directory row they need from the projection this job captured at dispatch — a page folded meanwhile publishes a new
-    // root and never mixes into it.
     match command {
         HomeCommand::CreateStudio(_) => Err(Fault::from("s.home.create-studio.effect-authority-required")),
         HomeCommand::RenameSpace(payload) => rename_space::handle_with_row(payload, &doc, &cfg, row(&payload.space_id)),
@@ -690,12 +680,6 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_framework_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_framework_plugin::ActionKind::Shell, "folder"))
         .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Remove Studio from Home", "Studio aus Home entfernen"))
         .action_with(semio_framework_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_framework_plugin::ActionKind::Shell, "home"))
-        // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the overview table's
-        // row-scoped actions. Every one of these is a pure `Effect` relay (contract §C6) — never a
-        // document mutation — so each is `.shell_action`, matching `openSpace`/`goHome` above, not
-        // `.mutation`. `createSpace`/`deleteSpace`/`renameSpace`/`shareSpace` are each their own dialog's
-        // submit action too (`DialogDefinition::new(id, …, ActionRef::new(id))`, the same self-
-        // referencing shape `PluginBuilder`'s own `declaring_dialog_appends_to_definition` test uses).
         .shell_action("createSpace", LocalizedLabel::native("Create Space", "Space erstellen"))
         .dialog(
             DialogDefinition::new("createSpace", LocalizedLabel::native("Create Space", "Space erstellen"), ActionRef::new("createSpace"))

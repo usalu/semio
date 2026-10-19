@@ -26,7 +26,6 @@ async fn ui_dirty_scope_defaults_to_full() {
     use semio_framework_kernel_ui::UiDirtyScope;
     assert_eq!(UiDirtyScope::default(), UiDirtyScope::Full);
     assert_eq!(serde_json::to_string(&UiDirtyScope::Full).unwrap(), "{\"kind\":\"full\"}");
-    // Absent from JSON (an older program that never sets it) must also deserialize to Full.
     #[derive(serde::Deserialize)]
     struct Wrapper {
         #[serde(default)]
@@ -255,7 +254,6 @@ async fn unresolved_action_choices_follow_neutral_catalog_contract() {
 #[semio_framework_async_macros::async_test]
 async fn missing_required_args_treats_unset_select_as_missing() {
     let defs = vec![ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X"))]).required(), ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).required()];
-    // Nothing staged, no defaults: both required ids are missing.
     let empty = semio_framework_value::DslValue::Object(Vec::new());
     let effective = effective_action_args(&defs, &empty, None);
     let missing = missing_required_args(&defs, &effective);
@@ -528,7 +526,7 @@ async fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_l
 #[semio_framework_async_macros::async_test]
 async fn app_window_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
     let mut app = app_with(vec![], vec![]).await;
-    app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
+    app.label = LocalizedLabel::data("Draw");
     assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
     assert_eq!(app_window_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
     assert_eq!(app_window_label(&app, "native", Locale::En, "Draw"), "semio · a", "window label equal to the app label appends nothing");
@@ -724,7 +722,6 @@ async fn dispatch_action_effect_round_trips_camel_case() {
     assert_eq!(json, r#"{"dispatchAction":{"req":2,"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
     let round: Effect = serde_json::from_str(&json).unwrap();
     assert_eq!(round, effect);
-    // `args` omitted entirely when unset, not serialized as `null`.
     let bare = Effect::DispatchAction { req: RequestId(3), action: "tick".into(), args: None, delay_ms: 0 };
     let bare_json = serde_json::to_string(&bare).unwrap();
     assert!(!bare_json.contains("\"args\""), "omitted when unset: {bare_json}");
@@ -738,8 +735,6 @@ async fn request_file_open_effect_round_trips_multiple() {
     assert!(json.contains("\"multiple\":true"), "{json}");
     let round: Effect = serde_json::from_str(&json).unwrap();
     assert_eq!(round, effect);
-    // `multiple` defaults to false when absent from the wire (older callers/plugins); `req` is
-    // not defaulted (mandatory on every completing effect).
     let defaulted: Effect = serde_json::from_str(r#"{"requestFileOpen":{"req":5,"accept":".png","importAction":"importFramePayload"}}"#).unwrap();
     assert_eq!(defaulted, Effect::RequestFileOpen { req: RequestId(5), accept: ".png".into(), read_as: None, import_action: "importFramePayload".into(), multiple: false, args: None });
 }
@@ -766,7 +761,6 @@ async fn request_media_frames_effect_round_trips_camel_case() {
     assert!(!json.contains("\"payload\""), "omitted when unset: {json}");
     let round: Effect = serde_json::from_str(&json).unwrap();
     assert_eq!(round, effect);
-    // Numeric hints default to 0 (host-default) and `payload`/`args` may be entirely absent.
     let defaulted: Effect = serde_json::from_str(r#"{"requestMediaFrames":{"req":7,"accept":"video/mp4","frameAction":"f","doneAction":"d","fallbackAction":"b"}}"#).unwrap();
     assert_eq!(
         defaulted,
@@ -784,7 +778,6 @@ async fn request_media_frames_effect_round_trips_camel_case() {
             args: None,
         }
     );
-    // `payload`-carrying variant (drop-zone bytes already in memory, no picker needed).
     let with_payload = Effect::RequestMediaFrames {
         req: RequestId(8),
         accept: "video/*".into(),

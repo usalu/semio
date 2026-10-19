@@ -56,7 +56,7 @@ impl Registry {
                 let slots = playground.user_react.len().max(playground.user_wgpu.len());
                 if slots > 0 { parameters.push(Parameter::choice("user-slot", Origin::Playground, None, (1..=slots).map(|slot| (slot.to_string(), Effect::default())).collect())); }
                 parameters.push(Parameter::choice("app-role", Origin::Playground, None, vec![("viewer".into(), Effect { env: vec![("SEMIO_APP_ROLE".into(), "viewer".into())], ..Default::default() })]));
-                let flag = |id: &str, default: bool, effect: Effect| Parameter { id: id.into(), title: None, description: None, kind: ParameterKind::Flag, origin: Origin::Playground, default: default.then(|| "true".to_string()), required: false, values: Vec::new(), effect, destination: Destination::Token, suggestions: None, verbs: None, playground: false, scoped: false };
+                let flag = |id: &str, default: bool, effect: Effect| Parameter { id: id.into(), title: None, description: None, kind: ParameterKind::Flag, origin: Origin::Playground, default: default.then(|| "true".to_string()), required: false, values: Vec::new(), effect, destination: Destination::Token, suggestions: None, all: false, verbs: None, playground: false, scoped: false };
                 if let Some(hub) = &playground.hub { parameters.push(flag("hub", false, Effect { env: vec![(HUB_ENV.into(), hub.clone())], ..Default::default() })); }
                 if playground.data_dir.is_some() || playground.user_data_dir.is_some() { parameters.push(flag("data", true, Effect::default())); }
                 if playground.local_only { parameters.push(flag("local-only", false, Effect { env: vec![(LOCAL_ONLY_ENV.into(), "1".into())], ..Default::default() })); }

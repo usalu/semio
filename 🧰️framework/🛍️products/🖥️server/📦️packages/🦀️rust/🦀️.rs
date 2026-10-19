@@ -35,5 +35,9 @@ pub mod gateway;
 #[path = "../../🧪️tests/🔬️conformance/🦀️.rs"]
 pub mod conformance;
 
+#[cfg(test)]
+#[path = "../../🧪️tests/🧩️instance/🦀️.rs"]
+pub mod test_instance;
+
 #[path = "../../🦀️.rs"]
 mod component;

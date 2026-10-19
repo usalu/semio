@@ -155,7 +155,7 @@
     {
       "law": "every_world_color_cursor_uses_the_encoded_composite_attachment",
       "variable": "draw_source",
-      "source": "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🦀️.rs",
+      "source": "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🔰️base-resources-and-ui-pipelines/🦀️.rs",
       "symbols": [
         "let world_encoded_format = format.remove_srgb_suffix();"
       ]
@@ -172,7 +172,7 @@
     {
       "law": "standard_translucent_world_pipeline_preserves_react_depth_and_side_policy",
       "variable": "source",
-      "source": "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🦀️.rs",
+      "source": "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🎭️material-pipelines/🦀️.rs",
       "symbols": [
         "world3d_standard_translucent_pipeline"
       ]
@@ -180,7 +180,7 @@
     {
       "law": "the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane",
       "variable": "source",
-      "source": "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🦀️.rs",
+      "source": "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🖼️textured-grid-and-post-pipelines/🦀️.rs",
       "symbols": [
         "world3d_textured_pipeline"
       ]

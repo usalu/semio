@@ -12,7 +12,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_board_normal_host::plan_delete_selection;
 use semio_framework_canvas::{Affine, Color, FillRule, Point, Scene, Vec2};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_pack_json::Value;

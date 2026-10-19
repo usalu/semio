@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use crate::editor::puzzle5d::entities::{PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_GRANULARITY_FASTENER, PUZZLE5D_GRANULARITY_GRIP, PUZZLE5D_GRANULARITY_PART, Puzzle5dDocument, Puzzle5dPart, puzzle5d_grip_full_id};
 use crate::editor::puzzle5d::view::{engine_grip_kind, Puzzle5dScene};
 use crate::editor::puzzle5d::entities::{grips_from_templates, resolve_part_kind_mesh_url, Puzzle5dFreshIds, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE5D_FLAT_TO_WORLD};
+use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::config::Puzzle5dKindWeights;
 
 //#region 🏷️Labels
 /// 🏷️ The catalogue display name one part kind carries (`label` → `name` → its own id), else the kind
@@ -312,9 +313,6 @@ pub fn add_palette_part(envelope: &mut Puzzle5dScene, part_kind: &str, x: f64, y
     let id = Puzzle5dFreshIds::from_document(&envelope.document).next_part();
     let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
     let grips = grips_from_templates(&envelope.document, part_kind);
-    // 🏷️ Stamped at creation, not derived at paint: the outliner, the 3D instance and a later export
-    // must all read the SAME authored name, and only this moment knows how many peers of this kind
-    // the document already holds.
     let label = puzzle5d_next_part_label(&envelope.document.parts, &envelope.document, part_kind);
     envelope.document.parts.push(Puzzle5dPart {
         id: id,

@@ -79,8 +79,6 @@ mod tests {
 
     #[test]
     fn kde_loo_differs_from_naive_resubstitution_direction() {
-        // 🔐️ LOO removes the self-term's downward bias, so LOO entropy should exceed naive
-        // resubstitution (which double-counts each point against itself).
         let x = box_muller_gaussian(500, 8);
         let cfg = KdeConfig { kernel: Kernel::Gaussian, bandwidth: Bandwidth::Silverman };
         let density = KdeDensity::fit(&x, cfg).unwrap();
@@ -94,7 +92,6 @@ mod tests {
 
         #[test]
         fn exponential_entropy_matches_closed_form() {
-            // 🔐️ differential entropy of Exp(1) is 1 nat.
             let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(9);
             let x: Vec<f64> = (0..5000).map(|_| -rng.next_f64().max(1e-12).ln()).collect();
             let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();

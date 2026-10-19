@@ -1,11 +1,12 @@
 //! 🧫️ Child identity receiving retains the actual original source through every interrupted frontier.
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,OriginalTurnFailure,StepContext,close_original_retained_step};
-use semio_framework_value::{DslValue,ControlledRetirement,retained_clone::RetainedCloneSource};
+use semio_framework_value::{DslValue,retained_clone::RetainedCloneSource};
+use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 
 fn stock()->RetainedCloneGrant { RetainedCloneGrant { maximum_items:100000,maximum_copy_bytes:64<<20,maximum_capacity_bytes:64<<20,maximum_release_bytes:64<<20,maximum_depth:128 } }
 fn receive(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,OriginalTurnFailure> {
- let result=cx.with_native_receiving::<_,semio_framework_value::native_decoding::NativeConstructionStepFailure<ValueError>>(|native|native.receive_construction_step(demand,run));
+ let result=cx.with_native_receiving::<_,semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>>(|native|native.receive_construction_step(demand,run));
  let progress=match &result { Ok(step)=>step.progress(),Err(error)=>error.retained_progress() };
  let reconciled=if let Some(grant)=cx.receiving_issued_grant() { cx.consume_receiving_retained(grant,progress) } else { assert_eq!(progress,Default::default());Ok(()) };
  cx.consume_fuel(progress.copied_items as u64);

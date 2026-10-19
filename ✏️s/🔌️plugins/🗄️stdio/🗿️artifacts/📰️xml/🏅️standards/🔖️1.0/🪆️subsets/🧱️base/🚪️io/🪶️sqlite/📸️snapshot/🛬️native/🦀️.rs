@@ -1,6 +1,7 @@
 //! 🛬️ Controlled literal XML state decoding with guarded iterative native tree construction.
 use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlSnapshot, XmlNode, XmlAttr, XmlDeclaration, XmlQuote, XmlDoctype, XmlExternalId, XmlDtdDeclaration, XmlDocument};
-use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::standards::v1_0::subsets::base::io::sqlite::snapshot::{XmlNodeList, XmlDocumentOwner};
 use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase, SqliteDatabaseLimits}, io_schema::IoPayload};
 
@@ -98,7 +99,7 @@ enum Start { Node(XmlNode), Element(Frame) }
 
 pub(crate) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>,_native_control:&mut NativeDecodeControl<'_>) -> Result<XmlSnapshot, ValueError> {
     let limits = control.limits(); let length = match payload { IoPayload::Text(text) => text.len(), IoPayload::Binary(bytes) => bytes.len() }; if length > limits.max_file_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"XML native file exceeds caller ceiling")); } control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, length)?;
-    let mut callback = |event: pack::value::native_decoding::NativeDecodeProgress| control.checkpoint(SqliteSnapshotPhase::DecodeNative, event.completed, event.total).is_ok(); let mut native = NativeDecodeControl::new(limits.max_value_bytes, &mut callback);
+    let mut callback = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| control.checkpoint(SqliteSnapshotPhase::DecodeNative, event.completed, event.total).is_ok(); let mut native = NativeDecodeControl::new(limits.max_value_bytes, &mut callback);
     let (bytes, binary) = match payload { IoPayload::Binary(bytes) => (store::semio_format::unwrap_binary_controlled(bytes, "stdio.xml", store::semio_format::Component::Pack, 1, &mut native)?, true), IoPayload::Text(text) => (store::semio_format::split_text_preamble_controlled(text, "stdio.xml", store::semio_format::Component::Dsl, 1, &mut native).map_err(|error|match error{store::semio_format::SemioError::DecodingControl(error)=>error,error=>ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())})?.as_bytes(), false) };
     native.begin_stage(bytes.len())?; Reader { bytes, position: 0, binary, rows: 0, limits, control: &mut native }.snapshot()
 }

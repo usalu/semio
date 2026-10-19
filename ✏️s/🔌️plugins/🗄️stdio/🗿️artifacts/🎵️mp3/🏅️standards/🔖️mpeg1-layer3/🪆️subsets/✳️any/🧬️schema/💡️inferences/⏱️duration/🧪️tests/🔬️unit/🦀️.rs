@@ -12,7 +12,6 @@ fn frame(mpeg_version_id: u8, layer: u8, sample_rate_index: u8, channel_mode: u8
 
 #[semio_framework_async_macros::async_test]
 async fn two_mpeg1_layer3_frames_at_44100hz_sum_to_the_real_1152_sample_duration() {
-    // MPEG1 (version_id=3) Layer III (layer=1), sample_rate_index=0 => 44100Hz, mono (channel_mode=3).
     let snapshot = Mp3Snapshot { frames: vec![frame(3, 1, 0, 3), frame(3, 1, 0, 3)], ..Mp3Snapshot::default() };
     let duration = compute_mp3_duration(&snapshot);
     assert_eq!(duration.frame_count, 2);
@@ -22,7 +21,6 @@ async fn two_mpeg1_layer3_frames_at_44100hz_sum_to_the_real_1152_sample_duration
 
 #[semio_framework_async_macros::async_test]
 async fn mpeg2_layer3_frame_uses_the_halved_576_sample_count_and_stereo_channel_mode() {
-    // MPEG2 (version_id=2) Layer III, sample_rate_index=0 => 22050Hz, stereo (channel_mode=0).
     let snapshot = Mp3Snapshot { frames: vec![frame(2, 1, 0, 0)], ..Mp3Snapshot::default() };
     let duration = compute_mp3_duration(&snapshot);
     assert_eq!(duration.channel_count, 2);

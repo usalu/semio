@@ -67,9 +67,6 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewFlowEvalJobFactory {
     /// and no row does.
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
-        // 🔁️ Both window-addressed FOLDS publish the same lane the tick does: they run the wave the
-        // settle unblocked inline and owe the addressed window the geometry and the status it
-        // advanced to.
         ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "flowTessellateResolve", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "flowEvalRelease", lanes: &[ArtifactToolPublicationLane::HostOnly] },

@@ -30,15 +30,15 @@ pub const PAGE_PREVIEW: &[u8] = r#"{"en":"Writing the sheets","de":"Blätter wer
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-sheets")]
 pub struct ExportSheets {
-    /// The file format: `svg` (one sheet) or `pdf` (the set, or one sheet when `sheet` names it).
+    /// 📰️ The file format: `svg` (one sheet) or `pdf` (the set, or one sheet when `sheet` names it).
     pub format: String,
-    /// The sheet to export; the first sheet for an SVG, the whole set for a PDF when absent.
+    /// 📃️ The sheet to export; the first sheet for an SVG, the whole set for a PDF when absent.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub sheet: Option<String>,
-    /// The language of the headings: `en` or `de`; English when absent.
+    /// 🌐️ The language of the headings: `en` or `de`; English when absent.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub locale: Option<String>,
-    /// The state a toggle that triggers the export reports; the export ignores it.
+    /// 🔘️ The state a toggle that triggers the export reports; the export ignores it.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub pressed: Option<bool>,
 }

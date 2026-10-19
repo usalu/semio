@@ -30,13 +30,6 @@ impl ProbeGuest for Component {
 
     // #region S3 — spawn-detached: root future returns immediately, spawned sibling keeps running
     async fn spawn_detached(ms: u32) -> u32 {
-        // 🧪️ `wit_bindgen::spawn` per its own doc: "this can be used to express
-        // execution-after-returning in the component model" — the spawned future is polled inside
-        // the SAME `FutureState::tasks` FuturesUnordered as this root future, but wit-bindgen's
-        // codegen emits the `AsyncTaskReturn`/`task.return` call as soon as THIS function's own
-        // future resolves (see `CallInterface`/`AsyncTaskReturn` in wit-bindgen-rust's bindgen.rs) —
-        // not after `tasks` fully drains. So the caller's promise should resolve here, while
-        // `slow-echo(ms, 0xDE7AC4ED)` is still in flight inside the spawned sibling.
         wit_bindgen::spawn(async move {
             let _ = probe_host::slow_echo(ms, 0xDE7AC4ED).await;
         });

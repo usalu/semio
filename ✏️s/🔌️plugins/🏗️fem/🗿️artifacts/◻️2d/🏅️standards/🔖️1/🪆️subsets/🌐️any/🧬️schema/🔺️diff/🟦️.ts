@@ -48,7 +48,7 @@ export interface Fem2dNodePatch {
   y?: Binary64;
 }
 
-import { type Binary64, parseBinary64, binary64Value } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64, parseBinary64, binary64Value } from "@semio-tech/value-ts/ieee754";
 /** 🧱️ Sparse material field changes; stable identity belongs to the modification key. */
 export interface Fem2dMaterialPatch {
   name?: string;
@@ -65,25 +65,25 @@ export type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad
 
 
 export interface Fem2dDiff {
-  /** @state artifact */
+  /** 🔘️ @state artifact */
   nodes?: Fem2dNodesDelta;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   elements?: Fem2dElementsDelta;
-  /** @state artifact */
+  /** 🗾️ @state artifact */
   regions?: Fem2dRegionsDelta;
-  /** @state artifact */
+  /** 🔩️ @state artifact */
   materials?: Fem2dMaterialsDelta;
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections?: Fem2dSectionsDelta;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   supports?: Fem2dSupportsDelta;
-  /** @state artifact */
+  /** 🏋️ @state artifact */
   loadCases?: Fem2dLoadCasesDelta;
-  /** @state artifact */
+  /** 🗃️ @state artifact */
   combinations?: Fem2dCombinationsDelta;
-  /** @state artifact */
+  /** 🔭️ @state artifact */
   analysis?: Fem2dAnalysisPatch;
-  /** @state config */
+  /** 🔄️ @state config */
 }
 
 export interface Fem2dNodeRemoval {
@@ -873,7 +873,7 @@ export function parseFem2dRegionPatch(value: unknown, at = "$"): Fem2dRegionPatc
     const coordinates = femFem2dDiffGuardArray(value, here);
     if (coordinates.length !== 2) return femFem2dDiffGuardReject(here, "two coordinates required");
     return coordinates.map((value, index) => {
-      const word = parseBinary64(value, `${here}[${index}]`);
+      const word = parseBinary64(value);
       if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(here, "finite coordinate required");
       return word;
     }) as [Binary64, Binary64];
@@ -890,7 +890,7 @@ export function parseFem2dRegionPatch(value: unknown, at = "$"): Fem2dRegionPatc
     else if (key === "holes") patch.holes = femFem2dDiffGuardArray(row[key], `${at}.${key}`).map((value, index) => ring(value, `${at}.${key}[${index}]`));
 
     else {
-      const word = parseBinary64(row[key], `${at}.${key}`);
+      const word = parseBinary64(row[key]);
       const number = binary64Value(word);
       if (!Number.isFinite(number) || (key !== "baseZ" && number <= 0)) return femFem2dDiffGuardReject(`${at}.${key}`, "positive finite geometry property required");
       patch[key as "thickness" | "meshSize"] = word;
@@ -941,7 +941,7 @@ export function parseFem2dLoadPatch(value: unknown, at = "$"): Fem2dLoadPatch {
     if (!fields[kind].includes(key)) return femFem2dDiffGuardReject(`${at}.${key}`, "unknown load field");
     if (["nodeId", "elementId", "regionId"].includes(key)) patch[key] = femFem2dDiffGuardString(row[key], `${at}.${key}`);
     else if (key === "dof") patch[key] = femFem2dDiffGuardMember(row[key], `${at}.${key}`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const);
-    else { const word = parseBinary64(row[key], `${at}.${key}`); if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(`${at}.${key}`, "finite value required"); patch[key] = word; }
+    else { const word = parseBinary64(row[key]); if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(`${at}.${key}`, "finite value required"); patch[key] = word; }
   }
   return patch as unknown as Fem2dLoadPatch;
 }
@@ -960,7 +960,7 @@ export function parseFem2dCombinationPatch(value: unknown, at = "$"): Fem2dCombi
 export function parseFem2dCombinationTermsDelta(value: unknown, at = "$"): Fem2dCombinationTermsDelta {
   const row = femFem2dDiffGuardObject(value, at);
   if (Object.keys(row).some(key => !["removed", "inserted", "moved", "modified"].includes(key))) return femFem2dDiffGuardReject(at, "unknown term delta field");
-  const finite = (raw: unknown, here: string) => { const word = parseBinary64(raw, here); if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(here, "finite factor required"); return word; };
+  const finite = (raw: unknown, here: string) => { const word = parseBinary64(raw); if (!Number.isFinite(binary64Value(word))) return femFem2dDiffGuardReject(here, "finite factor required"); return word; };
   return {
     removed: parseFemRemovals(row.removed, `${at}.removed`), moved: parseFemRelocations(row.moved, `${at}.moved`),
     inserted: parseFemInsertions(row.inserted, `${at}.inserted`, (raw, here) => { const term = femFem2dDiffGuardObject(raw, here); if (Object.keys(term).length !== 2 || !Object.hasOwn(term, "caseId") || !Object.hasOwn(term, "factor")) return femFem2dDiffGuardReject(here, "caseId and factor required"); return { caseId: femFem2dDiffGuardString(term.caseId, `${here}.caseId`), factor: finite(term.factor, `${here}.factor`) }; }),

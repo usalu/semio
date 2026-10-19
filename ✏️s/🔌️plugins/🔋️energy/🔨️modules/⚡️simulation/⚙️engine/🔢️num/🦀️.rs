@@ -69,7 +69,7 @@ pub fn simpson_integrate(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f6
     sum * h / 3.0
 }
 
-/// Explicit Euler step.
+/// 🧭️ Explicit Euler step.
 pub fn euler_step(y: f64, dydt: f64, dt: f64) -> f64 {
     y + dydt * dt
 }

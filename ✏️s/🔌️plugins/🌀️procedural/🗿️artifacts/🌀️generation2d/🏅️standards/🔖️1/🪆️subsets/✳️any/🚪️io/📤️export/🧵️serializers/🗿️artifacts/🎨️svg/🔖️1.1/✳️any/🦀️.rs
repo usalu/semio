@@ -1,4 +1,4 @@
-//! generation2d → svg — the page drawing (`generation2d_drawing`) written as SVG 1.1 by `s.stdio.semio/v1/drawing`'s own
+//! 🪄️ generation2d → svg — the page drawing (`generation2d_drawing`) written as SVG 1.1 by `s.stdio.semio/v1/drawing`'s own
 //! export leaf, the one svg writer every owner shares.
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no svg import.

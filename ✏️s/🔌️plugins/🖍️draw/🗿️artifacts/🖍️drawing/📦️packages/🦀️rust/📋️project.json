@@ -7,8 +7,17 @@
     "role:artifact",
     "family:draw"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🫧️transient/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"
+    ]
+  },
   "targets": {
-    "test-inspector-selection-actions":{"executor":"repo:script","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-inspector-selection-actions","forwardAllArgs":true}},
+    "test-inspector-selection-actions":{"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-inspector-selection-actions","forwardAllArgs":true}},
     "build": {
       "executor": "repo:script",
       "cache": true,
@@ -17,7 +26,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
@@ -52,7 +61,7 @@
     },
     "verify-drawing-canvas-window-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify drawing-canvas-window-ownership",
@@ -89,7 +98,12 @@
     },
     "graph-wire-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock"
+      ],
+      "cache": true,
       "dependsOn": [
         "graph-generate"
       ],
@@ -146,7 +160,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",

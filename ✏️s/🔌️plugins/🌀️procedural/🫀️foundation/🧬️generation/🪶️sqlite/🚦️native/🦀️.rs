@@ -5,7 +5,8 @@
 use semio_framework_dsl_record::{RecordSpecProducer, RecordValue};
 use semio_framework_os_flow_contract::FlowHostSnapshot;
 use semio_framework_os_playbook_contract::{GenerationPlayRoot, GenerationPlayState};
-use semio_framework_value::{NativeDecodeControl, ValueError};
+use semio_framework_value::ValueError;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::collections::BTreeMap;
 
 #[path = "🧬️records/🦀️.rs"]

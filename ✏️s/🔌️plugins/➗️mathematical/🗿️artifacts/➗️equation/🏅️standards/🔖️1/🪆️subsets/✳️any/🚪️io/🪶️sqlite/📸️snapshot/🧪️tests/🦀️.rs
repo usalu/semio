@@ -38,9 +38,9 @@ fn sqlite_snapshot_equation_deep_erased_native_retains_flat_owned_state_on_small
 #[test]
 fn sqlite_snapshot_equation_controlled_typed_construction_preserves_admission_and_known_work(){
  let(f,value)=fixture();let text=pack::snapshot::ArtifactDsl::print_dsl(&value);let(_,body)=store::semio_format::split_text_preamble(&text).unwrap();let spec=<EquationSnapshot as pack::snapshot::ArtifactPack>::record_spec().unwrap();let record=semio_framework_dsl_record::parse_exact(body,&spec,&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document}).unwrap();let bind=crate::standards::v1::subsets::any::io::binary::snapshot::reconstruct_pack_record_controlled;
- let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback);let restored=bind(&record,&mut control,1_000_000).unwrap();assert_eq!(restored,value);EquationSnapshot::retire_sqlite_snapshot(restored);
- let mut control=semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback);assert!(bind(&record,&mut control,f["maxRows"].as_u64().unwrap()as usize).is_err());assert_eq!(control.owned_bytes(),0,"row admission must precede typed field copying");
- let mut control=semio_framework_value::NativeDecodeControl::new(f["maxValueBytes"].as_u64().unwrap()as usize,&mut callback);assert!(bind(&record,&mut control,1_000_000).is_err());
+ let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024*1024,&mut callback);let restored=bind(&record,&mut control,1_000_000).unwrap();assert_eq!(restored,value);EquationSnapshot::retire_sqlite_snapshot(restored);
+ let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024*1024,&mut callback);assert!(bind(&record,&mut control,f["maxRows"].as_u64().unwrap()as usize).is_err());assert_eq!(control.owned_bytes(),0,"row admission must precede typed field copying");
+ let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(f["maxValueBytes"].as_u64().unwrap()as usize,&mut callback);assert!(bind(&record,&mut control,1_000_000).is_err());
  EquationSnapshot::retire_sqlite_snapshot(value);
 }
 

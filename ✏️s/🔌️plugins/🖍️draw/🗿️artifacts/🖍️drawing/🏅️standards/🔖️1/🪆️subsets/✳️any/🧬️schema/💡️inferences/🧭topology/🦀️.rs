@@ -27,7 +27,7 @@ pub fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::Page
     }
 }
 
-fn walk(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+fn walk(layers: &semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for layer in layers {
         let id = layer_id(layer).to_string_owner();
         topo_order.push(id.clone());

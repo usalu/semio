@@ -30,6 +30,7 @@ semio-s-artifact-puzzle-3d-model = { workspace = true }
 semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true }
 semio-s-artifact-puzzle-3d-precompute-fill = { workspace = true }
 semio-s-artifact-puzzle-3d-precompute-geometry = { workspace = true }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

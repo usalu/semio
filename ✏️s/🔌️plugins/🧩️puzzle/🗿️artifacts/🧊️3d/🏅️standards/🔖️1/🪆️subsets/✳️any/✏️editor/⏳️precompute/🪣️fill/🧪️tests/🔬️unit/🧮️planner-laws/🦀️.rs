@@ -411,8 +411,6 @@ fn nakagin_scale_roots() -> FillPreparationRoots {
             scale: None,
             vortices: vec![
                 VortexProps { id: "v0".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) },
-                // 🧲️ On the capsule's apex, pointing out: a placement docks there flush. At the base center pointing INTO the
-                // body it made every placement a duplicate of its host, which only passed while the host was never tested.
                 VortexProps { id: "v1".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 8.0], direction: Some([0.0, 0.0, 1.0]) },
             ],
         })

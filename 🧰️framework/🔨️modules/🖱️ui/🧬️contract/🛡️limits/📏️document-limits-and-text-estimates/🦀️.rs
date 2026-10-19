@@ -41,7 +41,6 @@ pub struct UiDocumentLimits {
 }
 
 impl Default for UiDocumentLimits {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn default() -> Self {
         Self { max_nodes: 20_000, max_depth: 128, max_children: 4_096, max_text_bytes: 65_536, max_patch_ops: 4_096, max_patch_bytes: 1_048_576 }
     }
@@ -68,7 +67,6 @@ impl UiDocumentLimits {
     /// 📏️ Liveness backstop for one surface patch: the steps a document at this quota may cost to mint.
     /// It is NOT the progress guarantee — the intake rejects a phase reporting 32 consecutive steps that
     /// carry neither an item nor a byte, and that byte-aware rule is what catches a genuine stall.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn retained_ui_intake_step_ceiling(&self) -> usize {
         self.max_nodes.saturating_mul(RETAINED_UI_INTAKE_STEPS_PER_NODE)
     }

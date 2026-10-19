@@ -14,7 +14,7 @@ export interface SemioPresentationOutline {
 }
 
 export interface SemioPresentationInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: SemioPresentationOutline;
 }
 

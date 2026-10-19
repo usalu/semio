@@ -40,7 +40,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn as_ratfunc_auto_recovers_together_form() {
         let x = Expr::symbol("x");
-        // 1/x + 1 -> (x + 1)/x  (structurally: num has x-degree-1 term, den has x^1 term)
         let e = Expr::add(vec![Expr::pow(x.clone(), Expr::integer(-1)), Expr::integer(1)]);
         let (num, den, map) = as_ratfunc_auto(&e).unwrap();
         assert!(poly_uses_var(&den, gen_index(&x, &map).unwrap()));
@@ -49,7 +48,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn factor_poly_u_recombines_to_the_original() {
-        // (2x - 1)(x + 3) = 2x^2 + 5x - 3, with a rational (non-integer) leading structure once made monic.
         let f = PolyU::from_coeffs(vec![Rational::from_i64(-3, 1).unwrap(), Rational::from_i64(5, 1).unwrap(), Rational::from_i64(2, 1).unwrap()]);
         let (overall, factors) = factor_poly_u(&f);
         let mut recombined = PolyU::constant(overall);

@@ -67,8 +67,8 @@ fn io_profile_requests_once_then_goes_idle_until_completion() {
 #[test]
 fn io_profile_re_requests_after_capability_revoked() {
     on_instance_open(br#"{"profile":"io","ioCapabilityId":"scale-fixture.io"}"#);
-    let _ = turn(budget(), clock(0, 1)); // requests
-    on_completed(1); // granted
+    let _ = turn(budget(), clock(0, 1));
+    on_completed(1);
     assert_eq!(revocation_count(), 0);
     on_capability_revoked("scale-fixture.io");
     assert_eq!(revocation_count(), 1);
@@ -113,7 +113,6 @@ fn stateful_profile_checkpoint_restore_round_trips_exactly() {
     }
     let snapshot = checkpoint().expect("checkpoint encodes");
     let before = STATE.with(|state| state.borrow().accumulated.clone());
-    // 🔀️ Mutate further so restore has something real to undo.
     let _ = turn(budget(), clock(0, 1));
     assert_ne!(STATE.with(|state| state.borrow().accumulated.clone()), before);
     restore(&snapshot).expect("restore decodes");

@@ -1,7 +1,7 @@
 /** 🧬️ PlaybookConfig */
 export interface PlaybookConfig {
-  /** @state config */
-  /** @state config */
+  /** 🤝️ @state config */
+  /** 🧑️ @state config */
   contributionsJson: string;
 }
 

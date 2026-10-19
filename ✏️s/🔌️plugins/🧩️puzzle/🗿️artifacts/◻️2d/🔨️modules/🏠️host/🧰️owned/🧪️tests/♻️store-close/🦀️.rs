@@ -6,10 +6,10 @@ use store::os_store::store_schema::ArtifactCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn standalone_history_close_resumes_past_the_original_ledger_page() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️store-close/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️store-close/🔣️.json")).unwrap();
     for (row, scheduled) in corpus["histories"].as_array().unwrap().iter().flat_map(|row| [(row, true), (row, false)]) {
         let edits = row["edits"].as_u64().unwrap() as usize;
-        let mut store = puzzle2d_store(create_document_envelope(crate::PUZZLE_2D_SCHEMA, "close-law", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+        let mut store = puzzle2d_store(create_document_envelope(semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA, "close-law", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         for index in 0..edits {
             let mutation = crate::standards::v1::subsets::any::schema::mutations::change_manifest_id(Some(format!("manifest-{index}").into()));
             store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();

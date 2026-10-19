@@ -76,11 +76,9 @@ fn evaluate_channels_budgeted_resumes_across_calls_until_complete() {
         reg.dispatch(kind, input)
     };
     cache.begin_epoch();
-    // ⏱️ Tick 1: budget for exactly one cache miss — stops at "a", "b" hasn't run yet.
     let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 1);
     assert_eq!(tick1.remaining, vec!["b".to_string()]);
-    // ⏱️ Tick 2: "a" is now a cache hit (free), so this budget-1 call reaches and computes "b".
     let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, EvalStepBudget::dispatches(1),&|_|true).unwrap();
     assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming must not recompute the already-cached \"a\"");
     assert!(tick2.remaining.is_empty(), "the walk reached the end of the topo order");
@@ -164,8 +162,6 @@ fn evaluate_channels_budgeted_yields_on_the_wall_clock_after_one_dispatch() {
         calls.fetch_add(1, Ordering::Relaxed);
         reg.dispatch(kind, input)
     };
-    // ⏱️ A node budget that would swallow the whole graph in one call, paired with a deadline that
-    // has already passed: the deadline, not the node count, is what stops the walk.
     let overrun = EvalStepBudget::until(512, always_expired_now_us, 0);
     cache.begin_epoch();
     let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HistoryFoldIndex::new(), &mut dispatch, &cache, &HashSet::new(), None, overrun,&|_|true).unwrap();

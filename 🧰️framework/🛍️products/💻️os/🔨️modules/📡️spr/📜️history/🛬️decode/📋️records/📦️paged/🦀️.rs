@@ -1,9 +1,10 @@
 //! 📦️ Canonical History indexes retain original native records in separately paid first-party pages.
 use super::RetainedHistoryRecordsStep;
-use semio_framework_value::{list::{PagedList,PagedListError},ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
 use std::mem::ManuallyDrop;
 pub struct RetainedHistoryPagedRecords<T>{records:ManuallyDrop<PagedList<T,{usize::MAX}>>,maximum_records:usize,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,closed:bool}
-fn error(error:PagedListError)->ValueError{ValueError::literal(match error.kind{semio_framework_value::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,semio_framework_value::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value::list::PagedListRefusalKind::InvariantViolated=>ValueRefusalKind::InvariantViolated},error.reason)}
+fn error(error:PagedListError)->ValueError{ValueError::literal(match error.kind{semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value_persistent::list::PagedListRefusalKind::InvariantViolated=>ValueRefusalKind::InvariantViolated},error.reason)}
 impl<T> RetainedHistoryPagedRecords<T>{
  pub fn admit(maximum_records:usize,g:RetainedCloneGrant)->Result<Option<Self>,ValueError>{if maximum_records==0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original paged History index bound is absent"))}if g.maximum_items==0||g.maximum_depth==0{return Ok(None)}Ok(Some(Self{records:ManuallyDrop::new(PagedList::empty()),maximum_records,receipt:Some((g,RetainedCloneProgress{copied_items:1,..Default::default()})),closed:false}))}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}

@@ -150,8 +150,6 @@ impl Scheduler {
     /// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): the one piece of an actor's scheduling entry
     /// [`Kernel::actor_metrics_samples`] needs that [`ActorMeta`] doesn't itself carry — `lane` is
     /// fixed at [`Scheduler::register_actor`] and never changes, so this is a plain lookup.
-    // 🚫️async: E1-adjacent pure accessor — its one consumer sits inside a sync `Iterator::map`
-    // closure (`Kernel::actor_metrics_samples`) — see R9 residue shape 1.
     pub fn lane_of(&self, actor: ActorId) -> Option<Lane> {
         self.actors.get(&actor).map(|e| e.lane)
     }
@@ -163,9 +161,6 @@ impl Scheduler {
         }
     }
 
-    // 🚫️async: E1-adjacent pure computation — every consumer sits inside a sync `Iterator::map`/
-    // `Option::map_or`/subtract-assign call (DRR quantum/deficit accounting), which cannot await —
-    // see R9 residue shape 1.
     fn actor_weight(entry: &ScheduledActor) -> i64 {
         ((entry.lane.weight() as f32) * entry.throttle.max(0.05)).round().max(1.0) as i64
     }
@@ -178,7 +173,6 @@ impl Scheduler {
         let mut budget_left = self.grants_per_tick;
 
         //#region 🔖️DeadlinePreemption
-        // 🚨️ Interactive envelopes past (or nearest) their deadline short-circuit ahead of DRR order.
         let mut overdue: Vec<(u64, ActorId)> = self.actors.iter().filter(|(_, e)| e.can_issue()).filter_map(|(id, e)| e.mailbox.earliest_deadline().filter(|d| *d <= now_ms).map(|d| (d, *id))).collect();
         overdue.sort();
         for (_, actor_id) in overdue {
@@ -232,8 +226,6 @@ impl Scheduler {
         }
         //#endregion 🔖️DrrRounds
 
-        // ⏰️ Earliest deadline still sitting in any active actor's mailbox after this tick's grants
-        // were drained — a hint for "check again by this time," not a guarantee of a grant then.
         let wake_at = self.actors.values().filter(|e| e.can_issue()).filter_map(|e| e.mailbox.earliest_deadline()).min();
         Decision { run, wake_at }
     }
@@ -319,8 +311,6 @@ impl Default for SceneStore {
 }
 
 impl SceneStore {
-    // 🚫️async: E1 pure constructor consumed by `Default::default` (external trait impl above) —
-    // see R9
     pub fn new() -> Self {
         Self { current: Arc::new(SceneSnapshot::default()), pending: Vec::new(), pending_node_delta: 0 }
     }

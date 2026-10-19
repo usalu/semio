@@ -307,7 +307,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
     fn terminal_is_empty(&self)->bool{self.closing&&self.tessellate.terminal_is_empty()&&self.evaluation.terminal_is_empty()}
 }
 
-/// with every open press's and typing run's provisional leaves (the framework's, as of admission) and every open gumball
+/// 🪄️ with every open press's and typing run's provisional leaves (the framework's, as of admission) and every open gumball
 /// gesture (this instance's) folded in — `None` while nothing is open, so the committed snapshot is read as is. The
 /// overlay is retired cold by the caller, never dropped.
 fn generation3d_provisional_snapshot(committed: &Generation3dSnapshot, provisional: &[semio_framework_value::DslValue], gumball: &semio_s_artifact_procedural_3d_transforms::GumballGestures) -> Option<Generation3dSnapshot> {

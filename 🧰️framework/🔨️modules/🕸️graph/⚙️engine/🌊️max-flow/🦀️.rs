@@ -89,8 +89,6 @@ impl FlowNetwork {
         }
         let mut total = 0.0;
         loop {
-            // 🚨️ was a dropped-future no-op: `bfs_levels` was never awaited, so `max_flow` never
-            // actually built a level graph — the whole Dinic's-algorithm loop was silently inert.
             let level = self.bfs_levels(source);
             if level[sink as usize].is_none() {
                 break;

@@ -1,6 +1,6 @@
 //! 🧵️ Byte-granular canonical compression with independently admitted matching-window pages.
 use super::*;
-use semio_framework_value::list::{PagedList, PagedListError, PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError, list::PagedListRefusalKind};
 pub use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
 
 const HISTORY: usize = WINDOW_SIZE + MAX_MATCH + 2;

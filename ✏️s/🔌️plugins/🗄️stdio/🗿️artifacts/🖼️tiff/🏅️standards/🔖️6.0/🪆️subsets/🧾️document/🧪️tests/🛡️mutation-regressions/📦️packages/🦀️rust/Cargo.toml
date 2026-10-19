@@ -50,6 +50,7 @@ semio-s-artifact-stdio-tiff-mutations = { path = "../../../../🧬️schema/🧬
 semio-s-artifact-stdio-tiff-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-tiff-schema-2 = { path = "../../../../../🧱️baseline/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-tiff-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-tiff-snapshot-surfaces = { path = "../../../../🧬️schema/📸️snapshot/🪟️surfaces/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [dev-dependencies]

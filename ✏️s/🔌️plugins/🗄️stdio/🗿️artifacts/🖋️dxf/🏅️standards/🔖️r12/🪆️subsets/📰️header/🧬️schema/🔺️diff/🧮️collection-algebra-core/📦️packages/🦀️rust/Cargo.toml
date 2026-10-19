@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-dxf-diff-algebra"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio dxf diff index-keyed and name-keyed collection algebra"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-contract = { workspace = true }

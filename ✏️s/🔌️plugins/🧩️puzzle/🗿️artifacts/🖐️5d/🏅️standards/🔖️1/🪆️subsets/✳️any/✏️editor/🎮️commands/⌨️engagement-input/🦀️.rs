@@ -1,6 +1,6 @@
 //! ⌨️ `engagement-input` command.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 
 pub fn engagement_input(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {

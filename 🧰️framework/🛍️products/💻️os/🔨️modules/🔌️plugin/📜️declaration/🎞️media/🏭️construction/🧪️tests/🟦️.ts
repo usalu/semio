@@ -11,7 +11,7 @@ test("original output construction has exact neutral chunk-slot bounds",()=>{
   if(row.accepted){
    const slots=Number((BigInt(row.maximum)+BigInt(fixture.chunkBytes)-1n)/BigInt(fixture.chunkBytes));
    expect(slots).toBe(row.slots);
-   expect(ceil(divide(row.maximum,fixture.chunkBytes))).toBe(row.slots);
+   expect(ceil(divide(row.maximum,fixture.chunkBytes) as number)).toBe(row.slots);
   }
  }
  const rust=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");

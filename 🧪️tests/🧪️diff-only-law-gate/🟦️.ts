@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import ts from "typescript";
-import { policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyDiffOnlyFileBreaches, policyHostApplyBreaches, policyInverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyRowEmitterBreaches, policyWholeStateDiffBreaches } from "@semio-tech/repo-lib/laws";
+import { policyBaseCloneDiffBreaches, policyDiffDerivedInverseBreaches, policyDiffOnlyFileBreaches, policyHostApplyBreaches, policyHostApplyFileBreaches, policyInverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyRowEmitterBreaches, policyWholeStateDiffBreaches } from "@semio-tech/repo-lib/laws";
 
 type Rule = "R8" | "R9" | "R10" | "R11" | "R12" | "R13" | "R14" | "R15" | "R16" | "R17" | "R18";
 type Case = { id: string; description: string; segments: string[]; lines: string[]; breaches: { line: number; rule: Rule }[]; oracle: Rule[] };

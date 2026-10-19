@@ -87,18 +87,12 @@ mod tests {
 
         write_atomic(&path, original, &context).unwrap();
 
-        // Simulate a crash between "temp file written" and "rename into place": create a
-        // stray tmp file with the naming scheme write_atomic uses, but never rename it.
         let stray_tmp = path.with_file_name("doc.spk.tmp-999999-0");
         std::fs::write(&stray_tmp, b"garbage-from-a-simulated-crashed-write").unwrap();
 
-        // The target must still show only the original, fully-committed content — the stray
-        // (simulated-interrupted) tmp file is never visible at `path`.
         let read_back = std::fs::read(&path).unwrap();
         assert_eq!(read_back, original);
 
-        // A second, real write_atomic call still succeeds and atomically replaces the content
-        // even with an unrelated stray tmp file sitting in the same directory.
         let updated = b"second committed content, replaces the first";
         write_atomic(&path, updated, &context).unwrap();
         let read_back = std::fs::read(&path).unwrap();
@@ -165,13 +159,9 @@ mod tests {
         let read_chunk = pack_file.read_chunk(chunk_id, VerificationLevel::Full).await.unwrap();
         assert_eq!(read_chunk, chunk_payload);
 
-        // `Full` verification also cross-checks the concatenated document body against the
-        // footer's blake3 content hash, proving StreamingPackWriter's running hash matches.
         let body = pack_file.body_bytes(VerificationLevel::Full).await.unwrap();
         assert_eq!(body, doc_payload);
 
-        // Forward-scan recovery should independently see every segment this session wrote:
-        // document, chunk, schema, chunk table, manifest, end.
         let report = recover_file(&path, &limits, context.clone()).await.unwrap();
         assert_eq!(report.segments_recovered, 6);
         assert!(report.manifest.is_some());
@@ -222,12 +212,10 @@ mod tests {
         file.set_len(full_len - semio_framework_pack_format::FOOTER_SIZE as u64).unwrap();
         drop(file);
 
-        // Superblock open must fail (no valid footer) — this is the scenario recover_file is for.
         let source = FilePackSource::open(&path, context.clone()).unwrap();
         assert!(semio_framework_pack_format::PackFile::open_superblock(source, &limits).await.is_err());
 
         let report = recover_file(&path, &limits, context.clone()).await.unwrap();
-        // document, chunk, chunk_table (since one chunk was written), manifest, end.
         assert_eq!(report.segments_recovered, 5);
         assert!(report.bytes_recovered > 0);
         assert!(report.manifest.is_some());
@@ -241,17 +229,12 @@ mod tests {
         let limits = PackLimits::default();
 
         let full_len = std::fs::metadata(&path).unwrap().len();
-        // Cut well past the footer AND into the tail of the body stream, guaranteeing the
-        // last segment present (the `End` marker) is itself truncated mid-frame.
         let cut_len = full_len - semio_framework_pack_format::FOOTER_SIZE as u64 - 3;
         let file = std::fs::OpenOptions::new().write(true).open(&path).unwrap();
         file.set_len(cut_len).unwrap();
         drop(file);
 
         let report = recover_file(&path, &limits, context.clone()).await.unwrap();
-        // Fewer than the full 5 segments (document, chunk, chunk_table, manifest, end) since
-        // the trailing bytes of the last segment are gone; recovery must stop cleanly there,
-        // never panic, and never report more than what a full session would produce.
         assert!(report.segments_recovered < 5);
         assert!(report.segments_recovered >= 1);
     }

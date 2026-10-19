@@ -93,7 +93,7 @@ async fn a_hit_inside_the_selection_keeps_the_whole_selection_as_the_menu_subjec
         window_instance_id: None,
         point: None,
     };
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let menu = app.context_menu(&request, &view).await;
     let delete = menu.iter().find(|item| item.id == "delete").expect("the object menu carries a delete row");
     let label = delete.label.clone().unwrap_or_default();
@@ -247,7 +247,7 @@ async fn the_world_scene_names_built_in_meshes_by_reference_and_fits_its_fixed_c
     let live_meshes = scene_meshes_of(&node);
     let (payload, capacity) = world_surface_payload_bytes(&mut app, main::BODY_KEY).await;
     assert!(payload <= capacity, "the popup-open world scene packs to {payload} bytes, over the fixed surface capacity {capacity}");
-    for meshes in [live_meshes, parse(&main::world_meshes_json(&nakagin_scene_snapshot()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
+    for meshes in [live_meshes, parse(&semio_s_artifact_puzzle_3d_editor_session::world_meshes_json(&nakagin_scene_snapshot()), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("nakagin meshes").as_array().cloned().expect("mesh array")] {
         assert!(!meshes.is_empty(), "a world scene always declares its meshes");
         assert!(to_json_string(&meshes).len() <= PUZZLE3D_SCENE_MESH_REFERENCE_BUDGET, "mesh references must stay a rounding error against the {capacity}-byte surface payload; observed {}", to_json_string(&meshes).len());
         for mesh in &meshes {
@@ -339,7 +339,7 @@ async fn the_nakagin_world_scene_publishes_every_lane_under_the_page_cap_with_th
 async fn a_nakagin_lane_that_did_not_change_does_not_republish_on_a_partial_refresh() {
     let mut app = nakagin_app().await;
     let before = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
-    dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [80.0, 80.0, 80.0], "target": [0.0, 0.0, 0.0], "zoom": 1.5 } })), Some(main::WINDOW_KIND_ID)).await.expect("setCamera");
+    dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [80.0, 80.0, 80.0], "target": [0.0, 0.0, 0.0], "zoom": 1.5 } })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setCamera");
     let moved = world_surface_carrier_census(&mut app, main::BODY_KEY).await;
     let republished: Vec<&str> = moved.lanes.iter().filter(|lane| before.lane(&lane.key).is_none_or(|previous| previous.declared_hash != lane.declared_hash)).map(|lane| lane.key.as_str()).collect();
     assert!(republished.is_empty(), "a camera move republished {republished:?}");
@@ -375,18 +375,18 @@ async fn close_vortex_suggestions_clears_sticky_hover() {
 #[semio_framework_async_macros::async_test]
 async fn open_and_accept_vortex_suggestions_preserve_active_utility() {
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("activate transform");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("activate transform");
     let vortex = first_vortex_full_id(&app);
-    let open = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.as_str(), "x": 0.0, "y": 0.0 })), Some(main::WINDOW_KIND_ID)).await.expect("openVortexSuggestions");
+    let open = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.as_str(), "x": 0.0, "y": 0.0 })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("openVortexSuggestions");
     assert!(open.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "opening suggestions must not emit utility/tool switches: {:?}", open.requested_effects);
-    let open_node = render_window(&mut app, main::WINDOW_KIND_ID).await;
+    let open_node = render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await;
     let open_interaction = interaction_of(&open_node);
     assert_eq!(open_interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "transform remains non-brush scene mode during suggestions");
     assert_eq!(open_interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true));
     pump_brush_suggestions(&mut app, "the popup's search settles", brush_suggestions_settled).await;
-    let accept = dispatch(&mut app, "acceptSuggestion", None, Some(main::WINDOW_KIND_ID)).await.expect("acceptSuggestion");
+    let accept = dispatch(&mut app, "acceptSuggestion", None, Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("acceptSuggestion");
     assert!(accept.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "accepting suggestions must not emit utility/tool switches: {:?}", accept.requested_effects);
-    let accept_interaction = interaction_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    let accept_interaction = interaction_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert!(accept_interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
     assert_eq!(accept_interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
 }
@@ -415,7 +415,7 @@ async fn interaction_admits_in_every_residue_class_while_a_reserved_verb_stays_p
 #[semio_framework_async_macros::async_test]
 async fn vortex_hover_storm_admits_then_the_brush_run_searches_and_a_click_places() {
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("brush");
     let vortex = first_vortex_full_id(&app);
     let before = object_count(&app);
     let mut last = None;
@@ -443,7 +443,7 @@ async fn each_window_instance_publishes_its_own_armed_utility_into_its_world_lan
     let perspective = "puzzle3d-main-perspective";
     let top = "puzzle3d-main-top";
     let arm = |utility: &'static str, window: &'static str| json!({ "utilityId": utility, "windowId": window });
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&arm(utilities::volume_brush::UTILITY_ID, main::WINDOW_KIND_ID)), Some(main::WINDOW_KIND_ID)).await.expect("arm the base pane");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&arm(utilities::volume_brush::UTILITY_ID, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("arm the base pane");
     dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&arm(utilities::brush::UTILITY_ID, perspective)), Some(perspective)).await.expect("arm brush in the perspective pane");
     dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "", "windowId": top })), Some(top)).await.expect("the top pane stays unarmed");
     let vortex = first_vortex_full_id(&app);
@@ -501,7 +501,7 @@ async fn vortex_hover_then_open_vortex_suggestions_publishes_menu() {
 async fn the_armed_brush_runs_a_read_only_search_that_traces_every_candidate_and_leaving_aborts_it() {
     use semio_framework_tool_run::ToolRunVerdict;
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("brush");
     let committed = committed_document(&app);
     let vortices = vortex_full_ids(&app);
     let (first, last) = (vortices.first().cloned().expect("a vortex"), vortices.last().cloned().expect("a vortex"));
@@ -516,7 +516,7 @@ async fn the_armed_brush_runs_a_read_only_search_that_traces_every_candidate_and
     let run = tool_run_trace_run(&app);
     target_brush_suggestions(&mut app, &last).await;
     assert_eq!(tool_run_trace_run(&app), run, "a new target retargets the same run");
-    dispatch(&mut app, "targetBrushSuggestions", Some(&json!({})), Some(main::WINDOW_KIND_ID)).await.expect("leave every vortex");
+    dispatch(&mut app, "targetBrushSuggestions", Some(&json!({})), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("leave every vortex");
     pump_brush_suggestions(&mut app, "leaving aborts the run", |presence| presence.is_some_and(|presence| presence.state == protocol::PresenceToolRunState::Aborted)).await;
     assert_eq!(committed_document(&app), committed, "the aborted search left the document byte-identical");
     dispatch(&mut app, "undo", None, None).await.expect("undo");
@@ -574,7 +574,7 @@ fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     assert_eq!(find_measure_select(&main::window_measures(&scene, labels), "puzzle3d-brush-placement"), None, "the candidate search's readout is the framework ToolRun panel, not a picker");
 }
 
-/// leftover InteractionView after vortex-domain interactionHover must carry the vortex full id.
+/// 🤝️ leftover InteractionView after vortex-domain interactionHover must carry the vortex full id.
 #[semio_framework_async_macros::async_test]
 async fn interaction_hover_leftover_carries_vortex_full_id() {
     let mut app = app().await;

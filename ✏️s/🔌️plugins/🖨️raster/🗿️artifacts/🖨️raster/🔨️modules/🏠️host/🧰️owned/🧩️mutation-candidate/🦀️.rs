@@ -402,13 +402,6 @@ impl RasterMutationCandidateAuthority {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        // 🌉️ The SAME funnel the native apply uses (`🔺️diff/📝️text`, `io`'s import
-                        // bridges): the payload's real bytes are decoded into the composed child's own
-                        // content, which both mints the CANONICAL content-addressed child id (a raw
-                        // `(mime, data)` digest minted here would disagree with every other route and
-                        // break `add-layer-asset`'s inverse) and produces the materialization this
-                        // handle must retain — without it the asset pool holds pixel-less handles and
-                        // the composite surface renders nothing.
                         self.asset_mint = Some(semio_s_artifact_raster_raster_model::mint_raster_image_child(&value.asset_id, &value.asset));
                     }
                     1 => {

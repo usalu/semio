@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { Vector3 } from "three";
 
 export function testFem3dSelectionProjectionOracle(): void {
-  const vector = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎯️projection/🔣️.json", import.meta.url), "utf8"));
+  const vector = JSON.parse(readFileSync(new URL("../🧫️fixtures/🎯️projection/🔣️.json", import.meta.url), "utf8"));
   const nodes = Array.from({ length: vector.nodeCount }, (_, index) => ({ id: `node:${index}`, point: new Vector3(index, 0, 0) }));
   const selected = nodes.toReversed().flatMap(node => Array.from({ length: vector.selectionMultiplicity }, () => node.id));
   const identities = new Set(selected);

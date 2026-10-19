@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️ComplianceHelpers
-/// � Exhaustive evaluate for the aluminium-structure subject.
+/// 📋️ Exhaustive evaluate for the aluminium-structure subject.
 fn push_duplicate_id_fails(report: &mut CheckReport, annex: AnnexChoice, list_path: &str, label_en: &str, label_de: &str, ids: impl IntoIterator<Item = String>) {
     use std::collections::{BTreeMap, BTreeSet};
     let id_list: Vec<String> = ids.into_iter().collect();

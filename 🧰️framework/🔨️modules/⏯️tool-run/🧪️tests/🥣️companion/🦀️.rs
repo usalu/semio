@@ -8,6 +8,8 @@ use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 
 pub use semio_framework_tool_run::testkit::*;
 pub use semio_framework_tool_run::*;
+pub use semio_framework_tool_run_tick_wire::testkit::*;
+pub use semio_framework_tool_run_tick_wire::*;
 
 #[global_allocator]
 static TOOL_RUN_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

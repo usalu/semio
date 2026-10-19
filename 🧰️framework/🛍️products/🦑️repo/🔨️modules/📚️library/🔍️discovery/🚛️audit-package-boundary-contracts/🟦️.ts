@@ -26,6 +26,16 @@ export function auditPackageBoundaryContracts(audit: TaxonomyAudit): void {
     ids(rule.allowedDirectoryKindIds, taxonomy.semanticDirectoryKinds, `packageBoundaryRules[${JSON.stringify(ecosystemId)}].allowedDirectoryKindIds`);
     if (!taxonomy.packageGlueGrammar[rule.glueGrammarId]) problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].glueGrammarId is missing.`);
     if (rule.recursive !== true || rule.uncertainRole !== "problem" || rule.implementationRole !== "problem") problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}] must recursively block uncertain and implementation roles.`);
+    const admission = rule.implementationAdmission;
+    if (admission !== null && admission !== undefined) {
+      if (admission.form === "nested-source-unit") {
+        exactKeys(admission, ["form", "unitSourceFileKindId"], `packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission`);
+        if (!rule.allowedFileKindIds.includes(admission.unitSourceFileKindId) || taxonomy.fileKinds[admission.unitSourceFileKindId]?.role !== "source") problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission.unitSourceFileKindId must be an allowed source file kind.`);
+      } else if (admission.form === "nested-manifest-unit") {
+        exactKeys(admission, ["form", "unitManifestContractId"], `packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission`);
+        if (admission.unitManifestContractId !== rule.manifestContractId) problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission.unitManifestContractId must be the package manifest contract.`);
+      } else problems.push(`packageBoundaryRules[${JSON.stringify(ecosystemId)}].implementationAdmission.form is invalid.`);
+    }
   }
 
   if (record(taxonomy.packageBoundaryProfiles, "packageBoundaryProfiles")) for (const [id, profile] of Object.entries(taxonomy.packageBoundaryProfiles)) {

@@ -28,11 +28,7 @@ pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) 
                 let object_ids = ctx.selected_object_ids();
                 apply_puzzle3d_focus_selection(ctx.scene, &object_ids);
             }
-            // 🧹️ Empties the framework-owned `vortex` domain through the one sanctioned reducer channel
-            // (`Emit.interaction_writes`) — never by poking selection state this app does not own.
             "clear" => ctx.clear_selection(),
-            // 🖱️ Marquee method for the next viewport drag, read back by `world_selection_json` into
-            // `World3dHost.selection.method`. `pick` is the way back to the default sweep.
             "pick" => ctx.scene.runtime.selection_method = PUZZLE3D_SELECTION_METHOD_PICK.into(),
             "rectangle" => ctx.scene.runtime.selection_method = PUZZLE3D_SELECTION_METHOD_RECTANGLE.into(),
             "lasso" => ctx.scene.runtime.selection_method = PUZZLE3D_SELECTION_METHOD_LASSO.into(),

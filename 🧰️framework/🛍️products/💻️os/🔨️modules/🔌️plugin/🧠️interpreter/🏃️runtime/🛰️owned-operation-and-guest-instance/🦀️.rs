@@ -123,7 +123,7 @@ pub struct OwnedGuestInstance {
 impl Drop for OwnedGuestInstance{fn drop(&mut self){assert!(std::thread::panicking()||(self.original_core.is_none()&&self.original_source.is_none()),"Owned original instance reached Drop before its paid Core and source close")}}
 
 impl OwnedGuestInstance {
-    pub fn original_core_mut(&mut self)->Result<(&Arc<crate::interpreter::CoreModule>,&mut semio_framework_plugin_interpreter::CoreInstanceOpening),semio_framework_value::ValueError>{let core=self.original_core.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Owned call requires its genuine paid original Core holder"))?;Ok((self.artifact.original_actor_module(),core))}
+    pub fn original_core_mut(&mut self)->Result<(&Arc<semio_framework_plugin_interpreter::CoreModule>,&mut semio_framework_plugin_interpreter::CoreInstanceOpening),semio_framework_value::ValueError>{let core=self.original_core.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Owned call requires its genuine paid original Core holder"))?;Ok((self.artifact.original_actor_module(),core))}
     /// 👁️ Borrows already funded original Core memory without copying or reopening its owner.
     pub fn original_memory(&self,index:u32)->Option<&[u8]>{self.original_core.as_ref()?.resources()?.memory(index)}
     pub fn original_startup_input(&self)->Option<semio_framework_actor::RetainedTurnInput>{self.original_startup_input}

@@ -1,5 +1,6 @@
 use semio_framework_plugin_reactor_lifecycle::with_state as with_pending;
-use semio_framework_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, take_turn_patch_page, turn_patch_budget_bytes, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use semio_framework_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, take_turn_patch_page, turn_patch_budget_bytes};
+use semio_framework_plugin_reactor_turn_limits::{PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
 use semio_framework::kernel::UiPatch;
 use semio_framework_plugin_reactor_patches as patches;
 use semio_framework_plugin_reactor_lifecycle as pending;

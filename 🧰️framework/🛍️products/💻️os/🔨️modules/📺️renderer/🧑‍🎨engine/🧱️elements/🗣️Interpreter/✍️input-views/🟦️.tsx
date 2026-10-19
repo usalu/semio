@@ -36,8 +36,8 @@ import {
 } from "@semio-tech/ui-react";
 import { type ContinuousGestureLane } from "@semio-tech/framework";
 import { type Component, type UiNodeRecord, type UiValue } from "@semio-tech/framework";
-import { uiAccessibilityValueV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
-import { formatUiNumber, formatUiNumberFixed } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
+import { uiAccessibilityValueV1 } from "@semio-tech/framework/modules/ui/contract/presentation/accessibility";
+import { formatUiNumber, formatUiNumberFixed } from "@semio-tech/framework/modules/ui/contract/presentation/number-format";
 import {
   uiNumberCrossedBound,
   uiNumberDisplayText,
@@ -46,7 +46,7 @@ import {
   uiNumberTypedValue,
   uiTextInputKey,
   uiTextInputKeyOf
-} from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
+} from "@semio-tech/framework/modules/ui/contract/component";
 import { interpLabel, type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { dispatchTrigger, resolveControlIconNode, toUiValue, useContinuousTriggerLane } from "../⚡️action-dispatch/🟦️.tsx";
 import { nodeDomId } from "../🪪️stable-dom-ids/🟦️.ts";
@@ -153,8 +153,6 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   const draftScope = inputDraftScope(record);
   const draftConflictLabel = useLabel("ui.host.inputDraftConflict");
   const draftDiscardLabel = useLabel("ui.host.inputDraftDiscard");
-  // 🔁️ A number field with a display factor carries its stored number and shows `stored × factor` at its precision; every
-  // typed number reads back through the shared law, so retyping the shown value keeps the exact stored one.
   const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
   const storedNumber = Number(component.value);
   const shownText = (stored: number): string => (factor == null ? (component.precision == null ? formatUiNumber(stored) : formatUiNumberFixed(stored, component.precision)) : uiNumberDisplayText(stored, factor, component.precision));
@@ -191,11 +189,6 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
       ? inputCommitLaneV1(context.localDocumentOwner).submit({ read, send, active, expected: draftPublication(raw), subscribe: (listener) => { const publication = context.store.subscribeRevision(listener); const lifecycle = subscribeActive(listener); return () => { publication(); lifecycle(); }; } })
       : send();
   }, draftPublication, context.localDocumentOwner);
-  // 🎚️ A number or colour field with no `commit` mode IS a continuous control: a held spinner, an arrow key
-  // on repeat, a colour picker dragged across its swatch and a scripted value stream all emit a value per frame,
-  // and each one costs a whole document round trip. It rides the same coalescing lane as a slider; blur and a
-  // colour picker's native `change` release the open press on the value last offered (the controlled field's DOM
-  // value may already be the published one again).
   const continuous = (component.kind === "number" || component.kind === "color") && !commitOnBlur;
   const picker = continuous && component.kind === "color";
   const pickerRef = usePickerRelease(picker, lane);
@@ -394,8 +387,6 @@ export function SliderView({ record, context }: { readonly record: UiNodeRecord;
 export function NumberStepperView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "numberStepper" }>;
   const lane = useContinuousTriggerLane(context, record);
-  // 🎚️ An absolute stepper value is a continuous control: a +/− click, typed digits and arrow keys ride the press lane,
-  // the button release or the field's blur is the release, so one interaction is ONE transaction.
   return (
     <Stepper
       id={nodeDomId(context.store, record, context.domScope)}
@@ -415,12 +406,6 @@ export function NumberStepperView({ record, context }: { readonly record: UiNode
       onChange={(value) => lane.offer(toUiValue(value))}
       onPointerUp={() => lane.commit()}
       onPointerCancel={() => lane.commit()}
-      // ➕️➖️ Only a node that DECLARES a `delta` binding gets the relative path. `Stepper`'s own
-      // contract is "reports a relative delta via `onDelta` when provided, otherwise falls back to
-      // computing an absolute `onChange`" — so supplying it unconditionally, as this did, sent every
-      // +/− click down a trigger most programs never bind and swallowed the gesture entirely: puzzle
-      // 3d's four Settings steppers all declare `Trigger::Change` only, and not one of their +/−
-      // buttons reached the guest (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B12, browser-measured).
       onDelta={(record.bindings ?? []).some((binding) => binding.trigger === "delta") ? (delta) => dispatchTrigger(context, record, "delta", toUiValue(delta)) : undefined}
     />
   );

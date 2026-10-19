@@ -1,4 +1,4 @@
-//! Inverse for `remove-retaining-wall`.
+//! ↩️ Inverse for `remove-retaining-wall`.
 use crate::remove_retaining_wall::RemoveRetainingWall;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::insert_retaining_wall;

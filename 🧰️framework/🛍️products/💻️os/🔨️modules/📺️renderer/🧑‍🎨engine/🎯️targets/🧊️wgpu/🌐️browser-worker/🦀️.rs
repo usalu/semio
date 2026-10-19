@@ -482,7 +482,7 @@ impl BrowserRendererWorker {
         let host = self.host.as_ref().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
         let original = self.original_frame.as_mut().expect("original frame entry available").dispatch_value_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx| {
             let turn = host.runtime.asset_decode_step(cx)?;
-            let kind = match turn.kind { crate::RendererAssetDecodeTurnKind::Pending => 0, crate::RendererAssetDecodeTurnKind::Idle => 1, crate::RendererAssetDecodeTurnKind::Published => 2, crate::RendererAssetDecodeTurnKind::Cancelled => 3, crate::RendererAssetDecodeTurnKind::Fault => 4 };
+            let kind = match turn.kind { semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Pending => 0, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Idle => 1, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Published => 2, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Cancelled => 3, semio_framework_os_renderer_wgpu_asset_decode::RendererAssetDecodeTurnKind::Fault => 4 };
             Ok(kind | if turn.pending { 8 } else { 0 })
         });
         let authority = match &original.result { Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error)) => Some(error.kind), _ => None };

@@ -19,6 +19,42 @@ use semio_framework_plugin_runtime_instances::inst_wire_frames::{decode_wire_ser
 use semio_framework_plugin_runtime_ops::ops_wire_limits::find_instance;
 use semio_framework_plugin_runtime_ops::ops_media::{plugin_cancel_media_export, plugin_consume_media, plugin_poll_media_export, plugin_produce_media, plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk};
 use semio_framework_plugin_runtime_ops::ops_document::{plugin_document_pack, plugin_ingest_operations};
+
+#[path = "🎯️document-and-child-commands/🦀️.rs"]
+mod document_and_child_commands;
+use document_and_child_commands::{arm_local_interaction_query, arm_context_menu, arm_apply_envelopes, arm_load_children, arm_read_children, arm_read_child_heads, arm_read_history};
+
+#[path = "📦️document-archive-commands/🦀️.rs"]
+mod document_archive_commands;
+use document_archive_commands::{arm_load_document_archive, arm_merge_document_archive, arm_poll_document_archive_load, arm_cancel_document_archive_load, arm_acknowledge_document_archive_load, arm_read_document_identity, arm_read_document_archive};
+
+#[path = "⚙️config-commands/🦀️.rs"]
+mod config_commands;
+use config_commands::{arm_load_config, arm_read_config, arm_load_window_config, arm_read_window_configs};
+
+#[path = "🎞️media-commands/🦀️.rs"]
+mod media_commands;
+use media_commands::{arm_media_in, arm_submit_media_export, arm_poll_media_export, arm_cancel_media_export, arm_media_fingerprint};
+
+#[path = "🔁️transaction-commands/🦀️.rs"]
+mod transaction_commands;
+use transaction_commands::{arm_transaction_prepare, arm_transaction_commit, arm_transaction_rollback, arm_transaction_undo, arm_transaction_redo};
+
+#[path = "🌐️relay-and-conflict-commands/🦀️.rs"]
+mod relay_and_conflict_commands;
+use relay_and_conflict_commands::{arm_open_artifact, arm_set_default_app, arm_clear_default_app, arm_set_merge_policy, arm_resolve_conflict, arm_read_conflicts};
+
+#[path = "🏁️exchange-finish/🦀️.rs"]
+mod exchange_finish;
+use exchange_finish::finish_exchange;
+
+/// 🧾️ The two facts the command arms of one exchange record for its tail: whether the document mutated and which typed operation the command started.
+#[derive(Default)]
+struct ExchangeFlags {
+    mutated: bool,
+    started_typed_operation: Option<u64>,
+}
+
 /// 🕹️ The typed operation an `AppCommand::Command` of this exchange STARTED (its reply's
 /// `output.operationId`) — the operation whose inline interaction fold this exchange still
 /// tries to land before the reply is sealed (`TYPED_OPERATION_REPLY_LEFTOVER_PUMPS`).
@@ -91,8 +127,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     let presence_pending = None;
     let mut presence_terminal = None;
     let mut presence_terminal_fault = None;
-    let mut mutated = false;
-    let mut started_typed_operation: Option<u64> = None;
+    let mut flags = ExchangeFlags::default();
     let command = match command {
         Some((envelope_seq, ingress)) => match ingress.advance_original(COMMAND_INGRESS_MOVES_PER_TURN,cx) {
             PluginCommandIngressStep::Pending(ingress) => {
@@ -206,8 +241,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                             if mutations.len() > ::replication::wire::command_ingress::INVOCATION_RESULT_PACK_MAXIMUM_BYTES || inverse_group.len() > ::replication::wire::command_ingress::INVOCATION_RESULT_PACK_MAXIMUM_BYTES {
                                 push_dispatch_fault(&mut frames, seq, Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.invocation-result-capacity"), "packed mutations or inverse group exceed command transport authority"), &report).await;
                             } else {
-                                mutated = true;
-                                started_typed_operation = result.output.get("operationId").and_then(DslValue::as_str).and_then(|operation| operation.parse::<u64>().ok());
+                                flags.mutated = true;
+                                flags.started_typed_operation = result.output.get("operationId").and_then(DslValue::as_str).and_then(|operation| operation.parse::<u64>().ok());
                                 frames.push(protocol::AppFrame::Invocation {
                                     in_reply_to: seq,
                                     output,
@@ -272,564 +307,57 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let command = owner.take_for_dispatch().ok_or_else(|| plugin_internal_fault("decoded command owner is terminal before dispatch"))?;
         match command {
             protocol::AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding"),
-            protocol::AppCommand::LocalInteractionQuery { seq, command } => {
-                frames.try_reserve_exact(2).map_err(|_| plugin_internal_fault("local interaction receipt and rejection slots could not be admitted"))?;
-                let reply = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    Ok(match command {
-                        protocol::LocalInteractionQueryCommand::Read { request_id } => match runtime.local_interaction_query_generation.next() {
-                            Some(generation) => instance.app.begin_local_interaction_query(request_id, generation),
-                            None => Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::GenerationExhausted }),
-                        },
-                        protocol::LocalInteractionQueryCommand::Acknowledge { token } => {
-                            instance.app.acknowledge_local_interaction_query(&token);
-                            None
-                        }
-                        protocol::LocalInteractionQueryCommand::Cancel { token } => {
-                            instance.app.cancel_local_interaction_query(&token);
-                            None
-                        }
-                    })
-                })
-                .await?;
-                if let Some(reply) = reply {
-                    frames.push(protocol::AppFrame::LocalInteractionQuery { reply });
-                }
-                frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-            }
+            protocol::AppCommand::LocalInteractionQuery { .. } => arm_local_interaction_query(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::ConfigCommand{seq,command}=>{
-                assert_eq!(command.capacity(),0,"configuration native job must own the exact original raw allocation before dispatch donation");let result=original_configuration.take().expect("original configuration completes before decoded command donation");mutated=true;frames.push(protocol::AppFrame::Done{in_reply_to:seq});push_invocation_side_frames(&mut effect_bytes,&mut event_bytes,&result).await;
+                assert_eq!(command.capacity(),0,"configuration native job must own the exact original raw allocation before dispatch donation");let result=original_configuration.take().expect("original configuration completes before decoded command donation");flags.mutated=true;frames.push(protocol::AppFrame::Done{in_reply_to:seq});push_invocation_side_frames(&mut effect_bytes,&mut event_bytes,&result).await;
             }
             protocol::AppCommand::Command { .. } => unreachable!("original manifest receiver dispatches before source consumption"),
             protocol::AppCommand::CommandText { seq, line: _ } => {
                 push_os_fault(&mut frames, Some(seq), "unsupported", "CommandText not yet wired".into()).await;
             }
-            protocol::AppCommand::ContextMenu { seq, request } => match decode_wire_serialized::<ContextMenuWireRequest>(&request).await.and_then(ContextMenuWireRequest::into_parts) {
-                Ok((request, view_state)) => {
-                    let outcome = with_instances_mut(runtime, |list| {
-                        let mut instance = find_instance(list, instance_id)?;
-                        Ok(::semio_framework_async::poll::resolve_ready(instance.app.context_menu(&request, &view_state)))
-                    });
-                    match outcome.await {
-                        Ok(items) => frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items) }),
-                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                    }
-                }
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-            },
+            protocol::AppCommand::ContextMenu { .. } => arm_context_menu(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::ArtifactCommand { .. } => unreachable!("original artifact receiver dispatches before source consumption"),
-            protocol::AppCommand::ApplyEnvelopes { seq, envelopes } => {
-                let encoded = protocol::encode_envelopes(&envelopes);
-                match plugin_ingest_operations(runtime, instance_id, &encoded, identity, cx).await {
-                    Ok(reports) => {
-                        mutated = true;
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                        for report in &reports {
-                            frames.push(protocol::AppFrame::MergeReport { in_reply_to: None, report: encode_wire_serialized(report) });
-                        }
-                        if !reports.is_empty() {
-                            let open: Vec<protocol::Conflict> = with_instances_mut(runtime, |list| {
-                                let instance = find_instance(list, instance_id)?;
-                                Ok(::semio_framework_async::poll::resolve_ready(instance.app.open_conflicts()))
-                            })
-                            .await?;
-                            frames.push(protocol::AppFrame::Conflicts { in_reply_to: None, conflicts: encode_wire_serialized(&open) });
-                        }
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
+            protocol::AppCommand::ApplyEnvelopes { .. } => arm_apply_envelopes(runtime, instance_id, identity, cx, &mut frames, &mut flags, command).await?,
             protocol::AppCommand::ReadDocument { seq } => match plugin_document_pack(runtime, instance_id).await {
                 Ok(files) => frames.push(protocol::AppFrame::Document { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
                 Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
             },
-            protocol::AppCommand::LoadChildren { seq, entries } => {
-                let loaded = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    for entry in &entries {
-                        if !entry.owner.is_empty() {
-                            return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), format!("child pack {}/{} belongs to member {}: a member's own children load with the document archive", entry.slot, entry.child_id, entry.owner)));
-                        }
-                        let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&entry.dialect).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.internal"), error))?;
-                        ::semio_framework_async::poll::resolve_ready(instance.app.load_child_pack(&entry.slot, &entry.child_id, dialect, &entry.envelope_pack, identity))?;
-                    }
-                    Ok(())
-                });
-                match loaded.await {
-                    Ok(()) => {
-                        mutated = true;
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadChildren { seq } => {
-                let read = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.child_packs())
-                });
-                match read.await {
-                    Ok(entries) => frames.push(protocol::AppFrame::Children { in_reply_to: seq, entries }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadChildHeads { seq } => {
-                let read = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.child_head_packs())
-                });
-                match read.await {
-                    Ok(entries) => frames.push(protocol::AppFrame::ChildHeads { in_reply_to: seq, entries }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::LoadDocumentArchive { seq, archive } => {
-                let admitted = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    instance.app.begin_document_archive_load(seq, archive)
-                });
-                match admitted.await {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::MergeDocumentArchive { seq, archive } => {
-                let admitted = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    instance.app.begin_document_archive_merge(seq, archive)
-                });
-                match admitted.await {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } => {
-                let status = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    drive_self_waking_ready(instance.app.poll_document_archive_load(operation, identity, cx))
-                });
-                match status.await {
-                    Ok(status) => {
-                        mutated |= status.state == protocol::DocumentArchiveLoadState::Ready;
-                        frames.push(protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::CancelDocumentArchiveLoad { seq, operation } => {
-                let cancelled = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    instance.app.cancel_document_archive_load(operation)
-                });
-                match cancelled.await {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => {
-                let acknowledged = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    instance.app.acknowledge_document_archive_load(operation)
-                });
-                match acknowledged.await {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadDocumentIdentity { seq } => {
-                let read = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    Ok(protocol::AppDocumentIdentity { app_instance_id: instance_id, parent_document_id: instance.app.document_identity() })
-                });
-                match read.await {
-                    Ok(identity) => frames.push(protocol::AppFrame::DocumentIdentity { in_reply_to: seq, identity }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadDocumentArchive { seq } => {
-                let read = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.document_archive())
-                });
-                match read.await {
-                    Ok(archive) => frames.push(protocol::AppFrame::DocumentArchive { in_reply_to: seq, archive }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadHistory { seq } => {
-                let snapshot = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.history_snapshot())
-                });
-                match snapshot.await {
-                    Ok(history_patch) => frames.push(protocol::AppFrame::HistorySnapshot { in_reply_to: seq, history_patch: encode_wire_serialized(&history_patch) }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::LoadConfig { seq, pack, spr } => {
-                let applied = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.load_config_pack(&store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }))
-                });
-                match applied.await {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadConfig { seq } => {
-                let read = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.config_pack())
-                });
-                match read.await {
-                    Ok(files) => frames.push(protocol::AppFrame::Config { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::LoadWindowConfig { seq, entry } => match store::os_store::serialization::decode_document_pack_bytes(&entry.envelope_pack).await {
-                Ok((pack, spr)) => {
-                    let loaded = with_instances_mut(runtime, |list| {
-                        let mut instance = find_instance(list, instance_id)?;
-                        ::semio_framework_async::poll::resolve_ready(instance.app.load_window_config_pack(WindowConfigPack {
-                            window_id: entry.window_id,
-                            window_kind_id: entry.window_kind_id,
-                            files: store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() },
-                        }))
-                    });
-                    match loaded.await {
-                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                    }
-                }
-                Err(error) => push_app_fault(&mut frames, Some(seq), error.into_fault()).await,
-            },
-            protocol::AppCommand::ReadWindowConfigs { seq } => {
-                let read = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.window_config_packs())
-                });
-                match read.await {
-                    Ok(packs) => {
-                        let mut entries = Vec::with_capacity(packs.len());
-                        for pack in packs {
-                            entries.push(protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack: store::os_store::serialization::encode_document_pack_bytes(&pack.files.pack, &pack.files.spr).await });
-                        }
-                        frames.push(protocol::AppFrame::WindowConfigs { in_reply_to: seq, entries });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::MediaIn { seq, port, descriptor, data } => {
-                let descriptor_value: DslValue = decode_wire_serialized_or(&descriptor, DslValue::Null).await;
-                let descriptor_json = serde_json::to_string(&descriptor_value).unwrap_or_else(|_| "{}".into());
-                match plugin_consume_media(runtime, instance_id, seq, &port, &descriptor_json, data, cx).await {
-                    Ok(None) => {
-                        mutated = true;
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    }
-                    Ok(Some(status)) => frames.push(protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status }),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
+            protocol::AppCommand::LoadChildren { .. } => arm_load_children(runtime, instance_id, identity, &mut frames, &mut flags, command).await?,
+            protocol::AppCommand::ReadChildren { .. } => arm_read_children(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ReadChildHeads { .. } => arm_read_child_heads(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::LoadDocumentArchive { .. } => arm_load_document_archive(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::MergeDocumentArchive { .. } => arm_merge_document_archive(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::PollDocumentArchiveLoad { .. } => arm_poll_document_archive_load(runtime, instance_id, identity, cx, &mut frames, &mut flags, command).await?,
+            protocol::AppCommand::CancelDocumentArchiveLoad { .. } => arm_cancel_document_archive_load(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::AcknowledgeDocumentArchiveLoad { .. } => arm_acknowledge_document_archive_load(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ReadDocumentIdentity { .. } => arm_read_document_identity(runtime, instance_id, identity, &mut frames, command).await?,
+            protocol::AppCommand::ReadDocumentArchive { .. } => arm_read_document_archive(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ReadHistory { .. } => arm_read_history(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::LoadConfig { .. } => arm_load_config(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ReadConfig { .. } => arm_read_config(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::LoadWindowConfig { .. } => arm_load_window_config(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ReadWindowConfigs { .. } => arm_read_window_configs(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::MediaIn { .. } => arm_media_in(runtime, instance_id, cx, &mut frames, &mut flags, command).await?,
             protocol::AppCommand::MediaOut{seq,port,..}=>{let artifact=original_media_artifact.take().expect("original media encoding completes before command donation");frames.push(protocol::AppFrame::Media{in_reply_to:seq,port,descriptor:encode_wire_serialized(&artifact.descriptor),data:artifact.data});},
-            protocol::AppCommand::SubmitMediaExport { seq, .. } => {
-                let handle=owner.take_media_submission().expect("original media submission is complete before command donation");
-                frames.push(protocol::AppFrame::MediaExportSubmitted{in_reply_to:seq,handle:media_export_handle_into_wire(handle)});
-            },
-            protocol::AppCommand::PollMediaExport { seq, handle } => {
-                let handle = media_export_handle_from_wire(handle);
-                if let Some(status)=owner.take_media_status(){frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:status.total_bytes,checkpoint_available:false,mime_type:status.mime_type,total_bytes:status.total_bytes,detail:String::new()});}else{
-                match owner.take_media_poll().expect("original media poll is retained before command donation") {
-                    ArtifactMediaExportPoll::Running { applied_progress, checkpoint_available } => frames.push(protocol::AppFrame::MediaExportStatus {
-                        in_reply_to: seq,
-                        handle: media_export_handle_into_wire(handle),
-                        state: protocol::MediaExportStateWire::Running,
-                        applied_progress,
-                        checkpoint_available,
-                        mime_type: String::new(),
-                        total_bytes: 0,
-                        detail: String::new(),
-                    }),
-                    ArtifactMediaExportPoll::Complete(_) => unreachable!("terminal result donates only to its original download registry before decoded command consumption"),
-                    ArtifactMediaExportPoll::Cancelled => frames.push(protocol::AppFrame::MediaExportStatus {
-                        in_reply_to: seq,
-                        handle: media_export_handle_into_wire(handle),
-                        state: protocol::MediaExportStateWire::Cancelled,
-                        applied_progress: 0,
-                        checkpoint_available: false,
-                        mime_type: String::new(),
-                        total_bytes: 0,
-                        detail: String::new(),
-                    }),
-                    ArtifactMediaExportPoll::Failed(detail) => frames.push(protocol::AppFrame::MediaExportStatus {
-                        in_reply_to: seq,
-                        handle: media_export_handle_into_wire(handle),
-                        state: protocol::MediaExportStateWire::Failed,
-                        applied_progress: 0,
-                        checkpoint_available: false,
-                        mime_type: String::new(),
-                        total_bytes: 0,
-                        detail,
-                    }),
-                }
-            }}
-            protocol::AppCommand::CancelMediaExport { seq, handle } => {
-                let handle = media_export_handle_from_wire(handle);
-                match plugin_cancel_media_export(runtime, instance_id, &handle).await {
-                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                    Err(error) => push_app_fault(&mut frames, Some(seq), plugin_internal_fault(error.to_string())).await,
-                }
-            }
+            protocol::AppCommand::SubmitMediaExport { .. } => arm_submit_media_export(&mut frames, &mut owner, command).await?,
+            protocol::AppCommand::PollMediaExport { .. } => arm_poll_media_export(&mut frames, &mut owner, command).await?,
+            protocol::AppCommand::CancelMediaExport { .. } => arm_cancel_media_export(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::TakeMediaExportChunk{seq,handle}=>{let(data,terminal)=owner.take_media_chunk();frames.push(protocol::AppFrame::MediaExportChunk{in_reply_to:seq,handle,data:data.unwrap_or_default(),terminal});},
-            protocol::AppCommand::MediaFingerprint { seq, port } => {
-                let fingerprint = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.media_fingerprint(&port)).map_err(|error| plugin_internal_fault(error.to_string()))
-                });
-                match fingerprint.await {
-                    Ok(fingerprint) => {
-                        let value = DslValue::String(fingerprint.0);
-                        frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&value) });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::PureCommand{seq,..}=>{let(result,EmitWire{document:document_ops,config:config_ops,draft:draft_ops,children:child_ops})=original_preview.take().expect("original preview completes before decoded command donation");mutated=true;frames.push(protocol::AppFrame::Emit{in_reply_to:seq,document_ops,config_ops,draft_ops,output:encode_wire_serialized(&result.output),diagnostics:encode_wire_serialized(&result.diagnostics),child_ops});push_invocation_side_frames(&mut effect_bytes,&mut event_bytes,&result).await;},
-            protocol::AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, origin, prepared_child_ops } => {
-                let decoded_origin = if origin.is_empty() { Ok(None) } else { decode_wire_serialized::<protocol::MutationOrigin>(&origin).await.map(Some) };
-                match decoded_origin {
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                    Ok(decoded_origin) => {
-                        let outcome = with_instances_mut(runtime, |list| {
-                            let mut instance = find_instance(list, instance_id)?;
-                            Ok(::semio_framework_async::poll::resolve_ready(instance.app.transaction_prepare(&txn_id, &mutation_id, &payload, &prepared_ops, &prepared_child_ops, decoded_origin)))
-                        });
-                        match outcome.await {
-                            Ok(outcome) => {
-                                let mut foreign = Vec::with_capacity(outcome.foreign.len());
-                                for step in outcome.foreign.iter() {
-                                    foreign.push(encode_wire_serialized(step));
-                                }
-                                let rejection = match outcome.rejection {
-                                    Some(fault) => encode_wire_serialized(&fault),
-                                    None => Vec::new(),
-                                };
-                                frames.push(protocol::AppFrame::TransactionPrepared { txn_id, foreign, rejection });
-                                frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                            }
-                            Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                        }
-                    }
-                }
-            }
-            protocol::AppCommand::TransactionCommit { seq, txn_id } => {
-                let meta = ActionMeta { actor: instance_actor(runtime, instance_id).await?.into(), instance_id, view_state: None };
-                let outcome = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.transaction_commit(&txn_id, &meta, identity))
-                });
-                match outcome.await {
-                    Ok(edit_id) => {
-                        mutated = true;
-                        frames.push(protocol::AppFrame::TransactionCommitted { txn_id, edit_id });
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::TransactionRollback { seq, txn_id } => {
-                let outcome = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.transaction_rollback(&txn_id))
-                });
-                match outcome.await {
-                    Ok(()) => {
-                        frames.push(protocol::AppFrame::TransactionRolledBack { txn_id });
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::TransactionUndo { seq, group_id } => {
-                let outcome = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.transaction_undo(&group_id, identity))
-                });
-                match outcome.await {
-                    Ok(()) => {
-                        mutated = true;
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::TransactionRedo { seq, group_id } => {
-                let outcome = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(instance.app.transaction_redo(&group_id, identity))
-                });
-                match outcome.await {
-                    Ok(()) => {
-                        mutated = true;
-                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    }
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => match relay_open_artifact(artifact_ref, role, plugin_id, app_id).await {
-                Ok(effect) => {
-                    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    effect_bytes.push(encode_wire_serialized(&effect));
-                }
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-            },
-            protocol::AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => match relay_set_default_app(artifact_kind, standard, subset, role, plugin_id, app_id).await {
-                Ok(effect) => {
-                    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    effect_bytes.push(encode_wire_serialized(&effect));
-                }
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-            },
-            protocol::AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => match relay_clear_default_app(artifact_kind, standard, subset, role).await {
-                Ok(effect) => {
-                    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
-                    effect_bytes.push(encode_wire_serialized(&effect));
-                }
-                Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-            },
-            protocol::AppCommand::SetMergePolicy { seq, policy } => {
-                let outcome = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(set_merge_policy_frames(&mut instance.app, seq, policy))
-                });
-                match outcome.await {
-                    Ok(outcome) => frames.extend(outcome),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
-                let outcome = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    ::semio_framework_async::poll::resolve_ready(resolve_conflict_frames(&mut instance.app, seq, conflict_id, resolution))
-                });
-                match outcome.await {
-                    Ok(outcome) => frames.extend(outcome),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
-            protocol::AppCommand::ReadConflicts { seq } => {
-                let outcome = with_instances_mut(runtime, |list| {
-                    let instance = find_instance(list, instance_id)?;
-                    Ok(::semio_framework_async::poll::resolve_ready(read_conflicts_frames(&instance.app, seq)))
-                });
-                match outcome.await {
-                    Ok(outcome) => frames.extend(outcome),
-                    Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                }
-            }
+            protocol::AppCommand::MediaFingerprint { .. } => arm_media_fingerprint(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::PureCommand{seq,..}=>{let(result,EmitWire{document:document_ops,config:config_ops,draft:draft_ops,children:child_ops})=original_preview.take().expect("original preview completes before decoded command donation");flags.mutated=true;frames.push(protocol::AppFrame::Emit{in_reply_to:seq,document_ops,config_ops,draft_ops,output:encode_wire_serialized(&result.output),diagnostics:encode_wire_serialized(&result.diagnostics),child_ops});push_invocation_side_frames(&mut effect_bytes,&mut event_bytes,&result).await;},
+            protocol::AppCommand::TransactionPrepare { .. } => arm_transaction_prepare(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::TransactionCommit { .. } => arm_transaction_commit(runtime, instance_id, identity, &mut frames, &mut flags, command).await?,
+            protocol::AppCommand::TransactionRollback { .. } => arm_transaction_rollback(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::TransactionUndo { .. } => arm_transaction_undo(runtime, instance_id, identity, &mut frames, &mut flags, command).await?,
+            protocol::AppCommand::TransactionRedo { .. } => arm_transaction_redo(runtime, instance_id, identity, &mut frames, &mut flags, command).await?,
+            protocol::AppCommand::OpenArtifact { .. } => arm_open_artifact(&mut frames, &mut effect_bytes, command).await?,
+            protocol::AppCommand::SetDefaultApp { .. } => arm_set_default_app(&mut frames, &mut effect_bytes, command).await?,
+            protocol::AppCommand::ClearDefaultApp { .. } => arm_clear_default_app(&mut frames, &mut effect_bytes, command).await?,
+            protocol::AppCommand::SetMergePolicy { .. } => arm_set_merge_policy(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ResolveConflict { .. } => arm_resolve_conflict(runtime, instance_id, &mut frames, command).await?,
+            protocol::AppCommand::ReadConflicts { .. } => arm_read_conflicts(runtime, instance_id, &mut frames, command).await?,
         }
         }
     }
-    if mutated {
-        let effects = with_instances_mut(runtime, |list| {
-            let mut instance = find_instance(list, instance_id)?;
-            let view = instance.surface_contexts.view().cloned();
-            ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(view.as_ref(), cx))
-        })
-        .await
-        ?;
-        for effect in effects.iter() {
-            effect_bytes.push(encode_wire_serialized(effect));
-        }
-    }
-    let (mut typed_output, mut typed_leftover) = with_instances_original_mut(runtime, |list| {
-        let mut instance = find_instance(list, instance_id)?;
-        let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((PluginExchangeOutput::default(),None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
-        advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx)
-    })
-    .await?;
-    if let Some(operation) = started_typed_operation {
-        let mut pumps = 0;
-        while pumps < TYPED_OPERATION_REPLY_LEFTOVER_PUMPS && typed_leftover.as_ref().is_none_or(|leftover| leftover.operation != operation) && typed_output.typed_operation_results.is_empty() && !typed_output.ownership_receipt_pending() {
-            let (more, leftover) = with_instances_original_mut(runtime, |list| {
-                let mut instance = find_instance(list, instance_id)?;
-                if !instance.app.has_runnable_typed_operations() {
-                    return Ok((None, None));
-                }
-                let cell=instance.cell;let mut pages=match cell.result_pages.try_lock(){Ok(pages)=>pages,Err(std::sync::TryLockError::WouldBlock)=>return Ok((None,None)),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("original result receiving authority is poisoned"))};
-                advance_typed_operation_output_with_leftover(&mut instance.app, instance_id, &mut pages, identity,cx).map(|(output, leftover)| (Some(output), leftover))
-            })
-            .await?;
-            let Some(more) = more else { break };
-            typed_output.original_receiving=more.original_receiving;
-            typed_output.constructor_receipt=more.constructor_receipt;
-            typed_output.preparation_receipt=more.preparation_receipt;
-            typed_output.retirement_receipt=more.retirement_receipt;
-            typed_output.history_command_receipt=more.history_command_receipt;
-            typed_output.tool_run_receipt=more.tool_run_receipt;
-            typed_output.frames.extend(more.frames);
-            typed_output.effects.extend(more.effects);
-            typed_output.events.extend(more.events);
-            typed_output.typed_operation_pages+=more.typed_operation_pages;
-            if leftover.is_some() {
-                typed_leftover = leftover;
-            }
-            pumps += 1;
-        }
-    }
-    effect_bytes.extend(typed_output.effects);
-    event_bytes.extend(typed_output.events);
-    if let Some(leftover) = typed_leftover.as_ref() {
-        let merged = merge_typed_operation_leftover_into_reply(&mut frames, leftover);
-        debug_runtime_line(format_args!("[TRACE] typed-operation inline leftover operation={} merged-into-reply={merged}", leftover.operation));
-    }
-    let ephemeral = with_instances_mut(runtime, |list| {
-        let instance = find_instance(list, instance_id)?;
-        Ok(::semio_framework_async::poll::resolve_ready(instance.app.ephemeral_snapshot()))
-    });
-    if let Ok(EphemeralSnapshot { presence, presence_generation, transient_generation, interaction, tool_run, history_edit }) = ephemeral.await {
-        let tool_run = tool_run.map_or_else(Vec::new, |tool_run| {
-            let mut bytes = Vec::new();
-            protocol::encode_presence_tool_run(&tool_run, &mut bytes);
-            bytes
-        });
-        let history_edit = history_edit.map_or_else(Vec::new, |history_edit| {
-            let mut bytes = Vec::new();
-            protocol::encode_presence_history_edit(&history_edit, &mut bytes);
-            bytes
-        });
-        frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run, history_edit });
-    }
-    if let Some(outcome) = with_instances_mut(runtime, |list| {
-        let mut instance = find_instance(list, instance_id)?;
-        Ok(instance.app.take_presence_outcome())
-    })
-    .await?
-    {
-        if let Some(fault) = outcome.fault {
-            push_app_fault(&mut frames, Some(outcome.seq), fault).await;
-        }
-    }
-    let mut frame_bytes = Vec::with_capacity(frames.len());
-    for frame in frames.iter() {
-        frame_bytes.push(protocol::encode_app_frame(frame).await);
-    }
-    frame_bytes.extend(typed_output.frames);
-    Ok(PluginExchangeOutput {
-        original_receiving: typed_output.original_receiving,
-        constructor_receipt: typed_output.constructor_receipt,
-        preparation_receipt: typed_output.preparation_receipt,
-        retirement_receipt: typed_output.retirement_receipt,
-        history_command_receipt: typed_output.history_command_receipt,
-        tool_run_receipt: typed_output.tool_run_receipt,
-        frames: frame_bytes,
-        effects: effect_bytes,
-        events: event_bytes,
-        retry_command,
-        command_terminal_fault,
-        presence_pending,
-        presence_terminal,
-        presence_terminal_fault,
-        typed_operation_pages: typed_output.typed_operation_pages,
-    })
+    finish_exchange(runtime, instance_id, identity, cx, frames, effect_bytes, event_bytes, retry_command, command_terminal_fault, presence_pending, presence_terminal, presence_terminal_fault, flags).await
 }

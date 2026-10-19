@@ -41,7 +41,6 @@ impl HeaderAttribute {
     /// `STRING`, `('')` for a `LIST[1:?] OF STRING`. `()` is NOT that spelling: the standard's
     /// lower bound of one is a population constraint, and every conformant producer writes the
     /// one-empty-string list instead (the ruststep reference reader refuses `()` outright).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn unpopulated(self) -> Part21Value {
         match self {
             HeaderAttribute::Text => Part21Value::Str(String::new()),
@@ -55,7 +54,6 @@ impl Part21Header {
     /// each with its full attribute list and every `LIST[1:?]` populated. This is what `default()`
     /// means for a header: the previous all-empty derive produced `FILE_DESCRIPTION();`, which is
     /// neither the right arity nor a readable exchange structure.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn iso_10303_21_minimum() -> Self {
         Self {
             file_description: FILE_DESCRIPTION_ATTRIBUTES.iter().map(|attribute| attribute.unpopulated()).collect(),
@@ -83,19 +81,15 @@ pub struct Part21Document {
 }
 
 impl Part21Document {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn instance(&self, id: u64) -> Option<&Part21Instance> {
         self.instances.iter().find(|i| i.id == id)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resolve(&self, value: &Part21Value) -> Option<&Part21Instance> {
         value.as_ref_id().and_then(|id| self.instance(id))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn by_type<'a>(&'a self, type_name: &'a str) -> impl Iterator<Item = &'a Part21Instance> + 'a {
         self.instances.iter().filter(move |i| i.is_type(type_name))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn next_id(&self) -> u64 {
         self.instances.iter().map(|i| i.id).max().unwrap_or(0) + 1
     }
@@ -113,19 +107,16 @@ pub struct Part21Builder {
 }
 
 impl Part21Builder {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
         Self { instances: Vec::new(), next_id: 1 }
     }
     /// ➕️ Allocates the next `#id` and appends a simple `TYPE(args)` instance.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn alloc(&mut self, type_name: &str, args: Vec<Part21Value>) -> u64 {
         let id = self.next_id;
         self.next_id += 1;
         self.instances.push(Part21Instance { id, entities: vec![(type_name.to_string(), args)] });
         id
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn build(self, header: Part21Header) -> Part21Document {
         Part21Document { header, instances: self.instances }
     }

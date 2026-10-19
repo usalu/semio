@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` section mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🏗️hall-new-beam-251a92/🦀️.rs"]
 mod create_section_hall_hall_new_beam;
@@ -30,3 +31,5 @@ mod replace_section_hall_hall_deep_purlin;
 mod replace_section_edge_negative_iy;
 #[path = "../../🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🪪️renames-purlin-dfe160/🦀️.rs"]
 mod replace_section_edge_renames_purlin;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-section/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_section_field_intent;

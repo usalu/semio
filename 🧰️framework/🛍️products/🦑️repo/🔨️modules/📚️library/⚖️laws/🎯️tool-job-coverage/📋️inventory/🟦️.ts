@@ -1,7 +1,7 @@
 import { WORKSPACE_ROOT } from "../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
-import { toolJobFactoryModuleFile } from "../🏭️factory/🟦️.ts";
-import { rustTokens, rustTokenPairs, rustTokenSegments, rustAttributes, rustVisibility } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { posix } from "node:path";
+import { rustTokens, rustTokenPairs, rustTokenSegments, rustAttributes, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
 /** 📋️ Tool-job coverage inventory: reserved ids, static rows, publication contracts, app-owned rows, dispositions and proofs.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
@@ -739,3 +739,41 @@ export function toolJobProofIdentity(proof: ToolJobProof): string {
   return `${proof.ownerFile}\0${proof.ownerTypeName}\0${proof.controllerId}\0${proof.factory}\0${proof.factoryType ?? ""}\0${proof.toolId}\0${proof.documentSchema}.tool-command.v1`;
 }
 //#endregion 🎯️ToolJobCoverage
+
+/** 🗿️ An artifact crate's own lib root (`🗿️artifacts/<artifact>/🦀️.rs`, declared by that artifact's
+ * `📦️packages/🦀️rust/Cargo.toml` `[lib] path = "../../🦀️.rs"`), which owns the `#[path]` module tree
+ * since the plugin package root became a re-export shell. */
+function toolJobArtifactCrateRoot(file: string): string | undefined {
+  const match = file.match(/^(.*\/🗿️artifacts\/[^/]+)\/🦀️\.rs$/);
+  return match?.[1];
+}
+/** 🧭️ Resolves one crate module through its package's explicit taxonomy declarations. */
+export function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
+  const candidates = new Set<string>();
+  const visit = (source: string, directory: string, prefix: string): void => {
+    const declaration = /#\[path\s*=\s*"([^"]+)"\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*([;{])/g;
+    let match: RegExpExecArray | null;
+    while ((match = declaration.exec(source))) {
+      const target = posix.normalize(posix.join(directory, match[1]!));
+      const name = `${prefix}::${match[2]}`;
+      if (match[3] === ";") {
+        const exportedComponent = prefix === modulePath && match[2] === "component" && /pub\s+use\s+component::\*\s*;/.test(source);
+        if ((name === modulePath || exportedComponent) && files.has(target)) candidates.add(target);
+        else if (modulePath.startsWith(`${name}::`) && files.has(target)) visit(files.get(target)!, posix.dirname(target), name);
+      } else {
+        const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+        if (!block) return;
+        visit(block.body, target, name);
+        declaration.lastIndex = block.end;
+      }
+    }
+  };
+  for (const [file, source] of files) {
+    if (!file.endsWith("/🦀️.rs")) continue;
+    const packageBoundary = file.lastIndexOf("/📦️packages/");
+    const owningRoot = packageBoundary >= 0 ? file.slice(0, packageBoundary) : toolJobArtifactCrateRoot(file);
+    if (owningRoot === undefined || !ownerFile.startsWith(`${owningRoot}/`)) continue;
+    visit(source, posix.dirname(file), "crate");
+  }
+  return candidates.size === 1 ? [...candidates][0] : undefined;
+}

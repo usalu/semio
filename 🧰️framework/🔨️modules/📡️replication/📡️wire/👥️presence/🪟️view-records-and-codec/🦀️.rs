@@ -19,7 +19,7 @@ pub struct PresenceWindowView {
     /// 📍️ In view coordinates: world point (Orbit), `[x, y, 0]` canvas point (Canvas),
     /// `[lng, lat, 0]` (Geo).
     pub pointer: Option<[f64; 3]>,
-    /// World-space ray origin for 3D presence (Orbit); absent for canvas/geo.
+    /// 📏️ World-space ray origin for 3D presence (Orbit); absent for canvas/geo.
     pub ray_origin: Option<[f64; 3]>,
 }
 

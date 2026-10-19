@@ -84,7 +84,7 @@ fn record_operation_pages_decode_cross_page_bytes_and_utf8_without_flattening_th
     encode_record_body_into(&spec,&record,&Default::default(),&mut source,&mut encoding).unwrap();
     let retained=source.allocated_bytes();
     let mut allow=|_|true;
-    let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+    let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
     let decoded=decode_record_body_span_exact_controlled(ByteSpan::from_source(&source),&spec,&Default::default(),&mut decoding).unwrap();
     assert_eq!(decoded,record);
     let FieldValue::Bytes64(bytes)=decoded.fields.get(&1).unwrap() else{panic!("complete octet owner lost")};
@@ -99,7 +99,7 @@ fn record_operation_pages_decode_cross_page_bytes_and_utf8_without_flattening_th
     let mut encoding=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
     source.write_bytes(&bad,&mut encoding).unwrap();
     let mut allow=|_|true;
-    let mut decoding=semio_framework_value::NativeDecodeControl::new(65536,&mut allow);
+    let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut allow);
     let error=decode_record_body_span_exact_controlled(ByteSpan::from_source(&source),&spec,&Default::default(),&mut decoding).unwrap_err();
     assert_eq!(error.kind().as_str(),case["malformedKind"].as_str().unwrap());
     assert!(source.iter().eq(bad));
@@ -123,7 +123,7 @@ fn intrinsic_operation_pages_emit_and_decode_same_complete_owner_under_actual_po
     assert_eq!(serde_json::to_value(&output).unwrap(),serde_json::to_value(&expected).unwrap());
     let retained=output.allocated_bytes();
     let mut options=DecodeOptions::default();options.limits.max_file_len=expected.len()as u64;
-    let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+    let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
     assert_eq!(decode_value_record_body_span_exact_controlled(ByteSpan::from_source(&output),1,&options,&mut decoding).unwrap(),value);
     assert_eq!(output.allocated_bytes(),retained);
     options.limits.max_file_len-=1;
@@ -165,7 +165,7 @@ fn record_operation_pages_real_core_sink_uses_step_funded_backing_and_same_contr
     assert_eq!(control.owned_bytes(),paid+case["fieldIndexAdmissionBytes"].as_u64().unwrap()as usize);
     let mut source=prepared.take_ready().unwrap();assert!(prepared.terminal_is_empty());
     assert!(source.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
-    let mut allow=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(65536,&mut allow);
+    let mut allow=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut allow);
     assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&source),&spec,&Default::default(),&mut control).unwrap(),record);
     for _ in 0..17000{if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}
     assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);
@@ -200,7 +200,7 @@ fn record_operation_pages_borrowed_source_excludes_large_payload_mirrors_and_kee
     assert_eq!(control.scoped_maximum(before+case["maximumMetadataBytes"].as_u64().unwrap()as usize,|control|encode_projected_record_body_into(&spec,&source,&options,&mut prepared,control)).unwrap(),expected.len());
     assert!(control.owned_bytes()-before<case["maximumMetadataBytes"].as_u64().unwrap()as usize);assert_eq!(prepared.allocated_bytes(),backing);
     let mut wire=prepared.take_ready().unwrap();assert!(wire.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&wire).unwrap(),serde_json::to_value(&expected).unwrap());
-    let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(65536,&mut allow);
+    let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut allow);
     assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&wire),&spec,&Default::default(),&mut decoding).unwrap(),record);
     finish(&mut wire);
     let mut wire=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
@@ -227,7 +227,7 @@ fn record_operation_pages_borrowed_source_joins_actual_nested_derived_tables_num
     let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
     assert_eq!(encode_projected_record_body_into(&spec,&owner,&options,&mut source,&mut encoding).unwrap(),expected.len());
     assert!(source.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
-    let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+    let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
     assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&source),&spec,&Default::default(),&mut decoding).unwrap(),record);
     finish(&mut source);
     let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(32768,131072).unwrap();
@@ -332,7 +332,7 @@ fn borrowed_static_projected_pack_nested_authored_shapes_match_original_codec(){
  let spec=Owner::__dsl_spec();let record=owner.__dsl_to_record();let options=EncodeOptions::default();let expected=encode_record_body(&spec,&record,&options).unwrap();let mut output=semio_framework_replication_codec::io::binary::operation_bytes::OwnedOperationBytes::try_new(32768,65536).unwrap();
  let mut capsule=BorrowedProjectedPackOperation::from_source(&owner,Owner::RECORD);let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(65536,&mut accepted);
  let(result,requested,released)=crate::test_allocation::observe_backing(||capsule.write_body(&options,&mut output,&mut control));assert_eq!(result.unwrap(),expected.len());assert_eq!(requested,capsule.allocated_bytes()+output.allocated_bytes());assert_eq!(released,0);assert_eq!(requested,control.owned_bytes());assert!(output.iter().eq(expected.iter().copied()));
- let mut accepted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(65536,&mut accepted);assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&output),&spec,&Default::default(),&mut decoding).unwrap(),record);finish(&mut output);
+ let mut accepted=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut accepted);assert_eq!(decode_record_body_span_exact_controlled(semio_framework_replication_codec::ByteSpan::from_source(&output),&spec,&Default::default(),&mut decoding).unwrap(),record);finish(&mut output);
  let scratch=capsule.allocated_bytes();let mut disposed=0;for _ in 0..32768{let(step,requested,released)=crate::test_allocation::observe_backing(||capsule.retire_one(1,4096).unwrap());assert_eq!(requested,0);assert_eq!(released,step.2);assert!(step.1<=1&&released<=4096);disposed+=released;if !step.0{break}}assert_eq!(disposed,scratch);assert_eq!(capsule.allocated_bytes(),0);
 }
 

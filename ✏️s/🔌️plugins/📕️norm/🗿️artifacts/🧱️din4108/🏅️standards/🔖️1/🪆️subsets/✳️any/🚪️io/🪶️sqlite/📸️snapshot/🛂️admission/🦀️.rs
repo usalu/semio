@@ -1,7 +1,7 @@
 //! 🧱️ Complete DIN4108 envelope, layer, segment and window cells before typed binding.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in[7,8,9]{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for z in n::list(n::field(root,7)?)?{rows=n::add(rows,n::list(n::field(n::record(z)?,4)?)?.len())?}for e in n::list(n::field(root,8)?)?{for l in n::list(n::field(n::record(e)?,10)?)?{rows=n::add(rows,1)?;rows=n::add(rows,n::list(n::field(n::record(l)?,11)?)?.len())?}}Ok(rows)}

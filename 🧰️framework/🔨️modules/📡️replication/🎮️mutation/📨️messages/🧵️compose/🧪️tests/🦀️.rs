@@ -1,4 +1,5 @@
 //! 🧪️ Native paged diagnostics share the neutral UTF8/JSON authority and measured physical grants.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::paged::PagedUtf8;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
@@ -23,7 +24,7 @@ impl ArtifactMessageSource for Source {
     fn target_count(&self) -> usize { self.targets.len() }
     fn target(&self, index: usize) -> Option<&dyn Utf8Text> { self.targets.get(index).map(|target| target as &dyn Utf8Text) }
 }
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(fixture_text!("../../🧵️compose/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn source(row: &serde_json::Value) -> Source {
     Source {
         level: match row["level"].as_str().unwrap() { "fatal"=>Severity::Fatal, "error"=>Severity::Error, "warning"=>Severity::Warning, _=>Severity::Info },

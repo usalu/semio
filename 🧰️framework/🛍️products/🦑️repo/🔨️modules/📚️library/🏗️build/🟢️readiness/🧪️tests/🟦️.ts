@@ -180,7 +180,7 @@ test("the policy of readiness is closed and finite",()=>{
 });
 
 test("the Nx command bridge awaits the declared readiness of a continuous target through the shared marker",async()=>{
- const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{executeLiteralBuildArgumentsV1}=await import("../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs"),{runNxCommandSourceV1}=await import("../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts");
+ const routing=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{executeLiteralBuildArgumentsV1}=await import("../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs"),{runNxCommandSourceV1}=await import("../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟦️.ts");
  const directory=await mkdtemp(join(tmpdir(),"semio-readiness-")),previous={invocation:process.env.SEMIO_SCRIPT_PROCESS_INVOCATION,artifacts:process.env.SEMIO_TEST_ARTIFACT_DIR},probe=Bun.serve({hostname:"127.0.0.1",port:0,fetch:()=>new Response("")}),port=probe.port;
  await probe.stop(true);
  const envelope=routing.createScriptProcessEnvelope({version:1,owner:"nx-readiness",maximumElapsedMilliseconds:30000},{exact:"original"},Date.now());

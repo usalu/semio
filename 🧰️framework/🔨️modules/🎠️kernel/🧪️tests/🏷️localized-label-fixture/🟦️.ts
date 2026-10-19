@@ -11,7 +11,7 @@ import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { SHELL_LOCALES, SHELL_TERMINOLOGIES, type LocalizedLabel } from "@semio-tech/framework/manifest/generated/ui-axes";
 import { historyEntryLabelText } from "../../🕰️history/🟦️.ts";
-import { localeLocalizedLabelFixtureUrl, localeLocalizedLabelSchemaUrl } from "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { localeLocalizedLabelFixtureUrl, localeLocalizedLabelSchemaUrl } from "@semio-tech/framework/ui/testing/fixtures";
 
 /** 📄️ `fileURLToPath`, never `new URL(...).pathname`: the latter percent-encodes every emoji segment. */
 const read = (url: URL): unknown => JSON.parse(readFileSync(fileURLToPath(url), "utf8")) as unknown;

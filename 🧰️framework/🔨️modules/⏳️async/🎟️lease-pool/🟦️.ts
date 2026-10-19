@@ -23,7 +23,7 @@ export interface LeasePoolStats {
 
 export interface LeasePool<T> {
   acquire(key: string): Promise<Lease<T>>;
-  /** Forces disposal of `key` (or every entry when omitted) right now, bypassing any linger timer.
+  /** 🏋️ Forces disposal of `key` (or every entry when omitted) right now, bypassing any linger timer.
    * A no-op (logged, not thrown) for a key with active leases — evicting a resource a caller still
    * holds would leave that caller's `Lease.value` silently dead underneath it. */
   evictNow(key?: string): void;

@@ -30,8 +30,6 @@ export function registeredVizFamilies(): ReadonlySet<string> {
   for (const name of readdirSync(VIZ_LATEX_DIR).filter((file) => file.endsWith(".sty"))) {
     const source = readFileSync(join(VIZ_LATEX_DIR, name), "utf8");
     for (const match of source.matchAll(/\\SemioVizFamily\s*\{\s*([a-z0-9-]+)\s*\}/g)) if (!commented(source, match.index)) families.add(match[1]!);
-    // 🏷️ A kernel package that is loaded before the registry registers from a begindocument hook,
-    // which reaches the same registry through its internal entry point.
     for (const match of source.matchAll(/\\semio_viz_family_define:nn\s*\{\s*([a-z0-9-]+)\s*\}/g)) if (!commented(source, match.index)) families.add(match[1]!);
   }
   return families;

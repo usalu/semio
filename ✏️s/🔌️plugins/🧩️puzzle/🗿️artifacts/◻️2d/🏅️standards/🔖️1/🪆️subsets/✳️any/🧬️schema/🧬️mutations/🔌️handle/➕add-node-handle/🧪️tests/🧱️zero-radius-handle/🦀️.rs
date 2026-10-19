@@ -2,7 +2,7 @@
 //!
 //! A handle of zero radius is what the handle record's `exclusiveMinimum: 0` forbids: a Fatal `mutation.invariant`, no handle is added.
 //!
-//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/➕add-node-handle/🧱️zero-radius-handle/`
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔌️handle/➕add-node-handle/🧱️zero-radius-handle/`
 //! (contract D1); the board is the synthetic selection board shared by every selection-transform vector.
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 
-static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/⬅️before/🔣️.json"));
-static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/➡️after/🔣️.json"));
-static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-node-handle/🧱️zero-radius-handle/🦠️mutation/🔣️.json"));
-static DIFF_ABSENT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-node-handle/🧱️zero-radius-handle/🔺️diff/🚫️.absent"));
-static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-node-handle/🧱️zero-radius-handle/🎯️outcome/🔣️.json"));
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/⬅️before/🔣️.json"));
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/➡️after/🔣️.json"));
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/➕add-node-handle/🧱️zero-radius-handle/🦠️mutation/🔣️.json"));
+static DIFF_ABSENT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/➕add-node-handle/🧱️zero-radius-handle/🔺️diff/🚫️.absent"));
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/➕add-node-handle/🧱️zero-radius-handle/🎯️outcome/🔣️.json"));
 
 fn before() -> Puzzle2dSnapshot {
     semio_framework_pack_json::from_json_str((*BEFORE), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

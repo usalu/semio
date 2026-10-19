@@ -138,9 +138,9 @@ if self.admitted.get() || self.offer.get().is_none() {
             self.admitted.set(false);
             let offer = self.next_offer(context);
             self.lent = match offer {
-                BoardFillOffer::Preview => Some(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Preview)),
-                BoardFillOffer::Checkpoint(_) => Some(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState)),
-                BoardFillOffer::Fault => Some(semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault)),
+                BoardFillOffer::Preview => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Preview)),
+                BoardFillOffer::Checkpoint(_) => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState)),
+                BoardFillOffer::Fault => Some(semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::Fault)),
                 BoardFillOffer::Yield | BoardFillOffer::Complete | BoardFillOffer::Cancelled => None,
             };
             self.offer.set(Some(offer));

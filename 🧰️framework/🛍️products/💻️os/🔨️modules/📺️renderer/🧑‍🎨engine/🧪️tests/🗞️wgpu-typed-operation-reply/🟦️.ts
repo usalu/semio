@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { typedOperationPageFixture as lanes } from "@semio-tech/framework-actor/testing/fixtures";
 import { decodeAppFrame, encodeAppFrame } from "../../../../../🟦️.ts";
-import { TYPED_OPERATION_PAGE_MAGIC, scanTypedOperationPages, shellFrameBytes } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { TYPED_OPERATION_PAGE_MAGIC, scanTypedOperationPages, shellFrameBytes } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { WGPU_TYPED_OPERATION_DRAIN_BUDGET, WGPU_TYPED_OPERATION_EFFECT_CAPACITY, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
 import { invocationResponseJson } from "@semio-tech/framework-renderer-wgpu/plugin-bridge";
 
@@ -84,8 +84,6 @@ describe("🗞️ wgpu multi-frame reply: app frames and typed-operation pages o
     expect(scan.kept.map((effect) => shellFrameBytes(effect, stream.instanceId)).filter((frame) => frame !== null).length).toBe(stream.expect.appFrames);
   });
 
-  // 🧯️ The hop after the framing one: the reply the guest finally produced carried an
-  // `invokeExtension` whose `req` is a u64, and `JSON.stringify` refuses a bigint outright.
   it("projects a bigint-bearing reply onto the JSON the program bridge parses", () => {
     const response = { output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, diagnostics: [], events: [], requestedEffects: [{ invokeExtension: { req: 7n, extensionId: "flow-extension-brep", capability: "evaluate", requestJson: "{}" } }] } as never;
     expect(() => JSON.stringify(response)).toThrow();

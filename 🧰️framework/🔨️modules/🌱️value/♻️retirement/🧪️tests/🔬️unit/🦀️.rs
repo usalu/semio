@@ -4,7 +4,7 @@ use std::{sync::Arc,mem::{ManuallyDrop,size_of},marker::PhantomData};
 
 #[test]
 fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_release() {
-    use crate::{value::observe_retirement_allocations,retained_clone::RetainedCloneGrant};
+    use crate::{observe_retirement_allocations,retained_clone::RetainedCloneGrant};
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {for copy in fixture["workBytes"].as_array().unwrap() {
         let copy=copy.as_u64().unwrap()as usize;
@@ -28,7 +28,7 @@ fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_releas
 
 #[test]
 fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
     struct Unsupported(String);
     /// 🚫️ Deliberately refuses controlled retirement so the erased admission returns the original owner.
     impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn RetirementCursor> { self.0.retirement() } fn controlled_retirement_supported() -> bool { false } }
@@ -100,7 +100,7 @@ fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_
 
 #[test]
 fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_release() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
     fn run<T: RetireOwned>(value: T, row: &serde_json::Value, law: &serde_json::Value) {
         let (result, heap) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(value));
         assert_eq!(heap, (0, 0));
@@ -194,7 +194,7 @@ fn native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_re
 
 #[test]
 fn paged_native_controlled_retirement_observes_copy_demand_without_releasing_backing() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
     fn run<T: RetireOwned>(value: T, row: &serde_json::Value) {
         let (mut owner, heap) = observe_retirement_allocations(|| controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("native controlled owner")));
         assert_eq!(heap, (0, 0));
@@ -258,7 +258,7 @@ enum CloseDemandEnum { Record(CloseDemandRecord), Empty }
 
 #[test]
 fn paged_native_retained_clone_close_admits_exact_leaf_and_composite_demand() {
-    use crate::{retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep}, value::observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep}, observe_retirement_allocations};
     fn run<T:RetainedClone>(source:crate::retained_clone::FixtureSource<T>,label:&str) {
         let (mut cursor,allocation)=observe_retirement_allocations(T::retained_clone_cursor);assert_eq!(allocation,(0,0));
         let mut ready=false;
@@ -310,7 +310,7 @@ crate::artifact_retire_struct!(MacroControlledRecord { label, values, nested });
 
 #[test]
 fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
-    use crate::{retained_clone::RetainedCloneGrant, value::observe_retirement_allocations};
+    use crate::{retained_clone::RetainedCloneGrant, observe_retirement_allocations};
     let fixture: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let values = fixture["cloneClose"]["optionalValues"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u32).collect::<Vec<_>>();
     let label = fixture["controlledRetirement"]["label"].as_str().unwrap();
@@ -339,7 +339,7 @@ fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
 
 #[test]
 fn retirement_forward_deque_keeps_original_source_and_exact_physical_backing() {
-    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, observe_retirement_allocations};
     use std::collections::VecDeque;
     let fixture: serde_json::Value = serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📥️forward-deque/🔣️.json")).unwrap();
     for count in fixture["rowCounts"].as_array().unwrap() {
@@ -380,21 +380,21 @@ fn retirement_forward_deque_keeps_original_source_and_exact_physical_backing() {
 
 #[derive(crate::RetireOwned, crate::RetainedClone, serde::Serialize)]
 enum ControlledTree {
-    Node(crate::paged::PagedUtf8<{usize::MAX}>, crate::list::PagedList<ControlledTree, {usize::MAX}>),
+    Node(crate::paged::PagedUtf8<{usize::MAX}>, semio_framework_value_paged_list::list::PagedList<ControlledTree, {usize::MAX}>),
     Leaf,
 }
 
 #[derive(crate::RetireOwned, crate::RetainedClone, serde::Serialize)]
 struct ControlledCloneRecord {
     tree: ControlledTree,
-    optional: Option<(crate::paged::PagedUtf8<{usize::MAX}>, crate::list::PagedList<u32, {usize::MAX}>)>,
+    optional: Option<(crate::paged::PagedUtf8<{usize::MAX}>, semio_framework_value_paged_list::list::PagedList<u32, {usize::MAX}>)>,
     objects: crate::paged::PagedMap<crate::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
 }
 
 #[test]
 fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocations() {
     use crate::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    use crate::value::observe_retirement_allocations;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations;
     let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let law = &corpus["controlledRetirement"];
     let depth = law["depth"].as_u64().unwrap() as usize;
@@ -441,7 +441,7 @@ fn paged_native_controlled_retirement_admits_actual_birth_and_release_allocation
 #[test]
 fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
     use crate::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    use crate::value::observe_retirement_allocations;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations;
     let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let text = corpus["prefix"].as_str().unwrap().repeat(corpus["prefixRepeat"].as_u64().unwrap() as usize);
     let budget = corpus["appendClose"]["maximumBytes"].as_u64().unwrap() as usize;
@@ -506,7 +506,7 @@ fn paged_native_append_close_exposes_exact_capacity_and_release_demand() {
 #[test]
 fn paged_native_clone_close_admits_actual_birth_release_and_zero_grants() {
     use crate::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneStep, RetainedCloneSource};
-    use crate::value::observe_retirement_allocations;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations;
     let corpus: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let law = &corpus["cloneClose"];
     let budget = law["maximumBytes"].as_u64().unwrap() as usize;
@@ -597,17 +597,17 @@ fn drain(retirement:Box<dyn ErasedSnapshotRetirement>,items:usize,bytes:usize)->
     let mut slot=Some(retirement);let(mut born,mut freed)=(0,0);
     for _ in 0..100_000 {
         let Some(owner)=slot.as_ref()else{return freed-born;};
-        let (demand,heap)=crate::value::observe_retirement_allocations(||crate::factory_ticket_demands(owner,bytes).unwrap());
+        let (demand,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||crate::factory_ticket_demands(owner,bytes).unwrap());
         assert_eq!(heap,(0,0));
         let grant=RetainedCloneGrant {maximum_items:items,maximum_copy_bytes:bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        let (step,heap)=crate::value::observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());
+        let (step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());
         assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         born+=heap.0;freed+=heap.1;
     }
     panic!("bounded original fixture retirement did not finish");
 }
 fn physical_owned<T:RetireOwned>(value:T,items:usize,bytes:usize)->usize {
-    let (retirement,heap)=crate::value::observe_retirement_allocations(||admit_fixture(value));
+    let (retirement,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||admit_fixture(value));
     drain(retirement,items,bytes)-(heap.0-heap.1)
 }
 fn neutral_logical_bytes(value:&serde_json::Value)->usize {
@@ -617,7 +617,7 @@ fn neutral_logical_bytes(value:&serde_json::Value)->usize {
 fn owned_retirement_matches_neutral_exact_byte_grants() {
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["cases"].as_array().unwrap().len(),11);
     for row in fixture["cases"].as_array().unwrap(){for budget in fixture["budgets"].as_array().unwrap(){
-        let (retirement,heap)=crate::value::observe_retirement_allocations(||match row["kind"].as_str().unwrap(){
+        let (retirement,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||match row["kind"].as_str().unwrap(){
             "string"=>admit_fixture(row["value"].as_str().unwrap().to_owned()),
             "strings"=>admit_fixture(serde_json::from_value::<Vec<String>>(row["value"].clone()).unwrap()),
             "optionalString"=>admit_fixture(serde_json::from_value::<Option<String>>(row["value"].clone()).unwrap()),
@@ -637,12 +637,12 @@ fn owned_retirement_matches_neutral_exact_byte_grants() {
 /// ♻️ Preserves the original64KiB logical quantum and36 payload-turn ceiling with separately admitted scaffolds.
 #[test]
 fn a_byte_buffer_retires_page_by_page_and_owned_elements_one_by_one() {
-    let (owner,heap)=crate::value::observe_retirement_allocations(||admit_fixture(vec![7u8;2*1024*1024]));let original=heap.0-heap.1;
+    let (owner,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||admit_fixture(vec![7u8;2*1024*1024]));let original=heap.0-heap.1;
     let mut slot=Some(owner);let(mut payload_turns,mut born,mut released,mut copied)=(0usize,0usize,0usize,0usize);
     for _ in 0..100_000 {
         let Some(owner)=slot.as_ref()else{break;};let demand=crate::factory_ticket_demands(owner,64*1024).unwrap();
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:64*1024,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        let (step,heap)=crate::value::observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();
+        let (step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||crate::close_factory_ticket(&mut slot,grant).unwrap());let progress=step.progress();
         assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(grant));born+=heap.0;released+=heap.1;copied+=progress.copied_bytes;
         payload_turns+=usize::from(progress.copied_bytes!=0||progress.released_bytes==2*1024*1024);
         assert!(payload_turns<=36,"the original2MiB payload requires at most36 turns of64KiB; scaffold authority is separate");
@@ -765,7 +765,7 @@ fn parent_return_fixture_demands_actual_full_allocation_release(){
 
 #[test]
 fn controlled_retirement_separates_logical_work_from_exact_physical_release() {
-    use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},value::observe_retirement_allocations};
+    use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},observe_retirement_allocations};
     fn run<T:RetireOwned+serde::Serialize>(value:T,row:&serde_json::Value,grant:RetainedCloneGrant) {
         assert_eq!(serde_json::to_value(&value).unwrap(),row["value"]);
         let mut owner=controlled::ControlledRetirement::new(value).unwrap_or_else(|_|panic!("controlled original owner"));
@@ -801,7 +801,7 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release() {
 
 #[test]
 fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold_terminal_frame() {
-    use crate::value::observe_retirement_allocations;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations;
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/⚖️physical-work/🔣️.json")).unwrap();
     let text=law["cases"][1]["value"].as_str().unwrap();
     let (cursor,heap)=observe_retirement_allocations(||admit_fixture(text.to_owned()));let original=heap.0-heap.1;
@@ -823,7 +823,7 @@ fn controlled_retirement_separates_logical_work_from_exact_physical_release_cold
 
 #[test]
 fn shared_retirement_physical_demand_preserves_original_backing_and_terminal_frames() {
-    use crate::value::observe_retirement_allocations;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations;
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/📏️shared-physical/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){for copy in law["workBytes"].as_array().unwrap(){
         let copy=copy.as_u64().unwrap()as usize;let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize);text.push_str(row["text"].as_str().unwrap());assert_eq!(serde_json::to_value(&text).unwrap(),row["text"]);let backing=text.capacity();
@@ -901,7 +901,7 @@ fn erased_snapshot_full_grant_admission_preserves_original_owner_and_all_four_cu
 /// 🧺️ Original heap and Reverse use the same vector allocation through each independently granted physical turn.
 #[test]
 fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
-    use crate::{value::observe_retirement_allocations as observe,retained_clone::RetainedCloneGrant};
+    use crate::{observe_retirement_allocations as observe,retained_clone::RetainedCloneGrant};
     use std::{collections::BinaryHeap,cmp::Reverse};
     let law:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🧺️heap.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){
@@ -920,7 +920,7 @@ fn original_heap_and_reverse_preserve_backing_and_full_retirement_receipts(){
 
 #[test]
 fn original_five_field_tuple_retirement_conserves_every_native_owner_and_receipt() {
-    use crate::{retained_clone::RetainedCloneGrant,value::observe_retirement_allocations as observe};
+    use crate::{retained_clone::RetainedCloneGrant,observe_retirement_allocations as observe};
     let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🪆️five-fields/🔣️.json")).unwrap();
     type Mesh=(String,Vec<f32>,Vec<f32>,Vec<u32>,Vec<f32>);
     let (source,original_heap)=observe(||serde_json::from_value::<Mesh>(fixture["fields"].clone()).unwrap());

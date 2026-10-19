@@ -20,7 +20,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use course::{cursor_problem, presence_problem, room_scope, roster_scope, thinking_problem, thinking_scope, CursorState, Place, PresenceState, Quiz, Scale, Screen, Task, ThinkingAnswer, ThinkingState, ValidationIssue};
+use course_presence::{cursor_problem, presence_problem, room_scope, roster_scope, thinking_problem, thinking_scope};
+use course::{CursorState, Place, PresenceState, Quiz, Scale, Screen, Task, ThinkingAnswer, ThinkingState, ValidationIssue};
 use serde::Deserialize;
 use server::contract::OpaqueJson;
 

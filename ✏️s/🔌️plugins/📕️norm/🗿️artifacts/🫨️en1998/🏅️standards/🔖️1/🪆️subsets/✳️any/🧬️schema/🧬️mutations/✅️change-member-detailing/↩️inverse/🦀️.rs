@@ -1,4 +1,4 @@
-//! Inverse for `change-member-detailing`.
+//! ↩️ Inverse for `change-member-detailing`.
 use crate::change_member_detailing::ChangeMemberDetailing;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

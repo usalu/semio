@@ -231,12 +231,10 @@ impl<T, D> Default for GltfCollectionDiff<T, D> {
 }
 
 impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate_apply(&self, base_len: usize, target: &str) -> protocol::MutationApplyResult<()> {
         let mut removed = std::collections::BTreeSet::new();
         for &index in &self.removed {
@@ -269,7 +267,6 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
     }
 
     /// ✍️ The list this diff turns `base` into; reached only from a diff type's own `apply`, under the received capability.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[T], target: &str, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Vec<T>> {
         self.validate_apply(base.len(), target)?;
         let mut next: Vec<Option<T>> = base.iter().cloned().map(Some).collect();
@@ -298,7 +295,6 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         Ok(out)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(&mut self, other: Self) {
         let (removed, modified, added, amended) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
@@ -319,7 +315,6 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         self.amended = amended.into_iter().map(|(index, diff)| GltfModified { index, diff }).collect();
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base_items: &[T]) -> Self {
         let (removed, modified, added, amended) =
             inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.item.clone())).collect::<Vec<_>>(), base_items, |d, orig| d.inverse(orig));

@@ -21,11 +21,11 @@ use semio_framework_plugin_decl_surface::ViewerApp;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 #[cfg(test)]
 use semio_framework_plugin_window_transient::built_text_to_component_tree;
-use semio_framework_plugin_instance_app::lifted_tree::editor_surface;
+use semio_framework_plugin_instance_surface::editor_surface;
 use crate::declarations_fixture_tests::fixture;
 use semio_framework_plugin_decl_registry::declarations::format_descriptor_of;
 use semio_framework_plugin_decl_registry::declarations::project_artifact_declarations;
-use semio_framework_plugin_instance_app::lifted_tree::viewer_surface;
+use semio_framework_plugin_instance_surface::viewer_surface;
 use semio_framework_plugin_abi::ArtifactBuilder;
 fn sqlite_guest_refusal_origin(dialect: &semio_framework_artifact_reference::ArtifactDialect) -> semio_framework::io_schema::IoError {
     use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -108,7 +108,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let neutral:semio_framework_plugin_abi::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();
             let grant=neutral.native.native().unwrap();
             let mut receive=|_|true;let mut publish=|_|true;let mut progress=|_|true;
-            let mut decoder=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut receive);
+            let mut decoder=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut receive);
             let mut encoder=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut publish);
             let mut native=semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decoder,&mut encoder,grant);
             let mut snapshot=SqliteSnapshotControl::new(&mut progress,limits);

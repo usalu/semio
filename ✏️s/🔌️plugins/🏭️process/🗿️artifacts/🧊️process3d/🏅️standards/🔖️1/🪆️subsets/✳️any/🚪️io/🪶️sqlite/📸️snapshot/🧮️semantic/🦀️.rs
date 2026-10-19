@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
 trait Check{fn step(&mut self)->Result<(),ValueError>;}
-impl Check for semio_framework_value::NativeDecodeControl<'_>{fn step(&mut self)->Result<(),ValueError>{self.step()}}
+impl Check for semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>{fn step(&mut self)->Result<(),ValueError>{self.step()}}
 struct Encode<'a,'p>(&'a mut SqliteSnapshotControl<'p>);
 impl Check for Encode<'_,'_>{fn step(&mut self)->Result<(),ValueError>{self.0.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)}}
 struct Cells<'a,C>{control:&'a mut C,bytes:usize,maximum:usize}
@@ -46,7 +46,7 @@ fn pose<C:Check>(s:&mut Cells<'_,C>,r:&R)->Result<(),ValueError>{s.add(16)?;for 
 fn texts<C:Check>(s:&mut Cells<'_,C>,r:&R,ids:&[u16])->Result<(),ValueError>{for id in ids{s.text(text(field(r,*id)?)?)?;}Ok(())}
 fn solid<C:Check>(s:&mut Cells<'_,C>,v:&F)->Result<(),ValueError>{let(tag,r)=tagged(v)?;s.add(24)?;let(sql,count)=match tag{"box"=>("box",3),"cylinder"=>("cylinder",2),"sphere"=>("sphere",1),"imported-mesh"=>("importedMesh",0),"imported-solid"=>("importedSolid",0),"reference"=>("reference",0),_=>return Err(invalid())};s.text(sql)?;if count==0{texts(s,r,&[0])?;}else{for id in 0..count{float(s,field(r,id)?)?;}}Ok(())}
 fn child<C:Check>(s:&mut Cells<'_,C>,r:&R,ordered:bool)->Result<(),ValueError>{s.add(if ordered{24}else{16})?;texts(s,r,&[0])?;texts(s,record(field(r,1)?)?,&[0,1,2,3])}
-pub(super) fn borrowed(r:&R,maximum:usize,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{native.scoped_stage(|native|{
+pub(super) fn borrowed(r:&R,maximum:usize,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{native.scoped_stage(|native|{
  native.begin_stage(0)?;let mut s=Cells{control:native,bytes:0,maximum};s.add(8)?;texts(&mut s,r,&[1,2])?;pose(&mut s,record(field(r,3)?)?)?;let stock=record(field(r,4)?)?;s.add(16)?;texts(&mut s,stock,&[0,1])?;pose(&mut s,record(field(stock,3)?)?)?;solid(&mut s,field(stock,2)?)?;s.add(24)?;child(&mut s,record(field(r,5)?)?,false)?;child(&mut s,record(field(r,6)?)?,false)?;
  for m in list(record(field(r,0)?)?.get(0))?{let m=record(m)?;s.add(24)?;texts(&mut s,m,&[0,1,2])?;if let Some(v)=m.get(3).filter(|v|!matches!(v,F::Absent)){s.text(text(v)?)?;}for cap in list(m.get(4))?{let cap=record(cap)?;s.add(40)?;texts(&mut s,cap,&[0,1,2])?;let(tag,recipe)=tagged(field(cap,3)?)?;let(sql,count)=match tag{"disc-cut"=>("discCut",2),"blade-cut"=>("bladeCut",3),"pocket-cut"=>("pocketCut",2),"bore-drill"=>("boreDrill",2),"cylinder-attach"=>("cylinderAttach",2),"box-attach"=>("boxAttach",3),_=>return Err(invalid())};s.text(sql)?;for id in 0..count{texts(&mut s,recipe,&[id])?;}
   for p in list(cap.get(4))?{let p=record(p)?;s.add(24)?;texts(&mut s,p,&[0,1])?;float(&mut s,field(p,2)?)?;}

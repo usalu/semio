@@ -27,6 +27,7 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-draw-drawing-editor-commands = { workspace = true }
 semio-s-artifact-draw-drawing-editor-interaction = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }

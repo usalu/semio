@@ -1,7 +1,7 @@
-//! and combinations — the records every fem3d facet (snapshot, diff, mutations, io, editor) names.
+//! 🧮️ and combinations — the records every fem3d facet (snapshot, diff, mutations, io, editor) names.
 //! 🏗️ FEM 3D structural model entities: nodes, members, solids, materials, sections, supports, loads, load cases
 
-use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::{decode_fixed_dofs,decode_fixed_dofs_controlled,retire_fixed_dofs};
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
@@ -131,7 +131,7 @@ impl semio_framework_value::ToValue for FemAxis {
     }
 }
 impl semio_framework_value::FromValue for FemAxis {
-    fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+    fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.checkpoint()?;
         match value.as_str(){Some("x")=>Ok(Self::X),Some("y")=>Ok(Self::Y),Some("z")=>Ok(Self::Z),_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a canonical extrusion axis key"))}
     }
@@ -219,6 +219,3 @@ pub use semio_s_fem_material::volumetric::FemMaterial;
 
 pub use semio_s_fem_material::volumetric::FemMaterialValue;
 
-#[cfg(test)]
-#[path="../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🏗️structure/🎟️fixed-dofs/🧪️tests/🦀️.rs"]
-mod fixed_dof_tests;

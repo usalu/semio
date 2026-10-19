@@ -1,6 +1,7 @@
 //! 🔗️ Real borrowed-key scratch admission with full System request and release observation.
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{DslValue,NativeDecodeControl,ValueRefusalKind};
+use semio_framework_value::{DslValue, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::collections::{HashMap,HashSet};
 use std::hash::Hasher;
 

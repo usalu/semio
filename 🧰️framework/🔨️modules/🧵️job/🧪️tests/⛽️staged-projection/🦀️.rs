@@ -2,6 +2,13 @@ use super::*;
 use std::cell::Cell;
 use std::mem::{MaybeUninit,size_of};
 use semio_framework_value::RetirementDemand;
+use semio_framework_job_payload::payload_writer_and_grant::RetainedJobPayloadWriter;
+use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
+use semio_framework_job_payload::payload_writer_and_grant::JobPayloadStagedSource;
+use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadAdmissionFault;
+use semio_framework_job_payload::payload_pages_and_ledger::RetainedJobPayload;
+use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadPageSource;
 
 struct OriginalSpan<'a>{bytes:&'a[u8],reads:&'a Cell<usize>,depth:usize}
 impl JobPayloadStagedSource for OriginalSpan<'_>{
@@ -26,7 +33,7 @@ fn writer_turn(frontier:usize,writer:&mut Option<RetainedJobPayloadWriter>,sourc
 
 #[test]
 fn original_staged_projection_admits_source_and_writer_frontiers_independently(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⛽️staged-projection/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⛽️staged-projection/🔣️.json")).unwrap();
  let bytes:Vec<u8>=fixture["sourceBytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();
  for frontier in 0..4{for axis in fixture["deniedAxes"].as_array().unwrap().iter().map(|v|v.as_str().unwrap()).chain(["exact"]){
   let mut original=OriginalFixture::new();let reads=Cell::new(0);let source=OriginalSpan{bytes:&bytes,reads:&reads,depth:fixture["sourceDepth"].as_u64().unwrap()as usize};let mut writer=None;
@@ -63,7 +70,7 @@ fn boxed_turn(owner:&mut Option<Box<RetainedPayloadBuilder>>,source:&OriginalSpa
 }
 #[test]
 fn original_boxed_staged_payload_initializes_and_projects_under_fixed_small_copy_grants(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/⛽️staged-projection/🔣️.json")).unwrap();let law=&fixture["construction"];let bytes:Vec<u8>=fixture["sourceBytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⛽️staged-projection/🔣️.json")).unwrap();let law=&fixture["construction"];let bytes:Vec<u8>=fixture["sourceBytes"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();
  for prefix in law["cancelPrefixes"].as_array().unwrap(){
   let mut original=OriginalFixture::new();let reads=Cell::new(0);let source=OriginalSpan{bytes:&bytes,reads:&reads,depth:3};let mut owner:Option<Box<RetainedPayloadBuilder>>=None;let(mut complete,mut born,mut released,mut turns)=(false,0,0,0);
   while turns<prefix.as_u64().unwrap()as usize&&!complete{

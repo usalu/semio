@@ -46,8 +46,6 @@ fn owned_bowyer_watson_replays_domain_invariants() {
 
 #[test]
 fn refined_mesh_respects_min_angle() {
-    // A long thin rectangle: all input corners are 90 degrees, while an unrefined diagonal would
-    // produce slivers. Deterministic boundary subdivision plus the interior lattice removes them.
     let outer = vec![[0.0, 0.0], [20.0, 0.0], [20.0, 1.0], [0.0, 1.0]];
     let domain = PlanarDomain { outer, holes: vec![] };
     let opts = MeshOpts { max_edge: 1.0, min_angle_deg: 25.0 };
@@ -130,20 +128,19 @@ fn split_to_tets_preserves_volume() {
 
 #[test]
 fn split_to_tets_shared_faces_are_parity_consistent() {
-    // Two Hex8 cells sharing the quad face [1,2,6,5] (cell A's +x face / cell B's -x face).
     let points = vec![
-        [0.0, 0.0, 0.0], // 0
-        [1.0, 0.0, 0.0], // 1
-        [1.0, 1.0, 0.0], // 2
-        [0.0, 1.0, 0.0], // 3
-        [0.0, 0.0, 1.0], // 4
-        [1.0, 0.0, 1.0], // 5
-        [1.0, 1.0, 1.0], // 6
-        [0.0, 1.0, 1.0], // 7
-        [2.0, 0.0, 0.0], // 8
-        [2.0, 1.0, 0.0], // 9
-        [2.0, 0.0, 1.0], // 10
-        [2.0, 1.0, 1.0], // 11
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [1.0, 1.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+        [1.0, 0.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [0.0, 1.0, 1.0],
+        [2.0, 0.0, 0.0],
+        [2.0, 1.0, 0.0],
+        [2.0, 0.0, 1.0],
+        [2.0, 1.0, 1.0],
     ];
     let cell_a = Cell::Hex8([0, 1, 2, 3, 4, 5, 6, 7]);
     let cell_b = Cell::Hex8([1, 8, 9, 2, 5, 10, 11, 6]);
@@ -182,7 +179,6 @@ fn volume_mesh_quality_detects_inverted_cell() {
     let good = VolumeMesh { points: points.clone(), cells: vec![Cell::Tet4([0, 1, 2, 3])] };
     assert!(volume_mesh_quality(&good).min_jacobian_sign_positive);
 
-    // Swap two nodes to invert the signed volume.
     let inverted = VolumeMesh { points, cells: vec![Cell::Tet4([1, 0, 2, 3])] };
     assert!(!volume_mesh_quality(&inverted).min_jacobian_sign_positive);
 }
@@ -211,8 +207,6 @@ fn boundary_faces_area_matches_extruded_box_surface() {
     let expected = 2.0 * side * side + 4.0 * side * height;
     assert!((total_area - expected).abs() < 1e-6, "total={total_area} expected={expected}");
 
-    // Every boundary face must be wound so its normal points away from its own tet's centroid —
-    // spot-checked here on the bottom face (z=0, outward normal must have negative z).
     for f in &faces {
         if tets.points[f[0] as usize][2] < 1e-9 && tets.points[f[1] as usize][2] < 1e-9 && tets.points[f[2] as usize][2] < 1e-9 {
             let (a, b, c) = (tets.points[f[0] as usize], tets.points[f[1] as usize], tets.points[f[2] as usize]);

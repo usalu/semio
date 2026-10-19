@@ -1,4 +1,4 @@
-//! (`part_id:grip_id`), full initial connection-parameterization payload included.
+//! 🌐️ (`part_id:grip_id`), full initial connection-parameterization payload included.
 //! 🔗 Puzzle5d mutation — `ConnectGrips`: creates a fastener between two full grip ids
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -54,7 +54,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectGrips {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ConnectGrips
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ConnectGrips>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

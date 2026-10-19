@@ -341,9 +341,6 @@ fn dyn_enum_call_supports_zero_variants() {
 
 #[test]
 fn dyn_enum_call_two_invocations_for_the_same_trait_in_one_module_both_resolve() {
-    // ✌️ A real enum plus its `NoMembers`-shaped empty sibling, closing the SAME trait, in the SAME
-    // module — requirement 4's shape. Bare invocation (no `use`) never collides, unlike `use ...;
-    // use ...;` would (`E0252`, verified — see the doc comment on `expand_dyn_enum_call`).
     let first = expand_dyn_enum_call(quote! { pub enum Members: SpaceMember { A(ConcreteA) } }).expect("first expansion");
     let second = expand_dyn_enum_call(quote! { pub enum NoMembers: SpaceMember {} }).expect("second expansion");
     assert!(first.to_string().contains("__semio_dispatch_SpaceMember"));

@@ -1,7 +1,8 @@
 //! 🧪️ Neutral publication vectors exercised through the retained publication owners.
 
 use super::*;
-use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, Operation, RevisionId, StepBudget, JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, Operation, RevisionId, StepBudget};
+use semio_framework_job_payload::{JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_PAGE_BYTES};
 
 /// 🪜️ One retained publication binds every operation page slot of each of its streams on its own turn before any byte moves.
 const POLL_BOUND: usize = 2 * JOB_PAYLOAD_OPERATION_PAGES + 64;

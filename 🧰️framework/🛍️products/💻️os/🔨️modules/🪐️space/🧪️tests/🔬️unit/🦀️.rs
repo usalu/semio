@@ -1,5 +1,7 @@
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
@@ -489,7 +491,6 @@ fn folder_and_entry_path_round_trip() {
 fn moves_and_renames_never_break_id_based_refs() {
     let mut collection = demo_collection();
     let before_id = collection.entries[0].id.clone();
-    // Rename the folder — the path changes, the id-based ref doesn't.
     collection.folders[0].name = "Outputs".into();
     assert_eq!(entry_path(&collection, &before_id), Some("Outputs/sketch".into()));
     assert!(collection.entries.iter().any(|entry| entry.id == before_id));
@@ -581,7 +582,6 @@ fn draft_promote_moves_envelope_bytes_byte_identical() {
     let demote = DraftCatalog::demote_operation(&entry.id);
     assert_eq!(demote, CollectionMutation::DeleteEntry { entry_id: entry.id.clone() });
 
-    // Mutation-sourced round trip: CreateEntry then its inverse restores the empty collection.
     let empty = empty_collection_snapshot("Demo");
     store::test_support::assert_operation_round_trip(&empty, operation);
 }
@@ -761,11 +761,6 @@ fn load_repair_reconcilers_never_write_history_rows() {
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 #[test]
 fn zip_export_import_round_trips_real_store_documents_and_blob() {
-    // 🌉️ `ArtifactStore::new`/`dispatch`/`snapshot_pack`/`TestBlobStore::put`/`get` all turned
-    // `async fn` under the runtime-dependency sweep; this test stays a plain sync `#[test]` (this
-    // crate has no `#[async_test]` harness dependency) and bridges via
-    // `resolve_kernel_future`, same as this file's other async fallout fixes — every
-    // op here is an in-memory fixture operation, never real I/O.
     test_identity!(identity);
     let mut nested_space_store =
         resolve_kernel_future(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
@@ -810,9 +805,6 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     import_blob(&fresh_blob_store, imported_blob, &imported_blob_bytes).expect("import blob");
     assert_eq!(resolve_kernel_future(fresh_blob_store.get(&blob_ref.hash)).expect("get"), Some(b"hello blob bytes".to_vec()));
 
-    // export -> import -> export must stay byte-stable with REAL data too (not just injected
-    // fixture strings) — the law `zip_export_import_export_is_byte_stable` proved with mock bytes
-    // holds end-to-end.
     let mut reexport_pack_files = HashMap::new();
     reexport_pack_files.insert("art-nested-space".to_string(), store::os_store::serialization::ArtifactPackFiles { pack: imported_pack.clone(), spr: imported_spr.clone(), ops: String::new() });
     let re_read_artifact = real_artifact_reader(&reexport_pack_files);

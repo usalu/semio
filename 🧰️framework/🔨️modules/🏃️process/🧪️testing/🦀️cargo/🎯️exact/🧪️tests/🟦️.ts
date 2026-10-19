@@ -9,7 +9,7 @@ import{join,resolve}from"node:path";
 import{createHash}from"node:crypto";
 import Ajv2020 from "ajv/dist/2020";
 import loaderSchema from "../📚️loader/🧬️schema/🔣️.json";
-import loaderFixture from "../📚️loader/🧫️fixtures/🔣️.json";
+import loaderFixture from "../📚️loader/🧪️tests/🧫️fixtures/🔣️.json";
 import { rustCompilerLoaderEnvironment } from "../📚️loader/🟦️.ts";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
@@ -137,7 +137,7 @@ test("native exact laws preserve original environment and actual toolchain libra
 test("neutral actual runner consumes each pure protocol and SQLite independently classifies terminal DATA",()=>{const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("exact.ts",source,ts.ScriptTarget.Latest,true),calls=new Set<string>();const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression))calls.add(node.expression.text);ts.forEachChild(node,visit);};visit(tree);for(const name of["readExactCargoExecutableV1","selectExactCargoLawsV1","requireExactCargoLawResultV1","requireExactCargoFingerprintV1","requireExactCargoTargetBoundaryV1","readExactCargoLawNamesV1"])expect(calls.has(name)).toBe(true);const db=new Database(":memory:"),admits=new Ajv({strict:true}).addSchema(schema).compile({$ref:schema.$id+"#/definitions/Capture"});db.exec("create table lines(value text)");try{for(const row of fixture.cases){const count=row.mutation==="zero-pass"?0:row.mutation==="two-pass"?2:1,ignored=row.mutation==="ignored-law"?1:0,result={status:row.mutation==="native-exit"?101:0,signal:null,stdout:`test first_law ... ${ignored?"ignored":"ok"}\n${row.mutation==="terminal-spoof"?"test result: ok. 1 passed; 0 failed; 0 ignored;\n":""}test result: ok. ${count} passed; 0 failed; ${ignored} ignored; 0 measured; 0 filtered out; finished in 0.00s\n`,stderr:""};expect(admits(result)).toBe(true);db.exec("delete from lines");for(const line of result.stdout.split("\n"))db.query("insert into lines values(?)").run(line);const oracle=db.query("select case when ?=0 and sum(value like 'test result: ok.%')=1 and sum(value like 'test result: ok. 1 passed; 0 failed; 0 ignored;%')=1 and sum(value='test first_law ... ok')=1 then 1 else 0 end accepted from lines").get(result.status);let accepted=false;try{requireExactCargoLawResultV1(result,"first_law");accepted=true;}catch{}expect(oracle).toEqual({accepted:Number(accepted)});}}finally{db.close();}});
 
 test("controlled fingerprint obeys neutral progress and interruption vectors with independent SHA-256", async () => {
- const {controlledExactExecutableFingerprint}=await import("../🔬️fingerprint/🟦️.ts"),{sha256}=await import("@noble/hashes/sha2.js"),law=JSON.parse(readFileSync(new URL("../🔬️fingerprint/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🔬️fingerprint/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+ const {controlledExactExecutableFingerprint}=await import("../🔬️fingerprint/🟦️.ts"),{sha256}=await import("@noble/hashes/sha2.js"),law=JSON.parse(readFileSync(new URL("../🔬️fingerprint/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🔬️fingerprint/🧬️schema/🔣️.json",import.meta.url),"utf8"));
  expect(new Ajv2020({strict:true}).compile(schema)(law)).toBe(true);
  const bytes=Buffer.alloc(law.byteLength,law.byte);expect(Buffer.from(sha256(bytes)).toString("hex")).toBe(law.sha256);
  for(const row of law.cases){

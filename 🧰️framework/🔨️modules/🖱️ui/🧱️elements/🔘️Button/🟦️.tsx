@@ -17,7 +17,7 @@ import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🔳�
 // Consumers MUST provide an icon for each Button.
 
 /**
- * ButtonProps holds the data fields for a ButtonProps record.
+ * 🔘️ ButtonProps holds the data fields for a ButtonProps record.
  **/
 type ButtonProps = React.ComponentProps<"button"> &
   StyleVariantProps<typeof buttonGroupItemVariants> & {

@@ -1,6 +1,11 @@
 //! 📒️ Driver and ledger of the tool run ledger: the tick receipt, the driver, the ledger with its trace window and the ledger operations over the selected run. See [`super`].
 
 use super::*;
+use semio_framework::kernel::UiDirtyScope;
+use std::collections::BTreeSet;
+use semio_framework_os_kernel::os_store::ArtifactStore;
+use semio_framework::Fault;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
 
 //#region 🔖️Ledger
 /// 📬️ What one applied tick changed.
@@ -125,7 +130,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.window_index(window_id).or_else(|| self.primary_index()).map(|index| self.entries[index].view())
     }
 
-    pub(crate) fn poll_view_for(&self,window_id:Option<&str>)->Option<crate::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];crate::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
+    pub(crate) fn poll_view_for(&self,window_id:Option<&str>)->Option<semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView<'_>>{self.window_index(window_id).or_else(||self.primary_index()).map(|index|{let entry=&self.entries[index];semio_framework_plugin_decl_views::tool_run_contract::ToolRunPollView{tool_id:&entry.tool_id,identity:entry.identity,state:entry.slot.state}})}
 
     fn window_index(&self, window_id: Option<&str>) -> Option<usize> {
         let window_id = window_id?;

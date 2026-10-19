@@ -15,3 +15,4 @@ name = "semio_framework_io_sqlite_model"
 path = "🦀️.rs"
 [dependencies]
 semio-framework-value.workspace = true
+semio-framework-value-native-owned.workspace = true

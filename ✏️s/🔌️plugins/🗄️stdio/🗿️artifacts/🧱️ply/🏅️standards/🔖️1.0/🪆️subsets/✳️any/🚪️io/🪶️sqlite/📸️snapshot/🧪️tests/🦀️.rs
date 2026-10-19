@@ -245,11 +245,11 @@ fn sqlite_snapshot_ply_controlled_native_retains_refusal_categories(){
  let limited=crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::record_controlled(&source,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true),0).err().expect("row admission");
  assert_eq!(limited.kind.as_str(),cases["rowAdmission"].as_str().unwrap());
  let mut record=crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::record_controlled(&source,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true),usize::MAX).unwrap();record.fields.remove(&3);
- let malformed=crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(&record,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).err().expect("malformed record");
+ let malformed=crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::reconstruct_record_controlled(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).err().expect("malformed record");
  assert_eq!(malformed.kind.as_str(),cases["malformedRecord"].as_str().unwrap());
  let source_case=&fixture["controlledTextSource"];let expected_span=semio_framework_diagnostic::TextSpan{line:source_case["span"]["line"].as_u64().unwrap()as u32,column:source_case["span"]["column"].as_u64().unwrap()as u32,length:source_case["span"]["length"].as_u64().unwrap()as u32};
  let spec=crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::spec();
- let text_error=semio_framework_dsl_record::parse_exact_controlled(source_case["source"].as_str().unwrap(),&spec,&semio_framework_dsl_record::ParseOptions::default(),&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true)).err().expect("actual malformed Text source");
+ let text_error=semio_framework_dsl_record::parse_exact_controlled(source_case["source"].as_str().unwrap(),&spec,&semio_framework_dsl_record::ParseOptions::default(),&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut |_|true)).err().expect("actual malformed Text source");
  assert_eq!(text_error.kind.as_str(),cases["malformedRecord"].as_str().unwrap());
  assert_eq!(text_error.span,expected_span);
  let io_error=store::io_schema::IoError::from_text_error_controlled(text_error,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true)).unwrap();

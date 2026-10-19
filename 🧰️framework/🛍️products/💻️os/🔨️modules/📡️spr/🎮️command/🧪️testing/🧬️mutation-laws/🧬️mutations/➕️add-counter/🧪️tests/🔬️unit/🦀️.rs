@@ -9,6 +9,6 @@ fn direct_counter_leaf_contract() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     for (delta, base) in [(5, 10i64), (-7, 10), (0, 10), (i64::MIN, 10), (i64::MAX, -10)] {
-        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddCounter(AddCounter { delta }), &base).await;
+        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CounterMutation::AddCounter(AddCounter { delta }), &base).await;
     }
 }

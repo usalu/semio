@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createElement, Fragment } from "react";
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
-import panelFixture from "../../../../../../../🔌️plugin/🧪️tests/🧫️fixtures/⏯️tool-run/🪧️panel-running.json";
+import panelFixture from "@semio-tech/framework/os/modules/plugin/testing/fixtures/tool-run/panel-running.json";
 import "../../../../🐚️Shell/🟦️.tsx";
 import { actionBindingToActionDescriptor, uiNodeToTreePanelConfig } from "../../../🌳️tree-windows/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1 } from "../../🟦️.ts";

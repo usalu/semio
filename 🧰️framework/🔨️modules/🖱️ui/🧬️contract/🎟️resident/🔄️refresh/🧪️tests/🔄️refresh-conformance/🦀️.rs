@@ -87,8 +87,6 @@ fn retained_refresh_never_needs_a_second_full_resident_set() {
     let mut steps = 0usize;
     for refresh in 0..data["refreshes"].as_u64().unwrap() {
         for (index, (surface, nodes)) in surfaces.iter().enumerate() {
-            // ♻️ This surface's PREVIOUS document is driven to terminal before its replacement asks
-            // the aggregate for credit — the whole law.
             if let Some(mut previous) = live[index].take() {
                 steps += retire(&mut previous, items, bytes);
                 drain_pages();

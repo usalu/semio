@@ -1,4 +1,4 @@
-//! the six DOF toggles `tx`…`rz`) → `ChangeSupport`.
+//! 🔘️ the six DOF toggles `tx`…`rz`) → `ChangeSupport`.
 //! 🩹️ Fem3d play app command — `patch-support`: one-field edit of a support (`nodeId`, or one of
 
 use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport;

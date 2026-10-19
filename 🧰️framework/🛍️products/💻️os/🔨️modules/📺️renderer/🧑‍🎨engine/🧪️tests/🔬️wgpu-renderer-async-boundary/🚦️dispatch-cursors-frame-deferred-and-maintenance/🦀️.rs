@@ -1,5 +1,6 @@
 /// 🚦️ Dispatch cursors, frame deferred and maintenance: the native entrypoint driver, the manifest edges, the dispatch cursors, the frame deferred cursor and cancel, the catalogue terminal pair, the maintenance authority, refusal cell and test owner.
 
+use semio_framework_os_renderer_wgpu_runtime_mailbox::FrameOriginalRecovery;
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_cursor() {
@@ -297,7 +298,7 @@ fn a_fault_after_staging_leave_retires_the_source_drop_before_a_later_single_dis
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending));
     input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ByteCredits);
     let mut faulted = false;
-    for _ in 0..ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY * 2 + 2 {
+    for _ in 0..semio_framework_ui_action::ACTION_BATCH_ITEM_CAPACITY * 2 + 2 {
         match transfer_frame_input_action(&mut input, &mut actions) {
             Err("bounded frame input action batch source faulted") => {
                 faulted = true;

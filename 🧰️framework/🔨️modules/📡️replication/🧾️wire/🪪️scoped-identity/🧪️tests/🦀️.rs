@@ -6,8 +6,8 @@ use super::*;
 /// 👁️ Strict borrowed visitation admits whole identities before callbacks and owns no heap storage.
 #[test]
 fn scoped_identity_visitor_is_atomic_ordered_and_allocation_free() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👁️visitor/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/👁️visitor/🔣️.json")).unwrap();
     for (index, row) in vectors["valid"].as_array().unwrap().iter().enumerate() {
         let identity = row["identity"].as_str().unwrap();
         let mut visited = [""; SCOPED_IDENTITY_MAX_SEGMENTS];
@@ -44,7 +44,7 @@ fn scoped_identity_visitor_is_atomic_ordered_and_allocation_free() {
 
 #[test]
 fn scoped_identities_follow_portable_vectors_and_bounds() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("third-party JSON oracle");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("third-party JSON oracle");
     for row in fixture["valid"].as_array().expect("valid vectors") {
         let segments: Vec<_> = row["segments"].as_array().expect("segments").iter().map(|segment| segment.as_str().expect("segment")).collect();
         let identity = row["identity"].as_str().expect("identity");

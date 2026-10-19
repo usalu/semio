@@ -118,8 +118,6 @@ describe("wgpu retained document reconcile", () => {
       const rustVariant = variant.charAt(0).toUpperCase() + variant.slice(1);
       expect(projection, `the projection handles Component::${rustVariant}`).toContain(`Component::${rustVariant}`);
     }
-    // 🧩️ The contract's own enum is the authority on the SET — a variant added there without a
-    // projection arm would fail to compile in Rust, and this pins the fixture to the same count.
     expect(new Set(Object.values(fixture.componentProjection)).size).toBeGreaterThan(10);
   });
 

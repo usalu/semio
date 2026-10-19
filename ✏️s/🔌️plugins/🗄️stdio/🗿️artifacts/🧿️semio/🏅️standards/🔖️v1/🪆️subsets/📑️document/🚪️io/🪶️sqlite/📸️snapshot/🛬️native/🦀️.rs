@@ -1,7 +1,7 @@
 //! 📑️ Admitted Document styles, image octets and recursively bounded typed block trees.
 use crate::schema::snapshot::{SemioDocumentSnapshot, DocBlock, DocRun, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.

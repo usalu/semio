@@ -1,4 +1,4 @@
-//! emitted (always, or only for hovered/selected objects) and HOW their direction arrows point
+//! 🖱️ emitted (always, or only for hovered/selected objects) and HOW their direction arrows point
 //! 🌀️ Edit-mode window options — how vortex markers are surfaced in the viewport: WHEN they are
 //! (outwards from the vortex point, or inwards onto it). Both are per-window-instance chrome.
 

@@ -14,7 +14,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     let linked_name = linked.map(|v| v.name.as_str()).unwrap_or("—");
     let linked_type = linked.map(|v| VentSystemType::parse(&v.system_type));
 
-    // Referential integrity — zone must link an existing ventilation system
     {
         let mut bi = CheckResult::assess(
             format!("din16798.zone.ventSystem.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§6.3", "system"),
@@ -60,7 +59,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
         out.push(bi.build());
     }
 
-    // Operative temperature — summer design
     let (t_min, t_max) = operative_temp_band(cat, "summer");
     let t = zone.t_op_summer_c;
     let mut b = CheckResult::assess(
@@ -85,7 +83,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(b.build());
 
-    // Winter operative temperature
     let (tw_min, tw_max) = operative_temp_band(cat, "winter");
     let tw = zone.t_op_winter_c;
     let mut bw = CheckResult::assess(
@@ -110,9 +107,8 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bw.build());
 
-    // PMV / PPD (fixed HVAC, both seasons) vs adaptive Annex B.2 — ComfortModel wire is the sole gate.
     let clo_summer = zone.clothing_clo;
-    let clo_winter = 1.0; // EN 16798-1 typical winter clothing when only one clo field is stored
+    let clo_winter = 1.0;
     if ComfortModel::parse(&zone.comfort_model) == ComfortModel::Adaptive {
         for (suffix, title_en, title_de) in [
             ("pmv.summer", "Summer PMV (ISO 7730)", "Sommer-PMV (ISO 7730)"),
@@ -159,7 +155,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
 
         let lim = pmv_limit(cat);
         let plim = ppd_limit(cat);
-        // Summer PMV/PPD — subject clothing (design summer clo)
         let pmv_s = pmv_iso7730(zone.t_op_summer_c, zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer);
         let mut bp_s = CheckResult::assess(
             format!("din16798-1.pmv.summer.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§7.2.2", "PMV"),
@@ -185,7 +180,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
         }
         out.push(bppd_s.build());
 
-        // Winter PMV/PPD — EN 16798-1 typical winter clothing 1.0 clo
         let pmv_w = pmv_iso7730(zone.t_op_winter_c, zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter);
         let mut bp_w = CheckResult::assess(
             format!("din16798-1.pmv.winter.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§7.2.2", "PMV"),
@@ -212,7 +206,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
         out.push(bppd_w.build());
     }
 
-    // Ventilation rate — EN 16798-1 §6.3 method selector
     let dlim_for_method = co2_above_outdoor_ppm(cat);
     let abs_lim_early = match usage {
         OccupancyType::Residential => annex.co2_absolute_residential_ppm,
@@ -250,10 +243,8 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bv.build());
 
-    // CO2 above outdoor
     let dco2 = (zone.co2_ppm - doc.outdoor_co2_ppm).max(0.0);
     let dlim = co2_above_outdoor_ppm(cat);
-    // Also respect DE absolute cap when annex=De
     let abs_lim = match usage {
         OccupancyType::Residential => annex.co2_absolute_residential_ppm,
         OccupancyType::Classroom => annex.co2_absolute_classroom_ppm,
@@ -269,7 +260,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     .explanation(loc(format!("ΔCO₂={dco2:.0} ppm; limit {effective_limit_above:.0} ppm (Cat {:?}, {})", cat, annex.choice.label()), format!("ΔCO₂={dco2:.0} ppm; Grenzwert {effective_limit_above:.0} ppm (Kat. {:?}, {})", cat, annex.choice.label())));
     if dco2 > effective_limit_above {
         let target_ppm = doc.outdoor_co2_ppm + effective_limit_above;
-        // Remedy via more outdoor air (proportional) or lower CO2 design
         let q_boost = if dco2 > 0.0 { q * (dco2 / effective_limit_above) } else { q_req };
         let q_needed = q_boost.max(q_req);
         bc = bc
@@ -294,7 +284,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bc.build());
 
-    // Humidity
     let (rh_min, rh_max) = humidity_band(cat);
     let rh = zone.rh_percent;
     let mut brh = CheckResult::assess(
@@ -314,7 +303,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(brh.explanation(loc(format!("RH={rh:.0} %; band {rh_min:.0}–{rh_max:.0} %"), format!("RF={rh:.0} %; Band {rh_min:.0}–{rh_max:.0} %"))).build());
 
-    // Illuminance
     let e_min = illuminance_min_lx(usage, cat);
     let mut bi = CheckResult::assess(
         format!("din16798-1.illuminance.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B", "E"),
@@ -327,7 +315,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bi.build());
 
-    // Noise
     let nlim = acoustic_limit_db(cat, usage, annex);
     let mut bn = CheckResult::assess(
         format!("din16798-1.noise.{}", zone.id), "DIN EN 16798-1", ClauseId::new("EN 16798-1", "Annex B", "L_Aeq"),
@@ -340,7 +327,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bn.build());
 
-    // Draught rate DR — ISO 7730 / EN 16798-1 category limits
     let dr = draught_rate_percent(zone.t_op_summer_c, zone.air_speed_m_s, zone.turbulence_intensity_percent);
     let dr_lim = draught_limit_percent(cat);
     let mut bd = CheckResult::assess(
@@ -352,7 +338,6 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
         format!("DR={dr:.1} % bei v={:.2} m/s, Tu={:.0} %, θ={:.1} °C; Kat.-Grenzwert {dr_lim:.0} %", zone.air_speed_m_s, zone.turbulence_intensity_percent, zone.t_op_summer_c),
     ));
     if dr > dr_lim {
-        // Invert roughly: lower air speed until DR ≤ limit (bounded search)
         let mut v_req = zone.air_speed_m_s;
         for step in 0..40 {
             let trial = (zone.air_speed_m_s * (1.0 - 0.025 * (step as f64 + 1.0))).max(0.05);
@@ -370,6 +355,5 @@ pub(super) fn evaluate_zone(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bd.build());
 
-    // Night setback deferred to envelope
     out
 }

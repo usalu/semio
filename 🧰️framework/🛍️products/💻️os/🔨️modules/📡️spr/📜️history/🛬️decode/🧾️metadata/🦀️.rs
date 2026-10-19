@@ -1,11 +1,12 @@
 //! 🧾️ Original OpMeta fields receive native owners one paid piece at a time under unchanged complete policy.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::OriginalHistoryEdits;
 use super::{HistoryEdit,HistoryOpMeta,HistoryMessage,RetainedHistoryIdDecode,RetainedHistoryMessageDecode,RetainedHistoryMessagePartial,RetainedHistoryRecords,RetainedHistoryRecordsStep,RetainedHistoryOriginJsonDecode,RetainedHistoryOriginJsonStep,RetainedHistoryOriginProjection,RetainedHistoryOriginPartial};
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity},dictionary::RetainedSourceDictionary,MutationOrigin,TransactionRef};
 use protocol::codec::HistoryReadLimits;
 use semio_framework_pack_json::{JsonReadLimits,JsonGrammarCursor,JsonError};
-use semio_framework_value::{DslValue,SharedUtf8,NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value::{DslValue, SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of_val};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct RetainedHistoryOpMetaPartial{

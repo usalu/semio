@@ -25,15 +25,12 @@ impl Default for SemioFlowArtifact {
 }
 
 impl SemioFlowArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioFlowSnapshot {
         SemioFlowSnapshot { schema: self.schema.clone(), nodes: self.nodes.clone(), edges: self.edges.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioFlowSnapshot) -> Self {
         Self { schema: snapshot.schema, nodes: snapshot.nodes, edges: snapshot.edges }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioFlowSnapshot) {
         self.schema = snapshot.schema;
         self.nodes = snapshot.nodes;

@@ -23,7 +23,6 @@ pub enum LineEnding {
 
 impl LineEnding {
     /// 🔤️ The literal byte sequence this line ending prints as.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(self) -> &'static str {
         match self {
             LineEnding::Lf => "\n",
@@ -68,7 +67,6 @@ impl Default for TxtSnapshot {
 impl TxtSnapshot {
     /// 🧵️ Reconstructs the full text body (lines joined by `line_ending`, with the trailing
     /// newline appended iff `trailing_newline`). Inverse of [`Self::from_body`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_body(&self) -> String {
         let sep = self.line_ending.as_str();
         let mut out = self.lines.join(sep);
@@ -81,7 +79,6 @@ impl TxtSnapshot {
     /// 🔍️ Splits a raw text body into `(lines, trailing_newline, line_ending)`. An empty body
     /// is zero lines (not one empty line) — the only case that needs special-casing, since
     /// `"".split(sep)` would otherwise yield a single empty-string element.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_body(body: &str) -> Self {
         if body.is_empty() {
             return Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: Vec::new(), trailing_newline: false, line_ending: LineEnding::Lf };

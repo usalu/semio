@@ -44,6 +44,6 @@ export interface AnimTimeline {
 }
 
 export interface SemioAnimationSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ timelines: AnimTimeline[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🎥️ @state artifact */ timelines: AnimTimeline[];
 }

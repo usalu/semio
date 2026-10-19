@@ -32,10 +32,6 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
   }, [mapSuggestionMenu, suggestionCheckingPlacementLabel, suggestionMenu, suggestionMenuOwnsThisWindow, suggestionNoPlacementLabel]);
   const closeSuggestionMenu = useCallback(() => dispatchSuggestion("closeHandleSuggestions"), [dispatchSuggestion]);
 
-  // 💡️ The provisional paint. The popup lists what the GUEST resolved, but the ghost on the canvas is
-  // drawn by THIS pane's engine, so the open handle and the previewed index are mirrored into the local
-  // slot — hovering a row moves the ghost this frame instead of a round trip later. The commit is never
-  // mirrored: `acceptSuggestion` places through the guest so the placement is exactly one document edit.
   useEffect(() => {
     const session = sessionRef.current;
     if (!session) return;
@@ -49,9 +45,6 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
     });
   }, [sessionEpoch, suggestionMenu?.handleId, suggestionMenu?.hoveredIndex, suggestionPopupOwnsThisWindow]);
 
-  // 🪟️ A pane that does NOT render the popup still has to be able to dismiss it, otherwise an open menu
-  // owned by a sibling gates this pane's ordinary context menu with no way out — the same hole
-  // `World3dHost` closes with its own escape/outside-pointer path.
   useEffect(() => {
     if (!suggestionMenu?.open || suggestionMenuOwnsThisWindow) return undefined;
     const onKeyDown = (event: globalThis.KeyboardEvent): void => {
@@ -131,9 +124,6 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
       if (!json || json === "[]") return;
       const rows = JSON.parse(json) as BoardEventRow[];
       pendingEventRowsRef.current.push(...rows);
-      // 🐁️ Hover leaves the board-events batch here: the engine already painted it locally this frame,
-      // and the framework copy travels on its own coalesced `interactionHover` lane so the outliner rows
-      // and the sibling panes follow without a whole-surface republish per pointermove.
       const hovered = latestBoard2dHoverId(rows);
       if (hovered !== undefined) {
         publishHoverPaint(hovered);
@@ -141,14 +131,10 @@ export function useBoardSuggestionsAndEvents(core: BoardCore1) {
       }
       const mutations = collectBoardLiveMirrorMutations(rows);
       pushBoardLiveMirrorMutations(peerScope, node.controllerId, node.surfaceId, mutations);
-      // 🕹️ The engine's own `select` row is this pane's OPTIMISTIC selection; `scene.selectionJson`
-      // stays the guest-confirmed one, so a probe can tell the two apart the way 3d's does.
       if (mutations.selectionIds) setLocalSelectionJson(JSON.stringify(mutations.selectionIds));
       boardStatusRef.current.pendingEvents = pendingEventRowsRef.current.length;
       publishBoardVitals();
-    } catch {
-      /* session not ready */
-    }
+    } catch {}
   }, [dispatchBoardHover, peerScope, node.controllerId, node.surfaceId, publishBoardVitals, publishHoverPaint]);
 
   const dispatchBufferedEvents = useCallback((): void => {

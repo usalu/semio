@@ -4,7 +4,7 @@ import gumballTargetsSchema from "../../🧱️elements/🌐️World3dHost/🧬�
 import gumballLiveProtocolFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json";
 import { worldGumballStep, WORLD_GUMBALL_IDLE, type WorldGumballEvent, type WorldGumballTargets } from "../../🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts";
 import { type ReactElement } from "react";
-import { hostArmedViewContext, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
+import { hostArmedViewContext, windowViewContext } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
 import Ajv2020 from "ajv/dist/2020";
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔣️label-resolution.json";
 import * as THREE from "three";
@@ -223,12 +223,6 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDragTargetV1("obj-1", ["obj-1", "obj-2"])).toBe("obj-1");
     expect(world3dRelocateDragTargetV1("obj-3", ["obj-1", "obj-2"])).toBeNull();
     expect(world3dRelocateDragTargetV1(null, [])).toBeNull();
-    // 🎯️ Wave B34: an empty-ground press with a live selection is the gesture's BASE POINT, not a miss —
-    // `world3dRelocateDispatchArgsV1` below computes `origin + (to - from)`, a travel delta, so the base
-    // point never had to be on the object. Measured on `:6013` (wasm #53): the utility was armed, the
-    // selection was `["seed-left-001"]`, the ground point resolved — and the press was refused for being
-    // 265 px away from the one object on screen, which is why `relocate-pose-delta` sat red at its 30 s
-    // budget across four waves (`📓️2026-09-12-wave-B34-interaction-scope.md` §2).
     expect(world3dRelocateDragTargetV1(null, ["seed-left-001"])).toBe("seed-left-001");
     expect(world3dRelocateDragTargetV1(undefined, ["obj-1", "obj-2"])).toBe("obj-1");
     const selected = world3dGumballSelectionArgsV1({ ids: ["obj-1"], selectionMode: "object" });
@@ -240,13 +234,6 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(world3dRelocateDispatchArgsV1("obj-1", [1, 2, 3], [10, 10, 0], [10.0000001, 10, 0])).toBeNull();
   });
 
-  // 🏁️ Wave B33: EVERY hover and brush target lane of the world host hands its gate the awaitable twin
-  // (`dispatchSettled`), because `dispatch` drops the `onAction` promise the gate measures. Measured on wasm
-  // #51: one 70-move brush hover storm enqueued 72 `interactionHover` + 85 `suggestionsTick` guest turns with
-  // 11/10 settled, and the `addTargetVolume` behind them lost its 30 s budget while the queue drained at
-  // ~3.5 turns/s (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). The behavioural halves are the
-  // "coalescing action dispatcher" and "in-flight skipping interval" laws; this is the wiring half, so a
-  // future edit cannot quietly hand a gate the void `dispatch` again.
   it("every self-gating world lane returns the controlled round trip it coalesces", async () => {
     const first = Promise.withResolvers<void>();
     const sent: string[] = [];
@@ -272,9 +259,6 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(source).not.toMatch(/return dispatch\("(?:interactionHover|targetBrushSuggestions|worldVortexHover)"/);
   });
 
-  // 🖌️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C: the brush candidate search is a read-only
-  // framework tool run whose trace layer paints every tested candidate, so the host keeps neither a polling
-  // tick nor a ghost of its own. Only a change of the armed brush's vortex travels to the guest.
   it("the world host has no brush suggestion tick and no brush ghost; the tool run trace replaces both", async () => {
     const { readFileSync, existsSync } = await import("node:fs");
     const { resolve } = await import("node:path");
@@ -291,18 +275,12 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("Volume-Brush Alt+click reads the ground through the host, not an occludable canvas plane", () => {
-    // 🧊️ The commit predicate is the whole gesture contract: armed + Alt, nothing else. A plain press
-    // while the utility is armed must stay a marquee, and Alt while it is NOT armed must stay inert.
     expect(world3dVolumeBrushCommits(true, true)).toBe(true);
     expect(world3dVolumeBrushCommits(true, false)).toBe(false);
     expect(world3dVolumeBrushCommits(false, true)).toBe(false);
-    // 🧊️ The origin is ALWAYS grid-snapped (the guest re-snaps by its own spacing), and a ray that
-    // misses the ground plane places nothing — which is also what keeps the ghost box off screen.
     expect(world3dVolumeBrushOriginV1([1.4, -2.6, 0], 1)).toEqual([1, -3, 0]);
     expect(world3dVolumeBrushOriginV1([1.4, -2.6, 0], 2)).toEqual([2, -2, 0]);
     expect(world3dVolumeBrushOriginV1(null, 1)).toBeNull();
-    // 🧊️ One lattice for every ground gesture: a voxel placement and a catalogue drop at the same point
-    // must resolve to the same origin.
     expect(world3dVolumeBrushOriginV1([1.4, -2.6, 0], 1)).toEqual(snapWorldPointToGrid([1.4, -2.6, 0], true, 1));
   });
 
@@ -324,8 +302,6 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("panelTabDefinitionToNode maps the framework-injected History panel tab through its rendered body", () => {
-    // 🕰️ id mirrors Rust `FRAMEWORK_PANEL_TAB_HISTORY_ID` — auto-injected into every app's panelTabs
-    // by `AppBuilder::build_definition` (see `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin`).
     const emptyAppLabelsOverlay = {
       windowKindLabels: {},
       panelTabLabels: {},
@@ -365,10 +341,6 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("anchors every declarable panel group on one of the four corners the dock fills from the session's own panel tabs", () => {
-    // 🧭️ `ShellHost`'s `defaultDock` reads `session.app.panelTabs` for all four corners. It used to read
-    // them for the two top corners only, so a `display`- or `settings`-group panel (puzzle3d's own settings
-    // section, with its grid-spacing/chunk-size/proximity/overlap steppers) was rendered by the guest,
-    // cached as a panel body, and then dropped before any dock node existed — unreachable in every anchor.
     expect(panelAnchorForGroup("workbench")).toBe("top-left");
     expect(panelAnchorForGroup("document")).toBe("top-left");
     expect(panelAnchorForGroup("details")).toBe("top-right");
@@ -381,9 +353,6 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("docks the framework History tab as its own bottom-right leaf and nests only the app's Settings tabs in the Settings branch", () => {
-    // 🕰️ `framework.panel.history` is injected into EVERY app's `panelTabs` (Settings group) and rendered from the guest's own
-    // `framework.body.history`; the dock keeps it a sibling leaf beside Settings, exactly like the wgpu dock assembly, so the
-    // Settings branch never carries a second History and the leaf is the interpreted body, not a host-built tab.
     const panelTabs = [
       { kind: { kind: "app" as const, id: "puzzle3d.panel.settings" }, group: "settings" as const },
       { kind: { kind: "app" as const, id: "framework.panel.history" }, group: "settings" as const },
@@ -395,11 +364,6 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("moves every out-of-hook chrome label when the in-app language switch runs, and restores them on the way back", async () => {
-    // 🌐️ A shell owns TWO i18n ports: its `ShellScope` instance (what `useUiTranslation` resolves) and the
-    // shared module port (the only one a tree builder outside hook context can read). `ShellHost`'s locale
-    // effect used to move the scope instance alone, so picking Deutsch in `#framework.settings.language`
-    // relabelled the hook-rendered chrome and left every builder-produced name in English — measured live on
-    // :6013 as "Einstellungen"/"Vollbild"/"Remote: getrennt" beside "Settings"/"General"/"Hotkeys"/"History".
     const keys = ["ui.panel.artifact", "ui.settings.tab.general", "ui.settings.tab.language"] as const;
     const english = keys.map((key) => String(shellLabel(key)));
     syncShellLabelLocale("de");
@@ -513,18 +477,12 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
 
     const brushTab = tabs[1] as Extract<PanelTabNode, { kind: "leaf" }>;
     const brushTree = brushTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
-    // A tool whose program published no measures yet resolves to an EMPTY options section — never to a
-    // second activation control (see the element-identity law below).
     const brushResolved = brushTree.resolveTree();
     expect(brushResolved.sections).toHaveLength(1);
     expect(brushResolved.sections[0]!.id).toBe("tool.brush.options");
     expect(brushResolved.sections[0]!.items).toEqual([]);
   });
 
-  // 🛠️ W-G law (browser-verified 2026-09-09): the `tool.<id>` leaf tab IS the activation control. A tool
-  // tree that renders its own toggle carried the leaf tab's element id (`tool.fill` appeared twice in the
-  // document) and disagreed with it — the tab read "selected" while the toggle read "not pressed", so the
-  // first press on a restored Fill tab deactivated instead of arming the tool.
   it("no tool tree carries a control that duplicates its own leaf tab id", () => {
     const toolMeasuresByToolIdRef = { current: {} as Readonly<Record<string, readonly WindowMeasure[]>> };
     const tabs = buildToolTabs(toolApp.tools, toolMeasuresByToolIdRef, vi.fn());
@@ -539,16 +497,11 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     }
   });
 
-  // 🛠️ W-G law: tool activation and the selected tool leaf are ONE state, whatever route set the path.
   it("reconcileToolTabSelection arms the tool a restored dock arrangement already selects", () => {
-    // Boot: `DockUiStateStore` restores bottom-middle at ["framework.category.tool", "tool.fill"] while no
-    // tool is active. Before W-G nothing reconciled this, so the FIRST press on the selected leaf read as a
-    // re-press and collapsed it (`progressPanelTabSelection` below) instead of arming Fill.
     const restored = ["framework.category.tool", "tool.fill"];
     const hydrate = reconcileToolTabSelection(null, null, toolIdFromPanelTabId(restored[restored.length - 1]!));
     expect(hydrate.effect).toEqual({ kind: "activate", toolId: "fill" });
     expect(hydrate.next).toEqual({ toolId: "fill", selected: "fill" });
-    // Once armed the pass is idle — no bounce between the two representations.
     expect(reconcileToolTabSelection(hydrate.next, "fill", "fill").effect).toEqual({ kind: "idle" });
   });
 
@@ -577,11 +530,6 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(reconcileToolTabSelection(armedByProgram.next, null, "fill").effect).toEqual({ kind: "select", toolId: null });
   });
 
-  // 🛠️ Wave B29 §14 `engagement-fill-verb`: typing `fill 3` answers `Effect::SetActiveTool { fill }`, and
-  // the reconciliation above is skipped wholesale while the Tool category is not the active root — so the
-  // tool went live with NO `tool.fill` leaf mounted anywhere, its options unreachable and nothing on
-  // screen saying it had armed. A program-driven arming reveals its own leaf; a user who armed a tool and
-  // then browsed the Command palette is left alone.
   it("a tool the program arms reveals its own leaf tab, and a tool the user browsed away from does not", () => {
     expect(programArmedToolRevealV1(null, "fill", false)).toBe(true);
     expect(programArmedToolRevealV1(null, "fill", true)).toBe(false);
@@ -597,8 +545,6 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(reconcileToolTabSelection(refused.next, null, "fill").effect).toEqual({ kind: "select", toolId: null });
   });
 
-  // 🛠️ W-G law: one press on the Tool category is enough — the remembered drill-down lands on the tool
-  // leaf and the same reconciliation arms it, so its ribbon items are live without a second press.
   it("one press on the Tool category reveals its remembered tool leaf and arms that tool", () => {
     const tabs: PanelTabNode[] = [{ kind: "branch", id: "framework.category.tool", icon: () => null, name: "Tool", children: buildToolTabs(toolApp.tools, { current: {} }, vi.fn()) }];
     const opened = progressPanelTabSelection(tabs, [], ["framework.category.tool"], { "framework.category.tool": "tool.fill" });
@@ -615,11 +561,6 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(toolIdFromPanelTabId(undefined)).toBeNull();
   });
 
-  // 🛠️ W-G3: guest always publishes fill measures on `framework.section.tools`, but the desktop
-  // Tool pane is `PanelTreeUnitsPane` (memoized) over lazy `resolveTree`. A first resolve against an
-  // empty ref (boot / tools surface not yet retained) stayed empty forever because `buildPanelProps`
-  // omitted `treeContentRevision`. This law fails if the revision identity does not change when the
-  // packed tools carrier lands, which is what re-calls `resolveTree` on the same tab objects.
   it("late-arriving fill measures change the tool panel tree revision so the memoized pane re-resolves", () => {
     const toolMeasuresByToolIdRef = { current: {} as Readonly<Record<string, readonly WindowMeasure[]>> };
     const tabs = buildToolTabs(toolApp.tools, toolMeasuresByToolIdRef, vi.fn());
@@ -633,8 +574,6 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(landedRevision.toolMeasuresByToolId.fill).toHaveLength(1);
   });
 
-  // 🛠️ W-G3: a closed Tool category press must not swallow as a root re-select. Opening from an
-  // empty current path applies memory (or the first tool leaf) so one press reveals Fill.
   it("one press on an inactive selected Fill leaf arms the tool instead of collapsing it", () => {
     const previous = ["framework.category.tool", "tool.fill"];
     const collapsed = progressPanelTabSelection(

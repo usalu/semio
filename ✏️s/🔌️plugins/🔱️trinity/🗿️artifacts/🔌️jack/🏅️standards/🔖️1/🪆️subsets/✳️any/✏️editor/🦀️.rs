@@ -231,7 +231,6 @@ pub fn jack_io() -> semio_framework_plugin::AppIo {
 /// `🎮️commands/<group>/component.rs`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum TrinityJackCommand {
-    // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "set-snapshot-json")]
     LoadDocumentJson { json: String },
     #[dsl(key = "delete-selection")]
@@ -245,7 +244,6 @@ pub enum TrinityJackCommand {
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
 
-    // 👁️ Config-only — was ephemeral `TrinityJackRuntime` state, now emits `config_mutations`.
     #[dsl(key = "node-graph-viewport")]
     SetViewport {
         surface_id: Option<String>,

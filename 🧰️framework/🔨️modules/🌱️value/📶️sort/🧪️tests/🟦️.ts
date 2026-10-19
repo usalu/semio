@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import Ajv from "ajv";
 import { HeapSortCursor } from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import snapshotSchema from "../🧬️schema/📸️snapshot.json" with { type: "json" };
 

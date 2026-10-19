@@ -6,9 +6,9 @@ import type { Generation3dViewCamera } from "../../🎚️config/🧬️schema/�
 
 /** 🧬️ Generation3dViewPresence */
 export interface Generation3dViewPresence {
-  /** @state presence */
+  /** 👻️ @state presence */
   previewCamera: Generation3dViewCamera;
-  /** @state presence */
+  /** 👁️ @state presence */
   showMode: string;
 }
 

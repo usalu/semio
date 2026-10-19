@@ -31,6 +31,9 @@ pub use retained_turn::{OriginalGuestExecutionBudget, OriginalGuestExecutionRece
 #[path = "🖼️wire-turn/📬️typed-operation/🦀️.rs"]
 pub mod typed_operation_page;
 
+#[path = "🖼️wire-turn/⚠️diagnostic/🦀️.rs"]
+pub mod typed_operation_diagnostics;
+
 #[path = "🎠️activation-reservation/🦀️.rs"]
 pub mod activation;
 

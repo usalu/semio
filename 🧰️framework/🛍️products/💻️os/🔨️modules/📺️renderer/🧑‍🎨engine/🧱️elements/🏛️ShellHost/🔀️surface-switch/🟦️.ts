@@ -123,10 +123,6 @@ export function createSealedInstanceLedgerV1(slots: number = SEALED_INSTANCE_LED
         if (dropped !== undefined) live.delete(dropped);
       }
     },
-    // 🔄️ The ONLY caller is a switch whose successor could not be created: the predecessor is being
-    // KEPT, so its seal has to come off or every later action on the surface the user still sees would
-    // be dropped forever. Leaves the key in the eviction ring — a slot is cheap, and re-sealing the
-    // same instance is idempotent anyway.
     unseal: (pluginId, instanceId) => {
       live.delete(sessionInstanceKeyV1(pluginId, instanceId));
     },

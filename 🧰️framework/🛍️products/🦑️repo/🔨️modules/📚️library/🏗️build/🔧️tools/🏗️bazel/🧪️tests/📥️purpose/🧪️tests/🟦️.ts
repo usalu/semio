@@ -1,4 +1,4 @@
-import "./🌱️birth.ts";
+import "./🌱️birth/🟦️.ts";
 import{test,expect}from"bun:test";
 import{readFile}from"node:fs/promises";
 import{join,basename}from"node:path";

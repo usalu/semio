@@ -1,0 +1,21 @@
+{
+  "policy": { "attempts": 4, "backoffMilliseconds": 1 },
+  "root": "/repository/cache space/m",
+  "image": "/repository/cache space/fixed.dmg",
+  "child": "/repository/cache space/m/nested (child)/m",
+  "noise": "hdiutil: info: cannot find IO media\n",
+  "exit": "/usr/bin/hdiutil info -plist exited with status 1 signal null\nhdiutil: info failed - Resource busy\n",
+  "cases": [
+    { "name": "whole snapshot accepted at once", "captures": [["parent"]], "calls": 1, "outcome": "accepted" },
+    { "name": "stderr noise before a valid plist is retried", "captures": [{ "noise": true, "images": ["parent"] }, ["parent"]], "calls": 2, "outcome": "accepted" },
+    { "name": "stderr noise after a valid plist is retried", "captures": [{ "noiseAfter": true, "images": ["parent"] }, ["parent"]], "calls": 2, "outcome": "accepted" },
+    { "name": "truncated inventory dropping the parent is retried", "captures": [[], ["parent"]], "calls": 2, "outcome": "accepted" },
+    { "name": "one mount point listed twice is retried", "captures": [["parent", "child", "child"], ["parent", "child"]], "calls": 2, "outcome": "accepted" },
+    { "name": "empty output is retried", "captures": [{ "raw": "" }, ["parent"]], "calls": 2, "outcome": "accepted" },
+    { "name": "tool failure is retried", "captures": [{ "exit": true }, ["parent"]], "calls": 2, "outcome": "accepted" },
+    { "name": "a lasting missing parent exhausts every attempt", "captures": [[]], "repeat": true, "calls": 4, "outcome": "Bounded unique parent roster required" },
+    { "name": "a lasting duplicate exhausts every attempt", "captures": [["parent", "child", "child"]], "repeat": true, "calls": 4, "outcome": "Bounded unique parent roster required" },
+    { "name": "lasting noise exhausts every attempt", "captures": [{ "noise": true, "images": ["parent"] }], "repeat": true, "calls": 4, "outcome": "Torn system image inventory" }
+  ],
+  "real": { "churners": 3, "samples": 120, "attempts": 8, "backoffMilliseconds": 40, "imageMegabytes": 8 }
+}

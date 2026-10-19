@@ -98,7 +98,6 @@ export function useWorldMarqueeAndGumball(core: WorldCore5) {
     [gumballLiveDispatch, selection.transformMode, selectionArgs],
   );
 
-  /** 🧯️ Host aborts of a live gesture whose ticks opened the app's tool transaction: window blur and unmount. */
   useEffect(() => {
     const onBlur = () => stepGumballGestureRef.current({ kind: "cancel", reason: "blur" });
     window.addEventListener("blur", onBlur);

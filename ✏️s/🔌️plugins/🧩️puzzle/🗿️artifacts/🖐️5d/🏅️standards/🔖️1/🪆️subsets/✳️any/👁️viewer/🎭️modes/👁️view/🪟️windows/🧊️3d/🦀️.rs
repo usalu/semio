@@ -1,4 +1,4 @@
-//! projection (part origins/orientations/scale, mesh urls), built with the frozen
+//! 🔭️ projection (part origins/orientations/scale, mesh urls), built with the frozen
 //! 🧊️ Puzzle 5D viewer — the World3d window: a read-only render of the unified 5d document's 3D
 //! `MeshWindowKit` (contract §2.6) directly on the artifact-level `Puzzle5dSnapshot` — this file
 //! imports nothing from the sibling editor module (`policyViewerPurityBreaches` forbids it

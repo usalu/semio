@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { addWorkspaceMembers, insertBuildOwnerRows, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📝️render/🟦️.ts";
+import { addWorkspaceMembers, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📝️render/🟦️.ts";
+import { BUILD_OWNER_REGISTRY_FILE, reconcileBuildOwnerRegistry } from "../../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
 
 /** 📦️ Result of scaffolding the crate boundaries of one subset. */
 export type SubsetCrateScaffold = { created: string[]; skipped: string[]; updated: string[]; notes: string[] };
@@ -79,12 +80,7 @@ export function scaffoldSubsetCrates(repoRoot: string, subsetRel: string, artifa
     const patched = patchRouterPackages(router, artifactCrate, crates.map((crate) => crate.name));
     if (patched !== router) { writeFileSync(routerPath, patched); result.updated.push(relativePosix(repoRoot, routerPath)); }
   }
-  const ownersPath = resolve(repoRoot, "📋️build-owners.json");
-  if (existsSync(ownersPath)) {
-    const raw = readFileSync(ownersPath, "utf8");
-    const { text, added } = insertBuildOwnerRows(raw, crates.map((crate) => ({ name: crate.name, root: relativePosix(repoRoot, crate.packageDir) })));
-    if (added.length) { writeFileSync(ownersPath, text); result.updated.push("📋️build-owners.json"); }
-  }
+  if (existsSync(resolve(repoRoot, BUILD_OWNER_REGISTRY_FILE)) && reconcileBuildOwnerRegistry(repoRoot, { scope: subsetRel, write: true }).changed) result.updated.push(BUILD_OWNER_REGISTRY_FILE);
   const lockPath = join(artifactDir, "Cargo.lock");
   if (existsSync(lockPath)) {
     const lock = readFileSync(lockPath, "utf8");

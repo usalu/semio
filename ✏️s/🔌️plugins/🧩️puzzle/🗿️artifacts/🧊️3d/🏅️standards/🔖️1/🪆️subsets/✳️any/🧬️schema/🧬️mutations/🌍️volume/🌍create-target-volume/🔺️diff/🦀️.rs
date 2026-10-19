@@ -1,4 +1,4 @@
-//! exists in `base`.
+//! ➕️ exists in `base`.
 //! 🔺️ Sparse diff builder for `CreateTargetVolume` — a real append-only insert. No-op when the id already
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dTargetVolumesDelta;

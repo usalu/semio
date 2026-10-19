@@ -112,11 +112,9 @@ pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioA
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn channel(seed: f32) -> SemioAudioChannel {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fixture() -> SemioAudioSnapshot {
         SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, channels: vec![channel(1.0), channel(2.0), channel(3.0)], tags: vec![SemioAudioTag { key: "title".into(), value: "t0".into() }], ..SemioAudioSnapshot::default() }
     }

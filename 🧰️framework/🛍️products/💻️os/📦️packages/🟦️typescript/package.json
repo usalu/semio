@@ -87,7 +87,7 @@
     "./modules/renderer/engine/elements/ChromePanels/panel-ids": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🆔️panel-ids/🟦️.ts",
     "./modules/renderer/engine/elements/ChromePanels/settings-general": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/⚙️settings-general/🟦️.tsx",
     "./modules/renderer/engine/elements/DiffViewHost": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔺️DiffViewHost/🟦️.tsx",
-    "./modules/renderer/engine/elements/Dock/testing/browser-acceptance/script": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️testing/🌐️browser-acceptance/📜️script.ts",
+    "./modules/renderer/engine/elements/Dock/testing/browser-acceptance/script": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️testing/🌐️browser-acceptance/🟦️.ts",
     "./modules/renderer/engine/elements/ElementHosts": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪢️ElementHosts/🟦️.ts",
     "./modules/renderer/engine/elements/EventFeedHost": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🟦️.tsx",
     "./modules/renderer/engine/elements/GraphTimelineHost": "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌳️GraphTimelineHost/🟦️.tsx",

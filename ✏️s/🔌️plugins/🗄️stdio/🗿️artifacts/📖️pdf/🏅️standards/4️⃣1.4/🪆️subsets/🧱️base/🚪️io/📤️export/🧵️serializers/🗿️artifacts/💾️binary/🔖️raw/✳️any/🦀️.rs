@@ -1,4 +1,4 @@
-//! Serialize stdio.pdf to stdio.binary.
+//! 📤️ Serialize stdio.pdf to stdio.binary.
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};

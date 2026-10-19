@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Build Owner Registry Consistency Cases V1",
+  "description": "Language-agnostic cases for the law that every manifest-bearing module has exactly one row in the build owner registry and every row names a live manifest. A file value is raw text, or a JSON value that is serialized as the file text. A finding is written `kind:subject` where the subject is the owner name when the finding has one and the path otherwise.",
+  "type": "object",
+  "required": ["version", "policy", "moveScopes", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "policy": {
+      "type": "object",
+      "required": ["collections", "moduleMember", "generated"],
+      "additionalProperties": false,
+      "properties": {
+        "collections": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "moduleMember": { "type": "string", "minLength": 1 },
+        "generated": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "moveScopes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "moves", "limit", "scopes"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "moves": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 } }, "description": "`[sourcePath, destinationPath]` pairs of an applied move plan." },
+          "limit": { "type": "integer", "minimum": 1 },
+          "scopes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "The subtrees the sync is scoped to, in byte order." }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "files", "registry", "findings", "sync"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "files": { "type": "object", "additionalProperties": { "type": ["string", "object", "array"] } },
+          "ignored": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "tracked": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Path prefixes that git tracks although the file may be absent from the tree." },
+          "scope": { "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }] },
+          "registry": { "$ref": "#/$defs/Registry" },
+          "findings": { "type": "array", "items": { "$ref": "#/$defs/Finding" } },
+          "sync": {
+            "type": "object",
+            "required": ["owners", "removed", "added", "renamed", "relocated"],
+            "additionalProperties": false,
+            "properties": {
+              "owners": { "type": "array", "items": { "type": "string", "pattern": "^.+@.+$" }, "description": "Every row after the sync as `name@root`, in file order." },
+              "removed": { "type": "array", "items": { "type": "string" } },
+              "removedNativeRoots": { "type": "array", "items": { "type": "array", "items": { "type": "string" } }, "description": "The native roots of every removed row, in `removed` order; absent means none are checked." },
+              "rows": { "type": "array", "items": { "$ref": "#/$defs/Row" }, "description": "Every row after the sync in file order with every field of the owner registry schema; absent means only `owners` is checked." },
+              "added": { "type": "array", "items": { "type": "string" } },
+              "renamed": { "type": "array", "items": { "type": "string", "pattern": "^.+>.+$" }, "description": "`from>to`." },
+              "relocated": { "type": "array", "items": { "type": "string", "pattern": "^.+:.+>.+$" }, "description": "`name:fromRoot>toRoot`." },
+              "residual": { "type": "array", "items": { "$ref": "#/$defs/Finding" }, "description": "Findings that remain after the sync; absent means none." }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Finding": {
+      "type": "string",
+      "pattern": "^(registry-invalid|missing-root|missing-manifest|missing-native-root|cargo-row-shadows-project|row-in-excluded-tree|manifest-not-file|name-mismatch|package-missing|package-stale|provider-owner-root|provider-source|provider-consumer-root|project-without-row|cargo-without-row):.+$"
+    },
+    "Row": {
+      "type": "object",
+      "required": ["name", "root", "manifest", "packages"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "root": { "type": "string" },
+        "manifest": { "type": "string" },
+        "packages": { "type": "array", "items": { "type": "string" } },
+        "nativeRoots": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Registry": {
+      "type": "object",
+      "required": ["version", "owners", "catalogProviders"],
+      "properties": {
+        "version": { "const": 1 },
+        "owners": { "type": "array" },
+        "catalogProviders": { "type": "array" }
+      }
+    }
+  }
+}

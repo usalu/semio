@@ -43,11 +43,11 @@ pub struct BoundedCleanPreparation {
     /// depth-noise bubble (an isolated negative voxel closes into an 8–12 face ball whose bounding
     /// box, at one voxel, is well above the 2 % fraction the size rule alone would drop).
     keep_largest_component: bool,
-    /// Face-connectivity of the welded triangles, for the small-component pass.
+    /// 🔌️ Face-connectivity of the welded triangles, for the small-component pass.
     components: Option<DisjointSet>,
-    /// First face seen on each undirected edge, so the second one unions with it.
+    /// 🔗️ First face seen on each undirected edge, so the second one unions with it.
     edge_owner: BTreeMap<(u32, u32), u32>,
-    /// Per component root: face count and bounding box.
+    /// 🔩️ Per component root: face count and bounding box.
     component_extents: BTreeMap<u32, (usize, [f64; 3], [f64; 3])>,
     kept_triangles: Vec<[u32; 3]>,
     kept_positions: Vec<[f64; 3]>,

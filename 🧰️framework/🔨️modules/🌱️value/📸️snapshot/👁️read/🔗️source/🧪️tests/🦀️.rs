@@ -14,7 +14,7 @@ fn receipt(p:RetainedCloneProgress,g:RetainedCloneGrant,born:usize,released:usiz
 fn close_projection(value:&mut RetainedOwnedProjection<OpaqueSnapshot>){for _ in 0..10000{if value.terminal_is_empty(){return;}let g=grant(value.close_demand(4096).unwrap());let(step,born,released)=observe(||value.close_step(g).unwrap());receipt(step.progress(),g,born,released);}panic!("captured snapshot projection did not close");}
 #[test]
 fn captured_snapshot_source_uses_original_registry_and_installed_opaque_issuer(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let issuer:Arc<dyn ArtifactOwnedValueRetirementFactory<OpaqueSnapshot>>=Arc::new(OpaqueSnapshotIssuer);
  for law in corpus["cases"].as_array().unwrap(){for cancel_at in 0..3{
   let mut registry=Some(super::super::SnapshotReadRegistryHandle::new());let bytes=law["bytes"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();let root=Arc::new(OpaqueSnapshot{bytes});let pointer=Arc::as_ptr(&root);let original=registry.as_ref().unwrap().try_issue(Arc::clone(&root)).unwrap_or_else(|_|panic!("captured original issue"));let(index,generation)=(original.index,original.generation);let mut read=Some(SnapshotRead::new(root,original));

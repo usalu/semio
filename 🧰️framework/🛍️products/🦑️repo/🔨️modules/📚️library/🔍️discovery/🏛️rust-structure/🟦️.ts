@@ -40,7 +40,9 @@ class RustStructureParser {
   readonly inlinePayloads: RustInlinePayloadFact[] = [];
   readonly constants: RustConstIdentityFact[] = [];
 
-  constructor(readonly tokens: readonly RustToken[], readonly pairs: ReadonlyMap<number, number>) {}
+  readonly tokens: readonly RustToken[];
+  readonly pairs: ReadonlyMap<number, number>;
+  constructor(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>) { this.tokens = tokens; this.pairs = pairs; }
 
   parse(): void {
     this.parseScope(0, this.tokens.length);

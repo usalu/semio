@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{DslValue,NativeDecodeControl};
+use semio_framework_value::DslValue;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn fixture()->serde_json::Value{serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧩️members/🔣️.json")).unwrap()}
 
@@ -29,7 +30,7 @@ fn member_comparison_cancels_inside_decoded_key_work(){
     let fixture=fixture();let comparison=&fixture["comparison"];
     let key=comparison["keyUnit"].as_str().unwrap().repeat(comparison["repetitions"].as_u64().unwrap()as usize);
     let text=format!("{{{}:null,{}:null}}",serde_json::to_string(&key).unwrap(),serde_json::to_string(&key).unwrap());
-    let mut inside=false;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==key.len()&&event.completed>=comparison["chunkBytes"].as_u64().unwrap()as usize&&event.completed<event.total{inside=true;false}else{true}};
+    let mut inside=false;let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.total==key.len()&&event.completed>=comparison["chunkBytes"].as_u64().unwrap()as usize&&event.completed<event.total{inside=true;false}else{true}};
     let mut control=NativeDecodeControl::new(comparison["maximumOwnedBytes"].as_u64().unwrap()as usize,&mut progress);
     let result=from_json_str_controlled::<DslValue>(&text,JsonMemberPolicy::Reject,&mut control);
     assert!(result.is_err());drop(control);assert!(inside);

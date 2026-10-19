@@ -32,6 +32,7 @@ semio-framework-canvas = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -39,6 +40,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-framework-value-dictionary = { workspace = true }
 semio-s-artifact-layout-layout-editor-commands = { workspace = true }
@@ -51,6 +53,7 @@ semio-s-artifact-layout-layout-model = { workspace = true }
 semio-s-artifact-layout-layout-mutations = { workspace = true }
 semio-s-artifact-layout-layout-mutations-content = { workspace = true }
 semio-framework-pixels = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-s-artifact-forms-forms = { workspace = true }

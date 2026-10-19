@@ -2,7 +2,10 @@ import { phaseCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟�
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { quantile } from "d3-array";
-import { appendFileSync, mkdtempSync } from "node:fs";
+import { Database } from "bun:sqlite";
+import ts from "typescript";
+import * as admission from "../🟦️.ts";
+import { appendFileSync, mkdtempSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
@@ -75,4 +78,19 @@ test("real Cargo through the wrapper: a tight memory budget admits one unit at a
 test("a unit's output footprint counts exactly the files its artifact stem names", () => {
   const vector = fixture.outputs as { artifact: string; entries: string[]; sizes: Record<string, number>; bytes: number };
   expect(unitOutputBytesV1(vector.artifact, vector.entries, (name) => vector.sizes[name]!)).toBe(vector.bytes);
+});
+
+test("memory capacity respects actual process bounds and agrees with SQLite independently",()=>{
+ const api=admission as unknown as{admissionMemoryBytesV1?:(physical:number,constraint:number)=>number;admissionMemoryShareV1?:(effective:number,tokens:number,parallelism:number)=>number};expect(typeof api.admissionMemoryBytesV1).toBe("function");expect(typeof api.admissionMemoryShareV1).toBe("function");const db=new Database(":memory:");try{for(const row of fixture.memory){expect(definition("MemoryCapacityV1")({physicalBytes:row.physicalBytes,constrainedBytes:row.constrainedBytes})).toBe(true);const oracle=db.query("select case when ?2=0 then ?1 else min(?1,?2) end bytes").get(row.physicalBytes,row.constrainedBytes)as{bytes:number};expect(api.admissionMemoryBytesV1!(row.physicalBytes,row.constrainedBytes),row.name).toBe(row.effectiveBytes);expect(oracle.bytes,row.name).toBe(row.effectiveBytes);}for(const row of fixture.memoryShares){expect(definition("MemoryShareV1")({effectiveBytes:row.effectiveBytes,tokens:row.tokens,parallelism:row.parallelism})).toBe(true);const oracle=db.query("select min(?1,?4+cast(floor((?1-?4)*1.0*?2/?3) as integer)) bytes").get(row.effectiveBytes,row.tokens,row.parallelism,admission.ADMISSION_POLICY_V1.reserveBytes)as{bytes:number};expect(api.admissionMemoryShareV1!(row.effectiveBytes,row.tokens,row.parallelism)).toBe(row.bytes);expect(oracle.bytes).toBe(row.bytes);}for(const value of[-1,NaN,Infinity,0.5])expect(()=>api.admissionMemoryBytesV1!(8589934592,value)).toThrow();for(const value of[0,-1,NaN,Infinity,0.5])expect(()=>api.admissionMemoryBytesV1!(value,0)).toThrow();expect(()=>api.admissionMemoryShareV1!(8589934592,2,1)).toThrow();expect(admission.ADMISSION_POLICY_V1.reserveBytes).toBe(6442450944);}finally{db.close();}
+});
+
+test("both actual production broker inputs apply memory bounds and preserve explicit driver observations",()=>{
+ const files=["../../🧩️component-pass/🟦️.ts", "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts"];
+ for(const[index,path]of files.entries()){
+  const tree=ts.createSourceFile(path,readFileSync(new URL(path,import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),expressions:ts.Expression[]=[];
+  const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="startAdmissionBrokerV1"){const object=node.arguments[0];if(object&&ts.isObjectLiteralExpression(object))for(const property of object.properties)if(ts.isPropertyAssignment(property)&&property.name.getText(tree)==="physicalBytes")expressions.push(property.initializer);}ts.forEachChild(node,visit);};visit(tree);expect(expressions).toHaveLength(1);
+  const expression=ts.transpile(`(${expressions[0]!.getText(tree)})`,{target:ts.ScriptTarget.ESNext}),run=new Function("options","admissionMemoryBytesV1","admissionMemoryShareV1","tokens","availableParallelism",`return ${expression}`);
+  for(const row of fixture.memoryShares){const observed=run({},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism);expect(observed).toBe(index===0?row.effectiveBytes:row.bytes);if(index===0)expect(run({physicalBytes:123},()=>row.effectiveBytes,admission.admissionMemoryShareV1,row.tokens,()=>row.parallelism)).toBe(123);}
+ }
+ const physical=8321515520,constraint=7516192768,effective=admission.admissionMemoryBytesV1(physical,constraint);expect(effective-admission.ADMISSION_POLICY_V1.reserveBytes).toBe(1073741824);expect(physical-effective).toBe(805322752);
 });

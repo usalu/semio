@@ -20,7 +20,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, it } from "vitest";
-import { residentRefreshFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { residentRefreshFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
 
 //#region 🧫️Fixture
 type FixtureSurface = { readonly id: string; readonly nodes: number };
@@ -132,7 +132,6 @@ describe("retained resident refresh budget", () => {
     let faults = 0;
     for (let refresh = 0; refresh < fixture.refreshes; refresh += 1) {
       fixture.surfaces.forEach((surface, index) => {
-        // ♻️ This surface's PREVIOUS root is released before its replacement asks for credit.
         const previous = live[index];
         if (previous !== null) {
           ledger.release(previous);

@@ -1,6 +1,8 @@
 //! 📖️ Ref reads of the instance time-travel turns: the read-only base, query, retirement demands, snap, option and reference label resolution and the pending work, position and busy views. See [`super`].
 
 use super::*;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework::MutationId;
 
 impl<'v, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelRef<'v, A, M, X> {
     /// 🧭️ The store state a session observes — of the store it edits; `None` when that composed member is gone.

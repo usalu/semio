@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Zero-Touch Closure Cases V1",
+  "description": "Language-agnostic cases for the law that the import closures running before the dependencies are installed contain only relative imports and runtime builtins. A case lists its roster, the files of its tree (path to text), the number of files each closure reaches and its findings written `closure|kind|file|specifier`; `details` gives the exact detail text of selected findings. A scan row lists the runtime module specifiers of one source text as `[specifier, kind]`; type-only imports are not runtime imports.",
+  "type": "object",
+  "required": ["version", "packages", "cases", "scans"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "packages": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["directory", "exports"],
+        "additionalProperties": false,
+        "properties": {
+          "directory": { "type": "string", "minLength": 1 },
+          "exports": { "type": "object" }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "roster", "files", "closureFiles", "findings"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "roster": { "type": "object" },
+          "files": { "type": "object", "additionalProperties": { "type": "string" } },
+          "closureFiles": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+          "findings": { "type": "array", "items": { "type": "string", "pattern": "^[^|]+\\|(workspace-specifier|external-package|seam-static|missing-entry)\\|[^|]+\\|[^|]+$" } },
+          "details": { "type": "object", "additionalProperties": { "type": "string" } }
+        }
+      }
+    },
+    "scans": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "path", "text", "imports"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "text": { "type": "string" },
+          "imports": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "type": "string" }, { "enum": ["static", "dynamic", "require"] }] } }
+        }
+      }
+    }
+  }
+}

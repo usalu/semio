@@ -1,6 +1,7 @@
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteDatabaseLimits, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SnapshotEncoding};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{ValueError, NativeDecodeControl};
+use semio_framework_value::ValueError;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::{child, text};
 use semio_framework_test_original_snapshot_owners as original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;

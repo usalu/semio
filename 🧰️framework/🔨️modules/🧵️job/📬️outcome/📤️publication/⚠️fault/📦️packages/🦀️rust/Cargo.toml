@@ -17,6 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 

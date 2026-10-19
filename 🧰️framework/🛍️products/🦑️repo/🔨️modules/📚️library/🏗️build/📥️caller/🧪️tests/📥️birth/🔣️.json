@@ -138,5 +138,67 @@
     "version": 1,
     "owner": "repository:build",
     "maximumElapsedMilliseconds": 0
-  }
+  },
+  "budgetCases": [
+    {
+      "name": "ordinary-viewer",
+      "environment": {},
+      "expected": 0
+    },
+    {
+      "name": "explicit-unlimited-viewer",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "0"
+      },
+      "expected": 0
+    },
+    {
+      "name": "explicit-finite-original",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "21600000"
+      },
+      "expected": 21600000
+    },
+    {
+      "name": "invalid-original",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "-1"
+      },
+      "expected": null
+    }
+  ],
+  "preparationCases": [
+    {
+      "requested": 5000,
+      "parent": 1000,
+      "expected": 1000
+    },
+    {
+      "requested": 1000,
+      "parent": 5000,
+      "expected": 1000
+    },
+    {
+      "requested": 5000,
+      "parent": 0,
+      "expected": 5000
+    }
+  ],
+  "pressureCases": [
+    {
+      "kind": "valid",
+      "accepted": true,
+      "effects": 4
+    },
+    {
+      "kind": "copied-control",
+      "accepted": false,
+      "effects": 0
+    },
+    {
+      "kind": "copied-original",
+      "accepted": false,
+      "effects": 0
+    }
+  ]
 }

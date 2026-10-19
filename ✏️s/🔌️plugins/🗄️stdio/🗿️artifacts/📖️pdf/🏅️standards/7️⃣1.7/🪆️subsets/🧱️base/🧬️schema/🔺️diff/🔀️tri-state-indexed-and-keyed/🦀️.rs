@@ -12,14 +12,12 @@ pub enum PdfSet<T> {
 }
 
 impl<T: Clone> PdfSet<T> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_option(value: &Option<T>) -> Self {
         match value {
             Some(value) => PdfSet::Set { value: value.clone() },
             None => PdfSet::Clear,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn into_option(self) -> Option<T> {
         match self {
             PdfSet::Set { value } => Some(value),
@@ -70,17 +68,14 @@ impl<T> Default for PdfIndexedDiff<T> {
 }
 
 impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate(&self, base_len: usize, field: &str) -> MutationApplyResult<()> {
         validate_index_triple(base_len, &self.removed, &self.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &self.added.iter().map(|item| item.index).collect::<Vec<_>>(), field)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[T]) -> Vec<T> {
         let mut next: Vec<T> = base.to_vec();
         for item in &self.modified {
@@ -105,10 +100,7 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
     }
 
     /// ➕️ Sequential coalesce: `self` then `other`, transported through `self`'s index moves.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(self, other: Self) -> Self {
-        // 🧮 Rebuild through a virtual base: every index the pair ever touches is materialized
-        // as a slot, both diffs applied in order, and the combined triple read back off it.
         let max_base = self.removed.iter().copied().chain(self.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0).max(self.added.len() + other.removed.iter().copied().chain(other.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0));
         let base: Vec<Slot<T>> = (0..max_base + self.added.len() + other.added.len() + 1).map(|index| Slot::Base(index)).collect();
         let mid = self.map_slots(&base);
@@ -116,7 +108,6 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
         Self::from_slots(&base, &end)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn map_slots(&self, base: &[Slot<T>]) -> Vec<Slot<T>> {
         let kept = base
             .iter()
@@ -139,7 +130,6 @@ impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
         })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn from_slots(base: &[Slot<T>], end: &[Slot<T>]) -> Self {
         let mut diff = Self::default();
         let surviving: HashSet<usize> = end
@@ -203,7 +193,6 @@ pub(super) fn triple_layout(base_len: usize, removed: &[usize], added: &[usize])
 impl<T: Clone + PartialEq> PdfIndexedDiff<T> {
     /// ↩️ The negative triple over `base`: it removes what this one added, restores every modified item to its base value at
     /// the position the item holds in the final state, and re-adds every removed base item at its base index.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &[T]) -> Self {
         let added: Vec<usize> = self.added.iter().map(|item| item.index).collect();
         let mut inverse = Self::default();
@@ -274,12 +263,10 @@ macro_rules! keyed {
 keyed!(PdfFont => id, PdfImage => id, PdfFormXObject => id, PdfExtGState => id, PdfShading => id, PdfPattern => id, PdfNamedColorSpace => name, PdfNamedProperties => name, PdfEmbeddedFile => id);
 
 impl<T: Clone + PartialEq + Keyed> PdfKeyedDiff<T> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate(&self, base: &[T], field: &str) -> MutationApplyResult<()> {
         let keys: Vec<String> = base.iter().map(|item| item.key().to_string()).collect();
         validate_named_keys(&keys, &self.removed, &self.modified.iter().map(|item| item.key.clone()).collect::<Vec<_>>(), &self.added.iter().map(|item| item.value.key().to_string()).collect::<Vec<_>>(), field)?;
@@ -292,7 +279,6 @@ impl<T: Clone + PartialEq + Keyed> PdfKeyedDiff<T> {
         validate_index_triple(base.len(), &removed_indices, &[], &self.added.iter().map(|item| item.index).collect::<Vec<_>>(), field)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[T]) -> Vec<T> {
         let mut next: Vec<T> = base.iter().filter(|item| !self.removed.iter().any(|key| key == item.key())).cloned().collect();
         for item in &self.modified {
@@ -311,7 +297,6 @@ impl<T: Clone + PartialEq + Keyed> PdfKeyedDiff<T> {
     /// ➕️ Sequential coalesce by key: later removals win over earlier additions/modifications,
     /// later modifications replace earlier ones, additions of a key removed earlier become
     /// modifications of the base.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(self, other: Self) -> Self {
         let mut out = Self::default();
         let first_added: HashSet<String> = self.added.iter().map(|item| item.value.key().to_string()).collect();
@@ -356,7 +341,6 @@ impl<T: Clone + PartialEq + Keyed> PdfKeyedDiff<T> {
 
     /// ↩️ The negative triple over `base`: it removes what this one added, restores every modified item to its base value and
     /// re-adds every removed base item at its base index.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &[T]) -> Self {
         let mut inverse = Self::default();
         inverse.removed = self.added.iter().map(|item| item.value.key().to_string()).collect();

@@ -8,7 +8,7 @@ const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),
 const grant=(d:OriginalVectorConcatDemand):OriginalVectorConcatGrant=>({maximumItems:1,maximumCopyBytes:d.copyBytes,maximumCapacityBytes:d.capacityBytes,maximumReleaseBytes:d.releaseBytes,maximumDepth:d.depth});
 const denied=(d:OriginalVectorConcatDemand):OriginalVectorConcatGrant[]=>{const issued=grant(d),result=[{...issued,maximumItems:0}];for(const[currency,demand]of[["maximumCopyBytes",d.copyBytes],["maximumCapacityBytes",d.capacityBytes],["maximumReleaseBytes",d.releaseBytes],["maximumDepth",d.depth]]as const)if(demand>0)result.push({...issued,[currency]:demand-1});return result;};
 test("owned vector concatenation keeps original row order under denial and cancellation",()=>{
- const law=read("../🧫️fixtures/🔣️.json");expect(new Ajv({strict:true}).compile(read("../🧬️schema/🔣️.json"))(law)).toBe(true);
+ const law=read("🧫️fixtures/🔣️.json");expect(new Ajv({strict:true}).compile(read("../🧬️schema/🔣️.json"))(law)).toBe(true);
  const db=new Database(":memory:");db.run("CREATE TABLE original_rows(chunk INTEGER,ordinal INTEGER,payload TEXT,PRIMARY KEY(chunk,ordinal))");
  law.chunks.forEach((rows:string[],chunk:number)=>rows.forEach((payload,ordinal)=>db.run("INSERT INTO original_rows VALUES(?,?,?)",[chunk,ordinal,payload])));
  const expected=(db.query("SELECT payload FROM original_rows ORDER BY chunk,ordinal").all()as{payload:string}[]).map(row=>row.payload);

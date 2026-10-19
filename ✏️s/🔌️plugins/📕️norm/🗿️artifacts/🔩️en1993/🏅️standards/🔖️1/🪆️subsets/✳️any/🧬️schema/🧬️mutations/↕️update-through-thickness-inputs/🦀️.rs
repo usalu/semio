@@ -1,4 +1,4 @@
-//! `upsert-section` — upsert a `SteelSection` by id into `sections`.
+//! 🧬️ `upsert-section` — upsert a `SteelSection` by id into `sections`.
 
 use semio_s_artifact_norm_en1993_model::{SteelSection, En1993Snapshot};
 

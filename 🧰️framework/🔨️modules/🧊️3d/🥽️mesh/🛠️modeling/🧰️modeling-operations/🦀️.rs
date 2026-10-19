@@ -301,7 +301,7 @@ impl MeshModelingOps for HalfedgeMesh {
     }
     /// 🔄 Drains selected winding work through the shared retained orientation owner.
     fn flip_faces(&mut self,faces:&[FaceId])->MeshResult<()> {*self=self.flip_faces_job(faces)?.finish_with_progress(|_|true)?;Ok(())}
-    /// Builds a halfedge mesh from a CAD solid tessellation that carries one B-Rep face id per triangle.
+    /// 🗃️ Builds a halfedge mesh from a CAD solid tessellation that carries one B-Rep face id per triangle.
     ///
     /// Each B-Rep face is reconstructed independently: coplanar triangles of a simply-connected face merge
     /// into one n-gon; faces with holes keep their triangulation so openings are not filled. Call
@@ -406,20 +406,20 @@ impl MeshModelingOps for HalfedgeMesh {
     fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
         let mut job=self.merge_coplanar_faces_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.coplanar_merge_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh coplanar merge cancelled".into()))}}
     }
-    /// Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
+    /// 🔩️ Unifies every group of vertices at (nearly) the same position — as commonly produced by importers
     /// that tessellate adjacent source faces independently, leaving duplicate, non-shared vertex ids along
     /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
     /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
     fn weld_coincident_vertices(&mut self,precision:f32)->MeshResult<usize> {
         let mut job=self.weld_coincident_vertices_job(precision)?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.welded_vertex_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh weld cancelled".into()))}}
     }
-    /// Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
+    /// 🟦️ Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
     /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
     /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
     fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
         let mut job=self.orient_faces_job()?;loop {match job.step(256,semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:usize::MAX,maximum_copy_bytes:128,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX},&mut semio_framework_value::retained_clone::RetainedCloneProgress::default())? {MeshModelingStep::Done(mesh)=>{let count=job.orientation_flip_count().unwrap();*self=mesh;return Ok(count);},MeshModelingStep::Working(_)=>{},MeshModelingStep::Cancelled(_)=>return Err(MeshKernelError::InvalidInput("mesh orientation cancelled".into()))}}
     }
-    /// Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
+    /// 🪣️ Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
     /// current halfedge topology and caps each with a new n-gon face, so the mesh becomes watertight. Call
     /// `weld_coincident_vertices` first if the mesh may contain importer-duplicated boundary vertices, or
     /// this will also "cap" seams that are actually already shared with a differently-indexed neighbor.

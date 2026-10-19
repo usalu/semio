@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { lusolve } from "mathjs";
 import Ajv from "ajv";
-import corpus from "../../🧫️fixtures/🏷️sources/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🏷️sources/🔣️.json" with { type: "json" };
 
 /** 🧮️ Independent LU solutions reproduce PyNite translations for every selected source and order. */
 export function testFem3dMountedSourceOracle(): void {

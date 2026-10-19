@@ -1,4 +1,4 @@
-//! `Fem2dSnapshot` is a pure `semio_framework_value::ToValue` record tree (nodes/elements/regions/materials/sections/
+//! 🌳️ `Fem2dSnapshot` is a pure `semio_framework_value::ToValue` record tree (nodes/elements/regions/materials/sections/
 //! 🚪️ fem2d → json — foreign `Serializer<Fem2dSnapshot>` on the framework's `io_mechanism` channel.
 //! supports/load-cases/combinations/analysis, no external child references), so its rfc8259
 //! rendition carries every field and the sibling `📥️import` leaf reconstructs the snapshot exactly:

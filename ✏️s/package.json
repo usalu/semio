@@ -113,6 +113,8 @@
     "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg",
     "../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
@@ -206,7 +208,7 @@
     "🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript",
     "🔌️plugins/🔱️trinity/📦️packages/🟦️typescript",
     "🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript",
-    "🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust",
+    "🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/pkg",
     "🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript",
     "🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
     "🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript",
@@ -290,9 +292,7 @@
     "🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript",
     "🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
     "🧑‍💻dev/🧱️block/📦️packages/🟦️typescript",
-    "🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",
-    "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
-    "../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript"
+    "🧑‍💻dev/🪐️space/📦️packages/🟦️typescript"
   ],
   "semio": {
     "workspace": {
@@ -360,6 +360,7 @@
     "ajv": "8.20.0",
     "brepjs": "^18.20.3",
     "brepjs-opencascade": "^0.15.6",
+    "d3-dsv": "3.0.1",
     "d3-geo": "3.1.1",
     "d3-hierarchy": "3.1.2",
     "fast-check": "3.23.2",
@@ -379,6 +380,7 @@
     "saxes": "6.0.0",
     "three": "^0.182.0",
     "three-mesh-bvh": "^0.9.14",
+    "tree-sitter-wasms": "0.1.13",
     "web-tree-sitter": "0.20.8",
     "xstate": "5.33.3"
   },

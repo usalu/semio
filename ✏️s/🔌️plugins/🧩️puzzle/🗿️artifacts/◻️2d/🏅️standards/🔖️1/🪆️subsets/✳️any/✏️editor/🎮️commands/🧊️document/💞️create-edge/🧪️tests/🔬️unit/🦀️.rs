@@ -1,4 +1,4 @@
-//! engagement line that drives the same arm.
+//! 🤝️ engagement line that drives the same arm.
 //! 🧪️ `createEdge` / `deleteEdge` laws: the compatibility gate, the occupied-handle refusal, and the
 
 use crate::editor::puzzle2d::testkit::*;

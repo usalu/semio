@@ -6,7 +6,7 @@ use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_dsl_record::JoinMode;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::Number;
 use semio_framework_dsl_record::ParseOptions;
 use semio_framework_dsl_record::RecordLayout;
@@ -324,7 +324,7 @@ fn sqlite_snapshot_native_record_owner_output_uses_one_control_through_both_enve
         };
     }
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=semio_framework_os_io::control::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,wallet(snapshot_caller_grant));
+let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=semio_framework_os_io::control::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,wallet(snapshot_caller_grant));
         let output = encode_fresh!(encoding, &mut |_| true, limits).unwrap();
         let decoded = super::decode_sqlite_snapshot_record_native(
             &output,
@@ -416,7 +416,7 @@ fn sqlite_snapshot_native_physical_text_preserves_escaped_utf8_and_cancels_insid
     record.fields.insert(1, semio_framework_dsl_record::FieldValue::Text(expected.clone()));
     let output = semio_framework_dsl_record::print_controlled(&record, &spec, semio_framework_dsl_record::JoinMode::Document, usize::MAX, &mut NativeEncodeControl::new(maximum, &mut |_| true)).unwrap();
     let options = ParseOptions { limits: Limits { max_bytes: maximum, ..Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document };
-    let actual = semio_framework_dsl_record::parse_exact_controlled(&output, &spec, &options, &mut semio_framework_value::NativeDecodeControl::new(maximum, &mut |_| true)).unwrap();
+    let actual = semio_framework_dsl_record::parse_exact_controlled(&output, &spec, &options, &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum, &mut |_| true)).unwrap();
     assert_eq!(actual, record);
     assert_eq!(semio_framework_dsl_record::parse_exact(&output, &spec, &options).unwrap(), record);
     assert_eq!(output, semio_framework_dsl_record::print(&record, &spec, JoinMode::Document));
@@ -466,7 +466,7 @@ fn sqlite_snapshot_native_physical_text_keeps_literal_lexer_boundaries() {
             assert_eq!(text, semio_framework_dsl_record::print(&record, &spec, mode), "{source}");
             assert_eq!(semio_framework_dsl_record::parse_exact(&text, &spec, &ParseOptions::default()).unwrap(), record, "{source}");
             let mut accept = |_| true;
-            let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut accept);
+            let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut accept);
             assert_eq!(semio_framework_dsl_record::parse_exact_controlled(&text, &spec, &ParseOptions::default(), &mut control).unwrap(), record, "{source}");
         }
     }
@@ -699,7 +699,8 @@ mod child_encoding_tests;
 
 #[test]
 fn sqlite_snapshot_native_protocol_refusals_retain_control_and_text_authority_at_public_terminals() {
-    use semio_framework_value::{NativeDecodeControl, NativeEncodeControl};
+    use semio_framework_value::NativeEncodeControl;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let spec = semio_framework_dsl_record::RecordSpec::new(Some("expression"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "value", Shape::Expr)]);
     let mut record = semio_framework_dsl_record::RecordValue::default();
     record.fields.insert(0, semio_framework_dsl_record::FieldValue::Expr(semio_framework_dsl_record::ExprValue::Var("x".into())));

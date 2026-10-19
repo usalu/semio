@@ -37,3 +37,13 @@ Feature: The supervisor owns the processes of a workspace
     When a view pastes two thousand lines at once
     Then the task read every line and ends
     And input for an ended task is answered with the error not_running
+
+Scenario: Every Launched Process Owns One Selected Deadline
+  Given an external process with a finite selected process time limit
+  When output, readiness probes and reconnects continue
+  Then its original monotonic deadline does not renew
+  And expiry stops its owned process tree through supervised escalation
+  And its terminal state and retained log truthfully report time limit exhaustion
+  And absent or zero selections remain unbounded
+  And invalid selections are refused before spawning
+  And an explicit restart receives a fresh selected deadline

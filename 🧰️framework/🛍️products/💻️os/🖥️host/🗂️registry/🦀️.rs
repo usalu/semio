@@ -150,9 +150,6 @@ fn seed_builtin_artifact_kinds() -> HashMap<OsArtifactKindId, ArtifactKindEntry>
             media_capability: OsMediaCapability::MeshOnly,
         },
     );
-    // 🌱️ `s.workflow`/`s.space`/`s.collection` are the three backbone-document kinds the os-core
-    // dissolve (`## The inversion`) now persists directly — seeded as builtins for the same reason
-    // `parameter.value` is: they are not any single app's document format.
     registry.insert(
         S_WORKFLOW_SCHEMA.to_string(),
         ArtifactKindEntry {
@@ -379,8 +376,6 @@ fn app_io_for_registration(registration: &OsAppRegistration) -> semio_framework:
         artifact_media_type,
         semio_framework::ArtifactPresentation {
             id: registration.id.clone(),
-            // 🚧️ No locale context reaches this reconstruction path — resolves native/English
-            // pending a documented follow-up (same gap as Menu::action_with_args in the plugin SDK).
             name: registration.label.resolve(Terminology::Native, Locale::En).to_string(),
             dimension: String::new(),
             component_kind: registration.component_kind.clone(),

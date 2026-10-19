@@ -43,7 +43,6 @@ pub struct PptxParagraph {
 }
 
 impl PptxParagraph {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn text(text: impl Into<String>) -> Self {
         Self { runs: vec![PptxRun { text: text.into(), bold: false, italic: false, font_size: None }] }
     }
@@ -193,7 +192,6 @@ impl Default for PptxSnapshot {
 }
 
 impl PptxSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_parts(opc: OpcPackage, xml_parts: Vec<PptxXmlPart>) -> Self {
         Self { schema: STDIO_PPTX_DOCUMENT_SCHEMA.into(), opc, xml_parts }
     }

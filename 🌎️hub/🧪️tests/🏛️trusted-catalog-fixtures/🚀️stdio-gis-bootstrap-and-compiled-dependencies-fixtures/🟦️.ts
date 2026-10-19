@@ -218,10 +218,6 @@ export async function proveTrustedCompiledDependenciesFixture(repoRoot: string):
     { change: "exact", accepted: true }, { change: "missing", accepted: false }, { change: "duplicate", accepted: false },
     { change: "wrong-version", accepted: false }, { change: "foreign-topic-version", accepted: false },
   ]);
-  // 🩹️ `gis-dependency`, `gis-trailing-byte` and `gis-duplicate-field` lost their `stdio` preview in
-  // commit 48a8c69cdb (2026-09-19): the FIXTURE was changed and this literal was not, so this law
-  // has been red ever since — found by ticket 26/09/18 slice TC3c, whose own gate it blocked. The
-  // literal is aligned to the fixture, which is the side that was edited deliberately.
   assert.deepEqual(fixture.atomicCases, [
     { change: "stdio-catalog", accepted: false, previews: [] }, { change: "gis-catalog", accepted: false, previews: ["stdio"] },
     { change: "gis-dependency", accepted: false, previews: [] }, { change: "gis-provider", accepted: false, previews: ["stdio"] },

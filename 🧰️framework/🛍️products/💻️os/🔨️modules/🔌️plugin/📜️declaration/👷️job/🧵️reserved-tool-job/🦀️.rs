@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[path="🎟️request/🔒️command/🦀️.rs"]
+#[path="../🎟️request/🔒️command/🦀️.rs"]
 mod original_command;
 pub use original_command::ArtifactOriginalToolCommand;
 
@@ -36,7 +36,7 @@ pub struct ArtifactOwnedToolJobRequest<A: ArtifactApp> {
     pub output_chunks: ArtifactOutputChunks,
     pub completion: ArtifactToolCompletion<A>,
 }
-#[path="🎟️request/♻️retirement/🦀️.rs"]
+#[path="../🎟️request/♻️retirement/🦀️.rs"]
 mod original_request_retirement;
 
 

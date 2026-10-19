@@ -2,7 +2,7 @@
  * `🧫️fixtures/📨️effect-wire-routes/🔣️.json`. */
 type TestSource = { readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🖼️wire-turn/🟦️.ts"), "WIRE_SEND_MESSAGE_ROUTED_TARGETS" | "isRoutedWireSendMessage" | "shellFrameBytes" | "wireEffectToFriendly" | "wireSendMessageTargetTag">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🖼️wire-turn/🔖️turn-result/🟦️.ts"), "WIRE_SEND_MESSAGE_ROUTED_TARGETS" | "isRoutedWireSendMessage" | "shellFrameBytes" | "wireSendMessageTargetTag"> & Pick<typeof import("../../🖼️wire-turn/🟦️.ts"), "wireEffectToFriendly">, source: TestSource): Promise<void> {
   const { shellFrameBytes, wireEffectToFriendly, isRoutedWireSendMessage, wireSendMessageTargetTag, WIRE_SEND_MESSAGE_ROUTED_TARGETS } = dependencies;
   const { afterEach, describe, expect, it, vi } = vitest;
   const { readFileSync } = await import("node:fs");
@@ -67,8 +67,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    // 🧯️ The law the console regression was: a routed send-message must not be reported as an
-    // unmapped effect. `unmapped` is reserved for a tag with no case at all.
     it("never calls a routed send-message unmapped", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       for (const row of fixture.cases.filter((entry) => isRoutedWireSendMessage(wireOf(entry)))) wireEffectToFriendly(wireOf(row), decodePackValue);

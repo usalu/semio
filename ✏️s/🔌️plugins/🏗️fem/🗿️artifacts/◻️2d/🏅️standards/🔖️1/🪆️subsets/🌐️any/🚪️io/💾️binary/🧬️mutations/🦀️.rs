@@ -36,7 +36,7 @@ mod semio_protocol_conformance;
 mod native_codec {
 #[cfg(test)] use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation_cold};
 #[cfg(test)] use crate::central_apply::apply_fem2d_mutation;
 
 impl protocol::OpBinary for Fem2dMutation {

@@ -111,7 +111,6 @@ pub trait WindowDelegate {
 
     /// 🚪️ Whether the host may actually close the window — `true` (close immediately) unless a
     /// delegate overrides this to, say, confirm unsaved changes first.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn close_requested(&mut self) -> bool {
         true
     }

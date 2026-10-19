@@ -1,10 +1,10 @@
 /** 🧬️ DagPresence */
 export interface DagPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   cameraX: number;
-  /** @state presence */
+  /** 📷️ @state presence */
   cameraY: number;
-  /** @state presence */
+  /** 🎥️ @state presence */
   cameraZoom: number;
 }
 

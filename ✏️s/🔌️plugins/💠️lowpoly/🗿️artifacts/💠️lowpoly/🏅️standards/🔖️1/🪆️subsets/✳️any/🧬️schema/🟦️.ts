@@ -6,9 +6,9 @@ import {parseLowpolyMeshState,type LowpolyMeshState}from"./🕸️mesh/🟦️.t
 export *from"./🕸️mesh/🟦️.ts";
 
 export interface LowpolyArtifact {
-  /** @state artifact */
+  /** 📜️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 📦️ @state artifact */
   objects: LowpolyObject[];
 }
 
@@ -45,7 +45,7 @@ export interface LowpolyObject {
   name: string;
   transform: LowpolyTransform;
   smoothShading: boolean;
-  /** `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
+  /** 🔺️ `null` when the object owns no mesh yet — confirmed against the `create-object` mutation fixture. */
   mesh: ArtifactChild | null;
   paintLayers: LowpolyPaintLayer[];
   /** 📄️ Independent authored source text remains literal even when no managed mesh exists. */

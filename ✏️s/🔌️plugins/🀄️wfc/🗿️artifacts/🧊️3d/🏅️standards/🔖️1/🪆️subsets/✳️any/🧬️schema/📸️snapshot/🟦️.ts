@@ -69,16 +69,16 @@ export interface GraphRule {
 }
 
 export interface Wfc3dSnapshot {
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🌱️ @state artifact */
   seed: bigint;
-  /** @state artifact */
+  /** 🎰️ @state artifact */
   slots: Slot3d[];
-  /** @state artifact */
+  /** ➖️ @state artifact */
   edges: SlotEdge[];
-  /** @state artifact */
+  /** 🗺️ @state artifact */
   tiles: Tile[];
-  /** @state artifact */
+  /** 📜️ @state artifact */
   rules: GraphRule[];
 }

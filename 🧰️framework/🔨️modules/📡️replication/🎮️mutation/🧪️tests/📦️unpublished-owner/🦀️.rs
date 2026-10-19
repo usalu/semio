@@ -1,4 +1,11 @@
-use super::{apply_diff_cold, apply_diff_cold_into, ApplyCapability, ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff, PreparedField};
+use semio_framework_test_fixtures::fixture_text;
+use super::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
+use semio_framework_mutation_diff::diff::apply_diff_cold;
+use semio_framework_mutation_diff::diff::apply_diff_cold_into;
+use semio_framework_mutation_diff::diff::ColdDiffAlgebra;
+use semio_framework_mutation_diff::diff::ColdMutationDiff;
+use semio_framework_mutation_diff::diff::MutationApplyError;
+use semio_framework_mutation_diff::diff::PreparedField;
 
 thread_local! {
     static CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -89,7 +96,7 @@ fn cold_owner_refusal_retires_scratch_and_preserves_original() {
 /// 🧪️ Portable staged-field outcomes agree with an independent transactional projection.
 #[test]
 fn prepared_fields_follow_portable_atomic_outcomes() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️prepared-fields/🔣️.json")).expect("portable field corpus");
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📦️prepared-fields/🔣️.json")).expect("portable field corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         FIELD_RETIREMENTS.with(|value| value.set(0));
         let mut projection = Projection { first: corpus["base"]["first"].as_i64().unwrap(), second: corpus["base"]["second"].as_i64().unwrap() };

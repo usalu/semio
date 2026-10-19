@@ -1,4 +1,4 @@
-//! Diff for `change-annex`.
+//! 🔺️ Diff for `change-annex`.
 use crate::change_annex::ChangeAnnex;
 use semio_s_artifact_norm_en1994_diff::En1994Diff;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

@@ -1,4 +1,4 @@
-//! gismap <- json
+//! 🧾️ gismap <- json
 use crate::GisMapSnapshot;
 use semio_framework_value::FromValue;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};

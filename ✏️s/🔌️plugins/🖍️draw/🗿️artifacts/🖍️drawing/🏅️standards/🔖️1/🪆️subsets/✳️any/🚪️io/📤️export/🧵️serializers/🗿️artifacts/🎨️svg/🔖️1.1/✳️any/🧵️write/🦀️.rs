@@ -2,7 +2,8 @@
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneContent};
 use semio_s_artifact_draw_drawing_model::{FillStyle, PathSegment};
 use semio_framework_pixels::{png_encoding::PngEncodeJob,retirement::RasterLease};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 use std::fmt::Write;
 use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;

@@ -21,7 +21,7 @@ fn populated() -> SemioTextSnapshot {
 async fn censuses_words_chars_marks_and_distinct_languages() {
     let profile = compute_semio_text_profile(&populated());
     assert_eq!(profile.run_count, 4);
-    assert_eq!(profile.word_count, 5); // "Hello, world"(2) + "again"(1) + "semio.tech"(1) + "unspecified"(1)
+    assert_eq!(profile.word_count, 5);
     assert_eq!(profile.mark_count, 2);
     assert_eq!(profile.languages, vec!["de".to_string(), "en".to_string()], "sorted, distinct, unspecified tag excluded");
 }

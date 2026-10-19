@@ -31,3 +31,4 @@ semio-framework-repo-tickets = { path = "../../../../🎫️tickets/📦️packa
 
 [dev-dependencies]
 dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
+semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

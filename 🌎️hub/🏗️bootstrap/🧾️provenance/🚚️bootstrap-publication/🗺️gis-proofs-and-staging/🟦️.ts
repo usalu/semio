@@ -1,6 +1,7 @@
 /** 🗺️ Trusted bootstrap GIS proofs and staging: the cold map component proof, the closed browser actor proof, the isolated candidate current staging and the rotation source fixture proof.
  * @see ../../../../📦️packages/🦀️rust/📜️script.ts
  */
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { checkResourceLeaseControl } from "@semio-tech/process/leases";
 import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
 import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
@@ -183,13 +184,6 @@ export function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string,
     if (existsSync(generationRoot)) {
       trustedBootstrapVerifyGeneration(generationRoot, bundleBytes, receipts, check);
     } else {
-      // 🧳️ Derived from the receipts the bundle itself carries, exactly the way
-      // `trustedBootstrapVerifyGeneration` derives the closure it then checks this staging against.
-      // Spelled as the fixed gis+stdio pair (ticket 26/09/18 slice TC3c generalised
-      // `withMaterializedTrustedCatalogBundleV1` and left this copy behind) the candidate staged two
-      // packages out of a three-package selection and the very next line's fence answered
-      // `generation directory is not the exact regular closure` — TC3e measured that at 13:48:13 on
-      // 2026-09-22, seven minutes into a hold, with the note package already published upstream.
       const stagedPlugins = [...receipts.keys()].sort();
       const stagedCarriesActor = (plugin: string): boolean => receipts.get(plugin)!.browserActor.kind === "closed-browser-actor";
       const files: { relative: string; maximum: number }[] = [];

@@ -2,9 +2,10 @@
 
 use semio_framework_os_infinite_board_schema::LayoutControl;
 use semio_framework_os_infinite_board_engine::{force_snapshot_json, UndirectedGraphEngine};
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
-macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=LayoutControl::new(500_000_000,&mut progress);layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
+macro_rules! physical_layout {($entry:ident,$source:expr $(,$options:expr)?)=>{{let mut decoding=|_|true;let mut encoding=|_|true;let mut progress=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(8*1024*1024,&mut decoding);let mut encode=semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut encoding);let mut work=LayoutControl::new(500_000_000,&mut progress);layout::$entry($source $(,$options)?,&mut decode,&mut work,&mut encode).map_err(|e|e.to_string())}};}
 
 #[test]
 fn undirected_graph_engine_alias() {

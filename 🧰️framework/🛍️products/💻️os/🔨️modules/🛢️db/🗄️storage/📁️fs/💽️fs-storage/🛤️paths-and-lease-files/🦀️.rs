@@ -90,24 +90,24 @@ pub(super) fn read_lease_file(path: &Path) -> Result<Option<(EpochFence, u64, Db
     Ok(Some((EpochFence { epoch }, expires_at_ms, DbIoText::try_from_str(holder)?)))
 }
 
-pub(super) struct FsLeaseTransportPolicy { handle: super::DbIoTaskHandle }
+pub(super) struct FsLeaseTransportPolicy { handle: db_io_core::DbIoTaskHandle }
 
     impl pack::PackTransportPolicy for FsLeaseTransportPolicy {
         fn checkpoint(&self, _: pack::PackTransportProgress) -> Result<(), semio_framework_value::ValueError> {
-            if super::db_io_cancel_requested(self.handle) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled, "filesystem lease operation canceled")); }
+            if db_io_registry::db_io_cancel_requested(self.handle) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled, "filesystem lease operation canceled")); }
             Ok(())
         }
         fn progress(&self, _: pack::PackTransportProgress) {
             let waker = {
-                let owner = super::DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                if !super::db_io_slot_matches(&owner, self.handle) { return; }
+                let owner = db_io_core::DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if !db_io_core::db_io_slot_matches(&owner, self.handle) { return; }
                 owner.waker.clone()
             };
             if let Some(waker) = waker { waker.wake(); }
         }
     }
 
-    fn write_lease_file(path: &Path, operation: u64, fence: EpochFence, expires_at_ms: u64, holder: &str) -> Result<(), DbError> {
+    pub(crate) fn write_lease_file(path: &Path, operation: u64, fence: EpochFence, expires_at_ms: u64, holder: &str) -> Result<(), DbError> {
     let holder = DbIoText::try_from_str(holder)?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(io_err)?;
@@ -117,11 +117,11 @@ pub(super) struct FsLeaseTransportPolicy { handle: super::DbIoTaskHandle }
     record[8..16].copy_from_slice(&expires_at_ms.to_le_bytes());
     record[16..18].copy_from_slice(&(holder.as_str().len() as u16).to_le_bytes());
     record[18..18 + holder.as_str().len()].copy_from_slice(holder.as_str().as_bytes());
-    let handle = super::DB_IO_TASK_SLOTS.iter().enumerate().find_map(|(slot, owner)| {
+    let handle = db_io_core::DB_IO_TASK_SLOTS.iter().enumerate().find_map(|(slot, owner)| {
             let owner = owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            (owner.operation == operation && owner.counted).then_some(super::DbIoTaskHandle { slot: slot as u16, generation: owner.generation, operation })
+            (owner.operation == operation && owner.counted).then_some(db_io_core::DbIoTaskHandle { slot: slot as u16, generation: owner.generation, operation })
         }).ok_or(DbError::Closed)?;
-        let context = pack::PackTransportContext::try_new(pack::TransportAdmission::new(super::DB_IO_PAGE_BYTES, 0), FsLeaseTransportPolicy { handle }).map_err(|refusal| {
+        let context = pack::PackTransportContext::try_new(pack::TransportAdmission::new(db_io_core::DB_IO_PAGE_BYTES, 0), FsLeaseTransportPolicy { handle }).map_err(|refusal| {
             let error = match refusal.cause {
                 pack::TransportContextRefusalCause::Admission(refusal) => pack::PackRefusal::TransportAdmission { category: pack::PackTransportCategory::NativeIo, refusal },
                 pack::TransportContextRefusalCause::Value(error) => pack::PackRefusal::ValueRefusal(error),

@@ -73,10 +73,6 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     SET_ZONE_PROPERTY_ACTION_ID,
     SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
     SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
-    // 🎥️ Declared last, matching the command enum's own declaration order: the 3d window's
-    // orbit pose. Retained like every other verb of this editor — `Migrated` is the only
-    // UI-dispatchable classification, and a `Migrated` verb without an owned reducer is refused
-    // with `interactive-job.missing-owned-reducer`.
     model_window::SET_CAMERA_ACTION_ID,
     SET_CONSTRUCTION_PROPERTY_ACTION_ID,
 ];
@@ -264,9 +260,6 @@ pub mod args_bridge {
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
         Ok(match action {
-            // 🧱️ `nodeId` is the argument name `TreeWindowKit::editable_window_kind()` declares for
-            // its own `set-node` row; `id` is what this editor's structure tree sent before the kit
-            // named the argument at all, and both reach the same field.
             super::SET_NODE_ACTION_ID => Command::SetStructureField { field: text(args, "nodeId").unwrap_or_else(|| text_or("id", "")), value: text_or("value", "") },
             super::SET_CELL_ACTION_ID => Command::SetZoneCell { row: u32_or("row", 0), column: text_or("column", ""), value: text_or("value", "") },
             super::CREATE_ZONE_ACTION_ID => Command::CreateZone { name: text_or("name", "Zone"), volume_m3: f64_or("volumeM3", 100.0), multiplier: u32_or("multiplier", 1), conditioned: bool_or("conditioned", true) },
@@ -281,13 +274,6 @@ pub mod args_bridge {
             super::SET_CONSTRUCTION_PROPERTY_ACTION_ID => {
                 Command::SetConstructionProperty { construction: u32_or("construction", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
             }
-            // 🌡️ A WHOLE-RECORD verb reached from a PER-FIELD control: the inspector authors all five
-            // slots at their current values plus `field`, naming the one the host then overwrites
-            // under `value`. Without that indirection the merged `value` would be read by nobody and
-            // the edited slot would silently fall back to the default below (the review's blocker:
-            // every throttle-range edit wrote 2.0 and every site edit wrote 0.0). A palette or
-            // keybinding invocation carries no `field`, so `edited` is `None` and every slot is read
-            // by its own name exactly as before.
             super::SET_THERMOSTAT_SETPOINTS_ACTION_ID => {
                 let edited = text(args, "field");
                 let merged = |key: &str, fallback: f64| if edited.as_deref() == Some(key) { number(args, "value").unwrap_or(fallback) } else { f64_or(key, fallback) };
@@ -299,8 +285,6 @@ pub mod args_bridge {
                     cooling_throttle_range_k: merged("coolingThrottleRangeK", 2.0),
                 }
             }
-            // 📍️ Same `{field, value}` indirection as the thermostat above — the site is a singleton
-            // record edited one scalar at a time.
             super::SET_SITE_ACTION_ID => {
                 let edited = text(args, "field");
                 let field = |key: &str| match edited.as_deref() {
@@ -312,8 +296,6 @@ pub mod args_bridge {
             }
             super::SET_RUN_PERIOD_ACTION_ID => Command::SetRunPeriod { start_month: u32_or("startMonth", 1), start_day: u32_or("startDay", 1), end_month: u32_or("endMonth", 12), end_day: u32_or("endDay", 31) },
             super::SET_ACTIVE_EXAMPLE_ACTION_ID => Command::SetActiveExample { example_id: text_or("exampleId", "") },
-            // 🔍️ The inspector's controls author only `{field, id}` — the host merges the control's
-            // own current value under `value`, so `field` is read back as `property` here.
             super::SET_SURFACE_PROPERTY_ACTION_ID => Command::SetSurfaceProperty {
                 surface: u32_or("surface", u32_or("id", 0)),
                 property: text(args, "property").unwrap_or_else(|| text_or("field", "")),
@@ -334,13 +316,7 @@ pub mod args_bridge {
                 let defaults = super::EnergyModelConfig::default();
                 Command::SetSimulationSettings { zone_timestep_minutes: u32_or("zoneTimestepMinutes", defaults.zone_timestep_minutes), system_timestep_minutes: u32_or("systemTimestepMinutes", defaults.system_timestep_minutes), warmup_days: u32_or("warmupDays", defaults.warmup_days) }
             }
-            // 🎨️ A select control merges its own scalar under `value`, so `field` is read from either
-            // spelling — the same `{field, value}` convention the inspector's controls use above.
             super::simulation::SET_RESULT_FIELD_ACTION_ID => Command::SetResultField { field: text(args, "field").unwrap_or_else(|| text_or("value", super::EnergyModelConfig::default().result_field.as_str())) },
-            // 🎥️ `command_from_action` must be TOTAL over the roster (`every_declared_action_is_
-            // classified_and_resolves_to_a_command` calls it with no args at all), so an absent or
-            // malformed pose becomes the empty string here and `camera_emit` refuses it there — the
-            // one place that can also tell WHICH window the gesture addressed.
             super::model_window::SET_CAMERA_ACTION_ID => Command::SetCamera { camera: camera_pose_json(args).unwrap_or_default() },
             _ => return Err(unknown(action)),
         })

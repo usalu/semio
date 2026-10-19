@@ -23,7 +23,6 @@ pub struct TsvRowDiff {
 
 impl TsvRowDiff {
     /// 🕳️ Whether this patch changes nothing.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         match &self.fields {
             None => true,
@@ -31,7 +30,6 @@ impl TsvRowDiff {
         }
     }
     /// ▶️ Applies this patch to a row.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_patch(&self, base: &[String]) -> Vec<String> {
         match &self.fields {
             None => base.to_vec(),
@@ -49,12 +47,10 @@ impl TsvRowDiff {
         }
     }
     /// ↩️ The positional patch restoring exactly the columns this patch sets back to their `base` values.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &[String]) -> Self {
         Self { fields: self.fields.as_ref().map(|patches| patches.iter().enumerate().map(|(index, patch)| patch.as_ref().and_then(|_| base.get(index).cloned())).collect()) }
     }
     /// ➕️ Structural per-position absorb: `other`'s populated positions win.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         match (&mut self.fields, other.fields) {
             (_, None) => {}
@@ -104,7 +100,6 @@ pub struct TsvRowsDiff {
 }
 
 impl TsvRowsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }

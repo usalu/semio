@@ -235,7 +235,7 @@ impl FlowActionState for FlowAction2580 {
             FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_580),
             FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
             FlowProgramPhase::Domain => {
-                let result: Result<Vec<u8>, FlowFailure> = flow_result! { {let mut progress=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(text(args,"json")?,&mut decode).map_err(domain_error)?;let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);domain.host.reorganize(&options,&mut control).map(|_|Vec::new()).map_err(domain_error)} };
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! { {let mut progress=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(text(args,"json")?,&mut decode).map_err(domain_error)?;let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);domain.host.reorganize(&options,&mut control).map(|_|Vec::new()).map_err(domain_error)} };
                 self.program.finish_domain(result)
             }
             FlowProgramPhase::Encode => self.program.encode_step(),

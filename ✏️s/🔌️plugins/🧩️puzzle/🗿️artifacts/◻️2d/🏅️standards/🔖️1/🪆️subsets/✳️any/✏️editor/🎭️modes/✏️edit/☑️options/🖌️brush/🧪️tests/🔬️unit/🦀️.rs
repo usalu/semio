@@ -27,8 +27,6 @@ fn brush_params_are_tagged_utility_options_not_engagement_controls() {
             _ => None,
         })
     };
-    // 🖌️ Brush candidate picker becomes a fill-utility-sibling tagged group, present only once the host
-    // has candidates to place (empty ⇒ absent, matching the old gated-control behaviour).
     let empty_brush = scene(empty_board_snapshot(), Puzzle2dPlayRuntime::default(), overview::utilities::brush::UTILITY_ID);
     assert_eq!(group_tag(&overview::window_measures(&empty_brush, labels), "puzzle2d-utility-options-brush"), Some(Some(overview::utilities::brush::UTILITY_ID.into())));
     let brush_runtime = Puzzle2dPlayRuntime { brush_candidates: vec![semio_framework_value::ToValue::to_value(&json!({ "nodeKind": "node" }))], ..Puzzle2dPlayRuntime::default() };

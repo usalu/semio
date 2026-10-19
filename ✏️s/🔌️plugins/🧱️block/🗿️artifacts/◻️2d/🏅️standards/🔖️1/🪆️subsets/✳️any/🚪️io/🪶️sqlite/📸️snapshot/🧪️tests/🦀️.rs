@@ -86,7 +86,7 @@ fn sqlite_snapshot_block2d_controlled_record_constructs_every_owned_field() {
         (spec.encoding)(&mut c).unwrap();
         let record = s.__dsl_to_record_controlled(&mut c).unwrap();
         let mut accepted = |_| true;
-        let mut c = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut accepted);
+        let mut c = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut accepted);
         (spec.decoding)(&mut c).unwrap();
         let p = Block2dSnapshot::__dsl_from_record_controlled(&record, &mut c).unwrap();
         assert_words(&p, word);

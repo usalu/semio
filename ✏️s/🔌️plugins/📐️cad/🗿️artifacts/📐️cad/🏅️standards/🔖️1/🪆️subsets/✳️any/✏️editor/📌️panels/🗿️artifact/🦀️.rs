@@ -156,9 +156,6 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels, windows: 
     let objects_of = |wanted: CadPaneId| -> &[CadObject] { envelope.panes.pane(wanted).objects.as_slice() };
     let document = &envelope.document;
 
-    // 🕹️ ONE tree-level `interactionSelect` binding for every pane object row (the pick rows below
-    // carry `granularity` and no binding of their own), so the whole document costs a single
-    // argument map no matter how many objects it holds.
     let mut builder = PanelTreeBuilder::new("cad-play-document")?.interaction_domain(CAD_PLAY_CONTROLLER_ID, CAD_INTERACTION_DOMAIN)?;
     builder = document_pane_section(builder, windows, labels.pane_shape, "shape", objects_of(CadPaneId::Shape), labels)?;
     builder = artifact_references_section(builder, windows, document, CAD_MODEL_DEFINITION_SHAPE, labels)?;

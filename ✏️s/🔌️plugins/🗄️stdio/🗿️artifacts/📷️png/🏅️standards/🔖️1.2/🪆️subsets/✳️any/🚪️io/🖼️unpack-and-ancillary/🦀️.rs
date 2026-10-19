@@ -118,7 +118,7 @@ pub(super) fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) -> Result<(
             let mut data = Vec::with_capacity(tc.keyword.len() + 2);
             data.extend_from_slice(&latin1_bytes(&tc.keyword));
             data.push(0);
-            data.push(0); // compression method 0 = zlib/deflate
+            data.push(0);
             let compressed = semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&latin1_bytes(&tc.value))?;
             data.extend_from_slice(&compressed);
             write_chunk(out, b"zTXt", &data);
@@ -128,7 +128,7 @@ pub(super) fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) -> Result<(
             data.extend_from_slice(&latin1_bytes(&tc.keyword));
             data.push(0);
             data.push(if tc.compressed { 1 } else { 0 });
-            data.push(0); // compression method 0 = zlib/deflate
+            data.push(0);
             data.extend_from_slice(tc.language_tag.as_bytes());
             data.push(0);
             data.extend_from_slice(tc.translated_keyword.as_bytes());

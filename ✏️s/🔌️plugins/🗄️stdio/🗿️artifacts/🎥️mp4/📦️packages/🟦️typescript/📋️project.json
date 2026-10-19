@@ -21,7 +21,7 @@
         "{workspaceRoot}/bun.lock"
       ],
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript",

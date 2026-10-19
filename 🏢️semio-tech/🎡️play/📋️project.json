@@ -3,7 +3,16 @@
   "$schema": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**",
+      "!{projectRoot}/test-results/**",
+      "sharedGlobals"
+    ],
+    "activationSources": [
+      "production",
+      "^production",
+      "!{projectRoot}/dist/**",
+      "!{projectRoot}/test-results/**"
     ]
   },
   "targets": {
@@ -12,6 +21,7 @@
       "cache": true,
       "outputs": [],
       "inputs": [
+        "activationSources",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -71,6 +81,7 @@
         "{projectRoot}/dist/♻️activation/prototype"
       ],
       "inputs": [
+        "activationSources",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -184,6 +195,17 @@
       "metadata": {
         "semio": {
           "orchestrator": true,
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "generation",
+                "title": { "en": "Native build generation", "de": "Native Build-Generation" },
+                "description": { "en": "Fresh starts the release drivers from a cold generation instead of reusing retained native builds.", "de": "Fresh startet die Release-Treiber aus einer kalten Generation, statt behaltene native Builds wiederzuverwenden." },
+                "kind": "choice",
+                "values": [{ "id": "fresh", "env": { "SEMIO_NATIVE_BUILD_GENERATION": "fresh" } }]
+              }
+            ]
+          },
           "release": {
             "prerequisites": [
               "workspace:deps-wasm-opt",
@@ -453,11 +475,13 @@
       },
       "cache": false,
       "outputs": [
-        "{workspaceRoot}/.cache/b/p/m/play/{options.env.SEMIO_BUILD_MODE}/pages"
+        "{projectRoot}/.🧾️store/build.json"
       ]
     },
     "test": {
       "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",

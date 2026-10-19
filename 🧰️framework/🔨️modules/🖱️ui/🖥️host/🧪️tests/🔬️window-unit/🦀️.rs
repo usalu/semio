@@ -6,14 +6,14 @@ use crate::observed_allocator::measured;
 
 
 #[cfg(not(target_arch="wasm32"))]
-struct ClipboardCaller {operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,grant:semio_framework_job::RetainedCloneGrant,cancel:semio_framework_job::CancelToken,authority:semio_framework_job::JobPayloadAuthority}
+struct ClipboardCaller {operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,grant:semio_framework_job::RetainedCloneGrant,cancel:semio_framework_job::CancelToken,authority:semio_framework_job_payload::JobPayloadAuthority}
 #[cfg(not(target_arch="wasm32"))]
 fn clipboard_fixture_now_us()->Option<u64>{Some(0)}
 #[cfg(not(target_arch="wasm32"))]
 impl ClipboardCaller {
  fn new(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,grant:semio_framework_job::RetainedCloneGrant)->Self{
   let(cancel,progress)=semio_framework_job::CancelToken::admit_root(grant).unwrap().unwrap();assert!(progress.fits(grant));
-  let(authority,progress)=semio_framework_job::JobPayloadAuthority::admit(operation,generation,grant).unwrap().unwrap();assert!(progress.fits(grant));
+  let(authority,progress)=semio_framework_job_payload::JobPayloadAuthority::admit(operation,generation,grant).unwrap().unwrap();assert!(progress.fits(grant));
   Self{operation,generation,grant,cancel,authority}
  }
  fn context<'a>(&'a self,budget:semio_framework_job::StepBudget,sequence:&'a mut u64,receipt:&'a mut semio_framework_job::RetainedCloneProgress)->Result<semio_framework_job::StepContext<'a>,semio_framework_value::ValueError>{semio_framework_job::StepContext::with_payload_authority(self.operation,self.generation,budget,&self.cancel,clipboard_fixture_now_us,sequence,receipt,&self.authority)}

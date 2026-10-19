@@ -6,6 +6,7 @@ import { documentRuntimeKeyForConfig, hubBinding } from "../🧩️actor-wire-he
 import { newArtifactState, retireArtifactBeforeReplacement } from "../♻️artifact-lifecycle/🟦️.ts";
 import { artifactScope, artifacts, emitEvent, post } from "../🧾️document-state/🟦️.ts";
 import { folderBinding } from "../🎭️actor-lifecycle/🟦️.ts";
+import { foldRemoteConfigFacet, seedConfigFacet } from "../🗂️config-lane/🟦️.ts";
 import { pollFolderOnce, watchFolder } from "../📁️folder/🟦️.ts";
 import { documentSocketGrantTestIssue } from "../🔐️hub-session/🟦️.ts";
 import { connectHub } from "../🔌️hub-connection/🟦️.ts";
@@ -34,7 +35,6 @@ export function openArtifact(request: ArtifactActorConfig & { readonly clientIns
   const folder = folderBinding(config);
     if (!folder) seedConfigFacet(state, null);
 if (folder) {
-    // 🥇️ One single-flight guard per document (finding 1), shared by every trigger source.
     state.revalidateFolder = latestWins(() => pollFolderOnce(state, folder));
     if (config.watchExternal !== false) watchFolder(state, folder);
     else void state.revalidateFolder();

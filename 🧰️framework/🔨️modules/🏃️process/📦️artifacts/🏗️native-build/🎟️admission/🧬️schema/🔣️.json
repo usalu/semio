@@ -281,6 +281,54 @@
           "minimum": 0
         }
       }
+    },
+    "MemoryCapacityV1": {
+      "description": "Actual physical memory and process memory constraint; zero constraint means unknown or unbounded. Effective capacity is their minimum when constraint is positive, independent of transient free memory.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "physicalBytes",
+        "constrainedBytes"
+      ],
+      "properties": {
+        "physicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "constrainedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "MemoryShareV1": {
+      "description": "Allocate the admitted CPU fraction only after effective memory and unchanged policy reserve. Never reconstruct above effective capacity when capacity is below reserve.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effectiveBytes",
+        "tokens",
+        "parallelism"
+      ],
+      "properties": {
+        "effectiveBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "tokens": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "parallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
     }
   }
 }

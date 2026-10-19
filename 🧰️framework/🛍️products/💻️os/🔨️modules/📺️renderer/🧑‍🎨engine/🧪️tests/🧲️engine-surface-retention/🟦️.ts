@@ -267,11 +267,8 @@ type Retained = { surfaceId: string; windowId: string; kind: string; controllerI
 
 /** 🧲️ The reference mirror, written from the fixture's `rules` and from nothing else. */
 const mirror = (state: Retained[], frame: Frame): { state: Retained[]; created: string[] } => {
-  // ownerIsTheWindowInstance + aClosedWindowDropsItsSurface
   const kept = state.filter((surface) => frame.liveWindows.includes(surface.windowId));
   const created: string[] = [];
-  // aRepaintRefreshesTheProjection + creationIsAnnouncedOnce; everything not mentioned is untouched
-  // (aFrameWithoutARepaintKeepsTheSurface).
   for (const entry of frame.drain) {
     if (entry.created) created.push(entry.surfaceId);
     if (entry.kind === "world3d") continue;

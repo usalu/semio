@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {inv} from "mathjs";
 import {DenseInverseCursor} from "../🟦️.ts";
 import type {DenseSolveStatus} from "../../🟦️.ts";
-import corpus from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const relative=(actual:number,expected:number):void=>assert(expected===0?Math.abs(actual)<=1e-12:Math.abs(actual-expected)<=corpus.relativeTolerance*Math.abs(expected),actual+" expected "+expected);
 function retained(n:number,source:number[],checkDenied:boolean):{status:DenseSolveStatus;inverse:number[];turns:number}{const matrix=[...source],inverse=Array(n*n).fill(7),cursor=new DenseInverseCursor(n,matrix.length,inverse.length);for(let turn=0;turn<1000000;turn++){const d=cursor.demand(),before=cursor.snapshot();if(checkDenied&&d.items>0){const a=[...matrix],b=[...inverse];for(const budget of[{...d,items:0},{...d,depth:0},...(d.copyBytes>0?[{...d,copyBytes:d.copyBytes-1}]:[])]){assert.equal(cursor.step(matrix,inverse,budget).status.kind,"refused");assert.deepEqual(cursor.snapshot(),before);assert.deepEqual(matrix,a);assert.deepEqual(inverse,b);}}const step=cursor.step(matrix,inverse,{items:1,copyBytes:32,depth:1,capacityBytes:0});assert(step.receipt.copyBytes<=32&&step.receipt.items<=1);assert.equal(step.receipt.capacityBytes,0);const restored=DenseInverseCursor.fromSnapshot(JSON.parse(JSON.stringify(cursor.snapshot().map(String))).map(BigInt));assert.deepEqual(restored.snapshot(),cursor.snapshot());if(step.status.kind!=="pending")return{status:step.status,inverse,turns:turn+1};}throw Error("inverse budget exhausted");}

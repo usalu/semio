@@ -131,11 +131,6 @@ export async function registerUiCloseAndJobAdmissionTests(vitest: PluginRuntimeV
       expect(leftoverShellInvocationFrames(leftover)).toHaveLength(1);
     });
 
-    // 📋️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END (`📓️selection-dedupe-2026-09-12.md`): a reserved job
-    // publishes its result frame on `send-message` whatever it did, so warning "clipboard-write missing"
-    // whenever a leftover carried one fired on EVERY reserved-job completion — measured on every
-    // `interactionSelect`/`interactionHover` of the generation3d preview. Nothing in the leftover list
-    // declares that a clipboard write was expected, so there is no predicate to warn on.
     it("never warns about a missing clipboard-write on a job completion that only carries send-message effects", () => {
       const { promoteShellSendMessages } = dependencies;
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

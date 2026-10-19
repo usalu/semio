@@ -1,4 +1,4 @@
-//! them. Nothing here applies a mutation or predicts what one should produce.
+//! 🫥️ them. Nothing here applies a mutation or predicts what one should produce.
 //! 🔍️ The READER: projects a committed fem3d JSON carrier through `json` (json-rust) and compares two of
 //!
 //! usage: reader project <file.json> | reader compare <expected.json> <actual.json>

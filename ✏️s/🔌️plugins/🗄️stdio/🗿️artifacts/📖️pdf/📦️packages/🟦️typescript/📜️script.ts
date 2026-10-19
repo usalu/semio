@@ -1,20 +1,16 @@
 #!/usr/bin/env bun
 /** 📦️ pdf TypeScript artifact package router. */
 import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
-import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import {resolve} from "node:path";
-import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runOwnedVerifyScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 /** 🧪️ Runs the artifact-owned original physical transport corpus with cancellation and progress. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length === 1 && segments[0] === "physical-codecs") {
-      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
-      return;
-    }
-    throw Error("verify physical-codecs");
+    await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
 await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf", { bundleRuntime: "bun", suites: [
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🧪️tests/🟦️.ts",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
@@ -29,7 +25,7 @@ await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-pdf",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📝️form/🟦️.ts",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📄️document/🟦️.ts",
 "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🧪️tests/🔣️transport/🟦️.ts"
-],commands:{verify:OwnedVerifyScript}});
+],commands: router});
 
 
 

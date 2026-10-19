@@ -1,7 +1,7 @@
 //! 🧭️ Retained paged symbol identities resolved through the same immutable operation source.
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView};
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use std::cmp::Ordering;
 use semio_framework_value::paged_text::TextReadView;
 

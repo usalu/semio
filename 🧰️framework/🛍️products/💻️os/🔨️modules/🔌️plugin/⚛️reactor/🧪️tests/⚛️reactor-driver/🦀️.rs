@@ -1,10 +1,10 @@
 use semio_framework::kernel::{Event, UiPatch};
 use semio_framework_plugin_reactor_tasks::{INSTANCE_METADATA, REGISTRY, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
 use semio_framework_plugin_reactor_tasks::tasks_instance_metadata::InstanceMetadataRegistry;
-use semio_framework_plugin_reactor_patches::PATCHES;
+use semio_framework_plugin_reactor_core::PATCHES;
 use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::REACTOR_TASK_SLOTS;
 #[cfg(test)]
-use semio_framework_ui_runtime::SurfaceReconcileReadyPatch;
+use semio_framework_ui_runtime_reconcile::SurfaceReconcileReadyPatch;
 use semio_framework_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
 use semio_framework_plugin_actor_host::{executor, requests};
 use semio_framework_plugin_reactor_patches as patches;
@@ -12,6 +12,7 @@ use semio_framework_plugin_reactor_lifecycle as pending;
 use semio_framework_plugin_reactor_turn as turn;
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
+use semio_framework::kernel::ActorUiPatchReceipt;
 
 #[doc(hidden)]
 pub fn queue_external_patch(patch: UiPatch) {
@@ -154,7 +155,7 @@ pub(super) async fn patches_revision(surface: &str) -> ui_contract::UiRevision {
 }
 
 /// 🩹️ Test-only completion driver over the same retained mounted authority.
-pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree,cx:&mut semio_framework_job::StepContext<'_>) -> Option<UiPatch> {
+pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime_presentation::ComponentTree,cx:&mut semio_framework_job::StepContext<'_>) -> Option<UiPatch> {
     PATCHES.with(|patches| {
         if !patches.can_begin(surface) {
             return None;
@@ -175,7 +176,7 @@ pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime
                 let revision = patch.as_ref().map_or(0, |patch| patch.revision.0);
                 let mut acknowledgement = None;
                 if published.is_some()
-                    && semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut acknowledgement, surface, revision, semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes())
+                    && semio_framework_ui_runtime_reconcile::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut acknowledgement, surface, revision, semio_framework_ui_runtime_reconcile::SurfaceReconcilePublishedPatch::required_acknowledge_bytes())
                         .expect("test-owned acknowledgement grant")
                 {
                     let mut acknowledgement = acknowledgement.take().expect("acknowledged publication owner");

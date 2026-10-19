@@ -43,7 +43,7 @@ export interface Puzzle3dSuggestionMenu {
   y: number;
   windowId: string;
   vortexFullId: string;
-  /** Listed as the context menu's "suggest" submenu rather than as its own floating popup. */
+  /** 📚️ Listed as the context menu's "suggest" submenu rather than as its own floating popup. */
   submenu: boolean;
 }
 
@@ -71,6 +71,6 @@ export interface Puzzle3dWindowTransient {
   suggestionMenu?: Puzzle3dSuggestionMenu | null;
   engagementInput: string;
   brushCandidateIndex: number;
-  /** The host activation (active tool, else the window's active utility) this scratch was captured under; scratch whose activation has moved on is never read back. */
+  /** ⚡️ The host activation (active tool, else the window's active utility) this scratch was captured under; scratch whose activation has moved on is never read back. */
   activation: string;
 }

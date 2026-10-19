@@ -27,7 +27,7 @@ impl AppPresenter {
             let _ = RENDERER_IO_WAKE.swap(false, Ordering::AcqRel);
             let _ = pump_renderer_io_sessions(1);
         }
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
         if self.pending.is_none() {
             if let Some(retirement) = self.retirement.as_mut() {
                 if retirement.step(&mut self.gpu, &self.gate)? {

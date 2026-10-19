@@ -1,2 +1,2 @@
-/** demo tiff */
+/** 🎬️ demo tiff */
 export const ID = 'demo';

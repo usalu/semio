@@ -87,11 +87,7 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             (max_w.max(120.0), height)
         }
         WidgetNode::Tree { sections, .. } => (measure_tree_sections_width(sections, atlas, theme), measure_tree_sections(sections)),
-        // 📶️ React's bar is `h-tiny w-full` — a full-width track one `--size-tiny` tall, which is
-        // what `paint::progress_bar_rects` centres inside whatever box this measure asks for.
         WidgetNode::Progress { .. } => (120.0, semio_framework_ui_wgpu_layout::chrome::SIZE_TINY.max(theme.gap_standard)),
-        // 🖼️ React caps the `<img>` at `max-h-64` (`UI_IMAGE_MAX_BOX_HEIGHT`); a source the process
-        // cannot decode itself measures as one `alt` line, which is what it paints.
         WidgetNode::Image { src, alt, .. } => match semio_framework_ui_wgpu_paint::ui_image_natural_size(src.as_str()) {
             Some((natural_w, natural_h)) => {
                 let height = (natural_h as f32).min(semio_framework_ui_wgpu_paint::UI_IMAGE_MAX_BOX_HEIGHT);
@@ -113,8 +109,6 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             }
             (max_w.max(120.0), height)
         }
-        // 🎬️🧩️ Neither a scene surface nor a plugin slot has an intrinsic size — both fill whatever
-        // box their container grants, exactly like the retained ladder's `LayoutNodeKind::EngineSurface`.
         WidgetNode::ComponentScene { .. } | WidgetNode::ExternalSlot { .. } => (120.0, theme.control_height),
     }
 }

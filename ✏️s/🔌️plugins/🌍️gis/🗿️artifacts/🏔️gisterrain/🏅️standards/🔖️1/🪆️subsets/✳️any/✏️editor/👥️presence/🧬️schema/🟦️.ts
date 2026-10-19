@@ -1,8 +1,8 @@
 /** 🧬️ Gis3dPresence */
 export interface Gis3dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   cameraJson: string;
-  /** @state presence */
+  /** 👉️ @state presence */
   selectedIds: string[];
 }
 

@@ -21,9 +21,6 @@ pub fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize]) -> bo
         relevant.insert(v);
         relevant.extend(dag.ancestors(v));
     }
-    // Moralize only the subgraph induced by the ancestral set: a co-parent marriage is only real
-    // if the common child is itself ancestral — moralizing the full DAG first (as `moralize()`
-    // does) would wrongly marry co-parents of children that fall outside the ancestral set.
     let mut moral_edges: BTreeSet<(usize, usize)> = BTreeSet::new();
     for &child in &relevant {
         let parents: Vec<usize> = dag.parents(child).iter().copied().filter(|p| relevant.contains(p)).collect();
@@ -96,7 +93,6 @@ pub struct FisherZ {
 impl FisherZ {
     /// 🔬️ Precomputes the complete-case correlation matrix over `columns` (in the same order as
     /// the paired [`CausalDag`]'s variable indices).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn for_table(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, columns: &[usize]) -> Result<Self, CausalError> {
         let (corr, n) = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::correlation_from_table(data, columns)?;
         Ok(Self { corr, n })

@@ -2,8 +2,10 @@
 use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 use crate::store;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
-use semio_framework_value::{native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value::native_encoding::NativeEncodeProgress;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8,ValueError>>,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{native.scoped_stage(|native|{let total=count.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Binary row extent overflow"))?;native.begin_stage(total)?;let mut completed=0;let mut progress=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let delta=event.completed.saturating_sub(completed);completed=event.completed;native.advance(delta).is_ok()};crate::standards::v_raw::subsets::any::io::sqlite::snapshot::native_cells(schema,count,bytes,&mut SqliteSnapshotControl::new(&mut progress,limits))})}
 pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<BinarySnapshot,ValueError>{
  use super::receiving::{Carrier,count,bind,body};

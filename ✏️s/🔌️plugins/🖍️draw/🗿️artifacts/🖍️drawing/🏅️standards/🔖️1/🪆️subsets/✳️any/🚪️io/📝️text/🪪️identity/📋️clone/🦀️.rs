@@ -3,7 +3,7 @@ use super::publication::admit_identity;
 use semio_s_artifact_draw_drawing_model::identity::DrawingIdentityKind;
 use semio_framework_value::{NativeEncodeControl,ValueError};
 
-pub fn admit_clone_identities(node:&semio_s_artifact_draw_drawing_model::DrawingLayerNode,suffix:&str,control:&mut NativeEncodeControl<'_>)->Result<semio_framework_value::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>,ValueError>{
+pub fn admit_clone_identities(node:&semio_s_artifact_draw_drawing_model::DrawingLayerNode,suffix:&str,control:&mut NativeEncodeControl<'_>)->Result<semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>,ValueError>{
  fn visit(node:&semio_s_artifact_draw_drawing_model::DrawingLayerNode,suffix:&str,depth:usize,count:&mut usize,control:&mut NativeEncodeControl<'_>,output:&mut Vec<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment>)->Result<(),ValueError>{
   control.checkpoint()?;if depth>=64||*count>=4096{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"Drawing identity subtree limit"));}*count+=1;
   let source=semio_s_artifact_draw_drawing_model::layer_id(node);if source.is_empty()||output.iter().any(|assignment|assignment.source==*source){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing identity subtree repeats or omits a source key"));}let mut bytes=control.allocate_vec(source.len())?;for chunk in source.retained_chunks().iter(){control.step()?;bytes.extend_from_slice(chunk.as_bytes());}

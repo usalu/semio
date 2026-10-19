@@ -1,6 +1,7 @@
-//! `Vec::new()`.
+//! 🔁️ `Vec::new()`.
 //! ↩️ Inverse for `ReplaceEdgeGeometry` — restores the BASE connection pose. Missing target ⇒
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::replace_edge_geometry::component::ReplaceEdgeGeometry;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceEdgeGeometry>>(payload: &super::ReplaceEdgeGeometry, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

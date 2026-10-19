@@ -66,13 +66,11 @@ pub mod derived_construction {
     impl PdfBuilderConstruction {
         /// ➕ Typed construction: appends a page (the analyzer→builder round-trip acceptance test's
         /// primary entry point -- requirement #8's `InsertPage`, exposed ergonomically).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             let (next, _diff) = self.mutate(PdfMutation::InsertPage(InsertPage { index, page }));
             next
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(self, info: PdfInfo) -> Self {
             let (next, _diff) = self.mutate(PdfMutation::SetInfo(SetInfo { info }));
             next

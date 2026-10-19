@@ -348,7 +348,7 @@ pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, ma
         Err(())
     }
 }
-pub fn paged_owner_retirement_demand<T,const N:usize>(owner:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{let failure=|error:semio_framework_value::list::PagedListError|ValueError::literal(ValueRefusalKind::InvariantViolated,error.reason);if owner.is_empty(){Ok(RetirementDemand{release_bytes:owner.next_release_allocation_bytes().map_err(failure)?,depth:owner.next_release_depth_demand().map_err(failure)?,..Default::default()})}else{Ok(RetirementDemand{depth:owner.next_pop_depth_demand().map_err(failure)?,..Default::default()})}}
+pub fn paged_owner_retirement_demand<T,const N:usize>(owner:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{let failure=|error:semio_framework_value_persistent::list::PagedListError|ValueError::literal(ValueRefusalKind::InvariantViolated,error.reason);if owner.is_empty(){Ok(RetirementDemand{release_bytes:owner.next_release_allocation_bytes().map_err(failure)?,depth:owner.next_release_depth_demand().map_err(failure)?,..Default::default()})}else{Ok(RetirementDemand{depth:owner.next_pop_depth_demand().map_err(failure)?,..Default::default()})}}
 
 pub fn paged_from_values<T, I: IntoIterator<Item = T>>(values: I) -> PagedList<T, SPARSE_INDEX_SPACE> where I::IntoIter: ExactSizeIterator {
     let values = values.into_iter();

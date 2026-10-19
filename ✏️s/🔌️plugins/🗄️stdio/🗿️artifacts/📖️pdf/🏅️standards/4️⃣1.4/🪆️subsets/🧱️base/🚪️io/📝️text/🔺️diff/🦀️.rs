@@ -158,7 +158,7 @@ pub(crate) fn dec_pages_diff(body: &str) -> Result<PdfPagesDiff, String> {
 }
 
 impl protocol::DiffText for PdfDiff {
-/// **Grammar**: `pages=<triple>` when the page lane moved, the empty string when nothing did —
+/// 🖨️ **Grammar**: `pages=<triple>` when the page lane moved, the empty string when nothing did —
 /// one space-separated `name=value` token per changed top-level field, exactly the convention
 /// the sibling 1.7 diff prints in.
 fn print_diff(&self) -> String {

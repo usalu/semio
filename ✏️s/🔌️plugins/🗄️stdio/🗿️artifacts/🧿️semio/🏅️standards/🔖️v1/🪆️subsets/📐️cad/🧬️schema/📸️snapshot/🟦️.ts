@@ -21,7 +21,7 @@ export interface CadLayer {
   visible: boolean;
 }
 
-/** Referential invariant (checked by `SemioCadValidator`, not the type system): `layer` must name a real `CadLayer`. */
+/** ✏️ Referential invariant (checked by `SemioCadValidator`, not the type system): `layer` must name a real `CadLayer`. */
 export interface CadEntityRecord {
   handle: string;
   layer: string;
@@ -35,8 +35,8 @@ export interface CadBlock {
 }
 
 export interface SemioCadSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ layers: CadLayer[];
-  /** @state artifact */ blocks: CadBlock[];
-  /** @state artifact */ entities: CadEntityRecord[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 🥞️ @state artifact */ layers: CadLayer[];
+  /** 🧱️ @state artifact */ blocks: CadBlock[];
+  /** 🧩️ @state artifact */ entities: CadEntityRecord[];
 }

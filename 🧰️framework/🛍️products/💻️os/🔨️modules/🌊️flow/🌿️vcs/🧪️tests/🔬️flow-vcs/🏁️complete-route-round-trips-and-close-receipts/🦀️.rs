@@ -103,10 +103,6 @@ fn set_layout_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn a_streamed_layout_drag_produces_one_edit() {
     let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer), semio_framework_os_kernel::os_spr::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
-    // 🔐️ `ArtifactStore::new` installs no owner catalog, and every mutating command is refused
-    // without one — the refusal drops the replayed projection on its error path, so the law reports
-    // `ordered-map root must be explicitly retired before drop` instead of the validation that caused it
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     semio_framework_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     let transaction = semio_framework_os_kernel::os_spr::TransactionRef { id: "tx-00000000000000f1".into(), tool: "s.flow@1/*#editor#drag".into() };
     for y in [10.0, 20.0, 30.0] {

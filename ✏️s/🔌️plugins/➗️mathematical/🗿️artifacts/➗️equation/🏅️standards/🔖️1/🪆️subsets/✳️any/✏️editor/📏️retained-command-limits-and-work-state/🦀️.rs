@@ -89,12 +89,6 @@ pub fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSna
     let extent = match command {
         EquationCommand::SetActiveExample(_) => return None,
         EquationCommand::NodeGraphViewport(_) => 1,
-        // 🧮️ `EquationRetainedCommandWork::step` charges ONE step per phase BOUNDARY on top of the
-        // per-item steps: `Initialize`, then `nodes-complete`, then `edges-complete` (`Finish` itself
-        // completes without a step). A graph-walking verb therefore costs `3 + nodes + edges`, not
-        // `2 + …` — the old constant priced exactly one boundary (the shape `SetPoints` has) and every
-        // `setAlgorithm`/`setDirected` overflowed its own extent by one step with
-        // `equation-work-extent-overflow` on the very last boundary.
         EquationCommand::SetAlgorithm(payload) if payload.algorithm.len() <= EQUATION_MAX_TEXT_BYTES && payload.seed.as_ref().is_none_or(|seed| seed.len() <= EQUATION_MAX_TEXT_BYTES) => 1,
         EquationCommand::SetAlgorithm(_) => return None,
         EquationCommand::SetDirected(_) => 1,
@@ -109,8 +103,6 @@ pub fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSna
                 && payload.graph.retained_metadata().1.len() <= EQUATION_MAX_TEXT_BYTES
                 && payload.graph.retained_metadata().2.is_none_or(|seed| seed.len() <= EQUATION_MAX_TEXT_BYTES) =>
         {
-            // 🗿️ `setArtifact` walks THREE phases (nodes, edges, points), so it pays `Initialize` plus
-            // three boundaries — see the `setAlgorithm` note above.
             4_usize.checked_add(payload.graph.retained_node_count())?.checked_add(payload.graph.retained_edge_count())?.checked_add(payload.geometry.points.len())?
         }
         EquationCommand::EditEquation(_) => return None,

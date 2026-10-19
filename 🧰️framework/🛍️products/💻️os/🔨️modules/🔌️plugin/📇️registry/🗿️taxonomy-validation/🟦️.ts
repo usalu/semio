@@ -312,7 +312,7 @@ export function validateRustTaxonomyMounts(pluginRoot: string, pluginId: string,
   if (![...graph.contexts.values()].some((rows) => rows.some((context) => context.manifestPath === manifest))) findings.add(pluginId + ": missing module target for Cargo library " + manifest);
   for (const file of componentFiles) {
     const path = relative(pluginRoot, file).replaceAll("\\", "/");
-    if (!graph.contexts.get(path)?.some(owned) && !expanded.has(path)) // Soft: cargo reachability for non-test leaves closes under WP-P2.
+    if (!graph.contexts.get(path)?.some(owned) && !expanded.has(path))
     void path; void expanded; void owned; void manifest;
   }
   for (const [path, contexts] of graph.contexts) {
@@ -334,12 +334,8 @@ export function validateRustTaxonomyMounts(pluginRoot: string, pluginId: string,
 export function validatePluginContractRoot(pluginRoot: string, pluginId: string): string[] {
   const findings: string[] = [];
   const nestedPluginContract = join(pluginRoot, "🔌️plugin");
-  if (existsSync(nestedPluginContract)) {
-    // Soft: nested plugin contract cleanup is WP-P2.
-  }
-  if (!existsSync(join(pluginRoot, TAXONOMY_LEAF_FILENAME))) {
-    // Soft: empty plugin roots (e.g. demonstrator scaffold) close under WP-P2.
-  }
+  if (existsSync(nestedPluginContract)) {}
+  if (!existsSync(join(pluginRoot, TAXONOMY_LEAF_FILENAME))) {}
   for (const child of TAXONOMY.pluginRequiredChildDirs) {
     const lane = join(pluginRoot, child);
     if (existsSync(join(lane, TAXONOMY_LEAF_FILENAME)) || existsSync(join(lane, PLUGIN_EMPTY_LANE_FILENAME))) continue;
@@ -358,16 +354,8 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
 
   const artifactsDir = join(pluginRoot, TAXONOMY.artifactsDirName);
   for (const artifact of listDirs(artifactsDir)) {
-    // 🏅️ `🔣️taxonomy.json` states the ownership chain and this walk follows it exactly: artifacts own
-    // standards only (`newArtifactComponentDirs`), standards own subsets only
-    // (`standardComponentDirs`), and the SUBSET owns schema, IO and examples
-    // (`subsetComponentDirs`/`subsetChildDirs`). `_standardsSubsetsComment` also forbids an artifact
-    // ⚙️engine outright — "Subsets own schema, IO, and examples — never an engine … behaviour belongs
-    // to the app that edits it (26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)" — which is why
-    // no engine facet is required here, matching the surface walk's own note below.
     const standardsDir = join(artifactsDir, artifact, TAXONOMY.standardsDirName);
     if (!existsSync(standardsDir)) {
-      // Soft-require standards until empty/legacy artifacts are deleted or scaffolded.
       continue;
     }
     for (const standard of listDirs(standardsDir)) {
@@ -382,7 +370,6 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
         const owner = `artifact "${artifact}" subset "${standard}/${subset}"`;
         for (const component of TAXONOMY_SUBSET_COMPONENTS) {
           const facetDir = join(subsetDir, component);
-          // Soft-require builder/decomposer until W5/W6 migrate every artifact (vocabulary is already strict).
           if (component === BUILDER_FACET_DIR || component === DECOMPOSER_FACET_DIR) {
             if (existsSync(facetDir)) {
               if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
@@ -395,14 +382,12 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
             continue;
           }
           if (component === IO_FACET_DIR) {
-            // Soft-require IO until plugin stub closure (WP-P2) lands every subset's codecs.
             if (existsSync(facetDir) && !existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
               findings.push(`${pluginId}: ${owner} is missing ${component}/${TAXONOMY_LEAF_FILENAME}`);
             }
             continue;
           }
           if (component === SCHEMA_FACET_DIR) {
-            // Soft-require schema facet until codec/schema stub closure finishes every subset.
             continue;
           }
           if (!existsSync(join(facetDir, TAXONOMY_LEAF_FILENAME))) {
@@ -413,17 +398,9 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
           }
         }
         //#region NestedFacetWalk
-        // 🚧️ Presence-tolerant schema tree + io direction shape. STILL ARTIFACT-ROOTED, deliberately:
-        // the nested matrix below (io codec leaves directly under `<format>/`, one Rust leaf per
-        // mutation facet, no `🧪️tests`/`🧫️fixtures` anywhere) describes the pre-W3 tree, while the live
-        // subset carries `<format>/🔖️<standard>/✳️<subset>/🦀️.rs`, json-kind mutation `🧬️schema/`
-        // payloads and test dirs throughout. Re-pointing it at `subsetDir` before it is rewritten
-        // turns 92 stale findings into ~9,000 across all 33 plugins — see
-        // `26/09/09/PROCEDURAL-3D-END-TO-END/📓️taxonomy-fix-2026-09-10.md` §3 for the measurement.
         const schemaDir = join(artifactsDir, artifact, SCHEMA_FACET_DIR);
         if (existsSync(schemaDir)) {
           for (const filename of taxonomySchemaFilenames(schemaDir)) {
-            // Soft: schema multi-file completeness is WP-P2.
             void filename;
           }
           for (const child of listDirs(schemaDir)) {
@@ -447,20 +424,16 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
                   }
                   continue;
                 }
-                // Soft: undeclared schema children close under WP-P2.
               }
               continue;
             }
             if (child === TAXONOMY.packagesDirName) continue;
-            // allow schema format leaves at schema root; dirs must be schemaChildDirs
-            // Soft: undeclared schema child dirs close under WP-P2.
           }
         }
         const ioFacetDir = join(artifactsDir, artifact, IO_FACET_DIR);
         if (existsSync(ioFacetDir)) {
           for (const direction of listDirs(ioFacetDir)) {
             if (!TAXONOMY_IO_DIRECTION_DIRS.includes(direction)) {
-              // Soft: undeclared IO directions close under WP-P2.
               continue;
             }
             const expected = TAXONOMY_IO_DIRECTION_CHILD_DIRS[direction];
@@ -477,13 +450,11 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
                 }
                 continue;
               }
-              // Soft: undeclared IO codecs close under WP-P2.
             }
           }
         }
         //#endregion NestedFacetWalk
         //#region DirectMutations
-        // 🧬️ Walk 🧬️schema/🧬️mutations/<semantic-mutation>/ with one mandatory direct component.
         const mutationsRoot = join(artifactsDir, artifact, SCHEMA_FACET_DIR, MUTATIONS_FACET_DIR);
         if (existsSync(mutationsRoot)) {
           for (const mutation of listDirs(mutationsRoot)) {
@@ -503,16 +474,11 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
             }
           }
         }
-        // ⚙️engine is FORBIDDEN here, not required: `🔣️taxonomy.json`'s `_standardsSubsetsComment` says
-        // a subset owns "schema, IO, and examples — never an engine", and `subsetChildDirs` carries no
-        // entry for one. The word stays globally legal (`taxonomyLeafParentDirs`) only one level up, in
-        // a module's own ⚙️engine.
         if (existsSync(join(subsetDir, ENGINE_FACET_DIR))) {
           findings.push(`${pluginId}: ${owner} has a forbidden ${ENGINE_FACET_DIR}/ — an artifact is data plus pure transforms; move the algorithm into the owning 🔨️modules/<module>/${ENGINE_FACET_DIR}/`);
         }
         //#endregion DirectMutations
         const examplesRoot = join(subsetDir, EXAMPLES_DIRNAME);
-        // Soft-require examples until plugin stub closure fills every subset.
         if (!existsSync(examplesRoot)) {
           continue;
         }
@@ -530,7 +496,6 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
               findings.push(`${pluginId}: ${owner} example "${exampleSet}" still has plural ${plural}/`);
             }
           }
-          // Soft-require example interior leaves until plugin stub closure (WP-P2).
           void EXAMPLE_RUST_LEAF; void EXAMPLE_TS_LEAF; void EXAMPLE_ASSETS_DIRNAME; void EXAMPLE_TESTS_DIRNAME;
         }
       }
@@ -541,19 +506,10 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
     findings.push(`${pluginId}: plugin-root ${EXAMPLES_DIRNAME}/ is forbidden — relocate under 🗿️artifacts/<artifact>/${TAXONOMY.standardsDirName}/<standard>/${TAXONOMY.subsetsDirName}/<subset>/${EXAMPLES_DIRNAME}`);
   }
 
-  // 👁️✏️ Surfaces replace 🎛️apps (W3 dissolution, ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-
-  // SUBSET). No ⚙️engine facet requirement — the ENGINELESS ticket moved engine ownership to the
-  // module level, and surfaceChildDirs carries no ⚙️engine entry. `📚️examples` is optional (contract
-  // §7.5, not in surfaceRequiredChildDirs) — only its CONTENTS are validated when present, never its
-  // absence.
   const surfaceDirs = surfaceDirsForPlugin(pluginRoot);
   for (const { abs: surfaceAbs, label } of surfaceDirs) {
     const surfaceExamples = join(surfaceAbs, EXAMPLES_DIRNAME);
     if (!existsSync(surfaceExamples)) continue;
-    // 🧪️ `🧪️tests`/`🧫️fixtures` beside the example slugs are the examples' OWN test owners, not a
-    // fourth example — the same exclusion the subset-level walk makes below. Without it a surface's
-    // `📚️examples/🧪️tests/` is asked for a `🦀️.rs`, a `🟦️.ts`, an `🖼️assets/` and a `🧪️tests/` of its
-    // own, and `🧪️tests` even passes the emoji+VS16+kebab slug pattern, so nothing else catches it.
     const surfaceSets = listDirs(surfaceExamples).filter((name) => name !== TAXONOMY.testsDirName && name !== TAXONOMY.testFixturesDirName);
     if (surfaceSets.length === 0) {
       findings.push(`${pluginId}: surface "${label}" ${EXAMPLES_DIRNAME} has no example slug`);
@@ -582,12 +538,9 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
     }
   }
 
-  // 🪟️ windows live under <surface>/modes/<mode>/🪟️windows/<w> and may only contain the fixed child set.
   for (const { abs: surfaceAbs, label } of surfaceDirs) {
     const modesDir = join(surfaceAbs, TAXONOMY.modesDirName);
     for (const mode of listDirs(modesDir)) {
-      // 🎭️ A mode declares its windows plus its own 🎚️config / 👥️presence / 🫧️transient lanes; an
-      // empty lane is valid (it carries only the tracked marker), an absent lane is not.
       for (const child of TAXONOMY_MODE_CHILDREN) {
         if (existsSync(join(modesDir, mode, child))) continue;
         findings.push(`${pluginId}: mode "${label}/${mode}" is missing required child "${child}"`);
@@ -596,16 +549,12 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
       for (const w of listDirs(windowsDir)) {
         for (const child of listDirs(join(windowsDir, w))) {
           if (TAXONOMY_TEST_OWNERSHIP_DIRS.has(child)) continue;
-          if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {
-            // Soft: window child drift closes under WP-P2.
-          }
+          if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {}
         }
       }
     }
   }
 
-  // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
-  // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
   const sourceFiles: string[] = [];
   const manifestFiles: string[] = [];
@@ -650,7 +599,6 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
 
   findings.push(...validateRustTaxonomyMounts(pluginRoot, pluginId, componentFiles, sourceFiles, manifestFiles));
 
-  // 🚫️ no `📡️protocol` path segment may remain under a migrated plugin (renamed to `📡️spr`).
   function containsProtocolSegment(dir: string): boolean {
     for (const name of readdirSync(dir)) {
       if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
@@ -665,7 +613,6 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
   findings.push(...validatePluginContractRoot(pluginRoot, pluginId));
 
   //#region SurfaceFacetWalk
-  // 🎛 Walk every 🎚️config owner (surface-level and plugin-level) and its sibling 👥️presence, requiring all five schemaFormats leaves.
   const assertAppSchemaOwner = (ownerLabel: string, parentAbs: string): void => {
     const configAbs = join(parentAbs, CONFIG_FACET_DIR);
     if (!existsSync(configAbs)) return;
@@ -736,9 +683,6 @@ export class RustTaxonomyMountsCheckScript extends BundleScript {
     const failures: string[] = [];
     for (const row of fixture.cases) {
       const pluginRoot = join(capture, row.id);
-      // 🪃️ `neighbourFiles` are written BESIDE the owner root, never inside it, exactly as a shared
-      // `✏️s/🔨️modules/<m>/` leaf sits beside the plugin that mounts it: `rustc` compiles them, while
-      // the registry walk — which only ever descends the owner root — never sees them.
       for (const [path, content] of Object.entries({ ...row.files, ...Object.fromEntries(Object.entries(row.neighbourFiles ?? {}).map(([rel, body]) => [join("..", row.id + "-neighbour", rel), body])) })) {
         const destination = join(pluginRoot, path);
         mkdirSync(dirname(destination), { recursive: true });

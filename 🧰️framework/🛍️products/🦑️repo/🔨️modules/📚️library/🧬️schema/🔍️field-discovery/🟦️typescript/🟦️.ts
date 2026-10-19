@@ -53,7 +53,7 @@ export function policyExtractTypescriptSchemaFields(
         const next = resolveModule?.(specifier, sourceId);
         return next ? find(next.text, next.moduleId, target, true) : null;
       };
-      for (const match of source.matchAll(/\bexport\s+(?:type\s+)?\{([^}]+)\}\s*(?:from\s*["']([^"']+)["'])?/g)) {
+      for (const match of source.matchAll(/\bexport\s*(?:type\s*)?\{([^}]+)\}\s*(?:from\s*["']([^"']+)["'])?/g)) {
         for (const item of match[1]!.split(",")) {
           const binding = /^(?:type\s+)?([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/.exec(item.trim());
           if (binding && (binding[2] ?? binding[1]) === name) return match[2] ? resolveDeclaration(match[2], binding[1]!) : find(source, sourceId, binding[1]!, false);
@@ -63,7 +63,7 @@ export function policyExtractTypescriptSchemaFields(
         if (match[2] === name && (!exported || match[1])) return find(source, sourceId, match[3]!, false);
       }
       if (!exported) {
-        for (const match of source.matchAll(/\bimport\s+(?:type\s+)?\{([^}]+)\}\s*from\s*["']([^"']+)["']/g)) {
+        for (const match of source.matchAll(/\bimport\s*(?:type\s*)?\{([^}]+)\}\s*from\s*["']([^"']+)["']/g)) {
           for (const item of match[1]!.split(",")) {
             const binding = /^(?:type\s+)?([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+([A-Za-z_][A-Za-z0-9_]*))?$/.exec(item.trim());
             if (binding && (binding[2] ?? binding[1]) === name) return resolveDeclaration(match[2]!, binding[1]!);

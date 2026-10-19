@@ -2,8 +2,8 @@ use crate::solve_linear_static;
 use crate::Elements;
 use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Dof;
 
 const E: f64 = 1000.0;
 const NU: f64 = 0.25;

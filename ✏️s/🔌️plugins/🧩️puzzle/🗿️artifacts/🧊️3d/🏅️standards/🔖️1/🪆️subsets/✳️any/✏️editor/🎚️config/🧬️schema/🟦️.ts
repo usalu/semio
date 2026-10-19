@@ -1,9 +1,9 @@
 export interface Puzzle3dConfig {
-  /** @state config */ fillCount: number;
-  /** @state config */ contactTolerance: number;
-  /** @state config */ objectKindWeights: Record<string, number>;
-  /** @state config */ vortexKindWeights: Record<string, number>;
-  /** @state config */ activeExampleId: string;
+  /** 🟦️ @state config */ fillCount: number;
+  /** 🤝️ @state config */ contactTolerance: number;
+  /** 🏋️ @state config */ objectKindWeights: Record<string, number>;
+  /** 🌪️ @state config */ vortexKindWeights: Record<string, number>;
+  /** 🟢️ @state config */ activeExampleId: string;
 }
 /** 🪣️ Schema default for `fillCount` (`🔣️.json`) — a fresh document asks for a hundred placements, and
  * the planner plans toward exactly that number: there is no ceiling to clamp against. */

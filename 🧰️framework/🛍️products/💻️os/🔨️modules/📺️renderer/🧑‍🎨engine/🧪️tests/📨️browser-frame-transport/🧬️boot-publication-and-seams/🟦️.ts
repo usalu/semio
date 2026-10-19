@@ -30,9 +30,6 @@ describe("browser frame worker transport", () => {
     const bootSource = (readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const workerSource = readFrameWorkerSource(root);
     const descriptorSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "utf8");
-    // ⌨️ The renderer answers `mod` with `cfg!(target_os = "macos")`, which is FALSE in every wasm
-    // build, so a macOS browser painted `Ctrl+Alt+E` where React painted `⌘️⌥️E`. `userAgentData`
-    // exists only on the page thread, so the read is made there and forwarded with the boot.
     expect(bootSource).toContain("platform: hostPlatform()");
     expect(workerSource).toContain("loaded.semioWgpuSetHostPlatform?.(message.platform)");
     expect(descriptorSource).toContain("export function resolveWgpuHostPlatform");
@@ -41,10 +38,6 @@ describe("browser frame worker transport", () => {
     expect(resolveWgpuHostPlatform({})).toBe("");
   });
 
-  // 🏷️ W15f — the brand REGISTRY row rides the SAME descriptor `locks`/`defaults` do. The catalogue
-  // stays TypeScript (`🧑‍💻dev/🏷️brand/🟦️.ts`'s `resolveShellBrandById`); only its resolved row crosses
-  // into the renderer, so the shell can key the tour's seen flag the way React does
-  // (`"<brandId>:<appId>"`) and honour `ephemeral`/`replayIntroductionOnLoad` at all.
   it("carries the resolved shell brand row on the boot descriptor", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const serveSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts"), "utf8");
@@ -64,10 +57,8 @@ describe("browser frame worker transport", () => {
     expect(branded.brandId).toBe("entwerfen-mit-bestand-aggregator");
     expect(branded.brand).toEqual({ windowTitle: "Aggregator", ephemeral: true, replayIntroductionOnLoad: true });
 
-    // 🎛️ An override beats the page, exactly as every other axis does — the embeddable door's path.
     expect(resolveWgpuBootDescriptor({ defaultVariant: "s", meta: (name) => meta[name] ?? "", overrides: { brand: { ephemeral: false } } }).brand.ephemeral).toBe(false);
 
-    // 🧭️ All three doors: the serve injects the meta tags, the native side reads the env twins.
     for (const tag of ["semio-brand-window-title", "semio-brand-ephemeral", "semio-brand-replay-introduction"]) expect(serveSource).toContain(`["${tag}"`);
     for (const variable of ["SEMIO_BRAND_WINDOW_TITLE", "SEMIO_BRAND_EPHEMERAL", "SEMIO_BRAND_REPLAY_INTRODUCTION"]) expect(rendererSource).toContain(variable);
   });
@@ -115,9 +106,6 @@ describe("browser frame worker transport", () => {
     expect(rustSource).toContain("DispatchEvent::TextEditCommit");
     expect(rustSource).toContain("pending_discrete.saturating_add(discrete_commits)");
     expect(rustSource).not.toContain("stream.text.push_str");
-    // 🧭️ The boot-query capacity guard lives in `🧭️boot-descriptor/🟦️.ts` (the schema-owned parser
-    // both doors share) rather than inline in the page boot, so the law follows it there: the bound
-    // is applied to `location.search` BEFORE the string reaches `URLSearchParams`.
     const descriptorSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "utf8");
     expect(bootSource).not.toContain("new URLSearchParams");
     expect(descriptorSource.indexOf("WGPU_BOOT_LOCATION_CAPACITY")).toBeLessThan(descriptorSource.indexOf("new URLSearchParams"));

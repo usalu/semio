@@ -1,4 +1,4 @@
-//! ids, which offset) are the payload, so editing the drag in history re-derives every board position from whatever base
+//! ↔️ ids, which offset) are the payload, so editing the drag in history re-derives every board position from whatever base
 //! ✋️ Puzzle5d mutation — `DragSelection2d`: a relative, parametric drag of a set of parts on the board by one flat offset. The gesture's own inputs (which
 //! it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
@@ -41,12 +41,11 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelection2d {
 
-
-}
-
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DragSelection2d {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for DragSelection2d
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<DragSelection2d>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

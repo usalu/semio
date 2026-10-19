@@ -1,2 +1,2 @@
-/** cube semio mesh */
+/** 🕸️ cube semio mesh */
 export const ID = 'cube';

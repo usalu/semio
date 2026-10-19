@@ -249,14 +249,6 @@ pub fn pointer_commit_action(node: &Node, bounds: Rect, x: f32, y: f32, inline: 
             if !number_stepper_can_step(node, stepper, sign) {
                 return None;
             }
-            // ➕️➖️ Only a node that DECLARES a `Delta` binding takes the relative path — React's
-            // `NumberStepperView` supplies `onDelta` only when `record.bindings` contains one
-            // (`🗣️Interpreter/🟦️.tsx`). Supplying it unconditionally sent every +/− click down a
-            // trigger most programs never bind and swallowed the gesture (ticket
-            // 26/09/02/PUZZLE-3D-END-TO-END wave B12). The node's own stamped bindings are the
-            // authority when it has them; an unaddressed node falls back to the spec's own marker
-            // (an empty action name), which `fired_action` already answers `None` for. The keyboard
-            // half of the same gesture (`focused_value_key_activation`) shares this rule verbatim.
             number_stepper_fired(node, stepper, sign)
         }
         _ => None,

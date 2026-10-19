@@ -1,4 +1,4 @@
-//! generation2d → pdf — the page drawing (`generation2d_drawing`) written as a one-page vector PDF 1.4 by `s.stdio.semio/v1/drawing`'s own
+//! 🪄️ generation2d → pdf — the page drawing (`generation2d_drawing`) written as a one-page vector PDF 1.4 by `s.stdio.semio/v1/drawing`'s own
 //! export leaf, the one pdf writer every owner shares.
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no pdf import.

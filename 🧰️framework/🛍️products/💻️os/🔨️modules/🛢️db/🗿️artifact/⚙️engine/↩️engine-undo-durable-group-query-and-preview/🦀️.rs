@@ -225,10 +225,6 @@ impl ArtifactEngine {
     /// `consistency` via `db_index`'s `CommitIndex`/`FrontierIndex`. `StateQuerySource` always reads
     /// the CURRENT canonical state regardless of what `consistency` resolved to — a true
     /// point-in-time replay is `db_engine`'s documented deferred extension (see its own module doc).
-    // 🔒️ Mirrors `submit`'s ownership rationale above: `ArtifactMessage::RunQuery` already owns
-    // `query`/`consistency` one level up on the actor-mailbox side, and query descriptors are
-    // small, cheap-to-move value types — taking them by reference here would only push the
-    // ownership question onto every caller for no benefit.
     #[allow(clippy::needless_pass_by_value)]
     pub async fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
         let index_facet = self.storage.index().await;
@@ -238,8 +234,6 @@ impl ArtifactEngine {
             commits: db_index::CommitIndex::new(&index_facet, self.document.clone()).await,
             frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()).await,
         };
-        // A fresh document has no recorded frontier yet; canonical reads still succeed via the
-        // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
             db_query::resolve_consistency(&consistency, &resolver).await?;
         }

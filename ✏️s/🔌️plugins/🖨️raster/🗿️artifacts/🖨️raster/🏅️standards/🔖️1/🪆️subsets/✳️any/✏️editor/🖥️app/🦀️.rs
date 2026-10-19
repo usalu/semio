@@ -41,6 +41,8 @@ use semio_framework_plugin::NoDraftMutation;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
+use semio_s_artifact_raster_raster_editor_commands::commands::flatten_layers;
+use semio_s_artifact_raster_raster_editor_commands::commands::mask_from_selection;
 
 pub(super) struct RasterCommandProofs;
 
@@ -84,7 +86,7 @@ pub struct RasterPlayApp;
 impl ArtifactEditor for RasterPlayApp {
     /// 📢️ The localized notices of the raster tool refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        paint_stroke::raster_fault_notices()
+        semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::raster_fault_notices()
     }
 
     /// ⏳️ The layers panel renders the live operations with their Cancel controls; nothing else shows them.
@@ -152,7 +154,7 @@ impl ArtifactEditor for RasterPlayApp {
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if tool_id == "paintStroke" {
-            Box::new(paint_stroke::PaintStrokeWork::default())
+            Box::new(semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::PaintStrokeWork::default())
         } else if tool_id == "flattenLayers" {
             Box::new(flatten_layers::LayerBakeWork::<false>::default())
         } else if tool_id == "mergeDown" {
@@ -393,7 +395,7 @@ impl ArtifactEditor for RasterPlayApp {
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
         let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let preview = match body_key {
-            composite::RASTER_PLAY_BODY_COMPOSITE => transient.window::<composite::transient::RasterCompositeWindowTransientOwner>().and_then(|window| paint_stroke::raster_stroke_preview(doc.snapshot, window)),
+            composite::RASTER_PLAY_BODY_COMPOSITE => transient.window::<composite::transient::RasterCompositeWindowTransientOwner>().and_then(|window| semio_s_artifact_raster_raster_editor_commands::commands::paint_stroke::raster_stroke_preview(doc.snapshot, window)),
             _ => None,
         };
         let rendered = render_raster_body(body_key, doc, preview.as_ref(), cfg, view_state, &interaction.selection(RASTER_INTERACTION_DOMAIN).ids, interaction.hover(RASTER_INTERACTION_DOMAIN, "pointer").ids.first().map(String::as_str));

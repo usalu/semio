@@ -32,8 +32,6 @@ pub(super) async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPla
     let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "ast", "targets": semio_framework_pack_json::to_json_string(&targets) }));
     let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,"interactionSelect",Some(args),&meta("local"),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.expect("interactionSelect");
-    // 🕹️ On a mounted app the verb is admitted as a framework-reserved job and publishes later —
-    // settle both so the selection is live before the next dispatch reads it.
     semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
     artifact_app_laws::settle_registered_typed_operation(app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("interactionSelect publication");
 }
@@ -64,8 +62,6 @@ async fn renders_jack_editor() {
     let mut app = new_app().await;
     let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     assert!(json.contains("text-editor"));
-    // 🚚️ The buffer rides an out-of-doc payload lane, never the projected doc spine — read the
-    // assembled scene the way a render host does.
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert_eq!(scene.buffer, jack::standards::v1::subsets::any::schema::graph::TRINITY_JACK_DEFAULT_QUERY);
 
@@ -92,7 +88,6 @@ async fn run_query_populates_results_and_a_set_query_mutates_projection() {
     .await
     .expect("run");
     drive_query_ownership_operations(&mut app,cx).await.expect("query completes");
-    // 🔬 The query's SET is ONE edit of the composed `content` child: the live member store holds the label.
     assert!(live_scene(&app).await.nodes.iter().any(|node| node.properties.get("label") == Some(&semio_framework_graph_manifest::PropertyValue::String("ran-label".into()))));
 
     app.close(cx);
@@ -113,10 +108,6 @@ async fn node_graph_select_updates_selection_and_document_tree() {
     select_ast(&mut app, &[&node_id],cx).await;
     let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.artifact", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     assert!(json.contains(&node_id));
-    // 🕹️ Rows carry no `selected` flag of their own any more: the tree binds the framework-owned
-    // `"ast"` interaction domain and the host paints the selection from the interaction state — so
-    // the proof is the binding plus the selection being the one `deleteSelection` reads
-    // (`delete_selection_removes_selected_node`).
     assert!(json.contains("\"interactionDomain\":\"ast\""), "document tree must bind the ast interaction domain: {json}");
 
     app.close(cx);

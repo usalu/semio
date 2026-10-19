@@ -65,7 +65,7 @@ async fn both_doors_carry_the_view_context_as_the_same_exact_pack_bytes() {
 async fn the_guest_decodes_every_integer_field_exactly() {
     let fixture = fixture();
     let mut accepted = |_| true;
-    let value = pack::record::intrinsic::decode_body(&unhex(&fixture.pack_hex), &pack::record::DecodeOptions::default(), &mut semio_framework_value::NativeDecodeControl::new(16 * 1024 * 1024, &mut accepted)).expect("the fixture pack decodes");
+    let value = pack::record::intrinsic::decode_body(&unhex(&fixture.pack_hex), &pack::record::DecodeOptions::default(), &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 * 1024 * 1024, &mut accepted)).expect("the fixture pack decodes");
     for path in &fixture.integer_paths {
         let mut cursor = &value;
         for key in path {

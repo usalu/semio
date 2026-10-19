@@ -93,7 +93,6 @@ mod tests {
         let mut inspector = NullInspector;
         macrostep(&mut snapshot, ToggleEvent::Flip, &mut sink, &mut inspector);
         assert!(snapshot.matches("on"));
-        // guard on the On->Off transition requires ctx.allow, which is false.
         macrostep(&mut snapshot, ToggleEvent::Flip, &mut sink, &mut inspector);
         assert!(snapshot.matches("on"), "guard should have blocked the transition back to off");
         assert_eq!(snapshot.context.count, 1);

@@ -474,7 +474,6 @@ pub struct GltfLengths {
 }
 impl GltfLengths {
     /// 📏️ The collection lengths of `base`.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn of(base: &GltfSnapshot) -> Self {
         let document = &base.document;
         Self {
@@ -494,7 +493,6 @@ impl GltfLengths {
         }
     }
     /// 📏️ The collection lengths of `base` after `family` gained one entry.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn after_insert(base: &GltfSnapshot, family: GltfTopLevelFamily) -> Self {
         let mut lengths = Self::of(base);
         match family {

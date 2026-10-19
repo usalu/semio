@@ -143,16 +143,14 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         return Err(Fault::from("puzzle5d-patch-part-selection-capacity"));
                     }
                     self.selection_cursor += 1;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-patch-part-selection", "Reading part target", "Teilziel wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-part-selection", "Reading part target", "Teilziel wird gelesen"));
                 }
                 self.stage = Puzzle5dPatchPartStage::Parts;
-                Ok(crate::puzzle_progress_step!("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
             }
             Puzzle5dPatchPartStage::Parts => {
                 let Some(row) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)).cloned() else {
                     self.stage = Puzzle5dPatchPartStage::Complete;
-                    // 🧯️ An unaddressed id or a field this inspector cannot write produced no mutation at all;
-                    // the pre-migration arm fell through silently and the panel looked dead.
                     if self.mutations.is_empty() {
                         return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.edit_not_applicable.as_str())));
                     }
@@ -165,7 +163,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         self.mutations.push(mutation);
                     }
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-part", "Patching part", "Teil wird geändert"))
             }
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-part-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-part-closing")),
@@ -324,10 +322,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         return Err(Fault::from("puzzle5d-patch-fastener-selection-capacity"));
                     }
                     self.selection_cursor += 1;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-patch-fastener-selection", "Reading fastener target", "Verbindungsziel wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-fastener-selection", "Reading fastener target", "Verbindungsziel wird gelesen"));
                 }
                 self.stage = Puzzle5dPatchPartStage::Parts;
-                Ok(crate::puzzle_progress_step!("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
             }
             Puzzle5dPatchPartStage::Parts => {
                 let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)).cloned() else {
@@ -341,7 +339,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         self.mutations.push(mutation);
                     }
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-fastener", "Patching fastener", "Verbindung wird geändert"))
             }
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-fastener-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-fastener-closing")),
@@ -521,10 +519,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         return Err(Fault::from("puzzle5d-patch-grip-selection-capacity"));
                     }
                     self.selection_cursor += 1;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-patch-grip-selection", "Reading grip target", "Griffziel wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-grip-selection", "Reading grip target", "Griffziel wird gelesen"));
                 }
                 self.stage = Puzzle5dPatchPartStage::Parts;
-                Ok(crate::puzzle_progress_step!("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
             }
             Puzzle5dPatchPartStage::Parts => {
                 let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
@@ -534,7 +532,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let Some(grip_value) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)).cloned() else {
                     self.part_cursor += 1;
                     self.grip_cursor = 0;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-patch-grip-part", "Advancing grip owner", "Griffinhaber wird gewechselt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-grip-part", "Advancing grip owner", "Griffinhaber wird gewechselt"));
                 };
                 if self.processed_grips >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
                     return Err(Fault::from("puzzle5d-patch-grip-work-capacity"));
@@ -547,7 +545,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     let grip_id = grip.id.clone();
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::replace_part_grip(part_id.to_string(), grip_id, grip));
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-patch-grip", "Patching grip", "Griff wird geändert"))
             }
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-grip-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-grip-closing")),

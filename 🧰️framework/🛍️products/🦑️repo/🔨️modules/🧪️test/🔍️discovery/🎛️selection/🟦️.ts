@@ -12,8 +12,6 @@ export function selectCases(repoRoot: string, segments: readonly string[]): Disc
   const owner = value("--owner");
   const caseSlug = value("--case");
   const project = value("--project");
-  // 🎛️`--owner` matches the exact owner path, a trailing segment of it, OR any ancestor segment, so
-  // `--owner 🗄️stdio` selects every artifact owned beneath that plugin rather than nothing.
   const matchesOwner = (entry: DiscoveredCase): boolean => owner === null || entry.owner === owner || entry.owner.endsWith(`/${owner}`) || entry.owner.split("/").includes(owner) || entry.owner.includes(`${owner}/`);
   const ownerRoot = value("--owner-root");
   return all.filter((entry) => matchesOwner(entry) && (ownerRoot === null || entry.owner === ownerRoot) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));

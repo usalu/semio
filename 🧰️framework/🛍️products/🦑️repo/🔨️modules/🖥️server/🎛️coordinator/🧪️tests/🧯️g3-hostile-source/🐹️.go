@@ -11,6 +11,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -48,7 +49,7 @@ func TestG3OwnedSourceHasNoExternalOrLegacyStoreFallback(t *testing.T) {
 	if _, err := os.Stat("go.sum"); !os.IsNotExist(err) {
 		t.Fatalf("go.sum must be naturally absent: %v", err)
 	}
-	windowsDurability, err := os.ReadFile("🪟️windows-durability/🐹️.go")
+	windowsDurability, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "..", "🔨️modules", "📁️filesystem", "🛡️durability", "📦️packages", "🐹️go", "🪟️windows-durability", "🐹️.go"))
 	if err != nil {
 		t.Fatal(err)
 	}

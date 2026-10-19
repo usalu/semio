@@ -3,8 +3,15 @@
   "node": "24.15.0",
   "workspaceVolumeTargets": [
     "/workspaces/semio/node_modules",
-    "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"
+    "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache",
+    "/workspaces/semio/.cache"
   ],
+  "locale": "en_US.UTF-8",
+  "storage": {
+    "policy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+    "workingSetGigabytes": 25,
+    "headroomPercent": 20
+  },
   "postCreateCommand": [
     "bun",
     "repo",

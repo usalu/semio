@@ -52,17 +52,9 @@ pub async fn definition() -> WindowKindDefinition {
         body_key: S_PLAY_BODY_WORKFLOW.into(),
         surface_kind: SurfaceKind::NodeGraph,
         icon_id: "graph-media".into(),
-        // 📇️ `options.measures` stays EMPTY here — measures are config-derived per frame by
-        // `ArtifactApp::window_measures`, never frozen into the manifest (see the `🎚️options` node's
-        // `measure(config, labels)` this window collects from). `options.engagement` DOES get a static
-        // initial value baked in (there is no per-frame `ArtifactApp::engagement()` trait method).
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: Vec::new(),
         utilities: Vec::new(),
-        // 🕹️ The primary node-graph canvas — hosts the `graph` domain (ticket
-        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM); `create_space_app`'s
-        // `.window_kind_interactions(...)` call re-asserts the same ref, this literal just keeps
-        // `definition()` honest on its own.
         interactions: vec![InteractionRef::new(semio_hub_space_foundation::S_PLAY_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -105,13 +97,6 @@ pub async fn render(app: &crate::SpaceApp, projection: &WorkflowSnapshot, config
     let camera = workflow_camera(config).await;
     let fixture = os_workflow_to_flow_host_snapshot_json(&projection.graph, &camera);
     let operators = build_os_workflow_operator_infos(&projection.graph, &projection.parameters);
-    // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
-    // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
-    // `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
-    // (unlike the tree-shaped nodes — see `stamp_and_cache_interaction_ui`), so `selection`/`hover`
-    // are left at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
-    // highlight until a future wave threads interaction into scene rendering. Flagged as a
-    // discovered framework gap, not worked around here.
     let scene = NodeGraphScene {
         editable: Some(true),
         operators: json_array_to_node_graph_operators(&operators).await,

@@ -16,12 +16,12 @@ test("configured compiler policies preserve the selected portable build mode",as
  const configuration=fileURLToPath(new URL("../../../../../⚙️configuration/🏃️process/🔣️.json",import.meta.url));
  const request=parseCommandArgumentsV1(["--config",configuration,"--cwd","📦️packages/🟦️typescript","--",process.execPath]);
  for(const row of fixture.modes){
-  const plan=resolveCommandConfigurationV1(request,{SEMIO_BUILD_MODE:row.mode});
+  const plan=resolveCommandConfigurationV1(request,{SEMIO_BUILD_MODE:row.mode},originalInvocation());
   expect(plan.policy.cargoArtifactPolicy!.mode).toBe(row.mode);
   expect(plan.environment.SEMIO_BUILD_MODE).toBe(row.mode);
   expect(oracle(plan.policy.cargoArtifactPolicy)).toBe(true);
  }
- expect(()=>resolveCommandConfigurationV1(request,{})).toThrow("Build mode");
+ expect(()=>resolveCommandConfigurationV1(request,{},originalInvocation())).toThrow("Build mode");
  console.log("[DEBUG] configured command compiler policies preserve both schema-owned build modes");
 });
 

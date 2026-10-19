@@ -1,6 +1,8 @@
 use super::{ArtifactBuilder, SnapshotBuilder};
 use protocol::{DiffAlgebra, ColdDiffAlgebra, MutationDiff, ColdMutationDiff};
-use crate::store::{os_store::serialization::{ArtifactDsl, ArtifactPack}, PackDecodeOptions, PackEncodeOptions, PackError};
+use crate::store::{os_store::serialization::{}, PackDecodeOptions, PackEncodeOptions, PackError};
+use pack::snapshot::ArtifactDsl;
+use pack::snapshot::ArtifactPack;
 
 thread_local! { static RETIRED: std::cell::Cell<[usize; 3]> = const { std::cell::Cell::new([0; 3]) }; }
 fn retire(axis: usize) { RETIRED.with(|counts| { let mut next = counts.get(); next[axis] += 1; counts.set(next); }); }
@@ -40,7 +42,7 @@ impl ColdMutationDiff<State> for Delta {
 }
 #[derive(semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct Operation { value: i64, semantic_refusal: bool, apply_refusal: bool }
-impl crate::os_spr::ColdMutation<State> for Operation {
+impl protocol::ColdMutation<State> for Operation {
     type ReferenceDiff = Delta;
     fn diff(&self, _: &State) -> protocol::MutationOutcome<Delta> { let outcome = protocol::MutationOutcome::new(Delta { value: Some(self.value), refuse: self.apply_refusal }); if self.semantic_refusal { outcome.absorb_messages([protocol::MutationMessage::error("mutation.refused", "semantic fixture refusal")]) } else { outcome } }
     fn inverse(&self, base: &State) -> Result<Vec<Self>, semio_framework_value::ValueError> { Ok(vec![Self { value: base.value, semantic_refusal: false, apply_refusal: false }]) }

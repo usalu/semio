@@ -68,7 +68,7 @@ export async function registerTests1(
   const { readFileSync } = await import("node:fs");
   const threeOracle = await import("three");
   const { join } = await import("node:path");
-  const selectionFixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures", "🔲️selection-drag.json"), "utf8")) as { cases: { id: string; method: string; start: [number, number]; samples: [number, number][]; release: [number, number]; retained: [number, number][]; active: boolean }[] };
+  const selectionFixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures", "🔲️selection-drag.json"), "utf8")) as { cases: { id: string; method: string; start: [number, number]; samples: [number, number][]; release: [number, number]; retained: [number, number][]; active: boolean }[] };
   describe("area-selection drag neutral fixtures", () => {
     for (const testCase of selectionFixture.cases) it(testCase.id, () => {
       const points: [number, number][] = [testCase.start];

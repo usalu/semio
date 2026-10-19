@@ -76,7 +76,6 @@ pub fn evaluate_tick(
     retained_grant: semio_framework_value::RetainedCloneGrant,
 ) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
-    // ▶️ The armed tick is now RUNNING, so its latch is free for whatever THIS tick decides to arm.
     session.begin_window_tick(window_id, retained_grant)?;
     let census_before = node_census_digest(session.status_json());
     let mut host = host_with_session(host_snapshot, session, retained_grant)?;
@@ -84,13 +83,6 @@ pub fn evaluate_tick(
     let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
     let mut extension_invocations = Vec::new();
-    // 🌊️ ONE WAVE, ONE HOP: every request the walk parked had its inputs ready in the same tick, so
-    // no member consumes another member's output and all of them may be outstanding at once. The
-    // per-window latch already counts a fan-out and hands the re-arm to whichever answer lands LAST
-    // (`FlowEvalSession::settle_window_extension`), so the chain now costs one round trip per
-    // dependency LEVEL rather than one per contributed node — which is what made a four-operator
-    // example spend seven `flowEvalTick` hops at roughly a second apiece
-    // (`📓️react-perf-ceilings-audit-2026-09-14.md` §1, §3 item 3).
     for pending in pending_extension_evals {
         let resume = session.has_evaluation_progress(pending.node_hash);
         let dependency_json = if resume { String::new() } else { geometry_dependency_json(host_snapshot, &pending.neuron_id) };
@@ -99,10 +91,6 @@ pub fn evaluate_tick(
     if extension_invocations.is_empty() && !more {
         extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, retained_grant)?);
     }
-    // ⏳️ A tick that parked extension work is emphatically NOT FINISHED, whatever the evaluation's own
-    // `more` says: `!more` is exactly the branch above that parks `tessellate`, and a window recorded
-    // finished while it still owes mesh round trips strands its surface at `inFlight: 1`
-    // (`📓️wgpu-example-chain-2026-09-13.md` §6.1). A graph nothing in this process can serve gives up.
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
     if !extension_invocations.is_empty() {
         session.note_window_extensions_in_flight(window_id, extension_invocations.len(), retained_grant)?;

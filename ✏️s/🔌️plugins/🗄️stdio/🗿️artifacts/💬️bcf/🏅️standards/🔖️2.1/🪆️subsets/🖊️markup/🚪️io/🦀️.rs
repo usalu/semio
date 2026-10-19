@@ -35,10 +35,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_ZIP)
@@ -617,14 +613,6 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            // 🕵️ Real sniff: BCF is a zip container that additionally carries a root `bcf.version`
-            // entry. Reuses the zip artifact's own byte-level magic+EOCD check (never reimplemented
-            // here) for the base confidence, then cheaply corroborates the `bcf.version` entry name
-            // via a substring scan of the raw bytes -- filenames are stored as literal bytes in both
-            // the local and central-directory headers, so this finds a real entry name without
-            // paying for a full `decode_zip` (which would also inflate every snapshot PNG payload
-            // just to read names -- the same cost tradeoff the zip analyzer's own sniff makes by
-            // stopping at "does a well-formed EOCD exist" rather than parsing every entry).
             use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
@@ -640,8 +628,6 @@ pub mod derived_analysis {
                         }
                     }
                 },
-                // The DSL envelope (hex-wrapped text) preamble is what actually recognizes the text
-                // form, not this byte-magic sniff.
                 AnalyzeSource::Text(_) => semio_framework_plugin::io::Confidence::Low,
             }
         }

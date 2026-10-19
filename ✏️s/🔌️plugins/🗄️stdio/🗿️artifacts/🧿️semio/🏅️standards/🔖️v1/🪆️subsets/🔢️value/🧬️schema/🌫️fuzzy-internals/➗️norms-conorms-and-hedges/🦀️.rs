@@ -13,7 +13,6 @@ pub enum TNorm {
 }
 
 impl TNorm {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(self, a: f64, b: f64) -> f64 {
         let a = clamp01(a);
         let b = clamp01(b);
@@ -33,7 +32,6 @@ impl TNorm {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
         values.fold(1.0, |acc, v| self.apply(acc, v))
     }
@@ -49,7 +47,6 @@ pub enum TConorm {
 }
 
 impl TConorm {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(self, a: f64, b: f64) -> f64 {
         let a = clamp01(a);
         let b = clamp01(b);
@@ -67,7 +64,6 @@ impl TConorm {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fold<I: Iterator<Item = f64>>(self, values: I) -> f64 {
         values.fold(0.0, |acc, v| self.apply(acc, v))
     }
@@ -83,7 +79,6 @@ pub enum Hedge {
 }
 
 impl Hedge {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(self, mu: f64) -> f64 {
         let mu = clamp01(mu);
         match self {

@@ -3,7 +3,7 @@ use crate::{RetainedCloneGrant,retirement::controlled::ControlledRetirement};
 use crate::allocation_testing::observe_retirement_allocations as observe;
 use semio_framework_test_fixtures::fixture_text;
 use std::sync::atomic::{AtomicUsize,Ordering};
-fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../🔁️ledger/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🔁️ledger/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(law:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(law["grant"].clone()).unwrap()}
 fn close(original:String,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant){let bytes=original.capacity();let(result,heap)=observe(||ControlledRetirement::new(original));assert_eq!(heap,(0,0));let mut owner=result.map_err(|(error,_)|error).unwrap();let(mut born,mut released)=(0,0);for _ in 0..4096{if owner.terminal_is_empty(){let(_,heap)=observe(||drop(owner));assert_eq!(heap,(0,0));assert_eq!(bytes+born,released);return}let capacity=owner.next_capacity_byte_demand(g.maximum_copy_bytes).unwrap();assert!(capacity<=g.maximum_capacity_bytes);assert!(owner.next_copy_byte_demand().unwrap()<=g.maximum_copy_bytes);assert!(owner.next_release_byte_demand().unwrap()<=g.maximum_release_bytes);assert!(owner.next_depth_demand().unwrap()<=g.maximum_depth);control.charge(capacity).unwrap();let(step,heap)=observe(||owner.step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.0;released+=heap.1;}panic!("original ledger output retirement frontier")}
 #[test]

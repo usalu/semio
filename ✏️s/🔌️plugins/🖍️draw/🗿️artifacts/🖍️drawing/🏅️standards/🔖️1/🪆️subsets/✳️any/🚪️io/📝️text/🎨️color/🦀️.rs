@@ -1,5 +1,6 @@
 //! 🎨️ Controlled physical hexadecimal RGB spelling and normalized RGBA admission.
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Expected #RGB or #RRGGBB and finite unit alpha")}
 pub fn decode_color_text(source:&str,alpha:f64,control:&mut NativeDecodeControl<'_>)->Result<[f64;4],ValueError>{
  control.checkpoint()?;let bytes=source.as_bytes();if !alpha.is_finite()||!(0.0..=1.0).contains(&alpha)||!matches!(bytes.len(),4|7)||bytes[0]!=b'#'{return Err(invalid());}

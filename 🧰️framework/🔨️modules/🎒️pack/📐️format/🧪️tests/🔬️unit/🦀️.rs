@@ -425,7 +425,7 @@ async fn open_manifest_rejects_wrong_kind_at_manifest_offset() {
     let limits = PackLimits::default();
     let mut footer_bytes = bytes[bytes.len() - FOOTER_SIZE..].to_vec();
     let mut footer = Footer::parse(&footer_bytes).await.unwrap();
-    footer.manifest_offset = HEADER_SIZE as u64; // points at the symbols segment instead
+    footer.manifest_offset = HEADER_SIZE as u64;
     footer_bytes = footer.write_bytes().await;
     let mut corrupted = bytes[..bytes.len() - FOOTER_SIZE].to_vec();
     corrupted.extend_from_slice(&footer_bytes);

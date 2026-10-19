@@ -17,8 +17,8 @@ export async function proveHubRendererCommandOwnershipV1(root:string):Promise<vo
  await assert.rejects(access(join(root,fixture.collaboration.generalHarness)),{code:"ENOENT"});
  const harnessSource=await readFile(join(root,fixture.collaboration.specificHarness),"utf8");
  assert.ok(specificSource.includes('from "../🤝️collaboration/🟦️.ts"')||specificSource.includes('from "./🤝️collaboration/🟦️.ts"'));
- const harness=await import(join(root,fixture.collaboration.specificHarness));
- assert.deepEqual(Object.keys(harness.HUB_COLLABORATION_CHECKS),fixture.collaboration.journeys);assert.deepEqual(Object.keys(harness.HUB_COLLABORATION_KINDS),fixture.collaboration.journeys);assert.deepEqual(harness.HUB_COLLABORATION_BOUNDS,fixture.collaboration.bounds);
+ const harness=await import(join(root,fixture.collaboration.specificHarness)),contract=await import(join(root,fixture.collaboration.specificHarness,"../📋️contract/🟦️.ts"));
+ assert.deepEqual(Object.keys(contract.HUB_COLLABORATION_CHECKS),fixture.collaboration.journeys);assert.deepEqual(Object.keys(contract.HUB_COLLABORATION_KINDS),fixture.collaboration.journeys);assert.deepEqual(contract.HUB_COLLABORATION_BOUNDS,fixture.collaboration.bounds);
  assert.equal(typeof harness.runHubCollaborationCli,"function");assert.deepEqual(ts.transpileModule(harnessSource,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext},reportDiagnostics:true}).diagnostics,[]);
  await import(join(root,general,"📜️script.ts"));
 }

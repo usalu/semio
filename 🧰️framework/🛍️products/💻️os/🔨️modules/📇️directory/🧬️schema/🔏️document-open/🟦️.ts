@@ -28,10 +28,6 @@ function documentOpenObject(value: unknown, required: readonly string[], optiona
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("document-open.invalid-object");
   const object = value as Record<string, unknown>;
   const accepted = new Set([...required, ...optional]);
-  // 🩺️ The refusal names the keys it refused on. This check is the closed-object gate for the plan
-  // and for every object nested inside it, and a bare code left a caller unable to tell an added
-  // field from a missing one, in which object — including the common case where the body is not a
-  // plan at all but a two-field `document-open-plan-error/v1`, whose `code` is the real answer.
   const unexpected = Object.keys(object).filter((key) => !accepted.has(key));
   const missing = required.filter((key) => !(key in object));
   if (unexpected.length !== 0 || missing.length !== 0) throw new Error(`document-open.invalid-fields unexpected=[${unexpected.join(",")}] missing=[${missing.join(",")}] accepted=[${[...accepted].join(",")}]`);

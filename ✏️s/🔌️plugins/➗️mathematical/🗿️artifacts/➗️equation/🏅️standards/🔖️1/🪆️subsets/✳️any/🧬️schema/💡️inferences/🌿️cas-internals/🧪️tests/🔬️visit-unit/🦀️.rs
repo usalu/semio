@@ -23,7 +23,7 @@ mod tests {
     async fn node_count_hand_case() {
         let x = Expr::symbol("x");
         let e = Expr::add(vec![x, Expr::integer(1)]);
-        assert_eq!(node_count(&e), 3); // Add(x, 1) has 2 children + 1 for itself
+        assert_eq!(node_count(&e), 3);
     }
 
     #[semio_framework_async_macros::async_test]

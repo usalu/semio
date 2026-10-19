@@ -3,21 +3,6 @@
 //! @see ../../README.md — the domain model
 //! @see ../../🧬️schema/🔣️.json — the normative contract
 
-#[path = "../📝️draft/🦀️.rs"]
-mod draft;
-
-#[path = "../📏️spacing/🦀️.rs"]
-pub mod spacing;
-
-#[path = "../🗓️schedule/🦀️.rs"]
-mod schedule;
-
-#[path = "../👀️attention/🦀️.rs"]
-mod attention;
-
-#[path = "../🚶️locomotion/🦀️.rs"]
-mod locomotion;
-
 #[path = "../💞️sociability/🦀️.rs"]
 mod sociability;
 
@@ -35,3 +20,19 @@ mod projection;
 
 #[path = "../🎪️stage/🦀️.rs"]
 pub mod stage;
+
+#[cfg(test)]
+#[path = "../📝️draft/🧪️tests/🔬️unit/🦀️.rs"]
+mod draft_tests;
+
+#[cfg(test)]
+#[path = "../🗓️schedule/🧪️tests/🔬️unit/🦀️.rs"]
+mod schedule_tests;
+
+#[cfg(test)]
+#[path = "../👀️attention/🧪️tests/🔬️unit/🦀️.rs"]
+mod attention_tests;
+
+#[cfg(test)]
+#[path = "../🚶️locomotion/🧪️tests/🔬️unit/🦀️.rs"]
+mod locomotion_tests;

@@ -2,7 +2,7 @@ import { DIAGRAM_UNIT } from "../📐️layout/📜️wire/🟦️.ts";
 
 // #region 📐️Contract
 /**
- * Configuration interface for the owned force simulation parameters.
+ * 📊️ Configuration interface for the owned force simulation parameters.
  **/
 export interface DiagramForceConfig {
   enabled: boolean;
@@ -14,7 +14,7 @@ export interface DiagramForceConfig {
 }
 
 /**
- * Default owned force configuration values.
+ * 📈️ Default owned force configuration values.
  **/
 export const defaultDiagramForceConfig: DiagramForceConfig = {
   enabled: false,

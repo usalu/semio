@@ -26,7 +26,7 @@ pub struct BoardBrushState {
 
 /// 🧩️ BoardHost gestures component: transform, region and link gesture state.
 pub struct BoardGesturesState {
-    /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
+    /// 🔗️ Screen-space polyline preview (CSS px) while dragging a handle link before drop.
     pub link_screen_preview: Option<Vec<Point>>,
     /// 🕹️ Which selection-gumball handles the select utility offers (`setTransformGumballFlag`).
     pub transform_flags: TransformGumballFlags,

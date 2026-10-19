@@ -47,8 +47,6 @@ fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
     let before = &source[..cursor];
     let colon = before.rfind(':')?;
     let after = &before[colon + 1..];
-    // 🩹️ an `@` after the kind name means the cursor moved into the port segment (`kind@port`);
-    // bail so `after_at_port_context` can offer port completions instead of kind completions.
     if after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | '@')) {
         return None;
     }
@@ -234,10 +232,6 @@ pub struct Diagnostic {
     pub end: usize,
     pub severity: DiagnosticSeverity,
     pub message: String,
-    // 🌉️ `default` added even though the serde attribute list only carries `skip_serializing_if`:
-    // serde treats an `Option<T>` field as implicitly optional on deserialize with no explicit
-    // `default`, but `#[derive(ToValue, FromValue)]` has no such special case — a genuinely omitted
-    // wire key needs `default` spelled out or `FromValue` errors "missing field" instead of `None`.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
 }
@@ -438,8 +432,6 @@ fn format_token(tok: &Token) -> String {
                 n.to_string()
             }
         }
-        // 🩹️ unified syntax law: strings always PRINT double-quoted with `dsl_core`'s canonical
-        // escape, regardless of which quote style the source used.
         Token::StringLit(s) => format!("\"{}\"", semio_framework_dsl::escape_text(s)),
         Token::LParen => "(".into(),
         Token::RParen => ")".into(),
@@ -634,9 +626,6 @@ fn idiom_classify(text: &str) -> Vec<(semio_framework_dsl::TokenClass, semio_fra
 
 // 🚫️async: E4 fn-pointer slot (`IdiomHooks.complete`) — see R2 E4.
 fn idiom_complete(text: &str, offset: usize) -> Vec<semio_framework_dsl::CompletionItem> {
-    // Jack's own `complete` needs a `QueryableGraph`-bounded generic for schema-aware suggestions
-    // (node/edge kinds, property names) that the generic `DslIdiom`/embed-host seam has no graph to
-    // supply — an empty graph still exercises the syntax-only completions (clause/logic keywords).
     struct EmptyGraph;
     impl QueryableGraph for EmptyGraph {
         fn manifest(&self) -> Option<&semio_framework_graph_manifest::GraphManifest> {

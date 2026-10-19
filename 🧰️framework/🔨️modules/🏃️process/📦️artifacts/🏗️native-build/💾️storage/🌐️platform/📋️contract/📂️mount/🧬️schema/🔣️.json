@@ -36,68 +36,6 @@
         ],
         "deletionAuthority": false
       }
-    },
-    "WindowsDirectory": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "platform",
-        "dev",
-        "ino",
-        "volumeSerial",
-        "fileId",
-        "volume",
-        "attributes",
-        "creationTime",
-        "securitySha256",
-        "streamsSha256"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
-        },
-        "platform": {
-          "const": "win32"
-        },
-        "dev": {
-          "type": "string",
-          "pattern": "^(0|[1-9][0-9]{0,19})$"
-        },
-        "ino": {
-          "type": "string",
-          "pattern": "^(0|[1-9][0-9]{0,19})$"
-        },
-        "volumeSerial": {
-          "type": "string",
-          "pattern": "^(0|[1-9][0-9]{0,19})$"
-        },
-        "fileId": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{32}$"
-        },
-        "volume": {
-          "type": "string",
-          "pattern": "^\\\\\\\\\\?\\\\Volume\\{[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\}\\\\$"
-        },
-        "attributes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "creationTime": {
-          "type": "string",
-          "pattern": "^-?(0|[1-9][0-9]{0,19})$"
-        },
-        "securitySha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        },
-        "streamsSha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        }
-      }
     }
   }
 }

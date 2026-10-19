@@ -7,6 +7,12 @@
     "role:artifact",
     "family:space"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
@@ -16,7 +22,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
@@ -93,7 +99,12 @@
     },
     "mutation-inventory": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
         "command": "bun ./📜️script.ts list-mutations",
@@ -102,7 +113,12 @@
     },
     "mutation-inventory-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
         "command": "bun ./📜️script.ts check",
@@ -111,7 +127,7 @@
     },
     "test-complete-app-document": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏭️bridge",
         "command": "bun ./📜️script.ts test",

@@ -1,4 +1,4 @@
-//! in both projections at once. The candidate search is the puzzle 3d read-only brush suggestions run
+//! 🔭️ in both projections at once. The candidate search is the puzzle 3d read-only brush suggestions run
 //! 🖌️ Brush utility — point at a grip and watch every compatible part being tested for it, then place a free one,
 //! (`📋️tool-run-contract.md` §2.4, §3.7) behind the planner bridge: the framework owns the run, its panel and its
 //! trace, which the world window paints as instances and the board as placements.

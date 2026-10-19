@@ -69,12 +69,6 @@ fn merge_status_json(computing: Option<String>, preview_status: Option<String>) 
 /// 👁️ Merges the session's live "still computing" flag, the resumable tessellation's progress and a
 /// fresh [`preview_status_json`] result into the one status object a preview window publishes.
 pub fn preview_scene_status_json(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, preview_status: Option<String>) -> Option<String> {
-    // ⛓️ `FlowEvalSession::pending` is `tick_scheduled` alone, which is FALSE at every hop boundary
-    // of a chain — a window waiting on an extension answer is marked owed, not armed. The chain
-    // ledger is the one that stays live for the whole evaluation (see `preview_chain_status`).
-    // 🏁️ The chain is the LIVE ledger and the run view LAGS it, so the run may raise `computing`
-    // only while the chain has not settled — before the first hop publishes a census the run
-    // legitimately knows more, and after the last one it knows less.
     let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
     let computing = (chain.working || (run.is_some_and(preview_eval_run_is_abortable) && !chain.settled())).then(|| r#"{"computing":true}"#.to_string());
     merge_status_json(merge_status_json(computing, Some(preview_progress_status_json(session, run))), preview_status)
@@ -105,18 +99,8 @@ pub fn preview_progress_status_json(session: Option<&FlowEvalSession>, run: Opti
 /// neural registry unretired for every later test in the binary).
 pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: Option<&ToolRunView>, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> String {
     let status = session.map(FlowEvalSession::preview_tessellate_status).unwrap_or_default();
-    // ⏱️ The budgeted-evaluation ledger — the half of a preview's work the tessellation ledger is
-    // structurally blind to, because a long operator admits no tessellation until it has finished
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
     let eval_status = session.map(FlowEvalSession::preview_eval_status).unwrap_or_default();
-    // ⛓️ The chain ledger — the only one of the three that is live at a hop BOUNDARY, which is where
-    // every status a preview publishes is built. Without it a whole evaluation published
-    // `phase: "idle" inFlight: 0 ratio: 1.0` on both renderers
-    // (`📓️wgpu-progress-visibility-2026-09-14.md`).
     let chain = session.map(FlowEvalSession::preview_chain_status).unwrap_or_default();
-    // 🛑 An aborted run OUTRANKS the tessellation ledger, which knows nothing about an abort raised
-    // while the evaluation was still in its `evaluate` round trips (no tessellation admitted yet, so
-    // no progress row to stamp) — that case used to publish `phase: "idle"` and swallow the gesture.
     let phase = if address.is_err() {
         semio_framework_os_flow::PreviewTessellatePhase::Faulted
     } else if session.is_some_and(FlowEvalSession::preview_cancelled) {
@@ -124,19 +108,8 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     } else {
         status.phase
     };
-    // 🛑 The abort affordance is the RUN's: it exists exactly while the framework would accept
-    // `toolRunAbort` for WORK THAT IS STILL OUTSTANDING, and it names the run it stops. A settled
-    // chain has none, whatever the run view still says — see [`PreviewChainStatus::settled`]: the
-    // view is a host artifact that reaches this surface on a render, so a run whose job has finished
-    // but whose terminal state has not been rendered back yet would otherwise offer a Cancel for an
-    // evaluation with nothing left to cancel (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let abortable = run.filter(|run| preview_eval_run_is_abortable(run) && address.is_ok() && !chain.settled());
-    // ⏱️ While a budgeted evaluation is the ONLY work outstanding, the surface names THAT phase —
-    // the tessellation ledger would say `idle` for the whole of it.
     let show_eval_phase = eval_status.in_flight > 0 && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);
-    // ⛓️ …and while NEITHER finer ledger has anything, the chain still does. This is the branch the
-    // whole of a live evaluation actually takes: both finer ledgers are empty at a hop boundary, so
-    // without it the surface names `idle` for work it can see is outstanding.
     let show_chain_phase = !show_eval_phase && chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle);
     let (phase_tag, english, german) = if show_eval_phase {
         let (english, german) = eval_status.phase.labels();
@@ -152,33 +125,12 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     label.insert("en", semio_framework_pack_json::Value::String(english.to_string()));
     label.insert("de", semio_framework_pack_json::Value::String(german.to_string()));
     let mut progress = semio_framework_pack_json::Object::new();
-    // 📈 `unitsDone`/`unitsTotal` are the UNITS OF THE WORK THIS STATUS IS ABOUT, which is what the
-    // consumer contract declares them to be (`World3dComputeStatusV1`, and its Rust twin
-    // `world3d_compute_status`) and what both renderers price the pill's `n/m (x%)` off.
-    //
-    // ⚖️ The PHASE is the finest name available; the PROGRESS is the only ledger that spans the whole
-    // evaluation. The budgeted-eval ledger aggregates its LIVE rows only, so finishing a node shrinks
-    // both halves of the fraction and the published pill counted DOWN — measured on 6018 as
-    // `Computing 7/7 (100%)` → `4/6 (67%)` → `3/6 (50%)` → `2/6 (33%)` across one evaluation
-    // (`📓️wgpu-progress-visibility-2026-09-14.md`). A progress bar that runs backwards is worse than
-    // none. The chain census is monotone inside one chain, so whenever it exists it is the fraction,
-    // whatever names the phase; `evalUnitsDone`/`evalUnitsTotal` still carry the finer detail.
-    // ⚖️ The chain owns the fraction while it is working, EXCEPT where it has no census of its own
-    // and a single budgeted evaluation does — there the finer ledger is the best denominator
-    // available. A working chain may never publish `ratio: 1.0`, census or not: `Computing 0/0
-    // (100%)` is the same lie as `idle`.
     let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
     let (units_done, units_total) = if chain_progress {let(done,total)=chain.units();(u64::from(done),u64::from(total))} else { (status.units_done, status.units_total) };
     progress.insert("unitsDone", semio_framework_pack_json::Value::from(u64::from(units_done)));
     progress.insert("unitsTotal", semio_framework_pack_json::Value::from(u64::from(units_total)));
     progress.insert("facesDone", semio_framework_pack_json::Value::from(u64::from(status.faces_done)));
     progress.insert("facesTotal", semio_framework_pack_json::Value::from(u64::from(status.faces_total)));
-    // ⏱️ `inFlight` counts EVERY kind of outstanding kernel work. A boolean preview spends its
-    // whole slow half in `evaluate` round trips that admit no tessellation, so the tessellation
-    // ledger alone published `inFlight: 0` while the kernel was busy for sixteen seconds
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The three ledgers OVERLAP by construction — a
-    // parked tessellate is a row in the tessellation ledger and a parked request in the chain's —
-    // so the count is whichever of them sees more, never their sum.
     progress.insert("inFlight", semio_framework_pack_json::Value::from(u64::from(chain.in_flight.max(status.in_flight.saturating_add(eval_status.in_flight)))));
     progress.insert("evalUnitsDone", semio_framework_pack_json::Value::from(u64::from(eval_status.units_done)));
     progress.insert("evalUnitsTotal", semio_framework_pack_json::Value::from(u64::from(eval_status.units_total)));
@@ -204,11 +156,6 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
         arguments.insert(TOOL_RUN_ARG_GENERATION, semio_framework_pack_json::Value::from(u64::from(run.identity.generation)));
         object.insert("cancelArgs", semio_framework_pack_json::Value::Object(arguments));
     }
-    // 💥 A live evaluate fault OUTRANKS the ledger phase for the same reason an addressing miss
-    // does — the surface must state what it is actually living with. It can only exist once the
-    // address resolved (an unaddressable extension is never invoked), so the two fault objects are
-    // mutually exclusive by construction, and a contribution install clears this one
-    // (`FlowEvalSession::invalidate_for_flow_extension_registry`) before the first tick settles.
     if let Some(evaluate_fault) = session.and_then(FlowEvalSession::extension_evaluate_fault) {
         let (english, german) = evaluate_fault.labels();
         let mut message = semio_framework_pack_json::Object::new();

@@ -1,4 +1,4 @@
-//! (nodes/members/supports, mesh-edge preview overlay) — the read-only counterpart of the sibling
+//! 🔘️ (nodes/members/supports, mesh-edge preview overlay) — the read-only counterpart of the sibling
 //! 🧱️ Fem2d viewer — the model window: a read-only render of the undeformed 2D structural canvas
 //! editor's model window. This file itself imports nothing from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright): the pure geometry draw helpers it needs are

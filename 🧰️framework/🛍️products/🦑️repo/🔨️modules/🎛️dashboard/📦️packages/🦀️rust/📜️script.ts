@@ -10,13 +10,13 @@ import { runOwnedBuildChildInvocationV1 } from "../../../📚️library/📦️p
 import {join,relative} from "node:path";
 import { mkdir } from "node:fs/promises";
 import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📦️installation/🟦️.ts";
-import { devToolingEnv, repoTestArtifactEnvironment, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
+import { devToolingEnv, repoTestArtifactEnvironment } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const crate = "semio-framework-repo-dashboard";
 /** 🦀️ The dashboard crates, bottom up: the producers carved along the layers of the dashboard, then the facade that owns the `semio` binary. */
-const crates = ["semio-framework-repo-dashboard-core", "semio-framework-repo-dashboard-launch", "semio-framework-repo-dashboard-repo-domain", "semio-framework-repo-dashboard-registry", "semio-framework-repo-dashboard-inventory", "semio-framework-repo-dashboard-wire", "semio-framework-repo-dashboard-preferences", "semio-framework-repo-dashboard-labels", "semio-framework-repo-dashboard-daemon", "semio-framework-repo-dashboard-terminal", "semio-framework-repo-dashboard-cli", crate];
+const crates = ["semio-framework-repo-dashboard-core", "semio-framework-repo-dashboard-launch", "semio-framework-repo-dashboard-repo-domain", "semio-framework-repo-dashboard-registry", "semio-framework-repo-dashboard-inventory", "semio-framework-repo-dashboard-wire", "semio-framework-repo-dashboard-preferences", "semio-framework-repo-dashboard-labels", "semio-framework-repo-dashboard-launcher", "semio-framework-repo-dashboard-daemon", "semio-framework-repo-dashboard-terminal", "semio-framework-repo-dashboard-cli", crate];
 const dashboardOptions=(invocation:ScriptInvocation,workspace:string):DashboardExecutionOptions=>({invocation,workspace,network:repositoryCargoNetworkV1(invocation,workspace),mode:readBuildMode(process.env.SEMIO_BUILD_MODE),control:scriptCompilerAdmissionControlV1(invocation,"dashboard:execution",0)});
 
 class BuildScript extends BundleScript {
@@ -39,42 +39,56 @@ class PreferencesScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  private async native(selection: { manifestPath: string; packages: string[]; extraArgs: string[] }, rest: string[]): Promise<void> {
+  private async bun(args:string[],label:string,options:DashboardExecutionOptions,env:NodeJS.ProcessEnv={}):Promise<void>{
+    await runOwnedCommand(process.execPath,["test",...args],this.repoRoot,label,compilerAdmissionBudgetV1(options.control),{env:scriptInvocationEnvironment(this.invocation,devToolingEnv(env)),signal:options.control.signal});
+  }
+
+  private async native(selection: { packages: string[]; extraArgs: string[] }, rest: string[]): Promise<void> {
     await runRepositoryCargoTests(selection.packages, this.repoRoot, this.invocation, [...selection.extraArgs, "--test-threads", "1", "--success-output", "immediate", ...rest]);
   }
 
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="process-deadline"){
+      const {rest}=resolveTestLevel(segments.slice(1),"quick");
+      await this.native({packages:["semio-framework-repo-dashboard-daemon","semio-framework-repo-dashboard-terminal"],extraArgs:["--lib","-E","test(process_deadline)"]},rest);return;
+    }
     if (segments[0] === "unit") {
       const { rest } = resolveTestLevel(segments.slice(1));
       await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest); return;
     }
+    const options=dashboardOptions(this.invocation,this.repoRoot);
+    if(segments[0]==="source-freshness"){
+      if(segments.length!==1)throw Error("Expected test source-freshness");
+      const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??join(this.repoRoot,".🧬semio/🦑️repo/⚡️cache/tests/dashboard-sources");await mkdir(artifacts,{recursive:true});
+      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts"),"--timeout","120000","--test-name-pattern","source digest"],"dashboard:source-freshness",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});return;
+    }
     if (segments[0] === "windows") {
       const { rest } = resolveTestLevel(segments.slice(1), "quick");
-      runCmd("bun", ["test", join(this.root, "../../🧪️tests/🪟️windows/🟦️.ts"), join(this.root, "../../🧪️tests/⌨️controls/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖱️pointer-routing/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv(repoTestArtifactEnvironment(this.repoRoot,"dashboard-windows")) });
+      await this.bun([join(this.root,"../../🧪️tests/🪟️windows/🟦️.ts"),join(this.root,"../../🧪️tests/⌨️controls/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🖱️pointer-routing/🟦️.ts")],"dashboard:windows-test",options,repoTestArtifactEnvironment(this.repoRoot,"dashboard-windows"));
       const selections = [
-        { manifestPath: join(this.root, "Cargo.toml"), packages: [crate], extraArgs: ["--lib", "-E", "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_)"] },
-        { manifestPath: join(this.repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml"), packages: ["semio-framework-ui"], extraArgs: ["--lib", "--features", "tui-terminal", "-E", "test(tui::)"] },
+        { packages: ["semio-framework-repo-dashboard-terminal"], extraArgs: ["--lib", "-E", "test(docking_) | test(real_pointer_drags_) | test(escape_focus_loss_) | test(keyboard_docking_) | test(every_window_docking_) | test(splitter_drag_) | test(nested_splits_)"] },
+        { packages: ["semio-framework-ui-tui-core", "semio-framework-ui-tui-vt", "semio-framework-ui-tui-terminal", "semio-framework-ui-tui-widgets", "semio-framework-ui-tui-frame", "semio-framework-ui-tui-engine", "semio-framework-ui-tui-host", "semio-framework-ui-tui-unit-laws", "semio-framework-ui-tui-vt-laws", "semio-framework-ui-tui-laws"], extraArgs: ["--lib", "--features", "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"] },
       ];
       for (const selection of selections) await this.native(selection, rest);
       return;
     }
-    const options=dashboardOptions(this.invocation,this.repoRoot);
-    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv({ ...repoTestArtifactEnvironment(this.repoRoot,"dashboard-authority"), SEMIO_DASHBOARD_BIN: await dashboardExecutable(this.root, this.repoRoot,options) }) });
+    await dashboardExecutable(this.root,this.repoRoot,options);
+    await withInstalledDashboardV1(this.repoRoot,options,executable=>this.bun([join(this.root,"../../🧪️tests/🧭️authority/🟦️.ts")],"dashboard:authority-test",options,{...repoTestArtifactEnvironment(this.repoRoot,"dashboard-authority"),SEMIO_DASHBOARD_BIN:executable}));
     if (segments[0] === "authority") return;
     if (segments[0] === "execution") {
       const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/dashboard-execution");
       await mkdir(artifacts, { recursive: true });
-      await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],this.repoRoot,"dashboard:execution-test",compilerAdmissionBudgetV1(options.control),{env:devToolingEnv({SEMIO_TEST_ARTIFACT_DIR:artifacts}),signal:options.control.signal});return;
+      await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],"dashboard:execution-test",options,{SEMIO_TEST_ARTIFACT_DIR:artifacts});return;
     }
     if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!,options); return; }
     const { rest } = resolveTestLevel(segments);
     process.env.SEMIO_TEST_PATH ??= process.env.PATH;
-    runCmd("bun", ["test", join(this.root, "../../🧪️tests/🌀️control-plane/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
+    await this.bun([join(this.root,"../../🧪️tests/🌀️control-plane/🟦️.ts")],"dashboard:control-plane-test",options);
     await dashboardExecutable(this.root,this.repoRoot,options);
     await withInstalledDashboardV1(this.repoRoot,options,async executable=>{
-      const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: executable });
-      runCmd("bun", ["test", join(this.root, "../../🧪️tests/🎮️registry/🟦️.ts")], { cwd: this.repoRoot, env: native });
-      runCmd("bun", ["test", "--timeout", "240000", join(this.root, "../../🧪️tests/🧭️cli/🟦️.ts")], { cwd: this.repoRoot, env: native });
+      const native = { SEMIO_DASHBOARD_BIN: executable };
+      await this.bun([join(this.root,"../../🧪️tests/🎮️registry/🟦️.ts")],"dashboard:registry-test",options,native);
+      await this.bun(["--timeout","240000",join(this.root,"../../🧪️tests/🧭️cli/🟦️.ts")],"dashboard:cli-test",options,native);
     });
     await runRepositoryCargoTests(crates, this.repoRoot, this.invocation, rest);
   }

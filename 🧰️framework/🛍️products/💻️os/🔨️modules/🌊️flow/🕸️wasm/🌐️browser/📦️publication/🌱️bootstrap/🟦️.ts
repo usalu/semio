@@ -1,0 +1,9 @@
+import {existsSync,mkdirSync,writeFileSync} from "node:fs";
+import {dirname,join} from "node:path";
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+
+const intent=schema.definitions.ManifestIntent.properties,protocol=schema.definitions.Protocol.const,packageExports=Object.freeze({".":Object.freeze({types:"./flow_core.d.ts",import:"./flow_core.js"}),"./🌐️flow-browser.js":Object.freeze({types:"./🌐️browser/🟦️.d.ts",import:"./🌐️browser/🟨️.js"}),"./🖥️flow-host.js":"./🖥️host/🟨️.js"});
+/** 📋️ Emits only finite package-manifest DATA; it issues no file, reader or compiler authority. */
+export function flowBrowserPackageManifestV1(version:string,snippets:readonly string[]=[]):Readonly<Record<string,unknown>>{if(typeof version!=="string"||!version||version.length>intent.version.maxLength*2||[...version].length>intent.version.maxLength||snippets.length>intent.snippets.maxItems||snippets.some(name=>!name.startsWith("snippets/")||name.length>intent.snippets.items.maxLength*2||[...name].length>intent.snippets.items.maxLength||/[\\:\u0000-\u001f]|(?:^|\/)\.\.?(?:\/|$)|\/\//u.test(name))||new Set(snippets).size!==snippets.length)throw new Error("Finite Flow package version and snippets required");return Object.freeze({type:"module",version,name:protocol.packageName,sideEffects:Object.freeze(["./snippets/*"]),files:Object.freeze([...protocol.nativeFiles,protocol.browser,protocol.host,protocol.declaration,...snippets]),main:"flow_core.js",module:"flow_core.js",types:"flow_core.d.ts",exports:packageExports});}
+/** 🌱️ Materializes the static workspace manifest without loading compiler or application owners. */
+export function bootstrapFlowCorePackage(root:string):void{const path=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json");if(existsSync(path))return;mkdirSync(dirname(path),{recursive:true});writeFileSync(path,JSON.stringify(flowBrowserPackageManifestV1("0.1.0"),null,2)+"\n",{flag:"wx"});}

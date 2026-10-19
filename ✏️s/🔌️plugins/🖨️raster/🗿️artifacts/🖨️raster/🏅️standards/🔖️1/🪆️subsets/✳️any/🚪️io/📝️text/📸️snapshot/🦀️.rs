@@ -96,7 +96,7 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 pub use mutations_codec::*;
 
 #[allow(unused_imports)]
-mod snapshot_wire_codec {
+pub mod snapshot_wire_codec {
 use crate::*;
 use crate::{RasterOwnedMap, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;

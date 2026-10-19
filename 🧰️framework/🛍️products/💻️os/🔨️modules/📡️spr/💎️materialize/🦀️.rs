@@ -1,7 +1,7 @@
 //! 🎞️ Protocol materialization: resolving *which* checkpoint/tail combination to replay
 //! from a `.spr` byte stream (`resolve_plan`), and a closure-generic driver that actually replays
 //! it into a caller-owned snapshot type `P` (`materialize_with`). This crate never knows what
-//! `P` is or how an op applies to it — `crate::os_spr::history::HistoryEdit`'s `ops: Vec<OpPayload>` stay
+//! `P` is or how an op applies to it — `crate::history::HistoryEdit`'s `ops: Vec<OpPayload>` stay
 //! opaque text/binary blobs all the way through; the `apply_edit` closure is where a downstream
 //! technology (its own `dsl`-generated `Mutation` impls) turns them into real mutations. Frozen
 //! contract: `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_materialize`).
@@ -100,7 +100,7 @@ async fn parse_snapshot(payload: &[u8]) -> Result<(SnapshotHeader, Option<(usize
     let body_span = if body_kind != SnapshotBodyKind::SidecarPack {
         let len = input.read_varint_u64()? as usize;
         let start = input.position();
-        input.read_bytes(len)?; // bounds-checked; establishes the span is actually present
+        input.read_bytes(len)?;
         Some((start, len))
     } else {
         None
@@ -156,9 +156,6 @@ async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), 
     }
     let base_count = input.read_varint_u64()? as u32;
     let count = input.read_varint_u64()?;
-    // 🎯️ Never `Vec::with_capacity(count)`: `count` is untrusted input read before any bound check
-    // against the (already frame-limited) payload — an adversarial huge varint must not itself
-    // trigger a huge allocation before the loop's own bounds-checked reads would fail it anyway.
     let mut entries: Vec<String> = Vec::new();
     for _ in 0..count {
         let len = input.read_varint_u64()? as usize;
@@ -257,13 +254,12 @@ struct Candidate<'a> {
 async fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> bool {
     match candidate.body_span {
         Some((start, len)) => hasher.hash(&candidate.payload[start..start + len]) == candidate.header.body_hash,
-        // A sidecar body lives outside `trusted` entirely; nothing here to hash against.
         None => true,
     }
 }
 
 /// 👓️ Reads and header-parses the `REC_PROJECTION` frame expected at an absolute offset
-/// (as recorded by a `crate::os_spr::history::IndexReader`'s `SEC_SNAPSHOT_OFFSETS` section).
+/// (as recorded by a `crate::history::IndexReader`'s `SEC_SNAPSHOT_OFFSETS` section).
 async fn read_snapshot_at(trusted: &[u8], offset: u64) -> Result<Candidate<'_>, ProtocolError> {
     let mut cursor = FrameCursor::new(trusted, offset).await;
     let frame = cursor.next_frame().await?.ok_or_else(|| malformed("snapshot frame", "missing frame at indexed offset"))?;
@@ -334,7 +330,7 @@ async fn find_snapshot_by_scan<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u3
                 }
                 *skipped += 1;
             }
-            Ok(_) => {} // a snapshot past `cap` — keep walking backward for an older one
+            Ok(_) => {}
             Err(_) => *skipped += 1,
         }
     }
@@ -353,7 +349,7 @@ async fn find_best_snapshot<'a>(trusted: &'a [u8], cap: u64, skipped: &mut u32) 
 /// 🧮️ Resolves a checkpoint id to the 0-based edit ordinal of the last edit it covers, via
 /// the advisory index when available, else a full decode-and-fold fallback (folded checkpoint ->
 /// change_ids -> each change's edit_ids -> max ordinal by position in `log.edits`, matching
-/// `crate::os_spr::history::encode_history`'s own ordinal assignment).
+/// `crate::history::encode_history`'s own ordinal assignment).
 async fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
     if let Some(index) = locate_index(trusted).await {
         if let Some((_, ordinal)) = index.checkpoint_offset(checkpoint_id).await {
@@ -379,9 +375,6 @@ async fn resolve_checkpoint_edit_ordinal(trusted: &[u8], checkpoint_id: &str, li
 
 async fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget, limits: &ProtocolLimits) -> Result<Option<u64>, ProtocolError> {
     match target {
-        // 🎯️ Design choice: "latest" has no ordinal cap — alternatives in this data model name sets
-        // of checkpoints, not forked edit sequences (`HistoryLog::edits` is one flat, shared log), so
-        // "latest on the active alternative" and "latest, full stop" resolve identically here.
         MaterializeTarget::LatestOnActive => Ok(None),
         MaterializeTarget::AtEditOrdinal(ordinal) => Ok(Some(*ordinal)),
         MaterializeTarget::AtCheckpoint(id) => resolve_checkpoint_edit_ordinal(trusted, id, limits).await,
@@ -469,12 +462,12 @@ async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(Di
 
 /// ▶️ Decodes `plan.base.bytes` into `P` (never for `BaseBytes::Sidecar` — a caller that
 /// resolved a sidecar snapshot must substitute `BaseBytes::Borrowed` with the fetched `.sprc`
-/// bytes, e.g. via `crate::os_spr::io::read_sidecar`, before calling this), then replays every `REC_EDIT`
+/// bytes, e.g. via `crate::io::read_sidecar`, before calling this), then replays every `REC_EDIT`
 /// frame from `plan.tail_start_offset` onward whose ordinal is `<= plan.target_edit_ordinal` (no cap
 /// iff `None`) through `apply_edit`. Re-derives its own trusted byte range from `protocol_bytes`
 /// (default limits — no `limits` parameter on this frozen signature) so a torn live tail is silently
 /// excluded rather than surfaced as an error, matching how every other reader in this crate family
-/// treats the boundary `crate::os_spr::format::recover` establishes.
+/// treats the boundary `crate::format::recover` establishes.
 pub async fn materialize_with<P, E>(
     plan: MaterializePlan<'_>,
     protocol_bytes: &[u8],

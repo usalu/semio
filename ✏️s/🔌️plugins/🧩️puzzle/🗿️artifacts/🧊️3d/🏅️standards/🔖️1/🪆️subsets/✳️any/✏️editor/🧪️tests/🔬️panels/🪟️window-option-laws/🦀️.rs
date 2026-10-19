@@ -9,9 +9,9 @@ async fn grid_window_options_control_one_visible_grid_spacing() {
     let lod = lod_of(&render_composite(&mut app).await);
     assert_eq!(lod.get("showLodGrid").and_then(Value::as_bool), Some(false));
     assert_eq!(lod.get("gridFactor").and_then(Value::as_f64), Some(7.5));
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures = app.window_measures(&view).await;
-    let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures = measures.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid")), Some(None));
     assert_eq!(find_measure_slider(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing")), Some(7.5));
 }
@@ -25,19 +25,19 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     let mut app = app().await;
     let second_window = "puzzle3d-main-2";
     let toggle_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible");
-    let base_view = app.window_view(main::WINDOW_KIND_ID);
+    let base_view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let second_view = app.window_view(second_window);
     let document_before = projection_of(&app);
     let app_config_before = app.config_pack().await.expect("app config before exact window publications");
 
-    dispatch(&mut app, "setGridSpacing", Some(&json!({ "value": 2.5 })), Some(main::WINDOW_KIND_ID)).await.expect("setGridSpacing on base window");
+    dispatch(&mut app, "setGridSpacing", Some(&json!({ "value": 2.5 })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setGridSpacing on base window");
     dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(second_window)).await.expect("setGridVisible on second window");
 
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures_after = app.window_measures(&view).await;
     assert_eq!(find_measure_toggle(measures_after.get(main::WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true), "the base window instance's grid must stay visible");
     assert_eq!(find_measure_toggle(measures_after.get(second_window).expect("second measures"), &toggle_id), Some(false), "only the targeted window instance's grid toggles off");
-    let base_render = render_window(&mut app, main::WINDOW_KIND_ID).await;
+    let base_render = render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await;
     let second_render = render_window(&mut app, second_window).await;
     assert_eq!(lod_of(&base_render).get("showLodGrid").and_then(Value::as_bool), Some(true));
     assert_eq!(lod_of(&base_render).get("gridFactor").and_then(Value::as_f64), Some(2.5));
@@ -64,17 +64,17 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
 #[semio_framework_async_macros::async_test]
 async fn window_option_rail_round_trips_grid_lod_and_vortex_into_published_config() {
     let mut app = app().await;
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let before = app.window_config_generation(&view).await.expect("window config generation").expect("puzzle3d registers one window config owner");
-    dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(main::WINDOW_KIND_ID)).await.expect("setGridVisible");
-    dispatch(&mut app, "setGridSpacing", Some(&json!({ "value": 25.0 })), Some(main::WINDOW_KIND_ID)).await.expect("setGridSpacing");
-    dispatch(&mut app, "setLodAutomatic", Some(&json!({ "pressed": false })), Some(main::WINDOW_KIND_ID)).await.expect("setLodAutomatic");
-    dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(main::WINDOW_KIND_ID)).await.expect("setVortexShow");
+    dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setGridVisible");
+    dispatch(&mut app, "setGridSpacing", Some(&json!({ "value": 25.0 })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setGridSpacing");
+    dispatch(&mut app, "setLodAutomatic", Some(&json!({ "pressed": false })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setLodAutomatic");
+    dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setVortexShow");
     assert!(!app.has_pending_typed_operations(), "window-option gestures must quiesce");
     let after = app.window_config_generation(&view).await.expect("window config generation").expect("puzzle3d registers one window config owner");
     assert_eq!(after, before + 4, "each window-option change must publish a WindowConfig generation, never drop");
     let measures = app.window_measures(&view).await;
-    let rail = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let rail = measures.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_toggle(rail, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible")), Some(false));
     assert_eq!(find_measure_slider(rail, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing")), Some(25.0));
     assert_eq!(find_measure_toggle(rail, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto")), Some(false));
@@ -224,9 +224,6 @@ async fn window_transient_is_exact_instance_local_and_resets_on_reload() {
     assert!(reset.get::<window_ownership::Puzzle3dWindowTransientOwner>().is_some_and(|value| value.suggestion_menu.is_none()));
     assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(3));
     assert_eq!(app.window_transient_generation(&view_b).expect("window b transient generation"), Some(0));
-    // 🧷️ Every `window_transient_snapshot` above is a live READ of the partition store, and close is
-    // blocked — by design — while one is outstanding. The reads have to be surrendered before the
-    // close witness, exactly as a host surrenders a rendered body before retiring its app.
     drop((transient_a, transient_b, closed));
     drop(reset);
     assert!(close_witness(&mut reopened).expect("reopened app close"));
@@ -289,11 +286,11 @@ async fn camera_actions_are_view_actions_that_emit_no_artifact_mutations() {
 #[semio_framework_async_macros::async_test]
 async fn focus_selection_frames_the_whole_document_when_nothing_is_selected() {
     let mut app = app().await;
-    dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [900.0, 900.0, 900.0], "target": [900.0, 900.0, 900.0], "zoom": 1.0 } })), Some(main::WINDOW_KIND_ID)).await.expect("park the camera far away");
-    let parked = camera_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [900.0, 900.0, 900.0], "target": [900.0, 900.0, 900.0], "zoom": 1.0 } })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("park the camera far away");
+    let parked = camera_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     let document_before = projection_of(&app);
-    let result = dispatch(&mut app, "focusSelection", None, Some(main::WINDOW_KIND_ID)).await.expect("focusSelection with an empty selection must complete");
-    let framed = camera_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    let result = dispatch(&mut app, "focusSelection", None, Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("focusSelection with an empty selection must complete");
+    let framed = camera_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_ne!(framed, parked, "focus with nothing selected must frame the document instead of leaving the camera parked");
     assert!(result.mutations.is_empty(), "focus is camera-only — it must emit no artifact history entry: {:?}", result.mutations);
     assert_eq!(projection_of(&app), document_before, "focus must not touch the document");
@@ -312,7 +309,7 @@ async fn focus_selection_frames_the_whole_document_when_nothing_is_selected() {
 #[semio_framework_async_macros::async_test]
 async fn one_window_config_mutation_publishes_exactly_one_generation_and_quiesces() {
     let mut app = app().await;
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let before = app.window_config_generation(&view).await.expect("window config generation").expect("puzzle3d registers one window config owner");
     dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [7.0, 8.0, 9.0], "target": [0.0, 0.0, 0.0], "zoom": 1.5 } })), None).await.expect("setCamera");
     assert!(!app.has_pending_typed_operations(), "one window-config gesture must leave no typed operation pending");
@@ -372,17 +369,17 @@ async fn vortex_show_window_option_defaults_to_selected_and_switches_to_always()
     let mut app = app().await;
     let all_vortex_ids = vortex_full_ids(&app);
     assert!(!all_vortex_ids.is_empty(), "scene_snapshot must expose vortices");
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures = app.window_measures(&view).await;
-    let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures = measures.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_SELECTED));
 
     assert!(vortices_of(&render_composite(&mut app).await).is_empty(), "Selected mode must hide vortices while idle");
 
     dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow always");
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures_always = app.window_measures(&view).await;
-    let window_measures_always = measures_always.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures_always = measures_always.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures_always, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_ALWAYS));
     assert_eq!(vortices_of(&render_composite(&mut app).await).len(), all_vortex_ids.len(), "Always mode must emit every vortex while idle");
 
@@ -393,9 +390,9 @@ async fn vortex_show_window_option_defaults_to_selected_and_switches_to_always()
 #[semio_framework_async_macros::async_test]
 async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inwards() {
     let mut app = app().await;
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures = app.window_measures(&view).await;
-    let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures = measures.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction")).as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS));
 
     dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow always");
@@ -404,9 +401,9 @@ async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inw
     assert!(outwards_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
 
     dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), None).await.expect("setVortexDirection inwards");
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures_inwards = app.window_measures(&view).await;
-    let window_measures_inwards = measures_inwards.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures_inwards = measures_inwards.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures_inwards, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction")).as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS));
     assert!(vortices_of(&render_composite(&mut app).await).iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS)));
 }
@@ -415,12 +412,12 @@ async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inw
 async fn vortex_direction_option_is_local_to_the_window_instance() {
     let mut app = app().await;
     let second_window = "puzzle3d-main-2";
-    dispatch(&mut app, "worldPointerDown", None, Some(main::WINDOW_KIND_ID)).await.expect("register base window");
-    dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(main::WINDOW_KIND_ID)).await.expect("setVortexShow always on base");
+    dispatch(&mut app, "worldPointerDown", None, Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("register base window");
+    dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("setVortexShow always on base");
     dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(second_window)).await.expect("setVortexShow always on second");
     dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), Some(second_window)).await.expect("setVortexDirection inwards on second window");
 
-    let base_vortices = vortices_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    let base_vortices = vortices_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert!(!base_vortices.is_empty(), "the base window must still emit vortices");
     assert!(base_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
 

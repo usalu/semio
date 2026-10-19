@@ -1,16 +1,16 @@
 /** 🧬️ Generation3dConfig */
 export interface Generation3dConfig {
-  /** @state config */
+  /** 🔭️ @state config */
   lodMode: string;
-  /** @state config */
+  /** 👁️ @state config */
   showMode: string;
-  /** @state config */
+  /** 📷️ @state config */
   camera: CameraJson;
-  /** @state config */
+  /** 👻️ @state config */
   previewCamera: Generation3dPreviewCamera;
-  /** @state config */
+  /** 💡️ @state config */
   sunJson: string;
-  /** @state config */
+  /** 👉️ @state config */
   selectedGenerationId?: string;
 }
 

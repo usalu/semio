@@ -126,7 +126,6 @@ async fn document_to_svg_dispatches_through_semio_drawing_bridge() {
     assert!(svg.contains("hello semio"), "{svg}");
     assert!(width >= 1024 && height >= 1024);
 
-    // Same pipeline through the JSON-wrapped entry point every io leaf/media handler actually calls.
     let json = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     let (svg_via_json, _w, _h) = note_document_json_to_svg(&json).expect("json svg export via io_dispatch");
     assert_eq!(svg, svg_via_json);

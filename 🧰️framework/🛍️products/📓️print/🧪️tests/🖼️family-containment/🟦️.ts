@@ -339,7 +339,7 @@ export async function compileNativeComplexSurfaces(execution:PrintExecutionV1): 
 });}
 
 
-/** \u{1fa9f} Compiles stock and authored grammar grids against independent D3 scales and square symbols. */
+/** 🪟️ Compiles stock and authored grammar grids against independent D3 scales and square symbols. */
 export async function compileNativeGrammarGrids(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/grammar-grids",async({directory:workDir,execution})=>{
   for (const theme of ["light", "dark"]) {
     const root=join(workDir,theme),body=fixture.gridCases.map(entry=>({raw:"\\SemioVizTable{grid-input}{"+entry.columns.join(",")+"}"+entry.rows.map(row=>"\\SemioVizRow{grid-input}{"+row.join(",")+"}").join("")+"\\clearpage\\SemioVizProbeBegin{grammar-grid}{"+entry.id+"}\\begin{VizFigure}[title={"+entry.id+"},width=80,height=40]\\SemioVizChart{"+entry.kind+"}["+entry.options+"]\\end{VizFigure}"}));

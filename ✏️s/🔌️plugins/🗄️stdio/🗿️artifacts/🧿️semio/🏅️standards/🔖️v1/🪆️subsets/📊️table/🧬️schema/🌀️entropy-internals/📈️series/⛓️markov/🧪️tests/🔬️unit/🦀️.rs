@@ -82,7 +82,6 @@ mod tests {
 
         #[test]
         fn two_state_chain_converges_to_analytic_stationary_and_entropy_rate() {
-            // ⛓️ pi P = pi for [[0.9, 0.1], [0.5, 0.5]] solves to pi = (5/6, 1/6).
             let transition = [[0.9, 0.1], [0.5, 0.5]];
             let seq = generate_two_state_sequence(transition, 50_000, 12_345);
             let chain = MarkovChain::fit(&seq, 2, 1).unwrap();

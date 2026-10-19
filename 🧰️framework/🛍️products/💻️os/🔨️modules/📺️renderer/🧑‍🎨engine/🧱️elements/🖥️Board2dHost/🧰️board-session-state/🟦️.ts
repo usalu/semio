@@ -91,13 +91,8 @@ export function useBoardSessionState({ node, onAction, requestContextMenu }: Com
       container.setAttribute("data-board-interaction-json", session?.interactionJson?.() ?? "{}");
       container.setAttribute("data-board-transform-json", session?.transformGumballJson?.() ?? "{}");
       container.setAttribute("data-board-target-regions-json", session?.targetRegionsJson?.() ?? "[]");
-      // 🩺️ `data-board-positions-json` names NODES only, so nothing in the DOM could ever be aimed at a
-      // handle — `connect`, `openHandleSuggestions` and `createEdge` all take handle ids. The engine
-      // answers viewport-bounded and capped, so a 358-handle document publishes a bounded attribute.
       container.setAttribute("data-board-handle-positions-json", session?.handlePositionsJson?.() ?? "{}");
-    } catch {
-      /* session not ready */
-    }
+    } catch {}
     container.setAttribute("data-board-status-json", board2dStatusJson(boardStatusRef.current));
   }, []);
 
@@ -124,10 +119,6 @@ export function useBoardSessionState({ node, onAction, requestContextMenu }: Com
   useEffect(() => {
     if (!windowInstanceId) return;
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
-      // 🎯️ `entity` targeting (board nodes/edges/handles by id) needs an id→screen API the board-2d wasm
-      // engine doesn't expose yet (mirroring the dag engine's `entity_screen_json` would be the fix) — a
-      // known gap, not a silent guess: `scene.snapshotJson`'s node schema isn't a framework-owned shape
-      // this file can safely parse. `canvasPoint` (world coordinates) is fully supported.
       canvasPoint: (x, y) => {
         const cameraJson = sceneRef.current?.cameraJson;
         if (!cameraJson) return null;

@@ -118,7 +118,7 @@ pub fn validate_link_pin_record(record: &semio_framework_dsl_record::RecordValue
     Ok(*ordinal)
 }
 
-pub fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<LinkPin, ValueError> {
+pub fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<LinkPin, ValueError> {
     control.scoped_stage(|control| {
         control.checkpoint()?;
         let ordinal = validate_link_pin_record(record).map_err(|message| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
@@ -272,7 +272,7 @@ pub fn artifact_link_from_record(record: &semio_framework_dsl_record::RecordValu
     Ok(ArtifactLink { target, pin, role })
 }
 
-pub fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactLink, ValueError> {
+pub fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactLink, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         if record.fields.len() != 3 || record.fields.keys().any(|id| *id > 2) {
@@ -320,13 +320,13 @@ impl semio_framework_dsl_record::DslField for LinkPin {
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected link pin Record"));
         };
         link_pin_from_record_controlled(record, control)
     }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         link_pin_from_record_controlled(record, control)
     }
 }
@@ -362,13 +362,13 @@ impl semio_framework_dsl_record::DslField for ArtifactLink {
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact link Record"));
         };
         artifact_link_from_record_controlled(record, control)
     }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         artifact_link_from_record_controlled(record, control)
     }
 }

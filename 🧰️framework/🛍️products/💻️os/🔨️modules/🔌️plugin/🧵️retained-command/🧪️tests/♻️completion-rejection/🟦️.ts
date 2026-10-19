@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 
 test("refused completion neutral ownership lifecycle matches SQLite",()=>{
-  const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/♻️completion-rejection.json",import.meta.url),"utf8"));
+  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/♻️completion-rejection.json",import.meta.url),"utf8"));
   const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/♻️completion-rejection.json",import.meta.url),"utf8"));
   expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   const oracle=new Database(":memory:");

@@ -9,7 +9,7 @@ fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{
 }
 fn visit(schema:&str,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{p.insert("playground_document",&[Cell::Text(schema)])?;Ok(())}
 fn admit(snapshot:&PlaygroundSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit(&snapshot.schema,&mut p)?;p.finish_borrowed()}
-fn admit_record(record:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{
+fn admit_record(record:&semio_framework_dsl_record::RecordValue,limits:SqliteDatabaseLimits,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{
  extent(limits)?;n.step()?;if record.fields.len()!=1{return Err(invalid("Playground native record field map differs"))}let Some(semio_framework_dsl_record::FieldValue::Text(schema))=record.fields.get(&0)else{return Err(invalid("Playground native schema requires text"))};let bytes=8usize.checked_add(schema.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Playground semantic extent overflow"))?;if bytes>limits.max_value_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Playground semantic value limit exceeded"))}Ok(())
 }
 

@@ -60,7 +60,6 @@ async fn executor_runs_steps_in_order() {
     assert!(result.effects.iter().all(|entry| entry.error.is_none()));
     let counter = result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
     assert_eq!(counter, Some(3.0));
-    // 🧊️ `RunResult` owns the accumulated scope and every effect row's dictionaries.
     ColdRetire::retire_cold(result);
 }
 

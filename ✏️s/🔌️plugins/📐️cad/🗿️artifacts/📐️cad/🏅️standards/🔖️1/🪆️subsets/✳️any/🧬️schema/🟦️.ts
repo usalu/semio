@@ -22,16 +22,16 @@ export type CadReferenceList = CadReference[];
 export interface CadNode { id: string; label: string; kind: string }
 
 export interface CadArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ id: string;
-  /** @state artifact @child kind=s.stdio.semio */ shapeModel?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ buildingModel?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ energyModel?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ structureClassicModel?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio many */ drawings: ArtifactChild[];
-  /** @state artifact @child kind=s.stdio.semio many */ breps: CadBrepChild[];
-  /** @state artifact */ referencesByModelDefinitionId: Record<string, CadReferenceList>;
-  /** @state artifact */ nodes: CadNode[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🆔️ @state artifact */ id: string;
+  /** 🧊️ @state artifact @child kind=s.stdio.semio */ shapeModel?: ArtifactChild;
+  /** 🏢️ @state artifact @child kind=s.stdio.semio */ buildingModel?: ArtifactChild;
+  /** 🏋️ @state artifact @child kind=s.stdio.semio */ energyModel?: ArtifactChild;
+  /** 🏗️ @state artifact @child kind=s.stdio.semio */ structureClassicModel?: ArtifactChild;
+  /** ✏️ @state artifact @child kind=s.stdio.semio many */ drawings: ArtifactChild[];
+  /** 🔷️ @state artifact @child kind=s.stdio.semio many */ breps: CadBrepChild[];
+  /** 🔗️ @state artifact */ referencesByModelDefinitionId: Record<string, CadReferenceList>;
+  /** 🔘️ @state artifact */ nodes: CadNode[];
 }
 
 function object(value: unknown, at: string): Record<string, unknown> {

@@ -48,7 +48,8 @@ use crate::people_gain_mutations::{
 use crate::plant_loop_mutations::{
     add_plant_loop_equipment, change_plant_loop_design_flow, change_plant_loop_return_temperature, change_plant_loop_supply_temperature, change_plant_loop_type, create_plant_loop, delete_plant_loop, remove_plant_loop_equipment, rename_plant_loop,
 };
-use crate::pv_system_mutations::{change_pv_system_area, change_pv_system_azimuth, change_pv_system_dc_capacity, change_pv_system_inverter_efficiency, change_pv_system_module_efficiency, change_pv_system_tilt, create_pv_system, delete_pv_system};
+use crate::pv_system_mutations::{change_pv_system_area, change_pv_system_azimuth, change_pv_system_tilt, create_pv_system, delete_pv_system};
+use crate::pv_system_performance_mutations::{change_pv_system_dc_capacity, change_pv_system_inverter_efficiency, change_pv_system_module_efficiency};
 use crate::refrigeration_mutations::{change_refrigeration_system_case_count, change_refrigeration_system_defrost_schedule, change_refrigeration_system_design_load, create_refrigeration_system, delete_refrigeration_system};
 use crate::room_air_mutations::{change_room_air_model, create_room_air_model_assignment, delete_room_air_model_assignment};
 use crate::run_mutations::{change_run_end_day, change_run_end_month, change_run_start_day, change_run_start_month, change_run_year};
@@ -75,10 +76,8 @@ use crate::ventilation_mutations::{
 };
 use crate::water_system_mutations::{change_water_system_fixture_count, change_water_system_peak_flow, change_water_system_schedule, create_water_system, delete_water_system};
 use crate::week_schedule_mutations::{change_weekly_schedule_day, create_weekly_schedule, delete_weekly_schedule};
-use crate::window_layer_mutations::{
-    change_gas_material_gas, change_gas_material_thickness, change_glazing_material_conductivity, change_glazing_material_infrared_emissivity, change_glazing_material_solar_transmittance, change_glazing_material_thickness,
-    change_glazing_material_visible_transmittance, rename_gas_material, rename_glazing_material,
-};
+use crate::window_layer_mutations::{change_gas_material_gas, change_gas_material_thickness, change_glazing_material_conductivity, change_glazing_material_thickness, rename_gas_material, rename_glazing_material};
+use crate::window_layer_optics_mutations::{change_glazing_material_infrared_emissivity, change_glazing_material_solar_transmittance, change_glazing_material_visible_transmittance};
 use crate::year_schedule_mutations::{
     add_annual_schedule_holiday, change_annual_schedule_default_daily_schedule, change_annual_schedule_holiday_daily_schedule, create_annual_schedule, delete_annual_schedule, insert_annual_schedule_rule, remove_annual_schedule_holiday,
     remove_annual_schedule_rule, reorder_annual_schedule_rules,

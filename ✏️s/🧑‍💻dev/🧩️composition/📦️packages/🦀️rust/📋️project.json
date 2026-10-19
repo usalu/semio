@@ -12,7 +12,12 @@
   "targets": {
     "source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️composition/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -22,7 +27,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -42,7 +47,7 @@
     },
     "test-generation2d": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation2d-example-export",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -52,7 +57,7 @@
     },
     "test-sequence": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick --test sequence-runtime",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -62,7 +67,7 @@
     },
     "test-generation3d-geometry": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation3d-example-geometry",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -72,7 +77,7 @@
     },
     "test-generation3d-incremental": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation3d-incremental-eval",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -82,7 +87,7 @@
     },
     "test-generation3d-app-laws": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation3d-app-laws",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
@@ -92,7 +97,7 @@
     },
     "test-generation3d-unit-laws": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test quick --test retained-artifact-units",
         "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",

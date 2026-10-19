@@ -72,10 +72,6 @@ const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_M
 async function prebuildParityPlugin(variant: string): Promise<void> {
   const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
   const logPath = join(parityOutDir(), `prebuild-${variant}.log`);
-  // 🔒️ The lock file lives beside the parity report, not in cargo's own output: every cargo invocation
-  // (this prebuild, react's and wgpu's own nx-driven builds) shares the ONE `cargoTargetDirectory`
-  // (fine-grain-locked, `.cargo/config.toml`) — this mkdir-mutex only dedupes the ~30-crate prebuild
-  // itself across concurrent parity runs, not cargo's own output location.
   const lockRoot = parityOutDir();
   const lockPath = join(lockRoot, ".semio-parity-prebuild-lock");
   mkdirSync(lockRoot, { recursive: true });
@@ -87,10 +83,6 @@ async function prebuildParityPlugin(variant: string): Promise<void> {
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       if (Date.now() >= lockDeadline) throw new Error(`plugin prebuild lock for ${variant} exceeded ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms (${lockPath})`);
-      // 🏛️ THE RULE (see 🔖️PollHelpers above): legitimate poll, not routed through a helper — this is
-      // a cross-process `mkdir`-as-mutex over a shared target dir; the lock's holder may be a wholly
-      // separate `parity` invocation this process never spawned and has no pid/handle/event for. A
-      // TCP/HTTP helper would not fit this shape (no port, no HTTP endpoint) even if we wanted one.
       await Bun.sleep(500);
     }
   }
@@ -107,8 +99,6 @@ async function prebuildParityPlugin(variant: string): Promise<void> {
     });
     daemon.child.stdout?.pipe(logStream);
     daemon.child.stderr?.pipe(logStream);
-    // 🧵️ We hold `daemon.child` — await its `exit` event via `awaitChildExit` (THE RULE above)
-    // instead of polling `exitCode`. Same budget as before.
     const exited = await awaitChildExit(daemon.child, PARITY_DEV_SERVER_BOOT_BUDGET_MS);
     if (exited === "timeout") {
       daemon.kill();
@@ -156,17 +146,13 @@ async function startParityDevServer(renderer: ParityRenderer, variant: string, p
 function stopParityDevServer(handle: ParityServerHandle): void {
   try {
     handle.daemon.kill();
-  } catch {
-    /* already gone */
-  }
+  } catch {}
   const occupant = describeDevPortOccupant(handle.port);
   const pid = Number(occupant?.match(/PID (\d+)/)?.[1]);
   if (Number.isFinite(pid)) {
     try {
       process.kill(pid, "SIGTERM");
-    } catch {
-      /* already gone */
-    }
+    } catch {}
   }
 }
 

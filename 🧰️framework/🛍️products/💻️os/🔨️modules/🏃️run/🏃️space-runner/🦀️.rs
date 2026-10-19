@@ -172,8 +172,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
         config: &(Vec<u8>, Vec<u8>),
         input_media: &BTreeMap<String, Media>,
     ) -> Result<((Vec<u8>, Vec<u8>), (Vec<u8>, Vec<u8>), BTreeMap<String, (Media, String)>), RunError> {
-        // 🛑️ Checked BEFORE `open`/`exchange` — a cancelled run stops before its NEXT node rather
-        // than mid-exchange (see `RunError::Cancelled`'s own doc).
         if self.cancel.is_cancelled().await {
             return Err(RunError::Cancelled);
         }
@@ -358,12 +356,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 
         let mut report = RunReport::default();
         let mut live: HashMap<String, u32> = HashMap::new();
-        // 🧷️ Progressively filled AS this run computes each node, in topological order — the within-run
-        // counterpart to `prior_node_records` (which stays fixed: the prior SEALED run's ground truth).
-        // A downstream node's input fingerprint must reflect what its upstream producer computed THIS
-        // run, not last time — mirrors the old `RunState.nodes`'s dual role (both "prior run" and "just
-        // computed this run"), split into two maps here on purpose so "prior sealed run" (read-only
-        // memoization ground truth) and "this run's own progress" (write-as-we-go) can never be confused.
         let mut current_run_records: BTreeMap<String, RunNodeRecord> = BTreeMap::new();
 
         for node_id in &order {
@@ -389,9 +381,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 
             if !dirty {
                 report.clean.push(node_id.clone());
-                // ⚡️ Cache hit: reuse the prior sealed run's own record verbatim (fingerprints/outputs),
-                // just relabeled `CacheHit` — this node is never opened, never mutates anything, and its
-                // outputs stay exactly what they already were.
                 let previous_record = previous.expect("dirty=false implies a prior record exists").clone();
                 let node_record = RunNodeRecord { status: RunNodeStatus::CacheHit, ..previous_record };
                 current_run_records.insert(node_id.clone(), node_record.clone());
@@ -407,15 +396,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
                 let media = match cache.get(&fingerprint) {
                     Some(media) => media,
                     None => {
-                        // 🩹️ Defensive one-hop fallback (mirrors the pre-`AppChannelHost` runner's own
-                        // behavior): a clean upstream node's output should already be in `cache` from a
-                        // prior run; reaching here means it genuinely isn't (e.g. an evicted media
-                        // cache dir) — recompute the source node directly, WITHOUT recursively
-                        // resolving ITS OWN inputs (a clean node's inputs are, by definition, unchanged
-                        // since it was last fully computed). Still fully readonly over `documents`/
-                        // `configs`: this recompute's own mutated bytes are simply discarded (`_source_*`)
-                        // rather than written anywhere, matching "run never writes over source" even in
-                        // this fallback path.
                         let source_node = *node_by_id.get(edge.source_node_id.as_str()).ok_or_else(|| RunError::UnknownNode(edge.source_node_id.clone()))?;
                         let source_document = documents.get(&source_node.artifact_ref).cloned().unwrap_or_default();
                         let source_config = configs.get(&source_node.config_ref).cloned().unwrap_or_default();
@@ -433,9 +413,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
             let (mutated_document, mutated_config, outputs) = self.compute_node(&mut live, node, &document, &config, &input_media).await?;
             let duration_ms = started_at.elapsed().as_secs_f64() * 1000.0;
 
-            // 🔒️ THE non-destructive rework's write side: mutated document/config bytes go into `sink`'s
-            // run-owned area (keyed by node id), never back into `documents`/`configs` — those stay
-            // read-only source maps for the whole call.
             sink.write_node_artifact(node_id, mutated_document.0, mutated_document.1);
             sink.write_node_config(node_id, mutated_config.0, mutated_config.1);
 
@@ -444,9 +421,6 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
             for (port_id, (media, fingerprint)) in &outputs {
                 output_fingerprints.push(PortFingerprint { port_id: port_id.clone(), fingerprint: fingerprint.clone() });
                 cache.put(&MediaFingerprint(fingerprint.clone()), media);
-                // 📤️ The media cache is the one place this crate already persists exported output bytes
-                // durably (`<space>/cache/media/<fingerprint>.json`) — `RunOutputArtifact`
-                // points at that real, existing location rather than inventing a second one this wave.
                 run_outputs.push(RunOutputArtifact { port_id: port_id.clone(), artifact_id: format!("cache/media/{fingerprint}"), path: format!("cache/media/{fingerprint}.json") });
             }
             let node_record = RunNodeRecord {

@@ -1,6 +1,8 @@
 //! 🧱️ Board event limits, window, export and dispatch work: the board event batch limit and extent, the window command work, the revision hex, the export work, the dispatch emit and the generic and active example extents. See [`super`].
 
 use super::*;
+use std::cell::RefCell;
+use semio_framework_job::StepContext;
 
 //#region 🔖️PlayApp
 //#region 🧵️RetainedCommands
@@ -159,8 +161,6 @@ pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
     let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
     let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), ..Default::default() };
     let mut scene = puzzle2d_scene_with(before.clone(), runtime, &active_utility, interaction);
-    // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
-    // each call. The previous last_synced_fixture cache lived on &self and cannot return.
     let host = RefCell::new(puzzle_board_host());
     {
         let mut host_mut = host.borrow_mut();
@@ -175,8 +175,6 @@ pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
     let mut artifact_mutations = Vec::new();
     let mut interaction_writes = Vec::new();
     let mut transaction = None;
-    // 🐢️ Default to Full (safe: every unrecognized/rare action re-renders everything); the
-    // narrow-tier arms below override it to the smallest scope that actually covers what they touch.
     let mut ui_scope = UiDirtyScope::Full;
     {
         let labels = puzzle2d_labels(view_state.ok_or_else(|| Fault::from("puzzle2d action requires the caller's explicit presentation axes"))?);
@@ -264,19 +262,13 @@ pub fn puzzle2d_dispatch_emit<A: Puzzle2dEditor>(
     apply_host_events(&mut host.borrow_mut(), &mut recorder, &mut scene.runtime);
     let mut operations = recorder.into_rows();
     operations.append(&mut artifact_mutations);
-    // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
-    // actual document mutation (would silently desync remote clients' UI from the committed operation).
     if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
         ui_scope = UiDirtyScope::Full;
     }
-    // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
-    // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
     let (next_config, next_window_config, next_window_transient) = window::split(&scene.runtime, window_kind);
     let config_mutations = config.mutations_to(&next_config);
     let window_config_mutations = if &next_window_config != window_config { vec![window::addressed_config(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_config)?] } else { Vec::new() };
     let window_transient = if &next_window_transient != window_transient { vec![window::addressed_transient(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_transient)?] } else { Vec::new() };
-    // 🛠️ The first tool transaction an action commits stamps every op of its ONE edit — the yielded leaves and any
-    // scene delta the same dispatch carried — so history lists the gesture as one row whose inputs stay editable.
     let transaction = transaction.filter(|_| !operations.is_empty());
     Ok((Emit { artifact_mutations: operations, config_mutations, window_config_mutations, transaction, effects, ui_scope, interaction_writes, ..Default::default() }, EphemeralEmit { window_transient, ..Default::default() }))
 }
@@ -315,8 +307,6 @@ pub fn puzzle2d_generic_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPl
     if addressed > PUZZLE2D_SELECTION_BATCH_LIMIT {
         return None;
     }
-    // 🧲️ `translateSelection` and `proximityConnect` land open handles, so both carry the gesture's
-    // fixed auto-connect budget on top of the entities they rewrite.
     let connects = if matches!(action, "translateSelection" | "proximityConnect") { PUZZLE2D_PROXIMITY_GESTURE_MAX } else { 0 };
     Some(addressed.saturating_add(connects).max(1))
 }

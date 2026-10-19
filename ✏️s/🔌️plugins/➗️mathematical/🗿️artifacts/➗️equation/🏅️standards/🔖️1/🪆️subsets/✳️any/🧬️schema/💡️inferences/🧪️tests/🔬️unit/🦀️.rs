@@ -16,7 +16,6 @@ async fn inference_default_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn default_graph_diamond_is_cycle_free_with_two_roots() {
-    // 🔷 The default graph is a diamond: a->b, a->c, b->d, c->d — acyclic, `a` is the only root.
     let inferred = EquationInference::infer(&EquationSnapshot::default()).expect("valid materialized inference fixture");
     assert!(inferred.topology.cycle_free);
     assert_eq!(inferred.topology.node_count, 4);
@@ -29,8 +28,6 @@ async fn default_graph_diamond_is_cycle_free_with_two_roots() {
 
 #[semio_framework_async_macros::async_test]
 async fn default_equation_is_the_zero_polynomial_with_no_roots() {
-    // 🔎️ `EquationExprSnapshot::default()` is the integer literal `0` — the zero polynomial has no
-    // isolated real roots, an empty `Vec`, never a panic (see `🌱roots`'s own scope tests).
     let inferred = EquationInference::infer(&EquationSnapshot::default()).expect("valid materialized inference fixture");
     assert!(inferred.roots.is_empty());
 }

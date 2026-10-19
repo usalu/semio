@@ -1,0 +1,238 @@
+[
+ {
+  "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 6,
+  "literal": "./✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 9,
+  "literal": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪟️optics/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 9,
+  "literal": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪪️owned-target/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪪️owned-target/🟦️.test.ts",
+   "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪪️owned-target/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🪪️owned-target/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 12,
+  "literal": "🧪️tests/🔬️unit/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 12,
+  "literal": "🩹️patch/🧪️tests/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 12,
+  "literal": "🖼️raster/🧪️tests/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 13,
+  "literal": "🧪️tests/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/✏️editor/🧪️tests/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 11,
+  "literal": "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 13,
+  "literal": "🧪️tests/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/✏️editor/🧪️tests/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 15,
+  "literal": "🧪️tests/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/✏️editor/🧪️tests/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 4,
+  "literal": "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🧬️canonical-storage/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🧬️canonical-storage/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🧪️tests/🧬️canonical-storage/🟦️.ts"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📜️script.ts",
+  "line": 4,
+  "literal": "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️owned-native-contract/🟦️.ts"
+ },
+ {
+  "file": "🧪️tests/🧫️fixtures/🧫️diff-only-law-gate/🔣️.json",
+  "line": 1607,
+  "literal": "🟦️.test.tsx",
+  "removed": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/🧪️tests/✏️editable-text/🟦️.test.tsx"
+  ],
+  "successor": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📊️Table/🧪️tests/✏️editable-text/🟦️.tsx"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🦀️rust/📜️script.ts",
+  "line": 205,
+  "literal": "🧪️tests/nested-io.ts",
+  "removed": [
+   "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io.ts"
+  ],
+  "successor": "🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/nested-io/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🔬️script-commands/🟦️.ts",
+  "line": 15,
+  "literal": "♻️retirement/🧪️tests/🧺️heap.ts",
+  "removed": [
+   "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap.ts"
+  ],
+  "successor": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🧺️heap/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🏃️process/📜️script.ts",
+  "line": 84,
+  "literal": "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts",
+  "removed": [
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts"
+  ],
+  "successor": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership/📜️script.ts",
+  "line": 9,
+  "literal": "🧪️tests/🟦️.test.ts",
+  "removed": [
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🟦️.test.ts",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/✏️editor/🧪️tests/🟦️.test.ts"
+  ],
+  "successor": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🖼️raster/🧪️tests/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🟦️.tsx",
+  "line": 175,
+  "literal": "🌐️browser.tsx",
+  "removed": [
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🌐️browser.tsx"
+  ],
+  "successor": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🌐️browser/🟦️.tsx"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+  "line": 155,
+  "literal": "💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🏪️scope/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+  "line": 155,
+  "literal": "📦️artifacts/🔒️bounded/🧪️tests/🍎️image.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
+  "line": 17,
+  "literal": "../🦀️.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
+  "line": 30,
+  "literal": "../🦀️.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🔣️.json",
+  "line": 552,
+  "literal": "🧪️tests/🦀️.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📜️script.ts",
+  "line": 6,
+  "literal": "🧪️tests/📒️ledger.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🧪️tests/🧫️fixtures/🔣️.json",
+  "line": 212,
+  "literal": "./production.ts",
+  "removed": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts"
+  ],
+  "successor": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production/🟦️.ts"
+ }
+]

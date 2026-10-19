@@ -1,4 +1,4 @@
-//! docx rep for stdio.docx 🧬️mutations
+//! 🧾️ docx rep for stdio.docx 🧬️mutations
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
@@ -8,30 +8,29 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_block;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_bool;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_str;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_style;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::dec_xml_node;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::decode_option;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_block;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_bool;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_list;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_str;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_style;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::enc_xml_node;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::encode_option;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::hex_decode;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::hex_encode;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::split_top_level;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::strip_brackets;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_xml_node_bin;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_xml_node_bin;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::parse_usize;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxPathSegment;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::dec_block;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::dec_bool;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::dec_str;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::dec_style;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::dec_xml_node;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::decode_option;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::enc_block;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::enc_bool;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::enc_list;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::enc_str;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::enc_style;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::enc_xml_node;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::encode_option;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::hex_decode;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::hex_encode;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::split_top_level;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::strip_brackets;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::dec_xml_node_bin;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::enc_xml_node_bin;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxPathSegment;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff;
 #[cfg(test)]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::docx_part_is_xml;
@@ -66,14 +65,14 @@ use xml_address::{
 /// `write_str_lp`/`read_str_lp`/`write_bytes_lp`/`read_bytes_lp`/`enc_block_bin`/`dec_block_bin`/
 /// `enc_style_bin`/`dec_style_bin`/`enc_opc_part_bin`/`dec_opc_part_bin`/`enc_rel_bin`/
 /// `dec_rel_bin` (`../🔺️diff/🦀️.rs`, `pub(crate)` to this artifact).
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_block_bin;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::dec_style_bin;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_block_bin;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::enc_style_bin;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::read_bytes_lp;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::read_str_lp;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::write_bytes_lp;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::write_str_lp;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::dec_block_bin;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::dec_style_bin;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::enc_block_bin;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::enc_style_bin;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::read_bytes_lp;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::read_str_lp;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::write_bytes_lp;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::write_str_lp;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_path_segment_bin(seg: &DocxPathSegment, out: &mut Vec<u8>) {

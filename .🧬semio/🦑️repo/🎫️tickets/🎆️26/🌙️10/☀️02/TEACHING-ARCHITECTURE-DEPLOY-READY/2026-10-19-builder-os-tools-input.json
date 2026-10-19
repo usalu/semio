@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "name": "semio-course-os-tools-sol-20261019",
+  "image": "semio-course-preflight-os:sol-tools-20261019",
+  "baseImage": "sha256:04ed9880ecae29f4b9954f72f498b2da9b3b58e4fc4b482d193b64e4a38118e0",
+  "platform": "linux/amd64",
+  "maximumMilliseconds": 600000,
+  "maximumCompressedInputBytes": 536870912,
+  "maximumTemporaryBytes": 1342177280,
+  "conservativeInputBytes": 337309456,
+  "conservativeTemporaryBytes": 737864120,
+  "preserveOperatingSystem": true,
+  "compose": true,
+  "existingRepository": true,
+  "installTools": [
+    "git",
+    "build-essential",
+    "curl"
+  ],
+  "auditDaemon": true,
+  "sourceFiles": 0,
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "completedAt": "2026-10-19T12:46:27.581Z",
+  "imageId": "sha256:3b79ef2921a597b6e0906f5627fd0b283273748f79235eac11464cdfe5fe43cf",
+  "imageBytes": 181663837,
+  "containerWritableBytes": 187793408,
+  "containerRootBytes": 527831040,
+  "packageBudget": {
+    "archiveBytes": 41727916,
+    "installedBytes": 197585920,
+    "metadataBytes": 20019339,
+    "conservativeInputBytes": 459114728,
+    "conservativeTemporaryBytes": 1329000943
+  },
+  "packageInput": "2026-10-19-builder-os-tools-packages.json"
+}

@@ -1,10 +1,12 @@
 //! 📥️ `AdmitLocalDocument` is the authoritative direct Rust leaf for listing one document in this device's local catalog.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
-use protocol::{MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
@@ -137,7 +139,7 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocume
     }
 }
 
-impl crate::os_spr::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
+impl semio_framework_os_command::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for AdmitLocalDocument {
     fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         let admitted = LocalDocument::from(self);
         if base.documents.iter().any(|entry| *entry == admitted) {

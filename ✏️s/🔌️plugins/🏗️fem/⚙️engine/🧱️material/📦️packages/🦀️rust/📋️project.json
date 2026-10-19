@@ -2,7 +2,7 @@
   "targets": {
     "test-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "metadata": {
         "semio": {
           "workspaceCommand": [
@@ -18,7 +18,7 @@
     },
     "test-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "metadata": {
         "semio": {
           "workspaceCommand": [

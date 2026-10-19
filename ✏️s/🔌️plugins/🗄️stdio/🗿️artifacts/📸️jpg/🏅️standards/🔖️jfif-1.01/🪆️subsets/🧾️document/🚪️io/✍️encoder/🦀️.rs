@@ -125,10 +125,6 @@ pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u
             }
         }
     }
-    // 📐️ One plane per component at that component's own resolution: `hmax / h` by `vmax / v`
-    // box-filtered. A component already at the frame maximum keeps its full-resolution buffer by
-    // MOVE rather than being box-filtered 1:1 into a second copy of it — on a 2275x2560 scan that
-    // is 46 MB of `f64` per component not allocated twice.
     let planes: Vec<(Vec<f64>, usize)> = comps
         .iter()
         .zip(full)
@@ -152,7 +148,7 @@ pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u
     let ac_chroma = build_huffman(&AC_CHROMA_BITS, &ac_chroma_values())?;
 
     let mut out = Vec::new();
-    out.extend_from_slice(&[0xFF, 0xD8]); // SOI
+    out.extend_from_slice(&[0xFF, 0xD8]);
     out.extend_from_slice(&encode_jfif_app0(snap));
     for seg in &snap.image.other_segments {
         out.push(0xFF);
@@ -211,9 +207,6 @@ pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u
     let mut dc_pred = vec![0i32; comps.len()];
     for my in 0..mcus_y {
         for mx in 0..mcus_x {
-            // 🧩️ T.81 §A.2.3 MCU interleave: every component contributes `h * v` blocks per MCU, in
-            // component order, row-major within the component — which is one block for a 1x1
-            // component and four for a 2x2 one.
             for (index, component) in comps.iter().enumerate() {
                 let (plane, plane_width) = &planes[index];
                 let (table_q, dc_table, ac_table) = if index == 0 { (&luma_q, &dc_luma, &ac_luma) } else { (&chroma_q, &dc_chroma, &ac_chroma) };
@@ -240,7 +233,7 @@ pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u
     }
     bw.flush();
     out.extend_from_slice(&bw.bytes);
-    out.extend_from_slice(&[0xFF, 0xD9]); // EOI
+    out.extend_from_slice(&[0xFF, 0xD9]);
     Ok(out)
 }
 

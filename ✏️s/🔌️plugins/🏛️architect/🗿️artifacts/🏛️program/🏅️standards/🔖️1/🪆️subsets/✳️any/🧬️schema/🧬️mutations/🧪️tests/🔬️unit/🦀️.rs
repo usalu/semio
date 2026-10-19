@@ -132,10 +132,6 @@ async fn update_governance_rename_and_replace_round_trip() {
 //#region 🗺️🧹connect-disconnect-adjacency
 #[semio_framework_async_macros::async_test]
 async fn connect_and_disconnect_adjacency_round_trip() {
-    // 🧲️ `connectAdjacency` UPSERTS BY ENDPOINT PAIR (see
-    // `connect_adjacency_upserts_an_existing_pair_by_endpoint_identity` below), and `sample_plugin()`
-    // already links its only two elements — so this law, which is about ADDING a brand-new edge and
-    // taking it away again, starts from the same document with no edge between them yet.
     let mut snapshot = sample_plugin();
     snapshot.adjacencies.clear();
     let a = snapshot.elements[0].header.id.clone();

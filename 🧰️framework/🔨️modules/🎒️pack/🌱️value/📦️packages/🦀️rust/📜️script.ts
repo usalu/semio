@@ -8,12 +8,13 @@ import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packag
 import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
+import { resolveTypescriptCompilerV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🧬️ Checks canonical record model and binding ownership without product infrastructure. */
 class OwnershipScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-ownership accepts no arguments");
     const test = resolve(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
     await runBudgetedTestCommand(process.execPath, ["test", test], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true});
   }
 }
@@ -23,7 +24,7 @@ class RefusalsScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("test-refusals accepts no arguments");
     const test=resolve(this.root,"../../🧪️tests/🚦️refusals/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+    await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
     await runBudgetedTestCommand(process.execPath,["test",test],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
   }
 }
@@ -50,4 +51,4 @@ class SchemaStorageScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-ownership", OwnershipScript).register("test-native", NativeScript).register("test-refusals",RefusalsScript).register("test-schema-storage-source",SchemaStorageScript);
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand: "test-ownership"}) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-ownership" }));

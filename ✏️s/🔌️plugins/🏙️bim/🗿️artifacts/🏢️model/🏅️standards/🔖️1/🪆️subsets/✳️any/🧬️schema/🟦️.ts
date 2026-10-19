@@ -1,119 +1,119 @@
 /** 🧬️ BIM model artifact schema — every field with its state class. */
 
 export interface ModelArtifact {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   project: Project;
-  /** @state artifact */
+  /** 🧱️ @state artifact */
   materials?: Record<string, Material>;
-  /** @state artifact */
+  /** 🚧️ @state artifact */
   wall_types?: Record<string, WallType>;
-  /** @state artifact */
+  /** 🟫️ @state artifact */
   slab_types?: Record<string, SlabType>;
-  /** @state artifact */
+  /** 🏠️ @state artifact */
   roof_types?: Record<string, RoofType>;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   column_types?: Record<string, ColumnType>;
-  /** @state artifact */
+  /** 🪵️ @state artifact */
   beam_types?: Record<string, BeamType>;
-  /** @state artifact */
+  /** 🪟️ @state artifact */
   window_types?: Record<string, WindowType>;
-  /** @state artifact */
+  /** 🚪️ @state artifact */
   door_types?: Record<string, DoorType>;
-  /** @state artifact */
+  /** 🎭️ @state artifact */
   curtain_wall_types?: Record<string, CurtainWallType>;
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   sites?: Record<string, Site>;
-  /** @state artifact */
+  /** 🏘️ @state artifact */
   buildings?: Record<string, Building>;
-  /** @state artifact */
+  /** 🪜️ @state artifact */
   storeys?: Record<string, Storey>;
-  /** @state artifact */
+  /** 🔳️ @state artifact */
   grids?: Record<string, GridLine>;
-  /** @state artifact */
+  /** 🪨️ @state artifact */
   walls?: Record<string, Wall>;
-  /** @state artifact */
+  /** 🧵️ @state artifact */
   curtain_walls?: Record<string, CurtainWall>;
-  /** @state artifact */
+  /** 🕳️ @state artifact */
   curtain_panel_overrides?: Record<string, CurtainPanelOverride>;
-  /** @state artifact */
+  /** 🗂️ @state artifact */
   columns?: Record<string, Column>;
-  /** @state artifact */
+  /** 📏️ @state artifact */
   beams?: Record<string, Beam>;
-  /** @state artifact */
+  /** ⬜️ @state artifact */
   slabs?: Record<string, Slab>;
-  /** @state artifact */
+  /** 🛖️ @state artifact */
   roofs?: Record<string, Roof>;
-  /** @state artifact */
+  /** 🔲️ @state artifact */
   openings?: Record<string, Opening>;
-  /** @state artifact */
+  /** 🛗️ @state artifact */
   stairs?: Record<string, Stair>;
-  /** @state artifact */
+  /** 🛤️ @state artifact */
   railings?: Record<string, Railing>;
-  /** @state artifact */
+  /** ♿️ @state artifact */
   ramps?: Record<string, Ramp>;
-  /** @state artifact */
+  /** 🛋️ @state artifact */
   spaces?: Record<string, Space>;
-  /** @state artifact */
+  /** 🔝️ @state artifact */
   ceiling_types?: Record<string, CeilingType>;
-  /** @state artifact */
+  /** 💡️ @state artifact */
   ceilings?: Record<string, Ceiling>;
-  /** @state artifact */
+  /** 🛏️ @state artifact */
   zones?: Record<string, Zone>;
-  /** @state artifact */
+  /** 🗺️ @state artifact */
   area_schemes?: Record<string, AreaScheme>;
-  /** @state artifact */
+  /** 🌌️ @state artifact */
   space_conditions?: Record<string, SpaceConditions>;
-  /** @state artifact */
+  /** 📷️ @state artifact */
   views?: Record<string, View>;
-  /** @state artifact */
+  /** 📄️ @state artifact */
   sheets?: Record<string, Sheet>;
-  /** @state artifact */
+  /** 🖼️ @state artifact */
   viewports?: Record<string, Viewport>;
-  /** @state artifact */
+  /** 📃️ @state artifact */
   sheet_revisions?: Record<string, SheetRevision>;
-  /** @state artifact */
+  /** ↔️ @state artifact */
   dimensions?: Record<string, Dimension>;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   tags?: Record<string, Tag>;
-  /** @state artifact */
+  /** 💬️ @state artifact */
   text_notes?: Record<string, TextNote>;
-  /** @state artifact */
+  /** ➡️ @state artifact */
   leaders?: Record<string, Leader>;
-  /** @state artifact */
+  /** ✍️ @state artifact */
   annotation_styles?: Record<string, AnnotationStyle>;
-  /** @state artifact */
+  /** 👪️ @state artifact */
   families?: Record<string, Family>;
-  /** @state artifact */
+  /** 🌳️ @state artifact */
   family_parameters?: Record<string, FamilyParameter>;
-  /** @state artifact */
+  /** 🪢️ @state artifact */
   family_solids?: Record<string, FamilySolid>;
-  /** @state artifact */
+  /** 🔌️ @state artifact */
   components?: Record<string, Component>;
-  /** @state artifact */
+  /** 🧩️ @state artifact */
   component_overrides?: Record<string, ComponentOverride>;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   mep_elements?: Record<string, MepElement>;
-  /** @state artifact */
+  /** 💥️ @state artifact */
   clash_sets?: Record<string, ClashSet>;
-  /** @state artifact */
+  /** 📜️ @state artifact */
   rules?: Record<string, Rule>;
-  /** @state artifact */
+  /** 🩺️ @state artifact */
   issues?: Record<string, Issue>;
-  /** @state artifact */
+  /** 🚨️ @state artifact */
   issue_comments?: Record<string, IssueComment>;
-  /** @state artifact */
+  /** 🧹️ @state artifact */
   wall_sweeps?: Record<string, WallSweep>;
-  /** @state artifact */
+  /** ⏱️ @state artifact */
   schedules?: Record<string, Schedule>;
-  /** @state artifact */
+  /** 📇️ @state artifact */
   property_templates?: Record<string, PropertyTemplate>;
-  /** @state artifact */
+  /** 📚️ @state artifact */
   classification_systems?: Record<string, ClassificationSystem>;
-  /** @state artifact */
+  /** 🎛️ @state artifact */
   properties?: Record<string, PropertySet>;
-  /** @state artifact */
+  /** 🚦️ @state artifact */
   classifications?: Record<string, ClassificationSet>;
   option_groups?: Record<string, OptionGroup>;
   design_options?: Record<string, DesignOption>;

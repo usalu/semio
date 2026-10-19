@@ -28,13 +28,6 @@ export function rewritePreview2ShimImports(componentJsPath: string, preview2Vend
 }
 
 export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  // 🧪️ terra-web-bridges (📓️terra-jco-spike-report.md "what must change" #2): NO `--async-mode`
-  // flag — confirmed byte-identical to jco's bare/"sync" default for a component whose every WIT
-  // function is already `async func` (`--async-mode jspi` was diffed against the bare transpile of
-  // the SAME wasm and produced 0 bytes of difference). `world actor`'s import surface is now `pure`
-  // (component.wit's `interface pure { log; now-ms; trace-span; }`, still plain `func`) PLUS
-  // `host-async` (`interface host-async`, ~:887 — 24 `async func` imports + `emit`/`emit-patch`) —
-  // both map to the SAME `🟨️.js`, which now implements both interfaces' exports from one file.
   if (
     runNodeBinStatus(
       ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"],

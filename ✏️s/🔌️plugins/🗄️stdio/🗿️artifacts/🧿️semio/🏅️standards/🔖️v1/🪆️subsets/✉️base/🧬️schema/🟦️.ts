@@ -3,6 +3,6 @@
 import type { SemioSubsetSnapshot } from "./📸️snapshot/🟦️";
 
 export interface SemioArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ subset: SemioSubsetSnapshot;
+  /** 📐️ @state artifact */ schema: string;
+  /** 🌳️ @state artifact */ subset: SemioSubsetSnapshot;
 }

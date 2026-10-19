@@ -38,11 +38,6 @@ export class FixtureScript extends Script {
           reproducible: fixture.reproducible,
           generator: fixture.generator?.oracle ?? "",
           engine: fixture.generator?.engineFamily ?? "",
-          // 🪆️Resolved, not spelled: `testEvidenceProblems` judges `✳️any` by what sits BESIDE it
-          // when it is handed the repository, exactly as the contract phase and the coverage gate
-          // already do (both other call sites pass it). Omitting it here made `fixture audit` the
-          // one command that read the bare spelling, so every single-subset owner's fixture — gif,
-          // las, obj — audited as a wildcard breach while the release gate it feeds reported it clean.
           problems: testEvidenceProblems(fixture, this.repoRoot),
         }));
         if (segments.includes("--json")) {
@@ -59,9 +54,6 @@ export class FixtureScript extends Script {
         return;
       }
       case "reproduce": {
-        // 🏭️Reproduction re-runs the RECORDED generator command and compares the bytes it produces with
-        // the committed ones. It never writes into the committed fixture: a "reproduce" that overwrote
-        // its own expectation would pass unconditionally, which is the whole failure mode it guards.
         let failed = 0;
         for (const fixture of fixtures.filter((entry) => entry.class === "third-party-generated")) {
           if (fixture.generator === undefined) {
@@ -98,8 +90,6 @@ export class FixtureScript extends Script {
         return;
       }
       case "generate": {
-        // 🏭️Generation and execution are separate operations on purpose: a normal test run must never
-        // be able to rewrite the expectation it is being measured against.
         let generated = 0;
         for (const fixture of fixtures.filter((entry) => entry.class === "third-party-generated" && entry.generator !== undefined)) {
           const outDir = join(testCacheDir(this.repoRoot, "work"), "🧫️generate", fixture.id);

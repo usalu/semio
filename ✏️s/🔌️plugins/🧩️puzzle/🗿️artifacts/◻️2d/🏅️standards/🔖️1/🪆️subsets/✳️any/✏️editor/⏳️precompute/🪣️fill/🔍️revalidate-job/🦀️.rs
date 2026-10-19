@@ -134,7 +134,7 @@ impl Puzzle2dFillRevalidateJob {
             steps: ToolRunStepRing::default(),
         });
         match self.writer.finish().and_then(|tick| tick.encode().ok()) {
-            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes),
+            Some(bytes) if bytes.len() <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes),
             Some(_) => fill_run_fault("puzzle2d-fill-revalidate-tick-bytes"),
             None => fill_run_fault("puzzle2d-fill-revalidate-tick-encode"),
         }

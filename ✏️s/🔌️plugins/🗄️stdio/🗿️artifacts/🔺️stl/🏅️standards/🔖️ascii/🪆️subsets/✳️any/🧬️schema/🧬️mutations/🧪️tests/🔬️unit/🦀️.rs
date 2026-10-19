@@ -50,7 +50,6 @@ async fn inverse_law() {
         StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 0, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] }),
     ];
     for m in variants {
-        // Mutation-level round trip.
         let mut snap = base.clone();
         apply_mutation(&mut snap, &m);
         for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
@@ -58,7 +57,6 @@ async fn inverse_law() {
         }
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
-        // Diff-level round trip.
         let d = m.diff(&base);
         let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
@@ -83,11 +81,8 @@ async fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation)
 async fn absorb_law() {
     let base = base_snapshot().await;
 
-    // Insert+Remove-before: added triangle lands correctly once an earlier-positioned base
-    // survivor is removed by the second mutation (the recipe's own canonical shift case).
     assert_absorb_law(&base, StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 2, triangle: tri(1.0, 0.0, 0.0, 99.0).await }), StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 })).await;
 
-    // Insert+Insert-same-index: both survive.
     assert_absorb_law(
         &base,
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 0.0, 0.0, 91.0).await }),
@@ -95,7 +90,6 @@ async fn absorb_law() {
     )
     .await;
 
-    // Add+SetField: the second mutation patches directly into the still-pending added triangle.
     assert_absorb_law(
         &base,
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 99.0).await }),
@@ -103,16 +97,12 @@ async fn absorb_law() {
     )
     .await;
 
-    // Modify+Remove: a pending field patch on a since-removed base triangle vanishes.
     assert_absorb_law(&base, StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 0.0, -1.0] }), StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 })).await;
 
-    // Insert then annihilate the very same insert.
     assert_absorb_law(&base, StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 99.0).await }), StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 })).await;
 
-    // Two unrelated scalar sets absorb via LWW.
     assert_absorb_law(&base, StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "first".into() }), StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "second".into() })).await;
 
-    // Modify+Modify on the same triangle: both fields land, per-field absorbed.
     assert_absorb_law(
         &base,
         StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 1, normal: [1.0, 0.0, 0.0] }),
@@ -130,12 +120,10 @@ async fn absorb_law_associativity() {
     let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
     let d3 = StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }).diff(&mid2);
 
-    // (d1∘d2)∘d3
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
     left.absorb(d3.diff().clone());
 
-    // d1∘(d2∘d3)
     let mut d23 = d2.diff().clone();
     d23.absorb(d3.diff().clone());
     let mut right = d1.diff().clone();
@@ -150,9 +138,6 @@ async fn absorb_law_associativity() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let bytes = std::fs::read(fixture_path!("../../../../📚️examples/🎬️demo/🖼️assets/🧊️.stl"));
-    // The checked-in fixture at this path is a shared cross-artifact demo placeholder
-    // (not real STL text) — fall back to a synthetic document so this law still exercises
-    // a genuine decode -> encode -> decode identity.
     let decoded = match bytes.ok().and_then(|b| String::from_utf8(b).ok()).and_then(|text| crate::engine::decode_stl_ascii(&text).ok()) {
         Some(decoded) => decoded,
         None => base_snapshot().await,
@@ -180,9 +165,9 @@ async fn sweep_b() -> StlSnapshot {
         schema: "stdio.stl".into(),
         solid_name: "after".into(),
         triangles: vec![
-            tri(0.0, 0.0, 1.0, 5.0).await,   // index 0: modified from sweep_a's index 0 (normal AND vertices differ — different seed)
-            tri(0.0, 1.0, 0.0, 10.0).await,  // index 1: unchanged
-            tri(-1.0, 0.0, 0.0, 20.0).await, // index 2: added (b longer than a)
+            tri(0.0, 0.0, 1.0, 5.0).await,
+            tri(0.0, 1.0, 0.0, 10.0).await,
+            tri(-1.0, 0.0, 0.0, 20.0).await,
         ],
     }
 }
@@ -266,9 +251,6 @@ async fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
 /// blocks.
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
-    // FG1: reuses `demo_mutation_cases()` (this file's own `DemoCases` region, above), the
-    // single source of truth also exercised by `⚙️engine::conformance_laws`'s `ops_grammar_
-    // conformance_law`/`protocol_walk_law` — same reuse pattern `binary`'s own pilot precedent.
     for mutation in demo_mutation_cases() {
         let printed = mutation.print_op();
         assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
@@ -287,9 +269,6 @@ async fn op_text_binary_roundtrip_law() {
 /// real `between()` results in both directions.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    // FG1: reuses `diff::demo_diff_cases()` (this artifact's `🔺️diff::component`'s own
-    // `DemoCases` region), the single source of truth also exercised by `⚙️engine::
-    // conformance_laws`'s `diff_grammar_conformance_law`/`protocol_walk_law`.
     for d in diff::demo_diff_cases() {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

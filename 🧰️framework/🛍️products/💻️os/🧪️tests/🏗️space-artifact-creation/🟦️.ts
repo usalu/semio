@@ -86,7 +86,6 @@ export async function registerSpaceArtifactCreationTests(vitest: Vitest, depende
       expect(spaceArtifactCreationOperations).toHaveLength(0);
     });
 
-    // 🐢️ ticket 26/09/23 S15: a slow hub is followed, never concluded — 🏪️store/👷️worker/🌱️creation-polling/🔣️.json.
     it("follows a creation the hub keeps accepted far past the old client deadline, and concludes only when the hub stops answering", async () => {
       const polling = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🏪️store/👷️worker/🌱️creation-polling/🔣️.json", source.url), "utf8")) as { pollMaxMs: number; unreachableBoundMs: number };
       vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });

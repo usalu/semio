@@ -1,6 +1,7 @@
 //! 🔍️ Complete typed row references and consumed flags have admitted concrete Vec backing.
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const TABLES:&[(&str,usize,bool)]=&[("lowpoly_document",2,false),("lowpoly_object",7,true),("lowpoly_transform",28,false),("lowpoly_mesh_child",6,false),("lowpoly_paint_layer",9,true),("lowpoly_paint_octet",4,true),("lowpoly_mesh_state",1,false),("lowpoly_mesh_vertex",22,true),("lowpoly_mesh_halfedge",13,true),("lowpoly_mesh_face",6,true),("lowpoly_mesh_seam",4,true),("lowpoly_mesh_attribute",8,true),("lowpoly_mesh_attribute_index",4,true),("lowpoly_mesh_attribute_sample",4,true),("lowpoly_mesh_material",5,true),("lowpoly_mesh_texture",5,true),("lowpoly_mesh_texture_octet",4,true),("lowpoly_mesh_value",2,false),("lowpoly_mesh_boolean",2,false),("lowpoly_mesh_unsigned",2,false),("lowpoly_mesh_signed",2,false),("lowpoly_mesh_float",4,false),("lowpoly_mesh_text",2,false),("lowpoly_mesh_bytes",1,false),("lowpoly_mesh_bytes_octet",4,true),("lowpoly_mesh_array_member",4,true),("lowpoly_mesh_object_member",5,true)];
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 pub fn sort<T>(values:&mut[T],control:&mut NativeDecodeControl<'_>,mut compare:impl FnMut(&T,&T)->Result<std::cmp::Ordering,ValueError>)->Result<(),ValueError>{

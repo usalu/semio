@@ -65,8 +65,6 @@ impl Store for KvStore {
     async fn write(&mut self, key: &str, value: String) {
         self.map.insert(key.to_string(), value);
     }
-    // `label` and `echo` inherit the trait's default bodies — dyn_enum must delegate to
-    // WHATEVER the concrete impl resolves to, override or default, without knowing which.
 }
 
 //#endregion
@@ -83,8 +81,6 @@ dyn_enum_close! {
 //#endregion
 
 fn block_on<F: std::future::Future>(future: F) -> F::Output {
-    // 🌀️ E5 executor bridge (at most one per crate, per R4/R5) — this test crate has no runtime
-    // dependency, and every future here is eagerly ready (no real IO), so a single poll suffices.
     use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
     fn noop(_: *const ()) {}
     fn clone(_: *const ()) -> RawWaker {

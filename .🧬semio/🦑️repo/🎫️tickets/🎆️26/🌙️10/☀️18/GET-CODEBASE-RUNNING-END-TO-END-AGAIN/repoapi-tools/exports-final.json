@@ -282,7 +282,7 @@
     "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/package.json": {
       "./paths": "./📁️paths/🟦️.ts",
       "./generation/testing": "./📤️generation/🧪️testing/🟦️.ts",
-      "./index.json": ".//🔣️json/🟦️.ts",
+      "./index.json": "./🔣️json/🟦️.ts",
       ".": "./🟦️.ts"
     },
     "🧰️framework/📦️packages/🟦️typescript/package.json": {
@@ -689,7 +689,7 @@
       "./testing/composition": "./🧪️testing/🧩️composition/🟦️.ts",
       "./testing/fixtures/natural-file-lifecycle.json": "./🧪️testing/🧫️fixtures/📄️natural-file-lifecycle/🔣️json/🟦️.ts",
       "./companions/test-support/plugin-family": "./🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts",
-      "./runtime-fault-vectors.json": ".//🔣️json/runtime-fault-vectors/🟦️.ts",
+      "./runtime-fault-vectors.json": "./🔣️json/runtime-fault-vectors/🟦️.ts",
       "./window/transient/testing/retained-window-input": "./🪟️window/🫧️transient/🧪️testing/🪟️retained-window-input/🟦️.ts"
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json": {
@@ -987,13 +987,13 @@
   },
   "exportsMissing": {
     "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/package.json": {
-      "./index.json": ".//🔣️json/🟦️.ts"
+      "./index.json": "./🔣️json/🟦️.ts"
     },
     "🧰️framework/📦️packages/🟦️typescript/package.json": {
       "./os/modules/infinite/world/r3f/packages/typescript": "./🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx"
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/package.json": {
-      "./runtime-fault-vectors.json": ".//🔣️json/runtime-fault-vectors/🟦️.ts"
+      "./runtime-fault-vectors.json": "./🔣️json/runtime-fault-vectors/🟦️.ts"
     },
     "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/package.json": {
       "(declare the built wasm package as a dependency of the dev composition project, or expose `.`)": "./✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js"
@@ -5537,8 +5537,8 @@
         },
         "./index.json": {
           "subpath": "./index.json",
-          "target": ".//🔣️json/🟦️.ts",
-          "glueFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript//🔣️json/🟦️.ts",
+          "target": "./🔣️json/🟦️.ts",
+          "glueFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🔣️json/🟦️.ts",
           "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json",
           "kind": "json",
           "symbols": [
@@ -13801,8 +13801,8 @@
         },
         "./runtime-fault-vectors.json": {
           "subpath": "./runtime-fault-vectors.json",
-          "target": ".//🔣️json/runtime-fault-vectors/🟦️.ts",
-          "glueFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust//🔣️json/runtime-fault-vectors/🟦️.ts",
+          "target": "./🔣️json/runtime-fault-vectors/🟦️.ts",
+          "glueFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🔣️json/runtime-fault-vectors/🟦️.ts",
           "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🩺️runtime-fault-vectors.json",
           "kind": "json",
           "symbols": [
@@ -19631,7 +19631,7 @@
       "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json": {
         "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json",
         "proposedSubpath": "./index.json",
-        "proposedGlueFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript//🔣️json/🟦️.ts",
+        "proposedGlueFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🔣️json/🟦️.ts",
         "symbols": [
           "default"
         ],
@@ -25432,7 +25432,7 @@
       "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🩺️runtime-fault-vectors.json": {
         "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🩺️runtime-fault-vectors.json",
         "proposedSubpath": "./runtime-fault-vectors.json",
-        "proposedGlueFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust//🔣️json/runtime-fault-vectors/🟦️.ts",
+        "proposedGlueFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🔣️json/runtime-fault-vectors/🟦️.ts",
         "symbols": [
           "default"
         ],
@@ -29329,7 +29329,7 @@
       "action": "new-entry"
     },
     {
-      "file": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript//🔣️json/🟦️.ts",
+      "file": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🔣️json/🟦️.ts",
       "package": "@semio-tech/compiler-syntax-rust-ts",
       "subpath": "./index.json",
       "symbols": [
@@ -33283,7 +33283,7 @@
       "action": "new-entry"
     },
     {
-      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust//🔣️json/runtime-fault-vectors/🟦️.ts",
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🔣️json/runtime-fault-vectors/🟦️.ts",
       "package": "@semio-tech/framework-plugin",
       "subpath": "./runtime-fault-vectors.json",
       "symbols": [

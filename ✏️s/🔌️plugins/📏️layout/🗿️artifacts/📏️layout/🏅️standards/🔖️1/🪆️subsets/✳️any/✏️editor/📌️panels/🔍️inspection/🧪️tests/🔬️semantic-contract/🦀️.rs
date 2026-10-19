@@ -12,9 +12,6 @@ fn layout_inspection_summary_matches_the_json_oracle() {
         let node = render(&snapshot, &config, &semio_s_artifact_layout_layout_editor_commands::LayoutInteractionSnapshot::default(), semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels(&view_state)).expect("semantic inspector");
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project and retire inspector");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent semantic JSON oracle");
-        // 🌳️ The inspector root is the panel TREE; its heading and rows live on the one summary
-        // SECTION below it (`Component::TreeSection`/`TreeItem`, `label` + `description`), never on
-        // the root and never as a single `value` string.
         let section = &actual["children"][0];
         assert_eq!(section["component"]["label"], row["heading"]);
         let lines: Vec<_> = section["children"]

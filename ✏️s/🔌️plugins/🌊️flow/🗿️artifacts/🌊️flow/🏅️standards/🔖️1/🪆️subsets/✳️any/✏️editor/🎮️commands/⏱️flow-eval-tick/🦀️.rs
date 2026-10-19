@@ -85,11 +85,8 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
     let parked = host.take_pending_extension_evals();
     let servable = may_rearm(&host.host_snapshot);
     let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
-    // 🧹️ The tick host owns a layout `OrderedMap` root that aborts the guest on a bare drop.
     host.retire_cold();
     let mut extension_invocations = Vec::new();
-    // 🌊️ ONE WAVE, ONE HOP — every request the walk parked is independent of the others by
-    // construction, so the whole dependency level crosses to its plugin on this one tick.
     for pending in parked {
         let resume=session.has_evaluation_progress(pending.node_hash);
         let hash=pending.node_hash;

@@ -321,8 +321,6 @@ function create(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, so
       const body = JSON.stringify(authority);
       const priorFetch = globalThis.fetch;
       clearHubSessionCapability();
-      // 🧭️ `HUB_SESSION_CAPABILITY_PATTERN_V1` is `session.v1.<32 hex>.<64 hex>`; the callers below name
-      // only the 64-hex proof half, so the capability is minted here rather than at every call site.
       expect(installHubSessionCapability(`session.v1.${"1".repeat(32)}.${proof}`)).toBe(true);
       globalThis.fetch = stubFetch(async () => new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } }));
       try {
@@ -341,8 +339,6 @@ function create(vitest: Vitest, dependencies: BackboneWorkerTestDependencies, so
       openArtifact({ documentId: fixture.intent.scope.documentId, schema: fixture.plan.artifact.schema, bindings: [], actor: "caller-selected-actor", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });
       const state = artifactState(fixture.intent.scope.documentId)!;
       state.openClientInstanceId = fixture.intent.clientInstanceId;
-      // 🪪️ The caller declares only which surface it wants: nothing forgeable is supplied, so the
-      // verified lease is the sole local comparison input for this wasm target.
       const binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }> = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: fixture.intent.scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId };
       artifacts.delete(state.runtimeKey);
       state.config = { ...state.config, bindings: [binding] };

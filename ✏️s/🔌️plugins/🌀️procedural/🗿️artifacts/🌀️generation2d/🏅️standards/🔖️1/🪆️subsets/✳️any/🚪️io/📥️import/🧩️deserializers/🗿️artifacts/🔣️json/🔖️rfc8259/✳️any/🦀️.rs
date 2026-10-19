@@ -1,4 +1,4 @@
-//! generation2d <- json
+//! 🪄️ generation2d <- json
 //!
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see the paired export
 //! leaf's doc comment and w5b-close-report.md): `JsonSnapshot::to_serde_value`/stdio's own real

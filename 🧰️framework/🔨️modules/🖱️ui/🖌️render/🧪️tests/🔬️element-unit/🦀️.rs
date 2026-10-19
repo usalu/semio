@@ -15,8 +15,6 @@ fn explicit_key_survives_a_sibling_reorder() {
     let parent = ElementId::new(None, &ReconciliationKey::Explicit("root".into()));
     let before_first = ElementId::new(Some(parent), &ReconciliationKey::Explicit("alpha".into()));
     let before_second = ElementId::new(Some(parent), &ReconciliationKey::Explicit("beta".into()));
-    // Reordered: "beta" now comes first, "alpha" second — an explicit key's id does not depend on
-    // position, unlike ReconciliationKey::Positional's ordinal.
     let after_first = ElementId::new(Some(parent), &ReconciliationKey::Explicit("beta".into()));
     let after_second = ElementId::new(Some(parent), &ReconciliationKey::Explicit("alpha".into()));
     assert_eq!(before_second, after_first);
@@ -52,13 +50,10 @@ fn retained_state_survives_a_rebuild_and_is_released_when_the_id_disappears() {
     store.end_frame();
     assert_eq!(*store.get_or_insert_with(surviving, || 0i32), 42);
 
-    // Next rebuild: only `surviving` is touched — `disappearing`'s element left the tree.
     store.begin_frame();
     assert_eq!(*store.get_or_insert_with(surviving, || 0i32), 42, "retained value must survive the rebuild untouched");
     store.end_frame();
 
-    // A third frame with nothing touched proves `disappearing` was actually dropped, not merely
-    // shadowed: re-inserting it now must run `init` again and see the fresh value, not 7.
     store.begin_frame();
     assert_eq!(*store.get_or_insert_with(disappearing, || 99i32), 99, "an untouched id's retained state must be released, not merely stale");
     store.end_frame();
@@ -98,10 +93,6 @@ fn any_element_paint_before_request_layout_panics() {
         fn paint(&mut self, _id: ElementId, _bounds: Bounds, _layout: &mut Self::LayoutState, _prepaint: &mut Self::PrepaintState, _cx: &mut PaintCx<'_>) {}
     }
 
-    // Uses `paint` (needs only `PaintCx`, which needs only the already-landed
-    // `crate::SceneBuilder`) rather than `prepaint` (which would need a
-    // `crate::TextSystem` value that does not exist until packet `render-text` lands) so this
-    // test can run against this packet alone.
     let mut any = AnyElement::new(Probe);
     let mut resources = crate::ResourceRegistry::default();
     let mut retained = RetainedStore::default();

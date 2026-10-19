@@ -88,7 +88,6 @@ test("original immutable History source preserves refused inputs and the final u
    for(const word of [4,8])for(const width of [1,3*word])expect(Buffer.alloc(capacity*width).byteLength).toBe(row.capacity*width);
   }
  }finally{db.close();}
- console.log("[DEBUG] original History source neutral custody cuts agree with independent RFC6902 state; native allocation/authority laws are separate");
 });
 test("original lane corpus agrees with SQLite byte order and JSONPatch interaction events",()=>{
  const validate=new Ajv({strict:true}).compile(read("./🧬️schema/🔣️.json"));expect(validate(law)).toBe(true);
@@ -101,7 +100,6 @@ test("original lane corpus agrees with SQLite byte order and JSONPatch interacti
   for(const row of law.commandAuthority){const expected=db.query("SELECT ? AND ? AND ? AS admitted").get(Number(row.job),Number(row.generation),Number(row.issuer)) as {admitted:number};expect(Boolean(expected.admitted)).toBe(row.ready);}
   for(const row of law.interaction){let state={n:row.initial};for(const value of row.values)state=applyPatch(state,[{op:"replace",path:"/n",value}],true,false).newDocument;expect(state.n).toBe(row.expected);expect(row.values.length).toBe(row.generation);expect(row.values.length).toBe(row.edits);}
  }finally{db.close();}
- console.log("[DEBUG] original side lane six UTF8 order fixtures under 32/64-bit grants; three retained interaction event fixtures agree with SQLite/JSONPatch");
 });
 
 test("original scalar varints preserve u64 values and exact consumed prefixes against protobuf",()=>{
@@ -129,7 +127,6 @@ test("original scalar varints preserve u64 values and exact consumed prefixes ag
    expect([...protobuf.Writer.create().uint64(row.value!).finish()]).toEqual(row.bytes);
   }
  }
- console.log("[DEBUG] original scalar u64 values and consumed prefixes agree with independent protobuf; overflowing tenth bytes retain exact source position");
 });
 
 test("original UTF8 scalar custody agrees with independent streaming decoders",()=>{
@@ -146,7 +143,6 @@ test("original UTF8 scalar custody agrees with independent streaming decoders",(
    expect(row.position).toBe(bytes.length);
   }
  }
- console.log("[DEBUG] original UTF8 fixture accepts exact scalar output under1/7/4096 pages and rejects malformed/truncated input with independent fatal decoding");
 });
 
 test("original normalized operation identities retain exact Unicode and full unsigned indexes",()=>{
@@ -160,5 +156,4 @@ test("original normalized operation identities retain exact Unicode and full uns
   const wire=protobuf.Writer.create().uint64(row.index).finish();
   expect(protobuf.Reader.create(wire).uint64().toString()).toBe(digits);
  }}finally{independent.close();}
- console.log("[DEBUG] normalized original operation identities agree with independent SQLite concatenation and protobuf unsigned decimal representation");
 });

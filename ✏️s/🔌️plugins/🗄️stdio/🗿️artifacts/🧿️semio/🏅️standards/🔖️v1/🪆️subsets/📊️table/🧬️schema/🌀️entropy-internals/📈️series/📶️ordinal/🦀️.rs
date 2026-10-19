@@ -71,7 +71,6 @@ pub struct DispersionConfig {
 }
 
 impl DispersionConfig {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(classes: usize, dim: usize, tau: usize) -> Result<Self, EntropyError> {
         if classes < 2 {
             return Err(EntropyError::InvalidConfig { field: "classes", reason: "must be at least 2" });

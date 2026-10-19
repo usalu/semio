@@ -10,7 +10,7 @@ import commandLimits from "../🧫️fixtures/🚧️retained-command-limits/�
 
 import documentAdmission from "../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json" with { type: "json" };
 import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
-import identityAdmission from "../../🕹️interaction/🧫️fixtures/🔣️.json" with { type: "json" };
+import identityAdmission from "../../🕹️interaction/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import fem3dDocumentSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseFem3dArtifact } from "../../../🧬️schema/🟦️.ts";
 import { mountedCloseFixture as mountedClose } from "@semio-tech/fem-js/testing/fixtures/mounted-close";

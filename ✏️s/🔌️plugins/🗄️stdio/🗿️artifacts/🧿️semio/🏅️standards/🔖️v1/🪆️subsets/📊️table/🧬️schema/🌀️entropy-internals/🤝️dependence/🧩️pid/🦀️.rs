@@ -188,7 +188,6 @@ impl PidLattice {
     /// the target's alphabet size. Rejects `sources.len() != 3` — this first implementation does
     /// not attempt a general-`n` lattice (the antichain count grows combinatorially and the
     /// well-known closed enumeration only exists at small `n`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(sources: &[&[u32]], target: &[u32], sizes: &[usize], target_size: usize, base: LogBase) -> Result<Self, EntropyError> {
         base.validate()?;
         if sources.len() != 3 {
@@ -207,9 +206,6 @@ impl PidLattice {
         }
 
         // #region 🔖️SubsetJoints
-        // 🧩️ packed joint symbols + alphabet size, and the resulting specific-information vector,
-        // for every one of the 7 non-empty source subsets — indexed directly by bitmask (index 0
-        // unused) rather than a `HashMap`, since the key space is fixed and tiny.
         let mut packed: [Option<(Vec<u32>, usize)>; 8] = [None, None, None, None, None, None, None, None];
         for &mask in NON_EMPTY_SUBSET_MASKS.iter() {
             let idxs: Vec<usize> = (0..3).filter(|i| mask & (1 << i) != 0).collect();
@@ -247,10 +243,6 @@ impl PidLattice {
         // #endregion 🔖️IMin
 
         // #region 🔖️MobiusInversion
-        // 🧩️ `predecessors[i]` = every strictly-smaller node under [`is_below`]. Since the order
-        // is transitive, a node's predecessor-set size is strictly greater than any of its own
-        // predecessors' — sorting by that size ascending is therefore a valid topological order
-        // without needing a dedicated Kahn's-algorithm pass.
         let predecessors: Vec<Vec<usize>> = (0..nodes.len()).map(|i| (0..nodes.len()).filter(|&j| j != i && is_below(&nodes[j], &nodes[i])).collect()).collect();
         let mut order: Vec<usize> = (0..nodes.len()).collect();
         order.sort_by_key(|&i| predecessors[i].len());
@@ -266,7 +258,6 @@ impl PidLattice {
     }
 
     /// 🧩️ Number of lattice nodes — always 18 for `n = 3` sources.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
@@ -275,7 +266,6 @@ impl PidLattice {
     /// [`PidLattice::compute`]) for the antichain described by `node_sets`: each inner `Vec<usize>`
     /// is a 0-based source-index subset, and both the outer and inner order are irrelevant (the
     /// antichain is compared as a set of sets).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn partial_information(&self, node_sets: &[Vec<usize>]) -> Option<f64> {
         self.node_index(node_sets).map(|i| self.base.from_nats(self.partial_info_nats[i]))
     }
@@ -285,12 +275,10 @@ impl PidLattice {
     /// [`PidLattice::partial_information`] atom is derived from, useful for inspecting the
     /// lattice's intermediate state (e.g. confirming monotonicity along [`is_below`]) rather than
     /// only its final decomposition.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn i_min(&self, node_sets: &[Vec<usize>], base: LogBase) -> Option<f64> {
         self.node_index(node_sets).map(|i| base.from_nats(self.i_min_nats[i]))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn node_index(&self, node_sets: &[Vec<usize>]) -> Option<usize> {
         let mut masks: Vec<u32> = node_sets.iter().map(|subset| subset.iter().fold(0u32, |acc, &idx| acc | 1u32.checked_shl(idx as u32).unwrap_or(0))).collect();
         masks.sort_unstable();
@@ -300,7 +288,6 @@ impl PidLattice {
 
     /// 🧩️ The total joint mutual information `I(S1,S2,S3;T)`, converted to `base` (independent of
     /// whatever `base` was passed to [`PidLattice::compute`]).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn total_mutual_information(&self, base: LogBase) -> f64 {
         base.from_nats(self.total_mi_nats)
     }

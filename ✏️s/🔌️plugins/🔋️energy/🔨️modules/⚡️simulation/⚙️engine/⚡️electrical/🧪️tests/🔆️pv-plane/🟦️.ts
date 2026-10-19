@@ -6,10 +6,12 @@ import createSchema from "../../../../../../🗿️artifacts/🔋️model/🏅�
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { dot, multiply } from "mathjs";
-import fixture from "../../🧫️fixtures/🔆️pv-plane/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🔆️pv-plane/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🔆️pv-plane/🔣️.json" with { type: "json" };
 
 const coefficients = [[-0.0083117,0.5877285,-0.0620636,-0.0596012,0.0721249,-0.0220216],[0.1299457,0.6825954,-0.1513752,-0.0189325,0.0659650,-0.0288748],[0.3296958,0.4868735,-0.2210958,0.0554140,-0.0639588,-0.0260542],[0.5682053,0.1874525,-0.2951290,0.1088631,-0.1519229,-0.0139754],[0.8730280,-0.3920403,-0.3616149,0.2255647,-0.4620442,0.0012448],[1.1326077,-1.2367284,-0.4118494,0.2877813,-0.8230357,0.0558651],[1.0601591,-1.5999137,-0.3589221,0.2642124,-1.1272340,0.1310694],[0.6777470,-0.3272588,-0.2504286,0.1561313,-1.3765031,0.2506212]];
+
+export const solarPvFixtureCases = fixture.cases;
 
 export function calculateSolarPvReference(row: typeof fixture.cases[number]): number[] {
   const [altitude, azimuth, tilt, direction] = [...row.sun, ...row.collector].map(value => value * Math.PI / 180);

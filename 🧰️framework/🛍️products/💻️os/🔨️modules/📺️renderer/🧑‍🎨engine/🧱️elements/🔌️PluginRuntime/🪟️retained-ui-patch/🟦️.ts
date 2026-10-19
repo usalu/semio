@@ -7,18 +7,9 @@ import { type Effect } from "@semio-tech/framework";
 import { decodePackWire } from "@semio-tech/framework/packs";
 import { type BuiltNode, type Component, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../../📃️UiDocumentStore/🟦️.tsx";
-import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
-import {
-  isRoutedWireSendMessage,
-  WIRE_SEND_MESSAGE_ROUTED_TARGETS,
-  wireDownloadMediaExport,
-  wireIconRenderExport,
-  wireExtensionInvocation,
-  wireOptionValue,
-  wireRespondAnswer,
-  wireSendMessageTargetTag,
-  wireVideoRenderExport
-} from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import type { RetainedUiNodeRecord } from "@semio-tech/framework/modules/ui/contract/retained/wire/typed";
+import { wireDownloadMediaExport, wireIconRenderExport, wireExtensionInvocation, wireOptionValue, wireRespondAnswer, wireVideoRenderExport } from "@semio-tech/framework/actor/wire-turn";
+import { isRoutedWireSendMessage, WIRE_SEND_MESSAGE_ROUTED_TARGETS, wireSendMessageTargetTag } from "@semio-tech/framework/actor/wire-turn";
 import {
   coerceWireBytes,
   decodeWirePack,
@@ -109,15 +100,9 @@ export function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["compone
  * here degrades to an honest `[TRACE]`-logged drop rather than guessing an unverified shape. */
 export function wireEffectToFriendly(effect: WireVariant): Effect | null {
   const val = (effect.val ?? {}) as Record<string, unknown>;
-  // 🧬️ Every `request-id`-carrying effect nests its payload in a `*-params` record (`🔌️plugin/🧬️schema/📜️.wit`,
-  // lowered by `⚛️reactor/🦀️.rs`'s `wit::Effect::…({ req, params })`); the request-less effects keep their
-  // fields at the top level. `wireExtensionInvocation` already reads the nested shape — the cases below
-  // used to read those same records flatly, which silently produced empty ids: a `dispatch-action` with
-  // `action: ""` reached the plugin as `window kind procedural-main does not own action ""`.
   const params = (val.params && typeof val.params === "object" ? val.params : {}) as Record<string, unknown>;
   const str = (key: string): string => String(val[key] ?? "");
   const num = (key: string): number => Number(val[key] ?? 0);
-  // 🎁️ ONE WIT `option<T>` reader, shared with `🖼️wire-turn.ts` rather than restated here.
   const optionValue = wireOptionValue;
   const packField = (key: string): unknown => {
     const raw = optionValue(val[key]);
@@ -135,9 +120,6 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return "requestSync";
     case "load-document":
       return { loadDocument: { pack: Array.from(coerceWireBytes(val.docPack)), spr: Array.from(coerceWireBytes(val.spr)) } };
-    // ⬇️ ONE decoder for both renderers (`🖼️wire-turn.ts`) — this door used to read `encoding` flat,
-    // and a WIT `option<string>` reaches it as `{tag:"some", val}`, so `typeof … === "string"` was
-    // always false and every binary export was saved as base64 TEXT under a binary file name.
     case "download-media-export":
       return wireDownloadMediaExport(effect);
     case "icon-render-export":
@@ -179,9 +161,6 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return { closeWindow: { window: num("window") } };
     case "dispatch-action": {
       const action = paramStr("action");
-      // 🚫️ An id-less self re-dispatch can only ever be rejected by the owning window kind; drop it at
-      // the boundary that decoded it rather than letting `makeEffectDispatchOne` turn it into an
-      // unhandled `plugin.internal` rejection with an empty action id in its message.
       if (!action) {
         return null;
       }
@@ -191,21 +170,12 @@ export function wireEffectToFriendly(effect: WireVariant): Effect | null {
       return { openDialog: { req: num("req"), dialogId: paramStr("dialogId"), args: paramPack("args") as Record<string, unknown> | undefined } };
     case "invoke-extension":
       return wireExtensionInvocation(effect);
-    // ↩️ ONE rule for the answer half of the request seam, shared with `🖼️wire-turn.ts`'s own copy of
-    // this mapping rather than re-decoded here — the divergence that file's header warns about.
     case "respond":
       return wireRespondAnswer(effect);
     case "spawn-plugin-instance":
       return { spawnPluginInstance: { req: num("req"), pluginId: paramStr("pluginId"), appId: paramStr("appId"), osInstanceId: paramText("osInstanceId"), label: paramText("label"), artifactJson: paramText("artifactJson") } };
     case "open-plugin-instance":
       return { openPluginInstance: { pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined } };
-    // 📨️ Transport, never a friendly `Effect` — see `WIRE_SEND_MESSAGE_ROUTED_TARGETS`. A
-    // `Shell{instance}` send-message IS an `AppFrame` reply: `runQueuedTurn` splits the ones that
-    // land on the call's own turn through `shellFrameBytes`, and `invocationFromFrames` applies the
-    // ones a later turn produced (a reserved tool job's completion, e.g. `interactionSelect`'s)
-    // through `leftoverShellInvocationFrames` — BEFORE this mapping runs. A `Backbone{uri}` one
-    // already went out the document port in `routeHostEffects`. Anything else has no host route and
-    // stays loud.
     case "send-message": {
       if (isRoutedWireSendMessage(effect)) return null;
       console.warn(`wireEffectToFriendly: send-message to "${wireSendMessageTargetTag(effect) || "no endpoint"}" has no host route — only ${WIRE_SEND_MESSAGE_ROUTED_TARGETS.join("/")} are consumed`);

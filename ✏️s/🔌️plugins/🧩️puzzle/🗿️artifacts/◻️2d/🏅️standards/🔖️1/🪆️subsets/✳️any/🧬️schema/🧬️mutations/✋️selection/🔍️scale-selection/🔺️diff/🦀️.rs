@@ -1,4 +1,4 @@
-//! (its own `scale` untouched) and every unlocked addressed target region scales corner and extent,
+//! 🔒️ (its own `scale` untouched) and every unlocked addressed target region scales corner and extent,
 //! 🔺️ Sparse diff builder for `ScaleSelection` — every unlocked addressed node spreads from the pivot
 //! all read off the BASE, so the leaf replays on any base.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;

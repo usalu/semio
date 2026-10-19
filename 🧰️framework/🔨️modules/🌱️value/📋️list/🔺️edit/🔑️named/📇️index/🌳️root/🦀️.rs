@@ -19,7 +19,7 @@ impl<T:Send+Sync+'static> Drop for NamedPersistentRoot<T>{fn drop(&mut self){let
 /// 📥️ Source validation and paid binding closure precede immutable root publication.
 pub struct NamedPersistentRootPreparation<T:Send+Sync+'static>{source:ManuallyDrop<Option<RetainedCloneSource<PersistentList<T>>>>,index:ManuallyDrop<Option<AdmittedNamedKeyIndex>>,key:fn(&T)->&str,closing:bool,ready:bool}
 impl<T:Send+Sync+'static> NamedPersistentRootPreparation<T>{
- pub fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.ready{return Err(invalid());}RetainedCloneBinding::demands(&self.index.as_ref().ok_or_else(invalid)?.original,body)}
+ pub fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.ready{return Err(invalid());}RetainedCloneBinding::close_demand(&self.index.as_ref().ok_or_else(invalid)?.original,body)}
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}let index=self.index.as_mut().ok_or_else(invalid)?;let step=RetainedCloneBinding::close_one(&mut index.original,grant)?;if index.original.is_none(){self.ready=true;}Ok(if self.ready{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
  pub fn output_ready(&self)->bool{!self.closing&&self.ready&&self.source.is_some()&&self.index.is_some()}
  pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid());}Ok(fixed(size_of::<NamedPersistentRoot<T>>()*2+size_of::<AdmittedNamedKeyIndex>()))}

@@ -142,7 +142,6 @@ pub fn check_u_prime(element: &EnvelopeElement, bridges: &[ThermalBridge], opaqu
         let r_need = 1.0 / u_cap;
         let mut remedied = false;
 
-        // Insulation: bump until utilization ≤ 1 with the same R_T sum the check re-evaluates.
         if let Some(idx) = insulation_layer_index(&element.layers) {
             let layer = &element.layers[idx];
             let mut d = required_insulation_thickness(&element.layers, r_si, r_se, r_need)
@@ -173,7 +172,6 @@ pub fn check_u_prime(element: &EnvelopeElement, bridges: &[ThermalBridge], opaqu
             }
         }
 
-        // ψ: emit a strictly lower bound that clears U′, including when formula ties current ψ.
         if let Some(bridge) = bridges.iter().max_by(|a, b| a.psi.partial_cmp(&b.psi).unwrap_or(std::cmp::Ordering::Equal)) {
             if bridge.length_m > 0.0 && bridge.psi > 0.0 {
                 let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
@@ -211,7 +209,6 @@ pub fn check_u_prime(element: &EnvelopeElement, bridges: &[ThermalBridge], opaqu
             }
         }
 
-        // lengthM: emit a strictly shorter bound that clears U′ (never refuse a computed clearing bound).
         if let Some(bridge) = bridges
             .iter()
             .filter(|b| b.psi > 0.0 && b.length_m > 0.0)
@@ -261,7 +258,6 @@ pub fn check_u_prime(element: &EnvelopeElement, bridges: &[ThermalBridge], opaqu
             }
         }
 
-        // Area: grow opaque share until Σ(ψ·l)/A drops enough (when U < U_max).
         if u < u_max {
             let mut opaque_after = opaque_area_m2;
             let mut area_req = element.area_m2;
@@ -308,7 +304,6 @@ pub fn check_u_prime(element: &EnvelopeElement, bridges: &[ThermalBridge], opaqu
             }
         }
 
-        // Guarantee: if still bare, force insulation one-ulp (or more) until U′ clears, else ψ→0.
         if !remedied {
             if let Some(idx) = insulation_layer_index(&element.layers) {
                 let layer = &element.layers[idx];
@@ -354,8 +349,6 @@ pub fn check_u_prime(element: &EnvelopeElement, bridges: &[ThermalBridge], opaqu
                 let other_psi_l = psi_l_sum(bridges) - bridge.psi * bridge.length_m;
                 let mut psi_req = 0.0;
                 let mut guard = 0u32;
-                // psi_req starts at 0; if even 0 does not clear, still attach 0 so Fail is not bare —
-                // sequential/other checks must then clear bridges; but with one dominant bridge, 0 clears when u ≤ u_max.
                 while guard < 8 && psi_req > 0.0 {
                     let u_prime_cand = u + (other_psi_l + psi_req * bridge.length_m) * share / element.area_m2;
                     if u_prime_utilization_clears(u_prime_cand, u_max) {

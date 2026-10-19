@@ -6,11 +6,11 @@ import type { PdfInfo } from './📸️snapshot/📇️metadata/🟦️.ts';
 import type { PdfIndirectObject, PdfPage } from './📸️snapshot/📄️document/🟦️.ts';
 
 export interface PdfArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ declaredVersion: string;
-  /** @state artifact */ pages: PdfPage[];
-  /** @state artifact */ info: PdfInfo;
-  /** @state artifact */ objects: PdfIndirectObject[];
-  /** @state artifact */ trailer: PdfDictEntry[];
-  /** @state artifact */ admittedStreamRoles: PdfAdmittedStreamRole[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🔖️ @state artifact */ declaredVersion: string;
+  /** 📄️ @state artifact */ pages: PdfPage[];
+  /** 🌳️ @state artifact */ info: PdfInfo;
+  /** 📦️ @state artifact */ objects: PdfIndirectObject[];
+  /** 🔝️ @state artifact */ trailer: PdfDictEntry[];
+  /** 🛂️ @state artifact */ admittedStreamRoles: PdfAdmittedStreamRole[];
 }

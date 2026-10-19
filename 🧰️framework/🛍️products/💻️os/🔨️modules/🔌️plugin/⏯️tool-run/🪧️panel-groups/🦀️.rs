@@ -1,6 +1,9 @@
 //! 🪧️ Panel groups of the tool run ledger: the ready group and the run panel group of the history panel. See [`super`].
 
 use super::*;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_ui_locale::Locale;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 //#region 🔖️Panel
 /// ▶️ The ready group of a run-declaring tool with no run yet: its status and a real Start button carrying the tool id.

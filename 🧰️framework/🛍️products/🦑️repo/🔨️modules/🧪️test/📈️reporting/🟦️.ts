@@ -155,8 +155,6 @@ export function computeCoverageMetrics(repoRoot: string, cases: readonly Discove
 
   const parityByImplementation: Record<string, { compared: number; equal: number; ratio: number }> = {};
   for (const verdict of parity) {
-    // 🧭️A verdict id is either a stable test id (`…::<implementation>::subject`) or a cross-subject
-    // pair (`…::<a>~<b>`); both name every implementation they speak for.
     const implementations = verdict.testId.includes("~") ? (verdict.testId.split("::").pop() ?? "").split("~") : [verdict.testId.split("::").at(-2) ?? ""];
     for (const implementation of implementations.filter(Boolean)) {
       const bucket = (parityByImplementation[implementation] ??= { compared: 0, equal: 0, ratio: 1 });
@@ -276,10 +274,6 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
   const fixturesByTarget = new Map<string, TestEvidence[]>();
   for (const contribution of registry.contributions) {
     for (const fixture of contribution.testEvidence) {
-      // 🛡️A malformed fixture must not take the whole matrix down. Three fixtures registered without a
-      // `target` threw here, and every caller that swallowed the throw reported coverage computed over a
-      // silently smaller set — the provenance dimension read 300/300 against 303 registered fixtures,
-      // because the three that FAILED it had been dropped from the denominator by the crash.
       if (fixture?.target?.artifact === undefined) continue;
       const key = `${surfaceCoordinate(fixture.target)}::${fixture.mutation ?? ""}::${fixture.outcome ?? ""}`;
       fixturesByTarget.set(key, [...(fixturesByTarget.get(key) ?? []), fixture]);
@@ -358,10 +352,6 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   const manifestMutations = registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => ({ manifest, mutation })));
   const owned = new Set(manifestMutations.map(({ manifest, mutation }) => `${manifest.artifact}@${manifest.standard}::${mutation.id}`));
   const runtimeIds = runtimeInventories.flatMap((inventory) => inventory.mutations.map((mutation) => `${inventory.artifact}@${inventory.standard}::${mutation.id}`));
-  // 🏭️A SUBSET WITH NO INVENTORY IS UNMEASURED, not covered. Pooling denominators across the registry
-  // meant one subset that had run the bridge kept the denominator non-empty, and every subset that had
-  // never run it simply contributed nothing — invisible rather than reported. Each such subset is
-  // counted as one uncovered coordinate so it appears in the gate's `missing` list by name.
   const inventoried = new Set(runtimeInventories.map((inventory) => surfaceCoordinate(inventory)));
   const uninventoried = registry.mutationManifests.map((manifest) => surfaceCoordinate(manifest)).filter((coordinate) => !inventoried.has(coordinate)).map((coordinate) => `${coordinate} (no runtime inventory)`);
 
@@ -371,11 +361,6 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
     .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability))))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.testEvidence).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => surfaceCoordinate(fixture.target)));
-  // 🧪️EVIDENCE IS THE CONJUNCTION, not the fixture alone. Counting only "a fixture targets this subset"
-  // let a mutation with NO discharged oracle — an `-uncarried` kind in a subset that happens to have
-  // fixtures — count as measured, and evidence then exceeded registration: 213 against 210, which is
-  // impossible by construction. A mutation is evidenced only when a qualifying oracle discharges it AND
-  // something exists to run that oracle against.
   const oracled = new Set(withoutOracle);
   const withoutEvidence = manifestMutations
     .filter(({ manifest, mutation }) => oracled.has(`${manifest.artifact}::${mutation.id}`) || !fixtureSubsets.has(surfaceCoordinate(manifest)))
@@ -408,11 +393,6 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
     measure("runtimeMutationCoverage", runtimeIds.length - runtimeIds.filter((id) => !owned.has(id)).length, runtimeIds.length + uninventoried.length, runtimeMissing),
     measure("subsetOwnershipCoverage", manifestMutations.length - wildcards.length, manifestMutations.length, wildcards),
     measure("externalOracleCoverage", manifestMutations.length - withoutOracle.length, manifestMutations.length, withoutOracle),
-    // 🧪️AN ORACLE THAT HAS NEVER BEEN RUN AGAINST ANYTHING PROVES NOTHING. `externalOracleCoverage`
-    // asks only whether a qualifying oracle is REGISTERED for a mutation; it says nothing about whether
-    // any artifact exists to run it on. 271 of 369 manifested mutations had zero fixtures targeting their
-    // subset while counting as covered — the empty-denominator failure this protocol already forbids at
-    // the dimension level, reappearing one level down at the mutation level.
     measure("oracleEvidenceCoverage", manifestMutations.length - withoutEvidence.length, manifestMutations.length, withoutEvidence),
     measure("oracleCapabilityCoverage", requiredCapabilities.length - unsupportedCapabilities.length, requiredCapabilities.length, unsupportedCapabilities),
     measure("productionBridgeCoverage", subjectResults.length - replaying.length, subjectResults.length, replaying),
@@ -440,9 +420,6 @@ export function enforceReleaseGates(measurements: readonly DimensionMeasurement[
       failures.push(`${dimension} was never measured — a gate that reads nothing cannot be satisfied`);
       continue;
     }
-    // 🚦️An EMPTY denominator is not 100%. `measure` reports ratio 1 for an empty set so the display
-    // reads "n/a" rather than a false 0%, but a release gate that accepted it would be satisfied by a
-    // run in which nothing was measured at all — which is precisely the failure the gate exists for.
     if (measurement.total === 0) {
       failures.push(`${dimension} has an EMPTY denominator — nothing was measured, and an unmeasured dimension cannot be 100%`);
       continue;

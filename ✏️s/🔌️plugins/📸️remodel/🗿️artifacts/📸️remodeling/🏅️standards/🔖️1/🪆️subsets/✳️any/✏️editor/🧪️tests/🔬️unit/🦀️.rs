@@ -430,15 +430,8 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     }
 
     assert!(<RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
-    // 👁️ No route declares the `Config` lane (the four view verbs publish to their exact `WindowConfig`
-    // owners, and `Config` is `NoConfig`), so no config one-item preparation factory is owed.
     assert!(!contracts.iter().any(|contract| contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::Config)), "a Config-lane route would need a config one-item preparation factory");
 
-    // 🧭️ `try_build_definition` fans an app action into a window kind only when that window REFERENCES
-    // it (`action_refs`) or the framework derives it (interaction / tool-run verbs) — every one of
-    // remodeling's retained routes is an app-level action, so the built `definition.actions` is where
-    // its declaration and classification are observable after the fact. (Reading only the per-window
-    // lists made this law assert against a set that never contained a single retained route.)
     let definition = create_remodeling_app();
     let declared: std::collections::BTreeMap<&str, InteractiveJobClassification> = definition
         .actions
@@ -683,8 +676,6 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
 /// whole-document `setDocument` snapshot, where one side's write would clobber the other's.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    // 🧹️ The REGISTERED pair: remodel publishes bounded tool proofs, so a registry-less `paired_apps`
-    // instance faults in the `interactive-job.catalog-authority` proof join before any edit lands.
     artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<RemodelingPlayApp>, _, _, _>(
         "mem://remodeling-convergence",
         || async { remodeling_app_manifest_for_tests() },

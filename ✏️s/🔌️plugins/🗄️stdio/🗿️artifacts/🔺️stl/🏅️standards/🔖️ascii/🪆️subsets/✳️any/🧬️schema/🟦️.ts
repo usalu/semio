@@ -5,9 +5,9 @@ export interface StlTriangle {
   vertices: [[Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64], [Binary64, Binary64, Binary64]];
 }
 export interface StlArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ solidName: string;
-  /** @state artifact */ triangles: StlTriangle[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 🧊️ @state artifact */ solidName: string;
+  /** 🕸️ @state artifact */ triangles: StlTriangle[];
 }
 
 //#region 🚪️Parsers

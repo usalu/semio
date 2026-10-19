@@ -16,7 +16,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust",
@@ -40,7 +40,7 @@
         "forwardAllArgs": true
       }
     },
-    "test-original-ownership":{"executor":"repo:script","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-ownership","forwardAllArgs":true}},
+    "test-original-ownership":{"executor":"repo:script","cache":true,"options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-ownership","forwardAllArgs":true}},
     "canonical-architecture": {
       "executor": "repo:script",
       "cache": false,

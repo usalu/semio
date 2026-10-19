@@ -146,8 +146,9 @@ export async function registerHubSessionCapabilityTests(vitest: Vitest, dependen
         "🧵️backbone-worker/🟦️.ts",
         "🧾️space-artifact-creation/🟦️.ts",
       ];
-      const shellHost = (await Promise.all(shellHostFiles.map((file) => readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/" + file, source.url), "utf8")))).join("\n");
-      const worker = (await import("@semio-tech/framework-compiler-ts/syntax/module-tree")).readModuleTreeSource(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url));
+      const { readModuleTreeSource } = await import("@semio-tech/framework-compiler-ts/syntax/module-tree");
+      const shellHost = shellHostFiles.map((file) => readModuleTreeSource(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/" + file, source.url))).join("\n");
+      const worker = readModuleTreeSource(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url));
       expect(pluginShard).not.toContain("semio-hub-session-port");
       expect(pluginShard).not.toContain("authorization");
       for (const retired of ["semio-browser-broker-port", "x-semio-browser-broker", "#semio-broker=", "localBrowserBrokerProof"]) {

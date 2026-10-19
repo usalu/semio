@@ -215,7 +215,6 @@ export function CanvasPresenceOverlayV1(props: CanvasPresenceSurfaceV1): ReactEl
             const world = props.objectWorldPositions?.[id];
             const projected =
               world && props.localOrbit && localSize ? orbitPointToScreen(props.localOrbit, localSize, world) : null;
-            // Orbit hosts paint projected selection rings only — never a normalized HUD stack.
             if (props.localOrbit && !projected) return null;
             return (
               <div

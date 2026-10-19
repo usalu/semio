@@ -1,18 +1,18 @@
 /** 🧬️ WiresCanvasTransient */
 export interface WiresCanvasTransient {
-  /** @state transient */
+  /** 💨️ @state transient */
   dragNodeId?: string;
-  /** @state transient */
+  /** ↔️ @state transient */
   dragStartX: number;
-  /** @state transient */
+  /** ➡️ @state transient */
   dragStartY: number;
-  /** @state transient */
+  /** 🚚️ @state transient */
   dragLastX: number;
-  /** @state transient */
+  /** 🧲️ @state transient */
   dragLastY: number;
-  /** @state transient */
+  /** ✋️ @state transient */
   dragZoom: number;
-  /** @state transient */
+  /** 🫧️ @state transient */
 }
 
 //#region 🚪️Parsers

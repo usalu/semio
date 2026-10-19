@@ -128,17 +128,6 @@ pub mod editor {
             pub mod set_area_brush_size;
         }
         #[path = "."]
-        pub mod panels {
-            #[path = "../../../../📌️panels/🛍️catalogue/🦀️.rs"]
-            pub mod catalogue;
-            #[path = "../../../../📌️panels/🗿️artifact/🦀️.rs"]
-            pub mod artifact;
-            #[path = "../../../../📌️panels/🔍️inspection/🦀️.rs"]
-            pub mod inspection;
-            #[path = "../../../../📌️panels/⚙️settings/🦀️.rs"]
-            pub mod settings;
-        }
-        #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {

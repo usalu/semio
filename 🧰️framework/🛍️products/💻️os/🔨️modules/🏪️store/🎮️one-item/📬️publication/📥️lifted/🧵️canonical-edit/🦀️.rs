@@ -168,7 +168,7 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
         self.prepared.as_ref()
     }
     /// 📥️ Installs the already funded ready diagnostic owner before exposing the sealed candidate witness.
-    pub fn record_prepared_outcome_messages(&mut self, messages: crate::os_spr::command::MutationMessagePublication) {
+    pub fn record_prepared_outcome_messages(&mut self, messages: semio_framework_os_spr::command::MutationMessagePublication) {
         self.prepared.as_mut().expect("ready diagnostic handoff requires a sealed candidate").record_outcome_messages(messages);
     }
     pub fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, M>> {
@@ -306,7 +306,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
     }
     /// 🧾️ Returns every actual currency from the preceding canonical preparation turn.
     pub fn ownership_progress(&self)->RetainedCloneProgress{self.ownership}
-    pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=Default::default();self.last_length=0;self.last_canonical=false;
         if self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         if self.prepared.is_some(){return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),self.ownership));}

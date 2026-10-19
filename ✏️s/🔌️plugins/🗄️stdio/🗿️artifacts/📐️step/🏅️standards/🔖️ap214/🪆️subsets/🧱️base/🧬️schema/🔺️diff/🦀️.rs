@@ -188,12 +188,10 @@ pub struct StepArgsDiff {
 }
 
 impl StepArgsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[StepValue]) -> Vec<StepValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
@@ -213,7 +211,6 @@ impl StepArgsDiff {
         next
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
@@ -230,7 +227,6 @@ impl StepArgsDiff {
         self.added = added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect();
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_args: &[StepValue]) -> Self {
         let (removed, modified, added) = rewind_indexed_collection(
             &self.removed,
@@ -259,12 +255,10 @@ pub struct StepEntityDiff {
 }
 
 impl StepEntityDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &StepEntity) -> StepEntity {
         let mut next = base.clone();
         if let Some(v) = &self.name {
@@ -279,12 +273,10 @@ impl StepEntityDiff {
         next
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &StepEntity) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
@@ -332,7 +324,6 @@ pub struct StepEntitiesDiff {
 }
 
 impl StepEntitiesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -347,7 +338,6 @@ impl StepEntitiesDiff {
         Self { removed, modified, added }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[StepEntity]) -> Vec<StepEntity> {
         let mut entities: Vec<StepEntity> = base.to_vec();
         if !self.removed.is_empty() {
@@ -414,14 +404,14 @@ fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -
     for dm in d2.modified {
         if added_ids.contains(&dm.id) {
             if annihilated.contains(&dm.id) {
-                continue; // modified-of-annihilated-add: moot.
+                continue;
             }
             if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
                 a.entity = apply_entity_diff_to_added(&dm.diff, &a.entity);
             }
         } else {
             if merged_removed.contains(&dm.id) {
-                continue; // modified-of-removed: illegal, ignored (matches apply()'s no-op rule).
+                continue;
             }
             if let Some(existing) = merged_modified.iter_mut().find(|m| m.id == dm.id) {
                 existing.diff.absorb(dm.diff.clone());
@@ -465,7 +455,6 @@ pub struct StepDiff {
 }
 
 impl StepDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().is_none_or(StepEntitiesDiff::is_empty)
     }

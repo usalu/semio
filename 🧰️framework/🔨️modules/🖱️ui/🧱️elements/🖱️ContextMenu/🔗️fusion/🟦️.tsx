@@ -1,5 +1,5 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { type ContextMenuItem, contextMenuItemClassName, contextMenuShortcutClassName, renderContextMenuLeading } from "../🎨️item-render/🟦️.tsx";
 import { contextMenuItemAtPath, contextMenuOrdinals, contextMenuPathKey, contextMenuPathsEqual, contextMenuReasonId, renderContextMenuOrdinalBadge, renderContextMenuReason } from "../🧭️navigation/🟦️.tsx";
 

@@ -16,7 +16,7 @@ use semio_repo_test_host::Outcome;
 use semio_repo_test_host::law::vector::Vector;
 
 //#region 🔖️Vectors
-/// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures`.
+/// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures`.
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-playback-clock" => Vector {

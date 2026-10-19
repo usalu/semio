@@ -4,13 +4,13 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcPartPatch, OpcPartsDelta};
 
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartModification;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartRemoval;
-use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta;
-#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::{DocxPathSegment};
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartModification;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartRemoval;
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::{DocxPathSegment};
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 #[cfg(test)]
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
@@ -38,10 +38,8 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 //#region 🔖️Mutations
-#[path = "🧭️edit-rules/🦀️.rs"]
-pub mod edit_rules;
 #[path = "🔗opc-layer/🦀️.rs"]
-pub(crate) mod opc_layer;
+pub mod opc_layer;
 #[path = "📎set-relationship/🦀️.rs"]
 pub mod set_relationship;
 #[path = "🧷remove-relationship/🦀️.rs"]
@@ -78,8 +76,7 @@ pub mod set_part;
 pub mod set_run_formatting;
 #[path = "🔤set-run-text/🦀️.rs"]
 pub mod set_run_text;
-#[path = "🧭️xml-address/🦀️.rs"]
-pub mod xml_address;
+pub use semio_s_artifact_stdio_docx_base_xml_address as xml_address;
 pub use xml_address::{
     docx_block_run_address, docx_block_slot, docx_styles_root, docx_top_level_block_address, docx_top_level_block_count, docx_top_level_run_at, docx_top_level_run_count, docx_xml_address, docx_xml_subtree_revision, resolve_docx_xml_address, DocxEditableRun, DocxXmlAddress,
     ResolvedDocxXmlAddress, docx_top_level_text_targets, DocxEditableText, DocxTextTargetKind, docx_run_formatting, DocxRunFormatting,
@@ -271,6 +268,11 @@ fn child_remove_plan(snapshot: &DocxSnapshot, parent: &DocxXmlAddress, index: us
     let inverse_parent = DocxXmlAddress { part_path: parent.part_path.clone(), node_path: parent.node_path.clone(), expected_name: parent.expected_name.clone(), revision: xml_address::revision_after_replacement(snapshot, parent, &replacement)? };
     let diff = part_diff(parent, XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() }) }));
     Ok(PreparedDocxXmlMutation { diff, inverse: DocxMutation::InsertXmlNode(insert_xml_node::InsertXmlNode { parent: inverse_parent, index, node: previous }), changed: true, address: parent.clone(), replacement })
+}
+
+/// 🌱️ Prepares a first run inside an empty paragraph without replacing its existing markup.
+pub fn empty_paragraph_text_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, ValueError> {
+    Ok(xml_address::empty_paragraph_run_insertion(snapshot, address, text)?.map(|(index, node)| DocxMutation::InsertXmlNode(insert_xml_node::InsertXmlNode { parent: address.clone(), index, node })))
 }
 
 /// 🧩️ Validates one addressed edit and prepares its compact target-part diff and exact inverse.

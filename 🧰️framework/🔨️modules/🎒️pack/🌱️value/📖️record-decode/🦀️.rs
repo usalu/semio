@@ -91,7 +91,7 @@ pub(super) trait MaterializationAdmission {
 
 impl MaterializationAdmission for ValueMaterialization {fn charge(&self,bytes:u64)->Result<(),PackRefusal>{ValueMaterialization::charge(self,bytes)}}
 
-pub(super) struct ControlledMaterialization<'a,'callback>{pub(super) control:std::cell::RefCell<&'a mut semio_framework_value::native_decoding::NativeDecodeControl<'callback>>,pub(super) maximum:u64}
+pub(super) struct ControlledMaterialization<'a,'callback>{pub(super) control:std::cell::RefCell<&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'callback>>,pub(super) maximum:u64}
 impl ControlledMaterialization<'_,'_>{
     fn check(&self,bytes:u64)->Result<(),PackRefusal>{if (self.control.borrow().owned_bytes() as u64).checked_add(bytes).filter(|next|*next<=self.maximum).is_none(){return Err(PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::OwnershipLimit,"controlled native materialization exceeds max_total_alloc")));}Ok(())}
 }
@@ -146,8 +146,6 @@ fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits)
 
 fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackRefusal> {
     let bytes = read_len_prefixed_bytes(reader, &ctx.limits)?;
-    // 🔁️ `reader.position()` is async now; `map_err`'s closure is sync (R10 residue shape 1), so
-    // the position is read up front rather than awaited inside the closure.
     let offset = reader.position() as u64;
     ctx.materialization.copy_span_utf8(bytes,offset,"text")
 }
@@ -282,8 +280,6 @@ pub(super) fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, c
         TAG_TUPLE => decode_seq_body(reader, elem_shape_of(shape), true, ctx, depth),
         TAG_LIST => {
             if let Some(spec_fn) = table_spec_of(shape) {
-                // Defensive: a verbose AoS list under a `Table` field. `Shape::Record(spec_fn)`
-                // built inline lets us reuse `decode_seq_body` unchanged.
                 let record_shape = Shape::Record(spec_fn);
                 decode_seq_body(reader, Some(&record_shape), false, ctx, depth)
             } else {
@@ -304,8 +300,6 @@ pub(super) fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, c
         TAG_WIRE => Ok(FieldValue::Wire(decode_wire(reader, ctx, depth + 1)?)),
         TAG_EXPR => {
             let text = decode_string(reader, ctx)?;
-            // 🔁️ Same closure constraint as `read_inline_string`: read the position before the
-            // sync `map_err` closure, don't `.await` inside it.
             let _offset = reader.position() as u64;
             ctx.materialization.expression(&text,ctx.limits.max_depth).map(FieldValue::Expr)
         }

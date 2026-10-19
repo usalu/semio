@@ -380,20 +380,7 @@ export class ActivationRegistry {
    * dead/disposed instance mid-suspend. */
   async suspend(actorId: string): Promise<void> {
     if (!this.resident.has(actorId)) return;
-    // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): `cancelQueued` MUST
-    // stay the first synchronous action after the residency check, before any `await` — this
-    // method's own pre-existing doc comment ("cancels every turn still queued... FIRST,
-    // synchronously, before the checkpoint/dispose round trip even starts") and a real regression
-    // this ordering fixes: an `await` inserted ahead of `cancelQueued` (even one that resolves
-    // immediately, e.g. calling an async fn with nothing to do) yields to the microtask queue at
-    // least once, which is enough for `TurnScheduler`'s own microtask-scheduled pump to dispatch an
-    // already-enqueued turn before `cancelQueued` ever runs — caught by
-    // `ActivationRegistry.suspend cancels queued turns`'s existing test.
     this.turnScheduler.cancelQueued(actorId);
-    // 🧩️ terra-extension-activation: leaves-first — every cascade-activated extension is suspended
-    // (checkpointed) before its parent's own checkpoint/dispose below, so an extension never outlives
-    // its parent's worker-side teardown. `extensionChildren`'s entry is left in place (not deleted)
-    // — `resume` needs it to restore the same children, parent-first, on the way back up.
     await this.suspendExtensionsOf(actorId);
     const checkpoint = await this.shardClient.checkpoint(actorId);
     this.checkpoints.set(actorId, checkpoint);
@@ -427,10 +414,6 @@ export class ActivationRegistry {
     const checkpoint = this.checkpoints.get(actorId);
     if (checkpoint) await this.shardClient.restore(actorId, checkpoint);
     this.markResident(actorId, pluginId);
-    // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): parent-first restore
-    // — the symmetric direction to `suspend`'s leaves-first teardown (design doc M6: "symmetric
-    // cascade, restore: parent first"). A child's own worker-side instance is only useful once its
-    // parent is running again.
     await this.resumeExtensionsOf(actorId);
   }
 
@@ -502,11 +485,6 @@ export class ActivationRegistry {
    * cancel message. See `📓️terra-T1-report.md` `## honest gaps`. */
   cancel(actorId: string): void {
     if (!this.actorPlugin.has(actorId)) return;
-    // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): leaves-first, and —
-    // unlike `suspend` — PERMANENT: every cascade-activated extension is cancelled before the parent
-    // itself, and the cascade edge is dropped (no checkpoint survives a `cancel`, so there is nothing
-    // for a later `resume` to restore). "A parent kill takes its extensions down" (design doc M6's
-    // own acceptance wording) is exactly this recursion.
     const children = this.extensionChildren.get(actorId);
     if (children) {
       for (const child of children) this.cancel(child);

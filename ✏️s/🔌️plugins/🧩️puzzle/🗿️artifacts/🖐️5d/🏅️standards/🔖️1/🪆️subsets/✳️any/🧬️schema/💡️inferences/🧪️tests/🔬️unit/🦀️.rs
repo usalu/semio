@@ -7,20 +7,18 @@ use std::collections::BTreeMap;
 
 use crate::standards::v1::subsets::any::schema::inferences::*;
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dFastener;
-use crate::Puzzle5dGrip;
-use crate::Puzzle5dGrip2d;
-use crate::Puzzle5dGrip3d;
-use crate::Puzzle5dMeta;
-use crate::Puzzle5dPart;
-use crate::Puzzle5dPart2d;
-use crate::Puzzle5dPart3d;
-use crate::Puzzle5dPartAnchor;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip2d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip3d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dMeta;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor;
 use protocol::Inference;
 
 //#region 🧸️Fixtures
 fn chain_snapshot() -> Puzzle5dSnapshot {
-    // p -f- c: a 2-part chain — same shape as puzzle3d's own inference fixture, kept
-    // independent per-file per this repo's inline-fixture convention.
     let parent = Puzzle5dPart {
         id: "p".into(),
         part_kind: None,

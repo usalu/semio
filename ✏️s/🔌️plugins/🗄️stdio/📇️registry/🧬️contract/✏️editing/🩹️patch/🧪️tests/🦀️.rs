@@ -603,7 +603,8 @@ fn paged_snapshot_patch_original_json_source_honors_paid_allocation_policy(){
 #[test]
 fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candidate(){
     use kernel::operation_bytes::{OwnedOperationBytes,OperationByteOutput,OperationByteComparison,OperationByteCloseStep};
-    use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+    use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-source.json")).unwrap();
     let read_fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-read.json")).unwrap();
     let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let cleanup=read_fixture["maximumCleanupBytes"].as_u64().unwrap()as usize;

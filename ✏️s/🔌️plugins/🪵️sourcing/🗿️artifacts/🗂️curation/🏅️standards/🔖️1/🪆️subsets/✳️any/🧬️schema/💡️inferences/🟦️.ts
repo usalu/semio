@@ -7,7 +7,7 @@ export interface CurationEntries {
 }
 
 export interface CurationInference {
-  /** @derived */
+  /** 📚️ @derived */
   entries: CurationEntries;
 }
 

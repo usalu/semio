@@ -8,7 +8,7 @@ import { setImmediate } from "node:timers/promises";
 import { runMutationInventoryProcess,readMutationInventoryCapture,readMutationInventoryExecutionPolicy,MutationInventoryProcessWorkspace,MutationInventoryProcessError,mutationInventoryPolicyArguments,admitMutationInventoryProducerArguments } from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-const require=createRequire(import.meta.url),Ajv=require("ajv"),execa=require("execa"),validate=new Ajv({strict:false}).compile(schema);
+const require=createRequire(import.meta.url),Ajv=require("ajv"),{execa}=require("execa"),validate=new Ajv({strict:false}).compile(schema);
 const output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!output||!isAbsolute(output))throw Error("Explicit mutation inventory test artifact directory required");
 const policy={version:1 as const,maximumUnits:1000000,maximumOwnedBytes:1048576,maximumCaptureBytes:262144,budgetMs:10000,compilerStorage:{buildDirectory:join(output,"build"),leaseDirectory:join(output,"leases"),targetDirectory:join(output,"target"),captureDirectory:join(output,"captures")}};
@@ -23,9 +23,9 @@ test("real owned captures equal installed execa and SQLite corpus",async()=>{
   await mkdir(output,{recursive:true});const db=new Database(":memory:");db.exec("CREATE TABLE expected(id TEXT,stdout TEXT,stderr TEXT,code INTEGER)");
   for(const row of fixture.cases){
     db.query("INSERT INTO expected VALUES(?,?,?,?)").run(row.id,row.stdout,row.stderr,row.code);
-    const independent=await execa(process.execPath,["-e",row.source],{reject:false,stripEof:false,timeout:10000});
+    const independent=await execa(process.execPath,["-e",row.source],{reject:false,stripFinalNewline:false,timeout:10000});
     const oracle=db.query("SELECT stdout,stderr,code FROM expected WHERE id=?").get(row.id) as {stdout:string;stderr:string;code:number};
-    expect({stdout:independent.stdout,stderr:independent.stderr,code:independent.code}).toEqual(oracle);
+    expect({stdout:independent.stdout,stderr:independent.stderr,code:independent.exitCode}).toEqual(oracle);
     const w=new MutationInventoryProcessWorkspace(),op=operation(w),result=await runMutationInventoryProcess(request(row.source),op);
     expect(result.reason).toBe("exit");expect(result.code).toBe(oracle.code);
     expect(await readMutationInventoryCapture(result.stdout,op)).toBe(oracle.stdout);expect(await readMutationInventoryCapture(result.stderr,op)).toBe(oracle.stderr);
@@ -57,7 +57,7 @@ test("real compiler lease stays owned until shutdown and cancels in the queue",a
     try{
       const result=await runMutationInventoryProcess({...request("void 0"),command:"cargo",argv:["--version"],compiler,budgetMs:row.budgetMs??policy.budgetMs},op);
       expect(String(result.reason)).toBe(row.reason);expect(w.stdout?.closed).toBe(true);expect(w.stderr?.closed).toBe(true);expect(w.lease).toBeUndefined();
-      if(row.kind==="cargo"){const independent=await execa("cargo",["--version"],{reject:false,stripEof:false,timeout:10000});expect(result.code).toBe(independent.code);expect(await readMutationInventoryCapture(result.stdout,op)).toBe(independent.stdout);expect(w.process?.closed).toBe(true);}
+      if(row.kind==="cargo"){const independent=await execa("cargo",["--version"],{reject:false,stripFinalNewline:false,timeout:10000});expect(result.code).toBe(independent.exitCode);expect(await readMutationInventoryCapture(result.stdout,op)).toBe(independent.stdout);expect(w.process?.closed).toBe(true);}
       else {expect(w.process).toBeUndefined();expect(queued).toBe(Boolean(row.queued));}
     }finally{held?.release();}
   }

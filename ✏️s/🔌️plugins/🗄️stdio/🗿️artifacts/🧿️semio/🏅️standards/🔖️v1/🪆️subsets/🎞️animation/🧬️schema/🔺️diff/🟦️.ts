@@ -20,7 +20,7 @@ export interface AnimChannelDiff {
 }
 
 export interface AnimTimelineDiff {
-  /** tri-state: absent = unchanged, null = name cleared, string = renamed */
+  /** 🫥️ tri-state: absent = unchanged, null = name cleared, string = renamed */
   name?: string | null;
   channels?: IndexedTripleDiff<AnimChannelDiff, AnimChannel>;
 }

@@ -1,4 +1,4 @@
-//! the captured BASE row. Missing target ⇒ `Vec::new()`.
+//! 📸️ the captured BASE row. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DisconnectKindCompatibility` — reconstructs a `connect-kind-compatibility` of
 use crate::Puzzle5dSnapshot;
 

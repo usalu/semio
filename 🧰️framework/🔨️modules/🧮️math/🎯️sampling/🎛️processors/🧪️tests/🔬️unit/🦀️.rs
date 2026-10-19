@@ -41,7 +41,6 @@ async fn top_k_keeps_exactly_k_highest_probability_tokens() {
 #[semio_framework_async_macros::async_test]
 async fn top_p_retains_smallest_prefix_covering_cumulative_mass() {
     let mut ws = LogitsWorkspace::new(4).await;
-    // 🌡️ Logits chosen so softmax gives one dominant token (~0.87) plus a long tail.
     ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).await.unwrap();
     let vocab = Vocabulary::new(4).await;
     let view = step_view(&vocab, &[], &[]).await;
@@ -153,9 +152,6 @@ async fn rank_truncation_keeps_exactly_max_rank_entries() {
 
 #[semio_framework_async_macros::async_test]
 async fn adaptive_truncation_targeting_effective_count_shrinks_a_near_uniform_distribution() {
-    // 📐️ A peaked distribution's *natural* effective count is already low — "targeting" a
-    // higher count than that can never shrink it (there's nothing to cut). Truncation only
-    // makes sense the other way: start near-uniform (effective count 6) and target lower (2).
     let mut ws = LogitsWorkspace::new(6).await;
     ws.reset_for_step(&[1.0; 6], SanitizePolicy::NegInfNan).await.unwrap();
     let vocab = Vocabulary::new(6).await;
@@ -423,8 +419,6 @@ async fn token_class_penalty_scales_only_classified_tokens() {
 async fn no_repeat_ngram_forbids_recreating_a_seen_bigram() {
     let mut ngram = NoRepeatNgram::new(2).await;
     let vocab = Vocabulary::new(5).await;
-    // History: [0, 1, 0]. The bigram (0 -> 1) was already seen, so after another `0` the
-    // engine must forbid token `1` (it would recreate that exact bigram).
     let generated_first = [TokenId::new(0)];
     let view_after_first = step_view(&vocab, &[], &generated_first).await;
     ngram.commit(&view_after_first, TokenId::new(1)).await;
@@ -663,10 +657,6 @@ async fn entropy_pid_sharpens_the_distribution_when_entropy_exceeds_target() {
     let view = step_view(&vocab, &[], &[]).await;
     let mut pid = EntropyPid::new(0.1, 1.0, 0.0, 0.0).await;
     pid.process(&view, &mut ws).await.unwrap();
-    // 📐️ Uniform entropy (ln 4 ≈ 1.39) is far above the 0.1 target, so `error = target - entropy`
-    // is very negative, driving `temp` toward (and clamped at) `0.05` — a *low* temperature that
-    // sharpens the distribution (reduces entropy) by scaling logits *up* (dividing by a small
-    // temp), the correct control direction for "entropy is too high, pull it down".
     assert!(ws.processed().await[0] > 1.0);
 }
 
@@ -692,7 +682,6 @@ async fn confidence_controller_uses_low_temp_under_low_entropy() {
     let view = step_view(&vocab, &[], &[]).await;
     let mut controller = ConfidenceController { low_entropy: 0.0, high_entropy: 2.0, low_temp: 0.2, high_temp: 1.5 };
     controller.process(&view, &mut ws).await.unwrap();
-    // 📐️ Near-zero entropy selects a temperature near `low_temp` (0.2), scaling logits up ~5x.
     assert!(ws.processed().await[0] > 40.0);
 }
 

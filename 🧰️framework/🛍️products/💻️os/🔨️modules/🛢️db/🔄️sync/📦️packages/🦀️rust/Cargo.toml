@@ -36,6 +36,7 @@ semio-framework-os-kernel-db-wal-log = { path = "../../../📝️wal/🧾️log/
 semio-framework-async = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel-db-actor = { path = "../../../🎭️actor/📦️packages/🦀️rust" }

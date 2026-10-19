@@ -15,8 +15,6 @@ export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; 
   const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
   const cameraKey = `${props.spec.mode.kind}:${props.seedKey}`;
   const perspectiveFov = worldProjectionPerspectiveFov(props.spec);
-  // 🐟️ Pre-mount the curvilinear pass while only the *pending* spec is curvilinear so its render target is warm and
-  // its strength can ramp in via `morphRef` before the camera remount, instead of popping in at full strength.
   const curvilinearMode = props.spec.mode.kind === "curvilinear" ? props.spec.mode : props.pendingSpec?.mode.kind === "curvilinear" ? props.pendingSpec.mode : null;
   return (
     <>
@@ -176,8 +174,6 @@ function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMod
     }
     const target = targetRef.current;
     const { material } = quadRef.current;
-    // 🐟️ Fade `uStrength`/`uFov` with the live projection morph — entering curvilinear ramps 0→target strength,
-    // leaving ramps target→0; `uStrength=0` is an exact identity blit so the fade can never pop.
     const morph = morphRef.current;
     const enteringCurvilinear = morph?.toSpec.mode.kind === "curvilinear";
     const leavingCurvilinear = morph?.fromSpec?.mode.kind === "curvilinear";

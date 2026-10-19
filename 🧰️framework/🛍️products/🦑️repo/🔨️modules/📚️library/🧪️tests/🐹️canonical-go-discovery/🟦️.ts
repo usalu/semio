@@ -14,6 +14,7 @@ type Vector = Readonly<{
   nativePackages: readonly Readonly<{ owner: string; package: string; production: string }>[];
   cases: readonly Readonly<{ owner: string; domain: string; case: string; package: string; production: string; productionImports?: readonly string[]; test: string }>[];
   oraclePrograms: readonly Readonly<{ directory: string; production: string }>[];
+  hostAdapterCases: readonly Readonly<{ owner: string; case: string; test: string }>[];
   opaqueCases: readonly Readonly<{ owner: string; domain: string; case: string; package: string; production: string; productionImports?: readonly string[]; test: string }>[];
   expectedPackages: readonly string[];
   expectedSources: readonly string[];
@@ -61,6 +62,11 @@ function materialize(root: string): void {
     mkdirSync(join(root, row.directory), { recursive: true });
     writeFileSync(join(root, row.directory, "🐹️.go"), `package main\n${row.production}\n`);
   }
+  for (const row of vector.hostAdapterCases) {
+    const testCase = join(root, row.owner, "🧪️tests", row.case);
+    mkdirSync(testCase, { recursive: true });
+    writeFileSync(join(testCase, "🐹️.go"), `package adapter\n${row.test}\n`);
+  }
   for (const row of [...vector.cases, ...vector.opaqueCases]) {
     const owner = row.owner === "." ? root : join(root, row.owner);
     const sourceDomain = join(owner, row.domain);
@@ -92,6 +98,8 @@ test("canonical Go plans preserve private-package tests through the Go toolchain
     expect(oracle.status, oracle.stderr).toBe(0);
     for (const name of vector.expectedTests) expect(oracle.stdout).toContain(`=== RUN   ${name}`);
     expect(oracle.stdout).not.toContain("TestFixtureMustStayOpaque");
+    expect(Object.values(plan.replacements).some((path) => vector.hostAdapterCases.some((row) => path.includes(row.case)))).toBe(false);
+    expect(oracle.stdout).not.toContain("TestHostAdapterMustStayOutside");
     for (const row of vector.oraclePrograms) {
       expect(plan.packages.some((name) => name.includes("oracles"))).toBe(false);
       expect(Object.values(plan.replacements).some((path) => path.includes(row.directory))).toBe(false);

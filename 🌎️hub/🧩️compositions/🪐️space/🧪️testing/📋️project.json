@@ -4,7 +4,7 @@
   "projectType": "library",
   "tags": ["lang:typescript", "role:hub", "test-only"],
   "targets": {
-    "test-ownership": { "executor": "repo:script", "cache": false, "options": { "command": "bun 📜️script.ts test-ownership", "cwd": "{projectRoot}", "forwardAllArgs": true } },
+    "test-ownership": { "executor": "repo:script", "cache": true, "options": { "command": "bun 📜️script.ts test-ownership", "cwd": "{projectRoot}", "forwardAllArgs": true }, "outputs": [], "inputs": ["default", "sharedGlobals", "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/**/*", "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs", "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio", "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs", "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio", "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📄️documents/🟦️.ts", "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📄️documents/🦀️.rs", "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/**/*", "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/🧪️testing/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/**/*"] },
     "test-native": { "executor": "repo:script", "cache": false, "options": { "command": "bun 📜️script.ts test-native", "cwd": "{projectRoot}", "forwardAllArgs": true } }
   }
 }

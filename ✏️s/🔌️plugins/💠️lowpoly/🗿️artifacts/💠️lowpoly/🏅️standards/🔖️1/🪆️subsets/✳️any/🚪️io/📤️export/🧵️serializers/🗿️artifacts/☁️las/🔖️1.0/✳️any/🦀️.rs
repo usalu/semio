@@ -1,4 +1,4 @@
-//! lowpoly -> las
+//! 🔺️ lowpoly -> las
 //!
 //! Real LAS 1.x export through `io::encode_las`: every world-space mesh vertex becomes one point
 //! record.

@@ -24,7 +24,7 @@ import bootSelectionFixture from "../🧫️fixtures/🔬️wgpu-shell-boot-sele
 import activationFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎬️artifact-activation/🔣️.json";
 import operationPublicationCorpus from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️operation-publication/🔣️.json";
 
-import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 
 const browserBuildModule = new URL("../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts", import.meta.url).href;
@@ -565,7 +565,8 @@ describe("framework renderer wgpu generated worker", () => {
     expect([...dockerfile.matchAll(/bun_sha="([0-9a-f]{64})"/gu)]).toHaveLength(2);
     expect(dockerfile).toContain('test "$(bun --version)" = "$BUN_VERSION"');
     expect(nativeBootstrap).toContain('"packageManager"');
-    expect(nativeBootstrap).toContain('bash -s "bun-v$required_version"');
+    expect(nativeBootstrap).toContain('install_pinned_bun "$required_version"');
+    expect(nativeBootstrap).not.toContain("bun.sh/install");
     expect(nativeBootstrap).not.toContain(bunVersion);
     if (process.platform !== "win32") {
       execFileSync("bash", ["-n", nativeBootstrapPath]);

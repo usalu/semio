@@ -22,6 +22,7 @@ use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
 use crate::lifted_document_materialize::fresh_replica_clock;
 use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES, CursorRevisionAccumulator, CursorRevisionRecord};
 use semio_framework_os_store_replay::{EffectiveOperation, EffectiveSupersessions, effective_operation, fold_operation};
+use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistryOwner;
 //#region 🔖️Authority
 //#region 🔖️EphemeralLanes
 //#region 🔖️Text

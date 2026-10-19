@@ -1,2 +1,3 @@
 /** 🧩️ Public `@semio-tech/framework/modules/ui/contract/retained/wire/typed` entry: explicit re-exports of the source module that owns each member. */
-export * from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
+export { Builder, OwnedUiNode, OwnedUiPayload, RetainedUiChildIdsCursor, RetainedUiTypedCursor, UiNodeRetirement, UiPayloadRetirement, activity, captureTypedUiPayload, captureUiFieldChange, ownPayload, readers, saturationProbe } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
+export type { Profile, RetainedUiComponent, RetainedUiFieldChange, RetainedUiNodeRecord, RetainedUiTypedValues, UiSurfaceByteView } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";

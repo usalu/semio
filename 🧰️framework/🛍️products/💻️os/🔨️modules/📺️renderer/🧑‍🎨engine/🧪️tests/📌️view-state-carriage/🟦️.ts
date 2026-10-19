@@ -18,7 +18,7 @@ import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS, type Plug
 import { decodePackValue, encodePackValue, isPackInteger, packValueToBase64, packValueFromBase64, viewContextWireValue } from "@semio-tech/framework-os";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/📌️panel-carriage/🔣️.json";
-import { contextIntegerCarriersFixture as integerCarriers } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { contextIntegerCarriersFixture as integerCarriers } from "@semio-tech/framework/manifest/testing/fixtures";
 
 const spawnedRoster = (count: number) =>
   Array.from({ length: count }, (_, index) => ({
@@ -46,10 +46,6 @@ describe("view-state carriage", () => {
   });
 
   it("never puts a program roster in the panel carriage, and stays inside the bound at window capacity", () => {
-    // 🪐️ The shell's app roster crosses as its own `setAppRegistrations` hint-push, never as panel
-    // state: the carriage declares exactly the fields the fixture names and `isSpacePanelState`
-    // refuses every other key, so a roster — which grows with the plugin closure and is exactly the
-    // payload that broke this bound — has nowhere to ride.
     const empty = buildSpacePanelState([], fixture.activePanelTab);
     expect(Object.keys(empty).sort()).toEqual([...fixture.carriedFields].sort());
     expect(isSpacePanelState({ ...empty, programs: [] })).toBe(false);
@@ -107,8 +103,6 @@ describe("view-context integer carriers", () => {
   it("keeps a non-integral number a float, and never mints a carrier for one", () => {
     const fractional = { ...view, toolRunTraceCursorByWindowId: { "procedural-preview": { run: integerCarriers.nonIntegral, generation: 0, page: 0 } } };
     expect(() => parseResolvedPluginViewState(fractional)).toThrow(/invalid tool run trace cursor/);
-    // 🚫️ The mint refuses rather than rounds: a fractional run id has no exact integer carrier, and
-    // silently truncating it would resend the wrong trace page instead of failing loudly.
     expect(() => viewContextWireValue(fractional as PluginViewState)).toThrow();
   });
 });

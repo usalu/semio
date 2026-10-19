@@ -21,9 +21,9 @@ import {
   withoutUiRefreshSectionsV1,
   type BrowserActorUiStoresV1
 } from "../../🛣️route-and-chrome/🟦️.tsx";
-import { workerVisibleSurfacesDocument as visibleSurfaces } from "../../../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
+import { workerVisibleSurfacesDocument as visibleSurfaces } from "@semio-tech/framework/os/modules/store/testing/fixtures";
 import corpus from "../🧫️fixtures/🎭️browser-actor-panels/🔣️.json";
-import schema from "../../../../../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧬️schema/🔣️.json";
+import schema from "@semio-tech/framework/os/modules/plugin/browser-bundle/patch-handoff/schema.json";
 // #endregion 🔌️Adapters
 
 //#region 🧪️Tests

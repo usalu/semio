@@ -1,5 +1,15 @@
 {
   "name": "@semio-tech/framework-process",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "targets": {
     "test-build-mode": {
       "executor": "repo:script",
@@ -22,11 +32,50 @@
         }
       }
     },
-    "test-routing": {
+    "test-process-progress": {
       "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/🧭️routing/📥️invocation/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test process-progress"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Process Progress",
+              "de": "Prozessfortschritt Prüfen"
+            },
+            "description": {
+              "en": "Verify localized source work, safe progress totals and original publisher authority.",
+              "de": "Lokalisierte Quellarbeit, sichere Fortschrittswerte und ursprüngliche Herausgabe prüfen."
+            }
+          }
+        }
+      }
+    },
+    "test-routing": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -37,9 +86,13 @@
     },
     "test-artifact-files": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -50,9 +103,13 @@
     },
     "test-owned-execution": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -98,13 +155,35 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test execution-budget"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Process Time Limits",
+              "de": "Prozesszeitlimits Prüfen"
+            },
+            "description": {
+              "en": "Verify portable process limits and finite build preparation budgets.",
+              "de": "Portable Prozesszeitlimits und endliche Budgets für die Build-Vorbereitung prüfen."
+            }
+          }
+        }
       }
     },
     "test-test-command": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -115,9 +194,13 @@
     },
     "test-cargo-profile": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -128,9 +211,13 @@
     },
     "test-cargo-driver": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -154,9 +241,13 @@
     },
     "test-vitest-driver": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -167,9 +258,13 @@
     },
     "test-artifact-publication": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -180,9 +275,13 @@
     },
     "test-owner-context": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -193,9 +292,13 @@
     },
     "test-capture": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -206,9 +309,13 @@
     },
     "test-exact-cargo-laws": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -219,9 +326,13 @@
     },
     "test-native-artifacts": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -253,9 +364,13 @@
     },
     "test-wasm-build": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -274,9 +389,13 @@
     },
     "test-command-owner": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/⚙️configuration/🏃️process/**/*"
       ],
@@ -287,9 +406,13 @@
     },
     "test-command-boundary": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/⚙️configuration/🏃️process/**/*"
       ],
@@ -300,9 +423,13 @@
     },
     "test-command-cold": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/⚙️configuration/🏃️process/**/*"
       ],
@@ -326,15 +453,28 @@
     },
     "test-native-build-mode": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test native-build-mode",
         "cwd": "🧰️framework/🔨️modules/🏃️process"
       },
-      "cache": false
+      "cache": true
     },
     "test-managed-build-mode": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
       "dependsOn": [
         {
           "projects": [
@@ -352,18 +492,108 @@
     },
     "test-go-build-mode": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test go-build-mode"
       }
     },
-    "test-compiler-state": {
+    "test-cargo-source-admission": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/📦️artifacts/🏗️native-build/📥️source/**/*", "{projectRoot}/📦️artifacts/🏗️native-build/🕸️units/**/*", "{projectRoot}/🔒️leases/**/*", "{projectRoot}/📜️script.ts"],
+      "outputs": [],
+      "options": {"cwd": "🧰️framework/🔨️modules/🏃️process", "command": "bun ./📜️script.ts test cargo-source-admission"},
+      "metadata": {"semio": {"execution": {"version": 1, "kind": "source"}, "dashboard": {
+        "title": {"en": "Verify Cargo Source Admission", "de": "Cargo-Quellcodezulassung Prüfen"},
+        "description": {"en": "Verify compiler unit source boundaries, progress checkpoints and cancellation.", "de": "Quellcodegrenzen, Fortschrittsmeldungen und Abbruch für Compiler-Einheiten prüfen."}
+      }}}
+    },
+    "test-native-cache-descriptors": {
       "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
+        "{projectRoot}/📦️artifacts/💾️cache/**/*",
+        "{projectRoot}/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test native-cache-descriptors"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Verify Native Cache Descriptor Refusals",
+              "de": "Native Cache-Deskriptor-Ablehnungen Prüfen"
+            },
+            "description": {
+              "en": "Verify strict descriptor custody with bounded process and path diagnostics.",
+              "de": "Strikte Deskriptor-Zuständigkeit mit begrenzten Prozess- und Pfadmeldungen prüfen."
+            }
+          }
+        }
+      }
+    },
+    "test-native-image-observation": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": ["{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🤫️silence/**/*", "{projectRoot}/📜️script.ts"],
+      "outputs": [],
+      "options": {"cwd": "🧰️framework/🔨️modules/🏃️process", "command": "bun ./📜️script.ts test native-image-observation"},
+      "metadata": {"semio": {"execution": {"version": 1, "kind": "source"}, "dashboard": {
+        "title": {"en": "Verify Native Image Observation", "de": "Native Image-Beobachtung Prüfen"},
+        "description": {"en": "Verify rotating event log observation and cancellation.", "de": "Beobachtung rotierender Ereignisprotokolle und Abbruch prüfen."}
+      }}}
+    },
+    "test-runtime-environment": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/🏗️build/🎛️environment/**/*",
+        "{projectRoot}/🏗️build/🟦️typescript/**/*",
+        "{projectRoot}/📜️script.ts"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test runtime-environment"
+      },
+      "metadata": {
+        "semio": {
+          "execution": { "version": 1, "kind": "source" },
+          "dashboard": {
+            "title": { "en": "Verify Runtime Environment", "de": "Laufzeitumgebung Prüfen" },
+            "description": { "en": "Verify compiler cache isolation in every build mode through the dashboard owner.", "de": "Compiler-Cache-Isolation in jedem Build-Modus über den Dashboard-Eigentümer prüfen." }
+          }
+        }
+      }
+    },
+    "test-compiler-state": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/🏗️build/**/*",
         "{projectRoot}/📜️script.ts"
       ],
@@ -426,9 +656,13 @@
     },
     "test-native-queued-cancellation": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*"
       ],
       "outputs": [],
@@ -474,17 +708,28 @@
     },
     "test-cargo-profile-policy": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test cargo-profile-policy"
       },
-      "cache": false
+      "cache": true
     },
     "test-workspace": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{projectRoot}/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*"
       ],

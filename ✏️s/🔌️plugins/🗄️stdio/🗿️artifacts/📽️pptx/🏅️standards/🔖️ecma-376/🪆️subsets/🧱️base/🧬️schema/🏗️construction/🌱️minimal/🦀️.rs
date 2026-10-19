@@ -139,7 +139,6 @@ fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
         },
         XmlNode::Element { name: "p:grpSpPr".into(), attrs: vec![], children: vec![] },
     ];
-    // 🔢 ids start at 2 -- id 1 is reserved for the group's own `p:cNvPr` above.
     for (i, shape) in slide.shapes.iter().enumerate() {
         sp_tree_children.push(shape_to_xml(shape, i as u32 + 2));
     }

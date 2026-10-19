@@ -110,7 +110,6 @@ impl Default for SemioTransform {
 
 impl SemioTransform {
     /// 🧭️ Identity transform: zero translation, identity rotation, unit scale.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn identity() -> Self {
         Self { translation: SemioPoint3::default(), rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
     }

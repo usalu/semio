@@ -93,7 +93,7 @@ use semio_framework_plugin::PluginApp;
 use semio_framework_plugin::VcsArtifactApp;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::ViewerApp;
-use semio_framework_plugin::__semio_dispatch_PluginApp;
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 use semio_framework_plugin::plugin_app_close_prelude::*;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎲️ The actual Puzzle editor and viewer app roster.

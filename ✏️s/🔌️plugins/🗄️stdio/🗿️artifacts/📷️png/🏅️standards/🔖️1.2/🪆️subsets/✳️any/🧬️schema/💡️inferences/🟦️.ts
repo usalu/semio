@@ -9,7 +9,7 @@ export interface PngDimensions {
 }
 
 export interface PngInference {
-  /** @derived */
+  /** 📏️ @derived */
   dimensions: PngDimensions;
 }
 

@@ -60,9 +60,6 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
     println!("[STATS] contributions payload chars={} pages={} page-bound={}", contributions.chars().count(), pages.len(), semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
     assert!(pages.len() > 1, "the staged closure must exceed one public-invocation string page, else the paging law proves nothing");
 
-    // 🌉️ The shell reaches this route through `AppCommand::Command` → `command_from_action`, not
-    // through the typed binary channel, so the ARG DECODE is part of the delivery and is pinned here
-    // on the real page the pager cut — including the envelope bound that sized it.
     for (index, page) in pages.iter().enumerate() {
         let counted: usize = page.chars().map(semio_framework::public_invocation_char_cost).sum();
         assert!(counted <= semio_framework::PUBLIC_INVOCATION_STRING_BYTES, "page {index} costs {counted} against the public-invocation string bound");
@@ -128,9 +125,6 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
         semio_framework_trace::guest_linear_memory_install_peak_ceiling_bytes(),
         semio_framework_trace::GUEST_LINEAR_MEMORY_MAXIMUM_BYTES
     );
-    // ⚖️ LAW: the whole boot + contributions-install + first-mesh sequence peaks under the schema's
-    // declared share of the guest's linear-memory budget — the bound that turns a browser-only
-    // `rust_oom` trap into a native failure (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let ceiling = semio_framework_trace::guest_linear_memory_install_peak_ceiling_bytes() as isize;
     assert!(
         peak < ceiling,
@@ -420,8 +414,6 @@ async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let (flow_view, _preview_view) = context::shell_views("procedural-repush-main", "procedural-repush-preview");
-    // 🪪️ A closure the registry does NOT already hold, so run 0 is a real control: it MUST move the
-    // generation and re-arm, which is the only thing that makes run 1's silence meaningful.
     let contributions = context::staged_flow_extension_contributions_json(&[(context::CONTRIBUTIONS_WITNESS_PLUGIN_ID, context::contributions_witness_manifest_json())]);
     let pages = semio_framework::public_invocation_string_pages(&contributions);
     let before = semio_framework_os_flow::flow_extension_registry_generation();

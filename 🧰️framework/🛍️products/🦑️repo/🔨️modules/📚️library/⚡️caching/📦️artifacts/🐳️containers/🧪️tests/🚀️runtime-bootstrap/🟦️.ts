@@ -2,7 +2,7 @@ import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} fro
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { isAbsolute, join, posix } from "node:path";
 import { spawnSync } from "node:child_process";
 
 /** 🐳️ The devcontainer fields this bootstrap contract reads. */
@@ -11,6 +11,8 @@ interface DevcontainerConfig {
   readonly remoteUser: string;
   readonly mounts: readonly string[];
   readonly onCreateCommand: readonly string[];
+  readonly hostRequirements: { readonly storage: string };
+  readonly containerEnv: Readonly<Record<string, string>>;
   readonly postCreateCommand: readonly string[];
   readonly features: Readonly<Record<string, { readonly version?: string; readonly moby?: boolean }>>;
   readonly forwardPorts: readonly number[];
@@ -49,7 +51,7 @@ interface PlaygroundSourceRow {
 /** 🎮️ Reads declared listener ports before any compiled catalog publication under the same original invocation. */
 export async function containerPlaygroundDeclarationsV1(workspace:string,invocation:ScriptInvocation):Promise<readonly PlaygroundRow[]>{
  checkScriptInvocation(invocation);const {cacheInternals,libraryBootstrap}=await import("../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");await libraryBootstrap;checkScriptInvocation(invocation);
- const control={check:()=>checkScriptInvocation(invocation),advance:(stage:string)=>advanceScriptInvocation(invocation,"container-bootstrap:"+stage,"running")},contributions=await cacheInternals.workspaceCatalogBuildContributionsV1(workspace),manifests=await cacheInternals.walkCargoTomlControlledV1(workspace,control),declared:readonly PlaygroundSourceRow[]=cacheInternals.collectPlaygroundCatalog(manifests,workspace,contributions),independent:PlaygroundSourceRow[]=[],require=createRequire(import.meta.url);
+ const control={check:()=>checkScriptInvocation(invocation),advance:(stage:string)=>advanceScriptInvocation(invocation,"container-bootstrap:"+stage,"running")},contributions=await cacheInternals.workspaceCatalogBuildContributionsV1(workspace),manifests=await cacheInternals.walkCargoTomlControlledV1(workspace,control),declared=cacheInternals.collectPlaygroundCatalog(manifests,workspace,contributions) as unknown as readonly PlaygroundSourceRow[],independent:PlaygroundSourceRow[]=[],require=createRequire(import.meta.url);
  let visited=0;for(const manifest of manifests){if(!contributions.some(contribution=>contribution.publication.contributions.some(owner=>owner.packageRoots.some(root=>manifest.startsWith(root+"/")))))continue;if(++visited%16===0)await control.advance("manifest-oracle");control.check();const parsed=require("@iarna/toml").parse(readFileSync(join(workspace,manifest),"utf8")),metadata=parsed.package?.metadata;if(metadata?.component?.package&&["plugin","extension"].includes(metadata.semio?.["component-kind"]))independent.push(...(metadata.semio.playground??[]));}
  const ports=(rows:readonly PlaygroundSourceRow[]):PlaygroundRow[]=>rows.map(row=>({variant:row.variant,ports:row.ports,...(row.user_ports===undefined?{}:{userPorts:row.user_ports})})),catalog=ports(declared);assert.deepEqual(catalog,ports(independent),"Declared container listeners must agree with the independent TOML reader");assert.equal(new Set(catalog.map(row=>row.variant)).size,catalog.length,"Declared playground variants must be unique");await control.advance("listeners-received");return catalog;
 }
@@ -73,6 +75,20 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   for (const mount of nestedMounts(parsedMounts)) assert.ok(mount.source!.includes("${devcontainerId}"), `The volume at ${mount.target} is nested in the checkout, so it must be private to it (\${devcontainerId})`);
   assert.deepEqual(volumes, nested(require("lodash").map(config.mounts, (mount: string) => require("lodash").fromPairs(require("lodash").map(mount.split(","), (pair: string) => require("lodash").split(pair, /=(.*)/s, 2))))));
   assert.deepEqual(volumes, fixture.workspaceVolumeTargets);
+  const lodash = require("lodash"), policy = JSON.parse(readFileSync(join(workspace, fixture.storage.policy), "utf8")) as { maximumBytes: number; partitions: Record<string, { directory: string; capacityBytes: number }> };
+  const partitions = Object.values(policy.partitions), volumeRoots = volumes.map((volume) => volume.slice(config.workspaceFolder.length + 1));
+  for (const partition of partitions) {
+    assert.ok(volumeRoots.some((root) => partition.directory.startsWith(`${root}/`)), `The native cache partition ${partition.directory} must live in a named volume, not the bind-mounted checkout`);
+    assert.ok(volumeRoots.some((root) => { const relative = posix.relative(root, partition.directory); return relative !== "" && !relative.startsWith("..") && !isAbsolute(relative); }), `The native cache partition ${partition.directory} must live in a named volume (path oracle)`);
+  }
+  const capacity = partitions.reduce((total, partition) => total + partition.capacityBytes, 0);
+  assert.equal(capacity, lodash.sumBy(partitions, "capacityBytes"));
+  assert.ok(capacity <= policy.maximumBytes, "The partition capacities fit the repository cache budget");
+  const declaredGigabytes = Number(/^(\d+)gb$/.exec(config.hostRequirements.storage)?.[1]), requiredGigabytes = Math.ceil((policy.maximumBytes / 1e9 + fixture.storage.workingSetGigabytes) * (100 + fixture.storage.headroomPercent) / 100);
+  assert.ok(declaredGigabytes >= requiredGigabytes, `hostRequirements.storage ${config.hostRequirements.storage} must cover the ${policy.maximumBytes} byte cache budget, the ${fixture.storage.workingSetGigabytes} GB working set and ${fixture.storage.headroomPercent} % headroom (${requiredGigabytes} GB)`);
+  assert.equal(config.containerEnv.LANG, fixture.locale);
+  assert.equal(config.containerEnv.LC_ALL, fixture.locale);
+  assert.ok(dockerfile.includes(`locale-gen ${fixture.locale}`) && dockerfile.includes(`ENV LANG=${fixture.locale}`), "The image generates the locale its environment declares");
   assert.deepEqual(config.onCreateCommand, ["sudo", "chown", `${config.remoteUser}:${config.remoteUser}`, ...volumes], "Docker creates a named volume nested in the checkout owned by root; the remote user must own it before postCreateCommand installs into it");
   for (const path of fixture.retiredScripts) assert.equal(existsSync(join(workspace, path)), false, `Retired lifecycle bypass: ${path}`);
   const rootTargets = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets;
@@ -85,7 +101,7 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   assert.equal(config.features["ghcr.io/devcontainers/features/rust:1"]?.version, "none", "rust-toolchain.toml is the only toolchain pin");
   assert.ok(!Object.keys(config.features).some((key) => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
   assert.deepEqual(config.features[fixture.dockerDaemonFeature.id], fixture.dockerDaemonFeature.options, "Hub backends publish on 127.0.0.1, so the devcontainer needs its own Docker daemon (docker-in-docker, Docker CE on Ubuntu noble), not the host's socket");
-  const lodash = require("lodash"), readManifest = (path: string): ProjectManifest => JSON.parse(readFileSync(join(workspace, path), "utf8"));
+  const readManifest = (path: string): ProjectManifest => JSON.parse(readFileSync(join(workspace, path), "utf8"));
   const catalog = await containerPlaygroundDeclarationsV1(workspace,invocation);
   const declaredPort = (command: ForwardedCommand): number => {
     if (command.playground !== undefined) {

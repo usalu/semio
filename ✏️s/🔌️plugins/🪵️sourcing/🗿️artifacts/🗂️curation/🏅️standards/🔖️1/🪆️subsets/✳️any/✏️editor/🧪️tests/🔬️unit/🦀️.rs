@@ -5,7 +5,7 @@ pub(crate) mod context {
     use semio_framework_plugin::EditorApp;
     use crate::editor::sourcing::{SourcingCurationApp, SourcingCurationCommand, create_sourcing_curation_app};
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as new_app_with_registry_impl, observe_registered_fixture_app, render_registered_fixture_app, OriginalFixtureScope};
-    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
@@ -663,7 +663,7 @@ async fn sourcing_curation_io_and_catalog_export_round_trip() {
     }
 }
 
-/// deliberately absent — it is `ForbiddenFromUi`, dispatched only through the host configuration
+/// 🗄️ deliberately absent — it is `ForbiddenFromUi`, dispatched only through the host configuration
 /// route, and it is the ONLY command of this app that is not a retained tool.
 #[test]
 fn retained_route_catalog_covers_every_ui_reachable_command() {

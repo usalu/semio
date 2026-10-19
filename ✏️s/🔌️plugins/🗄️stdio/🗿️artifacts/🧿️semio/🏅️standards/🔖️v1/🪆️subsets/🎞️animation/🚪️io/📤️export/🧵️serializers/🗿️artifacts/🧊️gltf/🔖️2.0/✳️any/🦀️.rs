@@ -64,7 +64,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
                     AnimTargetProperty::Rotation => GltfAnimationPath::Rotation,
                     AnimTargetProperty::Scale => GltfAnimationPath::Scale,
                     AnimTargetProperty::Weights => GltfAnimationPath::Weights,
-                    AnimTargetProperty::Custom { .. } => continue, // 📦️ dropped, documented above
+                    AnimTargetProperty::Custom { .. } => continue,
                 };
                 let node_index = node_names.iter().position(|n| n == &ch.target.node).unwrap_or_else(|| {
                     node_names.push(ch.target.node.clone());
@@ -107,7 +107,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
                 let interpolation = match ch.interpolation {
                     AnimInterpolation::Linear => GltfInterpolation::Linear,
                     AnimInterpolation::Step => GltfInterpolation::Step,
-                    AnimInterpolation::CubicSpline => GltfInterpolation::Linear, // 📦️ downgraded, documented above
+                    AnimInterpolation::CubicSpline => GltfInterpolation::Linear,
                 };
                 let sampler_index = samplers.len();
                 samplers.push(GltfAnimationSampler { input: input_acc, interpolation, output: output_acc, extensions: None, extras: None });

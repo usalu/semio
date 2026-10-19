@@ -118,7 +118,7 @@ impl DrawingDuplicateRewriteAuthority {
         Ok(RetainedCloneStep::Progress(progress))
     }
 
-    pub fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, document:&DrawingSnapshot, identities:&semio_framework_value::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, document:&DrawingSnapshot, identities:&semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal { return Ok(true); }
         let owners = (root as *const _ as usize, original as *const _ as usize);
         if self.owners.is_some_and(|held| held != owners) { return Err("drawing-store.duplicate-root-changed"); }

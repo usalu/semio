@@ -76,21 +76,12 @@ fn tile_numbering_matches_mercantile_xyz_scheme() {
         let expected_y = u32_field(entry, "y");
         let id = entry["id"].as_str().unwrap_or("?");
 
-        // Point the map at the fixture's lon/lat with a sub-pixel viewport at an extreme zoom, so the
-        // production visible-tile enumeration (tiles::visible_tiles, driven by the real
-        // screen_to_world windowing) can only ever resolve the single tile that contains this point —
-        // the same production code path MapHost uses to pick tiles for rendering.
         let world = lonlat_to_world(lon, lat);
         let camera = Camera { x: world.x, y: -world.y, zoom: 1e15 };
         let viewport = Viewport { width: 2, height: 2, dpr: 1.0 };
         let got = visible_tiles(&camera, &viewport, z);
         assert!(got.contains(&(z, expected_x, expected_y)), "{id}: mercantile's tile ({z},{expected_x},{expected_y}) missing from {got:?}");
 
-        // A point sitting exactly on a tile edge is shared by the tiles on both sides of it, so a
-        // viewport centred there genuinely overlaps 2 (edge) or 4 (corner) of them — `visible_tiles`
-        // answers "which tiles does this rect touch", which cannot disambiguate a measure-zero point
-        // the way mercantile's "which tile owns this point" can. Away from an edge the windowing must
-        // still collapse to the single containing tile.
         let n = f64::from(1u32 << z);
         let step = (WORLD_HALF * 2.0) / n;
         let on_edge = |v: f64| (v - v.round()).abs() < 1e-9;

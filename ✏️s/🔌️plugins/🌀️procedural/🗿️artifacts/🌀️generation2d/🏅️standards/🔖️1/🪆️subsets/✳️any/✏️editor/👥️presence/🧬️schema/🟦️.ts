@@ -1,10 +1,10 @@
 /** 🧬️ Generation2dPresence */
 export interface Generation2dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   camera: CameraJson;
-  /** @state presence */
+  /** 👁️ @state presence */
   showMode: string;
-  /** @state presence */
+  /** 👉️ @state presence */
   selectedGenerationId?: string;
 }
 

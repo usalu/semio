@@ -17,7 +17,7 @@ import { openFileAtLine } from "../🎵️path-navigation/🟦️.ts";
 // URI Resolution MUST handle parsing, tree node caching, and repo URI navigation.
 
 /**
- * Tree node data structure representing a monorepo artifact in the sidebar tree.
+ * 🌳️ Tree node data structure representing a monorepo artifact in the sidebar tree.
  **/
 export interface TreeNodeData {
   Kind: string;
@@ -36,24 +36,24 @@ export interface TreeNodeData {
 }
 
 /**
- * treeNodeCache.current holds the data fields for a treeNodeCache.current record.
+ * 🌲️ treeNodeCache.current holds the data fields for a treeNodeCache.current record.
  **/
 const treeNodeCache = ephemeralBox<Map<string, TreeNodeData> | null>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.treeNodeCache", null);
 /**
- * treeRootCache.current holds the data fields for a treeRootCache.current record.
+ * 🪾️ treeRootCache.current holds the data fields for a treeRootCache.current record.
  **/
 const treeRootCache = ephemeralBox<TreeNodeData | null>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.treeRootCache", null);
 /**
- * treeNodeCacheTime.current holds the data fields for a treeNodeCacheTime.current record.
+ * 🌴️ treeNodeCacheTime.current holds the data fields for a treeNodeCacheTime.current record.
  **/
 const treeNodeCacheTime = ephemeralBox("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.treeNodeCacheTime", 0);
 /**
- * TREE_CACHE_TTL holds the data fields for a TREE_CACHE_TTL record.
+ * 🎄️ TREE_CACHE_TTL holds the data fields for a TREE_CACHE_TTL record.
  **/
 const TREE_CACHE_TTL = 30000;
 
 /**
- * Extracts the leading emoji characters from a text string.
+ * 🔤️ Extracts the leading emoji characters from a text string.
  * Implementations MUST use Unicode emoji properties to detect the prefix.
  **/
 export function extractLeadingEmoji(text: string): string {
@@ -62,7 +62,7 @@ export function extractLeadingEmoji(text: string): string {
 }
 
 /**
- * Computes the display label for a tree node including emoji prefix and status icon.
+ * 🔘️ Computes the display label for a tree node including emoji prefix and status icon.
  * Implementations MUST prepend the node emoji and status indicator to the label.
  **/
 export function treeNodeDisplayLabel(node: TreeNodeData): string {
@@ -86,7 +86,7 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
 }
 
 /**
- * Returns the VS Code context value for a tree node based on its kind and status.
+ * 📍️ Returns the VS Code context value for a tree node based on its kind and status.
  * Implementations MUST distinguish open and closed tickets.
  **/
 export function treeNodeContextValue(node: TreeNodeData): string {
@@ -95,7 +95,7 @@ export function treeNodeContextValue(node: TreeNodeData): string {
 }
 
 /**
- * Returns the VS Code command to execute when a tree node is clicked.
+ * ⚫️ Returns the VS Code command to execute when a tree node is clicked.
  * Implementations MUST return undefined for category nodes and navigate for others.
  **/
 export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined {
@@ -105,7 +105,7 @@ export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined 
 }
 
 /**
- * Converts text to an uppercase slug with non-alphanumeric characters replaced by hyphens.
+ * 🐌️ Converts text to an uppercase slug with non-alphanumeric characters replaced by hyphens.
  * Implementations MUST uppercase the input and strip leading and trailing hyphens.
  **/
 export function slugify(text: string): string {
@@ -116,7 +116,7 @@ export function slugify(text: string): string {
 }
 
 /**
- * flattenTree holds the data fields for a flattenTree record.
+ * 📦️ flattenTree holds the data fields for a flattenTree record.
  **/
 function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): void {
   if (node.URI) {
@@ -130,7 +130,7 @@ function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): voi
 }
 
 /**
- * getTreeNodeCache holds the data fields for a getTreeNodeCache record.
+ * 🔵️ getTreeNodeCache holds the data fields for a getTreeNodeCache record.
  **/
 export async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   const now = Date.now();
@@ -164,7 +164,7 @@ export async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
 }
 
 /**
- * getTreeRoot holds the data fields for a getTreeRoot record.
+ * 🌱️ getTreeRoot holds the data fields for a getTreeRoot record.
  **/
 export async function getTreeRoot(): Promise<TreeNodeData | null> {
   await getTreeNodeCache();
@@ -172,7 +172,7 @@ export async function getTreeRoot(): Promise<TreeNodeData | null> {
 }
 
 /**
- * fetchTreeWithArgs holds the data fields for a fetchTreeWithArgs record.
+ * 📥️ fetchTreeWithArgs holds the data fields for a fetchTreeWithArgs record.
  **/
 export async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
   const root = getWorkspaceRoot();
@@ -192,7 +192,7 @@ export async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | 
 }
 
 /**
- * Clears the cached tree node data forcing a fresh fetch on next access.
+ * 📌️ Clears the cached tree node data forcing a fresh fetch on next access.
  * Implementations MUST reset all cache fields and the timestamp.
  **/
 export function invalidateTreeNodeCache(): void {
@@ -202,7 +202,7 @@ export function invalidateTreeNodeCache(): void {
 }
 
 /**
- * Parses a repo URI into its type and path components.
+ * 📂️ Parses a repo URI into its type and path components.
  * Implementations MUST return null for URIs that do not match the repo scheme.
  **/
 export function parseUri(uri: string): { type: string; path: string } | null {
@@ -212,7 +212,7 @@ export function parseUri(uri: string): { type: string; path: string } | null {
 }
 
 /**
- * navigateToUri holds the data fields for a navigateToUri record.
+ * 🧭️ navigateToUri holds the data fields for a navigateToUri record.
  **/
 export async function navigateToUri(uri: string): Promise<void> {
   const wsRoot = getWorkspaceRoot();

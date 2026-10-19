@@ -26,6 +26,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeIdealLoadsSys
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeIdealLoadsSystemMaxCoolingCapacity>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-max-cooling-capacity", record: "ChangedIdealLoadsSystemMaxCoolingCapacity" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -47,7 +48,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "ideal-loads-system", kind: "change-ideal-loads-system-max-cooling-capacity", record: "ChangedIdealLoadsSystemMaxCoolingCapacity" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

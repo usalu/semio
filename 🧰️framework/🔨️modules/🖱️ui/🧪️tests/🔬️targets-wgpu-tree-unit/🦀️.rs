@@ -54,8 +54,6 @@ fn mark_dirty_stops_bubbling_once_it_hits_an_already_dirty_ancestor() {
     assert!(tree.node(mid).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
     assert!(tree.node(root).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));
 
-    // mid and root already carry SUBTREE_DIRTY; this second call must still end up correct
-    // (leaf_b itself dirtied, ancestors still dirtied) even though it stops bubbling at `mid`.
     tree.mark_dirty(leaf_b, NodeFlags::DIRTY_PAINT);
     assert!(tree.node(leaf_b).unwrap().flags.contains(NodeFlags::DIRTY_PAINT));
     assert!(!tree.node(leaf_a).unwrap().flags.contains(NodeFlags::SUBTREE_DIRTY));

@@ -49,13 +49,11 @@ struct Canvas {
 }
 
 impl Canvas {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(width: usize, height: usize, background: Option<&SemioRgba>) -> Self {
         let fill = background.map_or([0.0; 4], |c| [c.r * c.a, c.g * c.a, c.b * c.a, c.a]);
         Self { width, height, premultiplied: vec![fill; width * height], accumulation: vec![0.0; (width + 2) * height], dirty: None }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn edge(&mut self, from: [f64; 2], to: [f64; 2]) {
         let stride = self.width + 2;
         let right = self.width as f32;
@@ -112,14 +110,12 @@ impl Canvas {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn polygon(&mut self, points: &[[f64; 2]]) {
         for index in 0..points.len() {
             self.edge(points[index], points[(index + 1) % points.len()]);
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn composite(&mut self, color: [f32; 4]) {
         let stride = self.width + 2;
         let Some([first_row, last_row, first_column, last_column]) = self.dirty.take() else { return };
@@ -144,7 +140,6 @@ impl Canvas {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn blit(&mut self, inverse: &Affine, source: &SemioRaster, size: [f64; 2], alpha: f32) {
         for row in 0..self.height {
             for column in 0..self.width {
@@ -166,7 +161,6 @@ impl Canvas {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn into_raster(self) -> SemioRaster {
         let mut rgba8 = Vec::with_capacity(self.width * self.height * 4);
         for pixel in &self.premultiplied {

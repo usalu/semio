@@ -58,8 +58,6 @@ impl UiTree {
                 UiDocumentReconcileStep::Pending
             }
             UiDocumentReconcilePhase::Adopt => {
-                // 🧹️ A root this ledger never minted can only come from the testkit `apply_tree`
-                // path; it is removed whole so the document owns the arena outright.
                 let adopted = self.root.is_some_and(|root| self.document_bindings().iter().any(|(_, node)| *node == root));
                 if let Some(root) = self.root.filter(|_| !adopted) {
                     self.remove(root);

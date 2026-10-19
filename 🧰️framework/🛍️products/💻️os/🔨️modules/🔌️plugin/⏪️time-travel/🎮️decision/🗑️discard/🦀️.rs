@@ -25,6 +25,8 @@ use std::mem::{ManuallyDrop, size_of_val};
 use semio_framework_value::{ErasedSnapshotRetirement, FactoryAuthority, ArtifactOwnedValueRetirementFactory};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
 
 pub(super) struct TimeTravelDiscardStoreEffects<P,Mu:Mutation<P>+Send+'static> {
  residue:ManuallyDrop<Option<TimeTravelStoreState<P,Mu>>>,

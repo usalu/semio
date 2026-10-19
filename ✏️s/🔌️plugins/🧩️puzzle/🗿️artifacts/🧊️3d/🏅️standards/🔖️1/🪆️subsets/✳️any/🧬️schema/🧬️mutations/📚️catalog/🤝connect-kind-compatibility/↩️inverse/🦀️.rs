@@ -1,4 +1,4 @@
-//! pair it created.
+//! 👫️ pair it created.
 //! ↩️ Inverse for `ConnectKindCompatibility` — always a `disconnect-kind-compatibility` of the
 use super::mutation::ConnectKindCompatibility;
 use crate::disconnect_kind_compatibility::mutation::DisconnectKindCompatibility;

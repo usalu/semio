@@ -21,6 +21,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-hash = { workspace = true }
+semio-framework-value-derive-expansion = { workspace = true }
 # 🧷️ `visit`/`visit-mut` pinned: `wasm-bindgen-macro-support` requests them in some hub components, and one host `syn` feature set keeps every component on the same proc-macro units.
 syn = { version = "2.0", features = ["full", "extra-traits", "visit", "visit-mut"] }
 quote = "1.0"
@@ -30,6 +31,8 @@ semio-framework-native-build-compiler-resources = { path = "../../../../🏃️p
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 # 🔬 Third-party oracle for the `flatten` integration test only (CLAUDE.md's sanctioned pattern:
 # external libs allowed in dev-dependencies to validate our own implementation) — proves this
 # derive's `#[value(flatten)]` wire shape is byte-identical to `#[serde(flatten)]`'s, never reached

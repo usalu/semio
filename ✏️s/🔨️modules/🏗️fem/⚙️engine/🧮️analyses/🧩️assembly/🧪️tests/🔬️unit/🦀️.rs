@@ -1,13 +1,13 @@
 use super::*;
-use super::*;
 use semio_s_fem_elements2d::Bar2;
 use semio_s_fem_elements2d::BeamEb2;
-use super::*;
 use semio_s_fem_test_support::pages_bytes;
 use semio_s_fem_test_support::seen_of;
 use semio_s_fem_test_support::test_operation;
 use semio_s_fem_test_support::Seen;
 use semio_s_fem_test_support::TEST_GRANT;
+use semio_s_fem_analyses_model::MountedAnalysisSupport;
+use semio_s_fem_model::Support;
 
 fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
     let model = AnalysisModel {

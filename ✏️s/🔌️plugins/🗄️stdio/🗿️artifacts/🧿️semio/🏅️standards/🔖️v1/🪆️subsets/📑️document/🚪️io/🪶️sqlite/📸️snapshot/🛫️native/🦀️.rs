@@ -1,6 +1,6 @@
 //! 📑️ Writes explicit document styles, images and typed recursive blocks under one ownership budget.
 use crate::schema::snapshot::{SemioDocumentSnapshot, DocStyle, DocImage, DocBlock, DocRun, RunStyle};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};

@@ -98,7 +98,6 @@ async fn introduction_point_round_trips_tagged_camel_case() {
         let round: IntroductionPoint = serde_json::from_str(&json).unwrap();
         assert_eq!(round, point);
     }
-    // 🏷️ "*" (any-entity wildcard) must round-trip byte-for-byte, not get normalized away.
     let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await;
     let json = serde_json::to_string(&wildcard).unwrap();
     assert!(json.contains("\"entity\":\"*\""), "{json}");
@@ -121,9 +120,6 @@ async fn introduction_gesture_round_trips_tagged_camel_case() {
         assert_eq!(round, gesture);
     }
 
-    // 🐢️ `rename_all` on an enum renames only the variant tag, not fields *within* a struct variant —
-    // `rename_all_fields` is required too, or this field would silently serialize snake_case
-    // (`delta_y`) and desync from the generated TS type's camelCase `deltaY` (see `UiDirtyScope`).
     let scroll_json = serde_json::to_string(&IntroductionGesture::Scroll { at, delta_y: 100.0 }).unwrap();
     assert!(scroll_json.contains("\"deltaY\":100.0"), "{scroll_json}");
     assert!(!scroll_json.contains("delta_y"), "{scroll_json}");
@@ -134,11 +130,6 @@ async fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
     let at = IntroductionPoint::Element { id: "puzzle3d-main".into(), offset: None };
     let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
     assert_eq!(drag, IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] });
-    // ⚖️ Defaults are still INFERRED on the way in (the input literal above names neither field),
-    // but they are always WRITTEN on the way out: `🤖️generated/🪪️manifest/🟦️.ts` declares both
-    // `button: IntroductionPointerButton` and `modifiers: Array<IntroductionKeyModifier>` as
-    // required, so omitting a defaulted value handed the host `undefined` where its own types
-    // promised a value. Asserting the omission — as this test previously did — pinned the defect.
     let drag_json = serde_json::to_string(&drag).unwrap();
     assert!(drag_json.contains("\"button\":\"left\""), "{drag_json}");
     assert!(drag_json.contains("\"modifiers\":[]"), "{drag_json}");
@@ -178,7 +169,6 @@ async fn introduction_demonstration_round_trips_and_defaults() {
     let json = serde_json::to_string(&step).unwrap();
     assert!(json.contains("\"demonstrations\":[]"), "{json}");
 
-    // 🎬️ A step can sequence several demonstrations (e.g. zoom, then pan, then orbit).
     let with_demos = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).demonstrate(vec![
         IntroductionDemonstration::scroll(IntroductionPoint::Screen { x: 400.0, y: 300.0 }, -100.0).await,
         IntroductionDemonstration::drag(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 400.0, y: 320.0 }).await,
@@ -385,22 +375,17 @@ async fn compose_tutorial_ui_applies_snapshot_then_deltas() {
         TutorialUiKeyframe { at: 300, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::PanelTab { group: "top-left".into(), tab_id: Some("catalogue".into()) }] } },
         TutorialUiKeyframe { at: 400, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::Selection { domain_id: "mesh".into(), granularity: "face".into(), ids: vec!["f1".into()] }] } },
     ];
-    // Before any sample: the base snapshot alone.
     let at_0 = compose_tutorial_ui(&def, 0.0);
     assert_eq!(at_0.active_tool_id, Some("fill".into()));
     assert_eq!(at_0.active_mode_id, None);
-    // After the snapshot but before its deltas.
     let at_100 = compose_tutorial_ui(&def, 100.0);
     assert_eq!(at_100.active_mode_id, Some("edit".into()));
     assert_eq!(at_100.active_tool_id, None, "snapshot replaces the base wholesale");
-    // After one delta.
     let at_200 = compose_tutorial_ui(&def, 250.0);
     assert_eq!(at_200.active_tool_id, Some("brush".into()));
-    // After both deltas.
     let at_300 = compose_tutorial_ui(&def, 300.0);
     assert_eq!(at_300.active_tool_id, Some("brush".into()));
     assert_eq!(at_300.active_panel_tab_by_group.get("top-left"), Some(&"catalogue".to_string()));
-    // After the selection delta: the framework-owned domain selection lands in `interaction_selection`.
     let at_400 = compose_tutorial_ui(&def, 400.0);
     let selection = at_400.interaction_selection.get("mesh").expect("mesh domain selection");
     assert_eq!(selection.granularity, "face");

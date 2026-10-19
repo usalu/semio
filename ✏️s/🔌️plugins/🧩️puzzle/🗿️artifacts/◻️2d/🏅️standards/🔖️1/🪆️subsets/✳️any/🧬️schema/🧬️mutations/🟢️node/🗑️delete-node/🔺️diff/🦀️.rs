@@ -1,4 +1,4 @@
-//! touches one of its handles), never a whole-snapshot capture.
+//! 🤝️ touches one of its handles), never a whole-snapshot capture.
 //! 🔺️ Sparse diff builder for `DeleteNode` — a real cascade-aware removal (node + any edge that
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;

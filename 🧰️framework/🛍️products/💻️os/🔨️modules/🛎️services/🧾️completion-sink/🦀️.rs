@@ -42,7 +42,6 @@ impl MockCompletionSink {
 }
 
 impl CompletionSink for MockCompletionSink {
-    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn complete(&self, actor: u64, generation: u16, event_bytes: Vec<u8>, lane: u8) {
         self.completions.lock().expect("MockCompletionSink mutex poisoned").push(CompletionRecord { actor, generation, event_bytes, lane });
     }

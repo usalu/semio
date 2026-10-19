@@ -599,11 +599,6 @@ macro_rules! derive_artifact_facets {
             type Children = $crate::derive_artifact_facets!(@children_ty <$construction as $crate::ArtifactBuilder>::Snapshot $(, $children)?);
         }
 
-        // 🕳️ `#[allow(dead_code)]` on this struct and the `$analyzer`/`$composer` inherent impls
-        // below: every real (non-test) invocation of this macro exercises them through their trait
-        // impls one paragraph up, but a grammar-only smoke test (proving a macro arm parses, not
-        // that the generated code runs) never constructs or calls the inherent convenience surface
-        // — a per-expansion false positive, not per-macro dead code.
         #[derive(Clone, Debug, Default)]
         #[allow(dead_code, reason = "grammar-smoke-test invocations never construct this — see comment above")]
         $visibility struct $builder($crate::DerivedArtifactBuilder<$spec>);
@@ -640,11 +635,6 @@ macro_rules! derive_artifact_facets {
 
         $visibility struct $composer;
 
-        // 🧩️ `reads()`/`compose()` delegate to `DerivedArtifactComposer<$spec>` (NOT `$composition`
-        // directly, as before C1) so the child-slot union/routing logic lives in exactly ONE place
-        // (`DerivedArtifactComposer`'s own `impl ArtifactComposer` — see its doc comment) rather than
-        // being re-derived per macro expansion; `WRITES` is unaffected by children and stays a
-        // direct read of `$composition::WRITES`.
         impl $crate::ArtifactComposer for $composer {
             type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
             const WRITES: $crate::Dialect = <$composition as $crate::ArtifactComposition>::WRITES;
@@ -657,9 +647,6 @@ macro_rules! derive_artifact_facets {
             pub fn compose(sources: &[$crate::io::ComposeSource<'_>]) -> Result<$crate::io::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::io::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
         }
     };
-    // 🧩️ Internal dispatch arm (Task 5): resolves `DerivedArtifactSpec::Children` — `$children` if
-    // the caller supplied one, else `NoChildren<$snapshot>`. Never invoked directly by a caller (the
-    // leading `@children_ty` token is not part of the public macro grammar above).
     (@children_ty $snapshot:ty) => { $crate::app::NoChildren<$snapshot> };
     (@children_ty $snapshot:ty, $children:ty) => { $children };
 }
@@ -722,9 +709,6 @@ macro_rules! subset {
             static REGISTERED: Once = Once::new();
             $(static VALIDATOR_ENTRY: OnceLock<$crate::io::SubsetValidatorEntry> = OnceLock::new();)?
 
-            // 🚫️async: E5 executor bridge — `Once::call_once`'s closure is std-fixed sync, so the
-            // (pure, in-memory) registry calls it drives are resolved through `resolve_ready`
-            // rather than forcing this whole registration path async (R9/R2).
             $(fn validator_entry() -> &'static $crate::io::SubsetValidatorEntry {
                 VALIDATOR_ENTRY.get_or_init($crate::io::subset_validator_entry_of::<$validator>)
             })?
@@ -768,9 +752,6 @@ macro_rules! subset {
             static REGISTERED: Once = Once::new();
             static VALIDATOR_ENTRY: OnceLock<$crate::io::SubsetValidatorEntry> = OnceLock::new();
 
-            // 🚫️async: E5 executor bridge — `Once::call_once`'s closure is std-fixed sync, so the
-            // (pure, in-memory) registry calls it drives are resolved through `resolve_ready`
-            // rather than forcing this whole registration path async (R9/R2).
             fn validator_entry() -> &'static $crate::io::SubsetValidatorEntry {
                 VALIDATOR_ENTRY.get_or_init($crate::io::subset_validator_entry_of::<$validator>)
             }

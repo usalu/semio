@@ -1,4 +1,4 @@
-//! `upsert-joint` — upsert a `SteelJoint` by id into `joints`.
+//! 🧬️ `upsert-joint` — upsert a `SteelJoint` by id into `joints`.
 
 use semio_s_artifact_norm_en1993_model::{SteelJoint, En1993Snapshot};
 

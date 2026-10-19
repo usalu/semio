@@ -1,4 +1,4 @@
-//! lowpoly <- ply
+//! 🔺️ lowpoly <- ply
 //!
 //! Geometry over the real `engine::decode_ply` (ascii and both binary encodings): the `vertex` element's `x`/`y`/`z` columns plus the `face` element's
 //!    `vertex_indices` (or `vertex_index`) list become ONE lowpoly object, n-gons kept. A file

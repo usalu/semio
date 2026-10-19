@@ -11,7 +11,7 @@ use semio_framework_plugin::app::settle_framework_reserved_admission;
 use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, paired_registered_apps_with_members, settle_registered_typed_operation};
 use semio_framework_plugin::{ActionMeta, EditorApp, PluginApp, VcsArtifactApp};
 
-/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// 🔄️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
 struct Replica(pub VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 

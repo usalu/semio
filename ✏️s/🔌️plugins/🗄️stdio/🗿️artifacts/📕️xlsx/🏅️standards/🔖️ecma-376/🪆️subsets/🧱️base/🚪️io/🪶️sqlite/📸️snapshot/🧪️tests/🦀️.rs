@@ -250,7 +250,7 @@ fn sqlite_snapshot_xlsx_opc_native_component_has_exact_literal_fields() {
         assert_eq!(&output[3..], expected);
         output.extend_from_slice(b"tail");
         let mut callback = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(limits.max_value_bytes, &mut callback);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(limits.max_value_bytes, &mut callback);
         control.begin_stage(output.len()).unwrap();
         control.advance(3).unwrap();
         let mut reader = semio_s_artifact_stdio_zip::opc::native::OpcNativeReader { bytes: &output, position: 3, rows: 7, limits, binary: encoding == SnapshotEncoding::Binary, control: &mut control };

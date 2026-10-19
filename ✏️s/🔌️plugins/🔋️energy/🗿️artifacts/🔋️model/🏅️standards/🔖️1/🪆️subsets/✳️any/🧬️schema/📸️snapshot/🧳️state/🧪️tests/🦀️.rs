@@ -1,10 +1,11 @@
 use super::*;
-use semio_framework_value::{DslValue,NativeDecodeControl,NativeReceive,NativeReceiver,RetirementDemand,retained_clone::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor},retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{DslValue, RetirementDemand, retained_clone::{RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor}, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver};
 use protocol::mutation::retained::{RetainedRowPatchFields,RetainedPatchSource};
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧳️state/🔣️.json")).unwrap()}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096,"actual original Energy frontier exceeds4096: {d:?}");RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 struct OriginalConstruction{grant:RetainedCloneGrant,issued:bool}
-impl semio_framework_value::native_decoding::NativeDecodeConstructionRecipient for OriginalConstruction{
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for OriginalConstruction{
  fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,semio_framework_value::ValueError>{assert!(!self.issued);assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(self.grant,d));self.issued=true;Ok(self.grant)}
  fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),semio_framework_value::ValueError>{assert!(self.issued);assert_eq!(g,self.grant);assert!(p.fits(g));Ok(())}
 }

@@ -106,12 +106,6 @@ fn preview_payload_has_meshes_and_instances() {
         let kind = kind_by_widget.get(widget).map(String::as_str).unwrap_or_default();
         let data = mesh_data_from_json(&mesh.get("data").cloned().unwrap_or_default());
         assert!(!data.edge_positions.is_empty(), "every preview mesh carries edge geometry, {id} ({kind}) did not");
-        // 🧊️ A surface-bearing channel tessellates to real triangles; a CURVE (`brep.curve.*`) and a
-        // `math.vector` marker are TRIANGLE-FREE by construction — `vector_marker_mesh` is a single
-        // origin→tip segment and the wire tessellation is a polyline, so both carry edge geometry
-        // (and the segment's own endpoints) but never an index buffer. Demanding ≥9 positions and
-        // ≥3 indices of them asserted something the geometry never had
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         if kind.starts_with("brep.curve.") || kind == "math.vector" {
             assert!(data.indices.is_empty(), "curve/marker preview {id} ({kind}) must be triangle-free, got {} indices", data.indices.len());
             curves += 1;

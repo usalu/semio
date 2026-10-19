@@ -41,7 +41,7 @@ impl ArtifactDeserializer for SemioVideoFromAvi {
                 let kind = match s.strh.fcc_type.as_str() {
                     "vids" => SemioVideoStreamKind::Video,
                     "auds" => SemioVideoStreamKind::Audio,
-                    _ => return None, // 📦️ AVI also permits "txts"/"mids" streams -- out of `video`'s own Video/Audio/Subtitle+opaque-sample vocabulary honestly dropped, never fabricated as one of the three.
+                    _ => return None,
                 };
                 let (codec, width, height) = match &s.strf {
                     AviStreamFormat::BitmapInfo { compression, width, height, .. } => (compression.clone(), (*width).max(0) as u32, (*height).unsigned_abs()),

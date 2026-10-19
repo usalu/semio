@@ -229,13 +229,6 @@ export function createFlowHost({ exports, memory, schedule = createFlowPumpSched
     try { pump(); } catch (error) { state.pending.delete(requestId); settled.reject(error); }
     return { requestId, result, cancel: () => cancel(requestId), subscribe(observer) { settled.observers.add(observer); return () => settled.observers.delete(observer); } };
   };
-  // 🛑️ A cancel the guest REFUSES is backpressure, not a failure: `flow_bridge_send` answers "no credit
-  // right now", and the request is still pending, so the cancel is re-sent by the pump exactly as a
-  // session close is (`owner.closing && !owner.controlSent`). Throwing `FlowMessageRejected` straight
-  // out of `cancel` put it in whatever called it — and `observeFlowTask` cancels the previous task per
-  // feature key on EVERY pointer move, so a drag over a saturated guest raised an uncaught
-  // `FlowMessageRejected` page error mid-gesture (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-  // `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
   const cancel = (requestId) => {
     const pending = state.pending.get(requestId);
     if (!pending) return false;
@@ -329,18 +322,7 @@ let nextSurfaceId = 1;
  * `created` there and present through {@link replayFlowDrawList} instead. Only a cancellation of
  * the attachment itself may abort the surface. */
 async function requestFlowSurfacePresentation(bindings, surface, canvas, width, height, dpr, gpu = globalThis.navigator?.gpu) {
-  // 🛡️ `navigator.gpu` is checked HERE, before the call, and not left to the wgpu surface bring-up
-  // inside the module: a guest-side panic is an unrecoverable trap that takes the whole session
-  // with it, so the overwhelmingly common deviceless case must never reach that code at all.
   if (!gpu || typeof bindings?.flowAttachSurfaceCanvas !== "function") return false;
-  // 🧭️ …and the PRESENCE of `navigator.gpu` decides nothing: a headless browser (and any machine
-  // with a blocklisted GPU) exposes the object and then hands out no adapter at all. An adapter is
-  // the only evidence that the guest's bring-up can finish, and it must be gathered BEFORE the
-  // element is handed over, because `wgpu`'s `create_surface` binds a `webgpu` context to the
-  // canvas before it discovers there is no adapter — and a canvas admits exactly one context kind
-  // for its whole life. Measured on the live serve: `No available adapters` → `present=2d` on a
-  // canvas whose `getContext("2d")` was null for the rest of the session, i.e. a node graph that
-  // could never be painted by either path.
   let adapter;
   try {
     adapter = await gpu.requestAdapter?.();
@@ -728,9 +710,6 @@ export function replayFlowDrawList(context, drawList, base = [1, 0, 0, 1, 0, 0])
 export function renderFlowCanvas(canvas, state) {
   if (!canvas) return FlowPresentation.none;
   if (state?.present === "gpu") return FlowPresentation.gpu;
-  // 📏️ The frame's own size wins; without one the canvas keeps the backing store its host already owns.
-  // `clientWidth` is 0 for a canvas in a hidden tab or an unlaid-out pane, so the previous fallback
-  // collapsed a correctly sized surface to 1x1 and presented nothing.
   const dpr = positiveFlowSize(state?.dpr) ?? globalThis.devicePixelRatio ?? 1;
   const framed = positiveFlowSize(state?.width) !== undefined && positiveFlowSize(state?.height) !== undefined;
   const width = framed ? state.width : Math.max(1, canvas.width / dpr);

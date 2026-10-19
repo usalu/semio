@@ -98,10 +98,6 @@ async fn delete_asset_of_a_missing_id_has_an_empty_inverse() {
 async fn drag_rotate_scale_assets_round_trip() {
     let mut snapshot = crate::empty_shooting_snapshot();
     let mut asset = sample_asset("a1");
-    // `ScaleAssets` always writes an explicit `Some([..])` scale, so backwards() restoring an
-    // originally-`None` scale lands on `Some([1,1,1])` — the same effective scale (see
-    // `shooting_asset_scale`) but not byte-identical. Start from an explicit identity scale so
-    // the round-trip assertion checks real equality instead of that representation quirk.
     asset.scale = Some([1.0, 1.0, 1.0]);
     snapshot.assets.push(asset);
     let drag = ShootingMutation::DragAssets(crate::standards::v1::subsets::any::schema::mutations::drag_assets::DragAssets { asset_ids: vec!["a1".into()], dx: 1.0, dy: 2.0, dz: 3.0 });
@@ -184,8 +180,6 @@ async fn saved_cameras_create_rename_replace_view_reorder_delete_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn replace_shot_camera_is_a_no_op_when_shot_has_no_saved_camera() {
-    // 🎥️ The free/live viewport camera is session-only runtime state now (never a document
-    // field) — `ReplaceShotCamera` against a shot with no saved-camera reference has nothing to patch.
     let mut snapshot = crate::empty_shooting_snapshot();
     snapshot.shots.push(sample_shot("s1"));
     let camera = ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() };

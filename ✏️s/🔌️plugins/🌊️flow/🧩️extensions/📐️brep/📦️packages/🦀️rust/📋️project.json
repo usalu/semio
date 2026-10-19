@@ -6,6 +6,12 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/**/*.rs",
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/**/🧫️fixtures/**/*"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📐️tessellate/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {
@@ -63,7 +69,7 @@
     },
     "test-mesh-oracle": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-mesh-oracle",

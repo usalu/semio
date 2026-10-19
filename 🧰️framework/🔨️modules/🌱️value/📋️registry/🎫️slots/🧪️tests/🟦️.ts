@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {FixedKeySlots} from "../🟦️.ts";
-import law from "../🧫️fixtures/🔣️.json";
+import law from "./🧫️fixtures/🔣️.json";
 import fc from "fast-check";
 import {Database} from "bun:sqlite";
 

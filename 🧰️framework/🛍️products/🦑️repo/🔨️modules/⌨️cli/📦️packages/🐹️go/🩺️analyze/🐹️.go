@@ -254,7 +254,7 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) workspace.ToolResult {
 		scope = workspace.ParseScope("compose")
 		wanted := []string{}
 		for extension := range extensions { wanted = append(wanted, strings.TrimPrefix(extension, ".")) }
-		files, listErr := workspace.GlobByExtension(workspace.RootDir, "**/*", wanted, []string{"**/node_modules/**", "**/.venv/**"}, true)
+		files, listErr := workspace.GlobByExtension(workspace.GetRootDir(), "**/*", wanted, []string{"**/node_modules/**", "**/.venv/**"}, true)
 		if listErr != nil { return workspace.ToolResult{Error: listErr.Error()} }
 		selected := make([]string, 0)
 		for _, file := range files { if extensions[strings.ToLower(filepath.Ext(file))] { selected = append(selected, file) } }

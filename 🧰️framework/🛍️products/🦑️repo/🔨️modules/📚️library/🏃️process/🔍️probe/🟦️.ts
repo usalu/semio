@@ -1,4 +1,4 @@
-import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,writeFileSync,existsSync,readFileSync,rmSync} from "node:fs";
 import {join,dirname} from "node:path";

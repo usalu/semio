@@ -5,7 +5,7 @@ pub use semio_framework_ui_contract_budget::*;
 pub use semio_framework_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
 pub use semio_framework_ui_contract_identity::{UiNodeId,UiRevision,SurfaceId};
 pub const UI_VALUE_NONE:usize=usize::MAX;
-use semio_framework_value::list as fixed_list_storage;
+use semio_framework_value_persistent::list as fixed_list_storage;
 pub use fixed_list_storage::{PagedListAllocationError,PagedListError,PagedListProgress,PagedListRefusalKind};
 
 #[path = "🔢️fixed-list/🦀️.rs"]

@@ -176,7 +176,6 @@ export async function registerUnifiedgumballMathAndMoreTests(vitest: Tests1Vites
       expect(rightHit[0] - centerHit[0]).toBeCloseTo(50, 5);
       expect(rightHit[1] - centerHit[1]).toBeCloseTo(0, 5);
 
-      // 🦆️ Duplicate-three failure mode: plain object with the flag but not `instanceof OrthographicCamera`.
       const duck = {
         isOrthographicCamera: true,
         position: ortho.position,
@@ -251,18 +250,6 @@ export async function registerUnifiedgumballMathAndMoreTests(vitest: Tests1Vites
   describe("icon hover animations", () => {
     const FULL_TURN_KEYFRAMES = new Set(["icon-rotate-ccw", "icon-rotate-cw", "icon-loader-2", "icon-flip-horizontal", "icon-flip-vertical", "icon-settings", "icon-globe"]);
     const NON_CATALOG_KINDS = ["emoji", "text", "typst", "image", "svg", "node", "shortcode", "missing"];
-    // Icons whose SVG has cleanly separable moving parts get a mechanism-accurate per-part animation
-    // instead (--icon-animation: none plus one or more --icon-part-<N>-anim assignments); see 🔧️IconPartAnim.
-    // Every icon below — and every whole-icon icon outside this set — has its own uniquely-named,
-    // individually-tuned keyframes; nothing is shared across icons (see the specificity/exclusivity tests).
-    // Physical-correctness pass moved hammer/box/move/arrow-up/arrow-down/arrow-left/arrow-right/undo/
-    // undo-2/redo/redo-2 OUT of this set: each is one rigid object (hammer head+handle, arrow head+shaft,
-    // the whole "move" cross, an undo/redo hook+curve), so it now animates as a single whole-icon rigid
-    // motion instead of independently-moving parts. Remaining whole-icon icons either have a single fused
-    // SVG path (no separable part exists without redrawing the vendored asset — e.g.
-    // folder/folder-open/message-square/message-circle, handled with a best-effort single-rigid-body
-    // motion instead) or their rigid motion already is the mechanically correct animation (globe, search,
-    // settings, rotate-cw/ccw, flip-horizontal/vertical, text-cursor).
     const PART_MECHANISM_ICONS = new Set([
       "alert-circle",
       "align-left",
@@ -402,8 +389,6 @@ export async function registerUnifiedgumballMathAndMoreTests(vitest: Tests1Vites
           }
           continue;
         }
-        // Whole-icon animations are named icon-<id> or, when a descriptive suffix reads better
-        // (e.g. icon-folder-flap), icon-<id>-<suffix> — same convention as per-part icons.
         const ruleMatch = css.match(new RegExp(`\\[data-icon="${name}"\\] \\{([^}]*)\\}`));
         expect(ruleMatch, `missing [data-icon="${name}"] rule`).toBeTruthy();
         const animMatch = ruleMatch![1].match(/--icon-animation:\s*(icon-[\w-]+);/);
@@ -433,13 +418,9 @@ export async function registerUnifiedgumballMathAndMoreTests(vitest: Tests1Vites
         }
         expect(body).toMatch(/0%,\s*\n\s*100%\s*\{/);
       }
-      // Every icon has its own dedicated keyframes now, so this count roughly tracks icon count; kept as a
-      // loose sanity floor (not exact) against an empty/broken scan rather than a precise assertion.
       expect(checked).toBeGreaterThan(100);
     });
 
-    // Keyed by the required animation-name prefix ("icon-<id>" for data-icon, "icon-kind-<kind>" for
-    // data-icon-kind), not the raw selector value, so specificity/exclusivity checks apply the right rule.
     function collectIconRules(css: string): Map<string, string> {
       const rules = new Map<string, string>();
       for (const m of css.matchAll(/\[data-icon="([a-z0-9-]+)"\] \{ ([^}]*)\}/g)) {

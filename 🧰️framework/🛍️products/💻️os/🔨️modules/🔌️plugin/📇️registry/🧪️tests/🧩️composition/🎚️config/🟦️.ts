@@ -1,4 +1,4 @@
-import base from "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts";
+import base from "@semio-tech/framework-renderer-react/testing/config";
 import { defineConfig } from "vitest/config";
 import { resolve } from "node:path";
 import { repoTestArtifactEnvironment } from "@semio-tech/process/execution";

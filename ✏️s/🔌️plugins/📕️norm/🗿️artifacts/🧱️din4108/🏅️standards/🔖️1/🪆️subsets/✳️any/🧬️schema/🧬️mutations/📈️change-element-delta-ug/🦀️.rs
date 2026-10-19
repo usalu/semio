@@ -1,4 +1,4 @@
-//! `change-element-delta-ug`.
+//! 🧬️ `change-element-delta-ug`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

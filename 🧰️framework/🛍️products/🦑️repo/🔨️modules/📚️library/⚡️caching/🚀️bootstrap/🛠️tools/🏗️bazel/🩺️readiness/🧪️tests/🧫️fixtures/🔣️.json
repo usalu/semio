@@ -1,0 +1,346 @@
+{
+  "facts": {
+    "platform": "linux",
+    "exchange": "supported",
+    "caseSensitive": "yes",
+    "imageTool": true,
+    "longPaths": "unprobed",
+    "paths": [
+      {
+        "label": "workspace",
+        "path": "/workspaces/semio",
+        "blocking": true
+      },
+      {
+        "label": "tools",
+        "path": "/workspaces/semio/.cache/b/t",
+        "blocking": true
+      },
+      {
+        "label": "dependencies",
+        "path": "/workspaces/semio/.cache/b/d",
+        "blocking": true
+      },
+      {
+        "label": "products",
+        "path": "/workspaces/semio/.cache/b/p",
+        "blocking": true
+      },
+      {
+        "label": "temporary",
+        "path": "/tmp",
+        "blocking": false
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "linux-unprivileged-needs-nothing",
+      "patch": {},
+      "refusals": [],
+      "warnings": []
+    },
+    {
+      "id": "linux-exchange-unsupported",
+      "patch": {
+        "exchange": "unsupported"
+      },
+      "refusals": [
+        "Atomic directory exchange (renameat2 RENAME_EXCHANGE) is unsupported"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "linux-exchange-unprobed",
+      "patch": {
+        "exchange": "unprobed"
+      },
+      "refusals": [
+        "Atomic directory exchange (renameat2 RENAME_EXCHANGE) is unsupported"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "darwin-needs-nothing",
+      "patch": {
+        "platform": "darwin",
+        "exchange": "unprobed",
+        "caseSensitive": "unprobed"
+      },
+      "refusals": [],
+      "warnings": []
+    },
+    {
+      "id": "darwin-image-tool-missing",
+      "patch": {
+        "platform": "darwin",
+        "exchange": "unprobed",
+        "imageTool": false,
+        "caseSensitive": "unprobed"
+      },
+      "refusals": [
+        "/usr/bin/hdiutil is missing"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "windows-ascii-needs-no-elevation",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "enabled",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "C:\\semio",
+            "blocking": true
+          },
+          {
+            "label": "tools",
+            "path": "C:\\semio\\.cache\\b\\t",
+            "blocking": true
+          },
+          {
+            "label": "temporary",
+            "path": "C:\\Users\\ueli\\AppData\\Local\\Temp",
+            "blocking": false
+          }
+        ]
+      },
+      "refusals": [],
+      "warnings": []
+    },
+    {
+      "id": "windows-unicode-checkout",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "enabled",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "C:\\Users\\Jürgen\\semio",
+            "blocking": true
+          },
+          {
+            "label": "tools",
+            "path": "C:\\Users\\Jürgen\\semio\\.cache\\b\\t",
+            "blocking": true
+          },
+          {
+            "label": "temporary",
+            "path": "C:\\Temp",
+            "blocking": false
+          }
+        ]
+      },
+      "refusals": [
+        "non-ASCII workspace path C:\\Users\\Jürgen\\semio (U+00FC at index 10)",
+        "non-ASCII tools path C:\\Users\\Jürgen\\semio\\.cache\\b\\t (U+00FC at index 10)"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "windows-emoji-ancestry",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "enabled",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "D:\\🧬\\semio",
+            "blocking": true
+          }
+        ]
+      },
+      "refusals": [
+        "non-ASCII workspace path D:\\🧬\\semio (U+1F9EC at index 3)"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "windows-unicode-temp-only-warns",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "enabled",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "C:\\semio",
+            "blocking": true
+          },
+          {
+            "label": "temporary",
+            "path": "C:\\Users\\Jürgen\\Temp",
+            "blocking": false
+          }
+        ]
+      },
+      "refusals": [],
+      "warnings": [
+        "non-ASCII temporary path"
+      ]
+    },
+    {
+      "id": "windows-long-paths-disabled",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "disabled",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "C:\\semio",
+            "blocking": true
+          }
+        ]
+      },
+      "refusals": [
+        "LongPathsEnabled"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "windows-journaled-swap-unsupported",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "enabled",
+        "exchange": "unsupported",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "C:\\semio",
+            "blocking": true
+          }
+        ]
+      },
+      "refusals": [
+        "journaled directory swap"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "windows-case-sensitivity-unavailable",
+      "patch": {
+        "platform": "win32",
+        "longPaths": "enabled",
+        "caseSensitive": "no",
+        "paths": [
+          {
+            "label": "workspace",
+            "path": "C:\\semio",
+            "blocking": true
+          }
+        ]
+      },
+      "refusals": [
+        "Microsoft-Windows-Subsystem-Linux"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "linux-case-folding-mount",
+      "patch": {
+        "caseSensitive": "no"
+      },
+      "refusals": [
+        "case-sensitive filesystem"
+      ],
+      "warnings": []
+    }
+  ],
+  "invalid": [
+    {
+      "longPaths": "maybe"
+    },
+    {
+      "exchange": "maybe"
+    },
+    {
+      "platform": "freebsd"
+    },
+    {
+      "skip": true
+    },
+    {
+      "paths": []
+    },
+    {
+      "imageTool": "yes"
+    },
+    {
+      "caseSensitive": "maybe"
+    },
+    {
+      "elevated": true
+    }
+  ],
+  "progress": {
+    "total": 1000,
+    "events": [
+      {
+        "phase": "waiting",
+        "bytes": 0
+      },
+      {
+        "phase": "verifying",
+        "bytes": 0
+      },
+      {
+        "phase": "downloading",
+        "bytes": 40
+      },
+      {
+        "phase": "downloading",
+        "bytes": 99
+      },
+      {
+        "phase": "downloading",
+        "bytes": 100
+      },
+      {
+        "phase": "downloading",
+        "bytes": 120
+      },
+      {
+        "phase": "downloading",
+        "bytes": 555
+      },
+      {
+        "phase": "downloading",
+        "bytes": 1000
+      },
+      {
+        "phase": "ready",
+        "bytes": 1000
+      }
+    ],
+    "lines": [
+      "[bazel] waiting 0/1000",
+      "[bazel] verifying 0/1000",
+      "[bazel] downloading 10% 100/1000",
+      "[bazel] downloading 50% 555/1000",
+      "[bazel] downloading 100% 1000/1000",
+      "[bazel] ready 1000/1000"
+    ]
+  },
+  "nonAscii": [
+    {
+      "text": "C:\\semio\\.cache",
+      "ascii": true
+    },
+    {
+      "text": "/Users/ueli/Documents/semio",
+      "ascii": true
+    },
+    {
+      "text": "/Users/ueli/semio/🧬",
+      "ascii": false
+    },
+    {
+      "text": "C:\\Dokumente und Einstellungen\\Jörg",
+      "ascii": false
+    },
+    {
+      "text": "",
+      "ascii": true
+    }
+  ]
+}

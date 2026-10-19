@@ -40,17 +40,17 @@ async fn lexer_tokenizes_a_representative_record_line() {
     assert_eq!(
         kinds,
         vec![
-            TokenKind::Ident, // camera
-            TokenKind::Ident, // x
+            TokenKind::Ident,
+            TokenKind::Ident,
             TokenKind::Equals,
-            TokenKind::Float, // 1.5
-            TokenKind::Ident, // y
+            TokenKind::Float,
+            TokenKind::Ident,
             TokenKind::Equals,
-            TokenKind::Int,   // -2
-            TokenKind::Ident, // zoom
+            TokenKind::Int,
+            TokenKind::Ident,
             TokenKind::Equals,
-            TokenKind::Int,   // 1
-            TokenKind::Ident, // label
+            TokenKind::Int,
+            TokenKind::Ident,
             TokenKind::Equals,
             TokenKind::Text,
             TokenKind::Eof,
@@ -95,12 +95,6 @@ async fn lexer_recognizes_negative_infinity_as_one_float_token() {
             (TokenKind::Float, "-inf".to_string()),
             (TokenKind::Ident, "y".to_string()),
             (TokenKind::Equals, "=".to_string()),
-            // "-influence" must NOT be split into a "-inf" float token plus a stray "luence"
-            // ident — the lookahead requires the char right after "-inf" to not itself
-            // continue an identifier, so the leading '-' falls through to the Minus operator
-            // token instead (added for Shape::Expr; previously this fell all the way through
-            // to "unknown character"/Error before Minus existed), then "influence" lexes as
-            // its own ident, unaffected either way.
             (TokenKind::Minus, "-".to_string()),
             (TokenKind::Ident, "influence".to_string()),
             (TokenKind::Ident, "z".to_string()),
@@ -177,8 +171,6 @@ async fn lexer_back_arrow_tokenizes_distinctly_from_dash_and_arrow() {
             (TokenKind::Ident, "b".to_string()),
             (TokenKind::Ident, "a".to_string()),
             (TokenKind::BackArrow, "<-".to_string()),
-            // `<` isn't ident-continue, so the '<' of "<-" can never be swallowed into the
-            // preceding kebab ident, and the following ident lexes untouched.
             (TokenKind::Ident, "hexagonal-column".to_string()),
         ]
     );
@@ -234,8 +226,6 @@ async fn lexer_caret_and_dotdot_tokenize_distinctly_from_neighbors() {
             (TokenKind::Float, "1.5".to_string()),
             (TokenKind::DotDot, "..".to_string()),
             (TokenKind::Int, "3".to_string()),
-            // A dot INSIDE an already-started ident never splits into DotDot — "a..b" stays
-            // one ident, exactly like kebab idents protect "-" from the Arrow/DashArrow checks.
             (TokenKind::Ident, "a..b".to_string()),
         ]
     );
@@ -251,7 +241,6 @@ async fn lexer_fence_captures_lang_and_multiline_content() {
     let (lang, content) = raw.split_once('\u{0}').expect("NUL separator");
     assert_eq!(lang, "jack");
     assert_eq!(content, "MATCH (a) RETURN a\nWHERE a.x > 1");
-    // lexing must resume normally right after the closing fence line.
     assert!(significant.iter().any(|t| t.kind == TokenKind::Ident && t.text.as_str().as_ref() == "after"));
 }
 
@@ -306,13 +295,11 @@ async fn unit_conversion_round_trips_back_to_the_original_value() {
 #[semio_framework_async_macros::async_test]
 async fn unit_conversion_same_unit_short_circuits_bit_exactly() {
     let deg = unit_by_symbol("deg").unwrap();
-    // 30.0 degrees previously round-tripped as 29.999999999999996 due to (30.0 * (PI/180)) / (PI/180).
     assert_eq!(convert(30.0, deg, deg), Some(30.0));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn ten_thousand_iteration_generative_escape_round_trip() {
-    // Hand-rolled xorshift — no proptest/quickcheck dependency in this workspace.
     let mut state: u64 = 0x9E3779B97F4A7C15;
     let mut next = || {
         state ^= state << 13;
@@ -338,16 +325,12 @@ async fn default_lex_options_is_byte_identical_to_pre_m1_raw_double_quote_behavi
     let opts = LexOptions::default();
     let tokens = lex_with(r#"label="a \"b\" c""#, &Limits::default(), false, &opts).expect("lex_with default");
     let text = tokens.iter().find(|t| t.kind == TokenKind::Text).expect("Text token");
-    // Raw mode: backslash pairs stay undecoded in the token text, exactly like `lex` always did.
     assert_eq!(text.text.as_str().as_ref(), r#"a \"b\" c"#);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn json_style_backslash_mode_decodes_standard_escapes_and_u_xxxx_surrogate_pairs() {
     let opts = LexOptions { strings: vec![StringMode { quote: '"', escape: StringEscape::Backslash }], comment: CommentDialect::default() };
-    // Raw Rust string so `\n`/`\t`/`\uD83D`/`\uDE00` reach the lexer as literal backslash
-    // sequences (not pre-decoded by Rust itself) — `😀` is U+1F600's UTF-16
-    // surrogate pair, the exact shape RFC 8259 §7 requires for astral codepoints.
     let tokens = lex_with(r#""line1\nline2\ttabA\uD83D\uDE00""#, &Limits::default(), false, &opts).expect("lex_with json backslash");
     let text = tokens.iter().find(|t| t.kind == TokenKind::Text).expect("Text token");
     assert_eq!(text.text.as_str().as_ref(), "line1\nline2\ttabA\u{1F600}");
@@ -421,9 +404,6 @@ async fn comment_line_marker_is_configurable_and_disableable() {
     let slash_slash = LexOptions { strings: vec![], comment: CommentDialect { line: Some("//".to_string()), block: None } };
     let tokens = lex_with("a // not a hash comment\n# still data now b", &Limits::default(), true, &slash_slash).expect("lex_with //");
     let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
-    // "//..." is a comment (dropped as trivia, stops at the real newline); "#" is no longer
-    // special under this dialect and falls through to "unknown character" (Error, forgiving),
-    // then "still"/"data"/"now"/"b" lex as ordinary idents on the next line.
     assert_eq!(significant[0], (TokenKind::Ident, "a".to_string()));
     assert!(significant.iter().any(|(k, t)| *k == TokenKind::Error && t == "#"), "'#' must no longer be swallowed as a comment marker");
     assert!(significant.iter().any(|(_, t)| t == "still"), "text after the real newline must still lex, comment stopped at EOL");
@@ -431,8 +411,6 @@ async fn comment_line_marker_is_configurable_and_disableable() {
     let none = LexOptions { strings: vec![], comment: CommentDialect { line: None, block: None } };
     let entity_like = lex_with("#123=WALL;", &Limits::default(), true, &none).expect("lex_with comment none");
     let kinds: Vec<(TokenKind, String)> = entity_like.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
-    // With line comments off, '#' is no longer swallowed into a Comment token — the entity
-    // number "123" lexes as a real Int and ";" as a real Semicolon, not eaten by a comment.
     assert!(kinds.iter().any(|(k, t)| *k == TokenKind::Int && t == "123"), "the entity number 123 must lex as a real Int, not be eaten by a comment");
     assert!(kinds.iter().any(|(k, _)| *k == TokenKind::Semicolon), "';' must lex as a real Semicolon token");
 }
@@ -443,14 +421,9 @@ async fn block_comment_step_style_spans_lines_and_does_not_consume_entity_hash()
     let source = "#10=IFCWALL('a''b')\n/* a block\ncomment spanning lines */\n#20=IFCSLAB('c');";
     let tokens = lex_with(source, &Limits::default(), true, &step_opts).expect("lex_with step block comment");
     let significant: Vec<(TokenKind, String)> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
-    // `#` isn't a comment marker here (comment.line = None) — both entity lines' `#NN` sigils
-    // lex as Dollar-less Error/Int pairs, i.e. the numbers 10/20 are real Int tokens, not eaten.
     assert!(significant.iter().any(|(k, t)| *k == TokenKind::Int && t == "10"));
     assert!(significant.iter().any(|(k, t)| *k == TokenKind::Int && t == "20"));
-    // The doubled-quote string decodes "a''b" -> "a'b".
     assert!(significant.iter().any(|(k, t)| *k == TokenKind::Text && t == "a'b"));
-    // The block comment's own content (the words "block"/"comment"/"spanning"/"lines") must
-    // NOT appear as separate tokens — it was consumed whole as one Comment (trivia).
     assert!(!significant.iter().any(|(_, t)| t == "spanning"));
 }
 
@@ -483,8 +456,6 @@ async fn leading_dot_enum_literals_lex_as_dotenum_step_style() {
 
 #[semio_framework_async_macros::async_test]
 async fn lone_leading_dot_without_closing_dot_is_unaffected_by_dotenum() {
-    // ".foo" (no closing dot) must NOT become DotEnum — falls through exactly like before
-    // this feature existed: an "unknown character" '.' (forgiving -> Error) then an Ident.
     let tokens = lex(".foo", &Limits::default(), true).expect("lex forgiving");
     let significant: Vec<TokenKind> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| t.kind).collect();
     assert_eq!(significant, vec![TokenKind::Error, TokenKind::Ident]);

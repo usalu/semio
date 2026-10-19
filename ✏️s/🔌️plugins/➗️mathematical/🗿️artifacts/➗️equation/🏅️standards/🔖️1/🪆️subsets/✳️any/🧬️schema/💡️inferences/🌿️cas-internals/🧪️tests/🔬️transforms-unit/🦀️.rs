@@ -5,7 +5,6 @@ mod tests {
     async fn laplace_of_t_to_the_n() {
         let t = Expr::symbol("t");
         let s = Expr::symbol("s");
-        // L{t^2} = 2/s^3
         let e = Expr::pow(t.clone(), Expr::integer(2));
         let result = laplace_transform(&e, &t, &s).unwrap();
         assert_eq!(result, Expr::integer(2) * Expr::pow(s, Expr::integer(-3)));

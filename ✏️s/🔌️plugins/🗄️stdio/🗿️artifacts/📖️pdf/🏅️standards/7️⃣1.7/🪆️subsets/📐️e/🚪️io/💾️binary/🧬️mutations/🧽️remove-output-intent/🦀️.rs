@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-output-intent`.
+//! 💾️ Direct binary identity for `remove-output-intent`.
 
 pub const TAG: u8 = 9;
 pub const BINARY_TAG: u8 = TAG;

@@ -40,7 +40,7 @@ class Fields {
         return tableEntries.map(([, v]) => v);
     }
     /**
-     * WIT spec (https://github.com/WebAssembly/WASI/blob/91bb44c3c3a9b1e09187db23c85fa844d1fd6b15/proposals/http/wit/types.wit#L215-L223):
+     * 🧬️ WIT spec (https://github.com/WebAssembly/WASI/blob/91bb44c3c3a9b1e09187db23c85fa844d1fd6b15/proposals/http/wit/types.wit#L215-L223):
      *
      * > Set all of the values for a name. Clears any existing values for that
      * > name, if they have been set.
@@ -854,7 +854,7 @@ function httpErrorCode(err) {
     };
 }
 let requestStreamingEnabled = false;
-/** Enable or disable Fetch `ReadableStream` request bodies. Disabled by default. */
+/** 📨️ Enable or disable Fetch `ReadableStream` request bodies. Disabled by default. */
 export function _setRequestStreaming(enabled) {
     if (typeof enabled !== "boolean") {
         throw new TypeError("request streaming setting must be a boolean");
@@ -873,7 +873,7 @@ export const incomingHandler = {
         throw "not-supported";
     },
 };
-/** Create a `wasi:http/incoming-handler` namespace backed by a Web Request handler. */
+/** ➕️ Create a `wasi:http/incoming-handler` namespace backed by a Web Request handler. */
 export function createIncomingHandler(handler) {
     return {
         async handle(request, responseOut) {
@@ -925,7 +925,7 @@ async function responseToOutgoingResponse(response) {
     }
     return outgoing;
 }
-/** Translate a browser Request through a WASI handler with a synchronously readable body. */
+/** 🤚️ Translate a browser Request through a WASI handler with a synchronously readable body. */
 export async function handleIncomingRequest(request, handler) {
     const [responseOut, response] = responseOutparamCreate();
     const body = request.body

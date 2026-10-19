@@ -2,15 +2,15 @@
 export type AdjacencyKind = "required" | "preferred" | "optional" | "prohibited";
 
 export interface ArchitectPresence {
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeRegister: string;
-  /** @state presence */
+  /** 🤝️ @state presence */
   adjacencyKindFilter?: AdjacencyKind;
-  /** @state presence */
+  /** 🕸️ @state presence */
   graphCameraX: number;
-  /** @state presence */
+  /** 🌐️ @state presence */
   graphCameraY: number;
-  /** @state presence */
+  /** 🔀️ @state presence */
   graphCameraZoom: number;
 }
 

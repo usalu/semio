@@ -1,6 +1,6 @@
 /** 📂 Context menu mapping, tiled-map snapshot ABI and catalogue drag payloads. */
 import { uiI18n } from "@semio-tech/ui-react";
-import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🎨️item-render/🟦️.tsx";
+import { contextMenuItemClassName } from "@semio-tech/framework/modules/ui/elements/ContextMenu/item-render";
 import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { uiDataLabel, formatKeybindingShortcut, buildKeysByActionId } from "@semio-tech/ui-react";
@@ -120,11 +120,6 @@ describe("framework renderer hosts", () => {
   });
 
   it("resolves taxonomy group rows from the chrome ribbon-parent bundle in both locales", async () => {
-    // 🗂️ The guest emits `menu.group.<category>` with `label: undefined` by contract (the host owns the
-    // chrome taxonomy vocabulary), and the React shell used to render the raw id — `menu.group.history`,
-    // `menu.group.selection`, … — where the wgpu target resolved a real label through
-    // `ribbon_parent_label`. The label must come from the SAME `ui.ribbon.parent.*` bundle the ribbon
-    // reads, so EN and DE both follow the active locale with no second string table.
     const specs = [
       { id: "menu.group.history", children: [{ id: "undo", label: "Undo", action: "undo" }] },
       { id: "menu.group.selection", children: [{ id: "duplicate", label: "Duplicate", action: "duplicateSelection" }] },
@@ -140,8 +135,6 @@ describe("framework renderer hosts", () => {
     expect(mapContextMenuSpecs(specs, () => {}).map((item) => item.label)).toEqual(["Verlauf", "Auswahl", "Mehr"]);
     await uiI18n.changeLanguage("en");
 
-    // 🗂️ Only group rows are resolved: an ordinary label-less row (a bare separator) keeps none, and an
-    // unknown category resolves to nothing rather than inventing chrome vocabulary.
     const untouched = mapContextMenuSpecs(
       [
         { id: "sep", separator: true },

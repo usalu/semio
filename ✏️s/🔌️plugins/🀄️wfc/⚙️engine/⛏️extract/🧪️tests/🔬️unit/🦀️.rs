@@ -29,7 +29,6 @@ fn window_two_deduplicates_repeated_windows() {
     let sample = checkerboard_sample(4);
     let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
     let extracted = extract_2d(&[sample], &cfg).unwrap();
-    // A periodic 2-color checkerboard has exactly 2 distinct 2x2 windows under periodic wrap.
     assert_eq!(extracted.model.pattern_count(), 2);
 }
 
@@ -93,7 +92,6 @@ fn multiple_samples_merge_frequencies() {
     let single = extract_2d(std::slice::from_ref(&a), &cfg).unwrap();
     let merged = extract_2d(&[a, b], &cfg).unwrap();
     assert_eq!(single.model.pattern_count(), merged.model.pattern_count());
-    // Each pattern's weight should double when the same sample is provided twice.
     for p in 0..merged.model.pattern_count() {
         let pid = PatternId::from_index(p);
         assert!((merged.model.pattern_info(pid).weight - 2.0 * single.model.pattern_info(pid).weight).abs() < 1e-9);

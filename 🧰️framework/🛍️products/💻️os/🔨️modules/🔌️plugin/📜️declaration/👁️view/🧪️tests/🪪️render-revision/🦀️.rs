@@ -13,7 +13,7 @@ fn context(base: &serde_json::Value, patch: &serde_json::Value, maximum_items: u
         base_revision: semio_framework_job::RevisionId(value["baseRevision"].as_str().unwrap().parse().unwrap()),
         generation: semio_framework_job::Generation(value["generation"].as_str().unwrap().parse().unwrap()),
         canonical_base_revision,
-        mounted_policy: crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant },
+        mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant },
     }
 }
 

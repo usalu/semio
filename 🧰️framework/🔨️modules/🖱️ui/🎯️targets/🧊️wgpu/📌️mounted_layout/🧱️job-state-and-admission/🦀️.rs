@@ -78,7 +78,7 @@ pub struct MountedLayoutJob {
     #[cfg(test)]
     pub(super) worker_thread_observed: bool,
     pub(super) fault: Option<MountedLayoutFault>,
-    pub(super) fault_payload: semio_framework_job::RetainedPayloadBuilder,
+    pub(super) fault_payload: semio_framework_job_payload::RetainedPayloadBuilder,
     pub(super) text_worker: DeterministicTextWorker,
 }
 
@@ -147,7 +147,7 @@ impl MountedLayoutJob {
             #[cfg(test)]
             worker_thread_observed: false,
             fault: None,
-            fault_payload: semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault),
+            fault_payload: semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::Fault),
             text_worker: DeterministicTextWorker::default(),
         })
     }
@@ -235,12 +235,6 @@ impl MountedLayoutJob {
                     UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
                     UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
                     UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
-                    // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`). As a plain `Leaf` it measured
-                    // from arena children — a progress node has none — so it solved to height ZERO and
-                    // `progress_bar_rects`' `SIZE_TINY.min(bounds.h)` painted nothing at all: the live
-                    // generation3d Tool-runs panel showed the run title and an empty gap where React shows the
-                    // filled bar (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-                    // `📓️w14b-generation3d-labels-preview-layout.md`).
                     UiNode::Progress(_) => LayoutNodeKind::Control { height: semio_framework_ui_wgpu_layout::chrome::SIZE_TINY, label_padding: None },
                     _ => LayoutNodeKind::Leaf,
                 }

@@ -366,23 +366,11 @@ pub fn create_note_app() -> AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 📇️ Palette-visible selection-consuming commands (P0) — the framework auto-injects
-            // selectAll/clearSelection (and interactionSelect/interactionHover/setSelectionMode/
-            // setInteractionGranularity) for every app that declares an `.interaction(...)` domain
-            // (see below); these two retained verbs still operate ON that framework-owned selection.
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
             .mutation("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"))
-            // ➕️ Palette-visible block insertion (P1) with a staged argument form.
             .mutation("addBlock", LocalizedLabel::native("Add Block", "Block hinzufügen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
-            // 🐚️ Export footer action → panel Shell action emitting a host effect (S); opening a file is the framework Import Document.
             .shell_action("saveDownload", LocalizedLabel::native("Export", "Exportieren"))
-            // 🔧️ Internal content operations — inspector/tree/drag/import-bound, not palette commands.
-            // B1: the old `"setGridVisible" | "toggleGrid"`/`"setSnapEnabled" | "toggleSnap"`/
-            // `"addBlock" | "dropBlockKind"` action-id aliases collapsed onto one `NoteCommand` variant
-            // each (see `NoteCommand`'s doc comment) — `toggleGrid`/`toggleSnap`/`dropBlockKind` were
-            // never independently wired to any UI element or host caller, so their dead alias
-            // declarations are dropped here rather than kept as unreachable synonyms.
             .action_with(note_internal_action("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Rastersichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(note_internal_action("setGridSpacing", LocalizedLabel::native("Set Grid Spacing", "Rasterabstand festlegen"), ActionKind::Mutation))
             .action_with(note_internal_action("setGridSubdivisions", LocalizedLabel::native("Set Grid Subdivisions", "Rasterunterteilungen festlegen"), ActionKind::Mutation))
@@ -407,13 +395,10 @@ pub fn create_note_app() -> AppDefinition {
             .action_with(note_internal_action("nudgeSelectionDownFast", LocalizedLabel::native("Nudge Selection Down Fast", "Auswahl schnell nach unten verschieben"), ActionKind::Mutation))
             .action_with(note_internal_action("nudgeSelectionLeftFast", LocalizedLabel::native("Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"), ActionKind::Mutation))
             .action_with(note_internal_action("nudgeSelectionRightFast", LocalizedLabel::native("Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"), ActionKind::Mutation))
-            // 👁️ Ephemeral view state — engagement/camera scratch, never a document operation. Selection/
-            // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(note_internal_action("navigatorEngagementInput", LocalizedLabel::native("Navigator Engagement Input", "Navigator-Eingabe"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(note_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
-            // 📝️ Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![
                     ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
@@ -471,8 +456,6 @@ pub fn create_note_app() -> AppDefinition {
                 ]).required(),
                 ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
             ])
-            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a): what `capabilities_search`
-            // matches on and `capabilities_describe` returns. EN first, DE second, no default language.
             .action_describe("addBlock", LocalizedLabel::native("Adds a new block to the note at the given position — text, image, table, math, ink stroke or group.", "Fügt der Notiz an der angegebenen Position einen neuen Block hinzu — Text, Bild, Tabelle, Mathematik, Tinte oder Gruppe."))
             .action_use_when("addBlock", vec!["add a text block".into(), "insert a table".into(), "add an image to the note".into(), "write a note".into()])
             .action_describe("deleteSelection", LocalizedLabel::native("Removes every currently selected block from the note.", "Entfernt alle aktuell ausgewählten Blöcke aus der Notiz."))
@@ -497,13 +480,11 @@ pub fn create_note_app() -> AppDefinition {
             .action_describe("setSnapGridSpacing", LocalizedLabel::native("Sets the spacing blocks snap to when snapping is on.", "Legt den Rasterabstand fest, an dem Blöcke bei aktiviertem Einrasten einrasten."))
             .action_describe("setPencilWidth", LocalizedLabel::native("Sets the stroke width the ink pencil draws with.", "Legt die Strichbreite des Tintenstifts fest."))
             .action_describe("setEraserRadius", LocalizedLabel::native("Sets the radius of the ink eraser.", "Legt den Radius des Tintenradierers fest."))
-            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("deleteSelection")
             .action_destructive("deleteBlock")
             .action_destructive("setActiveExample")
             .action_destructive("loadDocumentJson")
             .action_destructive("saveDownload")
-            // 🖱️ Raw input plumbing — the surface and the keyboard feed these, agents never do.
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("navigatorEngagementInput", semio_framework_plugin::CapabilityAudience::Input)
@@ -549,7 +530,6 @@ pub fn create_note_app() -> AppDefinition {
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("navigatorEngagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("saveDownload", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(note_utility("selectDirect", LocalizedLabel::native("Direct", "Direkt"), "text-cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", LocalizedLabel::native("Marquee", "Rahmenauswahl"), "selection", "Select", UtilityCategory::Selection))
             .utility(note_utility("text", LocalizedLabel::native("Text", "Text"), "type", "Block", UtilityCategory::Utilities))
@@ -568,9 +548,6 @@ pub fn create_note_app() -> AppDefinition {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+y", "redo")
-            // 🕹️ `mod+a`/`escape` are no longer declared here — the framework auto-injects `selectAll`/
-            // `clearSelection` (with these SAME keys) for every app with at least one `.interaction(...)`
-            // domain, see `interaction_action_definitions`.
             .keybinding("delete", "deleteSelection")
             .keybinding("backspace", "deleteSelection")
             .keybinding("mod+d", "duplicateSelection")
@@ -582,11 +559,6 @@ pub fn create_note_app() -> AppDefinition {
             .keybinding("shift+down", "nudgeSelectionDownFast")
             .keybinding("shift+left", "nudgeSelectionLeftFast")
             .keybinding("shift+right", "nudgeSelectionRightFast")
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "blocks" interaction
-            // domain — one granularity ("block"), `HierarchyProvider::Topology` from the document's own
-            // Group nesting (`note_blocks_topology`/`NotePlayApp::interaction_topology`), both hover and
-            // selection transitive (selecting/hovering a group covers its descendants). Multi-select via
-            // both Pick (tree rows) and Rectangle (the `selectMarquee` canvas utility), all five merges.
             .interaction(InteractionDefinition {
                 id: NOTE_INTERACTION_BLOCKS.into(),
                 label: LocalizedLabel::native("Blocks", "Blöcke"),
@@ -602,10 +574,6 @@ pub fn create_note_app() -> AppDefinition {
                 },
             })
             .window_kind_interactions(NOTE_PLAY_WINDOW_COMPOSITE, vec![InteractionRef::new(NOTE_INTERACTION_BLOCKS)])
-            // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE) —
-            // note has no user-visible sticky config defaults (unlike shooting's default shot/asset
-            // format), so `config_spec()` stays the trait default (`ConfigSpec::empty()`); registering it
-            // here still declares the config schema for the manifest.
             .config(NotePlayApp::config_spec())
             .build_definition();
     for window in app.window_kinds.iter_mut() {
@@ -615,11 +583,6 @@ pub fn create_note_app() -> AppDefinition {
             window.options.measures = navigator::window_measures(&document, &crate::NoteCamera::default(), &crate::editor::note::terminology::NotePlayLabels::NATIVE_EN);
         }
     }
-    // 👁️✏️ SDK gap (contract §2.4/§7.4): `.example(...)`/`.workflow(...)` do not exist on
-    // `EditorBuilder` — `PluginBuilder::editor::<E>` only takes the bare `AppDefinition`, so the old
-    // `"semio"` example registration and the `"note"` workflow tag are dropped here, not silently
-    // ported. The subset's own `📚️examples/🎬️demo` facet is the likely intended replacement
-    // mechanism (see this surface's own `📚️examples/🎬️demo-session`), per the pilot's report.
     app
 }
 //#endregion 🔖️Manifest

@@ -403,8 +403,6 @@ impl ToolRunMachine {
             (S::Running | S::Paused, K::SettingsChanged) => (Some(current.state), F::Reconfigure, true),
             (S::Complete, K::SettingsChanged) => (Some(S::Running), F::Reconfigure, true),
             (S::Running | S::Paused | S::Complete, K::BaseChanged) => (Some(current.state), F::Refold, true),
-            // 🏁️ A running or paused run finalizes the partial result it holds: the driver closes the run job at its tick
-            // boundary (placements are applied whole per tick) and publishes exactly the provisional edits computed so far.
             (S::Running | S::Paused | S::Complete, K::Finalize) => (Some(S::Finalizing), F::BeginFinalize, false),
             (S::Finalizing, K::PublicationComplete) => (Some(S::Finalized), F::ReleaseProvisional, false),
             (S::Finalizing, K::RevalidationConflicts) => (Some(S::Complete), F::RetractConflicts, true),

@@ -1,7 +1,7 @@
-//! `iz`, `j`) → `ChangeSection`.
+//! 🎮️ `iz`, `j`) → `ChangeSection`.
 //! 🩹️ Fem3d play app command — `patch-section`: one-field edit of a section (`name`, `area`, `iy`,
 
-use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection;
+use semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSectionPatch;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::ArtifactView;

@@ -1,4 +1,4 @@
-//! Norm command — `insert-item`.
+//! 📜️ Norm command — `insert-item`.
 
 use semio_s_artifact_norm_en1991_mutations::En1991Mutation;
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;

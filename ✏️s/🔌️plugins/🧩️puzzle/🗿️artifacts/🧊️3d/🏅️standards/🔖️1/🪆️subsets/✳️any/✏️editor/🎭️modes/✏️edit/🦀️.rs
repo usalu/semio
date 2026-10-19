@@ -1,4 +1,4 @@
-//! on the left third, a three-point Perspective pane on the right two thirds — two INSTANCES of the
+//! ↔️ on the left third, a three-point Perspective pane on the right two thirds — two INSTANCES of the
 //! ✏️ Puzzle 3d play app — the `edit` mode: the dual-pane default layout (an orthographic Top pane
 //! one `🪟️windows/🧊️main` window kind) plus the mode-level Fill tool. The per-window chrome options
 //! every instance shares live in `☑️options/*`.

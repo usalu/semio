@@ -91,3 +91,7 @@ pub use semio_framework_os_store_replay::lifted_snapshot_read::{ARTIFACT_STORE_U
 pub use semio_framework_os_store_ledger::lifted_snapshot_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreEditMetadata, ArtifactStoreEditRetirement, ArtifactStoreEditRetirementState, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreHistoryMetadataRetirementState, ArtifactStoreOperationRowOwners, ArtifactStoreStringRetirement};
 
 pub use semio_framework_value_snapshot_read::CapturedSnapshotSource;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

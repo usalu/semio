@@ -31,7 +31,7 @@ impl semio_framework_value::FromValue for DagSnapshot {
         result.validate().map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         Ok(result)
     }
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.object_controlled(control)?;
         semio_framework_value::DslValue::deny_fields_controlled(entries, &["schema", "content"], control)?;
         control.charge(size_of::<Self>())?;

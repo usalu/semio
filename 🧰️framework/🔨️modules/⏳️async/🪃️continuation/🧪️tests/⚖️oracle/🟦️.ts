@@ -166,7 +166,6 @@ export const runContinuationCaseLive = async (testCase: ContinuationCase, timeou
   const guard = setTimeout(() => settle?.(), timeoutMs);
   await done;
   clearTimeout(guard);
-  // 🩺 One extra unthrottled turn so a callback that should NOT have run gets its chance to prove it did.
   await scheduler.yieldContinuation();
   scheduler.dispose();
   return { order, completionMs: Date.now() - startedAtMs, elapsedMs: Date.now() - startedAtMs };

@@ -7,10 +7,6 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn minimal_pdf_with_extra_object(extra_obj_body: &[u8]) -> Vec<u8> {
-        // 🩹 Mirrors the hand-built classic-xref fixtures already used by `⚙️engine`'s own test
-        // module: a real one-page PDF plus one extra indirect object (referenced from
-        // `/OpenAction` so it's genuinely reachable, not just incidentally present in the xref
-        // table).
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
         let o1 = body.len();
@@ -59,10 +55,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn encrypted_trailer_document_is_rejected_upstream_by_the_shared_engine() {
-        // 🔒 `decode_pdf` runs the standard security handler on any /Encrypt trailer and refuses a
-        // document the (empty) user password does not open (`PdfEngineError::Unsupported`) --
-        // composing through the 🧱️base delegate surfaces that as a real ComposeError before this
-        // subset's own conformance check even runs.
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
         let o1 = body.len();
@@ -83,9 +75,6 @@ mod tests {
     async fn subset_validator_recheck_flags_soft_diagnostics_on_the_wire_payload() {
         let snapshot = PdfABuilder::new("sRGB IEC61966-2.1").add_page(crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage::new(50.0, 50.0)).build().unwrap();
         let bytes = <PdfSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
-        // The registered validator, called directly (same fn the generic io hook calls): today's
-        // writer drops `objects` on encode, so the OutputIntent genuinely isn't in these bytes --
-        // a real, honest soft diagnostic, not a false positive (see module doc comment).
         let diagnostics = PdfAValidator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a builder-clean document: {diagnostics:?}");
     }

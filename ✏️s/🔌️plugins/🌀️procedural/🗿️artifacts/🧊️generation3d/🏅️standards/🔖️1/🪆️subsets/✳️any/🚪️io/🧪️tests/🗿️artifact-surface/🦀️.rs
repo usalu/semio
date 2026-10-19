@@ -188,8 +188,6 @@ fn every_geometry_export_format_moves_the_committed_cube_past_the_oracle() {
             other => panic!("{other}: the fixture calls this a geometry row but no import leaf is named"),
         }
         .unwrap_or_else(|error| panic!("{id}: our own bytes re-import ({error})"));
-        // ☁️ LAS is a point cloud: it keeps every position and no face at all, so the oracle's
-        // trimesh verdict does not apply — its own round-trip case already asserts the positions.
         if id == "las" {
             assert_eq!(project(&back).vertex_count, 8, "las: the cube's 8 positions survive");
             continue;
@@ -202,7 +200,7 @@ fn every_geometry_export_format_moves_the_committed_cube_past_the_oracle() {
 /// own text, so it must work with no flow evaluator at all.
 #[test]
 fn the_text_export_is_the_documents_own_text_and_needs_no_evaluator() {
-    let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
+    let document = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::default();
     let bytes = document_io::export_document_bytes(&document).expect("txt exports without an evaluator");
     retire_document(document);
     let written = String::from_utf8(bytes).expect("txt is utf-8");
@@ -293,7 +291,7 @@ fn geometry_exports_require_prepared_geometry_and_document_exports_preserve_text
         assert!(!export.data.is_empty());
     }
     assert!(document_io::export_geometry(&mesh, fixture["exportInputs"]["rejectDocumentAsGeometry"].as_str().unwrap()).is_err());
-    let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
+    let document = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::default();
     let export = document_io::export_document(&document).expect("document exports without geometry");
     assert_eq!(export.filename, "generation3d.txt");
     assert!(!export.data.is_empty());
@@ -362,7 +360,7 @@ fn prepared_geometry_merge_preserves_surface_metadata_or_refuses_incompatible_do
 /// 📤️ Graph codecs require valid declared documents and finite caller-prepared geometry.
 #[test]
 fn document_geometry_bridge_validates_both_explicit_inputs() {
-    let document = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
+    let document = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::default();
     let value = semio_framework_value::ToValue::to_value(&document);
     retire_document(document);
     let mesh = crate::unit_cube_mesh_data();
@@ -742,7 +740,7 @@ fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_s
     let entry = io_registry::entries().iter().find(|entry| entry.writes.artifact_kind == contract["target"].as_str().unwrap()).expect("true graph text registry entry");
     for kind in contract["sourceKinds"].as_array().unwrap() {
         let source = match kind.as_str().unwrap() {
-            "native" => ErasedComposeSource { dialect: semio_s_artifact_procedural_generation3d::GENERATION3D_DIALECT, payload: IoPayload::Text(String::from_utf8(bytes.clone()).unwrap()) },
+            "native" => ErasedComposeSource { dialect: semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT, payload: IoPayload::Text(String::from_utf8(bytes.clone()).unwrap()) },
             "json-bridge" => ErasedComposeSource { dialect: Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY }, payload: IoPayload::Text(json.clone()) },
             unknown => panic!("unsupported registry fixture source {unknown}"),
         };
@@ -888,7 +886,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     {
         use semio_s_artifact_procedural_3d_export_document as editor;
         use semio_s_artifact_procedural_3d_viewer_commands::export_document as viewer;
-        let snapshot = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();
+        let snapshot = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::default();
         let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, alternatives: Vec::new(), current_checkpoint_id: None, commands: Vec::new(), command_filter: semio_framework_plugin::app::HistoryCommandFilter::default() };
         let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
         let editor = editor::emit(&editor::ExportDocument { format: "gltf".into(), widget_id: None }, &doc, Some(std::slice::from_ref(&mesh))).unwrap();
@@ -946,7 +944,7 @@ fn document_io_retained_envelope_resumes_bytes_cancels_and_retires_without_publi
     use std::{io::Write,process::{Command,Stdio}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let continuation=&fixture["documentContinuation"];let law=&continuation["envelope"];let text=law["text"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let binary=(0..law["binaryLength"].as_u64().unwrap()).map(|i|i as u8).collect::<Vec<_>>();let text_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="txt").unwrap();let binary_row=document_io::EXPORT_FORMATS.iter().find(|r|r.id=="las").unwrap();
     let mut child=Command::new("bun").args(["-e","await Bun.write(Bun.stdout,Buffer.from(await Bun.stdin.arrayBuffer()).toString('base64'));"]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&binary).unwrap();let oracle=child.wait_with_output().unwrap();assert!(oracle.status.success());let encoded=String::from_utf8(oracle.stdout).unwrap();
-    let retire=|envelope:document_io::Generation3dDocumentEnvelope|{let mut retirement=crate::retirement_driver::retire_owned_for_test(envelope,"document envelope");crate::retirement_driver::drive_erased_released(retirement.as_mut(),"document envelope");};
+    let retire=|envelope:document_io::Generation3dDocumentEnvelope|{let mut retirement=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(envelope,"document envelope");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(retirement.as_mut(),"document envelope");};
     for budget in continuation["budgets"].as_array().unwrap() {for (row,bytes,expected) in [(text_row,text.as_bytes().to_vec(),text.as_str()),(binary_row,binary.clone(),encoded.as_str())] {
         let pointer=bytes.as_ptr();let mut envelope=document_io::Generation3dDocumentEnvelope::new(row,bytes);let mut accepted=|_|true;let mut control=NativeEncodeControl::new(1000000,&mut accepted);let mut turns=0;let output=loop {let before=(envelope.position(),control.owned_bytes());assert!(envelope.step(0,&mut control).unwrap().is_none());assert_eq!((envelope.position(),control.owned_bytes()),before);turns+=1;assert!(turns<100000);if let Some(output)=envelope.step(budget.as_u64().unwrap()as usize,&mut control).unwrap() {break output;}};assert_eq!(output.data,expected);if row.id=="txt" {assert_eq!(output.data.as_ptr(),pointer);}assert!(envelope.step(1,&mut control).unwrap().is_none());retire(envelope);
     }}

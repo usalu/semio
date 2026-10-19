@@ -24,7 +24,7 @@ export interface SemanticExactDescendantContract {
   readonly requiredNodes: readonly SemanticDescendantNode[];
   readonly exclusiveAlternatives: readonly SemanticDescendantAlternative[];
   readonly realizedNodeCount: number;
-  readonly pathBudgetReserve: Readonly<{ derivation: "longest-canonical-descendant-suffix"; bytes: number }>;
+  readonly pathBudgetReserve: Readonly<{ derivation: "longest-canonical-descendant-suffix"; utf16Units: number }>;
 }
 
 interface SemanticCatalogDescendantContract {
@@ -33,7 +33,7 @@ interface SemanticCatalogDescendantContract {
   readonly catalogContractId: string;
   readonly leafFileKindId: string;
   readonly rendering: "semantic-member-directory-and-physical-kind-leaf";
-  readonly pathBudgetReserve: Readonly<{ derivation: "longest-rendered-catalog-descendant-suffix"; bytes: number }>;
+  readonly pathBudgetReserve: Readonly<{ derivation: "longest-rendered-catalog-descendant-suffix"; utf16Units: number }>;
 }
 
 export type SemanticDescendantContract = SemanticExactDescendantContract | SemanticCatalogDescendantContract;

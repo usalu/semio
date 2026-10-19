@@ -38,7 +38,7 @@ pub fn convert(mut value: DslValue, decode: bool) -> Result<DslValue, ValueError
 }
 
 /// 🎛️ Borrows a native or closed binary64 camera under the original caller's decode control.
-pub fn decode_camera(value:&DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Camera,ValueError>{
+pub fn decode_camera(value:&DslValue,c:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Camera,ValueError>{
  c.scoped_stage(|c|{c.begin_stage(3)?;let fields=value.object_controlled(c)?;if fields.len()!=3||fields.iter().any(|(key,_)|!["x","y","zoom"].contains(&key.as_str())){return Err(invalid("Jack camera requires exactly its three axes"))}c.charge(size_of::<Camera>())?;
  let mut axis=|key:&str|{let value=DslValue::field_controlled(fields,key,c)?.ok_or_else(||invalid("Jack camera axis missing"))?;let number=if let Some(number)=value.as_f64(){number}else{let fields=value.as_object().ok_or_else(||invalid("Jack camera word required"))?;if fields.len()!=1||fields[0].0!="bits"{return Err(invalid("Jack camera word fields"))}let bits=fields[0].1.as_str().ok_or_else(||invalid("Jack camera bits text required"))?;if bits.len()!=16||!bits.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)){return Err(invalid("Jack camera lowercase hex64 required"))}f64::from_bits(u64::from_str_radix(bits,16).map_err(|_|invalid("Jack camera bits invalid"))?)};c.step()?;Ok(number)};
  Ok(Camera{x:axis("x")?,y:axis("y")?,zoom:axis("zoom")?})})

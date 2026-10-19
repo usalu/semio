@@ -1,8 +1,9 @@
 //! 🧪️ The neutral dictionary corpus validates real fixed slots against the standard independent map.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 #[test]
 fn original_scratch_hash_matches_neutral_dictionary(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔑️hashed/🧮️scratch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let maximum=fixture["maximum"].as_u64().unwrap()as usize;
  let mut actual=ScratchHashMap::<String,i64>::try_with_capacity(maximum).unwrap();let mut oracle=std::collections::HashMap::new();
  let demand=ScratchHashMap::<String,i64>::allocation_demands(maximum).unwrap();assert_eq!(actual.allocation_progress().copied_bytes,demand.copy_bytes);assert_eq!(actual.allocation_progress().retained_capacity_bytes,demand.capacity_bytes);

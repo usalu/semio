@@ -277,22 +277,18 @@ impl UiNodeTable {
 
 impl UiSnapshotState {
     /// 🌱️ An empty state for `surface`, at revision zero with no root yet.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(surface: SurfaceId) -> Self {
         Self { surface, revision: UiRevision::default(), root: None, nodes: UiNodeTable::default() }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn get(&self, id: UiNodeId) -> Option<&UiNodeRecord> {
         self.nodes.get(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn root(&self) -> Option<UiNodeId> {
         self.root
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn revision(&self) -> UiRevision {
         self.revision
     }
@@ -311,7 +307,6 @@ impl UiSnapshotState {
 
     /// 🌲️ Depth-first ids rooted at `id` (`id` itself first), via an explicit stack — no recursive
     /// call, matching the flat-table design this whole crate is built around.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn iter_subtree(&self, id: UiNodeId) -> UiSubtreeIter<'_> {
         let mut stack = crate::UiFixedList::default();
         let rejected = stack.try_push(id).err();
@@ -335,7 +330,6 @@ pub struct UiSubtreeIter<'a> {
 impl<'a> Iterator for UiSubtreeIter<'a> {
     type Item = UiNodeId;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn next(&mut self) -> Option<UiNodeId> {
         if let Some(rejected) = self.rejected.take() {
             return Some(rejected);

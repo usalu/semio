@@ -1,11 +1,11 @@
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import * as React from "react";
 
 // Hierarchical tree view with sections, items, and file trees.
 // Consumers MUST wrap components in TreeStateProvider.
 
 /**
- * TreeStateContextValue holds the data fields for a TreeStateContextValue record.
+ * 🌳️ TreeStateContextValue holds the data fields for a TreeStateContextValue record.
  **/
 interface TreeStateContextValue {
   openStates: Readonly<Record<string, boolean>>;
@@ -14,12 +14,12 @@ interface TreeStateContextValue {
 }
 
 /**
- * TreeStateContext holds the data fields for a TreeStateContext record.
+ * 🌲️ TreeStateContext holds the data fields for a TreeStateContext record.
  **/
 const TreeStateContext = reactHostPort.createContext<TreeStateContextValue | null>(null);
 
 /**
- * Context provider managing tree expansion state — controlled via `openStates`/`onOpenStateChange` when a host
+ * 🪾️ Context provider managing tree expansion state — controlled via `openStates`/`onOpenStateChange` when a host
  * wants expansion to survive remounts (e.g. persisted across tab switches or reloads); uncontrolled (internal
  * state) otherwise. The map only ever holds explicit toggles — {@link useTreeOpenState}'s `getOpenState` falls
  * back to each item's own `defaultOpen` — so it already is the diff-from-default a host would persist.
@@ -48,7 +48,7 @@ export const TreeStateProvider: React.FC<{
 };
 
 /**
- * Hook returning tree expansion state and toggle functions.
+ * 🪝️ Hook returning tree expansion state and toggle functions.
  **/
 export const useTreeState = () => {
   const context = reactHostPort.useContext(TreeStateContext);

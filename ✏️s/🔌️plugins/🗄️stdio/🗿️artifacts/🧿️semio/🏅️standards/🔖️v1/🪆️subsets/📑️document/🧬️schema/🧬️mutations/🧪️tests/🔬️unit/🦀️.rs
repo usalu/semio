@@ -257,7 +257,6 @@ fn blocks_diff(diff: &SemioDocumentDiff) -> &BlocksDiff {
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
@@ -271,7 +270,6 @@ async fn absorb_law() {
         assert_eq!(triple.added[0].item, DocBlock::paragraph("f"));
     }
 
-    // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);
@@ -284,7 +282,6 @@ async fn absorb_law() {
         assert!(triple.added.iter().any(|a| a.item == DocBlock::paragraph("g")));
     }
 
-    // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("f") }), &base);
@@ -297,7 +294,6 @@ async fn absorb_law() {
         assert_eq!(triple.added[0].item, DocBlock::paragraph("patched"));
     }
 
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(1), run_index: 0, text: "patched".into() }), &base);
@@ -309,7 +305,6 @@ async fn absorb_law() {
         assert_eq!(triple.removed, vec![1]);
     }
 
-    // Associativity over a triple.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(2), block: DocBlock::paragraph("f") }), &base);

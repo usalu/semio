@@ -330,8 +330,8 @@ impl GraphHost {
             }
         }
         if let Some(status_json) = &payload.status_json {
-            let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
-            let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
+            let mut observe=|progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress.total<=64*1024;
+            let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(256*1024,&mut observe);
             if let Ok(statuses)=semio_framework_os_infinite::board::io::text::dag_input::decode_dag_node_statuses_json(status_json,&mut control){set_node_statuses(&mut self.dag.graph, &mut self.dag.paint, &statuses);}
         } else if let Some(computing_json) = &payload.computing_json {
             if let Ok(value) = serde_json::from_str::<Value>(computing_json) {
@@ -353,8 +353,6 @@ impl GraphHost {
     }
 
     pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), NodeGraphError> {
-        // 📦️ Host TS `encodePackValue` is the wire-body twin of `encode_wire_value` (no SPK shell);
-        // accept that first, then fall back to `decode_pack_value` for native pack-shell callers/tests.
         let dsl = store::pack_rt::decode_wire_value(bytes).or_else(|_| store::pack_rt::decode_pack_value(bytes))?;
         let value = store::pack_rt::dsl_value_to_json(dsl);
         self.sync_from_scene_value(&value)
@@ -740,7 +738,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = setCanvasThemeJson)]
         pub fn set_canvas_theme_json(&mut self, json: &str) {
             let mut accepted = |_| true;
-            let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+            let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
             if let Ok(overlay) = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control) {
                 match &mut self.state.borrow_mut().host.dag { __host => dag_set_canvas_palette(&mut __host.viewport, &mut __host.paint, &overlay) };
             }
@@ -768,8 +766,6 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = pointerUpScreen)]
         pub fn pointer_up_screen(&self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
-            // 🕹️ Routed through the `GraphHost` wrapper (not straight to `dag`) so a completed
-            // pick/marquee gesture is captured into `pending_gather` — see `take_selection_gather_json`.
             self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         }
 
@@ -961,7 +957,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<(),JsValue>{
             let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|v|v.as_bool().unwrap_or(false)).unwrap_or(false);
-            let mut decoding=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
+            let mut decoding=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum_bytes as usize,&mut decoding);
             let opts=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(options_json,&mut decode).map_err(|e|JsValue::from_str(&e.to_string()))?;
             let mut working=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut working);
             self.state.borrow_mut().host.dag.graph.reorganize(&opts,&mut work).map_err(|e|JsValue::from_str(&e.to_string()))

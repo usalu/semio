@@ -1,4 +1,4 @@
-//! appended objects/attractions, the placed collision entries the next step tests against, the per-run RNG
+//! ➕️ appended objects/attractions, the placed collision entries the next step tests against, the per-run RNG
 //! 🪣️ Puzzle 3d play app — the fill planner (`FillBuilder`: base scene, the growing plan sequence and its
 //! stream) and the fill tool run's two jobs, [`FillRunJob`] and [`FillRevalidateJob`], which the framework
 //! tool run ledger owns and steps (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS `📋️tool-run-contract.md`

@@ -2,10 +2,17 @@
   "name": "@semio-tech/s-norm-composition-tests",
   "projectType": "library",
   "sourceRoot": "✏️s/🧑‍💻dev/📕️norm",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/**/*"
+    ]
+  },
   "targets": {
     "verify-norm-document-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify norm-document-contract",
@@ -22,7 +29,7 @@
     },
     "verify-norm-results-window-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify norm-results-window-ownership",

@@ -2,7 +2,7 @@ import * as React from "react";
 import { type ContextMenuItem } from "../../🖱️ContextMenu/🎨️item-render/🟦️.tsx";
 import { ContextMenu } from "../../🖱️ContextMenu/🟦️.tsx";
 import { useLabel, useIdLabel, useControlAccessibleLabel } from "../../🏷️Label/🟦️.tsx";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { TreeContext, TreeAlignedRow, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../📏️row-alignment/🟦️.tsx";
 import { useFlow } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useUiDriverDragSurface } from "../../🚗️UiDriver/🟦️.tsx";
@@ -37,7 +37,7 @@ export function shouldDispatchTreeRowPointerLeave(relatedTarget: EventTarget | n
 }
 
 /**
- * Collapsible tree section header with optional action buttons.
+ * 🌳️ Collapsible tree section header with optional action buttons.
  **/
 export const TreeSection: React.FC<TreeSectionProps> = ({
   label,

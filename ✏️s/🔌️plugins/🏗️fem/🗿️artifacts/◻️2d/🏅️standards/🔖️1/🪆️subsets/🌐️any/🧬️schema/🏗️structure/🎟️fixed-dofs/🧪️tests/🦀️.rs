@@ -1,4 +1,5 @@
-use super::*;
+use crate::model::standards::v1::subsets::any::schema::structure::{decode_fixed_dofs, retire_fixed_dofs, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_value::{DslValue,FromValue};
 
 #[derive(semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
@@ -9,7 +10,7 @@ struct FixedDofCase { id:String, input:DslValue, canonical:bool }
 /// 🧪️ Both actual model crates mount this same cold law and neutral canonical corpus.
 #[test]
 fn fixed_dof_boundary_matches_neutral_canonical_sets(){
- let fixture:FixedDofFixture=semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+ let fixture:FixedDofFixture=semio_framework_pack_json::from_json_str(include_str!("../../../../🧪️tests/🧫️fixtures/🎟️fixed-dofs/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  assert_eq!(fixture.version,1);assert_eq!(fixture.order,["Tx","Ty","Tz","Rx","Ry","Rz"]);assert_eq!(fixture.cases.len(),73);
  for row in fixture.cases{
   let result=decode_fixed_dofs(row.input.clone());

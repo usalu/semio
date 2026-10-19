@@ -133,8 +133,6 @@ fn synthetic_orbit_peak_retention() {
     eprintln!("{}", retention(&engine).line("pushed"));
     loop {
         let status = engine.advance(256);
-        // 🔭️ The run job drains observations every continuation; mirror that so `recorded` does not
-        // stand in for the job's own trace buffer.
         engine.drain_observations(&mut drained);
         drained.clear();
         let snapshot = retention(&engine);

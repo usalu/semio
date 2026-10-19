@@ -39,14 +39,12 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     assert_eq!(absorbed.fmt, d1.fmt);
     assert_eq!(absorbed.data, d2.data);
 
-    // Same field twice: last write wins.
     let d3 = diff_set_data(WavData::Raw(vec![1]));
     let d4 = diff_set_data(WavData::Raw(vec![2]));
     let mut lww = d3.clone();
     lww.absorb(d4.clone());
     assert_eq!(lww.data, Some(WavData::Raw(vec![2])));
 
-    // Associativity over a triple.
     let da = diff_set_fmt(sweep_b().fmt);
     let db = diff_set_data(WavData::Pcm8(vec![7]));
     let dc = diff_set_other_chunks(&sweep_a(), vec![RiffChunk { fourcc: "cue ".into(), data: vec![], pad_byte: 0 }]);

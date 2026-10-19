@@ -1,4 +1,4 @@
-//! board and a 3d world, so its placement and suggestion solvers ARE the puzzle 3d fill and brush run jobs: a 5d
+//! 🀄️ board and a 3d world, so its placement and suggestion solvers ARE the puzzle 3d fill and brush run jobs: a 5d
 //! 🧠️ Puzzle 5d play app — the bridge onto the puzzle 3d planners. The 5d document is the unification of a 2d
 //! document is handed to them as the equivalent 3d document (parts as objects, grips as vortices, fasteners as
 //! attractions, and the kind catalogs they place from), and every tick they report is translated back —
@@ -17,10 +17,10 @@ use crate::puzzle_job::JobTurn;
 use semio_framework_job::InteractiveJob;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeBorrow;
-use semio_framework_job::RetainedJobPayload;
+use semio_framework_job_payload::RetainedJobPayload;
 use semio_framework_job::StepBudget;
 use semio_framework_job::StepContext;
-use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::ToolRunJob;
 use semio_framework_tool_run::ToolRunIdentity;
@@ -66,11 +66,11 @@ pub fn puzzle5d_placement_entity(part_id: &str) -> u64 {
 /// of `document`, or the kind meshes and sorted urls when that document cannot be built (no run can start then).
 pub fn puzzle5d_mesh_lane(snapshot: &Puzzle5dPlaySnapshot, document: &Puzzle5dDocument) -> Vec<String> {
     match puzzle5d_authored_kind_catalogs(snapshot).and_then(|catalogs| puzzle3d_snapshot(document, catalogs)) {
-        Ok(snapshot) => world3d::mesh_lane(&puzzle3d_scene_snapshot_from_document(snapshot.typed())),
+        Ok(snapshot) => semio_s_artifact_puzzle_3d_editor_session::mesh_lane(&puzzle3d_scene_snapshot_from_document(snapshot.typed())),
         Err(_) => {
             let mut urls = collect_mesh_urls(document);
             urls.sort();
-            [PUZZLE5D_FALLBACK_MESH_KIND.to_string(), world3d::VORTEX_MARKER_MESH_KIND.to_string()].into_iter().chain(urls).collect()
+            [PUZZLE5D_FALLBACK_MESH_KIND.to_string(), semio_s_artifact_puzzle_3d_editor_snapshot::VORTEX_MARKER_MESH_KIND.to_string()].into_iter().chain(urls).collect()
         }
     }
 }

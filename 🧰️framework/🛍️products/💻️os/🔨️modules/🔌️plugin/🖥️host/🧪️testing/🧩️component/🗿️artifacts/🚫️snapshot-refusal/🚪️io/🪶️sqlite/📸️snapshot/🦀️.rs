@@ -4,7 +4,8 @@ use super::super::super::Snapshot;
 use semio_framework_os_kernel as store;
 use semio_framework_os_kernel::os_pack as pack;
 use semio_framework_os_kernel::sqlite_snapshot::{*,artifact::{Cell,Projection}};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_diagnostic::{Diagnostic,ExpectedSet,FaultCode,FaultScope,Severity,TextSpan};
 const SQL:&str=include_str!("🗄️.sql");
 fn invalid(message:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
@@ -49,7 +50,7 @@ impl store::serialization::ArtifactSqliteSnapshotHost for Snapshot{
   let bytes=match payload{store::io_schema::IoPayload::Text(text)=>text.len(),store::io_schema::IoPayload::Binary(bytes)=>bytes.len()};
   if bytes>c.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"refusal snapshot native input exceeds file ceiling"))}
   c.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-   let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
+   let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
    let before=original.owned_bytes();let maximum_owned=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture native cumulative allowance overflow"));
    let result=maximum_owned.and_then(|maximum|original.scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
     match payload{

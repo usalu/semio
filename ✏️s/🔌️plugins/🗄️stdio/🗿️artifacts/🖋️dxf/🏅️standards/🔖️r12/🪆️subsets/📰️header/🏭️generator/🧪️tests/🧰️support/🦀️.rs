@@ -242,53 +242,36 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
 
     let before = base_doc();
     match id {
-        // 🧬 the `no-mutation` scenario id (no DxfMutation variant of its own) — before==after content.
         "no-mutation-no-op" => Some(RecipeOutput::Pair(before, Some(base_doc()))),
 
 
-        // 🧬 SetHeaderVar{name:"$INSBASE"} — the one generic $VAR `dxf`'s fixed Header struct
-        // persists unconditionally on an R12 save (../../../🔮️oracles/🦀️.rs's own
         // 🔖️HeaderVar note, independently reconfirmed against the generated writer).
         "set-header-var-applied" => {
             let mut after = base_doc();
             after.header.insertion_base = Point::new(50.0, 30.0, 0.0);
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // (no set-header-var-rejected-* recipe — see SET_HEADER_VAR_REJECTED_NOTE)
 
-        // 🧬 RemoveHeaderVar{name:"$INSBASE"} — dispatch resets to Point::origin().
         "remove-header-var-applied" => {
             let mut after = base_doc();
             after.header.insertion_base = Point::origin();
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 RemoveHeaderVar{name:"$SEMIO_TEST_MISSING_VAR"} — a name no real DXF writer emits, so
-        // it is genuinely absent from `base.header_vars`: validate_named_targets's removal path
-        // requires `unique(key)` (occurrences == Some(1)); an absent key is `None`, not `Some(1)`,
-        // so this is `invalid-remove-target` (🔺️diff/🦀️.rs:1551) regardless of which
-        // reference library reads the bytes — a carrier-independent rejection.
         "remove-header-var-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
 
-        // 🧬 InsertLayer{index:1, layer:"MARKERS"} — a name that does not yet exist, at a valid index.
         "insert-layer-applied" => {
             let mut after = base_doc();
             insert_layer_at(&mut after, 1, Layer { name: "MARKERS".to_string(), color: Color::from_index(6), line_type_name: "CONTINUOUS".to_string(), ..Default::default() });
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 InsertLayer{index:1, layer:"0"} — "0" already exists in the base layer table:
-        // validate_named_targets's add-path rejects any `present(key)` name — `invalid-add-target`.
         "insert-layer-rejected-duplicate" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 RemoveLayer{name:"DIMS"} — the unique, present target.
         "remove-layer-applied" => {
             let mut after = base_doc();
             let at = after.layers().position(|l| l.name == "DIMS").expect("DIMS present");
             after.remove_layer(at);
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 RemoveLayer{name:"GHOST_LAYER"} — absent: `invalid-remove-target`.
         "remove-layer-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 SetLayer{name:"DIMS", layer:{color:4, linetype:"DASHED"}} — whole-value replace of the
-        // named row (colour changes; linetype restated).
         "set-layer-applied" => {
             let mut after = base_doc();
             if let Some(slot) = after.layers_mut().find(|l| l.name == "DIMS") {
@@ -297,30 +280,21 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
             }
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 SetLayer{name:"GHOST_LAYER", ..} — `diff_set_layer` ALWAYS emits a `modified` entry
-        // (unlike SetHeaderVar, `layer_field_changes(&old.unwrap_or_default(), layer)` runs
-        // regardless of presence — 🧬️mutations/🦀️.rs:247-250); absent name fails the modify path's
-        // `unique(key)` check — `invalid-modify-target`.
         "set-layer-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
 
-        // 🧬 InsertStyle{index:1, style:"LABELS"} — new name, valid index.
         "insert-style-applied" => {
             let mut after = base_doc();
             insert_style_at(&mut after, 1, Style { name: "LABELS".to_string(), primary_font_file_name: "arial.ttf".to_string(), text_height: 2.5, ..Default::default() });
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 InsertStyle{index:1, style:"STANDARD"} — duplicate of the base's own row.
         "insert-style-rejected-duplicate" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 RemoveStyle{name:"NOTES"}.
         "remove-style-applied" => {
             let mut after = base_doc();
             let at = after.styles().position(|s| s.name == "NOTES").expect("NOTES present");
             after.remove_style(at);
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 RemoveStyle{name:"GHOST_STYLE"} — absent.
         "remove-style-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 SetStyle{name:"NOTES", style:{font:"arial.ttf"}} — font changes from "romans.shx".
         "set-style-applied" => {
             let mut after = base_doc();
             if let Some(slot) = after.styles_mut().find(|s| s.name == "NOTES") {
@@ -328,28 +302,21 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
             }
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 SetStyle{name:"GHOST_STYLE", ..} — same always-modifies shape as SetLayer; absent name
-        // fails `unique(key)` — `invalid-modify-target`.
         "set-style-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
 
-        // 🧬 InsertLinetype{index:1, linetype:"CENTER"} — new name, valid index.
         "insert-linetype-applied" => {
             let mut after = base_doc();
             insert_linetype_at(&mut after, 1, LineType { name: "CENTER".to_string(), description: "Center line".to_string(), ..Default::default() });
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 InsertLinetype{index:1, linetype:"CONTINUOUS"} — duplicate of the base's own row.
         "insert-linetype-rejected-duplicate" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 RemoveLinetype{name:"DASHED"}.
         "remove-linetype-applied" => {
             let mut after = base_doc();
             let at = after.line_types().position(|l| l.name == "DASHED").expect("DASHED present");
             after.remove_line_type(at);
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 RemoveLinetype{name:"GHOST_LTYPE"} — absent.
         "remove-linetype-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 SetLinetype{name:"DASHED", linetype:{description:"Dash pattern"}}.
         "set-linetype-applied" => {
             let mut after = base_doc();
             if let Some(slot) = after.line_types_mut().find(|l| l.name == "DASHED") {
@@ -357,30 +324,20 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
             }
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 SetLinetype{name:"GHOST_LTYPE", ..} — same always-modifies shape; absent name fails
-        // `unique(key)` — `invalid-modify-target`.
         "set-linetype-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
 
-        // 🧬 InsertEntity{index:2, entity:circle} — valid index (<= current length 7).
         "insert-entity-applied" => {
             let mut after = base_doc();
             insert_entity_at(&mut after, 2, on_layer("0", EntityType::Circle(Circle { center: Point::new(1200.0, 100.0, 0.0), radius: 30.0, ..Default::default() })));
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 InsertEntity{index:99, ..} — 99 > the evolving length (7): `validate_indexed_targets`'s
-        // add-path rejects `index > length` — `invalid-add-index`.
         "insert-entity-rejected-out-of-bounds" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 RemoveEntity{index:3} — the ARC, a valid middle target.
         "remove-entity-applied" => {
             let mut after = base_doc();
             after.remove_entity(3);
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 RemoveEntity{index:99} — 99 >= base length (7): `invalid-remove-index`.
         "remove-entity-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 SetEntity{index:5, entity:text} — index 5 (the TEXT) exists, so `diff()` takes the
-        // `Some(old) => diff_set_entity(...)` branch (🧬️mutations/🦀️.rs:268-271): a genuine
-        // whole-value replace, not the insert-fallback.
         "set-entity-applied" => {
             let mut after = base_doc();
             if let Some(slot) = after.entities_mut().nth(5) {
@@ -389,31 +346,20 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
             }
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 SetEntity{index:99, ..} — 99 is absent, so `diff()` takes the `None =>
-        // diff_insert_entity(*index, ..)` FALLBACK (🧬️mutations/🦀️.rs:268-271) — an out-of-bounds
-        // insert, not a "missing target": 99 > the evolving length (7), so
-        // `validate_indexed_targets`'s add-path rejects it the same way `insert-entity` does.
         "set-entity-rejected-out-of-bounds" => Some(RecipeOutput::Pair(before, None)),
 
-        // 🧬 InsertBlock{index:1, block:"BENCH_MARK"} — valid index (<= current length 2).
         "insert-block-applied" => {
             let mut after = base_doc();
             insert_block_at(&mut after, 1, Block { name: "BENCH_MARK".to_string(), layer: "0".to_string(), base_point: Point::new(0.0, 0.0, 0.0), entities: vec![on_layer("0", EntityType::Line(Line { p1: Point::new(0.0, 0.0, 0.0), p2: Point::new(100.0, 0.0, 0.0), ..Default::default() }))], ..Default::default() });
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 InsertBlock{index:99, ..} — 99 > the evolving length (2): `invalid-add-index`.
         "insert-block-rejected-out-of-bounds" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 RemoveBlock{index:1} — "BENCH", a valid target.
         "remove-block-applied" => {
             let mut after = base_doc();
             after.remove_block(1);
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 RemoveBlock{index:99} — 99 >= base length (2): `invalid-remove-index`.
         "remove-block-rejected-missing" => Some(RecipeOutput::Pair(before, None)),
-        // 🧬 SetBlock{index:0, ..} — index 0 ("SHELTER_POST") exists, so `diff()` takes the
-        // `Some(old) => diff_set_block(...)` branch: a genuine whole-value replace of base
-        // point + nested entities.
         "set-block-applied" => {
             let mut after = base_doc();
             if let Some(slot) = after.blocks_mut().nth(0) {
@@ -422,8 +368,6 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
             }
             Some(RecipeOutput::Pair(before, Some(after)))
         }
-        // 🧬 SetBlock{index:99, ..} — 99 is absent, falls back to `diff_insert_block(99, ..)`; 99 >
-        // the evolving length (2), so the fallback's own add-path rejects it — `invalid-add-index`.
         "set-block-rejected-out-of-bounds" => Some(RecipeOutput::Pair(before, None)),
 
         _ => None,

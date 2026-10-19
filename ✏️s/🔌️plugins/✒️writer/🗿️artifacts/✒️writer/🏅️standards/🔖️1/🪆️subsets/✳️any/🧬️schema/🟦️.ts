@@ -2,17 +2,17 @@
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface WriterArtifact {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🆔️ @state artifact */
   id: string;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   languageId: string;
-  /** @state artifact */
+  /** 🛰️ @state artifact */
   uri: string;
-  /** @state artifact */
+  /** 🔡️ @state artifact */
   text: string;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 📄️ @state artifact @child kind=s.stdio.semio */
   document: ArtifactChild;
 }
 

@@ -1,6 +1,7 @@
 //! 🎛️ Closed Diagnostic projection with caller-owned admission and bounded borrowed field scans.
 use super::*;
-use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, Number};
+use semio_framework_value::{DecodedValue, NativeEncodeControl, Number};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 type Fields = DecodedValue<Vec<(String, DslValue)>>;
 
 fn fields<'a, const N: usize>(value: &'a DslValue, names: [&str; N], c: &mut NativeDecodeControl<'_>) -> Result<[Option<&'a DslValue>; N], ValueError> {

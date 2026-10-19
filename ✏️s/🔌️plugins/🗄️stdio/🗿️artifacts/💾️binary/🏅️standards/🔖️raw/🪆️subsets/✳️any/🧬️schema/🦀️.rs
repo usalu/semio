@@ -26,19 +26,16 @@ impl Default for BinaryArtifact {
 
 impl BinaryArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> BinarySnapshot {
         BinarySnapshot { schema: self.schema.clone(), bytes: self.bytes.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: BinarySnapshot) -> Self {
         Self { schema: snapshot.schema, bytes: snapshot.bytes }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: BinarySnapshot) {
         self.schema = snapshot.schema;
         self.bytes = snapshot.bytes;

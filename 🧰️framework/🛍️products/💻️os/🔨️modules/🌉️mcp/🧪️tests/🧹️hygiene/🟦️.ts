@@ -58,8 +58,6 @@ describe("semio-os-mcp — stdio hygiene", () => {
     try {
       await proc.request("ping");
       proc.writeRaw("not json at all, a stray diagnostic-looking line");
-      // The malformed line still produces exactly one PARSE_ERROR response line — wait for it
-      // before sending the next well-formed request, so line order stays deterministic.
       await proc.nextLine();
       await proc.request("server/discover", {});
       await proc.request("tools/list", {});

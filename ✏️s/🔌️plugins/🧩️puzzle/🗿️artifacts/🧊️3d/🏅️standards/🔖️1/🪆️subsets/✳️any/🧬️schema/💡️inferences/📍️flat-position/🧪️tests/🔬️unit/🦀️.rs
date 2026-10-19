@@ -15,7 +15,6 @@ fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Ve
 }
 
 pub fn chain_snapshot() -> Puzzle3dSnapshot {
-    // root -A- mid -B- leaf: a 3-object chain so an ancestor change propagates to a grandchild.
     let root = object("root", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Fixed, vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     let mut mid = object("mid", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0]), vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     mid.anchor = Puzzle3dObjectAnchor::Derived;
@@ -42,7 +41,7 @@ async fn changing_a_leaf_own_vortex_does_not_recompute_ancestors() {
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut cache));
 
     let mut changed = base.clone();
-    changed.objects[2].vortices[0].position = [0.0, 0.0, -5.0]; // leaf's own vortex moves
+    changed.objects[2].vortices[0].position = [0.0, 0.0, -5.0];
     let before = (cache.stats()).await;
     let planes = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&changed, Some(&mut cache));
     let after = (cache.stats()).await;
@@ -58,7 +57,7 @@ async fn changing_the_root_position_recomputes_the_whole_chain() {
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut cache));
 
     let mut changed = base.clone();
-    changed.objects[0].origin = [9.0, 9.0, 9.0]; // root moves
+    changed.objects[0].origin = [9.0, 9.0, 9.0];
     let before = (cache.stats()).await;
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&changed, Some(&mut cache));
     let after = (cache.stats()).await;
@@ -73,7 +72,7 @@ async fn changing_an_attraction_center_param_never_touches_the_plane_chain() {
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&base, Some(&mut plane_cache));
 
     let mut changed = base.clone();
-    changed.attractions[0].x = 42.0; // center-only param
+    changed.attractions[0].x = 42.0;
     let before = (plane_cache.stats()).await;
     let _ = store::infer_field::<Puzzle3dSnapshot, Puzzle3dFlatPlane>(&changed, Some(&mut plane_cache));
     let after = (plane_cache.stats()).await;

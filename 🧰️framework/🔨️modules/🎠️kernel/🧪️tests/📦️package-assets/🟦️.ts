@@ -17,7 +17,7 @@ import { descriptorPackageAssets, fetchDescriptorManifest } from "../../🛂️d
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { ShardClient, type ShardBudget } from "@semio-tech/framework-actor/shard-client";
 import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
-import { renderTextFontsFixtureUrl } from "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { renderTextFontsFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
 import { canvasRuntimeAssetsFixtureUrl } from "@semio-tech/framework-canvas-ts/testing/fixtures";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -61,7 +61,7 @@ function capturingShardClient(posted: unknown[]): ShardClient {
 
 /** 🪶️ The worker's own splice, taken from its source text so the test runs the shipped code, not a copy. */
 function workerSplice(): (entry: { pendingAssets: unknown[] }, events: unknown[]) => any[] {
-  const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts"), "utf8");
+  const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🔌️actor-loading-and-replies/🟦️.ts"), "utf8");
   const start = source.indexOf("function spliceInstanceOpenAssets(");
   const end = source.indexOf("\n}\n", start) + 3;
   return new Function(`${source.slice(start, end).replaceAll("\\`", "`")}; return spliceInstanceOpenAssets;`)() as never;

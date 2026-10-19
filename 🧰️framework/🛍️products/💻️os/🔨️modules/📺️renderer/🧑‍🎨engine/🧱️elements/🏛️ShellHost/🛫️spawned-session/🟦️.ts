@@ -95,10 +95,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
   } = core;
   const refreshSpawnedUiPass = useCallback(
     async (spawned: SpawnedAppEntry, viewState: ViewModel) => {
-      // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — same fix as `refreshUi`
-      // above: reads `loadedPluginsRef.current` instead of closing over `loadedPlugins`, so this
-      // callback's identity (and every effect that lists it in a deps array) stops churning on every
-      // unrelated background catalogue plugin load.
       const loadedPlugins = loadedPluginsRef.current;
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
       const plugin = pluginEntry?.handle;
@@ -118,15 +114,8 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
         spawnedUiRefreshCacheRef.current = new Map();
       }
       const cache = spawnedUiRefreshCacheRef.current;
-      // 🪟️ EVERY window the spawned app declares, not just its canvas body: a spawned program is a
-      // member of this session and owns all of its own windows. The guest is addressed by its OWN
-      // window instance ids (its window kind ids — it has exactly one instance), while the shell keys
-      // them under `${spawnedId}::` so two spawned instances of one app cannot collide
-      // (`🪟️spawned-program`).
       const windowKinds = spawnedGuestWindowInstancesV1(app.windowKinds, frameworkLayoutDeclaredInstances(app.defaultLayout, app.windowKinds));
       const guestActiveWindowId = guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current) ?? resolveCanvasBodyKey(app);
-      // 🧩️ A spawned instance reads contributions from the registry the paged `setContributions` run
-      // installed, exactly like a primary session — the view context carries none.
       const fullViewState: ViewModel = injectActiveUtility(
         {
           ...spawnedProgramViewStateV1(viewState, app),
@@ -197,24 +186,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
     [],
   );
 
-  // 🐢️ Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
-  // a genuine session switch (app open/spawn/instance change) — every other action already calls
-  // `refreshUi` explicitly via `applyHostEffects`, and re-running it here too on every `session` object
-  // churn was a second, redundant full-shell refresh cascade per interaction.
-  // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
-  // from this effect's own deps (mirrors `refreshUi`'s own fix above, and lane 5-A's `readHistory`
-  // effect fix, line ~992): a session can only exist for an already-loaded plugin (nothing sets
-  // `session`/`sessionIdentityKey` for a plugin still mid-load), so this effect never needed to refire
-  // on unrelated background catalogue loads in the first place — `refreshUi` itself now reads
-  // `loadedPluginsRef.current` at call time regardless. Before this fix, `loadedPlugins` getting a new
-  // array reference on every one of the ~50+ sequential background plugin loads during boot re-ran this
-  // effect that many times for the SAME already-open session, each dispatching a fresh top-level
-  // `refreshUi` against the wasm guest's single-flight `InstanceGuard` — live-confirmed as the dominant
-  // contributor to the `plugin.internal: plugin instance busy` storm blocking collab-e2e STEP 2.
-  // 🪪️ The signed-in human is tracked beside the app/instance triple, not inside it: a changed triple is a live session that
-  // only needs re-rendering, while a changed HUMAN is recovered by the human-change effect below
-  // ({@link shellHumanChangeRecoveryV1}) — re-rendered for a first human or a new display name, established again for
-  // another human. `resolvedTargetViewState` stamps `sessionIdentity` from `identityRef.current` at plugin-call time.
   const sessionTripleKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
   const sessionHumanKey = `${identity?.userId ?? ""}:${identity?.displayName ?? ""}`;
   useEffect(() => {
@@ -241,10 +212,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
       const fault = liveInstanceWindowFaultV1(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId], isPluginInstanceRetiredV1);
       if (fault !== null) dispatch({ type: "SET_SPAWNED_WINDOW_ACTIVITY", value: {}, fault });
     });
-    // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
-    // (same reasoning as the session-refresh effect above): `refreshSpawnedUi` now reads
-    // `loadedPluginsRef.current` at call time, and a spawned instance can only exist for an
-    // already-loaded plugin, so this never needed to refire on unrelated background catalogue loads.
   }, [panel, refreshSpawnedUi, refreshSpawnedUiPass, session, hostMode]);
 
   /** 🪟️ The session layout the shell was showing when a spawned program took the canvas — restored
@@ -253,20 +220,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
   const sessionLayoutBeforeSpawnRef = useRef<{ readonly layout: WindowLayoutNode | null; readonly activeWindowId: string | null } | null>(null);
   const focusedProgramKey = focusedProgramKeyV1(focusedProgram);
   const seededFocusedProgramKeyRef = useRef<string>("");
-  /**
-   * 🪟️ Seeds the canvas for whichever program owns it. THIS is what makes a spawned program a member
-   * of the session rather than a breadcrumb: `Mode` prunes every layout leaf whose id is absent from
-   * the window list it is handed (`resolveModeLayout` → `reconcileWindows`), so a spawned program
-   * whose windows were never put into `shellLayout` reconciled the host app's leaves away and painted
-   * the empty-shell notice — measured verbatim on the real `s` host as "Drag windows from Display in
-   * the navbar, or restore a saved layout" with `[data-window-id] = []`
-   * (ticket 26/09/18, S4 §5.2). The spawned app's OWN declared default layout is used, renamed into
-   * that instance's window-id namespace, so a two-window foreign editor opens as its author declared.
-   *
-   * 🚦️ Keyed on the focused PROGRAM, never on `session` identity: an ordinary refresh must not
-   * re-seed, or every action would throw the live arrangement away.
-
-   */
   useEffect(() => {
     if (!session) return;
     if (seededFocusedProgramKeyRef.current === focusedProgramKey) return;
@@ -274,7 +227,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
     seededFocusedProgramKeyRef.current = focusedProgramKey;
     if (previous !== "" && activeToolIdRef.current) writeToolRegister(null, null);
     if (focusedSpawnedId !== null && focusedApp !== null) {
-      // 🪟️ Leaving the session's own canvas — remember it before the spawned seed replaces it.
       if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayout ?? null, activeWindowId: activeWindowIdRef.current };
       const seed = resolveFrameworkLayoutSeed(focusedApp.defaultLayout, withLocalizedWindowKindLabels(focusedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
       const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds, frameworkLayoutDeclaredInstances(focusedApp.defaultLayout, focusedApp.windowKinds))) as WindowLayoutNode;
@@ -293,15 +245,9 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
     const seed = resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
     dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
     dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seed.modeLayout) });
-    // 🐢️ `shellLayout` is read, not depended on: this effect fires on a focused-PROGRAM change only,
-    // and listing the live layout would re-enter it on every drag the user makes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale, writeToolRegister]);
 
-  /** ⌨️ A program the user just opened takes keyboard focus once its active window has mounted — its dock tabpanel,
-   * the same stop a pointer click lands on — but only while nothing else holds focus. Opening a program from the
-   * command palette used to leave focus on `<body>`, so the next Tab restarted at the navbar instead of inside the
-   * program the user asked for (WCAG 2.2 SC 2.4.3, measured inside `s`, ticket 26/09/23 S15). */
   useEffect(() => {
     if (focusedSpawnedId === null) return;
     let frames = 0;
@@ -388,20 +334,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
     });
   }, [sessionHumanKey, establishPrimaryWithShardRetry, retireSessionInstance, refreshUi, reportRefreshFault]);
 
-  // 🏠️🧳️👁️✏️ Generalised from the host-only `switchToManagedApp`: switches the mounted session to ANY
-  // loaded plugin's app by `(pluginId, appId)`, so the navbar role group can swap a playground between
-  // `…#editor` and `…#viewer` the same way studio mode swaps its landing/host apps. The host-only
-  // bookkeeping (`openSpaceIdRef`/`openInstanceIdRef` reset on the landing app) stays behind an
-  // explicit `hostMode` guard rather than being reachable from a non-host switch.
-  //
-  // 🪦️ TRANSACTIONAL since 26/09/09/PROCEDURAL-3D-END-TO-END: the whole switch runs through
-  // `sessionSwitchGateRef` (one at a time) and starts with a `quiesce` pass over `sessionWorkRef`, so
-  // the predecessor is never torn down under its own in-flight typed operations and extension
-  // invocations — the mid-chain tear-down measured on 6018, where `⌘️⌥️V` pressed during an
-  // `interactionSelect`/`flow-extension-brep evaluate` round trip revoked instance 1's activation and
-  // left every later action failing with `no actor for instance 1`
-  // (`🗑️generated/journey-3/console.txt`). `seal` runs before the close ladder because the ladder's own
-  // first step already revokes the actor.
   const switchToPluginApp = useCallback(
     async (pluginId: string, appId: string, viewState?: ViewModel, documentSource?: ActiveSession): Promise<ActiveSession | null> => {
       const defaultViewState = (app: AppDefinition): ViewModel => ({ activeModeId: app.defaultModeId ?? app.modes[0]?.id, ...(hostMode ? { panelJson: panelJsonFromState(buildSpacePanelState([], requiredHostPanelLeafId(hostApp))) } : {}) });
@@ -414,8 +346,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
             appId: (app) => app.id,
             quiesce: async (retiring) => {
               const quiet = await quiesceSessionWorkV1(() => sessionWorkRef.current.pending(retiring.pluginId, retiring.instanceId));
-              // ⏳️ A refusal has to name what it waited on, or the next person reading the console sees
-              // only a number and cannot tell a stuck guest turn from a stuck extension round trip.
               if (!quiet.settled) console.warn(`surface-switch draining ${retiring.pluginId}#${retiring.instanceId} ${sessionWorkRef.current.outstanding(retiring.pluginId, retiring.instanceId)}`);
               return quiet;
             },
@@ -455,8 +385,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
               });
             },
             retire: retireSessionInstance,
-            // 🪶️ The empty studio panel belongs to `hostMode` only: a non-host playground's boot session
-            // carries no `panelJson` at all, so a role switch must not invent one either.
             defaultViewState,
             publish: (next) => dispatch({ type: "SET_SESSION", value: { ...next,documentInitialized: documentSource !== undefined } }),
             seedLayout: (app) => {
@@ -476,10 +404,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
           { pluginId, appId, viewState },
           (retired, retireError) => console.warn(`switchToPluginApp: predecessor ${retired.pluginId}/${retired.app.id} retirement failed`, retireError),
         );
-        // 🚦️ `draining` and `busy` both mean "the switch did NOT happen": the predecessor kept its
-        // instance and the shell kept its surface. Telling the user so is the whole difference between
-        // a refusal and a silent no-op — the alternative the fixture rules out is tearing the
-        // predecessor down under its own in-flight work.
         if (outcome.status === "draining" || outcome.status === "busy") {
           showTransientNoticeRef.current(surfaceSwitchBusyTextV1(uiLocale), "info");
           return null;
@@ -537,12 +461,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
     [loadedPlugins, session, syncSpawnedPluginDocument, hostApp],
   );
 
-  /**
-   * 🐚️ Consumes a plugin action's typed `requestedEffects: Effect[]` (WS-D's `InvocationResponse`) —
-   * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocument`-mirror
-   * backbone-write block is gone entirely: document content sync now flows through
-   * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
-   */
   useEffect(() => {
     const services = documentServices.filter((presentation) => loadedPlugins.some((entry) => entry.handle.pluginId === presentation.owner && (entry.manifest.topicContributions ?? []).some((topic) => {
       if (topic.topic !== DOCUMENT_SERVICE_TOPIC_V1) return false;
@@ -629,11 +547,6 @@ export function useSpawnedSession(core: ShellCoreAfterContributionsAndRefresh) {
       if ("requestServiceOperation" in effect) await requestServiceOperation(entry.session, effect.requestServiceOperation, current);
       else window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
     });
-    // 🖼️ Wave B9 lane 4: this is the ONE dispatch route that carries no `UiDirtyScope` of its own and
-    // publishes no `OperationCompleted` frame for the verbs that commit inline, so without this the
-    // document changes and nothing repaints until some later, unrelated action refreshes — `paste`
-    // reached the world lane at +12 s in the browser (wave B6 §3). `browserActorDispatchUiScopeV1`
-    // answers `none` for a refusal or a zero-mutation action, and `refreshUi` returns immediately on it.
     const actionId = "actionId" in invocation.address ? invocation.address.actionId : undefined;
     applyLeftoverInteractionView(("output" in result ? (result as { output?: unknown }).output : undefined) ?? null);
     const dirty = browserActorWindowConfigDispatchUiScopeV1(result, actionId);

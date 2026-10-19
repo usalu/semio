@@ -10,19 +10,19 @@ pub struct DiscoveredGrammarFacet {
     pub standard: Option<String>,
     pub is_stdio: bool,
     pub file_path: PathBuf,
-    /// Repo-relative `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>` — what `pilot_resolve`'s
+    /// 🗂️ Repo-relative `✏️s/🔌️plugins/<plugin>/🗿️artifacts/<artifact>` — what `pilot_resolve`'s
     /// example-asset functions expect as their `artifact_rel` argument.
     pub artifact_rel: String,
-    /// `<plugin>::<artifact>` (or `<plugin>::<artifact>::<standard>`) — used in failure messages.
+    /// 🏷️ `<plugin>::<artifact>` (or `<plugin>::<artifact>::<standard>`) — used in failure messages.
     pub label: String,
 }
 
 /// 🧩️ Which sibling-fixture convention a discovered protocol facet expects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ProtocolFacetKind {
-    /// `🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio` + sibling `.pack.semio`.
+    /// 🗜️ `🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio` + sibling `.pack.semio`.
     Pack,
-    /// `🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio` + sibling `.spr.semio`.
+    /// 👶️ `🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio` + sibling `.spr.semio`.
     Spr,
 }
 
@@ -218,7 +218,7 @@ pub enum ConformanceFacet {
     ProtocolSpr,
 }
 
-/// Append-only. `("🎞️gif", "🔖️89a", ConformanceFacet::Grammar)` is the shape a graduating
+/// 🗄️ Append-only. `("🎞️gif", "🔖️89a", ConformanceFacet::Grammar)` is the shape a graduating
 /// FG-wave would add once gif 89a's real grammar+fixture pair lands and passes for real.
 ///
 /// 🎓️ P2-PC (pilot closer) graduation: the 6 P1-P3 pilots (json/csv/zip/png/txt/binary)

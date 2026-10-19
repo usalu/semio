@@ -57,5 +57,5 @@ macro_rules! receive{
  }
  };
 }
-receive!(decoding,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot);
+receive!(decoding,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot);
 receive!(encoding,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot);

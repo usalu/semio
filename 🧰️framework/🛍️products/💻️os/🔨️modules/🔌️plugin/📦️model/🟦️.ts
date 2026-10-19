@@ -16,7 +16,7 @@ import type {SemanticDescriptorEmissionV1} from "../🖨️describe/🛂️descr
 import { CATALOG_DESCRIPTOR_MAX_BYTES } from "@semio-tech/plugin-registry/catalog-verification";
 import { verifySemanticDescriptorPairBytesV1 } from "@semio-tech/plugin-registry/catalog-verification/descriptor-pair";
 import { encodeComponentReceiptV1, componentReceiptBindsV1, COMPONENT_PROFILE_POLICIES } from "../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
-import { type ComponentReceiptV1 } from "../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
+import { type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
 import { artifactsReadingSchema as inspectionSchema } from "@semio-tech/repo-lib/artifacts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

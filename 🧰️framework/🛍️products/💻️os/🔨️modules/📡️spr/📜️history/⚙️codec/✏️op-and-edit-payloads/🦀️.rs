@@ -95,22 +95,13 @@ pub async fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mu
     if let Some(hash) = &meta.payload_hash {
         out.write_bytes(hash);
     }
-    // 🎯️ Appended past the pre-existing tail (bit4 of the same presence byte) — a decoder reading
-    // a byte-log written before this field existed sees bit4 unset (that bit never existed in the
-    // old presence byte, so it always tests as 0) and recovers `group_id: None`.
     if let Some(group_id) = &meta.group_id {
         write_id_field(out, group_id, dict, edit_ordinal_of).await?;
     }
-    // 🎯️ Appended past `group_id` (bit5 of the same presence byte, same "absent for logs predating
-    // this field" contract) — canonical-JSON, not dict-interned: unlike `group_id`, an origin's
-    // `Contributed`/`Transaction` payload is structured data that won't repeat verbatim across
-    // siblings the way a shared composite-gesture id does.
     if !meta.origin.is_owner() {
         let encoded = semio_framework_pack_json::to_json_string(&meta.origin);
         write_str_field(out, &encoded).await;
     }
-    // 🎯️ Appended past `origin` (bit6 of the same presence byte, same "absent for logs predating
-    // this field" contract) — the durable message ledger, not reproducible from a fresh replay.
     if !meta.messages.is_empty() {
         out.write_varint_u64(meta.messages.len() as u64);
         for message in &meta.messages {

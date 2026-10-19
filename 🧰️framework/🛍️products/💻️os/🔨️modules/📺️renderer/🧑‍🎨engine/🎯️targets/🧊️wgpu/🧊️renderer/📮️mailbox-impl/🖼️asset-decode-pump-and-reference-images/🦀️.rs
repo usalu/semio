@@ -255,7 +255,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         if token.is_some_and(|token| token != job.token) {
             return true;
         }
-        if !matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
+        if !matches!(job.close_step(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
             return false;
         }
         *slot = None;

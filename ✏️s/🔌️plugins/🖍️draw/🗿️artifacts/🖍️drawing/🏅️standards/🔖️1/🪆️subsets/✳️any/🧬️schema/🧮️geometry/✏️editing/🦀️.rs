@@ -24,7 +24,7 @@ impl PathGeometrySource for Vec<PathSegment> {
     fn path_segment(&self, index: usize) -> Option<&PathSegment> { self.get(index) }
 }
 
-impl<const N: usize> PathGeometrySource for semio_framework_value::list::PagedList<PathSegment, N> {
+impl<const N: usize> PathGeometrySource for semio_framework_value_persistent::list::PagedList<PathSegment, N> {
     fn path_len(&self) -> usize { self.len() }
     fn path_segment(&self, index: usize) -> Option<&PathSegment> { self.get(index) }
 }

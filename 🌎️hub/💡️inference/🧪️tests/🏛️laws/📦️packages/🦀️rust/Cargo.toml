@@ -40,6 +40,7 @@ semio-s-artifact-gis-gismap = { workspace = true }
 blake3 = "1"
 semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-hub-inference = { workspace = true, features = ["testkit", "integration-fixtures"] }

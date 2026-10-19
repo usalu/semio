@@ -60,7 +60,7 @@ impl ArtifactCanonicalJsonScalarBytes {
             ArtifactCanonicalJsonNode::U128(value) => write!(self, "{value}").map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue,"canonical scalar fixed output refused")),
             ArtifactCanonicalJsonNode::F32HexWord(value) => write!(self, "\"{:08x}\"", value.to_bits()).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue,"canonical scalar fixed output refused")),
             ArtifactCanonicalJsonNode::F32(value) => semio_framework_value::serde_json::to_writer(&mut *self, &value).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue,"canonical scalar fixed output refused")),
-            ArtifactCanonicalJsonNode::F64(value) => crate::write_float_to(value, &mut *self).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue,"canonical scalar fixed output refused")),
+            ArtifactCanonicalJsonNode::F64(value) => semio_framework_pack_json_float::write_float_to(value, &mut *self).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue,"canonical scalar fixed output refused")),
             _ => return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"canonical-edit.invalid-typed-path")),
         };
         result.map_err(|error|error.with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:usize::from(self.length!=0),copied_bytes:self.length,..Default::default()}))?;

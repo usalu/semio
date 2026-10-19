@@ -1144,7 +1144,6 @@
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml": "isolated",
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml": "runtime",
-    "✏️s/🔌️plugins/🔱️trinity/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust/Cargo.toml": "isolated",
     "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/📦️packages/🦀️rust/Cargo.toml": "isolated",

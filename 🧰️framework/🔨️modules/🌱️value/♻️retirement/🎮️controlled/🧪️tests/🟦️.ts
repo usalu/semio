@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve, join, dirname } from "node:path";
 import { applyPatch as applyJsonPatch, type Operation } from "fast-json-patch";
 import { Database } from "bun:sqlite";
-import { inspectRustPathMounts } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { inspectRustPathMounts } from "@semio-tech/framework-compiler-rs/syntax/module-tree";
 import { between, readRetirementCopyDemandLaw, readRetirementPhysicalWorkLaw, retirementCopyDemand } from "../../🧪️tests/🧫️fixtures/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../../..");
@@ -194,7 +194,7 @@ test("cold shared retirement keeps logical work separate from exact physical bac
 
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text);expect(Buffer.byteLength(row.text,"utf8")).toBe(bytes.byteLength);expect(bytes.byteLength<=row.capacity).toBe(true);for(const work of law.workBytes){let remaining=bytes.byteLength,turns=0;while(remaining){remaining-=Math.min(remaining,work);turns++;}expect(turns<=law.maximumTurns).toBe(true);const owner={capacity:row.capacity,text:row.text};expect(patched(owner,[{op:"remove",path:"/text"}])).toEqual({capacity:row.capacity});}}
  expect(Math.ceil(law.buffer.bytes/law.buffer.workBytes)+4).toBe(law.buffer.maximumTurns);
- const shared=between(readFileSync(join(owner,"♻️retirement/🔗️arc-custody/🦀️.rs"),"utf8"),"RetirementCursor for SharedControlledRetirement<T>","RetireOwned for Arc<T>");expect(shared).toContain("fn next_close_byte_demand(");expect(shared).toContain("Arc::try_unwrap(source)");expect(shared).toContain("owned.step(grant)");
+ const shared=between(readFileSync(join(owner,"♻️retirement/🔗️arc-custody/🦀️.rs"),"utf8"),"impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {","RetireOwned for Arc<T>");expect(shared).toContain("fn next_close_byte_demand(");expect(shared).toContain("Arc::try_unwrap(source)");expect(shared).toContain("owned.step(grant)");
 });
 
 test("original controlled reservation failure saves actual retained allocation before error",()=>{

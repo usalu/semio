@@ -1,7 +1,7 @@
 /** 🧬️ Playground artifact schema — every field with its state class. */
 
 export interface PlaygroundArtifact {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
 }
 

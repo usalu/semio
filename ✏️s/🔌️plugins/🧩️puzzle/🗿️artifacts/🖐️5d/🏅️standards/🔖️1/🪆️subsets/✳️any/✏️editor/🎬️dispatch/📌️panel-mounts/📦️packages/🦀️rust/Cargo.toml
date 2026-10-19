@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-puzzle-5d-dispatch-panels"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 5d editor panel mounts"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-catalog = { path = "../../../../🗂️catalog/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-document-records = { path = "../../../../../🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-8 = { path = "../../../../../🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-tests = { path = "../../../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

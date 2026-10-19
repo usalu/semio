@@ -31,6 +31,7 @@ semio-framework-pack-record-encode = { path = "../../🛫️encode/📦️packag
 semio-framework-pack-record-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }

@@ -53,12 +53,6 @@ mod oracles {
             Parameter::Omitted => Json::Object(vec![("t".to_string(), Json::String("derived".to_string()))]),
             Parameter::Integer(i) => tv("integer", Json::Number(*i as f64)),
             Parameter::Real(r) => tv("real", Json::Number(*r)),
-            // 🔤️ A Part-21 string ARGUMENT is the value the literal DENOTES, not the literal.
-            // `ruststep`'s `string` combinator is `many0(none_of("'"))` — it decodes no control
-            // directive at all — so passing its text straight through compared ENCODINGS and made
-            // two conformant writers that spell one character differently diverge for no semantic
-            // reason. Decoded here through the shared oracle's OWN from-scratch reader, never
-            // through the production codec this projection is evidence about.
             Parameter::String(s) => tv("string", match semio_s_plugin_stdio_part21_test_oracle::decode_string_literal(s) {
                 Ok(value) => Json::String(value),
                 Err(error) => Json::Object(vec![("undecodableStringLiteral".to_string(), Json::String(error))]),

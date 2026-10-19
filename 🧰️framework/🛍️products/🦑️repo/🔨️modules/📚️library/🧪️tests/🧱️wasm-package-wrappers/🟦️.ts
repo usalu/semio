@@ -1,3 +1,4 @@
+import { storeReceiptOutputV1 } from "../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import { afterAll, describe, expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020";
 import { spawnSync } from "node:child_process";
@@ -59,7 +60,7 @@ describe("stable wasm package wrappers", () => {
       expect(project.targets[row.producerTarget].options.command, row.id).toBe(row.producerCommand);
       const producer = project.targets[row.producerTarget];
       expect(producer.executor, row.id).toBe("repo:script");
-      expect<readonly string[]>(producer.outputs, row.id).toEqual([]);
+      expect<readonly string[]>(producer.outputs, row.id).toEqual([storeReceiptOutputV1(row.producerTarget)]);
       expect(producer.metadata.semio.wasmPackageSourceV1, row.id).toEqual({ version: 1, sourceOwner: dirname(row.projectPath) });
     }
   });

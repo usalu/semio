@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "@semio-tech/framework-os-dev/activation";
-import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts";
+import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🧬️options/🟦️.ts";
 import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentOwnerRootV1 } from "@semio-tech/plugin-registry/deployment";

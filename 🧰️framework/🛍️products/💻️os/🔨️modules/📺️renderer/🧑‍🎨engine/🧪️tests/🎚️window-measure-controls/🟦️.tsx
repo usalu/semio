@@ -19,7 +19,7 @@ import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelp
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { FlowProvider } from "@semio-tech/ui-react";
-import { treeTextFlowFixture as readingFlow } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { treeTextFlowFixture as readingFlow } from "@semio-tech/framework/ui/testing/fixtures";
 
 it("interprets the neutral compact Tree and preserves checkbox identity, authority, and disability", () => {
   const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));
@@ -122,12 +122,8 @@ export function testWindowMeasureControls(): void {
       expect(dispatched.length).toBe(1);
       expect(dispatched[0]!.args!.pressed).toBe(false);
       expect(checkbox().checked).toBe(false);
-      // 🔁️ The program has still not answered: a re-render with the SAME published value must not snap
-      // the control back, or the user watches their own click undo itself.
       view.rerender(createElement(WindowMeasureToggle, { measure: toggleMeasure(true), onAction }));
       expect(checkbox().checked).toBe(false);
-      // 🏛️ The published value arrives and equals the draft — the draft retires, the program is the only
-      // authority again, and the next click dispatches from the published value.
       view.rerender(createElement(WindowMeasureToggle, { measure: toggleMeasure(false), onAction }));
       expect(checkbox().checked).toBe(false);
       fireEvent.click(checkbox());
@@ -142,8 +138,6 @@ export function testWindowMeasureControls(): void {
       expect(checkbox().checked).toBe(true);
       view.rerender(createElement(WindowMeasureToggle, { measure: toggleMeasure(false), onAction }));
       expect(checkbox().checked).toBe(true);
-      // 🧯️ A refusal: the program answers with a value that is not the draft. A draft is only ever the
-      // gap-filler, never a second source of truth, so the program wins.
       view.rerender(createElement(WindowMeasureToggle, { measure: toggleMeasure(true), onAction }));
       view.rerender(createElement(WindowMeasureToggle, { measure: toggleMeasure(false), onAction }));
       expect(checkbox().checked).toBe(false);
@@ -167,17 +161,12 @@ export function testWindowMeasureControls(): void {
       expect(trigger().textContent).toContain("Always");
     });
 
-    // 🕰️ Wave B41: the draft is invisible from outside React — a combobox trigger carries no value of its
-    // own, and the rendered text is the DRAFT's — so `🔍️browser-probe.ts` scored a pending draft as the
-    // program's answer. Every draft-bearing control now also exposes the AUTHORITY's value, which is what
-    // lets a reader (assistive technology, a tutorial, a probe) tell a pending gesture from a landed one.
     it("exposes the value the program published beside the draft it renders", () => {
       const onAction = () => undefined;
       const view = render(createElement(WindowMeasureSelect, { measure: selectMeasure("selected"), onAction }));
       expect(trigger().getAttribute("data-published-value")).toBe("selected");
       fireEvent.click(trigger());
       fireEvent.click([...document.querySelectorAll('[data-value="always"]')].at(-1) as HTMLElement);
-      // 🏛️ Draft in flight: the trigger SHOWS "Always" while the program still publishes "selected".
       expect(trigger().textContent).toContain("Always");
       expect(trigger().getAttribute("data-published-value")).toBe("selected");
       view.rerender(createElement(WindowMeasureSelect, { measure: selectMeasure("always"), onAction }));
@@ -193,8 +182,6 @@ export function testWindowMeasureControls(): void {
     });
   });
 
-  // 🔢️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS wave F: an UNBOUNDED count entry (a slider cannot
-  // express "no ceiling"; its `min`/`max` are mandatory). Run progress is the framework tool run panel.
   describe("🔢️ the unbounded number measure", () => {
     afterEach(() => cleanup());
 

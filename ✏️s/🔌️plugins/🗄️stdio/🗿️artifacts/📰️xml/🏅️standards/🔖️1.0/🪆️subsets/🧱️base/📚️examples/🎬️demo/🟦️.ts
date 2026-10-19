@@ -1,2 +1,2 @@
-/** demo xml */
+/** 🎬️ demo xml */
 export const ID = 'demo';

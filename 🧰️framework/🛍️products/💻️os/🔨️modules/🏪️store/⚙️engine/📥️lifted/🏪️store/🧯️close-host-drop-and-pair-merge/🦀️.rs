@@ -1,6 +1,7 @@
 //! 🧯️ Close host, drop and pair merge: the close host, the history finalization and supersede scope, the store drop, the merge by id and the pair merge. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

@@ -5,8 +5,6 @@ use semio_s_artifact_block_5d_diff::Block5dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &crate::rename_part_kind::RenamePartKind, base: &Block5dSnapshot) -> protocol::MutationOutcome<Block5dDiff> {
-    // 🪪️ `part_kind` is the document's single root kind (not a catalog member addressed by id), so
-    // there is no missing-target case and no collection to collide with — only the no-op check applies.
     if payload.new_name == base.part_kind.name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Part kind name is already \"{}\".", payload.new_name));
     }

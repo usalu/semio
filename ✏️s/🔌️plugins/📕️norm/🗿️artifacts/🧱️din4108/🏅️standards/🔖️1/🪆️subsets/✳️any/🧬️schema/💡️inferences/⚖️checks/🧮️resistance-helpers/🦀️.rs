@@ -206,7 +206,6 @@ pub(super) fn required_insulation_thickness(layers: &[LayerDocument], r_si: f64,
             .map(|(_, l)| layer_resistance(l))
             .sum::<f64>();
     let mut d_req = (r_min - r_other).max(0.0) * lambda;
-    // Nudge past f64 rounding so R lands at/above R_min after re-evaluation.
     while r_other + d_req / lambda < r_min {
         d_req = f64::from_bits(d_req.to_bits().saturating_add(1));
     }

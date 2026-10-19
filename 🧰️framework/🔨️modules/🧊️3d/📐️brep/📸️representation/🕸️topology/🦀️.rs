@@ -70,18 +70,15 @@ pub mod history {
     semio_framework_value::artifact_retire_struct!(LabelSource {next});
 
     impl LabelSource {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             LabelSource { next: 0 }
         }
         /// 📜️ Seeds the counter at an explicit high-water mark rather than restarting at 0 — used by
         /// [`crate::topology::Body`]'s `from_seed` so a rebuild from a persisted seed carries
         /// the label numbering forward instead of colliding with the labels it is restoring.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn from_next(next: u64) -> Self {
             LabelSource { next }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn next_label(&mut self) -> PersistentLabel {
             let label = PersistentLabel(self.next);
             self.next += 1;
@@ -89,7 +86,6 @@ pub mod history {
         }
         /// 📜️ The next label this source would mint — the high-water mark a seed must carry forward
         /// (see [`Self::from_next`]) so a rebuilt `Body` never re-mints a label already in use.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn next(&self) -> u64 {
             self.next
         }
@@ -112,11 +108,9 @@ pub mod history {
     }
 
     impl OpDelta {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn is_empty(&self) -> bool {
             self.generated.is_empty() && self.modified.is_empty() && self.deleted.is_empty()
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn merge(&mut self, other: OpDelta) {
             self.generated.extend(other.generated);
             self.modified.extend(other.modified);
@@ -138,23 +132,19 @@ pub mod history {
     semio_framework_value::artifact_retire_struct!(OpRecorder {delta,owned});
 
     impl OpRecorder {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             OpRecorder::default()
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn record_generated(&mut self, label: PersistentLabel) {
             if !self.delta.generated.contains(&label) {
                 self.delta.generated.push(label);
             }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn record_modified(&mut self, label: PersistentLabel) {
             if !self.delta.modified.contains(&label) && !self.delta.generated.contains(&label) {
                 self.delta.modified.push(label);
             }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn record_deleted(&mut self, label: PersistentLabel) {
             self.delta.generated.retain(|l| *l != label);
             self.delta.modified.retain(|l| *l != label);
@@ -162,7 +152,6 @@ pub mod history {
                 self.delta.deleted.push(label);
             }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn into_delta(self) -> OpDelta {
             self.delta
         }

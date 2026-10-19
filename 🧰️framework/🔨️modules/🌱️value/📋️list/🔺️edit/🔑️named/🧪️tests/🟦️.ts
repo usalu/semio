@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {NamedEditPlan,type NamedEditSource,type NamedEditGrant,observeContiguousNamedKey} from "../🟦️.ts";
 import {IndexedOutputCursor} from "../../🟦️.ts";
@@ -13,7 +13,7 @@ test("named edit plan preserves original ordinals and matches SQLite binary keys
   db.exec("DELETE FROM names");for(const [index,key]of law.base.entries())db.query("INSERT INTO names VALUES(?,?)").run(index,key);
   const lookup=(key:string)=>db.query<{idx:number},[string]>("SELECT idx FROM names WHERE key=? ORDER BY idx LIMIT 1").get(key)?.idx;
   if(law.expected){expect(law.removed.map(lookup)).toEqual(law.expected.removed);expect(law.modified.map(lookup)).toEqual(law.expected.modified);}
-  const encoder=new TextEncoder(),keys={base:law.base.map(key=>encoder.encode(key)),removed:law.removed.map(key=>encoder.encode(key)),modified:law.modified.map(key=>encoder.encode(key)),added:law.added.map(key=>encoder.encode(key))};
+  const encoder={encode:(text:string)=>new Uint8Array(Buffer.from(text,"utf8"))},keys={base:law.base.map(key=>encoder.encode(key)),removed:law.removed.map(key=>encoder.encode(key)),modified:law.modified.map(key=>encoder.encode(key)),added:law.added.map(key=>encoder.encode(key))};
   const source:NamedEditSource={originalBase:keys.base,shape:{baseLen:law.base.length,removed:law.removed.length,modified:law.modified.length,added:law.added.length},keyDemand:()=>({copyBytes:64,capacityBytes:0,depth:1}),observeKey:(lane,ordinal,grant)=>observeContiguousNamedKey(()=>keys[lane][ordinal]!,grant),addedIndex:ordinal=>law.indices[ordinal]!};
   const owner=new NamedEditPlan(source.shape);let turns=0;
   while(!owner.settled){const demand=owner.demand(source,owner.fixedCopyBytes+128),grant:NamedEditGrant={maximumItems:1,maximumCopyBytes:demand.copyBytes,maximumCapacityBytes:demand.capacityBytes,maximumDepth:demand.depth};expect(owner.advance(source,{...grant,maximumItems:0}).copiedBytes).toBe(0);expect(owner.advance(source,{...grant,maximumCopyBytes:owner.fixedCopyBytes-1}).copiedBytes).toBe(0);const receipt=owner.advance(source,grant);expect(receipt.copiedBytes).toBeLessThanOrEqual(grant.maximumCopyBytes);expect(++turns).toBeLessThan(2000);}
@@ -25,7 +25,7 @@ test("named edit plan preserves original ordinals and matches SQLite binary keys
  }finally{db.close();}
 });
 test("named keys with long common prefixes yield and cancel at original frontiers",()=>{
- const encoder=new TextEncoder(),prefix="k".repeat(fixture.wide.prefixLength),strings={base:[prefix+"é",prefix+"ö"],removed:[prefix+"é"],modified:[prefix+"ö"],added:[prefix+"é"]},keys={base:strings.base.map(k=>encoder.encode(k)),removed:strings.removed.map(k=>encoder.encode(k)),modified:strings.modified.map(k=>encoder.encode(k)),added:strings.added.map(k=>encoder.encode(k))};
+ const encoder={encode:(text:string)=>new Uint8Array(Buffer.from(text,"utf8"))},prefix="k".repeat(fixture.wide.prefixLength),strings={base:[prefix+"é",prefix+"ö"],removed:[prefix+"é"],modified:[prefix+"ö"],added:[prefix+"é"]},keys={base:strings.base.map(k=>encoder.encode(k)),removed:strings.removed.map(k=>encoder.encode(k)),modified:strings.modified.map(k=>encoder.encode(k)),added:strings.added.map(k=>encoder.encode(k))};
  const source:NamedEditSource={originalBase:keys.base,shape:{baseLen:2,removed:1,modified:1,added:1},keyDemand:()=>({copyBytes:64,capacityBytes:0,depth:1}),observeKey:(lane,ordinal,grant)=>observeContiguousNamedKey(()=>keys[lane][ordinal]!,grant),addedIndex:()=>1};
  const original=keys.base[0]!.buffer;
  for(const cut of [0,1,7,128,25000,null]){

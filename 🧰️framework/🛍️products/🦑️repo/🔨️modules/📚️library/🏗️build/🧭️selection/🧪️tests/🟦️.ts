@@ -17,7 +17,7 @@ import*as selectionOwner from"../🟦️.ts";
 const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("selection.ts",source,ts.ScriptTarget.Latest,true),require=createRequire(import.meta.url),parse=require("yargs-parser"),compilers=[(text:string)=>new Bun.Transpiler({loader:"ts"}).transformSync(text),(text:string)=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText];
 const select=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="selectBuildTasksV1");
 if(!select)throw Error("Actual task selection body required");
-const functions=tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&["shellArgument","buildBooleanOptionV1"].includes(node.name?.text??"")).map(node=>node.getText(tree).replace(/^export /u,"")),predicates:ts.VariableStatement[]=[],watchOptions:ts.VariableStatement[]=[];
+const functions=tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&["shellArgument","buildBooleanOptionV1","buildChangedFilesCommandsV1","affectedBuildProjectsV1"].includes(node.name?.text??"")).map(node=>node.getText(tree).replace(/^export /u,"")),predicates:ts.VariableStatement[]=[],watchOptions:ts.VariableStatement[]=[];
 ts.forEachChild(tree,function visit(node:ts.Node):void{if(ts.isVariableStatement(node)&&node.declarationList.declarations.some(row=>row.name.getText(tree)==="global"))predicates.push(node);if(ts.isVariableStatement(node)&&node.declarationList.declarations.some(row=>row.name.getText(tree)==="includeGlobal"))watchOptions.push(node);ts.forEachChild(node,visit);});
 if(predicates.length!==1)throw Error("Unique actual watch event predicate required");
 

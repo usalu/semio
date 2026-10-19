@@ -17,10 +17,10 @@ export { PREVIEW2_VENDOR_RELATIVE } from "../../../../🔌️plugin/📦️packa
 export { packageAssetDeliveries } from "../../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📦️package-assets/🟦️.ts";
 export { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../../🚚️distribution/🔌️components/🟦️.ts";
 export { DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName } from "../../../🚚️distribution/🟦️.ts";
-export { playgroundFlowWasmDevStubPlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
-export { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host/🟦️.ts";
+export { playgroundFlowWasmDevStubPlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
+export { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 export { semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
-export { semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+export { semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 export { semioAssetsVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
 export { semioServeCloseVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 export { semioExtensionStoreVitePlugin } from "../../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";

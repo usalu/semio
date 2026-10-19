@@ -39,7 +39,7 @@ async fn stateless_step_reports_eos_finish_reason() {
     let vocab = small_vocab().await;
     let config = SamplingConfig::precise().await;
     let mut logits = [0.0f32; 8];
-    logits[7] = 100.0; // 📖️ token 7 is the configured EOS token.
+    logits[7] = 100.0;
     let mut ws = LogitsWorkspace::new(8).await;
     let mut rng: RandomSources = CounterRng::from_seed(0).await.into();
     let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
@@ -211,8 +211,6 @@ async fn sample_step_with_no_repeat_ngram_avoids_recreating_a_bigram() {
     let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, CounterRng::from_seed(0).await.into()).await.unwrap();
     let mut ws = LogitsWorkspace::new(8).await;
     let mut observer: SamplingObservers = NullObserver.into();
-    // 📐️ Token 1 always dominates except when masked, so the no-repeat-ngram guard should force
-    // deviation the moment the same bigram would otherwise recur.
     let mut logits = [0.0f32; 8];
     logits[1] = 10.0;
     logits[0] = 5.0;
@@ -224,7 +222,6 @@ async fn sample_step_with_no_repeat_ngram_avoids_recreating_a_bigram() {
             break;
         }
     }
-    // 🌡️ Token 1 (the argmax) can never appear twice consecutively after the same predecessor.
     for pair in tokens.windows(3) {
         assert!(!(pair[0] == pair[2] && pair[1] == TokenId::new(1) && pair[0] == TokenId::new(1)), "must not recreate the (1, 1) bigram twice");
     }
@@ -254,7 +251,6 @@ async fn sample_step_with_regex_constraint_only_ever_emits_matching_text() {
     let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, CounterRng::from_seed(0).await.into()).await.unwrap();
     let mut ws = LogitsWorkspace::new(3).await;
     let mut observer: SamplingObservers = NullObserver.into();
-    // 🧱️ Token 0 ("z") has the highest raw logit but must be masked out by the regex constraint.
     let logits = [10.0f32, 1.0, 1.0];
     let result = sample_step(&config, &mut state, &mut ws, &vocab, Some(&adapter), &logits, &mut observer).await.unwrap();
     assert_ne!(result.token, TokenId::new(0));

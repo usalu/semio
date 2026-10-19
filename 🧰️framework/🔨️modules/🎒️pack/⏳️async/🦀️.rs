@@ -30,8 +30,6 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 // there is zero `dyn AsyncPackSource` anywhere in the repo (verified: `🎒️pack/**` plus
 // `🧰️framework`, `🛍️products`, `✏️s` repo-wide), so no dyn-erasure/O1 concern applies here.
 pub trait AsyncPackSource: Send + Sync {
-    // 🚫️async: no suspension point — every implementor answers from an already-known length
-    // (see `pack_http::SharedState::len`'s doc comment); deliberately synchronous by contract.
     fn len(&self) -> u64;
     fn is_empty(&self) -> bool {
         self.len() == 0
@@ -53,15 +51,10 @@ struct CancellationInner {
 pub struct CancellationToken(Arc<Mutex<CancellationInner>>);
 
 impl CancellationToken {
-    // 🚫️async: no suspension point; also called from `Default::default` below, an E1 impl of
-    // the externally-declared `Default` trait whose fixed sync signature cannot `.await`.
     pub fn new() -> Self {
         Self(Arc::new(Mutex::new(CancellationInner { cancelled: false, wakers: Vec::new() })))
     }
 
-    // 🚫️async: no suspension point, and load-bearing — the cancellation test drives this from a
-    // plain `std::thread::spawn` closure with no executor, simulating a foreign-thread cancel
-    // signal. Wakes every waker parked by `CancelWatch::poll` under the same lock `cancel` takes.
     pub fn cancel(&self) {
         let mut inner = self.0.lock().unwrap();
         inner.cancelled = true;
@@ -70,9 +63,6 @@ impl CancellationToken {
         }
     }
 
-    // 🚫️async: no suspension point; a cheap synchronous check kept sync so existing sync callers
-    // (including `CancelWatch::poll`'s own crate-private `poll_cancelled` below) never need an
-    // executor just to ask.
     pub fn is_cancelled(&self) -> bool {
         self.0.lock().unwrap().cancelled
     }
@@ -80,8 +70,6 @@ impl CancellationToken {
     /// 👀️ Checks cancellation and, if not yet cancelled, registers `waker` to be woken by the
     /// next `cancel()` — both under one lock, so this can never race a concurrent `cancel()` into
     /// missing the registration.
-    // 🚫️async: E1 — the only caller is `CancelWatch::poll`, an impl of the externally-declared
-    // `Future` trait, whose fixed sync signature cannot `.await`.
     fn poll_cancelled(&self, waker: &Waker) -> bool {
         let mut inner = self.0.lock().unwrap();
         if inner.cancelled {
@@ -113,10 +101,6 @@ struct CancelWatch<'a> {
 impl Future for CancelWatch<'_> {
     type Output = Result<Arc<Vec<u8>>, PackError>;
 
-    // 🚫️async: E1 impl of the externally-declared `Future` trait; `poll`'s signature is fixed by
-    // `std::future::Future` and must stay sync. The wait for cancellation is satisfied entirely
-    // by `CancellationToken::poll_cancelled` registering this poll's waker — `cancel()` on
-    // another thread calls `Waker::wake` directly, so this never spins or sleeps.
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.token.poll_cancelled(cx.waker()) {
             Poll::Ready(Err(PackError::Refusal(semio_framework_pack_error::PackRefusal::ValueRefusal(ValueError::new(ValueRefusalKind::Canceled, "read cancelled")))))
@@ -141,8 +125,6 @@ pub enum LoadPriority {
 
 impl LoadPriority {
     /// 🏅️ Lower rank = served first.
-    // 🚫️async: E1 — the only caller is `AcquireFuture::poll` below, an impl of the
-    // externally-declared `Future` trait, whose fixed sync signature cannot `.await`.
     fn rank(self) -> u8 {
         match self {
             LoadPriority::Critical => 0,
@@ -209,9 +191,6 @@ struct WaitForGroup {
 impl Future for WaitForGroup {
     type Output = Result<Arc<Vec<u8>>, PackError>;
 
-    // 🚫️async: E1 impl of the externally-declared `Future` trait; signature fixed by std. Already
-    // waker-correct (registers `cx.waker()` and returns `Pending`, woken by `finalize_group`'s
-    // `waker.wake()`) — no sleep here, nothing to fix.
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let mut inner = self.group.lock().unwrap();
         match &inner.state {
@@ -237,14 +216,11 @@ pub struct ReadScheduler<S: AsyncPackSource> {
 
 impl<S: AsyncPackSource> ReadScheduler<S> {
     /// 🆕️ A scheduler with a sensible default concurrency cap. Use `with_capacity` to tune it.
-    // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
-    // call sites (`let scheduler = ReadScheduler::new(source);`, unawaited) keep compiling.
     pub fn new(source: S) -> Self {
         Self::with_capacity(source, 4)
     }
 
     /// 🆕️ A scheduler that admits at most `max_concurrent_reads` physical reads at once.
-    // 🚫️async: no suspension point — same constructor reasoning as `new` above.
     pub fn with_capacity(source: S, max_concurrent_reads: usize) -> Self {
         Self { source, groups: Mutex::new(Vec::new()), demand: BoundedDemand::new(max_concurrent_reads) }
     }
@@ -273,9 +249,6 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 
     /// 🔎️ Finds a `Gathering` group whose range touches `range` and folds `range` into it
     /// (returning `is_leader = false`), or opens a fresh group (returning `is_leader = true`).
-    // 🚫️async: no suspension point — the whole body runs under `self.groups`'s lock (plus, per
-    // candidate, the group's own lock); never yields, so it stays a fast synchronous critical
-    // section rather than holding a non-`Send` `MutexGuard` across an `.await`.
     fn join_or_create_group(&self, range: ByteRange) -> (Arc<Mutex<Group>>, bool) {
         let mut groups = self.groups.lock().unwrap();
         for group in groups.iter() {
@@ -307,8 +280,6 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
 
     /// 🏁️ Records `result` as the group's outcome, wakes every waiter, and drops the group from
     /// the lookup table so nothing else can merge into it.
-    // 🚫️async: no suspension point — runs entirely under `group`'s lock, then `self.groups`'s;
-    // never yields (same lock-across-await avoidance as `join_or_create_group`).
     fn finalize_group(&self, group: &Arc<Mutex<Group>>, result: Result<Arc<Vec<u8>>, PackError>) {
         let wakers = {
             let mut inner = group.lock().unwrap();
@@ -383,19 +354,14 @@ pub struct BoundedDemand {
 }
 
 impl BoundedDemand {
-    // 🚫️async: no suspension point — construction only; kept sync so existing plain-sync test
-    // call sites (`let demand = BoundedDemand::new(1);`, unawaited) keep compiling.
     pub fn new(capacity: usize) -> Self {
         Self { state: Mutex::new(DemandState { in_flight: 0, capacity: capacity.max(1), queue: BinaryHeap::new(), next_seq: 0 }) }
     }
 
-    // 🚫️async: no suspension point — a cheap synchronous accessor, exercised directly by
-    // `bounded_demand_reports_capacity_and_in_flight` as a plain sync call.
     pub fn capacity(&self) -> usize {
         self.state.lock().unwrap().capacity
     }
 
-    // 🚫️async: no suspension point — see `capacity` above.
     pub fn in_flight(&self) -> usize {
         self.state.lock().unwrap().in_flight
     }
@@ -409,8 +375,6 @@ impl BoundedDemand {
 
     /// 🔓️ Frees one slot: transfers it to the highest-priority queued waiter if any are waiting,
     /// else simply lowers the in-flight count.
-    // 🚫️async: E1 — the only caller is `DemandPermit::drop` below, an impl of the
-    // externally-declared `Drop` trait, whose fixed sync signature cannot `.await`.
     fn release(&self) {
         let mut state = self.state.lock().unwrap();
         if let Some(next) = state.queue.pop() {
@@ -446,9 +410,6 @@ struct AcquireFuture<'a> {
 impl<'a> Future for AcquireFuture<'a> {
     type Output = DemandPermit<'a>;
 
-    // 🚫️async: E1 impl of the externally-declared `Future` trait; signature fixed by std.
-    // Already waker-correct: parks `cx.waker()` on the `DemandWaiter` and returns `Pending`,
-    // woken by `BoundedDemand::release`'s `waker.wake()` — no sleep, no spin.
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if let Some(waiter) = &self.waiter {
             if waiter.granted.load(Ordering::SeqCst) {

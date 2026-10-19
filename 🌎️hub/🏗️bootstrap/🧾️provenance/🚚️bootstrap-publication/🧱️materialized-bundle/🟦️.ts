@@ -111,10 +111,6 @@ export async function withMaterializedTrustedCatalogBundleV1<T>(host:LocalHubHos
         } finally {
           descriptor.fill(0);
         }
-        // 🧬️ The package's codec closure. A package the hub LINKS Rust codecs for must carry exactly
-        // the rows its compiled provider previews, so those come from the same registry the provider
-        // is generated from; every other package answers for itself, through the `codecs` subcommand
-        // of the descriptor emitter this build already produced, on these exact component bytes.
         const manifestKinds = trustedBootstrapDescriptorKindsV1(descriptorJson.get(request.pluginId)!).map((kind) => [String(kind.id), String(kind.schema)] as const);
         const hostedKinds = trustedBootstrapHostedKindsV1(request.pluginId, descriptorJson.get(request.pluginId)!, codecs);
         if (spec.linkedCodecRegistry) {
@@ -186,11 +182,7 @@ export async function withMaterializedTrustedCatalogBundleV1<T>(host:LocalHubHos
     for (const spec of selection) {
       const rows = codecs[spec.pluginId] ?? [];
       if (rows.length === 0) throw new Error(`trusted ${spec.pluginId} closure carries no artifact codec`);
-      // Openability is derived from verified descriptor editor targets (TC5); the table bit is advisory.
     }
-    // 🔢️ `validate_bundle` requires the selected closure in canonical identity order, which is the
-    // same order `trusted_profile_generation` frames it in; the REQUESTED order only names the
-    // profile, so `--packages stdio,gis` keeps minting `local-stdio-gis-open-v1`.
     const selectedClosure = selection
       .map((spec) => ({ pluginId: spec.pluginId, packageId: spec.componentPackageId, version: receipts.get(spec.pluginId)!.version }))
       .sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version]));

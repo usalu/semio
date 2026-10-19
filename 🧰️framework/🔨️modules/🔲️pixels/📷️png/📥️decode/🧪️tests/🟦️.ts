@@ -25,7 +25,7 @@ describe("PNG reconstruction",()=>{
   const oracle=PNG.sync.read(Buffer.from(source.data),{skipRescale:source.data[24]===16});
   const pixels=oracle.depth===16?Array.from(oracle.data as unknown as Uint16Array,v=>v>>>8):Array.from(oracle.data);
   const visible=(values:number[])=>values.map((v,i)=>i%4<3&&row.expected.pixels[i-i%4+3]===0?0:v);
-  expect(visible(pixels)).toEqual(visible(row.expected.pixels));
+  expect(visible(pixels)).toEqual(visible(row.expected.pixels as number[]));
  });
  test("seeded third-party compression with dynamic, fixed and stored blocks",()=>{
   let seed=0x762ba5;const width=257,height=41,expected:number[]=[],raw:number[]=[];

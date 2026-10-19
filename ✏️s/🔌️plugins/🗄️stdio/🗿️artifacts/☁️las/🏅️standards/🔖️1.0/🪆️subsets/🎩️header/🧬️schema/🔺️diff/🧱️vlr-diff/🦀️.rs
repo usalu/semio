@@ -84,14 +84,12 @@ pub struct LasVlrsDiff {
 }
 
 impl LasVlrsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
     /// ▶️ Applies this triple: `modified` by BASE index (no-op if since-removed), then `removed`
     /// (descending order doesn't matter — collected as a set), then `added` ascending, clamped.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply_unchecked(&self, base: &[LasVlr]) -> Vec<LasVlr> {
         let mut items = base.to_vec();
         for m in &self.modified {
@@ -110,14 +108,12 @@ impl LasVlrsDiff {
         items
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
         validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs")?;
         Ok(self.apply_unchecked(base))
     }
 
     /// ↩️ The negative triple against the base VLRs.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &[LasVlr]) -> Self {
         let modified: Vec<(usize, LasVlrDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, LasVlr)> = self.added.iter().map(|a| (a.index, a.vlr.clone())).collect();

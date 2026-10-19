@@ -25,9 +25,6 @@ pub mod export_model {
         cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut semio_s_artifact_process_process3d_kit::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: no `LinkResolver` — see
-        // `ProcessWorkingScene`'s doc comment; `doc.snapshot` alone cannot recover its composed
-        // children's content, so export degrades honestly to the empty working scene.
         let scene = semio_s_artifact_process_process3d_model::snapshot::process_working_scene_from_snapshot(doc.snapshot);
         match export_process3d_model(&scene, cfg.snapshot.resolved_up_to, &payload.format).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("process3d.media.export"), error))? {
             Some(export) => Ok(Emit::effect(Effect::DownloadMediaExport {

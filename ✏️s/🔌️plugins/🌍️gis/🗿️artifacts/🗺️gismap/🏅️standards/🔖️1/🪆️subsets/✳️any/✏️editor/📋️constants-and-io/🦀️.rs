@@ -203,10 +203,6 @@ pub fn gis2d_io() -> AppIo {
         artifact_schema: GIS_MAP_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![gis2d_features_in_port(), gis2d_map_out_port()],
-        // 🚮️ V7 deprecated-codec-enum retirement (SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT):
-        // `AppIo.{export,import}_formats` stays framework-owned and carries no `&'static str`
-        // stdio-kind-id peer field to move real values onto (unlike `ArtifactKindSpec`) — emptied,
-        // mirroring the sibling `gis3d_io()` (gis3d app) fix already applied in this ticket.
         export_formats: Vec::new(),
         import_formats: Vec::new(),
         artifact: semio_framework_plugin::ArtifactPresentation { id: crate::GISMAP_DIALECT.artifact_kind.into(), name: "2D Map".into(), dimension: "2d".into(), component_kind: "gismap".into() },

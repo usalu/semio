@@ -290,11 +290,6 @@ export function trustedBootstrapGenerationReceipt(record: any): TrustedBootstrap
     descriptor: Object.freeze({ byteLength: record.descriptor.byteLength, sha256: record.descriptor.sha256 }),
     componentReceipt: trustedBootstrapRecordReceipt(record),
     executionProtocol: trustedBootstrapExecutionProtocol(record.executionProtocol),
-    // 🖥️ The renderer this receipt validates the actor against comes from the actor's own kind, not
-    // from the package's name: this helper is re-run on an already-projected receipt (which carries
-    // no target list) as well as on a bundle record. That a package with open targets must carry a
-    // wasm actor at all is enforced where the target list IS in hand —
-    // `trustedBootstrapProfileEncoding`, through `trustedBootstrapPackageRenderer`.
     browserActor: trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, record.browserActor?.kind === "closed-browser-actor" ? "wasm" : "react"),
     pluginModule: trustedBootstrapPluginModuleRecordV1(record.pluginModule, identity.pluginId),
   });
@@ -314,10 +309,6 @@ export function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Arra
       const expected = bundleReceipts.get(plugin);
       if (!expected || JSON.stringify(expected) !== JSON.stringify(trustedBootstrapGenerationReceipt({ ...receipt.identity, ...receipt, receipt: receipt.componentReceipt }))) throw new Error("generation bundle metadata differs from its retained receipt");
     }
-    // 📁️ The published tree is EXACTLY what the bundle's own package records name: one directory per
-    // selected package, `browser/closed-actor.mjs` exactly where a record carries a closed actor and
-    // nowhere else. It is derived rather than spelled so a third package is verified as strictly as
-    // the first two (ticket 26/09/18 slice TC3c).
     const plugins = [...bundleReceipts.keys()].sort();
     const carriesActor = (plugin: string): boolean => bundleReceipts.get(plugin)!.browserActor.kind === "closed-browser-actor";
     const moduleFiles = new Map<string, Readonly<{ byteLength: number; sha256: string }>>();

@@ -210,7 +210,6 @@ pub struct AesKey {
 }
 
 impl AesKey {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(key: &[u8]) -> Self {
         let nk = key.len() / 4;
         let rounds = nk + 6;
@@ -241,14 +240,12 @@ impl AesKey {
         Self { round_keys }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn add_round_key(state: &mut [u8; 16], key: &[u8; 16]) {
         for (s, k) in state.iter_mut().zip(key) {
             *s ^= k;
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn encrypt_block(&self, block: &[u8; 16]) -> [u8; 16] {
         let mut state = *block;
         let rounds = self.round_keys.len() - 1;
@@ -278,7 +275,6 @@ impl AesKey {
         state
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn decrypt_block(&self, block: &[u8; 16]) -> [u8; 16] {
         let inverse = aes_inverse_sbox();
         let mut state = *block;
@@ -506,7 +502,6 @@ pub struct Decryptor {
 impl Decryptor {
     /// 🔑 Algorithm 1: the object key for `(num, gen)` (revisions ≤ 4); revision 6 uses the file
     /// key directly.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn object_key(&self, num: u32, gen: u16) -> Vec<u8> {
         if self.revision >= 5 {
             return self.file_key.clone();
@@ -522,7 +517,6 @@ impl Decryptor {
         hash[..n].to_vec()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn decrypt_bytes(&self, data: &[u8], num: u32, gen: u16) -> Vec<u8> {
         let key = self.object_key(num, gen);
         if self.aes {
@@ -532,7 +526,6 @@ impl Decryptor {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn encrypt_bytes(&self, data: &[u8], num: u32, gen: u16) -> Vec<u8> {
         let key = self.object_key(num, gen);
         if self.aes {
@@ -546,18 +539,15 @@ impl Decryptor {
     }
 
     /// 🔓 Decrypts every string and stream inside one indirect object.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn decrypt_object(&self, value: PdfObject, num: u32, gen: u16) -> PdfObject {
         self.map_object(value, num, gen, true)
     }
 
     /// 🔒 Encrypts every string and stream inside one indirect object.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn encrypt_object(&self, value: PdfObject, num: u32, gen: u16) -> PdfObject {
         self.map_object(value, num, gen, false)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn map_object(&self, value: PdfObject, num: u32, gen: u16, decrypt: bool) -> PdfObject {
         match value {
             PdfObject::Text(text) if !self.identity_strings&&!decrypt => PdfObject::Str(self.encrypt_bytes(&crate::standards::v1_7::subsets::base::io::text_string::encode_text_string(&text),num,gen)),
@@ -655,7 +645,6 @@ pub fn open_standard_security(encrypt: &[PdfDictEntry], document_id: &[u8], pass
         if matches {
             candidate
         } else {
-            // 🔑 Algorithm 7: try the password as the owner password.
             let mut hash = md5(&padded_password(password_bytes)).to_vec();
             let n = if r == 2 { 5 } else { key_length.clamp(5, 16) };
             if r >= 3 {

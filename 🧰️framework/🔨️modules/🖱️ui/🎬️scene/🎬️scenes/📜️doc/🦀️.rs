@@ -60,7 +60,6 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
     ///
     /// The default is "no lanes" — a scene whose payload is a bounded per-frame descriptor
     /// (`Canvas2dScene`, `IconRenderScene`, …) has nothing to gain and stays one atomic doc.
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>)
     where
         Self: Sized,
@@ -70,7 +69,6 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
 
     /// 🚚️ Re-attaches one lane's payload to a spine decoded from the surface doc — the exact inverse
     /// of [`SceneDoc::split_lanes`]. Returns `false` for a key this doc does not own.
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     fn merge_lane(&mut self, key: &str, payload: String) -> bool {
         let _ = (key, payload);
         false

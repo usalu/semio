@@ -73,10 +73,10 @@ pub const EXACT_ENCLOSURE_FACES: usize = 48;
 /// 🔲️ Long-wave exchange model of one enclosure.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub enum EnclosureRadiation {
-    /// Row-major approximate view factors `F[i][j]` from `i` to `j` and gray-body exchange factors
+    /// 🔁️ Row-major approximate view factors `F[i][j]` from `i` to `j` and gray-body exchange factors
     /// `𝓕[i][j]`: the net flux into face `i` is `Σ_j σ 𝓕[i][j] (T_j⁴ − T_i⁴)`.
     Exchange { view_factors: Vec<f64>, exchange_factors: Vec<f64> },
-    /// Carroll mean-radiant-temperature network: face `i` exchanges `participation[i]·(T_mrt⁴ − T_i⁴)`
+    /// 🌬️ Carroll mean-radiant-temperature network: face `i` exchanges `participation[i]·(T_mrt⁴ − T_i⁴)`
     /// with a massless node at `T_mrt⁴ = Σ A·p·T⁴ / Σ A·p`; `participation` already includes σ.
     MeanRadiant { participation: Vec<f64> },
 }

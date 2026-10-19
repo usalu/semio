@@ -8,10 +8,21 @@
     "role:test",
     "scope:s"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/🧪️tests/🔌️port-sides/**/*"
+    ]
+  },
   "targets": {
     "source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -20,7 +31,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -29,7 +40,12 @@
     },
     "port-sides-test": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🌊️flow/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts port-sides-test",
         "cwd": "\u270f\ufe0fs/\ud83e\uddd1\u200d\ud83d\udcbbdev/\ud83c\udf0a\ufe0fflow/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",

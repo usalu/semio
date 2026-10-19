@@ -1,7 +1,8 @@
 //! 🗣️ Typed map records retain native payload schemas and explicit controlled field ownership.
 use super::*;
 use semio_framework_dsl_record::{DslField, FieldValue, FieldSpec, RecordValue, RecordSpec, RecordLayout, Shape, RecordSpecProducer, NativeSchemaControl, producer, native_encoding::{self, FieldProjectionView as View, EncodedRecord}};
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, DecodedValue};
+use semio_framework_value::{NativeEncodeControl, DecodedValue};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn invalid() -> ValueError { controlled::invalid("map DSL record has incorrect fields") }
 fn fields(record: &RecordValue, ids: &[u16]) -> Result<(), ValueError> { if record.fields.len() != ids.len() || ids.iter().any(|id| record.get(*id).is_none()) { Err(invalid()) } else { Ok(()) } }

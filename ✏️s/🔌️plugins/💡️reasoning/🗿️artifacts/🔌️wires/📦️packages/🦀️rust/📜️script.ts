@@ -2,31 +2,14 @@
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ reasoning wires Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { runOwnedVerifyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-if (segments[0] === "wires-document-contract") {
-      const { testWiresDocumentContractOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
-      testWiresDocumentContractOracle();
-      if (segments[1] === "oracle") return;
-      const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "committed_diff", "--", "--nocapture"], join(this.repoRoot, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
-      return;
-    }
-if (segments[0] === "wires-window-transient") {
-      const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_transient", "--", "--nocapture"], join(this.repoRoot, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
-      return;
-    }
-    throw new Error('Unknown owned verification '+segments.join(' '));
+    await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-reasoning-wires", { packages: ["semio-s-artifact-reasoning-wires", "semio-s-artifact-reasoning-wires-inferences", "semio-s-artifact-reasoning-wires-schema", "semio-s-artifact-reasoning-wires-snapshot", "semio-s-artifact-reasoning-wires-snapshot-2", "semio-s-artifact-reasoning-wires-v1", "semio-s-artifact-reasoning-wires-viewer", "semio-s-artifact-reasoning-wires-window-transient", "semio-s-artifact-reasoning-wires-windows", "semio-s-artifact-reasoning-wires-wires"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: { "graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });
+const router = new ScriptRouter(import.meta.dir).register("graph-generate", GraphGenerateScript).register("preview-generated", GraphPreviewScript).register("graph-wire-check", OwnerGraphWireCheckScript).register("verify", OwnedVerifyScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-reasoning-wires", { packages: ["semio-s-artifact-reasoning-wires", "semio-s-artifact-reasoning-wires-inferences", "semio-s-artifact-reasoning-wires-schema", "semio-s-artifact-reasoning-wires-snapshot", "semio-s-artifact-reasoning-wires-snapshot-2", "semio-s-artifact-reasoning-wires-v1", "semio-s-artifact-reasoning-wires-viewer", "semio-s-artifact-reasoning-wires-window-transient", "semio-s-artifact-reasoning-wires-windows", "semio-s-artifact-reasoning-wires-wires"], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], commands: router });

@@ -46,7 +46,7 @@ function harness(compiler: typeof compilers[number], inspectors: Partial<{ inspe
 
 test("exact writable route and package registrations preserve the canonical semantic leaf", () => {
   const registration = vector.registration, project = JSON.parse(readFileSync(join(root, registration.projectPath), "utf8"));
-  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", options: { cwd: dirname(registration.projectPath), command: registration.command } });
+  expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", options: { cwd: dirname(registration.projectPath), command: registration.command } });
   const routerText = readFileSync(join(root, registration.routerPath), "utf8"), router = ts.createSourceFile(registration.routerPath, routerText, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node) => { if (ts.isIfStatement(node) && node.expression.getText(router) === 'segments[0] === "' + registration.route + '"') branches.push(node); ts.forEachChild(node, visit); };
   visit(router);

@@ -1,12 +1,13 @@
 use crate::{standards::v_utf_8::subsets::any::schema::snapshot::LineEnding, standards::v_utf_8::subsets::any::schema::snapshot::TxtSnapshot};
 use semio_framework_os_kernel::{sqlite_snapshot::artifact::Cell, sqlite_snapshot::SnapshotEncoding, sqlite_snapshot::SqliteSnapshotPhase};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{native_decoding::NativeDecodeControl, NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
 #[allow(unused_imports)]
 use semio_framework_os_kernel::{sqlite_snapshot::artifact::Projection, sqlite_snapshot::artifact::Reconstruction, sqlite_snapshot::artifact::ordered_row_refs, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::SqliteDatabase};
 #[allow(unused_imports)]
-use semio_framework_value::native_decoding::NativeDecodeProgress;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 use crate::standards::v_utf_8::subsets::any::io::sqlite::snapshot::{original_encoding};
 
 /// 🎟️ Supplies the immutable caller policy independently of every observed frontier.
@@ -16,7 +17,7 @@ fn original_caller_grant()->semio_framework_value::RetainedCloneGrant{
 
 /// 🛬️ Preserves this test's original SQL controller and retained native recipient through decode.
 fn with_original_decode<O>(sql:&mut SqliteSnapshotControl<'_>,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>,&mut store::NativeSnapshotDecodeOwner<'_,'_>)->O)->O{
- let policy=original_caller_grant();let mut accepted=|_|true;let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=semio_framework_value::NativeDecodeControl::new(sql.limits().max_value_bytes,&mut accepted);native.install_retirement_recipient(&mut recipient).unwrap();
+ let policy=original_caller_grant();let mut accepted=|_|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(sql.limits().max_value_bytes,&mut accepted);native.install_retirement_recipient(&mut recipient).unwrap();
  let result={let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,policy);operation(sql,&mut owner)};
  for _ in 0..4096{if !native.has_retirement_owner(){break}let step=native.close_retirement_recipient(policy).unwrap();assert!(step.progress().fits(policy));}assert!(!native.has_retirement_owner());result
 }
@@ -294,14 +295,15 @@ static TXT_ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trac
 
 #[test]
 fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and_actual_line_receipt(){
- use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
+ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, retirement::controlled::ControlledRetirement};
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  use std::cell::Cell;
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🫴️receiving.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let mut successes=0;
  for row in fixture["cases"].as_array().unwrap(){
   let expected=TxtSnapshot::from_body(row["body"].as_str().unwrap());let wire=<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();
   for cut in (0..24).chain(std::iter::once(usize::MAX)){
-   let events=Cell::new(0);let allowance=Cell::new(cut);let mut callback=|_|{events.set(events.get()+1);events.get()<=allowance.get()};let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,policy);
+   let events=Cell::new(0);let allowance=Cell::new(cut);let mut callback=|_|{events.set(events.get()+1);events.get()<=allowance.get()};let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1048576,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,policy);
    let(result,heap)=observe(||<TxtSnapshot as store::ArtifactPackReceiving>::receive_pack(&wire,&mut owner));let accepted=owner.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(accepted.retained_capacity_bytes,accepted.released_bytes));assert!(accepted.fits(policy));drop(owner);assert_eq!(wire.as_ptr(),pointer);allowance.set(usize::MAX);let mut born=0;let mut freed=0;
    match result{Ok(output)=>{successes+=1;assert_eq!(output,expected);let mut retired=ControlledRetirement::new(output).ok().unwrap();for _ in 0..4096{if retired.terminal_is_empty(){break}let(step,heap)=observe(||retired.step(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}assert!(retired.terminal_is_empty());},Err(error)=>assert_eq!(error.retained_progress(),accepted)}
    for _ in 0..4096{if !native.has_retirement_owner(){break}let(step,heap)=observe(||native.close_retirement_recipient(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}assert!(!native.has_retirement_owner());assert_eq!(accepted.retained_capacity_bytes+born,accepted.released_bytes+freed);
@@ -309,7 +311,7 @@ fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and
  }
 
  for axis in ["items","capacity","depth"]{
-  let expected=TxtSnapshot::from_body("a\nb");let wire=<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut accept=|_|true;let mut native=NativeDecodeControl::new(1048576,&mut accept);let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,heap)=observe(||<TxtSnapshot as store::ArtifactPackReceiving>::receive_pack(&wire,&mut owner));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());assert_eq!(wire.as_ptr(),pointer);
+  let expected=TxtSnapshot::from_body("a\nb");let wire=<TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&expected);let pointer=wire.as_ptr();let mut denied=policy;match axis{"items"=>denied.maximum_items=0,"capacity"=>denied.maximum_capacity_bytes=0,_=>denied.maximum_depth=0};let mut accept=|_|true;let mut native=NativeDecodeControl::new(1048576,&mut accept);let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,denied);let(result,heap)=observe(||<TxtSnapshot as store::ArtifactPackReceiving>::receive_pack(&wire,&mut owner));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes,owner.progress()),(0,0,RetainedCloneProgress::default()));drop(owner);assert!(!native.has_retirement_owner());assert_eq!(wire.as_ptr(),pointer);
  }
  assert!(successes>=fixture["cases"].as_array().unwrap().len());
 }

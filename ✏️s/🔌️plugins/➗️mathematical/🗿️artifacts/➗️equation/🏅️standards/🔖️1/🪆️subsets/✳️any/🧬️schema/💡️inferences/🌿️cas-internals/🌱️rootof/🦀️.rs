@@ -40,8 +40,6 @@ pub fn real_roots_of(poly: &PolyU<Integer>) -> Vec<Expr> {
 pub fn root_of_to_f64(e: &Expr) -> Option<f64> {
     let Kind::RootOf { coeffs, index } = e.kind() else { return None };
     let mut a = to_algebraic(coeffs, *index)?;
-    // 🎯️ The raw isolating interval can be as wide as the Cauchy root bound — refine to f64 precision
-    // before taking its midpoint, or the result only reflects the isolation step, not the root itself.
     a.refine(&Rational::from_i64(1, 1_000_000_000_000_000).unwrap());
     Some(a.to_f64())
 }

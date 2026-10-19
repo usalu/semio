@@ -3,21 +3,21 @@
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface ShootingArtifact {
-  /** @state artifact */
+  /** 📜️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets: ShootingAsset[];
-  /** @state artifact */
+  /** 📤️ @state artifact */
   savedCameras: ShootingSavedCamera[];
-  /** @state artifact */
+  /** 🎬️ @state artifact */
   scene: ShootingSceneLighting;
-  /** @state artifact */
+  /** 🎥️ @state artifact */
   shots: ShootingShot[];
-  /** @state artifact */
+  /** 🟢️ @state artifact */
   activeShotId: string;
-  /** @state artifact */
+  /** ⚡️ @state artifact */
   activeAssetId: string;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 🎖️ @state artifact @child kind=s.stdio.semio */
   emblem?: ArtifactChild;
 }
 

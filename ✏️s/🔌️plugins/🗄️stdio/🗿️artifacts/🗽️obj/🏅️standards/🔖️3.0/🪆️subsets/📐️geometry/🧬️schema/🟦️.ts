@@ -14,17 +14,17 @@ export interface ObjSmoothingRange { faceIndexFrom: bigint; group?: number; }
 export interface ObjUnknownStatement { lineIndex: bigint; raw: string; }
 
 export interface ObjArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ vertices: ObjVertex[];
-  /** @state artifact */ texcoords: ObjTexCoord[];
-  /** @state artifact */ normals: ObjNormal[];
-  /** @state artifact */ faces: ObjFace[];
-  /** @state artifact */ groups: ObjGroup[];
-  /** @state artifact */ objects: ObjObject[];
-  /** @state artifact */ mtllib?: string;
-  /** @state artifact */ usemtl: ObjUsemtlRange[];
-  /** @state artifact */ smoothingGroups: ObjSmoothingRange[];
-  /** @state artifact */ unknownStatements: ObjUnknownStatement[];
+  /** 🧊️ @state artifact */ schema: string;
+  /** 🕸️ @state artifact */ vertices: ObjVertex[];
+  /** 🔷️ @state artifact */ texcoords: ObjTexCoord[];
+  /** 📐️ @state artifact */ normals: ObjNormal[];
+  /** 🔲️ @state artifact */ faces: ObjFace[];
+  /** 🪣️ @state artifact */ groups: ObjGroup[];
+  /** 🧱️ @state artifact */ objects: ObjObject[];
+  /** 🗿️ @state artifact */ mtllib?: string;
+  /** 📦️ @state artifact */ usemtl: ObjUsemtlRange[];
+  /** 🌊️ @state artifact */ smoothingGroups: ObjSmoothingRange[];
+  /** 📜️ @state artifact */ unknownStatements: ObjUnknownStatement[];
 }
 
 //#region 🚪️Parsers

@@ -13,8 +13,8 @@ export type JsonValue =
   | { kind: "object"; members: JsonMember[] };
 
 export interface JsonSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ value: JsonValue;
+  /** 📐️ @state artifact */ schema: string;
+  /** 💎️ @state artifact */ value: JsonValue;
 }
 
 //#region 🚪️Parsers

@@ -1,5 +1,5 @@
 //! 📄️ Dense numerical cells use the shared original paged owner independently of logical dimensions.
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Debug,PartialEq)]
 pub struct PagedMatD{pub rows:usize,pub cols:usize,pub data:PagedList<f64,{usize::MAX}>}
 impl PagedMatD{

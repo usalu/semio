@@ -36,15 +36,6 @@ pub(super) fn imprint_face_pair(
     let Some(sb) = body.surfaces.get(face_b.surface).cloned() else { return Ok(()) };
     let Ok(curves) = intersect_surface_surface(sa, &sb, tol) else { return Ok(()) };
     for ic in &curves {
-        // A near-tangent pair (e.g. two spheres offset by barely more than the sum of
-        // their radii) can still produce a genuine but near-zero-radius contact circle
-        // from `intersect_surface_surface`'s own tolerant overlap test — a real curve
-        // object, not a numerical error, but one whose enclosed area/length is below the
-        // tolerance at which its precise topology (which side of the seam it grazes, its
-        // own trim gap) is even meaningful. Physically this is single-point external
-        // tangency: zero intersection area, nothing to imprint. Skipping it here (rather
-        // than imprinting a degenerate sliver) is what keeps the tangent-sphere union's
-        // volume the exact, un-carved sum of both spheres.
         let bracket = intcurve_finite_bracket(body, ic, fa, fb);
         if curve3_extent(&ic.curve3, bracket) <= tol {
             continue;
@@ -56,7 +47,7 @@ pub(super) fn imprint_face_pair(
             let p0 = ic.curve3.eval(t0);
             let p1 = ic.curve3.eval(t1);
             if !full_period && p0.distance(p1) <= tol.max(1e-9) {
-                continue; // degenerate near-zero chord — nothing useful to imprint
+                continue;
             }
             let along_a = coincident_boundary_edge(body, fa, ic, (t0, t1), tol);
             let along_b = coincident_boundary_edge(body, fb, ic, (t0, t1), tol);
@@ -67,14 +58,7 @@ pub(super) fn imprint_face_pair(
                     (anchor, anchor + (t1 - t0))
                 } else { (t0, t1) }
             } else { (t0, t1) };
-            // A segment can run exactly ALONG one operand's pre-existing boundary edge (a plane through a sphere's centre
-            // containing its axis meets it in that sphere's own seam meridian). Imprinting a second, geometrically identical
-            // edge there would leave duplicate topology, so the existing edge is subdivided and REUSED as the shared edge,
-            // and that operand queues no imprint of its own — the boundary it needs is already there.
             let endpoints = (ic.curve3.eval(t0), ic.curve3.eval(t1));
-            // 🧱 A segment running along BOTH operands' boundaries (two boxes flush on a face: the stock's side face meets the
-            // tool's top face exactly along the stock's own top edge) is already topology on each side; neither face needs an
-            // imprint, only the two boundary subedges must become ONE edge so the pieces stitch by shared-edge adjacency.
             if let (Some(existing_a), Some(existing_b)) = (along_a, along_b) {
                 let ea = if full_period { existing_a } else { boundary_subedge(body, fa, endpoints, (tol, weld), rec)? };
                 let eb = if full_period { existing_b } else { boundary_subedge(body, fb, endpoints, (tol, weld), rec)? };
@@ -107,8 +91,6 @@ pub(super) fn imprint_face_pair(
                 }
                 continue;
             }
-            // 🧭️ A fresh imprint is cut into pieces wherever it meets either face's boundary — a periodic seam it crosses, a pole it
-            // passes through — so every piece lies inside one chart of both faces and the arrangement sees a plain planar map.
             let marks = if full_period { touches } else { boundary_touch_parameters(body, ic, (fa, fb), (t0, t1), false, tol) };
             for (r0, r1, closed) in split_ranges((t0, t1), full_period, &marks) {
                 let edge_id = build_imprint_edge(body, ic, (r0, r1), closed, (tol, weld), rec);

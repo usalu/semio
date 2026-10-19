@@ -137,9 +137,6 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     let eval: serde_json::Value = serde_json::from_str(&eval_json).expect("evaluation json");
     let handle = output_channel(&eval, &fixture.preview.node, &fixture.preview.channel).get("handle").and_then(serde_json::Value::as_str).expect("geometry handle").to_string();
     let tolerance = preview_tolerance(lod_mode);
-    // 🧼️ The lane above already tessellated this handle at a FINER tolerance, and
-    // `cached_mesh_at_or_finer` would serve that cache instead of stepping — so the delivery starts
-    // from a cold kernel, the way a freshly evaluated handle does in the app.
     geometry_session().evict_mesh_cache_for_handle(&handle);
     geometry_session().cancel_all_tessellations();
     let node_hash = semio_framework_os_flow::preview_tessellate_node_hash(&handle, tolerance.to_bits());
@@ -180,8 +177,6 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         assert!(volume > 0.0, "{}: preview volume is outward", fixture.example);
         assert!((volume - oracle).abs() <= volume.abs().max(1.0) * 1e-5, "{}: independent preview volume", fixture.example);
     }
-    // 👁️ The publication the preview window actually paints, built from the SAME delivered session
-    // — transfer and publication are two different failures and this row separates them.
     resolve_preview_geometry(&eval_json, &host.host_snapshot, lod_mode, &mut session);
     let config = semio_s_artifact_procedural_3d_editor_config::Generation3dConfig { lod_mode: lod_mode.to_string(), ..Default::default() };
     let payload = semio_s_artifact_procedural_3d_mode_edit::windows::preview::preview_payload(&eval_json, &host.host_snapshot, &config, Some(&session), &semio_s_artifact_procedural_3d_mode_edit::windows::preview::PreviewInteractionMarks::default());
@@ -285,8 +280,6 @@ fn assert_delivery(dsl: &str, snapshot_json: &str) {
     assert_eq!(run.phase, "complete", "{}: the delivery ended in phase {:?}", fixture.example, run.phase);
     assert!(run.triangles >= delivery.min_triangles, "{}: {} delivered triangles, expected at least {}", fixture.example, run.triangles, delivery.min_triangles);
     assert!(run.edge_segments >= delivery.min_edge_segments, "{}: {} delivered edge segments, expected at least {}", fixture.example, run.edge_segments, delivery.min_edge_segments);
-    // 👁️ A wire preview has NO triangles and must still paint: its polyline rides the same `pack`
-    // body in `edgePositions`, and `mesh_has_preview_geometry` admits it on that alone.
     assert!(run.triangles > 0 || run.edge_segments > 0, "{}: the delivered mesh is empty", fixture.example);
     assert_eq!(run.payload_meshes, delivery.meshes, "{}: the preview published {} meshes, the example delivers exactly {}", fixture.example, run.payload_meshes, delivery.meshes);
     assert_eq!(run.payload_instances, delivery.meshes, "{}: every published mesh owes exactly one preview instance", fixture.example);

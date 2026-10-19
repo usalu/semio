@@ -39,7 +39,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 👁️ Read-only preview — no `.window_kind_interactions(..)` reference for this window.
         interactions: Vec::new(),
     }
 }

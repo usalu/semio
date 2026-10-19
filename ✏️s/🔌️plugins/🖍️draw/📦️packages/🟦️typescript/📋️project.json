@@ -1,6 +1,16 @@
 {
   "name": "@semio-tech/draw-js",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/↗️affine/**/*"
+    ]
+  },
   "targets": {
     "test": {
       "executor": "repo:script",
@@ -9,7 +19,7 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": true
     },
     "publication-authority-audit": {
       "executor": "repo:script",
@@ -22,7 +32,7 @@
     },
     "utility-action-policy": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts utility-action-policy",

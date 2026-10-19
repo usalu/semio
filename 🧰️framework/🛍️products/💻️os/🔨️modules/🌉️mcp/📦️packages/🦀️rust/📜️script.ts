@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { daemonBudgetOpts, orchestratorBudgetOpts, runCmd, runCargo, runProbe, runRepositoryCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { daemonBudgetOpts, orchestratorBudgetOpts, runCmd, runCargo, runProbe, runRepositoryCommand, resolveTypescriptCompilerV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runAdmittedCargoPackageTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -145,7 +145,7 @@ class OriginalInferenceSourceScript extends BundleScript {
     if (segments.length) throw new Error("Original inference source law has no arguments");
     const source = join(this.root, "..", "..", "💡️inference", "🧪️tests", "💼️inference-service-law", "🟦️.ts");const originalCaller = join(this.root, "..", "..", "💡️inference", "🧪️tests", "🔬️inference-jobs", "🟦️.ts");
     const budget = {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null} as const;
-    await runRepositoryCommand(this.invocation, process.execPath, [Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,originalCaller], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
+    await runRepositoryCommand(this.invocation, process.execPath, [resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,originalCaller], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
     await runRepositoryCommand(this.invocation, process.execPath, ["test",source,originalCaller], this.repoRoot, "mcp:original-inference:source", budget, {env:process.env});
   }
 }
@@ -162,7 +162,7 @@ class ProbeSqliteSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite source law has no arguments");
     const source=join(this.root,"..","..","🏠️workspace","🪶️sqlite","🧪️tests","🟦️.ts");
-    await runRepositoryCommand(this.invocation,process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"mcp:probe-sqlite-types",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
+    await runRepositoryCommand(this.invocation,process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"mcp:probe-sqlite-types",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
     await runRepositoryCommand(this.invocation,process.execPath,["test",source],this.repoRoot,"mcp:probe-sqlite-source",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
   }
 }
@@ -475,10 +475,6 @@ function renderType(node: SchemaNode | boolean, indent: string): string {
       return "number";
     case "array": {
       const element = renderType((node.items as SchemaNode | boolean | undefined) ?? true, indent);
-      // 📐️ `readonly T[]` parses only while `T` is a single type reference. An element that is itself
-      // an array emitted `readonly readonly X[][]`, which TypeScript refuses outright (`TS1354`), and
-      // a union element emitted `readonly A | B[]`, which parses as `(readonly A) | (B[])` — the wrong
-      // type, silently. Anything that is not a bare identifier gets its own parentheses.
       return `readonly ${/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(element) ? element : `(${element})`}[]`;
     }
     case "object": {
@@ -487,10 +483,6 @@ function renderType(node: SchemaNode | boolean, indent: string): string {
       const required = new Set((node.required as string[] | undefined) ?? []);
       const inner = `${indent}  `;
       const fields = Object.entries(properties).map(([name, member]) => `${inner}readonly ${JSON.stringify(name)}${required.has(name) ? "" : "?"}: ${renderType(member, inner)};`);
-      // 📐️ No `[key: string]: JsonValue` catch-all even where the schema permits extra properties:
-      // TypeScript requires every optional member to be assignable to the index type, which a
-      // `T | undefined` never is, and the committed `🔣️.json` — not this type — is the authority on
-      // what else a document may carry.
       return `{\n${fields.join("\n")}\n${indent}}`;
     }
     default:
@@ -641,4 +633,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "check" }));

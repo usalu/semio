@@ -25,7 +25,7 @@ pub struct RendererIoHandle {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoHandle {
-    pub fn try_take(&mut self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
+    pub fn try_take(&mut self) -> Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>> {
         let result = renderer_io_with_node(self.slot, self.generation, |node| {
             let result = node.result.take()?;
             node.result_taken = true;
@@ -40,7 +40,7 @@ impl RendererIoHandle {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl Future for RendererIoHandle {
-    type Output = Result<semio_framework_os_services::NativeIoValue, String>;
+    type Output = Result<semio_framework_os_services_native_io::NativeIoValue, String>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
         if let Some(result) = self.try_take() {
@@ -118,7 +118,7 @@ const RENDERER_IO_TURN_GRANT: semio_framework_job::RetainedCloneGrant = semio_fr
 
 /// 🪙️ One page, path or ledger release of a completed or detached result, with the parent depths its payload ladder needs.
 #[cfg(not(target_arch = "wasm32"))]
-const RENDERER_IO_RESULT_CLOSE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 };
+const RENDERER_IO_RESULT_CLOSE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 };
 
 /// 🪪️ The original authority one mounted native I/O request runs under: its own identity, root cancellation and paid caller turns, because this transport is pumped without any frame owner.
 #[cfg(not(target_arch = "wasm32"))]
@@ -191,7 +191,7 @@ impl RendererIoCaller {
 #[cfg(not(target_arch = "wasm32"))]
 enum RendererIoReceipt {
     Yield,
-    Terminal(Option<Result<semio_framework_os_services::NativeIoValue, String>>),
+    Terminal(Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>>),
     Fault(&'static str),
 }
 
@@ -199,14 +199,14 @@ enum RendererIoReceipt {
 pub struct RendererIoNode {
     #[cfg(any(test, feature = "testkit"))]
     #[doc(hidden)]
-    pub job: Option<semio_framework_os_services::NativeIoJob>,
+    pub job: Option<semio_framework_os_services_native_io::NativeIoJob>,
     #[cfg(not(any(test, feature = "testkit")))]
-    job: Option<semio_framework_os_services::NativeIoJob>,
+    job: Option<semio_framework_os_services_native_io::NativeIoJob>,
     params: Option<semio_framework_job_worker_authority::BatchJobParams>,
     params_retirement: Option<semio_framework_async::CancelTokenRetirement>,
-    session: Option<semio_framework_job_worker::WorkerJobSession<semio_framework_os_services::NativeIoJob>>,
+    session: Option<semio_framework_job_worker::WorkerJobSession<semio_framework_os_services_native_io::NativeIoJob>>,
     ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
-    result: Option<Result<semio_framework_os_services::NativeIoValue, String>>,
+    result: Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>>,
     result_taken: bool,
     detached: bool,
     caller: RendererIoCaller,
@@ -215,8 +215,8 @@ pub struct RendererIoNode {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoNode {
-    fn new(generation: u64, request: semio_framework_os_services::NativeIoRequest) -> Self {
-        Self { job: Some(semio_framework_os_services::NativeIoJob::new(request)), params: None, params_retirement: None, session: None, ticket: None, result: None, result_taken: false, detached: false, caller: RendererIoCaller::new(generation), waker: None }
+    fn new(generation: u64, request: semio_framework_os_services_native_io::NativeIoRequest) -> Self {
+        Self { job: Some(semio_framework_os_services_native_io::NativeIoJob::new(request)), params: None, params_retirement: None, session: None, ticket: None, result: None, result_taken: false, detached: false, caller: RendererIoCaller::new(generation), waker: None }
     }
 
     fn wake(&mut self) {
@@ -268,7 +268,7 @@ impl RendererIoNode {
             }
             Ok(_) => {}
             Err(error) if !error.is_empty() => {
-                if error.len() > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
+                if error.len() > semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES {
                     return false;
                 }
                 error.clear();
@@ -377,7 +377,7 @@ impl RendererIoNode {
         }
     }
 
-    fn receive_outcome(&mut self, mut owner: semio_framework_job_worker::WorkerJobOutcome<semio_framework_os_services::NativeIoJob>) {
+    fn receive_outcome(&mut self, mut owner: semio_framework_job_worker::WorkerJobOutcome<semio_framework_os_services_native_io::NativeIoJob>) {
         use semio_framework_job::{JobOutcomeDescriptor, JobOutcomeKind, RetainedCloneStep};
         let received = self.caller.turn(|cx| -> Result<RendererIoReceipt, semio_framework_job::OriginalTurnFailure> {
             let Some((issued, progress)) = owner.take_retained_step_receipt() else { return Ok(RendererIoReceipt::Fault("native I/O step returned no original receipt")) };
@@ -401,7 +401,7 @@ impl RendererIoNode {
             }
             Ok(match kind {
                 None | Some(JobOutcomeKind::Yield) => RendererIoReceipt::Yield,
-                Some(_) => RendererIoReceipt::Terminal(owner.job_mut().ok().and_then(semio_framework_os_services::NativeIoJob::take_result)),
+                Some(_) => RendererIoReceipt::Terminal(owner.job_mut().ok().and_then(semio_framework_os_services_native_io::NativeIoJob::take_result)),
             })
         });
         match received {
@@ -603,7 +603,7 @@ pub fn pump_renderer_io_sessions(maximum_sessions: usize) -> usize {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<RendererIoHandle, String> {
+pub fn submit_renderer_io(request: semio_framework_os_services_native_io::NativeIoRequest) -> Result<RendererIoHandle, String> {
     let Some((slot_index, generation)) = RENDERER_IO_SLOTS.iter().enumerate().find_map(|(index, slot)| {
         if slot.state.compare_exchange(RENDERER_IO_VACANT, RENDERER_IO_CHECKED_OUT, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
@@ -634,7 +634,7 @@ const RENDERER_IO_PAYLOAD_CLOSE_STEPS: usize = 4096;
 
 /// ♻️ Releases a completed native I/O payload one page or ledger frontier per step until it is terminal empty; false when the bounded walk left an owner behind.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn close_renderer_io_payload(payload: &mut semio_framework_job::RetainedJobPayload) -> bool {
+pub fn close_renderer_io_payload(payload: &mut semio_framework_job_payload::RetainedJobPayload) -> bool {
     for _ in 0..RENDERER_IO_PAYLOAD_CLOSE_STEPS {
         if payload.terminal_is_empty() {
             return true;
@@ -645,7 +645,7 @@ pub fn close_renderer_io_payload(payload: &mut semio_framework_job::RetainedJobP
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<semio_framework_os_services::NativeIoValue, String> {
+pub async fn run_renderer_io(request: semio_framework_os_services_native_io::NativeIoRequest) -> Result<semio_framework_os_services_native_io::NativeIoValue, String> {
     submit_renderer_io(request)?.await
 }
 

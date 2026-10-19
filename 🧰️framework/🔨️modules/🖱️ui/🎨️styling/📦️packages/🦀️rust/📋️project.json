@@ -13,6 +13,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -21,6 +27,7 @@
     },
     "check-generated": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-generated"
@@ -28,6 +35,7 @@
     },
     "fonts": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fonts",
@@ -37,6 +45,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -45,6 +61,14 @@
     },
     "test-rs": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -52,6 +76,14 @@
     },
     "test-py": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -59,7 +91,13 @@
     },
     "test-relative-sizing": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "workspace:deps-browsers"
@@ -71,7 +109,13 @@
     },
     "test-verification-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -80,12 +124,18 @@
       }
     },
     "test-color-primitives": {
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "workspace:deps-browsers"
       ],
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-color-primitives"
@@ -97,6 +147,18 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
       "sharedGlobals",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   }
 }

@@ -20,12 +20,16 @@ use crate::meters::{EndUse, FuelType};
 use crate::model::Model;
 use crate::results::Results;
 use crate::site::WeatherRecord;
-use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId, StepBudget, StepContext};
+use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, RetainedCloneGrant, RetainedCloneProgress, RevisionId, StepBudget, StepContext};
+use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload};
 use std::time::Instant;
 
 use crate::wire::ENERGY_WIRE_MAGIC;
 use crate::calendar::RunPeriod;
 use crate::model::{test_model_full_topology, test_model_single_zone};
+use semio_s_plugin_energy_engine_precompute::PrecomputeBuilder;
+use semio_framework_job::OriginalTurnFailure;
+use semio_s_plugin_energy_engine_sim_wire::EnergyWireLease;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Seen {
@@ -735,24 +739,6 @@ fn per_surface_conduction_losses_close_the_zone_air_balance_against_the_heating_
     let heating_kwh = heating.energy_kwh();
     assert!(heating_kwh > 0.0, "the ideal loads must have delivered heat, got {heating_kwh}");
 
-    // 🧪️ Physics of the tolerance. Over the run period the zone air node balances to
-    //   Q_hvac = Σ_faces area·h_in·(T_air − T_face) + Q_outdoor_air + Q_internal + dU_air/dt,
-    // and this fixture zeroes every term on the right but the first: no people/lights/equipment
-    // (Q_internal = 0), no infiltration object and an outdoor-air rate that is per-PERSON only with
-    // zero people (Q_outdoor_air = 0), and a heating design day whose direct and diffuse irradiance
-    // are both 0 at −10 °C (no absorbed solar re-entering through the wall). The air-storage term
-    // vanishes too, for a reason worth spelling out: at −10 °C outdoors the zone needs heat in every
-    // one of the 24 hours, so the thermostat pins the air at its 20 °C setpoint for the whole run
-    // period and dU_air/dt is identically zero after warmup. The wall's own transient charge is NOT
-    // dropped either — it lives inside T_face, which the settled solve produces and which the same
-    // `area·h_in·(T_air − T_face)` product this accumulator integrates already carries.
-    //
-    // So the identity is not approximate here: `required_w` (what the meter records) is read off the
-    // same settled linear system as the face temperatures, and `unit_commit` integrates that system's
-    // envelope term face by face. Measured agreement is 7.246355136318226 vs 7.246355136318228 kWh —
-    // two ULP. The 1e-6 relative band is therefore floating-point slack, not physics slack; anything
-    // above it means a wrong sign, a wrong area, a double count or a term accumulated at the wrong
-    // point in the timestep, which is exactly what this law is here to catch.
     let relative = (net_loss_kwh - heating_kwh).abs() / heating_kwh.max(1e-9);
     assert!(relative <= 1e-6, "per-surface conduction {net_loss_kwh} kWh vs heating meter {heating_kwh} kWh is {:.6} % apart", relative * 100.0);
 }
@@ -766,9 +752,6 @@ fn warmup_never_contributes_to_the_per_surface_totals() {
     let total = |results: &Results| results.per_surface.iter().map(|row| row.conduction_loss_kwh).sum::<f64>();
     let (a, b) = (total(&with_short_warmup), total(&with_long_warmup));
     assert!(a > 0.0 && b > 0.0);
-    // Four extra warmup days are four extra days of −10 °C wall conduction. If warmup were being
-    // integrated the longer run would report roughly twice the loss; converged warmup leaves the same
-    // run period, so the two totals differ only by how settled the wall was when the run started.
     assert!((a - b).abs() / a.max(1e-9) < 0.05, "warmup days leak into the run-period totals: {a} vs {b}");
 }
 
@@ -777,7 +760,7 @@ fn warmup_never_contributes_to_the_per_surface_totals() {
 /// 🌦️ The original retained job admits authored rows, selects next-day sources and refuses gaps before precompute.
 #[test]
 fn weather_job_original48_midnight_and_chronology_refusals_match_neutral_sources(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📍️site/📅️chronology/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../📍️site/📅️chronology/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){let records:Vec<WeatherRecord>=serde_json::from_value(case["records"].clone()).unwrap();let policy:crate::site::WeatherCalendar=serde_json::from_value(case["calendar"].clone()).unwrap();let p:RunPeriod=serde_json::from_value(case["run"].clone()).unwrap();let original=records.clone();let config=SimulationConfig{run_period_year:p.year,run_period_start_month:p.start_month,run_period_start_day:p.start_day,run_period_end_month:p.end_month,run_period_end_day:p.end_day,warmup_days:0,weather:Some(crate::site::WeatherData{calendar:policy,location:"neutral original".into(),latitude_deg:52.37,longitude_deg:9.74,elevation_m:55.0,time_zone_hours:1.0,records}),..Default::default()};let mut job=NativeEnergyJob::from_preborn(Engine::job(test_model_single_zone(),config).unwrap());let operation=job.operation;job.stage=EnergyJobStage::ResolveWeather;let mut sequence=0;
  for _ in 0..original.len()+2{let mut receipt=RetainedCloneProgress::default();let _=fixture_step(&mut job,semio_framework_job::StepBudget::new(1,u64::MAX,ENERGY_BATCH_GRANT),Probe::Original);if job.weather_fault.is_some()||job.stage!=EnergyJobStage::ResolveWeather{break;}}assert_eq!(job.weather_fault.is_none(),case["runAdmitted"].as_bool().unwrap(),"{}",case["id"]);assert_eq!(job.config.weather.as_ref().unwrap().records,original);
  if job.weather_fault.is_none(){assert_eq!(job.stage,EnergyJobStage::Precompute);for query in case["queries"].as_array().unwrap(){if query["expected"].is_null(){continue;}let date=&query["date"];let selected=job.weather_index(crate::calendar::SimDate::new(date[0].as_u64().unwrap()as u16,date[1].as_u64().unwrap()as u8,date[2].as_u64().unwrap()as u8),query["hour"].as_u64().unwrap()as u8).unwrap();let actual=job.hour_weather(selected,query["policy"]=="RepeatDay").unwrap();for(i,row)in[actual.previous,actual.current,actual.next].iter().enumerate(){assert_eq!(*row,original[query["expected"][i].as_u64().unwrap()as usize]);}}}
@@ -789,7 +772,7 @@ fn weather_job_original48_midnight_and_chronology_refusals_match_neutral_sources
 #[test]
 fn input_identity_original_full_fields_match_serde_and_paid_cancellation_frontiers(){
  use semio_framework_os_kernel::os_store::{ArtifactCanonicalSourceIdentityCursor as Cursor,ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../📍️site/📅️chronology/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../📍️site/📅️chronology/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let records:Vec<WeatherRecord>=serde_json::from_value(fixture["cases"][0]["records"].clone()).unwrap();
  let mut model=test_model_single_zone();model.name="München 🪪️ authored model".into();
  let config=SimulationConfig{weather:Some(crate::site::WeatherData{calendar:crate::site::WeatherCalendar::ActualDates,location:"full original48".into(),latitude_deg:52.37,longitude_deg:9.74,elevation_m:55.0,time_zone_hours:1.0,records}),..Default::default()};
@@ -805,7 +788,7 @@ fn input_identity_original_full_fields_match_serde_and_paid_cancellation_frontie
 /// ♻️ Real Energy cancellation delegates original builder/model custody and every physical release to shared quotes.
 #[test]
 fn energy_precompute_close_delegates_original_factory_quotes_and_physical_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧠️precompute/♻️retirement/🧫️fixtures/🔣️.json")).unwrap();let mut observed_turns=0;
+ let corpus:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧠️precompute/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut observed_turns=0;
  for case in corpus["cases"].as_array().unwrap(){for cutoff in corpus["cutoffs"].as_array().unwrap(){
   let model=match case["model"].as_str().unwrap(){"empty"=>Model::default(),"single"=>test_model_single_zone(),"600"=>semio_s_plugin_energy_engine_bestest::model("600").unwrap(),_=>unreachable!()};let mut builder=PrecomputeBuilder::new(10,10);let limit=if case["complete"].as_bool().unwrap(){usize::MAX}else{cutoff.as_u64().unwrap() as usize};let mut steps=0;while !builder.is_complete()&&steps<limit{builder.step(&model);steps+=1;assert!(steps<100_000);}
   let mut job=NativeEnergyJob::from_preborn(Engine::job(model,SimulationConfig::default()).unwrap());if case["complete"].as_bool().unwrap(){job.pre=Some(builder.finish());}else{job.precompute=Some(builder);}job.begin_close();

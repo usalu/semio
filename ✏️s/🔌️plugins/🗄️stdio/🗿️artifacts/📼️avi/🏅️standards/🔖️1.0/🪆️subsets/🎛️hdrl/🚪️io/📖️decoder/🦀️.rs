@@ -49,8 +49,6 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                                     let sub_type = fourcc_str(&s.payload[0..4].try_into().unwrap());
                                     strl_extra.push(RiffChunk { fourcc: format!("LIST:{sub_type}"), data: s.payload[4..].to_vec() });
                                 } else {
-                                    // 📦 e.g. a real `vprp` (video properties) or `JUNK` padding chunk — no
-                                    // typed slot of its own, retained verbatim (see snapshot's module doc).
                                     strl_extra.push(RiffChunk { fourcc: fourcc_str(&s.fourcc), data: s.payload.to_vec() });
                                 }
                             }
@@ -61,8 +59,6 @@ pub fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             let sub_type = fourcc_str(&h.payload[0..4].try_into().unwrap());
                             hdrl_extra.push(RiffChunk { fourcc: format!("LIST:{sub_type}"), data: h.payload[4..].to_vec() });
                         } else {
-                            // 📦 e.g. a real `JUNK` padding chunk directly inside `hdrl` — no typed slot
-                            // of its own, retained verbatim (see snapshot's module doc).
                             hdrl_extra.push(RiffChunk { fourcc: fourcc_str(&h.fourcc), data: h.payload.to_vec() });
                         }
                     }

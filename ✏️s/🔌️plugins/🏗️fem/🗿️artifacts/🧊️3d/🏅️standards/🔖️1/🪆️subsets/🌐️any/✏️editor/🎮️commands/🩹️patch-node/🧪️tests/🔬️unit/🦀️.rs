@@ -27,6 +27,14 @@ fn concurrent_node_fields_preserve_both_authors_intent() {
 use crate::context::dispatch;
 use crate::context::fem3d_demo_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node::PatchNode;
+#[cfg(test)] use semio_framework_plugin::component::Emit;
+#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_framework::Fault;
 
 fn demo() -> Fem3dSnapshot {
     semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()

@@ -1,4 +1,4 @@
-//! generation2d → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
+//! 🪄️ generation2d → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
 //! verbatim, so the hop is `IoFidelity::Exact`.
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 

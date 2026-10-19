@@ -17,9 +17,6 @@ pub fn handle(_payload: &Run, doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &
     let host = ImperativeHost::from_scene(&crate::procedure_scene(doc)?);
     let result = host.run();
     let json = semio_framework_pack_json::to_json_string(&result.scope);
-    // 🧊️ The run result owns the accumulated scope and every effect row's input/output
-    // dictionaries; a bare drop here aborts the guest with `final Dictionary ownership must be
-    // explicitly retired or owned by a cold boundary` (bucket XCUT-DICT).
     neural_engine::ColdRetire::retire_cold(result);
     Ok(Emit::config(vec![ImperativeConfigMutation::SetRunOutput(crate::editor::procedure::config::SetRunOutput { json })]))
 }

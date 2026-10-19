@@ -1,4 +1,5 @@
 import "../💾️storage/🧪️tests/🌐️platform/🟦️.ts";
+import "../💾️storage/🧪️tests/📤️diagnostics/🟦️.ts";
 import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 /** 📦️ Portable locked-install and owner-requested lock refresh command laws. */
 import { expect, test } from "bun:test";
@@ -14,7 +15,7 @@ import {prepareJavascriptDependencies,javascriptDependencyProducerArgumentsV1} f
 import dependencyInstallSchema from "../💾️storage/🧬️schema/📥️install.json"with{type:"json"};
 import {SyncScript,RefreshLockScript} from "../📜️script.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/📜️script.ts";
+import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/🟦️.ts";
 import { zipSync, unzipSync } from "fflate";
 import { activateWhenNxWatcherReady, waitForNxTargetStart, nxChildEnvironment, nxWatcherEnvironment, NxOutputSpoolV1 } from "../../📜️script.ts";
 import { EventEmitter } from "node:events";
@@ -31,7 +32,7 @@ async function outputCensus(root:string,input:any,mutation:string,api:typeof bun
  put("source/member/package.json",{name:"neutral-source",version:"1.0.0"});
  if(mutation!=="generatedBirth")for(const name of input.outputs)put("source/"+name+"/runtime/package.json",{name:"neutral-output-"+input.outputs.indexOf(name),version:"1.0.0"});
  const controller=new AbortController(),visited:string[]=[];let changed=false;
- try{const report=await api.publishBunWorkspaceOwnership(root,{signal:controller.signal,advance:async progress=>{
+ try{const report=await api.publishBunWorkspaceOwnership(root,{kind:"all"},{signal:controller.signal,advance:async progress=>{
   visited.push(progress.path);
   const at=mutation==="cancel"||mutation==="authoredDirectory"?join(root,"source"):join(root,"source/member/package.json");
   if(!changed&&progress.path===at&&progress.operation===(mutation==="cancel"||mutation==="authoredDirectory"?"list":"readText")){

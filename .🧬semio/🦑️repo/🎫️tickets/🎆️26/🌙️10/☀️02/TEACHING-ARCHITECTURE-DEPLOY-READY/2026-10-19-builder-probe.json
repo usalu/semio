@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "debianImage": "debian@sha256:a4672c0cb26fbdde88e38fa2dfb6c681942306680e41e4378b28770b6e79ee91",
+  "platform": "linux/amd64",
+  "bunVersion": "1.4.2",
+  "bunUrl": "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-linux-x64-baseline.zip",
+  "bunSha256": "c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f",
+  "maximumCompressedInputBytes": 268435456,
+  "maximumTemporaryBytes": 536870912,
+  "maximumBunArchiveBytes": 67108864,
+  "maximumBunExecutableBytes": 167772160,
+  "maximumDebianLayerBytes": 134217728,
+  "tmpfsBytes": 67108864,
+  "sourceReadOnly": true,
+  "command": [
+    "bun",
+    "repo",
+    "preflight",
+    "--scope",
+    "@teaching/architecture-course"
+  ],
+  "containerName": "semio-course-preflight-sol-20261019",
+  "containerMemoryBytes": 536870912,
+  "containerNetwork": "none",
+  "privateCacheTmpfsBytes": 33554432,
+  "runtimeTmpfsBytes": 33554432
+}

@@ -17,8 +17,10 @@ import { decodeFaultFromWire, decodePackValue, encodePackValue } from "@semio-te
 // `error instanceof SemioFaultError` branch is typed against that module instance, and a door double
 // that throws the other package's class degrades to a generic `extension.invoke-failed`.
 import { SemioFaultError } from "@semio-tech/framework";
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET, wireEffectToFriendly, wireRespondAnswer, type WireVariant } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES } from "@semio-tech/framework/trace/memory";
+import { wireEffectToFriendly, wireRespondAnswer } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "@semio-tech/framework/actor/wire-turn";
+import type { WireVariant } from "@semio-tech/framework-actor/wire-turn";
 import { EXTENSION_WORKER_LOST_FAULT, runInvokeExtensionEffect } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import {
   abortExtensionRequestsForActor,
@@ -216,9 +218,6 @@ describe("a surface cancel aborts the in-flight extension request", () => {
    * the only shape an abort can be observed on — `driveInboundRequest` reads its signal at turn
    * boundaries, so a guest that answers on turn 1 is never cancellable by construction. */
   const parkingDoorEntry = (observed: { signal?: AbortSignal }): LoadedProgramState => {
-    // ⏳️ A real macrotask per turn, so the drain SPANS the event loop the way a wasm worker turn
-    // does. A synchronous `more-work` loop burns the whole turn budget inside one microtask flush
-    // and no cancellation could ever be observed between two turns.
     const submit = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1));
       return { effects: [] as readonly WireVariant[], status: { tag: "more-work" } };
@@ -254,7 +253,6 @@ describe("a surface cancel aborts the in-flight extension request", () => {
     const actorKey = "s.procedural:1";
     expect(inFlightExtensionRequestCount(actorKey)).toBe(0);
     const settled = runInvokeExtensionEffect(requester, parkingDoorEntry(observed), 1, "flow-extension-brep", "tessellate", "{\"handle\":\"brep:solid-1\"}", 42n);
-    // ⏳️ One macrotask so the request actually reaches the door before the cancel gesture lands.
     await new Promise((resolve) => setTimeout(resolve, 5));
     expect(observed.signal, "the shell must hand `invoke` an AbortSignal — it never did, so a cancel reached the guest's own bookkeeping and never the parked request").toBeInstanceOf(AbortSignal);
     expect(observed.signal?.aborted).toBe(false);
@@ -287,8 +285,6 @@ describe("a surface cancel aborts the in-flight extension request", () => {
       },
       manifest: {},
     } as unknown as LoadedProgramState;
-    // 🩺️ The exact message `ShardClient.terminate` raises — `isShardLostError` matches on that
-    // prefix, so a test that invented its own wording would prove nothing.
     const shardLost = new Error("shard 0 terminated by the host watchdog: the worker was silent for 16271 ms; outstanding: turn flow-extension-brep#request started 16299 ms ago.");
     const dyingDoor = { handle: { pluginId: "flow-extension-brep", invoke: async () => { throw shardLost; } }, manifest: {} } as unknown as LoadedProgramState;
     await runInvokeExtensionEffect(requester, dyingDoor, 1, "flow-extension-brep", "evaluate", "{\"operatorId\":\"brep.bool.cut\",\"inputJson\":\"{}\"}", 9n);

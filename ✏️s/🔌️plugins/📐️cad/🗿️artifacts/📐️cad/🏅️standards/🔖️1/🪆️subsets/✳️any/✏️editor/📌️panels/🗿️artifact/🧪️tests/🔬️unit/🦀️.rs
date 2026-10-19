@@ -31,11 +31,11 @@ use semio_s_artifact_cad_cad_config::CadConfig;
 use semio_s_artifact_cad_cad_editor::forest_working_scene;
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::cad_labels;
 use crate::context::*;
-use semio_s_artifact_cad_cad_kit::{make_object_for_typology, CadPlayRuntime};
+use semio_s_artifact_cad_cad_kit::{make_object_for_typology};
 use semio_s_artifact_cad_cad_editor::CadPlayApp;
 use semio_s_artifact_cad_cad_model::geometry::CadPrimitiveSlot;
-use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_SHAPE};
-use semio_s_artifact_cad_cad_model::{snapshot::CadNode, snapshot::CadPaneId};
+use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene};
+use semio_s_artifact_cad_cad_model::{snapshot::CadNode};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::TreeWindowRequest;
@@ -165,8 +165,6 @@ async fn a_closed_container_stamps_its_total_without_children() {
     let shape = child(&tree, "cad-play-document.shape");
     assert_eq!(window_of(shape).total as usize, working.objects.len(), "a closed section still reports its extent");
     assert!(shape.children.is_empty(), "a closed section builds no rows: {:?}", row_keys(shape));
-    // 🔽️ The reference sections are author-collapsed (`default_open: false`), the same law by the
-    // other door: the host has never opened them, so nothing under them is built.
     let references = child(&tree, &format!("cad-play-document.references.{CAD_MODEL_DEFINITION_SHAPE}"));
     assert!(references.children.is_empty(), "an author-collapsed section builds no rows: {:?}", row_keys(references));
 }
@@ -239,8 +237,6 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
     let mut requests = vec![request("cad-play-document.nodes", Some(true), 0, 512)];
     for (suffix, objects) in panes {
         requests.push(request(&format!("cad-play-document.{suffix}"), Some(true), 0, 512));
-        // 🔑️ A nested container is addressed by its window PATH — the enclosing section's key, the
-        // separator, then its own key — so the same object id under two pane sections stays distinct.
         requests.extend(objects.iter().map(|object| request(&format!("cad-play-document.{suffix}{}{}", ui::TREE_WINDOW_PATH_SEPARATOR, object.id), Some(true), 0, 512)));
     }
     for model_definition_id in [CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC] {
@@ -256,7 +252,6 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
 
     let records = node_records(&tree);
 
-    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
     let mut keys = Vec::new();
     node_keys(&tree, &mut keys);
     let mut unique = keys.clone();
@@ -282,8 +277,6 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     assert_eq!(props.label.0.as_str(), "U2");
     assert_eq!(props.description.as_ref().map(|text| text.as_str()), Some("Beam"));
 
-    // 🔑️ A second render is a second body: one `TreeWindows` may see a given node key only once
-    // (`ui.tree-window.duplicate-key`), so the German paint gets its own ledger, as `render_body` does.
     let de_view = ViewModel { locale: Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let de_labels = cad_labels(&de_view);
     let de_windows = TreeWindows::unhosted();

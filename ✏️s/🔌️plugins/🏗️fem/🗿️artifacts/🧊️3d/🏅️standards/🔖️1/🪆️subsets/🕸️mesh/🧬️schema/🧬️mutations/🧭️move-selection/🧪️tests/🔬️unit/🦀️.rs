@@ -8,7 +8,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
 fn fixture() -> DslValue {
-    semio_framework_pack_json::from_json_str(include_str!("../../../../../🧫️fixtures/🧭️intent/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("transform intent vector")
+    semio_framework_pack_json::from_json_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧭️intent/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("transform intent vector")
 }
 
 fn decode<T: FromValue>(fixture: &DslValue, key: &str) -> T {
@@ -82,7 +82,7 @@ fn rotation_and_scaling_inverse_leave_unmoved_peer_coordinates_intact() {
         let diff = operation.diff(&base);
         let fields: Vec<_> = diff.diff().nodes.as_ref().unwrap().modified[0].patch.to_value().as_object().unwrap().iter().map(|(key, _)| key.clone()).collect();
         assert_eq!(fields, decode::<Vec<String>>(scenario, "authored"));
-        let peer = Fem3dMutation::ChangeNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode { id: "n1".into(), patch: decode(scenario, "peerPatch") });
+        let peer = Fem3dMutation::ChangeNode(crate::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode { id: "n1".into(), patch: decode(scenario, "peerPatch") });
         let combined = apply(&moved, &peer);
         let restored = operation.inverse(&base).unwrap().iter().rev().fold(combined, |state, event| apply(&state, event));
         assert_eq!(restored, apply(&base, &peer));

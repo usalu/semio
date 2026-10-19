@@ -311,11 +311,6 @@ pub fn build_channel_eval_json(host_snapshot: &FlowHostSnapshot, channels: &Eval
             }
         }
         widgets.insert(id.to_string(), semio_framework_pack_json::Value::Object(entry));
-        // 🧹️ `merge` MINTS a dictionary (`ColdDictionaryBuilder::finish`), so a neuron that carries
-        // params leaves this projection owning the only copy — and `Dictionary::drop` fail-closes on
-        // exactly that. Retire it here rather than at the loop's end: the leak is per widget, and it
-        // trapped the guest on any graph whose neurons carry inline params
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         neural::ColdRetire::retire_cold(input_dict);
         if let Some(operator_info) = operator_info {
             neural::ColdRetire::retire_cold(operator_info);
@@ -331,7 +326,6 @@ fn is_brep_geometry_handle(handle: &str) -> bool {
     if ["vertex-", "edge-", "wire-", "face-", "shell-", "solid-", "compound-", "curve-", "surface-"].iter().any(|prefix| handle.starts_with(prefix)) {
         return true;
     }
-    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 

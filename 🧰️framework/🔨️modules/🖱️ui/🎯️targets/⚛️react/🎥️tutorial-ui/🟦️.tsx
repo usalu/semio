@@ -8,7 +8,7 @@ import { Button } from "../../../🧱️elements/🔘️Button/🟦️.tsx";
 import { Slider } from "../../../🧱️elements/🎚️Slider/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { GLASS_OVERLAY_BOX_CLASS } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 import { type TutorialClockPort, formatTutorialTime, useTutorialClock } from "../🎞️tutorial-engine/🟦️.ts";
 import { resolveIntroductionPoint } from "../🧭️introduction-resolve/🟦️.ts";
@@ -226,7 +226,6 @@ export type TutorialGhostPointerProps = {
 /** @emoji 👻️ Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
 export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue, progress }) => {
   const [point, setPoint] = reactHostPort.useState<{ readonly x: number; readonly y: number } | null>(null);
-  // 🐚️ See `IntroductionDemonstrationOverlay`'s doc for why this falls back to `document.documentElement`.
   const shellScope = useShellScopeOptional();
 
   reactHostPort.useEffect(() => {

@@ -1,4 +1,4 @@
-//! OpBinary for En1993Mutation — tag + full JSON body.
+//! 🧬️ OpBinary for En1993Mutation — tag + full JSON body.
 use semio_s_artifact_norm_en1993_mutations::En1993Mutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");

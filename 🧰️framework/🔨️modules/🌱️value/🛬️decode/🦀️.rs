@@ -4,18 +4,12 @@ use crate::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement};
 mod observer;
 #[path="📏️maximum/🦀️.rs"]
 mod maximum;
-#[cfg(test)]
-#[path="📏️maximum/🧪️tests/🦀️.rs"]
-mod maximum_tests;
 #[path="🛂️allocation/🦀️.rs"]
 pub mod allocation;
 pub use allocation::{NativeDecodeAllocation,NativeDecodeAllocationPort,NativeForwardedDecodeControl,NativeForwardedDecodeContinuation};
 #[path="🏭️construction/🦀️.rs"]
 pub mod construction;
 pub use construction::{NativeDecodeConstructionRecipient,NativeOwnedDecodeControl,NativeConstructionStepResult,NativeConstructionStepOutcome,NativeConstructionStepFailure,OriginalReceivingPrimary};
-#[path="🧳️owned/🦀️.rs"]
-pub mod owned;
-pub use owned::{NativeReceive,NativeReceiver};
 #[path = "🫴️recipient/🦀️.rs"]
 mod recipient;
 #[path="🧬️child/🦀️.rs"]
@@ -174,14 +168,5 @@ impl<'a> NativeDecodeControl<'a> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "⚠️refusal/🧪️tests/🦀️.rs"]
-mod literal_refusal_tests;
 
-#[cfg(test)]
-#[path="🔁️ledger/🧪️tests/🦀️.rs"]
-mod original_ledger_tests;

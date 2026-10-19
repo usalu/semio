@@ -28,7 +28,7 @@ impl SnapshotPatch{
         super::kernel::operation_bytes::with_operation_encode_policy(options,control,|control|{
         let maximum=options.limits.max_file_len.min(super::SNAPSHOT_PATCH_MAX_BYTES as u64);
         let mut limited=super::kernel::operation_bytes::OperationByteLimitedOutput::new(output,maximum);
-        semio_framework_pack_json::write_json_source_into::<_,super::kernel::PackRefusal,_>(self,maximum,usize::from(options.limits.max_depth),options.limits.max_items,&mut|bytes:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>|limited.write_bytes(bytes,control),control)?;
+        semio_framework_pack_json_source_sink::write_json_source_into::<_,super::kernel::PackRefusal,_>(self,maximum,usize::from(options.limits.max_depth),options.limits.max_items,&mut|bytes:&[u8],control:&mut semio_framework_value::NativeEncodeControl<'_>|limited.write_bytes(bytes,control),control)?;
         Ok(())
         })
     }

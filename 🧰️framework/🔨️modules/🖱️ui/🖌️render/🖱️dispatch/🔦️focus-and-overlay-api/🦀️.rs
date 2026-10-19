@@ -10,7 +10,6 @@ impl Dispatcher {
     /// role as the one place `EditState` lifecycle is owned: blurring drops the old element's edit
     /// buffer, focusing an [`DispatchFlags::EDITABLE`] element for the first time since its last blur
     /// seeds one from [`ListenerSet::value`] with the caret at the end.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn apply_focus_transition(&mut self, tree: &DispatchTree, target: Option<ElementId>) -> bool {
         if self.focus == target {
             return false;
@@ -33,7 +32,6 @@ impl Dispatcher {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn clear_focus(&mut self, tree: &DispatchTree) -> bool {
         self.apply_focus_transition(tree, None)
     }
@@ -41,7 +39,6 @@ impl Dispatcher {
     /// 🎯️ Ported from `events.rs::FocusState::focus_next` verbatim, `NodeId` swapped for `ElementId`
     /// and the tab order rebuilt from [`collect_focusable`] scoped to `scope` (the topmost focus-trap
     /// overlay's root, or the tree root — see `Self::dispatch`'s `Tab` handling).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn focus_next(&mut self, tree: &DispatchTree, scope: FrameNodeId) -> bool {
         let mut order = Vec::with_capacity(64);
         collect_focusable(tree, scope, &mut order);
@@ -55,7 +52,6 @@ impl Dispatcher {
         self.apply_focus_transition(tree, Some(order[next]))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn focus_prev(&mut self, tree: &DispatchTree, scope: FrameNodeId) -> bool {
         let mut order = Vec::with_capacity(64);
         collect_focusable(tree, scope, &mut order);
@@ -71,7 +67,6 @@ impl Dispatcher {
     //#endregion 🔦️FocusApi
 
     //#region 🪟️OverlayApi
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn open_overlay(&mut self, root: ElementId, kind: OverlayKind, anchor: OverlayAnchor) {
         let focus_trap = matches!(kind, OverlayKind::Dialog | OverlayKind::CommandPalette);
         self.overlays.open(OpenOverlay { root, kind, anchor, placement: kind.default_placement(), dismiss: kind.dismiss_policy(), focus_trap });
@@ -80,7 +75,6 @@ impl Dispatcher {
     /// 🧹️ Ported from `events.rs::EventRouter::finish_close`: clears focus too if it was inside the
     /// closed overlay's subtree, so a dangling focus into a now-hidden subtree can't route key events
     /// nowhere useful.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn finish_close(&mut self, tree: &DispatchTree, overlay: OpenOverlay) {
         if let Some(focused) = self.focus {
             let inside = tree.element_node(focused).is_some_and(|focused_node| tree.element_node(overlay.root).is_some_and(|root_node| is_descendant(tree, focused_node, root_node)));
@@ -90,7 +84,6 @@ impl Dispatcher {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn close_overlay(&mut self, tree: &DispatchTree, root: ElementId) -> bool {
         match self.overlays.close_root(root) {
             Some(overlay) => {
@@ -101,7 +94,6 @@ impl Dispatcher {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn close_topmost_overlay(&mut self, tree: &DispatchTree) -> bool {
         match self.overlays.close_topmost() {
             Some(overlay) => {
@@ -116,7 +108,6 @@ impl Dispatcher {
     /// [`DispatchFlags::OVERLAY_TRIGGER`] node toggles an overlay whose root *and* anchor are that same
     /// node (a `Select`'s own synthesized item rows are already its children, so flagging the trigger
     /// itself `OVERLAY` gives the whole popup hit-test priority over its later-painted siblings).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn toggle_overlay_trigger(&mut self, tree: &DispatchTree, element: ElementId) {
         if let Some(overlay) = self.overlays.close_root(element) {
             self.finish_close(tree, overlay);
@@ -125,7 +116,6 @@ impl Dispatcher {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn dismiss_topmost_if_outside_press(&mut self, tree: &DispatchTree, x: f32, y: f32) -> bool {
         let Some(top) = self.overlays.topmost().copied() else { return false };
         if !top.dismiss.outside_press_swallow {
@@ -140,7 +130,6 @@ impl Dispatcher {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn maybe_dismiss_tooltip_on_hover_out(&mut self, tree: &DispatchTree, x: f32, y: f32) -> bool {
         let Some(top) = self.overlays.topmost().copied() else { return false };
         if top.kind != OverlayKind::Tooltip {

@@ -1,7 +1,7 @@
 /** 🖱️ The gesture→action law of a domain-bound `World3dHost`, mounted for real in jsdom.
  *
  * 🧫️ Every expectation is read from `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json`, the same file the
- * language-neutral Node oracle (`world3dPointerGestureOracle`, the react target's `📜️script.ts`) re-derives
+ * language-neutral Node oracle (`world3dPointerGestureOracle`, `🔮️oracles/🖱️world3d-gestures-and-selection`) re-derives
  * independently — so the law lives in the fixture and neither implementation can drift alone.
  *
  * 🧯️ Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-hover-selection-2026-09-12.md` §5.3 item 1: the
@@ -20,8 +20,8 @@ import { createElement, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
 import hoverTargets from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️hover-targets.json";
-import { interactionMergeModesFixture as mergeModes } from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🟦️.ts";
-import type { MergeMode } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import { interactionMergeModesFixture as mergeModes } from "@semio-tech/framework/interaction/testing/fixtures";
+import type { MergeMode } from "@semio-tech/framework/interaction";
 import identity from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🪪️world-surface-identity.json" with { type: "json" };
 import instanceTitles from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
 import { worldProjectionDefaults, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
@@ -302,9 +302,6 @@ export function testWorld3dInteraction(): void {
       expect(seams.projectionSpec).toEqual(worldProjectionDefaults("threePoint"));
     });
 
-    // 🪪️ `🪪️world-surface-identity.json` (peer ticket 26/09/02 wave B20): two panes of ONE document each
-    // have to name the window they were mounted into. Before that wave both published the per-document
-    // DFS record id, so a second pane's picks were indistinguishable from the first's.
     it("names its own window instance on every pane of one document surface", () => {
       for (const pane of identity.panes) {
         const { host } = mountHost({ surfaceId: pane.documentSurface, windowInstanceId: pane.window });
@@ -314,9 +311,6 @@ export function testWorld3dInteraction(): void {
       }
     });
 
-    // 🎯️ Every modifier chord of `🎯️merge-modes.json`'s `modifierPolicy` reaches the wire as the SCHEMA
-    // word, never a host-private spelling — the live 2026-09-12 defect faulted every one of these but
-    // the bare click (`interactionSelect: unknown merge 'add'`).
     for (const id of ["instance-pick-replaces", "instance-pick-additive", "instance-pick-subtractive", "instance-pick-subtractive-on-command", "instance-pick-invertive", "second-instance-of-one-topology-id-pick"] as const) {
       it(`dispatches interactionSelect for the topology target on ${id}`, () => {
         const spec = gesture(id);
@@ -329,9 +323,6 @@ export function testWorld3dInteraction(): void {
       });
     }
 
-    // 🧮️ The builder itself is the host's set boundary — the call sites are proved above, but only a
-    // law on the builder makes a duplicate target unrepresentable for EVERY caller (the marker picks,
-    // the marquee release, and any future one).
     it("collapses repeated topology ids into one wire target in the selection args builder", () => {
       const spec = gesture("repeated-ids-collapse-in-the-args-builder");
       const ids = spec.ids!;
@@ -343,9 +334,6 @@ export function testWorld3dInteraction(): void {
       expect(JSON.parse(args.targets)).toEqual(spec.expect.targets);
     });
 
-    // 🖱️ The fixture's modifier policy IS the host's: each chord's `pick` word must be the one an
-    // actual click on the mounted host puts on the wire, and no chord may resolve to a word the
-    // viewport cannot mean (`range` — no ordered topology).
     it("resolves every declared modifier chord to its schema merge word and never to range", () => {
       for (const row of mergeModes.modifierPolicy.rows) {
         const { dispatched, meshes } = mountHost();

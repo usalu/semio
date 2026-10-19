@@ -1,7 +1,7 @@
 //! 🧭️ `set-grip-direction` command — how grip direction arrows are drawn.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::entities::{PUZZLE5D_GRIP_DIRECTION_INWARDS, PUZZLE5D_GRIP_DIRECTION_OUTWARDS};
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{PUZZLE5D_GRIP_DIRECTION_INWARDS, PUZZLE5D_GRIP_DIRECTION_OUTWARDS};
 
 
 

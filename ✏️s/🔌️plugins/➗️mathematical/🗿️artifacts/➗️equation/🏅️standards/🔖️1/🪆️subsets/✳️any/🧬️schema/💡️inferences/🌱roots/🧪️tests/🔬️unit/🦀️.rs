@@ -49,8 +49,7 @@ async fn compute_equation_roots_finds_one_and_two() {
 
 #[semio_framework_async_macros::async_test]
 async fn out_of_scope_equation_plans_zero_steps_not_a_panic() {
-    // 🔎️ Rational, non-integer coefficient — documented scope boundary, not a crash.
-    let snapshot = EquationSnapshot::default(); // default equation is the integer literal 0
+    let snapshot = EquationSnapshot::default();
     let steps = <EquationRootsField as protocol::InferredField<EquationSnapshot>>::plan(&snapshot);
     assert!(steps.is_empty(), "the zero polynomial has no isolated real roots to plan");
 }

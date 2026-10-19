@@ -1,4 +1,4 @@
-//! txt import via framework `io_mechanism::deserialize_dsl_txt` (UTF-8 DSL carrier).
+//! 📥️ txt import via framework `io_mechanism::deserialize_dsl_txt` (UTF-8 DSL carrier).
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::deserialize_dsl_txt;

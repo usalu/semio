@@ -9,7 +9,7 @@ export interface SemioTextProfile {
 }
 
 export interface SemioTextInference {
-  /** @derived */
+  /** 📊️ @derived */
   profile: SemioTextProfile;
 }
 

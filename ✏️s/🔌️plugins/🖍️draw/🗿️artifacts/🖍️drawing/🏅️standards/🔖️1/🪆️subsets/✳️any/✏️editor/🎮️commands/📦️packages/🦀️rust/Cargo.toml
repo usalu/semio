@@ -28,6 +28,8 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-editor-interaction = { workspace = true }
 semio-s-artifact-draw-drawing-editor-tool = { workspace = true }

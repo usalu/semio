@@ -1,12 +1,8 @@
 //! 📦️ Retained cloning and retirement for schema-preserving paged carriers.
 
 use super::{RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress};
-use crate::{
-    ValueError, ValueRefusalKind,
-    list::PagedList,
-    paged::{PAGED_BYTES_CHUNK_BYTES, PagedBytes, PagedMap, PagedUtf8},
-    retirement::{RetireOwned, RetirementCursor},
-};
+use crate::{ValueError, ValueRefusalKind, paged::{PAGED_BYTES_CHUNK_BYTES, PagedBytes, PagedMap, PagedUtf8}, retirement::{RetireOwned, RetirementCursor}};
+use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct PagedBytesCursor<const N: usize> {

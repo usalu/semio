@@ -1,4 +1,4 @@
-//! ️tests for example `🏗️nakagin-capsule-tower`.
+//! 🧪️tests for example `🏗️nakagin-capsule-tower`.
 
 #[test]
 fn dsl_asset_parses_and_round_trips() {

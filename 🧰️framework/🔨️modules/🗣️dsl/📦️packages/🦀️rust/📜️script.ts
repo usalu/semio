@@ -1,34 +1,24 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-
-/** 🧫️ Checks the exact owned portable entrypoints without repository-specific tooling. */
-async function checkPortableTypes(root: string, workspace: string, tests: string[]): Promise<void> {
-  await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], {cwd: workspace, budgetMs: 30000, throwOnFailure: true});
-}
+import { runReferenceScript, runOwnershipScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🗣️ Runs every neutral selection, lexical, diagnostic and literal reference law. */
 class ReferenceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("test-reference accepts no arguments");
-    await checkPortableTypes(this.root, this.repoRoot, [join(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts"), join(this.root, "../../📖️grammar/📡️literal/🧪️tests/🟦️.ts")]);
-    await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts"), join(this.root, "../../📖️grammar/📡️literal/🧪️tests/🟦️.ts")], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true});
+    await runReferenceScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 /** 🚮️ Runs the full neutral reference corpus and its physically absent product projection. */
 class OwnershipScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("test-ownership accepts no arguments");
-    await checkPortableTypes(this.root, this.repoRoot, [join(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts"), join(this.root, "../../📖️grammar/📡️literal/🧪️tests/🟦️.ts"), join(this.root, "../../🧪️tests/🚮️absence/🟦️.ts")]);
-    await runBudgetedTestCommand(process.execPath, ["test", "--timeout", "30000", join(this.root, "../../🧪️tests/🧱️ownership/🟦️.ts"), join(this.root, "../../📖️grammar/📡️literal/🧪️tests/🟦️.ts"), join(this.root, "../../🧪️tests/🚮️absence/🟦️.ts")], {cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), throwOnFailure: true});
+    await runOwnershipScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 

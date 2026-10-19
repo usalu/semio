@@ -11,7 +11,7 @@ pub fn diff(payload: &ChangeSupport, base: &Fem2dSnapshotValue) -> protocol::Mut
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Support \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     let candidate = payload.patch.candidate(existing);
-    if !payload.patch.valid() || !crate::FemDof::canonical(&existing.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support sets must be canonical and must not accompany membership setters.", [payload.id.clone()]); }
+    if !payload.patch.valid() || !semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::canonical(&existing.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support sets must be canonical and must not accompany membership setters.", [payload.id.clone()]); }
     if !base.nodes.iter().any(|node| node.id == candidate.node_id) { return protocol::MutationOutcome::error("mutation.target-missing", format!("Node {} does not exist.", candidate.node_id), [candidate.node_id.clone()]); }
     if candidate == *existing {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Support \"{}\" already has the supplied properties.", payload.id));

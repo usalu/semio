@@ -1,4 +1,4 @@
-//! snapshot's lower-left quadrant, framed by `🎭️modes/✏️edit`'s triptych camera.
+//! ↔️ snapshot's lower-left quadrant, framed by `🎭️modes/✏️edit`'s triptych camera.
 //! 🎯️ Puzzle 2d play app — the Selection window: a non-interactive canvas pane framing the
 
 use crate::editor::puzzle2d::engine::BoardHost;

@@ -1,2 +1,2 @@
-/** flow io */
+/** 🌊️ flow io */
 export function register(): void {}

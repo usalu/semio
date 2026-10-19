@@ -1,4 +1,4 @@
-//! ️tests for app example `🎬️demo-session`.
+//! 🧪️tests for app example `🎬️demo-session`.
 
 #[test]
 fn cmd_asset_is_nonempty_demo_script() {

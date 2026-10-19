@@ -118,7 +118,7 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
  if seen_blocks.len()!=reader.blocks.len()||seen_inlines.len()!=reader.inlines.len()||!inlines.is_empty()||!items.is_empty(){return Err(invalid("Markdown tree contains unreachable entities"));}Ok(MdSnapshot{schema:reconstruct_text(control,reader.document.text(1)?)?,blocks:std::mem::take(&mut blocks.0)})
 }
 
-impl MdSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut out)?;out.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:store::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
+impl MdSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<(),ValueError>{semantic::extent(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(self,&mut out)?;out.finish_borrowed()}pub(crate)fn admit_sqlite_record(value:&semio_framework_dsl_record::RecordValue,limits:store::sqlite_snapshot::SqliteDatabaseLimits,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{semantic::admit_record(value,limits,native)}}
 impl ArtifactSqliteSnapshotHost for MdSnapshot{
  
  fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {

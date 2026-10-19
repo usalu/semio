@@ -6,12 +6,25 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🧭️slide-glob-assembly/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📽️presentation-core/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/📽️presentation-core/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

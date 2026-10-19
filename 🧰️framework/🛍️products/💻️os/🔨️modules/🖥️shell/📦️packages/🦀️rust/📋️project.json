@@ -3,29 +3,69 @@
   "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*"],
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*",
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "schemaModule": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{projectRoot}/Cargo.toml", "{projectRoot}/🦀️.rs", "{projectRoot}/📜️script.ts"],
-    "renderedMirror": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated/**/*"]
+    "renderedMirror": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated/**/*"],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
   },
   "targets": {
     "check": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
       }
     },
     "test": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "typegen": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -35,18 +75,31 @@
       "outputs": ["{workspaceRoot}/🧰️framework/🔨️modules/🐚️shell/🤖️generated"]
     },
     "schema-check": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts schema-check"
       },
-      "inputs": ["schemaModule", "renderedMirror"],
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain",
+        "schemaModule",
+        "renderedMirror"
+      ],
       "outputs": []
     },
     "preview-generated": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"

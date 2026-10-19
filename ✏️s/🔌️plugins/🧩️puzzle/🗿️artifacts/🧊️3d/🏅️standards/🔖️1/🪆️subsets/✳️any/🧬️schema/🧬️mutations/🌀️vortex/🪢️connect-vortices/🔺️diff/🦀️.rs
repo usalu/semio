@@ -1,4 +1,4 @@
-//! already exists in `base`.
+//! 🔗️ already exists in `base`.
 //! 🔺️ Sparse diff builder for `ConnectVortices` — a real append-only insert. No-op when the id
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dAttractionsDelta;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

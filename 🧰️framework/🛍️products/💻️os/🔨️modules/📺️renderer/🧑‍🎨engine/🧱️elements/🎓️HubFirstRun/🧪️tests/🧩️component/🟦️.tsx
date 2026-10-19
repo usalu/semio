@@ -216,9 +216,6 @@ describe("hub first-run seen flag", () => {
     expect(hubFirstRunShouldStartV1(memoryStorage(HUB_FIRST_RUN_SEEN_VALUE_V1), true)).toBe(false);
   });
 
-  // 🎓️ The whole point of restating the key instead of importing the React helpers: these four laws
-  // are what stop the restatement drifting. They compare this pure module against the *actual*
-  // `ui.introduction.seen.` machinery every other tour uses, in both directions.
   it("writes into the same key space every other introduction uses", () => {
     expect(HUB_FIRST_RUN_STORAGE_KEY_V1).toBe(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${HUB_FIRST_RUN_INTRODUCTION_ID_V1}`);
   });

@@ -37,7 +37,6 @@ fn child_plane_is_deterministic_for_vertical_stack() {
     let child_pose = poses.get("c").expect("c");
     let parent_pose = poses.get("p").expect("p");
     assert_eq!(parent_pose.plane.origin, [0.0, 0.0, 0.0]);
-    // Parent center at origin → compose circle rule with t=0 → (0, DIAGRAM_RADIUS).
     assert_eq!(child_pose.center, [0.0, DIAGRAM_RADIUS]);
     assert!(child_pose.plane.origin[2].is_finite());
 }

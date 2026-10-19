@@ -6,7 +6,6 @@ mod tests {
         let r = Rational::from_i64(1, 3).unwrap();
         let iv = Interval::from_rational(&r);
         assert!(iv.lo <= r.to_f64() && r.to_f64() <= iv.hi);
-        // Certified containment check via exact rational comparison against the bounds.
         let lo_r = Rational::from_f64(iv.lo).unwrap();
         let hi_r = Rational::from_f64(iv.hi).unwrap();
         assert!(lo_r <= r && r <= hi_r);

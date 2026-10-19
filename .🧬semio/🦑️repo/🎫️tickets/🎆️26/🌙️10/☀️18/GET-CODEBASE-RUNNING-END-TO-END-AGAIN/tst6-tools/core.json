@@ -1,0 +1,310 @@
+{
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"tst4:DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"scan:,",
+"scan:semver",
+"scan:dep/package.json"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧱️command-source/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬️decoder-absence/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"tst4:DEPS-OR-INFLIGHT-MOVE",
+"scan:toml"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✂️node-native-typescript/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎮️registry/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️cli/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏋️load/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/💨️smoke/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️incremental-targets/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-scenario-identities/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧰️framework-root-source-topology/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🧪️tests/⚙️transaction-process-ownership/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🚮️absence/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🌗️contrast/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🟦️.ts": [
+"tst3c:MISSING-DEP",
+"scan:+JSON.stringify(modulePath)+"
+],
+"🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry",
+"scan:@semio-tech/writer-writer"
+],
+"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry",
+"scan:@semio-tech/gis-gisterrain"
+],
+"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry",
+"scan:@semio-tech/gis-gismap-js"
+],
+"✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry",
+"scan:@semio-tech/space-home"
+],
+"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts": [
+"tst5:NO-DIST"
+],
+"✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪶️consumers/🟦️.ts": [
+"tst5:NO-DIST",
+"scan:@semio-tech/forms-js",
+"scan:@semio-tech/forms-js/private"
+],
+"🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🏛️boundary/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🏛️ownership/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/✂️clipping/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🕸️graph/🧪️tests/🪆️record-owner/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧱️owners/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/🌱️genesis/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/💼️job/📤️output/🧪️tests/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🧱️ports/🟦️.ts": [
+"tst3b:tree-sitter-wasms"
+],
+"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts": [
+"tst3b:d3-dsv"
+],
+"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts": [
+"tst3b:d3-dsv"
+],
+"🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🧱️io-boundary/🟦️.ts": [
+"scan:([^"
+],
+"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts": [
+"scan:+JSON.stringify(api)+"
+],
+"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧪️tests/📥️input/🟦️.ts": [
+"scan:cross-spawn"
+],
+"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧪️tests/🟦️.ts": [
+"scan:cross-spawn"
+],
+"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/📡️channel/🧪️tests/🟦️.ts": [
+"scan:cross-spawn"
+],
+"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📥️consumers/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️receiver/🧪️tests/📥️release/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/📥️paths/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/📥️inputs/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/📥️phase/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🧪️tests/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️candidate/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/💾️storage/🧪️tests/🟦️.ts": [
+"scan:,"
+],
+"🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🟦️.ts": [
+"scan:\\.\\.\\/🟦️\\.ts",
+"scan:\\.\\.\\/\\.\\.\\/\\.\\.\\/🔖️sync-protocol\\/🟦️\\.ts",
+"scan:\\.\\.\\/🔗️causal\\/🟦️\\.ts",
+"scan:\\.\\.\\/\\.\\.\\/\\.\\.\\/\\.\\.\\/🔖️sync-protocol\\/🟦️\\.ts",
+"scan:\\.\\.\\/🔗️causal\\/🧮️backbone\\/🟦️\\.ts"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔮️oracle-governance/🟦️.ts": [
+"scan:semver"
+],
+"🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🧩️shape/🟦️.ts": [
+"scan:+JSON.stringify(sourcePath)+"
+],
+"🧰️framework/🔨️modules/🫧️transient/🧪️tests/🟦️.ts": [
+"scan:lru-cache"
+],
+"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚀️local-hub/🎫️session/🧪️tests/🟦️.ts": [
+"scan:,start+15),owner=source.slice(start,end<0?undefined:end);expect(owner).toContain("
+],
+"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📋️runtime/🧪️tests/🟦️.ts": [
+"scan:@semio-tech/framework-os-node-graph-rs/framework_os_node_graph.js"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts": [
+"scan:@semio/process"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts": [
+"scan:+JSON.stringify(pathToFileURL(module).href)+"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts": [
+"scan:profile-fixture"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts": [
+"scan:probe"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts": [
+"scan:+JSON.stringify(bundle)+",
+"scan:+JSON.stringify(pathToFileURL(file).href)+"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts": [
+"scan:+JSON.stringify(value.specifier)+",
+"scan:+JSON.stringify(value.secondSpecifier)+"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🟦️.ts": [
+"scan:dotenv"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧪️tests/🧩️split-leaves/🟦️.ts": [
+"scan:\\.\\.\\/\\.\\.\\/🟦️\\.ts"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts": [
+"scan:x"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧾️generator-preview-and-dispositions/🟦️.ts": [
+"scan:@semio-tech/repo-lib"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔖️readme-current-source-revision/🟦️.ts": [
+"scan:+JSON.stringify(resolve(root,"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🛡️pattern-safety/🟦️.ts": [
+"scan:safe-regex"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/🧪️tests/🧭️router-ownership/🟦️.ts": [
+"scan:@repo-lib"
+]
+}

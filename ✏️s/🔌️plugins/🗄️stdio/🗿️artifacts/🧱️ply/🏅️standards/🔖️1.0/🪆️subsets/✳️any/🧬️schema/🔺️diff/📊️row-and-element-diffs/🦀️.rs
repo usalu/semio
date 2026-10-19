@@ -22,12 +22,10 @@ pub struct PlyRowDiff {
 }
 
 impl PlyRowDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.fields.is_empty()
     }
     /// ➕️ LWW per-field-name upsert absorb.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         for change in other.fields {
             if let Some(existing) = self.fields.iter_mut().find(|f| f.name == change.name) {
@@ -85,7 +83,6 @@ pub struct PlyRowsDiff {
 }
 
 impl PlyRowsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -269,7 +266,6 @@ pub struct PlyElementDiff {
 }
 
 impl PlyElementDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn is_empty(&self) -> bool {
         self.count.is_none() && self.properties.is_none() && self.rows.as_ref().is_none_or(PlyRowsDiff::is_empty)
     }
@@ -334,7 +330,6 @@ pub struct PlyElementsDiff {
 }
 
 impl PlyElementsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }

@@ -1,4 +1,4 @@
-//! history), never a mutation and never a difference of the imported board against the current one. The host's chunked inbound lane
+//! 📜️ history), never a mutation and never a difference of the imported board against the current one. The host's chunked inbound lane
 //! 📥 Loads an imported snapshot JSON file as the whole document — the artifact's load path (`Effect::LoadDocument`, outside
 //! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per
 //! `IMPORT_CHUNK_BYTES` page) is reassembled by the framework before this action runs

@@ -8,7 +8,7 @@ export interface PresentationTopology {
 }
 
 export interface PresentationInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: PresentationTopology;
 }
 

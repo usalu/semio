@@ -1,7 +1,7 @@
 //! 🌬️ Complete DIN16798 physical entities borrowed before native typed construction.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

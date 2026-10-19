@@ -328,7 +328,7 @@ impl BipartiteAccumulator {
         }
     }
 
-    /// `true` once every term is accumulated.
+    /// 📶️ `true` once every term is accumulated.
     fn advance(&mut self, problem: &impl BipartiteResiduals, a_params: &[VecD], b_params: &[VecD], loss: &RobustLoss, term_budget: usize) -> bool {
         let (ad, bd) = (problem.a_block_dim(), problem.b_block_dim());
         let terms = problem.residual_terms();
@@ -362,11 +362,11 @@ impl BipartiteAccumulator {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 enum SchurLmPhase {
-    /// Accumulating the normal equations at the current parameters.
+    /// 🧺️ Accumulating the normal equations at the current parameters.
     Base,
-    /// One damped Schur step at the current damping.
+    /// ➗️ One damped Schur step at the current damping.
     Solve,
-    /// Accumulating the normal equations at the candidate parameters, to accept or reject the step.
+    /// 🗳️ Accumulating the normal equations at the candidate parameters, to accept or reject the step.
     Candidate,
     Done,
 }
@@ -409,7 +409,7 @@ impl SchurLmPreparation {
         self.iterations
     }
 
-    /// One bounded unit; `true` once the adjustment is done (converged, out of iterations, or the
+    /// ⏳️ One bounded unit; `true` once the adjustment is done (converged, out of iterations, or the
     /// damping exhausted).
     pub fn advance(&mut self, problem: &impl BipartiteResiduals, cfg: &LmConfig, term_budget: usize) -> bool {
         let ad = problem.a_block_dim();

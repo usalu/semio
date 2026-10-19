@@ -35,8 +35,8 @@ impl ImportedMapFields{
 }
 impl FromValue for ImportedMap{
  fn from_value(value:DslValue)->Result<Self,semio_framework_value::ValueError>{let map=ImportedMapFields::from_value(value)?.into_map();map.validate().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))?;Ok(map)}
- fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{let owner=semio_framework_value::DecodedValue::new(ImportedMapFields::from_value_controlled(value,control)?.into_map(),Self::retire_decoded);owner.get().validate().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))?;control.checkpoint()?;Ok(owner.take())}
- fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{ImportedMapFields::default_value_controlled(control).map(ImportedMapFields::into_map)}
+ fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{let owner=semio_framework_value::DecodedValue::new(ImportedMapFields::from_value_controlled(value,control)?.into_map(),Self::retire_decoded);owner.get().validate().map_err(|error|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error))?;control.checkpoint()?;Ok(owner.take())}
+ fn default_value_controlled(control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{ImportedMapFields::default_value_controlled(control).map(ImportedMapFields::into_map)}
  fn retire_decoded(self){ImportedMapFields::retire_decoded(ImportedMapFields{positions:self.positions,routes:self.routes,regions:self.regions,properties:self.properties});}
 }
 
@@ -91,10 +91,6 @@ pub fn gis_terrain_mesh_from_snapshot(document: &GisTerrainSnapshot) -> SemioMes
     let (min_x, min_y, max_x, max_y) = bounds.map_or((0.0, 0.0, 1.0, 1.0), |b| (b.lon_min, b.lat_min, b.lon_max, b.lat_max));
     let (min_x, max_x) = if min_x < max_x { (min_x, max_x) } else { (min_x, min_x + 1.0) };
     let (min_y, max_y) = if min_y < max_y { (min_y, max_y) } else { (min_y, min_y + 1.0) };
-    // 🏔️ Honest gap (matches `gis3d_scene_media`'s own doc comment): with no DEM heightfield, every
-    // vertex is flat at z=0 regardless of `exaggeration` — `exaggeration` still round-trips as
-    // real document state; it currently has no
-    // per-vertex effect on THIS placeholder surface yet.
     let z = 0.0;
     let positions = vec![SemioPoint3 { x: min_x, y: min_y, z }, SemioPoint3 { x: max_x, y: min_y, z }, SemioPoint3 { x: max_x, y: max_y, z }, SemioPoint3 { x: min_x, y: max_y, z }];
     SemioMeshSnapshot {

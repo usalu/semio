@@ -296,11 +296,6 @@ export async function registerOwnedLocaleDetectorRetirementAndMoreTests(vitest: 
     });
 
     it("celebrating by a window-kind alias id stamps every pane of that kind, but celebrating by one pane's own element id stamps only that pane", () => {
-      // 🪟️ Mirrors two open panes of the same window kind (e.g. a split-view aggregator viewport): each
-      // pane's own `id` is unique (`windowElementId`/`childElementId` of its *instance* id), while both
-      // share the kind-level `data-element-alias` (`windowElementId` of the *kind* id). A completed
-      // pan/zoom/orbit interaction must celebrate only the pane that performed the gesture — never every
-      // aliased pane — so the shell targets the specific pane's own id, not the shared kind alias.
       vi.useFakeTimers();
       try {
         const { container } = render(
@@ -401,12 +396,6 @@ export async function registerOwnedLocaleDetectorRetirementAndMoreTests(vitest: 
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
-      // 🩺️ An animated registered custom property declared `inherits: true` and started on `:root`
-      // re-resolves EVERY element's computed style on EVERY frame — measured at 112.3 s of style
-      // recalculation out of 129.0 s of main-thread task time on the generation3d example, which paced
-      // the plugin host's more-work→poll pump at one macrotask per frame (ticket 2026/09/09,
-      // 📓️host-reconcile-silence-2026-09-12.md). The derived law lives in
-      // 🎨️styling/🧫️fixtures/🔁️animation-scope; these are the named consumers it protects.
       const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
       expect(unlayeredRoot).not.toMatch(/animation:/);
       expect(css).toMatch(/@property --loading-border-angle[\s\S]*?inherits:\s*false/);

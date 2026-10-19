@@ -1,3 +1,4 @@
+import type { PackageImplementationAdmission } from "../../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
 import type { GeneratorPreviewProgressPolicyV1 } from "../../../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import type { GeneratorProjectionActivation, RegistryCatalogInputDiscovery } from "../../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 import type { SemanticPackageGeneration } from "../../../🔍️discovery/📦️package-projection-contracts/🟦️.ts";
@@ -37,6 +38,7 @@ export interface PackageBoundaryRule {
   readonly recursive: true;
   readonly uncertainRole: "problem";
   readonly implementationRole: "problem";
+  readonly implementationAdmission: PackageImplementationAdmission | null;
 }
 
 export interface PackageBoundaryProfile {

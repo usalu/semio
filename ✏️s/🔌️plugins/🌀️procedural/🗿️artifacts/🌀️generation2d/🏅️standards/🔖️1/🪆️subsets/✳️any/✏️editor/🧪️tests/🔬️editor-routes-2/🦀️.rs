@@ -5,6 +5,8 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 
+#[path = "../🔬️app-fixture/🦀️.rs"]
+mod app_fixture;
 #[path = "../../📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"]
 mod inspection_panel_tests;
 #[path = "../../📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"]

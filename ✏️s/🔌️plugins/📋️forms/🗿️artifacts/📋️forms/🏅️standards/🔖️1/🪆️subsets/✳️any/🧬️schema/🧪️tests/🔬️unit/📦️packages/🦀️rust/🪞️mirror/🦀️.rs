@@ -150,8 +150,8 @@ pub mod standards {
                         pub mod deserializers {
                             #[path = "."]
                             pub mod artifacts {
-                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::import::deserializers::artifacts::zip;
-                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
+                                pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::import::deserializers::artifacts::zip;
+                                pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::import::deserializers::artifacts::json;
                             }
                         }
                     }
@@ -161,24 +161,24 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::zip;
+                                pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::zip;
                                 #[path = "."]
                                 pub mod csv {
-                                    pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::csv::*;
+                                    pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::csv::*;
                                     #[path = "."]
                                     pub mod v_rfc4180 {
-                                        pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::*;
+                                        pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::*;
                                         #[path = "."]
                                         pub mod any {
-                                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::*;
+                                            pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::*;
                                             #[cfg(test)]
                                             #[path = "../../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📊️csv/🔖️rfc4180/✳️any/🧪️tests/🔬️unit/🦀️.rs"]
                                             pub mod tests;
                                         }
                                     }
                                 }
-                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx;
-                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::json;
+                                pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx;
+                                pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::json;
                             }
                         }
                     }

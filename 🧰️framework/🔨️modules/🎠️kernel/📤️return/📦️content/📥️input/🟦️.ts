@@ -1,10 +1,10 @@
 //#region 📥️OwnedInputContract
-import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
+import { OwnedShardReturn, OwnedShardReturnPage, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client/activation";
 import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import type { ActorUiPatchReceipt } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
-import type { OwnedUiInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts";
-import { OwnedUiResidentPayload, OwnedUiResidentPayloadSourceRelease, OwnedUiResidentBuilderRetirement, type OwnedUiResidentInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
+import type { OwnedUiInstance } from "@semio-tech/framework/modules/ui/contract/retained/instance";
+import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "@semio-tech/framework/ui/contract/retained/operations/wire/pages";
+import { OwnedUiResidentPayload, OwnedUiResidentPayloadSourceRelease, OwnedUiResidentBuilderRetirement, type OwnedUiResidentInstance } from "@semio-tech/framework/ui/contract/retained/resident";
 import { bindReturnContentMatcher } from "../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
 import { bindUiInputHost } from "../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts";
 import { KernelReturnContentFraming, KernelReturnUiOperationHeader, type KernelReturnUiFieldName } from "../🟦️.ts";

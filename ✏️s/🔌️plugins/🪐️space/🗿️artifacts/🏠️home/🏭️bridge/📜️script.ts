@@ -1,14 +1,12 @@
 #!/usr/bin/env bun
-import { createIssuedResourceControlV1 } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-/** 🏭️ Collects only this artifact's actual production inventory under Original compiler custody. */
-import {join} from "node:path";
-import { runRepositoryMutationBridgeScriptV1 } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
-import { runAdmittedCargoCommandV1 } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import {receiveScriptProcessInvocation} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import collector from "./🔣️collector.json" with {type:"json"};
-const packageRoot=join(import.meta.dir,"📦️packages/🦀️rust"),binary="semio-space-home-mutation-bridge";
-if(process.argv[2]==="check"){
- if(process.argv.length!==3)throw Error("check accepts no overrides");
- await receiveScriptProcessInvocation(process.env,original=>runAdmittedCargoCommandV1(original,createIssuedResourceControlV1(original,"cargo:bridge",0),findWorkspaceRoot(),["test","--manifest-path",join(packageRoot,"Cargo.toml"),"--package","semio-s-artifact-space-home-mutation-bridge","--offline","--locked","--bin",binary,"--","--nocapture"],import.meta.dir,process.env,collector.maximumMilliseconds));
-}else await runRepositoryMutationBridgeScriptV1(packageRoot,binary,{...collector,version:1});
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
+
+/** 🚪️ `check` — runs the program of this script. */
+class CheckScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

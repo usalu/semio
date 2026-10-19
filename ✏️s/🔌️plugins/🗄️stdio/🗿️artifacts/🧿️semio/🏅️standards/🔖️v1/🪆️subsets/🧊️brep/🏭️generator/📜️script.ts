@@ -176,11 +176,11 @@ function tryMeasure<T>(fn: () => T): T | null {
  * reports by, and the unit two people can grow independently without touching the same file.
  */
 const RECIPES: readonly Recipe[] = [
-  ...(await import("./🧱️topology-build/📜️script.ts")).RECIPES,
-  ...(await import("./🧹️topology-remove/📜️script.ts")).RECIPES,
-  ...(await import("./🔄️geometry-replace/📜️script.ts")).RECIPES,
-  ...(await import("./📍️move-vertex/📜️script.ts")).RECIPES,
-  ...(await import("./🧮️booleans/📜️script.ts")).RECIPES,
+  ...(await import("./🧱️topology-build/🟦️.ts")).RECIPES,
+  ...(await import("./🧹️topology-remove/🟦️.ts")).RECIPES,
+  ...(await import("./🔄️geometry-replace/🟦️.ts")).RECIPES,
+  ...(await import("./📍️move-vertex/🟦️.ts")).RECIPES,
+  ...(await import("./🧮️booleans/🟦️.ts")).RECIPES,
 ];
 //#endregion 🧪️Corpus
 

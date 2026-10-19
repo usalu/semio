@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::modules::lower::*;
 
 //#region 🔖️Pages
 impl Lowering<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_page(&mut self, index: usize, page: &PdfPage, reference: ObjRef, parent: ObjRef) -> PResult<()> {
         let mut dict = vec![entry("Type", PdfObject::name("Page")), entry("Parent", PdfObject::Ref(parent)), entry("MediaBox", PdfObject::numbers(&page.media_box))];
         push_opt(&mut dict, "CropBox", page.crop_box.as_ref().map(|b| PdfObject::numbers(b)));
@@ -52,7 +51,6 @@ impl Lowering<'_> {
 
 //#region 🔖️Navigation
 impl Lowering<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_destination(&self, destination: &PdfDestination) -> PdfObject {
         let fit_items = |fit: &PdfDestinationFit| -> Vec<PdfObject> {
             let opt = |value: Option<f64>| value.map(PdfObject::number).unwrap_or(PdfObject::Null);
@@ -82,7 +80,6 @@ impl Lowering<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_file_specification(&self, file: &PdfFileSpecification) -> PdfObject {
         match file {
             PdfFileSpecification::Path { path } => PdfObject::Str(encode_text_string(path)),
@@ -90,7 +87,6 @@ impl Lowering<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_action(&mut self, action: &PdfAction) -> PdfObject {
         let mut dict = vec![entry("Type", PdfObject::name("Action"))];
         let text = |value: &str| PdfObject::Str(encode_text_string(value));
@@ -216,7 +212,6 @@ impl Lowering<'_> {
     }
 
     /// 📑 Writes an outline level as a doubly linked list and returns (first, last, count).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_outline_items(&mut self, items: &[PdfOutlineItem], parent: ObjRef) -> Option<(ObjRef, ObjRef, i64)> {
         if items.is_empty() {
             return None;
@@ -253,7 +248,6 @@ impl Lowering<'_> {
     }
 
     /// 🌳 A flat name tree (§7.9.6) — one node, sorted keys.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn name_tree(&mut self, pairs: Vec<(Vec<u8>, PdfObject)>) -> PdfObject {
         let mut pairs = pairs;
         pairs.sort_by(|a, b| a.0.cmp(&b.0));
@@ -265,7 +259,6 @@ impl Lowering<'_> {
         PdfObject::Ref(self.add(PdfObject::Dict(vec![entry("Names", PdfObject::Array(names))])))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_annotation(&mut self, annotation: &PdfAnnotation, page_index: usize, annotation_index: usize, page_ref: ObjRef) -> Vec<PdfDictEntry> {
         let text = |value: &str| PdfObject::Str(encode_text_string(value));
         let annotation_ref = |lowering: &Self, index: Option<u64>| index.and_then(|index| usize::try_from(index).ok()).and_then(|index| lowering.annotation_refs.get(page_index).and_then(|refs| refs.get(index))).map(|r| PdfObject::Ref(*r));

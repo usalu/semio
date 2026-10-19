@@ -12,7 +12,7 @@ import sourceSchema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import layersSchema from"../../📚️layers/🧬️schema/🔣️.json"with{type:"json"};
 import{hashNxSdkSourceFileV1}from"../🟦️.ts";
 import{registerBuildTestLawV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
-import{withRepositoryToolingStoreV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import{withRepositoryToolingStoreV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 
 test("neutral SDK descriptor contract preserves sixteen workers and bounded chunks",()=>{const validate=new Ajv({strict:true});expect(validate.validate(ioSchema,corpus.io)).toBe(true);expect(validate.validate(ioSchema.definitions.Faults,corpus.faults)).toBe(true);expect(validate.validate(ioSchema.definitions.Mutations,corpus.mutations)).toBe(true);const db=new Database(":memory:");try{const row=db.query("select ?1 workers,?2 chunk,?3 synchronous").get(layersSchema.definitions.Policy.const.maximumParallelOperations,sourceSchema.definitions.Policy.const.chunkBytes,0);expect(row).toEqual({workers:corpus.io.maximumParallel,chunk:corpus.io.chunkBytes,synchronous:corpus.io.maximumSynchronousCalls});db.exec("create table faults(operation text,missing integer)");for(const fault of corpus.faults)db.query("insert into faults values(?,?)").run(fault.operation,Number(fault.undefined));expect(db.query("select count(*) cases,count(distinct operation) operations,sum(missing) undefinedCases from faults").get()).toEqual({cases:4,operations:2,undefinedCases:2});}finally{db.close();}});
 

@@ -704,7 +704,6 @@ fn an_owner_whose_middle_sub_page_was_refused_keeps_the_earlier_ones_and_reports
 /// real ~1000-triangle part mesh.
 fn gridded_box(hx: f32, hy: f32, hz: f32, cells: usize) -> CollisionBody {
     let (mut positions, mut indices) = (Vec::<f32>::new(), Vec::<u32>::new());
-    // (origin, u, v) per face, u × v pointing outward.
     let faces: [([f32; 3], [f32; 3], [f32; 3]); 6] = [
         ([-hx, -hy, hz], [2.0 * hx, 0.0, 0.0], [0.0, 2.0 * hy, 0.0]),
         ([-hx, hy, -hz], [2.0 * hx, 0.0, 0.0], [0.0, -2.0 * hy, 0.0]),

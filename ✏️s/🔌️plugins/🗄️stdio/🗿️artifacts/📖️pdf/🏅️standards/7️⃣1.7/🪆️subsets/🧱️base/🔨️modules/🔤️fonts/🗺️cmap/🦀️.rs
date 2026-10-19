@@ -307,19 +307,16 @@ pub struct CidCodec {
 }
 
 impl CidCodec {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn identity(vertical: bool) -> Self {
         Self { codespace: vec![PdfCodespaceRange { byte_width: 2, low: 0, high: 0xFFFF }], mappings: Vec::new(), identity: true, vertical }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn embedded(cmap: &PdfEmbeddedCMap) -> Self {
         let identity = matches!(cmap.use_cmap.as_deref(), Some("Identity-H") | Some("Identity-V"));
         Self { codespace: cmap.codespace.clone(), mappings: cmap.mappings.clone(), identity, vertical: cmap.vertical }
     }
 
     /// 🔢 Whether every code is two bytes wide (what lets a writer emit `<XXXX>` strings).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn two_byte(&self) -> bool {
         self.codespace.iter().all(|range| range.byte_width == 2)
     }
@@ -327,7 +324,6 @@ impl CidCodec {
     /// ✂️ Splits a string operand into character codes per the codespace ranges (§9.7.6.2): the
     /// shortest range prefix that matches wins; an unmatched byte sequence consumes the width of
     /// the shortest range whose first byte matches, else one byte.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn split(&self, bytes: &[u8]) -> Vec<(u32, u32)> {
         let mut out = Vec::new();
         let mut cursor = 0usize;
@@ -357,7 +353,6 @@ impl CidCodec {
     }
 
     /// 🔢 The CID a code maps to (0 = notdef when unmapped).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cid(&self, code: u32) -> u32 {
         for mapping in &self.mappings {
             match mapping {
@@ -374,7 +369,6 @@ impl CidCodec {
     }
 
     /// 🔁 A code that maps to `cid`, if any (the writer's direction).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn code_for_cid(&self, cid: u32) -> Option<(u32, u32)> {
         for mapping in &self.mappings {
             match mapping {
@@ -393,13 +387,11 @@ impl CidCodec {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn width_of(&self, code: u32) -> u32 {
         self.codespace.iter().find(|range| code >= range.low && code <= range.high).map(|range| range.byte_width).unwrap_or(2)
     }
 
     /// 🔢 Appends `code` as `width` big-endian bytes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn push_code(out: &mut Vec<u8>, code: u32, width: u32) {
         for index in (0..width).rev() {
             out.push((code >> (8 * index)) as u8);

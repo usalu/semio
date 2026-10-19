@@ -95,43 +95,36 @@ impl TiledMapSceneLane {
     pub const ALL: [Self; 1] = [Self::MapDescriptor];
 
     /// 🏷️ See [`TILEDMAP_SCENE_LANE_NAMES`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn name(self) -> &'static str {
         TILEDMAP_SCENE_LANE_NAMES[self as usize]
     }
 
     /// 🏷️ See [`TILEDMAP_SCENE_LANE_FIELDS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn field(self) -> &'static str {
         TILEDMAP_SCENE_LANE_FIELDS[self as usize]
     }
 
     /// 🪧️ See [`TILEDMAP_SCENE_LANE_BODY_KEYS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn body_key(self) -> &'static str {
         TILEDMAP_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
     /// 🏷️ See [`TILEDMAP_SCENE_LANE_OPTIONAL`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn optional(self) -> bool {
         TILEDMAP_SCENE_LANE_OPTIONAL[self as usize]
     }
 
     /// 🔎️ Resolves a carrier root key back to its lane.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_body_key(body_key: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
     /// 🔎️ Resolves a lane wire name back to its lane.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
 
     /// 📤️ Removes this lane's payload from `scene`.
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn take(self, scene: &mut TiledMapScene) -> Option<String> {
         match self {
             Self::MapDescriptor => Some(std::mem::take(&mut scene.map_descriptor_json)),
@@ -139,7 +132,6 @@ impl TiledMapSceneLane {
     }
 
     /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`TiledMapSceneLane::take`].
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn put(self, scene: &mut TiledMapScene, payload: String) {
         match self {
             Self::MapDescriptor => scene.map_descriptor_json = payload,

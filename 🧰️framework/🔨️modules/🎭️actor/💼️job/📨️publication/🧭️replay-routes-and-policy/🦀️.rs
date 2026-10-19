@@ -9,7 +9,7 @@ pub const JOB_REPLAY_RECORD_PAGE_CAPACITY: usize = 32;
 
 pub const JOB_REPLAY_PROCESS_PAGE_CAPACITY: usize = 4_096;
 
-pub const JOB_REPLAY_PAGE_BYTES: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+pub const JOB_REPLAY_PAGE_BYTES: usize = semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
 pub(super) const JOB_REPLAY_SCALAR_TRANSFERS: u8 = 12;
 

@@ -30,19 +30,16 @@ fn causal_error_contract_preserves_transparent_sources_and_conversions() {
 // #region 🔖️Fixtures
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn chain3() -> CausalDag {
-    // x -> y -> z
     CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("x", "y"), ("y", "z")]).unwrap()
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fork3() -> CausalDag {
-    // x <- y -> z
     CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("y", "x"), ("y", "z")]).unwrap()
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn collider3() -> CausalDag {
-    // x -> z <- y
     CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("x", "z"), ("y", "z")]).unwrap()
 }
 // #endregion 🔖️Fixtures
@@ -121,7 +118,6 @@ fn cpdag_to_dag_round_trip_on_chain_is_acyclic_and_same_skeleton() {
 
 #[test]
 fn meek_rule1_orients_to_avoid_new_collider() {
-    // a -> b, b - c undirected, a and c not adjacent => b -> c.
     let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into()]);
     cpdag.directed.insert((0, 1));
     cpdag.undirected.insert((1, 2));
@@ -131,7 +127,6 @@ fn meek_rule1_orients_to_avoid_new_collider() {
 
 #[test]
 fn meek_rule2_orients_to_avoid_cycle() {
-    // a -> b -> c, a - c undirected => a -> c.
     let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into()]);
     cpdag.directed.insert((0, 1));
     cpdag.directed.insert((1, 2));
@@ -142,7 +137,6 @@ fn meek_rule2_orients_to_avoid_cycle() {
 
 #[test]
 fn meek_rule3_orients_via_two_directed_co_parents() {
-    // a-b, a-c, a-d undirected; c->b, d->b directed; c,d not adjacent => a->b.
     let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into(), "d".into()]);
     cpdag.undirected.insert((0, 1));
     cpdag.undirected.insert((0, 2));
@@ -178,7 +172,6 @@ fn fisher_z_ci_test_via_causal_dag_columns() {
 // #region 🔖️DiscoveryTests
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn linear_chain_scm() -> LinearGaussianScm {
-    // x -> m -> y, coefficients 2.0 and 1.5.
     let dag = CausalDag::from_named_edges(vec!["x".into(), "m".into(), "y".into()], &[("x", "m"), ("m", "y")]).unwrap();
     let mut weights = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(3, 3);
     weights.set(1, 0, 2.0);
@@ -196,9 +189,6 @@ fn local_bic_prefers_the_true_parent_set() {
     let scm = linear_chain_scm();
     let mut rng = semio_framework_geometry::random::Rng::from_seed(99);
     let mut data = scm.simulate(500, &mut rng).unwrap();
-    // An exogenous, causally unrelated column — unlike `y` (a downstream descendant of `m`
-    // in the chain, and thus itself strongly correlated with `m`), this one has no relationship
-    // to `m` at all, so it is a genuine negative control for "does BIC reward a real parent".
     let unrelated: Vec<f64> = (0..data.n_rows()).map(|_| semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
     data.push_continuous("unrelated", unrelated).unwrap();
     let with_true_parent = local_bic(&data, 1, &[0]).unwrap();
@@ -212,7 +202,6 @@ fn local_bic_prefers_the_true_parent_set() {
 // #region 🔖️IdentificationTests
 #[test]
 fn backdoor_minimal_set_on_confounder_triangle() {
-    // z -> x, z -> y, x -> y.
     let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("z", "x"), ("z", "y"), ("x", "y")]).unwrap();
     let sets = minimal_backdoor_sets(&dag, 0, 1, 3);
     assert_eq!(sets, vec![vec![2]]);
@@ -220,14 +209,12 @@ fn backdoor_minimal_set_on_confounder_triangle() {
 
 #[test]
 fn backdoor_m_bias_graph_allows_empty_adjustment() {
-    // a -> x, b -> y, a -> m, b -> m (m is a collider, not on any backdoor path): x -> y direct edge.
     let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "a".into(), "b".into(), "m".into()], &[("a", "x"), ("b", "y"), ("a", "m"), ("b", "m"), ("x", "y")]).unwrap();
     assert!(backdoor_satisfied(&dag, 0, 1, &[]), "no backdoor path from x to y should exist here");
 }
 
 #[test]
 fn frontdoor_satisfied_on_classic_mediator_graph() {
-    // u -> x, u -> y (unobserved confounder u), x -> m -> y.
     let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "m".into(), "u".into()], &[("u", "x"), ("u", "y"), ("x", "m"), ("m", "y")]).unwrap();
     assert!(frontdoor_satisfied(&dag, 0, 1, &[2]));
 }
@@ -257,7 +244,6 @@ fn linear_scm_total_effect_matches_analytic_path_product() {
 fn linear_scm_implied_covariance_matches_hand_computation() {
     let scm = linear_chain_scm();
     let cov = scm.implied_covariance().unwrap();
-    // Var(x) = 1.0; Var(m) = 4*1.0 + 0.25 = 4.25; Var(y) = 1.5^2*4.25 + 0.25 = 9.8125; Cov(x,y) = 2.0*1.5*Var(x) = 3.0.
     assert!((cov.get(0, 0) - 1.0).abs() < 1e-9);
     assert!((cov.get(1, 1) - 4.25).abs() < 1e-9);
     assert!((cov.get(2, 2) - 9.8125).abs() < 1e-9);
@@ -267,12 +253,10 @@ fn linear_scm_implied_covariance_matches_hand_computation() {
 #[test]
 fn linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise() {
     let scm = linear_chain_scm();
-    let observed = [1.0, 2.5, 5.0]; // noise_m = 2.5 - 2.0*1.0 = 0.5; noise_y = 5.0 - 1.5*2.5 = 1.25
+    let observed = [1.0, 2.5, 5.0];
     let cf = scm.counterfactual(&observed, &[(0, 2.0)]).unwrap();
-    // do(x=2.0): m = 2.0*2.0 + 0.5 = 4.5; y = 1.5*4.5 + 1.25 = 8.0
     assert!((cf.get(1) - 4.5).abs() < 1e-9);
     assert!((cf.get(2) - 8.0).abs() < 1e-9);
-    // shift in y should equal exactly a*b*(delta x) = 2.0*1.5*1.0 = 3.0
     assert!((cf.get(2) - observed[2] - 3.0).abs() < 1e-9);
 }
 
@@ -280,7 +264,6 @@ fn linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise() {
 fn what_if_query_level2_vs_level3() {
     let scm = linear_chain_scm();
     let interventional = scm.query(2, &WhatIf::new().do_(0, 2.0)).unwrap();
-    // E[y | do(x=2)] = 1.5 * (2.0 * 2.0) = 6.0 (all intercepts are 0 in this fixture).
     assert!((interventional - 6.0).abs() < 1e-9);
     let observed = [1.0, 2.5, 5.0];
     let what_if = WhatIf::new().do_(0, 2.0).given(0, observed[0]).given(1, observed[1]).given(2, observed[2]);
@@ -292,24 +275,20 @@ fn what_if_query_level2_vs_level3() {
 // #region 🔖️ScmDiscreteTests
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sprinkler_scm() -> DiscreteScm {
-    // Classic sprinkler net: Cloudy -> {Sprinkler, Rain} -> Wet. All variables binary (0=false, 1=true).
     let dag = CausalDag::from_named_edges(vec!["cloudy".into(), "sprinkler".into(), "rain".into(), "wet".into()], &[("cloudy", "sprinkler"), ("cloudy", "rain"), ("sprinkler", "wet"), ("rain", "wet")]).unwrap();
     let cardinalities = vec![2, 2, 2, 2];
     let cloudy = Cpt { node: 0, parents: vec![], cardinality: 2, probs: vec![0.5, 0.5] };
-    // sprinkler | cloudy: P(sprinkler=1|cloudy=0)=0.5, P(sprinkler=1|cloudy=1)=0.1
     let sprinkler = Cpt { node: 1, parents: vec![0], cardinality: 2, probs: vec![0.5, 0.5, 0.9, 0.1] };
-    // rain | cloudy: P(rain=1|cloudy=0)=0.2, P(rain=1|cloudy=1)=0.8
     let rain = Cpt { node: 2, parents: vec![0], cardinality: 2, probs: vec![0.8, 0.2, 0.2, 0.8] };
-    // wet | sprinkler, rain (config mixed-radix: sprinkler fastest)
     let wet = Cpt {
         node: 3,
         parents: vec![1, 2],
         cardinality: 2,
         probs: vec![
-            1.0, 0.0, // sprinkler=0,rain=0
-            0.1, 0.9, // sprinkler=1,rain=0
-            0.1, 0.9, // sprinkler=0,rain=1
-            0.01, 0.99, // sprinkler=1,rain=1
+            1.0, 0.0,
+            0.1, 0.9,
+            0.1, 0.9,
+            0.01, 0.99,
         ],
     };
     DiscreteScm { dag, cardinalities, cpts: vec![cloudy, sprinkler, rain, wet] }
@@ -360,9 +339,6 @@ fn wrong_column_type_errors() {
 
 #[test]
 fn oversized_variable_elimination_is_rejected() {
-    // 20 independent binary roots all feeding one "sink" child: the sink's own CPT factor
-    // already has 2^21 entries (21 binary variables), well past the 1e6-entry guard, and
-    // eliminating any root multiplies straight into that factor.
     let n_parents = 20;
     let mut names = vec!["sink".to_string()];
     names.extend((0..n_parents).map(|i| format!("p{i}")));
@@ -411,7 +387,6 @@ mod quick {
 
     #[test]
     fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
-        // x -> y with uniform (non-Gaussian) noise.
         let n = 3000;
         let mut rng = semio_framework_geometry::random::Rng::from_seed(55);
         let x: Vec<f64> = (0..n).map(|_| semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
@@ -452,8 +427,6 @@ mod quick {
         let ipw = ipw_ate(&data, 1, 2, &[0], &opts).unwrap();
         assert!((naive.estimate - true_ate).abs() > 0.3, "naive estimate {} should be visibly biased away from {true_ate}", naive.estimate);
         assert!((g_formula.estimate - true_ate).abs() < 0.2, "g-formula estimate {} should be close to {true_ate}", g_formula.estimate);
-        // IPW carries more finite-sample variance than g-formula (propensity-weight reweighting
-        // amplifies noise), so it gets a looser tolerance for the same sample size.
         assert!((ipw.estimate - true_ate).abs() < 0.35, "IPW estimate {} should be close to {true_ate}", ipw.estimate);
     }
 

@@ -1,2 +1,2 @@
-/** equation import csv */
+/** ➗️ equation import csv */
 export function register(): void {}

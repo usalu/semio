@@ -7987,6 +7987,127 @@
               "directoryName": "🚫️missing"
             }
           ]
+        },
+        {
+          "mutationId": "create-design-option",
+          "sourceMutationDirectoryName": "🧭️create-design-option",
+          "mutationDirectoryName": "🧭️create-design-option",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-option-group",
+          "sourceMutationDirectoryName": "🧭️create-option-group",
+          "mutationDirectoryName": "🧭️create-option-group",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "create-workset",
+          "sourceMutationDirectoryName": "🧭️create-workset",
+          "mutationDirectoryName": "🧭️create-workset",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-design-option",
+          "sourceMutationDirectoryName": "🧭️delete-design-option",
+          "mutationDirectoryName": "🧭️delete-design-option",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-option-group",
+          "sourceMutationDirectoryName": "🧭️delete-option-group",
+          "mutationDirectoryName": "🧭️delete-option-group",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-workset",
+          "sourceMutationDirectoryName": "🧭️delete-workset",
+          "mutationDirectoryName": "🧭️delete-workset",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-design-option",
+          "sourceMutationDirectoryName": "🧭️set-design-option",
+          "mutationDirectoryName": "🧭️set-design-option",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-element-option",
+          "sourceMutationDirectoryName": "🧭️set-element-option",
+          "mutationDirectoryName": "🧭️set-element-option",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-element-workset",
+          "sourceMutationDirectoryName": "🧭️set-element-workset",
+          "mutationDirectoryName": "🧭️set-element-workset",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-option-group",
+          "sourceMutationDirectoryName": "🧭️set-option-group",
+          "mutationDirectoryName": "🧭️set-option-group",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-workset",
+          "sourceMutationDirectoryName": "🧭️set-workset",
+          "mutationDirectoryName": "🧭️set-workset",
+          "scenarios": [
+            {
+              "id": "basic",
+              "directoryName": "✅️basic"
+            }
+          ]
         }
       ],
       "kinds": [

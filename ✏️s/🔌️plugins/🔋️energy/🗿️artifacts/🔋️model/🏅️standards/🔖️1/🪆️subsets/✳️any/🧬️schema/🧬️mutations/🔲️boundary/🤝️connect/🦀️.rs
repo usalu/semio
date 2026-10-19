@@ -26,6 +26,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ConnectSurfaces
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ConnectSurfaces> + From<crate::DisconnectSurfaces>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "surfaces", kind: "connect-surfaces", record: "ConnectedSurfaces" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -47,7 +48,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "connect", entity: "surfaces", kind: "connect-surfaces", record: "ConnectedSurfaces" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

@@ -132,6 +132,9 @@ path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/�
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 package = "semio-framework-os-kernel"
@@ -161,6 +164,7 @@ package = "semio-framework-dispatch-macros"
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
 package = "semio-framework-value-derive"
 
 [workspace.dependencies.base64_codec]

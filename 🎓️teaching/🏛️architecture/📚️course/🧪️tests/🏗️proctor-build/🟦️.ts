@@ -7,7 +7,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { basename, dirname, join, resolve } from "node:path";
 import { expect, it } from "vitest";
 import schema from "../../../../🛂️proctor/🏗️bootstrap/🧬️schema/🔣️.json" with { type: "json" };
-import fixtures from "../../../../🛂️proctor/🏗️bootstrap/🧫️fixtures/🔣️.json" with { type: "json" };
+import fixtures from "../../../../🛂️proctor/🏗️bootstrap/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { buildProctor, proctorBuildMode, proctorBuildPlan, proctorSourceRoots, TEACHING_WORKSPACE, type ProctorArtifact, type ProctorExecutable } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { pinExecutableArtifact } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
 import { withResourceLeases, checkResourceLeaseControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";

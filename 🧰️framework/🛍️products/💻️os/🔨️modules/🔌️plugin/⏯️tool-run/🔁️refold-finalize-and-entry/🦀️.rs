@@ -1,6 +1,11 @@
 //! 🔁️ Refold, finalize and entry of the tool run ledger: the refold, settings values and finalize phases and the per-run entry with its progress, trace and publication operations. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
+use semio_framework::FaultOrigin;
+use semio_framework::FaultCode;
+use semio_framework_os_kernel::DslValue;
+use std::collections::BTreeSet;
 
 //#region 🔖️Ledger
 /// 🔁️ A bounded refold of the provisional ops from `base`. `boundary` is whether the job reached a point where

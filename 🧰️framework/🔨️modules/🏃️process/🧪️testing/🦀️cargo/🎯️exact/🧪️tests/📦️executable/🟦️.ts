@@ -7,7 +7,7 @@ import ts from "typescript";
 import { readExactCargoExecutableV1, type ExactCargoTargetDataV1 } from "../../📋️protocol/🟦️.ts";
 import { rustCompilerLoaderEnvironment } from "../../📚️loader/🟦️.ts";
 import schema from "../../📋️protocol/🧬️schema/🔣️.json";
-import fixture from "../../📋️protocol/🧫️fixtures/📦️executable.json";
+import fixture from "../../📋️protocol/🧪️tests/🧫️fixtures/📦️executable.json";
 import policy from "../../📋️policy/🔣️.json";
 
 const executable = resolve("owned-fixture-executable");
@@ -18,7 +18,7 @@ for (const row of fixture.cases) test(`exact Cargo executable descriptor retains
   const validate = new Ajv({ strict: true }).compile(schema.definitions.Executable);
   if (!row.accepted) { expect(() => readExactCargoExecutableV1(capture(row.kinds), "fixture", target(row.target))).toThrow(); return; }
   const actual = readExactCargoExecutableV1(capture(row.kinds), "fixture", target(row.target));
-  expect(actual).toEqual({ path: executable, kinds: row.kinds });
+  expect(actual).toEqual({ path: executable, kinds: row.kinds as string[] });
   expect(validate(actual)).toBe(true);
   const db = new Database(":memory:");
   try {

@@ -323,11 +323,10 @@ use semio_s_artifact_block_5d_mut_meta::add_author::add_author_at;
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {
     let base = empty_block5d_snapshot();
-    assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())).await; // delete
-    assert_missing_target_is_error(&base, &remove_author("missing".into())).await; // remove
-    assert_missing_target_is_error(&base, &change_grip_kind_color("missing".into(), "#fff".into())).await; // change/set/update
+    assert_missing_target_is_error(&base, &delete_grip_kind("missing".into())).await;
+    assert_missing_target_is_error(&base, &remove_author("missing".into())).await;
+    assert_missing_target_is_error(&base, &change_grip_kind_color("missing".into(), "#fff".into())).await;
     assert_missing_target_is_error(&base, &move_grip_2d("missing".into(), 1.0, 1.0)).await;
-    // move/drag/rotate/scale/resize
 }
 
 #[semio_framework_async_macros::async_test]

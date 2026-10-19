@@ -33,8 +33,6 @@ describe("backbone envelope io", () => {
       calls += 1;
       return { ok: false, status: 500, arrayBuffer: async () => new ArrayBuffer(0) } as unknown as Response;
     }) as unknown as typeof fetch;
-    // 🪧️ no intervening `await` between creating the promise and `.rejects` consuming it — a
-    // definitive failure settles in one microtask hop, with no timer involved at all.
     await expect(readBackboneEnvelope("folder:///doc")).rejects.toThrow("backbone read failed (500)");
     expect(calls).toBe(1);
   });

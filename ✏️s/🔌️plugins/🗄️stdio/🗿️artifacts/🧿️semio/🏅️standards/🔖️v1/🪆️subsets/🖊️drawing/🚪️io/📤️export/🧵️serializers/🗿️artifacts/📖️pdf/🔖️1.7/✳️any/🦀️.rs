@@ -31,7 +31,6 @@ struct Painter<'a> {
 }
 
 impl Painter<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn alpha_state(&mut self, fill_alpha: f64, stroke_alpha: f64) -> Option<String> {
         if fill_alpha >= 1.0 && stroke_alpha >= 1.0 {
             return None;
@@ -44,7 +43,6 @@ impl Painter<'_> {
         Some(id)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn path(&mut self, segments: &[PathSegment]) -> bool {
         let mut pen = [0.0, 0.0];
         let mut start = [0.0, 0.0];
@@ -88,7 +86,6 @@ impl Painter<'_> {
         drew
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn node(&mut self, node: &DrawNode) {
         let styles = self.styles;
         let find = |name: &Option<String>| name.as_deref().and_then(|name| styles.iter().find(|s| s.name == name));

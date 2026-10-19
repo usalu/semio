@@ -28,8 +28,6 @@ pub const HASH_SIZE: usize = 1 << HASH_BITS;
 
 #[inline]
 pub(super) fn hash3(data: &[u8], i: usize) -> usize {
-    // A cheap multiplicative hash over 3 bytes; collisions just mean a longer (still correct)
-    // chain walk, never a wrong match -- every candidate is verified byte-by-byte below.
     let v = (data[i] as u32) | ((data[i + 1] as u32) << 8) | ((data[i + 2] as u32) << 16);
     ((v.wrapping_mul(0x9E3779B1)) >> (32 - HASH_BITS)) as usize
 }
@@ -50,8 +48,6 @@ pub(super) fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32],
     let mut chain = 0usize;
     while candidate >= min_candidate && candidate >= 0 && chain < max_chain {
         let cpos = candidate as usize;
-        // Cheap pre-check before the full byte compare: the candidate must at least beat the
-        // current best at the position we haven't yet verified.
         if best_len == 0 || (cpos + best_len < data.len() && data[cpos + best_len] == data[pos + best_len]) {
             let mut len = 0usize;
             while len < limit && data[cpos + len] == data[pos + len] {
@@ -76,7 +72,6 @@ pub(super) fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32],
 }
 
 pub(super) fn length_symbol(len: usize) -> (usize, u32, u8) {
-    // Highest base <= len; LEN_BASE is ascending so a linear scan from the top is exact and simple.
     for (idx, &base) in LEN_BASE.iter().enumerate().rev() {
         if len >= base as usize {
             return (257 + idx, (len - base as usize) as u32, LEN_EXTRA[idx]);

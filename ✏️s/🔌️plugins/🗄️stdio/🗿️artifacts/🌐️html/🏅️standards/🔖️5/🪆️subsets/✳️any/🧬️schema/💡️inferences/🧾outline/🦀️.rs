@@ -40,7 +40,6 @@ fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
 }
 
 impl HtmlOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &HtmlSnapshot) -> Self {
         let (element_count, max_depth, text_length) = walk(&snapshot.root, 1);
         Self { element_count, max_depth, text_length }

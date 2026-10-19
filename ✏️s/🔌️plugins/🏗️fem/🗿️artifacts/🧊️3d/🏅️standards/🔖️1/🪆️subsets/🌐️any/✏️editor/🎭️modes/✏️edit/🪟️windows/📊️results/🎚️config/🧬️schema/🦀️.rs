@@ -21,7 +21,7 @@ impl Fem3dResultsWindowConfig {
         validate_source_mode(self.result_source_id.as_deref(), &self.result_mode)
     }
     /// 🎟️ Borrowed source admission consumes one controlled work unit and no scratch allocation.
-    pub fn validate_result_source_controlled(&self, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
+    pub fn validate_result_source_controlled(&self, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
         control.step(1)?;
         self.validate_result_source()
     }

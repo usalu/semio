@@ -422,7 +422,6 @@ impl ArtifactCommandWork<EditorApp<ReasoningWiresPlayApp>> for WiresWindowDragWo
                     return Err(Fault::from("wires-drag-camera-invalid"));
                 }
                 self.consumed = true;
-                // 🧵️ A batched move lands on its LAST sample (design L4): the drag delta is start→last.
                 let [last_x, last_y] = payload.last_sample();
                 let gesture = Self::drag_mutation(window, Some(id.clone()), transient.drag_start_x, transient.drag_start_y, last_x, last_y, transient.drag_zoom);
                 Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: vec![gesture] } })
@@ -620,9 +619,6 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         if wires_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
             return Err(Fault::from("wires-command-payload-too-large"));
         }
-        // 🧵️ The four gesture verbs walk the canvas incrementally through `WiresWindowDragWork`; the
-        // four document verbs are one-shot reducers, so they take the framework's bounded one-step
-        // work over `WiresCommand::dispatch` instead of a bespoke cursor.
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match *request.command {
             WiresCommand::SetActiveExample(_) | WiresCommand::AddNode(_) | WiresCommand::AddRelationship(_) | WiresCommand::DeleteSelection(_) => {
                 Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(request.command.command_id(), wires_retained_document_reduce, wires_retained_extent))
@@ -802,7 +798,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .panel_tab_def(document_panel::definition())
         .panel_tab_def(catalogue_panel::definition())
         .panel_tab_def(inspection_panel::definition())
-        // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
         .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
@@ -820,10 +815,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_destructive("deleteSelection")
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
         .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
-        // 👁️ Ephemeral view state — in-flight drag. Selection/hover are framework-owned now
-        // (domain "graph") — no app-declared verbs; `interactionSelect`/`interactionHover`/
-        // `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity` auto-inject
-        // below via `.interaction(...)`.
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
         .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
@@ -837,10 +828,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
-        // 🕹️ Domain "graph": identities (node) and relationships (edge) — `Flat` (the mindmap graph
-        // has no parent/child structure to build a topology from, see `WIRES_INTERACTION_GRAPH`'s
-        // doc comment); single-select, pick-only, replace-only merge (matches the pre-migration
-        // click-to-select behaviour this crate hand-rolled).
         .interaction(InteractionDefinition {
             id: WIRES_INTERACTION_GRAPH.into(),
             label: LocalizedLabel::native("Graph", "Graph"),
@@ -853,9 +840,6 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
             selection: SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
         })
         .window_kind_interactions(WIRES_PLAY_WINDOW_CANVAS, vec![InteractionRef::new(WIRES_INTERACTION_GRAPH)])
-        // 🎯️ Typed channel surface (B1 pure-trait conversion) — `config_spec()`'s single source of
-        // truth (the trait default `ConfigSpec::empty()`: none of `NoConfig`'s fields are
-        // user-visible settings, they're ephemeral view state) reused here rather than duplicated.
         .config(ReasoningWiresPlayApp::config_spec())
         .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole reasoning board with the bundled metabolism example, or with an empty board for any other example id.", "Ersetzt das gesamte Denkbrett durch das mitgelieferte Stoffwechsel-Beispiel, bei jeder anderen Beispiel-Id durch ein leeres Brett."))
         .action_describe("addNode", LocalizedLabel::native("Adds a new node of the given kind (identity by default) to the reasoning board and selects it.", "Fügt dem Denkbrett einen neuen Knoten der angegebenen Art (standardmäßig Identität) hinzu und wählt ihn aus."))

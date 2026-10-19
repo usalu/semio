@@ -1,5 +1,5 @@
 //! 🧩️ Fixed native record members borrow genuine typed children across canonical, text and authored-value inputs.
-use crate::{DslValue,Number,ValueError,ValueRefusalKind,retirement::{RetireOwned,shared::sealed::SealedShared}};
+use crate::{DslValue,Number,ValueError,ValueRefusalKind,retirement::RetireOwned,shared_issuance::SealedShared};
 #[path="🧳️receiver/🦀️.rs"]mod receiver;
 pub use receiver::NativeFlatRecordReceiver;
 /// 🪪️ Original record identity is a borrowed canonical name or an actual declared text field ordinal.

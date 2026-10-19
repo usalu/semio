@@ -14,25 +14,25 @@ import {
   PLUGIN_HOST_SHIM_FILE,
   SHARD_WORKER_FILE,
   type PluginWebMaterializeContext,
-} from "../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
 import {
   PREVIEW2_VENDOR_RELATIVE,
-} from "../../🌐️browser-bundle/🕸️imports/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/imports";
 import {
   ensurePreview2ShimVendorAt,
-} from "../../🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/preview2-shim-patches";
 import {
   hostShimSource,
-} from "../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/host-shim-source";
 import {
   pluginComponentBridgeSource,
-} from "../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
 import {
   shardWorkerSource,
-} from "../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/shard-worker-source";
 import {
   transpilePluginComponent,
-} from "../../🌐️browser-bundle/🏗️materialization/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization";
 
 //#region 🔖️Constants
 export const EXTENSION_STATIC_ROUTE = MODULE_EXTENSION_ROUTE;

@@ -8,8 +8,6 @@ mod tests {
 
     #[test]
     fn lz76_matches_canonical_test_string() {
-        // 🔐️ See `exhaustive::lz76_canonical_value_matches_verified_reference` for the full
-        // cross-validation story behind this specific number.
         let s = binary_string("0001101001000101");
         assert_eq!(lz76_complexity(&s), 6);
     }
@@ -214,16 +212,11 @@ mod tests {
                     checked += 1;
                 }
             }
-            assert_eq!(checked, 8190); // 2^1 + 2^2 + ... + 2^12
+            assert_eq!(checked, 8190);
         }
 
         #[test]
         fn lz76_canonical_value_matches_verified_reference() {
-            // 🔐️ The literal incremental-parsing pseudocode, cross-checked against
-            // `brute_force_lz76` above on all 8190 binary strings of length 1..=12 with zero
-            // mismatches, computes `c = 6` for this string (not the `8` sometimes quoted for it
-            // in secondary sources — that figure does not reproduce under this definition and
-            // was rejected in favor of the exhaustively cross-validated result).
             let s = binary_string("0001101001000101");
             assert_eq!(lz76_complexity(&s), 6);
             assert_eq!(brute_force_lz76(&s), 6);

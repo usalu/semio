@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, useAgentBridge } from "../../🟦️.tsx";
 import { decodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
-import { policyApprovalWithdrawalFixtureUrl } from "../../../../../../🌉️mcp/🧪️tests/🧫️fixtures/🟦️.ts";
+import { policyApprovalWithdrawalFixtureUrl } from "@semio-tech/framework/os/modules/mcp/testing/fixtures";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -66,7 +66,6 @@ describe("useAgentBridge cancelToolCall", () => {
       const entry = hook.result.current.conversation[0]!;
       expect(entry.kind === "toolCall" && entry.state).toBe(cancellationFixture.openCancellation.state);
 
-      // 🛑️ A cancel with nothing open must report that it did not leave, never pretend.
       (live as unknown as { readyState: number }).readyState = 3;
       const beforeClosedCancel = sent.length;
       let refused = true;

@@ -104,9 +104,6 @@ async fn settle_into_reporting_with_items(app: &mut Puzzle3dApp, result: Result<
     let folded = result.map(|mut result| {
         result.requested_effects.extend(settled.effects.iter().cloned());
         result.events.extend(settled.events.iter().cloned());
-        // 🧲️ A latest-wins command answers BEFORE it runs, so its own terminal `UiDirtyScope` only
-        // exists on the completion lane; folding the last completion's scope in is what makes
-        // `InvocationResult::ui_scope` mean the same thing for a coalesced verb as for a plain one.
         if let Some(scope) = settled.scope.clone().or_else(|| settled.completions.last().map(|completion| completion.ui_scope.clone())) {
             result.ui_scope = scope;
         }
@@ -176,7 +173,7 @@ pub async fn dispatch_reporting(app: &mut Puzzle3dApp, action: &str, args: Optio
 /// 📥️ [`dispatch_reporting`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel —
 /// the lane a shell's picked-file chunks take, where the framework's import staging admits them first.
 pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args: &semio_framework_value::DslValue) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
-    let window_id = main::WINDOW_KIND_ID;
+    let window_id = semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID;
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let (raw, cx) = app.parts();
@@ -193,18 +190,12 @@ pub async fn dispatch_reporting_with_items(
     window_id: Option<&str>,
     maximum_items: usize,
 ) -> (Result<InvocationResult, Fault>, Puzzle3dSettled) {
-    let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+    let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
-    // 🏛️ The host resolves its OWN session state first and only then forwards the verb — so the very
-    // call that activates a tool/utility already carries it, exactly as `🏛️ShellHost/🟦️.tsx` does.
     if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID) {
         app.activate(action, args, window_id);
     }
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
-    // 🕰️ Framework-reserved verbs stay on `handle_action`: this is exactly the `skip` set
-    // `PluginBuilder`'s own declared-action bridge check uses (`🧰️framework/…/🔌️plugin/🦀️.rs`), i.e. every
-    // verb the framework injects and handles itself. A reserved verb sent down the typed channel faults
-    // `interactive-job.missing-factory` — the app owns no tool proof for a verb it never declared.
     if matches!(
         action,
         "undo"
@@ -252,7 +243,7 @@ pub async fn dispatch_reporting_with_items(
 /// the scene_snapshot here is exactly what a closed tab, a cancelled command or a torn-down app does, which
 /// is the ONLY way a law can witness the retirement array a live app is expected to give back.
 pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-    let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+    let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
@@ -281,7 +272,7 @@ pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>
 /// 🖱️ Browser pointermove over vortices admits many `interactionHover`s before Isolated reserved
 /// jobs finish. Laws that reproduce that storm must not `settle` between admits.
 pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
-    let window_id = window_id.unwrap_or(main::WINDOW_KIND_ID);
+    let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);

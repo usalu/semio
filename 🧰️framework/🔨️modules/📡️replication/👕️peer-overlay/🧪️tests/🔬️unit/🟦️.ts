@@ -15,7 +15,7 @@ import {
 } from "../../🟦️.ts";
 
 const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../🧪️tests/🧫️fixtures/👕️peer-overlay-v1/🔣️.json");
-const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { readonly cases: readonly any[] };
+const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as { readonly projectionCases: readonly any[]; readonly cases: readonly any[] };
 
 describe("👕️peer-overlay-v1", () => {
   for (const row of fixture.projectionCases) it(row.id, () => expect(orbitPointToScreen(row, row.size, row.world)).toEqual(row.expected));

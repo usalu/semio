@@ -17,9 +17,9 @@ export interface PresentationTilesInsertion { index: number; row: FigureTileDraf
 export interface PresentationTilesRelocation { id: string; from: number; to: number }
 export interface PresentationTilesDelta { removed: PresentationTilesRemoval[]; inserted: PresentationTilesInsertion[]; moved: PresentationTilesRelocation[]; modified: PresentationTilesModification[] }
 export interface PresentationDiff {
-  /** @state artifact */ schema: string | null;
-  /** @state artifact */ source: PresentationSourcePatch | null;
-  /** @state artifact */ tiles: PresentationTilesDelta | null;
+  /** 🔄️ @state artifact */ schema: string | null;
+  /** ✏️ @state artifact */ source: PresentationSourcePatch | null;
+  /** 🗺️ @state artifact */ tiles: PresentationTilesDelta | null;
 }
 
 const record = (value: unknown, at: string): Record<string, unknown> => {

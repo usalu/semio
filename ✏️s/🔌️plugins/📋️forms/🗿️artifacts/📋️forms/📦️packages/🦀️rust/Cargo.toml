@@ -20,6 +20,7 @@ name = "retirement_law"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🫧️transient/🧪️tests/⚖️retirement-law/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-forms-forms-archive-codecs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗜️archive-codecs/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-definition = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-config = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust" }
@@ -49,6 +50,7 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-dictionary = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-ui-contract.workspace = true

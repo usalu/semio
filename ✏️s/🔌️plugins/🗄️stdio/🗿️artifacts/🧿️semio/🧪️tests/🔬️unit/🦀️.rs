@@ -90,8 +90,6 @@ fn shared_snapshot_read_blocks_until_the_exact_owner_is_unique() {
 async fn every_composable_subset_dispatches_to_a_real_child_store() {
     for subset in composable_subsets() {
         let dialect = subset_dialect(subset);
-        // An empty pack is rejected by the production member, so this asserts the DISPATCH
-        // reached a real typed variant rather than falling through to "no member kind".
         let error = match create_semio_member("probe", &dialect, &[], protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await {
             Ok(_) => panic!("empty genesis pack must be rejected"),
             Err(error) => error,
@@ -159,19 +157,12 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     assert_eq!(store.outstanding_snapshot_read_count(), 0, "both leases were handed back");
     assert!(store.returned_snapshot_read_count() <= 2, "a returned lease may be reclaimed eagerly or parked, never double-counted");
 
-    // The first commit parks the aliased snapshot in the tail-undo cache; the SECOND one evicts it
-    // into the displaced-owner queue, which is where the close cursor meets it.
     for step in ["first", "second"] {
         semio_framework_plugin::with_authoring_identity!(|identity| store.apply_one(store.generation(), SemioValueMutation::SetValue(SetValue { path: Vec::new(), value: SemioValue::Str { value: step.into() } }), dsl::os_store::store_schema::HistoryLane::Document, &mut identity).await).expect("one-item commit");
     }
 
-    // The laws this pins reach their close through a SECOND decision — an undo of the commit they
-    // just applied, which is what repopulates the tail-undo cache from a displaced snapshot.
     semio_framework_plugin::with_authoring_identity!(|identity| SpaceMember::undo(&mut store, &mut identity).await).expect("derived undo of the last commit");
 
-    // 🚧️ The ordering itself: a lease still in the registry must stop the cursor IN its first phase.
-    // If the disposer walked displaced owners first it would meet this alias as a shared retirement
-    // it can never release and the close would wedge instead of waiting here.
     let outstanding = store.snapshot_read().expect("third snapshot read lease");
     assert!(store.close_owned_phase_witness().starts_with("semio/ReturnedLeases/"), "the close cursor must open on the lease registry, got {}", store.close_owned_phase_witness());
     let refused = store.close_owned_step(quoted(store.close_owned_demands(4096).expect("quoted store close demand"))).expect("bounded value-store close");

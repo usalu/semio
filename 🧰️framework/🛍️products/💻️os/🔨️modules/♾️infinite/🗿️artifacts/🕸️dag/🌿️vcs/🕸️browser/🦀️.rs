@@ -6,7 +6,7 @@
     use semio_framework_value::native_encoding::NativeEncodeProgress;
 
     /// 🪪️ Fixed identity-authoring ceiling every browser dispatch admits before it owns any authored bytes.
-    const DAG_VCS_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const DAG_VCS_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
     #[wasm_bindgen]
     pub struct DagSnapshotVcs {

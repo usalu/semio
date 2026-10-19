@@ -1,6 +1,6 @@
 //! 🔒️ `close-vortex-suggestions` command.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_pack_json::Value;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities::brush::run_effects;
 

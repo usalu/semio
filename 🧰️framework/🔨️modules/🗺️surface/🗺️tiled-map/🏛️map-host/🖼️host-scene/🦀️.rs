@@ -289,10 +289,6 @@ impl MapHost {
         h = fnv1a_bytes(h, self.pinned_band_id().unwrap_or("").as_bytes());
         h = fnv1a_mix(h, Self::layer_switches_hash(&self.layer_switches));
         h = fnv1a_mix(h, Self::theme_hash(&self.theme));
-        // 🚫️ `interaction_revision` deliberately absent: `append_vector_tiles` never reads selection or
-        // hover (those belong to the overlay layers, which are drawn fresh outside this
-        // cache), while `pointer_move_screen`/`set_camera` bump the revision on *every* frame of a pan —
-        // keying on it invalidated the cache once per frame and left a drag at the uncached 35 ms.
         h
     }
 

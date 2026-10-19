@@ -124,10 +124,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { createReadStream, mkdtempSync, mkdirSync, statSync, writeFileSync } = await import("node:fs");
       const { createHash } = await import("node:crypto");
       const { tmpdir } = await import("node:os");
-      // 🔏️ The framework's own digest is executed from its SOURCE TEXT rather than imported: importing
-      // `♻️activation/📥️installation/🟦️.ts` drags the whole materialization tool-chain (typescript, the
-      // wasm bootstrap, the registry discovery walk) through Vitest's transform and blows this suite's
-      // time budget on its own. Extracting the function body keeps the comparison against the LIVE rule.
       const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts"), "utf8");
       const body = /\nasync function activationFilesDigest\([^)]*\): Promise<string> \{\n([\s\S]*?)\n\}\n/.exec(source)?.[1];
       expect(body, "activationFilesDigest moved or changed shape in ♻️activation/📥️installation/🟦️.ts — re-derive activationFilesDigestSync against it").toBeTruthy();

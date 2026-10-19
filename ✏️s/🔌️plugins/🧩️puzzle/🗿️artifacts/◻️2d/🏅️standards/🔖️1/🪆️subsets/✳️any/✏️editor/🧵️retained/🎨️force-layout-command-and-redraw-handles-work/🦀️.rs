@@ -63,7 +63,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         _ => break,
                     }
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-node", "Reading layout node", "Layout-Knoten wird gelesen"))
             }
             Puzzle2dForceStage::Edges => {
                 for _ in 0..PUZZLE2D_FORCE_SCAN_PER_STEP {
@@ -72,7 +72,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.scan_edge_one(edges)?;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-edge", "Indexing layout edge", "Layout-Kante wird indiziert"))
             }
             Puzzle2dForceStage::Seed => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -81,7 +81,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.seed_one();
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-seed", "Seeding layout node", "Layout-Knoten wird initialisiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-seed", "Seeding layout node", "Layout-Knoten wird initialisiert"))
             }
             Puzzle2dForceStage::Center => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -90,7 +90,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.center_one();
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-center", "Centering layout", "Layout wird zentriert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-center", "Centering layout", "Layout wird zentriert"))
             }
             Puzzle2dForceStage::Reset => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -99,7 +99,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.reset_one();
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-reset", "Resetting layout force", "Layout-Kraft wird zurückgesetzt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-reset", "Resetting layout force", "Layout-Kraft wird zurückgesetzt"))
             }
             Puzzle2dForceStage::Repel => {
                 for _ in 0..PUZZLE2D_FORCE_UNITS_PER_STEP {
@@ -108,7 +108,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.repel_one(iterations);
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-repel", "Applying layout repulsion", "Layout-Abstoßung wird angewendet"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-repel", "Applying layout repulsion", "Layout-Abstoßung wird angewendet"))
             }
             Puzzle2dForceStage::Springs => {
                 for _ in 0..PUZZLE2D_FORCE_UNITS_PER_STEP {
@@ -117,7 +117,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.spring_one(iterations);
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-spring", "Applying layout spring", "Layout-Feder wird angewendet"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-spring", "Applying layout spring", "Layout-Feder wird angewendet"))
             }
             Puzzle2dForceStage::Integrate => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -126,7 +126,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.integrate_one(iterations);
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-integrate", "Integrating layout node", "Layout-Knoten wird integriert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-integrate", "Integrating layout node", "Layout-Knoten wird integriert"))
             }
             Puzzle2dForceStage::Emit => {
                 for _ in 0..PUZZLE2D_FORCE_NODES_PER_STEP {
@@ -135,7 +135,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
                     }
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-force-emit", "Preparing layout mutation", "Layout-Mutation wird vorbereitet"))
             }
             Puzzle2dForceStage::Complete => Err(Fault::from("puzzle2d-force-complete-repolled")),
             Puzzle2dForceStage::Closing => Err(Fault::from("puzzle2d-force-closing")),
@@ -304,7 +304,7 @@ impl Puzzle2dRedrawHandlesWork {
         if self.shapes.len() >= PUZZLE2D_REDRAW_MAX_NODES {
             return Err(Fault::from("puzzle2d-redraw-node-capacity"));
         }
-        let visible = crate::editor::puzzle2d::engine::board_visible_or_true(&crate::editor::puzzle2d::engine::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())});
+        let visible = semio_framework_os_infinite::board::board_visible_or_true(&semio_framework_os_infinite::board::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())});
         self.shapes.push(visible.then(|| Self::shape(object)).flatten());
         if !visible {
             self.node_cursor += 1;
@@ -325,7 +325,7 @@ impl Puzzle2dRedrawHandlesWork {
         let index = self.handle_cursor;
         self.handle_cursor += 1;
         let Some(handle_object) = handle.as_object() else { return Ok(()) };
-        if !crate::editor::puzzle2d::engine::board_visible_or_true(&crate::editor::puzzle2d::engine::BoardVisibility {hidden:handle_object.get("hidden").and_then(|v|v.as_bool()),visible:handle_object.get("visible").and_then(|v|v.as_bool()),locked:handle_object.get("locked").and_then(|v|v.as_bool())}) {
+        if !semio_framework_os_infinite::board::board_visible_or_true(&semio_framework_os_infinite::board::BoardVisibility {hidden:handle_object.get("hidden").and_then(|v|v.as_bool()),visible:handle_object.get("visible").and_then(|v|v.as_bool()),locked:handle_object.get("locked").and_then(|v|v.as_bool())}) {
             return Ok(());
         }
         let Some(handle_id) = handle_object.get("id").and_then(Value::as_str) else { return Ok(()) };
@@ -344,10 +344,10 @@ impl Puzzle2dRedrawHandlesWork {
         };
         self.edge_cursor += 1;
         let Some(object) = edge.as_object() else { return Ok(()) };
-        if !crate::editor::puzzle2d::engine::board_visible_or_true(&crate::editor::puzzle2d::engine::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())}) {
+        if !semio_framework_os_infinite::board::board_visible_or_true(&semio_framework_os_infinite::board::BoardVisibility {hidden:object.get("hidden").and_then(|v|v.as_bool()),visible:object.get("visible").and_then(|v|v.as_bool()),locked:object.get("locked").and_then(|v|v.as_bool())}) {
             return Ok(());
         }
-        let Some((source, target)) = crate::editor::puzzle2d::engine::board_edge_handle_ids(object.get("source").and_then(|v|v.as_str()),object.get("target").and_then(|v|v.as_str())) else { return Ok(()) };
+        let Some((source, target)) = semio_framework_os_infinite::board::board_edge_handle_ids(object.get("source").and_then(|v|v.as_str()),object.get("target").and_then(|v|v.as_str())) else { return Ok(()) };
         let (Some(&source_location), Some(&target_location)) = (self.handle_locations.get(source), self.handle_locations.get(target)) else {
             return Ok(());
         };
@@ -446,7 +446,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         _ => break,
                     }
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-redraw-node", "Indexing board node", "Board-Knoten wird indiziert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-redraw-node", "Indexing board node", "Board-Knoten wird indiziert"))
             }
             Puzzle2dRedrawStage::Edges => {
                 let edges = snapshot.value().get("edges").and_then(Value::as_array);
@@ -456,7 +456,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     self.resolve_edge_one(edges)?;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-redraw-edge", "Resolving handle angle", "Anschlusswinkel wird bestimmt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-redraw-edge", "Resolving handle angle", "Anschlusswinkel wird bestimmt"))
             }
             Puzzle2dRedrawStage::Emit => {
                 for _ in 0..PUZZLE2D_REDRAW_UNITS_PER_STEP {
@@ -465,7 +465,7 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { artifact_mutations: mutations, ui_scope: UiDirtyScope::Full, ..Default::default() }));
                     }
                 }
-                Ok(crate::puzzle_progress_step!("puzzle2d-redraw-emit", "Publishing handle angle", "Anschlusswinkel wird veröffentlicht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle2d-redraw-emit", "Publishing handle angle", "Anschlusswinkel wird veröffentlicht"))
             }
             Puzzle2dRedrawStage::Complete => Err(Fault::from("puzzle2d-redraw-complete-repolled")),
             Puzzle2dRedrawStage::Closing => Err(Fault::from("puzzle2d-redraw-closing")),

@@ -7,7 +7,7 @@ export interface VcsSummary {
 }
 
 export interface VcsInference {
-  /** @derived */
+  /** 📝️ @derived */
   summary: VcsSummary;
 }
 

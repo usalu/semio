@@ -1,0 +1,12 @@
+[package]
+name = "case-e0583_include_mod_wrong_dir"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+alpha = { path = "../../alpha" }
+
+[workspace]

@@ -1,6 +1,7 @@
 //! 🧬️ Native sample admission and physical lowering of owned TIFF pages.
 use super::*;
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 fn expand_ycbcr(raw:&[u8],width:usize,height:usize,h:usize,v:usize,c:&mut NativeDecodeControl<'_>)->Result<Vec<u8>,ValueError>{

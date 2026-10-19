@@ -475,9 +475,6 @@ fn absorb_value_diff(d1: SemioValueDiff, d2: SemioValueDiff) -> SemioValueDiff {
         (SemioValueDiff::Map { diff: o1 }, SemioValueDiff::Map { diff: o2 }) => {
             SemioValueDiff::Map { diff: absorb_named(o1, o2, &|e: &NamedAdded<SemioValueEntry>| e.item.key.clone(), &absorb_value_diff, &apply_value_diff_to_named_entry, &is_value_diff_effectively_empty) }
         }
-        // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs produced
-        // by real sequential application against the same intervening state — fall back to d2
-        // (last-write-wins) rather than panicking.
         (_, other) => other,
     }
 }
@@ -512,7 +509,6 @@ fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedT
         .unwrap_or(0);
     let n = max_ref + d1.removed.len() + d2.removed.len() + 64;
 
-    // Step A: base -> mid.
     let mut mid: Vec<Origin> = (0..n).map(Origin::Base).collect();
     let mut d1_removed_sorted = d1.removed.clone();
     d1_removed_sorted.sort_unstable();
@@ -530,7 +526,6 @@ fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedT
     }
     let d1_modified: std::collections::HashMap<usize, D> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
 
-    // Step B: mid -> after.
     let mut after: Vec<AfterSlot<D, T>> = mid
         .iter()
         .map(|origin| match origin {
@@ -547,7 +542,7 @@ fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedT
         if *idx < after.len() {
             match after.remove(*idx) {
                 AfterSlot::Base { orig, .. } => final_removed.push(orig),
-                AfterSlot::D1Added { .. } => {} // cancels the add: no removed entry, no added entry
+                AfterSlot::D1Added { .. } => {}
                 AfterSlot::D2Added(_) => {}
             }
         }
@@ -580,7 +575,6 @@ fn absorb_indexed<D: Clone, T: Clone>(d1: IndexedTripleDiff<D, T>, d2: &IndexedT
         after.insert(pos, AfterSlot::D2Added(d2.added[tag].item.clone()));
     }
 
-    // Step C: walk `after`, emitting the combined triple.
     let mut modified = Vec::new();
     let mut added = Vec::new();
     for (pos, slot) in after.into_iter().enumerate() {

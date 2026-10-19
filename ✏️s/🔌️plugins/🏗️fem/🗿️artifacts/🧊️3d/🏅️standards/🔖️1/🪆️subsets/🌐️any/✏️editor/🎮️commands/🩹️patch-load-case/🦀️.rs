@@ -1,4 +1,4 @@
-//! `ChangeLoadCaseName`, `selfWeight` → `ChangeLoadCaseSelfWeight`).
+//! 🎮️ `ChangeLoadCaseName`, `selfWeight` → `ChangeLoadCaseSelfWeight`).
 //! 🩹️ Fem3d play app command — `patch-load-case`: one-field edit of a load case (`name` →
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;

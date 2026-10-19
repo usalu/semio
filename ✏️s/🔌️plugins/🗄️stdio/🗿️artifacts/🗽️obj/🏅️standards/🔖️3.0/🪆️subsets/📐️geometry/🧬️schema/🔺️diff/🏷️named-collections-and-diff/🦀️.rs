@@ -72,7 +72,6 @@ pub struct ObjGroupsDiff {
     pub added: Vec<ObjGroupAdded>,
 }
 impl ObjGroupsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -180,7 +179,6 @@ pub struct ObjObjectsDiff {
     pub added: Vec<ObjObjectAdded>,
 }
 impl ObjObjectsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }

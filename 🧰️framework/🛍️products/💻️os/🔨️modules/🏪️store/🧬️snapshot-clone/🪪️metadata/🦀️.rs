@@ -1,7 +1,8 @@
 //! 🪪️ Native metadata consumes original actor leases and ordered mutations through independent turns.
 use super::*;
 use semio_framework_hash::Hasher;
-use semio_framework_value::{RetirementDemand,list::PagedList,retirement::{RetirementCursor,deferred,deferred_birth_bytes_for,sequence,sequence_birth_bytes}};
+use semio_framework_value::{RetirementDemand, retirement::{RetirementCursor, deferred, deferred_birth_bytes_for, sequence, sequence_birth_bytes}};
+use semio_framework_value_persistent::list::PagedList;
 
 fn refuses(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn permits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items!=0&&d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth}

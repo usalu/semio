@@ -32,6 +32,7 @@ if (segments[0] === "sequence-window-ownership") {
 }
 
 const segments = process.argv.slice(2);
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
 if (segments[0] === "test" && segments[1] === "io-descriptor-parity") {
   testArtifactIoDescriptorParity();
   if (segments[2] !== "oracle") {
@@ -41,4 +42,4 @@ if (segments[0] === "test" && segments[1] === "io-descriptor-parity") {
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sequence-sequence", { packages: ["semio-s-artifact-sequence-sequence", "semio-s-artifact-sequence-sequence-editor", "semio-s-artifact-sequence-sequence-inferences", "semio-s-artifact-sequence-sequence-schema", "semio-s-artifact-sequence-sequence-tests", "semio-s-artifact-sequence-sequence-v1"], ...{
   twins: [{ name: "sequence-snapshot-fixture-asset", run: sequenceSnapshotFixtureAssetSelfTests }, { name: "artifact-io-descriptor-parity", run: testArtifactIoDescriptorParity }],
   snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],
-}, commands: { verify: OwnedVerifyScript } });
+}, commands: router });

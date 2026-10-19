@@ -66,7 +66,6 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     live.pointerDown(10, 10, 0, false, { shift: false, ctrl: false, meta: false, alt: false });
     expect(receiver.sent.map((entry) => entry.action)).toEqual(["canvasPointerDown"]);
     for (let index = 1; index <= 40; index += 1) live.pointerMove(10 + index, 10 + 2 * index);
-    // 🔒️ The press is still out: nothing else may have been sent.
     expect(receiver.sent.length).toBe(1);
     await receiver.settleOne();
     expect(receiver.sent.length).toBe(2);
@@ -91,7 +90,6 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     live.pointerMove(1, 1);
     live.pointerMove(2, 2);
     live.pointerUp(3, 3, { shift: true, ctrl: false, meta: false, alt: false });
-    // 🖱️ Moves offered AFTER the release belong to the next hover batch, behind the release.
     live.pointerMove(4, 4);
     await receiver.settleAll();
     expect(receiver.sent.map((entry) => entry.action)).toEqual(["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasPointerMove"]);
@@ -123,7 +121,6 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
   it("turns a cancel mid-gesture into canvasPointerUp { cancelled: true } at the last known sample, and ignores one outside a gesture", async () => {
     const receiver = manualReceiver();
     const live = session(receiver.dispatch);
-    // 🚫️ pointerleave with no gesture open (the old forged release): nothing.
     live.pointerMove(5, 5);
     live.pointerCancel();
     await receiver.settleAll();
@@ -134,7 +131,6 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     await receiver.settleAll();
     expect(receiver.sent.map((entry) => entry.action)).toEqual(["canvasPointerMove", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
     expect(receiver.sent[3]!.args).toMatchObject({ x: 30, y: 40, cancelled: true, shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
-    // 🔁️ The cancelled pointer's stale continuation and a duplicate cancel are no-ops, and a fresh press opens a new gesture.
     live.pointerMove(50, 60);
     live.pointerUp(50, 60, { shift: false, ctrl: false, meta: false, alt: false });
     live.pointerCancel();

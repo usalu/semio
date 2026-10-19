@@ -9,13 +9,6 @@ pub fn standard<A: crate::FormsApplication>() -> semio_framework_plugin::app::de
 
     StandardDeclaration {
         id: StandardId("1"),
-        // 🪪️ `extensions: ["forms"]` is real, carried over from the native text codec's own
-        // extension constant (`🚪️io/📝️text/📸️snapshot/🦀️.rs`) and the old `definition()`'s own
-        // `"s.forms.codec.document.v1"` capability row (`extension` claim = `"forms"`). No real MIME
-        // registration exists anywhere in the pre-migration code for this artifact (only that codec
-        // id + extension claim) — `application/vnd.semio.forms+json` is a documented synthesis,
-        // matching `🎬️sequence`'s identical documented deviation (`📓️w4-sequence-report.md`
-        // openQuestion 1). Flag for whoever eventually wires a real media-type registry.
         media: MediaDeclaration { mimes: &["application/vnd.semio.forms+json"], extensions: &["forms"] },
         subsets: vec![subsets::any::subset()],
     }

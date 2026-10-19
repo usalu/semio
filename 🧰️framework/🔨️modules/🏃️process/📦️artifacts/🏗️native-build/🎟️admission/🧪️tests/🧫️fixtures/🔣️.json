@@ -928,5 +928,81 @@
       "other-1a.rlib": 7777
     },
     "bytes": 4672
-  }
+  },
+  "memory": [
+    {
+      "name": "unknown-zero",
+      "physicalBytes": 17179869184,
+      "constrainedBytes": 0,
+      "effectiveBytes": 17179869184
+    },
+    {
+      "name": "unbounded-large",
+      "physicalBytes": 17179869184,
+      "constrainedBytes": 9007199254740991,
+      "effectiveBytes": 17179869184
+    },
+    {
+      "name": "actual-private-container",
+      "physicalBytes": 8321515520,
+      "constrainedBytes": 7516192768,
+      "effectiveBytes": 7516192768
+    },
+    {
+      "name": "equal-limit",
+      "physicalBytes": 8589934592,
+      "constrainedBytes": 8589934592,
+      "effectiveBytes": 8589934592
+    },
+    {
+      "name": "larger-limit",
+      "physicalBytes": 8589934592,
+      "constrainedBytes": 17179869184,
+      "effectiveBytes": 8589934592
+    },
+    {
+      "name": "one-byte-limit",
+      "physicalBytes": 8589934592,
+      "constrainedBytes": 1,
+      "effectiveBytes": 1
+    }
+  ],
+  "memoryShares": [
+    {
+      "effectiveBytes": 7516192768,
+      "tokens": 8,
+      "parallelism": 8,
+      "bytes": 7516192768
+    },
+    {
+      "effectiveBytes": 7516192768,
+      "tokens": 2,
+      "parallelism": 8,
+      "bytes": 6710886400
+    },
+    {
+      "effectiveBytes": 8589934592,
+      "tokens": 1,
+      "parallelism": 2,
+      "bytes": 7516192768
+    },
+    {
+      "effectiveBytes": 5368709120,
+      "tokens": 1,
+      "parallelism": 2,
+      "bytes": 5368709120
+    },
+    {
+      "effectiveBytes": 6442450944,
+      "tokens": 1,
+      "parallelism": 8,
+      "bytes": 6442450944
+    },
+    {
+      "effectiveBytes": 7516192769,
+      "tokens": 1,
+      "parallelism": 8,
+      "bytes": 6576668672
+    }
+  ]
 }

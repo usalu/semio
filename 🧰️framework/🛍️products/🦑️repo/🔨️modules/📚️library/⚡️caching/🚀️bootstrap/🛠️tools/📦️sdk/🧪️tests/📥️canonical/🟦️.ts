@@ -4,8 +4,8 @@ import{join,dirname,basename}from"node:path";
 import{realpathSync,readFileSync}from"node:fs";
 import{pathToFileURL}from"node:url";
 import{withResourceLeases,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{scriptInvocationEnvironment,requireIssuedResourceControlV1,requireIssuedScriptInvocationV1,type IssuedScriptInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{withRepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import{scriptInvocationEnvironment,requireIssuedResourceControlV1,requireIssuedScriptInvocationV1,type IssuedScriptInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{withRepositoryToolingStoreV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{withNxToolingUseV1,nxToolingUseStorageV1}from"../../../📥️use/🟦️.ts";
 import{nxAuthorizerReceiptHoldsV1}from"../../../🔏️authorizers/📤️receipt/🟦️.ts";
 

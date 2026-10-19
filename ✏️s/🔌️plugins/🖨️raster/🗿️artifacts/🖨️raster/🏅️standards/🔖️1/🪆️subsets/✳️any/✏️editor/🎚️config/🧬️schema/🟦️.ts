@@ -2,18 +2,18 @@ import { parsePixelLayerSelectionV1 } from "@semio-tech/framework/pixels/selecti
 import type {RasterSelectionSpan} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 /** 🧬️ RasterConfig */
 export interface RasterCamera {
-  /** @state config */
+  /** ⚙️ @state config */
   x: number;
-  /** @state config */
+  /** 🎚️ @state config */
   y: number;
-  /** @state config */
+  /** 🔎️ @state config */
   zoom: number;
 }
 
 export interface RasterConfigViewportSize {
-  /** @state config */
+  /** ↔️ @state config */
   width: number;
-  /** @state config */
+  /** ↕️ @state config */
   height: number;
 }
 
@@ -26,9 +26,9 @@ export interface RasterPixelSelection {
 }
 
 export interface RasterConfig {
-  /** @state config */
+  /** 🧽️ @state config */
   brushSize: number;
-  /** @state config */
+  /** 🪥️ @state config */
   brushOpacity: number;
   /** 🎨️ Session foreground in hexadecimal RGB. */
   brushColor: string;
@@ -39,11 +39,11 @@ export interface RasterConfig {
   /** 🪣️ The bucket's colour tolerance (0..255). */
   fillTolerance:number;
   pixelSelection?:RasterPixelSelection;
-  /** @state config */
+  /** 🖼️ @state config */
   compositeViewport?: RasterConfigViewportSize;
-  /** @state config */
+  /** 📷️ @state config */
   camera: RasterCamera;
-  /** @state config */
+  /** 🎛️ @state config */
 }
 
 //#region 🚪️Parsers

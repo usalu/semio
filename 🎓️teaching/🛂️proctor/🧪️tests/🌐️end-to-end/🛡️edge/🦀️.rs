@@ -1,7 +1,7 @@
 //! 🛡️ The proctor end to end, the edge: the gate of a proctor behind its terminating proxy — enrollment keys, refused ids, body limits, per-address allowances, sign-up counting, its own routes only, socket limits and trickling bodies.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
+//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
@@ -153,7 +153,7 @@ fn a_command_for_an_id_no_actor_can_have_is_refused_before_it_costs_anything() {
 #[test]
 fn a_body_past_the_limit_is_refused_and_the_largest_real_command_is_far_below_it() {
     let limit = Limits::default().body_bytes.expect("the production limits cap the body");
-    for course in [fixtures().join("📚️course/🔣️.json"), fixture_path!("../../../🏛️architecture/📚️course/🔣️.json")] {
+    for course in [fixtures().join("📚️catalog/🔣️.json"), fixture_path!("../../../🏛️architecture/📚️course/🔣️.json")] {
         let largest = largest_answer(&course);
         assert!(largest > 1000 && largest * 3 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", course.display());
     }

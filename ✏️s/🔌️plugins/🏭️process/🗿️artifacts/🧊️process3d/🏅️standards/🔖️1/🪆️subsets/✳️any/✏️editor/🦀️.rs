@@ -291,18 +291,15 @@ pub fn create_process3d_app() -> AppDefinition {
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(workshop_panel::definition())
             .panel_tab_def(inspection::definition())
-            // 🔧️ Palette-visible create/mutate actions (staged arg forms attached below).
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
             .mutation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("removeSelectedStep", LocalizedLabel::native("Remove Selected Step", "Ausgewählten Schritt entfernen"))
             .action_destructive("removeSelectedStep")
-            // 🐚️ Palette-visible host round-trips.
             .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
             .action_destructive("exportModel")
             .shell_action("loadModelRequest", LocalizedLabel::native("Load Model…", "Modell laden…"))
-            // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
             .action_with(internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
             .action_destructive("setSnapshot")
             .action_with(internal_action("addWorkshopMachine", LocalizedLabel::native("Add Machine", "Maschine hinzufügen"), ActionKind::Mutation))
@@ -320,26 +317,19 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
             .action_audience("worldFaceDragEnd", semio_framework_plugin::CapabilityAudience::Input)
-            // ⏱️ Replay-cursor navigation: VIEW verbs on the config lane (the viewer's cursor), never history.
             .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::View))
             .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::View))
             .action_with(internal_action("stepCursorBack", LocalizedLabel::native("Step Cursor Back", "Cursor zurück"), ActionKind::View))
             .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::View))
-            // 🎛️ Engagement session command line (a separate system from utility selection).
             .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
-            // 👁️ Ephemeral view state — camera, sun. Selection/hover are the framework-owned
-            // "geometry" interaction domain now (declared below via `.interaction`); the six
-            // framework verbs (interactionSelect/interactionHover/clearSelection/selectAll/
-            // setSelectionMode/setInteractionGranularity) auto-inject — never declared here.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun") })
-            // 📝️ Staged argument forms for the palette-visible create/export actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("measure", LocalizedLabel::native("Measure", "Maßnahme"), vec![
                     ActionArgOption::new("cut", LocalizedLabel::native("Cut", "Schnitt")),
@@ -373,9 +363,6 @@ pub fn create_process3d_app() -> AppDefinition {
                     ActionArgOption::new("glb", LocalizedLabel::native("GLB", "GLB")),
                 ]).required().default_value(&"step"),
             ])
-            // 🧰️ Flat top-level exclusive utility bar scoped to the workpiece window (active utility is
-            // host-owned). These four are the window's entire utility set — not a sub-collection — so
-            // each carries `group: None` and renders as its own flat utility bar icon.
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("cut", LocalizedLabel::native("Cut", "Schneiden"), "scissors") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", LocalizedLabel::native("Drill", "Bohren"), "circle-dot") })
@@ -392,21 +379,6 @@ pub fn create_process3d_app() -> AppDefinition {
             .keybinding("backspace", "removeSelectedStep")
             .config(Process3dPlayApp::config_spec())
             .io(process3d_io())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old
-            // `PROCESS3D_EXAMPLE_TIMBER`/`PROCESS3D_EXAMPLE_PLATE` app-level example registrations and
-            // the no-op `.workflow("process3d", …)` call are dropped here, not silently: reported in
-            // this packet's migration notes. The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::examples::...`, real content, pre-existing) is the
-            // modern, role-agnostic replacement surface for this.
-            // 🧵️ Every one of this app's 33 tool ids is UI-reachable, so the classification is set in one
-            // sweep. `.action_interactive_job(id, …)` cannot express it: it only mutates `self.actions`
-            // (`🔌️plugin/🦀️.rs:5166-5172`), so for the 32 ids declared as COMMANDS it was a silent no-op —
-            // `migrated_tool_ids()` (`:12058`) then saw an empty set and `validate_tool_job_rows` rejected
-            // every proof row with `interactive-job.catalog-authority`. `interactive_jobs` covers actions,
-            // window actions, commands and mode commands alike. The exact split is pinned independently by
-            // `📦️packages/🟦️typescript/📜️script.ts`'s route audit, which fails if it ever drifts.
             .interactive_jobs(InteractiveJobClassification::Migrated)
             .action_describe("addStep", LocalizedLabel::native("Adds a process step that applies one measure (such as a cut or a drill) with a workshop machine's capability at the given position on the stock.", "Fügt einen Prozessschritt hinzu, der eine Maßnahme (etwa einen Schnitt oder eine Bohrung) mit der Fähigkeit einer Werkstattmaschine an der angegebenen Position des Rohteils ausführt."))
             .action_describe("setStock", LocalizedLabel::native("Swaps the stock (the raw part, such as a box or cylinder) for one of the given kind and resets the whole process: every step and the timeline cursor are cleared.", "Tauscht das Rohteil (etwa Quader oder Zylinder) gegen eines der angegebenen Art und setzt den gesamten Prozess zurück: alle Schritte und der Zeitleisten-Cursor werden gelöscht."))

@@ -26,10 +26,6 @@ impl Deserializer<WriterSnapshot> for JsonIntoWriter {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JsonIntoWriter: expected a text payload".to_string())));
         };
         let json = <JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoWriter: {error}"))))?;
-        // 🧾️ `print_dsl` is the s.stdio.json ARTIFACT text — a `semio stdio.json.dsl v1` preamble line
-        // followed by the body — so feeding it back to a JSON reader fails on its very first byte
-        // (`unexpected byte 115 at offset 0`, the `s` of `semio`). The document this leaf imports is
-        // the snapshot's VALUE, which `to_pack_value` hands over as first-party JSON.
         let snapshot: WriterSnapshot = semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_string(&json.to_pack_value()), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JsonIntoWriter: {error}"))))?;
         Ok(IoOutcome { value: snapshot, diagnostics: Vec::new() })
     }

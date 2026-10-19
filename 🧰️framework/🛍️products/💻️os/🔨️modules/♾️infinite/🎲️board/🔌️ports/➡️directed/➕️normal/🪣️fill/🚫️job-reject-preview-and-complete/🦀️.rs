@@ -75,7 +75,7 @@ impl BoardFillJob {
             return BoardFillOffer::Yield;
         }
         if self.commit_writer.is_none() {
-            self.commit_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
+            self.commit_writer = Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput));
             context.consume_fuel(1);
             return BoardFillOffer::Yield;
         }
@@ -87,7 +87,7 @@ impl BoardFillJob {
                 Ok(page) => page,
                 Err(_) => return BoardFillOffer::Yield,
             };
-            let end = start.saturating_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).min(BOARD_FILL_COMMIT_BYTES);
+            let end = start.saturating_add(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).min(BOARD_FILL_COMMIT_BYTES);
             if page.write(&encoder.bytes[start..end]).is_err() {
                 drop(page);
                 return self.fault_outcome("fill-commit-output");

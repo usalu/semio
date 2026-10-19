@@ -1,7 +1,8 @@
 //! 🧵️ Original text and admitted Unicode records resolve canonical scalars without replacing source custody.
 use super::{UnicodeLayout,UnicodeMapping,UnicodeMappingCursor,UnicodePropertyCursor};
 use semio_framework_2d_text_font::{FontReader,FontProgress,reserve_slot};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct NormalizedScalar{pub scalar:u32,pub source_at:usize,pub combining_class:u8}
 semio_framework_value::artifact_retire_leaf!(NormalizedScalar);

@@ -7,7 +7,6 @@ async fn workspace_reset_for_step_initializes_live_to_full_vocab_and_argmax() {
     let logits = [1.0f32, 3.0, 2.0, 3.0, 0.0];
     ws.reset_for_step(&logits, SanitizePolicy::NegInfNan).await.expect("finite logits never error");
     assert_eq!(ws.live().await, &[0, 1, 2, 3, 4]);
-    // 📐️ Ties between indices 1 and 3 (both 3.0) break toward the lowest token id.
     assert_eq!(ws.saved_argmax().await, TokenId::new(1));
 }
 

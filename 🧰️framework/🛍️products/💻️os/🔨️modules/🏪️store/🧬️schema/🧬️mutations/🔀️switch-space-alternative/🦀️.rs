@@ -33,7 +33,7 @@ impl semio_framework_os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMuta
 }
 }
 
-impl crate::os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SwitchSpaceAlternative {
+impl semio_framework_os_spr::ColdMutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for SwitchSpaceAlternative {
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Switch space alternative {}", self.alternative_id), &format!("Zu Space-Alternative {} wechseln", self.alternative_id))
     }

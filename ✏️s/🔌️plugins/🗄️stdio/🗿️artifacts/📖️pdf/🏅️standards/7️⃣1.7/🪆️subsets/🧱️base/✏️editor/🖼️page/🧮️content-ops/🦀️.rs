@@ -77,7 +77,6 @@ pub(super) fn resize_object(content: &mut [PdfOp], object: &PageObject, x: f64, 
             if let Some(name) = font {
                 let show = object.end;
                 if show <= content.len() {
-                    // Font size is applied by rewriting the nearest SetFont before this show.
                     if let Some(op) = content[..show].iter_mut().rev().find(|op| matches!(op, PdfOp::SetFont { name: current, .. } if current == &name)) {
                         if let PdfOp::SetFont { size: font_size, .. } = op {
                             *font_size = size;

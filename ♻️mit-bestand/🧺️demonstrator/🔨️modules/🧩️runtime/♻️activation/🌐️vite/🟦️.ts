@@ -22,7 +22,7 @@ import { demonstratorActivationLaneReceiptDirectories, publishDemonstratorUnionR
 export function demonstratorUnionReceiptVitePlugin(options: { readonly workspace: string }): OwnedBuildPlugin {
   const observers: { close: () => void }[] = [];
   const report = (error: unknown): void => console.error(`[demonstrator] union activation receipt refused: ${error instanceof Error ? error.message : String(error)}`);
-  const dispose = (): void => { while (observers.length > 0) { try { observers.pop()!.close(); } catch { /* a watcher already torn down by its own error */ } } };
+  const dispose = (): void => { while (observers.length > 0) { try { observers.pop()!.close(); } catch { } } };
   return {
     name: "demonstrator-union-activation-receipt",
     apply: "serve",

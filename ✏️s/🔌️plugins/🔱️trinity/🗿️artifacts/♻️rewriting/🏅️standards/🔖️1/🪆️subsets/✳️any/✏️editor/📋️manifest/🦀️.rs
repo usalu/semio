@@ -49,24 +49,15 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
                 PanelGroup::Details,
                 TRINITY_REWRITING_PLAY_BODY_INSPECTION,
             )
-            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Mutation).with_category("create"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Mutation).with_category("history"))
-            // 🎬️ The navbar example picker dispatches `setActiveExample` at boot and on every pick
-            // (`🧱️elements/🛠️ShellHelpers/🟦️.tsx:373`). Without this declaration the shell's very first
-            // dispatch was dropped `undeclared-action` — an error line on every boot and an inert
-            // picker — while the sibling `🔌️jack` app declared it all along. It stays UNSCOPED (no
-            // `window_kind_action_refs`) because it reads the document, not a pane.
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
             .action_destructive("setActiveExample")
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Mutation).with_category("transform"))
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform") })
-            // 🛠️ Dev-only raw rule editors — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
-            // 👁️ Ephemeral view state — viewport, recompute/layout, LOD. Selection/hover/text-cursor
-            // cross-highlighting is framework-owned now (domain "graph") — no app-declared verbs.
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
             .action_with(semio_framework_plugin::ActionDefinition::new("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation, "rotate-cw").with_category("transform"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers").with_category("mode"))
@@ -84,11 +75,6 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("reorganize", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("addWorkingNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
             .action_interactive_job("addWorkingNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
-            // references, transitive over each node's first incoming connection / variable binding
-            // (see `interaction_topology`). Selection/hover, modes and merges are ALL
-            // framework-injected now — no app-declared setSelection/nodeGraphHover/textSelect/
-            // textHover/graphPointerDown verbs.
             .interaction(InteractionDefinition {
                 id: "graph".into(),
                 label: LocalizedLabel::native("Nodes", "Knoten"),
@@ -101,9 +87,6 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(TRINITY_REWRITING_PLAY_WINDOW_AFTER, vec![InteractionRef::new("graph")])
             .window_kind_interactions(TRINITY_REWRITING_PLAY_WINDOW_LHS, vec![InteractionRef::new("graph")])
             .window_kind_interactions(TRINITY_REWRITING_PLAY_WINDOW_RHS, vec![InteractionRef::new("graph")])
-            // 📝️ Staged argument forms.
-            // 🎬️ The option list IS the subset's registered example set — the navbar picker only ever
-            // dispatches a registered id.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label()),

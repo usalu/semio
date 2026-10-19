@@ -125,24 +125,24 @@
         })
         .restartable(restart_command.clone());
         semio_framework_plugin_reactor_tasks::tasks_task_lane::spawn_task(instance, &meta, task).expect("must spawn");
-        assert!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await);
-        let observed_parked_requests = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pending_request_count().await;
+        assert!(crate::reactor_driver::run_until_idle(8).await);
+        let observed_parked_requests = crate::reactor_driver::pending_request_count().await;
 
         let packed = semio_framework_plugin_reactor_core::checkpoint_now(&runtime).await.expect("checkpoint must succeed while the task is in flight");
 
         assert!(completion["execution"].as_array().unwrap().iter().any(|row| row == "await-request-retirement-before-observation"), "the completion oracle declares this exact order");
-        semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::cancel_instance_registry_requests(instance).await;
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::poll_instance_tasks_once(instance).await, 1, "the live task observes its retired request on its next poll and finishes");
+        crate::reactor_driver::cancel_instance_registry_requests(instance).await;
+        assert_eq!(crate::reactor_driver::poll_instance_tasks_once(instance).await, 1, "the live task observes its retired request on its next poll and finishes");
         semio_framework_plugin_reactor_tasks::tasks_task_lane::cancel_instance_tasks(instance);
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await as u64, completion["checkpoint"]["tasksAfterCancel"].as_u64().unwrap());
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await as u64, completion["checkpoint"]["tasksAfterCancel"].as_u64().unwrap());
         assert_eq!(observed_parked_requests as u64, completion["checkpoint"]["parkedRequests"].as_u64().unwrap(), "checkpoint must observe an actually polled and parked task");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pending_request_count().await as u64, completion["checkpoint"]["requestsAfterCancel"].as_u64().unwrap());
+        assert_eq!(crate::reactor_driver::pending_request_count().await as u64, completion["checkpoint"]["requestsAfterCancel"].as_u64().unwrap());
         let fault = observed_completion.lock().unwrap().take().expect("the original retained task completed").expect_err("retired request must not become a successful host response");
         assert_eq!(fault.code.0, completion["checkpoint"]["completionFaultCode"].as_str().unwrap());
         assert_eq!(fault.message, completion["checkpoint"]["completionFaultMessage"].as_str().unwrap());
 
         semio_framework_plugin_reactor_core::restore_now(&runtime, &packed).await.expect("restore must succeed");
-        let (resumed_instance, resumed_meta, resumed_input) = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pop_task_resume().await.expect("restore must have queued exactly one resume for the restartable task");
+        let (resumed_instance, resumed_meta, resumed_input) = crate::reactor_driver::pop_task_resume().await.expect("restore must have queued exactly one resume for the restartable task");
         assert_eq!(resumed_instance, instance);
         assert_eq!(resumed_meta.instance_id, instance);
         let semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes) = resumed_input.expect("a restart resume is always Command, never Fault") else { panic!("expected Command") };

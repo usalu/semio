@@ -115,7 +115,7 @@ use semio_framework_plugin::HierarchyProvider;
 use semio_framework_plugin::Media;
 use semio_framework_plugin::MediaPayload;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
-    use semio_framework_plugin::{EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     type MountedPresentationApp = VcsArtifactApp<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
@@ -336,10 +336,6 @@ async fn app_manifest_declares_expected_operations_and_shell_actions() {
 //#region 🔖️ManifestSanity
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
-    // 🌱️ `AppDefinition` is documented framework-side (ticket 26/09/01/RUNTIME-DEPENDENCY-
-    // ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) as still serde-only, blocked on
-    // `WindowKindDefinition`/`UtilityDefinition` converting first — outside this plugin's write
-    // scope, so this reads the manifest back off `Debug` instead of JSON.
     let json = format!("{:?}", create_animate_presentation_app());
     assert!(json.contains(tile_editor::PRESENTATION_PLAY_WINDOW_MAIN), "window kind missing from the manifest: {json}");
     assert!(json.contains(main::PRESENTATION_PLAY_MODE_MAIN), "mode missing from the manifest");
@@ -479,7 +475,6 @@ async fn frame_import_placement_is_deterministic_and_non_overlapping() {
     assert_ne!(first, second);
     assert_eq!(next_frame_tile_id(0), "frame-1");
     assert_eq!(next_frame_tile_id(1), "frame-2");
-    // 🧮️ Pure function of the count, not a mutating counter.
     assert_eq!(next_frame_tile_crop(0), first);
 }
 //#endregion 🔖️PortTests

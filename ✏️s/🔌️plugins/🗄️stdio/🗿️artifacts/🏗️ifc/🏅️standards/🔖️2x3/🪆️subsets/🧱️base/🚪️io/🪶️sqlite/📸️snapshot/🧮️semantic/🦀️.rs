@@ -2,7 +2,7 @@
 const TABLES:[(&str,usize);12]=[("ifc2x3_document",4),("ifc2x3_edm_preamble",17),("ifc2x3_entity_argument",4),("ifc2x3_entity_type",4),("ifc2x3_file_description_argument",4),("ifc2x3_file_name_argument",4),("ifc2x3_file_schema_argument",4),("ifc2x3_header",1),("ifc2x3_instance",4),("ifc2x3_list_element",4),("ifc2x3_typed_argument",4),("ifc2x3_value",12)];
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Part21 native role or exclusive forest differs from its authored fields")}
 fn sum(left:usize,right:usize)->Result<usize>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Part21 semantic extent overflow"))}

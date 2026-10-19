@@ -1,4 +1,4 @@
-//! (`📋️tool-run-contract.md` §2.4, §3.7). The manifest carries its [`ToolRunDefinition`]; the framework
+//! 📜️ (`📋️tool-run-contract.md` §2.4, §3.7). The manifest carries its [`ToolRunDefinition`]; the framework
 //! 🪣️ Edit-mode tool — Fill: a whole-document generator declared as a framework tool run
 //! injects start/pause/resume/step/abort/finalize/dismiss, owns the provisional placements in its ledger and
 //! publishes them as one edit on finalize. This module declares the definition, the count measure (shared
@@ -190,7 +190,7 @@ struct FillToolRunPreparation {
     scene: SceneConfig,
     lane: Vec<String>,
     cursor: usize,
-    meshes: semio_s_artifact_puzzle_3d_precompute::fill::FillMeshMap,
+    meshes: semio_s_artifact_puzzle_3d_precompute_fill::FillMeshMap,
     fallback: Option<CollisionBody>,
     digest: Vec<u8>,
     target: FillToolRunTarget,
@@ -221,7 +221,7 @@ impl Puzzle3dFillToolRunJob {
             digest.extend_from_slice(kind.as_bytes());
             digest.extend_from_slice(&weight.to_bits().to_le_bytes());
         }
-        Self { phase: FillToolRunPhase::Preparing(Box::new(FillToolRunPreparation { identity, scene, lane, cursor: 0, meshes: semio_s_artifact_puzzle_3d_precompute::fill::FillMeshMap::new(), fallback: None, digest, target })), inputs }
+        Self { phase: FillToolRunPhase::Preparing(Box::new(FillToolRunPreparation { identity, scene, lane, cursor: 0, meshes: semio_s_artifact_puzzle_3d_precompute_fill::FillMeshMap::new(), fallback: None, digest, target })), inputs }
     }
 
     /// 🥽️ One preparation unit; `true` once every mesh identity is installed.

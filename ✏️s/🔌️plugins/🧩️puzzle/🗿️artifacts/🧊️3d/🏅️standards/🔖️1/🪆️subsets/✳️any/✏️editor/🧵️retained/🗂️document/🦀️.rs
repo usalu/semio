@@ -1,4 +1,4 @@
-//! object kinds, the inspector patch, attraction creation and the active example switch. Every work is written against
+//! 🩹️ object kinds, the inspector patch, attraction creation and the active example switch. Every work is written against
 //! 🗂️ Puzzle 3d retained document works — the staged edits that read the document before they emit: kind weights,
 //! the [`Puzzle3dEditor`] contract, not the concrete editor.
 

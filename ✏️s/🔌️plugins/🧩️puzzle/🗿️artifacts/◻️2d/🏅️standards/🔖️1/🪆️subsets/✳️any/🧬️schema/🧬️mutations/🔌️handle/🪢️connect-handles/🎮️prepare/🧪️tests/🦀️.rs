@@ -30,7 +30,7 @@ fn close(cursor: &mut Puzzle2dConnectHandlesPreparationCursor) {
 fn history_edit_puzzle2d_borrowed_connect_preparation_preserves_finite_priority_and_exact_proximity() {
     assert!(std::mem::size_of::<Puzzle2dConnectHandlesPreparationCursor>() <= 4096);
     assert!(std::mem::size_of::<Puzzle2dConnectHandlesPlan>() <= 96);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let grant = RetainedCloneGrant::one_payload_turn(96,64);

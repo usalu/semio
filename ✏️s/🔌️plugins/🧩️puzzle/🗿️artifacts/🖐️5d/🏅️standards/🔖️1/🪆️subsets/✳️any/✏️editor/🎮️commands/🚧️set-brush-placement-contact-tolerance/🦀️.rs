@@ -1,7 +1,7 @@
 //! 🚧️ `set-brush-placement-contact-tolerance` command.
-use crate::editor::puzzle5d::entities::puzzle5d_absolute_or_delta;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::puzzle5d_absolute_or_delta;
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 
 
 use semio_framework_pack_json::Value;

@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-reactor-turn-limits"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The retire-until-complete drivers and the close, patch, executor hold and measured guest turn limits of the plugin reactor turn"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-reactor-turn-limits"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio_framework_ui_runtime = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }

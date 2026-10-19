@@ -1,6 +1,7 @@
 //! 🫴️ Domain-neutral paid SQL destinations and indexes borrow the original native receiving wallet.
 use super::super::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase};
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::{cmp::Ordering,mem::size_of};
 /// 🧾️ The original SQLite receiving scope adopts body, close and publication effects once.
 pub struct ReceivingSettlement<'a,'b>{control:std::cell::RefCell<super::super::SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:std::cell::Cell<bool>,cause:std::cell::RefCell<Option<ValueError>>}
@@ -49,7 +50,7 @@ impl<B:ReceivingWallet> Port<'_,'_,'_,B>{
  pub fn text(&mut self,text:&str,output:&mut String,depth:usize)->Result<()>{
   self.admit(text.len())?;let phase=self.phase();self.control.checkpoint(phase,0,text.len())?;let before=self.owned();let control=&mut *self.control;let body=&mut *self.body;let mut cause=None;
   let result=match &mut self.native{
-   Direction::Decode(native)=>{let mut observe=|event:semio_framework_value::native_decoding::NativeDecodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_text_into(native,text,output,depth))},
+   Direction::Decode(native)=>{let mut observe=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_text_into(native,text,output,depth))},
    Direction::Encode(native)=>{let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|match control.checkpoint(phase,event.completed,event.total){Ok(())=>true,Err(error)=>{cause=Some(error);false}};native.scoped_observer(&mut observe,|native|body.copy_encode_text_into(native,text,output,depth))}
   };self.receipt(before)?;result.map_err(|error|cause.unwrap_or(error))
  }

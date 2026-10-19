@@ -1,2 +1,2 @@
-/** demo svg */
+/** 🎬️ demo svg */
 export const ID = 'demo';

@@ -15,8 +15,6 @@ export function useEditorSessionPresence(core: EditorCore1) {
 
   useEffect(() => {
     syncSession();
-    // sessionEpoch: re-sync immediately after WasmCanvas (re)attaches a session (e.g. the stub -> real wasm swap),
-    // since the attach lifecycle is independent of scene changes and a ref update alone would not otherwise re-trigger this effect.
   }, [syncSession, sessionEpoch]);
 
   const wasmEditorSurfaceShellScope = useShellScopeOptional();
@@ -86,8 +84,6 @@ export function useEditorSessionPresence(core: EditorCore1) {
       if (caretCadenceRef.current === cadence) caretCadenceRef.current = null;
     };
   }, []);
-  /** ⌨️ The typing run ends as ONE edit when the editor loses focus or the page is hidden or left (a run pending for less than the
-   * idle bound is never lost to a closed tab), and when the editor unmounts. */
   useEffect(() => {
     const sink = sinkRef.current;
     if (!sink) return;

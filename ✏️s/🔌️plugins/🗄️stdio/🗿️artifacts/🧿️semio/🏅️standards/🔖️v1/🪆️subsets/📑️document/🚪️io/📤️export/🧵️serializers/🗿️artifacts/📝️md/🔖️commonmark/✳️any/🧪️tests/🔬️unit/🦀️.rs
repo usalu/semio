@@ -26,6 +26,5 @@ async fn maps_headings_lists_code_quotes_and_flattens_tables() {
     assert!(matches!(&md.blocks[2], MdBlock::List { ordered: false, items, .. } if items.len() == 1));
     assert!(matches!(&md.blocks[3], MdBlock::CodeBlock { info: Some(l), .. } if l == "rust"));
     assert!(matches!(&md.blocks[4], MdBlock::BlockQuote { blocks } if blocks.len() == 1));
-    // table flattens to a single paragraph (its one cell's one block), not a table construct.
     assert!(matches!(&md.blocks[5], MdBlock::Paragraph { .. }));
 }

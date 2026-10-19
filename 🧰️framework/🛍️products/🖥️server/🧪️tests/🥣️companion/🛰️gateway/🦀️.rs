@@ -1,4 +1,4 @@
-//! 🛰️ The gateway's unit laws, run from the companion against the gateway's public vocabulary and its `testkit` hooks.
+//! 🛰️ The gateway's unit laws, run from the companion against the gateway's public vocabulary.
 use axum::Router;
 use axum::body::Bytes;
 use axum::extract::{ConnectInfo, Path, Request, State};
@@ -22,7 +22,6 @@ use tokio::sync::oneshot;
 use tokio::time::Instant;
 
 pub use server::gateway::*;
-pub use server::gateway::testkit::*;
 
 #[path = "../../../🔨️modules/📡️gateway/🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

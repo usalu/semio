@@ -22,7 +22,8 @@ impl semio_framework_job::OriginalDomainFailure for DomainFixture{
 /// 📦️ Actual paid type erasure preserves the original domain and retires through one finite caller.
 #[test]
 fn original_turn_failure_domain_admission_preserves_full_source_and_paid_close(){
- use semio_framework_job::{OriginalCallerSourceParent,JobPayloadAuthority,admit_original_domain_failure,original_domain_failure_demand,close_original_retained_step,OriginalDomainView as V};
+ use semio_framework_job::{OriginalCallerSourceParent, admit_original_domain_failure, original_domain_failure_demand, close_original_retained_step, OriginalDomainView as V};
+ use semio_framework_job_payload::{JobPayloadAuthority};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️domain.json")).unwrap();
  for copy in [1,3,64]{
   let stock=RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:134217728,maximum_capacity_bytes:268435456,maximum_release_bytes:536870912,maximum_depth:4096};
@@ -100,7 +101,7 @@ mod original_closure_tests;
 #[test]
 fn original_turn_failure_receiving_preserves_five_owned_causes(){
  use semio_framework_job::{OriginalReceivingPrimary,OriginalDomainProjection,OriginalDomainView as V};
- use semio_framework_value::native_decoding::NativeConstructionStepFailure;
+ use semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure;
  let corpus=corpus();let wire=&corpus["receivingWire"];let row=&wire["primary"]["original"];
  let cause=|value:&serde_json::Value|ValueError::new(ValueRefusalKind::from_wire(value["kind"].as_str().unwrap()).unwrap(),value["message"].as_str().unwrap()).with_retained_progress(progress(&value["retainedProgress"]));
  for copy in [1,3,64]{

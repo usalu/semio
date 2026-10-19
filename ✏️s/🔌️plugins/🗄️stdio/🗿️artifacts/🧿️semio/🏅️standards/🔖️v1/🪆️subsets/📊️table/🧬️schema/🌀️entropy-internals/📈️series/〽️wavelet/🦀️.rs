@@ -26,7 +26,6 @@ pub enum WaveletFamily {
 impl WaveletFamily {
     /// 🪢️ Number of taps in this family's filters; also the minimum signal length a single
     /// decomposition level can consume.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn filter_len(self) -> usize {
         match self {
             Self::Haar => 2,
@@ -38,7 +37,6 @@ impl WaveletFamily {
 
     /// 🪢️ Orthonormal low-pass (scaling/approximation) decomposition filter coefficients, taps
     /// summing to `sqrt(2)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn low_pass(self) -> Vec<f64> {
         match self {
             Self::Haar => {
@@ -143,7 +141,6 @@ pub struct WaveletConfig {
 
 impl WaveletConfig {
     /// 🪢️ Builds a config, rejecting `levels == 0`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(family: WaveletFamily, levels: usize, boundary: BoundaryMode) -> Result<Self, EntropyError> {
         if levels == 0 {
             return Err(EntropyError::InvalidConfig { field: "levels", reason: "must be at least 1" });
@@ -168,7 +165,6 @@ impl Dwt {
     /// subband. Stops early (without erroring) once the current approximation's length drops
     /// below the chosen family's filter length; the number of levels actually produced is
     /// reported by [`Dwt::levels_achieved`]. Rejects `x` shorter than the filter length outright.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn decompose(x: &[f64], cfg: WaveletConfig) -> Result<Self, EntropyError> {
         let filter_len = cfg.family.filter_len();
         if x.len() < filter_len {
@@ -193,14 +189,12 @@ impl Dwt {
     }
 
     /// 🪢️ Number of levels actually produced (`<= cfg.levels`; see [`Dwt::decompose`]).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn levels_achieved(&self) -> usize {
         self.levels_achieved
     }
 
     /// 🪢️ Energy (sum of squared coefficients) of each subband, detail levels finest-first
     /// followed by the final approximation.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn subband_energies(&self) -> Vec<f64> {
         let mut energies: Vec<f64> = self.details.iter().map(|d| neumaier_sum(d.iter().map(|&v| v * v))).collect();
         energies.push(neumaier_sum(self.approximation.iter().map(|&v| v * v)));

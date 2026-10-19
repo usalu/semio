@@ -13,7 +13,7 @@ import { sizeVar } from "@semio-tech/ui-styling";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🌳️Tree/📐️layout/🟦️.tsx";
+import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, PropertyValueColumnContext, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyInlineGapPx, detailPanelPropertyStackedToInlineHysteresisPx, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName, detailPanelHeaderLineCenterPx, treeItemLabelStyle, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { resolveUiLabel, type UiTranslationKey, type UiRegisteredTranslationKey, type UiTranslateFn } from "../📚️I18n/🟦️.tsx";
 import { activeUiDriver, useUiDriver, isInternalChromeControlId, resolveControlLabelId, panelKindFromPanelToggleControlId, humanizeEngagementStepId, humanizeControlId } from "../🚗️UiDriver/🟦️.tsx";
 import { useControlHotkey } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
@@ -27,7 +27,7 @@ export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: 
   return { t: t as UiTranslateFn, i18n };
 }
 /**
- * React hook that resolves a localized label by i18n key and driver label tier. Strict: `id` must be a
+ * 📛️ React hook that resolves a localized label by i18n key and driver label tier. Strict: `id` must be a
  * real key from the domain-neutral chrome schema or a product's {@link registerUiTranslationBundles}
  * bundle — both are guaranteed complete for every {@link UiLocale}, so a defined `id` always yields a
  * `string`. For ids that may or may not be a registered key (e.g. resolved from an arbitrary DOM/control
@@ -110,7 +110,7 @@ export function useIdLabel(id: string | undefined): UiLabel | undefined {
   return undefined;
 }
 /**
- * Resolves a localized string from a raw translation value and driver label tier.
+ * 🗃️ Resolves a localized string from a raw translation value and driver label tier.
  * Pure function (non-hook) variant of useLabel for use outside React render context.
  * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
  **/
@@ -160,7 +160,7 @@ export function useControlTooltipText(id: string | undefined, text?: string, opt
 // Consumers MUST use these as building blocks for inputs.
 
 /**
- * LabelProps holds the data fields for a LabelProps record.
+ * 🔖️ LabelProps holds the data fields for a LabelProps record.
  **/
 interface LabelProps {
   id?: string;
@@ -169,7 +169,7 @@ interface LabelProps {
   labelElementId?: string;
   className?: string;
   /**
-   * Property rows use the label/value grid; tree group headers mirror TreeItem header geometry
+   * 🪪️ Property rows use the label/value grid; tree group headers mirror TreeItem header geometry
    * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.
    */
   labelLayoutKind?: "property" | "treeGroupHeader";

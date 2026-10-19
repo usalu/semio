@@ -1,6 +1,7 @@
 //! 📦️ Schema-preserving paged text, sequence, and insertion-ordered map owners.
 
-use crate::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape, list::PagedList};
+use crate::{DslValue, FromValue, ToValue, ValueEdit, ValueError, ValueShape};
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_intrinsic::{append_paged_cold as append_cold,paged_value_index as paged_index};
 use std::fmt::{Debug, Display, Formatter, Write};
 
@@ -191,7 +192,7 @@ impl<const N: usize> PagedUtf8<N> {
         Ok(output)
     }
 
-    pub fn try_from_str_controlled(value: &str, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    pub fn try_from_str_controlled(value: &str, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         if value.len() > N {
             return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("UTF-8 value has {} bytes, exceeding paged capacity {N}", value.len())));
         }
@@ -246,7 +247,7 @@ impl<const N: usize> PagedUtf8<N> {
     }
 
     /// 🧮️ Appends caller-bounded text while charging original chunk and metadata backing before allocation.
-    pub fn try_push_str_controlled(&mut self,value:&str,control:&mut crate::NativeDecodeControl<'_>)->Result<(),ValueError>{
+    pub fn try_push_str_controlled(&mut self,value:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{
         if value.is_empty(){return control.checkpoint();}
         self.byte_len.checked_add(value.len()).filter(|bytes|*bytes<=N).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"paged UTF-8 append exceeds its declared capacity"))?;
         if value.len()>PAGED_UTF8_CHUNK_BYTES{return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"controlled text append requires one source chunk"));}
@@ -552,7 +553,7 @@ impl<V, const N: usize> PagedMap<V, N> {
     }
 
     /// 🗂️ Adopts sorted unique admitted entries without allocating duplicate-key scratch.
-    pub fn from_sorted_retained_entries_controlled(entries: PagedList<(PagedUtf8<{usize::MAX}>, V), N>, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    pub fn from_sorted_retained_entries_controlled(entries: PagedList<(PagedUtf8<{usize::MAX}>, V), N>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| {
             let total = entries.iter().try_fold(entries.len(), |total, (key, _)| total.checked_add(key.len()).ok_or_else(|| ValueError::new(crate::ValueRefusalKind::WorkLimit, "paged map ordered validation workload overflow")))?;
             control.begin_stage(total)?;

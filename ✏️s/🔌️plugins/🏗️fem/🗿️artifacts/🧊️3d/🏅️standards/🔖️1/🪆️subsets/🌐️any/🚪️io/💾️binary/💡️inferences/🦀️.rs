@@ -1,4 +1,4 @@
-//! declaration-only shape as the sibling `📝️text` leaf: inference values are only ever computed
+//! 🧊️ declaration-only shape as the sibling `📝️text` leaf: inference values are only ever computed
 //! 📡️ Fem3d inference — the normative handcrafted binary protocol for this facet. Same
 //! and (optionally) cached, never decoded from an authored binary document, so there is no
 //! `encode`/`decode` pair here — just the protocol spec text every other representation leaf

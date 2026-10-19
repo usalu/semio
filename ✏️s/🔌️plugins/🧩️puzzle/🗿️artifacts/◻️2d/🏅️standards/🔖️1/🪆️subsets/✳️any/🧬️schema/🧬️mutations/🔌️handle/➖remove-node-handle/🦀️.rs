@@ -1,4 +1,4 @@
-//! any edge whose `source`/`target` referenced this handle is severed too).
+//! 🔗️ any edge whose `source`/`target` referenced this handle is severed too).
 //! ➖ Puzzle2d mutation — `RemoveNodeHandle`: detaches a rim port from a node (captures cascade —
 
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;

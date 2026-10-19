@@ -1,4 +1,4 @@
-//! `upsert-silo-shell` — upsert a `SiloShell` by id into `silo_shells`.
+//! 🧬️ `upsert-silo-shell` — upsert a `SiloShell` by id into `silo_shells`.
 
 use semio_s_artifact_norm_en1993_model::{SiloShell, En1993Snapshot};
 

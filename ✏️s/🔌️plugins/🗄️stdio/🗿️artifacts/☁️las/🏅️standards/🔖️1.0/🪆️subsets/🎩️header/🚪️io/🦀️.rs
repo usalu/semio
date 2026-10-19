@@ -20,10 +20,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY)
@@ -255,7 +251,7 @@ pub fn decode_las(bytes: &[u8]) -> Result<LasSnapshot, String> {
         return Err(format!("las: offset_to_point_data {point_offset} precedes declared header_size {header_size}"));
     }
     let number_of_vlrs = read_u32(bytes, off::NUMBER_OF_VLRS)?;
-    let point_format = bytes[off::POINT_DATA_FORMAT_ID] & 0x7F; // top bit flags waveform-packet storage, irrelevant to the record layout itself
+    let point_format = bytes[off::POINT_DATA_FORMAT_ID] & 0x7F;
     let record_len = read_u16(bytes, off::POINT_DATA_RECORD_LENGTH)? as usize;
     if record_len == 0 {
         return Err("las: point data record length is zero".into());
@@ -573,8 +569,6 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    // 🔍 stdio.las's text envelope is a hex dump of the raw bytes after the
-                    // `semio ...` preamble line — decode the first 4 bytes to sniff the real signature.
                     let body = match store::semio_format::split_text_preamble(text) {
                         Ok((_, rest)) => rest,
                         Err(_) => text,

@@ -1,4 +1,4 @@
-//! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! ☝️ single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
 //! 🧬️ Puzzle 5d artifact — semantic document mutation dispatch enum. Every variant is a
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Puzzle5dSnapshot>` and `impl protocol::SemanticMutation<Puzzle5dSnapshot>`

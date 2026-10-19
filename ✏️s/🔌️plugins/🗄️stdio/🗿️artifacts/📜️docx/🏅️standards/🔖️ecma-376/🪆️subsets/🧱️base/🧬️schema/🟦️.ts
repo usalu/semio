@@ -2,7 +2,7 @@ import type { DocxXmlPart, RetainedOpcPackage } from './📸️snapshot/🟦️.
 
 /** 🧬️ Complete materialized DOCX artifact state. */
 export interface DocxArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ opc: RetainedOpcPackage;
-  /** @state artifact */ xmlParts: DocxXmlPart[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 📦️ @state artifact */ opc: RetainedOpcPackage;
+  /** 🧾️ @state artifact */ xmlParts: DocxXmlPart[];
 }

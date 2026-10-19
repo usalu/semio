@@ -5,7 +5,7 @@ import Ajv from "ajv";
 
 /** 🧪️ Validates authored statements and arity without the DSL implementation. */
 export function testDeclaredVariantFieldOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../🫳️borrowed-object/🧫️fixtures/🌿️variant-field/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../../🧪️tests/🧫️fixtures/🫳️borrowed-object/🌿️variant-field/🔣️.json", import.meta.url), "utf8"));
   const reference = new Ajv({ strict: true }).compile({
     type: "array", minItems: 1, maxItems: 1,
     items: {

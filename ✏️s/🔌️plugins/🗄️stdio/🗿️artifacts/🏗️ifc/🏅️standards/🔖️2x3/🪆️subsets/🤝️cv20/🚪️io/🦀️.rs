@@ -175,7 +175,6 @@ use semio_framework_diagnostic::Severity;
     impl Ifc2x3Cv20BuilderConstruction {
         /// ➕ The recommended entry point: always produces a document with `IFC2X3`/`CoordinationView`
         /// header and a real project+units pair.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, diagnostics: Vec::new() }
         }
@@ -183,7 +182,6 @@ use semio_framework_diagnostic::Severity;
         /// 🧱️ Adds a product instance of `type_name` (must be one of the geometry-bearing product
         /// types this MVD checks), always wiring `ObjectPlacement` (attribute index 5) to the seeded
         /// `IFCLOCALPLACEMENT`.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_product(mut self, id: u64, type_name: &str, name: &str) -> Self {
             let instance = Part21Instance {
                 id,

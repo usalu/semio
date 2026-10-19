@@ -1,21 +1,21 @@
 /** 🧬️ RasterPresence */
 export interface RasterPresenceCamera {
-  /** @state presence */
+  /** 🛰️ @state presence */
   x: number;
-  /** @state presence */
+  /** 🤝️ @state presence */
   y: number;
-  /** @state presence */
+  /** 🔎️ @state presence */
   zoom: number;
 }
 
 export interface RasterPresence {
-  /** @state presence */
+  /** 🖌️ @state presence */
   brushSize: number;
-  /** @state presence */
+  /** 🧽️ @state presence */
   brushOpacity: number;
-  /** @state presence */
+  /** 📷️ @state presence */
   camera: RasterPresenceCamera;
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeUtilityId: string;
 }
 

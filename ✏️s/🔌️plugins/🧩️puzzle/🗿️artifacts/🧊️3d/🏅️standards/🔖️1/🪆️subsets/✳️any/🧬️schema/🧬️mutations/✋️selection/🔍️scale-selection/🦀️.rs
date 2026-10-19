@@ -1,4 +1,4 @@
-//! and target volumes, each about its own origin. The gesture's own inputs (which ids, which factors) are
+//! 🧊️ and target volumes, each about its own origin. The gesture's own inputs (which ids, which factors) are
 //! 🔍️ Puzzle3d mutation — `ScaleSelection`: a relative, parametric per-axis scaling of a set of objects
 //! the payload, so editing the scaling in history re-derives every scale from whatever base it replays on.
 use {semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::ScaleTargetVolume};

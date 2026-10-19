@@ -7,7 +7,7 @@ export interface IfcBounds {
 }
 
 export interface IfcInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: IfcBounds;
 }
 

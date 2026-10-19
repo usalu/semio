@@ -1,5 +1,6 @@
 use super::*;
-use super::super::{MirrorAxis, WeldMode};
+use semio_framework_3d_mesh_document::{MirrorAxis, WeldMode};
+use semio_framework_3d::mesh::MeshModelingOps;
 
 fn boxed() -> HalfedgeMesh {
     HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box primitive")
@@ -41,7 +42,7 @@ fn replayed(base: &HalfedgeMesh, journal: &MeshJournal) -> HalfedgeMesh {
         assert!(marked.remove(seam), "a removed seam was marked");
     }
     marked.extend(journal.seams_added.iter().copied());
-    let seams = marked.into_iter().collect::<Vec<u32>>().into_iter().fold(super::super::HistoryFoldSet::new(), |mut set, seam| {
+    let seams = marked.into_iter().collect::<Vec<u32>>().into_iter().fold(semio_framework_3d_mesh_document::HistoryFoldSet::new(), |mut set, seam| {
         set.insert(seam);
         set
     });
@@ -266,7 +267,7 @@ fn a_renumbering_gesture_refuses_channels_and_seams() {
     assert!(MeshOverlay::new(&seamed).unwrap_uv().is_ok(), "unwrapping reads the seams");
     let mut channelled = boxed();
     channelled
-        .set_attribute("tag".into(), MeshAttribute { domain: super::super::MeshAttributeDomain::Face, semantic: super::super::MeshAttributeSemantic::Custom, interpolation: super::super::MeshAttributeInterpolation::Constant, values: vec![DslValue::Null], indices: Some(vec![0; 6]) })
+        .set_attribute("tag".into(), MeshAttribute { domain: semio_framework_3d_mesh_document::MeshAttributeDomain::Face, semantic: semio_framework_3d_mesh_document::MeshAttributeSemantic::Custom, interpolation: semio_framework_3d_mesh_document::MeshAttributeInterpolation::Constant, values: vec![DslValue::Null], indices: Some(vec![0; 6]) })
         .expect("a face channel");
     assert!(MeshOverlay::new(&channelled).triangulate().is_err());
 }

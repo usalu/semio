@@ -26,20 +26,7 @@ use std::collections::{HashMap};
 #[cfg(test)]
 use std::collections::HashSet;
 
-#[path = "../🔎️quality/🦀️.rs"]
-mod quality;
-pub use quality::{analyze_polygon_soup, MeshBounds, MeshMassProperties, MeshQualityReport, ScalarStats};
-
-#[path = "../🎨️surface/🦀️.rs"]
-mod surface;
-pub use surface::MeshSurfaceJob;
-
-
-#[path = "📝️journal/🦀️.rs"]
-mod journal;
-pub use journal::{ArenaJournal, MeshJournal, MeshOverlay};
-
-#[path = "🔍️structure/🦀️.rs"]
+#[path = "../🔍️structure/🦀️.rs"]
 mod structure;
 /// 🌉️ Encodes original ordered UV membership as the declared array of vertex ids.
 mod u32_membership_bridge {

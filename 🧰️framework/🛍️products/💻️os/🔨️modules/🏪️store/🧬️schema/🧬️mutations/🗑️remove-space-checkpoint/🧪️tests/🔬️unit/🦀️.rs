@@ -1,5 +1,5 @@
-use crate::os_spr::ColdMutationKind;
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_spr::ColdMutationKind;
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_os_spr::{MutationKind, MutationLeaf};
 #[test]
@@ -11,7 +11,7 @@ fn metadata_and_target_subregion_are_leaf_owned() {
 }
 
 fn checkpoint(id: &str) -> super::super::super::SpaceCheckpoint {
-    super::super::super::SpaceCheckpoint { id: id.into(), parent_id: None, message: id.into(), authors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(0, 1), members: Vec::new() }
+    super::super::super::SpaceCheckpoint { id: id.into(), parent_id: None, message: id.into(), authors: Vec::new(), timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(0, 1), members: Vec::new() }
 }
 
 /// ➕️ L3: removing the first, a middle and the last of three checkpoints inverts to the same position and sums to the negative diff.
@@ -19,7 +19,7 @@ fn checkpoint(id: &str) -> super::super::super::SpaceCheckpoint {
 async fn inverse_diffs_sum_to_the_negative_diff() {
     let base = SpaceHistorySnapshot { checkpoints: vec![checkpoint("a"), checkpoint("b"), checkpoint("c")], ..Default::default() };
     for id in ["a", "b", "c"] {
-        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: id.into() }), &base).await;
+        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: id.into() }), &base).await;
     }
 }
 

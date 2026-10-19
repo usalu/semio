@@ -336,7 +336,6 @@ export function parseUiTheme(json: unknown): UiTheme {
     ...(obj.icons !== undefined ? { icons: parseThemeIcons(obj.icons, "icons") } : {}),
   };
   resolveThemeGeometry(theme);
-  // Resolve every paint once so unknown token refs fail loudly at parse time.
   for (const appearance of THEME_APPEARANCE_NAMES) {
     resolveThemeAppearancePalettes(theme, appearance);
   }

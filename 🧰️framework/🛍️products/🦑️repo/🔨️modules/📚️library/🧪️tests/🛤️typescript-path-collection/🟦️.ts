@@ -200,7 +200,7 @@ test("neutral map-only boundaries match independent AST for-of detection without
   }
 });
 
-test("registers the kind-only canonical test through the package router as an owner route that is never replayed from cache", () => {
+test("registers the kind-only canonical test through the package router as an owner route replayed only from its declared inputs", () => {
   const expected = vector.execution, project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);
   expect(project.targets[expected.target]?.cache).toBe(expected.cache);

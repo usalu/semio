@@ -14,7 +14,6 @@ pub(super) fn check_selection(catalogue: &Catalogue, selection: &SelectionReques
         ));
         return;
     }
-    // Part 1 §4.2 — class / series / constraint leaves govern selection applicability.
     let class_ok = catalogue.product_classes.iter().any(|c| c.id == selection.class_id);
     report.push(assess(
         "iso16757.1.4.2.selection.class",
@@ -170,7 +169,6 @@ pub(super) fn check_selection(catalogue: &Catalogue, selection: &SelectionReques
         prop_opts.dedup();
         value_opts.sort();
         value_opts.dedup();
-        // Prefer real property values as option 0 so apply_remedy_edit clears empty selection.
         let mut opts = prop_opts;
         for v in value_opts {
             if !opts.contains(&v) {

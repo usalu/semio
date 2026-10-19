@@ -4270,7 +4270,6 @@
       "semio.process.exact-cargo.protocol/v1": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️protocol/🧬️schema/🔣️.json",
       "semio:compiler-cargo-selector-arguments:v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/⚙️cargo/🧬️schema/🔣️.json",
       "semio:native-fixed-platform:v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
-      "semio:native-fixed-publication-metadata:v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/💾️metadata/🧬️schema/🔣️.json",
       "semio:native-fixed-publication:v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🧬️schema/🔣️.json",
       "semio:process:cargo-input-continuation-policy:v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧬️schema/🔣️.json",
       "urn:semio:framework:process:accepted-physical-cleanup-request": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json",

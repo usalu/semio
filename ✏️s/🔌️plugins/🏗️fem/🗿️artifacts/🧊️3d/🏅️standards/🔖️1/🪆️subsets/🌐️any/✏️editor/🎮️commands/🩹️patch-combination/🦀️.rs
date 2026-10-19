@@ -1,4 +1,4 @@
-//! `term:<caseId>` factor, `addTerm` with the case id as value, `removeTerm`) → keyed name/term events.
+//! 🔍️ `term:<caseId>` factor, `addTerm` with the case id as value, `removeTerm`) → keyed name/term events.
 //! 🩹️ Fem3d play app command — `patch-combination`: one-field edit of a combination (`name`, a
 
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_combination_name::ChangeCombinationName;

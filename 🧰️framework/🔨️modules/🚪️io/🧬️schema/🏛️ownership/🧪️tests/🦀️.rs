@@ -1,6 +1,7 @@
 //! 🏛️ Neutral I/O vocabulary preserves shared literal values and controlled refusal causes.
 use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef};
-use semio_framework_value::{DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,ToValue};
+use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn reference(value:&serde_json::Value)->ArtifactRef{
     ArtifactRef{artifact_id:value["artifactId"].as_str().unwrap().into(),dialect:ArtifactDialect{artifact_kind:value["dialect"]["artifactKind"].as_str().unwrap().into(),standard:value["dialect"]["standard"].as_str().unwrap().into(),subset:value["dialect"]["subset"].as_str().unwrap().into()}}
 }

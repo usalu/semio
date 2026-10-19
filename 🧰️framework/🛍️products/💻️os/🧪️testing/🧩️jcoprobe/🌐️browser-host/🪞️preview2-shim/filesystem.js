@@ -140,7 +140,7 @@ export const preopens = {
         return _preopens;
     },
 };
-/** Create isolated filesystem namespaces backed by an application-selected adapter. */
+/** 🆕️ Create isolated filesystem namespaces backed by an application-selected adapter. */
 export function createFilesystem({ adapter, preopens: configuredPreopens, }) {
     const entries = Object.entries(configuredPreopens).map(([guestPath, capability]) => [descriptorCreate(adapter.getRoot(capability)), guestPath]);
     let disposed = false;
@@ -178,7 +178,7 @@ export function _getFileData() {
     return JSON.stringify(_fileData);
 }
 /**
- * Replace all preopens with the given set.
+ * 🔁️ Replace all preopens with the given set.
  * @param preopensConfig - Map of virtual paths to file data entries
  */
 export function _setPreopens(preopensConfig) {
@@ -189,7 +189,7 @@ export function _setPreopens(preopensConfig) {
     }
 }
 /**
- * Add a single preopen mapping.
+ * ☝️ Add a single preopen mapping.
  * @param virtualPath - The virtual path visible to the guest
  * @param fileData - The file data object representing the directory
  */
@@ -202,7 +202,7 @@ export function _addPreopen(virtualPath, fileData) {
     }
 }
 /**
- * Add a single preopen backed by a custom adapter (e.g. `OpfsFilesystemAdapter`) instead of the
+ * 🌉️ Add a single preopen backed by a custom adapter (e.g. `OpfsFilesystemAdapter`) instead of the
  * default in-memory one. Lets a host wire an alternative `BrowserFilesystemAdapter` into the
  * top-level `wasi:filesystem/preopens` singleton that transpiled components import statically.
  * @param virtualPath - The virtual path visible to the guest
@@ -217,16 +217,16 @@ export function _addPreopenWithAdapter(virtualPath, adapter, capability) {
         _rootPreopen = entry;
     }
 }
-/** Clear all preopens, giving the guest no filesystem access. */
+/** ➖️ Clear all preopens, giving the guest no filesystem access. */
 export function _clearPreopens() {
     _preopens = [];
     _rootPreopen = null;
 }
-/** Get current preopens configuration. */
+/** ⚙️ Get current preopens configuration. */
 export function _getPreopens() {
     return [..._preopens];
 }
-/** Reject host paths because browser filesystems require explicit capabilities. */
+/** ✨️ Reject host paths because browser filesystems require explicit capabilities. */
 export function _createPreopenDescriptor(hostPreopen) {
     throw new TypeError(`browser preopen ${JSON.stringify(hostPreopen)} is a host path; configure browser file data or an adapter instead`);
 }

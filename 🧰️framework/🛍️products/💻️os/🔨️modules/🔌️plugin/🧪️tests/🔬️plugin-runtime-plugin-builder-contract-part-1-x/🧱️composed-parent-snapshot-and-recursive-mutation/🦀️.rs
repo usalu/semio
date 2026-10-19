@@ -173,7 +173,7 @@ impl Mutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
 
 }
 
-impl crate::os_spr::ColdMutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
+impl semio_framework_os_kernel::ColdMutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
     type ReferenceDiff = ComposedParentDiff;
     fn diff(&self, _base: &ComposedParentSnapshot) -> protocol::MutationOutcome<Self::ReferenceDiff> { protocol::MutationOutcome::new(ComposedParentDiff { revision: Some(self.value) }) }
     fn inverse(&self, base: &ComposedParentSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {

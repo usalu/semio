@@ -2,7 +2,8 @@
 
 use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-use semio_framework_value::{list::PagedList, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
+use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
+use semio_framework_value_persistent::list::PagedList;
 
 #[test]
 fn paged_native_drawing_snapshot_duplicate_close_preserves_physical_grant_axes() {

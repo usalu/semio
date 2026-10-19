@@ -27,20 +27,20 @@ export type { AssetDeliveryDeclarationV1 };
 /** 🗂️ One composable Storybook slice. */
 export type StoryScope = {
   readonly id: string;
-  /** Emoji-namespaced `meta.title` prefix every owned story must start with. */
+  /** 📛️ Emoji-namespaced `meta.title` prefix every owned story must start with. */
   readonly titlePrefix: string;
-  /** Repo-root-relative source dirs this scope's stories import from. Watch-ignores are DERIVED: union(all scopes' roots) − union(active scopes' roots). */
+  /** 🌳️ Repo-root-relative source dirs this scope's stories import from. Watch-ignores are DERIVED: union(all scopes' roots) − union(active scopes' roots). */
   readonly sourceRoots: readonly string[];
-  /** Only irregular aliases (css subpaths, single-file entries, wasm pkg entries, `/plugin-modules`-style routes). Regular `@semio-tech/*` aliases are auto-derived from the workspace scan. */
+  /** 🪞️ Only irregular aliases (css subpaths, single-file entries, wasm pkg entries, `/plugin-modules`-style routes). Regular `@semio-tech/*` aliases are auto-derived from the workspace scan. */
   readonly aliases?: Readonly<Record<string, string>>;
-  /** Extra `optimizeDeps.exclude` entries beyond the workspace-package scan. */
+  /** 🎛️ Extra `optimizeDeps.exclude` entries beyond the workspace-package scan. */
   readonly optimizeDepsExclude?: readonly string[];
-  /** Static-dir / tile-proxy / mesh-collection assets served via the existing `createAssetBuildPluginsV1` dispatcher. */
+  /** 🎞️ Static-dir / tile-proxy / mesh-collection assets served via the existing `createAssetBuildPluginsV1` dispatcher. */
   readonly assets?: readonly AssetDeliveryDeclarationV1[];
-  /** Lazy scope-gated Vite plugins (only imported when this scope is active). */
+  /** 🏗️ Lazy scope-gated Vite plugins (only imported when this scope is active). */
   readonly vitePlugins?: () => Promise<OwnedBuildPlugin[]>;
   /**
-   * Config-relative glob(s) for the scope's feature-owned canonical story leaves.
+   * 📚️ Config-relative glob(s) for the scope's feature-owned canonical story leaves.
    */
   readonly storyGlobs?: readonly string[];
 };

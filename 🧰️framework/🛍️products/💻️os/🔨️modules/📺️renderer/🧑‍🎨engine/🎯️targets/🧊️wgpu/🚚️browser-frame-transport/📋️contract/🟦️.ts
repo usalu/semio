@@ -5,7 +5,7 @@ import type { NativeCatalogV1 } from "@semio-tech/plugin-registry/runtime";
 import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostStorageSnapshot } from "../../🧭️boot-descriptor/🟦️.ts";
 import type { OriginalBootstrapRequest, OriginalBootstrapResponse } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
-import type { BrowserMediaCommand, BrowserMediaRelease, BrowserMediaResult, PresentedMediaSlot } from "../../../../🎬️media/🌐️browser/🟦️.ts";
+import type { BrowserMediaCommand, BrowserMediaRelease, BrowserMediaResult, PresentedMediaSlot } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 import type { InteractiveJobUiMessage, InteractiveJobWorkerMessage } from "../../🔌️browser-interactive-job-port/🟦️.ts";
 import type { ReferenceImageDimensions } from "../../🖼️reference-image-decode/🟦️.ts";
 import type { OriginalBootstrapOwner } from "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";

@@ -22,7 +22,6 @@ semio_framework_value::artifact_retire_struct!(KnotVector {knots,degree});
 
 impl KnotVector {
     /// 🧵️ Builds and validates a knot vector: non-decreasing, correct length for `(n, degree)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(knots: Vec<f64>, degree: usize, control_point_count: usize) -> Option<Self> {
         if knots.len() != control_point_count + degree + 1 {
             return None;
@@ -34,7 +33,6 @@ impl KnotVector {
     }
     /// 🧵️ A clamped (open) uniform knot vector: the first and last knots repeat `degree+1` times,
     /// the standard choice so the curve interpolates its first/last control points.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn clamped_uniform(control_point_count: usize, degree: usize) -> Self {
         let n = control_point_count;
         let p = degree;
@@ -46,17 +44,13 @@ impl KnotVector {
         knots.extend(std::iter::repeat_n(1.0, p + 1));
         KnotVector { knots, degree: p }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn domain(&self) -> (f64, f64) {
         (self.knots[self.degree], self.knots[self.knots.len() - self.degree - 1])
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn control_point_count(&self) -> usize {
         self.knots.len() - self.degree - 1
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_periodic_compatible(&self) -> bool {
-        // A periodic (non-clamped) knot vector has no repeated end knots beyond multiplicity 1.
         self.multiplicity_at_index(0) == 1
     }
     /// 🔁️ An unclamped, uniformly-spaced knot vector for a periodic (closed) degree-`p` curve with
@@ -64,7 +58,6 @@ impl KnotVector {
     /// `p` duplicated onto the end — the standard "phantom wrap" trick), so ordinary clamped
     /// de Boor evaluation reproduces the closed curve exactly, including a `C^(p-1)`-continuous
     /// seam, with no special-cased evaluation path.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn periodic_uniform(control_point_count: usize, degree: usize) -> Self {
         let n = control_point_count;
         let p = degree;
@@ -75,14 +68,12 @@ impl KnotVector {
     /// 🔁️ Structurally periodic: both ends have multiplicity 1 (unclamped), so evaluation wraps
     /// smoothly through the domain boundary rather than pinning the curve to its first/last
     /// control point — the necessary condition [`Self::periodic_uniform`] always satisfies.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_periodic(&self) -> bool {
         self.degree > 0 && self.multiplicity_at_index(0) == 1 && self.multiplicity_at_index(self.knots.len() - 1) == 1
     }
     /// 🔁️ Wraps `u` into this knot vector's domain by its period (`domain.1 - domain.0`) — the
     /// inverse-evaluation counterpart to periodic curve construction, used wherever a caller has a
     /// parameter that may have drifted outside `[domain.0, domain.1)` on a periodic curve.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn wrap(&self, u: f64) -> f64 {
         let (lo, hi) = self.domain();
         let span = hi - lo;
@@ -95,13 +86,11 @@ impl KnotVector {
         }
         lo + x
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn multiplicity_at_index(&self, i: usize) -> usize {
         self.knots.iter().filter(|&&k| k == self.knots[i]).count()
     }
     /// 🧵️ Finds the knot span index `i` such that `knots[i] <= u < knots[i+1]` (or the last valid
     /// span if `u` equals the domain's upper bound), via binary search — O(log n) per evaluation.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn find_span(&self, u: f64) -> usize {
         let n = self.control_point_count() - 1;
         let p = self.degree;
@@ -125,7 +114,6 @@ impl KnotVector {
     }
     /// 🧵️ The multiplicity of the knot value equal to `u`, or `0` if `u` is not an existing knot
     /// (within exact equality — callers should snap to a known knot value before calling this).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn multiplicity(&self, u: f64) -> usize {
         self.knots.iter().filter(|&&k| k == u).count()
     }

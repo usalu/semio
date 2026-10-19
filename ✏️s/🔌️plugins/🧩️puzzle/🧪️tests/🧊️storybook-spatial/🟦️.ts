@@ -21,7 +21,6 @@ async function expectStoryLoads(page: Page, storyId: string): Promise<void> {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
 
-  // 📛️ Story ids are the literal emoji-prefixed `meta.title` slug (Storybook does not strip non-ASCII from `index.json`'s `id`, unlike `./puzzle-2d.spec.ts`'s plain-ASCII "puzzle-2d--..." ids) — percent-encode for the query string.
   await page.goto(`iframe.html?id=${encodeURIComponent(storyId)}&viewMode=story`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
   await expect(page.locator("body")).not.toContainText("Failed to load the Storybook preview file");

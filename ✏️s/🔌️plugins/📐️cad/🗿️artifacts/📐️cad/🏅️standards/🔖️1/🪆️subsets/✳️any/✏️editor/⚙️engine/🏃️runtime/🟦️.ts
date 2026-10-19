@@ -167,10 +167,6 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
     shippedModelDefinitionAssetsCache.current = emptyModelDefinitionAssets();
     return shippedModelDefinitionAssetsCache.current;
   }
-  // 🩹 Base was stale `./asset/modelDefinition` (ASCII, singular — pre-dates the emoji/plural asset-tree rename;
-  // never matched anything, and being relative-without-`./` even threw a vite:import-glob parse error). Real tree:
-  // `🖼️assets/🏗️modelDefinitions/<modelDefinition>/{🎬️actions,🕹️interactions,🗂️typologies/*/🔣️typology.json,
-  // 🏷️attributeDefinitions,🔧️propertyDefinitions,🏷️propertyKinds,📊️statDefinitions,🔀️transformations,🔣️modelDefinition.json}`.
   shippedModelDefinitionAssetsCache.current = {
     typologies: import.meta.glob(["../../../📚️examples/🖼️assets/🏗️modelDefinitions/**/🗂️typologies/**/🔣️typology.json"], {
       eager: true,

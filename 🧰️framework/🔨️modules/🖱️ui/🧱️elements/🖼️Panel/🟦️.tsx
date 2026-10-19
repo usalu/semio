@@ -11,7 +11,7 @@ import { panelTabFirstDraggableElementId } from "../../🔨️modules/🆔️ele
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.useRef/.useMemo at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { Tree } from "../🌳️Tree/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -406,11 +406,6 @@ const Panel: React.FC<PanelProps> = ({
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
   const panelShellRoot = panelShellScope?.rootRef.current ?? undefined;
-  // 🛟️ An anchored panel floats OVER the canvas region in the app root's stacking context, so window
-  // content under it can neither derive the box it occupies nor win the corner back by restacking — this
-  // panel is the only party that knows, and publishes its own box for every in-window affordance that
-  // anchors into the same corner to reserve against (see `chromePanelSafeArea`). Retracted on close and
-  // on unmount so a closed dock leaves every rail flush again.
   reactHostPort.useLayoutEffect(() => {
     const key = `panel:${anchor}`;
     const root = panelRootRef.current;
@@ -438,8 +433,6 @@ const Panel: React.FC<PanelProps> = ({
   const firstDraggableAlias = visible && activeNode ? panelTabFirstDraggableElementId(activeNode.id) : null;
   useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
 
-  // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
-  // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
   const positionStyle = {
     ...(isChromeHosted && visible ? chromeHostedOpenPanelPositionStyle(anchor) : anchorPositionStyle(anchor)),
     width: visible ? `${size}px` : undefined,
@@ -448,10 +441,6 @@ const Panel: React.FC<PanelProps> = ({
   const panelZClass = getLevelZClass("panel");
   const chromeHostedCapRowStyle = isChromeHosted && visible ? chromeHostedPanelCapRowStyle(anchor, trailingEndWidthPx) : undefined;
 
-  // 🎯️ An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
-  // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
-  // {@link PanelChromeTabBar} owns that empty-drop-zone role instead (registering under the same `${anchor}:`
-  // row key), so this always renders nothing when empty.
   if (tabs.length === 0) {
     if (isChromeHosted || !dock?.dragTabId) return null;
     return (
@@ -472,7 +461,6 @@ const Panel: React.FC<PanelProps> = ({
     );
   }
 
-  // 🎛️ Chrome-hosted: the sibling {@link PanelChromeTabBar} is this anchor's folded representation — no floating button group of our own.
   if (isChromeHosted && !visible) return null;
 
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];

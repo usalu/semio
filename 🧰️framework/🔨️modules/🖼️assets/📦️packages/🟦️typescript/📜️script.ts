@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { createChromiumSvgVideoRuntimeV1 } from "../../../../📦️packages/🟦️typescript/🖌️raster/🎥️video/🖋️svg-export/🌐️browser/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧬️ Routes deterministic catalog, metabolism, and animated logo tasks. */
@@ -8,25 +7,21 @@ import { resolve } from "node:path";
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { renderCatalogArtifacts } from "../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 import { renderMetabolismArtifacts } from "../../🌱️metabolism/🏗️builder/📽️projection/🟦️.ts";
-import { assetOutputManifest, checkAssetArtifacts, previewAssetArtifacts, publishAssetArtifacts, writeAssetArtifacts } from "../../🏗️builder/📦️publication/🟦️.ts";
-import { exportLogoAnimation, generateLogoAnimation } from "../../🪧️logos/🏗️builder/🎞️animation/🟦️.ts";
+import { assetOutputManifest, checkAssetArtifacts, publishAssetArtifacts, writeAssetArtifacts } from "../../🏗️builder/📦️publication/🟦️.ts";
+import { generateLogoAnimation } from "../../🪧️logos/🏗️builder/🎞️animation/🟦️.ts";
+import { runGenerateCatalogScript, runExportLogoScript, runPreviewGeneratedScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
 class GenerateCatalogScript extends BundleScript {
-  run(segments: string[]): void {
-    const target = (segments[0] ?? "all").toLowerCase();
-    if (!["js", "net", "py", "rust", "all"].includes(target)) throw new Error(`Unknown catalog generate target: ${target}`);
-    const artifacts = renderCatalogArtifacts(target);
-    writeAssetArtifacts(artifacts);
-    console.log(`[asset] wrote ${artifacts.length} catalog artifacts → ${target}`);
+  async run(segments: string[]): Promise<void> {
+    await runGenerateCatalogScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 /** 🥽️ Proves schema-owned mesh transport without a concrete product dependency. */
 class MeshContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-mesh-contract accepts no arguments");
+    if (segments.length) throw new Error("test-mesh-contract accepts no arguments");
     await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🥽️mesh/🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot , budgetMs: testLevelBudgetMs()});
   }
 }
@@ -34,7 +29,7 @@ class MeshContractScript extends BundleScript {
 /** 🗺️ Verifies the caller-owned tile transport contract without any concrete product. */
 class TileProxyContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-tile-proxy-contract accepts no arguments");
+    if (segments.length) throw new Error("test-tile-proxy-contract accepts no arguments");
     await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🗺️tile-proxy/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
   }
 }
@@ -42,7 +37,7 @@ class TileProxyContractScript extends BundleScript {
 /** 🧭️ Verifies explicit asset providers and actual transport after concrete owners are removed. */
 class AssetDispatchContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-dispatch-contract accepts no arguments");
+    if (segments.length) throw new Error("test-dispatch-contract accepts no arguments");
     await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🔍️resolver/🧭️dispatch/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
   }
 }
@@ -71,14 +66,7 @@ class GenerateLogoScript extends BundleScript {
 
 class ExportLogoScript extends BundleScript {
   async run(): Promise<void> {
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACTS_DIR;
-    if (!artifactRoot) throw new Error("Logo video export requires caller-owned SEMIO_TEST_ARTIFACTS_DIR");
-    const runtime = await createChromiumSvgVideoRuntimeV1();
-    try {
-      await exportLogoAnimation({ artifactRoot, openBrowser: runtime.openBrowser, encoderExecutable: "ffmpeg" });
-    } finally {
-      await runtime.close();
-    }
+    await runExportLogoScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
@@ -90,8 +78,8 @@ class BuildScript extends BundleScript {
 }
 
 class PreviewGeneratedScript extends BundleScript {
-  run(): void {
-    process.stdout.write(previewAssetArtifacts(this.repoRoot));
+  async run(): Promise<void> {
+    await runPreviewGeneratedScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
@@ -115,4 +103,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-generated", CheckGeneratedScript);
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "build" }) }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "build" }));

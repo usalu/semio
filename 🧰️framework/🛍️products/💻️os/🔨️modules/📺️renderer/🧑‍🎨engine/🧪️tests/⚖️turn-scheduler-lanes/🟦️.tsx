@@ -16,8 +16,6 @@ export async function registerTurnSchedulerLanesTests(vitest: PluginRuntimeVites
           },
           async () => {
             const actorId = "turn-test-lane-actor";
-            // 🎯️ UserVisible enqueued FIRST, Interactive second — both land before the scheduler's first
-            // microtask pump, so dispatch order must reflect lane priority, not arrival order.
             const userVisible = submitPluginTurn(actorId, [{ kind: "surface-visible", payload: { marker: "user-visible-1" } }], "UserVisible", "surface-visible");
             const interactive = submitPluginTurn(actorId, [{ kind: "app-command", payload: { marker: "interactive-1" } }], "Interactive");
             await Promise.all([userVisible, interactive]);
@@ -66,12 +64,10 @@ export async function registerTurnSchedulerLanesTests(vitest: PluginRuntimeVites
 
       it("surfaces Rejected once an actor's mailbox is genuinely full of distinct turns, instead of growing without bound", async () => {
         await withFakeShardClient(
-          () => new Promise(() => {}), // 🎯️ never settles — every submitted turn for this actor stays queued behind the first, in flight forever.
+          () => new Promise(() => {}),
           async () => {
             const actorId = "turn-test-rejected-actor";
             const settled: Array<"accepted" | "rejected"> = [];
-            // 🎯️ One turn dispatches immediately (goes "in flight"); the rest queue behind it in the same
-            // lane (no coalescing, no lower lane to evict) until PLUGIN_TURN_MAILBOX_CAPACITY (32) is hit.
             for (let index = 0; index < 41; index += 1) {
               submitPluginTurn(actorId, [{ kind: "app-command", payload: { marker: `t-${index}` } }], "Interactive").then(
                 () => settled.push("accepted"),

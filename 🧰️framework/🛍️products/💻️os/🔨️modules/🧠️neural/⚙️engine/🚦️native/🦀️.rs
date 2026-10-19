@@ -1,6 +1,7 @@
 //! 🧠️ Controlled construction of the actual neural tree owner family.
 use super::*;
-use semio_framework_value::{DecodedValue,NativeDecodeControl,NativeEncodeControl,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{replace,size_of,take};
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

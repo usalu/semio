@@ -294,5 +294,37 @@
       "pack_record_schema_laws",
       "--offline"
     ]
+  ],
+  "dependencyBootstrapCases": [
+    {
+      "command": "run",
+      "install": true,
+      "queuedWrites": 1
+    },
+    {
+      "command": "run",
+      "install": false,
+      "queuedWrites": 0
+    },
+    {
+      "command": "show",
+      "install": true,
+      "queuedWrites": 1
+    },
+    {
+      "command": "dependencies",
+      "install": true,
+      "queuedWrites": 1
+    },
+    {
+      "command": "tools",
+      "install": false,
+      "queuedWrites": 0
+    },
+    {
+      "command": "reset",
+      "install": false,
+      "queuedWrites": 0
+    }
   ]
 }

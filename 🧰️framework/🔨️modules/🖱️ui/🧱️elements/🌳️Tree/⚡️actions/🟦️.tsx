@@ -3,7 +3,7 @@ import { type UiLabel, uiDataLabel } from "../../🎗️UiLabel/🟦️.tsx";
 import type { ContextMenuItem } from "../../🖱️ContextMenu/🎨️item-render/🟦️.tsx";
 import * as React from "react";
 import { DragHandle } from "../../🧱️DragHandle/🟦️.tsx";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { Action } from "../../⚡️ActionGroup/🟦️.tsx";
 import { DisabledReasonHint } from "../../💡️ChromeControlHint/🟦️.tsx";
 
@@ -13,7 +13,7 @@ export const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-s
 export type TreeActionPlacement = "row" | "menu";
 
 /**
- * Configuration interface for an action button on a tree section.
+ * 🌳️ Configuration interface for an action button on a tree section.
  **/
 export interface TreeSectionAction {
   kind?: "button";
@@ -32,7 +32,7 @@ export interface TreeSectionAction {
 }
 
 /**
- * Configuration interface for a checkbox action on a tree header row.
+ * 🌲️ Configuration interface for a checkbox action on a tree header row.
  **/
 export interface TreeCheckboxAction {
   kind: "checkbox";

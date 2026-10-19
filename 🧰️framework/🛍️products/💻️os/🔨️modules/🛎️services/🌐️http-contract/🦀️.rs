@@ -258,7 +258,6 @@ pub trait HttpTransport: Send + Sync {
 /// loudly rather than silently succeeding with fake data.
 pub struct UnwiredHttpTransport;
 impl HttpTransport for UnwiredHttpTransport {
-    // 🚫️async: E6 dyn-compat — see the trait declaration's tag above.
     fn call(&self, _request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
         Err(std::io::Error::other("HttpPool: no HttpTransport wired yet (see the packet report's honest gaps)"))
     }
@@ -281,7 +280,6 @@ impl HttpBody for BufferedHttpBody {
         HttpBodyCancellationHandle::idle()
     }
 
-    // 🚫️async: E6 dyn-compat — see the `HttpBody` trait's `dedyn-fw-os-misc` tag above.
     fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
         let chunk = self.remaining.take();
         Box::pin(async move {
@@ -317,7 +315,6 @@ impl BlockingHttpTransport {
 }
 
 impl AsyncHttpTransport for BlockingHttpTransport {
-    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn begin(&self, ctx: &OperationContext, request: HttpRequest) -> HttpTransportStart {
         let transport = self.transport.clone();
         let compute = self.compute.clone();

@@ -52,7 +52,7 @@ fn run_enum_shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(
 
 impl semio_framework_dsl_record::DslField for RunStatus {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.step()?;Ok(semio_framework_dsl_record::FieldValue::Enum(run_status_ordinal(*self)))}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.step()?;match value{semio_framework_dsl_record::FieldValue::Enum(ordinal)=>run_status_from_ordinal(*ordinal),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared run status enum"))}}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.step()?;match value{semio_framework_dsl_record::FieldValue::Enum(ordinal)=>run_status_from_ordinal(*ordinal),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared run status enum"))}}
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{run_enum_shape_controlled(&[("pending",0),("running",1),("succeeded",2),("failed",3),("canceled",4)],control)}
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Enum(run_status_variants())
@@ -105,7 +105,7 @@ fn run_node_status_variants() -> Vec<(String, u32)> {
 
 impl semio_framework_dsl_record::DslField for RunNodeStatus {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.step()?;Ok(semio_framework_dsl_record::FieldValue::Enum(run_node_status_ordinal(*self)))}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.step()?;match value{semio_framework_dsl_record::FieldValue::Enum(ordinal)=>run_node_status_from_ordinal(*ordinal),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared run status enum"))}}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.step()?;match value{semio_framework_dsl_record::FieldValue::Enum(ordinal)=>run_node_status_from_ordinal(*ordinal),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared run status enum"))}}
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{run_enum_shape_controlled(&[("computed",0),("cacheHit",1),("failed",2)],control)}
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Enum(run_node_status_variants())
@@ -156,7 +156,7 @@ fn run_trigger_to_record_controlled(value:&RunTrigger,control:&mut semio_framewo
  RunTrigger::Automation{automation_ref,event_fingerprint}=>{record.insert(0,semio_framework_dsl_record::FieldValue::Text(control.copy_text("automation")?))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Absent)?;control.step()?;record.insert(2,semio_framework_dsl_record::FieldValue::Text(control.copy_text(automation_ref)?))?;control.step()?;record.insert(3,semio_framework_dsl_record::FieldValue::Text(control.copy_text(event_fingerprint)?))?;control.step()?;}
  }Ok(record.take())})
 }
-fn run_trigger_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RunTrigger,ValueError>{
+fn run_trigger_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RunTrigger,ValueError>{
  control.scoped_stage(|control|{control.begin_stage(4)?;control.step()?;let kind=match record.get(0){Some(semio_framework_dsl_record::FieldValue::Text(value))=>value.as_str(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected run trigger kind"))};
  let mut text=|id|->Result<Option<String>,ValueError>{let value=match record.get(id){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>None,Some(value)=>Some(control.scoped_stage(|control|{control.begin_stage(0)?;<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control)})?)};control.step()?;Ok(value)};
  let actor=text(1)?;let automation_ref=text(2)?;let event_fingerprint=text(3)?;match(kind,actor,automation_ref,event_fingerprint){("manual",Some(actor),None,None)=>Ok(RunTrigger::Manual{actor}),("automation",None,Some(automation_ref),Some(event_fingerprint))=>Ok(RunTrigger::Automation{automation_ref,event_fingerprint}),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid run trigger fields"))}})
@@ -237,8 +237,8 @@ fn run_trigger_from_record(record: &semio_framework_dsl_record::RecordValue) -> 
 impl semio_framework_dsl_record::DslField for RunTrigger {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{run_trigger_to_record_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Record)}
     fn to_record_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{run_trigger_to_record_controlled(self,control)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>run_trigger_from_record_controlled(record,control),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared record"))}}
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{run_trigger_from_record_controlled(record,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.checkpoint()?;match value{semio_framework_dsl_record::FieldValue::Record(record)=>run_trigger_from_record_controlled(record,control),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected declared record"))}}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{run_trigger_from_record_controlled(record,control)}
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(run_trigger_spec_producer())
     }

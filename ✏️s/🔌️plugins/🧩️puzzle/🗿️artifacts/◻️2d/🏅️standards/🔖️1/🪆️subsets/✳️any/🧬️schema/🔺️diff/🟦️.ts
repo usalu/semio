@@ -24,19 +24,19 @@ import {
 } from "../🟦️.ts";
 
 export interface Puzzle2dDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   artifact?: Puzzle2dArtifact;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** 📷️ @state artifact */
   camera?: Puzzle2dCamera;
-  /** @state artifact */
+  /** 🔘️ @state artifact */
   nodes?: Puzzle2dNodesDelta;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   edges?: Puzzle2dEdgesDelta;
-  /** @state artifact */
+  /** 🗾️ @state artifact */
   targetRegions?: Puzzle2dTargetRegionsDelta;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta?: Puzzle2dMetaPatch;
 }
 

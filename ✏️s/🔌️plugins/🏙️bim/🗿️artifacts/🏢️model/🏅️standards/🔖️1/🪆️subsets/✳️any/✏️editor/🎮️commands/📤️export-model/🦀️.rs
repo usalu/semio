@@ -31,9 +31,9 @@ pub const ENCODE_PREVIEW: &[u8] = br#"{"en":"Writing the file","de":"Datei wird 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-model")]
 pub struct ExportModel {
-    /// The file format: `ifc2x3`, `ifc4`, `glb`, `svg` or `csv`.
+    /// 📰️ The file format: `ifc2x3`, `ifc4`, `glb`, `svg` or `csv`.
     pub format: String,
-    /// The state a toggle that triggers the export reports; the export ignores it.
+    /// 🔘️ The state a toggle that triggers the export reports; the export ignores it.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub pressed: Option<bool>,
 }

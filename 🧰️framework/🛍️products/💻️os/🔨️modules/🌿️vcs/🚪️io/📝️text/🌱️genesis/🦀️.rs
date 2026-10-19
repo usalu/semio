@@ -1,6 +1,7 @@
 //! 🌱️ Native stored genesis Pack text framing.
 use crate::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisProducer};
-use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub fn encode_genesis_hex_controlled(pack:&[u8],control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{
  let capacity=pack.len().checked_mul(2).filter(|n|*n<=isize::MAX as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Genesis hex capacity overflow"))?;
  control.begin_stage(pack.len())?;control.charge(capacity)?;let mut hex=String::new();hex.try_reserve_exact(capacity).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Genesis hex allocation refused"))?;

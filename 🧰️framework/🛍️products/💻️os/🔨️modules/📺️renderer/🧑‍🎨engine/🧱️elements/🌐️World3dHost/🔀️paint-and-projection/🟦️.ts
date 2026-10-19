@@ -41,8 +41,6 @@ export function useWorldPaintAndProjection(core: WorldCore4) {
     };
   }, []);
 
-  // 🧭️ Completed user orbit/pan/zoom gesture (`WorldOrbitGated.onCamera`, fired on gesture end) — the only
-  // camera-change handler wired to a real user interaction, so it's the only one that also dispatches.
   const handleCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, false);
@@ -63,9 +61,6 @@ export function useWorldPaintAndProjection(core: WorldCore4) {
     [noteUserMovedCamera],
   );
 
-  // 🧭️ Programmatic auto-fit-to-content camera change (`WorldAutoFit.onFitted`, runs after a document/scene
-  // loads or content changes) — deliberately split from `handleCameraChange` so this path never dispatches;
-  // only a genuine user gesture should sync a camera to the plugin.
   const handleAutoFitCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, false);
@@ -87,8 +82,6 @@ export function useWorldPaintAndProjection(core: WorldCore4) {
     if (pending && windowInstanceId) setWindowIcon?.(windowInstanceId, worldProjectionSpecIconId(pending) as IconName);
   }, [setWindowIcon, windowInstanceId]);
 
-  // 🧭️ Gizmo/axis-indicator camera snap — a discrete view change the user clicked, so (like
-  // `handleCameraChange`) it also dispatches, debounced identically.
   const handleGizmoCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, true);
@@ -103,13 +96,6 @@ export function useWorldPaintAndProjection(core: WorldCore4) {
 
   const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
 
-  // 🧭️ User-driven projection-kind switch (`WorldOrbitProjectionSwitchPane`) — view-state only, never
-  // dispatched: the only existing `setProjection` consumer (`apply_world3d_projection_action` in the
-  // framework plugin's Rust) takes granular `{field, value}` pairs from window-measure Select/Slider
-  // controls (e.g. `perspectiveKind`/`orthographicView`/`axonometricVariant`), a fundamentally different
-  // contract than this pane's whole-`WorldProjectionSpec` (mode ⊗ orientation) template selection — there is
-  // no lossless mapping from one to the other, so dispatching here would silently no-op against every real
-  // handler instead of doing anything.
   const handleProjectionKindChange = useCallback(
     (spec: WorldProjectionSpec) => {
       retainedPendingProjectionSpecRef.current = spec;

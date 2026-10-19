@@ -5,7 +5,7 @@
 
 // #region 🔌️Adapters
 /**
- * Structured event emitted by the repo CLI binary.
+ * 🗂️ Structured event emitted by the repo CLI binary.
  **/
 export type RepoEvent = {
   kind: string;
@@ -20,7 +20,7 @@ export type RepoEvent = {
 // Types MUST define interfaces for repo events, tool results, and data models.
 
 /**
- * Structured output from a repo CLI tool invocation.
+ * 🛠️ Structured output from a repo CLI tool invocation.
  **/
 export interface ToolResult<T = unknown> {
   output: { lines: { type: string; text: string }[]; exitCode: number };
@@ -41,7 +41,7 @@ export interface TechnologyData {
 }
 
 /**
- * Code policy configuration with id, name, and description.
+ * 📜️ Code policy configuration with id, name, and description.
  **/
 export interface PolicyData {
   id: string;
@@ -50,7 +50,7 @@ export interface PolicyData {
 }
 
 /**
- * YAML frontmatter fields parsed from a ticket markdown file.
+ * 🎫️ YAML frontmatter fields parsed from a ticket markdown file.
  **/
 export interface TicketFrontmatter {
   status: string;
@@ -64,7 +64,7 @@ export interface TicketFrontmatter {
 }
 
 /**
- * Single interaction record within a ticket lifecycle.
+ * 🎯️ Single interaction record within a ticket lifecycle.
  **/
 export interface TicketInteraction {
   prompt: string;
@@ -77,7 +77,7 @@ export interface TicketInteraction {
 }
 
 /**
- * Full ticket data including date, slug, frontmatter, and interactions.
+ * 📌️ Full ticket data including date, slug, frontmatter, and interactions.
  **/
 export interface TicketData {
   year: number;
@@ -90,7 +90,7 @@ export interface TicketData {
 }
 
 /**
- * Line-level contribution metrics for added and removed lines.
+ * 🤝️ Line-level contribution metrics for added and removed lines.
  **/
 export interface ContributorLineMetrics {
   added: number;
@@ -98,7 +98,7 @@ export interface ContributorLineMetrics {
 }
 
 /**
- * Contributor metrics scoped to a single definition.
+ * 🧑️ Contributor metrics scoped to a single definition.
  **/
 export interface ContributorDefinitionData {
   name: string;
@@ -106,7 +106,7 @@ export interface ContributorDefinitionData {
 }
 
 /**
- * Contributor metrics scoped to a file section and its definitions.
+ * 🎁️ Contributor metrics scoped to a file section and its definitions.
  **/
 export interface ContributorSectionData {
   name: string;
@@ -115,7 +115,7 @@ export interface ContributorSectionData {
 }
 
 /**
- * Contributor metrics scoped to a single file and its sections.
+ * 👥️ Contributor metrics scoped to a single file and its sections.
  **/
 export interface ContributorFileData {
   name: string;
@@ -124,7 +124,7 @@ export interface ContributorFileData {
 }
 
 /**
- * Contributor metrics scoped to a folder and its files.
+ * ➕️ Contributor metrics scoped to a folder and its files.
  **/
 export interface ContributorFolderData {
   name: string;
@@ -133,7 +133,7 @@ export interface ContributorFolderData {
 }
 
 /**
- * Contributor metrics scoped to a bundle and its folders.
+ * 🗜️ Contributor metrics scoped to a bundle and its folders.
  **/
 export interface ContributorBundleData {
   name: string;
@@ -142,7 +142,7 @@ export interface ContributorBundleData {
 }
 
 /**
- * Ticket metadata associated with a contributor.
+ * 🗒️ Ticket metadata associated with a contributor.
  **/
 export interface ContributorTicketData {
   year: number;
@@ -157,7 +157,7 @@ export interface ContributorTicketData {
 }
 
 /**
- * Checkpoint metadata associated with a contributor.
+ * 🚩️ Checkpoint metadata associated with a contributor.
  **/
 export interface ContributorCheckpointData {
   title: string;
@@ -165,7 +165,7 @@ export interface ContributorCheckpointData {
 }
 
 /**
- * Full contributor profile with contributions across bundles, tickets, and checkpoints.
+ * 🌐️ Full contributor profile with contributions across bundles, tickets, and checkpoints.
  **/
 export interface ContributorData {
   github: string;
@@ -180,7 +180,7 @@ export interface ContributorData {
 }
 
 /**
- * TextEdit holds the data fields for a TextEdit record.
+ * ⌨️ TextEdit holds the data fields for a TextEdit record.
  **/
 interface TextEdit {
   start: number;
@@ -189,7 +189,7 @@ interface TextEdit {
 }
 
 /**
- * AutoFix holds the data fields for a AutoFix record.
+ * 🩹️ AutoFix holds the data fields for a AutoFix record.
  **/
 interface AutoFix {
   description: string;
@@ -197,7 +197,7 @@ interface AutoFix {
 }
 
 /**
- * Breach holds the data fields for a Breach record.
+ * 📦️ Breach holds the data fields for a Breach record.
  **/
 export interface Breach {
   id: string;
@@ -211,7 +211,7 @@ export interface Breach {
 }
 
 /**
- * SectionInfo holds the data fields for a SectionInfo record.
+ * ✂️ SectionInfo holds the data fields for a SectionInfo record.
  **/
 export interface SectionInfo {
   name: string;
@@ -224,7 +224,7 @@ export interface SectionInfo {
 }
 
 /**
- * DefinitionInfo holds the data fields for a DefinitionInfo record.
+ * 🧬️ DefinitionInfo holds the data fields for a DefinitionInfo record.
  **/
 interface DefinitionInfo {
   name: string;
@@ -234,7 +234,7 @@ interface DefinitionInfo {
 }
 
 /**
- * GraphqlSectionRange holds the data fields for a GraphqlSectionRange record.
+ * 🔌️ GraphqlSectionRange holds the data fields for a GraphqlSectionRange record.
  **/
 interface GraphqlSectionRange {
   start?: number;
@@ -242,7 +242,7 @@ interface GraphqlSectionRange {
 }
 
 /**
- * GraphqlSection holds the data fields for a GraphqlSection record.
+ * 📡️ GraphqlSection holds the data fields for a GraphqlSection record.
  **/
 interface GraphqlSection {
   name: string;

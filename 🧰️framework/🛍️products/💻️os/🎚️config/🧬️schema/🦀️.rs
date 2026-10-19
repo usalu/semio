@@ -7,7 +7,9 @@
 //! crate root) — imported here, never redefined. The plugin host mounts this schema together with
 //! every direct mutation leaf in its Rust glue.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use {semio_framework::AppRef,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

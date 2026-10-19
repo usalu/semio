@@ -1,6 +1,6 @@
 //! 🛬️ Borrowed Semio native primitives admit explicit owner fields before materialization.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SqliteDatabaseLimits};
 
 /// 📥️ Borrowed native payload body after envelope unwrapping, in the encoding the caller supplied.
@@ -13,7 +13,7 @@ pub fn with_body<T>(payload:&store::io::IoPayload,id:&str,control:&mut SqliteSna
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
   let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};
-  let result=native_control.scoped_maximum(allowance,|native|{native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+  let result=native_control.scoped_maximum(allowance,|native|{native.scoped_observer(&mut |event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
    (||->Result<T,ValueError>{match payload{
     store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,id,store::semio_format::Component::Pack,1,native)?;read(Body::Binary(body),native,limits)},
     store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,id,store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?;read(Body::Text(body),native,limits)}

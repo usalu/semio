@@ -3,9 +3,9 @@ import { parseArtifactChild } from "@semio-tech/framework/schema/artifact-refere
 import { type ArtifactChild } from "../🟦️.ts";
 
 export interface ProcedureDiff {
-  /** @state artifact */ schema: string | null;
-  /** @state artifact @child kind=s.stdio.semio */ flow: ArtifactChild | null;
-  /** @state artifact @child kind=s.stdio.semio */ text: ArtifactChild | null;
+  /** 🔄️ @state artifact */ schema: string | null;
+  /** 🌊️ @state artifact @child kind=s.stdio.semio */ flow: ArtifactChild | null;
+  /** ✏️ @state artifact @child kind=s.stdio.semio */ text: ArtifactChild | null;
 }
 
 /** 🧮️ Resolves omitted delta fields to the native unchanged null value. */

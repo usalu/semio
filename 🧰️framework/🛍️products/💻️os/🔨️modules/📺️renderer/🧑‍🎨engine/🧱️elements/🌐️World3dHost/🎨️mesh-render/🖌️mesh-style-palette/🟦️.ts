@@ -59,7 +59,6 @@ export function useMeshStylePalette(): MeshStylePalette {
   const shellScope = useShellScopeOptional();
   useCanvasAppearanceSync(
     useCallback(() => {
-      // 🎨️ resolveColorHex caches by CSS-expression string only (no theme key), so a theme flip must bust it before re-resolving or every kind keeps its stale color.
       clearColorResolveCache();
       setPalette(resolveMeshStylePalette());
     }, []),

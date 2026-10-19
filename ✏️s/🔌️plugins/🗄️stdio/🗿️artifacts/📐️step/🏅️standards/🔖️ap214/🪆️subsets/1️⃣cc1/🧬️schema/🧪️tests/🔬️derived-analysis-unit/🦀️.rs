@@ -50,7 +50,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn bare_shape_representation_base_type_is_also_hard() {
-        // Suffix match catches the un-subtyped base type too -- CC1 allows NO representation.
         let mut doc = base_doc();
         doc.instances.push(Part21Instance { id: 4, entities: vec![("SHAPE_REPRESENTATION".into(), vec![])] });
         let snapshot = StepSnapshot::from_part21_document(&doc);

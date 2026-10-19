@@ -1,7 +1,8 @@
 //! 🌳️ Fold-owned AVL indexes retain native inline slots until independently granted retirement.
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor, deferred, deferred_birth_bytes_for, sequence, sequence_birth_bytes};
 use std::{borrow::Borrow, cmp::Ordering};
-use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},value::list::{PagedList,PagedListRefusalKind}};
+use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListRefusalKind};
 #[path="👁️read/🦀️.rs"]
 mod read;
 pub use read::HistoryFoldIndexRead;
@@ -213,23 +214,7 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndex<K,V>{fn retir
 
 /// 🧺️ Owns arbitrary original membership keys in the same retained ordered arena.
 #[derive(Clone,Debug,PartialEq,Eq, semio_framework_value::RetainedClone)]
-pub struct HistoryFoldSet<K:Ord>(HistoryFoldIndex<K,()>);
-impl HistoryFoldSet<String>{
-    /// 🪴️ Original text membership insertion borrows the canonical index cursor and preserves its first admitted row.
-    pub async fn insert_original_text(&mut self,key:String,control:&super::HistoryFoldControl)->Result<bool,crate::ProtocolError>{control.get_or_insert_text(&mut self.0,key,()).await}
-    /// 👁️ Borrowed text membership reads one original key page and native node per granted turn.
-    pub async fn contains_original_text(&self,key:&str,control:&super::HistoryFoldControl)->Result<bool,crate::ProtocolError>{Ok(control.get_text(&self.0,key).await?.is_some())}
-}
-impl<K:Copy+Ord+RetireOwned> HistoryFoldSet<K>{
-    /// 🔢️ The same native cursor admits Copy-key membership without eager arena growth.
-    pub async fn insert_original_copy(&mut self,key:K,control:&super::HistoryFoldControl)->Result<bool,crate::ProtocolError>{control.get_or_insert_copy(&mut self.0,key,()).await}
-    /// 🔢️ Scalar membership borrows the actual native node through its original read continuation.
-    pub async fn contains_original_copy(&self,key:&K,control:&super::HistoryFoldControl)->Result<bool,crate::ProtocolError> where K:Sync{Ok(control.get_copy(&self.0,key).await?.is_some())}
-    /// 🍂️ Scalar set removal retains its exact original row through the defining paid extraction child.
-    pub async fn remove_original_copy(&mut self,key:&K,control:&super::HistoryFoldControl)->Result<bool,crate::ProtocolError> where K:Sync{Ok(control.remove_copy(&mut self.0,key).await?.is_some())}
-    /// 🌱️ The minimum original scalar remains retained until its independently granted extraction completes.
-    pub async fn pop_first_original_copy(&mut self,control:&super::HistoryFoldControl)->Result<Option<K>,crate::ProtocolError>{let row=control.pop_first(&mut self.0).await?;let key=row.as_ref().map(|(key,())|*key);drop(row);Ok(key)}
-}
+pub struct HistoryFoldSet<K:Ord>(pub HistoryFoldIndex<K,()>);
 impl<K:Ord> Default for HistoryFoldSet<K>{fn default()->Self{Self(HistoryFoldIndex::default())}}
 impl<K:Ord> HistoryFoldSet<K>{
     pub fn new()->Self{Self::default()}

@@ -1,4 +1,4 @@
-//! `upsert-load-case` — upsert a `LoadCase` by id into `load_cases`.
+//! 🧬️ `upsert-load-case` — upsert a `LoadCase` by id into `load_cases`.
 
 use semio_s_artifact_norm_en1993_model::{LoadCase, En1993Snapshot};
 

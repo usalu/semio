@@ -18,9 +18,6 @@ fn dsl_pack_equivalence_example_fixture() {
 fn dsl_pack_equivalence_with_generation_state() {
     let mut projection = Generation3dSnapshot::default();
     let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
-    // 🌱️ Fractional (not whole-number) so `semio_framework_value::FromValue::from_value`'s int-normalization of whole
-    // `DslValue::Number`s (an engine-owned behavior, see the sibling dsl test) doesn't make this
-    // round trip spuriously unequal.
     values.insert("count".into(), semio_framework_value::DslValue::float(3.5));
     projection.generation = semio_framework_artifact_playbook_playbook::GenerationPlayState {
         generations: vec![semio_framework_artifact_playbook_playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values }],

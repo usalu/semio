@@ -64,15 +64,15 @@ semio-s-artifact-puzzle-5d-catalog = { path = "../../../🗂️catalog/📦️pa
 semio-s-artifact-puzzle-5d-diff-2 = { path = "../../../../🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-document-records = { path = "../../../../🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-5d-mut-any = { path = "../../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-2 = { path = "../../../../🧬️schema/🧬️mutations/🖋️edit-part3d-label/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-3 = { path = "../../../../🧬️schema/🧬️mutations/🗒️change-description/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-4 = { path = "../../../../🧬️schema/🧬️mutations/🌱create-part/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-5 = { path = "../../../../🧬️schema/🧬️mutations/🌱create-part/🧪️tests/🌱️appends-part-c/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-7 = { path = "../../../../🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-8 = { path = "../../../../🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-part2d = { path = "../../../../🧬️schema/🧬️mutations/🧱️part2d-leaves/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-5d-store-preparation = { path = "../../../🧰️kit/💾️store-preparation/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-store-preparation-commands = { path = "../../../🧰️kit/💾️store-preparation/🎮️command-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-tests = { path = "../../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }

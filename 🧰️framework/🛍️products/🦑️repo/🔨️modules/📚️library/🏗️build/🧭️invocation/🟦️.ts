@@ -137,7 +137,7 @@ export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS
   return {tool,args:selected};
 }
 
-/** 🔌️ Translates portable CLI and environment options only at the Nx implementation boundary. */
+/** 🔌️ Translates portable CLI and environment options only at the Nx implementation boundary; `--graph` is the portable alias of `--dry-run` and always names stdout or a file. */
 export function nxBuildArgumentsV1(args:readonly string[]):string[] {
   const aliases:Record<string,string>={"--skip-cache":"--skip-nx-cache","--skip-remote-cache":"--skip-remote-cache","--exclude-dependencies":"--excludeTaskDependencies","--exclude-task-dependencies":"--excludeTaskDependencies","--output":"--output-style","--bail":"--nx-bail","--dry-run":"--graph=stdout","--include-global-files":"--includeGlobalWorkspaceFiles"};
   const translated:string[]=[];
@@ -146,6 +146,12 @@ export function nxBuildArgumentsV1(args:readonly string[]):string[] {
     if(argument==="--"){translated.push(...args.slice(index));break;}
     const separator=argument.indexOf("="),name=separator<0?argument:argument.slice(0,separator);
     if(name==="--dry-run"){if(!argument.endsWith("=false"))translated.push("--graph=stdout");continue;}
+    if(name==="--graph"){
+      const value=separator<0?undefined:argument.slice(separator+1),next=args[index+1];
+      if(value==="false")continue;
+      if(value===undefined&&next!==undefined&&next!=="--"&&!next.startsWith("-")){translated.push(`--graph=${next}`);index++;continue;}
+      translated.push(`--graph=${value===undefined||value==="true"?"stdout":value}`);continue;
+    }
     translated.push((aliases[name]??name)+(separator<0?"":argument.slice(separator)));
   }
   return translated;

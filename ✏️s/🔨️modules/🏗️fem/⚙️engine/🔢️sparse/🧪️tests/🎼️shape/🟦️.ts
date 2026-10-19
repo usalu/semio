@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {Database} from "bun:sqlite";
-import law from "../../🧫️fixtures/🎼️shape/🔣️.json";
+import law from "../🧫️fixtures/🎼️shape/🔣️.json";
 import {subspaceShapeAdmitted} from "../../🎼️shape/🟦️.ts";
 
 /** 🎼️ Independent SQLite checks exact integer quotients for native layout admission across both pointer widths. */

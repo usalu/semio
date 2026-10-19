@@ -1,4 +1,4 @@
-//! kinds, plus the engagement HUD builder both windows share (it only differs by which window id it
+//! 🕹️ kinds, plus the engagement HUD builder both windows share (it only differs by which window id it
 //! ✏️ Puzzle 5d play app — the `edit` mode: the 2D-first 40/60 split layout over the two window
 //! binds its input/abort actions to). The Utility Options every window exposes for the shared
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's

@@ -159,8 +159,6 @@ async fn record_kinds_are_distinct_members_of_the_extension_range() {
     for kind in kinds {
         assert!(is_wal_record_kind(kind));
     }
-    // 🧪️ `0x0C` (protocol::wire::REC_COMMIT) hard-coded rather than depending on protocol_core
-    // directly just for this one assertion — this crate's extension range never overlaps it.
     assert!(!is_wal_record_kind(0x0C));
 }
 //#endregion 🔖️RecordKinds

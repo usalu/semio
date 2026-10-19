@@ -1,13 +1,23 @@
 {
   "name": "@semio-tech/playground-composition",
   "projectType": "library",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition",
   "targets": {
     "test-typescript": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv"
       ],
       "options": {
         "cwd": ".",

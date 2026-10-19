@@ -28,6 +28,8 @@ semio-framework-pack-format = { path = "../../../../📐️format/📦️package
 semio-framework-pack-record-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-edit = { path = "../../../../../🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 blake3 = "1.8.2"

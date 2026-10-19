@@ -5,41 +5,40 @@ import { createIssuedResourceControlV1 } from "../../../../../🧰️framework/�
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ❓️ `@teaching/architecture-course` task router: `bun ./📜️script.ts <dev|dev-site|build|test [quick|long|exhaustive]|test-e2e [--topology <both|dev|rehearsal>] [--serial] [--keep] [--proctor <executable>] [-- <Playwright arguments…>]|typecheck|check|publish|docker-image-build [--tag <tag>]|docker-image-check [--tag <tag>] [--port <n>] [--keep]|docker-image-publish [--tag <tag>]|docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]|docker-stack-bundle [--tag <tag>] [--out <directory>]|deploy-check [--tag <tag>]>`. */
-import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildViteArtifact, playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildCourseImage, checkCourse, checkCourseDeployment, checkCourseImage, checkCourseStack, courseReleaseBuildPlan, publishCourseImage, publishCourseSite, stageCourseStackBundle } from "../../🚀️deploy/🟦️.ts";
+import { checkCourse } from "../../🚀️deploy/🟦️.ts";
+import { buildCourseReleaseSite, publishCourseSite } from "../../🚀️deploy/🌐️site/🟦️.ts";
+import { buildCourseImage, publishCourseImage } from "../../🚀️deploy/🐳️docker-image/🟦️.ts";
+import { checkCourseImage } from "../../🚀️deploy/🩺️docker-image-check/🟦️.ts";
+import { checkCourseStack } from "../../🚀️deploy/🧱️docker-stack/🟦️.ts";
+import { stageCourseStackBundle } from "../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
+import { checkCourseDeployment } from "../../🚀️deploy/⚖️readiness/🟦️.ts";
 import { runCourseEndToEnd } from "../../🎭️e2e/🟦️.ts";
 import { runDevStack } from "../../🧱️stack/🟦️.ts";
-import {courseOriginalBuildModeV1} from "../../🏗️builder/🎚️mode/🟦️.ts";
 import { runBuildPreflightV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptInvocationBudget } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const VITE_CONFIG = "../../🏗️builder/🌐️vite/🟦️.ts";
 
-/** 🩺️ Diagnoses the course's authored native release requirements through its dashboard owner. */
+/** 🩺️ Runs generic host preflight through the course dashboard owner; image production validates its native runtime contract. */
 class PreflightScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if(args.length)throw Error("Course preflight accepts no arguments");
-    await runBuildPreflightV1(this.repoRoot,["preflight","--scope","@teaching/architecture-course"],this.invocation);
+    if(args.length)throw new Error("Course preflight accepts no arguments");
+    await runBuildPreflightV1(this.repoRoot,["preflight"],this.invocation);
   }
 }
 /** 🧰️ Installs Chromium's Debian system packages under the original CI process control. */
 class CiBrowserPrepareScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if(args.length)throw Error("Course CI browser preparation accepts no arguments");
+    if(args.length)throw new Error("Course CI browser preparation accepts no arguments");
     await runOwnedCommand("node",[join(this.repoRoot,"node_modules/playwright/cli.js"),"install-deps","chromium"],this.repoRoot,"architecture-course:ci-browser-prepare",scriptInvocationBudget(this.invocation,600_000),{signal:this.invocation.control.signal});
   }
-}
-
-/** 📦️ Builds the publication with its fixed release intent and original compiler authority. */
-async function buildReleaseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
-  courseOriginalBuildModeV1(invocation,"release");
-  await buildViteArtifact({ ...courseReleaseBuildPlan(repoRoot, bundleRoot), invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-release", 0) });
 }
 
 /** 🛠️ `dev` — the whole local stack in one terminal: the proctor, then the site (`dev-site`), stopped together. */
@@ -88,7 +87,7 @@ class CheckScript extends BundleScript {
 }
 class PublishScript extends BundleScript {
   async run(): Promise<void> {
-    await publishCourseSite(this.repoRoot, this.root, this.invocation, () => buildReleaseSite(this.repoRoot, this.root, this.invocation));
+    await publishCourseSite(this.repoRoot, this.root, this.invocation, () => buildCourseReleaseSite(this.repoRoot, this.root, this.invocation));
   }
 }
 class DockerImageBuildScript extends BundleScript {
@@ -122,15 +121,13 @@ class DockerStackBundleScript extends BundleScript {
 class DeployCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await checkCourseDeployment(this.repoRoot, this.root, {
-      build: () => buildReleaseSite(this.repoRoot, this.root, this.invocation),
+      build: () => buildCourseReleaseSite(this.repoRoot, this.root, this.invocation),
       typecheck: () => typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:course-deployment", 0), cwd: this.root, project: "tsconfig.json", owner: "architecture-course:typescript", args: [], timeoutMs: 120_000 }),
       endToEnd: () => runCourseEndToEnd(this.invocation, this.repoRoot, this.root, fileURLToPath(import.meta.url), playgroundPortEnv("architecture-course"), ["--serial", "--"]),
     }, segments, this.invocation);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("dev-site", DevSiteScript).register("build", BuildScript).register("test", TestScript).register("test-e2e", TestEndToEndScript).register("typecheck", TypecheckScript).register("check", CheckScript).register("publish", PublishScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("docker-image-publish", DockerImagePublishScript).register("docker-stack-check", DockerStackCheckScript).register("docker-stack-bundle", DockerStackBundleScript).register("deploy-check", DeployCheckScript);
-
-router.register("preflight",PreflightScript).register("ci-browser-prepare",CiBrowserPrepareScript);
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("dev-site", DevSiteScript).register("build", BuildScript).register("test", TestScript).register("test-e2e", TestEndToEndScript).register("typecheck", TypecheckScript).register("check", CheckScript).register("publish", PublishScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("docker-image-publish", DockerImagePublishScript).register("docker-stack-check", DockerStackCheckScript).register("docker-stack-bundle", DockerStackBundleScript).register("deploy-check", DeployCheckScript).register("preflight", PreflightScript).register("ci-browser-prepare", CiBrowserPrepareScript);
 
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

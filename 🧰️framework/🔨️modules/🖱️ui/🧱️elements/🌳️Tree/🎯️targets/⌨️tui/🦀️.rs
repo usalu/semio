@@ -389,7 +389,7 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
         let (fg, row_bg, mut attrs) = row_style(theme, bg, selected, focused, hovered == Some(item));
         let fg = if path && !selected { theme.role(Role::BorderEmphasized) } else { fg };
         if path && !selected {
-            attrs |= crate::tui::cell::attr::BOLD;
+            attrs |= semio_framework_ui_tui_core::cell::attr::BOLD;
         }
         let line = Rect::new(area.x, y, area.width, 1);
         buf.fill_rect(line, Cell::blank(fg, row_bg));
@@ -397,7 +397,7 @@ pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer
         for (depth, &ancestor) in ancestors.iter().enumerate().take(usize::from(area.width).div_ceil(2)) {
             let emphasized = on_path(ancestor) && hovered != Some(ancestor);
             let guide_fg = theme.role(if emphasized { Role::BorderEmphasized } else { Role::BorderNormal });
-            let guide_attrs = if emphasized { crate::tui::cell::attr::BOLD } else { 0 };
+            let guide_attrs = if emphasized { semio_framework_ui_tui_core::cell::attr::BOLD } else { 0 };
             buf.put_str(Pos { x: area.x + depth as u16 * 2, y }, theme.glyphs.glyph(Glyph::ScrollTrack), guide_fg, row_bg, guide_attrs, line);
         }
         ancestors.push(item);

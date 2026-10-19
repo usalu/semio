@@ -51,7 +51,7 @@ impl MountedState {
     }
 
     fn fail(&mut self, detail: Vec<u8>) -> JobStep {
-        record_terminal(self.identity, if self.cancel.is_cancelled_now() { semio_framework_value::RequestTerminalKind::Cancelled } else { semio_framework_value::RequestTerminalKind::Faulted });
+        record_terminal(self.identity, if self.cancel.is_cancelled_now() { semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled } else { semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Faulted });
         JobStep::Failed(if detail.capacity() <= FAULT_BYTES { detail } else { b"fem3d.visual-fault-capacity".to_vec() })
     }
 

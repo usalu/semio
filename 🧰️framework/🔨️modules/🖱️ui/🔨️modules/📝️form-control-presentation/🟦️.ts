@@ -24,7 +24,7 @@ export const uiFormControlBrowserDefaultProps = {
 } as const;
 // #endregion 🧾️FormControlPresentation
 
-/** @emoji 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
+/** 🚫️ Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
 export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
   if (element.dataset.uiBrowserDefaults === "true") return;
   const kind = element instanceof HTMLInputElement ? (element.type || "text").toLowerCase() : "textarea";

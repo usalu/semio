@@ -18,7 +18,7 @@ impl MutationKind<i64, CounterMutation> for AddUncheckedCounter {
 
 }
 
-impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddUncheckedCounter {
+impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddUncheckedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(1))
     }
@@ -48,9 +48,3 @@ impl OpText for AddUncheckedCounter {
     }
 }
 //#endregion 📜️Text
-
-//#region 🧪️Contract
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Contract

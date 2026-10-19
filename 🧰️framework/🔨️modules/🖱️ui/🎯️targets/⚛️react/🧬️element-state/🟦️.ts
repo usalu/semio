@@ -6,12 +6,12 @@ export interface UiElementStateProps {
   state?: UiState;
   /** @default "idle" */
   status?: UiStatus;
-  /** Authored render-hovered flag; composes with (never replaces) live CSS `:hover`. @default false */
+  /** 🖱️ Authored render-hovered flag; composes with (never replaces) live CSS `:hover`. @default false */
   hover?: boolean;
   selected?: boolean;
 }
 
-/** @emoji 🧭️ Resolves `props` against the shared defaults and returns everything a component needs to
+/** 🧭️ Resolves `props` against the shared defaults and returns everything a component needs to
  * apply the model: whether it must render `null` (`state === "hidden"`), the `data-ui-*` attribute
  * spread for CSS-driven components, and the fill-kind for 3D/canvas components that can't use CSS. */
 export function useElementState(props: UiElementStateProps): {
@@ -24,10 +24,10 @@ export function useElementState(props: UiElementStateProps): {
   return { state, hidden: state.state === "hidden", attrs: elementStateAttributes(state), fillKind: resolveElementFillKind(state) };
 }
 
-/** @emoji 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
+/** 🎉️ Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
 export const CELEBRATE_STAMP_DURATION_MS = 2400;
 
-/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
+/** 🎉️ Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
  * the transient counterpart of an authored `state: "celebrating"`. Unmanaged by React (like the
  * introduction engine's `data-introduced` stamp) so re-renders can't clobber it. Returns a cancel
  * function that un-stamps immediately. */
@@ -41,7 +41,7 @@ export function celebrateElement(target: Element, durationMs = CELEBRATE_STAMP_D
   };
 }
 
-/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
+/** 🎉️ Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
  * then removes it — the selector form of {@link celebrateElement}. Returns a cancel that un-stamps
  * every match immediately. `root` scopes the search (e.g. a shell's own root) — omitted, searches the
  * whole document as before; matters because element ids/aliases are not guaranteed unique across
@@ -51,7 +51,7 @@ export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP
   return () => cancels.forEach((cancel) => cancel());
 }
 
-/** @emoji 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
+/** 🎉️ Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
  * element carrying a valid `data-element-alias`) for `durationMs` — the tour-finale counterpart of
  * {@link celebrateElements}. Skips the introduction chrome itself (`ui.introduction.*`) so the
  * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately.

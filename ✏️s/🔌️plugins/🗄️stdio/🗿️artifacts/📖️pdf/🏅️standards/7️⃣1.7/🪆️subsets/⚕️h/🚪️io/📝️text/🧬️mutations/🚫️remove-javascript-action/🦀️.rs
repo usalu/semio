@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-javascript-action`.
+//! 🆔️ Direct text identity for `remove-javascript-action`.
 
 pub const OPCODE: &str = "remove-javascript-action";
 pub const TEXT_OPCODE: &str = OPCODE;

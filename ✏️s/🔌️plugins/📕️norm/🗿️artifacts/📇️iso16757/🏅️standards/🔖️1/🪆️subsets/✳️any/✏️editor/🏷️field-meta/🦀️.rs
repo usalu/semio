@@ -295,7 +295,6 @@ pub fn iso16757_field_meta(path: &str) -> Option<NormFieldMeta> {
         let templated = if let Some((_key, tail)) = rest.split_once('.') {
             format!("catalogue.compositions.*.{tail}")
         } else if rest.contains('[') {
-            // compositions.{key}[i].field
             let after = rest.split_once(']').map(|(_, t)| t.trim_start_matches('.')).unwrap_or("");
             if after.is_empty() { "catalogue.compositions.*[]".into() } else { format!("catalogue.compositions.*[].{after}") }
         } else {

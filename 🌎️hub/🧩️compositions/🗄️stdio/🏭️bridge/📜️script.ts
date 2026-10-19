@@ -1,9 +1,12 @@
 #!/usr/bin/env bun
-import { join } from "node:path";
-import { runCargo } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
 
-if (import.meta.main) {
-  const [command, artifact, standard, subset, ...surface] = process.argv.slice(2);
-  if (command !== "list-mutations" || !artifact || !standard || !subset || surface.length > 1) throw new Error("list-mutations <artifact> <standard> <subset> [<surface>]");
-  await runCargo(["run", "--quiet", "--offline", "--manifest-path", join(import.meta.dir, "📦️packages/🦀️rust/Cargo.toml"), "--bin", "semio-hub-stdio-mutation-bridge", "--", command, artifact, standard, subset, ...surface], import.meta.dir);
+/** 🚪️ `run` — runs the program of this script. */
+class RunScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
 }
+const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));

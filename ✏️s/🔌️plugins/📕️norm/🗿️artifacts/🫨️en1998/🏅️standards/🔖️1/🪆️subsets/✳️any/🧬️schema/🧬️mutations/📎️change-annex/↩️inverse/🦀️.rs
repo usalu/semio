@@ -1,4 +1,4 @@
-//! Inverse for `change-annex`.
+//! ↩️ Inverse for `change-annex`.
 use crate::change_annex::ChangeAnnex;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

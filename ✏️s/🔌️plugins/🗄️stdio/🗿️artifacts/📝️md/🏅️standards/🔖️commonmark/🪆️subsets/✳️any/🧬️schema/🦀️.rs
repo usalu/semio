@@ -27,19 +27,16 @@ impl Default for MdArtifact {
 
 impl MdArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> MdSnapshot {
         MdSnapshot { schema: self.schema.clone(), blocks: self.blocks.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: MdSnapshot) -> Self {
         Self { schema: snapshot.schema, blocks: snapshot.blocks }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: MdSnapshot) {
         self.schema = snapshot.schema;
         self.blocks = snapshot.blocks;

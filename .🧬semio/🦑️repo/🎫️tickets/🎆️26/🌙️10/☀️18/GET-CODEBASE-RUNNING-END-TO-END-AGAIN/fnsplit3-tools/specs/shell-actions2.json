@@ -1,0 +1,41 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts",
+ "scopeLine": 125,
+ "coreStmtLine": 126,
+ "coreType": "ShellCoreAfterShellUriAndDocuments",
+ "types": {
+  "action": "ShellInputActionV1",
+  "entry": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"inputLedgerRef\"][\"current\"][\"issue\"]>",
+  "primaryActionOwner": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]>",
+  "actionOwner": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]>",
+  "directBrowserActor": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"directBrowserActorForSession\"]>",
+  "dispatchViewState": "NonNullable<ReturnType<typeof hostArmedViewContext>>",
+  "plugin": "ShellCoreAfterShellUriAndDocuments[\"loadedPlugins\"][number][\"handle\"]",
+  "lifecycle": "ActionDispatchLifecycleV1 | undefined",
+  "onAction": "(requested: ShellInputActionV1, submittedOrigin?: ShellDialogOriginV1, propagateFailure?: boolean, lifecycle?: ActionDispatchLifecycleV1, requiredOperationOwner?: ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]>) => Promise<InputOutcomeV1>",
+  "requested": "ShellInputActionV1",
+  "requiredOperationOwner": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]> | undefined",
+  "submittedOrigin": "ShellDialogOriginV1 | undefined"
+ },
+ "files": [
+  {
+   "id": "funnel",
+   "dir": "🧭️input-funnel",
+   "doc": "🧭️ The staged body of the shell input funnel: recovery, shell-intercepted actions, dispatch target resolution and program dispatch.\n *\n 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: the body of the shell input funnel (`onAction`) after its ledger entry is issued, moved verbatim."
+  }
+ ],
+ "items": [
+  {
+   "id": "run",
+   "kind": "range",
+   "line": 182,
+   "to": 409,
+   "returns": true,
+   "terminal": true,
+   "name": "runShellInput",
+   "emoji": "🚦",
+   "doc": "Runs one shell input through the funnel stages and answers its ledger outcome; a throw is mapped by the caller.",
+   "file": "funnel"
+  }
+ ]
+}

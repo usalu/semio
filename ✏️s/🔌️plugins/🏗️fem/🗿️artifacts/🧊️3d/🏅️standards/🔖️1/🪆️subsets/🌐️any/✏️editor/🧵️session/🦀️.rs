@@ -1,14 +1,14 @@
 //! 🧵️ Mounted FEM3D visual publication on the shared bounded-job reactor.
 
-use semio_s_fem_analyses_model::AssemblyCsrBuild;
-use semio_s_fem_analyses_model::AssemblyJob;
-use semio_s_fem_analyses_model::AssemblyJobConstruction;
+use semio_s_fem_analyses_assembly::AssemblyCsrBuild;
+use semio_s_fem_analyses_assembly::AssemblyJob;
+use semio_s_fem_analyses_assembly::AssemblyJobConstruction;
 use semio_s_fem_analyses_model::MountedAnalysisModel;
 use semio_s_fem_analyses_model::MountedAnalysisSupport;
 use semio_s_fem_analyses_model::MOUNTED_ANALYSIS_BACKING_BYTES;
 use crate::elements3d::Tet4;
-use crate::mesh::MeshJob;
-use crate::mesh::MeshOpts;
+use semio_s_fem_mesh::MeshJob;
+use semio_s_fem_mesh::MeshOpts;
 use semio_s_fem_mesh::MountedPlanarDomain;
 use semio_s_fem_model::Bar3;
 use semio_s_fem_model::Dof;
@@ -17,11 +17,11 @@ use semio_s_fem_static::Elements;
 use semio_s_fem_model::Frame3;
 use semio_s_fem_model::Node;
 use crate::sparse::Csr;
-use crate::sparse::LdltJob;
-use crate::sparse::SymmetricPencilConstruction;
+use semio_s_fem_sparse_ldlt::LdltJob;
+use semio_s_fem_sparse::SymmetricPencilConstruction;
 use semio_s_fem_sparse::MountedScalarSlots;
 use semio_s_fem_sparse_pcg::PcgJob;
-use crate::sparse::PcgJobConstruction;
+use semio_s_fem_sparse_pcg::PcgJobConstruction;
 use semio_s_fem_sparse_subspace::SubspaceIterationJob;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;

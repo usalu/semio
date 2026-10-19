@@ -1,4 +1,4 @@
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { type ElementsSurfaceDevice, elementsSurfaceDeviceIsMobile, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches } from "../../../📱️device/🟦️.ts";
 import * as React from "react";
 import { UiMobileProvider, UiMobileContext } from "../../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
@@ -9,7 +9,7 @@ import { type InteractionCommands, InteractionContext, ActiveInteractionContext 
 
 const UiDeviceContext = reactHostPort.createContext<ElementsSurfaceDevice | undefined>(undefined);
 
-/** @emoji 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
+/** 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
  * {@link UiMobileProvider}, used when a shell pins a device from settings instead of measuring one. */
 export const UiDeviceProvider: React.FC<{
   readonly device: ElementsSurfaceDevice;
@@ -21,7 +21,7 @@ export const UiDeviceProvider: React.FC<{
 );
 
 /**
- * @emoji 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
+ * 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
  * measured through the ONE policy `📱️device/🟦️.ts` shares with the wgpu dock.
  *
  * `AGENTS.md` orders the devices desktop → mobile → tablet and the settings surface has always offered
@@ -47,7 +47,7 @@ export function useUiDevice(): ElementsSurfaceDevice {
 // Consumers MUST use these constants for section precedence.
 
 /**
- * Priority enum for section content ownership across apps.
+ * ✂️ Priority enum for section content ownership across apps.
  **/
 export enum SectionSpecificity {
   SKETCHPAD = 0,
@@ -61,7 +61,7 @@ export enum SectionSpecificity {
 
 // #endregion 🔊️Section Specificity
 
-/** @emoji 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
+/** 🔤️ External provider for interaction commands; prefer {@link GhostProvider} at layout root. */
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
   activeInteraction?: string;

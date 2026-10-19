@@ -208,7 +208,8 @@ export interface Taxonomy {
   readonly variationSelectorPolicy: { readonly selector: "\uFE0F"; readonly requiredAfterEmoji: true; readonly comparison: "ignore-selector" };
   readonly collisionPolicy: {
     readonly comparisons: readonly ("byte" | "nfc" | "case-fold" | "vs16-fold" | "same-kind")[];
-    readonly maxPathBytes: number;
+    readonly maxPathUtf16Units: number;
+    readonly maxComponentUtf8Bytes: number;
     readonly rejectWindowsReservedNames: true;
     readonly rejectTrailingDotsAndSpaces: true;
   };

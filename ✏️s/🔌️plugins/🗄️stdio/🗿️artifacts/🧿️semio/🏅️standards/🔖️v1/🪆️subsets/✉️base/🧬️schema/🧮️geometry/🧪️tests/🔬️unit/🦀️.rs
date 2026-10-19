@@ -54,8 +54,6 @@ async fn rgba_and_uv_default_to_zero() {
 
 #[semio_framework_async_macros::async_test]
 async fn point3_and_point2_are_plain_structs_not_tuples() {
-    // 🧪️ Structural proof against the f6 §4.3 bare-tuple `DslField` gap: field ACCESS by
-    // name, not `.0`/`.1` positional tuple indexing.
     let p3 = SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 };
     let p2 = SemioPoint2 { x: p3.x, y: p3.y };
     assert_eq!(p2, SemioPoint2 { x: 1.0, y: 2.0 });

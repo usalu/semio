@@ -336,13 +336,6 @@ pub enum WidgetNode<E> {
         selection_change: Option<E>,
     },
     //#region 🧩️KitCompositeParity
-    // 🧩️ The five `UiNode` kinds this second, smaller paint kit carried NO arm for until ticket
-    // 26/09/17 packet W15a — a panel painted through `render_widget` (scene-embedded chrome, the
-    // standalone `🌳️Tree` target) could not show a progress bar, an image, a nested group, a scene
-    // or an extension slot AT ALL, while the retained `paint_node` ladder painted all five. Each arm
-    // below is the same geometry and the same theme tokens as its retained twin
-    // (`🖌️paint/🦀️.rs`'s `paint_progress`/`UiNode::Image`/`UiNode::Group`/`UiNode::ComponentScene`/
-    // `UiNode::ExternalSlot` arms), so the two kits cannot drift.
     /// 📶️ React's `ProgressView` (`🗣️Interpreter/🟦️.tsx:2098-2118`): a `bg-muted h-tiny w-full`
     /// track with a `bg-accent` fill at `uiProgressFractionV1(completed, total)`, or the centred
     /// one-third busy band when `total` is absent. `completed`/`total` are `UiProgressNode`'s own

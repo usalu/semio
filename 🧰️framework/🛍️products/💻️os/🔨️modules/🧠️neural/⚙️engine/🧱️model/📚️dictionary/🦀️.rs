@@ -180,7 +180,7 @@ impl FromValue for Dictionary {
             }
         }
     }
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let DslValue::Object(entries) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Dictionary")); };
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
             control.begin_stage(entries.len())?;
@@ -194,7 +194,7 @@ impl FromValue for Dictionary {
             Ok(builder.finish())
         }))
     }
-    fn default_value_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn default_value_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| { control.begin_stage(1)?; control.step()?; Ok(Self::new()) })
     }
     fn retire_decoded(self) { self.retire_cold(); }
@@ -268,7 +268,7 @@ impl FromValue for Value {
             other => Ok(Value::Atom(Atom::from_value(other)?)),
         }
     }
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         match value { DslValue::Object(_) => Dictionary::from_value_controlled(value, control).map(Self::Dictionary), _ => Atom::from_value_controlled(value, control).map(Self::Atom) }
     }
     fn retire_decoded(self) { self.retire_cold(); }
@@ -356,7 +356,7 @@ impl FromValue for Atom {
             DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an atom, found an array or object")),
         }
     }
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         match value {
             DslValue::Null => <()>::from_value_controlled(value, control).map(|()| Self::Null),
             DslValue::Bool(_) => bool::from_value_controlled(value, control).map(Self::Boolean),

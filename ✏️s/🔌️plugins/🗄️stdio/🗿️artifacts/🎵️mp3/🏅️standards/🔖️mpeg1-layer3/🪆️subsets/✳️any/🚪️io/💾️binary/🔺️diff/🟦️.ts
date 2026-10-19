@@ -5,6 +5,6 @@ export interface Semio_mp3_diffEntry {
   value: string;
 }
 export interface Semio_mp3_diff {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Semio_mp3_diffEntry[];
+  /** 💾️ @state artifact */ schema: string;
+  /** 🧱️ @state artifact */ entries: Semio_mp3_diffEntry[];
 }

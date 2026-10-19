@@ -645,38 +645,38 @@ export interface MepValue {
 }
 
 export interface ModelInference {
-  /** @derived */
+  /** 🔬️ @derived */
   element_solids: Record<string, ElementSolid>;
-  /** @derived */
+  /** 🪜️ @derived */
   stair_runs: Record<string, StairRun>;
-  /** @derived */
+  /** ♿️ @derived */
   ramp_runs: Record<string, RampRun>;
   families: Record<string, FamilyValue>;
   components: Record<string, ComponentValue>;
   mep: Record<string, MepValue>;
-  /** @derived */
+  /** 🛋️ @derived */
   spaces: Record<string, SpaceRoom>;
-  /** @derived */
+  /** 🧮️ @derived */
   quantities: ModelQuantities;
-  /** @derived */
+  /** 🕳️ @derived */
   opening_frames: Record<string, OpeningFrame>;
-  /** @derived */
+  /** 🏢️ @derived */
   storey_levels: Record<string, StoreyLevel>;
-  /** @derived */
+  /** 🧱️ @derived */
   wall_layout: Record<string, WallLayout>;
-  /** @derived */
+  /** 🎭️ @derived */
   curtain_layout: Record<string, CurtainLayout>;
-  /** @derived */
+  /** 🗓️ @derived */
   plan_linework: Record<string, PlanLinework>;
-  /** @derived */
+  /** 🩺️ @derived */
   diagnostics: Diagnostic[];
-  /** @derived */
+  /** 🛏️ @derived */
   zone_totals: Record<string, ZoneTotals>;
-  /** @derived */
+  /** 🗺️ @derived */
   scheme_totals: Record<string, SchemeTotals>;
-  /** @derived */
+  /** 🔍️ @derived */
   diagnostic_index: DiagnosticIndex;
-  /** @derived */
+  /** 🏷️ @derived */
   effective_properties: Record<string, EffectiveProperties>;
 }
 

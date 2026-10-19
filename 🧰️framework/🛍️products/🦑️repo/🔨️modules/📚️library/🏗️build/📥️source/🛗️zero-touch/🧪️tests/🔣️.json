@@ -1,0 +1,437 @@
+{
+  "version": 1,
+  "packages": {
+    "@scope/lib": {
+      "directory": "pkg/lib",
+      "exports": {
+        ".": "./index.ts",
+        "./sub": {
+          "bun": "./sub/bun.ts",
+          "default": "./sub/default.ts"
+        },
+        "./feature/*": "./features/*/mod.ts",
+        "./package.json": "./package.json"
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "a relative closure with builtins is clean",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import { readFileSync } from \"node:fs\";\nimport { b } from \"./sub/b.ts\";\nimport os from \"os\";\nimport \"bun:test\";\nexport const a = b;\n",
+        "sub/b.ts": "import data from \"../data.json\" with { type: \"json\" };\nexport const b = data;\n",
+        "data.json": "{\"leaf\":true}"
+      },
+      "findings": [],
+      "closureFiles": {
+        "cli": 2
+      }
+    },
+    {
+      "name": "an external package is refused with the capture message",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import ts from \"typescript\";\nexport { ts };\n"
+      },
+      "findings": [
+        "cli|external-package|a.ts|typescript"
+      ],
+      "details": {
+        "cli|external-package|a.ts|typescript": "External implementation runtime dependency refused: typescript"
+      },
+      "closureFiles": {
+        "cli": 1
+      }
+    },
+    {
+      "name": "a scoped external subpath is refused",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import Ajv from \"ajv/dist/2020.js\";\nexport { Ajv };\n"
+      },
+      "findings": [
+        "cli|external-package|a.ts|ajv/dist/2020.js"
+      ],
+      "closureFiles": {
+        "cli": 1
+      }
+    },
+    {
+      "name": "a workspace specifier must be relative and names the owner file",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import { x } from \"@scope/lib\";\nimport { y } from \"@scope/lib/sub\";\nimport { z } from \"@scope/lib/feature/alpha\";\nimport { w } from \"@scope/lib/missing\";\nexport const all = [x, y, z, w];\n"
+      },
+      "findings": [
+        "cli|workspace-specifier|a.ts|@scope/lib",
+        "cli|workspace-specifier|a.ts|@scope/lib/feature/alpha",
+        "cli|workspace-specifier|a.ts|@scope/lib/missing",
+        "cli|workspace-specifier|a.ts|@scope/lib/sub"
+      ],
+      "details": {
+        "cli|workspace-specifier|a.ts|@scope/lib": "Import the owner module by the relative path to pkg/lib/index.ts.",
+        "cli|workspace-specifier|a.ts|@scope/lib/sub": "Import the owner module by the relative path to pkg/lib/sub/bun.ts.",
+        "cli|workspace-specifier|a.ts|@scope/lib/feature/alpha": "Import the owner module by the relative path to pkg/lib/features/alpha/mod.ts.",
+        "cli|workspace-specifier|a.ts|@scope/lib/missing": "Import the owner module by a relative path; no export of the package resolves this specifier."
+      },
+      "closureFiles": {
+        "cli": 1
+      }
+    },
+    {
+      "name": "type-only imports carry no runtime",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import type { A } from \"typescript\";\nimport { type B } from \"@scope/lib\";\nexport type { C } from \"ajv\";\nexport const n = 1 as unknown as A | B;\n"
+      },
+      "findings": [],
+      "closureFiles": {
+        "cli": 1
+      }
+    },
+    {
+      "name": "findings are found transitively through static, dynamic and require edges",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import { b } from \"./b.ts\";\nexport const load = () => import(\"./c.ts\");\nexport const r = require(\"./d.cjs\");\nexport { b };\n",
+        "b.ts": "import \"left-pad\";\n",
+        "c.ts": "export * from \"./e.mjs\";\n",
+        "e.mjs": "import \"chalk\";\n",
+        "d.cjs": "module.exports = require(\"lodash\");\n"
+      },
+      "findings": [
+        "cli|external-package|b.ts|left-pad",
+        "cli|external-package|d.cjs|lodash",
+        "cli|external-package|e.mjs|chalk"
+      ],
+      "closureFiles": {
+        "cli": 5
+      }
+    },
+    {
+      "name": "static mode follows static imports only",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "router",
+            "entry": "a.ts",
+            "mode": "static",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import { b } from \"./b.ts\";\nexport const load = () => import(\"./c.ts\");\nexport const r = require(\"./d.cjs\");\nexport { b };\n",
+        "b.ts": "export const b = 1;\n",
+        "c.ts": "import \"chalk\";\n",
+        "d.cjs": "require(\"lodash\");\n"
+      },
+      "findings": [],
+      "closureFiles": {
+        "router": 2
+      }
+    },
+    {
+      "name": "a seam is cut when loaded dynamically and refused when imported statically",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          },
+          {
+            "id": "other",
+            "entry": "z.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": [
+          {
+            "module": "seam.ts",
+            "reason": "fixture"
+          }
+        ]
+      },
+      "files": {
+        "a.ts": "export const load = () => import(\"./seam.ts\");\n",
+        "z.ts": "import { s } from \"./seam.ts\";\nexport { s };\n",
+        "seam.ts": "import \"typescript\";\nexport const s = 1;\n"
+      },
+      "findings": [
+        "other|seam-static|z.ts|./seam.ts"
+      ],
+      "closureFiles": {
+        "cli": 1,
+        "other": 1
+      }
+    },
+    {
+      "name": "a seam that does not exist is a stale roster",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": [
+          {
+            "module": "gone.ts",
+            "reason": "fixture"
+          }
+        ]
+      },
+      "files": {
+        "a.ts": "export const a = 1;\n"
+      },
+      "findings": [
+        "seams|missing-entry|gone.ts|gone.ts"
+      ],
+      "closureFiles": {
+        "cli": 1
+      }
+    },
+    {
+      "name": "a missing entry is a finding",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "gone.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {},
+      "findings": [
+        "cli|missing-entry|gone.ts|gone.ts"
+      ],
+      "closureFiles": {
+        "cli": 1
+      }
+    },
+    {
+      "name": "import cycles terminate and query suffixes resolve",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "import \"./b.ts?revision=1\";\n",
+        "b.ts": "import \"./a.ts\";\nimport \"jszip\";\n"
+      },
+      "findings": [
+        "cli|external-package|b.ts|jszip"
+      ],
+      "closureFiles": {
+        "cli": 2
+      }
+    },
+    {
+      "name": "non-ASCII and emoji paths resolve",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "📜️script.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "📜️script.ts": "import { b } from \"./🧭️routing/🟦️.ts\";\nexport { b };\n",
+        "🧭️routing/🟦️.ts": "import \"zod\";\nexport const b = 1;\n"
+      },
+      "findings": [
+        "cli|external-package|🧭️routing/🟦️.ts|zod"
+      ],
+      "closureFiles": {
+        "cli": 2
+      }
+    },
+    {
+      "name": "a shebang line is ignored",
+      "roster": {
+        "version": 1,
+        "closures": [
+          {
+            "id": "cli",
+            "entry": "a.ts",
+            "mode": "full",
+            "reason": "fixture"
+          }
+        ],
+        "seams": []
+      },
+      "files": {
+        "a.ts": "#!/usr/bin/env bun\nimport \"yaml\";\n"
+      },
+      "findings": [
+        "cli|external-package|a.ts|yaml"
+      ],
+      "closureFiles": {
+        "cli": 1
+      }
+    }
+  ],
+  "scans": [
+    {
+      "name": "static, dynamic and require kinds",
+      "path": "a.ts",
+      "text": "import a from \"s1\";\nexport { b } from \"s2\";\nexport * from \"s3\";\nimport \"s4\";\nconst d = await import(\"s5\");\nconst r = require(\"s6\");\n",
+      "imports": [
+        [
+          "s1",
+          "static"
+        ],
+        [
+          "s2",
+          "static"
+        ],
+        [
+          "s3",
+          "static"
+        ],
+        [
+          "s4",
+          "static"
+        ],
+        [
+          "s5",
+          "dynamic"
+        ],
+        [
+          "s6",
+          "require"
+        ]
+      ]
+    },
+    {
+      "name": "type-only forms are dropped",
+      "path": "a.ts",
+      "text": "import type { A } from \"t1\";\nimport { type B } from \"t2\";\nexport type { C } from \"t3\";\nimport { type D, e } from \"kept\";\n",
+      "imports": [
+        [
+          "kept",
+          "static"
+        ]
+      ]
+    },
+    {
+      "name": "a javascript module",
+      "path": "a.mjs",
+      "text": "import { createRequire } from \"node:module\";\nconst require = createRequire(import.meta.url);\nconst c = require(\"typescript\");\n",
+      "imports": [
+        [
+          "node:module",
+          "static"
+        ],
+        [
+          "typescript",
+          "require"
+        ]
+      ]
+    },
+    {
+      "name": "a shebang and an emoji specifier",
+      "path": "📜️script.ts",
+      "text": "#!/usr/bin/env bun\nimport { x } from \"./🧭️routing/🟦️.ts\";\n",
+      "imports": [
+        [
+          "./🧭️routing/🟦️.ts",
+          "static"
+        ]
+      ]
+    }
+  ]
+}

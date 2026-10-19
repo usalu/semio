@@ -358,6 +358,7 @@ impl Dashboard {
             SessionStatus::Exited => Status::Failure,
             SessionStatus::Failed => Status::Fault,
             SessionStatus::Interrupted => Status::Warning,
+            SessionStatus::TimedOut => Status::Failure,
         }
     }
 

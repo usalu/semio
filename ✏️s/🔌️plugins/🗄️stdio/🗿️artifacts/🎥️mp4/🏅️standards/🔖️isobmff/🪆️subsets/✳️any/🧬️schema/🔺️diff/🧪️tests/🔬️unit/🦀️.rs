@@ -22,11 +22,9 @@ fn snap(tracks: Vec<Mp4Track>) -> Mp4Snapshot {
 #[test]
 fn absorb_insert_then_remove_before_matches_sequential() {
     let base: Vec<Mp4Sample> = vec![sample(1), sample(2)];
-    // d1: insert `f` at final index 2 -> mid = [s1, s2, f]
     let f = Mp4Sample { data: vec![0xAA], duration: 1, cts_offset: 0, sync: true };
     let mut d1: Mp4SamplesDiff = IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: 2, item: f.clone() }] };
     let mid = apply_indexed(&base, &d1, apply_sample_diff);
-    // d2: remove base index 0 from mid -> after = [s2, f]
     let d2: Mp4SamplesDiff = IndexedDiff { removed: vec![0], modified: vec![], added: vec![] };
     let after = apply_indexed(&mid, &d2, apply_sample_diff);
     let sequential = after.clone();

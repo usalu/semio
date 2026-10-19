@@ -11,8 +11,8 @@ export interface StlTriangle {
 
 /** 📸️ Persisted `stdio.stl` snapshot. */
 export interface StlSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact — the `solid <name>`/`endsolid <name>` header/trailer token. */
+  /** 📐️ @state artifact */ schema: string;
+  /** 🧊️ @state artifact — the `solid <name>`/`endsolid <name>` header/trailer token. */
   solidName: string;
-  /** @state artifact */ triangles: StlTriangle[];
+  /** 🕸️ @state artifact */ triangles: StlTriangle[];
 }

@@ -1,4 +1,4 @@
-//! instance. The 2d twin of puzzle3d's `setSelectableKind` over `objects`/`vortices`/`attractions`.
+//! 🧱️ instance. The 2d twin of puzzle3d's `setSelectableKind` over `objects`/`vortices`/`attractions`.
 //! 🎯️ `set-selectable-kind` command — which `vortex` granularity a pick may even reach, per window
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_window_and_measures_scope, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_HANDLE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE};

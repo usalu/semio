@@ -93,10 +93,10 @@ fn replay_owner_work<M: Clone + super::Mutation<DemoSnapshot> + OpBinary>(store:
 /// inside the ingest adopted — the corpus' expected state, the same revision, log, supersessions and outcomes.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧫️supersede-replay/🔣️.json")).expect("corpus parses");
     let hex = |text: &str| text.as_bytes().chunks(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("ascii hex"), 16).expect("hex pair")).collect::<Vec<u8>>();
     let mut deferred_cases = 0;
     for case in corpus["cases"].as_array().expect("cases") {
@@ -145,7 +145,7 @@ async fn a_deferred_remote_supersession_adopts_what_an_undeferred_one_adopts() {
 /// from the start to the undeferred adoption.
 #[semio_framework_async_macros::async_test]
 async fn cancelling_a_deferred_replay_at_any_step_leaves_the_store_untouched() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..12).map(add).map(|operation| vec![operation])).collect();
@@ -184,7 +184,7 @@ async fn cancelling_a_deferred_replay_at_any_step_leaves_the_store_untouched() {
 /// is the fold of every event either replica holds; a further remote supersession joins the waiting change.
 #[semio_framework_async_macros::async_test]
 async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..8).map(add).map(|operation| vec![operation])).collect();
@@ -215,7 +215,7 @@ async fn a_local_edit_or_a_further_remote_change_restarts_the_deferred_replay() 
 /// naming its live prefix.
 #[semio_framework_async_macros::async_test]
 async fn the_prefix_ring_grows_with_the_square_root_of_the_history() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let edits: Vec<Vec<DemoMutation>> = std::iter::once(vec![set(1)]).chain((1..100).map(|_| vec![add(1)])).collect();
@@ -421,7 +421,7 @@ async fn drive_local(store: &mut ArtifactStore<DemoSnapshot, CountedOp>) -> (usi
 /// store adopts.
 #[semio_framework_async_macros::async_test]
 async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferred_dispatch_adopts() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut deferred = long_history("local-deferred", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
@@ -473,7 +473,7 @@ async fn long_local_history_steps_replay_across_turns_and_adopt_what_an_undeferr
 /// the history before it and restarts its replay, whose adoption folds both.
 #[semio_framework_async_macros::async_test]
 async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_it() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = long_history("local-discard", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
@@ -504,7 +504,7 @@ async fn a_waiting_local_step_is_discarded_with_zero_trace_and_an_edit_restarts_
 /// dispatch answers at once — and nothing of it is recorded.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_finalize_whose_report_blocks_is_refused_with_nothing_recorded() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut deferred = long_history("local-blocked", Some(ReplayTurnBudget::operations(LOCAL_BUDGET)), &mut identity).await;
@@ -538,7 +538,7 @@ fn fold_clock_us() -> Option<u64> {
 /// runtime's own turn deadline ends a turn earlier still; the adoption equals the undeferred dispatch's.
 #[semio_framework_async_macros::async_test]
 async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_cap() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     const WALL_US: u64 = 4_000;
@@ -585,10 +585,10 @@ async fn a_deferred_local_step_yields_on_its_wall_deadline_before_its_operation_
 
 #[semio_framework_async_macros::async_test]
 async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_mutation_limit() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
-    let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
     let count = law["mutationCount"].as_u64().unwrap() as usize;
     let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect(), &mut identity).await;
     let make = || EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), author.log.applied_edit_ids.iter().cloned().collect(), 0, "demo/v1", Default::default(), &author.log.envelope.vcs.edits).unwrap();

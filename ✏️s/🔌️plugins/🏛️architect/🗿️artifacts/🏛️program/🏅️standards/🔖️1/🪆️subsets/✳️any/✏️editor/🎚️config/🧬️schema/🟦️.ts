@@ -1,12 +1,12 @@
 /** 🧬️ ArchitectConfig */
 export interface ArchitectConfig {
-  /** @state config */
+  /** 🔍️ @state config */
   searchQuery: string;
-  /** @state config */
+  /** 🔎️ @state config */
   searchHistoryJson: string;
-  /** @state config */
+  /** 🍃️ @state config */
   lastResultJson: string;
-  /** @state config */
+  /** 🏁️ @state config */
   lastAnalysisJson: string;
 }
 

@@ -4,23 +4,19 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
+import { runFreshComponentCheckScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🧪️ Runs the portable source, staging and actual process lifetime proofs for fresh producers. */
 class FreshComponentCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-fresh-component accepts no arguments");
-    const { createFreshComponentTests } = await import("../../🧪️tests/🆕️fresh-component/🟦️.ts");
-    const { testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 } = createFreshComponentTests(this.invocation);
-    await testFreshComponentSourceEpochV1(this.repoRoot);
-    await testFreshComponentStagingV1(this.repoRoot);
-    await testFreshComponentProcessV1(this.repoRoot);
+    await runFreshComponentCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 /** 🔤️ Runs the TypeScript oracle of the canonical descriptor pack fixture (design §22.19). */
 class CanonicalDescriptorPackCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-canonical-descriptor-pack accepts no arguments");
+    if (segments.length) throw new Error("test-canonical-descriptor-pack accepts no arguments");
     const { canonicalDescriptorPackOracle } = await import("../../🧪️tests/🧪️canonical-descriptor-pack/🟦️.ts");
     console.log(`canonical-descriptor-pack-oracle cases=${canonicalDescriptorPackOracle(this.repoRoot)}`);
   }

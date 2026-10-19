@@ -95,24 +95,12 @@ fn loop_volume_moments(body: &Body, face: FaceId, loop_id: semio_framework_3d_br
     match surface {
         Surface::Plane { .. } if loop_has_only_straight_edges(body, loop_id) => {
             let mut pts = loop_positions(body, loop_id)?;
-            // 🕳️ An inner loop (a hole) is wound OPPOSITE to the outer ring about the surface's natural
-            // normal (`euler::split_face_by_interior_curve`'s convention), and the callers subtract
-            // every inner contribution — so, exactly as the general branch's `ear_clip` normalises its
-            // UV polygon, the ring is walked CCW about the natural normal before the tetra sum, or a
-            // planar hole's contribution came back negated and `vol -= inner` ADDED its area (a
-            // through-pocket in a box read 1 + 0.16·… instead of 1 − 0.16, ticket
-            // 26/09/15/DEV-PROCESS-REACT-E2E).
             if let Some(natural) = surface.normal(0.0, 0.0) {
                 if polygon_area_vector(&pts).dot(natural) < 0.0 {
                     pts.reverse();
                 }
             }
             let (sv, mx, my, mz) = signed_tetra_sum(&pts);
-            // 🐛 FIX: this fast path derives its sign purely from the loop's own vertex winding,
-            // which never encodes `face.flipped` — the general (non-planar) branch below DOES
-            // negate for `flipped` (`quad_triangle_once` flips `cross(du,dv)`), so a flipped
-            // planar face silently got the wrong-signed volume/moment contribution here, breaking
-            // `solid_signed_volume`'s orientation sign for any solid with a flipped planar face.
             if flipped {
                 Ok((-sv, -mx, -my, -mz))
             } else {

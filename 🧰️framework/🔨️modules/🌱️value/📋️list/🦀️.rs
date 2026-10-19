@@ -47,7 +47,7 @@ impl PagedListAllocationError {
 const FANOUT: usize = 16;
 const PAGE_BYTES: usize = 4096;
 
-pub(crate) trait PageAllocation {
+pub trait PageAllocation {
     fn reserve<T>(owner: &mut Vec<T>, slots: usize) -> Result<(), std::collections::TryReserveError>;
 }
 

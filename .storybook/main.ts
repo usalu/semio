@@ -97,7 +97,7 @@ const config: StorybookConfig = {
   core: {
     disableTelemetry: true,
   },
-  /** Storybook 10.4's `changeDetection` builder-agnostic resolver defaults on and crashes (`Cannot read properties of undefined (reading 'buildError')`) against this repo's workspace alias set; keep it off until upstream stabilizes it. */
+  /** 📡️ Storybook 10.4's `changeDetection` builder-agnostic resolver defaults on and crashes (`Cannot read properties of undefined (reading 'buildError')`) against this repo's workspace alias set; keep it off until upstream stabilizes it. */
   features: {
     changeDetection: false,
   },
@@ -108,7 +108,7 @@ const config: StorybookConfig = {
     config.cacheDir = viteCacheDirectory(repoRootPath, { ...process.env, SEMIO_BUILD_MODE: buildMode });
     config.resolve = config.resolve || {};
     // #region 🔖️ResolvePackageExports
-    /** SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */
+    /** ⏪️ SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */
     const previousConditions = config.resolve.conditions ?? [];
     config.resolve.conditions = ["import", "module", "browser", "default", ...previousConditions.filter((c) => !["import", "module", "browser", "default"].includes(c))];
     // #endregion 🔖️ResolvePackageExports

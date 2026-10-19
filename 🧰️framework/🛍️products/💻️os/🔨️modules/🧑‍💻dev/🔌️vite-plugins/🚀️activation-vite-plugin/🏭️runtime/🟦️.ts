@@ -14,7 +14,7 @@ import { STREAM_MUX_BOUNDS_V1, type StreamMuxJobV1, type StreamMuxJsonV1 } from 
 import { REPO_ROOT } from "../../🧭️repo-root/🟦️.ts";
 import { devStreamMuxServer, type DevUpgradeServer } from "../../🔀️stream-mux-server/🟦️.ts";
 
-import type { ActivationComponentSpec, ActivationVitePluginOptions } from "../🟦️.ts";
+import type { ActivationComponentSpec, ActivationVitePluginOptions } from "../🧬️options/🟦️.ts";
 import type { BackboneServerRequest, BackboneServerResponse } from "../../🧱️backbone-vite-plugin/🟦️.ts";
 
 /** 📥️ Filename owned by plugin store installation; inlined so the vite-plugin graph does not pull materialization. */
@@ -89,7 +89,6 @@ export function activateServer(server: ActivationServer, options: ActivationVite
       }
       previous = receipt;
     };
-    // Serve-start owns the boot freshness pass. Skip the duplicate sync walk on first listen.
     if (!server.httpServer?.listening) {
       previous = receipt;
       return;

@@ -9,9 +9,6 @@ fn every_declared_recipe_id_resolves() {
 
 #[test]
 fn encode_decode_round_trips_the_base_document() {
-    // 📌 `base_doc()`'s own item#i1 text node deliberately stores the PRE-ESCAPED source form
-    // (see this file's header) — decode resolves entities, so the round-trip target is the
-    // RESOLVED text, not the literal source string.
     let mut doc = base_doc();
     let bytes = encode_xml(&doc);
     let back = decode_xml(&bytes).expect("decode base document");

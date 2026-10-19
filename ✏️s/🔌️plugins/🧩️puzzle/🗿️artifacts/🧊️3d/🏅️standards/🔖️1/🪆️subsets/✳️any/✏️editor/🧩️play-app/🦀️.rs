@@ -3,6 +3,14 @@
 use super::*;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main;
+use semio_s_artifact_puzzle_3d_editor_panels::artifact;
+use semio_s_artifact_puzzle_3d_editor_panels::catalogue;
+use semio_s_artifact_puzzle_3d_editor_panels::inspection;
+use semio_s_artifact_puzzle_3d_editor_window as window_ownership;
+use semio_s_artifact_puzzle_3d_editor_presence as presence;
+use semio_s_artifact_puzzle_3d_editor_panels::settings as settings_panel;
 
 /// 🧩️ The puzzle-3d play editor: the `ArtifactEditor` the framework mounts as `EditorApp<Puzzle3dPlayApp>`. It holds no
 /// state of its own — every call checks the document instance's [`Puzzle3dSession`] out of the session registry, and
@@ -11,8 +19,8 @@ use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 pub struct Puzzle3dPlayApp;
 
 impl ArtifactEditor for Puzzle3dPlayApp {
-    const DIALECT: Dialect = crate::PUZZLE3D_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = crate::PUZZLE_3D_SCHEMA;
+    const DIALECT: Dialect = semio_s_artifact_puzzle_3d_model::PUZZLE3D_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA;
     type Snapshot = Puzzle3dPlaySnapshot;
     type Mutation = Puzzle3dMutation;
     type Config = Puzzle3dConfig;
@@ -244,7 +252,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// now call this automatically the moment `Puzzle3dPlayApp` is bound to a plugin, exactly like
     /// `🗒️note`'s own `app_schema` override.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::puzzle3d::config::schema::app_schema_descriptor())
+        Some(semio_s_artifact_puzzle_3d_editor_config::schema::app_schema_descriptor())
     }
 
     /// 🚀️ The `default_scene_snapshot()` (Concrete Forest) document, nothing else.
@@ -396,24 +404,24 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_upsert_catalog_rows(&mut catalogs, "vortices", fragment.get("vortexKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "cables", fragment.get("cableKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "attractions", fragment.get("attractionKinds"));
-        let kind_catalogs: Option<crate::Puzzle3dKindCatalogs> = Some(<crate::Puzzle3dKindCatalogs as FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
+        let kind_catalogs: Option<semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs> = Some(<semio_s_artifact_puzzle_3d_model::Puzzle3dKindCatalogs as FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
         let mut operations = Vec::new();
         if kind_catalogs != before.meta.kind_catalogs {
-            operations.push(semio_s_artifact_puzzle_3d_mutations::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(kind_catalogs));
+            operations.push(semio_s_artifact_puzzle_3d_mutations_catalog::replace_kind_catalogs::mutation::replace_kind_catalogs(kind_catalogs));
         }
 
         if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
             let mut rows = before.meta.kind_compatibility.clone();
             for incoming in incoming_compat {
-                let row = <crate::Puzzle3dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let connect = semio_s_artifact_puzzle_3d_mutations::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None);
+                let row = <semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let connect = semio_s_artifact_puzzle_3d_mutations_catalog::connect_kind_compatibility::mutation::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None);
                 match rows.iter().position(|entry| entry.source == row.source && entry.target == row.target) {
                     None => {
                         operations.push(connect);
                         rows.push(row);
                     }
                     Some(index) if rows[index] != row => {
-                        operations.push(semio_s_artifact_puzzle_3d_mutations::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
+                        operations.push(semio_s_artifact_puzzle_3d_mutations_catalog::disconnect_kind_compatibility::mutation::disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
                         operations.push(connect);
                         rows[index] = row;
                     }
@@ -500,10 +508,10 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle3dWindowTransient::default(), Some(view_state));
         with_puzzle3d_app_for(puzzle3d_view_session_key(doc), &runtime, |app| {
-            let wid = view_state.window_id.as_deref().unwrap_or(main::WINDOW_KIND_ID);
+            let wid = view_state.window_id.as_deref().unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = app.scene_for(doc.snapshot, &runtime, Some(view_state), wid);
-            HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
+            HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
         })
     }
 
@@ -562,9 +570,6 @@ impl Puzzle3dPlayApp {
                 sync_precompute_session(&mut precompute, &envelope);
             }
             let precompute = app.precompute.borrow();
-            // 🪣️ What the viewport shows is exactly the document the framework hands in: while a fill run
-            // holds provisional placements, `doc.snapshot` is the tool run overlay (committed ⊕ provisional).
-            // The precompute session and every body render off this ONE decoded scene.
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
             match base_body_key {
                 main::BODY_KEY => {
@@ -574,9 +579,6 @@ impl Puzzle3dPlayApp {
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
                     main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref())
                 }
-                // 🪟️ One `TreeWindows` read per body: the host's open/scroll state for exactly the body
-                // being rendered, so every container stamps its full `total` and materialises only the
-                // rows on screen (📓️design-virtualised-tree.md §5, §8).
                 artifact::BODY_KEY => artifact::render(&envelope.scene_snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact::BODY_KEY)),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue::BODY_KEY)),
                 inspection::BODY_KEY => inspection::render(&envelope, interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection::BODY_KEY)),

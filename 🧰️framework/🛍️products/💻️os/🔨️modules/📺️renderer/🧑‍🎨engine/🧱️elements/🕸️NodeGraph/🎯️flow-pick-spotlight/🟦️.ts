@@ -160,9 +160,7 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
         try {
           const parsed = JSON.parse(flowJsonText(value)) as { readonly x?: number; readonly y?: number };
           setSpotlight({ screen: { x: sx, y: sy }, world: { x: parsed.x ?? world.x, y: parsed.y ?? world.y } });
-        } catch {
-          /* retain projected world */
-        }
+        } catch {}
       });
     },
     [editable, labelStateJson],
@@ -190,9 +188,7 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
         try {
           const parsed = JSON.parse(flowJsonText(value)) as { readonly x?: number; readonly y?: number };
           observeFlowTask(session, "setGhostWidget", session.setGhostWidget(catalogueGhostDescriptorJson(catalogueApp), parsed.x ?? world.x, parsed.y ?? world.y));
-        } catch {
-          /* retain projected world */
-        }
+        } catch {}
       });
       renderFlow();
       paintOverlays();
@@ -220,9 +216,7 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
         try {
           const parsed = JSON.parse(flowJsonText(value)) as { readonly x?: number; readonly y?: number };
           world = { x: parsed.x ?? fallback.x, y: parsed.y ?? fallback.y };
-        } catch {
-          /* retain projected world */
-        }
+        } catch {}
         const catalogueApp = parseCatalogueAppDragPayload(raw);
         if (catalogueApp) {
           dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, x: world.x, y: world.y });
@@ -256,9 +250,6 @@ export function useFlowPickAndSpotlight(core: FlowCoreAfterFlowSessionAttach) {
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
 
-  // 🛍️ The app-static catalogue is installed on its own pass, not with every scene sync: it changes
-  // only when the app instance (or the installed operator extensions) changes, while a scene resyncs on
-  // every fixture edit. See `AppCatalogueContext`.
   useEffect(() => {
     const session = sessionRef.current;
     if (!session || !sessionReady) return;

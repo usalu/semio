@@ -33,17 +33,17 @@ fn sqlite_snapshot_vdi3805_controlled_native_binding_preserves_every_neutral_num
 #[test]
 fn sqlite_snapshot_vdi3805_controlled_attribute_binding_admits_before_owned_copy_and_cancels_inside_entries(){
  use semio_framework_dsl_record::DslField;
- use semio_framework_value::native_decoding::NativeDecodeProgress;
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
  let neutral:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎛️control.json")).unwrap();
  let count=neutral["entityCount"].as_u64().unwrap()as usize;let cancel_at=neutral["cancelAt"].as_u64().unwrap()as usize;let length=neutral["largeTextBytes"].as_u64().unwrap()as usize;
  let attributes=semio_s_artifact_norm_vdi3805_model::SheetAttributes::Generic(semio_s_artifact_norm_vdi3805_model::GenericAttributes{entries:(0..count).map(|n|semio_s_artifact_norm_vdi3805_model::GenericAttribute{key:n.to_string(),value:"世界".into(),unit:None}).collect()});let value=attributes.to_value();
  let mut reached=false;let mut callback=|event:NativeDecodeProgress|{if event.completed>=cancel_at{reached=true;false}else{true}};
- assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
- let mut permit=|_:NativeDecodeProgress|true;let mut limited=semio_framework_value::NativeDecodeControl::new(1024,&mut permit);assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=1024);
+ assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
+ let mut permit=|_:NativeDecodeProgress|true;let mut limited=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024,&mut permit);assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=1024);
  let attributes=semio_s_artifact_norm_vdi3805_model::SheetAttributes::Generic(semio_s_artifact_norm_vdi3805_model::GenericAttributes{entries:vec![semio_s_artifact_norm_vdi3805_model::GenericAttribute{key:String::new(),value:"x".repeat(length),unit:None}]});let value=attributes.to_value();
- let mut limited=semio_framework_value::NativeDecodeControl::new(65536,&mut permit);assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=65536);
+ let mut limited=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut permit);assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut limited).is_err());assert!(limited.owned_bytes()<=65536);
  let mut reached=false;let mut callback=|event:NativeDecodeProgress|{if event.total==length&&event.completed>=65536{reached=true;false}else{true}};
- assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
+ assert!(semio_s_artifact_norm_vdi3805_model::SheetAttributes::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024*1024,&mut callback)).is_err());assert!(reached);
 }
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SnapshotEncoding,SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue}};
 fn fixture()->Vdi3805Snapshot{semio_framework_pack_json::from_json_str(include_str!("🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}

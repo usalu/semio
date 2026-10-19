@@ -5,7 +5,7 @@ import{resolve}from"node:path";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv/dist/2020";
 import{IndexedEnergyResults,RESULT_FIELDS,RESULT_BANDS}from"../🟦️.ts";
-import small from"../🔎️indexed/🧫️fixtures/🔣️.json";
+import small from"../🔎️indexed/🧪️tests/🧫️fixtures/🔣️.json";
 import{PayloadReadView,validatePayloadUpdate,validatePayloadContinuation,type PayloadIndexedSource,type PayloadUpdate}from"../../../../../../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🟦️.ts";
 const energy="✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results";
 const stream="🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream";

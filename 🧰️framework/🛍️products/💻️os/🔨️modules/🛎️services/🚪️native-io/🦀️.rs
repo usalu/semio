@@ -125,8 +125,8 @@ pub enum NativeIoRequest {
 #[derive(Debug)]
 #[expect(clippy::large_enum_variant, reason = "Completions transfer fixed path slots into one-entry retirement without allocating another result owner.")]
 pub enum NativeIoValue {
-    Bytes(semio_framework_job::RetainedJobPayload),
-    Page { bytes: semio_framework_job::RetainedJobPayload, eof: bool },
+    Bytes(semio_framework_job_payload::RetainedJobPayload),
+    Page { bytes: semio_framework_job_payload::RetainedJobPayload, eof: bool },
     Paths(NativePathSet),
     Modified(NativeModifiedSet),
     ResidentBytes(Option<u64>),
@@ -139,7 +139,7 @@ pub struct NativeIoStreamRefusal{pub length:u64,pub maximum_bytes:u64}
 /// 📋️ A result observation borrows only scalar shape while its producer keeps every physical owner.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NativeIoResultStatus{Bytes{length:usize,pages:usize},Page{length:usize,pages:usize,eof:bool},Paths{count:usize},Modified{count:usize},ResidentBytes(Option<u64>),StreamRefused(NativeIoStreamRefusal),Fault}
-fn validate_original_stream_extent(length:u64,cx:&StepContext<'_>)->Result<(),NativeIoStreamRefusal>{let stock=cx.original_total_retained_grant();let page=semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;let capacity=stock.maximum_capacity_bytes.min(stock.maximum_release_bytes).min(semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES);let maximum_bytes=((capacity/page)*page)as u64;if length>maximum_bytes{Err(NativeIoStreamRefusal{length,maximum_bytes})}else{Ok(())}}
+fn validate_original_stream_extent(length:u64,cx:&StepContext<'_>)->Result<(),NativeIoStreamRefusal>{let stock=cx.original_total_retained_grant();let page=semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;let capacity=stock.maximum_capacity_bytes.min(stock.maximum_release_bytes).min(semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES);let maximum_bytes=((capacity/page)*page)as u64;if length>maximum_bytes{Err(NativeIoStreamRefusal{length,maximum_bytes})}else{Ok(())}}
 
 impl NativeIoValue {
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
@@ -176,10 +176,6 @@ impl NativeIoValue {
 
 //#endregion 📂️Schema
 
-#[doc(hidden)] pub fn native_io_close_grant() -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 }
-}
-
 fn native_io_child_demands(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "original native I/O child depth overflow"))?;
     Ok(demand)
@@ -189,11 +185,11 @@ fn native_io_child_demands(mut demand: RetirementDemand) -> Result<RetirementDem
 
 #[doc(hidden)] pub enum NativeIoState {
     Pending(NativeIoRequest),
-    Reading { file: File, writer: semio_framework_job::RetainedJobPayloadWriter },
-    ReadingBuffered { file: File, writer: semio_framework_job::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES], length: usize },
-    ReadingPage { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job::RetainedJobPayloadWriter },
-    ReadingPageBuffered { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES], buffered: usize },
-    ClosingWriterFault { writer: semio_framework_job::RetainedJobPayloadWriter, error: String },
+    Reading { file: File, writer: semio_framework_job_payload::RetainedJobPayloadWriter },
+    ReadingBuffered { file: File, writer: semio_framework_job_payload::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES], length: usize },
+    ReadingPage { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job_payload::RetainedJobPayloadWriter },
+    ReadingPageBuffered { file: File, cursor: u64, length: u64, remaining: usize, writer: semio_framework_job_payload::RetainedJobPayloadWriter, bytes: [u8; semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES], buffered: usize },
+    ClosingWriterFault { writer: semio_framework_job_payload::RetainedJobPayloadWriter, error: String },
     Scanning { entries: ReadDir, paths: NativePathSet, directories_only: bool, first_only: bool },
     ClosingScanFault { paths: NativePathSet, rejected: Option<PathBuf>, error: String },
     ReadingModified { paths: NativePathSet, modified: NativeModifiedSet },
@@ -212,10 +208,10 @@ pub struct NativeIoJob {
     retired_path: Option<PathBuf>,
     #[doc(hidden)] pub result: Option<Result<NativeIoValue, String>>,
     closing: bool,
-    fault_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+    fault_writer: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
     fault_cursor: usize,
     fault_complete: bool,
-    fault_detail: Option<semio_framework_job::RetainedJobPayload>,
+    fault_detail: Option<semio_framework_job_payload::RetainedJobPayload>,
 }
 
 impl NativeIoJob {
@@ -295,7 +291,7 @@ impl NativeIoJob {
     /// 🔁️ A fully acknowledged and retired page reuses its exact path under the same incoming caller.
     pub fn restart_read_page(&mut self,offset:u64,max_bytes:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if self.closing||!matches!(self.state,NativeIoState::Finished)||self.result.is_some()||self.fault_writer.is_some()||self.fault_detail.is_some()||self.request_path.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native page restart requires its retained path and retired original result").into())}
-        if max_bytes==0||max_bytes>semio_framework_job::JOB_PAYLOAD_PAGE_BYTES{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native page restart exceeds the actual one-page bound").into())}
+        if max_bytes==0||max_bytes>semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native page restart exceeds the actual one-page bound").into())}
         let copy_bytes=size_of::<Option<PathBuf>>()+size_of::<u64>()+size_of::<usize>()+2*size_of::<usize>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<copy_bytes||grant.maximum_depth==0{return Ok(false)}
         cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()})?;let path=self.request_path.take().unwrap();self.state=NativeIoState::Pending(NativeIoRequest::ReadPage{path,offset,max_bytes});cx.consume_fuel(1);Ok(true)
     }
@@ -310,10 +306,10 @@ impl NativeIoJob {
             Some(Err(error))=>{
                 if self.fault_detail.is_none(){
                     if !self.fault_complete{
-                        let writer=self.fault_writer.get_or_insert_with(||semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::Fault));
-                        match writer.write_slice_page(cx,error.as_bytes(),&mut self.fault_cursor){Ok(complete)=>self.fault_complete=complete,Err(semio_framework_job::JobPayloadAdmissionFault::OpportunityExhausted)=>{},Err(_)=>return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native I/O fault payload exceeded received authority"))};return Ok(None);
+                        let writer=self.fault_writer.get_or_insert_with(||semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::Fault));
+                        match writer.write_slice_page(cx,error.as_bytes(),&mut self.fault_cursor){Ok(complete)=>self.fault_complete=complete,Err(semio_framework_job_payload::JobPayloadAdmissionFault::OpportunityExhausted)=>{},Err(_)=>return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native I/O fault payload exceeded received authority"))};return Ok(None);
                     }
-                    let copied_bytes=size_of::<semio_framework_job::RetainedJobPayloadWriter>()+size_of::<semio_framework_job::RetainedJobPayload>();let grant=cx.retained_grant();
+                    let copied_bytes=size_of::<semio_framework_job_payload::RetainedJobPayloadWriter>()+size_of::<semio_framework_job_payload::RetainedJobPayload>();let grant=cx.retained_grant();
                     if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}
                     let original=self.fault_writer.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O fault writer absent"))?;
                     match original.finish(){Ok(detail)=>self.fault_detail=Some(detail),Err(original)=>{self.fault_writer=Some(original);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O fault payload unfinished"))}}
@@ -335,7 +331,7 @@ impl NativeIoJob {
                     let length=match file.metadata(){Ok(metadata)=>metadata.len(),Err(error)=>return self.finish(Err(format!("{}: {error}",path.display())),cx)};
                     self.known_file_length=Some(length);
                     if let Err(refusal)=validate_original_stream_extent(length,cx){return self.finish(Ok(NativeIoValue::StreamRefused(refusal)),cx)}
-                    self.state = NativeIoState::Reading { file, writer: semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput) };
+                    self.state = NativeIoState::Reading { file, writer: semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput) };
                     Ok(None)
                 }
                 Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
@@ -344,7 +340,7 @@ impl NativeIoJob {
             NativeIoRequest::ReadPage { path, offset, max_bytes } => {
                 self.request_path = Some(path);
                 let path = self.request_path.as_ref().expect("retained original native page path");
-                if max_bytes == 0 || max_bytes > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
+                if max_bytes == 0 || max_bytes > semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES {
                     return self.finish(Err("native I/O page exceeded the mounted one-page output authority".into()), cx);
                 }
                 match File::open(path) {
@@ -361,7 +357,7 @@ impl NativeIoJob {
                         if let Err(error) = file.seek(std::io::SeekFrom::Start(offset)) {
                             return self.finish(Err(format!("{}: {error}", path.display())), cx);
                         }
-                        self.state = NativeIoState::ReadingPage { file, cursor: offset, length, remaining: max_bytes, writer: semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput) };
+                        self.state = NativeIoState::ReadingPage { file, cursor: offset, length, remaining: max_bytes, writer: semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput) };
                         Ok(None)
                     }
                     Err(error) => self.finish(Err(format!("{}: {error}", path.display())), cx),
@@ -399,7 +395,7 @@ impl NativeIoJob{
         match std::mem::replace(&mut self.state, NativeIoState::Finished) {
             NativeIoState::Pending(request) => self.start(request, cx),
             NativeIoState::Reading { mut file, writer } => {
-                let mut chunk = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
+                let mut chunk = [0u8; semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES];
                 match file.read(&mut chunk) {
                     Ok(0) => match writer.finish() {
                         Ok(bytes) => self.finish(Ok(NativeIoValue::Bytes(bytes)), cx),
@@ -426,7 +422,7 @@ impl NativeIoJob{
                 let mut cursor = 0;
                 match writer.write_slice_page(cx, &bytes[..length], &mut cursor) {
                     Ok(true) => self.state = NativeIoState::Reading { file, writer },
-                    Ok(false) | Err(semio_framework_job::JobPayloadAdmissionFault::OpportunityExhausted) => {
+                    Ok(false) | Err(semio_framework_job_payload::JobPayloadAdmissionFault::OpportunityExhausted) => {
                         self.state = NativeIoState::ReadingBuffered { file, writer, bytes, length };
                     }
                     Err(_) => self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O byte output exceeded retained page credits".into() },
@@ -443,8 +439,8 @@ impl NativeIoJob{
                         }
                     };
                 }
-                let readable = remaining.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).min(usize::try_from(length - cursor).unwrap_or(usize::MAX));
-                let mut chunk = [0u8; semio_framework_job::JOB_PAYLOAD_PAGE_BYTES];
+                let readable = remaining.min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).min(usize::try_from(length - cursor).unwrap_or(usize::MAX));
+                let mut chunk = [0u8; semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES];
                 match file.read(&mut chunk[..readable]) {
                     Ok(0) => match writer.finish() {
                         Ok(bytes) => self.finish(Ok(NativeIoValue::Page { bytes, eof: true }), cx),
@@ -469,7 +465,7 @@ impl NativeIoJob{
                     Ok(true) => {
                         self.state = NativeIoState::ReadingPage { file, cursor: cursor.saturating_add(buffered as u64), length, remaining: remaining - buffered, writer };
                     }
-                    Ok(false) | Err(semio_framework_job::JobPayloadAdmissionFault::OpportunityExhausted) => {
+                    Ok(false) | Err(semio_framework_job_payload::JobPayloadAdmissionFault::OpportunityExhausted) => {
                         self.state = NativeIoState::ReadingPageBuffered { file, cursor, length, remaining, writer, bytes, buffered };
                     }
                     Err(_) => self.state = NativeIoState::ClosingWriterFault { writer, error: "native I/O page output exceeded retained page credits".into() },

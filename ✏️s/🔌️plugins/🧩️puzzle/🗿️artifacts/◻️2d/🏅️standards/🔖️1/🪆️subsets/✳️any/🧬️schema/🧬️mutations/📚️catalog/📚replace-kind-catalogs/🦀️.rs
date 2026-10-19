@@ -1,4 +1,4 @@
-//! kind-catalog bundle (`nodes`/`🐙️handles`/`edges`/`wires` catalogs together, one manifest-import
+//! 📇️ kind-catalog bundle (`nodes`/`🐙️handles`/`edges`/`wires` catalogs together, one manifest-import
 //! 📚 Puzzle2d mutation — `ReplaceKindCatalogs`: whole-value swap of the snapshot-carried typed
 //! gesture).
 

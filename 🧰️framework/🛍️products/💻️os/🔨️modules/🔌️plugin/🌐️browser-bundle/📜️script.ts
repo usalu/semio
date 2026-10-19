@@ -15,7 +15,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
-import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
+import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts";
 
@@ -396,7 +396,7 @@ function observedBrowserCodegenPolicy(executable:{sha256:string;byteLength:numbe
 
 /** 🔬️ Verifies surviving original compiler/policy evidence against the complete current factory-owned input roster. */
 export async function verifyBrowserActorProducerInputsV1(observation:BrowserActorProducerInputsV1,invocation:ScriptInvocation,phase:CompilerAdmissionControl,control:BrowserActorBuildControl={}):Promise<Readonly<{inputs:readonly BrowserActorPhysicalInputV1[];importInterfaces:readonly string[]}>>{
-  requireIssuedResourceControlInvocationV1(phase,invocation);const check=()=>{phase.signal.throwIfAborted();if(control.cancelled?.())throw Error("browser actor producer: cancelled");},denied=():never=>{throw Error("browser actor producer: original input evidence differs from current owned factory");};
+  requireIssuedResourceControlInvocationV1(phase,invocation);const check=()=>{phase.signal.throwIfAborted();if(control.cancelled?.())throw new Error("browser actor producer: cancelled");},denied=():never=>{throw new Error("browser actor producer: original input evidence differs from current owned factory");};
   check();const [admit,admitPolicy]=await Promise.all([browserBundleValidator("BrowserActorProducerInputsV1"),browserBundleValidator("CodegenPolicyV1")]);if(!admit(observation))denied();
   const originalPolicy=JSON.parse(observation.policyCanonical);if(!admitPolicy(originalPolicy)||canonicalJson(originalPolicy)!==observation.policyCanonical||createHash("sha256").update(observation.policyCanonical).digest("hex")!==observation.policySha256)denied();
   const executable=exactExecutableFingerprint(realpathSync(process.execPath),{cancelled:control.cancelled,progress:(completed,total)=>control.progress?.("policy",completed,total)});if(canonicalJson(executable)!==canonicalJson(observation.runtime))denied();
@@ -701,8 +701,8 @@ export async function activate(identity, port, control = {}) {
 }
 `;
   if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled");
-  const result = await ownedBrowserBundleWorker({ version: 1, kind: "actor", mode: readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode, contents, runtime: { host: new TextDecoder().decode(runtime.get("host")!.bytes), wasi: new TextDecoder().decode(runtime.get("wasi")!.bytes) } }, () => { if (control.cancelled?.()) throw Error("browser actor bundle: cancelled"); }, invocation,compiler);
-  if (result.loadedRuntime !== 2) throw Error("browser actor bundle: runtime snapshot coverage");
+  const result = await ownedBrowserBundleWorker({ version: 1, kind: "actor", mode: readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode, contents, runtime: { host: new TextDecoder().decode(runtime.get("host")!.bytes), wasi: new TextDecoder().decode(runtime.get("wasi")!.bytes) } }, () => { if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled"); }, invocation,compiler);
+  if (result.loadedRuntime !== 2) throw new Error("browser actor bundle: runtime snapshot coverage");
   const output = result.source;
   const parsed = ts.createSourceFile("actor.js", output, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   if ((parsed as unknown as { parseDiagnostics: unknown[] }).parseDiagnostics.length) throw new Error("browser actor bundle: invalid output");

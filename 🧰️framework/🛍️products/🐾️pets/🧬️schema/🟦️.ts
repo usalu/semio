@@ -93,8 +93,8 @@ export const DRIFTS = ["fall", "rise", "burst", "orbit", "drift"] as const;
 /** 🍃️ One of {@link DRIFTS}. */
 export type Drift = (typeof DRIFTS)[number];
 
-/** 🎮️ What a learner can ask of a pet without a pointer: a hello, a trick, petting it or tossing it. */
-export const DEEDS = ["hello", "trick", "pet", "toss"] as const;
+/** 🎮️ What a learner can ask of a free pet without a pointer: a hello, a click trick, petting, tossing or an explicit hand gesture. */
+export const DEEDS = ["hello", "trick", "pet", "toss", "circle", "countercircle", "stroke", "shake"] as const;
 
 /** 🕹️ One of {@link DEEDS}. */
 export type Deed = (typeof DEEDS)[number];

@@ -52,7 +52,6 @@ runBenchWebBudgets(${JSON.stringify({ pluginIds, firstPluginExtensionIds, shardC
   .then((rows) => { window.__BENCH_WEB__.rows = rows; window.__BENCH_WEB__.done = true; })
   .catch((error) => { window.__BENCH_WEB__.error = String((error && error.stack) || error); window.__BENCH_WEB__.done = true; });
 </script></body></html>`;
-  // 🎭️ Matches `StudioE2eScript`'s own install location note above — same repo-scoped Playwright cache.
   process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(repoRoot, "tools", "ms-playwright");
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });

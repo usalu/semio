@@ -14,7 +14,7 @@ import { FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanv
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🧱️mesh-parsing-and-residency/🟦️.ts";
 import { sceneMeshKindsFixture as sceneMeshKindFixture } from "@semio-tech/framework-mesh-engine-rs/testing/fixtures";
 import { buildContractNode, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
-import { surfaceHostRetentionFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { surfaceHostRetentionFixture } from "@semio-tech/framework/ui/testing/fixtures";
 
 //#region 🥽️SceneMeshKindReferences
 /** 🥽️ The local-space bounding box a resolved kind occupies — the ONE property the fixture pins across
@@ -62,10 +62,7 @@ describe("node-graph surface sizing", () => {
   it("adopts its container's size on mount without any animation frame", () => {
     const container = new DOMRect(0, 0, 966, 836);
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(container);
-    // 🙈️ A hidden/background tab never runs a frame callback — the regression this guards is a canvas
-    // that only ever reached its real size from inside one (`📓️runtime-verification-2026-09-09.md` #3).
     const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
-    // The wasm surface never settles here either, so nothing but the container observer can size these.
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockReturnValue(new Promise(() => {}));
     vi.stubGlobal("devicePixelRatio", 2);
     const view = render(
@@ -157,8 +154,6 @@ function recordingCanvasContext(operations: string[]): CanvasRenderingContext2D 
 describe("node-graph surface attachment in a hidden tab", () => {
   it("attaches, feeds the scene and draws without any animation frame", async () => {
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
-    // 🙈️ The exact boot condition of `📓️runtime-verification-2026-09-09.md` #4: a hidden tab, so no frame
-    // callback ever runs, on a host with no `navigator.gpu` at all (jsdom ships none).
     const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
     const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
     const painted = new Map<HTMLCanvasElement, string[]>();
@@ -195,12 +190,8 @@ describe("node-graph surface attachment in a hidden tab", () => {
       await waitFor(() => {
         for (const canvas of canvases) expect((painted.get(canvas) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true);
       });
-      // 📏️ A frame that carries no size of its own must not collapse the store the host measured.
       for (const canvas of canvases) expect([canvas.width, canvas.height]).toEqual([966, 836]);
       expect(painted.get(canvases[0]!)).toContain("clearRect(0,0,966,836)");
-      // 🚫️ The placeholder this replaced drew one `fillRect(x-60,y-24,120,48)` per widget at RAW
-      // world coordinates, in the 2D default black because it never set a fill style. A frame that
-      // carries no draw list must now paint nothing at all rather than invent a picture.
       expect((painted.get(canvases[0]!) ?? []).filter((operation) => operation.startsWith("fillRect("))).toEqual([]);
       expect(frame).not.toHaveBeenCalled();
     } finally {
@@ -216,12 +207,6 @@ describe("node-graph surface attachment in a hidden tab", () => {
   });
 
   it("replaces a canvas that can no longer give a 2D context and re-attaches its surface to the successor", async () => {
-    // 🚨️ The live defect this pins: `wgpu` binds a `webgpu` context to the element before it finds
-    // out there is no adapter, and a canvas admits exactly one context kind for its whole life — so
-    // the frame correctly falls back to `present: "2d"` onto an element that can never give a 2D
-    // context, and the graph stays blank forever with nothing in the console. A frame that reports
-    // `unpresentable` must retire that element and let the presentation be decided again for a new
-    // one. Measured on 6018 before this: canvas 0 `not-2d`, 0 ink pixels, every frame.
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 966, 836));
     const frame = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 0);
     const painted = new Map<HTMLCanvasElement, string[]>();
@@ -233,9 +218,6 @@ describe("node-graph surface attachment in a hidden tab", () => {
       return recordingCanvasContext(operations);
     } as unknown as HTMLCanvasElement["getContext"]);
     const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
-    // 🖥️ The surface must really be presenting on the GPU, because only a canvas that was handed to
-    // the WebGPU presenter can be poisoned — a host that never had a device is a host with no 2D
-    // canvas either, and replacing its element would remount forever.
     let boundToTheGpuPresenter = 0;
     const runtime = await createFlowBrowserRuntime({
       source: bridge.exports,
@@ -267,13 +249,9 @@ describe("node-graph surface attachment in a hidden tab", () => {
       const successor = view.container.querySelectorAll("canvas")[0]!;
       expect(successor).not.toBe(first);
       expect(view.container.querySelectorAll("canvas").length).toBe(2);
-      // ⏳️ The successor's backing store is sized by its own layout effect, which runs after the
-      // attach this test waited on — reading it in the same tick catches the jsdom default 300x150.
       await waitFor(() => expect([successor.width, successor.height]).toEqual([966, 836]));
       await waitFor(() => expect((painted.get(successor) ?? []).some((operation) => operation.startsWith("clearRect("))).toBe(true));
       expect(painted.has(first)).toBe(false);
-      // 🔚️ Exactly one successor: it re-attaches without a device, so it stays 2D-capable and the
-      // host never asks for another. A replacement loop is the failure mode this bound rules out.
       await new Promise((settle) => setTimeout(settle, 50));
       expect(view.container.querySelectorAll("canvas")[0]).toBe(successor);
       expect(attaches()).toBe(2);
@@ -325,8 +303,6 @@ describe("node-graph surface attachment in a hidden tab", () => {
       await waitFor(() => expect(bridge.operations).toContain(flowAbi.operations.attachSurface));
       for (let index = 1; index < retention.refreshes.length; index += 1) {
         const refresh = retention.refreshes[index]!;
-        // 🪪️ `controllerId` is the DFS-minted record id, and it MOVES with the body (29 → 33 on the
-        // measured refresh). A host that re-attached on it would fail here and nowhere else.
         view.rerender(
           createElement(FlowGraphCanvasHost, {
             scene: sceneFor(refresh.statusJson),
@@ -470,8 +446,6 @@ describe("built-node store reloads", () => {
       view.rerender(createElement(deferred, { node: contractNode("second") }));
       expect(view.container.textContent).toContain("second");
       expect(renderPhaseUpdates()).toEqual([]);
-      // 🧪️ Control: the pre-fix shape (a `loadSnapshot` in the render body of a store that already has
-      // mounted subscribers) is exactly what React reports as a cross-component render-phase update.
       const control = render(createElement(eager, { node: contractNode("first") }));
       control.rerender(createElement(eager, { node: contractNode("second") }));
       expect(renderPhaseUpdates().length).toBeGreaterThan(0);
@@ -514,11 +488,6 @@ test("world3d rectangle marquee draws a rectangle and pick draws nothing", () =>
 });
 
 test("InterpretedUiNode hands every surface host the shell's plugin context-menu resolver", () => {
-  // 🖱️ No `<InterpretedUiNode>` call site passes `requestContextMenu` as a prop — ShellHost publishes it
-  // through `PluginSurfaceActionsContext` instead — so until wave B11 every `ComponentSceneHost` saw
-  // `undefined` and `openSurfaceContextMenu` was unreachable in the React renderer: a right-click on a
-  // world/board/canvas surface could only ever produce ShellHost's window-level fallback menu. This is a
-  // source law because the wiring is one `??` that no render test would notice going missing again.
   const body = String((InterpretedUiNode as unknown as { readonly type: (...args: never[]) => unknown }).type);
   expect(body).toContain("usePluginSurfaceActions");
   expect(body).toMatch(/requestContextMenu:\s*requestContextMenu\s*\?\?/);

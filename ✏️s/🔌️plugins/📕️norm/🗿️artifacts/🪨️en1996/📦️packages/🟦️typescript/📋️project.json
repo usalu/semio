@@ -13,7 +13,7 @@
       },
       "cache": true,
       "inputs": ["production", "^production"],
-      "outputs": ["{projectRoot}/dist"]
+      "outputs": ["{projectRoot}/.🧾️store/build.json"]
     },
     "check": {
       "executor": "repo:script",

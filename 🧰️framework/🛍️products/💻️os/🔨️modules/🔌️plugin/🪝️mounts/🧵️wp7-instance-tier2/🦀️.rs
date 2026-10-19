@@ -6,6 +6,10 @@
 //#region 🏛️OwnershipFacet
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use semio_framework_plugin_testing_acceptance::ui_action_laws as ui_action_laws;
+/// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
+pub use semio_framework_plugin_decl_app::bounded_first_step_tool_proofs;
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub use semio_framework_plugin_testing_acceptance::{composed_child_history_law, composed_reload_law, history_edit_acceptance_law};
 //#endregion 🏛️OwnershipFacet
 //#region 📄️DeclarationFixtureMutationMount
 
@@ -13,8 +17,6 @@ pub use semio_framework_plugin_testing_acceptance::ui_action_laws as ui_action_l
 //#region 🏛️OwnershipFacet
 #[cfg(test)]
 pub(crate) use semio_framework_plugin_testing_fixtures_publication::publication_fixture as publication_fixture;
-#[cfg(test)]
-pub(crate) use semio_framework_plugin_testing_fixtures_publication::window_transient_owners as window_transient_owners;
 #[cfg(test)]
 pub(crate) use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture as test_app_mutation_fixture;
 #[cfg(test)]

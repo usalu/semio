@@ -21,3 +21,8 @@ semio-framework-value-derive = { workspace = true }
 semio-s-plugin-energy-engine-props = { workspace = true }
 semio-s-plugin-energy-engine-units = { workspace = true }
 serde = { workspace = true }
+semio-s-plugin-energy-engine-calendar = { workspace = true }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

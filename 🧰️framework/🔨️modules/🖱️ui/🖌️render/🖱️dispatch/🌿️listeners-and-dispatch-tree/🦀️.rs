@@ -35,7 +35,6 @@ impl ListenerSet {
         })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn binding_for(&self, trigger: Trigger) -> Option<&ActionBinding> {
         self.bindings.iter().find(|binding| binding.trigger == trigger)
     }
@@ -77,7 +76,6 @@ pub struct DispatchTree {
 }
 
 impl DispatchTree {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(revision: UiRevision) -> Self {
         Self { nodes: Vec::new(), children: Vec::new(), hitboxes: Vec::new(), root: None, revision, index: HashMap::new() }
     }
@@ -86,7 +84,6 @@ impl DispatchTree {
     /// present, is folded into `flags` automatically so a caller never has to state the same fact
     /// twice. `parent: None` makes this node the tree's root (last such call wins — real callers build
     /// exactly one root).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn insert(&mut self, parent: Option<FrameNodeId>, element: ElementId, mut flags: DispatchFlags, listeners: ListenerSet, hitbox: Option<Hitbox>) -> FrameNodeId {
         let id = FrameNodeId(self.nodes.len() as u32);
         let hitbox_id = hitbox.map(|hitbox| {
@@ -111,32 +108,26 @@ impl DispatchTree {
         id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn node(&self, id: FrameNodeId) -> Option<&DispatchNode> {
         self.nodes.get(id.0 as usize)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn children(&self, id: FrameNodeId) -> &[FrameNodeId] {
         self.children.get(id.0 as usize).map_or(&[], Vec::as_slice)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn element_node(&self, element: ElementId) -> Option<FrameNodeId> {
         self.index.get(&element).copied()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn bounds(&self, hitbox: HitboxId) -> Bounds {
         self.hitboxes[hitbox.0 as usize].bounds
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn root(&self) -> Option<FrameNodeId> {
         self.root
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn revision(&self) -> UiRevision {
         self.revision
     }
@@ -146,7 +137,6 @@ impl DispatchTree {
     /// now lives in [`DispatchNode::parent`]/[`Self::children`] instead. Index order matches
     /// [`HitboxId`] (`self.bounds`'s own indexing), never insertion-into-`nodes` order for a node
     /// without a hitbox.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn hitboxes(&self) -> &[Hitbox] {
         &self.hitboxes
     }

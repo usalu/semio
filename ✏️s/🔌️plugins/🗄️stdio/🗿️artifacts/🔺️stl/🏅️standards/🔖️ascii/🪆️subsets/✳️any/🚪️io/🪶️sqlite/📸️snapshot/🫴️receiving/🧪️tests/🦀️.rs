@@ -9,7 +9,8 @@ use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
 #[global_allocator]
 static ORIGINAL_RECEIVING_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use crate::standards::v_ascii::subsets::any::io::sqlite::snapshot::*;
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn grants()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🎟️grants.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(value.clone()).unwrap()}
@@ -24,7 +25,7 @@ macro_rules! original{
   }
  };
 }
-original!(decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,SqliteDatabase);
+original!(decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,SqliteDatabase);
 original!(encode,NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,StlSnapshot);
 #[test]
 fn stl_original_receiving_complete_fixed_scalars_and_indexes_conserve_actual_original_backing(){
@@ -46,10 +47,10 @@ fn stl_original_receiving_sql_cancellation_retains_exact_cause_and_same_original
    let blocked=Cell::new(false);let canceled=Cell::new(false);let mut callback=|_|!blocked.get();let mut recipient=<$recipient>::new();let mut native=$native::new(16777216,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut sql_callback=|event:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{let cut=event.total==bytes&&event.completed>=65536&&event.completed<event.total;canceled.set(canceled.get()||cut);!cut};let mut sql=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let before=sql.allocation_remaining_bytes();let mut owner=store::$owner::new(&mut native,incoming);let(result,heap)=observe(||($call)(&mut sql,&mut owner));let receipt=owner.progress();let error=result.unwrap_err();assert!(canceled.get());assert_eq!(error.kind,ValueRefusalKind::Canceled);assert_eq!(error.message,"relational SQLite transfer cancelled");assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));assert_eq!(error.retained_progress(),receipt);assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));drop(owner);assert_eq!(before-sql.allocation_remaining_bytes(),native.owned_bytes());assert!(native.has_retirement_owner());let(mut born,mut freed)=(heap.requested_bytes,heap.released_bytes);let(step,heap)=observe(||native.close_retirement_recipient(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));blocked.set(true);let(step,heap)=observe(||native.close_retirement_recipient(closing));assert_eq!(step.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(native.has_retirement_owner());blocked.set(false);for _ in 0..4096{if !native.has_retirement_owner(){break}let(step,heap)=observe(||native.close_retirement_recipient(closing).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}assert!(!native.has_retirement_owner());assert_eq!(born,freed);
   }};
  }
- direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
+ direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>|StlSnapshot::from_sqlite_database_receiving(&input,sql,owner));
 }
-original!(validate_decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,());
+original!(validate_decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,());
 original!(validate_encode,NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,());
 #[test]
 fn stl_original_receiving_directional_validation_preserves_exact_dialect_and_document_policy(){
@@ -62,7 +63,7 @@ fn stl_original_receiving_directional_validation_preserves_exact_dialect_and_doc
 fn stl_original_receiving_original_native_and_sql_capacity_ceilings_refuse_before_birth(){
  let law=grants();let policy=grant(&law["body"]);let original=input(false);let source=StlSnapshot{schema:"original".into(),solid_name:"name".into(),triangles:vec![StlTriangle::default()]};
  macro_rules! direction{($native:ident,$owner:ident,$recipient:path,$call:expr)=>{{for(native_maximum,sql_maximum)in[(0,16777216),(16777216,0)]{let mut callback=|_|true;let mut recipient=<$recipient>::new();let mut native=$native::new(native_maximum,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut sql=SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits{max_allocation_bytes:sql_maximum,..Default::default()});let mut owner=store::$owner::new(&mut native,policy);let(result,heap)=observe(||($call)(&mut sql,&mut owner));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.progress(),RetainedCloneProgress::default());drop(owner);assert_eq!(native.owned_bytes(),0);assert!(!native.has_retirement_owner());}}};}
- direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
+ direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>|StlSnapshot::from_sqlite_database_receiving(&original,sql,owner));
 }
 #[test]

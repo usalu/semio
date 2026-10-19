@@ -24,9 +24,9 @@ export interface PptxSlide { shapes: PptxShape[] }
 export interface PptxPresentation { slides: PptxSlide[] }
 /** 🧬️ Complete lossless PPTX snapshot. */
 export interface PptxSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ opc: OpcPackage;
-  /** @state artifact */ xmlParts: PptxXmlPart[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 📦️ @state artifact */ opc: OpcPackage;
+  /** 🧾️ @state artifact */ xmlParts: PptxXmlPart[];
 }
 
 /** 🚪️ A precise position and reason for refusing a malformed PPTX snapshot. */

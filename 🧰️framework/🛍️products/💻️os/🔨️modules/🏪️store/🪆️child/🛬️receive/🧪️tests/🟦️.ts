@@ -23,7 +23,7 @@ test("persisted child identity keeps every exact target independently of local m
     }
   } finally { db.close(); }
   const source = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
-  expect(source).toContain("self.header.advance(original,control,grant)");
+  expect(source).toContain("self.header.advance(original,control,body,grant)");
   expect(source).toContain("self.header.close_step(grant)");
   expect(source).toContain("ArtifactChild::new(header.child_id,header.target)");
   expect(source).not.toContain("FromValue");

@@ -39,7 +39,6 @@ async fn definition_declares_a_world3d_window() {
     assert_eq!(def.body_key, BODY_KEY);
     assert_eq!(def.body_key, "energy.model.3d");
     assert_eq!(def.surface_kind, SurfaceKind::World3d);
-    // 🕹️ Picking is framework-owned, so the ONLY verb this window owns is its camera.
     assert_eq!(def.actions.len(), 1);
     assert_eq!(def.actions[0].id, SET_CAMERA_ACTION_ID);
     assert!(
@@ -195,9 +194,6 @@ async fn a_stored_camera_replaces_the_model_derived_one() {
     assert_eq!(stored_scene.camera_json, stored.camera.scene_camera_json());
     assert!(stored_scene.camera_json.contains("\"position\":[30.0,-25.0,18.0]"), "{}", stored_scene.camera_json);
 
-    // 🎥️ The geometry, the picking domain and the fit revision are untouched by the camera: a camera
-    // change must never re-arm the one-shot auto-fit (`world3dAutoFitKey` keys on fit revision +
-    // the ATTACHED scene camera, never on the live pose).
     assert_eq!(default_scene.meshes_json, stored_scene.meshes_json);
     assert_eq!(default_scene.instances_json, stored_scene.instances_json);
     assert_eq!(default_scene.fit_json, stored_scene.fit_json);
@@ -250,7 +246,6 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
     let overlay: HashMap<u32, [f64; 3]> = model.surfaces.iter().map(|surface| (surface.id.0, [0.5, 0.5, 0.5])).collect();
     let node = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), Some(&overlay), Some("Conduction loss · 0.0 – 412.3 kWh"), Some((0.0, 412.3)), None).expect("the legend render assembles");
 
-    // 🔑️ The whole point of the explicit ids: eight swatches plus two labels are ten siblings.
     assert_sibling_keys_unique(&node, "root");
     let legend = &node.children[0];
     assert_eq!(legend.key.as_str(), LEGEND_NODE_ID);
@@ -261,11 +256,9 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
     let bands = crate::editor_results::legend_bands();
     assert_eq!(sources.len(), 8, "one swatch per ramp band: {sources:?}");
     for (source, band) in sources.iter().zip(bands.iter()) {
-        // 🎨️ `#` is percent-encoded in a data URI, so the band hex appears as `%23rrggbb`.
         assert!(source.contains(&format!("%23{}", band.trim_start_matches('#'))), "swatch {source} does not carry band {band}");
         assert!(source.len() <= 512, "a swatch source must fit UI_TEXT_MAX_BYTES: {} bytes", source.len());
     }
-    // 🌡️ The strip and the meshes must agree band for band: `band_color` indexes this same array.
     for (index, band) in bands.iter().enumerate() {
         let value = index as f64 / (bands.len() - 1) as f64 * 412.3;
         assert_eq!(crate::editor_results::band_color(value, 0.0, 412.3), *band, "band {index} of the strip is not the colour the mesh at that value takes");
@@ -276,7 +269,6 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
     assert!(labels.contains(&"412.3 kWh".to_string()), "the strip prints its maximum: {labels:?}");
     assert!(labels.iter().any(|label| label.contains("Conduction loss")), "the caption line still names the field: {labels:?}");
 
-    // 🎬️ …and the scene underneath is untouched by any of it.
     let scene = scene_of(surface_node(&node));
     assert_eq!(scene.domain_id.as_deref(), Some(ENERGY_MODEL_INTERACTION_DOMAIN));
     assert!(scene.instances_json.contains(&format!("\"id\":\"{}\"", model.surfaces[0].id.0)));
@@ -285,12 +277,10 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
 #[semio_framework_async_macros::async_test]
 async fn without_an_overlay_there_is_no_legend_at_all() {
     let model = bestest_600();
-    // 🚫️ No caption ⇒ the render is the bare surface, bounds or not.
     let bare = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some((0.0, 9.0)), None).expect("the bare render assembles");
     assert!(matches!(bare.component, semio_framework_plugin::Component::Surface(_)), "an un-overlaid viewport is the surface itself, with no legend column");
     assert!(swatch_sources(&bare).is_empty(), "no overlay, no swatches");
 
-    // 🏷️ A caption with no bounds is the caption line alone — the old shape, unchanged.
     let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Conduction loss")).expect("the captioned render assembles");
     assert!(swatch_sources(&captioned).is_empty(), "a caption without bounds draws no ramp strip");
     assert_eq!(captioned.children[0].children.iter().count(), 1, "the legend column is just the caption line");

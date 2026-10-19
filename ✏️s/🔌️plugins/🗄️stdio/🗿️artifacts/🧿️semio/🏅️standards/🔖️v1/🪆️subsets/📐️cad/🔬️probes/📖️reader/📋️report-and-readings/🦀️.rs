@@ -18,19 +18,15 @@ pub(super) struct Report {
 }
 
 impl Report {
-    // 🚫️async: pure constructor helper.
     pub(super) fn new(probe: &'static str, engine: (&'static str, &'static str, &'static str)) -> Self {
         Report { probe, engine_family: engine.0, engine_impl: engine.1, engine_version: engine.2, status: "ok", measurements: Vec::new(), diagnostics: Vec::new() }
     }
-    // 🚫️async: pure mutator helper.
     pub(super) fn put(&mut self, key: &str, value: Json) {
         self.measurements.push((key.to_string(), value));
     }
-    // 🚫️async: pure mutator helper.
     pub(super) fn diag(&mut self, severity: &'static str, message: String, detail: Option<String>) {
         self.diagnostics.push((severity, message, detail));
     }
-    // 🚫️async: pure formatting helper.
     pub(super) fn emit(self, duration_ms: u128) -> String {
         let mut fields = vec![
             ("schema".to_string(), s("semio.repository-test.probe-report/v2")),
@@ -78,7 +74,6 @@ pub(super) struct Ent {
 }
 
 impl Ent {
-    // 🚫️async: pure formatting helper.
     pub(super) fn json(&self) -> Json {
         obj(vec![("kind", s(&self.kind)), ("layer", s(&self.layer)), ("geom", nums(&self.geom)), ("text", s(&self.text))])
     }
@@ -93,7 +88,6 @@ pub(super) struct Reading {
 }
 
 impl Reading {
-    // 🚫️async: pure formatting helper.
     pub(super) fn json(&self) -> Json {
         obj(vec![
             ("layers", Json::Arr(self.layers.iter().map(|(n, c, lt, v)| obj(vec![("name", s(n)), ("colorIndex", Json::Int(*c)), ("lineType", s(lt)), ("visible", Json::Bool(*v))])).collect())),
@@ -101,7 +95,6 @@ impl Reading {
             ("entities", Json::Arr(self.entities.iter().map(Ent::json).collect())),
         ])
     }
-    // 🚫️async: pure accessor helper.
     pub(super) fn counts(&self) -> (usize, usize, usize) {
         (self.layers.len(), self.blocks.len(), self.entities.len())
     }

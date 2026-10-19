@@ -68,7 +68,6 @@ pub enum GifDisposal {
 impl GifDisposal {
     /// 📐️ Decodes the GCE packed byte's 3-bit disposal field (values 4-7 are spec-reserved and
     /// fold back to `Unspecified` rather than erroring).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_bits(bits: u8) -> Self {
         match bits {
             1 => GifDisposal::DoNotDispose,
@@ -77,7 +76,6 @@ impl GifDisposal {
             _ => GifDisposal::Unspecified,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_bits(self) -> u8 {
         match self {
             GifDisposal::Unspecified => 0,
@@ -172,7 +170,6 @@ pub struct GifFrame {
 impl GifFrame {
     /// 🖌️ Derived RGBA accessor — decodes `indices` through `lct` (falling back to `gct`).
     /// `transparent_index`-matching pixels normalize to `[0,0,0,0]`. NOT a stored field.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rgba(&self, gct: Option<&GifColorTable>) -> Vec<u8> {
         let table = self.lct.as_ref().or(gct);
         let mut out = Vec::with_capacity(self.indices.len() * 4);

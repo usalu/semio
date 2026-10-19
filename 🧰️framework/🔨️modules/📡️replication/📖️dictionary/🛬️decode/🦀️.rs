@@ -1,5 +1,6 @@
 //! 📖️ Original dictionary strings remain borrowed source ranges while every genuine backing stays under its caller receipt.
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,list::{PagedList,PagedListError}};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
 use crate::retained::RetainedWireUtf8Validation;
 use crate::{RetainedWireByteSource, OriginalWireSourceIdentity};
 use std::mem::ManuallyDrop;
@@ -27,7 +28,7 @@ impl RetainedSourceDictionary{
  pub fn position(&self)->usize{self.cursor}
  fn validate_source<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{if self.source_identity!=source.original_source_identity(){return Err(Self::fault("original dictionary source identity or extent changed"))}Ok(())}
  fn fault(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
- fn list_error(error:PagedListError)->ValueError{ValueError::literal(match error.kind{semio_framework_value::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,_=>ValueRefusalKind::InvariantViolated},error.reason)}
+ fn list_error(error:PagedListError)->ValueError{ValueError::literal(match error.kind{semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,_=>ValueRefusalKind::InvariantViolated},error.reason)}
  fn varint<S:RetainedWireByteSource+?Sized>(source:&S,cursor:&mut usize,end:usize)->Result<usize,ValueError>{
   let mut result=0u64;
   for index in 0..10{let byte=source.byte_at(*cursor).filter(|_|*cursor<end).ok_or_else(||Self::fault("original dictionary scalar is truncated"))?;*cursor+=1;if index==9&&byte>1{return Err(Self::fault("original dictionary scalar overflows"))}result|=((byte&127)as u64)<<(index*7);if byte&128==0{return usize::try_from(result).map_err(|_|Self::fault("original dictionary extent exceeds this platform"))}}

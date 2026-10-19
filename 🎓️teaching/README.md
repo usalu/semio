@@ -65,3 +65,22 @@ structure, materials) slot in beside `⚡️energy` without touching existing pa
    draft-07 contract through ajv on the course and every quiz.
 7. Every edit of a quiz file changes its revision, and open runs of the old revision are voided at their next start or
    submission, so batch content changes.
+
+## Develop
+
+Everything runs through the tool-neutral build entry (`bun repo run <project>:<target>`, Nx with Bun by default, Bazel with `bun repo --tool=bazel run …`) and is selectable in the dashboard (`bun run dashboard`, **New Task**). After `bun repo tools setup all` and `bun repo dependencies sync --all`:
+
+| Command | Port | Cache |
+|---|---|---|
+| `bun repo run @teaching/architecture-course:dev` (the proctor, then the site, stopped together) | `8791` and `6061` | never |
+| `bun repo run @teaching/architecture-course:test`, `typecheck` | | yes |
+| `bun repo run @teaching/architecture-course:test-e2e -- --topology dev --` | fresh loopback ports | never |
+| `bun repo run @teaching/proctor:test`, `build` | | yes |
+
+Prerequisites per command, the release path (Docker, native Linux x64, release mode), the dashboard registry entries and what is not yet verified are in the [course README](🏛️architecture/📚️course/README.md#develop) and the [proctor README](🛂️proctor/README.md#run) (each with a German chapter at the end).
+
+## 🇩🇪️ Deutsch
+
+### Entwickeln
+
+Alles läuft über den werkzeugneutralen Build-Einstieg (`bun repo run <Projekt>:<Target>`, standardmäßig Nx mit Bun, Bazel mit `bun repo --tool=bazel run …`) und ist im Dashboard wählbar (`bun run dashboard`, **New Task**). Nach `bun repo tools setup all` und `bun repo dependencies sync --all` gelten dieselben Befehle wie in der englischen Tabelle oben: `@teaching/architecture-course:dev` (Proctor `8791`, Seite `6061`, nie gecacht), `test` und `typecheck` (gecacht), `test-e2e -- --topology dev --` (frische Loopback-Ports, nie gecacht) sowie `@teaching/proctor:test` und `build` (gecacht). Voraussetzungen je Befehl, der Release-Pfad (Docker, natives Linux x64, Release-Modus), die Dashboard-Registereinträge und der Verifikationsstand stehen im [README des Kurses](🏛️architecture/📚️course/README.md#-deutsch) und im [README des Proctors](🛂️proctor/README.md#-deutsch), jeweils mit deutschem Kapitel am Ende.

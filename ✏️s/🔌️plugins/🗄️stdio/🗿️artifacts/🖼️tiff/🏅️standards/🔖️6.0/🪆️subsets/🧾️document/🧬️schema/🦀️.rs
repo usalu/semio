@@ -23,15 +23,12 @@ impl Default for TiffArtifact {
 }
 
 impl TiffArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> TiffSnapshot {
         TiffSnapshot { schema: self.schema.clone(), ifds: self.ifds.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: TiffSnapshot) -> Self {
         Self { schema: snapshot.schema, ifds: snapshot.ifds }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
         *self = Self::from_snapshot(snapshot);
     }

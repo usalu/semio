@@ -1,6 +1,7 @@
 //! 🎚️ Engagement submit, commit and probe tests of the CAD editor unit tests: the state confirm, the committing event, the interaction scope, the render cost probe and the solid export. See [`super`].
 
 use super::*;
+#[cfg(test)] use semio_s_artifact_cad_cad_modes as edit;
 
 //#region 🔖️EngagementSubmit
 /// ⏎️ The shell's Enter/Space on an empty action line during a session is the state's `confirm`:

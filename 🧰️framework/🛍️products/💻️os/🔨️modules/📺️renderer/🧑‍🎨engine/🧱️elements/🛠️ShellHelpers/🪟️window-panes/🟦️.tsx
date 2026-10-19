@@ -69,14 +69,6 @@ export function buildActionCategoryTree(
       defaultOpen: true,
       items: categoryActions.map((action): TreeDataItem => {
         const icon = action.iconId ? <Icon icon={action.iconId as IconName} size="small" /> : undefined;
-        // 🧯️ The armed-utility gate is about the APP's own verbs — a brush that owns the pointer must not
-        // have "Delete Selection" pressed out from under it. It is NOT about the framework's own reserved
-        // rows: `mod+z` undoes while the brush is armed (the chord is bound outside this pane), so a pane
-        // that refuses `#action.undo` at the same moment is inconsistent with its own keybinding. That
-        // inconsistency is the whole defect — `pointer-events-none` swallows the click AND the handler
-        // short-circuits, so the row reported as inert with no fault and no console line while
-        // `framework.history.undo` (ungated) undid the same document (measured 2026-09-17, ◻️2d battery
-        // `undo-action-row-changes-document`; every lane after the first `armUtility` was affected).
         const rowDisabled = disabled && !FRAMEWORK_RESERVED_ACTION_IDS.has(action.id);
         const rowClassName = rowDisabled ? "pointer-events-none opacity-50" : undefined;
         if (!actionRequiresStagedForm(action)) {
@@ -98,12 +90,6 @@ export function buildActionCategoryTree(
       const missing = unresolvedActionArgs(expandedAction.args, effective);
       sections.push({
         id: `action.category.${category.id}.form`,
-        // 🏷️ The staged-argument form is a SECTION of the Actions pane and every section a user reads
-        // carries a name. It had none, so the export dialog's own argument list announced as an unnamed
-        // group to a screen reader and read as an untranslated row to the German pass (measured on
-        // generation3d 6018: `actions-pane-de` → `unlabelled: ["action.category.actions.form"]`). The
-        // expanded action's OWN label is already resolved against the host's locale, and it is what the
-        // form is for — no second string to translate, and it says WHICH action is being staged.
         label: expandedAction.label,
         defaultOpen: true,
         items: expandedAction.args.map(
@@ -163,21 +149,6 @@ export type WindowActionPaneProps = {
 export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
   const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute, appLabelsOverlay } = props;
   const sections = buildActionCategoryTree(windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute, appLabelsOverlay);
-  // 📜️ The rail is its OWN scroll container, not a block that grows past the pane.
-  //
-  // `Tree` clips itself (`data-slot="tree"` carries `overflow-hidden`), so a rail taller than the pane
-  // hid its own last rows instead of handing them to the pane body's scroller: measured on generation3d
-  // at 1600×1000 with 32 rows and the app panels raised, `[data-slot="tree"]` rendered 960 px tall inside
-  // a 901 px pane body and the expanded `addWidget` form's `kind` combobox sat at y=1038, below the
-  // 1000 px viewport — `click` timed out in the shared bar probe and the verb dispatched with no staged
-  // argument (ticket 26/09/18, B3c §4.3's reproduction, re-measured by FL1 in `🗑️generated/fl1-*-rail-*.txt`).
-  // `min-h-0 flex-1` lets the pane body shrink this box to the band it actually has, and `overflow-y-auto`
-  // makes the rows past that band reachable — by wheel, by keyboard focus, and by a probe's
-  // `scrollIntoViewIfNeeded`. `shrink-0` on the tree is the other half and not optional: as a flex item the
-  // tree would otherwise be shrunk to the band too and clip the very rows this is trying to reach (measured
-  // in between: pane 862, tree offsetHeight 862 with scrollHeight 960, nothing scrollable anywhere).
-  // A pane whose body has no definite height is unchanged: `flex-1` has nothing to shrink against and the
-  // rail renders exactly as before.
   return (
     <div data-slot="window-action-pane" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain">
       <Tree className="shrink-0" sections={sections} showLines={false} sortableSections={false} />

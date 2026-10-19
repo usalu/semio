@@ -92,8 +92,6 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
     <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center -space-x-2", className)}>
       {visible.map((peer) => {
         const roleLabel = peer.role === "author" ? authorRoleLabel : peer.role === "spectator" ? spectatorRoleLabel : undefined;
-        // 🤖️ The agent badge is part of the accessible name, not decoration beside it: a screen
-        // reader must hear "Drafting agent (AI agent, Editing)" from the roster row itself.
         const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel, peer.activity?.text].filter((value): value is string => value !== undefined);
         const peerTitle = qualifiers.length > 0 ? `${peer.label} (${qualifiers.join(", ")})` : peer.label;
         return (

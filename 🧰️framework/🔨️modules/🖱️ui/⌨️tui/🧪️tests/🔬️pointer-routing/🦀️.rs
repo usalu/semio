@@ -6,7 +6,8 @@ use semio_framework_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeStat
 use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::event::{Event, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Size};
-use semio_framework_ui_tui_frame::layout::{Constraint, Dimension, DockPlacement, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner};
+use semio_framework_ui_tui_frame::layout::{Constraint, Dimension, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_tui_core::docking::{DockPlacement, WindowStackCorner};
 use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
 use semio_framework_ui_tui_core::theme::Theme;
 use semio_framework_ui_tui_widgets::widget::{TabsState, WidgetState, WizardState};

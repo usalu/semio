@@ -1,4 +1,4 @@
-//! Inverse for `remove-tank`.
+//! ↩️ Inverse for `remove-tank`.
 use crate::remove_tank::RemoveTank;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::insert_tank;

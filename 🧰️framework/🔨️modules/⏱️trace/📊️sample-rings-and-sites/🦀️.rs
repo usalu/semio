@@ -84,8 +84,6 @@ impl PercentileRing {
         self.len == 0
     }
 
-    // 🚫️async: E1 pure computation over already-recorded in-memory samples — same class as
-    // `ActorMetrics::wall_us_p95`, which this mirrors.
     pub(super) fn percentile(&self, p: f32) -> u32 {
         if self.len == 0 {
             return 0;

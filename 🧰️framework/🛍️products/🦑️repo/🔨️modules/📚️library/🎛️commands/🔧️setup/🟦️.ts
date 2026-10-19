@@ -2,11 +2,12 @@
  * @see 📜️script.ts
  */
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
-import { ensureMcpBinary } from "@semio-tech/framework-os-mcp";
+import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
 import { runCmd } from "../../🏃️process/🟦️.ts";
 import { installMicroCommitGitHooks } from "../📝️commit/🪝️hooks/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { spawnSync } from "node:child_process";
 import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
@@ -56,6 +57,13 @@ export const REPO_LOCAL_GIT_CONFIG = [
   ["core.symlinks", "true"],
   ["core.longpaths", "true"],
 ] as const;
+
+/** 🪟️ Reads `LongPathsEnabled` from `reg query` output: true for 1, false for any other number, undefined when the value is absent.
+ * https://learn.microsoft.com/windows/win32/fileio/maximum-file-path-limitation */
+export function parseWindowsLongPathsEnabled(output: string): boolean | undefined {
+  const match = /^\s*LongPathsEnabled\s+REG_DWORD\s+0x([0-9a-f]+)\s*$/imu.exec(output);
+  return match ? Number.parseInt(match[1]!, 16) === 1 : undefined;
+}
 
 export class SetupScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -115,6 +123,7 @@ export class SetupScript extends Script {
 
   private runGit(): void {
     for (const [key, value] of REPO_LOCAL_GIT_CONFIG) runCmd("git", ["config", "--local", key, value], { cwd: this.root });
+    if (process.platform === "win32") this.reportWindowsLongPaths();
     installMicroCommitGitHooks(this.root);
     const source = "AGENTS.md";
     for (const alias of AGENT_INSTRUCTION_ALIASES) {
@@ -129,6 +138,13 @@ export class SetupScript extends Script {
         linkSync(join(this.root, source), aliasPath);
       }
     }
+  }
+
+  private reportWindowsLongPaths(): void {
+    const query = spawnSync("reg.exe", ["query", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", "/v", "LongPathsEnabled"], { encoding: "utf8", windowsHide: true });
+    const enabled = parseWindowsLongPathsEnabled(query.stdout ?? "");
+    console.log(`[setup] readiness LongPathsEnabled=${enabled === undefined ? "unknown" : enabled ? 1 : 0} core.longpaths=true`);
+    if (enabled !== true) console.warn("[setup] Windows long paths are disabled: tracked fixtures and build outputs exceed 260 characters. Run once in an elevated PowerShell, then open a new terminal: New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force");
   }
 
   private runFull(): void {

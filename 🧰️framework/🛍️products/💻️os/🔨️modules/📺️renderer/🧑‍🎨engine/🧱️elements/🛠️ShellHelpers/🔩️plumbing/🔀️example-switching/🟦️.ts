@@ -64,9 +64,6 @@ export function navbarExampleIdFromHistoryUpserts(
   rememberedExampleId: string,
   bootExampleId: string,
 ): string | undefined {
-  // 🪪️ Keyed on the action id alone. The former `label.includes("Set Active Example")` arm matched
-  // the English prose of a row's label, which no longer exists as a single string and would have
-  // silently stopped matching for a German shell — the id is the locale-independent key.
   const rows = (upserts ?? []).filter((entry) => entry.actionId === SET_ACTIVE_EXAMPLE_ACTION_ID);
   if (rows.length === 0) return undefined;
   if (rows.some((entry) => entry.revertible !== false)) return rememberedExampleId || undefined;

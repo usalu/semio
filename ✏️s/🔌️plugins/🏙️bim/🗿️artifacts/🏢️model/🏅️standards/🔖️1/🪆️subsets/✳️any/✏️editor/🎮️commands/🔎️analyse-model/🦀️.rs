@@ -21,7 +21,7 @@ pub const PREVIEW: &[u8] = br#"{"en":"Analysing the model","de":"Modell wird ana
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "analyse-model")]
 pub struct AnalyseModel {
-    /// The state a toggle that triggers the analysis reports; the analysis ignores it.
+    /// 🔘️ The state a toggle that triggers the analysis reports; the analysis ignores it.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub pressed: Option<bool>,
 }

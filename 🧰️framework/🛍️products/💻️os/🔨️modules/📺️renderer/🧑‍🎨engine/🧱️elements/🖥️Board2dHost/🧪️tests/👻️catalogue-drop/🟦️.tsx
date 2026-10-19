@@ -11,9 +11,7 @@ import { boardCatalogueDropHostContainsPoint, boardCatalogueDropPointOverRect, b
 // #region 👻️CatalogueDropLaws
 const DROP_PAYLOAD = { kindId: "seed", catalogSlice: "nodes", shape: "circle" as const, radius: 24 };
 
-afterEach(() => {
-  // 🎯️ Host registrations are process-global; drop every key registered by this suite.
-});
+afterEach(() => {});
 
 describe("👻️ board catalogue drop geometry", () => {
   it("boardCatalogueDropPointOverRect is inclusive on all four edges", () => {

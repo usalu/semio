@@ -110,8 +110,6 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, invocation
     await assert.rejects(closeActorBundle.close(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
     actorModulePath = join(evidence, "actor-import.closed.js");
     const { bytes, ...receipt } = await closeActorBundle.build(component, invocation, scriptCompilerAdmissionControlV1(invocation,"test:browser-phase",0));
-    // 🧭️ `slice()` answers a `Uint8Array<ArrayBuffer>`: a view over a `SharedArrayBuffer` is not a
-    // `BufferSource`, and `Uint8Array` alone no longer says which of the two backs it.
     const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value.slice())).toString("hex");
     assert.equal(receipt.codegenPolicy, fixture.identity.artifactPolicy);
     assert.equal(receipt.componentSha256, await digest(component));

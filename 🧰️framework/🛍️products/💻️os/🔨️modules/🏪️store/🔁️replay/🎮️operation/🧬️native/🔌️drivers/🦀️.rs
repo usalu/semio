@@ -2,7 +2,10 @@
 use super::*;
 use semio_framework_value::{retained_clone::{RetainedClone,RetainedCloneCursor},snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor}};
 use semio_framework_os_store_one_item::{PagedOneItemEdit,PagedOneItemEditStep};
-use semio_framework_os_store_snapshot_clone::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep};
+use semio_framework_os_store_snapshot_clone::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory};
+use super::super::{ArtifactReplayPreparation,ArtifactReplayPreparationFactory};
+use semio_framework_pack_json::ArtifactCanonicalJsonTree;
+use semio_framework_os_store_command::HistoryLane;
 
 pub struct PagedProjection<P:SnapshotProjection>{cursor:Option<P::Projection>,closing:bool}
 impl<P:SnapshotProjection> Default for PagedProjection<P>{fn default()->Self{Self{cursor:None,closing:false}}}
@@ -38,7 +41,7 @@ impl<P:'static,M:'static,E:PagedOneItemEdit<P,M>> SemanticEdit<P,M> for PagedSem
  fn birth_demand(&self)->RetirementDemand{header::<bool>()}
  fn begin(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let d=self.birth_demand();if !retained_clone_grant_admits(g,d){return Err(invalid("semantic edit stage not funded"));}Ok(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})}
  fn demands(&self,b:RetainedCloneRef<'_,P>,m:RetainedCloneRef<'_,M>,p:&P,body:usize)->Result<RetirementDemand,ValueError>{self.edit.advance_demands(b,m,p,body)}
- fn advance(&mut self,b:RetainedCloneRef<'_,P>,m:RetainedCloneRef<'_,M>,p:&mut P,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>{Ok(match self.edit.advance(b,m,p,body,g,receiving)?{PagedOneItemEditStep::Progress(r)=>SemanticEditStep::Progress(r),PagedOneItemEditStep::Complete(r,row)=>SemanticEditStep::CompleteSingle(r,row),PagedOneItemEditStep::CompleteRows(r,rows)=>SemanticEditStep::Complete(r,rows,Vec::new(),false),PagedOneItemEditStep::CompleteOutcome(r,rows,messages)=>SemanticEditStep::Complete(r,rows,messages,false),PagedOneItemEditStep::RefusedOutcome(r,messages)=>SemanticEditStep::Refused(r,messages)})}
+ fn advance(&mut self,b:RetainedCloneRef<'_,P>,m:RetainedCloneRef<'_,M>,p:&mut P,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>{Ok(match self.edit.advance(b,m,p,body,g,receiving)?{PagedOneItemEditStep::Progress(r)=>SemanticEditStep::Progress(r),PagedOneItemEditStep::Complete(r,row)=>SemanticEditStep::CompleteSingle(r,row),PagedOneItemEditStep::CompleteRows(r,rows)=>SemanticEditStep::Complete(r,rows,Vec::new(),false),PagedOneItemEditStep::CompleteOutcome(r,rows,messages)=>SemanticEditStep::Complete(r,rows,messages,false),PagedOneItemEditStep::RefusedOutcome(r,messages)=>SemanticEditStep::Refused(r,messages)})}
  fn begin_close(&mut self){self.closing=true;self.edit.begin_close();}
  fn close_demand(&self,f:&dyn ArtifactOwnedValueRetirementFactory<M>,b:usize)->Result<RetirementDemand,ValueError>{self.edit.close_demands(f,b)}
  fn close_step(&mut self,f:&dyn ArtifactOwnedValueRetirementFactory<M>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.edit.close_step(f,g)}
@@ -50,9 +53,27 @@ impl<P:RetainedClone,M:'static,E:RetainedCloneEdit<P,M>> SemanticEdit<P,M> for C
  fn birth_demand(&self)->RetirementDemand{let d=self.factory.as_ref().unwrap().begin_demand();RetirementDemand{copy_bytes:size_of::<E::Cursor>(),capacity_bytes:d.capacity_bytes,depth:d.depth.max(1),..Default::default()}}
  fn begin(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let d=self.birth_demand();if !retained_clone_grant_admits(g,d){return Err(invalid("semantic retained edit birth not funded"));}let(c,mut p)=self.factory.as_ref().unwrap().begin(g)?;self.cursor=Some(c);p.copied_bytes=p.copied_bytes.max(d.copy_bytes);Ok(p)}
  fn demands(&self,b:RetainedCloneRef<'_,P>,m:RetainedCloneRef<'_,M>,p:&P,body:usize)->Result<RetirementDemand,ValueError>{self.cursor.as_ref().ok_or_else(||invalid("semantic retained edit cursor absent"))?.advance_demands(b,p,m,body)}
- fn advance(&mut self,b:RetainedCloneRef<'_,P>,m:RetainedCloneRef<'_,M>,p:&mut P,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>{let c=self.cursor.as_mut().ok_or_else(||invalid("semantic retained edit cursor absent"))?;let d=c.advance_demands(b,p,m,body)?;if !retained_clone_grant_admits(g,d){return Ok(SemanticEditStep::Progress(Default::default()));}receiving.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{receiving.charge(d.capacity_bytes)?;}Ok(match c.advance(b,p,m,body,g)?{RetainedCloneEditStep::Progress(r)=>SemanticEditStep::Progress(r),RetainedCloneEditStep::Complete(r)=>{let rows=c.take_inverse().ok_or_else(||invalid("semantic retained edit omitted inverse"))?;SemanticEditStep::Complete(r,rows,Vec::new(),c.foreign_step_presence())}})}
+ fn advance(&mut self,b:RetainedCloneRef<'_,P>,m:RetainedCloneRef<'_,M>,p:&mut P,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>{let c=self.cursor.as_mut().ok_or_else(||invalid("semantic retained edit cursor absent"))?;let d=c.advance_demands(b,p,m,body)?;if !retained_clone_grant_admits(g,d){return Ok(SemanticEditStep::Progress(Default::default()));}receiving.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{receiving.charge(d.capacity_bytes)?;}Ok(match c.advance(b,p,m,body,g)?{RetainedCloneEditStep::Progress(r)=>SemanticEditStep::Progress(r),RetainedCloneEditStep::Complete(r)=>{let rows=c.take_inverse().ok_or_else(||invalid("semantic retained edit omitted inverse"))?;SemanticEditStep::Complete(r,rows,Vec::new(),c.foreign_step_presence())}})}
  fn begin_close(&mut self){self.closing=true;if let Some(c)=self.cursor.as_mut(){c.cancel();let _=c.begin_close();}}
  fn close_demand(&self,_:&dyn ArtifactOwnedValueRetirementFactory<M>,b:usize)->Result<RetirementDemand,ValueError>{if let Some(c)=self.cursor.as_ref(){return if c.terminal_is_empty(){Ok(header::<Option<E::Cursor>>())}else{Ok(RetirementDemand{copy_bytes:c.next_close_copy_byte_demand()?,capacity_bytes:c.next_close_capacity_byte_demand(b)?,release_bytes:c.next_close_release_byte_demand()?,depth:c.next_close_depth_demand()?})};}if self.factory.is_some(){return Ok(header::<Arc<E>>());}self.factory_close.as_ref().map_or(Ok(Default::default()),|f|f.demands(b))}
  fn close_step(&mut self,f:&dyn ArtifactOwnedValueRetirementFactory<M>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Ok(RetainedCloneStep::Progress(Default::default()));}let d=self.close_demand(f,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if let Some(c)=self.cursor.as_mut(){if !c.terminal_is_empty(){return c.close_step(g);}self.cursor=None;}else if let Some(f)=self.factory.take(){self.factory_close=Some(semio_framework_value::FactoryAuthority::new(f));}else if let Some(f)=self.factory_close.as_mut(){let s=f.step(g)?;if f.terminal_is_empty(){self.factory_close=None;}return Ok(s);}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
  fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.is_none()&&self.factory.is_none()&&self.factory_close.is_none()}
+}
+
+/// 🪢 Funds the metadata-free native semantic producer from the retained clone preparation factory.
+impl<P,M,E> ArtifactReplayPreparationFactory<P,M> for RetainedClonePreparationFactory<P,M,E>
+where P:RetainedClone,M:ArtifactCanonicalJsonTree+RetireOwned+Send+Sync+'static,E:RetainedCloneEdit<P,M>{
+ fn preparation_birth_demand(&self)->semio_framework_value::RetirementDemand{
+  type Producer<P,M,E>=NativeSemanticPreparation<P,M,ClonedProjection<P>,ClonedSemanticEdit<P,M,E>>;
+  semio_framework_value::RetirementDemand{copy_bytes:size_of::<ArtifactReplayPreparationRequest<P,M>>()+size_of::<Producer<P,M,E>>()+size_of::<Arc<E>>(),capacity_bytes:size_of::<Producer<P,M,E>>(),depth:1,..Default::default()}
+ }
+ fn begin(&self,request:ArtifactReplayPreparationRequest<P,M>,grant:RetainedCloneGrant)->Result<(Box<dyn ArtifactReplayPreparation<P,M>>,RetainedCloneProgress),(ValueError,ArtifactReplayPreparationRequest<P,M>)>{
+  let d=ArtifactReplayPreparationFactory::preparation_birth_demand(self);
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"semantic retained clone producer birth not funded"),request));}
+  let admitted=request.input.borrow().and_then(|input|self.edit.preflight(input.get(),HistoryLane::Document).map(|_|()).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"semantic retained clone operation footprint refused")));
+  if let Err(error)=admitted{return Err((error,request));}
+  let projection=ClonedProjection::<P>::new(self.edit.snapshot_cursor_birth_demand());
+  let edit=ClonedSemanticEdit::<P,M,E>::new(Arc::clone(&self.edit));
+  Ok((Box::new(NativeSemanticPreparation::new(request,projection,edit)),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
+ }
 }

@@ -5,7 +5,7 @@ use semio_framework_value::RetirementDemand;
 impl RetainedJobPayloadWriter {
     pub fn birth_demand() -> RetirementDemand { RetirementDemand { copy_bytes: 2 * size_of::<Self>(), depth: 1, ..Default::default() } }
 
-    pub fn new_funded(stream: JobPayloadStream, cx: &mut StepContext<'_>) -> Result<Option<Self>, ValueError> {
+    pub fn new_funded(stream: JobPayloadStream, cx:&mut impl JobPayloadStep) -> Result<Option<Self>, ValueError> {
         let demand = Self::birth_demand();
         if !writer_permits(cx, demand) { return Ok(None); }
         cx.consume_retained(writer_progress(demand))?;
@@ -23,17 +23,17 @@ impl RetainedJobPayloadWriter {
         })
     }
 
-    pub fn begin_staged_page_funded(&mut self, cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub fn begin_staged_page_funded(&mut self, cx:&mut impl JobPayloadStep) -> Result<bool, ValueError> {
         if self.staged.is_some() { return Ok(true); }
         let demand = self.staged_page_birth_demand()?;
-        if !writer_permits(cx, demand) || cx.payload_page_granted { return Ok(false); }
+        if !writer_permits(cx, demand) || cx.payload_page_granted() { return Ok(false); }
         let payload = self.payload.as_ref().ok_or_else(writer_sealed)?;
-        if payload.ledger.as_ref().is_some_and(|ledger| !Arc::ptr_eq(ledger, &cx.payload_ledger)) { return Err(writer_foreign()); }
+        if payload.ledger.as_ref().is_some_and(|ledger| !Arc::ptr_eq(ledger, cx.payload_ledger())) { return Err(writer_foreign()); }
         let extent = self.rejected.as_ref().map_or(JOB_PAYLOAD_PAGE_BYTES, JobPayloadPageSource::allocated_capacity_bytes);
-        cx.payload_ledger.reserve(payload.stream, extent).map_err(writer_fault)?;
+        cx.payload_ledger().reserve(payload.stream, extent).map_err(writer_fault)?;
         let source = self.rejected.take().unwrap_or_default();
-        *self.staged = Some((Arc::clone(&cx.payload_ledger), source, 0));
-        cx.payload_page_granted = true;
+        *self.staged = Some((Arc::clone(cx.payload_ledger()), source, 0));
+        cx.grant_payload_page();
         cx.consume_retained(writer_progress(demand))?;
         Ok(true)
     }
@@ -45,11 +45,11 @@ impl RetainedJobPayloadWriter {
         Ok(RetirementDemand { copy_bytes, depth, ..Default::default() })
     }
 
-    pub fn write_staged_source_funded(&mut self, cx: &mut StepContext<'_>, source: &(impl JobPayloadStagedSource + ?Sized), cursor_copy_bytes: usize) -> Result<bool, ValueError> {
+    pub fn write_staged_source_funded(&mut self, cx:&mut impl JobPayloadStep, source: &(impl JobPayloadStagedSource + ?Sized), cursor_copy_bytes: usize) -> Result<bool, ValueError> {
         let demand = self.staged_source_demand(source, cursor_copy_bytes)?;
         if !writer_permits(cx, demand) { return Ok(false); }
         let (ledger, page, length) = self.staged.as_mut().ok_or_else(writer_extent)?;
-        if !Arc::ptr_eq(ledger, &cx.payload_ledger) { return Err(writer_foreign()); }
+        if !Arc::ptr_eq(ledger, cx.payload_ledger()) { return Err(writer_foreign()); }
         cx.consume_retained(writer_progress(demand))?;
         let end = *length + source.byte_len();
         source.write_bytes(&mut page.storage[*length..end]).map_err(|fault| writer_fault(fault).with_retained_progress(writer_progress(demand)))?;
@@ -63,11 +63,11 @@ impl RetainedJobPayloadWriter {
         Ok(RetirementDemand { copy_bytes: copy_bytes.checked_add(cursor_copy_bytes).ok_or_else(writer_extent)?, depth: 3, ..Default::default() })
     }
 
-    pub fn commit_staged_page_funded(&mut self, cx: &mut StepContext<'_>, cursor_copy_bytes: usize) -> Result<bool, ValueError> {
+    pub fn commit_staged_page_funded(&mut self, cx:&mut impl JobPayloadStep, cursor_copy_bytes: usize) -> Result<bool, ValueError> {
         let demand = self.staged_commit_demand(cursor_copy_bytes)?;
         if !writer_permits(cx, demand) { return Ok(false); }
         let (ledger, _, _) = self.staged.as_ref().ok_or_else(writer_extent)?;
-        if !Arc::ptr_eq(ledger, &cx.payload_ledger) { return Err(writer_foreign()); }
+        if !Arc::ptr_eq(ledger, cx.payload_ledger()) { return Err(writer_foreign()); }
         let payload = self.payload.as_ref().ok_or_else(writer_sealed)?;
         if self.sealed || payload.page_count >= JOB_PAYLOAD_OPERATION_PAGES || payload.pages[payload.page_count].is_some() { return Err(writer_sealed()); }
         self.commit_staged_page().map_err(writer_fault)?;
@@ -82,7 +82,7 @@ impl RetainedJobPayloadWriter {
         Ok(RetirementDemand { copy_bytes, depth: 2, ..Default::default() })
     }
 
-    pub fn take_finished_funded(&mut self, output: &mut Option<RetainedJobPayload>, cx: &mut StepContext<'_>, cursor_copy_bytes: usize) -> Result<bool, ValueError> {
+    pub fn take_finished_funded(&mut self, output: &mut Option<RetainedJobPayload>, cx:&mut impl JobPayloadStep, cursor_copy_bytes: usize) -> Result<bool, ValueError> {
         if output.is_some() { return Err(writer_sealed()); }
         let demand = Self::take_finished_demand(cursor_copy_bytes)?;
         if !writer_permits(cx, demand) { return Ok(false); }
@@ -93,7 +93,7 @@ impl RetainedJobPayloadWriter {
         Ok(true)
     }
 
-    pub fn finish_funded(writer: &mut Option<Self>, output: &mut Option<RetainedJobPayload>, cx: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub fn finish_funded(writer: &mut Option<Self>, output: &mut Option<RetainedJobPayload>, cx:&mut impl JobPayloadStep) -> Result<bool, ValueError> {
         if output.is_some() { return Err(writer_sealed()); }
         let demand = Self::finish_demand();
         if !writer_permits(cx, demand) { return Ok(false); }
@@ -120,7 +120,7 @@ impl JobPayloadStagedSource for [u8] {
     }
 }
 
-fn writer_permits(cx: &StepContext<'_>, demand: RetirementDemand) -> bool {
+fn writer_permits(cx:&impl JobPayloadStep, demand: RetirementDemand) -> bool {
     let grant = cx.retained_grant();
     !cx.is_cancelled() && !cx.should_yield() && grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
 }

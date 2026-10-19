@@ -23,11 +23,6 @@ describe("sphere-box-fuse", () => {
   it("recomputes the committed union volume by its own quadrature", () => {
     const ball = knob.radius;
     const side = knob.size;
-    // 🧲️ `brep.prim3d.box` spans `[0, side]³` from its own CORNER, and the ball is centred on that
-    // corner — so the overlap is the ball's POSITIVE OCTANT clipped to the box, not the concentric
-    // intersection the committed extent (`[-ball, side]`, which this same test asserts) never
-    // described. Each `z` slice contributes a quarter disc of radius `√(ball² − z²)` clipped to the
-    // square `[0, side]²`.
     const clipped = (z: number) => {
       const squared = ball * ball - z * z;
       if (squared <= 0) return 0;

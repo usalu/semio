@@ -161,12 +161,10 @@ use semio_framework_diagnostic::Severity;
 
     impl PdfVtBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an output-condition identifier up front.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(output_condition: impl Into<String>) -> Self {
             Self { snapshot: seeded_snapshot(output_condition.into()) }
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(mut self, mut page: PdfPage) -> Self {
             if page.trim_box.is_none() && page.art_box.is_none() { page.trim_box=Some(page.media_box); }
             let media=page.media_box;
@@ -213,7 +211,6 @@ use semio_framework_diagnostic::Severity;
             self
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo(SetInfo { info }));
             self

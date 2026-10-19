@@ -99,10 +99,6 @@ async function waitForPluginBuildLeaseReady(variant: string, deadlineMs: number)
   while (Date.now() < deadline) {
     const lease = readPluginBuildLease(path);
     if (!lease || lease.registryReady || !isPidAlive(lease.pid)) return true;
-    // 🏛️ THE RULE (see 🔖️PollHelpers above): legitimate poll, not routed through a helper — the lease
-    // holder is another `dev` process entirely, identified only by a `pid` in this on-disk lease file.
-    // We hold no handle to it (no child object, no stream, no promise), only its pid, so there is no
-    // event to await; a lease file + `isPidAlive` liveness check is the only signal available.
     await Bun.sleep(500);
   }
   return false;
@@ -115,15 +111,11 @@ function takeOverPluginBuildLease(variant: string, port: number): void {
   const path = pluginBuildLeasePath(variant);
   try {
     rmSync(path, { force: true });
-  } catch {
-    // 🏁️ A vanished lease is the desired end state either way.
-  }
+  } catch {}
   try {
     mkdirSync(pluginBuildLeaseDir(), { recursive: true });
     writeFileSync(path, JSON.stringify({ pid: process.pid, port, startedAt: Date.now(), registryReady: false } satisfies PluginBuildLease, null, 2));
-  } catch {
-    // 🏁️ Unwritable lease dir is not a reason to refuse to build.
-  }
+  } catch {}
 }
 
 /** 🔓️ Releases this process's own plugin-build lease (no-op if it was never the holder, or lost
@@ -135,9 +127,7 @@ function releasePluginBuildLease(variant: string): void {
   if (!lease || lease.pid !== process.pid) return;
   try {
     rmSync(path, { force: true });
-  } catch {
-    // 🏁️ Best-effort: a vanished lease file is already the desired end state.
-  }
+  } catch {}
 }
 
 export { PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS, type PluginBuildLease, acquirePluginBuildLease, isPidAlive, markPluginBuildLeaseReady, pluginBuildLeaseDir, pluginBuildLeasePath, readPluginBuildLease, releasePluginBuildLease, takeOverPluginBuildLease, waitForPluginBuildLeaseReady };

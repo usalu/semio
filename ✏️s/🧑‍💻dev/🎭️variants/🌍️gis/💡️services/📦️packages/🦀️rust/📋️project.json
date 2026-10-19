@@ -6,10 +6,28 @@
     "lang:rust",
     "role:tool"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/**/*",
+      "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/**/*"
+    ]
+  },
   "targets": {
     "source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -18,7 +36,7 @@
     },
     "native-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts native-check",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -27,9 +45,9 @@
     },
     "native-build": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [
-        "{projectRoot}/dist/native-{options.env.SEMIO_BUILD_MODE}"
+        "{projectRoot}/.🧾️store/native-build.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts build native",
@@ -61,7 +79,7 @@
     },
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -70,9 +88,14 @@
     },
     "mcp-build": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "cache": true,
       "outputs": [
-        "{projectRoot}/dist/mcp-{options.env.SEMIO_BUILD_MODE}"
+        "{projectRoot}/.🧾️store/mcp-build.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts build mcp",
@@ -104,7 +127,12 @@
     },
     "mcp-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -345,7 +373,12 @@
     },
     "untrusted-content-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "cache": true,
       "dependsOn": [
         {
           "projects": [
@@ -362,7 +395,12 @@
     },
     "mcp-composition-source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts mcp-composition-source-check",

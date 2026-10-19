@@ -44,9 +44,7 @@ export function parseInvocationResponse(raw: string): InvocationResponse {
     if (parsed && typeof parsed === "object" && Array.isArray(parsed.mutations)) {
       return parsed as InvocationResponse;
     }
-  } catch {
-    // fall through to the empty response
-  }
+  } catch {}
   return EMPTY_INVOCATION_RESPONSE;
 }
 //#endregion InvocationResponse

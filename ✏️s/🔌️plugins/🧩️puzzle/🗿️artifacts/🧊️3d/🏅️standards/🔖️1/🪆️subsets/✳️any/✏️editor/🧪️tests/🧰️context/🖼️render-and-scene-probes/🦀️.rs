@@ -9,7 +9,7 @@
 /// type default (no camera, no suggestion popup, no engagement scratch), which is a state no real
 /// render can be in.
 pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
-    let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+    let window_id = body_key.split_once(':').map_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, |(_, window)| window);
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
     rendered_body_value(app, body_key, &view).await
@@ -80,7 +80,7 @@ async fn rendered_body_value(app: &mut Puzzle3dApp, body_key: &str, view: &ViewM
 /// payload is read back off the built `Surface` node rather than re-encoded, so the law measures the
 /// same bytes the host shipped.
 pub async fn world_surface_payload_bytes(app: &mut Puzzle3dApp, body_key: &str) -> (usize, usize) {
-    let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+    let window_id = body_key.split_once(':').map_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, |(_, window)| window);
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
     let (raw, cx) = app.parts();
@@ -149,7 +149,7 @@ impl WorldSceneCarrierCensus {
 /// 🚚️ Renders `body_key` and censuses the world-3d surface it publishes. Reads the built tree
 /// directly — never a re-encode — so the law measures exactly the bytes the host shipped.
 pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str) -> WorldSceneCarrierCensus {
-    let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
+    let window_id = body_key.split_once(':').map_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, |(_, window)| window);
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
     let (raw, cx) = app.parts();

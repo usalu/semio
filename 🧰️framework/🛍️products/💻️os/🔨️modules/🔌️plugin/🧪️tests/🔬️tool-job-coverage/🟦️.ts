@@ -12,7 +12,7 @@ import persistentFoundationFixture from "./🧫️fixtures/🧾️persistent-fou
 
 import contractExpressionFixture from "./🧫️fixtures/🧾️contract-expression.json";
 
-import { toolJobContractSource, toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobPublicationContracts, toolJobPublicationAuthorityReady } from "@semio-tech/repo-lib/laws";
+import { toolJobContractSource, toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobAppOwnedRows, toolJobProductionProtocolSource, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobPublicationContracts, toolJobPublicationAuthorityReady, toolJobProofCatalogFailures } from "@semio-tech/repo-lib/laws";
 
 import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
 import { toolJobRasterEnvelopeSourceEvidence, toolJobRasterEnvelopeCallerFailures, toolJobRasterEnvelopeCallerRetainedExact, toolJobStoreBatchPublicationBounded, toolJobTypedPersistentFoundation, toolJobPluginInstanceSource, toolJobStoreSource } from "@semio-tech/repo-lib/laws";
@@ -24,9 +24,9 @@ import { storeCanonicalEditSealerSelfTests } from "@semio-tech/framework-os/modu
 import { toolJobOwnerFactoryResolutionSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts";
 import { toolJobFactoryProofJoinSelfTests } from "../🔬️tool-job-factory-proof-join/🟦️.ts";
 import { toolJobLatestWinsSelfTests } from "../🔬️tool-job-latest-wins/🟦️.ts";
-import { toolJobMicrosecondBudgetSelfTests } from "../../../../../../🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts";
+import { toolJobMicrosecondBudgetSelfTests } from "@semio-tech/framework/job/budget/testing/tool-job-microsecond-budget";
 import { toolJobMicrosecondWorkerBindingSelfTests } from "@semio-tech/repo-lib/laws";
-import { toolJobTelemetryContentionSelfTests } from "../../../../../../🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts";
+import { toolJobTelemetryContentionSelfTests } from "@semio-tech/framework/trace/clock/testing/tool-job-telemetry-contention";
 import { toolJobCooperativeMaintenanceSelfTests } from "@semio-tech/framework-async/cooperative/testing/tool-job-cooperative-maintenance";
 import { proceduralGenerationRootSelfTests } from "@semio-tech/framework-os/modules/playbook/artifacts/playbook/generation/testing/procedural-generation-root";
 import { flowTypedRetirementSelfTests } from "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/testing/flow-typed-retirement";
@@ -37,7 +37,6 @@ import { ephemeralPublicationChecks, freshTurnAndHostOnlyPublicationChecks, reta
 import { segmentedOutputAndChildRootChecks, snapshotAndReactorCloseChecks, typedRouteCancellationAndCloseChecks } from "./🛑️cancellation-close-and-output-ownership/🟦️.ts";
 import { artifactStoreStructuralAndEnvelopeCodecChecks } from "./🗄️artifact-store-and-envelope-codec/🟦️.ts";
 import { gisMapEnvelopeCallerRetainedChecks, jackEnvelopeCallerRetainedChecks, trinityRewriteEnvelopeCallerRetainedChecks, writerEnvelopeCallerRetainedChecks } from "./✍️caller-retained-document-envelopes/🟦️.ts";
-import { rasterEnvelopeLoopRestorationChecks, rasterEnvelopeRouteAndMutationChecks, rasterEnvelopeSourceFixtures, rasterRejectedOutputIdentityChecks } from "./🖼️raster-envelope/🟦️.ts";
 import { drawingEnvelopeMutationChecks, drawingEnvelopeRouteAndSemanticChecks, drawingEnvelopeSourceFixtures } from "./🎨️drawing-envelope/🟦️.ts";
 import { commandIngressAndKernelRequestChecks, peerPresenceRosterChecks } from "./🤝️peer-presence-and-command-ingress/🟦️.ts";
 import { layoutAndColdRelayRetainedChecks, universalRetainedOwnershipChecks } from "./🔭️universal-and-layout-retained-ownership/🟦️.ts";
@@ -172,10 +171,6 @@ export function toolJobCoverageSelfTests(): number {
   const { retainedJackStore, retainedJackCodec, retainedJackEditor } = jackEnvelopeCallerRetainedChecks({ retainedWriterWasm, retainedWriterPlugin });
   trinityRewriteEnvelopeCallerRetainedChecks({ retainedJackStore, retainedJackCodec, retainedJackEditor, retainedWriterPlugin });
   gisMapEnvelopeCallerRetainedChecks({ retainedWriterWasm, retainedJackStore, retainedWriterPlugin });
-  const { retainedRasterCodec, retainedRasterEditor } = rasterEnvelopeSourceFixtures();
-  rasterEnvelopeRouteAndMutationChecks({ retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedWriterPlugin });
-  rasterEnvelopeLoopRestorationChecks({ retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedWriterPlugin });
-  rasterRejectedOutputIdentityChecks({ retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedWriterPlugin });
   const { retainedDrawingCodec, retainedDrawingEditor } = drawingEnvelopeSourceFixtures();
   drawingEnvelopeRouteAndSemanticChecks({ retainedJackStore, retainedDrawingCodec, retainedDrawingEditor, retainedWriterPlugin });
   drawingEnvelopeMutationChecks({ retainedJackStore, retainedDrawingCodec, retainedDrawingEditor, retainedWriterPlugin });

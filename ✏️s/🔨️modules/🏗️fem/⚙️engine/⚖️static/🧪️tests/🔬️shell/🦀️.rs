@@ -1,9 +1,8 @@
 use crate::solve_linear_static;
 use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Dof;
 
 const E: f64 = 1000.0;
 const NU: f64 = 0.25;
@@ -33,12 +32,12 @@ fn shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature() {
 
     let mut u = Vec::with_capacity(18);
     for &[x, y, _] in &positions {
-        u.push(MU.0 + MU.1 * x + MU.2 * y); // Tx
-        u.push(MV.0 + MV.1 * x + MV.2 * y); // Ty
-        u.push(0.5 * (KX * x * x + KY * y * y + 2.0 * KXY * x * y)); // Tz = w
-        u.push(KY * y + KXY * x); // Rx = ∂w/∂y
-        u.push(-(KX * x + KXY * y)); // Ry = -∂w/∂x
-        u.push(0.0); // Rz (drilling) stays zero — not excited by this field
+        u.push(MU.0 + MU.1 * x + MU.2 * y);
+        u.push(MV.0 + MV.1 * x + MV.2 * y);
+        u.push(0.5 * (KX * x * x + KY * y * y + 2.0 * KXY * x * y));
+        u.push(KY * y + KXY * x);
+        u.push(-(KX * x + KXY * y));
+        u.push(0.0);
     }
     let u = VecD::from_vec(u);
 
@@ -115,7 +114,6 @@ fn shell_facet3_mass_total_equals_rho_t_area() {
     let ctx = ElementContext { positions: positions.to_vec() };
     let m = el.mass(&ctx).expect("shell facet reports mass");
     let sum_tx: f64 = (0..3).flat_map(|r| (0..3).map(move |c| (6 * r, 6 * c))).map(|(r, c)| m.get(r, c)).sum();
-    // `aligned_triangle_positions` is `[[0,0,0],[2,0,0],[0.2,1.8,0]]` — shoelace area directly.
     let area = 0.5 * ((positions[1][0] - positions[0][0]) * (positions[2][1] - positions[0][1]) - (positions[2][0] - positions[0][0]) * (positions[1][1] - positions[0][1])).abs();
     let expected = density * thickness * area;
     assert!((sum_tx - expected).abs() / expected < 1e-9, "sum={sum_tx} expected={expected}");
@@ -131,9 +129,6 @@ fn shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_
     let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
     let ctx = ElementContext { positions: positions.to_vec() };
 
-    // Uniform uniaxial membrane strain `u = k*x` (zero elsewhere) recovers a constant `Nxx`,
-    // compressive for k<0 and tensile for k>0 — same field shape `elements2d::continuum_tests`
-    // uses for its patch tests.
     let field = |k: f64| {
         let mut u = Vec::with_capacity(18);
         for &[x, _, _] in &positions {
@@ -144,9 +139,6 @@ fn shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_
     let kg_tension = el.geometric_stiffness(&ctx, &field(1e-4)).expect("shell reports geometric stiffness");
     let kg_compression = el.geometric_stiffness(&ctx, &field(-1e-4)).expect("shell reports geometric stiffness");
 
-    // Node `b`'s local `Tz` sits at global index 8 (node 1 * 6 dof + 2) — the aligned-triangle
-    // fixture makes local == global, so this global diagonal entry is directly the out-of-plane
-    // stiffness contribution the buckling solver would add for node b.
     let tz_b = 8usize;
     assert!(kg_tension.get(tz_b, tz_b) > 0.0, "tension should STIFFEN out-of-plane bending, got Kg[b,Tz]={}", kg_tension.get(tz_b, tz_b));
     assert!(kg_compression.get(tz_b, tz_b) < 0.0, "compression should DESTABILIZE out-of-plane bending, got Kg[b,Tz]={}", kg_compression.get(tz_b, tz_b));

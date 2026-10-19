@@ -22,29 +22,23 @@ describe("control chrome", () => {
           anchors: { "top-left": [a, b], "top-middle": [], "top-right": [branch], "right-middle": [], "bottom-right": [c], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
         };
   
-        // Same-row reorder: move `b` before `a` (removal-first — index 0 in the post-removal row). Both items'
-        // `order` is reassigned to match their new position, so neither keeps its exact object reference here.
         const reordered = moveTabInDock(dock, { tabId: "b", fromAnchor: "top-left", target: { kind: "insert", anchor: "top-left", parentPath: [], index: 0 } });
         expect(reordered.anchors["top-left"].map((tab) => tab.id)).toEqual(["b", "a"]);
         expect(reordered.anchors["top-left"].map((tab) => tab.order)).toEqual([0, 1]);
   
-        // Cross-anchor move: `c` from bottom-right to top-left, at the end.
         const moved = moveTabInDock(dock, { tabId: "c", fromAnchor: "bottom-right", target: { kind: "insert", anchor: "top-left", parentPath: [], index: 2 } });
         expect(moved.anchors["bottom-right"]).toEqual([]);
         expect(moved.anchors["top-left"].map((tab) => tab.id)).toEqual(["a", "b", "c"]);
   
-        // Cross-anchor move into a previously-empty middle anchor.
         const movedToMiddle = moveTabInDock(dock, { tabId: "c", fromAnchor: "bottom-right", target: { kind: "insert", anchor: "top-middle", parentPath: [], index: 0 } });
         expect(movedToMiddle.anchors["bottom-right"]).toEqual([]);
         expect(movedToMiddle.anchors["top-middle"].map((tab) => tab.id)).toEqual(["c"]);
   
-        // Child-append: `c` becomes a child of the empty `branch` tab in top-right.
         const nested = moveTabInDock(dock, { tabId: "c", fromAnchor: "bottom-right", target: { kind: "child", anchor: "top-right", parentId: "branch" } });
         const nestedBranch = nested.anchors["top-right"][0];
         expect(nestedBranch?.kind === "branch" ? nestedBranch.children.map((child) => child.id) : null).toEqual(["c"]);
         expect(nested.anchors["bottom-right"]).toEqual([]);
   
-        // Own-subtree guard: dropping `branch` as a child of itself, or inserting it under its own path, is a no-operation (same reference).
         expect(moveTabInDock(dock, { tabId: "branch", fromAnchor: "top-right", target: { kind: "child", anchor: "top-right", parentId: "branch" } })).toBe(dock);
         expect(moveTabInDock(dock, { tabId: "branch", fromAnchor: "top-right", target: { kind: "insert", anchor: "top-right", parentPath: ["branch"], index: 0 } })).toBe(dock);
       });
@@ -58,7 +52,6 @@ describe("control chrome", () => {
           anchors: { "top-left": [outerBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
         };
         const result = moveTabInDock(dock, { tabId: "only-child", fromAnchor: "top-left", target: { kind: "insert", anchor: "top-right", parentPath: [], index: 0 } });
-        // Both `inner` (emptied) and `outer` (left with no children once `inner` is pruned) disappear from top-left.
         expect(result.anchors["top-left"]).toEqual([]);
         expect(result.anchors["top-right"].map((tab) => tab.id)).toEqual(["only-child"]);
       });
@@ -121,16 +114,11 @@ describe("control chrome", () => {
   
         const rows: readonly PanelTabRowDropTarget[] = [{ anchor: "top-left", parentPath: [], rowElement }];
   
-        // Left half of the leaf button: insert-before (index 0).
         expect(computeTabDockDropZone(20, 10, rows, new Set())).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 0 });
-        // Right half of the leaf button: insert-after (index 1).
         expect(computeTabDockDropZone(80, 10, rows, new Set())).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 1 });
-        // Center 30–70% band of the branch button (100–200 wide -> 130..170): nest as a child.
         expect(computeTabDockDropZone(150, 10, rows, new Set())).toEqual({ kind: "child", anchor: "top-left", parentId: "branch-a" });
-        // Excluding the branch button (e.g. it's the dragged subtree) falls through to append-at-end of the row.
         expect(computeTabDockDropZone(150, 10, rows, new Set(["branch-a"]))).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 1 });
   
-        // Outside every registered surface: no drop.
         expect(computeTabDockDropZone(9999, 9999, rows, new Set())).toBeNull();
       });
   

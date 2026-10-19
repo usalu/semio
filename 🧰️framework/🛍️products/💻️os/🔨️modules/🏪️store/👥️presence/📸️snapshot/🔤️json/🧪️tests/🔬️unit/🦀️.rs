@@ -3,7 +3,8 @@ use super::*;
 use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use crate::ArtifactPresenceSnapshot;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-use semio_framework_value::{native_decoding::NativeDecodeRetirementRecipient, native_encoding::NativeEncodeRetirementRecipient, NativeDecodeControl, NativeEncodeControl};
+use semio_framework_value::{native_encoding::NativeEncodeRetirementRecipient, NativeEncodeControl};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeRetirementRecipient, native_decoding::NativeDecodeControl};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]

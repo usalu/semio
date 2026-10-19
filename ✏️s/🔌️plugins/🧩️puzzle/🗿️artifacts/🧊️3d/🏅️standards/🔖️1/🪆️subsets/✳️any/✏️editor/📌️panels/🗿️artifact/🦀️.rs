@@ -1,4 +1,4 @@
-//! planes, target volumes and attractions, each row a pick target of the tree's interaction domain and
+//! 🗓️ planes, target volumes and attractions, each row a pick target of the tree's interaction domain and
 //! 📄️ Puzzle 3d play app panel — the document tree: objects (with their vortices nested), reference
 //! carrying inline hide/lock actions.
 //!

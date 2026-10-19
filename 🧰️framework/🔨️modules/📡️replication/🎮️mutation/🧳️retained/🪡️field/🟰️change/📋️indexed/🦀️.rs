@@ -1,6 +1,7 @@
 //! 📋️ Exact whole replacements compare original typed vectors and move each funded payload into ascending sparse rows.
 use super::RetainedFieldChange;
-use semio_framework_value::{RetainedEquality,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::RetireOwned, retained_clone::{RetainedClone, RetainedCloneRef, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
+use semio_framework_value_persistent::retained_equality::RetainedEquality;
 use std::{collections::VecDeque,mem::{size_of,ManuallyDrop}};
 const META:usize=size_of::<usize>()*8+3;
 fn invalid(text:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,text)}

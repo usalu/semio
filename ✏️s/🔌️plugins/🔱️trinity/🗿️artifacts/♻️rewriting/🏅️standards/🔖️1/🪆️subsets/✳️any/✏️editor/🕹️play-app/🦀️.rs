@@ -130,12 +130,6 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         Some(rewriting_io())
     }
 
-    // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetState` — a
-    // whole-snapshot LWW register wearing a mutation costume, see `📓️taxonomy.md`'s forbidden
-    // vocabulary), so this intentionally falls back to the trait default (`None`) rather than
-    // overriding — the `"artifact:in"` media port therefore reports `MediaError::NotImplemented`;
-    // there is no import mutation (locked decision).
-
     /// 🔌️ `"graph:in"` loads an incoming `trinity.graph` pack as this rule's `working_graph`
     /// working graph — a single targeted field edit, not a whole-document replace.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, RewritingSnapshot>) -> Result<Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
@@ -249,8 +243,6 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, RewritingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        // 🕹️ Selection is framework-owned now (domain "graph") — `context_menu` has no `InteractionView`,
-        // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
 
         let menu = Menu::of(registry, view_state)

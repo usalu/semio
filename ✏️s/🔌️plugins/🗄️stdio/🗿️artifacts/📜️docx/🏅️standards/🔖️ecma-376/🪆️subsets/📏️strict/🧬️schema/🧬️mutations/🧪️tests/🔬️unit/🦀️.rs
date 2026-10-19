@@ -1,4 +1,6 @@
 use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::*;
+#[cfg(test)] use semio_s_artifact_stdio_xml_snapshot::standards::v1_0::subsets::base::schema::snapshot::XmlDocument;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 //#region 🔖️KindsConformanceLaw
 /// 🧭️ `kind_of` is an EXHAUSTIVE match (no wildcard arm) — the compiler refuses this file if a

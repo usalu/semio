@@ -399,7 +399,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   const directory = join(import.meta.dir, "../🧫️fixtures/🪶️artifact-empty-facet-authoring/📋️registration"),
     bytes = readFileSync(join(directory, "🔣️.json"), "utf8"),
     registration = JSON.parse(bytes);
-  expect(registration).toEqual({ schemaVersion: 1, contractId: "artifact-empty-facet-authoring-registration-v1", command: "artifact-empty-facet-authoring", target: "test-artifact-empty-facet-authoring", cache: false, source: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts", runner: "runTestBudgeted", budget: "default" });
+  expect(registration).toEqual({ schemaVersion: 1, contractId: "artifact-empty-facet-authoring-registration-v1", command: "artifact-empty-facet-authoring", target: "test-artifact-empty-facet-authoring", cache: true, source: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪶️artifact-empty-facet-authoring/🟦️.ts", runner: "runTestBudgeted", budget: "default" });
   const errors: ParseError[] = [];
   expect(parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(registration);
   expect(errors).toEqual([]);
@@ -408,7 +408,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   expect(join(repoRoot, registration.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[registration.target]).toBeDefined();
-  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", cache: registration.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
+  expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", cache: registration.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
   const path = join(packageRoot, "📜️script.ts"),

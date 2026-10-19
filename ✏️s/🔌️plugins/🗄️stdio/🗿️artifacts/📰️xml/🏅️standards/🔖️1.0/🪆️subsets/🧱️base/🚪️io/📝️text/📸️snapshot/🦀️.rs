@@ -45,8 +45,6 @@ pub(crate) fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<O
     if !s[*pos..].starts_with("<?xml") {
         return Ok(None);
     }
-    // Distinguish the reserved `<?xml ...?>` declaration target from an ordinary PI whose target
-    // merely starts with the same four letters (e.g. `<?xml-stylesheet ...?>`).
     let after = s[*pos + "<?xml".len()..].chars().next();
     match after {
         Some(c) if c.is_ascii_whitespace() || c == '?' => {}
@@ -56,8 +54,6 @@ pub(crate) fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<O
     let mut version = None;
     let mut encoding = None;
     let mut standalone = None;
-    // 🗣️ `version` is mandatory and always first, so its delimiter is the declaration's own
-    // (see `XmlQuote`); a declaration whose pseudo-attributes disagree normalizes to that one.
     let mut quote = XmlQuote::default();
     loop {
         skip_ws(s, pos);
@@ -333,8 +329,6 @@ pub(crate) fn xml_unescape_text(s: &str) -> Result<String, String> {
             }
         };
         out.push(decoded);
-        // Advance the char iterator past the consumed entity (end index is relative to `rest`,
-        // i.e. `i`-relative; convert to an absolute byte offset and skip to just past the `;`).
         let consume_to = i + end + 1;
         while let Some(&(j, _)) = chars.peek() {
             if j < consume_to {
@@ -707,14 +701,12 @@ use super::*;
 use crate::STDIO_XML_DOCUMENT_SCHEMA;
 impl XmlSnapshot {
     /// 📥️ Parses XML into its lossless logical model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
         Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text)? })
     }
 
     /// 📤️ Deterministically materializes XML from the logical model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_utf8(&self) -> Result<Vec<u8>, String> {
         Ok(xml_document_to_text_checked(&self.doc)?.into_bytes())
     }

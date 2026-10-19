@@ -1,10 +1,12 @@
-//! and every gesture the plugin turns into a document edit is the concrete mutation kinds it consists of. Each law
+//! 👆️ and every gesture the plugin turns into a document edit is the concrete mutation kinds it consists of. Each law
 //! 🧭️ Host gesture protocol laws: the renderer and the panels report GESTURES (verbs with ids and values), never a scene,
 //! builds the kinds from a typed base alone, replays them forward through the central applier and the recorded
 //! inverse rows last-to-first, and requires the base back.
 
 use super::*;
 use {semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation::change_object_hidden, semio_s_artifact_puzzle_3d_mutations_object::change_object_locked::mutation::change_object_locked, semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object, semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::delete_object, semio_s_artifact_puzzle_3d_mutations_vortex::disconnect_vortices::mutation::disconnect_vortices};
+#[cfg(test)] use semio_s_artifact_puzzle_3d_commands_document::set_selection_flag;
+#[cfg(test)] use semio_s_artifact_puzzle_3d_commands_document::add_target_volume;
 
 fn vortex(id: &str) -> Puzzle3dVortex {
     Puzzle3dVortex { id: id.into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None, radius: None, hidden: false, locked: false }

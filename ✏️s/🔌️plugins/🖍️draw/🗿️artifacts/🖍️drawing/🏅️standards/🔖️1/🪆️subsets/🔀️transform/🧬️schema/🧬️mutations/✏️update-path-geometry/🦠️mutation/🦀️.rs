@@ -12,9 +12,9 @@ use semio_s_artifact_draw_drawing_model::PathSegment;
 pub struct UpdatePathGeometry {
     pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[dsl(statements, block)]
-    pub segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>,
+    pub segments: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>,
 }
-pub fn update_path_geometry<Op: From<UpdatePathGeometry>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> Op {
+pub fn update_path_geometry<Op: From<UpdatePathGeometry>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, segments: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>) -> Op {
     Op::from(UpdatePathGeometry { layer_id, segments })
 }
 impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdatePathGeometry where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdatePathGeometry> {

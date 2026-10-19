@@ -1,4 +1,4 @@
-use semio_framework_plugin_reactor_turn::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use semio_framework_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
 use semio_framework_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR, instance_lifetime};
 use semio_framework_plugin_reactor_tasks::tasks_fixed_slots::REACTOR_TASK_SLOTS;
 use semio_framework_plugin_reactor_lifecycle::life_reactor_close::{ReactorCloseRegistry, activate_reactor_close, reactor_close_complete, release_reactor_close, reserve_reactor_close};

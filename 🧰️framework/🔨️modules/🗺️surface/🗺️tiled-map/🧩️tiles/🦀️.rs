@@ -93,12 +93,6 @@ pub fn visible_tile_cursor(camera: &Camera, viewport: &Viewport, z: u32) -> Visi
     let step = (WORLD_HALF * 2.0) / n;
     let x0 = ((min_x + WORLD_HALF) / step).floor().max(0.0) as u32;
     let y0 = ((WORLD_HALF - max_y) / step).floor().max(0.0) as u32;
-    // 🎯️ Last index is the tile *containing* the far edge, i.e. `ceil - 1`: a bare `ceil` named the
-    // tile that starts where the viewport ends, so every window over-covered by a whole column and
-    // a whole row (9×6 instead of 8×5 at 1920×1080/z14 — ~35% of each refresh's fetches and PNG/MVT
-    // decodes spent on tiles `tile_rect_intersects_viewport` then discards at draw time). `ceil - 1`
-    // also drops that zero-overlap tile when the edge lands exactly on a boundary, and the `max(x0)`
-    // floor keeps a viewport smaller than one tile at a single tile rather than an empty range.
     let x1 = (((max_x + WORLD_HALF) / step).ceil() - 1.0).max(x0 as f64).min(n - 1.0) as u32;
     let y1 = (((WORLD_HALF - min_y) / step).ceil() - 1.0).max(y0 as f64).min(n - 1.0) as u32;
     let columns = usize::try_from(x1.saturating_sub(x0).saturating_add(1)).unwrap_or(usize::MAX);

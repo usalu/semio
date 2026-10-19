@@ -102,9 +102,11 @@
       ]
     },
     "deps": {
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
+        "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts deps"
       }
     }

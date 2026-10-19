@@ -1,6 +1,7 @@
 //! 🚪️ Original tool factories borrow native construction authority and preserve caller custody through refusal.
 use super::RetainedToolWireInput;
-use semio_framework_job::{Generation,InteractiveJob,Operation,OperationId,OriginalTurnFailure,StepContext,OriginalPayloadSourceIdentity};
+use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, OriginalTurnFailure, StepContext};
+use semio_framework_job_payload::{OriginalPayloadSourceIdentity};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 
@@ -65,7 +66,7 @@ pub fn admit_original_tool_job_controlled<P:Send+'static,J:InteractiveJob+Send+'
 /// 🏭️ A non-cloneable loan of an already admitted construction quote exists only inside its original callback.
 pub struct OriginalToolConstructionScope<'scope>{identity:OriginalToolJobIdentity,remaining:RetirementDemand,_loan:std::marker::PhantomData<&'scope mut ()>}
 impl<'scope> OriginalToolConstructionScope<'scope>{
- fn loan(_original:&'scope mut semio_framework_value::NativeDecodeControl<'_>,identity:OriginalToolJobIdentity,remaining:RetirementDemand)->Self{Self{identity,remaining,_loan:std::marker::PhantomData}}
+ fn loan(_original:&'scope mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,identity:OriginalToolJobIdentity,remaining:RetirementDemand)->Self{Self{identity,remaining,_loan:std::marker::PhantomData}}
  pub fn identity(&self)->OriginalToolJobIdentity{self.identity}
  /// 🪙️ Reserves only the still-available original owner quote before any physical source is born.
  pub fn admit_owner(&mut self,demand:RetirementDemand)->Result<(),ValueError>{if demand.depth>self.remaining.depth||demand.copy_bytes>self.remaining.copy_bytes||demand.capacity_bytes>self.remaining.capacity_bytes||demand.release_bytes>self.remaining.release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction owner exceeds its remaining admitted quote"))}self.remaining.copy_bytes-=demand.copy_bytes;self.remaining.capacity_bytes-=demand.capacity_bytes;self.remaining.release_bytes-=demand.release_bytes;Ok(())}

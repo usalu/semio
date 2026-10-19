@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { Database } from "bun:sqlite";
-import fixture from "../../🧫️fixtures/🧮️plain-elements/🔣️.json";
+import fixture from "../🧫️fixtures/🧮️plain-elements/🔣️.json";
 import schema from "../../🧬️schema/🧮️plain-elements/🔣️.json";
 
 /** 🧮️ Validates padded plain-composite retirement with an independent relational oracle. */

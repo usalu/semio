@@ -83,8 +83,6 @@ pub mod engagement_possible_select {
     pub fn handle(payload: &EngagementPossibleSelect, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let pane_id = payload.pane.as_deref().map_or(CadPaneId::Shape, cad_pane_id_from_suffix);
-        // 🎯️ A keyed transition (`confirm`, `close`, …) may be guarded on the selection the user made
-        // in the viewport — feed the live `"cad"` ids in first, then apply the transition.
         let step = runtime.engagement_session.as_mut().and_then(|session| {
             inject_selection(session, &ctx.interaction.ids);
             apply_event(session, &payload.possible_id, None).then(|| (session.state.clone(), session.clone()))
@@ -167,9 +165,6 @@ pub mod world_pointer_down {
     pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let pane_id = payload.pane.as_deref().map(cad_pane_id_from_suffix).or_else(|| payload.surface_id.as_deref().and_then(|surface_id| surface_id.rsplit('/').next()).map(cad_pane_id_from_suffix)).unwrap_or(CadPaneId::Shape);
-        // 📍️ `apply_event`'s payload for a pointer event is the raw position value itself
-        // (mirrors the pre-B1 `args.get("position")` extraction — NOT re-wrapped in another
-        // `{"position": ...}` object).
         let point_value =
             (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
         let commit = runtime.engagement_session.as_mut().and_then(|session| {
@@ -199,9 +194,6 @@ pub mod world_pointer_move {
     }
 
     pub fn handle(payload: &WorldPointerMove, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-        // Live rubber-band preview during an active engagement session: applies `pointer.move`
-        // (updating the session's cursor/preview context) in the window transient only — never an
-        // object, never config, never a history row.
         let point_value =
             (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
         let mut runtime = runtime_of(cfg, &ctx.window_transient);

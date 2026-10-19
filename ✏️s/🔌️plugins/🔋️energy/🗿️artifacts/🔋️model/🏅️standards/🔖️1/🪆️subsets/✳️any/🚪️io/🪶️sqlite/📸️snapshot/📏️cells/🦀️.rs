@@ -1,7 +1,8 @@
 //! 📏️ Energy native syntax admits each authored relational cell before either typed owner.
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R,DslField};
-use semio_framework_value::{DslValue as D,FromValue,NativeDecodeControl as N,ValueRefusalKind};
+use semio_framework_value::{DslValue as D, FromValue, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 type Roles<'a>=&'a[(&'a str,Role)];

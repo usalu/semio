@@ -27,10 +27,10 @@ describe("areaOf", () => {
 });
 
 describe("readSemioMarker", () => {
-  test("reads role = \"plugin\" from the writer plugin's migrated Cargo.toml", () => {
+  test("reads role = \"hub\" from the writer composition's Cargo.toml", () => {
     const root = getWorkspaceRoot();
     const manifestPath = join(root, "🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml");
-    expect(readSemioMarker(manifestPath, "🦀️rust")).toEqual({ role: "plugin" });
+    expect(readSemioMarker(manifestPath, "🦀️rust")).toEqual({ role: "hub" });
   });
 
   test("returns undefined for a non-existent manifest", () => {

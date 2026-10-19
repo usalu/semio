@@ -82,12 +82,6 @@ fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, bool) {
                 cur = to;
             }
             PathSegment::ArcTo { rx, ry, to, .. } => {
-                // 📐 Honest simplification: samples a straight-ish arc via linear interpolation of
-                // the endpoint radii direction is out of scope for a general x-rotated ellipse in
-                // this bridge — real circular (rx==ry) arcs are sampled exactly on a circle through
-                // start/end at that radius; a genuinely elliptical (rx!=ry) or rotated arc falls
-                // back to a single straight segment (documented, real, honest — never fabricated
-                // curvature it can't derive without a full endpoint-to-center arc solve).
                 if (rx - ry).abs() < EPS && rx > EPS {
                     if let Some((cx, cy)) = arc_center(cur, to, rx) {
                         let a0 = (cur.y - cy).atan2(cur.x - cx);

@@ -16,7 +16,8 @@ fn equivalent_inner_producer()->RecordSpecProducer{RecordSpecProducer{ordinary:e
 
 #[test]
 fn schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted(){
- use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,ValueRefusalKind};
+ use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  let contract:serde_json::Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🌱️value/🧪️tests/🧫️fixtures/🔑️schema-hash/💰️storage/🔣️.json"))).unwrap();
  assert_eq!(contract["requests"],"fullSystemAllocatorRequests");
  assert_eq!(contract["cumulative"],"sameCallerNoRefund");
@@ -71,6 +72,6 @@ fn schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted()
    }};
   }
   check!(NativeEncodeControl,semio_framework_value::native_encoding::NativeEncodeProgress);
-  check!(NativeDecodeControl,semio_framework_value::native_decoding::NativeDecodeProgress);
+  check!(NativeDecodeControl,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress);
  }
 }

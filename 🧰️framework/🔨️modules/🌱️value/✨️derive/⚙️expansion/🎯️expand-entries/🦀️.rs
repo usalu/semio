@@ -2,7 +2,7 @@
 
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
-use super::{container_crate_path, controlled_from_body, controlled_retirement_body, controlled_to_body, deny_unknown_keys, enum_edit_path_body, enum_key_at_path_body, enum_to_path_body, field_wire_name, from_value_struct_fields, generics_with_bound, named_fields, parse_container_attrs, parse_field_attrs, parse_variant_attrs, struct_edit_path_body, struct_key_at_path_body, struct_to_path_body, to_value_object_entries, variant_destructure_patterns, variant_field_from_value_read, variant_field_to_value_push, variant_wire_name};
+use super::{container_crate_path, controlled_from_body, controlled_semantic_admission, controlled_retirement_body, controlled_to_body, deny_unknown_keys, enum_edit_path_body, enum_key_at_path_body, enum_to_path_body, field_wire_name, from_value_struct_fields, generics_with_bound, named_fields, parse_container_attrs, parse_field_attrs, parse_variant_attrs, struct_edit_path_body, struct_key_at_path_body, struct_to_path_body, to_value_object_entries, variant_destructure_patterns, variant_field_from_value_read, variant_field_to_value_push, variant_wire_name};
 
 //#region 🔖️Expand
 pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
@@ -21,8 +21,6 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { #value_crate::ToValue::to_value(&self.0) },
             other => return Err(syn::Error::new_spanned(other, "#[value(transparent)] requires exactly one field")),
         },
-        // 🆔 Single-field tuple struct (`struct Foo(pub u32);`): automatic transparent newtype —
-        // see the module docs' `#[value(transparent)]` entry for why this needs no attribute.
         Data::Struct(data) if matches!(&data.fields, Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1) => {
             quote! { #value_crate::ToValue::to_value(&self.0) }
         }
@@ -47,10 +45,6 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
             }
         }
         Data::Enum(data) if container.tag.is_none() => {
-            // 🏷️ Externally-tagged (serde's own default enum representation when no `#[serde(tag
-            // = …)]` is present): a unit variant is still the bare wire-name string, a
-            // single-unnamed-field or named-field variant becomes a one-key object
-            // `{"VariantName": <payload>}`.
             let arms = data
                 .variants
                 .iter()
@@ -155,11 +149,6 @@ pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStr
                             })
                         }
                         (Fields::Named(named), None) => {
-                            // 🛡️ `__out_entries`, not `entries` — a user field literally named `entries`
-                            // (e.g. `SemioValue::Map { entries: Vec<SemioValueEntry> }`) would otherwise
-                            // shadow the accumulator once `#(#idents),*` destructures it into scope, making
-                            // `ToValue::to_value(#ident)` resolve to the accumulator itself (an owned
-                            // `Vec<(String, DslValue)>`) instead of the field's `&Vec<SemioValueEntry>`.
                             let push_into = quote! { __out_entries };
                             let pushes = named
                                 .named
@@ -272,7 +261,6 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => quote! { Ok(Self(#value_crate::FromValue::from_value(value)?)) },
             other => return Err(syn::Error::new_spanned(other, "#[value(transparent)] requires exactly one field")),
         },
-        // 🆔 Single-field tuple struct: sibling of `expand_to_value`'s identical guard above.
         Data::Struct(data) if matches!(&data.fields, Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1) => {
             quote! { Ok(Self(#value_crate::FromValue::from_value(value)?)) }
         }
@@ -300,8 +288,6 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
             }
         }
         Data::Enum(data) if container.tag.is_none() => {
-            // 🏷️ Externally-tagged (serde's own default enum representation when no `#[serde(tag
-            // = …)]` is present) — mirrors `expand_to_value`'s sibling arm above.
             let string_arms = data.variants.iter().filter(|variant| matches!(variant.fields, Fields::Unit)).map(|variant| {
                 let variant_ident = &variant.ident;
                 let variant_attrs = parse_variant_attrs(&variant.attrs)?;
@@ -398,8 +384,6 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                             #wire_variant => Self::#variant_ident,
                         }),
                         (Fields::Unit, None) => {
-                            // 🛡️ Internally-tagged unit variant: the whole entries object is nothing
-                            // but the tag, so `deny_unknown_fields` allows exactly `{tag}`.
                             let deny_check = if container.deny_unknown_fields {
                                 deny_unknown_keys(&quote! { __entries }, std::slice::from_ref(tag), &value_crate)
                             } else {
@@ -416,23 +400,6 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                             })
                         }
                         (Fields::Unnamed(unnamed), None) if unnamed.unnamed.len() == 1 => {
-                            // 🩹 Strip the tag key before handing the object to the payload type's
-                            // own `FromValue` — `expand_to_value`'s sibling arm never puts the tag
-                            // INTO the payload's own entries (it prepends the tag after taking the
-                            // payload's `to_value()`, so the payload never emits it either), so
-                            // leaving the tag in here was a decode/encode asymmetry: a payload type
-                            // that itself carries `#[value(deny_unknown_fields)]` would reject its
-                            // own valid wire form because the wrapper's tag key looked unknown to it.
-                            //
-                            // 🪆 The `__scalar` arm is the exact inverse of `expand_to_value`'s runtime
-                            // branch: a payload whose `to_value()` is NOT an object cannot be spliced
-                            // beside the tag, so the encoder carries it as the single entry
-                            // `{"value": <scalar>}`. Which of the two shapes a given wire object is
-                            // cannot be decided from the payload TYPE at expansion time (a struct whose
-                            // only field is literally named `value` produces the same key set), so the
-                            // object form is attempted first and the carrier is unwrapped only when it
-                            // fails — that ordering decodes both shapes correctly, where a key-shape
-                            // test alone would mis-decode `struct P { value: String }`.
                             let payload_ty = &unnamed.unnamed[0].ty;
                             Ok(quote! {
                                 #wire_variant => Self::#variant_ident({
@@ -508,10 +475,6 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                 },
                 None => quote! {},
             };
-            // 🛡️ Adjacently-tagged outer-level `deny_unknown_fields`: the allowed key set here is
-            // just `{tag, content}` regardless of which variant matches, so this check runs once,
-            // before the tag is even read — unlike the internally-tagged case (no `content`),
-            // where the allowed set depends on the variant and is checked per-arm above instead.
             let outer_deny_check = match (&container.content, container.deny_unknown_fields) {
                 (Some(content), true) => deny_unknown_keys(&quote! { __entries }, &[tag.clone(), content.clone()], &value_crate),
                 _ => quote! {},

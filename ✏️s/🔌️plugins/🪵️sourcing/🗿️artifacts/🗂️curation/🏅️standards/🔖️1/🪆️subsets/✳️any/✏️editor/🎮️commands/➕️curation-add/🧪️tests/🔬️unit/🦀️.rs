@@ -9,7 +9,6 @@ use crate::schema::curated_count;
 async fn curation_add_and_remove_round_trip_through_operations() {
     let mut app = new_app().await;
     let document = app.snapshot().expect("snapshot");
-    // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.
     let object_id = document.stock_extra[2].id.clone();
     dispatch(&mut app, SourcingCurationCommand::CurationAdd(CurationAdd { object_id: object_id.clone() })).await;
     assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);
@@ -32,7 +31,6 @@ async fn curation_set_count_supports_both_delta_and_absolute_value() {
 async fn drop_on_curated_and_drop_on_pool_mirror_add_and_remove() {
     let mut app = new_app().await;
     let document = app.snapshot().expect("snapshot");
-    // stock[2] isn't part of the fixture's pre-curated set, so a single drop lands on count 1.
     let object_id = document.stock_extra[2].id.clone();
     dispatch(&mut app, SourcingCurationCommand::DropOnCurated(drop_on_curated::DropOnCurated { object_id: object_id.clone() })).await;
     assert_eq!(curated_count(&app.snapshot().expect("snapshot"), &object_id), 1);

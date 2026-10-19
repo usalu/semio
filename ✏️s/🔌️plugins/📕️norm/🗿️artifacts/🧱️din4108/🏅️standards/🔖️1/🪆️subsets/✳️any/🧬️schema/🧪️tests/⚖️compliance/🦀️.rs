@@ -1,4 +1,4 @@
-//! Numeric worked examples + Wave D DoD tests for DIN 4108.
+//! 🔢️ Numeric worked examples + Wave D DoD tests for DIN 4108.
 
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_compliance::CheckStatus;

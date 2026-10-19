@@ -1,4 +1,4 @@
-//! selection reaches the render as [`Puzzle2dInteractionSnapshot`] (resolved once per render by
+//! 👉️ selection reaches the render as [`Puzzle2dInteractionSnapshot`] (resolved once per render by
 //! 🔍️ Puzzle 2d play app panel — the field inspector for whatever is selected. The live `vortex`
 //! `Puzzle2dPlayApp::render_with_request_context`), so this panel shows the first selected node,
 //! edge or handle's real fields; an empty selection falls back to the document summary.
@@ -6,9 +6,9 @@
 //! 🩹️ The two mutating rows dispatch `setSelectionFlag` with an explicit `{flag, value}` over the live
 //! selection — the same arg shape the context menu sends.
 
-use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES;
-use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle_extension_id, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES;
+use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
+use {semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_edges, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::snapshot_target_regions, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle_extension_id, semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dInteractionSnapshot, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Component, NumberStepperProps, Trigger};
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 
@@ -191,7 +191,7 @@ fn node_fields(node: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
         stepper_row(&mut fields, "node.radius", labels.radius.as_str(), id, "radius", stepper_value(node, "radius", 24.0), 1.0)?;
     }
     read_only(&mut fields, "node.handles", labels.handles.as_str(), node.get("handles").and_then(Value::as_array).map_or(0, Vec::len))?;
-    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node))?;
+    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node))?;
     flag_row(&mut fields, "node.locked", labels.locked.as_str(), "locked", flag(node, "locked"))?;
     Ok(fields)
 }
@@ -202,7 +202,7 @@ fn edge_fields(edge: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
     read_only(&mut fields, "edge.kind", labels.edge_kind.as_str(), text(edge, "edgeKind"))?;
     read_only(&mut fields, "edge.source", labels.source.as_str(), text(edge, "source"))?;
     read_only(&mut fields, "edge.target", labels.target.as_str(), text(edge, "target"))?;
-    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(edge))?;
+    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(edge))?;
     flag_row(&mut fields, "edge.locked", labels.locked.as_str(), "locked", flag(edge, "locked"))?;
     Ok(fields)
 }

@@ -772,7 +772,7 @@
       "effect": "linux-mapping",
       "status": 1,
       "callbacks": 0,
-      "message": "One exact loop filesystem mount required"
+      "message": "Attached directory partition required"
     }
   ],
   "protectedScopeCaseSchema": {

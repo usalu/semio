@@ -33,7 +33,6 @@ fn superscript_is_narrower_and_shifted_above_the_baseline() {
         let box_ = layout_src(fonts, "x^2");
         assert!(box_.width > 0.0);
         assert!(box_.height > 0.0, "a superscript must raise the box's height");
-        // Two items: the base glyph and the (smaller, higher) exponent glyph.
         assert_eq!(box_.items.len(), 2);
     });
 }
@@ -71,7 +70,6 @@ fn sqrt_draws_a_radical_sign_and_a_top_rule() {
 fn matrix_lays_out_a_grid_wrapped_in_parens() {
     with_fonts(|fonts| {
         let box_ = layout_src(fonts, "mat(1, 2; 3, 4)");
-        // 4 number glyphs + 2 stretchy paren glyphs.
         assert_eq!(box_.items.iter().filter(|i| matches!(i, PlacedItem::Glyph { .. })).count(), 6);
     });
 }
@@ -133,8 +131,6 @@ fn unknown_call_name_renders_the_name_and_wrapped_args_rather_than_silently_drop
 #[test]
 fn layout_raw_text_shapes_arbitrary_strings_without_parsing_notation_syntax() {
     with_fonts(|fonts| {
-        // `_ ; < > !` are all special characters in math notation — a raw-text caller must be
-        // able to include them literally, which `layout_raw_text` (no parser involved) allows.
         let box_ = layout_raw_text(fonts, "a_b; c<d!");
         assert!(box_.width > 0.0);
         assert!(!box_.items.is_empty());

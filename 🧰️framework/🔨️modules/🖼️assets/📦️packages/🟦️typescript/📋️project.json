@@ -5,7 +5,13 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖌️raster/🎥️video/🖋️svg-export/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
@@ -28,6 +34,11 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
@@ -36,6 +47,7 @@
     },
     "check-generated": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-generated"
@@ -79,6 +91,7 @@
       "outputs": []
     },
     "generate-logo": {
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -94,7 +107,12 @@
     },
     "test-mesh-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -104,7 +122,12 @@
     },
     "test-tile-proxy-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "options": {
@@ -114,7 +137,12 @@
     },
     "test-dispatch-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -124,7 +152,12 @@
     },
     "test-svg-video-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {

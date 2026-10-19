@@ -1,2 +1,2 @@
-/** flow export json */
+/** 🌊️ flow export json */
 export function register(): void {}

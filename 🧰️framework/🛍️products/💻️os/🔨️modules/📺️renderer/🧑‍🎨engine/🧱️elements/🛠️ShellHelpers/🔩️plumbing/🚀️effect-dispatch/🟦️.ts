@@ -60,7 +60,6 @@ export function makeEffectDispatchOne(
   resolveViewState: (session: ActiveSession) => ViewModel,
   provenance?: Pick<InputProvenanceV1, "causedBy" | "windowId">,
 ): EffectDispatchOne {
-  // 🔗️ A follow-up inherits its cause's key: `causalOrderKeyV1` over `{ inputSeq: cause, causedBy: cause }` IS the cause.
   const dispatch = provenance !== undefined && provenance.causedBy !== null ? { order: causalOrderKeyV1({ inputSeq: provenance.causedBy, causedBy: provenance.causedBy }) } : undefined;
   return async (action, args) => {
     if (!isCurrent()) return;

@@ -25,13 +25,13 @@ path = "../../🦀️.rs"
 native = ["semio-framework-ui-tui-terminal/native"]
 
 [dependencies]
+semio-framework-ui-tui-terminal = { path = "../../../../📺️terminal/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-ui-tui-core = { path = "../../../../🧱️cell-model/📦️packages/🦀️rust" }
 semio-framework-ui-tui-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-ui-tui-frame = { path = "../../../../🏛️frame/📦️packages/🦀️rust" }
 semio-framework-ui-tui-host = { path = "../../../../🏃️host/📦️packages/🦀️rust" }
-semio-framework-ui-tui-terminal = { path = "../../../../📺️terminal/📦️packages/🦀️rust" }
 semio-framework-ui-tui-vt = { path = "../../../../📟️vt/📦️packages/🦀️rust" }
 semio-framework-ui-tui-widgets = { path = "../../../../🧩️widgets/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }

@@ -41,7 +41,6 @@ impl SectionJob {
 }
 
 impl StagedOperation for SectionJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }
@@ -189,7 +188,6 @@ impl SplitJob {
 }
 
 impl StagedOperation for SplitJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }
@@ -287,7 +285,6 @@ impl BooleanFoldJob {
         Ok(Self::fold(shape, BooleanOp::Unite, tol, transforms.into_iter().map(Operand::Transformed).collect()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fold(base: SolidId, op: BooleanOp, tol: f64, operands: Vec<Operand>) -> Self {
         let plan = Plan::new(&[("fold", operands.len())]);
         Self { base, op, tol, operands, current: base, next_operand: 0, child: None, ledger: ChildLedger::default(), plan }
@@ -295,7 +292,6 @@ impl BooleanFoldJob {
 }
 
 impl StagedOperation for BooleanFoldJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }

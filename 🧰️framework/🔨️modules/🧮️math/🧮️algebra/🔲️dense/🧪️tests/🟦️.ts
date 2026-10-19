@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { lusolve } from "mathjs";
 import { DenseSolveCursor, type DenseSolveBudget } from "../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 export function verifyRetainedDenseOracle(): void {

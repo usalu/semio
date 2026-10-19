@@ -1,4 +1,4 @@
-import{testMethodV1,testRecordV1}from"../../../../../🧪️tests/📋️values/🟦️.ts";
+import{testMethodV1,testRecordV1}from"../../../../../../📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -26,7 +26,7 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
   assert.deepEqual(project.targets[fixture.target].outputs, []);
   assert.equal(project.targets[fixture.target].options.command, `bun "${fixture.entry}" prepare`);
   assert.ok(project.targets["deps-wasm"].dependsOn.includes(fixture.target));
-  const { cacheInternals } = await import("../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+  const { cacheInternals } = await import("../../../../../../📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const targets = { wasm: { cache: true, dependsOn: ["declarations"] } };
   assert.deepEqual(testRecordV1(testMethodV1(cacheInternals,"withWasmTooling",targets,true),"wasm").dependsOn, ["declarations", `workspace:${fixture.target}`]);
   assert.deepEqual(testMethodV1(cacheInternals,"withWasmTooling",targets,false), targets);

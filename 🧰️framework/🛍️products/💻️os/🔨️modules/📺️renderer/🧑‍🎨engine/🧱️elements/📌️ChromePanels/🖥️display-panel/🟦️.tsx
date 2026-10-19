@@ -100,9 +100,6 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
           label: kind.label,
           icon: displayWindowKindIcon(kind.iconId),
           defaultOpen: false,
-          // 🔃️ `worldProjectionTemplatesToTreeItems` already returns its items pre-reversed for one "up" render
-          // level (see its docstring); the plain kind leaf renders *last* raw so the bottom-anchored Tree's own
-          // reversal puts it first — reading top-to-bottom: the plain kind leaf, then Parallel, then Perspective.
           items:
             kind.surfaceKind === "world-3d"
               ? [

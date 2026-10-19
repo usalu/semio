@@ -7,7 +7,7 @@ export interface HtmlOutline {
 }
 
 export interface HtmlInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: HtmlOutline;
 }
 

@@ -52,9 +52,6 @@ use semio_framework_plugin::WindowEngagementStatus;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
 use std::collections::HashMap;
-use export_job::DrawingExportCommandJobFactory;
-use image_job::DrawingImageCommandJobFactory;
-use path_job::DrawingPathCommandJobFactory;
 #[path="🎯️points/🦀️.rs"]
 pub mod points;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
@@ -89,7 +86,7 @@ pub fn drawing_point_topology(snapshot:&DrawingSnapshot)->DomainTopology {
                 let Some(geometry)=points::geometry_id(&path.segments) else {continue;};
                 for (index,segment) in path.segments.iter().enumerate() {
                     for point in points::point_slots(segment) {
-                        if let Some(id)=points::point_id(&path.base.id,&geometry,index,*point) {ordered.push(TopologyNode {id,granularity:super::DRAWING_POINT_GRANULARITY.into(),parent:None});}
+                        if let Some(id)=points::point_id(&path.base.id,&geometry,index,*point) {ordered.push(TopologyNode {id,granularity:crate::DRAWING_POINT_GRANULARITY.into(),parent:None});}
                     }
                 }
             },

@@ -34,7 +34,7 @@ pub const TIME_TRAVEL_FINALIZE_REQUEST: RequestId = RequestId(0x7417_0001);
 
 #[doc(hidden)]
 pub fn history_planning_retirement_grant(demand:RetirementDemand)->RetainedCloneGrant {
-    RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+    RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
 }
 
 #[doc(hidden)]

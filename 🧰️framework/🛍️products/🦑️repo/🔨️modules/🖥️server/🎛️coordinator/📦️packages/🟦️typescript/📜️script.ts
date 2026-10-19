@@ -28,12 +28,12 @@ export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLi
 const PACKAGE_DIR = import.meta.dir;
 
 /** 🏗️ Delegates the coordinator's compile to its actual dedicated command owner. */
-class BuildScript extends BundleScript{async run(segments:string[]):Promise<void>{const {buildCoordinatorNextV1}=await import("../../🏗️builder/🏃️execution/📜️script.ts");await buildCoordinatorNextV1(this.repoRoot,this.invocation,segments);}}
+class BuildScript extends BundleScript{async run(segments:string[]):Promise<void>{const {buildCoordinatorNextV1}=await import("../../🏗️builder/🏃️execution/🟦️.ts");await buildCoordinatorNextV1(this.repoRoot,this.invocation,segments);}}
 
 /** 🛠️ Serves the coordinator through Next's development server, rebuilding on every edit. */
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    for(let index=0;index<segments.length;index+=2)if(!["--port","-p","--hostname","-H"].includes(segments[index]??"")||!segments[index+1])throw Error("Next development accepts only owned listener settings");
+    for(let index=0;index<segments.length;index+=2)if(!["--port","-p","--hostname","-H"].includes(segments[index]??"")||!segments[index+1])throw new Error("Next development accepts only owned listener settings");
     await withRepositoryCacheStoreV1(this.repoRoot,"dependencies",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),()=>withNextStorageV1(this.repoRoot,"prototype",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),async(store,_layout,temporary)=>{
     const typescript = join(temporary, "tsconfig.json"), require = createRequire(join(PACKAGE_DIR, "package.json"));
     await writeFile(typescript, JSON.stringify({ extends: join(PACKAGE_DIR, "tsconfig.json"), compilerOptions: { baseUrl: PACKAGE_DIR, strict: true, incremental: true, tsBuildInfoFile: join(temporary, "state.tsbuildinfo") }, include: [join(PACKAGE_DIR, "app/**/*.ts"), join(PACKAGE_DIR, "app/**/*.tsx"), join(PACKAGE_DIR, "lib/**/*.ts"), join(temporary, "next-env.d.ts"), join(temporary, "types/**/*.ts")], exclude: [join(PACKAGE_DIR, "node_modules"), join(PACKAGE_DIR, "dist"), join(PACKAGE_DIR, "📜️script.ts")] }));
@@ -51,10 +51,10 @@ class StartScript extends BundleScript {
     const standalone=requireNativeStoragePathV1(store.root,join(layout.output,"standalone")),environment:Record<string,string|undefined>={...devToolingEnv(),...store.environment,HOSTNAME:"0.0.0.0"};await withRepositoryArtifactV1({workspace:this.repoRoot,invocation:this.invocation,storage:store.storage,control:store.control,request:{version:1,path:layout.output,owner:`repo-coordinator:next:${mode}`,maximumBytes:storageSchema.definitions.Protocol.const.maximumOutputBytes,maximumFiles:storageSchema.definitions.Protocol.const.maximumOutputFiles}},reader=>withRepositoryArtifactTaskV1(reader,this.invocation,async artifact=>{
     for (let index = 0; index < segments.length; index += 2) {
       const key = segments[index], value = segments[index + 1];
-      if (!value || !key || !["--port", "-p", "--hostname", "-H"].includes(key)) throw Error("Expected start [--port <port>] [--hostname <hostname>]");
+      if (!value || !key || !["--port", "-p", "--hostname", "-H"].includes(key)) throw new Error("Expected start [--port <port>] [--hostname <hostname>]");
       environment[key === "--port" || key === "-p" ? "PORT" : "HOSTNAME"] = value;
     }
-    if(!artifact.files.includes("standalone/server.js"))throw Error("Original Next standalone entry required");
+    if(!artifact.files.includes("standalone/server.js"))throw new Error("Original Next standalone entry required");
     await artifact.recheck();await runOwnedCommand("node", [requireNativeStoragePathV1(store.root,join(standalone,"server.js"))], standalone, "repo-coordinator:start", 0, { env: environment, signal: artifact.control.signal });
     }));
     });
@@ -64,7 +64,7 @@ class StartScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "next-rebuild") {
-      if (segments.length !== 1) throw Error("Expected test next-rebuild");
+      if (segments.length !== 1) throw new Error("Expected test next-rebuild");
       await runOwnedCommand(process.execPath, ["test", join(PACKAGE_DIR, "../../🏗️builder/🎟️admission/🧪️tests/🟦️.ts")], this.repoRoot, "next:rebuild-tests", scriptInvocationBudget(this.invocation, 60_000), { signal: this.invocation.control.signal });
       return;
     }

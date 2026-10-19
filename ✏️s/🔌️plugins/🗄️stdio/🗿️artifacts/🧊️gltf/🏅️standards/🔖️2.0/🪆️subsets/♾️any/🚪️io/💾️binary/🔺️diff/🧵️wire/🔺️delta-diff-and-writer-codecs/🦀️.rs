@@ -6,7 +6,6 @@ use crate::standards::v2_0::subsets::any::io::binary::diff::wire::*;
 /// 🧷️ Binary codec of one positional list delta: removed `(id, base index)`, inserted `(after index, row)`, moved `(id, from, to)`.
 macro_rules! delta_bin_codec {
     ($write:ident, $read:ident, $delta:ident, $removal:ident, $insertion:ident, $relocation:ident, $write_id:expr, $read_id:expr, $write_row:expr, $read_row:expr) => {
-        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
         pub fn $write(w: &mut dsl::ByteWriter, delta: &$delta) {
             write_bin_vec(w, &delta.removed, |w, entry: &$removal| {
                 $write_id(w, &entry.id);
@@ -23,7 +22,6 @@ macro_rules! delta_bin_codec {
             });
         }
 
-        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
         pub fn $read(r: &mut dsl::ByteReader<'_>) -> Result<$delta, dsl::PackRefusal> {
             let removed = read_bin_vec(r, |r| Ok($removal { id: $read_id(r)?, index: r.read_varint_u64()? as usize }))?;
             let inserted = read_bin_vec(r, |r| Ok($insertion { index: r.read_varint_u64()? as usize, row: $read_row(r)? }))?;

@@ -214,8 +214,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
     worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
   }, [spaceAdministration]);
 
-  /** 🧯️ Unmount and identity change both retire the operation: the worker cancels its transport and
-   * erases page, receipt, and capability before the pane can be remounted under a new identity. */
   useEffect(() => () => {
     const worker = backboneWorkerRef.current;
     const operationEpoch = spaceAdministrationEpochRef.current;
@@ -254,9 +252,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
   }, []);
   useEffect(() => retireAuthenticatedInferencePresentation, [retireAuthenticatedInferencePresentation]);
 
-  // 🪪️ §C3 identity bootstrap — pre-identity default actor, set once at mount so `PluginRuntime`'s
-  // `AppChannelClient`s created before sign-in resolves (or with no hub env at all) still carry the
-  // SAME `client-{sessionId}` id `shellActorIdRef` already defaults to.
   useEffect(() => {
     setPluginRuntimeActor(shellActorIdRef.current);
   }, []);
@@ -285,10 +280,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
   }, [hubEnv, retireAuthenticatedInferencePresentation]);
 
   useEffect(() => {
-    // 📇️ §C3 "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly" — the
-    // existing `🛠️dev🖥️s⚛️react` launcher (no `S_HUB_URL`) never reaches any code below this guard.
-    // 🎫️ A hub env with no session is the ordinary local-first state, not a fault: the shell runs,
-    // and the hub badge offers sign-in. Only a signed-in human has hub authority to bootstrap.
     const capability = hubSessionCapability;
     if (!hubEnv || capability === null) return;
     setHubSessionRefused(false);
@@ -301,19 +292,7 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
       const identityAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = identityAttempt;
       identityClientInstanceIdRef.current = clientInstanceId;
-      // 📇️ Opens the identity document FIRST (folder poll starts immediately) so the snapshot wait
-      // below has something to resolve against; re-opening later with the same `documentId` (once the
-      // real actor id is known) is a harmless idempotent re-subscribe (`openArtifact` always closes
-      // any prior state for the same id first).
       worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...identityConfig }) });
-      // 📇️ terra-web-shellhost (finding 3) — event-driven wait for a previously-persisted identity's
-      // `documentArchiveReplaced`, raced against a 2s `AbortSignal.timeout`: a 404/no-file-yet folder read
-      // never emits a `documentArchiveReplaced` at all (see `pollFolderOnce`'s doc in `🏪️store/👷️worker/🟦️.ts`).
-      // It runs BESIDE the hub's authority read below, never before it: awaited first, it held every first
-      // sign-in's identity — and with it the input funnel's identity gate — 2 s behind the hub's answer
-      // (ticket 26/09/23 S18 §14c). The record only decides what is written back: an unchanged identity is
-      // not rewritten unless the authority moved, and a returning human keeps the record's `issuedAtMs`.
-      // `identityWaitAbort` folds into the raced signal so an unmount tears the subscription down at once.
       const storedIdentityRead = waitForEvent<Identity | null>(
         (handler) => {
           identitySnapshotResolverRef.current = handler;
@@ -326,10 +305,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
       const sameIdentity = (left: Identity | null, right: Identity): boolean => left !== null && left.userId === right.userId && left.email === right.email && left.displayName === right.displayName && left.hubBaseUrl === right.hubBaseUrl;
       let shownIdentity: Identity | null = null;
       let writtenIdentity: Identity | null = null;
-      // 🎫️ Hands the credential-owning worker the human's own capability over a private port, then
-      // reads the hub's authority back through it. A fresh channel per bootstrap is deliberate: the
-      // worker retires every owner bound to a previous capability when a new one is installed, so
-      // switching humans can never leave one principal's document open under another's session.
       const sessionChannel = new MessageChannel();
       worker.postMessage({ kind: "semio-hub-session-port", port: sessionChannel.port2 }, [sessionChannel.port2]);
       const sessionPort = new HubSessionPortClientV1(sessionChannel.port1, capability.token);
@@ -373,9 +348,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
           shellActorIdRef.current = shellActorId(shellSessionIdRef.current, null);
           setPluginRuntimeActor(shellActorIdRef.current);
         },
-        // 🔌️ A link that stopped answering is not a session that ended: the shell says it is offline
-        // and keeps the authority it already verified, so a short connection loss leaves the document,
-        // its history and its owners exactly where they were and the loop catches up on its own.
         onDegraded: (offline) => {
           if (!ownerIsCurrent()) return;
           setIdentityOffline(offline);
@@ -459,8 +431,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
     return () => window.removeEventListener("pointermove", trackPointer);
   }, []);
 
-  // 🐚️ Only a page-owning studio shell syncs to the real browser URL bar/history — an embedded shell
-  // sharing the page with others must not fight them over `window.history`.
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", hostMode && scope.ownsPage);
   const shellRoute = useMemo(() => parseShellRoute(shellUri.split("?")[0] ?? "/"), [shellUri]);
   /** 🧭️ The path the shell renders as not found — never the hub overlay route, which renders over the underlying session. */
@@ -495,8 +465,6 @@ export function useDirectoryAndRoute(core: ShellCoreAfterBackboneWorker) {
     requestSessionRoute(uri);
   }, [hostMode, navigateHistory, requestSessionRoute]);
 
-  // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
-  // page must not clobber each other's panel layout/dock state through an unnamespaced localStorage key.
   const shellStorage = scope.storage;
   const dockLayoutStore = useMemo(() => new DockLayoutStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
   const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);

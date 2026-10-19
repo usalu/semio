@@ -144,18 +144,15 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioTableBuilderConstruction {
         /// 🏗️ Starts a fresh, empty table document.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: SemioTableSnapshot::default() }
         }
         /// 🏗️ Appends one column, in order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_column(mut self, name: impl Into<String>, kind: SemioTableCellKind) -> Self {
             self.snapshot.columns.push(SemioTableColumn { name: name.into(), kind });
             self
         }
         /// 🏗️ Appends one row, in order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_row(mut self, row: SemioTableRow) -> Self {
             self.snapshot.rows.push(row);
             self

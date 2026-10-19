@@ -1,5 +1,6 @@
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import type { SemanticDescendantNode } from "../📜️taxonomy-contracts/🟦️.ts";
+import { pathUtf16Units } from "../📏️path-budget/🟦️.ts";
 import type { TaxonomyAudit } from "../🪣️taxonomy-audit-context/🟦️.ts";
 
 /** 🛤️ Audits the semantic directory member kinds, the projected member kinds, the profile renderers and the descendant contracts. */
@@ -120,9 +121,9 @@ export function auditMemberAndDescendantContracts(audit: TaxonomyAudit): void {
       if (!catalog || !("contractKind" in catalog) || catalog.contractKind !== "distributed-json-manifest-catalog") problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].catalogContractId must reference one distributed JSON manifest catalog.`);
       if (!taxonomy.fileKinds[contract.leafFileKindId]) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].leafFileKindId is missing.`);
       if (contract.rendering !== "semantic-member-directory-and-physical-kind-leaf") problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].rendering is invalid.`);
-      exactKeys(contract.pathBudgetReserve, ["derivation", "bytes"], `semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve`);
+      exactKeys(contract.pathBudgetReserve, ["derivation", "utf16Units"], `semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve`);
       if (contract.pathBudgetReserve.derivation !== "longest-rendered-catalog-descendant-suffix") problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve.derivation is invalid.`);
-      if (!Number.isSafeInteger(contract.pathBudgetReserve.bytes) || contract.pathBudgetReserve.bytes <= 0 || contract.pathBudgetReserve.bytes >= taxonomy.collisionPolicy.maxPathBytes) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve.bytes must be a positive safe integer below maxPathBytes.`);
+      if (!Number.isSafeInteger(contract.pathBudgetReserve.utf16Units) || contract.pathBudgetReserve.utf16Units <= 0 || contract.pathBudgetReserve.utf16Units >= taxonomy.collisionPolicy.maxPathUtf16Units) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve.utf16Units must be a positive safe integer below maxPathUtf16Units.`);
       continue;
     }
     exactKeys(contract, ["rootDirectoryKindId", "requiredNodes", "exclusiveAlternatives", "realizedNodeCount", "pathBudgetReserve"], `semanticDescendantContracts[${JSON.stringify(id)}]`);
@@ -158,14 +159,14 @@ export function auditMemberAndDescendantContracts(audit: TaxonomyAudit): void {
       }
     }
     if (contract.realizedNodeCount !== requiredRealizedKeys.size + (contract.exclusiveAlternatives?.length ?? 0)) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].realizedNodeCount must equal realized required destination nodes plus one node per exclusive group.`);
-    exactKeys(contract.pathBudgetReserve, ["derivation", "bytes"], `semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve`);
+    exactKeys(contract.pathBudgetReserve, ["derivation", "utf16Units"], `semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve`);
     if (contract.pathBudgetReserve.derivation !== "longest-canonical-descendant-suffix") problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve.derivation is invalid.`);
-    const derivedBytes = Math.max(0, ...allKeys.map((key) => new TextEncoder().encode(`/${key.slice(key.indexOf(":") + 1)}`).length));
-    if (contract.pathBudgetReserve.bytes !== derivedBytes) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve.bytes must equal derived longest suffix ${derivedBytes}.`);
-    if (contract.pathBudgetReserve.bytes >= taxonomy.collisionPolicy.maxPathBytes) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve must be below maxPathBytes.`);
+    const derivedUnits = Math.max(0, ...allKeys.map((key) => pathUtf16Units(`/${key.slice(key.indexOf(":") + 1)}`)));
+    if (contract.pathBudgetReserve.utf16Units !== derivedUnits) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve.utf16Units must equal derived longest suffix ${derivedUnits}.`);
+    if (contract.pathBudgetReserve.utf16Units >= taxonomy.collisionPolicy.maxPathUtf16Units) problems.push(`semanticDescendantContracts[${JSON.stringify(id)}].pathBudgetReserve must be below maxPathUtf16Units.`);
     if (id === "mutation-implementation-case-v1") {
       const expectedRequired = ["directory:", "file:🦀️.rs"].sort();
-      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 2 || contract.pathBudgetReserve.bytes !== 11) problems.push("semanticDescendantContracts.mutation-implementation-case-v1 must encode the exact two-node Rust implementation case and 11-byte reserve.");
+      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 2 || contract.pathBudgetReserve.utf16Units !== 7) problems.push("semanticDescendantContracts.mutation-implementation-case-v1 must encode the exact two-node Rust implementation case and 7-unit reserve.");
     }
     if (id === "mutation-fixture-bundle-v1") {
       const expectedRequired = ["directory:", "directory:🦠️mutation", "file:🦠️mutation/🔣️.json", "directory:📸️snapshot", "directory:📸️snapshot/⬅️before", "file:📸️snapshot/⬅️before/🔣️.json", "directory:📸️snapshot/➡️after", "file:📸️snapshot/➡️after/🔣️.json", "directory:🔺️diff", "directory:🎯️outcome", "file:🎯️outcome/🔣️.json"].sort();

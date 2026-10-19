@@ -4,12 +4,12 @@
  * oracle for counts and for matrix composition). */
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { manifestViewContextSchema as viewContextSchema } from "../../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework/manifest/testing/fixtures";
 import { parseResolvedPluginViewState } from "@semio-tech/framework";
 import { Matrix4, Quaternion, Vector3, BoxGeometry, type InstancedMesh } from "three";
-import { runTracePagesFixture as fixture } from "../../../../../../../../../../🔨️modules/⏯️tool-run/🧪️tests/🧫️fixtures/🟦️.ts";
-import { canvas2dSceneLanesFixture as canvas2dLanes } from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { rfc4648Base64urlVectorsFixture as base64UrlVectors } from "../../../../../../../../../../🔨️modules/🚪️io/🧪️tests/🧫️fixtures/🟦️.ts";
+import { runTracePagesFixture as fixture } from "@semio-tech/framework/tool-run/testing/fixtures";
+import { canvas2dSceneLanesFixture as canvas2dLanes } from "@semio-tech/framework/ui/testing/fixtures";
+import { rfc4648Base64urlVectorsFixture as base64UrlVectors } from "@semio-tech/framework/io/testing/fixtures";
 import { base64UrlDecode, base64UrlEncode } from "@semio-tech/framework/io/base64";
 import {
   encodeToolRunTraceDelta,

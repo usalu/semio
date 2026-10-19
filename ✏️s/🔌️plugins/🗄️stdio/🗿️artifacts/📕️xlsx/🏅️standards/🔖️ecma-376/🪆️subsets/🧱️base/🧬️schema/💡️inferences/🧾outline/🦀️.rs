@@ -18,7 +18,6 @@ pub struct XlsxOutline {
 }
 
 impl XlsxOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &XlsxSnapshot) -> Self {
         let workbook = snapshot.project_workbook().unwrap_or_default();
         let sheet_names: Vec<String> = workbook.sheets.iter().map(|s| s.name.clone()).collect();

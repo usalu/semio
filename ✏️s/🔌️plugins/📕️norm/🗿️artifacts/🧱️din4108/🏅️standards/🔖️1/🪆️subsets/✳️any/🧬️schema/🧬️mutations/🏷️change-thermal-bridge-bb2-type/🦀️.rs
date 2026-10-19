@@ -1,4 +1,4 @@
-//! `change-thermal-bridge-bb2-type`.
+//! 🧬️ `change-thermal-bridge-bb2-type`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

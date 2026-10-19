@@ -28,13 +28,6 @@ impl Ui {
     /// already knows (via `scene_host.is_some()`) whether to paint its own placeholder chrome for
     /// `ComponentScene`/`Image` leaves this tick or leave that rect for the host to fill in below —
     /// see `paint`'s own doc comment on that gate.
-    // 🧬️ A former `Option<&mut dyn SceneHost>` — `SceneHost` is a genuine OPEN extension point (its own
-    // doc comment: "the only place vello/world3d/raster-decode-specific code may live"; two real
-    // implementors already exist, `RecordingSceneHost` here in tests and `FrameworkSceneHost` in
-    // `os/renderer/engine/🟦️Interpreter`, which is outside this crate). Per R11 this is the trivially-
-    // generic argument-position case (R11(a)): each call site already hands `frame` ONE concrete host
-    // reference, so `H: SceneHost` loses no expressiveness versus `dyn` and every existing caller's
-    // call syntax (`Some(&mut concrete_host)`) is unchanged — `H` is inferred from the argument.
     /// 🧵️ Advances one retained paint node, traversal scalar, scene child, publication swap, or
     /// retirement scalar for one mounted window.
     pub fn frame_step<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>) -> UiFrameStep {
@@ -148,9 +141,6 @@ impl Ui {
                         frame.candidate.push_scissor(clip);
                     }
                 }
-                // 🪟️ An overlay's content paints into the overlay bucket, ON TOP of the surface the
-                // `Overlays` phase already drew for it and above every panel in the frame — the
-                // browser's portal + `z-menu` equivalent. Plain in-flow content is untouched.
                 if frame.paint_overlay {
                     frame.candidate.begin_overlay_route();
                 }

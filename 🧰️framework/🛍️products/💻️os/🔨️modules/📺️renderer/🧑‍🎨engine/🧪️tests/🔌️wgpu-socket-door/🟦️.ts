@@ -187,7 +187,6 @@ describe("wgpu socket door — closing", () => {
     expect(answer.state).toBe("closed");
     expect(answer.closeCode).toBe(4401);
     expect(answer.messages).toEqual([{ text: "last word" }]);
-    // 🧯️ Forgotten only once drained — a second poll no longer knows the socket.
     expect((await call({ op: "socket", socketId: 1, verb: "poll" })).error).toContain("unknown socket 1");
   });
 

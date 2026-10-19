@@ -105,7 +105,6 @@ pub struct OrdinalConfig {
 impl OrdinalConfig {
     /// 🔤️ Validated constructor: `dim >= 2` (a single-value "pattern" carries no order
     /// information) and `tau >= 1`. Defaults `ties` to [`TiePolicy::StableRank`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(dim: usize, tau: usize) -> Result<Self, EntropyError> {
         if dim < 2 {
             return Err(EntropyError::InvalidConfig { field: "dim", reason: "ordinal patterns need dim >= 2 to carry order information" });
@@ -117,7 +116,6 @@ impl OrdinalConfig {
     }
 
     /// 🔤️ Consuming setter for the tie policy.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_ties(mut self, ties: TiePolicy) -> Self {
         self.ties = ties;
         self
@@ -139,7 +137,6 @@ pub struct OrdinalSymbolizer {
 
 impl OrdinalSymbolizer {
     /// 🔤️ Wraps an already-validated [`OrdinalConfig`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(cfg: OrdinalConfig) -> Self {
         Self { cfg }
     }
@@ -171,7 +168,6 @@ impl DispersionSymbolizer {
     /// 🔤️ Validated constructor: `classes >= 2`, `dim >= 1`, `tau >= 1`, and `classes^dim` must
     /// fit within the `u32` symbol codomain that [`Symbolizer::symbolize`] returns (checked via
     /// [`checked_state_count`], which itself guards `usize`/`u128` overflow of the raw product).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(classes: usize, dim: usize, tau: usize) -> Result<Self, EntropyError> {
         if classes < 2 {
             return Err(EntropyError::InvalidConfig { field: "classes", reason: "dispersion needs at least 2 classes" });
@@ -239,7 +235,6 @@ pub struct QuantileSymbolizer {
 
 impl QuantileSymbolizer {
     /// 🔤️ Validated constructor: `bins >= 2`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(bins: usize) -> Result<Self, EntropyError> {
         if bins < 2 {
             return Err(EntropyError::InvalidConfig { field: "bins", reason: "must be at least 2" });
@@ -282,7 +277,6 @@ pub struct ThresholdSymbolizer {
 impl ThresholdSymbolizer {
     /// 🔤️ Validated constructor: `edges` must be non-empty, every entry finite, and the sequence
     /// strictly ascending. Never silently sorts — an out-of-order `edges` is a caller bug.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(edges: Vec<f64>) -> Result<Self, EntropyError> {
         if edges.is_empty() {
             return Err(EntropyError::InvalidConfig { field: "edges", reason: "must not be empty" });

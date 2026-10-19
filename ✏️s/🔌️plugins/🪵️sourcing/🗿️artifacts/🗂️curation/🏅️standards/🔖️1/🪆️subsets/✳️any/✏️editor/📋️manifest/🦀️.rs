@@ -52,9 +52,6 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                     export_stdio_kinds: vec![],
         import_stdio_kinds: vec![],
     })
-            // 🔌️ WORKFLOWS-END-TO-END-TYPED-PORTS port recipe: the `catalog:out` port's declared kind —
-            // harmless duplicate `ArtifactKindSpec` across producers (see `s/plugin/block`'s `3d` app,
-            // which declares the SAME `kit.catalog` shape independently).
             .artifact_kind(ArtifactKindSpec {
                 id: "kit.catalog".into(),
                 label: LocalizedLabel::native("Kit Catalogue", "Bausatzkatalog"),
@@ -77,12 +74,6 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .window_kind_def(preview::definition())
             .window_kind_def(grid::definition())
             .default_layout(edit::layout())
-            // 🕹️ The "rows" interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-
-            // MECHANISM) replaces the deleted `selected_object_id` config field and the `select-row`/
-            // `world-select` commands — a curation table picks exactly one row. The six framework verbs
-            // (`interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
-            // `setInteractionGranularity`) auto-inject; the pool/curated tables and the grid's world3d
-            // pick surface all carry it.
             .interaction(InteractionDefinition {
                 id: SOURCING_ROWS_DOMAIN.into(),
                 label: LocalizedLabel::native("Rows", "Zeilen"),
@@ -100,17 +91,12 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .window_kind_interactions(pool::SOURCING_CURATION_WINDOW_POOL, vec![InteractionRef::new("rows")])
             .window_kind_interactions(curated::SOURCING_CURATION_WINDOW_CURATED, vec![InteractionRef::new("rows")])
             .window_kind_interactions(grid::SOURCING_CURATION_WINDOW_GRID, vec![InteractionRef::new("rows")])
-            // 🔧️ Curation counts/stock edits are persisted in `CurationSnapshot`, so each arm emits a
-            // whole-document `SetArtifact` operation and is declared as a Mutation, never a View.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
             .action_with(hidden_operation("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden")))
             .action_destructive("loadDocumentJson")
             .action_with(hidden_operation("curationAdd", LocalizedLabel::native("Curation Add", "Kuratierung hinzufügen")))
-            // 🔧️ Palette-reachable Artifact-lane mutation: the curated-table stepper and DnD arms stay
-            // window chrome, but outcome 1 needs one Actions-rail row that journals a store edit
-            // (ticket 26/09/18 S14). `stockFromCatalogue` remains HostOnly and cannot move `#s-checkin`.
             .action_with(ActionDefinition::bounded_catalog("curationSetCount", LocalizedLabel::native("Curation Set Count", "Kuratierte Anzahl festlegen"), ActionKind::Mutation))
             .action_with(hidden_operation("curationRemove", LocalizedLabel::native("Curation Remove", "Kuratierung entfernen")))
             .action_destructive("curationRemove")
@@ -118,14 +104,12 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .action_audience("dropOnPool", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(hidden_operation("dropOnCurated", LocalizedLabel::native("Drop On Curated", "Auf Kuratiert ablegen")))
             .action_audience("dropOnCurated", semio_framework_plugin::CapabilityAudience::Input)
-            // 👁️ Filters/sort/selection — session-only `SourcingCurationConfig` view state, never the document.
             .action_with(hidden_view_action("setFilterQuery", LocalizedLabel::native("Set Filter Query", "Filterabfrage festlegen")))
             .action_with(hidden_view_action("setFilterModule", LocalizedLabel::native("Set Filter Module", "Filtermodul festlegen")))
             .action_with(hidden_view_action("setFilterTypology", LocalizedLabel::native("Set Filter Typology", "Filtertypologie festlegen")))
             .action_with(hidden_view_action("setFilterMinAvailability", LocalizedLabel::native("Set Filter Min Availability", "Mindestverfügbarkeit festlegen")))
             .action_with(hidden_view_action("sortTable", LocalizedLabel::native("Sort Table", "Tabelle sortieren")))
             .view_action("setGridInstanceDisplay", LocalizedLabel::native("Set Grid Instance Display", "Raster-Instanzdarstellung festlegen"))
-            // 📝️ Staged argument form for the panel-visible example switch.
             .action_args(
                 "setActiveExample",
                 vec![ActionArgDef::select(
@@ -143,9 +127,6 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                     ActionArgDef::number("value", LocalizedLabel::native("Value", "Wert")),
                 ],
             )
-            // 🎯️ Typed channel surface — this app's typed commands are dispatched via
-            // undeclared above, mirroring `flow_ui`: `VcsArtifactApp`'s kind-discipline check only runs
-            // when the registry actually declares a command's id).
             .io(sourcing_curation_io())
             .action_interactive_job("loadDocumentJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)

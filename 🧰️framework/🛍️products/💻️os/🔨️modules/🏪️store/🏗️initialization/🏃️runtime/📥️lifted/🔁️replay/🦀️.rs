@@ -8,6 +8,8 @@ use semio_framework_os_store_replay::fold_operation;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
+use semio_framework_value::RetainedCloneStep;
+use semio_framework_os_spr::ColdMutation;
 /// ▶️ What folding one forward of an applied edit onto the initialization runtime's current projection produced.
 pub enum ArtifactStoreInitializationNext<P> {
     /// 🏁️ The edit has no forward at that index.
@@ -22,10 +24,10 @@ pub enum ArtifactStoreInitializationNext<P> {
 impl<P> ArtifactStoreInitializationRuntime<P> {
     /// 👁️ Quotes the original current lease without cloning the snapshot or replacing its registry.
     pub fn native_snapshot_read_demand() -> RetirementDemand {
-        RetirementDemand { copy_bytes: std::mem::size_of::<super::snapshot_read::SnapshotRead<P>>() + std::mem::size_of::<super::SnapshotReadLeaseSlot>(), depth: 1, ..Default::default() }
+        RetirementDemand { copy_bytes: std::mem::size_of::<semio_framework_value_snapshot_read::SnapshotRead<P>>() + std::mem::size_of::<semio_framework_value_snapshot_read::SnapshotReadLeaseSlot>(), depth: 1, ..Default::default() }
     }
     /// 🧷️ Admits the current projection through the exact runtime registry later transferred to the Store.
-    pub fn admit_native_snapshot_read(&self, generation: u64, grant: RetainedCloneGrant) -> Result<Option<(super::snapshot_read::SnapshotRead<P>, RetainedCloneProgress)>, ValueError>
+    pub fn admit_native_snapshot_read(&self, generation: u64, grant: RetainedCloneGrant) -> Result<Option<(semio_framework_value_snapshot_read::SnapshotRead<P>, RetainedCloneProgress)>, ValueError>
     where P: Send + Sync + 'static,
     {
         let demand=Self::native_snapshot_read_demand();if !permits(grant,demand){return Ok(None);}
@@ -33,20 +35,20 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if !self.read_registry.publish_authority(generation,revision){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"initialization read registry authority is busy"));}
         let current=self.current.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"initialization original current absent"))?;
         let lease=self.read_registry.try_issue(Arc::clone(current)).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"initialization original read registry is full"))?;
-        Ok(Some((super::snapshot_read::SnapshotRead::new(Arc::clone(current),lease),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+        Ok(Some((semio_framework_value_snapshot_read::SnapshotRead::new(Arc::clone(current),lease),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
     /// 📏️ Quotes the actual returned current owner before native replay proceeds to another input.
     pub fn native_read_retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>
     where P:Send+Sync+'static,
     {
-        if let Some(active)=self.close_active.as_ref(){return super::artifact_retirement_box_demands(active,body);}
+        if let Some(active)=self.close_active.as_ref(){return semio_framework_value_snapshot_read::artifact_retirement_box_demands(active,body);}
         if self.read_registry.closed()||!self.read_registry.has_returned(){return Ok(Default::default());}
-        self.read_registry.returned_admission_demands::<P>(|_|RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}).map_err(super::SnapshotReadLeaseRefusal::into_value_error)
+        self.read_registry.returned_admission_demands::<P>(|_|RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()}).map_err(semio_framework_value_snapshot_read::SnapshotReadLeaseRefusal::into_value_error)
     }
     /// ♻️ Returns one exact original read under the installed genesis issuer.
     pub fn settle_native_read_step(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>
     where P:Send+Sync+'static,
-    {super::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,grant)}
+    {semio_framework_value_snapshot_read::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,grant)}
     pub(super) fn read_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>
     where P:Send+Sync+'static,
     {

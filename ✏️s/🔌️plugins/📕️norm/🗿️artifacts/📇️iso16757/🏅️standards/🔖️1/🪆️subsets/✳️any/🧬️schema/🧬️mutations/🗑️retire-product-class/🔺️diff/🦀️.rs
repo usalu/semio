@@ -1,4 +1,4 @@
-//! Diff for `retire-product-class`.
+//! 🔄️ Diff for `retire-product-class`.
 
 use crate::retire_product_class::mutation::RetireProductClass;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

@@ -16,6 +16,9 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-fem-3d-mesh-elements = { workspace = true }
+semio-s-artifact-fem-3d-mesh-sections = { workspace = true }
+semio-s-artifact-fem-3d-mesh-solids = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 pack = { workspace = true }

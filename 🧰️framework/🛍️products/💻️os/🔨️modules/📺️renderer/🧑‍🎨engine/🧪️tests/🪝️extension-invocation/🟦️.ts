@@ -4,7 +4,7 @@ import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json";
 import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import { describe, expect, it, vi } from "vitest";
-import { manifestPublicInvocationSchema as publicInvocationSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { manifestPublicInvocationSchema as publicInvocationSchema } from "@semio-tech/framework/manifest/testing/fixtures";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_DEPTH, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationCharCost, publicInvocationStringPages } from "@semio-tech/framework";
 import { rendererExport } from "../🧰️engine-contract-helpers/🟦️.ts";
 
@@ -90,9 +90,6 @@ describe("extension invocation completion ownership", () => {
   });
 
 
-  // 🔁️ The Rust law over the SAME fixture is `evaluate_invoke_json`'s
-  // `the_evaluate_wire_answers_every_fixture_row` (`🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🦀️.rs`):
-  // it produces the answer bytes, this twin proves the shell classifies and packs exactly those.
   it.each(extensionInvocationWireFixture.rows)("classifies the $name evaluate answer the way the extension SDK produced it", async (row) => {
     const { decodePackValue } = await import("@semio-tech/framework-os");
     const request = JSON.parse(row.requestJson) as Record<string, unknown>;
@@ -106,8 +103,6 @@ describe("extension invocation completion ownership", () => {
       return extensionAnswerBytes(answer);
     });
     await runInvokeExtensionEffect(entry(completionHandle(complete)), entry({ invoke }), fixture.instanceId, fixture.extensionId, extensionInvocationWireFixture.capability, row.requestJson, BigInt(fixture.requestId));
-    // 🛑️ The shell hands every extension request an `AbortSignal` so a surface's declared cancel
-    // can retire it from outside the per-actor queue (`📓️preview-eval-cancellation-2026-09-12.md`).
     expect(invoke).toHaveBeenCalledExactlyOnceWith(extensionInvocationWireFixture.capability, row.requestJson, { originInstanceId: fixture.instanceId, signal: expect.any(AbortSignal) });
     const [, , outcome] = complete.mock.calls[0] as unknown as [number, bigint, { ok?: Uint8Array; fault?: Uint8Array }];
     expect("ok" in outcome ? "ok" : "fault").toBe(row.outcome);
@@ -123,19 +118,11 @@ describe("extension invocation completion ownership", () => {
     const requestJson = JSON.stringify(request);
     const publish = vi.fn(async () => {});
     await dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability, requestJson }, publish);
-    // 🛑️ The shell hands every extension request an `AbortSignal` so a surface's declared cancel
-    // can retire it from outside the per-actor queue (`📓️preview-eval-cancellation-2026-09-12.md`).
     expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson, { originInstanceId: fixture.instanceId, signal: expect.any(AbortSignal) });
     expect(complete).toHaveBeenCalledOnce();
     expect(publish).toHaveBeenCalledExactlyOnceWith(requester, await complete.mock.results[0]!.value);
   });
 
-  // 🪪️ LAW: an invocation addresses an extension by the CONTRIBUTING PLUGIN's id. A producer whose
-  // own domain names the extension differently (flow calls the text kernel `text`, its plugin is
-  // `flow-extension-text`) must translate before it emits — this shell knows no topic vocabulary and
-  // resolves nothing but `handle.pluginId`. Regression guard: the removed fallback scanned
-  // `manifest.contributions` for an `extensionId` field no manifest carries, so the miss was silent
-  // and every flow evaluation stalled (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   it("resolves the extension actor by plugin id and faults a flow-domain address", async () => {
     const { decodePackValue, decodeFaultFromWire } = await import("@semio-tech/framework-os");
     const invoke = vi.fn(async () => extensionAnswerBytes(fixture.response));

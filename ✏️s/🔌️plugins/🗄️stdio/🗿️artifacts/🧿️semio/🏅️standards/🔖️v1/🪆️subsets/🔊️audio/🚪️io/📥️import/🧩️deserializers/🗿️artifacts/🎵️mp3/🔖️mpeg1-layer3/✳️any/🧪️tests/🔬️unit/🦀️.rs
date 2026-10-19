@@ -22,8 +22,8 @@ fn real_world_mp3() -> Mp3Snapshot {
 #[semio_framework_async_macros::async_test]
 async fn deserialize_derives_real_sample_rate_and_channel_count_leaves_samples_empty() {
     let audio = ::semio_framework_async::poll::resolve_ready(SemioAudioFromMp3::deserialize(&real_world_mp3())).expect("deserialize");
-    assert_eq!(audio.sample_rate, 44_100); // MPEG1, index 0
-    assert_eq!(audio.channels.len(), 2); // channel_mode 0 = stereo
+    assert_eq!(audio.sample_rate, 44_100);
+    assert_eq!(audio.channels.len(), 2);
     for ch in &audio.channels {
         assert!(ch.samples.is_empty(), "mp3 payload is opaque -- no fabricated samples");
     }

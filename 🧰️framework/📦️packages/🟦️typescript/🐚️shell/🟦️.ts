@@ -1,3 +1,3 @@
 /** 🐚️ SDK entry `@semio-tech/framework/shell`: explicit public surface of the framework module that plugins build on. */
 export { defaultShellState, reduce } from "../../../🔨️modules/🐚️shell/🟦️.ts";
-export type { ReduceResult, ShellCommand, ShellState } from "../../../🔨️modules/🐚️shell/🟦️.ts";
+export type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ReduceErr, ReduceOk, ReduceResult, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice, UiDriver, UiTheme } from "../../../🔨️modules/🐚️shell/🟦️.ts";

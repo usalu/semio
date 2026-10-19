@@ -1,7 +1,7 @@
 //! 🗃️ The retained symbol table: paged symbol spans and scalars with checked allocation, handback and controlled close.
 
 use semio_framework_value::{ValueRefusalKind, RetirementDemand, ValueError};
-use semio_framework_value::list::{PagedListError, PagedListAllocationError, PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 use std::mem::size_of;
 use semio_framework_pack_format_retained::{RetainedPackCatalogCause, RetainedPackCatalogFault, RetainedPackCloseStep, RetainedPackSegmentHeader, retained_page_close_demands};
 use super::{RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackChunkEntry, RetainedPackSymbolSpan, original_symbol_storage};
@@ -14,13 +14,13 @@ pub(super) const RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES: usize = isize::MAX as usiz
 
 pub(super) const RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS: usize = isize::MAX as usize / size_of::<RetainedPackSegmentHeader>();
 
-pub(super) type RetainedPackSymbolSpans = semio_framework_value::list::PagedList<RetainedPackSymbolSpan, RETAINED_PACK_MAXIMUM_SYMBOL_SPANS>;
+pub(super) type RetainedPackSymbolSpans = semio_framework_value_persistent::list::PagedList<RetainedPackSymbolSpan, RETAINED_PACK_MAXIMUM_SYMBOL_SPANS>;
 
-pub(super) type RetainedPackSymbolScalars = semio_framework_value::list::PagedList<char, RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS>;
+pub(super) type RetainedPackSymbolScalars = semio_framework_value_persistent::list::PagedList<char, RETAINED_PACK_MAXIMUM_SYMBOL_SCALARS>;
 
-pub(super) type RetainedPackChunkEntries = semio_framework_value::list::PagedList<RetainedPackChunkEntry, RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES>;
+pub(super) type RetainedPackChunkEntries = semio_framework_value_persistent::list::PagedList<RetainedPackChunkEntry, RETAINED_PACK_MAXIMUM_CHUNK_ENTRIES>;
 
-pub(super) type RetainedPackObservedChunks = semio_framework_value::list::PagedList<RetainedPackSegmentHeader, RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS>;
+pub(super) type RetainedPackObservedChunks = semio_framework_value_persistent::list::PagedList<RetainedPackSegmentHeader, RETAINED_PACK_MAXIMUM_OBSERVED_CHUNKS>;
 
 pub struct RetainedPackSymbolTable {
     pub(super) maximum_symbols: usize,

@@ -18,8 +18,6 @@ import { join, relative, sep } from "node:path";
 export const MUTATION_BRIDGE_REL = "🏭️bridge/📜️script.ts";
 
 export function mutationBridgeFor(repoRoot: string, owner: string, manifest: MutationManifest, providers: readonly MutationInventoryProviderV1[] = discoverMutationInventoryProvidersV1(repoRoot)): { command: string; args: string[] } | null {
-  // 🧭️The bridge is looked up at the owner and then at each ancestor, so a subset inherits the one its
-  // artifact publishes instead of every subset needing its own copy.
   let candidate = owner;
   for (;;) {
     const abs = join(repoRoot, candidate, MUTATION_BRIDGE_REL);

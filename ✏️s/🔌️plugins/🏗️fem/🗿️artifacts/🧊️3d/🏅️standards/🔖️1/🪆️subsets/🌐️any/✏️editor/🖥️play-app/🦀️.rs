@@ -214,7 +214,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&semio_framework_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
-        crate::live_visual::prepare_snapshot_read(operation, snapshot, windows, view, grant)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
     /// 🎞️ `"artifact:out"` reproduces the trait's default whole-document pack (overriding
@@ -275,7 +275,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
                 let id = doc.operation().and_then(|operation| operation.entity_id("sol", "solids")).map_err(|fault| MediaError::Payload(port.into(), format!("{fault:?}")))?;
                 let solid = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id, axis };
-                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
+                Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -304,8 +304,6 @@ impl ArtifactEditor for Fem3dPlayApp {
         let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
         let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
         let list = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
-        // 🩹️ A control's `Trigger::Change` value arrives typed (number for sliders/number inputs,
-        // bool for toggles, text for selects/inputs); every patch command carries it as text.
         let scalar_text = |key: &str| {
             args.and_then(|value| value.get(key)).and_then(|value| match value {
                 semio_framework_value::DslValue::String(text) => Some(text.clone()),
@@ -469,7 +467,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
-        crate::live_visual::reconcile(doc)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::reconcile(doc)
     }
     /// 🕹️ Interaction-less twin of [`Self::render_with_request_context`] — an empty `"fem3d"` domain,
     /// so nothing paints selected and the inspector shows the document summary.
@@ -521,7 +519,7 @@ impl Fem3dPlayApp {
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &ViewModel,
         interaction: Fem3dInteractionSnapshot,
-        clock: Option<window_results::transient::FemPlaybackClock>,
+        clock: Option<semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let labels = fem3d_labels(view_state);
         match body_key {
@@ -536,8 +534,8 @@ impl Fem3dPlayApp {
             window_results::FEM3D_BODY_RESULTS => {
                 let window = window_results::config::effective(&window_results::config::current(cfg), clock.as_ref());
                 match preview {
-                    Some(preview) => window_results::render_pending(preview, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority())),
-                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority())),
+                    Some(preview) => window_results::render_pending(preview, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive),
+                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive),
                 }
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),

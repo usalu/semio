@@ -1,6 +1,6 @@
 //! 🐍️ Python oracle + JSON-schema validation for EN 1996 examples.
 
-use crate::evaluate_building;
+use crate::checks::masonry::evaluate_building;
 use semio_framework_test_fixtures::manifest_dir;
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use std::process::Command;

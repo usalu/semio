@@ -15,7 +15,8 @@ import { applyPatch } from "fast-json-patch";
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
 import hoverTargets from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️hover-targets.json";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🎯️pick-bounds.json" with { type: "json" };
-import { world3dInstanceLocalCorners, world3dInstanceInteractionTarget } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
+import { world3dInstanceLocalCorners } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts";
+import { world3dInstanceInteractionTarget } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { resolveClickInstanceIdFromProjected } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
 import { hoveredInteractionTargetV1, mergeWorldSelectionWithLeftoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 

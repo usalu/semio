@@ -50,7 +50,7 @@ impl RetainedDiffApply<Snapshot,Edit> for EditApply{
    _=>scalar(),
   })
  }
- fn preflight(&mut self,d:RetainedCloneRef<'_,Edit>,s:RetainedCloneRef<'_,Snapshot>,post:&Snapshot,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
+ fn preflight(&mut self,d:RetainedCloneRef<'_,Edit>,s:RetainedCloneRef<'_,Snapshot>,post:&Snapshot,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
   let demand=self.preflight_demand(d,s,post,body)?;if !protocol::retained_mutation_demand_fits(demand,g){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   match self.phase{
    0=>{self.refused=d.get().require_a.is_some_and(|expected|expected!=s.get().a);self.phase=if self.refused{3}else{1};},
@@ -82,7 +82,7 @@ impl RetainedDiff<Snapshot> for Sequence{type Apply=SequenceApply;}
 impl RetainedDiffApply<Snapshot,Sequence> for SequenceApply{
  fn new()->Self{Self(RetainedDiffSequence::new())}
  fn preflight_demand(&self,d:RetainedCloneRef<'_,Sequence>,s:RetainedCloneRef<'_,Snapshot>,post:&Snapshot,body:usize)->Result<RetirementDemand,ValueError>{self.0.preflight_demand(d.project(0,|d|&d.edits),s,post,body)}
- fn preflight(&mut self,d:RetainedCloneRef<'_,Sequence>,s:RetainedCloneRef<'_,Snapshot>,post:&Snapshot,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{self.0.preflight(d.project(0,|d|&d.edits),s,post,body,g,&mut *receiving)}
+ fn preflight(&mut self,d:RetainedCloneRef<'_,Sequence>,s:RetainedCloneRef<'_,Snapshot>,post:&Snapshot,body:usize,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{self.0.preflight(d.project(0,|d|&d.edits),s,post,body,g,&mut *receiving)}
  fn take_messages(&mut self)->Vec<MutationMessage>{self.0.take_messages()}
  fn commit_demand(&self,d:RetainedCloneRef<'_,Sequence>,s:RetainedCloneRef<'_,Snapshot>,post:&Snapshot,body:usize)->Result<RetirementDemand,ValueError>{self.0.commit_demand(d.project(0,|d|&d.edits),s,post,body)}
  fn commit(&mut self,d:RetainedCloneRef<'_,Sequence>,s:RetainedCloneRef<'_,Snapshot>,post:&mut Snapshot,g:RetainedCloneGrant,c:ApplyCapability)->Result<RetainedCloneStep,ValueError>{self.0.commit(d.project(0,|d|&d.edits),s,post,g,c)}
@@ -98,7 +98,7 @@ fn source<T:RetireOwned+Sync>(value:T)->RetainedCloneSource<T>{let d=RetainedClo
 fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){while !source.terminal_is_empty(){let d=source.next_close_demands(4096).unwrap();exact(||source.close_step(grant(d)).unwrap(),|step|step.progress());}}
 fn drain<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).map_err(|(e,_)|e).unwrap();while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();exact(||owner.step(grant(d)).unwrap(),|step|step.progress());}}
 fn decode<T:FromValue>(value:&serde_json::Value)->T{semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
-fn run(row:&serde_json::Value,base:&serde_json::Value,body:usize,cut:Option<usize>,commit_cut:Option<usize>){let mut receiving_callback=|_:semio_framework_value::NativeDecodeProgress|true;let mut receiving=semio_framework_value::NativeDecodeControl::new(1<<24,&mut receiving_callback);
+fn run(row:&serde_json::Value,base:&serde_json::Value,body:usize,cut:Option<usize>,commit_cut:Option<usize>){let mut receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<24,&mut receiving_callback);
  PROJECTIONS.store(0,Ordering::Relaxed);let mut original=source(decode::<Snapshot>(base));let mut post=decode::<Snapshot>(base);let pointer=post.text.as_ptr();let mut diff=source(Sequence{edits:decode(&row["edits"])});let(mut owner,_)=exact(||protocol::begin_retained_diff::<Snapshot,Sequence>(grant(protocol::retained_diff_birth_demand::<Snapshot,Sequence>())).unwrap(),|value|value.1);let mut turns=0;let mut settled=None;
  while cut.is_none_or(|cut|turns<cut){
   let d=owner.preflight_demand(diff.borrow(),original.borrow(),&post,body).unwrap();for denied in denied(grant(d),d){let step=exact(||protocol::preflight_retained_diff(&mut owner,diff.borrow(),original.borrow(),&post,body,denied,&mut receiving).unwrap(),|step|step.progress());assert_eq!(step.progress(),Default::default());assert_eq!(owner.preflight_demand(diff.borrow(),original.borrow(),&post,body).unwrap(),d);}
@@ -112,14 +112,14 @@ fn run(row:&serde_json::Value,base:&serde_json::Value,body:usize,cut:Option<usiz
 }
 #[test]
 fn retained_diff_sequence_matches_original_intermediate_sqlite_values_and_refusal(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for row in law["cases"].as_array().unwrap(){for body in[1,4096]{run(row,&law["base"],body,None,None);}}
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in law["cases"].as_array().unwrap(){for body in[1,4096]{run(row,&law["base"],body,None,None);}}
 }
 #[test]
 fn retained_diff_sequence_cancellation_closes_original_sources_diagnostics_and_candidates(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for row in law["cases"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){run(row,&law["base"],1,Some(cut.as_u64().unwrap()as usize),None);if row["accepted"]==true{run(row,&law["base"],1,None,Some(cut.as_u64().unwrap()as usize));}}}
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in law["cases"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){run(row,&law["base"],1,Some(cut.as_u64().unwrap()as usize),None);if row["accepted"]==true{run(row,&law["base"],1,None,Some(cut.as_u64().unwrap()as usize));}}}
 }
 #[test]
 fn retained_diff_sequence_wide_original_projection_and_every_custody_cut_are_genuine(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let text=law["wideText"]["text"].as_str().unwrap().repeat(law["wideText"]["repeat"].as_u64().unwrap()as usize);let mut base=law["base"].clone();base["text"]=text.clone().into();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let text=law["wideText"]["text"].as_str().unwrap().repeat(law["wideText"]["repeat"].as_u64().unwrap()as usize);let mut base=law["base"].clone();base["text"]=text.clone().into();
  for index in[1,2,3]{let mut row=law["cases"][index].clone();if row["accepted"]==true{row["expected"]["text"]=text.clone().into();}for body in[1,4096]{run(&row,&base,body,None,None);}for cut in[0,1,7,19,71,1025]{run(&row,&base,1,Some(cut),None);}if row["accepted"]==true{for cut in[0,1,7]{run(&row,&base,1,None,Some(cut));}}}
 }

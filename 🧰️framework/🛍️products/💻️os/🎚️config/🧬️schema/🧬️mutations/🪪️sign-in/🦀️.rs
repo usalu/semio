@@ -1,10 +1,12 @@
 //! 🪪️ `SignIn` is the authoritative direct Rust leaf for establishing an OS identity session.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::super::SettingEdit;
 use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
-use protocol::{MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
@@ -133,7 +135,7 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
+impl semio_framework_os_command::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
     fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
         let identity = Identity::from(self);
         if base.0.as_ref() == Some(&identity) {

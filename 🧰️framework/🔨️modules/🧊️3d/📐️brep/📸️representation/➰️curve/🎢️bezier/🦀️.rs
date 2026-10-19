@@ -26,27 +26,22 @@ pub struct RationalBezier2 {
 }
 
 impl RationalBezier3 {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(controls: Vec<Pnt3>, weights: Vec<f64>) -> Self {
         debug_assert_eq!(controls.len(), weights.len());
         RationalBezier3 { controls, weights }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn unweighted(controls: Vec<Pnt3>) -> Self {
         let weights = vec![1.0; controls.len()];
         RationalBezier3::new(controls, weights)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn degree(&self) -> usize {
         self.controls.len().saturating_sub(1)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_rational(&self) -> bool {
         self.weights.iter().any(|w| (w - 1.0).abs() > 1e-12)
     }
     /// 🎀️ De Casteljau evaluation via homogeneous (weighted) coordinates, so a single algorithm
     /// covers both the polynomial and rational cases.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, t: f64) -> Pnt3 {
         let n = self.controls.len();
         let mut hx: Vec<f64> = (0..n).map(|i| self.controls[i].x * self.weights[i]).collect();
@@ -65,7 +60,6 @@ impl RationalBezier3 {
     }
     /// 🎀️ Splits into two segments at `t`, each reparameterized onto `[0, 1]`. Uses de Casteljau
     /// on the homogeneous control net so the split is exact for rational curves too.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn subdivide(&self, t: f64) -> (RationalBezier3, RationalBezier3) {
         let n = self.controls.len();
         let mut hx = vec![vec![0.0; n]; n];
@@ -94,7 +88,6 @@ impl RationalBezier3 {
             let w_left = hw[level][0];
             left_c.push(Pnt3::new(hx[level][0] / w_left, hy[level][0] / w_left, hz[level][0] / w_left));
             left_w.push(w_left);
-            // R_level = b[n-1-level][level] (the triangle's other diagonal) — not b[level][n-1-level].
             let row = n - 1 - level;
             let col = level;
             let w_right = hw[row][col];
@@ -107,7 +100,6 @@ impl RationalBezier3 {
     /// control points contains an unweighted curve exactly; for rational curves with all-positive
     /// weights it still contains the curve, since the curve point is a convex combination of the
     /// control points).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn control_hull_box(&self) -> (Pnt3, Pnt3) {
         let mut lo = self.controls[0];
         let mut hi = self.controls[0];
@@ -120,7 +112,6 @@ impl RationalBezier3 {
     /// 🎀️ Degree-elevates a polynomial (non-rational) Bézier by one degree, preserving the exact
     /// curve. Rational elevation is not implemented (unneeded by the kernel: rational Béziers are
     /// only ever consumed at fixed degree by the conic/NURBS conversion paths).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn elevate(&self) -> RationalBezier3 {
         debug_assert!(!self.is_rational(), "degree elevation is only implemented for polynomial (unweighted) Beziers");
         let n = self.degree();
@@ -138,21 +129,17 @@ impl RationalBezier3 {
 }
 
 impl RationalBezier2 {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(controls: Vec<Pnt2>, weights: Vec<f64>) -> Self {
         debug_assert_eq!(controls.len(), weights.len());
         RationalBezier2 { controls, weights }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn unweighted(controls: Vec<Pnt2>) -> Self {
         let weights = vec![1.0; controls.len()];
         RationalBezier2::new(controls, weights)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn degree(&self) -> usize {
         self.controls.len().saturating_sub(1)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, t: f64) -> Pnt2 {
         let n = self.controls.len();
         let mut hx: Vec<f64> = (0..n).map(|i| self.controls[i].x * self.weights[i]).collect();
@@ -167,7 +154,6 @@ impl RationalBezier2 {
         }
         Pnt2::new(hx[0] / hw[0], hy[0] / hw[0])
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn subdivide(&self, t: f64) -> (RationalBezier2, RationalBezier2) {
         let n = self.controls.len();
         let mut hx = vec![vec![0.0; n]; n];
@@ -193,7 +179,6 @@ impl RationalBezier2 {
             let w_left = hw[level][0];
             left_c.push(Pnt2::new(hx[level][0] / w_left, hy[level][0] / w_left));
             left_w.push(w_left);
-            // R_level = b[n-1-level][level] (the triangle's other diagonal) — not b[level][n-1-level].
             let row = n - 1 - level;
             let col = level;
             let w_right = hw[row][col];
@@ -202,7 +187,6 @@ impl RationalBezier2 {
         }
         (RationalBezier2::new(left_c, left_w), RationalBezier2::new(right_c, right_w))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn control_hull_box(&self) -> (Pnt2, Pnt2) {
         let mut lo = self.controls[0];
         let mut hi = self.controls[0];

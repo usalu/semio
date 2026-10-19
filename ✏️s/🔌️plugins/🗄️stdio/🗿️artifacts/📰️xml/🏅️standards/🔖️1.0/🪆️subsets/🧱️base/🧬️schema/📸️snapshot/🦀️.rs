@@ -127,7 +127,6 @@ pub enum XmlQuote {
 
 impl XmlQuote {
     /// 🔡️ The delimiter itself.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_char(self) -> char {
         match self {
             Self::Double => '"',
@@ -137,7 +136,6 @@ impl XmlQuote {
 
     /// 🔡️ The delimiter a parser just consumed; anything that is not `'` is the double quote,
     /// because `parse_attr_value` has already rejected every other byte in that position.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_char(quote: char) -> Self {
         if quote == '\'' {
             Self::Single
@@ -148,7 +146,6 @@ impl XmlQuote {
 
     /// 🫥 `skip_serializing_if` for the default spelling: a double-quoted declaration writes no
     /// `quote` key at all, which is what keeps every pre-existing wire value byte-identical.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_double(&self) -> bool {
         matches!(self, Self::Double)
     }
@@ -224,7 +221,6 @@ impl XmlDeclaration {
     /// one out of a document) goes through here, so adding a further modeled facet of the
     /// declaration can never again silently miss a struct literal. A reader that recovered a real
     /// delimiter builds the struct directly and sets [`XmlDeclaration::quote`] itself.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(version: impl Into<String>, encoding: Option<String>, standalone: Option<bool>) -> Self {
         Self { version: version.into(), encoding, standalone, quote: XmlQuote::Double }
     }
@@ -253,13 +249,11 @@ impl Default for XmlSnapshot {
 
 impl XmlSnapshot {
     /// 🪞️ Returns the lossless logical state used by diff and mutation laws.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn semantic_projection(&self) -> Self {
         self.clone()
     }
 
     /// 🌱️ A well-formed document holding exactly one empty `<root/>` element, the blank page a new XML editor starts from.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_empty_root() -> Self {
         Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), ..XmlDocument::default() } }
     }

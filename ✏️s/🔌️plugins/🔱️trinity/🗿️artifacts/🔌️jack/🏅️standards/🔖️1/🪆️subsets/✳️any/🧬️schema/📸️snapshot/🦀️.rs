@@ -157,12 +157,12 @@ impl semio_framework_value::ToValue for JackSnapshot {
     }
 }
 impl semio_framework_value::FromValue for JackSnapshot {
-    fn from_value_controlled(value: &semio_framework_value::DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         c.scoped_stage(|c| {
             c.begin_stage(8)?;
             let fields = value.object_controlled(c)?;
             c.charge(size_of::<Self>())?;
-            fn optional_field<T: semio_framework_value::FromValue + Default>(fields: &[(String, semio_framework_value::DslValue)], key: &str, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<T, semio_framework_value::ValueError> {
+            fn optional_field<T: semio_framework_value::FromValue + Default>(fields: &[(String, semio_framework_value::DslValue)], key: &str, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, semio_framework_value::ValueError> {
                 let value = match semio_framework_value::DslValue::field_controlled(fields, key, c)? {
                     Some(value) => T::from_value_controlled(value, c)?,
                     None => T::default(),

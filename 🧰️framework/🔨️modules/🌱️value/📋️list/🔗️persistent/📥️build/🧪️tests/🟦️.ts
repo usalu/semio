@@ -2,7 +2,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv/dist/2020.js";
 import schema from"../🧬️schema/🔣️.json";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import{PersistentListBuilder}from"../🟦️.ts";
 test("owned persistent construction preserves original rows across every fanout carry boundary",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);

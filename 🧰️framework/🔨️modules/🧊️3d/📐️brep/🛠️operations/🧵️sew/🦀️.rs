@@ -118,7 +118,6 @@ pub struct HealingReport {
 }
 
 impl HealingReport {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn total_repairs(&self) -> usize {
         self.vertices_merged + self.degenerate_edges_removed + self.orientations_fixed + self.wire_gaps_closed + self.small_faces_removed + self.duplicate_faces_removed
     }
@@ -133,7 +132,6 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpR
     solid_exists(body, solid)?;
     let tol = if tolerance.is_finite() && tolerance > 0.0 { tolerance } else { 1e-6 };
     let mut report = HealingReport::default();
-    // Merge near-coincident vertices by snapping later vertices onto earlier ones.
     let ids: Vec<_> = body.vertices.iter().map(|(id, _)| id).collect();
     for i in 0..ids.len() {
         let Some(pi) = body.vertices.get(ids[i]).map(|v| v.position) else { continue };
@@ -148,7 +146,6 @@ pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpR
             }
         }
     }
-    // Drop zero-length edges by collapsing endpoint coincidence already snapped.
     for (edge_id, _) in body.edges.iter().map(|(id, e)| (id, e.clone())).collect::<Vec<_>>() {
         let coedges = body.edge_coedges(edge_id);
         if coedges.is_empty() {
@@ -211,7 +208,6 @@ impl DefeatureJob {
 }
 
 impl StagedOperation for DefeatureJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }

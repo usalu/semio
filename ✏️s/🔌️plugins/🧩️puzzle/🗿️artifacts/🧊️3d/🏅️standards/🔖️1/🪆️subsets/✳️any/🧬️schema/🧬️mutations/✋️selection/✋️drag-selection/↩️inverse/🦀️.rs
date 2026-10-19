@@ -1,4 +1,4 @@
-//! (exact, never a negated offset that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
+//! 🎯️ (exact, never a negated offset that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DragSelection` — the absolute setters restoring every BASE origin the drag moves
 use super::mutation::DragSelection;
 use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::MoveTargetVolume, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};

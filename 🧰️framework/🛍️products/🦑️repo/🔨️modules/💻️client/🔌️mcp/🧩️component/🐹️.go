@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/usalu/semio/repo/providers"
-
+	"github.com/usalu/semio/repo/workspace"
 )
 
 // #endregion 🤸️Preamble
@@ -43,7 +43,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if err := client.BindWorkingDirectory(); err != nil {
+	if err := workspace.BindWorkingDirectory(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

@@ -1,14 +1,14 @@
 /** 👥️ Hub Studio presence. @see https://json.schemas.assets.semio-tech.com/hub/compositions/space/engine/space/presence/schema.json */
 export interface SpacePresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   camera: Record<string, SpaceWindowCamera>;
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeNodeId?: string;
-  /** @state presence */
+  /** 🎯️ @state presence */
   focusedNodeId?: string;
-  /** @state presence */
+  /** 🔘️ @state presence */
   collapsedNodeIds: string[];
-  /** @state presence */
+  /** 👻️ @state presence */
   previewOffNodeIds: string[];
 }
 

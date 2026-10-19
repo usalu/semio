@@ -1,6 +1,6 @@
 import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts";
 import { declaredPlaygroundCompositionPathV1 } from "../🧩️composition/🟦️.ts";
-import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
+import { parseTileProxyAssetSpecV1 } from "@semio-tech/assets/tile-proxy";
 import { admitPlaygroundNativeHostV1, parsePlaygroundNativeHostV1, nativeHostFilesystemViewV1, nativeHostTextSourceViewV1, type PlaygroundNativeHostV1 } from "@semio-tech/repo-lib/dev";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";

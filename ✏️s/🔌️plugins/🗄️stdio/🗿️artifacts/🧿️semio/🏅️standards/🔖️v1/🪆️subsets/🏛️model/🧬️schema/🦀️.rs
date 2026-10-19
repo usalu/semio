@@ -28,15 +28,12 @@ impl Default for SemioModelArtifact {
 }
 
 impl SemioModelArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioModelSnapshot {
         SemioModelSnapshot { schema: self.schema.clone(), spatial: self.spatial.clone(), elements: self.elements.clone(), relations: self.relations.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioModelSnapshot) -> Self {
         Self { schema: snapshot.schema, spatial: snapshot.spatial, elements: snapshot.elements, relations: snapshot.relations }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioModelSnapshot) {
         self.schema = snapshot.schema;
         self.spatial = snapshot.spatial;

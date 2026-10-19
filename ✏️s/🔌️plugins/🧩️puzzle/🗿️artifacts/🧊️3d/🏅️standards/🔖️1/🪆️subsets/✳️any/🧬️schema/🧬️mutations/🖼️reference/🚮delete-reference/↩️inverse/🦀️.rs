@@ -1,4 +1,4 @@
-//! BASE entry. Missing target ⇒ `Vec::new()`.
+//! 🫥️ BASE entry. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DeleteReference` — reconstructs a `create-reference` of the captured
 use super::mutation::DeleteReference;
 use crate::create_reference::mutation::CreateReference;

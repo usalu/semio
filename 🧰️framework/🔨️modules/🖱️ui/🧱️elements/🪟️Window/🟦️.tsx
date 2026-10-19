@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { childElementId } from "../🆔️ElementId/🟦️.tsx";
 import { ActionGroup, ActionGroupItem } from "../⚡️ActionGroup/🟦️.tsx";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
@@ -83,7 +83,6 @@ interface WindowProps extends WindowConfig {
  * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
  **/
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
-  // 🎨️ Transparent — rendered inside the Window body, which already paints the window-level surface.
   const bgClass = "bg-transparent";
   const errorLabel = useLabel("ui.common.error");
   return (
@@ -165,10 +164,8 @@ const Window: React.FC<WindowProps> = ({
   const actionLabel = useLabel("ui.common.actions");
   const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
   const utilitiesLabel = useLabel("ui.common.utilities");
-  // 📱️ Windows always take the full space on mobile — Focus/Unfocus is meaningless there and is hidden.
   const mobile = useUiMobile();
   const focusControl = !mobile && (onMaximize || onMinimize);
-  // 🐚️ Gates the search-routing keydown listeners below to this shell — absent outside a `ShellScopeProvider` (tests), where they simply stay inert.
   const shellScope = useShellScopeOptional();
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -179,15 +176,12 @@ const Window: React.FC<WindowProps> = ({
     onMeasuresFoldedChange?.(folded);
     if (measuresFoldedProp === undefined) setMeasuresFoldedInternal(folded);
   };
-  // 🎛️ Controlled-with-default fold state for the bottom-left Utilities rail (default true).
   const [utilityBarFoldedInternal, setUtilityBarFoldedInternal] = reactHostPort.useState(true);
   const utilityBarFolded = utilityBarFoldedProp ?? utilityBarFoldedInternal;
   const setUtilityBarFolded = (folded: boolean) => {
     onUtilityBarFoldedChange?.(folded);
     if (utilityBarFoldedProp === undefined) setUtilityBarFoldedInternal(folded);
   };
-  // 🎛️ Controlled-with-default fold state for the merged top-left Actions pane (default true) —
-  // shared by the active engagement and the categorized ad-hoc actions tree, one toggle for both.
   const [actionsFoldedInternal, setActionsFoldedInternal] = reactHostPort.useState(true);
   const actionsFolded = actionsFoldedProp ?? actionsFoldedInternal;
   const setActionsFolded = (folded: boolean) => {
@@ -227,9 +221,6 @@ const Window: React.FC<WindowProps> = ({
     [active, search, searchExpanded],
   );
 
-  // 🔎️ Typing anywhere in an active window with a folded search pane unfolds it, mirroring a spotlight
-  // search, so the shell-scoped routing that applies the keystroke (see Mode) has a mounted field to
-  // land in. Purely additive — it only flips the fold flag, never touches the value/dispatch itself.
   useShellKeydown(
     shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
     (event) => {
@@ -267,13 +258,6 @@ const Window: React.FC<WindowProps> = ({
 
   if (!isVisible) return null;
 
-  // 🪪️ A control GROUP is minted only when it carries a control. `showControls` used to force it open
-  // too, and the OS dock passes no `onClose`/`onMaximize`/`onOpenInNewWindow` at all (its focus and
-  // close live on the dock TAB, `ModeDockTabBar`) — so every window in the shell published an empty
-  // 2px-wide `framework.window.<segment>.windowControls` box: a control id that names nothing, in
-  // every DOM census, with a focusable border and no affordance (the catalogue smoke test filters it
-  // out by name, `💻️os/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts:163`). Ticket
-  // 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12d-pane-chip-ids-and-projection-toggle.md` §4.
   const hasWindowControls = Boolean(onOpenInNewWindow || focusControl || onClose);
   const hasControls = hasWindowControls || controls;
 
@@ -321,7 +305,6 @@ const Window: React.FC<WindowProps> = ({
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-[var(--gap-standard)]">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
-          {/* 🪟️ PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
           <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
           {measures ? (
             <Pane
@@ -361,8 +344,6 @@ const Window: React.FC<WindowProps> = ({
             >
               <ActionGroup id={childElementId("framework.window", id, "engagement", "quick")}>
                 {engagement.options.map((option) => (
-                  // 🎛️ A pressed option (a granularity switch, a gumball handle group) reads pressed here exactly as
-                  // in the expanded engagement: `aria-pressed` for readers, the active fill for the eye.
                   <ActionGroupItem key={option.id} id={option.id} icon={option.icon} text={typeof option.label === "string" ? option.label : undefined} aria-pressed={option.pressed} data-state={option.pressed === undefined ? undefined : option.pressed ? "on" : "off"} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
                 ))}
               </ActionGroup>

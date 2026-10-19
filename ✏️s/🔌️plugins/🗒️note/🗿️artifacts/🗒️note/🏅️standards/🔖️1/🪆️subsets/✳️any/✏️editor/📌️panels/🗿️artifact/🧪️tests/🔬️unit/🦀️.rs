@@ -18,11 +18,6 @@ use semio_framework_plugin::PluginApp;
 async fn renders_document_tree() {
     let mut app = note_app().await;
     let document = crate::standards::v1::subsets::any::io::text::snapshot::semio_example_snapshot();
-    // ♻️ The seed envelope is printed from inside the owner-installing store guard
-    // (`🚪️io/💾️binary/📸️snapshot`), which walks the bounded close loop on drop. A bare
-    // `create_document_envelope` handed straight to `print_document_pack` and then dropped asserts
-    // `artifact envelope terminal shell reached Drop before its app-owned bounded retirement
-    // authority detached every nested owner`, which is what this law used to die of.
     let files = {
         let seed = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
             .await

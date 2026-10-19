@@ -12,7 +12,7 @@
 // Types MUST be exported when used externally.
 
 /**
- * Properties of a fixed component.
+ * 📌️ Properties of a fixed component.
  * FixedType MUST have a name and value.
  **/
 interface FixedType {
@@ -21,7 +21,7 @@ interface FixedType {
 }
 
 /**
- * Kind alternatives for fixed types.
+ * 🧊️ Kind alternatives for fixed types.
  * FixedKind MUST be one of alpha or beta.
  **/
 type FixedKind = "alpha" | "beta";
@@ -33,7 +33,7 @@ type FixedKind = "alpha" | "beta";
 // Components MUST accept FixedType props.
 
 /**
- * Renders a fixed component by returning its name.
+ * 🔒️ Renders a fixed component by returning its name.
  * FixedComponent MUST return the name property.
  **/
 export function FixedComponent(props: FixedType): string {

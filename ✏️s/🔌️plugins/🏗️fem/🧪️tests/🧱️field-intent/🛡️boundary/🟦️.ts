@@ -39,7 +39,7 @@ describe("support membership and concrete snapshot schemas", () => {
     });
 
     it(`${dimension} snapshot validates concrete domain records`, () => {
-      const valid = read(resolve(subsets, "🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"));
+      const valid = read(resolve(subsets, "🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"));
       expect(snapshot(valid), JSON.stringify(snapshot.errors)).toBe(true);
       for (const materials of [[{}], [{ ...valid.materials[0], e: 0 }], [{ ...valid.materials[0], id: null }]]) {
         expect(snapshot({ ...valid, materials })).toBe(false);

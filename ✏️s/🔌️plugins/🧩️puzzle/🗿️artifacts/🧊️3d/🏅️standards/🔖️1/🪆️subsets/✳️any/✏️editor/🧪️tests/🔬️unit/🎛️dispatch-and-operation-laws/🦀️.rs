@@ -183,9 +183,6 @@ fn app_config_serialization_excludes_operation_and_window_state() {
     let config = Puzzle3dConfig::default();
     let spr = to_json_string(&config);
     let oracle: serde_json::Value = serde_json::from_str(&spr).expect("third-party JSON oracle accepts Puzzle 3D config");
-    // 🧮️ Five shared preferences: the four fill/distribution ones, plus `activeExampleId` — document
-    // identity rather than a preference, and the only thing `export_snapshot` can name its download after
-    // (wave B26). Everything per-WINDOW or per-OPERATION still stays out, which is what this law is for.
     assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
     assert!(spr.contains("activeExampleId"));
     for forbidden in ["fillCheckpoint", "fillApplyGeneration", "windowOptions", "camera", "suggestionMenu", "engagementInput"] {

@@ -51,7 +51,6 @@ impl DependencyTracker {
     /// 🎬️ Opens a new actual-read recording scope for `surface`, pushed onto a nesting stack — a
     /// present that itself drives a nested present's `begin`/`finish` pair keeps accruing its own
     /// reads to its own scope once the inner one closes, so nested presents nest correctly.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn begin(&mut self, surface: ui_contract::SurfaceId) {
         self.scopes.push((surface, HashSet::new()));
     }
@@ -59,7 +58,6 @@ impl DependencyTracker {
     /// 👁️ Records that the innermost open scope actually read `entity`. A deliberate no-op with no
     /// scope open — see the module doc for why that is exactly what keeps an event handler's reads
     /// from ever becoming a frame dependency.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn record_read(&mut self, entity: EntityId) {
         if let Some((_, reads)) = self.scopes.last_mut() {
             reads.insert(entity);
@@ -69,7 +67,6 @@ impl DependencyTracker {
     /// 🏁️ Closes the innermost scope — asserted to belong to `surface`, since scopes must close in
     /// the reverse order they opened — and replaces that surface's stored read set wholesale with
     /// exactly what was recorded since the matching `begin`, updating the inverse index to match.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn finish(&mut self, surface: ui_contract::SurfaceId) {
         let (scope_surface, reads) = self.scopes.pop().expect("finish called with no open scope");
         assert_eq!(scope_surface, surface, "present scope nesting mismatch");
@@ -99,7 +96,6 @@ impl DependencyTracker {
     /// Backed by a `HashSet`, so any number of calls — for the same entity repeatedly, or for
     /// several entities read by overlapping surfaces — coalesce to at most one dirty mark per
     /// surface: a bulk projection update still produces exactly one frame, not N.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn notify_entity(&mut self, entity: EntityId) {
         let surfaces: Vec<_> = self.dirty_surfaces_for(entity).collect();
         self.dirty.extend(surfaces);

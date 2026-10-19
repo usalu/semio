@@ -85,8 +85,6 @@ async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
     for back in undo.iter().rev() {
         restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
-    // `delete-vertex`'s inverse lifts the vertex and edge tails off and re-declares them in base order
-    // (`🗑️delete-vertex/↩️inverse`), so the undo restores the document exactly, order included.
     assert_eq!(restored, base, "cascade delete-vertex must be exactly undoable");
 }
 

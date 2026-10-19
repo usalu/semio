@@ -453,8 +453,8 @@ describe("🐾️ pet companions", () => {
     it("glances at the tips of the other learners' cursors while they show", () => {
       expect(peerGlances()).toEqual([]);
       const peers: readonly PeerCursor[] = [
-        { session: "w1", tag: "0badc0de", label: "Mira K.", colour: 3, cursor: { anchor: "run", x: 0.5, y: 0.5 }, focus: undefined, drag: undefined },
-        { session: "w2", tag: "0badc0df", label: "Ben", colour: 4, cursor: { anchor: "elsewhere", x: 0.1, y: 0.1 }, focus: "run", drag: undefined },
+        { session: "w1", tag: "0badc0de", label: "Mira K.", colour: 3, place: { screen: "home" }, home: undefined, cursor: { anchor: "run", x: 0.5, y: 0.5 }, focus: undefined, drag: undefined },
+        { session: "w2", tag: "0badc0df", label: "Ben", colour: 4, place: { screen: "home" }, home: undefined, cursor: { anchor: "elsewhere", x: 0.1, y: 0.1 }, focus: "run", drag: undefined },
       ];
       const { rerender } = render(
         <>

@@ -18,6 +18,8 @@ fn semantic_chart_inference_owns_values_and_io_owns_native_text(){
 use crate::*;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 use protocol::{ColdMutation, ColdDiffAlgebra, Mutation,ColdMutationDiff,MutationDiff,DiffAlgebra,Inference};
+use semio_framework_plugin::component::WireArtifactInferenceCacheMode;
+use semio_framework_plugin::component::ArtifactInferenceServiceRegistry;
 
 #[test]
 fn io_value_declarations_preserve_neutral_omission_null_and_unicode(){
@@ -249,7 +251,8 @@ mod sqlite_snapshot_tests;
 #[test]
 fn paged_chart_original_operation_keeps_exact_variants_policy_and_source_owner(){
     use protocol::os_spr::operation_bytes::{OwnedOperationBytes,OperationBytePreparation,OperationByteMeasurement,OperationByteCloseStep};
-    use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,Number};
+    use semio_framework_value::{NativeEncodeControl, Number};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
     let payload=fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize);
     let operation=ChangeChartValue{path:serde_json::from_value(fixture["path"].clone()).unwrap(),value:Some(DslValue::Array(vec![DslValue::String(payload),DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(-0.0)]))};

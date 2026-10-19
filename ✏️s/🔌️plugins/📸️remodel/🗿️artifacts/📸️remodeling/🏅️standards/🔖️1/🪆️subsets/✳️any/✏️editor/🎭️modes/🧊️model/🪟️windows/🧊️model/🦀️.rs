@@ -40,7 +40,6 @@ pub fn definition() -> WindowKindDefinition {
         body_key: REMODELING_PLAY_BODY_MAIN.into(),
         surface_kind: SurfaceKind::World3d,
         icon_id: "remodeling-model".into(),
-        // 🎚️ `measures` stays empty: they are config-derived per frame by `ArtifactEditor::window_measures`.
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["select", "measure", "sculpt"].iter().map(|id| UtilityRef::from(*id)).collect(),
@@ -133,9 +132,6 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
                     "id": "remodeling-sparse",
                     "positionsB64": base64_codec::base64_standard_encode(sparse.points.to_f32_vec_from(&scene.durable_artifacts).iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
                     "colorsB64": sparse.colors.as_ref().map(|colors| base64_codec::base64_standard_encode(&colors.0)),
-                    // 📏️ Screen pixels, like the camera and GCP layers: the reconstruction is
-                    // normalised to unit RMS radius, so an attenuated (world-unit) size of 3 drew
-                    // every point as a square larger than the object and the cloud as one grey blob.
                     "size": 3.0,
                     "sizeAttenuation": false,
                 }));
@@ -183,11 +179,6 @@ fn world_points_json(scene: &RemodelingSnapshot, config: &RemodelingModelWindowC
 }
 
 pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    // 🕹️ The "assets" selection now lives in the framework-owned interaction domain (ticket
-    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `ArtifactEditor::render` carries no
-    // `InteractionView`, so this scene payload can no longer embed a live selection; every
-    // not-yet-migrated `world3d_selection_json` call site in this repo already passes an empty
-    // selection for the same reason.
     let camera_json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&config.camera));
     let mut world_scene = world3d_scene(camera_json, world_meshes_json(scene), world_instances_json(config), world3d_selection_json("rectangle", &[], None), &WorldSunConfig::default());
     world_scene.points_json = world_points_json(scene, config);

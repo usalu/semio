@@ -108,9 +108,6 @@ async function getCachedBlob(hash: string): Promise<{ bytes: Uint8Array; mediaTy
     void writeCachedBlob({ ...cached, lastAccessedAt: Date.now() });
     return { bytes: new Uint8Array(cached.bytes), mediaType: cached.mediaType };
   }
-  // ⏱️ Finding 3: no per-document abort context exists here (the blob cache is global, not tied to
-  // one document), so a fixed timeout is the whole story — still enough that a stalled dev-server
-  // response can't hang this call forever.
   const response = (await fetchWithTimeout(`${BLOB_ENDPOINT_PATH}/${encodeURIComponent(hash)}`, undefined, { timeoutMs: BLOB_FETCH_TIMEOUT_MS })) as BinaryFetchTimeoutResponse;
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`blob fetch failed (${response.status})`);

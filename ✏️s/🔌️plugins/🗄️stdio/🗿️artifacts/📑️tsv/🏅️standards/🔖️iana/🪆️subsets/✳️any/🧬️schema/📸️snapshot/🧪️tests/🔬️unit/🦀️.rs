@@ -31,10 +31,6 @@ async fn sniff_rejects_binary_noise() {
 
 #[semio_framework_async_macros::async_test]
 async fn embedded_backslash_t_is_not_a_real_tab() {
-    // 🔒 Documents the honest IANA TSV limitation: a genuine tab byte inside a field is
-    // indistinguishable from a column boundary (no quoting mechanism exists to escape it).
-    // A `\t` two-character ESCAPE SEQUENCE (backslash + t), by contrast, is just two
-    // ordinary text characters and round-trips perfectly, same as the real W0 fixture's row 5.
     let text = "note\nWeathering Test\\tSample\n";
     let snap = decode_tsv(text);
     assert_eq!(snap.records[1], vec!["Weathering Test\\tSample"]);

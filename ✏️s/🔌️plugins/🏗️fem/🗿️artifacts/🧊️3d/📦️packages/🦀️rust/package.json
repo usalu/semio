@@ -5,7 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
-    "verify-fem3d-numerical-child-native": "bun nx run @semio-tech/fem-3d-rs:verify-fem3d-numerical-child-native",
-    "verify-fem3d-numerical-child-source": "bun nx run @semio-tech/fem-3d-rs:verify-fem3d-numerical-child-source"
+    "verify-fem3d-numerical-child-native": "bun --cwd \"../../../../../../..\" repo run @semio-tech/fem-3d-rs:verify-fem3d-numerical-child-native",
+    "verify-fem3d-numerical-child-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/fem-3d-rs:verify-fem3d-numerical-child-source"
   }
 }

@@ -1,10 +1,12 @@
 import { SchemaCheck } from "../🧱️script-bases/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolve } from "node:path";
-import { runExactCargoLaws } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 /** 🧬️ Retained clone command: the fixture shapes of retained clone choices, grants, ordered map paging and paged copies, and the retained clone check.
  *
@@ -211,7 +213,6 @@ export class RetainedCloneCheckScript extends BundleScript {
       assert.equal(reservedBeforeTake(row.reservePosition, row.takePosition), row.expected, row.id);
     }
     assert(reservedBeforeTake(handoffMethod.indexOf("displaced_retirements.reserve(1)?"), handoffMethod.indexOf("publication.take()")), "Store reserves surviving close authority before taking the scheduler owner");
-    console.log(`[DEBUG] Source authority order: ${preparationFixture.handoff.sourceAuthorityOrder.length} neutral/Ajv cases and actual reserve-before-take checked`);
     assert(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs"), "utf8").includes("ErasedSnapshotRetirement for ArtifactStoreBatchPublication"));
     const pluginSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs"), "utf8");
     assert(pluginSource.includes("fn handoff_mounted_durable_publication("));
@@ -287,8 +288,7 @@ export class RetainedLaneScript extends BundleScript {
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   if(args[0]==="source")return;
-  const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runExactCargoLaws({invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":manifest},cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::tests::original_side_lane_comparison_uses_granted_utf8_chunks","os_store::tests::original_envelope_parse_preserves_genesis_without_a_discarded_projection_clone","os_store::tests::native_command_publication_preserves_original_context_issuer_and_denied_inputs","os_store::tests::interaction_store_apply_updates_hover_and_bumps_generation","os_store::tests::interaction_store_reset_discards_hover_and_bumps_generation","os_store::tests::interaction_store_default_seeds_from_hover_default"]}]});
-  console.log("[DEBUG] retained side lane exact native "+receipts[0]!.assertions+" original owner laws");
+  const native=readCargoTestPolicyV1(process.env),manifest=resolve(this.root,"Cargo.toml");assert.equal(resolve(native.manifestPath),manifest);const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,env:process.env,manifestPaths:{"semio-framework-os-kernel":manifest},nativeEnv:{RUST_MIN_STACK:native.rustMinStack},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::tests::original_side_lane_comparison_uses_granted_utf8_chunks","os_store::tests::original_envelope_parse_preserves_genesis_without_a_discarded_projection_clone","os_store::tests::native_command_publication_preserves_original_context_issuer_and_denied_inputs","os_store::tests::interaction_store_apply_updates_hover_and_bumps_generation","os_store::tests::interaction_store_reset_discards_hover_and_bumps_generation","os_store::tests::interaction_store_default_seeds_from_hover_default"]}]});
  }
 }
 
@@ -297,7 +297,7 @@ export class OriginalIngressScript extends BundleScript {
   if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-ingress source|native");
   const oracle=await import("../../../../🔨️modules/🏪️store/📥️ingress/📚️original/🧪️tests/🟦️.ts");oracle.originalIngressOracle();
   if(args[0]==="source")return;
-  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::original_ingress::tests::original_ingress_borrows_exact_rows_and_moves_only_accepted_owners"]}]});
+  const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::original_ingress::tests::original_ingress_borrows_exact_rows_and_moves_only_accepted_owners"]}]});
  }
 }
 
@@ -306,7 +306,7 @@ export class OriginalHistoryInputScript extends BundleScript {
   if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-history-input source|native");
   const oracle=await import("../../../../🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🔗️history/🧪️tests/🟦️.ts");oracle.originalHistoryInputOracle();
   if(args[0]==="source")return;
-  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::replay_preparation::native::history::tests::original_history_input_returns_same_backing_and_captured_issuer","os_store::component::replay_preparation::native::history::tests::original_history_input_cancellation_restores_each_partial_birth_and_waits_for_live_producer"]}]});
+  const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::replay_preparation::native::history::tests::original_history_input_returns_same_backing_and_captured_issuer","os_store::component::replay_preparation::native::history::tests::original_history_input_cancellation_restores_each_partial_birth_and_waits_for_live_producer"]}]});
  }
 }
 
@@ -317,6 +317,6 @@ export class OriginalIoRetirementScript extends BundleScript {
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   if(args[0]==="source")return;
-  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["io::control::retirement_tests::original_io_retirement_keeps_canceled_decoder_and_remaining_physical_wallet","io::control::retirement_tests::original_io_retirement_preserves_active_encoder_and_refuses_encoder_only_authority"]}]});
+  const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["io::control::retirement_tests::original_io_retirement_keeps_canceled_decoder_and_remaining_physical_wallet","io::control::retirement_tests::original_io_retirement_preserves_active_encoder_and_refuses_encoder_only_authority"]}]});
  }
 }

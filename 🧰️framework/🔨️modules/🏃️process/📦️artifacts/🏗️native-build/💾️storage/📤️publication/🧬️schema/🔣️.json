@@ -498,21 +498,15 @@
         "win32": {
           "mounted": [
             "image:information",
-            "metadata:pending",
             "image:detach",
             "image:inactive",
-            "metadata:published",
             "image:attach",
-            "image:verify",
-            "metadata:settled"
+            "image:verify"
           ],
           "inactive": [
             "image:information",
-            "metadata:pending",
-            "metadata:published",
             "image:attach",
-            "image:verify",
-            "metadata:settled"
+            "image:verify"
           ]
         }
       }
@@ -838,15 +832,12 @@
         ],
         "win32": [
           "image:information",
-          "metadata:pending",
           "image:detach",
           "image:inactive",
-          "metadata:published",
           "image:attach",
           "image:verify",
           "image:detach",
-          "image:inactive",
-          "metadata:settled"
+          "image:inactive"
         ]
       }
     }

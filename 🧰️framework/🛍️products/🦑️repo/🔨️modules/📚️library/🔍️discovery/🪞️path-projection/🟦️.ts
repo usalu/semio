@@ -1,4 +1,5 @@
 import { basename, dirname } from "node:path";
+import { pathUtf16Units } from "../📏️path-budget/🟦️.ts";
 import type { SemanticPathProjectionReferenceConsumerContract, SemanticPathProjectionReferenceConsumerForm } from "../📜️taxonomy-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { canonicalSemanticDirectoryName } from "../📂️semantic-directory-kinds/🟦️.ts";
@@ -203,7 +204,7 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
     destinationDirectoryCount: accepted ? destinationDirectories.length : 0,
     destinationNodeCount: accepted ? destinationNodes.length : 0,
     mappingDigest: accepted ? projectionFileMappingDigest(candidateMappings) : "",
-    maxPathBytes: accepted ? Math.max(0, ...destinationNodes.map(({ path }) => new TextEncoder().encode(path).length)) : 0,
+    maxPathUtf16Units: accepted ? Math.max(0, ...destinationNodes.map(({ path }) => pathUtf16Units(path))) : 0,
     problems,
   };
 }

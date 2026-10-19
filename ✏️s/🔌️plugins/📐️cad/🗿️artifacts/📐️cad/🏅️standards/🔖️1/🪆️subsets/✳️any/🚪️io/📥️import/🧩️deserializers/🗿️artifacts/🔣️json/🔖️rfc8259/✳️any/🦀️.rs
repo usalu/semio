@@ -1,4 +1,4 @@
-//! Deserialize cad via stdio.json.
+//! 📂️ Deserialize cad via stdio.json.
 //!
 //! 🧹️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
 //! binary `deserialize()` this file used to carry no longer compiled against the real

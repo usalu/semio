@@ -2,6 +2,21 @@
 
 use super::*;
 
+#[path = "🎛️settings/🦀️.rs"]
+mod settings;
+
+#[path = "🎨️theme-actions/🦀️.rs"]
+mod theme_actions;
+
+#[path = "⌨️staging/🦀️.rs"]
+mod staging;
+
+#[path = "🪟️layouts/🦀️.rs"]
+mod layouts;
+
+#[path = "🧩️plugins-chat/🦀️.rs"]
+mod plugins_chat;
+
 //#region ShellActions
 impl<'ctx> ActionsCtx<'ctx> {
     /** 🪪️ One action a live ENGINE SURFACE derived from raw pointer/wheel input — the world pane's
@@ -188,522 +203,67 @@ impl<'ctx> ActionsCtx<'ctx> {
             }
             if action.controller_id == "framework" {
                 match action.action.as_str() {
-                    "setAppearance" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.prefs.appearance_id = value.to_string();
-                            self.note_shell_setting_command("os.setAppearance", Some(value)).await?;
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "setDriver" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.prefs.driver_id = value.to_string();
-                            self.prefs.clear_driver_draft(&mut self.chrome);
-                            self.note_shell_setting_command("os.setDriver", Some(value)).await?;
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "setDriverField" => {
-                        if let (Some(key), Some(value)) = (action.args.as_ref().and_then(|args| args.get("key")).and_then(|value| value.as_str()), action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str())) {
-                            if self.prefs.set_driver_field(key, value, &mut self.chrome) {
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "setDriverSaveLabel" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()) {
-                            if self.prefs.driver_save_label != value {
-                                self.prefs.driver_save_label = value.to_string();
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "saveDriver" => {
-                        let label = self.prefs.driver_save_label.trim().to_string();
-                        if let Some(id) = custom_ui_driver_id(&label) {
-                            let mut driver = self.prefs.driver_document(&self.chrome);
-                            driver.driver_id = id.clone();
-                            driver.label = label;
-                            self.chrome.chrome_build.preferences.custom_drivers.insert(id.clone(), driver);
-                            self.prefs.driver_id = id;
-                            self.prefs.driver_save_label.clear();
-                            self.prefs.clear_driver_draft(&mut self.chrome);
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "deleteDriver" => {
-                        if let Some(id) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()).filter(|id| id.starts_with("custom.")) {
-                            let changed = self.chrome.chrome_build.preferences.custom_drivers.remove(id).is_some() || self.prefs.driver_id == id || self.prefs.driver_draft.is_some();
-                            if self.prefs.driver_id == id {
-                                self.prefs.driver_id = "default".into();
-                            }
-                            self.prefs.clear_driver_draft(&mut self.chrome);
-                            if changed {
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "setLocale" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            let changed = self.prefs.locale_id != value;
-                            self.prefs.locale_id = value.to_string();
-                            semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale(self.prefs.active_locale());
-                            if let Some(status) = self.prefs.plugin_fault_status(&self.plugins) {
-                                self.chrome.error = Some(status);
-                            }
-                            self.docs.trace_resolved_locale("setLocale", &self.chrome, &self.prefs);
-                            self.note_shell_setting_command("os.setLocale", Some(value)).await?;
-                            if changed {
-                                self.as_session().sync_dock_tabs();
-                                self.settle.owe_refresh(UiDirtyScope::Full);
-                                self.settle.owe_settle();
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "setTerminology" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            let changed = self.prefs.terminology_id != value;
-                            self.prefs.terminology_id = value.to_string();
-                            self.note_shell_setting_command("os.setTerminology", Some(value)).await?;
-                            if changed {
-                                self.as_session().sync_dock_tabs();
-                                self.settle.owe_refresh(UiDirtyScope::Full);
-                                self.settle.owe_settle();
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "setThemeId" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            let changed = self.chrome.chrome_build.preferences.theme_id != value || self.prefs.theme_draft.is_some();
-                            set_active_theme_id(value);
-                            self.prefs.clear_theme_draft();
-                            self.chrome.chrome_build.preferences.theme_id = value.to_string();
-                            self.note_shell_setting_command("os.setThemeId", Some(value)).await?;
-                            if changed {
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "runOsCommand" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            let command_id = value.to_string();
-                            self.apply_os_command(&command_id, None).await?;
-                        }
-                        return Ok(());
-                    }
-                    "setLayout" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.chrome.chrome_build.preferences.ui_layout = if value == "tablet" { "tablet".to_string() } else { "desktop".to_string() };
-                            self.note_shell_setting_command("os.setLayout", Some(value)).await?;
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "setDefaultApp" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            let key = action.args.as_ref().and_then(|args| args.get("row")).and_then(|v| v.as_str()).unwrap_or_default().to_string();
-                            if value == DEFAULT_APP_NONE_VALUE {
-                                self.plugins.default_app_pins.remove(&key);
-                            } else {
-                                self.plugins.default_app_pins.insert(key, value.to_string());
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "captureKeybinding" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            let already = self.input.keybinding_capture_control_id.as_deref() == Some(value);
-                            self.input.keybinding_capture_control_id = (!already).then(|| value.to_string());
-                        }
-                        return Ok(());
-                    }
-                    "resetKeybinding" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.chrome.chrome_build.preferences.keybinding_overrides.remove(value);
-                        }
-                        return Ok(());
-                    }
-                    "setCommandExpanded" => {
-                        if let Some(key) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()) {
-                            let live = self.docs.resolved_commands(&self.chrome, &self.plugins).into_iter().any(|entry| entry.definition.in_palette && !entry.definition.args.is_empty() && command_address_stable_key(&entry.address) == key);
-                            if live {
-                                self.commands.expanded_command_id = (self.commands.expanded_command_id.as_deref() != Some(key)).then(|| key.to_string());
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "executeResolvedCommand" => {
-                        if let Some(key) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()).map(ToOwned::to_owned) {
-                            if let Some(entry) = self.docs.resolved_commands(&self.chrome, &self.plugins).into_iter().find(|entry| entry.definition.in_palette && entry.definition.args.is_empty() && command_address_stable_key(&entry.address) == key) {
-                                match &entry.address.owner {
-                                    semio_framework::manifest::CommandOwnerAddress::Os => {
-                                        self.apply_os_command(&entry.definition.id, None).await?;
-                                    }
-                                    _ => {
-                                        self.dispatch_command(semio_framework::manifest::CommandInvocation { address: entry.address, arguments: Default::default() }).await?;
-                                    }
-                                }
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "stageCommandArg" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let (Some(command), Some(arg)) = (args.get("command").and_then(Value::as_str), args.get("arg").and_then(Value::as_str)) {
-                            let staged = self.commands.staged_command_args.entry(command.to_string()).or_default();
-                            let value = staged_arg_value(&args, staged.get(arg));
-                            staged.insert(arg.to_string(), value);
-                        }
-                        return Ok(());
-                    }
-                    "resetStagedCommand" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.commands.staged_command_args.remove(value);
-                        }
-                        return Ok(());
-                    }
-                    "executeStagedCommand" => {
-                        if let Some(key) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
-                            let staged = self.commands.staged_command_args.get(&key).cloned().unwrap_or_default();
-                            if let Some(entry) = self.docs.resolved_commands(&self.chrome, &self.plugins).into_iter().find(|entry| entry.definition.in_palette && command_address_stable_key(&entry.address) == key) {
-                                let Some(effective) = resolved_execute_args(&entry.definition.args, &staged) else { return Ok(()) };
-                                match &entry.address.owner {
-                                    semio_framework::manifest::CommandOwnerAddress::Os => {
-                                        let command_id = entry.definition.id.clone();
-                                        let option = entry.definition.args.first().and_then(|arg| effective.get(&arg.id)).and_then(|value| value.as_str().map(ToOwned::to_owned));
-                                        self.apply_os_command(&command_id, option.as_deref()).await?;
-                                    }
-                                    _ => {
-                                        let arguments = effective.into_iter().filter_map(|(id, value)| serde_json::from_value::<DslValue>(value).ok().map(|value| (id, value))).collect();
-                                        self.dispatch_command(semio_framework::manifest::CommandInvocation { address: entry.address.clone(), arguments }).await?;
-                                    }
-                                }
-                            }
-                            self.commands.staged_command_args.remove(&key);
-                            self.commands.expanded_command_id = None;
-                        }
-                        return Ok(());
-                    }
-                    "setActionExpanded" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let (Some(window_id), Some(action_id)) = (args.get("window").and_then(Value::as_str), args.get("action").and_then(Value::as_str)) {
-                            if self.windows.action_panel_expanded.get(window_id).map(String::as_str) == Some(action_id) {
-                                self.windows.action_panel_expanded.remove(window_id);
-                            } else {
-                                self.windows.action_panel_expanded.insert(window_id.to_string(), action_id.to_string());
-                            }
-                        }
-                        return self.as_window_actions().republish_window_action_panes();
-                    }
+                    "setAppearance" => return self.framework_set_appearance(&action).await,
+                    "setDriver" => return self.framework_set_driver(&action).await,
+                    "setDriverField" => return self.framework_set_driver_field(&action).await,
+                    "setDriverSaveLabel" => return self.framework_set_driver_save_label(&action).await,
+                    "saveDriver" => return self.framework_save_driver().await,
+                    "deleteDriver" => return self.framework_delete_driver(&action).await,
+                    "setLocale" => return self.framework_set_locale(&action).await,
+                    "setTerminology" => return self.framework_set_terminology(&action).await,
+                    "setThemeId" => return self.framework_set_theme_id(&action).await,
+                    "runOsCommand" => return self.framework_run_os_command(&action).await,
+                    "setLayout" => return self.framework_set_layout(&action).await,
+                    "setDefaultApp" => return self.framework_set_default_app(&action).await,
+                    "captureKeybinding" => return self.framework_capture_keybinding(&action).await,
+                    "resetKeybinding" => return self.framework_reset_keybinding(&action).await,
+                    "setCommandExpanded" => return self.framework_set_command_expanded(&action).await,
+                    "executeResolvedCommand" => return self.framework_execute_resolved_command(&action).await,
+                    "stageCommandArg" => return self.framework_stage_command_arg(&action).await,
+                    "resetStagedCommand" => return self.framework_reset_staged_command(&action).await,
+                    "executeStagedCommand" => return self.framework_execute_staged_command(&action).await,
+                    "setActionExpanded" => return self.framework_set_action_expanded(&action).await,
                     IMPORT_TRANSFER_CANCEL_ACTION => {
                         if let Some(transfer) = action.args.as_ref().map(dsl_value_as_json).and_then(|args| args.get("transfer").and_then(Value::as_u64)) {
                             self.as_session().cancel_import_transfer(transfer);
                         }
                         return Ok(());
                     }
-                    "stageActionArg" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let (Some(window_id), Some(action_id), Some(arg_id)) = (args.get("window").and_then(Value::as_str), args.get("action").and_then(Value::as_str), args.get("arg").and_then(Value::as_str)) {
-                            let (window_id, action_id, arg_id) = (window_id.to_string(), action_id.to_string(), arg_id.to_string());
-                            let value = staged_arg_value(&args, self.commands.staged_map_for(&window_id, &action_id).get(&arg_id));
-                            self.commands.stage_arg(&window_id, &action_id, &arg_id, value);
-                        }
-                        return self.as_window_actions().republish_window_action_panes();
-                    }
-                    "resetActionArgs" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let (Some(window_id), Some(action_id)) = (args.get("window").and_then(Value::as_str), args.get("action").and_then(Value::as_str)) {
-                            let (window_id, action_id) = (window_id.to_string(), action_id.to_string());
-                            self.commands.reset_staged_args(&window_id, &action_id);
-                        }
-                        return self.as_window_actions().republish_window_action_panes();
-                    }
-                    "executeStagedAction" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let (Some(window_id), Some(action_id)) = (args.get("window").and_then(Value::as_str), args.get("action").and_then(Value::as_str)) {
-                            let (window_id, action_id) = (window_id.to_string(), action_id.to_string());
-                            self.execute_staged_action(&window_id, &action_id).await?;
-                        }
-                        return Ok(());
-                    }
-                    "setEngagementInput" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let Some(window_id) = args.get("window").and_then(Value::as_str) {
-                            let value = args.get("value").and_then(Value::as_str).unwrap_or_default().to_string();
-                            self.windows.engagement_inputs.insert(window_id.to_string(), value);
-                        }
-                        return Ok(());
-                    }
-                    "toggleSearchPossibles" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let Some(window_id) = args.get("window").and_then(Value::as_str) {
-                            let open = self.commands.search_possibles_open.get(window_id).copied().unwrap_or(false);
-                            self.commands.search_possibles_open.insert(window_id.to_string(), !open);
-                        }
-                        return self.as_window_actions().republish_window_action_panes();
-                    }
-                    "setWorldProjectionTemplate" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        if let (Some(window_id), Some(template_id)) = (args.get("windowId").and_then(Value::as_str), args.get("templateId").and_then(Value::as_str)) {
-                            let (window_id, template_id) = (window_id.to_string(), template_id.to_string());
-                            self.dock.select_world_projection_template(&window_id, &template_id, &mut self.surfaces, &mut self.docs, &mut self.windows)?;
-                        }
-                        return Ok(());
-                    }
-                    "setLayoutSaveLabel" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.dock.layout_save_label = value.to_string();
-                        }
-                        return Ok(());
-                    }
-                    "saveCurrentLayout" => {
-                        let label = self.dock.layout_save_label.trim().to_string();
-                        if label.is_empty() {
-                            return Ok(());
-                        }
-                        if let Some(layout) = self.dock.current_named_layout(&label, &self.docs) {
-                            let id = layout.id.clone();
-                            self.dock.user_layouts.retain(|entry| entry.id != id);
-                            self.dock.user_layouts.push(layout);
-                            self.dock.layout_save_label.clear();
-                            self.dock.persist_named_layouts(&self.docs);
-                            self.note_shell_setting_command("os.saveNamedLayout", Some(&id)).await?;
-                        }
-                        return Ok(());
-                    }
-                    "applyNamedLayout" => {
-                        if let Some(layout_id) = action.args.as_ref().and_then(|args| args.get("layoutId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
-                            if self.as_session().apply_named_layout(&layout_id) {
-                                self.note_shell_setting_command("os.applyNamedLayout", Some(&layout_id)).await?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "deleteUserLayout" => {
-                        if let Some(layout_id) = action.args.as_ref().and_then(|args| args.get("layoutId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
-                            self.dock.user_layouts.retain(|entry| entry.id != layout_id);
-                            self.dock.persist_named_layouts(&self.docs);
-                            self.note_shell_setting_command("os.deleteNamedLayout", Some(&layout_id)).await?;
-                        }
-                        return Ok(());
-                    }
-                    "openDisplayWindow" => {
-                        let window_kind_id = action.args.as_ref().and_then(|args| args.get("windowKindId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
-                        let template_id = action.args.as_ref().and_then(|args| args.get("templateId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
-                        if let Some(window_kind_id) = window_kind_id {
-                            self.dock.open_display_window(&window_kind_id, template_id.as_deref(), &mut self.settle, &self.docs, &mut self.windows);
-                        }
-                        return Ok(());
-                    }
-                    "selectConflict" => {
-                        if let Some(conflict_id) = action.args.as_ref().and_then(|args| args.get("conflictId")).and_then(|v| v.as_str()) {
-                            self.prefs.selected_conflict_id = (self.prefs.selected_conflict_id.as_deref() != Some(conflict_id)).then(|| conflict_id.to_string());
-                        }
-                        return Ok(());
-                    }
-                    "resolveConflict" => {
-                        let conflict_id = action.args.as_ref().and_then(|args| args.get("conflictId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
-                        let accept = action.args.as_ref().and_then(|args| args.get("accept")).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(true);
-                        if let Some(conflict_id) = conflict_id {
-                            self.docs.resolve_open_conflict(&conflict_id, accept, &mut self.chrome, &self.plugins, &mut self.prefs).await;
-                        }
-                        return Ok(());
-                    }
-                    "installPlugin" | "reloadPlugin" => {
-                        if let Some(plugin_id) = action.args.as_ref().and_then(|args| args.get("pluginId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
-                            if action.action == "reloadPlugin" {
-                                self.docs.uninstall_plugin(&plugin_id, &mut self.plugins, &mut self.directory);
-                            }
-                            let _ = self.plugins.install_plugin(&plugin_id).await;
-                            self.note_shell_setting_command(if action.action == "reloadPlugin" { "os.reloadPlugin" } else { "os.installPlugin" }, Some(&plugin_id)).await?;
-                        }
-                        return Ok(());
-                    }
-                    "uninstallPlugin" => {
-                        if let Some(plugin_id) = action.args.as_ref().and_then(|args| args.get("pluginId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
-                            if self.docs.uninstall_plugin(&plugin_id, &mut self.plugins, &mut self.directory) {
-                                self.note_shell_setting_command("os.uninstallPlugin", Some(&plugin_id)).await?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "installExtensionUrl" => {
-                        let url = action.args.as_ref().and_then(|args| args.get("url")).and_then(|value| value.as_str()).filter(|url| !url.is_empty()).map(ToOwned::to_owned);
-                        let mut request = serde_json::json!({
-                            "op": "extension-store-install-url",
-                            "prompt": shell_chrome_string("plugins.extension.urlPrompt", self.prefs.locale_id == "de")
-                        });
-                        if let Some(url) = url.as_deref() {
-                            request["url"] = serde_json::Value::String(url.to_string());
-                        }
-                        if self.install_extension_from_store(request).await? {
-                            self.note_shell_setting_command("os.installExtensionUrl", url.as_deref()).await?;
-                        }
-                        return Ok(());
-                    }
-                    "installExtensionFile" => {
-                        if self.install_extension_from_store(serde_json::json!({ "op": "extension-store-install-file" })).await? {
-                            self.note_shell_setting_command("os.installExtensionFile", None).await?;
-                        }
-                        return Ok(());
-                    }
-                    "setExtensionEnabled" => {
-                        let extension_id = action.args.as_ref().and_then(|args| args.get("extensionId")).and_then(|value| value.as_str()).map(ToOwned::to_owned);
-                        let enabled = action.args.as_ref().and_then(|args| args.get("enabled")).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(true);
-                        if let Some(extension_id) = extension_id {
-                            if self.set_extension_enabled(&extension_id, enabled).await? {
-                                self.note_shell_setting_command(if enabled { "os.enableExtension" } else { "os.disableExtension" }, Some(&extension_id)).await?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "uninstallExtension" => {
-                        if let Some(extension_id) = action.args.as_ref().and_then(|args| args.get("extensionId")).and_then(|value| value.as_str()).map(ToOwned::to_owned) {
-                            if self.uninstall_extension(&extension_id).await? {
-                                self.note_shell_setting_command("os.uninstallExtension", Some(&extension_id)).await?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "setChatDraft" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            self.directory.agent_chat_draft = value.to_string();
-                        }
-                        return Ok(());
-                    }
-                    "sendChatDraft" => {
-                        self.directory.send_agent_chat_draft(&mut self.chrome);
-                        return Ok(());
-                    }
-                    "cancelToolCall" => {
-                        if let Some(invocation_id) = action.args.as_ref().and_then(|args| args.get("invocationId")).and_then(|value| value.as_str()).map(ToOwned::to_owned) {
-                            self.chrome.cancel_agent_tool_call(&invocation_id);
-                        }
-                        return Ok(());
-                    }
+                    "stageActionArg" => return self.framework_stage_action_arg(&action).await,
+                    "resetActionArgs" => return self.framework_reset_action_args(&action).await,
+                    "executeStagedAction" => return self.framework_execute_staged_action(&action).await,
+                    "setEngagementInput" => return self.framework_set_engagement_input(&action).await,
+                    "toggleSearchPossibles" => return self.framework_toggle_search_possibles(&action).await,
+                    "setWorldProjectionTemplate" => return self.framework_set_world_projection_template(&action).await,
+                    "setLayoutSaveLabel" => return self.framework_set_layout_save_label(&action).await,
+                    "saveCurrentLayout" => return self.framework_save_current_layout().await,
+                    "applyNamedLayout" => return self.framework_apply_named_layout(&action).await,
+                    "deleteUserLayout" => return self.framework_delete_user_layout(&action).await,
+                    "openDisplayWindow" => return self.framework_open_display_window(&action).await,
+                    "selectConflict" => return self.framework_select_conflict(&action).await,
+                    "resolveConflict" => return self.framework_resolve_conflict(&action).await,
+                    "installPlugin" | "reloadPlugin" => return self.framework_install_or_reload_plugin(&action).await,
+                    "uninstallPlugin" => return self.framework_uninstall_plugin(&action).await,
+                    "installExtensionUrl" => return self.framework_install_extension_url(&action).await,
+                    "installExtensionFile" => return self.framework_install_extension_file().await,
+                    "setExtensionEnabled" => return self.framework_set_extension_enabled(&action).await,
+                    "uninstallExtension" => return self.framework_uninstall_extension(&action).await,
+                    "setChatDraft" => return self.framework_set_chat_draft(&action).await,
+                    "sendChatDraft" => return self.framework_send_chat_draft().await,
+                    "cancelToolCall" => return self.framework_cancel_tool_call(&action).await,
                     other if other.starts_with("hub") => {
                         self.handle_hub_workspace_action(&action.action.clone(), action.args.clone()).await;
                         return Ok(());
                     }
-                    "setMergePolicy" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            if SHELL_MERGE_POLICY_OPTIONS.iter().any(|(option, _)| *option == value) {
-                                self.prefs.merge_policy = value.to_string();
-                                self.note_shell_setting_command("os.setMergePolicy", Some(value)).await?;
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "setThemeColor" | "setThemeSpacing" | "setThemeFontStack" | "setThemeStroke" | "setThemeRadius" | "setThemeOpacity" | "setThemeMetric" | "setThemeAppearancePaint" => {
-                        let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
-                        let verb = action.action.clone();
-                        let before = self.prefs.theme_document(&self.chrome);
-                        self.prefs.apply_theme_editor_commit(&verb, &args, &self.chrome);
-                        if self.prefs.theme_document(&self.chrome) != before {
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "setThemeSaveLabel" => {
-                        let value = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()).unwrap_or_default().to_string();
-                        if self.prefs.theme_save_label != value {
-                            self.prefs.theme_save_label = value;
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "saveTheme" => {
-                        let label = self.prefs.theme_save_label.trim().to_string();
-                        if let Some(id) = custom_theme_id_for_label(&label) {
-                            let mut document = self.prefs.theme_document(&self.chrome);
-                            document.id = id.clone();
-                            document.label = label;
-                            if let Some(raw) = save_custom_theme_document(&id, &document) {
-                                self.chrome.chrome_build.preferences.custom_themes.insert(id.clone(), raw);
-                                self.chrome.chrome_build.preferences.theme_id = id.clone();
-                                self.prefs.theme_draft = None;
-                                self.prefs.theme_save_label.clear();
-                                self.note_shell_setting_command("os.setThemeId", Some(id.as_str())).await?;
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "exportTheme" => {
-                        let document = self.prefs.theme_document(&self.chrome);
-                        if let Some(text) = document.canonical_json() {
-                            download_media_export(&format!("{}.theme.dsl", document.id), "text/plain", &text, None);
-                        }
-                        return Ok(());
-                    }
-                    "importTheme" => {
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            self.prefs.pending_theme_import = true;
-                        }
-                        #[cfg(not(target_arch = "wasm32"))]
-                        self.settle.submit_shell_io_future(async move {
-                            let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
-                            ShellIoCompletion::Actions(
-                                opened.into_iter().take(1).map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": file.contents }) }).collect(),
-                            )
-                        });
-                        return Ok(());
-                    }
-                    "applyImportedTheme" => {
-                        if let Some(text) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            if let Some(document) = ThemeDocument::parse(text) {
-                                let label = if document.label.is_empty() { document.id.clone() } else { document.label.clone() };
-                                if let Some(id) = custom_theme_id_for_label(&label) {
-                                    let saved = ThemeDocument { id: id.clone(), label, ..document };
-                                    if let Some(raw) = save_custom_theme_document(&id, &saved) {
-                                        self.chrome.chrome_build.preferences.custom_themes.insert(id.clone(), raw);
-                                        self.chrome.chrome_build.preferences.theme_id = id.clone();
-                                        self.prefs.theme_draft = None;
-                                        self.note_shell_setting_command("os.setThemeId", Some(id.as_str())).await?;
-                                        self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                                    }
-                                }
-                            }
-                        }
-                        return Ok(());
-                    }
-                    "resetThemeId" => {
-                        let changed = self.chrome.chrome_build.preferences.theme_id != "semio" || self.prefs.theme_draft.is_some();
-                        set_active_theme_id("semio");
-                        self.prefs.clear_theme_draft();
-                        self.chrome.chrome_build.preferences.theme_id = "semio".to_string();
-                        self.note_shell_setting_command("os.resetThemeId", Some("semio")).await?;
-                        if changed {
-                            self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                        }
-                        return Ok(());
-                    }
-                    "deleteThemeId" => {
-                        if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
-                            delete_custom_theme(value);
-                            let removed = self.chrome.chrome_build.preferences.custom_themes.remove(value).is_some();
-                            let selected = self.chrome.chrome_build.preferences.theme_id == value;
-                            if selected {
-                                self.chrome.chrome_build.preferences.theme_id = "semio".to_string();
-                            }
-                            self.note_shell_setting_command("os.deleteThemeId", Some(value)).await?;
-                            if removed || selected {
-                                self.as_session().republish_shell_panel_document(FRAMEWORK_SETTINGS_THEME_TAB_ID)?;
-                            }
-                        }
-                        return Ok(());
-                    }
+                    "setMergePolicy" => return self.framework_set_merge_policy(&action).await,
+                    "setThemeColor" | "setThemeSpacing" | "setThemeFontStack" | "setThemeStroke" | "setThemeRadius" | "setThemeOpacity" | "setThemeMetric" | "setThemeAppearancePaint" => return self.framework_set_theme_token(&action).await,
+                    "setThemeSaveLabel" => return self.framework_set_theme_save_label(&action).await,
+                    "saveTheme" => return self.framework_save_theme().await,
+                    "exportTheme" => return self.framework_export_theme().await,
+                    "importTheme" => return self.framework_import_theme(&action).await,
+                    "applyImportedTheme" => return self.framework_apply_imported_theme(&action).await,
+                    "resetThemeId" => return self.framework_reset_theme_id().await,
+                    "deleteThemeId" => return self.framework_delete_theme_id(&action).await,
                     _ => {}
                 }
             }

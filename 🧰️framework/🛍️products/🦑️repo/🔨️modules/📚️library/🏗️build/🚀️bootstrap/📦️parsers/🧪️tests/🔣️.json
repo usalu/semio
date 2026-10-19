@@ -34,5 +34,182 @@
     "root": ".",
     "inherited": ".agents",
     "expected": "."
-  }
+  },
+  "bootstrapCases": [
+    {
+      "id": "missing-receipt",
+      "material": true,
+      "receipt": false,
+      "matches": false,
+      "writeFails": false,
+      "state": "receipt-required",
+      "installs": 0,
+      "writes": 1,
+      "failure": false
+    },
+    {
+      "id": "ready",
+      "material": true,
+      "receipt": true,
+      "matches": true,
+      "writeFails": false,
+      "state": "ready",
+      "installs": 0,
+      "writes": 0,
+      "failure": false
+    },
+    {
+      "id": "missing-material",
+      "material": false,
+      "receipt": false,
+      "matches": false,
+      "writeFails": false,
+      "state": "material-required",
+      "installs": 1,
+      "writes": 1,
+      "failure": false
+    },
+    {
+      "id": "changed-immutable-receipt",
+      "material": true,
+      "receipt": true,
+      "matches": false,
+      "writeFails": true,
+      "state": "receipt-required",
+      "installs": 0,
+      "writes": 1,
+      "failure": true
+    },
+    {
+      "id": "material-race-before-writer",
+      "material": true,
+      "receipt": false,
+      "matches": false,
+      "writeFails": true,
+      "state": "receipt-required",
+      "installs": 0,
+      "writes": 1,
+      "failure": true
+    }
+  ],
+  "progressCases": [
+    {
+      "name": "one-update-per-second",
+      "events": [
+        {
+          "at": 0,
+          "operation": "list",
+          "completedOperations": 64
+        },
+        {
+          "at": 10,
+          "operation": "list",
+          "completedOperations": 128
+        },
+        {
+          "at": 999,
+          "operation": "state",
+          "completedOperations": 192
+        },
+        {
+          "at": 1000,
+          "operation": "state",
+          "completedOperations": 256
+        },
+        {
+          "at": 1000,
+          "operation": "readText",
+          "completedOperations": 320
+        },
+        {
+          "at": 2000,
+          "operation": "readText",
+          "completedOperations": 384
+        }
+      ],
+      "published": [
+        64,
+        256,
+        384
+      ]
+    },
+    {
+      "name": "phase-changes-retain-one-global-rate",
+      "events": [
+        {
+          "at": 0,
+          "operation": "list",
+          "completedOperations": 64
+        },
+        {
+          "at": 1,
+          "operation": "state",
+          "completedOperations": 128
+        },
+        {
+          "at": 2,
+          "operation": "readText",
+          "completedOperations": 192
+        },
+        {
+          "at": 3,
+          "operation": "membership",
+          "completedOperations": 256
+        },
+        {
+          "at": 4,
+          "operation": "selection",
+          "completedOperations": 320
+        },
+        {
+          "at": 5,
+          "operation": "publication",
+          "completedOperations": 384
+        },
+        {
+          "at": 1000,
+          "operation": "publication",
+          "completedOperations": 448
+        }
+      ],
+      "published": [
+        64,
+        448
+      ]
+    },
+    {
+      "name": "checkpoint-boundary-is-unchanged",
+      "events": [
+        {
+          "at": 0,
+          "operation": "list",
+          "completedOperations": 63
+        },
+        {
+          "at": 100,
+          "operation": "list",
+          "completedOperations": 64
+        },
+        {
+          "at": 200,
+          "operation": "list",
+          "completedOperations": 65
+        },
+        {
+          "at": 1099,
+          "operation": "state",
+          "completedOperations": 128
+        },
+        {
+          "at": 1100,
+          "operation": "state",
+          "completedOperations": 192
+        }
+      ],
+      "published": [
+        64,
+        192
+      ]
+    }
+  ]
 }

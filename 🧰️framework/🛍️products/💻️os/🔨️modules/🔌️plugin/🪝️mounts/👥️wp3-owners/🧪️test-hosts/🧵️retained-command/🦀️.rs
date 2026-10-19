@@ -2,6 +2,20 @@
 
 #[doc(hidden)]
 pub mod retained_command_unit_1 {
+    use semio_framework_plugin_window_kits::AppActionRegistry;
+    use serde_json::Value;
+    use semio_framework_plugin_decl_app::ArtifactApp;
+    use semio_framework_plugin_decl_emission::ActionMeta;
+    use semio_framework::Fault;
+    use semio_framework::RetainedCloneGrant;
+    use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+    use semio_framework_os_store_command::ArtifactCommand;
+    use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+    use semio_framework_os_store_testing_doubles::store;
+    use semio_framework_plugin_instance_app::VcsArtifactApp;
+    use semio_framework_plugin_testing_laws::artifact_app_laws;
+    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+    use semio_framework_plugin_reactor_app::PluginApp;
     use semio_framework_plugin_retained_command::typed_operation::PendingPublicationOutcome;
     #[doc(hidden)]
 pub async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
@@ -273,8 +287,8 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
     /// outboxes. Deliberately calls NO `maintenance_step`: a slot the host cannot release on this path alone
     /// is a leak, whatever the cooperative rotation would eventually have done about it.
     #[cfg(test)]
-    async fn drive_host_typed_continuations<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt> {
-        let mut receiving_job=crate::app_testing::artifact_app_laws::FixtureOriginalJob::new(crate::app_testing::artifact_app_laws::fixture_retained_turn());
+    async fn drive_host_typed_continuations<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt> {
+        let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn());
         let mut ownership_receipts = Vec::new();
         artifact_app_laws::retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original fixture admission receipts");
         for _ in 0..continuations {
@@ -283,7 +297,7 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
             }
             receiving_job.receive(mounted_policy.preparation,|receiving|::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity,mounted_policy.preparation,receiving))).expect("one host continuation unit");
             artifact_app_laws::retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original fixture continuation receipts");
-            while let Some(mut page) = crate::app_testing::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
+            while let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
                 assert!(app.acknowledge_typed_operation_result(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,mounted_policy.close)).expect("presented result page accepts its exact token"));
             }
             while app.take_typed_operation_effect().is_some() {}
@@ -305,8 +319,8 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
     /// `(terminal completions, continuations spent, first parked continuation)`, where "parked" is a
     /// continuation that ended owing typed-operation work while the turn reported none runnable.
     #[cfg(test)]
-    async fn drive_host_call_with_deferred_acks<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, stop_at_idle: bool, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> HostCallCensus {
-        let mut receiving_job=crate::app_testing::artifact_app_laws::FixtureOriginalJob::new(crate::app_testing::artifact_app_laws::fixture_retained_turn());
+    async fn drive_host_call_with_deferred_acks<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, stop_at_idle: bool, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> HostCallCensus {
+        let mut receiving_job=semio_framework_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn());
         let mut ownership_receipts = Vec::new();
         artifact_app_laws::retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original deferred admission receipts");
         let mut acknowledgements: Vec<TypedOperationResultToken> = Vec::new();
@@ -319,11 +333,11 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
             }
             receiving_job.receive(mounted_policy.preparation,|receiving|::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(identity,mounted_policy.preparation,receiving))).expect("one host continuation unit");
             artifact_app_laws::retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original deferred continuation receipts");
-            while let Some(mut page) = crate::app_testing::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
+            while let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
                 if matches!(page.lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault) {
                     terminal = Some((page.lane, String::from_utf8_lossy(page.bytes()).into_owned()));
                 }
-                acknowledgements.push(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,mounted_policy.close));
+                acknowledgements.push(semio_framework_plugin_testing_laws::artifact_app_laws::close_fixture_result_page(&mut page,mounted_policy.close));
             }
             while app.take_typed_operation_effect().is_some() {}
             while app.take_typed_operation_event().is_some() {}

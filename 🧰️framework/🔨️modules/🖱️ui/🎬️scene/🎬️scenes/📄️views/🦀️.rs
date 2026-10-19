@@ -329,8 +329,6 @@ pub struct VirtualFileSystemScene {
 }
 
 impl SceneDoc for VirtualFileSystemScene {
-    // 🧭️ Kebab-case like every sibling tag — see `ui_contract::SurfaceKind`'s own header for the
-    // rename that retired the last camelCase spelling from the contract, this crate and the wgpu target.
     const SCHEMA: &'static str = "virtual-file-system@1";
 }
 

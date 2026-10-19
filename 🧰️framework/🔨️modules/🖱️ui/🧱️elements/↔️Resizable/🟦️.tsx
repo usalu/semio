@@ -10,7 +10,7 @@ import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import { domSizePx } from "@semio-tech/ui-styling";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🪬️Resizable
@@ -170,7 +170,6 @@ function ResizableJoinCornerGrab({
 }
 
 function ResizablePanelGroup({ className, orientation = "horizontal", resizeTargetMinimumSize = RESIZABLE_HIT_TARGET_MINIMUM_SIZE, defaultLayout, ...props }: React.ComponentProps<typeof ResizablePrimitive.Group>) {
-  // react-resizable-panels Layout is Record<panelId, number>; reject/omit mismatched array leftovers from callers.
   const safeDefaultLayout =
     defaultLayout == null
       ? undefined

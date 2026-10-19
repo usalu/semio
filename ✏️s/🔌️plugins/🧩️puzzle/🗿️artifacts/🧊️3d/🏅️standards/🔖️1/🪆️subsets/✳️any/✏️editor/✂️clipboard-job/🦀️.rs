@@ -1,6 +1,7 @@
 //! ✂️ Clipboard job: the one-step reserved copy, cut and paste job and the cut operations.
 
 use super::*;
+use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
 
 /// ♻️ The owners one `Puzzle3dClipboardJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
@@ -45,9 +46,6 @@ impl Puzzle3dClipboardJob {
         let scene_snapshot = puzzle3d_scene_snapshot_from_play_snapshot(snapshot.as_ref());
         let marks = Puzzle3dInteractionSnapshot::from_state(&interaction, &hover);
         match self.tool_id.as_str() {
-            // 🧾️ `copy` answers a selection it cannot resolve with `Emit::default()`, i.e. ZERO effects —
-            // the same shape as "the hotkey never reached the guest" (ticket 26/09/02/PUZZLE-3D-END-TO-END
-            // wave B47 §4).
             "copy" => {
                 let selected = puzzle3d_selected_objects_from(&marks, &scene_snapshot);
                 match puzzle3d_copy_fragment_from(&scene_snapshot, selected) {
@@ -159,5 +157,5 @@ pub(super) fn puzzle3d_cut_operations(doc: &ArtifactView<'_, Puzzle3dPlaySnapsho
 pub fn puzzle3d_cut_operations_from(before: &Puzzle3dSnapshot, marks: &Puzzle3dInteractionSnapshot) -> Vec<Puzzle3dMutation> {
     let host = puzzle3d_scene_snapshot_from_document(before);
     let ids: Vec<String> = puzzle3d_selected_objects_from(marks, &host).into_iter().map(|object| object.id).collect();
-    delete_selection::delete_selection_mutations(before, &ids, &HashSet::new(), &[], &[], &[])
+    semio_s_artifact_puzzle_3d_commands_document::delete_selection::delete_selection_mutations(before, &ids, &HashSet::new(), &[], &[], &[])
 }

@@ -1,4 +1,4 @@
-//! advances at ~30 fps. ONE clock for every FEM editor: fem 2d and fem 3d register this transient for their own
+//! 📶️ advances at ~30 fps. ONE clock for every FEM editor: fem 2d and fem 3d register this transient for their own
 //! 🫧️ The running playback CLOCK of one concrete FEM results window — the per-frame phase the tick chain
 //! results-window kind ([`Fem2dResultsWindowTransientOwner`] here, fem 3d's owner beside its window).
 //!

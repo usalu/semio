@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 #[path="../🫴️receiving/🧪️tests/🦀️.rs"]mod receiving;
 use crate::DiffAlgebra;
@@ -17,7 +18,7 @@ impl RetainedDiffApply<Projection,Diff> for Apply{
   if self.closing||self.prepared{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture diff preflight already settled"));}
   Ok(match self.phase{0=>RetirementDemand{copy_bytes:size_of::<usize>()+size_of::<bool>(),depth:1,..Default::default()},1=>{if self.field.value().is_some(){RetirementDemand{copy_bytes:size_of::<usize>()+size_of::<bool>(),depth:1,..Default::default()}}else{self.field.demand(diff.project(0,|diff|&diff.set),body)?}},2=>RetainedDiagnosticPreparation::<0>::start_demand(),3=>self.diagnostic.demand([],body)?,4=>RetirementDemand{copy_bytes:size_of::<Vec<MutationMessage>>()*2+size_of::<usize>(),depth:1,..Default::default()},_=>unreachable!("fixture preflight phase")})
  }
- fn preflight(&mut self,diff:RetainedCloneRef<'_,Diff>,original:RetainedCloneRef<'_,Projection>,post:&Projection,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
+ fn preflight(&mut self,diff:RetainedCloneRef<'_,Diff>,original:RetainedCloneRef<'_,Projection>,post:&Projection,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
   let demand=self.preflight_demand(diff,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}
   let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   match self.phase{
@@ -60,8 +61,8 @@ fn messages(rows:Vec<MutationMessage>){let mut owner=MutationMessageLedgerRetire
 
 /// 🧫️ Real typed diffs remain unchanged and serializable while only the central owner can commit admitted fragments.
 #[test]
-fn retained_central_diff_preserves_original_serialization_and_refuses_fatal_preflight(){let mut receiving_callback=|_:semio_framework_value::NativeDecodeProgress|true;let mut receiving=semio_framework_value::NativeDecodeControl::new(1<<24,&mut receiving_callback);
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+fn retained_central_diff_preserves_original_serialization_and_refuses_fatal_preflight(){let mut receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<24,&mut receiving_callback);
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🔺️diff/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus.as_array().unwrap(){
   let original_diff=Diff{set:case["diff"]["set"].as_i64().unwrap(),refused:case["diff"]["refused"].as_bool().unwrap()};let mut diff=source(original_diff.clone());let mut before=source(Projection{value:case["before"].as_i64().unwrap(),untouched:vec![42;256]});let mut post=Projection{value:case["before"].as_i64().unwrap(),untouched:vec![42;256]};let pointer=post.untouched.as_ptr();
   let((mut owner,receipt),heap)=observe(||begin_retained_diff::<Projection,Diff>(grant(retained_diff_birth_demand::<Projection,Diff>())).unwrap());assert_eq!(heap,(receipt.retained_capacity_bytes,0));assert!(owner.commit_demand(diff.borrow(),before.borrow(),&post,128).is_err());
@@ -76,7 +77,7 @@ fn retained_central_diff_preserves_original_serialization_and_refuses_fatal_pref
 
 /// 🛑️ Every original typed diff plan frontier closes before its genuine D/P sources retire.
 #[test]
-fn retained_central_diff_cancellation_settles_staged_fields_and_original_sources(){let mut receiving_callback=|_:semio_framework_value::NativeDecodeProgress|true;let mut receiving=semio_framework_value::NativeDecodeControl::new(1<<24,&mut receiving_callback);
+fn retained_central_diff_cancellation_settles_staged_fields_and_original_sources(){let mut receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<24,&mut receiving_callback);
  for refused in [false,true]{for cancel in 0..28{
   let mut diff=source(Diff{set:2,refused});let mut before=source(Projection{value:1,untouched:vec![]});let mut post=Projection{value:1,untouched:vec![]};let(mut owner,_)=begin_retained_diff::<Projection,Diff>(grant(retained_diff_birth_demand::<Projection,Diff>())).unwrap();let mut admitted=false;
   for _ in 0..cancel{if admitted{let quote=grant(owner.commit_demand(diff.borrow(),before.borrow(),&post,128).unwrap());commit_retained_diff(&mut owner,diff.borrow(),before.borrow(),&mut post,quote).unwrap();break;}let quote=grant(owner.preflight_demand(diff.borrow(),before.borrow(),&post,128).unwrap());match preflight_retained_diff(&mut owner,diff.borrow(),before.borrow(),&post,128,quote,&mut receiving).unwrap(){RetainedDiffPreflightStep::Progress(_)=>{},RetainedDiffPreflightStep::Admitted(_,rows)=>{messages(rows);admitted=true;},RetainedDiffPreflightStep::Refused(_,rows)=>{messages(rows);break;}}}

@@ -1,6 +1,10 @@
 //! 🏷️ Action outcome and labels of the tool run ledger: the action outcome, the exact integer argument reader and the step, verdict and state labels. See [`super`].
 
 use super::*;
+use semio_framework_ui_locale::Terminology;
+use semio_framework_ui_locale::Locale;
+use semio_framework_os_kernel::DslValue;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 //#region 🔖️Driver
 /// 🎛️ Outcome of one tool run action dispatch; rejections are silent no-ops (§2.1).

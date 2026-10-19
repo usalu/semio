@@ -14,9 +14,6 @@ fn find(haystack: &[u8], needle: &[u8], from: usize) -> Option<usize> {
 }
 
 fn inflate_content(pdf: &[u8]) -> String {
-    // 📦️ The page content is the one `<< /Filter /FlateDecode /Length N >>` stream (images and
-    // masks carry `/Type /XObject` first); offsets are byte offsets — the binary header comment
-    // would drift a lossy-UTF-8 search.
     let marker = b"<< /Filter /FlateDecode /Length ";
     let start = find(pdf, marker, 0).expect("a content stream");
     let length_start = start + marker.len();
@@ -88,7 +85,6 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
         body.base.attributes.fill = Some(FillStyle::Solid { color: [0.1, 0.2, 0.3, 1.0] });
     }
     doc.layers.push(text);
-    // 🖼️ A 2×2 RGBA PNG with one transparent pixel.
     let png = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 0, 0, 0, 0] }).expect("png encodes");
     doc.assets.insert(semio_framework_value::paged::PagedUtf8::from("pic"), semio_s_artifact_draw_drawing_io::image::drawing_image_from_png(&png));
     let mut image = create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Picture")).to_string().into()).expect("nonempty authored identity"), "Picture", "pic");

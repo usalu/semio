@@ -12,7 +12,7 @@ async fn interaction_select_leftover_does_not_arm_gumball_without_transform_util
         &mut app,
         "interactionSelect",
         Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })),
-        Some(main::WINDOW_KIND_ID),
+        Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID),
     )
     .await
     .expect("interactionSelect admit");
@@ -34,12 +34,12 @@ async fn gumball_active_only_for_transform_utilities_with_object_selection() {
     let mut app = app().await;
     let object_id = first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
-    let idle_selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    let idle_selection = selection_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_eq!(idle_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "selection alone must not show the gumball");
     assert!(idle_selection.get("transformMode").is_none(), "non-transform utility must not emit transformMode");
 
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
-    let transform_selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("transform");
+    let transform_selection = selection_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_eq!(transform_selection.get("gumballActive").and_then(Value::as_bool), Some(true), "transform utility plus a live object selection shows the gumball");
     assert_eq!(transform_selection.get("ids").and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>()), Some(vec![object_id.clone()]));
     assert_eq!(transform_selection.get("activeObjectId").and_then(Value::as_str), Some(object_id.as_str()));
@@ -51,8 +51,8 @@ async fn gumball_active_only_for_transform_utilities_with_object_selection() {
     assert_eq!(selection_of(&render_window(&mut app, main::WINDOW_KIND_ID).await).get("gumballActive").and_then(Value::as_bool), Some(false), "an unattached gumball must never render");
 
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("reselect");
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
-    let brush_selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("brush");
+    let brush_selection = selection_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
     assert!(brush_selection.get("transformMode").is_none());
 }
@@ -64,10 +64,10 @@ async fn gumball_inactive_when_every_handle_flag_is_off() {
     let mut app = app().await;
     let object_id = first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
-    dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "move", "pressed": false })), Some(main::WINDOW_KIND_ID)).await.expect("no move");
-    dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(main::WINDOW_KIND_ID)).await.expect("no rotate");
-    let selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("transform");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "move", "pressed": false })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("no move");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("no rotate");
+    let selection = selection_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_eq!(selection.get("gumballActive").and_then(Value::as_bool), Some(false), "a gumball with no handles must not render");
 }
 
@@ -79,7 +79,7 @@ async fn transform_utility_is_local_to_the_window_instance_not_shared_across_spl
     let top = main::WINDOW_INSTANCE_TOP;
     let perspective = main::WINDOW_INSTANCE_PERSPECTIVE;
     dispatch(&mut app, "worldPointerDown", None, Some(perspective)).await.expect("register perspective");
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(top)).await.expect("transform on top");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID })), Some(top)).await.expect("transform on top");
     let top_selection = selection_of(&render_window(&mut app, top).await);
     assert_eq!(top_selection.get("transformMode").and_then(Value::as_str), Some("transform"), "transform on top pane must switch that pane's own scene mode");
     let perspective_selection = selection_of(&render_window(&mut app, perspective).await);
@@ -89,20 +89,20 @@ async fn transform_utility_is_local_to_the_window_instance_not_shared_across_spl
 #[semio_framework_async_macros::async_test]
 async fn transform_utility_options_expose_move_and_rotate_flags() {
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into() };
     let measures = main::window_measures(&scene, labels);
-    assert_eq!(measure_group_tag(&measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform")), Some(Some(utilities::transform::UTILITY_ID.into())));
+    assert_eq!(measure_group_tag(&measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform")), Some(Some(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into())));
     assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-move"), Some(true));
     assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-rotate"), Some(true));
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
-    dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(main::WINDOW_KIND_ID)).await.expect("disable rotate");
-    let selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("transform");
+    dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("disable rotate");
+    let selection = selection_of(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_eq!(selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
     assert_eq!(selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(false));
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let app_measures = app.window_measures(&view).await;
-    let window_measures = app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures = app_measures.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_toggle(window_measures, "puzzle3d-transform-rotate"), Some(false));
 }
 
@@ -140,7 +140,7 @@ async fn gumball_app() -> (Puzzle3dApp, String) {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
     let object_id = first_object_id(&app);
-    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
+    dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("transform");
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
     (app, object_id)
 }

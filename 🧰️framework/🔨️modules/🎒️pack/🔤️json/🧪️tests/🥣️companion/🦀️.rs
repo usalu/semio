@@ -7,6 +7,7 @@ use semio_framework_test_fixtures::fixture_path;
 
 pub use semio_framework_pack_json::*;
 pub use semio_framework_pack_json::testkit::JsonLexeme;
+pub use semio_framework_pack_json_source_sink::write_json_source_into;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{DslValue, ValueError, ValueRefusalKind};
 

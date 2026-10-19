@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import currencies from "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json";
-import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { recordMountedSnapshotPreparation, sameArtifactPendingSourceVersion } from "../🟦️.ts";
 
 /** 🧾️ Uses SQLite's independent conjunction arithmetic for the original receipt corpus. */

@@ -27,10 +27,6 @@ enum Mailbox {
 }
 
 impl Mailbox {
-    // 🚫️async: E1-adjacent — pure, in-memory state-machine construction, consumed (below) through
-    // sync `Iterator::map`/`map_or` closures and a `std::sync::Mutex` guard held across the whole
-    // call in `EventRouter::publish`/`drain`. See R9 and the same reasoning on `TokenBucket`/
-    // `WheelCore` above.
     pub(super) fn new(policy: &ChannelPolicy) -> Mailbox {
         match policy {
             ChannelPolicy::LatestWins { max_bytes } => Mailbox::LatestWins { max_bytes: *max_bytes, pending: None },
@@ -44,7 +40,6 @@ impl Mailbox {
     /// 📮️ `mailbox_key` is only meaningful for a [`ChannelPolicy::Coalesced`] mailbox — an
     /// incoming message under a key already pending REPLACES it (collapse); a new key queues
     /// alongside the others.
-    // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
     pub(super) fn publish(&mut self, mailbox_key: Option<&str>, payload: Vec<u8>) -> PublishOutcome {
         match self {
             Mailbox::LatestWins { max_bytes, pending } => {
@@ -137,7 +132,6 @@ impl Mailbox {
 
     /// 💳️ `ByteCredit` tracks a spendable budget only, no queued payload, in this packet — a real
     /// byte-metered channel's actual delivery mechanism is later-packet wiring, so it drains empty.
-    // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
     pub(super) fn drain(&mut self) -> Vec<Vec<u8>> {
         match self {
             Mailbox::LatestWins { pending, .. } => pending.take().into_iter().collect(),
@@ -186,8 +180,6 @@ impl Default for EventRouter {
 }
 
 impl EventRouter {
-    // 🚫️async: E1 pure constructor consumed by `Default::default` (external trait, cannot be async)
-    // — see R9. No suspension point exists (`Mutex::new`/`HashMap::new` are in-memory only).
     pub fn new() -> EventRouter {
         EventRouter { subscribers: Mutex::new(HashMap::new()), mailboxes: Mutex::new(HashMap::new()) }
     }

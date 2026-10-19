@@ -64,9 +64,6 @@ fn collects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets(
     assert_eq!(slots.len(), 1);
     let slot = &slots[0];
     assert_eq!(slot.surface(), Some(("surface.one", SurfaceKind::World3d)));
-    // The scene leaf is the stack's second child (below the text sibling plus the stack's own
-    // top padding) -- a nonzero absolute y proves ancestor offsets were accumulated, not just
-    // the leaf's own parent-relative `LayoutBucket` coordinates.
     assert!(slot.rect.y > 0.0, "expected the scene leaf offset below its text sibling, got y={}", slot.rect.y);
     assert!(slot.rect.w > 0.0 && slot.rect.h > 0.0);
 }
@@ -101,10 +98,6 @@ fn collects_an_image_leaf_alongside_a_scene_leaf() {
 
 #[test]
 fn collects_a_scene_leaf_nested_under_a_group_ancestor() {
-    // 🌳️ Regression for the shadow-walk gap this bridge replaces: the legacy immediate-mode walk
-    // it superseded only recursed into Stack/Section/Field, so a ComponentScene nested under a
-    // Group never resolved to real content. `collect_scene_slots_node` recurses into every
-    // node's `tree.children` unconditionally, so a Group ancestor is no different from a Stack.
     let tree = layout(&group(vec![text("label"), scene("surface.nested")]));
     let root = tree.root.unwrap();
 

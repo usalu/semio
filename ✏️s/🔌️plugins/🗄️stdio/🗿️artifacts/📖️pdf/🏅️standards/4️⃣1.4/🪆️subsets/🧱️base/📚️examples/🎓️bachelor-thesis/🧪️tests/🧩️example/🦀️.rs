@@ -80,12 +80,6 @@ async fn real_decode_has_many_pages_and_real_extracted_text() {
     let non_empty_pages = snap.pages.iter().filter(|p| !p.text().trim().is_empty()).count();
     assert!(non_empty_pages > 0, "at least one page must have non-empty extracted text");
 
-    // 📏 Non-trivial extracted character volume across the whole document -- proves the
-    // content-stream tokenizer + BT/ET + Tj/TJ operator handling actually ran against real,
-    // non-trivial page content (not that it just silently found nothing). The characters
-    // themselves are legitimately mostly U+FFFD for THIS fixture (see the module doc comment:
-    // every referenced font is Type3 with synthetic, non-AGL `/Differences` names and there is
-    // no `/ToUnicode` anywhere in the file) -- asserting "no U+FFFD" here would be dishonest.
     let total_chars: usize = snap.pages.iter().map(|p| p.text().chars().count()).sum();
     assert!(total_chars > 10_000, "expected substantial extracted character volume across 65 pages of body text, got {total_chars}");
 }
@@ -185,7 +179,6 @@ async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_
 
 #[semio_framework_async_macros::async_test]
 async fn decode_encode_decode_is_structurally_equal_at_page_level() {
-    // 📏 The logical writer deterministically materializes a fresh PDF serialization.
     let original = decode_pdf(document_bytes()).expect("decode");
     let rewritten_bytes = encode_pdf(&original).expect("encode");
     assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).expect("canonical decode")).expect("canonical re-encode"), rewritten_bytes);
@@ -205,11 +198,6 @@ async fn decode_encode_decode_is_structurally_equal_at_page_level() {
 //#region (c) AnalyzerBuilderRoundTrip
 #[semio_framework_async_macros::async_test]
 async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
-    // 🎯 The project's core acceptance test: walk the real decode's page-tree view, reconstruct
-    // an equivalent document using ONLY typed builder calls (the resource collections the page
-    // content names through their `Set*` mutations, then `PdfBuilder::add_page`, requirement #8), then compare the two documents' *analyzer output* (a fresh real decode of
-    // the rebuilt file), not the in-memory structs -- proving the builder's typed ops are
-    // actually sufficient to reconstruct what the analyzer sees, round-tripped through real bytes.
     let original = decode_pdf(document_bytes()).expect("decode");
 
     let mut builder = PdfBuilder::empty();

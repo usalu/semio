@@ -36,15 +36,12 @@ impl Default for GifArtifact {
 }
 
 impl GifArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> GifSnapshot {
         GifSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, gct: self.gct.clone(), background_color_index: self.background_color_index, pixel_aspect_ratio: self.pixel_aspect_ratio, images: self.images.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
         Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, gct: snapshot.gct, background_color_index: snapshot.background_color_index, pixel_aspect_ratio: snapshot.pixel_aspect_ratio, images: snapshot.images }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;

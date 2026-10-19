@@ -45,7 +45,6 @@ pub struct DwgLogicalEntity {
     pub geometry: DwgLogicalGeometry,
 }
 impl DwgLogicalEntity {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn to_native(&self) -> Result<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity, String> {
         let color = match self.color {
             -1 => semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer,
@@ -65,7 +64,6 @@ pub fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
     values.try_into().map_err(|_| format!("expected 3 values, got {}", values.len()))
 }
 impl DwgLogicalGeometry {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn from_native(geometry: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry) -> Self {
         use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::*;
         match geometry {
@@ -98,7 +96,6 @@ impl DwgLogicalGeometry {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn to_native(&self) -> Result<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry, String> {
         use DwgLogicalGeometryKind::*;
         Ok(match self.kind {

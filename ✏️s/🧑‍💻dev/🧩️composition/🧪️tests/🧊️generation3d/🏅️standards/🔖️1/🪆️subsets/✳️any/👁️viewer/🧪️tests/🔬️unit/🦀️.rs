@@ -201,10 +201,6 @@ fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
     let action = dispatchable.iter().find(|action| action.id == "exportDocument").expect("the viewer declares exportDocument");
     assert!(action.in_palette, "a reader has to be able to find it");
     assert_eq!(action.kind, ActionKind::View, "ShellHost's read-only gate swallows a Mutation-kind action on a viewer session");
-    // 🪪️ NO trailing ellipsis in the declared label: the shell appends one itself for every action
-    // that carries staged args (`🛠️ShellHelpers/🟦️.tsx`, `label: `${action.label}…``), so a declared
-    // one painted "Export Artifact……" / "Artefakt exportieren……" in the Actions pane (ticket
-    // 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs` step `actions-pane-de`).
     assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Export Artifact");
     assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Artefakt exportieren");
     let arg = action.args.iter().find(|arg| arg.id == "format").expect("exportDocument carries a format arg");
@@ -288,9 +284,6 @@ async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
         Generation3dViewCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 120.0 }),
         Generation3dViewCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: 42.0 }),
         Generation3dViewCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 2.0 }),
-        // 🎨️ The navbar example picker's verb belongs in this law too: loading an example into a
-        // read-only surface is a CONFIG edit, and it must stay one
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL.into() }),
         Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
     ];
@@ -319,20 +312,12 @@ async fn every_emitted_action_is_declared_on_the_preview_window_kind() {
     let projection = render(&mut app, preview::BODY_KEY).await;
     let mut emitted = semio_framework_plugin::ui_action_laws::emitted_action_ids(&projection);
     drop(app);
-    // 🎛️ `ArtifactViewer::window_measures` is an associated function over borrowed views, not a
-    // `PluginApp` method, so the chrome half of the law reads the SAME builder the trait impl calls.
     emitted.extend(semio_framework_plugin::ui_action_laws::measure_action_ids(&preview::preview_window_measures(&Generation3dViewConfig::default(), false, generation3d_view_action)));
-    // 📷️ `setCamera` is dispatched by the world host's own viewport gesture (`World3dHost/🟦️.tsx`), not by
-    // a measure or a `UiNode` binding, so the render/measure walk can never observe it — it is asserted
-    // against the declaration directly instead of being dropped from the law.
     emitted.insert("setCamera".into());
     println!("[STATS] window-actions kind={} declared={} emitted={} emits={emitted:?}", preview::WINDOW_KIND_ID, declared.len(), emitted.len());
     for action in &emitted {
         assert!(declared.contains(action), "{} emits {action} but never declares it — ShellHost's declaredAction gate drops it", preview::WINDOW_KIND_ID);
     }
-    // 🧾️ Exactness, expressed against the APP-AUTHORED verbs only: `build_definition` also injects the
-    // framework's own history/clipboard/tutorial/interaction ids into every window kind, and those are
-    // never a plugin's to scope. `GENERATION3D_VIEW_TOOL_IDS` is this viewer's own action roster.
     assert_eq!(emitted, GENERATION3D_VIEW_TOOL_IDS.iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<String>>(), "the viewer's one window kind must dispatch exactly the app's own view actions");
 }
 //#endregion 📇️WindowActionLawTests

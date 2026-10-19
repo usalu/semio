@@ -1,0 +1,14 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+const script = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts";
+const lines = readFileSync(script, "utf8").split("\n");
+const find = (needle: string) => lines.findIndex((l) => l.startsWith(needle));
+const a = find("const variant = ");
+const b = find("async function validateWindowOwnershipSchemas");
+const c = find("function implementsFor");
+const d = find("class PublicationAuthorityAuditScript");
+const body = [...lines.slice(a, b), ...lines.slice(c, d)].join("\n");
+const puzzleRoot = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle";
+const prog = `import { readFileSync } from "node:fs";\nimport { resolve } from "node:path";\n${body}\nconst puzzleRoot = ${JSON.stringify(puzzleRoot)};\nconst fixture = JSON.parse(readFileSync(resolve(puzzleRoot, "🧪️tests/🧫️fixtures/🔏️publication-authority/🔣️.json"), "utf8")) as PublicationFixture;\nconsole.log("fixtureOracle", fixtureOracle(fixture));\nfor (const owner of fixture.owners) { try { const source = ownerSource(puzzleRoot, owner); console.log(owner.owner, "ownerOracle", ownerOracle(owner, source), "bytes", source.length); } catch (e) { console.log(owner.owner, "THROWS", String(e).slice(0, 120)); } }\n`;
+const out = process.argv[2]!;
+writeFileSync(out, prog);

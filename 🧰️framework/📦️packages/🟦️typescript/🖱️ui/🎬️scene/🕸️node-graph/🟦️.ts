@@ -1,2 +1,3 @@
 /** 🧩️ Public `@semio-tech/framework/modules/ui/scene/node-graph` entry: explicit re-exports of the source module that owns each member. */
-export * from "../../../../../🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts";
+export { NODE_GRAPH_SCENE_LANES, TEXT_EDITOR_SCENE_LANES, nodeGraphActions, nodeGraphSceneFromLanes, textEditorSceneFromLanes } from "../../../../../🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts";
+export type { AppCatalogue, AppCatalogueItem, AppCatalogueSection, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, PresencePeer, TextEditorScene } from "../../../../../🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts";

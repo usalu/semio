@@ -1,6 +1,8 @@
 //! 🧪️ Original paid semantic metadata survives exclusive payload loans and a separate granted acknowledgement.
 use semio_framework_job::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::RetainedJobPayload;
 #[path="../../../🧪️testing/📬️payload/🦀️.rs"]
 mod original_payload;
 #[global_allocator]

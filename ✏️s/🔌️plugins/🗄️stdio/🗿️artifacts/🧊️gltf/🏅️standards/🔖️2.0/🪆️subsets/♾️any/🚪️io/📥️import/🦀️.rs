@@ -76,14 +76,10 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
         pos += clen;
     }
     let json_chunk = json_chunk.ok_or("glb: missing JSON chunk")?;
-    // Real-world encoders pad the JSON chunk with spaces (per spec) but some historical writers
-    // used NUL or trimmed whitespace -- trim both so lenient real-world files still parse.
     let json_text = std::str::from_utf8(json_chunk).map_err(|e| format!("glb: JSON chunk is not valid utf-8: {e}"))?;
     let document: GltfDocument = semio_framework_pack_json::from_json_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r']), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
     validate_document(&document)?;
 
-    // The BIN chunk's declared length is 4-byte-padded; the true buffer content length is
-    // `document.buffers[0].byteLength` (padding is trailing filler, never real payload).
     let bin_content: Option<Vec<u8>> = bin_chunk.map(|chunk| {
         let declared_len = document.buffers.first().map_or(chunk.len(), |b| b.byte_length);
         chunk[..declared_len.min(chunk.len())].to_vec()

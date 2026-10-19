@@ -1,4 +1,4 @@
-//! Direct text identity for `insert-media-annotation`.
+//! 🆔️ Direct text identity for `insert-media-annotation`.
 
 pub const OPCODE: &str = "insert-media-annotation";
 pub const TEXT_OPCODE: &str = OPCODE;

@@ -36,11 +36,6 @@ pub(super) fn trim_patch(body: &Body, edge: EdgeId, patch: &mut Patch, corners: 
             continue;
         };
         let (point, normal) = face_plane(body, cap)?;
-        // 🧭️ Agreeing on ONE station is necessary but not sufficient: a variable fillet's cap
-        // plane is symmetric about the dihedral's bisector, so both rulings meet it at the same
-        // distance from the apex while the cross-section circle between them bulges straight
-        // out of that plane. The trim is an iso-line only when the iso-line itself lies IN the
-        // cap — which is exactly the constant-radius case, whose axis the cap is perpendicular to.
         patch.ends[slot] = if (a - b).abs() <= 1e-9 && iso_lies_in_plane(patch, a, point, normal) {
             EndTrim::Iso(a)
         } else {

@@ -1,5 +1,5 @@
 import {verifyCapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
-import {CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1} from "@semio-tech/process/native-receipt";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import schema from "@semio-tech/process/artifacts/native-build/units/schema.json";
@@ -25,7 +25,7 @@ import {join,resolve} from "node:path";
 import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
-import {actualCargoCompilerPlanningPortV1,captureCargoCompilationGraphV1,cargoEffectiveRustFlagsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {actualCargoCompilerPlanningPortV1,captureCargoCompilationGraphV1,cargoEffectiveRustFlagsV1} from "@semio-tech/process/artifacts/native-build/units/capture";
 test("actual Cargo plans normal/proc-macro/build-script units without compiler execution",async()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR,mode=process.env.SEMIO_BUILD_MODE;if(!artifacts||mode!=="prototype"&&mode!=="release")throw Error("Original Cargo graph fixture authority required");const root=mkdtempSync(join(artifacts,"ug-"));try{writeFileSync(join(root,"Cargo.toml"),'[workspace]\nmembers=["base","derive","consumer"]\nresolver="2"\n[profile.prototype]\ninherits="dev"\n');for(const name of ["base","derive","consumer"]){mkdirSync(join(root,name));writeFileSync(join(root,name,"Cargo.toml"),'[package]\nname="'+name+'"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\n'+(name==="derive"?'proc-macro=true\n[dependencies]\nbase={path="../base"}\n':name==="consumer"?'[dependencies]\nbase={path="../base"}\nderive={path="../derive"}\n':""));writeFileSync(join(root,name,"lib.rs"),'pub fn value()->u32{1}\n');}writeFileSync(join(root,"consumer/build.rs"),'fn main(){}\n');await receiveScriptProcessInvocation(process.env,async original=>{const control=scriptCompilerAdmissionControlV1(original,"cargo:actual-unit-graph",60000);await withRepositoryCompilerStoreV1(process.cwd(),mode,control,scriptInvocationEnvironment(original,process.env),async (store,control)=>{const environment=store.environment;await captureOwnedCommandV1("cargo",["generate-lockfile","--offline","--manifest-path",join(root,"Cargo.toml")],root,{control,env:environment});const graph=await captureCargoCompilationGraphV1({workspaceRoot:root,cwd:root,program:"cargo",prefix:[],args:["build","--manifest-path",join(root,"Cargo.toml"),"--profile",mode],environment,maximumOutputBytes:4194304},control,actualCargoCompilerPlanningPortV1());expect(new Ajv({strict:true}).compile(schema)(graph)).toBe(true);expect(graph.units.some(unit=>unit.kind==="proc-macro"&&unit.roles.includes("host"))).toBe(true);expect(graph.units.some(unit=>unit.kind==="build-script"&&unit.roles.includes("host"))).toBe(true);expect(graph.units.some(unit=>unit.kind==="build-script-run")).toBe(true);expect(graph.units.find(unit=>unit.packageName==="consumer"&&unit.kind==="library")?.roles).toContain("target");expect(graph.units.filter(unit=>unit.kind!=="library").every(unit=>unit.support.kind==="unsupported")).toBe(true);});});}finally{rmSync(root,{recursive:true,force:true});}
 },60000);
@@ -41,7 +41,7 @@ test("foreign Cargo source keeps its provenance while owned Source caps remain m
 });
 
 import {existsSync} from "node:fs";
-import {withNativeImageStorageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import {withNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {buildCargoArtifacts} from "@semio-tech/process/native-build";
 test("actual ordinary Cargo build rejects owned Source growth before its compiler executable starts",async()=>{

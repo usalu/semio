@@ -1,18 +1,18 @@
 /** 🧬️ ShootingConfig */
 export interface ShootingConfig {
-  /** @state config */
+  /** 🎥️ @state config */
   defaultShotFormat: string;
-  /** @state config */
+  /** 📸️ @state config */
   defaultShotShape: string;
-  /** @state config */
+  /** 🎞️ @state config */
   defaultAssetFormat: string;
-  /** @state config */
+  /** 👉️ @state config */
   selectedShotIds: string[];
-  /** @state config */
+  /** 🎯️ @state config */
   centerModel: boolean;
-  /** @state config */
+  /** 🔖️ @state config */
   fitRevision: number;
-  /** @state config */
+  /** 📷️ @state config */
   camera: ShootingCamera;
 }
 

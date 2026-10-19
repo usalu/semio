@@ -1,11 +1,11 @@
-use crate::board_set_camera;
+use semio_framework_os_infinite::board_set_camera;
 mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::handle_position_on_circle;
     use crate::editor::puzzle2d::engine::BoardHost;
     use crate::editor::puzzle2d::engine::HandleDescriptor;
-    use crate::editor::puzzle2d::engine::NodeDescriptor;
+    use semio_framework_os_infinite::board::NodeDescriptor;
     use crate::editor::puzzle2d::engine::SceneDescriptor;
     use crate::editor::puzzle2d::engine::BoardFillCaptureStep;
     use crate::editor::puzzle2d::engine::BoardFillCheckpoint;

@@ -54,11 +54,6 @@ pub fn render_rows(rows: &[semio_s_space_core::HomeSpaceRow], labels: &HomeTable
 /// studio catalog, never from the artifact document itself.
 pub fn render<'a>(hub_spaces: impl IntoIterator<Item = &'a store::os_directory::DirectorySpace>, retired_local_studio_ids: &[String], view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let labels = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
-    // 🌉️ `semio_s_space_core::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
-    // stay sync (called synchronously by `HomeViewer::render`) — bridged via `resolve_ready`.
-    // 🪪️ Signed out is a state, not a fault — the editor's twin of this window carries the full
-    // reasoning. A signed-out human owns no spaces, so this publishes the same table empty instead of
-    // declining to render the product's landing window.
     let rows = match semio_s_space_core::home_session_identity(view_state) {
         Some(identity) => ::semio_framework_async::poll::resolve_ready(semio_s_space_core::home_space_rows(hub_spaces, &identity.user_id, retired_local_studio_ids)),
         None => Vec::new(),

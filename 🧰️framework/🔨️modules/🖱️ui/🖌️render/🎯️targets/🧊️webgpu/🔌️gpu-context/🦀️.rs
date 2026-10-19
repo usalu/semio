@@ -97,7 +97,6 @@ pub(crate) struct GpuContext {
 impl GpuContext {
     /// 🌐️ The one genuinely async part of this whole backend (ticket brief) — instance → surface →
     /// adapter → device, all real round-trips to the browser's GPU process.
-    // 🌐️async: genuinely async device/adapter construction — the one exception U1 itself carves out.
     pub(crate) async fn new(surface_id: SurfaceId) -> Result<Self, BackendError> {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..wgpu::InstanceDescriptor::new_without_display_handle() });
         let target = wgpu::SurfaceTargetUnsafe::RawHandle { raw_display_handle: Some(wgpu::rwh::WebDisplayHandle::new().into()), raw_window_handle: wgpu::rwh::WebWindowHandle::new(surface_id.get()).into() };
@@ -125,7 +124,6 @@ impl GpuContext {
         Ok(Self { device, queue, surface, surface_format, view_format, alpha_mode, capabilities })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn configure(&self, width: u32, height: u32) {
         configure_surface(&self.device, &self.surface, self.surface_format, self.view_format, self.alpha_mode, width, height);
     }

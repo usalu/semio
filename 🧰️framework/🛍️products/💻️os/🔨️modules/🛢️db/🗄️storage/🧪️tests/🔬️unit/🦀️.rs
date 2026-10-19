@@ -285,6 +285,12 @@ use db_io_core::{CatalogStorage as _, DB_IO_PAGE_BYTES, DbIoPageWriter, DbIoPage
 use db_io_driver::{block_on_ready, db_io_test_pool, poll_once};
 use db_storage_fs::FsStorage;
 use db_storage_memory::MemoryStorage;
+use db_io_core::DbIoFaultKind;
+use db_io_core::DbIoLostOwner;
+use db_io_core::DbIoFaultCause;
+use db_io_core::DbIoText;
+use db_io_core::DbIoTask;
+use db_io_core::DbIoFault;
 
 fn pages(bytes: &[u8]) -> DbIoPages {
     let mut writer = DbIoPageWriter::try_reserve(bytes.len().div_ceil(DB_IO_PAGE_BYTES)).expect("test storage pages admitted");

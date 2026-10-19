@@ -1,8 +1,10 @@
 //! ↩️ Exact sparse restoration from the central forward diff's inverse, preserving independent peer fields.
 use super::MoveSelection;
 use crate::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode;
-use crate::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceNode> + From<ReplaceRegion>>(payload: &MoveSelection, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {

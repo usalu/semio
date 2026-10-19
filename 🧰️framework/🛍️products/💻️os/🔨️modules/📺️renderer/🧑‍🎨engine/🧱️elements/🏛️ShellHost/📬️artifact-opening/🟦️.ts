@@ -54,7 +54,7 @@ import { canonicalSurfaceId } from "../🔐️identity-binding/🟦️.ts";
 import { SPACE_INDEX_DOCUMENT_ID, type SpaceArtifactCreationOwnerV1, spaceArtifactCreationReadyOpening } from "../🧾️space-artifact-creation/🟦️.ts";
 import { withLocalizedWindowKindLabels } from "../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterDirectoryLaneAndLayout } from "../📐️layout-hotkeys/🟦️.ts";
-import type { PreparedArtifactOpeningTarget } from "../🔒️identity-document-ports/🟦️.ts";
+import type { PreparedArtifactOpeningTarget } from "../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
 
 //#region FrameworkOsShell
 /** 👁️✏️ `PluginRuntime`'s `PluginWasmHandle` wraps the raw `exchange` ABI behind typed methods —
@@ -144,8 +144,6 @@ export function useArtifactOpening(core: ShellCoreAfterDirectoryLaneAndLayout) {
     const artifactRef = typeof record?.artifactRef === "string" ? record.artifactRef : "";
     const openedArtifactKind = (): string => (artifactRef.includes("#") ? parseSurfaceAppId(artifactRef).dialect : parseDialectCoordinate(artifactRef)).artifactKind;
     if (hubPluginSource !== null && record !== undefined && typeof record.spaceId === "string" && record.spaceId.length > 0) {
-      // 🌎️ A hub document runs on the module of the catalog generation that serves it, never on whatever this device
-      // staged: its program is installed from the hub catalog and it alone routes the opening.
       let artifactKind: string;
       try {
         artifactKind = openedArtifactKind();
@@ -419,9 +417,6 @@ export function useArtifactOpening(core: ShellCoreAfterDirectoryLaneAndLayout) {
       messageText: conflictMessageText,
       onSelect: (conflictId) => dispatch({ type: "SET_SELECTED_CONFLICT_ID", value: conflictId }),
       onResolve: dispatchResolveConflict,
-      // 🐢️ No synchronous "current document as JSON" accessor is in this lease's reach yet (the
-      // decoded artifact lives inside the plugin wasm instance, not mirrored into `ShellState`) — an
-      // empty string is an honest "no local snapshot", never a fabricated diff side.
       currentDocumentText: "",
     }),
     [openConflicts, uiLocale, selectedConflictId, conflictKindLabel, conflictMessageText, dispatchResolveConflict],
@@ -429,12 +424,6 @@ export function useArtifactOpening(core: ShellCoreAfterDirectoryLaneAndLayout) {
   const conflictsHostRef = useRef(conflictsHost);
   conflictsHostRef.current = conflictsHost;
 
-  /** 📖️ Seeds the Conflicts panel with this session's authoritative roster on session start/switch
-   * (`AppCommand::ReadConflicts`, contract freeze §C8/§C9) — otherwise the panel would only ever
-   * show conflicts a later `setMergePolicy`/`resolveConflict` reply happened to carry, staying empty
-   * across a reload even when the guest already holds `Open` conflicts. Reads
-   * `loadedPluginsRef.current` rather than depending on `loadedPlugins` so a plugin hot-swap that
-   * leaves the session's pluginId in place doesn't re-fire this on every unrelated roster change. */
   useEffect(() => {
     if (!session) return;
     const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;

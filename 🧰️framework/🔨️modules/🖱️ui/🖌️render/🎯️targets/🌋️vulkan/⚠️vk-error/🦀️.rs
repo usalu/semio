@@ -28,14 +28,12 @@ pub enum VulkanGraphicsError {
 }
 
 impl From<vk::Result> for VulkanGraphicsError {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(result: vk::Result) -> Self {
         Self::Vk(result)
     }
 }
 
 impl From<VulkanGraphicsError> for BackendError {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(error: VulkanGraphicsError) -> Self {
         match error {
             VulkanGraphicsError::Vk(result) => classify_vk_result(result),

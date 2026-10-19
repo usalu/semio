@@ -35,8 +35,10 @@ semio-framework-pack-format = { path = "../../../../📐️format/📦️package
 semio-framework-pack-record-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
+semio-framework-dsl-record-derive = { path = "../../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

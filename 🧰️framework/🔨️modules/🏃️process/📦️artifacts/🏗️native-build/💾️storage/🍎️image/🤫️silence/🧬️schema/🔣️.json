@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "platform": "darwin",
+        "serviceDirectory": ".fseventsd",
+        "serviceMarker": "no_log",
+        "spotlightMarker": ".metadata_never_index",
+        "uuidFile": "fseventsd-uuid",
+        "logPattern": "^[0-9a-f]{16}$",
+        "serviceDirectoryMode": 493,
+        "markerMode": 420,
+        "residualLogFiles": 8,
+        "residualLogBytes": 1048576,
+        "pruneBatch": 64,
+        "maximumEntries": 262144,
+        "seedPrefix": "semio-silence-",
+        "seededFormat": "UDRW"
+      }
+    },
+    "Entry": {
+      "enum": [
+        "absent",
+        "file",
+        "other"
+      ]
+    },
+    "Facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "writable",
+        "marker",
+        "spotlightMarker",
+        "logFiles",
+        "logBytes"
+      ],
+      "properties": {
+        "directory": {
+          "enum": [
+            "absent",
+            "directory",
+            "other"
+          ]
+        },
+        "writable": {
+          "type": "boolean"
+        },
+        "marker": {
+          "$ref": "#/definitions/Entry"
+        },
+        "spotlightMarker": {
+          "$ref": "#/definitions/Entry"
+        },
+        "logFiles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Phase": {
+      "enum": [
+        "attach",
+        "open"
+      ]
+    },
+    "Action": {
+      "enum": [
+        "create-directory",
+        "write-marker",
+        "write-spotlight-marker",
+        "prune-logs"
+      ]
+    },
+    "Refusal": {
+      "enum": [
+        "unsafe-service-directory",
+        "unsafe-marker",
+        "foreign-service-directory"
+      ]
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "phase",
+        "facts",
+        "actions",
+        "refusal"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "$ref": "#/definitions/Phase"
+        },
+        "facts": {
+          "$ref": "#/definitions/Facts"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Action"
+          }
+        },
+        "refusal": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Refusal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ObservationRace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logs", "bytesPerLog", "removed", "files", "bytes", "directoryMutations"],
+      "properties": {
+        "logs": {"type": "integer", "minimum": 64, "maximum": 64},
+        "bytesPerLog": {"type": "integer", "minimum": 1},
+        "removed": {"type": "integer", "minimum": 1, "maximum": 64},
+        "files": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "directoryMutations": {"const": ["remove", "replace"]}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases", "observationRace"
+      ],
+      "properties": {
+        "observationRace": {"$ref": "#/definitions/ObservationRace"},
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        }
+      }
+    }
+  }
+}

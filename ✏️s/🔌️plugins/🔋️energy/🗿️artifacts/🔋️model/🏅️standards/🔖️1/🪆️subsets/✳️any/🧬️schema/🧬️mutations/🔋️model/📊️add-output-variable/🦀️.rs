@@ -27,6 +27,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddOutputVariable
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddOutputVariable> + From<crate::RemoveOutputVariable>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "output-variable", kind: "add-output-variable", record: "AddedOutputVariable" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -48,7 +49,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "output-variable", kind: "add-output-variable", record: "AddedOutputVariable" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

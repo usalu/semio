@@ -1,4 +1,4 @@
-//! lowpoly <- dwg
+//! 🔺️ lowpoly <- dwg
 //!
 //! Geometry over the real `decode_dwg` / `dwg_drawing_to_mesh` pipeline: polyface-mesh entities
 //! become one lowpoly object of triangles.

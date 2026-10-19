@@ -3,6 +3,8 @@
 
 use crate::{artifact_kind, definition, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
 use semio_framework_test_fixtures::fixture_path;
+use semio_s_artifact_wfc_grid3d_snapshot::standards::v1::subsets::any::schema::snapshot::Grid3dTileMedia;
+use semio_s_artifact_wfc_grid3d_snapshot::standards::v1::subsets::any::schema::snapshot::Grid3dDirection;
 
 #[test]
 fn the_dialect_and_the_document_schema_are_the_same_string() {

@@ -42,7 +42,7 @@ pub enum CollisionPenetrationStage {
 pub enum CollisionStepResult {
     Pending,
     Cancelled,
-    /// `depth`: how far (m) one body's surface dives into the other solid, measured to that solid's nearest surface —
+    /// 🌐️ `depth`: how far (m) one body's surface dives into the other solid, measured to that solid's nearest surface —
     /// `0` for bodies that only touch. `rejected_early` when the measure stopped at the first probe past the tolerance.
     Complete { depth: f64, rejected_early: bool },
 }

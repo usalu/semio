@@ -1,8 +1,8 @@
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: String, presence: Value, received: i64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
-    let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
+    let mut observer = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1048576, &mut observer);
     let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let mut actor = Some(actor); let mut presence = Some(presence);
     let result = publication.adopt(&mut actor, &mut presence, received, &mut original);
@@ -11,8 +11,8 @@ fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: Strin
 }
 
 fn commit_fixture(publication: &mut PresencePeersPublication<Value>, grant: RetainedCloneGrant) -> Result<PresencePeersCommit<Value>, ValueError> {
-    let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
-    let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
+    let mut observer = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1048576, &mut observer);
     let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let (commit, receipt) = publication.take_commit(&mut original)?;
     assert_eq!(receipt, original.progress()); assert!(receipt.fits(grant)); Ok(commit)
@@ -79,7 +79,7 @@ fn inverse(&self, base: &Value) -> Self {
     }
 }
 
-impl crate::os_spr::ColdDiffAlgebra<Value> for Value {
+impl semio_framework_os_spr::ColdDiffAlgebra<Value> for Value {
     fn inverse(&self, base: &Value) -> Self {
         base.clone()
     }
@@ -95,7 +95,7 @@ impl ColdMutationDiff<Value> for Value {
         *self = other;
     }
 
-    fn apply(&self, _unpublished: &mut Value, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
+    fn apply(&self, _unpublished: &mut Value, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
         Ok(())
     }
 }
@@ -252,20 +252,20 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
 }
 
 fn publish_original_presence(owner: &mut PresenceStore<Value, ValueMutation>, expected: u64, mutation: ValueMutation, snapshots: Arc<dyn SnapshotRetirementFactory<Value>>) {
-    let factory = crate::os_store::ArtifactEphemeralTransferPreparationFactory::new(
-        |_| Ok(crate::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<ValueMutation>())),
+    let factory = semio_framework_os_store_one_item_batch::ephemeral_transfer::ArtifactEphemeralTransferPreparationFactory::new(
+        |_| Ok(semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<ValueMutation>())),
         |mutation| match mutation { ValueMutation::SetValue(value) => Value(value.n) },
         Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Value>::default()),
         Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<ValueMutation>::default()),
     );
-    let grant = crate::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: CLOSE_GRANT.maximum_items, maximum_copy_bytes: CLOSE_GRANT.maximum_copy_bytes, maximum_capacity_bytes: CLOSE_GRANT.maximum_capacity_bytes, maximum_release_bytes: CLOSE_GRANT.maximum_release_bytes, maximum_depth: CLOSE_GRANT.maximum_depth };
+    let grant = semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: CLOSE_GRANT.maximum_items, maximum_copy_bytes: CLOSE_GRANT.maximum_copy_bytes, maximum_capacity_bytes: CLOSE_GRANT.maximum_capacity_bytes, maximum_release_bytes: CLOSE_GRANT.maximum_release_bytes, maximum_depth: CLOSE_GRANT.maximum_depth };
     let mut publication = owner.begin_publish_one(semio_framework_job::OperationId(100 + expected), expected, mutation, Some(&factory), Some(snapshots)).unwrap_or_else(|_| panic!("original typed presence publication is admitted"));
     let mut published = false;
     for _ in 0..4096 {
         assert!(matches!(owner.advance_publish_one(&mut publication, crate::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant }).unwrap(), crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
         match owner.advance_publish_one(&mut publication, grant).unwrap() {
-            crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, progress) => { assert!(progress.fits(CLOSE_GRANT)); assert_eq!((receipt.generation_before, receipt.generation_after), (expected, expected + 1)); published = true; break; },
-            crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_, progress) => assert!(progress.fits(CLOSE_GRANT)),
+            semio_framework_os_store_one_item::ArtifactStoreOneItemAdvance::Published(receipt, progress) => { assert!(progress.fits(CLOSE_GRANT)); assert_eq!((receipt.generation_before, receipt.generation_after), (expected, expected + 1)); published = true; break; },
+            semio_framework_os_store_one_item::ArtifactStoreOneItemAdvance::PreparationProgress(_, progress) => assert!(progress.fits(CLOSE_GRANT)),
             _ => {}
         }
     }
@@ -379,8 +379,8 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         let mut presence = Some(Value(law["peer"]["value"].as_i64().unwrap() as i32));
         let refused = match refusal.as_str().unwrap() { "items" => RetainedCloneGrant { maximum_items: 0, ..grant }, "copy" => RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }, "capacity" => RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant }, "depth" => RetainedCloneGrant { maximum_depth: 0, ..grant }, _ => grant };
         let running = std::cell::Cell::new(refusal != "nativeCancellation");
-        let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| running.get();
-        let mut native = semio_framework_value::NativeDecodeControl::new(law["nativeMaximumBytes"].as_u64().unwrap() as usize, &mut observer);
+        let mut observer = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| running.get();
+        let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(law["nativeMaximumBytes"].as_u64().unwrap() as usize, &mut observer);
         let mut original = semio_framework_io_control::NativeSnapshotDecodeOwner::new(&mut native, refused);
         let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.adopt(&mut actor, &mut presence, law["receivedAtMilliseconds"].as_i64().unwrap(), &mut original));
         assert!(result.is_err());

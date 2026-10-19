@@ -64,22 +64,17 @@ pub struct EmitEvent {
 
 impl EmitEvent {
     /// 🆕️ A bare event with `name` and no document/fields yet.
-    // 🚫️async: E1 pure builder — `Emit::emit`'s real sinks may genuinely await (I/O), but building
-    // the event value itself has no suspension point, and several call sites build one from a sync
-    // context (e.g. `db_actor::run_actor_loop`, a raw OS thread with no executor) — see R9
     pub fn new(name: &'static str) -> Self {
         Self { name, document: None, fields: Vec::new() }
     }
 
     /// 🪪️ Scopes the event to `document` (builder-style).
-    // 🚫️async: E1 pure builder — see `EmitEvent::new`
     pub fn with_document(mut self, document: ArtifactId) -> Self {
         self.document = Some(document);
         self
     }
 
     /// ➕️ Appends one field (builder-style).
-    // 🚫️async: E1 pure builder — see `EmitEvent::new`
     pub fn field(mut self, key: &'static str, value: EmitField) -> Self {
         self.fields.push((key, value));
         self
@@ -138,7 +133,6 @@ fn write_json_field_value(field: &EmitField, out: &mut String) {
             if v.is_finite() {
                 let _ = write!(out, "{v}");
             } else {
-                // 🔒️ JSON has no NaN/Infinity literal — never emit a syntactically invalid line.
                 out.push_str("null");
             }
         }
@@ -385,7 +379,6 @@ impl<S: EventSink> Emit for AuditSink<S> {
 pub struct Labels(Vec<(&'static str, String)>);
 
 impl Labels {
-    // 🚫️async: E1 pure constructor consumed synchronously by dozens of test/production call sites — see R9
     pub fn new(pairs: impl IntoIterator<Item = (&'static str, String)>) -> Labels {
         let mut pairs: Vec<_> = pairs.into_iter().collect();
         pairs.sort_by_key(|(k, _)| *k);
@@ -428,11 +421,6 @@ impl CardinalityLimiter {
             labels
         } else {
             let overflow = Labels::new([("cardinality", "overflow".to_string())]);
-            // 🔒️ Only claim a tracked slot for the overflow marker if one is actually free —
-            // when real distinct series have already filled `max_series_per_metric`, inserting
-            // here unconditionally would push `series_count` past the very limit this type
-            // exists to enforce. Once it does occupy a slot, `contains` short-circuits above so
-            // it is never re-inserted.
             if series.len() < self.max_series_per_metric {
                 series.insert(overflow.clone());
             }
@@ -636,7 +624,6 @@ pub enum HealthState {
 }
 
 impl HealthState {
-    // 🚫️async: E4 fn-pointer slot (used as `Iterator::max_by_key(HealthState::rank)`) — see R9
     fn rank(&self) -> u8 {
         match self {
             HealthState::Healthy => 0,

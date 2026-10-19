@@ -4,9 +4,8 @@
   "rhs": null,
   "parameterBindings": null,
   "ruleLayout": {
-    "entries": [
-      {
-        "key": "lhs-match",
+    "entries": {
+      "lhs-match": {
         "precondition": "any",
         "operation": {
           "kind": "set",
@@ -20,8 +19,7 @@
           }
         }
       },
-      {
-        "key": "rhs-set-0",
+      "rhs-set-0": {
         "precondition": "any",
         "operation": {
           "kind": "set",
@@ -35,6 +33,6 @@
           }
         }
       }
-    ]
+    }
   }
 }

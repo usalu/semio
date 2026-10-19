@@ -91,7 +91,7 @@ pub(super) fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>
         }
     }
     while mid_labels.len() < l1 {
-        mid_labels.push(Lbl::Base(usize::MAX)); // inert padding, never referenced by mid_pos_of_base
+        mid_labels.push(Lbl::Base(usize::MAX));
     }
 
     let d2_added_lbl: Vec<(usize, Lbl)> = d2_added.iter().enumerate().map(|(k, (idx, _))| (*idx, Lbl::Added2(k))).collect();

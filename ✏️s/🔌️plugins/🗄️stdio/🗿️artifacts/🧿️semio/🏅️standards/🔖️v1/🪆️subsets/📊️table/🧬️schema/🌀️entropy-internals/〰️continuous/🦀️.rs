@@ -45,12 +45,8 @@ pub enum Kernel {
 }
 
 impl Kernel {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn log_density_contribution(self, scaled_diff: f64) -> f64 {
         match self {
-            // 📈️ Standard normal kernel K(u) = (1/sqrt(2*pi)) * exp(-u^2/2); the additive
-            // -0.5*ln(2*pi) term is the kernel's own normalizing constant and must not be
-            // dropped, or every density (and hence the entropy) is off by a constant factor.
             Kernel::Gaussian => -0.5 * (2.0 * core::f64::consts::PI).ln() - 0.5 * scaled_diff * scaled_diff,
             Kernel::Epanechnikov => {
                 if scaled_diff.abs() >= 5.0_f64.sqrt() {
@@ -91,7 +87,6 @@ pub struct KdeDensity {
 
 impl KdeDensity {
     /// 📈️ Fits a KDE to `x`, selecting bandwidth `h` per `cfg.bandwidth` if not [`Bandwidth::Fixed`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fit(x: &[f64], cfg: KdeConfig) -> Result<Self, EntropyError> {
         validate_series(x, "kde input")?;
         if x.len() < 2 {
@@ -116,7 +111,6 @@ impl KdeDensity {
     }
 
     /// 📈️ Density estimate at `x` using the full sample (not leave-one-out).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn pdf(&self, x: f64) -> f64 {
         let n = self.data.len() as f64;
         let log_terms: Vec<f64> = self.data.iter().map(|&xi| self.kernel.log_density_contribution((x - xi) / self.h)).collect();
@@ -125,7 +119,6 @@ impl KdeDensity {
 
     /// 📈️ Leave-one-out differential entropy plug-in: `-1/N * sum ln f_{-i}(x_i)`, which removes
     /// the systematic downward bias the self-term introduces in plain resubstitution.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn entropy(&self, base: LogBase) -> Result<Estimate, EntropyError> {
         base.validate()?;
         let n = self.data.len();
@@ -147,8 +140,6 @@ impl KdeDensity {
 fn histogram_entropy_nats(x: &[f64], bins: &BinsSpec) -> Result<(f64, usize), EntropyError> {
     let n = x.len() as f64;
     let (min, max) = x.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| (lo.min(v), hi.max(v)));
-    // 🔐️ x is already validated finite by every caller, so a plain `<=` (no NaN concern) is
-    // both correct and clearer than negating `>`.
     if max <= min {
         return Err(EntropyError::DegenerateInput { what: "constant series has zero range" });
     }

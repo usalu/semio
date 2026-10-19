@@ -41,8 +41,6 @@ pub(super) const ADVERSARIAL_UNICODE: &[char] = &['é', 'ø', 'ñ', 'ß', '文',
 
 pub(super) async fn next_word(rng: &mut SplitMix64, max_len: usize) -> String {
     let len = 1 + rng.next_range(max_len as u64).await as usize;
-    // 🚫️async: R10 shape 1 — `next_range` is async but `Iterator::map`'s closure is sync; hoisted
-    // into a plain loop so each character draw can be awaited.
     let mut word = String::with_capacity(len);
     for _ in 0..len {
         word.push(WORD_ALPHABET[rng.next_range(WORD_ALPHABET.len() as u64).await as usize] as char);
@@ -52,13 +50,11 @@ pub(super) async fn next_word(rng: &mut SplitMix64, max_len: usize) -> String {
 
 /// ✏️ Free-form text safe as either a quoted `dsl_schema` field OR a raw opaque `.ops` op line: at
 /// least one word, no leading/trailing whitespace, no `'\n'`, never trims to something starting
-/// with `'#'` (which `crate::os_spr::history::parse_ops_text` would otherwise swallow as a comment).
+/// with `'#'` (which `crate::history::parse_ops_text` would otherwise swallow as a comment).
 /// `adversarial` widens the word count (exercising long descriptions) and splices a unicode
 /// character onto the first word (never at a boundary, so trimming never changes the value).
 pub(super) async fn next_text(rng: &mut SplitMix64, adversarial: bool) -> String {
     let word_count = if adversarial && rng.next_bool().await { 20 + rng.next_range(60).await as usize } else { 1 + rng.next_range(5).await as usize };
-    // 🚫️async: R10 shape 1 — `next_word` is async but `Iterator::map`'s closure is sync; hoisted
-    // into a plain loop so each element can be awaited.
     let mut words: Vec<String> = Vec::with_capacity(word_count);
     for _ in 0..word_count {
         words.push(next_word(rng, 8).await);
@@ -81,10 +77,10 @@ pub(super) async fn next_ident(rng: &mut SplitMix64, prefix: &str, index: usize,
     id
 }
 
-/// ⏱️ Either a canonical `YYYY-MM-DDTHH:MM:SS[.fff]Z` string (exercising `crate::os_spr::wire::scalar`'s
+/// ⏱️ Either a canonical `YYYY-MM-DDTHH:MM:SS[.fff]Z` string (exercising `crate::wire::scalar`'s
 /// compact tag-1/2 timestamp encoding) or, in adversarial mode, a deliberately non-canonical raw
 /// string (a non-UTC offset, free text, or a Z-suffixed string with an out-of-grammar shape) that
-/// forces the tag-0 raw-text fallback — see `crate::os_spr::wire::scalar`'s module note: correctness
+/// forces the tag-0 raw-text fallback — see `crate::wire::scalar`'s module note: correctness
 /// never depends on which tag gets chosen, only on the round-trip equality check, so both branches
 /// are safe regardless of exact calendar validity.
 pub(super) async fn next_timestamp(rng: &mut SplitMix64, adversarial: bool) -> String {
@@ -123,7 +119,7 @@ pub struct GenProfile {
     pub adversarial: bool,
 }
 
-/// 🔀️ Appends one generated [`crate::os_spr::HistoryTransitionRecord`] carrying `transition`, causally
+/// 🔀️ Appends one generated [`crate::HistoryTransitionRecord`] carrying `transition`, causally
 /// chained to the previous one, at a strictly increasing physical clock.
 pub(super) async fn push_transition(rng: &mut SplitMix64, clock: &mut u64, adversarial: bool, index: usize, transition: crate::HistoryTransition, transitions: &mut Vec<crate::HistoryTransitionRecord>) {
     *clock += 1;
@@ -134,7 +130,7 @@ pub(super) async fn push_transition(rng: &mut SplitMix64, clock: &mut u64, adver
     transitions.push(crate::HistoryTransitionRecord { id, actor:actor.into(), hlt, dependencies, observed: None, payload: crate::encode_history_transition(&transition) });
 }
 
-/// 🎞️ Deterministic seeded `crate::os_spr::HistoryLog` fabricator.
+/// 🎞️ Deterministic seeded `crate::HistoryLog` fabricator.
 pub struct HistoryLogGen {
     pub(super) state: u64,
 }

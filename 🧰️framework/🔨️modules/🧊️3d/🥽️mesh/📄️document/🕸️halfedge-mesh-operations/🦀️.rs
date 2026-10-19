@@ -148,7 +148,7 @@ impl HalfedgeMesh {
         Self::from_faces(&verts, &faces)
     }
 
-    /// Builds a halfedge mesh from CAD face wire loops that share a global vertex buffer.
+    /// 🔲️ Builds a halfedge mesh from CAD face wire loops that share a global vertex buffer.
     ///
     /// Each entry is `(outer, holes)`. Faces without holes become one n-gon; faces with holes are
     /// triangulated via keyhole bridging so openings stay empty (never filled by a single outer n-gon).

@@ -128,11 +128,6 @@ impl WorkloadGen {
     /// given `seed`, and disjoint so the final materialized state never depends on submit order,
     /// which is exactly the property `assert_sync_convergence`/`SimRuntime`'s interleaving tests
     /// need from their workload.
-    // 🔀️ `db_artifact::encode_pathmap_json` genuinely awaits (`store::pack_rt::encode_wire_value`,
-    // outside this packet's scope) — stays `async fn` even though the rest of this file's
-    // Prng/Generators/SimRuntime regions are pure (R9 does not apply to a fn with a real
-    // suspension point). The `.map`-chain-vs-sync-closure shape (R10 residue 1) is why this is
-    // an explicit `for` loop rather than an `Iterator::map`.
     pub async fn disjoint_batch(&mut self, document: &protocol::ArtifactId, count: usize) -> Vec<protocol::MutationEnvelope> {
         let mut out = Vec::with_capacity(count);
         for index in 0..count {
@@ -378,7 +373,7 @@ async fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protoc
     let created = db_artifact_engine::ArtifactEngine::create(document.clone(), storage, db_artifact_engine::ArtifactEngineConfig::default(), 0);
     let mut engine = match created {
         Ok(engine) => engine,
-        Err(_) => return, // the fault fired during genesis itself — nothing further to submit.
+        Err(_) => return,
     };
     for (i, envelope) in ops.iter().enumerate() {
         let batch = db_artifact_contract::CommandBatch::new(vec![envelope.clone()]).await.expect("testkit: single-envelope batch");

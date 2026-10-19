@@ -21,11 +21,11 @@ import {
   type StagedArgContextV1
 } from "../../🪟️window-panes/📝️staged-args/🟦️.tsx";
 import { syncShellLabelLocale, type ResolvedActionArgDef } from "../../🏷️labels/🟦️.tsx";
-import { uiNumberControlsFixture as numberControls } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { manifestNumberFacetsFixture as numberFacets } from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { uiNumberControlsFixture as numberControls } from "@semio-tech/framework/ui/testing/fixtures";
+import { manifestNumberFacetsFixture as numberFacets } from "@semio-tech/framework/manifest/testing/fixtures";
 import type { ActionArgNumberFacets } from "@semio-tech/framework";
-import { uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
-import { formatUiNumber } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
+import { uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText } from "@semio-tech/framework/modules/ui/contract/component";
+import { formatUiNumber } from "@semio-tech/framework/modules/ui/contract/presentation/number-format";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 

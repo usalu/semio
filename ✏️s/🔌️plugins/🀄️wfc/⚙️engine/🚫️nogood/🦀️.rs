@@ -106,9 +106,6 @@ impl NogoodIndex {
                 v.retain(|&i| i as usize != idx);
             }
         }
-        // `swap_remove` moved the former last element into `idx`; every watcher entry pointing at
-        // the old last index must be renumbered to `idx`, or a future lookup would silently watch
-        // the wrong (or a now-nonexistent) nogood.
         let moved_from = self.nogoods.len();
         if idx < moved_from {
             for v in self.watchers.values_mut() {
@@ -155,16 +152,10 @@ impl NogoodIndex {
             };
             match not_false.as_slice() {
                 [] => {
-                    // Every literal is already decided to exactly its nogood value, with nothing
-                    // watched yet to have caught it incrementally: the combination this nogood
-                    // forbids already holds outright, before any search decision.
                     conflict.get_or_insert(self.nogoods[idx].literals[0].0);
                 }
                 [only] => {
                     let (n, p) = self.nogoods[idx].literals[*only];
-                    // Only force an exclusion if this literal is genuinely still open (present,
-                    // undecided) — if it's already excluded some other way, the clause is already
-                    // satisfied via it and needs no forcing.
                     if domains.get(n).bits().get(p) {
                         if let Some(c) = force_exclude_and_propagate(model, topo, domains, queue, trail, metrics, n, p, w) {
                             conflict.get_or_insert(c);
@@ -229,29 +220,15 @@ impl NogoodIndex {
                 continue;
             }
 
-            // No replacement among the rest of the clause: the partner watch is the sole
-            // remaining hope, re-checked fresh (it may have quietly gone false via ordinary
-            // propagation this store never reacted to — never trust a cached assumption here).
             if is_false(domains, other_literal) {
                 conflict.get_or_insert(node);
             } else if domains.get(other_literal.0).bits().get(other_literal.1) {
-                // Still genuinely open (present, undecided): force it out to keep the clause
-                // satisfied, exactly the unit-propagation this combination's learning intended.
                 if let Some(c) = force_exclude_and_propagate(model, topo, domains, queue, trail, metrics, other_literal.0, other_literal.1, w) {
                     conflict.get_or_insert(c);
                 }
             }
-            // else: already excluded some other way — the clause is already satisfied via this
-            // literal, nothing to force.
         }
 
-        // Every nogood in `moved` had its watch relocated away from `(node, pattern)` — drop its
-        // now-stale registration there (a nogood that instead unit-propagated or conflicted kept
-        // its watch exactly where it was, so it must stay registered and is never in `moved`).
-        // Forgetting this step leaves a dangling index behind: if `(node, pattern)` is ever
-        // decided again later (backtracked past and re-explored), `on_decision` would look up
-        // this stale index and find `watch_a`/`watch_b` pointing at a completely different
-        // literal by then.
         if !moved.is_empty() {
             if let Some(v) = self.watchers.get_mut(&(node, pattern)) {
                 v.retain(|idx| !moved.iter().any(|(i, _)| *i as u32 == *idx));

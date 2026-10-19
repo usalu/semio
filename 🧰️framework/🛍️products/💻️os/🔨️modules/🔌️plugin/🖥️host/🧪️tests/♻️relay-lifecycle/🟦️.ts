@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "@semio-tech/framework/test/adapter";
 
 type Expected = { state: string; firstReason: string | null; cancelAdmissions: number; releaseOpportunities: number; callerOutput: string | null };
 type Accounting = { seedPagesBefore: number; seedPagesAfter: number; abiBytesBefore: number; abiBytesAfter: number };

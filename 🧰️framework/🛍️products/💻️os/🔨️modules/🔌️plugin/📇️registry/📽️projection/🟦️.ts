@@ -19,7 +19,7 @@ import { AssetSpecRow, PlaygroundEntry, generatePlaygroundRegistry, generateWith
 import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦️.ts";
 import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import { findNewContractPluginRoots, validatePlaygroundRegistry, validateTaxonomyTree } from "../🗿️taxonomy-validation/🟦️.ts";
-import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 
 
 export function emitTypeScript(entries: DeployedRegistryEntryV1[], directories: readonly ModuleDirectory[], outputRoot = parseCatalogPublicationV1(neutralPublication).outputRoot): string {
@@ -491,10 +491,6 @@ export class CheckScript extends BundleScript {
       for (const violation of violations) console.error(`  - ${violation}`);
       process.exit(1);
     }
-    // 🗿️ Taxonomy tree audit for plugins discovered via the shared package contract. Its severity is
-    // the plugin areas' declared maturity, not a hand-flipped flag: warn while any area is `exempt`
-    // (a subtree discovery itself skips), hard failure once every area is declared `clean`
-    // — the finalization flip is then a one-word edit in `🔣️taxonomy.json`.
     const taxonomyFindings = newContractPluginRoots.flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
     if (taxonomyFindings.length > 0) {
       const areaLabel = PLUGIN_AREAS.join(", ");
@@ -507,17 +503,11 @@ export class CheckScript extends BundleScript {
         process.exit(1);
       }
     }
-    // 🧭️ Shared-discovery diagnostics: a non-empty `discoverPackageProblems` outside an
-    // exempt area means a manifest lost its role marker (the failure mode that silently
-    // dropped a migrated extension crate from this very catalog) or a `🎯️targets/<target>/` dir is
-    // missing its manifest. Warn-only while any area is pre-`clean`.
     const discoveryProblems = publicationPackageRootsV1(this.publication).length ? discoverPackageProblems(repoRoot, TAXONOMY) : [];
     if (discoveryProblems.length > 0) {
       console.warn("package discovery problems:");
       for (const problem of discoveryProblems) console.warn(`  - [${problem.kind}] ${problem.message}`);
     }
-    // 🛂️ `📓️design-abi.md` §3's descriptor gate — see `validateDescriptors`'s own doc for the
-    // warn-vs-error severity split.
     const descriptorResult = validateDescriptors(entries, repoRoot);
     if (descriptorResult.warnings.length > 0) {
       console.warn("descriptor gate warnings:");

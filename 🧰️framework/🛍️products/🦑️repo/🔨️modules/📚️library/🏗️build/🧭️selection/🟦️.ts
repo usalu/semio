@@ -49,6 +49,32 @@ export function selectBuildProjectsV1(graph:BuildGraphV1,patterns:readonly strin
 /** 🐚️ Quotes literal command arguments for the platform shell. */
 function shellArgument(value:string):string { return process.platform==="win32"?'"'+value.replaceAll('"','""')+'"':"'"+value.replaceAll("'","'\\''")+"'"; }
 
+/** 🧾️ Plans the git queries that define the changed-file set every build tool shares for `affected`. */
+export function buildChangedFilesCommandsV1(head:readonly string[]):readonly (readonly string[])[] {
+  const base=buildOptionV1(head,"base")??"HEAD",revision=buildOptionV1(head,"head"),uncommitted=buildBooleanOptionV1(head,"uncommitted")??false,untracked=buildBooleanOptionV1(head,"untracked")??false,commands:string[][]=[];
+  if(!untracked||uncommitted)commands.push(["-c","core.fsmonitor=false","diff","--name-only","-z",uncommitted?"HEAD":base,...(revision&&!uncommitted?[revision]:[])]);
+  if(untracked||!uncommitted&&!revision)commands.push(["-c","core.fsmonitor=false","ls-files","--others","--exclude-standard","-z"]);
+  return commands;
+}
+
+/** 🧭️ Maps changed files to the projects Nx's affected locators touch (deepest owning root, `{workspaceRoot}/…` target inputs, `nx.json` for all) and closes over dependents; the one rule every build tool shares for `affected`. */
+export function affectedBuildProjectsV1(graph:BuildGraphV1,files:readonly string[]):string[] {
+  const names=Object.keys(graph.projects),owners=[...names].sort((a,b)=>graph.projects[b]!.root.length-graph.projects[a]!.root.length||(a<b?-1:1)),affected=new Set<string>(),prefix="{workspaceRoot}/";
+  if(files.includes("nx.json"))for(const name of names)affected.add(name);
+  else if(files.length){
+    for(const file of files){const owner=owners.find(name=>graph.projects[name]!.root==="."||file.startsWith(graph.projects[name]!.root+"/"));if(owner)affected.add(owner);}
+    const extract=(inputs:readonly unknown[],named:Record<string,readonly unknown[]>,seen:ReadonlySet<string>):string[]=>inputs.flatMap(input=>typeof input==="string"?Object.hasOwn(named,input)?seen.has(input)?[]:extract(named[input]!,named,new Set(seen).add(input)):input.startsWith(prefix)?[input.slice(prefix.length)]:[]:typeof input==="object"&&input!==null&&typeof (input as {fileset?:unknown}).fileset==="string"&&(input as {fileset:string}).fileset.startsWith(prefix)?[(input as {fileset:string}).fileset.slice(prefix.length)]:[]),matchers=new Map<string,(file:string)=>boolean>();
+    const matcher=(pattern:string)=>{let known=matchers.get(pattern);if(!known){if(/[?*+@!]\(/u.test(pattern))known=()=>true;else{const glob=new Bun.Glob(pattern);known=(file:string)=>glob.match(file);}matchers.set(pattern,known);}return known;};
+    for(const name of names){
+      if(affected.has(name))continue;
+      const named={...graph.namedInputs,...graph.projects[name]!.namedInputs} as Record<string,readonly unknown[]>,patterns=new Set(Object.values(graph.projects[name]!.targets).flatMap(target=>target.inputs?extract(target.inputs,named,new Set()):[]));
+      if([...patterns].some(pattern=>files.some(matcher(pattern))))affected.add(name);
+    }
+  }
+  let changed=true;while(changed){changed=false;for(const edge of graph.dependencies)if(affected.has(edge.target)&&!affected.has(edge.source)&&graph.projects[edge.source]){affected.add(edge.source);changed=true;}}
+  return [...affected].sort();
+}
+
 /** 🧮️ Resolves portable execution selections and forwards literal task arguments. */
 export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation):Promise<{tasks:string[];args:string[];parallel?:number;skipCache:boolean;skipRemoteCache:boolean;excludeDependencies:boolean;bail:boolean;verbose:boolean;outputStyle?:"stream"|"stream-without-prefixes"|"static"}> {
   checkScriptInvocation(invocation);
@@ -74,14 +100,10 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
     if(operation==="affected"){
       let files=buildOptionsV1(head,["files"]).flatMap(value=>value.split(",").filter(Boolean));
       if(!files.length&&!enabled(["--all"])){
-        const control=scriptCompilerAdmissionControlV1(invocation,"build:affected-files",30_000),base=buildOptionV1(head,"base")??"HEAD",revision=buildOptionV1(head,"head"),uncommitted=enabled(["--uncommitted"]),untracked=enabled(["--untracked"]);
-        const commands:Promise<string>[]=[];
-        if(!untracked||uncommitted)commands.push(captureOwnedCommandV1("git",["-c","core.fsmonitor=false","diff","--name-only","-z",uncommitted?"HEAD":base,...(revision&&!uncommitted?[revision]:[])],root,{control}));
-        if(untracked||!uncommitted&&!revision)commands.push(captureOwnedCommandV1("git",["-c","core.fsmonitor=false","ls-files","--others","--exclude-standard","-z"],root,{control}));
-        files=[...new Set((await Promise.all(commands)).flatMap(output=>output.split("\0").filter(Boolean)))];
+        const control=scriptCompilerAdmissionControlV1(invocation,"build:affected-files",30_000);
+        files=[...new Set((await Promise.all(buildChangedFilesCommandsV1(head).map(command=>captureOwnedCommandV1("git",[...command],root,{control})))).flatMap(output=>output.split("\0").filter(Boolean)))];
       }
-      const owners=Object.keys(graph.projects).sort((a,b)=>graph.projects[b]!.root.length-graph.projects[a]!.root.length),affected=new Set(files.flatMap(file=>{const name=owners.find(name=>graph.projects[name]!.root==="."||file.startsWith(graph.projects[name]!.root+"/"));return name?[name]:[];}));
-      let changed=true;while(changed){changed=false;for(const edge of graph.dependencies)if(affected.has(edge.target)&&!affected.has(edge.source)){affected.add(edge.source);changed=true;}}
+      const affected=new Set(affectedBuildProjectsV1(graph,files));
       if(!enabled(["--all"]))projects=projects.filter(project=>affected.has(project));
     }
     const targetOptions=buildOptionsV1(head,["targets","target","t"]).flatMap(value=>value.split(",").filter(Boolean));
@@ -141,4 +163,5 @@ export function validateBuildTaskArgumentsV1(args:readonly string[]):void {
   const output=buildOptionV1(args,"output")??buildOptionV1(args,"output-style");
   for(const name of ["projects","p","targets","target","t","exclude"])for(const pattern of buildOptionsV1(args,[name]).flatMap(value=>value.split(",").filter(Boolean)))buildPatternV1(pattern,"");
   if(output&&!["stream","stream-without-prefixes","static"].includes(output))throw Error(`Unsupported build output style: ${output}`);
+  if(args[0]==="affected"&&buildOptionsV1(args,["projects","p"]).length)throw Error("Affected cannot be narrowed with --projects; select the projects with run-many or drop --projects");
 }

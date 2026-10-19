@@ -4,7 +4,8 @@
 //! 🔖 `IoFidelity::Lossy`: step titles, logic, options and results have no column, so there is no
 //! csv import — the document itself travels as json, txt or zip.
 
-use crate::{forms_steps, FormsSnapshot};
+use semio_s_artifact_forms_forms_snapshot::FormsSnapshot;
+use semio_s_artifact_forms_forms_snapshot::forms_steps;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};

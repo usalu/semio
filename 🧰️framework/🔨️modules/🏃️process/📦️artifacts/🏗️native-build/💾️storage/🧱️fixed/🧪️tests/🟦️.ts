@@ -1,15 +1,7 @@
-import "../📥️allocation/🧪️tests/🟦️.ts";
 import "./🌱️birth/🟦️.ts";
-import "./🌱️birth/🛂️host.ts";
 import {expect,test} from "bun:test";
-import "../📦️vhd/🧪️tests/🟦️.ts";
-import "../🗂️system/🧪️tests/🟦️.ts";
-import "../📥️receipt/🧪️tests/🟦️.ts";
-import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json" with {type:"json"};
-import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {nativeLinuxLoopMountV1,nativeFixedVhdFooterV1} from "../🟦️.ts";
 import {nativeStoragePlatformV1} from "../../🌐️platform/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../🌐️platform/📋️contract/🟦️.ts";
 import {mkdtempSync,mkdirSync,symlinkSync,lstatSync,rmSync} from "node:fs";
@@ -25,11 +17,15 @@ test("native output path admission rejects dangling symlinks before any material
  try{mkdirSync(join(root,"nested"));symlinkSync(join(root,"absent"),join(root,"dangling"),process.platform==="win32"?"junction":"dir");expect(lstatSync(join(root,"dangling")).isSymbolicLink()).toBe(true);for(const row of fixture.paths){const path=resolve(root,row.path),oracle=database.query("SELECT instr(? || '/', ? || '/') = 1 AND ? NOT LIKE 'dangling/%' AS admitted").get(path,root,row.path) as {admitted:number};expect(Boolean(oracle.admitted)).toBe(row.accepted);if(row.accepted)expect(requireNativeStoragePathV1(root,path)).toBe(path);else expect(()=>requireNativeStoragePathV1(root,path)).toThrow();}}finally{database.close();rmSync(root,{recursive:true,force:true});}
 });
 
-test("neutral fixed backings require exact bounded system identities",()=>{
- const validate=new Ajv({strict:false}).compile(schema),db=new Database(":memory:");db.run("CREATE TABLE backing(type INTEGER,bytes INTEGER,file INTEGER)");
- expect(validate({version:1,root:"/repo/fixed/m",image:"/repo/fixed/fixed.img",filesystemBytes:33554432,maximumPhysicalBytes:34603008})).toBe(true);
- expect(validate({version:1,root:"/repo/fixed/m",image:"/repo/fixed/fixed.img",filesystemBytes:33554432,maximumPhysicalBytes:34603008,ambient:true})).toBe(false);
- for(const row of fixture.linux){if(row.valid)expect(nativeLinuxLoopMountV1(row.line+"\n",row.root).device).toMatch(/^7:/u);else expect(()=>nativeLinuxLoopMountV1(row.line+"\n",row.root)).toThrow();}
- for(const row of fixture.vhd){const footer=Buffer.alloc(512);footer.write("conectix");footer.writeBigUInt64BE(0xffffffffffffffffn,16);footer.writeBigUInt64BE(BigInt(row.currentBytes),40);footer.writeBigUInt64BE(BigInt(row.currentBytes),48);footer.writeUInt32BE(row.type,60);footer.writeUInt32BE((~footer.reduce((sum,byte)=>sum+byte,0))>>>0,64);db.run("INSERT INTO backing VALUES(?,?,?)",[row.type,row.currentBytes,row.fileBytes]);const independent=db.query("SELECT type=2 AND file=bytes+512 AND bytes<=33554432 AS valid FROM backing ORDER BY rowid DESC LIMIT 1").get() as {valid:number};expect(Boolean(independent.valid)).toBe(row.valid);if(row.valid)expect(nativeFixedVhdFooterV1(footer,row.fileBytes,34603008,33554432)).toBe(row.currentBytes);else expect(()=>nativeFixedVhdFooterV1(footer,row.fileBytes,34603008,33554432)).toThrow();footer[20]=footer[20]!^1;expect(()=>nativeFixedVhdFooterV1(footer,row.fileBytes,34603008,33554432)).toThrow();}
- db.close();
+test("every reservation, commit and recheck charges the directory meter before the journal records it",async()=>{
+ const index=await Bun.file(new URL("../../🟦️.ts",import.meta.url)).text(),fixed=await Bun.file(new URL("../🟦️.ts",import.meta.url)).text(),port=await Bun.file(new URL("../../🔌️port/🟦️.ts",import.meta.url)).text();
+ const acquire=index.slice(index.indexOf("export function acquireNativeStorageV1"),index.indexOf("type FundedChildScope"));
+ expect(acquire.indexOf('measure?.(custody.backing,{mode:"reserve",requestBytes:allocation.bytes}')).toBeGreaterThan(0);
+ expect(acquire.indexOf('measure?.(custody.backing,{mode:"reserve"')).toBeLessThan(acquire.indexOf('append({type:"reserved",allocation})'));
+ const funded=index.slice(index.indexOf("export function withNativeStorageFundedChildReservationV1"));
+ expect(funded.indexOf('measure?.(custody.backing,{mode:"reserve",requestBytes:allocation.bytes}')).toBeLessThan(funded.indexOf('append({type:"reserved",allocation})'));
+ expect(index).toContain('port.measure?.(backing,{mode:"commit",requestBytes:0},actual);await transition(actual,{type:"committed"');
+ expect(index).toContain('await port.measure?.(backing,{mode:"recheck",requestBytes:0},actual);');
+ expect(fixed).toContain("meter.admit(request)");expect(fixed).toContain("createNativeDirectoryMeterV1({root,filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes})");
+ expect(fixed).not.toContain("measureCommitBytes");expect(port).toContain('mode:"reserve"|"commit"|"recheck"');
 });

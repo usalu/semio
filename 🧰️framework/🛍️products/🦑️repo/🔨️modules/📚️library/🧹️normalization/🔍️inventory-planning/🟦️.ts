@@ -23,7 +23,7 @@ import { applyEditsToContent } from "../✂️reference-edits/🟦️.ts";
 import { type LeafStamp, inventoryEntriesByNormalizedPath, inventoryLeafStamps, referenceEditsByPath } from "../🧱️inventory-leaf-stamps/🟦️.ts";
 import { type CandidatePath, type MutableInventoryEntry, TEXT_LIMIT_BYTES, contentOf, leafContentOf, packageLocation, storedClassification } from "../📸️repository-capture/🟦️.ts";
 import { ancestorDirectoryKindIds, normalizeMutationCasePairs, pathPolicyViolations, provenMutationLeafOwners, sourceTreeDigest, validateMutationCasePairs } from "../👥️mutation-projection/🟦️.ts";
-import { canonicalDirectory, canonicalFile, classifyPackageRole, directoryHash, inventoryDigestOf, matchingFixedContracts, packageImplementationDestination } from "../📏️fixed-contracts/🟦️.ts";
+import { canonicalDirectory, canonicalFile, classifyPackageRole, packageImplementationAdmittedAt, directoryHash, inventoryDigestOf, matchingFixedContracts, packageImplementationDestination } from "../📏️fixed-contracts/🟦️.ts";
 import { projectNestedCargoPackages, validateMutationPayloadSchemas, validateTicketImportantDirectories } from "../🗺️artifact-projection-catalogs/🟦️.ts";
 import { assertGeneratorPreviewTarget } from "../🧐️preimage-assertions/🟦️.ts";
 import { projectArtifactCatalogs, projectArtifactEmptyFacetFiles, projectExactOwnedFiles, projectTicketDocumentFiles, projectTicketImportantFiles } from "../📂️owned-file-projection/🟦️.ts";
@@ -162,7 +162,8 @@ export function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInvent
     const fixedSource = canonical.fixedId ? storedClassification(leafStore, () => recordKey("taxonomy-fixed-source-v1", normalizationRevision(), taxonomy.input.contentHash, canonical.fixedId!, content.hash, String(textual)), () => fixedSourceDispositionDecision(canonical.fixedId, text(), taxonomy.discoverySchema)) : fixedSourceDispositionDecision(canonical.fixedId, null, taxonomy.discoverySchema);
     if (fixedSource?.finding === "fixed-source-content-unreadable") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} could not read a UTF-8 body for its declared semantic validator`));
     if (fixedSource?.finding === "fixed-source-disposition-unresolved") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} rejected the body with its declared semantic validator`));
-    const role = packageLocation(row.path, taxonomy) ? storedClassification(leafStore, () => recordKey("taxonomy-package-role-v1", normalizationRevision(), taxonomy.input.contentHash, row.path, canonical.fileKind ?? "", canonical.fixedId ?? "", content.hash, String(textual)), () => classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, text(), taxonomy)) : classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, null, taxonomy);
+    const admitted = packageImplementationAdmittedAt(row.path, canonical.fileKind, taxonomy, (candidate) => leafPaths.has(candidate));
+    const role = packageLocation(row.path, taxonomy) ? storedClassification(leafStore, () => recordKey("taxonomy-package-role-v2", normalizationRevision(), taxonomy.input.contentHash, row.path, canonical.fileKind ?? "", canonical.fixedId ?? "", content.hash, String(textual), String(admitted)), () => classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, text(), taxonomy, admitted)) : classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, null, taxonomy);
     let normalizedPath = canonical.path;
     if (role === "implementation") {
       const extracted = packageImplementationDestination(row.path, canonical, canonicalDirectoryByPath, directoryKindByPath, taxonomy);

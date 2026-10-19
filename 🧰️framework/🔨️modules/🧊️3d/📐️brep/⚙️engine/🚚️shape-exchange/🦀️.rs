@@ -22,7 +22,6 @@ fn label_high_water(body: &Body, root: PersistentLabel) -> u64 {
 
 impl Brep {
     /// 📤️ Exports `handle` as a session-free [`ShapeValue`] holding exactly the closure of its roots, every [`PersistentLabel`] preserved and the arena compacted to dense ids in index order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_shape(&self, handle: &GeometryHandle) -> Result<ShapeValue, BrepError> {
         let entity = self.entity(handle)?;
         let label = label_of_entity(&self.body, entity).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))?;
@@ -51,13 +50,11 @@ impl Brep {
     }
 
     /// 📥️ Imports `shape` into this session and returns the root handle; in a fresh session every label, and therefore every handle, equals the exported one.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_shape(&mut self, shape: &ShapeValue) -> Result<GeometryHandle, BrepError> {
         self.import_shape_mapped(shape).map(|imported| imported.handle)
     }
 
     /// 📥️ [`Brep::import_shape`] that also reports the label shift, so labels held against the value resolve in a non-fresh session.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_shape_mapped(&mut self, shape: &ShapeValue) -> Result<ImportedShape, BrepError> {
         shape.check()?;
         let offset = self.body.labels.next();

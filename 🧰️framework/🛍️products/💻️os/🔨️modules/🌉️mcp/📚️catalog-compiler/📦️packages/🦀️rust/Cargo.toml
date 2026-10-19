@@ -27,6 +27,7 @@ framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦�
 semio-framework = { workspace = true }
 semio-framework-onboarding = { path = "../../../../../../../🔨️modules/🎓️onboarding/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
+semio-framework-process-routing-workspace = { path = "../../../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { path = "../../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

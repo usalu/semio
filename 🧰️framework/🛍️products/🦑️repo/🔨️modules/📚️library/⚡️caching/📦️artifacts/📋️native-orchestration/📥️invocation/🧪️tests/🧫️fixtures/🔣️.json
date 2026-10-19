@@ -397,56 +397,6 @@
       "accepted": false
     }
   ],
-  "windowsSystem": [
-    {
-      "name": "Windows captures actual OS directories",
-      "platform": "win32",
-      "authored": "none",
-      "accepted": true
-    },
-    {
-      "name": "Windows exact authored facts agree with OS",
-      "platform": "win32",
-      "authored": "exact",
-      "accepted": true
-    },
-    {
-      "name": "Windows foreign authored paths refuse",
-      "platform": "win32",
-      "authored": "foreign",
-      "accepted": false
-    },
-    {
-      "name": "Windows extra fields refuse",
-      "platform": "win32",
-      "authored": "extra",
-      "accepted": false
-    },
-    {
-      "name": "Windows other version refuses",
-      "platform": "win32",
-      "authored": "version",
-      "accepted": false
-    },
-    {
-      "name": "Linux has no Windows facts",
-      "platform": "linux",
-      "authored": "none",
-      "accepted": true
-    },
-    {
-      "name": "macOS has no Windows facts",
-      "platform": "darwin",
-      "authored": "none",
-      "accepted": true
-    },
-    {
-      "name": "Linux cannot assert Windows authority",
-      "platform": "linux",
-      "authored": "exact",
-      "accepted": false
-    }
-  ],
   "neutralRoles": [
     {
       "name": "nx prototype uses neutral role",

@@ -47,10 +47,6 @@ pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     if ctx.refuse_without_selection(&marked) {
         return;
     }
-    // 🔒️ A lock has to mean the same thing to every verb. `translateSelection` has refused a locked
-    // grab since wave B31 while `deleteSelection` erased the very same object without a word — the
-    // 2026-09-17 ◻️2d battery measured the twin defect there (`before=12 after=0` on a node whose
-    // inspector flag read `locked true` and whose drag WAS refused). One notice, no edit, no fault.
     let locked = ctx.scene.scene_snapshot.objects.iter().any(|object| object_ids.contains(&object.id) && object.locked)
         || ctx.scene.scene_snapshot.objects.iter().any(|object| {
             object.vortices.iter().any(|vortex| vortex.locked && vortex_ids.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id)))

@@ -53,8 +53,6 @@ export function useWorldMeshVisuals(meshes:readonly WorldMeshRecord[]):Map<strin
     closeSpan({ built, kept: meshes.length - built });
     return next;
   }, [meshes]);
-  // 🧹️ Dispose-on-remove, after the commit that stopped referencing them: a geometry retired during
-  // render is still in the mounted scene until React commits the new one.
   useEffect(() => {
     const retired = retiredMeshVisualsRef.current;
     retiredMeshVisualsRef.current = [];
@@ -144,11 +142,6 @@ export function WorldInstancesLayer({
   readonly subElementPaint: World3dSubElementPaint;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
-  // 🖱️ The component (vertex/edge/face) under the pointer, painted from THIS pane's own raycast the
-  // moment the pointer reaches it. The guest echoes the same hover back in its selection JSON
-  // (`hoveredComponent`) a few turns later; until then — and for a guest that never echoes it — the
-  // local hit is what highlights. Cleared on pointer-out and on every object-level hover, so a stale
-  // face highlight never outlives the pointer leaving the mesh (lowpoly, 2026-09-18).
   const [localHoveredComponent, setLocalHoveredComponent] = useState<WorldHoverComponent | null>(null);
   const onComponentHoverPainted = useCallback(
     (args: { objectId: string; mode: string; id: number } | null) => {
@@ -162,9 +155,6 @@ export function WorldInstancesLayer({
     [onComponentHover],
   );
   const hoveredComponent = localHoveredComponent ?? selection.hoveredComponent;
-  // 🧊️ Per-mesh-id visuals, keyed on the mesh RECORD's identity (`advanceWorldMeshResidency` keeps
-  // that identity across a refresh that did not touch the mesh), so an N-mesh surface with one moved
-  // mesh allocates one `BufferGeometry` instead of N — and every retired one is disposed.
   const geometries = useMemo(() => {
     const map = new Map<string, BufferGeometry>();
     for (const [meshId, entry] of meshVisuals) if (entry.geometry) map.set(meshId, entry.geometry);
@@ -190,7 +180,6 @@ export function WorldInstancesLayer({
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const currentComponentIds = new Set(selection.componentIds ?? []);
   const mergedComponentIdsSet = mergedComponentIds ? new Set(mergedComponentIds) : null;
-  // Still-selected (solid) = current ∩ merged when dragging; newly-added (preview tint) = merged − current.
   const selectedComponentIds = useMemo(
     () => (mergedComponentIdsSet ? new Set([...currentComponentIds].filter((id) => mergedComponentIdsSet.has(id))) : currentComponentIds),
     [currentComponentIds, mergedComponentIdsSet],
@@ -227,10 +216,6 @@ export function WorldInstancesLayer({
       previewInstanceIds: mergedInstanceIdsSet,
     });
   }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredKindId, selection.ids]);
-  // 🎯️ The raycast result paints BEFORE it is dispatched: the hover chrome follows the pointer at
-  // raycast speed and the guest's echo (`selection.hoveredId`, one round trip later) only confirms it
-  // — see `worldHoverPaintIdV1`. The claim is withdrawn when the pointer leaves the canvas
-  // (`onLocalHoverRelease`), so a hover another surface authors shows once the pointer is elsewhere.
   const handleLocalInstancePointerMove = useCallback(
     (id: string | null) => {
       instanceChromeStore.setLocalHover(id);
@@ -481,8 +466,6 @@ export function WorldInstancesLayer({
     [applyGumballLivePreview, controllerId, gumballLiveDispatch, gumballPreviewSourceId, onGumballDragEnd],
   );
 
-  // 🪪️ Stable across renders, like every other `WorldInstanceNode` prop: an inline function here defeated the node's memo, so
-  // every refresh re-rendered every instance of the document even when one instance changed.
   const mergeMode = useCallback(
     (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentPickMergeMode(resolveWorldMergeMode(selection.selectionMergeMode, event, persistentSelectionMode)),
     [selection.selectionMergeMode, persistentSelectionMode],

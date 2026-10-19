@@ -2,7 +2,7 @@
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::DslValue;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value::Number;
 use semio_framework_value::RetainedCloneGrant;
@@ -60,7 +60,7 @@ macro_rules! native_port{
  };
 }
 
-native_port!(Decode,ProjectSnapshot,allocate_vec_into,copy_text_into,semio_framework_value::native_decoding::NativeDecodeProgress);
+native_port!(Decode,ProjectSnapshot,allocate_vec_into,copy_text_into,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress);
 
 native_port!(Encode,ReconstructSnapshot,allocate_encode_vec_into,copy_encode_text_into,semio_framework_value::native_encoding::NativeEncodeProgress);
 

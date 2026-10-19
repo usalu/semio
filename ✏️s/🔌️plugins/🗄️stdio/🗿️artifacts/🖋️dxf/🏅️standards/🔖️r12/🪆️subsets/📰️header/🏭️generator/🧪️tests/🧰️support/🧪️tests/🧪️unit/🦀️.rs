@@ -26,8 +26,6 @@ fn rejected_recipes_carry_no_after_state_applied_ones_do() {
 
 #[test]
 fn drafting_plate_is_unaffected_by_this_retrofit() {
-    // 🔒 Guards the ONE fixture this retrofit must never change: same bytes, same digest, as
-    // measured before this file was extended (see the committed testEvidence entry).
     let bytes = encode(&base_doc());
     assert_eq!(bytes.len(), 9521, "drafting-plate byte length must be unchanged");
 }

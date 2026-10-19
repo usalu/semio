@@ -197,9 +197,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("exposes inline appearance and reveal scripts", () => {
       expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("prefers-color-scheme");
-      // 🌓️ The ONE document the OS shell writes — never `ui.chrome.appearance`, which nothing has
-      // written since the shell moved to the event-sourced config lane (the fixture-driven law in
-      // `🧪️tests/🧩️suite/🟦️.ts` is what states this; this line keeps the retired key out).
       expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("semio.os.config");
       expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).not.toContain("ui.chrome.appearance");
       expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
@@ -396,8 +393,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("createWorkspaceViteResolveConfig", () => {
-    // ⏱️ `findWorkspacePackages` walks the whole repo tree: measured 14.4 s cold, 27 s under fleet load.
-    // The first caller in the process pays it; the memo makes every later one free.
     it(
       "pins scene hosts and excludes workspace packages from optimizeDeps",
       () => {

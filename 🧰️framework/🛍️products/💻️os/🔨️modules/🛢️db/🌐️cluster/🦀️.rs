@@ -368,7 +368,6 @@ impl QuorumTracker {
     }
 
     /// 🥇️ True iff at least `threshold` distinct nodes have acked.
-    // 🚫️async: E1 pure accessor consumed synchronously by tests and `ack` — see R9
     pub fn satisfied(&self) -> bool {
         self.acked.len() >= self.threshold as usize
     }
@@ -427,14 +426,7 @@ pub async fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Resu
     match intent {
         ReadIntent::Canonical | ReadIntent::Preview => replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no leader available to serve a canonical/preview read".to_string())),
         ReadIntent::BoundedStaleness { at_least } => {
-            // 🎯️ A document-mismatched frontier can never dominate `at_least` — treated as
-            // non-qualifying (`unwrap_or(false)`) rather than propagating the error, since a
-            // routing decision over a heterogeneous replica list should skip a malformed candidate,
-            // not fail the whole read.
             let mut candidates: Vec<&ReplicaStatus> = replicas.iter().filter(|status| status.frontier.dominates(at_least).unwrap_or(false)).collect();
-            // 🎯️ Prefer offloading to a follower (read-scaling is the whole point of bounded
-            // staleness); fall back to the leader only if no follower qualifies. Secondary sort by
-            // node id for a deterministic pick among equally-eligible followers.
             candidates.sort_by(|a, b| a.is_leader.cmp(&b.is_leader).then_with(|| a.node.cmp(&b.node)));
             candidates.first().map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no replica meets the requested staleness bound".to_string()))
         }

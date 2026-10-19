@@ -53,7 +53,6 @@ pub struct UiRevision(pub u64);
 
 impl UiRevision {
     /// ⏭️ The next revision after this one.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn try_next(self) -> Option<Self> {
         self.0.checked_add(1).map(Self)
     }
@@ -66,7 +65,6 @@ pub struct UiNodeIdAllocator(u64);
 
 impl UiNodeIdAllocator {
     /// 🏭️ Mints the next unused [`UiNodeId`] for this surface.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn try_allocate(&mut self) -> Option<UiNodeId> {
         let id = UiNodeId(self.0);
         self.0 = self.0.checked_add(1)?;

@@ -25,15 +25,12 @@ pub struct GltfAssetDiff {
 }
 
 impl GltfAssetDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.version.is_none() && self.generator.is_none() && self.copyright.is_none() && self.min_version.is_none() && self.extensions.is_none() && self.extras.is_none()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &GltfAsset, _capability: protocol::ApplyCapability) -> GltfAsset {
         self.apply_fields(base)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_fields(&self, base: &GltfAsset) -> GltfAsset {
         let mut next = base.clone();
         if let Some(v) = &self.version {
@@ -56,7 +53,6 @@ impl GltfAssetDiff {
         }
         next
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &GltfAsset) -> Self {
         Self {
             version: self.version.as_ref().map(|_| base.version.clone()),
@@ -67,7 +63,6 @@ impl GltfAssetDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(&mut self, other: Self) {
         if other.version.is_some() {
             self.version = other.version;

@@ -68,8 +68,6 @@ impl ActionRef {
         Self(id.into())
     }
 
-    // 🚫️async: E1 transitive — the only consumer is inside an `Iterator::find` (external trait)
-    // closure, which must be sync; pure field access, no I/O (R9).
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -189,8 +187,6 @@ impl ToolRef {
         Self(id.into())
     }
 
-    // 🚫️async: E1 transitive — the only consumer is inside an `Iterator::find` (external trait)
-    // closure, which must be sync; pure field access, no I/O (R9).
     pub fn as_str(&self) -> &str {
         &self.0
     }

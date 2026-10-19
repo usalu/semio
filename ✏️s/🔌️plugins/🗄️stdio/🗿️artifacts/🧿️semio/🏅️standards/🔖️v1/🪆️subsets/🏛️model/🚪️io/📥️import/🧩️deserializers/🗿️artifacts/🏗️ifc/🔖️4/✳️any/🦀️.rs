@@ -178,8 +178,6 @@ fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<&
             out_relations.push(ModelRelation { id: format!("rel-containedin-{id}-{parent}"), kind: RelationKind::ContainedIn, from: id, to: parent.to_owned() });
         }
         for child in &node.children {
-            // 🧩️ Flattened: a nested element (e.g. an opening) attaches to the SAME spatial
-            // ancestor, not to `id` — `model.elements` has no element-parent field.
             walk(doc, child, parent_spatial_id, analysis, out_spatial, out_elements, out_relations);
         }
     }

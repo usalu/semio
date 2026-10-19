@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-2d-compute = { path = "../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }

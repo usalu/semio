@@ -1,0 +1,1121 @@
+{
+  "version": 1,
+  "tree": [
+    {
+      "path": "store/site/.semio-artifact.json",
+      "text": "{\"version\":1}\n"
+    },
+    {
+      "path": "store/site/assets/app.js",
+      "text": "console.log(1);\n"
+    },
+    {
+      "path": "store/site/assets/data.bin",
+      "hex": "00010203ff"
+    },
+    {
+      "path": "store/site/index.html",
+      "text": "<!doctype html>\n"
+    },
+    {
+      "path": "store/bin/proctor",
+      "text": "#!/bin/sh\necho proctor\n"
+    }
+  ],
+  "entries": [
+    {
+      "path": "store/bin/proctor",
+      "kind": "file",
+      "bytes": 23,
+      "files": 1,
+      "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+    },
+    {
+      "path": "store/site",
+      "kind": "directory",
+      "bytes": 51,
+      "files": 4,
+      "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+    }
+  ],
+  "treeManifest": ".semio-artifact.json\n14\n50208d78350a7a160dec59a82df1499b6ca7da33e54c5eb11c97e342118e68bb\nassets/app.js\n16\nb603d946eb2b396ca4ecf65c223daff659dbe6f1cfeac235b7c61d3ba6964cae\nassets/data.bin\n5\nff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e\nindex.html\n16\n335fca8574f060eea24ebcdae6b78f32414f5de03da1084fd0e73d710768e3a9\n",
+  "verification": [
+    {
+      "name": "pristine content verifies by digest",
+      "mutations": [],
+      "mode": "digest",
+      "expected": {
+        "state": "valid",
+        "findings": []
+      }
+    },
+    {
+      "name": "pristine content verifies by stat",
+      "mutations": [],
+      "mode": "stat",
+      "expected": {
+        "state": "valid",
+        "findings": []
+      }
+    },
+    {
+      "name": "a removed file is absent",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/bin/proctor"
+        }
+      ],
+      "mode": "digest",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/bin/proctor",
+            "reason": "absent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a removed directory is absent",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/site"
+        }
+      ],
+      "mode": "stat",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/site",
+            "reason": "absent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "both entries missing report both in receipt order",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/bin"
+        },
+        {
+          "op": "remove",
+          "path": "store/site"
+        }
+      ],
+      "mode": "digest",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/bin/proctor",
+            "reason": "absent"
+          },
+          {
+            "path": "store/site",
+            "reason": "absent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a same-size rewrite changes the digest",
+      "mutations": [
+        {
+          "op": "write",
+          "path": "store/bin/proctor",
+          "text": "#!/bin/sh\necho proctoX\n"
+        }
+      ],
+      "mode": "digest",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/bin/proctor",
+            "reason": "digest"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a same-size rewrite passes the cheap stat check",
+      "mutations": [
+        {
+          "op": "write",
+          "path": "store/bin/proctor",
+          "text": "#!/bin/sh\necho proctoX\n"
+        }
+      ],
+      "mode": "stat",
+      "expected": {
+        "state": "valid",
+        "findings": []
+      }
+    },
+    {
+      "name": "a shorter file differs in size under both modes",
+      "mutations": [
+        {
+          "op": "write",
+          "path": "store/bin/proctor",
+          "text": "#!/bin/sh\n"
+        }
+      ],
+      "mode": "stat",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/bin/proctor",
+            "reason": "size"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a file replaced by a directory differs in kind",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/bin/proctor"
+        },
+        {
+          "op": "mkdir",
+          "path": "store/bin/proctor"
+        }
+      ],
+      "mode": "digest",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/bin/proctor",
+            "reason": "kind"
+          }
+        ]
+      }
+    },
+    {
+      "name": "an extra file in a directory differs in size",
+      "mutations": [
+        {
+          "op": "write",
+          "path": "store/site/extra.txt",
+          "text": "x"
+        }
+      ],
+      "mode": "stat",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/site",
+            "reason": "size"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a removed file in a directory differs in size",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/site/assets/data.bin"
+        }
+      ],
+      "mode": "stat",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/site",
+            "reason": "size"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a same-size edit inside a directory changes the digest",
+      "mutations": [
+        {
+          "op": "write",
+          "path": "store/site/assets/app.js",
+          "text": "console.log(2);\n"
+        }
+      ],
+      "mode": "digest",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/site",
+            "reason": "digest"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a same-size edit inside a directory passes the cheap stat check",
+      "mutations": [
+        {
+          "op": "write",
+          "path": "store/site/assets/app.js",
+          "text": "console.log(2);\n"
+        }
+      ],
+      "mode": "stat",
+      "expected": {
+        "state": "valid",
+        "findings": []
+      }
+    },
+    {
+      "name": "a symbolic link inside a directory is unreadable",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/site/index.html"
+        },
+        {
+          "op": "symlink",
+          "path": "store/site/index.html",
+          "target": "assets/app.js"
+        }
+      ],
+      "mode": "digest",
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/site",
+            "reason": "unreadable"
+          }
+        ]
+      }
+    }
+  ],
+  "malformed": [
+    {
+      "name": "an unknown version",
+      "receipt": {
+        "version": 2,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "no entries",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [],
+        "links": []
+      }
+    },
+    {
+      "name": "an extra receipt key",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "note": "x",
+        "links": []
+      }
+    },
+    {
+      "name": "an extra entry key",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f",
+            "mtime": 1
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "an uppercase digest",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "B99690C3652EB1B5FAD506069CD2D4809DFA0DCDE1BA2277832DCC0F455B2B6F"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a short digest",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "abc"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "an absolute path",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "/etc/passwd",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a parent segment",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/../etc",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a backslash path",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store\\bin",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "an unknown kind",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "link",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a negative size",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": -1,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a file with two files",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 2,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a target with a slash",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "a/b",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a duplicate path",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          }
+        ],
+        "links": []
+      }
+    },
+    {
+      "name": "a receipt without links",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a link with an extra key",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "links": [
+          {
+            "path": "proj/dist",
+            "target": "store/site",
+            "kind": "dir"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a link to a parent path",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "links": [
+          {
+            "path": "proj/dist",
+            "target": "../store/site"
+          }
+        ]
+      }
+    },
+    {
+      "name": "an absolute link path",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "links": [
+          {
+            "path": "/proj/dist",
+            "target": "store/site"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a duplicate link",
+      "receipt": {
+        "version": 1,
+        "project": "p",
+        "target": "build",
+        "entries": [
+          {
+            "path": "store/bin/proctor",
+            "kind": "file",
+            "bytes": 23,
+            "files": 1,
+            "sha256": "b99690c3652eb1b5fad506069cd2d4809dfa0dcde1ba2277832dcc0f455b2b6f"
+          },
+          {
+            "path": "store/site",
+            "kind": "directory",
+            "bytes": 51,
+            "files": 4,
+            "sha256": "fd1ff5a889d838164dcbbaeb7df7158c36fb44d617479c438f23bfcf47443a64"
+          }
+        ],
+        "links": [
+          {
+            "path": "proj/dist",
+            "target": "store/site"
+          },
+          {
+            "path": "proj/dist",
+            "target": "store/site"
+          }
+        ]
+      }
+    }
+  ],
+  "declarations": [
+    {
+      "name": "a declared receipt resolves under the project root",
+      "projectRoot": "a/b",
+      "target": "build",
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "expected": "a/b/.🧾️store/build.json"
+    },
+    {
+      "name": "other outputs do not declare one",
+      "projectRoot": "a/b",
+      "target": "build",
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ],
+      "expected": null
+    },
+    {
+      "name": "no outputs declare none",
+      "projectRoot": "a/b",
+      "target": "build",
+      "outputs": [],
+      "expected": null
+    },
+    {
+      "name": "another target's receipt is not this target's",
+      "projectRoot": "a/b",
+      "target": "site",
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "expected": null
+    },
+    {
+      "name": "the mode token keeps the receipt a different output",
+      "projectRoot": "a/b",
+      "target": "build",
+      "outputs": [
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🧾️store/build.json"
+      ],
+      "expected": null
+    },
+    {
+      "name": "a project at the workspace root",
+      "projectRoot": ".",
+      "target": "build",
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "expected": ".🧾️store/build.json"
+    }
+  ],
+  "repairSelections": [
+    {
+      "selection": [
+        "run",
+        "@teaching/proctor:build",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "expected": true
+    },
+    {
+      "selection": [
+        "run",
+        "@teaching/proctor:build:release",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--",
+        "--flag"
+      ],
+      "expected": true
+    },
+    {
+      "selection": [
+        "run",
+        "@teaching/proctor:build"
+      ],
+      "expected": false
+    },
+    {
+      "selection": [
+        "run",
+        "@teaching/proctor:build",
+        "--skip-nx-cache"
+      ],
+      "expected": false
+    },
+    {
+      "selection": [
+        "run",
+        "@teaching/proctor:build",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache"
+      ],
+      "expected": false
+    },
+    {
+      "selection": [
+        "run",
+        "@teaching/proctor:build",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies",
+        "--output-style=stream"
+      ],
+      "expected": false
+    },
+    {
+      "selection": [
+        "run-many",
+        "--targets=build",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "expected": false
+    },
+    {
+      "selection": [
+        "run",
+        "proctor",
+        "--skip-nx-cache",
+        "--excludeTaskDependencies"
+      ],
+      "expected": false
+    },
+    {
+      "selection": [
+        "reset"
+      ],
+      "expected": false
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "a hit with its store content present runs once",
+      "receipt": "valid",
+      "firstRun": "ok",
+      "repairWrites": "valid",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 0,
+        "outcome": "ok"
+      }
+    },
+    {
+      "name": "a hit whose store content is gone is a miss and re-executes",
+      "receipt": "store-missing",
+      "firstRun": "ok",
+      "repairWrites": "valid",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 1,
+        "outcome": "ok"
+      }
+    },
+    {
+      "name": "a repair that does not restore the content fails closed",
+      "receipt": "store-missing",
+      "firstRun": "ok",
+      "repairWrites": "nothing",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 1,
+        "outcome": "error",
+        "message": "still not valid"
+      }
+    },
+    {
+      "name": "a receipt the handler never wrote after a success is re-executed",
+      "receipt": "absent",
+      "firstRun": "ok",
+      "repairWrites": "valid",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 1,
+        "outcome": "ok"
+      }
+    },
+    {
+      "name": "a receipt still unwritten after re-execution fails closed",
+      "receipt": "absent",
+      "firstRun": "ok",
+      "repairWrites": "nothing",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 1,
+        "outcome": "error",
+        "message": "unwritten"
+      }
+    },
+    {
+      "name": "a malformed receipt is re-executed",
+      "receipt": "malformed",
+      "firstRun": "ok",
+      "repairWrites": "valid",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 1,
+        "outcome": "ok"
+      }
+    },
+    {
+      "name": "a failed run with no receipt state is the original failure",
+      "receipt": "absent",
+      "firstRun": "fail",
+      "repairWrites": "nothing",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 0,
+        "outcome": "error",
+        "message": "run failed"
+      }
+    },
+    {
+      "name": "a failed run with a valid receipt is the original failure",
+      "receipt": "valid",
+      "firstRun": "fail",
+      "repairWrites": "nothing",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 1,
+        "repairs": 0,
+        "outcome": "error",
+        "message": "run failed"
+      }
+    },
+    {
+      "name": "a failed run with gone store content repairs and retries once",
+      "receipt": "store-missing",
+      "firstRun": "fail",
+      "repairWrites": "valid",
+      "secondRun": "ok",
+      "expected": {
+        "runs": 2,
+        "repairs": 1,
+        "outcome": "ok"
+      }
+    },
+    {
+      "name": "a retry that fails again is its failure",
+      "receipt": "store-missing",
+      "firstRun": "fail",
+      "repairWrites": "valid",
+      "secondRun": "fail",
+      "expected": {
+        "runs": 2,
+        "repairs": 1,
+        "outcome": "error",
+        "message": "run failed"
+      }
+    }
+  ],
+  "receiptFiles": [
+    {
+      "name": "a missing file is unwritten",
+      "content": null,
+      "expected": "unwritten"
+    },
+    {
+      "name": "text that is not JSON is malformed",
+      "content": "{",
+      "expected": "malformed"
+    },
+    {
+      "name": "JSON of another shape is malformed",
+      "content": "{\"version\":1}",
+      "expected": "malformed"
+    }
+  ],
+  "links": [
+    {
+      "path": "proj/dist",
+      "target": "store/site",
+      "symlink": "../store/site"
+    },
+    {
+      "path": "proj/📤️dist/prototype",
+      "target": "store/site",
+      "symlink": "../../store/site"
+    }
+  ],
+  "linkVerification": [
+    {
+      "name": "intact links verify",
+      "mutations": [],
+      "expected": {
+        "state": "valid",
+        "findings": []
+      }
+    },
+    {
+      "name": "a removed link is absent",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "proj/dist"
+        }
+      ],
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "proj/dist",
+            "reason": "absent"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a link replaced by a real directory is refused",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "proj/dist"
+        },
+        {
+          "op": "mkdir",
+          "path": "proj/dist"
+        }
+      ],
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "proj/dist",
+            "reason": "link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a link retargeted elsewhere is refused",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "proj/dist"
+        },
+        {
+          "op": "mkdir",
+          "path": "store/other"
+        },
+        {
+          "op": "symlink",
+          "path": "proj/dist",
+          "target": "../store/other"
+        }
+      ],
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "proj/dist",
+            "reason": "link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "a pruned store slot leaves its dangling links absent and the content absent",
+      "mutations": [
+        {
+          "op": "remove",
+          "path": "store/site"
+        }
+      ],
+      "expected": {
+        "state": "invalid",
+        "findings": [
+          {
+            "path": "store/site",
+            "reason": "absent"
+          },
+          {
+            "path": "proj/dist",
+            "reason": "absent"
+          },
+          {
+            "path": "proj/📤️dist/prototype",
+            "reason": "absent"
+          }
+        ]
+      }
+    }
+  ]
+}

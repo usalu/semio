@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { acquireResourceLease, resourceLeasePathV1, checkResourceLeaseControl } from "@semio-tech/process/leases";
-import { readFilesystemJournalWorkerOptionsV1 } from "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts";
+import { readFilesystemJournalWorkerOptionsV1 } from "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🟦️.ts";
 import { mkdir, readFile, readdir, lstat, realpath, rm, writeFile, symlink, unlink } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";

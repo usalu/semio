@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` combination mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🏗️hall/🦀️.rs"]
 mod create_combination_hall_hall_new_acc;
@@ -28,3 +29,7 @@ mod replace_combination_dangling_term;
 mod replace_combination_no_such_combo;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🪪️renames/🦀️.rs"]
 mod replace_combination_renames_combo;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-combination-term/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_combination_term_field_intent;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-combination-name/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_combination_name_field_intent;

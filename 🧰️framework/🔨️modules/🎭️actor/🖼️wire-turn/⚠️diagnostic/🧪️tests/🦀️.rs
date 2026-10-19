@@ -10,7 +10,7 @@ fn close(owner:&mut OperationDiagnosticPublication){owner.begin_close();let mut 
 /// 📬️ Original diagnostic bytes and five-field ACK custody survive every physical refusal and streaming window.
 #[test]
 fn operation_diagnostics_original_pages_preserve_ack_custody_and_physical_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
   let mut input=rows(case);let vector=input.as_ptr();let body=input[0].message.as_ptr();let expected=serde_json::to_value(input[0].to_value()).unwrap();let birth=grant(OperationDiagnosticPublication::capture_demand());
   for denied in[RetainedCloneGrant{maximum_items:0,..birth},RetainedCloneGrant{maximum_copy_bytes:birth.maximum_copy_bytes-1,..birth},RetainedCloneGrant{maximum_depth:0,..birth}]{let(result,heap)=observe(||OperationDiagnosticPublication::capture(input,denied));input=match result{Err((_,rows))=>rows,Ok(_)=>panic!("denied capture admitted originals")};assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(input.as_ptr(),vector);assert_eq!(input[0].message.as_ptr(),body);}
@@ -28,12 +28,12 @@ fn operation_diagnostics_original_pages_preserve_ack_custody_and_physical_receip
 
 /// 🛑️ Encoding cancellation returns the same original diagnostic owners through funded closure.
 #[test]
-fn operation_diagnostics_cancel_every_original_frontier(){let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for cut in corpus["cancelFrontiers"].as_array().unwrap(){let input=rows(&corpus["cases"][2]);let pointer=input[0].message.as_ptr();let(mut owner,_)=OperationDiagnosticPublication::capture(input,grant(OperationDiagnosticPublication::capture_demand())).unwrap_or_else(|(error,_)|panic!("{error}"));for _ in 0..cut.as_u64().unwrap(){let g=grant(owner.next_demand(32).unwrap());owner.advance(g).unwrap();assert_eq!(owner.original_rows().unwrap()[0].message.as_ptr(),pointer);}close(&mut owner);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original operation diagnostic cancellation frontier {cut} closed original owners");}}
+fn operation_diagnostics_cancel_every_original_frontier(){let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for cut in corpus["cancelFrontiers"].as_array().unwrap(){let input=rows(&corpus["cases"][2]);let pointer=input[0].message.as_ptr();let(mut owner,_)=OperationDiagnosticPublication::capture(input,grant(OperationDiagnosticPublication::capture_demand())).unwrap_or_else(|(error,_)|panic!("{error}"));for _ in 0..cut.as_u64().unwrap(){let g=grant(owner.next_demand(32).unwrap());owner.advance(g).unwrap();assert_eq!(owner.original_rows().unwrap()[0].message.as_ptr(),pointer);}close(&mut owner);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original operation diagnostic cancellation frontier {cut} closed original owners");}}
 
 /// 🎟️ The production original driver copy quantum funds capture without enlarging any currency.
 #[test]
 fn operation_diagnostics_original4096_capture_demand_fits_production_driver(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let copy=law["originalDriver"]["maximumCopyBytes"].as_u64().unwrap()as usize;
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let copy=law["originalDriver"]["maximumCopyBytes"].as_u64().unwrap()as usize;
  assert_eq!(copy,4096);assert!(OperationDiagnosticPublication::capture_demand().copy_bytes<=copy,"original diagnostic capture exceeds unchanged production4096 copy authority");
 }
 

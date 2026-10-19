@@ -230,6 +230,94 @@ test("circling the pointer round a pet changes its state", async ({ device }) =>
   }).toPass({ timeout: 2 * RECAST_MS });
 });
 
+test("keyboard gestures reach the real stage: circle and countercircle change a rung, stroke purrs, and shake changes state immediately", async ({ device }) => {
+  const learner = await device("en");
+  const page = learner.page;
+  await enterWithPets(learner);
+  await page.evaluate(() => (window.location.hash = "prefs"));
+  await expect(pane(page, "prefs")).toHaveAttribute("data-opened", "");
+  await instrumented(page);
+  const group = pane(page, "prefs").getByRole("group", { name: PLAY_LABEL[learner.locale], exact: true });
+  for (const deed of ["circle", "countercircle", "stroke", "shake"] as const) {
+    for (const key of ["Enter", "Space"] as const) {
+      await expect(async () => {
+        const pet = await reachable(page, (body) => deed === "stroke" || circled(KINDS[body.id]!, body.state, deed) !== body.state);
+        const name = KINDS[pet.id]!.name[learner.locale];
+        const player = group.getByRole("group", { name, exact: true });
+        const button = player.getByRole("button", { name: DEEDS[deed].button[learner.locale], exact: true });
+        const becomes = deed === "stroke" ? pet.state : circled(KINDS[pet.id]!, pet.state, deed);
+        const since = (await trailOf(page, pet.id)).length;
+        await button.focus();
+        await page.keyboard.press(key);
+        await expect(button).toBeFocused();
+        await expect(group.getByRole("status")).toHaveText(said(deed, name, learner.locale));
+        await expect.poll(async () => ({
+          state: (await bodies(page)).find((body) => body.id === pet.id)?.state,
+          answered: deed === "shake" || (await trailOf(page, pet.id)).slice(since).some((line) => line.startsWith(deed === "stroke" ? "purr/" : "trick/")),
+        }), { message: `${key} ${deed}: ${pet.id} ${pet.state} → ${becomes}`, timeout: ANSWER_MS }).toEqual({ state: becomes, answered: true });
+        test.info().annotations.push({ type: "keyboard-stage", description: `${key} ${deed}: ${pet.id} ${pet.state} → ${becomes}; ${(await trailOf(page, pet.id)).slice(since).join(" → ")}` });
+      }).toPass({ timeout: RECAST_MS });
+    }
+  }
+});
+
+for (const locale of ["en", "de"] as const) {
+  for (const width of [320, 375]) {
+    test(`all eight pet deeds fit and remain in tab order at ${width}px with 200% text and the longest authored ${locale} name`, async ({ device }) => {
+      const learner = await device(locale);
+      const page = learner.page;
+      await page.setViewportSize({ width, height: 812 });
+      await enterWithPets(learner);
+      await page.evaluate(() => (window.location.hash = "prefs"));
+      await expect(pane(page, "prefs")).toHaveAttribute("data-opened", "");
+      const group = pane(page, "prefs").getByRole("group", { name: PLAY_LABEL[locale], exact: true });
+      const player = group.locator("[data-pets-player]").first();
+      await expect(player).toBeVisible();
+      const id = await player.getAttribute("data-pets-player");
+      const longest = Object.values(KINDS).map((kind) => kind.name[locale]).reduce((one, other) => one.length >= other.length ? one : other);
+      await page.evaluate(() => {
+        const root = document.documentElement;
+        root.style.fontSize = `${Number.parseFloat(getComputedStyle(root).fontSize) * 2}px`;
+      });
+      await player.locator("span[id]").evaluate((label, name) => { label.textContent = name; }, longest);
+      await expect(player).toHaveAccessibleName(longest);
+      expect(await player.locator("span[id]").evaluate((label) => label.scrollWidth - label.clientWidth), "the longest authored name wraps inside its column").toBeLessThanOrEqual(1);
+      const buttons = player.getByRole("button");
+      await expect(buttons).toHaveCount(8);
+      await expect(buttons).toHaveText(Object.values(DEEDS).map((deed) => deed.button[locale]));
+      expect(await buttons.evaluateAll((elements) => {
+        const boxes = elements.map((element) => element.getBoundingClientRect());
+        return boxes.flatMap((one, index) => boxes.slice(index + 1).flatMap((other, offset) => Math.min(one.right, other.right) - Math.max(one.left, other.left) > 0.5 && Math.min(one.bottom, other.bottom) - Math.max(one.top, other.top) > 0.5 ? [[index, index + offset + 1]] : []));
+      }), "the eight button hit areas never overlap").toEqual([]);
+      for (const direction of ["Tab", "Shift+Tab"] as const) {
+        const indices = direction === "Tab" ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+        await buttons.nth(indices[0]!).focus();
+        for (const [step, index] of indices.entries()) {
+          if (step > 0) await page.keyboard.press(direction);
+          const button = buttons.nth(index);
+          await expect(button).toBeFocused();
+          await expect(button).toBeInViewport({ ratio: 1 });
+          const bounds = await button.evaluate((element) => {
+            const box = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            const inset = Number.parseFloat(style.outlineWidth) + Math.max(0, Number.parseFloat(style.outlineOffset));
+            return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height, outline: Number.isFinite(inset) ? inset : 0, scroll: element.scrollWidth, client: element.clientWidth };
+          });
+          expect(bounds.left - bounds.outline, `${locale} ${width} ${index}: focus outline left`).toBeGreaterThanOrEqual(0);
+          expect(bounds.right + bounds.outline, `${locale} ${width} ${index}: focus outline right`).toBeLessThanOrEqual(width);
+          expect(bounds.top - bounds.outline, `${locale} ${width} ${index}: focus outline top`).toBeGreaterThanOrEqual(0);
+          expect(bounds.bottom + bounds.outline, `${locale} ${width} ${index}: focus outline bottom`).toBeLessThanOrEqual(812);
+          expect(bounds.width).toBeGreaterThanOrEqual(24);
+          expect(bounds.height).toBeGreaterThanOrEqual(24);
+          expect(bounds.scroll, `${locale} ${width} ${index}: label fits its button`).toBeLessThanOrEqual(bounds.client + 1);
+          test.info().annotations.push({ type: "pet-control-bounds", description: JSON.stringify({ locale, name: longest, id, direction, index, ...bounds }) });
+        }
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+    });
+  }
+}
+
 test("a control under a pet still receives its click: the card a falling pet passes in front of opens, and the pet is not picked up", async ({ device }) => {
   const learner = await device("en");
   const page = learner.page;
@@ -280,7 +368,7 @@ test("a control under a pet still receives its click: the card a falling pet pas
   await expect(page.locator("html")).not.toHaveAttribute(CURSOR, "grabbing");
 });
 
-test("the settings let the learner play with a pet on stage by keyboard: a hello, a trick, a stroke and a toss", async ({ device }) => {
+test("the settings let the learner play with a pet on stage by keyboard: greetings, tricks, petting, tossing and explicit gestures", async ({ device }) => {
   const learner = await device("de");
   const page = learner.page;
   await enterWithPets(learner);
@@ -315,5 +403,9 @@ test("the settings let the learner play with a pet on stage by keyboard: a hello
     await ask("toss", "Space");
     await expect.poll(() => answered(["greet", "trick", "purr", "tumble/air"]), { message: `${pet.id} is tossed up`, timeout: ANSWER_MS }).toBe(4);
     await expectPerched(page, pet.id, LANDING_MS);
+    for (const deed of ["circle", "countercircle", "stroke", "shake"] as const) {
+      await ask(deed, "Enter");
+      await ask(deed, "Space");
+    }
   }).toPass({ timeout: 2 * RECAST_MS });
 });

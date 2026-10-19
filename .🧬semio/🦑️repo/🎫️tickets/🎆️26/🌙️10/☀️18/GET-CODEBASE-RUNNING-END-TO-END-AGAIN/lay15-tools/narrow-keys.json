@@ -1,0 +1,194 @@
+{
+ "note": "manifest keys to add to @semio-tech/repo-lib package.json exports; glue files exist already (explicit named re-exports of one library module)",
+ "keys": [
+  {
+   "key": "./process/caching",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/⚡️caching/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+   "names": [
+    "repoCacheDirectory"
+   ]
+  },
+  {
+   "key": "./process/environment/test-output",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+   "names": [
+    "repoTestArtifactEnvironment"
+   ]
+  },
+  {
+   "key": "./artifacts/reading/contract",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "names": [
+    "RepositoryArtifactRequestV1"
+   ]
+  },
+  {
+   "key": "./cargo/caching/artifacts/wasm/contract",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+   "names": [
+    "repositoryWasmPackageRequestV1"
+   ]
+  },
+  {
+   "key": "./storage/enforcement/tools",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "names": [
+    "withRepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "key": "./cargo/caching/artifacts/native-build/published",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "names": [
+    "withRepositoryPublishedCargoExecutableV1"
+   ]
+  },
+  {
+   "key": "./cargo/dependencies/contract",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "names": [
+    "CargoDependencyNetworkV1"
+   ]
+  },
+  {
+   "key": "./storage/enforcement/budget/paths",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "names": [
+    "repositoryCachePartitionRootDataV1"
+   ]
+  },
+  {
+   "key": "./storage/caching/bootstrap/script",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/⚡️caching/🚀️bootstrap/📜️script/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "names": [
+    "runOwnedNxInvocationV1"
+   ]
+  },
+  {
+   "key": "./storage/enforcement/budget/opening",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "names": [
+    "repositoryCachePartitionRootV1",
+    "repositoryLeaseDirectoryV1"
+   ]
+  },
+  {
+   "key": "./artifacts/native-orchestration/invocation",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "names": [
+    "readNativeCallerAuthorityV1"
+   ]
+  },
+  {
+   "key": "./artifacts/native-orchestration/invocation/preparation",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+   "names": [
+    "repositoryCargoPreparationStorageV1"
+   ]
+  },
+  {
+   "key": "./inventory/workspaces",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "key": "./storage/enforcement/budget/opening/store",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "names": [
+    "withRepositoryCacheStoreV1",
+    "RepositoryCacheStoreV1"
+   ]
+  },
+  {
+   "key": "./artifacts/root",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+   "names": [
+    "stageRepositoryArtifacts",
+    "withRepositoryArtifactDestinationV1"
+   ]
+  },
+  {
+   "key": "./process/environment",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts",
+   "names": [
+    "devToolingEnv"
+   ]
+  },
+  {
+   "key": "./build/graph",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🕸️graph/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "names": [
+    "BuildGraphV1",
+    "BuildTargetV1"
+   ]
+  },
+  {
+   "key": "./build/selection/closure",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🧭️selection/📥️closure/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts",
+   "names": [
+    "selectedBuildPrerequisitesV1"
+   ]
+  },
+  {
+   "key": "./build/selection",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🧭️selection/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts",
+   "names": [
+    "selectBuildTasksV1"
+   ]
+  },
+  {
+   "key": "./build/inputs/membership",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/📥️inputs/📂️membership/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts",
+   "names": [
+    "withBuildFileMembershipV1"
+   ]
+  },
+  {
+   "key": "./inventory/dependencies/typescript/configured",
+   "glue": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+   "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+   "names": [
+    "configuredSourceInputsV1",
+    "ConfiguredSourceInputsV1"
+   ]
+  }
+ ],
+ "bareNeedKey": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts",
+   "before": "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "sub": "./artifacts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "reason": "bare specifier needs manifest key ./artifacts/reading/contract"
+  },
+  {
+   "file": "🧰️framework/🛍️products/📓️print/📦️artifacts/🟦️.ts",
+   "before": "../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "sub": "./storage",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "reason": "bare specifier needs manifest key ./storage/enforcement/budget/paths"
+  }
+ ]
+}

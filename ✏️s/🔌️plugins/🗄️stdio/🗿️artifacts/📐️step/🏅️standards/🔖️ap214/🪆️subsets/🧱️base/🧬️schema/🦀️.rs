@@ -32,19 +32,16 @@ impl Default for StepArtifact {
 }
 
 impl StepArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> StepSnapshot {
         StepSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: StepSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
     /// 🧐️ Derived BrepMesh analyzer view — computed on demand from the typed entity graph via
     /// `StepSnapshot::to_part21_document`, never stored.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn brep_mesh(&self) -> semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::brep::BrepMeshView {
         semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
     }

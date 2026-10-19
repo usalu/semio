@@ -1,6 +1,6 @@
 import { type ActorInstanceLifetime, actorInstanceLifetimeEquals } from "../../🚪️lifetime/🟦️.ts";
 import type { ActorUiPatchReceipt } from "../../🚪️lifetime/🩹️patch/🟦️.ts";
-import { OwnedUiPatchInputAcceptance, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { OwnedUiPatchInputAcceptance, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import { bindUiPatchAuthority, type UiActivationLease, type UiPatchSource } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts";
 
 /** 🏠️ The part of the instance owner a patch claim consults: the UI host that must own the patch's surface. */

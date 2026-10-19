@@ -1,6 +1,7 @@
 //! ↩️ Supersede, undo, redo and backbone pump: the supersede commands, the replays, the authored supersessions, the undo and redo lanes, the text and binary dispatch, the backbone attachment and the pump. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

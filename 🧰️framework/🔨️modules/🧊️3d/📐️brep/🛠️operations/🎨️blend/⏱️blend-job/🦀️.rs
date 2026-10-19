@@ -133,7 +133,6 @@ impl BlendJob {
         Self::plan(body, solid, edges, BlendSpec::Chamfer(d1, d2))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn plan(body: &Body, solid: SolidId, edges: &[EdgeId], spec: BlendSpec) -> Result<Self, KernelError> {
         let solid_faces: BTreeSet<FaceId> = body.solid_faces(solid).into_iter().collect();
         let selected_set: BTreeSet<EdgeId> = edges.iter().copied().collect();
@@ -166,7 +165,6 @@ impl BlendJob {
 }
 
 impl StagedOperation for BlendJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }

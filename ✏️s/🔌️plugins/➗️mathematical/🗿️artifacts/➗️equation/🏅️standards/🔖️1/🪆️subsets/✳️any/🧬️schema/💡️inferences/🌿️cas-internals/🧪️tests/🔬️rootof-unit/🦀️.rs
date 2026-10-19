@@ -3,7 +3,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn real_roots_of_quadratic_gives_two_rootofs() {
-        // x^2 - 2, roots +-sqrt(2)
         let p = PolyU::from_coeffs(vec![Integer::from_i64(-2), Integer::from_i64(0), Integer::from_i64(1)]);
         let roots = real_roots_of(&p);
         assert_eq!(roots.len(), 2);

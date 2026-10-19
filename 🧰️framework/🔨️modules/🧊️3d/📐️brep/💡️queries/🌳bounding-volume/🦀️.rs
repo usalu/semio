@@ -105,7 +105,6 @@ pub mod spatial {
     }
 
     impl<T> Node<T> {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn aabb(&self) -> &Aabb {
             match self {
                 Node::Leaf { aabb, .. } => aabb,
@@ -121,28 +120,23 @@ pub mod spatial {
 
     impl<T> Bvh<T> {
         /// 🏗️ Builds a BVH from AABB-bounded items via recursive median split on the longest axis.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn build(items: Vec<(Aabb, T)>) -> Self {
             Self { root: Self::build_node(items) }
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn build_node(mut items: Vec<(Aabb, T)>) -> Option<Node<T>> {
             if items.is_empty() {
                 return None;
             }
             if items.len() == 1 {
-                // 🛡️ len == 1 was just checked above, so `next()` structurally cannot be `None`.
                 let (aabb, item) = items.into_iter().next().expect("checked len == 1");
                 return Some(Node::Leaf { aabb, item });
             }
-            // 🛡️ items.is_empty() and items.len() == 1 were both ruled out above, so len >= 2 and `reduce` over a non-empty iterator cannot be `None`.
             let bounds = items.iter().map(|(aabb, _)| aabb.clone()).reduce(|a, b| aabb_union(&a, &b)).expect("checked non-empty");
             let axis = aabb_longest_axis(&bounds);
             items.sort_by(|(a, _), (b, _)| aabb_center(a)[axis].partial_cmp(&aabb_center(b)[axis]).unwrap_or(std::cmp::Ordering::Equal));
             let mid = items.len() / 2;
             let right_items = items.split_off(mid);
-            // 🛡️ len >= 2 here implies mid = len/2 is in 1..=len-1, so both the retained `items` (left, len == mid) and `right_items` (len - mid) are non-empty — `build_node` only returns `None` for an empty input.
             let left = Self::build_node(items).expect("checked non-empty left partition");
             let right = Self::build_node(right_items).expect("checked non-empty right partition");
             Some(Node::Branch { aabb: bounds, left: Box::new(left), right: Box::new(right) })
@@ -151,14 +145,12 @@ pub mod spatial {
         /// 🔍️ Returns the item whose leaf AABB is nearest to `point` (by AABB distance, not exact
         /// item-surface distance) — callers refine among close candidates via the exact kernel
         /// query; this only narrows the candidate set.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn query_point_nearest(&self, point: Vec3) -> Option<&T> {
             let mut best: Option<(&T, f64)> = None;
             Self::visit_nearest(self.root.as_ref(), point, &mut best);
             best.map(|(item, _)| item)
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn visit_nearest<'a>(node: Option<&'a Node<T>>, point: Vec3, best: &mut Option<(&'a T, f64)>) {
             let Some(node) = node else { return };
             let bound_dist = aabb_point_distance_sq(node.aabb(), point);
@@ -185,14 +177,12 @@ pub mod spatial {
         }
 
         /// 🎯️ Returns all items whose leaf AABB is crossed by the ray `origin + t * dir` (`t >= 0`).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<&T> {
             let mut hits = Vec::new();
             Self::visit_ray(self.root.as_ref(), origin, dir, &mut hits);
             hits
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn visit_ray<'a>(node: Option<&'a Node<T>>, origin: Vec3, dir: Vec3, hits: &mut Vec<&'a T>) {
             let Some(node) = node else { return };
             if !aabb_ray_hits(node.aabb(), origin, dir) {
@@ -208,14 +198,12 @@ pub mod spatial {
         }
 
         /// 📦️ Returns all items whose leaf AABB overlaps `query`.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn query_aabb_overlap(&self, query: &Aabb) -> Vec<&T> {
             let mut hits = Vec::new();
             Self::visit_overlap(self.root.as_ref(), query, &mut hits);
             hits
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn visit_overlap<'a>(node: Option<&'a Node<T>>, query: &Aabb, hits: &mut Vec<&'a T>) {
             let Some(node) = node else { return };
             if !aabb_overlaps(node.aabb(), query) {
@@ -233,7 +221,6 @@ pub mod spatial {
         /// 🎯️ Like [`Bvh::query_ray`], but sorted near-to-far by AABB entry parameter `t` — lets a
         /// caller stop at the first candidate whose *exact* intersection succeeds instead of
         /// resolving every leaf the ray's box crosses.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn query_ray_ordered(&self, origin: Vec3, dir: Vec3) -> Vec<(&T, f64)> {
             let mut hits = Vec::new();
             Self::visit_ray_ordered(self.root.as_ref(), origin, dir, &mut hits);
@@ -241,7 +228,6 @@ pub mod spatial {
             hits
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn visit_ray_ordered<'a>(node: Option<&'a Node<T>>, origin: Vec3, dir: Vec3, hits: &mut Vec<(&'a T, f64)>) {
             let Some(node) = node else { return };
             let Some(t) = aabb_ray_entry(node.aabb(), origin, dir) else { return };
@@ -258,14 +244,12 @@ pub mod spatial {
         /// just its AABB lower bound), and a subtree is pruned whenever its AABB lower bound
         /// already exceeds the best exact distance found so far — unlike
         /// [`Bvh::query_point_nearest`], this returns the genuinely closest item.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn query_nearest_exact<F: Fn(&T) -> f64>(&self, point: Vec3, exact: F) -> Option<&T> {
             let mut best: Option<(&T, f64)> = None;
             Self::visit_nearest_exact(self.root.as_ref(), point, &exact, &mut best);
             best.map(|(item, _)| item)
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn visit_nearest_exact<'a, F: Fn(&T) -> f64>(node: Option<&'a Node<T>>, point: Vec3, exact: &F, best: &mut Option<(&'a T, f64)>) {
             let Some(node) = node else { return };
             let lower_bound = aabb_point_distance_sq(node.aabb(), point).sqrt();
@@ -298,14 +282,12 @@ pub mod spatial {
         /// 🔁️ Recomputes every leaf and branch AABB in place (same tree topology) from a fresh
         /// `bounds` lookup — cheaper than [`Bvh::build`] when items moved slightly but membership
         /// didn't change enough to warrant a new median-split partition.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn refit<F: Fn(&T) -> Aabb>(&mut self, bounds: &F) {
             if let Some(node) = &mut self.root {
                 Self::refit_node(node, bounds);
             }
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn refit_node<F: Fn(&T) -> Aabb>(node: &mut Node<T>, bounds: &F) -> Aabb {
             match node {
                 Node::Leaf { aabb, item } => {
@@ -514,32 +496,27 @@ pub fn build_edge_bvh(body: &Body, solid: SolidId) -> Result<EdgeBvh, KernelErro
 
 impl FaceBvh {
     /// 🎯️ Face ids whose leaf bounds are crossed by the ray.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<FaceId> {
         self.bvh.query_ray(origin, dir).into_iter().copied().collect()
     }
 
     /// 📦 Face ids whose leaf bounds overlap `query`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_aabb(&self, query: &Aabb) -> Vec<FaceId> {
         self.bvh.query_aabb_overlap(query).into_iter().copied().collect()
     }
 
     /// 📍 Face id whose leaf bound is nearest to `point` (AABB distance).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_nearest(&self, point: Vec3) -> Option<FaceId> {
         self.bvh.query_point_nearest(point).copied()
     }
 
     /// 🎯️ Face ids whose leaf bounds are crossed by the ray, ordered near-to-far by AABB entry.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_ray_ordered(&self, origin: Vec3, dir: Vec3) -> Vec<(FaceId, f64)> {
         self.bvh.query_ray_ordered(origin, dir).into_iter().map(|(f, t)| (*f, t)).collect()
     }
 
     /// 📍 The face genuinely closest to `point` (surface `closest_point` plus trim test, not just
     /// AABB distance) and its closest point and distance, via BVH branch-and-bound.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn closest_face(&self, body: &Body, point: Pnt3) -> Option<(FaceId, Pnt3, f64)> {
         let target = point.to_array();
         let face = *self.bvh.query_nearest_exact(target, |f: &FaceId| closest_point_on_face(body, *f, point).map_or(f64::INFINITY, |(_, d)| d))?;
@@ -548,7 +525,6 @@ impl FaceBvh {
     }
 
     /// 🔁️ Recomputes every face's AABB in place from the current `body` geometry.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn refit(&mut self, body: &Body) {
         self.bvh.refit(&|f: &FaceId| face_aabb(body, *f).unwrap_or(Aabb { min: [0.0; 3], max: [0.0; 3] }));
     }
@@ -556,25 +532,21 @@ impl FaceBvh {
 
 impl EdgeBvh {
     /// 🎯️ Edge ids whose leaf bounds are crossed by the ray.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_ray(&self, origin: Vec3, dir: Vec3) -> Vec<EdgeId> {
         self.bvh.query_ray(origin, dir).into_iter().copied().collect()
     }
 
     /// 📦 Edge ids whose leaf bounds overlap `query`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_aabb(&self, query: &Aabb) -> Vec<EdgeId> {
         self.bvh.query_aabb_overlap(query).into_iter().copied().collect()
     }
 
     /// 📍 Edge id whose leaf bound is nearest to `point` (AABB distance).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn query_nearest(&self, point: Vec3) -> Option<EdgeId> {
         self.bvh.query_point_nearest(point).copied()
     }
 
     /// 🔁️ Recomputes every edge's AABB in place from the current `body` geometry.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn refit(&mut self, body: &Body) {
         self.bvh.refit(&|e: &EdgeId| edge_aabb(body, *e).unwrap_or(Aabb { min: [0.0; 3], max: [0.0; 3] }));
     }
@@ -589,25 +561,21 @@ pub struct SolidBvh {
 
 impl SolidBvh {
     /// 🏗️ Builds the face index for `solid`.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn build(body: &Body, solid: SolidId) -> Result<Self, KernelError> {
         Ok(Self { solid, faces: build_face_bvh(body, solid)? })
     }
 
     /// 🌳 Borrows the underlying face index for direct ray/AABB/nearest queries.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn faces(&self) -> &FaceBvh {
         &self.faces
     }
 
     /// 📍 The face genuinely closest to `point` and its closest point and distance.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn closest_face(&self, body: &Body, point: Pnt3) -> Option<(FaceId, Pnt3, f64)> {
         self.faces.closest_face(body, point)
     }
 
     /// 🔁️ Recomputes every face's AABB in place from the current `body` geometry.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn refit(&mut self, body: &Body) {
         self.faces.refit(body);
     }

@@ -45,6 +45,7 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../../
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-note-note-delete-blocks = { path = "../../../../../🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/📦️packages/🦀️rust" }
 semio-s-artifact-note-note-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust" }

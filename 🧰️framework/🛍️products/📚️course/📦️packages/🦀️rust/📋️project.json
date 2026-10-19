@@ -14,12 +14,30 @@
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧫️fixtures/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/**/*"
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧪️tests/🧫️fixtures/**/*",
+      "sharedGlobals"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "build": {
       "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
@@ -27,11 +45,19 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ]
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

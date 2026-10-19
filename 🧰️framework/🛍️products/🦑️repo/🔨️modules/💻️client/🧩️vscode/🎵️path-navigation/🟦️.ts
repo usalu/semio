@@ -14,7 +14,7 @@ import { getWorkspaceRoot } from "../🎼️utilities/🟦️.ts";
 // Helpers MUST provide file path extraction, ticket path resolution, and editor navigation.
 
 /**
- * extractFilePathFromScope holds the data fields for a extractFilePathFromScope record.
+ * 📄️ extractFilePathFromScope holds the data fields for a extractFilePathFromScope record.
  **/
 export function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
@@ -60,7 +60,7 @@ export function extractFilePathFromScope(scope: string): string | undefined {
 }
 
 /**
- * resolveTicketPath holds the data fields for a resolveTicketPath record.
+ * 🗃️ resolveTicketPath holds the data fields for a resolveTicketPath record.
  **/
 export function resolveTicketPath(ticket: { year: number; month: number; day: number; slug: string; folderPath?: string }): string | undefined {
   if (ticket.folderPath) return ticket.folderPath;
@@ -71,7 +71,7 @@ export function resolveTicketPath(ticket: { year: number; month: number; day: nu
 }
 
 /**
- * openFileAtLine holds the data fields for a openFileAtLine record.
+ * 📥️ openFileAtLine holds the data fields for a openFileAtLine record.
  **/
 export async function openFileAtLine(filePath: string, startLine: number, endLine?: number): Promise<void> {
   const root = getWorkspaceRoot();

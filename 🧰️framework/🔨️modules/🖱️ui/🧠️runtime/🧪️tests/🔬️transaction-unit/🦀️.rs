@@ -153,7 +153,7 @@ fn an_intent_mutates_entity_state_and_the_following_transact_emits_a_patch() {
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
-    runtime.transact(0); // 🌱️ unconditional first present, baseline revision 1
+    runtime.transact(0);
 
     runtime.submit_intent(test_intent(surface.clone(), &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 1));
     let transacted = runtime.transact(0);
@@ -172,19 +172,18 @@ fn a_stale_revision_intent_is_dropped_and_produces_no_patch_and_no_command() {
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (presenter, model) = register_test_surface(&mut runtime, surface.clone());
-    runtime.transact(0); // revision 1
+    runtime.transact(0);
 
-    // 🐌️ advance the surface's revision independently of any intent, so the gap exceeds tolerance
     runtime.store_mut().update(&model, |m, cx| {
         m.value = 1;
         cx.notify();
     });
-    runtime.transact(0); // revision 2
+    runtime.transact(0);
     runtime.store_mut().update(&model, |m, cx| {
         m.value = 2;
         cx.notify();
     });
-    let bumped = runtime.transact(0); // revision 3
+    let bumped = runtime.transact(0);
     assert_eq!(bumped.patches.len(), 1);
 
     runtime.submit_intent(test_intent(surface, &presenter, ui_contract::UiRevision(0), ui_contract::Trigger::Delta, 99));
@@ -202,7 +201,7 @@ fn a_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_p
     let mut runtime = test_runtime();
     let surface = surface("s");
     let (_presenter, model) = register_test_surface(&mut runtime, surface);
-    runtime.transact(0); // baseline
+    runtime.transact(0);
 
     for value in 1..=5 {
         runtime.push_delta(FakeDelta { target: model.clone(), value }).expect("fits: same key coalesces");
@@ -220,7 +219,7 @@ fn an_entity_notified_but_not_read_by_any_surface_produces_no_patch() {
     let mut runtime = test_runtime();
     let surface = surface("s");
     register_test_surface(&mut runtime, surface);
-    runtime.transact(0); // baseline: establishes the surface's real read set
+    runtime.transact(0);
 
     let untracked = runtime.store_mut().insert(0i32);
     runtime.store_mut().update(&untracked, |value, cx| {

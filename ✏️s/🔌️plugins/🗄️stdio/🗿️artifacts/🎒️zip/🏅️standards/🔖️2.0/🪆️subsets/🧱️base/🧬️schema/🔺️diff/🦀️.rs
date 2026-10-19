@@ -40,7 +40,6 @@ pub struct ZipEntriesDiff {
 }
 
 impl ZipEntriesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() && self.order.is_none()
     }
@@ -48,7 +47,6 @@ impl ZipEntriesDiff {
     /// 🔁️ The negative rows against the base entries: added members are removed again, removed members return with their base
     /// content, every modified member restores its base fields under the name it carries afterwards, and an explicit `order`
     /// is emitted exactly when the natural order of those rows would not land on the base order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base: &[ZipEntry]) -> Self {
         let find = |name: &str| base.iter().find(|entry| entry.name == name);
         let removed: Vec<String> = self.added.iter().map(|entry| entry.name.clone()).collect();

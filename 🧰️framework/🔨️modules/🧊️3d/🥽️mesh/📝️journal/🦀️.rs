@@ -17,8 +17,8 @@
 //!
 //! The base mesh is never mutated and never cloned into a working copy by this module.
 
-use super::{EdgeId, FaceId, HalfEdge, HalfedgeMesh, MeshAttribute, MeshFace, MeshKernelError, MeshResult, MeshTexture, MeshVertex, VertexId};
-use protocol::value::DslValue;
+use semio_framework_3d_mesh_document::{EdgeId, FaceId, HalfEdge, HalfedgeMesh, MeshAttribute, MeshFace, MeshKernelError, MeshResult, MeshTexture, MeshVertex, VertexId};
+use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 #[path = "✍️editor/🦀️.rs"]

@@ -1,4 +1,4 @@
-//! ser json to txt
+//! 🧾️ ser json to txt
 use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::write_json_pretty;
 use crate::JsonSnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;

@@ -288,6 +288,17 @@
       "states": [
         "artifact"
       ]
+    },
+    {
+      "name": "compact import and interface extension without whitespace",
+      "files": {
+        "/root.ts": "import{type Base}from\"./base.ts\";export interface Fixture extends Base{}",
+        "/base.ts": "export interface Base{content:string;meta?:number;}"
+      },
+      "expected": [
+        "content",
+        "meta"
+      ]
     }
   ],
   "graphql": [

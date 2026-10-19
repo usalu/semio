@@ -160,12 +160,6 @@ async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
         assert_ne!(fault.code.0.as_str(), "interactive-job.not-ui-safe", "{id} must be past the classification gate");
         assert_eq!(fault.code.0.as_str(), "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
     }
-    // ♻️ NOT closed through `close_registered_fixture_app`: Home's PRESENCE lane still has no
-    // retirement factory, so the close ladder faults at that stage — the same gap the running shell
-    // reports as `predecessor space/s.space.home@1/*#editor retirement failed` on every app switch
-    // (measured by S4, ticket 26/09/18 §3). Home's document, config, draft and transient lanes are
-    // declared above; the presence lane is a bespoke domain retirement (see `🌊️flow`'s) and is the
-    // next owner's piece.
     std::mem::forget(home);
 }
 
@@ -178,12 +172,9 @@ async fn temporary_studio_uses_ephemeral_registry_not_catalog() {
     let doc = ArtifactView::new(&projection, &history);
     let config = HomeConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    // 🚫️ `Emit` carries no `Debug`, so the rejection is destructured rather than `unwrap_err`ed.
     let Err(fault) = handle(&CreateStudio { name: "Missing Identity".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg) else {
         panic!("a temporary studio minted without a view session identity must be rejected");
     };
-    // 🧯️ `Fault::from(&str)` mints `app.message` and carries the text as the MESSAGE — asserting the
-    // code here read `app.message` and had never passed.
     assert_eq!((fault.code.0.as_str(), fault.message.as_str()), ("app.message", "s.home.create-studio.effect-authority-required"));
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     let emit = handle_with_identity(&CreateStudio { name: "Temp Studio".into(), kind: "temporary".into(), folder_path: None }, &doc, &cfg, &identity, &mut authoring).expect("handle");

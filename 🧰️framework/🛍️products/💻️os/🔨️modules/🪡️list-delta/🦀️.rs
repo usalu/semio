@@ -24,9 +24,8 @@
 //!
 //! @see ./🧪️tests/🔬️unit/🦀️.rs — the randomized sequence laws
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use semio_framework_mutation_diff::{ApplyCapability, MutationApplyError};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 
 #[doc(hidden)]
 pub use semio_framework_dsl_record_derive as __dsl_record_derive;
@@ -89,12 +88,12 @@ pub fn supplied_value<T: semio_framework_value::FromValue>(value: semio_framewor
 }
 
 /// 🎟️ Admits a supplied sparse setter under its original native decode control.
-pub fn supplied_value_controlled<T: semio_framework_value::FromValue>(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<T>, semio_framework_value::ValueError> {
+pub fn supplied_value_controlled<T: semio_framework_value::FromValue>(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Option<T>, semio_framework_value::ValueError> {
     T::from_value_controlled(value, control).map(Some)
 }
 
 /// 🕳️ Admits absence through the optional value's native default owner.
-pub fn supplied_value_default<T: semio_framework_value::FromValue>(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<T>, semio_framework_value::ValueError> {
+pub fn supplied_value_default<T: semio_framework_value::FromValue>(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Option<T>, semio_framework_value::ValueError> {
     <Option<T> as semio_framework_value::FromValue>::default_value_controlled(control)
 }
 

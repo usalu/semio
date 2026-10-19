@@ -1,4 +1,4 @@
-//! touching one of this part's grips is severed too, re-`connect-grips`ed by the inverse).
+//! 🤝️ touching one of this part's grips is severed too, re-`connect-grips`ed by the inverse).
 //! 🗑 Puzzle5d mutation — `DeletePart`: removes an id-keyed part (captures cascade — any fastener
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -40,7 +40,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DeletePart {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for DeletePart
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<DeletePart>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

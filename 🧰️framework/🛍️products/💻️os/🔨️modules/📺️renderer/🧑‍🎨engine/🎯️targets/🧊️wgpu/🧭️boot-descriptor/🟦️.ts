@@ -370,9 +370,7 @@ export function readWgpuHostStorageSnapshot(view: { readonly localStorage?: Stor
       const name = storage.key(index);
       if (typeof name === "string" && wgpuHostStorageCarriesKey(name)) names.add(name);
     }
-  } catch {
-    /* an enumeration a sandboxed store refuses still leaves the fixed keys readable */
-  }
+  } catch {}
   const snapshot: Record<string, string> = {};
   let bytes = 0;
   for (const name of [...names].sort()) {

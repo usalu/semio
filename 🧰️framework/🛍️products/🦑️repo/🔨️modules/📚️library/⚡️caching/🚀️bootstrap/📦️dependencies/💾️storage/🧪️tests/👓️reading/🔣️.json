@@ -759,5 +759,408 @@
 "sourceOwnerStorePlatformCases":[{"platform":"freebsd","storeOpens":0,"accepted":false}],
 "sourceOwnerStoreDispatchCases":[{"mode":"sync","selection":"all","accepted":true,"command":"sync"},{"mode":"lock","selection":"all","accepted":true,"command":"lock"},{"mode":"lock","selection":"scope","accepted":true,"command":"lock"},{"mode":"foreign","selection":"all","accepted":false,"command":null},{"mode":"sync","selection":"invalid","accepted":false,"command":null}],
 "sourceOwnerStoreLockCases":[{"mode":"complete","accepted":true,"changed":2,"retained":0},{"mode":"subset","accepted":true,"changed":1,"retained":0},{"mode":"missing-lock","accepted":true,"changed":2,"retained":0},{"mode":"unready","accepted":true,"changed":2,"retained":1},{"mode":"ready-collision","accepted":false,"changed":0,"retained":0},{"mode":"selected-alias","accepted":false,"changed":0,"retained":0},{"mode":"foreign-alias","accepted":false,"changed":0,"retained":0},{"mode":"installer-second","accepted":false,"changed":0,"retained":0},{"mode":"output-second","accepted":false,"changed":0,"retained":0},{"mode":"source-drift","accepted":false,"changed":0,"retained":0},{"mode":"publish-after-effect","accepted":false,"changed":1,"retained":0},{"mode":"source-second","accepted":false,"changed":1,"retained":0},{"mode":"undefined","accepted":false,"changed":0,"retained":0},{"mode":"frozen","accepted":false,"changed":0,"retained":0}],
-  "sourceAliasCases":[{"mode":"absent","accepted":true},{"mode":"directory","accepted":true},{"mode":"absolute-owned","accepted":true},{"mode":"relative-owned","accepted":true},{"mode":"outside","accepted":true},{"mode":"dangling","accepted":true},{"mode":"file","accepted":false},{"mode":"ancestor-link","accepted":false},{"mode":"duplicate","accepted":false},{"mode":"cancelled","accepted":false},{"mode":"endpoint-drift","accepted":false},{"mode":"target-drift","accepted":false}]
+  "sourceAliasCases":[{"mode":"absent","accepted":true},{"mode":"directory","accepted":true},{"mode":"absolute-owned","accepted":true},{"mode":"relative-owned","accepted":true},{"mode":"outside","accepted":true},{"mode":"dangling","accepted":true},{"mode":"file","accepted":false},{"mode":"ancestor-link","accepted":false},{"mode":"duplicate","accepted":false},{"mode":"cancelled","accepted":false},{"mode":"endpoint-drift","accepted":false},{"mode":"target-drift","accepted":false}],
+  "sourceOwnerProviderProjectionCases": [
+  {
+    "name": "borrowed-version-drift",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.31"
+            },
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": true,
+    "aliases": 1
+  },
+  {
+    "name": "borrowed-manifest-drift",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.30"
+            },
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": true,
+    "aliases": 1
+  },
+  {
+    "name": "borrowed-compatible-instance",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": true,
+    "aliases": 0
+  },
+  {
+    "name": "canonical-copy-refused",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": ".",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.31"
+            },
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": false,
+    "aliases": 0
+  },
+  {
+    "name": "prospective-copy-refused",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.31"
+            },
+            "sourceInstance": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": false,
+    "aliases": 0
+  },
+  {
+    "name": "optional-absent",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "optional",
+            "range": "^8.5.6",
+            "expected": null,
+            "provider": null,
+            "sourceInstance": null
+          }
+        ]
+      }
+    ],
+    "accepted": true,
+    "aliases": 0
+  },
+  {
+    "name": "canonical-absent-refused",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": null,
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.31"
+            },
+            "sourceInstance": null
+          }
+        ]
+      }
+    ],
+    "accepted": false,
+    "aliases": 0
+  },
+  {
+    "name": "borrowed-absent-refused",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": null,
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": false,
+    "aliases": 0
+  },
+  {
+    "name": "duplicate-declarations-deduplicated",
+    "relations": [
+      {
+        "source": "pkg",
+        "memberScope": "b",
+        "ownerScope": ".",
+        "manifestSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "ownerRoot": "/native/a/w/0",
+        "memberRoot": "/native/b/w/0",
+        "edges": [
+          {
+            "name": "postcss",
+            "kind": "development",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.31"
+            },
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          },
+          {
+            "name": "postcss",
+            "kind": "runtime",
+            "range": "^8.5.6",
+            "expected": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            },
+            "provider": {
+              "path": "/native/b/postcss",
+              "dev": "1",
+              "ino": "22",
+              "mode": "16877",
+              "manifestSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "version": "8.5.31"
+            },
+            "sourceInstance": {
+              "path": "/native/a/postcss",
+              "dev": "1",
+              "ino": "11",
+              "mode": "16877",
+              "manifestSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "version": "8.5.30"
+            }
+          }
+        ]
+      }
+    ],
+    "accepted": true,
+    "aliases": 1
+  }
+]
 }

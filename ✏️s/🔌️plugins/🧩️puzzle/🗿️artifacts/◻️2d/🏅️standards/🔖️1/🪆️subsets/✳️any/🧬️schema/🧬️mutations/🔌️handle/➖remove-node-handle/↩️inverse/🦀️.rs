@@ -1,4 +1,4 @@
-//! handle, then re-`connect-handles`es every edge BASE shows touching it (severed cascade).
+//! 🤚️ handle, then re-`connect-handles`es every edge BASE shows touching it (severed cascade).
 //! ↩️ Inverse for `RemoveNodeHandle` — reconstructs an `add-node-handle` of the captured BASE
 //! Missing target ⇒ `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;
@@ -6,6 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::C
 use crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles;
 use crate::standards::v1::subsets::any::schema::mutations::add_node_handle::AddNodeHandle;
 use crate::Puzzle2dSnapshot;
+use crate::mirror::standards::v1::subsets::any::schema::mutations::remove_node_handle::component::RemoveNodeHandle;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<RemoveNodeHandle> + From<AddNodeHandle> + From<ConnectHandles> + From<ChangeEdgeVisible> + From<ChangeEdgeLocked>>(payload: &super::RemoveNodeHandle, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

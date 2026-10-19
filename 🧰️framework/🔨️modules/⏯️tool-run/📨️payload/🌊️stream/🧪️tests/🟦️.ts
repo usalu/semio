@@ -2,7 +2,7 @@
 import {test}from"bun:test";
 import assert from"node:assert/strict";
 import Ajv from"ajv/dist/2020";
-import law from"../🧫️fixtures/🔣️.json";
+import law from"./🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 import{PayloadReadView,validatePayloadUpdate,validatePayloadContinuation,type PayloadUpdate,type PayloadIndexedSource}from"../🟦️.ts";
 test("original payload pages match Buffer and Ajv while disconnected",()=>{

@@ -1,6 +1,6 @@
 //! 🧳️ Original typed list children become persistent native rows through mandatory receiving and funded ownership transfers.
 use super::{NativeReceive,NativeReceiver};
-use crate::{DslValue,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,list::persistent::{PersistentList,PersistentListBuilder},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},retirement::shared::sealed::{SealedShared,SharedIssuer}};
+use crate::{DslValue,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,list::persistent::{PersistentList,PersistentListBuilder},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},shared_issuance::{SealedShared,SharedIssuer}};
 use std::mem::{ManuallyDrop,size_of};
 /// 👓️ Existing original native array owners lend constant-cost cardinality and ranked typed child references.
 pub trait NativeListSource:Sync+'static{type Row:Sync+'static;fn row_count(&self)->Result<usize,ValueError>;fn row(&self,index:usize)->Result<&Self::Row,ValueError>;}
@@ -76,7 +76,7 @@ impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Persisten
   if self.raw.is_some(){return nested(self.retirement.next_owner_demands::<T>(true,&None,body)?,m);}
   if self.sealed.is_some(){return nested(self.retirement.next_owner_demands::<SealedShared<T>>(true,&None,body)?,m);}
   if self.output.is_some(){return nested(self.retirement.next_owner_demands::<PersistentList<T>>(true,&None,body)?,m);}
-  if self.binding.is_some(){return nested(RetainedCloneBinding::demands(&self.binding,body)?,m);}Ok(Default::default())
+  if self.binding.is_some(){return nested(RetainedCloneBinding::close_demand(&self.binding,body)?,m);}Ok(Default::default())
  }
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let d=self.close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let m=Self::metadata();

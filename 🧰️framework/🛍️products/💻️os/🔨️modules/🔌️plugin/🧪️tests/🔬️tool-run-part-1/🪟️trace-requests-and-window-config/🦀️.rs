@@ -3,6 +3,7 @@
 //#region 🎯️RetargetAndSettings
 /// ⚖️ LAW: the run's trace key allocator hands out keys above every key its ticks upserted and every key allocated
 /// before, the request carries the entity marks, and the request names the window the run was started from.
+use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 #[semio_framework_async_macros::async_test]
 async fn tool_run_requests_carry_trace_key_allocation_entity_marks_and_the_starting_window() {
     let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
@@ -193,7 +194,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
         if mounted.pending_window_config_receipt.is_some() {
             yielded_with_retained_receipt += 1;
         }
-        if let Some(found) = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation) {
+        if let Some(found) = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation) {
             page = Some(found);
             break;
         }
@@ -204,7 +205,7 @@ async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_
     assert!(mounted.pending_window_config_receipt.is_none() && mounted.published_window_config);
     assert!(mounted.window_config_authority.as_ref().is_some_and(|authority| authority.snapshot.generation() > generation_before), "the captured authority was refreshed to the published generation");
     assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
-mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
     let mut terminal = false;
     for _ in 0..4096 {
         app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
@@ -214,10 +215,10 @@ mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixtu
             let quoted = grant;
             mounted.granted_retirement_step(quoted).expect("granted retirement of the acknowledged publication");
         }
-        if let Some(mut page) = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation) {
+        if let Some(mut page) = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation) {
             terminal = page.lane == TypedOperationResultLane::Terminal;
             assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).expect("exact ACK"));
-mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
             break;
         }
     }

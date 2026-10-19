@@ -73,19 +73,19 @@
             vec![TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
             "the task lane spends its own publication unit and mints NO host page of its own: the operation's pages are exactly the ones its emit's remaining lanes owe"
         );
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(instance).await, 1, "the publication ladder's task lane must have spawned exactly one task");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 1, "the publication ladder's task lane must have spawned exactly one task");
 
-        let pending = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
+        let pending = crate::reactor_driver::run_until_idle(8).await;
         assert!(pending, "the task must be parked on a real RequestRegistry await, not finished synchronously");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pending_request_count().await, 1, "storage_read must have allocated exactly one RequestRegistry slot");
-        assert!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pop_task_resume().await.is_none(), "nothing can have resolved yet — the task is still parked");
+        assert_eq!(crate::reactor_driver::pending_request_count().await, 1, "storage_read must have allocated exactly one RequestRegistry slot");
+        assert!(crate::reactor_driver::pop_task_resume().await.is_none(), "nothing can have resolved yet — the task is still parked");
 
-        semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::resolve_request(1, Ok(42i32.to_le_bytes().to_vec())).await;
-        let pending = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::run_until_idle(8).await;
+        crate::reactor_driver::resolve_request(1, Ok(42i32.to_le_bytes().to_vec())).await;
+        let pending = crate::reactor_driver::run_until_idle(8).await;
         assert!(!pending, "the task must run to completion once its await resolves");
-        assert_eq!(semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::task_count_for_instance(spawn_meta.instance_id).await, 0, "TASK_RECORDS must be cleaned up the moment the task's future completes");
+        assert_eq!(crate::reactor_driver::task_count_for_instance(spawn_meta.instance_id).await, 0, "TASK_RECORDS must be cleaned up the moment the task's future completes");
 
-        let (resumed_instance, resumed_meta, resumed_input) = semio_framework_plugin_tests_03::reactor_core_test_hosts::reactor_core_unit_1::reactor_driver::pop_task_resume().await.expect("the completed task must have queued exactly one resume");
+        let (resumed_instance, resumed_meta, resumed_input) = crate::reactor_driver::pop_task_resume().await.expect("the completed task must have queued exactly one resume");
         assert_eq!(resumed_instance, spawn_meta.instance_id);
         assert_eq!(resumed_meta.actor.as_str(), "alice", "the follow-up must carry the task's ORIGINATING actor, not whatever is 'current' at resume time");
         assert_eq!(resumed_meta.instance_id, spawn_meta.instance_id);

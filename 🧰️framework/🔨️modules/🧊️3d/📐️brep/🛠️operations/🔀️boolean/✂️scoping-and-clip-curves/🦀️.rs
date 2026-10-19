@@ -81,11 +81,6 @@ pub(super) fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId,
     }
     let periodic = ic.curve3.is_periodic() && ic.curve3.period().is_some_and(|p| (hi - lo - p).abs() < 1e-6 * p.max(1.0));
     const N: usize = 64;
-    // The trim's CLOSURE, not its interior: a clip that treats "on the boundary" as outside stops
-    // one sample short of a sphere's pole (which IS its `v = ±π/2` boundary), never reaches a
-    // periodic seam, and shreds an arc that runs exactly along an operand's own edge into
-    // borderline fragments — all three of the procedural examples' failure modes. See
-    // `classification::point_in_face_uv_closure`.
     let valid = |t: f64| -> bool {
         let ua = wrap_uv_for_surface(body, face_a, ic.pcurve_a.eval(t));
         let ub = wrap_uv_for_surface(body, face_b, ic.pcurve_b.eval(t));
@@ -118,12 +113,6 @@ pub(super) fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId,
         }
     }
     if periodic && !runs.is_empty() {
-        // A periodic curve whose valid runs account for (essentially) the whole period never
-        // leaves either trim: it is ONE closed loop, not the two adjacent open runs a seam touch
-        // used to read as. Under the closed trim test a seam touch leaves no gap at all, so the
-        // touch parameters can no longer be read off the gaps and are solved for directly
-        // ([`boundary_touch_parameters`]) — which is also strictly more accurate, since a gap's
-        // midpoint was only ever as good as the sampling that produced the gap.
         let covered: f64 = runs.iter().map(|&(t0, t1)| t1 - t0).sum();
         if (hi - lo - covered) < (hi - lo) * 1e-3 {
             return vec![(lo, hi, true, boundary_touch_parameters(body, ic, (face_a, face_b), (lo, hi), true, tol))];

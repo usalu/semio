@@ -76,7 +76,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
             let genesis = AdmittedArtifactGenesis::from_decoded_pack(law["snapshot"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize), pack);
             let mut edits = ArtifactHistoryLedger::new();
             if with_edit {
-                let mut reverse = semio_framework_value::list::PagedList::new();
+                let mut reverse = semio_framework_value_persistent::list::PagedList::new();
                 for value in &inverse { reverse.try_push(*value).unwrap(); }
                 let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().into()), line: None, forwards: forwards.clone(), inverse: reverse, mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
                 let mut publisher = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();

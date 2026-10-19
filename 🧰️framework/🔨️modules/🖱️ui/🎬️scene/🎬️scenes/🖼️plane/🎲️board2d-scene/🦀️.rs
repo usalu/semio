@@ -171,43 +171,36 @@ impl Board2dSceneLane {
     pub const ALL: [Self; 2] = [Self::Snapshot, Self::ToolRunTrace];
 
     /// 🏷️ See [`BOARD2D_SCENE_LANE_NAMES`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn name(self) -> &'static str {
         BOARD2D_SCENE_LANE_NAMES[self as usize]
     }
 
     /// 🏷️ See [`BOARD2D_SCENE_LANE_FIELDS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn field(self) -> &'static str {
         BOARD2D_SCENE_LANE_FIELDS[self as usize]
     }
 
     /// 🪧️ See [`BOARD2D_SCENE_LANE_BODY_KEYS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn body_key(self) -> &'static str {
         BOARD2D_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
     /// 🏷️ See [`BOARD2D_SCENE_LANE_OPTIONAL`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn optional(self) -> bool {
         BOARD2D_SCENE_LANE_OPTIONAL[self as usize]
     }
 
     /// 🔎️ Resolves a carrier root key back to its lane.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_body_key(body_key: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
     /// 🔎️ Resolves a lane wire name back to its lane.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
 
     /// 📤️ Removes this lane's payload from `scene`; `None` when the optional lane is unset.
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn take(self, scene: &mut Board2dScene) -> Option<String> {
         match self {
             Self::Snapshot => Some(std::mem::take(&mut scene.snapshot_json)),
@@ -216,7 +209,6 @@ impl Board2dSceneLane {
     }
 
     /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`Board2dSceneLane::take`].
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn put(self, scene: &mut Board2dScene, payload: String) {
         match self {
             Self::Snapshot => scene.snapshot_json = payload,

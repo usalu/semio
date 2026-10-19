@@ -27,69 +27,69 @@ impl<'a>ScalarRow<'a>{
 trait Scalar:Sized{
  const WIDTH:usize;
  fn append<'a>(&'a self,cells:&mut ScalarRow<'a>)->Result<(),ValueError>;
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>;
- fn read(row:&SqliteRow,index:&mut usize,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>;
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>;
+ fn read(row:&SqliteRow,index:&mut usize,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>;
 }
-fn native_scalar<T:semio_framework_dsl_record::DslField>(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,ValueError>{n.scoped_stage(|n|{n.begin_stage(0)?;T::from_value_controlled(value,n)})}
+fn native_scalar<T:semio_framework_dsl_record::DslField>(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,ValueError>{n.scoped_stage(|n|{n.begin_stage(0)?;T::from_value_controlled(value,n)})}
 fn semantic_add(left:usize,right:usize)->Result<usize,ValueError>{left.checked_add(right).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling semantic extent overflow"))}
 fn float_bytes(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
 fn next<'a>(row:&'a SqliteRow,index:&mut usize)->Result<&'a SqliteValue,ValueError>{let value=row.values.get(*index).ok_or_else(||invalid("Remodeling scalar is absent"))?;*index+=1;Ok(value)}
 impl Scalar for String{
  const WIDTH:usize=1;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{c.push(ScalarCell::Borrowed(Cell::Text(self)))}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{n.step()?;match value{semio_framework_dsl_record::FieldValue::Text(value)=>Ok(value.len()),_=>Err(invalid("Remodeling native scalar requires text"))}}
- fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Text(v)=>n.copy_text(v),_=>Err(invalid("Remodeling requires literal text"))}}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{n.step()?;match value{semio_framework_dsl_record::FieldValue::Text(value)=>Ok(value.len()),_=>Err(invalid("Remodeling native scalar requires text"))}}
+ fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Text(v)=>n.copy_text(v),_=>Err(invalid("Remodeling requires literal text"))}}
 }
 macro_rules! integer_scalar{($t:ty)=>{impl Scalar for $t{
  const WIDTH:usize=1;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{c.push(ScalarCell::Borrowed(Cell::Integer(*self as i64)))}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{let _=native_scalar::<Self>(value,n)?;Ok(8)}
- fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Integer(v)=><$t>::try_from(*v).map_err(|e|invalid(e.to_string())),_=>Err(invalid("Remodeling requires a native integer"))}}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{let _=native_scalar::<Self>(value,n)?;Ok(8)}
+ fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Integer(v)=><$t>::try_from(*v).map_err(|e|invalid(e.to_string())),_=>Err(invalid("Remodeling requires a native integer"))}}
 }}}
 integer_scalar!(u32);integer_scalar!(i64);
 impl Scalar for bool{
  const WIDTH:usize=1;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{c.push(ScalarCell::Borrowed(Cell::Integer(i64::from(*self))))}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{let _=native_scalar::<Self>(value,n)?;Ok(8)}
- fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Integer(0)=>Ok(false),SqliteValue::Integer(1)=>Ok(true),_=>Err(invalid("Remodeling requires a canonical Boolean"))}}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{let _=native_scalar::<Self>(value,n)?;Ok(8)}
+ fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Integer(0)=>Ok(false),SqliteValue::Integer(1)=>Ok(true),_=>Err(invalid("Remodeling requires a canonical Boolean"))}}
 }
 impl Scalar for u64{
  const WIDTH:usize=2;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{c.push(ScalarCell::Decimal(Decimal::new(*self)))?;c.push(ScalarCell::Borrowed(Cell::Integer(*self as i64)))}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(semantic_add(Decimal::new(native_scalar::<Self>(value,n)?).len(),8)?)}
- fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let text=match next(r,i)?{SqliteValue::Text(v)=>v,_=>return Err(invalid("Remodeling unsigned64 decimal is absent"))};let bits=match next(r,i)?{SqliteValue::Integer(v)=>*v as u64,_=>return Err(invalid("Remodeling unsigned64 exact word is absent"))};if text!=Decimal::new(bits).text()?{return Err(invalid("Remodeling unsigned64 decimal disagrees with its word"))}Ok(bits)}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(semantic_add(Decimal::new(native_scalar::<Self>(value,n)?).len(),8)?)}
+ fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let text=match next(r,i)?{SqliteValue::Text(v)=>v,_=>return Err(invalid("Remodeling unsigned64 decimal is absent"))};let bits=match next(r,i)?{SqliteValue::Integer(v)=>*v as u64,_=>return Err(invalid("Remodeling unsigned64 exact word is absent"))};if text!=Decimal::new(bits).text()?{return Err(invalid("Remodeling unsigned64 decimal disagrees with its word"))}Ok(bits)}
 }
 fn class(v:f64)->&'static str{if v.is_nan(){"nan"}else if v==f64::INFINITY{"positiveInfinity"}else if v==f64::NEG_INFINITY{"negativeInfinity"}else{"finite"}}
 fn numeric_agrees(query:&SqliteValue,value:f64)->bool{match query{SqliteValue::Null=>value.is_nan(),SqliteValue::Real(v)=>!value.is_nan()&&*v==value,SqliteValue::Integer(v)=>value.is_finite()&&value>=-9223372036854775808.0&&value<9223372036854775808.0&&value.fract()==0.0&&value as i64==*v&&*v as f64==value,_=>false}}
 impl Scalar for f64{
  const WIDTH:usize=3;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{c.extend([ScalarCell::Borrowed(if self.is_nan(){Cell::Null}else{Cell::Real(*self)}),ScalarCell::Borrowed(Cell::Integer(self.to_bits()as i64)),ScalarCell::Borrowed(Cell::Text(class(*self)))])}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(float_bytes(native_scalar::<Self>(value,n)?))}
- fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let query=next(r,i)?;let value=match next(r,i)?{SqliteValue::Integer(v)=>f64::from_bits(*v as u64),_=>return Err(invalid("Remodeling binary64 word is absent"))};if !matches!(next(r,i)?,SqliteValue::Text(v)if v==class(value))||!numeric_agrees(query,value){return Err(invalid("Remodeling binary64 query or class disagrees with its word"))}Ok(value)}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(float_bytes(native_scalar::<Self>(value,n)?))}
+ fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let query=next(r,i)?;let value=match next(r,i)?{SqliteValue::Integer(v)=>f64::from_bits(*v as u64),_=>return Err(invalid("Remodeling binary64 word is absent"))};if !matches!(next(r,i)?,SqliteValue::Text(v)if v==class(value))||!numeric_agrees(query,value){return Err(invalid("Remodeling binary64 query or class disagrees with its word"))}Ok(value)}
 }
 impl Scalar for f32{
  const WIDTH:usize=3;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{let query=f64::from(*self);c.extend([ScalarCell::Borrowed(if self.is_nan(){Cell::Null}else{Cell::Real(query)}),ScalarCell::Borrowed(Cell::Integer(i64::from(self.to_bits()))),ScalarCell::Borrowed(Cell::Text(class(query)))])}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(float_bytes(f64::from(native_scalar::<Self>(value,n)?)))}
- fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let query=next(r,i)?;let word=match next(r,i)?{SqliteValue::Integer(v)=>u32::try_from(*v).map_err(|e|invalid(e.to_string()))?,_=>return Err(invalid("Remodeling binary32 word is absent"))};let value=f32::from_bits(word);let query_value=f64::from(value);if !matches!(next(r,i)?,SqliteValue::Text(v)if v==class(query_value))||!numeric_agrees(query,query_value){return Err(invalid("Remodeling binary32 query or class disagrees with its word"))}Ok(value)}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(float_bytes(f64::from(native_scalar::<Self>(value,n)?)))}
+ fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let query=next(r,i)?;let word=match next(r,i)?{SqliteValue::Integer(v)=>u32::try_from(*v).map_err(|e|invalid(e.to_string()))?,_=>return Err(invalid("Remodeling binary32 word is absent"))};let value=f32::from_bits(word);let query_value=f64::from(value);if !matches!(next(r,i)?,SqliteValue::Text(v)if v==class(query_value))||!numeric_agrees(query,query_value){return Err(invalid("Remodeling binary32 query or class disagrees with its word"))}Ok(value)}
 }
 impl<T:Scalar> Scalar for Option<T>{
  const WIDTH:usize=T::WIDTH;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{match self{Some(v)=>v.append(c),None=>c.extend((0..Self::WIDTH).map(|_|ScalarCell::Borrowed(Cell::Null)))}}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{if matches!(value,semio_framework_dsl_record::FieldValue::Absent){n.step()?;Ok(0)}else{T::native(value,n)}}
- fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let end=i.checked_add(Self::WIDTH).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling optional width overflow"))?;let fields=r.values.get(*i..end).ok_or_else(||invalid("Remodeling optional scalar is absent"))?;if fields.iter().all(|v|matches!(v,SqliteValue::Null)){*i=end;Ok(None)}else{T::read(r,i,n).map(Some)}}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{if matches!(value,semio_framework_dsl_record::FieldValue::Absent){n.step()?;Ok(0)}else{T::native(value,n)}}
+ fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let end=i.checked_add(Self::WIDTH).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling optional width overflow"))?;let fields=r.values.get(*i..end).ok_or_else(||invalid("Remodeling optional scalar is absent"))?;if fields.iter().all(|v|matches!(v,SqliteValue::Null)){*i=end;Ok(None)}else{T::read(r,i,n).map(Some)}}
 }
 impl<T:Scalar,const N:usize> Scalar for [T;N]{
  const WIDTH:usize=N*T::WIDTH;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{for v in self{v.append(c)?;}Ok(())}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{let semio_framework_dsl_record::FieldValue::Tuple(items)=value else{return Err(invalid("Remodeling scalar requires fixed tuple"))};if items.len()!=N{return Err(invalid("Remodeling scalar tuple arity differs"))}let mut bytes=0;for item in items{bytes=semantic_add(bytes,T::native(item,n)?)?;}Ok(bytes)}
- fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let mut values=n.allocate_vec(N)?;for _ in 0..N{n.step()?;values.push(T::read(r,i,n)?)}values.try_into().map_err(|_|invalid("Remodeling fixed tuple arity differs"))}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{let semio_framework_dsl_record::FieldValue::Tuple(items)=value else{return Err(invalid("Remodeling scalar requires fixed tuple"))};if items.len()!=N{return Err(invalid("Remodeling scalar tuple arity differs"))}let mut bytes=0;for item in items{bytes=semantic_add(bytes,T::native(item,n)?)?;}Ok(bytes)}
+ fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let mut values=n.allocate_vec(N)?;for _ in 0..N{n.step()?;values.push(T::read(r,i,n)?)}values.try_into().map_err(|_|invalid("Remodeling fixed tuple arity differs"))}
 }
 macro_rules! enumeration{($t:ty;$($variant:ident=>$name:literal),+)=>{impl Scalar for $t{
  const WIDTH:usize=1;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{c.push(ScalarCell::Borrowed(Cell::Text(match self{$(Self::$variant=>$name),+})))}
- fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(match native_scalar::<Self>(value,n)?{$(Self::$variant=>$name.len()),+})}
- fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Text(v)=>match v.as_str(){$($name=>Ok(Self::$variant)),+,_=>Err(invalid("Remodeling enum symbol is undeclared"))},_=>Err(invalid("Remodeling enum requires literal text"))}}
+ fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{Ok(match native_scalar::<Self>(value,n)?{$(Self::$variant=>$name.len()),+})}
+ fn read(r:&SqliteRow,i:&mut usize,_:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{match next(r,i)?{SqliteValue::Text(v)=>match v.as_str(){$($name=>Ok(Self::$variant)),+,_=>Err(invalid("Remodeling enum symbol is undeclared"))},_=>Err(invalid("Remodeling enum requires literal text"))}}
 }}}
 enumeration!(MediaKind;ImageSequence=>"image-sequence",Video=>"video");
 enumeration!(VideoCodec;Avc=>"avc",Hevc=>"hevc",Vp9=>"vp9",Av1=>"av1",Mjpeg=>"mjpeg",Unknown=>"unknown");
@@ -103,15 +103,15 @@ trait Entity:Sized{
  const WIDTH:usize;
  const FIELDS:u16;
  fn fields<'a>(&'a self,cells:&mut ScalarRow<'a>)->Result<(),ValueError>;
- fn native(record:&semio_framework_dsl_record::RecordValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>;
- fn read(row:&SqliteRow,start:usize,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>;
+ fn native(record:&semio_framework_dsl_record::RecordValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>;
+ fn read(row:&SqliteRow,start:usize,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>;
 }
 macro_rules! entity{($t:ty,$count:expr;$($id:literal=>$field:ident:$kind:ty),+$(;$($nested:ident),+)?)=>{impl Entity for $t{
  const WIDTH:usize=0$(+<$kind as Scalar>::WIDTH)+;
  const FIELDS:u16=$count;
  fn fields<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{$(self.$field.append(c)?;)+Ok(())}
- fn native(record:&semio_framework_dsl_record::RecordValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{semantic_cells::shape(record,Self::FIELDS)?;let mut bytes=0;$(bytes=semantic_add(bytes,<$kind as Scalar>::native(record.get($id).ok_or_else(||invalid("Remodeling native scalar role is absent"))?,n)?)?;)+Ok(bytes)}
- fn read(row:&SqliteRow,start:usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{n.charge(std::mem::size_of::<Self>())?;let mut index=start;let result=Self{$($field:<$kind as Scalar>::read(row,&mut index,n)?,)+$($($nested:Default::default(),)+)?};if index!=row.values.len(){return Err(invalid("Remodeling entity has extra scalar columns"))}Ok(result)}
+ fn native(record:&semio_framework_dsl_record::RecordValue,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<usize,ValueError>{semantic_cells::shape(record,Self::FIELDS)?;let mut bytes=0;$(bytes=semantic_add(bytes,<$kind as Scalar>::native(record.get($id).ok_or_else(||invalid("Remodeling native scalar role is absent"))?,n)?)?;)+Ok(bytes)}
+ fn read(row:&SqliteRow,start:usize,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{n.charge(std::mem::size_of::<Self>())?;let mut index=start;let result=Self{$($field:<$kind as Scalar>::read(row,&mut index,n)?,)+$($($nested:Default::default(),)+)?};if index!=row.values.len(){return Err(invalid("Remodeling entity has extra scalar columns"))}Ok(result)}
 }}}
 entity!(FrameRef,3;0=>index:u32,1=>timestamp_ms:f64,2=>asset_id:String);
 entity!(VideoSource,7;0=>name:String,1=>container:String,2=>codec:VideoCodec,3=>duration_ms:f64,4=>frame_count:u32,5=>width:u32,6=>height:u32);
@@ -207,7 +207,7 @@ fn project_float_buffer(p:&mut RowWriter<'_,'_>,cloud:i64,slot:&str,value:&Float
 }
 fn project_byte_buffer(p:&mut RowWriter<'_,'_>,cloud:i64,slot:&str,value:Option<&ByteBuffer>)->Result<(),ValueError>{if let Some(value)=value{p.insert("remodel_byte_buffer",&[Cell::Integer(cloud),Cell::Text(slot),Cell::Blob(&value.0)])?;}Ok(())}
 
-struct Reader<'d,'n,'p>{database:&'d SqliteDatabase,native:&'n mut semio_framework_value::NativeDecodeControl<'p>,groups:BTreeMap<(&'static str,usize),BTreeMap<i64,Vec<&'d SqliteRow>>>,used:BTreeSet<(&'static str,i64)>}
+struct Reader<'d,'n,'p>{database:&'d SqliteDatabase,native:&'n mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'p>,groups:BTreeMap<(&'static str,usize),BTreeMap<i64,Vec<&'d SqliteRow>>>,used:BTreeSet<(&'static str,i64)>}
 impl<'d,'n,'p>Reader<'d,'n,'p>{
  fn use_row(&mut self,table:&'static str,row:&SqliteRow)->Result<(),ValueError>{self.native.charge(96)?;if !self.used.insert((table,row.rowid)){return Err(invalid("Remodeling row is multiply owned"))}Ok(())}
  fn take(&mut self,table:&'static str,parent:i64,column:usize,width:usize,ordinal:bool)->Result<Vec<&'d SqliteRow>,ValueError>{
@@ -236,7 +236,7 @@ fn read_durable(r:&mut Reader<'_,'_,'_>,row:&SqliteRow,kind:&str)->Result<ByteBu
  }
  let shape=durable_shape(kind,&bytes,|_,_|r.native.step())?;if shape.field!=field||shape.tag!=tag||shape.kind!=storage||shape.count!=count{return Err(invalid("Remodeling structured durable boundary differs"))}Ok(ByteBuffer(bytes))
 }
-fn read_child<S>(row:&SqliteRow,index:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::os_store::artifact_child::ArtifactChild<S>,ValueError>{let child_id=String::read(row,index,n)?;let artifact_id=String::read(row,index,n)?;let artifact_kind=String::read(row,index,n)?;let standard=String::read(row,index,n)?;let subset=String::read(row,index,n)?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))}
+fn read_child<S>(row:&SqliteRow,index:&mut usize,n:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<store::os_store::artifact_child::ArtifactChild<S>,ValueError>{let child_id=String::read(row,index,n)?;let artifact_id=String::read(row,index,n)?;let artifact_kind=String::read(row,index,n)?;let standard=String::read(row,index,n)?;let subset=String::read(row,index,n)?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))}
 fn read_float_buffer(r:&mut Reader<'_,'_,'_>,row:&SqliteRow)->Result<Float32Buffer,ValueError>{
  let samples=r.take("remodel_float_sample",row.rowid,1,6,true)?;
  match row.text(3)?{
@@ -256,7 +256,7 @@ fn read_watertight(r:&mut Reader<'_,'_,'_>,parent:i64,column:usize)->Result<Opti
 fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<RemodelingSnapshot,ValueError>{
  c.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
  store::sqlite_snapshot::validate_sqlite_database_schema(database,SCHEMA,c.limits())?;
- let maximum=c.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value::NativeDecodeControl::new(maximum,&mut progress);
+ let maximum=c.limits().max_value_bytes;let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut progress);
  native.charge(size_of::<RemodelingSnapshot>())?;
  let mut r=Reader{database,native:&mut native,groups:BTreeMap::new(),used:BTreeSet::new()};
  let document=r.singleton("remodel_document",3)?;let root=document.rowid;let schema=r.native.copy_text(document.text(1)?)?;let id=r.native.copy_text(document.text(2)?)?;

@@ -1,6 +1,7 @@
 //! 🎚️ Finite record decisions retain one paid typed field frontier and the original immutable source pair.
 use super::RetainedFieldChange;
-use semio_framework_value::{RetainedEquality,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::RetireOwned, retained_clone::{RetainedClone, RetainedCloneRef, RetainedCloneBinding, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
+use semio_framework_value_persistent::retained_equality::RetainedEquality;
 use std::mem::{size_of,ManuallyDrop};
 const META:usize=size_of::<usize>()*4+2;
 fn invalid(text:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,text)}
@@ -38,7 +39,7 @@ impl<R:Sync+'static,P:'static,T:RetainedEquality+RetainedClone> RetainedRecordCh
  fn terminal_is_empty(&self)->bool{self.field.terminal_is_empty()}
 }
 /// 🏗️ Allocates only an admitted concrete cursor body; the original record owner quotes its exact native layout first.
-pub fn boxed_record_field<R:Sync+'static,P:'static,T:RetainedEquality+RetainedClone>(field:RetainedRecordFieldChange<R,P,T>)->Result<Box<dyn RetainedRecordChangeField<R,P>>,ValueError>{semio_framework_value::retained_equality::equality_box(field).map(|field|field as Box<dyn RetainedRecordChangeField<R,P>>)}
+pub fn boxed_record_field<R:Sync+'static,P:'static,T:RetainedEquality+RetainedClone>(field:RetainedRecordFieldChange<R,P,T>)->Result<Box<dyn RetainedRecordChangeField<R,P>>,ValueError>{semio_framework_value_persistent::retained_equality::equality_box(field).map(|field|field as Box<dyn RetainedRecordChangeField<R,P>>)}
 /// 🧳️ Record aliases remain immutable through every field and all partial original result retirement.
 pub struct RetainedRecordChangeOwner<R:Sync+'static,P:RetainedRecordChange<R>>{authored:Option<RetainedCloneBinding>,original:Option<RetainedCloneBinding>,output:ManuallyDrop<Option<P>>,active:Option<Box<dyn RetainedRecordChangeField<R,P>>>,retirement:RetainedCloneClose,index:usize,bytes:usize,phase:u8,closing:bool}
 impl<R:Sync+'static,P:RetainedRecordChange<R>> RetainedRecordChangeOwner<R,P>{

@@ -190,9 +190,9 @@ type Pins = Record<string, string | boolean | number>;
 type Member = { run: string; parameters?: Pins; env?: Record<string, string> };
 type Resolved = { commandId: string; cmd: string; args: string[]; cwd: string; env: Record<string, string>; ready?: Json; requires: Resolved[][]; verb: string };
 
-function axesFor(verb: string, owned: Json[], nx: boolean): Json[] {
-  const effectBeyondNx = (axis: Json): boolean => Boolean(axis.env || axis.args || axis.valueEnv || axis.valueFlag || axis.valuePositional || (axis.values ?? []).some((value: Json) => value.env || value.args));
-  return (rootBlock().parameters as Json[]).filter((axis) => !owned.some((own) => own.id === axis.id) && !axis.appliesTo?.playground && (nx ? !axis.appliesTo?.verbs || axis.appliesTo.verbs.includes(verb) : axis.appliesTo?.verbs?.includes(verb) && effectBeyondNx(axis)));
+function axesFor(verb: string, owned: Json[], nx: boolean,playground=false): Json[] {
+  const effectBeyondNx = (axis: Json): boolean => Boolean(Object.keys(axis.env??{}).length || axis.args?.length || axis.valueEnv || axis.valueFlag || axis.valuePositional || (axis.values ?? []).some((value: Json) => Object.keys(value.env??{}).length || value.args?.length));
+  return (rootBlock().parameters as Json[]).filter((axis) => {const scope=axis.appliesTo,selected=scope?.all===true||scope?.verbs?.includes(verb);return !owned.some((own) => own.id === axis.id) && (playground?scope?.playground===true:nx?!scope||selected:Boolean(scope)&&selected&&effectBeyondNx(axis));});
 }
 
 /** 🎛️ Applies the parameters in order (fleet-plan §2.2 "effect semantics") and returns what they contribute. */
@@ -324,7 +324,7 @@ function resolvePlayground(id: string, variant: string, chosen: Pins, extra: str
   const port = slot === undefined ? row.ports[key] : row.userPorts[key][slot - 1];
   const env: Record<string, string> = { SEMIO_PLUGIN: variant, SEMIO_RENDERER: key, S_OS_PORT: String(extraEnv.S_OS_PORT ?? port), ...(row.app ? { SEMIO_APP_ID: row.app, VITE_SEMIO_APP_ID: row.app } : {}) };
   const target = renderer === "react" ? `dev-${variant}-react-dev` : renderer === "wgpu-native" ? `run-${variant}-native-dev` : `dev-${variant}-wgpu-dev`;
-  const args = ["repo", "run", `@semio-tech/framework-os-dev:${target}`];
+  const effects=apply(axesFor("dev",[],true,true),chosen,{},env),args = ["repo", "run", `@semio-tech/framework-os-dev:${target}`,...effects.buildFlags];
   if (chosen.example !== undefined) {
     const slug = (row.examples as string[]).find((candidate) => candidate === chosen.example || candidate.split("️").pop() === chosen.example)!;
     env.PLAYGROUND_LOCKED_EXAMPLE_ID = slug;
@@ -340,7 +340,8 @@ function resolvePlayground(id: string, variant: string, chosen: Pins, extra: str
     if ((row.dataDir || row.userDataDir) && flag("data", true) && directory) env.S_DATA_DIR = `${root}/${directory}`;
     ready = { port: Number(env.S_OS_PORT), path: chosen["app-role"] === "viewer" && row.viewerPath ? row.viewerPath : "" };
   }
-  return { commandId: id, cmd: "bun", args: [...args, ...extra], cwd: "", env: { ...RUNNER_ENV, ...env, ...extraEnv }, ready, requires: [], verb: "dev" };
+  if(effects.args.length){if(!args.includes("--"))args.push("--");args.push(...effects.args);}
+  return { commandId: id, cmd: "bun", args: [...args, ...extra], cwd: "", env: { ...RUNNER_ENV, ...env,...effects.env,...extraEnv }, ready, requires: [], verb: "dev" };
 }
 
 /** 🧾️ The comparable form of a launch: process list with workspace-relative cwd, environment as a sorted map. */

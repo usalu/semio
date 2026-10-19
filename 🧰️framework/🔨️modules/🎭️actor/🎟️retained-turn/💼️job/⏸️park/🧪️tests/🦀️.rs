@@ -1,6 +1,7 @@
 //! ⏸️ The real Actor loan checks out and receives in one owned asynchronous source context.
 use semio_framework_actor::{ActorGuestPhase,OriginalActorInput,OriginalJobTurnLoan,RetainedTurnInput};
-use semio_framework_job::{CancelToken,Generation,JobPayloadAuthority,OperationId,OriginalCallerSourceParent,RetainedCloneGrant,RetainedCloneProgress,StepBudget};
+use semio_framework_job::{CancelToken, Generation, OperationId, OriginalCallerSourceParent, RetainedCloneGrant, RetainedCloneProgress, StepBudget};
+use semio_framework_job_payload::{JobPayloadAuthority};
 use std::{future::Future,pin::pin,task::{Context,Poll,RawWaker,RawWakerVTable,Waker}};
 
 #[global_allocator]

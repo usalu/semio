@@ -1,0 +1,498 @@
+{
+ "CARGO": [
+  [
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧪️tests/🟦️.ts",
+   "error: rustc: 1 | \nerror[E0432]: unresolved import `semio_framework_process_routing_workspace` | \nerror: aborting due to 1 previous error"
+  ],
+  [
+   "📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts",
+   "error: /Users/ueli/.rustup/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/rustc --crate-type=lib --crate-name source_oracle --edition=2021 --emit=dep-in"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🟦️.ts",
+   "\nerror: Preparation program capture-program failed: 1 null: error: Cannot find module '/Users/ueli/Documents/semio/ð§°ï¸framework/ðï¸products/ð¦ï¸repo/"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts",
+   "\nerror: Preparation program capture-program failed: 1 null: error: Cannot find module '/Users/ueli/Documents/semio/ð§°ï¸framework/ðï¸products/ð¦ï¸repo/"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧭️native-discovery/🟦️.ts",
+   "error: Invalid Cargo workspace contribution"
+  ],
+  [
+   "📚️library/🧪️tests/🔬️workspace-contract/📝️commit-and-budgets/🟦️.ts",
+   "error: Bounded original native test evidence directory required | error: Invalid Cargo workspace contribution"
+  ]
+ ],
+ "ENVELOPE": [
+  [
+   "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🧪️tests/🟦️.ts",
+   "error: expect(received).toContain(expected)"
+  ],
+  [
+   "📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+   "\nerror: Original process birth already received | \nerror: Original process birth already received | \nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+   "\nerror: expect(received).toBe(expected) | error: Original process admission closed | error: Original process admission closed"
+  ],
+  [
+   "📚️library/⚡️caching/🕸️graph/🏇️waiter/🧪️tests/🟦️.ts",
+   "error: Original installed tooling identity and ticket artifact directory required"
+  ],
+  [
+   "📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts",
+   "\nerror: Nested persistent image requires actual parent scope | error: Original process admission closed | \nerror: Nested persistent image requires actual parent"
+  ],
+  [
+   "📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
+   "error: Required original cache consumer unavailable | error: Original process admission closed | error: Original process admission closed"
+  ],
+  [
+   "📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts",
+   "\nerror: Nested persistent image requires actual parent scope | error: Original process admission closed | error: Actual incoming immutable SDK identity required"
+  ],
+  [
+   "📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts",
+   "error: Original process admission closed | error: Original process admission closed | error: Original process admission closed"
+  ],
+  [
+   "📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts",
+   "error: Original bounded Nx namespace required"
+  ],
+  [
+   "📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts",
+   "error: Original SDK and artifacts required | \nerror: Original SDK and artifacts required"
+  ],
+  [
+   "📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+   "\nerror: Original Nx SDK required | \nerror: Original process birth already received | \nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🌍️caller-environment/🟦️.ts",
+   "error: Original immutable SDK required | error: Original SDK and artifacts required | error: Original immutable SDK required"
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts",
+   "error: Original bounded Nx namespace required"
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🔗️import-edges/🔁️context/🟦️.ts",
+   "\nerror: Original bounded graph writer custody required | \nerror: Original bounded graph writer custody required | \nerror: Original bounded graph writer custody "
+  ],
+  [
+   "📚️library/⚡️caching/🧹️pruning/⏱️continuation/🧪️tests/🟦️.ts",
+   "error: Live Original resource control issuance required"
+  ],
+  [
+   "📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts",
+   "error: Live Original process issuance required | error: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/🟦️.ts",
+   "error: Live Original resource control issuance required"
+  ],
+  [
+   "📚️library/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts",
+   "\nerror: Nested persistent image requires actual parent scope"
+  ],
+  [
+   "📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🟦️.ts",
+   "error: Original process admission closed"
+  ],
+  [
+   "📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts",
+   "error: Original prepared execution inventory required"
+  ],
+  [
+   "📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
+   "error: Original artifact namespace and immutable SDK required"
+  ],
+  [
+   "📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts",
+   "\nerror: Original artifact namespace and immutable SDK required | \nerror: Original artifacts and immutable SDK required"
+  ],
+  [
+   "📚️library/🏗️build/📊️reporting/🧪️tests/🟦️.ts",
+   "\nerror: Original process birth already received | \nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/🏗️build/📖️storybook/💾️storage/🧪️tests/🟦️.ts",
+   "\nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🧪️tests/🟦️.ts",
+   "error: Original snapshot fixture required"
+  ],
+  [
+   "📚️library/🏗️build/📥️inputs/🎯️selected/🧪️tests/🟦️.ts",
+   "error: Original immutable native inventory SDK required"
+  ],
+  [
+   "📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts",
+   "error: Original process admission closed | error: Original process admission closed | \nerror: Build test receiver closed with active callback"
+  ],
+  [
+   "📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🟦️.ts",
+   "\nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+   "\nerror: expect(received).toThrow(expected) | error: Original process admission closed | error: Original Script process deadline exhausted"
+  ],
+  [
+   "📚️library/🏗️build/🧭️selection/📥️closure/🧪️tests/🟦️.ts",
+   "error: Original Nx SDK required | \nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts",
+   "error: Original native caller capabilities required | error: expect(received).toThrow(expected)"
+  ],
+  [
+   "📚️library/🕸️dependencies/🟦️typescript/🧪️tests/🟦️.ts",
+   "\nerror: Original process birth already received"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts",
+   "error: process didn't exit successfully: `bun '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts",
+   "error: Original default preparation artifact and storage declarations required"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts",
+   "error: error: process didn't exit successfully: `bun '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforc"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: Original process admission closed | error: Original process admission closed"
+  ],
+  [
+   "📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+   "error: Original short preparation custody storage required"
+  ],
+  [
+   "📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+   "error: Original bounded Nx namespace required"
+  ],
+  [
+   "📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts",
+   "error: Original bounded Nx namespace required"
+  ],
+  [
+   "🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts",
+   "error: Live Original resource control issuance required | error: Live Original resource control issuance required | error: Live Original resource control issuan"
+  ],
+  [
+   "🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts",
+   ""
+  ],
+  [
+   "🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts",
+   "\nerror: Original SDK required | \nerror: Original process birth already received"
+  ],
+  [
+   "🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts",
+   "\nerror: Original process birth already received"
+  ],
+  [
+   "🧪️test/🧪️tests/⚖️comparison-profiles/🟦️.ts",
+   "error: Original finite test artifact callback required"
+  ],
+  [
+   "🧪️test/🧪️tests/🔮️oracle-governance/🟦️.ts",
+   "error: Original finite test artifact callback required"
+  ],
+  [
+   "🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts",
+   "\nerror: Original process birth already received | error: expect(received).toThrow(expected) | \nerror: Original process birth already received"
+  ],
+  [
+   "🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts",
+   "\nerror: Original process birth already received | \nerror: Original process birth already received | \nerror: Original process birth already received"
+  ]
+ ],
+ "DASHBOARD-INSTALL": [
+  [
+   "🎛️dashboard/🧪️tests/🗺️coverage/🟦️.ts",
+   "error: Dashboard is not installed. Run bun run dashboard:install once, then start bun run dashboard."
+  ]
+ ],
+ "OPEN-LAW": [
+  [
+   "📚️library/⚖️laws/📇️indexed-generated-output/🧪️tests/🗂️indexed-generated-output/🟦️.ts",
+   "error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/📋️data/🧪️tests/🟦️.ts",
+   "error: Required original cache consumer unavailable"
+  ],
+  [
+   "📚️library/⚡️caching/📥️inference/🧪️tests/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts",
+   "error: Actual incoming immutable Nx tooling identity required"
+  ],
+  [
+   "📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
+   "\nerror: 34 | import {nativeImageRootV1} from \"@semio-tech/process/artifacts/native-build/storage/platform/contract\"; | error: Cannot use test outside of the tes"
+  ],
+  [
+   "📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts",
+   "\nerror: expect(received).toBeLessThan(expected)"
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🔗️import-edges/🏛️graph/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🗿️artifact-source/🟦️.ts",
+   "error: Materialized absolute path exceeds 256 characters"
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🛑️coordinator/🔮️oracle/🟦️.ts",
+   "SyntaxError: import.meta is only valid inside modules."
+  ],
+  [
+   "📚️library/⚡️caching/🧪️tests/🧱️command-source/🟦️.ts",
+   "error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📏️recensus/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts",
+   "\nSyntaxError: JSON Parse error: Unexpected EOF | \nSyntaxError: JSON Parse error: Unexpected EOF"
+  ],
+  [
+   "📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬️decoder-absence/🟦️.ts",
+   "error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/↪️rust-divergence-callback/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toBeUndefined() | error: expect(received).toBeUndefined()"
+  ],
+  [
+   "📚️library/🧪️tests/🍃️artifact-support-leaf-authority/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toBe(expected) | error: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts",
+   "error: Vite config requires its original bounded compiler cache | error: Error while processing options validation schema of rule 'for-direction': undefined is "
+  ],
+  [
+   "📚️library/🧪️tests/🎚️vitest-configuration-ownership/🟦️.ts",
+   "error: 🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+  ],
+  [
+   "📚️library/🧪️tests/📏️lib-wiring-budget/🟦️.ts",
+   "error: expect(received).toEqual(expected) | error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/📜️historical-document-evidence/🟦️.ts",
+   "error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/📦️package-asset-constants/🟦️.ts",
+   "error: ENOENT: no such file or directory, stat '/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/"
+  ],
+  [
+   "📚️library/🧪️tests/📱️app-verification-source-ownership/🟦️.ts",
+   "error: ✏️s/🔌️plugins/🌍️gis/🧬️schema/🟦️.ts | error: 🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/📜️script.ts | error: 🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rus"
+  ],
+  [
+   "📚️library/🧪️tests/🔏️path-emoji-statutes/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/🧪️tests/🔗️markdown-inline-references/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+   "error: peer capture census rejected its real exact helper/base/factory authority"
+  ],
+  [
+   "📚️library/🧪️tests/🔬️workspace-contract/📖️taxonomy-loading/🟦️.ts",
+   "error: Undeclared generator stderr refused | error: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/🔬️workspace-contract/📦️package-language-handoff/🟦️.ts",
+   "error: expect(received).toHaveLength(expected) | error: expect(received).toContain(expected) | error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/🔬️workspace-contract/🔗️registry-and-cargo-providers/🟦️.ts",
+   "error: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs"
+  ],
+  [
+   "📚️library/🧪️tests/🔬️workspace-contract/🧬️mutation-taxonomy/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toEqual(expected) | error: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/🔬️workspace-contract/🧳️generated-outputs/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toEqual(expected) | error: dev-plugin-component-imperative-extension-logic-js"
+  ],
+  [
+   "📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts",
+   "error: revised-exact-authority: [{\"instancePath\":\"/sourceAuthority/kind\",\"schemaPath\":\"#/properties/kind/const\",\"keyword\":\"const\",\"params\":{\"allowedValue\":\"exac"
+  ],
+  [
+   "📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts",
+   "error: Module not found \"/Users/ueli/Documents/semio/.cache/tst4/ta222/go-cancellation-8wVyrF/temporary/client-sandbox-3431855567/🧰️framework/🛍️products/🦑️repo/"
+  ],
+  [
+   "📚️library/🧪️tests/🛟️transaction-recovery-authority/🟦️.ts",
+   "error: unchanged-index | error: unchanged-index"
+  ],
+  [
+   "📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts",
+   "TypeError: undefined is not an object (evaluating 'fixture.freshClone.deferredImports.source') | error: tracked relative paths above 213 UTF-16 units (max 226) "
+  ],
+  [
+   "📚️library/🧪️tests/🧑‍💻os-dev-composition-ownership/🟦️.ts",
+   "error: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts | error: expect(received).toContain(expected) | error: expect(re"
+  ],
+  [
+   "📚️library/🧪️tests/🧪️mutation-leaf-identity/🟦️.ts",
+   "error: descriptorless-helper-module"
+  ],
+  [
+   "📚️library/🧪️tests/🧪️script-async-runners/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/🧪️tests/🧪️storybook-discovery/🟦️.ts",
+   "error: ui source root 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript | error: ENOENT: no such file or direct"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️cargo-transaction-command-source/🟦️.ts",
+   "error: 🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts -> ⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts",
+   "error: Dependency direction graph omits inventoried sources: 🧰️framework/a.ts, 🧰️framework/nested/b.tsx, 🧰️framework/nested/types.d.mts"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️owned-script-routes/🟦️.ts",
+   "error: expect(received).toEqual(expected) | error: expect(received).toEqual(expected) | error: Build failed with 1 error:"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️root-artifact-dependency-source/🟦️.ts",
+   "error: 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts -> 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📽️projectio"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️root-surface-abstraction-law-source/🟦️.ts",
+   "error: [verify abstraction-ownership] ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts: missing document dec"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️rust-source-direction/🧫️fixture-ownership/🟦️.ts",
+   "error: 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts"
+  ],
+  [
+   "📚️library/🧪️tests/🧲️rust-physical-reference-context/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toEqual(expected)"
+  ],
+  [
+   "📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
+   "error: expect(received).toBe(expected) | error: expect(received).toBe(expected) | error: expect(received).toBe(expected)"
+  ],
+  [
+   "🖥️server/🎛️coordinator/🏗️builder/🏃️execution/🧪️tests/🟦️.ts",
+   "\nerror: expect(received).toBeLessThanOrEqual(expected)"
+  ],
+  [
+   "🧪️test/🧪️tests/🧪️mutation-history-gates/🟦️.ts",
+   "error: expect(received).toEqual(expected)"
+  ],
+  [
+   "🧪️test/🧪️tests/🧬️schema-invariants/🟦️.ts",
+   "error: expect(received).toEqual(expected)"
+  ],
+  [
+   "🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts",
+   "error: Traceback (most recent call last):"
+  ]
+ ],
+ "DEPS-OR-INFLIGHT-MOVE": [
+  [
+   "📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts",
+   "error: expect(received).toBeGreaterThan(expected)"
+  ],
+  [
+   "📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
+   "\nerror: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/⏱️process-budgets/🟦️.ts",
+   "SyntaxError: Export named 'npmRunPathEnv' not found in module '/Users/ueli/Documents/semio/.cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/npm-run-path@4."
+  ],
+  [
+   "📚️library/🧪️tests/✂️node-native-typescript/🟦️.ts",
+   ""
+  ],
+  [
+   "📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts",
+   "error: Producer static import lacks exact workspace authority: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️"
+  ],
+  [
+   "📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts",
+   "error: Cannot find module '../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts' from '/Users/ueli/Documents/"
+  ],
+  [
+   "📚️library/🧪️tests/🦀️incremental-targets/🟦️.ts",
+   "error: Cannot find module '../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts' from '/Users/ueli/Documents/"
+  ],
+  [
+   "📚️library/🧪️tests/🧬️mutation-scenario-identities/🟦️.ts",
+   "error: Cannot find module '../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts' from '/Users/ueli/Documents/"
+  ],
+  [
+   "📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts",
+   "error: Cannot find module '../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts' from '/Users/ueli/Documents/"
+  ],
+  [
+   "📚️library/🧪️tests/🧰️framework-root-source-topology/🟦️.ts",
+   "error: expect(received).toBe(expected)"
+  ],
+  [
+   "📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts",
+   "error: Cannot find module '../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts' from '/Users/ueli/Documents/"
+  ],
+  [
+   "🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+   "error: Undeclared external source import @semio-tech/plugin-registry/runtime in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨"
+  ],
+  [
+   "🧰️framework/🛍️products/🦑️repo/🧪️tests/⚙️transaction-process-ownership/🟦️.ts",
+   "error: Cannot find package 'smart-buffer' from '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🧪️tests/⚙️transaction-process-ownership/🟦️.ts'"
+  ]
+ ],
+ "TIMEOUT": [
+  [
+   "🧪️test/🧪️tests/🔍️discovery-contract/🟦️.ts",
+   ""
+  ],
+  [
+   "🧪️test/🧪️tests/🦠️mutation-catalogs/🟦️.ts",
+   ""
+  ]
+ ]
+}

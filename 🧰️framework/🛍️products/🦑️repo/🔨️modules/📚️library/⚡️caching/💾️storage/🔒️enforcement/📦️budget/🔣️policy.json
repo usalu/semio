@@ -42,7 +42,7 @@
     "leases": {
       "directory": ".cache/b/l",
       "capacityBytes": 67108864,
-      "maximumLogicalBytes": 66060288
+      "maximumLogicalBytes": 62914560
     }
   }
 }

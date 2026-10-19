@@ -1,7 +1,7 @@
 //! 📽️ Emits every Presentation owner and its actual typed Document block vocabulary under one control.
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 use crate::schema::snapshot::{SemioPresentationSnapshot, SlideShape, SlideFrame, PlaceholderKind};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_encoding as document;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};

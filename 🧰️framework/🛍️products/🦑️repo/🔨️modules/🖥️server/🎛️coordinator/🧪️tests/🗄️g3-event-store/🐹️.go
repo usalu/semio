@@ -104,7 +104,7 @@ func TestG3LanguageNeutralGoldenEnvelope(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected, err := os.ReadFile(filepath.Join("🧫️fixtures", "📜️g3-event-log.jsonl"))
+	expected, err := os.ReadFile(filepath.Join("🧪️tests", "🧫️fixtures", "📜️g3-event-log.jsonl"))
 	if err != nil {
 		t.Fatal(err)
 	}

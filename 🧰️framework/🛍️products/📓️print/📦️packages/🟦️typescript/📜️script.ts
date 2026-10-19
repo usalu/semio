@@ -26,14 +26,14 @@ class GenerateScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "measurement") {
-      if (segments.length !== 1) throw Error("Expected test measurement");
+      if (segments.length !== 1) throw new Error("Expected test measurement");
       const{captureOwnedCommandV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"),{scriptInvocationEnvironment,withRequestedIssuedResourceControlV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),phaseControl=createIssuedResourceControlV1(this.invocation,"print:measurement:test",0);
       await withPrintExecutionV1({workspace:this.repoRoot,invocation:this.invocation,phaseControl,kind:"probe"},execution=>withPrintScratchV1(execution,"test/measurement",scratch=>withRequestedIssuedResourceControlV1(scratch.control,30000,async control=>{const output=await captureOwnedCommandV1(process.execPath,["test","../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧪️tests/📏️ownership/🟦️.ts"],this.root,{control,env:scriptInvocationEnvironment(this.invocation,scratch.environment)});process.stdout.write(output);})));
 
       return;
     }
     if (segments[0] === "native-grammar") {
-      const flags=segments.slice(1);if(flags.length>1||flags.some(flag=>!['--families-only','--grammar-only'].includes(flag)))throw Error("Print native grammar accepts one authored selection");
+      const flags=segments.slice(1);if(flags.length>1||flags.some(flag=>!['--families-only','--grammar-only'].includes(flag)))throw new Error("Print native grammar accepts one authored selection");
       const phaseControl=createIssuedResourceControlV1(this.invocation,"print:native:grammar",0);
       await withPrintExecutionV1({workspace:this.repoRoot,invocation:this.invocation,phaseControl,kind:"probe"},async execution=>{if(flags.includes("--families-only")){const{compileNativeFamilyContainment}=await import("../../🧪️tests/🖼️family-containment/🟦️.ts");await compileNativeFamilyContainment(execution);}else{const{compileNativeGrammar}=await import("../../🧪️tests/🧬️native-chart-grammar/🟦️.ts");await compileNativeGrammar(execution,!flags.includes("--grammar-only"));}});
       return;

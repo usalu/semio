@@ -27,7 +27,6 @@ async fn aho_corasick_handles_overlapping_patterns_via_fail_links() {
     for &byte in b"abcd" {
         state = ac.step(state, byte).await;
     }
-    // 🛑️ After consuming "abcd", the automaton must have matched "bcd" via the fail link.
     let (index, len) = ac.matched_at(state).await.expect("bcd must match via fail link");
     assert_eq!(len, 3);
     let _ = index;
@@ -201,7 +200,6 @@ async fn dfa_token_cache_evicts_all_entries_once_max_entries_is_reached() {
     let start = dfa.start().await;
     cache.get_or_compute(&dfa, start, &adapter).await;
     let after_a = dfa.step(start, b'a').await;
-    // 🤖️ Filling a second, distinct state must evict the first since max_entries is 1.
     cache.get_or_compute(&dfa, after_a, &adapter).await;
     assert_eq!(cache.entries.len(), 1);
     assert!(cache.entries.contains_key(&after_a));
@@ -294,7 +292,7 @@ async fn json_mode_constraint_accepts_valid_json_and_rejects_invalid() {
 
     let mut bad = JsonModeConstraint::new().await;
     bad.accept(&view, TokenId::new(0)).await.unwrap();
-    bad.accept(&view, TokenId::new(5)).await.unwrap(); // ']' can't close an object
+    bad.accept(&view, TokenId::new(5)).await.unwrap();
     assert!(bad.is_dead().await);
 }
 

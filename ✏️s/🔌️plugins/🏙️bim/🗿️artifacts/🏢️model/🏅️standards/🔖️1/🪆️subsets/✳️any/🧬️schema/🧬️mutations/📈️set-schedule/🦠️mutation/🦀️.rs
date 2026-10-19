@@ -32,12 +32,12 @@ pub struct SetSchedule {
 }
 
 impl SetSchedule {
-    /// \u{1fa79} The sparse entity patch this payload names: every provided field, restated values included.
+    /// 🩹️ The sparse entity patch this payload names: every provided field, restated values included.
     pub fn patch(&self) -> SchedulePatch {
         SchedulePatch { name: self.name.clone(), category: self.category, columns: self.columns.clone(), sort: self.sort.clone(), filter: self.filter.clone(), group: self.group.clone(), itemize: self.itemize, storeys: self.storeys.clone(), phases: self.phases.clone() }
     }
 
-    /// \u{1f9e9} The payload that provides exactly the fields \u00B6patch\u00B6 names.
+    /// 🧩️ The payload that provides exactly the fields \u00B6patch\u00B6 names.
     pub fn from_patch(id: String, patch: SchedulePatch) -> Self {
         Self { id, name: patch.name, category: patch.category, columns: patch.columns, sort: patch.sort, filter: patch.filter, group: patch.group, itemize: patch.itemize, storeys: patch.storeys, phases: patch.phases }
     }

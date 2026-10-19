@@ -78,7 +78,8 @@ fn original_job_cancellation_preserves_denied_and_foreign_sources(){
 /// 🛑️ Actual canceled controls borrow the initiating token until their terminal paid reply.
 #[test]
 fn original_job_cancelled_context_publishes_terminal_reply_after_paid_close(){
- use semio_framework_job::{CancelToken,JobPayloadAuthority};
+ use semio_framework_job::{CancelToken};
+ use semio_framework_job_payload::{JobPayloadAuthority};
  use semio_framework_value::retirement::RetirementCursor;
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🧩️extension/🧪️tests/🧫️fixtures/📨️invoke/🔣️.json")).unwrap();let operation=OperationId(corpus["caller"]["operation"].as_u64().unwrap());let generation=Generation(corpus["caller"]["generation"].as_u64().unwrap());let g=&corpus["executionGrant"];let original=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
  for copy in corpus["failureCopyGrants"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as usize){

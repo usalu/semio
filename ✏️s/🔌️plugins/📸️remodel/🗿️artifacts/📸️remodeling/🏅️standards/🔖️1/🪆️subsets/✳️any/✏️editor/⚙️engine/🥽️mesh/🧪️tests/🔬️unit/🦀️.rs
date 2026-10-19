@@ -954,8 +954,6 @@ fn bounded_hole_fill_caps_an_open_box_into_a_watertight_outward_solid() {
 
 #[test]
 fn bounded_hole_fill_never_reuses_an_existing_edge_as_a_diagonal() {
-    // A flap triangle (4, 6, 8) already owns the edge 4-6 across the open top: a cap that closes
-    // the square along 4-6 would give that edge three faces. The cap must take the 5-7 diagonal.
     let mut mesh = open_top_box();
     mesh.positions.push([0.5, 0.5, 1.5]);
     mesh.triangles.push([4, 6, 8]);

@@ -51,7 +51,6 @@ pub struct Scene;
 impl Scene {
     /// 🏁️ validate → snap → order → batch → hash. Consumes `builder`; an equal `content_hash` on two
     /// packets built from equal input lets a host skip submission entirely.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(any(test, feature = "backend-testing"))]
     pub fn finish(builder: SceneBuilder, params: FinishParams) -> Result<RenderPacket, SceneError> {
         validate(&builder)?;

@@ -64,9 +64,6 @@ describe("node graph gestures", () => {
   it("declares a rule for every case, and a case for every rule", () => {
     for (const testCase of law.cases) expect(law.rules[testCase.rule], testCase.name).toBeTruthy();
     const covered = new Set(law.cases.map((testCase) => testCase.rule));
-    // 🪶 Two rules are about a SHAPE no wgpu gesture case can express — what a changed move publishes,
-    // and what the SCREEN path's release dispatches when nothing changed — so each is pinned by its own
-    // `it` below instead of by a case row.
     expect([...Object.keys(law.rules)].filter((rule) => !covered.has(rule) && rule !== "aChangedMovePublishesOnlyWhatChanged" && rule !== "aContentlessGestureDispatchesNothing")).toEqual([]);
   });
 
@@ -119,10 +116,6 @@ describe("node graph gestures", () => {
   });
 
   it("decides what a gesture publishes BEFORE it reserves anything, so a plain hover reserves nothing", () => {
-    // 🩸️ Every move published `interactionSelect` + `interactionHover` + `nodeGraphViewport` whether
-    // or not any had changed, and the 256-slot queue filled mid-sweep: `BoundedActionFault::ItemCredits`
-    // at admission, after which the session published nothing at all. Measured on 6118 — a 22x20 sweep
-    // faulted at point ~50 and not one of the six presses that followed ever reached the host.
     const bounded = canvas.slice(canvas.indexOf("fn node_graph_bounded_publish"));
     const body = bounded.slice(0, bounded.indexOf("\n}\n"));
     const dispatchAt = body.indexOf("graph_interaction_dispatch(");
@@ -135,9 +128,6 @@ describe("node graph gestures", () => {
   });
 
   it("keeps the pre-reservation for the phases that can still mutate the graph", () => {
-    // 🪸️ The rule the change-detection must NOT weaken: a press, a release, or a move inside a live
-    // wire draw can still edit the graph, and a bounded dispatch may never mutate what it cannot then
-    // publish. Only a plain hover — which can produce no edit at all — pays after the fact.
     const screen = canvas.slice(canvas.indexOf("fn node_graph_screen_pointer_into"));
     const body = screen.slice(0, screen.indexOf("\n}\n"));
     expect(body).toContain("let may_mutate = !matches!(intent.phase, flow::dag::DagPointerPhase::Move) || node_graph_gesture_is_screen_path(surface_id, None);");
@@ -147,9 +137,6 @@ describe("node graph gestures", () => {
   });
 
   it("publishes a node drag as ONE relative gesture record on release, the way React's own fallback dispatches onNodeDragStop", () => {
-    // 🩸️ A bounded drag wrote the new positions into the fixture layout and told the guest nothing, so
-    // every dragged node snapped back on the next fixture push; an absolute position per node then made the
-    // guest's edit unreplayable on any other base. Every host now writes the ONE gesture record (design §13.3).
     const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     const plan = dag.slice(dag.indexOf("pub fn plan_graph_edits"));
     const body = plan.slice(0, plan.indexOf("\n    }\n"));
@@ -199,10 +186,6 @@ describe("node graph gestures", () => {
   });
 
   it("classifies a surface point exactly once, and routes the gesture by that same answer", () => {
-    // 🩺️ Which part of a node is draggable body and which is inline widget used to be knowable only by
-    // pressing and seeing what happened. `DagScreenHit` is the one classification, `is_screen_path`
-    // routes from it and `is_draggable_body` reports from it, so a press can never be explained by a
-    // different hit test than the one that routed it.
     const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     const begins = dag.slice(dag.indexOf("pub fn screen_pointer_gesture_begins_at"));
     expect(begins.slice(0, begins.indexOf("\n}\n"))).toContain("screen_hit(viewport, graph, minimap, sx, sy).is_screen_path()");

@@ -44,7 +44,6 @@ mod tests {
 
     #[test]
     fn chain_rule_holds_for_joint_entropy() {
-        // 🔐️ X,Y independent uniform over {0,1}: H(X,Y) = H(X) + H(Y|X) = 2 bits.
         let joint = [0.25, 0.25, 0.25, 0.25];
         let h_xy = joint_entropy(&joint, LogBase::Bits).unwrap();
         let h_x = entropy(&[0.5, 0.5], LogBase::Bits).unwrap();
@@ -55,7 +54,6 @@ mod tests {
 
     #[test]
     fn conditional_entropy_zero_when_y_determined_by_x() {
-        // 🔐️ Y = X exactly: H(Y|X) = 0.
         let joint = [0.5, 0.0, 0.0, 0.5];
         let h = conditional_entropy(&joint, 2, 2, LogBase::Bits).unwrap();
         assert!(h.abs() < 1e-9);
@@ -75,7 +73,7 @@ mod tests {
     fn renyi_alpha_zero_equals_hartley_over_support() {
         let p = [0.5, 0.5, 0.0];
         let h = renyi_entropy(&p, 0.0, LogBase::Bits).unwrap();
-        assert!((h - 1.0).abs() < 1e-9); // support size 2 -> log2(2) = 1
+        assert!((h - 1.0).abs() < 1e-9);
     }
 
     #[test]
@@ -111,7 +109,6 @@ mod tests {
 
     #[test]
     fn tsallis_uniform_matches_closed_form() {
-        // 🔐️ S_q(uniform_k) = (1 - k^(1-q)) / (q - 1)
         let k = 4;
         let p = vec![1.0 / k as f64; k];
         let q = 2.0;

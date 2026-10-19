@@ -23,8 +23,8 @@ impl semio_framework_dsl_record::DslField for DwgTableControlEntry {
         if let Some(handle)=self.handle{record.insert(1,semio_framework_dsl_record::FieldValue::UInt(handle))?;control.step()?;}
         Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table-control entry requires a record"))};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table-control entry requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
         control.begin_stage(record.fields.len())?;let has=control.scoped_stage(|control|{control.begin_stage(0)?;<bool as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(0).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG handle presence missing"))?,control)})?;
         for(id,value)in &record.fields{if *id!=0&&!(has&&*id==1)&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table-control entry has an unowned field"))}control.step()?;}
         Ok(Self{handle:if has{Some(control.scoped_stage(|control|{control.begin_stage(0)?;<u64 as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"DWG handle missing"))?,control)})?)}else{None}})
@@ -112,7 +112,6 @@ impl Default for DwgTableControlBody {
     }
 }
 impl DwgTableControlBody {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn entry_handles(&self) -> &[DwgTableControlEntry] {
         match self {
             Self::Block(value) => &value.entry_handles,
@@ -259,8 +258,8 @@ impl semio_framework_dsl_record::DslField for DwgComplexColorValue {
             Self::Foreground=>6,Self::LayerOff=>7,Self::LayerFrozen=>8,
         };record.insert(0,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex color requires a record"))};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex color requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
         control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(semio_framework_dsl_record::FieldValue::Enum(kind))=>*kind,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex-color kind missing"))};
         let allowed:&[u16]=match kind{0|1|2|6|7|8=>&[],3=>&[1,2,3],4|5=>&[4],_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex-color kind unknown"))};
         for(id,value)in &record.fields{if *id!=0&&!allowed.contains(id)&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG complex color has an unowned field"))}control.step()?;}

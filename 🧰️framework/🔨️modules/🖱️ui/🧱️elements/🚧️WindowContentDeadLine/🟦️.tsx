@@ -7,7 +7,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { readSizeVarPx, STYLING_COMPACT_ROOT_PX, uiSpacingPx } from "@semio-tech/ui-styling";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🚧️WindowContentDeadLine

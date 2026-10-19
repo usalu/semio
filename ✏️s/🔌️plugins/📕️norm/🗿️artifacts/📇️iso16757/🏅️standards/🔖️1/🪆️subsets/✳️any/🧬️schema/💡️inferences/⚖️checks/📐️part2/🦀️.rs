@@ -116,10 +116,6 @@ pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     }
 
                     if let Some(install) = obj.spaces.iter().find(|s| s.kind == SpaceKind::Installation) {
-                        // overlaps with clearance means product grows by clearance and still intersects install — insufficient space
-                        // Actually: clearance_ok = install envelope leaves INSTALL_CLEARANCE around product.
-                        // Helper: !product.overlaps(install, clearance) means after expanding product by clearance it doesn't overlap install?
-                        // Looking at BoundingBox::overlaps - need to check semantics.
                         let needed = [
                             (bbox.max[0] - bbox.min[0]) + 2.0 * INSTALL_CLEARANCE_M,
                             (bbox.max[1] - bbox.min[1]) + 2.0 * INSTALL_CLEARANCE_M,
@@ -137,10 +133,6 @@ pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                             && bbox.max[0] <= install.bounds.max[0] - INSTALL_CLEARANCE_M + 1e-9
                             && bbox.max[1] <= install.bounds.max[1] - INSTALL_CLEARANCE_M + 1e-9
                             && bbox.max[2] <= install.bounds.max[2] - INSTALL_CLEARANCE_M + 1e-9;
-                        // §5.3.5 is a ≥ envelope-size clause: once have≥needed (u≥1 under minimum /
-                        // u≤1 when computed=have and limit=needed with forced Pass), status Passes.
-                        // product_inside remains informational for inset geometry but must not keep
-                        // u=1.0 Fail after max[] remedies enlarge the installation space.
                         let ok = axis_ok;
                         if ok {
                             report.push(assess(
@@ -504,7 +496,6 @@ fn check_ports_primitives_and_spaces(doc: &Iso16757Snapshot, report: &mut CheckR
         ("sphere", &["radius"]),
     ];
     for (id, obj) in &doc.geometry.objects {
-        // Map key must equal object.id (geometry catalogue integrity, Part 2 §5.1).
         if obj.id != *id {
             report.push(fail(
                 format!("iso16757.2.5.1.objectId.{id}"),

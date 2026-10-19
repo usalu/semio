@@ -6,20 +6,23 @@
   ],
   "targets": {
     "build": {
+      "executor": "repo:script",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "inputs": [
         "production",
         "^production"
       ],
       "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo build --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
       }
     },
     "check": {
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -27,11 +30,13 @@
         "^default"
       ],
       "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo check --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
       }
     },
     "test": {
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -39,11 +44,13 @@
         "^default"
       ],
       "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
       }
     },
     "fonts": {
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -58,7 +65,7 @@
         "semio-framework-canvas-font-assets:build"
       ],
       "outputs": [
-        "{workspaceRoot}/.cache/b/p/m/infinite/{options.env.SEMIO_BUILD_MODE}/fonts"
+        "{projectRoot}/.🧾️store/fonts.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts fonts"
@@ -73,6 +80,7 @@
       }
     },
     "test-wgpu-world-terrain": {
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -86,6 +94,15 @@
     },
     "test-original-board-fill-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-board-fill-source",
@@ -102,13 +119,33 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔣️shortcodes.json"
     ],
     "default": [
-      "nativeAssets"
+      "nativeAssets",
+      "sharedGlobals"
     ],
     "nativeSources": [
       "nativeAssets"
     ],
     "nativeTestSources": [
       "nativeAssets"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   }
 }

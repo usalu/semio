@@ -32,5 +32,10 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-replication = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-value-retirement = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }

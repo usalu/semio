@@ -10,7 +10,7 @@ import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/
 import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { type PluginExtensionCompletion, serializePerActor } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { isShardLostError } from "@semio-tech/framework-actor/shard-client/heartbeat";
+import { isShardLostError } from "@semio-tech/framework/actor/shard-client/heartbeat";
 import { hopTrace, type HopTraceDetail } from "@semio-tech/framework/trace";
 import { commandStallBandTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 
@@ -147,18 +147,8 @@ async function runCapturedExtensionEffect(
   let outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array };
   try {
     if (!extensionEntry) throw unavailable("extension.missing");
-    // 📥️ `PluginWasmHandle.invoke` IS the ABI's inbound-request door (`🔌️PluginRuntime`'s own
-    // `invoke` doc): it submits `Event::Request` on the extension's request actor and returns the
-    // `respond` answer. The typed refusal below now only ever names a handle that genuinely has no
-    // door — a test double, or a target that never adapted one — never a loaded extension.
     const { invoke } = extensionEntry.handle;
     if (typeof invoke !== "function") throw unavailable("extension.invoke-unavailable");
-    // 🛑️ The door honours an `AbortSignal` at turn boundaries and `invoke` forwards one, but nothing
-    // ever handed it one, so `cancelPreviewEval` reached the requesting guest's own bookkeeping and
-    // never the request already parked on the extension actor. Registering the controller under the
-    // REQUESTER's actor key is what lets a surface's declared cancel affordance retire it from
-    // outside the per-actor queue those requests are serialized in — a guest-emitted cancel would
-    // queue behind the very call it means to stop (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     const cancellation = beginCancellableExtensionRequest(requesterActorKey);
     let raw: Uint8Array;
     try {
@@ -167,18 +157,9 @@ async function runCapturedExtensionEffect(
       cancellation.finish();
     }
     completion.assertActive();
-    // 📦️ The guest answers a capability in the capability's OWN encoding (`evaluate_invoke_json`
-    // produces JSON text); the completion that carries it back is a `pack`, so the one re-encoding
-    // happens here and nowhere else (`📓️extension-result-realloc-2026-09-10.md` §4.5).
     outcome = { ok: encodePackValue(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw))) };
   } catch (error) {
     completion.assertActive();
-    // 🚑️ A worker the host's own watchdog took down is NOT an anonymous invocation failure: it is a
-    // recoverable, retryable loss of the callee, and the requester's surface must be able to say so
-    // (`flow.extension-evaluate-failed` carries `faultCode` straight into the preview status). Naming
-    // it `extension.invoke-failed` alongside a genuine guest refusal left the surface unable to
-    // distinguish "the geometry kernel refused this" from "the geometry kernel's worker died"
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
     const fault: Fault = error instanceof SemioFaultError ? error.fault : isShardLostError(error) ? {
       origin: "os", code: EXTENSION_WORKER_LOST_FAULT, severity: "error", message: error instanceof Error ? error.message : String(error),
       scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: true,
@@ -187,10 +168,6 @@ async function runCapturedExtensionEffect(
       scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
     };
     outcome = { fault: encodePackValue(fault) };
-    // 🩺 The DECODED fault, not just "something faulted": the completion this builds reaches the
-    // requesting guest as opaque bytes, so this line is the only place a boot log can say WHICH
-    // door refused (ticket 26/09/09/PROCEDURAL-3D-END-TO-END — 154 fault bytes that turned out to
-    // be `extension.invoke-unavailable` on every evaluate, for eight boots running).
   }
   completion.assertActive();
   const response = await completion.complete(outcome);

@@ -156,9 +156,6 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
-        // 🧯️ Every early terminal below is a click that placed nothing. Each one now says so — an
-        // absent/mismatched kind, a kind with no mesh or no source vortex, and a target vortex that is
-        // already attracted are all invisible refusals otherwise.
         let Some(catalogs) = snapshot.typed().meta.kind_catalogs.as_ref() else {
             self.stage = Puzzle3dAddBrushObjectStage::Complete;
             return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));

@@ -434,9 +434,6 @@ fn absorb_value_rows(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
         (JsonValueDiff::String { .. }, JsonValueDiff::String { value }) => JsonValueDiff::String { value },
         (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_rows(a1, &a2) },
         (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_rows(o1, o2) },
-        // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs that were
-        // actually produced by real sequential application against the same intervening state —
-        // fall back to d2 (last-write-wins) rather than panicking.
         (_, other) => other,
     }
 }
@@ -477,7 +474,6 @@ fn absorb_array_rows(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
         .unwrap_or(0);
     let n = max_ref + d1.removed.len() + d2.removed.len() + 64;
 
-    // Step A: base -> mid.
     let mut mid: Vec<Origin> = (0..n).map(Origin::Base).collect();
     let d1_removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&d1.removed);
     for idx in d1_removed_sorted.iter().rev() {
@@ -493,7 +489,6 @@ fn absorb_array_rows(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
     }
     let d1_modified: HashMap<usize, JsonValueDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
 
-    // Step B: mid -> after.
     let mut after: Vec<AfterSlot> = mid
         .iter()
         .map(|origin| match origin {
@@ -508,7 +503,7 @@ fn absorb_array_rows(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
         if *idx < after.len() {
             match after.remove(*idx) {
                 AfterSlot::Base { orig, .. } => final_removed.push(orig),
-                AfterSlot::D1Added { .. } => {} // cancels the add: no removed entry, no added entry
+                AfterSlot::D1Added { .. } => {}
                 AfterSlot::D2Added(_) => {}
             }
         }
@@ -541,7 +536,6 @@ fn absorb_array_rows(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
         after.insert(pos, AfterSlot::D2Added(d2.added[tag].item.clone()));
     }
 
-    // Step C: walk `after`, emitting the combined triple.
     let mut modified = Vec::new();
     let mut added = Vec::new();
     for (pos, slot) in after.into_iter().enumerate() {

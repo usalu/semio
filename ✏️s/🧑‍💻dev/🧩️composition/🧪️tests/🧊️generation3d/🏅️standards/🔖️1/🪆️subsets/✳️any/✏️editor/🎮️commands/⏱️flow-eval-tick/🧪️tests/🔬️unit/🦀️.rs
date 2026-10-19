@@ -104,8 +104,6 @@ fn an_uncontributed_graph_arms_no_tick_while_a_served_one_keeps_its_chain() {
         .served_kind_candidates
         .iter()
         .find(|kind| {
-            // 🧹️ The probe graph owns `Dictionary` params like every other one — retire it, or the
-            // neural engine's ownership gate fails the run on a leak this test invented itself.
             let probe = single_kind_graph(kind, 1);
             let served = semio_framework_os_flow::unserved_flow_operator_kinds(&probe, &semio_framework_os_flow::flow_operator_registry()).is_empty();
             probe.retire_cold();
@@ -147,8 +145,6 @@ async fn a_later_set_contributions_owes_the_settled_run_a_restart() {
     let (flow_view, _preview_view) = crate::editor_domain::editor_laws::context::shell_views("procedural-gate-main", "procedural-gate-preview");
     let settled = crate::editor_domain::editor_laws::context::drive_preview_run(&mut app, &flow_view, &[]).await;
     assert_eq!(settled.state.as_deref(), Some("finalized"), "the preview settles before the push: {settled:?}");
-    // 🪪️ A closure the registry does NOT already hold, so the push really moves the registry
-    // generation — an unchanged closure is a no-op by design (`re_pushing_an_unchanged_closure_…`).
     let contributions = crate::editor_domain::editor_laws::context::staged_flow_extension_contributions_json(&[(
         crate::editor_domain::editor_laws::context::CONTRIBUTIONS_WITNESS_PLUGIN_ID,
         crate::editor_domain::editor_laws::context::contributions_witness_manifest_json(),

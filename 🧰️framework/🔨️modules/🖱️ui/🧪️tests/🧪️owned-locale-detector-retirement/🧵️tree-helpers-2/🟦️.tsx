@@ -65,11 +65,6 @@ describe("tree helpers", () => {
         ).toEqual({ selectedIds: ["a", "c"], anchorId: "c" });
       });
   
-      // 🕹️wave-2b: `getTreeNextSelectionState`/`normalizeTreeSelectedIds` now delegate to `🕹️interaction`'s
-      // `nextSelection`/`validateState` (wave 0) — these extend the same two `it` blocks above rather than
-      // adding new files, asserting the delegation preserves exact prior behavior for single mode (LAST
-      // target wins, ignores modifiers), additive toggle-off, and `normalizeTreeSelectedIds`'s FIRST-id
-      // clamp for externally-supplied ids (the two deliberately different clamps — see the functions' docs).
       it("single-selection-mode picks ignore additive/range keys, keeping the LAST target (nextSelection delegation)", () => {
         expect(
           getTreeNextSelectionState({

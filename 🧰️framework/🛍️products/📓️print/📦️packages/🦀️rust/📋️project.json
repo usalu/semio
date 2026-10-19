@@ -3,6 +3,27 @@
   "root": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/📓️print",
   "projectType": "library",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
+  },
   "tags": [
     "lang:rust",
     "role:product",
@@ -11,6 +32,15 @@
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -18,6 +48,13 @@
     },
     "build": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        "cargoToolchain"
+      ],
+      "outputs": ["{projectRoot}/.🧾️store/build.json"],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
@@ -25,7 +62,15 @@
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -34,7 +79,15 @@
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -43,7 +96,15 @@
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -61,7 +122,15 @@
     },
     "test-logical-owner": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts logical-owner check",
@@ -70,7 +139,14 @@
     },
     "test-native-emission": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",

@@ -10,7 +10,8 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::factory::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
-use semio_framework_value::{NativeDecodeConstructionRecipient,NativeDecodeProgress,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeConstructionRecipient, native_decoding::NativeDecodeProgress};
 struct LawConstruction { original:RetainedCloneGrant, spent:RetainedCloneProgress }
 impl NativeDecodeConstructionRecipient for LawConstruction {
  fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{if !semio_framework_value::retained_clone::retained_clone_grant_admits(self.original,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"law original construction denied"));}Ok(self.original)}

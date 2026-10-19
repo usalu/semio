@@ -28,7 +28,9 @@ semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️
 semio-framework-async = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-framework-pack = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel-db-io-core = { path = "../../../🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+serde_json = { workspace = true }

@@ -1,4 +1,4 @@
-//! Deserialize stdio.gif from stdio.binary.
+//! 📥️ Deserialize stdio.gif from stdio.binary.
 
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifSnapshot, STDIO_GIF89A_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_binary::BinarySnapshot;

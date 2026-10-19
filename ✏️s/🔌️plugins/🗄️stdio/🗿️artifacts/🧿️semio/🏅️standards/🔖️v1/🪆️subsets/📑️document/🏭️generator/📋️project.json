@@ -2,32 +2,40 @@
   "name": "@semio-tech/fixture-generator-stdio-semio-v1-document",
   "targets": {
     "🏭️generator": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-carrier": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
         "command": "bun ./📜️script.ts carrier",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-carrier-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
         "command": "bun ./📜️script.ts carrier-manifests",
         "forwardAllArgs": true
       },

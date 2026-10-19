@@ -10,9 +10,10 @@ use semio_framework_plugin_plugin_program::WireArtifactInferenceRequest;
 use semio_framework_plugin_plugin_program::active_artifact_inferences;
 use semio_framework_plugin_plugin_program::cancelled_artifact_inferences;
 use crate::artifact_inference::ArtifactInferenceGatewayFailure;
-use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, NativeDecodeControl, NativeEncodeContinuation, NativeEncodeControl, RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, NativeEncodeContinuation, NativeEncodeControl, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::native_decoding::NativeDecodeContinuation;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_pack_json::{Value, Number, JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy, JsonWriteCursor, JsonWriteSource, JsonWriteNode};
 

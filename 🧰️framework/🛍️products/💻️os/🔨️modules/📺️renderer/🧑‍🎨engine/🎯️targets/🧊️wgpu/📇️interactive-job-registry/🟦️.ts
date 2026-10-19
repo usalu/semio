@@ -1,5 +1,5 @@
-import { DIAGRAM_LAYOUT_CODEC_KIND, type DiagramLayoutDescriptor, type DiagramLayoutIngressPage } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/📜️wire/🟦️.ts";
-import { createDiagramLayoutWorkerJob, type DiagramLayoutWorkerJob } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts";
+import { DIAGRAM_LAYOUT_CODEC_KIND, type DiagramLayoutDescriptor, type DiagramLayoutIngressPage } from "@semio-tech/framework/modules/ui/elements/Diagram/layout/wire";
+import { createDiagramLayoutWorkerJob, type DiagramLayoutWorkerJob } from "@semio-tech/framework/modules/ui/elements/Diagram/layout";
 import {
   INTERACTIVE_JOB_INPUT_BYTE_CAPACITY,
   INTERACTIVE_JOB_INPUT_ITEM_CAPACITY,

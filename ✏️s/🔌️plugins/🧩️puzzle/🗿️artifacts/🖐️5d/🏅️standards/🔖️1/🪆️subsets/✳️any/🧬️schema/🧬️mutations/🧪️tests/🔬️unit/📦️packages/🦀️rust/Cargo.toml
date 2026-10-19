@@ -82,6 +82,8 @@ semio-s-plugin-puzzle-retained = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
+semio-s-artifact-puzzle-5d-diff-2 = { path = "../../../../🙈change-target-volume-hidden/🔺️diff/📦️packages/🦀️rust" }
+semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
 rstar = "0.12"

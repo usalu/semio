@@ -20,7 +20,7 @@ impl ToValue for ScheduleId {
     }
 }
 impl FromValue for ScheduleId {
-    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
+    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         u32::from_value(value).map(ScheduleId)
     }

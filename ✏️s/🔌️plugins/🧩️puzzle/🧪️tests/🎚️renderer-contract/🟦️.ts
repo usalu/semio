@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { defineConfig } from "vitest/config";
-import rendererConfig from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts";
+import rendererConfig from "@semio-tech/framework-renderer-react/testing/config";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 

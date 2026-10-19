@@ -204,9 +204,6 @@ fn read_svg(path: &str) -> Result<Vec<SvgNode>, String> {
                 nodes.push(node);
                 let pushed = nodes.len() - 1;
                 *siblings.last_mut().unwrap() += 1;
-                // 🧭️An `Empty` element (`<path …/>`) never produces an `End`, so it must open and
-                // close its own frame here. Treating it like a `Start` left the stack unbalanced and
-                // every following sibling was reported as that element's child.
                 if !empty {
                     stack.push((pushed, 0));
                     siblings.push(0);
@@ -728,10 +725,6 @@ fn main() {
             }
             for input in inputs.iter().take(2) {
                 if extension(input) != "svg" {
-                    // ✘️SVG is the ONLY carrier of this subset that encodes paint and stroke width.
-                    // DXF binds a node's style and never reads it; PDF carries text alone. Answering
-                    // `ok` with an empty paint set would let a recolour pass against a file that
-                    // never carried a colour.
                     return unsupported(&format!(".{} does not encode SVG structure, paint or stroke width", extension(input)));
                 }
             }

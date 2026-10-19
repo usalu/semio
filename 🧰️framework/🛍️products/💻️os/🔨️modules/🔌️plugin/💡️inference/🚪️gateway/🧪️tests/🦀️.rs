@@ -11,6 +11,7 @@ use semio_framework_pack_json::JsonWriteSource;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retirement::RetireOwned;
 use std::cell::Cell;
+use semio_framework_plugin_extension::inference_gateway::ArtifactInferenceGateway;
 
 /// 🪪️ Cancellation reaches the registered child only after paid execution cleanup under fixed copy.
 #[test]

@@ -1,4 +1,4 @@
-//! reads it when its job is built, and the framework tool run driver reconfigures a live run when it
+//! 📥️ reads it when its job is built, and the framework tool run driver reconfigures a live run when it
 //! 🪣️ `set-fill-count` retained-operation helpers: the count is shared configuration only. A fill run
 //! changes (`📋️tool-run-contract.md` §3.3, §3.7.5) — this command never touches the document.
 

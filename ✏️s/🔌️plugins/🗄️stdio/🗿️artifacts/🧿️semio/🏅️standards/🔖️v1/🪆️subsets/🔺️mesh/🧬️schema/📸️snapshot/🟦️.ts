@@ -40,8 +40,8 @@ export interface SemioTexture {
 }
 
 export interface SemioMeshSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ meshes: SemioMesh[];
-  /** @state artifact */ materials: SemioMaterial[];
-  /** @state artifact */ textures: SemioTexture[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🧶️ @state artifact */ meshes: SemioMesh[];
+  /** 🧱️ @state artifact */ materials: SemioMaterial[];
+  /** 🏁️ @state artifact */ textures: SemioTexture[];
 }

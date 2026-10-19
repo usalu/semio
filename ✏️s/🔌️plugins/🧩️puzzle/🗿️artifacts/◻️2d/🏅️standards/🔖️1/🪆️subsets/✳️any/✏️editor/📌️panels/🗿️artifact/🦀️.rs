@@ -1,4 +1,4 @@
-//! target of the `vortex` interaction domain (ticket
+//! 🤝️ target of the `vortex` interaction domain (ticket
 //! 📄️ Puzzle 2d play app panel — the document tree: one row per node and per edge, each a pick
 //! 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework paints selected/hovered
 //! presence after render.
@@ -12,9 +12,9 @@
 //! `interactionSelect` binding [`PanelTreeBuilder::interaction_domain`] stamps, and every row is
 //! keyed by its raw entity id, so a pick costs nothing of the argument arena.
 
-use crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS;
-use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::board_snapshot_edges, crate::editor::puzzle2d::snapshot::board_snapshot_nodes, crate::editor::puzzle2d::snapshot::snapshot_target_regions, crate::editor::puzzle2d::snapshot::puzzle2d_node_display_label, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, crate::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, crate::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS;
+use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
+use {semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_edges, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::snapshot_target_regions, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_node_display_label, semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_EDGE, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_NODE, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_GRANULARITY_TARGET_REGION, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;
 
@@ -149,7 +149,7 @@ fn pick_row(id: &str, label: String, description: Option<&str>, granularity: &st
 
 fn node_row(node: &Value, snapshot: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = node.get("id").and_then(Value::as_str).ok_or_else(|| PluginAssemblyError::new("ui.document", "puzzle2d node id is required"))?;
-    let (hidden, locked) = (crate::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node), flag(node, "locked"));
+    let (hidden, locked) = (semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node), flag(node, "locked"));
     let item = pick_item(id, node_label(node, snapshot), node.get("nodeKind").and_then(Value::as_str), PUZZLE2D_GRANULARITY_NODE)?.dimmed(hidden);
     with_hide_lock_actions(item, node_flag_target(id, hidden, locked), hide_lock_actions(hidden, locked, labels, ["setSelectionHidden", "setSelectionLocked"])).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "puzzle2d row admission failed"))
 }

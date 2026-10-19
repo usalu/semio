@@ -1,4 +1,4 @@
-//! (`object_id:vortex_id`), full initial connection-parameterization payload included.
+//! 🌐️ (`object_id:vortex_id`), full initial connection-parameterization payload included.
 //! 🔗 Puzzle3d mutation — `ConnectVortices`: creates an attraction between two full vortex ids
 use crate::disconnect_vortices::mutation::DisconnectVortices;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

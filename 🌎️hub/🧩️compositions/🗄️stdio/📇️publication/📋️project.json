@@ -6,11 +6,14 @@
   "targets": {
     "publish": {
       "executor": "repo:script",
-      "options": { "command": "bun 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true }
+      "options": { "command": "bun 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true },
+      "cache": false
     },
     "test": {
       "executor": "repo:script",
-      "options": { "command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true }
+      "options": { "command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true },
+      "outputs": [],
+      "cache": true
     }
   }
 }

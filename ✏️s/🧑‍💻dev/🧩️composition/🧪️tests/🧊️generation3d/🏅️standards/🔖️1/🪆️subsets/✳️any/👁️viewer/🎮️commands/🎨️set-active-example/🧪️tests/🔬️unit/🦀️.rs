@@ -99,8 +99,6 @@ fn every_bundled_example_switches_the_viewed_document() {
     for (example_id, nodes) in &seen {
         println!("[STATS] viewer example {example_id} nodes={nodes:?}");
     }
-    // 🧾️ Seven of the eight are structurally distinct graphs; `hexagonal-mushroom-column` IS the
-    // default document, so it is the one whose node set legitimately equals the opened one.
     for (example_id, nodes) in &seen {
         if *example_id == PROCEDURAL_EXAMPLE_HEX_COLUMN {
             assert_eq!(nodes, &opened, "the hex column example is the default document");

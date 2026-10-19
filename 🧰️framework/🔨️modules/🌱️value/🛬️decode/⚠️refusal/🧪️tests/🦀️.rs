@@ -4,7 +4,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[test]
 fn original_native_refusal_forwarded_cause_moves_the_exact_original_backing(){
- let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["forwarded"];
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["forwarded"];
  macro_rules! direction{($control:ident,$allocation:ty)=>{
   let message=law["message"].as_str().unwrap().to_owned();let pointer=message.as_ptr();let mut original=Some(ValueError::new(crate::ValueRefusalKind::InvalidValue,message));let mut callback=|_|true;
   let mut allocation=|request:$allocation|{assert_eq!(request.bytes,1);assert_eq!(request.owned_bytes,0);assert_eq!(request.next_owned_bytes,1);assert_eq!(request.maximum_bytes,1);Err(original.take().unwrap())};
@@ -17,7 +17,7 @@ fn original_native_refusal_forwarded_cause_moves_the_exact_original_backing(){
 
 #[test]
 fn original_native_refusal_literal_controls_preserve_zero_physical_authority(){
- let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){
   let operation=case["operation"].as_str().unwrap();let mut accepted=|_|operation!="checkpoint";let maximum=fixture["maximumBytes"].as_u64().unwrap()as usize;
   let((result,owned),physical)=crate::allocation_testing::observe_retirement_allocations(||{

@@ -1,7 +1,8 @@
-//! the captured BASE row. Missing target ⇒ `Vec::new()`.
+//! 📸️ the captured BASE row. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DisconnectKindCompatibility` — reconstructs a `connect-kind-compatibility` of
 use crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::ConnectKindCompatibility;
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility::component::DisconnectKindCompatibility;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<DisconnectKindCompatibility> + From<ConnectKindCompatibility>>(payload: &super::DisconnectKindCompatibility, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

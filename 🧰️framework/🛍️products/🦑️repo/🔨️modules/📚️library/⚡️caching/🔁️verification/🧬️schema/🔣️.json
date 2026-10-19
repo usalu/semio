@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cache Probe",
+  "description": "Tool-neutral description of the isolated workspace that proves a build tool restores cached task results.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "project", "maxCacheSize", "namedInputs", "ignore", "targets"],
+  "properties": {
+    "version": { "const": 1 },
+    "project": { "type": "string", "minLength": 1 },
+    "maxCacheSize": { "type": "string", "pattern": "^[0-9]+(KB|MB|GB)$" },
+    "namedInputs": {
+      "type": "object",
+      "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/Input" } }
+    },
+    "ignore": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "targets": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Target" } }
+  },
+  "definitions": {
+    "Input": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["file"], "properties": { "file": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["env"], "properties": { "env": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["named"], "properties": { "named": { "type": "string", "minLength": 1 } } }
+      ]
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "cache", "outputs", "command"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "cache": { "type": "boolean" },
+        "inputs": { "type": "array", "items": { "$ref": "#/definitions/Input" } },
+        "outputs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "dependsOn": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "command": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

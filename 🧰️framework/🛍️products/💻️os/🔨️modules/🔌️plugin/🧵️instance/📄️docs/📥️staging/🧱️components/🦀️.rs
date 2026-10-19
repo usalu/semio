@@ -55,6 +55,33 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             segmented_closures: ArtifactFixedRegistry::new(),
         }
     }
+
+    pub async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?;if receiver.is_some(){return Ok(true)}let operation_id=handle.operation_id.0;
+        if *terminal&&self.segmented_downloads.get(operation_id).is_none(){return Ok(true)}
+        self.snapshot_retirements.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving lost its original source"))?.validate(cx)?;
+        let output=self.segmented_downloads.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving has no exact output"))?;
+        if !output.owns_media_export_loan(handle){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving requires its exact handle").into())}
+        if !*terminal{if !output.chunks.take_chunk_original(receiver,terminal,cx)?{return Ok(false)}return Ok(receiver.is_some())}
+        if !output.terminal_is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download EOF retains unread original chunks").into())}
+        let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput>()+size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        if !self.segmented_closures.can_insert(operation_id){return Ok(false)}let output=self.segmented_downloads.remove(operation_id).expect("checked exact original download");self.segmented_closures.insert_admitted(operation_id,semio_framework_plugin_document_media::media_export::MediaDownloadRetirement::pending(output));cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
+
+    pub async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, semio_framework::Fault> {
+        let output = self.segmented_downloads.get(operation_id).ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("interactive-job.unknown-segmented-download"), format!("unknown segmented download operation {operation_id}")))?;
+        let chunk = output.chunks.take_chunk()?;
+        if chunk.is_none() {
+            let output =
+                self.segmented_downloads.remove(operation_id).ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("interactive-job.segmented-download-authority"), "terminal segmented download changed before exact removal"))?;
+            if !output.terminal_is_empty() {
+                self.segmented_downloads.insert_admitted(operation_id, output);
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("interactive-job.segmented-download-terminal-not-empty"), "terminal segmented download retained unread chunks"));
+            }
+            drop(output);
+        }
+        Ok(chunk)
+    }
 }
 
 /// 🦠️ Envelope jobs: envelope ingress and decode, store replacement and document archive loads.
@@ -87,6 +114,32 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
             envelope_completed_records: store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry::new(),
             envelope_completed_record_retirements: ArtifactFixedRegistry::new(),
             document_snapshot_read_returns: SnapshotReadReturnPump::new(),
+        }
+    }
+
+    pub fn acknowledge_document_archive_load(&mut self, operation: u64) -> Result<(), semio_framework::Fault> {
+        let active = self.document_archive_loads.get(operation).ok_or_else(|| semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
+        if !active.terminal() {
+            return Err(semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "recursive document archive operation cannot be acknowledged before terminal status"));
+        }
+        if !active.inputs_are_empty() {
+            return Err(semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE, "terminal recursive document archive operation still owns retained input"));
+        }
+        let mut active = self.document_archive_loads.remove(operation).ok_or_else(|| semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive authority changed before acknowledgement"))?;
+        drop(std::mem::take(&mut active.fault));
+        drop(active);
+        Ok(())
+    }
+
+    pub fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), semio_framework::Fault> {
+        let active = self.document_archive_loads.get_mut(operation).ok_or_else(|| semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
+        match active.state {
+            semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Pending | semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Running => {
+                active.request_terminal(semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled);
+                Ok(())
+            }
+            semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Cancelled => Ok(()),
+            semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Ready | semio_framework_plugin_document_media::ActiveDocumentArchiveLoadState::Fault => Err(semio_framework_plugin_decl_app::document_load_fault(semio_framework_plugin_decl_app::DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive operation cannot be cancelled")),
         }
     }
 }

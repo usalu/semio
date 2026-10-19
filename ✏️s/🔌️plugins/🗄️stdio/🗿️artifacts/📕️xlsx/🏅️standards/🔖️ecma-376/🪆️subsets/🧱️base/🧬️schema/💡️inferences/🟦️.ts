@@ -7,7 +7,7 @@ export interface XlsxOutline {
 }
 
 export interface XlsxInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: XlsxOutline;
 }
 

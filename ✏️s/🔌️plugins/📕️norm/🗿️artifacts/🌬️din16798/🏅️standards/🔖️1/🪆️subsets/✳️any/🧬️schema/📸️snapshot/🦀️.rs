@@ -80,7 +80,7 @@ impl Din16798Snapshot {
         z.floor_area_m2 = 80.0;
         z.occupants = 3;
         z.vent_method = "method_3_predefined_rates".into();
-        z.outdoor_air_supplied_m3_h = 363.6; // 80 m² × 1.0 + 3 × 7.0 L/s → m³/h
+        z.outdoor_air_supplied_m3_h = 363.6;
         z.co2_ppm = 850.0;
         z.noise_db = 24.0;
         let mut v = VentSystemDocument::default();

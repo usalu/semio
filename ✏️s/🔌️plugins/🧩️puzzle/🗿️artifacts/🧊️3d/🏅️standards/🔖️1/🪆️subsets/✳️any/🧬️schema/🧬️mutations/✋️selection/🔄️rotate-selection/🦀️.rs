@@ -1,4 +1,4 @@
-//! volumes, each about its own origin, by one world-axis rotation. The gesture's own inputs (which ids,
+//! 🧊️ volumes, each about its own origin, by one world-axis rotation. The gesture's own inputs (which ids,
 //! 🔄️ Puzzle3d mutation — `RotateSelection`: a relative, parametric turn of a set of objects and target
 //! which axis, which angle) are the payload, so editing the turn in history re-derives every orientation
 //! from whatever base it replays on.

@@ -10,12 +10,29 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧹️retire/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🔀️booleans/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript",

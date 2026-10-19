@@ -1,4 +1,4 @@
-//! manifest stitch. Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `Fem3dPlayApp` now
+//! 📜️ manifest stitch. Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `Fem3dPlayApp` now
 //! 🖥️ FEM 3D play app — the `ArtifactEditor` impl (dispatch-only), the aggregated command enum and the
 //! authors the `✏️editor` surface only — the read-only `👁️viewer` surface is a genuinely independent
 //! sibling (`semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer`), never constructed from this file.

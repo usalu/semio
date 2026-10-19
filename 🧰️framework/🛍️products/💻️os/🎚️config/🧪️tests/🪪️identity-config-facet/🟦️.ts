@@ -44,24 +44,16 @@ export async function registerIdentityConfigFacetTests(vitest: Vitest, dependenc
       const afterSecondSignIn = applyIdentityConfigMutation(afterSignOut, signIn(second));
       expect(afterSecondSignIn).toEqual(second);
 
-      // ↩️ sign-out's inverse, from the base it cleared, restores exactly the prior session.
       expect(inverseIdentityConfigMutation(signOut(), afterFirstSignIn)).toEqual([signIn(first)]);
-      // ↩️ sign-out's inverse with no prior session is a no-op.
       expect(inverseIdentityConfigMutation(signOut(), null)).toEqual([]);
-      // ↩️ sign-in's inverse, from no prior session, is a sign-out.
       expect(inverseIdentityConfigMutation(signIn(first), null)).toEqual([signOut()]);
-      // ↩️ sign-in's inverse, from a prior session (switching accounts), restores the prior one.
       expect(inverseIdentityConfigMutation(signIn(second), afterFirstSignIn)).toEqual([signIn(first)]);
     });
 
-    it("foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events", () => {
+    it("foldIdentityEvent folds sign-in -> sign-out -> sign-in as last-envelope-wins, ignoring non-remoteMutations events", async () => {
+      const { diffIdentityConfigMutation, signIn, signOut } = await import("@semio-tech/framework/config/mutations");
       const first = sampleIdentity();
       const second = sampleIdentity({ userId: "u-2" });
-      const decodePayload = (payload: unknown): Identity | null | undefined => {
-        if (payload === null) return null;
-        if (typeof payload === "object" && payload !== null && "userId" in payload) return payload as Identity;
-        return undefined;
-      };
       const envelope = (payload: unknown): ArtifactEvent => ({
         kind: "remoteMutations",
         envelopes: [
@@ -78,14 +70,13 @@ export async function registerIdentityConfigFacetTests(vitest: Vitest, dependenc
       });
 
       let state: Identity | null = null;
-      state = foldIdentityEvent(state, envelope(first), decodePayload);
+      state = foldIdentityEvent(state, envelope(diffIdentityConfigMutation(signIn(first), state)));
       expect(state).toEqual(first);
-      state = foldIdentityEvent(state, envelope(null), decodePayload);
+      state = foldIdentityEvent(state, envelope(diffIdentityConfigMutation(signOut(), state)));
       expect(state).toBeNull();
-      state = foldIdentityEvent(state, envelope(second), decodePayload);
+      state = foldIdentityEvent(state, envelope(diffIdentityConfigMutation(signIn(second), state)));
       expect(state).toEqual(second);
-      // 🚧️ A non-`remoteMutations` event (e.g. `status`) passes state through unchanged.
-      state = foldIdentityEvent(state, { kind: "status", persisted: true, pendingMutations: 0, remote: { kind: "detached" } }, decodePayload);
+      state = foldIdentityEvent(state, { kind: "status", persisted: true, pendingMutations: 0, remote: { kind: "detached" } });
       expect(state).toEqual(second);
     });
   });

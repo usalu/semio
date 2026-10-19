@@ -1,7 +1,7 @@
 /** 🧬️ Playground snapshot schema — artifact-lane fields only. */
 
 export interface PlaygroundSnapshot {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
 }
 

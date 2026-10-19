@@ -21,7 +21,7 @@
     },
     "shared-schema": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts shared-schema",

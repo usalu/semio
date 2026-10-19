@@ -1,6 +1,7 @@
-//! target ⇒ `Vec::new()`.
+//! 🔘️ target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `ChangeNodeVisible` — restores the BASE field value on the addressed node. Missing
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::change_node_visible::component::ChangeNodeVisible;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ChangeNodeVisible>>(payload: &super::ChangeNodeVisible, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

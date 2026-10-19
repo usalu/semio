@@ -14,14 +14,12 @@ pub struct Graft<'a> {
     displaced: Vec<PdfObject>,
 }
 impl<'a> Graft<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(typed: &'a PdfSnapshot) -> Self {
         let graph: BTreeMap<u32, PdfIndirectObject> = typed.objects.iter().map(|object| (object.id.num, object.clone())).collect();
         let next = graph.keys().next_back().copied().unwrap_or(0) + 1;
         Self { typed, graph, trailer: typed.trailer.clone(), next, displaced: Vec::new() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read(&self) -> PResult<Reading> {
         Reading::of(GraphView(&self.graph), &self.trailer, &self.typed.declared_version)
     }
@@ -29,7 +27,6 @@ impl<'a> Graft<'a> {
     /// 🔁 One graft round against `reading` (what the graph spells now); `original` is the
     /// untouched graph's reading, the only source a resource may be retained from. `false` when a
     /// moved lane is beyond what a graft can express.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn round(&mut self, reading: &Reading, original: &Reading, moved: &Moved) -> PResult<bool> {
         let pages = match moved.pages {
             true => match self.graft_pages(reading)? {
@@ -48,26 +45,22 @@ impl<'a> Graft<'a> {
     }
 
     /// 🏁 Collects what the grafts displaced and hands back the graph and its trailer.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn finish(mut self) -> PResult<(Cow<'a, [PdfIndirectObject]>, DocumentTrailer)> {
         self.collect_displaced();
         let trailer = retained_trailer(self.typed, &self.trailer)?;
         Ok((Cow::Owned(self.graph.into_values().collect()), trailer))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn reserve(&mut self) -> ObjRef {
         let reference = ObjRef { num: self.next, gen: 0 };
         self.next += 1;
         reference
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn value(&self, reference: ObjRef) -> Option<&PdfObject> {
         self.graph.get(&reference.num).map(|object| &object.value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resolve(&self, value: &PdfObject) -> Option<PdfObject> {
         match value {
             PdfObject::Ref(reference) => self.value(*reference).cloned(),
@@ -75,22 +68,18 @@ impl<'a> Graft<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn dict(&self, reference: ObjRef) -> Vec<PdfDictEntry> {
         self.value(reference).and_then(PdfObject::as_dict).map(<[PdfDictEntry]>::to_vec).unwrap_or_default()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn set_dict(&mut self, reference: ObjRef, entries: Vec<PdfDictEntry>) {
         self.graph.insert(reference.num, PdfIndirectObject { id: reference, value: PdfObject::Dict(entries) });
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn catalog(&self) -> Option<ObjRef> {
         dict_get(&self.trailer, "Root").and_then(PdfObject::as_ref)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn page_tree_root(&self) -> Option<ObjRef> {
         dict_get(&self.dict(self.catalog()?), "Pages").and_then(PdfObject::as_ref)
     }
@@ -98,7 +87,6 @@ impl<'a> Graft<'a> {
     /// 🧬 Moves the lowered objects `value` reaches out of `scratch` into the graph under fresh
     /// numbers (one number per scratch object across a batch, recorded in `adopted`) and returns
     /// `value` with its references rewritten.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn adopt(&mut self, value: &PdfObject, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) -> PdfObject {
         let mut pending = Vec::new();
         referenced(value, &[], &mut pending);
@@ -122,7 +110,6 @@ impl<'a> Graft<'a> {
 
     /// 🔧 Re-states `key` in `entries`: `value` (adopted from `scratch`) replaces the entry,
     /// `None` drops it; the value it displaces is collected later.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn put(&mut self, entries: &mut Vec<PdfDictEntry>, key: &str, value: Option<PdfObject>, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) {
         let value = value.map(|value| self.adopt(&value, scratch, adopted));
         match (entries.iter().position(|entry| entry.key == key), value) {
@@ -141,7 +128,6 @@ impl<'a> Graft<'a> {
 
     /// 🧹 Drops every object only displaced values reached that nothing in the grafted document
     /// reaches any more (`/Parent` back-links do not keep an object in the candidate set).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn collect_displaced(&mut self) {
         let mut pending = Vec::new();
         for value in std::mem::take(&mut self.displaced) {
@@ -176,7 +162,6 @@ impl<'a> Graft<'a> {
     /// fresh; and the page tree is re-stated flat under its root only when the page sequence
     /// itself changed. Returns the page references in typed order, `None` when a page carries
     /// what no graft can express.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn graft_pages(&mut self, reading: &Reading) -> PResult<Option<Vec<ObjRef>>> {
         let typed = self.typed;
         let read = &reading.lanes.pages;
@@ -232,7 +217,6 @@ impl<'a> Graft<'a> {
     /// ✏️ Patches the retained page at `reference` so it spells typed page `index`: the entries of
     /// every moved field are re-stated from the page lowered afresh, every other entry (content
     /// stream, resources, annotations, keys no field owns) stays as the graph holds it.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn patch_page(&mut self, index: usize, read: &PdfPage, reference: ObjRef, targets: &HashMap<(Category, String), ObjRef>) -> PResult<bool> {
         let snapshot = self.typed;
         let typed = &snapshot.pages[index];
@@ -292,7 +276,6 @@ impl<'a> Graft<'a> {
     }
 
     /// ➕ Lowers typed page `index` fresh at the reserved `reference` under `parent`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn insert_page(&mut self, index: usize, reference: ObjRef, parent: ObjRef, targets: &HashMap<(Category, String), ObjRef>) -> PResult<bool> {
         let snapshot = self.typed;
         let page = &snapshot.pages[index];
@@ -309,7 +292,6 @@ impl<'a> Graft<'a> {
     }
 
     /// 🆔 Whether a typed resource collection defines `id` in `category`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn defines(&self, category: Category, id: &str) -> bool {
         let typed = self.typed;
         match category {
@@ -328,7 +310,6 @@ impl<'a> Graft<'a> {
     /// already sees (its own or inherited) are kept whole, and an id they do not bind to the
     /// graph's object for it is bound on a page-own copy. `false` when the content names a typed
     /// resource the graph holds no object for.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn bind_resources(&mut self, dict: &mut Vec<PdfDictEntry>, ops: &[PdfOp], targets: &HashMap<(Category, String), ObjRef>) -> bool {
         let effective = self.effective_resources(dict);
         let mut resources = effective.clone();
@@ -362,14 +343,12 @@ impl<'a> Graft<'a> {
     }
 
     /// 📚 The resource dictionary a page sees: its own, else the nearest ancestor's.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn effective_resources(&self, dict: &[PdfDictEntry]) -> Vec<PdfDictEntry> {
         self.inherited(dict, "Resources", None).and_then(|value| self.resolve(&value)).and_then(|value| value.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default()
     }
 
     /// 🧬 The inherited attribute `key` of a page dictionary: its own entry, else the nearest
     /// ancestor's below `stop`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inherited(&self, dict: &[PdfDictEntry], key: &str, stop: Option<ObjRef>) -> Option<PdfObject> {
         if let Some(value) = dict_get(dict, key) {
             return Some(value.clone());
@@ -389,7 +368,6 @@ impl<'a> Graft<'a> {
     /// 🌳 Re-states the page tree flat under `root` (§7.7.3.2): every page a direct kid in typed
     /// order, carrying the attributes it inherited from the intermediate nodes it leaves; the
     /// intermediate nodes and the removed pages are displaced.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn restate_page_tree(&mut self, root: ObjRef, pages: &[ObjRef], removed: &[ObjRef]) {
         for page in pages {
             let mut dict = self.dict(*page);
@@ -418,7 +396,6 @@ impl<'a> Graft<'a> {
 
     /// ℹ️ Grafts the information dictionary: re-stated in place when the graph holds one, added
     /// when it does not, dropped from the trailer when the typed record is empty.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn graft_info(&mut self) {
         let snapshot = self.typed;
         let info = &snapshot.info;
@@ -442,7 +419,6 @@ impl<'a> Graft<'a> {
     /// destinations resolve to the graph's pages) and only the entries the moved lanes own are
     /// re-stated in the retained catalog; named destinations re-state the `/Names` tree's `/Dests`
     /// (superseding a PDF 1.1 catalog `/Dests`), extra entries re-state exactly the keys they carry.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn graft_catalog(&mut self, reading: &Reading, pages: &[ObjRef], lanes: &[CatalogLane]) -> PResult<()> {
         let (Some(catalog_ref), Some(root)) = (self.catalog(), self.page_tree_root()) else { return Ok(()) };
         let (lowered, objects) = lower_catalog_standalone(self.typed, self.next, LowerOptions::default(), &reading.targets(pages), root)?;
@@ -471,7 +447,6 @@ impl<'a> Graft<'a> {
 
     /// 🎯 Re-states `/Names /Dests`, editing the `/Names` dictionary where the graph keeps it and
     /// dropping it once it holds nothing.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn put_named_destinations(&mut self, catalog: &mut Vec<PdfDictEntry>, dests: Option<PdfObject>, scratch: &HashMap<u32, PdfObject>, adopted: &mut HashMap<u32, ObjRef>) {
         let held = dict_get(catalog, "Names").cloned();
         let mut names = held.as_ref().and_then(|value| self.resolve(value)).and_then(|value| value.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
@@ -488,7 +463,6 @@ impl<'a> Graft<'a> {
     /// values are the graph's own when a page edit changed which pages reach them, or in what
     /// order. Pages that inherited the root's resources get them as their own first. `false` when
     /// a typed resource is not the original graph's object.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn retain_resources(&mut self, original: &Reading, pages: &[ObjRef]) -> bool {
         fn section<T: PartialEq>(key: &'static str, category: Category, typed: &[T], read: &[T], id: impl Fn(&T) -> &str, refs: &HashMap<(Category, String), ObjRef>) -> Option<(&'static str, Vec<PdfDictEntry>)> {
             let entries = typed.iter().map(|item| read.contains(item).then(|| refs.get(&(category, id(item).to_string())).map(|reference| PdfDictEntry::new(id(item), PdfObject::Ref(*reference)))).flatten()).collect::<Option<Vec<_>>>()?;

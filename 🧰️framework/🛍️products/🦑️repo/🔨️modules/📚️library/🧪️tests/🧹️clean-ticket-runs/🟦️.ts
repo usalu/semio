@@ -28,10 +28,17 @@ test("clean removes generated ticket run output without removing ticket material
       writeFileSync(probe, "generated probe output\n");
     }
     writeFileSync(material, "ticket material\n");
+    writeFileSync(join(ticket, "🎫️ticket.json"), JSON.stringify({ status: "closed" }, null, 2));
+    const openTicket = join(root, ".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️09", "☀️01", "OPEN-TICKET-RUNS");
+    const openRun = join(openTicket, "🧾️runs", "🔖️05BsOk", "📝️.md");
+    mkdirSync(dirname(openRun), { recursive: true });
+    writeFileSync(openRun, "live run output\n");
+    writeFileSync(join(openTicket, "🎫️ticket.json"), JSON.stringify({ status: "open" }, null, 2));
     try { symlinkSync(material, join(dirname(runs[0]!), "alias")); } catch {}
     await clean(root);
     for (const run of runs) expect(existsSync(run)).toBe(false);
     for (const probe of probes) expect(existsSync(probe)).toBe(false);
+    expect(existsSync(openRun)).toBe(true);
     expect(existsSync(material)).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-import { loadUiProgressFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadUiProgressFixture } from "@semio-tech/framework/ui/testing/fixtures";
 type TestSource = { readonly url: string };
 
 /** 📶️ The interpreted `progress` component is a real, accessible progressbar that answers the shared

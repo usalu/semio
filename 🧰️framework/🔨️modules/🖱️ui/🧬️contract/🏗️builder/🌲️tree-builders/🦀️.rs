@@ -26,7 +26,6 @@ impl TreeBuilder {
     }
 
     /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn interaction_domain(mut self, domain: crate::UiText) -> Self {
         self.interaction_domain = Some(domain);
         self
@@ -34,7 +33,6 @@ impl TreeBuilder {
 }
 
 impl HasBase for TreeBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
@@ -45,7 +43,6 @@ impl HasChildren for TreeBuilder {}
 impl HasStackLayout for TreeBuilder {}
 
 impl From<TreeBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeBuilder) -> Self {
         assemble(builder.base, crate::Component::Tree(crate::TreeProps { presentation: builder.presentation, interaction_domain: builder.interaction_domain }))
     }
@@ -69,7 +66,6 @@ pub fn tree_section(label: crate::Label) -> TreeSectionBuilder {
 
 impl TreeSectionBuilder {
     /// 🔽️ Sets whether the section starts open.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn default_open(mut self, default_open: bool) -> Self {
         self.default_open = Some(default_open);
         self
@@ -77,7 +73,6 @@ impl TreeSectionBuilder {
 
     /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
     /// [`crate::TreeWindow`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn window(mut self, window: crate::TreeWindow) -> Self {
         self.window = Some(window);
         self
@@ -91,7 +86,6 @@ impl TreeSectionBuilder {
 }
 
 impl HasBase for TreeSectionBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
@@ -102,7 +96,6 @@ impl HasChildren for TreeSectionBuilder {}
 impl HasStackLayout for TreeSectionBuilder {}
 
 impl From<TreeSectionBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeSectionBuilder) -> Self {
         assemble(builder.base, crate::Component::TreeSection(crate::TreeSectionProps { label: Some(builder.label), default_open: builder.default_open, window: builder.window, header_toolbar: builder.header_toolbar }))
     }
@@ -137,35 +130,30 @@ pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
 
 impl TreeItemBuilder {
     /// 📝️ Sets secondary description copy.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn description(mut self, description: crate::UiText) -> Self {
         self.description = Some(description);
         self
     }
 
     /// 🖼️ Sets the icon key.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn icon(mut self, icon: crate::UiText) -> Self {
         self.icon = Some(icon);
         self
     }
 
     /// 🔽️ Sets whether the row starts open (when it has nested items).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn default_open(mut self, default_open: bool) -> Self {
         self.default_open = Some(default_open);
         self
     }
 
     /// 🖐️ Marks the row draggable.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn draggable(mut self, draggable: bool) -> Self {
         self.draggable = Some(draggable);
         self
     }
 
     /// 🏷️ Sets the payload a drag of this row carries.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drag_data(mut self, drag_data: crate::UiFixedMap<crate::UiText>) -> Self {
         self.drag_data = Some(drag_data);
         self
@@ -173,14 +161,12 @@ impl TreeItemBuilder {
 
     /// 👁️ Sets the domain "eye toggle" dimmed state — the row stays visible and clickable, just
     /// visually de-emphasized; not the same axis as [`HasBase::disabled`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn dimmed(mut self, dimmed: bool) -> Self {
         self.dimmed = Some(dimmed);
         self
     }
 
     /// ☑️ Marks this row as one option of a single-choice list, chosen or not ([`crate::TreeItemProps::selected`]).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn selected(mut self, selected: bool) -> Self {
         self.selected = Some(selected);
         self
@@ -188,7 +174,6 @@ impl TreeItemBuilder {
 
     /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
     /// [`crate::TreeWindow`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn window(mut self, window: crate::TreeWindow) -> Self {
         self.window = Some(window);
         self
@@ -196,14 +181,12 @@ impl TreeItemBuilder {
 
     /// 🎯️ Makes the row a pick target of the tree's `interaction_domain` at this granularity, keyed
     /// by the row's own record key — no per-row binding and no argument map.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn granularity(mut self, granularity: crate::UiText) -> Self {
         self.granularity = Some(granularity);
         self
     }
 
     /// 🎬️ Appends one row action — a verb on the row's [`crate::RowTarget`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
     pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
         match self.row_actions.try_push(row_action) {
@@ -213,7 +196,6 @@ impl TreeItemBuilder {
     }
 
     /// 🎯️ Sets the ONE target every row action and the activation of this row fire on.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn target(mut self, target: crate::RowTarget) -> Self {
         self.target = Some(target);
         self
@@ -221,7 +203,6 @@ impl TreeItemBuilder {
 }
 
 impl HasBase for TreeItemBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
@@ -232,7 +213,6 @@ impl HasChildren for TreeItemBuilder {}
 impl HasStackLayout for TreeItemBuilder {}
 
 impl From<TreeItemBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeItemBuilder) -> Self {
         assemble(
             builder.base,

@@ -8,7 +8,7 @@ import*as synchronousFilesystem from"node:fs";
 import{join,dirname}from"node:path";
 import{randomUUID,createHash}from"node:crypto";
 import{registerBuildTestLawV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
-import{withRepositoryToolingStoreV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import{withRepositoryToolingStoreV1}from"../../../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{nxSdkSnapshotIdentityV1}from"../../../../📥️snapshot/🟦️.ts";
 import{nxSdkBinaryReceiptV1}from"../../../../🧊️binary/🟦️.ts";
 import{withNxSdkDerivativeProjectionV1,requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}from"../../🟦️.ts";

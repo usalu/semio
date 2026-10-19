@@ -1,4 +1,4 @@
-//! `upsert-member-action` — upsert a `MemberAction` by id into `member_actions`.
+//! 🧬️ `upsert-member-action` — upsert a `MemberAction` by id into `member_actions`.
 
 use semio_s_artifact_norm_en1993_model::{MemberAction, En1993Snapshot};
 

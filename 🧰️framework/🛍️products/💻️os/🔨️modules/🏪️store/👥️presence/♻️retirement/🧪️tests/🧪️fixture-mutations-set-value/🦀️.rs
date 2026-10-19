@@ -1,7 +1,7 @@
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ValueMutation::SetValue(SetValue { n: 9 }), &Value(3)).await;
+    semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ValueMutation::SetValue(SetValue { n: 9 }), &Value(3)).await;
 }
 
 #[test]

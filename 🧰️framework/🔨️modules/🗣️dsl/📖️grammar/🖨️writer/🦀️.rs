@@ -32,9 +32,6 @@ fn print_symbol(symbol: &Symbol, out: &mut String) {
         }
         Symbol::Group(alts) => {
             out.push('{');
-            // 🔁️ Box::pin: print_symbol <-> print_alternatives is a mutual-recursion cycle, and
-            // an fn's own opaque Future type cannot embed a cycle-partner's opaque type at
-            // an unboxed, unbounded size (R10 residue shape 3).
             print_alternatives(alts, out);
             out.push('}');
         }
@@ -88,8 +85,6 @@ pub fn print_grammar(grammar: &GrammarFile) -> String {
         out.push_str(extension);
         out.push('\n');
     }
-    // P2-M1 items 1 & 4: only emitted when they differ from `LexOptions::default()`, so a grammar
-    // that never declared `comment`/`string` directives prints byte-identically to before P2-M1.
     let default_comment = CommentDialect::default();
     if grammar.lex.comment.line != default_comment.line {
         match &grammar.lex.comment.line {
@@ -182,11 +177,9 @@ fn print_prim(prim: &Prim, out: &mut String) {
                 out.push_str("varint bytes");
             } else if matches!(count, Count::Varint) {
                 out.push_str("array ");
-                // 🔁️ Box::pin: self-recursive fn (R10 residue shape 3).
                 print_prim(inner, out);
             } else {
                 out.push_str("Array(");
-                // 🔁️ Box::pin: self-recursive fn (R10 residue shape 3).
                 print_prim(inner, out);
                 out.push_str(", ");
                 print_count(count, out);
@@ -275,7 +268,6 @@ fn print_repeat_arm(arm: &RepeatArm, out: &mut String) {
             if i > 0 {
                 out.push(' ');
             }
-            // 🔁️ Box::pin: self-recursive fn (R10 residue shape 3).
             print_repeat_arm(narm, out);
         }
         out.push('}');

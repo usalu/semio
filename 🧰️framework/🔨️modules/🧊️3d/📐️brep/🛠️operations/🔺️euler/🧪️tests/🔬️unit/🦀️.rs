@@ -17,7 +17,6 @@ fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
         edges.insert((a, b), edge);
         edges.insert((b, a), edge);
     }
-    // Four triangular faces of a tetrahedron with vertex indices 0,1,2,3.
     let face_defs = [[0, 1, 2], [0, 3, 1], [1, 3, 2], [2, 3, 0]];
     let mut faces = Vec::new();
     for tri in face_defs {
@@ -112,7 +111,6 @@ async fn split_edge_within_a_loop_ring_preserves_ring_validity() {
     split_edge(&mut body, target_edge, mid, position, &mut rec);
     let coedges_after = body.loop_coedges(outer);
     assert_eq!(coedges_after.len(), coedges_before.len() + 1, "the ring gains exactly one coedge");
-    // The ring must still be a single closed cycle covering every live coedge in the loop.
     let mut seen = std::collections::HashSet::new();
     for c in &coedges_after {
         assert!(seen.insert(*c), "ring must not repeat a coedge");

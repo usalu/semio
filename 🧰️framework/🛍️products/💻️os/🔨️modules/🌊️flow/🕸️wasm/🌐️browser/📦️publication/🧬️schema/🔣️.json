@@ -59,6 +59,44 @@
           ]
         }
       }
+    },
+    "ManifestIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "snippets"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "snippets": {
+          "type": "array",
+          "maxItems": 16376,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^snippets/",
+            "not": {
+              "anyOf": [
+                {
+                  "pattern": "[\\\\:\\u0000-\\u001f]"
+                },
+                {
+                  "pattern": "(?:^|/)\\.\\.?(?:/|$)"
+                },
+                {
+                  "pattern": "//"
+                }
+              ]
+            }
+          }
+        }
+      }
     }
   }
 }

@@ -128,7 +128,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(beff.build());
 
-    // Section classification uses tw/tf
     let class = part_1_1::section_class(&beam.steel, f_y);
     let mut cls = CheckResult::assess(
         format!("en1994.5.5.class.{}", beam.id), "DIN EN 1994-1-1",
@@ -214,7 +213,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(bending.build());
 
-    // Construction-stage steel-alone demand (EN 1994-1-1 §9.3 / §6.2) — reads construction actions.
     let m_c = uls_c.m_nm;
     let mut cst = CheckResult::assess(
         format!("en1994.6.2.1.construction.{}", beam.id), "DIN EN 1994-1-1",
@@ -233,7 +231,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(cst.build());
 
-    // Stud spacing §6.6.5.5
     let (s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam);
     let mut ssp = CheckResult::assess(
         format!("en1994.6.6.5.5.spacing.{}", beam.id), "DIN EN 1994-1-1",
@@ -260,7 +257,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         let n_c = 0.85 * (beam.concrete_f_ck_pa / p.gamma_c) * b_eff * h_c;
         n_a.min(n_c)
     };
-    let v_l_ed = n_cf; // force to transfer in critical shear span
+    let v_l_ed = n_cf;
     let v_ed_stud = v_l_ed / n_f.max(1) as f64;
     let mut stud = CheckResult::assess(
         format!("en1994.6.6.3.1.prd.{}", beam.id), "DIN EN 1994-1-1",
@@ -384,7 +381,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(vl.build());
 
-    // LTB from construction / hogging combinations
     let m_b = part_1_1::ltb_moment_resistance_nm(&beam, f_y, annex);
     let construction_applies = beam.construction == "unpropped" && uls_c.m_nm > 1.0;
     let hogging_applies = uls.m_hog_nm > 1.0;
@@ -410,7 +406,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             trial_min.ltb_length_m = 0.05;
             let m_b_at_min_l = part_1_1::ltb_moment_resistance_nm(&trial_min, f_y, annex);
             if m_b_at_min_l >= m_ltb_ed {
-                // Shorter L → higher χ_LT: search max L in [0.05, current] that still clears.
                 let mut lo = 0.05_f64;
                 let mut hi = beam.ltb_length_m.max(0.05);
                 for _ in 0..32 {
@@ -429,7 +424,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
                         lc("Reduce LTB length (add restraints).", "Biegedrillknicklänge verkürzen.")));
                 }
             } else {
-                // Catalogue resolve() overwrites geometry leaves — remedy designation to a heavier section that clears at current L.
                 let clearing: Vec<String> = SteelSection::heavier_heb_options(&beam.steel.designation)
                     .into_iter()
                     .filter(|d| {
@@ -463,7 +457,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         .annex(annex).build());
     }
 
-    // SLS characteristic — stress limit EN 1994-1-1 §7.2.2
     let w_el = (beam.steel.i_y_m4 / (beam.steel.height_m / 2.0).max(1e-6)).max(1e-9);
     let sigma_a = sls_char.m_nm.abs() / w_el;
     let sigma_lim = 0.9 * f_y;
@@ -507,7 +500,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(stress.build());
 
-    // SLS frequent — deflection EN 1994-1-1 §7.3.1 / EN 1990 Table A1.4 + DIN EN 1990/NA
     let n_l = part_1_1::modular_ratio_long_term(beam.concrete_e_cm_pa, 2.0);
     let i_eff = beam.steel.i_y_m4 * (1.0 + 0.35 * n_l / 10.0);
     let delta = 5.0 * sls_freq.m_nm * beam.span_m.powi(2) / (48.0 * 210e9 * i_eff.max(1e-12));
@@ -555,8 +547,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         {
             let q_leaf = format!("actions[id={}].qAreaPa", a.id);
             let q_cur = a.q_area_pa.abs();
-            // Permanent share can dominate M; zero the imposed lead so δ falls with M_q removal when that is enough,
-            // otherwise span remedy above clears alone / sequentially.
             let q_req = q_cur * ratio * 0.5;
             sls = sls.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_req),
                 lc(
@@ -567,15 +557,12 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     }
     report.push(sls.build());
 
-    // SLS quasi-permanent — crack control EN 1994-1-1 §7.4 with n_L
     let as_min = part_1_1::as_min_hogging_m2_per_m(&beam, b_eff);
     let s_max_bar = part_1_1::max_bar_spacing_m(beam.wk_limit_m.max(0.0003));
-    // Long-term modular ratio scales tension demand under QP hogging
     let qp_hog = sls_qp.m_hog_nm.abs().max(sls_qp.m_nm.abs() * 0.05);
     let n_l_fac = 0.9 + 0.1 * (n_l / 10.0).min(2.0);
     let load_fac = 1.0 + qp_hog / (sls_char.m_nm.abs().max(1.0) + qp_hog);
     let scale = n_l_fac * load_fac;
-    // Limits shared with remedies so util = provided/limit is exactly 1.0 at equality (≤ Pass).
     let as_limit = as_min * scale.max(1.0);
     let s_limit = s_max_bar / scale.max(1.0);
     let crack_util = (as_limit / beam.as_hogging_m2_per_m.max(1e-12)).max(beam.bar_spacing_m / s_limit.max(1e-12));
@@ -596,7 +583,6 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
             crack = crack.remedy(Remedy::at_least(beam_ref(&beam, "asHoggingM2PerM"), Quantity::new(QuantityKind::Area, beam.as_hogging_m2_per_m), Quantity::new(QuantityKind::Area, as_req),
                 lc(format!("Provide ≥ {:.0} mm²/m hogging reinforcement.", as_req * 1e6), format!("≥ {:.0} mm²/m Stützbewehrung vorsehen.", as_req * 1e6))));
         }
-        // Place spacing on the passing side of the ≤ limit (not exact FP equality of inverse products).
         let s_req = s_limit * 0.98;
         if beam.bar_spacing_m > s_req {
             crack = crack.remedy(Remedy::at_most(beam_ref(&beam, "barSpacingM"), Quantity::length_m(beam.bar_spacing_m), Quantity::length_m(s_req),
@@ -664,17 +650,14 @@ fn evaluate_column(report: &mut CheckReport, doc: &En1994Snapshot, col: &Composi
 fn evaluate_slab(report: &mut CheckReport, doc: &En1994Snapshot, slab: &CompositeSlab) {
     let annex = doc.annex;
     let uls = part_en1990::uls_composite(&slab.actions, slab.span_m, &slab.support, 1.0, annex);
-    // For slabs, q_area acts on 1 m strip: action_internals uses spacing — pass 1.0 so q_area*1 = line per m
     let m_ed = uls.m_nm;
     let v_ed = uls.v_n;
     let label = lc(format!("Composite slab {}", slab.id), format!("Verbunddecke {}", slab.id));
 
-    // Construction-stage sheeting
     let m_sheet = part_1_1::sheeting_construction_mrd_nm_per_m(&slab.sheeting, 280e6);
     let q_constr = slab.actions.iter().filter(|a| a.stage == "construction" || a.kind == "construction").map(|a| a.q_area_pa).sum::<f64>()
         + slab.actions.iter().filter(|a| a.kind == "permanent" && a.stage == "construction").map(|a| a.q_area_pa).sum::<f64>();
     let m_constr = if q_constr > 0.0 { q_constr * slab.span_m.powi(2) / 8.0 } else {
-        // wet concrete self-weight on sheeting
         25e3 * (slab.concrete_thickness_m - slab.sheeting.height_m).max(0.04) * slab.span_m.powi(2) / 8.0
     };
     let mut sh = CheckResult::assess(
@@ -846,7 +829,6 @@ pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
             let steel = document.beams.first().map(|b| b.steel.clone()).unwrap_or_else(SteelSection::heb300);
             let am_v = part_1_2::section_factor_m_inv(&steel);
             let theta_a = part_1_2::steel_temperature_c(rating, am_v, document.insulation_thickness_m);
-            // Fire combination load level η_fi from Eq. 6.11 / G+ψ_fi Q vs ambient ULS
             let eta_fi = document.beams.first().map(|b| {
                 let fire_e = part_en1990::fire_combination(&b.actions, b.span_m, &b.support, b.spacing_m, annex);
                 let uls_e = part_en1990::uls_composite(&b.actions, b.span_m, &b.support, b.spacing_m, annex);
@@ -876,7 +858,7 @@ pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
     if document.structure_kind == "bridge" {
         for beam in &document.beams {
             let steel = beam.steel.clone();
-            let w_el = steel.w_pl_y_m3 * 0.85; // elastic approx
+            let w_el = steel.w_pl_y_m3 * 0.85;
             let mut delta = beam.actions.iter().filter(|a| a.kind == "fatigue").map(|a| a.delta_sigma_k_pa).fold(0.0_f64, f64::max);
             if delta < 1.0 {
                 delta = part_en1990::flm3_delta_sigma_pa(beam.span_m, w_el);

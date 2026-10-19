@@ -1,6 +1,7 @@
 //! 🫴️ Concrete SQLite receiving preserves the original generic owner and physical settlement.
 use semio_framework_io_control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,retained_clone::RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 /// 🫴️ A domain frame keeps its complete fallible status in original receiving custody.
 pub trait NativeSqliteReceivingFrame:semio_framework_value::retirement::RetireOwned{
  fn receiving_status(&mut self)->&mut Option<Result<(),ValueError>>;
@@ -24,7 +25,7 @@ macro_rules! original_sqlite_receiving{
  }
  };
 }
-original_sqlite_receiving!(SqliteSnapshotDecodeReceiving,NativeSnapshotDecodeOwner,Decode,semio_framework_value::native_decoding::NativeDecodeProgress,ProjectSnapshot);
+original_sqlite_receiving!(SqliteSnapshotDecodeReceiving,NativeSnapshotDecodeOwner,Decode,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,ProjectSnapshot);
 original_sqlite_receiving!(SqliteSnapshotEncodeReceiving,NativeSnapshotEncodeOwner,Encode,semio_framework_value::native_encoding::NativeEncodeProgress,ReconstructSnapshot);
 impl crate::artifact::receiving::ReceivingWallet for NativeSnapshotBodyWallet{
  fn admit_frontier(&self,demand:RetainedCloneGrant)->Result<(),ValueError>{NativeSnapshotBodyWallet::admit_frontier(self,demand)}

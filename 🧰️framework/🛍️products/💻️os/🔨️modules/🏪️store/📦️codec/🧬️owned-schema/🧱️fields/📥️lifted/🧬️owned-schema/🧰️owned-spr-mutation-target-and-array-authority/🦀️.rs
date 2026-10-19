@@ -371,7 +371,7 @@ where
     pub actor: std::mem::ManuallyDrop<Option<semio_framework_value::SharedUtf8>>,
     pub actor_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>,
     pub forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
-    pub inverse: std::mem::ManuallyDrop<Option<semio_framework_value::list::PagedList<Mutation, {usize::MAX}>>>,
+    pub inverse: std::mem::ManuallyDrop<Option<semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>>>,
     pub sequence_number: Option<i32>,
     pub value: std::mem::ManuallyDrop<Option<Edit<Mutation>>>,
     pub retirement: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,

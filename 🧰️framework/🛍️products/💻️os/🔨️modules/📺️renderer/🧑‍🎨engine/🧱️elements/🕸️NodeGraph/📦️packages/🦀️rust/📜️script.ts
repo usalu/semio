@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 import { createIssuedResourceControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { verifyProducedWasmPackageV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1 } from "@semio-tech/framework/process/cargo-test";
 import { buildBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { buildAdmittedWasmWebV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { buildAdmittedWasmWebV1 } from "@semio-tech/framework/process/wasm-build";
 import { runOwnedCommand } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";

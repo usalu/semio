@@ -3,6 +3,6 @@
 import type { AnimTimeline } from "./📸️snapshot/🟦️";
 
 export interface SemioAnimationArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ timelines: AnimTimeline[];
+  /** 🎞️ @state artifact */ schema: string;
+  /** 🎬️ @state artifact */ timelines: AnimTimeline[];
 }

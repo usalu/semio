@@ -158,10 +158,6 @@ impl FlowHost {
     /// 💥️ Explodes a cluster back into its inner widgets.
     pub fn explode_cluster(&mut self, cluster_id: &str) -> Result<(), FlowCoreError> {
         let cluster_index = self.host_snapshot.widgets.iter().position(|widget| matches!(widget, Widget::Cluster { id, .. } if id == cluster_id)).ok_or_else(|| FlowCoreError::UnknownCluster(cluster_id.to_string()))?;
-        // 🧹️ The working copy is BORROWED from one retired clone, not destructured out of it: a
-        // cluster's `Tree` params and its `FlowUi` node map both fail closed on a bare drop, so
-        // owning `tree`/`flow` as loose locals aborted the process at the end of this function
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         let exploded = self.host_snapshot.widgets[cluster_index].clone();
         let Widget::Cluster { tree, flow, .. } = &exploded else {
             exploded.retire_cold();
@@ -205,9 +201,6 @@ impl FlowHost {
             restored_widgets.push((namespaced_id, neuron.id.clone(), widget));
         }
         let id_map: HashMap<String, String> = restored_widgets.iter().map(|(namespaced, original, _)| (original.clone(), namespaced.clone())).collect();
-        // 🧹️ The cluster widget carries a `FlowUi` whose `OrderedMap<FlowNodeGui>` and a `Tree`
-        // whose `Dictionary` params both fail closed on a bare drop, so the exploded shell is
-        // RETIRED rather than dropped (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         self.host_snapshot.widgets.remove(cluster_index).retire_cold();
         self.host_snapshot.layout.remove(cluster_id);
         let mut restored_ids = Vec::with_capacity(restored_widgets.len());

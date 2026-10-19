@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { eigs } from "mathjs";
 import schema from "../../🧬️schema/⚖️combination-stress/🔣️.json";
-import fixture from "../../🧫️fixtures/⚖️combination-stress/🔣️.json";
+import fixture from "../🧫️fixtures/⚖️combination-stress/🔣️.json";
 
 /** 🔮️ Independently checks equivalent stress through mathjs principal-stress eigenvalues. */
 export function verifyCombinationStressOracle(): void {

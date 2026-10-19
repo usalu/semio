@@ -1,2 +1,2 @@
-/** note semio text */
+/** 📝️ note semio text */
 export const ID = 'note';

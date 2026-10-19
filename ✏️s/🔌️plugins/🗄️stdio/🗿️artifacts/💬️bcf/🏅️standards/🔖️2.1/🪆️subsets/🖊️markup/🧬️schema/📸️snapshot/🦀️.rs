@@ -35,7 +35,7 @@ impl semio_framework_dsl_record::BorrowedDslField for BcfCamera{const SHAPE:semi
 impl semio_framework_dsl_record::DslField for BcfCamera {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.step()?;let mut statements=control.allocate_vec(1)?;statements.push(<Self as semio_framework_dsl_record::DslVariants>::to_named_record_controlled(self,control)?);Ok(semio_framework_dsl_record::FieldValue::Statements(statements))}
 
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{
         control.step()?;
         match value{semio_framework_dsl_record::FieldValue::Statements(values)if values.len()==1=>{let(keyword,record)=&values[0];<Self as semio_framework_dsl_record::DslVariants>::from_named_record_controlled(keyword,record,control)},_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"BCF camera requires exactly one typed choice"))}
     }

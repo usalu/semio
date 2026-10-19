@@ -158,7 +158,6 @@ export function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPat
     if (!arraySizes) {
       const expectedKeys = node.children.map((_, index) => modeJoinPath(axisPath, index));
       const matched = expectedKeys.filter((key) => typeof sizesRecord[key] === "number").length;
-      // Stale edit-mode resize events (2 keys) must not partially overwrite a 3-panel generate dock.
       if (matched > 0 && matched !== node.children.length) {
         const even = 100 / node.children.length;
         return { ...node, children: node.children.map((child) => ({ ...child, size: even })) };

@@ -165,7 +165,6 @@ async fn a_selected_construction_edits_its_layer_stack_and_reports_its_u_value()
     assert!(json.contains("Wood Siding") || json.contains("Plasterboard"), "a layer reads as its material's name: {json}");
     assert!(carries_a_tree(&json), "{json}");
 
-    // 🔥️ The U-value row reports exactly what the engine computes for that stack.
     let model = crate::examples::demo::model();
     let construction = model.constructions.iter().find(|entry| entry.id.0 == 30).expect("construction 30");
     let layers: Vec<crate::model::Material> = construction.layer_material_ids.iter().filter_map(|layer| model.materials.iter().find(|material| material.id == *layer).cloned()).collect();

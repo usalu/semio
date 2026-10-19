@@ -66,7 +66,6 @@ async fn every_variant_round_trips_through_diff_and_inverse() {
             mutation,
             En1990Mutation::RemoveSeismic(_) | En1990Mutation::RemoveAccidental(_)
         ) {
-            // Default subject has empty seismics/accidentals — out-of-range remove is fatal by design.
             continue;
         }
         let _ = round_trip(&base, &mutation);

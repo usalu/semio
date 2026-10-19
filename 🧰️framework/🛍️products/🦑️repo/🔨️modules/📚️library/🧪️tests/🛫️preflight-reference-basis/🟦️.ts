@@ -287,7 +287,7 @@ function physicalRun(name: string): string {
 
 /** 🧩️ Reuses only the authored embedded fixture function, never importing or executing the 62-case suite. */
 function physicalFixture(name: string) {
-  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", schemaRelative = library + "/🔣️taxonomy.json", suitePath = join(root, library, "🧪️tests/🔄️transaction-v2/🟦️.ts");
+  const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library", schemaRelative = library + "/🔣️taxonomy.json", suitePath = join(root, library, "🧪️tests/🔄️transaction-v2/🏗️fixture-builders/🟦️.ts");
   const suite = readFileSync(suitePath, "utf8"), tree = ts.createSourceFile(suitePath, suite, ts.ScriptTarget.Latest, true);
   const helpers = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "embeddedFixture");
   expect(helpers).toHaveLength(1);
@@ -309,7 +309,7 @@ function physicalFixture(name: string) {
     git("-c", "user.name=Preflight Fixture", "-c", "user.email=fixture@invalid.example", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "preflight fixture");
     return { ...row, baselineCommit: git("rev-parse", "HEAD") };
   };
-  const original = helpers[0]!.getText(tree), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(original);
+  const original = helpers[0]!.getText(tree).replace(/^export\s+/u, ""), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(original);
   const build = new Function("fixture", "join", "mkdirSync", "dirname", "writeFileSync", "readFileSync", "relative", "SCHEMA_REL", compiled + "\nreturn embeddedFixture;")(fixture, join, mkdirSync, dirname, writeFileSync, readFileSync, relative, schemaRelative);
   const row = build(name);
   put(".git/info/exclude", schemaRelative + "\n");

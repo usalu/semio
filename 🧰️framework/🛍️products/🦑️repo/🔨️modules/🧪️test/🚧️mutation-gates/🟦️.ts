@@ -71,28 +71,13 @@ export function mutationInventoryBreaches(repoRoot: string, registry: OracleRegi
       for (const mutation of manifest.mutations) {
         const subset = owningSubsetOf(manifest, mutation);
         const coordinate = subsetCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset });
-        // 🪆️THE KEY MUST CARRY THE SUBSET. Without it this check is artifact-level inside a platform whose
-        // entire point is subset-level scoping, and it reports a DUPLICATE whenever two genuinely different
-        // subsets of one artifact happen to share a mutation name — `semio@v1/cad` and `semio@v1/document`
-        // both declaring `set-snapshot`, `brep` and `mesh` both declaring `move-vertex`. Those are distinct
-        // mutations of distinct scopes, which is exactly what the taxonomy is for; only the SAME mutation
-        // of the SAME subset claimed by two manifests is a real duplicate.
         const key = `${coordinate}${manifest.surface === undefined ? "" : `#${manifest.surface}`}::${mutation.id}`;
         ownerOf.set(key, [...(ownerOf.get(key) ?? []), `${contribution.manifestPath}#${coordinate}`]);
         if (manifest.surface === undefined && isWildcardSubset(subset)) {
           const siblings = (declaredSubsets(repoRoot).get(`${manifest.artifact}@${manifest.standard}`) ?? []).filter((candidate) => !isWildcardSubset(candidate));
           if (siblings.length > 0) {
-            // 🚫️The artifact HAS narrower scopes and this mutation declined them. Hard failure.
             breaches.push(breach("testing/contract", "wildcard-subset-owner", contribution.manifestPath, `Mutation ${mutation.id} is owned by wildcard subset ${JSON.stringify(subset)} while ${manifest.artifact}@${manifest.standard} declares ${siblings.length} real subset(s): ${siblings.join(", ")}`, "Testing at artifact level hides which part of the artifact a mutation actually changed, and lets one broad case stand in for every narrow one.", `Give the mutation its smallest owner among ${siblings.join(", ")}, or declare an explicit typed compound.`));
           } else if (!subsetPolicyIsSingle(repoRoot, manifest.artifact, manifest.standard)) {
-            // 🪆️The artifact declares NO narrower scope at all. That is sometimes the truth — RFC 8259
-            // JSON has no conformance classes — and sometimes an artifact that simply has not been
-            // split yet, which is the case the whole subset-scoping requirement exists for: `s.cad.cad`
-            // addresses shape, building, energy, structure, drawing, node and reference scopes through
-            // ONE `*` bucket. The two are indistinguishable from here, so this is a MEDIUM finding
-            // asking the owner to decide, not a hard failure asserting which one it is. Recording
-            // `"subsetPolicy": "single"` with a rationale in the artifact's own 🪆️subsets component
-            // settles it and silences this.
             breaches.push(breach("testing/contract", "unsplit-artifact-subset", contribution.manifestPath, `Mutation ${mutation.id} is owned by ${JSON.stringify(subset)} and ${manifest.artifact}@${manifest.standard} declares no narrower subset at all`, "A mutation is owned by the SMALLEST semantic subset. An artifact with a single catch-all subset is either a format that genuinely has no narrower scope, or one that has not been split yet — and until the owner says which, every mutation on it is scoped to the whole artifact.", `Declare the real subsets of ${manifest.artifact}@${manifest.standard} and give this mutation its smallest owner, or record "subsetPolicy": "single" with a rationale in that artifact's 🪆️subsets component.`, "medium"));
           }
         }
@@ -382,8 +367,6 @@ export function registryRecordBreaches(registry: OracleRegistry): BreachRecord[]
         breaches.push(breach("testing/contract", "pipeline-record-invalid", pipeline.id, `Pipeline ${pipeline.id} stage ${index} names unregistered probe ${stage.probe}`, "An unregistered probe has no licence, pin, engine family or qualification on record, and the stage cannot run.", "Register the probe, or remove the stage."));
         continue;
       }
-      // 🚫️`optional` is for a probe that is registered and NOT YET QUALIFIED. Marking a qualified
-      // probe's stage optional would excuse that probe's own reported failure.
       if (stage.optional === true && isQualifiedProbe(probe)) {
         breaches.push(breach("testing/contract", "optional-stage-overclaimed", pipeline.id, `Pipeline ${pipeline.id} stage ${index} marks QUALIFIED probe ${stage.probe} optional`, "`optional` exists for a probe whose qualification spike has not passed. On a qualified probe it would excuse that probe's own status: failed, which is the one thing this protocol must never do.", "Remove `optional`, or downgrade the probe's qualification honestly."));
       }
@@ -485,7 +468,6 @@ function ignoresItsInput(text: string, entry: "serialize" | "deserialize" = "ser
       }
     }
     const body = text.slice(open + 1, i);
-    // 🧭️`let _ = X;` is the idiom these stubs use to silence the unused-parameter warning; it is not a read.
     const reads = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(body.replace(new RegExp(`let\\s+_\\s*=\\s*${name}\\s*;`, "g"), ""));
     if (!reads) return true;
   }
@@ -534,13 +516,6 @@ export function reimplementationOracleBreaches(repoRoot: string, registry: Oracl
     const predicts = /fn\s+(apply_kind|apply)\s*\(/.test(text) && /has no oracle implementation/.test(text);
     const admits = /independent implementation|second implementation|deliberately mirrors|reimplemented from scratch/i.test(text);
     if (!predicts && !admits) continue;
-    // 📖️AN OWNER MAY HOLD BOTH MECHANISMS AT ONCE, and the distinction is the whole point. A predicting
-    // `🦀️oracle.rs` sitting in the directory does not taint a qualifying oracle that is
-    // judged by READER probes over committed fixtures — there the expected state is never computed, it
-    // is the `after` half of a byte-reproducible fixture, and a third-party library parses both sides.
-    // Flagging on the file's mere presence could not tell "a genuine new reader" from "the old mistake",
-    // which is exactly what the gltf retrofit reported back. A registered comparison pipeline over
-    // QUALIFIED probes is the discriminator: it means something other than our own Rust is the judge.
     const judgedByProbes =
       contribution.comparisonPipelines.length > 0 &&
       contribution.probes.length > 0 &&
@@ -649,8 +624,6 @@ export function stubDeserializerBreaches(repoRoot: string): BreachRecord[] {
       const coerces = (/to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) || /\b[a-z_][a-z0-9_]*\s*\.\s*to_value\s*\(\s*\)/.test(text)) && /from_value\s*[:(<]/.test(text);
       const inert = ignoresItsInput(text, "deserialize");
       if (!parsesDsl && !coerces && !inert) continue;
-      // 🧭️`binary@raw` is the raw-bytes carrier, like txt: a stdio format read from it by its own
-      // parser (STEP's and IFC's DSL IS Part 21) is the format, not a stub.
       if (format === "txt" || format === "json" || format === "binary" || format === "") continue;
       breaches.push(
         breach(
@@ -686,30 +659,13 @@ export function stubSerializerBreaches(repoRoot: string): BreachRecord[] {
       } catch {
         continue;
       }
-      // 🧭️Any serializing entry point counts, not `serialize_bytes` alone. Several owners deleted their
-      // byte path entirely and kept only `serialize_text` returning `print_dsl` — cad exports STL, OBJ,
-      // glTF, IFC and STEP that way. Keying the gate on `serialize_bytes` skipped every one of them and
-      // reported the whole owner as having real carriers.
       if (!/fn\s+serialize(_bytes|_text)?\s*[(<]/.test(text)) continue;
       const printsDsl = printsItsInputAsDsl(text);
-      // 🕳️THE SECOND STUB SHAPE, and the worse of the two. `encode_pack` the SOURCE snapshot, then
-      // `decode_pack` those very bytes AS THE TARGET type — one artifact's binary envelope reinterpreted
-      // as another's. It is not an unimplemented export, it is type confusion: at best it fails on the
-      // envelope id, at worst a lenient decode yields a structurally valid document full of noise. A gate
-      // that only looked for `print_dsl` read these as REAL exporters, which is how they survived.
       const transmutes = /encode_pack\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) && /decode_pack\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text);
-      // 🫥️THE QUIETEST SHAPE OF ALL. `serde_json::to_value` the source, then `from_value` into the target.
-      // Every non-`schema` field of these target snapshots carries `#[serde(default)]` and nothing rejects
-      // unknown keys, so deserialization SUCCEEDS and yields an EMPTY document — `architect/program`'s
-      // xlsx export turns 266 mutable registers into a workbook with no sheets, and reports Ok. It neither
-      // prints DSL nor transmutes an envelope, so both earlier detectors passed it, and 266 mutations were
-      // counted as having a real carrier on the strength of an exporter that can never show a mutation.
       const coerces = (/to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) || /\b[a-z_][a-z0-9_]*\s*\.\s*to_value\s*\(\s*\)/.test(text)) && /from_value\s*[:(<]/.test(text);
       const inert = ignoresItsInput(text);
       if (!printsDsl && !transmutes && !coerces && !inert) continue;
       const format = rel.match(/🗿️artifacts\/[^/]*?([a-z0-9]+)\/🔖️/)?.[1] ?? "";
-      // 🧭️An artifact whose own carrier IS text or JSON may legitimately print its DSL; the finding is
-      // about a STANDARD format that the DSL is not.
       if (format === "txt" || format === "json" || format === "") continue;
       const binary = BINARY_CARRIER_FORMATS.includes(format);
       breaches.push(
@@ -765,8 +721,6 @@ export function noOracleMisuseBreaches(registry: OracleRegistry): BreachRecord[]
 export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const oracles = new Map(registry.oracles.map((oracle) => [oracle.id, oracle]));
-  // 📏️A fixture naming a tolerance profile nobody defines is a fixture whose every dimensional
-  // assertion resolves against nothing — the name reads as policy while carrying none.
   const tolerances = toleranceProfileTable(registry);
   const profiles = profileTable(registry);
   for (const contribution of registry.contributions) {
@@ -893,10 +847,6 @@ export function isolationBreaches(registry: OracleRegistry): BreachRecord[] {
     }
   }
   for (const probe of registry.probes) {
-    // 🔒️RECORDED DEBT IS EXEMPT, and only recorded debt — the same rule oracles get, and for the same
-    // reason: asserting unconditionally meant that honestly recording a package's reachability failed
-    // the very gate demanding it be recorded, leaving an owner the choice of hiding it or staying red.
-    // An UNRECORDED production-reachable probe is still a hard failure.
     if (probe.productionReachable === true && probe.productionDebt === undefined) {
       breaches.push(breach("testing/dependency", "probe-production-reachable", probe.id, `Probe ${probe.id} (${probe.package}) is production-reachable and records no debt`, "A measurement tool linked into production stops being an independent measurement.", "Make the probe test-only, or record the reachability as shrink-only productionDebt with an owner and a plan."));
     }

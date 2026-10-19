@@ -8,7 +8,7 @@ export interface DrawingTopology {
 }
 
 export interface DrawingInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: DrawingTopology;
 }
 

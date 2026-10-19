@@ -15,7 +15,7 @@ import * as watchModule from "../🟦️.ts";
 import corpus from "./🔣️.json";
 
 const root=process.env.SEMIO_WORKSPACE_ROOT!,directory=resolve(process.argv[3]??""),artifacts=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??""),mode=process.argv[2];
-if(!root||!['authority','receive','fault-error','fault-undefined','fault-overflow'].includes(mode??'')||!relative(artifacts,directory)||relative(artifacts,directory).startsWith('..')||process.argv.length!==4)throw Error("Owned watch fixture arguments required");
+if(!root||!['authority','receive','fault-error','fault-undefined','fault-overflow'].includes(mode??'')||!relative(artifacts,directory)||relative(artifacts,directory).startsWith('..')||process.argv.length!==4)throw new Error("Owned watch fixture arguments required");
 await receiveScriptProcessInvocation(process.env,async original=>{
  const envelope=readIssuedScriptProcessEnvelopeV1(original),child=corpus.cases[0]!.child;
  if(mode==='receive'){
@@ -23,7 +23,7 @@ await receiveScriptProcessInvocation(process.env,async original=>{
   assert.equal(process.env.SEMIO_BUILD_GRAPH_PATH,undefined);assert.equal(process.env.SEMIO_BUILD_GRAPH_DIGEST,undefined);assert.equal(process.env.SEMIO_BUILD_REUSE_GRAPH,undefined);
   await writeFile(join(directory,'receiver.json'),JSON.stringify({envelope,files:JSON.parse(process.env.SEMIO_BUILD_CHANGED_FILES!),projects:JSON.parse(process.env.SEMIO_BUILD_CHANGED_PROJECTS!)}));return;
  }
- const faultMode=mode.startsWith('fault-')?mode.slice(6):undefined,wait=async(condition:()=>Promise<boolean>)=>{for(let count=0;count<400;count++){checkScriptInvocation(original);if(await condition())return;await advanceScriptInvocation(original,'watch:fixture-wait','running');await Bun.sleep(20);}throw Error('Actual watch fixture condition not observed');};
+ const faultMode=mode.startsWith('fault-')?mode.slice(6):undefined,wait=async(condition:()=>Promise<boolean>)=>{for(let count=0;count<400;count++){checkScriptInvocation(original);if(await condition())return;await advanceScriptInvocation(original,'watch:fixture-wait','running');await Bun.sleep(20);}throw new Error('Actual watch fixture condition not observed');};
  if(!faultMode){
  const phaseControl=createIssuedResourceControlV1(original,"watch:child-projection",0),before=JSON.stringify(envelope.capabilities),environment=await projectOwnedBuildChildEnvironmentV1(root,child,original,phaseControl,{files:['app/source.ts'],projects:['app']});
  assert.equal(JSON.stringify(readIssuedScriptProcessEnvelopeV1(original).capabilities),before);
@@ -46,7 +46,7 @@ await receiveScriptProcessInvocation(process.env,async original=>{
  checkScriptInvocation(original);assert.equal(original.control.signal.aborted,false);
  }
  if(faultMode){
- const source=await readFile(new URL("../../🟦️.ts",import.meta.url),'utf8'),ast=ts.createSourceFile('watch.ts',source,ts.ScriptTarget.Latest,true),declaration=ast.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='watchBuildInvocationV1');if(!declaration)throw Error('Actual watch declaration required');
+ const source=await readFile(new URL("../../🟦️.ts",import.meta.url),'utf8'),ast=ts.createSourceFile('watch.ts',source,ts.ScriptTarget.Latest,true),declaration=ast.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='watchBuildInvocationV1');if(!declaration)throw new Error('Actual watch declaration required');
  const body=declaration.getText(ast).replace(/^export /u,'').replace('await import("./👁️watch/🟦️.ts")','watchModule'),compiled=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
  const cachePolicy=(await import('../../../../⚡️caching/🔣️policy.json')).default,ownership=(await import('../../../../🗂️workspaces/🔣️policy.json')).default;
  for(const fault of [faultMode]){

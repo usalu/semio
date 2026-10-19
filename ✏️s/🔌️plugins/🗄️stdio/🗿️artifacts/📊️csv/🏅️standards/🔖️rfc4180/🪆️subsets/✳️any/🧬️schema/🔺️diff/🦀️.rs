@@ -181,9 +181,9 @@ impl CsvRecordsDiff {
 /// 🎰 One slot of a simulated post-removal/insertion array.
 #[derive(Clone, Copy, Debug)]
 enum Slot {
-    /// A surviving item that was at this BASE index.
+    /// 🗃️ A surviving item that was at this BASE index.
     Base(usize),
-    /// An item inserted by this diff, identified by its position in the diff's own `added` vec.
+    /// 🆕️ An item inserted by this diff, identified by its position in the diff's own `added` vec.
     Added(usize),
 }
 

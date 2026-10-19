@@ -1,4 +1,4 @@
-//! program ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
+//! 🗓️ program ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 //! of the sibling export leaf (`IoFidelity::Exact`).
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 

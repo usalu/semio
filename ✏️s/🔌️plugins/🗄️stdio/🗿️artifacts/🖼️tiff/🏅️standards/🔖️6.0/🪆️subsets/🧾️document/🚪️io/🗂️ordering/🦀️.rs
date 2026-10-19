@@ -1,5 +1,6 @@
 //! 🗂️ Stable TIFF tag ordering with admitted index storage and bounded merge work.
-use semio_framework_value::{ValueError,native_decoding::NativeDecodeControl,native_encoding::NativeEncodeControl};
+use semio_framework_value::{ValueError, native_encoding::NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub trait TagOrderControl{fn indices(&mut self,count:usize)->Result<Vec<usize>,ValueError>;fn begin(&mut self,total:usize)->Result<(),ValueError>;fn step(&mut self)->Result<(),ValueError>;}
 impl TagOrderControl for NativeDecodeControl<'_>{fn indices(&mut self,count:usize)->Result<Vec<usize>,ValueError>{self.allocate_vec(count)}fn begin(&mut self,total:usize)->Result<(),ValueError>{self.begin_stage(total)}fn step(&mut self)->Result<(),ValueError>{self.step()}}
 impl TagOrderControl for NativeEncodeControl<'_>{fn indices(&mut self,count:usize)->Result<Vec<usize>,ValueError>{self.allocate_vec(count)}fn begin(&mut self,total:usize)->Result<(),ValueError>{self.begin_stage(total)}fn step(&mut self)->Result<(),ValueError>{self.step()}}

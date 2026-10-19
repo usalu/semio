@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-pets-staging-draft"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Pets staging draft: the working state of a stage with the spacing, schedule, attention and locomotion rules that edit it. Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
+
+[package.metadata.semio]
+role = "product"
+id = "pets-staging-draft"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pets-character = { path = "../../../🎭️character/📦️packages/🦀️rust" }
+semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
+semio-framework-pets-kinematics = { path = "../../../⚙️kinematics/📦️packages/🦀️rust" }
+semio-framework-pets-interaction = { path = "../../../🖱️interaction/📦️packages/🦀️rust" }
+semio-framework-pets-traversal = { path = "../../../🧭️traversal/📦️packages/🦀️rust" }

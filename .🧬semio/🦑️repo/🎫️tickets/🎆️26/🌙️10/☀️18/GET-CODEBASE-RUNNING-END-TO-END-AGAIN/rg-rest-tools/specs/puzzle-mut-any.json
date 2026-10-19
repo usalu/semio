@@ -1,0 +1,35 @@
+{
+ "ws": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml",
+ "old_name": "semio-s-artifact-puzzle-5d-mut-any",
+ "old_pkg": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+ "moves": [
+  "standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry",
+  "standards::v1::subsets::any::schema::mutations::edit_part_2d_text",
+  "standards::v1::subsets::any::schema::mutations::change_part_2d_icon",
+  "standards::v1::subsets::any::schema::mutations::change_part_2d_hidden",
+  "standards::v1::subsets::any::schema::mutations::change_part_2d_locked"
+ ],
+ "new": {
+  "name": "semio-s-artifact-puzzle-5d-mut-any-part2d",
+  "dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️part2d-leaves",
+  "emoji": "🧱️",
+  "doc": "The five part 2d field mutation leaves of `semio-s-artifact-puzzle-5d` with their diff and inverse, held by their own crate so the aggregate crate stays inside the source gate.",
+  "desc": "Puzzle 5d part 2d mutation leaves"
+ },
+ "subtree": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+ "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+ "rewrites": [
+  {
+   "re": "\\bcrate::Puzzle5dSnapshot\\b",
+   "to": "semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot"
+  },
+  {
+   "re": "\\bcrate::standards::v1::subsets::any::schema::diff::",
+   "to": "semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::"
+  },
+  {
+   "re": "impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for (\\w+) \\{",
+   "to": "impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for \\1\nwhere\n    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<\\1>,\n{"
+  }
+ ]
+}

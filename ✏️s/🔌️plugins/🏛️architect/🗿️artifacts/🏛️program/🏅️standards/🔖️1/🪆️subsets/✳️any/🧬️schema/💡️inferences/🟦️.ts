@@ -9,7 +9,7 @@ export interface ProgramTopology {
 }
 
 export interface ProgramInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: ProgramTopology;
 }
 

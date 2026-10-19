@@ -1,7 +1,8 @@
 //! 🌳️ Original scalar frames retain their high-water pages while borrowed source nodes are visited.
 use super::{SemioValue,ValueSqliteTables,References,number};
 use store::sqlite_snapshot::{SqliteSnapshotControl,artifact::{Cell,RowWriter}};
-use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::PagedList;
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 
 #[derive(Clone,Copy,semio_framework_value::RetireOwned)]

@@ -88,15 +88,12 @@ const DEFAULT_QUALITY: u8 = 90;
 fn recipe(id: &str) -> Option<(Vec<u8>, Vec<u8>)> {
     let base = base_image();
     match id {
-        // 🫥️ Reader-uncarried: `image` writes a real density difference but has no decode-side
-        // getter for it in this crate version (see module docstring). The bytes genuinely differ.
         "change-jfif-header-applied" => {
             let before = encode(&base, DEFAULT_QUALITY, None);
             let after = encode(&base, DEFAULT_QUALITY, Some((300, 300, PixelDensityUnit::Inches)));
             Some((before, after))
         }
 
-        // 👁️ Witnessable: `xmp_metadata()` reads exactly this APP1 shape.
         "insert-other-segment-applied" => {
             let before = encode(&base, DEFAULT_QUALITY, None);
             let after = splice_xmp(&before, &xmp_packet());
@@ -108,7 +105,6 @@ fn recipe(id: &str) -> Option<(Vec<u8>, Vec<u8>)> {
             Some((before, plain))
         }
 
-        // 👁️ Witnessable: the decoded raster digest changes from a real gradient to a flat fill.
         "replace-pixels-applied" => {
             let before = encode(&base, DEFAULT_QUALITY, None);
             let after = encode(&solid_image(base.width(), base.height(), [128, 128, 128]), DEFAULT_QUALITY, None);

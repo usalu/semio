@@ -10,7 +10,7 @@ export interface SemioImageDimensions {
 }
 
 export interface SemioImageInference {
-  /** @derived */
+  /** 📏️ @derived */
   dimensions: SemioImageDimensions;
 }
 

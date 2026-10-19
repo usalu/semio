@@ -3,7 +3,6 @@
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
 extern crate semio_framework_os_kernel as store;
-use semio_s_artifact_raster_raster_model::RASTER_OWNED_FIELD_BYTES;
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::{RasterAssetChild, RasterLayerNode, RasterOwnedMap};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;

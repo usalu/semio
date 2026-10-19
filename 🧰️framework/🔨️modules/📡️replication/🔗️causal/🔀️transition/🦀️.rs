@@ -591,12 +591,6 @@ pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transition
 
 //#endregion 🔖️Fold
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
 #[cfg(test)]
 #[global_allocator]
 static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

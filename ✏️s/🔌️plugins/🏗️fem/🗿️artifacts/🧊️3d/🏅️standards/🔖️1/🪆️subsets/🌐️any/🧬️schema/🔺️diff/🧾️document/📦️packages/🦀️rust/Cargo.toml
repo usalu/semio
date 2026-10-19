@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-fem-3d-diff-document"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d diff JSON Schema document"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

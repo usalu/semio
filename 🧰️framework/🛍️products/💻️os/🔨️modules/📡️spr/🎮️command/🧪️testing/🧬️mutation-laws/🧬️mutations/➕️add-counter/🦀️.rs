@@ -1,6 +1,8 @@
 //! ➕️ Direct add-counter fixture payload and behavior.
 use super::super::{Counter, CounterDiff, CounterMutation};
-use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationOutcome};
+use semio_framework_os_command::MutationKind;
+use semio_framework_os_command::SemanticDescriptor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -24,7 +26,7 @@ impl MutationKind<Counter, CounterMutation> for AddCounter {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<Counter, CounterMutation> for AddCounter {
+impl semio_framework_os_command::ColdMutationKind<Counter, CounterMutation> for AddCounter {
     fn diff(&self, _base: &Counter) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff { deltas: vec![self.delta] })
     }

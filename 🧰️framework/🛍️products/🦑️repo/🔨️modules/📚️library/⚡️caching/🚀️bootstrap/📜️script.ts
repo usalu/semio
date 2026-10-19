@@ -49,12 +49,12 @@ export function pinnedNxRuntimeEnvironment(source:NodeJS.ProcessEnv,bun:string,p
 }
 
 /** 🛠️ Loads the owner of the current immutable Nx recipe and patch identity. */
-function nxBootstrapServices(): typeof import("./🛠️tools/📜️script.ts") {
-  return createRequire(import.meta.url)("./🛠️tools/📜️script.ts");
+function nxBootstrapServices(): typeof import("./🛠️tools/🟦️.ts") {
+  return createRequire(import.meta.url)("./🛠️tools/🟦️.ts");
 }
 
-export {publishBuildBootstrapSourcesV1 as publishBootstrapSources} from "../../🏗️build/🚀️bootstrap/📜️script.ts";
-import {publishBuildBootstrapSourcesV1 as publishBootstrapSources} from "../../🏗️build/🚀️bootstrap/📜️script.ts";
+export {publishBuildBootstrapSourcesV1 as publishBootstrapSources} from "../../🏗️build/🚀️bootstrap/🟦️.ts";
+import {publishBuildBootstrapSourcesV1 as publishBootstrapSources} from "../../🏗️build/🚀️bootstrap/🟦️.ts";
 
 /** 📂️ One directory the admission walk descended into: its identity stamp, the child directories it queues and the admitted manifest names it holds. */
 type NxAdmissionDirectory = { readonly dev: number; readonly ino: number; readonly mtimeMs: number; readonly ctimeMs: number; readonly children: readonly string[]; readonly manifests: readonly string[] };
@@ -76,7 +76,7 @@ function nxAdmissionSnapshotPath(root: string,directory:string): string {
 /** 📖️ Reads the previous admission snapshot for `policy`, or none when absent, unreadable or produced by another policy. */
 async function readNxAdmissionSnapshot(path: string, policy: string): Promise<NxAdmissionSnapshot["directories"]> {
   try {
-    const state=await lstat(path);if(!state.isFile()||state.isSymbolicLink()||state.nlink!==1||state.size>NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1)throw Error("Bounded collection admission snapshot required");
+    const state=await lstat(path);if(!state.isFile()||state.isSymbolicLink()||state.nlink!==1||state.size>NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1)throw new Error("Bounded collection admission snapshot required");
     const snapshot = JSON.parse(await readFile(path, "utf8")) as NxAdmissionSnapshot;
     return snapshot.policy === policy && snapshot.directories && typeof snapshot.directories === "object" ? snapshot.directories : {};
   } catch { return {}; }
@@ -86,7 +86,7 @@ async function readNxAdmissionSnapshot(path: string, policy: string): Promise<Nx
 async function writeNxAdmissionSnapshot(path: string, snapshot: NxAdmissionSnapshot): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   const temporary = `${path}.${process.pid}.${randomUUID()}.tmp`;
-  const source=JSON.stringify(snapshot);if(Buffer.byteLength(source)>NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1)throw Error("Bounded collection admission snapshot required");
+  const source=JSON.stringify(snapshot);if(Buffer.byteLength(source)>NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V1)throw new Error("Bounded collection admission snapshot required");
   try{await writeFile(temporary,source,{flag:"wx"});await rename(temporary,path);}finally{rmSync(temporary,{force:true});}
 }
 
@@ -210,12 +210,12 @@ async function publishNxCollectionBoundaryV1(root: string,directory:string, sign
   if (await original() !== before) throw new Error("Nx ignore authority changed during current owner admission");
   signal?.throwIfAborted();
   if (result !== before) {
-    if(Buffer.byteLength(result)>524288)throw Error("Nx source configuration exceeds finite publication capacity");
+    if(Buffer.byteLength(result)>524288)throw new Error("Nx source configuration exceeds finite publication capacity");
     const temporary=join(repositoryCacheBudgetV1(root).controlDirectory,"nxignore.tmp");
-    if(existsSync(temporary)){const stale=await lstat(temporary);if(!stale.isFile()||stale.isSymbolicLink()||stale.nlink!==1||stale.size>524288)throw Error("Owned Nx configuration staging required");rmSync(temporary);}
+    if(existsSync(temporary)){const stale=await lstat(temporary);if(!stale.isFile()||stale.isSymbolicLink()||stale.nlink!==1||stale.size>524288)throw new Error("Owned Nx configuration staging required");rmSync(temporary);}
     await mkdir(dirname(temporary), { recursive: true });
     try {
-      if(Buffer.byteLength(result)>524288)throw Error("Bounded Nx ignore control file required");
+      if(Buffer.byteLength(result)>524288)throw new Error("Bounded Nx ignore control file required");
       await writeFile(temporary, result,{flag:"wx"});
       signal?.throwIfAborted();
       if (await original() !== before) throw new Error("Nx ignore authority changed before atomic publication");
@@ -245,7 +245,7 @@ export function nxChildEnvironment(environment: NodeJS.ProcessEnv, args: readonl
 
 /** 🧷️ Names the exact SDK before the physical namespace owner supplies every filesystem path. */
 export function nxToolingEnvironmentV1(environment:NodeJS.ProcessEnv,toolingIdentity:string):NodeJS.ProcessEnv{
- if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw Error("Original immutable Nx tooling identity required");return {...environment,SEMIO_NX_TOOLING_IDENTITY:toolingIdentity};
+ if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw new Error("Original immutable Nx tooling identity required");return {...environment,SEMIO_NX_TOOLING_IDENTITY:toolingIdentity};
 }
 
 /** 🔗️ Retains each watcher binding with its concrete graph and socket locations. */
@@ -255,7 +255,7 @@ export type NxWatcherEnvironment = Readonly<Record<string, string | undefined>> 
 export function nxWatcherEnvironment(root: string, environment: Record<string, string | undefined>, activation: string): NxWatcherEnvironment {
   const binding = Object.entries(environment).filter(([key]) => /^(?:S_|VITE_|PLAYGROUND_|SEMIO_(?:PLUGIN|RENDERER|BUILD_MODE|NX_TOOLING_IDENTITY|LOCALE|LOCKED_LOCALE|LOCKED_TERMINOLOGY)$)/.test(key)).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
   const identity = createHash("sha256").update(JSON.stringify([resolve(root).replaceAll("\\", "/"), activation, binding])).digest("hex").slice(0, 24);
-  const storage=environment.SEMIO_NX_FIXED_STORAGE,graphStorage=environment.SEMIO_NX_GRAPH_STORAGE,socketStorage=environment.SEMIO_NX_SOCKET_STORAGE,tooling=environment.SEMIO_NX_TOOLING_IDENTITY;if(!storage||!graphStorage||!socketStorage||!tooling)throw Error("Original funded watcher namespace required");const graphIdentity=environment.SEMIO_BUILD_GRAPH_DIGEST??null,expected=boundedNxNamespaceV1(storage,graphStorage,tooling,root,graphIdentity,environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!);if(environment.NX_WORKSPACE_DATA_DIRECTORY!==expected.environment.NX_WORKSPACE_DATA_DIRECTORY)throw Error("Original watcher base namespace refused");const namespace=boundedNxNamespaceV1(storage,graphStorage,tooling,root,graphIdentity,environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!,identity),sockets=boundedNxSocketNamespaceV1(socketStorage,tooling,root,graphIdentity,environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!,identity);
+  const storage=environment.SEMIO_NX_FIXED_STORAGE,graphStorage=environment.SEMIO_NX_GRAPH_STORAGE,socketStorage=environment.SEMIO_NX_SOCKET_STORAGE,tooling=environment.SEMIO_NX_TOOLING_IDENTITY;if(!storage||!graphStorage||!socketStorage||!tooling)throw new Error("Original funded watcher namespace required");const graphIdentity=environment.SEMIO_BUILD_GRAPH_DIGEST??null,expected=boundedNxNamespaceV1(storage,graphStorage,tooling,root,graphIdentity,environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!);if(environment.NX_WORKSPACE_DATA_DIRECTORY!==expected.environment.NX_WORKSPACE_DATA_DIRECTORY)throw new Error("Original watcher base namespace refused");const namespace=boundedNxNamespaceV1(storage,graphStorage,tooling,root,graphIdentity,environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!,identity),sockets=boundedNxSocketNamespaceV1(socketStorage,tooling,root,graphIdentity,environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!,identity);
   return { ...environment,...namespace.environment,...sockets.environment,...(environment.SEMIO_NX_GRAPH_DIAGNOSTIC_DIRECTORY?{SEMIO_NX_GRAPH_DIAGNOSTIC_DIRECTORY:join(environment.SEMIO_NX_GRAPH_DIAGNOSTIC_DIRECTORY,"watchers",identity)}:{}),SEMIO_NX_WATCHER_IDENTITY:identity,NX_WORKSPACE_DATA_DIRECTORY:namespace.environment.NX_WORKSPACE_DATA_DIRECTORY!, NX_SOCKET_DIR:sockets.environment.NX_SOCKET_DIR!, NX_DAEMON_SOCKET_DIR: undefined };
 }
 
@@ -416,7 +416,7 @@ export class NxScript extends Script {
     }
     const nxCli = tooling.cli;
     const invocation = resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
-    const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw Error("Original loaded Nx tooling receipt required");
+    const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw new Error("Original loaded Nx tooling receipt required");
     return withNxToolingUseV1(nxToolingUseStorageV1(this.root),{identity:toolingIdentity,toolkitRoot:dirname(tooling.modulePath),invocation:this.invocation},phaseControl,async(_witness,actualPhase)=>{
     const check=()=>checkResourceLeaseControl(actualPhase);check();
     const implementationIdentity=createRequire(import.meta.url)("../../🟨️.mjs").nxBuildDependencyImplementationV1();
@@ -508,7 +508,7 @@ export class NxScript extends Script {
         if(!inheritedReuse&&!invocation.watch&&nxChildEnvironment(env,invocation.args,false).NX_DAEMON!=="false"){
           for(const key of ["NX_WORKSPACE_DATA_DIRECTORY","NX_PROJECT_GRAPH_CACHE_DIRECTORY","NX_CACHE_DIRECTORY","NX_NATIVE_FILE_CACHE_DIRECTORY","SEMIO_NX_FIXED_STORAGE","SEMIO_NX_SOCKET_STORAGE","TMPDIR","TMP","TEMP","NX_SOCKET_DIR","NX_DAEMON_SOCKET_DIR","NX_DAEMON"]){const value=key==="NX_DAEMON"?nxChildEnvironment(env,invocation.args,false).NX_DAEMON:env[key];if(value===undefined)delete process.env[key];else process.env[key]=value;}
           const frozen=await createRequire(nxCli)("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();
-          if(!frozen||frozen.toolingIdentity!==toolingIdentity)throw Error("Original immutable graph authorizers required");
+          if(!frozen||frozen.toolingIdentity!==toolingIdentity)throw new Error("Original immutable graph authorizers required");
           if(frozen.authorizers.selectedTaskSelectionV1(invocation.args,readBuildMode(env.SEMIO_BUILD_MODE??"prototype"))){
             const control=actualPhase,ports=await selectedGraphSdkPortsV1(this.root,nxCli,invocation.args,readBuildMode(env.SEMIO_BUILD_MODE),control,nxChildEnvironment(nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,readScriptProcessEnvelope(JSON.parse(env[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),invocation.args),invocation.args,env),invocation.args,false)),proof=await frozen.authorizers.captureSelectedGraphReuseReceiptV1(this.root,workspaceData,ports,actualPhase.signal);check();
             if(proof){sourceHandoff=await writeSelectedGraphHandoffV1(this.root,workspaceData,proof,env,actualPhase.signal);env.SEMIO_NX_SELECTED_GRAPH_RECEIPT=sourceHandoff!.environment;selected=true;}
@@ -607,8 +607,8 @@ export function nxBootstrapEnvelopeV1(root:string,args:readonly string[],environ
  const policy=encoded===undefined?incoming?.policy??readScriptPolicy({version:1,owner:"repository:nx",maximumElapsedMilliseconds:orchestratorBudgetMs()??0}):readScriptPolicy(JSON.parse(encoded));
  const capabilities=incoming?capabilityWire===undefined?incoming.capabilities:JSON.parse(capabilityWire):capabilityWire===undefined?createNxBootstrapCapabilitiesV1(root,args,environment):readNxBootstrapAuthoringCapabilitiesV1(JSON.parse(capabilityWire));
  const envelope=incoming??createScriptProcessEnvelope(policy,capabilities,now);
- if(envelope.policy.version!==policy.version||envelope.policy.owner!==policy.owner||envelope.policy.maximumElapsedMilliseconds!==policy.maximumElapsedMilliseconds)throw Error("Original Nx process policy changed across handoff");
- if(JSON.stringify(envelope.capabilities)!==JSON.stringify(capabilities))throw Error("Original Nx process capabilities changed across handoff");
+ if(envelope.policy.version!==policy.version||envelope.policy.owner!==policy.owner||envelope.policy.maximumElapsedMilliseconds!==policy.maximumElapsedMilliseconds)throw new Error("Original Nx process policy changed across handoff");
+ if(JSON.stringify(envelope.capabilities)!==JSON.stringify(capabilities))throw new Error("Original Nx process capabilities changed across handoff");
  return envelope;
 }
 
@@ -617,7 +617,7 @@ if (import.meta.main) {
  process.env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(envelope,process.env)[SCRIPT_PROCESS_INVOCATION_ENV];
  try{await withScriptProcessEnvelope(envelope,async original=>{
   const native=await import("../../../🎛️dashboard/📦️installation/🟦️.ts"),selectedMode=resolveNxInvocation(args.slice(1)).env.SEMIO_BUILD_MODE,mode=readBuildMode((original.capabilities as{buildMode?:unknown}).buildMode??selectedMode??"prototype");
-  if(selectedMode!==undefined&&mode!==selectedMode)throw Error("Original dashboard build mode changed across handoff");
+  if(selectedMode!==undefined&&mode!==selectedMode)throw new Error("Original dashboard build mode changed across handoff");
   const invocation=args[0]==="nx"&&native.dashboardInstalled(WORKSPACE_ROOT,mode)?native.dashboardInvocation(args.slice(1)):undefined;
   if(invocation){try{process.exitCode=await native.launchDashboard(WORKSPACE_ROOT,invocation,{invocation:original,workspace:WORKSPACE_ROOT,mode,network:readNativeCallerAuthorityV1(original.capabilities).network,control:scriptCompilerAdmissionControlV1(original,"dashboard:launch",0)});}catch(error){console.error(error instanceof Error?error.message:String(error));process.exitCode=original.control.signal.aborted?130:1;}}
   else{publishBootstrapSources(WORKSPACE_ROOT);await new ScriptRouter(WORKSPACE_ROOT).register("nx",NxScript).run(args,original);}

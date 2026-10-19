@@ -12,6 +12,7 @@ pub(super) fn caller_worker_close_policy(phase:WorkerJobClosePhase)->RetainedClo
 
 use std::mem::size_of;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
+use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 
 fn params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
     BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "test.retained-job", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: logical_now_us }

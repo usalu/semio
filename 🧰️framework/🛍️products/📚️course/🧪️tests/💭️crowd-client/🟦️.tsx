@@ -643,7 +643,7 @@ describe("🧘️ a page that stays still while the crowd arrives and the others
   });
 
   it("draws the others' pointers and names over the page, never in it", () => {
-    const peers: readonly PeerCursor[] = [{ session: "s-1", tag: "0000000a", label: "Ada", colour: 3, cursor: { anchor: "run", x: 0.5, y: 0.5 }, focus: "run", drag: "kettle" }];
+    const peers: readonly PeerCursor[] = [{ session: "s-1", tag: "0000000a", label: "Ada", colour: 3, place: { screen: "home" }, home: undefined, cursor: { anchor: "run", x: 0.5, y: 0.5 }, focus: "run", drag: "kettle" }];
     render(<PresenceOverlay view={{ ...EMPTY_PRESENCE_VIEW, peers }} show />);
     const layer = document.querySelector<HTMLElement>("[data-presence-layer]")!;
     for (const name of ["fixed", "inset-0", "overflow-hidden", "pointer-events-none"]) expect(layer.classList.contains(name), name).toBe(true);

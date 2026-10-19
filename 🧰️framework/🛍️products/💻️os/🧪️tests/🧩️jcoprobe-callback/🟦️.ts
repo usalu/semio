@@ -31,7 +31,7 @@ async function runS2() {
   const result = await probe.awaitEcho(50, 777);
   const elapsed = performance.now() - start;
   clearInterval(interval);
-  const ok = result === 777 && ticks >= 3; // 50ms / 5ms interval should tick ~10x if unblocked
+  const ok = result === 777 && ticks >= 3;
   record("S2", ok, `awaitEcho(50,777) took ${elapsed.toFixed(2)}ms, result=${result}, concurrent setInterval(5ms) fired ${ticks} times while it was pending (>=3 required to prove the loop wasn't blocked)`);
 }
 // #endregion
@@ -44,7 +44,6 @@ async function runS3() {
   const result = await probe.spawnDetached(80);
   const exportDoneAt = performance.now() - start;
   events.push({ label: "export-resolved", t: exportDoneAt });
-  // give the detached background task a chance to actually finish (its own 80ms delay)
   await new Promise((resolve) => setTimeout(resolve, 200));
   const totalAt = performance.now() - start;
   record(

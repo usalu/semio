@@ -1,0 +1,63 @@
+# Architecture Course Build Continuation
+
+The chat goal and ticket remain open. **No redeployable artifact, managed course collection/assertion pass, compiled Rust pass or browser pass exists yet.** Continue working; no external input is required. Detailed history is retained in the other ticket reports; this file is the current checkpoint.
+
+## Ticket And Builder
+
+- Ticket ID `26/10/02/TEACHING-ARCHITECTURE-DEPLOY-READY`; folder is this document's parent. Repo goal association `RUNNING-FRAMEWORK/RUNNING-PRODUCTS` stays unchanged.
+- Dedicated running builder `semio-course-builder-sol-8579fa82486d`; volume `semio-course-source-8579fa82486d-195bb7ab`; guest Source `/repo`. Do not recreate/delete it while required work remains.
+- Exact OS image `sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b`, Debian12 linux/amd64, actual Bun1.4.2/Node24.15.0/private Docker29.9.1+Compose5.6.0. Memory7GiB/CPU8, native directory/exchange backend, no host Source/socket mount.
+- Frozen base manifest SHA256 `8579fa82486d7a67d41046c62d04167914d25b4ff3747d6514f2c0c44a836c36`, 121423 files/1415976711B. Authentic Git HEAD `bd9e4e02bd0a1225c7cc47d9f2de10f116927e1d`. Independently frozen epochs are not atomic current-host equivalence.
+- Managed lock and full sync succeeded; full normalized sync terminal0 at20:51:25.823UTC after56m20s, expiredfalse. Independent observation matched308 bindings. Do not repeat lock/sync absent actual dependency metadata changes.
+- Ten verified chained Source overlays are applied. Latest receipt `🗑️generated/2026-10-19-source-overlay-10.json`, SHA256 `7cd542d8ff28bdb37ab31775a7738b3ee6512375d64d6d1340cf2aede9f38795`. Root verified exact three handoff rows/hashes/bytes; Low independently verified all ten receipt hashes/chains, actual private three hashes and inactive diagnostics. Exact plan/receipts in `2026-10-19-build-input.json`.
+- All temporary diagnostics are removed/inactive. Root compile-demand diagnostic8091 terminal1/expiredfalse and compile-remove22382 terminal0 restored exact production admission06c365e8e789949a6d820d9e8bbe198705169f51d169aa3e1ad6eb0c11799593/discovery05949a4f14f4c830ed15424259590e43889c7eab4f4c0d3e265824d8ee7c977f. Distinct receipts/observed metadata are retained. No managed lane is active. Release owns the next root-authority repair; root owns any later exact transfer.
+
+## Actual Latest Boundary
+
+Latest production release7 is terminal1/expiredfalse,364.391s, 2026-10-19T22:51:53.959Z–22:57:58.350Z. Immutable receipt private-build-20261019T225153-ace24a38.json, log2026-10-20-runtime-course-ts-release7.log SHA256562052669c2669dec17e4b8e0f6bdc7355ba9e43134ab1dbd25c18bb5a91459a. It crossed the corrected pack/value wrapper, then again refused VSCode query importing absent generated GraphQL types before collection. Actual owner/targets/demand-root provenance is absent from the production error; do not infer that it is the former passive framework route.
+
+Earlier production release6 terminal1/expiredfalse after321.036s, receipt private-build-20261019T223941-ace24a38.json, failed at the pack/value TypeScript package script importing absent ../../📜️script.ts. That exact correction is applied as overlay10 below.
+
+Runtime independently verified frozen/base/HEAD wrapper9f93df7ff93e954bd54fcd19995ded2406042f22e02b2c6fd0452899e4e62f11 has the stale route. That target is absent frozen/host/HEAD/index. Actual semantic value/🟦️.ts a019b0372d61b91e0b7620dc551834a90d48571b6cbaddbd629d83c62746e325 already defines the exact public helper and is byte-identical frozen/base/host. Host and authentic index wrapper already contain another owner's correction to ../../🟦️.ts, hash496af3ab41f1b54d7203e8006d7d37449ea254dfd746e82ca52cd9f76c1ec992. Release owns narrow neutral RED/GREEN regression; runtime and Low independently review before root borrows/transfers exact current bytes. No stub, compatibility adapter, exemption or duplicate implementation is required.
+
+The prior six-file relative-workspace-fallback repair remains valid, but another route caused the actual failure. Root's bounded diagnostic Original ran22:19:22.768–22:22:23.054UTC, terminal1/expiredfalse. Exact53added records/13932UTF8bytes proved course→framework/default; framework has targets[] and only default requested. Its broad semantic freshness pattern matches11061 files including VSCode. Missing context is executablefalse/moduleCount7172/caretInputs[]. Course's own721matched inputs exclude VSCode. Root restored both temporary files afterward. Evidence: `2026-10-20-admission-trace.md`, generated `2026-10-20-admission-trace-observed.json` and managed log. Do not rerun instrumentation as though pending.
+
+## Latest Applied Repair
+
+The five-file freshness/demanded-compilation repair is now applied as overlay9. Exact final handoff is generated/2026-10-20-freshness-handoff.json; report2026-10-20-freshness-compilation.md. It retains passive named-input Source byte hashing, strict selected/declared roots, known demanded bare runtime/type entries and generated producer ordering. Explicit entries override prior raw-resource observation; ordinary raw resources remain passive. Strict absent direct exports remain a bounded limitation supported by the finite262manifest/24coldsurface audit with zero unique taxonomy witnesses; no Native artifact readiness claim or invented fallback is made.
+
+Meaningful REDs and final four direct tests/122assertions passed. Runtime final umbrella-green7 passed nine positives/five strict negatives through actual admission/nodes/assembly/Nx/Bazel, actual parser/TS companion, independent SQLite expected paths and36 Python byte-digest recomputations. Same-owner raw collision was correctly observed before demanded compilation/refusal. Final five exact hashes/bytes and Source read fences held; independent High/Low reviews are clean. Root transferred overlay9 terminal0; Low verified full nine-receipt chain and all five actual private hashes. These are pure-function/input proofs, not a managed course or compiled-native pass.
+
+The public-helper wrapper correction and regression are now applied as overlay10. Exact current wrapper496af3ab… is borrowed unchanged; the only authored Source updates are the existing graph testb85e1d7d… and neutral fixture0b900d0a…. Frozen RED3 meaningfully refuses the stale target; actual permanent GREEN2 passes1test/8assertions. Independent actual TypeScript alias/checker and selected admission→nodes/assembly→Nx/Bazel proof is terminal0 with missing-target/undeclared-export strict negatives, independent SQLite paths/four Python byte hashes. High/Low exact review is clean. Root transfer session22860 terminal0 and exact receipt rows match handoff. Report2026-10-20-script-surface.md.
+
+Release7 is terminal1. Root's distinct compile-demand diagnostic completed23:13:49.618–23:18:26.803UTC terminal1/expiredfalse; logSHA256dcd8fa463b65a68fa3d5d66611a75543def220ce429b63b3ae8922ffa485ec3d. Exact316added rows/49677UTF8bytes, largest583; routine cap reached, reserved critical row retained untruncated. Actual failing owner @semio-tech/framework-rs selectedgenerate inputsdefault/nativeTestSources; VSCode query is initial seed, command/declared/demandedfalse, no predecessor. Earlier passive framework targets[]/default now correctly has moduleCount0 despite query matched. Actual compile-remove22382 terminal0 restores exact production hashes and inactive metadata. Do not rerun instrumentation as pending.
+
+Release now owns test-first compilation-root authority refinement: a selected generator's broad freshness files must not become typed roots merely due to target selection. Preserve actual command/declared/bare roots, genuine selected test/compiler roots, generated producer discovery and freshness hashes. Inspect actual framework-rs generate/course:test authority before choosing the schema-first rule; no naive omission of compiler/test Source demand. Runtime independently proves final pipeline; Low audits. No managed course collection/assertion/native/browser pass or redeployable artifact exists yet.
+
+## Active Fleet
+
+- `/root/course_release` High: owns permanent repair/direct tests/report/ledger; no private/managed command until root exact transfer/handoff.
+- `/root/course_runtime` High: owns independent corrected full pipeline, cold-export/Native surface audit, later eight individual test commands. No overlapping discovery edits.
+- `/root/final_source_audit` Low: read-only Source/evidence audit, later overlay/runtime verification. No Source/private mutations or managed commands.
+- Root owns coordination, exact Source overlays, temporary diagnostic lifecycle, actual proctor material check, release aggregate/export and ticket closure. Keep maximum useful four-agent fleet and readable messages.
+
+## Next Execution Gates
+
+All actual commands run through ticket `🚀️run/📜️script.ts command ...` into genuine `bun repo`, explicit `--configuration=release` before `--`. Future supervisor limit2h; authored quick assertion/preparation budgets stay unchanged. Workers own sessions until terminal. All generated logs/receipts stay under ticket `🗑️generated`.
+
+1. Finish current compilation-root authority design/TDD/full-pipeline proof and independent exact Source review; root transfers only the validated cohort. Diagnostic8091/removal are complete. Do not repeat completed overlays/proofs or rewrite base.
+2. After any exact reviewed repair transfer, release owns next clean individually selected run @semio-tech/course:test --configuration=release through terminal. Only an actual clean success opens other lanes.
+3. Runtime runs eight individually selected suites: pets, course-react, pets-react, architecture-course, then course-rs, course-tests-runs-rs, pets-rs and proctor. Exact projects in runtime.md. Barrier before four native suites: root proctor check must be terminal0. Retain each suite's actual collection/results.
+4. Release runs three individual typechecks: course-react,pets,pets-react, then separate `@teaching/architecture-course:ci-browser-prepare`, all release.
+5. Root runs `run @teaching/proctor:check --configuration=release` under build authority to validate real material and warm sealed native tooling. Success needs actual course fingerprint/five quiz rows plus overall0, not cargo progress alone. It does not compile every native test dependency; cold300s preparation caveat remains.
+6. After required gates, root runs `run @teaching/architecture-course:deploy-check --configuration=release -- --tag architecture-20261019-8579fa82486d`, then `docker-stack-bundle` with identical tag. Aggregate covers site typecheck/material/publication/image+runtime/stack/both browser topologies; it does not replace nine test targets or three extra typechecks. No registry push is required.
+7. Actual runner `export`; independently audit site and offline proctor bundle. Intended host course TypeScript package `dist/2026-10-19-8579fa82486d/{site,proctor}`. Exact offline bundle includes proctor-image.tar with proctor+local pinned Caddy, compose/Caddyfile/.env/README/certificates. Existing operator .env/certificates preserved on redeploy. Export is an honest private Original artifact copy, not host Native production or current-checkout identity.
+8. Preserve final Markdown evidence/owned-file ledgers and all input scripts/configs; delete ticket generated outputs only after actual completion. Close existing ticket through repo MCP with own files/summary, then complete chat goal only once build is delivered.
+
+**Do not use run-many for the planned gates.** Earlier batching plan was superseded: public scheduler selection supports it, but buildInvocationGraphSelectionV1 returns kind=all for non-run commands, broadening Source admission. No batch was executed. No new run-many feature work is needed for this goal.
+
+## Rules And Evidence
+
+Read build skill before new build handling. Actual builds/tests only `bun repo`; no raw Nx/Cargo/rustc/install/private CARGO_TARGET_DIR. Focused pure Source/data regressions during startup repair are explicitly distinguished from managed/compiler/browser proof. No modifying Git commands/worktrees or AGENTS edits. Permanent scripts only 📜️script.ts. Source paths/custody/limits remain enforced; no fake producer receipts or missing-source stubs.
+
+Artifact export limits remain4GiBtotal/1GiBfile/8192files/16384nodes/10min/path256UTF16; actual artifact roster/size still required. Longest expected authored font stage249 is only a source audit, not final fit proof. Detailed existing reports: status, runtime, generated-compile, relative-source, freshness-compilation, admission-trace, private-build-audit, provider-identity, artifact-export, release-file-ledger, runtime-changes.

@@ -5,12 +5,13 @@ extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_mut_pv_system as pv_system_mutations;
+extern crate semio_s_artifact_energy_model_mut_pv_system_performance as pv_system_performance_mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[path = "."]
 mod change_pv_system_inverter_efficiency {
-    pub use crate::pv_system_mutations::change_pv_system_inverter_efficiency::*;
+    pub use crate::pv_system_performance_mutations::change_pv_system_inverter_efficiency::*;
     #[path = "../../☀️pv-system/♌️change-inverter-efficiency/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../☀️pv-system/♌️change-inverter-efficiency/🧪️tests/✅️applies/🦀️.rs"]
@@ -19,7 +20,7 @@ mod change_pv_system_inverter_efficiency {
 
 #[path = "."]
 mod change_pv_system_dc_capacity {
-    pub use crate::pv_system_mutations::change_pv_system_dc_capacity::*;
+    pub use crate::pv_system_performance_mutations::change_pv_system_dc_capacity::*;
     #[path = "../../☀️pv-system/⚛️change-dc-capacity/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../☀️pv-system/⚛️change-dc-capacity/🧪️tests/✅️applies/🦀️.rs"]
@@ -46,7 +47,7 @@ mod delete_pv_system {
 
 #[path = "."]
 mod change_pv_system_module_efficiency {
-    pub use crate::pv_system_mutations::change_pv_system_module_efficiency::*;
+    pub use crate::pv_system_performance_mutations::change_pv_system_module_efficiency::*;
     #[path = "../../☀️pv-system/🎖️change-module-efficiency/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../☀️pv-system/🎖️change-module-efficiency/🧪️tests/✅️applies/🦀️.rs"]

@@ -47,6 +47,18 @@ fn the_reference_quiz_and_course_are_clean() {
 }
 
 #[test]
+fn pooled_timing_boundaries_have_shared_issue_codes() {
+    let source: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧺️balanced-pools/🔣️.json")).unwrap();
+    let vectors: Vec<serde_json::Value> = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧺️balanced-pools/🩺️validation.json")).unwrap();
+    for vector in vectors {
+        let mut document = source.clone();
+        document["tasks"][0]["pool"]["seconds"] = vector["seconds"].clone();
+        let quiz: Quiz = serde_json::from_value(document).unwrap();
+        assert_eq!(serde_json::to_value(quiz_issues(&quiz)).unwrap(), vector["issues"], "{}", vector["id"]);
+    }
+}
+
+#[test]
 fn architecture_topic_vectors_agree_with_the_read_model() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(5).unwrap();
     let site = root.join("🎓️teaching/🏛️architecture/📚️course");

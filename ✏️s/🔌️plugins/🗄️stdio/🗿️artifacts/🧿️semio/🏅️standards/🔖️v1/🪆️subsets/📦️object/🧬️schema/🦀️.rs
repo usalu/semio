@@ -59,15 +59,12 @@ impl semio_framework_value::FromValue for SemioObjectArtifact {
 //#endregion 🔖️ValueCodec
 
 impl SemioObjectArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioObjectSnapshot {
         SemioObjectSnapshot { schema: self.schema.clone(), transform: self.transform, brep: self.brep.clone(), mesh: self.mesh.clone(), properties: self.properties.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioObjectSnapshot) -> Self {
         Self { schema: snapshot.schema, transform: snapshot.transform, brep: snapshot.brep, mesh: snapshot.mesh, properties: snapshot.properties }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioObjectSnapshot) {
         self.schema = snapshot.schema;
         self.transform = snapshot.transform;

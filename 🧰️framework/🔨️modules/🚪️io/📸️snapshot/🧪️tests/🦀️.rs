@@ -12,7 +12,7 @@ fn neutral_snapshot_contracts_encode_firstparty_values_and_interaction_state_wit
   let payload=value.encode_native_snapshot(NativeSnapshotEncoding::Text,&mut encode).unwrap();
   let semio_framework_io_schema::IoPayload::Text(text)=payload else{panic!("authored text face")};
   assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),*reference);
-  let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(1_000_000,&mut accepted);
+  let mut accepted=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1_000_000,&mut accepted);
   let restored=DslValue::decode_native_snapshot(NativeSnapshotInput::Text(&text),&mut decode).unwrap();
   assert_eq!(serde_json::Value::from(restored),*reference);
  }

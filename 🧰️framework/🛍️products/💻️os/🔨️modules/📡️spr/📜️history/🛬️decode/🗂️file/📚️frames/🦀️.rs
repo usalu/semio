@@ -1,7 +1,8 @@
 //! 📚️ Original source frames publish bounded coordinates only after exact committed-span verification.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity,HistoryReadLimits},format::retained::{RetainedSprVerification,RetainedSprLimits}};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Debug,PartialEq,Eq)]
 pub struct RetainedHistorySourceFrame{start:usize,end:usize,payload:(usize,usize),kind:u8,flags:u8,raw_bytes:Option<u64>}
 impl RetainedHistorySourceFrame{

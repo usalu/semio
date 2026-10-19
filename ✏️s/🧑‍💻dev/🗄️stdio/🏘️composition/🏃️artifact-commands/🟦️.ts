@@ -13,3 +13,12 @@ export class StdioArtifactPackageGraphScript extends BundleScript {
     await testStdioArtifactPackageGraph(this.repoRoot,this.invocation);
   }
 }
+
+/** 🥡️ Owned `verify` routes of the stdio composition; the semio member-store producer source lane runs here so the neutral root imports no plugin test. */
+export class StdioVerifyScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] !== "semio-member-store-producer-source" || segments.length !== 1) throw new Error("Usage: verify semio-member-store-producer-source");
+    const { verifySemioMemberStoreProducerSource } = await import("../../🧪️tests/🧿️semio-member-store-producer-source/🟦️.ts");
+    console.log(`semio member store producer source: ${verifySemioMemberStoreProducerSource(this.repoRoot)} self-tests passed.`);
+  }
+}

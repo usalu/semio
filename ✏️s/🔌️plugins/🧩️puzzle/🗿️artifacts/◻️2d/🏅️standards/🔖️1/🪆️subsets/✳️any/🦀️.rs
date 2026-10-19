@@ -1,4 +1,4 @@
-//! RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
+//! 🏃️ RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
 //! 🪆️ Subset root for `s.puzzle.puzzle2d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — `crate::editor::puzzle2d`/

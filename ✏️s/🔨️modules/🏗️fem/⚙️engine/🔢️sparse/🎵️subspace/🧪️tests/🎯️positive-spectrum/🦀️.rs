@@ -10,7 +10,7 @@ use semio_s_fem_test_support::TEST_GRANT;
 fn matrix_case(row:&serde_json::Value,dense:&str,diagonal:&str)->Coo{if let Some(rows)=row[dense].as_array(){let mut coo=Coo::new(rows.len());for(i,values)in rows.iter().enumerate(){for(j,value)in values.as_array().unwrap().iter().enumerate(){let value=value.as_f64().unwrap();if value!=0.0{coo.add(i,j,value);}}}coo}else{let rows=row[diagonal].as_array().unwrap();let mut coo=Coo::new(rows.len());for(i,value)in rows.iter().enumerate(){let value=value.as_f64().unwrap();if value!=0.0{coo.add(i,i,value);}}coo}}
 #[test]
 fn mathematical_subspace_certifies_the_same_neutral_positive_spectrum(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🎯️positive-spectrum/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎯️positive-spectrum/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let k=matrix_case(row,"stiffness","stiffnessDiagonal");let b=matrix_case(row,"right","rightDiagonal");let n=k.n;let requested=row["requested"].as_u64().unwrap()as usize;
   let factor=ldlt_factor(&k.to_csc_sym_upper()).unwrap();let pairs=subspace_iteration(&factor,&b.to_csr(),n,requested,1000);
@@ -20,7 +20,7 @@ fn mathematical_subspace_certifies_the_same_neutral_positive_spectrum(){
 }
 #[test]
 fn generalized_subspace_targets_positive_spectrum_and_certifies_original_residual(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🎯️positive-spectrum/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎯️positive-spectrum/🔣️.json")).unwrap();
  for(index,row)in corpus["cases"].as_array().unwrap().iter().enumerate(){
   let k=matrix_case(row,"stiffness","stiffnessDiagonal");let b=matrix_case(row,"right","rightDiagonal");let n=k.n;let requested=row["requested"].as_u64().unwrap()as usize;
   let factor=ldlt_factor(&k.to_csc_sym_upper()).unwrap();let operation=Operation::new(semio_framework_job::allocate_operation_id(),semio_framework_job::RevisionId(7),semio_framework_job::Generation(9),index as u64);

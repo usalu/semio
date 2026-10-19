@@ -1,6 +1,7 @@
 //! 🧪️ Shared Part21 inputs retain their exact success, rejection and cancellation allocations.
 use super::*;
-use semio_framework_value::{ErasedSnapshotRetirement,native_decoding::NativeDecodeRetirementRecipient,retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{ErasedSnapshotRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use std::cell::Cell;
 

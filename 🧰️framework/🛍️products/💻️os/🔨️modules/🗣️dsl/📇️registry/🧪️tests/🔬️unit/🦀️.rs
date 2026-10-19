@@ -39,7 +39,5 @@ async fn full_resolver_from_map_bypasses_the_global_registry() {
     let resolver = FullResolver::from_map(schemas).await;
     assert_eq!(resolver.names().await, vec!["p2m3.isolated.schema".to_string()]);
     assert!(resolver.resolve("p2m3.isolated.schema").await.is_some());
-    // Not in THIS table (even though another test registers it globally) — proves from_map
-    // is a genuinely isolated table, not a view into the process-global registry.
     assert!(resolver.resolve("p2m3.registry-test.schema").await.is_none());
 }

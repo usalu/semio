@@ -17,8 +17,6 @@ async fn render_splits_header_from_data_rows() {
     };
     let node = render(&document).expect("render");
     let scene: semio_framework_ui_scene::TableScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("decode the table scene with its lanes");
-    // 📊️ `TableWindowKit` contract: `columnsJson` is `{id, label}` records, `rowsJson` is
-    // `{id, <column id>: cell}` records keyed by column position.
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
     assert_eq!(columns, vec![serde_json::json!({ "id": "0", "label": "name" })]);
     let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");

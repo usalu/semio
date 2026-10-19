@@ -1,7 +1,7 @@
 //! 🪶️ Semantic container refusals have no external transport variant.
 use semio_framework_diagnostic::{FaultOrigin,TextError};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 use super::{PackTransportCategory,PackRetryDisposition,TransportCaptureRefusal};
 #[derive(Debug,Clone,PartialEq,semio_framework_value::RetireOwned)]
 pub enum PackRefusal{

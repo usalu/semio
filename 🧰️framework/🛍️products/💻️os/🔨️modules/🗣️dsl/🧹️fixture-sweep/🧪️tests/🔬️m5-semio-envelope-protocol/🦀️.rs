@@ -26,9 +26,6 @@ async fn semio_envelope_protocol_walks_a_real_wrap_binary_payload() {
 
 #[semio_framework_async_macros::async_test]
 async fn semio_envelope_protocol_walks_a_different_token_length_and_an_empty_payload() {
-    // A different plugin/artifact/component/version -> a different token length (proves the
-    // length-prefixed `token` segment genuinely reads `token_len`, not a hardcoded width), and
-    // a genuinely empty inner payload (proves `chain bytes` tolerates zero trailing bytes).
     let envelope = SemioEnvelope::from_envelope_id("stdio.gif", Component::Spr, 3).expect("valid envelope id");
     let wrapped = wrap_binary(&envelope, &[]);
 

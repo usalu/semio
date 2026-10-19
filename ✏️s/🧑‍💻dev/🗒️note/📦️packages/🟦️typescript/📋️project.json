@@ -2,10 +2,16 @@
   "name": "@semio-tech/s-note-composition-tests",
   "projectType": "library",
   "sourceRoot": "✏️s/🧑‍💻dev/🗒️note",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗒️note/**/*.{ts,tsx,json,semio,wit,sql}"
+    ]
+  },
   "targets": {
     "verify-note-document-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify note-document-contract",

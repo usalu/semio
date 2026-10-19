@@ -1,4 +1,4 @@
-//! torsion and member-UDL support), the `Tet4`/`Hex8` solid continuum elements, and `ShellFacet3`
+//! 👤️ torsion and member-UDL support), the `Tet4`/`Hex8` solid continuum elements, and `ShellFacet3`
 //! 🧊️ 3D structural elements: axial `Bar3` truss, Euler-Bernoulli `Frame3` frame member (with
 //! (flat facet shell: CST membrane + DKT bending + drilling stabilization).
 

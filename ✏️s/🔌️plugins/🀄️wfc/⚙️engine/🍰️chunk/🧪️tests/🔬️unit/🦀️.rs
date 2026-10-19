@@ -28,8 +28,6 @@ fn chunk_seed_is_deterministic_and_varies_by_coordinate_and_model() {
     assert_ne!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 4, 4, 99));
     assert_ne!(chunk_seed(1, 3, 4, 99), chunk_seed(1, 3, 4, 100));
     assert_ne!(chunk_seed(1, 3, 4, 99), chunk_seed(2, 3, 4, 99));
-    // Negative chunk coordinates (a chunk west/north of the origin) must not panic or collide
-    // trivially with their positive counterpart.
     assert_ne!(chunk_seed(1, -3, 4, 99), chunk_seed(1, 3, 4, 99));
 }
 
@@ -52,7 +50,6 @@ fn solve_chunk_reproduces_identical_content_on_repeated_calls() {
 fn solve_chunk_respects_seam_pins_from_a_committed_neighbor() {
     let (model, topo, _arcs) = checkerboard(6);
     let config = SearchConfig::default();
-    // Simulates a neighboring chunk having already committed node 0 to white.
     let outcome = solve_chunk(&model, &topo, &config, 7, 0, 0, None, &[(NodeId(0), PatternId(1))]);
     match outcome {
         SolveOutcome::Solved(sol) => assert_eq!(sol.assignment[0], PatternId(1)),
@@ -62,10 +59,6 @@ fn solve_chunk_respects_seam_pins_from_a_committed_neighbor() {
 
 #[test]
 fn different_chunk_coordinates_can_yield_different_content_for_an_underconstrained_model() {
-    // A single isolated node with two equally-likely patterns and no seam pins: different
-    // chunk coordinates should be free to (though aren't guaranteed to) land on different
-    // values — what matters is they're each internally deterministic, checked here by
-    // confirming the two calls aren't forced to collide by construction.
     let mut b = ModelBuilder::new();
     b.add_pattern(1.0);
     b.add_pattern(1.0);

@@ -1,6 +1,7 @@
 //! 📤️ Entry borrows its whole original failure while bounded Pack windows become paid fault pages.
 use semio_framework_job::OriginalDomainProjection;
-use semio_framework_job::{OriginalTurnFailure,StepContext,RetainedPayloadBuilder,JobPayloadStream,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView};
+use semio_framework_job::{OriginalTurnFailure, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
+use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream};
 use semio_framework_os_kernel::record::BorrowedProjectedPackCursor;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 

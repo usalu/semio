@@ -3,7 +3,7 @@ export type Fem3dLoadPatch =
   | { kind: "nodal"; nodeId?: string; dof?: FemDof; value?: Binary64 }
   | { kind: "memberUdl"; elementId?: string; wx?: Binary64; wy?: Binary64; wz?: Binary64 }
   | { kind: "area"; solidId?: string; pressure?: Binary64 };
-import { parseMapDelta, type MapDelta } from "../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts";
+import { parseMapDelta, type MapDelta } from "@semio-tech/framework-replication/mutation/map/schema";
 export type Fem3dCombinationTermsDelta = MapDelta<Binary64>;
 /** 🩹️ Combination edits own a name or explicitly keyed term changes. */
 export interface Fem3dCombinationPatch { name?: string; terms?: Fem3dCombinationTermsDelta; }
@@ -49,7 +49,7 @@ export interface Fem3dNodePatch {
   z?: Binary64;
 }
 
-import { type Binary64, parseBinary64, binary64Value } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64, parseBinary64, binary64Value } from "@semio-tech/value-ts/ieee754";
 /** 🧱️ Sparse material field changes; stable identity belongs to the modification key. */
 export interface Fem3dMaterialPatch {
   name?: string;
@@ -67,23 +67,23 @@ export type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport
 
 
 export interface Fem3dDiff {
-  /** @state artifact */
+  /** 🔘️ @state artifact */
   nodes?: Fem3dNodesDelta;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   elements?: Fem3dElementsDelta;
-  /** @state artifact */
+  /** 🔩️ @state artifact */
   materials?: Fem3dMaterialsDelta;
-  /** @state artifact */
+  /** ✂️ @state artifact */
   sections?: Fem3dSectionsDelta;
-  /** @state artifact */
+  /** 🔷️ @state artifact */
   solids?: Fem3dSolidsDelta;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   supports?: Fem3dSupportsDelta;
-  /** @state artifact */
+  /** 🏋️ @state artifact */
   loadCases?: Fem3dLoadCasesDelta;
-  /** @state artifact */
+  /** 🗃️ @state artifact */
   combinations?: Fem3dCombinationsDelta;
-  /** @state artifact */
+  /** 🔭️ @state artifact */
   analysis?: Fem3dAnalysisPatch;
 }
 
@@ -874,7 +874,7 @@ export function parseFem3dSolidPatch(value: unknown, at = "$"): Fem3dSolidPatch 
     const coordinates = femFem3dDiffGuardArray(value, here);
     if (coordinates.length !== 2) return femFem3dDiffGuardReject(here, "two coordinates required");
     return coordinates.map((value, index) => {
-      const word = parseBinary64(value, `${here}[${index}]`);
+      const word = parseBinary64(value);
       if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(here, "finite coordinate required");
       return word;
     }) as [Binary64, Binary64];
@@ -891,12 +891,12 @@ export function parseFem3dSolidPatch(value: unknown, at = "$"): Fem3dSolidPatch 
     else if (key === "holes") patch.holes = femFem3dDiffGuardArray(row[key], `${at}.${key}`).map((value, index) => ring(value, `${at}.${key}[${index}]`));
     else if (key === "layers") {
       const count = parseFemCount(row[key], `${at}.${key}`);
-      if (count === 0n) return GUARDReject(`${at}.${key}`, "positive layer count required");
+      if (count === 0n) return femFem3dDiffGuardReject(`${at}.${key}`, "positive layer count required");
       patch.layers = count;
     }
-    else if (key === "axis") patch.axis = GUARDMember(row[key], `${at}.${key}`, ["x", "y", "z"] as const);
+    else if (key === "axis") patch.axis = femFem3dDiffGuardMember(row[key], `${at}.${key}`, ["x", "y", "z"] as const);
     else {
-      const word = parseBinary64(row[key], `${at}.${key}`);
+      const word = parseBinary64(row[key]);
       const number = binary64Value(word);
       if (!Number.isFinite(number) || (key !== "baseZ" && number <= 0)) return femFem3dDiffGuardReject(`${at}.${key}`, "positive finite geometry property required");
       patch[key as "baseZ" | "height" | "meshSize"] = word;
@@ -936,7 +936,7 @@ export function parseFem3dElementPatch(value: unknown, at = "$"): Fem3dElementPa
     if (key === "end") { patch.end = femFem3dDiffGuardString(row[key], `${at}.${key}`); }
     if (key === "materialId") { patch.materialId = femFem3dDiffGuardString(row[key], `${at}.${key}`); }
     if (key === "sectionId") { patch.sectionId = femFem3dDiffGuardString(row[key], `${at}.${key}`); }
-    if (key === "roll") { const word = parseBinary64(row[key], `${at}.${key}`); if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(`${at}.${key}`, "finite roll required"); patch.roll = word; }
+    if (key === "roll") { const word = parseBinary64(row[key]); if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(`${at}.${key}`, "finite roll required"); patch.roll = word; }
   }
   return patch;
 }
@@ -952,7 +952,7 @@ export function parseFem3dLoadPatch(value: unknown, at = "$"): Fem3dLoadPatch {
     if (!fields[kind].includes(key)) return femFem3dDiffGuardReject(`${at}.${key}`, "unknown load field");
     if (["nodeId", "elementId", "solidId"].includes(key)) patch[key] = femFem3dDiffGuardString(row[key], `${at}.${key}`);
     else if (key === "dof") patch[key] = femFem3dDiffGuardMember(row[key], `${at}.${key}`, ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] as const);
-    else { const word = parseBinary64(row[key], `${at}.${key}`); if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(`${at}.${key}`, "finite value required"); patch[key] = word; }
+    else { const word = parseBinary64(row[key]); if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(`${at}.${key}`, "finite value required"); patch[key] = word; }
   }
   return patch as unknown as Fem3dLoadPatch;
 }
@@ -969,5 +969,5 @@ export function parseFem3dCombinationPatch(value: unknown, at = "$"): Fem3dCombi
 }
 /** 🗂️ Uses the shared keyed map wire and finite owned numeric payloads. */
 export function parseFem3dCombinationTermsDelta(value: unknown, at = "$"): Fem3dCombinationTermsDelta {
-  return parseMapDelta(value, raw => { const word = parseBinary64(raw, at); if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(at, "finite factor required"); return word; });
+  return parseMapDelta(value, raw => { const word = parseBinary64(raw); if (!Number.isFinite(binary64Value(word))) return femFem3dDiffGuardReject(at, "finite factor required"); return word; });
 }

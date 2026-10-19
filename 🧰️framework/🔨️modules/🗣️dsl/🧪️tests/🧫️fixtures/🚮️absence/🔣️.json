@@ -4,7 +4,10 @@
     "🧰️framework/🔨️modules/🗣️dsl",
     "🧰️framework/🔨️modules/⚠️diagnostic",
     "🧰️framework/🔨️modules/🏃️process",
-    "🧰️framework/🔨️modules/🧬️schema/✅️validator"
+    "🧰️framework/🔨️modules/🧬️schema/✅️validator",
+    "🧰️framework/🔨️modules/📁️filesystem",
+    "🧰️framework/🔨️modules/📚️compiler/📖️syntax",
+    "🧰️framework/📦️packages/🟦️typescript/📁️filesystem"
   ],
   "absentRoots": [
     "🧰️framework/🛍️products",

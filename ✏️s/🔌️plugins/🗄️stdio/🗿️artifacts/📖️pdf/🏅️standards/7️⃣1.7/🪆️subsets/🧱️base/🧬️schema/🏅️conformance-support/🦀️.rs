@@ -307,20 +307,17 @@ pub struct Insertion {
 }
 
 impl Insertion {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn after(base: &PdfSnapshot, placements: &[ObjectPlacement]) -> Self {
         Self { next: next_object_id(base).num, end: base.objects.len(), placements: placements.to_vec(), added: Vec::new() }
     }
 
     /// ➖️ The same insertion when `count` objects of the base leave in the same edit, so the end of the list is `count` earlier.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn dropping(mut self, count: usize) -> Self {
         self.end = self.end.saturating_sub(count);
         self
     }
 
     /// ➕️ Adds `value` and returns the reference it landed at.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn push(&mut self, value: PdfObject) -> ObjRef {
         let slot = self.added.len();
         let (id, index) = match self.placements.get(slot) {
@@ -333,7 +330,6 @@ impl Insertion {
     }
 
     /// 🧱️ The `objects` rows of everything pushed so far, in final-position order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rows(mut self) -> PdfDiff {
         if self.added.is_empty() {
             return PdfDiff::default();

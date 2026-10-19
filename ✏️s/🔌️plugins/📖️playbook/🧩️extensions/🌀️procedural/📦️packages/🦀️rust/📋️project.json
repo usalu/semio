@@ -7,6 +7,11 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.json",
       "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.ts"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {
@@ -40,7 +45,12 @@
     },
     "geometry-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts geometry-contract",

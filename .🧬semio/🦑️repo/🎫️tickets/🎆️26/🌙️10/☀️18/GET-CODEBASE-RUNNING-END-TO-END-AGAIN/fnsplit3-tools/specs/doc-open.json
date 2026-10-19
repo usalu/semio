@@ -1,0 +1,158 @@
+{
+ "file": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🗺️document-open/🟦️.ts",
+ "scopeLine": 11,
+ "allowAny": true,
+ "coreStmts": [
+  {
+   "line": 12,
+   "type": "Vitest",
+   "via": "vitest"
+  },
+  {
+   "line": 14,
+   "type": "ReturnType<typeof workerLawFakesV1>",
+   "via": "fakes"
+  },
+  {
+   "line": 15,
+   "type": "ServiceCompositionTestDependenciesV1",
+   "via": "dependencies"
+  }
+ ],
+ "types": {
+  "probe": "ColdPairProbe",
+  "fixture": "Awaited<ReturnType<ReturnType<typeof workerLawFakesV1>[\"executionTargetLeaseFixture\"]>>",
+  "fields": "Awaited<ReturnType<ReturnType<typeof workerLawFakesV1>[\"executionTargetLeaseFixture\"]>>[\"manifest\"]",
+  "statuses": "Extract<BackboneWorkerResponse, { kind: \"execution-target-status\" }>[]",
+  "historyStatuses": "Extract<BackboneWorkerResponse, { kind: \"inference-history-status\" }>[]",
+  "uiStore": "InstanceType<typeof import(\"@semio-tech/framework-os/modules/renderer/engine/elements/UiDocumentStore\").UiDocumentStore>",
+  "approvalReceipt": "ReturnType<typeof parseGisMapInferenceApprovalReceiptV1>",
+  "createBrowserActorUiIntentRequestV1": "typeof import(\"@semio-tech/framework/browser-bundle/action-handoff/intent\").createBrowserActorUiIntentRequestV1",
+  "createBrowserActorAppCommandRequestV1": "typeof import(\"@semio-tech/framework/browser-bundle/action-handoff/command\").createBrowserActorAppCommandRequestV1",
+  "decodeAppCommand": "typeof import(\"@semio-tech/framework-os\").decodeAppCommand",
+  "decodeDocumentBackboneControlV1": "typeof import(\"@semio-tech/framework/backbone/binding\").decodeDocumentBackboneControlV1",
+  "encodeDocumentBackboneControlV1": "typeof import(\"@semio-tech/framework/backbone/binding\").encodeDocumentBackboneControlV1",
+  "encodeAppFrame": "typeof import(\"@semio-tech/framework-os\").encodeAppFrame",
+  "decodeBrowserActorHostEffectsV1": "typeof import(\"@semio-tech/framework/browser-bundle/action-handoff/publication\").decodeBrowserActorHostEffectsV1",
+  "reissuedOwner": "NonNullable<ServiceCompositionTestDependenciesV1[\"testSeams\"][\"inferenceApprovalUndoOwner\"]>",
+  "submittingOwner": "NonNullable<ServiceCompositionTestDependenciesV1[\"testSeams\"][\"inferenceApprovalUndoOwner\"]>",
+  "bootstrap": "WireArtifactBootstrap",
+  "lease": "InstanceType<ServiceCompositionTestDependenciesV1[\"DocumentExecutionTargetLease\"]>",
+  "documentId": "string"
+ },
+ "typeImports": {},
+ "files": [
+  {
+   "id": "fix",
+   "dir": "🧱️cold-pair-fixtures",
+   "doc": "🧱️ The cold pair fixtures: the exact pack and spr pattern, the guest descriptor, the visible surface helpers and the recorded worker traffic.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | registerGisDocumentOpenTests}: a phase of the cold pair transfer test over the same registrar bindings, moved verbatim."
+  },
+  {
+   "id": "worker",
+   "dir": "🪤️cold-pair-worker-fake",
+   "doc": "🪤️ The fake browser actor worker of the cold pair transfer: load, describe, stage, invoke and terminate over a message port.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | registerGisDocumentOpenTests}: a phase of the cold pair transfer test over the same registrar bindings, moved verbatim."
+  },
+  {
+   "id": "setup",
+   "dir": "🔌️cold-pair-session-setup",
+   "doc": "🔌️ The hub session, the open artifact, the execution target lease and the fake socket the cold pair transfer runs against.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | registerGisDocumentOpenTests}: a phase of the cold pair transfer test over the same registrar bindings, moved verbatim."
+  },
+  {
+   "id": "e1",
+   "dir": "🚚️transfer-and-render-phases",
+   "doc": "🚚️ The activation, cold pair install and lazy render phases of the cold pair transfer.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | registerGisDocumentOpenTests}: a phase of the cold pair transfer test over the same registrar bindings, moved verbatim."
+  },
+  {
+   "id": "e2",
+   "dir": "⚡️action-and-command-phases",
+   "doc": "⚡️ The view refresh, ui intent action and early command phases of the cold pair transfer.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | registerGisDocumentOpenTests}: a phase of the cold pair transfer test over the same registrar bindings, moved verbatim."
+  },
+  {
+   "id": "e3",
+   "dir": "↩️undo-owner-phases",
+   "doc": "↩️ The direct action, approval undo owner and hostile render phases of the cold pair transfer.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | registerGisDocumentOpenTests}: a phase of the cold pair transfer test over the same registrar bindings, moved verbatim."
+  }
+ ],
+ "items": [
+  {
+   "id": "fix",
+   "kind": "range",
+   "line": 69,
+   "to": 144,
+   "name": "prepareColdPairFixtures",
+   "emoji": "🧪",
+   "doc": "Reads the corpus, derives the exact pack and spr pattern, rewrites the guest descriptor and builds the recorded traffic arrays.",
+   "file": "fix"
+  },
+  {
+   "id": "setup",
+   "kind": "range",
+   "line": 145,
+   "to": 251,
+   "name": "openColdPairSession",
+   "emoji": "🌉",
+   "doc": "Installs the session capability and the fetch stub, opens the artifact, mints the lease and wires the fake socket and worker sink.",
+   "file": "setup"
+  },
+  {
+   "id": "worker",
+   "kind": "range",
+   "line": 252,
+   "to": 503,
+   "name": "createColdPairWorkerClass",
+   "emoji": "🤖",
+   "doc": "Declares the fake browser actor worker class over the recorded traffic.",
+   "file": "worker"
+  },
+  {
+   "id": "b1",
+   "kind": "range",
+   "line": 506,
+   "to": 584,
+   "name": "runColdPairActivationPhase",
+   "emoji": "🚀",
+   "doc": "Activates the reservation, installs the verified cold pair and asserts the exact page receipts and lazy render events.",
+   "file": "e1"
+  },
+  {
+   "id": "b2",
+   "kind": "range",
+   "line": 585,
+   "to": 660,
+   "name": "runViewRefreshAndEarlyCommandPhase",
+   "emoji": "🔁",
+   "doc": "Refreshes the host view, offers a ui intent action and queues an early command behind the held patch.",
+   "file": "e1"
+  },
+  {
+   "id": "b3",
+   "kind": "range",
+   "line": 661,
+   "to": 735,
+   "name": "runActionPatchAndDirectCommandPhase",
+   "emoji": "🎬",
+   "doc": "Applies the held action patch, answers the early command and runs the direct action and command invocations.",
+   "file": "e2"
+  },
+  {
+   "id": "b4",
+   "kind": "range",
+   "line": 737,
+   "to": 826,
+   "name": "runApprovalUndoOwnerPhase",
+   "emoji": "🔙",
+   "doc": "Rebinds the approval undo owner across rebootstrap, share lease rotation and an in-flight undo.",
+   "file": "e3"
+  },
+  {
+   "id": "b5",
+   "kind": "range",
+   "line": 827,
+   "to": 877,
+   "name": "runHostileRenderPhase",
+   "emoji": "🧨",
+   "doc": "Rejects hostile browser render rows and closes the render driver child.",
+   "file": "e3"
+  }
+ ]
+}

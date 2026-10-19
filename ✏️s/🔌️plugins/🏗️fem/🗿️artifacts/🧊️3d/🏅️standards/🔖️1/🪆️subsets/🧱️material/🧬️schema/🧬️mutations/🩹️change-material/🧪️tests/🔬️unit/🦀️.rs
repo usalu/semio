@@ -10,37 +10,37 @@ fn material_field_intent_follows_committed_vectors() {
     let vectors = [
         (
             "🩹️renames",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json"))
         ),
         (
             "📉️softens",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🔺️diff/🔣️.json"))
         ),
         (
             "⏸️same",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🔺️diff/🔣️.json"))
         ),
         (
             "⛔️missing",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
         (
             "⚗️invalid",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
     ];

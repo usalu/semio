@@ -1,4 +1,4 @@
-import { loadUiSurfaceLifetimeFixture, loadSurfaceHostRetentionFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadUiSurfaceLifetimeFixture, loadSurfaceHostRetentionFixture } from "@semio-tech/framework/ui/testing/fixtures";
 type TestSource = { readonly url: string };
 
 /** 🪪️ Every interpreted container carries its authored stable DOM id — including the two wrapper roles
@@ -207,9 +207,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       load(0);
       const view = render(createElement(UiNodeView, { store, id: store.getState().root, context: { store, onAction: () => {}, onIntent: () => {} } }));
       const canvasAt = () => document.getElementById(retention.expected.canvasDomId);
-      // 🕸️ A `node-graph` surface whose `doc.bytes` are empty decodes to no scene, so `NodeGraphHost`
-      // renders its empty-scene body and never boots a wasm flow session — the retained-identity law
-      // is about the React subtree, and a jsdom suite must not need a 43 MB engine to state it.
       const hostAt = () => view.container.querySelector(".semio-node-graph-empty");
       const firstCanvas = canvasAt();
       const firstHost = hostAt();
@@ -220,8 +217,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (let index = 1; index < retention.refreshes.length; index += 1) {
         const refresh = retention.refreshes[index];if(!refresh)throw Error("Authored container refresh required");
         load(index);
-        // 🪪️ The refresh REACHED the DOM — the minted id on the very element under test moved. Without
-        // this the identity assertions below would pass on a render that never happened.
         expect(canvasAt()!.getAttribute("data-ui-node-id"), `refresh "${refresh.name}" never reached the DOM`).toBe(mintedAt(index));
         expect(canvasAt(), `refresh "${refresh.name}" replaced the canvas container's DOM element — the surface host was unmounted and rebuilt`).toBe(firstCanvas);
         expect(hostAt(), `refresh "${refresh.name}" replaced the node-graph host's DOM element`).toBe(firstHost);

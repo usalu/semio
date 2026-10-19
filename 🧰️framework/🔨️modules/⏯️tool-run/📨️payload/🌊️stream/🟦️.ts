@@ -15,8 +15,8 @@ export function validatePayloadContinuation(previous:PayloadIndexedSource|undefi
 }
 /** 🔎️ A fixed read visits original indexed pages without a full decode, flatten or clone. */
 export class PayloadReadView{
- reads=0;copiedBytes=0;
- constructor(readonly source:PayloadIndexedSource,identity:string){if(source.identity!==identity)throw Error("foreign-payload-generation");if(!Number.isSafeInteger(source.totalBytes)||!Number.isSafeInteger(source.receivedBytes)||source.receivedBytes<0||source.receivedBytes>source.totalBytes||!Number.isSafeInteger(source.chunkBytes)||source.chunkBytes<1)throw Error("invalid-payload-directory");}
+ readonly source:PayloadIndexedSource;reads=0;copiedBytes=0;
+ constructor(source:PayloadIndexedSource,identity:string){this.source=source;if(source.identity!==identity)throw Error("foreign-payload-generation");if(!Number.isSafeInteger(source.totalBytes)||!Number.isSafeInteger(source.receivedBytes)||source.receivedBytes<0||source.receivedBytes>source.totalBytes||!Number.isSafeInteger(source.chunkBytes)||source.chunkBytes<1)throw Error("invalid-payload-directory");}
  get complete():boolean{return this.source.receivedBytes===this.source.totalBytes;}
  get totalBytes():number{return this.source.totalBytes;}
  read(offset:number,count:number):Uint8Array|undefined{

@@ -161,7 +161,7 @@ fn window_hit_resolves_tab_activation_and_new_tab_signals() {
     w.new_tab = true;
     let layout = window_chip_layout(&w, rect);
     let window = ChromeState::Window(Box::new(w));
-    let group = layout.groups.iter().find(|g| g.corner == semio_framework_ui_tui_frame::layout::WindowStackCorner::TopLeft).expect("top-left group");
+    let group = layout.groups.iter().find(|g| g.corner == semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft).expect("top-left group");
     let tab0 = group.tabs.first().expect("first tab geometry");
     let tab1 = group.tabs.get(1).expect("second tab geometry");
     assert_eq!(window.window_hit(rect, Pos { x: tab0.x + 2, y: rect.y + 1 }), Some(WidgetSignal::WindowTabActivated(0)));

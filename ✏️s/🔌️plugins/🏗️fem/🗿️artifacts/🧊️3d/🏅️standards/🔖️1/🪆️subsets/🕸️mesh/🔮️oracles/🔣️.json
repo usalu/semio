@@ -113,6 +113,10 @@
             {
               "id": "removes-the-bracing-be89d2",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -132,6 +136,10 @@
             {
               "id": "removes-the-column-head-056295",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -155,6 +163,10 @@
             {
               "id": "removes-the-spare-30ecfb",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -178,6 +190,10 @@
             {
               "id": "removes-the-roof-slab-f0fb64",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },

@@ -4,8 +4,8 @@ import corpus from '../🧫️fixtures/🔣️.json';
 import schema from '../🧬️schema/🔣️.json';
 import projectionCorpus from '../🧫️fixtures/🔗️projection.json';
 import projectionSchema from '../🧬️schema/🔗️projection.json';
-import snapshotCorpus from '../../../🏪️store/🔗️read/🔗️source/🧫️fixtures/🔣️.json';
-import snapshotSchema from '../../../🏪️store/🔗️read/🔗️source/🧬️schema/🔣️.json';
+import snapshotCorpus from '../🧫️fixtures/📸️snapshot.json';
+import snapshotSchema from '../🧬️schema/📸️snapshot.json';
 import { OriginalHistoryLedger } from '../🟦️.ts';
 export function verifyOriginalHistoryRead() {
  const validate=new Ajv({strict:true}).compile(schema);if(!validate(corpus))throw new Error(JSON.stringify(validate.errors));

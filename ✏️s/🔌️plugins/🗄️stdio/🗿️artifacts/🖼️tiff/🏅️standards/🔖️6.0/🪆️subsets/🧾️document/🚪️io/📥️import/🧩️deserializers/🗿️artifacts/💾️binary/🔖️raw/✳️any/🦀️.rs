@@ -1,4 +1,4 @@
-//! Deserialize stdio.tiff from stdio.binary.
+//! 📥️ Deserialize stdio.tiff from stdio.binary.
 
 use crate::{TiffSnapshot, STDIO_TIFF_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_binary::BinarySnapshot;

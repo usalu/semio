@@ -322,12 +322,6 @@ impl DirectorySpaceAdministrationPageV1 {
         };
         let anonymous = generation == 0 && binding.bytes().all(|byte| byte == b'0');
         let bound = (1..=DOCUMENT_OPEN_MAX_SAFE_INTEGER).contains(&generation) && !binding.bytes().all(|byte| byte == b'0');
-        // 🔓️ The anonymous binding IS the all-zero word (`space_administration_session_binding_v1`
-        // returns `[0u8; 32]` when there is no caller), and `valid_document_open_hash` rejects exactly
-        // that word — so requiring it here made every anonymous read of a PUBLIC space unconstructible
-        // and the route answered 500. The shape is checked here; whether an all-zero or a real digest is
-        // the admissible one is already decided by `anonymous || bound` below, and `Member`/`Author` still
-        // demand `bound`.
         let binding_is_hex = binding.len() == 64 && binding.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'));
         if schema != DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA
             || !binding_is_hex

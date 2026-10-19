@@ -76,11 +76,6 @@ export function mutationCatalogProblems(value: unknown, owner?: string, taxonomy
     if (typeof value[key] !== "string" || value[key].length === 0) problems.push(`${key} must be a non-empty string`);
     else if (value[key] !== value[key].normalize("NFC")) problems.push(`${key} must be NFC`);
   }
-  // 🪆️A catalog's profile coordinates ARE its owner's: an artifact subset, or a nested facet within it,
-  // carries `🏅️standards/🔖️<v>/🪆️subsets/✳️<s>` in its path and must restate it here. An owner with no
-  // such coordinates — a framework facet whose vocabulary is versioned with the product rather than with a
-  // published standard — has none to restate and must not invent one. Requiring them unconditionally is what
-  // made those owners' catalogs unrepresentable, and an unrepresentable catalog is an unmeasured vocabulary.
   const profiled = owner === undefined ? value.standardDirectoryName !== undefined || value.subsetDirectoryName !== undefined : owner.includes(PROFILE_MARKER);
   const standardDirectoryName = typeof value.standardDirectoryName === "string" ? value.standardDirectoryName : "";
   const subsetDirectoryName = typeof value.subsetDirectoryName === "string" ? value.subsetDirectoryName : "";

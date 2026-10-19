@@ -94,7 +94,7 @@ impl semio_framework_value::ToValue for DenseSolveCursor {
 }
 impl semio_framework_value::FromValue for DenseSolveCursor {
  fn from_value(v:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError>{let words=<[u64;12] as semio_framework_value::FromValue>::from_value(v)?;Self::from_snapshot(words).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid dense cursor snapshot"))}
- fn from_value_controlled(v:&semio_framework_value::DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{let words=<[u64;12] as semio_framework_value::FromValue>::from_value_controlled(v,c)?;Self::from_snapshot(words).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid dense cursor snapshot"))}
+ fn from_value_controlled(v:&semio_framework_value::DslValue,c:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{let words=<[u64;12] as semio_framework_value::FromValue>::from_value_controlled(v,c)?;Self::from_snapshot(words).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid dense cursor snapshot"))}
 }
 impl semio_framework_value::serde::Serialize for DenseSolveCursor {
  fn serialize<S:semio_framework_value::serde::Serializer>(&self,s:S)->Result<S::Ok,S::Error>{semio_framework_value::serde::Serialize::serialize(&self.snapshot(),s)}

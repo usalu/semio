@@ -57,13 +57,6 @@ pub(super) fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f6
             if denom <= tol * tol {
                 return Err(KernelError::Operation("degenerate edge line".into()));
             }
-            // 🐛 The projection parameter alone says only WHERE on the infinite line the point
-            // projects, never whether it is on that line at all — and `splice_boundary_vertex`
-            // splits the first ring edge whose parameter lands strictly inside. A sphere's north
-            // pole projects onto the box edge on the far side of the same face at an interior
-            // parameter, so the imprint vertex was spliced into a face it is nowhere near (found
-            // live in the sphere-box fuse: the pole landed on the `x = 1.5` face's own edge). The
-            // non-line branch below has always checked its distance; this one must too.
             let t = dir.dot(point - *origin) / denom;
             if (*origin + *dir * t).distance(point) > tol.max(1e-9) * 10.0 {
                 return Err(KernelError::Operation("imprint hit does not lie on this line edge".into()));

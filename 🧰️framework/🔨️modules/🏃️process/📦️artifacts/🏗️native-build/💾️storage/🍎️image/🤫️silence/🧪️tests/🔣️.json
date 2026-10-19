@@ -1,0 +1,232 @@
+{
+ "observationRace": {"logs":64,"bytesPerLog":1000,"removed":1,"files":63,"bytes":63000,"directoryMutations":["remove","replace"]},
+ "cases": [
+  {
+   "name": "seeded fresh volume is compliant",
+   "phase": "attach",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [],
+   "refusal": null
+  },
+  {
+   "name": "legacy volume without any marker and a 42 MiB log directory is repaired at attach",
+   "phase": "attach",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "absent",
+    "spotlightMarker": "absent",
+    "logFiles": 400,
+    "logBytes": 44040192
+   },
+   "actions": [
+    "write-marker",
+    "write-spotlight-marker",
+    "prune-logs"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "volume whose service directory does not exist yet gets it created",
+   "phase": "attach",
+   "facts": {
+    "directory": "absent",
+    "writable": true,
+    "marker": "absent",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [
+    "create-directory",
+    "write-marker"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "marker present but one residual log is pruned at attach",
+   "phase": "attach",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 1,
+    "logBytes": 30000
+   },
+   "actions": [
+    "prune-logs"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "marker present and small residue is tolerated while mounted",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 8,
+    "logBytes": 1048576
+   },
+   "actions": [],
+   "refusal": null
+  },
+  {
+   "name": "one residual file over the count bound is pruned while mounted",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 9,
+    "logBytes": 90000
+   },
+   "actions": [
+    "prune-logs"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "residue over the byte bound is pruned while mounted",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 2,
+    "logBytes": 1048577
+   },
+   "actions": [
+    "prune-logs"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "missing marker is repaired while mounted",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "absent",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [
+    "write-marker"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "missing spotlight marker is repaired while mounted",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "absent",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [
+    "write-spotlight-marker"
+   ],
+   "refusal": null
+  },
+  {
+   "name": "service directory owned by another user with markers present needs nothing",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": false,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [],
+   "refusal": null
+  },
+  {
+   "name": "service directory owned by another user without marker is refused",
+   "phase": "attach",
+   "facts": {
+    "directory": "directory",
+    "writable": false,
+    "marker": "absent",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [],
+   "refusal": "foreign-service-directory"
+  },
+  {
+   "name": "service directory owned by another user with logs is refused",
+   "phase": "attach",
+   "facts": {
+    "directory": "directory",
+    "writable": false,
+    "marker": "file",
+    "spotlightMarker": "file",
+    "logFiles": 3,
+    "logBytes": 900
+   },
+   "actions": [],
+   "refusal": "foreign-service-directory"
+  },
+  {
+   "name": "service directory that is a link is refused",
+   "phase": "attach",
+   "facts": {
+    "directory": "other",
+    "writable": false,
+    "marker": "absent",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [],
+   "refusal": "unsafe-service-directory"
+  },
+  {
+   "name": "marker that is not a regular single-link file is refused",
+   "phase": "attach",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "other",
+    "spotlightMarker": "file",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [],
+   "refusal": "unsafe-marker"
+  },
+  {
+   "name": "spotlight marker that is a directory is refused",
+   "phase": "open",
+   "facts": {
+    "directory": "directory",
+    "writable": true,
+    "marker": "file",
+    "spotlightMarker": "other",
+    "logFiles": 0,
+    "logBytes": 0
+   },
+   "actions": [],
+   "refusal": "unsafe-marker"
+  }
+ ]
+}

@@ -130,7 +130,6 @@ pub struct TransferConfig {
 }
 
 impl TransferConfig {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(k_history: usize, l_history: usize, backend: TeBackend) -> Result<Self, EntropyError> {
         if k_history == 0 || l_history == 0 {
             return Err(EntropyError::InvalidConfig { field: "history", reason: "k_history and l_history must be at least 1" });
@@ -161,9 +160,9 @@ pub fn transfer_entropy(source: &[f64], target: &[f64], cfg: TransferConfig) -> 
             }
             let source_symbols = quantile_bin(source, bins);
             let target_symbols = quantile_bin(target, bins);
-            let mut a = Vec::with_capacity(n_samples); // source_past packed
-            let mut b = Vec::with_capacity(n_samples); // target_past packed
-            let mut c = Vec::with_capacity(n_samples); // target_future
+            let mut a = Vec::with_capacity(n_samples);
+            let mut b = Vec::with_capacity(n_samples);
+            let mut c = Vec::with_capacity(n_samples);
             let a_size = (bins as u64).pow(cfg.l_history as u32).min(u32::MAX as u64) as usize;
             let b_size = (bins as u64).pow(cfg.k_history as u32).min(u32::MAX as u64) as usize;
             if (bins as u64).pow(cfg.l_history as u32) > u32::MAX as u64 || (bins as u64).pow(cfg.k_history as u32) > u32::MAX as u64 {

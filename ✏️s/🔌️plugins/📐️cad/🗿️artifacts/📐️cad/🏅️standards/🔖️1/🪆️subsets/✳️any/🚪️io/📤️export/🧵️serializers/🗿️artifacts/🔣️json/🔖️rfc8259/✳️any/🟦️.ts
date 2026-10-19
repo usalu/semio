@@ -1,2 +1,2 @@
-/** Serialize cad to stdio.json. */
+/** 📤️ Serialize cad to stdio.json. */
 export {};

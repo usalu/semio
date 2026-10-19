@@ -25,7 +25,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudgetMsV1, shardTurnDriveStepsV1, type ShardTurnCarriers } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudgetMsV1, shardTurnDriveStepsV1, type ShardTurnCarriers } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts";
 
 /** 🧬️ The materialization module is READ, never imported: it reaches the repo library's lease store
  * (`node:sqlite`) and cannot be bundled into a renderer test environment — the same reason its own
@@ -33,7 +33,8 @@ import { driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudg
  * makes "held equal by the suite" true rather than aspirational. */
 const HERE = dirname(fileURLToPath(import.meta.url));
 const CONTRACT_SOURCE = readFileSync(resolve(HERE, "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts"), "utf8");
-const WORKER_SOURCE = readFileSync(resolve(HERE, "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts"), "utf8");
+const SHARD_WORKER_SOURCE_DIR = resolve(HERE, "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source");
+const WORKER_SOURCE = ["", ...["🥾️worker-bootstrap-and-faults", "🎬️actor-state-and-lanes", "🚦️request-beats-and-drive-pacing", "🔌️actor-loading-and-replies", "📨️message-handler"]].map((leaf) => readFileSync(resolve(SHARD_WORKER_SOURCE_DIR, leaf, "🟦️.ts"), "utf8")).join("\n");
 const declared = (name: string): number => {
   const match = new RegExp(`export const ${name} = (\\d+);`).exec(CONTRACT_SOURCE);
   if (!match) throw new Error(`materialization declares no ${name}`);
@@ -175,7 +176,6 @@ describe("🚚️ the worker-owned MoreWork drive", () => {
   it("stops at the backstop step ceiling only when every turn is free", async () => {
     const driven = drive([silent()], { costMs: 0, steps: SHARD_TURN_DRIVE_STEP_CEILING });
     const settled = await driven.run();
-    // 🚚️ The backstop counts TURNS per crossing and the first one is `first`, so k admits k − 1 polls.
     expect(settled).toMatchObject({ stopped: "steps", polls: SHARD_TURN_DRIVE_STEP_CEILING - 1 });
   });
 
@@ -183,8 +183,6 @@ describe("🚚️ the worker-owned MoreWork drive", () => {
     const driven = drive([silent()], { costMs: CONTRACT.measuredGuestTurnCostMs, steps: SHARD_TURN_DRIVE_STEP_CEILING });
     const settled = await driven.run();
     expect(settled.stopped).toBe("budget");
-    // 🐛️ The rounded wall (`steps × cost` = 91 ms) would have stopped one whole turn earlier with 9 ms
-    // of the host's own grant unspent — and a crossing that carries nothing is what this lane removes.
     expect(settled.polls).toBe(Math.ceil(CONTRACT.hostGrantWallMs / CONTRACT.measuredGuestTurnCostMs));
     expect(settled.polls).toBeGreaterThan(CONTRACT.driveStepCeiling);
   });

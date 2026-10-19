@@ -1,6 +1,7 @@
 //! 🛬️ Literal JSON record fields are admitted before typed storage and reconstruction.
 use super::*;
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn field(record:&semio_framework_dsl_record::RecordValue,id:u16)->Result<&semio_framework_dsl_record::FieldValue,ValueError>{record.get(id).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,format!("JSON logical field {id} is missing")))}
 fn list(value:&semio_framework_dsl_record::FieldValue)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match value{semio_framework_dsl_record::FieldValue::List(values)=>Ok(values),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"JSON logical list field differs"))}}

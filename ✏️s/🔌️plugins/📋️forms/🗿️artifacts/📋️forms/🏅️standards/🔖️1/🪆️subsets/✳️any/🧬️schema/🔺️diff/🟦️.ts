@@ -19,12 +19,12 @@ export type FormsStepsDelta = RowDelta<FormStep, FormsStepPatch>;
 export type FormsResponsesDelta = Omit<RowDelta<FormsResponse, never>, "modified">;
 
 export interface FormsDiff {
-  /** @state artifact */ schema?: "forms.form";
-  /** @state artifact */ id?: string;
-  /** @state artifact */ version?: string;
-  /** @state artifact */ title?: FormsOptionalText;
-  /** @state artifact */ steps?: FormsStepsDelta;
-  /** @state artifact */ responses?: FormsResponsesDelta;
+  /** 🔄️ @state artifact */ schema?: "forms.form";
+  /** ✏️ @state artifact */ id?: string;
+  /** 🔖️ @state artifact */ version?: string;
+  /** 📛️ @state artifact */ title?: FormsOptionalText;
+  /** 🪜️ @state artifact */ steps?: FormsStepsDelta;
+  /** 📬️ @state artifact */ responses?: FormsResponsesDelta;
 }
 
 const record = (value: unknown, at: string, keys: readonly string[]): Record<string, unknown> => parseSchemaRecord(value, keys, at) as Record<string, unknown>;

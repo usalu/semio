@@ -98,8 +98,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
     }
   }, [scene?.layersJson]);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.canvas");
-  // 🏁️ RETURNS `onAction`'s promise: the gesture lane's single-flight gate is that promise (a `void`
-  // dispatcher would clear it on the next microtask and coalesce nothing — World3dHost wave B33).
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>): void | Promise<unknown> => {
       const ownedArgs = { surfaceId: node.surfaceId, ...args };
@@ -122,8 +120,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
           if (cameraSyncTimeoutRef.current) clearTimeout(cameraSyncTimeoutRef.current);
           cameraSyncTimeoutRef.current = setTimeout(() => dispatch("setCamera", { camera: next }), CAMERA_SYNC_DEBOUNCE_MS);
         },
-        // 🖱️ The session builds its gesture lane over this dispatcher, so the lane is per mounted host and
-        // is rebuilt with the session whenever `dispatch`'s identity (node ids / `onAction`) changes.
         (action, args) => dispatch(action, args),
         () => framingRef.current,
       );
@@ -175,8 +171,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
         const screen = worldToScreenLogical(x, y, cameraRef.current, rect.width, rect.height);
         return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
       },
-      // 🏷️ `"layer"` is the only domain — a `CanvasLayerRecord.id` is optional and there is no id index,
-      // so only layers that authored one are targetable; `"*"` picks the first that has an id.
       entity: (domain, entityId): IntroductionResolvedGeometry | null => {
         if (domain !== "layer") return null;
         const container = containerRef.current;
@@ -188,9 +182,6 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
           const screen = worldToScreenLogical(wx, wy, cameraRef.current, rect.width, rect.height);
           return { x: rect.left + screen.x, y: rect.top + screen.y };
         };
-        // 🐢️ Layer `transform` (a local affine matrix) is deliberately not applied here — composing it
-        // correctly needs matrix math this resolver has no other use for; an explicitly transformed
-        // layer's demonstration target will be off by that transform until this is extended.
         if (layer.segments && layer.segments.length > 0) {
           const polyline = sampleBezierSegments(layer.segments).map((point) => toScreen(point.x, point.y));
           const point=polyline[Math.floor(polyline.length/2)];if(point)return{point,polyline,visible:true};

@@ -1,4 +1,4 @@
-//! relocate proximity radius, the viewport chunk size and the grid spacing. Unlike the
+//! 🚚️ relocate proximity radius, the viewport chunk size and the grid spacing. Unlike the
 //! ⚙️ Puzzle 3d play app panel — the app-wide settings: the brush placement contact tolerance, the
 //! window-instance chrome in `🎭️modes/✏️edit/☑️options/*`, these are settings a user tunes once for
 //! the whole session rather than per pane. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM:

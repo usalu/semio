@@ -10,7 +10,7 @@ import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modu
 import{acquireResourceLease,checkResourceLeaseControl,requireResourceLeaseReadCustodyV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{RepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{nxSdkSnapshotIdentityV1,type NxSdkSnapshotCloneV1}from"../../📥️snapshot/🟦️.ts";
 import{nxSdkBinaryReceiptV1}from"../../🧊️binary/🟦️.ts";
 import{verifyNxSdkBinaryLinksV1}from"../../🧊️binary/🔎️verification/🟦️.ts";

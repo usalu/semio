@@ -18,12 +18,6 @@ pub(super) fn base_drawing() -> Drawing {
     window.entities.push(line((5.0, 0.0), (6.0, 0.0), "0"));
     window.entities.push(line((5.5, 0.0), (5.5, 1.0), "WALLS"));
     d.add_block(window);
-    // 🪆️Seven of the nine `CadEntity` shapes. `Ellipse` and `Dimension` are ABSENT ON PURPOSE and the
-    // absence is a measured finding, not an oversight: both are R13+ entities, the `dxf` crate will
-    // not write either into an R12 document, and this subset's dialect is r12. Our own exporter
-    // smuggles them through as bridge-owned RAW GROUP CODES (`DxfEntity::Other`), which is not
-    // standard R12 and which the crate does not recover as typed entities. So the oracle's reach is
-    // seven shapes, not nine, and those two are registered as uncarried rather than papered over.
     for e in [
         line((0.0, 0.0), (5.0, 0.0), "WALLS"),
         circle((2.0, 2.0), 1.5, "WALLS"),
@@ -100,9 +94,6 @@ pub(super) fn after_drawing(recipe: &str) -> Option<Drawing> {
             }
             d = rebuild_with_entities(d, kept);
         }
-        // 🚨️The deliberate COUNTEREXAMPLE for the gate: same mutation, wrong answer. The radius is
-        // off by 0.05 and the centre by 0.1 — small enough that a loose tolerance would wave it
-        // through, which is exactly what makes it a useful negative.
         "set-entity-geometry-circle-radius-counterexample" => {
             let mut kept: Vec<_> = d.entities().cloned().collect();
             for e in kept.iter_mut() {

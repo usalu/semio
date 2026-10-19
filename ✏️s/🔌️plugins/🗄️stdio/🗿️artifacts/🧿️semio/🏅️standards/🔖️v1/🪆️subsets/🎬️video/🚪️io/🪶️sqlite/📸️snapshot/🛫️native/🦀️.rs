@@ -1,6 +1,6 @@
 //! 🎬️ Writes stream provenance, signed rational words and exact ordered sample bytes.
 use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream, SemioVideoSample, SemioVideoStreamKind};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
 pub(crate) fn encode(snapshot:&SemioVideoSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.video.dsl v1\n","stdio.semio.video.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}

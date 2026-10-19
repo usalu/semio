@@ -49,7 +49,6 @@ pub struct TrueTypeFont {
 
 impl TrueTypeFont {
     /// 📖 Parses `data` (a `.ttf`/`.otf`, or the first font of a `.ttc`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parse(data: &[u8]) -> Result<Self, String> {
         let mut offset = 0usize;
         let tag = u32_at(data, 0).ok_or("truncated sfnt header")?;
@@ -148,7 +147,6 @@ impl TrueTypeFont {
         Ok(Self { data: data.to_vec(), tables, units_per_em, num_glyphs, bbox, ascender, descender, line_gap, cap_height, x_height, weight_class, italic_angle, fixed_pitch, postscript_name, family_name, advances, unicode_map, mac_roman_map, symbol_map, glyph_names, cff, index_to_loc_long })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn names(name: &[u8]) -> (Option<String>, Option<String>) {
         let count = u16_at(name, 2).unwrap_or(0) as usize;
         let storage = u16_at(name, 4).unwrap_or(0) as usize;
@@ -171,7 +169,6 @@ impl TrueTypeFont {
         (postscript, family)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn post_glyph_names(post: &[u8], num_glyphs: u16) -> Vec<String> {
         let version = u32_at(post, 0).unwrap_or(0);
         match version {
@@ -197,7 +194,6 @@ impl TrueTypeFont {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_cmap_subtable(sub: &[u8]) -> BTreeMap<u32, u16> {
         let mut map = BTreeMap::new();
         match u16_at(sub, 0).unwrap_or(u16::MAX) {
@@ -274,20 +270,17 @@ impl TrueTypeFont {
         map
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn table(&self, name: &str) -> Option<&[u8]> {
         self.tables.get(name).map(|(start, length)| &self.data[*start..*start + *length])
     }
 
     /// 🔢 Glyph id of a Unicode scalar (unicode cmap, then the (3,0) symbol cmap's F0xx range).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn glyph_for_char(&self, character: char) -> Option<u16> {
         let code = character as u32;
         self.unicode_map.get(&code).copied().or_else(|| self.symbol_map.get(&(0xF000 + (code & 0xFF))).copied().filter(|_| code < 256)).or_else(|| self.symbol_map.get(&code).copied())
     }
 
     /// 🔢 Glyph id of a glyph name (`post` table, then `gXX`/`glyphXX`/`uniXXXX` forms).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn glyph_for_name(&self, name: &str) -> Option<u16> {
         if let Some(index) = self.glyph_names.iter().position(|candidate| candidate == name) {
             return Some(index as u16);
@@ -303,19 +296,16 @@ impl TrueTypeFont {
     }
 
     /// 📏 Advance width of a glyph in 1/1000 text-space units.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn advance_1000(&self, glyph: u16) -> f64 {
         let advance = self.advances.get(glyph as usize).or(self.advances.last()).copied().unwrap_or(0) as f64;
         advance * 1000.0 / self.units_per_em as f64
     }
 
     /// 📐 A font-unit value scaled to 1/1000 em.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scale_1000(&self, value: i16) -> f64 {
         value as f64 * 1000.0 / self.units_per_em as f64
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn glyph_location(&self, glyph: u16) -> Option<(usize, usize)> {
         let loca = self.table("loca")?;
         let index = glyph as usize;
@@ -324,7 +314,6 @@ impl TrueTypeFont {
     }
 
     /// 🧩 Glyph ids a composite glyph references (empty for simple glyphs).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn component_glyphs(&self, glyph: u16) -> Vec<u16> {
         let mut out = Vec::new();
         let Some(glyf) = self.table("glyf") else { return out };
@@ -361,7 +350,6 @@ impl TrueTypeFont {
     /// included) is emptied, unused tables dropped, and the result is a valid `FontFile2` whose
     /// glyph ids still match this font's — so `/CIDToGIDMap /Identity` and `post` names keep
     /// working. CFF-based programs cannot be subset this way and are returned whole.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn subset(&self, glyphs: &BTreeSet<u16>) -> Vec<u8> {
         let (Some(glyf), Some(_)) = (self.table("glyf"), self.table("loca")) else { return self.data.clone() };
         let mut keep: BTreeSet<u16> = BTreeSet::new();
@@ -421,7 +409,6 @@ impl TrueTypeFont {
     }
 
     /// 🧾 The whole program as a `FontFile2`-shaped sfnt (tables the writer needs, nothing else).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn all_glyphs(&self) -> BTreeSet<u16> {
         (0..self.num_glyphs).collect()
     }

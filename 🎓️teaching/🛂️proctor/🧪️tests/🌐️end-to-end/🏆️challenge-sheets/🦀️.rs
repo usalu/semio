@@ -1,7 +1,7 @@
 //! 🏆️ The proctor end to end, the challenge sheets: every challenge deals its own sheet and earns its own points, expert and hard runs clock and score from the instants the device claims, an easy run questions far off cards until it closes and switching the challenge ends in runs exhausted.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
+//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 

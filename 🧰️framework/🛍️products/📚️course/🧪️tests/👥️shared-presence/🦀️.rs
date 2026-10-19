@@ -11,7 +11,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use course::serde_json::{self, Map, Value};
-    use course::{cursor_problem, presence_problem, room_scope, roster_scope, thinking_problem, thinking_scope, CursorState, Place, PresenceState, ThinkingState};
+    use course::{CursorState, Place, PresenceState, ThinkingState};
+    use course_presence::{cursor_problem, presence_problem, room_scope, roster_scope, thinking_problem, thinking_scope};
     use semio_repo_test_host::{parse_json, Context, Outcome};
 
     const VECTORS: &str = "shared://👥️shared-presence/🔣️.json";

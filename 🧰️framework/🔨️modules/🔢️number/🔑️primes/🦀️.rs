@@ -239,7 +239,6 @@ fn pollard_rho_u64(n: u64) -> u64 {
             d = gcd_u64(q as u64, n);
         }
         if d == n || d == 0 {
-            // fallback: brute retry within the cycle
             d = 1;
             let mut xr = xs;
             let yr = ys;
@@ -251,7 +250,6 @@ fn pollard_rho_u64(n: u64) -> u64 {
         if d != n && d > 1 {
             return d;
         }
-        // retry with a new random c
     }
 }
 
@@ -288,7 +286,6 @@ pub fn factor_u64(n: u64) -> Vec<(u64, u32)> {
     }
     recurse(n, &mut factors);
     factors.sort_unstable_by_key(|&(p, _)| p);
-    // merge duplicate prime entries that recursion may have added at different points
     let mut merged: Vec<(u64, u32)> = Vec::new();
     for (p, c) in factors {
         if let Some(last) = merged.last_mut() {
@@ -408,7 +405,6 @@ fn pollard_rho_natural(n: &Natural) -> Natural {
             d = if q.is_zero() { n.clone() } else { q.gcd(n) };
         }
         if d == *n {
-            // batch overshot a nontrivial factor: backtrack one step at a time from the failed batch's start
             d = Natural::one();
             let mut xr = xs;
             while d == Natural::one() {
@@ -424,7 +420,6 @@ fn pollard_rho_natural(n: &Natural) -> Natural {
         if d != *n && !d.is_zero() && d != Natural::one() {
             return d;
         }
-        // else retry with a different c
     }
 }
 // #endregion 🔖️Factor

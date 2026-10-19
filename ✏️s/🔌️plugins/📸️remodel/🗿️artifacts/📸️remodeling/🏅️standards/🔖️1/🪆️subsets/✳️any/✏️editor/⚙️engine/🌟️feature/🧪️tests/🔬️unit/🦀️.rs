@@ -248,7 +248,6 @@ fn match_guided_epipolar_recovers_match_along_horizontal_line_and_filters_off_li
         Keypoint { x: 20.0, y: 23.9, octave: 0, angle: 0.0, response: 1.0 },
     ];
     let desc_b = [zero, Descriptor256([u64::MAX, 0, 0, 0]), zero, zero];
-    // F for a pure horizontal-translation stereo rig: epipolar lines are horizontal (Y = y).
     let f_matrix = [[0.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]];
     let matches = match_guided_epipolar(&kp_a, &desc_a, &kp_b, &desc_b, &f_matrix, 3.0);
     assert_eq!(matches.len(), 1, "expected exactly one match, got {matches:?}");
@@ -264,7 +263,6 @@ fn match_guided_epipolar_handles_vertical_epipolar_line() {
     let desc_a = [zero];
     let kp_b = [Keypoint { x: 15.0, y: 10.0, octave: 0, angle: 0.0, response: 1.0 }, Keypoint { x: 15.0, y: 80.0, octave: 0, angle: 0.0, response: 1.0 }];
     let desc_b = [zero, Descriptor256([u64::MAX, 0, 0, 0])];
-    // F for a pure vertical-translation stereo rig: epipolar lines are vertical (X = x), exercising the y-stepping branch.
     let f_matrix = [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0]];
     let matches = match_guided_epipolar(&kp_a, &desc_a, &kp_b, &desc_b, &f_matrix, 3.0);
     assert_eq!(matches.len(), 1, "expected exactly one match along the vertical epipolar line, got {matches:?}");

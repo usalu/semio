@@ -1,4 +1,4 @@
-//! document into the board engine's fill ingress, drives its `BoardFillJob` search and reports every
+//! 📄️ document into the board engine's fill ingress, drives its `BoardFillJob` search and reports every
 //! 🪣️ Puzzle 2d fill tool run (`📋️tool-run-contract.md` §2.7, §3.2, §3.3, §3.7): the run job streams the
 //! candidate the search decides as a `placement2d` trace record — `testing`, then `danger` (collision),
 //! `warning` (port or kind rule) or `success` (placed). Every placement appends its `create_node` +

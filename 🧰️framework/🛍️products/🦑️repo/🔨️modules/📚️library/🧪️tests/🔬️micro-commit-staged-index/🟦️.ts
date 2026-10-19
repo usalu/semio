@@ -20,7 +20,7 @@ type Fixture = { version: number; cases: Case[] };
 
 const fixturePath = fileURLToPath(new URL(`../\u{1F9EB}\u{FE0F}fixtures/\u{1F52C}\u{FE0F}micro-commit-staged-index/\u{1F523}\u{FE0F}.json`, import.meta.url));
 const featurePath = fileURLToPath(new URL(`./\u{1F952}\u{FE0F}.feature`, import.meta.url));
-const libraryPath = fileURLToPath(new URL(`../../\u{1F7E6}\u{FE0F}.ts`, import.meta.url));
+const libraryPath = fileURLToPath(new URL(`../../\u{1F39B}\u{FE0F}commands/\u{1F4DD}\u{FE0F}commit/\u{1FA99}\u{FE0F}micro-commit/\u{1F7E6}\u{FE0F}.ts`, import.meta.url));
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 const feature = readFileSync(featurePath, "utf8");
 

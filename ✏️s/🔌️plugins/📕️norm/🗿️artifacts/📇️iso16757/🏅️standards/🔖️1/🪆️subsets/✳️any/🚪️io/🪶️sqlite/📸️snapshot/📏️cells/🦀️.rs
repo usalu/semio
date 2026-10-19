@@ -1,7 +1,8 @@
 //! 📏️ ISO catalogue native CST admits every authored SQL cell before typed ownership.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{DslField,FieldValue as F,RecordValue as R};
-use semio_framework_value::{DslValue as D,NativeDecodeControl,Number};
+use semio_framework_value::{DslValue as D, Number};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 type Result<T>=std::result::Result<T,ValueError>;
 const WIDTHS:&[(&str,usize)]=&[
 ("document",26),("names",4),("name_alternative",5),("unit",9),("catalogue_value",18),("value_element",4),

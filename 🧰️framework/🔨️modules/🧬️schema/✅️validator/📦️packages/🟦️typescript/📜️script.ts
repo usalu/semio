@@ -1,15 +1,13 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation,scriptInvocationEnvironment,scriptInvocationBudget } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { resolve } from "node:path";
+import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runTestScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
 /** 🛡️ Executes the import-free unknown-value shape guard contract. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.shift() !== "shape") throw new Error("Expected test shape");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🧩️shape/🟦️.ts"), ...args], this.root, "schema-validator:shape", scriptInvocationBudget(this.invocation,15_000),{signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,process.env)});
+    await runTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, defaultCommand: "test" }));

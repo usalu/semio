@@ -13,7 +13,7 @@ import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framewo
 import { Board2dHost } from "../../🟦️.tsx";
 import { BOARD_2D_ZOOM_BOUNDS, board2dPinchCamera } from "../../📍️drop-and-camera/🟦️.ts";
 import { BoardSessionFactoryContext, createBoardPeerScope } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
-import surfacePinchFixture from "../../../../🧪️tests/🧫️fixtures/🤏️surface-pinch/🔣️.json";
+import surfacePinchFixture from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/surface-pinch.json";
 import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 // #endregion 🔌️Adapters
 
@@ -191,7 +191,6 @@ describe("🤏️ board 2d two-finger gesture", () => {
     expect(session.calls).toContain("pointerDownScreen");
 
     pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", 2, 500, 300)));
-    // 🤏️ The first finger's pick/marquee is abandoned the moment the second lands.
     expect(session.calls).toContain("cancelAreaSelect");
 
     const callsAtPinchStart = session.calls.length;
@@ -200,11 +199,9 @@ describe("🤏️ board 2d two-finger gesture", () => {
       window.dispatchEvent(pointer("pointermove", 2, 600, 300));
     });
 
-    // 🤏️ Separation 200 → 400 px: the camera doubled its zoom and never went through the pointer lane.
     expect(session.camera.zoom).toBeCloseTo(2, 6);
     expect(session.calls.slice(callsAtPinchStart)).not.toContain("pointerMoveScreen");
     expect(session.calls.slice(callsAtPinchStart)).toContain("setCameraSilent");
-    // 🧭️ Per-frame camera state is window-transient: not one dispatch per move.
     expect(actions.filter((entry) => entry.action === "setCamera")).toHaveLength(0);
   });
 

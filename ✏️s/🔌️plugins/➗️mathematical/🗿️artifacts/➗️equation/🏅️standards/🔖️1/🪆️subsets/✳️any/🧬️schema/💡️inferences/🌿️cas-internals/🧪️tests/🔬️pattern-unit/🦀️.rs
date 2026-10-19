@@ -36,7 +36,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ac_match_finds_permuted_assignment() {
-        // pattern: wild(0) + wild(1), subject: y + x -- should match regardless of order.
         let x = Expr::symbol("x");
         let y = Expr::symbol("y");
         let pattern = Expr::add(vec![wild(0), wild(1)]);
@@ -71,7 +70,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn rule_rewrites_matching_expression() {
-        // sin(w)^2 + cos(w)^2 -> 1 (Pythagorean identity, single-term hand case without the +seq form)
         let w = Expr::symbol("w");
         let lhs = Expr::add(vec![Expr::pow(Expr::func(crate::cas::fnkind::FnKind::Sin, vec![wild(0)]), Expr::integer(2)), Expr::pow(Expr::func(crate::cas::fnkind::FnKind::Cos, vec![wild(0)]), Expr::integer(2))]);
         let rule = Rule::new(lhs, Expr::integer(1));

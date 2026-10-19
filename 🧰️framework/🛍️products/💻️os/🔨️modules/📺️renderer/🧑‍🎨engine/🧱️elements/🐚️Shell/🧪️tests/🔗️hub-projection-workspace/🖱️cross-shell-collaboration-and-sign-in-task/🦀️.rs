@@ -127,7 +127,7 @@ fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
     let mut context = std::task::Context::from_waker(waker);
     let pump = || {
         let _ = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
     };
 
     let started = std::time::Instant::now();

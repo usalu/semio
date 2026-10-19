@@ -84,8 +84,6 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     let cfg = ConfigView { snapshot: &config, window: None };
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     let _ = (&doc, &cfg);
-    // 🔒️ Through the app instance, because the poll now reads the RETAINED evaluation session's
-    // per-window arming latch and only the instance owns the handle to it.
     let effects = app.pending_effects(Some(&preview_view)).await;
     println!("[STATS] pending_effects effects={}", effects.len());
     snapshot.retire_cold();

@@ -12,7 +12,7 @@ export interface SemioKitEntries {
 }
 
 export interface SemioKitInference {
-  /** @derived */
+  /** 📚️ @derived */
   entries: SemioKitEntries;
 }
 

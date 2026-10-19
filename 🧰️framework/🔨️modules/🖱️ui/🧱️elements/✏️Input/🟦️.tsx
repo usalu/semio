@@ -9,7 +9,7 @@
 import { formatUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
@@ -346,7 +346,7 @@ export function formatNumber(value: number | string): string {
 //#endregion Number formatting
 
 /**
- * InputProps holds the data fields for a InputProps record.
+ * 🏷️ InputProps holds the data fields for a InputProps record.
  **/
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
@@ -360,7 +360,7 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
 }
 
 /**
- * Input holds the data fields for a Input record.
+ * 📦️ Input holds the data fields for a Input record.
  **/
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);

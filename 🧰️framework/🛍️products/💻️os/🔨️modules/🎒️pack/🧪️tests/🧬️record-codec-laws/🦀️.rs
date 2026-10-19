@@ -99,8 +99,6 @@ impl RecordValueGen {
 
     const ALPHABET: &'static [u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ";
 
-    // 🔁️ `.map(...).collect()` here would need an `async` closure over a `&mut self` PRNG draw —
-    // sync closures can't `` (R10 residue shape 1) — so the draws are sequenced by hand.
     fn next_string(&mut self, max_len: usize) -> String {
         let len = self.next_range(max_len as u64 + 1) as usize;
         let mut out = String::with_capacity(len);
@@ -122,10 +120,6 @@ impl RecordValueGen {
     //#endregion 🔖️Prng
 
     //#region 🔖️Shapes
-    // 🔁️ Mutually recursive with `generate_value` (which also recurses into itself directly for
-    // `Tuple`/`List`/`Map`/`Block`) — every edge in that cycle is `...` because an
-    // `fn`'s own opaque `Future` type cannot embed itself or a cycle-partner's opaque type at
-    // an unboxed, unbounded size (R10 residue shape 3).
     fn generate_record(&mut self, spec: &RecordSpec, depth: u16, max_depth: u16) -> RecordValue {
         let mut fields = semio_framework_dsl_record::RecordValue::default().fields;
         for field in &spec.fields {
@@ -158,9 +152,6 @@ impl RecordValueGen {
                     semio_framework_dsl_record::FieldValue::Enum(variants[idx].1)
                 }
             }
-            // 🔁️ Every arm below that used to be `.map(|_| self.generate_value(...)).collect()`
-            // is rewritten as an explicit loop: the closure would need to `` a `&mut self`
-            // draw, and `Iterator::map`'s closure is sync (R10 residue shape 1).
             semio_framework_dsl_record::Shape::Tuple(elem, len) => {
                 let n = match len {
                     Some(n) => *n,
@@ -303,7 +294,6 @@ impl RecordValueGen {
         }
     }
 
-    // 🔁️ Self-recursive (`Array`/`Object` arms) — boxed for the same reason as `generate_value`.
     fn generate_dsl_value(&mut self, depth: u16, max_depth: u16) -> DslValue {
         if depth > max_depth {
             return semio_framework_value::DslValue::Null;
@@ -311,10 +301,6 @@ impl RecordValueGen {
         match self.next_range(6) {
             0 => semio_framework_value::DslValue::Null,
             1 => semio_framework_value::DslValue::Bool(self.next_bool()),
-            // 🌉️ All three `Number` variants, matching `encode_dsl_value`/`decode_dsl_value`'s
-            // `TAG_INT`/`TAG_UINT`/`TAG_F64` grammar — a generated `UInt`/`Int` now survives the
-            // round trip as its own variant, so restricting this arm to `Float` would leave two
-            // thirds of the dynamic numeric grammar unexercised.
             2 => match self.next_range(3) {
                 0 => semio_framework_value::DslValue::float(self.next_f64()),
                 1 => semio_framework_value::DslValue::uint(self.next_uint()),

@@ -1,4 +1,4 @@
-//! attraction. Missing target ⇒ `Vec::new()`.
+//! 🧲️ attraction. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DisconnectVortices` — reconstructs a `connect-vortices` of the captured BASE
 use super::mutation::DisconnectVortices;
 use crate::connect_vortices::mutation::ConnectVortices;

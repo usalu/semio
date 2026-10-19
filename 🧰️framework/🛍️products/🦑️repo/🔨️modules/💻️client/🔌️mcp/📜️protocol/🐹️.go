@@ -289,6 +289,13 @@ type Tool struct {
 	Title       string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
 	InputSchema Schema `json:"inputSchema"`
+	OutputSchema *Schema `json:"outputSchema,omitempty"`
+}
+
+// 📤️ToolResultOutputSchema is the one `outputSchema` every repository tool declares: object data is returned as is, array or scalar data is wrapped as `{"result": <value>}` (see `CallToolResult.MarshalJSON` and `$defs.ToolOutput` of the module schema).
+func ToolResultOutputSchema() *Schema {
+	additional := true
+	return &Schema{Type: "object", Description: "Object data as is; array or scalar data wrapped as result.", Properties: map[string]Schema{"result": {Description: "Array or scalar data of the tool."}}, AdditionalProperties: &additional}
 }
 
 type ListToolsResult struct {
@@ -314,6 +321,22 @@ type CallToolResult struct {
 	Content           []Content       `json:"content"`
 	StructuredContent json.RawMessage `json:"structuredContent,omitempty"`
 	IsError           bool            `json:"isError,omitempty"`
+	OutputSchemaDeclared bool         `json:"-"`
+}
+
+// 🧯️MarshalJSON keeps `content` an array and emits `structuredContent` only as a JSON object: null is omitted, object data is kept, array or scalar data is wrapped as `{"result": <value>}` when the tool declares an `outputSchema` and omitted otherwise.
+func (result CallToolResult) MarshalJSON() ([]byte, error) {
+	type wire CallToolResult
+	encoded := wire(result)
+	if encoded.Content == nil { encoded.Content = []Content{} }
+	trimmed := bytes.TrimSpace(encoded.StructuredContent)
+	switch {
+	case len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")): encoded.StructuredContent = nil
+	case trimmed[0] == '{': encoded.StructuredContent = trimmed
+	case result.OutputSchemaDeclared: encoded.StructuredContent = append(append([]byte(`{"result":`), trimmed...), '}')
+	default: encoded.StructuredContent = nil
+	}
+	return json.Marshal(encoded)
 }
 
 type Resource struct {

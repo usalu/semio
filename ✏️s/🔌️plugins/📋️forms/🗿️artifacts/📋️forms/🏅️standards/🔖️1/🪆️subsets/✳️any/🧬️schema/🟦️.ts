@@ -13,14 +13,14 @@ function parseFormsChild(value: unknown, subset: "value" | "table", at: string):
 }
 
 export interface FormsArtifact {
-  /** @state artifact */ schema: "forms.form";
-  /** @state artifact */ id: string;
-  /** @state artifact */ version: string;
-  /** @state artifact */ title?: string;
-  /** @state artifact */ definition: FormsDefinition;
-  /** @state artifact */ responses: FormsResponse[];
-  /** @state artifact @child kind=s.stdio.semio */ structure: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ results: ArtifactChild;
+  /** 📐️ @state artifact */ schema: "forms.form";
+  /** 🔑️ @state artifact */ id: string;
+  /** 🔖️ @state artifact */ version: string;
+  /** 📛️ @state artifact */ title?: string;
+  /** 📜️ @state artifact */ definition: FormsDefinition;
+  /** 📬️ @state artifact */ responses: FormsResponse[];
+  /** 🏗️ @state artifact @child kind=s.stdio.semio */ structure: ArtifactChild;
+  /** 📥️ @state artifact @child kind=s.stdio.semio */ results: ArtifactChild;
 }
 
 /** 🪪️ Validates the document marker, declared fields and each exact child dialect. */

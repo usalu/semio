@@ -1,9 +1,9 @@
-//! Puzzle5d mutation — `ChangePart2dLocked`: changes a part's 2D-projection locked flag.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::Puzzle5dSnapshot;
+//! 🧩️ Puzzle5d mutation — `ChangePart2dLocked`: changes a part's 2D-projection locked flag.
+use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
-/// `change-part2d-locked` payload.
+/// 🔩️ `change-part2d-locked` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -32,7 +32,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangePart2dLocked {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ChangePart2dLocked
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ChangePart2dLocked>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

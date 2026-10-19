@@ -1,4 +1,4 @@
-use crate::os_spr::ColdMutationKind;
+use semio_framework_os_spr::ColdMutationKind;
 use super::*;
 use semio_framework_os_spr::SemanticMutation;
 

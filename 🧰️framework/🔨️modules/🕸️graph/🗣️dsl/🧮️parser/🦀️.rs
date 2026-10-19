@@ -141,10 +141,6 @@ impl Parser {
                 let right = self.parse_bracketed_pattern_node()?;
                 Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: None, kind: None, directed: true, right }) })
             }
-            // ➖️ `-` and `--` are the SAME connector. Cypher (and this dialect's own executor parser,
-            // and every committed example query in the repo) writes `(a)-[r:Kind]->(b)`; `--` is this
-            // grammar's own equal-status spelling. Accepting only `--` made every real query fail
-            // `unexpected character '-'` in lint/complete/hover/format while the executor ran it fine.
             Token::Dash | Token::DashArrow => {
                 self.bump();
                 if matches!(self.peek(), Token::LBracket) {

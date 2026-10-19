@@ -9,7 +9,9 @@
       "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
       "{projectRoot}/**/*",
       "{workspaceRoot}/✏️s/🧑‍💻dev/📐️cad/🧪️tests/🎚️config/🟦️.ts",
-      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/**/*"
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/**/*"
     ]
   },
   "targets": {
@@ -24,6 +26,7 @@
     },
     "generate": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate",
@@ -32,6 +35,7 @@
     },
     "fixture": {
       "executor": "repo:script",
+      "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts fixture",

@@ -25,7 +25,7 @@ impl ColdDiffAlgebra<()> for Delta {
 /// 🛂️ Neutral admission vectors gate inverse candidates and retire every evaluated diff once.
 #[test]
 fn inverse_admission_follows_portable_outcomes_and_retires_each_diff() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/↩️inverse-admission/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/↩️inverse-admission/🔣️.json")).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
         RETIRED.with(|count| count.set(0));
         let outcome = MutationOutcome::new(Delta { empty: row["empty"].as_bool().unwrap() });

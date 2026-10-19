@@ -335,7 +335,6 @@ async fn fatigue_failing_fails_fat_check() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope() {
-    // CORRECTION 13:43 — descriptive report labels exempted explicitly.
     const LABEL_EXCEPTIONS: &[&str] = &["projectId", "labelEn", "labelDe"];
 
     fn leaf_name(path: &str) -> &str {
@@ -552,7 +551,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
     let mut unchanged = Vec::new();
     let mut checked = 0usize;
 
-    // Building leaves (non-bridgeSls, non-altitude — altitude needs snow).
     {
         let base = &building;
         let base_sig = sig(&evaluate(base));
@@ -571,7 +569,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
                 None => continue,
             };
             let next = if path == "referencePeriodYears" {
-                // Cross the 25 a threshold used by target β selection.
                 let v = cur.as_f64().unwrap_or(50.0);
                 serde_json::json!(if v >= 25.0 { 10.0 } else { 50.0 })
             } else {
@@ -586,10 +583,8 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
             }
             let Ok(perturbed) = serde_json::from_value::<En1990Snapshot>(tree) else { continue };
             checked += 1;
-            // Annex DE↔EN is a no-op for office/wind ψ; use seismic example where ψ₂ diverges.
             if path == "annex" {
                 let mut annex_base = semio_s_artifact_norm_en1990_examples::accidental_seismic_compliant::reference_snapshot();
-                // Category "other" has divergent ψ₂ DE vs EN (see seismic_combination_de_vs_en_diverge_on_other_psi_2).
                 annex_base.variables[0].category = "other".into();
                 annex_base.annex = semio_s_plugin_norm_compliance::AnnexChoice::De;
                 let annex_sig = sig(&evaluate(&annex_base));
@@ -603,7 +598,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
         }
     }
 
-    // Site altitude — DE snow subject (≤1000 m → >1000 m flips ψ).
     {
         let base = &building_snow;
         let base_sig = sig(&evaluate(base));
@@ -616,7 +610,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
         }
     }
 
-    // Bridge SLS leaves on committed bridge example.
     {
         let base = &bridge;
         let base_sig = sig(&evaluate(base));
@@ -648,7 +641,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
     }
 
     
-    // Accidental + seismic leaves on committed example (6.11 / 6.12b active).
     {
         let base = semio_s_artifact_norm_en1990_examples::accidental_seismic_compliant::reference_snapshot();
         let base_report = evaluate(&base);
@@ -689,7 +681,6 @@ async fn every_editable_leaf_changes_a_check_when_perturbed_in_applicable_scope(
                 unchanged.push(format!("accidental_seismic:{path}"));
             }
         }
-        // Explicit flip from N/A on empty tables: removing actions should restore N/A.
         let mut cleared = base.clone();
         cleared.accidentals.clear();
         cleared.seismics.clear();

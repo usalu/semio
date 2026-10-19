@@ -2,9 +2,9 @@
 import { parseProcedureArtifact, type ArtifactChild } from "../🟦️.ts";
 
 export interface ProcedureSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact @child kind=s.stdio.semio */ flow: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ text: ArtifactChild;
+  /** 📐️ @state artifact */ schema: string;
+  /** 🌊️ @state artifact @child kind=s.stdio.semio */ flow: ArtifactChild;
+  /** 🔤️ @state artifact @child kind=s.stdio.semio */ text: ArtifactChild;
 }
 
 /** 🔎️ Validates a snapshot through the exact Procedure document boundary. */

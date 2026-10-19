@@ -22,7 +22,8 @@ fn drawing_clipboard_dependency_fixture_and_repeated_identity_are_complete() {
 
 #[test]
 fn drawing_clipboard_asset_entry_admission_preserves_original_samples_and_backing(){
- use semio_framework_value::{NativeDecodeControl,ToValue};
+ use semio_framework_value::ToValue;
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧱️structure/🧪️tests/🧫️fixtures/🧬️mutations/📥️import-image-asset/➕️adds/📸️snapshot/➡️after/🔣️.json")).unwrap();
  let asset:DrawingImageAsset=serde_json::from_value(fixture["assets"]["bitmap"].clone()).unwrap();let mut candidate=Some(("bitmap".to_owned(),asset));let mut assets=DrawingClipboardAssets::default();let mut accepted=|_|true;
  let mut denied=NativeDecodeControl::new(0,&mut accepted);let(result,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||assets.append_candidate(&mut candidate,&mut denied));assert!(result.is_err());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));assert!(assets.is_empty());assert!(candidate.is_some());
@@ -65,7 +66,7 @@ fn drawing_clipboard_native_codec_matches_serde_and_resumes_large_text(){
     let mut encoder=semio_framework_pack_json::JsonWriteCursor::new(encode::ClipboardJsonSource{packet:packet.clone()});let mut receipt=None;let mut turns=0;
     let output=loop{let mut accepted=|_|true;let mut control=if let Some(receipt)=receipt.take(){NativeEncodeControl::resume(receipt,&mut accepted).unwrap()}else{NativeEncodeControl::new(MAX_BYTES,&mut accepted)};let output=encoder.step(17,&mut control).unwrap();receipt=Some(control.pause().unwrap());turns+=1;if let Some(output)=output{break output;}};
     assert!(turns>100);assert_eq!(serde_json::from_str::<serde_json::Value>(&output).unwrap(),expected);retire(encoder);
-    let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);
+    let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);
     let mut hydration=decode::ClipboardHydration::new(packet.to_value());let mut turns=0;while !hydration.step(&mut control).unwrap(){turns+=1;assert!(turns<100000);}assert!(turns>64);assert_eq!(hydration.packet,packet);retire(hydration);
     let mut cancelled=decode::ClipboardHydration::new(packet.to_value());for _ in 0..32{assert!(!cancelled.step(&mut control).unwrap());}retire(cancelled);
 }
@@ -86,7 +87,8 @@ fn drawing_clipboard_boolean_operand_displacement_survives_parent_change(){
 
 #[test]
 fn drawing_clipboard_hydration_preserves_admitted_identity_and_depth_refusal_owners(){
-    use semio_framework_value::{ToValue,NativeDecodeControl};
+    use semio_framework_value::ToValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📋️clipboard/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let cases=fixture["codecCases"].as_array().unwrap();
     let identity="a".repeat(cases[0]["identityBytes"].as_u64().unwrap()as usize);let a=shape(&identity);let b=shape("b");let mut boolean=semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Result")).to_string().into()).expect("nonempty authored identity"), "Result","union",vec![identity.clone().into(),"b".into()].into());layer_base_mut(&mut boolean).id="result".into();
     let packet=DrawingClipboard{schema:SCHEMA.into(),roots:vec![a,b,boolean],selected:vec!["result".into()],assets:Default::default()};let mut accepted=|_|true;let mut control=NativeDecodeControl::new(job::MAX_NATIVE_BYTES,&mut accepted);let mut hydration=decode::ClipboardHydration::new(packet.to_value());while !hydration.step(&mut control).unwrap(){}assert_eq!(hydration.packet,packet);retire(hydration);

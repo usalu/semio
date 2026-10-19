@@ -19,7 +19,7 @@ export type DependencyToolRunner=NativeDependencyToolRunnerV1;
 
 /** 🛠️ Synchronizes one native environment; The build tool schedules every cross-environment prerequisite. */
 export async function prepareDependencies(kind: string, workspace: string, invocation:ScriptInvocation, storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1,runner: DependencyToolRunner = runNativeDependencyToolV1,environment:NodeJS.ProcessEnv=process.env): Promise<void> {
-  if(!nativeSchema.$defs.NativeDependencyKind.enum.some(value=>value===kind))throw Error("Unknown dependency environment: "+kind);requireIssuedResourceControlInvocationV1(phase.leaseControl,invocation);if(phase.authority.original!==invocation.capabilities)throw Error("Original native dependencies control required");const boundedEnvironment=environment,signal=phase.leaseControl.signal;await phase.advance("native-dependencies:"+kind);
+  if(!nativeSchema.$defs.NativeDependencyKind.enum.some(value=>value===kind))throw new Error("Unknown dependency environment: "+kind);requireIssuedResourceControlInvocationV1(phase.leaseControl,invocation);if(phase.authority.original!==invocation.capabilities)throw new Error("Original native dependencies control required");const boundedEnvironment=environment,signal=phase.leaseControl.signal;await phase.advance("native-dependencies:"+kind);
   const run = async (command: string, args: string[], capture = false, environment?: NodeJS.ProcessEnv): Promise<string> => {
     await phase.advance(command+":"+args[0]);
     const result = await runner(command, args, workspace, signal, capture, environment??boundedEnvironment,storage,phase);
@@ -61,7 +61,7 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
 /** 🔌️ Receives the original native caller for the selected dependency environment. */
 export class NativeDependenciesScript extends Script {
  async run(args:string[]):Promise<void>{
-  if(args.length!==1||!nativeSchema.$defs.NativeDependencyKind.enum.some(value=>value===args[0]))throw Error("Native dependency synchronization requires one environment and accepts no installer overrides");
+  if(args.length!==1||!nativeSchema.$defs.NativeDependencyKind.enum.some(value=>value===args[0]))throw new Error("Native dependency synchronization requires one environment and accepts no installer overrides");
   try{await withRepositoryCargoPreparationV1(this.repoRoot,this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"native:dependencies-entry",0),process.env,async(environment,phase)=>prepareDependencies(args[0]!,this.root,this.invocation,parseCargoPreparationStorageV1(JSON.parse(environment.SEMIO_CARGO_PREPARATION_STORAGE!)),phase,runNativeDependencyToolV1,{...environment}));}
   catch(error){this.invocation.control.signal.throwIfAborted();throw error;}
  }

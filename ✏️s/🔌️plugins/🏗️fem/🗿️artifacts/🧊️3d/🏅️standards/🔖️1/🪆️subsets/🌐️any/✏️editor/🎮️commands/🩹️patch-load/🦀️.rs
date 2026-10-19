@@ -1,4 +1,4 @@
-//! `elementId`, `wx`, `wy`, `wz`, `solidId`, `pressure`) → `ChangeLoad`.
+//! 🎮️ `elementId`, `wx`, `wy`, `wz`, `solidId`, `pressure`) → `ChangeLoad`.
 //! 🩹️ Fem3d play app command — `patch-load`: one-field edit of a load (`nodeId`, `dof`, `value`,
 
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_owner;

@@ -1,4 +1,4 @@
-//! moved out of the artifact tree).
+//! ↔️ moved out of the artifact tree).
 //! 🗺️ FEM 3D module engine — cheap solid mesh preview + nodal-averaged stress (pure FE algorithm,
 
 use crate::fem3d_engine::meshing;

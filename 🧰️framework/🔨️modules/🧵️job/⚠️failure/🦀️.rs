@@ -44,14 +44,14 @@ impl From<ValueError> for OriginalTurnFailure{
  fn from(primary:ValueError)->Self{Self{effects:primary.retained_progress(),primary:primary.into(),receipt_refusal:None,context_refusal:None}}
 }
 impl From<Fault> for OriginalTurnFailure{fn from(primary:Fault)->Self{Self{effects:primary.retained_progress(),primary:primary.into(),receipt_refusal:None,context_refusal:None}}}
-impl From<semio_framework_value::native_decoding::NativeConstructionStepFailure<ValueError>> for OriginalTurnFailure {
- fn from(failure:semio_framework_value::native_decoding::NativeConstructionStepFailure<ValueError>)->Self {
+impl From<semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>> for OriginalTurnFailure {
+ fn from(failure:semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>)->Self {
   let primary=OriginalReceivingPrimary { primary:failure.primary,quote_refusal:None,allocation_refusal:None,progress:failure.progress };
   Self { effects:failure.progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:failure.receipt_refusal,context_refusal:None }
  }
 }
-impl From<semio_framework_value::native_decoding::NativeConstructionStepFailure<OriginalReceivingPrimary>> for OriginalTurnFailure {
- fn from(failure:semio_framework_value::native_decoding::NativeConstructionStepFailure<OriginalReceivingPrimary>)->Self {
+impl From<semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<OriginalReceivingPrimary>> for OriginalTurnFailure {
+ fn from(failure:semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<OriginalReceivingPrimary>)->Self {
   let mut primary=failure.primary.unwrap_or(OriginalReceivingPrimary { primary:None,quote_refusal:None,allocation_refusal:None,progress:failure.progress });primary.progress=failure.progress;
   Self { effects:failure.progress,primary:OriginalTurnPrimary::Receiving(primary),receipt_refusal:failure.receipt_refusal,context_refusal:None }
  }

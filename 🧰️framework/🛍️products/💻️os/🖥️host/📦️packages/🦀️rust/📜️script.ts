@@ -2,13 +2,9 @@
 import {verifyProducedWasmPackageV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` host router. */
-import { join, resolve } from "node:path";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { runCargo } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { runVitest } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { buildAdmittedWasmWebV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -17,6 +13,7 @@ import { MemberOpenProtocolScript, PublicMemberOpenHandoffCheckScript, PublicMem
 import { MemberHistoryIdentitySourceScript, MemberHistoryIdScript, MemberHistoryInputScript } from "./🎛️commands/🪪️member-history-identity/🟦️.ts";
 import { MemberHistoryDictionaryScript, MemberHistoryFoundationScript, MemberHistoryRecordScript } from "./🎛️commands/📚️member-history-dictionary/🟦️.ts";
 import { MemberFactoryIdentityScript } from "./🎛️commands/🏭️member-factory-identity/🟦️.ts";
+import { runTestScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 class CheckScript extends BundleScript {
   run(segments: string[]): void {
@@ -26,15 +23,7 @@ class CheckScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const owner = join(this.root, "../..");
-    const actorFixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧾️actor-context/🔣️.json"), "utf8"));
-    for (const row of actorFixture.cases) assert.deepEqual(JSON.parse(JSON.stringify([row.actor, row.reopenActor])), row.expectedActors);
-    const { rest } = resolveTestLevel(segments, "quick");
-    if (rest[0] === "rust") {
-      runCargo(["test", "--manifest-path", "Cargo.toml", ...rest.slice(1)], this.root);
-      return;
-    }
-    await runVitest(this.root, rest, "../../../🧪️tests/🎚️config/🟦️.ts");
+    await runTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 

@@ -1,4 +1,4 @@
-//! then re-`connect-vortices`es every attraction BASE shows touching one of its vortices (severed
+//! 🧲️ then re-`connect-vortices`es every attraction BASE shows touching one of its vortices (severed
 //! ↩️ Inverse for `DeleteObject` — reconstructs a `create-object` of the captured BASE object,
 //! cascade). Missing target ⇒ `Vec::new()`.
 use super::mutation::DeleteObject;

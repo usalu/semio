@@ -139,7 +139,6 @@ pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Resul
 pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
     let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let name = parsed.snapshot.name.trim().to_owned();
-    // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
     let mut owners = parsed.into_envelope().into_owners();
     let mut edit_messages = Vec::with_capacity(owners.edit_messages.len());
     while let Some(entry) = owners.edit_messages.pop() { edit_messages.push(entry); }

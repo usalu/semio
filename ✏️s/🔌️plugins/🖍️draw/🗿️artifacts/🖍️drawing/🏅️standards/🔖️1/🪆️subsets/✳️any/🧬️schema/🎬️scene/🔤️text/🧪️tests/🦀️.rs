@@ -3,7 +3,8 @@ use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::PathSegment;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneContent, DocumentSceneError};
-#[allow(unused_imports)] use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+#[allow(unused_imports)] use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+#[allow(unused_imports)] use semio_framework_value_persistent::list::PagedList;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::text::*;
 use semio_s_artifact_draw_drawing_model::FillStyle;
 use semio_s_artifact_draw_drawing_scene::preparation::DocumentSceneNode;

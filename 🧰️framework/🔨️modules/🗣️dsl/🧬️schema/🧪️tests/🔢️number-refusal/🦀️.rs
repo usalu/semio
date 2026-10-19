@@ -1,7 +1,7 @@
 //! 🔢️ Native numeric refusal authority separates caller work bounds from malformed values.
 use semio_framework_dsl_record::{FieldSpec, ParseOptions, RecordLayout, RecordSpec, Shape, parse_exact_controlled};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[test]
 fn controlled_numeric_token_bounds_preserve_distinct_work_and_value_refusals() {

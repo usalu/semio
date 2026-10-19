@@ -28,7 +28,6 @@ use semio_framework_ui_runtime_exchange::Command;
 /// other entity mutation uses — `notify`/`emit`/`defer`/`spawn_local`, never an await, by the same
 /// construction `crate::EntityStore::update` already enforces on every other mutation path.
 pub trait HandleIntent: Sized {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn on_intent(&mut self, intent: &ui_contract::UiIntent, cx: &mut crate::Context<'_, Self>) -> DispatchOutcome;
 }
 

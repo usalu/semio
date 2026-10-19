@@ -26,6 +26,8 @@ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-docx-base-diff = { workspace = true }
+semio-s-artifact-stdio-docx-base-xml-address = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 semio-s-artifact-stdio-docx-base-model = { workspace = true }

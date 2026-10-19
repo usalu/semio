@@ -1,4 +1,4 @@
-//! collision}` adapter (the ONE interface boundary this module depends on), the plain
+//! 💥️ collision}` adapter (the ONE interface boundary this module depends on), the plain
 //! 📐️ Puzzle 3d play app — the precompute geometry layer: the `semio_framework_3d::{rigid,
 //! `[f64; 3]`/`[f64; 4]` vector and quaternion math the placement solver builds on, the brush
 //! placement pose solver itself, and the collision-body/AABB/overlap primitives the brush and

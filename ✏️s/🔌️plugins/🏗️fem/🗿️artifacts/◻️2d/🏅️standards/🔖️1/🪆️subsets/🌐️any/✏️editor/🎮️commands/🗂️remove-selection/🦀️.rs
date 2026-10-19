@@ -9,8 +9,8 @@ use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case;
 use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::delete_region;
+use semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section;
 use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load;
 
@@ -84,13 +84,13 @@ pub fn remove_ids(doc: &ArtifactView<'_, Fem2dSnapshot>, ids: &[String]) -> Resu
         operations.push(Fem2dMutation::DeleteElement(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement { id: element_id(row).into() }));
     }
     for row in snapshot.regions.iter().filter(|row| selected.contains(&("region", row.id.as_str()))) {
-        operations.push(Fem2dMutation::DeleteRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion { id: row.id.clone() }));
+        operations.push(Fem2dMutation::DeleteRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion { id: row.id.clone() }));
     }
     for row in snapshot.nodes.iter().filter(|row| selected.contains(&("node", row.id.as_str()))) {
         operations.push(Fem2dMutation::DeleteNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id: row.id.clone() }));
     }
     for row in snapshot.sections.iter().filter(|row| selected.contains(&("section", row.id.as_str()))) {
-        operations.push(Fem2dMutation::DeleteSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: row.id.clone() }));
+        operations.push(Fem2dMutation::DeleteSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: row.id.clone() }));
     }
     for row in snapshot.materials.iter().filter(|row| selected.contains(&("material", row.id.as_str()))) {
         operations.push(Fem2dMutation::DeleteMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: row.id.clone() }));

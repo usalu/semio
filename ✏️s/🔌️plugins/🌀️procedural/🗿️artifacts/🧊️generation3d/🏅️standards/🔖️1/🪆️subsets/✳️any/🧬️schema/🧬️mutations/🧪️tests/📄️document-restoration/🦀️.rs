@@ -20,7 +20,7 @@ fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracl
     for case in fixture["cases"].as_array().unwrap() {
         let wire = serde_json::to_string(&case["mutation"]).unwrap();
         let mut accepted = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(fixture["maximumDecodeBytes"].as_u64().unwrap() as usize, &mut accepted);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(fixture["maximumDecodeBytes"].as_u64().unwrap() as usize, &mut accepted);
         let parsed = semio_framework_pack_json::from_json_str_controlled::<Generation3dMutation>(&wire, semio_framework_pack_json::JsonMemberPolicy::Reject, &mut control);
         let Ok(mutation) = parsed else { checks.push((case["id"].as_str().unwrap().to_owned(), false)); continue };
         let binary = mutation.encode_op().ok().and_then(|bytes| Generation3dMutation::decode_op(&bytes).ok());

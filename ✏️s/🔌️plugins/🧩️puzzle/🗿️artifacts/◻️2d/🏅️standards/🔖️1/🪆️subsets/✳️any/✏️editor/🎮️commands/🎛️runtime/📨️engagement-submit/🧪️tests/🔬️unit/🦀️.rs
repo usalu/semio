@@ -46,8 +46,6 @@ async fn engagement_line_carries_its_arguments_verbatim() {
     assert_eq!(moved.get("x").and_then(Value::as_f64), Some(x + 50.0), "`move 50 25` must translate by dx");
     assert_eq!(moved.get("y").and_then(Value::as_f64), Some(y + 25.0), "`move 50 25` must translate by dy");
 
-    // 🔄️ A single-node selection rotates about its own centroid, so the pose is unchanged — the proof
-    // that the verb parsed is the radius-preserving handle turn, asserted through a two-node selection.
     let other = board_snapshot_nodes(&fixture_of(&app)).iter().map(|node| node.get("id").and_then(Value::as_str).unwrap_or_default().to_string()).find(|other| other != &id).expect("a second node");
     let pair = semio_framework_pack_json::to_json_string(&[&id, &other].map(|node| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: node.clone() }));
     dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": pair, "merge": "replace", "method": "pick" })), None).expect("select both nodes");

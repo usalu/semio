@@ -85,7 +85,6 @@ fn wrap_boundary_solves_consistently() {
 
 #[test]
 fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
-    // A 3x3 wrapped grid forces an odd cycle along each axis; two colors can't 2-color it.
     let (model, topo) = checkerboard(3, 3, Boundary::Wrap);
     let mut solver = Grid2dSolverBuilder::new(model, topo).config(SearchConfig { mode: search::SearchMode::Backtrack, ..Default::default() }).build().unwrap();
     let outcome = solver.solve(1);
@@ -94,10 +93,6 @@ fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
 
 #[test]
 fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
-    // Independently hand-enumerated arcs for a 3x4 VonNeumann/Open grid (not derived from
-    // 🦀️grid2d.rs's own resolve_coord logic) fed into a GraphTopology, compared against the
-    // same model solved through Grid2dTopology: both must produce byte-identical assignments
-    // and identical observation counts under the same seed/config.
     let width = 3usize;
     let height = 4usize;
     let mut b = TiledModelBuilder::new();
@@ -119,12 +114,12 @@ fn graph_vs_grid2d_strict_equivalence_von_neumann_open() {
         for x in 0..width {
             let idx = |x: usize, y: usize| crate::ids::NodeId::from_index(y * width + x);
             if x + 1 < width {
-                hand_arcs.push((idx(x, y), idx(x + 1, y), rels[0])); // east: offset (1,0)
-                hand_arcs.push((idx(x + 1, y), idx(x, y), rels[1])); // west: offset (-1,0)
+                hand_arcs.push((idx(x, y), idx(x + 1, y), rels[0]));
+                hand_arcs.push((idx(x + 1, y), idx(x, y), rels[1]));
             }
             if y + 1 < height {
-                hand_arcs.push((idx(x, y), idx(x, y + 1), rels[2])); // south: offset (0,1)
-                hand_arcs.push((idx(x, y + 1), idx(x, y), rels[3])); // north: offset (0,-1)
+                hand_arcs.push((idx(x, y), idx(x, y + 1), rels[2]));
+                hand_arcs.push((idx(x, y + 1), idx(x, y), rels[3]));
             }
         }
     }

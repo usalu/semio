@@ -1,6 +1,6 @@
 //! 🧫️ Neutral original typed receiving laws compare the independent JSON binding.
 use super::*;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::cell::Cell;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫴️receiving/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{static POLICY:std::sync::OnceLock<RetainedCloneGrant>=std::sync::OnceLock::new();*POLICY.get_or_init(||{let value=fixture();let value=&value["grant"];RetainedCloneGrant{maximum_items:value["items"].as_u64().unwrap()as usize,maximum_copy_bytes:value["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["depth"].as_u64().unwrap()as usize}})}

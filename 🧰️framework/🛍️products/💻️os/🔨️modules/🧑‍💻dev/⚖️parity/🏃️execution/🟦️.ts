@@ -70,9 +70,6 @@ async function triageParityBoot(page: import("playwright").Page, renderer: Parit
       const stale = staleBridgeHit();
       return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "DUMP-EMPTY", detail: "no data-ui-path nodes" };
     }
-    // 🩹️ The shell itself can mount (>20 root nodes, non-empty dump) while ONE plugin/extension actor
-    // inside it fails to activate — that failure never blocks `#root`, so it must be checked even on an
-    // otherwise-PASSing boot, or a stale-bridge variant silently reports PASS.
     const stale = staleBridgeHit();
     return stale ? { status: "STALE-BRIDGE", detail: stale } : { status: "PASS" };
   }
@@ -153,11 +150,6 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
     const regionNodes = reactDump.nodes.filter((n) => PARITY_PIXEL_REGION_KINDS.has(n.kind) && wgpuPaths.has(n.path));
     const regions = await Promise.all(regionNodes.map((n) => compareParityRegion(reactPage, reactPng, wgpuPng, n, outDir, variant)));
     const failingRegions = regions.filter((r) => r.ratio > r.threshold);
-    // 🎬️Runs regardless of the structural/pixel outcome above (not gated on their PASS) — behavioral
-    // parity is a distinct axis (interaction-driven dynamic state vs. static end-state), and a
-    // static mismatch elsewhere shouldn't hide whether app state still transitions correctly. Wrapped
-    // defensively: a probe-runner exception (e.g. a page closing mid-step) must not take down the
-    // whole `verifyParityVariant` call, only degrade `behavioral` to a diagnosable FAIL.
     let behavioral: ProbeRunResult | undefined;
     try {
       behavioral = await runParityProbe(reactPage, wgpuPage, PARITY_STATE_PROBE_SUITE.steps);
@@ -198,12 +190,6 @@ class ParityTriageScript extends BundleScript {
     ensureParityPlaywrightBrowsersPath();
     const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    // 🩹️terra-parity-rebaseline: `reactServer`/`wgpuServer` used to be `const`, ASSIGNED BEFORE this
-    // `try`, so a throw from the SECOND `startParityDevServer` call (e.g. wgpu's cold cargo build
-    // exceeding `PARITY_BOOT_BUDGET_MS`) left the first server's process running with nothing left
-    // holding a reference to stop it — confirmed leaked in practice (a react `vite` + a wgpu `trunk`
-    // process both still bound to their ports well after the command had exited). `let` + assignment
-    // INSIDE the try, guarded in `finally`, is the same safe shape `verifyParityVariant` already uses.
     let reactServer: ParityServerHandle | undefined;
     let wgpuServer: ParityServerHandle | undefined;
     try {
@@ -237,7 +223,6 @@ class ParityProbeScript extends BundleScript {
     ensureParityPlaywrightBrowsersPath();
     const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
-    // 🩹️terra-parity-rebaseline: same leak fix as `ParityTriageScript` above — see its comment.
     let reactServer: ParityServerHandle | undefined;
     let wgpuServer: ParityServerHandle | undefined;
     try {

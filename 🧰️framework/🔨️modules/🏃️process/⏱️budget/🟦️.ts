@@ -4,6 +4,7 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 export type ProcessBudgetEnvironment = Readonly<Record<string, string | undefined>>;
 
 export const BUILD_BUDGET_MS = 0;
+export const BUILD_PREPARATION_BUDGET_MS = schema.$defs.BuildPreparationDefault.const;
 export const CMD_BUDGET_MS = 0;
 export const ORCHESTRATOR_BUDGET_MS = 0;
 export const DAEMON_BUDGET_MS = 0;
@@ -17,6 +18,11 @@ function readBudget(name: string, fallback: number, environment: ProcessBudgetEn
 /** 🏗️ Resolves a build budget without selecting a build tool or repository policy. */
 export function buildBudgetMs(environment: ProcessBudgetEnvironment = process.env): number {
   return readBudget("SEMIO_BUILD_BUDGET_MS", BUILD_BUDGET_MS, environment);
+}
+
+/** 🧱️ Bounds expensive build preparation independently of an ordinary long-lived session. */
+export function buildPreparationBudgetMs(environment: ProcessBudgetEnvironment = {}): number {
+  return buildBudgetMs(environment) || BUILD_PREPARATION_BUDGET_MS;
 }
 
 /** 🛠️ Resolves a command budget supplied by its caller's environment. */

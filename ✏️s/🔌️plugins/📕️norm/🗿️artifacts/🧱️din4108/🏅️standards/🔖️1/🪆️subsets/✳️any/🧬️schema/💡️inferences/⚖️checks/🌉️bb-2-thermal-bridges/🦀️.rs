@@ -35,7 +35,6 @@ pub fn delta_u_wb_limit(bridges: &[ThermalBridge], details_conform: bool) -> f64
     }
     let cats: Vec<&str> = bridges.iter().map(|b| bb2_category(&b.bb2_type)).collect();
     if cats.iter().any(|c| *c == BB2_DETAILED) {
-        // Detailed ψ·l method: still compare Σψ·l/A against the catalogue flat for the remaining class.
         if cats.iter().all(|c| *c == BB2_DETAILED || *c == BB2_CATEGORY_A) && details_conform {
             DELTA_U_WB_CATEGORY_A
         } else {

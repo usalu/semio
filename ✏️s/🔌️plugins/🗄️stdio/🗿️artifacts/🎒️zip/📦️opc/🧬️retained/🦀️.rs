@@ -1,7 +1,8 @@
 //! 🧬️ Paged retained ownership for OPC snapshots and Store preparation.
 
 use super::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode, OpcRelationshipOwners};
-use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, list::PagedList, paged::{PagedBytes, PagedMap, PagedUtf8}};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, paged::{PagedBytes, PagedMap, PagedUtf8}};
+use semio_framework_value_persistent::list::PagedList;
 #[path = "🚦️ownership/🦀️.rs"]
 mod ownership;
 

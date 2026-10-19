@@ -100,7 +100,6 @@ pub(crate) struct Pipelines {
 }
 
 impl Pipelines {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> Self {
         let ui_globals_layout = bind_group_layout(device, "ui_globals_layout", UI_FAMILY.variants[0].pipelines[0].bind_groups[0].entries);
         let world_globals_layout = bind_group_layout(device, "world3d_globals_layout", WORLD3D_FAMILY.variants[0].pipelines[0].bind_groups[0].entries);
@@ -187,7 +186,6 @@ impl Pipelines {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32, time_seconds: f32) {
         queue.write_buffer(&self.globals_buffer, 0, bytemuck::bytes_of(&UiGlobals { screen_size: [width, height], _pad: [time_seconds, 0.0] }));
     }

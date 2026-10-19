@@ -63,7 +63,7 @@ pub struct IdealLoadsInput {
     pub floor_area_m2: f64,
 }
 
-/// Alias for callers that still use the request naming.
+/// 🏋️ Alias for callers that still use the request naming.
 pub type IdealLoadsRequest = IdealLoadsInput;
 
 /// 📤️ Ideal loads delivery result per zone timestep.

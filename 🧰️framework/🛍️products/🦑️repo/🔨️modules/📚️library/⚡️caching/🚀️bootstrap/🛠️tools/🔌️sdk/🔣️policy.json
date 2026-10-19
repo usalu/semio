@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "modules": [
+    "@nx/devkit",
+    "nx/bin/nx.js",
+    "nx/package.json",
+    "nx/src/daemon/client/client",
+    "nx/src/daemon/client/daemon-environment",
+    "nx/src/daemon/socket-utils",
+    "nx/src/hasher/task-hasher",
+    "nx/src/native",
+    "nx/src/project-graph/nx-deps-cache",
+    "nx/src/tasks-runner/create-task-graph",
+    "nx/src/utils/consume-messages-from-socket",
+    "nx/src/utils/workspace-context",
+    "nx/src/utils/workspace-root"
+  ],
+  "adapterRoots": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap"
+  ],
+  "scanned": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules"
+  ]
+}

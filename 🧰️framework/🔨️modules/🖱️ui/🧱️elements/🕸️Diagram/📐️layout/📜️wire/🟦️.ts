@@ -1,17 +1,17 @@
 import type { Edge, Node } from "@xyflow/react";
 
 /**
- * Base pixel unit for diagram node sizing.
+ * 🖼️ Base pixel unit for diagram node sizing.
  **/
 export const DIAGRAM_UNIT = 48;
 
 /**
- * Union type for diagram layout directions (TB/BT/LR/RL).
+ * 📊️ Union type for diagram layout directions (TB/BT/LR/RL).
  **/
 export type DiagramLayoutDirection = "TB" | "BT" | "LR" | "RL";
 
 /**
- * Configuration for the owned deterministic directed layout.
+ * 📈️ Configuration for the owned deterministic directed layout.
  **/
 export interface DiagramLayoutOptions {
   direction?: DiagramLayoutDirection;

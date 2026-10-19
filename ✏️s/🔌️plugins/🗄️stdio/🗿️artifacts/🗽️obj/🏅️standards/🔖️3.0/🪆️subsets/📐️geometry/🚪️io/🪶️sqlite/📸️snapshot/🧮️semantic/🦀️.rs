@@ -1,7 +1,7 @@
 //! 🗽️ Borrowed native OBJ fields admit all handcrafted SQL cells before typed construction.
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

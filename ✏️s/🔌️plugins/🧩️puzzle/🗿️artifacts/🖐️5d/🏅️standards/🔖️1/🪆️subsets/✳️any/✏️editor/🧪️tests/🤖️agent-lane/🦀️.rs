@@ -1,4 +1,4 @@
-//! `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 5d document.
+//! 👻️ `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 5d document.
 //! 🤖️ The puzzle 5d editor's own tool-command job (`puzzle.5d.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 
 use semio_framework_plugin::ArtifactEditor;

@@ -85,7 +85,7 @@ fn assert_nurbs_traces_circle(nurbs: &NurbsCurve3, frame: &Frame3, radius: f64, 
 async fn circle_to_nurbs_traces_the_circle_exactly_for_small_arc() {
     let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
     let c = Curve3::Circle { frame, radius: 5.0 };
-    let domain = (0.2, 0.2 + std::f64::consts::FRAC_PI_3); // 60 degrees, single span
+    let domain = (0.2, 0.2 + std::f64::consts::FRAC_PI_3);
     let nurbs = c.to_nurbs(domain);
     assert_nurbs_traces_circle(&nurbs, &frame, 5.0, domain, 20);
     assert!(nurbs.controls[0].distance(c.eval(domain.0)) < 1e-9);
@@ -149,9 +149,6 @@ async fn nurbs_circle_d1_d2_are_exact_not_finite_difference() {
         let p = c.eval(t).to_vec();
         let d1 = c.d1(t);
         let d2 = c.d2(t);
-        // On a unit circle: |C|=1, C·C'=0 (tangent ⟂ radius), and the exact curvature formula
-        // |C'×C''|/|C'|³ must equal 1 (reciprocal of unit radius) to within 1e-9 — a much
-        // tighter bound than the old finite-difference implementation could ever satisfy.
         assert!((p.norm() - 1.0).abs() < 1e-9, "off unit circle at t={t}");
         assert!(p.dot(d1).abs() < 1e-9, "tangent not perpendicular to radius at t={t}");
         let speed = d1.norm();
@@ -166,10 +163,6 @@ async fn nurbs_d1_matches_analytic_circle_d1_within_tight_tolerance() {
     let nurbs = quarter_circle_nurbs();
     for i in 1..20 {
         let nurbs_t = i as f64 / 20.0;
-        // The rational-quadratic parametrization is not angle-linear (see `to_nurbs`'s own
-        // doc), so derive the true angle from the NURBS point itself rather than assuming a
-        // linear map, then compare unit tangent *directions* (which depend only on position on
-        // the circle, not on parametrization speed).
         let p = nurbs.eval(nurbs_t);
         let angle = p.y.atan2(p.x);
         let a_dir = analytic.d1(angle).normalized().unwrap();

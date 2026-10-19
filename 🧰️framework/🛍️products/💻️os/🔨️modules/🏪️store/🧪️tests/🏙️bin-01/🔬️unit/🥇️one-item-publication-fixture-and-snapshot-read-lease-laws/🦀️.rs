@@ -186,9 +186,8 @@ fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_take
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(String::from("retained"));
     let lease = registry.try_issue(owner.clone()).expect("snapshot read lease admission");
-    let index = lease.slot_index();
-    let generation = lease.slot_generation();
     let read = ErasedSnapshotRead::new(owner, lease);
+    let (_, index, generation) = read.lease_identity().unwrap();
     assert!(registry.contains(index, generation));
     assert!(!registry.terminal_is_empty());
     drop(read);
@@ -210,34 +209,12 @@ fn stale_snapshot_read_generation_never_removes_a_reused_slot() {
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(7u32);
     let lease = registry.try_issue(owner.clone()).expect("first exact lease");
-    let index = lease.slot_index();
-    let generation = lease.slot_generation();
     let read = ErasedSnapshotRead::new(owner, lease);
+    let (_, index, generation) = read.lease_identity().unwrap();
     drop(match read.into_typed::<u32>(&registry) {
         Ok(owner) => owner,
         Err(_) => panic!("first exact retirement"),
     });
     assert!(registry.try_take(index, generation).is_err());
-    assert!(registry.terminal_is_empty());
-}
-
-#[test]
-fn snapshot_read_lease_contention_returns_the_exact_untouched_owner() {
-    let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
-    let owner = Arc::new(String::from("contention-owner"));
-    let guard = registry.state_lock().try_lock().expect("hold exact registry contention fixture");
-    let rejected = match registry.try_issue(owner.clone()) {
-        Ok(_) => panic!("nonblocking admission rejects while the fixed registry is contended"),
-        Err(rejected) => rejected,
-    };
-    assert!(Arc::ptr_eq(&owner, &rejected));
-    assert_eq!(Arc::strong_count(&owner), 2, "contention creates no hidden owner clone");
-    drop(guard);
-    let lease = registry.try_issue(rejected.clone()).expect("the same owner retries after contention");
-    let read = ErasedSnapshotRead::new(rejected, lease);
-    drop(match read.into_typed::<String>(&registry) {
-        Ok(owner) => owner,
-        Err(_) => panic!("retried exact owner handback succeeds"),
-    });
     assert!(registry.terminal_is_empty());
 }

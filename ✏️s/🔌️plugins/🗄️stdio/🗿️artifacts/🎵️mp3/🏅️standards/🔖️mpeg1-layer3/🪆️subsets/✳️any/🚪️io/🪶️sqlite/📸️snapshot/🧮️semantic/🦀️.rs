@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue};
 use store::sqlite_snapshot::SqliteDatabaseLimits;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const TABLES:[(&str,usize);8]=[("mp3_document",2),("mp3_id3v2_tag",1),("mp3_id3v2_frame",11),("mp3_id3_text_value",4),("mp3_id3_content_octet",4),("mp3_id3v1_tag",8),("mp3_audio_frame",15),("mp3_audio_payload_octet",4)];
 pub(super) fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  let mut bytes=0usize;for statement in Mp3Snapshot::SQLITE_SCHEMA.split(';'){bytes=bytes.checked_add(statement.trim().len()).ok_or_else(||work("MP3 authored schema extent overflow"))?;}for(name,_)in TABLES{bytes=bytes.checked_add(name.len()).ok_or_else(||work("MP3 authored schema name extent overflow"))?;}

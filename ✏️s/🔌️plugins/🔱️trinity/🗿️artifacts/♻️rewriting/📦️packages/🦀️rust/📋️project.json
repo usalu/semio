@@ -7,6 +7,13 @@
     "role:artifact",
     "family:trinity"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📋️contract/**/*"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
@@ -16,7 +23,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
@@ -51,7 +58,7 @@
     },
     "verify-rewriting-document-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify rewriting-document-contract",
@@ -68,7 +75,7 @@
     },
     "verify-rewriting-map-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify rewriting-map-ownership",
@@ -85,7 +92,7 @@
     },
     "verify-rewriting-window-config": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify rewriting-window-config",
@@ -122,7 +129,12 @@
     },
     "graph-wire-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock"
+      ],
+      "cache": true,
       "dependsOn": [
         "graph-generate"
       ],
@@ -134,7 +146,7 @@
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{projectRoot}/../../🏅️standards/**/*",
         "{projectRoot}/../../🦀️.rs",
@@ -161,7 +173,7 @@
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{projectRoot}/../../🏅️standards/**/*",
         "{projectRoot}/../../🦀️.rs",
@@ -188,7 +200,7 @@
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "{projectRoot}/../../🏅️standards/**/*",
         "{projectRoot}/../../🦀️.rs",
@@ -212,7 +224,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.lock"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",

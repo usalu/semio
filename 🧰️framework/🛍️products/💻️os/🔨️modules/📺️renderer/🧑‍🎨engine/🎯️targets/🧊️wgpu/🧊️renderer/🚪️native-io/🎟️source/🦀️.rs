@@ -5,7 +5,7 @@ use crate::native_caller::NativeFrameCaller;
 use semio_framework_actor::retained_context::{OriginalActorCall,OriginalActorContextError};
 use semio_framework_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
 use semio_framework_job::{OriginalJobPageReturnRegistry,OriginalSuppliedJobPage,OriginalContiguousJobBytes,OriginalJobBytesReturnRegistry,OriginalJobBytesReservation,OriginalSuppliedJobBytes,OriginalTurnFailure,OriginalConstructionDemand,StepContext,JobOutcomeView,admit_original_construction};
-use semio_framework_os_services::{NativeIoJob,NativeIoRequest,NativeIoResultStatus,NativeIoStreamRefusal,OriginalNativePathReturnRegistry,OriginalNativePathReservation,OriginalSuppliedNativePath};
+use semio_framework_os_services_native_io::{NativeIoJob, NativeIoRequest, NativeIoResultStatus, NativeIoStreamRefusal, OriginalNativePathReturnRegistry, OriginalNativePathReservation, OriginalSuppliedNativePath};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::sync::{Mutex,MutexGuard};
 use std::sync::atomic::{AtomicBool,AtomicU8,AtomicU64,AtomicUsize,Ordering};
@@ -19,7 +19,7 @@ const LIVE:u8=1;
 const CHECKED:u8=2;
 const EXHAUSTED:u8=3;
 const INVOCATIONS:usize=semio_framework_job_worker::WORKER_JOB_SESSION_SLOTS+1;
-const RETURN_SLOTS:usize=semio_framework_job::JOB_PAYLOAD_PROCESS_BYTES/semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+const RETURN_SLOTS:usize=semio_framework_job_payload::JOB_PAYLOAD_PROCESS_BYTES/semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 static RETURNS:OriginalJobPageReturnRegistry<RETURN_SLOTS>=OriginalJobPageReturnRegistry::with_return_wake(renderer_source_io_return_wake);
 static BYTE_RETURNS:OriginalJobBytesReturnRegistry<INVOCATIONS>=OriginalJobBytesReturnRegistry::with_return_wake(renderer_source_io_return_wake);
 static PATH_RETURNS:OriginalNativePathReturnRegistry<INVOCATIONS>=OriginalNativePathReturnRegistry::with_return_wake(renderer_source_io_return_wake);
@@ -39,7 +39,7 @@ impl<'a> RendererIoPath<'a>{
   let mut bytes=Vec::new();bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original native path allocation refused"))?;let capacity=bytes.capacity();
   for part in self.parts.into_iter().filter(|part|!part.is_empty()){if !bytes.is_empty(){bytes.push(b'/');}bytes.extend_from_slice(part.as_encoded_bytes());}
   let path=std::path::PathBuf::from(unsafe{std::ffi::OsString::from_encoded_bytes_unchecked(bytes)});
-  let request=match mode{RendererSourceIoMode::Contiguous{..}=>NativeIoRequest::ReadPage{path,offset:0,max_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES},RendererSourceIoMode::Directory=>NativeIoRequest::ScanDirectory{path,directories_only:false,extension:Some(std::borrow::Cow::Borrowed("wasm")),first_only:true},RendererSourceIoMode::Modified=>{let mut paths=semio_framework_os_services::NativePathSet::new();paths.try_push(path).expect("one original modified path fits its fixed input owner");NativeIoRequest::Modified(paths)},RendererSourceIoMode::World=>NativeIoRequest::ReadBytes(path),RendererSourceIoMode::Resident=>unreachable!()};
+  let request=match mode{RendererSourceIoMode::Contiguous{..}=>NativeIoRequest::ReadPage{path,offset:0,max_bytes:semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES},RendererSourceIoMode::Directory=>NativeIoRequest::ScanDirectory{path,directories_only:false,extension:Some(std::borrow::Cow::Borrowed("wasm")),first_only:true},RendererSourceIoMode::Modified=>{let mut paths=semio_framework_os_services_native_io::NativePathSet::new();paths.try_push(path).expect("one original modified path fits its fixed input owner");NativeIoRequest::Modified(paths)},RendererSourceIoMode::World=>NativeIoRequest::ReadBytes(path),RendererSourceIoMode::Resident=>unreachable!()};
   Ok((request,RetainedCloneProgress{copied_items:1,copied_bytes:length,retained_capacity_bytes:capacity,..Default::default()}))
  }
 }
@@ -170,7 +170,7 @@ impl RendererSourceIoNode{
    if self.bytes_reservation.is_none(){let reservation=&mut self.bytes_reservation;let identity=&mut self.bytes_identity;let call=self.caller.dispatch_step(|cx|{*identity=Some(cx.original_source_parent()?.source_identity()?);*reservation=BYTE_RETURNS.reserve(cx)?;Ok(reservation.is_some())});self.accept(call);return}
    let reservation=&mut self.bytes_reservation;let bytes=&mut self.contiguous;let output=&mut self.published_bytes;let call=self.caller.dispatch_step(|cx|reservation.as_mut().unwrap().publish(bytes,output,cx));if self.accept(call)==Some(true){self.bytes_reservation.take();self.ready=true;}return
   }
-  let offset=self.contiguous.as_ref().unwrap().retained_length()as u64;let invocation=&mut self.invocation;let call=self.caller.dispatch_step(|cx|invocation.as_mut().unwrap().restart_read_page(offset,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES,cx));if self.accept(call)==Some(true){self.contiguous_consumed=false;}
+  let offset=self.contiguous.as_ref().unwrap().retained_length()as u64;let invocation=&mut self.invocation;let call=self.caller.dispatch_step(|cx|invocation.as_mut().unwrap().restart_read_page(offset,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES,cx));if self.accept(call)==Some(true){self.contiguous_consumed=false;}
  }
  fn close_one(&mut self){
   use semio_framework_job::InteractiveJob;

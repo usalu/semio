@@ -1,4 +1,4 @@
-//! Inverse for `update-site`.
+//! ↩️ Inverse for `update-site`.
 use crate::update_site::UpdateSite;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

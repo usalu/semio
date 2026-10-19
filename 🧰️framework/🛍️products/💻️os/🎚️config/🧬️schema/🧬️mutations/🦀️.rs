@@ -46,16 +46,9 @@ pub enum UiPreferencesConfigMutation {
 
 //#region 🔖️MergePolicy
 pub use super::change_merge_policy::{
-    change_merge_policy, MergePolicyDiff, inverse_merge_policy_config_mutation, inverse_merge_policy_config_mutation_steps, ChangeMergePolicy, MergePolicySetting, MERGE_POLICY_CONFIG_SCHEMA,
+    change_merge_policy, register_merge_policy_config_mutation_descriptors, MergePolicyConfigMutation, MergePolicyDiff, inverse_merge_policy_config_mutation, inverse_merge_policy_config_mutation_steps, ChangeMergePolicy, MergePolicySetting, MERGE_POLICY_CONFIG_SCHEMA,
 };
 
-/// 🛡️ Typed, invertible merge-policy mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
-#[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = MergePolicySetting, diff = MergePolicyDiff, schema = "os.config.merge-policy", reference = MergePolicySetting, reference_diff = MergePolicyDiff)]
-pub enum MergePolicyConfigMutation {
-    ChangeMergePolicy(ChangeMergePolicy),
-}
 //#endregion 🔖️MergePolicy
 
 //#region 🔖️Identity

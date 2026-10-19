@@ -1,2 +1,2 @@
-/** vcs export xlsx */
+/** 🍴️ vcs export xlsx */
 export function register(): void {}

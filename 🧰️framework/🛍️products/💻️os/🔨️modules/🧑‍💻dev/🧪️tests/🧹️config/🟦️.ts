@@ -241,8 +241,6 @@ describe("dev server watch policy", () => {
       for (const segment of ["🧰️framework", ...watchPolicy.forbiddenRoots, "🧰️framework/dist", "🧰️framework/🤖️generated"]) mkdirSync(join(sandbox, segment), { recursive: true });
       semioSourceWatchVitePlugin({ repoRoot: sandbox }).configureServer(server);
       const written = [join(sandbox, "🧰️framework/🟦️.ts"), join(sandbox, "🧰️framework/dist/🟦️.js"), join(sandbox, "🧰️framework/🤖️generated/🟦️.ts"), ...watchPolicy.forbiddenRoots.map((root) => join(sandbox, root, "noise.txt"))];
-      // ⏳️ `fs.watch` arms asynchronously, so the edit is replayed until it lands rather than written once
-      // behind an unarmed watcher — the deadline is the failure, never a fixed sleep.
       const deadline = Date.now() + 20_000;
       while (!seen.includes("🧰️framework/🟦️.ts") && Date.now() < deadline) {
         for (const file of written) writeFileSync(file, `export const value = ${Date.now()};\n`);
@@ -255,20 +253,6 @@ describe("dev server watch policy", () => {
     }
   });
 
-  // 🛰️ Ticket 26/09/02/PUZZLE-3D-END-TO-END wave B53: the EVENT is the contract, not only the path. macOS
-  // reports every write to an existing file — in place and atomic (temp + rename) alike — as `fs.watch`
-  // `eventType: "rename"`, and Vite invalidates a transformed module ONLY from its `change` handler
-  // (`moduleGraph.onFileChange`); its `add` handler never touches the module graph, and with
-  // `SEMIO_VITE_HMR=0` (`hmr: false`) no HMR pass invalidates either. A watcher that answers a modified
-  // file with `add` therefore serves the pre-edit transform for the life of the server, which is how a
-  // landed host fix measured as absent on `:6013` (`📓️2026-09-13-wave-B53-nakagin-export-full-run.md` §4.2).
-  //
-  // 26/09/09 PROCEDURAL-3D-END-TO-END: the PATH is not the contract either. macOS names a recursive
-  // `fs.watch` event after the directory entry that changed, and an atomic save changes the entry of the
-  // TEMPORARY file — the edited module's own path was named 0 times in 5 at every module depth
-  // (`📓️vite-stale-transform-guard-2026-09-15.md` §1). The watcher therefore carries the freshness
-  // registry and answers any event by re-stating the tracked modules of its directory, which is the only
-  // way a temporary-file event can invalidate the module it was renamed onto.
   it.each([
     ["an in-place write", (target: string) => writeFileSync(target, `export const value = ${Date.now()};\n`)],
     ["an atomic save", (target: string) => {
@@ -289,10 +273,6 @@ describe("dev server watch policy", () => {
       const freshness = createSourceFreshnessRegistry();
       freshness.record(target);
       semioSourceWatchVitePlugin({ repoRoot: sandbox, freshness }).configureServer(server);
-      // ⏳️ `fs.watch` arms asynchronously, and macOS answers only the FIRST write to a path with `rename`
-      // — every later write to the same path in the same session may report `change` on its own. A retry
-      // loop over the target would therefore pass on its second write while a real editor's single save
-      // stays invisible, so the arming is proven on a SEPARATE file and the target is written exactly once.
       const deadline = Date.now() + 20_000;
       while (!events.some((event) => event.endsWith("🔎️arm.ts")) && Date.now() < deadline) {
         writeFileSync(arming, `export const armed = ${Date.now()};\n`);
@@ -362,18 +342,12 @@ describe("dev server transform freshness", () => {
     });
     try {
       await server.listen();
-      // 🧭️ `/@fs/` is the shape Vite transforms AND caches; a root-relative `.ts` URL is answered by the
-      // static middleware from disk, which is always fresh and would make this law vacuous. The type
-      // annotation proves the response really is a transform rather than the file's own bytes.
       const request = async () => (await fetch(`http://127.0.0.1:${port}/@fs${target}`, { headers: { accept: "*/*" } })).text();
       const cached = await request();
       expect(cached, "the measured response must be a cached transform, not the raw file").not.toContain(": number");
       expect(cached).toContain("export const value = 0");
       const stamp = `export const value = ${Date.now()};`;
       write(target, `${stamp}\n`);
-      // 🚫️ No settle window: the guarantee is "the NEXT request", not "a request after the watcher
-      // eventually catches up". Waiting here would let the filesystem watcher pass the test on the one
-      // write style it can see and hide the two it cannot.
       expect(await request(), "the first request after an edit must carry the edited bytes").toContain(stamp);
     } finally {
       await server.close();
@@ -457,8 +431,6 @@ const SOURCE_MODULE = /\.(?:[cm]?tsx?|[cm]?jsx?)$/u;
  * to the tool config rather than to the browser entry beside it. */
 function resolveBrowserCandidate(candidate: string): string | null {
   if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
-  // 📎️ A TypeScript source may address its sibling by the emitted `.js`/`.mjs`/`.jsx` name (NodeNext style);
-  // every resolver here rewrites that back onto the TypeScript twin before it looks for a real `.js` file.
   for (const [emitted, authored] of Object.entries(browserContract.extensionAlias)) {
     if (!candidate.endsWith(emitted)) continue;
     for (const extension of authored) {
@@ -530,8 +502,6 @@ function browserGraph(): BrowserGraph {
       const target = aliasTarget(bare) ?? (bare.startsWith(".") ? resolve(dirname(file), bare) : null);
       const resolved = target === null ? null : resolveBrowserCandidate(target);
       if (resolved === null) {
-        // 🧱️ A relative specifier that resolves to nothing is a build artifact this repository has not produced
-        // yet (a wasm component wrapper, a generated bundle); it carries no package edge to deny.
         (bare.startsWith(".") ? unresolved : []).push(`${repoRelative(file)} → ${bare}`);
         if (!bare.startsWith(".")) packageEdges.set(bare, [...(packageEdges.get(bare) ?? []), repoRelative(file)]);
         continue;
@@ -609,9 +579,6 @@ describe("browser entry module graph", () => {
     for (const denied of browserContract.denyModules) expect(oracle.modules, denied).not.toContain(denied);
     expect(oracle.packages.filter((specifier) => deniedPackageOf(specifier) !== undefined)).toEqual([]);
     expect(oracle.packages.filter((specifier) => browserContract.denySpecifiers.some((denied) => denied.specifier === specifier))).toEqual([]);
-    // 🔁️ The safety-relevant direction: the walk above must not MISS an edge esbuild found — a guard that
-    // under-walks is the dangerous one. The reverse is not asserted: esbuild drops an import statement whose
-    // bindings are all unused (it assumes they were types), so its input set is legitimately the smaller one.
     expect(oracle.modules.filter((module) => SOURCE_MODULE.test(module) && !ours.modules.includes(module)), "esbuild reached a browser module this walk never visited").toEqual([]);
   }, 120_000);
 
@@ -637,8 +604,6 @@ describe("browser entry module graph", () => {
     const { resolutions } = browserGraph();
     for (const ambiguous of browserContract.ambiguousDirectories) {
       const directory = join(repoRoot, ambiguous.directory);
-      // 🔎️ The hazard is proven, not assumed: a third-party resolver on Vite's own extension order lands the bare
-      // kind basename on the tool-config entry, which is why every browser importer must name its extension.
       expect(repoRelative(resolver(directory, `./${ambiguous.kindBasename}`) as string)).toBe(ambiguous.extensionlessResolvesTo);
       expect(repoRelative(resolver(directory, `./${ambiguous.kindBasename}.tsx`) as string)).toBe(ambiguous.browserEntry);
       const extensionless = resolutions.filter(({ resolved }) => repoRelative(resolved) === ambiguous.extensionlessResolvesTo);

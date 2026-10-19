@@ -33,7 +33,7 @@ struct OwnedValues(Vec<Option<GltfJson>>);
 pub(super) fn retire(value:GltfJson){let mut pending=vec![value];while let Some(value)=pending.pop(){match value{GltfJson::Array(values)=>pending.extend(values),GltfJson::Object(values)=>pending.extend(values.into_iter().map(|(_,child)|child)),_=>{}}}}
 impl Drop for OwnedValues{fn drop(&mut self){for value in self.0.iter_mut().filter_map(Option::take){retire(value);}}}
 impl Json{
- pub(super) fn reconstruct_controlled(self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<GltfJson,ValueError>{
+ pub(super) fn reconstruct_controlled(self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<GltfJson,ValueError>{
   if self.nodes.is_empty(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"GLTF extras root is missing"))}
   let mut total=self.nodes.len();for node in&self.nodes{total=total.checked_add(node.items.len()).and_then(|n|n.checked_add(node.members.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"GLTF extras entity count overflow"))?;}
   control.begin_stage(total)?;

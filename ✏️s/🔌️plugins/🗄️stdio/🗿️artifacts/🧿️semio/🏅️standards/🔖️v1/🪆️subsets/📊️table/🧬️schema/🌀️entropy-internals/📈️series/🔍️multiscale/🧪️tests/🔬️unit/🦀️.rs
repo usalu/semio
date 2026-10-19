@@ -48,7 +48,6 @@ mod tests {
             let mut rng = semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::numeric::Xorshift64::new(2);
             let n = 4000;
             let white: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
-            // 🔐️ a crude 1/f-like signal via running-sum (integrated white noise).
             let mut acc = 0.0;
             let pink: Vec<f64> = std::iter::repeat_with(|| {
                 acc = 0.98 * acc + rng.next_gaussian();

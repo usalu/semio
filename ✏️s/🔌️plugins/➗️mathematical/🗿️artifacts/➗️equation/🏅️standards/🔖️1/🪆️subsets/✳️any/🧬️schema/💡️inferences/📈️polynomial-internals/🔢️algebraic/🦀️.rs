@@ -158,7 +158,6 @@ impl AlgebraicReal {
 
     // #region 🔖️CheapTransforms
     pub fn neg(&self) -> Self {
-        // Root of f(x) negated is a root of f(-x); reverse the sign of odd-degree coefficients.
         let coeffs = self.poly.coeffs().iter().enumerate().map(|(i, c)| if i % 2 == 1 { c.neg() } else { c.clone() }).collect();
         Self { poly: PolyU::from_coeffs(coeffs), lo: self.hi.neg(), hi: self.lo.neg() }
     }
@@ -186,7 +185,6 @@ impl AlgebraicReal {
         if r.is_zero() {
             return Some(Self::from_rational(&Rational::zero()));
         }
-        // Root of f(x) scaled by r is a root of f(x/r); clear denominators via coefficient*r^i scaling.
         let n = self.poly.degree().unwrap_or(0);
         let mut coeffs = Vec::with_capacity(n + 1);
         for (i, c) in self.poly.coeffs().iter().enumerate() {
@@ -204,8 +202,6 @@ impl AlgebraicReal {
         if count_roots_in(&seq, &new_lo, &new_hi) == 1 {
             Some(Self { poly: integer_poly, lo: new_lo, hi: new_hi })
         } else {
-            // Fallback: the transformed interval is no longer isolating (rare boundary case) — recover
-            // via root_of on the recomputed integer polynomial using the numeric estimate.
             let target = self.to_f64() * r.to_f64();
             Self::root_of_near(&integer_poly, target)
         }
@@ -303,7 +299,6 @@ impl AlgebraicReal {
             }
             precision = precision.div(&Rational::from_i64(4, 1).unwrap()).unwrap();
         }
-        // Defensive fallback: numeric estimate selects the nearest root of the resultant polynomial.
         let target = match operation {
             Combine::Add => a.to_f64() + b.to_f64(),
             Combine::Mul => a.to_f64() * b.to_f64(),

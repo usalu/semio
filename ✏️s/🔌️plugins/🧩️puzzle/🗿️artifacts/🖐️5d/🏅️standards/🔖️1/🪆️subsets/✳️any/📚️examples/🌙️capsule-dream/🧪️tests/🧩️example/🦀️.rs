@@ -1,4 +1,4 @@
-//! ️tests for example `🌙️capsule-dream`.
+//! 🧪️tests for example `🌙️capsule-dream`.
 
 use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 

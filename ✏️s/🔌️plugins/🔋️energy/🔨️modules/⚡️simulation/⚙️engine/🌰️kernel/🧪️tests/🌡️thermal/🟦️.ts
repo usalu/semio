@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import {lusolve} from "mathjs";
 import {DenseSolveCursor} from "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/🟦️.ts";
-import fixture from "../../🧫️fixtures/🌡️thermal/🔣️.json" with {type:"json"};
-import schema from "../../🧫️fixtures/🌡️thermal/schema.json" with {type:"json"};
+import fixture from "../🧫️fixtures/🌡️thermal/🔣️.json" with {type:"json"};
+import schema from "../🧫️fixtures/🌡️thermal/schema.json" with {type:"json"};
 
 function retained(matrix:number[][],rhs:number[]):number[]{const a=matrix.flat(),b=[...rhs],cursor=new DenseSolveCursor(b.length,a.length,b.length);for(let turn=0;turn<1000;turn++){const before=cursor.snapshot(),restored=DenseSolveCursor.fromSnapshot(JSON.parse(JSON.stringify(before.map(String))).map(BigInt));assert.deepEqual(restored.snapshot(),before);const denied=cursor.step(a,b,{items:0,copyBytes:64,depth:1,capacityBytes:0});assert.equal(denied.status.kind,"refused");assert.deepEqual(cursor.snapshot(),before);const step=cursor.step(a,b,{items:1,copyBytes:64,depth:1,capacityBytes:0});assert.notDeepEqual(cursor.snapshot(),before,"funded dense prefix continuation");if(step.status.kind==="complete")return b;assert.equal(step.status.kind,"pending");}throw Error("dense thermal progress exhausted");}
 

@@ -9,8 +9,6 @@ pub fn diff(payload: &super::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> pr
     if let Err(reason) = payload.new_catalogs.as_ref().map_or(Ok(()), puzzle2d_catalogs_invariant) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
     }
-    // 🗂️ `meta.kindCatalogs` lives on the document-root singleton `meta` (not a catalog member
-    // addressed by id), so there is no missing-target case — only the no-op check applies.
     if payload.new_catalogs == base.meta.kind_catalogs {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Kind catalogs are unchanged.");
     }

@@ -139,6 +139,14 @@
         "@semio-tech/repo-dashboard-rs:build"
       ],
       "expected": null
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:workflow",
+        "--help"
+      ],
+      "expected": null
     }
   ],
   "mayRunStale": [
@@ -424,5 +432,858 @@
       },
       "receivingDelayMilliseconds": 40
     }
-  }
+  },
+  "launch": [
+    {
+      "name": "installed-stale-tasks",
+      "args": [
+        "tasks"
+      ],
+      "mode": "release",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-tasks",
+      "args": [
+        "tasks"
+      ],
+      "mode": "release",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 7,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "installed-stale-logs-task",
+      "args": [
+        "logs",
+        "task"
+      ],
+      "mode": "prototype",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-logs-task",
+      "args": [
+        "logs",
+        "task"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "installed-stale-stop-task",
+      "args": [
+        "stop",
+        "task"
+      ],
+      "mode": "release",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-stop-task",
+      "args": [
+        "stop",
+        "task"
+      ],
+      "mode": "release",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "installed-stale-kill-task",
+      "args": [
+        "kill",
+        "task"
+      ],
+      "mode": "prototype",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-kill-task",
+      "args": [
+        "kill",
+        "task"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "installed-stale-open-task",
+      "args": [
+        "open",
+        "task"
+      ],
+      "mode": "release",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-open-task",
+      "args": [
+        "open",
+        "task"
+      ],
+      "mode": "release",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "installed-stale-daemon-status",
+      "args": [
+        "daemon",
+        "status"
+      ],
+      "mode": "prototype",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-daemon-status",
+      "args": [
+        "daemon",
+        "status"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "installed-stale-daemon-stop",
+      "args": [
+        "daemon",
+        "stop"
+      ],
+      "mode": "release",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 0,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-daemon-stop",
+      "args": [
+        "daemon",
+        "stop"
+      ],
+      "mode": "release",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "current-start",
+      "args": [
+        "run"
+      ],
+      "mode": "prototype",
+      "installed": true,
+      "stale": null,
+      "stalenessChecks": 1,
+      "rebuilds": 0,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "stale-start",
+      "args": [
+        "run"
+      ],
+      "mode": "prototype",
+      "installed": true,
+      "stale": "source changed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-status-refusal",
+      "args": [
+        "daemon",
+        "status"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "rebuild-refused",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-status-rebuild-cancellation",
+      "args": [
+        "daemon",
+        "status"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "rebuild-cancelled",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "missing-status-child-cancellation",
+      "args": [
+        "daemon",
+        "status"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "launch-cancelled",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    },
+    {
+      "name": "finite-original-cold-rebuild",
+      "args": [
+        "tasks"
+      ],
+      "mode": "release",
+      "installed": false,
+      "stale": "it is not installed",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 1000,
+      "preparationBudget": 1000
+    },
+    {
+      "name": "invalid-record-tasks-rebuild-before-observation",
+      "args": [
+        "tasks"
+      ],
+      "mode": "prototype",
+      "installed": false,
+      "stale": "the installation record does not name its sources",
+      "stalenessChecks": 1,
+      "rebuilds": 1,
+      "outcome": "complete",
+      "exitCode": 0,
+      "originalBudget": 0,
+      "preparationBudget": 21600000
+    }
+  ],
+  "bootstrapLeaves": [
+    {
+      "declaration": {
+        "version": 1,
+        "kind": "source"
+      },
+      "accepted": true
+    },
+    {
+      "declaration": {
+        "version": 1,
+        "kind": "native",
+        "scope": "production"
+      },
+      "accepted": true
+    },
+    {
+      "declaration": {
+        "version": 1,
+        "kind": "native",
+        "scope": "test"
+      },
+      "accepted": true
+    },
+    {
+      "declaration": {
+        "version": 1,
+        "kind": "source",
+        "children": []
+      },
+      "accepted": false
+    },
+    {
+      "declaration": {
+        "version": 1,
+        "kind": "native"
+      },
+      "accepted": false
+    },
+    {
+      "declaration": {
+        "version": 1,
+        "kind": "unknown"
+      },
+      "accepted": false
+    }
+  ],
+  "bootstrap": [
+    {
+      "name": "source-freshness-leaf",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-source-freshness"
+      ],
+      "direct": [],
+      "descendants": []
+    },
+    {
+      "name": "run",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--output=stream",
+        "--",
+        "commands",
+        "--check"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ],
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "daemon",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:daemon",
+        "--output=stream",
+        "--",
+        "status"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ],
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "preferences",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:preferences",
+        "--output=stream",
+        "--",
+        "show"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ],
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "install",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:install",
+        "--output=stream"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ],
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "build",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:build"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-authority",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-authority"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-execution",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-execution"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-quick",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-quick"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-long",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-long"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-exhaustive",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-exhaustive"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-coverage",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-coverage"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-journeys",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-journeys"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-load",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-load"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "test-smoke",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-smoke"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "compile",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:compile"
+      ],
+      "direct": [],
+      "descendants": []
+    },
+    {
+      "name": "test-unit",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-unit"
+      ],
+      "direct": [],
+      "descendants": []
+    },
+    {
+      "name": "test-windows",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test-windows"
+      ],
+      "direct": [],
+      "descendants": []
+    },
+    {
+      "name": "workflow",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:workflow"
+      ],
+      "direct": [],
+      "descendants": []
+    },
+    {
+      "name": "unrelated",
+      "args": [
+        "run",
+        "workspace:build"
+      ],
+      "direct": [],
+      "descendants": []
+    },
+    {
+      "name": "graph-remains-backend",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--graph=stdout"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ],
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    },
+    {
+      "name": "native-workflow-argv",
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--",
+        "workflow",
+        "status"
+      ],
+      "direct": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ]
+      ],
+      "descendants": [
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:build"
+        ],
+        [
+          "run",
+          "@semio-tech/repo-dashboard-rs:compile"
+        ]
+      ]
+    }
+  ],
+  "installationRecordCases": [
+    {
+      "name": "missing",
+      "mutation": "absent",
+      "installed": false,
+      "reason": "it is not installed"
+    },
+    {
+      "name": "unreadable",
+      "mutation": "unreadable",
+      "installed": false,
+      "reason": "the installation record is unreadable"
+    },
+    {
+      "name": "current",
+      "mutation": "none",
+      "installed": true,
+      "reason": null
+    },
+    {
+      "name": "old-schema",
+      "mutation": "version",
+      "installed": false,
+      "reason": "the installation record does not name its sources"
+    },
+    {
+      "name": "foreign-platform",
+      "mutation": "platform",
+      "installed": false,
+      "reason": "the installation record does not name its sources"
+    },
+    {
+      "name": "other-mode",
+      "mutation": "mode",
+      "installed": false,
+      "reason": "the installation record does not name its sources"
+    },
+    {
+      "name": "wrong-immutable-path",
+      "mutation": "path",
+      "installed": false,
+      "reason": "the installation record does not name its sources"
+    },
+    {
+      "name": "missing-source-manifests",
+      "mutation": "manifests",
+      "installed": false,
+      "reason": "the installation record does not name its sources"
+    },
+    {
+      "name": "unknown-field",
+      "mutation": "unknown",
+      "installed": false,
+      "reason": "the installation record does not name its sources"
+    }
+  ]
 }

@@ -36,6 +36,11 @@ export function drawingEnvelopeSourceFixtures() {
   return { retainedDrawingCodec, retainedDrawingEditor };
 }
 
+/** 🔌 Builds the plugin source the Drawing envelope route accepts: the writer plugin plus the framework default initializer. */
+function drawingPluginFixture(retainedWriterPlugin: string): string {
+  return [retainedWriterPlugin, "Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))"].join("\n");
+}
+
 /** 🔍 Checks the drawing envelope route, the production editor and the semantic digest field omissions. */
 export function drawingEnvelopeRouteAndSemanticChecks({ retainedJackStore, retainedDrawingCodec, retainedDrawingEditor, retainedWriterPlugin }: {
   readonly retainedJackStore: string;
@@ -43,8 +48,7 @@ export function drawingEnvelopeRouteAndSemanticChecks({ retainedJackStore, retai
   readonly retainedDrawingEditor: string;
   readonly retainedWriterPlugin: string;
 }) {
-  const retainedDrawingDefaultInitializer = "Ok(bounded_document_store_initialization_job(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))";
-  const retainedDrawingPlugin = [retainedWriterPlugin, retainedDrawingDefaultInitializer].join("\n");
+  const retainedDrawingPlugin = drawingPluginFixture(retainedWriterPlugin);
   if (!toolJobDrawingEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawingCodec, retainedDrawingEditor, retainedDrawingPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Drawing-envelope-route was falsely rejected.");
   const secondDrawingApplyLanes = [
     "struct DrawingStoreInitializationAuthority",
@@ -84,6 +88,7 @@ export function drawingEnvelopeMutationChecks({ retainedJackStore, retainedDrawi
   readonly retainedDrawingEditor: string;
   readonly retainedWriterPlugin: string;
 }) {
+  const retainedDrawingPlugin = drawingPluginFixture(retainedWriterPlugin);
   for (const anchor of retainedDrawingCodec.split("\n")) {
     if (toolJobDrawingEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawingCodec.replace(anchor, "omitted-host-anchor"), retainedDrawingEditor, retainedDrawingPlugin)) throw new Error(`[verify interactivity tool-jobs] self-test Drawing-host-anchor-omission-${anchor} was falsely accepted.`);
   }

@@ -47,8 +47,6 @@ export async function runSceneShadingOracle(
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });
   const playwrightSpecifier = "playwright";
-  // 🧭️ The specifier is indirect on purpose (playwright is a dev-only dependency), which erases the
-  // module type and makes every callback parameter below an implicit `any`.
   const { chromium } = (await import(playwrightSpecifier)) as typeof import("playwright");
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8")) as SceneShadingOracleFixture;
   const threePath = Bun.resolveSync("three", repoRoot);

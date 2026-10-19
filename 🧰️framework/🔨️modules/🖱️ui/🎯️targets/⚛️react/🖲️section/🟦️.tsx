@@ -5,7 +5,7 @@ import * as React from "react";
 // Consumers MUST provide a heading string.
 
 /**
- * Props interface for the Section component.
+ * ✂️ Props interface for the Section component.
  **/
 export interface SectionProps {
   id?: string;

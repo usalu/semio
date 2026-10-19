@@ -134,7 +134,6 @@ pub struct UiPresence {
 }
 
 impl UiPresence {
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (serde skip_serializing_if) — see R9
     pub fn is_default(&self) -> bool {
         *self == Self::default()
     }

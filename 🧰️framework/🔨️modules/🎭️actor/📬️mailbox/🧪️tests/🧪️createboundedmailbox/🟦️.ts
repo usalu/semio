@@ -62,8 +62,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("(b) an ordered envelope never overtakes unordered envelopes queued ahead of every larger-ordered one", () => {
-      // ordered-only rule: three unordered turns, then an ordered one with a small key — there is
-      // no queued envelope with a larger `order` to land in front of, so it appends (arrival order).
       const mailbox = createBoundedMailbox<string>(10);
       mailbox.enqueue({ lane: "Interactive", payload: "u1" });
       mailbox.enqueue({ lane: "Interactive", payload: "u2" });
@@ -78,7 +76,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       mailbox.enqueue({ lane: "Interactive", order: 11, payload: "input-11" });
       mailbox.enqueue({ lane: "Interactive", payload: "maintenance-after-11" });
       mailbox.enqueue({ lane: "Interactive", order: 12, payload: "input-12" });
-      // guest follow-up caused by input 10 arrives last, keyed causedBy = 10
       expect(mailbox.enqueue({ lane: "Interactive", order: 10, payload: "followup-of-10" })).toEqual({ kind: "accept" });
       expect(drain(mailbox)).toEqual(["input-10", "followup-of-10", "input-11", "maintenance-after-11", "input-12"]);
     });
@@ -106,7 +103,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       mailbox.enqueue({ lane: "Interactive", order: 1, payload: "o1" });
       mailbox.enqueue({ lane: "Interactive", coalesce: "pointer-move", order: 2, payload: "move-a" });
       mailbox.enqueue({ lane: "Interactive", order: 3, payload: "o3" });
-      // newer sample with a much larger key must NOT move behind o3 — position wins
       expect(mailbox.enqueue({ lane: "Interactive", coalesce: "pointer-move", order: 99, payload: "move-b" })).toEqual({ kind: "coalesced" });
       expect(mailbox.length).toBe(3);
       expect(mailbox.popNext()?.payload).toBe("o1");
@@ -121,7 +117,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       mailbox.enqueue({ lane: "Interactive", coalesce: "k", order: 5, payload: "old" });
       mailbox.enqueue({ lane: "Interactive", order: 8, payload: "o8" });
       expect(mailbox.enqueue({ lane: "Interactive", coalesce: "k", payload: "new" })).toEqual({ kind: "coalesced" });
-      // the retained key 5 still anchors later ordered insertions: 6 lands after it, before 8
       mailbox.enqueue({ lane: "Interactive", order: 6, payload: "o6" });
       const head = mailbox.popNext();
       expect(head?.payload).toBe("new");
@@ -148,7 +143,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       const evicting = createBoundedMailbox<string>(2);
       evicting.enqueue({ lane: "Maintenance", order: 9, payload: "m9" });
-      evicting.enqueue({ lane: "Maintenance", order: 1, payload: "m1" }); // now the Maintenance head
+      evicting.enqueue({ lane: "Maintenance", order: 1, payload: "m1" });
       expect(evicting.enqueue({ lane: "Interactive", order: 5, payload: "i5" })).toEqual({ kind: "dropped", lane: "Maintenance" });
       expect(evicting.length).toBe(2);
       expect(drain(evicting)).toEqual(["i5", "m9"]);

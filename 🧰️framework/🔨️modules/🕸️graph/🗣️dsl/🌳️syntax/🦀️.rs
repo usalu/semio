@@ -254,8 +254,6 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
         let text = token.text.as_str().to_string();
         match token.kind {
             semio_framework_dsl::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
-            // A lone `_` is `dsl_core`'s placeholder sigil; Jack has no placeholder concept of its
-            // own, so it round-trips as an ordinary one-character identifier.
             semio_framework_dsl::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
             semio_framework_dsl::TokenKind::Int | semio_framework_dsl::TokenKind::Float => {
                 let n: f64 = text.parse().map_err(GraphDslError::NumberFormat)?;
@@ -270,22 +268,10 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             semio_framework_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
             semio_framework_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
             semio_framework_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
-            // ➖️ A bare `-` is the pattern connector every Cypher-shaped query writes
-            // (`(a)-[r:Kind]->(b)`), which is also what this dialect's own executor parser accepts
-            // and what every committed example query in the repo uses. It used to fall into the
-            // stray-character bucket below and every such query was reported
-            // `unexpected character '-'` by lint/complete/hover/format while running perfectly.
             semio_framework_dsl::TokenKind::Minus => push_spanned(out, Token::Dash, start, end),
             semio_framework_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
             semio_framework_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
-            // Double-quoted text delegated straight through `dsl_core` — unreachable in practice
-            // since `lex_spanned` pre-scans and consumes every quote itself before ever
-            // delegating a segment, kept only for defensive completeness.
             semio_framework_dsl::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
-            // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
-            // character" treatment as an outright `os_dsl::TokenKind::Error` below. P2-M1's
-            // promoted `< > & $ ;` tokens and STEP's `DotEnum` literal join this bucket too —
-            // Jack has no grammar concept for any of them either.
             semio_framework_dsl::TokenKind::EdgeArrow
             | semio_framework_dsl::TokenKind::LBrace
             | semio_framework_dsl::TokenKind::RBrace
@@ -384,8 +370,6 @@ pub(crate) fn lex(input: &str) -> Result<Vec<Token>, GraphDslError> {
 
 /// 🎨️ Tokenize jack source for editor highlighting (never fails).
 pub fn tokenize(input: &str) -> Vec<TokenSpan> {
-    // 🔀️ Rewritten from `.map(..)` — `token_class` is async and cannot be called inside the sync
-    // closure that used to build each `TokenSpan` (R10 residue shape #1).
     let rows = lex_spanned(input, true).unwrap_or_default();
     let mut out = Vec::with_capacity(rows.len());
     for row in rows {

@@ -282,7 +282,7 @@
       ],
       "properties": {
         "path": {
-          "const": ".github/workflows/architecture-quiz.yml"
+          "const": ".github/workflows/architecture-course.yml"
         },
         "jobs": {
           "const": [

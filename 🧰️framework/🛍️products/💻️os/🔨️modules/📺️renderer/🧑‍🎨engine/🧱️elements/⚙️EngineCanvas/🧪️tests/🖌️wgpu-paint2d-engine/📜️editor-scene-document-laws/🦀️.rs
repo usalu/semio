@@ -58,7 +58,7 @@ fn the_contract_scene_builds_the_editor_engines_canonical_scene() {
         let built: Value = serde_json::from_str(&document).expect("the document is JSON");
         assert!(same_json(&built, &expected), "{id}: built {built} for {expected}");
         let mut admitted = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(TEXT_EDITOR_SCENE_OWNED_BYTES, &mut admitted);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(TEXT_EDITOR_SCENE_OWNED_BYTES, &mut admitted);
         assert!(framework_editor::scene::from_json(&document, &mut control).is_ok(), "{id}: the engine decodes the built document");
         let (echo, _) = text_editor_scene_document(&scene, false);
         let echo: Value = serde_json::from_str(&echo).expect("the echo document is JSON");

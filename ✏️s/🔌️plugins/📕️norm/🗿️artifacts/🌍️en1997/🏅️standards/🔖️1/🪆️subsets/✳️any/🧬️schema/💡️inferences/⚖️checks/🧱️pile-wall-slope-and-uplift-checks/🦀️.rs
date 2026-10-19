@@ -160,7 +160,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         let label = loc(&format!("Wall {}", wall.id), &format!("Wand {}", wall.id));
         let (k_ep, k_label) = part_1::earth_pressure_coefficient(wall.backfill_phi_deg, &wall.earth_pressure_mode, wall.ocr, wall.wall_friction_deg);
         let e_a = 0.5 * k_ep * wall.backfill_gamma * wall.height.powi(2) + k_ep * wall.surcharge * wall.height;
-        // Select governing design situation (max sliding utilization) among project situations.
         let mut wall_sit = doc.design_situation.clone();
         let mut wall_u = -1.0f64;
         for sit in design_situations.iter() {
@@ -187,8 +186,7 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         let stem_below_gwl = (wall.embedment - gwl).max(0.0).min(wall.height + wall.embedment);
         let gamma_c = wall.concrete_gamma.max(1_000.0);
         let gamma_c_prime = (gamma_c - gamma_w).max(1_000.0);
-        // Vertical stem/base self-weight: γ_c above GWL, γ′_c = γ_c − γ_w below GWL.
-        let stem_vol = wall.base_width * wall.stem_thickness; // m² × 1 m run
+        let stem_vol = wall.base_width * wall.stem_thickness;
         let self_weight = if gwl >= wall.height + wall.embedment {
             stem_vol * gamma_c
         } else if gwl <= 0.0 {
@@ -200,7 +198,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         let v_d = design_actions(&p_project, wall.vertical_permanent + self_weight, 0.0);
         let a = wall.base_width * 1.0;
         let gamma_p = if gwl < wall.embedment { (wall.backfill_gamma - gamma_w).max(1_000.0) } else { wall.backfill_gamma };
-        // Passive earth resistance with γ_R,e and wall embedment
         let e_p_k = part_1::passive_earth_force_n(wall.backfill_phi_deg, gamma_p, wall.embedment, 1.0, wall.wall_friction_deg);
         let r_passive = e_p_k / p_project.gamma_r_e;
         let r_base = part_1::sliding_resistance_with_params(wall.backfill_phi_deg, 0.0, v_d, a, &p_project, 0.0, 0.0, wall.backfill_gamma, false);
@@ -234,7 +231,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
             } else {
                 (wall.embedment * 2.0).max(2.0)
             };
-            // Active force ~ h²; scale height so design H drops to R with margin (fixed surcharge term → iterate once).
             let h_scale = (r_slide / h_d.max(1e-9)).sqrt().clamp(0.05, 1.0);
             let height_req = (wall.height * h_scale * 0.95).max(0.5);
             slide = slide.remedy(Remedy::at_least(
@@ -256,7 +252,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         }
         report.push(slide.build());
 
-        // Earth-pressure regime check (Rankine / K0 / increased active)
         let path_mode = id_path("retainingWalls", &wall.id, "earthPressureMode");
         let path_move = id_path("retainingWalls", &wall.id, "wallMovement");
         let ka_r = part_1::ka_rankine(wall.backfill_phi_deg);
@@ -265,7 +260,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         let move_key = wall.wall_movement.to_ascii_lowercase().replace(['-','_',' '], "");
         let mode_ok = matches!(mode_key.as_str(), "active" | "atrest" | "k0" | "increasedactive" | "ruhe");
         let move_ok = matches!(move_key.as_str(), "free" | "rigid" | "propped" | "gestuetzt" | "gestützt" | "steif" | "");
-        // DIN 4085: free cantilever needs active (sufficient displacement); rigid/propped → at-rest or increased active.
         let consistent = match move_key.as_str() {
             "free" | "" => matches!(mode_key.as_str(), "active"),
             "rigid" | "steif" | "propped" | "gestuetzt" | "gestützt" => matches!(mode_key.as_str(), "atrest" | "k0" | "increasedactive" | "ruhe"),
@@ -275,7 +269,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         let (computed_k, limit_k) = if regime_fail {
             (2.0, 1.0)
         } else {
-            // OCR-sensitive K₀ index (DIN 4085 Jáky) — always ≤1 so Pass when regime is valid.
             (k0.clamp(1e-9, 0.999), 1.0)
         };
         let mut ep = CheckResult::assess(
@@ -369,7 +362,6 @@ pub(super) fn check_piles_walls_slopes_and_uplift(doc: &En1997Snapshot, report: 
         );
     }
 
-    // Overall stability uses GEO-3 (EN 1997-1 §2.4.7.3.4 + DIN 1054 NA) regardless of project DA.
     for slope in doc.slopes.iter() {
         let geo3 = DesignApproach::Geo3.annex_params(annex);
         let label = loc(&format!("Slope {}", slope.id), &format!("Böschung {}", slope.id));

@@ -31,9 +31,9 @@ pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schem
                         }
                         #[path = "."]
                         pub mod edit_part_2d_text {
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::*;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::diff;
-                            pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::inverse;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::*;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::diff;
+                            pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::inverse;
                         }
                         #[path = "."]
                         pub mod move_part_3d {

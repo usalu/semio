@@ -10,8 +10,8 @@ import { randomBytes } from "crypto";
 import { parseCommandAction, parseCreateDeveloperRequest, parseCreateKeyRequest, parseRevokeKeyRequest } from "../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
-import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "../../📚️library/🗄️persistence/🟦️.ts";
-import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "../../📚️library/🔐️authentication/🟦️.ts";
+import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { requireAuth, requireAdmin, isAuthError, hashApiKey } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
         developer: dev.email,
         label: parsed.data.label,
       });
-      // Return the raw key only this once - it cannot be retrieved again
       return NextResponse.json({ key: rawKey, id: apiKey.id, label: apiKey.label });
     }
 

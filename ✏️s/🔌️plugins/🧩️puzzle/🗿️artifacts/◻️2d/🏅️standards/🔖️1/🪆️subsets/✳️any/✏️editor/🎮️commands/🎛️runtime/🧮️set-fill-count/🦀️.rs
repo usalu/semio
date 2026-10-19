@@ -1,4 +1,4 @@
-//! running fill tool run observes the config change and resumes from its checkpoint with the new count (a raise
+//! 🏃️ running fill tool run observes the config change and resumes from its checkpoint with the new count (a raise
 //! 🧮️ `set-fill-count` command — the fill tool's requested count, a shared `Puzzle2dConfig` preference. A
 //! continues, a lower retracts the provisional tail); the command itself never touches the document.
 

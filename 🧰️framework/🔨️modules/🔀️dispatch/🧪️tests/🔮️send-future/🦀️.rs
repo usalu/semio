@@ -165,7 +165,6 @@ async fn read_through_the_bound<S: Store>(store: &S, key: &str) -> Option<String
 fn assert_send<T: Send>(_value: &T) {}
 
 fn block_on<F: Future>(future: F) -> F::Output {
-    // 🌀️ E5 executor bridge (at most one per crate, per R4/R5) — every future here is eagerly ready.
     use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
     fn noop(_: *const ()) {}
     fn clone(_: *const ()) -> RawWaker {

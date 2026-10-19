@@ -12,17 +12,28 @@
   "targets": {
     "declarations": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts declarations",
         "cwd": "{projectRoot}"
       },
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "reads",
         "flowBrowserDeclarationOracle"
       ]
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true,
@@ -31,16 +42,23 @@
     },
     "test-browser": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-browser",
         "cwd": "{projectRoot}"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "flowBrowserRuntimeOracle"
       ]
     },
     "test-browser-ownership": {
       "executor": "repo:script",
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-browser-ownership",
         "cwd": "{projectRoot}"
@@ -85,17 +103,28 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🌱️bootstrap/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️tests/🌱️bootstrap/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json"
       ],
       "cache": true
     },
     "test-browser-clock": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-browser-clock",
         "cwd": "{projectRoot}"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "flowBrowserRuntimeOracle",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🧪️testing/⏱️consumed-browser-clock/🟦️.ts"
@@ -103,16 +132,30 @@
     },
     "test-source-read": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-source-read",
         "cwd": "{projectRoot}"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/**/*"
       ]
     },
     "test-evaluation-work": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-evaluation-work",
         "cwd": "{projectRoot}"
@@ -120,6 +163,14 @@
     },
     "test-evaluation-seeds": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-evaluation-seeds",
         "cwd": "{projectRoot}"
@@ -127,7 +178,13 @@
     },
     "test-evaluation-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -137,30 +194,47 @@
     },
     "test-session-source": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-session-source",
         "cwd": "{projectRoot}"
       },
-      "cache": false
+      "cache": true
     },
     "test-source": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-source",
         "cwd": "{projectRoot}"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "flowBrowserRuntimeOracle",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts"
       ]
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust"
       },
       "inputs": [
+        "default",
+        "^default",
+        "reads",
         "flowBrowserProduction"
       ],
       "outputs": []
@@ -172,7 +246,7 @@
         "cwd": "{projectRoot}"
       },
       "outputs": [
-        "{workspaceRoot}/.cache/b/p/m/browser/{options.env.SEMIO_BUILD_MODE}/flow"
+        "{projectRoot}/.🧾️store/wasm.json"
       ],
       "cache": true,
       "inputs": [
@@ -189,6 +263,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "{projectRoot}",
@@ -197,17 +279,30 @@
     },
     "test-geometry-ownership": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
       "options": {
         "command": "bun ./📜️script.ts test-geometry-ownership",
         "cwd": "{projectRoot}"
       },
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": []
     },
     "test-retained-grant-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-retained-grant-source",
         "cwd": "{projectRoot}"
@@ -215,20 +310,43 @@
     },
     "test-host-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-host-source",
         "cwd": "{projectRoot}"
       }
     },
     "test-dag-source": {
-      "cache": false,
+      "executor": "repo:script",
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-dag-source"
-      }
+      },
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": []
     },
     "test-vcs-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-vcs-source",
         "cwd": "{projectRoot}"
@@ -236,6 +354,14 @@
     },
     "test-retained-receipt-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-retained-receipt-source"
@@ -243,11 +369,17 @@
     },
     "test-sdk-source": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-sdk-source",
         "cwd": "{projectRoot}"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/**/*"
       ]
     }
@@ -331,6 +463,17 @@
     ],
     "nativeSources": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️component/**/*"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   }
 }

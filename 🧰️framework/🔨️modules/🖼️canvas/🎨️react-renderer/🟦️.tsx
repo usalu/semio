@@ -226,9 +226,7 @@ export function WasmCanvas({ className, sessionFactory, onSessionReady, enablePo
   const renderFrame = React.useCallback(() => {
     try {
       sessionRef.current?.renderFrame();
-    } catch {
-      /* gpu not ready */
-    }
+    } catch {}
   }, []);
 
   React.useEffect(() => {
@@ -287,10 +285,6 @@ export function WasmCanvas({ className, sessionFactory, onSessionReady, enablePo
       session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
       scheduler.paintNow();
     };
-    // 🚫️ `pointerleave` / `pointercancel` / `lostpointercapture` are gesture CANCELS. While the canvas holds
-    // capture, `pointerleave` and `lostpointercapture` only fire after `pointerup` has already closed the
-    // gesture, so the session sees them as no-ops; only a capture lost mid-gesture (or a pointer the
-    // browser reclaims for scrolling) reaches the session as a cancel.
     const onPointerCancel = (ev: PointerEvent) => {
       if (ev.type !== "lostpointercapture" && canvas.hasPointerCapture(ev.pointerId)) canvas.releasePointerCapture(ev.pointerId);
       if (ev.type !== "pointerleave" && gestures.up(ev.pointerId).kind !== "single") return;
@@ -344,13 +338,6 @@ export function WasmCanvas({ className, sessionFactory, onSessionReady, enablePo
         }
       });
     };
-    // Waits for the container to report a real (non-degenerate) layout size before the first GPU attach —
-    // attaching at a stale 1x1 rect (common on first paint, before flex/grid layout settles) leaves the
-    // WebGPU surface configured at a bogus size; WebGPU surface errors are async/out-of-band and never
-    // surface as a JS exception, so a botched first attach silently renders nothing forever after.
-    // The wait is driven by `ResizeObserver` (plus one synchronous measure), never by an animation
-    // frame: a hidden/background tab never ticks `requestAnimationFrame`, so the rAF poll this replaces
-    // never attached at all there and every canvas stayed at the HTML default 300x150.
     const attachWhenLaidOut = (): boolean => {
       if (torndown) return true;
       const rect = container.getBoundingClientRect();
@@ -365,8 +352,6 @@ export function WasmCanvas({ className, sessionFactory, onSessionReady, enablePo
         layoutRo = null;
       });
       layoutRo.observe(container);
-      // Last resort for a container that never reaches a real size (a permanently collapsed pane):
-      // attach at whatever it reports rather than leaving the surface unattached forever.
       degenerateTimer = setTimeout(() => {
         if (torndown || layoutRo === null) return;
         layoutRo.disconnect();

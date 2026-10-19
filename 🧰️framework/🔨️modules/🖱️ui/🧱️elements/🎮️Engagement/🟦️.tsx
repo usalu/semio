@@ -1,7 +1,7 @@
 /** 🎛 Owns the window engagement pane that edits the active tool parameters. */
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { type ControlIcon } from "../🔣️Icons/🟦️.tsx";
@@ -31,14 +31,14 @@ export interface EngagementStatus {
   content: React.ReactNode;
 }
 
-/** @emoji 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
+/** 🔘️ One discrete option on an engagement {@link EngagementRingControl}. */
 export interface EngagementRingOption {
   id: string;
   label: string;
   disabled?: boolean;
 }
 
-/** @emoji 🎚️ Engagement range slider for numeric values (height, distance, …). */
+/** 🎚️ Engagement range slider for numeric values (height, distance, …). */
 export interface EngagementSliderControl {
   kind: "slider";
   id?: string;
@@ -46,7 +46,7 @@ export interface EngagementSliderControl {
   value: number;
   min: number;
   max: number;
-  /** @emoji 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
+  /** 🎚️ Absolute preloaded/ready extent on the fixed `[min, max]` range. */
   ready?: number;
   step?: number;
   unit?: string;
@@ -55,7 +55,7 @@ export interface EngagementSliderControl {
   onCommit?: (value: number) => void;
 }
 
-/** @emoji 🔢️ Engagement stepper for numeric values without fixed upper bound. */
+/** 🔢️ Engagement stepper for numeric values without fixed upper bound. */
 export interface EngagementStepperControl {
   kind: "stepper";
   id?: string;
@@ -70,7 +70,7 @@ export interface EngagementStepperControl {
   onCommit?: (value: number) => void;
 }
 
-/** @emoji 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
+/** 🧫️ Engagement ring (radial dial) for angles or discrete option selection. */
 export interface EngagementRingControl {
   kind: "ring";
   id?: string;
@@ -81,7 +81,7 @@ export interface EngagementRingControl {
   onSelect?: (id: string) => void;
 }
 
-/** @emoji 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
+/** 🔘️ One discrete option on an engagement {@link EngagementToggleGroupControl}. */
 export interface EngagementToggleGroupOption {
   id: string;
   label: string;
@@ -89,7 +89,7 @@ export interface EngagementToggleGroupOption {
   disabled?: boolean;
 }
 
-/** @emoji 🔘️ Engagement toggle button group for small unordered enums. */
+/** 🔘️ Engagement toggle button group for small unordered enums. */
 export interface EngagementToggleGroupControl {
   kind: "toggleGroup";
   id?: string;
@@ -100,14 +100,14 @@ export interface EngagementToggleGroupControl {
   onSelect?: (id: string) => void;
 }
 
-/** @emoji 🔽️ One item on an engagement {@link EngagementSelectControl}. */
+/** 🔽️ One item on an engagement {@link EngagementSelectControl}. */
 export interface EngagementSelectItem {
   id: string;
   value: string;
   label: string;
 }
 
-/** @emoji 🔽️ Engagement select dropdown for large enums. */
+/** 🔽️ Engagement select dropdown for large enums. */
 export interface EngagementSelectControl {
   kind: "select";
   id?: string;
@@ -119,27 +119,27 @@ export interface EngagementSelectControl {
   onChange?: (value: string) => void;
 }
 
-/** @emoji 🎛️ Optional engagement UI control for the active action step. */
+/** 🎛️ Optional engagement UI control for the active action step. */
 export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
-/** @emoji 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+/** 🏷️ i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
   actions: "ui.engagement.actions",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** @emoji 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
+/** 🏷️ Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
   actionsAria: "Actions",
 } as const;
 
-/** @emoji 💬️ Floating window engagement payload with options, status, and controls. */
+/** 💬️ Floating window engagement payload with options, status, and controls. */
 export interface EngagementSpec {
-  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
+  /** 🎯️ Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
   sessionActive?: boolean;
   options?: EngagementOption[];
-  /** @emoji 🎛️ Optional slider, stepper, or ring control for the active step. */
+  /** 🎛️ Optional slider, stepper, or ring control for the active step. */
   control?: EngagementControl;
-  /** @emoji 🎛️ Optional additional controls rendered below the primary control. */
+  /** 🎛️ Optional additional controls rendered below the primary control. */
   controls?: readonly EngagementControl[];
   status?: EngagementStatus[];
 }
@@ -158,7 +158,7 @@ function engagementControlIsNumeric(control: EngagementControl): control is Enga
   return control.kind === "slider" || control.kind === "stepper";
 }
 
-/** @emoji 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
+/** 🎛️ Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
 function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
   const label = engagementControlLabel(control);
   const selectLabel = useLabel("ui.common.select");
@@ -264,7 +264,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   );
 }
 
-/** @emoji 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
+/** 💬️ Top-aligned engagement: status heading, optional control, and option buttons. */
 const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, control, controls, status, className = "" }) => {
   const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
   const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;

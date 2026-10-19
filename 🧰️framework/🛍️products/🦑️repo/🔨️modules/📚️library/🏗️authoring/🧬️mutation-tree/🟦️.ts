@@ -22,7 +22,8 @@ import { NEW_SCAFFOLD_MARKER, newScaffoldRustLeaf, NEW_SCAFFOLD_TICKET_PATH, new
 import { CRATE_HARD_BUDGET, CRATE_TARGET_BUDGET } from "../📦️crate-tree/🗺️plan/💰️budget/🟦️.ts";
 import { measureRustCrate } from "../📦️crate-tree/🗺️plan/📏️measure/🟦️.ts";
 import { resolveOwningCrate } from "../📦️crate-tree/🗺️plan/📦️cargo-lib/🟦️.ts";
-import { addWorkspaceMembers, insertBuildOwnerRows, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📦️crate-tree/📝️render/🟦️.ts";
+import { addWorkspaceMembers, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📦️crate-tree/📝️render/🟦️.ts";
+import { BUILD_OWNER_REGISTRY_FILE, reconcileBuildOwnerRegistry } from "../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
 
 export type NewMutationScaffoldOptions = {
   readonly composite?: boolean;
@@ -406,12 +407,7 @@ function registerMutationFamilyCrate(repoRoot: string, family: NewMutationFamily
     const text = readFileSync(router, "utf8");
     try { const next = patchRouterPackages(text, family.owner.name, [family.crateName]); if (next !== text) { writeFileSync(router, next); updated.push("router packages"); } } catch { updated.push("router packages unchanged"); }
   }
-  const ownersPath = resolve(repoRoot, "📋️build-owners.json");
-  if (existsSync(ownersPath)) {
-    const raw = readFileSync(ownersPath, "utf8");
-    const { text, added } = insertBuildOwnerRows(raw, [{ name: family.crateName, root: family.packageDir }]);
-    if (added.length) { writeFileSync(ownersPath, text); updated.push("build owner row"); }
-  }
+  if (existsSync(resolve(repoRoot, BUILD_OWNER_REGISTRY_FILE)) && reconcileBuildOwnerRegistry(repoRoot, { scope: family.packageDir, write: true }).changed) updated.push("build owner row");
   const lock = join(workspaceDir, "Cargo.lock");
   if (existsSync(lock)) {
     const text = readFileSync(lock, "utf8");

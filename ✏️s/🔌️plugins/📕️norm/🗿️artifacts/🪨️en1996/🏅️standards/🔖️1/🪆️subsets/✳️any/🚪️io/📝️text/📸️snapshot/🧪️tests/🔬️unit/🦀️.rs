@@ -17,6 +17,5 @@ async fn loadbearing_wall_example_fixture_parses_and_round_trips() {
     assert_eq!(document.walls.len(), 1);
     assert_eq!(document.walls[0].id, "wall-north");
     store::os_store::test_support::assert_dsl_round_trip(&document);
-    // Keep asset in sync with the printer (authoritative for the example pack).
     let _ = EN1996_LOADBEARING_WALL_EXAMPLE_TEXT;
 }

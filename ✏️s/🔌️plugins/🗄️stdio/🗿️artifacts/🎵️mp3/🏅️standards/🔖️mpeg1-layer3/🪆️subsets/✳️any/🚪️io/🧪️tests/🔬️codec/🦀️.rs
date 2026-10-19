@@ -35,10 +35,6 @@ async fn no_id3v2_header_returns_none() {
 
 #[semio_framework_async_macros::async_test]
 async fn frame_header_bit_layout_round_trips() {
-    // FF FB 90 C4: MPEG1(11) Layer III(01) no-CRC(1), bitrate idx 9, sr idx 0, mono, original.
-    // 128kbps/44100Hz gives a real 417-byte frame (`144*128000/44100`, no padding) —
-    // `parse_frame_header` honestly bounds-checks the WHOLE frame against the buffer (not
-    // just its 4 header bytes), so the buffer must actually be 417 bytes long.
     let header_bytes = [0xFF, 0xFB, 0x90, 0xC4];
     let mut bytes = header_bytes.to_vec();
     bytes.resize(417, 0);

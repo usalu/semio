@@ -1,5 +1,5 @@
 //! 🪡️ Original-bound field copying seals only the authored typed child and retains every partial owner for closure.
-use crate::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retirement::shared::sealed::{SealedShared,SharedIssuer},retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedFieldCursor,retained_clone_grant_admits}};
+use crate::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedFieldCursor,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 /// 🧵️ Intrinsic field payload authority is explicit; enclosing native rows choose their own independent issuer.
 pub struct NativeIntrinsicSharedField<T:RetainedClone+Send+Sync+'static>{binding:Option<RetainedCloneBinding>,cursor:RetainedFieldCursor<T>,raw:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<SealedShared<T>>>,retirement:RetainedCloneClose,phase:u8,closing:bool}
@@ -13,7 +13,7 @@ impl<T:RetainedClone+Send+Sync+'static> NativeIntrinsicSharedField<T>{
   if self.closing||self.phase>=4{return Err(invalid());}
   if !original.check_binding(&self.binding)?{return Ok(fixed(original.binding_copy_bytes()));}
   if self.phase==0{let d=self.cursor.advance_demands(original,body)?;return if self.cursor.output_ready(){Ok(fixed(size_of::<T>()*2+size_of::<u8>()))}else{Ok(d)};}
-  if self.phase==1{let mut d=super::super::construction::NativeOwnedDecodeControl::shared_birth_demand::<T>();d.copy_bytes+=2*size_of::<bool>()+size_of::<u8>();return Ok(d);}
+  if self.phase==1{let mut d=semio_framework_value_native_decoding::native_decoding::construction::NativeOwnedDecodeControl::shared_birth_demand::<T>();d.copy_bytes+=2*size_of::<bool>()+size_of::<u8>();return Ok(d);}
   if self.cursor.terminal_is_empty(){return Ok(fixed(size_of::<u8>()));}
   self.cursor.close_demands(body)
  }
@@ -40,7 +40,7 @@ impl<T:RetainedClone+Send+Sync+'static> NativeIntrinsicSharedField<T>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<T>(false,&None,body);}
   if self.raw.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body);}
   if self.output.is_some(){return self.retirement.next_owner_demands::<SealedShared<T>>(true,&None,body);}
-  RetainedCloneBinding::demands(&self.binding,body)
+  RetainedCloneBinding::close_demand(&self.binding,body)
  }
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}

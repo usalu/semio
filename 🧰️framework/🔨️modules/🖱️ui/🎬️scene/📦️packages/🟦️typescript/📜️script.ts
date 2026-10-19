@@ -12,12 +12,12 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runOwnedCommand("bun", [
       "test",
-      resolve(import.meta.dir, "../../🧪️tests/🧩️block-list/🟦️.test.ts"),
-      resolve(import.meta.dir, "../../🧪️tests/🚚️text-editor-lanes/🟦️.test.ts"),
-      resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.test.ts"), resolve(import.meta.dir, "../../🧪️tests/✂️text-splice/🟦️.test.ts"),
-      resolve(import.meta.dir, "../../🧪️tests/🚚️world3d-scene-lanes/🟦️.test.ts"),
-      resolve(import.meta.dir, "../../🧪️tests/📏️world3d-modelling/🟦️.test.ts"),
-      resolve(import.meta.dir, "../../🧪️tests/🚚️node-graph-scene-lanes/🟦️.test.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🧩️block-list/🟦️.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️text-editor-lanes/🟦️.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️table-lanes/🟦️.ts"), resolve(import.meta.dir, "../../🧪️tests/✂️text-splice/🟦️.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️world3d-scene-lanes/🟦️.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/📏️world3d-modelling/🟦️.ts"),
+      resolve(import.meta.dir, "../../🧪️tests/🚚️node-graph-scene-lanes/🟦️.ts"),
       ...segments,
     ], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
   }

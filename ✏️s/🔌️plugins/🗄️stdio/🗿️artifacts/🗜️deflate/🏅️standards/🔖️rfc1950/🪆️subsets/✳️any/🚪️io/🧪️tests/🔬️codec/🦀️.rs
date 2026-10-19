@@ -2,6 +2,8 @@ use semio_framework_value::{retained_clone::RetainedCloneGrant, retained_clone::
 use crate::standards::v_rfc1950::subsets::any::io::zlib::*;
 use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::io::binary::snapshot::encode_deflate_snapshot;
 use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::io::binary::snapshot::decode_deflate_snapshot;
+use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateLevelHint;
+use semio_s_artifact_stdio_deflate_snapshot::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
 
 fn grant(items: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }
@@ -106,7 +108,7 @@ fn raw_deflate_round_trip() {
 
 /// 📦️ Flattens a sealed paged `RetainedJobPayload` into the contiguous bytes these byte-identity
 /// assertions compare — the job protocol lends pages, never one `Vec<u8>`.
-fn retained_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+fn retained_bytes(payload: &semio_framework_job_payload::RetainedJobPayload) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(payload.len());
     for index in 0..payload.page_count() {
         if let Some(page) = payload.page(index) {
@@ -216,9 +218,6 @@ fn raw_deflate_compresses_repetitive_text() {
 
 #[test]
 fn raw_deflate_round_trips_binary_with_long_range_matches() {
-    // A repeating 4-byte pattern well past MIN_MATCH, exercising the hash-chain match finder
-    // across many window-fulls (data.len() > WINDOW) so distances near the 32KB boundary are
-    // exercised too, not just short-range matches.
     let mut p = Vec::with_capacity(100_000);
     for i in 0..25_000u32 {
         p.extend_from_slice(&i.to_le_bytes());
@@ -231,8 +230,6 @@ fn raw_deflate_round_trips_binary_with_long_range_matches() {
 
 #[test]
 fn raw_deflate_round_trips_random_incompressible_data() {
-    // Match search finding nothing (or only sub-MIN_MATCH runs) must still round-trip --
-    // pure-literal fallback path.
     let mut state = 0x2545F4914F6CDD1Du64;
     let mut p = Vec::with_capacity(4096);
     for _ in 0..4096 {
@@ -263,7 +260,6 @@ fn snapshot_codec_round_trip_with_preset_dictionary() {
     let snap =
         DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 5, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0x1234_5678), payload: b"preset-dictionary-id-round-trip".to_vec() };
     let bytes = encode_deflate_snapshot(&snap);
-    // 🪆️ FDICT set + DICTID present between CMF/FLG and the deflate body.
     assert_eq!(bytes[1] & 0x20, 0x20);
     let decoded = decode_deflate_snapshot(&bytes).expect("decode");
     assert_eq!(decoded, snap);
@@ -274,6 +270,6 @@ fn snapshot_codec_round_trip_with_preset_dictionary() {
 #[test]
 fn snapshot_codec_rejects_bad_check_bits() {
     let mut bytes = encode_deflate_snapshot(&DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: b"corrupt-me".to_vec() });
-    bytes[1] ^= 0x01; // flip a FCHECK bit
+    bytes[1] ^= 0x01;
     assert!(decode_deflate_snapshot(&bytes).is_err());
 }

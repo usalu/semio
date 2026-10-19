@@ -302,7 +302,6 @@ struct LabelResolver {
 }
 
 impl LabelResolver {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn resolve(&mut self, id: &str) -> PersistentLabel {
         if let Some(&label) = self.map.get(id) {
             return label;
@@ -474,10 +473,6 @@ pub fn body_from_snapshot(snapshot: &SemioBrepSnapshot) -> Result<Body, KernelEr
     };
 
     let mut seed_faces: Vec<SeedFace> = Vec::with_capacity(snapshot.faces.len());
-    // 🧱️ `(face snapshot id, outer BrepLoop id, inner BrepLoop ids)` — retained so the p-curve
-    // second pass (after `Body::from_seed`) can re-walk each face's rings in the SAME order
-    // `from_seed` assigned them (outer first, then inners), matching them back to this
-    // snapshot's own `BrepLoop.id`s to look up `coedges` by `loopId`.
     let mut face_loop_ids: Vec<(String, Vec<String>)> = Vec::with_capacity(snapshot.faces.len());
     for f in &snapshot.faces {
         let outer = resolve_loop(&f.outer_loop, &mut resolver);
@@ -503,11 +498,6 @@ pub fn body_from_snapshot(snapshot: &SemioBrepSnapshot) -> Result<Body, KernelEr
     let seed = BrepArenaSeed { next_label: resolver.next_fresh.max(high_water), vertices: seed_vertices, edges: seed_edges, loops: seed_loops, faces: seed_faces, shells: seed_shells, solids: seed_solids };
     let mut body = Body::from_seed(&seed);
 
-    // 🧱️ Second pass: attach p-curves. Rebuild the label→FaceId map from the just-built body
-    // (labels are exactly what `resolver` minted above, so this is a direct lookup) and, for
-    // each face, zip its native ring order (`face_loops`/`loop_coedges`, which `from_seed`
-    // built in EXACTLY the `seed_faces`/`seed_loops` order above) against this snapshot's own
-    // `coedges` (filtered by `loopId`, same ring order `to_snapshot` emitted them in).
     if !snapshot.coedges.is_empty() {
         let face_id_by_label: HashMap<PersistentLabel, FaceId> = body.faces.iter().map(|(id, face)| (face.label, id)).collect();
         for (face_snapshot_id, ring_ids) in &face_loop_ids {
@@ -515,9 +505,6 @@ pub fn body_from_snapshot(snapshot: &SemioBrepSnapshot) -> Result<Body, KernelEr
             let face_label = resolver.resolve(&f.id);
             let Some(&face_id) = face_id_by_label.get(&face_label) else { continue };
             let native_loop_ids = body.face_loops(face_id);
-            // 🪡️ The two uses of one seam edge on one face share ONE p-curve when their snapshot
-            // p-curves are identical (as every primitive constructor builds them), so the
-            // rebuilt body keeps the original's p-curve count instead of minting a duplicate.
             let mut shared_pcurves: Vec<(EdgeId, &BrepCurve2, Curve2Id)> = Vec::new();
             for (native_loop_id, brep_loop_id) in native_loop_ids.iter().zip(ring_ids.iter()) {
                 let native_coedge_ids = body.loop_coedges(*native_loop_id);

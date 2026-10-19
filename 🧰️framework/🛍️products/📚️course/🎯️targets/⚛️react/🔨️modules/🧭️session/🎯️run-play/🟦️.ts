@@ -120,11 +120,13 @@ export class RunPlay {
   }
 
   private async submitting(run: Id, signal: AbortSignal, onPhase: (phase: SubmissionPhase) => void): Promise<SessionFailure | undefined> {
+    signal.throwIfAborted();
     const learner = this.state.learnerId();
     if (learner === undefined) return { kind: "rejected", rejection: "unknown-learner" };
     const delivered = this.routing.direct() && (await this.routing.saved(run, signal, onPhase));
     if (this.state.read().runs[run]?.status === "voided") return { kind: "rejected", rejection: "quiz-revised" };
     onPhase({ phase: "submitting" });
+    signal.throwIfAborted();
     const command: SubmitRunCommand = { type: "submit-run", id: newId(), learner, run };
     const verdict = delivered || !this.routing.decidable(command) ? (await this.routing.decided(command, signal)).verdict : this.deputising.deputise(command);
     if (verdict.kind === "refused" || (verdict.kind === "rejected" && verdict.rejection !== "run-closed")) return failureOf(verdict);

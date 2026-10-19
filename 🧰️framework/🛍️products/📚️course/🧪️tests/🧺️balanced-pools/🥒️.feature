@@ -1,4 +1,12 @@
 Feature: Balanced question pools
+  Scenario: Pooled timing boundaries report stable diagnostics
+    Given the shared pooled timing vectors at zero, one, 300, 3600 and 3601 seconds
+    When both language validators inspect the pooled task
+    Then zero seconds reports below-minimum at /tasks/0/pool/seconds
+    And 3601 seconds reports value-invalid at /tasks/0/pool/seconds
+    And the remaining durations are accepted
+    And AJV independently identifies the minimum and maximum violations
+
   Scenario: Equivalent questions rotate before repeating
     Given a pool with fixed semantic slots and four variants per slot
     When the same learner starts four attempts across challenges

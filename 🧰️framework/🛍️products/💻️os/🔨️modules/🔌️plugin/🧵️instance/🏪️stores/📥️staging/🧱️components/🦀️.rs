@@ -178,6 +178,23 @@ impl<A: ArtifactApp> PeerRoster<A> {
             presence_marked_keys: BTreeMap::new(),
         }
     }
+
+    pub fn admit_presence_ingress(&mut self, admission: semio_framework_plugin_peer::PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64) {
+        let slot = crate::stores_components::InstanceStores::<A>::peer_roster_slot(admission.generation);
+        assert_eq!(command.seq(), admission.seq, "Presence cursor sequence is bound by its unforgeable reservation");
+        assert_eq!(self.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "Presence reservation remains live under the app's exclusive owner");
+        assert!(self.peer_roster_publications.can_insert(admission.generation), "Presence publication slot was reserved before cursor construction");
+        let generation = admission.generation;
+        self.peer_roster_publications.insert_admitted(generation, semio_framework_plugin_peer::PeerRosterPublication::<A>::new(admission, now_ms, command));
+    }
+
+    pub fn reject_presence_ingress(&mut self, admission: semio_framework_plugin_peer::PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: semio_framework::Fault) {
+        let slot = crate::stores_components::InstanceStores::<A>::peer_roster_slot(admission.generation);
+        assert_eq!(self.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "malformed Presence owner retains its exact reservation");
+        assert!(self.peer_roster_publications.can_insert(admission.generation), "malformed Presence cleanup uses its pre-reserved publication slot");
+        let generation = admission.generation;
+        self.peer_roster_publications.insert_admitted(generation, semio_framework_plugin_peer::PeerRosterPublication::<A>::rejected(admission, command, fault));
+    }
 }
 
 /// 🥁️ Action ingress: the parser slots that retain unused original arguments and faults until their paid close.

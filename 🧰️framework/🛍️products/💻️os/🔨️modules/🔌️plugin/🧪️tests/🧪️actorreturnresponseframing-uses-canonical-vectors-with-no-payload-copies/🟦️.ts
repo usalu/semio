@@ -115,14 +115,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const producerPath = (name: keyof typeof producerLeaf) => new URL(`../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/${producerLeaf[name]}/🟦️.ts`, testSource.url);
     const producer = (name: keyof typeof producerLeaf) => ts.createSourceFile(producerPath(name).pathname, readFileSync(producerPath(name), "utf8"), ts.ScriptTarget.Latest, true);
     const producers = { shardWorkerSource: (await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts")).shardWorkerSource, hostShimSource: (await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts")).hostShimSource };
-    // 🫀️ Inventoried from the EMITTED bytes, not the template's raw text: `shardWorkerSource` now
-    // interpolates the schema-owned liveness policy, so its return is a template EXPRESSION and its
-    // literal text no longer is the worker. The AST check still fences the shape (one returned
-    // template, nothing else), the inventory reads what the browser actually gets.
     const generated = (name: "shardWorkerSource" | "hostShimSource") => {
       const declaration = producer(name).statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
-      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name);
+      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned) || (ts.isCallExpression(returned) && ts.isPropertyAccessExpression(returned.expression) && returned.expression.name.text === "join" && ts.isArrayLiteralExpression(returned.expression.expression)))) throw new Error("Changed generated inbox source " + name);
       return ts.createSourceFile(name + ".js", producers[name](), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
     };
     const worker = generated("shardWorkerSource"); const shim = generated("hostShimSource"); const requests: string[] = []; const replies: string[] = []; const effects: string[] = []; const effectReplies: string[] = [];
@@ -159,7 +155,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const generated = (name: "shardWorkerSource" | "hostShimSource") => {
       const declaration = sources[name].statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
-      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name);
+      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned) || (ts.isCallExpression(returned) && ts.isPropertyAccessExpression(returned.expression) && returned.expression.name.text === "join" && ts.isArrayLiteralExpression(returned.expression.expression)))) throw new Error("Changed generated inbox source " + name);
       const text = producers[name]() as string;
       return name === "shardWorkerSource" ? classicShardWorkerSource(text) : text;
     };

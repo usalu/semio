@@ -631,7 +631,7 @@ const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
 /// `PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
 /// refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
 /// principal is not a member of, a version boundary — is returned on its first occurrence untouched.
-fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<HeadlessWorkspace, GatewayError> {
+fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal, host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy) -> Result<HeadlessWorkspace, GatewayError> {
     let scopes: Vec<String> = principal.scopes.iter().map(|scope| scope.0.clone()).collect();
     let mut attempts_made = 0;
     loop {
@@ -692,7 +692,7 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
 /// inside the workspace; publishing the binding there is what keeps a `shell` session from having
 /// two document owners (`📓️lb1…` §7.3 step 1).
-fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Result<(McpServer, String), GatewayError> {
+fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime, host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy) -> Result<(McpServer, String), GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
@@ -747,7 +747,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
 /// [--no-bridge]`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StdioOptions {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy,
     pub folder: Option<String>,
     pub hub: Option<HubOptions>,
     pub principal: Option<String>,
@@ -896,7 +896,7 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
 /// by the protected process-entry credential and never by argv, URL, environment, or disk state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HttpOptions {
-    pub host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
+    pub host_driver_policy:semio_framework_plugin_host_wake::GuestRelayDriverPolicy,
     pub port: u16,
     pub bind: String,
     pub folder: Option<String>,

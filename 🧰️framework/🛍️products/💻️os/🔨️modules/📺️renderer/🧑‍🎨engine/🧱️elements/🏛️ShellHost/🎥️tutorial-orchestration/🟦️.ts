@@ -30,10 +30,10 @@ import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/�
 import {
   applyTutorialUiChangeToShell,
   applyTutorialUiSnapshotToShell,
-  EMPTY_SHELL_HISTORY_PROJECTION_V1,
   captureTutorialUiSnapshot,
   type TutorialUiBridgeContext
 } from "../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
+import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { downloadMediaExport } from "../../🛠️ShellHelpers/🔩️plumbing/📥️downloads-and-file-requests/🟦️.ts";
 import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
@@ -187,10 +187,6 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
             run.record(documentEvent, slice.forward, { kind: "mutations", envelopes: (slice.forward ? kind.backwards : kind.forwards) as readonly MutationEnvelope[] });
           }
         } else if (kind.kind === "load") {
-          // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
-          // only carries binary pack/spr containers (`AppCommand::LoadDocumentArchive`), and no TS-side
-          // text→pack encoder exists (a separate, much larger work package), so a `Load` history entry
-          // cannot replay through the plugin bridge; the UI/camera/event tracks alongside it still do.
           documentTouched = true;
         } else if (kind.kind === "undo") {
           await onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" }, run.origin, true);
@@ -226,8 +222,6 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
     [historyStore, loadedPlugins, refreshUi],
   );
 
-  // 🎬️ Director: one subscription to the clock's rAF-driven ticks. Camera interpolation applies every
-  // tick (smooth); UI/document/event application throttles to `TUTORIAL_DIRECTOR_TICK_MS`.
   useEffect(() => {
     const def = activeTutorial;
     if (!def || !session) return;
@@ -286,16 +280,8 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
               run.record(documentEvent, slice.forward, { kind: "mutations", envelopes: (slice.forward ? kind.backwards : kind.forwards) as readonly MutationEnvelope[] });
             }
           } else if (kind.kind === "load") {
-            // 🚧️ `kind.documentDsl`/`kind.previousDsl` is authored DSL/JSON document TEXT — the channel
-            // only carries binary pack/spr containers (`AppCommand::LoadDocumentArchive`), and no TS-side
-            // text→pack encoder exists (a separate, much larger work package), so a `Load` history
-            // entry cannot replay through the plugin bridge on a seek either.
             documentTouched = true;
           }
-          // 🚧️ Undo/Redo/Checkpoint/CheckoutCheckpoint/SwitchAlternative crossings mid-seek are an honest
-          // scope cut here (replaying a crossed history op out of its natural live-dispatch order is
-          // ambiguous without more VCS-side infrastructure) — the director's per-tick forward playback
-          // above still applies them correctly; only a large scrub jumping OVER one of these entries misses it.
         }
         if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
         const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
@@ -434,10 +420,6 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
       return;
     }
     if (tutorialRecorderStartingRef.current) return;
-    // 🚧️ `TutorialRecorder`'s base document is authored DSL/JSON TEXT — the channel only carries
-    // binary pack/spr containers, and no TS-side pack→text decoder exists (deliberately out of scope
-    // for `🔖️PackValueCodec`), so a recording's `base.documentDsl` fixture can't be captured from the
-    // live channel; its UI/camera/event tracks still capture faithfully.
     const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     if (!plugin) return;
     tutorialRecorderStartingRef.current = true;
@@ -457,9 +439,6 @@ export function useTutorialOrchestration(core: ShellCoreAfterShellActions) {
     toggleTutorialRecordingRef.current = toggleTutorialRecording;
   }, [startTutorial, stopTutorial, toggleTutorialRecording]);
 
-  // ⏺️ Recorder: UI-state diff on every `ShellState` change (catches panel-tab clicks/tree expands/etc.
-  // that bypass `onAction`), a periodic full-snapshot keyframe every 5s, and a 10Hz epsilon-filtered
-  // camera sampler per registered driver (world drags bypass `onAction` entirely).
   useEffect(() => {
     if (!tutorialRecording) return;
     const record = (): void => {

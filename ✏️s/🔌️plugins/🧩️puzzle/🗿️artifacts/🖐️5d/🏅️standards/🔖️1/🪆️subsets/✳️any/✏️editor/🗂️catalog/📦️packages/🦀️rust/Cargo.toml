@@ -83,6 +83,8 @@ semio-s-plugin-puzzle-retained = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-s-artifact-puzzle-3d-editor-session = { path = "../../../../../../../../../🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎟️session/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 rstar = "0.12"

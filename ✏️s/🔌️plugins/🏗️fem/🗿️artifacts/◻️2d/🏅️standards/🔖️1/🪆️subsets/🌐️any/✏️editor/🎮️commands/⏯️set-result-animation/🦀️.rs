@@ -1,4 +1,4 @@
-//! speed, loop mode, waveform) — window config only, never a document mutation. ONE implementation for every
+//! 🏁️ speed, loop mode, waveform) — window config only, never a document mutation. ONE implementation for every
 //! ⏯️ FEM play app command — `result-animation`: results-window playback state (phase, play/pause,
 //! FEM editor: fem 2d and fem 3d each declare their results window as a [`FemPlaybackTransport`] and route
 //! the command through [`set_result_animation_step`].

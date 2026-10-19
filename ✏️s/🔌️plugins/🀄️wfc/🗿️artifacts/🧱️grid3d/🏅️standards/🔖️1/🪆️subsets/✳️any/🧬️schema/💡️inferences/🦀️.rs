@@ -102,7 +102,7 @@ pub(crate) fn boundary(periodic: bool) -> engine::grid2d::Boundary {
 }
 
 /// 🧾️ One retained payload's bytes, concatenated across its pages.
-pub(crate) fn payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+pub(crate) fn payload_bytes(payload: &semio_framework_job_payload::RetainedJobPayload) -> Vec<u8> {
     (0..payload.page_count()).flat_map(|index| payload.page(index).map(<[u8]>::to_vec).unwrap_or_default()).collect()
 }
 

@@ -2,8 +2,8 @@
 /** 🧵️ Bounded, operation-owned browser download streaming. */
 // #endregion 🧲️Header
 
-import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts";
-export { SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🟦️.ts";
+import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "@semio-tech/framework/actor/shard-client";
+export { SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "@semio-tech/framework/actor/shard-client";
 
 export const SEGMENTED_DOWNLOAD_MARKER_PREFIX = "semio-segmented-handle-v1:";
 

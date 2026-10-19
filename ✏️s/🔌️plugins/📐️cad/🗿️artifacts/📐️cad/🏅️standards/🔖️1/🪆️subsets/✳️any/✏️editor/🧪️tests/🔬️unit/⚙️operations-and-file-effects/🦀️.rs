@@ -37,14 +37,6 @@ async fn add_object_through_wrapper_grows_the_composed_pane() {
 
 #[semio_framework_async_macros::async_test]
 async fn derive_transformation_populates_energy_pane() {
-    // ⚠️ `apply_transformation_entries` yields nothing until the derivation rules are written
-    // (see its own doc comment in this file) — this instead exercises the real derive algorithm
-    // directly (`run_derive_from_geometry`), the pure function `applyTransformation` will call
-    // once that seam exists. `make_object_for_typology` already built and dropped its own local
-    // `cad_brep_kernel()` internally to mint the object's solid handle; `cad_brep_kernel()` is a
-    // fresh `Brep::new()` per call (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
-    // wave G4 — no shared lock, no reentrancy concern), so the kernel built HERE for
-    // `run_derive_from_geometry` is its own independent instance.
     let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     let mut kernel = cad_brep_kernel();
     let derived = run_derive_from_geometry(&mut kernel, &[object], "energy");
@@ -54,18 +46,6 @@ async fn derive_transformation_populates_energy_pane() {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_transformation_uses_live_shape_pane() {
-    // ⚠️ CORRECTED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
-    // wave G4): this test used to derive from `forest_working_scene().objects` and compare
-    // against a single live box, relying on the forest fixture's `solid_handle`s resolving into
-    // whatever kernel `run_derive_from_geometry` reached — only true under the deleted
-    // process-global `BrepEngineHost` singleton. `solid_for_object` (the derive's per-object
-    // solid builder) has never applied `object.origin` — fixture objects carry `origin:
-    // [0,0,0]` regardless (`objects_from_host_snapshot_model`) — so once a handle stops resolving it
-    // falls back to an extent+typology-only box built at the kernel's local origin, and two
-    // fixture objects sharing that origin fuse into a materially different (and no longer
-    // fixture-distinguishing) hull. The real, still-true property — output tracks LIVE INPUT,
-    // not a memoized static result — is verified here directly against extent, the one field
-    // that DOES still flow through `solid_for_object`'s fallback path honestly.
     let live_box = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     let mut kernel = cad_brep_kernel();
     let box_derived = run_derive_from_geometry(&mut kernel, &[live_box], "energy");
@@ -76,14 +56,6 @@ async fn forest_transformation_uses_live_shape_pane() {
     let wall_derived = run_derive_from_geometry(&mut kernel, &[live_wall], "energy");
     assert!(!wall_derived.is_empty(), "a live wall panel must derive at least a hull");
 
-    // 🧭️ `FROM_GEOMETRY_CLASSIFY_RULES` keys ONLY on a face normal and its z-band — there is no
-    // extent, aspect-ratio or area term — so every box-shaped solid, a 1×1×1 cube and a 4×0.2×3 wall
-    // panel alike, necessarily yields the SAME typology multiset (hull, 4× external wall, roof,
-    // baseplate, windows). `run_derive_from_geometry` then groups its faces through a `HashMap`, whose
-    // iteration order is randomised per process, so the typology SEQUENCE is not a property of the
-    // derive at all (this assertion used to read that sequence and passed or failed by luck).
-    // The live-input property lives in WHERE the classified faces land: `solid_for_object` falls back
-    // to `box_prim(extent)`, so extent — and only extent — reaches the output honestly.
     fn derived_typologies(objects: &[semio_s_artifact_cad_cad_model::geometry::CadObject]) -> Vec<String> {
         let mut rows: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
         rows.sort();

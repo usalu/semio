@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { executeCommandV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️command/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-if (process.argv.length !== 3 || process.argv[2] !== "test") throw Error("Expected native ownership test");
+if (process.argv.length !== 3 || process.argv[2] !== "test") throw new Error("Expected native ownership test");
 const cwd = import.meta.dir, artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(cwd, "🤖️generated"));
 await receiveScriptProcessInvocation(process.env, async (invocation) => {
   const result = await executeCommandV1({ version: 1, cwd, command: process.execPath, args: ["test", join(cwd, "🟦️.ts")], manifests: [], preparation: "none" }, {

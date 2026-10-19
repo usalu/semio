@@ -1,7 +1,8 @@
 //! 🌱️ Original registry custody admits its frame and every queue, slot and generation page separately.
 use super::{SnapshotReadRegistryHandle,SnapshotReadLeaseRegistry};
 use crate::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
-use semio_framework_value::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,native_decoding::NativeRetirementDecodeControl,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeRetirementDecodeControl};
 use std::{mem::{size_of,ManuallyDrop},sync::Arc};
 
 /// 🧳️ A partial registry cannot issue reads and keeps its original physical pages through refusal and cancellation.

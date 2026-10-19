@@ -32,6 +32,9 @@ use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ScrubInput, ToolAbortReason, ToolStep};
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
 
 #[doc(hidden)]
 pub type Runtime = ToolMachineRuntime<TestSnapshot, TestMutation, TestSnapshot, TestMutation>;

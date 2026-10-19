@@ -67,16 +67,6 @@ fn validate_named_targets<'a>(
     added: impl IntoIterator<Item = (usize, &'a str)>,
     prefix: &[String],
 ) -> MutationApplyResult<()> {
-    // 🎯️ The precondition is about the TARGETS, not about the whole table. A name-keyed edit is
-    // ambiguous exactly when the name IT NAMES occurs more than once, and refusing that stays
-    // right; refusing an unambiguous edit because some UNRELATED name is duplicated elsewhere in
-    // the same table is not the same rule, and it is what the whole-base uniqueness check used to
-    // do. The real committed `🖊️bus-shelter-r12.dxf` carries `LAYER ["0","0","DIMS"]`,
-    // `STYLE ["ANNOTATIVE","STANDARD","STANDARD","NOTES"]` and two `CONTINUOUS` linetypes — the
-    // `dxf` 0.6 writer that DERIVED it adds its own `normalize()` defaults on top of the source's
-    // own entries — so every single layer/style/linetype edit in `📰️mutate-dxf-r12` was refused,
-    // including `remove-layer {"name":"DIMS"}`, whose target is unique. Ten of the case's 39
-    // parity comparisons diverged on that alone.
     let mut occurrences: BTreeMap<&str, usize> = BTreeMap::new();
     for key in base_keys {
         *occurrences.entry(key).or_insert(0) += 1;

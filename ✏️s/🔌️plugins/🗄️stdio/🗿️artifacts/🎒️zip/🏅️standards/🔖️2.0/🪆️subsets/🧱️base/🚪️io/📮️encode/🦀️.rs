@@ -321,7 +321,7 @@ fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result
         cen.extend_from_slice(&u16_le(central_name.len() as u16));
         cen.extend_from_slice(&u16_le(central_extra.len() as u16));
         cen.extend_from_slice(&u16_le(central_comment.len() as u16));
-        cen.extend_from_slice(&u16_le(0)); // disk number start — single-disk archives only
+        cen.extend_from_slice(&u16_le(0));
         cen.extend_from_slice(&u16_le(metadata.central.internal_attributes));
         cen.extend_from_slice(&u32_le(metadata.central.external_attributes));
         cen.extend_from_slice(&u32_le(central_offset));
@@ -346,8 +346,8 @@ fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result
 
     let mut eocd = Vec::new();
     eocd.extend_from_slice(&u32_le(SIG_EOCD));
-    eocd.extend_from_slice(&u16_le(0)); // disk number
-    eocd.extend_from_slice(&u16_le(0)); // disk with central directory start
+    eocd.extend_from_slice(&u16_le(0));
+    eocd.extend_from_slice(&u16_le(0));
     eocd.extend_from_slice(&u16_le(count));
     eocd.extend_from_slice(&u16_le(count));
     eocd.extend_from_slice(&u32_le(cd_size as u32));

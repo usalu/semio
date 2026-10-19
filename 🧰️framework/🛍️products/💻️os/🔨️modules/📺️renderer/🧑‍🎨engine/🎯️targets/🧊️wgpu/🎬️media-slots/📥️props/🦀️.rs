@@ -1,5 +1,6 @@
 //! 🎟️ Original accepted params feed the existing paid grammar without a second wire or semantic clone.
-use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_pack_json::{JsonGrammarCursor,JsonReadLimits,JsonMemberPolicy,JsonError};
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V};
 use semio_framework_value::retirement::controlled::ControlledRetirement;

@@ -224,7 +224,6 @@ function buildStoryWorld3dSceneNode(state: StoryWorld3dState): UiComponentSceneN
   const { fixture, runtime } = state;
   const selectedIds = new Set(runtime.selectedIds);
 
-  // 📦️ No `url`/`data` on purpose (see header docstring) — falls back to `World3dHost`'s neutral placeholder box per instance.
   const meshes = fixture.objects.map((object) => ({ id: object.id }));
 
   const instances = fixture.objects.map((object) => ({

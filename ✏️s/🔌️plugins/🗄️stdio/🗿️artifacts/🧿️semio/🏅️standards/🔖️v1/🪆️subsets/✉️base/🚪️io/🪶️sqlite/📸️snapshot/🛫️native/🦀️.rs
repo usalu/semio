@@ -1,7 +1,7 @@
 //! 🛫️ Borrowed explicit Semio native fields are measured and emitted under one ownership control.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::native_encoding::NativeEncodeControl;
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteDatabaseLimits,artifact::owned_workspace};
 use {crate::schema::geometry::SemioTransform, crate::schema::geometry::native::{NativeF64, NativeF32}};
 pub struct Writer<'a,'b,'c>{control:&'a mut NativeEncodeControl<'b>,output:Option<&'c mut Vec<u8>>,count:usize,entities:usize,limits:SqliteDatabaseLimits,primitive_value_limit:Option<usize>}

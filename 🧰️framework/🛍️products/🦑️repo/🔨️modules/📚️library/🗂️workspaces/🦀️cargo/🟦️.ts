@@ -2,9 +2,7 @@ import selectionSchema from"./🧬️schema/🎯️selection.json"with{type:"jso
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{readPhysicalCargoSourceV1}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import preparationProgressSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧬️schema/🔣️.json" with {type:"json"};
-const preparationProgressPolicy=preparationProgressSchema.definitions.Policy.const;
-import {captureOwnedCommandResultV1,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {captureOwnedCommandResultV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./🛠️preparation/📦️storage/🟦️.ts";
 import type {CargoPreparationControlV1,CargoWorkspaceControlV1,CargoWorkspaceProgressV1} from "./🛠️preparation/🎛️control/🟦️.ts";
@@ -166,6 +164,11 @@ export function cargoWorkspaceForManifest(root: string, manifest: string): Cargo
   return selectCargoWorkspace(root, manifest, path => read(root, path), new Map());
 }
 
+/** 🎛️ Selects the nearest Cargo workspace through one physical plan that stays cancellable under the caller control. */
+export function cargoWorkspaceForManifestControlledV1(root: string, manifest: string, control: CargoWorkspaceControlV1): Promise<CargoWorkspaceScope> {
+  return controlled(selectPlan(root, manifest, path => readPlan(root, path), new Map()), control);
+}
+
 /** 🏎️ Binds native profiles to their selected workspace or the repository-wide configuration. */
 export function cargoNextestConfiguration(root:string,directory:string):string {
  const repository=resolve(root),owner=resolve(repository,directory);
@@ -265,7 +268,14 @@ function publishMembership(root: string, owner: CargoWorkspaceScope, mode: "chec
   const path=physical(root,owner.manifest),source=readFileSync(path,"utf8"),document=object(Bun.TOML.parse(source));
   const members=cargoWorkspaceMembers(root,owner).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))) || ".");
   const children=owners.filter(row=>row.directory!==owner.directory && (owner.directory==="." || row.directory.startsWith(owner.directory+"/"))).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory))));
-  const exclude=[...new Set([...owner.contribution.exclude,...(retainExclusions?document.workspace.exclude??[]:[]),...children])].sort();
+  const known=new Map(owners.map(scope=>[scope.directory,scope]));
+  if(owner.directory!==".")for(let directory=dirname(owner.directory);;directory=dirname(directory)){
+    const manifest=directory==="."?"Cargo.toml":`${slash(directory)}/Cargo.toml`;
+    if(existsSync(resolve(root,manifest))&&read(root,manifest).workspace!==undefined){const ancestor=cargoWorkspaceForManifest(root,manifest);known.set(ancestor.directory,ancestor);}
+    if(directory===".")break;
+  }
+  const foreign=[...known.values()].filter(other=>other.directory!==owner.directory&&!(owner.directory==="."||other.directory.startsWith(owner.directory+"/"))).flatMap(other=>cargoWorkspaceMembers(root,other)).map(row=>slash(relative(resolve(root,owner.directory),resolve(root,row.directory)))).filter(directory=>directory!=="."&&directory!==".."&&!directory.startsWith("../")&&!children.some(child=>directory===child||directory.startsWith(child+"/")));
+  const exclude=[...new Set([...owner.contribution.exclude,...(retainExclusions?document.workspace.exclude??[]:[]),...children,...foreign])].sort();
   if(JSON.stringify(document.workspace.members)===JSON.stringify(members) && JSON.stringify(document.workspace.exclude??[])===JSON.stringify(exclude))return false;
   if(mode==="check")throw Error(`Cargo source membership is stale: ${owner.manifest}`);
   let after=source;
@@ -287,7 +297,6 @@ export type CargoPreparationV1 = Readonly<{ script: string; command: readonly st
 export type CargoPreparationDiagnosticPhaseV1 = "lease-wait" | "lease" | "discovery" | "inventory" | "closure" | "recipe" | "finished" | "publication";
 /** 🕰️ Emits opt-in preparation observations separately from machine-readable stdout. */
 export function logCargoPreparationDiagnosticV1(phase: CargoPreparationDiagnosticPhaseV1, owner: string, elapsedMs: number, items: number): void {
- if(process.env.SEMIO_CARGO_PREPARATION_TIMING==="1")console.error(`[DEBUG] cargo-preparation ${JSON.stringify({phase,owner,elapsedMs,items})}`);
 }
 /** 🧬️ Admits an owner-authored executable recipe with literal argv and no implicit producer identity. */
 export function parseCargoPreparation(value: unknown): CargoPreparationV1 {
@@ -389,7 +398,7 @@ export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationSt
 /** 🛠️ Awaits the selected native workspace child under unchanged original control. */
 export async function prepareCargoWorkspaceInvocation(storage:CargoPreparationStorageV1,root:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<void>{
  const request=cargoWorkspacePreparationInvocationV1(storage,root,args,cwd,environment);if(!request)return;
- const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}}),tail=preparationProgressPolicy.diagnosticCharacters;if(result.stdout||result.stderr)await writeOwnedCommandOutputV1(process.stderr,"[DEBUG] Selected Cargo preparation terminal "+JSON.stringify({status:result.status,signal:result.signal,stderr:result.stderr.slice(-tail),stdout:result.stdout.slice(-tail)})+"\n",control);
+ const result=await captureOwnedCommandResultV1(request.command,request.args,request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});
  if(result.status!==0||result.signal!==null)throw Error("Native Cargo owner preparation failed status="+result.status+" signal="+result.signal+": "+(result.stderr||result.stdout).slice(-2048));
 }
 

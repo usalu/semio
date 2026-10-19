@@ -1,0 +1,11 @@
+import { readFileSync } from "node:fs";
+const fam = (n: string) => n.replace(/^(no-cross-package-relative|no-cross-technology|no-cross-plugin|plugin-no-extension-or-artifact)-.+$/u, "$1");
+const load = (p: string) => JSON.parse(readFileSync(p, "utf8")).violations as any[];
+const key = (v: any) => [v.rule, v.from, v.to, (v.cycle ?? []).join(">")].join("|");
+const a = load(process.argv[2]!), b = load(process.argv[3]!);
+const ak = new Set(a.map(key)), bk = new Set(b.map(key));
+const news = b.filter(v => !ak.has(key(v))), gone = a.filter(v => !bk.has(key(v)));
+const count = (vs: any[]) => { const m: Record<string, number> = {}; for (const v of vs) m[fam(v.rule)] = (m[fam(v.rule)] ?? 0) + 1; return m; };
+console.log("new", JSON.stringify(count(news)), "\ngone", JSON.stringify(count(gone)));
+const rule = process.argv[4];
+if (rule) for (const v of news.filter(v => fam(v.rule) === rule).slice(0, +(process.argv[5] ?? 15))) console.log(v.from.slice(-80), "->", v.to.slice(-80), v.cycle ? "cycle:" + v.cycle.length : "");

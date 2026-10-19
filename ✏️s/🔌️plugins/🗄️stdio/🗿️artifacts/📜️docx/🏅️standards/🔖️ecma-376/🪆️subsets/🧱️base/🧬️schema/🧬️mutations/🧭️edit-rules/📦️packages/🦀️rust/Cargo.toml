@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-docx-base-edit-rules"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio docx base details-pane edit rules"
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+semio-s-artifact-stdio-docx-base-model = { workspace = true }

@@ -11,7 +11,9 @@
         "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "regenerate-example": {
       "executor": "repo:script",
@@ -20,7 +22,8 @@
         "command": "bun ./📜️script.ts regenerate-example",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "cache": false
     }
   }
 }

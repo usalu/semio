@@ -44,8 +44,6 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
         expect(outcome.ok).toBe(true);
         if (!outcome.ok) return;
         expect(calls).toEqual(["a-plugin:10:prepare", "b-plugin:20:prepare"]);
-        // 🎯️ Reverse discovery order: initiator (a) discovered first, foreign target (b) discovered
-        // second — commit visits b before a (contract freeze §5.6).
         expect(commitOrder).toEqual(["b-plugin:20", "a-plugin:10"]);
         expect(outcome.editIds.get("artifact-a")).toBe("edit-a-plugin-10");
         expect(outcome.editIds.get("artifact-b")).toBe("edit-b-plugin-20");
@@ -109,8 +107,6 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
           foreign: [foreignB, foreignC],
         });
         expect(outcome).toEqual({ ok: false, code: "transaction.commit-failed" });
-        // discovery order was [a, b, c]; commit visits c (succeeds) then b (fails) — c is already
-        // committed so it gets undone, a (never reached) gets rolled back alongside the failing b.
         expect(commitOrder).toEqual(["c-plugin:30"]);
         expect(calls).toContain("c-plugin:30:undo");
         expect(calls).toContain("a-plugin:10:rollback");
@@ -186,7 +182,7 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
           ["a-plugin", fakeHandle("a-plugin", calls, commitOrder)],
           ["b-plugin", fakeHandle("b-plugin", calls, commitOrder)],
         ]);
-        const coordinator = new TransactionCoordinator(directory, router, plugins); // no planner injected
+        const coordinator = new TransactionCoordinator(directory, router, plugins);
         const foreign = encodeForeignStepBytes({ target: { artifactId: "artifact-b", artifactKind: "s.b.doc" }, mutationId: "s.b#aec-building:add-room", payload: [1], label: "x" });
         const outcome = await coordinator.run({
           initiatorPluginId: "a-plugin",
@@ -282,6 +278,7 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
           contextMenu: async () => [],
           readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
           readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
+          subscribeOperationDiagnostics: () => () => {},
           subscribeOperationCompletions: () => () => {},
         subscribeOperationProgress: () => () => {},
           readWindowConfigPacks: async () => [],

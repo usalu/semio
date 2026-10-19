@@ -246,7 +246,7 @@ fn ellipse_critical_thetas(frame: &Frame3, a: f64, b: f64, target: Pnt3) -> Vec<
         let k3 = a * x0 * beta - b * y0 * alpha;
         let k4 = a * x0 * alpha + b * y0 * beta;
         let coeffs = [k1 + k3, 2.0 * (k2 + k4), -6.0 * k1, 2.0 * (k4 - k2), k1 - k3];
-        let half = std::f64::consts::PI / 3.0; // window half-width in phi; tan(half) stays finite
+        let half = std::f64::consts::PI / 3.0;
         let bound = half.tan();
         let poly = Poly::new(substitute_affine(&coeffs, -bound, bound));
         if poly.degree() == 0 {
@@ -277,15 +277,6 @@ fn closest_on_ellipse(frame: &Frame3, major_radius: f64, minor_radius: f64, doma
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn all_local_minima_periodic(criticals: &[f64], domain: (f64, f64), curve: &Curve3, target: Pnt3) -> Vec<ClosestParam> {
     let period = curve.period().unwrap_or(std::f64::consts::TAU);
-    // 🐛 A domain spanning exactly one full period (e.g. a whole, untrimmed circle's own
-    // `(0, TAU)`) has NO real trim boundary — `domain.0`/`domain.1` are the SAME physical point,
-    // not two independent constrained-optimum candidates, and (unlike a genuine critical point)
-    // neither satisfies the first-order condition `is_local_minimum` assumes (its own docstring).
-    // Drop both sentinels unconditionally in that case rather than subjecting them to a test only
-    // meaningful at a real stationary point — every genuine minimum on a full period is already
-    // found via `is_local_minimum` on the wrapped `criticals`. A genuinely trimmed sub-arc keeps
-    // both endpoints unconditionally (the constrained optimum can legitimately sit there even when
-    // it isn't an unconstrained critical point).
     let full_period = (domain.1 - domain.0 - period).abs() < 1e-9;
     let mut candidates = periodic_candidates(criticals, domain, period);
     candidates.retain(|&t| {
@@ -727,14 +718,6 @@ fn fitting_knot_vector(params: &[f64], p: usize, num_controls: usize) -> Vec<f64
         u[n + 1 + i] = 1.0;
     }
     if n > p {
-        // 🐛 The standard Piegl-Tiller averaging formula (NURBS Book Eq. 9.68) needs `n - p`
-        // interior knots (indices `p+1..=n`), not `n - p - 1` — the previous off-by-one left the
-        // LAST interior knot (index `n`) unset (default 0.0), which for the common `n_controls =
-        // degree + 2` case (`n - p == 1`) makes the loop range `1..=0` — empty — so the sole
-        // interior knot stayed at its zero-initialized value, colliding with the clamped-start
-        // knots and pushing that knot's multiplicity past `degree + 1`. `KnotVector::new` then
-        // correctly rejected it as invalid, which `approximate_curve_with_count`'s `?` silently
-        // turned into `None`, panicking every caller that `.unwrap()`s the result.
         let d = (m + 1) as f64 / (n - p + 1) as f64;
         for j in 1..=(n - p) {
             let jd = j as f64 * d;
@@ -886,9 +869,6 @@ pub fn split_nurbs(curve: &NurbsCurve3, t: f64) -> (NurbsCurve3, NurbsCurve3) {
         hz = nz;
         hw = nw;
     }
-    // Once t has full multiplicity (degree+1), it occupies consecutive knot indices [k, k+degree]
-    // for some k; find_span(t) returns k+degree (the span ending exactly at t), so k = span-degree.
-    // The control net splits cleanly there: the left piece owns points [0, k), the right [k, end).
     let k = knots.find_span(t) - degree;
     let dehomogenize = |i: usize| Pnt3::new(hx[i] / hw[i], hy[i] / hw[i], hz[i] / hw[i]);
     let left_controls: Vec<Pnt3> = (0..k).map(dehomogenize).collect();

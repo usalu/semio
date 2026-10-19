@@ -5,6 +5,7 @@ import{readFileSync}from"node:fs";
 test("neutral actual CMake owner replaces raw probes and ambient state with retained custody",()=>{const script=readFileSync(new URL("../📜️script.ts",import.meta.url),"utf8");expect(script).toContain("runRepositoryCmakeV1");for(const raw of["spawnSync","readProcessOwnerContextV1","acquireCompilerCapacityLeaseV1","acquireQueuedResourceLease","availableParallelism","uvTool","SEMIO_COMPILER_CAPACITY_HELD"])expect(script).not.toContain(raw);const text=readFileSync(new URL("../🏃️execution/🟦️.ts",import.meta.url),"utf8");for(const owner of["withRepositoryToolingStoreV1","withRepositoryCacheStoreV1","readNativeStorageReservationPolicyV1","withCompilerState","withCmakeInputsV1","runCmakeOwnedStageV1"])expect(text).toContain(owner+"(");expect(text).toContain("capacity:null");expect(text).not.toContain("as NativeStorage");});
 
 import Ajv from"ajv";
+import Ajv2020 from"ajv/dist/2020";
 import{Database}from"bun:sqlite";
 import{join}from"node:path";
 import{mkdtempSync,writeFileSync,rmSync}from"node:fs";
@@ -32,7 +33,7 @@ test("neutral CMake consumed cache facts match independent SQLite and mode schem
 
 import { parse } from "dotenv";
 import { compilerEnvironmentFromOutput } from "../🪟️toolchain/🟦️.ts";
-const toolchainFixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8")), validateToolchain=new Ajv({strict:false}).compile(schema.definitions.NativePresets);
+const toolchainFixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8")), validateToolchain=new Ajv2020({strict:false}).compile(schema.definitions.NativePresets);
 test("all native host presets use the compiler-only generator and agree with Ajv", () => {
   for (const row of toolchainFixture.presets) {
     const native = row.preset.hidden === true || row.preset.generator === "Ninja" && !Object.hasOwn(row.preset, "architecture") && ["Debug", "Release"].includes(row.preset.cacheVariables?.CMAKE_BUILD_TYPE);

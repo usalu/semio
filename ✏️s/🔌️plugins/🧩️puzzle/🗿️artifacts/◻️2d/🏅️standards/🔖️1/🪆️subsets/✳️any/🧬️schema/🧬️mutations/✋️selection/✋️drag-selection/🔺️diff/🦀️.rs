@@ -1,4 +1,4 @@
-//! by the payload offset, read off the BASE position, so the leaf replays on any base.
+//! 📦️ by the payload offset, read off the BASE position, so the leaf replays on any base.
 //! 🔺️ Sparse diff builder for `DragSelection` — every unlocked addressed node and target region moves
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodePatch;

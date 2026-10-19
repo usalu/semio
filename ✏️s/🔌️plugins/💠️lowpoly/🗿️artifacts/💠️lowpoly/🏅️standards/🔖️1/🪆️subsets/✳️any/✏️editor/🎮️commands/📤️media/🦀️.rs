@@ -79,7 +79,6 @@ pub mod export_mesh {
 
     pub fn handle(payload: &ExportMesh, doc: &ArtifactView<'_, LowpolySnapshot>, _cfg: &ConfigView<'_, LowpolyConfig>, _ctx: &mut LowpolyScratch) -> Result<Emit<LowpolyMutation, LowpolyConfigMutation>, Fault> {
         let (filename, mime_type, data) = export_mesh_text(doc.snapshot, &payload.format)?;
-        // ⬇️ An absent `encoding` means "`data` IS the file" (the host accepts only that or `base64`).
         Ok(Emit::effect(Effect::DownloadMediaExport { filename, mime_type, data, encoding: None }))
     }
 }

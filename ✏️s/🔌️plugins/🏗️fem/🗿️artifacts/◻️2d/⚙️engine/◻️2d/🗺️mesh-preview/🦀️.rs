@@ -1,4 +1,4 @@
-//! the artifact tree).
+//! 🌳️ the artifact tree).
 //! 🗺️ FEM 2D module engine — cheap mesh preview + nodal stress bridge (pure FE algorithm, moved out of
 
 use crate::fem2d_engine::meshing::build_nodes_and_elements;

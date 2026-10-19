@@ -1,4 +1,4 @@
-//! model <- epJSON
+//! 📰️ model <- epJSON
 //!
 //! ⚡️ Exact inverse of the export leaf (`🚪️io/📤️export/…/⚡️epjson/🔖️25.2/✳️any/🦀️.rs`), reading a
 //! real EnergyPlus 25.2 `epJSON` document with [`pack::json::parse`] and no third-party translator.

@@ -1,6 +1,7 @@
 //! 🧭️ Plugin registry rows, repo-root discovery, component paths and committed package descriptors.
 
 use semio_framework_os_kernel::native_catalog as component_artifacts;
+use semio_framework_process_routing_workspace as workspace_identity;
 use std::path::Path;
 use std::path::PathBuf;
 use semio_framework_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};

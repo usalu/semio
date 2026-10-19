@@ -32,7 +32,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 🕹️ Populated post-hoc by `create_playbook_play_app`'s `.window_kind_interactions(..)` call.
         interactions: Vec::new(),
     }
 }

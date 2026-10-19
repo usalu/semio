@@ -269,7 +269,6 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         .collect::<std::collections::BTreeSet<_>>();
     assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 40, batch: 0, migrated: 40, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
     assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
-    // 📣️ The seven host relays plus the three studio exports and the compiled-DAG submit gesture, which touch no store.
     assert_eq!(host_only_ids.len(), 11);
 }
 
@@ -329,7 +328,6 @@ async fn space_window_kind_actions_scope_editing_to_workflow() {
     assert!(!graph.contains(&"navigateVirtualFileSystemNode".to_string()));
     assert!(dag.contains(&"compiledDagEngagementSubmit".to_string()));
     assert!(!graph.contains(&"compiledDagEngagementSubmit".to_string()));
-    // 🌐️ Global navigation/utility actions stay orphans on every window.
     for shared in ["setActiveExample", "goHome"] {
         assert!(graph.contains(&shared.to_string()) && vfs.contains(&shared.to_string()) && dag.contains(&shared.to_string()), "{shared} stays global");
     }
@@ -351,9 +349,6 @@ async fn space_manifest_uses_studio_app_id() {
 async fn commit_checkpoint_round_trips_projection() {
     use semio_hub_space_commands_authoring::spawn_app;
     context::seed_draw_plugin().await;
-    // 🧾️ The REGISTERED wrapper: `SpaceApp` publishes bounded tool proofs, so the registry-less
-    // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
-    // (`generated_migrated=false`, `migrated={}`) while it is constructed.
     let mut app = context::app_with_registry().await;
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
@@ -368,9 +363,6 @@ async fn commit_checkpoint_round_trips_projection() {
 async fn checkout_checkpoint_restores_projection() {
     use semio_hub_space_commands_authoring::spawn_app;
     context::seed_draw_plugin().await;
-    // 🧾️ The REGISTERED wrapper: `SpaceApp` publishes bounded tool proofs, so the registry-less
-    // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
-    // (`generated_migrated=false`, `migrated={}`) while it is constructed.
     let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     context::dispatch_settled(&mut app, SpaceCommand::SpawnApp(semio_hub_space_commands_authoring::spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 })).await;
@@ -424,9 +416,6 @@ async fn two_instances_converge_on_disjoint_edits_via_backbone() {
     context::seed_multi_port_plugins().await;
     let draw_surface_id = context::test_surface_id("draw").await;
     let shooting_surface_id = context::test_surface_id("shooting").await;
-    // 🧹️ The REGISTERED pair: `SpaceApp` publishes bounded tool proofs, so a registry-less
-    // `paired_apps` instance faults in the `interactive-job.catalog-authority` proof join
-    // (`generated_migrated=false`, `migrated={}`) while it is constructed, before any edit lands.
     plugin_laws::assert_two_registered_instances_converge::<SpaceApp, (usize, usize), _, _>(
         "mem://s-studio-convergence",
         || create_space_app(),

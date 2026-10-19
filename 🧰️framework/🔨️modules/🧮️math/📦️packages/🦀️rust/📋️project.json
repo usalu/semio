@@ -5,14 +5,27 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🧮️math/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
-    "verify-rank-source":{"executor":"repo:script","cache":false,"options":{"command":"bun ./📜️script.ts verify-rank source","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
-    "verify-rank-native":{"executor":"repo:script","cache":false,"options":{"command":"bun ./📜️script.ts verify-rank","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
+    "verify-rank-source":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"command":"bun ./📜️script.ts verify-rank source","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
+    "verify-rank-native":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"command":"bun ./📜️script.ts verify-rank","cwd":"🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust"}},
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -21,6 +34,12 @@
     },
     "lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts lint"
@@ -28,6 +47,12 @@
     },
     "verify-dense-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-dense-source"
@@ -35,6 +60,12 @@
     },
     "verify-dense-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-dense-native retained_dense",
@@ -43,7 +74,12 @@
     },
     "verify-inverse-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts verify-inverse-source",
         "forwardAllArgs": true,
@@ -52,7 +88,12 @@
     },
     "verify-inverse-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts verify-inverse-native retained_inverse",
         "forwardAllArgs": true,

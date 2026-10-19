@@ -32,7 +32,7 @@
     },
     "plan-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -43,7 +43,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {

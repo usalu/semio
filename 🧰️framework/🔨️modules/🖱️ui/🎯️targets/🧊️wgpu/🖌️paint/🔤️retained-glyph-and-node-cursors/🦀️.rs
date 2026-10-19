@@ -199,8 +199,6 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
     let y = baseline - logical_h - bearing_y;
     let uv = [atlas_x as f32 / atlas_w, atlas_y as f32 / atlas_h, (atlas_x + width) as f32 / atlas_w, (atlas_y + height) as f32 / atlas_h];
     draw.push_glyph([x, y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
-    // 🅰️ The synthetic semibold's second strike — same glyph, same baseline, offset along x only, so
-    // the advance (and with it the line box and every wrap point priced above) is untouched.
     if let Some(offset) = weight.synthetic_offset(size) {
         draw.push_glyph([x + offset, y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
     }

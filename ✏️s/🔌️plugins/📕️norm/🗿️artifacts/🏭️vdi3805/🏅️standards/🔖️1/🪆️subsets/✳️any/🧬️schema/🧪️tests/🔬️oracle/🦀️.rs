@@ -44,14 +44,12 @@ mod tests {
             let oracle = run_oracle(&path);
             let report = evaluate(&doc);
             let rust_pass = !report.failing().any(|_| true);
-            // Oracle structure/dn/kvs/pn/authority/geom — compare those ids only
             let oracle_checks = oracle["checks"].as_array().expect("checks");
             for oc in oracle_checks {
                 let id = oc["id"].as_str().unwrap_or("");
                 let pass = oc["pass"].as_bool().unwrap_or(false);
                 if id == "structure" {
                     let rust_struct_ok = report.checks.iter().any(|c| c.id.starts_with("vdi3805.1.structure") && c.status != semio_s_plugin_norm_compliance::CheckStatus::Fail);
-                    // structure Pass means no Fail with structure prefix after filtering… use complies for structure errors
                     let has_struct_fail = report.failing().any(|c| c.id.contains("structure"));
                     assert_eq!(!has_struct_fail, pass, "{name} structure oracle={pass} rust_fail={}", has_struct_fail);
                     let _ = rust_struct_ok;

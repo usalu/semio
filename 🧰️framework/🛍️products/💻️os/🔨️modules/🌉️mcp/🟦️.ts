@@ -3,7 +3,7 @@ import{withMcpClientSessionV1,type McpClientSessionV1}from"./📡️stdio/🎫�
 export{withMcpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
 export type{McpClientSessionV1}from"./📡️stdio/🎫️session/🟦️.ts";
 import{type ScriptInvocation}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{type ResourceLeaseControl}from"@semio-tech/process/leases";
+import{type ResourceLeaseControl}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 /** 🌉️ TypeScript surface of the `🌉️mcp` module (packet `P5-conformance-tests`) — the pieces the
  * conformance test suite under `📦️packages/🟦️typescript` shares: where the real `semio-os-mcp`
  * stdio binary lives, a minimal raw newline-delimited JSON-RPC client for the modern era the
@@ -17,8 +17,9 @@ import { createHash } from "node:crypto";
 import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
+import { serveWarmMcpGateway } from "./📡️stdio/🚪️gateway/🟦️.ts";
 import type { Readable, Writable } from "node:stream";
-import { cargoTargetDirectory } from "@semio-tech/process/execution";
+import { cargoTargetDirectory } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, parseCargoBinarySourcesV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 //#region 🔖️BinaryPath
@@ -73,6 +74,22 @@ export function resolveMcpBinarySourcesPath(binary: string, platform: NodeJS.Pla
 /** 🏗️ Injectable staging boundary: one attempt returning the neutral build target's exit status. */
 export type McpBinaryStaging = Readonly<{ stage: (progress: (line: string) => void) => number }>;
 
+const mcpStagingEnvironment = (): NodeJS.ProcessEnv => ({ ...process.env, CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0", [CARGO_BUILD_OWNER_PID_ENV]: String(process.pid) });
+
+/** 🏗️ Non-blocking staging: the neutral build target runs as a child while the caller keeps serving; resolves with its exit status, `-1` when it cannot start. */
+export function stageMcpBinaryAsync(repoRoot: string, progress: (line: string) => void, signal?: AbortSignal): Promise<number> {
+  return new Promise((resolveStatus) => {
+    progress(`[semio-os-mcp] staging via bun repo run ${MCP_BINARY_TARGET}`);
+    const child = spawn("bun", ["repo", "run", MCP_BINARY_TARGET, "--output=stream"], { cwd: repoRoot, shell: false, env: mcpStagingEnvironment(), stdio: ["ignore", "pipe", "pipe"], signal });
+    for (const stream of [child.stdout, child.stderr]) createInterface({ input: stream }).on("line", (line) => void (line.trim() && progress(line)));
+    child.on("error", (error) => {
+      progress(`[semio-os-mcp] ${error.message}`);
+      resolveStatus(-1);
+    });
+    child.on("close", (code) => resolveStatus(code ?? -1));
+  });
+}
+
 const nativeMcpBinaryStagingFor = (repoRoot: string): McpBinaryStaging => ({
   stage: (progress) => {
     progress(`[semio-os-mcp] staging via bun repo run ${MCP_BINARY_TARGET}`);
@@ -81,7 +98,7 @@ const nativeMcpBinaryStagingFor = (repoRoot: string): McpBinaryStaging => ({
       encoding: "utf8",
       maxBuffer: 16 * 1024 * 1024,
       shell: false,
-      env: { ...process.env, CARGO_INCREMENTAL: process.env.CARGO_INCREMENTAL ?? "0", [CARGO_BUILD_OWNER_PID_ENV]: String(process.pid) },
+      env: mcpStagingEnvironment(),
     });
     const combined = `${result.stdout ?? ""}${result.stderr ?? ""}`;
     for (const line of combined.split(/\r?\n/)) {
@@ -134,8 +151,8 @@ export function requireMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = proc
  * an edit in this module — stat-checked, so a warm tree answers in milliseconds. Any build of the neutral
  * target (a gate's `dependsOn`, `bun ./📜️script.ts build`) publishes the record with the binary, so
  * `.mcp.json`'s `initialize` never re-stages a binary a build just produced. `workspace:setup` /
- * `bun ./📜️script.ts setup` calls this so a first-ever compile never lands inside a client's
- * initialize timeout. */
+ * `bun ./📜️script.ts setup` calls this to stage ahead of time; a client that starts first is served by
+ * {@link serveWarmMcpStdio}, which never blocks `initialize` on a build. */
 export function ensureMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform, staging: McpBinaryStaging = nativeMcpBinaryStagingFor(repoRoot)): string {
   if (env.SEMIO_OS_MCP_BIN) return requireMcpBinary(repoRoot, env, platform);
   const binary = resolveMcpBinaryPath(repoRoot, env, platform);
@@ -144,11 +161,21 @@ export function ensureMcpBinary(repoRoot: string, env: NodeJS.ProcessEnv = proce
     console.error(`[semio-os-mcp] staged binary is fresh (${freshness.reason})`);
     return requireMcpBinary(repoRoot, env, platform);
   }
-  console.error(`[semio-os-mcp] staging binary (${freshness.reason}) — progress on stderr; initialize waits for this stage, so run \`bun ./📜️script.ts setup\` once for a zero-touch cold start`);
+  console.error(`[semio-os-mcp] staging binary (${freshness.reason}) — progress on stderr`);
   const status = staging.stage((line) => console.error(line));
   if (status !== 0) throw new Error(`semio-os-mcp staging via ${MCP_BINARY_TARGET} exited with status ${status}`);
   console.error(`[semio-os-mcp] staged ${binary}`);
   return requireMcpBinary(repoRoot, env, platform);
+}
+
+/** 🔥️ Whether `initialize` can be answered by the real server immediately: an explicit override, or a staged binary whose sources are unchanged. */
+export function mcpBinaryIsStaged(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): boolean {
+  return Boolean(env.SEMIO_OS_MCP_BIN) || mcpBinaryFreshness(resolveMcpBinaryPath(repoRoot, env, platform), platform).fresh;
+}
+
+/** 🚪️ Serves `semio-os-mcp stdio …` for a client whose binary is missing or stale: the handshake is answered at once, staging runs in the background, and the real server takes over through `list_changed` notifications — so a cold build never lands inside the client's connect timeout. */
+export function serveWarmMcpStdio(repoRoot: string, extra: readonly string[], env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): Promise<number> {
+  return serveWarmMcpGateway({ stage: (progress, signal) => stageMcpBinaryAsync(repoRoot, progress, signal), command: () => requireMcpBinary(repoRoot, env, platform), args: ["stdio", ...extra], cwd: repoRoot, env, input: process.stdin, output: process.stdout });
 }
 //#endregion 🔖️BinaryPath
 
@@ -231,7 +258,6 @@ export function spawnRawMcp(bin: string, args: readonly string[] = ["stdio"]): R
       const remaining = Math.max(1, deadline - Date.now());
       const line = await nextLine(remaining);
       const parsed = JSON.parse(line) as RawJsonRpcResponse & { readonly method?: string };
-      // Server→client notifications (progress, resources/updated, …) share stdout; skip until the matching id.
       if (parsed.id === id) return parsed;
       if (typeof parsed.method === "string" && (parsed.id === undefined || parsed.id === null)) continue;
       throw new Error(`spawnRawMcp: expected response id ${id} for ${method}, got ${line.slice(0, 240)}`);
@@ -556,12 +582,6 @@ export async function runRepoMcpClientJourney(repoRoot: string,invocation:Script
 export async function runOsMcpClientJourney(repoRoot: string, folder: string, pins: McpClientE2ePinsV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).semio;
   if (!entry) return [mcpStepFailure("os: .mcp.json entry", "`.mcp.json` declares no `semio` server")];
-  // 🔒️ `--no-bridge` PINS this gate to the headless lane. Without it the gateway publishes a
-  //    rendezvous offer, a developer's live `dev s` shell dials it, `SessionChannelBinding::resolve`
-  //    answers `ChannelKind::Shell`, and this `--folder` gate silently measures — and DRIVES — that
-  //    human's open document instead of the workspace it names (measured 2026-09-20, WR3 §5.0:
-  //    "the shell reports 1 open instance(s)" in a run against a throwaway tmpdir). The shell route
-  //    has its own permanent gate, `live-agent-loop-check`; this one owns the headless route.
   return withMcpClientSessionV1(invocation,phaseControl,{command:entry.command,args:[...entry.args,...["--folder", folder, "--no-bridge"]],cwd:repoRoot,environment:{...process.env,...MCP_CLIENT_HARNESS_ENVIRONMENT}},async session=>{
   const steps: McpClientStep[] = [];
     const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: false } }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
@@ -569,10 +589,6 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     await session.notify("notifications/initialized", {});
     announce(steps, { step: "os: initialize", ok: true, detail: `server=${mcpJsonPathV1(initialized.result,["serverInfo","name"])}@${mcpJsonPathV1(initialized.result,["serverInfo","version"])} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
 
-    // 🧭️ Step 0 of the gate proper: WHICH lane is this run measuring? `context_resolve` takes the
-    //    session's channel decision and is sticky, so the value read here is the value every later
-    //    tool call uses. A `--folder --no-bridge` run that reports anything but `headless` is not a
-    //    headless measurement and every number below it would be about somebody else's shell.
     const context = await session.call("context_resolve", {});
     const resolvedChannel = String(context.structuredContent?.channel ?? "");
     announce(steps, {
@@ -588,10 +604,6 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     });
     if (resolvedChannel !== "headless") return steps;
 
-    // 🧱️ The second thing this gate establishes, before it spends a single request on a guest: is
-    //    the ONE component every dispatch row below is pinned to staged, and is it the build its
-    //    committed descriptor describes? Both answers are a file read; neither is worth a 240 s
-    //    request wall to discover.
     const staged = [pins.pluginId, pins.inferencePluginId].map((pluginId) => verifyStagedPluginComponent(repoRoot, pluginId));
     announce(steps, { step: "os: every pinned component is staged and current", ok: staged.every((verdict) => verdict.ok), detail: staged.map((verdict) => verdict.detail).join(" | "), wire: staged });
     if (!staged.every((verdict) => verdict.ok)) return steps;
@@ -602,8 +614,6 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const missingTools = requiredTools.filter((name) => !toolNames.includes(name));
     announce(steps, { step: "os: tools/list", ok: missingTools.length === 0 && toolNames.length >= 9, detail: missingTools.length === 0 ? `${toolNames.length} tools, all ${requiredTools.length} required present` : `missing: ${missingTools.join(", ")}`, wire: toolNames });
 
-    // 📄️ Cursor pagination, walked as a spec-strict client walks it: page one, then every
-    // `nextCursor` until there is none, and the concatenation must equal the whole stable list.
     const walk = await paginationWalk(session, "tools/list", "tools", (tool: any) => String(tool.name));
     announce(steps, { step: "os: tools/list pagination walk", ok: walk.ok && walk.visited.join("\0") === toolNames.join("\0"), detail: walk.ok ? `${walk.pages} page(s), ${walk.visited.length} tool(s), order identical to the unpaged list` : walk.detail, wire: { pages: walk.pages, firstCursor: walk.firstCursor } });
     const foreignCursor = await session.request("tools/list", { cursor: "someone-elses-cursor" });
@@ -627,10 +637,6 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const opened = await session.call("artifact_open", { artifactId });
     announce(steps, { step: "os: artifact_open", ok: opened.isError !== true, detail: opened.isError === true ? JSON.stringify(opened.structuredContent) : `kind=${opened.structuredContent?.kind} sizeBytes=${opened.structuredContent?.sizeBytes}`, wire: opened.structuredContent });
 
-    // 🔎️ `capabilities_search` keeps a step of ITS OWN, and it is a ranking step: the reply is read
-    //    for the properties a ranking owes an agent (ordered, filtered, unambiguous, reaching the
-    //    verb a client would look for) over the COMPILED CATALOG alone — no guest, no component, no
-    //    artifact. What it deliberately no longer does is hand the dispatch rows below their target.
     const mutations = await session.call("capabilities_search", { query: pins.searchQuery, kind: ["mutation"], artifactKind: pins.artifactKind });
     const mutationHits = (mutations.structuredContent?.results ?? []) as Array<Record<string, any>>;
     const ranking = capabilitySearchRankingVerdict(mutationHits, pins.capabilityId, pins.artifactKind);
@@ -664,30 +670,16 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const exportedBase64 = String(untrustedContent(exported).contentBase64 ?? "");
     announce(steps, { step: "os: artifact_export", ok: exported.isError !== true && exportedBase64.length > 0, detail: exported.isError === true ? `${exportTarget}: ${JSON.stringify(exported.structuredContent).slice(0, 300)}` : `artifactId=${exportTarget} port=${exported.structuredContent?.format} base64Bytes=${exportedBase64.length} (inside untrusted) declaredFormats=${JSON.stringify(exported.structuredContent?.declaredExportFormats ?? [])}`, wire: { ...exported.structuredContent, untrusted: { provenance: (exported.structuredContent?.untrusted as any)?.provenance, contentBase64: `${exportedBase64.slice(0, 32)}…` } } });
 
-    // 🎯️ Every dispatch row from here down is the PINNED verb on the PINNED artifact kind, whose
-    //    component the step above proved staged and current. Walking on to another hit when one
-    //    refuses was tried and REVERTED (WR4 §5.4): each hit belongs to a different plugin, stdio
-    //    dispatches one request at a time, and abandoning a call client-side does not free the
-    //    server — so one cold 202 MB component (`gis`) wedges every later step behind it. One
-    //    plugin per journey is also one cold component compile per journey.
     const beforeSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
     const packBefore = String(untrustedContent(beforeSnapshot).packBase64 ?? "");
     const documentBefore = snapshotDocumentBase64(beforeSnapshot);
 
     const prepared = await session.call("action_prepare", { capabilityId: pins.capabilityId, input });
     const baselineRevision = revisionOf(prepared);
-    // 🗿️ ONE artifact identity across the whole journey. `RevisionStamp.artifactId` used to carry
-    //    the PLUGIN id (`🌉️mcp/🏠️workspace/🦀️.rs` stamped `entry.plugin_id`), so `artifact_create`,
-    //    `action_invoke` and `artifact_snapshot` named two different things for one document and
-    //    `artifact_snapshot(revisionAfter.artifactId)` answered `no such artifact: note`
-    //    (`📓️ce1-…` §8 gap 4). Ticket 26/09/18 slice M8 binds the channel's session document to the
-    //    artifact this workspace created from the plugin's genesis; this row is what holds it there.
     announce(steps, { step: "os: the prepared revision names the ARTIFACT, not the plugin", ok: baselineRevision?.artifactId === typedArtifactId, detail: `revision.artifactId=${baselineRevision?.artifactId ?? "<none>"} artifact_create used ${typedArtifactId} (pinned plugin is ${pins.pluginId})`, wire: baselineRevision });
     announce(steps, { step: "os: action_prepare", ok: prepared.isError !== true, detail: prepared.isError === true ? `${pins.capabilityId} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 260)}` : `handle=${prepared.structuredContent?.preparedHandle} baseline=${stampText(baselineRevision)}`, wire: prepared.structuredContent });
     if (prepared.isError === true) return steps;
 
-    // 🔔️ `resources/subscribe` on the very artifact the prepared action will mutate — the one URI
-    // whose `notifications/resources/updated` the commit below must push.
     const watchedArtifact = baselineRevision?.artifactId ?? artifactId;
     const watchedUri = `semio://artifact/${watchedArtifact}`;
     const subscribed = await session.request("resources/subscribe", { uri: watchedUri });
@@ -702,21 +694,12 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     const revisionAfter = invoked.structuredContent?.revisionAfter as RevisionStampWire | undefined;
     announce(steps, { step: "os: action_invoke (a real mutation)", ok: invoked.isError !== true && invoked.structuredContent?.status === "SUCCEEDED" && revisionAfter?.headEditId !== undefined && revisionAfter?.headEditId !== revisionBefore?.headEditId, detail: invoked.isError === true ? JSON.stringify(invoked.structuredContent).slice(0, 300) : `status=${invoked.structuredContent?.status} ${stampText(revisionBefore)} → ${stampText(revisionAfter)} undoToken=${undoToken ?? "<none>"}`, wire: invoked.structuredContent });
 
-    // 🔔️ The push the subscription promised: a `notifications/resources/updated` naming the exact
-    // URI subscribed to, arriving without a single poll.
     const updates = session.serverNotifications().slice(notificationsBefore).filter((envelope) => envelope.method === "notifications/resources/updated");
     const updatedUris = updates.map((envelope) => String((envelope.params as any)?.uri ?? ""));
     announce(steps, { step: "os: notifications/resources/updated after the commit", ok: updatedUris.includes(watchedUri), detail: updatedUris.includes(watchedUri) ? `${updates.length} update(s), including ${watchedUri}` : `${updates.length} update(s), none naming ${watchedUri}: ${updatedUris.join(", ") || "<none>"}`, wire: updatedUris });
     const unsubscribed = await session.request("resources/unsubscribe", { uri: watchedUri });
     announce(steps, { step: "os: resources/unsubscribe", ok: !unsubscribed.error, detail: unsubscribed.error ? JSON.stringify(unsubscribed.error) : `unsubscribed from ${watchedUri}`, wire: unsubscribed.result });
 
-    // 📦️ The snapshot is taken of the artifact this journey created, by the SAME id
-    //    `action_prepare` stamped and `action_invoke` mutated — one identity, asserted above. It is
-    //    read from the live guest session the mutation went to, not from the row frozen at create
-    //    time, so the DOCUMENT bytes MUST differ across the commit: a snapshot that cannot show the
-    //    change the agent just made is worse than no snapshot, and the shipped `mutate-safely`
-    //    prompt tells an agent to confirm exactly this way. The document is `pack` AND `spr`, never
-    //    `pack` alone — see `snapshotDocumentBase64`.
     const afterSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
     const packAfter = String(untrustedContent(afterSnapshot).packBase64 ?? "");
     const afterEnvelope = afterSnapshot.structuredContent?.untrusted as Record<string, any> | undefined;
@@ -733,10 +716,6 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
     }
     const undone = await session.call("history_undo", { undoToken });
     const headAfterUndo = await headRevision(session, pins.capabilityId, input);
-    // ⚠️ `members` is the COUNT OF MEMBERS ATTEMPTED (`ActionAdapter::fan_out` returns
-    //    `undo.members.len()` whether or not a member failed) — a per-member failure travels in
-    //    `warnings`, and only an all-members failure is a tool error. A gate that read `members > 0`
-    //    alone therefore passed on a fan-out where every member warned, so `warnings` is asserted.
     const undoWarnings = (undone.structuredContent?.warnings ?? []) as string[];
     announce(steps, { step: "os: history_undo (mutation reverted)", ok: undone.isError !== true && Number(undone.structuredContent?.members ?? 0) > 0 && undoWarnings.length === 0 && headAfterUndo?.headEditId === baselineRevision?.headEditId, detail: undone.isError === true ? JSON.stringify(undone.structuredContent).slice(0, 300) : `members=${undone.structuredContent?.members} warnings=${undoWarnings.length === 0 ? "none" : undoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterUndo)} (baseline ${stampText(baselineRevision)})`, wire: undone.structuredContent });
 
@@ -765,58 +744,25 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string, pi
 
     const listed = await session.call("inference_list", {});
     const declared = (listed.structuredContent?.declared ?? []) as Array<Record<string, any>>;
-    // 💡️ The roster must CONTAIN the pinned service — the list is a union over every installed
-    //    plugin's declared roster, so which entry is first is another thing the gate must not read.
     const service = declared.find((row) => row.artifactKind === pins.inferenceArtifactKind && row.inferenceSchema === pins.inferenceSchema);
-    // 📜️ A declared row is not enough: an agent also has to be able to READ what to send. The row
-    //    must publish its payload contract (`payloadSchemaId` + an input schema), because without
-    //    one `inference_run` can only ever dispatch `{}` and the guest answers a decode fault after
-    //    the whole component has been compiled (`📓️pz2-…md` §5.2 measured 240 s of exactly that).
     const contract = service?.payload as Record<string, any> | undefined;
     const contractOk = typeof contract?.payloadSchemaId === "string" && typeof contract?.inputSchema === "string" && contract.inputSchema.length > 0;
     announce(steps, { step: "os: inference_list declares the pinned service", ok: listed.isError !== true && service !== undefined && contractOk, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : service ? `${declared.length} declared inference(s), including ${pins.inferenceArtifactKind}/${pins.inferenceSchema} by ${service.contributor || service.owner}${contractOk ? `, contract ${contract?.payloadSchemaId} (binds \`${contract?.artifactBinding?.field ?? "<none>"}\`, ${String(contract?.inputSchema ?? "").length} B input schema)` : ", publishing NO payload contract — a client cannot know what to send"}` : `${declared.length} declared inference(s), none of them ${pins.inferenceArtifactKind}/${pins.inferenceSchema}: ${declared.map((row) => `${row.artifactKind}/${row.inferenceSchema}`).join(", ")}`, wire: declared.slice(0, 8) });
     if (!service) return steps;
-    // 🗿️ The artifact the inference is RUN ON — its own kind, created through the same
-    //    `artifact_create` every other artifact in this journey goes through. It carries no row of
-    //    its own on purpose: the denominator stays comparable across slices, and a create that
-    //    fails is visible in the `inference_run` row it serves (the gateway then refuses by name,
-    //    `INPUT_INVALID … artifactId`, instead of dispatching a body no guest can decode).
     const inferenceArtifactId = `${artifactId}-inference`;
     const inferenceArtifact = await session.call("artifact_create", { artifactId: inferenceArtifactId, kind: pins.inferenceArtifactKind });
     if (inferenceArtifact.isError === true) console.log(`[client-e2e] artifact_create ${pins.inferenceArtifactKind}: ${JSON.stringify(inferenceArtifact.structuredContent).slice(0, 200)}`);
-    // 📈️ The spec's own progress mechanism, on the one tool that mints a job: the call carries
-    // `_meta.progressToken`, and every `JobRegistry` row of that job must arrive as a
-    // `notifications/progress` carrying that exact token — no `job_get` poll in this step.
     const progressToken = `m5b-${Date.now().toString(36)}`;
     const progressBefore = session.serverNotifications().length;
-    // ⏳️ A request that never answers must become a NAMED RED, not an exception: an uncaught
-    //    rejection here aborts the journey before it prints a tally or a single `FAIL` line, which
-    //    is strictly worse than a red row (WR4 §5.4 recorded the same trap for a cold `gis`).
-    //    Measured 2026-09-20: `s.wfc.bitmap.solve` did not answer within **900 000 ms** — that is
-    //    not a cold-compile budget, it is a solve that does not return, so the budget stays at the
-    //    journey's own 240 s and the row says so.
     const inferenceEnvelope = await session
       .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: pins.inferencePluginId, artifactId: inferenceArtifactId, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
 ;
     const inference = (inferenceEnvelope.error ? { isError: true, structuredContent: { code: `JSONRPC_${inferenceEnvelope.error.code}`, message: inferenceEnvelope.error.message } } : (inferenceEnvelope.result ?? {})) as McpToolReply;
     const progressRows = session.serverNotifications().slice(progressBefore).filter((envelope) => envelope.method === "notifications/progress" && (envelope.params as any)?.progressToken === progressToken);
     announce(steps, { step: "os: notifications/progress for _meta.progressToken", ok: progressRows.length > 0, detail: progressRows.length > 0 ? `${progressRows.length} progress row(s), last progress=${(progressRows[progressRows.length - 1]?.params as any)?.progress}` : `no progress notification carried token ${progressToken} — the job reported none, or the push is not wired`, wire: progressRows.map((envelope) => envelope.params) });
-    // 🛑️ MCP's own request-scoped cancellation. stdio dispatches one request at a time, so this
-    // arrives after the call it names returned: what it proves here is that the server accepts the
-    // notification, answers nothing (JSON-RPC's rule for notifications) and stays responsive.
     await session.notify("notifications/cancelled", { requestId: inferenceEnvelope.id ?? 0, reason: "client-e2e cancellation probe" });
-    // ⏳️ Same law as the `inference_run` call above, and for the same reason: this `ping` follows a
-    //    call that can still be busy in the guest, and an uncaught rejection here abandons the
-    //    journey before it prints a tally or a single `FAIL` line. Measured 2026-09-22 (slice CE3):
-    //    a `s.wfc.bitmap.solve` that did not return inside its own 240 s budget left this `ping`
-    //    unanswered too, and the whole gate died with a stack trace at 27 printed rows.
     const stillAlive = await session.request("ping", {});
     announce(steps, { step: "os: notifications/cancelled is accepted and unanswered", ok: !stillAlive.error, detail: stillAlive.error ? `the server stopped answering after notifications/cancelled: ${JSON.stringify(stillAlive.error)}` : "cancelled accepted with no response; ping still answers", wire: stillAlive.result });
-    // 🏃️ A REFUSED inference still minted a job — the gateway registers the row before it dispatches
-    //    and reports it back inside the error's own `details` — so the job rows below are read from
-    //    whichever of the two places the reply carries it. Reading only the success shape made
-    //    `job_get`/`job_cancel` unreachable the moment the plugin refused, which is exactly when a
-    //    client most needs them to work.
     const jobId = (inference.structuredContent?.jobId ?? (inference.structuredContent?.details as Record<string, unknown> | undefined)?.jobId) as string | undefined;
     announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? `${inference.structuredContent?.code}: ${inference.structuredContent?.message} ${JSON.stringify(inference.structuredContent?.details ?? null).slice(0, 300)}` : `jobId=${jobId} artifactId=${inference.structuredContent?.artifactId || "<none>"} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
 

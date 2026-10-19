@@ -4,13 +4,33 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📐️geometry/**/*",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
     "test-selection-oracle": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": ["workspace:deps-python"],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
@@ -20,6 +40,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -33,13 +61,16 @@
         "command": "bun ./📜️script.ts test oracle",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "workspace:deps-python"
       ],
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧱️regions/**/*"
       ]
     },
@@ -50,11 +81,14 @@
         "command": "bun ./📜️script.ts test oracle three",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [],
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧱️regions/**/*"
       ]
     },
@@ -65,13 +99,16 @@
         "command": "bun ./📜️script.ts test oracle shapely",
         "forwardAllArgs": true
       },
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "dependsOn": [
         "workspace:deps-python"
       ],
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/◻️2d/🧱️regions/**/*"
       ]
     }

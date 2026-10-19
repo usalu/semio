@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "source": "authenticated pinned apt metadata projected before download",
+  "dockerKey": {
+    "bytes": 3817,
+    "sha256": "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
+  },
+  "dockerPrimaryFingerprint": "9DC858229FC7DD38854AE2D88D81803C0EBFCD88",
+  "phases": [
+    {
+      "requested": [
+        "ca-certificates=20250419~deb12u1"
+      ],
+      "selected": [
+        "libssl3=3.0.22-1~deb12u1",
+        "openssl=3.0.22-1~deb12u1",
+        "ca-certificates=20250419~deb12u1"
+      ],
+      "records": [
+        {
+          "package": "libssl3",
+          "version": "3.0.22-1~deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 2039240,
+          "installedBytes": 6185984,
+          "sha256": "f0a8aa8429209e556c278a9936bbd5f7d2cdb9f7e4e23b1e43ed399217ba80c1",
+          "filename": "pool/updates/main/o/openssl/libssl3_3.0.22-1~deb12u1_amd64.deb"
+        },
+        {
+          "package": "openssl",
+          "version": "3.0.22-1~deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 1442052,
+          "installedBytes": 2369536,
+          "sha256": "6f43fb5e9f3ceb0e36c91d0a148282a8eaf174b441c17d3665b6ba049b33d2c2",
+          "filename": "pool/updates/main/o/openssl/openssl_3.0.22-1~deb12u1_amd64.deb"
+        },
+        {
+          "package": "ca-certificates",
+          "version": "20250419~deb12u1",
+          "architecture": "all",
+          "archiveBytes": 161988,
+          "installedBytes": 399360,
+          "sha256": "62b08a77d985d4253894b1f69aebda5925034ca4e294add364167fad8cb64a44",
+          "filename": "pool/updates/main/c/ca-certificates/ca-certificates_20250419~deb12u1_all.deb"
+        }
+      ],
+      "budget": {
+        "archiveBytes": 3643280,
+        "installedBytes": 8954880,
+        "metadataBytes": 19803491,
+        "conservativeInputBytes": 264699228,
+        "conservativeTemporaryBytes": 532679315
+      }
+    },
+    {
+      "requested": [
+        "gcc=4:12.2.0-3",
+        "pkg-config=1.8.1-1",
+        "docker-ce-cli=5:29.9.1-1~debian.12~bookworm",
+        "docker-compose-plugin=5.6.0-1~debian.12~bookworm"
+      ],
+      "selected": [
+        "binutils-common=2.40-2",
+        "libbinutils=2.40-2",
+        "libctf-nobfd0=2.40-2",
+        "libctf0=2.40-2",
+        "libgprofng0=2.40-2",
+        "libjansson4=2.14-2",
+        "binutils-x86-64-linux-gnu=2.40-2",
+        "binutils=2.40-2",
+        "libisl23=0.25-1.1",
+        "libmpfr6=4.2.0-1",
+        "libmpc3=1.3.1-1",
+        "cpp-12=12.2.0-14+deb12u1",
+        "cpp=4:12.2.0-3",
+        "docker-ce-cli=5:29.9.1-1~debian.12~bookworm",
+        "docker-compose-plugin=5.6.0-1~debian.12~bookworm",
+        "libcc1-0=12.2.0-14+deb12u1",
+        "libgomp1=12.2.0-14+deb12u1",
+        "libitm1=12.2.0-14+deb12u1",
+        "libatomic1=12.2.0-14+deb12u1",
+        "libasan8=12.2.0-14+deb12u1",
+        "liblsan0=12.2.0-14+deb12u1",
+        "libtsan2=12.2.0-14+deb12u1",
+        "libubsan1=12.2.0-14+deb12u1",
+        "libquadmath0=12.2.0-14+deb12u1",
+        "libgcc-12-dev=12.2.0-14+deb12u1",
+        "gcc-12=12.2.0-14+deb12u1",
+        "gcc=4:12.2.0-3",
+        "libpkgconf3=1.8.1-1",
+        "pkgconf-bin=1.8.1-1",
+        "pkgconf=1.8.1-1",
+        "pkg-config=1.8.1-1"
+      ],
+      "records": [
+        {
+          "package": "binutils-common",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 2486664,
+          "installedBytes": 15381504,
+          "sha256": "ab314134f43a0891a48f69a9bc33d825da748fa5e0ba2bebb7a5c491b026f1a0",
+          "filename": "pool/main/b/binutils/binutils-common_2.40-2_amd64.deb"
+        },
+        {
+          "package": "libbinutils",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 572104,
+          "installedBytes": 2528256,
+          "sha256": "fcf55b99e5f8a78f3c8ce9b6957f1024f394cf20c196b100d308a57e43547710",
+          "filename": "pool/main/b/binutils/libbinutils_2.40-2_amd64.deb"
+        },
+        {
+          "package": "libctf-nobfd0",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 153384,
+          "installedBytes": 308224,
+          "sha256": "ef1dfcf22de41ea90ebd3d505447ccccd999e96b85aa777a1d7d981dc3b347aa",
+          "filename": "pool/main/b/binutils/libctf-nobfd0_2.40-2_amd64.deb"
+        },
+        {
+          "package": "libctf0",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 89796,
+          "installedBytes": 237568,
+          "sha256": "3fb7b6f326be3fae4a87a3d33b9269bd06c1e4346a24bd737f265067e3b7427f",
+          "filename": "pool/main/b/binutils/libctf0_2.40-2_amd64.deb"
+        },
+        {
+          "package": "libgprofng0",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 812120,
+          "installedBytes": 4052992,
+          "sha256": "a3c4092d84f19d13caf90f3c96eec53db8819f0e3a5247434944d71ed75fa53d",
+          "filename": "pool/main/b/binutils/libgprofng0_2.40-2_amd64.deb"
+        },
+        {
+          "package": "libjansson4",
+          "version": "2.14-2",
+          "architecture": "amd64",
+          "archiveBytes": 40788,
+          "installedBytes": 103424,
+          "sha256": "3fc9742f9f1a37bcb9931df6074b4d1483419ef832ad5349f47323e75fc27864",
+          "filename": "pool/main/j/jansson/libjansson4_2.14-2_amd64.deb"
+        },
+        {
+          "package": "binutils-x86-64-linux-gnu",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 2245848,
+          "installedBytes": 11702272,
+          "sha256": "2d7ea8a570d768224d7f2424abbe6f373d2154865a1fa7f56c80d43ecf492521",
+          "filename": "pool/main/b/binutils/binutils-x86-64-linux-gnu_2.40-2_amd64.deb"
+        },
+        {
+          "package": "binutils",
+          "version": "2.40-2",
+          "architecture": "amd64",
+          "archiveBytes": 64980,
+          "installedBytes": 111616,
+          "sha256": "83c3e20b53e1fbd84d764c3ba27d26a0376e361ae5d7fb37120196934dd87424",
+          "filename": "pool/main/b/binutils/binutils_2.40-2_amd64.deb"
+        },
+        {
+          "package": "libisl23",
+          "version": "0.25-1.1",
+          "architecture": "amd64",
+          "archiveBytes": 683060,
+          "installedBytes": 2357248,
+          "sha256": "ebff0b2f8b220c74224197523019366e97ee4770d464bebc48e4865114e4da0e",
+          "filename": "pool/main/i/isl/libisl23_0.25-1.1_amd64.deb"
+        },
+        {
+          "package": "libmpfr6",
+          "version": "4.2.0-1",
+          "architecture": "amd64",
+          "archiveBytes": 700900,
+          "installedBytes": 1205248,
+          "sha256": "37b7a2b4e78890b6a074777f27b96c84f58e81558ba08410c2b6c0ca4a4ad77b",
+          "filename": "pool/main/m/mpfr4/libmpfr6_4.2.0-1_amd64.deb"
+        },
+        {
+          "package": "libmpc3",
+          "version": "1.3.1-1",
+          "architecture": "amd64",
+          "archiveBytes": 51480,
+          "installedBytes": 152576,
+          "sha256": "d7f79544790e44f9b0c8cb9034a18c58d37f8702a15f32539050718679e52f80",
+          "filename": "pool/main/m/mpclib3/libmpc3_1.3.1-1_amd64.deb"
+        },
+        {
+          "package": "cpp-12",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 9767788,
+          "installedBytes": 34660352,
+          "sha256": "fedbb98e877adde83c983c6071537ea25ac52b277ac6e4637d85025949ca1454",
+          "filename": "pool/main/g/gcc-12/cpp-12_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "cpp",
+          "version": "4:12.2.0-3",
+          "architecture": "amd64",
+          "archiveBytes": 6836,
+          "installedBytes": 30720,
+          "sha256": "a63db920f7aa1857a57beab185423deffb6111fa09437a99bbb4ef724fb7ba78",
+          "filename": "pool/main/g/gcc-defaults/cpp_12.2.0-3_amd64.deb"
+        },
+        {
+          "package": "docker-ce-cli",
+          "version": "5:29.9.1-1~debian.12~bookworm",
+          "architecture": "amd64",
+          "archiveBytes": 17594200,
+          "installedBytes": 47670272,
+          "sha256": "e96643506288cde4ce60ecbf84ec5c88d0969e9e717452442c86e33273bbfced",
+          "filename": "dists/bookworm/pool/stable/amd64/docker-ce-cli_29.9.1-1~debian.12~bookworm_amd64.deb"
+        },
+        {
+          "package": "docker-compose-plugin",
+          "version": "5.6.0-1~debian.12~bookworm",
+          "architecture": "amd64",
+          "archiveBytes": 8080860,
+          "installedBytes": 32677888,
+          "sha256": "b3e0c6c950f7a08155e65a318ced8cf2314b7fdc0617cb807283bcef3d411c40",
+          "filename": "dists/bookworm/pool/stable/amd64/docker-compose-plugin_5.6.0-1~debian.12~bookworm_amd64.deb"
+        },
+        {
+          "package": "libcc1-0",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 41736,
+          "installedBytes": 139264,
+          "sha256": "4ee6009633003f47de98333ea7f7d8835ec563ae2ac4f30251dbfee04d75d46b",
+          "filename": "pool/main/g/gcc-12/libcc1-0_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libgomp1",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 115772,
+          "installedBytes": 319488,
+          "sha256": "48fec46bda7f5b1638b9e959889bfbc20491247d402d120bb152687eb48143d7",
+          "filename": "pool/main/g/gcc-12/libgomp1_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libitm1",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 26140,
+          "installedBytes": 117760,
+          "sha256": "0ed5b35dfd1346cccbf065408ec789db6c44c1d0a16ae84533411dea09632979",
+          "filename": "pool/main/g/gcc-12/libitm1_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libatomic1",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 9376,
+          "installedBytes": 46080,
+          "sha256": "fbd4e154a6b444229ea002cc209df099209c0adc09102e5fd21239a3d2b55e2d",
+          "filename": "pool/main/g/gcc-12/libatomic1_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libasan8",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 2192652,
+          "installedBytes": 8209408,
+          "sha256": "e7ac5d797d7d438a130674a8e463530f06aa02ecf919ca054d75eaa2f7849ec7",
+          "filename": "pool/main/g/gcc-12/libasan8_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "liblsan0",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 969300,
+          "installedBytes": 3012608,
+          "sha256": "d234ab339c0ba31a4fb44e2334cf5a8d15b87f2c2f9e74fadfaa877f92dcf22a",
+          "filename": "pool/main/g/gcc-12/liblsan0_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libtsan2",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 2196972,
+          "installedBytes": 8002560,
+          "sha256": "06906663d644a75a1a836382ecd80b61461129c06f02935ce408b25809f6c958",
+          "filename": "pool/main/g/gcc-12/libtsan2_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libubsan1",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 883056,
+          "installedBytes": 2715648,
+          "sha256": "744f52adf00ffd45d44806b1c7e802a36bd27e479c9bc8457128fde357faa530",
+          "filename": "pool/main/g/gcc-12/libubsan1_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libquadmath0",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 144616,
+          "installedBytes": 299008,
+          "sha256": "3f0c9a4c730da2fdab001cae596625438598fd2996d29d888feeb4c1cdc9011f",
+          "filename": "pool/main/g/gcc-12/libquadmath0_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "libgcc-12-dev",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 2437204,
+          "installedBytes": 14626816,
+          "sha256": "d720259380a84f2ffc6fe516eff5cbe9c8a005138e8d6a5748747ba4b3404a82",
+          "filename": "pool/main/g/gcc-12/libgcc-12-dev_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "gcc-12",
+          "version": "12.2.0-14+deb12u1",
+          "architecture": "amd64",
+          "archiveBytes": 19268852,
+          "installedBytes": 69873664,
+          "sha256": "b46f33cc2ec245e435e043807038cecf4b201ef004800e9dfc1455240360e49d",
+          "filename": "pool/main/g/gcc-12/gcc-12_12.2.0-14+deb12u1_amd64.deb"
+        },
+        {
+          "package": "gcc",
+          "version": "4:12.2.0-3",
+          "architecture": "amd64",
+          "archiveBytes": 5216,
+          "installedBytes": 48128,
+          "sha256": "bb63b0fb2797e2a3a294dab8a02614930c557ec1f4ea96637c244b8b5f87e630",
+          "filename": "pool/main/g/gcc-defaults/gcc_12.2.0-3_amd64.deb"
+        },
+        {
+          "package": "libpkgconf3",
+          "version": "1.8.1-1",
+          "architecture": "amd64",
+          "archiveBytes": 36084,
+          "installedBytes": 103424,
+          "sha256": "da01fb901123ae498c36387a32240e09e1f2866810146c5a574273f7eaf31093",
+          "filename": "pool/main/p/pkgconf/libpkgconf3_1.8.1-1_amd64.deb"
+        },
+        {
+          "package": "pkgconf-bin",
+          "version": "1.8.1-1",
+          "architecture": "amd64",
+          "archiveBytes": 29472,
+          "installedBytes": 82944,
+          "sha256": "8fb5a8f83e46ad04b4cf02651ceec56c0611a335cf0d30780d859a95d0400174",
+          "filename": "pool/main/p/pkgconf/pkgconf-bin_1.8.1-1_amd64.deb"
+        },
+        {
+          "package": "pkgconf",
+          "version": "1.8.1-1",
+          "architecture": "amd64",
+          "archiveBytes": 25892,
+          "installedBytes": 66560,
+          "sha256": "4e3ce982b5fedc6c6119268435504a64f5ffcc6d93aaecaea902d816eba1215f",
+          "filename": "pool/main/p/pkgconf/pkgconf_1.8.1-1_amd64.deb"
+        },
+        {
+          "package": "pkg-config",
+          "version": "1.8.1-1",
+          "architecture": "amd64",
+          "archiveBytes": 13688,
+          "installedBytes": 29696,
+          "sha256": "312b2bdeff4671f8e0d589c124554890e944dd083061e9ad6f129bc76a970765",
+          "filename": "pool/main/p/pkgconf/pkg-config_1.8.1-1_amd64.deb"
+        }
+      ],
+      "budget": {
+        "archiveBytes": 75390116,
+        "installedBytes": 269828096,
+        "metadataBytes": 20019339,
+        "conservativeInputBytes": 337309456,
+        "conservativeTemporaryBytes": 1126388431
+      }
+    }
+  ]
+}

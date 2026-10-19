@@ -1,4 +1,4 @@
-//! Inverse for `remove-slab`.
+//! ↩️ Inverse for `remove-slab`.
 use crate::remove_slab::RemoveSlab;
 use crate::insert_slab::InsertSlab;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

@@ -1,6 +1,6 @@
 //! 🧰️ Emits every explicitly authored catalog, placed design, child and representation field.
 use crate::schema::snapshot::{SemioKitSnapshot, SemioKitType, SemioKitDesign, SemioKitPiece, SemioKitConnection};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};

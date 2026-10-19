@@ -1,0 +1,1528 @@
+[
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts",
+  "after": "@semio-tech/framework/browser-bundle/action-handoff/requests",
+  "pkg": "@semio-tech/framework",
+  "sub": "./browser-bundle/action-handoff/requests"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+  "after": "@semio-tech/framework/browser-bundle/action-handoff",
+  "pkg": "@semio-tech/framework",
+  "sub": "./browser-bundle/action-handoff"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/🟦️.ts",
+  "before": "../../../../../../🔨️modules/🐚️shell/🟦️.ts",
+  "after": "@semio-tech/framework/shell",
+  "pkg": "@semio-tech/framework",
+  "sub": "./shell"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts",
+  "before": "../../../../../../🔨️modules/🐚️shell/🟦️.ts",
+  "after": "@semio-tech/framework/shell",
+  "pkg": "@semio-tech/framework",
+  "sub": "./shell"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts",
+  "before": "../../../../../../🔨️modules/🐚️shell/🟦️.ts",
+  "after": "@semio-tech/framework/shell",
+  "pkg": "@semio-tech/framework",
+  "sub": "./shell"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+  "before": "../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts",
+  "after": "@semio-tech/framework-actor/shard-client/wire",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./shard-client/wire"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+  "before": "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+  "after": "@semio-tech/framework-actor/wire-turn",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./wire-turn"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+  "before": "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
+  "after": "@semio-tech/framework-actor/wire-turn",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./wire-turn"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧰️settlement-test-kit/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+  "after": "@semio-tech/framework-actor/shard-client",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./shard-client"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🧪️tests/🖼️canvas-runtime-assets/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+  "after": "@semio-tech/framework-canvas-ts/runtime-assets",
+  "pkg": "@semio-tech/framework-canvas-ts",
+  "sub": "./runtime-assets"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/♻️retirement/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts",
+  "after": "@semio-tech/framework-compiler-ts/syntax/module-tree",
+  "pkg": "@semio-tech/framework-compiler-ts",
+  "sub": "./syntax/module-tree"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts",
+  "before": "../../../../🧪️tests/🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json",
+  "after": "@semio-tech/framework-os/testing/fixtures/channel/document-archive.json",
+  "pkg": "@semio-tech/framework-os",
+  "sub": "./testing/fixtures/channel/document-archive.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+  "before": "../../📇️directory/🛡️access-policy/🔣️.json",
+  "after": "@semio-tech/framework-os/modules/directory/access-policy.json",
+  "pkg": "@semio-tech/framework-os",
+  "sub": "./modules/directory/access-policy.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts",
+  "before": "../../../../../🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/♻️close/🔣️.json",
+  "after": "@semio-tech/framework-plugin/reactor/jobs/infer/schema/close.json",
+  "pkg": "@semio-tech/framework-plugin",
+  "sub": "./reactor/jobs/infer/schema/close.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts",
+  "before": "../../../../../🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/⚠️failure/🔣️.json",
+  "after": "@semio-tech/framework-plugin/reactor/jobs/infer/schema/failure.json",
+  "pkg": "@semio-tech/framework-plugin",
+  "sub": "./reactor/jobs/infer/schema/failure.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts",
+  "before": "../../../../../🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/🔣️.json",
+  "after": "@semio-tech/framework-plugin/reactor/jobs/infer/schema.json",
+  "pkg": "@semio-tech/framework-plugin",
+  "sub": "./reactor/jobs/infer/schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts",
+  "before": "../../../../../🔌️plugin/⚛️reactor/💼️jobs/🧬️schema/🤝️loan/🔣️.json",
+  "after": "@semio-tech/framework-plugin/reactor/jobs/schema/loan.json",
+  "pkg": "@semio-tech/framework-plugin",
+  "sub": "./reactor/jobs/schema/loan.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts",
+  "before": "../../../../../🔌️plugin/💡️inference/🚪️gateway/🧬️schema/♻️close/🔣️.json",
+  "after": "@semio-tech/framework-plugin/inference/gateway/schema/close.json",
+  "pkg": "@semio-tech/framework-plugin",
+  "sub": "./inference/gateway/schema/close.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🎚️config/🟦️.ts",
+  "before": "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+  "after": "@semio-tech/framework-renderer-react/testing/config",
+  "pkg": "@semio-tech/framework-renderer-react",
+  "sub": "./testing/config"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🏭️build-owners/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+  "after": "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts",
+  "pkg": "@semio-tech/ui-styling",
+  "sub": "./builder/vite"
+ },
+ {
+  "file": "✏️s/🔌️plugins/📏️layout/🧪️tests/🎚️renderer-contract/🟦️.ts",
+  "before": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+  "after": "@semio-tech/framework-renderer-react/testing/config",
+  "pkg": "@semio-tech/framework-renderer-react",
+  "sub": "./testing/config"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🎚️config/📺️renderer/🟦️.ts",
+  "before": "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+  "after": "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🧪️testing/🎚️config/🟦️.ts",
+  "pkg": "@semio-tech/framework-renderer-react",
+  "sub": "./testing/config"
+ },
+ {
+  "file": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🎞️scenes/🟦️.ts",
+  "before": "../../../../../../🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
+  "after": "@semio-tech/framework/interaction",
+  "pkg": "@semio-tech/framework",
+  "sub": "./interaction"
+ },
+ {
+  "file": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🔁️story-reducers/🟦️.ts",
+  "before": "../../../../../../🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
+  "after": "@semio-tech/framework/interaction",
+  "pkg": "@semio-tech/framework",
+  "sub": "./interaction"
+ },
+ {
+  "file": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+  "after": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🧪️testing/🎚️config/🟦️.ts",
+  "pkg": "@semio-tech/framework-renderer-react",
+  "sub": "./testing/config"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json",
+  "after": "@semio-tech/framework/modules/filesystem/observation/journal/schema.json",
+  "pkg": "@semio-tech/framework",
+  "sub": "./modules/filesystem/observation/journal/schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json",
+  "after": "@semio-tech/framework/modules/filesystem/observation/journal/schema.json",
+  "pkg": "@semio-tech/framework",
+  "sub": "./modules/filesystem/observation/journal/schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json",
+  "after": "@semio-tech/framework/modules/filesystem/observation/journal/schema.json",
+  "pkg": "@semio-tech/framework",
+  "sub": "./modules/filesystem/observation/journal/schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+  "after": "@semio-tech/framework/filesystem",
+  "pkg": "@semio-tech/framework",
+  "sub": "./filesystem"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+  "after": "@semio-tech/framework/filesystem",
+  "pkg": "@semio-tech/framework",
+  "sub": "./filesystem"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+  "after": "@semio-tech/framework/filesystem",
+  "pkg": "@semio-tech/framework",
+  "sub": "./filesystem"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+  "after": "@semio-tech/framework/filesystem",
+  "pkg": "@semio-tech/framework",
+  "sub": "./filesystem"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔌️adapter-invocation/🟦️.ts",
+  "before": "../../../../../../🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "after": "@semio-tech/framework/modules/test/schema.json",
+  "pkg": "@semio-tech/framework",
+  "sub": "./modules/test/schema.json"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+  "before": "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts",
+  "after": "@semio-tech/framework-os-mcp",
+  "pkg": "@semio-tech/framework-os-mcp",
+  "sub": "."
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",
+  "before": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts",
+  "after": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/📋️contract/🟦️.ts",
+  "pkg": "@semio-tech/framework-plugin",
+  "sub": "./model/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs",
+  "before": "../../../../../../../📓️print/📦️artifacts/🟦️.ts",
+  "after": "../../../../../../../📓️print/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+  "pkg": "@semio-tech/print",
+  "sub": "./artifacts"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/source/admission/read",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/source/admission/read"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+  "after": "@semio-tech/process/routing/invocation/process",
+  "pkg": "@semio-tech/process",
+  "sub": "./routing/invocation/process"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+  "after": "@semio-tech/process/routing/invocation/process",
+  "pkg": "@semio-tech/process",
+  "sub": "./routing/invocation/process"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts",
+  "before": "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "after": "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/source/admission/read"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "after": "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/source/admission/read"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+  "before": "./../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧪️tests/📥️canonical/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./routing/invocation/process"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts",
+  "before": "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+  "before": "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/source/admission",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/source/admission"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+  "before": "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/source/admission",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/source/admission"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts",
+  "before": "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+  "after": "@semio-tech/process/wasm-build",
+  "pkg": "@semio-tech/process",
+  "sub": "./wasm-build"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts",
+  "before": "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+  "after": "@semio-tech/process/wasm-build",
+  "pkg": "@semio-tech/process",
+  "sub": "./wasm-build"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+  "after": "@semio-tech/process/testing/invocation",
+  "pkg": "@semio-tech/process",
+  "sub": "./testing/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.d.mts",
+  "before": "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "after": "@semio-tech/process/artifacts/native-build/storage/platform/contract",
+  "pkg": "@semio-tech/process",
+  "sub": "./artifacts/native-build/storage/platform/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+  "before": "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+  "after": "@semio-tech/process/leases",
+  "pkg": "@semio-tech/process",
+  "sub": "./leases"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts",
+  "before": "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts",
+  "after": "@semio-tech/process/routing",
+  "pkg": "@semio-tech/process",
+  "sub": "./routing"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts",
+  "before": "../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+  "after": "../../../../../../📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./build/inference"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🏷️localized-label-fixture/🟦️.ts",
+  "before": "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts",
+  "after": "@semio-tech/framework/ui/testing/fixtures",
+  "pkg": "@semio-tech/framework",
+  "sub": "./ui/testing/fixtures"
+ },
+ {
+  "file": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📦️package-assets/🟦️.ts",
+  "before": "../../../🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts",
+  "after": "@semio-tech/framework/ui/testing/fixtures",
+  "pkg": "@semio-tech/framework",
+  "sub": "./ui/testing/fixtures"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🟦️.ts",
+  "before": "../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+  "after": "@semio-tech/framework-actor/shard-client",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./shard-client"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/📮️shard-client/🟦️.ts",
+  "before": "../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+  "after": "@semio-tech/framework-actor/shard-client",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./shard-client"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🟦️typescript/🎭️actor/🖼️wire-turn/🟦️.ts",
+  "before": "../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+  "after": "@semio-tech/framework-actor/wire-turn",
+  "pkg": "@semio-tech/framework-actor",
+  "sub": "./wire-turn"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🟦️typescript/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+  "before": "../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+  "after": "@semio-tech/framework-kernel/return/content/input",
+  "pkg": "@semio-tech/framework-kernel",
+  "sub": "./return/content/input"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🟦️typescript/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+  "before": "../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+  "after": "@semio-tech/framework-kernel/return/content/input",
+  "pkg": "@semio-tech/framework-kernel",
+  "sub": "./return/content/input"
+ },
+ {
+  "file": "🧰️framework/📦️packages/🟦️typescript/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧫️fixtures/🟦️.ts",
+  "before": "../../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/🟦️.ts",
+  "after": "@semio-tech/framework-os/modules/store/testing/fixtures",
+  "pkg": "@semio-tech/framework-os",
+  "sub": "./modules/store/testing/fixtures"
+ },
+ {
+  "file": "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️renderer-contract/🟦️.ts",
+  "before": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+  "after": "@semio-tech/framework-renderer-react/testing/config",
+  "pkg": "@semio-tech/framework-renderer-react",
+  "sub": "./testing/config"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+  "after": "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/⚡️caching/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/caching"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+  "after": "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/⚡️caching/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/caching"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+  "after": "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/⚡️caching/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/caching"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "after": "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/environment/test-output"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "after": "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/environment/test-output"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts",
+  "before": "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "after": "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/environment/test-output"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts",
+  "before": "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+  "after": "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/reading/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts",
+  "before": "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+  "after": "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./cargo/caching/artifacts/wasm/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+  "before": "../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "after": "../../📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/tools"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+  "before": "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/tools"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+  "before": "../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "after": "../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/tools"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+  "before": "../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "after": "../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/tools"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+  "before": "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/tools"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+  "before": "../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+  "after": "../../📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./cargo/caching/artifacts/native-build/published"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+  "before": "./../../📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+  "after": "../../📚️library/📦️packages/🟦️typescript/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./cargo/dependencies/contract"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts",
+  "before": "../../../💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/paths"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts",
+  "before": "../../📜️script.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/⚡️caching/🚀️bootstrap/📜️script/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/caching/bootstrap/script"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+  "before": "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🩺️readiness/🟦️.ts",
+  "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+  "before": "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+  "before": "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+  "before": "../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+  "before": "../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️.ts",
+  "before": "../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🟦️.ts",
+  "before": "../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+  "before": "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+  "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️capture/🟦️.ts",
+  "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+  "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+  "before": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+  "before": "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "after": "../../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+  "before": "../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "after": "../../../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+  "before": "../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "after": "../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+  "before": "../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "after": "../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts",
+  "before": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+  "before": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/native-orchestration/invocation/preparation"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+  "before": "../../../../🗂️workspaces/🟦️.ts",
+  "after": "../../../../📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./inventory/workspaces"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+  "before": "../../../../📚️library/🗂️workspaces/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./inventory/workspaces"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+  "before": "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening/store"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+  "before": "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening/store"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🟦️.ts",
+  "before": "../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+  "after": "../../📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./storage/enforcement/budget/opening/store"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+  "before": "../../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./artifacts/root"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+  "before": "../../../../📚️library/🏃️process/🌿️environment/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🌿️environment/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./process/environment"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+  "before": "../../../../../📚️library/🏗️build/🕸️graph/🟦️.ts",
+  "after": "../../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🕸️graph/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./build/graph"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+  "before": "../../../../../📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts",
+  "after": "../../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🧭️selection/📥️closure/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./build/selection/closure"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+  "before": "../../../../../📚️library/🏗️build/🧭️selection/🟦️.ts",
+  "after": "../../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🧭️selection/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./build/selection"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+  "before": "../../../../📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️inputs/📂️membership/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./build/inputs/membership"
+ },
+ {
+  "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+  "before": "../../../../📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+  "after": "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+  "pkg": "@semio-tech/repo-lib",
+  "sub": "./inventory/dependencies/typescript/configured"
+ }
+]

@@ -74,9 +74,6 @@ describe("scope-safe Shell presence", () => {
     expect(scopedPresencePeersV1(event(a), a.scope, null)).toEqual([]);
   });
 
-  // 👁️ Row 3.4 (C13, measured on hub 7800 p24): the roster is document-wide (contract §C7.0) — a Spectator on the viewer
-  // surface and an author on the editor surface of ONE document see each other; only the message's own verified surface must
-  // be the one the session was admitted on.
   it("projects every peer of the document whatever surface it runs, for the editor and the viewer alike", () => {
     const [a, b] = fixture.cases;
     const both = (surface: string) => ({ ...event(a), verifiedSurfaceId: surface, event: { kind: "presence" as const, peers: [a.peer, { ...b.peer, surface: b.surface }] } });
@@ -89,8 +86,6 @@ describe("scope-safe Shell presence", () => {
     expect(scopedPresencePeersV1(both(b.surface), a.scope, a.surface), "a message verified on another surface than the session's").toEqual([]);
   });
 
-  // 👕️ C13 (note on hub 7800 p24): the ink host publishes and paints presence through the shared canvas camera, so the same
-  // ink point lands on the same pixel of the local ink view whatever the camera (offset, zoom, viewport size).
   it("maps the ink camera onto the shared canvas presence camera exactly", () => {
     const cases: readonly (readonly [{ x: number; y: number; zoom: number }, readonly [number, number], readonly [number, number]])[] = [
       [{ x: 0, y: 0, zoom: 1 }, [800, 600], [0, 0]],
@@ -107,9 +102,6 @@ describe("scope-safe Shell presence", () => {
     }
   });
 
-  // 🤖️ Outcome 3 × 4: an AI agent acting under a delegated credential is its own principal, and a
-  // human collaborator must be able to SEE that in the roster rather than mistaking it for the
-  // person who delegated to it.
   it("projects an agent peer as its own principal and badges it distinctly from the delegating human", () => {
     const [a] = fixture.cases;
     const agentPeer = { ...a.peer, actor: "actor-agent", userId: "user-a", label: "Drafting agent", principalKind: "agent" as const };
@@ -121,7 +113,6 @@ describe("scope-safe Shell presence", () => {
     expect(projected[1]).toMatchObject({ actor: "actor-agent", label: "Drafting agent", isAgent: true });
     expect(projected[1]?.actor, "the agent is a separate roster row, never folded into its delegating human").not.toBe(projected[0]?.actor);
 
-    // 🛡️ Absent and "human" are the same thing — a client cannot promote itself by omitting it.
     const claimedHuman = { ...event(a), event: { kind: "presence" as const, peers: [{ ...agentPeer, principalKind: "human" as const }] } };
     expect(scopedPresencePeersV1(claimedHuman, a.scope, a.surface)[0]?.isAgent).toBeUndefined();
   });
@@ -147,8 +138,6 @@ describe("scope-safe Shell presence", () => {
     await uiI18n.changeLanguage("en");
   });
 
-  // 💓️ ticket 26/09/18 slice PR1 — the shell half of the beat/eviction contract, read from the SAME
-  // fixture the hub's `presence_liveness_contract_matches_the_shared_fixture` reads.
   it("beats within its own interval and never lets a wedged document component silence presence", async () => {
     expect(presenceLiveness.schema).toBe("semio.presence.liveness/v1");
     expect(presenceLiveness.constants.heartbeatIntervalMs).toBe(PRESENCE_HEARTBEAT_INTERVAL_MS);
@@ -161,19 +150,13 @@ describe("scope-safe Shell presence", () => {
     expect(PRESENCE_LIVE_VIEW_BEAT_INTERVAL_MS).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
     for (const vector of law("a-moving-pointer-beats-live").vectors!) expect(presenceLiveViewBeatDelayMsV1(vector.lastBeatAtMs, vector.nowMs), JSON.stringify(vector)).toBe(vector.delayMs);
 
-    // A document component that answers never is the exact shape that silenced the heartbeat: the
-    // beat must still resolve, without a pack, well inside one interval.
     const wedged = { ephemeralSnapshot: () => new Promise<{ readonly presence: readonly number[] } | null>(() => undefined) };
     const started = Date.now();
     await expect(presenceEphemeralSnapshotWithinBoundV1(wedged, 11, 30)).resolves.toBeUndefined();
     expect(Date.now() - started).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
-    // A thrown snapshot is the same answer: presence is not where a document fault surfaces.
     await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.reject(new Error("browser actor child: invocation rejected")) }, 12, 30)).resolves.toBeUndefined();
-    // A healthy document still carries its pack.
     await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.resolve({ presence: [7, 7] }) }, 13, 30)).resolves.toEqual({ presence: [7, 7] });
-    // The ABI's own "no pack right now" is `null`, which reaches the beat as the same absence.
     await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.resolve(null) }, 15, 30)).resolves.toBeUndefined();
-    // A plugin with no snapshot at all beats identity-only rather than throwing.
     await expect(presenceEphemeralSnapshotWithinBoundV1({}, 14, 30)).resolves.toBeUndefined();
   });
 

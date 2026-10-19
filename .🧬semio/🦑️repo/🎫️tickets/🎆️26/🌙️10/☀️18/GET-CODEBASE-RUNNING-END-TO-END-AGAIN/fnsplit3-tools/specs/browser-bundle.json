@@ -1,0 +1,113 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts",
+ "factory": "createBrowserBundleTests",
+ "param": "dependencies",
+ "paramType": "import(\"../../🌐️browser-bundle/📜️script.ts\").BrowserBundleTestDependencies",
+ "extraParams": [
+  {
+   "name": "source",
+   "type": "{ directory: string; url: string }"
+  }
+ ],
+ "destructureLine": 7,
+ "aliasLines": [
+  8
+ ],
+ "rootEmoji": "🌐",
+ "rootDocText": "Composes the browser bundle tests: codegen, closed actor bundle, host activation and the closed component factory over one dependency bag.",
+ "rootReturns": [
+  "testClosedBrowserComponentFactory",
+  "testBrowserCodegenCapsule",
+  "testBrowserCodegenSources",
+  "testBrowserCodegenPolicy",
+  "testBrowserActorCodegenManifest",
+  "testClosedBrowserActorBundle",
+  "testBrowserHostActivation"
+ ],
+ "children": [
+  {
+   "dir": "🧬️browser-codegen-tests",
+   "doc": "🧬️ The browser codegen tests: compiler capsule, captured sources, policy snapshots, the async task return lift and the generated manifest.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createBrowserBundleTests}: a factory over the same `dependencies` bag and `source` as the root, returning its test functions.",
+   "name": "createBrowserCodegenTests",
+   "emoji": "🏗",
+   "fnDoc": "Builds the browser codegen test functions over the shared dependency bag.",
+   "fns": [
+    "testBrowserCodegenCapsule",
+    "testBrowserCodegenSources",
+    "testBrowserCodegenPolicy",
+    "testAsyncTaskReturnLift",
+    "testBrowserActorCodegenManifest"
+   ],
+   "returns": [
+    "testBrowserCodegenCapsule",
+    "testBrowserCodegenSources",
+    "testBrowserCodegenPolicy",
+    "testAsyncTaskReturnLift",
+    "testBrowserActorCodegenManifest"
+   ]
+  },
+  {
+   "dir": "🛡️actor-bundle-tests",
+   "doc": "🛡️ The closed browser actor bundle test: a real canonical pure import and exact actor shutdown.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createBrowserBundleTests}: a factory over the same `dependencies` bag and `source` as the root, returning its test functions.",
+   "name": "createBrowserActorBundleTests",
+   "emoji": "🏗",
+   "fnDoc": "Builds the closed browser actor bundle test over the shared dependency bag.",
+   "fns": [
+    "testClosedBrowserActorBundle"
+   ],
+   "returns": [
+    "testClosedBrowserActorBundle"
+   ]
+  },
+  {
+   "dir": "🪢️host-activation-tests",
+   "doc": "🪢️ The browser host activation test: actor-local host request and stream retirement against schema-owned traces.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createBrowserBundleTests}: a factory over the same `dependencies` bag and `source` as the root, returning its test functions.",
+   "name": "createBrowserHostActivationTests",
+   "emoji": "🏗",
+   "fnDoc": "Builds the browser host activation test over the shared dependency bag.",
+   "fns": [
+    "testBrowserHostActivation"
+   ],
+   "returns": [
+    "testBrowserHostActivation"
+   ]
+  },
+  {
+   "dir": "🏭️component-factory-test",
+   "doc": "🏭️ The closed browser component factory test: AJV, jco, the native WebAssembly oracle, hostile sources and cancellation.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createBrowserBundleTests}: a factory over the same `dependencies` bag and `source` as the root, returning its test functions.",
+   "name": "createClosedBrowserComponentFactoryTest",
+   "emoji": "🔧",
+   "fnDoc": "Builds the closed browser component factory test, which first runs every other browser bundle test.",
+   "fns": [
+    "testClosedBrowserComponentFactory"
+   ],
+   "returns": [
+    "testClosedBrowserComponentFactory"
+   ],
+   "needs": [
+    {
+     "child": 0,
+     "names": [
+      "testBrowserCodegenCapsule",
+      "testBrowserCodegenSources",
+      "testBrowserCodegenPolicy",
+      "testAsyncTaskReturnLift",
+      "testBrowserActorCodegenManifest"
+     ]
+    },
+    {
+     "child": 2,
+     "names": [
+      "testBrowserHostActivation"
+     ]
+    },
+    {
+     "child": 1,
+     "names": [
+      "testClosedBrowserActorBundle"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -23,8 +23,6 @@ export function testCacheDir(repoRoot: string, child: string): string {
   if (!taxonomy.testOutputChildDirs.includes(child)) throw new Error(`unknown test cache child dir ${JSON.stringify(child)}`);
   const scope = process.env.SEMIO_TEST_OUTPUT_SCOPE;
   if (scope !== undefined) {
-    // 🥒️A project name is a canonical, emoji-prefixed case slug (see `canonicalCase`), never ASCII-only —
-    // this only rejects what would escape the two path segments it becomes (`/`, `.`, `..`, empty, NUL).
     const segments = scope.split("/");
     if (segments.length !== 2 || segments.some((segment) => segment === "" || segment === "." || segment === ".." || segment.includes("\0") || segment.includes("\\") || segment.includes(":"))) throw new Error(`invalid test output scope ${JSON.stringify(scope)}`);
     return repositoryTestArtifactPathV1(repoRoot,child);

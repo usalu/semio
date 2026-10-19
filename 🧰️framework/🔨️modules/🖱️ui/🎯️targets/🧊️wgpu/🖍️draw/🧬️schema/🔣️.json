@@ -177,7 +177,9 @@
           "source": {
             "enum": [
               "🔧️pipeline/🏭️factory/🎯️gpu-targets-and-pipeline-resources/🦀️.rs",
-              "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🦀️.rs"
+              "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🔰️base-resources-and-ui-pipelines/🦀️.rs",
+              "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🎭️material-pipelines/🦀️.rs",
+              "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🖼️textured-grid-and-post-pipelines/🦀️.rs"
             ]
           },
           "symbols": {

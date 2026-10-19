@@ -1,4 +1,4 @@
-//! `upsert-plated-panel` — upsert a `PlatedPanel` by id into `plated_panels`.
+//! 🧬️ `upsert-plated-panel` — upsert a `PlatedPanel` by id into `plated_panels`.
 
 use semio_s_artifact_norm_en1993_model::{PlatedPanel, En1993Snapshot};
 

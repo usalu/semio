@@ -17,7 +17,6 @@ pub fn inverse<Op: From<crate::edit_paint_layer::EditPaintLayer>>(payload: &Edit
             let start = run.offset as usize;
             let bytes = pixels
                 .map(|buffer| {
-                    // 🎨️ A sparse (never painted) layer reads as the opaque-white default.
                     if buffer.is_empty() {
                         return vec![255; run.bytes.len()];
                     }

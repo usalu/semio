@@ -17,7 +17,7 @@ impl ChangeChartValue{
   })
  }
  /// 🫳️ Decodes the same immutable source and verifies canonical bytes under caller controls.
- pub fn decode_op_span(source:protocol::ByteSpan<'_>,options:&protocol::codec::PackDecodeOptions,canonical_options:&protocol::codec::PackEncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Self,protocol::ProtocolError>{
+ pub fn decode_op_span(source:protocol::ByteSpan<'_>,options:&protocol::codec::PackDecodeOptions,canonical_options:&protocol::codec::PackEncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<Self,protocol::ProtocolError>{
   decoding.checkpoint().map_err(protocol::PackRefusal::from)?;
   if source.len()as u64>options.limits.max_file_len{return Err(protocol::PackRefusal::LimitExceeded{kind:semio_framework_value::ValueRefusalKind::OwnershipLimit,limit:"Chart operation source byte length"}.into());}
   if source.get(0)!=Some(&1)||source.get(1)!=Some(&1){return Err(protocol::PackRefusal::RetainedMalformed{kind:semio_framework_value::ValueRefusalKind::InvalidValue,what:"Chart operation format/tag",offset:0,detail:"expected exact [1,1] header"}.into());}

@@ -4,7 +4,7 @@ import {resolve} from "node:path";
 import {readFileSync} from "node:fs";
 import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 class CompositionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -53,7 +53,7 @@ class PlaygroundSessionScript extends BundleScript {
 }
 class CatalogPublicationScript extends BundleScript {
   async run(args:string[]):Promise<void>{
-    if(args.length!==1||!["generate","check","preview","verify"].includes(args[0]!))throw Error("catalog-publication requires generate, check, preview or verify");
+    if(args.length!==1||!["generate","check","preview","verify"].includes(args[0]!))throw new Error("catalog-publication requires generate, check, preview or verify");
     const {specificCatalogPublicationV1}=await import("./🧩️catalog/📦️packages/🟦️typescript/📣️publication/🟦️.ts");
     const {GenerateScript,CheckGeneratedScript,PreviewGeneratedScript,CheckScript}=await import("../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
     const selected=args[0]==="generate"?GenerateScript:args[0]==="check"?CheckGeneratedScript:args[0]==="preview"?PreviewGeneratedScript:CheckScript;
@@ -62,7 +62,7 @@ class CatalogPublicationScript extends BundleScript {
 }
 class CatalogPublicationTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
-    if(args.length)throw Error("catalog-publication-test accepts no arguments");
+    if(args.length)throw new Error("catalog-publication-test accepts no arguments");
     const {runOwnedCommand}=await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️rebuild/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts")],this.repoRoot,"catalog-publication",120000,{signal:this.invocation.control.signal});
   }
@@ -83,10 +83,10 @@ class McpClientEndToEndScript extends BundleScript {
       for(const step of steps)console.log(`${step.ok?"PASS":"FAIL"}  ${step.step} — ${step.detail}`);
       const failed=steps.filter(step=>!step.ok);
       console.log(`mcp-client-e2e: ${steps.length-failed.length}/${steps.length} steps green over the two real .mcp.json servers.`);
-      if(failed.length)throw Error(`mcp-client-e2e: ${failed.length} step(s) red: ${failed.map(step=>step.step).join(", ")}`);
+      if(failed.length)throw new Error(`mcp-client-e2e: ${failed.length} step(s) red: ${failed.map(step=>step.step).join(", ")}`);
     };
     const selected=args[flag+1];
-    if(flag>=0){if(!selected)throw Error("Selected MCP workspace required");await run(join(this.repoRoot,selected),phase);}else await withMcpClientWorkspaceV1(this.invocation,phase,run);
+    if(flag>=0){if(!selected)throw new Error("Selected MCP workspace required");await run(join(this.repoRoot,selected),phase);}else await withMcpClientWorkspaceV1(this.invocation,phase,run);
   }
 }
 /** 🪁️ `typecheck` — every TypeScript source of `✏️s/` (all plugins, modules and the dev layer) against the compiler in one program (`../tsconfig.json`), so no plugin package needs a `tsconfig.json` of its own. */

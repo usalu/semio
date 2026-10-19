@@ -321,7 +321,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return nested(RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() }); }
         if let Some(fault) = self.fault.as_ref() { let release_bytes=match &fault.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(text)=>text.capacity()};return Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() }); }
         if let Some(owner)=self.registry_retirement.as_ref(){return artifact_retirement_box_demands(owner,body);}
-        if self.original_registry.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<SnapshotReadRegistryAliasRetirement>()+size_of::<Option<super::snapshot_read_registry_handle::SnapshotReadRegistryHandle>>()+size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>(),capacity_bytes:size_of::<SnapshotReadRegistryAliasRetirement>(),depth:1,..Default::default()});}
+        if self.original_registry.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<SnapshotReadRegistryAliasRetirement>()+size_of::<Option<semio_framework_value_snapshot_read::snapshot_read_registry_handle::SnapshotReadRegistryHandle>>()+size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>(),capacity_bytes:size_of::<SnapshotReadRegistryAliasRetirement>(),depth:1,..Default::default()});}
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
@@ -334,7 +334,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     }
 
     /// 🏷️ The id of the action or command this gesture publishes for, stamped on the gesture's new edit (an amend keeps
-    /// the verb of the edit it extends). See [`crate::os_spr::command::Edit::verb`].
+    /// the verb of the edit it extends). See [`semio_framework_os_spr::command::Edit::verb`].
     pub fn set_verb(&mut self, verb: Option<String>) {
         self.verb = verb.filter(|value| !value.is_empty());
     }
@@ -367,10 +367,10 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         if self.phase != ArtifactStoreOneItemPublicationPhase::Publishing || self.stage.as_ref().is_none_or(|stage| stage.post.is_none()) {
             return None;
         }
-        if self.stage.as_ref()?.diagnostics.row_count()!=0 && (!self.stage.as_ref()?.diagnostics.joined_transfer_ready() || grant.maximum_items==0 || grant.maximum_depth==0 || grant.maximum_copy_bytes<size_of::<crate::os_spr::command::MutationMessagePublication>()) {
+        if self.stage.as_ref()?.diagnostics.row_count()!=0 && (!self.stage.as_ref()?.diagnostics.joined_transfer_ready() || grant.maximum_items==0 || grant.maximum_depth==0 || grant.maximum_copy_bytes<size_of::<semio_framework_os_spr::command::MutationMessagePublication>()) {
             return None;
         }
-        if self.stage.as_ref()?.diagnostics.row_count()!=0 && (!self.stage.as_ref()?.diagnostics.joined_transfer_ready() || grant.maximum_items==0 || grant.maximum_depth==0 || grant.maximum_copy_bytes<size_of::<crate::os_spr::command::MutationMessagePublication>()) { return None; }
+        if self.stage.as_ref()?.diagnostics.row_count()!=0 && (!self.stage.as_ref()?.diagnostics.joined_transfer_ready() || grant.maximum_items==0 || grant.maximum_depth==0 || grant.maximum_copy_bytes<size_of::<semio_framework_os_spr::command::MutationMessagePublication>()) { return None; }
         let authority = Arc::clone(self.authority.as_ref()?);
         let stage = self.take_stage()?;
         let ArtifactStoreBatchStage { edit, post, local_actor: _, applied_edit_id, tail_edit_id, digest, mut diagnostics, .. } = *stage;

@@ -1,7 +1,7 @@
 //! 🏷️ Retains validated canonical symbol spans in their original immutable wire owner.
 
 use crate::RetainedUtf8Cursor; use semio_framework_pack_format_retained::{RetainedVarintCursor, RetainedVarintStep};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
 use std::mem::size_of;
 

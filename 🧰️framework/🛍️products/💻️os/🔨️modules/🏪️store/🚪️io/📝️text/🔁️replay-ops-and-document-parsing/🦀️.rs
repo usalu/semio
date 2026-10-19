@@ -14,7 +14,7 @@ where
     let mut id = String::new();
     let mut edits: Vec<Edit<Mutation>> = Vec::new();
     let mut transitions: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
-    let mut inverse_by_edit: HashMap<String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>> = HashMap::new();
+    let mut inverse_by_edit: HashMap<String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>> = HashMap::new();
     let mut metadata_by_edit: HashMap<String, HashMap<u32, MutationMeta>> = HashMap::new();
     let mut messages_by_edit: HashMap<String, Vec<semio_framework_os_spr::MutationMessage>> = HashMap::new();
     let mut message_order = Vec::new();

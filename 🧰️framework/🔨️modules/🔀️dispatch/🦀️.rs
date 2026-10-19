@@ -330,12 +330,6 @@ fn analyze_and_build_body(item_trait: &ItemTrait) -> TokenStream {
     let supertrait_assertions = build_supertrait_assertions(item_trait);
 
     quote! {
-        // 🔇 `unused_variables`: a zero-variant closing enum degenerates every method's match to zero
-        // arms, so every non-`self` PARAMETER goes unreferenced in that impl — correct, not a defect
-        // (`match *self {}` is exhaustive precisely because it is never reachable). `unused_mut`: never
-        // actually needed (parameter patterns are `mut`-stripped in `simple_ident_params`), kept as a
-        // second, cheap belt-and-braces guard against the SAME zero-arm shape. Neither allow adds a
-        // bound or changes a signature — R7 is satisfied by lint suppression, not by rewriting types.
         #[allow(unused_variables, unused_mut)]
         impl #impl_generics #trait_ident for $enum_name #where_clause {
             #(#delegate_methods)*
@@ -377,16 +371,6 @@ fn build_delegate_method(trait_ident: &Ident, method: &TraitItemFn) -> syn::Resu
     };
     let dot_await = asyncness.as_ref().map(|_| quote! { .await });
 
-    // 🎯 `*self` (a DEREF'd PLACE, not the bare reference `self`) for every receiver that isn't owned —
-    // verified against real rustc for BOTH arm counts: `match self {}` on `&Self`/`&mut Self` is
-    // rejected ("references are always considered inhabited", E0004), but `match *self {}` is accepted
-    // (an empty match on the deref'd, genuinely-uninhabited `Self` place). For the N-arm case the SAME
-    // `*self` scrutinee, combined with an explicit `ref`/`ref mut` binding mode (never bare — relying on
-    // match-ergonomics-through-a-deref alone was ambiguous enough to be worth pinning down explicitly),
-    // still binds `inner` at the right reference kind without a move-out-of-borrow error — also
-    // verified. `self: Arc<Self>` derefs the SAME way (`*self` on `Arc<Self>` yields the `Self` place
-    // through `Arc`'s `Deref`), so all three reference-shaped receivers share one scrutinee/pattern
-    // template; only owned `self` (no `Deref` to go through) uses the bare, unref'd form.
     let (scrutinee, pattern_binding, receiver_expr) = match receiver_kind {
         ReceiverKind::ByValue => (quote! { self }, quote! { inner }, quote! { inner }),
         ReceiverKind::ByRef => (quote! { *self }, quote! { ref inner }, quote! { inner }),

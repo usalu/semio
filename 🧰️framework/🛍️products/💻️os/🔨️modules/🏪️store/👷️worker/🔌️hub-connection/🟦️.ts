@@ -39,8 +39,6 @@ export async function connectHubOnce(state: ArtifactState, binding: Extract<Pers
     state.pendingSocketActorId = receipt.actorId;
     setRemote(state, { kind: "connecting" });
     const wsBase = binding.baseUrl.replace(/^http/, "ws");
-    // 📡️ Presence scope (contract §C0) travels out of band as `?surface=` — no `PresencePeer` wire
-    // change (its flag byte is full and the file is peer-leased).
     const scope = `${binding.spaceId}/${state.config.documentId}`;
     const query = new URLSearchParams();
     if (authority.surfaceId) query.set("surface", authority.surfaceId);
@@ -49,7 +47,6 @@ export async function connectHubOnce(state: ArtifactState, binding: Extract<Pers
     const suffix = encoded.length > 0 ? `?${encoded}` : "";
     const socket = new WebSocket(`${wsBase}/scopes/${encodeURIComponent(scope)}/document/ws${suffix}`, ["semio.session.v1", hubSessionCapability]);
     const presenceCandidate = authority.surfaceId ? { socket, scope: { spaceId: binding.spaceId, documentId: state.config.documentId }, verifiedSurfaceId: authority.surfaceId } : null;
-    // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
     socket.binaryType = "arraybuffer";
     state.socket = socket;
     let sustainedHealthTimer: ReturnType<typeof setTimeout> | null = null;
@@ -72,9 +69,6 @@ export async function connectHubOnce(state: ArtifactState, binding: Extract<Pers
             wire_version: 1,
             protocol_version: 1,
             schema: authority.schema,
-            // 🧬️ W5.7: real hash when the shell supplied one via `ArtifactActorConfig.packSchemaHash`
-            // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
-            // hub treats as "schema-agnostic client" and never validates.
             pack_schema_hash: [...authority.packSchemaHash],
             resume_token: state.resumeToken,
             frontier: state.frontier,
@@ -120,10 +114,6 @@ export async function connectHubOnce(state: ArtifactState, binding: Extract<Pers
       }
       if (sustainedHealthReached || state.artifactRebootstrapRequired || state.actorRecoveryRequested) {
         state.actorRecoveryRequested = false;
-        // ♻️ Resets the DISPLAY estimate to match the real reset: `reconnectForever` is about to
-        // start a brand-new `retryWithJitteredBackoff` call for the next cycle. A close this worker made
-        // to rebuild the document (`requireArtifactRebootstrap`) is no link failure either: the rebuild
-        // reconnects at once instead of inheriting the backoff of an earlier outage.
         state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
         setRemote(state, { kind: "backoff", retryInMs: 0 });
         resolve();

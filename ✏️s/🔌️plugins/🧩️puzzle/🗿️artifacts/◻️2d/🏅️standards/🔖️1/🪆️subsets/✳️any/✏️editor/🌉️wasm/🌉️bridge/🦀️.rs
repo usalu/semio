@@ -27,7 +27,10 @@ use semio_framework_async::browser::future_to_promise;
 use semio_framework_geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::{board_delete_selection, board_set_camera, board_set_grid_visible, board_set_wheel_zoom_active};
+use semio_framework_os_infinite::board_delete_selection;
+use semio_framework_os_infinite::board_set_camera;
+use semio_framework_os_infinite::board_set_grid_visible;
+use semio_framework_os_infinite::board_set_wheel_zoom_active;
 
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(source_px: f64, source_py: f64, source_cx: f64, source_cy: f64, target_px: f64, target_py: f64, target_cx: f64, target_cy: f64) -> Vec<f64> {
@@ -62,10 +65,10 @@ pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64
 #[wasm_bindgen(js_name = boardRedrawLayoutSnapshotJson)]
 pub fn board_redraw_layout_snapshot_json(snapshot_json:&str,options_json:&str,maximum_bytes:u32,maximum_work:u32,progress:js_sys::Function)->Result<String,JsValue>{
  let report=|phase:&str,completed:u64|progress.call2(&JsValue::NULL,&JsValue::from_str(phase),&JsValue::from_f64(completed as f64)).map(|value|value.as_bool().unwrap_or(false)).unwrap_or(false);
- let mut decode_progress=|p:semio_framework_value::NativeDecodeProgress|report("decode",p.completed as u64);
+ let mut decode_progress=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|report("decode",p.completed as u64);
  let mut encode_progress=|p:semio_framework_value::native_encoding::NativeEncodeProgress|report("encode",p.completed as u64);
  let mut layout_progress=|p:semio_framework_os_infinite::board::schema::layout::LayoutProgress|report("layout",p.completed);
- let mut decode=semio_framework_value::NativeDecodeControl::new(maximum_bytes as usize,&mut decode_progress);
+ let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum_bytes as usize,&mut decode_progress);
  let mut encode=semio_framework_value::NativeEncodeControl::new(maximum_bytes as usize,&mut encode_progress);
  let mut work=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(maximum_work as u64,&mut layout_progress);
  semio_framework_os_infinite::board::io::text::layout::redraw_snapshot_json(snapshot_json,options_json,&mut decode,&mut work,&mut encode).map_err(|e|JsValue::from_str(&e.to_string()))
@@ -190,7 +193,7 @@ impl BoardSession {
     #[wasm_bindgen(js_name = syncDescriptorJson)]
     pub fn sync_descriptor_json(&mut self, json: &str) -> Result<(), JsValue> {
         let mut accepted=|_|true;
-        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);
+        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);
         let desc=semio_framework_os_infinite::board::io::text::visibility::decode_board_scene_json(json,&mut control).map_err(|error|JsValue::from_str(&error.to_string()))?;
         self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(())
@@ -209,7 +212,7 @@ impl BoardSession {
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
     pub fn set_canvas_theme_json(&mut self, json: &str) {
         let mut accepted=|_|true;
-        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);
+        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut accepted);
         if let Ok(overlay)=semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json,&mut control){self.state.borrow_mut().host.style.set_canvas_palette(&overlay);}
     }
 
@@ -221,7 +224,7 @@ impl BoardSession {
     #[wasm_bindgen(js_name = loadBoardSnapshotJson)]
     pub fn load_board_snapshot_json(&mut self, json: &str) -> bool {
         let mut accepted=|_|true;
-        let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);
+        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);
         semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut self.state.borrow_mut().host.scene, &mut self.state.borrow_mut().host.focus, &mut self.state.borrow_mut().host.style, &mut self.state.borrow_mut().host.outbox,json,&mut control)
     }
 

@@ -22,9 +22,9 @@ fn builder_produces_correct_out_and_in_arcs() {
 #[test]
 fn self_loops_and_multiedges_are_supported() {
     let mut b = GraphTopologyBuilder::new(2);
-    b.arc(NodeId(0), NodeId(0), RelationId(0)); // self-loop
+    b.arc(NodeId(0), NodeId(0), RelationId(0));
     b.arc(NodeId(0), NodeId(1), RelationId(0));
-    b.arc(NodeId(0), NodeId(1), RelationId(1)); // multiedge under a different relation
+    b.arc(NodeId(0), NodeId(1), RelationId(1));
     let topo = b.build().unwrap();
     assert_eq!(topo.arc_count(), 3);
     assert_eq!(topo.out_degree(NodeId(0)), 3);

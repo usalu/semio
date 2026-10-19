@@ -421,7 +421,7 @@ impl semio_framework_pack_json::JsonWriteSource for DraftChangesBorrowed<'_>{
 /// 📡️ Writes original ranges through the caller's borrowed sink, preserving its accepted prefix on refusal.
 pub fn write_draft_changes_json_into<E:From<protocol::value::ValueError>,F>(changes:&[DraftChange],maximum_bytes:u64,maximum_depth:usize,maximum_items:u64,output:&mut F,control:&mut protocol::value::NativeEncodeControl<'_>)->Result<u64,E>
 where F:FnMut(&[u8],&mut protocol::value::NativeEncodeControl<'_>)->Result<(),E>{
-    semio_framework_pack_json::write_json_source_into(&DraftChangesBorrowed(changes),maximum_bytes,maximum_depth,maximum_items,output,control)
+    semio_framework_pack_json_source_sink::write_json_source_into(&DraftChangesBorrowed(changes),maximum_bytes,maximum_depth,maximum_items,output,control)
 }
 
 struct DraftChangesOwner(Vec<DraftChange>);

@@ -1,7 +1,8 @@
 //! 🧪️ The language-neutral intrinsic corpus preserves values, framing and caller authority.
 use crate::{decode, IntrinsicFormat};
 use semio_framework_dsl_record::{FieldSpec, FieldValue, RecordFields, RecordLayout, RecordSpec, RecordValue, Shape};
-use semio_framework_value::{DslValue, NativeDecodeControl};
+use semio_framework_value::DslValue;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const FIELD_ID: u16 = 1;
 use serde_json::Value;
 

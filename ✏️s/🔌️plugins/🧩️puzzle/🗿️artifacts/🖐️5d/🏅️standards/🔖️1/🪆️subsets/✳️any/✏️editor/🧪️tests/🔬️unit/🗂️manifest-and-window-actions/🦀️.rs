@@ -87,7 +87,6 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
     let after = projection_of(&app);
     let pasted_parts: Vec<&Value> = after["parts"].as_array().unwrap().iter().filter(|part| !before_ids.contains(part["id"].as_str().unwrap_or_default())).collect();
     assert_eq!(pasted_parts.len(), 1);
-    // "original" anchor uses the raw position override verbatim as the 2D delta.
     let original_x = projection["parts"][0]["2d"]["x"].as_f64().unwrap_or(0.0);
     assert_eq!(pasted_parts[0]["2d"]["x"].as_f64().unwrap(), original_x + 10.0);
     dispatch(&mut app, "undo", None, None).expect("undo");
@@ -146,8 +145,6 @@ async fn app_definition_declares_its_three_panel_tabs() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {
     let mut app = app();
-    // 🪟️ A window engagement is collected per LIVE window INSTANCE, so an empty `ViewModel` names no
-    // window and the map comes back empty — the same per-instance contract `window_measures` carries.
     let engagements = ::semio_framework_async::poll::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
     assert!(engagements.contains_key(board2d::WINDOW_KIND_ID));
     assert!(engagements.contains_key(world3d::WINDOW_KIND_ID));
@@ -237,19 +234,12 @@ async fn part_kind_options_are_named_kinds_and_never_catalog_uuids() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_part_kind_materializes_the_declared_kind_default() {
-    // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
-    // 🗨️ The default is the FIRST LIVE catalog kind (`puzzle5d_default_part_kind`), never the literal
-    // "Part" this select used to hardcode — a literal no catalog declares could not add a real kind.
     let expected_default = puzzle5d_default_part_kind(&puzzle5d_part_kind_options());
     assert!(!expected_default.is_empty() && expected_default != "Part", "the declared default is a real catalog kind, got {expected_default:?}");
     let mut app = app_with_registry();
     dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty");
     let before = part_count(&app);
     let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
-    // 🧾️ `addPartKind` is `InteractiveJobClassification::Migrated`, so its ADMISSION carries no
-    // mutations — the edit travels on the retained operation and lands in the document below. The
-    // "is a Mutation" half of this sentence is the manifest declaration, which is what is read here;
-    // asserting it on the admission result was reading the pre-migration dispatch shape.
     assert!(result.mutations.is_empty(), "a Migrated verb's admission carries no mutations of its own");
     let declaration = declared_actions(&create_puzzle5d_app()).into_iter().find(|action| action.id == "addPartKind").expect("addPartKind is declared").kind;
     assert_eq!(declaration, semio_framework_plugin::ActionKind::Mutation, "addPartKind is declared a Mutation");
@@ -261,7 +251,6 @@ async fn add_part_kind_materializes_the_declared_kind_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_utility_emits_no_ops_and_no_history_entry() {
-    // 🧰️ Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
     let mut app = app_with_registry();
     let before = projection_of(&app);
     let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&semio_framework_pack_json::json!({ "utilityId": "brush" })), None).expect("switch utility");
@@ -334,8 +323,6 @@ async fn exact_window_transient_isolated_abort_and_reload_reset_through_register
 
 #[semio_framework_async_macros::async_test]
 async fn engagements_expose_no_utility_switch_options_for_either_window() {
-    // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
-    // engagement HUD may duplicate it as options.
     let mut app = app();
     let engagements = ::semio_framework_async::poll::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
@@ -350,8 +337,6 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 #[semio_framework_async_macros::async_test]
 async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_controls() {
     let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    // 🪣️ Fill TOOL: the count entry and the distribution trees live in the tool options rail, NOT in either
-    // window's measures and NOT on the engagement HUD.
     let fill_runtime = Puzzle5dRuntime { fill_count: 3, ..Default::default() };
     let fill_scene = Puzzle5dScene { document: default_document(), runtime: fill_runtime, active_utility: fill_tool::TOOL_ID.into(), interaction: Default::default() };
     let tool_measures = fill_tool::measures(&fill_scene, labels, None);
@@ -363,8 +348,6 @@ async fn fill_is_tool_options_and_brush_is_utility_options_never_engagement_cont
         let fill_hud = edit::puzzle5d_engagement(&fill_scene, window, labels, None);
         assert!(fill_hud.control.is_none() && fill_hud.controls.is_none(), "{window} fill engagement HUD must no longer carry the relocated control");
     }
-    // 🖌️ Brush utility: with no candidates to place, the "brush"-tagged group still surfaces (matching the
-    // old gate), and the engagement HUD is likewise bare.
     let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into(), interaction: Default::default() };
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         let measures = if window == board2d::WINDOW_KIND_ID { board2d::window_measures(&brush_scene, labels) } else { world3d::window_measures(&brush_scene, labels) };
@@ -427,10 +410,6 @@ async fn engagement_placeholder_advertises_exactly_the_parsed_verbs() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
-    // 🧰️ The engagement token drives the host-owned utility switch of the window the line was typed in,
-    // and of that window ALONE. The active utility is per window INSTANCE in the host (a split pane keeps
-    // its own), so pushing `brush` into the sibling pane as well would silently retool a window nobody
-    // addressed. This law used to demand both windows, which is the pre-per-window contract.
     for window in [world3d::WINDOW_KIND_ID, board2d::WINDOW_KIND_ID] {
         let mut app = app();
         let result = dispatch(&mut app, "engagementSubmit", Some(&semio_framework_pack_json::json!({ "window": window, "value": "brush" })), Some(window)).expect("submit");

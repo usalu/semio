@@ -9,8 +9,6 @@ pub fn encode_model_with_diagnostics(model: &Model) -> (Value, Vec<EpJsonDiagnos
     let mut diagnostics = Vec::new();
     let mut document = Object::new();
     let zone_name_of = |id: EntityId| model.zones.iter().find(|zone| zone.id == id).map(|zone| entity_name("Zone", zone.id, &zone.name));
-    // 🧱️🪟️🌫️ A construction layer names one of THREE material families — opaque `materials`,
-    // glazing panes `glazing_materials`, gas gaps `gas_materials` (one shared `EntityId` space).
     let material_name_of = |id: EntityId| {
         model
             .materials
@@ -178,8 +176,6 @@ fn encode_materials(model: &Model, document: &mut Object) {
     if !massless.is_empty() {
         document.insert("Material:NoMass", Value::Object(Object::from_iter(massless)));
     }
-    // 🪟️ Spectral-average glazing panes → `WindowMaterial:Glazing`; gas gaps → `WindowMaterial:Gas`
-    // (the layered twins of the per-fenestration `WindowMaterial:SimpleGlazingSystem` below).
     let panes: Vec<(String, Value)> = model
         .glazing_materials
         .iter()
@@ -352,9 +348,6 @@ fn encode_surfaces(model: &Model, document: &mut Object, zone_name_of: &dyn Fn(E
             };
             let construction = glazing_stack(model, window).map_or_else(|| glazing_construction_name(&name), |stack| entity_name("Construction", stack.id, &stack.name));
             let mut fields = vec![field("surface_type", "Window"), field("construction_name", construction), field("building_surface_name", entity_name("Surface", surface.id, &surface.name))];
-            // 🔶️ `FenestrationSurface:Detailed` itself tops out at four corners, so an aperture
-            // whose own polygon has more is written whole and reported — the document stays a
-            // faithful picture of the semio model, and the reader is told EnergyPlus will not take it.
             if rectangle.len() != 4 {
                 fields.push(field("number_of_vertices", rectangle.len() as f64));
                 diagnostics.push(EpJsonDiagnostic::new(

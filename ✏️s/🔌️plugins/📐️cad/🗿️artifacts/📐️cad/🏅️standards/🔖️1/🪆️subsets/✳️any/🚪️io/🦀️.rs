@@ -667,7 +667,7 @@ pub mod derived_construction {
         }
     }
 
-    /// Builds a `cad` snapshot.
+    /// ✏️ Builds a `cad` snapshot.
     #[derive(Clone, Debug)]
     pub struct CadBuilderConstruction {
         snapshot: CadSnapshot,

@@ -19,7 +19,7 @@ export interface JpgFrameHeader {
  * EXACT zigzag scan order the DQT segment stores on disk. */
 export interface JpgQuantTable {
   id: number;
-  /** DQT `Pq` nibble: `0` = 8-bit values, `1` = 16-bit values. */
+  /** 🔬️ DQT `Pq` nibble: `0` = 8-bit values, `1` = 16-bit values. */
   precision: number;
   values: number[]; // exactly 64 entries
 }

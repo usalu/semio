@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-fem-2d-editor-session-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Fem 2d editor session capacities and process owner catalog"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-scene = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-registry = { workspace = true }
+semio-s-fem-analyses-model = { workspace = true }
+semio-s-fem-model = { workspace = true }
+semio-s-fem-static = { workspace = true }

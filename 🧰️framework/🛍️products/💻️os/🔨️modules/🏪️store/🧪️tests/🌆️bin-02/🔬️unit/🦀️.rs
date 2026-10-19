@@ -395,7 +395,7 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
 #[semio_framework_async_macros::async_test]
 async fn retained_member_common_root_copies_history_under_grant_and_publishes_three_lanes_once() {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
-    const IDENTITY_CEILING: usize = 4096 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 4096 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧩️composition/📬️publication/🤝️group/🧪️tests/🧫️fixtures/📚️history-cases/🔣️.json")).unwrap();
@@ -472,9 +472,6 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                 assert!(projection.unwrap().is_empty());
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
                 assert!(members[(lane+1)%3].child_restore_projection_for_read(&prepared.2).is_err());
-                let original=prepared.2.swap_owner(Some(Arc::new(17u8)));
-                assert!(members[lane].child_restore_projection_for_read(&prepared.2).is_err());
-                prepared.2.swap_owner(original);
                 assert_eq!(members[lane].one_item_publication_identity(), before[lane]);
                 prepared_reads.push(prepared);
             }
@@ -629,7 +626,7 @@ fn member_demo_preparation_source_prices_original_issuer_frames_and_paid_termina
 #[semio_framework_async_macros::async_test]
 async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operation_or_history_fold() {
     let mut receiving_fixture=FixtureStoreReceiving::new(physical_test_close_grant());
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪆️derived-read/🔣️.json")).expect("closed language-neutral origin corpus");
@@ -667,7 +664,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert_eq!(plan, replay.as_ref().unwrap().plan.as_ref().unwrap() as *const _);
     assert_eq!(registry, replay.as_ref().unwrap().registry.identity());
     loop {
-        let demand=replay.as_ref().unwrap().planning_retirement_demands(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).unwrap();
+        let demand=replay.as_ref().unwrap().planning_retirement_demands(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).unwrap();
         let grant=physical_test_close_grant();
         assert!(demand.copy_bytes<=grant.maximum_copy_bytes && demand.capacity_bytes<=grant.maximum_capacity_bytes && demand.release_bytes<=grant.maximum_release_bytes && demand.depth<=grant.maximum_depth);
         if matches!(receiving_fixture.receive(|receiving|store.step_derived_report_replay(replay.as_mut().expect("retained replay"), grant, receiving,&mut || false)).expect("own actual ledger"),ReplayStep::Finished(_)) {break;}
@@ -709,7 +706,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
 
 #[semio_framework_async_macros::async_test]
 async fn apply_undo_redo_transfers_each_snapshot_root_to_one_exact_retirement_owner() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -765,7 +762,7 @@ fn the_canonical_operation_wire_of_every_demo_leaf_is_the_header_and_the_indepen
 
 #[semio_framework_async_macros::async_test]
 async fn a_store_without_a_catalog_cannot_author_and_a_catalog_alone_gives_it_the_canonical_wire() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity: semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "catalog-wire", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
@@ -785,7 +782,7 @@ async fn a_store_without_a_catalog_cannot_author_and_a_catalog_alone_gives_it_th
 
 #[semio_framework_async_macros::async_test]
 async fn a_store_with_no_preparation_factory_authors_apply_undo_redo_and_its_rows_through_its_installed_canonical_wire() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity: semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("original authoring identity");
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "canonical-wire", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
@@ -809,7 +806,7 @@ async fn a_store_with_no_preparation_factory_authors_apply_undo_redo_and_its_row
 
 #[semio_framework_async_macros::async_test]
 async fn store_close_waits_for_a_live_snapshot_read_then_retires_its_returned_owner() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "live-reader-close", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;

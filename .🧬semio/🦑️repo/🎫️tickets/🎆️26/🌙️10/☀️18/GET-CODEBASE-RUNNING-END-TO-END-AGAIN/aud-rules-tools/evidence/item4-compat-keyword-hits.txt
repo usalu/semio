@@ -1,0 +1,385 @@
+.333ee2a:13828:          "util-deprecate": "1.0.2",
+.333ee2a:14453:          "util-deprecate": "^1.0.2"
+.333ee2a:14893:          "util-deprecate": "^1.0.1"
+.333ee2a:16677:    "util-deprecate": [
+.333ee2a:16678:      "util-deprecate@1.0.2",
+.333ee2a:18659:          "util-deprecate": "~1.0.1"
+.333ee2a:18681:          "util-deprecate": "~1.0.1"
+.3a0f1e4:13809:          "util-deprecate": "1.0.2",
+.3a0f1e4:14434:          "util-deprecate": "^1.0.2"
+.3a0f1e4:14874:          "util-deprecate": "^1.0.1"
+.3a0f1e4:16658:    "util-deprecate": [
+.3a0f1e4:16659:      "util-deprecate@1.0.2",
+.3a0f1e4:18640:          "util-deprecate": "~1.0.1"
+.3a0f1e4:18662:          "util-deprecate": "~1.0.1"
+.48ebeba:13828:          "util-deprecate": "1.0.2",
+.48ebeba:14453:          "util-deprecate": "^1.0.2"
+.48ebeba:14893:          "util-deprecate": "^1.0.1"
+.48ebeba:16677:    "util-deprecate": [
+.48ebeba:16678:      "util-deprecate@1.0.2",
+.48ebeba:18659:          "util-deprecate": "~1.0.1"
+.48ebeba:18681:          "util-deprecate": "~1.0.1"
+go.work.sum:108:golang.org/x/tools/go/expect v0.1.1-deprecated/go.mod h1:eihoPOH+FgIqa3FpoTwguz/bVUSGBlGQU67vpBeOrBY=
+go.work.sum:109:golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated/go.mod h1:RVAQXBGNv1ib0J382/DPCRS/BPnsGebyM1Gj5VSDpG8=
+♻️mit-bestand/.1f1b746:14491:          "util-deprecate": "1.0.2",
+♻️mit-bestand/.1f1b746:15034:          "util-deprecate": "^1.0.2"
+♻️mit-bestand/.1f1b746:15398:          "util-deprecate": "^1.0.1"
+♻️mit-bestand/.1f1b746:16965:    "util-deprecate": [
+♻️mit-bestand/.1f1b746:16966:      "util-deprecate@1.0.2",
+♻️mit-bestand/.1f1b746:18394:          "util-deprecate": "~1.0.1"
+♻️mit-bestand/.1f1b746:18416:          "util-deprecate": "~1.0.1"
+♻️mit-bestand/.5a9924f:14506:          "util-deprecate": "1.0.2",
+♻️mit-bestand/.5a9924f:15049:          "util-deprecate": "^1.0.2"
+♻️mit-bestand/.5a9924f:15413:          "util-deprecate": "^1.0.1"
+♻️mit-bestand/.5a9924f:16980:    "util-deprecate": [
+♻️mit-bestand/.5a9924f:16981:      "util-deprecate@1.0.2",
+♻️mit-bestand/.5a9924f:18409:          "util-deprecate": "~1.0.1"
+♻️mit-bestand/.5a9924f:18431:          "util-deprecate": "~1.0.1"
+♻️mit-bestand/.c50a18e:14506:          "util-deprecate": "1.0.2",
+♻️mit-bestand/.c50a18e:15049:          "util-deprecate": "^1.0.2"
+♻️mit-bestand/.c50a18e:15413:          "util-deprecate": "^1.0.1"
+♻️mit-bestand/.c50a18e:16980:    "util-deprecate": [
+♻️mit-bestand/.c50a18e:16981:      "util-deprecate@1.0.2",
+♻️mit-bestand/.c50a18e:18409:          "util-deprecate": "~1.0.1"
+♻️mit-bestand/.c50a18e:18431:          "util-deprecate": "~1.0.1"
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:641:      !1 === n.suppressDeprecationWarnings && "undefined" != typeof console && console.warn && console.warn("Deprecation warning: " + e);
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:646:        if ((null != n.deprecationHandler && n.deprecationHandler(null, e), i)) {
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:667:      (null != n.deprecationHandler && n.deprecationHandler(e, t), Y[e] || (M(t), (Y[e] = !0)));
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:687:    ((n.suppressDeprecationWarnings = !1),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:688:      (n.deprecationHandler = null),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:1891:    var Qn = b("moment().min is deprecated, use moment.max instead. http://momentjs.com/guides/#/warnings/min-max/", function () {
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:1895:      Xn = b("moment().max is deprecated, use moment.min instead. http://momentjs.com/guides/#/warnings/min-max/", function () {
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2089:          null === i || isNaN(+i) || (O(t, "moment()." + t + "(period, number) is deprecated. Please use moment()." + t + "(number, period). See http://momentjs.com/guides/#/warnings/add-inverted-param/ for more info."), (r = n), (n = i), (i = r)),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2275:    var lr = b("moment().lang() is deprecated. Instead, use moment().localeData() to get the language configuration. Use moment().locale() to change languages.", function (e) {
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2775:      (ua.dates = b("dates accessor is deprecated. Use date instead.", ea)),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2776:      (ua.months = b("months accessor is deprecated. Use month instead", mt)),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2777:      (ua.years = b("years accessor is deprecated. Use year instead", Be)),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2778:      (ua.zone = b("moment().zone is deprecated, use moment().utcOffset instead. http://momentjs.com/guides/#/warnings/zone/", pi)),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2779:      (ua.isDSTShifted = b("isDSTShifted is deprecated. See http://momentjs.com/guides/#/warnings/dst-shifted/ for more information", Mi)));
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2861:      (n.lang = b("moment.lang is deprecated. Use moment.locale instead.", _n)),
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:2862:      (n.langData = b("moment.langData is deprecated. Use moment.localeData instead.", vn)));
+♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/🧰️zukunft-bau-entwerfen-mit-bestand_files/📝️Form.min.js:3101:      (cs.toIsoString = b("toIsoString() is deprecated. Please use toISOString() instead (notice the capitals)", us)),
+✏️s/.11689b4:14423:          "util-deprecate": "1.0.2",
+✏️s/.11689b4:14966:          "util-deprecate": "^1.0.2"
+✏️s/.11689b4:15334:          "util-deprecate": "~1.0.1"
+✏️s/.11689b4:16898:    "util-deprecate": [
+✏️s/.11689b4:16899:      "util-deprecate@1.0.2",
+✏️s/.11689b4:18134:          "util-deprecate": "^1.0.1"
+✏️s/.11689b4:18556:          "util-deprecate": "^1.0.1"
+✏️s/.11689b4:18754:          "util-deprecate": "^1.0.1"
+✏️s/.5acfc64:14548:          "util-deprecate": "1.0.2",
+✏️s/.5acfc64:15120:          "util-deprecate": "^1.0.2"
+✏️s/.5acfc64:15482:          "util-deprecate": "~1.0.1"
+✏️s/.5acfc64:17112:    "util-deprecate": [
+✏️s/.5acfc64:17113:      "util-deprecate@1.0.2",
+✏️s/.5acfc64:18328:          "util-deprecate": "^1.0.1"
+✏️s/.5acfc64:18783:          "util-deprecate": "^1.0.1"
+✏️s/.5acfc64:18981:          "util-deprecate": "^1.0.1"
+✏️s/.bd1ac53:14438:          "util-deprecate": "1.0.2",
+✏️s/.bd1ac53:14981:          "util-deprecate": "^1.0.2"
+✏️s/.bd1ac53:15349:          "util-deprecate": "~1.0.1"
+✏️s/.bd1ac53:16913:    "util-deprecate": [
+✏️s/.bd1ac53:16914:      "util-deprecate@1.0.2",
+✏️s/.bd1ac53:18149:          "util-deprecate": "^1.0.1"
+✏️s/.bd1ac53:18571:          "util-deprecate": "^1.0.1"
+✏️s/.bd1ac53:18769:          "util-deprecate": "^1.0.1"
+✏️s/.c63c70c:14541:          "util-deprecate": "1.0.2",
+✏️s/.c63c70c:15113:          "util-deprecate": "^1.0.2"
+✏️s/.c63c70c:15471:          "util-deprecate": "^1.0.1"
+✏️s/.c63c70c:17101:    "util-deprecate": [
+✏️s/.c63c70c:17102:      "util-deprecate@1.0.2",
+✏️s/.c63c70c:18317:          "util-deprecate": "^1.0.1"
+✏️s/.c63c70c:18575:          "util-deprecate": "~1.0.1"
+✏️s/.c63c70c:18597:          "util-deprecate": "~1.0.1"
+✏️s/.c63c70c:18804:          "util-deprecate": "^1.0.1"
+✏️s/.c63c70c:19002:          "util-deprecate": "^1.0.1"
+✏️s/.c63c70c:19384:          "util-deprecate": "~1.0.1"
+✏️s/.dec32ca:14438:          "util-deprecate": "1.0.2",
+✏️s/.dec32ca:14981:          "util-deprecate": "^1.0.2"
+✏️s/.dec32ca:15349:          "util-deprecate": "~1.0.1"
+✏️s/.dec32ca:16913:    "util-deprecate": [
+✏️s/.dec32ca:16914:      "util-deprecate@1.0.2",
+✏️s/.dec32ca:18149:          "util-deprecate": "^1.0.1"
+✏️s/.dec32ca:18571:          "util-deprecate": "^1.0.1"
+✏️s/.dec32ca:18769:          "util-deprecate": "^1.0.1"
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️constants-and-io/🦀️.rs:206:        // 🚮️ V7 deprecated-codec-enum retirement (SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT):
+✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🦀️.rs:25:/// channels never coexist — a second parallel registration channel is the compatibility layer
+✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🦀️.rs:102:/// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs:5:/// greenfield, no backward compat — so round-tripping every current variant (below) is the law
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs:217:// deprecated framework format-enum layer is retired in favor of the plain `"s.stdio.<format>"`
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs:86:/// 📋️ Compatibility alias used by older call sites.
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs:22:/// ♻️ Compatibility alias — former nested `part_2` module.
+✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🔌️io-and-commands/🦀️.rs:20:/// `las`/`png`) instead of the deprecated enum this file used to import from `semio_framework_plugin` — see
+✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/🦀️.rs:2://! compatibility shim for existing launch targets until callers migrate.
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator/🔁️codec/🦀️.rs:81:#[allow(deprecated)]
+🌎️hub/.11d1f79:14659:          "util-deprecate": "1.0.2",
+🌎️hub/.11d1f79:15237:          "util-deprecate": "^1.0.2"
+🌎️hub/.11d1f79:15595:          "util-deprecate": "^1.0.1"
+🌎️hub/.11d1f79:17228:    "util-deprecate": [
+🌎️hub/.11d1f79:17229:      "util-deprecate@1.0.2",
+🌎️hub/.11d1f79:18692:          "util-deprecate": "~1.0.1"
+🌎️hub/.11d1f79:18714:          "util-deprecate": "~1.0.1"
+🌎️hub/.11d1f79:19451:          "util-deprecate": "~1.0.1"
+🌎️hub/.2ce7591:14547:          "util-deprecate": "1.0.2",
+🌎️hub/.2ce7591:15096:          "util-deprecate": "^1.0.2"
+🌎️hub/.2ce7591:15460:          "util-deprecate": "^1.0.1"
+🌎️hub/.2ce7591:17027:    "util-deprecate": [
+🌎️hub/.2ce7591:17028:      "util-deprecate@1.0.2",
+🌎️hub/.2ce7591:18458:          "util-deprecate": "~1.0.1"
+🌎️hub/.2ce7591:18480:          "util-deprecate": "~1.0.1"
+🌎️hub/.349fc10:14652:          "util-deprecate": "1.0.2",
+🌎️hub/.349fc10:15230:          "util-deprecate": "^1.0.2"
+🌎️hub/.349fc10:15588:          "util-deprecate": "^1.0.1"
+🌎️hub/.349fc10:17221:    "util-deprecate": [
+🌎️hub/.349fc10:17222:      "util-deprecate@1.0.2",
+🌎️hub/.349fc10:18685:          "util-deprecate": "~1.0.1"
+🌎️hub/.349fc10:18707:          "util-deprecate": "~1.0.1"
+🌎️hub/.349fc10:19444:          "util-deprecate": "~1.0.1"
+🌎️hub/.5e128e3:14478:          "util-deprecate": "1.0.2",
+🌎️hub/.5e128e3:15027:          "util-deprecate": "^1.0.2"
+🌎️hub/.5e128e3:15391:          "util-deprecate": "^1.0.1"
+🌎️hub/.5e128e3:16958:    "util-deprecate": [
+🌎️hub/.5e128e3:16959:      "util-deprecate@1.0.2",
+🌎️hub/.5e128e3:18379:          "util-deprecate": "~1.0.1"
+🌎️hub/.5e128e3:18401:          "util-deprecate": "~1.0.1"
+🌎️hub/.661fcfe:14546:          "util-deprecate": "1.0.2",
+🌎️hub/.661fcfe:15095:          "util-deprecate": "^1.0.2"
+🌎️hub/.661fcfe:15459:          "util-deprecate": "^1.0.1"
+🌎️hub/.661fcfe:17026:    "util-deprecate": [
+🌎️hub/.661fcfe:17027:      "util-deprecate@1.0.2",
+🌎️hub/.661fcfe:18457:          "util-deprecate": "~1.0.1"
+🌎️hub/.661fcfe:18479:          "util-deprecate": "~1.0.1"
+🌎️hub/.7604e5d:14546:          "util-deprecate": "1.0.2",
+🌎️hub/.7604e5d:15095:          "util-deprecate": "^1.0.2"
+🌎️hub/.7604e5d:15459:          "util-deprecate": "^1.0.1"
+🌎️hub/.7604e5d:17026:    "util-deprecate": [
+🌎️hub/.7604e5d:17027:      "util-deprecate@1.0.2",
+🌎️hub/.7604e5d:18457:          "util-deprecate": "~1.0.1"
+🌎️hub/.7604e5d:18479:          "util-deprecate": "~1.0.1"
+🌎️hub/.997a4c9:14488:          "util-deprecate": "1.0.2",
+🌎️hub/.997a4c9:15037:          "util-deprecate": "^1.0.2"
+🌎️hub/.997a4c9:15401:          "util-deprecate": "^1.0.1"
+🌎️hub/.997a4c9:16968:    "util-deprecate": [
+🌎️hub/.997a4c9:16969:      "util-deprecate@1.0.2",
+🌎️hub/.997a4c9:18389:          "util-deprecate": "~1.0.1"
+🌎️hub/.997a4c9:18411:          "util-deprecate": "~1.0.1"
+🌎️hub/.d17326d:14489:          "util-deprecate": "1.0.2",
+🌎️hub/.d17326d:15038:          "util-deprecate": "^1.0.2"
+🌎️hub/.d17326d:15402:          "util-deprecate": "^1.0.1"
+🌎️hub/.d17326d:16969:    "util-deprecate": [
+🌎️hub/.d17326d:16970:      "util-deprecate@1.0.2",
+🌎️hub/.d17326d:18390:          "util-deprecate": "~1.0.1"
+🌎️hub/.d17326d:18412:          "util-deprecate": "~1.0.1"
+🌎️hub/.df93166:14489:          "util-deprecate": "1.0.2",
+🌎️hub/.df93166:15038:          "util-deprecate": "^1.0.2"
+🌎️hub/.df93166:15402:          "util-deprecate": "^1.0.1"
+🌎️hub/.df93166:16969:    "util-deprecate": [
+🌎️hub/.df93166:16970:      "util-deprecate@1.0.2",
+🌎️hub/.df93166:18390:          "util-deprecate": "~1.0.1"
+🌎️hub/.df93166:18412:          "util-deprecate": "~1.0.1"
+🌎️hub/.e8d39dc:14562:          "util-deprecate": "1.0.2",
+🌎️hub/.e8d39dc:15111:          "util-deprecate": "^1.0.2"
+🌎️hub/.e8d39dc:15475:          "util-deprecate": "^1.0.1"
+🌎️hub/.e8d39dc:17042:    "util-deprecate": [
+🌎️hub/.e8d39dc:17043:      "util-deprecate@1.0.2",
+🌎️hub/.e8d39dc:18473:          "util-deprecate": "~1.0.1"
+🌎️hub/.e8d39dc:18495:          "util-deprecate": "~1.0.1"
+🌎️hub/.ead4492:14562:          "util-deprecate": "1.0.2",
+🌎️hub/.ead4492:15111:          "util-deprecate": "^1.0.2"
+🌎️hub/.ead4492:15475:          "util-deprecate": "^1.0.1"
+🌎️hub/.ead4492:17042:    "util-deprecate": [
+🌎️hub/.ead4492:17043:      "util-deprecate@1.0.2",
+🌎️hub/.ead4492:18473:          "util-deprecate": "~1.0.1"
+🌎️hub/.ead4492:18495:          "util-deprecate": "~1.0.1"
+🌎️hub/🧩️compositions/➗️mathematical/🦀️.rs:22:/// NOT kept alongside it (a second parallel registration channel is the compatibility layer this
+🌎️hub/🧩️compositions/🌿️vcs/🦀️.rs:22:/// kept alongside it (a second parallel registration channel is the compatibility layer this ticket
+🌎️hub/🧩️compositions/🎬️sequence/🦀️.rs:22:/// NOT kept alongside it (a second parallel registration channel is the compatibility layer this
+🌎️hub/🧩️compositions/💠️lowpoly/🦀️.rs:25:/// is deleted, not deprecated. `.editor::<E>(…)` registers the mutation-capable surface (the former
+🌎️hub/🧩️compositions/📋️forms/🦀️.rs:22:/// NOT kept alongside it (a second parallel registration channel is the compatibility layer this
+🌎️hub/🧩️compositions/📸️remodel/🦀️.rs:22:/// compatibility layer this ticket forbids, so the old calls are gone rather than kept alongside.
+🌎️hub/🧩️compositions/🔱️trinity/🦀️.rs:29:/// registration channel is the compatibility layer this ticket forbids), same cutover `🗒️note`/
+🌎️hub/🧩️compositions/🕸️dag/🦀️.rs:24:/// registration — that is a forbidden compatibility layer, already rejected once on this ticket).
+🌎️hub/🧩️compositions/🗒️note/🦀️.rs:23:/// channel is the compatibility layer this ticket forbids). `crate::artifacts::note::artifact_kind()`
+🌎️hub/🧩️compositions/🪵️sourcing/🦀️.rs:23:/// NOT kept alongside it (a second parallel registration channel is the compatibility layer this
+🎓️teaching/.1b8e820:11987:          "util-deprecate": "1.0.2",
+🎓️teaching/.1b8e820:12524:          "util-deprecate": "^1.0.2"
+🎓️teaching/.1b8e820:12882:          "util-deprecate": "^1.0.1"
+🎓️teaching/.1b8e820:14430:    "util-deprecate": [
+🎓️teaching/.1b8e820:14431:      "util-deprecate@1.0.2",
+🎓️teaching/.1b8e820:15803:          "util-deprecate": "~1.0.1"
+🎓️teaching/.1b8e820:15825:          "util-deprecate": "~1.0.1"
+🎓️teaching/.9ddc0b8:11996:          "util-deprecate": "1.0.2",
+🎓️teaching/.9ddc0b8:12533:          "util-deprecate": "^1.0.2"
+🎓️teaching/.9ddc0b8:12891:          "util-deprecate": "^1.0.1"
+🎓️teaching/.9ddc0b8:14439:    "util-deprecate": [
+🎓️teaching/.9ddc0b8:14440:      "util-deprecate@1.0.2",
+🎓️teaching/.9ddc0b8:15812:          "util-deprecate": "~1.0.1"
+🎓️teaching/.9ddc0b8:15834:          "util-deprecate": "~1.0.1"
+🎓️teaching/.b2dd0ab:11996:          "util-deprecate": "1.0.2",
+🎓️teaching/.b2dd0ab:12533:          "util-deprecate": "^1.0.2"
+🎓️teaching/.b2dd0ab:12891:          "util-deprecate": "^1.0.1"
+🎓️teaching/.b2dd0ab:14439:    "util-deprecate": [
+🎓️teaching/.b2dd0ab:14440:      "util-deprecate@1.0.2",
+🎓️teaching/.b2dd0ab:15812:          "util-deprecate": "~1.0.1"
+🎓️teaching/.b2dd0ab:15834:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.027e4d3:14400:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.027e4d3:14943:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.027e4d3:15307:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.027e4d3:16874:    "util-deprecate": [
+🏢️semio-tech/.027e4d3:16875:      "util-deprecate@1.0.2",
+🏢️semio-tech/.027e4d3:18295:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.027e4d3:18317:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.1b65f20:14463:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.1b65f20:15006:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.1b65f20:15370:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.1b65f20:16937:    "util-deprecate": [
+🏢️semio-tech/.1b65f20:16938:      "util-deprecate@1.0.2",
+🏢️semio-tech/.1b65f20:18392:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.1b65f20:18414:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.1e10480:14387:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.1e10480:14930:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.1e10480:15294:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.1e10480:16861:    "util-deprecate": [
+🏢️semio-tech/.1e10480:16862:      "util-deprecate@1.0.2",
+🏢️semio-tech/.1e10480:18282:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.1e10480:18304:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.4b17d2d:14447:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.4b17d2d:14990:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.4b17d2d:15354:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.4b17d2d:16921:    "util-deprecate": [
+🏢️semio-tech/.4b17d2d:16922:      "util-deprecate@1.0.2",
+🏢️semio-tech/.4b17d2d:18376:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.4b17d2d:18398:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.512a94d:14446:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.512a94d:14989:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.512a94d:15353:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.512a94d:16920:    "util-deprecate": [
+🏢️semio-tech/.512a94d:16921:      "util-deprecate@1.0.2",
+🏢️semio-tech/.512a94d:18375:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.512a94d:18397:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.53c317c:14463:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.53c317c:15006:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.53c317c:15370:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.53c317c:16937:    "util-deprecate": [
+🏢️semio-tech/.53c317c:16938:      "util-deprecate@1.0.2",
+🏢️semio-tech/.53c317c:18392:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.53c317c:18414:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.675e87a:14397:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.675e87a:14940:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.675e87a:15304:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.675e87a:16871:    "util-deprecate": [
+🏢️semio-tech/.675e87a:16872:      "util-deprecate@1.0.2",
+🏢️semio-tech/.675e87a:18292:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.675e87a:18314:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.d1d3570:14446:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.d1d3570:14989:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.d1d3570:15353:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.d1d3570:16920:    "util-deprecate": [
+🏢️semio-tech/.d1d3570:16921:      "util-deprecate@1.0.2",
+🏢️semio-tech/.d1d3570:18375:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.d1d3570:18397:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.ef0430e:14400:          "util-deprecate": "1.0.2",
+🏢️semio-tech/.ef0430e:14943:          "util-deprecate": "^1.0.2"
+🏢️semio-tech/.ef0430e:15307:          "util-deprecate": "^1.0.1"
+🏢️semio-tech/.ef0430e:16874:    "util-deprecate": [
+🏢️semio-tech/.ef0430e:16875:      "util-deprecate@1.0.2",
+🏢️semio-tech/.ef0430e:18295:          "util-deprecate": "~1.0.1"
+🏢️semio-tech/.ef0430e:18317:          "util-deprecate": "~1.0.1"
+🧰️framework/🔨️modules/📡️replication/🚪️io/🧪️tests/🏛️ownership/🥒️.feature:21:    And causal mutation semantics contain no binary codec or compatibility alias
+🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🔬️unit/🦀️.rs:75:        assert!(MergeMode::from_wire_label(word).is_none(), "the deleted word '{word}' must decode to nothing — greenfield, no compatibility layer");
+🧰️framework/🔨️modules/🖱️ui/📜️declaration/🧩️ui-graph/🦀️.rs:102:// RUNTIME packet `scene-surface`. Re-exported here (not a compatibility shim: this crate
+🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/✂️curve-ops/🦀️.rs:708:/// method) — kept as a thin, backward-compatible wrapper over [`interpolate_curve`] (degree
+🧰️framework/🔨️modules/🧬️schema/✅️validator/🔨️compile/🦀️.rs:111:            "uniqueItems" | "readOnly" | "writeOnly" | "deprecated" => {
+🧰️framework/🔨️modules/🧬️schema/✅️validator/🔨️compile/🦀️.rs:227:    schema.iter().any(|(key, _)| !key.starts_with("x-") && !matches!(key, "$ref" | "$id" | "$schema" | "$comment" | "title" | "description" | "default" | "examples" | "readOnly" | "writeOnly" | "deprecated" | "definitions" | "$defs"))
+🧰️framework/🔨️modules/🧬️schema/✅️validator/🔨️compile/🦀️.rs:345:    schema.iter().all(|(key, _)| key.starts_with("x-") || matches!(key, "oneOf" | "anyOf" | "$id" | "$schema" | "$comment" | "title" | "description" | "default" | "examples" | "readOnly" | "writeOnly" | "deprecated" | "definitions" | "$defs"))
+🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🟦️.ts:32:const annotations = new Set(["title", "description", "default", "examples", "const", "enum", "type", "format", "readOnly", "writeOnly", "deprecated", "$comment", "multipleOf", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minLength", "maxLength", "pattern", "minItems", "maxItems", "uniqueItems", "minProperties", "maxProperties", "required", "contentEncoding", "contentMediaType"]);
+🧰️framework/🔨️modules/🧬️schema/🧪️tests/🔬️component-unit/🦀️.rs:322:        r#"{"oneOf":[{"const":"left"},{"const":"right"}],"title":"side","description":"side choice","default":"left","examples":["right"],"readOnly":false,"writeOnly":false,"deprecated":false,"format":"semio-side","x-semio-kind":"choice"}"#,
+🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🐚️channel/🦀️.rs:26://! remains the path whenever no shell is attached — it is a fallback, not a deprecated lane.
+🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧬️schema/📐️tool-shapes/🦀️.rs:40:pub const SCHEMA_BOOLEAN_KEYWORDS: &[&str] = &["additionalProperties", "unevaluatedProperties", "additionalItems", "unevaluatedItems", "readOnly", "writeOnly", "deprecated", "uniqueItems", "exclusiveMinimum", "exclusiveMaximum"];
+🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🧪️tests/🔬️unit/🦀️.rs:186:    // a byte-level backward-compatibility proof, not just "doesn't panic".
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx:459:/** 🌲️ Hosts an authored semantic {@link BuiltNode} in the shell's panel-tree leaf without reviving the removed recursive `UiNode` compatibility model.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts:533:    if (!node || !ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression) || !ts.isIdentifier(node.expression.expression) || !["_lowerImport", "_lowerImportBackwardsCompat"].includes(node.expression.expression.text) || node.expression.name.text !== "bind" || node.arguments.length !== 2 || node.arguments[0]?.kind !== ts.SyntaxKind.NullKeyword || !node.arguments[1] || !ts.isObjectLiteralExpression(node.arguments[1])) return;
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️world3d-host-unit/🦀️.rs:19:            assert!(protocol::MergeMode::from_wire_label(word).is_none(), "the deleted word '{word}' must decode to nothing — no adapter, no compatibility layer");
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🦀️.rs:188:/// briefly overlap, not as a compatibility layer.
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2711:    // This is a hack to maintain backwards compatibility with
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2786:  function _lowerImportBackwardsCompat(args) {
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2788:    _debugLog('[_lowerImportBackwardsCompat()] args', { args, params });
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2819:        throw new Error('p3 async wasm exports cannot use backwards compat auto-task init');
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2953:      // This is a hack to maintain backwards compatibility with
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2982:          _debugLog('[_lowerImportBackwardsCompat()] calling lowered import', { importFn, params });
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2994:          _debugLog("[_lowerImportBackwardsCompat()] import fn error:", err);
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9525:let trampoline18 = _trampoline18.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9553:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9582:let trampoline19 = _trampoline19.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9602:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9623:let trampoline20 = _trampoline20.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9659:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9696:let trampoline21 = _trampoline21.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9732:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9769:let trampoline22 = _trampoline22.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9805:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9842:let trampoline23 = _trampoline23.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9878:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9915:let trampoline24 = _trampoline24.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:9951:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10088:let trampoline30 = _trampoline30.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10117:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10147:let trampoline31 = _trampoline31.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10200:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10254:let trampoline32 = _trampoline32.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10312:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10371:let trampoline33 = _trampoline33.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10424:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10478:let trampoline34 = _trampoline34.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10502:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10527:let trampoline35 = _trampoline35.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10574:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10622:let trampoline36 = _trampoline36.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10669:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10717:let trampoline37 = _trampoline37.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:10764:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2711:    // This is a hack to maintain backwards compatibility with
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2786:  function _lowerImportBackwardsCompat(args) {
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2788:    _debugLog('[_lowerImportBackwardsCompat()] args', { args, params });
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2819:        throw new Error('p3 async wasm exports cannot use backwards compat auto-task init');
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2953:      // This is a hack to maintain backwards compatibility with
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2982:          _debugLog('[_lowerImportBackwardsCompat()] calling lowered import', { importFn, params });
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2994:          _debugLog("[_lowerImportBackwardsCompat()] import fn error:", err);
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9525:let trampoline18 = _trampoline18.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9553:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9582:let trampoline19 = _trampoline19.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9602:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9623:let trampoline20 = _trampoline20.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9659:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9696:let trampoline21 = _trampoline21.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9732:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9769:let trampoline22 = _trampoline22.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9805:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9842:let trampoline23 = _trampoline23.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9878:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9915:let trampoline24 = _trampoline24.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:9951:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10088:let trampoline30 = _trampoline30.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10117:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10147:let trampoline31 = _trampoline31.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10200:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10254:let trampoline32 = _trampoline32.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10312:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10371:let trampoline33 = _trampoline33.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10424:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10478:let trampoline34 = _trampoline34.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10502:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10527:let trampoline35 = _trampoline35.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10574:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10622:let trampoline36 = _trampoline36.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10669:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10717:let trampoline37 = _trampoline37.manuallyAsync ? new WebAssembly.Suspending(_lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:10764:)) : _lowerImportBackwardsCompat.bind(
+🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-scale.sty:210:% 📐 Backwards-compatible four-argument definition used by the families still on the legacy layout.
+🧰️framework/🛍️products/🦑️repo/go.work.sum:93:golang.org/x/tools/go/expect v0.1.1-deprecated/go.mod h1:eihoPOH+FgIqa3FpoTwguz/bVUSGBlGQU67vpBeOrBY=
+🧰️framework/🛍️products/🦑️repo/go.work.sum:94:golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated/go.mod h1:RVAQXBGNv1ib0J382/DPCRS/BPnsGebyM1Gj5VSDpG8=
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🪆️subset-conformance/🟦️.ts:219:/** 🚫 Glue compatibility shims keeping pre-migration module paths must be deleted. */
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🪆️subset-conformance/🟦️.ts:237:        reason: "Greenfield forbids compatibility shims.",
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/📐️type-render/🟦️.ts:46:const ANNOTATIONS = new Set(["description", "title", "default", "examples", "$comment", "deprecated", "readOnly", "writeOnly", "$id", "$schema"]);
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧱️taxonomy-normalization/🟦️.ts:351:      library.compatibilityAlias = true;
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟦️.ts:426:        { ...descriptor, compatibilityAlias: "legacy" },

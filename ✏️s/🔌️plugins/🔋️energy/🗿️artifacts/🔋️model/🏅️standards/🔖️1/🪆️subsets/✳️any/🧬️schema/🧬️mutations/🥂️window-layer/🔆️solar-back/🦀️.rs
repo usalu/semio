@@ -1,5 +1,5 @@
 //! 🔆️ A semantic intent changes only the named glazing optical field.
-use crate::{diff::EnergyModelDiff,mutations::EnergyModelMutation,EnergyModelSnapshot};
+use crate::{diff::EnergyModelDiff,EnergyModelSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive,ToValue as ToValueDerive};
 /// 🪟️ Solar back reflectance is addressed by the original glazing row identity.
 #[derive(Clone,Debug,PartialEq,ToValueDerive,FromValueDerive,semio_framework_dsl_record_derive::DslRecord,dsl::MutationLeaf,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree)]
@@ -9,8 +9,11 @@ use semio_framework_value_derive::{FromValue as FromValueDerive,ToValue as ToVal
 #[dsl(keyword="change-glazing-material-solar-reflectance-back")]
 pub struct ChangeGlazingMaterialSolarReflectanceBack{pub id:crate::model::EntityId,pub new_solar_reflectance_back:f64}
 /// 🎯️ Constructs the explicit optical field intent.
-pub fn change_glazing_material_solar_reflectance_back(id:crate::model::EntityId,new_solar_reflectance_back:f64)->EnergyModelMutation{EnergyModelMutation::ChangeGlazingMaterialSolarReflectanceBack(ChangeGlazingMaterialSolarReflectanceBack{id,new_solar_reflectance_back})}
-impl protocol::MutationKind<EnergyModelSnapshot,EnergyModelMutation> for ChangeGlazingMaterialSolarReflectanceBack{
+pub fn change_glazing_material_solar_reflectance_back<Op: From<ChangeGlazingMaterialSolarReflectanceBack>>(id:crate::model::EntityId,new_solar_reflectance_back:f64)->Op{ChangeGlazingMaterialSolarReflectanceBack{id,new_solar_reflectance_back}.into()}
+impl<Op> protocol::MutationKind<EnergyModelSnapshot,Op> for ChangeGlazingMaterialSolarReflectanceBack
+where
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGlazingMaterialSolarReflectanceBack>,
+{
  const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"change",entity:"glazing-material",kind:"change-glazing-material-solar-reflectance-back",record:"ChangedGlazingMaterialSolarReflectanceBack"};
 
 
@@ -18,7 +21,10 @@ impl protocol::MutationKind<EnergyModelSnapshot,EnergyModelMutation> for ChangeG
  fn target(&self)->Vec<String>{vec![self.id.0.to_string()]}
 }
 
-impl protocol::ColdMutationKind<EnergyModelSnapshot,EnergyModelMutation> for ChangeGlazingMaterialSolarReflectanceBack{
+impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot,Op> for ChangeGlazingMaterialSolarReflectanceBack
+where
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeGlazingMaterialSolarReflectanceBack>,
+{
  fn diff(&self,base:&EnergyModelSnapshot)->protocol::MutationOutcome<EnergyModelDiff>{super::diff::diff(self,base)}
- fn inverse(&self,base:&EnergyModelSnapshot)->Result<Vec<EnergyModelMutation>,semio_framework_value::ValueError>{super::inverse::inverse(self,base)}
+ fn inverse(&self,base:&EnergyModelSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{super::inverse::inverse(self,base)}
 }

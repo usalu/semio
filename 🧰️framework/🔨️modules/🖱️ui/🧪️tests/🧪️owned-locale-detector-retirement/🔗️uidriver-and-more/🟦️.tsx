@@ -63,8 +63,6 @@ export async function registerUidriverAndMoreTests(vitest: Tests2Vitest, depende
             </TreeContext.Provider>
           </UiDriverProvider>,
         );
-        // 📮️ A native HTML5 drag cannot be driven by synthetic pointer moves, so the bytes a real
-        // `dragstart` would put on the `DataTransfer` have to be readable from the row itself.
         expect(markup).toContain('data-drag-mime="application/x-semio-catalogue-item"');
         expect(markup).toContain("data-drag-payload=");
         expect(markup).toContain('data-draggable="true"');

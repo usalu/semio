@@ -185,7 +185,6 @@ pub struct SamplerHeap {
 }
 
 impl SamplerHeap {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn new(device: &ID3D12Device) -> Result<Self, PipelineBuildError> {
         let desc = D3D12_DESCRIPTOR_HEAP_DESC { Type: D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, NumDescriptors: 4, Flags: D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, NodeMask: 0 };
         // 🔓️ SAFETY: plain descriptor-heap creation; `desc` is a stack value valid for the call.
@@ -216,12 +215,10 @@ impl SamplerHeap {
         Ok(Self { heap })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn heap(&self) -> &ID3D12DescriptorHeap {
         &self.heap
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn gpu_handle_at(&self, device: &ID3D12Device, index: usize) -> D3D12_GPU_DESCRIPTOR_HANDLE {
         let stride = unsafe { device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) } as u64;
         let start = unsafe { self.heap.GetGPUDescriptorHandleForHeapStart() };
@@ -229,13 +226,11 @@ impl SamplerHeap {
     }
 
     /// 🖋️ `(glyph_sampler, icon_sampler)` — the UI/vector 2D pipeline family's table base.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn ui_table(&self, device: &ID3D12Device) -> D3D12_GPU_DESCRIPTOR_HANDLE {
         self.gpu_handle_at(device, 0)
     }
 
     /// 🌫️ `(scene_sampler, scene_sampler)` — the glass/blur/blit pipeline family's table base.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn scene_table(&self, device: &ID3D12Device) -> D3D12_GPU_DESCRIPTOR_HANDLE {
         self.gpu_handle_at(device, 2)
     }
@@ -497,7 +492,6 @@ impl Pipelines {
     /// `scene_format` is the offscreen scene color target's format (`blur_downsample` targets it, and
     /// every 2D/3D content pipeline targets it too — mirrors `GpuContext::render_frame`'s two-pass
     /// structure, same as the Metal backend's `Pipelines::new`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &ID3D12Device, surface_format: DXGI_FORMAT, scene_format: DXGI_FORMAT) -> Result<Self, PipelineBuildError> {
         let root_signature = build_root_signature(device)?;
         let samplers = SamplerHeap::new(device)?;
@@ -620,9 +614,6 @@ impl Pipelines {
             scene_format,
             DEPTH_STENCIL_FORMAT,
         )?;
-        // 🫧️ Depth bias -2/-1.0 mirrors `WORLD3D_TRANSLUCENT_PIPELINE` and is baked into this PSO's
-        // `RasterizerState` directly (see this file's header) — `🌐️world3d.rs` never sets it at
-        // encode time the way the Metal backend's `encode_passes` does.
         let world3d_translucent = build_pso(
             device,
             &root_signature,

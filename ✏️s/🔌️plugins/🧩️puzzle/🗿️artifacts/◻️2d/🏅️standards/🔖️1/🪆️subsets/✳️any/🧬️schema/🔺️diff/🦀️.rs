@@ -9,7 +9,7 @@ use protocol::ColdDiffAlgebra;
 use protocol::MutationDiff;
 use protocol::ColdMutationDiff;
 use protocol::list_delta::RowPatch;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged::PagedUtf8;
 
 //#region 🔖️Diff

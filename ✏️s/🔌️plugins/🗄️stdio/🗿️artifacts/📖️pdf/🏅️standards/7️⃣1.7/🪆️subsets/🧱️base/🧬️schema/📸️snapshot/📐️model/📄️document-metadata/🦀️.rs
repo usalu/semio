@@ -61,11 +61,10 @@ pub struct PdfDate {
 }
 
 impl PdfDate {
-    fn one_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<u32, semio_framework_value::ValueError> {
+    fn one_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<u32, semio_framework_value::ValueError> {
         control.checkpoint()?;
         Ok(1)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn one() -> u32 {
         1
     }
@@ -99,7 +98,6 @@ pub struct PdfInfo {
 }
 
 impl PdfInfo {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self == &PdfInfo::default()
     }
@@ -254,11 +252,9 @@ pub struct PdfEncryption {
 }
 
 impl PdfEncryption {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn all_permissions() -> i32 {
         -1
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn yes() -> bool {
         true
     }

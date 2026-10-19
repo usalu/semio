@@ -69,9 +69,6 @@ pub fn refine_point_lm(poses: &[(CameraPose, Intrinsics)], obs_px: &[[f64; 2]], 
     x0.set(0, initial[0]);
     x0.set(1, initial[1]);
     x0.set(2, initial[2]);
-    // ⏱️ A three-parameter point from a DLT start converges in a handful of damped steps; fifty
-    // bought nothing and made one bounded retriangulation unit (which may refine twice, on the full
-    // track and on its agreeing subset) overrun the worker ceiling.
     let cfg = LmConfig { max_iters: 8, ..LmConfig::default() };
     let result = semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::levenberg_marquardt(&problem, x0, &cfg);
     [result.x.get(0), result.x.get(1), result.x.get(2)]

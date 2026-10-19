@@ -173,11 +173,6 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         let node = crate::editor::procedure::modes::edit::windows::main::render(&document, &vectors["runOutput"].to_string(), labels).expect("table");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
         let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
-        // 📊️ `TableWindowKit::render` emits the renderer table contract both hosts read: `columnsJson`
-        // as `{id, label}` records and `rowsJson` as `{id, "<column index>": cell}` records. The
-        // committed oracle spells what the USER reads — the locale-resolved column labels and the cell
-        // text in column order — so the records are projected back to that, rather than the oracle being
-        // rewritten into the renderer's keying.
         let columns: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.columns_json).expect("columns oracle").into_iter().map(|column| column["label"].clone()).collect();
         assert_eq!(serde_json::Value::Array(columns.clone()), row["columns"]);
         let rows: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.rows_json)

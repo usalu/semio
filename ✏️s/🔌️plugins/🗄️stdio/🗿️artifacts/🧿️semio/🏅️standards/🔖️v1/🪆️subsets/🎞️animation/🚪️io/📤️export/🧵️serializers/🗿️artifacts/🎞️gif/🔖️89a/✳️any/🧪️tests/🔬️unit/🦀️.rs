@@ -22,7 +22,7 @@ async fn serialize_derives_real_delay_from_keyframe_time_deltas() {
     assert_eq!(gif.frames.len(), 3);
     assert_eq!(gif.frames[0].delay_cs, 10);
     assert_eq!(gif.frames[1].delay_cs, 20);
-    assert_eq!(gif.frames[2].delay_cs, 20); // last frame reuses prior delay
+    assert_eq!(gif.frames[2].delay_cs, 20);
     assert!(gif.frames.iter().all(|f| f.indices.is_empty()), "no fabricated pixel data");
 }
 

@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-payload"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Job payload custody: the paid payload pages and operation ledger, the retained payload writer and grant, the in-place payload builder and its staged pages, funded through the job step."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-payload"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_payload"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true }

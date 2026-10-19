@@ -13,5 +13,5 @@ export { AGENT_BRIDGE_RENDEZVOUS_DIR_ENV, liveAgentBridgeOfferFor, semioAgentBri
 export { AGENT_CREDENTIALS_DIR_ENV, semioAgentCredentialInstallVitePlugin } from "../../../🔌️vite-plugins/🔐️agent-credential-install/🟦️.ts";
 export type { DescriptorRouteDecision, DescriptorRouteGuardSpec } from "../../../🔌️vite-plugins/🟦️.ts";
 export type { CanonicalBootstrapFolderMirrorFrontierV1, CanonicalBootstrapFolderMirrorOwnerV1, CanonicalBootstrapFolderMirrorReserveV1 } from "../../../🔌️vite-plugins/📇️bootstrap-folder-mirror/🟦️.ts";
-export type { ActivationComponentSpec } from "../../../🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts";
+export type { ActivationComponentSpec } from "../../../🔌️vite-plugins/🚀️activation-vite-plugin/🧬️options/🟦️.ts";
 export type { SourceFreshnessRegistry, SourceStamp } from "../../../🔌️vite-plugins/🔖️source-freshness/🟦️.ts";

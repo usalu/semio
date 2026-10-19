@@ -44,18 +44,15 @@ pub struct TouchedPaths {
 
 impl TouchedPaths {
     /// 🏗️ Builds a `TouchedPaths` from plain `&str` path segments.
-    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn new(paths: impl IntoIterator<Item = impl Into<String>>) -> Self {
         Self { paths: paths.into_iter().map(Into::into).collect() }
     }
 
-    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     fn segments(path: &str) -> Vec<&str> {
         path.split('/').filter(|segment| !segment.is_empty()).collect()
     }
 
     /// 🔀️ Whether any of `self.paths` shares an ancestor/descendant relationship with `prefix`.
-    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn intersects_prefix(&self, prefix: &str) -> bool {
         let target = Self::segments(prefix);
         self.paths.iter().any(|path| {
@@ -86,7 +83,6 @@ impl TouchedPaths {
     }
 
     /// 🔀️ Whether any of `prefixes` intersects `self` (see [`intersects_prefix`](Self::intersects_prefix)).
-    // 🚫️async: E1 pure accessor consumed inside a sync std Iterator closure — see R9
     pub fn intersects_any(&self, prefixes: &[&str]) -> bool {
         prefixes.iter().any(|prefix| self.intersects_prefix(prefix))
     }

@@ -1,6 +1,8 @@
 //! 🧮️ Effective operations and folds: the pair merge, the effective operation with its drop, the supersession aware effective operations, the replacement admission and the effective edit, operation and recorded folds. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutationDiff;
+use semio_framework_os_spr::ColdMutation;
 
 /// 🫱️ What merging a persisted pair into a live store found ([`ArtifactStore::merge_persisted_history`]): `merged` events the
 /// store took from the pair, and `ahead` events the store holds that the pair lacks — what a writer persists again for.
@@ -157,7 +159,7 @@ where
 }
 
 /// 🧭️ Decides once and retires the original diff after its single permitted application.
-fn apply_operation_decision<P, D, T>(outcome: crate::os_spr::MutationOutcome<D>, apply: impl FnOnce(&D) -> crate::os_spr::MutationApplyResult<T>) -> (Option<crate::os_spr::MutationApplyResult<T>>, Vec<crate::os_spr::MutationMessage>)
+fn apply_operation_decision<P, D, T>(outcome: semio_framework_os_spr::MutationOutcome<D>, apply: impl FnOnce(&D) -> semio_framework_os_spr::MutationApplyResult<T>) -> (Option<semio_framework_os_spr::MutationApplyResult<T>>, Vec<semio_framework_os_spr::MutationMessage>)
 where D: ColdMutationDiff<P>,
 {
     let outcome = match outcome.admit() {
@@ -187,7 +189,7 @@ where
         protocol::MutationAdmission::Refused(outcome) => {
             let (diff, messages) = outcome.into_parts();
             <D as MutationDiff<P>>::retire_cold(diff);
-            return (base.clone(), crate::os_spr::MutationOutcome::new(D::default()).absorb_messages(messages));
+            return (base.clone(), semio_framework_os_spr::MutationOutcome::new(D::default()).absorb_messages(messages));
         }
     };
     let (diff, mut messages) = outcome.into_parts();
@@ -209,7 +211,7 @@ where
     P: Clone,
     Mutation: ColdMutation<P>,
 {
-    let (applied, mut messages) = apply_operation_decision::<P, Mutation::ReferenceDiff, P>(operation.diff(state).stamp_op_index(op_index), |diff| crate::os_spr::apply_diff_cold(diff, state));
+    let (applied, mut messages) = apply_operation_decision::<P, Mutation::ReferenceDiff, P>(operation.diff(state).stamp_op_index(op_index), |diff| semio_framework_os_spr::apply_diff_cold(diff, state));
     match applied {
         Some(Ok(next)) => (Some(next), messages),
         None => (None, messages),
@@ -223,16 +225,16 @@ where
 }
 
 /// 🪜️ Keeps a refused step unchanged while continuing the same exclusive projection owner.
-pub fn fold_operation_into<P, Mutation>(state: &mut P, operation: &Mutation, op_index: u32) -> (bool, Vec<crate::os_spr::MutationMessage>)
+pub fn fold_operation_into<P, Mutation>(state: &mut P, operation: &Mutation, op_index: u32) -> (bool, Vec<semio_framework_os_spr::MutationMessage>)
 where Mutation: ColdMutation<P>,
 {
     let outcome = operation.diff(state).stamp_op_index(op_index);
-    let (applied, mut messages) = apply_operation_decision::<P, Mutation::ReferenceDiff, ()>(outcome, |diff| crate::os_spr::apply_diff_cold_into(diff, state));
+    let (applied, mut messages) = apply_operation_decision::<P, Mutation::ReferenceDiff, ()>(outcome, |diff| semio_framework_os_spr::apply_diff_cold_into(diff, state));
     match applied {
         Some(Ok(())) => (true, messages),
         None => (false, messages),
         Some(Err(error)) => {
-            let mut fatal = crate::os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
+            let mut fatal = semio_framework_os_spr::MutationMessage::fatal(error.code, error.message).at(error.target);
             fatal.op_index = Some(op_index);
             messages.push(fatal);
             (false, messages)

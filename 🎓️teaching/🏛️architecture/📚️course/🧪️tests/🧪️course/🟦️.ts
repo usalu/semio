@@ -36,6 +36,29 @@ const COUNTABLE = { en: /^(?!(?:The|A|An|One) )(?!\p{L}+ing (?:(?:an?|the)\b|\d)
 const length = (text: string): number => [...text].length;
 
 describe("architecture course", () => {
+  it("shares valid proctor fixtures with the Rust unit and HTTP suites", () => {
+    const proctor = resolve(siteRoot, "../../🛂️proctor");
+    const source = readFileSync(resolve(proctor, "🔨️modules/📚️course/🧰️fixtures/🦀️.rs"), "utf8");
+    const relative = source.match(/fixture_path!\("([^"]+)"\)/u)?.[1];
+    expect(relative).toBeDefined();
+    const path = resolve(proctor, "🔨️modules/🧱️base/📦️packages/🦀️rust", relative!);
+    const fixture = read(path) as Course;
+    const documents = fixture.quizzes.map(file => read(resolve(dirname(path), file)) as Quiz);
+    expect(courseIssues(fixture, documents)).toEqual([]);
+    expect(validCourse(fixture) ? [] : validCourse.errors).toEqual([]);
+    for (const quiz of documents) {
+      expect(quizIssues(quiz)).toEqual([]);
+      expect(validQuiz(quiz) ? [] : validQuiz.errors).toEqual([]);
+    }
+    for (const [document, file] of [[fixture, path], ...documents.map((quiz, index) => [quiz, resolve(dirname(path), fixture.quizzes[index]!)] as const)] as const) {
+      expect(resolve(dirname(file), document.$schema!.split("#")[0]!)).toBe(schemaPath);
+    }
+    const harness = readFileSync(resolve(proctor, "🧪️tests/🌐️end-to-end/🧰️harness/🦀️.rs"), "utf8");
+    const directory = harness.match(/fixture_path!\("([^"]+)"\)/u)?.[1];
+    expect(directory).toBeDefined();
+    expect(resolve(proctor, "📦️packages/🦀️rust", directory!, "📚️catalog/🔣️.json")).toBe(path);
+  });
+
   it("owns the course identity while preserving its quiz components", () => {
     expect(course.schema).toBe(courseContract.schema);
     expect(course.id).toBe(courseContract.id);

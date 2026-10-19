@@ -24,6 +24,7 @@ semio-framework-composition-admission = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-job-publication = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
@@ -47,6 +48,7 @@ semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-raster-raster-mutations = { workspace = true }
 semio-s-artifact-raster-raster-mutations-layers = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }

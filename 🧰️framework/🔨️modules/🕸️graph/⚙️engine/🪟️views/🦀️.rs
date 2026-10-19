@@ -318,8 +318,6 @@ impl<'g, G: GraphView, FN: Fn(NodeId) -> bool, FE: Fn(EdgeRef) -> bool> GraphVie
         self.edges().count()
     }
     fn edges(&self) -> impl Iterator<Item = EdgeRef> {
-        // 🔀️ Rewritten from `.filter(move |&e| self.keep(e))` — `keep` is async and cannot be
-        // called inside a sync closure (R10 residue shape #1).
         let mut out = Vec::new();
         for e in self.graph.edges() {
             if self.keep(e) {
@@ -332,8 +330,6 @@ impl<'g, G: GraphView, FN: Fn(NodeId) -> bool, FE: Fn(EdgeRef) -> bool> GraphVie
         self.out_neighbors(node)
     }
     fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
-        // 🔀️ Rewritten — `edges_between` is async and cannot be called inside the sync `.filter`
-        // predicate that used to guard this (R10 residue shape #1).
         let node_ok = (self.keep_node)(node);
         let mut out = Vec::new();
         if node_ok {

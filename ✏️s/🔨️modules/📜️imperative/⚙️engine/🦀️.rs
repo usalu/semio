@@ -154,7 +154,7 @@ impl<'a> Executor<'a> {
         Self { registry }
     }
 
-    /// Runs steps strictly in list order; merges each output into scope; halts on first error.
+    /// 🏃️ Runs steps strictly in list order; merges each output into scope; halts on first error.
     pub fn run(&self, path: &Path, seed: &Dictionary) -> RunResult {
         let mut scope = seed.clone();
         let mut effects = Vec::new();

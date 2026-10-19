@@ -1,4 +1,4 @@
-//! into the viewport, with their rim-vortex templates nested) plus the vortex/cable/attraction kind
+//! 🖼️ into the viewport, with their rim-vortex templates nested) plus the vortex/cable/attraction kind
 //! 🛍️ Puzzle 3d play app panel — the kind catalogue: the object kinds available to place (draggable
 //! rows the scene_snapshot's `meta.kindCatalogs` declares.
 //!
@@ -8,7 +8,7 @@
 //! longer truncates with a `+N` that never advanced — the panel's page cursor was dead
 //! (`📓️audit-app-panels-a.md` §4a), and the scrollbar now spans the whole catalog instead.
 
-use semio_s_artifact_puzzle_3d_editor_snapshot::catalog_entry_label;
+pub use semio_s_artifact_puzzle_3d_editor_snapshot::catalog_entry_label;
 use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 use {semio_s_artifact_puzzle_3d_editor_session::ui_label, semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dScene, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_INTERACTION_DOMAIN, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 

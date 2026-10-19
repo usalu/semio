@@ -45,22 +45,10 @@ pub(super) fn loop_uv_polygon_with(body: &Body, loop_id: semio_framework_3d_brep
             let s = i as f64 / (n - 1) as f64;
             let mut uv = coedge_uv_sample(body, co, surface, s)?;
             let is_pole = surface.is_degenerate_uv(uv.x, uv.y);
-            // `s` must reach 1.0 (via `i/(n-1)`, not `i/n`) so each coedge's samples actually span
-            // its own full [0,1]. The last-sample-skip below (mirroring classification.rs's own
-            // `loop_uv_polygon_sampled` pattern, kept close per doctrine) avoids duplicating each
-            // shared vertex twice — EXCEPT at a pole: a cone's apex (or a sphere's own poles) is
-            // where a lune face's seam genuinely re-enters at the OTHER `u` branch (`0` in, `2π`
-            // out), so skipping it here would merge the two branches into one point and let the
-            // boundary "close" via a spurious diagonal across the full angular range instead of
-            // tracing the real (degenerate-width-at-the-pole, but still `0..2π`-wide) rectangle —
-            // same bug class as `tessellation.rs`'s `collect_loop_uv`, see the pole-branch doc below.
             if i == n - 1 && ci + 1 != coedges.len() && !is_pole {
                 continue;
             }
             if surface.is_u_periodic() {
-                // A pole has a meaningless `u`; unwrapping the sample AFTER it against the pole's
-                // own (arbitrary) `u` would drag the departing seam back onto the arriving branch —
-                // don't chain continuity through one (mirrors `tessellation.rs`'s identical fix).
                 if !prev_was_pole {
                     if let Some(pu) = prev_u {
                         uv.x = unwrap_u(pu, uv.x);
@@ -69,14 +57,6 @@ pub(super) fn loop_uv_polygon_with(body: &Body, loop_id: semio_framework_3d_brep
                 prev_u = Some(uv.x);
             }
             prev_was_pole = is_pole;
-            // 🐛 A repeated vertex is fatal downstream, not merely redundant: `ear_clip`'s
-            // blocking test is `point_in_or_on_triangle`, so a duplicate of any candidate ear's
-            // OWN corner reads as a point lying inside that ear and blocks it — with every
-            // candidate blocked the triangulation bails out empty and the face measures as ZERO
-            // area. Found live on the single-seam sphere, whose pole branch (above) deliberately
-            // keeps the shared vertex of both the arriving and departing coedge: `face_area` of a
-            // plain unit sphere came out `0`, which `validate_body` then reported as a
-            // `sliver-face`, failing every boolean that produced or preserved a sphere face.
             if poly.last().is_some_and(|last| (last.x - uv.x).abs() <= UV_WELD && (last.y - uv.y).abs() <= UV_WELD) {
                 continue;
             }

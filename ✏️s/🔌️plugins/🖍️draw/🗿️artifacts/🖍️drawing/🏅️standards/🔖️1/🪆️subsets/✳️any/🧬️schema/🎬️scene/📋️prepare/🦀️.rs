@@ -48,8 +48,8 @@ impl Default for DocumentSceneLimits{fn default()->Self{Self{max_nodes:1024,max_
 pub enum DocumentSceneContent{
  Path{segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
  Image{asset:String,width:f64,height:f64},Group{children:Vec<String>,isolation:bool},
- Text{content:String,x:f64,y:f64,size:f64,font_family:crate::DrawingFontFamily,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
- Glyphs{content:String,x:f64,y:f64,size:f64,font_family:crate::DrawingFontFamily,segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
+ Text{content:String,x:f64,y:f64,size:f64,font_family:semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
+ Glyphs{content:String,x:f64,y:f64,size:f64,font_family:semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily,segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
  Boolean{operation:String,children:Vec<String>,reference_transform:[f64;6],fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
  Trace{source:String,threshold:f64,simplify_epsilon:f64,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},
 }

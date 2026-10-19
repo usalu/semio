@@ -2,6 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Closed Build Owner Admission V1",
   "$defs": {
+    "sourceInputObservation": {"const":{"selectedTask":"compile","declaredEntry":"compile","namedInputOnly":"freshness"}},
+    "relativeImportOwnership": {"const":{"workspaceRoot":".","workspaceAncestorRole":"source","nestedOwnerRole":"project"}},
+    "generatedImportResolution": {"const":{"files":[".ts",".tsx",".js",".jsx"],"probes":["",".ts",".tsx",".d.ts",".js",".jsx",".json",".node",".mts",".cts",".mjs",".cjs","/package.json","/index.ts","/index.tsx","/index.d.ts","/index.js","/index.jsx","/index.json","/index.node","/index.mts","/index.cts","/index.mjs","/index.cjs"]}},
+    "generatedTaskDependencies": {"type":"object","maxProperties":65536,"propertyNames":{"type":"string","minLength":1,"pattern":"^[^\\u0000-\\u0020:]+$"},"additionalProperties":{"type":"array","uniqueItems":true,"maxItems":65536,"items":{"type":"string","minLength":3,"maxLength":256,"pattern":"^[^\\u0000-\\u0020:]+:[^\\u0000-\\u0020:]+$"}}},
     "ownerInputs": {
       "type": "object",
       "maxProperties": 65536,
@@ -60,6 +64,7 @@
             "minLength": 1
           }
         },
+        "generatedDependencies": { "$ref": "#/$defs/generatedTaskDependencies" },
         "dependencyInputs": {
           "$ref": "#/$defs/ownerInputs"
         }
@@ -95,6 +100,7 @@
   ],
   "additionalProperties": false,
   "properties": {
+    "generatedDependencies": {"type":"object","maxProperties":65536,"additionalProperties":{"$ref":"#/$defs/generatedTaskDependencies"}},
     "owners": {
       "type": "array",
       "uniqueItems": true,

@@ -40,3 +40,9 @@ declare module "fresh" {
   /** 🧊️ Reports whether a response with `responseHeaders` is still fresh for a request carrying `requestHeaders`. */
   export default function fresh(requestHeaders: Readonly<Record<string, string | readonly string[] | undefined>>, responseHeaders: Readonly<Record<string, string | readonly string[] | undefined>>): boolean;
 }
+
+/** 🩺️ Error-introspection helper (the `check-error` package chai uses), the reference oracle the editor error contract's diagnostic message is checked against. */
+declare module "check-error" {
+  /** 🩺️ Reads the message of an error-like value, or the value itself when it is already a string. */
+  export function getMessage(errorLike: unknown): string;
+}

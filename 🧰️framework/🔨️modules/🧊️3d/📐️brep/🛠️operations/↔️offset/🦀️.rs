@@ -131,13 +131,6 @@ fn offset_nurbs_surface(u_knots: &KnotVector, v_knots: &KnotVector, controls: &[
         if max_err <= tol {
             return Ok(candidate);
         }
-        // Bisects EVERY interior span (both directions), not just the single widest one — a
-        // widest-span-only strategy stalls (repeatedly refines wherever the FIRST tie sits while
-        // the actual worst-deviation region elsewhere never gets finer), confirmed by a direct
-        // convergence-trend probe: it plateaued above `tol` for 3 consecutive rounds even given
-        // 10 rounds. Uniform h-refinement doubles the span count every round instead, which is
-        // guaranteed to shrink the sampled deviation everywhere (a first-order method: halving
-        // knot spacing roughly halves the interpolation error at every sample, not just one span).
         for um in all_span_midpoints(&u_knots) {
             let (nu, c1, w1) = insert_u_knot_surface(&u_knots, &controls, &weights, um);
             u_knots = nu;
@@ -515,8 +508,6 @@ fn face_normal_at(body: &Body, face: FaceId, coedge: CoedgeId, vertex: Option<Ve
     let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
     let surf = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))?;
     let mut n = if let Surface::Plane { frame } = surf {
-        // A planar face's normal is position-independent — no pcurve needed (planar faces don't
-        // always carry one, W1-E's own documented convention).
         frame.z
     } else if let Some(pid) = c.pcurve {
         let param = match vertex {

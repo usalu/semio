@@ -5,7 +5,7 @@ import{dirname,isAbsolute,relative,resolve,sep}from"node:path";
 import{realpathSync}from"node:fs";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"@semio-tech/process/routing";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{readPhysicalCargoSourceV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import{readPhysicalCargoSourceV1}from"@semio-tech/process/artifacts/native-build/source/admission/read";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 declare const sourceBrand:unique symbol;
 /** 🧷️ Identifies a live bounded snapshot whose captured bytes supply the actual compiler loader. */

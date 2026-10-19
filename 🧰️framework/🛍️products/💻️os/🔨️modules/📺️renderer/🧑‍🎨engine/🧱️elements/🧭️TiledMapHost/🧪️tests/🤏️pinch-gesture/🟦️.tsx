@@ -9,7 +9,7 @@ import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
-import surfacePinchFixture from "../../../../🧪️tests/🧫️fixtures/🤏️surface-pinch/🔣️.json";
+import surfacePinchFixture from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/surface-pinch.json";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 
 const { createMapSessionMock } = vi.hoisted(() => ({ createMapSessionMock: vi.fn() }));

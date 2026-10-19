@@ -1,12 +1,12 @@
 /** 🔗️ Hub connection and spaces exports of the renderer entry: the hub connection lane with its sign-in, space browser and delegation panes, the hub first run walkthrough and the spaces chrome labels. */
-import { useHubConnection } from "../../../🧱️elements/🔗️HubConnection/🟦️.tsx";
-import { hubUiLabel } from "../../../🧱️elements/🔗️HubConnection/🌐️ui-labels/🟦️.ts";
-import { type HubConnectionPortV1, type HubConnectionValueV1, type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../../../🧱️elements/🔗️HubConnection/🔌️connection-contract/🟦️.ts";
-import { createHubConnectionFetchPortV1, type HubFetchResponseV1 } from "../../../🧱️elements/🔗️HubConnection/🛰️fetch-port/🟦️.ts";
-import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1, type HubSignInPaneProps } from "../../../🧱️elements/🔐️HubSignIn/🟦️.tsx";
-import { SpaceBrowser, spaceBrowserPresencePeersV1, type SpaceBrowserProps } from "../../../🧱️elements/🏘️SpaceBrowser/🟦️.tsx";
-import { AgentDelegations, agentDelegationInstantV1, type AgentDelegationsProps } from "../../../🧱️elements/🤖️AgentDelegations/🟦️.tsx";
-import { HubFirstRun, hubFirstRunStageAtIndex, type HubFirstRunProps } from "../../../🧱️elements/🎓️HubFirstRun/🟦️.tsx";
+import { useHubConnection } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection";
+import { hubUiLabel } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection/ui-labels";
+import { type HubConnectionPortV1, type HubConnectionValueV1, type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection/connection-contract";
+import { createHubConnectionFetchPortV1, type HubFetchResponseV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection/fetch-port";
+import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1, type HubSignInPaneProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubSignIn";
+import { SpaceBrowser, spaceBrowserPresencePeersV1, type SpaceBrowserProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/SpaceBrowser";
+import { AgentDelegations, agentDelegationInstantV1, type AgentDelegationsProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentDelegations";
+import { HubFirstRun, hubFirstRunStageAtIndex, type HubFirstRunProps } from "@semio-tech/framework-os/modules/renderer/engine/elements/HubFirstRun";
 
 //#region 🔖️HubConnection
 /** 🔗️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the browser-facing hub

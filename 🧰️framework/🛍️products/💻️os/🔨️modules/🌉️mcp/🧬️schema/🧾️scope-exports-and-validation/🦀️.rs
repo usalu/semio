@@ -10,7 +10,7 @@ const LEAVES: FacetLeaves = FacetLeaves { rust: concat!(include_str!("../🦀️
 /// 🏷️ `$defs` of `🔣️.json`, which `🧪️Tests::the_json_mirror_publishes_exactly_the_registry_exports`
 /// pins to [`schemas`]; `🧪️Tests::the_scope_export_declaration_matches_the_registry` pins this list to
 /// the same set, so a new registry entry cannot be published without being resolvable.
-const EXPORTS: [SchemaExport; 74] = [
+const EXPORTS: [SchemaExport; 75] = [
     SchemaExport { id: "ActionInvokeInput", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceBudgetV1", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceCacheModeV1", leaves: LEAVES },

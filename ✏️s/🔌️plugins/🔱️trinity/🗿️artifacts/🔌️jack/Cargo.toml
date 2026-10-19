@@ -100,6 +100,7 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive
 
 
 
+
 [workspace.dependencies.semio-s-artifact-trinity-jack]
 path = "📦️packages/🦀️rust"
 

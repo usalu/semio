@@ -1,6 +1,7 @@
 //! 🎟️ Original JSON authority is conserved across repeated turns, cancellation and paid physical closure.
 use super::*;
-use semio_framework_value::{DslValue,NativeDecodeControl,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value::{DslValue, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn law()->serde_json::Value{serde_json::from_str(crate::text("📥️decode/🧵️operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(value.clone()).unwrap()}
@@ -27,7 +28,7 @@ fn original_json_operation_never_refills_cumulative_authority_from_repeated_turn
 
 #[test]
 fn original_json_operation_debits_post_effect_cancellation_and_keeps_its_cleanup_wallet(){
-    let law=law();let source=law["source"].as_str().unwrap();let source_pointer=source.as_ptr();let mut accepted=|event:semio_framework_value::native_decoding::NativeDecodeProgress|event.completed!=1;let mut control=NativeDecodeControl::new_retained(&mut accepted);let mut incoming_policy=policy(&law);incoming_policy.normal.maximum_items=128;let incoming=grant(&law["turn"]);
+    let law=law();let source=law["source"].as_str().unwrap();let source_pointer=source.as_ptr();let mut accepted=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|event.completed!=1;let mut control=NativeDecodeControl::new_retained(&mut accepted);let mut incoming_policy=policy(&law);incoming_policy.normal.maximum_items=128;let incoming=grant(&law["turn"]);
     let mut operation=JsonReadOperation::<_,DslValue>::new(source,JsonMemberPolicy::Reject,incoming_policy,&mut control).unwrap();let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||operation.step(incoming).map(|value|value.is_some()).map_err(|error|{let JsonError::Native(error)=error else{unreachable!()};(error.kind,error.retained_progress())}));let(kind,receipt)=result.unwrap_err();assert_eq!(kind,ValueRefusalKind::Canceled);assert_eq!((born,released),(0,0));assert_eq!(receipt,operation.normal_receipt());assert_eq!(operation.normal_receipt().copied_items,1);assert_eq!(operation.source().as_ptr(),source_pointer);assert_eq!(operation.retirement_receipt(),Default::default());close(&mut operation,&law);
 }
 

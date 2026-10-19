@@ -282,7 +282,7 @@ pub mod completion_effects;
 #[path = "../📬️completion/♻️vacant/🦀️.rs"]
 pub mod completion_vacant;
 #[path = "../🌱️initialization/🏪️catalog/🦀️.rs"]
-pub pub(crate) mod original_catalog_constructor;
+pub mod original_catalog_constructor;
 #[path = "🛬️lifted/👁️view/🦀️.rs"]
 mod lifted_view;
 pub use lifted_view::*;

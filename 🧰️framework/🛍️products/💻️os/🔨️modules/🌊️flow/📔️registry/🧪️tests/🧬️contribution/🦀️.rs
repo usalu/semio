@@ -111,11 +111,6 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     let expected = third_party_json(reader.schema("owned").unwrap());
     let capacity = fixture["retiredCapacity"].as_u64().unwrap() as usize;
     assert_eq!(RETIRED_REGISTRY_CAPACITY, capacity);
-    // 🎟️ Filled by pressure, not by an exact count: an admission that finds the queue full first
-    // retires the free versions ahead of the pinned one (`reclaim_free_retired_registries`), so the
-    // number of installs exhaustion takes is the queue's depth BEHIND `reader`, not `capacity`.
-    // What the law states is unchanged — that exhaustion is reached, refuses, and preserves every
-    // root (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let mut refused = None;
     for _ in 1..=capacity * 4 {
         if let Err(reason) = install_flow_extension_manifest(plugin, &manifest) {

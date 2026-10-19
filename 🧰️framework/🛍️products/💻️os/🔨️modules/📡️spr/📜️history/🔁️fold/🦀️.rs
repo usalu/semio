@@ -21,7 +21,7 @@ impl HistoryLog {
             control.pulse().await?;
             let metadata = edit.meta.as_deref().unwrap_or_default();
             let timestamp = match metadata.first().and_then(|metadata| metadata.hlt) {
-                Some((actor, physical_ms, logical)) => protocol::HybridLogicalTimestamp { actor, physical_ms: match u64::try_from(physical_ms){Ok(value)=>value,Err(_)=>return Err(protocol::history_fold_refusal_controlled("negative history clock",control).await?)}, logical },
+                Some((actor, physical_ms, logical)) => protocol::HybridLogicalTimestamp { actor, physical_ms: match u64::try_from(physical_ms){Ok(value)=>value,Err(_)=>return Err(semio_framework_replication_history::history_fold_refusal_controlled("negative history clock",control).await?)}, logical },
                 None => protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
             };
             let id = control.track(protocol::copy_history_text(&edit.id, control).await?).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
@@ -31,7 +31,7 @@ impl HistoryLog {
             for index in 0..edit.ops.len() {
                 let identity = control.track(match metadata.get(index).and_then(|metadata| metadata.op_id.as_deref()) {
                     Some(identity) => protocol::copy_history_text(identity, control).await?,
-                    None => protocol::copy_history_operation_identity(&edit.id,index as u64,control).await?,
+                    None => semio_framework_replication_history::copy_history_operation_identity(&edit.id,index as u64,control).await?,
                 }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
                 control.insert_text(&mut owners, protocol::copy_history_text(&identity, control).await?, position).await?;
                 control.push_vec(&mut mutations,protocol::MutationId(identity.take())).await?;
@@ -50,7 +50,7 @@ impl HistoryLog {
         let mut transitions = control.vector(self.transitions.len()).await?;
         for source in &self.transitions {
             let decoded = control.track(protocol::decode_history_transition_controlled(&source.payload, control).await?).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-            if !shape.admits(decoded.kind()) { return Err(protocol::history_fold_refusal_controlled("transition is refused by the history shape",control).await?); }
+            if !shape.admits(decoded.kind()) { return Err(semio_framework_replication_history::history_fold_refusal_controlled("transition is refused by the history shape",control).await?); }
             let mutation_id = control.track(protocol::MutationId(protocol::copy_history_text(&source.id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             let document_id = control.track(protocol::ArtifactId(protocol::copy_history_text(&self.doc_id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             let actor=control.track(protocol::ActorId(control.lease_actor(&source.actor).await)).unwrap_or_else(|_|unreachable!("history actor shared ownership")).await;
@@ -63,7 +63,7 @@ impl HistoryLog {
             control.push_vec(&mut transitions,protocol::MutationEnvelope { mutation_id: mutation_id.take(), document_id: document_id.take(), actor: actor.take(), dependencies: dependencies.take(), observed: observed.take(), target: Vec::new(), diff: protocol::ArtifactDiff { schema: schema.take(), payload:payload.take() }, inverse: protocol::InverseMutation { schema:inverse_schema, payload: Vec::new() }, timestamp: protocol::HybridLogicalTimestamp { actor: source.hlt.0, physical_ms: source.hlt.1, logical: source.hlt.2 }, transaction: None, verb: None, line: None }).await?;
         }
         let document_id = control.track(protocol::ArtifactId(protocol::copy_history_text(&self.doc_id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-        let trunk = control.track(protocol::copy_history_trunk(&document_id, control).await?).unwrap_or_else(|_|unreachable!("history trunk declares controlled local ownership")).await;
+        let trunk = control.track(semio_framework_replication_history::copy_history_trunk(&document_id, control).await?).unwrap_or_else(|_|unreachable!("history trunk declares controlled local ownership")).await;
         let line_id = control.track(match self.viewer_line.as_ref().filter(|line| line.as_str() != trunk.as_str()) { Some(line) => protocol::copy_history_text(line, control).await?, None => trunk.take() }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
         let checkpoint_id = match &self.viewer_checkpoint { Some(checkpoint) => Some(protocol::copy_history_text(checkpoint, control).await?), None => None };
         let head = control.track(protocol::ViewerHead { line_id: line_id.take(), checkpoint_id }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
@@ -75,12 +75,12 @@ impl HistoryLog {
         let mut conflicts = control.vector(self.conflicts.len()).await?;
         for source in &self.conflicts {
             let identity = control.track(protocol::ConflictId(protocol::copy_history_text(&source.id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-            let status = match source.status { 0 => protocol::ConflictStatus::Open, 1 => protocol::ConflictStatus::Accepted, 2 => protocol::ConflictStatus::Discarded, _ => return Err(protocol::history_fold_refusal_controlled("unknown conflict status",control).await?) };
+            let status = match source.status { 0 => protocol::ConflictStatus::Open, 1 => protocol::ConflictStatus::Accepted, 2 => protocol::ConflictStatus::Discarded, _ => return Err(semio_framework_replication_history::history_fold_refusal_controlled("unknown conflict status",control).await?) };
             let mut actors = control.vector(source.actors.len()).await?;
             for actor in &source.actors {control.push_vec(&mut actors,protocol::ActorId(control.lease_actor(actor).await)).await?;}
             let mut messages = control.vector(source.messages.len()).await?;
             for source in &source.messages {
-                let level = match semio_framework_diagnostic::Severity::from_u8(source.level){Some(level)=>level,None=>return Err(protocol::history_fold_refusal_controlled("unknown conflict severity",control).await?)};
+                let level = match semio_framework_diagnostic::Severity::from_u8(source.level){Some(level)=>level,None=>return Err(semio_framework_replication_history::history_fold_refusal_controlled("unknown conflict severity",control).await?)};
                 let code = control.track(protocol::copy_history_text(&source.code, control).await?).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
                 let message = control.track(protocol::copy_history_text(&source.message, control).await?).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
                 let mut target = control.vector(source.target.len()).await?;
@@ -90,7 +90,7 @@ impl HistoryLog {
             let kind = control.track(match source.kind {
                 0 => { let mut envelopes = control.vector(source.envelopes.len()).await?; for bytes in &source.envelopes { control.push_vec(&mut envelopes,protocol::decode_history_envelope_controlled(bytes, control).await?).await?; } protocol::ConflictKind::Quarantined { envelopes: envelopes.take() } },
                 1 => { let mut edit_ids = control.vector(source.edit_ids.len()).await?; for id in &source.edit_ids { control.push_vec(&mut edit_ids,protocol::copy_history_text(id, control).await?).await?; } protocol::ConflictKind::Degraded { edit_ids: edit_ids.take() } },
-                _ => return Err(protocol::history_fold_refusal_controlled("unknown conflict kind",control).await?),
+                _ => return Err(semio_framework_replication_history::history_fold_refusal_controlled("unknown conflict kind",control).await?),
             }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
             control.push_vec(&mut conflicts,protocol::Conflict { id: identity.take(), kind: kind.take(), status, messages: messages.take(), actors: actors.take(), timestamp: protocol::HybridLogicalTimestamp { actor: source.hlt.0, physical_ms: source.hlt.1, logical: source.hlt.2 } }).await?;
         }

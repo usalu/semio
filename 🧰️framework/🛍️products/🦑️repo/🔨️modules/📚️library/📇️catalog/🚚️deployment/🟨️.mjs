@@ -1,4 +1,4 @@
-import { parseInstallationDirectoryV1 } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟨️.mjs";
+import { parseInstallationDirectoryV1 } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟨️.mjs";
 
 /** 🚚️ Admits optional owner-authored deployment without publishing compiled-only components. */
 export function componentDeploymentDirectoryV1(metadata, admit = parseInstallationDirectoryV1) {

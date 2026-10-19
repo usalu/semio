@@ -5,7 +5,7 @@
   "targets": {
     "verify-puzzle-fill-policy-self-tests": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify puzzle-fill-policy-self-tests",
@@ -22,7 +22,7 @@
     },
     "verify-browser-contribution": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify browser-contribution",

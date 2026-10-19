@@ -1,4 +1,4 @@
-//! Serialize cad to stdio.json.
+//! 💾️ Serialize cad to stdio.json.
 //!
 //! 🧹️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
 //! binary `serialize()` this file used to carry no longer compiled against the real `JsonSnapshot`

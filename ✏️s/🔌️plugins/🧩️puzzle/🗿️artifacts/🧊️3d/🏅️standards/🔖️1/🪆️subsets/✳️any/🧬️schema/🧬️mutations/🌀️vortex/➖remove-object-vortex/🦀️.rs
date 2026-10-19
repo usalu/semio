@@ -1,4 +1,4 @@
-//! cascade — any attraction whose `attracting`/`attracted` referenced this vortex is severed too).
+//! 🌊️ cascade — any attraction whose `attracting`/`attracted` referenced this vortex is severed too).
 //! ➖ Puzzle3d mutation — `RemoveObjectVortex`: detaches a rim vortex from an object (captures
 use {crate::add_object_vortex::mutation::AddObjectVortex, crate::connect_vortices::mutation::ConnectVortices};
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

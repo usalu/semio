@@ -2,7 +2,8 @@
 use super::{ArtifactReplayPreparationContext,ArtifactReplayPrepared,ArtifactReplayPreparationStep};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement};
 use semio_framework_value_snapshot_read::{CapturedSnapshotSource,SnapshotRead};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits,admit_retained_clone_progress},retirement::original_vector::OriginalVectorCursor,list::PagedList};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::RetireOwned, retained_clone::{RetainedCloneRef, RetainedCloneSource, RetainedOwnedProjection, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedCloneClose, retained_clone_grant_admits, admit_retained_clone_progress}, retirement::original_vector::OriginalVectorCursor};
+use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{size_of,ManuallyDrop},sync::Arc};
 #[path="🔌️drivers/🦀️.rs"]
 mod drivers;
@@ -39,7 +40,7 @@ pub trait SemanticEdit<P,M>:Send+'static{
  fn birth_demand(&self)->RetirementDemand;
  fn begin(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>;
  fn demands(&self,before:RetainedCloneRef<'_,P>,input:RetainedCloneRef<'_,M>,post:&P,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,before:RetainedCloneRef<'_,P>,input:RetainedCloneRef<'_,M>,post:&mut P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>;
+ fn advance(&mut self,before:RetainedCloneRef<'_,P>,input:RetainedCloneRef<'_,M>,post:&mut P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<SemanticEditStep<M>,ValueError>;
  fn begin_close(&mut self);
  fn close_demand(&self,factory:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<RetirementDemand,ValueError>;
  fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<M>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
@@ -58,7 +59,7 @@ pub struct NativeSemanticPreparation<P:RetireOwned+Sync,M:RetireOwned+Sync,C:Sem
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||invalid("semantic producer depth overflow"))?;Ok(d)}
-fn list_error(error:semio_framework_value::list::PagedListError)->ValueError{ValueError::literal(match error.kind{semio_framework_value::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,semio_framework_value::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value::list::PagedListRefusalKind::InvariantViolated=>ValueRefusalKind::InvariantViolated},error.reason)}
+fn list_error(error:semio_framework_value_persistent::list::PagedListError)->ValueError{ValueError::literal(match error.kind{semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value_persistent::list::PagedListRefusalKind::InvariantViolated=>ValueRefusalKind::InvariantViolated},error.reason)}
 impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdit<P,M>> NativeSemanticPreparation<P,M,C,E>{
  pub fn new(request:ArtifactReplayPreparationRequest<P,M>,projection:C,edit:E)->Self{Self{base:ManuallyDrop::new(Some(request.base)),source:ManuallyDrop::new(None),source_authority:ManuallyDrop::new(None),input:ManuallyDrop::new(Some(request.input)),projection,edit,post:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),rows:ManuallyDrop::new(None),pages:ManuallyDrop::new(Some(Default::default())),pending:ManuallyDrop::new(None),messages:ManuallyDrop::new(None),next:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(request.snapshots)),mutations:ManuallyDrop::new(Some(request.mutations)),factory_close:[None,None],active:ManuallyDrop::new(None),retirement:Default::default(),stage:Stage::SourceCapture,foreign:false,refused:false,closing:false}}
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -80,7 +81,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
    Stage::Ready=>header::<ArtifactReplayPrepared<P,M>>(),
   })
  }
- pub fn advance(&mut self,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{
+ pub fn advance(&mut self,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{
   let d=self.demands(body)?;if !retained_clone_grant_admits(grant,d){return Ok(ArtifactReplayPreparationStep::Blocked);}
   if self.closing{return Ok(ArtifactReplayPreparationStep::Blocked);}receiving.checkpoint()?;if self.stage!=Stage::Edit{receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;if d.capacity_bytes!=0{receiving.charge(d.capacity_bytes)?;}}
   let unit=||RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes};
@@ -126,7 +127,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   if let Some(factory)=self.factory_close.iter().find_map(Option::as_ref){return factory.demands(body);}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{
   if !self.closing{return Ok(RetainedCloneStep::Progress(Default::default()));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if d.capacity_bytes!=0{receiving.charge(d.capacity_bytes)?;}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
@@ -156,7 +157,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
 
 impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdit<P,M>> super::ArtifactReplayPreparation<P,M> for NativeSemanticPreparation<P,M,C,E>{
  fn advance_demands(&self,b:usize)->Result<RetirementDemand,ValueError>{self.demands(b)}
- fn advance(&mut self,body:usize,g:semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{NativeSemanticPreparation::advance(self,body,g.retained_grant(),control)}
+ fn advance(&mut self,body:usize,g:semio_framework_os_store_one_item::ArtifactStoreOneItemGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactReplayPreparationStep,ValueError>{NativeSemanticPreparation::advance(self,body,g.retained_grant(),control)}
  fn take_prepared(&mut self)->Option<ArtifactReplayPrepared<P,M>>{self.take()}
  fn cancel(&mut self){NativeSemanticPreparation::begin_close(self);}
  fn begin_close(&mut self){NativeSemanticPreparation::begin_close(self);}
@@ -165,7 +166,7 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
  fn next_close_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{Ok(self.close_demand(b)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.release_bytes)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.depth)}
- fn close_step(&mut self,g:RetainedCloneGrant,receiving:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{NativeSemanticPreparation::close_step(self,g,receiving)}
+ fn close_step(&mut self,g:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{NativeSemanticPreparation::close_step(self,g,receiving)}
  fn terminal_is_empty(&self)->bool{NativeSemanticPreparation::terminal_is_empty(self)}
 }
 

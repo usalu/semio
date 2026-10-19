@@ -34,7 +34,7 @@ fn dragged_node_icon_stays_on_the_node_while_icon_cache_retirement_is_pending() 
         ],
         "edges": []
     });
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture.to_string(),&mut control)});
     host.scene.set_size(800, 600, 1.0);
     host.style.set_automatic_lod(false);
     host.style.set_forced_draw_lod_label("detail");
@@ -81,7 +81,7 @@ fn board_edge_starts_at_the_handle_cap() {
     })
     .to_string();
     let mut host = BoardHost::default();
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board,&mut control)}, "the two-node board parses");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board,&mut control)}, "the two-node board parses");
     let source = host.scene.handles.get("a:h").expect("source handle");
     assert!((effective_handle_radius(&host.scene, &host.style, source) - 3.0).abs() < 1e-9, "the authored cap radius is kept");
     let curve = board_edge_curve(&host.scene, &host.style, host.scene.edges.get("e").expect("edge")).expect("edge curve");
@@ -101,7 +101,7 @@ fn gesture_host() -> BoardHost {
     host.scene.set_size(800, 600, 1.0);
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
     set_transform_flags(&mut host.scene, &mut host.gestures, true, false);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the gesture fixture must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the gesture fixture must parse");
     let _ = host.outbox.drain_events_json();
     host
 }
@@ -244,7 +244,7 @@ fn draft_referenced_ids_paint_highlighted_without_publishing() {
     assert!(interaction_overlay_entity_ids(&host.scene, &host.focus).contains("node-a"), "the overlay pass repaints the highlight");
     let node = |id: &str, x: f64| serde_json::json!({ "id": id, "x": x, "y": 0.0, "shape": "circle", "radius": 10.0, "handles": [] });
     let preview = serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [node("node-a", 0.0), node("node-b", 40.0)], "edges": [] }).to_string();
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&preview,&mut control)}, "the preview fixture parses");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&preview,&mut control)}, "the preview fixture parses");
     assert_eq!(host.focus.highlighted_ids_json().expect("highlighted ids"), r#"["node-a","node-b","node-locked"]"#, "a preview repaint keeps what the draft references");
     assert_eq!(style(&host, "node-b"), BoardElementStyleKind::Highlighted, "the re-parse cleared the selection, not the highlight");
     host.focus.set_highlighted_ids(Vec::new());

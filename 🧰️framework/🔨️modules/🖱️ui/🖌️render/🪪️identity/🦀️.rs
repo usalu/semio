@@ -61,7 +61,6 @@ impl ElementId {
     /// 🌱️ Combines an optional parent id with `key`. `parent: None` seeds the hash the same way a
     /// child would seed it from a parent id of `FXHASH_SEED` — there is no reserved all-zero root
     /// sentinel, so a root element's id is exactly as well-distributed as any other.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(parent: Option<ElementId>, key: &ReconciliationKey) -> Self {
         let seed = parent.map_or(FXHASH_SEED, |id| id.0);
         let hash = match key {

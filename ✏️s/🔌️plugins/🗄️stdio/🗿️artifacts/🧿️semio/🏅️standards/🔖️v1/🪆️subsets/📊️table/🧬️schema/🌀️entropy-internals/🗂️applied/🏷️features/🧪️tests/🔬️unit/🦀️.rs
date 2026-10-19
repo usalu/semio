@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn suggest_bins_falls_back_to_sturges_for_degenerate_iqr() {
         let mut x = vec![0.0; 100];
-        x[0] = 1000.0; // 🔐️ a single outlier keeps the IQR at zero
+        x[0] = 1000.0;
         assert!(matches!(suggest_bins(&x), BinsSpec::Sturges));
     }
 

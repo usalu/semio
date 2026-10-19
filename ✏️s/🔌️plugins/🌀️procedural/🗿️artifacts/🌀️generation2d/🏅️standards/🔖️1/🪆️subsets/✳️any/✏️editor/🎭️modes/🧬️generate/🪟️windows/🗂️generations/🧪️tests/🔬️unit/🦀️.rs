@@ -2,7 +2,8 @@ use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use semio_s_artifact_procedural_2d_mode_generate::windows::generations::*;
 use semio_s_artifact_procedural_2d_editor_commands::add_generation;
-use crate::app_fixture::{app, close, dispatch, render as render_body, render_with_view, snapshot_read, Generation2dApp};
+use crate::app_fixture::{app, close, dispatch, render as render_body, render_with_view, Generation2dApp};
+use semio_framework_os_kernel::os_store::snapshot_read;
 use semio_s_artifact_procedural_2d_editor::Generation2dCommand;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 

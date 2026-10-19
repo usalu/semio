@@ -1,0 +1,219 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧵️backbone-worker/🟦️.ts",
+ "scopeLine": 81,
+ "coreStmtLine": 82,
+ "coreType": "ShellCoreAfterIdentityAndDocumentPorts",
+ "types": {
+  "rebootstrapDiscardedSessionsRef": "RefObject<Map<string, ActiveSession>>",
+  "setBootstrapUiByDocument": "Dispatch<SetStateAction<BootstrapUiState>>",
+  "setExecutionTargetUiByDocument": "Dispatch<SetStateAction<ExecutionTargetUiState>>",
+  "setPresencePeersByRuntimeKey": "Dispatch<SetStateAction<Readonly<Record<string, readonly ScopedPresencePeerV1[]>>>>",
+  "socketActorReadyRef": "RefObject<Map<string, { readonly clientInstanceId: string; resolve(actorId: string): void; reject(error: Error): void }>>"
+ },
+ "files": [
+  {
+   "id": "actor",
+   "dir": "🪟️browser-actor-messages",
+   "doc": "🪟️ The browser actor ui patch offer and mounted identity messages of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "socket",
+   "dir": "🔌️socket-actor-messages",
+   "doc": "🔌️ The socket actor readiness and failure messages of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "inference",
+   "dir": "🧠️inference-history-messages",
+   "doc": "🧠️ The inference history status message of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "creation",
+   "dir": "🌱️artifact-creation-messages",
+   "doc": "🌱️ The space artifact creation catalog refresh, creation status and document check-in status messages of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "directory",
+   "dir": "📇️directory-messages",
+   "doc": "📇️ The directory scope revocation, space administration and command receipt messages of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "bootstrap",
+   "dir": "🥾️bootstrap-messages",
+   "doc": "🥾️ The artifact bootstrap progress, failure and rebootstrap messages of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "events",
+   "dir": "📬️document-event-messages",
+   "doc": "📬️ The local catalog, identity and document event messages of the backbone worker.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useBackboneWorker}: each function is one message arm of the backbone worker `onmessage` ladder, moved verbatim."
+  },
+  {
+   "id": "plug",
+   "dir": "🔧️plugin-install-state",
+   "doc": "🔧️ The plugin module url, rebuilt-at, in-flight and install progress state of the backbone worker hook.\n *\n * 🧱️ Child hook module of {@link ../🟦️.ts | useBackboneWorker}: runs the original hook statements in order."
+  }
+ ],
+ "items": [
+  {
+   "id": "patch",
+   "kind": "if",
+   "line": 211,
+   "name": "handleBrowserActorUiPatchMessage",
+   "emoji": "🩻",
+   "doc": "Validates a browser actor ui patch offer against the open session and answers a verdict per surface.",
+   "file": "actor"
+  },
+  {
+   "id": "mounted",
+   "kind": "if",
+   "line": 250,
+   "name": "handleBrowserActorUiMountedMessage",
+   "emoji": "🏔",
+   "doc": "Binds the mounted browser actor identity and resolves the document ready state.",
+   "file": "actor"
+  },
+  {
+   "id": "sockact",
+   "kind": "if",
+   "line": 279,
+   "name": "handleSocketActorMessage",
+   "emoji": "🧦",
+   "doc": "Resolves the waiter of a ready socket actor and publishes its local presence actor.",
+   "file": "socket"
+  },
+  {
+   "id": "sockfail",
+   "kind": "if",
+   "line": 330,
+   "name": "handleSocketActorFailedMessage",
+   "emoji": "💥",
+   "doc": "Rejects the waiter of a socket actor that failed to start.",
+   "file": "socket"
+  },
+  {
+   "id": "hist",
+   "kind": "if",
+   "line": 309,
+   "name": "handleInferenceHistoryStatusMessage",
+   "emoji": "📜",
+   "doc": "Folds an inference history status into the ui state of its open document.",
+   "file": "inference"
+  },
+  {
+   "id": "refresh",
+   "kind": "if",
+   "line": 340,
+   "name": "handleSpaceArtifactCreationCatalogRefreshRequiredMessage",
+   "emoji": "🔄",
+   "doc": "Requests a fresh creation catalog when the retained one lost its authority.",
+   "file": "creation"
+  },
+  {
+   "id": "checkin",
+   "kind": "if",
+   "line": 363,
+   "name": "handleDocumentCheckInStatusMessage",
+   "emoji": "📥",
+   "doc": "Folds a document check-in status into the owner's ui state.",
+   "file": "creation"
+  },
+  {
+   "id": "crstatus",
+   "kind": "if",
+   "line": 371,
+   "name": "handleSpaceArtifactCreationStatusMessage",
+   "emoji": "🏗",
+   "doc": "Folds an artifact creation status into its owner and opens the ready artifact once.",
+   "file": "creation"
+  },
+  {
+   "id": "revoked",
+   "kind": "if",
+   "line": 438,
+   "name": "handleDirectoryScopeRevokedMessage",
+   "emoji": "🚫",
+   "doc": "Retires every document, creation and ui state of a revoked directory scope.",
+   "file": "directory"
+  },
+  {
+   "id": "adminstate",
+   "kind": "if",
+   "line": 468,
+   "name": "handleDirectoryAdministrationStateMessage",
+   "emoji": "🏠",
+   "doc": "Verifies and applies a space administration page for the current epoch.",
+   "file": "directory"
+  },
+  {
+   "id": "admincap",
+   "kind": "if",
+   "line": 483,
+   "name": "handleDirectoryAdministrationCapabilityMessage",
+   "emoji": "🎟",
+   "doc": "Copies an invite capability for the current administration transfer.",
+   "file": "directory"
+  },
+  {
+   "id": "receipt",
+   "kind": "if",
+   "line": 501,
+   "name": "handleDirectoryCommandReceiptMessage",
+   "emoji": "🧾",
+   "doc": "Retains a command receipt and folds its accepted events into the directory.",
+   "file": "directory"
+  },
+  {
+   "id": "boot",
+   "kind": "if",
+   "line": 516,
+   "name": "handleArtifactBootstrapMessage",
+   "emoji": "🚚",
+   "doc": "Folds bootstrap progress, failure and rebootstrap requests into the document ui state.",
+   "file": "bootstrap"
+  },
+  {
+   "id": "catev",
+   "kind": "if",
+   "line": 558,
+   "name": "handleLocalCatalogEventMessage",
+   "emoji": "🗃",
+   "doc": "Applies a local catalog document event.",
+   "file": "events"
+  },
+  {
+   "id": "idev",
+   "kind": "if",
+   "line": 575,
+   "name": "handleIdentityEventMessage",
+   "emoji": "🪪",
+   "doc": "Applies an identity document event.",
+   "file": "events"
+  },
+  {
+   "id": "docev",
+   "kind": "range",
+   "line": 592,
+   "to": 697,
+   "returns": true,
+   "terminal": true,
+   "name": "handleDocumentEventMessage",
+   "emoji": "📨",
+   "doc": "Routes a document event to its open session: status, presence, backbone, archive, command outcome and conflict.",
+   "file": "events"
+  },
+  {
+   "id": "plug",
+   "kind": "range",
+   "line": 140,
+   "to": 187,
+   "name": "usePluginInstallState",
+   "emoji": "🧰",
+   "doc": "Holds the plugin module url, rebuilt-at, in-flight and install progress state.",
+   "file": "plug"
+  }
+ ],
+ "typeImports": {
+  "RefObject": "react",
+  "Dispatch": "react",
+  "SetStateAction": "react"
+ }
+}

@@ -323,8 +323,6 @@ pub fn project(bytes: &[u8]) -> Result<String, String> {
         None => out.push_str(",\"info\":null"),
     }
 
-    // 🔢️Object inventory by /Type — what `insert-object` and `remove-object` move, and the one axis a
-    // page-level projection would miss entirely.
     let mut spare = 0usize;
     let mut inserted = 0usize;
     let mut spare_label = "null".to_string();

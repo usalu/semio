@@ -40,8 +40,6 @@ pub struct TutorialDefinition {
 impl TutorialDefinition {
     /// 📂️ Deserializes a `TutorialDefinition` from its JSON wire format — the constructor apps use
     /// to load a hand-authored or recorded tutorial (e.g. via `include_str!`) into `.tutorial(...)`.
-    // 🚧️ BLOCKED: `TutorialDefinition` itself is serde-only (see its docstring) — this stays on
-    // `serde_json` until that lands.
     pub async fn from_json(json: &str) -> Result<Self, serde_json::Error> {
         serde_json::from_str(json)
     }

@@ -16,9 +16,6 @@ export function SelectionUtilityOptions({ activeUtilityId, windowId, onAction, g
   const subtractiveLabel = useLabel("ui.selection.subtractive");
   const invertiveLabel = useLabel("ui.selection.invertive");
   const selectionMethod = activeUtilityId === "selectLasso" ? "lasso" : "rectangle";
-  // 🐚️ Replaces the old `(globalThis).__selectionMode` + `window` `"semio:selectionOptionsChanged"`
-  // broadcast — this shell's own store, so its selection-mode toggle never reconfigures another mounted
-  // shell's marquee gestures.
   const selectionStore = useShellScope().selection;
 
   const [selectionMode, setSelectionMode] = useState<MergeMode>(() => selectionStore.get());

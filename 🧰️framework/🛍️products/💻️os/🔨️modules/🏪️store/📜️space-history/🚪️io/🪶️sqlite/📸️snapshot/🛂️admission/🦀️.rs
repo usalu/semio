@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_io_sqlite_snapshot::SqliteDatabaseLimits;
 use semio_framework_io_sqlite_snapshot::artifact::RowWriter;
-use semio_framework_value::{DslValue,NativeDecodeControl,Number};
+use semio_framework_value::{DslValue, Number};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn required<'a>(value:&'a DslValue,key:&str)->Result<&'a DslValue,ValueError>{
  let DslValue::Object(fields)=value else{return Err(fields::invalid("history semantic object is required"))};
  fields.iter().find(|(name,_)|name==key).map(|(_,value)|value).ok_or_else(||fields::invalid("history semantic field is required"))

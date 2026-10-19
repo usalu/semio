@@ -101,8 +101,6 @@ async fn reverse_cursor_yields_frames_in_reverse_order() {
         forward_kinds.push(frame.kind);
     }
 
-    // ReverseFrameCursor has no header-boundary awareness (see its doc comment) — a whole-file
-    // walk slices the header off first so `prev_frame` naturally bottoms out at pos == 0.
     let mut reverse = ReverseFrameCursor::at_end(&bytes[HEADER_SIZE..]).await;
     let mut reverse_kinds = Vec::new();
     while let Some(frame) = reverse.prev_frame().await.unwrap() {
@@ -126,7 +124,7 @@ async fn reverse_cursor_stops_exactly_at_record_stream_start() {
     while cursor.prev_frame().await.unwrap().is_some() {
         count += 1;
     }
-    assert_eq!(count, 3); // 2 records + 1 commit
+    assert_eq!(count, 3);
     assert!(cursor.prev_frame().await.unwrap().is_none(), "must keep returning None, not error, once exhausted");
 }
 
@@ -152,10 +150,6 @@ async fn frame_detects_back_len_tamper_via_reverse_cursor() {
 
 #[semio_framework_async_macros::async_test]
 async fn cursor_surfaces_unrecognized_extension_kind_transparently() {
-    // 🎯️ "Skip-unknown" for this crate means: an unrecognized kind (extension range, critical
-    // bit clear) is structurally indistinguishable from a known one — the cursor advances past
-    // it and returns it like any other frame; interpreting/skipping it is a caller decision
-    // (see the module doc). This proves the cursor never special-cases `kind`.
     let options = WriteOptions::default();
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
     writer.write_record(0x50, false, b"extension-payload", semio_framework_replication_codec::CodecId(0)).await.unwrap();
@@ -198,10 +192,8 @@ async fn compressed_frame_round_trips_stored_and_raw_len() {
 async fn commit_chain_verifies_by_recomputation_on_a_hand_built_file() {
     let bytes = build_small_file().await;
 
-    // chain_0 = blake3(header)
     let chain_0 = *semio_framework_hash::hash(&bytes[..HEADER_SIZE]).as_bytes();
 
-    // Recompute digest_i for every non-commit frame since the header, and the resulting chain_1.
     let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
     let mut concat = chain_0.to_vec();
     let mut commit_frame: Option<RecordFrame<'_>> = None;
@@ -242,8 +234,6 @@ async fn commit_chain_links_prev_commit_offset_across_multiple_commits() {
 
 #[semio_framework_async_macros::async_test]
 async fn parse_commit_payload_is_public_for_downstream_frontier_summaries() {
-    // Mirrors how `os_spr::history::FrontierSummary`/`protocol_materialize` are expected to
-    // pull `last_commit_seq`/`chain_hash` out of a `REC_COMMIT` frame found via `FrameCursor`.
     let bytes = build_small_file().await;
     let mut cursor = FrameCursor::new(&bytes, HEADER_SIZE as u64).await;
     let mut commit_frame = None;
@@ -272,7 +262,7 @@ async fn recover_fast_path_trusts_a_cleanly_committed_file() {
     assert_eq!(report.bytes_recovered, bytes.len() as u64);
     assert_eq!(report.torn_tail_bytes, 0);
     assert_eq!(report.last_commit_seq, 1);
-    assert_eq!(report.records_recovered, 3); // 2 records + 1 commit frame
+    assert_eq!(report.records_recovered, 3);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -288,7 +278,7 @@ async fn recover_fast_path_walks_multi_commit_chain_to_genesis() {
     assert_eq!(report.last_commit_seq, 5);
     assert_eq!(report.bytes_recovered, bytes.len() as u64);
     assert_eq!(report.torn_tail_bytes, 0);
-    assert_eq!(report.records_recovered, 10); // 5 records + 5 commits
+    assert_eq!(report.records_recovered, 10);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -299,7 +289,7 @@ async fn recover_forward_scan_truncates_to_last_commit_on_torn_tail() {
     let commit_end = writer.commit().await.unwrap() + COMMIT_FRAME_LEN;
     writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, b"uncommitted", semio_framework_replication_codec::CodecId(0)).await.unwrap();
     let mut bytes = writer.into_sink().await;
-    bytes.truncate(bytes.len() - 3); // tear the tail mid-record, after the commit
+    bytes.truncate(bytes.len() - 3);
 
     let report = recover(&bytes, &ProtocolLimits::default(), RecoveryMode::LastCommit).await.unwrap();
     assert_eq!(report.bytes_recovered, commit_end);
@@ -398,7 +388,7 @@ async fn writer_preserves_original_sink_refusal_and_wire_chain() {
         fn from(error: semio_framework_pack_error::PackRefusal) -> Self { Self::Pack(error) }
     }
     struct OwnedSink { bytes: Vec<u8>, original: Arc<u64>, fail: usize, writes: usize }
-    impl crate::source::PackSink for OwnedSink {
+    impl semio_framework_pack_source::PackSink for OwnedSink {
         type Error = OwnedRefusal;
         async fn write_all(&mut self, bytes: &[u8]) -> Result<(), Self::Error> {
             let write = self.writes;
@@ -411,14 +401,14 @@ async fn writer_preserves_original_sink_refusal_and_wire_chain() {
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let payload: Vec<u8> = fixture["payload"].as_array().unwrap().iter().map(|byte| byte.as_u64().unwrap() as u8).collect();
-    let options = WriteOptions { required_flags: crate::REQUIRED_HASH_CHAIN, optional_flags: 0 };
+    let options = WriteOptions { required_flags: semio_framework_replication_wire_core::REQUIRED_HASH_CHAIN, optional_flags: 0 };
     for failed in fixture["failedWrites"].as_array().unwrap() {
         let failed = failed.as_u64().unwrap() as usize;
         let original = Arc::new(fixture["originalToken"].as_u64().unwrap());
         let sink = OwnedSink { bytes: Vec::new(), original: original.clone(), fail: failed, writes: 0 };
         let outcome = async {
             let mut writer = SprWriter::begin(sink, &options).await?;
-            writer.write_record(crate::REC_EDIT, true, &payload, crate::codec::ids::CodecId(0)).await?;
+            writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, &payload, semio_framework_replication_codec::ids::CodecId(0)).await?;
             writer.commit().await?;
             Ok::<_, SprWriteError<OwnedRefusal>>(writer.into_sink().await)
         }.await;
@@ -429,7 +419,7 @@ async fn writer_preserves_original_sink_refusal_and_wire_chain() {
         }
     }
     let mut writer = SprWriter::begin(Vec::new(), &options).await.unwrap();
-    writer.write_record(crate::REC_EDIT, true, &payload, crate::codec::ids::CodecId(0)).await.unwrap();
+    writer.write_record(semio_framework_replication_wire_core::REC_EDIT, true, &payload, semio_framework_replication_codec::ids::CodecId(0)).await.unwrap();
     let commit_offset = writer.commit().await.unwrap() as usize;
     let chain = writer.committed_chain_hash();
     let bytes = writer.into_sink().await;

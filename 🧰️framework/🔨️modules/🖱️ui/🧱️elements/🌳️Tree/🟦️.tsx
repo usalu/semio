@@ -16,7 +16,7 @@ export { uiSpacingLen };
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import type { UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
@@ -200,8 +200,6 @@ export const Tree = (({
       }
       const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
       const orderedIds = getTreeItemOrderedIds(resolvedSections, sectionItemsById, itemItemsById);
-      // 🎯️ Routed through the ONE shared modifier→merge policy (see `interactionMergeFromModifiers`'s
-      // doc) rather than hand-checking `event.metaKey`/`event.ctrlKey`/`event.shiftKey` here directly.
       const merge = interactionMergeFromModifiers(event);
       const nextSelection = getTreeNextSelectionState({
         selectionMode,

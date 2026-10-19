@@ -1,4 +1,4 @@
-//! single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
+//! ☝️ single-field tuple wrapping a handcrafted `protocol::MutationKind` payload (see the
 //! 🧬️ Puzzle 3d artifact — semantic document mutation dispatch enum. Every variant is a
 //! `🧬️mutations/<slug>/` triad leaves); `#[derive(dsl::Mutations)]` generates
 //! `impl protocol::Mutation<Puzzle3dSnapshot>` and `impl protocol::SemanticMutation<Puzzle3dSnapshot>`
@@ -8,6 +8,9 @@
 //! The native editor owns its immutable play root; semantic mutation authority remains the
 //! canonical typed snapshot and its typed diff algebra.
 
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as dsl;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
 use protocol::ColdMutation;

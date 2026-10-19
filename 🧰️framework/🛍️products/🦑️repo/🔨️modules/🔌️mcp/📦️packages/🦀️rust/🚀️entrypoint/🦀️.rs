@@ -77,8 +77,6 @@ pub fn serve(server: &Arc<Server>, peer: &str, reader: impl Read + Send, writer:
             sink(response.as_bytes())?;
             continue;
         }
-        // 🤝️The latch is armed BEFORE the payload reaches a worker: arming it afterwards races the
-        // worker that already answered, and the decrement would then be lost for good.
         if matches!(&decoded, Ok(request) if request.method == "initialize") {
             session.expect_handshake();
         }

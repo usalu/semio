@@ -14,13 +14,13 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "drag-layers")]
 pub struct DragLayers {
-    pub targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
+    pub targets: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
     pub dx: f64,
     pub dy: f64,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_layers<Op: From<DragLayers>>(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, dx: f64, dy: f64) -> Op {
+pub fn drag_layers<Op: From<DragLayers>>(targets: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, dx: f64, dy: f64) -> Op {
     Op::from(DragLayers { targets, dx, dy })
 }
 

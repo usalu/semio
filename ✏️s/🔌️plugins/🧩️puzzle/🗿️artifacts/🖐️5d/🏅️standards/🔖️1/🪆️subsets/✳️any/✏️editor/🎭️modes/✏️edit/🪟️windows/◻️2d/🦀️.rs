@@ -1,4 +1,4 @@
-//! Owns the board scene payload (nodes/🐙️handles/edges plus the glyph catalogs and placement
+//! 👪️ Owns the board scene payload (nodes/🐙️handles/edges plus the glyph catalogs and placement
 //! ◻️ Puzzle 5d play app — the `Board2d` window kind: the flat projection of the unified 5d document.
 //! compatibility the board host reads), binds the pointer utilities (`🪛️utilities/*`) and scopes the
 //! board-event/2D-camera actions (`🎬️actions`). Its only genuinely 2D-specific chrome measure is the

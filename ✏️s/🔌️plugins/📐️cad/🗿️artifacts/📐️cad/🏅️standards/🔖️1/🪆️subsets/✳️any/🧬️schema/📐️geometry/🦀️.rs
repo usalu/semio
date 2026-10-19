@@ -406,7 +406,7 @@ pub fn resolve_primitive_handle(primitives: &[CadPrimitiveSlot], handles: &HashM
     None
 }
 
-/// Collects the world-space vertex positions reachable from a solid/shell/face/wire/edge id by
+/// ⚪️ Collects the world-space vertex positions reachable from a solid/shell/face/wire/edge id by
 /// descending the authored topology graph (fixture vertex positions are already world-absolute).
 fn primitive_vertex_positions(geometry: &CadGeometry, primitive_id: &str) -> Vec<[f64; 3]> {
     let vertices = vertex_map(geometry);
@@ -448,7 +448,7 @@ fn extent_from_positions(positions: &[[f64; 3]]) -> Option<[f64; 3]> {
     Some([max[0] - min[0], max[1] - min[1], max[2] - min[2]])
 }
 
-/// Derives an object's world-space bounding extent from its authored geometry, trying each
+/// 📏️ Derives an object's world-space bounding extent from its authored geometry, trying each
 /// primitive slot in order (mirrors `resolve_primitive_handle`'s slot priority).
 pub(crate) fn extent_from_host_snapshot_primitives(geometry: &CadGeometry, primitives: &[CadPrimitiveSlot]) -> Option<[f64; 3]> {
     primitives.iter().find_map(|primitive| extent_from_positions(&primitive_vertex_positions(geometry, &primitive.primitive_id)))

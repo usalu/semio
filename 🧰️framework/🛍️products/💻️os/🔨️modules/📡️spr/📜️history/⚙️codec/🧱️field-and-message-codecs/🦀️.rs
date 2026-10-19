@@ -44,8 +44,6 @@ pub(super) async fn read_str_field(input: &mut ByteReader<'_>) -> Result<String,
 }
 
 pub(super) async fn write_id_field(out: &mut ByteWriter, id: &str, dict: &mut DictBuilder, edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync)) -> Result<(), ProtocolError> {
-    // ✏️ Genuine `|s|` closure — see `read_id_field`'s tag above (the HRTB gap applies to
-    // `AsyncFnMut` the same way it does to `AsyncFn`).
     protocol::scalar::write_id(out, id, |s| dict.intern(s), edit_ordinal_of).map_err(ProtocolError::from)
 }
 
@@ -100,8 +98,6 @@ pub async fn read_history_message(input: &mut ByteReader<'_>, dict: &DictReader)
         0 => None,
         1 => {
             let raw = input.read_varint_u64()?;
-            // 🚫️async: R10 shape 1 — `position()` is async but `map_err`'s closure is sync; the
-            // offset is captured up front instead of awaited inside the closure.
             let offset = input.position() as u64;
             Some(u32::try_from(raw).map_err(|_| ProtocolError::Malformed { what: "history message operation index", offset, detail: "exceeds u32".to_string() })?)
         }

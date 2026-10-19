@@ -183,7 +183,6 @@ fn reapplying_an_identical_tree_sets_zero_dirty_flags() {
     let ui = stack("root", vec![text("hello"), button("btn", "Go")]);
     tree.apply_tree(&ui);
     let root = tree.root.unwrap();
-    // fresh insert marks everything dirty; that's expected and not under test here.
     clear_dirty(&mut tree, root);
 
     tree.apply_tree(&ui);

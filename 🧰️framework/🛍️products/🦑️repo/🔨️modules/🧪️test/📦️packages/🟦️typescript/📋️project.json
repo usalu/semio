@@ -6,10 +6,14 @@
   "targets": {
     "test-fixture-isolation": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
@@ -21,6 +25,7 @@
     },
     "test-discovery-boundaries": {
       "executor": "repo:script",
+      "outputs": [],
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
@@ -40,10 +45,14 @@
     },
     "test-platform-discovery-contract": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
@@ -55,10 +64,14 @@
     },
     "test-platform-comparison-profiles": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
@@ -70,10 +83,14 @@
     },
     "test-platform-oracle-governance": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
@@ -85,10 +102,14 @@
     },
     "test-platform-mutation-catalogs": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
@@ -100,6 +121,13 @@
     },
     "lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts lint"
@@ -107,6 +135,8 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test"
@@ -114,6 +144,8 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
         "htmlSourcePairs",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
@@ -140,6 +172,14 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📜️set-doctype-applied/📸️snapshot/⬅️before/🌐️.html",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/➡️after/🌐️.html",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔖️set-attribute-applied/📸️snapshot/⬅️before/🌐️.html"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   }
 }

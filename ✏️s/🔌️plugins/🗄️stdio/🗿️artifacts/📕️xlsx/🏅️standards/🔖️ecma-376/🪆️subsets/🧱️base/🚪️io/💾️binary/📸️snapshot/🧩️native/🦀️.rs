@@ -4,7 +4,8 @@ use semio_framework_os_kernel::{
     io_schema::IoPayload,
     sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase},
 };
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{retire_xml_document,XmlDocumentView};
 use semio_s_artifact_stdio_zip::opc::native::{OpcNativeReader, OpcNativeWriter};
 #[path = "💰️backing/🦀️.rs"]

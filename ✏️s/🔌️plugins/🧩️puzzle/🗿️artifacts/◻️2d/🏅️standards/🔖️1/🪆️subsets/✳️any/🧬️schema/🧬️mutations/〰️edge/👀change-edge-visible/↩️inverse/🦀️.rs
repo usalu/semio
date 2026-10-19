@@ -1,6 +1,7 @@
-//! target ⇒ `Vec::new()`.
+//! 🔗️ target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `ChangeEdgeVisible` — restores the BASE field value on the addressed edge. Missing
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::component::ChangeEdgeVisible;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ChangeEdgeVisible>>(payload: &super::ChangeEdgeVisible, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

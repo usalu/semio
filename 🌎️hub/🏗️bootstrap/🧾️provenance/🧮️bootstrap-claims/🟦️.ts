@@ -67,11 +67,6 @@ export function trustedBootstrapDescriptorClaims(bytes: Uint8Array): TrustedBoot
   const descriptor = packValueToExactJson(decoded) as Record<string, unknown>;
   const manifest = descriptor?.manifest as Record<string, unknown>;
   if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("trusted descriptor manifest is missing");
-  // 🔗️ `PluginManifest.dependencies` is `#[value(default, skip_serializing_if = "Vec::is_empty")]`
-  // (`🛂️manifest/🦀️.rs:4418`), so a plugin that depends on nothing — `semio-hub-stdio` is exactly
-  // that — emits a descriptor with NO `dependencies` key at all. Requiring the key present rejected
-  // every dependency-free package, which is the whole trusted bootstrap set. Absent means the empty
-  // vector, which is what the encoder's own contract says; the 128 bound still applies to a present one.
   const declaredDependencies = manifest.dependencies === undefined ? [] : manifest.dependencies;
   if (!Array.isArray(declaredDependencies) || declaredDependencies.length > 128) throw new Error("trusted descriptor manifest dependency vector is missing or unbounded");
   const identity = trustedBootstrapIdentity({ pluginId: manifest.pluginId, packageId: descriptor.packageId, version: manifest.version });
@@ -251,9 +246,6 @@ export function trustedBootstrapProfileEncoding(profile: any, codecs: TrustedBoo
     pieces.push(trustedBootstrapCount(rows.length));
     for (const row of rows) pieces.push(trustedBootstrapField(row.artifactKind), trustedBootstrapField(row.artifactSchema), trustedBootstrapField(Buffer.from(row.packSchemaHash, "hex")));
   }
-  // 🎯️ The whole SET behind its own count, in `trusted_profile_generation`'s canonical order (ticket
-  // 26/09/18 slice TC3b). A one-target profile frames byte-identically to the retired single-target
-  // encoding, so generalising this does not by itself rotate an existing generation id.
   const selectedTargets = [...(profile.openTargets as TrustedBootstrapOpenTargetV1[])].sort((left, right) => trustedBootstrapOpenTargetOrder(left, right, profile.packages));
   pieces.push(trustedBootstrapCount(selectedTargets.length));
   for (const target of selectedTargets) {

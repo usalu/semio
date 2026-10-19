@@ -1,4 +1,4 @@
-//! ️tests for example `🌲️concrete-forest`.
+//! 🧪️tests for example `🌲️concrete-forest`.
 
 use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 

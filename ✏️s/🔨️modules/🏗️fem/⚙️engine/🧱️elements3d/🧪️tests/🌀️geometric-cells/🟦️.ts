@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { cross, det, dot, inv, multiply, norm, transpose } from "mathjs";
-import fixture from "../../🧫️fixtures/🌀️geometric-cells/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🌀️geometric-cells/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🌀️geometric-cells/🔣️.json" with { type: "json" };
 
 type GeometricCase = typeof fixture.cases[number];

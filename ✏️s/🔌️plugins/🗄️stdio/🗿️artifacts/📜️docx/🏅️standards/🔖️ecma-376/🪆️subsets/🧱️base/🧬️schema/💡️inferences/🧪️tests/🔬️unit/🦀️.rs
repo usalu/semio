@@ -1,5 +1,6 @@
 use semio_s_artifact_stdio_docx_base_inferences::standards::v_ecma_376::subsets::base::schema::inferences::*;
 use protocol::Inference;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {

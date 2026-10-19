@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
+  "$schema": "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "homes",
   "emoji": "🏠",

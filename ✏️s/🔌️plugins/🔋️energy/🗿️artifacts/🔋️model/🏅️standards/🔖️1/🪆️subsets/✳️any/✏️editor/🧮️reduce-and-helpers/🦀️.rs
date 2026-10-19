@@ -283,8 +283,6 @@ pub(super) fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, 
             let Some(selected) = crate::editor_config::ResultField::from_id(field) else {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("'{field}' is not a published per-surface result field")));
             };
-            // 🎨️ Only the 3d model window's body re-renders: the map, the ramp and the legend are all
-            // derived inside its own `render`, and nothing else in the editor reads `resultField`.
             return Ok(Emit {
                 config_mutations: vec![EnergyModelConfigMutation::ChangeResultField(ChangeResultField { field: selected.id().to_string() })],
                 ui_scope: UiDirtyScope::Partial {
@@ -299,9 +297,6 @@ pub(super) fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, 
                 ..Default::default()
             });
         }
-        // 🎥️ A camera is addressed at ONE window instance, and `reduce` sees no `ViewModel` — both
-        // dispatch routes intercept `SetCamera` through `camera_emit` before they ever get here, so
-        // reaching this arm means the gesture arrived without its window context.
         EnergyModelEditorCommand::SetCamera { .. } => {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"));
         }

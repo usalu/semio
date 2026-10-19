@@ -1,4 +1,5 @@
 //! 🧫️ The lower native gate consumes the same neutral axes and authentic fixture roots.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{OriginalJobFixtureCaller,OriginalJobDecodeOwner};
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100_000,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128}}
@@ -6,7 +7,7 @@ fn clock()->Option<u64>{Some(1)}
 fn finish(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){for _ in 0..10000{if decoder.terminal_is_empty(){return}caller.turn(stock(),|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;crate::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}panic!("original construction decoder close must terminate")}
 #[test]
 fn defining_five_currency_quotes_match_the_language_neutral_cases(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../🏭️construction/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){let q=|key:&str,index:usize|row[key][index].as_u64().unwrap()as usize;let demand=OriginalConstructionDemand{items:q("quote",0),copy_bytes:q("quote",1),capacity_bytes:q("quote",2),release_bytes:q("quote",3),depth:q("quote",4)};let grant=RetainedCloneGrant{maximum_items:q("grant",0),maximum_copy_bytes:q("grant",1),maximum_capacity_bytes:q("grant",2),maximum_release_bytes:q("grant",3),maximum_depth:q("grant",4)};assert_eq!(demand.fits(grant),row["accepted"].as_bool().unwrap(),"{}",row["name"]);}
 }
 #[test]

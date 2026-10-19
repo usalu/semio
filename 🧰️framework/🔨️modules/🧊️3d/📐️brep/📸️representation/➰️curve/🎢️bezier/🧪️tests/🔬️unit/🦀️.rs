@@ -2,7 +2,6 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn unweighted_bezier_eval_matches_de_casteljau_by_hand() {
-    // Quadratic bezier: (0,0),(1,2),(2,0) at t=0.5 -> (1, 1)
     let b = RationalBezier2::unweighted(vec![Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 2.0), Pnt2::new(2.0, 0.0)]);
     let p = b.eval(0.5);
     assert!((p.x - 1.0).abs() < 1e-12);
@@ -29,7 +28,6 @@ async fn subdivide_matches_original_at_endpoints_and_split_point() {
 
 #[semio_framework_async_macros::async_test]
 async fn subdivide_of_rational_bezier_preserves_curve_points() {
-    // Quarter circle as a rational quadratic Bezier.
     let s = std::f64::consts::FRAC_1_SQRT_2;
     let b = RationalBezier2::new(vec![Pnt2::new(1.0, 0.0), Pnt2::new(1.0, 1.0), Pnt2::new(0.0, 1.0)], vec![1.0, s, 1.0]);
     let t = 0.3;
@@ -38,7 +36,6 @@ async fn subdivide_of_rational_bezier_preserves_curve_points() {
     assert!((left.eval(1.0).x - expected.x).abs() < 1e-9);
     assert!((left.eval(1.0).y - expected.y).abs() < 1e-9);
     assert!((right.eval(0.0).x - expected.x).abs() < 1e-9);
-    // All points on a quarter unit circle satisfy x^2+y^2=1.
     let sample = b.eval(0.6);
     assert!((sample.x * sample.x + sample.y * sample.y - 1.0).abs() < 1e-9);
 }
@@ -71,7 +68,6 @@ async fn subdivide_until_flat_leaves_cover_the_full_parameter_range() {
     let b = RationalBezier2::unweighted(vec![Pnt2::new(0.0, 0.0), Pnt2::new(1.0, 5.0), Pnt2::new(2.0, -3.0), Pnt2::new(3.0, 1.0)]);
     let leaves = subdivide_until_flat(&b, 0.1, 12);
     assert!(!leaves.is_empty());
-    // Endpoints of the whole curve must be reproduced by the first/last leaf.
     assert!(leaves.first().unwrap().eval(0.0).distance(b.eval(0.0)) < 1e-9);
     assert!(leaves.last().unwrap().eval(1.0).distance(b.eval(1.0)) < 1e-9);
 }

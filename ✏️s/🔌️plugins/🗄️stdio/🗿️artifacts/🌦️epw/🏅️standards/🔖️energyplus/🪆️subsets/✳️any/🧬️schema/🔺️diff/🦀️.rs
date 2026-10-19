@@ -30,31 +30,26 @@ macro_rules! epw_record_diff {
 
         impl EpwRecordDiff {
             /// 🕳️ Whether this patch changes nothing.
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             pub fn is_empty(&self) -> bool {
                 $( self.$field.is_none() && )+ true
             }
             /// ▶️ Applies this patch to a record.
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             pub fn apply_patch(&self, base: &EpwRecord) -> EpwRecord {
                 EpwRecord {
                     $( $field: self.$field.clone().unwrap_or_else(|| base.$field.clone()), )+
                 }
             }
             /// ↩️ The patch restoring exactly the columns this patch sets back to their `base` values.
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             pub fn inverse(&self, base: &EpwRecord) -> Self {
                 Self {
                     $( $field: self.$field.as_ref().map(|_| base.$field.clone()), )+
                 }
             }
             /// ➕️ LWW per-field absorb: `other`'s populated columns win.
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             fn absorb(&mut self, other: Self) {
                 $( if other.$field.is_some() { self.$field = other.$field; } )+
             }
             /// 📥️ Sets exactly one column by its canonical wire index (see [`EpwRecord::field_at`]).
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             pub fn set_at(&mut self, index: usize, value: Option<String>) {
                 match index {
                     $( $index => self.$field = value, )+
@@ -62,7 +57,6 @@ macro_rules! epw_record_diff {
                 }
             }
             /// 📤️ Reads one column's patch value by its canonical wire index.
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             pub fn get_at(&self, index: usize) -> Option<&Option<String>> {
                 match index {
                     $( $index => Some(&self.$field), )+
@@ -119,7 +113,6 @@ pub struct EpwRecordsDiff {
 }
 
 impl EpwRecordsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -308,20 +301,17 @@ fn apply_epw_diff_unchecked(diff: &EpwDiff, base: &EpwSnapshot) -> EpwSnapshot {
         next.data_periods = v.clone();
     }
     if let Some(rdiff) = &diff.records {
-        // 🥇 modified refers to BASE indices — apply before any removal shifts them.
         for m in &rdiff.modified {
             if let Some(rec) = next.records.get_mut(m.index) {
                 *rec = m.diff.apply_patch(rec);
             }
         }
-        // 🥈 removed refers to BASE indices — process descending.
         let removed_desc = semio_s_artifact_stdio_contract::ordered_unique_descending(&rdiff.removed);
         for idx in removed_desc {
             if idx < next.records.len() {
                 next.records.remove(idx);
             }
         }
-        // 🥉 added refers to FINAL indices — process ascending, clamped.
         let mut added_asc = rdiff.added.clone();
         added_asc.sort_by_key(|a| a.index);
         for a in added_asc {

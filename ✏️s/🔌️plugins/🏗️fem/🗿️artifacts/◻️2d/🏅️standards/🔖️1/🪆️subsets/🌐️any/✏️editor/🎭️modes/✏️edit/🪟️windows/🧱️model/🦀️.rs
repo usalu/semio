@@ -1,4 +1,4 @@
-//! mesh-edge preview overlay). Also hosts the screen-space draw helpers shared with the results window
+//! 🕸️ mesh-edge preview overlay). Also hosts the screen-space draw helpers shared with the results window
 //! 🧱️ Fem2d play app — the model window: the editable 2D structural canvas (nodes/members/supports,
 //! (`semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results`) — kept here rather than in the artifact's
 //! `⚙️engine` because they take/return app-facing `semio_framework_plugin` scene types and their only

@@ -1,6 +1,6 @@
 //! 🧬️ Fem3d snapshot schema — artifact-lane fields only.
 
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
@@ -25,11 +25,11 @@ pub use reference::Fem3dSnapshotValue;
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dSnapshot {
     #[state(artifact)]
-    pub nodes: semio_framework_value::list::persistent::PersistentList<semio_s_fem_node::volumetric::FemNode>,
+    pub nodes: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::volumetric::FemNode>,
     #[state(artifact)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
-    pub materials: semio_framework_value::list::persistent::PersistentList<semio_s_fem_material::volumetric::FemMaterial>,
+    pub materials: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_material::volumetric::FemMaterial>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[state(artifact)]
@@ -47,7 +47,7 @@ pub struct Fem3dSnapshot {
 impl Fem3dSnapshot {
 
     /// 🛂️ Checks borrowed native record identities before any typed snapshot owner is constructed.
-    pub fn validate_interaction_record(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
+    pub fn validate_interaction_record(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
         identity_admission::validate(record, control)
     }
 

@@ -465,7 +465,6 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
     );
     let mut app = app().await;
 
-    // 🌲️ Below the budget: the inline lane, unchanged, and NO segmented handle at all.
     let (small, small_settled) = dispatch_reporting(&mut app, "exportSnapshot", None, None).await;
     small.expect("concrete forest export");
     let small_bytes = puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("live snapshot").typed())).len();
@@ -477,7 +476,6 @@ async fn export_over_the_inline_budget_streams_one_segmented_download_carrying_t
     });
     assert_eq!(inline, Some(("concrete-forest.json".to_string(), small_bytes, Some("utf-8".to_string()))), "the inline lane carries the whole payload and the utf-8 encoding");
 
-    // 🏢️ Above the budget: one segmented handle, no inline payload, and the full JSON on drain.
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "nakagin" })), None).await.expect("load nakagin");
     let expected = puzzle3d_export_json(&puzzle3d_scene_snapshot_from_document(app.snapshot().expect("live snapshot").typed()));
     assert!(expected.len() > puzzle3d_export_inline_budget_bytes(), "Nakagin must exceed the inline budget, got {} B", expected.len());

@@ -90,12 +90,6 @@ const resolvedPlaygroundAssets = isHostPlaygroundFilter(plugin, playgrounds, [..
  * (e.g. the Aggregator's "aggregator" → `puzzle`) needs only its own, plus the shared `🪞️vendor` shim
  * dependencies. Unknown identities are rejected before selecting physical copy roots. */
 const resolvedPluginId = playgrounds.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.pluginId;
-// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (wgpu-web-shard): `🧵️shard` is `🟦️.ts`'s
-// generated `🟨️shard-worker.js` bundle — every actor of every plugin now activates through the ONE pooled
-// shard-worker pool (`ShardClient`/`ActivationRegistry`, design-runtime.md §1/§3), not a per-plugin
-// worker, so a single-variant production build needs this directory copied regardless of which plugin
-// `resolvedPluginId` names. Omitting it meant `dist/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js` was never
-// copied and every single-variant production build 404s the shard worker at first plugin activation.
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
 const extensionIds = new Set(extensions.map((target) => target.pluginId));
 const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...plugins, ...extensions], buildMode) : undefined;
@@ -119,8 +113,6 @@ return {
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" as const, plugins: () => [semioProductionTestBoundaryVitePlugin()], rollupOptions: { output: distributionRollupOutput } },
-  // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
-  // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
   build: {
     ...semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))),
     outDir: path.join(playDir, DISTRIBUTION_LAYOUT.directory, buildMode),
@@ -156,13 +148,6 @@ return {
     port: Number(process.env.S_OS_PORT ?? 6066),
     strictPort: true,
     ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}),
-    // 🌐️ `/_semio/hub/*` is the shell's own same-origin route to its hub — the ONE lane the
-    // credential-owning backbone worker uses, carrying the signed-in human's `Authorization: Bearer`
-    // (`🏪️store/👷️worker/🟦️.ts`'s `HUB_REQUEST_ROUTE_PREFIX`). In development this server is what
-    // mounts it: `S_HUB_URL` is forwarded verbatim, headers included, with the prefix rewritten away,
-    // so the browser never pays a cross-origin preflight for a request it must authenticate. A
-    // configured `S_LOCAL_RELAY_URL` takes precedence and keeps the operator relay lane intact for
-    // the hub's own launcher, which proxies the whole `/_semio` namespace rather than just the hub.
     ...(process.env.S_LOCAL_RELAY_URL
       ? {
           proxy: {
@@ -186,12 +171,6 @@ return {
           }
         : {}),
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, rendererModulesDir] },
-    // 👁️ `semioSourceFreshnessVitePlugins` owns file watching (see its docstring): Vite's own chokidar
-    // watcher watches `root` plus every module-graph file outside it, which on macOS consolidates into
-    // ONE FSEvents stream over the whole repository and then pays `events × watched paths` per event —
-    // a concurrent cargo build in the shared cache wedges the server. `server.watch.ignored` cannot fix
-    // that (chokidar reads it only after those per-path filters have run), so there is no watcher here
-    // to configure; the replacement watches the source roots and never sees cache writes at all.
     watch: null,
   },
   plugins: [
@@ -200,11 +179,6 @@ return {
     semioProductionTestBoundaryVitePlugin(),
     ...semioHostHtmlVitePlugin(repoRoot, {
       title: "semio · os",
-      // 🌐️ MUST be root-relative (`/…`), not `./…`: `semioHostHtmlString` renders this into a `<script
-      // src>` on every request via `transformIndexHtml` (`🟦️.ts`), including SPA
-      // deep-link fallbacks like `/spaces/{id}` — a `./`-relative entry resolves against the CURRENT
-      // path there, 404ing on any nested route (26/08/16 HUB-SPACES lane 4-I: this is why user2's hard
-      // navigation to `/spaces/{id}` never rendered — the browser requested `/spaces/🟦️.ts`).
       entry: options.browserEntry,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),
@@ -229,8 +203,6 @@ return {
       ...runtimeAssetDeliveries(),
       ...packageAssetDeliveries(),
     ])),
-    // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
-    // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
     ...createAssetBuildPluginsV1(repoRoot, resolvedPlaygroundAssets, assetProviders, resolveAssetDeliveryModeV1(process.env.SEMIO_ASSET_SERVE_MODE)),
@@ -247,7 +219,6 @@ return {
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(plugin),
     "import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
     "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
-    // 👥️ Non-secret collaborative endpoint metadata; authority stays inside the local relay.
     "import.meta.env.VITE_S_HUB_URL": JSON.stringify(process.env.S_HUB_URL ?? ""),
     "import.meta.env.VITE_S_DATA_DIR": JSON.stringify(process.env.S_DATA_DIR ?? ""),
   },

@@ -1,8 +1,9 @@
 //! 🗜️ Original compressed bytes produce paid pages while codec and output custody close independently.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use protocol::codec::{DeflateRetainedCursor,DeflateRetainedStep,RetainedInflateCloseStep,OriginalWireSourceIdentity,RetainedWireByteSource,PackRefusal};
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::list::PagedList;
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_persistent::list::PagedList;
 use std::mem::ManuallyDrop;
 
 pub struct RetainedHistoryDeflatePayload{original:OriginalWireSourceIdentity,range:(usize,usize),pages:ManuallyDrop<PagedList<u8,{usize::MAX}>>}
@@ -24,7 +25,7 @@ impl Drop for RetainedHistoryDeflatePayload{fn drop(&mut self){assert!(self.term
 pub enum RetainedHistoryDeflateStep{Blocked,Progress,Ready,Closed}
 pub struct RetainedHistoryDeflateDecode{source:OriginalWireSourceIdentity,control:(u64,Option<u64>),range:(usize,usize),position:usize,expected:usize,complete:bool,closing:bool,closed:bool,codec:ManuallyDrop<Option<DeflateRetainedCursor>>,payload:ManuallyDrop<Option<RetainedHistoryDeflatePayload>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>}
 fn fault(reason:&'static str)->PackRefusal{ValueError::literal(ValueRefusalKind::InvalidValue,reason).into()}
-fn page_fault(error:semio_framework_value::list::PagedListError)->PackRefusal{PackRefusal::from_paged_refusal(error,"original History Deflate pages",0)}
+fn page_fault(error:semio_framework_value_persistent::list::PagedListError)->PackRefusal{PackRefusal::from_paged_refusal(error,"original History Deflate pages",0)}
 fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_depth>=d.depth&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes}
 fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 impl RetainedHistoryDeflateDecode{

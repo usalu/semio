@@ -55,8 +55,6 @@ mod conformance_laws {
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
 
-        // 🔬️ Also the empty-entities case (`StepSnapshot::default()`), exercising `instance*`'s
-        // zero-width match and the empty-value-list optional group.
         let empty_text = pack::snapshot::ArtifactDsl::print_dsl(&empty_step_snapshot());
         let (empty_envelope, empty_body) = store::semio_format::split_text_preamble(&empty_text).expect("split preamble");
         let empty_reconstructed = format!("{}\n{empty_body}", empty_envelope.envelope_id());

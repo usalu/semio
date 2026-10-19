@@ -1,6 +1,7 @@
 // 🗂️ One retained publication owner binds selected ordinals to its complete original child collection.
 use super::{paged_owner::PagedChildOwner,paged_encoder::{PagedChildGroups,PagedChildGroup}};
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress,RetirementDemand,list::PagedList,retirement::allocation_return::ParentAllocationReturn};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, RetirementDemand, retirement::allocation_return::ParentAllocationReturn};
+use semio_framework_value_persistent::list::PagedList;
 const CAPACITY:usize=isize::MAX as usize;
 fn invalid(detail:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,detail)}
 pub struct ChildGroupPublicationOwner{children:PagedList<PagedChildOwner,CAPACITY>,indices:PagedList<usize,CAPACITY>,next:usize,complete:bool,closing:bool}
@@ -20,8 +21,8 @@ impl ChildGroupPublicationOwner{
     /// 👓️ The only complete source view borrows the same private collection that selection consumed.
     pub fn sources(&self)->Result<SelectedChildGroupSources<'_>,ValueError>{if self.closing||!self.complete||self.next!=self.children.len(){return Err(invalid("publication lacks a complete live selection"))}Ok(SelectedChildGroupSources{owner:self})}
     /// 🏠️ Forwards real empty allocations to the admitted parent without claiming child physical disposal.
-    pub fn return_one<const P:usize>(&mut self,parent:&mut ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_value::list::PagedListReturnProgress,ValueError>{
-        use semio_framework_value::list::PagedListReturnProgress;
+    pub fn return_one<const P:usize>(&mut self,parent:&mut ParentAllocationReturn<P>,maximum_items:usize,maximum_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListReturnProgress,ValueError>{
+        use semio_framework_value_persistent::list::PagedListReturnProgress;
         if maximum_items==0||maximum_bytes==0{return Ok(PagedListReturnProgress::default())}self.closing=true;
         if self.indices.pop().is_some(){return Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}if !self.indices.terminal_is_empty(){return self.indices.return_empty_page(parent,1)}
         if let Some(index)=self.children.len().checked_sub(1){let child=self.children.get_mut(index).unwrap();if !child.terminal_is_empty(){return child.return_one(parent,1,maximum_bytes)}self.children.pop();return Ok(PagedListReturnProgress{progressed:true,returned_allocation_bytes:0})}if !self.children.terminal_is_empty(){return self.children.return_empty_page(parent,1)}Ok(PagedListReturnProgress::default())

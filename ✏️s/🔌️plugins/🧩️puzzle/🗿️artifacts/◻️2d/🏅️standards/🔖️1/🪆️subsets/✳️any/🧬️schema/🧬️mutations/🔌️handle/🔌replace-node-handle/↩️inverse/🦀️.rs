@@ -1,6 +1,7 @@
-//! `Vec::new()`.
+//! 🔁️ `Vec::new()`.
 //! ↩️ Inverse for `ReplaceNodeHandle` — restores the BASE handle payload. Missing target ⇒
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::replace_node_handle::component::ReplaceNodeHandle;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceNodeHandle>>(payload: &super::ReplaceNodeHandle, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

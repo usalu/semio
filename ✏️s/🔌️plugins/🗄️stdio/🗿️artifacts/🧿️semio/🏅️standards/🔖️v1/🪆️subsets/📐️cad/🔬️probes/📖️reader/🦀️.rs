@@ -170,8 +170,6 @@ fn main() {
                         report.put("differenceCount", Json::Int(problems.len() as i64));
                         report.put("differences", Json::Arr(problems.iter().take(24).map(|p| Json::Str(p.clone())).collect()));
                         if witnessing {
-                            // 🔎️WITNESS: the inputs are BEFORE and AFTER, and the question is whether
-                            // the carrier recorded the mutation at all.
                             let witnessed = !unwitnessed(&mutation, &left, &right);
                             report.put("carrierWitnessed", Json::Bool(witnessed));
                             if !witnessed {
@@ -183,7 +181,6 @@ fn main() {
                                 );
                             }
                         } else {
-                            // ⚖️AGREE: the inputs are EXPECTED and ACTUAL, and equality IS the pass.
                             report.put("agree", Json::Bool(equal));
                         }
                     }

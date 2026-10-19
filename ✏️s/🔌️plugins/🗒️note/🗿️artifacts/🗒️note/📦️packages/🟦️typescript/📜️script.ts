@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runCanonicalArchitectureScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 class TestScript extends BundleScript {
   run(): void {
     const subset = join(this.repoRoot, "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any");
@@ -31,9 +32,8 @@ class CheckScript extends BundleScript {
 /** 🛂️ Validates artifact document behavior and its authored TypeScript surfaces. */
 class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
-    await new ContractTestScript(this.root, this.repoRoot, this.invocation).run();
-    new CheckScript(this.root, this.repoRoot, this.invocation).run();
+    await runCanonicalArchitectureScript({ contract: () => new ContractTestScript(this.root, this.repoRoot, this.invocation).run(), check: () => new CheckScript(this.root, this.repoRoot, this.invocation).run() });
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-snapshot-sqlite", SqliteTestScript).register("test-document-contract", ContractTestScript).register("check", CheckScript).register("canonical-architecture", CanonicalArchitectureScript);
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

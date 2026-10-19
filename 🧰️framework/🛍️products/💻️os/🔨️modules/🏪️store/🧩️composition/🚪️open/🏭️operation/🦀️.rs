@@ -249,7 +249,7 @@ where
     genesis_hasher: semio_framework_hash::Hasher,
     pub history: ManuallyDrop<Option<MemberHistoryVerification>>,
     pub selection: ManuallyDrop<Option<MemberFactorySelection<F>>>,
-    /// The selected history input awaiting its dictionary owner: kept across steps when the step budget
+    /// 👉️ The selected history input awaiting its dictionary owner: kept across steps when the step budget
     /// is spent between selection and dictionary admission, instead of failing the open as stale.
     pub selected: ManuallyDrop<Option<SelectedMemberHistoryInput<F>>>,
     rejected_history_input: ManuallyDrop<Option<semio_framework_os_store_member_open::history::VerifiedMemberHistoryInput>>,
@@ -512,7 +512,7 @@ where
         Ok(true)
     }
 
-    /// Admits the selected history input into its dictionary owner; a spent step budget or deadline
+    /// 🚀️ Admits the selected history input into its dictionary owner; a spent step budget or deadline
     /// keeps the selected input retained for the next step rather than rejecting the open.
     fn begin_selected_dictionary(&mut self, cx: &mut StepContext<'_>) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
         let Some(selected) = self.selected.as_mut() else { return self.reject(MemberOpenDiagnostic::Stale) };

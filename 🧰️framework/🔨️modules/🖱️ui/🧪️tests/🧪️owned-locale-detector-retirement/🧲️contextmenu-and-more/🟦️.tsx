@@ -152,7 +152,6 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
         expect(gap.className).not.toContain("ui-glass");
         expect(stack.querySelector('[class*="ui-glass"][class*="absolute"][class*="inset-0"]')).toBeNull();
         expect(chip?.className).toContain("ui-glass");
-        // 🪜️ D2 regression: the interior title chip must be transparent, not a second opaque fill.
         const titleChip = stack?.querySelector('[data-slot="context-menu-title-chip"]') as HTMLElement;
         expect(titleChip?.className).not.toContain("ui-surface");
       });

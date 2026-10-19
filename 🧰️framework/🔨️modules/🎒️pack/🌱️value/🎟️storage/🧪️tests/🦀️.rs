@@ -54,7 +54,8 @@ fn pack_original_value_stack_storage_symbols_keep_each_partial_original_under_fo
 
 #[test]
 fn pack_original_value_stack_storage_eager_capacity_retains_reserved_original_slots(){
- use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement};
+ use semio_framework_value::retirement::controlled::ControlledRetirement;
+ use semio_framework_value_persistent::list::PagedList;
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let mut list=PagedList::<u64,16384>::empty();let mut born=0;let mut pointer=None;
  for target in corpus["capacityTargets"].as_array().unwrap(){let target=target.as_u64().unwrap()as usize;

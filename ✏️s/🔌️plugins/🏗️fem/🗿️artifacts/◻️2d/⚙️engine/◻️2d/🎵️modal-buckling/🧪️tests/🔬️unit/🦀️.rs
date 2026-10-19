@@ -114,12 +114,12 @@ fn continuum_buckling_rejects_unknown_area_region() {
 
 #[test]
 fn continuum_static_modal_and_buckling_match_scikit_fem_and_scipy() {
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures/🧱️solves-fem2d-1-continuum/📊️expected.results.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures/🧱️solves-fem2d-1-continuum/📊️expected.results.json")).unwrap();
     for (name, snapshot) in [
-        ("🔺️triangle.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures/🧱️solves-fem2d-1-continuum/🔺️triangle.snapshot.json")),
-        ("🌉️mixed.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures/🧱️solves-fem2d-1-continuum/🌉️mixed.snapshot.json")),
-        ("🕳️hole.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures/🧱️solves-fem2d-1-continuum/🕳️hole.snapshot.json")),
-        ("📏️scaled-hole.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧫️fixtures/🧱️solves-fem2d-1-continuum/📏️scaled-hole.snapshot.json")),
+        ("🔺️triangle.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures/🧱️solves-fem2d-1-continuum/🔺️triangle.snapshot.json")),
+        ("🌉️mixed.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures/🧱️solves-fem2d-1-continuum/🌉️mixed.snapshot.json")),
+        ("🕳️hole.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures/🧱️solves-fem2d-1-continuum/🕳️hole.snapshot.json")),
+        ("📏️scaled-hole.snapshot.json", include_str!("../../../../../🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧪️tests/🧫️fixtures/🧱️solves-fem2d-1-continuum/📏️scaled-hole.snapshot.json")),
     ] {
         let report = semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::fem2d_continuum_report_json(snapshot, matches!(name, "🔺️triangle.snapshot.json" | "🌉️mixed.snapshot.json")).unwrap();
         let actual: serde_json::Value = serde_json::from_str(&report).unwrap();

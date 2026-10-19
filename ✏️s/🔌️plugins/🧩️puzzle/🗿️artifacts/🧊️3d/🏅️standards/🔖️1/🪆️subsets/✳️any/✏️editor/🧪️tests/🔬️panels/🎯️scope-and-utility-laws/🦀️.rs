@@ -24,10 +24,6 @@ async fn command_scope_classes_name_the_panels_they_change() {
     for action in dispatchable_actions(&definition) {
         let class = puzzle3d_command_scope_class(&action.id);
         let scope = puzzle3d_scope(class);
-        // 🧾️ The declared `ActionKind` is a HISTORY/undo classification, not a paint one. Both
-        // `relocateTargetVolume` and `worldRelocate` are Mutations (they emit artifact edits), so this
-        // law requires them to name inspector, outliner and history. A `View` verb that happens to carry
-        // the document class is over-painting at worst, never stale.
         if action.kind != ActionKind::Mutation {
             continue;
         }
@@ -205,10 +201,6 @@ async fn add_object_kind_honors_drop_origin() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_object_kind_materializes_the_declared_kind_default() {
-    // 📝️ P1 arg form: firing addObjectKind with no args on a document whose catalogs were cleared must
-    // materialize the declared `objectKind` default — the catalog row AND the object referencing it —
-    // in ONE gesture. A retained tool job never publishes inline (`settle`'s own docstring), so the
-    // settled document, not the dispatch's `mutations` vector, is where the gesture is observed.
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     let before = object_count(&app);
@@ -299,10 +291,10 @@ async fn alt_click_adds_one_target_volume_sized_by_the_utility_voxel_dims() {
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::volume_brush::UTILITY_ID })), None).await.expect("arm the volume brush");
     for (axis, value) in [("w", 2.0), ("d", 3.0), ("h", 4.0)] {
-        dispatch(&mut app, "setVoxelDims", Some(&json!({ "axis": axis, "value": value })), Some(main::WINDOW_KIND_ID)).await.expect("voxel dimension");
+        dispatch(&mut app, "setVoxelDims", Some(&json!({ "axis": axis, "value": value })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("voxel dimension");
     }
     let before = volumes(&app);
-    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [3.0, -2.0, 0.0] })), Some(main::WINDOW_KIND_ID)).await.expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [3.0, -2.0, 0.0] })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("addTargetVolume");
     assert_eq!(volumes(&app), before + 1, "one Alt+click places exactly one target volume");
     let projection = projection_of(&app);
     let volume = projection.get("targetVolumes").and_then(Value::as_array).and_then(|entries| entries.last()).expect("the placed volume");
@@ -311,10 +303,8 @@ async fn alt_click_adds_one_target_volume_sized_by_the_utility_voxel_dims() {
     assert!(scale[1] > scale[0] && scale[2] > scale[1], "the W/D/H steppers must size the placed box in their own order: {scale:?}");
     let origin: Vec<f64> = volume.get("origin").and_then(Value::as_array).expect("the volume carries an origin").iter().filter_map(Value::as_f64).collect();
     assert_eq!(origin.len(), 3, "the volume lands at the pointed ground point: {origin:?}");
-    // 🔢️ A grid-snapped ground point is USUALLY whole (`[0,10,0]` was the live browser payload), and JSON
-    // serializes a whole f64 as an integer — so the decode must admit integer carriers, not only floats.
     let whole = volumes(&app);
-    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [0, 10, 0] })), Some(main::WINDOW_KIND_ID)).await.expect("addTargetVolume with integer coordinates");
+    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [0, 10, 0] })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("addTargetVolume with integer coordinates");
     assert_eq!(volumes(&app), whole + 1, "an integer-valued ground point must place a volume exactly like a fractional one");
 }
 
@@ -325,7 +315,7 @@ async fn add_target_volume_without_a_ground_point_raises_one_notice_and_places_n
     let volumes = |app: &Puzzle3dApp| projection_of(app).get("targetVolumes").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
     let mut app = app().await;
     let before = volumes(&app);
-    let result = dispatch(&mut app, "addTargetVolume", None, Some(main::WINDOW_KIND_ID)).await.expect("a missing origin is a refusal, not a fault");
+    let result = dispatch(&mut app, "addTargetVolume", None, Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("a missing origin is a refusal, not a fault");
     let notices: Vec<&String> = result
         .requested_effects
         .iter()
@@ -341,8 +331,6 @@ async fn add_target_volume_without_a_ground_point_raises_one_notice_and_places_n
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_utility_emits_no_ops_and_no_history_entry() {
-    // 🧰️ Switching utilities is the framework-injected View action: no document operations, no undo
-    // entry, no re-emitted utility-switch effect (the command IS the direct switch).
     let mut app = app().await;
     let before = projection_of(&app);
     let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), None).await.expect("switch utility");
@@ -363,9 +351,6 @@ fn set_active_utility_dirties_the_world_body() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_exposes_no_utility_switch_options() {
-    // 🧰️ select/brush/fill switching lives only on the framework utility bar; the engagement HUD
-    // must not duplicate it as options. Object placement is catalogue drag-and-drop plus the shell
-    // menu row `openAddObjectDialog`, not a per-viewport quick-action chip.
     let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let engagement = main::engagement(&scene, &Puzzle3dLabels::NATIVE_EN, None);
     let options = engagement.options.as_deref().unwrap_or(&[]);
@@ -375,7 +360,7 @@ async fn engagement_exposes_no_utility_switch_options() {
 
 #[semio_framework_async_macros::async_test]
 async fn transform_engagement_does_not_block_background_deselect() {
-    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID.into() };
     assert_eq!(main::engagement(&scene, &Puzzle3dLabels::NATIVE_EN, None).session_active, Some(false));
 }
 

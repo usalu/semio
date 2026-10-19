@@ -9,7 +9,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(layout = "lines")]
 #[artifact(id = "s.sourcing.curation.gridwindowconfig", extension = "sourcinggridwindowcfg")]
 pub struct GridWindowConfig {
-    /// `line-behind` | `representative` | `representative-with-count`
+    /// 🧱️ `line-behind` | `representative` | `representative-with-count`
     pub instance_display: String,
 }
 

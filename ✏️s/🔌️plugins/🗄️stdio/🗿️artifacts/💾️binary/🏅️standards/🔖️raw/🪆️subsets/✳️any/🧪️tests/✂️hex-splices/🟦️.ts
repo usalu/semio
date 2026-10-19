@@ -58,7 +58,6 @@ describe("hex-window splices (ajv + two independent decodings)", () => {
       if (row.leaves.length === 0 && decoded === "ignored") return;
       const viaLeaves = applyLeaves(base, row.leaves);
       if (decoded !== "ignored" && decoded !== null) {
-        // the digits only cover the touched byte runs: rebuild the whole buffer from the digit ranges applied to the whole hex text
         const text = Array.from(row.before);
         const parts: string[] = [];
         let position = 0;

@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::{io::Write, process::{Command, Stdio}};
 
 fn text_refusal_fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }

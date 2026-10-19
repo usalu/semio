@@ -2,14 +2,14 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 import{NativeNamedRootReceiving,type NativeNamedRowReceiving}from"../🟦️.ts";
 import{RetainedUtf8Buffer}from"../../../../../../../📝️text/🚶️utf8/🟦️.ts";
 import{persistentNamedKeySource}from"../../../🟦️.ts";
 import type{NamedEditDemand,NamedEditGrant,NamedEditReceipt}from"../../../../🟦️.ts";
 type Row={key:Uint8Array;payload:number};
-const encode=new TextEncoder(),decode=new TextDecoder(),key=(row:Row)=>row.key;
+const encode={encode:(text:string)=>new Uint8Array(Buffer.from(text,"utf8"))},decode=new TextDecoder(),key=(row:Row)=>row.key;
 class RowReceiving implements NativeNamedRowReceiving<Row>{
  #input:unknown;#key:Uint8Array|undefined;#buffer:RetainedUtf8Buffer|undefined;#output:Row|undefined;#payload=0;#offset=0;#phase=0;
  constructor(input:unknown){this.#input=input;}

@@ -137,9 +137,6 @@ impl CatalogStorage for Neo4jDbIoExecutor {
         if row.is_some() {
             return Ok(new_fence);
         }
-        // 🎯️ The CAS attempt itself was atomic (see `CYPHER_CATALOG_CAS`'s doc); this follow-up
-        // read only decides what CURRENT epoch to report in the `Fenced` error, so a benign race
-        // against a concurrent writer can only change the reported number, never the CAS outcome.
         let current = self.read_root().await?.map_or(EpochFence::INITIAL, |(_, fence)| fence);
         Err(DbError::Fenced { expected: current.epoch, actual: expected.epoch })
     }

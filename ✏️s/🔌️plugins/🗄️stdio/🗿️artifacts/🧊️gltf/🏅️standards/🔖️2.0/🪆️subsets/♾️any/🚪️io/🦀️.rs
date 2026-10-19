@@ -70,7 +70,6 @@ pub fn encode_data_uri(media_type: &str, bytes: &[u8]) -> String {
 //#endregion 🔖️Base64
 //#region 🔖️AccessorModel
 impl GltfComponentType {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_code(code: u64) -> Result<Self, String> {
         Ok(match code {
             5120 => Self::Byte,
@@ -83,7 +82,6 @@ impl GltfComponentType {
         })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn code(self) -> u64 {
         match self {
             Self::Byte => 5120,
@@ -97,7 +95,6 @@ impl GltfComponentType {
 
 
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn read_at(self, bytes: &[u8], offset: usize) -> Result<f64, String> {
         let size = self.byte_size();
         if offset + size > bytes.len() {
@@ -130,7 +127,6 @@ impl std::str::FromStr for GltfAccessorType {
     }
 }
 impl GltfAccessorType {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Scalar => "SCALAR",

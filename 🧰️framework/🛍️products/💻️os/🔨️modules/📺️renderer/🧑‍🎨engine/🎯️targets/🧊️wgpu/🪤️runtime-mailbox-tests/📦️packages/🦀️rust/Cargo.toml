@@ -74,7 +74,7 @@ ui_scene = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-framework-os-kernel" }
-semio-framework-os-services = { workspace = true }
+semio-framework-os-services-native-io = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }
@@ -83,3 +83,6 @@ semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/�
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-job-payload = { workspace = true }
+semio-framework-plugin-ownership = { workspace = true }
+semio-framework-ui-wgpu-raster = { workspace = true }

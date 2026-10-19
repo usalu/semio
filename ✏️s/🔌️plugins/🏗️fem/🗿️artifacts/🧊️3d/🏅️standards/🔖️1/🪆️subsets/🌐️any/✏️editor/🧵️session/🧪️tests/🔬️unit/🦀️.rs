@@ -16,7 +16,7 @@ fn fixture_prepare_result(render: AppRenderOperationContext, doc: &Fem3dSnapshot
     let original = windows.borrow(semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::FEM3D_WINDOW_RESULTS, id).unwrap();
     let (spec, source) = physical_parts(doc, request).unwrap();
     let grant = render.mounted_policy.preparation;
-    let version = semio_framework_value::RequestCandidateVersion { source: source_version(render), consumer_generation: original.generation, consumer_revision: original.revision };
+    let version = semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion { source: source_version(render), consumer_generation: original.generation, consumer_revision: original.revision };
     let progress = MOUNTED.with(|registry| prepare_result_demand(&mut registry.borrow_mut(), render, ConsumerKey::Window(original.authority), id, spec, source, version, grant));
     let mut sequence = 0; let mut receipt = RetainedCloneProgress::default();
     let mut cx = StepContext::new(semio_framework_job::allocate_operation_id(), render.generation, StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
@@ -35,7 +35,7 @@ const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, m
 
 #[test]
 fn fem3d_results_retained_pages_route_only_matching_completed_sources() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
         let current = (row["currentReady"].as_bool().unwrap() && row["currentRevision"].as_bool().unwrap() && row["currentSource"].as_bool().unwrap()).then_some(2);
         let retained = row["retainedSource"].as_bool().unwrap().then_some(1);
@@ -119,7 +119,7 @@ fn fem3d_numerical_child_classifies_every_lent_outcome_without_retaining_it() {
         assert!(child.step(&doc, &mut solver, &mut backing, freshness(19), operation, &mut context).is_err());
         let mut complete = false;
         for _ in 0..256 {
-            if child.close_step(release_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)).0 {
+            if child.close_step(release_grant(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)).0 {
                 complete = true;
                 break;
             }
@@ -130,7 +130,7 @@ fn fem3d_numerical_child_classifies_every_lent_outcome_without_retaining_it() {
 
 #[test]
 fn fem3d_exact_app_leases_keep_colliding_jobs_and_close_isolated() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
     let ids: Vec<u32> = corpus["appIds"].as_array().unwrap().iter().map(|id| id.as_u64().unwrap() as u32).collect();
     for &app in &ids {
         let identity = recovery_identity(app, u64::from(app));
@@ -161,7 +161,7 @@ fn fem3d_exact_app_leases_keep_colliding_jobs_and_close_isolated() {
 
 #[semio_framework_async_macros::async_test]
 async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sources() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
     let mut doc = Fem3dSnapshot::default();
     doc.load_cases = ["a", "b"].into_iter().map(|id| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: id.into(), name: id.into(), loads: vec![], self_weight: false }).collect();
     doc.combinations = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination { id: "a".into(), name: "a".into(), terms: Default::default() }];
@@ -191,7 +191,7 @@ async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sour
 
 #[semio_framework_async_macros::async_test]
 async fn fem3d_wide_physical_request_and_window_text_use_shared_granted_custody() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
     let source = "a".repeat(corpus["wideSourceLength"].as_u64().unwrap() as usize); let window = "w".repeat(corpus["wideWindowLength"].as_u64().unwrap() as usize);
     let mut doc = Fem3dSnapshot::default(); doc.load_cases = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: source.clone(), name: "Wide".into(), loads: vec![], self_weight: false }];
     let window_owners = fixture_windows(&[window.as_str()]).await;
@@ -209,7 +209,7 @@ async fn fem3d_wide_physical_request_and_window_text_use_shared_granted_custody(
 
 #[test]
 fn fem3d_original_fault_and_cancel_terminal_receipts_prevent_implicit_resubmit() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎞️results/🔣️.json")).unwrap();
     for (ordinal, kind) in corpus["terminalKinds"].as_array().unwrap().iter().enumerate() {
         let identity = recovery_identity(9239 + ordinal as u32, 47 + ordinal as u64);
         let (shell, recovery) = MOUNTED.with(|registry| { let mut registry = registry.borrow_mut(); let (shell, recovery) = reserve_recovery_state(&mut registry, identity); let owner = registry.shell_request[shell as usize].unwrap(); assert!(registry.requests.begin_execution(owner, identity_version(identity), identity.job)); (shell, recovery) });
@@ -446,10 +446,10 @@ fn fem3d_numerical_child_absent_lanes_retain_later_close_owners() {
         }
         let zero = child.close_step(release_grant(0));
         let held = child.close_lane == lane && child.model.is_some() == row["model"].as_bool().unwrap() && child.analysis_node_ids.len() == usize::from(row["nodeIds"].as_bool().unwrap());
-        let first = child.close_step(release_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
+        let first = child.close_step(release_grant(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES));
         let actual = serde_json::json!({ "lane": child.close_lane, "complete": first.0 });
         for _ in 0..1_024 {
-            let step = child.close_step(release_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
+            let step = child.close_step(release_grant(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES));
             if step.0 {
                 if child.close_lane < 22 { child.close_lane += 1; }
                 else { break; }
@@ -541,7 +541,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     assert_eq!(child.close_step(release_grant(0)), (false, 0, 0));
     let mut closed = false;
     for _ in 0..200_000 {
-        if child.close_step(release_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY))).0 {
+        if child.close_step(release_grant(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY))).0 {
             closed = true;
             break;
         }
@@ -558,7 +558,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
 /// 🏠️ The shipped demo crosses physical order pages while numerical and visual publication remain progressive.
 #[test]
 fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📚️paged-demo/🔣️.json")).expect("independent NumPy demo equilibrium");
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📚️paged-demo/🔣️.json")).expect("independent NumPy demo equilibrium");
     let doc = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot();
     assert!(!doc.solids.is_empty(), "the demo carries a meshed slab");
     let (analysis_nodes, _) = semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::mesh_solids(&doc).expect("the demo meshes");
@@ -584,7 +584,7 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
     }
     let stress: [Option<f64>; MAXIMUM_FIELDS] = std::array::from_fn(|index| (child.stress_counts[index] != 0).then(|| child.stress_sums[index] / child.stress_counts[index] as f64));
     for _ in 0..200_000 {
-        if child.close_step(release_grant(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY))).0 {
+        if child.close_step(release_grant(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES.max(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY))).0 {
             break;
         }
     }
@@ -855,7 +855,7 @@ fn fem3d_visual_close_grants_retain_exact_backing_until_admitted() {
 
 #[test]
 fn fem3d_mounted_selected_sources_match_pynite_and_case_order_is_irrelevant() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️sources/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️sources/🔣️.json")).unwrap();
     let base: Fem3dSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📐️cantilever-tip-load-local-y.snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for order in corpus["orders"].as_array().unwrap() {
         let mut doc = base.clone();
@@ -905,7 +905,7 @@ mod render_revision_tests;
 
 #[test]
 fn fem3d_source_preflight_rejects_ambiguous_missing_nonfinite_and_excess_sources() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏷️sources/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🏷️sources/🔣️.json")).unwrap();
     assert_eq!(corpus["maximumSources"].as_u64().unwrap() as usize, MAXIMUM_LOADS);
     let base: Fem3dSnapshot = semio_framework_pack_json::from_json_str(include_str!("../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧮️solves-fem3d-1-benchmarks/📐️cantilever-tip-load-local-y.snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for refusal in corpus["refusals"].as_array().unwrap() {

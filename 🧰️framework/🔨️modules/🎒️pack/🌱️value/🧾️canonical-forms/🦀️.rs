@@ -151,9 +151,6 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
         }
         FieldValue::List(items) => {
             if let Some(spec_fn) = table_spec_of(shape) {
-                // Walk each row's `TableSoA` columns, forcing `Text`-typed columns (they're
-                // always symrefs on the wire) and recursing generically into every other column
-                // shape for nested strings.
                 let element_spec = (spec_fn.ordinary)();
                 for row in items {
                     let FieldValue::Record(r) = row else { continue };

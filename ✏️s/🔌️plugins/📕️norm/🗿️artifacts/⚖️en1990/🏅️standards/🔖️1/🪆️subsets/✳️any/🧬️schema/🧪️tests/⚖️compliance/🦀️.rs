@@ -72,7 +72,6 @@ async fn combination_6_11_accidental() {
     let mut actions = sample_actions();
     actions.a_d = 40.0;
     let ed = combination_6_11(&annex, &actions, 0);
-    // G + A_d + ψ1*office + ψ2*wind = 100 + 40 + 0.5*50 + 0*30 = 165
     assert!((ed - 165.0).abs() < 1e-9);
 }
 

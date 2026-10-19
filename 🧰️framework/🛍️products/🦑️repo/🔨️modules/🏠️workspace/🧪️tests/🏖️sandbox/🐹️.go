@@ -13,7 +13,10 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(sandbox.Run("workspace", nil, m.Run))
+	os.Exit(sandbox.Run("workspace", nil, func() int {
+		workspace.FixtureOrigin = sandbox.Origin()
+		return m.Run()
+	}))
 }
 
 func TestTestsRunAgainstAnOwnedRoot(t *testing.T) {

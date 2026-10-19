@@ -187,9 +187,6 @@ fn splice_added_targets(splices: &[ByteSplice]) -> Vec<(usize, Lbl)> {
 /// `ByteSplice` list.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
-    // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
-    // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
-    // elements when `d2` still references real base positions `d1` never touched.
     let max_ref = d1.iter().chain(d2.iter()).map(|s| s.offset + s.remove_len.max(s.insert.len())).max();
     let l1 = max_ref.map_or(0, |m| m + 8);
 
@@ -198,17 +195,13 @@ pub fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
     let d1_added = splice_added_targets(d1);
     let mut mid_labels = simulate_labels(base_labels, &d1_removed, &d1_added);
     while mid_labels.len() < l1 {
-        mid_labels.push(Lbl::Base(usize::MAX)); // inert padding, tail-appended
+        mid_labels.push(Lbl::Base(usize::MAX));
     }
 
     let d2_removed = splice_removed_indices(d2);
     let d2_added = splice_added_targets(d2);
     let after_labels = simulate_labels(mid_labels, &d2_removed, &d2_added);
 
-    // 🧵️ Run-length-encode the after-label array back into a minimal ordered splice list: walk
-    // left to right, tracking the next expected surviving base index; a gap means those base
-    // indices were removed, and any `New` labels seen since the last `Base` are the insert run
-    // anchored at that gap (or appended at the very end).
     let mut splices = Vec::new();
     let mut expected = 0usize;
     let mut pending_insert: Vec<u8> = Vec::new();
@@ -220,7 +213,7 @@ pub fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
                 }
                 expected = i + 1;
             }
-            Lbl::Base(_) => { /* padding, never real */ }
+            Lbl::Base(_) => { }
             Lbl::New(byte) => pending_insert.push(byte),
         }
     }

@@ -1,4 +1,4 @@
-//! Deserialize stdio.jpg from stdio.binary.
+//! 📥️ Deserialize stdio.jpg from stdio.binary.
 
 use crate::{JpgSnapshot, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_binary::BinarySnapshot;

@@ -125,16 +125,8 @@ class PluginCapabilityLintScript extends BundleScript {
       wgpu: "forbidden",
       "wgpu-core": "forbidden",
       winit: "forbidden",
-      // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: the OS HOST crate. A plugin/extension may
-      // depend on the plugin SDK, never on the host that hosts it — see 📓️w0-d-sdk-surface.md §3.2 for
-      // the current 17-crate backlog, seeded below in KNOWN_CAPABILITY_VIOLATIONS.
       "semio-framework-os": "forbidden",
     };
-    // 🕵️ Real registry membership, not a path substring: the pre-emoji-rename
-    // `/plugin/rs/Cargo.toml` substring this used to filter on matches zero packages under
-    // today's `✏️s/🔌️plugins/**/📦️packages/🦀️rust/Cargo.toml` layout, so every plugin
-    // silently skipped this lint entirely — revived in ticket
-    // 26/08/05/STALE-CONFIG-FIXES-AND-CAPABILITY-LINT-REVIVAL.
     let checkedPackageCount = 0;
     const failures: string[] = [];
     for (const pkg of metadata.packages) {
@@ -172,9 +164,6 @@ class PluginCapabilityLintScript extends BundleScript {
       walkRustSources(dirname(pkg.manifest_path), rustSources);
       for (const sourcePath of rustSources) {
         const source = await Bun.file(sourcePath).text();
-        // 🚪️ `26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE`: std::env/std::process joined std::fs/std::net
-        // on the same footing — all four are raw-ambient-authority escape hatches a sandboxed plugin
-        // must not reach for directly; all four are gated by the same localBackboneStorage capability.
         if (/std::fs::|std::net::|std::env::|std::process::/.test(source) && !declared.has("localBackboneStorage")) {
           failures.push(`${pkg.name}: uses std::fs/std::net/std::env/std::process without localBackboneStorage capability (${relative(repoRoot, sourcePath)})`);
         }

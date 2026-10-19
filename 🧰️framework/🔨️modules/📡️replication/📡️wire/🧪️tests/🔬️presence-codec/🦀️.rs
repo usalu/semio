@@ -167,8 +167,6 @@ async fn presence_peer_round_trips_views_ui_color_surface() {
 
 #[semio_framework_async_macros::async_test]
 async fn presence_peer_rejects_unknown_flag_bits() {
-    // Hand-built rather than mutating an encode output: flags is a varint_u64. Bit 15 is one past
-    // the frozen 0..=14 range (bit 14 = typing). The next field to take bit 15 must move this.
     let mut bytes = Vec::new();
     semio_framework_replication_wire_core::write_str(&mut bytes, "peer-5");
     semio_framework_replication_wire_core::write_varint_u64(&mut bytes, 1 << 15);
@@ -176,14 +174,12 @@ async fn presence_peer_rejects_unknown_flag_bits() {
     let err = decode_presence_peer(&bytes).await.unwrap_err();
     assert!(matches!(err, semio_framework_replication_error::ProtocolError::Malformed { what: "presence peer flags", .. }));
 
-    // Bit 12 IS known: missing body is a truncated-text error, not an unknown-flag refusal.
     let mut bit_twelve = Vec::new();
     semio_framework_replication_wire_core::write_str(&mut bit_twelve, "peer-5");
     semio_framework_replication_wire_core::write_varint_u64(&mut bit_twelve, 1 << 12);
     semio_framework_replication_wire_core::write_varint_u64(&mut bit_twelve, 1000);
     assert!(decode_presence_peer(&bit_twelve).await.is_err());
 
-    // Bit 11 IS known: missing body / bad principal-kind tag.
     let mut bit_eleven = Vec::new();
     semio_framework_replication_wire_core::write_str(&mut bit_eleven, "peer-5");
     semio_framework_replication_wire_core::write_varint_u64(&mut bit_eleven, 1 << 11);
@@ -227,7 +223,6 @@ async fn presence_peer_principal_kind_round_trips_in_both_codecs() {
         assert_eq!(decoded, peer, "JSON codec, {kind:?}");
     }
 
-    // 🔤️ The JSON spelling is the wire name, and an unknown one is a typed refusal, never `human`.
     let encoded = semio_framework_value::ToValue::to_value(&PresencePeer {
         actor: "a".into(),
         connected_at_ms: 1,

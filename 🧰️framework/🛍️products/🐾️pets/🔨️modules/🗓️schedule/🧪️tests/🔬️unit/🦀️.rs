@@ -3,9 +3,10 @@
 //! @see ../../🦀️.rs — the implementation under test
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, a meadow to stand on and time passing
 
-use super::*;
+use semio_framework_pets_staging_draft::schedule::*;
 use crate::stage::advance;
 use crate::stage::tests::{meadow, ticked, troupe};
+use semio_framework_pets_contract::schema::PetMode;
 
 #[test]
 fn pairs_are_drawn_on_whole_seconds_after_the_warm_up() {

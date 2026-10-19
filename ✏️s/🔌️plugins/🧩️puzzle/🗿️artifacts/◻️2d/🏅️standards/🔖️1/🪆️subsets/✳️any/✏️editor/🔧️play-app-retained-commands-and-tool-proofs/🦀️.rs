@@ -1,6 +1,15 @@
 //! 🔧️ Play app, retained commands and tool proofs: the puzzle2d play app with its render body, the retained command job factory and the bounded first-step tool proofs. See [`super`].
 
 use super::*;
+use semio_s_artifact_puzzle_2d_snapshot::editor::puzzle2d::window;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::overview;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::detail;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::selection;
+use crate::mirror::editor::puzzle2d::panels::catalogue;
+use crate::mirror::editor::puzzle2d::panels::inspection;
+use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::settings;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+use semio_s_artifact_puzzle_2d_snapshot::editor::puzzle2d::window::Puzzle2dWindowTransient;
 
 //#region 🔖️PlayApp
 /// 🧩️ Puzzle-2d play app. Owns the `BoardHost` engine; the persisted document (the bare snapshot json)
@@ -20,15 +29,13 @@ impl Puzzle2dPlayApp {
         interaction: Puzzle2dInteractionSnapshot,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
-        let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
+        let window_kind = window::kind_for_view(view_state).unwrap_or(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID);
         let runtime = window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind));
         let active_utility = puzzle2d_active_utility(Some(view_state));
         let snapshot = doc.snapshot.value().clone();
         let document_json = snapshot.to_string();
         let envelope = puzzle2d_scene_with(snapshot, runtime, active_utility, interaction);
         let labels = puzzle2d_labels(view_state);
-        // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
-        // the body being rendered — every panel container below shares its first-paint row budget.
         let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             overview::BODY_KEY => overview::render(&document_json, &envelope)?,
@@ -93,7 +100,7 @@ impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
         self.contract
     }
 
-    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
     
 }

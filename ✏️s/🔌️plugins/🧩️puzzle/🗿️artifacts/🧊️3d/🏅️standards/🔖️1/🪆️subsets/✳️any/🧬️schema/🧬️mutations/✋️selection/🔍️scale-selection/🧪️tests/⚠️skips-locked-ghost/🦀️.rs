@@ -2,7 +2,7 @@
 //!
 //! `volume-1` halves; the absent `object-ghost` and the locked `object-c` are skipped with one `mutation.partial` per reason.
 //!
-//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔍️scale-selection/⚠️skips-locked-ghost/`
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/`
 //! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
 
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
@@ -12,11 +12,11 @@ use semio_s_artifact_puzzle_3d_mutations::inverse_puzzle3d_mutation;
 
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json")).expect("committed test data reads"));
-static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json")).expect("committed test data reads"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔍️scale-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json")).expect("committed test data reads"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json")).expect("committed test data reads"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json")).expect("committed test data reads"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json")).expect("committed test data reads"));
 
 fn before() -> Puzzle3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

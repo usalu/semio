@@ -1,0 +1,110 @@
+import { readCargoTestPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import Ajv from "ajv";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join, relative, sep } from "node:path";
+import { runAdmittedCargoTestsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { mutationSchemaDocumentIndexProjection } from "../../🗂️schema-index/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolve as scriptDirectoryResolve } from "node:path";
+
+const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");
+
+
+
+/** 🧭️ The committed projection the mutation derive macros read (`MUTATION_AUTHORITY_LOCATOR` in `✨️derive/🦀️.rs`). */
+const MUTATION_AUTHORITY_PATH = join(SCRIPT_DIR, "../../🔣️mutation-authority.json");
+
+type TaxonomyFileKind = { emoji?: unknown; extensionChains?: unknown };
+
+/** 🧬️ Projects the repository taxonomy onto the exact facts the mutation derive macros need, validated against
+ * `MutationSourceAuthorityProjectionV1`, in the taxonomy's own order so the macros expand exactly as they did from the taxonomy. */
+function mutationAuthorityProjection(repoRoot: string): string {
+  const project = JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8"));
+  const taxonomy = JSON.parse(readFileSync(join(repoRoot, project.metadata.semio.taxonomy), "utf8"));
+  const filename = (kindId: unknown): string => {
+    const kind = taxonomy.fileKinds?.[String(kindId)] as TaxonomyFileKind | undefined;
+    const extension = Array.isArray(kind?.extensionChains) ? kind.extensionChains[0] : undefined;
+    if (typeof kind?.emoji !== "string" || typeof extension !== "string" || !extension.startsWith(".")) throw new Error(`taxonomy file kind ${String(kindId)} has no emoji and canonical extension`);
+    return `${kind.emoji}${extension}`;
+  };
+  const collections = Object.entries(taxonomy.semanticCollections ?? {}).filter(([, definition]) => (definition as { kind?: unknown }).kind === "mutation").map(([name]) => name);
+  if (collections.length !== 1) throw new Error("taxonomy mutation collection is ambiguous");
+  const projection = {
+    schema: "semio.dsl.mutation-source-authority/v1",
+    sourceFilename: filename(taxonomy.mutationComponentFileKindId),
+    descriptorFilename: filename(taxonomy.mutationDescriptorFileKindId),
+    mutationCollection: collections[0],
+    mutationPayloadFacet: Array.isArray(taxonomy.mutationBehaviorFacetDirs) ? taxonomy.mutationBehaviorFacetDirs[0] : undefined,
+    mutationDomainOwners: taxonomy.mutationDomainOwners ?? {},
+    mutationAggregateSources: taxonomy.mutationAggregateSources ?? {},
+  };
+  const document = JSON.parse(readFileSync(join(SCRIPT_DIR, "../../🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  const validate = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityProjectionV1`)!;
+  if (!validate(projection)) throw new Error(`mutation authority projection is outside its schema: ${JSON.stringify(validate.errors)}`);
+  return `${JSON.stringify(projection, null, 2)}\n`;
+}
+
+export const SCHEMA_INDEX_PATH = join(SCRIPT_DIR, "../../🗂️schema-document-index.json");
+
+/** 🔁️ Writes the projection only when its bytes change, so an unrelated taxonomy edit leaves every deriving crate fresh. */
+export class GenerateScript extends BundleScript {
+  async run(): Promise<void> {
+    const projected = mutationAuthorityProjection(this.repoRoot);
+    let committed: string | undefined;
+    try { committed = readFileSync(MUTATION_AUTHORITY_PATH, "utf8"); } catch { committed = undefined; }
+    if (committed === projected) return console.log("mutation-authority: unchanged");
+    writeFileSync(MUTATION_AUTHORITY_PATH, projected);
+    console.log("mutation-authority: written");
+  }
+}
+
+/** 👁️ Prints the generator-contract preview of the one projection file (`mutation-source-authority` in `generatorContracts`). */
+export class PreviewGeneratedScript extends BundleScript {
+  async run(): Promise<void> {
+    const path = relative(this.repoRoot, MUTATION_AUTHORITY_PATH).replaceAll("\\", "/").normalize("NFC");
+    const nodes = [{ bytesBase64: Buffer.from(mutationAuthorityProjection(this.repoRoot)).toString("base64"), mode: 0o644, nodeKind: "file", path }];
+    process.stdout.write(`${JSON.stringify({ contractId: "mutation-source-authority", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+
+/** ✅️ Fails when the committed projection is not the projection of the current taxonomy. */
+export class CheckGeneratedScript extends BundleScript {
+  async run(): Promise<void> {
+    if (readFileSync(MUTATION_AUTHORITY_PATH, "utf8") !== mutationAuthorityProjection(this.repoRoot)) throw new Error("mutation-authority projection is stale; run bun repo run @semio-tech/dsl-derive-rs:generate");
+    console.log("mutation-authority: fresh");
+  }
+}
+
+/** 🧊️ Checks explicit native/reference derive boundaries under the original selected owner policy. */
+export class ColdReferenceTestScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    const {rest}=resolveTestLevel(segments);
+    await runAdmittedCargoTestsV1({manifestPath:join(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel-dsl-derive"],cwd:this.root,extraArgs:["--lib","cold_reference_",...rest],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env),this.root,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));
+  }
+}
+
+/** 🔁️ Writes the schema document index only when its bytes change, so an unrelated edit leaves every deriving crate fresh. */
+export class GenerateSchemaIndexScript extends BundleScript {
+  async run(): Promise<void> {
+    const projected = mutationSchemaDocumentIndexProjection(this.repoRoot);
+    let committed: string | undefined;
+    try { committed = readFileSync(SCHEMA_INDEX_PATH, "utf8"); } catch { committed = undefined; }
+    if (committed === projected) return console.log("schema-document-index: unchanged");
+    writeFileSync(SCHEMA_INDEX_PATH, projected);
+    console.log("schema-document-index: written");
+  }
+}
+
+/** 👁️ Prints the generator-contract preview of the schema document index. */
+export class PreviewSchemaIndexScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] !== "preview") throw new Error("unknown schema-index subcommand");
+    const path = relative(this.repoRoot, SCHEMA_INDEX_PATH).split(sep).join("/").normalize("NFC");
+    const nodes = [{ bytesBase64: Buffer.from(mutationSchemaDocumentIndexProjection(this.repoRoot)).toString("base64"), mode: 0o644, nodeKind: "file", path }];
+    process.stdout.write(`${JSON.stringify({ contractId: "mutation-schema-document-index", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}

@@ -1,6 +1,7 @@
 //! 🧪️ Supplied native bytes return without copy and close only through their still-live original supplier.
 use semio_framework_job::*;
-#[path="../../../../🧪️testing/📬️payload/🦀️.rs"]
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+#[path="../../../🧪️testing/📬️payload/🦀️.rs"]
 mod original_payload;
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

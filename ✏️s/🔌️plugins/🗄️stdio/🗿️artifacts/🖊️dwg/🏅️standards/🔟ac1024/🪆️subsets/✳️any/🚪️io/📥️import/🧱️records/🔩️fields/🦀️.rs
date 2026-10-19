@@ -439,7 +439,6 @@ pub fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, ha
     use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgDistanceConstraint;
     use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint;
     use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint;
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn core(data: &mut DwgBitReader<'_>) -> Result<DwgConstraintNodeCore, String> {
         let id = data.read_bl()? as i32;
         if id < 0 {
@@ -452,15 +451,12 @@ pub fn decode_r2010_constraint_node(class: &str, data: &mut DwgBitReader<'_>, ha
         let connected_node_ids = (0..count).map(|_| data.read_bl()).collect::<Result<Vec<_>, _>>()?;
         Ok(DwgConstraintNodeCore { id, connected_node_ids })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn geometric(data: &mut DwgBitReader<'_>) -> Result<DwgGeometricConstraint, String> {
         Ok(DwgGeometricConstraint { node: core(data)?, owner_node_id: data.read_bl()?, implied: data.read_b()?, active: true })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn geometry(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgConstraintGeometry, String> {
         Ok(DwgConstraintGeometry { node: core(data)?, geometry_dependency_handle: read_object_handle(handles, base)?, geometry_node_id: data.read_bl()? })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn explicit(data: &mut DwgBitReader<'_>, handles: &mut DwgBitReader<'_>, base: u64) -> Result<DwgExplicitConstraint, String> {
         Ok(DwgExplicitConstraint {
             geometric: geometric(data)?,

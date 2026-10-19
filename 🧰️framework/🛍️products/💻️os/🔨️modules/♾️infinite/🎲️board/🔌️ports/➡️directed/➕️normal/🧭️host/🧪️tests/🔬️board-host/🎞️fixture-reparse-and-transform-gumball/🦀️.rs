@@ -18,7 +18,7 @@
         };
         let mut host = BoardHost::default();
         host.scene.set_size(800, 600, 1.0);
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(4),&mut control)}, "the opening parse must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(4),&mut control)}, "the opening parse must be admitted");
         host.focus.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Vec2::ZERO, start_positions: [("node-0".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None, gesture: GestureStage::default(), delta: Vec2::ZERO };
         let plan = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 10.0, y: 5.0, shift: false, ctrl_or_meta: false, alt: false }).expect("finish drag plan");
         begin_pointer_commit(&mut host.scene, &mut host.commit, plan).expect("retained drag commit");
@@ -29,8 +29,8 @@
                 break;
             }
         }
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(4),&mut control)}, "the re-parse after a drag must be admitted");
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(104),&mut control)}, "the re-parse after a hundred-placement fill must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(4),&mut control)}, "the re-parse after a drag must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(104),&mut control)}, "the re-parse after a hundred-placement fill must be admitted");
         set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["node-3".to_string()]);
         board_delete_selection(&mut host.scene, &mut host.outbox, &mut host.commit);
         let live = semio_framework_job::root_cancel_token();
@@ -43,8 +43,8 @@
             let _ = host.outbox.pop_owned_event();
         }
         assert!(!host.scene.nodes.contains_key("node-3"), "the delete must remove its node");
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(103),&mut control)}, "the re-parse after a delete must be admitted");
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(103),&mut control)}, "a session may re-parse its board any number of times");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(103),&mut control)}, "the re-parse after a delete must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(103),&mut control)}, "a session may re-parse its board any number of times");
     }
 
 #[cfg(test)]
@@ -67,10 +67,10 @@
         };
         let mut host = BoardHost::default();
         host.scene.set_size(800, 600, 1.0);
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(Some(serde_json::json!({ "x": 12.0, "y": -3.0, "zoom": 2.0 }))),&mut control)}, "a fixture that names its camera still parses");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(Some(serde_json::json!({ "x": 12.0, "y": -3.0, "zoom": 2.0 }))),&mut control)}, "a fixture that names its camera still parses");
         let framed = (host.scene.camera.x, host.scene.camera.y, host.scene.camera.zoom);
         assert_eq!(framed, (12.0, -3.0, 2.0), "a named camera is adopted");
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(None),&mut control)}, "a document with no camera key must parse, not refuse");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board(None),&mut control)}, "a document with no camera key must parse, not refuse");
         assert!(host.scene.nodes.contains_key("node-a"), "the cameraless document paints its nodes");
         assert_eq!((host.scene.camera.x, host.scene.camera.y, host.scene.camera.zoom), framed, "the session keeps the camera it was looking through");
     }
@@ -89,17 +89,17 @@
         })
         .to_string();
         let mut host = BoardHost::default();
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&good,&mut control)}, "the opening parse must be admitted");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&good,&mut control)}, "the opening parse must be admitted");
         for refused in [
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-z", "x": 1.0, "y": 1.0, "shape": "circle" }], "edges": [] }),
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-z", "x": 1.0, "y": 1.0, "shape": "circle", "radius": 10.0, "handles": [{ "id": "node-z:v0", "handleKind": "b-l", "angle": 0.0, "radius": 3.0, "color": "not-a-color" }] }], "edges": [] }),
             serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-z", "x": 1.0, "y": 1.0, "shape": "rectangle", "width": 0.0, "height": 4.0 }], "edges": [] }),
         ] {
-            assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&refused.to_string(),&mut control)}, "this fixture must be refused: {refused}");
+            assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&refused.to_string(),&mut control)}, "this fixture must be refused: {refused}");
             assert!(host.scene.nodes.contains_key("node-a"), "a refused parse must not empty the board: {refused}");
             assert!(!host.scene.nodes.contains_key("node-z"), "a refused parse must not half-commit its own rows: {refused}");
         }
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&good,&mut control)}, "the next real parse still lands");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&good,&mut control)}, "the next real parse still lands");
     }
 
 #[cfg(test)]
@@ -116,11 +116,11 @@
         let edge_rows: Vec<serde_json::Value> = (0..edges).map(|index| serde_json::json!({ "id": format!("edge-{index}"), "source": format!("node-{index}:b"), "target": format!("node-{}:a", index + 1) })).collect();
         let board = serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": nodes, "edges": edge_rows }).to_string();
         let mut host = BoardHost::default();
-        assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board,&mut control)}, "the edged board must parse into a fresh session");
+        assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board,&mut control)}, "the edged board must parse into a fresh session");
         let events = host.outbox.drain_events_json();
         assert!(!events.contains("edgeCreate"), "a fixture parse must not announce the document's edges as creations: {events}");
         for round in 0..4 {
-            assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board,&mut control)}, "re-parse #{round} of the same edged board must parse in the same session without draining");
+            assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&board,&mut control)}, "re-parse #{round} of the same edged board must parse in the same session without draining");
         }
         assert!(host.sync_descriptor(&SceneDescriptor::default()).is_ok(), "an authoring sync still runs after the parses");
     }
@@ -143,7 +143,7 @@ fn transform_gumball_host() -> BoardHost {
     let mut host = BoardHost::default();
     host.scene.set_size(800, 600, 1.0);
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the gumball fixture must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the gumball fixture must parse");
     host
 }
 
@@ -328,7 +328,7 @@ fn the_rotate_ring_outranks_the_nodes_and_handles_under_it() {
         "edges": []
     })
     .to_string();
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&under_ring,&mut control)}, "the overlapping board must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&under_ring,&mut control)}, "the overlapping board must parse");
     set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["node-a".into(), "node-b".into()]);
     let _ = host.outbox.drain_events_json();
     let grab = transform_ring_screen_at(&host, 0.0);

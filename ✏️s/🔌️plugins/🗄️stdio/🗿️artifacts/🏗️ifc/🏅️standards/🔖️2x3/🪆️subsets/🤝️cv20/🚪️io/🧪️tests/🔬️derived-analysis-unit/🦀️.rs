@@ -27,7 +27,7 @@ mod tests {
                     Part21Value::Unset,
                     Part21Value::Unset,
                     Part21Value::Unset,
-                    Part21Value::Ref(20), // UnitsInContext
+                    Part21Value::Ref(20),
                 ],
             )],
         };
@@ -41,7 +41,7 @@ mod tests {
                     Part21Value::Str("Wall".into()),
                     Part21Value::Unset,
                     Part21Value::Unset,
-                    Part21Value::Ref(10), // ObjectPlacement
+                    Part21Value::Ref(10),
                 ],
             )],
         };

@@ -224,9 +224,9 @@ fn split_index_field(rest: &str) -> (usize, &str) {
 #[test]
 fn groundwater_level_changes_bearing_utilization() {
     let mut doc = compliant_demo();
-    doc.groundwater_level = 0.2; // below footing base → γ′
+    doc.groundwater_level = 0.2;
     let u_wet = check_project(&doc).checks.iter().find(|c| c.id.contains("bearing")).map(|c| c.utilization).unwrap();
-    doc.groundwater_level = 20.0; // dry
+    doc.groundwater_level = 20.0;
     let u_dry = check_project(&doc).checks.iter().find(|c| c.id.contains("bearing")).map(|c| c.utilization).unwrap();
     assert!((u_wet - u_dry).abs() > 0.01, "GWL must change bearing u; wet={u_wet} dry={u_dry}");
 }

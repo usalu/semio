@@ -31,6 +31,7 @@ semio-s-artifact-fem-3d-editor-results-window = { workspace = true }
 semio-s-artifact-fem-3d-editor-terminology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
+semio-s-artifact-fem-2d-results-state = { path = "../../../../../../../../../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

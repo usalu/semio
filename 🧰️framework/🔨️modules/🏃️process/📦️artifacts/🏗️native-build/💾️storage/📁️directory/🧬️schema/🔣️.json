@@ -1,0 +1,344 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/directory/component.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "kind": "directory-partition",
+        "anchor": "fixed.dir",
+        "volume": "v",
+        "root": "m",
+        "receipt": "image.json",
+        "maximumAnchorBytes": 4096,
+        "maximumEntries": 1048576,
+        "maximumDepth": 64,
+        "probe": [
+          "case-a",
+          "CASE-A"
+        ],
+        "actions": [
+          "allocate",
+          "activate",
+          "inactive",
+          "deactivate"
+        ],
+        "states": [
+          "inactive",
+          "attached"
+        ],
+        "exchange": {
+          "darwin": {
+            "library": "/usr/lib/libSystem.B.dylib",
+            "symbol": "renameatx_np",
+            "flag": 2,
+            "atFdcwd": -2,
+            "error": "__error",
+            "unsupported": [
+              45,
+              22
+            ]
+          },
+          "linux": {
+            "x64": "/lib/x86_64-linux-gnu/libc.so.6",
+            "arm64": "/lib/aarch64-linux-gnu/libc.so.6",
+            "symbol": "renameat2",
+            "flag": 2,
+            "atFdcwd": -100,
+            "error": "__errno_location",
+            "unsupported": [
+              95,
+              38,
+              22
+            ]
+          },
+          "windows": {
+            "libraries": {
+              "kernel": "kernel32.dll",
+              "nt": "ntdll.dll",
+              "registry": "advapi32.dll"
+            },
+            "moveWriteThrough": 8,
+            "extendedPrefix": "\\\\?\\",
+            "extendedUncPrefix": "\\\\?\\UNC\\",
+            "maximumExtendedUnits": 32767,
+            "invalidHandle": "18446744073709551615",
+            "createFile": {
+              "genericRead": 2147483648,
+              "genericWrite": 1073741824,
+              "fileWriteAttributes": 256,
+              "shareAll": 7,
+              "openExisting": 3,
+              "backupSemantics": 33554432,
+              "openReparsePoint": 2097152,
+              "fileReadAttributes": 128
+            },
+            "caseSensitive": {
+              "informationClass": 71,
+              "flag": 1,
+              "informationBytes": 4,
+              "statusBlockBytes": 16
+            },
+            "flush": {
+              "tolerated": [
+                1,
+                5
+              ]
+            },
+            "unsupported": [],
+            "longPaths": {
+              "hive": -2147483646,
+              "key": "SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+              "value": "LongPathsEnabled",
+              "flags": 16,
+              "notFound": 2,
+              "dataBytes": 4
+            },
+            "blockBytes": 4096,
+            "systemRoot": {
+              "pattern": "^[A-Za-z]:\\\\[^\\\\/:*?\"<>|\\u0000-\\u001f]+$",
+              "library": "System32"
+            }
+          }
+        },
+        "refusals": {
+          "unsupported": "Atomic directory exchange is unsupported by this kernel or filesystem",
+          "caseInsensitive": "Case-sensitive host filesystem required for a directory partition",
+          "capacity": "Directory partition capacity exceeded",
+          "interrupted": "Interrupted directory swap requires recovery",
+          "swapState": "Unrecognized interrupted directory swap state",
+          "swapSiblings": "Journaled directory swap requires two sibling directories",
+          "windowsRename": "Directory rename refused by Windows",
+          "windowsOpenHandle": "A handle is still open inside the partition (Win32 error 5 or 32); close every user of the partition before it is swapped",
+          "caseBuild": "This Windows build has no per-directory case sensitivity (build 17107 or newer on NTFS is required)",
+          "caseFeature": "Per-directory case sensitivity is unavailable: enable the optional feature Microsoft-Windows-Subsystem-Linux (dism /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux, then restart) and use an NTFS volume",
+          "caseNotEmpty": "Per-directory case sensitivity can only be set on an empty directory",
+          "caseAccess": "Per-directory case sensitivity was refused (access denied) for the cache directory owner",
+          "caseUnverified": "The directory still folds case after the per-directory case-sensitivity flag was set",
+          "windowsInUse": "Directory is held open by another process (Win32 sharing violation); close every user of the partition"
+        },
+        "childDepth": 2,
+        "meter": {
+          "intervalBytes": 16777216,
+          "intervalMilliseconds": 2000
+        },
+        "swap": {
+          "intent": "swap.json",
+          "temporary": "m.old",
+          "maximumIntentBytes": 4096,
+          "kind": "directory-swap"
+        },
+        "windowsStatuses": {
+          "directoryNotEmpty": 3221225729,
+          "notSupported": 3221225659,
+          "invalidInfoClass": 3221225475,
+          "invalidParameter": 3221225485,
+          "accessDenied": 3221225506
+        },
+        "windowsErrors": {
+          "sharing": 32,
+          "accessDenied": 5,
+          "alreadyExists": 183,
+          "fileNotFound": 2,
+          "pathNotFound": 3,
+          "invalidFunction": 1
+        },
+        "childEnvironment": {
+          "linux": {
+            "PATH": "/usr/bin:/bin",
+            "LANG": "C",
+            "LC_ALL": "C"
+          }
+        }
+      }
+    },
+    "Anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "underlying"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "directory-partition"
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "underlying": {
+          "$ref": "#/definitions/Identity"
+        }
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "reservedBytes",
+        "usedBytes",
+        "requestBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum payload bytes in one declared allocation."
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Whole physical partition ceiling including directory and journal metadata."
+        },
+        "reservedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Durable held journal charge before this request."
+        },
+        "usedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Measured or conservatively estimated allocated bytes of the complete directory tree."
+        },
+        "requestBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Additional finite allocation entitlement to admit; zero when checking existing content."
+        }
+      },
+      "description": "A payload request fits its declared filesystem envelope; the durable journal and measured whole directory tree each stay within the unchanged physical partition ceiling."
+    },
+    "SwapIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "first",
+        "second",
+        "temporary",
+        "identities"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "directory-swap"
+        },
+        "first": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^\\\\/:*?\"<>|\\u0000-\\u001f]+$"
+        },
+        "second": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^\\\\/:*?\"<>|\\u0000-\\u001f]+$"
+        },
+        "temporary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^\\\\/:*?\"<>|\\u0000-\\u001f]+$"
+        },
+        "identities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "first",
+            "second"
+          ],
+          "properties": {
+            "first": {
+              "$ref": "#/definitions/Identity"
+            },
+            "second": {
+              "$ref": "#/definitions/Identity"
+            }
+          }
+        }
+      }
+    },
+    "MeterRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "requestBytes"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "reserve",
+            "commit",
+            "recheck"
+          ]
+        },
+        "requestBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "MeterLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

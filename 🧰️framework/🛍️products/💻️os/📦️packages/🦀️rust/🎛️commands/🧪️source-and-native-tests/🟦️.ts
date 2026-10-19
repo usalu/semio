@@ -1,12 +1,11 @@
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
-import { runExactCargoLaws } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 /** 🧪️ Source and native test commands: wire, payload, transport, list record, pack schema, retirement, key index, assembly lifetime, jco adapter, artifact kind, returned reads, edit metadata, actor identity, preparation control, config paging, cleanup context, crate boundaries and the DSL architecture proof.
  *
  * @see ../../📜️script.ts — the package script that registers the commands of this module
  */
 import { captureOwnedCommandV1 } from "@semio-tech/process/owned-execution";
 import { scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { createIssuedResourceControlV1, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -287,10 +286,10 @@ export class DiagnosticAdmissionCheckScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-diagnostic-admission accepts no arguments");
   const {Database}=await import("bun:sqlite");
-  const {replayReportBlocksFinalize,outcomeCodeLevel}=await import("../../../../../../🔨️modules/📡️replication/🟦️.ts");
-  const law=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🔣️.json"),"utf8"));
+  const {replayReportBlocksFinalize,outcomeCodeLevel}=await import("@semio-tech/framework-replication");
+  const law:any=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🔣️.json"),"utf8"));
   const schema=JSON.parse(readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧫️fixtures/🚦️admission/🧬️schema/🔣️.json"),"utf8"));
-  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(validate(law),JSON.stringify(validate.errors));
+  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(Boolean(validate(law)),JSON.stringify(validate.errors));
   const replaySource=readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs"),"utf8");
   const retainedSource=readFileSync(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🦀️.rs"),"utf8");
   assert(replaySource.includes("operation.diff(base).stamp_op_index(index as u32).admit()"));
@@ -318,9 +317,9 @@ export class DiagnosticAdmissionCheckScript extends BundleScript {
    }
    console.log("[DEBUG] diagnostic-admission: Ajv validates four nonempty scalar diff vectors; SQLite verifies retained/prefix/history/merge projection and invocation ordering; original diagnostics agree; Error/Fatal cannot apply or inverse");
    const cursorRoot=join(this.repoRoot,"🧰️framework/🔨️modules/📡️replication/🎮️mutation/📬️preparation");
-   const cursorLaw=JSON.parse(readFileSync(join(cursorRoot,"🧫️fixtures/🔣️.json"),"utf8"));
+   const cursorLaw:any=JSON.parse(readFileSync(join(cursorRoot,"🧫️fixtures/🔣️.json"),"utf8"));
    const cursorSchema=JSON.parse(readFileSync(join(cursorRoot,"🧬️schema/🔣️.json"),"utf8"));
-   const validateCursor=semioSchemaAjvV1({strict:true,allErrors:true}).compile(cursorSchema);assert(validateCursor(cursorLaw),JSON.stringify(validateCursor.errors));
+   const validateCursor=semioSchemaAjvV1({strict:true,allErrors:true}).compile(cursorSchema);assert(Boolean(validateCursor(cursorLaw)),JSON.stringify(validateCursor.errors));
    assert(cursorLaw.base.rowCount*cursorLaw.base.rowBytes>cursorLaw.grant.maximumCapacityBytes);
    for(const entry of cursorLaw.cases){
     assert(entry.targetRow<cursorLaw.base.rowCount);
@@ -340,7 +339,7 @@ export class OwnedReplayCheckScript extends BundleScript {
   const root=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
   const law=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧫️replay-retirement/🔣️.json"),"utf8")).ownedReplay as Array<{name:string;base:number;operations:Array<{value:number;fault:string}>;expected:number;coldClones:number;ownedClones:number;terminalOwners:number}>;
   const schema=JSON.parse(readFileSync(join(root,"🧫️fixtures/🧫️replay-retirement/🧬️schema/📥️owned-replay/🔣️.json"),"utf8"));
-  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(validate(law),JSON.stringify(validate.errors));
+  const validate=semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema);assert(Boolean(validate(law)),JSON.stringify(validate.errors));
   const database=new Database(":memory:");
   try {
    database.exec("CREATE TABLE operations(position INTEGER PRIMARY KEY,value INTEGER,fault TEXT);CREATE TABLE original(value INTEGER);CREATE TABLE projection(value INTEGER)");
@@ -389,7 +388,7 @@ export class CanonicalSourceIdentityCheckScript extends BundleScript {
   if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("Canonical source identity requires source or native");
   const oracle=await import("../../../../🔨️modules/🏪️store/🧵️canonical-edit/🪪️source-identity/🧪️tests/🟦️.ts");oracle.runCanonicalSourceIdentityChecks();
   if(segments[0]==="source")return;
-  const receipts=await runRepositoryExactCargoLaws({invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,...exactCargoStageEnvironments(),artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},laws:["os_store::canonical_edit::source_identity::tests::canonical_source_identity_streams_original_full_fields_and_closes_every_cancelled_prefix","os_store::canonical_edit::source_identity::tests::canonical_source_identity_refuses_a_foreign_live_root_before_reading_it","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_birth_deep_source_and_cancellation_fit4096","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_refuses_original_source_depth65_and_closes_paid_backing"]}]});
+  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:configuredExactCargoLawPolicyV1(),cwd:this.repoRoot,...exactCargoStageEnvironments(),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},laws:["os_store::canonical_edit::source_identity::tests::canonical_source_identity_streams_original_full_fields_and_closes_every_cancelled_prefix","os_store::canonical_edit::source_identity::tests::canonical_source_identity_refuses_a_foreign_live_root_before_reading_it","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_birth_deep_source_and_cancellation_fit4096","os_store::canonical_edit::source_identity::tests::canonical_source_identity_staged64_refuses_original_source_depth65_and_closes_paid_backing"]}]});
   console.log("[DEBUG] canonical source identity exact native passed "+receipts[0]!.assertions+" original-root laws");
  }
 }
@@ -397,10 +396,10 @@ export class CanonicalSourceIdentityCheckScript extends BundleScript {
 export class OriginalVcsCommandScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length!==1||!["source","native"].includes(args[0]!))throw Error("test-original-vcs-command source|native");
-  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧪️tests/🟦️.test.ts");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🎮️command/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
   if(args[0]==="source")return;
-  const native=readCargoTestPolicyV1(process.env);await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:this.invocation.control.remainingMilliseconds()},cwd:this.repoRoot,cargoTargetDir:native.targetDirectory,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::native_vcs_command::tests::original_vcs_request_custody_closes_owned_unicode_and_authors_with_physical_receipts"]}]});
+  const native=readCargoTestPolicyV1(process.env);await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0)},cwd:this.repoRoot,nativeEnv:{RUST_MIN_STACK:native.rustMinStack},manifestPaths:{"semio-framework-os-kernel":resolve(this.root,"Cargo.toml")},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib",name:"semio_framework_os_kernel"},cargoArgs:["--locked"],laws:["os_store::component::native_vcs_command::tests::original_vcs_request_custody_closes_owned_unicode_and_authors_with_physical_receipts"]}]});
  }
 }

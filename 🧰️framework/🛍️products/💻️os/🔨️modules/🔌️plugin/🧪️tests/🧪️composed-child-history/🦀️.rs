@@ -20,6 +20,8 @@ use semio_framework_plugin_window_transient::window_transient::WindowTransientOw
 use semio_framework_plugin_time_travel as time_travel;
 use semio_framework_ui_contract::*;
 use std::collections::{HashMap, HashSet};
+use semio_framework_ui_locale::LocalizedLabel;
+use serde_json::Value;
 
 const COMPOSED_CHILD_HISTORY_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️composed-child-history/🔣️.json");
 

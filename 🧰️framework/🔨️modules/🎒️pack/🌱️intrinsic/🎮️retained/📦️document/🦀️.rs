@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_pack_format_retained::{RetainedPackAnchorCursor as Anchor, RetainedPackSegmentCursor as Segment, RetainedPackSegmentAdmission as Admission, RetainedPackSourceEvent as Source, RetainedPackSegmentEvent as Event, RetainedPackCatalogFault as CatalogFault, RetainedPackCloseStep as Close}; use semio_framework_pack_format_catalog::{RetainedPackCatalogCursor as Catalog, RetainedPackCatalog}; use semio_framework_pack_format::Superblock;
 use semio_framework_pack_record_retained::RetainedValueCursor as Value;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 
 pub(super) const SCHEMA_GRAPH:&[u8]=&[1,1,1,5,b'v',b'a',b'l',b'u',b'e',0,14];
 const IDS:usize=isize::MAX as usize/size_of::<u64>();
@@ -16,7 +16,7 @@ pub(crate) struct DocumentDriver{
  intrinsic:bool,schema_index:usize,schema_hash:semio_framework_hash::Hasher,chunks:Chunks,pending_id:Option<u64>,chunk_hash:semio_framework_hash::Hasher,closed:bool,
 }
 fn catalog_fault(error:CatalogFault)->PackRefusal{error.into_pack_refusal("retained intrinsic Document catalog")}
-fn paged(error:semio_framework_value::list::PagedListError)->PackRefusal{PackRefusal::from_paged_refusal(error,"retained intrinsic chunk references",0)}
+fn paged(error:semio_framework_value_persistent::list::PagedListError)->PackRefusal{PackRefusal::from_paged_refusal(error,"retained intrinsic chunk references",0)}
 fn partial_close(step:Close)->RetainedCloneStep{match close_receipt(step){RetainedCloneStep::Complete(progress)|RetainedCloneStep::Progress(progress)=>RetainedCloneStep::Progress(progress)}}
 fn segment_one(cursor:&mut Segment,input:&[u8],offset:&mut usize,complete:&mut bool,maximum:usize)->Result<Option<Event>,PackRefusal>{
  if let Some(bytes)=cursor.next_allocation_bytes(){if bytes>maximum{return Err(capacity())}cursor.reserve_allocation(bytes).map_err(|error|error.fault.into_pack_refusal("retained intrinsic inflater",0))?;return Ok(None)}

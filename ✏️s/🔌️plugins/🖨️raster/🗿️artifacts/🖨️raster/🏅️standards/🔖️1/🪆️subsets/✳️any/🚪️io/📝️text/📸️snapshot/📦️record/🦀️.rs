@@ -2,7 +2,7 @@
 use crate::snapshot::RasterSnapshot;
 use crate::{RasterLayerNode, RasterLayerMask, RasterOwnedMap, RasterAssetChild};
 use semio_framework_value::NativeEncodeControl;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn limit(kind:ValueRefusalKind,message:&str)->ValueError{ValueError::new(kind,message)}

@@ -268,7 +268,6 @@ fn every_default_leaf_has_en_de_field_meta() {
             for c in choices {
                 assert_ne!(c.label_en, c.value, "raw wire label_en for {} on {path}", c.value);
                 assert!(!c.label_de.is_empty());
-                // human labels must differ from raw codes for non-identical catalogue codes
                 if matches!(c.value, "building" | "bridge" | "propped" | "unpropped" | "true" | "false" | "en" | "de" | "r30" | "r60" | "r90" | "r120") {
                     assert_ne!(c.label_en, c.value, "{path} {}", c.value);
                 }
@@ -487,7 +486,6 @@ fn every_editable_leaf_affects_at_least_one_check() {
             failing_beam,
             |p| {
                 let leaf = leaf_name(p);
-                // Failing DSL base: walk governing load / stud / span leaves that prove Fail paths.
                 if p.contains("beams[") && matches!(leaf, "qAreaPa" | "spacingM" | "totalCount" | "spanM" | "slabThicknessM") {
                     return true;
                 }
@@ -557,7 +555,6 @@ fn every_editable_leaf_affects_at_least_one_check() {
             }
         }
     }
-    // Annex γ_Mf on bridge fatigue limits (DE 1.35 vs EN 1.15) — same proof as de_vs_en_bridge_fatigue_gamma_mf.
     {
         let mut de = En1994Snapshot::bridge_girder();
         de.annex = AnnexChoice::De;
@@ -570,8 +567,6 @@ fn every_editable_leaf_affects_at_least_one_check() {
         assert!(fat_de.limit.value < fat_en.limit.value, "DE γ_Mf must lower Δσ_R (de={} en={})", fat_de.limit.value, fat_en.limit.value);
         checked += 1;
     }
-
-    // Column force leaves on default (characteristic N_k / M_k enter ULS 6.10).
 
     {
         let base = En1994Snapshot::default();

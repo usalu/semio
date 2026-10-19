@@ -4,7 +4,7 @@ import type { DiagramForceConfig, DiagramForceNode, DiagramForceSimulation, Diag
 import { OwnedDiagramForceSimulation, finiteForceValue } from "../🧮️force-simulation/🟦️.ts";
 
 /**
- * ForceNode holds the data fields for a ForceNode record.
+ * 🏋️ ForceNode holds the data fields for a ForceNode record.
  **/
 export interface ForceNode extends DiagramForceNode {
   id: string;

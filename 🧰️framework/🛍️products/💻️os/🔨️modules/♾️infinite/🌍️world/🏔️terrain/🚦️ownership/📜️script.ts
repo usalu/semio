@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 class TestScript extends BundleScript {
  async run(segments:string[]):Promise<void> {
-  await runOwnedCommand("bun",["test",resolve(import.meta.dir,"🧪️tests/🟦️.test.ts"),...segments],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
+  await runOwnedCommand("bun",["test",resolve(import.meta.dir,"🧪️tests/🟦️.ts"),...segments],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
  }
 }
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript), { invocation: original, ...({defaultCommand:"test"}) }));

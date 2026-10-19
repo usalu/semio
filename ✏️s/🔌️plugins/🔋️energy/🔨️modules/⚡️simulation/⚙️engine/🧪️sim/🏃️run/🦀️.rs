@@ -96,8 +96,6 @@ impl EnergyJobAuthority {
                     if self.state.as_mut().expect("state exists while reserving surfaces").surfaces.admit(self.model.surfaces.len()).is_err() {
                         { return self.begin_fault(); }
                     }
-                    // 🧱️ The per-surface energy table is admitted once, here, for exactly one row per
-                    // opaque surface and one per fenestration — never grown afterwards.
                     if self.state.as_mut().expect("state exists while reserving surfaces").per_surface.admit(self.model.surfaces.len(), self.model.fenestrations.len()).is_err() {
                         return self.begin_fault();
                     }
@@ -211,10 +209,6 @@ impl EnergyJobAuthority {
                 }
                 let turn=self.timestep_work.as_mut().expect("warmup timestep work exists").step_funded(&self.model,&self.config,pre,self.state.as_mut().expect("state initialized before warmup"),context.retained_grant());
                 if context.consume_retained(turn.progress).is_err()||turn.fault.is_some(){return self.begin_fault();}
-                // 🧵️ Completion is acknowledged BEFORE the fuel check and the rng rotates ONCE per
-                // completed timestep: `step` already charged this call's unit at entry, so a one-unit
-                // grant is always exhausted here — checking `should_yield` first starved the job in
-                // this stage forever, and rotating per call made the chronology depend on the grant.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
                     return EnergyRun::Yield;
                 }
@@ -368,7 +362,6 @@ impl EnergyJobAuthority {
                 }
                 let turn=self.timestep_work.as_mut().expect("run timestep work exists").step_funded(&self.model,&self.config,pre,self.state.as_mut().expect("state initialized before run"),context.retained_grant());
                 if context.consume_retained(turn.progress).is_err()||turn.fault.is_some(){return self.begin_fault();}
-                // 🧵️ Same order as the warmup stage: acknowledge completion first, rotate once per timestep.
                 if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
                     return EnergyRun::Yield;
                 }
@@ -481,7 +474,7 @@ impl EnergyJobAuthority {
                     }
                 }
                 if self.output_writer.is_none() && self.output_payload.is_none() {
-                    self.output_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
+                    self.output_writer = Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
                     return EnergyRun::Yield;
                 }
                 match self.encode_output_step(context) {

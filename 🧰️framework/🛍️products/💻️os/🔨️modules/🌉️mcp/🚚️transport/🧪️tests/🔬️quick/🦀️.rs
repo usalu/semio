@@ -12,7 +12,7 @@ use semio_framework_os_mcp_bridge_codec::bridge::{BRIDGE_VERSION, BridgeFlags, S
 use semio_framework_os_mcp_consent::elicitation::{ELICITATION_TIMEOUT_MS, ElicitationAction, ElicitationChannel, ElicitationClock, ElicitationUnavailable, StdioLines, SystemElicitationClock};
 use semio_framework_os_mcp_server::mcp_server::McpServer;
 use semio_framework_os_mcp_server::stdio_transport::{McpTransport, StdioTransport};
-use semio_framework_os_mcp_wire::protocol::{ClientFeatures, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcResponse, NullBackend};
+use semio_framework_os_mcp_wire::protocol::{CallToolResult, ClientFeatures, InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, JsonRpcId, JsonRpcRequest, JsonRpcResponse, NullBackend, Tool};
 use semio_framework_os_mcp_workspace::gateway_backend::GatewayBackends;
 
 /// 📝️ An owned, cloneable `Write` sink — `StdioTransport` now takes its output stream by value
@@ -626,3 +626,36 @@ fn the_client_feature_mirror_records_exactly_what_was_advertised() {
 }
 
 //#endregion 🔖️Elicitation
+
+//#region 🔖️StructuredContentShape
+
+/// 📦️ MCP defines `structuredContent` as a JSON object. A tool that declares an `outputSchema` and returns
+/// array or scalar data reaches the wire as `{"result": <value>}`, null is omitted, and a tool without an
+/// `outputSchema` omits non-object data: nothing is silently reshaped into `null`.
+#[test]
+fn structured_content_reaches_the_wire_as_an_object_or_not_at_all() {
+    let mut tools = InMemoryToolRegistry::new();
+    let mut declared = Tool::new("declared_list", serde_json::json!({ "type": "object" }));
+    declared.output_schema = Some(serde_json::json!({ "type": "object" }));
+    tools.register(declared, |_arguments| CallToolResult::ok(vec![], Some(serde_json::json!([1, 2])))).unwrap();
+    tools.register(Tool::new("undeclared_list", serde_json::json!({ "type": "object" })), |_arguments| CallToolResult::ok(vec![], Some(serde_json::json!([1, 2])))).unwrap();
+    let mut declared_null = Tool::new("declared_null", serde_json::json!({ "type": "object" }));
+    declared_null.output_schema = Some(serde_json::json!({ "type": "object" }));
+    tools.register(declared_null, |_arguments| CallToolResult::ok(vec![], Some(serde_json::Value::Null))).unwrap();
+    tools.register(Tool::new("object", serde_json::json!({ "type": "object" })), |_arguments| CallToolResult::ok(vec![], Some(serde_json::json!({ "a": 1 })))).unwrap();
+    let mut server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)));
+    let expectations = [
+        ("declared_list", Some(serde_json::json!({ "result": [1, 2] }))),
+        ("undeclared_list", None),
+        ("declared_null", None),
+        ("object", Some(serde_json::json!({ "a": 1 }))),
+    ];
+    for (index, (name, expected)) in expectations.into_iter().enumerate() {
+        let request = JsonRpcRequest { jsonrpc: "2.0".to_string(), id: Some(JsonRpcId::Number(index as i64 + 1)), method: "tools/call".to_string(), params: Some(serde_json::json!({ "name": name, "arguments": {} })) };
+        let response = server.dispatch(&request).expect("a request with an id always answers");
+        let result = serde_json::to_value(&response).expect("a response always serializes").get("result").cloned().expect("a tools/call result");
+        assert_eq!(result.get("structuredContent"), expected.as_ref(), "{name}: {result}");
+    }
+}
+
+//#endregion 🔖️StructuredContentShape

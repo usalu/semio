@@ -4,7 +4,7 @@
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, a meadow to stand on, the events and a pet at rest
 
 use super::*;
-use crate::draft::draft_of;
+use semio_framework_pets_staging_draft::draft::draft_of;
 use crate::population::CENTRED;
 use crate::stage::tests::{meadow, plain, pointed, rested, run, ticked, troupe};
 use crate::stage::{advance, frame_of};

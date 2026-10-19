@@ -4,14 +4,13 @@
   "rhs": null,
   "parameterBindings": null,
   "ruleLayout": {
-    "entries": [
-      {
-        "key": "shaft",
+    "entries": {
+      "shaft": {
         "precondition": "present",
         "operation": {
           "kind": "remove"
         }
       }
-    ]
+    }
   }
 }

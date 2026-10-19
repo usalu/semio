@@ -9,7 +9,7 @@ const base=join(import.meta.dir,"..");
 const fixture=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const varint=(value:bigint)=>{const bytes=[];do{const byte=Number(value&127n);value>>=7n;bytes.push(byte|(value?128:0));}while(value);return Buffer.from(bytes);};
 test("original arithmetic expression corpus matches independent Buffer UTF8 and mathjs evaluation",()=>{
- const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/🧮️expression/🔣️.json"),"utf8"));for(const row of rows.cases){const bytes=Buffer.from(row.text);const body=Buffer.concat([Buffer.from([0,1,rows.fieldId,rows.tag,rows.inlineTag]),varint(BigInt(bytes.length)),bytes]);expect(body.toString("hex")).toBe(row.bodyHex);if(row.value!==undefined)expect(parseMath(row.text).compile().evaluate(row.scope??{})).toBe(row.value);}console.log(`[DEBUG] independent Buffer and mathjs verified${rows.cases.length}original expression grammar vectors`);
+ const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🧮️expression/🔣️.json"),"utf8"));for(const row of rows.cases){const bytes=Buffer.from(row.text);const body=Buffer.concat([Buffer.from([0,1,rows.fieldId,rows.tag,rows.inlineTag]),varint(BigInt(bytes.length)),bytes]);expect(body.toString("hex")).toBe(row.bodyHex);if(row.value!==undefined)expect(parseMath(row.text).compile().evaluate(row.scope??{})).toBe(row.value);}console.log(`[DEBUG] independent Buffer and mathjs verified${rows.cases.length}original expression grammar vectors`);
 });
 const text=(node:any)=>node.value.repeat(node.repeat??1);
 const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false)=>{
@@ -19,7 +19,7 @@ const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false
 };
 const f64=(bits:string)=>{const bytes=Buffer.alloc(8);bytes.writeBigUInt64LE(BigInt(`0x${bits}`));return bytes;};
 test("portable standard Map Statements Wire bytes match independent Buffer UTF8 ordering",()=>{
- const rows=JSON.parse(readFileSync(join(base,"🧫️fixtures/🧩️branches/🔣️.json"),"utf8"));
+ const rows=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🧩️branches/🔣️.json"),"utf8"));
  for(const row of rows.cases){
   const values:string[]=row.kind==="map"?row.pairs.filter((pair:any)=>pair[1]!==null).flat():row.kind==="statements"?[row.keyword,...row.values]:row.slots.filter((value:any)=>typeof value==="string");
   const pool=[...new Set(values)].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));const index=(text:string)=>varint(BigInt(pool.indexOf(text)));const word=(text:string)=>Buffer.concat([Buffer.from([6]),index(text)]);
@@ -31,7 +31,7 @@ test("portable standard Map Statements Wire bytes match independent Buffer UTF8 
  }
 });
 test("native original key and text retain Unicode crossing an actual source page",()=>{
- const row=JSON.parse(readFileSync(join(base,"🧫️fixtures/🌿️native-text/🔣️.json"),"utf8"));const bytes=Buffer.concat([Buffer.alloc(row.split,row.fill),Buffer.from(row.scalar),Buffer.alloc(row.bytes-row.split-Buffer.byteLength(row.scalar),row.fill)]);expect(bytes).toHaveLength(row.bytes);const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);expect(Buffer.from(new TextEncoder().encode(text))).toEqual(bytes);expect(bytes.subarray(row.split,row.split+Buffer.byteLength(row.scalar))).toEqual(Buffer.from(row.scalar));expect(varint(BigInt(bytes.length))).toEqual(Buffer.from([130,64]));expect(Buffer.from(row.bodyHex,"hex")).toEqual(Buffer.from([1,row.recordId,16,row.mapEntries,6,0,6,0]));
+ const row=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🌿️native-text/🔣️.json"),"utf8"));const bytes=Buffer.concat([Buffer.alloc(row.split,row.fill),Buffer.from(row.scalar),Buffer.alloc(row.bytes-row.split-Buffer.byteLength(row.scalar),row.fill)]);expect(bytes).toHaveLength(row.bytes);const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);expect(Buffer.from(new TextEncoder().encode(text))).toEqual(bytes);expect(bytes.subarray(row.split,row.split+Buffer.byteLength(row.scalar))).toEqual(Buffer.from(row.scalar));expect(varint(BigInt(bytes.length))).toEqual(Buffer.from([130,64]));expect(Buffer.from(row.bodyHex,"hex")).toEqual(Buffer.from([1,row.recordId,16,row.mapEntries,6,0,6,0]));
 });
 const encode=(node:any,pool:string[]):Buffer=>{
   if(node.kind==="block")return Buffer.concat([Buffer.from([14]),...(node.items[0].kind==="record"?[Buffer.from([13])]:[]),encode(node.items[0],pool)]);

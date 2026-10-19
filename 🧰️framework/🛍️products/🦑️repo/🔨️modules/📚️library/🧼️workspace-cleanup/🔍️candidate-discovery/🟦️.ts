@@ -491,7 +491,7 @@ export function cleanBuildArtifactRemovals(root: string, protectedPrefixes: read
   return out;
 }
 
-/** Ticket size hits keep the deepest path so `target/` wins over year/month parents. */
+/** ➖️ Ticket size hits keep the deepest path so `target/` wins over year/month parents. */
 export function cleanDedupePreferDeepest(removals: readonly CleanRemoval[]): CleanRemoval[] {
   const sorted = [...removals].sort((a, b) => b.path.length - a.path.length || a.path.localeCompare(b.path));
   const kept: CleanRemoval[] = [];
@@ -502,4 +502,4 @@ export function cleanDedupePreferDeepest(removals: readonly CleanRemoval[]): Cle
   return kept;
 }
 
-/** Prefer shallow removals across kinds so a parent delete absorbs nested hits. */
+/** 👪️ Prefer shallow removals across kinds so a parent delete absorbs nested hits. */

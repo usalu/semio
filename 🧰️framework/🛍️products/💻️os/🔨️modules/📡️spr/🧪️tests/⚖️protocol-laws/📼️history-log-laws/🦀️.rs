@@ -3,15 +3,15 @@
 use super::*;
 
 //#region 🔖️Laws
-// `crate::os_spr::history::encode_history`/`decode_history`/`parse_ops_text`/`print_ops_text` are the
+// `crate::history::encode_history`/`decode_history`/`parse_ops_text`/`print_ops_text` are the
 // whole-batch codec and text-grammar twin the frozen contract's laws are phrased against; the
 // `protocol` facade doesn't re-export them (only `HistoryAppender`/`HistoryReader` and the
 // `compile_ops`/`decompile_ops` ops-text wrappers), so this crate depends on `protocol_history`
 // directly for the struct-level and text-level laws below (see `Cargo.toml`'s note).
 
 /// 🖇️ `.spr` bytes for `log`: `commit_after_every_record: false` uses the whole-batch
-/// `crate::os_spr::history::encode_history` codec directly (buffered); `true` streams it through
-/// `crate::os_spr::HistoryAppender`, committing after every single record (the hot-path shape a live
+/// `crate::history::encode_history` codec directly (buffered); `true` streams it through
+/// `crate::HistoryAppender`, committing after every single record (the hot-path shape a live
 /// appender actually uses) — see `assert_streamed_equals_buffered`.
 pub async fn write_history_log(log: &crate::HistoryLog, commit_after_every_record: bool) -> Vec<u8> {
     if !commit_after_every_record {
@@ -68,8 +68,8 @@ pub async fn assert_ops_protocol_bidirectional(ops_text: &str) {
     assert_eq!(crate::history::print_ops_text(&reparsed).unwrap(), printed, "print_ops_text(parse_ops_text(text)) must be a fixpoint under a second parse/print pass");
 }
 
-/// ✅️ LAW: streaming `log` through `crate::os_spr::HistoryAppender` one commit per record decodes
-/// identically to a single-shot `crate::os_spr::history::encode_history` of the whole log.
+/// ✅️ LAW: streaming `log` through `crate::HistoryAppender` one commit per record decodes
+/// identically to a single-shot `crate::history::encode_history` of the whole log.
 pub async fn assert_streamed_equals_buffered(log: &crate::HistoryLog) {
     let buffered = read_history_log(&write_history_log(log, false).await).await;
     let streamed = read_history_log(&write_history_log(log, true).await).await;
@@ -99,7 +99,7 @@ pub async fn open_and_log(bytes: &[u8], options: &crate::DecodeOptions) -> Resul
 /// ✅️ LAW (softened to match the family's actual recovery-then-verify layering, see below): a
 /// single-byte flip anywhere in `bytes` at or after the header must never go unnoticed under Full
 /// verification. The frozen contract's prose says "must error", but per-frame CRC-32C is checked
-/// during `crate::os_spr::format::recover`'s own scan BEFORE `VerificationLevel::Full`'s chain-hash check
+/// during `crate::format::recover`'s own scan BEFORE `VerificationLevel::Full`'s chain-hash check
 /// ever runs — `protocol_history`'s own precedent test (`history_full_verification_detects_tampering`
 /// in `protocol/history/rs/lib.rs`) documents the same real outcome: a corrupted frame's own CRC
 /// mismatch makes `recover` truncate the trusted range BEFORE it, so the decode either errors OR
@@ -155,7 +155,7 @@ pub(super) async fn sampled_lengths(total: usize, cap: usize) -> Vec<usize> {
 }
 
 /// ✅️ LAW: truncating `bytes` at every sampled length (density per `level`) then running
-/// `crate::os_spr::format::recover` (`RecoveryMode::LastCommit`) always yields a trusted prefix that ends
+/// `crate::format::recover` (`RecoveryMode::LastCommit`) always yields a trusted prefix that ends
 /// exactly at a real `REC_COMMIT` frame — or, if no commit survived the truncation, exactly at the
 /// 32-byte header.
 pub async fn assert_recovery_truncates_to_commit(bytes: &[u8], level: CorruptionLevel) {
@@ -207,9 +207,9 @@ pub(super) async fn scratch_spr_path(label: &str) -> std::path::PathBuf {
     std::env::temp_dir().join(format!("protocol-testkit-{label}-{}-{nanos}.spr", std::process::id()))
 }
 
-/// ✅️ LAW: `crate::os_spr::compact` is physically-rewriting-but-identity-preserving — the
+/// ✅️ LAW: `crate::compact` is physically-rewriting-but-identity-preserving — the
 /// `(kind, payload bytes)` multiset of every structural record is unchanged across a compaction
-/// round trip. Native-only (`crate::os_spr::compact` is a file-based API): writes `bytes` to a scratch
+/// round trip. Native-only (`crate::compact` is a file-based API): writes `bytes` to a scratch
 /// temp file, compacts it in place, reads it back.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_compaction_identity(bytes: &[u8]) {
@@ -219,10 +219,8 @@ pub async fn assert_compaction_identity(bytes: &[u8]) {
     let path = scratch_spr_path("compact").await;
     std::fs::write(&path, bytes).expect("write scratch .spr file for compaction test");
     let options = crate::CompactOptions { drop_ephemeral: true, keep_snapshots: crate::KeepSnapshots::All };
-    // 🎯️ `compact` rewrites the file in place, so it must be awaited BEFORE reading it back —
-    // reading first would race the physical rewrite and observe the pre-compaction bytes.
     let token=semio_framework_async::CancelToken::root_now();let transport=semio_framework_os_pack_tools::control::admit_command_transport(limits.max_total_alloc,token.clone(),|_|{}).unwrap();let context=semio_framework_os_pack_tools::control::CommandContext::try_new(transport,limits.max_total_alloc,token,|_|{}).unwrap();
-    crate::compact(&path, &options, &limits, &context).await.expect("crate::os_spr::compact must succeed on an already-valid stream");
+    crate::compact(&path, &options, &limits, &context).await.expect("crate::compact must succeed on an already-valid stream");
     let compacted = std::fs::read(&path);
     let _ = std::fs::remove_file(&path);
 

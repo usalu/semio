@@ -25,92 +25,14 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
-//#endregion 🔌️Adapters
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
 
-//#region 🧬️Contract
-const HERE = import.meta.dir;
-const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate");
-const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
-const RECIPE = "survey-strip";
-const FIXTURE_DIRECTORY = "🛩️survey-strip";
-const FIXTURE_FILE = "☁️survey-strip.las";
-//#endregion 🧬️Contract
-
-//#region 🔨️Build
-/** ⚙️ Builds the reference-crate-backed generator binary if it is missing or stale. */
-function ensureBuilt(): void {
-  const result = spawnSync("cargo", ["build", "--release", "--manifest-path", join(ENGINE_DIR, "Cargo.toml")], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`cargo build failed with status ${result.status}`);
-}
-
-async function sha256(path: string): Promise<string> {
-  const bytes = readFileSync(path);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return `sha256:${[...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
-}
-//#endregion 🔨️Build
-
-//#region 🚪️Commands
-async function generate(outDir: string): Promise<void> {
-  ensureBuilt();
-  mkdirSync(outDir, { recursive: true });
-  const outPath = join(outDir, FIXTURE_FILE);
-  const result = spawnSync(ENGINE_BIN, [outPath], { stdio: "inherit" });
-  if (result.status !== 0) throw new Error(`generator binary failed with status ${result.status}`);
-  const digest = await sha256(outPath);
-  console.log(`${outPath}\n${digest}`);
-}
-
-async function manifests(): Promise<void> {
-  const outPath = join(FIXTURES_DIR, FIXTURE_DIRECTORY, FIXTURE_FILE);
-  if (!existsSync(outPath)) throw new Error(`${outPath} does not exist — run "generate" first`);
-  const digest = await sha256(outPath);
-  const entry = {
-    id: RECIPE,
-    class: "third-party-generated",
-    family: "mechanical",
-    files: [{ path: `../🧫️fixtures/${FIXTURE_DIRECTORY}/${FIXTURE_FILE}`, mediaType: "application/vnd.las", sha256: digest }],
-    provenance: { license: "public-domain (synthetic, no third-party content embedded)" },
-    generator: {
-      oracle: "las-1-0-any-mutate",
-      packageVersion: "0.11",
-      engineFamily: "las-rs",
-      engineVersion: "0.11",
-      command: "bun 🏭️generator/📜️script.ts generate",
-      platform: currentPlatform(),
-    },
-    reproducible: true,
-  };
-  console.log(JSON.stringify(entry, null, 2));
-}
-//#endregion 🚪️Commands
-
-//#region 🚪️Entry
-async function main(argv: readonly string[]): Promise<number> {
-  const [command = "", ...rest] = argv;
-  const outFlagIndex = rest.indexOf("--out");
-  // 🧭️ `SEMIO_FIXTURE_OUT` (set by `test fixture reproduce`/`generate`) is a FIXTURES ROOT, not a
-  // per-recipe directory — every generator in the repository writes `<root>/<recipe>/<file>`.
-  const fixtureOutRoot = process.env.SEMIO_FIXTURE_OUT;
-  const outDir = outFlagIndex >= 0 ? rest[outFlagIndex + 1]! : fixtureOutRoot !== undefined ? join(fixtureOutRoot, FIXTURE_DIRECTORY) : join(FIXTURES_DIR, FIXTURE_DIRECTORY);
-  if (command === "generate") {
-    await generate(outDir);
-    return 0;
+/** 🚪️ `run` — runs the program of this script. */
+class RunScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
   }
-  if (command === "manifests") {
-    await manifests();
-    return 0;
-  }
-  console.error(`usage: 📜️script.ts <generate|manifests> [--out <dir>]`);
-  return 2;
 }
-
-if (import.meta.main) process.exit(await main(process.argv.slice(2)));
-//#endregion 🚪️Entry
+const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));

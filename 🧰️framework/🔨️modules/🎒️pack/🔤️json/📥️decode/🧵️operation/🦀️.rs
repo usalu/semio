@@ -1,6 +1,7 @@
 //! 🧵️ Original source and control remain bound while independent cumulative wallets fund parsing and physical closure.
 use super::{JsonError,JsonReadLimits,JsonReadSource,JsonParsedValue,JsonSourceCursor,JsonMemberPolicy,normal_remaining};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement, retirement::RetireOwned, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 
 /// 🛂️ Caller-authored total parse and cleanup authority accompanies the complete source limits.

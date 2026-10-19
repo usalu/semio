@@ -17,3 +17,7 @@ pub mod plugin_builder_contract_tests_3;
 #[cfg(test)]
 #[path = "../../🪝️mounts/📜️wp2-declaration/🧪️hosts/🎟️child-receipt/🦀️.rs"]
 pub mod receipt_tests_host;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🧬️mutation-fixtures-job-close/🦀️.rs"]
+pub(crate) mod job_close_fixture;

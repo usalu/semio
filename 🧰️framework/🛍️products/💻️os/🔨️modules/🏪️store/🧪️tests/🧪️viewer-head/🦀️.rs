@@ -168,7 +168,7 @@ async fn act(replicas: &mut [Replica; 2], at: usize, action: &serde_json::Value,
 /// lists the same alternatives and projects every alternative's tip as `converged` says for every arrival order.
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_head_corpus_matches_two_stores() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
@@ -214,7 +214,7 @@ async fn the_viewer_head_corpus_matches_two_stores() {
 /// persisted pair restores exactly the revision it showed.
 #[semio_framework_async_macros::async_test]
 async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧫️viewer-head/🔣️.json")).expect("the corpus parses");
@@ -273,7 +273,7 @@ async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
 /// trunk, then `red`, then `blue` — and so do both authors.
 #[semio_framework_async_macros::async_test]
 async fn the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arrived_in() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("viewer-ledger-order", Some(0)).await;
@@ -317,7 +317,7 @@ async fn the_ledgers_list_their_facts_in_log_order_whatever_order_the_events_arr
 /// projections and content revisions.
 #[semio_framework_async_macros::async_test]
 async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut author = fresh("viewer-finalize", Some(0)).await;
@@ -384,7 +384,7 @@ async fn a_finalize_as_a_new_alternative_moves_only_its_author() {
 /// registration, checkpoints and projection exactly as the author does.
 #[semio_framework_async_macros::async_test]
 async fn a_commit_on_an_alternative_waits_for_the_alternative() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut author = fresh("viewer-commit-line", Some(0)).await;
@@ -448,7 +448,7 @@ fn ledger(store: &SeverityStore) -> (Vec<(String, Option<semio_framework_value::
 /// revision; the `.ops` text — the shared log — restores all of it but the head, at the trunk tip.
 #[semio_framework_async_macros::async_test]
 async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_and_warnings() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, SeverityMutation>("demo/v1", "folder-reload", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
@@ -492,7 +492,7 @@ async fn the_persisted_pair_restores_edits_history_edits_alternatives_the_head_a
 /// stands where a pair says.
 #[semio_framework_async_macros::async_test]
 async fn a_read_back_pair_merges_its_log_and_never_moves_the_reader() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("pair-merge", Some(0)).await;
@@ -547,7 +547,7 @@ async fn a_read_back_pair_merges_its_log_and_never_moves_the_reader() {
 /// it, and both replicas show the same document, supersession and applied edits — and neither has anything left to persist.
 #[semio_framework_async_macros::async_test]
 async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut a = fresh("two-peers", Some(0)).await;
@@ -601,7 +601,7 @@ async fn two_peers_on_one_folder_converge_through_an_open_history_edit() {
 /// only a change of content makes it stale.
 #[semio_framework_async_macros::async_test]
 async fn a_port_rebinding_moves_no_content_and_keeps_a_finished_replay() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = fresh("rebind", Some(0)).await;

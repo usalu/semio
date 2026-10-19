@@ -102,8 +102,6 @@ fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextError> 
         let suffix_token = cursor.advance();
         let suffix_text = suffix_token.text.as_str();
         let parts: Vec<&str> = suffix_text.split('x').collect();
-        // `"x0.12x0.24".split('x')` yields `["", "0.12", "0.24"]` — the leading empty piece is the
-        // text before the first `x`, which is always empty since the suffix itself starts with it.
         if parts.first() != Some(&"") || parts.len() != dims {
             return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("dimension literal expects {dims} components glued with 'x', found '{}{}'", format_f64(first), suffix_text),suffix_token.span));
         }
@@ -198,8 +196,6 @@ pub(super) fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> R
             let mut out = Vec::new();
             while let Some(keyword) = current_keyword(cursor) {
                 let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == &keyword) else { break };
-                // `parse_record_body` consumes the keyword itself (see its own check below); we
-                // only peek here to decide whether this token starts a known variant at all.
                 let record = parse_record_body(cursor, &(spec_fn.ordinary)(), depth + 1)?;
                 out.push((keyword, record));
                 cursor.limits.check_nodes(out.len(), cursor.span())?;

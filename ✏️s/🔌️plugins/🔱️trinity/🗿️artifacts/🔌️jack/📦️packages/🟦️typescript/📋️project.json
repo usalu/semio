@@ -20,7 +20,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript",
@@ -30,7 +30,7 @@
     },
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
         "^default",
@@ -64,7 +64,7 @@
     },
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
         "^default",

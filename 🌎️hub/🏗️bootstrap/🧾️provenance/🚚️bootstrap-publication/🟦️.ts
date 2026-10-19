@@ -63,8 +63,6 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const bundle = JSON.parse(readFileSync(receipt.bundlePath, "utf8"));
   const profile = bundle.profiles?.find((candidate: any) => candidate.id === receipt.profileId);
   const selected = bundle.packages?.find((candidate: any) => candidate.pluginId === "gis");
-  // 🎯️ The GIS target is selected by its OWNER, not by index: a generation's open targets are a SET
-  // now (ticket 26/09/18), so `[0]` would silently probe whichever package happens to sort first.
   const target = profile?.openTargets?.find((row: any) => row?.package?.pluginId === "gis" && row?.target?.role === "editor")?.target;
   if (!profile || !selected || !target) throw new Error("trusted stdio+GIS candidate bundle lost its exact GIS target");
   const headers = { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" };
@@ -72,12 +70,6 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const createdBody = created.status === 202 ? (JSON.parse(created.text) as Record<string, any>) : undefined;
   const spaceId = createdBody?.events?.find((candidate: any) => candidate?.body?.kind === "space.created")?.body?.spaceId;
   if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("trusted stdio+GIS candidate could not create its private probe space");
-  // 🌱️ The probe document is created through the Hub's OWN server-owned creation transaction, the
-  // same one `createCheckInProcessGenesis` drives. A bare `announce-document` registers
-  // a descriptor and nothing else: the open-plan issuer also requires an ACTIVE ARTIFACT CHECKPOINT
-  // (`🏗️bootstrap/🦀️.rs:3099-3104`), so it answered `404 not-found` for every announced-only document
-  // and this proof could never have passed. The creation transaction establishes the genesis
-  // checkpoint, which is also what a real client does before it opens anything.
   const creationRoute = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
   const creationRequest = sealSpaceArtifactCreateV1({ requestId: randomBytes(16).toString("hex"), expectedCatalogGenerationId: receipt.generationId, kindId: target.artifactKind, name: "Trusted GIS Bootstrap Probe Map" });
   const accepted = await fetch(`http://127.0.0.1:${run.port}${creationRoute}`, { method: "POST", headers, signal:AbortSignal.any([control.signal,AbortSignal.timeout(5000)]), body: JSON.stringify(creationRequest) });
@@ -105,9 +97,6 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
     signal:AbortSignal.any([control.signal,AbortSignal.timeout(2000)]),
     body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, requestedSurfaceId: target.surfaceId, clientInstanceId: "trusted-bootstrap-candidate" }),
   });
-  // 🩺️ The refusal body is a two-field `document-open-plan-error/v1`, so parsing it first reported
-  // every hub refusal as the parser's generic `document-open.invalid-fields` and threw the actual
-  // `code` away. Read the status FIRST and name the code.
   const planText = await response.text();
   if (!response.ok) throw new Error(`trusted stdio+GIS candidate was refused its GIS Map plan: ${response.status} ${planText.slice(0, 256)}`);
   const plan = parseDocumentOpenPlanV1(JSON.parse(planText), Date.now());

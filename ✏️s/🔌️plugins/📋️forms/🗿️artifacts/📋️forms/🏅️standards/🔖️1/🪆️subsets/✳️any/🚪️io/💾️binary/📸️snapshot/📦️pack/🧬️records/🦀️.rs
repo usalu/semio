@@ -2,7 +2,7 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::FieldValue;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::NativeEncodeControl;
 #[derive(semio_framework_dsl_record_derive::DslScalar)]pub(super) enum Kind{Null,Boolean,Unsigned,Signed,Float,Text,Bytes,Array,Object}
 pub(super) struct Octets(pub Vec<u8>);

@@ -1,6 +1,7 @@
 //! 🧾️ Drawing bounded commands: the bounded, export, image and path tool ids, their publication contracts and the bounded command job factory.
 
 use super::*;
+use semio_s_artifact_draw_drawing_editor_store_preparation::DRAWING_BOUNDED_WORK_ITEMS;
 
 //#region 🧵️BoundedCommands
 /// 🧵️ Every non-gesture `DrawingCommand` row, each reducing in one bounded first step through
@@ -66,8 +67,6 @@ pub const DRAWING_PATH_PUBLICATION_CONTRACTS: &[semio_framework_plugin::Artifact
 pub const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
-
-pub(super) const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
 
 /// 🛣️ One publication lane row per bounded route, read off each handler's real `Emit` construction
 /// (`🎮️commands/*/🦀️.rs`). The four whole-document routes emit nothing but an `Effect::LoadDocument`

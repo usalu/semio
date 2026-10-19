@@ -1,17 +1,17 @@
 /** 🧬️ Puzzle2d artifact schema — every field with its state class. */
 
 export interface Puzzle2dArtifact {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 📷️ @state artifact */
   camera: Puzzle2dCamera;
-  /** @state artifact */
+  /** 🔘️ @state artifact */
   nodes: Puzzle2dNode[];
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   edges: Puzzle2dEdge[];
-  /** @state artifact */
+  /** 🗾️ @state artifact */
   targetRegions: Puzzle2dTargetRegion[];
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta: Puzzle2dMeta;
 }
 

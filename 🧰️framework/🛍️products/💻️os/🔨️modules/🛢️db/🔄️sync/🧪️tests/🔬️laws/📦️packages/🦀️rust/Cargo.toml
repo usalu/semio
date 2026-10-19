@@ -42,3 +42,4 @@ semio-framework-os-kernel-db-wal-log = { path = "../../../../../📝️wal/🧾�
 semio-framework-replication = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value = { workspace = true }

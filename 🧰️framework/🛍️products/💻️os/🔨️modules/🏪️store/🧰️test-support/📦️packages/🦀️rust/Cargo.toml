@@ -43,6 +43,7 @@ semio-framework-os-store-space-schema = { path = "../../../🧬️schema/📦️
 semio-framework-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
 semio-framework-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }

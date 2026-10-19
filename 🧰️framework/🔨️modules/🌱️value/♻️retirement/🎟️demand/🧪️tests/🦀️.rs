@@ -1,5 +1,5 @@
 //! 🎟️ Native original sealed-owner families count the terminal leaf visits of each aggregate demand.
-use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}}};
+use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement},shared_issuance::{SealedShared,SharedIssuer}};
 use std::{cell::Cell,mem::size_of};
 thread_local!{static VISITS:Cell<usize>=const{Cell::new(0)};static HINT:Cell<usize>=const{Cell::new(0)};static FOREIGN_HINTS:Cell<usize>=const{Cell::new(0)};}
 struct Probe;
@@ -21,7 +21,7 @@ fn grant(d:RetirementDemand,body:usize)->RetainedCloneGrant{RetainedCloneGrant{m
 fn quote(owner:&ControlledRetirement<Family>,body:usize)->(RetirementDemand,usize,usize){VISITS.with(|n|n.set(0));HINT.with(|n|n.set(body));FOREIGN_HINTS.with(|n|n.set(0));let(d,heap)=crate::observe_retirement_allocations(||ErasedSnapshotRetirement::next_demand(owner,body).unwrap());assert_eq!(heap,(0,0));(d,VISITS.with(Cell::get),FOREIGN_HINTS.with(Cell::get))}
 #[test]
 fn original_retirement_combined_quote_visits_terminal_leaf_once_with_actual_body_hint(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut obeys=true;
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut obeys=true;
  for family in law["families"].as_array().unwrap(){
   let depth=family["sealedDepth"].as_u64().unwrap()as usize;let mut value=Family::Leaf(Probe);let(mut born,mut released)=(0,0);
   for _ in 0..depth{let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:4096};let((alias,p),heap)=crate::observe_retirement_allocations(||SealedShared::admit(value,SharedIssuer::owned(),g).unwrap_or_else(|_|panic!("original family issuance")));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=heap.0;released+=heap.1;value=Family::Branch(alias);}

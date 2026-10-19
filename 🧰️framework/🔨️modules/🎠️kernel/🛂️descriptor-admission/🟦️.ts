@@ -55,7 +55,7 @@ export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string
   return { manifest, packageId, componentSha256: receipt.componentSha256, ...(assets.length === 0 ? {} : { assets }) };
 }
 
-/** `onProgress` is called on the response headers and on every streamed chunk — see
+/** 📥️ `onProgress` is called on the response headers and on every streamed chunk — see
  * {@link readDescriptorText} for why this fetch owes its caller a heartbeat at all. */
 export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: DescriptorProgress = () => {}): Promise<PluginManifest> {
   const { descriptor, manifest } = await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress);

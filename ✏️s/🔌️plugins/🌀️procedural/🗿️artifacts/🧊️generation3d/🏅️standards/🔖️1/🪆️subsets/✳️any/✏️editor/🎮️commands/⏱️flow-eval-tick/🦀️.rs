@@ -71,10 +71,6 @@ pub fn evaluate(
         let mut state = doc.snapshot.generation.as_state().clone();
         state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
         if semio_framework_artifact_playbook_playbook::selected_generation(&state).is_none() {
-            // 🔒️ This tick RAN — it just had nothing to evaluate. Discharging the window's latch here
-            // is what lets the run settle and a later gesture owe a fresh evaluation; leaving it armed
-            // would make a generate preview that opened before any generation exists wait forever
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             session.begin_window_tick(window_id, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
             session.note_window_tick_outcome(window_id, false, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
             return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, preview_eval::preview_eval_publication_for(session, &doc.snapshot.host_snapshot, retained_eval)));

@@ -88,7 +88,6 @@ pub(crate) struct EffectQueues {
 }
 
 impl EffectQueues {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new() -> Self {
         Self { notify: VecDeque::new(), emit: VecDeque::new(), defer: VecDeque::new(), tasks: VecDeque::new(), listeners: HashMap::new(), next_listener_id: 0, next_task_id: 0, pending_detach: Rc::new(RefCell::new(Vec::new())) }
     }
@@ -130,27 +129,23 @@ impl<'a, T: 'static> Context<'a, T> {
     }
 
     /// 🎫️ A fresh strong handle to the entity currently under lease.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn entity(&self) -> Entity<T> {
         self.entity.clone()
     }
 
     /// 🪶️ A non-owning handle to the entity currently under lease.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn weak_entity(&self) -> WeakEntity<T> {
         self.entity.downgrade()
     }
 
     /// 🔔️ Queues a "this entity changed" notification for every `observe` listener registered on it.
     /// Queued, not run inline — delivery happens at `EntityStore::flush_effects`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn notify(&mut self) {
         self.effects.notify.push_back(self.entity.id);
     }
 
     /// 📣️ Queues a typed event for every `subscribe` listener registered on this entity. Queued, not
     /// run inline — delivery happens at `EntityStore::flush_effects`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn emit<E: 'static>(&mut self, event: E) {
         self.effects.emit.push_back((self.entity.id, Box::new(event)));
     }
@@ -158,7 +153,6 @@ impl<'a, T: 'static> Context<'a, T> {
     /// ⏭️ Queues an effect to run against the `EntityStore` at the next safe boundary the embedder
     /// chooses (`runtime-transact`'s flush loop, via `EntityStore::drain_deferred`) — never inline,
     /// never during this or any other entity's lease.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn defer(&mut self, effect: impl FnOnce(&mut EntityStore) + 'static) {
         self.effects.defer.push_back(Box::new(effect));
     }
@@ -168,14 +162,12 @@ impl<'a, T: 'static> Context<'a, T> {
     /// capture a `&mut T` or this `Context`, both of which borrow a lifetime shorter than `'static`.
     /// The future must re-enter later through a `WeakEntity::upgrade`, never through a captured
     /// reference.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn spawn_local(&mut self, future: impl Future<Output = ()> + 'static) -> Task {
         self.effects.spawn(future)
     }
 
     /// 🔗️ Invokes `listener` whenever `source` emits an `E` via `Context::emit`, for as long as the
     /// returned [`Subscription`] is alive and `source` itself has not been released.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn subscribe<U: 'static, E: 'static>(&mut self, source: &Entity<U>, mut listener: impl FnMut(&mut T, &E, &mut Context<'_, T>) + 'static) -> Subscription {
         let observer = self.entity.clone();
         let alive = Rc::downgrade(&source.handle);
@@ -188,7 +180,6 @@ impl<'a, T: 'static> Context<'a, T> {
 
     /// 🔗️ Invokes `listener` whenever `source` notifies via `Context::notify`, for as long as the
     /// returned [`Subscription`] is alive and `source` itself has not been released.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn observe<U: 'static>(&mut self, source: &Entity<U>, mut listener: impl FnMut(&mut T, &mut Context<'_, T>) + 'static) -> Subscription {
         let observer = self.entity.clone();
         let alive = Rc::downgrade(&source.handle);

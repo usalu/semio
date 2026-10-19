@@ -6,13 +6,16 @@
 //! @see ../🎪️stage/🦀️.rs — the façade of the stage and the normative order of a tick
 //! @see ../💞️sociability/🟦️.ts — the TypeScript twin
 
-use crate::draft::{actor_key, clip_at, index_of, shift, stage_key, Draft};
-use crate::locomotion::{attend, paced, stroll};
-use crate::schedule::{pairing_tick, sociable};
-use crate::spacing::{clearway, COMFORT_GAP, MEET_GAP};
-use semio_framework_pets_character::behavior::{affinity_of, dwell_of, encounter_of, needs_after, rapport_after, rapport_faded, MODE_LIMITS};
-use semio_framework_pets_contract::schema::{Activity, Menagerie, Rapport, Ticks};
-use semio_framework_pets_kinematics::randomness::{random_pick, random_words, unit_of};
+use semio_framework_pets_staging_draft::attention::{hail, heed, loose, shrug, PURR_TICKS};
+use semio_framework_pets_staging_draft::draft::{actor_key, clip_at, feel, index_of, perform, present, shift, stage_key, standing, Draft};
+use semio_framework_pets_staging_draft::locomotion::{attend, paced, stroll};
+use semio_framework_pets_staging_draft::schedule::{pairing_tick, sociable};
+use semio_framework_pets_staging_draft::spacing::{clearway, COMFORT_GAP, MEET_GAP};
+use semio_framework_pets_character::behavior::{affinity_of, dwell_of, encounter_of, encounter_shares, needs_after, rapport_after, rapport_faded, AFFINITY_FLOOR, ENCOUNTERS, MODE_LIMITS};
+use semio_framework_pets_character::feeling::{caught, click_trick, encounter_bias, show_trick, swayed_shares, whim_trick, Occasion, CONTAGION_REACH, LEAN_TICKS};
+use semio_framework_pets_contract::schema::{Activity, Cue, Deed, Feeling, Footing, Menagerie, PetMode, Pledge, Rapport, Ticks, Tier};
+use semio_framework_pets_interaction::gesture::{warmth_after, Caress};
+use semio_framework_pets_kinematics::randomness::{random_pick, random_words, unit_of, weighted_index};
 use semio_framework_pets_kinematics::terrain::{larger, smaller};
 use semio_framework_pets_kinematics::trigonometry::clamp;
 
@@ -319,22 +322,29 @@ pub(crate) fn clicked(draft: &mut Draft<'_>, species: &str, x: f64) {
     if body.activity == Activity::Sulk { reconcile(draft, index, now); }
     if draft.stage.actors[index].activity == Activity::Sleep { feel(draft, index, Occasion::Woken, now); }
     if tier == Tier::Enough { shrug(draft, index, x, now); return; }
-    if tier == Tier::Purr { feel(draft, index, Occasion::Purred, now); crate::draft::purr(draft, index, PURR_TICKS, now); heed(draft, index, x, now); return; }
+    if tier == Tier::Purr { feel(draft, index, Occasion::Purred, now); semio_framework_pets_staging_draft::draft::purr(draft, index, PURR_TICKS, now); heed(draft, index, x, now); return; }
     let kind = draft.kinds[index];
-    let trick = (tier == Tier::Trick).then(|| crate::feeling::click_trick(kind, &standing(draft, index, now).state, present(draft, index, now), draft.stage.actors[index].warmth.tricks - 1)).flatten();
+    let trick = (tier == Tier::Trick).then(|| click_trick(kind, &standing(draft, index, now).state, present(draft, index, now), draft.stage.actors[index].warmth.tricks - 1)).flatten();
     if let Some(trick) = trick { perform(draft, index, trick, now); heed(draft, index, x, now); } else { feel(draft, index, Occasion::Greeted, now); hail(draft, index, x, now); }
 }
 
-/// 🎮️ Keyboard deeds use the same authored greetings, tricks and purring as pointer attention.
+/// 🎮️ Keyboard deeds share authored greetings, click tricks, purring and explicit gesture handlers with pointer attention.
 pub(crate) fn played(draft: &mut Draft<'_>, species: &str, deed: Deed) {
     let Some(index) = index_of(&draft.stage.actors, species).filter(|_| draft.stage.mode != PetMode::Still && draft.stage.play && deed != Deed::Toss) else { return; };
     if !loose(&draft.stage.actors[index]) { return; }
     let now = draft.stage.tick;
+    match deed {
+        Deed::Shake => { semio_framework_pets_staging_draft::attention::shaken(draft, index, now); return; }
+        Deed::Circle => { semio_framework_pets_staging_draft::attention::cued(draft, index, Cue::Circle, now); return; }
+        Deed::Countercircle => { semio_framework_pets_staging_draft::attention::cued(draft, index, Cue::Countercircle, now); return; }
+        Deed::Stroke => { semio_framework_pets_staging_draft::attention::cued(draft, index, Cue::Stroke, now); return; }
+        _ => {}
+    }
     let kind = draft.kinds[index];
-    if deed == Deed::Pet { feel(draft, index, Occasion::Purred, now); crate::draft::purr(draft, index, PURR_TICKS, now); return; }
+    if deed == Deed::Pet { feel(draft, index, Occasion::Purred, now); semio_framework_pets_staging_draft::draft::purr(draft, index, PURR_TICKS, now); return; }
     let state = standing(draft, index, now).state;
     let feeling = present(draft, index, now);
-    let trick = if deed == Deed::Trick { crate::feeling::click_trick(kind, &state, feeling, draft.stage.actors[index].warmth.tricks).or_else(|| crate::feeling::whim_trick(kind, &state, feeling, 0.0)) } else { None };
+    let trick = if deed == Deed::Trick { click_trick(kind, &state, feeling, draft.stage.actors[index].warmth.tricks).or_else(|| whim_trick(kind, &state, feeling, 0.0)) } else { None };
     if let Some(trick) = trick { draft.stage.actors[index].warmth.tricks += 1; perform(draft, index, trick, now); } else {
         feel(draft, index, Occasion::Greeted, now);
         let body = &draft.stage.actors[index];

@@ -50,8 +50,6 @@ impl EquationRetainedCommandWork {
     fn initialize(&mut self, command: &EquationCommand, snapshot: &EquationSnapshot) -> Result<(), Fault> {
         let source = snapshot;
         match command {
-            // 🎬️ Completed in `step` before any phase runs — it exists to CREATE the scene these
-            // phases read, so reaching the phase machine at all is a routing defect.
             EquationCommand::SetActiveExample(_) => return Err(Fault::from("equation-set-active-example-is-not-a-phased-command")),
             EquationCommand::SetAlgorithm(payload) => {
                 self.leaves = set_algorithm::set_algorithm_leaves(payload, &source.graph);
@@ -201,7 +199,6 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         if self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-overflow"));
         }
-        // 🎬️ One step, no scene: the whole-document replacement is a host-applied effect.
         if let EquationCommand::SetActiveExample(payload) = command {
             return set_active_example::emit(&payload.example_id).map(ArtifactCommandWorkStep::Complete);
         }

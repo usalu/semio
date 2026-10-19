@@ -1,25 +1,18 @@
 #!/usr/bin/env bun
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {join} from "node:path";
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import { readBuildMode, buildModeEnvironment } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runAdmittedExactCargoLawsV1, buildAdmittedCargoArtifactsV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { NativeScript } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { nativeServiceCompositionLaws } from "../../🧪️tests/🔌️service-composition/🟦️.ts";
+import { runBuildScript, runOsMcpLiveAgentLoopScript, runOsMcpHubAgentParticipantScript, runOsMcpPluginCoverageScript, runOsMcpUserPathScript, runOsMcpInferenceQuartetScript, runOsMcpSecurityScript, runOsMcpAgentReplyScript, runFixtureOwnershipCompositionScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 class BuildScript extends BundleScript {
-  async run([kind,profile,...args]:string[]):Promise<void> {
-    if(args.length || (!kind||!["native","mcp"].includes(kind)))throw new Error("Service build requires an exact executable and mode");
-    const mode=readBuildMode(profile);
-    if(process.env.SEMIO_BUILD_MODE!==undefined&&readBuildMode(process.env.SEMIO_BUILD_MODE)!==mode)throw Error("Service build mode contradicts its original environment");
-    const binary=`semio-s-gis-services-${kind}`;
-    await buildAdmittedCargoArtifactsV1(`${this.root}/Cargo.toml`,["-p","semio-s-dev-gis-services","--bin",binary],this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), environment:buildModeEnvironment(mode),output:`dist/${kind}-${mode}`,sourcesRecord:`${binary}.sources.json`});
+  async run(segments: string[]): Promise<void> {
+    await runBuildScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 class SourceScript extends BundleScript { async run():Promise<void> {nativeServiceCompositionLaws(this.repoRoot);} }
@@ -30,67 +23,46 @@ class TestScript extends BundleScript {
     console.log(`native-service-runtime: exact=${laws.length} passed`);
   }
 }
-const HARNESS_FLAGS = { "--hub": "OS_MCP_HUB_ORIGIN", "--serve": "S_OS_MCP_LIVE_SHELL_URL", "--locale": "S_OS_MCP_LIVE_LOCALE", "--hub-admin-capability": "OS_HUB_ADMIN_CAPABILITY_FILE" } as const;
-type HarnessFlag = keyof typeof HARNESS_FLAGS;
-
-function harnessEnvironment(verb: string, segments: string[], accepted: readonly HarnessFlag[]): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = { ...process.env };
-  for (let index = 0; index < segments.length; index += 2) {
-    const flag = segments[index] as HarnessFlag;
-    const value = segments[index + 1];
-    if (!accepted.includes(flag) || value === undefined || value.startsWith("--")) throw new Error(`${verb} takes ${accepted.map((name) => `${name} <value>`).join(" ") || "no arguments"}; refused ${accepted.includes(flag) ? `${flag} without a value` : `argument ${index + 1}`} (values are never echoed)`);
-    if (flag === "--locale" && value !== "en" && value !== "de") throw new Error(`${verb}: --locale is en or de, got ${value}`);
-    env[HARNESS_FLAGS[flag]] = value;
-  }
-  return env;
-}
 
 class OsMcpLiveAgentLoopScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("live-agent-loop-check", segments, ["--serve", "--locale"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts")],this.repoRoot,"os-mcp-live-agent-loop",{version:1,maximumElapsedMilliseconds:900_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpLiveAgentLoopScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 class OsMcpHubAgentParticipantScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("hub-agent-participant-check", segments, ["--hub"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts")],this.repoRoot,"os-mcp-hub-agent-participant",{version:1,maximumElapsedMilliseconds:900_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpHubAgentParticipantScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 class OsMcpPluginCoverageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("plugin-coverage-check", segments, ["--hub"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts")],this.repoRoot,"os-mcp-plugin-coverage",{version:1,maximumElapsedMilliseconds:7_200_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpPluginCoverageScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 class OsMcpUserPathScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("user-path-check", segments, ["--hub", "--serve", "--locale"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/🟦️.ts")],this.repoRoot,"os-mcp-user-path",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpUserPathScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 class OsMcpInferenceQuartetScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("inference-quartet-check", segments, ["--hub"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts")],this.repoRoot,"os-mcp-inference-quartet",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpInferenceQuartetScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 class OsMcpSecurityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("security-check", segments, ["--hub", "--hub-admin-capability"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/🟦️.ts")],this.repoRoot,"os-mcp-security",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpSecurityScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 class OsMcpAgentReplyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const env = harnessEnvironment("agent-reply-check", segments, ["--serve", "--locale"]);
-    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts")],this.repoRoot,"os-mcp-agent-reply",{version:1,maximumElapsedMilliseconds:900_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
+    await runOsMcpAgentReplyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
@@ -106,7 +78,7 @@ class McpCompositionSourceScript extends BundleScript {
 }
 class FixtureOwnershipCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runRepositoryCommand(this.invocation,process.execPath,["repo", "run", target, "--skip-cache"],this.repoRoot,"fixture-owner:" + target,{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
+    await runFixtureOwnershipCompositionScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
@@ -118,4 +90,4 @@ class CanonicalPairCompositionScript extends BundleScript {
 }
 
 const router=new ScriptRouter(import.meta.dir).register("source-check",SourceScript).register("native-check",TestScript).register("native",NativeScript).register("build",BuildScript).register("live-agent-loop-check",OsMcpLiveAgentLoopScript).register("hub-agent-participant-check",OsMcpHubAgentParticipantScript).register("plugin-coverage-check",OsMcpPluginCoverageScript).register("user-path-check",OsMcpUserPathScript).register("inference-quartet-check",OsMcpInferenceQuartetScript).register("security-check",OsMcpSecurityScript).register("agent-reply-check",OsMcpAgentReplyScript).register("untrusted-content-check",UntrustedContentScript).register("mcp-composition-source-check",McpCompositionSourceScript).register("fixture-ownership-check",FixtureOwnershipCompositionScript).register("canonical-pair-composition-check",CanonicalPairCompositionScript);
-if(import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"source-check"}) }));
+if(import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "source-check" }));

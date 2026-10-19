@@ -78,9 +78,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let initial = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
     let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    // 🔐️ Owner-installing guard (`🚪️io/💾️binary/📸️snapshot`) — a bare `ArtifactStore::new` installs
-    // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
-    // `edit history insertion requires its exact mutation retirement factory`.
     let mut store = crate::host::owned::new_note_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

@@ -47,7 +47,6 @@ impl GpuResources {
     /// ever been requested (a real, common first-frame state — `NullBackend` has no such gap because
     /// it never touches a device at all, but a real backend must bind *something*). Overwritten by the
     /// first real `ResourceOp::UploadAtlas` of each byte density.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &Device) -> Self {
         let glyph_atlas = Some(create_texture(device, MTLPixelFormat::R8Unorm, 1, 1, 1, "glyph_atlas_dummy"));
         replace_region(glyph_atlas.as_deref().expect("just created"), 1, 1, &[0u8], 1);
@@ -56,39 +55,32 @@ impl GpuResources {
         Self { glyph_atlas, icon_atlas, ..Self::default() }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn glyph_atlas(&self) -> Option<&MetalTexture> {
         self.glyph_atlas.as_deref()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn icon_atlas(&self) -> Option<&MetalTexture> {
         self.icon_atlas.as_deref()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn raster_texture(&self, id: TextureId) -> Option<&MetalTexture> {
         self.raster_textures.get(&id).map(|texture| texture.as_ref())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mesh(&self, id: MeshId) -> Option<&MeshBuffers> {
         self.meshes.get(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn knows_texture(&self, id: TextureId) -> bool {
         self.known_textures.contains(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn knows_mesh(&self, id: MeshId) -> bool {
         self.known_meshes.contains(&id)
     }
 
     /// ♻️ Drains every id this table currently believes resident, for `GraphicsBackend::recover`
     /// reporting after `debug_force_device_loss` — mirrors `NullBackend::debug_force_device_loss`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_known(&mut self) -> (Vec<TextureId>, Vec<MeshId>, Vec<AtlasId>) {
         self.glyph_atlas = None;
         self.icon_atlas = None;
@@ -99,7 +91,6 @@ impl GpuResources {
 
     /// 📤️ Applies one `ResourceOp` stream, always *before* the `render` call whose packet references
     /// the ids it uploads (the trait's own invariant — see `backend.rs`'s `GraphicsBackend` docstring).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn apply(&mut self, device: &Device, ops: &[ResourceOp]) -> Result<(), MetalGraphicsError> {
         for op in ops {
             match op {
@@ -119,7 +110,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_atlas(&mut self, device: &Device, id: AtlasId, width: u32, height: u32, pixels: &[u8]) -> Result<(), MetalGraphicsError> {
         let pixel_count = (width as usize) * (height as usize);
         if pixel_count == 0 {
@@ -144,7 +134,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_texture(&mut self, device: &Device, id: TextureId, width: u32, height: u32, pixels: &[u8]) {
         if width == 0 || height == 0 {
             self.known_textures.insert(id);
@@ -156,7 +145,6 @@ impl GpuResources {
         self.known_textures.insert(id);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn create_or_update_mesh(&mut self, device: &Device, id: MeshId, positions: &[f32], normals: &[f32], indices: &[u32]) -> Result<(), MetalGraphicsError> {
         let vertex_count = positions.len() / 3;
         let mut vertices = Vec::with_capacity(vertex_count);

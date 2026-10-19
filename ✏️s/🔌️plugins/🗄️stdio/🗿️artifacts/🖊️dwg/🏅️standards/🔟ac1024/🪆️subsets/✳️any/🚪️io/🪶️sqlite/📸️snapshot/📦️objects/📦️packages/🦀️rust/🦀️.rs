@@ -35,12 +35,6 @@ pub mod standards {
                             pub mod records;
                             #[path = "../../../🎨️color/🦀️.rs"]
                             pub mod color;
-                            #[path = "../../../📐️entities/🦀️.rs"]
-                            pub mod entities;
-                            #[path = "../../../📐️entities/📏️dimension/🦀️.rs"]
-                            pub mod entity_dimension;
-                            #[path = "../../../📐️entities/🖼️viewport/🦀️.rs"]
-                            pub mod entity_viewport;
                             #[path = "../../🦀️.rs"]
                             pub mod objects;
                             #[path = "../../../🧮️evaluation/🦀️.rs"]

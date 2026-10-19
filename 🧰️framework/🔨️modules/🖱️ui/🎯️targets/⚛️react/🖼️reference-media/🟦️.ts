@@ -1,31 +1,31 @@
 import * as THREE from "three";
 import { ephemeralBox } from "@semio-tech/framework/transient";
 
-/** @emoji 🖼️ Reference plane media kind for infinite-world grid underlays. */
+/** 🖼️ Reference plane media kind for infinite-world grid underlays. */
 export type ReferenceMediaKind = "image" | "svg" | "pdf";
 
-/** @emoji 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
+/** 🖼️ Source descriptor for {@link ReferenceMediaPort.loadReferenceTexture}. */
 export interface ReferenceMediaSource {
   readonly url: string;
   readonly mediaKind: ReferenceMediaKind;
   readonly page?: number;
 }
 
-/** @emoji 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
+/** 🖼️ Loaded reference texture with intrinsic pixel dimensions. */
 export interface ReferenceMediaLoadResult {
   readonly texture: THREE.Texture;
   readonly width: number;
   readonly height: number;
 }
 
-/** @emoji 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
+/** 🖼️ Port for rasterizing png/svg/pdf paths into three.js textures. */
 export interface ReferenceMediaPort {
   loadReferenceTexture(source: ReferenceMediaSource): Promise<ReferenceMediaLoadResult>;
 }
 
 const REFERENCE_MEDIA_RASTER_MAX = 4096;
 
-/** @emoji 🔎️ Infers reference media kind from a URL path extension. */
+/** 🔎️ Infers reference media kind from a URL path extension. */
 export function referenceMediaKindFromUrl(url: string): ReferenceMediaKind | null {
   const ext = url.split(/[?#]/, 1)[0]?.split(".").pop()?.toLowerCase() ?? "";
   if (["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif", "tif", "tiff"].includes(ext)) {
@@ -111,7 +111,7 @@ async function loadReferenceImageTexture(url: string): Promise<ReferenceMediaLoa
   };
 }
 
-/** @emoji 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
+/** 🖼️ Default {@link ReferenceMediaPort} wired through {@link sceneHostPort}. */
 export let referenceMediaPort: ReferenceMediaPort = {
   async loadReferenceTexture(source) {
     if (source.mediaKind === "image") {

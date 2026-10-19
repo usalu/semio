@@ -22,7 +22,6 @@ const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard:
 /// Part-21 exchange file's convention (dense, monotonically-issued `#N` ids).
 struct IdGen(u64);
 impl IdGen {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn next(&mut self) -> u64 {
         self.0 += 1;
         self.0
@@ -77,7 +76,7 @@ impl ArtifactSerializer for SemioCadToStep {
             match &rec.entity {
                 CadEntity::Line { a, b } => entities.extend(line_entities(&mut ids, a, b)),
                 CadEntity::Circle { center, radius } => entities.extend(circle_entities(&mut ids, center, *radius)),
-                _ => {} // no B-rep/solid equivalent in this bridge's scope — documented, dropped.
+                _ => {}
             }
         }
         let header = StepHeader { file_description: Default::default(), file_name: StepFileName { name: "semio-cad-export".into(), ..Default::default() }, file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] } };

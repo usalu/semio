@@ -49,7 +49,6 @@ pub fn classify_atlas_upload(width: u32, height: u32, byte_len: usize) -> Result
 }
 
 impl AtlasFormat {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn vk_format(self) -> vk::Format {
         match self {
             AtlasFormat::Glyph => vk::Format::R8_UNORM,
@@ -73,7 +72,6 @@ pub struct VulkanImage {
 }
 
 impl VulkanImage {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn destroy(&self, device: &ash::Device) {
         // 🔓️ SAFETY: caller (`GpuResources::drain_known`/`Drop`) guarantees the device is idle before
         // any destroy path runs — no in-flight command buffer references this image/view.
@@ -97,7 +95,6 @@ pub struct VulkanMesh {
 }
 
 impl VulkanMesh {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn destroy(&self, device: &ash::Device) {
         // 🔓️ SAFETY: same idle-device precondition as `VulkanImage::destroy`.
         unsafe {
@@ -128,22 +125,18 @@ pub struct GpuResources {
 }
 
 impl GpuResources {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn knows_texture(&self, id: TextureId) -> bool {
         self.known_textures.contains(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn knows_mesh(&self, id: MeshId) -> bool {
         self.known_meshes.contains(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn raster_texture(&self, id: TextureId) -> Option<&VulkanImage> {
         self.raster_textures.get(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mesh(&self, id: MeshId) -> Option<&VulkanMesh> {
         self.meshes.get(&id)
     }
@@ -154,7 +147,6 @@ impl GpuResources {
     /// waited for the device to go idle (or, on a genuine device-lost, accepted that `device_wait_idle`
     /// itself may report `ERROR_DEVICE_LOST` and skipped straight to dropping handles — a lost device's
     /// resources are already invalid GPU-side either way).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_known(&mut self, device: &ash::Device) -> (Vec<TextureId>, Vec<MeshId>, Vec<AtlasId>) {
         if let Some(atlas) = self.glyph_atlas.take() {
             atlas.destroy(device);
@@ -173,7 +165,6 @@ impl GpuResources {
 
     /// 📤️ Applies one `ResourceOp` stream, always *before* the `render` call whose packet references
     /// the ids it uploads (the `GraphicsBackend` contract's own invariant).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn apply(&mut self, device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, command_pool: vk::CommandPool, queue: vk::Queue, ops: &[ResourceOp]) -> Result<(), VulkanGraphicsError> {
         for op in ops {
             match op {
@@ -197,7 +188,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[allow(clippy::too_many_arguments)]
     fn upload_atlas(&mut self, device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, command_pool: vk::CommandPool, queue: vk::Queue, id: AtlasId, width: u32, height: u32, pixels: &[u8]) -> Result<(), VulkanGraphicsError> {
         self.known_atlases.insert(id);
@@ -213,7 +203,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[allow(clippy::too_many_arguments)]
     fn upload_texture(
         &mut self,
@@ -235,7 +224,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[allow(clippy::too_many_arguments)]
     fn create_or_update_mesh(
         &mut self,

@@ -246,11 +246,9 @@ pub struct AnimKeyframeDiff {
 }
 
 impl AnimKeyframeDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
         self.t.is_none() && self.value.is_none()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn apply_row(&self, base: &AnimKeyframe) -> AnimKeyframe {
         let mut next = base.clone();
         if let Some(v) = self.t {
@@ -261,11 +259,9 @@ impl AnimKeyframeDiff {
         }
         next
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base: &AnimKeyframe) -> Self {
         Self { t: self.t.map(|_| base.t), value: self.value.as_ref().map(|_| base.value.clone()) }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.t.is_some() {
             self.t = other.t;
@@ -293,11 +289,9 @@ pub struct AnimChannelDiff {
 }
 
 impl AnimChannelDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
         self.target.is_none() && self.interpolation.is_none() && self.keyframes.as_ref().is_none_or(indexed_is_empty)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn apply_row(&self, base: &AnimChannel) -> AnimChannel {
         let mut next = base.clone();
         if let Some(v) = &self.target {
@@ -311,11 +305,9 @@ impl AnimChannelDiff {
         }
         next
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base: &AnimChannel) -> Self {
         Self { target: self.target.as_ref().map(|_| base.target.clone()), interpolation: self.interpolation.map(|_| base.interpolation), keyframes: self.keyframes.as_ref().map(|d| inverse_indexed(d, &base.keyframes, |d, item| d.inverse(item))) }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.target.is_some() {
             self.target = other.target;
@@ -347,11 +339,9 @@ pub struct AnimTimelineDiff {
 }
 
 impl AnimTimelineDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
         self.name.is_none() && self.channels.as_ref().is_none_or(indexed_is_empty)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn apply_row(&self, base: &AnimTimeline) -> AnimTimeline {
         let mut next = base.clone();
         if let Some(v) = &self.name {
@@ -362,11 +352,9 @@ impl AnimTimelineDiff {
         }
         next
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base: &AnimTimeline) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), channels: self.channels.as_ref().map(|d| inverse_indexed(d, &base.channels, |d, item| d.inverse(item))) }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
@@ -396,7 +384,6 @@ pub struct SemioAnimationDiff {
 }
 
 impl SemioAnimationDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.timelines.as_ref().is_none_or(indexed_is_empty)
     }

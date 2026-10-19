@@ -1,0 +1,109 @@
+{
+ "measured": [
+  {
+   "imageBytes": 33554432,
+   "filesystemBytes": 33513472,
+   "usedAtEmptyBytes": 679936
+  },
+  {
+   "imageBytes": 66060288,
+   "filesystemBytes": 66019328,
+   "usedAtEmptyBytes": 827392
+  },
+  {
+   "imageBytes": 134217728,
+   "filesystemBytes": 134176768,
+   "usedAtEmptyBytes": 1417216
+  },
+  {
+   "imageBytes": 267386880,
+   "filesystemBytes": 267345920,
+   "usedAtEmptyBytes": 1544192
+  },
+  {
+   "imageBytes": 268435456,
+   "filesystemBytes": 268394496,
+   "usedAtEmptyBytes": 1544192
+  },
+  {
+   "imageBytes": 536870912,
+   "filesystemBytes": 536829952,
+   "usedAtEmptyBytes": 1798144
+  },
+  {
+   "imageBytes": 1073741824,
+   "filesystemBytes": 1073700864,
+   "usedAtEmptyBytes": 3387392
+  },
+  {
+   "imageBytes": 1610612736,
+   "filesystemBytes": 1610571776,
+   "usedAtEmptyBytes": 6410240
+  },
+  {
+   "imageBytes": 2146435072,
+   "filesystemBytes": 2146394112,
+   "usedAtEmptyBytes": 8466432
+  },
+  {
+   "imageBytes": 2147483648,
+   "filesystemBytes": 2147442688,
+   "usedAtEmptyBytes": 8466432
+  },
+  {
+   "imageBytes": 2148532224,
+   "filesystemBytes": 1938776064,
+   "usedAtEmptyBytes": 8093696
+  },
+  {
+   "imageBytes": 2415919104,
+   "filesystemBytes": 2206162944,
+   "usedAtEmptyBytes": 9658368
+  },
+  {
+   "imageBytes": 2684354560,
+   "filesystemBytes": 2474598400,
+   "usedAtEmptyBytes": 10141696
+  },
+  {
+   "imageBytes": 3221225472,
+   "filesystemBytes": 3011469312,
+   "usedAtEmptyBytes": 12222464
+  },
+  {
+   "imageBytes": 4293918720,
+   "filesystemBytes": 4084162560,
+   "usedAtEmptyBytes": 16334848
+  }
+ ],
+ "usable": [
+  {
+   "imageBytes": 33554432,
+   "usableBytes": 30761120
+  },
+  {
+   "imageBytes": 66060288,
+   "usableBytes": 63140000
+  },
+  {
+   "imageBytes": 134217728,
+   "usableBytes": 131031200
+  },
+  {
+   "imageBytes": 2147483648,
+   "usableBytes": 2136432800
+  },
+  {
+   "imageBytes": 2149580800,
+   "usableBytes": 1929625760
+  },
+  {
+   "imageBytes": 4293918720,
+   "usableBytes": 4065587360
+  },
+  {
+   "imageBytes": 8588886016,
+   "usableBytes": 8343777440
+  }
+ ]
+}

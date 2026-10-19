@@ -15,7 +15,6 @@ fn a_published_payload_round_trips_back_into_the_same_per_surface_map() {
     assert_eq!(map.len(), rows.len());
     for row in &rows {
         let decoded = map.get(row.id.0).expect("every encoded row decodes");
-        // f32 on the wire: assert to single-precision, not to the f64 the engine accumulated in.
         for (decoded, original) in [
             (decoded.conduction_loss_kwh, row.conduction_loss_kwh),
             (decoded.conduction_gain_kwh, row.conduction_gain_kwh),
@@ -34,7 +33,6 @@ fn a_payload_never_outgrows_the_tick_budget_even_for_two_thousand_surfaces() {
     assert_eq!(bytes.len(), 40_008, "2 000 surfaces are 8 header bytes plus 2 000 × 20");
     assert!(bytes.len() * 4 < semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX, "2 000 surfaces leave at least a 4× margin inside one tick");
     assert_eq!(decode_run_payload(&bytes).expect("decodes").len(), 2_000);
-    // The hard ceiling itself still fits, with room for the progress record and the step ring.
     assert!(energy_surface_payload_bytes(ENERGY_SURFACE_PAYLOAD_MAXIMUM_ROWS) < semio_framework_tool_run::TOOL_RUN_TICK_BYTES_MAX);
 }
 
@@ -86,10 +84,6 @@ fn an_empty_map_colours_nothing_and_a_flat_map_still_colours() {
 
 #[test]
 fn a_field_that_is_zero_everywhere_colours_nothing_rather_than_faking_a_flat_result() {
-    // 🌡️ A cooling design day has no conduction LOSS on any face (heat flows inward all day) and a
-    // heating one has no conduction GAIN — measured with BESTEST 600, whose cooling-design-day loss
-    // column is 0.0000 on all eight faces. Painting every one of them the coldest band would read as a
-    // measured, uniform result; leaving them uncoloured reads as "this field has nothing to show".
     let empty = decode_run_payload(&encode_surface_energy_payload([summary(1, 0.0, 3.02, 0.0, 38.7), summary(2, 0.0, 6.06, 0.0, 25.1)].into_iter())).expect("decodes");
     let (colors, min, max) = surface_colors(&empty, ResultField::ConductionLoss);
     assert!(colors.is_empty(), "an all-zero field must not paint anything");
@@ -134,8 +128,6 @@ fn the_legend_names_the_field_and_its_range() {
 
 #[test]
 fn one_dominant_face_no_longer_collapses_every_other_face_onto_the_coldest_band() {
-    // 🌡️ The shape a real envelope has: a ground floor that loses several times what any wall loses.
-    // Linear normalisation puts all five walls inside the first 1/14th of the range, i.e. one band.
     let rows = [summary(1, 8.0, 0.0, 0.0, 0.0), summary(2, 11.0, 0.0, 0.0, 0.0), summary(3, 13.0, 0.0, 0.0, 0.0), summary(4, 15.0, 0.0, 0.0, 0.0), summary(5, 300.0, 0.0, 0.0, 0.0)];
     let linear: Vec<&str> = rows.iter().map(|row| band_color(row.conduction_loss_kwh, 8.0, 300.0)).collect();
     assert_eq!(linear.iter().collect::<std::collections::BTreeSet<_>>().len(), 2, "the linear ramp really does collapse this case — the premise of the rank ramp");

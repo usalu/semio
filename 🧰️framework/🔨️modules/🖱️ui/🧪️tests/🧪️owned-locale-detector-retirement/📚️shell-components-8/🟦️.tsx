@@ -23,9 +23,6 @@ export async function registerShellComponents8Tests(vitest: Tests1Vitest, depend
     function TestShellRoot({ children }: { readonly children: () => React.ReactNode }): React.ReactElement {
       const [scope] = reactHostPort.useState(() => createShellScope({ storage: createMemoryStoragePort(), initialLocale: "en" }));
       const [, bump] = reactHostPort.useState(0);
-      // 🐚️ Memoized: an inline (re-created every render) ref callback makes React detach+reattach the
-      // ref on every commit (identity changed → old callback fires with `null`, new one fires with the
-      // node), and since each call bumps state, that becomes an infinite render loop.
       const setRoot = reactHostPort.useCallback(
         (node: HTMLDivElement | null) => {
           scope.rootRef.current = node;
@@ -404,11 +401,9 @@ describe("Shell components", () => {
       const maximizeBtn = container.querySelector('[id="framework.window.labeledWindow.windowControls.maximize"]');
       expect(maximizeBtn?.textContent?.trim()).toBe("Focus");
 
-      // Verify folded state options label
       const unfoldBtn = container.querySelector('[id="framework.window.labeledWindow.measures.unfold"]');
       expect(unfoldBtn?.textContent?.trim()).toBe("Window Options");
 
-      // Unfold it
       if (unfoldBtn) fireEvent.click(unfoldBtn);
 
       const foldToggle = container.querySelector('[id="framework.window.labeledWindow.measures.fold"]');
@@ -438,12 +433,6 @@ describe("Shell components", () => {
       expect(container.querySelector('[id="framework.window.mobileWindow.windowControls.close"]')).toBeTruthy();
     });
 
-    // 🪪️ LAW: a window control GROUP exists only where it carries a control. The OS dock hands its
-    // windows no `onClose`/`onMaximize`/`onOpenInNewWindow` (focus and close live on the dock TAB), so
-    // an unconditional group published an empty 2px `…windowControls` box on every window — an id in
-    // every DOM census that names nothing and cannot be pressed, which no canvas renderer can or
-    // should mirror (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-    // `📓️w12d-pane-chip-ids-and-projection-toggle.md` §4).
     it("Window mints no window-control group when it is handed no window control", () => {
       const { container } = render(
         <Window id="uncontrolled-window">

@@ -11,7 +11,6 @@ use crate::standards::v2_0::subsets::any::io::text::diff::wire::*;
 /// inserted rows with their after positions, moved ids with both.
 macro_rules! delta_text_codec {
     ($enc:ident, $dec:ident, $delta:ident, $removal:ident, $insertion:ident, $relocation:ident, $enc_id:expr, $dec_id:expr, $enc_row:expr, $dec_row:expr) => {
-        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
         pub(crate) fn $enc(delta: &$delta) -> String {
             let removed = delta.removed.iter().map(|entry| format!("{}@{}", $enc_id(&entry.id), entry.index)).collect::<Vec<_>>().join(",");
             let inserted = delta.inserted.iter().map(|entry| format!("{}:{}", entry.index, $enc_row(&entry.row))).collect::<Vec<_>>().join(",");
@@ -19,7 +18,6 @@ macro_rules! delta_text_codec {
             format!("[{removed}];[{inserted}];[{moved}]")
         }
 
-        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
         pub(crate) fn $dec(s: &str) -> Result<$delta, String> {
             let three = split_top_level(s, ';');
             let [removed_s, inserted_s, moved_s] = three.as_slice() else { return Err(format!("list delta: expected 3 sections, got {}", three.len())) };

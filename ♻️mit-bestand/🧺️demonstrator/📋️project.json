@@ -6,7 +6,16 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
       "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
-      "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🎚️config/🟦️.ts",
+      "!{projectRoot}/dist/**",
+      "!{projectRoot}/test-results/**",
+      "sharedGlobals"
+    ],
+    "activationSources": [
+      "production",
+      "^production",
+      "!{projectRoot}/dist/**",
+      "!{projectRoot}/test-results/**"
     ]
   },
   "targets": {
@@ -15,6 +24,7 @@
       "cache": true,
       "outputs": [],
       "inputs": [
+        "activationSources",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -50,6 +60,7 @@
       "cache": true,
       "outputs": [],
       "inputs": [
+        "activationSources",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -125,13 +136,15 @@
         "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
         "forwardAllArgs": false
       },
-      "cache": true,
+      "cache": false,
       "outputs": [
-        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/site"
+        "{projectRoot}/.🧾️store/build.json"
       ]
     },
     "test": {
       "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -146,6 +159,7 @@
         "{projectRoot}/dist/♻️activation/prototype"
       ],
       "inputs": [
+        "activationSources",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -167,7 +181,7 @@
     },
     "activate-lanes-prototype": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "inputs": [
         {
@@ -262,6 +276,8 @@
     },
     "canonical-architecture": {
       "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",

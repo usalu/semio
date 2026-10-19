@@ -65,3 +65,5 @@ semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owne
 semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }

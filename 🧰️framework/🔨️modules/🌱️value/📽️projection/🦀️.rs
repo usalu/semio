@@ -71,7 +71,7 @@ impl<T:Send+Sync+'static> ImmutableRootProjection for SealedShared<T>{
  fn root_projection_demand(_original:RetainedCloneRef<'_,Self>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:size_of::<Self>()*3,depth:1,..Default::default()})}
  fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{let d=Self::root_projection_demand(original)?;if !retained_clone_grant_admits(grant,d){return Ok(None);}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Self>()*2,..grant};let(value,_)=original.get().try_duplicate(child)?;Ok(Some((value,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
 }
-impl<T:Send+Sync+'static> ImmutableRootProjection for crate::list::persistent::PersistentList<T>{
+impl<T:Send+Sync+'static> ImmutableRootProjection for semio_framework_value_persistent::list::persistent::PersistentList<T>{
  fn root_projection_demand(_original:RetainedCloneRef<'_,Self>)->Result<RetirementDemand,ValueError>{Ok(Self::projection_demand())}
  fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{Self::project(original,grant)}
 }

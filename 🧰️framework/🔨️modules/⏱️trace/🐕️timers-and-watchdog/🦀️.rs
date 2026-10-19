@@ -20,8 +20,6 @@ impl StepTimer {
 }
 
 impl Drop for StepTimer {
-    // 🚫️async: E1 external-trait impl — `Drop::drop`'s signature is fixed by std, so this can never
-    // `.await`; same reasoning as `CancelToken`'s `Debug::fmt` impl in `⏳️async/🦀️.rs`.
     fn drop(&mut self) {
         if let Some(elapsed) = self.start_us.zip(try_now_us()).and_then(|(start, end)| end.checked_sub(start)) {
             record_site_sample(self.site, elapsed);
@@ -199,7 +197,6 @@ impl Watchdog {
 }
 
 impl Drop for Watchdog {
-    // 🚫️async: E1 external-trait impl, same reasoning as `StepTimer::drop` above.
     fn drop(&mut self) {
         if !self.finished {
             self.report(try_now_us());

@@ -466,12 +466,6 @@ mod mounted_laws {
         assert!(semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
         assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        // 🔐️ A DIFFERENT operation id owns no lease at all, so the fail-closed answer is
-        // `authority-missing`, not `wrong-operation`: leases are keyed BY operation
-        // (`FixedOperationRegistry::get_operation`), so a lease whose recorded operation disagrees
-        // with the id it was found under is unreachable without the `#[cfg(test)]` hostile
-        // injection that `editor::…::unit`'s own hostile law drives
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.authority-missing"));
         assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation3d-publication.wrong-generation"));
         semio_s_artifact_procedural_3d_host::generation3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");

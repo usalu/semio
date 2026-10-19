@@ -1,0 +1,891 @@
+{
+  "version": 1,
+  "directories": [
+    ".vscode",
+    ".vscode-insiders",
+    ".idea",
+    ".vs",
+    ".fleet",
+    ".zed",
+    ".settings",
+    ".nova",
+    ".run",
+    "nbproject",
+    ".emacs.d",
+    ".vim",
+    ".kateproject.d"
+  ],
+  "files": [
+    ".editorconfig",
+    ".project",
+    ".classpath",
+    ".cproject",
+    ".kateproject",
+    ".nvim.lua",
+    ".nvimrc",
+    "launch.json",
+    "launch.seed.jsonc",
+    "launchsettings.json",
+    ".vimrc",
+    ".exrc",
+    ".dir-locals.el",
+    ".dir-locals-2.el",
+    "cmakesettings.json",
+    "c_cpp_properties.json",
+    ".emacs",
+    ".vimspector.json",
+    "launch.vs.json",
+    "tasks.vs.json"
+  ],
+  "suffixes": [
+    "code-workspace",
+    "sln",
+    "slnx",
+    "slnf",
+    "suo",
+    "user",
+    "iml",
+    "ipr",
+    "iws",
+    "vsconfig",
+    "vssettings",
+    "vspscc",
+    "vssscc",
+    "ncb",
+    "opensdf",
+    "sln.docstates",
+    "sublime-project",
+    "sublime-workspace",
+    "dotsettings",
+    "sublime-settings"
+  ],
+  "excludedDirectories": [
+    ".git",
+    "node_modules",
+    ".cache",
+    "⚡️cache",
+    "🗑️generated",
+    ".lake",
+    ".venv",
+    "venv"
+  ],
+  "manifestNames": [
+    "package.json",
+    "project.json",
+    "📋️project.json",
+    "nx.json",
+    "task.json",
+    "tasks.json",
+    "📋️task.json",
+    "📋️tasks.json",
+    "policy.json",
+    "🔣️policy.json",
+    "🎮️commands.json"
+  ],
+  "maximumEntries": 3000000,
+  "maximumDirectories": 400000,
+  "maximumMilliseconds": 300000,
+  "pathCases": [
+    {
+      "path": "unknown/ignored/.vscode",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.vscode-insiders",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.idea",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.vs",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.fleet",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.zed",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.settings",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.nova",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.run",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.editorconfig",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.project",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.classpath",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.cproject",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.kateproject",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.nvim.lua",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.nvimrc",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/launch.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/launch.seed.jsonc",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.code-workspace",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.sln",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.slnx",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.slnf",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.suo",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.user",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.iml",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.ipr",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.iws",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.vsconfig",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.vssettings",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.vspscc",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.vssscc",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.ncb",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.opensdf",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.sln.docstates",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.sublime-project",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.sublime-workspace",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": ".git/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": "node_modules/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": ".cache/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": "⚡️cache/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": "🗑️generated/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": ".lake/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": ".venv/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": "venv/external/.vscode/launch.json",
+      "kind": "file",
+      "expected": "excluded"
+    },
+    {
+      "path": "unknown/.vscode",
+      "kind": "symlink",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/external-link",
+      "kind": "symlink",
+      "expected": "accepted"
+    },
+    {
+      "path": "authored/build/Project.sln",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "authored/target/.idea",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "extension/.vscodeignore",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "extension/vscode/🟦️.ts",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "history/README.md",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "history/input/📜️script.ts",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "product/settings.json",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "product/tasks.json",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown\\.IDEA\\workspace.xml",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/nbproject",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/launchSettings.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.vimrc",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.exrc",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.dir-locals.el",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.dir-locals-2.el",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.launch",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/ignored/Project.DotSettings",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/Project.sln.DotSettings",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/eclipse.launch",
+      "kind": "file",
+      "content": "<?xml version=\"1.0\"?><launchConfiguration type=\"org.eclipse.debug\"/>",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/runtime.launch",
+      "kind": "file",
+      "content": "<?xml version=\"1.0\"?><launch><node/></launch>",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/eclipse-comment.launch",
+      "kind": "file",
+      "content": "<!-- domain <launch/> -->\n<launchConfiguration/>",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/runtime-comment.launch",
+      "kind": "file",
+      "content": "<!-- <launchConfiguration/> -->\n<launch/>",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/eclipse-doctype.launch",
+      "kind": "file",
+      "content": "<!DOCTYPE launchConfiguration SYSTEM \"launch.dtd\"><launchConfiguration/>",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/runtime-doctype.launch",
+      "kind": "file",
+      "content": "<!DOCTYPE launch SYSTEM \"runtime.dtd\"><launch/>",
+      "expected": "accepted"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/📥️inputs/retained/.vscode/launch.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/runtime-nested.launch",
+      "kind": "file",
+      "content": "<launch><launchConfiguration/></launch>",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/ignored/.emacs.d",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.vim",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.kateproject.d",
+      "kind": "directory",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/cmakesettings.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/c_cpp_properties.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.emacs",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/.vimspector.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/project.sublime-settings",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/CMakeSettings.json",
+      "kind": "symlink",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/CMakePresets.json",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/ignored/CMakeUserPresets.json",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/ignored/native-commands.code-snippets",
+      "kind": "file",
+      "expected": "accepted"
+    },
+    {
+      "path": "unknown/ignored/launch.vs.json",
+      "kind": "file",
+      "expected": "retired"
+    },
+    {
+      "path": "unknown/ignored/tasks.vs.json",
+      "kind": "file",
+      "expected": "retired"
+    }
+  ],
+  "manifestCases": [
+    {
+      "name": "unknown target input",
+      "document": {
+        "targets": {
+          "compile": {
+            "inputs": [
+              "{workspaceRoot}/unknown/Other.sln"
+            ]
+          }
+        }
+      },
+      "expected": [
+        "{workspaceRoot}/unknown/Other.sln"
+      ]
+    },
+    {
+      "name": "unknown executable",
+      "document": {
+        "scripts": {
+          "build": "dotnet build Unknown.slnx"
+        }
+      },
+      "expected": [
+        "dotnet build Unknown.slnx"
+      ]
+    },
+    {
+      "name": "configuration executable",
+      "document": {
+        "targets": {
+          "build": {
+            "configurations": {
+              "release": {
+                "command": "code --folder-uri .vscode"
+              }
+            }
+          }
+        }
+      },
+      "expected": [
+        "code --folder-uri .vscode"
+      ]
+    },
+    {
+      "name": "dependency file",
+      "document": {
+        "targets": {
+          "run": {
+            "dependsOn": [
+              "unknown/Workspace.code-workspace"
+            ]
+          }
+        }
+      },
+      "expected": [
+        "unknown/Workspace.code-workspace"
+      ]
+    },
+    {
+      "name": "policy named inputs",
+      "document": {
+        "namedInputs": {
+          "dotnet": [
+            "{workspaceRoot}/Fresh.sln"
+          ]
+        }
+      },
+      "expected": [
+        "{workspaceRoot}/Fresh.sln"
+      ]
+    },
+    {
+      "name": "dashboard external tool",
+      "document": {
+        "metadata": {
+          "semio": {
+            "dashboard": {
+              "tools": [
+                {
+                  "command": [
+                    "code",
+                    "unknown/Workspace.code-workspace"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "expected": [
+        "unknown/Workspace.code-workspace"
+      ]
+    },
+    {
+      "name": "task command",
+      "document": {
+        "tasks": [
+          {
+            "command": "code unknown/launch.json"
+          }
+        ]
+      },
+      "expected": [
+        "code unknown/launch.json"
+      ]
+    },
+    {
+      "name": "negative input glob",
+      "document": {
+        "targets": {
+          "build": {
+            "inputs": [
+              "!{projectRoot}/.vscode/**"
+            ]
+          }
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "negative command remains executable",
+      "document": {
+        "scripts": {
+          "bad": "!code .vscode"
+        }
+      },
+      "expected": [
+        "!code .vscode"
+      ]
+    },
+    {
+      "name": "passive extension manifest",
+      "document": {
+        "name": "vscode-extension",
+        "description": "Historical Other.sln and .vscode",
+        "contributes": {
+          "configuration": {
+            "title": ".vscode"
+          }
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "passive fixture strings",
+      "document": {
+        "fixture": {
+          "command": "code .vscode"
+        },
+        "description": "launch.json"
+      },
+      "expected": []
+    },
+    {
+      "name": "external path reference still refused",
+      "document": {
+        "scripts": {
+          "bad": "code node_modules/vendor/.vscode"
+        }
+      },
+      "expected": [
+        "code node_modules/vendor/.vscode"
+      ]
+    },
+    {
+      "name": "neutral inputs",
+      "document": {
+        "targets": {
+          "build": {
+            "inputs": [
+              "{workspaceRoot}/Directory.Build.props",
+              "{projectRoot}/**/*.csproj"
+            ],
+            "options": {
+              "command": "bun ./📜️script.ts build"
+            }
+          }
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "root task options",
+      "document": {
+        "options": {
+          "command": "dotnet build Unknown.sln"
+        }
+      },
+      "expected": [
+        "dotnet build Unknown.sln"
+      ]
+    },
+    {
+      "name": "target dashboard effect",
+      "document": {
+        "targets": {
+          "run": {
+            "metadata": {
+              "semio": {
+                "dashboard": {
+                  "parameters": [
+                    {
+                      "args": [
+                        "Unknown.sln"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": [
+        "Unknown.sln"
+      ]
+    },
+    {
+      "name": "package Nx target input",
+      "document": {
+        "nx": {
+          "targets": {
+            "build": {
+              "inputs": [
+                "Unknown.sln"
+              ]
+            }
+          }
+        }
+      },
+      "expected": [
+        "Unknown.sln"
+      ]
+    },
+    {
+      "name": "passive package Nx labels",
+      "document": {
+        "nx": {
+          "description": "Unknown.sln"
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "runtime launch settings input",
+      "document": {
+        "targets": {
+          "run": {
+            "inputs": [
+              "{projectRoot}/Properties/launchSettings.json"
+            ]
+          }
+        }
+      },
+      "expected": [
+        "{projectRoot}/Properties/launchSettings.json"
+      ]
+    },
+    {
+      "name": "domain launch input",
+      "document": {
+        "targets": {
+          "run": {
+            "inputs": [
+              "robot/runtime.launch"
+            ]
+          }
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "Visual Studio folder launch control",
+      "document": {
+        "targets": {
+          "run": {
+            "inputs": [
+              "{projectRoot}/launch.vs.json"
+            ]
+          }
+        }
+      },
+      "expected": [
+        "{projectRoot}/launch.vs.json"
+      ]
+    }
+  ],
+  "contentProbeBytes": 65536,
+  "semanticRoles": {
+    "ticketRoots": [
+      ".🧬semio/🦑️repo/🎫️tickets",
+      ".🧬semio/🦅repo/🎫️tickets"
+    ],
+    "retainedInputDirectories": [
+      "📥️inputs",
+      "📥inputs",
+      "🧫️fixtures",
+      "🧫fixtures"
+    ],
+    "ticketCommandName": "🎮️commands.json",
+    "ticketDocumentName": "🎫️ticket.json"
+  },
+  "roleCases": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/📥️inputs/retained-x/package.json",
+      "text": "{",
+      "ticketStatus": null,
+      "expectedRole": "retained",
+      "expectedParse": "not-read",
+      "expectedReferences": []
+    },
+    {
+      "path": "unknown/ignored/package.json",
+      "text": "{",
+      "ticketStatus": null,
+      "expectedRole": "active",
+      "expectedParse": "invalid",
+      "expectedReferences": []
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/🎮️commands.json",
+      "text": "{\"tools\": [{\"command\": [\"code\", \"Unknown.sln\"]}]}",
+      "ticketStatus": "open",
+      "expectedRole": "ticket",
+      "expectedParse": "valid",
+      "expectedReferences": [
+        "Unknown.sln"
+      ]
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/🎮️commands.json",
+      "text": "{",
+      "ticketStatus": "closed",
+      "expectedRole": "neutral",
+      "expectedParse": "not-read",
+      "expectedReferences": []
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/🎮️commands.json",
+      "text": "{",
+      "ticketStatus": "open",
+      "expectedRole": "ticket",
+      "expectedParse": "invalid",
+      "expectedReferences": []
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/📥️inputs/retained-x/🎮️commands.json",
+      "text": "{",
+      "ticketStatus": "open",
+      "expectedRole": "retained",
+      "expectedParse": "not-read",
+      "expectedReferences": []
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/ROLE-PROBE/🎮️commands.json",
+      "text": "{\"tools\": [{\"command\": [\"bun\", \"repo\", \"--help\"], \"title\": {\"en\": \"Historical .vscode\"}}]}",
+      "ticketStatus": "open",
+      "expectedRole": "ticket",
+      "expectedParse": "valid",
+      "expectedReferences": []
+    }
+  ],
+  "maximumXmlPrologSections": 128
+}

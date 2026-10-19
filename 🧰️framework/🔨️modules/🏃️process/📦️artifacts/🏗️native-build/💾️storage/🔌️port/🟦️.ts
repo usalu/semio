@@ -14,6 +14,7 @@ export interface NativeStoragePortV1{
  recheck(backing:NativeStorageBackingV1,control:ResourceLeaseControl):Promise<void>;
  syncMetadata(backing:NativeStorageBackingV1,directory:string,control:ResourceLeaseControl):Promise<void>;
  retire(allocation:NativeStorageAllocationV1,backing:NativeStorageBackingV1,control:ResourceLeaseControl):Promise<void>;
+ measure?(backing:NativeStorageBackingV1,request:Readonly<{mode:"reserve"|"commit"|"recheck";requestBytes:number}>,control:ResourceLeaseControl):Promise<void>;
 }
 export type NativeStorageObservationPortV1=Pick<NativeStoragePortV1,"withOperation"|"observe"|"recheck">&Readonly<{check(control:ResourceLeaseControl):void}>;
 /** 📚️ Returns detached current journal DATA, never an allocation or a writer continuation. */

@@ -260,6 +260,22 @@
           }
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "profile"
+      ],
+      "properties": {
+        "command": {
+          "const": "setup-debugger"
+        },
+        "profile": {
+          "const": "lldb"
+        }
+      }
     }
   ],
   "$defs": {
@@ -390,6 +406,184 @@
     "DebuggerLimits": {
       "const": {
         "maximumArgumentUnits": 8192
+      }
+    },
+    "NativeDebuggerSetupPolicy": {
+      "const": {
+        "version": 1,
+        "profile": "lldb",
+        "probeArguments": [
+          "--no-lldbinit",
+          "--batch",
+          "-o",
+          "version",
+          "-o",
+          "script print(6*7)"
+        ],
+        "probeExpectedLine": "42",
+        "probeMilliseconds": 30000,
+        "windows": {
+          "llvmVersion": "22.1.8",
+          "pythonVersion": "3.11.9",
+          "llvmDirectory": "semio/LLVM/22.1.8",
+          "pythonDirectory": "semio/Python/3.11.9",
+          "pythonOptions": "/quiet TargetDir=\"{pythonRoot}\" InstallAllUsers=0 PrependPath=0 AssociateFiles=0 Include_launcher=0 InstallLauncherAllUsers=0 Include_test=0",
+          "llvmPackage": "LLVM.LLVM",
+          "pythonPackage": "Python.Python.3.11"
+        },
+        "macPrefixes": [
+          "/opt/homebrew/opt/lldb",
+          "/usr/local/opt/lldb"
+        ],
+        "privilegeArguments": [
+          "-n",
+          "true"
+        ],
+        "installers": [
+          {
+            "platform": "linux",
+            "manager": "apt-get",
+            "steps": [
+              {
+                "id": "lldb",
+                "command": "apt-get",
+                "args": [
+                  "update",
+                  "-qq"
+                ],
+                "environment": {
+                  "DEBIAN_FRONTEND": "noninteractive"
+                }
+              },
+              {
+                "id": "lldb",
+                "command": "apt-get",
+                "args": [
+                  "install",
+                  "-y",
+                  "--no-install-recommends",
+                  "lldb"
+                ],
+                "environment": {
+                  "DEBIAN_FRONTEND": "noninteractive"
+                }
+              }
+            ]
+          },
+          {
+            "platform": "linux",
+            "manager": "dnf",
+            "steps": [
+              {
+                "id": "lldb",
+                "command": "dnf",
+                "args": [
+                  "install",
+                  "-y",
+                  "lldb"
+                ]
+              }
+            ]
+          },
+          {
+            "platform": "linux",
+            "manager": "pacman",
+            "steps": [
+              {
+                "id": "lldb",
+                "command": "pacman",
+                "args": [
+                  "-Sy",
+                  "--needed",
+                  "--noconfirm",
+                  "lldb"
+                ]
+              }
+            ]
+          },
+          {
+            "platform": "linux",
+            "manager": "zypper",
+            "steps": [
+              {
+                "id": "lldb",
+                "command": "zypper",
+                "args": [
+                  "--non-interactive",
+                  "install",
+                  "--no-recommends",
+                  "lldb",
+                  "python3-lldb"
+                ]
+              }
+            ]
+          },
+          {
+            "platform": "darwin",
+            "manager": "brew",
+            "steps": [
+              {
+                "id": "lldb",
+                "command": "brew",
+                "args": [
+                  "install",
+                  "lldb"
+                ]
+              }
+            ]
+          },
+          {
+            "platform": "win32",
+            "manager": "winget",
+            "steps": [
+              {
+                "id": "python",
+                "command": "winget",
+                "args": [
+                  "install",
+                  "--exact",
+                  "--id",
+                  "Python.Python.3.11",
+                  "--version",
+                  "3.11.9",
+                  "--scope",
+                  "user",
+                  "--location",
+                  "{pythonRoot}",
+                  "--override",
+                  "/quiet TargetDir=\"{pythonRoot}\" InstallAllUsers=0 PrependPath=0 AssociateFiles=0 Include_launcher=0 InstallLauncherAllUsers=0 Include_test=0",
+                  "--accept-package-agreements",
+                  "--accept-source-agreements",
+                  "--disable-interactivity",
+                  "--silent",
+                  "--force"
+                ]
+              },
+              {
+                "id": "lldb",
+                "command": "winget",
+                "args": [
+                  "install",
+                  "--exact",
+                  "--id",
+                  "LLVM.LLVM",
+                  "--version",
+                  "22.1.8",
+                  "--scope",
+                  "machine",
+                  "--location",
+                  "{llvmRoot}",
+                  "--accept-package-agreements",
+                  "--accept-source-agreements",
+                  "--disable-interactivity",
+                  "--silent",
+                  "--force"
+                ]
+              }
+            ]
+          }
+        ],
+        "privilegeEnvironmentCommand": "env"
       }
     }
   }

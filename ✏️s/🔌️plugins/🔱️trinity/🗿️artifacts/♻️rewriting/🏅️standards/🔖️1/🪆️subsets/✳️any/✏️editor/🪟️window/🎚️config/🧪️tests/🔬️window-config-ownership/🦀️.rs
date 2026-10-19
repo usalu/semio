@@ -91,8 +91,6 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
             app.take_typed_operation_effect();
             app.take_typed_operation_event();
             app.take_typed_operation_ui_scope();
-            // 🧹️ The terminal witness lands in its own completion outbox, which `has_pending_typed_operations`
-            // counts — left undrained this loop spins to its deadline (`window config operations did not finish`).
             while app.take_typed_operation_completion().await.map_err(|error| format!("{error:?}"))?.is_some() {}
             std::thread::yield_now();
         }

@@ -5,6 +5,15 @@
     "default": [
       "{workspaceRoot}/🌎️hub/🧩️compositions/🌊️flow/**/*.rs",
       "{projectRoot}/**/*"
+    ],
+    "graphGenerateSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*manifest.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*",
+      "{projectRoot}/../../🛂️manifest/📇️outputs.json",
+      "{projectRoot}/📜️script.ts",
+      "{projectRoot}/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
     ]
   },
   "targets": {
@@ -15,7 +24,8 @@
         "command": "bun ./📜️script.ts add-widget-retained-check",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "child-edit-check": {
       "executor": "repo:script",
@@ -24,7 +34,8 @@
         "command": "bun ./📜️script.ts child-edit-check",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "child-identity-check": {
       "executor": "repo:script",
@@ -33,7 +44,8 @@
         "command": "bun ./📜️script.ts child-identity-check",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "test-source": {
       "executor": "repo:script",
@@ -41,7 +53,9 @@
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "check": {
       "executor": "repo:script",
@@ -52,7 +66,9 @@
       },
       "dependsOn": [
         "graph-generate"
-      ]
+      ],
+      "outputs": [],
+      "cache": true
     },
     "test": {
       "executor": "repo:script",
@@ -63,7 +79,9 @@
       },
       "dependsOn": [
         "graph-generate"
-      ]
+      ],
+      "outputs": [],
+      "cache": true
     },
     "graph-generate": {
       "executor": "repo:script",
@@ -73,13 +91,7 @@
         "command": "bun ./📜️script.ts graph-generate"
       },
       "inputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/**/*manifest.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/**/*",
-        "{projectRoot}/../../🛂️manifest/📇️outputs.json",
-        "{projectRoot}/📜️script.ts",
-        "{projectRoot}/📋️project.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+        "graphGenerateSources"
       ],
       "outputs": [
         "{projectRoot}/../../🤖️generated"
@@ -87,16 +99,20 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
       },
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "graphGenerateSources",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🌊️flow/🤖️generated/**/*"
+      ]
     },
     "graph-wire-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [
         "graph-generate"
       ],
@@ -104,7 +120,14 @@
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts graph-wire-check"
       },
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
+      ]
     }
   }
 }

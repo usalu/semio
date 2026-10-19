@@ -19,7 +19,7 @@ pub(super) fn retire_dag(mut dag: crate::MutationDag) {
     assert!(dag.terminal_is_empty(), "a law's causal dag must reach its exact terminal-empty witness");
 }
 
-/// 🧺️ Drains every applied envelope out of `dag` via [`crate::os_spr::MutationDag::take_next_applied`],
+/// 🧺️ Drains every applied envelope out of `dag` via [`crate::MutationDag::take_next_applied`],
 /// mirroring the one-at-a-time cursor contract (`Envelope` collects, `SeededIdentity` is a no-op,
 /// `Complete` ends the loop).
 pub(super) fn take_all_applied(dag: &mut crate::MutationDag) -> Vec<crate::MutationEnvelope> {

@@ -403,10 +403,6 @@ use semio_s_artifact_raster_raster_mutations_pixels::fill_selection;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
     let snapshot: RasterSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
-    // 🧹️ A decoded before-document owns two fixed-capacity maps (`assets`, every adjustment's
-    // `params`) whose `Drop` fails closed, so the snapshot cannot simply fall off this frame when
-    // the mutation beside it does not decode — every committed before-document of this artifact is
-    // populated.
     match semio_framework_pack_json::from_json_str::<RasterMutation>(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(mutation) => Ok((snapshot, mutation)),
         Err(error) => {
@@ -537,8 +533,6 @@ pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutatio
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
     use protocol::Mutation;
-    // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
-    // insertion carries), so it is cold-retired here rather than dropped.
     let (diff, raised) = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
     let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
     let applied = protocol::apply_diff(&diff, snapshot);

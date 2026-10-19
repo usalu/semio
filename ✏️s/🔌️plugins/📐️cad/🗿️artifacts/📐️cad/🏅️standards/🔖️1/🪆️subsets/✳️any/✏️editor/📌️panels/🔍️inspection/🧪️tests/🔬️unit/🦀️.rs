@@ -32,7 +32,6 @@ use semio_s_artifact_cad_cad_inferences::CAD_EXAMPLE_FOREST_LEFT;
 use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_ENERGY};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
-use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::ViewModel;
 
 fn projected(panel: BuiltNode) -> String {
@@ -136,7 +135,6 @@ async fn a_wide_selection_windows_its_ids_by_raw_id_without_starving_the_field_g
     let expected: Vec<String> = ids[offset as usize..(offset + rows) as usize].iter().map(|id| format!("cad-play-inspector.ids.{id}")).collect();
     assert_eq!(keys, expected, "exactly the requested slice, keyed by the RAW object id — never renumbered by the offset");
 
-    // 🧾️ The object's own nine fields are an author-fixed group beside the window, not its tail.
     let fields = panel.children.iter().find(|child| child.key.as_str() == "cad-play-inspector.object").expect("the object field group");
     assert_eq!(fields.children.len(), 9, "the field group is complete however wide the selection is");
     let json = projected(panel);

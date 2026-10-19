@@ -7,7 +7,7 @@ pub(crate) mod context {
     use crate::WriterSnapshot;
     use crate::editor::writer::{WriterCommand, WriterPlayApp, create_writer_app};
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members, settle_registered_typed_operation};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+    use semio_framework_plugin::{InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub const WRITER_TEST_WINDOW_ID: &str = "writer-main-test";
     
@@ -15,7 +15,7 @@ pub(crate) mod context {
         ViewModel { window_id: Some(WRITER_TEST_WINDOW_ID.into()), window_instances: vec![ViewWindowInstance { id: WRITER_TEST_WINDOW_ID.into(), window_kind_id: WRITER_PLAY_WINDOW_KIND.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
     }
     
-    /// WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
+    /// 🏔️ WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
     /// EditorApp<WriterPlayApp> (SDK adapter, contract 2.1) is the real ArtifactApp implementor
     /// VcsArtifactApp wraps, the same way PluginBuilder::editor::<WriterPlayApp> builds it.
     type MountedWriterApp = VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
@@ -56,7 +56,7 @@ pub(crate) mod context {
         WriterApp(app, scope)
     }
     
-    /// Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
+    /// 📱️ Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
     /// shape artifact_app_laws::new_app_with_registry/assert_declared_actions_bridge_to_commands still expect --
     /// framework test context gap (framework crate outside this packet's lease), not modifiable here.
     fn writer_app_manifest_for_tests() -> semio_framework_plugin::App {
@@ -94,7 +94,7 @@ pub(crate) mod context {
     /// so the artifact's OWN owner catalog retires it here — the same shape `🖨️raster`'s
     /// `retire_raster_envelope` uses for exactly this fixture pattern.
     pub fn retire_writer_envelope(envelope: store::os_store::store_schema::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
-        crate::host::owned::retire_writer_envelope(envelope);
+        crate::editor_unit_tests::context::retire_writer_envelope(envelope);
     }
     
     pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
@@ -198,7 +198,7 @@ fn writer_envelope_wire() -> Vec<u8> {
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
     let envelope = store::os_store::document_materialize::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    crate::host::owned::retire_writer_envelope(envelope);
+    crate::editor_unit_tests::context::retire_writer_envelope(envelope);
     wire
 }
 
@@ -501,7 +501,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert!(json.contains("text.document"), "artifact kind missing from the manifest");
 }
 
-/// SDK GAP (contract 2.4): create_writer_app() now returns a bare AppDefinition -- .example(...)
+/// 🔣️ SDK GAP (contract 2.4): create_writer_app() now returns a bare AppDefinition -- .example(...)
 /// does not exist on Editor::builder, so the "jack"/"dag.jack" example registrations this test
 /// used to assert on no longer exist to assert on (App{definition,examples} no longer flows through
 /// this builder path at all). Deleted rather than left compiling against a field that is gone;

@@ -7,7 +7,7 @@
     "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-readme-current-source-activation",
     "target": "test-readme-current-source-activation",
     "command": "bun ./📜️script.ts test readme-current-source-activation",
-    "cache": false,
+    "cache": true,
     "route": "readme-current-source-activation",
     "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🟢️readme-current-source-activation/🟦️.ts"
   },

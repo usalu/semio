@@ -23,8 +23,6 @@ async fn negative_tolerance_clamps_to_zero() {
 
 #[semio_framework_async_macros::async_test]
 async fn check_containment_flags_violation() {
-    // A vertex whose own tolerance ball (0.1) is larger than its incident edge's tube (0.01)
-    // violates the containment hierarchy: the finer (vertex) must fit inside the coarser (edge).
     let vertex_tol = Tol::new(0.1);
     let edge_tol = Tol::new(0.01);
     let violation = check_containment("vertex-1", vertex_tol, "edge-1", edge_tol);

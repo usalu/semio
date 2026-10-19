@@ -38,6 +38,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateHumidistat
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateHumidistat> + From<crate::DeleteHumidistat>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "humidistat", kind: "create-humidistat", record: "CreatedHumidistat" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -59,7 +60,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "humidistat", kind: "create-humidistat", record: "CreatedHumidistat" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

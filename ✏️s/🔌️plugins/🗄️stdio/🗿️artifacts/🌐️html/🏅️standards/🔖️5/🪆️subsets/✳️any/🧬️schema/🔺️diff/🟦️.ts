@@ -30,7 +30,7 @@ export interface HtmlAttributesDiff {
 
 export interface HtmlAttrModified {
   name: string;
-  /** absent = unchanged, null = the attribute is now valueless, string = set. */
+  /** 🫥️ absent = unchanged, null = the attribute is now valueless, string = set. */
   value?: string | null;
 }
 

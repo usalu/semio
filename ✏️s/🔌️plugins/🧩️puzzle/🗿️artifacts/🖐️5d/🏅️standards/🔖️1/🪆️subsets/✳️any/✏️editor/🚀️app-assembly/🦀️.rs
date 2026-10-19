@@ -98,7 +98,6 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
                     world3d::actions::set_camera::reference(),
                 ],
             )
-            // 🏗️ 2D-first 40/60 split — board pane left (diagram 40%), world pane right (scene 60%).
             .default_layout(edit::layout())
             .panel_tab_def(artifact_panel::definition())
             .panel_tab_def(catalogue::definition())
@@ -111,21 +110,12 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("tab", "cycleBrushCandidate")
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
-            // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).
-            // 📤️📥️ Document IO. `exportSnapshot`/`openImportSnapshot` are SHELL verbs (a download, a file
-            // picker — no document mutation of their own); `importSnapshot` is the mutation the picker
-            // re-dispatches once per wire page and never a menu row of its own, so the user-facing
-            // "Import" row is the one that actually opens a picker.
             .action_with(ActionDefinition::bounded_catalog("exportSnapshot", puzzle5d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
             .action_with(ActionDefinition::bounded_catalog("openImportSnapshot", puzzle5d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSnapshot", puzzle5d_localized(|l| l.import), ActionKind::Mutation) })
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
-            // 🗨️ Shell-only effect: opens the declared "addPart" dialog, whose submit dispatches
-            // `addPartKind`. The parametrized verb itself is NOT a palette row — its `partKind` select IS
-            // the dialog, and offering both published two rows carrying the same "Add Part" label, the
-            // second one opening a bare action pane (puzzle 3d's own measured defect).
             .action_with(ActionDefinition::bounded_catalog("openAddPartDialog", puzzle5d_localized(|l| l.add_part_prompt), ActionKind::Shell).with_category("create"))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("addPartKind", puzzle5d_localized(|l| l.add_part), ActionKind::Mutation).with_category("create") })
             .mutation("addBrushPart", LocalizedLabel::native("Add Brush Part", "Pinselteil hinzufügen"))
@@ -160,7 +150,6 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle5d_flag_value_action("setTargetVolumeLocked", vec![ActionArgDef::text("id", LocalizedLabel::native("Id", "ID"))], "locked", LocalizedLabel::native("Set Target Volume Locked", "Zielvolumen gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
             .mutation("relocateTargetVolume", LocalizedLabel::native("Relocate Target Volume", "Zielvolumen verlagern"))
             .mutation("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"))
-            // 👁️ Ephemeral view state — selection, hover, utility parameters, brush cycling, camera pose.
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setCamera2d", LocalizedLabel::native("Set Camera 2D", "Kamera 2D festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setCamera3d", LocalizedLabel::native("Set Camera 3D", "Kamera 3D festlegen"), ActionKind::View, "camera"))
@@ -289,10 +278,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setTargetVolumeLocked", InteractiveJobClassification::Migrated)
             .action_interactive_job("setVoxelDims", InteractiveJobClassification::Migrated)
             .action_interactive_job("worldRelocate", InteractiveJobClassification::Migrated)
-            // 📝️ Staged argument forms for the brush create actions (P1).
             .action_args("addPartKind", vec![puzzle5d_part_kind_arg()])
-            // 🗨️ The dialog `openAddPartDialog` opens, driving the SAME `addPartKind` operation and the
-            // SAME live `partKind` select the arg form declares.
             .dialog(
                 DialogDefinition::new(open_add_part_dialog::PUZZLE5D_ADD_PART_DIALOG, puzzle5d_localized(|l| l.add_part), semio_framework_plugin::ActionRef::new("addPartKind"))
                     .body(puzzle5d_localized(|l| l.add_part_body))
@@ -302,16 +288,11 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_args("addBrushPart", vec![
                 ActionArgDef::select("partKind", puzzle5d_localized(|l| l.kind), vec![ActionArgOption::new("Part", puzzle5d_localized(|l| l.part))]).default_value(&"Part"),
             ])
-            // 🧰️ Flat per-window set of utilities; `select` is the default. Each `🪛️utilities/*` node
-            // owns its own id/definition; a utility bound by BOTH windows is declared once (under the
-            // 2D window) and referenced by the 3D window's `definition()`.
             .utility(board2d::utilities::select::definition(puzzle5d_localized(|l| l.select)))
             .utility(crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::definition())
             .utility(board2d::utilities::brush::definition(puzzle5d_localized(|l| l.brush)))
             .utility(world3d::utilities::volume_brush::definition(puzzle5d_localized(|l| l.volume_brush)))
             .utility(world3d::utilities::world_relocate::definition())
-            // 🛠️ Fill is a mode-level TOOL (a whole-document generator over both projections), not a window
-            // utility — it keeps its viewport interaction in both panes through the host's `active_tool_id`.
             .tool(fill_tool::definition(puzzle5d_localized(|l| l.fill)))
             .mode_tools(edit::PUZZLE5D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
     .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 5D puzzle with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte 5D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))

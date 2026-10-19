@@ -10,6 +10,9 @@
         "semio-framework-3d-mesh-reconstruction",
         "semio-framework-3d-mesh-document",
         "semio-framework-3d-mesh-contract",
+        "semio-framework-3d-mesh-journal",
+        "semio-framework-3d-mesh-surface",
+        "semio-framework-3d-mesh-quality",
         "semio-framework-3d-mesh-clipping",
         "semio-framework-3d-brep-vector",
         "semio-framework-value",
@@ -67,6 +70,35 @@
         "semio-framework-3d-testing-support",
         "semio-framework-test-fixtures"
       ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-journal",
+      "directory": "🥽️mesh/📝️journal/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-mesh-document",
+        "semio-framework-value"
+      ],
+      "development": [
+        "semio-framework-3d"
+      ]
+    },
+    {
+      "name": "semio-framework-3d-mesh-surface",
+      "directory": "🥽️mesh/🎨️surface/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-mesh-document"
+      ],
+      "development": []
+    },
+    {
+      "name": "semio-framework-3d-mesh-quality",
+      "directory": "🥽️mesh/🔎️quality/📦️packages/🦀️rust",
+      "production": [
+        "semio-framework-3d-mesh-document",
+        "semio-framework-value",
+        "semio-framework-value-derive"
+      ],
+      "development": []
     },
     {
       "name": "semio-framework-3d-mesh-clipping",

@@ -39,9 +39,7 @@ const STORY_ICON_RENDER_CONTROLLER_ID = "icon-render-story";
 //#endregion Fixtures
 
 //#region StoryHost
-function noopAction(_action: ActionDescriptor): void {
-  // 🔇️ IconRenderHost never dispatches — it's a read-only preview surface.
-}
+function noopAction(_action: ActionDescriptor): void {}
 
 function IconRenderStoryHost({ format }: { readonly format: IconRenderRequest["format"] }): ReactElement {
   const node: UiComponentSceneNode = useMemo(

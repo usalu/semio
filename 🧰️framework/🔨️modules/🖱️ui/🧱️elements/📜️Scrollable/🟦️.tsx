@@ -10,7 +10,7 @@ import * as React from "react";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.forwardRef at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { useWindowContentDeadLineInset, windowContentDeadLineScrollClass } from "../🚧️WindowContentDeadLine/🟦️.tsx";
 // #endregion 🔌️Adapters

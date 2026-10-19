@@ -1,0 +1,1058 @@
+{
+ "reverted": [
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/✏️TextEditor/🖍️buffer-and-edit-helpers/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/TextEditor/buffer-and-edit-helpers",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/✏️TextEditor/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/TextEditor",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🎊️instance-celebration/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/mesh-render/instance-celebration",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🔺️mesh-geometry-and-appearance/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/mesh-render/mesh-geometry-and-appearance",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/mesh-render/mesh-style-palette",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/mesh-render/glb-bounds-and-styling",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/marquee-and-bridges",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/instance-selection",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/scene-schema",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/interaction-domain-args",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🗂️catalogue-drop/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/catalogue-drop",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/gumball-math",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🧱️instance-layers/🌪️vortex-markers/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/instance-layers/vortex-markers",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/window-view-store",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌐️World3dHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/📊️Table/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Table",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/📐️Canvas2dHost/📷️camera-math/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Canvas2dHost/camera-math",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/📐️Canvas2dHost/🖍️layer-paint/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Canvas2dHost/layer-paint",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/📐️Canvas2dHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Canvas2dHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖌️Paint2dHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Paint2dHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WorldTerrainLayer",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🧭️TiledMapHost/📐️map-parsing/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/TiledMapHost/map-parsing",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🌍️scene-and-world-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🧭️TiledMapHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/TiledMapHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🎓️HubFirstRun/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/HubFirstRun",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🏘️SpaceBrowser/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/SpaceBrowser",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🔐️HubSignIn/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/HubSignIn",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🔗️HubConnection/🌐️ui-labels/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection/ui-labels",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🔗️HubConnection/🔌️connection-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection/connection-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🔗️HubConnection/🛰️fetch-port/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection/fetch-port",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🔗️HubConnection/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/HubConnection",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🔗️hub-connection-and-spaces/🟦️.ts",
+   "before": "../../../🧱️elements/🤖️AgentDelegations/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/AgentDelegations",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🌳️GraphTimelineHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/GraphTimelineHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/📡️EventFeedHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/EventFeedHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🔺️DiffViewHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/DiffViewHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖋️InkCanvasHost/🌳️ink-document-ops/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost/ink-document-ops",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖋️InkCanvasHost/📐️ink-geometry/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost/ink-geometry",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖋️InkCanvasHost/🧱️ink-block-views/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost/ink-block-views",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖋️InkCanvasHost/🧾️ink-model/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost/ink-model",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖋️InkCanvasHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖥️Board2dHost/📍️drop-and-camera/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost/drop-and-camera",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖥️Board2dHost/📡️board-events/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost/board-events",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖥️Board2dHost/🔄️session-sync/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost/session-sync",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖥️Board2dHost/🔬️board-parsing/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost/board-parsing",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖥️Board2dHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🖼️IconRenderHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/IconRenderHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🖥️board-ink-and-feed-hosts/🟦️.ts",
+   "before": "../../../🧱️elements/🧩️BlockListHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/BlockListHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🎚️UiPreferences/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/UiPreferences",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🎛️UtilityTree/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/UtilityTree",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🏛️ShellHost/🪝️host-ports/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHost/host-ports",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🏛️ShellHost/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHost",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🎛️shell-actions/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/shell-actions",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/👥️peer-interaction/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/peer-interaction",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/program-sessions",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/boot-and-locks",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🕹️shell-store/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/shell-store",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🗃️state-shapes/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/state-shapes",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🧯️fault-boundary/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/fault-boundary",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🐚️Shell/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Shell",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/📃️UiDocumentStore/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/UiDocumentStore",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/📌️ChromePanels/⚙️settings-general/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ChromePanels/settings-general",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/📌️ChromePanels/🏪️marketplace-panel/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ChromePanels/marketplace-panel",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/📌️ChromePanels/🖥️display-panel/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ChromePanels/display-panel",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/📌️ChromePanels/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ChromePanels",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/📌️ChromePanels/🆔️panel-ids/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ChromePanels/panel-ids",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🔄️ShellSync/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellSync",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/PluginRuntime/handle-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/PluginRuntime",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🔎️ShellSearch/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellSearch",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/👥️presence-overlay/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/presence-overlay",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/node-tree",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/interpreter-context",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🪪️stable-dom-ids/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/stable-dom-ids",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🗣️Interpreter/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🪢️ElementHosts/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ElementHosts",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/tree-windows",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/command-registry",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/media-import",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🏷️labels/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/labels",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🏷️labels/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/labels",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/panel",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/ui-refresh",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/plumbing/effect-dispatch",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/plumbing",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/plumbing/action-ids",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🆔️action-ids/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/plumbing/action-ids",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/transfer-checkin-tutorial",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/⌨️keyboard-chords/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes/keyboard-chords",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes/window-measures",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/📋️clipboard-activation/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes/clipboard-activation",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes/staged-args",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes/utility-bar-options",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/extension-io",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🗣️interpreter-and-shell/🟦️.ts",
+   "before": "../../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/route-and-chrome",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🎬️flow-gestures/🟦️.ts",
+   "before": "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔄️flow-session-sync/🟦️.ts",
+   "before": "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔄️flow-session-sync/🟦️.ts",
+   "before": "../../🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔌️flow-session-attach/🟦️.ts",
+   "before": "../../🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🔷️diagram-node/🟦️.tsx",
+   "before": "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🖼️dag-overlays/🟦️.tsx",
+   "before": "../../🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",
+   "before": "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",
+   "before": "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",
+   "before": "../../🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧱️flow-surface-state/🟦️.ts",
+   "before": "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧱️flow-surface-state/🟦️.ts",
+   "before": "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧱️flow-surface-state/🟦️.ts",
+   "before": "../../🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+   "before": "../🔎️ShellSearch/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/ShellSearch",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+   "before": "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+   "before": "../🗣️Interpreter/🖱️surface-menu/🟦️.ts",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx",
+   "before": "../🪪️WasmSessionLoader/🟦️.tsx",
+   "after": "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader",
+   "reason": "rule:renderer-hosts-only-ui"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/⌨️keybindings/🟦️.ts",
+   "before": "../../../🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "after": "@semio-tech/framework/ui/targets/react",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+   "before": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "before": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎞️tutorial-engine/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎬️introduction-demo/🟦️.tsx",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+   "before": "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+   "before": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📐️introduction-geometry/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🐳️dock-skeleton/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🆔️element-identity/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🧱️elements/🔌️Ports/🟦️",
+   "after": "@semio-tech/framework/modules/ui/elements/Ports/interactive-jobs",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔑️chrome-prefs/🟦️.ts",
+   "before": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+   "before": "../../../🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "after": "@semio-tech/framework/ui/targets/react",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧭️introduction-resolve/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts",
+   "before": "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "after": "@semio-tech/repo-lib/artifacts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts",
+   "before": "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "after": "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts",
+   "before": "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+   "after": "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/📓️print/📦️artifacts/🟦️.ts",
+   "before": "../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "after": "@semio-tech/repo-lib/storage",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "before": "../../../🎛️dashboard/📦️installation/🟦️.ts",
+   "after": "../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+   "before": "../../../../🎛️dashboard/📦️installation/🟦️.ts",
+   "after": "../../../../../../../📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📍️coordinates/🟨️.mjs",
+   "before": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts",
+   "after": "../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/📦️model/📋️contract/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs",
+   "before": "../../../../../../../📓️print/📦️artifacts/🟦️.ts",
+   "after": "../../../../../../../📓️print/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+   "before": "../../../🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+   "after": "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "before": "../../📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "after": "../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "before": "../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "after": "../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+   "before": "./../../📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "after": "../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts",
+   "before": "../../../💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+   "before": "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+   "before": "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+   "before": "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+   "before": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+   "before": "../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+   "before": "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "after": "../../../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+   "before": "../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+   "before": "../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "after": "../../../../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🟦️.ts",
+   "before": "../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+   "before": "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+   "before": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+   "before": "../../../../🗂️workspaces/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/📇️inventory/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+   "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+   "before": "../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "after": "../../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️capture/🟦️.ts",
+   "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "before": "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "after": "../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "before": "../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "after": "../../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts",
+   "before": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "after": "../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+   "before": "../../../../../📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "after": "../../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+   "before": "../../../../../📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts",
+   "after": "../../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+   "before": "../../../../../📚️library/🏗️build/🧭️selection/🟦️.ts",
+   "after": "../../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+   "before": "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "after": "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+   "before": "../../../../📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts",
+   "after": "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+   "before": "../../../../📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+   "after": "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts",
+   "reason": "cycle"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
+   "before": "../📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts",
+   "after": "@semio-tech/framework-replication",
+   "reason": "cycle"
+  }
+ ],
+ "byReason": {
+  "rule": 136,
+  "cycle": 38
+ },
+ "ruleCounts": {
+  "renderer-hosts-only-ui": 116,
+  "ui-no-framework-packages": 20
+ },
+ "done": 174,
+ "missing": 0
+}

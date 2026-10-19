@@ -193,7 +193,7 @@ import type { Decorator } from "@storybook/react-vite";
 import React from "react";
 
 // #region 🧩️LevelWrapper
-/** Border + min width used when a story sets `level` via args. */
+/** 📶️ Border + min width used when a story sets `level` via args. */
 export const LevelWrapper: React.FC<{ level: UiLevel; children: React.ReactNode }> = ({ level, children }) => {
   return (
     <div className={`p-4 ${surfaceClass} border min-w-[12.5rem]`} data-level={level}>

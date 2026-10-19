@@ -1,4 +1,4 @@
-//! drop's fastenings) as ONE committed `ToolTransaction` under a deterministic ref, a board drag stays on the
+//! ➖️ drop's fastenings) as ONE committed `ToolTransaction` under a deterministic ref, a board drag stays on the
 //! 🛠️ Laws of the puzzle 5d transform tool machine alone: a gesture record yields its parametric leaf (and a
 //! board, a gesture that moves nothing leaves zero trace.
 use semio_framework_pack_json::json;

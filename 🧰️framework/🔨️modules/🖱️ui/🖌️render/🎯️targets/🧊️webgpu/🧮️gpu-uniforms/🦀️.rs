@@ -72,7 +72,6 @@ pub(crate) struct World3dGpuInstance {
 }
 
 impl World3dGpuInstance {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn from_instance(instance: &ui_render::MeshInstance) -> Self {
         let m = instance.model;
         Self {
@@ -96,7 +95,6 @@ pub(crate) struct WorldLineGpuVertex {
 }
 
 impl From<&ui_render::LineVertex3> for WorldLineGpuVertex {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(vertex: &ui_render::LineVertex3) -> Self {
         Self { position: vertex.position, color: vertex.color }
     }

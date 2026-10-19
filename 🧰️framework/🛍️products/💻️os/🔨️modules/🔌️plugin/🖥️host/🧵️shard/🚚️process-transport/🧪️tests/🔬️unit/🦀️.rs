@@ -273,7 +273,7 @@ async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_s
     semio_framework_async::block_on(shard_b.kill());
 }
 
-/// terra-shard-grants: wraps in `crate::shard::ShardFrame::Envelope` — the wire now carries
+/// 📤️ terra-shard-grants: wraps in `crate::shard::ShardFrame::Envelope` — the wire now carries
 /// `ShardFrame`, not raw `Envelope` bytes (`ShardLoop::pump`'s own change), so this fixture's
 /// hand-rolled encoder must wrap here too, even though its one caller is `#[ignore]`d.
 async fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::Payload) -> Vec<u8> {

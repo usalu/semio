@@ -34,9 +34,6 @@ pub(super) fn emit_record(input: DeriveInput) -> proc_macro2::TokenStream {
     let expanded = quote! {
         #borrowed
         impl #name {
-            // 🚫️async: E4 — its VALUE is stored as the fn pointer in `Shape::Record(Self::__dsl_spec)`
-            // below (`DslField::shape` is itself E4 for the same reason — see R9), and `spec_exprs`
-            // (built from the now-sync `DslField::shape`/`DslVariants::variants`) needs no executor.
             pub fn __dsl_spec() -> ::semio_framework_dsl_record::RecordSpec {
                 ::semio_framework_dsl_record::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }
@@ -71,7 +68,6 @@ pub(super) fn emit_record(input: DeriveInput) -> proc_macro2::TokenStream {
             fn projection_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{#retained_projection}
             fn projection_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{#retained_keys}
             fn retire_decoded(self){#retirement}
-            // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
             fn shape() -> ::semio_framework_dsl_record::Shape {
                 ::semio_framework_dsl_record::Shape::Record(Self::__dsl_spec_producer())
             }
@@ -125,7 +121,6 @@ pub(super) fn emit_scalar(input: DeriveInput) -> proc_macro2::TokenStream {
     let expanded = quote! {
         #borrowed
         impl ::semio_framework_dsl_record::DslField for #name {
-            // 🚫️async: E4 — see `DslField::shape`'s tag on the trait.
             fn shape() -> ::semio_framework_dsl_record::Shape {
                 ::semio_framework_dsl_record::Shape::Enum(vec![ #(#variant_tags),* ])
             }
@@ -173,11 +168,6 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
         let keyword = attrs.key.clone().unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
         let fields = &variant.fields;
 
-        // A single-field tuple variant (`Shape(DrawShapeBody)`) delegates entirely to its inner
-        // type's own `DslField` impl — its `RecordSpec` IS the inner type's, not a wrapper with one
-        // positional field, so a body already declared with `#[derive(DslRecord)]` (its own keyword,
-        // its own fields) prints/parses completely unchanged whether reached through the enum or on
-        // its own.
         if let Fields::Unnamed(unnamed) = fields {
             if unnamed.unnamed.len() == 1 {
                 let inner_ty = &unnamed.unnamed[0].ty;
@@ -214,10 +204,6 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
         variants_exprs.push(quote!{(#keyword.to_string(),Self::#producer_name())});
         schema_variant_stmts.push(quote!{variants.push((control.copy_text(#keyword)?,Self::#producer_name()));control.step()?;});
 
-        // Build a per-variant to-record conversion using the field bindings from a `match` on
-        // `self`, since (unlike `DslRecord`) the fields live inside an enum variant, not `self.field`.
-        // A true unit variant (`Variant`, no braces at all) needs a bare match pattern — `Variant {}`
-        // is only valid Rust for a variant that was itself declared with (empty) braces.
         let field_binds: Vec<proc_macro2::TokenStream> = field_idents.iter().map(|f| { let local = field_local(f); quote! { #f: #local } }).collect();
         let to_value_stmts_for_variant: Vec<proc_macro2::TokenStream> = record_codegen_to_value_from_bindings(fields);
         let is_unit = matches!(fields, Fields::Unit);
@@ -268,7 +254,6 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
             fn projected_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::RecordSpecProducer){match #receiver{#(#variant_identity_arms),*}}
             fn projected_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{match #receiver{#(#variant_projection_arms),*}}
             fn projected_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{match #receiver{#(#variant_key_arms),*}}
-            // 🚫️async: E4 — see `DslVariants::variants`'s tag on the trait.
             fn variants() -> Vec<(String, ::semio_framework_dsl_record::RecordSpecProducer)> {
                 vec![ #(#variants_exprs),* ]
             }

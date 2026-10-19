@@ -1,6 +1,7 @@
-//! target ⇒ `Vec::new()`.
+//! ⌨️ target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `EditTargetRegionLabel` — restores the BASE field values on the addressed region. Missing
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::edit_target_region_label::component::EditTargetRegionLabel;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<EditTargetRegionLabel>>(payload: &super::EditTargetRegionLabel, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

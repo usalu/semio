@@ -104,12 +104,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
-  // 📱️ Moved ahead of `mobilePanelTabs` (below) so its synthetic mobile "App" tab can share the exact
-  // example-select/mode-switcher elements the desktop navbar center cluster renders — single source of truth.
-  // 📚️ Resolved by DIALECT, never by app id: an example is a document of the artifact's subset, so
-  // the viewer of a dialect offers exactly the same picker its editor does (ticket
-  // 26/09/09/PROCEDURAL-3D-END-TO-END). `examplesForApp` is the shared predicate — Rust
-  // `manifest::examples_for_app` is its twin, both pinned by `📚️example-picker.json`.
   const focusedPluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram?.pluginId)?.manifest, [loadedPlugins, focusedProgram?.pluginId]);
   const exampleOptions = useMemo(() => {
     const app = focusedApp;
@@ -118,8 +112,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
     return examples.map((example) => ({
       id: example.id,
       label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
-      // 🩹️ `PluginManifest.examples` entries carry no icon (`{id, label, artifactJson, dialect}` only,
-      // same shape kernel's own `PluginManifest` declares) — a generic fallback, not a fabricated field.
       icon: "file" as IconName,
     }));
   }, [focusedPluginManifest, focusedApp, appLabelsOverlay, uiTerminology, uiLocale]);
@@ -198,9 +190,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
     const access = scope === undefined ? null : (sharedSpaceAccessRef.current.get(scope.spaceId) ?? null);
     const refused = (role: AppRole, isActive: boolean): boolean => !isActive && sharedDocumentRoleSwitchRefusedV1(access, role);
     return (
-      // 🚦️ `aria-busy` on the GROUP, disabled on the items: a switch is a transaction over the whole
-      // group (it quiesces, retires and mounts), never over one button, and a second press while one is
-      // running is refused by `sessionSwitchGateRef` rather than queued — so the group must say so.
       <ButtonGroup key="roles" id="playground.navbar.roles" role="group" aria-label={surfaceRoleGroupText(uiLocale)} aria-busy={surfaceSwitchBusy || undefined}>
         {SURFACE_ROLE_ORDER.map((role) => {
           const app = sessionRoleApps[role];
@@ -228,8 +217,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
 
   const resolvedCommands = useMemo(() => {
     const resolved = resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, localPrograms.map((entry) => entry.manifest), selectedSpaceArtifactKinds);
-    // 👁️✏️ Hides every `Mutation`-kind command from a viewer session's palette (contract freeze §5) —
-    // `resolveCommands` itself stays role-agnostic (os hosts/tests call it without a session at all).
     return session?.app.role === "viewer" ? resolved.filter((entry) => !isMutationKindDefinition(entry.definition)) : resolved;
   }, [osCommands, activePluginManifest, session?.app, activeModeId, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins, selectedSpaceArtifactKinds]);
 
@@ -247,8 +234,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
         for (const definition of resolveWindowActions(session.app, kind)) actionDefinitions.push({ ownerId: actionStageKey(instance.id, definition.id), args: choiceArgs(definition.args) });
       }
     }
-    // 🪟️ Every window a spawned program owns stages its own args, under the shell's window-id
-    // namespace — the Actions rail is per window instance, and a spawned app is no longer one window.
     for (const spawned of panel?.spawnedApps ?? []) {
       const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (app === undefined) continue;
@@ -288,9 +273,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
   const onCommand = useCallback(
     (address: CommandAddress, args?: Record<string, unknown>) => {
       const commandId = address.commandId;
-      // 🎥️ Same sandbox-start/recorder-arm side effects `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
-      // need — routed through the `startTutorialRef`/`toggleTutorialRecordingRef` bridge since they need
-      // more context (plugin bridge, sandbox snapshot) than a bare `dispatch` gives `dispatchOsCommand`.
       if (isOsCommandAddress(address) && commandId === "os.playTutorial") {
         const tutorialId = typeof args?.tutorialId === "string" ? args.tutorialId : "";
         if (tutorialId) startTutorialRef.current(tutorialId);
@@ -303,11 +285,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
       if (isOsCommandAddress(address) && commandId === "os.toggleFullscreen") {
         void toggleDocumentFullscreen(scope.rootRef.current ?? document.documentElement).catch((error) => console.error("Fullscreen request was rejected", error));
       }
-      // 🧵️ Reveals the task-manager window on its own anchor — the same "select the tab, then show the
-      // anchor" pair `dispatchOsCommand`'s `open-artifact-with-*` arm uses for the Document panel.
-      // 🔗️ The hub workspace is an overlay `ShellHost` owns, and `/hub` is its address — routing the
-      // verb through `navigateHistory` keeps the palette entry, the connection badge and a pasted
-      // link on exactly one code path.
       if (isOsCommandAddress(address) && commandId === OPEN_HUB_COMMAND_ID) {
         navigateHistory(SHELL_HUB_ROUTE);
       }
@@ -322,7 +299,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
         return;
       }
       if (!session) return;
-      // ⏺️ Recorder tap for plugin/app/mode-scope commands — mirrors `onAction`'s tap above.
       if (tutorialRecordingRef.current && !tutorialDrivenRef.current.active) {
         tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
       }
@@ -330,7 +306,6 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
       if (!ownerPluginId || ownerPluginId !== session.pluginId) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === ownerPluginId)?.handle;
       if (!plugin) return;
-      // 👁️✏️ Same client-side half of the read-only guarantee `onAction` applies above, for commands.
       if (session.app.role === "viewer" && resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.kind === "mutation") {
         showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
         return;
@@ -428,16 +403,11 @@ export function useCommandBar(core: ShellCoreAfterCheckInAndSync) {
 
   const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
 
-  // 🗺️ `ToolDefinition.label` is a manifest `LocalizedLabel` field — resolved here, right after
-  // `resolveModeTools` (an external `framework-os-core` helper this file cannot edit), so every
-  // downstream consumer (`buildToolTree`/`buildToolTabs`) keeps reading an already-plain-string `label`.
   const resolvedModeTools = useMemo(
     () => resolveModeTools(focusedApp ?? undefined, focusedModeId).map((tool) => ({ ...tool, label: resolveManifestLabel(tool.label as LocalizedLabel | string, uiTerminology, uiLocale) })),
     [focusedApp, focusedModeId, uiTerminology, uiLocale],
   );
 
-  // 🐢️ Only the presence of a session gates the tool tabs, so this memo (and `defaultDock`'s, which
-  // consumes it) keeps its identity across every session object churn.
   const hasToolSession = session !== null && session !== undefined;
   const toolTabs = useMemo(() => (hasToolSession ? buildToolTabs(resolvedModeTools, toolMeasuresByToolIdRef, onActionStable) : []), [hasToolSession, resolvedModeTools, onActionStable]);
 

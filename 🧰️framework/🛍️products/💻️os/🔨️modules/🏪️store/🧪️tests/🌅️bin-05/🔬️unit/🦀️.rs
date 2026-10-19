@@ -5,13 +5,13 @@
 use protocol::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 
-#[path = "../../🏗️initialization/🏠️owners/🧪️tests/🦀️.rs"]
+#[path = "../../../🏗️initialization/🏠️owners/🧪️tests/🦀️.rs"]
 mod shared_semantic_source_tests;
 
 /// 🪪️ Runs one authoring call under a fixture caller-owned identity authority and returns the call's own result after the authority's cumulative receipt is settled.
 macro_rules! with_fixture_identity {
     (|$identity:ident| $call:expr) => {{
-        const FIXTURE_IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+        const FIXTURE_IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
         let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             assert!(progress.owned_bytes <= FIXTURE_IDENTITY_CEILING);
             true

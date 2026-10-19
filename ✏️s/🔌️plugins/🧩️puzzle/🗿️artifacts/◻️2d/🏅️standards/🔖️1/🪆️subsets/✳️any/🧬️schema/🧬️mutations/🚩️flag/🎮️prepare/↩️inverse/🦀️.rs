@@ -4,7 +4,8 @@ use crate::standards::v1::subsets::any::schema::preparation::native_preparation_
 use super::{Puzzle2dFlagIntent, Puzzle2dFlagPlan, Puzzle2dFlagPreparationCursor, Puzzle2dFlagPreparationStep};
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct Puzzle2dFlagInverseCursor<T:Puzzle2dFlagIntent> { state: ManuallyDrop<Puzzle2dFlagInverseState<T>> }

@@ -44,7 +44,6 @@ impl TextSystem {
     /// 🧱️ Builds a real `parley::Layout` for `text`/`style`, breaking lines unwrapped (`max_width:
     /// None`) or at `max_width`. Private — every public shaping/measuring/cursor/selection method below
     /// funnels through this one builder instead of five copies of the same `RangedBuilder` setup.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn layout_for(&mut self, text: &str, style: &TextStyle, max_width: Option<f32>) -> Layout<[u8; 4]> {
         let stack = self.font_stack_for(style.family);
         let mut builder = self.layout_cx.ranged_builder(&mut self.font_cx, text, 1.0, true);
@@ -59,7 +58,6 @@ impl TextSystem {
     /// re-shaping the same run is a cache hit, never redone work. `Measurement`'s cache (see
     /// `🔖️Measure::measure`) is this same cache: `measure` calls `shape` internally, so "measure the
     /// same string twice" and "shape the same string twice" are the identical cache, not two.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn shape(&mut self, text: &str, style: &TextStyle) -> &ShapedText {
         let key = ShapeCacheKey { text: text.to_string(), family: style.family, size_bits: style.size_px.to_bits() };
         if self.shape_cache.contains_key(&key) {
@@ -76,7 +74,6 @@ impl TextSystem {
     /// 🧵️ Reads glyphs/metrics out of an already-built (and already line-broken/aligned) `Layout` — the
     /// shared tail of [`Self::shape`] and [`Self::shape_paragraph`], so wrapping/alignment support never
     /// duplicates the glyph-extraction loop.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn extract_shaped(&mut self, layout: &Layout<[u8; 4]>) -> ShapedText {
         let width = layout.width();
         let height = layout.height();
@@ -102,12 +99,10 @@ impl TextSystem {
         ShapedText { glyphs, width, height, ascent, descent, is_rtl }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn shape_cache_hits(&self) -> u32 {
         self.shape_hits
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn shape_cache_misses(&self) -> u32 {
         self.shape_misses
     }
@@ -119,7 +114,6 @@ impl TextSystem {
     /// (interactive resize, live paragraph editing) to key a cache on productively. Falls back to a
     /// glyph-less placeholder [`ShapedText`] while `style.base.family` names an unresolved
     /// [`FontDependencyId`], same short-circuit [`Self::measure`] takes.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn shape_paragraph(&mut self, text: &str, style: &TextRunStyle, max_width: f32) -> ShapedText {
         if !self.family_ready(style.base.family) {
             let Measurement::Pending { placeholder_width, placeholder_height } = Self::placeholder_measurement(text, style.base.size_px) else { unreachable!("placeholder_measurement always returns Pending") };
@@ -138,7 +132,6 @@ impl TextSystem {
         self.extract_shaped(&layout)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn to_parley_alignment(alignment: TextAlignment) -> Alignment {
         match alignment {
             TextAlignment::Left => Alignment::Left,
@@ -173,7 +166,6 @@ impl GlyphEntry {
     /// 📐️ `[u0, v0, u1, v1]` normalized against `atlas_width`/`atlas_height` — pass
     /// [`TextSystem::atlas_dimensions`]/[`TextSystem::color_atlas_dimensions`] (matching
     /// [`Self::is_color`]) here, read fresh every paint call, never cached.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn uv_rect(&self, atlas_width: u32, atlas_height: u32) -> [f32; 4] {
         let w = atlas_width as f32;
         let h = atlas_height as f32;
@@ -198,7 +190,6 @@ struct RasterizedGlyph {
 }
 
 impl RasterizedGlyph {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn empty() -> Self {
         Self { bitmap: Vec::new(), width: 0, height: 0, bearing_x: 0.0, bearing_y: 0.0, is_color: false }
     }
@@ -223,7 +214,6 @@ pub(super) struct AtlasPage {
 }
 
 impl AtlasPage {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn new(key: &'static str, channels: u32) -> Self {
         let width = 2048;
         let height = 2048;
@@ -234,7 +224,6 @@ impl AtlasPage {
     /// returns the placement. Never panics on a pathological glyph wider than the whole page — worst
     /// case it silently clips via [`Self::blit`]'s own bounds checks, which real UI glyph sizes never
     /// approach.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn place(&mut self, w: u32, h: u32, bitmap: &[u8]) -> (u32, u32) {
         if self.cursor_x + w + 2 > self.width {
             self.cursor_x = 1;
@@ -252,7 +241,6 @@ impl AtlasPage {
         (x, y)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn blit(&mut self, x: u32, y: u32, w: u32, h: u32, bitmap: &[u8]) {
         if bitmap.is_empty() || w == 0 {
             return;
@@ -270,7 +258,6 @@ impl AtlasPage {
 
     /// 📏️ Height-only doubling — see this struct's own docstring for why this never invalidates an
     /// already-returned [`GlyphEntry`]'s coordinates.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn grow(&mut self) {
         let stride = (self.width * self.channels) as usize;
         self.height *= 2;
@@ -289,7 +276,6 @@ impl AtlasPage {
     /// so the upload is unconditionally queued. The stale previous-generation id is simply abandoned —
     /// nothing in this crate retains it (`Self::id` is overwritten below), and no frame references it
     /// past the one that triggered the growth, since frames are rebuilt from scratch every frame.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn queue_upload(&mut self, resources: &mut ResourceRegistry) {
         let key = format!("{}:{}", self.key, self.generation);
         self.id = Some(resources.request_atlas_upload(&key, self.width, self.height, self.pixels.clone()));
@@ -297,7 +283,6 @@ impl AtlasPage {
 }
 
 impl TextSystem {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn quantize_size(size_px: f32) -> u32 {
         size_px.round().max(1.0) as u32
     }
@@ -305,7 +290,6 @@ impl TextSystem {
     /// 🔍️ Fetches (rasterizing and bin-packing on first use) `(font, glyph_id)`'s atlas placement at
     /// `size_px`. A cache hit touches `resources` not at all — no `ResourceOp` is queued for an
     /// already-packed glyph, which is what keeps "a second identical glyph produces none" true.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn ensure_glyph(&mut self, resources: &mut ResourceRegistry, font: FontHandle, glyph_id: u16, size_px: f32) -> GlyphEntry {
         let key = GlyphCacheKey { font, glyph_id, size_bucket: Self::quantize_size(size_px) };
         if let Some(entry) = self.glyph_cache.get(&key) {
@@ -325,7 +309,6 @@ impl TextSystem {
     /// `Content::Color`; everything else is an 8-bit alpha mask. Ported verbatim from the wgpu-old
     /// target's `render_resolved`. Never panics on an unresolvable font/glyph — returns
     /// [`RasterizedGlyph::empty`], which still caches (so a broken glyph is not re-attempted every call).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn rasterize(&mut self, font: FontHandle, glyph_id: u16, size_px: f32) -> RasterizedGlyph {
         let Some(slot) = self.font_table.get(font.0 as usize) else { return RasterizedGlyph::empty() };
         let data = slot.data.data();
@@ -338,22 +321,18 @@ impl TextSystem {
         RasterizedGlyph { bitmap: image.data, width: image.placement.width, height: image.placement.height, bearing_x: image.placement.left as f32, bearing_y: (image.placement.top - image.placement.height as i32) as f32, is_color }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn atlas_id(&self) -> Option<AtlasId> {
         self.alpha_page.id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn color_atlas_id(&self) -> Option<AtlasId> {
         self.color_page.id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn atlas_dimensions(&self) -> (u32, u32) {
         (self.alpha_page.width, self.alpha_page.height)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn color_atlas_dimensions(&self) -> (u32, u32) {
         (self.color_page.width, self.color_page.height)
     }

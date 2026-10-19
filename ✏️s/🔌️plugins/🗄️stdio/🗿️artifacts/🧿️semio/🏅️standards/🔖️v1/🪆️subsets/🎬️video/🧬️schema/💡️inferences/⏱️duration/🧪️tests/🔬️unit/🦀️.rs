@@ -25,7 +25,6 @@ fn populated() -> SemioVideoSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn duration_is_the_max_across_every_stream() {
     let duration = compute_semio_video_duration(&populated());
-    // video stream: 59 / (30/1) ≈ 1.9667s; audio stream: 96000 / (48000/1) = 2.0s — audio wins.
     assert!((duration.duration_seconds - 2.0).abs() < 1e-9, "expected audio stream's 2.0s to win, got {}", duration.duration_seconds);
     assert_eq!(duration.stream_count, 2);
     assert_eq!(duration.sample_count, 3);

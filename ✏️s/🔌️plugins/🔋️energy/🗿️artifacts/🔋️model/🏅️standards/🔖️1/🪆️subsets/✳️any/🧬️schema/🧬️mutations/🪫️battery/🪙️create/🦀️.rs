@@ -29,6 +29,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateBattery
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateBattery> + From<crate::DeleteBattery>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "battery", kind: "create-battery", record: "CreatedBattery" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -50,7 +51,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "battery", kind: "create-battery", record: "CreatedBattery" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

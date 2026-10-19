@@ -1,4 +1,4 @@
-//! `edit` mode, and paired the same way — a `◻️2d` board pane beside a `🧊️3d` world pane, so a
+//! 👫️ `edit` mode, and paired the same way — a `◻️2d` board pane beside a `🧊️3d` world pane, so a
 //! 👁️ Puzzle 5D viewer — the `view` mode: the read-only counterpart of the editor's paired-window
 //! read-only 5d document shows BOTH projections instead of the world one alone.
 

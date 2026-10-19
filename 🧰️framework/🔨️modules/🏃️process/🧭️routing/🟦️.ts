@@ -45,6 +45,17 @@ export class ScriptRouter<Capabilities extends object = object> {
     return this;
   }
 
+  /** 🔎️Whether a subcommand name is registered. */
+  has(name: string): boolean {
+    return this.commands.has(name);
+  }
+
+  /** 🧲️Takes over every subcommand of another router, refusing duplicate names. */
+  adopt(other: ScriptRouter<Capabilities>): this {
+    for (const [name, load] of other.commands) this.add(name, load);
+    return this;
+  }
+
   /** 💤️Loads only the selected command owner, sharing one load across concurrent dispatches. */
   registerLazy(name: string, load: ScriptCommandLoader<Capabilities>): this {
     let command: Promise<ScriptCommand<Capabilities>> | undefined;

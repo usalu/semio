@@ -92,9 +92,6 @@ const GLB_EDGE_GEOMETRY_CACHE = new WeakMap<BufferGeometry, EdgesGeometry>();
 
 /** 🎨️ Adds a border-color {@link EdgesGeometry} outline to every mesh under `root` (idempotent), using the shared {@link GLB_EDGE_GEOMETRY_CACHE}. */
 export function applyGlbMeshEdgeBorders(root: Object3D, borderColor: string): void {
-  // 🧵️ Collect targets before mutating: `object.add(...)` during `traverse()` would splice the new
-  // (itself a Mesh) child into the live `children` array traverse is still walking, so it gets visited
-  // and outlined again — and again — recursing until the stack overflows.
   const targets: Mesh[] = [];
   root.traverse((object) => {
     if (!(object instanceof Mesh)) return;

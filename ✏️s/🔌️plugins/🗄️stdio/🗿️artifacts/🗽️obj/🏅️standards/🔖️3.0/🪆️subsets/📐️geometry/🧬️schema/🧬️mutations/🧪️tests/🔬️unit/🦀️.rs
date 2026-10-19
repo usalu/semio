@@ -47,7 +47,6 @@ async fn inverse_law() {
 async fn absorb_law() {
     let base = base_snapshot();
 
-    // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 2, vertex: ObjVertex { x: 8.0, y: 8.0, z: 8.0, w: None } }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 0 }).diff(&mid);
@@ -56,7 +55,6 @@ async fn absorb_law() {
     composed.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Insert+Remove-before absorb mismatch");
 
-    // 🧩 Insert(2,f) + Insert(2,g): both must survive.
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 2, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 2, vertex: ObjVertex { x: 2.0, y: 0.0, z: 0.0, w: None } }).diff(&mid);
@@ -66,7 +64,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.vertices.len(), base.vertices.len() + 2, "both inserts must survive");
 
-    // 🧩 Add + SetField (SetVertex): patch into the added payload.
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 1, vertex: ObjVertex { x: 0.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::SetVertex(set_vertex::SetVertex { index: 1, vertex: ObjVertex { x: 42.0, y: 0.0, z: 0.0, w: Some(1.0) } }).diff(&mid);
@@ -76,7 +73,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Add+SetField absorb mismatch");
     assert_eq!(after.vertices[1].x, 42.0);
 
-    // 🧩 Modify + Remove: modifying then removing the same vertex collapses to a removal.
     let d1 = ObjMutation::SetVertex(set_vertex::SetVertex { index: 1, vertex: ObjVertex { x: 7.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 1 }).diff(&mid);
@@ -85,7 +81,6 @@ async fn absorb_law() {
     composed.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
 
-    // 🧩 Name-keyed: Add group + Rename-shaped remove-of-added annihilates the add.
     let d1 = ObjMutation::SetGroup(set_group::SetGroup { name: "Fresh".into(), faces: vec![0], index: None }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: "Fresh".into() }).diff(&mid);
@@ -95,7 +90,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&composed, &base).expect("valid absorbed diff"), after, "Add+Remove(name-keyed) absorb mismatch");
     assert_eq!(after.groups, base.groups, "add-then-remove of the same name must be a full no-op");
 
-    // 🧩 Associativity over a triple.
     let base = base_snapshot();
     let d1 = ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 0, vertex: ObjVertex { x: 1.0, y: 0.0, z: 0.0, w: None } }).diff(&base);
     let s1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");

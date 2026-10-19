@@ -45,7 +45,6 @@ impl SurfaceReconcileOracle {
     /// existing id and diffs field-by-field via [`Self::diff_existing`]; a miss mints a fresh id via
     /// the allocator and inserts the node wholesale via one `Upsert` — the only two ways any node ever
     /// enters `ops`. Returns the id `node` now has, whichever path was taken.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn diff_node(&mut self, parent: Option<ui_contract::UiNodeId>, node: &TreeNode, ops: &mut ui_contract::UiPatchOps) -> ui_contract::UiNodeId {
         let identity = identity_of(parent, node);
         if let Some(&id) = self.key_index.get(&identity) {
@@ -77,7 +76,6 @@ impl SurfaceReconcileOracle {
     /// whichever is actually smaller on the wire — so `Upsert` is reserved for a genuinely new node
     /// ([`Self::diff_node`]'s other arm) or for a multi-group change so broad that one full record
     /// beats several targeted ops.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn diff_existing(&mut self, id: ui_contract::UiNodeId, node: &TreeNode, ops: &mut ui_contract::UiPatchOps) {
         let old = self.retained.get(&id).and_then(ui_contract::UiNodeRecord::credited_clone).expect("🚫️ key_index names an id with no retained record or alias credit");
         let new_child_ids = self.diff_children(id, &old.children, &node.children, ops);
@@ -131,7 +129,6 @@ impl SurfaceReconcileOracle {
     /// via a throwaway single-purpose [`ui_contract::UiPatch`] — the byte-accounting logic (including
     /// which fields even count as "text") lives once, in the contract crate that also enforces
     /// `max_patch_bytes`, and is never duplicated here.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn estimate_bytes<'a>(&self, candidate_ops: impl IntoIterator<Item = &'a ui_contract::UiPatchOp>) -> usize {
         let mut ops = ui_contract::UiPatchOps::default();
         for op in candidate_ops {
@@ -146,7 +143,6 @@ impl SurfaceReconcileOracle {
     /// touch only the ids actually affected. Every old child whose id is not among the freshly diffed
     /// ids is removed as a whole subtree. Returns the new children list in `new_children`'s order,
     /// ready to become the parent's own `children` field.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn diff_children(&mut self, parent_id: ui_contract::UiNodeId, old_child_ids: &ui_contract::UiNodeChildren, new_children: &ui_contract::BuiltChildren, ops: &mut ui_contract::UiPatchOps) -> ui_contract::UiNodeChildren {
         assert_unique_child_keys(parent_id, new_children);
 
@@ -169,7 +165,6 @@ impl SurfaceReconcileOracle {
     /// whole subtree on the receiver side — and mirrors that locally via [`Self::purge_subtree`], so
     /// this reconciler's own `retained`/`key_index` never accumulate an orphan for a node the receiver
     /// no longer has either.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn remove_subtree(&mut self, parent: Option<ui_contract::UiNodeId>, id: ui_contract::UiNodeId, ops: &mut ui_contract::UiPatchOps) {
         ops.try_push(ui_contract::UiPatchOp::Remove { id }).expect("test patch remains bounded");
         self.purge_subtree(parent, id);
@@ -178,7 +173,6 @@ impl SurfaceReconcileOracle {
     /// 🧹️ Removes `id` and every node reachable from it via its own retained `children`, purging both
     /// `retained` and `key_index` for each — the local mirror of [`ui_contract::apply_patch`]'s
     /// `remove_subtree`. `id` is never handed back to the allocator, so it can never be reused.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn purge_subtree(&mut self, parent: Option<ui_contract::UiNodeId>, id: ui_contract::UiNodeId) {
         if let Some(record) = self.retained.remove(&id) {
             self.key_index.remove(&(parent, record.key));

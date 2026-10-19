@@ -3,11 +3,11 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { drainTypedOperationTurns as driveTypedOperationDrain } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { drainTypedOperationTurns as driveTypedOperationDrain } from "@semio-tech/framework/actor/wire-turn";
 import { type PluginOperationCompletion } from "../🧷️handle-contract/🟦️.ts";
 import { type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 import { TYPED_OPERATION_PENDING_OUTPUT, TYPED_OPERATION_TERMINAL_OUTPUT } from "../📬️typed-result/🟦️.ts";
-import { yieldPluginUiContinuation } from "../🔁️turn-settle/🟦️.ts";
+import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 
 //#region 🔖️plugin-runtime
 //#region 🔖️ActorAdapter

@@ -162,9 +162,6 @@ async fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
     })
     .to_string();
     let emit = drive(&app, &scene, "importCadFile", Some(json!({ "payload": file_text, "name": "cad.spatial.json" })));
-    // 🌱️ Whole-document replace is not an in-history mutation (SEMANTIC-MUTATIONS-OVERHAUL
-    // retired `SetSnapshot`) — a spatial JSON string payload now surfaces as a
-    // `Effect::LoadDocument` carrying the replacement document's pack bytes.
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
         panic!("expected a LoadDocument effect");
     };

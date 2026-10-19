@@ -20,7 +20,6 @@ async fn translate_selection_persists_transform_into_flow_graph() {
     let offset = crate::gumball_param_vector(&projection.host_snapshot, transform_id, "offset", [0.0; 3]);
     assert_eq!(offset, [1.0, 2.0, 3.0]);
 
-    // Re-grabbing the same transform accumulates the delta instead of creating a second node.
     dispatch(&mut app, Generation3dCommand::TranslateSelection(TranslateSelection { node_ids: vec![transform_id.into()], dx: 1.0, dy: 0.0, dz: 0.0, phase: None, reason: None, window_id: None })).await;
     let projection2 = context::snapshot(&app);
     assert_eq!(projection2.host_snapshot.widgets.iter().filter(|widget| widget_id(widget) == transform_id).count(), 1);

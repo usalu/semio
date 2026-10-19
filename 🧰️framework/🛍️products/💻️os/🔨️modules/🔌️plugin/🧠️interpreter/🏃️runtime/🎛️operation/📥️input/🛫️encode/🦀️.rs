@@ -21,7 +21,7 @@ impl Encoder<'_,'_,'_,'_>{
  fn string(&mut self,text:&str)->Result<(),Refusal>{self.raw(b"\"")?;self.contents(text)?;self.raw(b"\"")}
  fn contents(&mut self,text:&str)->Result<(),Refusal>{let bytes=text.as_bytes();let mut start=0;for(index,byte)in bytes.iter().copied().enumerate(){let escape=match byte{b'"'=>Some(&b"\\\""[..]),b'\\'=>Some(&b"\\\\"[..]),8=>Some(&b"\\b"[..]),9=>Some(&b"\\t"[..]),10=>Some(&b"\\n"[..]),12=>Some(&b"\\f"[..]),13=>Some(&b"\\r"[..]),0..=31=>Some(&b""[..]),_=>None};if let Some(escape)=escape{if start<index{self.raw(&bytes[start..index])?;}if escape.is_empty(){const HEX:&[u8;16]=b"0123456789abcdef";self.raw(&[b'\\',b'u',b'0',b'0',HEX[(byte>>4)as usize],HEX[(byte&15)as usize]])?;}else{self.raw(escape)?;}start=index+1;}}if start<bytes.len(){self.raw(&bytes[start..])?;}Ok(())}
  fn number(&mut self,value:impl std::fmt::Display)->Result<(),Refusal>{let mut scalar=Scalar::new();write!(scalar,"{value}").map_err(|_|invalid())?;if self.key{self.string(scalar.text())}else{self.raw(scalar.text().as_bytes())}}
- fn float(&mut self,value:f64)->Result<(),Refusal>{if self.key{return Err(invalid());}let mut scalar=Scalar::new();semio_framework_pack_json::write_float_to(value,&mut scalar).map_err(|_|invalid())?;self.raw(scalar.text().as_bytes())}
+ fn float(&mut self,value:f64)->Result<(),Refusal>{if self.key{return Err(invalid());}let mut scalar=Scalar::new();semio_framework_pack_json_float::write_float_to(value,&mut scalar).map_err(|_|invalid())?;self.raw(scalar.text().as_bytes())}
 }
 pub(super) struct Compound<'a,'b,'control,'observer,'output>{encoder:&'a mut Encoder<'b,'control,'observer,'output>,first:bool,end:&'static[u8]}
 impl Compound<'_,'_,'_,'_,'_>{fn separator(&mut self)->Result<(),Refusal>{if self.first{self.first=false;Ok(())}else{self.encoder.raw(b",")}}fn item<T:Serialize+?Sized>(&mut self,value:&T)->Result<(),Refusal>{self.separator()?;value.serialize(&mut*self.encoder)}fn finish(self)->Result<(),Refusal>{self.encoder.raw(self.end)}}
@@ -30,7 +30,7 @@ impl<'a,'b,'control,'observer,'output> ser::Serializer for &'a mut Encoder<'b,'c
  type Ok=();type Error=Refusal;type SerializeSeq=Compound<'a,'b,'control,'observer,'output>;type SerializeTuple=Self::SerializeSeq;type SerializeTupleStruct=Self::SerializeSeq;type SerializeTupleVariant=Self::SerializeSeq;type SerializeMap=Self::SerializeSeq;type SerializeStruct=Self::SerializeSeq;type SerializeStructVariant=Self::SerializeSeq;
  integers!(serialize_i8:i8,serialize_i16:i16,serialize_i32:i32,serialize_i64:i64,serialize_i128:i128,serialize_u8:u8,serialize_u16:u16,serialize_u32:u32,serialize_u64:u64,serialize_u128:u128);
  fn serialize_bool(self,value:bool)->Result<(),Refusal>{if self.key{self.string(if value{"true"}else{"false"})}else{self.raw(if value{b"true"}else{b"false"})}}
- fn serialize_f32(self,value:f32)->Result<(),Refusal>{if self.key{return Err(invalid());}let mut scalar=Scalar::new();semio_framework_pack_json::write_float32_to(value,&mut scalar).map_err(|_|invalid())?;self.raw(scalar.text().as_bytes())}
+ fn serialize_f32(self,value:f32)->Result<(),Refusal>{if self.key{return Err(invalid());}let mut scalar=Scalar::new();semio_framework_pack_json_float::write_float32_to(value,&mut scalar).map_err(|_|invalid())?;self.raw(scalar.text().as_bytes())}
  fn serialize_f64(self,value:f64)->Result<(),Refusal>{self.float(value)}
  fn serialize_char(self,value:char)->Result<(),Refusal>{self.string(value.encode_utf8(&mut[0;4]))}
  fn serialize_str(self,value:&str)->Result<(),Refusal>{self.string(value)}

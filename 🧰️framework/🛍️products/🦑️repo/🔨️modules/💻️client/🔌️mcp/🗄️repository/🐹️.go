@@ -316,7 +316,8 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile pro
 		{Name: "goal_reopen", Description: "Reopen a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "prompt": stringField("Additional goal prompt."), "llm": stringField("Model."), "client": stringField("Agent client."), "title": stringField("Updated title."), "description": stringField("Updated description."), "due_date": stringField("YYYY-MM-DD due date."), "no_management": booleanField("Skip management integration.")}, "id", "prompt", "llm", "client")},
 	}
 	for _, schema := range tools {
-		name := schema.Name
+		schema.OutputSchema = ToolResultOutputSchema()
+		name, declared := schema.Name, schema.OutputSchema != nil
 		if err := server.RegisterTool(schema, func(ctx context.Context, params CallToolParams, progress ProgressReporter) (CallToolResult, error) {
 			if err := progress.Report(ctx, 0, nil, "started"); err != nil {
 				return CallToolResult{}, err
@@ -328,7 +329,7 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile pro
 			if err := progress.Report(ctx, 1, nil, "completed"); err != nil {
 				return CallToolResult{}, err
 			}
-			return CallToolResult{Content: []Content{{Type: "text", Text: result.Text}}, StructuredContent: result.Structured, IsError: result.IsError}, nil
+			return CallToolResult{Content: []Content{{Type: "text", Text: result.Text}}, StructuredContent: result.Structured, IsError: result.IsError, OutputSchemaDeclared: declared}, nil
 		}); err != nil {
 			return nil, err
 		}

@@ -58,6 +58,8 @@ export const REPOSITORY_TOOLING_PROVIDER_V1 = defineScriptProviderV1<RepositoryT
 const sync = (): RepositoryToolingProviderV1 => loadScriptProviderSyncV1(REPOSITORY_TOOLING_PROVIDER_V1);
 const provider = (): Promise<RepositoryToolingProviderV1> => loadScriptProviderV1(REPOSITORY_TOOLING_PROVIDER_V1);
 
+/** 🧮️ Resolves the TypeScript compiler entry installed for the given directory. */
+export function resolveTypescriptCompilerV1(from: string): string { return Bun.resolveSync("typescript/bin/tsc", from); }
 /** 🏃️ Runs a subprocess with inherited stdio and a wall-clock budget; throws on a nonzero exit, a signal or an exceeded budget. */
 export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void { sync().runCmd(cmd, args, opts); }
 /** 🔍️ Runs a subprocess and captures its outcome without throwing on a nonzero exit. */

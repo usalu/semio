@@ -1,4 +1,4 @@
-//! Diff for `introduce-product-class`.
+//! 🔄️ Diff for `introduce-product-class`.
 
 use crate::introduce_product_class::mutation::IntroduceProductClass;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

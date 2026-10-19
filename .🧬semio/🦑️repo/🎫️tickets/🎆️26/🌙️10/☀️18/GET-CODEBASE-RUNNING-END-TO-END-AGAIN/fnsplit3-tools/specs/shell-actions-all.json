@@ -1,0 +1,156 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts",
+ "scopeLine": 121,
+ "coreStmtLine": 122,
+ "coreType": "ShellCoreAfterShellUriAndDocuments",
+ "types": {
+  "action": "ShellInputActionV1",
+  "entry": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"inputLedgerRef\"][\"current\"][\"issue\"]>",
+  "primaryActionOwner": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]>",
+  "actionOwner": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]>",
+  "directBrowserActor": "ReturnType<ShellCoreAfterShellUriAndDocuments[\"directBrowserActorForSession\"]>",
+  "dispatchViewState": "NonNullable<ReturnType<typeof hostArmedViewContext>>",
+  "plugin": "ShellCoreAfterShellUriAndDocuments[\"loadedPlugins\"][number][\"handle\"]",
+  "lifecycle": "ActionDispatchLifecycleV1 | undefined",
+  "onAction": "(requested: ShellInputActionV1, submittedOrigin?: ShellDialogOriginV1, propagateFailure?: boolean, lifecycle?: ActionDispatchLifecycleV1, requiredOperationOwner?: ReturnType<ShellCoreAfterShellUriAndDocuments[\"captureEffectOwner\"]>) => Promise<InputOutcomeV1>"
+ },
+ "files": [
+  {
+   "id": "act",
+   "dir": "🧰️utility-and-tool-activation",
+   "doc": "🧰️ The shell-intercepted utility and tool activation of the input funnel.\n *\n 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: each function is one stage of the shell input funnel (`onAction`), moved verbatim."
+  },
+  {
+   "id": "misc",
+   "dir": "🔄️recovery-navigation-sync-and-panel-actions",
+   "doc": "🔄️ The shell-intercepted recovery, camera navigation, sync card and panel tab actions of the input funnel.\n *\n 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: each function is one stage of the shell input funnel (`onAction`), moved verbatim."
+  },
+  {
+   "id": "target",
+   "dir": "🎯️dispatch-target-and-view-state",
+   "doc": "🎯️ The program that owns a dispatch, the remote undo route and the dispatched view state of the input funnel.\n *\n 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: each function is one stage of the shell input funnel (`onAction`), moved verbatim."
+  },
+  {
+   "id": "dispatch",
+   "dir": "🚀️program-dispatch",
+   "doc": "🚀️ The browser actor route and the plugin route that run a dispatched action and settle its ledger entry.\n *\n 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: each function is one stage of the shell input funnel (`onAction`), moved verbatim."
+  },
+  {
+   "id": "funnel",
+   "dir": "🧭️input-funnel",
+   "doc": "🧭️ The staged body of the shell input funnel: recovery, shell-intercepted actions, dispatch target resolution and program dispatch.\n *\n 🧱️ Child module of {@link ../🟦️.ts | useShellActions}: the body of the shell input funnel (`onAction`) after its ledger entry is issued, moved verbatim."
+  }
+ ],
+ "items": [
+  {
+   "id": "util",
+   "kind": "if",
+   "line": 311,
+   "name": "handleSetActiveUtilityAction",
+   "emoji": "🔧",
+   "doc": "Compare-and-sets a window's utility register and forwards the resolved utility to the owning program.",
+   "file": "act"
+  },
+  {
+   "id": "tool",
+   "kind": "if",
+   "line": 361,
+   "name": "handleSetActiveToolAction",
+   "emoji": "🛠",
+   "doc": "Compare-and-sets the mode-level tool register, clears every window utility and forwards the tool to the program.",
+   "file": "act"
+  },
+  {
+   "id": "recovery",
+   "kind": "range",
+   "line": 179,
+   "to": 196,
+   "returns": true,
+   "name": "handleRecoveryAction",
+   "emoji": "🚑",
+   "doc": "Restarts or quarantines a program for the recovery controller actions.",
+   "file": "misc"
+  },
+  {
+   "id": "worldnav",
+   "kind": "if",
+   "line": 288,
+   "name": "handleWorldNavigationAction",
+   "emoji": "🧭",
+   "doc": "Completes the introduction interactions a camera navigation gesture report satisfies.",
+   "file": "misc"
+  },
+  {
+   "id": "sync",
+   "kind": "if",
+   "line": 422,
+   "name": "handleSyncCardAction",
+   "emoji": "📡",
+   "doc": "Routes the sync card actions to the attach, detach, browse and selection callbacks.",
+   "file": "misc"
+  },
+  {
+   "id": "panel",
+   "kind": "if",
+   "line": 468,
+   "name": "handleSetActivePanelTabAction",
+   "emoji": "🗂",
+   "doc": "Validates and applies a panel tab activation on the host or the session program.",
+   "file": "misc"
+  },
+  {
+   "id": "target",
+   "kind": "range",
+   "line": 490,
+   "to": 527,
+   "name": "resolveDispatchTarget",
+   "emoji": "🪟",
+   "doc": "Resolves the spawned program that owns a dispatch from its controller and its window.",
+   "file": "target"
+  },
+  {
+   "id": "undo",
+   "kind": "range",
+   "line": 528,
+   "to": 542,
+   "returns": true,
+   "name": "routeRemoteUndo",
+   "emoji": "⏪",
+   "doc": "Sends an undo to the mounted remote history owner when the undo route is remote.",
+   "file": "target"
+  },
+  {
+   "id": "viewstate",
+   "kind": "range",
+   "line": 585,
+   "to": 615,
+   "name": "buildDispatchViewState",
+   "emoji": "🧮",
+   "doc": "Builds the guest window id, the declared instances and the view state projection a dispatch carries.",
+   "file": "target"
+  },
+  {
+   "id": "direct",
+   "kind": "range",
+   "line": 667,
+   "to": 690,
+   "returns": true,
+   "name": "dispatchDirectBrowserActorAction",
+   "emoji": "📮",
+   "doc": "Runs an action through the hub-mounted browser actor and maps a rejection to a typed refusal.",
+   "file": "dispatch"
+  },
+  {
+   "id": "program",
+   "kind": "range",
+   "line": 694,
+   "to": 759,
+   "returns": true,
+   "name": "dispatchProgramAction",
+   "emoji": "🎬",
+   "doc": "Runs an action through the program handler, applies its history patch and host effects and settles the ledger entry.",
+   "file": "dispatch",
+   "terminal": true
+  }
+ ]
+}

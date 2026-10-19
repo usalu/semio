@@ -632,9 +632,6 @@ pub fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", binary_scalar.clone(), vec![power_out()]), Power, vec!["number", "number"], &["number"]);
     register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", binary_scalar, vec![modulo_out()]), Modulo, vec!["number", "number"], &["number"]);
 
-    // 🧬️ Each unary op has a distinct concrete `Operator` type, so this is unrolled rather than
-    // looped over a heterogeneous table — no first-party `dyn` seam, per O1/R11 (closed local set,
-    // no shared collection needed).
     register_simple(registry, operator_info("math.negate", "Negate", "Neg", "Negates a number", vec![number_channel("number", "math.negate")], vec![negated_out()]), Negate, vec!["number"], &["number"]);
     register_simple(registry, operator_info("math.abs", "Abs", "Abs", "Absolute value", vec![number_channel("number", "math.abs")], vec![absolute_out()]), Abs, vec!["number"], &["number"]);
     register_simple(registry, operator_info("math.sqrt", "Sqrt", "Sqrt", "Square root", vec![number_channel("number", "math.sqrt")], vec![root_out()]), Sqrt, vec!["number"], &["number"]);

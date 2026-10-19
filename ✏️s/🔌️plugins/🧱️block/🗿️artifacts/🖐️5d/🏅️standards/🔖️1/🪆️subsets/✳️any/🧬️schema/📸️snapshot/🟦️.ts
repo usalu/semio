@@ -8,19 +8,19 @@ export interface Block5dPart3d{orientation:p.BlockVector4|null;scale:p.BlockVect
 export interface Block5dGripKind{id:string;name:string;label:string;color:string;defaultRopeKind:string}
 export interface Block5dGripTemplate{id:string;gripKind:string;angle:Binary64;radius2d:Binary64;position:p.BlockVector3;direction:p.BlockVector3;radius3d:Binary64}
 export interface Block5dSnapshot{
- /** @state artifact */ schema:string;
- /** @state artifact */ partKind:shared.BlockKindIdentity;
- /** @state artifact */ part2d:Block5dPart2d;
- /** @state artifact */ part3d:Block5dPart3d;
- /** @state artifact */ representations:shared.BlockRepresentation[];
- /** @state artifact */ gripKinds:Block5dGripKind[];
- /** @state artifact */ grips:Block5dGripTemplate[];
- /** @state artifact */ compatibility:shared.BlockCompatibilityRule[];
- /** @state artifact */ attributes:shared.BlockAttribute[];
- /** @state artifact */ authors:shared.BlockAuthor[];
- /** @state artifact */ camera2d:shared.BlockCamera2d;
- /** @state artifact */ camera3d:shared.BlockCamera3d;
- /** @state artifact */ meta:shared.BlockMeta;
+ /** 📐️ @state artifact */ schema:string;
+ /** 🧩️ @state artifact */ partKind:shared.BlockKindIdentity;
+ /** 🔩️ @state artifact */ part2d:Block5dPart2d;
+ /** 🧱️ @state artifact */ part3d:Block5dPart3d;
+ /** 📜️ @state artifact */ representations:shared.BlockRepresentation[];
+ /** 🤚️ @state artifact */ gripKinds:Block5dGripKind[];
+ /** 🪝️ @state artifact */ grips:Block5dGripTemplate[];
+ /** 🔌️ @state artifact */ compatibility:shared.BlockCompatibilityRule[];
+ /** 🏷️ @state artifact */ attributes:shared.BlockAttribute[];
+ /** ✍️ @state artifact */ authors:shared.BlockAuthor[];
+ /** 📷️ @state artifact */ camera2d:shared.BlockCamera2d;
+ /** 🎥️ @state artifact */ camera3d:shared.BlockCamera3d;
+ /** 📇️ @state artifact */ meta:shared.BlockMeta;
 }
 /** 🔵️ Admit each optional native two-dimensional presentation field. */
 export function parseBlock5dPart2d(v:unknown):Block5dPart2d{const r=p.row(v);return{shape:p.optional(r.shape,p.text),radius:p.optional(r.radius,p.word),width:p.optional(r.width,p.word),height:p.optional(r.height,p.word),color:p.optional(r.color,p.text),iconKind:p.optional(r.iconKind,p.text)}}

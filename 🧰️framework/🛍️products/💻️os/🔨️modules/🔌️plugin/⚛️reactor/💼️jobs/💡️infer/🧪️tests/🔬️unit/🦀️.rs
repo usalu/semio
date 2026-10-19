@@ -73,10 +73,10 @@ fn interactive_bridge_coalesces_preview_but_backpressures_lossless_items() {
     assert_eq!(bridge.take_preview().expect("coalesced preview").payload, vec![2, 3]);
 
     bridge
-        .publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: 1 }))
+        .publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState), applied_progress: 1 }))
         .expect("first checkpoint");
     bridge
-        .publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), applied_progress: 2 }))
+        .publish_lossless(LosslessInferenceItem::Checkpoint(semio_framework_job::Checkpoint { state: semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState), applied_progress: 2 }))
         .expect("second checkpoint");
     assert!(matches!(bridge.publish_lossless(LosslessInferenceItem::TestBytes(1)), Err(InferenceBridgeError::Saturated { .. })));
     assert!(matches!(bridge.take_lossless(), Some(LosslessInferenceItem::Checkpoint(checkpoint)) if checkpoint.applied_progress == 1));

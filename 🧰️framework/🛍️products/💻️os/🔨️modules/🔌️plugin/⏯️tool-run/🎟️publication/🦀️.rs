@@ -24,6 +24,7 @@ use semio_framework_value::SharedUtf8;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::{size_of, ManuallyDrop};
+use protocol::HybridLogicalTimestamp;
 pub(crate) struct ToolRunPublicationIngress{pub actor:Option<ControlledRetirement<SharedUtf8>>,pub transaction:ManuallyDrop<Option<protocol::TransactionRef>>,transaction_close:Option<ControlledRetirement<protocol::TransactionRef>>}
 impl Default for ToolRunPublicationIngress{fn default()->Self{Self{actor:None,transaction:ManuallyDrop::new(None),transaction_close:None}}}
 fn original_control_demand<T:RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()});}Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun ingress child depth overflow"))?;demand})}

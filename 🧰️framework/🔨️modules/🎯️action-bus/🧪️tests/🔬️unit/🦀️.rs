@@ -4,14 +4,14 @@ use super::admission::tests::{source,close,grant,clock};
 use semio_framework_job::{Generation,RevisionId,OriginalJobFixtureCaller,OriginalJobDecodeOwner,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobOutcomeKind,InteractiveJobCloseStep,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};
 struct Payload{bytes:[u8;64],len:usize}
-struct Job{bytes:[u8;64],len:usize,input:Option<RetainedToolWireInput>,checkpoint:Option<RetainedToolWireInput>,decoded:bool,writer:Option<semio_framework_job::RetainedJobPayloadWriter>,published:Option<semio_framework_job::RetainedJobPayload>,cursor:usize,closing:bool}
+struct Job{bytes:[u8;64],len:usize,input:Option<RetainedToolWireInput>,checkpoint:Option<RetainedToolWireInput>,decoded:bool,writer:Option<semio_framework_job_payload::RetainedJobPayloadWriter>,published:Option<semio_framework_job_payload::RetainedJobPayload>,cursor:usize,closing:bool}
 impl Job{
  fn demands(&self)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.input.as_ref().or(self.checkpoint.as_ref()){return Ok(RetirementDemand{release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?,..Default::default()})}if let Some(owner)=self.writer.as_ref(){return owner.retirement_demands()}self.published.as_ref().map_or(Ok(Default::default()),|owner|owner.retirement_demands())}
 }
 impl InteractiveJob for Job{
  fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
   if !self.decoded{let input=self.input.as_ref().map_or(0,RetainedToolWireInput::declared_bytes);let total=input+self.checkpoint.as_ref().map_or(0,RetainedToolWireInput::declared_bytes);if self.len<total{let(owner,index)=if self.len<input{(self.input.as_ref().unwrap(),self.len)}else{(self.checkpoint.as_ref().unwrap(),self.len-input)};self.bytes[self.len]=owner.page(index/TOOL_WIRE_PAGE_BYTES).unwrap()[index%TOOL_WIRE_PAGE_BYTES];self.len+=1;cx.consume_fuel(1);}if self.len<total{return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}self.decoded=true;}
-  if self.published.is_some(){return JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()).map_err(Into::into)}let writer=self.writer.get_or_insert_with(||semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));if !writer.write_slice_page(cx,&self.bytes[..self.len],&mut self.cursor).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture output page refused"))?{return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}match self.writer.take().unwrap().finish(){Ok(payload)=>self.published=Some(payload),Err(writer)=>{self.writer=Some(writer);return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}}JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()).map_err(Into::into)
+  if self.published.is_some(){return JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()).map_err(Into::into)}let writer=self.writer.get_or_insert_with(||semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput));if !writer.write_slice_page(cx,&self.bytes[..self.len],&mut self.cursor).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixture output page refused"))?{return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}match self.writer.take().unwrap().finish(){Ok(payload)=>self.published=Some(payload),Err(writer)=>{self.writer=Some(writer);return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}}JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()).map_err(Into::into)
  }
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Complete=>descriptor.complete(None,self.published.as_ref()),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture publication descriptor differs"))}}
  fn begin_close(&mut self){self.closing=true;}
@@ -67,15 +67,15 @@ fn fixture_scope_grant()->semio_framework_job::RetainedCloneGrant{
 
 struct ImmediateJob {
     output: Option<Vec<u8>>,
-    writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
-    published: Option<semio_framework_job::RetainedJobPayload>,
+    writer: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
+    published: Option<semio_framework_job_payload::RetainedJobPayload>,
     cursor: usize,
     closing: bool,
 }
 impl InteractiveJob for ImmediateJob {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
         if self.published.is_some() { return JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()).map_err(Into::into); }
-        let writer = self.writer.get_or_insert_with(|| semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
+        let writer = self.writer.get_or_insert_with(|| semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput));
         if !writer.write_slice_page(cx, self.output.as_deref().unwrap_or_default(), &mut self.cursor).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original fixture payload page admission refused"))? { return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into); }
         match self.writer.take().expect("immediate original output writer").finish(){Ok(payload)=>self.published=Some(payload),Err(writer)=>{self.writer=Some(writer);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture payload writer has not completed").into())}}
         JobOutcomeBorrow::admit_complete(cx,None,self.published.as_ref()).map_err(Into::into)
@@ -355,7 +355,7 @@ fn completed_job_retains_original_input_until_exact_granted_close() {
 }
 
 struct RetainedNumberJob {
-    checkpoint: semio_framework_job::RetainedJobPayload,
+    checkpoint: semio_framework_job_payload::RetainedJobPayload,
     input: Option<RetainedToolWireInput>,
     bytes: [u8; 8],
     cursor: usize,
@@ -451,7 +451,7 @@ impl ToolJobFactory for RetainedNumberFactory {
         if input.declared_bytes() != 8 || checkpoint.is_some() {
             return Err((ToolJobFactoryError::new("retained number requires eight bytes and no checkpoint"), input, checkpoint));
         }
-        Ok(RetainedNumberJob { checkpoint: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), input: Some(input), bytes: [0; 8], cursor: 0, output: None, closing: false })
+        Ok(RetainedNumberJob { checkpoint: semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState), input: Some(input), bytes: [0; 8], cursor: 0, output: None, closing: false })
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -520,7 +520,7 @@ fn production_typed_payload_and_retained_pages_enter_the_same_registered_factory
     input.admit_page(ToolWirePage::try_copy_from(&42u64.to_le_bytes()).unwrap()).unwrap();
     input.seal().unwrap();
     let operation = Operation::new(allocate_operation_id(), RevisionId(1), Generation(2), 3);
-    let payload = RetainedNumberJob { checkpoint: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), input: None, bytes: [0; 8], cursor: 0, output: None, closing: false };
+    let payload = RetainedNumberJob { checkpoint: semio_framework_job_payload::RetainedJobPayload::empty(semio_framework_job_payload::JobPayloadStream::CheckpointState), input: None, bytes: [0; 8], cursor: 0, output: None, closing: false };
     let spec = ToolOperationSpec::new("number", "retained", "test.retained-number.v1", payload, operation);
     let mut dispatch = match bus.dispatch_wire_retained_with_spec(&admission, input, None, spec) {
         Ok(dispatch) => dispatch,

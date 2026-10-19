@@ -1,15 +1,16 @@
 //! 🫴️ Actual original native caller for the Semio SQLite snapshot suites: independent body and close grants drive every erased conversion.
 use semio_framework_os_kernel::{self as store, sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl}};
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 pub fn native_caller_policy() -> serde_json::Value { serde_json::from_str(include_str!("🎟️original.json")).unwrap() }
 pub trait OriginalNativeRefusalReceipt { fn original_native_receipt(&self) -> semio_framework_value::retained_clone::RetainedCloneProgress; }
 impl OriginalNativeRefusalReceipt for semio_framework_value::ValueError { fn original_native_receipt(&self) -> semio_framework_value::retained_clone::RetainedCloneProgress { self.retained_progress() } }
 impl OriginalNativeRefusalReceipt for store::io_schema::IoError { fn original_native_receipt(&self) -> semio_framework_value::retained_clone::RetainedCloneProgress { self.cause.retained_progress() } }
 macro_rules! original_native_caller {
-    ($name:ident,$module:ident,$control:ident,$owner:ident,$recipient:ident,$allocation:ident,$progress:ident) => {
-        pub fn $name<T, E: OriginalNativeRefusalReceipt>(law: &serde_json::Value, limits: SqliteDatabaseLimits, callback: &mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress) -> bool, original_observer: &mut dyn FnMut(semio_framework_value::$module::$progress) -> bool, original_continuation: impl FnOnce(&mut semio_framework_value::$control<'_>), operation: impl FnOnce(&mut SqliteSnapshotControl<'_>, &mut store::$owner<'_, '_>) -> Result<T, E>) -> Result<T, E> {
-            use semio_framework_value::$module::{$recipient, $allocation};
+    ($name:ident,$root:ident,$module:ident,$control:ident,$owner:ident,$recipient:ident,$allocation:ident,$progress:ident) => {
+        pub fn $name<T, E: OriginalNativeRefusalReceipt>(law: &serde_json::Value, limits: SqliteDatabaseLimits, callback: &mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress) -> bool, original_observer: &mut dyn FnMut($root::$module::$progress) -> bool, original_continuation: impl FnOnce(&mut semio_framework_value::$control<'_>), operation: impl FnOnce(&mut SqliteSnapshotControl<'_>, &mut store::$owner<'_, '_>) -> Result<T, E>) -> Result<T, E> {
+            use $root::$module::{$recipient, $allocation};
             use std::sync::atomic::{AtomicUsize, Ordering};
             let grant = serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["bodyGrant"].clone()).unwrap();
             let close = serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["closeGrant"].clone()).unwrap();
@@ -39,8 +40,8 @@ macro_rules! original_native_caller {
         }
     };
 }
-original_native_caller!(with_original_decode, native_decoding, NativeDecodeControl, NativeSnapshotDecodeOwner, NativeDecodeRetirementRecipient, NativeDecodeAllocation, NativeDecodeProgress);
-original_native_caller!(with_original_encode, native_encoding, NativeEncodeControl, NativeSnapshotEncodeOwner, NativeEncodeRetirementRecipient, NativeEncodeAllocation, NativeEncodeProgress);
+original_native_caller!(with_original_decode, semio_framework_value_native_owned, native_decoding, NativeDecodeControl, NativeSnapshotDecodeOwner, NativeDecodeRetirementRecipient, NativeDecodeAllocation, NativeDecodeProgress);
+original_native_caller!(with_original_encode, semio_framework_value, native_encoding, NativeEncodeControl, NativeSnapshotEncodeOwner, NativeEncodeRetirementRecipient, NativeEncodeAllocation, NativeEncodeProgress);
 
 pub fn retire_original_output<T: semio_framework_value::retirement::RetireOwned>(source: T, law: &serde_json::Value) {
     let close = serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["closeGrant"].clone()).unwrap();
@@ -63,7 +64,7 @@ pub fn with_native_control<T>(operation: impl FnOnce(&mut store::io::io_mechanis
     let mut decode = NativeDecodeControl::new(maximum, &mut receive);
     let mut encode = NativeEncodeControl::new(maximum, &mut publish);
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: maximum, maximum_capacity_bytes: maximum, maximum_release_bytes: maximum, maximum_depth: 512 };
-    let mut decode_recipient = semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut decode_recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
     let mut encode_recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
     decode.install_retirement_recipient(&mut decode_recipient).expect("the run owns an explicit decode retirement slot");
     encode.install_retirement_recipient(&mut encode_recipient).expect("the run owns an explicit encode retirement slot");

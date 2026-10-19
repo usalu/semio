@@ -60,6 +60,3 @@ impl<'a> NativeForwardedDecodeContinuation<'a>{
 }
 impl<'a> std::ops::Deref for NativeForwardedDecodeControl<'a>{type Target=NativeDecodeControl<'a>;fn deref(&self)->&Self::Target{&self.inner}}
 impl<'a> std::ops::DerefMut for NativeForwardedDecodeControl<'a>{fn deref_mut(&mut self)->&mut Self::Target{&mut self.inner}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

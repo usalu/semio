@@ -256,8 +256,6 @@ fn refine_rig_recovers_planted_extrinsics_and_instance_poses_from_perturbation()
             .enumerate()
             .map(|(i, c)| {
                 if i == 0 {
-                    // camera 0 is the rig-frame anchor: refine_rig never touches it, so it must start
-                    // at its true value (as it would in practice — the rig frame is *defined* by it).
                     return c.clone();
                 }
                 let mut log = c.pose_in_rig.log();
@@ -323,7 +321,6 @@ fn bougnoux_focal_from_fundamental_recovers_distinct_ground_truth_focals() {
     assert!((rf1 - f1_true).abs() / f1_true < 0.01, "f1 = {rf1}, expected {f1_true}");
     assert!((rf2 - f2_true).abs() / f2_true < 0.01, "f2 = {rf2}, expected {f2_true}");
 
-    // scale invariance: an arbitrary nonzero rescale of F must give the same answer.
     let mut f_scaled = MatD::zeros(3, 3);
     for r_ in 0..3 {
         for c_ in 0..3 {

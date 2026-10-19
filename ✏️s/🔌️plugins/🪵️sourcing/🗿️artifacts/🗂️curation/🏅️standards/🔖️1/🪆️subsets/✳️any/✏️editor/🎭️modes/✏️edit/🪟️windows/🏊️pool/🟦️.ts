@@ -23,7 +23,7 @@ export interface PoolRow {
   module: string;
   typology: string;
   availability: number;
-  /** Current curated count for this object kind — rendered as a stepper cell (0..=availability). */
+  /** 🏛️ Current curated count for this object kind — rendered as a stepper cell (0..=availability). */
   curated: number;
 }
 

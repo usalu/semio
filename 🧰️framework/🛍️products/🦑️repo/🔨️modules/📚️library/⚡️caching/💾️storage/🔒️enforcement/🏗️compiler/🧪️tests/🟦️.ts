@@ -8,10 +8,10 @@ import schema from "./🧬️.json" with {type:"json"};
 import {repositoryCompilerReservationV1} from "../🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {recoverNativeStorageReservationV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {ordinaryNativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
-import type {NativeImageStorageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import type {NativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 
 test("neutral unsupported build modes refuse before storage observation",async()=>{
  const control={signal:new AbortController().signal,remainingMilliseconds:()=>30000,publish:async()=>{},yieldContinuation:async()=>{}},root=process.env.SEMIO_TEST_ARTIFACT_DIR!;let observations=0;

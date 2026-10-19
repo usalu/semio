@@ -17,12 +17,30 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🔨️modules/**/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/*/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/*/🔣️.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/🧫️fixtures/*/🔣️.json",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -31,6 +49,13 @@
     },
     "typecheck": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",

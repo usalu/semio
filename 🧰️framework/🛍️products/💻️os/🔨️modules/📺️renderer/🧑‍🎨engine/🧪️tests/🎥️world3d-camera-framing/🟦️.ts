@@ -6,7 +6,7 @@ import { Box3, BufferGeometry, EdgesGeometry, Float32BufferAttribute, Group, Lin
 import { describe, expect, it } from "vitest";
 import { frameWorldProjectionPose, worldSceneContentBounds } from "@semio-tech/infinite-world-r3f";
 import { world3dAutoFitKey, world3dAutoFitOwed, world3dBoundsRadius, world3dFrameCameraFromBounds } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
-import { world3dCameraFramingFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { world3dCameraFramingFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
@@ -44,9 +44,6 @@ function framed(camera: FixtureCamera) {
   const parallel = projection === "orthographic" || (typeof projection === "object" && projection.mode?.kind === "orthographic");
   const sceneCamera = parallel ? new OrthographicCamera() : new PerspectiveCamera(camera.fov, fixture.viewport[0] / fixture.viewport[1]);
   const aspect = "aspect" in sceneCamera ? sceneCamera.aspect : 1;
-  // 📐️ The fixture's `projection` is the full projection SPEC; a camera state's own `projection`
-  // is the orbit mode the spec resolves to, which is the same `parallel` decision the scene camera
-  // above is built from.
   return world3dFrameCameraFromBounds(center, radius, { ...camera, projection: parallel ? "orthographic" : "perspective", explicitProjection: camera.projection !== undefined, projectionFrame: fixture.framePolicies.delivered }, fixture.fit.padding, aspect);
 }
 

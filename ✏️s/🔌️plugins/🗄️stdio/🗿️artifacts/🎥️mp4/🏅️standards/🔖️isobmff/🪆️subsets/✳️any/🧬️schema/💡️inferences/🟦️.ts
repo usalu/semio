@@ -7,7 +7,7 @@ export interface Mp4Duration {
 }
 
 export interface Mp4Inference {
-  /** @derived */
+  /** ⏱️ @derived */
   duration: Mp4Duration;
 }
 

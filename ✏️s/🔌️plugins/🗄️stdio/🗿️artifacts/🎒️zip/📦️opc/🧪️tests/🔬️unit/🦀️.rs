@@ -147,9 +147,6 @@ async fn round_trip_preserves_parts_and_relationships() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_relationship_target_is_relative_to_owner_directory() {
-    // A relationship owned by "word/document.xml" (rels file at
-    // "word/_rels/document.xml.rels") targeting "media/image1.png" resolves against
-    // "word/", not the package root — the #1 OPC relative-target gotcha.
     assert_eq!(resolve_relationship_target("word/document.xml", "media/image1.png"), "word/media/image1.png");
     assert_eq!(resolve_relationship_target("word/document.xml", "/media/image1.png"), "media/image1.png");
     assert_eq!(resolve_relationship_target("", "word/document.xml"), "word/document.xml");

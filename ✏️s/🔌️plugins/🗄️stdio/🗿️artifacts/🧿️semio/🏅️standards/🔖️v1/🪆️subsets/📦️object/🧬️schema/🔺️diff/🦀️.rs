@@ -60,7 +60,6 @@ impl SemioObjectDiff {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.transform.is_none() && self.brep.is_none() && self.mesh.is_none() && self.properties.is_none()
     }

@@ -1,4 +1,4 @@
-//! `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 2d document.
+//! 👻️ `action_prepare` previews for the verbs its coverage battery reaches on a puzzle 2d document.
 //! 🤖️ The puzzle 2d editor's own tool-command job (`board.ports.directed.v1.tool-command.v1`) on the agent lane: what the semio MCP gateway's
 
 use crate::editor::puzzle2d::window;

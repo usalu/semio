@@ -13,7 +13,7 @@ use semio_s_artifact_procedural_2d_editor::*;
 use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
 use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
-/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// 🪄️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
 pub struct Generation2dApp(pub VcsArtifactApp<EditorApp<Generation2dPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 

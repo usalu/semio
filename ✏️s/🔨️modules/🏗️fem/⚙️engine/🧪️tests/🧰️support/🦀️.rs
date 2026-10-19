@@ -1,4 +1,4 @@
-//! engine crates' native contract tests (a dev-dependency only).
+//! ⚙️ engine crates' native contract tests (a dev-dependency only).
 //! 🧪️ Retained numerical payload projection, borrowed-outcome observation and close accounting shared by the fem
 
 use semio_framework_job::Generation;
@@ -11,7 +11,7 @@ use semio_framework_job::OriginalTurnFailure;
 
 use semio_framework_job::JobOutcomeBorrow;
 
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 
 use semio_framework_job::Operation;
 
@@ -21,9 +21,9 @@ use semio_framework_job::RetainedCloneGrant;
 
 use semio_framework_job::RetainedCloneProgress;
 
-use semio_framework_job::RetainedJobPayload;
+use semio_framework_job_payload::RetainedJobPayload;
 
-use semio_framework_job::RetainedJobPayloadWriter;
+use semio_framework_job_payload::RetainedJobPayloadWriter;
 
 use semio_framework_job::RevisionId;
 
@@ -31,7 +31,7 @@ use semio_framework_job::StepBudget;
 
 use semio_framework_job::StepContext;
 
-use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 use semio_framework_value::RetirementDemand;
 
 /// 🎟️ The wallet one observed test step may spend.

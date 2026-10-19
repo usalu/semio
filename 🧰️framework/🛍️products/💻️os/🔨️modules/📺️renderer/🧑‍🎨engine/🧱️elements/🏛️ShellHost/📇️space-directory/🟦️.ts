@@ -17,7 +17,7 @@ export class SpaceDirectoryHistoryV1 {
 
   constructor(readonly spaceId: string) {}
 
-  /** Adds every event of this space; answers whether the history changed. */
+  /** ➕️ Adds every event of this space; answers whether the history changed. */
   add(events: readonly DirectoryEvent[]): boolean {
     let changed = false;
     for (const event of events) {
@@ -29,7 +29,7 @@ export class SpaceDirectoryHistoryV1 {
     return changed;
   }
 
-  /** Every event of the space, in ascending `seq`: what one fold receives. */
+  /** ⚡️ Every event of the space, in ascending `seq`: what one fold receives. */
   events(): readonly DirectoryEvent[] {
     return this.ordered;
   }

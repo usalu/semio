@@ -88,14 +88,8 @@ impl ArtifactEngine {
     /// 🚦️ The full command pipeline: admit → dedupe → base-resolve/deps → authz → validate →
     /// conflict → execute → WAL append → durability → publish → project →
     /// preview-reconcile → live-query notify → receipt.
-    // 🔒️ `batch` is taken by value deliberately, not just because the current body happens not to
-    // move it: submitting a batch is the one place in this API where the caller's copy is
-    // logically spent (it becomes part of durable history), matching `ArtifactMessage::Submit`'s
-    // owned payload on the actor-mailbox side one level up. Keeping ownership here leaves room for
-    // a future zero-copy WAL append that moves `batch.envelopes` directly into the write path.
     #[allow(clippy::needless_pass_by_value)]
     pub async fn submit(&mut self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
-        // admit
         check_len(batch.envelopes.len() as u64, self.config.limits.max_batch_commands as u64, "db_artifact::batch_commands")?;
         for envelope in &batch.envelopes {
             if envelope.document_id != self.protocol_document {
@@ -112,13 +106,10 @@ impl ArtifactEngine {
             }
         }
 
-        // dedupe (whole-batch, keyed by the batch's designated command_id)
         if let Some(cached) = self.applied_receipts.get(&command_id.0) {
             return Ok(cached.clone());
         }
 
-        // index backlog bound: write what earlier commits queued before this one adds more; refuse
-        // transiently while index storage fails, before the WAL holds anything of this batch
         if self.index_backlog.pending() > INDEX_BACKLOG_ENTRIES_MAX {
             if let Err(error) = self.maintain_index().await {
                 return Err(DbError::Unavailable(format!("index backlog of {} entries cannot be written: {error}", self.index_backlog.pending())));
@@ -138,20 +129,12 @@ impl ArtifactEngine {
                 continue;
             }
 
-            // authz: the `db_security::SecurityGate`, keyed by a permissive principal synthesized from the
-            // envelope's own actor (see `ArtifactEngineConfig::security`'s doc). An already-committed
-            // envelope (content-checked above) skipped it: it is an idempotent resend.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
             self.config.security.admit_commands(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &[(&envelope.actor, &envelope.mutation_id)], now_ms).await?;
             if let Some(refusal) = self.history_transition_refusal(envelope, &batch.envelopes, &batch_ids) {
                 return Err(DbError::Rejected { policy: options.policy, worst: semio_framework_diagnostic::Severity::Error, messages: vec![refusal] });
             }
 
-            // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
-            // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
-            // these same WAL records via `decode_command_envelope` (the same binary codec) to serve
-            // semio_hub bootstrap/catch-up, so this crate's own write-and-read-back convention below must
-            // agree with it byte-for-byte.
             let mut envelope_bytes = Vec::new();
             protocol::encode_envelope(envelope, &mut envelope_bytes);
             check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_artifact::envelope_bytes")?;
@@ -165,17 +148,11 @@ impl ArtifactEngine {
         }
 
         if planned.is_empty() {
-            // Every envelope in this (re-)submitted batch was already durable individually — a
-            // full no-op commit, per-envelope half of the dedupe law (see `plan_one`'s doc).
             let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await?), messages: Vec::new() };
             self.remember_receipt(&receipt);
             return Ok(receipt);
         }
 
-        // outcome step (contract §C9): union this batch's own `db_conflict::ConflictDetector`
-        // findings (probed against recent commit history) into graded `protocol::MutationMessage`s,
-        // then let `options.policy` decide before touching `self.recent_touches`/`self.outbox`/the
-        // WAL at all — a rejected batch must leave every one of those untouched.
         let batch_touches: Vec<db_conflict::CommandTouch> = planned.iter().map(|(envelope, plan)| command_touch(envelope, &plan.touched)).collect();
         let mut messages: Vec<protocol::MutationMessage> = Vec::new();
         for (index, (envelope, _)) in planned.iter().enumerate() {
@@ -213,10 +190,6 @@ impl ArtifactEngine {
             newly_applied.push((envelope, plan.touched));
         }
 
-        // Bookkeeping for `preview_conflicts`'s real, additive `db_conflict::ConflictDetector`
-        // integration (see its own doc) — `submit`'s own returned `ConflictRecord`s stay this
-        // crate's original path-granular last-writer detection above (see `🔖️Conflict`'s doc). Only
-        // reached once the outcome step above has accepted the batch.
         for (envelope, _) in &newly_applied {
             self.remember_target(envelope);
         }
@@ -224,12 +197,10 @@ impl ArtifactEngine {
             remember_recent_touch(&mut self.recent_touches, touch);
         }
 
-        // publish: compute + WAL-append the new frontier in the same transaction as its commands
         let new_frontier = Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await?.0, epoch: self.frontier.epoch };
         let mut records = db_wal_log::WalRecordBatch::new();
         let _ = records.push(db_wal_log::WalRecord::Frontier(new_frontier.clone()));
 
-        // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
         let wal_facet = self.storage.wal().await;
         let appended = self.wal.submit(&wal_facet, &commands, &records, options.durability, now_ms).await?;
         drop(wal_facet);
@@ -238,7 +209,6 @@ impl ArtifactEngine {
         drop(records);
         self.frontier = new_frontier.clone();
 
-        // publish: index entries join the backlog; the runner writes its full runs after the receipt
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
         let queued = ArtifactIndexWatermarks::default();
         for (offset, ((envelope, _), actor_seq)) in newly_applied.iter().zip(&applied_actor_seqs).enumerate() {
@@ -248,7 +218,6 @@ impl ArtifactEngine {
         }
         self.index_backlog.queue_frontier(&queued, &new_frontier);
 
-        // project: run every registered projection over each newly-applied envelope
         let projection_classes = (self.config.projections)();
         if !projection_classes.is_empty() {
             let index_facet = self.storage.index().await;
@@ -258,18 +227,11 @@ impl ArtifactEngine {
             }
         }
 
-        // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all }, &db_preview::DbConflictOracle::default());
         self.head_edit_id = Some(command_id.clone());
 
-        // live-query notify
-        // 🩹️ R13: was `let _ = self.refresh_live_queries();` — silently dropped the future, so
-        // this notify step never actually ran. `.await`ed now; the `Vec<(u64, QueryDiff)>` result
-        // is genuinely unneeded here (callers observe diffs via their own subscription poll), so
-        // `let _ =` on the awaited, resolved value is the correct fire-and-forget shape.
         let _ = self.refresh_live_queries().await;
 
-        // receipt
         let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash().await?), messages };
         self.remember_receipt(&receipt);
         Ok(receipt)

@@ -1,4 +1,4 @@
-//! Norm command — `set-field`.
+//! 📜️ Norm command — `set-field`.
 
 use semio_s_artifact_norm_en1998_mutations::En1998Mutation;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

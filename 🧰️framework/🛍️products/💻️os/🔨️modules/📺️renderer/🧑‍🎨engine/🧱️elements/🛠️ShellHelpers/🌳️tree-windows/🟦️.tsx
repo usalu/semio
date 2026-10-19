@@ -271,8 +271,6 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
       const state = bodyState(bodyKey);
       if (state.open.get(nodeKey) === open) return;
       state.open.set(nodeKey, open);
-      // 🪟️ Opening is a request for rows: forget what the observer last measured for this container, so
-      // the first-paint fallback speaks for it again until the tree it is about to render is measured.
       if (open) {
         state.measured.delete(nodeKey);
         state.windows.delete(nodeKey);
@@ -283,15 +281,7 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
     reportWindows: (bodyKey, requests, rows) => {
       const state = bodyState(bodyKey);
       const next = new Map(requests.map((request) => [request.nodeKey, { offset: Math.max(0, Math.floor(request.offset)), rows: Math.max(0, Math.floor(request.rows)) }] as const));
-      // 🪟️ The report is the WHOLE body: every windowed container the tree currently renders, the
-      // off-screen ones as spacer-only windows. So replacing the map wholesale is also how state for
-      // containers that left the body (a document switch, a folded ancestor) is pruned, and an unreported
-      // key is by definition one that has never been rendered — the only case the first-paint row
-      // fallback in `viewStateFields` may speak for.
       const sameWindows = next.size === state.windows.size && [...next].every(([nodeKey, window]) => state.windows.get(nodeKey)?.offset === window.offset && state.windows.get(nodeKey)?.rows === window.rows);
-      // 🪟️ A measured container is a RENDERED container, so it is open — record that unless the host has
-      // been told otherwise, and an explicit fold always wins (a report in flight when the user folds
-      // must never re-open what they just closed).
       let openedAny = false;
       for (const nodeKey of next.keys()) {
         state.measured.add(nodeKey);
@@ -317,12 +307,6 @@ export function createTreeWindowSchedulerV1(options: TreeWindowSchedulerOptionsV
           if (!treeWindowSendableIdentifierV1(bodyKey, nodeKey, unsendable)) continue;
           const open = state.open.get(nodeKey);
           const window = state.windows.get(nodeKey);
-          // 🪟️ A container the user just opened has no measurement yet — it was not in the body when the
-          // observer last looked — so it asks for one viewport's worth, which the observer's first real
-          // report then narrows. `rows: 0` would materialise nothing at all and the row the chevron
-          // promised would never appear. This fallback speaks ONLY for a never-measured container: an
-          // open one that is merely scrolled off screen is in every report, at `rows: 0`, and must not be
-          // handed a viewport's worth of the body's budget for rows nobody is looking at.
           const rows = window?.rows ?? (open === false || state.measured.has(nodeKey) ? 0 : (viewportRows ?? TREE_WINDOW_DEFAULT_ROWS));
           flattened.push({ bodyKey, nodeKey, ...(open === undefined ? {} : { open }), offset: window?.offset ?? 0, rows });
         }
@@ -472,12 +456,6 @@ export function uiNodeToTreePanelConfig(node: BuiltNode, onAction: (action: Acti
  * authored-body path ({@link uiNodeToTreePanelConfig}) and the actor-rendered path ({@link BrowserActorPanelHostV1}). */
 function interpretedTreePanelConfigV1(store: UiDocumentStore, boundaryKey: string, onAction: (action: ActionDescriptor) => void, onIntent: (intent: UiIntent) => void | Promise<void>, bodyKey: string, treeWindows?: TreeWindowHostV1 | null): TreePanelConfig {
   const treeWindowContext = treeWindows ? createTreeWindowContextV1(bodyKey, treeWindows) : null;
-  // 🧭️ Never park the interpreted body on an empty-label `TreeDataItem.control` — property-layout rows
-  // split every row into a wide label column plus a fixed value column, which parked the lone default
-  // `file-text` icon in the left column and squeezed the whole inspector/document/catalogue tree into
-  // the value column (ticket 26/08/01 FIX-INSPECTOR-TREES-TO-MATCH-DOCUMENT, remeasured 2026-09-13).
-  // Host the body as the tree's full-width `emptyState` instead; the inner document still renders its
-  // own `Tree` when the snapshot root is `component.type === "tree"`.
   return {
     sections: [],
     emptyState: (

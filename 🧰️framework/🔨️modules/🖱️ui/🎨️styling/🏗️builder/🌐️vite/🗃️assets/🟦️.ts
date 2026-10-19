@@ -7,7 +7,7 @@ import { createUiAssetsMiddleware } from "../🗺️mesh-collection/🟦️.ts";
 /** 🗂️ Canonical repo-relative root of the asset-owned public namespace. */
 export const SEMIO_ASSET_ROOT = "🧰️framework/🔨️modules/🖼️assets";
 
-/** @emoji 📂 Resolves and validates the merged Semio asset package root (fonts required). */
+/** 📂 Resolves and validates the merged Semio asset package root (fonts required). */
 export function resolveSemioAssetRoot(repoRoot: string): string {
   const assetsRoot = resolve(repoRoot, SEMIO_ASSET_ROOT);
   const fontDir = resolve(assetsRoot, "🔤️fonts");
@@ -102,7 +102,7 @@ export function semioReferencedAssetsVitePlugin(repoRoot: string): OwnedBuildPlu
   ];
 }
 
-/** @emoji 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
+/** 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
 export type PlaygroundRendererPuzzleKind = string;
 
 function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
@@ -126,7 +126,7 @@ function namedImportSpecifiersForModule(source: string, moduleId: string): strin
   return names;
 }
 
-/** @emoji 🔁️ Named import specifiers duplicated within the same module import block(s). */
+/** 🔁️ Named import specifiers duplicated within the same module import block(s). */
 export function duplicateNamedImportsForModule(source: string, moduleId: string): string[] {
   const names = namedImportSpecifiersForModule(source, moduleId);
   const seen = new Set<string>();

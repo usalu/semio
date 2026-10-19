@@ -14,8 +14,6 @@ const HOST_APP_ID: &str = "sourcing-curation";
 pub fn bundle() -> ExtensionBundle {
     let module = WindowsModule;
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Windows", env!("CARGO_PKG_VERSION")).extends("sourcing").depends_on("sourcing", semio_framework::tree_pin!());
-    // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
-    // extension only contributes a topic (`sourcing.module`).
     let bundle = bundle.mode(ExecutionMode::Declarative);
     bundle.contributes_topic(
         "sourcing.module",

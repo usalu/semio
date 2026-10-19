@@ -67,20 +67,11 @@ pub fn puzzle5d_handle_action<A: Puzzle5dEditor>(
     let tool_mutations = std::mem::take(&mut ctx.artifact_mutations);
     let transaction = ctx.transaction.take();
     if aborted {
-        // 🧯️ An aborted arm emits no document/config delta — but the refusal NOTICE it pushed is the
-        // user-visible half of that refusal and must survive, or "refused" and "silently did nothing"
-        // look identical. Effects travel on their own lane, so keeping them costs no mutation and no
-        // undo entry; the scope stays `None` because nothing was painted.
         return (Emit { effects: arm_effects, ui_scope: UiDirtyScope::None, ..Default::default() }, EphemeralEmit::default());
     }
     let next_active_utility = scene.active_utility.clone();
     let operations: Vec<Puzzle5dMutation> = tool_mutations;
-    // 🛠️ A committed transform-tool transaction stamps every op of this ONE edit.
     let transaction = transaction.filter(|_| !operations.is_empty());
-    // 🧰️🛠️ Programmatic tool/utility switches push the host session. Arming fill emits `SetActiveTool { fill }`
-    // only — an empty tool effect here would bounce-disarm a just-armed run, so LEAVING fill is exclusively the
-    // host's own `setActiveTool ""` (which `engagementAbort` raises itself). A real utility change still emits
-    // `SetActiveUtility`; the host's mutual exclusion clears the tool when the utility is non-empty.
     let initial_is_fill_tool = active_utility_initial == PUZZLE5D_FILL_TOOL_ID;
     let next_is_fill_tool = next_active_utility == PUZZLE5D_FILL_TOOL_ID;
     if next_is_fill_tool && !initial_is_fill_tool {
@@ -168,8 +159,6 @@ fn dispatch_puzzle5d_action(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args:
         "setTargetVolumeHidden" => set_target_volume_flag::set_target_volume_flag_value(ctx, args, "hidden"),
         "setTargetVolumeLocked" => set_target_volume_flag::set_target_volume_flag_value(ctx, args, "locked"),
         "setVoxelDims" => set_voxel_dims::set_voxel_dims(ctx, args),
-        // 🛑️ Pure pointer-down notifications: no scene mutation, no operations, no config snapshot —
-        // the pre-migration code returned `Emit::default()` here, which `abort` reproduces exactly.
         "worldPointerDown" | "canvasPointerDown" => ctx.abort = true,
         _ => {}
     }

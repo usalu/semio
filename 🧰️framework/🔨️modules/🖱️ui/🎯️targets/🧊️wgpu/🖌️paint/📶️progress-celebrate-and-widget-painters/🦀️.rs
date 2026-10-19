@@ -29,8 +29,6 @@ pub fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presen
         let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
         push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true);
     } else if presence.state == UiState::Previewed {
-        // 🔍️ Inset (not outset, unlike `selected`'s ring) hairline so the two stay distinguishable
-        // when composed — a previewed-and-selected element still reads as selected via the outset ring.
         push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true);
     }
     if presence.state == UiState::Introducing {

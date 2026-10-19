@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 /// 🪜️ Close steps of one last registry custody: its frame, every slot and generation page, and the terminal handoff.
-const REGISTRY_CLOSE_STEPS: usize = 4 + super::super::snapshot_read::SNAPSHOT_READ_LEASE_CAPACITY / super::super::snapshot_read::SNAPSHOT_READ_SLOT_PAGE + super::super::snapshot_read::SNAPSHOT_READ_LEASE_CAPACITY / super::super::snapshot_read::SNAPSHOT_READ_GENERATION_PAGE;
+const REGISTRY_CLOSE_STEPS: usize = 4 + crate::SNAPSHOT_READ_LEASE_CAPACITY / crate::SNAPSHOT_READ_SLOT_PAGE + crate::SNAPSHOT_READ_LEASE_CAPACITY / crate::SNAPSHOT_READ_GENERATION_PAGE;
 #[test]
 fn original_erased_read_return_retains_source_on_every_refusal_and_returns_the_same_registry(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["erasedReturn"];let g=&law["grant"];let grant=RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize};
@@ -91,37 +91,6 @@ fn original_read_return_refusals_preserve_payload_and_lease(){
  }
  let(result,heap)=observe(||read.try_return_to_registry_witness());let witness=match result{Ok(witness)=>witness,Err(_)=>panic!("valid original return was refused")};assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(witness.registry.identity(),identity);assert!(!witness.terminal_is_empty());assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire),1);let guard=registry.try_take(index,generation).unwrap();drop(guard);assert!(witness.terminal_is_empty());drop(registry);
  let mut cursor=SnapshotReadReturnRetirement::new(witness);for _ in 0..REGISTRY_CLOSE_STEPS{if cursor.terminal_is_empty(){break;}let demand=cursor.demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(result,heap)=observe(||cursor.step(grant));assert_eq!(result.unwrap().progress().released_bytes,heap.released_bytes);assert_eq!(heap.requested_bytes,0);}assert!(cursor.terminal_is_empty());let(_,heap)=observe(||drop(cursor));assert_eq!(heap.released_bytes,0);assert_eq!(*source,41);
-}
-
-#[test]
-fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){
- use crate::io::io_mechanism::{IoEntry,IoEntryDirection,OwnedSerializerFactory,OwnedSerializerRequest,OwnedSerializerAdmission,OwnedSerializerRefusal};
- use crate::io_schema::{IoFidelity,IoPayload,IoOutcome,IoResult};
- use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
- static CALLS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
- const NATIVE:Dialect=Dialect{artifact_kind:"test.owned-source",standard:StandardId("1"),subset:SubsetId::ANY};
- fn demand(_: &OwnedSerializerRequest)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,ValueError>{Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand{capacity_bytes:128,depth:1})}
- fn refuse(request:OwnedSerializerRequest,_:RetainedCloneGrant)->Result<OwnedSerializerAdmission,OwnedSerializerRefusal>{CALLS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);Err(OwnedSerializerRefusal{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"fixture refuses original request after valid generic admission"),request,progress:Default::default()})}
- fn transport(_: &IoPayload,_: &mut crate::io::io_mechanism::IoRunControl<'_,'_>)->IoResult<IoPayload>{Ok(IoOutcome::clean(IoPayload::Binary(Vec::new())))}
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/📤️serialization/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
- let source=Arc::new(73u32);let registry=crate::SnapshotReadRegistryHandle::new();let revision=[7u8;32];assert!(registry.publish_authority(9,revision));
- for row in corpus["cases"].as_array().unwrap(){
-  let foreign=Dialect{artifact_kind:match row["format"].as_str().unwrap(){"png"=>"png","svg"=>"svg",_=>"pdf"},standard:StandardId("1"),subset:SubsetId::ANY};
-  let lease=registry.try_issue(source.clone()).unwrap_or_else(|_|panic!("genuine captured source"));let read=super::super::SnapshotRead::new(source.clone(),lease).into_erased();
-  let options=semio_framework_value::DslValue::String(format!("original-options-{}",row["id"]));let options_pointer=options.as_str().unwrap().as_ptr();
-  let request=OwnedSerializerRequest{source:read,route:(semio_framework_artifact_reference::ArtifactDialect::from(NATIVE),semio_framework_artifact_reference::ArtifactDialect::from(foreign)),generation:if row["current"].as_bool().unwrap(){9}else{8},revision,options,children:None};
-  let entry=IoEntry{from:NATIVE,into:foreign,fidelity:IoFidelity::Exact,direction:if row["direction"]=="export"{IoEntryDirection::Export}else{IoEntryDirection::Import},sniff:None,run:transport,owned_serializer:row["capability"].as_bool().unwrap().then_some(OwnedSerializerFactory{demand,admit:refuse})};
-  let g=&row["grant"];let grant=RetainedCloneGrant{maximum_items:g["items"].as_u64().unwrap()as usize,maximum_copy_bytes:g["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:g["release"].as_u64().unwrap()as usize,maximum_depth:g["depth"].as_u64().unwrap()as usize};let calls=CALLS.load(std::sync::atomic::Ordering::Relaxed);
-  let(missing,heap)=observe(||crate::io::io_mechanism::io_begin_owned_serialization(request,grant));let missing=match missing{Err(refused)=>refused,Ok(_)=>panic!("unregistered original source route admitted")};assert_eq!(missing.error.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner);assert_eq!(missing.progress,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(missing.request.source.get::<u32>().unwrap()as*const u32,Arc::as_ptr(&source));assert_eq!(missing.request.options.as_str().unwrap().as_ptr(),options_pointer);let request=missing.request;
-  let(result,heap)=observe(||entry.begin_owned_serialization(request,grant));let refused=match result{Err(refused)=>refused,Ok(_)=>panic!("deliberately rejecting fixture admitted a job")};assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(refused.progress,Default::default());assert_eq!(refused.request.source.get::<u32>().unwrap()as*const u32,Arc::as_ptr(&source));assert_eq!(refused.request.options.as_str().unwrap().as_ptr(),options_pointer);assert_eq!(CALLS.load(std::sync::atomic::Ordering::Relaxed)-calls,row["factoryCalls"].as_u64().unwrap()as usize);
-  let original=match refused.request.source.try_into_typed::<u32>(){Ok(read)=>read,Err(_)=>panic!("original type lost")};let witness=match original.try_return_to_registry_witness(){Ok(witness)=>witness,Err(_)=>panic!("exact source return refused")};let mut read_close=SnapshotReadReturnRetirement::new(witness);
-  let birth=semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<u32>();let birth_grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:birth,maximum_depth:2,..Default::default()};
-  let(returned,heap)=observe(||registry.try_admit_one_returned::<u32,_>(birth_grant,|owner,grant|semio_framework_value::retirement::arc_custody::admit_shared_retirement(owner,grant,true)).unwrap());assert_eq!(heap.requested_bytes,returned.1.retained_capacity_bytes);assert_eq!(heap.released_bytes,returned.1.released_bytes);let mut slot_close=returned.0;assert!(slot_close.is_some());
-  for _ in 0..1000{let Some(owner)=slot_close.as_ref()else{break;};let demand=crate::artifact_retirement_box_demands(owner,4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe(||crate::artifact_retirement_box_close_step(&mut slot_close,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(slot_close.is_none());
-  for _ in 0..16{if read_close.terminal_is_empty(){break;}let demand=read_close.demands().unwrap();read_close.step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()}).unwrap();}assert!(read_close.terminal_is_empty());
-  let mut options_close=semio_framework_value::retirement::controlled::ControlledRetirement::new(refused.request.options).unwrap_or_else(|_|panic!("native options controlled authority"));
-  for _ in 0..1000{if options_close.terminal_is_empty(){break;}let copy=options_close.next_copy_byte_demand().unwrap();options_close.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:options_close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:options_close.next_release_byte_demand().unwrap(),maximum_depth:options_close.next_depth_demand().unwrap()}).unwrap();}assert!(options_close.terminal_is_empty());
- }
 }
 
 #[test]

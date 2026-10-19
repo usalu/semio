@@ -259,13 +259,10 @@ async fn concurrent_write_to_the_same_path_without_a_dependency_is_recorded_as_a
     let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
     engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
-    // op-2 writes the same path but does NOT declare op-1 as a dependency: a real concurrent
-    // write from `op-2`'s author's point of view.
     let receipt = engine.submit(CommandBatch::new(vec![envelope("op-2", &[], "bob", &[("x", serde_json::json!(2))]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
     assert_eq!(receipt.conflicts.len(), 1);
     assert_eq!(receipt.conflicts[0].conflicting_with, protocol::MutationId("op-1".to_string()));
     assert_eq!(receipt.conflicts[0].path, "x");
-    // Last-writer-wins: the conflicting write still applies.
     let x: serde_json::Value = stored_json(engine.get("x").await.unwrap().unwrap()).await;
     assert_eq!(x, serde_json::json!(2));
 }

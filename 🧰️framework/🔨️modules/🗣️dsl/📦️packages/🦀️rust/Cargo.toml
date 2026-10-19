@@ -28,6 +28,7 @@ semio-framework-dsl-token = { path="../../🔤️token/📦️packages/🦀️ru
 semio-framework-dsl-syntax = { path="../../📖️grammar/📝️syntax/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust" }

@@ -265,7 +265,7 @@ export const HostSceneCanvas = sceneHostPort.fiber.canvas;
 // #region 🪟️Pane
 
 
-/** @emoji 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
+/** 🪟️ Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
  * (e.g. a per-tool floating control) contribute a draggable pane without threading it through the window's props.
  * Renders nothing outside a `PaneHost`. */
 export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null {

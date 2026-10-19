@@ -1,7 +1,8 @@
 //! 🧪️ Typed field refusal identity through direct and boxed owned bindings.
 use crate::{DslField, FieldValue, RecordValue, Shape};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[derive(Debug)]
 struct RefusingField(ValueError);

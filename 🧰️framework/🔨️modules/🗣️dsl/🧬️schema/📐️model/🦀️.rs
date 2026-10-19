@@ -1,6 +1,7 @@
 //! 📐️ Authored Record value, shape, field projection and typed receiving ownership.
 pub use semio_framework_diagnostic::{Limits,TextError,TextSpan};
-pub use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+pub use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[path="../🪆️binding/🦀️.rs"]
 mod binding;
 pub use binding::*;
@@ -152,30 +153,25 @@ pub struct FieldSpec {
 }
 
 impl FieldSpec {
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn new(id: u16, key: &str, shape: Shape) -> Self {
         Self { id, key: key.to_string(), position: None, shape, optional: false, flatten: false, defines: None, is_call_name: false }
     }
 
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn positional(mut self, index: u8) -> Self {
         self.position = Some(index);
         self
     }
 
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn optional(mut self) -> Self {
         self.optional = true;
         self
     }
 
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn flatten(mut self) -> Self {
         self.flatten = true;
         self
     }
 
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn defines(mut self, kind: &'static str) -> Self {
         self.defines = Some(kind);
         self
@@ -183,7 +179,6 @@ impl FieldSpec {
 
     /// 📛️ Marks this field as the one printed before `=` / parsed as the assignment target
     /// in a `RecordLayout::Call` spec. See [`RecordLayout::Call`].
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn call_name(mut self) -> Self {
         self.is_call_name = true;
         self
@@ -198,14 +193,12 @@ pub struct RecordSpec {
 }
 
 impl RecordSpec {
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn new(keyword: Option<&str>, layout: RecordLayout, fields: Vec<FieldSpec>) -> Self {
         Self { keyword: keyword.map(|k| k.to_string()), layout, fields }
     }
 
     /// 🏗️ Same as [`Self::new`] but takes an already-owned keyword — what
     /// `dsl_derive`-generated code builds from a spliced `String` literal.
-    // 🚫️async: E1 pure spec builder consumed by E4 fn-pointer slots (Shape::Record) and derive-macro output — see R9
     pub fn new_owned(keyword: Option<String>, layout: RecordLayout, fields: Vec<FieldSpec>) -> Self {
         Self { keyword, layout, fields }
     }
@@ -409,9 +402,6 @@ pub struct RecordValue {
 }
 
 impl RecordValue {
-    // 🚫️async: E1 pure map lookup, consumed by `Iterator::any`/`Option::and_then` sync closures
-    // (`print_record_fields`) and by dozens of `assert_eq!(value.get(id), ...)` test call sites
-    // that compare its result directly (never ``ed) — see R9
     pub fn get(&self, id: u16) -> Option<&FieldValue> {
         self.fields.get(&id)
     }
@@ -433,9 +423,6 @@ pub enum ExprOp {
 }
 
 impl ExprOp {
-    // 🚫️async: E1 pure, consumed by `print_expr_prec` (forced sync — its `Call` arm feeds a
-    // `Display`-formatted `Iterator::map(...).join(...)` closure chain, R9) and inlined directly
-    // into `format!` args elsewhere in this impl — see R9
     pub fn precedence(self) -> u8 {
         match self {
             ExprOp::Add | ExprOp::Sub => 1,
@@ -443,7 +430,6 @@ impl ExprOp {
         }
     }
 
-    // 🚫️async: E1 pure, same R9 chain as `precedence` above
     pub fn symbol(self) -> &'static str {
         match self {
             ExprOp::Add => "+",

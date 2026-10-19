@@ -63,13 +63,7 @@ export async function collabSignIn(page: import("playwright").Page, email: strin
   await form.locator('input[type="email"]').fill(email);
   await form.locator('input[type="password"]').fill(password);
   await form.locator('[id="os.hub.signIn.submit"]').click();
-  // 🪪️ The badge stops offering sign-in exactly when the SHELL holds a verified session authority
-  // (`hubSessionPresence` is derived from `verifiedSessionAuthority`), which is the predicate every
-  // hub-authenticated step below is admitted against — not merely "the form submitted".
   await page.waitForFunction(() => !document.querySelector('[data-semio-hub-sign-in=""]'), undefined, { timeout: 60_000 });
-  // 🚪️ Close by the cancel control's OWN id. `button[aria-label]` first-match resolves to
-  // `os.hub.firstRun.replay` ("How this works"), which REPLAYS the first-run tour instead of closing the
-  // workspace — leaving the shell behind the tour's veil with every later step's target covered.
   await page.locator('[data-semio-hub-workspace] [id="os.hub.signIn.cancel"]').click();
   await page.locator("[data-semio-hub-workspace]").waitFor({ state: "hidden", timeout: 15_000 });
 }

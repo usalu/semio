@@ -201,9 +201,6 @@ fn read_svg(path: &str) -> Result<Vec<SvgNode>, String> {
                 nodes.push(node);
                 let pushed = nodes.len() - 1;
                 *siblings.last_mut().unwrap() += 1;
-                // 🧭️An `Empty` element (`<path …/>`) never produces an `End`, so it must open and
-                // close its own frame here. Treating it like a `Start` left the stack unbalanced and
-                // every following sibling was reported as that element's child.
                 if !empty {
                     stack.push((pushed, 0));
                     siblings.push(0);
@@ -418,7 +415,7 @@ fn compare_svg(expected: &[SvgNode], actual: &[SvgNode]) -> J {
 /// `drawing_document_to_svg`'s own one-group-per-node shape), wrapping one `<path>` or `<text>` leaf.
 struct SceneNode<'a> {
     matrix: [f64; 6],
-    kind: &'a str, // "path" | "text"
+    kind: &'a str,
     d: Option<&'a str>,
     text: Option<&'a str>,
     fill: Option<&'a str>,
@@ -511,23 +508,16 @@ fn fixtures(out: &str) -> Result<Vec<String>, String> {
         }};
     }
 
-    // create-layer: a second node appears.
     recipe!("create-layer-adds-a-node", (100, 50), &[base_rect()], &[base_rect(), SceneNode { matrix: IDENTITY, kind: "path", d: Some("M 20 0 L 30 0 L 30 10 L 20 10 Z"), text: None, fill: Some("rgba(0,0,255,1)"), stroke: None, stroke_width: None, opacity: None }]);
 
-    // delete-layer: the second node disappears.
     recipe!("delete-layer-removes-a-node", (100, 50), &[base_rect(), base_text()], &[base_rect()]);
 
-    // duplicate-layer: a second, identical node is inserted right after the source.
     recipe!("duplicate-layer-inserts-a-copy", (100, 50), &[base_rect()], &[base_rect(), base_rect()]);
 
-    // reorder-layer: two nodes swap position (structural address changes, tags stay the same set).
     recipe!("reorder-layer-swaps-two-nodes", (100, 50), &[base_rect(), base_text()], &[base_text(), base_rect()]);
 
-    // set-layer-visible: turning a layer invisible removes its scene node entirely (flatten skips
-    // `!base.visible` layers before they ever become a DrawingSceneNode).
     recipe!("set-layer-visible-hides-a-node", (100, 50), &[base_rect(), base_text()], &[base_rect()]);
 
-    // update-layer-transform: the wrapping group's matrix changes; geometry (`d`) is untouched.
     recipe!(
         "update-layer-transform-moves-a-node",
         (100, 50),
@@ -535,7 +525,6 @@ fn fixtures(out: &str) -> Result<Vec<String>, String> {
         &[SceneNode { matrix: [1.0, 0.0, 0.0, 1.0, 15.0, 5.0], kind: "path", d: Some("M 0 0 L 10 0 L 10 10 L 0 10 Z"), text: None, fill: Some("rgba(0,128,0,1)"), stroke: Some("rgba(0,0,0,1)"), stroke_width: Some("1"), opacity: None }]
     );
 
-    // replace-layer-fill: only the fill channel changes.
     recipe!(
         "replace-layer-fill-recolors-a-node",
         (100, 50),
@@ -543,7 +532,6 @@ fn fixtures(out: &str) -> Result<Vec<String>, String> {
         &[SceneNode { matrix: IDENTITY, kind: "path", d: Some("M 0 0 L 10 0 L 10 10 L 0 10 Z"), text: None, fill: Some("rgba(255,0,0,1)"), stroke: Some("rgba(0,0,0,1)"), stroke_width: Some("1"), opacity: None }]
     );
 
-    // replace-layer-stroke: only the stroke color/width changes.
     recipe!(
         "replace-layer-stroke-changes-outline",
         (100, 50),
@@ -551,7 +539,6 @@ fn fixtures(out: &str) -> Result<Vec<String>, String> {
         &[SceneNode { matrix: IDENTITY, kind: "path", d: Some("M 0 0 L 10 0 L 10 10 L 0 10 Z"), text: None, fill: Some("rgba(0,128,0,1)"), stroke: Some("rgba(0,0,255,1)"), stroke_width: Some("3"), opacity: None }]
     );
 
-    // set-layer-opacity: only the opacity channel changes (Path leaf; Image leaves never see this).
     recipe!(
         "set-layer-opacity-fades-a-node",
         (100, 50),

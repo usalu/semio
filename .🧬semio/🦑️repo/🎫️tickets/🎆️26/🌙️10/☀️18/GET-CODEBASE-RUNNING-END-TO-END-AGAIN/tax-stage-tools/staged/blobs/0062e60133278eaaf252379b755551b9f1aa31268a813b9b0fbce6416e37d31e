@@ -1,0 +1,14 @@
+import{test,expect}from"bun:test";
+import{readFile}from"node:fs/promises";
+import ts from"typescript";
+import Ajv from"ajv";
+import{Database}from"bun:sqlite";
+import{buildOrchestrationContextV1}from"../../../../📥️caller/📤️orchestration/🟨️.mjs";
+import schema from"./🧬️schema/🔣️.json";
+import corpus from"./🔣️.json";
+
+test("Bazel projects child authority only for actual declared orchestration metadata",async()=>{
+ const source=await readFile(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("bazel.ts",source,ts.ScriptTarget.Latest,true),owner=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="generateBazelWorkspaceV1");if(!owner)throw Error("Actual Bazel workspace generator required");let declaration:import("typescript").VariableDeclaration|undefined;const visit=(node:import("typescript").Node)=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)==="orchestration")declaration=node;ts.forEachChild(node,visit);};visit(owner);if(!declaration?.initializer||!ts.isVariableDeclarationList(declaration.parent))throw Error("Actual orchestration selection initializer required");const list=declaration.parent.declarations,index=list.indexOf(declaration),prior=list.slice(0,index).map(node=>"const "+node.getText(tree)+";").join("\n"),code=ts.transpileModule("function selected(graph,task,buildOrchestrationContextV1){"+prior+"return "+declaration.initializer.getText(tree)+";}",{compilerOptions:{target:ts.ScriptTarget.ESNext}}).outputText,selected=new Function(code+";return selected;")()as(graph:object,task:object,context:typeof buildOrchestrationContextV1)=>unknown,admit=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");
+ try{for(const row of corpus.cases){expect(admit(row)).toBe(true);const execution={version:1,kind:row.kind,...(row.children==="none"?{}:{children:row.children==="valid"?[{project:"fixture",target:"leaf"}]:"foreign"})},graph={projects:{fixture:{targets:{build:{metadata:{semio:{execution}},configurations:{prototype:{execution:{}},release:{execution:{}}}},leaf:{metadata:{semio:{execution:{kind:"command"}}}}}}}},task={project:"fixture",target:"build",...(row.configuration===null?{}:{configuration:row.configuration})};let calls=0,failed=false,result:unknown;try{result=selected(graph,task,(projects,selection)=>{calls++;return buildOrchestrationContextV1(projects,selection);});}catch{failed=true;}const oracle=db.query("select case when ?='orchestration' and ?!='none' then 1 else 0 end invoked").get(row.kind,row.children)as{invoked:number};expect(oracle.invoked).toBe(row.calls);expect(calls).toBe(row.calls);expect(failed).toBe(row.expected==="refusal");if(!failed)expect(result!==undefined).toBe(row.expected==="context");}}
+ finally{db.close();}expect(await readFile(new URL("../../🟦️.ts",import.meta.url),"utf8")).toBe(source);
+});

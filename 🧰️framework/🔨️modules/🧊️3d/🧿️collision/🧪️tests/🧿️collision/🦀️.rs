@@ -313,7 +313,6 @@ fn distance_to_surface_matches_brute_force_and_the_oracle_inside_and_outside() {
 #[test]
 fn clip_behind_triangle_keeps_exactly_the_part_under_the_face_inside_its_prism() {
     let face = [Point3::new(0.0, 0.0, 0.0), Point3::new(4.0, 0.0, 0.0), Point3::new(0.0, 4.0, 0.0)];
-    // A vertical triangle crossing the face's plane: only its part below z = 0 and above the face's footprint survives.
     let crossing = [Point3::new(1.0, 1.0, 1.0), Point3::new(1.0, 1.0, -0.5), Point3::new(2.0, 1.0, -0.5)];
     let clipped = clip_behind_triangle(crossing, face);
     assert!(!clipped.points().is_empty());
@@ -351,7 +350,6 @@ fn containment_holds_for_a_mesh_whose_indices_mix_windings() {
         let point = Point3::from_coords(lcg.next_vector3(1.6));
         assert_eq!(contains_point(Isometry3::identity(), &repaired, point), contains_point(Isometry3::identity(), &consistent, point), "mixed winding at {point:?}");
     }
-    // The tetrahedron whose one face was wound the other way: nothing below its base is inside.
     let tetra = TriMesh::new(vec![Point3::new(-4.0, -4.0, 0.0), Point3::new(4.0, -4.0, 0.0), Point3::new(0.0, 4.0, 0.0), Point3::new(0.0, 0.0, 8.0)], vec![[0, 1, 2], [0, 1, 3], [1, 2, 3], [2, 0, 3]]);
     assert!(!contains_point(Isometry3::identity(), &tetra, Point3::new(0.0, -3.95, -0.1)));
     assert!(contains_point(Isometry3::identity(), &tetra, Point3::new(0.0, 0.0, 1.0)));
@@ -381,7 +379,6 @@ fn fast_containment_agrees_with_the_winding_number_including_points_on_faces_edg
         let rotation = UnitQuaternion::from_quaternion(Quaternion::new(0.9, 0.2, -0.3, 0.25));
         for pose in [Isometry3::identity(), Isometry3::from_parts(Vector3::new(3.0, -2.0, 0.5), rotation)] {
             let mut points: Vec<Point3> = (0..2048).map(|_| Point3::from_coords(lcg.next_vector3(2.5))).collect();
-            // 📐️ The half-unit lattice lands exactly on faces, edges, vertices and the reflex corner.
             for x in -4..=5 {
                 for y in -4..=5 {
                     for z in -3..=3 {

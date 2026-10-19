@@ -226,16 +226,10 @@ fn render_body(
         zones::BODY_KEY => zones::render(doc.snapshot)?,
         simulation::BODY_KEY => simulation::render(doc.tool_run(), cfg.snapshot, &doc.snapshot.model, view_state.locale),
         model_window::BODY_KEY => {
-            // 🎨️ Results mode: while a finished (or ticking) energy simulation run carries a per-surface
-            // payload, its chosen field paints the surfaces and the legend rides as the caption.
             let energy = crate::editor_edit::tools::simulation::surface_energy_from_run(doc.tool_run());
             let field = crate::editor_config::result_field(cfg.snapshot);
             let painted = energy.as_ref().map(|map| crate::editor_results::surface_colors(map, field));
             let caption = painted.as_ref().map(|(_, min, max)| crate::editor_results::legend_caption(field, *min, *max));
-            // 🎥️ `config::current` is the addressed window's retained orbit pose, `None` until it has
-            // been moved — an unmoved window keeps the model-derived camera and `fit_json`'s framing.
-            // 🎨️ The same `(min, max)` the ramp was normalized over also labels the legend strip's two
-            // ends, so the caption line and the swatch strip can never round differently.
             model_window::render_with_legend(
                 &crate::snapshot::energy_model(doc.snapshot),
                 interaction,
@@ -245,11 +239,7 @@ fn render_body(
                 model_window::config::current(cfg),
             )?
         }
-        // 🪟️ The host's open/scroll state for THIS body, read once per render — every container of
-        // the outliner materialises exactly the slice it names and stamps its own full `total`.
         artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, interaction, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY))?,
-        // 🎨️ `cfg` reaches the inspector because its Results section renders the CURRENT colour field
-        // and binds `set-result-field` — the one control lane D's selector had nowhere to live.
         inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, cfg.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY))?,
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.render", "the unknown-body label could not be assembled"))?,
     };

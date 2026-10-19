@@ -11,12 +11,10 @@ pub struct AdaptiveMembership {
 }
 
 impl AdaptiveMembership {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(mf: MembershipFunction, learning_rate: f64) -> Self {
         Self { mf, learning_rate }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fit(&mut self, samples: &[(f64, f64)], epochs: usize) -> f64 {
         let mut loss = 0.0;
         for _ in 0..epochs {
@@ -60,14 +58,12 @@ pub struct Anfis {
 }
 
 impl Anfis {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(input_count: usize, rules_per_input: usize, input_ranges: &[(f64, f64)]) -> Self {
         let rule_count = rules_per_input.pow(input_count as u32);
         let mut premise_centers = vec![vec![0.0; input_count]; rule_count];
         let mut premise_widths = vec![vec![1.0; input_count]; rule_count];
         let mut idx = 0usize;
         let steps: Vec<Vec<f64>> = input_ranges.iter().map(|(lo, hi)| linspace(*lo, *hi, rules_per_input)).collect();
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn recurse(input_count: usize, steps: &[Vec<f64>], path: &mut Vec<usize>, idx: &mut usize, centers: &mut [Vec<f64>], widths: &mut [Vec<f64>], ranges: &[(f64, f64)]) {
             if path.len() == input_count {
                 for (j, &s) in path.iter().enumerate() {
@@ -89,12 +85,10 @@ impl Anfis {
         Self { input_count, rules_per_input, premise_centers, premise_widths, consequent_coeffs }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rule_count(&self) -> usize {
         self.consequent_coeffs.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn firing_strengths(&self, x: &[f64]) -> Vec<f64> {
         (0..self.rule_count())
             .map(|r| {
@@ -109,7 +103,6 @@ impl Anfis {
             .collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn forward(&self, x: &[f64]) -> f64 {
         let w = self.firing_strengths(x);
         let den: f64 = w.iter().sum();
@@ -127,7 +120,6 @@ impl Anfis {
         num / den
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fit_hybrid(&mut self, data: &[(Vec<f64>, f64)], epochs: usize) -> f64 {
         let mut loss = 0.0;
         for _ in 0..epochs {
@@ -137,7 +129,6 @@ impl Anfis {
         loss
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fit_consequents(&mut self, data: &[(Vec<f64>, f64)]) {
         let n = data.len();
         let r = self.rule_count();
@@ -172,7 +163,6 @@ impl Anfis {
         let _ = n;
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn fit_premises(&mut self, data: &[(Vec<f64>, f64)]) -> f64 {
         let mut loss = 0.0;
         let lr = 0.01;

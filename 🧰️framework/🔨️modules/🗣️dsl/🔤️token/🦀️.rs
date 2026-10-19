@@ -25,7 +25,6 @@ fn interner() -> &'static Mutex<InternerState> {
 }
 
 impl Symbol {
-    // 🚫️async: E1 pure accessor — see `interner` above.
     pub fn intern(text: &str) -> Self {
         let mut state = interner().lock().unwrap_or_else(|poison| poison.into_inner());
         if let Some(id) = state.lookup.get(text) {
@@ -38,7 +37,6 @@ impl Symbol {
         Symbol(id)
     }
 
-    // 🚫️async: E1 pure accessor — see `interner` above.
     pub fn as_str(&self) -> Arc<str> {
         let state = interner().lock().unwrap_or_else(|poison| poison.into_inner());
         state.strings[self.0 as usize].clone()
@@ -108,7 +106,6 @@ pub enum TokenKind {
 }
 
 impl TokenKind {
-    // 🚫️async: E1 pure classifier consumed by `Iterator::filter` sync closures across the dsl module — see R9
     pub fn is_trivia(&self) -> bool {
         matches!(self, TokenKind::Whitespace | TokenKind::Newline | TokenKind::Comment)
     }

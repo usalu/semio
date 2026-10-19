@@ -1,7 +1,7 @@
 /** 🧰️ The shared shard client test kit: the destructured dependencies, the fake shard worker, the client harness and the resident, lifecycle and output fixtures of the settlement tests. */
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { loadActorCompositionFixture } from "@semio-tech/framework-actor/testing/fixtures";
-import { loadRetainedResidentSlotFixture, loadRetainedResidentSlotSchema, loadRetainedResidentPayloadFixture, loadRetainedResidentPayloadSchema, loadRetainedResidentBuilderFixture, loadRetainedResidentBuilderSchema } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadRetainedResidentSlotFixture, loadRetainedResidentSlotSchema, loadRetainedResidentPayloadFixture, loadRetainedResidentPayloadSchema, loadRetainedResidentBuilderFixture, loadRetainedResidentBuilderSchema } from "@semio-tech/framework/ui/testing/fixtures";
 
 /** 🕵️ A getter spy for bun, whose `spyOn` refuses accessor properties: counts reads, optionally replaces the read, restores the original descriptor. */
 export const spyGetter = (prototype: object, name: string) => {
@@ -14,23 +14,23 @@ export const spyGetter = (prototype: object, name: string) => {
 /** ⏳️ Runs a rejection assertion once its promise has settled: vitest's `rejects` returns at once while bun's blocks the test until the promise settles, so a promise that only settles after a later statement (terminate, revoke, release) must be asserted after that statement under both runners. */
 export const afterSettle = (promise: Promise<unknown>, assertion: () => Promise<void>): Promise<void> => promise.then(() => undefined, () => undefined).then(assertion);
 export type TestSource = { readonly directory: string; readonly url: string };
-export type ShardClientInternals = { readonly state: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🗃️state/🟦️.ts").ShardClientState; readonly hub: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientHub };
+export type ShardClientInternals = { readonly state: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🗃️state/🟦️.ts").ShardClientState; readonly hub: import("@semio-tech/framework-actor/shard-client").ShardClientHub };
 /** 🔬 Reads the private hub and the single private state object of a shard client, which the settlement tests observe instead of the former private fields. */
 export const shardClientInternals = (client: unknown): ShardClientInternals => { const hub = Reflect.get(client as object, "hub") as ShardClientInternals["hub"]; return { hub, state: hub.state }; };
 
 export type ActorInstanceLifecycleReceipt = import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt;
 export type ActorInstanceLifetime = import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
-export type InboundMessage = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📨️messages/🟦️.ts").InboundMessage;
-export type Lane = import("../../../../../../../🔨️modules/🎭️actor/🤖️generated/🎭️actor/🟦️.ts").Lane;
-export type OutboundMessage = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📨️messages/🟦️.ts").OutboundMessage;
+export type InboundMessage = import("@semio-tech/framework-actor/shard-client").InboundMessage;
+export type Lane = import("@semio-tech/framework-actor").Lane;
+export type OutboundMessage = import("@semio-tech/framework-actor/shard-client").OutboundMessage;
 export type OwnedResidentAdmission = import("@semio-tech/value-ts/resident").OwnedResidentAdmission;
 export type OwnedResidentRecord = import("@semio-tech/value-ts/resident").OwnedResidentRecord;
-export type OwnedUiResidentInstance = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentInstance;
-export type OwnedUiResidentPayload = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayload;
+export type OwnedUiResidentInstance = import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentInstance;
+export type OwnedUiResidentPayload = import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentPayload;
 export type PendingEntry = import("@semio-tech/framework-actor/shard-client/activation").PendingEntry;
 export type ResidentStep = import("@semio-tech/value-ts/resident").ResidentStep;
 export type ShardBudget = import("@semio-tech/framework-actor/shard-client/wire").ShardBudget;
-export type ShardClientOptions = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/⚙️options/🟦️.ts").ShardClientOptions;
+export type ShardClientOptions = import("@semio-tech/framework-actor/shard-client").ShardClientOptions;
 export type ShardEnvelope = import("@semio-tech/framework-actor/shard-client/wire").ShardEnvelope;
 export type ShardEventEnvelope = import("@semio-tech/framework-actor/shard-client/wire").ShardEventEnvelope;
 export type ShardFrame = import("@semio-tech/framework-actor/shard-client/wire").ShardFrame;
@@ -40,7 +40,7 @@ export type ShardJspiScope = import("@semio-tech/framework-actor/shard-client/he
 export type ShardReturnAdmission = import("@semio-tech/framework-actor/shard-client/activation").ShardReturnAdmission;
 export type ShardSlot = import("@semio-tech/framework-actor/shard-client/activation").ShardSlot;
 export type ShardWorkerLike = import("@semio-tech/framework-actor/shard-client/quota").ShardWorkerLike;
-export type UiResidentSourceProof = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayloadSourceRelease;
+export type UiResidentSourceProof = import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentPayloadSourceRelease;
 export type ShardClient = import("@semio-tech/framework-actor/shard-client").ShardClient;
 export type OwnedNativeUiPatchAuthority = import("@semio-tech/framework-actor/shard-client/ui-patch").OwnedNativeUiPatchAuthority;
 export type OwnedNativeUiPatchSubmissionReceipt = import("@semio-tech/framework-actor/shard-client/ui-patch").OwnedNativeUiPatchSubmissionReceipt;
@@ -51,11 +51,11 @@ export type OwnedActorTurnOutputs = import("@semio-tech/framework-actor/activati
 export type OwnedKernelReturnContent = import("@semio-tech/framework-kernel/return/content/input").OwnedKernelReturnContent;
 export type OwnedResidentLedger = import("@semio-tech/value-ts/resident").OwnedResidentLedger;
 export type OwnedResidentRetirement = import("@semio-tech/value-ts/resident").OwnedResidentRetirement;
-export type OwnedUiInstance = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstance;
-export type OwnedUiInstanceRetirement = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstanceRetirement;
-export type OwnedUiPatchAcknowledgement = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiPatchAcknowledgement;
-export type OwnedUiPatchInputRetirement = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiPatchInputRetirement;
-export type OwnedUiResidentPool = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPool;
+export type OwnedUiInstance = import("@semio-tech/framework/modules/ui/contract/retained/instance").OwnedUiInstance;
+export type OwnedUiInstanceRetirement = import("@semio-tech/framework/modules/ui/contract/retained/instance").OwnedUiInstanceRetirement;
+export type OwnedUiPatchAcknowledgement = import("@semio-tech/framework/modules/ui/contract/retained/instance").OwnedUiPatchAcknowledgement;
+export type OwnedUiPatchInputRetirement = import("@semio-tech/framework/modules/ui/contract/retained/instance").OwnedUiPatchInputRetirement;
+export type OwnedUiResidentPool = import("@semio-tech/framework/ui/contract/retained/resident").OwnedUiResidentPool;
 export type EffectReplyPayload = { readonly requestId: string; readonly value?: unknown; readonly message?: string };
 export type EffectReplyMessage = { readonly kind: "frame"; readonly frame: { readonly kind: "Envelope"; readonly envelope: { readonly payload: { readonly kind: "effect-complete" | "effect-error"; readonly payload: EffectReplyPayload } } } };
 
@@ -138,7 +138,7 @@ export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMet
     return pool;
   }
   async function fixtureResidentScope(pool: OwnedUiResidentPool, ledger: OwnedResidentLedger, lease: ShardInstanceLifecycleLease): Promise<OwnedUiResidentInstance> {
-    const { OwnedUiResidentInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
+    const { OwnedUiResidentInstance } = await import("@semio-tech/framework/ui/contract/retained/resident");
     const fixture = await loadRetainedResidentSlotFixture();
     const schema = await loadRetainedResidentSlotSchema(); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     
@@ -157,7 +157,7 @@ export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMet
     return scope;
   }
   async function fixtureResidentPayload(scope: OwnedUiResidentInstance, ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>): Promise<OwnedUiResidentPayload> {
-    const { OwnedUiResidentPayload } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
+    const { OwnedUiResidentPayload } = await import("@semio-tech/framework/ui/contract/retained/resident");
     const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input");
     const fixture = await loadRetainedResidentPayloadFixture(); const schema = await loadRetainedResidentPayloadSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); 
@@ -175,7 +175,7 @@ export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMet
     return payload;
   }
   async function fixtureResidentBuilder(ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>, resident: OwnedUiResidentPayload) {
-    const { OwnedUiOperationPayloadBuilder } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
+    const { OwnedUiOperationPayloadBuilder } = await import("@semio-tech/framework/ui/contract/retained/operations/wire/pages");
     const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input");
     const fixture = await loadRetainedResidentBuilderFixture(); const schema = await loadRetainedResidentBuilderSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); 

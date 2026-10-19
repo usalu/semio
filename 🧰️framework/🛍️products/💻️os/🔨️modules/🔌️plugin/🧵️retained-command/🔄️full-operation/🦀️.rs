@@ -2,7 +2,6 @@
 use semio_framework_plugin_operation::{ToolCancellationLeaseRetirement, original_lease_cursor_admit, original_lease_cursor_release};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 pub(crate) use semio_framework_actor::typed_operation_diagnostics as diagnostic_publication;
-
 use semio_framework_value::DslValue;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -710,7 +709,5 @@ pub fn bounded_json_items(value: Option<&DslValue>, maximum: usize) -> Result<us
 
 
 pub use semio_framework_plugin_job::lifted_full_operation_job::*;
-
-include!("🏭️producer/🦀️.rs");
 
 include!("🏭️producer/🦀️.rs");

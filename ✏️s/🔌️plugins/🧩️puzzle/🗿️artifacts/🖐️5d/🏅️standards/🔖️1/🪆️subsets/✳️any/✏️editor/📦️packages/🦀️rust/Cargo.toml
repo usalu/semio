@@ -15,9 +15,6 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
-[features]
-testkit = ["semio-framework-plugin/artifact-app-testing", "semio-framework-os-kernel/protocol-laws", "semio-framework-os-kernel/mutation-testing", "semio-s-plugin-puzzle-jobs/testing"]
-
 [dependencies]
 machine = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
@@ -32,6 +29,7 @@ semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰�
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-infinite = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -65,6 +63,7 @@ semio-s-artifact-puzzle-3d-precompute = { workspace = true }
 semio-s-artifact-puzzle-3d-precompute-brush = { workspace = true }
 semio-s-artifact-puzzle-5d-catalog = { path = "../../🗂️catalog/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-dispatch = { path = "../../🎬️dispatch/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-dispatch-panels = { path = "../../🎬️dispatch/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-document-records = { path = "../../../🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-interaction = { path = "../../🕹️interaction/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../../🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust" }
@@ -77,7 +76,7 @@ semio-s-artifact-puzzle-5d-mut-any-7 = { path = "../../../🧬️schema/🧬️m
 semio-s-artifact-puzzle-5d-mut-any-8 = { path = "../../../🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-retained = { path = "../../🧵️retained/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-5d-store-preparation = { path = "../../🧰️kit/💾️store-preparation/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-store-preparation-commands = { path = "../../🧰️kit/💾️store-preparation/🎮️command-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-tests = { path = "../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }

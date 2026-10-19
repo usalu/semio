@@ -25,6 +25,7 @@ semio-framework-os-infinite-board-dag-graph = { path = "../../../../../../♾️
 semio-framework-os-infinite-board-dag-host = { path = "../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-pack-error = { path = "../../../../../../../../../🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }

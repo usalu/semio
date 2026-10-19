@@ -38,9 +38,9 @@ async fn translate_moves_vertices() {
 #[semio_framework_async_macros::async_test]
 async fn from_indexed_triangles_builds_triangle_faces() {
     let positions = vec![
-        0.0, 0.0, 0.0, //
-        1.0, 0.0, 0.0, //
-        0.0, 1.0, 0.0, //
+        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
     ];
     let indices = vec![0, 1, 2];
     let mesh = HalfedgeMesh::from_indexed_triangles(&positions, &indices).unwrap();
@@ -50,25 +50,22 @@ async fn from_indexed_triangles_builds_triangle_faces() {
 
 #[semio_framework_async_macros::async_test]
 async fn from_indexed_triangles_by_face_id_merges_per_brep_face_without_filling_holes() {
-    // Two quads on z=0 sharing no edge (a slab with a gap — like a face pair that must not be bridged),
-    // plus a third vertical face that should stay separate. Face ids: 1 covers both coplanar quads'
-    // triangles as two separate B-Rep faces (10 and 11), so the gap is never capped.
     let positions = vec![
-        0.0, 0.0, 0.0, // 0
-        1.0, 0.0, 0.0, // 1
-        1.0, 1.0, 0.0, // 2
-        0.0, 1.0, 0.0, // 3
-        2.0, 0.0, 0.0, // 4
-        3.0, 0.0, 0.0, // 5
-        3.0, 1.0, 0.0, // 6
-        2.0, 1.0, 0.0, // 7
-        0.0, 0.0, 1.0, // 8
-        1.0, 0.0, 1.0, // 9
+        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        2.0, 0.0, 0.0,
+        3.0, 0.0, 0.0,
+        3.0, 1.0, 0.0,
+        2.0, 1.0, 0.0,
+        0.0, 0.0, 1.0,
+        1.0, 0.0, 1.0,
     ];
     let indices = vec![
-        0, 1, 2, 0, 2, 3, // face 10 — left quad
-        4, 5, 6, 4, 6, 7, // face 11 — right quad (gap between x=1 and x=2)
-        0, 1, 9, 0, 9, 8, // face 12 — vertical
+        0, 1, 2, 0, 2, 3,
+        4, 5, 6, 4, 6, 7,
+        0, 1, 9, 0, 9, 8,
     ];
     let face_ids = vec![10, 10, 11, 11, 12, 12];
     let mut mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &face_ids).unwrap();
@@ -90,7 +87,6 @@ async fn from_indexed_triangles_by_face_id_merges_per_brep_face_without_filling_
 
 #[semio_framework_async_macros::async_test]
 async fn orient_faces_consistently_fixes_same_winding_neighbors() {
-    // Two quads sharing edge 1-2, both wound CCW in XY — shared edge has the same directed sense.
     let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
     let faces = vec![vec![0, 1, 2, 3], vec![1, 2, 5, 4]];
     let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
@@ -212,8 +208,6 @@ async fn json_roundtrip() {
 
 #[semio_framework_async_macros::async_test]
 async fn newell_normal_handles_collinear_first_corner() {
-    // First three points (0,0,0)-(1,0,0)-(2,0,0) are collinear: the old first-triangle-cross
-    // method degenerates to a zero vector here, Newell's method must not.
     let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
     let mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).unwrap();
     let normal = mesh.face_normal(FaceId(0)).unwrap();
@@ -223,7 +217,6 @@ async fn newell_normal_handles_collinear_first_corner() {
 
 #[semio_framework_async_macros::async_test]
 async fn ear_clipping_triangulates_concave_l_polygon() {
-    // Concave L-shaped hexagon.
     let corners = [(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0), (1.0, 2.0), (0.0, 2.0)];
     let mut positions: Vec<Vec3> = Vec::with_capacity(corners.len());
     for &(x, y) in &corners {
@@ -246,7 +239,6 @@ async fn ear_clipping_triangulates_concave_l_polygon() {
     for tri in &triangles {
         let pts: Vec<(f64, f64)> = tri.iter().map(|&i| (corners[i].0 as f64, corners[i].1 as f64)).collect();
         triangle_area_sum += shoelace(&pts);
-        // Nondegenerate.
         assert!(shoelace(&pts) > 1e-6);
     }
     assert!((triangle_area_sum - polygon_area).abs() < 1e-6);
@@ -272,7 +264,6 @@ async fn dissolve_edges_merges_two_triangles_into_a_quad() {
     let faces = vec![vec![0, 1, 2], vec![0, 2, 3]];
     let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
     assert_eq!(mesh.face_count(), 2);
-    // Halfedge index 2 is face 0's edge 2->0, the shared diagonal.
     mesh.dissolve_edges(&[EdgeId(2)]).unwrap();
     assert_eq!(mesh.face_count(), 1);
     let verts = mesh.face_vertex_ids(FaceId(0)).unwrap();
@@ -281,8 +272,6 @@ async fn dissolve_edges_merges_two_triangles_into_a_quad() {
 
 #[semio_framework_async_macros::async_test]
 async fn merge_and_cleanup_collapses_seam_vertices_of_a_contiguous_strip() {
-    // Three coplanar quads in a row sharing seam edges; the seam vertices are used by exactly
-    // two faces each and lie on straight boundary lines, so they must be dropped after merge.
     let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0], [3.0, 0.0, 0.0], [3.0, 1.0, 0.0]];
     let faces = vec![vec![0, 1, 2, 3], vec![1, 4, 5, 2], vec![4, 6, 7, 5]];
     let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
@@ -307,15 +296,13 @@ async fn tessellate_concave_face_tags_all_triangles_with_one_face_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn weld_coincident_vertices_unifies_independently_tessellated_seam() {
-    // Two quads sharing an edge but built with DUPLICATE (non-shared) vertices at that seam, as an
-    // importer would produce when tessellating adjacent source faces independently.
     let positions = vec![
         [0.0, 0.0, 0.0],
-        [1.0, 0.0, 0.0], // seam vertex, quad A's copy
-        [1.0, 1.0, 0.0], // seam vertex, quad A's copy
+        [1.0, 0.0, 0.0],
+        [1.0, 1.0, 0.0],
         [0.0, 1.0, 0.0],
-        [1.0, 0.0, 0.0], // seam vertex, quad B's copy (duplicate position, different id)
-        [1.0, 1.0, 0.0], // seam vertex, quad B's copy (duplicate position, different id)
+        [1.0, 0.0, 0.0],
+        [1.0, 1.0, 0.0],
         [2.0, 0.0, 0.0],
         [2.0, 1.0, 0.0],
     ];
@@ -333,7 +320,6 @@ async fn weld_coincident_vertices_unifies_independently_tessellated_seam() {
 #[semio_framework_async_macros::async_test]
 async fn fill_holes_caps_a_missing_box_face() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-    // Remove one face by rebuilding without it.
     let (positions, mut face_list) = mesh.polygon_soup();
     face_list.remove(0);
     assert_eq!(face_list.len(), 5);
@@ -341,8 +327,6 @@ async fn fill_holes_caps_a_missing_box_face() {
     let filled = mesh.fill_holes().unwrap();
     assert_eq!(filled, 1);
     assert_eq!(mesh.face_count(), 6);
-    // Verify the resulting mesh is watertight: every directed boundary edge (position-keyed) now has
-    // an opposite-winding counterpart.
     let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
     for fi in 0..mesh.face_count() {
         let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
@@ -358,9 +342,6 @@ async fn fill_holes_caps_a_missing_box_face() {
 
 #[semio_framework_async_macros::async_test]
 async fn fill_holes_disambiguates_two_holes_sharing_one_vertex() {
-    // 3x3 grid of vertices forming a 2x2 grid of quads; keep only the two DIAGONAL quads, so the two
-    // missing (diagonally opposite) quads are separate holes that touch at exactly the shared center
-    // vertex (index 4). A vertex-only "next" map cannot disambiguate this; proper halfedge rotation can.
     let mut positions = Vec::new();
     for i in 0..3 {
         for j in 0..3 {
@@ -522,7 +503,6 @@ async fn move_vertices_rejects_empty_and_moves_selected() {
 async fn rotate_vertices_rejects_empty_and_rotates_around_pivot() {
     let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
     assert_eq!(mesh.rotate_vertices(&[], Vec3::new(0.0, 0.0, 1.0), 1.0, Vec3::ZERO), Err(MeshKernelError::EmptySelection));
-    // Vertex 0 starts at (-1,-1,-1); rotating 90° about Z around the origin maps (x,y) -> (-y,x).
     mesh.rotate_vertices(&[VertexId(0)], Vec3::new(0.0, 0.0, 1.0), std::f32::consts::FRAC_PI_2, Vec3::ZERO).unwrap();
     let p = mesh.vertex_position(VertexId(0)).unwrap();
     assert!((p.x() - 1.0).abs() < 1e-4, "got x={}", p.x());

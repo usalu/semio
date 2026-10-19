@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::{retirement::RetireOwned,retained_clone::RetainedCloneSource};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
@@ -9,7 +10,7 @@ fn close(lookup:&mut RetainedKeyLookup){lookup.begin_close();while !lookup.termi
 /// 🧫️ Unique, absent, duplicate and empty keys agree with portable neutral query rows.
 #[test]
 fn retained_key_lookup_matches_neutral_queries_without_key_or_row_clone(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🔎️key/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
   let mut rows=source(case["keys"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect::<Vec<_>>());
   let mut key=source(case["needle"].as_str().unwrap().to_owned());let mut lookup=RetainedKeyLookup::new();let mut turns=0;

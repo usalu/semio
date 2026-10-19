@@ -1,0 +1,3 @@
+const j = JSON.parse(await Bun.file(import.meta.dir + "/../🗑️generated/aud-cachecov.json").text());
+const std=/^(build|check|test|test-snapshot-sqlite(-native|-source)?|verify-.*|🏭️generator.*|graph-generate|package|test-original-receiving-(native|source)|test-.*)$/;
+for (const t of j.targets.filter((t:any)=>t.owner==="✏️s" && (t.classProposal==="unclassified-cache-off"||(!std.test(t.name)&&t.classProposal.startsWith("determ"))||t.classProposal==="side-effecting"||t.classProposal==="test-against-live"))) console.log(t.classProposal.slice(0,6),t.name,"|",t.cache,"|",t.file.replace("/📋️project.json","").replace("✏️s/",""),"|",(t.command??"").slice(0,90));

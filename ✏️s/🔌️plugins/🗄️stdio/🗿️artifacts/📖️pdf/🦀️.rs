@@ -298,7 +298,7 @@ pub mod editor {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17a::*;
 
         pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf17a::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17a::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17a::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -313,8 +313,8 @@ pub mod editor {
     pub mod pdf17 {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17::presence;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -329,8 +329,8 @@ pub mod editor {
     pub mod pdf17e {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17e::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17e::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17e::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17e::presence;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17e::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -345,8 +345,8 @@ pub mod editor {
     pub mod pdf17h {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17h::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17h::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17h::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17h::presence;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17h::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -361,8 +361,8 @@ pub mod editor {
     pub mod pdf17ua {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17ua::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17ua::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17ua::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17ua::presence;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17ua::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -377,8 +377,8 @@ pub mod editor {
     pub mod pdf17vt {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::editor::pdf17vt::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17vt::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17vt::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17vt::presence;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17vt::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -393,8 +393,8 @@ pub mod editor {
     pub mod pdf17x {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17x::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17x::presence;
-        pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17x::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17x::presence;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::editor::pdf17x::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -413,8 +413,8 @@ pub mod viewer {
     pub mod pdf14a {
         pub use semio_s_artifact_stdio_pdf_schema_5::viewer::pdf14a::*;
 
-        pub use semio_s_artifact_stdio_pdf_snapshot::viewer::pdf14a::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf14a::config;
+        pub use semio_s_artifact_stdio_pdf_snapshot_surfaces::viewer::pdf14a::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf14a::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -429,8 +429,8 @@ pub mod viewer {
     pub mod pdf14 {
         pub use semio_s_artifact_stdio_pdf_schema_5::viewer::pdf14::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf14::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf14::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf14::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf14::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -445,8 +445,8 @@ pub mod viewer {
     pub mod pdf14x {
         pub use semio_s_artifact_stdio_pdf_mut_family_15::viewer::pdf14x::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf14x::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf14x::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf14x::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf14x::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -461,8 +461,8 @@ pub mod viewer {
     pub mod pdf17a {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::viewer::pdf17a::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17a::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17a::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17a::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17a::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -477,8 +477,8 @@ pub mod viewer {
     pub mod pdf17 {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::viewer::pdf17::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -493,8 +493,8 @@ pub mod viewer {
     pub mod pdf17e {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::viewer::pdf17e::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17e::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17e::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17e::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17e::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -509,8 +509,8 @@ pub mod viewer {
     pub mod pdf17h {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::viewer::pdf17h::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17h::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17h::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17h::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17h::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -525,8 +525,8 @@ pub mod viewer {
     pub mod pdf17ua {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::viewer::pdf17ua::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17ua::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17ua::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17ua::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17ua::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -541,8 +541,8 @@ pub mod viewer {
     pub mod pdf17vt {
         pub use semio_s_artifact_stdio_pdf_viewer::viewer::pdf17vt::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17vt::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17vt::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17vt::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17vt::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -557,8 +557,8 @@ pub mod viewer {
     pub mod pdf17x {
         pub use semio_s_artifact_stdio_pdf_pdf_snapshot_value_tests::viewer::pdf17x::*;
 
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17x::presence;
-        pub use semio_s_artifact_stdio_pdf_diff::viewer::pdf17x::config;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17x::presence;
+        pub use semio_s_artifact_stdio_pdf_diff_surfaces::viewer::pdf17x::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]

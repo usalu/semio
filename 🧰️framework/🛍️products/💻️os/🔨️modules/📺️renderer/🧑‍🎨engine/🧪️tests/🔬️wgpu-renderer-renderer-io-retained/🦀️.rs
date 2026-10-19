@@ -14,7 +14,7 @@ fn headless_entrypoint_drives_retained_io_and_matches_the_json_oracle() {
     std::fs::write(&path,serde_json::to_vec(&contract["document"]).expect("oracle input")).expect("test document");
     let oracle:serde_json::Value=serde_json::from_slice(&std::fs::read(&path).expect("independent file read")).expect("independent JSON parser");
     let actual=crate::native_entrypoint::drive_native_entrypoint(async {
-        let bytes=read_renderer_source_bytes(&path,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("headless original source bytes");
+        let bytes=read_renderer_source_bytes(&path,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("headless original source bytes");
         let parsed:serde_json::Value=serde_json::from_slice(bytes.bytes()).expect("renderer JSON");
         drop(bytes);
         parsed
@@ -51,7 +51,7 @@ fn native_app_worker_completes_io_without_a_presentation_host() {
     let (sent,received)=std::sync::mpsc::channel();
     let request_path=path.clone();
     spawn_app_task(async move {
-        let bytes=read_renderer_source_bytes(&request_path,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("worker original source bytes");
+        let bytes=read_renderer_source_bytes(&request_path,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("worker original source bytes");
         let actual:serde_json::Value=serde_json::from_slice(bytes.bytes()).expect("renderer JSON");
         drop(bytes);
         sent.send(actual).expect("worker result");
@@ -76,7 +76,7 @@ fn native_kernel_worker_completes_io_without_a_presentation_host() {
     let (sent,received)=std::sync::mpsc::channel();
     let request_path=path.clone();
     let _task=kernel_runtime::KernelPoolFuture::spawn(renderer_worker_pool(),semio_framework_async::Lane::Interactive,async move {
-        let bytes=read_renderer_source_bytes(&request_path,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("worker original source bytes");
+        let bytes=read_renderer_source_bytes(&request_path,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES as u64).await.expect("worker original source bytes");
         let actual:serde_json::Value=serde_json::from_slice(bytes.bytes()).expect("renderer JSON");
         drop(bytes);
         sent.send(actual).expect("worker result");
@@ -121,7 +121,7 @@ fn native_component_reader_admits_local_dev_artifacts_above_catalog_network_boun
     std::fs::File::create(&path).expect("oversized local input").set_len(maximum+1).expect("bounded sparse input");
     crate::native_entrypoint::drive_native_entrypoint(async{
         let refusal=kernel_runtime::read_native_component(&path).await.expect_err("maximum plus one local byte must be refused");
-        assert_eq!(refusal.kind,crate::RendererSourceIoFailureKind::Extent(semio_framework_os_services::NativeIoStreamRefusal{length:maximum+1,maximum_bytes:maximum}));
+        assert_eq!(refusal.kind,crate::RendererSourceIoFailureKind::Extent(semio_framework_os_services_native_io::NativeIoStreamRefusal{length:maximum+1,maximum_bytes:maximum}));
         drop(refusal);
     });
     std::fs::remove_file(path).expect("remove test output");

@@ -7,6 +7,7 @@ use semio_framework_plugin_reactor_lifecycle::instance_lifetime;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
 use semio_framework_plugin_reactor_turn as turn;
+use semio_framework_plugin_reactor_turn::original_receiving::ReceivingSource;
 
 #[test]
 fn original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source(){

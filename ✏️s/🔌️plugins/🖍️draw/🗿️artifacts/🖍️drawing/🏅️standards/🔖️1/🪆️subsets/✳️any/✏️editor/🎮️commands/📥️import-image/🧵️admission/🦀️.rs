@@ -9,6 +9,9 @@ use semio_framework_value::{retirement::controlled::ControlledRetirement,retaine
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
+use semio_framework::Fault;
+use semio_framework_plugin::component::Emit;
+use semio_framework_plugin::component::NoConfigMutation;
 pub type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 /// 🪙️ Whether the step wallet still funds one whole work turn quoted as `demand`.
 fn can_enter(grant:RetainedCloneGrant,demand:semio_framework_value::RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}

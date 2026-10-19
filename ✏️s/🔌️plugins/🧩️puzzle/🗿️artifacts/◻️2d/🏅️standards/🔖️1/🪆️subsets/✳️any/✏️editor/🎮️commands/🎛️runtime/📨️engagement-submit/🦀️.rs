@@ -25,7 +25,6 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
         "connect" => {
             let (source, target) = match operands.as_slice() {
                 [source, target, ..] => ((*source).to_string(), (*target).to_string()),
-                // 🔗️ A bare `connect` takes the two selected handles, the same pair the context-menu row does.
                 [] => match selected_ids.as_slice() {
                     [source, target] => (source.clone(), target.clone()),
                     _ => (String::new(), String::new()),
@@ -40,16 +39,11 @@ pub fn engagement_submit(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) 
             }
         }
         "select" | "brush" => {
-            // 🧰️ Reconcile the engagement text-command utility switch through the host-owned active
-            // utility: point the local engine now and let the framework persist the new active utility
-            // for the pane via `Effect::SetActiveUtility`.
             ctx.host.borrow_mut().set_active_utility(verb);
             ctx.effects.push(Effect::SetActiveUtility { window_id: ctx.window_id.unwrap_or(ctx.window_kind).to_string(), utility_id: verb.to_string() });
             true
         }
         "fill" => {
-            // 🛠️ Fill is a mode-level tool, not a window utility — activate it through
-            // `Effect::SetActiveTool`, leaving this window's active utility untouched.
             if let Some(count) = numbers.first().filter(|count| **count >= 0.0 && count.round() <= f64::from(u32::MAX)) {
                 ctx.scene.runtime.fill_count = count.round() as u32;
             }

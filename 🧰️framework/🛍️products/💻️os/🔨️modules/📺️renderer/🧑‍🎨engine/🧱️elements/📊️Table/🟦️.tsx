@@ -239,7 +239,6 @@ function renderTableCell(cell: TableCellRecord, id: string, columnLabel: string 
 //#region Component
 export function TableHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.table;
-  // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
   const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");

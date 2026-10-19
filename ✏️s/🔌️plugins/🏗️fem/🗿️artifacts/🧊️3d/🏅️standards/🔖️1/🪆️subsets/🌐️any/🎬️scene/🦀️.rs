@@ -1,4 +1,4 @@
-//! every solid's surface mesh, and one pickable instance per document entity — nodes and members
+//! 🔷️ every solid's surface mesh, and one pickable instance per document entity — nodes and members
 //! 🎬️ Fem3d — the `World3d` scene the editor's windows and the viewer draw: the `"box"`/`"cone"` primitives plus
 //! as boxes, solids as their meshed surface, supports as cones under their node, loads as arrows —
 //! every instance keyed by the RAW entity id it stands for and tagged with its `fem3d` granularity,

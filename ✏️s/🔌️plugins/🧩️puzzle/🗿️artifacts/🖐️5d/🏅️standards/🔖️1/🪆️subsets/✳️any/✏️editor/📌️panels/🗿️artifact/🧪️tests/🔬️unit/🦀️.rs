@@ -266,7 +266,6 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     let (parts_len, grips_len, fasteners_len) = (ui::UI_DOCUMENT_NODES + 72, 24, ui::UI_DOCUMENT_NODES + 16);
     let scene = scaled_scene(parts_len, grips_len, fasteners_len);
     let mut requests = vec![request(PARTS_SECTION, Some(true), 0, 512), request(FASTENERS_SECTION, Some(true), 0, 512)];
-    // 🔑️ A nested container is addressed by its window PATH: the parts section, then the part row.
     requests.extend((0..24).map(|index| request(&nested_key(PARTS_SECTION, &format!("part-{index}")), Some(true), 0, 512)));
     let view = windows_for(requests);
     let windows = TreeWindows::for_body(&view, BODY_KEY);
@@ -280,7 +279,6 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     }
     let records = node_records(&tree);
 
-    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
     let mut keys = Vec::new();
     node_keys(&tree, &mut keys);
     let mut unique = keys.clone();

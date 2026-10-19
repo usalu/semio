@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [features]
 testkit = []
+durable-group-testing = []
 
 [dependencies]
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
@@ -38,7 +39,11 @@ semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/�
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

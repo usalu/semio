@@ -1,4 +1,4 @@
-//! volumes by one common world offset. The gesture's own inputs (which ids, which offset) are the
+//! 🧊️ volumes by one common world offset. The gesture's own inputs (which ids, which offset) are the
 //! ✋️ Puzzle3d mutation — `DragSelection`: a relative, parametric drag of a set of objects and target
 //! payload, so editing the drag in history re-derives every origin from whatever base it replays on.
 use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::MoveTargetVolume, semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::ReplaceAttractionGeometry, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};

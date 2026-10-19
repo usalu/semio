@@ -94,11 +94,9 @@ function WorldR3fOrderedLayersStoryHost(): ReactElement {
           <WorldOrbitGated zoom={1} />
           <WorldLodBridge lodRef={lodRef} distanceReference={30} gridFactor={DEFAULT_LOD_GRID_FACTOR} gridSnapEnabled={false} showLodGrid={false} automaticLod depthVariableLod={false} manualLod={DEFAULT_MANUAL_LOD}>
             <WorldLayerStack>
-              {/* 📐️ Background layer (negative order): the LOD grid, composed explicitly via `GridLayer` instead of `WorldLodBridge`'s built-in `showLodGrid` toggle. */}
               <WorldLayer order={-1} name="grid-background">
                 <GridLayer gridDatum={[0, 0, 0]} />
               </WorldLayer>
-              {/* 🧊️ Foreground layer (order 0): the actual content, rendered after (i.e. visually atop) the grid. */}
               <WorldLayer order={0} name="content">
                 <mesh position={[0, 0, 2]}>
                   <boxGeometry args={[4, 4, 4]} />

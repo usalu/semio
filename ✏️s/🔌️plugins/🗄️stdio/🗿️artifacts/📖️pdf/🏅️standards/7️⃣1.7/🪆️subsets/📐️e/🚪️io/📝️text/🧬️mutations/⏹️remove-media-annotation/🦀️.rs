@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-media-annotation`.
+//! 🆔️ Direct text identity for `remove-media-annotation`.
 
 pub const OPCODE: &str = "remove-media-annotation";
 pub const TEXT_OPCODE: &str = OPCODE;

@@ -58,7 +58,7 @@ impl LayoutImportJob {
     pub(super) fn fault<'a>(&'a mut self, cx: &mut StepContext<'_>, detail: &str) -> LayoutJobTurn<'a> {
         if self.fault_detail.is_none() {
             let bytes = detail.as_bytes();
-            self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
+            self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
         }
         let bytes = self.fault_detail.as_deref().unwrap_or_default();
         self.fault_publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, bytes, cx)
@@ -289,7 +289,6 @@ pub(super) fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<
     let (kind, page_id) = match *request.command {
         LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
         LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.or_else(|| Some(blueprint::config::from_snapshot(request.window_config.as_ref()).active_page_id))),
-        // 📕️ An unaddressed PDF is the whole document (every page); PNG/SVG stay single-page.
         LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id),
         LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
         _ => return Ok(None),
@@ -298,10 +297,6 @@ pub(super) fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "layout export command does not match its exact registered tool"));
     }
     let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
-    // 📤️ A queue of the job's OWN, never `request.output_chunks`: the mounted operation keeps a clone
-    // of the request's queue and drains it at retirement (`MountedTypedCommandFullOperation::
-    // retirement_step`), which emptied every download right after the host's ACK — a 0-byte `Demo.pdf`
-    // (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). Same shape as puzzle's `export_snapshot`.
     drop(request.output_chunks);
     let payload = LayoutExportToolPayload {
         request: LayoutExportRequest { kind, page_id, snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex },

@@ -33,8 +33,6 @@ fn fem2d_mesh_preview_returns_region_triangles() {
     assert!(!meshes[0].tris.is_empty(), "expected at least one triangle");
     assert!(!meshes[0].points.is_empty(), "expected mesh points");
     assert_eq!(meshes[0].node_ids.len(), meshes[0].points.len(), "one node id per mesh point");
-    // `rectangle_region_doc`'s 4 outline corners coincide with existing doc nodes `c0..c3`, so those
-    // 4 mesh points must resolve to the doc's own node ids, not synthesized `r1_m*` ids.
     for corner_id in ["c0", "c1", "c2", "c3"] {
         assert!(meshes[0].node_ids.contains(&corner_id.to_string()), "expected corner {corner_id} to be reused, got {:?}", meshes[0].node_ids);
     }

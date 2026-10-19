@@ -71,7 +71,7 @@ test("the portable ownership schema preserves every original law, witness byte a
     expect(project.name).toBe(row.target.slice(0, row.target.lastIndexOf(":")));
     const target = project.targets[row.target.slice(row.target.lastIndexOf(":") + 1)];
     expect(target.options.command).toBe("bun ./📜️script.ts " + row.command);
-    expect(target.cache).toBe(false);
+    expect(target.cache === false || target.inputs?.includes("reads")).toBe(true);
     for (const input of row.inputs) expect(digest(readFileSync(join(root, input.path)))).toBe(input.sha256);
   }
   for (const input of corpus.generalInputs) expect(digest(readFileSync(join(root, input.path)))).toBe(input.sha256);

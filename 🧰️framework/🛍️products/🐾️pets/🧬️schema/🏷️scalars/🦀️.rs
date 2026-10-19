@@ -263,7 +263,7 @@ pub enum Drift {
 /// 🌬️ Every [`Drift`], in the order of the contract.
 pub const DRIFTS: [Drift; 5] = [Drift::Fall, Drift::Rise, Drift::Burst, Drift::Orbit, Drift::Drift];
 
-/// 🕹️ What a learner can ask of a pet without a pointer: a hello, a trick, petting it or tossing it.
+/// 🕹️ What a learner can ask of a free pet without a pointer: a hello, a click trick, petting, tossing or an explicit hand gesture.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Deed {
@@ -271,10 +271,14 @@ pub enum Deed {
     Trick,
     Pet,
     Toss,
+    Circle,
+    Countercircle,
+    Stroke,
+    Shake,
 }
 
 /// 🎮️ Every [`Deed`], in the order of the contract.
-pub const DEEDS: [Deed; 4] = [Deed::Hello, Deed::Trick, Deed::Pet, Deed::Toss];
+pub const DEEDS: [Deed; 8] = [Deed::Hello, Deed::Trick, Deed::Pet, Deed::Toss, Deed::Circle, Deed::Countercircle, Deed::Stroke, Deed::Shake];
 
 /// 🖲️ What presses a pet: a mouse, a pen or a finger.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]

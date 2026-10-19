@@ -6,7 +6,7 @@ pub struct NativeSnapshotEncodeOwner<'owner,'control>{native:&'owner mut NativeE
 impl<'owner,'control> NativeSnapshotEncodeOwner<'owner,'control>{
  pub(super) fn borrowed_pending(native:&'owner mut NativeEncodeControl<'control>,grant:RetainedCloneGrant,wallet:&'owner mut RetainedCloneProgress,pending:Option<&'owner mut Option<Box<dyn ErasedSnapshotRetirement>>>)->Self{let mut owner=Self::borrowed(native,grant,wallet);owner.pending=pending;owner}
  pub(super) fn with_io<T>(&mut self,operation:impl FnOnce(&mut super::IoRunControl<'_,'control>)->Result<T,ValueError>)->Result<T,ValueError>{let mut run=super::IoRunControl::borrowed_encoding(self.native,self.grant,&mut self.progress,self.pending.as_deref_mut());operation(&mut run)}
- pub(super) fn with_io_companion<T>(&mut self,decode:&mut semio_framework_value::NativeDecodeControl<'control>,operation:impl FnOnce(&mut super::IoRunControl<'_,'control>)->Result<T,ValueError>)->Result<T,ValueError>{let mut run=super::IoRunControl::borrowed_native(decode,self.native,self.grant,&mut self.progress,self.pending.as_deref_mut(),super::IoNativeDirection::Encode);operation(&mut run)}
+ pub(super) fn with_io_companion<T>(&mut self,decode:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'control>,operation:impl FnOnce(&mut super::IoRunControl<'_,'control>)->Result<T,ValueError>)->Result<T,ValueError>{let mut run=super::IoRunControl::borrowed_native(decode,self.native,self.grant,&mut self.progress,self.pending.as_deref_mut(),super::IoNativeDirection::Encode);operation(&mut run)}
  /// 🫴️ Requires original native authority and an independently supplied full physical grant.
  pub fn new(native:&'owner mut NativeEncodeControl<'control>,grant:RetainedCloneGrant)->Self{Self{native,grant,progress:RetainedCloneProgress::default(),wallet:None,pending:None}}
  /// 🔗️ Reborrows the caller's existing physical wallet without resetting its accepted receipts.
@@ -59,7 +59,7 @@ macro_rules! snapshot_admission{
  }};
 }
 snapshot_admission!(NativeEncodeControl<'_>);
-snapshot_admission!(semio_framework_value::NativeDecodeControl<'_>);
+snapshot_admission!(semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>);
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

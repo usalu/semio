@@ -23,7 +23,6 @@ pub enum DeflateLevelHint {
 
 impl DeflateLevelHint {
     /// 📐️ Decodes FLG's 2-bit FLEVEL field.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_bits(bits: u8) -> Self {
         match bits & 0b11 {
             0 => DeflateLevelHint::Fastest,
@@ -33,7 +32,6 @@ impl DeflateLevelHint {
         }
     }
     /// 📐️ Encodes to FLG's 2-bit FLEVEL field.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_bits(self) -> u8 {
         match self {
             DeflateLevelHint::Fastest => 0,

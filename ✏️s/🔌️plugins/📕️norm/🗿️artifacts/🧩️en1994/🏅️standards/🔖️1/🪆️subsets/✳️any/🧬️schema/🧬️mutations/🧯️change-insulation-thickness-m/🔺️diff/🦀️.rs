@@ -1,4 +1,4 @@
-//! Diff for `change-insulation-thickness-m`.
+//! 🔺️ Diff for `change-insulation-thickness-m`.
 use crate::change_insulation_thickness_m::ChangeInsulationThicknessM;
 use semio_s_artifact_norm_en1994_diff::En1994Diff;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

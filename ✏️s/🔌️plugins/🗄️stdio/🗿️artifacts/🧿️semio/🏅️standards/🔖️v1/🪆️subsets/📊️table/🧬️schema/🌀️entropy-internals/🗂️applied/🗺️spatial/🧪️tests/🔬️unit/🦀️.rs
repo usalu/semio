@@ -10,10 +10,6 @@ mod tests {
 
     #[test]
     fn noisy_image_has_higher_glcm_entropy_than_smooth_gradient() {
-        // 🔐️ A checkerboard is NOT a good "high texture" counter-example here: it alternates
-        // between exactly two values, so its dx=1 co-occurrence matrix is nearly deterministic
-        // (low entropy). Genuine per-pixel noise, which visits many distinct adjacent-value
-        // pairs unpredictably, is the correct high-entropy comparison against a smooth gradient.
         let width = 16;
         let height = 16;
         let mut rng = semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::numeric::Xorshift64::new(9);

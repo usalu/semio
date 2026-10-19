@@ -4,7 +4,7 @@
 #[path = "../📦️prepared/♻️retirement/🧪️tests/🦀️.rs"]
 pub mod tests;
 #[path = "../📬️paged-one-item/🦀️.rs"]
-pub pub mod paged_one_item;
+pub mod paged_one_item;
 #[path = "../🧩️composition/📨️emission/📦️owned/🦀️.rs"]
 pub mod member_owned_batch;
 #[path = "../🫧️ephemeral/📢️publication/🔁️transfer/🦀️.rs"]
@@ -17,6 +17,9 @@ pub mod lifted_one_item_publication;
 pub mod lifted_native;
 #[path = "📥️lifted/🤝️group/🦀️.rs"]
 pub mod lifted_member_group;
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 use semio_framework_value_snapshot_read::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, SnapshotRead};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPreparationRequest};
@@ -144,7 +147,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
             let snapshots = self.snapshot_retirement.take().expect("original returned snapshot issuer");
             let birth = ArtifactStoreOneItemPrepared::<P, M>::retirement_birth_demand();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: 0, maximum_depth: birth.depth };
-            match super::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(edit, post, mutations, snapshots, grant) {
+            match semio_framework_os_store_one_item_publication::prepared_retirement::ArtifactStorePreparedRetirement::admit_returned(edit, post, mutations, snapshots, grant) {
                 Ok((owner, progress)) => { assert!(progress.fits(grant)); *self.active = Some(owner); }
                 Err((error, edit, post, mutations, snapshots)) => { *self.refused = Some((edit, post)); *self.mutation_retirement = Some(mutations); *self.snapshot_retirement = Some(snapshots); return Err(error); }
             }

@@ -1,4 +1,4 @@
-//! energy → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
+//! 🏋️ energy → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
 //! verbatim, so the hop is `IoFidelity::Exact`.
 use crate::snapshot::EnergyModelSnapshot;
 

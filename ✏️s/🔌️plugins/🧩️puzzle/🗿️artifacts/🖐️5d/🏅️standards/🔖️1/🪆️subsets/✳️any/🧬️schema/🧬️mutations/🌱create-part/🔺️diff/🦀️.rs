@@ -1,4 +1,4 @@
-//! exists in `base`.
+//! ➕️ exists in `base`.
 //! 🔺️ Sparse diff builder for `CreatePart` — a real append-only insert. No-op when the id already
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartsDelta;

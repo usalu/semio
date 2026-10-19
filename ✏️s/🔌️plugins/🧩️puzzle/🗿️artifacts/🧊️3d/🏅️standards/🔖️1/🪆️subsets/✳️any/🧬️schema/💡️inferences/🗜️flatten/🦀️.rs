@@ -75,8 +75,6 @@ fn plane_to_matrix(p: FlattenPlane) -> [f64; 16] {
     let x = p.x_axis;
     let y = p.y_axis;
     let z = cross(x, y);
-    // Column-major: axis i is column i; translation in the last column.
-    // (Compose's historical packing transposed axes vs apply_mat_vec3; Flat goldens need this form.)
     [x[0], x[1], x[2], 0.0, y[0], y[1], y[2], 0.0, z[0], z[1], z[2], 0.0, p.origin[0], p.origin[1], p.origin[2], 1.0]
 }
 
@@ -208,8 +206,6 @@ pub fn compute_child_plane(parent_plane: FlattenPlane, parent_point: [f64; 3], p
     let cross_vec = cross(parent_dir, reverse_child);
     let cross_len = (cross_vec[0] * cross_vec[0] + cross_vec[1] * cross_vec[1] + cross_vec[2] * cross_vec[2]).sqrt();
     let align_quat = if cross_len < TOLERANCE {
-        // Vertical parallel dirs make cross(z, parent)=0; emit identity when already aligned,
-        // 180° about X when opposite (compose's half-angle branch produced a zero quaternion).
         if dot(parent_dir, reverse_child) > 0.0 {
             [0.0, 0.0, 0.0, 1.0]
         } else if parent_dir[2].abs() < TOLERANCE {

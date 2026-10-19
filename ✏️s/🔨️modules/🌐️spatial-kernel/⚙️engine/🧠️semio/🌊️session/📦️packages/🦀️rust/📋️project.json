@@ -11,7 +11,7 @@
   "targets": {
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts check",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
@@ -20,7 +20,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
@@ -43,11 +43,16 @@
           }
         }
       },
-      "outputs": []
+      "outputs": ["{projectRoot}/.🧾️store/wasm.json"]
     },
     "source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/Cargo.lock"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
         "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
@@ -86,7 +91,10 @@
   },
   "namedInputs": {
     "nativeSources": [
-      "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧩️component/**/*"
+      "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧩️component/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🏗️construction/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   }
 }

@@ -1,6 +1,7 @@
 //! 🎟️ Persistent finite-task inputs and born candidates retain their authentic producer until exact close.
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,OriginalCallerSourceLoan,OriginalSourceBinding,OriginalConstructionDemand,OriginalTurnFailure,StepContext,admit_original_construction,close_original_retained_step};
-use semio_framework_value::{NativeDecodeControl,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of};
 
 /// 📥️ A concrete producer input declares genuine bounded close instead of erasing opaque Future captures.

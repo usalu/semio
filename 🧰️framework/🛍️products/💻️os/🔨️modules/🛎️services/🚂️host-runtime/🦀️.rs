@@ -173,8 +173,6 @@ struct ScopeTableInner {
 }
 
 impl ScopeTable {
-    // 🚫️async: E1-adjacent pure constructor — no suspension point exists (`Arc::new`/
-    // `AtomicU64::new`/`Mutex::new`/`WorkerPool::clone` are in-memory only). See R9.
     pub(super) fn new(pool: WorkerPool) -> ScopeTable {
         ScopeTable(Arc::new(ScopeTableInner { pool, next_id: AtomicU64::new(1), records: Mutex::new(HashMap::new()), owner_index: Mutex::new(HashMap::new()), children: Mutex::new(HashMap::new()) }))
     }
@@ -207,10 +205,6 @@ impl ScopeTable {
     /// ([`Lane::from_context_lane`]) — [`block_on`] (this crate's `entrypoint`-feature import of
     /// [`PoolFutureTask`] polls `fut` once per finite worker turn. Pending I/O or timers retain only
     /// their waker and consume no worker, permit, or admission slot between wakes.
-    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
-    // here). Consumed by `TokioHostRuntime::spawn_scoped`, already `async fn` to match the trait,
-    // which calls this plainly — an `async fn` here would add a second, pointless suspension layer.
-    // See R9.
     pub(super) fn spawn_scoped(&self, scope: &ScopeHandle, ctx: &OperationContext, fut: HostFuture<()>) {
         let cancel = ctx.cancel.clone();
         let lane = Lane::from_context_lane(ctx.lane);

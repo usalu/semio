@@ -50,6 +50,7 @@ pub struct Parameter {
     pub effect: Effect,
     pub destination: Destination,
     pub suggestions: Option<SuggestionSpec>,
+    pub(super) all: bool,
     pub(super) verbs: Option<Vec<String>>,
     pub(super) playground: bool,
     pub(super) scoped: bool,
@@ -59,7 +60,7 @@ impl Parameter {
     /// 🏷️ A human title in the selected language, or the parameter identity.
     pub fn display_title(&self, locale: Locale) -> &str { self.title.as_ref().map_or(self.id.as_str(), |text| text.get(locale)) }
 
-    pub(super) fn choice(id: &str, origin: Origin, default: Option<&str>, values: Vec<(String, Effect)>) -> Self { Self { id: id.into(), title: None, description: None, kind: ParameterKind::Choice, origin, default: default.map(str::to_string), required: false, values, effect: Effect::default(), destination: Destination::Token, suggestions: None, verbs: None, playground: false, scoped: false } }
+    pub(super) fn choice(id: &str, origin: Origin, default: Option<&str>, values: Vec<(String, Effect)>) -> Self { Self { id: id.into(), title: None, description: None, kind: ParameterKind::Choice, origin, default: default.map(str::to_string), required: false, values, effect: Effect::default(), destination: Destination::Token, suggestions: None, all: false, verbs: None, playground: false, scoped: false } }
 
     /// 🔬️ Whether a global axis is offered on a command the build runner runs.
     pub(super) fn applies(&self, verb: &str, playground: bool) -> bool {
@@ -67,13 +68,13 @@ impl Parameter {
         !self.scoped || self.selects(verb)
     }
 
-    /// 🧰️ Whether a global axis is offered on a command outside the build runner: it must name the verb and
+    /// 🧰️ Whether a global axis is offered on a command outside the build runner: it must select the verb and
     /// change more than the build flags, which such a command ignores.
     pub(super) fn applies_beyond_build(&self, verb: &str) -> bool {
         self.scoped && self.selects(verb) && (!self.effect.env.is_empty() || !self.effect.args.is_empty() || self.destination != Destination::Token || self.values.iter().any(|(_, effect)| !effect.env.is_empty() || !effect.args.is_empty()))
     }
 
-    fn selects(&self, verb: &str) -> bool { self.verbs.as_ref().is_some_and(|verbs| verbs.iter().any(|known| known == verb)) }
+    fn selects(&self, verb: &str) -> bool { self.all || self.verbs.as_ref().is_some_and(|verbs| verbs.iter().any(|known| known == verb)) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

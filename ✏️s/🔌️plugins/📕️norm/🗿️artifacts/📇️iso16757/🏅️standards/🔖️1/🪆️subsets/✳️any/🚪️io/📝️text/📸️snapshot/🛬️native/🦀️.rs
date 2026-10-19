@@ -3,7 +3,7 @@ use semio_s_artifact_norm_iso16757_model::{CatalogueValue as V, CatalogueUnit, D
 use semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::collections::BTreeMap;
 fn invalid(message:impl Into<String>)->semio_framework_value::ValueError{semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 fn object(v:&D)->Result<&[(String,D)],semio_framework_value::ValueError>{match v{semio_framework_value::DslValue::Object(v)=>Ok(v),_=>Err(invalid("expected catalogue syntax object"))}}

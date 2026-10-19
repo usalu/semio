@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::lookup::Puzzle2dLookupScope;
 use protocol::os_store::{ArtifactMessageFragment, ArtifactMessageSource};
 use crate::standards::v1::subsets::any::schema::preparation::text_preparation::messages::*;
 use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeIcon;
-use super::super::EditTargetRegionLabel;
+use semio_s_artifact_puzzle_2d_mut_any_3::standards::v1::subsets::any::schema::mutations::edit_target_region_label::EditTargetRegionLabel;
 use protocol::os_store::ArtifactMessageComposeCursor;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::retained_clone::RetainedCloneGrant;

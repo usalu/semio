@@ -7,22 +7,22 @@ import { runRepositoryCommand } from "../../../../../../../🧰️framework/🔨
 /** 🦀️ Checks the independent neutral native package with explicit owning manifest and finite process authority. */
 class CheckScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("Neutral mesh check accepts no implicit arguments");
+  if(segments.length)throw new Error("Neutral mesh check accepts no implicit arguments");
   await runRepositoryCommand(this.invocation,"cargo",["check","--offline","--manifest-path",resolve(this.root,"Cargo.toml")],this.root,"fem-mesh-check",{version:1,maximumElapsedMilliseconds:300000,output:{maximumBytes:134217728,maximumLines:65536}});
  }
 }
 /** 🧪️ Runs the complete original neutral mesh laws under finite owning execution. */
 class TestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("Neutral mesh laws accept no implicit selection");
+  if(segments.length)throw new Error("Neutral mesh laws accept no implicit selection");
   await runRepositoryCommand(this.invocation,"cargo",["test","--offline","--manifest-path",resolve(this.root,"Cargo.toml"),"--lib","--","--nocapture"],this.root,"fem-mesh-test",{version:1,maximumElapsedMilliseconds:300000,output:{maximumBytes:134217728,maximumLines:65536}});
  }
 }
 /** 📐️ Runs the complete portable neutral surface corpus without installing foreign artifact providers. */
 class SurfaceTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("Neutral surface corpus accepts no implicit selection");
-  if(!process.env.SEMIO_FEM_NEUTRAL_RESULTS)throw Error("Neutral surface corpus requires an explicit output authority");
+  if(segments.length)throw new Error("Neutral surface corpus accepts no implicit selection");
+  if(!process.env.SEMIO_FEM_NEUTRAL_RESULTS)throw new Error("Neutral surface corpus requires an explicit output authority");
   await runRepositoryCommand(this.invocation,"cargo",["test","--offline","--manifest-path",resolve(this.root,"Cargo.toml"),"--lib","surface_tests::complete_portable_region_surface_corpus","--","--exact","--nocapture"],this.root,"fem-mesh-surface-test",{version:1,maximumElapsedMilliseconds:300000,output:{maximumBytes:134217728,maximumLines:65536}});
  }
 }

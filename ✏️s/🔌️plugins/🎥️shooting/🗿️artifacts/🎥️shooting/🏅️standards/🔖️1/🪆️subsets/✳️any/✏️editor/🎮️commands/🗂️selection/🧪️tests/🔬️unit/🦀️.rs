@@ -31,8 +31,6 @@ async fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
     let mut app = shooting_app().await;
     dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) })).await;
     dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) })).await;
-    // fit_revision itself is asserted end-to-end (render fitJson) in the scene window's own tests;
-    // here we just assert the command round-trips without error under both edges.
     let result = dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: None })).await;
     assert!(!result.edited_document(), "center-model is config-only");
 }

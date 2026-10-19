@@ -97,9 +97,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
 
 function spinMs(milliseconds: number): void {
   const until = performance.now() + milliseconds;
-  while (performance.now() < until) {
-    /* a genuinely executing turn */
-  }
+  while (performance.now() < until) {}
 }
 
 describe("wgpu UI-turn budget", () => {

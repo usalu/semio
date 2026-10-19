@@ -377,7 +377,7 @@ impl<D> MutationOutcome<D> {
     }
 }
 #[cfg(test)]
-#[path = "🧪️tests/↩️inverse-admission/🦀️.rs"]
+#[path = "../🧪️tests/↩️inverse-admission/🦀️.rs"]
 mod inverse_admission_tests;
 
 //#endregion 🔖️Message

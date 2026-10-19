@@ -1,4 +1,4 @@
-//! planner bridge's translation (`🧠️precompute`). It follows the instance's brush suggestions link, which 5d's
+//! 🌉️ planner bridge's translation (`🧠️precompute`). It follows the instance's brush suggestions link, which 5d's
 //! 🖌️ Puzzle 5d brush suggestions run job: the puzzle 3d brush suggestions search over the 5d document, behind the
 //! instance operation owner carries exactly like puzzle 3d's.
 
@@ -14,7 +14,6 @@ use crate::editor::puzzle5d::precompute::Puzzle5dPlannerToolRunJob;
 
 
 
-use crate::editor::puzzle5d::Puzzle5dPlayApp;
 use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Fault;

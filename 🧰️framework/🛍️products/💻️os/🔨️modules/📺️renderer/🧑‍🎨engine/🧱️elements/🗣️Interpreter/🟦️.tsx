@@ -77,12 +77,6 @@ export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterCo
  * re-rendering from here.
  */
 export const InterpretedUiNode = memo(function InterpretedUiNode({ store, windowId, localDocumentOwner = null, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore; readonly windowId?: string; readonly localDocumentOwner?: LocalDocumentOwnerV1 | null } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
-  // 🖱️ The shell publishes the plugin's on-demand menu resolver through `PluginSurfaceActionsContext`
-  // (ShellHost's `requestContextMenu`), and NO `<InterpretedUiNode>` call site has ever passed it as a
-  // prop — so every `ComponentSceneHost`'s `requestContextMenu` was `undefined` and its whole
-  // plugin-context-menu branch (`openSurfaceContextMenu`) was dead code in the React renderer: a
-  // right-click on a world/board/canvas surface only ever produced ShellHost's window-level fallback
-  // menu. Reading the context here wires every surface host at once, which is what that context is for.
   const surfaceActions = usePluginSurfaceActions();
   const root = useUiDocumentRoot(store);
   const ownedAction = useCallback((action: ShellInputActionV1, lifecycle?: ActionDispatchLifecycleV1) => onAction(windowId === undefined ? action : inputActionWithWindowV1(action, windowId), lifecycle), [onAction, windowId]);

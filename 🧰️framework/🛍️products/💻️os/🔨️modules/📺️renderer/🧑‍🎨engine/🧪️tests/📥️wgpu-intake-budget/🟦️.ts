@@ -3,7 +3,7 @@ import { encodePackValue } from "@semio-tech/framework-os";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { RETAINED_UI_INTAKE_SLICE_STEPS, RETAINED_UI_INTAKE_STEPS_PER_NODE, retainedUiIntakeStepCeiling } from "../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
 import { WGPU_UI_INTAKE_STEP_CEILING, WgpuUiIntakeCursor } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/ui-intake-and-route";
-import { uiRetainedIntakeFixture as intakeFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { uiRetainedIntakeFixture as intakeFixture } from "@semio-tech/framework/ui/testing/fixtures";
 
 /** 📏️ The fixed TOTAL budget the wgpu target applied before this suite existed. Kept as a literal
  * so the regression it caused stays legible: generation3d's first document faulted against it at

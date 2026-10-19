@@ -1,4 +1,4 @@
-//! OS hub backend — thin axum shell over `db::Database` (document authority + content-addressed
+//! 🌍️ OS hub backend — thin axum shell over `db::Database` (document authority + content-addressed
 //! blobs) and the hub directory capability traits (identity/tenancy), speaking `protocol_wire`'s binary frames over
 //! WebSocket.
 //!

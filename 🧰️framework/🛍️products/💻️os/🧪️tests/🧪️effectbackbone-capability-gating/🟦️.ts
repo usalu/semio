@@ -111,7 +111,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(third).toEqual({ kind: "rejectedFull" });
       expect(reporter.recorded()).toHaveLength(1);
       expect(reporter.recorded()[0]).toMatchObject({ actor: "actor-1", uri: "studio-42", channel: "send", outcome: { kind: "rejectedFull" } });
-      // 🧾️ Nothing was silently dropped: both accepted messages are still there, in order.
       expect(backbone.drain("actor-1")).toEqual([
         { message: { source: { backbone: { uri: "studio-42" } }, payload: [1] } },
         { message: { source: { backbone: { uri: "studio-42" } }, payload: [2] } },
@@ -144,11 +143,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       instanceA.subscribe("actor-1", "studio-42");
       instanceA.deliverMessage("actor-1", "studio-42", [1]);
 
-      // instanceB has no endpoint registered for studio-42 at all — a send through it fails noSuchEndpoint.
       expect(instanceB.send("actor-1", "studio-42", [1])).toEqual({ ok: false, error: { kind: "noSuchEndpoint", uri: "studio-42" } });
-      // instanceB was never subscribed — nothing instanceA delivered leaks across.
       expect(instanceB.drain("actor-1")).toEqual([]);
-      // instanceA's own state is untouched by instanceB's independent existence.
       expect(instanceA.drain("actor-1")).toHaveLength(1);
     });
   });
@@ -191,7 +187,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", actorIdentityGrant: { maximumItems: 1024, maximumCopyBytes: 65536, maximumCapacityBytes: 65536, maximumReleaseBytes: 65536, maximumDepth: 64 }, hub: { kind: "hub", dataClass: "persistedShared", baseUrl: "https://hub.example", spaceId: "space-1" } });
       transport.send("studio-42", [1, 2]);
       transport.send("studio-42", [3, 4]);
-      expect(posted).toHaveLength(3); // one "open" + two "send"
+      expect(posted).toHaveLength(3);
       const decoded = posted.map((message) => decodeBackboneWorkerRequest(message.wire));
       expect(decoded[0]).toMatchObject({ kind: "open", documentId: "studio-42", actor: "actor-1" });
       expect(decoded[1]).toMatchObject({ kind: "send", documentId: "studio-42", message: { kind: "publishPreview", key: "studio-42", seq: 1, payload: [1, 2] } });
@@ -220,10 +216,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const dispose = bridgeBackboneWorkerInbound(backbone, worker);
       const wire = { wire: encodeBackboneWorkerResponse({ kind: "event", documentId: "studio-42", clientInstanceId: "33333333-3333-4333-8333-333333333333", event: { kind: "preview", actor: "peer", key: "studio-42", seq: 1, payload: [42] } }) };
       worker.onmessage?.({ data: wire });
-      expect(priorCalls).toEqual([wire]); // chained, not replaced
+      expect(priorCalls).toEqual([wire]);
       expect(backbone.drain("actor-1")).toEqual([{ message: { source: { backbone: { uri: "studio-42" } }, payload: [42] } }]);
       dispose();
-      expect(worker.onmessage).toBe(priorHandler); // restored, not nulled
+      expect(worker.onmessage).toBe(priorHandler);
     });
 
     it("bridgeBackboneWorkerInbound ignores non-event and non-preview responses without throwing", async () => {
@@ -275,7 +271,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const enumMatch = testSource.match(/pub enum MessageEndpoint \{([\s\S]*?)\n\}/);
-      expect(enumMatch).not.toBeNull(); // [TRACE] `pub enum MessageEndpoint { ... }` shape not found — Rust source changed, update this test's regex
+      expect(enumMatch).not.toBeNull();
       const rustVariants = parseRustVariants(enumMatch![1]!);
       expect(rustVariants.map((variant) => variant.name)).toEqual(MESSAGE_ENDPOINT_VARIANT_FIELDS.map((variant) => variant.kind));
       for (const rustVariant of rustVariants) {
@@ -290,7 +286,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const variantMatch = testSource.match(/\bSendMessage\s*\{([^{}]*)\}/);
-      expect(variantMatch).not.toBeNull(); // [TRACE] `SendMessage { ... }` not found — Rust `Effect::SendMessage` changed, update this test
+      expect(variantMatch).not.toBeNull();
       expect(parseFieldList(variantMatch![1]!)).toEqual(["target", "payload"]);
     });
 
@@ -299,7 +295,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const kernelUrl = new URL("../../../../../🔨️modules/🎠️kernel/🦀️.rs", source.url);
       const testSource = readFileSync(kernelUrl, "utf8");
       const variantMatch = testSource.match(/\bMessage\s*\{([^{}]*)\}/);
-      expect(variantMatch).not.toBeNull(); // [TRACE] `Message { ... }` not found — Rust `Event::Message` changed, update this test
+      expect(variantMatch).not.toBeNull();
       expect(parseFieldList(variantMatch![1]!)).toEqual(["source", "payload"]);
     });
   });

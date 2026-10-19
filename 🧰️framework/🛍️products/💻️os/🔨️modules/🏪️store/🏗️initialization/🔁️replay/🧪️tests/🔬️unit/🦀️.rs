@@ -19,7 +19,7 @@ use semio_framework_os_store_space_schema::{ArtifactCommand, SupersedeInput};
 
 const SCHEMA: &str = "demo/v1";
 const ACTOR: &str = "actor:replay";
-const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 const WIDE: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
 
 type Initializer = ArtifactStoreReplayInitializer<DemoSnapshot, DemoMutation, semio_framework_os_store_engine_owners::producer::BoundedDocumentStoreOwnerProducer>;

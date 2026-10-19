@@ -8,7 +8,7 @@ export interface ProcedureTopology {
 }
 
 export interface ProcedureInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: ProcedureTopology;
 }
 

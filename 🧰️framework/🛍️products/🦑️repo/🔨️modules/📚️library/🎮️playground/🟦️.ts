@@ -8,15 +8,17 @@ import { ephemeralBox } from "@semio-tech/framework";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { declaredWorkspaces, getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "@semio-tech/plugin-registry/catalog-view";
 
 export type PlaygroundHostKind = string;
 
+/** 🎮️ The catalog row fields the playground port table reads; the registry owns the full row. */
+export type PlaygroundCatalogRow = { readonly variant: string; readonly ports: { readonly react: number; readonly wgpu: number } };
+
 /** 📚️ Reads the caller-supplied publication root; absence admits empty, configured missing or malformed files refuse. */
-export function loadFrameworkOsPlaygroundCatalog(catalogRoot=process.env.SEMIO_PLUGIN_CATALOG): readonly PlaygroundVariant[] {
+export function loadFrameworkOsPlaygroundCatalog<Variant extends PlaygroundCatalogRow = PlaygroundCatalogRow>(catalogRoot=process.env.SEMIO_PLUGIN_CATALOG): readonly Variant[] {
   if(catalogRoot===undefined)return [];
   const catalogPath = join(catalogRoot, "🚀️playgrounds.json");
-  return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
+  return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly Variant[];
 }
 
 type PlaygroundPortSpec = {

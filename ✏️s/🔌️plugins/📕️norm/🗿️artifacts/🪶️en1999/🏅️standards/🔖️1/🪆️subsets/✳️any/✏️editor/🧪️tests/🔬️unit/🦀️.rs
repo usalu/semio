@@ -9,7 +9,7 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_en1999_app(), examples: Vec::new() }
     }
 
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// 📜️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the app's paid close.
     pub struct NormApp(pub VcsArtifactApp<EditorApp<En1999PlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     

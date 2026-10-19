@@ -1,0 +1,23 @@
+import {createHash} from "node:crypto";
+import {basename,dirname,join,resolve,sep} from "node:path";
+import {existsSync,lstatSync,readFileSync,realpathSync,renameSync,writeFileSync} from "node:fs";
+import {setTimeout as delay} from "node:timers/promises";
+import {receiveScriptProcessInvocation,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,readIssuedScriptProcessEnvelopeV1,scriptInvocationEnvironment} from "../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {acquireResourceLease,checkResourceLeaseControl,readResourceQueueClaimIdentityV1,retireResourceLeaseV1,resourceLeasePathV1} from "../../../🟦️.ts";
+
+/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
+export async function runScriptProgram(): Promise<void> {
+  const [mode,directory,resource]=process.argv.slice(2),generated=process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if(process.argv.length!==5||!generated||!directory||!resource||!["hold","wait","cancel","claim-read","retire"].includes(mode!))throw new Error("Closed concurrency worker input required");
+  const root=realpathSync(generated),own=realpathSync(directory);if(own!==resolve(directory)||!own.startsWith(root+sep)||lstatSync(own).isSymbolicLink())throw new Error("Exact private concurrency directory required");
+  await receiveScriptProcessInvocation(process.env,async original=>{
+   const wire=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION!;if(wire!==scriptInvocationEnvironment(original,process.env).SEMIO_SCRIPT_PROCESS_INVOCATION)throw new Error("Exact canonical received worker wire required");const envelope=readIssuedScriptProcessEnvelopeV1(original),ack={version:1,mode,directory,resource,wireSha256:createHash("sha256").update(wire).digest("hex"),policy:envelope.policy,deadlineEpochMilliseconds:envelope.deadlineEpochMilliseconds,capabilities:envelope.capabilities};console.log("[DATA] Lease concurrency receiver "+JSON.stringify(ack));
+   const publish=(name:string,value:string)=>{const path=join(own,name);writeFileSync(path+".n",value,{flag:"wx"});renameSync(path+".n",path);};
+   const stop=new AbortController(),owner=createIssuedResourceControlV1(original,"lease:concurrency-worker",0),control=mode==="cancel"?createRequestedIssuedResourceControlV1(owner,0,stop.signal):owner,go=join(own,"g");let settled=false,waited=false,retired=0,held:Awaited<ReturnType<typeof acquireResourceLease>>|undefined,failed=false,failure:unknown;
+   const action=()=>{if(!existsSync(go))return undefined;const row=lstatSync(go);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size>64)throw new Error("Exact worker command required");const value=readFileSync(go,"utf8");if(value!=="close"&&value!=="cancel")throw new Error("Closed worker command required");return value;};
+   const monitor=mode==="cancel"?(async()=>{while(!settled){checkResourceLeaseControl(owner);if(action()==="cancel"){stop.abort(Error("Fixture wait cancelled"));return;}await delay(5,undefined,{signal:owner.signal});}})():Promise.resolve();
+   try{if(mode==="retire"){(await acquireResourceLease({directory:own,resource,mode:"shared",signal:control.signal,control})).release();retired=(await retireResourceLeaseV1(own,resource,control,0)).retired;if(retired!==1)throw new Error("Node exact retirement required");(await acquireResourceLease({directory:own,resource,mode:"shared",signal:control.signal,control})).release();return;}if(mode==="claim-read"){await readResourceQueueClaimIdentityV1(dirname(own),basename(resourceLeasePathV1(own,resource)),control);throw new Error("Busy claim reader unexpectedly succeeded");}
+   held=await acquireResourceLease({directory:own,resource,mode:process.env.SEMIO_CONCURRENCY_MODE==="exclusive"?"exclusive":"shared",signal:control.signal,control,onWait:()=>{if(!waited){waited=true;publish("w","waiting");}}});publish("a","acquired");while(!action()){checkResourceLeaseControl(control);await delay(5,undefined,{signal:control.signal});}
+   }catch(error){failed=true;failure=error;throw error;}finally{settled=true;let cleanup:unknown,cleanupFailed=false;try{held?.release();}catch(error){cleanupFailed=true;cleanup=error;}try{await monitor;}catch(error){if(!cleanupFailed){cleanupFailed=true;cleanup=error;}}console.log("[DEBUG] Lease concurrency result "+JSON.stringify({version:1,waited,retired,acquired:held!==undefined,closed:!cleanupFailed,failed,cancelled:control.signal.aborted,cancellationCauseHeld:failed&&(failure===control.signal.reason||failure instanceof Error&&failure.cause===control.signal.reason),reason:failed?(failure instanceof Error?failure.message:String(failure)):null}));if(cleanupFailed&&!failed)throw cleanup;}
+  });
+}

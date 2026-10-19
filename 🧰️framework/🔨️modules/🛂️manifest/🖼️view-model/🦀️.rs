@@ -437,20 +437,17 @@ impl UiRefreshSection {
     pub const ALL: [Self; 4] = [Self::Engagements, Self::Measures, Self::Tools, Self::Catalogue];
 
     /// 🔑️ See [`UI_REFRESH_SECTION_KEYS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn key(self) -> &'static str {
         UI_REFRESH_SECTION_KEYS[self as usize]
     }
 
     /// 🪧️ See [`UI_REFRESH_SECTION_BODY_KEYS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn body_key(self) -> &'static str {
         UI_REFRESH_SECTION_BODY_KEYS[self as usize]
     }
 
     /// 🔎️ Resolves a mounted surface's body key back to the section it renders, `None` for every
     /// app-authored body.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_body_key(body_key: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|section| section.body_key() == body_key)
     }

@@ -12,7 +12,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 
 fn collision_document() -> Fem3dSnapshot {
-    let fixture: DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../🎮️commands/🗂️remove-selection/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../🎮️commands/🗂️remove-selection/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut doc = Fem3dSnapshot::from_value(fixture.get("snapshot").unwrap().clone()).unwrap();
     doc.nodes[0].id = "same".into();
     doc.materials[0].id = "same".into();
@@ -35,7 +35,7 @@ fn collision_document() -> Fem3dSnapshot {
 
 #[test]
 fn scoped_targets_separate_all_entity_kinds_and_repeated_load_ids() {
-    let fixture: DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: DslValue = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let doc = collision_document();
     for row in fixture.get("targets").unwrap().as_array().unwrap() {
         let identity = row.get("identity").unwrap().as_str().unwrap();
@@ -99,7 +99,7 @@ fn viewport_identity_collisions_are_distinct_and_unencodable_ids_refuse_scene() 
 /// 🛂️ Public cold JSON and metered typed admission enforce the same owner namespace contract.
 #[test]
 fn public_json_identity_admission_refuses_invalid_owners_and_controlled_scratch_is_metered() {
-    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner admission vectors");
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner admission vectors");
     let valid = collision_document();
     let read = |document: &Fem3dSnapshot| semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(&semio_framework_pack_json::to_json_string(document), semio_framework_pack_json::JsonMemberPolicy::Reject);
     assert_eq!(read(&valid).expect("namespace collisions admitted"), valid);
@@ -115,15 +115,15 @@ fn public_json_identity_admission_refuses_invalid_owners_and_controlled_scratch_
         assert!(read(&invalid).is_err(), "public JSON must refuse {}", row["kind"].as_str().unwrap());
     }
     let mut observe = |_| true;
-    let mut granted = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut observe);
+    let mut granted = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut observe);
     valid.validate_interaction_identities_controlled(&mut granted).expect("funded identity scratch");
     assert!(granted.owned_bytes() >= 10 * std::mem::size_of::<(&str, &str, &str)>());
     let mut observe = |_| true;
-    let mut unfunded = semio_framework_value::NativeDecodeControl::new(0, &mut observe);
+    let mut unfunded = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut observe);
     assert!(valid.validate_interaction_identities_controlled(&mut unfunded).is_err());
     assert_eq!(unfunded.owned_bytes(), 0);
     let mut cancel = |_| false;
-    let mut canceled = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut cancel);
+    let mut canceled = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut cancel);
     assert!(valid.validate_interaction_identities_controlled(&mut canceled).is_err());
     assert_eq!(canceled.owned_bytes(), 0);
     eprintln!("[DEBUG] FEM3d public JSON refused four invalid owner vectors; native identity scratch was explicitly funded, zero-budget refused and cancellation preserved ownership");
@@ -131,8 +131,8 @@ fn public_json_identity_admission_refuses_invalid_owners_and_controlled_scratch_
 
 #[test]
 fn snapshot_identity_admission_preserves_namespaces_and_refuses_invalid_owners() {
-    use protocol::os_store::serialization::ArtifactDsl;
-    use protocol::os_store::serialization::ArtifactPack;
+    use semio_framework_os_kernel::os_store::ArtifactDsl;
+    use semio_framework_os_kernel::os_store::ArtifactPack;
     let doc = collision_document();
     assert!(doc.validate_interaction_identities().is_ok());
     assert_eq!(Fem3dSnapshot::decode_pack(&doc.encode_pack()).unwrap(), doc);

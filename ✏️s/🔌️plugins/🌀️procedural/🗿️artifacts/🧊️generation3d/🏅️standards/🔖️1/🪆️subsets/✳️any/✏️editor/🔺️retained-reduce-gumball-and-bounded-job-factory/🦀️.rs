@@ -60,9 +60,6 @@ fn generation3d_retained_reduce(
         Generation3dCommand::KnifeMeshSelection(payload) => semio_s_artifact_procedural_3d_editor_commands::knife_mesh_selection::apply_selected(payload, &doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_) if semio_s_artifact_procedural_3d_mode_edit::windows::preview::edits_components(context.and_then(|context| context.view_state.as_ref()), interaction.active_granularity.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map(String::as_str)) => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::delete_selected(&doc, interaction.selection.get(semio_s_artifact_procedural_3d_editor_selection::DOMAIN).map_or(&[], |selection| selection.ids.as_slice())),
         Generation3dCommand::DeleteSelection(_payload) => Ok(delete_selection::apply_selected(&doc, &selected())),
-        // 🧭️ Keyboard traversal reads the SAME `graph` selection the pointer writes and hands the next
-        // one back through `Emit.interaction_writes`, so an arrow key and a click are the same gesture
-        // to everything downstream (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Generation3dCommand::SelectNextNode(_payload) => Ok(select_next_node::apply_selected(&doc, &selected())),
         Generation3dCommand::SelectPreviousNode(_payload) => Ok(select_previous_node::apply_selected(&doc, &selected())),
         Generation3dCommand::SelectUpstreamNode(_payload) => Ok(select_upstream_node::apply_selected(&doc, &selected())),
@@ -195,12 +192,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
             return Ok(result);
         }}
         self.consumed = true;
-        // 🩹️ Every gesture on this route that MOVED THE DOCUMENT owes the attached previews a fresh
-        // evaluation — `patchFlowWidgets`, `addWidget`, `removeWidget`, `nodeGraphEdit`,
-        // `deleteSelection`, `reorganize` and every transform. The rule is read off the emit, never off
-        // a roster of tool ids: the roster carried only `setActiveExample` and the generation commands,
-        // so an inspector slider moved `height` 6 → 7 and the preview kept painting the old geometry
-        // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
         let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
         let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
         let emit = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
@@ -320,9 +311,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "cycleShowMode", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "cycleLodMode", lanes: &[ArtifactToolPublicationLane::Config] },
-        // 🧭️ Keyboard traversal publishes the framework's selection lane and NOTHING else: a step is
-        // not an edit, so it authors no document op and takes no config row — which is also why it
-        // never enters undo (`HistoryLane::Interaction`).
         ArtifactToolPublicationContract { tool_id: "selectNextNode", lanes: &[ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "selectPreviousNode", lanes: &[ArtifactToolPublicationLane::Interaction] },
         ArtifactToolPublicationContract { tool_id: "selectUpstreamNode", lanes: &[ArtifactToolPublicationLane::Interaction] },

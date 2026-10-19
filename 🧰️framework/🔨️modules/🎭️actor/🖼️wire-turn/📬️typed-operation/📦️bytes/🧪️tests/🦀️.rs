@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-fn law()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn law()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn original()->RetainedCloneGrant{let d=law();let g=&d["grant"];RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize}}
 fn denials(d:RetirementDemand,g:RetainedCloneGrant)->Vec<RetainedCloneGrant>{let mut result=vec![RetainedCloneGrant{maximum_items:0,..g}];if d.copy_bytes!=0{result.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g});}if d.capacity_bytes!=0{result.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..g});}if d.release_bytes!=0{result.push(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g});}if d.depth!=0{result.push(RetainedCloneGrant{maximum_depth:d.depth-1,..g});}result}
 #[test]fn original_retained_byte_page_4096_conserves_backing_through_all_frontiers(){

@@ -1,0 +1,14 @@
+import { scan, prop, setProps, apply } from "./jsonspan.ts";
+import assert from "node:assert/strict";
+const multi = `{\n  "targets": {\n    "test": {\n      "executor": "repo:script",\n      "cache": false,\n      "options": {\n        "command": "x"\n      }\n    },\n    "check": {\n      "executor": "repo:script",\n      "options": {}\n    },\n    "\\ud83e\\uddea\\ufe0fwitness": {"cache": false, "options": {"command":"y"}}\n  }\n}\n`;
+const root = scan(multi); const targets = prop(root, "targets")!.value;
+const t = (n: string) => prop(targets, n)!.value;
+const edits = [...setProps(multi, t("test"), [["cache", true]], ["executor"]), ...setProps(multi, t("check"), [["cache", true], ["outputs", ["{projectRoot}/dist/build"]], ["inputs", ["default", { env: "X" }]]], ["executor"]), ...setProps(multi, t("🧪️witness"), [["cache", true]], ["executor"])];
+const out = apply(multi, edits);
+const parsed = JSON.parse(out);
+assert.equal(parsed.targets.test.cache, true); assert.equal(parsed.targets.check.cache, true); assert.deepEqual(parsed.targets.check.outputs, ["{projectRoot}/dist/build"]); assert.equal(parsed.targets["🧪️witness"].cache, true);
+console.log(out);
+const compact = `{"targets":{"a":{"options":{"command":"x"}}, "b":{"executor":"repo:script","options":{}}}}`;
+const c = scan(compact); const ts = prop(c, "targets")!.value;
+const o = apply(compact, [...setProps(compact, prop(ts, "a")!.value, [["cache", true]], ["executor"]), ...setProps(compact, prop(ts, "b")!.value, [["cache", true], ["outputs", []]], ["executor"])]);
+JSON.parse(o); console.log(o);

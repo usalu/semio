@@ -1,15 +1,13 @@
 #!/usr/bin/env bun
 /** 📦️ shooting shooting Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import {resolve} from "node:path";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runVerifyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🛂️ Checks the actual public snapshot facade and independent neutral oracle types. */
-class VerifyScript extends BundleScript{
- async run(segments:string[]):Promise<void>{
-  if(segments.length!==1||segments[0]!=="snapshot-sqlite-source")throw Error("Unknown Shooting owned verification");
-  const snapshot=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
-  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(snapshot,"🧪️tests/🪶️sqlite/🟦️.ts")],this.repoRoot,"shooting-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
- }
+class VerifyScript extends BundleScript {
+  async run(segments:string[]): Promise<void> {
+    await runVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-shooting-shooting", { packages: ["semio-s-artifact-shooting-shooting", "semio-s-artifact-shooting-shooting-config", "semio-s-artifact-shooting-shooting-mut-family", "semio-s-artifact-shooting-shooting-inferences", "semio-s-artifact-shooting-shooting-mut-any", "semio-s-artifact-shooting-shooting-mut-any-2", "semio-s-artifact-shooting-shooting-mut-any-3", "semio-s-artifact-shooting-shooting-mutations", "semio-s-artifact-shooting-shooting-schema", "semio-s-artifact-shooting-shooting-set-active-asset", "semio-s-artifact-shooting-shooting-shooting", "semio-s-artifact-shooting-shooting-tests", "semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half"],commands:{verify:VerifyScript},snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+const router = new ScriptRouter(import.meta.dir).register("verify", VerifyScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-shooting-shooting", { packages: ["semio-s-artifact-shooting-shooting", "semio-s-artifact-shooting-shooting-config", "semio-s-artifact-shooting-shooting-mut-family", "semio-s-artifact-shooting-shooting-inferences", "semio-s-artifact-shooting-shooting-mut-any", "semio-s-artifact-shooting-shooting-mut-any-2", "semio-s-artifact-shooting-shooting-mut-any-3", "semio-s-artifact-shooting-shooting-mutations", "semio-s-artifact-shooting-shooting-schema", "semio-s-artifact-shooting-shooting-set-active-asset", "semio-s-artifact-shooting-shooting-shooting", "semio-s-artifact-shooting-shooting-tests", "semio-s-artifact-shooting-shooting-tests-dims-scene-sun-to-half"],commands: router,snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

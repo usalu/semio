@@ -20,7 +20,7 @@ effect with `--pet-shiny-filter`; the quiz host derives the list from badge awar
 | `🧬️schema/🔣️.json` | The normative contract (JSON Schema draft-07): menageries, species, ensembles, the stage, its events and its frames. |
 | `🧬️schema/🟦️.ts`, `🧬️schema/🦀️.rs` | Hand-written type twins, one type per `$defs` entry under the same name. The Rust twin mounts its sections from the child folders `🏷️scalars`, `🦴️rig-and-animation`, `🐾️menagerie-and-terrain`, `🎬️stage` and `🎞️frame`, re-exported by glob, so the paths stay `schema::Name`. |
 | `🔨️modules/📐️trigonometry/` | `sinTurns`, `cosTurns` from fixed polynomials, `clamp`, `lerp`, `smoothstep`: the only sine and cosine the cores use. |
-| `🔨️modules/🎲️randomness/` | Counter-based draws: `randomWords(key, count)` (numpy's seed sequence), `unitOf`, `randomUnit`, `randomBetween`, `weightedIndex`, `randomPick`, and the four reserved streams (`STAGE_STREAM`, `CAST_STREAM`, `ROTATION_STREAM`, `CHEMISTRY_STREAM`). |
+| `🔨️modules/🎲️randomness/` | Counter-based draws: `randomWords(key, count)` (numpy's seed sequence), `unitOf`, `randomUnit`, `randomBetween`, `weightedIndex`, `randomPick`, and the six reserved streams (`STAGE_STREAM`, `CAST_STREAM`, `ROTATION_STREAM`, `CHEMISTRY_STREAM`, `GEAR_STREAM`, `MISCHIEF_STREAM`). |
 | `🔨️modules/🦴️rig/` | 2×3 affine matrices, `restPose`, `solveRig` (forward kinematics), `lookOffset` (where a pupil looks) and `pupilReach` (how far it travels). |
 | `🔨️modules/🎞️animation/` | `easeBezier`, `sampleTrack`, `sampleClip`, `blendPose`, the gaze spring `springStep` and the blink `lidAt`. |
 | `🔨️modules/🏞️terrain/` | `perchesOf` (surfaces minus keep-outs), strides, falls, landings and the ballistic hop between perches; `wallsOf` (the free stretches of the side walls, by the keep-outs beside them), `wallAt`, `nearestWall` and the line of sight `segmentHits`/`segmentClear` (Liang–Barsky). |
@@ -47,7 +47,8 @@ effect with `--pet-shiny-filter`; the quiz host derives the list from badge awar
 | `🔨️modules/🧭️traversal/` | Crate `semio-framework-pets-traversal`, project `@semio-tech/pets-traversal-rs`: swing and climbing. |
 | `🔨️modules/🖱️interaction/` | Crate `semio-framework-pets-interaction`, project `@semio-tech/pets-interaction-rs`: gesture, effects and mischief. |
 | `🔨️modules/🎭️character/` | Crate `semio-framework-pets-character`, project `@semio-tech/pets-character-rs`: behavior and feeling. |
-| `🔨️modules/🎬️staging/` | Crate `semio-framework-pets-staging`, project `@semio-tech/pets-staging-rs`: draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock, projection and the stage. |
+| `🔨️modules/📝️draft/` | Crate `semio-framework-pets-staging-draft`, project `@semio-tech/pets-staging-draft-rs`: the draft with the spacing, schedule, attention and locomotion rules that edit it. |
+| `🔨️modules/🎬️staging/` | Crate `semio-framework-pets-staging`, project `@semio-tech/pets-staging-rs`: sociability, choice, population, clock, projection and the stage, over the draft crate. |
 | `🎯️targets/⚛️react/` | `@semio-tech/pets-react`: the inline SVG depiction, the DOM survey, the pacer, the decorative pet layer and the stories gallery. |
 | `🧪️tests/🎚️config/🟦️.ts` | Vitest configuration of the TypeScript core; its `include` is a glob over every module's unit suite. It also tells the suites how much to sample at the test level of the run (`sampled(few, full, more)`). |
 | `🧪️tests/<case>/` | The language-agnostic Protocol v2 cases (`🥒️.feature` with one adapter per language) and the suites of the React target (`🟦️.tsx`). |
@@ -146,6 +147,7 @@ pet it and shake it.
   on offer in the states `from` (in every state when absent) and may leave the species in the state `to` and
   in a `mood`. A ladder of states is written as tricks: `circle` tricks that lead one state up, `countercircle`
   tricks that lead one down.
+- The keyboard's explicit `circle`, `countercircle`, `stroke` and `shake` deeds call the same handlers as pointer gestures. The learner chooses the direction or action directly; `from`, the free-actor boundary and permission to play still apply. A shake applies its state, particles and mood immediately without a clip, as the held-hand shake does. These explicit requests also work in unwilling moods; autonomous `whim` and `show` retain their mood gates, and chemistry-only tricks stay behind chemistry. The generic `trick` deed keeps its click-trick sequence and willing-whim fallback.
 - The **purr** is every species' contentment: a looping `clip` and optionally an `emitter`.
 - An **emitter** is a source of particles on a bone, `x` and `y` away from it: every particle is drawn as
   `shape` around its own origin and painted like a part (`fill`, `stroke`, `strokeWidth`); `motion` is `fall`,
@@ -196,7 +198,8 @@ sets it off on an `activity` it could start by itself (`fidget`, `walk`, `hop`, 
 ### Stage, events, frames
 
 `openStage(seed)` is an empty stage. `advance(menagerie, stage, events)` folds events into it —
-`ticked`, `pointed`, `unpointed`, `glanced`, `surveyed`, `summoned`, `tuned`, `hushed`, `poked` — and
+`ticked`, `pointed`, `unpointed`, `glanced`, `surveyed`, `summoned`, `tuned`, `hushed`, `pressed`, `dragged`,
+`released`, `cancelled`, `reclaimed`, `stirred`, `scrolled`, `played`, `permitted` — and
 `frameOf(menagerie, stage)` projects what a render target draws: the actors back to front with a matrix per
 bone, their eyes and mood, what they are doing (`activity`), the rate the motion needs (64, 32, 16 or 0 ticks
 per second) and the tick of the next change when nothing moves. Time is whole ticks, 64 per second.
@@ -222,7 +225,7 @@ What an actor does with the pointer, all of it inside the fold:
   does so again depends on `temperament.curiosity`.
 
 In mode `still` none of this happens. While the stage is quiet (`hushed`) the pupils still follow, and nothing
-else does: no turn, no lean, no greeting, and a poke is ignored.
+else happens by itself: no turn, no lean and no autonomous greeting. Permitted explicit keyboard deeds remain available.
 
 Where actors appear: a newcomer takes the least crowded perch, the ground (the lowest perches of the stage)
 last, so a cast spreads over the surfaces instead of lining up on the floor. When a survey brings new ground,
@@ -301,7 +304,7 @@ never looks into the layer itself.
 | `controls` | none | selector of more controls a press on a pet never takes away from, besides `PET_PRESS_CONTROLS` (controls and labels) — a host's drag grips, for instance |
 | `walls` | none | selector of more elements whose sides pets may climb, besides the sides of the surfaces' own elements |
 | `props` | `[data-pet-prop]` | selector of the elements a pet may play with (their key is the value of `data-pet-prop`) |
-| `ref` | none | receives `{ play(species, deed) }`: a deed (`hello`, `trick`, `pet`, `toss`) the learner asked a pet for without a pointer — the keyboard equivalent of the hand for a "Play with the pets" group |
+| `ref` | none | receives `{ play(species, deed) }`: a deed (`hello`, `trick`, `pet`, `toss`, `circle`, `countercircle`, `stroke`, `shake`) the learner asked a pet for without a pointer — the keyboard equivalent of the hand for a "Play with the pets" group |
 | `glances` | none | other things worth a look, in viewport pixels, sampled with every survey |
 | `scale` | 0.8 below 768 px, else 1 | the size pets are drawn at |
 | `seed` | random per mount | the seed of the stage |

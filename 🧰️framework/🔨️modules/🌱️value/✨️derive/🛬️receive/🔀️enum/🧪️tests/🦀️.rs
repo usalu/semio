@@ -1,4 +1,5 @@
 //! 🧪️ Real tagged FEM payloads and tuple variants preserve source leases through every native frontier.
+use semio_framework_test_fixtures::fixture_text;
 use crate::{NativeDecodeControl,DslValue,RetirementDemand,ValueError,retained_clone::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress},native_decoding::{NativeReceive,NativeReceiver},retirement::{RetireOwned,controlled::ControlledRetirement,shared::sealed::SealedShared}};
 #[derive(crate::RetireOwned,crate::NativeReceive,crate::ToValue)]
 #[value(crate="crate",rename_all="camelCase")]
@@ -53,4 +54,4 @@ fn run<T:NativeReceive<DslValue>+Observed>(row:&serde_json::Value,cuts:&[serde_j
  }
 }
 #[test]
-fn native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier(){let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for row in f["cases"].as_array().unwrap(){let cuts=f["cuts"].as_array().unwrap();match row["family"].as_str().unwrap(){"element"=>{oracle::<OracleElement>(row);run::<Element>(row,cuts)},"mutation"=>{oracle::<OracleMutation>(row);run::<Mutation>(row,cuts)},"external"=>{oracle::<OracleExternal>(row);run::<External>(row,cuts)},"adjacent"=>{oracle::<OracleAdjacent>(row);run::<Adjacent>(row,cuts)},_=>panic!("declared enum family")}}eprintln!("[DEBUG] payload enum exact Serde shape/variant/arity validation, original source identity, funded typed child custody and12 cancellation frontiers");}
+fn native_payload_enum_receives_exact_declared_variants_and_closes_every_original_frontier(){let f:serde_json::Value=serde_json::from_str(fixture_text!("../../../✨️derive/🛬️receive/🔀️enum/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for row in f["cases"].as_array().unwrap(){let cuts=f["cuts"].as_array().unwrap();match row["family"].as_str().unwrap(){"element"=>{oracle::<OracleElement>(row);run::<Element>(row,cuts)},"mutation"=>{oracle::<OracleMutation>(row);run::<Mutation>(row,cuts)},"external"=>{oracle::<OracleExternal>(row);run::<External>(row,cuts)},"adjacent"=>{oracle::<OracleAdjacent>(row);run::<Adjacent>(row,cuts)},_=>panic!("declared enum family")}}eprintln!("[DEBUG] payload enum exact Serde shape/variant/arity validation, original source identity, funded typed child custody and12 cancellation frontiers");}

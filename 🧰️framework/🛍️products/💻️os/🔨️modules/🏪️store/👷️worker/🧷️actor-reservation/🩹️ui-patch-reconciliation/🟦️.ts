@@ -51,8 +51,6 @@ export class ReservationUiPatches {
       },
       Math.min(15_000, BROWSER_ACTOR_CHILD_LIMITS.invokeMs),
     );
-    // ⏳️ `settled` lets `awaitUiQuiescence` wait for this offer; its own no-op catch keeps an unobserved deadline
-    // from surfacing as an unhandled rejection while awaiters still see the rejection.
     const settled = result.then(() => undefined);
     settled.catch(() => {});
     this.session.pendingUiPatch = { offer, resolve, reject, timer, settled };

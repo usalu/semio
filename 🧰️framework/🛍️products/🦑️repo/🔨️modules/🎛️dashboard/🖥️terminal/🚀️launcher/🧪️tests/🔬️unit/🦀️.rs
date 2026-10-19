@@ -32,7 +32,7 @@ fn suggestion_help_uses_the_selected_locale_and_customized_bindings() {
     assert!(caption.contains("Alt+Y")); assert!(caption.contains("übernimmt"));
 }
 
-fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
+fn fixture() -> serde_json::Value { serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
 fn registry() -> Arc<Registry> {
     let facts: Facts = serde_json::from_value(fixture()["workspace"].clone()).unwrap();
@@ -139,7 +139,7 @@ fn a_collapsed_tree_lists_only_verbs_and_expanding_reveals_children() {
 
 #[test]
 fn every_scenario_of_the_launcher_feature_is_proved_by_a_test() {
-    dashboard_core::testkit::assert_proved(include_str!("../../../../🧪️tests/🚀️launcher/🥒️.feature"), &[include_str!("🦀️.rs")], &[
+    dashboard_core::testkit::assert_proved(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🚀️launcher/🥒️.feature"), &[semio_framework_test_fixtures::fixture_text!("../../🧪️tests/🔬️unit/🦀️.rs")], &[
         ("The fixture workspace offers exactly the pinned commands", &["the_fixture_workspace_offers_exactly_the_pinned_commands"]),
         ("Journeys match the shared vectors", &["journeys_match_the_shared_vectors"]),
         ("A registry update keeps the search, the selection and the open groups", &["selection_search_and_open_groups_survive_a_registry_update"]),
@@ -150,7 +150,7 @@ fn every_scenario_of_the_launcher_feature_is_proved_by_a_test() {
 
 #[test]
 fn localized_metadata_is_visible_in_command_search_and_parameter_forms() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
     let facts: Facts = serde_json::from_value(fixture["workspace"].clone()).unwrap();
     let registry = Arc::new(Registry::build(std::path::Path::new("workspace"), &facts));
     for row in fixture["display"].as_array().unwrap() {
@@ -179,7 +179,7 @@ fn localized_metadata_is_visible_in_command_search_and_parameter_forms() {
 
 #[test]
 fn launcher_viewport_and_default_text_follow_the_shared_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
     for row in fixture["viewportCases"].as_array().unwrap() {
         let mut harness = launcher();
         harness.state.set_page(row["initialPage"].as_u64().unwrap() as usize);
@@ -201,8 +201,8 @@ fn launcher_viewport_and_default_text_follow_the_shared_vectors() {
 
 #[test]
 fn launcher_pointer_rows_follow_localized_description_layout() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
-    let metadata: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧫️fixtures/⌨️batch/🔣️.json")).unwrap();
+    let metadata: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧫️fixtures/🌐️metadata/🔣️.json")).unwrap();
     let facts: Facts = serde_json::from_value(metadata["workspace"].clone()).unwrap();
     for row in vectors["pointerCases"].as_array().unwrap() {
         let locale = if row["locale"] == "en" { Locale::En } else { Locale::De };

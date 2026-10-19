@@ -4,6 +4,7 @@
 /// render seam hands the app (`InteractionView::draft_references`) so it highlights what the edited mutation acts on: a
 /// list and a single reference of one domain merge in draft order with each id once, a reference without a domain and a
 /// number contribute nothing, and nothing is referenced before the session opens or once it exits.
+use serde_json::Value;
 #[semio_framework_async_macros::async_test]
 async fn the_open_draft_references_its_reference_inputs_per_domain() {
     let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{

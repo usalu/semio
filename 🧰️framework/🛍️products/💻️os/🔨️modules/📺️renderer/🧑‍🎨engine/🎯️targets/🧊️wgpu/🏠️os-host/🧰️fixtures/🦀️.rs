@@ -3,6 +3,8 @@
 //! 🧭️ Behind `testkit`: the monolith test unit held these functions in the os-host standalone law file; laws in the test bins name them through this module.
 
 use super::*;
+#[path = "../../../../🧪️tests/🎟️original-turn/🦀️.rs"]
+pub mod fixture_original_turn;
 use semio_framework_os_renderer_wgpu_app_runtime::{AppMailbox, AppRuntime};
 use semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget;
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry;
@@ -84,7 +86,7 @@ pub fn finish_world_fixture_component_close(shell: semio_framework_os_renderer_w
     assert!(request.engine_token.is_none(), "this World fixture has no paired GPU engine token");
     let runtime = runtime_with_shell(shell);
     let mut close = ComponentSurfaceCloseOwner::new(request);
-    let mut original = semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
+    let mut original = fixture_original_turn::FixtureTurnV1::new(semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     for _ in 0..262_144 {
         if close.terminal_is_empty() {
             break;

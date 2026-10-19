@@ -288,8 +288,6 @@ it("keeps hover out of the board-events batch — it travels on the framework in
   });
 
   it("board 2d gumball: a rotate record flushes at once and its live preview frames never reach the guest", () => {
-    // 🔄️ `transformPreview` is the peer-pane mirror's food ONLY — forwarding it would spend one of the
-    // store's 64 applied edits per drag frame, when a whole rotate gesture must be a single edit.
     const { flushNow, eventsJson } = coalesceBoard2dEvents([
       { name: "transformPreview", payload: { moves: [{ id: "alpha", x: 1, y: 1 }] } },
       { name: "gesture", payload: { gestureId: "gesture-2", kind: "rotate", targets: ["alpha"], pivotX: 0, pivotY: 0, angle: 0.5, proximity: [] } },

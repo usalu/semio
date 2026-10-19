@@ -13,6 +13,7 @@ use semio_framework::kernel::{Event, MessageEndpoint};
 use semio_framework::kernel::RequestOutcome;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
+use semio_framework::Effect;
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

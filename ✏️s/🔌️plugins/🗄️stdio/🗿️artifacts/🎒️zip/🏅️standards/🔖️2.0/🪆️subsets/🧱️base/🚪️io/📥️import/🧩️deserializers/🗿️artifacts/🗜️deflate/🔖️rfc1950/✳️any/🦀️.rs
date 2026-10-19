@@ -1,10 +1,10 @@
-//! Deserialize stdio.zip from stdio.deflate (inflate then parse ZIP).
+//! 📥️ Deserialize stdio.zip from stdio.deflate (inflate then parse ZIP).
 
 use crate::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_deflate::DeflateSnapshot;
 
 //#region Codec
-/// Register deserializer hooks.
+/// 📤️ Register deserializer hooks.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
@@ -17,7 +17,7 @@ pub fn deserialize(from: &DeflateSnapshot) -> Result<ZipSnapshot, store::PackErr
     Ok(snap)
 }
 
-/// Decode deflate pack then parse.
+/// 📂️ Decode deflate pack then parse.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ZipSnapshot, store::PackError> {
     deserialize(&<DeflateSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?)

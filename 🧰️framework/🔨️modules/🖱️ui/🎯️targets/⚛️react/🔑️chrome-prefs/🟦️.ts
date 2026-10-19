@@ -46,9 +46,7 @@ export function readStoredUiCustomThemes(storage: StoragePort): Record<string, U
     for (const [id, value] of Object.entries(parsed)) {
       try {
         out[id] = parseUiTheme(value);
-      } catch {
-        /* drop invalid saved theme */
-      }
+      } catch {}
     }
     return out;
   } catch {

@@ -4,7 +4,7 @@
 
 use crate::editor::puzzle2d::config::PUZZLE2D_WINDOW_BODY_KEYS;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
-use crate::editor::puzzle2d::panels::inspection;
+use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::inspection;
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::recorder::Puzzle2dRecorder;
 use {crate::editor::puzzle2d::snapshot::puzzle2d_selection_write, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx, crate::editor::puzzle2d::modes::edit::windows::overview::utilities::select::Puzzle2dSelectionRecord};
@@ -21,6 +21,7 @@ use std::sync::OnceLock;
 use crate::editor::puzzle2d::engine::BoardHost;
 use crate::editor::puzzle2d::recorder;
 use crate::editor::puzzle2d::engine::board_host::drain_board_events_json;
+use crate::mirror::editor::puzzle2d::commands::apply_board_events;
 
 
 /// 🐢️ Classifies a batch of board events into the narrowest `UiDirtyScope` that covers all of them —
@@ -49,15 +50,11 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
                 panel_properties = true;
                 engagements = true;
             }
-            // 🎬️ A finished drag or rotate arrives as ONE record: positions (and handle angles) change and a drop
-            // may land new edges, so the panes, the inspector and the layers tree repaint.
             "gesture" => {
                 window_bodies = true;
                 panel_layers = true;
                 panel_properties = true;
             }
-            // 🎯️ A painted region adds an outliner row; a moved or resized one only changes geometry,
-            // so it repaints the panes and the inspector without churning the layers tree.
             "regionCreate" => {
                 window_bodies = true;
                 panel_layers = true;
@@ -78,7 +75,6 @@ fn puzzle2d_board_events_scope(events: &[Value]) -> UiDirtyScope {
                 window_bodies = true;
                 engagements = true;
             }
-            // 🖱️ Engine-local hover paints itself; the guest keeps no hover state to re-render for.
             "hover" | "preselectCancel" => {}
             _ => recognized_all = false,
         }

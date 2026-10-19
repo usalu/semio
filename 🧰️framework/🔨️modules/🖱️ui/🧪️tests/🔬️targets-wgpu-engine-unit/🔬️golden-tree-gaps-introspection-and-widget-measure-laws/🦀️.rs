@@ -62,7 +62,7 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
     }
 }
 
-/// KNOWN GAP: `reconcile` only expands `Field`/`Section` into a real retained child for their
+/// ↔️ KNOWN GAP: `reconcile` only expands `Field`/`Section` into a real retained child for their
 /// `child`/`children` payload (per `reconcile`'s own module doc comment — M2 recurses into
 /// `Stack`/`Section`/`Field` only), but `flex::LayoutEngine` only grants `flex_grow: 1.0` to a
 /// `Stack`'s children (see `style_with_grow`'s `flex_grow_child` param, gated on
@@ -124,7 +124,7 @@ fn golden_section_known_gap() {
     assert!(instances > 0, "Section should paint its header label plus its children");
 }
 
-/// KNOWN GAP: see `to_widget_node`'s own `UiNode::Image | UiNode::ComponentScene | UiNode::ExternalSlot`
+/// 🖼️ KNOWN GAP: see `to_widget_node`'s own `UiNode::Image | UiNode::ComponentScene | UiNode::ExternalSlot`
 /// match arm doc comment — `WidgetNode<E>` has no variant for any of these three, so there is no
 /// immediate-mode equivalent to compare against at all. `paint::paint_image`/
 /// `paint_component_scene`/`paint_external_slot` are themselves documented placeholders (no host

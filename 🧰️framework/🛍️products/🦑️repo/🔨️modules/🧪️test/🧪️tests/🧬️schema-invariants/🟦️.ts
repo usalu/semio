@@ -56,13 +56,9 @@ function discard(root: string): void {
 /** 🧬️ Writes one `🧬️schema/` module and returns the catalog row that names its files. */
 function writeSchemaModule(root: string, ownerRel: string, id: string, defs: Record<string, unknown>, sources: Readonly<Record<string, string>>, rootExport = false, extra: Record<string, unknown> = {}): { path: string; formats: Record<string, string> } {
   const moduleRel = `${ownerRel}/🧬️schema`;
-  // 🎯️A single-export module IS its export and says so with the taxonomy's root keyword; a multi-export
-  // module lists them under `$defs`. Both forms are written here so both are actually exercised.
   const single = Object.entries(defs)[0]!;
   const document = rootExport ? { $schema: "http://json-schema.org/draft-07/schema#", $id: id, title: single[0], ...(single[1] as Record<string, unknown>), ...extra } : { $schema: "http://json-schema.org/draft-07/schema#", $id: id, ...extra, $defs: defs };
   write(root, `${moduleRel}/🔣️.json`, `${JSON.stringify(document, null, 2)}\n`);
-  // 📚️`path` is the MODULE directory and every `formats` value is relative to it — the shape the
-  // generator emits, so this fixture repository and the real catalog are read by the same code.
   const formats: Record<string, string> = { "🔣️jsonschema": "🔣️.json" };
   for (const [format, source] of Object.entries(sources)) {
     write(root, `${moduleRel}/${FORMAT_FILENAMES[format]!}`, source);
@@ -163,8 +159,6 @@ function catalogRepo(options: CatalogCaseOptions = {}): string {
   if (options.crossScopeRef === true) properties.approval = { $ref: `${HUB_ID}#/$defs/Approval` };
   if (options.crossScopeDefinitionsRef === true) properties.approval = { $ref: `${HUB_ID}#/definitions/approvalState` };
   if (options.filePathRef === true) properties.approval = { $ref: "../../🌎️hub/💡️inference/🧬️schema/🔣️.json#/$defs/Approval" };
-  // 🔗️A helper lives in `definitions` and is addressed as `#/definitions/<helper>`; it is deliberately
-  // NOT an export, so an internal reference to it can never be required to be export-addressed.
   if (options.internalDefinitionsRef === true) {
     extra.definitions = { author: { type: "object", additionalProperties: false, properties: { name: { type: "string" } } } };
     properties.author = { $ref: "#/definitions/author" };
@@ -173,8 +167,6 @@ function catalogRepo(options: CatalogCaseOptions = {}): string {
   const restricted = options.restrictedFormats ?? (options.invalidRestrictedFormats === undefined ? null : options.invalidRestrictedFormats);
   const artifact: Record<string, unknown> = { type: "object", additionalProperties: false, required: ["title"], properties };
   if (restricted !== null) artifact["x-semio-formats"] = restricted;
-  // 🏗️An export declaring restricted support is only proof of the rule if the formats it did not
-  // declare actually stop implementing it; `implementRestrictedFormats` says which ones still do.
   const implemented = (format: string): boolean => (options.implementRestrictedFormats === undefined ? true : options.implementRestrictedFormats.includes(format));
   const writer = writeSchemaModule(root, WRITER_OWNER, WRITER_ID, { Artifact: artifact }, {
     "🦀️rust": options.dropRustExport === true || !implemented("🦀️rust") ? "pub struct WriterDocument {\n    pub title: String,\n}\n" : "pub struct Artifact {\n    pub title: String,\n}\n",
@@ -194,8 +186,6 @@ function catalogRepo(options: CatalogCaseOptions = {}): string {
     "hub.inference": { ...hub, exports: rootExportRow("Approval"), dependsOn: [], hashes: {} },
   };
   if (options.mutationAggregate === true) {
-    // 🧬️A mutation leaf is its own scope and its whole document IS the payload contract, so the
-    // aggregate's branches address it by absolute `$id` with no fragment.
     const leafId = mutationLeafSchemaId(root, WRITER_ID, LEAF_SEMANTIC_KIND);
     const leaf = writeSchemaModule(root, LEAF_OWNER, leafId, { Payload: { type: "object", additionalProperties: false, required: ["title"], properties: { title: { type: "string" } } } }, {}, true);
     scopes[LEAF_SCOPE_ID] = { ...leaf, exports: rootExportRow("Payload"), dependsOn: [], hashes: {} };
@@ -354,15 +344,11 @@ describe("🍃️ mutation leaves at depth one and two", () => {
   function repoWithLeaves(): string {
     const root = scaffold();
     const mutations = `${OWNER}/🧬️schema/🧬️mutations`;
-    // 🍃️A one-segment leaf, beside a two-segment one: the grouping directory carries no descriptor,
-    // its child carries one, and the verb directory's own name yields no kind at all.
     write(root, `${mutations}/🪄️change-title/🔣️.json`, `${JSON.stringify(descriptor("change-title", "ChangeTitle"), null, 2)}\n`);
     write(root, `${mutations}/🪄️change-title/🧬️schema/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
     write(root, `${mutations}/🔑️access-rule/🌱️create/🔣️.json`, `${JSON.stringify(descriptor("create-access-rule", "CreateAccessRule"), null, 2)}\n`);
     write(root, `${mutations}/🔑️access-rule/🌱️create/🧬️schema/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
-    // 🧫️A collection under `🧬️mutations` holds example data; its case file is not a leaf descriptor.
     write(root, `${mutations}/🧪️tests/🧪️replays-a-change/🔣️.json`, `${JSON.stringify({ schemaVersion: 1 }, null, 2)}\n`);
-    // 📝️A codec facet is a facet whatever it contains.
     write(root, `${mutations}/📝️text/🔣️.json`, `${JSON.stringify(payload, null, 2)}\n`);
     clearSchemaContractCache();
     return root;
@@ -422,8 +408,6 @@ describe("⚖️ the two measurements", () => {
   test("a cross-scope reference out of the filtered subtree still resolves", () => {
     const root = catalogRepo({ crossScopeRef: true });
     try {
-      // 🔗️`s.writer.writer` refs `hub.inference`, which the filter excludes from REPORTING but never
-      // from the `$id` index: a narrowed index would report the legal reference as unresolved.
       expect(codesOf(schemaResolutionDiagnostics(root, WRITER_OWNER))).toEqual(["schema-cross-scope-dependency-forbidden"]);
     } finally {
       discard(root);
@@ -470,7 +454,6 @@ describe("🚶️ the tree walk's boundaries", () => {
       expect([...submodulePaths(root)]).toEqual(["♻️mit-bestand/🔎️recherche"]);
       const reached = schemaTreeFiles(root, "♻️mit-bestand");
       expect(reached).toEqual(["♻️mit-bestand/📋️bericht/contracts/lane_schema.json"]);
-      // 📍️The sibling that is NOT a submodule still reports, so the skip is the declaration and not the prefix.
       expect(codesOf(schemaPlacementDiagnostics(root, reached))).toEqual(["schema-placement-outside-module"]);
     } finally {
       discard(root);
@@ -605,9 +588,6 @@ describe("🔎️ per-format export presence", () => {
     });
   }
 
-  // 🦀️Row 148 in prose: a scope that OWNS its type elsewhere and republishes it by name has declared
-  // the export, and one that hides it in a group or a glob has not. The vector above carries the same
-  // twelve verdicts as data; these three restate the boundary where a regex is easiest to get wrong.
   test("a rust re-export declares an export only when the statement names it, alone", () => {
     expect(declaresSchemaExport("🦀️rust", "pub use inner::Artifact;\n", "Artifact")).toBe(true);
     expect(declaresSchemaExport("🦀️rust", "pub use inner::{Artifact};\n", "Artifact")).toBe(false);
@@ -636,7 +616,6 @@ describe("🔎️ per-format export presence", () => {
     expect(declaresSchemaExportParser("🟦️typescript", `${type}export const parseArtifact = (value: unknown): Artifact => value as Artifact;\n`, "Artifact")).toBe(true);
     expect(declaresSchemaExportParser("🟦️typescript", `${type}export let parseArtifact = (value: unknown): Artifact => value as Artifact;\n`, "Artifact")).toBe(true);
     expect(declaresSchemaExportParser("🟦️typescript", `${type}export declare function parseArtifact(value: unknown): Artifact;\n`, "Artifact")).toBe(true);
-    // 🚪️A parser for a DIFFERENT export, and an unexported one, are both absent as far as a consumer is concerned.
     expect(declaresSchemaExportParser("🟦️typescript", `${type}export function parseArtifactDraft(value: unknown): Artifact {\n  return value as Artifact;\n}\n`, "Artifact")).toBe(false);
     expect(declaresSchemaExportParser("🟦️typescript", `${type}function parseArtifact(value: unknown): Artifact {\n  return value as Artifact;\n}\n`, "Artifact")).toBe(false);
   });
@@ -661,8 +640,6 @@ describe("🧬️ a mutation leaf's own $id", () => {
   test("the semantic kind keys the leaf, so a two-segment leaf directory still gets one id", () => {
     const root = scaffold();
     try {
-      // 🧬️Deriving the id from the leaf DIRECTORY instead would give `🩻️node-skin/🔗️bind` and
-      // `🎛️sampler/🔗️bind` the same last segment; the semantic kind is what keeps them apart.
       const ids = cases.mutationLeafIdCases.map((row) => mutationLeafSchemaId(root, row.rootModuleId, row.semanticKind));
       expect(new Set(ids).size).toBe(ids.length);
       for (const row of cases.mutationLeafIdCases) expect(mutationLeafSchemaId(root, row.rootModuleId, row.semanticKind).endsWith(`/${row.semanticKind}/schema.json`)).toBe(true);
@@ -820,8 +797,6 @@ describe("🩺️ the committed tree is measured by the same checkers", () => {
     for (const entry of discoverSchemaFixtures(repoRoot, TEST_DOMAIN_REL_PATH)) expect(entry.fixtures.length).toBeGreaterThan(0);
   });
 
-  // 🧭️Scoped to the module this worker owns. The rest of the tree is mid-migration under other
-  // partitions, and asserting over it here would report their work as this module's breakage.
   test("the test platform's own subtree carries no schema-contract finding", () => {
     expect(schemaContractDiagnostics(repoRoot, TEST_DOMAIN_REL_PATH).map((entry) => `${entry.code} ${entry.path ?? ""}`)).toEqual([]);
   });

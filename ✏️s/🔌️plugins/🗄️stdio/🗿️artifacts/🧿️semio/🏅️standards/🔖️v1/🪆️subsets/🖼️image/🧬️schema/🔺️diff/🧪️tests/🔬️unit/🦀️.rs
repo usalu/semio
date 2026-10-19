@@ -62,9 +62,6 @@ async fn absorb_modify_then_remove_drops_modify() {
 /// `between()` result.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    // 🌱 Reuses `demo_diff_cases()` (single source of truth, also feeds
-    // `diff_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs`)
-    // rather than an independent copy of the same base/other fixture pair.
     for d in demo_diff_cases() {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

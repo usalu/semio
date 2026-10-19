@@ -1,2 +1,2 @@
-/** demo obj */
+/** 🎬️ demo obj */
 export const ID = 'demo';

@@ -141,7 +141,7 @@ function hasHostPluginShape(plugin: OwnedBuildPlugin): plugin is OwnedBuildPlugi
 }
 
 /** 🚪️ Hands owned plugins to a Vite plugin list. The plugins are checked at run time against the shape the host reads, so the admission is a narrowing, not an unchecked cast; a plugin that does not fit is refused with its name. */
-export function hostBuildPlugins(plugins: readonly OwnedBuildPlugin[]): Plugin[] {
+export function hostBuildPlugins(plugins: readonly OwnedBuildPlugin[]): (OwnedBuildPlugin & Plugin)[] {
   return plugins.map((plugin) => {
     if (!hasHostPluginShape(plugin)) throw new Error(`Owned build plugin ${JSON.stringify(plugin.name)} does not have the shape the Vite plugin host reads`);
     return plugin;

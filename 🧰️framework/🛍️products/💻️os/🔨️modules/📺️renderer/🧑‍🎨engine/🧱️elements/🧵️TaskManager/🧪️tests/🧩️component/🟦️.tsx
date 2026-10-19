@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework/actor/retained-turn/bootstrap/testing/fixtures";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🧵️TaskManager/component.test.tsx
 /** 🧪️ `🧵️TaskManager` tests: the pure scene-JSON builders (`taskManagerColumns`/
@@ -18,9 +18,9 @@ import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-l
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
 import runningTasks from "../🧫️fixtures/🏃️running-tasks.json";
 import { ActivationRegistry } from "@semio-tech/framework";
-import { ShardClient } from "@semio-tech/framework-actor/shard-client";
-import { type ShardBudget } from "@semio-tech/framework-actor/shard-client/wire";
-import { type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client/quota";
+import { ShardClient } from "@semio-tech/framework/actor/shard-client";
+import { type ShardBudget } from "@semio-tech/framework/actor/shard-client/wire";
+import { type ShardWorkerLike } from "@semio-tech/framework/actor/shard-client/quota";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 // #endregion 🔌️Adapters
 
@@ -67,7 +67,6 @@ describe("taskManagerRows", () => {
   it("emits all three row actions (suspend/resume/cancel), each addressed at this row's actor id", () => {
     const [row] = taskManagerRows([ROW], LABELS);
     // 🔖️ `TaskManagerTableRow`'s index signature admits the row's own `id` string beside its cells,
-    // so a cell read narrows explicitly rather than assuming every key is a cell.
     const actionsCell = row!.actions as TaskManagerTableCell;
     if (typeof actionsCell === "string" || actionsCell.kind !== "buttons") throw new Error("expected a buttons cell");
     expect(actionsCell.buttons.map((button) => button.action.action)).toEqual(["suspend", "resume", "cancel"]);

@@ -91,7 +91,7 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
 
 fn measured_view_state() -> semio_framework_plugin::ViewModel {
     semio_framework_plugin::ViewModel {
-        window_id: Some(main::WINDOW_KIND_ID.to_string()),
+        window_id: Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.to_string()),
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: main::WINDOW_KIND_ID.to_string(), window_kind_id: main::WINDOW_KIND_ID.to_string() }],
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
@@ -111,7 +111,7 @@ fn measured_nakagin_snapshot() -> Puzzle3dPlaySnapshot {
 fn open_vortex_suggestions_every_step_stays_below_the_interactive_ceiling_for_nakagin() {
     let snapshot = measured_nakagin_snapshot();
     let config = Puzzle3dConfig::default();
-    let command = Puzzle3dCommand::from_action("openVortexSuggestions", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), Some(main::WINDOW_KIND_ID.to_string())).expect("openVortexSuggestions command decodes");
+    let command = Puzzle3dCommand::from_action("openVortexSuggestions", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.to_string())).expect("openVortexSuggestions command decodes");
     let (steps, worst) = measured_cold_runs("openVortexSuggestions", &command, &snapshot, &config);
     assert!(worst < PUZZLE3D_INTERACTIVE_STEP_CEILING, "openVortexSuggestions worst turn {worst:?} over {steps} turns is at or over the framework's interactive step ceiling {PUZZLE3D_INTERACTIVE_STEP_CEILING:?}");
     assert!(worst < PUZZLE3D_MEASURED_STEP_BUDGET, "openVortexSuggestions worst turn {worst:?} over {steps} turns exceeds this artifact's own unoptimized budget {PUZZLE3D_MEASURED_STEP_BUDGET:?}");
@@ -123,7 +123,7 @@ fn open_vortex_suggestions_every_step_stays_below_the_interactive_ceiling_for_na
 fn accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin() {
     let snapshot = measured_nakagin_snapshot();
     let config = Puzzle3dConfig::default();
-    let command = Puzzle3dCommand::from_action("acceptSuggestion", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), Some(main::WINDOW_KIND_ID.to_string())).expect("acceptSuggestion command decodes");
+    let command = Puzzle3dCommand::from_action("acceptSuggestion", Some(json!({ "fullId": "25b0dba0-8f81-423a-94a1-b911a6031010:link" })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.to_string())).expect("acceptSuggestion command decodes");
     let (steps, worst) = measured_cold_runs("acceptSuggestion", &command, &snapshot, &config);
     assert!(worst < PUZZLE3D_INTERACTIVE_STEP_CEILING, "acceptSuggestion worst turn {worst:?} over {steps} turns is at or over the framework's interactive step ceiling {PUZZLE3D_INTERACTIVE_STEP_CEILING:?}");
     assert!(worst < PUZZLE3D_MEASURED_STEP_BUDGET, "acceptSuggestion worst turn {worst:?} over {steps} turns exceeds this artifact's own unoptimized budget {PUZZLE3D_MEASURED_STEP_BUDGET:?}");
@@ -141,7 +141,7 @@ fn measured_concrete_forest_snapshot() -> Puzzle3dPlaySnapshot {
 fn set_active_example_every_step_stays_below_the_interactive_ceiling_for_nakagin() {
     let snapshot = measured_concrete_forest_snapshot();
     let config = Puzzle3dConfig::default();
-    let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), Some(main::WINDOW_KIND_ID.to_string())).expect("setActiveExample command decodes");
+    let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.to_string())).expect("setActiveExample command decodes");
     let (steps, worst) = measured_cold_runs("setActiveExample", &command, &snapshot, &config);
     assert!(worst < PUZZLE3D_INTERACTIVE_STEP_CEILING, "setActiveExample worst turn {worst:?} over {steps} turns is at or over the framework's interactive step ceiling {PUZZLE3D_INTERACTIVE_STEP_CEILING:?}");
     assert!(worst < PUZZLE3D_MEASURED_STEP_BUDGET, "setActiveExample worst turn {worst:?} over {steps} turns exceeds this artifact's own unoptimized budget {PUZZLE3D_MEASURED_STEP_BUDGET:?}");

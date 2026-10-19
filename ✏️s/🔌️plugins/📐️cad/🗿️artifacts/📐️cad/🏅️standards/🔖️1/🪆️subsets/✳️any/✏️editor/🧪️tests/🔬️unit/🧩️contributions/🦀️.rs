@@ -26,7 +26,6 @@ async fn a_contributed_cad_computer_pack_is_accepted_by_set_contributions() {
                 ]),
             ),
         ]),
-        // 🧩️ A second entry on another topic: a mixed host payload must still install cad's own share.
         semio_framework_value::DslValue::object([
             ("pluginId".to_string(), semio_framework_value::DslValue::String("flow".into())),
             (
@@ -111,8 +110,6 @@ async fn the_shipped_cad_computer_pack_is_admitted_by_the_retained_config_envelo
         "every cad-extension-* module installs, in host order"
     );
     assert!(accepted.iter().all(|pack| pack.computers_json.contains("modelDefinitionIds")), "each module's own computer roster survives verbatim");
-    // 🖼️ `render_body` runs `validate_cad_computer_contributions` on every body assembly
-    // (`✏️editor/🦀️.rs:1278`), so a pack that made the panel refuse would surface here.
     let history = empty_history();
     let doc = ArtifactView::new(&scene, &history);
     assert!(render_direct(&app, shape::BODY_KEY, &doc, &config, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).is_ok(), "the shape panel still assembles with the whole pack installed");
@@ -147,7 +144,6 @@ fn demonstrator_contributions_pack() -> String {
                         semio_framework_value::DslValue::object([
                             ("appId".to_string(), semio_framework_value::DslValue::String(app_id.into())),
                             ("moduleId".to_string(), semio_framework_value::DslValue::String(plugin_id.into())),
-                            // 📐️ The REAL bulk string of that extension, measured off the built dev manifests 2026-09-16.
                             ("bulkJson".to_string(), semio_framework_value::DslValue::String("m".repeat(bulk))),
                         ]),
                     ),

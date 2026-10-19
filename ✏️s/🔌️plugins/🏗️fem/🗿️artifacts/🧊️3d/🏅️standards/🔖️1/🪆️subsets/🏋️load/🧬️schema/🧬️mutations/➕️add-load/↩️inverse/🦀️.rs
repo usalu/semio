@@ -1,4 +1,4 @@
-//! and the id was genuinely new (a duplicate id is a warned no-op forward, so its inverse is empty).
+//! 📋️ and the id was genuinely new (a duplicate id is a warned no-op forward, so its inverse is empty).
 //! ↩️ Inverse for `AddLoad` — a `remove-load` of the just-added load id, only if the case existed
 use super::AddLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;

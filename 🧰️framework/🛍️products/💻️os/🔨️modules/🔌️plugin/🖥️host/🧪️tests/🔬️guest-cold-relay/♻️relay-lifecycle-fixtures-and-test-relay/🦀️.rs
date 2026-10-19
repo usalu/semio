@@ -72,7 +72,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
 
     let mock = Arc::new(MockGuestRuntime::new().await);
     let handle = mounted_handle(Arc::clone(&mock), RuntimeActorId(8_017)).await;
-    let oversized = vec![0; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES + 1];
+    let oversized = vec![0; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES + 1];
     let error = handle.infer(&oversized, &semio_framework_job::root_cancel_token()).await.expect_err("oversized relay input");
     assert!(error.to_string().contains("input exceeds the retained operation byte limit"));
     assert_eq!(mock.start_admissions(), 0);
@@ -83,10 +83,10 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
         registry.pool.clone(),
         semio_framework_async::CancelToken::root_now(),
         1,
-        ("semio.infer".to_string(), vec![0; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]),
+        ("semio.infer".to_string(), vec![0; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES]),
     );
     maximum_rejected_job.begin_close();
-    for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
+    for _ in 0..semio_framework_job_payload::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
         if matches!(semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| maximum_rejected_job.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
             break;
         }

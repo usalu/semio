@@ -17,7 +17,7 @@ async fn closest_point_on_plane_matches_orthogonal_projection() {
 async fn closest_point_on_sphere_matches_radial_projection() {
     let frame = Frame3::from_normal(Pnt3::new(1.0, 1.0, 1.0), Vec3::Z).unwrap();
     let s = Surface::Sphere { frame, radius: 3.0 };
-    let target = Pnt3::new(1.0, 1.0, 21.0); // 20 units above the sphere along its axis
+    let target = Pnt3::new(1.0, 1.0, 21.0);
     let cp = closest_uv(&s, s.domain(), target, 1e-9);
     assert!((cp.distance - 17.0).abs() < 1e-6);
 }
@@ -26,7 +26,7 @@ async fn closest_point_on_sphere_matches_radial_projection() {
 async fn closest_point_on_sphere_pole_is_certified_and_exact() {
     let frame = Frame3::WORLD;
     let s = Surface::Sphere { frame, radius: 2.0 };
-    let target = Pnt3::new(0.0, 0.0, 10.0); // directly above the north pole
+    let target = Pnt3::new(0.0, 0.0, 10.0);
     let cp = closest_uv(&s, s.domain(), target, 1e-9);
     assert!(cp.certified);
     assert!((cp.distance - 8.0).abs() < 1e-6);
@@ -47,8 +47,6 @@ async fn closest_point_on_cylinder_matches_expected_geometry() {
 async fn closest_point_on_cone_apex_when_unconstrained_minimum_is_negative() {
     let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
     let s = Surface::Cone { frame, half_angle: std::f64::consts::FRAC_PI_6 };
-    // Straight down from the apex: the unconstrained v* is negative, so the true closest
-    // point on the (v >= 0) cone is the apex itself.
     let target = Pnt3::new(0.0, 0.0, -5.0);
     let cp = closest_uv(&s, s.domain(), target, 1e-9);
     assert!(cp.certified);
@@ -60,7 +58,7 @@ async fn closest_point_on_cone_apex_when_unconstrained_minimum_is_negative() {
 async fn closest_point_on_torus_matches_meridional_projection() {
     let frame = Frame3::WORLD;
     let s = Surface::Torus { frame, major_radius: 5.0, minor_radius: 1.0 };
-    let target = Pnt3::new(5.0, 0.0, 5.0); // straight up from the tube center at u=0
+    let target = Pnt3::new(5.0, 0.0, 5.0);
     let cp = closest_uv(&s, s.domain(), target, 1e-9);
     assert!(cp.certified);
     assert!((cp.distance - 4.0).abs() < 1e-6, "distance mismatch: {}", cp.distance);
@@ -72,11 +70,6 @@ async fn closest_point_on_cylinder_seam_wraps_correctly() {
     let frame = Frame3::from_normal(Pnt3::new(0.0, 0.0, 0.0), Vec3::Z).unwrap();
     let s = Surface::Cylinder { frame, radius: 1.0 };
     let angle = -0.01_f64;
-    // 🐛 Placed via `frame.to_world` (the frame's OWN local axes), not raw world `cos`/`sin` —
-    // `Frame3::from_normal`'s `x`/`y` come from `Vec3::any_orthogonal` (for `normal = Z` that's
-    // `x = (0,1,0), y = (-1,0,0)`, a 90°-rotated basis, not world `X`/`Y`), so a world-angle-`(-0.01)`
-    // point sits at LOCAL angle `-0.01 - π/2`, nowhere near this cylinder's own `u = 0`/`TAU` seam —
-    // the test was inadvertently probing the middle of the domain instead of the seam it names.
     let target = frame.to_world(Pnt3::new(2.0 * angle.cos(), 2.0 * angle.sin(), 0.0));
     let cp = closest_uv(&s, ((0.0, std::f64::consts::TAU), (-5.0, 5.0)), target, 1e-9);
     let expected = std::f64::consts::TAU + angle;
@@ -138,8 +131,6 @@ mod quick {
     async fn closest_point_on_nurbs_patch_matches_dense_sampling_oracle() {
         let frame = Frame3::WORLD;
         let cyl = Surface::Cylinder { frame, radius: 2.5 };
-        // A NURBS surface built by densely sampling a cylinder patch is an independent,
-        // easily oracled shape for the patch-subdivision + Newton path.
         let u_knots = KnotVector::clamped_uniform(5, 3);
         let v_knots = KnotVector::clamped_uniform(4, 3);
         let controls: Vec<Vec<Pnt3>> = (0..5)

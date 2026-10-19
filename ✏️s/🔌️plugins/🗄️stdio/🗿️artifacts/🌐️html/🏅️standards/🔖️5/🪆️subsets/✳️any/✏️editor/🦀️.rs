@@ -424,7 +424,6 @@ pub fn create_html_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::definition())
         .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
         .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::WINDOW_KIND_ID, "HTML"))
-        // 🎬️ Example picker — one option per example `register_apps` publishes for this dialect.
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_html_inferences::examples::demo::ID, semio_s_artifact_stdio_html_inferences::examples::demo::label())], semio_s_artifact_stdio_html_inferences::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)

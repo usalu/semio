@@ -27,6 +27,8 @@ testkit = ["semio-framework-os-renderer-wgpu-contracts/testkit", "semio-framewor
 [dependencies]
 semio-framework-plugin-interpreter-runtime = { workspace = true }
 semio-framework-ui-contract-validation = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
@@ -46,3 +48,4 @@ serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }

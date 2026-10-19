@@ -312,7 +312,7 @@ pub fn solve_inequality(e: &Expr, operator: RelationalOperator, x: &Expr) -> Sol
             RelationalOperator::Ge => value >= 0.0,
             RelationalOperator::Lt => value < 0.0,
             RelationalOperator::Le => value <= 0.0,
-            RelationalOperator::Eq | RelationalOperator::Ne => false, // equalities/disequalities go through solve_univariate, not here
+            RelationalOperator::Eq | RelationalOperator::Ne => false,
         };
         if holds {
             let lo_bound = if lo.is_finite() { Bound::Value(Expr::from(Rational::from_f64(lo).unwrap_or_else(Rational::zero))) } else { Bound::NegInf };

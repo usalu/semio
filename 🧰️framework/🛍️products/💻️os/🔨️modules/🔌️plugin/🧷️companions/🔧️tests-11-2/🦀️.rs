@@ -14,3 +14,7 @@ extern crate semio_framework_os_kernel as pack;
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs"]
 pub mod plugin_builder_contract_tests_6;
+
+#[cfg(test)]
+#[path = "../../⚛️reactor/🧪️tests/⚛️reactor-driver/🦀️.rs"]
+pub(crate) mod reactor_driver;

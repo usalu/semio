@@ -244,13 +244,6 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         Some(jack_io())
     }
 
-    // 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
-    // `📓️taxonomy.md`'s forbidden vocabulary), so this intentionally falls back to the trait
-    // default (`None`) rather than overriding — the `"artifact:in"` media port therefore reports
-    // `MediaError::NotImplemented`; a real whole-snapshot load goes through `reset_document_effect`
-    // (`Effect::LoadDocument`, outside undo history), see `editor::jack::commands::set_active_example`
-    // and `editor::jack::commands::load_document_json`.
-
     /// 🔌️ `"graph:out"` fans the live query-graph projection out to other graph-consuming workflow
     /// nodes, in addition to the implicit `"artifact:out"` — both encode the same `JackSnapshot` pack.
     fn export_media(port: &str, doc: &ArtifactView<'_, JackSnapshot>) -> Result<Media, MediaError> {
@@ -363,13 +356,8 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, JackSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
 
-        // 🕹️ Selection is framework-owned now (domain "ast") — `context_menu` has no `InteractionView`,
-        // so the request's own surface-carried selection groups are the only source; no config fallback.
         let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &[], &[]);
         let menu = Menu::of(registry, view_state).action("runQuery").action("formatDocument").group("mode", |m| m.action("setActiveExample")).group("open", |m| m.action("loadExampleQuery"));
-        // 🩹️ `Direct`, not `ViaNodeGraphEdit`: jack's own `TrinityJackCommand::DeleteSelection` is a
-        // real standalone command (no `nodeGraphEdit`-style JSON-operations envelope exists for jack),
-        // so the context-menu row must dispatch the `deleteSelection` action id directly.
         menu.item(node_graph_delete_selection_spec(semio_framework_plugin::delete_selection().resolve(view_state.terminology, view_state.locale), view_state, &nodes, &edges, NodeGraphDeleteDispatch::Direct)).build()
     }
 

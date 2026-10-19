@@ -2,7 +2,7 @@
 
 use semio_framework_replication_codec::{ByteRange, PackLimits};
 use semio_framework_value::{ValueRefusalKind, RetirementDemand, ValueError};
-use semio_framework_value::list::{PagedListError, PagedListAllocationError, PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 use std::mem::size_of;
 use semio_framework_pack_format::{RawManifest, Superblock};
 use semio_framework_pack_format_retained::{RetainedPackCatalogFault, RetainedPackCloseStep, RetainedPackSegmentEvent, RetainedPackSegmentHeader, RetainedVarintStep, retained_page_close_demands};

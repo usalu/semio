@@ -6,11 +6,11 @@ export interface CadBounds {
 }
 
 export interface CadInference {
-  /** @derived */
+  /** 📦️ @derived */
   objectCount: number;
-  /** @derived */
+  /** 📍️ @derived */
   vertexCount: number;
-  /** @derived */
+  /** 🔲️ @derived */
   bounds: CadBounds | null;
 }
 

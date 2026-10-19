@@ -23,7 +23,7 @@ impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<TestSnapshot, TestMutation> for SetLabel {
+impl semio_framework_os_command::ColdMutationKind<TestSnapshot, TestMutation> for SetLabel {
     fn diff(&self, base: &TestSnapshot) -> MutationOutcome<TestDiff> {
         let outcome = MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()), slot: None });
         match base.label == self.value {

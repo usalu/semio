@@ -168,11 +168,6 @@ export function testAdapterFilenames(taxonomy: TestTaxonomy): Readonly<Record<st
  * only by a CI path filter. This function names no area; which ones are excluded is vocabulary. */
 export function isExcludedTestPath(repoRoot: string, relPath: string): boolean {
   const normalized = relPath.split(sep).join("/");
-  // 🚫️The repository's OWN semio root is excluded structurally, not by a listed path: it holds
-  // tickets, caches, notes, metrics and hub runtime data (whose trusted-catalog builds carry cargo
-  // `examples/` output), and a ticket folder routinely contains a SCRATCH COPY of a plugin subtree.
-  // Those copies were discovered as real owners and real test cases. It is derived from
-  // `getSemioRoot` rather than spelled here so relocating it is still a vocabulary change.
   const metaRoot = relative(repoRoot, getSemioRoot(repoRoot)).split(sep).join("/");
   if (metaRoot.length > 0 && !metaRoot.startsWith("..") && (normalized === metaRoot || normalized.startsWith(`${metaRoot}/`))) return true;
   return Object.values(testTaxonomy(repoRoot).pathExclusions).some(({ path }) => normalized === path.replace(/\/$/, "") || normalized.startsWith(path) || normalized.includes(`/${path}`));

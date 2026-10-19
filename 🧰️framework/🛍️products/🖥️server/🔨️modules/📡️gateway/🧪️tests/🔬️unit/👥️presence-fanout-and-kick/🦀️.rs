@@ -1,46 +1,6 @@
-//! 👥️ Presence colour leases, fanout lanes and the kick signal of the gateway unit laws. See [`super`].
+//! 👥️ Fanout lanes and the kick signal of the gateway unit laws. See [`super`].
 
 use super::*;
-
-//#region 🔖️Presence
-#[test]
-fn a_colour_lease_takes_the_lowest_free_slot() {
-    let presence = Presence::new();
-    assert_eq!(presence.acquire_colour("space-1", "alice"), 0);
-    assert_eq!(presence.acquire_colour("space-1", "bob"), 1);
-    assert_eq!(presence.acquire_colour("space-1", "bob"), 1);
-    presence.release_colour("space-1", "alice");
-    assert_eq!(presence.acquire_colour("space-1", "carol"), 0);
-    assert_eq!(presence.acquire_colour("space-2", "dave"), 0);
-}
-
-#[test]
-fn a_colour_is_freed_only_on_the_last_disconnect() {
-    let presence = Presence::new();
-    assert_eq!(presence.acquire_colour("space-1", "alice"), 0);
-    assert_eq!(presence.acquire_colour("space-1", "alice"), 0);
-    presence.release_colour("space-1", "alice");
-    assert_eq!(presence.colour_of("space-1", "alice"), Some(0));
-    assert_eq!(presence.acquire_colour("space-1", "bob"), 1);
-    presence.release_colour("space-1", "alice");
-    assert_eq!(presence.colour_of("space-1", "alice"), None);
-    assert_eq!(presence.acquire_colour("space-1", "carol"), 0);
-}
-
-#[test]
-fn joining_and_leaving_maintains_the_roster() {
-    let presence = Presence::new();
-    presence.join("space-1", "bob", "canvas");
-    presence.join("space-1", "alice", "canvas");
-    presence.publish_peer("space-1", "alice", vec![7]);
-    let roster = presence.roster("space-1");
-    assert_eq!(roster.iter().map(|session| session.actor.as_str()).collect::<Vec<_>>(), vec!["alice", "bob"]);
-    assert_eq!(roster[0].peer, Some(vec![7]));
-    presence.leave("space-1", "alice");
-    assert_eq!(presence.roster("space-1").len(), 1);
-    assert_eq!(presence.colour_of("space-1", "alice"), None);
-}
-//#endregion 🔖️Presence
 
 //#region 🔖️Fanout
 #[tokio::test]

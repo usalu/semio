@@ -19,12 +19,10 @@ pub struct GltfOrientationIndicators {
 pub struct GltfOrientationInference;
 
 impl GltfOrientationInference {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
         orientation_consistency::infer_pair(pair)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer_assembly(indicators: &mut GltfOrientationIndicators, part_count: usize, sample_count: usize, topology: Topology) {
         if part_count > 1 {
             indicators.orientation_consistency = orientation_consistency::unavailable_for_assembly(sample_count, topology);

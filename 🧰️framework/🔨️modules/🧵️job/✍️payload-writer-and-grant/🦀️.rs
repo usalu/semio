@@ -33,18 +33,18 @@ impl RetainedJobPayloadWriter {
         self.payload.as_ref().map_or(0, RetainedJobPayload::page_count)
     }
 
-    pub fn admit_page<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<JobPayloadPageGrant<'a>, JobPayloadAdmissionFault> {
+    pub fn admit_page<'a>(&'a mut self, cx:&mut impl JobPayloadStep) -> Result<JobPayloadPageGrant<'a>, JobPayloadAdmissionFault> {
         let source = self.rejected.take().unwrap_or_default();
-        if cx.payload_page_granted {
+        if cx.payload_page_granted() {
             *self.rejected = Some(source);
             return Err(JobPayloadAdmissionFault::OpportunityExhausted);
         }
-        let ledger = Arc::clone(&cx.payload_ledger);
+        let ledger = Arc::clone(cx.payload_ledger());
         if let Err(fault) = self.reserve_page(&ledger,source.allocated_capacity_bytes()) {
             *self.rejected = Some(source);
             return Err(fault);
         }
-        cx.payload_page_granted = true;
+        cx.grant_payload_page();
         Ok(self.begin_page(ledger, source))
     }
 
@@ -65,7 +65,7 @@ impl RetainedJobPayloadWriter {
         self.sealed && self.rejected.is_none() && self.staged.is_none() && self.closing_ledger.is_none() && self.payload.is_none()
     }
 
-    pub fn begin_staged_page(&mut self, cx: &mut StepContext<'_>) -> Result<(), JobPayloadAdmissionFault> {
+    pub fn begin_staged_page(&mut self, cx:&mut impl JobPayloadStep) -> Result<(), JobPayloadAdmissionFault> {
         if self.staged.is_some() {
             return Ok(());
         }
@@ -107,7 +107,7 @@ pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFa
         Ok(())
     }
 
-    pub fn write_slice_page(&mut self, cx: &mut StepContext<'_>, bytes: &[u8], cursor: &mut usize) -> Result<bool, JobPayloadAdmissionFault> {
+    pub fn write_slice_page(&mut self, cx:&mut impl JobPayloadStep, bytes: &[u8], cursor: &mut usize) -> Result<bool, JobPayloadAdmissionFault> {
         if *cursor > bytes.len() {
             return Err(JobPayloadAdmissionFault::StreamBytes);
         }
@@ -145,7 +145,7 @@ pub fn write_staged(&mut self, bytes: &[u8]) -> Result<(), JobPayloadAdmissionFa
 }
 
 
-#[path="📬️outcome/✍️writer/⛽️staged/🦀️.rs"]
+#[path="../📬️outcome/✍️writer/⛽️staged/🦀️.rs"]
 mod original_staged_writer;
 impl Drop for RetainedJobPayloadWriter {
     fn drop(&mut self) {

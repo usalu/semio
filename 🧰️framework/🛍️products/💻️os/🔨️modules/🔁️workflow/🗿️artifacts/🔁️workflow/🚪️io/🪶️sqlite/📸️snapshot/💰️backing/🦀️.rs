@@ -1,6 +1,6 @@
-//! \u{1f4b0}\uFE0F Paid Workflow indexes retain original rows under one cumulative native allocation ledger.
+//! 💰️ Paid Workflow indexes retain original rows under one cumulative native allocation ledger.
 use super::{SqliteRow,ValueError,entity};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::cmp::Ordering;
 fn invalid(message:&str)->ValueError{crate::workflow_invalid(message)}
 fn sort(rows:&mut[&SqliteRow],native:&mut NativeDecodeControl<'_>,mut compare:impl FnMut(&SqliteRow,&SqliteRow)->Result<Ordering,ValueError>)->Result<(),ValueError>{

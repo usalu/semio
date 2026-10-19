@@ -1,0 +1,101 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assets"
+  ],
+  "properties": {
+    "assets": {
+      "type": "array",
+      "minItems": 25,
+      "maxItems": 25,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/Asset"
+      }
+    }
+  },
+  "definitions": {
+    "Asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "version",
+        "platform",
+        "arch",
+        "url",
+        "sha256"
+      ],
+      "properties": {
+        "tool": {
+          "enum": [
+            "node",
+            "go",
+            "rustup",
+            "uv",
+            "dotnet-install"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+|[a-f0-9]{40})$"
+        },
+        "platform": {
+          "enum": [
+            "win32",
+            "darwin",
+            "linux",
+            "any"
+          ]
+        },
+        "arch": {
+          "enum": [
+            "x64",
+            "arm64",
+            "any"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://[a-z0-9.-]+/[A-Za-z0-9._/-]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Pins": {
+      "const": {
+        "assets": [
+          {"tool":"node","version":"24.15.0","platform":"darwin","arch":"arm64","url":"https://nodejs.org/dist/v24.15.0/node-v24.15.0-darwin-arm64.tar.xz","sha256":"af5cfaeafe603aaf7599f287fd9d100bb41f16794f49788fa59dd3f25546930f"},
+          {"tool":"node","version":"24.15.0","platform":"darwin","arch":"x64","url":"https://nodejs.org/dist/v24.15.0/node-v24.15.0-darwin-x64.tar.xz","sha256":"5d627245b9f53cb2512cc21b7aa6aad693106affadd91e0c8f42d600fb7ba444"},
+          {"tool":"node","version":"24.15.0","platform":"linux","arch":"arm64","url":"https://nodejs.org/dist/v24.15.0/node-v24.15.0-linux-arm64.tar.xz","sha256":"f3d5a797b5d210ce8e2cb265544c8e482eaedcb8aa409a8b46da7e8595d0dda0"},
+          {"tool":"node","version":"24.15.0","platform":"linux","arch":"x64","url":"https://nodejs.org/dist/v24.15.0/node-v24.15.0-linux-x64.tar.xz","sha256":"472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6"},
+          {"tool":"node","version":"24.15.0","platform":"win32","arch":"arm64","url":"https://nodejs.org/dist/v24.15.0/node-v24.15.0-win-arm64.zip","sha256":"c9eb7402eda26e2ba7e44b6727fc85a8de56c5095b1f71ebd3062892211aa116"},
+          {"tool":"node","version":"24.15.0","platform":"win32","arch":"x64","url":"https://nodejs.org/dist/v24.15.0/node-v24.15.0-win-x64.zip","sha256":"cc5149eabd53779ce1e7bdc5401643622d0c7e6800ade18928a767e940bb0e62"},
+          {"tool":"go","version":"1.26.9","platform":"darwin","arch":"x64","url":"https://dl.google.com/go/go1.26.9.darwin-amd64.tar.gz","sha256":"00c29e3d4c8562f547410daa18d2959b641bd691ab00c4a525ea817a0253d4bd"},
+          {"tool":"go","version":"1.26.9","platform":"darwin","arch":"arm64","url":"https://dl.google.com/go/go1.26.9.darwin-arm64.tar.gz","sha256":"f9bb7c0a02506c5d9bf0d1eb1f7ee6c7684f844ae49558308a0427b830e022cc"},
+          {"tool":"go","version":"1.26.9","platform":"linux","arch":"x64","url":"https://dl.google.com/go/go1.26.9.linux-amd64.tar.gz","sha256":"42d158b4d8f7b61ac0a830567c940a86098fb7aac52e467a5ebec03ef5cc2f8d"},
+          {"tool":"go","version":"1.26.9","platform":"linux","arch":"arm64","url":"https://dl.google.com/go/go1.26.9.linux-arm64.tar.gz","sha256":"4a97373d49fcacdcf3694fea368a500b00ee3e963974f3e7514132717632f052"},
+          {"tool":"go","version":"1.26.9","platform":"win32","arch":"x64","url":"https://dl.google.com/go/go1.26.9.windows-amd64.zip","sha256":"d722201a9c0c086d1610e111c48203009af690892ed708072bd5ae20160e7a59"},
+          {"tool":"go","version":"1.26.9","platform":"win32","arch":"arm64","url":"https://dl.google.com/go/go1.26.9.windows-arm64.zip","sha256":"05215f9e71ea27c9e843409314b1e6bf12dc6a5516318126b2357d497fed42c5"},
+          {"tool":"rustup","version":"1.29.0","platform":"darwin","arch":"arm64","url":"https://static.rust-lang.org/rustup/archive/1.29.0/aarch64-apple-darwin/rustup-init","sha256":"aeb4105778ca1bd3c6b0e75768f581c656633cd51368fa61289b6a71696ac7e1"},
+          {"tool":"rustup","version":"1.29.0","platform":"darwin","arch":"x64","url":"https://static.rust-lang.org/rustup/archive/1.29.0/x86_64-apple-darwin/rustup-init","sha256":"33cf85df9142bc6d29cbc62fa5ca1d4c29622cddb55213a4c1a43c457fb9b2d7"},
+          {"tool":"rustup","version":"1.29.0","platform":"linux","arch":"x64","url":"https://static.rust-lang.org/rustup/archive/1.29.0/x86_64-unknown-linux-gnu/rustup-init","sha256":"4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10"},
+          {"tool":"rustup","version":"1.29.0","platform":"linux","arch":"arm64","url":"https://static.rust-lang.org/rustup/archive/1.29.0/aarch64-unknown-linux-gnu/rustup-init","sha256":"9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792"},
+          {"tool":"rustup","version":"1.29.0","platform":"win32","arch":"x64","url":"https://static.rust-lang.org/rustup/archive/1.29.0/x86_64-pc-windows-msvc/rustup-init.exe","sha256":"86478e53f769379d7f0ebfa7c9aa97cb76ca92233f79aa2cc0dbee2efaac73c7"},
+          {"tool":"rustup","version":"1.29.0","platform":"win32","arch":"arm64","url":"https://static.rust-lang.org/rustup/archive/1.29.0/aarch64-pc-windows-msvc/rustup-init.exe","sha256":"3af309e6c3062aa11df0e932954f69d13b734d8a431e593812f3ecd9ff9e6ef6"},
+          {"tool":"uv","version":"0.11.6","platform":"darwin","arch":"arm64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-aarch64-apple-darwin.tar.gz","sha256":"4b69a4e366ec38cd5f305707de95e12951181c448679a00dce2a78868dfc9f5b"},
+          {"tool":"uv","version":"0.11.6","platform":"darwin","arch":"x64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-x86_64-apple-darwin.tar.gz","sha256":"8e0ed5035eaa28c7c8cd2a46b5b9a05bfff1ef01dbdc090a010eb8fdf193a457"},
+          {"tool":"uv","version":"0.11.6","platform":"linux","arch":"x64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-x86_64-unknown-linux-gnu.tar.gz","sha256":"0c6bab77a67a445dc849ed5e8ee8d3cb333b6e2eba863643ce1e228075f27943"},
+          {"tool":"uv","version":"0.11.6","platform":"linux","arch":"arm64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-aarch64-unknown-linux-gnu.tar.gz","sha256":"d5be4bf7015ea000378cb3c3aba53ba81a8673458ace9c7fa25a0be005b74802"},
+          {"tool":"uv","version":"0.11.6","platform":"win32","arch":"x64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-x86_64-pc-windows-msvc.zip","sha256":"99aa60edd017a256dbf378f372d1cff3292dbc6696e0ea01716d9158d773ab77"},
+          {"tool":"uv","version":"0.11.6","platform":"win32","arch":"arm64","url":"https://github.com/astral-sh/uv/releases/download/0.11.6/uv-aarch64-pc-windows-msvc.zip","sha256":"bee7b25a7a999f17291810242b47565c3ef2b9205651a0fd02a086f261a7e167"},
+          {"tool":"dotnet-install","version":"5147e32300a8e908f5d737c8cff63a76b4b63531","platform":"any","arch":"any","url":"https://raw.githubusercontent.com/dotnet/install-scripts/5147e32300a8e908f5d737c8cff63a76b4b63531/src/dotnet-install.sh","sha256":"082f7685e156738a1b2e2ed8381a621870d4ce8e8c59278034556f05c186eb2e"}
+        ]
+      }
+    }
+  }
+}

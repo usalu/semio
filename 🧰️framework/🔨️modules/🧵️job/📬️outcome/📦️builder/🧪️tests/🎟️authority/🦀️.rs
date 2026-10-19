@@ -1,5 +1,6 @@
 //! 🎟️ Admission and borrowed caller turns preserve their original ledger without transferring custody.
 use semio_framework_job::*;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}

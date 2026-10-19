@@ -39,7 +39,6 @@ async fn list_and_quote_flatten_image_and_pagebreak_drop() {
         ],
     };
     let docx = ::semio_framework_async::poll::resolve_ready(SemioDocumentToDocx::serialize(&snap)).expect("serialize").project_document().expect("project");
-    // list item + quote paragraph + image-alt paragraph = 3 blocks; PageBreak drops entirely.
     assert_eq!(docx.body.len(), 3);
     assert!(matches!(&docx.body[2], DocxBlock::Paragraph(p) if p.runs[0].text == "alt text"));
 }

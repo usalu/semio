@@ -243,9 +243,6 @@ fn cmd_compare(carrier: &str, args: &[String]) -> String {
             report.put("differenceCount", Json::Int(problems.len() as i64));
             report.put("differences", Json::Arr(problems.into_iter().map(|p| s(&p)).collect()));
             if !equal {
-                // 🔎️Not a probe FAILURE — a probe that ran cleanly and found a real disagreement is
-                // reporting exactly what it was asked to. `status` stays "ok"; the orchestrator reads
-                // `agree`.
             }
         }
         Err(e) => report.fail(e),

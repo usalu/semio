@@ -32,6 +32,7 @@ semio-framework-value-intrinsic = { path="../../🌳️intrinsic/📦️packages
 semio-framework-value-clone-source = { path="../../🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path="../../🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-paged-text = { path="../../📝️text/📦️paged/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path="../../🛬️decode/📦️packages/🦀️rust" }
 semio-framework-value-native-encoding = { path="../../🛫️encode/📦️packages/🦀️rust" }
 semio-framework-value-original-aliases = { path="../../♻️retirement/📦️aliases/📦️packages/🦀️rust" }
@@ -44,7 +45,15 @@ semio-framework-value-allocation-return = { path="../../♻️retirement/📦️
 semio-framework-value-control-contract = { path="../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-value-edit = { path = "../../📋️list/🔺️edit/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-schema = { path = "../../🧬️schema/📦️packages/🦀️rust" }
+semio-framework-value-registry = { path = "../../📋️registry/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

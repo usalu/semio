@@ -1,5 +1,6 @@
 use crate::{DslField,FieldValue,JoinMode,ParseOptions,Shape,parse_exact,parse_exact_controlled,print};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[derive(Debug,PartialEq,serde::Serialize,semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword="presence")]
@@ -22,7 +23,7 @@ fn value_presence_ordinary_controlled_and_borrowed_boundaries_share_intent() {
     for case in corpus["cases"].as_array().unwrap(){
         let text=case["text"].as_str().unwrap();let accepted=case["accepted"].as_bool().unwrap();assert_eq!(recognizer.recognize(text).unwrap(),accepted,"{}",case["id"]);
         let ordinary=parse_exact(text,&spec,&ParseOptions::default()).and_then(|record|Presence::__dsl_from_record(&record));assert_eq!(ordinary.is_ok(),accepted,"{}",case["id"]);
-        let mut observe=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(32768,&mut observe);
+        let mut observe=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(32768,&mut observe);
         let controlled=parse_exact_controlled(text,&spec,&ParseOptions::default(),&mut control).map_err(|error|error.to_string()).and_then(|record|Presence::from_record_controlled(&record,&mut control).map_err(|error|error.to_string()));assert_eq!(controlled.is_ok(),accepted,"{}",case["id"]);
         if accepted{
             let ordinary=ordinary.unwrap();let controlled=controlled.unwrap();assert_eq!(ordinary,controlled);assert_eq!(serde_json::to_value(&ordinary).unwrap(),case["json"]);
@@ -33,7 +34,7 @@ fn value_presence_ordinary_controlled_and_borrowed_boundaries_share_intent() {
         }
     }
     let mut record=parse_exact("presence id=\"c1\" factor { }",&spec,&ParseOptions::default()).unwrap();record.fields.insert(1,FieldValue::Absent);assert!(Presence::__dsl_from_record(&record).is_err());
-    let mut observe=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(32768,&mut observe);assert!(Presence::from_record_controlled(&record,&mut control).is_err());
+    let mut observe=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(32768,&mut observe);assert!(Presence::from_record_controlled(&record,&mut control).is_err());
 }
 
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
@@ -45,7 +46,7 @@ fn value_presence_table_parser_preserves_required_nullable_fields() {
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧪️fixtures/📨️presence/🔣️.json")).unwrap();let spec=PresenceBatch::__dsl_spec();
     for case in corpus["tableCases"].as_array().unwrap(){
         let text=case["text"].as_str().unwrap();let accepted=case["accepted"].as_bool().unwrap();let ordinary=parse_exact(text,&spec,&ParseOptions::default());assert_eq!(ordinary.is_ok(),accepted,"{}",case["id"]);
-        let mut observe=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(32768,&mut observe);let controlled=parse_exact_controlled(text,&spec,&ParseOptions::default(),&mut control);assert_eq!(controlled.is_ok(),accepted,"{}",case["id"]);
+        let mut observe=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut control=NativeDecodeControl::new(32768,&mut observe);let controlled=parse_exact_controlled(text,&spec,&ParseOptions::default(),&mut control);assert_eq!(controlled.is_ok(),accepted,"{}",case["id"]);
         if accepted {let ordinary=PresenceBatch::__dsl_from_record(&ordinary.unwrap()).unwrap();let controlled=PresenceBatch::from_record_controlled(&controlled.unwrap(),&mut control).unwrap();assert_eq!(ordinary.rows,controlled.rows);assert_eq!(serde_json::to_value(&ordinary.rows[0]).unwrap(),case["json"]);}
     }
 }

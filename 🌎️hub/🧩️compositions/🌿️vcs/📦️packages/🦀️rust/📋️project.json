@@ -36,7 +36,9 @@
         "cwd": "🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "native-codec-oracle": {
       "executor": "repo:script",

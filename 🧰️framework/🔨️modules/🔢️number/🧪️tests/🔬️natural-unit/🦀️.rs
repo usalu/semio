@@ -82,7 +82,7 @@ mod tests {
 
     #[test]
     fn bit_length_and_bit_access() {
-        let v = n("256"); // 2^8
+        let v = n("256");
         assert_eq!(v.bit_length(), 9);
         assert!(v.bit(8));
         assert!(!v.bit(7));
@@ -115,7 +115,6 @@ mod tests {
                 seed ^= seed << 17;
                 seed
             };
-            // Sizes straddling KARATSUBA_THRESHOLD (32 limbs) on both operands.
             for limb_count in [1usize, 10, 31, 32, 33, 40, 64, 96] {
                 let a_limbs: Vec<u64> = (0..limb_count).map(|_| next()).collect();
                 let b_limbs: Vec<u64> = (0..limb_count / 2 + 1).map(|_| next()).collect();
@@ -152,8 +151,6 @@ mod tests {
 
         #[test]
         fn div_rem_add_back_branch_is_exercised_and_correct() {
-            // Crafted vectors known to trigger Knuth D's rare add-back correction: divisor with a
-            // near-max top limb paired with a dividend that makes the initial qhat estimate overshoot.
             let u = Natural::normalize(vec![0, 0, 0x8000_0000_0000_0000, 1]);
             let v = Natural::normalize(vec![0xFFFF_FFFF_FFFF_FFFF, 0x8000_0000_0000_0000]);
             let (q, r) = u.div_rem(&v);
@@ -186,7 +183,7 @@ mod tests {
                 seed ^= seed << 17;
                 seed
             };
-            let limbs_4096 = 64; // 4096 / 64
+            let limbs_4096 = 64;
             for _ in 0..5 {
                 let a = Natural::normalize((0..limbs_4096).map(|_| next()).collect());
                 let mut b = Natural::normalize((0..limbs_4096 / 2).map(|_| next()).collect());
@@ -218,7 +215,7 @@ mod tests {
                 seed ^= seed << 17;
                 seed
             };
-            let limbs_16384 = 256; // 16384 / 64
+            let limbs_16384 = 256;
             for _ in 0..3 {
                 let a = Natural::normalize((0..limbs_16384).map(|_| next()).collect());
                 let b = Natural::normalize((0..limbs_16384).map(|_| next()).collect());

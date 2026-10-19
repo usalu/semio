@@ -73,7 +73,7 @@ pub struct ArtifactEnvelopeDecodeAuthority<P, Mutation> {
     pub released_field_bytes: usize,
     pending_field: Option<(u16, OwnedSchemaToken, bool)>,
     pub state: ArtifactEnvelopeDecodeState,
-    pub fault: semio_framework_job::RetainedPayloadBuilder,
+    pub fault: semio_framework_job_payload::RetainedPayloadBuilder,
     fault_cursor: usize,
 }
 
@@ -112,7 +112,7 @@ where
             released_field_bytes: 0,
             pending_field: None,
             state: ArtifactEnvelopeDecodeState::Fields,
-            fault: semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault),
+            fault: semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::Fault),
             fault_cursor: 0,
         })
     }

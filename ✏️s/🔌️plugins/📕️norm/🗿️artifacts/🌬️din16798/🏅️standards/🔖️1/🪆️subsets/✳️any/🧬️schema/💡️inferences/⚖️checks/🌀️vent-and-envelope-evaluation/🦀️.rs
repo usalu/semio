@@ -11,7 +11,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     let q_design = vent.design_airflow_m3_h;
     let q_design_m3_s = (q_design / 3600.0).max(1e-9);
 
-    // Capacity: sum of linked zone supplies ≤ system design outdoor-air capacity
     {
         let mut bc = CheckResult::assess(
             format!("din16798-3.capacity.{}", vent.id), "DIN EN 16798-3", ClauseId::new("EN 16798-3", "§6", "q_design"),
@@ -39,14 +38,12 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
         out.push(bc.build());
     }
 
-    // Operating fan flow vs design capacity
     {
         let q_fan_m3_h = vent.fan_q_v_m3_s * 3600.0;
         let mut bf = CheckResult::assess(
             format!("din16798-5-1.fan-flow.{}", vent.id), "DIN EN 16798-5-1", ClauseId::new("EN 16798-5-1", "§6.1", "q_fan"),
             vent_subject(vent, path("fanQVM3S")), loc("Fan operating flow vs design", "Ventilator-Betriebsvolumenstrom vs. Auslegung"),
         ).annex(doc.annex);
-        // Relative ε avoids float Fail when fan_q_v_m3_s was authored as design/3600.
         if q_fan_m3_h <= q_design * (1.0 + 1e-6) {
             bf = bf.status(CheckStatus::Pass)
                 .utilization(Quantity::new(QuantityKind::VentilationRate, q_fan_m3_h.min(q_design)), Quantity::new(QuantityKind::VentilationRate, q_design.max(1e-9)))
@@ -69,7 +66,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
         out.push(bf.build());
     }
 
-    // SFP
     let bound = sfp_bound(vent.sfp_required_class);
     let mut bs = CheckResult::assess(
         format!("din16798-3.sfp.{}", vent.id), "DIN EN 16798-3", ClauseId::new("EN 16798-3", "Table 10", "SFP"),
@@ -82,7 +78,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bs.build());
 
-    // Heat recovery
     match heat_recovery_eta_min(&vent.system_type) {
         None => out.push(CheckResult::assess(
             format!("din16798-3.hr.{}", vent.id), "DIN EN 16798-3", ClauseId::new("EN 16798-3", "§7.3", "η"),
@@ -102,7 +97,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
         }
     }
 
-    // Filter / ODA
     let (req_filter, req_rank) = required_filter_for_oda(&vent.oda_class);
     let have = filter_rank(&vent.filter_sup_class);
     let mut bf = CheckResult::assess(
@@ -110,7 +104,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
         vent_subject(vent, path("filterSupClass")), loc("SUP filter vs ODA class", "Zuluftfilter vs. ODA-Klasse"),
     ).annex(doc.annex);
     if have >= req_rank {
-        // utilization(have, req) would be >1 when overspecified — force Pass after recording ranks.
         bf = bf.utilization(Quantity::new(QuantityKind::Dimensionless, have as f64), Quantity::new(QuantityKind::Dimensionless, req_rank.max(1) as f64))
             .status(CheckStatus::Pass)
             .explanation(loc(format!("{} with {} OK (need ≥{})", vent.oda_class, vent.filter_sup_class, req_filter), format!("{} mit {} OK (mind. {})", vent.oda_class, vent.filter_sup_class, req_filter)));
@@ -133,7 +126,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bf.build());
 
-    // Inspection
     let interval = inspection_interval_years(&vent.system_type);
     let mut bi = CheckResult::assess(
         format!("din16798-3.inspection.{}", vent.id), "DIN EN 16798-3", ClauseId::new("EN 16798-3", "§8.1", "inspection"),
@@ -146,7 +138,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bi.build());
 
-    // Humidification — NA for natural systems or when required=0
     let vent_kind = VentSystemType::parse(&vent.system_type);
     if matches!(vent_kind, VentSystemType::Natural) {
         out.push(CheckResult::assess(
@@ -183,7 +174,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
         out.push(bh.build());
     }
 
-    // Duct leakage Part 17
     let lim = duct_leakage_limit(&vent.duct_class, vent.duct_test_pressure_pa);
     let mut bd = CheckResult::assess(
         format!("din16798-17.duct.{}", vent.id), "DIN EN 16798-17", ClauseId::new("EN 16798-17", "§8.2", "leakage"),
@@ -196,7 +186,6 @@ pub(super) fn evaluate_vent(doc: &semio_s_artifact_norm_din16798_model::Din16798
     }
     out.push(bd.build());
 
-    // Annual fan energy vs independent EN 16798-5-1 §6.1 benchmark using design airflow (not declared SFP class).
     const FAN_ENERGY_BENCHMARK_SFP_W_M3_S: f64 = 1000.0;
     let e = part_5_1::fan_energy_kwh(vent.sfp_w_m3_s, q_design_m3_s, vent.fan_t_run_h);
     let e_ref = part_5_1::fan_energy_kwh(FAN_ENERGY_BENCHMARK_SFP_W_M3_S, q_design_m3_s, vent.fan_t_run_h).max(1e-9);
@@ -280,7 +269,6 @@ pub(super) fn evaluate_envelope(doc: &semio_s_artifact_norm_din16798_model::Din1
         out.push(bc.build());
     }
 
-    // Night setback using first zone usage if any
     let usage = doc.zones.first().map(|z| parse_usage(&z.usage_type)).unwrap_or(OccupancyType::Office);
     let sb_min = part_5_1::night_setback_min_k(usage);
     let mut bs = CheckResult::assess(

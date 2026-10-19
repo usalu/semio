@@ -289,10 +289,6 @@ impl Puzzle5dClipboardJob {
         match self.verb {
             Puzzle5dClipboardVerb::Copy => Emit { effects, ..Default::default() },
             Puzzle5dClipboardVerb::Cut => {
-                // 🔒️ A LOCKED part is copied but never removed: a lock exists precisely to refuse a
-                // destructive gesture, and a cut that deleted it anyway would be the one clipboard
-                // path that ignores it. Its fasteners stay too — disconnecting an edge whose part
-                // survives would leave the document half-cut.
                 let locked: HashSet<&str> = self.work.scan.parts.iter().filter(|part| part.part_2d.locked.unwrap_or(false)).map(|part| part.id.as_str()).collect();
                 let mut mutations = self
                     .work

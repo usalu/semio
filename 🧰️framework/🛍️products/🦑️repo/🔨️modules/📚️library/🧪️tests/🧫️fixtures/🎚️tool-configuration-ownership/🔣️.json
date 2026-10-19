@@ -171,7 +171,7 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
       "tokens": [
-        "config: \"../../🏗️builder/🌐️vite/🟦️.ts\""
+        "import {frameworkOsViteArtifactInputsV1} from \"../../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts\""
       ]
     },
     {
@@ -202,7 +202,7 @@
       ]
     },
     {
-      "path": "📜️script.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧹️code-style/🟦️.ts",
       "tokens": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
       ]
@@ -221,12 +221,6 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
-      "tokens": [
-        "💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
-      ]
-    },
-    {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧷️typescript-reference-authority/🟦️.ts",
       "tokens": [
         "/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
@@ -239,19 +233,13 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/⚙️config-graph.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/⚙️config-graph.json",
       "tokens": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧫️fixtures/🔌️staging-root.json",
-      "tokens": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
-      ]
-    },
-    {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/🎮️playground-session/🔣️.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🔌️staging-root.json",
       "tokens": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
       ]

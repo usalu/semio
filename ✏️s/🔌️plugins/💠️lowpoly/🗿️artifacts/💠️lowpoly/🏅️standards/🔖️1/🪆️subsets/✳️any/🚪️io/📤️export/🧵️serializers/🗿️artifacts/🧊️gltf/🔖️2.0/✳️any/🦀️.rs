@@ -1,4 +1,4 @@
-//! lowpoly -> gltf
+//! 🔺️ lowpoly -> gltf
 //!
 //! Real glTF 2.0 GLB export through `io::encode_glb`: every object with non-empty `mesh_content`
 //! becomes one node/mesh pair (world-space positions, fan-triangulated n-gons).

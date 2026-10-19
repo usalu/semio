@@ -214,11 +214,6 @@ export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: st
 
 function UtilityRibbonItems({ items, onAction, stacked }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void; readonly stacked: boolean }): ReactElement {
   const sorted = useMemo(() => [...items].sort((left, right) => (left.order ?? 0) - (right.order ?? 0)), [items]);
-  // 🎯️ The toggle the user's press landed on (set by the item's own `onClick`, consumed by the group's
-  // `onValueChange`). A toggle group's `onValueChange` hands back the WHOLE next value set, and the old
-  // `flushToggles` diffed every entry's `pressed` against it — so a controlled resync that differed for
-  // several entries dispatched several actions the user never asked for. Only the pressed entry's diff is
-  // dispatched now; a value change with no recorded press is a resync and dispatches nothing.
   const pressedToggleRef = useRef<string | null>(null);
   const nodes = useMemo(() => {
     const rendered: ReactElement[] = [];
@@ -270,9 +265,6 @@ function UtilityRibbonItems({ items, onAction, stacked }: { readonly items: read
               const entry = run.find((candidate) => candidate.id === pressedId);
               const action = entry ? resolveLeafAction(entry) : null;
               if (!entry || !action) return;
-              // 🔢️ `action.args` pass through UNCHANGED: the shell stamps `expectedGeneration` (and
-              // `windowId`) into every `setActiveUtility` descriptor it renders, and the CAS on the
-              // shell's versioned register is what replaces the old wall-clock echo-off.
               if ((entry.pressed ?? false) !== values.includes(entry.id)) onAction(action);
             }}
             items={run.map((entry) => ({
@@ -359,12 +351,6 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     setActivePath(activePath.slice(0, depth));
   };
 
-  // 🎛️ Deactivation only ever comes from an explicit press on the PRESSED chip, never from the group's
-  // `onValueChange("")`. The single `ToggleGroup` emits `""` from `activate()` whenever the value it holds
-  // equals the item pressed — the same shape a controlled-value resync takes — so that channel is ignored
-  // entirely; the pressed chip's own `onClick` performs the collapse and `preventDefault()`s so the
-  // wrapper's `activate()` never runs for it (`ToggleGroupItem` skips `activate` on a default-prevented
-  // click). An unpressed chip's press still arrives as `onValueChange(<id>)` and only drills the path.
   const renderSegment = (segment: UtilityRibbonSegment): ReactNode =>
     segment.kind === "picker" ? (
       <RibbonItem className={direction !== "inline" ? "h-auto w-full max-w-full" : undefined}>

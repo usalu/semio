@@ -22,8 +22,10 @@ testkit = ["semio-framework-async/testkit"]
 
 [dependencies]
 semio-framework-trace = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-shared-issuance = { path = "../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }

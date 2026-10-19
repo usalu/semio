@@ -20,7 +20,7 @@ const playwrightTimeoutMs = playwrightTestTimeoutMs();
 function withTrailingSlash(url: string): string {
   return url.endsWith("/") ? url : `${url}/`;
 }
-/** Trailing `/` so `page.goto("iframe.html")` resolves at the static server root. */
+/** 🌐️ Trailing `/` so `page.goto("iframe.html")` resolves at the static server root. */
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${storybookPort}/`);
 
 export default defineConfig({

@@ -6,8 +6,7 @@
     "version",
     "cases",
     "reads",
-    "negatives",
-    "windows"
+    "negatives"
   ],
   "properties": {
     "version": {
@@ -137,50 +136,6 @@
           },
           "accepted": {
             "type": "boolean"
-          }
-        }
-      }
-    },
-    "windows": {
-      "type": "array",
-      "minItems": 8,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "name",
-          "route",
-          "facts",
-          "accepted",
-          "captures"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "route": {
-            "enum": [
-              "fresh",
-              "neutral",
-              "receipt",
-              "negative"
-            ]
-          },
-          "facts": {
-            "enum": [
-              "exact",
-              "foreign",
-              "missing",
-              "changed"
-            ]
-          },
-          "accepted": {
-            "type": "boolean"
-          },
-          "captures": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1
           }
         }
       }

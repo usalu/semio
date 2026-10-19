@@ -1,4 +1,4 @@
-//! world origin, by one world-axis rotation. The gesture's own inputs (which ids, which axis, which angle) are the
+//! 🗺️ world origin, by one world-axis rotation. The gesture's own inputs (which ids, which axis, which angle) are the
 //! 🔄️ Puzzle5d mutation — `RotateSelection3d`: a relative, parametric turn of a set of parts and target volumes, each about its own
 //! payload, so editing the turn in history re-derives every orientation from whatever base it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
@@ -42,12 +42,11 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateSelection3d {
 
-
-}
-
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RotateSelection3d {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for RotateSelection3d
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RotateSelection3d>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

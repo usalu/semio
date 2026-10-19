@@ -45,7 +45,7 @@ fn region_host() -> BoardHost {
     let mut host = BoardHost::default();
     host.scene.set_size(800, 600, 1.0);
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the region fixture must parse");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the region fixture must parse");
     host
 }
 
@@ -265,7 +265,7 @@ fn regions_count_against_the_descriptor_census_and_never_the_pointer_credits() {
     let region = |index: usize| serde_json::json!({ "id": format!("r{index}"), "x": 0.0, "y": 0.0, "width": 8.0, "height": 8.0 });
     let rows: Vec<serde_json::Value> = (0..BOARD_DESCRIPTOR_ITEM_CAPACITY).map(region).collect();
     let overflowing = serde_json::json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "node-a", "x": 0.0, "y": 0.0, "shape": "circle", "radius": 20.0, "handles": [] }], "edges": [], "targetRegions": rows }).to_string();
-    assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&overflowing,&mut control)}, "one node plus a full census of regions overruns the descriptor ceiling");
+    assert!(!{let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&overflowing,&mut control)}, "one node plus a full census of regions overruns the descriptor ceiling");
     assert_eq!(host.scene.regions.len(), 3, "and the refused parse leaves the live board exactly as it was");
 
     let mut host = region_host();

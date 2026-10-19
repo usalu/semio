@@ -1,26 +1,26 @@
 /** 🧬️ Process3dConfig */
 export interface Process3dConfig {
-  /** @state config */
+  /** 🤝️ @state config */
   engagementInput: string;
-  /** @state config */
+  /** 📷️ @state config */
   cameraPosition: number[];
-  /** @state config */
+  /** 🎥️ @state config */
   cameraTarget: number[];
-  /** @state config */
+  /** 📸️ @state config */
   cameraFov: number;
-  /** @state config */
+  /** 💡️ @state config */
   sunEnabled: boolean;
-  /** @state config */
+  /** ☀️ @state config */
   sunAzimuth: number;
-  /** @state config */
+  /** 🔦️ @state config */
   sunElevation: number;
-  /** @state config */
+  /** 🌞️ @state config */
   sunIntensity: number;
-  /** @state config */
+  /** 🕯️ @state config */
   sunColor: string;
-  /** @state config */
+  /** 🧑️ @state config */
   contributionsJson: string;
-  /** @state config */
+  /** 🗃️ @state config */
   resolvedUpTo?: number | null;
 }
 

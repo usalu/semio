@@ -55,8 +55,8 @@ fn factory_owned_retirement_accepts_actual_send_only_payloads(){
 /// 🔗️ A genuine projected source preserves its original custom issuer on take, cancellation and provider refusal.
 #[test]
 fn factory_owned_source_preserves_actual_payload_and_custom_issuer() {
-    use crate::retained_clone::{RetainedCloneSource, RetainedCloneSourceTake};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔗️source/🔣️.json")).unwrap();
+    use semio_framework_value_clone_source::{RetainedCloneSource, RetainedCloneSourceTake};
+    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔗️source/🔣️.json")).unwrap();
     for row in law["cases"].as_array().unwrap() {
         let mut text=String::with_capacity(row["capacity"].as_u64().unwrap()as usize); text.push_str(row["text"].as_str().unwrap());
         let pointer=text.as_ptr();
@@ -77,7 +77,7 @@ fn factory_owned_source_preserves_actual_payload_and_custom_issuer() {
         assert_eq!(heap,(receipt.retained_capacity_bytes,receipt.released_bytes)); assert!(receipt.fits(grant));
         assert_eq!(source.borrow().get().as_ptr(),pointer);
         assert!(std::ptr::addr_eq(Arc::as_ptr(source.try_authority().unwrap().factory()),issuer));
-        let project_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:crate::retained_clone::RetainedCloneBinding::alias_copy_bytes(),maximum_depth:1,..Default::default()};
+        let project_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_framework_value_clone_source::RetainedCloneBinding::alias_copy_bytes(),maximum_depth:1,..Default::default()};
         let visits=std::cell::Cell::new(0);
         for axis in law["projectionRefusals"].as_array().unwrap() {
             let denied=match axis.as_str().unwrap(){"items"=>RetainedCloneGrant{maximum_items:0,..project_grant},"copy"=>RetainedCloneGrant{maximum_copy_bytes:project_grant.maximum_copy_bytes-1,..project_grant},"depth"=>RetainedCloneGrant{maximum_depth:0,..project_grant},_=>unreachable!()};

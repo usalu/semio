@@ -1,0 +1,10 @@
+import { SCRIPT_PROCESS_INVOCATION_ENV, createScriptProcessEnvelope, readScriptPolicy, scriptProcessEnvironment } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { issueRepositoryScriptProvidersV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🟦️.ts";
+import { SCRIPT_PROVIDERS_ENV } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔌️providers/🟦️.ts";
+import { createNativeBuildCallerCapabilitiesV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts";
+const root = process.env.SEMIO_REPO_ROOT ?? process.cwd();
+const capabilities = createNativeBuildCallerCapabilitiesV1(root, ["test"], "nx", { ...process.env, SEMIO_BUILD_MODE: "prototype" });
+const policy = readScriptPolicy({ version: 1, owner: "tst3a", maximumElapsedMilliseconds: 0 });
+const env = scriptProcessEnvironment(createScriptProcessEnvelope(policy, capabilities, Date.now()), {});
+issueRepositoryScriptProvidersV1(process.env);
+process.stdout.write(JSON.stringify({invocation:env[SCRIPT_PROCESS_INVOCATION_ENV]!,providers:process.env[SCRIPT_PROVIDERS_ENV]!}));

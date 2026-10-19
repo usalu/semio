@@ -54,8 +54,6 @@ export function resultFor(plan: TestCasePlan, scenarioId: string, level: TestRes
     mkdirSync(dirname(projectionPath), { recursive: true });
     writeFileSync(projectionPath, `${JSON.stringify(outcome.projection, null, 2)}\n`);
   }
-  // 📦️Every produced file is re-hashed HERE rather than trusted from the handler: the digest a
-  // comparison stage keys on must describe the bytes that actually reached disk.
   const artifacts: ResultArtifact[] = (outcome?.artifacts ?? []).map((artifact) => {
     const abs = isAbsolute(artifact.path) ? artifact.path : join(plan.artifactDir, artifact.path);
     return { role: artifact.role, path: abs, mediaType: artifact.mediaType, sha256: contentDigestOf(abs), bytes: statSync(abs).size };
@@ -77,8 +75,6 @@ export function resultFor(plan: TestCasePlan, scenarioId: string, level: TestRes
     featureHash: plan.featureHash,
     fixtureHash: setDigest(plan.inputs.map((fixture) => [fixture.name, fixture.digest] as const)),
     artifacts,
-    // 🏭️Only a handler that actually reached production dispatch carries this. Emitting it
-    // unconditionally would make every replaying adapter look like a real subject.
     productionDispatch: outcome?.productionDispatch,
     output: {
       rawHash: raw === undefined ? digest("") : digest(raw),

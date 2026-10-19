@@ -1,6 +1,5 @@
 //! 🎯️ Fem2d play app command — `focus-entity`: frames the addressed window's camera on one entity.
 
-use crate::editor::fem2d::commands::set_camera::self;
 
 use crate::editor::fem2d::commands::set_camera::SetCamera;
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::fem2d_entity_model_point;
@@ -15,6 +14,7 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
+use crate::editor::fem2d::commands::set_camera;
 
 type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 

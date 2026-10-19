@@ -52,9 +52,6 @@ async fn drill_reduces_volume_below_stock() {
         label: "Drill".into(),
         enabled: true,
         origin: None,
-        // 🧭️ Poses are centres: a 1.2 m tool centred 0.4 m below the unit stock's own centre enters
-        // through the bottom face and stops 0.2 m short of the top — a blind pocket well inside the
-        // stock's sides.
         measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.4, depth: 0.4, height: 1.2 }, pose: Pose { position: [0.1, 0.1, -0.4], axis: [0.0, 0.0, 1.0], angle: 0.0 } },
     });
     let drilled_volume = processed_volume(&scene, None).expect("drilled volume");

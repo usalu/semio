@@ -55,7 +55,7 @@ export function registerEnvelopeOrderingAndFrameTests(kit: ShardClientSettlement
       expect(tracker.granted("a")).toBe(BUDGET);
       expect(interpretShardFrame({ kind: "Register", actor: "a" }, tracker)).toEqual({ action: "register", actor: "a" });
       expect(interpretShardFrame({ kind: "Unregister", actor: "a" }, tracker)).toEqual({ action: "unregister", actor: "a" });
-      expect(tracker.granted("a")).toEqual(MAINTENANCE_LANE_DEFAULT_BUDGET); // forgotten — back to the floor, not a stale grant
+      expect(tracker.granted("a")).toEqual(MAINTENANCE_LANE_DEFAULT_BUDGET);
     });
 
     it("an unknown/future frame variant resolves to 'unknown' instead of throwing (forward-compat)", () => {
@@ -82,7 +82,7 @@ export function registerEnvelopeOrderingAndFrameTests(kit: ShardClientSettlement
       expect(sent.frame.kind).toBe("Grant");
       const grantFrame = sent.frame as { readonly kind: "Grant"; readonly actor: string; readonly budget: ShardBudget; readonly envelopes: readonly ShardEnvelope[] };
       expect(grantFrame.budget).toBe(grantBudget);
-      expect(grantFrame.envelopes.map((envelope) => envelope.seq)).toEqual([2, 1]); // Interactive dispatched before Background
+      expect(grantFrame.envelopes.map((envelope) => envelope.seq)).toEqual([2, 1]);
     });
 
     it("envelope() sends a ShardFrame::Envelope frame with NO budget field on the wire at all", async () => {
@@ -96,7 +96,7 @@ export function registerEnvelopeOrderingAndFrameTests(kit: ShardClientSettlement
       const sent = workers[0]!.sent[1] as { readonly kind: string; readonly frame: ShardFrame };
       expect(sent.kind).toBe("frame");
       expect(sent.frame.kind).toBe("Envelope");
-      expect(Object.keys(sent.frame)).toEqual(["kind", "envelope"]); // structurally budget-less on the wire
+      expect(Object.keys(sent.frame)).toEqual(["kind", "envelope"]);
     });
 
     it("turn()/activate() keep working completely unchanged alongside the new frame wire (incremental adoption really is incremental)", async () => {
@@ -156,7 +156,7 @@ export function registerEnvelopeOrderingAndFrameTests(kit: ShardClientSettlement
       const rustUrl = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs", testSource.url);
       const source = readModuleTreeSource(rustUrl);
       const enumMatch = source.match(/pub enum ShardFrame \{([\s\S]*?)\n\}\s*\n\s*impl ShardFrame/);
-      expect(enumMatch).not.toBeNull(); // [TRACE] `pub enum ShardFrame { ... } impl ShardFrame` shape not found — Rust source changed, update this test's regex
+      expect(enumMatch).not.toBeNull();
       const body = enumMatch![1]!.replace(/\/\/\/.*$/gm, "").replace(/\/\/.*$/gm, "");
       const variantPattern = /(\w+)\s*(?:\{([^{}]*)\}|\(([^()]*)\))?\s*,/g;
       const rustVariants: Array<{ readonly name: string; readonly fields: readonly string[] | null }> = [];
@@ -175,10 +175,9 @@ export function registerEnvelopeOrderingAndFrameTests(kit: ShardClientSettlement
         }
       }
 
-      // Same variant NAMES, in the same order, as this file's own runtime twin.
       expect(rustVariants.map((variant) => variant.name)).toEqual(SHARD_FRAME_VARIANT_FIELDS.map((variant) => variant.kind));
       for (const rustVariant of rustVariants) {
-        if (rustVariant.fields === null) continue; // tuple variant (`Envelope(Envelope)`) — Rust has no field name to diff against; see SHARD_FRAME_VARIANT_FIELDS's own doc
+        if (rustVariant.fields === null) continue;
         const tsVariant = SHARD_FRAME_VARIANT_FIELDS.find((variant) => variant.kind === rustVariant.name)!;
         expect(tsVariant.fields).toEqual(rustVariant.fields);
       }

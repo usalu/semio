@@ -293,8 +293,6 @@ impl UiTree {
     /// retirement half of the ledger, driven by `Ui::close_document_step` so a surface that drops its
     /// document does not keep its records' arena nodes alive. `true` once the ledger is empty.
     pub fn close_document_binding_step(&mut self, retire_scene: &mut impl FnMut(UiNodeId, NodeId, &Node) -> bool) -> bool {
-        // 🔽️ Synthesized composite rows go FIRST: they hang off document-bound owners, so freeing the
-        // owner before the row would leave the row pointing at a dead slot.
         if !self.retire_composite_row_step() {
             return false;
         }

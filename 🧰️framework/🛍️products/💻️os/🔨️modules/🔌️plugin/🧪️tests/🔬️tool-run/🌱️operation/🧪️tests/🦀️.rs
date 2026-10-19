@@ -5,7 +5,8 @@ use crate::tool_run_support_1::original_toy_operation::OriginalToyOperationSourc
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_job::StepContext;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
-use semio_framework_job::{Generation, OperationId, JobPayloadAuthority, StepBudget};
+use semio_framework_job::{Generation, OperationId, StepBudget};
+use semio_framework_job_payload::{JobPayloadAuthority};
 #[doc(hidden)]
 pub fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 #[test]

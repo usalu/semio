@@ -11,7 +11,6 @@ pub struct EncodeOptions {
 }
 impl EncodeOptions {
     /// 📦 The export profile consumers want: subset fonts, compressed streams.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export() -> Self {
         Self { lower: LowerOptions { subset_fonts: true, compress: true }, write: WriteOptions::default() }
     }
@@ -108,7 +107,6 @@ pub struct Reading {
     seen: HashSet<u32>,
 }
 impl Reading {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn of(source: impl ObjectSource, trailer: &[PdfDictEntry], declared_version: &str) -> PResult<Self> {
         let mut recording = Recording { inner: source, seen: HashSet::new() };
         let (lanes, ids, page_refs, annotation_refs) = {
@@ -121,7 +119,6 @@ impl Reading {
     }
 
     /// 🗺️ Where every resource this reading names lives, and every page in `pages` order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn targets(&self, pages: &[ObjRef]) -> HashMap<(Category, String), ObjRef> {
         let mut refs = self.refs.clone();
         refs.extend(pages.iter().enumerate().map(|(index, reference)| ((Category::Page, index.to_string()), *reference)));
@@ -147,7 +144,6 @@ pub enum CatalogLane {
 impl CatalogLane {
     const ALL: [Self; 12] = [Self::Outlines, Self::NamedDestinations, Self::PageLabels, Self::OutputIntents, Self::PageLayout, Self::PageMode, Self::ViewerPreferences, Self::OpenAction, Self::Language, Self::MarkInfo, Self::Metadata, Self::Extra];
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn moved(self, read: &PdfSnapshot, typed: &PdfSnapshot) -> bool {
         match self {
             Self::Outlines => read.outlines != typed.outlines,
@@ -166,7 +162,6 @@ impl CatalogLane {
     }
 
     /// 🔑 The catalog key the lane owns (named destinations live in the `/Names` tree, extra entries under their own keys).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn key(self) -> &'static str {
         match self {
             Self::Outlines => "Outlines",
@@ -197,7 +192,6 @@ pub struct Moved {
     regenerate: bool,
 }
 impl Moved {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(read: &PdfSnapshot, typed: &PdfSnapshot) -> Self {
         Self {
             pages: read.pages != typed.pages,
@@ -208,7 +202,6 @@ impl Moved {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         !self.pages && !self.info && !self.resources && self.catalog.is_empty() && !self.regenerate
     }

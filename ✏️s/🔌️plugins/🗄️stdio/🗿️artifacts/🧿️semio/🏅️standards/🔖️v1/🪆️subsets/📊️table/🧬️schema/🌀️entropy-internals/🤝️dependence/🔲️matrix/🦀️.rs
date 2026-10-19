@@ -103,8 +103,6 @@ pub fn jacobi_eigen_symmetric(a_in: &[f64], n: usize) -> Result<(Vec<f64>, Vec<f
                 }
             }
         }
-        // 🔢️ `d` was already updated incrementally by `-= h` / `+= h` during the sweep above;
-        // only the per-sweep accumulator `z` needs resetting for the next sweep.
         z.iter_mut().for_each(|zi| *zi = 0.0);
     }
     if !converged {

@@ -1,19 +1,19 @@
 /** 🧬️ Block3dConfig */
 export interface Block3dConfig {
-  /** @state config */
+  /** 🟢️ @state config */
   activeRepresentationId?: string;
-  /** @state config */
+  /** 🏷️ @state config */
   wantedTags: string[];
-  /** @state config */
-  /** @state config */
+  /** 🪟️ @state config */
+  /** 🖼️ @state config */
   windows: Block3dWindowView[];
-  /** @state config */
+  /** 🖌️ @state config */
   brushVortexKindId?: string;
-  /** @state config */
+  /** 🧽️ @state config */
   brushRadius: number;
-  /** @state config */
+  /** 🪥️ @state config */
   brushFlip: boolean;
-  /** @state config */
+  /** 📷️ @state config */
   camera?: BlockCamera3d;
 }
 

@@ -2,7 +2,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::{ChangeNodeIcon,EditTargetRegionLabel,Puzzle2dMutation};
 use crate::standards::v1::subsets::any::schema::preparation::text_preparation::{Puzzle2dTextIntent,Puzzle2dTextPlan,Puzzle2dTextPreparationCursor,Puzzle2dTextPreparationStep};
 use crate::Puzzle2dSnapshot;
-use semio_framework_value::{list::PagedList,paged::PagedUtf8,retirement::controlled::ControlledRetirement,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
+use semio_framework_value::{paged::PagedUtf8, retirement::controlled::ControlledRetirement, ValueError, ValueRefusalKind, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop,size_of},ops::{Deref,DerefMut}};
 type Text=PagedUtf8<{usize::MAX}>;
 type Inverse=PagedList<Puzzle2dMutation,{usize::MAX}>;

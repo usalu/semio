@@ -7,10 +7,10 @@ import { Database } from "bun:sqlite";
 /** 🛂️ Independent relational admission oracle for the shared inverse contract. */
 export function testInverseAdmission(): void {
   const owner = join(import.meta.dir, "../..");
-  const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/↩️inverse-admission/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/↩️inverse-admission/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/↩️inverse-admission/🔣️.json"), "utf8"));
   const validate = new Ajv({ strict: true }).compile(schema);
-  assert(validate(corpus), JSON.stringify(validate.errors));
+  assert(Boolean(validate(corpus)), JSON.stringify(validate.errors));
   const database = new Database(":memory:");
   try {
     database.exec("CREATE TABLE outcomes (id TEXT PRIMARY KEY, level TEXT, empty INTEGER NOT NULL, foreign_steps INTEGER NOT NULL)");

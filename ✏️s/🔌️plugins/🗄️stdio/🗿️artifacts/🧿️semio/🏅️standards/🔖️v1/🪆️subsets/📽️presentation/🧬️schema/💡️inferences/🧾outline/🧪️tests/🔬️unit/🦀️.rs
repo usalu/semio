@@ -28,9 +28,9 @@ async fn collects_headings_and_counts_across_masters_layouts_slides_and_notes() 
     let outline = compute_semio_presentation_outline(&snapshot);
     assert_eq!(outline.section_outline, vec![SemioPresentationHeadingEntry { level: 1, text: "Title Master".into() }, SemioPresentationHeadingEntry { level: 2, text: "Slide Heading".into() },]);
     assert_eq!(outline.slide_count, 1);
-    assert_eq!(outline.shape_count, 4); // 1 master TextBox + 1 layout Placeholder + 1 slide TextBox + 1 slide Table
-    assert_eq!(outline.block_count, 5); // Title Master heading + Slide Heading + paragraph + table-cell paragraph + notes paragraph
-    assert_eq!(outline.word_count, 11); // "Title Master"(2) + "Slide Heading"(2) + "one two three"(3) + "cell text"(2) + "speaker notes"(2)
+    assert_eq!(outline.shape_count, 4);
+    assert_eq!(outline.block_count, 5);
+    assert_eq!(outline.word_count, 11);
 }
 
 #[semio_framework_async_macros::async_test]

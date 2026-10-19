@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-tool-run-tick-wire = { path = "../../../../🎞️tick/📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]
 semio-framework-pack = { workspace = true }
@@ -32,4 +33,5 @@ semio-framework-replication = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
 serde_json = { workspace = true }

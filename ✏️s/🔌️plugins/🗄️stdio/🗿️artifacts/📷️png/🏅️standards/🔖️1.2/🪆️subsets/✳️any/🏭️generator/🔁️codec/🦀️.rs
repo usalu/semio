@@ -1,4 +1,4 @@
-//! png-codec — standalone PNG 1.2 codec on top of `png` 0.18.1's own encoder/decoder. Zero
+//! 🖼️ png-codec — standalone PNG 1.2 codec on top of `png` 0.18.1's own encoder/decoder. Zero
 //! dependencies beyond `png` itself (see this crate's own Cargo.toml — its own `[workspace]`,
 //! isolated from the repository's root workspace and Cargo.lock).
 //!

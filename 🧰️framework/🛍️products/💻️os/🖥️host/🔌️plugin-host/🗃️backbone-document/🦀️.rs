@@ -283,8 +283,6 @@ where
         envelope.retire_unadopted();
         return Err(VcsError::Deserialize(format!("expected schema {expected_schema}")));
     }
-    // 🧺️ Consume the shell: its `Drop` asserts the owners were detached, so reading fields off it
-    // and letting it fall out of scope aborts the guest at runtime.
     let mut owners = envelope.into_owners();
     let mut edit_messages = Vec::with_capacity(owners.edit_messages.len());
     while let Some(entry) = owners.edit_messages.pop() { edit_messages.push(entry); }

@@ -1,4 +1,4 @@
-//! attraction allowance.
+//! 🧲️ attraction allowance.
 //! 💔 Puzzle3d mutation — `DisconnectKindCompatibility`: revokes one vortex-kind-id pair's
 use crate::connect_kind_compatibility::mutation::ConnectKindCompatibility;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

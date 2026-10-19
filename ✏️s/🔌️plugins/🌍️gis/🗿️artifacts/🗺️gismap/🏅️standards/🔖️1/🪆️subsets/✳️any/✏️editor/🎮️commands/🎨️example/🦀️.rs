@@ -51,12 +51,6 @@ pub mod set_active_example {
 
     pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, GisMapSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<GisMapMutation, NoConfigMutation>, Fault> {
         let next = example_document(&payload.example_id)?;
-        // 🕹️ The pre-migration layer/feature selection clear that used to live here (`SetSelection {
-        // ids: Vec::new() }`) is gone — selection is framework-owned config now, and `Emit` has no
-        // channel to touch the framework's `interaction_store` (ticket
-        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). The `"features"` domain is
-        // `HierarchyProvider::Flat`, so `validate_state` does not auto-prune it either — a stale
-        // selection surviving a document swap is a known, accepted gap of this wave.
         let document = doc.snapshot;
         if document.positions == next.positions && document.routes == next.routes && document.regions == next.regions {
             return Ok(Emit::default());

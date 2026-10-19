@@ -20,11 +20,14 @@ export type DependencyTruthReport = {
 const DEPENDENCY_MANDATED_NX_PACKAGES = new Set(["nx", "@nx/devkit", "@nx/js"]);
 const DEPENDENCY_AUTHORIZED_TOOLCHAIN_MANIFESTS = new Set(["package.json", ...DEPENDENCY_TOOLCHAIN_RECIPE_MANIFESTS.keys()]);
 export const DEPENDENCY_REPO_POLICY_ROOT = "🧰️framework/🛍️products/🦑️repo";
-const DEPENDENCY_REPO_POLICY_LIBRARY = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts`;
+const DEPENDENCY_REPO_POLICY_LIBRARY_ROOT = `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library`;
+const DEPENDENCY_REPO_POLICY_PACKAGE_MODULE = `${DEPENDENCY_REPO_POLICY_LIBRARY_ROOT}/📦️packages/🟦️typescript/🚨️policy/🟦️.ts`;
+const DEPENDENCY_REPO_POLICY_OWNER_MODULE = `${DEPENDENCY_REPO_POLICY_LIBRARY_ROOT}/🚨️policy/🧭️entrypoints/🟦️.ts`;
 export const DEPENDENCY_REPO_POLICY_ROUTERS = [`${DEPENDENCY_REPO_POLICY_ROOT}/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/💻️client/📜️script.ts`, `${DEPENDENCY_REPO_POLICY_ROOT}/🔨️modules/📚️library/📜️script.ts`] as const;
 
 export function dependencyRepoPolicyLibrarySpecifier(repoRoot: string, script: string): string {
-  const specifier = relative(dirname(join(repoRoot, script)), join(repoRoot, DEPENDENCY_REPO_POLICY_LIBRARY)).replaceAll("\\", "/");
+  const owner = script.startsWith(`${DEPENDENCY_REPO_POLICY_LIBRARY_ROOT}/`) ? DEPENDENCY_REPO_POLICY_OWNER_MODULE : DEPENDENCY_REPO_POLICY_PACKAGE_MODULE;
+  const specifier = relative(dirname(join(repoRoot, script)), join(repoRoot, owner)).replaceAll("\\", "/");
   return specifier.startsWith(".") ? specifier : `./${specifier}`;
 }
 

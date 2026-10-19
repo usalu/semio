@@ -1,6 +1,7 @@
 //! 🪆️ Nested IO loans retain original pending frames and settle accepted native spans exactly once.
 use super::*;
-use semio_framework_value::{native_decoding::NativeDecodeRetirementRecipient,native_encoding::NativeEncodeRetirementRecipient};
+use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use std::cell::Cell;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("nested-io.json")).unwrap()}
 #[test]

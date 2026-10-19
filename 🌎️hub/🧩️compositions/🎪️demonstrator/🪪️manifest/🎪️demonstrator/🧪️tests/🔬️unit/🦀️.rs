@@ -91,17 +91,10 @@ fn every_surface_declares_a_artifact_schema() {
 #[test]
 fn contribution_consumers_declare_the_hidden_app_command() {
     let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
-    // 🧩️ `generation3d` became a contribution consumer in its own right (its editor declares
-    // `setContributions` with a HostOnly publication lane, see procedural's `✏️editor/🦀️.rs`), so the
-    // pinned set carries it in this bundle's registration order.
     assert_eq!(consumers, vec!["s.procedural.generation3d@1/*#editor", "s.cad.cad@1/*#editor", "s.sourcing.curation@1/*#editor", "s.process.process3d@1/*#editor"]);
     for app in test_bundle().manifest.apps {
         if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
             assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
-            // 📄️ A contributions push is either one whole payload (`json`) or one PAGE of it
-            // (`json` + `page`/`pageCount`) — generation3d's push outgrew the single-invocation wire
-            // ceiling and streams pages now (`✏️editor/🦀️.rs` `COMMAND_MAXIMUM_BYTES`). Both rosters
-            // start with the payload argument and declare no other host-catalogue argument.
             let args: Vec<&str> = command.args.iter().map(|arg| arg.id.as_str()).collect();
             assert!(args == vec!["json"] || args == vec!["json", "page", "pageCount"], "{} declares an unknown contributions argument roster: {args:?}", app.id);
             assert_eq!(command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
@@ -141,8 +134,6 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
         ("s.process.process3d@1/*#editor", &["process.play.main"]),
         ("s.gis.gismap@1/*#editor", &["gis2d.play.composite"]),
     ];
-    // 🗣️ `ViewModel::locale`/`terminology` are non-optional (the shell always resolves one before the
-    // first render), so a bare `"{}"` is not a decodable view state — the host's own default view is.
     let view_state = serde_json::to_string(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("aggregate view state serializes");
     let mut generation = 1_u64;
     for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
@@ -181,14 +172,10 @@ fn every_bundled_surface_declares_its_derived_child_dialects() {
     assert_editor_children_declared::<crate::editor::playground::PlaygroundEditor>("s.demonstrator.playground@1/*#editor", 0);
     assert_viewer_children_declared::<crate::viewer::playground::PlaygroundViewer>("s.demonstrator.playground@1/*#viewer", 0);
     assert_editor_children_declared::<Generation3dPlayApp>("s.procedural.generation3d@1/*#editor", 0);
-    // 🏗️ cad composes four genesis children of its own now (shape/building/energy/structure), all
-    // declared by the roster the helper checks before it returns this count.
     assert_editor_children_declared::<CadPlayApp>("s.cad.cad@1/*#editor", 4);
     assert_editor_children_declared::<Puzzle3dPlayApp>("s.puzzle.puzzle3d@1/*#editor", 0);
     assert_editor_children_declared::<SourcingCurationApp>("s.sourcing.curation@1/*#editor", 1);
     assert_viewer_children_declared::<SourcingViewer>("s.sourcing.curation@1/*#viewer", 1);
-    // 🏭️ process3d composes its own genesis children now (ticket 26/09/17 `LoadDocument` path:
-    // `genesis_child_pack` + `SemioMembers`), so its default document derives five declared children.
     assert_editor_children_declared::<Process3dPlayApp>("s.process.process3d@1/*#editor", 5);
     assert_viewer_children_declared::<Process3dViewer>("s.process.process3d@1/*#viewer", 5);
     assert_editor_children_declared::<Gis2dPlayApp>("s.gis.gismap@1/*#editor", 2);

@@ -217,7 +217,7 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {
-    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.genesis.facts().snapshot().clone());
+    let mut snapshot = ColdReplayProjection::<P, Mutation>::new(envelope.vcs.genesis.facts().snapshot().clone());
     let mut seen = HashSet::new();
     for edit_id in applied_edit_ids {
         let edit_id = edit_id.as_ref();

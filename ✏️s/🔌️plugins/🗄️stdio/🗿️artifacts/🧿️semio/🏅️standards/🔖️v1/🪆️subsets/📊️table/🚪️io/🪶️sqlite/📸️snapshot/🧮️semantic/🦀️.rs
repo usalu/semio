@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::ad
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::hex_text;
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::value_text;
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::value_binary;
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native primitive differs from its authored shape")}

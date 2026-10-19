@@ -1,6 +1,7 @@
 //! 💰️ Retained OPC adoption admits each actual page and copied literal before ownership.
 use super::*;
-use semio_framework_value::{NativeDecodeControl, paged::PAGED_UTF8_CHUNK_BYTES};
+use semio_framework_value::paged::PAGED_UTF8_CHUNK_BYTES;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn append<T, const N: usize>(target: &mut PagedList<T, N>, value: T, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
     while !target.has_reserved_slot() {

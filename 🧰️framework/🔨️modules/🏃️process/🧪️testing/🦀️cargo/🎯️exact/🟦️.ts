@@ -173,14 +173,15 @@ function beginExactCargoLease(artifactRoot: string): () => void {
 
 /** 🚫️ Preserves the precise failing stage and actual child status independently of assertion parsing. */
 export class ExactCargoLawError extends Error {
+  readonly stage:ExactCargoLawStage;readonly status:number | null;readonly signal:string | null;readonly artifactDir:string;
   constructor(
-    readonly stage: ExactCargoLawStage,
-    readonly status: number | null,
-    readonly signal: string | null,
-    readonly artifactDir: string,
+    stage: ExactCargoLawStage,
+    status: number | null,
+    signal: string | null,
+    artifactDir: string,
     detail: string,
   ) {
-    super(`exact Cargo law ${stage} failed: status=${status} signal=${signal ?? "none"} artifacts=${artifactDir}; ${detail}`);
+    super(`exact Cargo law ${stage} failed: status=${status} signal=${signal ?? "none"} artifacts=${artifactDir}; ${detail}`);this.stage=stage;this.status=status;this.signal=signal;this.artifactDir=artifactDir;
   }
 }
 

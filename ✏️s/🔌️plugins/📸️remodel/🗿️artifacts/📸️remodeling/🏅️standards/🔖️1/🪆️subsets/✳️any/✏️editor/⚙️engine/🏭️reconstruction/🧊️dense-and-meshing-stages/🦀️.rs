@@ -176,9 +176,6 @@ impl ReconstructionEngine {
     /// registered neighbors; returns whether more cameras remain.
     pub(super) fn step_dense_stereo(&mut self) -> bool {
         const LUMA_PIXELS_PER_STEP: usize = 2_048;
-        // ⏱️ One PatchMatch pixel evaluates `(2r + 1)²` reference samples against every source view
-        // per hypothesis; the admitted worst case (radius 4, eight sources = 648 samples) is held to
-        // one pixel per step, and a lighter configuration takes proportionally more pixels.
         const PATCH_SAMPLES_PER_STEP: usize = 648;
         let patch_side = 2 * self.params.dense.window_radius.clamp(1, 4) as usize + 1;
         let patch_sources = self.params.dense_source_views.clamp(1, 8);
@@ -326,11 +323,6 @@ impl ReconstructionEngine {
         if !self.step_meshing_bounds() {
             return true;
         }
-        // 🧊️ Always ensures a (possibly still-empty) TSDF exists once this stage starts, even when
-        // `n_dense == 0` (a degenerate but legitimate outcome — every registered camera got pruned by
-        // bundle adjustment): without this, `begin_meshing` used to find `self.tsdf` still `None` and
-        // silently skip building a `MeshPipeline`, later surfacing as the confusing, wiring-looking
-        // `"mesh pipeline not initialized"` failure instead of an honest empty-reconstruction outcome.
         if self.tsdf.is_none() {
             let preparation = self.meshing_preparation.as_ref().expect("walked meshing preparation");
             let (voxel_size, truncation) = self.meshing_voxel();
@@ -352,10 +344,6 @@ impl ReconstructionEngine {
             let mask = self.consistency_masks.get(slot).map(Vec::as_slice);
             if preparation.advance_masked(self.tsdf.as_mut().expect("just ensured"), &self.depth_maps[slot], mask, &(pose, intrinsics), true, TSDF_SAMPLES_PER_STEP) {
                 self.tsdf_preparation = None;
-                // 🧹️ This map's three per-pixel buffers (~1.5 MiB for a 320x240 view, ~5 MiB at the
-                // admitted 512x512 envelope) are dead the moment it is integrated: fusion already read
-                // every map above and nothing downstream reads them again. The slot itself stays so the
-                // stage's cursors and counts keep their meaning.
                 self.depth_maps[slot] = remodeling_dense::DepthMap::new(0, 0);
                 if let Some(mask) = self.consistency_masks.get_mut(slot) {
                     *mask = Vec::new();
@@ -428,17 +416,9 @@ impl ReconstructionEngine {
         let (bounds_min, bounds_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.meshing_voxel().0);
         let volume = self.tsdf.take().expect("meshing volume");
         self.mesh_pipeline = Some(semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_observed_only_surface().with_views(preparation.views));
-        // 🧹️ Input pixels are dead here: the texture views above hold their own copies and the mesh
-        // stages read only the volume and those views. Ten 320x240 frames are 3 MiB, the admitted
-        // envelope (64 frames of 512x512) is 64 MiB — all of it retained through meshing otherwise.
-        // Width/height go with the buffer so `data.len() == width * height * 4` still holds.
         for frame in &mut self.frames {
             frame.image = remodeling_image::ImageRgba8 { width: 0, height: 0, data: Vec::new() };
         }
-        // 🧹️ The keypoints the terminal observation table needs were already copied into the
-        // finalized `observations`, so they are dead by the mesh handoff. The descriptors stay:
-        // at 32 bytes each they are under a megabyte for the admitted envelope, and the match
-        // oracle (`match_oracle_inputs`) reads them after the run.
         self.keypoints_per_frame = Vec::new();
         true
     }

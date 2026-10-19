@@ -60,11 +60,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("artifactKindChoices dedupes by dialect coordinate (owner manifest first wins), sorts, and filters by role", () => {
       const drawDialect: ArtifactDialect = { artifactKind: "s.draw.draw", standard: "1", subset: "*" };
       const dagDialect: ArtifactDialect = { artifactKind: "s.dag.dag", standard: "1", subset: "*" };
-      // 🗂️ Two manifests: "draw" (the owner plugin, passed first) offers the editor for its own
-      // dialect plus an unrelated app with an empty `artifactSchema` (must never surface — it hasn't
-      // opted into `io` yet, mirroring apps that haven't populated `AppIo` in the Rust test's spirit);
-      // "draw-contrib" is a later contributor offering only a viewer for the SAME dialect coordinate
-      // under a different label, proving the owner's (first) label wins once both roles are in scope.
       const manifests = [
         fakeManifest("draw", [
           { role: "editor", dialect: drawDialect, artifactSchema: "draw.document", label: { en: "Draw", de: "Zeichnung" } },

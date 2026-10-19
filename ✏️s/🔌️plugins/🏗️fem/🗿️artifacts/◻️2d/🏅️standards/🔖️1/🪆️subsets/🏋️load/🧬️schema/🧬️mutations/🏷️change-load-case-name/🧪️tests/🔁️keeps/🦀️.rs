@@ -13,7 +13,7 @@
 //! 🔁️ The dead case is already named "Dead", so this is `change-load-case-name`'s no-op branch: a NO-OP with a Warning, an empty diff, and a document that does not move. `change-load-case-name` has no Fatal branch at all.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation_cold;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
@@ -63,7 +63,7 @@ fn the_no_op_is_a_warning_not_a_rejection() {
 fn inverse_restores_before() {
     let base = before();
     let operation = mutation();
-    let inverse = inverse_fem2d_mutation(&base, &operation).expect("aggregate inverse admission");
+    let inverse = inverse_fem2d_mutation_cold(&base, &operation).expect("aggregate inverse admission");
     assert!(inverse.is_empty(), "unchanged mutations cannot publish inverse candidates: {inverse:?}");
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &operation).expect("unchanged forward outcome");

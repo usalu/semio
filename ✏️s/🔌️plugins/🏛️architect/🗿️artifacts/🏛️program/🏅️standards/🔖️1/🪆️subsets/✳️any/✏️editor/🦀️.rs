@@ -683,10 +683,6 @@ impl ArtifactEditor for ArchitectPlayApp {
                 semio_framework_tool_machine::node_graph_edit_rows(args).map_err(Fault::from)?;
                 Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(args.get("operations").expect("the row decoder requires operations")) }))
             },
-            // 🖼️ An ABSENT `viewport` is the Graph window's own default, not a fault: this action carries
-            // no `action_args` row, so a palette/keybinding dispatch (and the framework's own
-            // `assert_declared_actions_bridge_to_commands` law) hands the bridge no payload at all.
-            // Only a PRESENT but malformed viewport is rejected.
             "nodeGraphViewport" => {
                 let viewport = match args.and_then(|value| value.get("viewport")).cloned() {
                     Some(value) => <semio_framework_os_kernel::Viewport2d as semio_framework_value::FromValue>::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?,
@@ -780,11 +776,6 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .view_action("selectRegister", LocalizedLabel::native("Select Register", "Register wählen"))
-            // 🧬️ These three are DOCUMENT tools (`ARCHITECT_DOCUMENT_TOOL_IDS`, publication lane
-            // `Artifact`, handlers returning `Emit::mutations`), so they must be declared `Mutation`:
-            // the mounted registry enforces kind discipline and refused every one of them with
-            // `View-kind command '<id>' must not emit operations`, which is why they only ever worked
-            // in the registry-less unit harness.
             .mutation("addElement", LocalizedLabel::native("Add Element", "Element hinzufügen"))
             .mutation("removeElement", LocalizedLabel::native("Remove Element", "Element entfernen"))
             .action_destructive("removeElement")
@@ -793,10 +784,6 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .mutation("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
             .mutation("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))
             .action_with(ActionDefinition::new("search", LocalizedLabel::native("Search", "Suchen"), ActionKind::View, "search"))
-            // 📚️ The playground navbar dispatches `setActiveExample` for its fixture combobox on
-            // boot. `try_build_definition` copies app-level actions onto every window kind, so an
-            // app-level row is what stops the shell dropping it before dispatch (which it logged as
-            // this app's only console *error*).
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_with(ActionDefinition::new("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"), ActionKind::Shell, "download"))
@@ -902,12 +889,6 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .action_args("search", vec![ActionArgDef::text("query", LocalizedLabel::native("Query", "Suchanfrage"))])
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])])
             .action_args("importProgram", vec![ActionArgDef::text("payload", LocalizedLabel::native("ProgramSnapshot DSL", "Programm-DSL"))])
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "program" interaction
-            // domain — one granularity ("entity") over the 68 flat registers, `HierarchyProvider::Flat`
-            // (no parent/child nesting), single-select Pick/Replace only (the document panel's element
-            // rows are the sole real pick surface today — see its own doc comment). Scoped to the graph
-            // window (the node-graph canvas, this app's closest analog to a primary editing surface),
-            // mirroring `dag`'s main window's identical declaration.
             .interaction(InteractionDefinition {
                 id: ARCHITECT_INTERACTION_PROGRAM.into(),
                 label: LocalizedLabel::native("Program", "Programm"),
@@ -918,13 +899,6 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             })
             .window_kind_interactions(graph_window::ARCHITECT_WINDOW_GRAPH, vec![InteractionRef::new(ARCHITECT_INTERACTION_PROGRAM)])
             .default_layout(edit_mode::layout())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
-            // `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old `"sample"`/`"empty"` example
-            // registrations and the no-op `.workflow("architect", "Architect", "data")` call are dropped
-            // here (not silently: reported in the packet's migration report). The subset's own
-            // `📚️examples/🎬️demo`/`📚️examples/🎬️demo-session` facets are the modern, role-agnostic
-            // replacement surface for this.
             .action_describe("setAdjacencyKind", LocalizedLabel::native("Sets how two program elements must relate (required, preferred, optional or prohibited); without a kind it cycles to the next one, and cycling past prohibited removes the adjacency.", "Legt fest, wie zwei Programmelemente zueinander stehen (erforderlich, bevorzugt, optional oder verboten); ohne Art wird zur nächsten gewechselt, nach verboten entfällt die Adjazenz."))
             .action_describe("addRegisterItem", LocalizedLabel::native("Adds a new row with the given name to one register of the program (such as users, activities or elements), or applies the named template instead.", "Fügt einem Register des Programms (etwa Nutzer, Aktivitäten oder Elemente) eine neue Zeile mit dem angegebenen Namen hinzu oder wendet stattdessen die genannte Vorlage an."))
             .action_describe("removeRegisterItem", LocalizedLabel::native("Deletes one row by id from a register of the program; its data is gone unless the edit is undone.", "Löscht eine Zeile anhand ihrer Id aus einem Register des Programms; ihre Daten sind fort, sofern die Änderung nicht rückgängig gemacht wird."))

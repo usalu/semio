@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { vitestRunArguments } from "@semio-tech/repo-lib/testing";
+import { vitestRunArguments } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/📋️arguments/🟦️.ts";
 
 describe("test command routing", () => {
   it("consumes the Nx test level before forwarding Vitest arguments", async () => {

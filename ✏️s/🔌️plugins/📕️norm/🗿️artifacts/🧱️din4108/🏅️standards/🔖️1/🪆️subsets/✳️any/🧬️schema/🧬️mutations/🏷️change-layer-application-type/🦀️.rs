@@ -1,4 +1,4 @@
-//! `change-layer-application-type`.
+//! 🧬️ `change-layer-application-type`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

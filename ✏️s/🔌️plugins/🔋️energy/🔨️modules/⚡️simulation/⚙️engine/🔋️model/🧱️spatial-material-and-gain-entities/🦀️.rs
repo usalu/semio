@@ -151,7 +151,7 @@ impl OutsideBoundary {
 /// coordinates an epJSON document round-trips through.
 pub const FENESTRATION_PLANE_TOLERANCE_M: f64 = 1e-3;
 
-/// See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
+/// 🧮️ See ANSI/ASHRAE 140 §5.2 cases 610/630/910/930, whose overhang and fins are exactly this shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Fenestration {

@@ -1,7 +1,7 @@
 //! 📋️ Original operation buffers retain paid collection backing until protocol handoff or closure.
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use semio_framework_value::list::{PagedList,PagedListError};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
 use std::mem::{ManuallyDrop,size_of};
 
 pub type ArtifactPreparedOperations=Vec<Vec<u8>>;
@@ -19,7 +19,7 @@ pub struct ArtifactPreparedOperationsOwner {
 }
 
 fn refusal(error:PagedListError)->ValueError {
- let kind=match error.kind {semio_framework_value::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,_=>ValueRefusalKind::InvariantViolated};
+ let kind=match error.kind {semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed=>ValueRefusalKind::AllocationFailed,semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit=>ValueRefusalKind::OwnershipLimit,_=>ValueRefusalKind::InvariantViolated};
  ValueError::literal(kind,error.reason)
 }
 

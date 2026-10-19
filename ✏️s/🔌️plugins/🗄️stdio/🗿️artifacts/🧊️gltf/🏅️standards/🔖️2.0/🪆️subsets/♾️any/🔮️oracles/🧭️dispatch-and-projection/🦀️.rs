@@ -197,10 +197,6 @@ pub fn project_gltf(bytes: &[u8]) -> Result<Json, String> {
     let materials: Vec<Json> = (0..top_level_len(&doc, "materials"))
         .map(|index| Json::Object(vec![("alphaMode".to_string(), Json::String(material_alpha_mode(&doc, index))), ("doubleSided".to_string(), Json::Bool(material_double_sided(&doc, index)))]))
         .collect();
-    // 🎥️ `document/cameras` and `document/skins` — projected structurally via [`to_host_json`]
-    // rather than a hand-picked field list, since `create-camera`'s own `projection` param is
-    // carried the same way (see `create_camera`/[`from_host_json`]) and this keeps the two
-    // directions symmetric.
     let cameras: Vec<Json> = arr(&doc, "cameras").iter().map(to_host_json).collect();
     let skins: Vec<Json> = arr(&doc, "skins").iter().map(to_host_json).collect();
     let animations: Vec<Json> = arr(&doc, "animations")
@@ -212,21 +208,11 @@ pub fn project_gltf(bytes: &[u8]) -> Result<Json, String> {
             Json::Object(members)
         })
         .collect();
-    // 🧩️ `document/asset`, `document/extensionsUsed`/`extensionsRequired` and
-    // `document/extensions`/`extras` (shard G2, this ticket) — projected the same structural way as
-    // `cameras`/`skins`/`animations` above, the entire normative surface the 14 `🪪️asset` kinds
-    // touch.
     let asset = obj_get(&doc, "asset").map(to_host_json).unwrap_or(Json::Null);
     let extensions_used: Vec<Json> = arr(&doc, "extensionsUsed").iter().filter_map(json::JsonValue::as_str).map(|value| Json::String(value.to_string())).collect();
     let extensions_required: Vec<Json> = arr(&doc, "extensionsRequired").iter().filter_map(json::JsonValue::as_str).map(|value| Json::String(value.to_string())).collect();
     let document_extensions = obj_get(&doc, "extensions").map(to_host_json).unwrap_or(Json::Null);
     let document_extras = obj_get(&doc, "extras").map(to_host_json).unwrap_or(Json::Null);
-    // 🎨️ `document/{materials,textures,images,samplers}` (shard G4, this ticket) — `materialsFull`
-    // is the FULL structural material dump (`pbrMetallicRoughness`/`{normal,occlusion,emissive}
-    // Texture` included), projected the same structural way as `cameras`/`skins`/`animations`
-    // above, since `create`/`delete`/`move`/`reorder-materials` and every `*-texture` kind's own
-    // cascading clear are only observable through the WHOLE material object, not the `alphaMode`/
-    // `doubleSided` pair `materials` above already carries for the artifact-root case's own 2 kinds.
     let materials_full: Vec<Json> = arr(&doc, "materials").iter().map(to_host_json).collect();
     let textures: Vec<Json> = arr(&doc, "textures").iter().map(to_host_json).collect();
     let images: Vec<Json> = arr(&doc, "images").iter().map(to_host_json).collect();

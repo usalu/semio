@@ -1,6 +1,7 @@
 //! 🧪️ Real original publication preserves source identity, bounded copies, physical receipts and terminal custody.
 use semio_framework_job::*;
 use semio_framework_job_publication::{JobPublicationKind,RetainedJobPublication};
+#[cfg(test)] use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
 #[global_allocator]
 static ORIGINAL_TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observed<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}

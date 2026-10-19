@@ -134,36 +134,30 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioImageBuilderConstruction {
         /// 🏗️ Starts a fresh image at the given pixel dimensions.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(width: u32, height: u32) -> Self {
             Self { snapshot: SemioImageSnapshot { width, height, ..SemioImageSnapshot::default() } }
         }
         /// 🏗️ Sets the source colorspace.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_colorspace(mut self, colorspace: SemioColorspace) -> Self {
             self.snapshot.colorspace = colorspace;
             self
         }
         /// 🏗️ Sets the bit depth.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_bit_depth(mut self, bit_depth: u8) -> Self {
             self.snapshot.bit_depth = bit_depth;
             self
         }
         /// 🏗️ Appends one frame, in order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_frame(mut self, frame: SemioImageFrame) -> Self {
             self.snapshot.frames.push(frame);
             self
         }
         /// 🏗️ Sets the embedded ICC profile (`None` clears it).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_icc(mut self, icc: Option<Vec<u8>>) -> Self {
             self.snapshot.icc = icc;
             self
         }
         /// 🏗️ Appends one metadata entry.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
             self.snapshot.metadata.push(SemioImageMetadataEntry { key: key.into(), value: value.into() });
             self

@@ -34,6 +34,7 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../⏳️async/📦️packages/🦀️rust" }
+semio-framework-job-payload = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }

@@ -3,7 +3,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use crate::schema::snapshot::{SemioDrawingSnapshot, DrawCanvas, DrawStyle, DrawNode, PathSegment, SemioPoint2};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};

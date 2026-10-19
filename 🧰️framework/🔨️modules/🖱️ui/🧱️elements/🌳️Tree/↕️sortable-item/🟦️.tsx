@@ -1,5 +1,5 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { TreeContext, TreeAlignedRow, treeHeaderRowClassName, treeInspectorInnerRowClassName, treeHeaderMainClassName } from "../📏️row-alignment/🟦️.tsx";
 import { useFlow } from "../../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { useIdLabel } from "../../🏷️Label/🟦️.tsx";
@@ -17,7 +17,7 @@ import { renderTreeHeaderActions } from "../⚡️actions/🟦️.tsx";
 import { TreeBranchContent } from "../🌲️branch/🟦️.tsx";
 
 /**
- * SortableTreeItem holds the data fields for a SortableTreeItem record.
+ * 🌳️ SortableTreeItem holds the data fields for a SortableTreeItem record.
  *
  * 🖱️ `onClick` belongs to the `role="treeitem"` SHELL — the element that carries `id` and
  * `aria-selected` — in every one of the four layouts, group rows included. A group row used to wire it to
@@ -313,7 +313,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 };
 
 /**
- * Drag-and-drop sortable container for tree items.
+ * 🌲️ Drag-and-drop sortable container for tree items.
  **/
 export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onReorder, children }) => {
   const handleDragEnd = (event: DragEndEvent) => {

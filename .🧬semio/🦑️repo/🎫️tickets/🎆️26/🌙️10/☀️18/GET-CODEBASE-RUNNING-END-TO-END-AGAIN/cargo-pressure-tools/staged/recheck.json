@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "source": "pub const VALUE:u8=1;\n",
+  "sequence": {
+    "cases": [
+      {"id": "one-unit-without-embedded-inputs", "units": 1, "embedded": 0},
+      {"id": "three-units-with-seven-embedded-inputs", "units": 3, "embedded": 7}
+    ]
+  },
+  "gate": {
+    "cases": [
+      {"id": "burst-inside-one-interval", "interval": 1000, "calls": [["unit", 0], ["unit", 10], ["unit", 999]], "expected": 1},
+      {"id": "interval-elapses-between-units", "interval": 1000, "calls": [["unit", 0], ["unit", 1000], ["unit", 1500], ["unit", 2000]], "expected": 3},
+      {"id": "completion-always-settles", "interval": 1000, "calls": [["unit", 0], ["complete", 5], ["complete", 6]], "expected": 3}
+    ]
+  }
+}

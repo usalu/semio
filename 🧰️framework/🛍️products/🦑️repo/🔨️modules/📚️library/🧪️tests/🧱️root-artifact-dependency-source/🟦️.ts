@@ -9,7 +9,7 @@ import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-
 
 type Fixture = Readonly<{
   version: number;
-  owners: readonly Readonly<{ owner: string; exports: readonly string[]; consumers: readonly string[] }>[];
+  owners: readonly Readonly<{ owner: string; facades?: readonly string[]; exports: readonly string[]; consumers: readonly string[] }>[];
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; ancestorKinds?: readonly string[]; kind: string }>[];
   wgpuOutputRoots: readonly Readonly<{ path: string; inclusion: "tracked" | "ignored" }>[];
   wgpuGeneratorImplementationInputs: readonly string[];
@@ -62,9 +62,11 @@ describe("root artifact and dependency source ownership", () => {
       expect(existsSync(absolute), row.owner).toBe(true);
       const exports = exportedNames(absolute);
       for (const name of row.exports) expect(exports.has(name), `${row.owner}:${name}`).toBe(true);
+      for (const facade of row.facades ?? []) expect(readFileSync(resolve(repoRoot, facade), "utf8"), `${facade} -> ${row.owner}`).toContain(relativeSpecifier(facade, row.owner));
       for (const consumer of row.consumers) {
         const source = readFileSync(resolve(repoRoot, consumer), "utf8");
-        expect(source, `${consumer} -> ${row.owner}`).toContain(relativeSpecifier(consumer, row.owner));
+        const reach = [row.owner, ...(row.facades ?? [])].map((target) => relativeSpecifier(consumer, target));
+        expect(reach.some((specifier) => source.includes(specifier)), `${consumer} -> ${row.owner}`).toBe(true);
       }
     }
     const root = readFileSync(resolve(repoRoot, "📜️script.ts"), "utf8");

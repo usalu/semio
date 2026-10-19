@@ -86,7 +86,7 @@ impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::re
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::semio_framework_value")]
 pub struct Store<T, Id> {
-    slots: semio_framework_value::list::PagedList<Slot<T>,{usize::MAX}>,
+    slots: semio_framework_value_persistent::list::PagedList<Slot<T>,{usize::MAX}>,
     free_head: Option<u32>,
     _marker: std::marker::PhantomData<fn() -> Id>,
 }
@@ -104,9 +104,8 @@ impl<T, Id: ArenaId> Default for Store<T, Id> {
 }
 
 impl<T, Id: ArenaId> Store<T, Id> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
-        Store { slots: semio_framework_value::list::PagedList::empty(), free_head: None, _marker: std::marker::PhantomData }
+        Store { slots: semio_framework_value_persistent::list::PagedList::empty(), free_head: None, _marker: std::marker::PhantomData }
     }
     /// 🪙️ Original insertion transfers ownership without copying any prior slot or incoming payload.
     pub fn next_insert_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
@@ -145,7 +144,6 @@ impl<T, Id: ArenaId> Store<T, Id> {
         let copy=self.next_insert_copy_byte_demand().expect("original arena cold copy authority");
         loop{let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_insert_capacity_byte_demand(copy).expect("original arena cold capacity authority"),maximum_release_bytes:self.next_insert_release_byte_demand().expect("original arena cold release authority"),maximum_depth:self.next_insert_depth_demand().expect("original arena cold depth authority")};if grant.maximum_capacity_bytes==0{return self.insert_reserved(value,grant).unwrap_or_else(|(error,_)|panic!("original arena cold transfer: {error}")).0;}self.reserve_insert_step(grant).unwrap_or_else(|(error,_)|panic!("original arena cold reserve: {error}"));}
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get(&self, id: Id) -> Option<&T> {
         let slot = self.slots.get(id.raw_index() as usize)?;
         if slot.generation == id.raw_generation() {
@@ -154,7 +152,6 @@ impl<T, Id: ArenaId> Store<T, Id> {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get_mut(&mut self, id: Id) -> Option<&mut T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
         if slot.generation == id.raw_generation() {
@@ -163,11 +160,9 @@ impl<T, Id: ArenaId> Store<T, Id> {
             None
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn contains(&self, id: Id) -> bool {
         self.get(id).is_some()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn remove(&mut self, id: Id) -> Option<T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
         if slot.generation != id.raw_generation() {
@@ -190,11 +185,9 @@ impl<T, Id: ArenaId> Store<T, Id> {
         let value=self.remove(id);
         Ok((value,RetainedCloneProgress {copied_items:1,..Default::default()}))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn len(&self) -> usize {
         self.slots.iter().filter(|s| s.value.is_some()).count()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -202,13 +195,11 @@ impl<T, Id: ArenaId> Store<T, Id> {
     /// (`crate::topology::Body`) calls per unreachable id: bumps the slot's generation
     /// (see [`Self::remove`]) so a still-held stale id self-detects instead of aliasing whatever
     /// reuses the slot next. Returns `false` (no-op) for an already-stale or out-of-range id.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn free(&mut self, id: Id) -> bool {
         self.remove(id).is_some()
     }
     /// 🗄️ Whether `id` currently resolves to a value — [`Self::contains`] under the name a
     /// liveness/registry call site reads more naturally.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_live(&self, id: Id) -> bool {
         self.contains(id)
     }
@@ -222,18 +213,15 @@ impl<T, Id: ArenaId> Store<T, Id> {
         slot.value.as_ref().map(|value| (Id::from_raw(index as u32, slot.generation), value))
     }
     /// 🗄️ Deterministic index-order iteration over live entries.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn iter(&self) -> impl Iterator<Item = (Id, &T)> {
         self.slots.iter().enumerate().filter_map(|(i, slot)| slot.value.as_ref().map(|v| (Id::from_raw(i as u32, slot.generation), v)))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (Id, &mut T)> {
         self.slots.iter_mut().enumerate().filter_map(|(i, slot)| {
             let gen = slot.generation;
             slot.value.as_mut().map(|v| (Id::from_raw(i as u32, gen), v))
         })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ids(&self) -> impl Iterator<Item = Id> + '_ {
         self.iter().map(|(id, _)| id)
     }

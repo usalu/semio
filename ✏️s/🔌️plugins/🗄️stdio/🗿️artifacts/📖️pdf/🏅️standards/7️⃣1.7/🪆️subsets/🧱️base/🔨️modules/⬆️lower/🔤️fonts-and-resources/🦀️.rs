@@ -10,7 +10,6 @@ use crate::standards::v1_7::subsets::base::modules::lower::*;
 
 //#region 🔖️Fonts
 impl Lowering<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_fonts(&mut self) -> PResult<()> {
         for font in &self.snapshot.fonts {
             let reference = self.refs[&(Category::Font, font.id.clone())];
@@ -20,7 +19,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_simple_encoding(encoding: &PdfSimpleEncoding) -> Option<PdfObject> {
         if encoding.differences.is_empty() {
             return encoding.base.map(|base| PdfObject::name(base_encoding_name(base)));
@@ -40,7 +38,6 @@ impl Lowering<'_> {
         Some(PdfObject::Dict(dict))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_program(&mut self,program:&PdfFontProgram,glyphs:Option<&BTreeSet<u16>>)->PResult<(&'static str,PdfObject)> {
         crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;
         let mut object=self.artifacts.resolve(program.reference())?;
@@ -49,7 +46,6 @@ impl Lowering<'_> {
         Ok((key,PdfObject::Ref(self.add(object))))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_descriptor(&mut self, descriptor: &PdfFontDescriptor, program: Option<&PdfFontProgram>, glyphs: Option<&BTreeSet<u16>>) -> PResult<PdfObject> {
         let mut dict = vec![
             entry("Type", PdfObject::name("FontDescriptor")),
@@ -80,7 +76,6 @@ impl Lowering<'_> {
         Ok(PdfObject::Ref(self.add(PdfObject::Dict(dict))))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_font(&mut self, font: &PdfFont) -> PResult<Vec<PdfDictEntry>> {
         let glyphs = self.used_glyphs.get(&font.id).cloned();
         let mut dict = vec![entry("Type", PdfObject::name("Font"))];
@@ -150,7 +145,6 @@ impl Lowering<'_> {
         Ok(dict)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_cid_font(&mut self, cid: &PdfCidFont, glyphs: Option<&BTreeSet<u16>>) -> PResult<ObjRef> {
         let mut dict = vec![entry("Type", PdfObject::name("Font")), entry("Subtype", PdfObject::name(if cid.true_type { "CIDFontType2" } else { "CIDFontType0" })), entry("BaseFont", PdfObject::name(&cid.base_font)), entry("CIDSystemInfo", cid_system_info(&cid.system_info))];
         let descriptor = self.lower_descriptor(&cid.descriptor, cid.program.as_ref(), glyphs)?;
@@ -196,7 +190,6 @@ fn cid_system_info(info: &PdfCidSystemInfo) -> PdfObject {
 
 //#region 🔖️Resources
 impl Lowering<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_optional_content_groups(&mut self) {
         let Some(optional_content) = &self.snapshot.optional_content else { return };
         for group in &optional_content.groups {
@@ -212,7 +205,6 @@ impl Lowering<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_images(&mut self) -> PResult<()> {
         for image in &self.snapshot.images {
             let reference = self.refs[&(Category::XObject, image.id.clone())];
@@ -230,7 +222,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_forms(&mut self) -> PResult<()> {
         for form in &self.snapshot.forms {
             let reference = self.refs[&(Category::XObject, form.id.clone())];
@@ -253,7 +244,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_group(&mut self, group: &PdfTransparencyGroup) -> PResult<PdfObject> {
         let mut dict = vec![entry("Type", PdfObject::name("Group")), entry("S", PdfObject::name("Transparency"))];
         push_opt(&mut dict, "CS", group.color_space.as_ref().map(|cs| lower_colour_space(cs, self)).transpose()?);
@@ -266,7 +256,6 @@ impl Lowering<'_> {
         Ok(PdfObject::Dict(dict))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_ext_g_states(&mut self) -> PResult<()> {
         for state in &self.snapshot.ext_g_states {
             let reference = self.refs[&(Category::ExtGState, state.id.clone())];
@@ -279,7 +268,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_shadings(&mut self) -> PResult<()> {
         for shading in &self.snapshot.shadings {
             let reference = self.refs[&(Category::Shading, shading.id.clone())];
@@ -292,7 +280,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_patterns(&mut self) -> PResult<()> {
         for pattern in &self.snapshot.patterns {
             let reference = self.refs[&(Category::Pattern, pattern.id.clone())];
@@ -327,7 +314,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_named_resources(&mut self) -> PResult<()> {
         for space in &self.snapshot.color_spaces {
             let reference = self.refs[&(Category::ColorSpace, space.name.clone())];
@@ -345,7 +331,6 @@ impl Lowering<'_> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_embedded_files(&mut self) {
         for file in &self.snapshot.embedded_files {
             let reference = self.refs[&(Category::EmbeddedFile, file.id.clone())];

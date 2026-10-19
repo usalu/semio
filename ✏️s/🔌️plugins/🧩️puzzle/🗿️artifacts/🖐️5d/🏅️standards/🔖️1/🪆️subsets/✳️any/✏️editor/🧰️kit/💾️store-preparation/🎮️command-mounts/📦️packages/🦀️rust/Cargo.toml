@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-puzzle-5d-store-preparation-commands"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Puzzle 5d store-preparation command mounts"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-3d-editor-modes = { workspace = true }
+semio-s-artifact-puzzle-3d-precompute = { workspace = true }
+semio-s-artifact-puzzle-5d-catalog = { path = "../../../../../🗂️catalog/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-document-records = { path = "../../../../../../🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-interaction = { path = "../../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-2 = { path = "../../../../../../🧬️schema/🧬️mutations/🖋️edit-part3d-label/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-4 = { path = "../../../../../../🧬️schema/🧬️mutations/🌱create-part/🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-5 = { path = "../../../../../../🧬️schema/🧬️mutations/🌱create-part/🧪️tests/🌱️appends-part-c/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-8 = { path = "../../../../../../🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-snapshot = { path = "../../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-tests = { path = "../../../../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-plugin-puzzle-retained = { workspace = true }

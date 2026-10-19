@@ -220,7 +220,6 @@ pub fn build_xref(data: &[u8], start_offset: Option<usize>) -> XrefState {
         for (num, (id, off)) in &scanned {
             entries.insert(*num, XrefEntry::Normal { offset: *off, gen: id.gen });
         }
-        // 🧾 Objects living inside object streams are only reachable through those streams.
         let stream_nums: Vec<u32> = scanned.iter().filter(|(_, (_, off))| parse_indirect_at(data, *off).is_ok_and(|(_, object)| object.dict_get("Type").and_then(PdfObject::as_name) == Some("ObjStm"))).map(|(num, _)| *num).collect();
         for stream_num in stream_nums {
             if let Ok((_, PdfObject::Stream { dict, data: raw, .. })) = parse_indirect_at(data, scanned[&stream_num].1) {
@@ -297,19 +296,16 @@ pub struct Resolver<'a> {
 }
 
 impl<'a> Resolver<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &'a [u8], xref: HashMap<u32, XrefEntry>) -> Self {
         Self { data, xref, cache: HashMap::new(), objstm_cache: HashMap::new(), objstm_bytes: HashMap::new(), decryptor: None, resolving: HashSet::new() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_decryptor(&mut self, decryptor: Option<Decryptor>) {
         self.decryptor = decryptor;
         self.cache.clear();
     }
 
     /// 🎯 The object `num` refers to, undecoded (stream data still filtered) but decrypted.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resolve(&mut self, num: u32) -> Option<PdfObject> {
         if let Some(v) = self.cache.get(&num) {
             return Some(v.clone());
@@ -338,7 +334,6 @@ impl<'a> Resolver<'a> {
         Some(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn resolve_compressed(&mut self, stream_num: u32, index: u32) -> Option<PdfObject> {
         if !self.objstm_bytes.contains_key(&stream_num) {
             let obj = self.resolve(stream_num)?;
@@ -376,7 +371,6 @@ impl<'a> Resolver<'a> {
 
     /// 📚️ Materializes every entry of the xref table into `PdfIndirectObject`s with decoded
     /// stream data (the retained-graph lane), in file order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resolve_all(&mut self) -> PResult<Vec<PdfIndirectObject>> {
         let mut nums: Vec<u32> = self.xref.keys().copied().collect();
         nums.sort_by_key(|num| match self.xref.get(num) {

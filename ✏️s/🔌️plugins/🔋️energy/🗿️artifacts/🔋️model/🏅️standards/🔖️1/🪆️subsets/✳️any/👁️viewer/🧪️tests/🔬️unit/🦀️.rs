@@ -62,9 +62,6 @@ async fn every_viewer_publication_lane_is_a_window_config_lane() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_camera_gesture_becomes_an_addressed_window_config_write_and_nothing_else() {
-    // 🎥️ The command carries the ORBIT json the args bridge canonicalizes (`{position,target,zoom}`),
-    // not the scene camera json the render publishes (`{position,target,up,fov}`) — two different
-    // shapes, and only the first one carries a zoom.
     let command = EnergyModelViewCommand::SetCamera { camera: "{\"position\":[12.0,-9.0,7.5],\"target\":[4.0,3.0,1.35],\"zoom\":1.0}".into() };
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("window-1".into()),

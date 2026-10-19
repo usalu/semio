@@ -148,4 +148,4 @@ router.register("test-original-vcs-command", OriginalVcsCommandScript);
 router.register("db-error-ownership-check", DbErrorOwnershipCheckScript);
 router.register("test-original-snapshot-receiving", OriginalSnapshotReceivingScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "check" }));

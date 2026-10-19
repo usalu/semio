@@ -1,4 +1,4 @@
-use super::*;
+use crate::model::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemDof};
 use semio_s_fem_model::Dof;
 
 #[test]

@@ -1,0 +1,200 @@
+{
+ "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts",
+ "factoryLine": 16,
+ "hostStmtLine": 17,
+ "hostParam": "host",
+ "hostType": "DocumentServiceWorkerHostV1",
+ "ctxConsts": [
+  {
+   "line": 18,
+   "name": "post",
+   "type": "(message: DocumentServiceWorkerMessageV1) => ReturnType<DocumentServiceWorkerHostV1[\"post\"]>",
+   "create": "(message) => host.post({ ...message, owner: \"gis\", serviceId: \"s.gis.gismap.inference\" })"
+  }
+ ],
+ "lets": [
+  {
+   "line": 53
+  },
+  {
+   "line": 90
+  },
+  {
+   "line": 91
+  },
+  {
+   "line": 272
+  }
+ ],
+ "sharedStmts": [
+  23,
+  26,
+  28,
+  30,
+  32,
+  55,
+  67
+ ],
+ "sharedDir": "🧰️worker-context-and-types",
+ "sharedDoc": "🧰️ The GIS inference worker context: the host port, the `post` sink, the mutable port and undo owner state and the shared operation types.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createGisMapInferenceWorkerV1}: the functions take the worker context `ctx` explicitly instead of closing over the factory.",
+ "ctxTypeName": "GisInferenceContext",
+ "stateTypeName": "GisInferenceState",
+ "createName": "createGisInferenceContext",
+ "stateEmoji": "🗃",
+ "stateDoc": "The mutable inference state one worker installation owns: the retained port, the approval undo owner and its epoch.",
+ "ctxEmoji": "🧭",
+ "ctxDoc": "What every inference function reads: the framework host, the `post` sink and the mutable state.",
+ "createEmoji": "🏭",
+ "createDoc": "Builds the context of one worker installation over the framework host port.",
+ "rootRegionOpen": "//#region 💡️Inference",
+ "rootRegionClose": "//#endregion 💡️Inference",
+ "files": [
+  {
+   "id": "undo",
+   "dir": "↩️approval-undo-owner",
+   "doc": "↩️ The retained approval undo owner: minting, retirement, rebootstrap re-issue and binding to the mounted cold pair.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createGisMapInferenceWorkerV1}: the functions take the worker context `ctx` explicitly instead of closing over the factory.",
+   "fns": [
+    {
+     "name": "mintInferenceApprovalUndoIdempotencyKeyV1",
+     "emoji": "🔑"
+    },
+    {
+     "name": "approvalUndoStatus",
+     "emoji": "📣"
+    },
+    {
+     "name": "retireInferenceApprovalUndoForAuthority",
+     "emoji": "🛂"
+    },
+    {
+     "name": "sameApprovalUndoFrontierV1",
+     "emoji": "🧮"
+    },
+    {
+     "name": "sameApprovalUndoMountV1",
+     "emoji": "🧷"
+    },
+    {
+     "name": "retireInferenceApprovalUndo",
+     "emoji": "🗑"
+    },
+    {
+     "name": "reissueInferenceApprovalUndoForRebootstrap",
+     "emoji": "🔄"
+    },
+    {
+     "name": "bindInferenceApprovalUndoToMountedPair",
+     "emoji": "🔗"
+    },
+    {
+     "name": "retainInferenceApprovalUndo",
+     "emoji": "💾"
+    }
+   ]
+  },
+  {
+   "id": "port",
+   "dir": "📡️port-status-and-broker",
+   "doc": "📡️ The retained inference port primitives: status publication, lease check, broker fetch, job body reads and retirement.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createGisMapInferenceWorkerV1}: the functions take the worker context `ctx` explicitly instead of closing over the factory.",
+   "fns": [
+    {
+     "name": "postInferencePortStatus",
+     "emoji": "📢"
+    },
+    {
+     "name": "advanceInferencePort",
+     "emoji": "🧮"
+    },
+    {
+     "name": "inferenceLeaseVerified",
+     "emoji": "🪪"
+    },
+    {
+     "name": "inferenceBrokerFetch",
+     "emoji": "🌉"
+    },
+    {
+     "name": "inferenceApprovalUndoBrokerFetch",
+     "emoji": "🔙"
+    },
+    {
+     "name": "readInferenceJson",
+     "emoji": "📥"
+    },
+    {
+     "name": "inferenceCodeFromRejection",
+     "emoji": "🚦"
+    },
+    {
+     "name": "retireInferencePort",
+     "emoji": "🏁"
+    }
+   ]
+  },
+  {
+   "id": "turns",
+   "dir": "🔁️port-job-turns",
+   "doc": "🔁️ The job turns of a retained inference port: lookup, termination, poll scheduling, driving, reconciliation, polling and cancellation.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createGisMapInferenceWorkerV1}: the functions take the worker context `ctx` explicitly instead of closing over the factory.",
+   "fns": [
+    {
+     "name": "liveInferencePort",
+     "emoji": "🔎"
+    },
+    {
+     "name": "terminateInferencePort",
+     "emoji": "🧯"
+    },
+    {
+     "name": "scheduleInferencePoll",
+     "emoji": "⏱"
+    },
+    {
+     "name": "driveInferencePort",
+     "emoji": "🧭"
+    },
+    {
+     "name": "reconcileInferenceJob",
+     "emoji": "🩹"
+    },
+    {
+     "name": "pollInferenceJob",
+     "emoji": "📃"
+    },
+    {
+     "name": "cancelInferenceJob",
+     "emoji": "❌"
+    }
+   ]
+  },
+  {
+   "id": "life",
+   "dir": "🎛️port-lifecycle-and-decisions",
+   "doc": "🎛️ Opening, submitting, approving, undoing and closing the retained inference port.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | createGisMapInferenceWorkerV1}: the functions take the worker context `ctx` explicitly instead of closing over the factory.",
+   "fns": [
+    {
+     "name": "openInferencePort",
+     "emoji": "🔓"
+    },
+    {
+     "name": "submitInferenceJob",
+     "emoji": "📮"
+    },
+    {
+     "name": "approveInferenceProposal",
+     "emoji": "👍"
+    },
+    {
+     "name": "undoInferenceApproval",
+     "emoji": "⏪"
+    },
+    {
+     "name": "closeInferencePort",
+     "emoji": "🛑"
+    }
+   ]
+  }
+ ],
+ "dropName": "DropGisInferenceContext",
+ "dropEmoji": "🪝",
+ "dropDoc": "The parameter list of a context function without its leading context, for the bound test seam."
+}

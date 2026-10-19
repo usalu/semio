@@ -1,4 +1,4 @@
-//! tiff-ifd-codec — standalone reader/writer on top of `tiff` 0.11's own IFD/tag decoder+encoder
+//! 🖼️ tiff-ifd-codec — standalone reader/writer on top of `tiff` 0.11's own IFD/tag decoder+encoder
 //! (`tiff::decoder::Decoder`, `tiff::encoder::TiffEncoder`). Zero dependencies beyond `tiff`
 //! itself (see this crate's own Cargo.toml — its own `[workspace]`, isolated from the
 //! repository's root workspace and Cargo.lock).

@@ -39,7 +39,7 @@ fn font_for<'a>(fonts: &'a FontSet<'_>, kind: FontKind) -> Option<&'a Font<'a>> 
         FontKind::Math => Some(fonts.math),
         FontKind::Serif => Some(fonts.serif),
         FontKind::Mono => Some(fonts.mono),
-        FontKind::Emoji => None, // emoji glyphs are pre-rasterized `PlacedItem::Image`, never `Glyph`
+        FontKind::Emoji => None,
     }
 }
 
@@ -58,9 +58,6 @@ fn write_glyph(out: &mut String, fonts: &FontSet<'_>, placement: &GlyphPlacement
     let Some(path) = crate::text::outline_glyph_path(font, placement.glyph_id) else { return };
     let units_per_em = font.units_per_em() as f32;
     let scale = font_size_pt / units_per_em;
-    // Font design space is Y-up; SVG is Y-down. The glyph's own outline is in raw font units
-    // (unscaled) — one transform per placement does the translate, unit scale, extra vertical
-    // stretch (`scale_y`, from stretchy delimiters/radicals), and the Y-flip together.
     out.push_str(&format!(r#"<path transform="translate({:.3} {:.3}) scale({:.6} {:.6})" d="{path}"/>"#, placement.x * font_size_pt, -placement.y * font_size_pt, scale, -scale * placement.scale_y));
 }
 

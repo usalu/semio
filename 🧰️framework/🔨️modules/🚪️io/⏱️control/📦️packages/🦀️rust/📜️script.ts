@@ -12,8 +12,8 @@ import { cmdBudgetMs } from "../../../../🏃️process/📦️packages/🟦️t
 /** 🏛️ Checks generic IO ownership and the original receiving neutral corpus. */
 class SourceScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-source accepts no arguments");
-  const sources=[resolve(this.root,"../../🧪️tests/🏛️ownership.ts"),resolve(this.root,"../../🛫️snapshot/🧪️tests/🟦️.ts")];
+  if(segments.length)throw new Error("test-source accepts no arguments");
+  const sources=[resolve(this.root,"../../🧪️tests/🏛️ownership/🟦️.ts"),resolve(this.root,"../../🛫️snapshot/🧪️tests/🟦️.ts")];
   await runBudgetedTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
  }
 }
@@ -21,7 +21,7 @@ class SourceScript extends BundleScript{
 class NativeScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-  const {rest}=resolveTestLevel(segments);if(rest.length)throw Error("test-native accepts only an execution level");
+  const {rest}=resolveTestLevel(segments);if(rest.length)throw new Error("test-native accepts only an execution level");
   await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,cargoPhase);
  }
 }
@@ -29,7 +29,7 @@ class NativeScript extends BundleScript{
 class ReceivingScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-  if(segments.length)throw Error("test-snapshot-receiving-native accepts no arguments");
+  if(segments.length)throw new Error("test-snapshot-receiving-native accepts no arguments");
   await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-control"],cwd:this.root,extraArgs:["--lib","original_receiving_","--no-fail-fast","--","--nocapture"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,cargoPhase);
  }
 }

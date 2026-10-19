@@ -1,10 +1,10 @@
 //! 🔺️ Sparse diff builder for `ChangePart2dHidden` — patches the one addressed part in place.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPart2dPatch;
-use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
-use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartsDelta;
+use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
+use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::Puzzle5dPart2dPatch;
+use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
+use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::Puzzle5dPartsDelta;
 use protocol::list_delta::RowPatch;
-use crate::Puzzle5dSnapshot;
+use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangePart2dHidden, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {

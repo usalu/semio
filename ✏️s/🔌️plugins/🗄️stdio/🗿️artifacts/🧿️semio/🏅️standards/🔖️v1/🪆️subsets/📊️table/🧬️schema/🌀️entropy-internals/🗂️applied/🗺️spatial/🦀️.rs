@@ -25,7 +25,6 @@ pub struct SpatialConfig {
 }
 
 impl SpatialConfig {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(method: SpatialMethod, bins: usize) -> Result<Self, EntropyError> {
         if bins < 2 {
             return Err(EntropyError::InvalidConfig { field: "bins", reason: "must be at least 2" });
@@ -85,7 +84,7 @@ pub fn entropy_2d(pixels: &[f64], width: usize, height: usize, cfg: SpatialConfi
                     let a = levels[(y as usize) * width + x as usize];
                     let b = levels[(ny as usize) * width + nx as usize];
                     joint[a * cfg.bins + b] += 1.0;
-                    joint[b * cfg.bins + a] += 1.0; // 🖼️ standard GLCM symmetrization
+                    joint[b * cfg.bins + a] += 1.0;
                     pairs += 2.0;
                 }
             }

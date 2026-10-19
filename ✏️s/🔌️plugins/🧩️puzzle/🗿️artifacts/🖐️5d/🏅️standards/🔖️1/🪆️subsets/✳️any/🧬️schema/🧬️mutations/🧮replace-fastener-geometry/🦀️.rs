@@ -1,9 +1,9 @@
-//! Puzzle5d mutation — `ReplaceFastenerGeometry`: whole-value swap of a fastener's pose-solver connection pose.
+//! 🧩️ Puzzle5d mutation — `ReplaceFastenerGeometry`: whole-value swap of a fastener's pose-solver connection pose.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
-/// `replace-fastener-geometry` payload.
+/// 🔁️ `replace-fastener-geometry` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -39,7 +39,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplaceFastenerGeometry {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ReplaceFastenerGeometry
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ReplaceFastenerGeometry>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

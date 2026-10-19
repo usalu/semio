@@ -271,7 +271,7 @@ describe("schema-mutation-editability", () => {
     const schema = `${layout}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧬️schema/🔣️.json`;
     const framework = new Map(["🧰️framework", "🌎️hub"].flatMap((root) => [...mutationSchemaDocumentIndex(repoRoot, root)]));
     expect(mutationLeafCrateManifest(repoRoot, schema)).toBe(`${layout}/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml`);
-    expect(mutationSchemaSearchRoots(repoRoot, schema)).toEqual(["✏️s/🔌️plugins/📏️layout", "✏️s/🔌️plugins/📋️forms"]);
+    expect(mutationSchemaSearchRoots(repoRoot, schema)).toEqual(["✏️s/🔌️plugins/📏️layout"]);
     const union = new Map(mutationSchemaSearchRoots(repoRoot, schema).flatMap((root) => [...mutationSchemaDocumentIndex(repoRoot, root)]).reverse());
     expect(mutationLeafUnpublishedReferences(repoRoot, schema, union, framework)).toEqual([]);
     expect(mutationLeafUnpublishedReferences(repoRoot, schema, mutationSchemaDocumentIndex(repoRoot, "✏️s/🔌️plugins/📏️layout"), framework)).toEqual(["https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json"]);

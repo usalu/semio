@@ -1,4 +1,4 @@
-//! model <- json
+//! 🧾️ model <- json
 use crate::snapshot::EnergyModelSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{write_json_pretty};
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};

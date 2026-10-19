@@ -1,4 +1,4 @@
-//! Diff for `introduce-geometry-object`.
+//! 🔄️ Diff for `introduce-geometry-object`.
 
 use crate::introduce_geometry_object::mutation::IntroduceGeometryObject;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

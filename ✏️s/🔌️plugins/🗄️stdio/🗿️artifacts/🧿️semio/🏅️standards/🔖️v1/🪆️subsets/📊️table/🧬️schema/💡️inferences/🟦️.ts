@@ -12,7 +12,7 @@ export interface SemioTableShape {
 }
 
 export interface SemioTableInference {
-  /** @derived */
+  /** 🧊️ @derived */
   shape: SemioTableShape;
 }
 

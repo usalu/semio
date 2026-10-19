@@ -34,7 +34,6 @@ async fn maps_layers_blocks_and_entities() {
     assert_eq!(cad.blocks.len(), 1);
     assert_eq!(cad.blocks[0].entities.len(), 1);
     assert!(matches!(cad.blocks[0].entities[0].entity, CadEntity::Line { .. }));
-    // circle, insert, ellipse map; 3DFACE (Other, unmodeled kind) is honestly dropped
     assert_eq!(cad.entities.len(), 3);
     assert!(matches!(cad.entities[0].entity, CadEntity::Circle { .. }));
     assert!(matches!(cad.entities[1].entity, CadEntity::Insert { .. }));

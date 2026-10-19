@@ -1,4 +1,4 @@
-//! attraction touching one of this object's vortices is severed too, re-`connect-vortices`ed by
+//! 🧲️ attraction touching one of this object's vortices is severed too, re-`connect-vortices`ed by
 //! 🗑 Puzzle3d mutation — `DeleteObject`: removes an id-keyed object (captures cascade — any
 //! the inverse).
 use {semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::ConnectVortices, crate::create_object::mutation::CreateObject};

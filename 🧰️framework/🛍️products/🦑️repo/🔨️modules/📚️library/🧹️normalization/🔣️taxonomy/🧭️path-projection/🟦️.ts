@@ -1,4 +1,4 @@
-import type { SemanticPathProjectionReferenceConsumerForm } from "../../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
+import type { MutationFixtureCoverageContract, SemanticPathProjectionReferenceConsumerForm } from "../../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 
 export type SemanticProjectionCaptureField = "standardVersion" | "subsetId" | "mutationId" | "scenarioId" | "commandDirectoryName";
 
@@ -92,5 +92,6 @@ export interface MutationCatalogProjectionContractIds {
   readonly implementationDescendantContractId: string;
   readonly fixtureDescendantContractId: string;
   readonly catalogContractId: string;
-  readonly coverage: "every-catalog-vector-has-one-implementation-and-one-fixture-bundle";
+  readonly coverage: "every-catalog-vector-has-one-fixture-bundle-with-declared-coverage";
+  readonly fixtureCoverage: MutationFixtureCoverageContract;
 }

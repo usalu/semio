@@ -2,7 +2,7 @@
 //! ring, and pair merges. The engine, history reads and time travel replay through it; it never names the engine.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_spr::{ColdDiffAlgebra};
+use semio_framework_os_spr::{ColdDiffAlgebra};
 #[path = "📥️lifted/🏪️store/🦀️.rs"]
 pub mod lifted_store;
 #[path = "🎮️operation/🦀️.rs"]

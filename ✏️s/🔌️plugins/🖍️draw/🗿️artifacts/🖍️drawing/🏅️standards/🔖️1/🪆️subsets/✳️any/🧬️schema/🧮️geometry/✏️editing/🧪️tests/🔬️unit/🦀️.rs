@@ -49,7 +49,7 @@ fn path_node_editing_shared_cases() {
         let saved = source.clone();
         let result = edit_path(&source, &operation);
         assert_eq!(source, saved);
-        let native: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(case["before"].clone()).unwrap();
+        let native: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(case["before"].clone()).unwrap();
         let native_before = serde_json::to_value(&native).unwrap();
         let native_result = edit_path(&native, &operation);
         assert_eq!(native_result.as_ref().map(|value| serde_json::to_value(value).unwrap()), result.as_ref().map(|value| serde_json::to_value(value).unwrap()));

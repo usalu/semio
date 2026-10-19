@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv/dist/2020.js";
-import fixture from "../../🧫️fixtures/⛽️publication/🔣️.json";
+import fixture from "../../🧪️tests/🧫️fixtures/⛽️publication/🔣️.json";
 import schema from "../../🧬️schema/⛽️publication/🔣️.json";
 import { verifyEnergyOriginalSessionOracle } from "../../🧪️tests/🎟️source/🟦️.ts";
 export function verifyEnergyPublicationOracle():void{

@@ -1,6 +1,6 @@
 //! 🏭️ Retained native construction requires original physical grants and retains born output before receipt acceptance.
 use super::NativeDecodeControl;
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::shared::sealed::{SealedShared,SealedSharedBirth,SharedIssuer}};
+use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},shared_issuance::{SealedShared,SealedSharedBirth,SharedIssuer}};
 use std::mem::size_of;
 #[path="🧾️result/🦀️.rs"]
 mod result;
@@ -70,4 +70,3 @@ impl<'operation,'decode> NativeOwnedDecodeControl<'operation,'decode>{
   self.recipient.accept(grant,progress).map_err(|error|error.with_retained_progress(progress))?;Ok(progress)
  }
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

@@ -1,5 +1,6 @@
 //! ↩️ Inverse for `ReplaceNodeGeometry` — restores the BASE shape/extent. Missing target ⇒ `Vec::new()`.
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::replace_node_geometry::component::ReplaceNodeGeometry;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceNodeGeometry>>(payload: &super::ReplaceNodeGeometry, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

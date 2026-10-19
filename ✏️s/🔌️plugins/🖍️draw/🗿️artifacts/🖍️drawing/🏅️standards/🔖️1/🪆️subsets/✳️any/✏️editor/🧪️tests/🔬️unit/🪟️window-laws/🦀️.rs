@@ -7,15 +7,11 @@ use semio_framework_test_fixtures::fixture_text;
 async fn canvas_pointer_up_direct_pick_selects_inline() {
     let (mut app, meta) = inline_selection_app().await;
     // 🔖 The default document's one layer is an empty-segment path (no bounds to hit-test against
-    // — see `default_drawing_document`), so a real shape is added first, mirroring
-    // `marquee_select_covers_contained_layer_only`'s own setup.
     let initial_id = first_layer_id(&app);
     settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &meta).await;
     settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
     let rect_id = last_layer_id(&app);
     settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
-    // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
-    // viewport with the identity camera above maps to world (10,10) — inside the rect.
     let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);

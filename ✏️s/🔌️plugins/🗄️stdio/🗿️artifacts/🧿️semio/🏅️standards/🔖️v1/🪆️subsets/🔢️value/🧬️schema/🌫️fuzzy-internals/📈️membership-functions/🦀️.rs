@@ -16,42 +16,34 @@ pub enum MembershipFunction {
 }
 
 impl MembershipFunction {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn triangular(a: f64, b: f64, c: f64) -> Self {
         Self::Triangular { a, b, c }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn trapezoidal(a: f64, b: f64, c: f64, d: f64) -> Self {
         Self::Trapezoidal { a, b, c, d }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn gaussian(mean: f64, sigma: f64) -> Self {
         Self::Gaussian { mean, sigma: sigma.max(1e-12) }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn generalized_bell(a: f64, b: f64, c: f64) -> Self {
         Self::GeneralizedBell { a: a.max(1e-12), b: b.max(1e-6), c }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sigmoid(a: f64, c: f64) -> Self {
         Self::Sigmoid { a, c }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn singleton(value: f64) -> Self {
         Self::Singleton { value }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn piecewise_linear(knots: Vec<(f64, f64)>) -> Self {
         Self::PiecewiseLinear { knots }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, x: f64) -> f64 {
         match self {
             Self::Triangular { a, b, c } => {
@@ -128,7 +120,6 @@ impl MembershipFunction {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parameters(&self) -> Vec<f64> {
         match self {
             Self::Triangular { a, b, c } => vec![*a, *b, *c],
@@ -141,7 +132,6 @@ impl MembershipFunction {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_parameters(&mut self, params: &[f64]) -> FuzzyResult<()> {
         match self {
             Self::Triangular { a, b, c } => {
@@ -202,7 +192,6 @@ impl MembershipFunction {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn support_min(&self) -> f64 {
         match self {
             Self::Triangular { a, .. } | Self::Trapezoidal { a, .. } => *a,
@@ -214,7 +203,6 @@ impl MembershipFunction {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn support_max(&self) -> f64 {
         match self {
             Self::Triangular { c, .. } => *c,

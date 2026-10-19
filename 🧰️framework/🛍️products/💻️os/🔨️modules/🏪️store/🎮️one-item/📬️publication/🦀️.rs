@@ -9,6 +9,9 @@ pub mod lifted_store;
 pub mod lifted_publication;
 #[path = "../../📦️prepared/♻️retirement/🦀️.rs"]
 pub mod prepared_retirement;
+#[path = "../../📦️prepared/🔗️binding/🦀️.rs"]
+mod prepared_binding;
+pub use prepared_binding::ArtifactStorePreparedBinding;
 #[path = "../../🧩️composition/📬️publication/🤝️group/🔏️digest/🦀️.rs"]
 pub mod batch_digest;
 #[path = "../../🧵️canonical-edit/🧳️source/🦀️.rs"]
@@ -318,7 +321,7 @@ pub struct ArtifactStoreOneItemSeal {
 /// mutation inverse/diff/apply/encoding result inside its retained cursor before exposing this
 /// value. The store publication turn only validates fixed authorities and moves these owners.
 pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
-    outcome_messages: Option<crate::os_spr::command::MutationMessagePublication>,
+    outcome_messages: Option<semio_framework_os_spr::command::MutationMessagePublication>,
     pub edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
@@ -332,12 +335,12 @@ pub struct ArtifactStoreOneItemPrepared<P, Mutation> {
 
 impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
     /// 📨️ Captures an original diagnostic owner and its separately funded report copy.
-    pub fn record_outcome_messages(&mut self, messages: crate::os_spr::command::MutationMessagePublication) {
+    pub fn record_outcome_messages(&mut self, messages: semio_framework_os_spr::command::MutationMessagePublication) {
         assert!(self.outcome_messages.is_none() && messages.ready(), "sealed diagnostic transfer requires one ready original owner");
         self.outcome_messages = Some(messages);
     }
     /// 👁️ Borrows semantic rows without surrendering the candidate's original owner.
-    pub fn outcome_messages(&self) -> &[crate::os_spr::MutationMessage] { self.outcome_messages.as_ref().map_or(&[], crate::os_spr::command::MutationMessagePublication::original_messages) }
+    pub fn outcome_messages(&self) -> &[semio_framework_os_spr::MutationMessage] { self.outcome_messages.as_ref().map_or(&[], semio_framework_os_spr::command::MutationMessagePublication::original_messages) }
 
     /// 🌐️ Captures the original domain producer's measured foreign-step decision.
     pub fn record_foreign_step_presence(&mut self, presence: bool) { self.foreign_step_presence = Some(presence); }
@@ -399,7 +402,7 @@ impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation> {
 
 /// 🧳️ The owners of a consumed sealed candidate, taken apart by the Store that stages or retires them.
 pub struct ArtifactStoreOneItemPreparedParts<P, Mutation> {
-    pub outcome_messages: Option<crate::os_spr::command::MutationMessagePublication>,
+    pub outcome_messages: Option<semio_framework_os_spr::command::MutationMessagePublication>,
     pub edit: Box<Edit<Mutation>>,
     pub post_snapshot: Arc<P>,
     pub next_clock: HybridLogicalTimestamp,
@@ -429,9 +432,9 @@ pub struct ArtifactStoreOneItemPreparationRequest<P, Input, Mutation> {
 /// rejected at admission instead of receiving false resumability credit.
 pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     /// 📨️ Borrows the semantic diagnostics owned by this exact structural preparation.
-    fn outcome_messages(&self) -> &[crate::os_spr::MutationMessage] { &[] }
+    fn outcome_messages(&self) -> &[semio_framework_os_spr::MutationMessage] { &[] }
 
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;

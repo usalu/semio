@@ -47,7 +47,6 @@ mod input_root;
 pub struct UiThreadToken(());
 
 impl UiThreadToken {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[doc(hidden)] pub fn mint() -> Self {
         Self(())
     }
@@ -61,7 +60,6 @@ impl UiThreadToken {
     /// capability marker within a trusted codebase, not a defense against a determined adversary inside
     /// the same trust boundary — see this crate's own root docstring on the U1 sync/async boundary for
     /// the enforcement model this participates in.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mint_for_host() -> Self {
         Self(())
     }
@@ -82,7 +80,6 @@ pub struct WorkerContext {
 }
 
 impl WorkerContext {
-    // 🚫️async: U1 — plain data constructor, no suspension of any kind.
     pub fn new(generation: InputGeneration) -> Self {
         Self { generation }
     }
@@ -102,7 +99,6 @@ impl WorkerContext {
 pub struct InputGeneration(pub u64);
 
 impl InputGeneration {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn checked_next(self) -> Option<Self> {
         self.0.checked_add(1).map(Self)
     }
@@ -140,36 +136,30 @@ pub struct CoalesceSlot {
 }
 
 impl CoalesceSlot {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self::default()
     }
 
     /// 🖱️ Overwrites any pending pointer-move sample — only the latest position matters for hit-test.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn coalesce_pointer_move(&mut self, sample: PointerMoveSample) {
         self.pointer_move = Some(sample);
     }
 
     /// 📐️ Overwrites any pending metrics sample — only the latest size/scale matters.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn coalesce_metrics(&mut self, sample: MetricsSample) {
         self.metrics = Some(sample);
     }
 
     /// 🚿️ Takes the retained pointer sample once its generation can enter the current ordered page.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn take_pointer_move(&mut self) -> Option<PointerMoveSample> {
         self.pointer_move.take()
     }
 
     /// 🚿️ Takes the latest metrics sample independently of input dispatch order.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn take_metrics(&mut self) -> Option<MetricsSample> {
         self.metrics.take()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_empty(&self) -> bool {
         self.pointer_move.is_none() && self.metrics.is_none()
     }
@@ -222,7 +212,6 @@ pub struct EventQueue {
 }
 
 impl EventQueue {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self { #[cfg(test)] root: None, coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::new(), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
     }
@@ -238,7 +227,6 @@ impl EventQueue {
     /// 🔢️ The generation this queue is currently accumulating into — bumped by every `enqueue*` call
     /// below. A caller reads this AFTER enqueueing to stamp whatever it derives from the event (e.g. a
     /// hit-test performed synchronously against the coalesced pointer position).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn current_generation(&self) -> InputGeneration {
         self.generation
     }
@@ -248,7 +236,6 @@ impl EventQueue {
     /// [`CoalesceSlot`] for replaceable kinds, the bounded queue otherwise. Requires a [`UiThreadToken`]
     /// — this is, by construction, the one function a host's event callback is allowed to call
     /// directly with the raw event.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn enqueue(&mut self, _ui: UiThreadToken, event: DispatchEvent) -> EnqueueOutcome {
         let Some(generation) = self.generation.checked_next() else {
             self.overflow_count = self.overflow_count.saturating_add(1);
@@ -270,7 +257,6 @@ impl EventQueue {
     /// 📐️ [`crate::window::WindowMetrics`] funnels through here rather than [`Self::enqueue`] — it is
     /// not a [`ui_render::DispatchEvent`] variant at all (see `window.rs`'s own `WindowDelegate::
     /// handle_metrics`), but is exactly as replaceable as pointer move/scroll.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn enqueue_metrics(&mut self, _ui: UiThreadToken, physical_width: u32, physical_height: u32, scale_factor: f32) -> EnqueueOutcome {
         let Some(generation) = self.generation.checked_next() else {
             self.overflow_count = self.overflow_count.saturating_add(1);
@@ -281,7 +267,6 @@ impl EventQueue {
         EnqueueOutcome::Accepted
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn push_discrete(&mut self, event: DispatchEvent, generation: InputGeneration) -> EnqueueOutcome {
         let bytes = event_owned_bytes(&event);
         if bytes > DISCRETE_EVENT_BYTE_CAPACITY || self.discrete.len() >= DISCRETE_QUEUE_CAPACITY || self.discrete_bytes.saturating_add(bytes) > DISCRETE_QUEUE_BYTE_CAPACITY {
@@ -300,7 +285,6 @@ impl EventQueue {
     /// 🚿️ Drains one bounded ordered page and only exposes a retained pointer sample when no older
     /// ordered event remains for a later page. Requires [`WorkerContext`]: draining feeds a frame
     /// build, which is worker-only work per this ticket's capability split.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_page(&mut self, _worker: WorkerContext) -> DrainedEvents {
         let metrics = self.coalesced.take_metrics();
         let mut discrete = std::array::from_fn(|_| None);
@@ -317,17 +301,14 @@ impl EventQueue {
         DrainedEvents { pointer_move, metrics, discrete }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn overflow_count(&self) -> u64 {
         self.overflow_count
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_empty(&self) -> bool {
         self.coalesced.is_empty() && self.discrete.is_empty()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pending_discrete_len(&self) -> usize {
         self.discrete.len()
     }

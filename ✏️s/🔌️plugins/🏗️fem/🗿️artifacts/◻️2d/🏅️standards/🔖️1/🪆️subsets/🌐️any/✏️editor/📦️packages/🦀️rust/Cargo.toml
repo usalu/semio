@@ -20,6 +20,8 @@ name = "editor_app"
 path = "../../🧪️tests/🔬️app/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-fem-2d-mesh-regions = { workspace = true }
+semio-s-artifact-fem-2d-mesh-sections = { workspace = true }
 semio-s-artifact-fem-2d-results-state = { path = "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
 semio-s-fem-analyses-model = { path = "../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust" }
 pack = { workspace = true }
@@ -47,7 +49,6 @@ semio-s-artifact-fem-2d-editor-terminology = { workspace = true }
 semio-s-artifact-fem-2d-editor-transient = { workspace = true }
 semio-s-artifact-fem-2d-engine = { workspace = true }
 semio-s-artifact-fem-2d-io = { workspace = true }
-semio-s-artifact-fem-2d-mesh = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-artifact-fem-2d-mutations = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
@@ -64,3 +65,8 @@ semio-s-artifact-fem-2d-material = { workspace = true }
 semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-replication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-s-fem-material = { path = "../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
+semio-s-fem-node = { path = "../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+teaching-proctor-domain = { path = "../../../../../../../../../../../../🎓️teaching/🛂️proctor/🔨️modules/🧠️domain/📦️packages/🦀️rust" }
+semio-framework-os-command = { workspace = true }

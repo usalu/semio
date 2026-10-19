@@ -50,8 +50,6 @@ fn every_surface_of_a_dialect_resolves_the_same_example_picker() {
         .map(|row| ExampleDefinition { id: row.id.clone(), label: LocalizedLabel::data(&row.id), icon_id: IconName::from("file"), artifact_json: String::new(), dialect: row.dialect.clone() })
         .collect();
     for case in &fixture.cases {
-        // 🪪️ The fixture's app id must be the derived surface id, so a row can never claim a
-        // dialect/role pair its own id contradicts.
         assert_eq!(surface_app_id(&case.app.dialect, case.app.role), case.app.id, "{}: app id must derive from its dialect and role", case.name);
         let resolved: Vec<&str> = examples_for_dialect(&examples, &case.app.dialect).into_iter().map(|example| example.id.as_str()).collect();
         assert_eq!(resolved, case.expected.iter().map(String::as_str).collect::<Vec<&str>>(), "{}", case.name);

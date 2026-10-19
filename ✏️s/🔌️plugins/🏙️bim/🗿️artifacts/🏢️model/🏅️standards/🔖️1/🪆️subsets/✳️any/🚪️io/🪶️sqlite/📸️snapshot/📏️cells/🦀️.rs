@@ -1,7 +1,8 @@
 //! 📏️ Borrowed native BIM roles are counted before typed reconstruction.
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::{NativeDecodeControl as N,DslValue};
+use semio_framework_value::DslValue;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 const WIDTHS:&[(&str,usize)]=&[
  ("bim_document",2),

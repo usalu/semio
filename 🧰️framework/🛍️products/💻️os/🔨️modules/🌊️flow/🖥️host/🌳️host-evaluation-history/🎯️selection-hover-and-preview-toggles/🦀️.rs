@@ -29,7 +29,7 @@ impl FlowHost {
     pub fn hover_facts(&self)->semio_framework_os_infinite::board::schema::dag_input::DagHoverFacts{self.dag.graph.hover_facts()}
 
     /// 🔌️ Projects selected typed widget channels.
-    pub fn selected_channels(&self)->Vec<dag::DagChannelRef>{self.dag.graph.selected_channels()}
+    pub fn selected_channels(&self)->Vec<semio_framework_os_infinite::board::schema::dag_input::DagChannelRef>{self.dag.graph.selected_channels()}
 
     /// ✅️ Replaces selection from admitted semantic domains.
     pub fn set_selection_domains(&mut self,domains:&DagSelectionDomains){self.dag.graph.set_selection_domains(domains);}
@@ -75,7 +75,7 @@ impl FlowHost {
     }
 
     /// 🔌️ Replaces admitted typed channel selection.
-    pub fn set_selected_channels(&mut self,channels:&[dag::DagChannelRef]){set_selected_channels(&mut self.dag.viewport, &mut self.dag.graph, channels);}
+    pub fn set_selected_channels(&mut self,channels:&[semio_framework_os_infinite::board::schema::dag_input::DagChannelRef]){set_selected_channels(&mut self.dag.viewport, &mut self.dag.graph, channels);}
 
     /// 🌫️ Widget ids with preview disabled.
     pub fn preview_off_widget_ids(&self) -> Vec<String> {

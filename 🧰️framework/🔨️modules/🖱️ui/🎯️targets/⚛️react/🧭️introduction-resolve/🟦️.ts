@@ -1,7 +1,7 @@
 import type { IntroductionPoint } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
 import * as React from "react";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { introductionSurfaceResolvers } from "../📐️introduction-geometry/🟦️.ts";
 
 //#region 🎬️DemonstrationResolve
@@ -156,8 +156,6 @@ export function resolveIntroductionPoint(point: IntroductionPoint, root: ParentN
       const { min, max, axis } = geometry.domain;
       const t = max === min ? 0 : (Math.min(max, Math.max(min, point.value)) - min) / (max - min);
       const rect = geometry.rect;
-      // 🎚️ x-axis tracks read left→right with increasing value; y-axis tracks read bottom→top (screen y
-      // decreases upward), matching how a vertical slider's "up" reads as "more".
       return axis === "x" ? { x: rect.x + t * rect.width, y: rect.y + rect.height / 2 } : { x: rect.x + rect.width / 2, y: rect.y + (1 - t) * rect.height };
     }
     default:

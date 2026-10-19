@@ -2,7 +2,8 @@
 #[path = "../../../🧪️testing/♻️retirement/🦀️.rs"]
 mod retirement_controls;
 use semio_framework_dsl_record::{DslField,FieldValue,RecordValue,Shape};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Debug)]
 struct RefusingField(ValueError);
 fn refusal(value:&FieldValue)->ValueError {

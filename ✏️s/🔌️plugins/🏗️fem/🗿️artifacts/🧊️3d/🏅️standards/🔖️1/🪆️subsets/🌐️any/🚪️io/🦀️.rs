@@ -1,4 +1,4 @@
-//! foreign hop, aggregated from the typed `Serializer<Fem3dSnapshot>`/`Deserializer<Fem3dSnapshot>`
+//! 🦘️ foreign hop, aggregated from the typed `Serializer<Fem3dSnapshot>`/`Deserializer<Fem3dSnapshot>`
 //! 🚪️ IO `s.fem.fem3d` (1/🌐️any) — `io() -> IoDeclaration`: this subset's native codecs plus every
 //! leaves under `📥️import/🧩️deserializers`/`📤️export/🧵️serializers`. Foreign io goes EXCLUSIVELY
 //! through the framework's `io_mechanism` registry, reached from the sibling `🪆️subsets/🌐️any/🦀️.rs`'s

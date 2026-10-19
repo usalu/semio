@@ -13,13 +13,13 @@ export type EquationNodesDelta = RowDelta<EquationGraphNode, EquationNodePatch>;
 export type EquationEdgesDelta = RowDelta<EquationEdge, EquationEdgePatch>;
 
 export interface EquationDiff {
-  /** @state artifact */ directed?: boolean;
-  /** @state artifact */ algorithm?: string;
-  /** @state artifact */ algorithmSeed?: EquationOptionalSeed;
-  /** @state artifact */ nodes?: EquationNodesDelta;
-  /** @state artifact */ edges?: EquationEdgesDelta;
-  /** @state artifact */ points?: EquationPointsDelta;
-  /** @state artifact */ equation?: EquationExprDiff;
+  /** 🔄️ @state artifact */ directed?: boolean;
+  /** ✏️ @state artifact */ algorithm?: string;
+  /** 🌱️ @state artifact */ algorithmSeed?: EquationOptionalSeed;
+  /** 🔘️ @state artifact */ nodes?: EquationNodesDelta;
+  /** 🔗️ @state artifact */ edges?: EquationEdgesDelta;
+  /** ⚫️ @state artifact */ points?: EquationPointsDelta;
+  /** ➗️ @state artifact */ equation?: EquationExprDiff;
 }
 
 const record = (value: unknown, at: string, allowed: readonly string[]): Record<string, unknown> => {

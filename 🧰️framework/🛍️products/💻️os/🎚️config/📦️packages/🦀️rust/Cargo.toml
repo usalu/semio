@@ -21,6 +21,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-os-config-merge-policy = { workspace = true }
 semio-framework-pack = { path = "../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -34,3 +35,4 @@ serde_json = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-os-command = { path = "../../../🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }

@@ -3,15 +3,15 @@ import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/sc
 import { parseDslValue } from "@semio-tech/framework/value/schema";
 
 export interface PlaybookDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   schema?: string | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   id?: string | null;
-  /** @state artifact */
+  /** 🔖️ @state artifact */
   version?: string | null;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string | null;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 🌊️ @state artifact @child kind=s.stdio.semio */
   flow?: ArtifactChild | null;
 }
 

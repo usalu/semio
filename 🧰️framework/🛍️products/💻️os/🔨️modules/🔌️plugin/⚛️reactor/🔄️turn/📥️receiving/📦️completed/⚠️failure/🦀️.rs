@@ -1,8 +1,10 @@
 //! 🧳️ Original parser refusals keep their complete native fields through the existing paid domain frontier.
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_job::{OriginalDomainFailure, OriginalDomainProjection, OriginalDomainView as V};
-use semio_framework_pack::{PackRefusal, PackRetryDisposition, PackTransportCategory};
 use semio_framework_pack_json::JsonError;
+use pack::PackRefusal;
+use pack::PackRetryDisposition;
+use pack::PackTransportCategory;
 #[derive(Debug,semio_framework_value::RetireOwned)]
 pub(super) enum DecodeFailure{Json(JsonError,RetainedCloneProgress),Pack(PackRefusal,RetainedCloneProgress)}
 impl OriginalDomainFailure for DecodeFailure{

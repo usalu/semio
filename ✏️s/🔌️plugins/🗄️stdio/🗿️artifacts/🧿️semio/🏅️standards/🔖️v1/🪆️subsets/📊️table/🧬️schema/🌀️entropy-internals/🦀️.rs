@@ -94,7 +94,6 @@ pub enum LogBase {
 
 impl LogBase {
     /// 📏️ Natural logarithm of this base's numeric value (`ln(base)`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ln(self) -> f64 {
         match self {
             Self::Nats => 1.0,
@@ -105,7 +104,6 @@ impl LogBase {
     }
 
     /// 📏️ Validates that a custom base is usable (`b > 0`, `b != 1`, finite).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate(self) -> Result<(), EntropyError> {
         if let Self::Base(b) = self {
             if !b.is_finite() || b <= 0.0 || (b - 1.0).abs() < 1e-15 {
@@ -116,19 +114,16 @@ impl LogBase {
     }
 
     /// 📏️ Converts a value already expressed in nats into this base.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_nats(self, nats: f64) -> f64 {
         nats / self.ln()
     }
 
     /// 📏️ Converts a value expressed in this base into nats.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_nats(self, value: f64) -> f64 {
         value * self.ln()
     }
 
     /// 📏️ Converts `value` from one base to another without an intermediate caller-visible step.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn convert(value: f64, from: LogBase, to: LogBase) -> f64 {
         to.from_nats(from.to_nats(value))
     }
@@ -184,7 +179,6 @@ pub struct Estimate {
 
 impl Estimate {
     /// 📦️ Returns a copy of this estimate with `value`/`std_error`/`ci` converted to `base`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn in_base(&self, base: LogBase) -> Estimate {
         let convert = |v: f64| LogBase::convert(v, self.base, base);
         Estimate {
@@ -201,13 +195,11 @@ impl Estimate {
     }
 
     /// 📦️ Value converted to bits.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn bits(&self) -> f64 {
         LogBase::convert(self.value, self.base, LogBase::Bits)
     }
 
     /// 📦️ Value converted to nats.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn nats(&self) -> f64 {
         LogBase::convert(self.value, self.base, LogBase::Nats)
     }

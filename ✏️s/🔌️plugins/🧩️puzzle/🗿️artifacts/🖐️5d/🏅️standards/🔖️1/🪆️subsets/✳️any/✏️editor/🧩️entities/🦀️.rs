@@ -105,11 +105,11 @@ pub static EMPTY_EXAMPLE_DOCUMENT: LazyLock<Puzzle5dDocument> = LazyLock::new(em
 pub const PUZZLE5D_RESERVED_RAW_BYTES: usize = 65_536;
 pub const PUZZLE5D_RESERVED_OUTPUT_BYTES: usize = 1_048_576;
 pub const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096;
-pub const PUZZLE5D_IMPORT_MEDIA_BYTES: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+pub const PUZZLE5D_IMPORT_MEDIA_BYTES: usize = semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 pub const PUZZLE5D_IMPORT_SEMANTIC_ITEMS: usize = 32;
 pub const PUZZLE5D_IMPORT_DECODED_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * PUZZLE5D_IMPORT_SEMANTIC_ITEMS + PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 5;
 pub const PUZZLE5D_IMPORT_MUTATION_ITEMS: usize = PUZZLE5D_IMPORT_SEMANTIC_ITEMS * 2 + 1;
-pub const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job::JOB_PAYLOAD_PAGE_BYTES / size_of::<Puzzle5dMutation>();
+pub const PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE: usize = semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES / size_of::<Puzzle5dMutation>();
 pub const PUZZLE5D_IMPORT_MUTATION_PAGES: usize = PUZZLE5D_IMPORT_MUTATION_ITEMS.div_ceil(PUZZLE5D_IMPORT_MUTATIONS_PER_PAGE);
 
 pub fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {

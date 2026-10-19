@@ -99,8 +99,6 @@ async fn a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_t
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "a shell-dispatched setActiveExample published a fault lane");
     let published = published_node_ids(&context::render_with_view(&mut app, flow_window::GENERATION_3D_PLAY_BODY_MAIN, &flow_view).await);
     assert_eq!(published, authored_node_ids(PROCEDURAL_EXAMPLE_BOX_SHELL), "the shell-dispatched switch did not republish the flow window's graph");
-    // 🔒️ The switch carries the run start on its OWN emit, and the link's one-request latch is what
-    // keeps the following refresh poll from asking for a SECOND run on top of it.
     let polled = app.pending_effects(Some(&flow_view)).await;
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "the switched document must start the preview's evaluation run, got {:?}", receipt.effects);
     assert!(context::run_actions(&polled).is_empty(), "the refresh poll must ask for no second run, got {polled:?}");
@@ -241,8 +239,6 @@ async fn every_example_switch_row_of_the_fixture_holds() {
                 assert_eq!(after_eval, before_eval, "{}: a no-op pick moved the preview's retained evaluation", row.id);
             }
         }
-        // 🪪️ Every authored id of the picked example, and nothing else — the fixture's own table is
-        // the oracle the TypeScript twin reads too, so a drifting DSL asset fails here first.
         if let Some(authored) = row.picks.last().and_then(|pick| fixture.examples.get(pick)) {
             let authored: std::collections::BTreeSet<String> = authored.iter().cloned().collect();
             assert_eq!(expected, authored, "{}: the row's expectation disagrees with the fixture's own authored table", row.id);

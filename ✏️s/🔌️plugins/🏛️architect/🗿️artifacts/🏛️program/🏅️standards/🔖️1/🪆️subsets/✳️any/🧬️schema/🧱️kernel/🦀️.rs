@@ -75,7 +75,7 @@ impl semio_framework_dsl_record::DslField for EntityId {
             other => Err(format!("expected Text, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         <String as semio_framework_dsl_record::DslField>::from_value_controlled(value, control).map(Self)
     }
 }

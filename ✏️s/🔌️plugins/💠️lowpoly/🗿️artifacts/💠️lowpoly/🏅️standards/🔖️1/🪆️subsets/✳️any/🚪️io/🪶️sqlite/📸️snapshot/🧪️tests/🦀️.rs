@@ -8,7 +8,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot;
 use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyTransform, snapshot::LowpolyPaintLayer};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell,FloatColumn,FloatRow}}};
-use semio_framework_value::{DecodedValue,FromValue,NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, FromValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,SqliteSnapshotPhase,export_sqlite_database,import_sqlite_database};
 fn fixture()->LowpolySnapshot{
  let f:serde_json::Value=serde_json::from_str(std::fs::read_to_string(fixture_path!("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap();let words:Vec<f32>=f["floatWords"].as_array().unwrap().iter().map(|value|f32::from_bits(u32::from_str_radix(value.as_str().unwrap(),16).unwrap())).collect();let child=&f["meshChild"];let target=&child["target"];let dialect=&target["dialect"];

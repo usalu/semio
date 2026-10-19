@@ -39,7 +39,6 @@ impl Default for FlowInference {
 
         let fixture = snapshot.to_host_snapshot();
         let topology = compute_flow_topology(&fixture.widgets, &fixture.synapses);
-        // 🧹️ The projection owns a layout `OrderedMap` root that refuses a bare drop.
         fixture.retire_cold();
         Self { topology }
     }

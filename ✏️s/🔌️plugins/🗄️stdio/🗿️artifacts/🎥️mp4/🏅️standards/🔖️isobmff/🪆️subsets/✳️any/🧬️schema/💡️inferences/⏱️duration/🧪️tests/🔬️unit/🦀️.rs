@@ -11,8 +11,8 @@ fn track(timescale: u32, sample_durations: &[u32]) -> Mp4Track {
 async fn container_duration_is_bounded_by_the_slowest_ending_track() {
     let snapshot = Mp4Snapshot {
         tracks: vec![
-            track(1000, &[33, 33]),         // 0.066s
-            track(1000, &[33, 33, 33, 33]), // 0.132s — the real container duration
+            track(1000, &[33, 33]),
+            track(1000, &[33, 33, 33, 33]),
         ],
         ..Mp4Snapshot::default()
     };

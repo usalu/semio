@@ -1,7 +1,7 @@
 /** 🗄️ Persisted browser installation records over the shared plugin module wire contract. */
 import storeSchemaModule from "../../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🔣️.json";
 import { validateTrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA } from "../../📦️deployment/🧬️schema/🟦️.ts";
-import { TrustedPluginModuleRefusalV1, type TrustedPluginModuleIndexEntryV1 } from "../../../../../../../🔨️modules/🔌️plugin-module/🟦️.ts";
+import { TrustedPluginModuleRefusalV1, type TrustedPluginModuleIndexEntryV1 } from "@semio-tech/framework/plugin-module";
 
 const refuse = (reason: string): never => { throw new TrustedPluginModuleRefusalV1(`plugin store ${reason}`); };
 function exactRecord(value: unknown, keys: readonly string[]): Record<string, unknown> {

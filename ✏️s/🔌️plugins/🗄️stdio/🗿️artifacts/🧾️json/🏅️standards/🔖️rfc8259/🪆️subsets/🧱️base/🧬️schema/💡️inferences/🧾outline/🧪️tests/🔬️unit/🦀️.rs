@@ -10,7 +10,6 @@ async fn counts_nodes_and_depth_over_nested_structure() {
         value: JsonValue::Object { members: vec![JsonMember { key: "a".into(), value: JsonValue::Array { items: vec![JsonValue::Number { lexeme: "1".into() }, JsonValue::Number { lexeme: "2".into() }] } }] },
     };
     let outline = JsonOutline::compute(&snapshot);
-    // root object(1) + array(1) + two numbers(2) = 4 nodes; depth: object(1) -> array(2) -> number(3)
     assert_eq!(outline.node_count, 4);
     assert_eq!(outline.max_depth, 3);
     assert_eq!(outline.root_kind, "object");

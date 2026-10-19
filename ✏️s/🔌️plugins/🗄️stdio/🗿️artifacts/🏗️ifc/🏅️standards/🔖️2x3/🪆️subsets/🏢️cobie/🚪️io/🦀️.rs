@@ -148,13 +148,11 @@ use semio_framework_diagnostic::Severity;
     }
 
     impl Ifc2x3CobieBuilderConstruction {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
         }
 
         /// 🏷️ Adds a named `IFCSPACE` (COBie's `Space` sheet row).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_space(mut self, name: &str) -> Self {
             let id = self.next_id;
             self.next_id += 1;

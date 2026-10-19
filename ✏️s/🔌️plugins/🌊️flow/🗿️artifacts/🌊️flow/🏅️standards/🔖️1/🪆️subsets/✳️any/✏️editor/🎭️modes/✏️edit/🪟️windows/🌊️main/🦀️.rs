@@ -91,9 +91,6 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 
 //#region 🔖️Render
 pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
-    // 🧹️ The host and the live projection both own an `OrderedMap` layout root that aborts the guest on
-    // a bare drop; each is retired once the scene has been read off it (ticket
-    // 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
     let (nodes, edges) = with_host_from_snapshot(snapshot, config, session, |host| dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot));
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let (snapshot_json, flow_extras) = with_live_host_snapshot(snapshot, |live| {

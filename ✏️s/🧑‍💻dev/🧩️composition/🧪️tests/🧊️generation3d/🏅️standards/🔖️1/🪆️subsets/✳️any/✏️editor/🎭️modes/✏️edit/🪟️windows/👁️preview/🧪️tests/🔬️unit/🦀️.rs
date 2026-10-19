@@ -17,18 +17,11 @@ fn preview_scene(projection: &str) -> semio_framework_ui_declaration::ui::World3
 
 #[semio_framework_async_macros::async_test]
 async fn renders_world_preview_scene() {
-    // 🧵️ Rendering the preview body tessellates BRep geometry through the same process-wide cache
-    // `apps::generation3d`'s own tests serialize on — see that module's `unit_tests::serial_execution`.
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     drain_flow_eval_ticks(&mut app).await;
     let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_PREVIEW).await;
     assert!(json.contains("world-3d"));
-    // 🐛️ Regression guard for the empty-scene defect: `handle`/`render` used to construct a
-    // brand-new `FlowEvalSession` on every call, so `eval_json` was always `""` and
-    // `preview_payload` short-circuited to `("[]", "[]")` despite the default
-    // `hexagonal-mushroom-column` fixture being non-empty. `json.contains("world-3d")` alone
-    // never caught this — both fields still assert non-empty below.
     let scene = preview_scene(&json);
     assert_ne!(scene.meshes_json, "[]", "hexagonal-mushroom-column must tessellate into non-empty preview meshes");
     assert_ne!(scene.instances_json, "[]", "hexagonal-mushroom-column must produce non-empty preview instances");

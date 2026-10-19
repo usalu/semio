@@ -5,7 +5,7 @@ use semio_framework_replication_codec::{RetainedDeflateEncoder,Crc32cCursor};
 use semio_framework_pack_format::retained_encoding::{self as grammar,RetainedCanonicalLayout,RetainedChunkEntry};
 use semio_framework_dsl_record::{BorrowedRecordSpec,native_encoding::FieldProjectionSource};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::list::{PagedList,PagedListError};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
 #[derive(Clone,Copy)]
 struct FrameExtent{raw:usize,stored:usize}
 
@@ -44,7 +44,7 @@ impl BorrowedPackDocumentCursor{
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.source.terminal_is_empty()&&self.schema.terminal_is_empty()&&self.deflate.terminal_is_empty()&&self.frames.terminal_is_empty()&&self.content.terminal_is_empty()&&self.chunk_entries.terminal_is_empty()}
  pub fn output_len(&self)->Option<usize>{if self.measure{None}else{self.layout.total().ok()}}
  pub fn emitted_bytes(&self)->usize{self.written}
- fn segment_kind(&self)->u8{[crate::KIND_SYMBOLS,crate::KIND_DOCUMENT,crate::KIND_MANIFEST][self.segment]}
+ fn segment_kind(&self)->u8{[semio_framework_replication_codec::ids::KIND_SYMBOLS,semio_framework_replication_codec::ids::KIND_DOCUMENT,semio_framework_replication_codec::ids::KIND_MANIFEST][self.segment]}
  fn source_boundary(&self)->bool{match self.segment{0=>matches!(self.source.section(),BorrowedPackSection::Body|BorrowedPackSection::Complete),1=>self.source.is_complete()||self.raw==self.frame_size,_=>self.raw==self.layout.manifest_len().unwrap_or(usize::MAX)}}
  fn extent(&self)->FrameExtent{if self.segment==1{self.frames[self.frame_index]}else{FrameExtent{raw:self.layout.raw[self.segment],stored:self.layout.stored[self.segment]}}}
  fn demands(&self)->Result<(usize,usize,usize),ValueError>{Ok(match self.phase{
@@ -132,19 +132,17 @@ impl BorrowedPackDocumentCursor{
    Phase::Header=>{if self.offset==semio_framework_pack_format::HEADER_SIZE{self.phase=Phase::Prefix;self.offset=0;self.crc=Crc32cCursor::new();}else{return Ok(self.fixed(self.layout.header_byte(self.offset,self.crc.finish()),self.offset<20,output));}},
    Phase::Prefix=>{let extent=self.extent();if self.offset==grammar::prefix_len(extent.raw,extent.stored,true){self.phase=Phase::Segment;self.offset=0;}else{return Ok(self.fixed(grammar::prefix_byte(self.segment_kind(),extent.raw,extent.stored,true,self.offset),true,output));}},
    Phase::Checksum=>{if self.offset<4{return Ok(self.fixed(self.crc.finish().to_le_bytes()[self.offset],false,output));}if self.segment==0&&self.layout.chunks!=0{self.chunk_index=0;self.phase=Phase::ChunkPrefix;}else if self.segment==1&&self.frame_index+1<self.frames.len(){self.frame_index+=1;self.start_segment()?;self.phase=Phase::Prefix;}else if self.segment==1&&self.layout.chunks!=0{self.phase=Phase::TablePrefix;}else if self.segment<2{self.segment+=1;self.start_segment()?;self.phase=Phase::Prefix;}else{self.phase=Phase::End;}self.offset=0;self.crc=Crc32cCursor::new();},
-   Phase::ChunkPrefix=>{let length=self.chunk_entries[self.chunk_index].length;if self.offset<grammar::prefix_len(length,length,false){return Ok(self.fixed(grammar::prefix_byte(crate::KIND_CHUNK,length,length,false,self.offset),true,output));}self.chunk_offset=0;self.phase=Phase::ChunkEmit;},
+   Phase::ChunkPrefix=>{let length=self.chunk_entries[self.chunk_index].length;if self.offset<grammar::prefix_len(length,length,false){return Ok(self.fixed(grammar::prefix_byte(semio_framework_replication_codec::ids::KIND_CHUNK,length,length,false,self.offset),true,output));}self.chunk_offset=0;self.phase=Phase::ChunkEmit;},
    Phase::ChunkEmit=>{if let Some(byte)=self.compressed{if output.is_empty(){return Ok(Default::default());}self.compressed=None;self.chunk_offset+=1;return Ok(self.fixed(byte,true,output));}if self.chunk_offset==self.source.chunk_len(self.chunk_index)?{self.phase=Phase::ChunkChecksum;self.offset=0;}else{self.compressed=Some(self.source.chunk_byte(source,self.chunk_index,self.chunk_offset)?);progress.copied_bytes=1;}},
    Phase::ChunkChecksum=>{if self.offset<4{return Ok(self.fixed(self.crc.finish().to_le_bytes()[self.offset],false,output));}self.chunk_index+=1;if self.chunk_index<self.layout.chunks{self.phase=Phase::ChunkPrefix;}else{self.segment=1;self.start_segment()?;self.phase=Phase::Prefix;}self.offset=0;self.crc=Crc32cCursor::new();},
-   Phase::TablePrefix=>{let length=self.layout.chunk_table_raw;if self.offset<grammar::prefix_len(length,length,false){return Ok(self.fixed(grammar::prefix_byte(crate::KIND_CHUNK_TABLE,length,length,false,self.offset),true,output));}self.offset=0;self.chunk_offset=0;self.chunk_index=0;self.phase=Phase::TableBody;},
+   Phase::TablePrefix=>{let length=self.layout.chunk_table_raw;if self.offset<grammar::prefix_len(length,length,false){return Ok(self.fixed(grammar::prefix_byte(semio_framework_replication_codec::ids::KIND_CHUNK_TABLE,length,length,false,self.offset),true,output));}self.offset=0;self.chunk_offset=0;self.chunk_index=0;self.phase=Phase::TableBody;},
    Phase::TableBody=>{if self.offset==self.layout.chunk_table_raw{self.offset=0;self.phase=Phase::TableChecksum;}else{let count_bytes=grammar::varint_len(self.layout.chunks);let entry=self.offset>=count_bytes;let byte=if entry{self.chunk_entries[self.chunk_index].byte(self.chunk_offset)?}else{grammar::varint_byte(self.layout.chunks,self.offset)};let step=self.fixed(byte,true,output);if step.written_bytes!=0&&entry{self.chunk_offset+=1;if self.chunk_offset==self.chunk_entries[self.chunk_index].raw_len(){self.chunk_index+=1;self.chunk_offset=0;}}return Ok(step);}},
    Phase::TableChecksum=>{if self.offset<4{return Ok(self.fixed(self.crc.finish().to_le_bytes()[self.offset],false,output));}self.segment=2;self.start_segment()?;self.phase=Phase::Prefix;self.offset=0;self.crc=Crc32cCursor::new();},
-   Phase::End=>{if self.offset<3{return Ok(self.fixed(grammar::prefix_byte(crate::KIND_END,0,0,false,self.offset),true,output));}self.phase=Phase::EndChecksum;self.offset=0;},
+   Phase::End=>{if self.offset<3{return Ok(self.fixed(grammar::prefix_byte(semio_framework_replication_codec::ids::KIND_END,0,0,false,self.offset),true,output));}self.phase=Phase::EndChecksum;self.offset=0;},
    Phase::EndChecksum=>{if self.offset<4{return Ok(self.fixed(self.crc.finish().to_le_bytes()[self.offset],false,output));}self.phase=Phase::Footer;self.offset=0;self.crc=Crc32cCursor::new();},
    Phase::Footer=>{if self.offset<semio_framework_pack_format::FOOTER_SIZE{return Ok(self.fixed(self.layout.footer_byte(self.offset,self.crc.finish())?,self.offset<80,output));}if self.written!=self.layout.total()?{return Err(invalid("retained Pack final output disagrees with measured exact length").into());}self.phase=Phase::Complete;},
    _=>return Err(invalid("retained Pack document work frontier is invalid").into()),
   }
-  #[cfg(debug_assertions)]
-  if progress==RetainedCloneProgress::default(){eprintln!("[DEBUG] funded Pack document idle phase={} measure={} segment={} need-raw={} source-section={:?} source-min={} source-cap={:?} source-depth={:?} deflate-phase={} quoted-copy={} quoted-cap={} quoted-depth={} grant={grant:?}",self.phase as u8,self.measure,self.segment,self.need_raw,self.source.section(),self.source.next_minimum_copy_bytes(),self.source.next_capacity_byte_demand(),self.source.next_advance_depth_demand(),self.deflate.phase().as_str(),copy,capacity,depth);}
   Ok(BorrowedPackDocumentProgress{progress,written_bytes:0,complete:self.is_complete()})
  }
  /// 🍂️ Quotes and closes the original child owners individually; output custody stays with its caller.

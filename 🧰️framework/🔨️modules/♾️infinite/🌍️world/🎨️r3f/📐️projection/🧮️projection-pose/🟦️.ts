@@ -136,7 +136,7 @@ export function worldProjectionCardinalLook(view: WorldOrthographicViewId): { re
       return { dir: [-1, 0, 0], up: [0, 0, 1] };
     case "right":
       return { dir: [1, 0, 0], up: [0, 0, 1] };
-    default: // "plan" | "top"
+    default:
       return { dir: [0, 0, 1], up: [0, 1, 0] };
   }
 }

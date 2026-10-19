@@ -4,9 +4,10 @@ use semio_framework_os_infinite::board::io::text::dag_input::{retained::{DagInpu
 use semio_framework_pack_json::JsonBorrowedWriteCursor;
 use semio_framework_os_infinite::board::ports::directed_dag::input_application::{DagInputApplication,DagInputDisplaced};
 use semio_framework_value::retirement::controlled::{ControlledRetirement,admit_typed_controlled_retirement};
-use semio_framework_value::native_decoding::NativeDecodeContinuation;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::native_encoding::NativeEncodeContinuation;
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ErasedSnapshotRetirement,retained_clone::RetainedCloneGrant,retirement::{RetireOwned,admit_owned_retirement}};
+use semio_framework_value::{NativeEncodeControl, ErasedSnapshotRetirement, retained_clone::RetainedCloneGrant, retirement::{RetireOwned, admit_owned_retirement}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 pub struct FlowDagAction{
     pub operation:u16,admission:Option<FlowFeatureAdmission>,input_ceiling:usize,output_ceiling:usize,program:FlowProgramState,observer:Rc<FlowOperationObserver>,

@@ -388,7 +388,7 @@ pub struct MountedWorkerFaultCapture {
 
 /// 🧮️ Reports the next original copy or metadata unit without creating a replacement fault.
 #[doc(hidden)]
-pub fn original_fault_capture_demands(capture:&Option<MountedWorkerFaultCapture>,detail:&semio_framework_job::RetainedJobPayload)->Result<RetirementDemand,ValueError> {
+pub fn original_fault_capture_demands(capture:&Option<MountedWorkerFaultCapture>,detail:&semio_framework_job_payload::RetainedJobPayload)->Result<RetirementDemand,ValueError> {
     if detail.len()>TYPED_OPERATION_FAULT_BYTES||capture.as_ref().is_some_and(|owner|owner.original!=detail as*const _ as usize||owner.expected!=detail.len()){
         return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"bounded fault capture requires its same authored native extent"));
     }
@@ -398,7 +398,7 @@ pub fn original_fault_capture_demands(capture:&Option<MountedWorkerFaultCapture>
 
 /// 🧾️ Yields one paid original payload copy before the separate inline custody transfer.
 #[doc(hidden)]
-pub fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFaultCapture>,detail:&semio_framework_job::RetainedJobPayload,recipient:&mut Option<ArtifactBoundedToolFault>,grant:RetainedCloneGrant)->PluginLifecycleStep {
+pub fn advance_original_fault_capture(capture:&mut Option<MountedWorkerFaultCapture>,detail:&semio_framework_job_payload::RetainedJobPayload,recipient:&mut Option<ArtifactBoundedToolFault>,grant:RetainedCloneGrant)->PluginLifecycleStep {
     let idle=RetainedCloneProgress::default();
     let demand=match original_fault_capture_demands(capture,detail){Ok(demand)=>demand,Err(_)=>return PluginLifecycleStep::Blocked{reason:"original bounded fault quote refused its native payload"}};
     if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes{return PluginLifecycleStep::Progress(idle);}

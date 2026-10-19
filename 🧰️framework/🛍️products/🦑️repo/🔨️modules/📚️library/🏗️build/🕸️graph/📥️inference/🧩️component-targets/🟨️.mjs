@@ -2,7 +2,7 @@
 import { createRequire } from "node:module";
 import { dirname, join, relative } from "node:path";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
-import { printArtifactNxOutputV1 } from "../../../../../../../📓️print/📦️artifacts/🟦️.ts";
+import { printArtifactNxOutputV1 } from "../../../../../../../📓️print/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 const { existsSync, readFileSync, statSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */

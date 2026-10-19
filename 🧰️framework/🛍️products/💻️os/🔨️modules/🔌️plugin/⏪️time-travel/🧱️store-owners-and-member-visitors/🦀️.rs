@@ -47,7 +47,7 @@ where
 #[doc(hidden)]
 pub  struct TimeTravelMemberRun<'a,'c> {
     pub owners: &'a mut Option<Box<dyn TimeTravelOwners>>,
-    pub command: TimeTravelStoreCommand,pub receiving:Option<&'a mut semio_framework_value::NativeDecodeControl<'c>>,
+    pub command: TimeTravelStoreCommand,pub receiving:Option<&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'c>>,
 }
 
 impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_,'_> {

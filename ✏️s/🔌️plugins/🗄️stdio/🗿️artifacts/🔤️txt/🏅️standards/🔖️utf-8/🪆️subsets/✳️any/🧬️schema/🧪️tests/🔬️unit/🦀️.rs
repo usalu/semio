@@ -93,10 +93,6 @@ async fn grammar_conformance_law() {
     let grammar = semio_framework_dsl::parse_grammar(grammar_text).expect("parse snapshot grammar");
     assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar);
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-    // 🧬️ CARRIER LAW: `PRIMARY_TEXT` is now the raw body itself (no preamble to split off —
-    // `parse_dsl`/`print_dsl` no longer wrap one). The grammar's own synthetic conformance
-    // input shape (`"<envelope-id>\n<body>"`) is a framework-level testing convention
-    // unrelated to the real codec, so it is built directly here.
     let body = crate::examples::demo::PRIMARY_TEXT;
     let normalized = format!("{}\n{body}", <TxtSnapshot as pack::snapshot::ArtifactDsl>::envelope_id());
     let ok = recognizer.recognize(&normalized).expect("recognize should not error");
@@ -110,7 +106,6 @@ async fn grammar_conformance_law() {
 /// protocol facet walks a genuine `encode_diff` frame.
 #[semio_framework_async_macros::async_test]
 async fn protocol_walk_law() {
-    // Pack (snapshot binary facet).
     let snap = demo_txt_snapshot();
     let pack_bytes = <TxtSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
     let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
@@ -118,14 +113,12 @@ async fn protocol_walk_law() {
     let trace = semio_framework_dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
     assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
-    // Spr (mutations binary facet) — a real, non-trivial mutation.
     let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
     let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
     let spr_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
     let trace = semio_framework_dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
     assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
 
-    // Diff binary facet.
     let mut before = snap.clone();
     let diff = crate::apply_mutation(&mut before, &mutation);
     let diff_bytes = <TxtDiff as protocol::DiffBinary>::encode_diff(diff.diff()).expect("encode_diff");

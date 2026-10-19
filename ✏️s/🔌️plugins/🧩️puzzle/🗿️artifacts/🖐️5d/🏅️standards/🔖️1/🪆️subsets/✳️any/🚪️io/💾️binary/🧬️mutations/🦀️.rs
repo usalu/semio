@@ -143,7 +143,7 @@ mod native_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle5d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
-use crate::Puzzle5dPlaySnapshot;
+use crate::mirror::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnapshot;
 pub use mutations_codec::*;
 
 impl OpBinary for Puzzle5dMutation {

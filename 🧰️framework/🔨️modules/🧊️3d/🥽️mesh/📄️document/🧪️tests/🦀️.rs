@@ -22,12 +22,8 @@ fn value_round_trip_matches_serde_shape() {
     let encoded=cause.to_value_controlled(&mut semio_framework_value::NativeEncodeControl::new(1_000_000,&mut permit)).unwrap();
     assert_eq!(serde_json::Value::from(encoded.clone()),*wire);
     let mut decode_permit=|_|true;
-    assert_eq!(semio_framework_value::ValueError::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(1_000_000,&mut decode_permit)).unwrap(),cause);
+    assert_eq!(semio_framework_value::ValueError::from_value_controlled(&encoded,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1_000_000,&mut decode_permit)).unwrap(),cause);
 
-    // `HalfedgeMesh` has no `PartialEq` (pre-existing — not added here), so round-trip fidelity
-    // is checked by re-encoding the decoded mesh and comparing `DslValue`s, plus a direct
-    // comparison against `serde_json`'s own encoding of the SAME mesh — the round-trip
-    // contract's actual bar (byte-identical wire shape), not just "decodes to something".
     let mesh = HalfedgeMesh::from_faces(&[[-0.5,-0.5,-0.5],[0.5,-0.5,-0.5],[0.5,0.5,-0.5],[-0.5,0.5,-0.5],[-0.5,-0.5,0.5],[0.5,-0.5,0.5],[0.5,0.5,0.5],[-0.5,0.5,0.5]],&[vec![0,3,2,1],vec![4,5,6,7],vec![0,1,5,4],vec![3,7,6,2],vec![0,4,7,3],vec![1,2,6,5]]).expect("cube document");
     let encoded = semio_framework_value::ToValue::to_value(&mesh);
     let decoded = <HalfedgeMesh as semio_framework_value::FromValue>::from_value(encoded.clone()).expect("round-trip decode");

@@ -96,7 +96,7 @@ fn replication_value_refusals_keep_kind_through_owned_paths_and_terminal_message
         assert_eq!(error.clone().into_message(), error.message);
     }
     let mut cancel = |_| false;
-    let mut control = semio_framework_value::NativeDecodeControl::new(usize::MAX, &mut cancel);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX, &mut cancel);
     let error = control.checkpoint().unwrap_err().under("snapshot");
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     let mut allow = |_| true;

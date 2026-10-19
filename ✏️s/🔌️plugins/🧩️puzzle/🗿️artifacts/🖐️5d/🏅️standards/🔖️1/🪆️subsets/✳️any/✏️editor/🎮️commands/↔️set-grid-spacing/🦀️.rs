@@ -1,7 +1,7 @@
 //! 🌐️ `set-grid-spacing` command — the world pane's grid pitch (m), the same spacing snapping rounds onto.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::entities::{PUZZLE5D_GRID_SPACING_MAX, PUZZLE5D_GRID_SPACING_MIN};
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{PUZZLE5D_GRID_SPACING_MAX, PUZZLE5D_GRID_SPACING_MIN};
 
 
 

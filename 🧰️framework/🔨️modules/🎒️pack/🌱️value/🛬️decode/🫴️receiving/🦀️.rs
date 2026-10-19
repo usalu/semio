@@ -1,7 +1,8 @@
 //! 🫴️ Original Record tokens build retained generic fields one caller item at a time.
 use super::{RetainedRecordBodyCursor,RetainedRecordBodyToken,RetainedValueToken as Token,RetainedValueContainer as Container,RetainedValueRole as Role,FieldValue,RecordValue,PackLimits,PackRefusal};
 use semio_framework_dsl_record::{BorrowedRecordSpec,BorrowedShape,RecordFields};
-use semio_framework_value::{DslValue,Number,NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
+use semio_framework_value::{DslValue, Number, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of};
 use crate::intrinsic::{DocumentDriver,Driver};
 #[path="📦️document/🦀️.rs"]

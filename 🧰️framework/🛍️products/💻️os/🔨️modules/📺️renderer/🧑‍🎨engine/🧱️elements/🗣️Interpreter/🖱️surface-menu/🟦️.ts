@@ -78,9 +78,6 @@ export async function openSurfaceContextMenu(
   const titleKey = surfaceContextMenuTitleKey(request);
   if (!requestContextMenu) return { items: shellFallback?.() ?? [], titleKey };
   try {
-    // 🖱️ An EMPTY plugin answer stays empty — it is the surface saying "nothing here", and the shell
-    // fallback is deliberately NOT substituted for it (law: "openSurfaceContextMenu keeps an empty
-    // plugin answer off the shell fallback"). The fallback is only for a surface with no resolver at all.
     return { items: mapSpecs(await requestContextMenu(request)), titleKey };
   } catch {
     return { items: [], titleKey };

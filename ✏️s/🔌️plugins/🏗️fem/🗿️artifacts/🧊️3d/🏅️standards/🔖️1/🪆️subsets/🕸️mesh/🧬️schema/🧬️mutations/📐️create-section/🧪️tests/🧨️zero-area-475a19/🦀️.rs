@@ -14,7 +14,7 @@
 //! matrix is singular. The document refuses the value rather than letting the solver discover it.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation_cold;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -61,7 +61,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 /// ↩️ A refused mutation has no admitted diff and no executable inverse.
 #[test]
 fn inverse_of_refused_mutation_is_empty() {
-    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("refused inverse verdict");
+    let inverse = inverse_fem3d_mutation_cold(&before(), &mutation()).expect("refused inverse verdict");
     assert!(inverse.is_empty(), "a refused mutation cannot author an inverse: {inverse:?}");
 }
 

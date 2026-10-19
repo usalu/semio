@@ -8,6 +8,7 @@ use semio_framework_job::{StepContext, OriginalTurnFailure, OriginalCallerSource
 use std::{marker::PhantomData, mem::ManuallyDrop};
 use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenStep;
 use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenOperation;
+use semio_framework_value::RetirementDemand;
 pub struct UnsupportedMemberSnapshotOpen<P> {
     pub request: ManuallyDrop<Option<MemberOpenRequest>>,
     pub diagnostic: Option<MemberOpenDiagnostic>,
@@ -37,7 +38,7 @@ impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
 }
 
 impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_os_store_read::artifact_retirement_owner_demands(&self.request, body) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.request, body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled); }
         semio_framework_os_store_read::retirement_owner_close(&mut self.request, grant)

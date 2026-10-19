@@ -9,7 +9,7 @@
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
 import { type DockSkeleton, type DockTabSkeleton } from "../../🔨️modules/🐳️dock-skeleton/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { Icon, type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx";
@@ -346,13 +346,10 @@ function defaultSubtreeMentioned(node: PanelTabNode, mentionedTabIds: ReadonlySe
 export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton | null): PanelDock {
   if (!skeleton) return defaultDock;
   const { nodes, units } = indexPanelDockById(defaultDock);
-  // Mentions are collected up front across the WHOLE skeleton (not incrementally during resolution) so that which
-  // anchor/branch gets processed first never affects which default children/units get auto-appended back — a tab
-  // moved to an anchor processed later must not be reclaimed by its old branch's "append missing" pass.
   const mentionedTabIds = new Set<string>();
   const mentionedUnitIds = new Set<string>();
   for (const anchor of ANCHORS) collectDockSkeletonMentions(skeleton.anchors[anchor] ?? [], nodes, mentionedTabIds, mentionedUnitIds);
-  const resolvedTabIds = new Set<string>(); // guards only against the same id appearing twice in the skeleton
+  const resolvedTabIds = new Set<string>();
 
   const resolveNode = (entry: DockTabSkeleton): PanelTabNode | null => {
     const defaultNode = nodes.get(entry.id);
@@ -526,8 +523,6 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
   const resolvedActiveId = activeId;
 
-  // 📜️ Keyed on the tab IDS, not the array: a shell refresh hands a fresh `tabs` array with the same tabs, and resetting
-  // `scrollLeft` forces a synchronous layout (121 ms of a 3.6 s tool run in the React shell, one per refresh per row).
   const tabIdsKey = sortedTabs.map((tab) => tab.id).join("\u0000");
   reactHostPort.useLayoutEffect(() => {
     const bar = barRef.current;
@@ -558,7 +553,6 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const tabDragActive = Boolean(dock?.dragTabId);
   const rowDropReady = tabDragActive && Boolean(anchor) && !parentPath.some((id) => dock?.draggedSubtreeIds?.has(id));
   const unitDragActive = usePanelTreeUnitDragActive();
-  // 👻️ All panel tab strips and toggles dim during interaction ghost sessions per window interaction contract.
   const ghostDim = true;
 
   return (

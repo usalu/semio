@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-media-annotation`.
+//! 💾️ Direct binary identity for `remove-media-annotation`.
 
 pub const TAG: u8 = 7;
 pub const BINARY_TAG: u8 = TAG;

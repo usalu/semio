@@ -1,6 +1,6 @@
 //! 📉️ Work-granted Douglas–Peucker simplification preserves authored curve segments.
 use semio_s_artifact_draw_drawing_model::PathSegment;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 type Segments=PagedList<PathSegment,{usize::MAX}>;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum PathSimplifyPhase {Scanning,Reducing,Building,Complete}

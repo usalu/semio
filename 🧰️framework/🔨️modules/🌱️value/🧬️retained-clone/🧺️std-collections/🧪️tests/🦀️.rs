@@ -1,4 +1,5 @@
 //! 🧪️ Standard collection clones equal the `Clone` oracle and the serde_json oracle under entry-sized grants and early cancellation.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::retained_clone::RetainedCloneSource;
 use std::ops::Deref;
@@ -97,7 +98,7 @@ fn typed<M: DeserializeOwned>(value: &serde_json::Value) -> M { serde_json::from
 
 #[test]
 fn standard_collection_clones_equal_clone_and_serde_oracles_per_fixture_row() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧺️std-collections/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["schema"], "framework.value.retained-clone.std-collections.v1");
     for row in fixture["cases"].as_array().unwrap() {
         let value = &row["value"];
@@ -153,5 +154,5 @@ fn standard_collection_scalar_clones_are_fully_quoted_turn_by_turn() {
 
 #[test]
 fn reselected_string_copy_budget_matches_exact_utf8_prefix_and_actual_maximum(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in fixture["copySelection"].as_array().unwrap(){let text=row["source"].as_str().unwrap();let source=Held::new(text.to_owned());let mut cursor=String::retained_clone_cursor();for _ in 0..4{if cursor.phase==1{break}let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()};assert!(cursor.advance(source.borrow(), maximum, grant).unwrap().progress().fits(grant));}assert_eq!(cursor.phase,1);let requested=row["requestedBytes"].as_u64().unwrap()as usize;let maximum=row["admittedBytes"].as_u64().unwrap()as usize;let original=cursor.advance_demands(source.borrow(),requested).unwrap();let selected=cursor.advance_demands(source.borrow(),maximum).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum,maximum_depth:selected.depth,..Default::default()};let step=cursor.advance(source.borrow(), maximum, grant).unwrap();assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(maximum<original.copy_bytes);let prefix=row["expectedPrefix"].as_str().unwrap();assert_eq!(cursor.output.as_deref().unwrap(),prefix);let oracle=String::from_utf8(text.as_bytes()[..prefix.len()].to_vec()).unwrap();assert_eq!(cursor.output.as_deref().unwrap(),oracle);close_all::<String>(&mut cursor);}
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧺️std-collections/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for row in fixture["copySelection"].as_array().unwrap(){let text=row["source"].as_str().unwrap();let source=Held::new(text.to_owned());let mut cursor=String::retained_clone_cursor();for _ in 0..4{if cursor.phase==1{break}let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:text.len(),maximum_depth:1,..Default::default()};assert!(cursor.advance(source.borrow(), text.len(), grant).unwrap().progress().fits(grant));}assert_eq!(cursor.phase,1);let requested=row["requestedBytes"].as_u64().unwrap()as usize;let maximum=row["admittedBytes"].as_u64().unwrap()as usize;let original=cursor.advance_demands(source.borrow(),requested).unwrap();let selected=cursor.advance_demands(source.borrow(),maximum).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum,maximum_depth:selected.depth,..Default::default()};let step=cursor.advance(source.borrow(), text.len(), grant).unwrap();assert!(step.progress().fits(grant));assert_eq!(step.progress().copied_bytes,row["expectedCopiedBytes"].as_u64().unwrap()as usize);assert!(step.progress().copied_bytes<=selected.copy_bytes);assert!(maximum<original.copy_bytes);let prefix=row["expectedPrefix"].as_str().unwrap();assert_eq!(cursor.output.as_deref().unwrap(),prefix);let oracle=String::from_utf8(text.as_bytes()[..prefix.len()].to_vec()).unwrap();assert_eq!(cursor.output.as_deref().unwrap(),oracle);close_all::<String>(&mut cursor);}
 }

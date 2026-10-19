@@ -11,7 +11,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
-import { runRepositoryCargoTests } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { runAdmittedExactCargoLawsV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -532,7 +532,7 @@ class PluginIdentityCheckScript extends BundleScript {
 /** 🪶️ Reads the actual two-owner composition census and runs its registered owning Native law. */
 class SnapshotOwnerCensusScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if(segments.length!==1 || !["source","native"].includes(segments[0]!)) throw Error("snapshot-owner-census requires source or native");
+    if(segments.length!==1 || !["source","native"].includes(segments[0]!)) throw new Error("snapshot-owner-census requires source or native");
     const fixtureRoot=join(this.repoRoot,"🌎️hub/🧩️compositions/🪐️space/🧪️tests/🧫️fixtures/🪶️snapshot-owner-census");
     const fixture=JSON.parse(readFileSync(join(fixtureRoot,"🔣️.json"),"utf8")) as {package:string,owners:{package:string,kind:string,sqlPath:string,tables:string[]}[]};
     const manifest=parseToml(readFileSync(join(this.root,"Cargo.toml"),"utf8")) as {package:{name:string},dependencies:Record<string,unknown>};
@@ -617,4 +617,4 @@ class PersistenceDataClassCheckScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("snapshot-owner-census", SnapshotOwnerCensusScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
 
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

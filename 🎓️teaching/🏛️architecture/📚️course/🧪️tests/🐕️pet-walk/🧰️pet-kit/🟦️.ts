@@ -78,12 +78,16 @@ export const FORCED_NOTE: Text = { en: "Your device uses its own contrast colour
 /** 🤹️ The name of the group of the settings that plays with the pets on stage (`course.preferences.petsPlayWith`). */
 export const PLAY_LABEL: Text = { en: "Play with the pets", de: "Mit den Tierchen spielen" };
 
-/** 🎾️ What the settings can ask a pet for, the name of its button and what the status line says once it was asked (`course.preferences.pets{Hello,Trick,Pet,Toss}` and `…Said`). */
+/** 🎾️ The settings' deeds, their bilingual button names and their polite request announcements. */
 export const DEEDS = {
   hello: { button: { en: "Hello", de: "Hallo" }, said: { en: "{{name}} says hello.", de: "{{name}} sagt Hallo." } },
   trick: { button: { en: "Trick", de: "Kunststück" }, said: { en: "{{name}} does a trick.", de: "{{name}} macht ein Kunststück." } },
   pet: { button: { en: "Pet", de: "Streicheln" }, said: { en: "{{name}} is petted.", de: "{{name}} wird gestreichelt." } },
   toss: { button: { en: "Toss", de: "Hochwerfen" }, said: { en: "{{name}} is tossed up.", de: "{{name}} wird hochgeworfen." } },
+  circle: { button: { en: "Circle clockwise", de: "Im Uhrzeigersinn kreisen" }, said: { en: "You circle {{name}} clockwise.", de: "Du umkreist {{name}} im Uhrzeigersinn." } },
+  countercircle: { button: { en: "Circle counterclockwise", de: "Gegen den Uhrzeigersinn kreisen" }, said: { en: "You circle {{name}} counterclockwise.", de: "Du umkreist {{name}} gegen den Uhrzeigersinn." } },
+  stroke: { button: { en: "Stroke", de: "Streichen" }, said: { en: "You stroke {{name}}.", de: "Du streichst über {{name}}." } },
+  shake: { button: { en: "Shake", de: "Schütteln" }, said: { en: "You shake {{name}}.", de: "Du schüttelst {{name}}." } },
 } as const satisfies Readonly<Record<string, { readonly button: Text; readonly said: Text }>>;
 
 /** ⏩️ The client's test seam: the attribute of the document root that makes the pets' time pass faster. */
@@ -308,12 +312,13 @@ export async function reachable(page: Page, wanted: (body: Body) => boolean = ()
   return free[0]!;
 }
 
-/** 🔄️ The state circling a pet one way (`circle`, clockwise on the screen) or the other (`countercircle`) leaves it in, as its species authors it: the first trick that cue sets off in `state` — its `to`, or one rung along the states its `from` lists (every state when it lists none), up for a trick cued by circling clockwise and down otherwise —, or `state` when no trick answers. */
-export function circled(kind: Kind, state: string, cue: "circle" | "countercircle"): string {
+/** 🔄️ The state a circling or shaking hand leaves, as authored: the first eligible trick's `to`, or one rung along its `from` states (all states when absent), up for a clockwise trick and down otherwise; an unanswered cue keeps the state. */
+export function circled(kind: Kind, state: string, cue: "circle" | "countercircle" | "shake"): string {
   const trick = kind.tricks.find((candidate) => candidate.cues.includes(cue) && (candidate.from === undefined || candidate.from.includes(state)));
   const states = kind.states.map((entry) => entry.id);
   if (trick === undefined) return state;
   if (trick.to !== undefined) return states.includes(trick.to) ? trick.to : state;
+  if (!trick.cues.includes("circle") && !trick.cues.includes("countercircle")) return state;
   const listed = (trick.from ?? []).filter((rung) => states.includes(rung));
   const rungs = listed.length > 0 ? listed : states;
   const index = rungs.indexOf(state);

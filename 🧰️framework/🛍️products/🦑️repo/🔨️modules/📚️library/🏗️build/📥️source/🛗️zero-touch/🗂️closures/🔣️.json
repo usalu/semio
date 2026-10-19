@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "closures": [
+    {
+      "id": "repo-cli",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+      "mode": "full",
+      "reason": "bun repo boots without node_modules for help, preflight, tools setup and dependencies lock and sync"
+    },
+    {
+      "id": "dependencies-js",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "mode": "full",
+      "reason": "workspace:deps-js-lock, deps-js-all and deps-javascript install the JavaScript dependencies themselves"
+    },
+    {
+      "id": "dependencies-native",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "mode": "full",
+      "reason": "workspace:deps-cargo, deps-go, deps-python, deps-dotnet, deps-cpp, deps-browsers, deps-tools and deps-trunk run before every JavaScript package is linked"
+    },
+    {
+      "id": "wasm-tools",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+      "mode": "full",
+      "reason": "workspace:deps-wasm-opt prepares the wasm toolchain during setup"
+    },
+    {
+      "id": "bazel-bootstrap",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+      "mode": "full",
+      "reason": "bun repo tools setup bazel provisions Bazel before dependencies exist"
+    },
+    {
+      "id": "build-bootstrap",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "mode": "full",
+      "reason": "ensureBuildEnvironment and the Nx adapter run before any task"
+    },
+    {
+      "id": "root-router",
+      "entry": "📜️script.ts",
+      "mode": "static",
+      "reason": "every root route starts here; lazy routes load after install, the repo route is the repo-cli closure"
+    },
+    {
+      "id": "root-setup",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+      "mode": "full",
+      "reason": "bun ./📜️script.ts setup provisions the checkout and runs inside a half-installed workspace"
+    },
+    {
+      "id": "root-entrypoints",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧭️entrypoints/🟦️.ts",
+      "mode": "full",
+      "reason": "every non-repo root route dispatches through the workspace script main"
+    }
+  ],
+  "seams": [
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "reason": "The build graph is inferred through the TypeScript compiler and the TOML parser of the installed workspace; the graph module loads it lazily for run, run-many, affected and show."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+      "reason": "The Nx graph consumer path analyses sources through the installed TypeScript compiler; nx --version never loads it."
+    }
+  ]
+}

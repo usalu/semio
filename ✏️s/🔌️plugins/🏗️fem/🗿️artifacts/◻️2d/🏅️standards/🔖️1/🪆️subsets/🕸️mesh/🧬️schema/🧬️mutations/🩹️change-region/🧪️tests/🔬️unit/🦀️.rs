@@ -10,37 +10,37 @@ fn region_field_intent_follows_committed_vectors() {
     let vectors = [
         (
             "🩹️changes",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🔺️diff/🔣️.json"))
         ),
         (
             "📐️geometry",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/📐️geometry/🔺️diff/🔣️.json"))
         ),
         (
             "⏸️same",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⏸️same/🔺️diff/🔣️.json"))
         ),
         (
             "⛔️missing",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
         (
             "⚗️invalid",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
     ];
@@ -83,8 +83,8 @@ fn sparse_patch_codec_preserves_authored_presence(){
     let actual:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let expected:semio_framework_value::DslValue=semio_framework_pack_json::from_json_str(r#"{"holes":[]}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(actual,expected);
-    let value=patch.to_value();let mut allow=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(65536,&mut allow);
+    let value=patch.to_value();let mut allow=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut allow);
     let decoded=<Fem2dRegionPatch as FromValue>::from_value_controlled(&value,&mut control).expect("controlled sparse patch");
     assert_eq!(decoded,patch);<Fem2dRegionPatch as FromValue>::retire_decoded(decoded);
-    for invalid in[r#"{"holes":null}"#,r#"{"id":"other"}"#]{assert!(semio_framework_pack_json::from_json_str::<Fem2dRegionPatch>(invalid, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());let value=semio_framework_pack_json::from_json_str(invalid, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut allow=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(65536,&mut allow);assert!(<Fem2dRegionPatch as FromValue>::from_value_controlled(&value,&mut control).is_err());}
+    for invalid in[r#"{"holes":null}"#,r#"{"id":"other"}"#]{assert!(semio_framework_pack_json::from_json_str::<Fem2dRegionPatch>(invalid, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());let value=semio_framework_pack_json::from_json_str(invalid, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let mut allow=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut allow);assert!(<Fem2dRegionPatch as FromValue>::from_value_controlled(&value,&mut control).is_err());}
 }

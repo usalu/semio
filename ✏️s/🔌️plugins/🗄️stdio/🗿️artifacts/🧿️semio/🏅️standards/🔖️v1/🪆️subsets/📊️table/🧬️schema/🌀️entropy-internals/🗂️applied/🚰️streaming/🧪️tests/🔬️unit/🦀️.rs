@@ -104,15 +104,13 @@ mod tests {
         for _ in 0..50 {
             de.update(0);
         }
-        // 🔐️ after many decayed updates of the same symbol, entropy should be near zero
-        // (essentially deterministic), then adding a burst of the other symbol should raise it.
         let before = de.estimate().unwrap().value;
         assert!(before < 0.1, "got {before}");
         for _ in 0..50 {
             de.update(1);
         }
         let after = de.estimate().unwrap().value;
-        assert!(after < 0.5, "got {after}"); // 🔐️ decay erased symbol-0 history; now near-deterministic on symbol 1
+        assert!(after < 0.5, "got {after}");
     }
 
     #[test]

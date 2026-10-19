@@ -63,8 +63,6 @@ fn assert_absorb_matches_sequential(base: &SemioFlowSnapshot, d1: &SemioFlowDiff
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: Insert+Remove(other) -> both survive independently (name-keyed absorb has no
-    // index-transport interaction between an unrelated insert and an unrelated removal).
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
@@ -77,7 +75,6 @@ async fn absorb_law() {
         assert_eq!(nd.added[0].item.id, "f");
     }
 
-    // Canonical: Insert(f)+Insert(g) -> both survive.
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
@@ -89,7 +86,6 @@ async fn absorb_law() {
         let _ = mid;
     }
 
-    // Canonical: Insert(f)+SetField(f) -> patch into the added payload.
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
@@ -103,7 +99,6 @@ async fn absorb_law() {
         let _ = mid;
     }
 
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
     {
         let base = base_snapshot();
         let d1 = diff_set_node_kind("n2", "patched");
@@ -116,7 +111,6 @@ async fn absorb_law() {
         let _ = mid;
     }
 
-    // Associativity over a triple.
     {
         let base = base_snapshot();
         let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);

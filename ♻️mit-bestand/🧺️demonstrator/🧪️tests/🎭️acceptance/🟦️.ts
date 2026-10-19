@@ -1,5 +1,5 @@
 // #region 🧲️Header
-// 💻️ ♻️mit-bestand/🧺️demonstrator/🧪️demonstrator.acceptance.spec.ts
+// 💻️ ♻️mit-bestand/🧺️demonstrator/🧪️tests/🎭️acceptance/🟦️.ts
 // Specs: End-to-end acceptance coverage for the "Entwerfen mit Bestand" demonstrator's eight live panes.
 // Summary: For every `DEMONSTRATOR_PANES` entry, deep-links straight to `/#<paneId>` (the fast path that
 // boots exactly that one pane immediately instead of waiting through the 1.5s/35s sequential-boot queue —
@@ -406,9 +406,7 @@ async function tiledMapHasVisibleContent(page: Page, container: Locator, require
   if ((await host.count()) === 0) return { hasScene: false, painted: false, distinctColors: 0 };
   const canvas = host.locator("canvas");
   await expect(canvas).toBeVisible({ timeout: SHELL_READY_TIMEOUT_MS });
-  // 🐢️ Give the map session a couple of animation frames to actually paint after mount.
   await canvas.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-  // 🎨️ A flat grab still counts ONE colour, so "painted" needs a floor of two — not merely non-zero.
   const distinctColors = await settleContentCount(() => countCanvasColors(page, canvas), requireContent, 2);
   return { hasScene: true, painted: distinctColors > 1, distinctColors };
 }
@@ -506,7 +504,6 @@ for (const paneCase of PANE_CASES) {
     for (const win of paneCase.windows) {
       const instanceIds = win.instanceIds ?? [windowElementId(win.kindId)];
       if (win.instanceIds) {
-        // 🎯️ Both split instances alias back to the shared kind id — confirms the alias wiring itself.
         const aliasMatches = page.locator(paneElementSelector(paneCase.paneId, windowElementId(win.kindId)));
         await expect(aliasMatches).toHaveCount(instanceIds.length, { timeout: SHELL_READY_TIMEOUT_MS });
       }

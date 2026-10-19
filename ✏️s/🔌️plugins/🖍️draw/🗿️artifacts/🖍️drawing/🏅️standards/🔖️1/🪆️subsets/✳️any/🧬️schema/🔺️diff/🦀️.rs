@@ -16,7 +16,8 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_value::{list::PagedList, paged::{PagedMap, PagedUtf8, Utf8Text}};
+use semio_framework_value::paged::{PagedMap, PagedUtf8, Utf8Text};
+use semio_framework_value_persistent::list::PagedList;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the drawing artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).

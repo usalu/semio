@@ -2,7 +2,7 @@
 const TABLES:[(&str,usize);27]=[("md_block",2),("md_block_inline",4),("md_block_quote",1),("md_code_block",3),("md_code_span",2),("md_document",2),("md_document_block",4),("md_emphasis",1),("md_emphasis_inline",4),("md_hard_break",1),("md_heading",2),("md_html_block",2),("md_html_inline",2),("md_image",4),("md_inline",2),("md_link",3),("md_link_text",4),("md_list",4),("md_list_item",3),("md_list_item_block",4),("md_paragraph",1),("md_quote_block",4),("md_soft_break",1),("md_strong",1),("md_strong_inline",4),("md_text",2),("md_thematic_break",1)];
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 pub fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"CommonMark literal role, variant or exclusive forest differs")}

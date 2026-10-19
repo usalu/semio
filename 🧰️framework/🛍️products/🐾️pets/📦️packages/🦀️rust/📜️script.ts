@@ -9,7 +9,7 @@ import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️
 import { buildAdmittedCargoArtifactsV1, runAdmittedCargoPackageTestsV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 
 /** 🐾️ The pets crates, bottom up: the core carved along its domain seams, then the façade the subject hosts link. */
-const PETS_PACKAGES = ["semio-framework-pets-contract", "semio-framework-pets-kinematics", "semio-framework-pets-clearance", "semio-framework-pets-traversal", "semio-framework-pets-interaction", "semio-framework-pets-character", "semio-framework-pets-staging", "semio-framework-pets"];
+const PETS_PACKAGES = ["semio-framework-pets-contract", "semio-framework-pets-kinematics", "semio-framework-pets-clearance", "semio-framework-pets-traversal", "semio-framework-pets-interaction", "semio-framework-pets-character", "semio-framework-pets-staging-draft", "semio-framework-pets-staging", "semio-framework-pets"];
 
 /** 🧪️ Runs the pets crates' unit and fixture suites at the requested level. */
 class TestScript extends BundleScript {

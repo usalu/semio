@@ -1,7 +1,7 @@
 //! 🛬️ Typed image native construction with cumulative caller admission.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::schema::snapshot::{SemioImageSnapshot, SemioImageFrame, SemioImageMetadataEntry, SemioColorspace, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 

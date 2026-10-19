@@ -52,9 +52,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.block.block2d.grammar.3", "grammar", "block.block2d.diff", &[("grammar", "block.block2d.diff")], None),
         ("s.block.block2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
         ("s.block.block2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
-        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block2dPlayApp>>()` derives
-        // its extension claim from `<Block2dSnapshot as pack::snapshot::ArtifactDsl>::EXTENSION`
-        // (`…/🧬️schema/📸️snapshot/🦀️.rs`), which is `"block2d"`, not `"block"`.
         ("s.block.block2d.codec.document-1", "codec", "block.2d:block2d", &[("codec", "block.2d"), ("codec-extension", "8:block.2d:block2d")], None),
         ("s.block.block2d.localization.en", "localization", "2D Block", &[], Some(("en", "2D Block"))),
         ("s.block.block2d.localization.de", "localization", "2D-Baustein", &[], Some(("de", "2D-Baustein"))),

@@ -1,2 +1,3 @@
 /** 🧩️ Public `@semio-tech/framework/actor/shard-client` entry: explicit re-exports of the source module that owns each member. */
-export * from "../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+export { ACTOR_RETURN_RESULT_MAXIMUM_BYTES, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, SHARD_LIVENESS_POLICY, ShardClient, ShardClientHub, admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, shardClientRetryableLifecycleTestDependenciesV1, shardClientTestDependenciesV1 } from "@semio-tech/framework-actor/shard-client";
+export type { ActorReturnControl, ActorReturnDrive, ActorReturnFault, ActorReturnIdentity, ActorReturnOrigin, ActorReturnPageReceipt, ActorReturnResult, ShardClientRetryableLifecycleTestDependenciesV1, ShardClientTestDependenciesV1 } from "@semio-tech/framework-actor/shard-client";

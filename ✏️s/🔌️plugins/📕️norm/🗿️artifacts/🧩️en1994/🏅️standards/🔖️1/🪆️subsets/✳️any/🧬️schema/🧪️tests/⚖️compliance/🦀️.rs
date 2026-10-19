@@ -9,14 +9,13 @@ fn sample_beam() -> CompositeBeam {
 #[test]
 fn effective_width_8m_span() {
     let beff = part_1_1::effective_width_m(8.0, 0.300, 3.0);
-    // be1 = 8/8 + 0.15 = 1.15; 2*be1=2.30; be2=1.5; 2*be2=3.0 → min = 2.30 m
     assert!((beff - 2.30).abs() < 0.01);
 }
 
 #[test]
 fn stud_connector_resistance_worked_example() {
     let mut beam = sample_beam();
-    beam.sheeting.ribs_parallel_to_beam = true; // k_t = 1
+    beam.sheeting.ribs_parallel_to_beam = true;
     beam.studs = HeadedStuds { diameter_m: 0.019, height_m: 0.095, f_u_pa: 450e6, count_per_rib: 1, spacing_m: 0.2, total_count: 40 };
     beam.concrete_f_ck_pa = 30e6;
     beam.concrete_e_cm_pa = 33e9;
@@ -38,7 +37,6 @@ fn plastic_moment_partial_equation() {
 
 #[test]
 fn de_bridge_gamma_mf_stricter_than_en() {
-    // EN 1994-2 §6.8.2 → EN 1993-1-9 Table 3.1; DIN EN 1993-1-9/NA safe-life γ_Mf = 1,35 vs EN damage-tolerant 1,15.
     let en = AnnexParams::en().gamma_mf;
     let de = AnnexParams::de().gamma_mf;
     assert!((en - 1.15).abs() < 1e-9);
@@ -50,7 +48,6 @@ fn de_bridge_gamma_mf_stricter_than_en() {
 
 #[test]
 fn de_gamma_m1_stricter_than_en() {
-    // EN 1994-1-1 §2.4.1.2 → EN 1993-1-1; DIN EN 1993-1-1/NA γ_M1 = 1,10 vs EN recommended 1,00.
     assert!((AnnexParams::en().gamma_m1 - 1.0).abs() < 1e-9);
     assert!((AnnexParams::de().gamma_m1 - 1.1).abs() < 1e-9);
     let beam = sample_beam();
@@ -62,7 +59,6 @@ fn de_gamma_m1_stricter_than_en() {
 
 #[test]
 fn de_deflection_limit_tighter_than_en() {
-    // EN 1990 Table A1.4 floor w_max = L/250; DIN EN 1990/NA frequent appearance uses L/300.
     let lim_en = part_1_1::deflection_limit_m(8.0, AnnexChoice::En);
     let lim_de = part_1_1::deflection_limit_m(8.0, AnnexChoice::De);
     assert!((lim_en - 8.0 / 250.0).abs() < 1e-12);
@@ -73,6 +69,5 @@ fn de_deflection_limit_tighter_than_en() {
 #[test]
 fn bridge_fatigue_uses_detail_as_strength_not_as_mpa_limit() {
     let limit = part_2::steel_fatigue_resistance_pa("stud_welded", 2.0e6, AnnexChoice::En);
-    // Δσ_c = 80 MPa / γ_Mf(1.15) at N_ref (EN 1993-1-9 detail category via EN 1994-2 §6.8.2)
     assert!((limit / 1e6 - 80.0 / 1.15).abs() < 0.1);
 }

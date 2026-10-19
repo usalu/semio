@@ -51,12 +51,10 @@ pub struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &'a [u8]) -> Self {
         Self { data, byte_pos: 0, bit_pos: 0 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn u1(&mut self) -> Result<u32, H264Error> {
         let &byte = self.data.get(self.byte_pos).ok_or(H264Error::Truncated)?;
         let bit = (byte >> (7 - self.bit_pos)) & 1;
@@ -68,7 +66,6 @@ impl<'a> BitReader<'a> {
         Ok(u32::from(bit))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn u(&mut self, n: u8) -> Result<u32, H264Error> {
         let mut v = 0u32;
         for _ in 0..n {
@@ -78,7 +75,6 @@ impl<'a> BitReader<'a> {
     }
 
     /// 🧮️ Exp-Golomb unsigned code (`ue(v)`, clause 9.1).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ue(&mut self) -> Result<u32, H264Error> {
         let mut leading_zero_bits = 0u32;
         while self.u1()? == 0 {

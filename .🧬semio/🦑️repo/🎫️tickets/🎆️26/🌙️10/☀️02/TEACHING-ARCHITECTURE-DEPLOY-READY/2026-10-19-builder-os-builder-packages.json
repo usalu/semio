@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "installedPhases": [
+    {
+      "requested": [
+        "docker-ce=5:29.9.1-1~debian.12~bookworm",
+        "containerd.io=2.4.2-2~debian.12~bookworm",
+        "iptables=1.8.9-2"
+      ],
+      "selected": [
+        "containerd.io=2.4.2-2~debian.12~bookworm",
+        "libip4tc2=1.8.9-2",
+        "libip6tc2=1.8.9-2",
+        "libxtables12=1.8.9-2",
+        "netbase=6.4",
+        "libmnl0=1.0.4-3",
+        "libnfnetlink0=1.0.2-2",
+        "libnetfilter-conntrack3=1.0.9-3",
+        "libnftnl11=1.2.4-2",
+        "iptables=1.8.9-2",
+        "libnftables1=1.0.6-2+deb12u2",
+        "libbsd0=0.11.7-2",
+        "libedit2=3.1-20221030-2",
+        "nftables=1.0.6-2+deb12u2",
+        "docker-ce=5:29.9.1-1~debian.12~bookworm"
+      ],
+      "records": [
+        {
+          "package": "containerd.io",
+          "version": "2.4.2-2~debian.12~bookworm",
+          "architecture": "amd64",
+          "archiveBytes": 23264076,
+          "installedBytes": 89016320,
+          "sha256": "9100b99aad702b120e8bd5286e378f2fb13317745bd7afaf39be6d64f5bbf8b8",
+          "filename": "dists/bookworm/pool/stable/amd64/containerd.io_2.4.2-2~debian.12~bookworm_amd64.deb"
+        },
+        {
+          "package": "libip4tc2",
+          "version": "1.8.9-2",
+          "architecture": "amd64",
+          "archiveBytes": 19016,
+          "installedBytes": 67584,
+          "sha256": "f2c48b367f9ec13f9aa577e7ccf81b371ce5d5fe22dddf9d7aa99f1e0bb7cfc4",
+          "filename": "pool/main/i/iptables/libip4tc2_1.8.9-2_amd64.deb"
+        },
+        {
+          "package": "libip6tc2",
+          "version": "1.8.9-2",
+          "architecture": "amd64",
+          "archiveBytes": 19416,
+          "installedBytes": 67584,
+          "sha256": "be88db3dfa2fe3345ea343207f7c75345602686121e579023d021c348b9b4f4d",
+          "filename": "pool/main/i/iptables/libip6tc2_1.8.9-2_amd64.deb"
+        },
+        {
+          "package": "libxtables12",
+          "version": "1.8.9-2",
+          "architecture": "amd64",
+          "archiveBytes": 30752,
+          "installedBytes": 103424,
+          "sha256": "cb841d66950a43af4a398625313d2f3da9065299c9738538de6c2c3495857040",
+          "filename": "pool/main/i/iptables/libxtables12_1.8.9-2_amd64.deb"
+        },
+        {
+          "package": "netbase",
+          "version": "6.4",
+          "architecture": "all",
+          "archiveBytes": 12800,
+          "installedBytes": 36864,
+          "sha256": "29b23c48c0fe6f878e56c5ddc9f65d1c05d729360f3690a593a8c795031cd867",
+          "filename": "pool/main/n/netbase/netbase_6.4_all.deb"
+        },
+        {
+          "package": "libmnl0",
+          "version": "1.0.4-3",
+          "architecture": "amd64",
+          "archiveBytes": 12476,
+          "installedBytes": 47104,
+          "sha256": "4581f42e3373cb72f9ea4e88163b17873afca614a6c6f54637e95aa75983ea7c",
+          "filename": "pool/main/libm/libmnl/libmnl0_1.0.4-3_amd64.deb"
+        },
+        {
+          "package": "libnfnetlink0",
+          "version": "1.0.2-2",
+          "architecture": "amd64",
+          "archiveBytes": 15132,
+          "installedBytes": 52224,
+          "sha256": "ae5cbba417ea48f34c1f72c27e8146a81f20614c1296bca2cd7234c8215fddcc",
+          "filename": "pool/main/libn/libnfnetlink/libnfnetlink0_1.0.2-2_amd64.deb"
+        },
+        {
+          "package": "libnetfilter-conntrack3",
+          "version": "1.0.9-3",
+          "architecture": "amd64",
+          "archiveBytes": 40704,
+          "installedBytes": 142336,
+          "sha256": "65f1539238f60fcc85d115acd640474f45c77bfddcf402eb7d75965a783c2bc8",
+          "filename": "pool/main/libn/libnetfilter-conntrack/libnetfilter-conntrack3_1.0.9-3_amd64.deb"
+        },
+        {
+          "package": "libnftnl11",
+          "version": "1.2.4-2",
+          "architecture": "amd64",
+          "archiveBytes": 61632,
+          "installedBytes": 238592,
+          "sha256": "9e619e1470a1915264e906020f3bfc046fd8458043b1342686d997b5078213af",
+          "filename": "pool/main/libn/libnftnl/libnftnl11_1.2.4-2_amd64.deb"
+        },
+        {
+          "package": "iptables",
+          "version": "1.8.9-2",
+          "architecture": "amd64",
+          "archiveBytes": 360192,
+          "installedBytes": 2465792,
+          "sha256": "2928d3ca6ca8a3dc3f423f6752822b1f3614a5ba609ff7806bcba4449ffe90e1",
+          "filename": "pool/main/i/iptables/iptables_1.8.9-2_amd64.deb"
+        },
+        {
+          "package": "libnftables1",
+          "version": "1.0.6-2+deb12u2",
+          "architecture": "amd64",
+          "archiveBytes": 299116,
+          "installedBytes": 942080,
+          "sha256": "3a8223f9bfba99d97bf25296ac83de307ab036e1df63e5965f88809266851947",
+          "filename": "pool/main/n/nftables/libnftables1_1.0.6-2+deb12u2_amd64.deb"
+        },
+        {
+          "package": "libbsd0",
+          "version": "0.11.7-2",
+          "architecture": "amd64",
+          "archiveBytes": 117416,
+          "installedBytes": 206848,
+          "sha256": "bb31cc8b40f962a85b2cec970f7f79cc704a1ae4bad24257a822055404b2c60b",
+          "filename": "pool/main/libb/libbsd/libbsd0_0.11.7-2_amd64.deb"
+        },
+        {
+          "package": "libedit2",
+          "version": "3.1-20221030-2",
+          "architecture": "amd64",
+          "archiveBytes": 92992,
+          "installedBytes": 264192,
+          "sha256": "1cf14abf2716d3279db12d0657a5737cf70074a1e71d3bdf73206625e3c89ce6",
+          "filename": "pool/main/libe/libedit/libedit2_3.1-20221030-2_amd64.deb"
+        },
+        {
+          "package": "nftables",
+          "version": "1.0.6-2+deb12u2",
+          "architecture": "amd64",
+          "archiveBytes": 70292,
+          "installedBytes": 180224,
+          "sha256": "966ff20ce58c17163a771c02ddbca264291408f94c512bd85dd18da0ebdbe88c",
+          "filename": "pool/main/n/nftables/nftables_1.0.6-2+deb12u2_amd64.deb"
+        },
+        {
+          "package": "docker-ce",
+          "version": "5:29.9.1-1~debian.12~bookworm",
+          "architecture": "amd64",
+          "archiveBytes": 24544052,
+          "installedBytes": 116339712,
+          "sha256": "040567cb82687a0439b1f4da0d4e121dcfef237e639ed2aaa3a99da2fb916650",
+          "filename": "dists/bookworm/pool/stable/amd64/docker-ce_29.9.1-1~debian.12~bookworm_amd64.deb"
+        }
+      ],
+      "budget": {
+        "archiveBytes": 48960064,
+        "installedBytes": 210170880,
+        "metadataBytes": 20019339,
+        "conservativeInputBytes": 619316608,
+        "conservativeTemporaryBytes": 2267731168
+      }
+    }
+  ],
+  "node": {
+    "version": "24.15.0",
+    "platform": "linux",
+    "architecture": "x64",
+    "archiveBytes": 31164460,
+    "executableBytes": 122889056,
+    "executableSha256": "d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c"
+  },
+  "daemonProcesses": {
+    "running": []
+  }
+}

@@ -1,6 +1,7 @@
 //! 📤️ Publication and member refresh of the instance tool run turns: the publication rejection, the run publication, the finalize owner and publication close and the composed member refresh, settle and publication. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     pub(super) fn reject_tool_run_publication(&mut self, run: u64, generation: u32) -> Result<(), Fault> {
@@ -15,7 +16,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
     /// ♻️ Each folded op leaves the root it was prepared against returned to the Store; reclaim it before the
     /// next fold, or a large finalize keeps one whole document per op (see `reclaim_document_snapshot_read_returns`).
-    pub(super)  async fn publish_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    pub(super)  async fn publish_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
         if selected_entry!(self.tool_runs).is_some_and(|entry| entry.member.is_some()) {
             return self.publish_tool_run_member(deadline,grant,receiving).await;
         }
@@ -136,7 +137,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// the member's place once every op is shown. `true` while the fold still owns this turn — also while the retirement
     /// of the reads it replaced is saturated (retryable), so the job waits instead of leasing more; a fold that cannot
     /// apply its ops (they do not decode as the member's vocabulary) faults the run.
-    pub(super)  fn refresh_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<bool, Fault> {
+    pub(super)  fn refresh_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<bool, Fault> {
         let Some(mut member) = selected_entry_mut!(self.tool_runs).and_then(|entry| entry.member.take()) else { return Ok(false) };
         let outcome = self.child_composition.refresh_member_overlay(&mut member, deadline,grant,receiving);
         let entry = selected_entry_mut!(self.tool_runs).expect("a member run keeps its slot");
@@ -187,7 +188,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     /// carries the run's `TransactionRef` and group id: one history row whose mutations are the member's leaves, editable on
     /// that member store. A member that is gone or ops that do not decode reject the publication like a conflicting parent
     /// batch.
-    async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    async fn publish_tool_run_member(&mut self, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let app_instance_id = self.app.instance_id().await;
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let (run, generation) = (entry.slot.run, entry.slot.generation);

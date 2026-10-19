@@ -1,6 +1,7 @@
 //! 📇️ Kind catalogs and shipped kinds: the manifest and document kind catalogs, the inferred kind entries and the shipped node kinds with their options. See [`super`].
 
 use super::*;
+use std::collections::BTreeSet;
 
 fn manifest_catalog_rows(kinds: &[semio_framework_graph_manifest::KindDef]) -> Value {
     Value::Array(

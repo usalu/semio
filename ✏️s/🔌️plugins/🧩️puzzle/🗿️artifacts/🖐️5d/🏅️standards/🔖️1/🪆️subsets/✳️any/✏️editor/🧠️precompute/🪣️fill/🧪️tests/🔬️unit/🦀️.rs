@@ -337,7 +337,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         assert_eq!(success_twins, placed_centers, "{id}: a placed part's board twin sits on the part");
 
         let planner = fill3d::build_run_job(ToolRunJobRequest::<EditorApp<Puzzle3dPlayApp>> {
-            tool_id: fill3d::TOOL_ID,
+            tool_id: semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::modes::edit::tools::fill::TOOL_ID,
             definition: &fill3d::run_definition(),
             purpose: ToolRunJobPurpose::Run,
             identity: identity(),
@@ -525,10 +525,6 @@ pub(crate) fn tool_run_action(app: &mut Puzzle5dTestApp, action: &str, args: ser
 }
 
 fn start(app: &mut Puzzle5dTestApp) -> serde_json::Value {
-    // 🧊️ The app-driven laws run the planner through the LIVE tool-run ledger, not through `job()`, so they
-    // need the same process-wide mesh identities seeded — see `seed_planner_meshes`. Without them every
-    // candidate reads `mesh-unavailable` and the run completes having placed nothing
-    // (`PresenceToolRun { state: Complete, completed: 0, total: Some(40) }`).
     seed_planner_meshes(&crate::editor::puzzle5d::entities::default_document());
     tool_run_action(app, TOOL_RUN_START_ACTION_ID, serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID }))
 }

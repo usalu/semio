@@ -127,8 +127,6 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
         ShellCommand::SetActiveUtility { window_id, utility_id } => {
             require_non_empty(window_id, "window_id")?;
             next.active_utility_by_window.insert(window_id.clone(), utility_id.clone());
-            // Mode↔tool mutual exclusion (tricky path, packet §5): a utility taking control of the
-            // currently-focused window releases the global active tool.
             if utility_id.is_some() && next.active_window_id.as_deref() == Some(window_id.as_str()) && next.active_tool_id.is_some() {
                 let previous = next.active_tool_id.take();
                 events.push(ShellEvent::ActiveToolChanged { previous, current: None });
@@ -137,8 +135,6 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
         ShellCommand::SetActiveTool { tool_id } => {
             let previous_tool = next.active_tool_id.clone();
             next.active_tool_id = tool_id.clone();
-            // Mode↔tool mutual exclusion: a global tool taking control releases the focused
-            // window's active utility.
             if tool_id.is_some() {
                 if let Some(window_id) = next.active_window_id.clone() {
                     if let Some(slot) = next.active_utility_by_window.get_mut(&window_id) {
@@ -226,9 +222,6 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
         }
         ShellCommand::SetExtraWindows { windows } => {
             next.extra_windows = windows.clone();
-            // Focus-after-close (tricky path, packet §5): if the focused window was an extra
-            // window and it is no longer present, refocus the last remaining extra window, or
-            // clear focus if none remain.
             if let Some(active) = next.active_window_id.clone() {
                 let was_extra = state.extra_windows.iter().any(|w| w.window_id == active);
                 let still_present = next.extra_windows.iter().any(|w| w.window_id == active);

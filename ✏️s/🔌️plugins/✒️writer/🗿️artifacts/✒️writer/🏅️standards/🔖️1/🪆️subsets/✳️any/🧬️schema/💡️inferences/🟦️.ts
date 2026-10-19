@@ -7,7 +7,7 @@ export interface WriterOutline {
 }
 
 export interface WriterInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: WriterOutline;
 }
 

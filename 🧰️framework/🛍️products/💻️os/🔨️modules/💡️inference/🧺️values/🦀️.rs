@@ -1,7 +1,8 @@
 //! 🧺️ Original source ordinals retain typed values and every partial parent/output owner.
 use super::{InferenceWorkFailure,OriginalInferenceScope};
 use semio_framework_job::{OriginalCallerSourceLoan,StepContext,OriginalTurnFailure};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,controlled::ControlledRetirement},RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::{retirement::{RetireOwned, controlled::ControlledRetirement}, RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::PagedList;
 
 type Rows<V> = PagedList<Option<V>,{usize::MAX}>;
 type Payload<V> = (Rows<V>,Vec<V>,Option<V>,Option<V>,Option<ControlledRetirement<Vec<V>>>);

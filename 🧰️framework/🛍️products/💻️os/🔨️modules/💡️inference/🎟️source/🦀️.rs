@@ -1,6 +1,7 @@
 //! 🎟️ Explicit owned snapshots and actual Store reads seal once under their original native caller; neither kind manufactures the other.
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
-use semio_framework_value::{RetireOwned,ControlledRetirement,RetainedCloneSource,RetainedCloneRef,RetainedCloneStep,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetireOwned,RetainedCloneSource,RetainedCloneRef,RetainedCloneStep,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 use semio_framework_value_snapshot_read::SnapshotRead;
 /// 🧭️ Original source ownership remains explicit during admission, work and every partial close.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

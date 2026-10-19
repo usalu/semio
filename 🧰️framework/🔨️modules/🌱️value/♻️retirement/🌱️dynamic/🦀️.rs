@@ -4,6 +4,14 @@ use crate::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use std::mem::{ManuallyDrop,size_of};
 struct ValueRetirement(ManuallyDrop<Option<crate::DslValue>>);
 impl RetirementCursor for ValueRetirement {
+    fn next_demand(&self, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
+        Ok(crate::RetirementDemand {
+            capacity_bytes: self.next_birth_bytes(body).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "original dynamic child lacks a birth quote"))?,
+            release_bytes: self.next_close_byte_demand().unwrap_or(0),
+            depth: self.next_depth_demand()?,
+            ..Default::default()
+        })
+    }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         match self.0.take() {

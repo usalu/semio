@@ -223,9 +223,6 @@ impl TimestepWork {
             absorbed_w_m2 += pane_w_m2;
         }
         let transmitted_w = incident.diffuse_w_m2() * glazing.diffuse_transmittance * window.area_m2;
-        // 🧱️ This window's own shortwave ledger for the timestep: everything that passes through the
-        // glazing into the zone (diffuse here, beam through `beam_transmittance` — the same product
-        // `unit_beam_patch` redistributes onto the back faces) and everything the panes keep.
         if state.warmup_complete {
             let beam_transmitted_w = incident.beam_w_m2 * glazing.beam_transmittance(cosine) * window.area_m2;
             let dt = self.dt_s;
@@ -395,8 +392,6 @@ impl TimestepWork {
                         let wind = if surface.wind_exposed { wind_speed_at_height(weather.wind_speed_m_s, surface.centroid_height_m) } else { 0.0 };
                         let h_convection = if wet { 1000.0 } else { exterior_convection_w_m2k(outside_c, weather.dry_bulb_c, surface.normal[2], wind, is_windward(surface.normal[2], surface.azimuth_deg, weather.wind_direction_deg), surface.roughness_multiplier) };
                         let (h_sky, h_air, h_ground) = exterior_radiation_w_m2k(outside_c, weather.dry_bulb_c, weather.sky_temperature_c, surface.outside_emissivity, surface.normal[2]);
-                        // 🧱️ The outside face's own shortwave gain for this timestep, the same product
-                        // that drives `q_outside` below.
                         if state.warmup_complete {
                             let absorbed_w = surface.outside_solar_absorptance * solar_w_m2 * surface.area_m2;
                             if let Some(row) = state.per_surface.opaque_mut(id) {
@@ -633,9 +628,6 @@ impl TimestepWork {
             };
             let offset = index * nodes;
             let inside_h = state.solver.inside_convection_w_m2k[index];
-            // 🧱️ The settled zone-air ⇄ inside-face convective flux for this timestep, which IS the
-            // envelope term of the zone air balance `unit_solve`/`unit_settle` just closed. Positive
-            // when the air is warmer than the face, i.e. heat leaving the zone through it.
             if state.warmup_complete {
                 let (id, area_m2) = match face {
                     EnclosureFace::Opaque(id) => (id, pre.surfaces.get(&id).map_or(0.0, |surface| surface.area_m2)),

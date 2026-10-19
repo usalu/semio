@@ -1,5 +1,7 @@
 //! 📏️ The complete original page bound is paid once and the next native binding refuses before allocation.
 use semio_framework_job::*;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}

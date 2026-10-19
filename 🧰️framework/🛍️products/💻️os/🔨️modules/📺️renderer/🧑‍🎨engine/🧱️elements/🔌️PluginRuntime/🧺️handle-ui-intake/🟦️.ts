@@ -7,24 +7,17 @@ import { type PluginUiRefreshRequest, type PluginUiRefreshResponse, type PluginU
 import { type BuiltNode } from "@semio-tech/framework";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { OwnedUiPatchIntake } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
-import { type OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework-actor/shard-client/ui-patch";
-import { type ShardInstanceLifecycleLease } from "@semio-tech/framework-actor/shard-client/activation";
-import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
+import { type OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework/actor/shard-client/ui-patch";
+import { type ShardInstanceLifecycleLease } from "@semio-tech/framework/actor/shard-client/activation";
+import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
+import type { RetainedUiNodeRecord } from "@semio-tech/framework/modules/ui/contract/retained/wire/typed";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
 import { hopTrace } from "@semio-tech/framework/trace";
 import { retainedSurfaceId, wirePatchSurfaceId, type WireTurnResult, type WireVariant } from "../🪝️wire-codec/🟦️.ts";
 import { ownedUiComponentToBuilt } from "../🪟️retained-ui-patch/🟦️.ts";
 import { serializePerActor, submitPluginLifecycleTurn } from "../🧵️turn-dispatch/🟦️.ts";
-import {
-  createRetainedUiCloseLadderV1,
-  PLUGIN_UI_CONTINUATION_LIMIT,
-  PLUGIN_UI_INTAKE_STEP_CEILING,
-  type PluginPatchAcceptance,
-  uiIntakeOwesYieldV1,
-  uiPatchAdmissionRoundsV1,
-  yieldPluginUiContinuation
-} from "../🔁️turn-settle/🟦️.ts";
+import { createRetainedUiCloseLadderV1, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, type PluginPatchAcceptance, uiIntakeOwesYieldV1, uiPatchAdmissionRoundsV1 } from "../🔁️turn-settle/🟦️.ts";
+import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import { retainedUiRefreshEffects, sectionValueFromBuiltNode, uiRefreshSectionTargets, uiRefreshSectionUnchanged } from "../🖼️surface-refresh/🟦️.ts";
 import { createInstanceTable, type PluginHandleScope } from "../🪢️handle-scope/🟦️.ts";
 
@@ -251,13 +244,6 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
           result.push({ key: target.key, hash: target.hash! });
           continue;
         }
-        // 🧯️ A requested body that has no retained surface at all, or one the guest has not rooted yet,
-        // is omitted from the response — and the shell's own merge keeps whatever it had (its loading
-        // placeholder, on a first refresh). That is indistinguishable from a healthy refresh, so it is
-        // recorded: one console record per dropped body, permanent (not a `[TRACE]` trace), the same
-        // way `AppRouter` records a plugin it excluded. A panel that renders forever empty in the
-        // browser (measured 2026-09-09 21:05 on `framework.panel.inspection`) is either named here or
-        // is a real guest render — no third possibility.
         if (!surface) {
           console.error(`refreshUi dropped requested body ${JSON.stringify(target.key)}: no retained surface on instance ${instanceId}`);
           continue;

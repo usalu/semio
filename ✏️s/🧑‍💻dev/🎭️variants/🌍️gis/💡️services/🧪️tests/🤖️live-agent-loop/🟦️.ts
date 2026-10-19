@@ -318,8 +318,6 @@ function readShell(page: Page) {
       id: element.id,
     })),
     cancelButtons: [...document.querySelectorAll("[data-semio-agent-chat-cancel]")].map((element) => element.getAttribute("data-semio-agent-chat-cancel")),
-    // ⛩️ Every approval's ONE affordance (`🤖️AgentApprovals`' `AgentApprovalAffordance`, rendered in the agent
-    //    conversation; ticket 26/09/18 session 11 U5 retired the modal copy whose veil blocked the inline one).
     approvals: [...document.querySelectorAll("[data-semio-agent-approval-id]")].map((element) => element.getAttribute("data-semio-agent-approval-id")),
     approvalCountdown: document.querySelector("[data-semio-agent-approval-countdown]")?.getAttribute("data-semio-agent-approval-countdown") ?? null,
     windowIds: [...new Set([...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")))],
@@ -355,12 +353,6 @@ const page = await (await browser.newContext({ viewport: { width: 1600, height: 
 
 let gateway: Peer | null = null;
 try {
-  // 🛰️ The dev session publishes its own record into the rendezvous the gateway reads, so the pairing
-  //    is deterministic even with several gateways and several sessions alive at once.
-  // 🛰️ The offer the endpoint already served is read IN FULL, not just its status: a dead gateway
-  //    leaves its file behind and a peer's live one is served in preference to nothing, so a gate
-  //    that only checked for `200` would happily hand this shell somebody else's bridge and then
-  //    report on their session. The step passes only once the typed answer names a NEW gateway (url + proof).
   const readOffer = (): Promise<AgentBridgeConfig | null> =>
     fetch(OFFER_URL)
       .then(async (response) => (response.status === 200 ? parseAgentBridgeOffer(await response.json()) : null))
@@ -436,24 +428,12 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
 }
 
   await page.goto(SHELL_URL, { waitUntil: "domcontentloaded", timeout: 180_000 });
-  // 🪧️ `data-semio-os-ready` carries the BOOTED PLUGIN'S ID, not `"true"`.
   const booted = await until("shell boot", 240_000, 1000, async () => {
     const view = await readShell(page);
     return view.ready || view.shellError ? view : null;
   });
   record("boot", booted?.ready && !booted.shellError ? "pass" : "fail", booted ? `ready=${booted.ready} error=${booted.shellError} windows=${booted.windowIds.join(",")}` : "the shell never reached data-semio-os-ready");
 
-  // 🪟️ OPTIONAL: drive the loop against a SPAWNED foreign editor instead of the landing app.
-  //
-  // Every step below addresses whatever program owns the canvas, and against a single-plugin `dev`
-  // session that is the booted plugin itself — which is what this gate has always measured. Against
-  // the real `s` host it is `s`'s own Home: `ready=s`, `windows=s-home-main`, and the foreign editor
-  // a human would drive only exists after a palette spawn. Ticket 26/09/18 S5 §8 named that gap as
-  // the reason the gate could not be pointed at `:6071` at all. This is the step it named: with
-  // `S_OS_MCP_LIVE_SPAWN=<pluginId>` the gate opens the studio and spawns that program through the
-  // shell's own command palette before asserting anything, so `ui_focus`, `ui_reveal`,
-  // `artifact_open`, `action_prepare`/`action_invoke` and `history_undo` all address a spawned
-  // foreign editor. Unset — every existing single-plugin invocation — this is one skipped `if`.
   if (SPAWN_PLUGIN) {
     const spawnedWindows = await spawnProgramThroughPalette(page, SPAWN_PLUGIN);
     record(
@@ -463,19 +443,12 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     );
   }
 
-  // (a) the gateway's own witness that a shell attached: `ui_focus` stops answering the
-  //     "no shell is attached to /bridge yet" refusal the moment the socket registers.
   const attached = await until("the shell to register on /bridge", 90_000, 1000, async () => {
     const focused = await gateway!.call("ui_focus", {});
     return structured(focused).code === undefined ? focused : null;
   });
   record("(a) the shell dials /bridge", attached ? "pass" : "fail", attached ? `ui_focus answered ${describe(attached)}` : "ui_focus never stopped answering PLUGIN_UNAVAILABLE — no shell registered");
 
-  // 🧭️ WHICH lane is this run measuring? `context_resolve` is where the decision is TAKEN and it is
-  //    sticky, so this call must come after the shell has registered (a resolve issued before the
-  //    socket lands would pin `headless` for the whole session and every (f) step below would
-  //    silently measure this process's own `--folder` workspace). The headless twin of this
-  //    assertion is `client-e2e`'s step 0, which pins the opposite value.
   const context = await gateway.call("context_resolve", {});
   const resolvedChannel = String(structured(context).channel ?? "");
   record(
@@ -486,7 +459,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       : `channel=${resolvedChannel || "<none>"} — a shell is attached but this session resolved elsewhere; \`🏛️ShellHost\` did not declare relayAppCommands, or the resolve happened before the socket registered`,
   );
 
-  // (d) ui_reveal moves the real dock — and is how the conversation gets on screen at all.
   const revealed = await gateway.call("ui_reveal", { anchor: "right", path: ["framework.chat"] });
   const chatVisible = await until("the chat panel", 30_000, 500, async () => {
     const view = await readShell(page);
@@ -504,12 +476,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
   const focusedOne = windowId ? await gateway.call("ui_focus", { windowId }) : null;
   record("(d) ui_focus moves the real active window", focusedOne && structured(focusedOne).ok === true ? "pass" : "fail", focusedOne ? `${describe(focusedOne)} (windowId=${windowId})` : "the shell reported no window id to focus");
 
-  // (b) a tool call shows as a running row, then as a settled result row.
-  // 👁️ A running row is TRANSIENT — a gateway-owned read settles in milliseconds, and polling the
-  //    DOM for it scores the shell's own promptness as a missing row (this step flaked exactly that
-  //    way across two runs of identical code, 2026-09-20). An observer installed BEFORE the call
-  //    sees every state the row passed through, so the assertion is about what the shell rendered
-  //    rather than about when the poll happened to look.
   await page.evaluate(() => {
     const seen = new Set<string>();
     (window as unknown as { __semioRunningRows: string[] }).__semioRunningRows = [];
@@ -536,30 +502,17 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
   });
   record("(b) tool call → running row → result row", sawRunning && sawResult ? "pass" : "fail", `running=${JSON.stringify(sawRunning)} settled=${JSON.stringify(sawResult)} call=${describe(settledCall)}`);
 
-  // 🎯️ The mutation candidates, read off the LIVE catalog. A gateway-owned read verb settles in
-  //    milliseconds and never gives the cancel affordance a frame to exist in, so (c) keeps a plugin
-  //    `action_invoke` in flight instead — which is the honest shape of "an in-flight call" anyway.
   const found = await gateway.call("capabilities_search", { query: "delete selection clear", kind: ["mutation"] });
   const mutations = ((structured(found).results ?? []) as Record<string, any>[]).map((row) => String(row.capabilityId));
   const target = mutations.find((id) => id.startsWith(`${PLUGIN}.`)) ?? mutations[0] ?? null;
-  // ✍️ The (f) chain's own verb, looked up in the LIVE catalog by the id it ends in. Separate from
-  //    `target` on purpose — see MUTATION_VERB. `null` makes the whole chain SKIP with the reason,
-  //    exactly as a missing destructive verb makes (e) skip, rather than asserting into thin air.
   const writeSearch = await gateway.call("capabilities_search", { query: MUTATION_VERB, kind: ["mutation"] });
   const writeTarget =
     ((structured(writeSearch).results ?? []) as Record<string, any>[]).map((row) => String(row.capabilityId)).find((id) => id.startsWith(`${PLUGIN}.`) && id.endsWith(`.${MUTATION_VERB}`)) ?? null;
 
-  // (c) the running row's Cancel button cancels the call in flight.
   if (target === null) {
     record("(c) Cancel cancels an in-flight call", "skip", "the live catalog exposes no mutation capability to keep in flight");
   } else {
     const inFlight = gateway.call("action_invoke", { capabilityId: target, input: {} }).catch((error) => ({ error: { message: String(error) } }) as Record<string, any>);
-    // 🖱️ Found and clicked inside ONE evaluate: a locator click is a second round trip, and an
-    //    in-flight verb can settle in that gap — which scores the shell's own promptness as a
-    //    missing cancel button. This clicks the affordance that exists at the instant it is seen.
-    //    Only the `action_invoke` row qualifies: the search calls before it answer the gate before
-    //    their own result frame reaches the shell, so "the first running row" was sometimes one of
-    //    them — a click on an already-settled call that proved nothing (U5 §2, run 2).
     const cancelledAt = Date.now();
     const cancelled = await until("a cancellable row to click", 30_000, 100, async () =>
       page.evaluate(() => {
@@ -580,15 +533,8 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       });
       const settled = await inFlight;
       const settledMs = Date.now() - cancelledAt;
-      // 🛑️ The call must END as cancelled, promptly — not merely show a `cancelling` row while it
-      //    waits out the 120 s approval deadline as `APPROVAL_REQUIRED`, which is what a parked
-      //    approval did before the gateway's wait observed the tool call's own job (U5 §2, run 1).
       const endedCancelled = structured(settled as Record<string, any>).code === "CANCELLED" && settledMs < 30_000;
       record("(c) Cancel cancels an in-flight call", cancelling && endedCancelled ? "pass" : "fail", `clicked=${cancelled} row=${JSON.stringify(cancelling)} settledMs=${settledMs} call=${describe(settled as Record<string, any>)}`);
-      // 🪦️ The call parked on an approval, so the shell was showing a decidable affordance for it. The
-      //    gateway withdraws it with the cancel (`ApprovalWithdrawn{cancelled}`), and the shell must
-      //    retire it — no countdown, no decision — and say why in the human's language, instead of
-      //    leaving it decidable until its own countdown runs out (U5 §7).
       const approvalId = String(structured(settled as Record<string, any>).details?.approvalHandle ?? "");
       const retired = await until("the withdrawn approval affordance", 15_000, 150, async () =>
         page.evaluate((id: string) => {
@@ -611,10 +557,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     }
   }
 
-  // (f) the mutation chain, against the SAME live gateway the shell is dialled into:
-  //     create/open → prepare/invoke → snapshot → undo/redo → transaction → export. Every leg
-  //     asserts on returned wire data and each one states its own cascade reason rather than
-  //     inheriting a green from the leg before it.
   const safely = async (label: string, run: () => Promise<Record<string, any>>): Promise<Record<string, any>> => {
     try {
       return await run();
@@ -627,8 +569,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     if (envelope.result?.isError) return `${structured(envelope).code ?? "ERROR"}: ${String(structured(envelope).message ?? "").slice(0, 200)}`;
     return null;
   };
-  // 🗣️ `<plugin>.<artifactKind>@<schemaVersion>/*#<app>.<action>` — the artifact kind a mutation
-  //    capability belongs to is the segment its own id carries, never a kind invented here.
   const artifactKind = writeTarget ? (/^[^.]+\.([^@]+)@/.exec(writeTarget)?.[1] ?? null) : null;
   let plantedIn: { artifactId: string } | null = null;
   if (!writeTarget || !artifactKind) {
@@ -641,17 +581,7 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     const createFault = failure(created) ?? failure(opened);
     record("(f1) artifact_create/open", createFault ? "fail" : "pass", createFault ? `kind=${artifactKind}: ${createFault}` : `artifactId=${artifactId} kind=${artifactKind} ${describe(opened)}`);
 
-    // 🧬️ The document as it stands BEFORE the agent touches it, kept whole: (f4) is only a real
-    //    assertion if it can say the bytes CHANGED, and a pack whose change lands past a preview's
-    //    cut looks identical to a truncated read. Measured 2026-09-20 (AP1): `artifact_snapshot`
-    //    answered a byte-identical pack across a mutation the same chain reported as applied,
-    //    because the snapshot came from the folder row seeded at create time rather than from the
-    //    session's own channel — a `packBytes > 0` assertion could never have caught it.
     const snapshotBefore = createFault ? created : await safely("artifact_snapshot", () => gateway!.call("artifact_snapshot", { artifactId }));
-    // 🧬️ The WHOLE observable snapshot, not its pack alone: an event-sourced document keeps its
-    //    genesis container in `pack` and every edit in the `spr` sidecar, so a note that gained a
-    //    block answers an unchanged `packBytes` and a grown `sprBytes` (515/223 → 515/612, measured
-    //    2026-09-20). A witness that watched only the pack would call that "no change".
     const witness = (envelope: Record<string, any>): string => `${structured(envelope).packBytes ?? "?"}:${structured(envelope).sprBytes ?? "?"}:${envelopeText(structured(envelope).untrusted)}`;
     const before = witness(snapshotBefore);
 
@@ -673,8 +603,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     const packBytes = Number(structured(snapshot).packBytes ?? 0);
     const after = witness(snapshot);
     const snapshotFault = invokeFault ? `cascaded from (f3)` : (failure(snapshot) ?? (packBytes > 0 ? null : "the snapshot carries no pack at all"));
-    // 🧬️ "Shows the change" means the snapshot differs from the pre-invoke read. An identical one
-    //    after an applied mutation means the snapshot is answering some other copy of the document.
     record(
       "(f4) artifact_snapshot shows the change",
       !snapshotFault && after !== before ? "pass" : "fail",
@@ -684,14 +612,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
           : `the snapshot is byte-identical to the pre-invoke read (packBytes=${packBytes}, sprBytes=${structured(snapshot).sprBytes ?? "?"}) — it is not reading the store the mutation landed in`),
     );
 
-    // 🖥️ The acceptance criterion outcome 4 actually names: the change the agent made is the change
-    //    a human sees. Checked against the live DOM by the artifact's own id, so it can only pass if
-    //    the shell really owns the document the gateway mutated.
-    //    🪪️ TWO ids name one document and the gate asserts the bridge between them. `artifactId` is
-    //    what this client INVENTED and handed the gateway; `expectedRevision.artifactId` is what the
-    //    shell's own artifact route answered for it (`${pluginId}:${appId}:${instanceId}`) — the
-    //    shell publishes exactly that string as `data-semio-artifact-id`, so a green row means the
-    //    id the agent holds resolves to the element the human is looking at.
     const shellArtifactRef = String(structured(prepared).expectedRevision?.artifactId ?? "");
     const shellShows = shellArtifactRef
       ? await page.evaluate((id: string) => document.querySelector(`[data-semio-artifact-id="${id}"], [data-semio-document-id="${id}"]`) !== null, shellArtifactRef)
@@ -706,14 +626,11 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
           : `action_prepare returned no expectedRevision.artifactId, so the agent holds no shell-resolvable identity for ${artifactId} at all`,
     );
 
-    // ↩️ `history_undo`/`redo` are keyed by the invocation's OWN undo token, not by the artifact —
-    //    an agent may only walk back a mutation it can name.
     const undone = snapshotFault || !undoToken ? snapshot : await safely("history_undo", () => gateway!.call("history_undo", { undoToken }));
     const redone = !undoToken || failure(undone) ? undone : await safely("history_redo", () => gateway!.call("history_redo", { undoToken }));
     const historyFault = snapshotFault ? `cascaded from (f4)` : !undoToken ? "(f3) returned no undoToken, so there is nothing an agent could undo" : (failure(undone) ?? failure(redone));
     record("(f6) history_undo/redo", historyFault ? "fail" : "pass", historyFault ?? `undo=${describe(undone)} redo=${describe(redone)}`);
 
-    // 🧾️ A saga is begun over PREPARED handles, so each leg needs its own fresh prepare.
     const prepareFor = async (leg: string): Promise<string> => String(structured(await safely(`action_prepare/${leg}`, () => gateway!.call("action_prepare", { capabilityId: target, input: {} }))).preparedHandle ?? "");
     const rollbackHandle = historyFault ? "" : await prepareFor("rollback");
     const begun = rollbackHandle ? await safely("transaction_begin", () => gateway!.call("transaction_begin", { preparedHandles: [rollbackHandle] })) : undone;
@@ -733,8 +650,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     if (!exportFault) plantedIn = { artifactId };
   }
 
-  // (e) approval. `capabilities_describe` is the precondition oracle: a capability that does not
-  //     gate cannot raise an affordance, and asserting against it would be theatre.
   const described = target ? await gateway.call("capabilities_describe", { capabilityId: target }) : null;
   const policy = (structured(described ?? {}).capability ?? structured(described ?? {})) as Record<string, any>;
   const gates = policy?.policy?.approval === "always" || (policy?.policy?.approval === "whenDestructive" && policy?.effects?.destructive === true);
@@ -745,20 +660,7 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
     record("(e3) a silent client returns the typed timeout", "skip", reason);
     for (const step of ["(g1) a collaborator's instruction reaches the agent only inside `untrusted`", "(g2) the destructive action it asks for still waits for a human", "(g3) the planted block survives the denial"]) record(step, "skip", reason);
   } else {
-    // 🚦️ Which channel resolves the approval is itself the measurement (M5a, 2026-09-20). The
-    //    coordinator offers ELICITATION first, so an elicitation-capable client settles every
-    //    approval through its own human and the shell is never asked — which is how the shell lane
-    //    went unmeasured. This gateway's client therefore advertises no `elicitation` at all (see
-    //    `open`), the lane most real MCP clients are on: the gateway must then publish
-    //    `ApprovalRequested` over `/bridge`, the shell must render a decidable affordance, and the
-    //    human's click must come back as the typed outcome. `sawAffordance` is an assertion here,
-    //    not a note: without it the human was never given the chance to decide.
     const decide = async (decision: "once" | "deny", capabilityId: string = String(target), input: Record<string, unknown> = {}): Promise<{ answer: Record<string, any>; surface: string; countdown: string | null; words: Readonly<{ once: string; deny: string }> | null }> => {
-      // 🗂️ Every approval this run already parked stays on screen — `(c)` cancels its call while the
-      //    gateway is still waiting for a human, so a row from it outlives the step. Deciding "the
-      //    first row" would answer THAT one, whose budget has been running since, and leave this
-      //    invocation waiting on a decision nobody made. Only an id that was not there a moment ago
-      //    belongs to the call this step just made.
       const before = new Set((await readShell(page)).approvals.filter((id): id is string => id !== null));
       const invoked = gateway!.call("action_invoke", { capabilityId, input });
       const shown = await until("the approval affordance", 30_000, 150, async () => {
@@ -766,9 +668,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
         const fresh = view.approvals.find((id) => id !== null && !before.has(id));
         return fresh ? { id: fresh, controlId: `framework.approvals.${decision}.${fresh}`, surface: "conversation", countdown: view.approvalCountdown } : null;
       });
-      // ⏳️ The countdown is part of the affordance, not decoration: a human asked to decide inside
-      //    a deadline they cannot see is being asked to guess. Read from THIS approval's own row,
-      //    so an older row's spent budget is never mistaken for this one's.
       const countdown = shown
         ? await page.evaluate(
             (id: string) =>
@@ -804,10 +703,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       `affordance=${denied.surface} channel=${structured(denied.answer).details?.channel ?? "?"} answer=${describe(denied.answer)}`,
     );
 
-    // (g) prompt injection. A collaborator's document carries an instruction; the agent reads the
-    //     document back. The text must reach it only inside the `untrusted` envelope, and the
-    //     destructive action it asks for must still stop at the human. The plant is the law's shell
-    //     recipe (`🧷️untrusted-content-law.json`): a whole-document load the human approves.
     const untrustedLaw = JSON.parse(readFileSync(join(REPO_ROOT, UNTRUSTED_LAW), "utf8"));
     const adversarial = String(JSON.parse(readFileSync(join(REPO_ROOT, untrustedLaw.lawPath), "utf8")).canary);
     const needles = canaryNeedles(adversarial);
@@ -841,9 +736,6 @@ async function spawnProgramThroughPalette(page: Page, pluginId: string): Promise
       record(gSteps[2]!, after.carried.includes(adversarial) ? "pass" : "fail", `the snapshot still carries the collaborator's text inside untrusted: ${after.carried.includes(adversarial)}`);
     }
 
-    // ⏱️ A client that advertises `elicitation` and then never answers must get the typed timeout —
-    //    not an approval, and not a wedged agent. Its own empty rendezvous closes the SHELL lane by
-    //    construction, so the only budget this step spends is the elicitation deadline itself.
     const silent = await open("(e3) elicitation timeout — a client that never answers", entry, { S_AGENT_BRIDGE_DIR: mkdtempSync(join(serviceMcpTestArtifactRoot(), "semio-os-mcp-silent-")) }, true);
     silent.elicitationAnswer = "silent";
     const timedOut = await silent.call("action_invoke", { capabilityId: target, input: {} });

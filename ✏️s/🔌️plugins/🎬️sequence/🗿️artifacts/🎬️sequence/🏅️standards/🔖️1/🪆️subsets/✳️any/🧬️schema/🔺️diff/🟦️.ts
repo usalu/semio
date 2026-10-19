@@ -2,8 +2,8 @@
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface SequenceDiff {
-  /** @state artifact */ schema?: string;
-  /** @state artifact @child kind=s.stdio.semio */ content?: ArtifactChild;
+  /** 🔄️ @state artifact */ schema?: string;
+  /** 📄️ @state artifact @child kind=s.stdio.semio */ content?: ArtifactChild;
 }
 
 const object = (value: unknown, at: string): Record<string, unknown> => {

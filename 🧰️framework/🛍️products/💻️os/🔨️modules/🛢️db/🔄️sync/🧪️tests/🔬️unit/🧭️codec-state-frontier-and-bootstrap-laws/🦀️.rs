@@ -102,7 +102,6 @@ async fn missing_commands_transfer_round_trip_from_genesis() {
     let missing = missing_commands(&state, &replica_frontier).await.unwrap();
     assert_eq!(missing, state.commands, "a genesis replica is missing every command");
 
-    // "Applying" the transfer catches the replica up to the server's frontier exactly.
     let caught_up = state.frontier.clone();
     assert!(missing_commands(&state, &caught_up).await.unwrap().is_empty());
 }
@@ -115,7 +114,6 @@ async fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica(
     let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
     let replica_frontier = first_state.frontier;
 
-    // More commands land on the server after the replica already caught up once.
     {
         let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
         for i in 3..6u64 {
@@ -287,7 +285,6 @@ async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
         panic!("expected a Welcome frame");
     };
     assert!(matches!(bootstrap, protocol::Bootstrap::Snapshot { inline: None, .. }));
-    // 10 bytes chunked at 4 bytes/chunk -> 3 chunks (4, 4, 2), plus one SnapshotDone.
     assert_eq!(response.follow_up.len(), 4);
     assert!(matches!(response.follow_up[3], protocol::ServerFrame::SnapshotDone { seq_count: 3 }));
 }

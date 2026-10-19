@@ -408,7 +408,7 @@ pub mod abi {
     pub fn step(job:u64,cx: &mut StepContext<'_>)->Result<Option<JobStep>,OriginalTurnFailure>{
         let grant=cx.retained_grant();let cancel=cx.borrowed_original_cancel_token()?;
         let mut decode_callback=|_|!cancel.is_cancelled_now();let mut encode_callback=|_|!cancel.is_cancelled_now();
-        let mut decode=semio_framework_value::NativeDecodeControl::new_retained(&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new_retained(&mut encode_callback);let mut original=IoRunControl::new(&mut decode,&mut encode,grant);
+        let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new_retained(&mut encode_callback);let mut original=IoRunControl::new(&mut decode,&mut encode,grant);
         let mut snapshot_callback=|_|!cancel.is_cancelled_now();let mut snapshot=SqliteSnapshotControl::new(&mut snapshot_callback,Default::default());
         semio_framework_async::poll::resolve_ready(step_job(job,&mut original,&mut snapshot,cx)).map(|step|match step{JobStep::Running(None)=>None,step=>Some(step)})
     }

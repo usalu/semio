@@ -51,16 +51,16 @@ pub fn handle(payload: &FlowEvalResolve, _doc: &ArtifactView<'_, FlowSnapshot>, 
     let given_up = match session.resolve_preview_eval_cold(payload.node_hash, output_json).map_err(|error|semio_framework_diagnostic::FaultFrom::into_fault(error))? {
         flow::PreviewEvalOutcome::Complete { output_json } => {
             if session.invocation_origin_cold(&payload.window_id,payload.node_hash).is_some_and(|origin|origin.outer_node_hash.is_some()){
-                session.retain_invocation_reply_cold(&payload.window_id,payload.node_hash,output_json).map_err(|(error,source)|{flow::host::retire_invocation_reply_cold(source);semio_framework_diagnostic::FaultFrom::into_fault(error)})?;
+                session.retain_invocation_reply_cold(&payload.window_id,payload.node_hash,output_json).map_err(|(error,source)|{semio_framework_os_flow_host_session::retire_invocation_reply_cold(source);semio_framework_diagnostic::FaultFrom::into_fault(error)})?;
                 return Ok(Emit::default());
             }
-            flow::host::io::evaluation_response::decode_flow_node_output_json(&output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err()
+            semio_framework_os_flow_host_session::io::evaluation_response::decode_flow_node_output_json(&output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err()
         },
         flow::PreviewEvalOutcome::Pending(pending)=>{
             let hash=pending.node_hash;
             if session.invocation_origin_cold(&payload.window_id,hash).is_none(){
                 let origin=session.invocation_origin_cold(&payload.window_id,payload.node_hash).ok_or_else(||Fault::from("flow-eval-pending-original-context-required"))?.pending_origin_cold(pending);
-                session.retain_invocation_origin_cold(flow::host::FlowInvocationOriginLease::from_cold(origin));
+                session.retain_invocation_origin_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOriginLease::from_cold(origin));
             }
             let origin=session.invocation_origin_cold(&payload.window_id,hash).ok_or_else(||Fault::from("flow-eval-pending-source-required"))?;
             let invocation=ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(false),"flowEvalResolve");

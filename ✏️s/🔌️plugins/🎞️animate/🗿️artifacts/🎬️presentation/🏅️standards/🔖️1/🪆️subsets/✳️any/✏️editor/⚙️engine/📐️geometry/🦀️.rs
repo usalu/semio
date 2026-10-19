@@ -140,7 +140,7 @@ pub mod geometry {
         styled_path(path, fill, stroke, stroke_width)
     }
 
-    /// { } Brace under content.
+    /// 📄️ { } Brace under content.
     pub fn brace(start: Point, end: Point, direction: Vec2, color: Color, width: f64) -> VSobject {
         let mid = Point::new((start.x() + end.x()) / 2.0, (start.y() + end.y()) / 2.0);
         let dir = if direction.hypot() < 1e-9 { Vec2::new(0.0, -1.0) } else { direction / direction.hypot() };

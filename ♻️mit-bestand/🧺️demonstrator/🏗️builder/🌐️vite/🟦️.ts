@@ -20,7 +20,7 @@ import { demonstratorRuntimeAssetSources } from "../../🔨️modules/🧩️run
 import { demonstratorActivationComponents, readDemonstratorActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { demonstratorUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
-import { repoCacheDirectory } from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -81,7 +81,6 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     strictPort: true,
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir] },
     watch: {
-      // Generated registry/session rewrites must not bounce Vite.
       ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**"],
     },
   },

@@ -18,7 +18,7 @@ import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦
 // Consumers MUST provide NavbarItem entries.
 
 /**
- * Props interface for the Footer component.
+ * 🔝️ Props interface for the Footer component.
  **/
 export interface FooterProps {
   items: NavbarItem[];

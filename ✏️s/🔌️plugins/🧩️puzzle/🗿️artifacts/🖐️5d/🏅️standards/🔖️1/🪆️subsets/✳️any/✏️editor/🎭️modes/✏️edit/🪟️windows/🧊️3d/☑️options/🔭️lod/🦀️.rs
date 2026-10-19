@@ -1,4 +1,4 @@
-//! plus the manual LOD slider whose range `setLodManual` clamps against. The board pane's LOD is a
+//! ✍️ plus the manual LOD slider whose range `setLodManual` clamps against. The board pane's LOD is a
 //! 🔭️ 3D-window option — the level-of-detail group: the automatic-zoom and depth-variable toggles
 //! tier SELECT over the board engine's own scale table (`◻️2d/☑️options/🔭️lod`), a different control
 //! over different state, so neither file is a copy of the other.

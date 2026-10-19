@@ -86,13 +86,6 @@ fn sweep_b() -> SemioPresentationSnapshot {
             SlideMaster { id: "addedMaster".into(), shapes: Vec::new() },
         ],
         layouts: vec![SlideLayout { id: "keepLayout".into(), master_id: "keep".into(), shapes: Vec::new() }, SlideLayout { id: "addedLayout".into(), master_id: "toModify".into(), shapes: Vec::new() }],
-        // 🎯️ Length 2 vs `sweep_a`'s 3: per docx's own "known structural trap" precedent, a
-        // single same-direction `between()` call on an INDEX-keyed collection can never show
-        // BOTH a top-level `removed` AND a top-level `added` (only one tail flavor per
-        // direction) -- `a -> b` exercises `slides.removed` (the dropped `toDropSlide`, index
-        // 2) + `slides.modified[0]` (nested shapes modified+added, nested notes added);
-        // `b -> a` (asserted separately in `field_sweep` below) exercises `slides.added` (the
-        // very same dropped slide, carried whole as the added item's payload).
         slides: vec![
             Slide {
                 id: "toModifySlide".into(),
@@ -195,7 +188,6 @@ fn slides_triple(diff: &SemioPresentationDiff) -> &crate::schema::diff::SlidesDi
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
     {
         let base = fixture();
         let new_slide = || Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
@@ -210,7 +202,6 @@ async fn absorb_law() {
         assert_eq!(triple.added[0].item, new_slide());
     }
 
-    // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
     {
         let base = fixture();
         let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
@@ -225,7 +216,6 @@ async fn absorb_law() {
         assert!(triple.added.iter().any(|a| a.item == slide_g));
     }
 
-    // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
     {
         let base = fixture();
         let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };
@@ -239,7 +229,6 @@ async fn absorb_law() {
         assert_eq!(triple.added[0].item.layout_id, Some("patched".to_string()));
     }
 
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: 1, layout_id: Some("x".into()) }), &base);
@@ -251,7 +240,6 @@ async fn absorb_law() {
         assert_eq!(triple.removed, vec![1]);
     }
 
-    // Associativity over a triple.
     {
         let base = fixture();
         let slide_f = Slide { id: "f".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() };

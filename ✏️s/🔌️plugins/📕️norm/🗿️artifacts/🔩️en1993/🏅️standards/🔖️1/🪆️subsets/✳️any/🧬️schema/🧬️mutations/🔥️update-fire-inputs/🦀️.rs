@@ -1,4 +1,4 @@
-//! `upsert-fire-exposure` — upsert a `FireExposure` by id into `fire_exposures`.
+//! 🧬️ `upsert-fire-exposure` — upsert a `FireExposure` by id into `fire_exposures`.
 
 use semio_s_artifact_norm_en1993_model::{FireExposure, En1993Snapshot};
 

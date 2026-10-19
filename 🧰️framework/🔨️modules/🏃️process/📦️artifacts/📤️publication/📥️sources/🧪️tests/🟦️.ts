@@ -4,7 +4,7 @@ import{Database}from"bun:sqlite";
 import{mkdtemp,writeFile,mkdir,rm,rename,symlink,readdir}from"node:fs/promises";
 import{fstatSync,lstatSync}from"node:fs";
 import{join,resolve}from"node:path";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 import corpus from"./🔣️.json";
 const root=resolve(process.cwd(),".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated");
 async function fixture(run:(directory:string)=>Promise<void>){await mkdir(root,{recursive:true});const directory=await mkdtemp(join(root,"sources-"));try{await run(directory);}finally{await rm(directory,{recursive:true,force:true});}}

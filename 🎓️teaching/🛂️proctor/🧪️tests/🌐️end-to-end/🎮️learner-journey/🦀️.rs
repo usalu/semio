@@ -1,7 +1,7 @@
 //! 🎮️ The proctor end to end, the learner journey: a learner plays through the real API and the facts survive a restart, the API serves the CDN site across origins, learners share presence and cursors, a production proctor opens presence to the site origin only and learners see what the others think live.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
+//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 
@@ -358,7 +358,7 @@ fn learners_see_what_the_others_think_live_and_what_they_answered() {
     }
     accepted(&base, &json!({ "type": "submit-run", "id": id(70), "learner": grace, "run": grace_run }));
     let results: Vec<course::RunResult> = [&ada_run, &grace_run].iter().map(|run| serde_json::from_value(view(&base, &json!({ "type": "run", "run": run }))["result"].clone()).expect("a run result")).collect();
-    let course = load_course(&fixtures().join("📚️course/🔣️.json")).expect("fixture course");
+    let course = load_course(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture course");
     let oracle = serde_json::to_string(&course::crowd_view(&course.entry("power").expect("power").quiz, &results)).expect("oracle json");
     let answered = crowd(&base);
     assert_eq!(answered, oracle, "the proctor's crowd is the core's crowd_view, byte for byte");

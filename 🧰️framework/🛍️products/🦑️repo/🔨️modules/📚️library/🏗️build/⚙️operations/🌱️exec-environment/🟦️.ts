@@ -1,0 +1,2 @@
+/** 🌱️ Names the environment every tool exports to an `exec` command: the project name and its root relative to the workspace; it imports nothing so adapters can use it without pulling in the tool registry. */
+export function buildExecEnvironmentV1(project:string,root:string):Readonly<{SEMIO_PROJECT_NAME:string;SEMIO_PROJECT_ROOT:string}>{return Object.freeze({SEMIO_PROJECT_NAME:project,SEMIO_PROJECT_ROOT:root});}

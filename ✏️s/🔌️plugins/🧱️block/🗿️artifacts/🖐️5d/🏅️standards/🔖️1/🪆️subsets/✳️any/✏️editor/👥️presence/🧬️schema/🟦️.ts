@@ -1,6 +1,6 @@
 /** 🧬️ Block5dPresence */
 export interface Block5dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   selectedIds: string[];
 }
 

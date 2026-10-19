@@ -464,7 +464,6 @@ fn triangulate_respects_hole_area() {
 
 #[test]
 fn triangulate_honors_constrained_boundary_edges() {
-    // L-shape: non-convex outer boundary.
     let outer = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [5.0, 5.0], [5.0, 10.0], [0.0, 10.0]];
     let domain = PlanarDomain { outer: outer.clone(), holes: vec![] };
     let mesh = triangulate(&domain, &no_refine()).expect("triangulates");

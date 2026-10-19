@@ -1,7 +1,7 @@
 //! 🫙️ Original typed native prefix remains in its admitted caller-returned workspace.
 use std::mem::ManuallyDrop;
 use semio_framework_value::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress};

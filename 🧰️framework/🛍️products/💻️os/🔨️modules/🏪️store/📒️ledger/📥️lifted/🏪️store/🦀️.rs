@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::lifted_replay::FoldProjection;
 use semio_framework_os_store_projection::retire_shared_projection;
 use semio_framework_os_spr::Mutation;
+use semio_framework_os_spr::MutationDiff;
 
 
 impl<P, Mutation> ColdFoldProjection<P, Mutation> for Arc<P>

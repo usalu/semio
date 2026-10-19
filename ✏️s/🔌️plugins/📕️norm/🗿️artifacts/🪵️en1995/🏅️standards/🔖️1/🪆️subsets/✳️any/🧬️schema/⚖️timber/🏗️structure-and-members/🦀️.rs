@@ -346,7 +346,6 @@ fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, prop
     let w_1kn = deflection_m(m, props, 0.0, 1000.0);
     let xi = if m.damping_xi > 0.0 { m.damping_xi } else { 0.01 };
     let m_star = mu * l / 2.0;
-    // Derived modal walking acceleration from mass / modal stiffness proxy / damping (§7.3).
     let a_vert = if m_star > 0.0 && f1 > 0.0 {
         (1.0 / (m_star * xi.sqrt()).max(1e-9)) * (f1 / 8.0).max(0.1) * 0.25
     } else {
@@ -393,7 +392,6 @@ fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, prop
         DEPTH_LEVERS,
     ));
     if f1 + 1e-9 >= f1_lim {
-        // §7.3.3 simplified path (f₁ ≥ 8 Hz): unit-impulse velocity criterion.
         out.push(assessed(
             head("velocity", "massKgPerM2", "Floor unit-impulse velocity", "Einheitsimpuls-Geschwindigkeit Decke"),
             Quantity::new(QuantityKind::Dimensionless, v_impulse),
@@ -405,7 +403,6 @@ fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, prop
             MASS_LEVERS,
         ));
     } else {
-        // §7.3.3 special investigation (f₁ < 8 Hz): acceleration comfort.
         let a_lim = params.floor_a_limit();
         out.push(assessed(
             head("acceleration", "dampingXi", "Floor acceleration", "Deckenbeschleunigung"),

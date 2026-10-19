@@ -139,7 +139,6 @@ async fn codec_retention_law() {
     assert_eq!(snap1.smoothing_groups, snap2.smoothing_groups);
     assert_eq!(snap1.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(), snap2.unknown_statements.iter().map(|u| u.raw.clone()).collect::<Vec<_>>(), "unknown-statement content and relative order must be retained");
 
-    // 🔁 second-generation stability: a true fixed point from here on.
     let text3 = encode_obj(&snap2);
     let snap3 = decode_obj(&text3).expect("re-decode 2");
     assert_eq!(snap2, snap3, "decode/encode must be a fixed point from the second generation onward");

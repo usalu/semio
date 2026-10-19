@@ -101,8 +101,6 @@ impl TokenTextAdapter for SliceTextAdapter {
     }
 
     async fn fingerprint(&self) -> u64 {
-        // 📖️ FNV-1a over every token's bytes with a separator byte between entries so `["ab","c"]`
-        // and `["a","bc"]` never collide.
         let mut hash = 0xcbf2_9ce4_8422_2325u64;
         for token in &self.tokens {
             for &b in token {

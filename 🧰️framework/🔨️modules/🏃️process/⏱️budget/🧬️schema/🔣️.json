@@ -30,6 +30,60 @@
           "$ref": "#/$defs/Milliseconds"
         }
       }
+    },
+    "BuildPreparationDefault": {
+      "const": 21600000
+    },
+    "BuildPreparationMilliseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "TimerMaximumMilliseconds": {
+      "const": 2147483647
+    },
+    "TimerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "budget",
+        "checks",
+        "expectedDelays",
+        "expectedExpirations"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "budget": {
+          "$ref": "#/$defs/Milliseconds"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Milliseconds"
+          }
+        },
+        "cancelBeforeCheck": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectedDelays": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "expectedExpirations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
     }
   },
   "$ref": "#/$defs/Milliseconds"

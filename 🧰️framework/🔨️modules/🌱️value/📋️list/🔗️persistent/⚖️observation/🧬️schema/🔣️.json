@@ -2,7 +2,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "cases"
+    "cases",
+    "closure",
+    "closureBudgets",
+    "frontierPayloads"
   ],
   "properties": {
     "cases": {
@@ -42,6 +45,93 @@
           }
         }
       }
+    },
+    "closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bodyBytes",
+        "maximumTurns",
+        "maximumIdleTurns"
+      ],
+      "properties": {
+        "bodyBytes": {
+          "const": 4096
+        },
+        "maximumTurns": {
+          "const": 10000
+        },
+        "maximumIdleTurns": {
+          "const": 8
+        }
+      }
+    },
+    "closureBudgets": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bodyBytes",
+          "quotedCopyBytes",
+          "expectedCopyBytes"
+        ],
+        "properties": {
+          "bodyBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65536
+          },
+          "quotedCopyBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65536
+          },
+          "expectedCopyBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65536
+          }
+        }
+      }
+    },
+    "frontierPayloads": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "elementBytes",
+          "pageBytes",
+          "expectedSlots",
+          "expectedCapacityBytes"
+        ],
+        "properties": {
+          "elementBytes": {
+            "enum": [
+              8,
+              16
+            ]
+          },
+          "pageBytes": {
+            "const": 4096
+          },
+          "expectedSlots": {
+            "enum": [
+              256,
+              512
+            ]
+          },
+          "expectedCapacityBytes": {
+            "const": 4096
+          }
+        }
+      },
+      "uniqueItems": true
     }
   }
 }

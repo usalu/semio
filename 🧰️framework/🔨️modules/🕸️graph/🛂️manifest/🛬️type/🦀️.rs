@@ -1,5 +1,6 @@
 //! 🏷️ Explicit controlled Graph property type conversion and canonical owner retirement.
-use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, ValueError, ValueType};
+use semio_framework_value::{DslValue, FromValue, ValueError, ValueType};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub(super) fn decode(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<ValueType, ValueError> {
     c.scoped_stage(|c| {
         c.begin_stage(0)?;

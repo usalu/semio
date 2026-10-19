@@ -1,7 +1,7 @@
 //! 🗣️ Product-neutral lexical, grammar and idiom interfaces.
 extern crate self as semio_framework_dsl;
 pub use semio_framework_diagnostic::{TextError,Limits,TextSpan,FaultCode,DiagnosticCode,Severity,ExpectedSet,Diagnostic,FaultOrigin,FaultScope,FaultCause,Fault};
-pub use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeProgress};
+pub use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 pub use semio_framework_dsl_token as token;
 pub use semio_framework_dsl_lexical::{lexer,trust};
 #[path = "../../📖️grammar/🦀️.rs"]

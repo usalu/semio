@@ -1,6 +1,7 @@
-//! target ⇒ `Vec::new()`.
+//! 🗾️ target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `ChangeTargetRegionHidden` — restores the BASE field values on the addressed region. Missing
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::change_target_region_hidden::component::ChangeTargetRegionHidden;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ChangeTargetRegionHidden>>(payload: &super::ChangeTargetRegionHidden, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

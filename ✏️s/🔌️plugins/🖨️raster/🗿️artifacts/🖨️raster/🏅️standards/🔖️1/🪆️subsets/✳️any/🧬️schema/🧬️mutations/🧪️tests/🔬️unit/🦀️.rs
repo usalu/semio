@@ -32,8 +32,6 @@ fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSna
     let mut restored = forward.clone();
     for back in mutation.inverse(snapshot).expect("valid retained mutation inverse fixture") {
         let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
-        // 🧹️ Every displaced projection owns the document's `assets` pool and every adjustment's
-        // `params` map, so it retires instead of reaching `RasterOwnedMap`'s fail-closed `Drop`.
         semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(std::mem::replace(&mut restored, next));
         protocol::Mutation::retire_cold(back);
     }
@@ -167,9 +165,6 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
 #[semio_framework_async_macros::async_test]
 async fn store_applies_layer_create() {
     let mut store = RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
-    // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
-    // built with the artifact's own `raster_document_store_owners`, never bare.
     store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);

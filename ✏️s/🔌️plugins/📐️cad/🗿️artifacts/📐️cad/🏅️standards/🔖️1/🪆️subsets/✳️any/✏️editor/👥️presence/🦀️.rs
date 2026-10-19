@@ -26,10 +26,6 @@ pub mod retirement;
 #[artifact(extension = "cad.presence")]
 #[dsl(layout = "lines")]
 pub struct CadPresence {
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): mesh object/vertex/edge/face
-    // selection AND hover broadcast automatically now via the framework's typed
-    // `PresencePeer.interaction: Option<PresenceInteraction>` for the `"cad"` domain — every field
-    // that used to mirror `CadConfig`'s selection/hover here is DELETED, not migrated in place.
     pub camera_position: [f64; 3],
     pub camera_target: [f64; 3],
     pub camera_zoom: f64,

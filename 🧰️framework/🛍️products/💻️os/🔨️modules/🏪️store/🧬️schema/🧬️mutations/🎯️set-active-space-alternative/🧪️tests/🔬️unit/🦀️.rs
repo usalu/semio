@@ -16,8 +16,8 @@ fn metadata_and_explicit_nullable_wire_are_canonical() {
     assert_eq!(SpaceHistoryMutation::decode_op(&mutation.encode_op().expect("binary")).expect("binary decode"), mutation);
 }
 
-fn alternative(id: &str) -> super::super::super::SpaceAlternative {
-    super::super::super::SpaceAlternative { id: id.into(), name: id.into(), checkpoint_ids: Vec::new() }
+fn alternative(id: &str) -> semio_framework_os_store_space_schema::space_history_document::SpaceAlternative {
+    semio_framework_os_store_space_schema::space_history_document::SpaceAlternative { id: id.into(), name: id.into(), checkpoint_ids: Vec::new() }
 }
 
 /// ➕️ L3: activating another alternative, clearing the active one and re-activating the active one sum to the negative diff.

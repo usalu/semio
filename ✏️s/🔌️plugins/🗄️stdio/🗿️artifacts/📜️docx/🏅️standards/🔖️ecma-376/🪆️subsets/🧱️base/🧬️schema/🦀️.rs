@@ -101,12 +101,6 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
         .set_override("word/numbering.xml", "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml")
         .expect("the demo content-type override fits retained OPC ownership");
     snap.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
-    // 🔤️ Path-ascending is the package NORMAL FORM a decode hands back
-    // (`semio_s_artifact_stdio_zip`'s decoder canonicalizes member order), so the demo has to be
-    // stated in it: `📜️example.docx` IS `encode_docx(this)`, and `demo_subset_integrated_roundtrip`
-    // re-encodes what a decode of that file yields and demands byte-identical output. Appending
-    // `word/numbering.xml` after `build_minimal_docx`'s own parts left the demo one step off that
-    // normal form, so every content byte round-tripped and the member SEQUENCE did not.
     snap
 }
 //#endregion 🔖️DocumentHelpers

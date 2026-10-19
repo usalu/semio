@@ -10,8 +10,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
         let mut snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
-        // Strip the seeded /StructTreeRoot to simulate a stripped-down document reaching the
-        // builder through its explicit snapshot constructor.
         if let Some(catalog_obj) = snapshot.objects.iter_mut().find(|o| o.id.num == 1) {
             if let PdfObject::Dict(d) = &mut catalog_obj.value {
                 d.retain(|e| e.key != "StructTreeRoot");

@@ -2,7 +2,7 @@
 
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_plugin_window_config::{DirectIngress, TypedWindowConfigPublication, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot};
+use semio_framework_plugin_window_config::{DirectIngress, WindowConfigAuthorityIdentity, TypedWindowConfigPublication, TypedWindowConfigStoreOwner, WindowConfigMutation, WindowConfigOwner, WindowConfigSnapshot};
 use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use semio_framework_value::FactoryBoxedValue;
 use std::future::Future;

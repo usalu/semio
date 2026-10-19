@@ -18,10 +18,6 @@ use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock};
 
 //#region 🔖️Children
-        }),
-    )?;
-    Ok(server)
-}
 
 #[path = "🔏️digest-and-json/🦀️.rs"]
 mod digest_and_json;

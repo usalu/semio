@@ -44,7 +44,6 @@ export function useEditorCompletionsRenameAndMenu(core: EditorCore2) {
   }, []);
 
   const sessionFactory = useCallback(() => {
-    // Empty pkg stub (`export class EditorSession {}`) must not replace the no-op host fallback.
     if (wasmSession && typeof wasmSession.attachCanvas === "function") return wasmSession;
     return {
       attachCanvas: async () => undefined,
@@ -87,8 +86,6 @@ export function useEditorCompletionsRenameAndMenu(core: EditorCore2) {
       setExtraCaretsJson: () => {},
       setCaretVisible: () => {},
     } satisfies FrameworkEditorSession;
-    // Deliberately omits scene.buffer: WasmCanvas re-attaches the GPU canvas whenever sessionFactory's
-    // identity changes, so this must stay stable across content edits — only the wasmSession load transition matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wasmSession]);
 
@@ -166,8 +163,6 @@ export function useEditorCompletionsRenameAndMenu(core: EditorCore2) {
 
   const dismissContextMenu = useCallback(() => setContextMenu(null), []);
 
-  // Stable identity: WasmCanvas re-attaches the GPU canvas whenever this prop's identity changes,
-  // so it must not close over anything that changes per scene update (see sessionEpoch above for re-sync).
   const onSessionReady = useCallback((session: WasmCanvasSession) => {
     sessionRef.current = session as FrameworkEditorSession;
     sessionRef.current.setCaretVisible(caretCadenceRef.current?.visible() ?? false);

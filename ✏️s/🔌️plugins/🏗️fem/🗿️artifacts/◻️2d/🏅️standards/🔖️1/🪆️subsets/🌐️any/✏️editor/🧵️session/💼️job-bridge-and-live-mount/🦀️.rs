@@ -29,7 +29,7 @@ impl BoundedJob for MountedBoundedJob {
             }
             Ok::<_, semio_framework_job::OriginalTurnFailure>(step)
         })()?;
-        match &step { JobStep::Done(_) => record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Validated), JobStep::Failed(_) => record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Faulted), _ => {} }
+        match &step { JobStep::Done(_) => record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Validated), JobStep::Failed(_) => record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Faulted), _ => {} }
         Ok(step)
     }
 
@@ -137,9 +137,9 @@ pub fn initialize() {
 //#endregion 💼️JobBridge
 
 //#region 🎛️LiveMount
-pub(super) fn source_version(render:AppRenderOperationContext)->semio_framework_value::RequestSourceVersion{semio_framework_value::RequestSourceVersion{base_revision:render.base_revision.0,generation:render.generation.0,canonical_revision:render.canonical_base_revision}}
-fn identity_version(identity:MountedIdentity)->semio_framework_value::RequestSourceVersion{semio_framework_value::RequestSourceVersion{base_revision:identity.base_revision.0,generation:identity.generation.0,canonical_revision:identity.canonical_base_revision}}
-fn record_terminal(identity:MountedIdentity,kind:semio_framework_value::RequestTerminalKind){MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();if let Some(index)=registry.current.iter().position(|current|current.is_some_and(|current|current.identity==identity)){if let Some((owner,_,_))=registry.requests.at(index){registry.requests.record_terminal(owner,identity_version(identity),identity.job,kind);}}});}
+pub(super) fn source_version(render:AppRenderOperationContext)->semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{base_revision:render.base_revision.0,generation:render.generation.0,canonical_revision:render.canonical_base_revision}}
+fn identity_version(identity:MountedIdentity)->semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{base_revision:identity.base_revision.0,generation:identity.generation.0,canonical_revision:identity.canonical_base_revision}}
+fn record_terminal(identity:MountedIdentity,kind:semio_framework_value_registry::fixed_request_owners::RequestTerminalKind){MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();if let Some(index)=registry.current.iter().position(|current|current.is_some_and(|current|current.identity==identity)){if let Some((owner,_,_))=registry.requests.at(index){registry.requests.record_terminal(owner,identity_version(identity),identity.job,kind);}}});}
 pub(super) fn current_identity(identity: MountedIdentity) -> Option<MountedIdentity> {
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -169,8 +169,8 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem2
         let current_slot = owner.index();
         if registry.source_kinds[current_slot]!=2 {
             let version=source_version(render);let lookup=registry.requests.source_lookup(owner,version);
-            if let Some((position,semio_framework_value::RequestLookupOutcome::Matched))=lookup{registry.sources[current_slot]=Some(if registry.source_kinds[current_slot]==0{ResolvedResultSource::LoadCase(position)}else{ResolvedResultSource::Combination(position)});}
-            else if lookup.is_some_and(|(_,outcome)|outcome==semio_framework_value::RequestLookupOutcome::Missing){return false;}
+            if let Some((position,semio_framework_value_registry::fixed_request_owners::RequestLookupOutcome::Matched))=lookup{registry.sources[current_slot]=Some(if registry.source_kinds[current_slot]==0{ResolvedResultSource::LoadCase(position)}else{ResolvedResultSource::Combination(position)});}
+            else if lookup.is_some_and(|(_,outcome)|outcome==semio_framework_value_registry::fixed_request_owners::RequestLookupOutcome::Missing){return false;}
             else{if grant.maximum_copy_bytes<8{return false;}let position=lookup.map_or(0,|(position,_)|position);let candidate=if registry.source_kinds[current_slot]==0{snapshot.load_cases.get(position).map(|case|case.id.as_str())}else{snapshot.combinations.get(position).map(|combination|combination.id.as_str())};let lookup_grant=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-8,..grant};if let Ok(step)=registry.requests.source_lookup_step(owner,version,candidate,lookup_grant){progress=step.progress;if progress!=Default::default(){registry.request_cursor=(current_slot+1)%SESSION_ACTIVE_CAPACITY;progress.copied_bytes+=8;}}return false;}
         }else{registry.sources[current_slot]=None;}
         registry.request_cursor = (current_slot + 1) % SESSION_ACTIVE_CAPACITY;
@@ -279,9 +279,9 @@ pub fn result_request_key(source: Option<semio_s_fem_analyses_model::ResultSourc
 #[cfg(test)]
 fn resolved_source(snapshot:&Fem2dSnapshot,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>)->Option<Option<ResolvedResultSource>>{match source{None=>Some(None),Some(source)if source.kind=="loadCase"=>snapshot.load_cases.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::LoadCase(index))),Some(source)if source.kind=="combination"=>snapshot.combinations.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::Combination(index))),Some(_)=>None}}
 
-fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperationContext,consumer:ConsumerKey,window:&str,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>,family:semio_s_fem_app_surface::ResultMode,index:usize,version:semio_framework_value::RequestCandidateVersion,grant:RetainedCloneGrant)->RetainedCloneProgress{
+fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperationContext,consumer:ConsumerKey,window:&str,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>,family:semio_s_fem_app_surface::ResultMode,index:usize,version:semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion,grant:RetainedCloneGrant)->RetainedCloneProgress{
  let source=if family==semio_s_fem_app_surface::ResultMode::Modal{None}else{source};let index=if family==semio_s_fem_app_surface::ResultMode::Static{0}else{index};
- let Some(app)=registry.app_slots.lookup(render.app_instance_id)else{let bytes=size_of::<u32>()+size_of::<semio_framework_value::FixedKeySlot>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Default::default();}if registry.app_slots.claim(render.app_instance_id).is_none(){return Default::default();}return RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};};
+ let Some(app)=registry.app_slots.lookup(render.app_instance_id)else{let bytes=size_of::<u32>()+size_of::<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Default::default();}if registry.app_slots.claim(render.app_instance_id).is_none(){return Default::default();}return RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};};
  let consumer_index=registry.requests.consumer_index(render.app_instance_id,consumer);
  if consumer==ConsumerKey::Model&&consumer_index.is_none(){return registry.requests.claim_consumer_controlled(render.app_instance_id,consumer,grant).map_or(Default::default(),|step|step.progress);}
  if consumer!=ConsumerKey::Model&&consumer_index.is_none_or(|index|registry.requests.consumer_name(index).is_none()){return registry.requests.prepare_consumer(render.app_instance_id,consumer,window,grant).map_or(Default::default(),|step|step.progress);}
@@ -298,7 +298,7 @@ fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperation
 pub fn prepare_snapshot_read(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot,windows:&semio_framework_plugin::WindowConfigOwnerRegistry,view:Option<&semio_framework_plugin::ViewModel>,grant:RetainedCloneGrant)->semio_framework_plugin::MountedSnapshotReadPreparation{
  if render.app_instance_id==0||grant.maximum_items==0||grant.maximum_depth==0{return Default::default();}
  let departure=retain_result_windows(render,windows,view,grant);if departure!=Default::default(){return semio_framework_plugin::MountedSnapshotReadPreparation{ready:false,progress:departure};}
- let progress=MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let count=view.map_or(1,|view|view.window_instances.len()+1);for _ in 0..count{let index=registry.consumer_cursor%count;registry.consumer_cursor=(index+1)%count;let (consumer,window,source,family,mode,version)=if index==0{(ConsumerKey::Model,"model",snapshot.load_cases.first().map(|case|semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:&case.id}),semio_s_fem_app_surface::ResultMode::Static,0,semio_framework_value::RequestCandidateVersion{source:source_version(render),consumer_generation:0,consumer_revision:[0;32]})}else{let Some(window)=view.and_then(|view|view.window_instances.get(index-1))else{continue;};let Some(authority)=windows.borrow(&window.window_kind_id,&window.id)else{continue;};let Some(config)=authority.get::<semio_s_artifact_fem_2d_results_state::config::Fem2dResultsWindowConfigOwner>()else{continue;};let source=match config.result_source_id.as_deref(){Some(id)=>match semio_s_fem_analyses_model::borrow_result_source_identity(id){Ok(source)=>Some(source),Err(_)=>continue},None=>snapshot.load_cases.first().map(|case|semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:&case.id})};(ConsumerKey::Window(authority.authority),window.id.as_str(),source,config.result_mode,config.result_mode_index,semio_framework_value::RequestCandidateVersion{source:source_version(render),consumer_generation:authority.generation,consumer_revision:authority.revision})};let progress=prepare_result_demand(&mut registry,render,consumer,window,source,family,mode,version,grant);if progress!=Default::default(){return progress;}}Default::default()});
+ let progress=MOUNTED.with(|registry|{let mut registry=registry.borrow_mut();let count=view.map_or(1,|view|view.window_instances.len()+1);for _ in 0..count{let index=registry.consumer_cursor%count;registry.consumer_cursor=(index+1)%count;let (consumer,window,source,family,mode,version)=if index==0{(ConsumerKey::Model,"model",snapshot.load_cases.first().map(|case|semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:&case.id}),semio_s_fem_app_surface::ResultMode::Static,0,semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion{source:source_version(render),consumer_generation:0,consumer_revision:[0;32]})}else{let Some(window)=view.and_then(|view|view.window_instances.get(index-1))else{continue;};let Some(authority)=windows.borrow(&window.window_kind_id,&window.id)else{continue;};let Some(config)=authority.get::<semio_s_artifact_fem_2d_results_state::config::Fem2dResultsWindowConfigOwner>()else{continue;};let source=match config.result_source_id.as_deref(){Some(id)=>match semio_s_fem_analyses_model::borrow_result_source_identity(id){Ok(source)=>Some(source),Err(_)=>continue},None=>snapshot.load_cases.first().map(|case|semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:&case.id})};(ConsumerKey::Window(authority.authority),window.id.as_str(),source,config.result_mode,config.result_mode_index,semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion{source:source_version(render),consumer_generation:authority.generation,consumer_revision:authority.revision})};let progress=prepare_result_demand(&mut registry,render,consumer,window,source,family,mode,version,grant);if progress!=Default::default(){return progress;}}Default::default()});
  if progress!=Default::default(){return semio_framework_plugin::MountedSnapshotReadPreparation{ready:false,progress};}prepare_snapshot_admission(render,snapshot,grant)
 }
 
@@ -314,7 +314,7 @@ pub fn reconcile(doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem2dSnap
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let mut cancellations=Vec::new();
-        for index in 0..SESSION_ACTIVE_CAPACITY{let Some((owner,scope,_))=registry.requests.at(index)else{continue;};if scope!=render.app_instance_id||registry.requests.references(owner)!=0||registry.request_cancelled[index]{continue;}if let Some(current)=registry.current[index]{registry.requests.record_terminal(owner,identity_version(current.identity),current.identity.job,semio_framework_value::RequestTerminalKind::Cancelled);registry.request_cancelled[index]=true;cancellations.push(Effect::CancelJob{job:current.identity.job});}}
+        for index in 0..SESSION_ACTIVE_CAPACITY{let Some((owner,scope,_))=registry.requests.at(index)else{continue;};if scope!=render.app_instance_id||registry.requests.references(owner)!=0||registry.request_cancelled[index]{continue;}if let Some(current)=registry.current[index]{registry.requests.record_terminal(owner,identity_version(current.identity),current.identity.job,semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled);registry.request_cancelled[index]=true;cancellations.push(Effect::CancelJob{job:current.identity.job});}}
         if !cancellations.is_empty(){return cancellations;}
         let Some(app_slot) = registry.app_slots.lookup(render.app_instance_id).map(|slot| slot.index()) else { return Vec::new() };
         let Some(owner) = registry.snapshot_owners[app_slot].filter(|owner| registry.requests.key(*owner).is_some_and(|(scope, _)| scope == render.app_instance_id) && registry.requests.ready(*owner)) else { return Vec::new() };
@@ -365,7 +365,7 @@ pub fn reconcile(doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem2dSnap
                     state.cancel.cancel_now();
                 }
             }
-            registry.requests.record_terminal(owner,identity_version(previous.identity),previous.identity.job,semio_framework_value::RequestTerminalKind::Cancelled);
+            registry.requests.record_terminal(owner,identity_version(previous.identity),previous.identity.job,semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled);
             registry.current[current_slot] = None;
         }
         let identity = pending.identity;
@@ -486,7 +486,7 @@ pub(super) fn merge_close_demand(total: &mut RetirementDemand, child: Retirement
     total.depth = total.depth.max(child.depth);
 }
 
-fn close_request_step(app_instance_id: u32, lease: semio_framework_value::FixedKeySlot, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
+fn close_request_step(app_instance_id: u32, lease: semio_framework_value_registry::fixed_key_slots::FixedKeySlot, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, PluginLifecycleFailure> {
     if grant.maximum_items == 0 { return Ok(session_pending(0, 0)); }
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
@@ -530,7 +530,7 @@ fn close_request_step(app_instance_id: u32, lease: semio_framework_value::FixedK
         if !matches!(step, PluginLifecycleStep::Complete(_)) { return Ok(step)}
         let children_remain = MOUNTED.with(|registry| registry.borrow().shell_requests.iter().any(|owner| *owner == Some(lease)));
         if children_remain { return Ok(PluginLifecycleStep::Blocked { reason: "mounted FEM request still owns its original child shell" }); }
-        let copy_bytes = size_of::<RequestKey>() * 2 + size_of::<semio_framework_value::FixedKeySlot>() * 2 + size_of::<Option<u32>>() + size_of::<usize>() * 2;
+        let copy_bytes = size_of::<RequestKey>() * 2 + size_of::<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>() * 2 + size_of::<Option<u32>>() + size_of::<usize>() * 2;
         if grant.maximum_copy_bytes < copy_bytes || grant.maximum_depth == 0 { return Ok(session_pending(0, 0))}
         if let Some(progress)=MOUNTED.with(|registry|registry.borrow_mut().requests.retire_request_step(lease,grant)){return Ok(PluginLifecycleStep::Progress(progress));}
         MOUNTED.with(|registry| {
@@ -558,7 +558,7 @@ fn close_turn(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedClo
     if let Some(owner) = owner { return Ok(close_request_step(app_instance_id, owner, cx, grant)?); }
     let step = retire_one(app_instance_id, cx, grant)?;
     if !matches!(step, PluginLifecycleStep::Complete(_)) { return Ok(step); }
-    let copy_bytes = size_of::<RequestKey>() + size_of::<semio_framework_value::FixedKeySlot>() * 2 + size_of::<Option<u32>>() + size_of::<usize>() * 2;
+    let copy_bytes = size_of::<RequestKey>() + size_of::<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>() * 2 + size_of::<Option<u32>>() + size_of::<usize>() * 2;
     if grant.maximum_copy_bytes < copy_bytes || grant.maximum_depth == 0 { return Ok(session_pending(0, 0)); }
     MOUNTED.with(|registry| { let mut registry = registry.borrow_mut(); let Some(app) = registry.app_slots.lookup(app_instance_id) else { return Ok(PluginLifecycleStep::Complete(Default::default())); }; registry.model_requests[app.index()] = None; registry.snapshot_owners[app.index()] = None; assert!(registry.app_slots.release(app_instance_id, app)); Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })) })
 }

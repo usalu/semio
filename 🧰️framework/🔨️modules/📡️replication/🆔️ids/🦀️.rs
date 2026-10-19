@@ -187,7 +187,6 @@ impl HybridLogicalTimestamp {
 }
 
 impl Ord for HybridLogicalTimestamp {
-    // 🚫️async: E1 impl of externally-declared `Ord` trait
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         (self.physical_ms, self.logical, self.actor).cmp(&(other.physical_ms, other.logical, other.actor))
     }

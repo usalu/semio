@@ -353,9 +353,6 @@ async function proveDirectorySpaceAdministrationPageV1(repoRoot: string): Promis
   if (administrationMember({ ...fixture.members[0]!, unknown: true }) || hubSchemaExport(repoRoot, "schema://hub.directory/SpaceAdministrationSpaceV1")({ ...fixture.space, unknown: true }))
     throw new Error("space administration contracts admitted an unknown field");
 
-  // 🧬️ Schema-first parity: the SHARED component JSON schema (the one the Rust and TypeScript twins are
-  // both derived from) must itself admit every sealed vector and reject every structural hostile. Without
-  // this the component `$defs` could drift away from both implementations unnoticed.
   const validatePage = hubSchemaExport(repoRoot, "schema://os.directory/DirectorySpaceAdministrationPageV1");
   for (const vector of fixture.vectors) {
     const { page } = seal(vector.access, vector.expected.memberRows, vector.expected.inviteRows);

@@ -7,7 +7,7 @@ use super::*;
 // 🚫️async: R9 pure in-memory parse, no I/O.
 pub fn parse(input: &str, policy: JsonMemberPolicy) -> Result<Value, JsonError> {
     let mut cursor = JsonParseCursor::new(policy);
-    let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut accepted);
+    let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut accepted);
     loop { if let Some(value) = cursor.step(input, 4096,&mut control,RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:isize::MAX as usize,maximum_capacity_bytes:isize::MAX as usize,maximum_release_bytes:isize::MAX as usize,maximum_depth:MAX_DEPTH as usize+4})? { return Ok(value); } }
 }
 
@@ -28,7 +28,7 @@ pub(super) fn normal_remaining(grant:RetainedCloneGrant,progress:RetainedClonePr
     Ok(RetainedCloneGrant{maximum_items:grant.maximum_items-progress.copied_items,maximum_copy_bytes:grant.maximum_copy_bytes-progress.copied_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes-progress.retained_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes-progress.released_bytes,..grant})
 }
 
-type JsonCandidates<T> = semio_framework_value::list::PagedList<T,{usize::MAX}>;
+type JsonCandidates<T> = semio_framework_value_persistent::list::PagedList<T,{usize::MAX}>;
 
 struct JsonFrame<V:JsonParsedValue> {
     pub object: bool, pub state: u8, item_count:u64, pub values: JsonCandidates<V>, pub entries: JsonCandidates<(String,V)>,
@@ -45,7 +45,7 @@ impl JsonStringScan{
 
 pub(super) enum JsonLexeme { String(JsonStringScan), Number(NumberScan) }
 
-fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value::NativeDecodeControl<'_>,receipt:&mut RetainedCloneProgress)->Result<bool,JsonError> {
+fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,receipt:&mut RetainedCloneProgress)->Result<bool,JsonError> {
     if owner.has_reserved_slot() {return Ok(true);}
     let bytes=owner.next_allocation_bytes().map_err(ValueError::from)?;control.charge(bytes)?;
     match owner.reserve_one(bytes){Ok(progress)=>receipt.retained_capacity_bytes=progress.allocated_bytes,Err(error)=>{receipt.retained_capacity_bytes=error.allocated_bytes;return Err(ValueError::from(error.refusal()).into());}}Ok(false)
@@ -99,10 +99,10 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         }else if self.lexeme.is_none()&&self.frames.capacity()==0&&matches!(input.byte_at(self.position),Some(b'{'|b'[')){demand.capacity_bytes=(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)*size_of::<JsonFrame<V>>();}
         Ok(demand)
     }
-    pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<V>,JsonError>{
+    pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<V>,JsonError>{
         self.step_source(input,maximum_units,control,grant,true)
     }
-    pub fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,known_utf8:bool)->Result<Option<V>,JsonError>{
+    pub fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,known_utf8:bool)->Result<Option<V>,JsonError>{
         self.normal_step_progress=Default::default();
         let result=(||{
         for _ in 0..maximum_units{
@@ -131,7 +131,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
             result=>result,
         }
     }
-    pub(super) fn advance<S:JsonReadSource+?Sized>(&mut self,input:&S,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
+    pub(super) fn advance<S:JsonReadSource+?Sized>(&mut self,input:&S,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
         if self.obsolete.is_some() {
             if !json_candidate_slot(&mut self.retired,control,receipt)? {return Ok(());}
             self.retired.push_reserved(self.obsolete.take().unwrap()).unwrap_or_else(|_|unreachable!());return Ok(());
@@ -227,7 +227,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     }
     fn admit_container_depth(&self)->Result<(),JsonError>{let maximum=self.limits.maximum_depth.min(MAX_DEPTH as usize);if self.frames.len()>=maximum{Err(JsonError::MaxDepthExceeded(maximum as u32))}else{Ok(())}}
     fn close_frame(&mut self) {self.frames.last_mut().unwrap().state=8;self.position+=1;}
-    fn materialize_frame(&mut self,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
+    fn materialize_frame(&mut self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),JsonError> {
         let frame=self.frames.last_mut().unwrap();
         if !frame.admitted {if frame.object {frame.members=control.allocate_vec(frame.entries.len())?;receipt.retained_capacity_bytes=frame.members.capacity()*size_of::<(String,V)>();}else {frame.array=control.allocate_vec(frame.values.len())?;receipt.retained_capacity_bytes=frame.array.capacity()*size_of::<V>();}frame.admitted=true;return Ok(());}
         if frame.object {if let Some(entry)=frame.entries.pop(){frame.members.push(entry);return Ok(());}}else if let Some(value)=frame.values.pop(){frame.array.push(value);return Ok(());}
@@ -370,7 +370,7 @@ impl JsonValueProjection {
         else if self.frames.capacity()==0&&self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_))){demand.capacity_bytes=(MAX_DEPTH as usize+2)*size_of::<JsonProjectionFrame>();}
         Ok(demand)
     }
-    pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<DslValue>,ValueError>{
+    pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<DslValue>,ValueError>{
         self.normal_step_progress=Default::default();if maximum_bytes==0{return Ok(None);}
         for _ in 0..maximum_units{
             let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands()?;if !normal_permit(demand,remaining)?{break;}
@@ -386,7 +386,7 @@ impl JsonValueProjection {
         }
         Ok(None)
     }
-    pub(super) fn advance(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<DslValue>,ValueError> {
+    pub(super) fn advance(&mut self,maximum_units:usize,maximum_bytes:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Option<DslValue>,ValueError> {
         if maximum_bytes==0{return Ok(None);}
         for _ in 0..maximum_units {
             control.checkpoint()?;control.step()?;

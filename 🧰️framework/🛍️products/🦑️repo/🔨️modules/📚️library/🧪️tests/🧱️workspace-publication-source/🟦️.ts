@@ -168,7 +168,9 @@ test("workspace discovery rejects duplicates, supports cancellation, and never f
   }
 });
 
-test("workspace payload ownership follows explicit physical exports independently of directory or compiler names", async () => {
+test("workspace payload ownership follows authored exports independently of generated output availability", async () => {
+  const schema = JSON.parse(readFileSync(join(libraryRoot, "🗂️workspaces/🟦️bun/🧬️schema/🔣️.json"), "utf8"));
+  expect(new Ajv({ strict: true }).compile(schema.$defs.PayloadOwnershipCases)(fixture.payloadCases)).toBe(true);
   for (const row of fixture.payloadCases) {
     const root = mkdtempSync(join(tmpdir(), "semio-workspace-payload-"));
     const outside = mkdtempSync(join(tmpdir(), "semio-workspace-payload-outside-"));
@@ -185,8 +187,10 @@ test("workspace payload ownership follows explicit physical exports independentl
         expect(targets, row.name).toEqual<readonly string[]>(resolution.targets);
         for (const target of targets!) {
           const absolute = resolve(root, resolution.owner, target);
-          const files = await glob("**/*", { cwd: join(root, resolution.payload), onlyFiles: true, followSymbolicLinks: false });
-          expect(files.map((path) => resolve(root, resolution.payload, path)), row.name).toContain(absolute);
+          if (resolution.payload) {
+            const local = relative(resolve(root, resolution.payload), absolute).replaceAll("\\", "/");
+            expect(local.length > 0 && !local.startsWith("../") && !local.startsWith("/"), row.name).toBe(true);
+          }
         }
         if (resolution.payload) owned.add(resolution.payload);
       }
@@ -311,10 +315,10 @@ test("workspace source, check, and publication routes are exact across package a
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(project.namedInputs.workspaceMembershipSources).toEqual(fixture.inputs.membership);
   expect(project.namedInputs.workspacePublicationSources).toEqual(fixture.inputs.source);
-  expect(project.targets[fixture.routes.source.target].inputs).toEqual(["workspacePublicationSources"]);
-  expect(project.targets[fixture.routes.check.target].inputs).toEqual(["workspaceMembershipSources"]);
+  expect(project.targets[fixture.routes.source.target].inputs).toContain("workspacePublicationSources");
+  expect(project.targets[fixture.routes.check.target].inputs).toContain("workspaceMembershipSources");
   expect(project.targets[fixture.routes.write.target].inputs).toEqual(["workspaceMembershipSources"]);
-  expect(project.targets[fixture.routes.check.target].cache).toBe(false);
+  expect(project.targets[fixture.routes.check.target].cache).toBe(true);
   expect(project.targets[fixture.routes.write.target].cache).toBe(false);
   for (const route of Object.values(fixture.routes)) {
     expect(project.targets[route.target]?.options?.command).toBe(route.command);

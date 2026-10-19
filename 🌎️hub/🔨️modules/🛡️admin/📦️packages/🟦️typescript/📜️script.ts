@@ -3,37 +3,15 @@ import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🛡️ `@semio-tech/hub-admin` (nx `os-hub-admin`) router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
-import { runViteBuild, runViteBunxDev } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-
-/** 🩺️ Warns that the standalone Vite surface has no administrator authority; authenticated use is
- * exclusively owned by the loopback relay started by `os-hub:dev-secure-admin`. */
-async function warnWhenHubIsUnreachable(): Promise<void> {
-  const hubUrl = process.env.OS_HUB_URL ?? "http://127.0.0.1:8787";
-  try {
-    const response = await fetch(`${hubUrl}/admin/api/overview`, { signal: AbortSignal.timeout(2_000) });
-    if (response.ok) {
-      console.log(`[admin] hub reachable at ${hubUrl}; use bun repo run os-hub:dev-secure-admin for authenticated administration`);
-      return;
-    }
-    console.warn(`[admin] hub at ${hubUrl} answered ${response.status}; use bun repo run os-hub:dev-secure-admin for the authenticated relay.`);
-  } catch {
-    console.warn(`[admin] no hub reachable at ${hubUrl}; this Vite surface is static-only and has no administrator credential.`);
-    console.warn(`[admin] start the protected surface with: bun repo run os-hub:dev-secure-admin`);
-  }
-}
+import { runDevScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await warnWhenHubIsUnreachable();
-    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels:[],
-      config: "../../🏗️builder/🌐️vite/🟦️.ts",
-      portEnv: "OS_HUB_ADMIN_DEV_PORT",
-      defaultPort: "8790",
-      fixedPort: true,
-    });
+    await runDevScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
@@ -56,4 +34,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "build" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "build" }));

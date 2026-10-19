@@ -45,5 +45,5 @@ pub struct AddSection {
 
 pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let id = doc.operation()?.entity_id("s", "sections")?;
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy }, index: None })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy }, index: None })]))
 }

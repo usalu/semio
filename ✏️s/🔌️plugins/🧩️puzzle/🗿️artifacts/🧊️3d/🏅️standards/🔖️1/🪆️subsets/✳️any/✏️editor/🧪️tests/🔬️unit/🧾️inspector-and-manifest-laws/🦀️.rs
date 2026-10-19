@@ -264,10 +264,6 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     let dialog = def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog");
     assert_eq!(dialog.title.resolve(terminology, locale), "Baukomponente hinzufügen");
     assert_eq!(dialog.submit_label.resolve(terminology, locale), "Hinzufügen");
-    // 🗂️ The select's own label is the terminology-aware half; its OPTIONS are the declared examples'
-    // catalog rows (`puzzle3d_object_kind_options`), carried as `LocalizedLabel::data` — document data,
-    // never authored UI text, so a row reads identically on every axis. The literal `"Object"` option
-    // this law used to assert on was the hardcoded placeholder that catalog derivation replaced.
     let arg = dialog.args.iter().find(|entry| entry.id == "objectKind").expect("objectKind arg");
     assert_eq!(arg.label.resolve(terminology, locale), "Art");
     match arg.control() {
@@ -283,10 +279,7 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     assert_eq!(action("addObjectKind").label.resolve(terminology, locale), "Baukomponente hinzufügen");
     assert_eq!(action("openVortexSuggestions").label.resolve(terminology, locale), "Verbindungspunkt-Vorschläge öffnen");
     assert_eq!(action("createAttraction").label.resolve(terminology, locale), "Verbindung erstellen");
-    assert_eq!(def.utilities.iter().find(|entry| entry.id == utilities::transform::UTILITY_ID).expect("transform utility").label.resolve(terminology, locale), "Transformieren");
-    // 🎭️✏️ `create_puzzle3d_app()` no longer registers examples (see its own doc comment — `Editor::builder`
-    // has no `.example(...)` and `AppDefinition` carries no `examples` field), so the concrete-forest
-    // example's German label can no longer be asserted here; dropped, not silently left stale.
+    assert_eq!(def.utilities.iter().find(|entry| entry.id == semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID).expect("transform utility").label.resolve(terminology, locale), "Transformieren");
     let framework_interaction_actions = [
         INTERACTION_SELECT_ACTION_ID,
         semio_framework_plugin::INTERACTION_HOVER_ACTION_ID,
@@ -321,12 +314,10 @@ async fn app_definition_labels_stay_english_native_without_brand_locks() {
 #[semio_framework_async_macros::async_test]
 async fn document_and_kinds_trees_use_german_reuse_section_labels() {
     let mut app = app().await;
-    // 🗣️ Panels resolve their label set from the host's own axes and fail closed on an unauthored one
-    // (`puzzle3d_labels`), so the German reuse text this law is about only exists once the axes name it.
     app.set_label_axes(semio_framework_ui_locale::Locale::De, semio_framework_ui_locale::Terminology::Reuse);
     let document_json = render_body(&mut app, artifact::BODY_KEY).await.to_string();
     let kinds = render_body(&mut app, catalogue::BODY_KEY).await.to_string();
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures_json = to_json_string(&app.window_measures(&view).await);
     assert!(document_json.contains("Baukomponenten"), "document tree objects section");
     assert!(document_json.contains("Verbindungen"), "document tree attractions section");
@@ -347,9 +338,9 @@ async fn main_window_utilities_lead_with_transform_without_select_tool_and_no_de
     assert!(!utility_ids.contains(&"select"), "puzzle 3d must not declare a select utility");
     assert!(!utility_ids.contains(&"scale"), "puzzle 3d must not declare a scale utility");
     assert!(!utility_ids.contains(&semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID), "fill is a mode-level tool, not a window utility");
-    let window = definition.window_kinds.iter().find(|window| window.id == main::WINDOW_KIND_ID).expect("main window");
+    let window = definition.window_kinds.iter().find(|window| window.id == semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window");
     let main_utilities: Vec<&str> = window.utilities.iter().map(|utility| utility.as_str()).collect();
-    assert_eq!(main_utilities.first().copied(), Some(utilities::transform::UTILITY_ID));
+    assert_eq!(main_utilities.first().copied(), Some(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID));
     assert!(!main_utilities.contains(&"select"));
     assert!(!main_utilities.contains(&semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID), "fill must not be bound to the main window as a utility");
     assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "", "unset/cleared host utility must not impersonate transform");

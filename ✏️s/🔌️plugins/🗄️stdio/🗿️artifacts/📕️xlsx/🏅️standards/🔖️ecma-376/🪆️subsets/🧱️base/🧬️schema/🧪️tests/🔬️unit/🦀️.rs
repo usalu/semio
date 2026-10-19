@@ -75,10 +75,6 @@ async fn builder_produces_minimal_valid_package_that_decodes_back() {
 
 #[semio_framework_async_macros::async_test]
 async fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
-    // 🎯️ The engine no longer resolves `SharedString(idx)` into literal text, nor dedupes on
-    // encode -- `workbook.shared_strings` IS the SST, passed through directly. Confirms the
-    // real bytes carry the table unchanged AND every cell keeps its own index (not a
-    // resolved-text copy the old `Text` variant used to collapse into).
     let snap = build_minimal_xlsx(sample_workbook());
     assert!(snap.xml_part(SHARED_STRINGS_PART).is_some(), "the SST is an authoritative XML part");
     xml_document_from_text(&snap.part_text(SHARED_STRINGS_PART).expect("sharedStrings.xml text")).expect("parse sst");
@@ -92,9 +88,6 @@ async fn shared_strings_are_carried_verbatim_never_resolved_or_deduped() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_resolves_real_hand_built_package_with_every_cell_type() {
-    // Hand-built OOXML: real workbook.xml + worksheet + sharedStrings.xml + all rels wired
-    // by hand, not a generator shortcut. Exercises every `XlsxCellValue` variant: shared
-    // string, number, boolean, inline string, and a formula with a cached numeric result.
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -210,11 +203,6 @@ async fn shrinking_sheet_count_drops_stale_worksheet_parts() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_recognizes_strict_office_document_and_shared_strings_relationship_types() {
-    // 🏅️ ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES W3: a genuinely
-    // ISO/IEC 29500-1 Strict-shaped package uses the purl.oclc.org relationship TYPE URIs for
-    // the package-root officeDocument pointer and the workbook's sharedStrings relationship --
-    // without recognizing those (alongside the Transitional ones), decode would reject every
-    // real Strict document outright.
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");

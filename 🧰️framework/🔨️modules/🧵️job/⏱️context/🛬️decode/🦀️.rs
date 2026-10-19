@@ -1,8 +1,9 @@
 //! 🛬️ A paid original source lends actual native decode imports and receives the concrete producer's effects.
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalTurnFailure,StepContext};
-use semio_framework_value::{ErasedSnapshotRetirement,NativeDecodeControl,NativeDecodeRetirementRecipient,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::native_decoding::{NativeDecodeAllocation,NativeForwardedDecodeControl};
-use semio_framework_value::native_decoding::allocation::NativeForwardedDecodeReceipt;
+use semio_framework_value::{ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeAllocation, native_decoding::NativeForwardedDecodeControl};
+use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
 use std::{cell::UnsafeCell,mem::ManuallyDrop,sync::atomic::{AtomicBool,Ordering}};
 
 /// 📋️ The original caller authors a fixed cumulative ownership ceiling before decoding begins.

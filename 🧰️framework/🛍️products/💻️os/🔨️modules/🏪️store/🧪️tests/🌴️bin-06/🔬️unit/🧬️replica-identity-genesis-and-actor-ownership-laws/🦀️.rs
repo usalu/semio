@@ -4,7 +4,7 @@
 /// gestures never share an edit or wire operation id (the hub ledger dedupes by id).
 #[semio_framework_async_macros::async_test]
 async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_operation_id() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️replica-edit-identity.json")).expect("replica identity fixture");
@@ -44,7 +44,7 @@ async fn fresh_replicas_authoring_identical_gestures_never_share_an_edit_or_oper
 
 #[semio_framework_async_macros::async_test]
 async fn dispatch_group_borrowed_child_keeps_exact_sources_on_policy_refusal() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🫳️child-dispatch/🔣️.json")).expect("neutral borrowed child declaration");
@@ -113,12 +113,12 @@ fn immutable_stored_genesis_obeys_the_neutral_law() {
     assert_eq!(DECODED.load(std::sync::atomic::Ordering::SeqCst), 2);
     assert_eq!(born.facts().digest(), digests[0]);
     assert_ne!(digests[0], digests[1]);
-    assert!(semio_framework_os_vcs::io::text::genesis::decode_genesis_hex_controlled("7B",&mut semio_framework_value::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
+    assert!(semio_framework_os_vcs::io::text::genesis::decode_genesis_hex_controlled("7B",&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut |_|true)).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn opened_actor_ownership_obeys_the_neutral_law() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();
@@ -207,7 +207,7 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
 
 #[semio_framework_async_macros::async_test]
 async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
-    const IDENTITY_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| { assert!(progress.owned_bytes <= IDENTITY_CEILING); true };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING, &mut identity_observer).expect("declared Unit caller identity authority");
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧫️actor-genesis/🔣️.json")).unwrap();

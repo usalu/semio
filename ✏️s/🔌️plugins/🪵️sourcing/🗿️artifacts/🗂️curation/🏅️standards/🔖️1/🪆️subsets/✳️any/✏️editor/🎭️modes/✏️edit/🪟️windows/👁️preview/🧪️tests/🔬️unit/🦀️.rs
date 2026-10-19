@@ -40,6 +40,5 @@ async fn definition_declares_the_world3d_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_via_the_app() {
     let mut app = new_app().await;
-    // `render` carries no `InteractionView` yet, so the app-level render always shows the placeholder.
     assert!(render_body(&mut app, SOURCING_CURATION_BODY_PREVIEW).await.contains("No selection"));
 }

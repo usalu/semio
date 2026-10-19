@@ -13,7 +13,7 @@ export function auditLeafAndReferencePolicies(audit: TaxonomyAudit): void {
   }
   if (record(taxonomy.implementationLeafPolicy, "implementationLeafPolicy")) {
     const policy = taxonomy.implementationLeafPolicy;
-    const ignoredPathPatterns = ["**/.git", "**/.next", "**/.nx", "**/.pytest_cache", "**/.venv", "**/.🧬semio", "**/__pycache__", "**/coverage", "**/dist", "**/node_modules", "**/storybook-static", "**/target", "**/📤️dist", "**/🗑️generated", "**/🔌️plugin-modules", "**/📦️packages/🦀️rust/pkg", "**/📦️packages/🟦️typescript/out", "**/📦️packages/🔷️dotnet/obj"];
+    const ignoredPathPatterns = ["**/.cache", "**/.git", "**/.lake", "**/.next", "**/.nx", "**/.pytest_cache", "**/.venv", "**/.🧬semio", "**/__pycache__", "**/coverage", "**/dist", "**/node_modules", "**/storybook-static", "**/target", "**/📤️dist", "**/🗑️generated", "**/🔌️plugin-modules", "**/📦️packages/🦀️rust/pkg", "**/📦️packages/🟦️typescript/out", "**/📦️packages/🔷️dotnet/obj", "**/🎤️präsentation/📅️33.projektetage/🌐️public", "**/🪞️preview2-shim"];
     if (Object.keys(policy).sort().join("\0") !== "fileKindIds\0ignoredPathPatterns\0roles" || policy.roles.join("\0") !== "source" || policy.fileKindIds.join("\0") !== "css\0html" || policy.ignoredPathPatterns.join("\0") !== ignoredPathPatterns.join("\0")) problems.push("implementationLeafPolicy must cover every source role plus exact CSS/HTML authored kinds and only the declared generated, cache and tool-state paths.");
     ids(policy.fileKindIds, taxonomy.fileKinds, "implementationLeafPolicy.fileKindIds");
     for (const [index, value] of policy.ignoredPathPatterns.entries()) pathPattern(value, `implementationLeafPolicy.ignoredPathPatterns[${index}]`);

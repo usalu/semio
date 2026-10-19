@@ -45,7 +45,7 @@ export async function registerUiIntakeAdmissionTests(vitest: PluginRuntimeVitest
       const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
       const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
       const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
-      const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+      const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
       const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
       const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
       const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
@@ -128,7 +128,6 @@ export async function registerUiIntakeAdmissionTests(vitest: PluginRuntimeVitest
               const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
               lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: BigInt(fixture.guestLifetime) };
               patchSequence += 1n;
-              // 🧺️ THE page the defect needs: `panel` twice, with a sibling between them, `A'.base = A.revision`.
               value = {
                 ...plain,
                 lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured" as const, lifetime, requestSequence: payload.requestSequence }),
@@ -147,7 +146,6 @@ export async function registerUiIntakeAdmissionTests(vitest: PluginRuntimeVitest
               const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
               value = receipt.kind === "accepted" ? { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration }) } : plain;
             } else if (first?.kind === "surface-visible") {
-              // 🔁️ Every later refresh publishes the panel again — the crossing the wedged cell used to reject.
               patchSequence += 1n;
               revision += 1n;
               value = { ...plain, uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence }), uiPatches: [{ surface: { instance: lifetime!.instanceId, surface: panel }, revision, baseRevision: revision - 1n, ops: ops(`refresh-${revision}`) }] };
@@ -170,7 +168,6 @@ export async function registerUiIntakeAdmissionTests(vitest: PluginRuntimeVitest
         const viewState = { locale: "en" as const, terminology: "native" as const, windowInstances: [{ id: panel, windowKindId: "fixture" }, { id: other, windowKindId: "fixture" }] };
         const projected = await handle.refreshUi(instance, { viewState, windows: [{ key: panel, bodyKey: "root" }, { key: other, bodyKey: "root" }] });
         for (const window of projected.windows ?? []) installs.push(`${window.key}=${(window.value as { component?: { value?: string } } | undefined)?.component?.value ?? "none"}`);
-        // 🔁️ A second refresh proves the panel's cell is not wedged: it publishes again and projects again.
         const again = await handle.refreshUi(instance, { viewState, windows: [{ key: panel, bodyKey: "root" }] });
         const panelAgain = (again.windows ?? []).find((window) => window.key === panel);
         expect(installs).toContain(`${other}=sibling`);

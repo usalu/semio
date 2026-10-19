@@ -1,0 +1,197 @@
+{
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts",
+ "scopeLine": 81,
+ "coreStmtLine": 82,
+ "coreType": "ShellCoreAfterSpawnedSession",
+ "files": [
+  {
+   "id": "view",
+   "dir": "🎛️view-state-effects",
+   "doc": "🎛️ The host effects that change the shell view state: active utility, active tool and dialog opening.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim."
+  },
+  {
+   "id": "load",
+   "dir": "📥️document-load-effects",
+   "doc": "📥️ The host effects that bring a document in: archive loading and file open requests.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim."
+  },
+  {
+   "id": "export",
+   "dir": "📤️export-effects",
+   "doc": "📤️ The host effects that hand a document out: media downloads, video render and icon render exports.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim."
+  },
+  {
+   "id": "dispatch",
+   "dir": "🔁️dispatch-media-and-extension-effects",
+   "doc": "🔁️ The host effects that continue program work: re-dispatch, media frame requests and extension invocation.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim."
+  },
+  {
+   "id": "replay",
+   "dir": "🎯️replay-shell-command-effect",
+   "doc": "🎯️ The `replayShellCommand` host effect: directory administration, space artifact creation and shell command replay.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: the effect arm of the `applyHostEffects` pass, moved verbatim."
+  },
+  {
+   "id": "instances",
+   "dir": "🌱️spawn-and-open-instance-effects",
+   "doc": "🌱️ The host effects that create program instances: spawning and opening plugin instances.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | useApplyHostEffects}: each function is one effect arm of the `applyHostEffects` pass, moved verbatim."
+  },
+  {
+   "id": "subs",
+   "dir": "📡️operation-subscriptions",
+   "doc": "📡️ The operation completion, diagnostic and progress subscriptions of the host effects hook.\n *\n * 🧱️ Child hook module of {@link ../🟦️.ts | useApplyHostEffects}: runs the original `useEffect` statements in order."
+  }
+ ],
+ "items": [
+  {
+   "id": "util",
+   "kind": "if",
+   "line": 124,
+   "name": "applySetActiveUtilityEffect",
+   "emoji": "🧰",
+   "doc": "Mirrors a program's utility switch into the host registers and the follow-up view state.",
+   "file": "view"
+  },
+  {
+   "id": "tool",
+   "kind": "if",
+   "line": 136,
+   "name": "applySetActiveToolEffect",
+   "emoji": "🛠",
+   "doc": "Mirrors a program's tool switch into the host registers and the follow-up view state.",
+   "file": "view"
+  },
+  {
+   "id": "dialog",
+   "kind": "if",
+   "line": 147,
+   "name": "applyOpenDialogEffect",
+   "emoji": "💬",
+   "doc": "Opens an owned dialog when the effect's session is still the shown one.",
+   "file": "view"
+  },
+  {
+   "id": "load",
+   "kind": "if",
+   "line": 162,
+   "name": "applyLoadDocumentEffect",
+   "emoji": "📦",
+   "doc": "Loads a pack and spr pair through the program's stepped archive loader with progress and cancellation.",
+   "file": "load"
+  },
+  {
+   "id": "fileopen",
+   "kind": "if",
+   "line": 236,
+   "name": "applyRequestFileOpenEffect",
+   "emoji": "📂",
+   "doc": "Reads the files the user picks and imports them through the program's import action.",
+   "file": "load"
+  },
+  {
+   "id": "download",
+   "kind": "if",
+   "line": 192,
+   "name": "applyDownloadMediaExportEffect",
+   "emoji": "💾",
+   "doc": "Delivers an inline or segmented media export as a download.",
+   "file": "export"
+  },
+  {
+   "id": "video",
+   "kind": "if",
+   "line": 211,
+   "name": "applyVideoRenderExportEffect",
+   "emoji": "🎞",
+   "doc": "Runs a video render export and announces its outcome.",
+   "file": "export"
+  },
+  {
+   "id": "icon",
+   "kind": "if",
+   "line": 225,
+   "name": "applyIconRenderExportEffect",
+   "emoji": "🖼",
+   "doc": "Renders each requested icon and downloads the data URL.",
+   "file": "export"
+  },
+  {
+   "id": "redispatch",
+   "kind": "if",
+   "line": 254,
+   "name": "applyDispatchActionEffect",
+   "emoji": "🔂",
+   "doc": "Schedules the program's self re-dispatch through the host continuation scheduler.",
+   "file": "dispatch"
+  },
+  {
+   "id": "media",
+   "kind": "if",
+   "line": 439,
+   "name": "applyRequestMediaFramesEffect",
+   "emoji": "🎥",
+   "doc": "Answers a media frame request through the program's media transport.",
+   "file": "dispatch"
+  },
+  {
+   "id": "extension",
+   "kind": "if",
+   "line": 459,
+   "name": "applyInvokeExtensionEffect",
+   "emoji": "🧩",
+   "doc": "Invokes an extension capability and feeds its completion back through the effect pass.",
+   "file": "dispatch"
+  },
+  {
+   "id": "replay",
+   "kind": "if",
+   "line": 284,
+   "name": "applyReplayShellCommandEffect",
+   "emoji": "🎭",
+   "doc": "Replays a shell-owned command against the directory, the space index and the artifact creation lane.",
+   "file": "replay"
+  },
+  {
+   "id": "spawn",
+   "kind": "if",
+   "line": 495,
+   "name": "applySpawnPluginInstanceEffect",
+   "emoji": "🌿",
+   "doc": "Spawns a plugin instance for the effect's program.",
+   "file": "instances"
+  },
+  {
+   "id": "open",
+   "kind": "if",
+   "line": 507,
+   "name": "applyOpenPluginInstanceEffect",
+   "emoji": "🚪",
+   "doc": "Opens a plugin instance and mounts it into the shell.",
+   "file": "instances"
+  },
+  {
+   "id": "sub1",
+   "kind": "range",
+   "line": 590,
+   "to": 668,
+   "name": "useOperationCompletionSubscriptions",
+   "emoji": "🏁",
+   "doc": "Applies terminal operation publications and shows the operation diagnostics for the active and spawned receivers.",
+   "file": "subs"
+  },
+  {
+   "id": "sub2",
+   "kind": "range",
+   "line": 673,
+   "to": 740,
+   "name": "useOperationProgressSubscriptions",
+   "emoji": "📈",
+   "doc": "Renders a running operation's process through the ui-refresh lane for the session and every spawned program.",
+   "file": "subs"
+  }
+ ],
+ "types": {
+  "effectOwner": "ReturnType<ShellCoreAfterSpawnedSession[\"captureEffectOwner\"]>",
+  "effectOrigin": "ReturnType<ShellCoreAfterSpawnedSession[\"captureEffectOwner\"]>[\"presentation\"]",
+  "nextViewState": "ActiveSession[\"viewState\"]",
+  "applyHostEffects": "(effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<ShellCoreAfterSpawnedSession[\"captureEffectOwner\"]>) => Promise<void>"
+ }
+}

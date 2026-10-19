@@ -1,4 +1,4 @@
-//! projection: the instance/mesh/vortex/attraction/target-volume/reference payloads, the selection
+//! 🔭️ projection: the instance/mesh/vortex/attraction/target-volume/reference payloads, the selection
 //! 🧊️ Puzzle 3d play app — the one `World3d` window kind. Owns the viewport's whole scene
 //! and gumball descriptor, the LOD/chunking/environment blocks and the interaction channel (active
 //! utility, suggestion popup) the host renderer reads. Also

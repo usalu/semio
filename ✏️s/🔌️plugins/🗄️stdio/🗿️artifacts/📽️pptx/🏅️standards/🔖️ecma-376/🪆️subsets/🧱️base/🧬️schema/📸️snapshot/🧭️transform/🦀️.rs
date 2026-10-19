@@ -1,5 +1,6 @@
 //! 📐️ Exact signed64 transform scalar boundary.
-use semio_framework_value::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError};
+use semio_framework_value::{DslValue, NativeEncodeControl, ValueError};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::ValueRefusalKind;
 fn parse(text: &str) -> Result<i64, String> {
     if text.len() > 20 {

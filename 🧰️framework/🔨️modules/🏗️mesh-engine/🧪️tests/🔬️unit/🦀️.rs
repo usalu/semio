@@ -50,10 +50,10 @@ fn stl_round_trip() {
 fn tetra_mesh_fixture() -> MeshData {
     let mut mesh = MeshData {
         positions: vec![
-            0.0, 0.0, 0.0, // v0
-            1.0, 0.0, 0.0, // v1
-            0.0, 1.0, 0.0, // v2
-            0.0, 0.0, 1.0, // v3
+            0.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0,
         ],
         indices: vec![0, 1, 2, 0, 1, 3, 0, 2, 3, 1, 2, 3],
         ..MeshData::default()
@@ -93,8 +93,6 @@ fn stl_round_trip_preserves_triangle_geometry() {
     let bytes = StlExporter.export(&mesh).expect("export stl");
     let decoded = StlImporter.import(&bytes).expect("import stl");
     assert_eq!(decoded.triangle_count(), mesh.triangle_count());
-    // STL has no vertex sharing, so indices are trivially [0, 1, 2, 3, ...]; compare
-    // per-triangle corner positions against the original indexed mesh instead.
     for (triangle, decoded_tri) in mesh.indices.as_chunks::<3>().0.iter().zip(decoded.indices.as_chunks::<3>().0) {
         for (&original_index, &decoded_index) in triangle.iter().zip(decoded_tri.iter()) {
             let original = &mesh.positions[original_index as usize * 3..original_index as usize * 3 + 3];

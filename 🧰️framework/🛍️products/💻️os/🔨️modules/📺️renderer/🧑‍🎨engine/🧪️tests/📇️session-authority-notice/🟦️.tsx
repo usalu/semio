@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import equal from "fast-deep-equal";
 import { afterEach, describe, expect, it } from "vitest";
 import { directorySessionRefreshFixture as fixture } from "../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
-import { DIRECTORY_SESSION_AUTHORITY_TEXT_V1, directorySessionAuthorityTextV1, parseDirectorySessionAuthorityLocaleV1 } from "../../../../../../../🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts";
+import { DIRECTORY_SESSION_AUTHORITY_TEXT_V1, directorySessionAuthorityTextV1, parseDirectorySessionAuthorityLocaleV1 } from "@semio-tech/framework/directory/session-refresh";
 import { SessionAuthorityNotice } from "../../🧱️elements/🏛️ShellHost/🔖️session-notice/🟦️.tsx";
 
 afterEach(cleanup);

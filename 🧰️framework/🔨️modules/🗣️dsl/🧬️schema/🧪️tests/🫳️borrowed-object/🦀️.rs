@@ -253,7 +253,7 @@ enum DeclaredVariantField {
 #[test]
 fn declared_variant_field_has_one_named_record_and_preserves_control() {
     use crate::{BorrowedDslField, BorrowedShape, DslField, FieldValue, native_encoding::FieldProjectionView};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🌿️variant-field/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🫳️borrowed-object/🌿️variant-field/🔣️.json")).unwrap();
     let BorrowedShape::Statements(variants) = <DeclaredVariantField as BorrowedDslField>::SHAPE else { panic!("declared variants retain their typed statement shape") };
     assert_eq!(variants.len(), fixture["variantCount"].as_u64().unwrap() as usize);
     for row in fixture["valid"].as_array().unwrap() {
@@ -281,21 +281,21 @@ fn declared_variant_field_has_one_named_record_and_preserves_control() {
         assert_eq!(expected.to_value_controlled(&mut control).unwrap(), encoded);
         assert!(control.owned_bytes() > 0);
         let mut decode_accepted = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut decode_accepted);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut decode_accepted);
         assert_eq!(<DeclaredVariantField as DslField>::from_value_controlled(&encoded, &mut control).unwrap(), expected);
         let mut canceled = |_| false;
         let mut control = semio_framework_value::NativeEncodeControl::new(0, &mut canceled);
         assert!(expected.to_value_controlled(&mut control).is_err());
         assert_eq!(control.owned_bytes(), fixture["canceledOwnedBytes"].as_u64().unwrap() as usize);
         let mut decode_canceled = |_| false;
-        let mut control = semio_framework_value::NativeDecodeControl::new(0, &mut decode_canceled);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut decode_canceled);
         assert!(<DeclaredVariantField as DslField>::from_value_controlled(&encoded, &mut control).is_err());
         assert_eq!(control.owned_bytes(), fixture["canceledOwnedBytes"].as_u64().unwrap() as usize);
         for count in fixture["refusedStatementCounts"].as_array().unwrap() {
             let malformed = FieldValue::Statements(vec![statements[0].clone(); count.as_u64().unwrap() as usize]);
             assert!(<DeclaredVariantField as DslField>::from_value(&malformed).is_err());
             let mut decode_accepted = |_| true;
-            let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut decode_accepted);
+            let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut decode_accepted);
             assert!(<DeclaredVariantField as DslField>::from_value_controlled(&malformed, &mut control).is_err());
         }
     }

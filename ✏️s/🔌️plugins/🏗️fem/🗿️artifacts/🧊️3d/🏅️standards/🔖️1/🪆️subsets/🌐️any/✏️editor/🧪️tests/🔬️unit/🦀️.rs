@@ -99,8 +99,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(FEM3D_RETAINED_TOOL_IDS.len(), 34);
     assert_eq!(<Fem3dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 34);
     assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), 34);
-    // 🧷️ `validate_tool_job_rows` compares `registration.contract == row.contract` byte for byte, so
-    // the proof rows and the registered factory MUST build from the one `fem3d_retained_contract()`.
     assert_eq!(fem3d_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(ToolJobFactory::execution_contract(&Fem3dRetainedCommandJobFactory::new("s.fem.fem3d@1/*#editor")), fem3d_retained_contract());
     let mut sorted_ids = FEM3D_RETAINED_TOOL_IDS.to_vec();
@@ -139,7 +137,7 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
     let boot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
     let factory = Fem3dArtifactPreparationFactory;
     for solid in &boot.solids {
-        let mutation = Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone(), index: None });
+        let mutation = Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone(), index: None });
         assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
     }
     for node in &boot.nodes {
@@ -286,7 +284,7 @@ async fn every_command_keeps_its_current_bytes() {
         let bytes = command.encode_op().expect("encode");
         assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected, "wire bytes changed for {}", command.command_id());
     }
-    let nodal_load_without_case = Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value: -5000.0, case_id: None });
+    let nodal_load_without_case = Fem3dCommand::AddNodalLoad(Fem3dCommand::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value: -5000.0, case_id: None });
     assert_eq!(nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "010601026e3103000600010a020205000000000088b3c0");
 }
 
@@ -384,7 +382,7 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
         envelope.retire_unadopted();
         events
     }
-    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🕹️interaction/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("peer vectors");
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../🕹️interaction/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("peer vectors");
     let row = &fixture["peerCatchUp"];
     let mut first = fem3d_peer_app("fem3d-peer-a");
     let mut second = fem3d_peer_app("fem3d-peer-b");
@@ -422,7 +420,7 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
 async fn undo_restores_document_after_add_node() {
     let mut app = fem3d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(Fem3dCommand::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🛡️ The same round trip for `addSupport`, the verb 🏗️fem3d's own bar presses. B3f measured it
@@ -512,7 +510,7 @@ async fn import_media_geometry_in_adds_a_new_solid_3d() {
     let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     assert_eq!(emit.artifact_mutations.len(), 1);
     match &emit.artifact_mutations[0] {
-        Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, .. }) => {
+        Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, .. }) => {
             assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
             assert_eq!(solid.base_z, 0.5);
             assert_eq!(solid.height, 3.0);
@@ -570,6 +568,16 @@ async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
 }
 //#endregion 🎬️SceneRender
 use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::set_active_example;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_node;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_support;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::add_material;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model as window_model;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results as window_results;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dPlayApp;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 /// 👥️ The mounted camera and declared interaction use the shared transport and retire on departure.
 #[semio_framework_async_macros::async_test]
@@ -583,9 +591,9 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     let boot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
     let node = boot.nodes.first().expect("bundled structural node");
     let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
-    let window_kind = edit::windows::model::FEM3D_WINDOW_MODEL;
+    let window_kind = semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL;
     let view = semio_framework_plugin::ViewModel { window_id: Some("model-presence".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "model-presence".into(), window_kind_id: window_kind.into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let protocol::PresenceViewKind::Orbit { position, target, up, .. } = expected.kind else { panic!("portable orbit pose") };
-    let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: crate::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
+    let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_framework_os_kernel::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
     assert_registered_presence_round_trip::<EditorApp<Fem3dPlayApp>, _, _>(|| async { context::manifest() }, command, view, expected, ("fem3d", Some(("node", &selected))), fixture_mounted_policy(), &mut fixture_identity()).await;
 }

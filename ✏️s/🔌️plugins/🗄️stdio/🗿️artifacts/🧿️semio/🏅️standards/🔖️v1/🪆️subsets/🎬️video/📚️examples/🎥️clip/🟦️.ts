@@ -1,2 +1,2 @@
-/** clip semio video */
+/** 🎞️ clip semio video */
 export const ID = 'clip';

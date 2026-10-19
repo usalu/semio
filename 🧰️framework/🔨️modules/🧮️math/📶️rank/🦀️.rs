@@ -1,5 +1,7 @@
 //! 📶️ Original scalar columns prepare quantile bands through admitted pages and one shared sort frontier per turn.
-use semio_framework_value::{list::PagedList,HeapSortCursor,HeapSortWork,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetainedCloneStep as Step}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant as Grant, RetainedCloneProgress as Progress, RetainedCloneStep as Step}};
+use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_edit::{sort::HeapSortCursor, sort::HeapSortWork};
 use std::mem::size_of;
 const CONTROL:usize=8*size_of::<usize>()+5*size_of::<f64>()+2*size_of::<u8>()+2*size_of::<bool>();
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original scalar rank projection lost its paid frontier")}

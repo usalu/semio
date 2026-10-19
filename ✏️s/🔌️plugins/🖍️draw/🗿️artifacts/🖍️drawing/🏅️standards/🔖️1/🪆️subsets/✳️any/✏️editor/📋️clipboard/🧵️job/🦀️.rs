@@ -13,12 +13,13 @@ use semio_s_artifact_draw_drawing_editor_interaction::clipboard::invert;
 use semio_framework_plugin::{ArtifactReservedToolJobRequest,ArtifactReservedToolInput,EditorApp,Emit,Effect,EphemeralEmit,ArtifactReservedJob};
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,StepContext};
-use semio_framework_value::{DslValue,ValueError,RetireOwned,NativeDecodeControl,native_decoding::NativeDecodeContinuation,NativeEncodeControl,NativeEncodeContinuation,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneSource,RetainedCloneStep}};
+use semio_framework_value::{DslValue, ValueError, RetireOwned, NativeEncodeControl, NativeEncodeContinuation, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeContinuation};
 use semio_framework_value::retirement::RetireOwned as RetireAuthority;
 type App=EditorApp<crate::DrawingPlayApp>;
 type Clone<T>=semio_s_artifact_draw_drawing_host_arena::DrawingNativeCloneAuthority<T>;
 type NativeText=semio_framework_value::paged::PagedUtf8<{usize::MAX}>;
-type NativeRetired=semio_framework_value::list::PagedList<NativeText,{MAX_NODES*MAX_NODES+MAX_TASKS}>;
+type NativeRetired=semio_framework_value_persistent::list::PagedList<NativeText,{MAX_NODES*MAX_NODES+MAX_TASKS}>;
 struct ClipboardScene<'a>{packet:&'a DrawingClipboard,selected:&'a[String]}
 impl semio_s_artifact_draw_drawing_scene::preparation::DrawingSceneSource for ClipboardScene<'_>{
  fn root_count(&self)->usize{self.packet.roots.len()}
@@ -37,6 +38,10 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes;
 use semio_s_artifact_draw_drawing_editor_interaction::clipboard::media_type;
+use semio_framework::kernel::PasteAnchor;
+use semio_framework::kernel::ClipboardError;
+use semio_framework::kernel::ClipboardFragment;
+use semio_framework::kernel::PastePlacement;
 #[path="📋️metadata/🦀️.rs"]
 pub mod metadata;
 struct TreeCursor{address:DrawingLayerAddress,children:[usize;MAX_DEPTH],base:usize,entered:bool,complete:bool,all_roots:bool}

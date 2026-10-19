@@ -8,7 +8,7 @@ export interface SemioGraphTopology {
 }
 
 export interface SemioGraphInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: SemioGraphTopology;
 }
 

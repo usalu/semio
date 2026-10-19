@@ -535,7 +535,7 @@ pub struct DrawingPlacedLayer<'a> {
 /// 🗂️ Every layer of `base` whose id is in `ids`, in document (pre-)order, placed in the world.
 pub fn drawing_placed_layers<'a, T: semio_framework_value::paged::Utf8Text>(base: &'a DrawingSnapshot, ids: &[T]) -> Vec<DrawingPlacedLayer<'a>> {
     let mut placed = Vec::new();
-    let mut stack: Vec<(semio_framework_value::list::PagedIter<'a, DrawingLayerNode, {usize::MAX}>, [f64; 6], bool, Option<&'a semio_framework_value::paged::PagedUtf8<{usize::MAX}>>)> = vec![(base.layers.iter(), DRAWING_IDENTITY_MATRIX, true, None)];
+    let mut stack: Vec<(semio_framework_value_persistent::list::PagedIter<'a, DrawingLayerNode, {usize::MAX}>, [f64; 6], bool, Option<&'a semio_framework_value::paged::PagedUtf8<{usize::MAX}>>)> = vec![(base.layers.iter(), DRAWING_IDENTITY_MATRIX, true, None)];
     while let Some((layers, parent, editable, ancestor)) = stack.last_mut() {
         let Some(layer) = layers.next() else {
             stack.pop();
@@ -557,7 +557,7 @@ pub fn drawing_placed_layers<'a, T: semio_framework_value::paged::Utf8Text>(base
 }
 
 /// 🚨️ The schema-stated target invariant every selection transform shares: at least one id, none repeated.
-pub fn drawing_targets_invariant(targets: &semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> Result<(), &'static str> {
+pub fn drawing_targets_invariant(targets: &semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> Result<(), &'static str> {
     if targets.is_empty() {
         return Err("a selection transform addresses at least one layer");
     }
@@ -570,7 +570,7 @@ pub fn drawing_targets_invariant(targets: &semio_framework_value::list::PagedLis
 
 /// 🚨️ The `mutation.partial` warnings of a layer selection transform: addressed ids missing from the drawing, locked or hidden,
 /// or placed through a singular transform — each skipped, never fatal.
-pub fn drawing_selection_partial(targets: &semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, placed: &[DrawingPlacedLayer<'_>], locked: Vec<String>, singular: Vec<String>) -> Vec<protocol::MutationMessage> {
+pub fn drawing_selection_partial(targets: &semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, placed: &[DrawingPlacedLayer<'_>], locked: Vec<String>, singular: Vec<String>) -> Vec<protocol::MutationMessage> {
     let missing: Vec<String> = targets.iter().filter(|id| !placed.iter().any(|entry| &layer_base(entry.layer).id == *id)).map(|id| id.to_string_owner()).collect();
     [(missing, "not in this drawing"), (locked, "locked or hidden"), (singular, "placed through a singular transform")]
         .into_iter()

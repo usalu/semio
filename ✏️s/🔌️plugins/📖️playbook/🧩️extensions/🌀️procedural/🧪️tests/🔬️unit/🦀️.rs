@@ -208,12 +208,9 @@ async fn params_body_includes_media_export_buttons() {
 async fn export_solid_action_stashes_result_and_is_undoable() {
     let mut app = new_app().await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none());
-    // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
-    // stashed result is read back through the materialized projection.
     let export_args = json_to_dsl_value(&semio_framework_pack_json::json!({ "format": "obj" }));
     act(&mut app, ACTION_EXPORT_SOLID, Some(&export_args)).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
-    // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
     artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta().instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
     artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
@@ -254,8 +251,6 @@ async fn export_solid_declares_only_format_arg_and_materializes_default() {
     semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     app.bind_instance_id(meta().instance_id).await;
     let mut app = ModuleTestApp(app, scope);
-    // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
-    // so the whole-payload operation still applies and stashes a result.
     act(&mut app, ACTION_EXPORT_SOLID, None).await;
     assert!(app.snapshot().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");

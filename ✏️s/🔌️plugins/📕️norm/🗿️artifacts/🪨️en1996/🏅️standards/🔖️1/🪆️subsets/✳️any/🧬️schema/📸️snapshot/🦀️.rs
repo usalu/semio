@@ -386,7 +386,7 @@ pub struct WallOpening {
 #[value(rename_all = "camelCase")]
 pub struct ConcentratedLoad {
     pub id: String,
-    /// Characteristic concentrated force F_k [N].
+    /// 🧲️ Characteristic concentrated force F_k [N].
     #[dsl(unit = "N")]
     pub force_n: f64,
     #[dsl(unit = "m2")]
@@ -403,31 +403,31 @@ pub struct ConcentratedLoad {
 #[value(rename_all = "camelCase")]
 pub struct WallLoadCase {
     pub id: String,
-    /// persistent | transient | accidental | seismic
+    /// 🎨️ persistent | transient | accidental | seismic
     pub design_situation: String,
-    /// Imposed-floor category (A/B/C/D/E/H/…) for ψ factors (EN 1990 Table A1.1 / DE NA).
+    /// 📌️ Imposed-floor category (A/B/C/D/E/H/…) for ψ factors (EN 1990 Table A1.1 / DE NA).
     pub imposed_category: String,
-    /// Characteristic permanent vertical load from slabs/floors onto this wall [N] (excl. wall self-weight).
+    /// 🟫️ Characteristic permanent vertical load from slabs/floors onto this wall [N] (excl. wall self-weight).
     #[dsl(unit = "N")]
     pub g_k_slab_n: f64,
-    /// Characteristic imposed floor load intensity [Pa].
+    /// 🔒️ Characteristic imposed floor load intensity [Pa].
     #[dsl(unit = "Pa")]
     pub q_k_imposed_pa: f64,
-    /// Tributary floor area for imposed / snow vertical load [m²].
+    /// 📐️ Tributary floor area for imposed / snow vertical load [m²].
     #[dsl(unit = "m2")]
     pub tributary_area_m2: f64,
-    /// Clear slab span [m] (eccentricity + EN 1996-3/NA Table NA.A.1 ≤ 6 m).
+    /// ⬜️ Clear slab span [m] (eccentricity + EN 1996-3/NA Table NA.A.1 ≤ 6 m).
     #[dsl(unit = "m")]
     pub slab_span_m: f64,
-    /// Characteristic snow load intensity on tributary [Pa].
+    /// 🌬️ Characteristic snow load intensity on tributary [Pa].
     #[dsl(unit = "Pa")]
     pub q_k_snow_pa: f64,
-    /// Peak velocity pressure q_p [Pa] (EN 1991-1-4).
+    /// ❄️ Peak velocity pressure q_p [Pa] (EN 1991-1-4).
     #[dsl(unit = "Pa")]
     pub q_p_wind_pa: f64,
-    /// External pressure coefficient c_pe [-] (EN 1991-1-4).
+    /// 🔗️ External pressure coefficient c_pe [-] (EN 1991-1-4).
     pub c_pe: f64,
-    /// Characteristic horizontal earth-pressure resultant on basement wall [N].
+    /// 🗺️ Characteristic horizontal earth-pressure resultant on basement wall [N].
     #[dsl(unit = "N")]
     pub h_k_earth_n: f64,
     #[dsl(table)]
@@ -472,7 +472,7 @@ pub struct MasonryWall {
     pub unit_height_m: f64,
     pub mortar_type: MortarType,
     pub mortar_class: MortarClass,
-    /// Declared mortar compressive strength (SI Pa) — must match `mortarClass` within tolerance.
+    /// 🔆️ Declared mortar compressive strength (SI Pa) — must match `mortarClass` within tolerance.
     #[dsl(unit = "Pa")]
     pub mortar_strength_pa: f64,
     #[dsl(unit = "m")]
@@ -486,13 +486,13 @@ pub struct MasonryWall {
     pub f_yd_pa: f64,
     pub fire_rei_min: u32,
     pub exposure: ExposureClass,
-    /// Friction coefficient μ for sliding (EN 1996-1-1 §6.2 / DE NA).
+    /// 🔢️ Friction coefficient μ for sliding (EN 1996-1-1 §6.2 / DE NA).
     pub mu: f64,
-    /// Masonry bulk density for self-weight [kg/m³].
+    /// 🔋️ Masonry bulk density for self-weight [kg/m³].
     pub density_kg_m3: f64,
-    /// Final creep coefficient φ_∞ (EN 1996-1-1 Table 3.3 / DE NA) used in e_k.
+    /// 🏁️ Final creep coefficient φ_∞ (EN 1996-1-1 Table 3.3 / DE NA) used in e_k.
     pub phi_infinity: f64,
-    /// Basement wall (EN 1996-3/NA earth-pressure path).
+    /// 🚧️ Basement wall (EN 1996-3/NA earth-pressure path).
     pub is_basement: bool,
     #[dsl(table)]
     pub load_cases: Vec<WallLoadCase>,

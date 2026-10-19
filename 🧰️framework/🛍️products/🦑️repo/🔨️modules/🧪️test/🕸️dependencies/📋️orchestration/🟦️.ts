@@ -22,10 +22,6 @@ export function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[]
     entries: { ecosystem: string; name: string; version: string; kinds: string[]; users: string[]; productionReachable?: boolean; oracleIds?: string[]; capabilities?: string[] }[];
   };
   const registry = loadOracleRegistry(repoRoot);
-  // 🔒️Keyed by EVERY package an oracle links and holding EVERY oracle that links it. Keying on the
-  // primary package alone missed the composed halves; keeping only one oracle per package made the
-  // committed record depend on manifest discovery order, so the same repository could produce two
-  // different baselines. Ids are sorted, so the file is a function of the registry and nothing else.
   const oraclesByLinkedPackage = new Map<string, OracleEntry[]>();
   for (const oracle of registry.oracles) for (const linked of oracleLinkedPackages(oracle)) oraclesByLinkedPackage.set(linked.package, [...(oraclesByLinkedPackage.get(linked.package) ?? []), oracle]);
   const classified: ClassifiedDependency[] = baselineRaw.entries.map((entry) => {
@@ -45,10 +41,6 @@ export function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[]
       capabilities: linking.length > 0 ? [...new Set(linking.flatMap((oracle) => oracle.capabilities))].sort() : entry.capabilities,
     };
   });
-  // 🧩️EVERY package a registered oracle links, not only the one its id is named after. A composed
-  // reference (reader + writer, archive + XML) links several, and a secondary package that never
-  // reached this list would be linked into the host while the ratchet and the report both showed it
-  // as absent — the exact blind spot registration exists to close.
   for (const oracle of registry.oracles) {
     for (const linked of oracleLinkedPackages(oracle)) {
       if (classified.some((entry) => entry.name === linked.package)) continue;
@@ -65,10 +57,6 @@ export function loadClassifiedBaseline(repoRoot: string): ClassifiedDependency[]
       });
     }
   }
-  // 🧩️An owner that puts an external distribution on a generated host's import path has added a
-  // third-party test dependency, exactly as registering an oracle package does. Classifying it here
-  // is what keeps the Python and npm hosts inside the same ratchet as the Rust one instead of
-  // letting a manifest field become an unwatched channel for reference libraries.
   for (const host of externalOracleHostPackages(registry)) {
     const existing = classified.find((entry) => entry.ecosystem === host.ecosystem && entry.name === host.name);
     if (existing !== undefined) {
@@ -93,10 +81,6 @@ export class DependencyScript extends Script {
       return;
     }
 
-    // 🔎️The ratchet is fed the COMMITTED baseline against a FRESH SCAN of the live tree. It used to be
-    // handed the same array twice, which made `newProduction` and `unregisteredTestDeps` provably
-    // always empty however many production dependencies a change added — a shrink-only gate that
-    // could not see growth. `--scan` prints what the scan found, for when the two disagree.
     const scanned = scanDeclaredDependencies(this.repoRoot, registry);
     const verdict = ratchetDependencies(sorted, scanned, registry);
     if (segments.includes("--scan")) {
@@ -109,8 +93,6 @@ export class DependencyScript extends Script {
     const oracleDeps = sorted.filter((entry) => entry.kinds.includes("test-oracle"));
     console.log(`[dependency] ecosystems=${new Set(sorted.map((entry) => entry.ecosystem)).size} entries=${sorted.length} production-reachable=${production.length} test-oracle=${oracleDeps.length}`);
     for (const entry of oracleDeps) console.log(`[dependency] test-oracle ${entry.ecosystem}:${entry.name}@${entry.version} (${(entry.oracleIds ?? []).join(",")})`);
-    // 🔒️Recorded debt is printed every run so it can never quietly become permanent; an UNRECORDED
-    // production-reachable oracle is still a hard failure.
     const recorded = new Map(registry.oracles.filter((entry) => entry.productionDebt !== undefined).map((entry) => [entry.package, entry]));
     for (const [, entry] of recorded) console.log(`[dependency] production-debt ${entry.package} (oracle ${entry.id}) reachable from ${entry.productionDebt!.reachableFrom.join(", ")} — owner ${entry.productionDebt!.owner}`);
     const leaked = oracleDeps.filter((entry) => entry.productionReachable && !recorded.has(entry.name));

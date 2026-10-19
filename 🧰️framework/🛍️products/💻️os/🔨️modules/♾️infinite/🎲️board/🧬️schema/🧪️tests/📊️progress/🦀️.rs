@@ -3,8 +3,9 @@
 use semio_framework_os_infinite_board_schema::{DagComputingProgress, DagInputCursor, DagInputFacts, DagInputKind, decode_dag_computing_progress_json};
 use semio_framework_test_fixtures::fixture_text;
 use std::cell::Cell;
-use semio_framework_value::{ErasedSnapshotRetirement, NativeDecodeControl};
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value::ErasedSnapshotRetirement;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::retirement::{admit_owned_retirement, RetireOwned};
 

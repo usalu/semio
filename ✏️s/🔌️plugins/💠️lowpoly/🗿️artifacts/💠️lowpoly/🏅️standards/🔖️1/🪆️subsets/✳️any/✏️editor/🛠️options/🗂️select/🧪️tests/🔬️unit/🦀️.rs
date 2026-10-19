@@ -17,12 +17,9 @@ async fn select_window_options_expose_mesh_domain_granularity_and_mode_toggles()
         })
         .collect();
     let ids: Vec<&str> = toggles.iter().map(|(id, _, _)| *id).collect();
-    // 🎯️ The pressed toggles ARE the live state: multiple mode and the face granularity here.
     let pressed: Vec<&str> = toggles.iter().filter(|(_, _, pressed)| *pressed).map(|(id, _, _)| *id).collect();
     assert_eq!(pressed, vec!["lowpoly-select-mode-multiple", "lowpoly-select-face"]);
     assert_eq!(ids, vec!["lowpoly-select-mode-single", "lowpoly-select-mode-multiple", "lowpoly-select-mesh", "lowpoly-select-vertex", "lowpoly-select-edge", "lowpoly-select-face"]);
-    // 🕹️ Every toggle dispatches a framework-injected mesh-domain interaction verb, never a
-    // deleted app command.
     for (id, action, _) in &toggles {
         assert!(action.action == "setInteractionGranularity" || action.action == "setSelectionMode", "{id} must dispatch a framework interaction verb, got {}", action.action);
     }

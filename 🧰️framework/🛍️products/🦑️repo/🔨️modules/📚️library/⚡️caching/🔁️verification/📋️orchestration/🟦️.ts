@@ -1,11 +1,17 @@
 import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import buildPolicy from "../../../🏗️build/🔣️policy.json" with { type: "json" };
+import probeSchema from "../🧬️schema/🔣️.json" with { type: "json" };
+import probeData from "../🔣️probe.json" with { type: "json" };
+import type { CacheProbeSpecV1, CacheProbeToolV1 } from "../../../🏗️build/⚙️operations/🟦️.ts";
 
-/** 🔁️ Verifies actual Nx execution, reuse, restoration and invalidation in an isolated ticket fixture. */
+const probeSpecification = probeData as CacheProbeSpecV1;
+
+/** 🔁️ Verifies actual build tool execution, reuse, restoration and invalidation in an isolated ticket fixture. */
 export class CacheVerifyScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const output = ticketOutput(this.repoRoot, args);
@@ -20,7 +26,15 @@ export class CacheVerifyScript extends BundleScript {
     }
   }
 
+  private async probeTool(): Promise<CacheProbeToolV1> {
+    const selected = process.env.SEMIO_BUILD_TOOL ?? buildPolicy.defaultTool;
+    if (selected !== "nx") throw new Error(`No cache probe implements build tool ${selected}`);
+    if (validateJsonSchemaSubset(probeSchema, probeSpecification).length) throw new Error("Closed cache probe specification required");
+    return (await import("../../🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts")).nxCacheProbeV1(this.repoRoot);
+  }
+
   private async verify(output: string): Promise<void> {
+    const tool = await this.probeTool();
     const fixture = join(output, "cache-verification");
     const marker = join(fixture, ".nx-verification.json");
     if (existsSync(fixture)) {
@@ -32,28 +46,12 @@ export class CacheVerifyScript extends BundleScript {
     mkdirSync(fixture, { recursive: true });
     writeFileSync(marker, JSON.stringify({ owner: "repo:cache-verify", active: true, pid: process.pid }) + "\n");
     const put = (path: string, data: string | object): void => writeFileSync(join(fixture, path), typeof data === "string" ? data : JSON.stringify(data, null, 2));
-    put("nx.json", {
-      useDaemonProcess: false,
-      cacheDirectory: ".nx/cache",
-      maxCacheSize: "64MB",
-      namedInputs: { production: ["{projectRoot}/source.json", "{projectRoot}/toolchain.json", "{projectRoot}/📜️script.ts", { env: "CACHE_PROBE_MODE" }], test: ["production", "{projectRoot}/spec.json"] },
-    });
-    put("package.json", { name: "cache-verification", private: true, nx: { includedScripts: [] } });
-    put(".gitignore", "node_modules\n.nx\ndist\nstate\n*.log\n");
+    for (const [path, data] of Object.entries(tool.files(probeSpecification))) put(path, data);
     put("source.json", { value: 42 });
     put("toolchain.json", { version: 1 });
     put("spec.json", { case: 1 });
     put("unrelated.json", { ignored: 1 });
     put("validation.json", { valid: true });
-    put("project.json", {
-      name: "probe",
-      targets: {
-        build: { executor: "nx:run-commands", cache: true, inputs: ["production"], outputs: ["{projectRoot}/dist"], options: { command: "bun ./📜️script.ts build" } },
-        test: { executor: "nx:run-commands", cache: true, inputs: ["test"], outputs: [], options: { command: "bun ./📜️script.ts test" } },
-        validate: { executor: "nx:run-commands", cache: false, outputs: [], options: { command: "bun ./📜️script.ts validate" } },
-        guarded: { executor: "nx:run-commands", cache: true, dependsOn: ["validate"], inputs: ["production"], outputs: [], options: { command: "bun ./📜️script.ts guarded" } },
-      },
-    });
     put(
       "📜️script.ts",
       `import { mkdirSync, existsSync, readFileSync, writeFileSync, chmodSync } from "node:fs";
@@ -77,19 +75,9 @@ console.log("[cache-probe] " + command + " executed " + count);
     const observations: { scenario: string; buildExecutions: number; testExecutions: number; exitCode: number; durationMs: number }[] = [];
     const count = (task: string): number => (existsSync(join(fixture, "state", task)) ? Number(readFileSync(join(fixture, "state", task), "utf8")) : 0);
     const run = async (scenario: string, task = "build", mode = "one", success = true): Promise<void> => {
-      const env: Record<string, string | undefined> = {
-        ...process.env,
-        NX_DAEMON: "false",
-        NX_ISOLATE_PLUGINS: "false",
-        NX_TUI: "false",
-        NX_NATIVE_COMMAND_RUNNER: "false",
-        NX_WORKSPACE_DATA_DIRECTORY: join(fixture, ".nx", "workspace-data"),
-        CACHE_PROBE_MODE: mode,
-      };
-      for (const key of Object.keys(env)) if (key.startsWith("NX_TASK_") || ["NX_SKIP_NX_CACHE", "NX_SKIP_REMOTE_CACHE"].includes(key)) delete env[key];
       const started = performance.now();
-      delete env.NX_FORCE_REUSE_CACHED_GRAPH;
-      const child = (globalThis as any).Bun.spawn(["node", createRequire(join(this.repoRoot, "package.json")).resolve("nx/bin/nx.js"), "run", `probe:${task}`, "--output-style=static"], { cwd: fixture, env, stdout: "pipe", stderr: "pipe" });
+      const invocation = tool.invocation(probeSpecification, task, fixture, { ...process.env, CACHE_PROBE_MODE: mode });
+      const child = (globalThis as any).Bun.spawn([invocation.command, ...invocation.arguments], { cwd: fixture, env: invocation.environment, stdout: "pipe", stderr: "pipe" });
       const cancel = (): void => {
         child.kill();
       };
@@ -156,7 +144,7 @@ console.log("[cache-probe] " + command + " executed " + count);
       assert.equal(count("build"), 6);
       writeFileSync(
         join(dirname(dirname(output)), "📓️cache-verification.md"),
-        `# Nx Runtime Cache Verification\n\nPassed on ${process.platform}/${process.arch} with Nx ${createRequire(import.meta.url)("nx/package.json").version}. This isolated fixture verifies the Nx contract; individual product restoration remains separately tracked.\n\n| Scenario | Builds Executed | Tests Executed | Exit | Milliseconds |\n| --- | ---: | ---: | ---: | ---: |\n${observations.map((row) => `| ${row.scenario} | ${row.buildExecutions} | ${row.testExecutions} | ${row.exitCode} | ${row.durationMs} |`).join("\n")}\n\nRestored artifact bytes and executable bits matched; its consumer printed 42.\n`,
+        `# ${tool.label} Runtime Cache Verification\n\nPassed on ${process.platform}/${process.arch} with ${tool.label} ${tool.version()}. This isolated fixture verifies the ${tool.label} contract; individual product restoration remains separately tracked.\n\n| Scenario | Builds Executed | Tests Executed | Exit | Milliseconds |\n| --- | ---: | ---: | ---: | ---: |\n${observations.map((row) => `| ${row.scenario} | ${row.buildExecutions} | ${row.testExecutions} | ${row.exitCode} | ${row.durationMs} |`).join("\n")}\n\nRestored artifact bytes and executable bits matched; its consumer printed 42.\n`,
       );
     } finally {
       writeFileSync(join(output, "cache-verification.json"), JSON.stringify(observations, null, 2) + "\n");

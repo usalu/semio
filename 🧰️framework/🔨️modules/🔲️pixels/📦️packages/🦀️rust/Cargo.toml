@@ -17,6 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../◻️2d/📦️packages/🦀️rust" }
 semio-framework-io-binary-source = { path = "../../../🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }

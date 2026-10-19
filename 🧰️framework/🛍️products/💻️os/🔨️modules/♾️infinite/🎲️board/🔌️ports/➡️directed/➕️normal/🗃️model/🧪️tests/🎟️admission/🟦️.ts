@@ -2,7 +2,8 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
-const owner=new URL("../../",import.meta.url),source=readFileSync(new URL("🪣️fill-job/🦀️.rs",owner),"utf8"),parent=readFileSync(new URL("🦀️.rs",owner),"utf8");
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+const owner=new URL("../../",import.meta.url),source=readModuleTreeSource(new URL("../🪣️fill/🦀️.rs",owner)),parent=source;
 const law=JSON.parse(readFileSync(new URL("../🧫️fixtures/🎟️admission/🔣️.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("🧬️schema/🎟️admission/🔣️.json",owner),"utf8"));
 test("original board fill descriptor layouts and separate semantic serial agree with SQLite",()=>{
@@ -21,8 +22,8 @@ test("original board fill descriptor layouts and separate semantic serial agree 
  expect(source.includes("original_source: Some(original_source)")).toBe(true);
  expect(source.includes("Self::from_original_state(original, max_count, semantic_operation, binding)")).toBe(true);
  expect(source.includes("pub fn with_operation(")).toBe(false);
- expect(source.includes("pub fn step(&mut self, host: &BoardHost, cx: &mut semio_framework_job::StepContext")).toBe(true);
- expect(source.includes("let demand = self.next_step_demands(host)?")).toBe(true);
+ expect(source.includes("pub fn step(&mut self, scene: &BoardSceneState, style: &BoardStyleState, brush: &BoardBrushState, cx: &mut semio_framework_job::StepContext")).toBe(true);
+ expect(source.includes("let demand = self.next_step_demands(style)?")).toBe(true);
  expect(source.includes("self.validate_original_source(context)?")).toBe(true);
  expect(source.includes("self.validate_original_source(cx)?")).toBe(true);
  expect(parent.includes("Layout::array::<Option<BoardFillPage<T>>>(CAPACITY)")).toBe(true);

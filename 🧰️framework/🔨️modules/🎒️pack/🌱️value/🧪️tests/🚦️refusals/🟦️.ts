@@ -10,7 +10,7 @@ import "../../🧭️tooling/🧪️tests/🟦️.ts";
 
 test("neutral strict wire corpus separates grammar from observed native backing",async()=>{
     const root=resolve(import.meta.dir,"../../../../../..");
-    const {proveWireValueMaterializationFixture}=await import(resolve(root,"🧰️framework/🔨️modules/🎒️pack/🌱️value/📜️script.ts"));
+    const {proveWireValueMaterializationFixture}=await import(resolve(root,"🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts"));
     await proveWireValueMaterializationFixture(root);
 });
 

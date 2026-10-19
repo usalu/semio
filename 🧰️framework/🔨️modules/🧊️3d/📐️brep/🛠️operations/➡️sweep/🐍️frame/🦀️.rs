@@ -59,7 +59,6 @@ pub(super) struct RmfFrame {
 }
 
 impl RmfFrame {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn frame3(&self) -> Frame3 {
         Frame3 { origin: self.origin, x: self.x, y: self.tangent.cross(self.x), z: self.tangent }
     }

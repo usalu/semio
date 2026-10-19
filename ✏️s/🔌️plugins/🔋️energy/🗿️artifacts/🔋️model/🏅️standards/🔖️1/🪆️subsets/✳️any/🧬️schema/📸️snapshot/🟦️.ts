@@ -4,16 +4,16 @@ import type { ArtifactRef, ArtifactLink } from "@semio-tech/framework/schema/art
 export * from "./⚡️model/🟦️.ts";
 
 export interface EnergyModelSnapshot {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   model: EnergyModel;
-  /** @state artifact @child s.stdio.semio.value */
+  /** 🔩️ @state artifact @child s.stdio.semio.value */
   structure: { childId: string; target: ArtifactRef };
-  /** @state artifact @child s.stdio.semio.table */
+  /** 🛋️ @state artifact @child s.stdio.semio.table */
   zones: { childId: string; target: ArtifactRef };
-  /** @state artifact @link model */
+  /** 📎️ @state artifact @link model */
   referencedModel: ArtifactLink|null;
-  /** @state artifact @link weather */
+  /** 🌬️ @state artifact @link weather */
   weatherLink: ArtifactLink|null;
 }

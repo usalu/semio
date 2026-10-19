@@ -20,7 +20,7 @@ pub struct ArtifactBoundedToolFault {
 impl ArtifactBoundedToolFault {
     /// 🧾️ Retains a terminal job fault's detail bytes (bounded) so the publication that follows
     /// a cancelled lease reports the real cause instead of a generic cancellation.
-    pub fn from_payload(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+    pub fn from_payload(detail: &semio_framework_job_payload::RetainedJobPayload) -> Self {
         let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0 };
         for page in 0..detail.page_count() {
             let Some(bytes) = detail.page(page) else { break };
@@ -36,7 +36,7 @@ impl ArtifactBoundedToolFault {
     }
 
     /// 🧾️ Recovers the canonical reducer refusal before retaining its bounded publication frame.
-    fn from_retained_fault(detail: &semio_framework_job::RetainedJobPayload) -> Self {
+    fn from_retained_fault(detail: &semio_framework_job_payload::RetainedJobPayload) -> Self {
         let payload = Self::from_payload(detail);
         let fault = reducer_fault_of_detail(payload.as_bytes()).unwrap_or_else(|| Fault::new(FaultOrigin::Framework, "interactive-job.app-owned-output", String::from_utf8_lossy(payload.as_bytes())));
         Self::from_fault(&fault)

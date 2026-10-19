@@ -17,7 +17,7 @@ pub struct PatchLayer {
 pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
     if !matches!(payload.field.as_str(), "locked" | "visible") && semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document, &payload.layer_id) { return Err(Fault::from("The selected layer is locked")); }
-    let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);
+    let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut accepted);
     let json_value = semio_s_artifact_draw_drawing_mutations::text::field_input::parse_layer_field_input(&payload.field,&payload.value,&mut control).map_err(|error|Fault::from(error.to_string()))?;
     match drawing_op_for_layer_field(document, &payload.layer_id, &payload.field, &json_value) {
         Some(operation) if changes_layer(document,&operation)? => Ok(Emit::mutations(vec![operation])),

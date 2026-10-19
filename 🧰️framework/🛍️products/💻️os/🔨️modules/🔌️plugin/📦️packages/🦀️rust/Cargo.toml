@@ -42,6 +42,7 @@ original-actor-context-testing = ["semio-framework-plugin-guest-contract/origina
 canvas-runtime-assets = ["dep:semio-framework-canvas-assets", "semio-framework-plugin-builder/canvas-runtime-assets"]
 
 [dependencies]
+semio-framework-plugin-instance-surface = { path = "../../🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust" }
 semio-framework-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
 # 🖼️ Optional: a plugin whose guest sizes or paints canvas icons enables `canvas-runtime-assets` (see `PluginBuilder::canvas_runtime_assets`).
@@ -69,9 +70,11 @@ semio-framework-schema-composition = { path = "../../../../../../🔨️modules/
 semio-framework-schema-registry = { path = "../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-registry = { path = "../../../../../../🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-payload = { path = "../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 # ⏯️ Tool run contract (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W0-D): the runtime ledger/driver
 # folds `ToolRunTick`s and publishes one `Edit` at finalize; the pure contract crate never depends back on this one.
@@ -130,9 +133,7 @@ wit-bindgen = { version = "0.57.1", default-features = false, features = ["macro
 # 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `ArtifactApp::Snapshot`/
 # `Config`/`Draft`/`Presence`/`Transient` now bound on `ToValue`/`FromValue` instead of
 # `Serialize`/`DeserializeOwned` (`../../📦️packages/🦀️rust/🦀️.rs`'s trait definitions). Promoted from
-# `semio-framework-value-snapshot-read = { path = "../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
-
-[dev-dependencies]` because the crate's own production defaults (`NoConfig`/`NoPresence`/
+# `[dev-dependencies]` because the crate's own production defaults (`NoConfig`/`NoPresence`/
 # `NoTransient`, `crate::local_interaction`'s `InteractionConfigMutation`) derive `ToValue`/
 # `FromValue` directly now, not only the test fixtures.
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
@@ -204,6 +205,7 @@ semio-framework-plugin-testing-acceptance = { path = "../../🧪️tests/🧪️
 semio-framework-plugin-reactor-wit-bridge = { path = "../../⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin-instance-surface = { path = "../../🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust" }
 semio-framework-plugin-surface-fixture = { path = "../../🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 
@@ -221,6 +223,9 @@ semio-framework-plugin-test-support = { path = "../../🧷️companions/🧯️t
 semio-framework-plugin-instance-app = { path = "../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-window-kits = { path = "../../🪟️window-kits/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-reactor-patches = { path = "../../⚛️reactor/🩹️patches/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-testing-fixtures-publication = { path = "../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
+semio-framework-plugin-testing-fixtures = { path = "../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
+semio-framework-tool-run-tick-wire = { workspace = true }
 
 [[test]]
 name = "owned-output"

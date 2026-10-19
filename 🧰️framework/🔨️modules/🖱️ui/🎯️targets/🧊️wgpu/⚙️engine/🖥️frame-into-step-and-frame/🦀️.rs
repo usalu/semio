@@ -118,7 +118,6 @@ impl Ui {
                         frame.candidate.push_scissor(clip);
                     }
                 }
-                // 🪟️ See `frame_step`'s twin: overlay content composites above the surface chrome.
                 if frame.paint_overlay {
                     frame.candidate.begin_overlay_route();
                 }

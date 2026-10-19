@@ -15,7 +15,7 @@ export interface XlsxSheet { name: string; cells: XlsxCell[] }
 export interface XlsxWorkbook { sheets: XlsxSheet[]; sharedStrings: string[] }
 export interface XlsxXmlPart { path: string; contentType: string; document: XmlDocument }
 export interface XlsxSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ opc: OpcPackage;
-  /** @state artifact */ xmlParts: XlsxXmlPart[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 📦️ @state artifact */ opc: OpcPackage;
+  /** 🧾️ @state artifact */ xmlParts: XlsxXmlPart[];
 }

@@ -28,6 +28,7 @@ semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-flow = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -35,6 +36,7 @@ semio-framework-plugin = { workspace = true }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-3d-add-widget = { workspace = true }
 semio-s-artifact-procedural-3d-delete-selection = { workspace = true }
 semio-s-artifact-procedural-3d-editor-commands = { workspace = true }
@@ -68,6 +70,8 @@ semio-s-artifact-procedural-3d-set-contributions = { workspace = true }
 semio-s-artifact-procedural-3d-set-widget-input = { workspace = true }
 semio-s-artifact-procedural-3d-terminology = { workspace = true }
 semio-s-artifact-procedural-3d-transforms = { workspace = true }
+semio-framework-schema-registry = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

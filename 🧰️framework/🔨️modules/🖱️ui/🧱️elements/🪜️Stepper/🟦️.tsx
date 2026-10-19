@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { formatNumber } from "../✏️Input/🟦️.tsx";
 import { roundUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
@@ -27,7 +27,7 @@ import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
 // Consumers MUST provide min and max bounds.
 
 /**
- * StepperProps holds the data fields for a StepperProps record.
+ * 🎚️ StepperProps holds the data fields for a StepperProps record.
  **/
 interface StepperProps extends ElementProps {
   value?: number;
@@ -65,7 +65,7 @@ interface StepperProps extends ElementProps {
 }
 
 /**
- * Numeric stepper with increment, decrement, and drag-to-adjust.
+ * 🎛️ Numeric stepper with increment, decrement, and drag-to-adjust.
  **/
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, mixed, precision, onChange, onDelta, onPointerDown, onPointerUp, onPointerCancel, interactionId, id, showLabel, "aria-labelledby": labelledBy, "aria-label": ariaLabel, "aria-valuetext": ariaValueText, disabled = false, snapValues, displayFactor = null, unit = null, limits = null }) => {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);

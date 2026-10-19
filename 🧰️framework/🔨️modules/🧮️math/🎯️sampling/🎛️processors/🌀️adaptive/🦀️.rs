@@ -3,7 +3,7 @@
 use semio_framework_math_sampling_vocabulary::{SamplingError, TokenId, entropy_nats};
 use semio_framework_math_sampling_config::MirostatVersion;
 use semio_framework_math_sampling_workspace::{LogitsWorkspace, ProcessorKind, StateMark, StepView};
-use super::LogitsProcessor;
+use super::{LogitsProcessor, LogitsProcessors};
 
 // #region 🔖️Adaptive
 /// 🌀️ Mirostat v1/v2: adapts the truncation cutoff step by step so the *observed* surprise of
@@ -36,9 +36,7 @@ impl LogitsProcessor for Mirostat {
     async fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
         ws.sort_live_by_prob_desc().await;
         let keep = match self.version {
-            // 🌀️ v1: candidate-set size grows/shrinks as `2^mu` (a power-law-fit proxy).
             MirostatVersion::V1 => (2.0f64).powf(self.mu).round().max(1.0) as usize,
-            // 🌀️ v2: keep every token whose surprise (`-log2 p`) stays within `mu` of the target.
             MirostatVersion::V2 => {
                 let probs = ws.probs().await;
                 probs.iter().take_while(|&&p| -(p as f64).log2() <= self.mu).count().max(1)

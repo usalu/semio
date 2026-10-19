@@ -19,10 +19,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY)
@@ -113,7 +109,7 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            const SIG: [u8; 2] = [0xFF, 0xD8]; // SOI
+            const SIG: [u8; 2] = [0xFF, 0xD8];
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if bytes.len() >= 2 && bytes[0..2] == SIG {
@@ -123,8 +119,6 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    // 🔍 stdio.jpg's text envelope is a hex dump of the raw bytes after the
-                    // `semio ...` preamble line — decode the first 2 bytes to sniff the real SOI marker.
                     let body = match store::semio_format::split_text_preamble(text) {
                         Ok((_, rest)) => rest,
                         Err(_) => text,

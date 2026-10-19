@@ -119,8 +119,6 @@ async fn decode_run_rejects_kind_mismatch() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_run_rejects_non_ascending_entries() {
-    // Hand-build a malformed body bypassing `encode_run`'s own ordering check, to exercise
-    // `decode_run`'s independent defensive re-validation.
     let mut writer = ByteWriter::new();
     writer.write_bytes(&RUN_MAGIC);
     writer.write_u8(RUN_VERSION);
@@ -513,8 +511,6 @@ async fn projection_index_resolves_exact_and_floor_lookups_scoped_to_projection_
     assert_eq!(read_retained(&floor).await, b"state-20");
     while floor.close_step().unwrap().is_some() {}
     assert_eq!(db_actor::block_on(index.latest_at_or_before("by-author", 5)).expect("latest_at_or_before"), None);
-    // 🎯️ "by-color" sorts after "by-author" but has no entries at all — must not fall back to
-    // a lexicographically-earlier projection's entry.
     assert_eq!(db_actor::block_on(index.latest_at_or_before("by-color", 100)).expect("latest_at_or_before"), None);
 }
 

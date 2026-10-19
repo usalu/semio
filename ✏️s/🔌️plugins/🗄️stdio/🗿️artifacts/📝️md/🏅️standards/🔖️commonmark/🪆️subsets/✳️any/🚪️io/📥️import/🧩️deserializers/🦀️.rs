@@ -290,7 +290,6 @@ fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlock, us
         if i >= lines.len() {
             break;
         }
-        // 🕳️ Skip blank lines, deciding whether the list continues past them.
         if lines[i].trim().is_empty() {
             let mut j = i;
             while j < lines.len() && lines[j].trim().is_empty() {
@@ -470,7 +469,6 @@ fn try_parse_link(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn try_parse_image(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
-    // 🖼️ `start` is the index of `!`; the bracket scan begins one char later, at `[`.
     if chars.get(start + 1) != Some(&'[') {
         return None;
     }

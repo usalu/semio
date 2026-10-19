@@ -62,3 +62,5 @@ semio-framework-os-kernel-db-snapshot = { path = "../../📸️snapshot/📦️p
 semio-framework-os-kernel-db-state = { path = "../../🔘️state/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-io-driver = { path = "../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = { workspace = true }
+semio-framework-replication = { workspace = true }

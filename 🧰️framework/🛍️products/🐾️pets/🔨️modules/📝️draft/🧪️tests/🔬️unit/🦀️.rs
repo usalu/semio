@@ -3,7 +3,7 @@
 //! @see ../../🦀️.rs — the implementation under test
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe and a meadow to stand on
 
-use super::*;
+use semio_framework_pets_staging_draft::draft::*;
 use crate::stage::tests::{meadow, troupe};
 
 #[test]

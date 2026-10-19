@@ -1,6 +1,7 @@
 //! 🏗️ The original Job decoder owns generic construction, candidate custody and complete physical receipts.
 use super::{StepContext,OriginalTurnFailure,Generation,OperationId,OriginalPayloadSourceIdentity};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,NativeDecodeControl};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 /// 📏️ One defining owner declares all five independent currencies before a native birth.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct OriginalConstructionDemand{pub items:usize,pub copy_bytes:usize,pub capacity_bytes:usize,pub release_bytes:usize,pub depth:usize}
@@ -26,7 +27,7 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
     if context.receiving_issued_grant().is_some()||context.receiving_child_progress()!=RetainedCloneProgress::default(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction cannot replace an outstanding construction scope").into());}
     if !context.retained_recipient_is_admitted(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction recipient already exceeds its turn").into());}
     if context.is_cancelled()||context.should_yield()||!demand.fits(context.retained_grant()){return Ok(false);}
-    use semio_framework_value::native_decoding::{NativeConstructionStepFailure,NativeConstructionStepResult};
+    use semio_framework_value_native_owned::{native_decoding::NativeConstructionStepFailure, native_decoding::NativeConstructionStepResult};
     use super::OriginalReceivingPrimary;
     let result=context.with_native_receiving::<_,NativeConstructionStepFailure<OriginalReceivingPrimary>>(|control|control.receive_construction_step_typed(demand.physical(),|control,grant|{
         if control.owned_bytes().checked_add(demand.capacity_bytes).is_none_or(|next|next>control.maximum_bytes()){

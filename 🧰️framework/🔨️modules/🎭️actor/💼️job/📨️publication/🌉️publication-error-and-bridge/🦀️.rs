@@ -102,13 +102,13 @@ pub struct JobTurnBridge {
     pub(super) pending: Option<JobOutcomeProjection>,
     pub(super) original: semio_framework_job::RetainedCloneGrant,
     pub(super) progress: semio_framework_job::RetainedCloneProgress,
-    authority: Option<semio_framework_job::JobPayloadAuthority>,
+    authority: Option<semio_framework_job_payload::JobPayloadAuthority>,
 }
 
 #[cfg(test)]
 impl JobTurnBridge {
     pub fn new(operation: semio_framework_job::Operation, original: semio_framework_job::RetainedCloneGrant) -> Result<Self, semio_framework_value::ValueError> {
-        let Some((authority, progress)) = semio_framework_job::JobPayloadAuthority::admit(operation.operation, operation.generation, original)? else {
+        let Some((authority, progress)) = semio_framework_job_payload::JobPayloadAuthority::admit(operation.operation, operation.generation, original)? else {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "actor bridge requires original payload authority admission"));
         };
         Ok(Self { operation, next_step_sequence: 0, terminal: false, pending: None, original, progress, authority: Some(authority) })

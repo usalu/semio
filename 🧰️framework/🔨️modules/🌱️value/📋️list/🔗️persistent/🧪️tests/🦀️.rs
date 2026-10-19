@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::retained_clone::{RetainedCloneSource,RetainedCloneStep};
 pub(super) fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
@@ -12,7 +13,7 @@ use super::*;
 /// 🌳️ Original immutable readers and untouched rows keep their identities through exactly one changed path.
 #[test]
 fn persistent_shared_pages_preserve_readers_and_birth_only_changed_paths(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){let count=case["rowCount"].as_u64().unwrap()as usize;let index=case["index"].as_u64().unwrap()as usize;let mut source=original(list(count));let mut authored=original(row(case["authored"].as_i64().unwrap()));let old_root=source.borrow().get().root.as_ref().unwrap().identity();
   let projection_quote=grant(PersistentList::<i64>::projection_demand());for g in[RetainedCloneGrant{maximum_items:0,..projection_quote},RetainedCloneGrant{maximum_copy_bytes:projection_quote.maximum_copy_bytes-1,..projection_quote},RetainedCloneGrant{maximum_depth:0,..projection_quote}]{let(result,h)=observe(||PersistentList::project(source.borrow(),g).unwrap());assert!(result.is_none());assert_eq!(h,(0,0));}
   let((reader,p),h)=observe(||PersistentList::project(source.borrow(),projection_quote).unwrap().unwrap());assert_eq!(h,(0,0));assert!(p.fits(projection_quote));assert_eq!(reader.root.as_ref().unwrap().identity(),old_root);let mut reader=original(reader);

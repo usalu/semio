@@ -252,10 +252,6 @@ impl<T: Field> MatG<T> {
     pub fn inverse(&self) -> Option<Self> {
         assert_eq!(self.rows, self.cols, "MatG::inverse: requires a square matrix");
         let n = self.rows;
-        // 🐛️ Rank must come from `self` alone: the augmented `[A | I]` matrix's own rref rank is
-        // NOT a valid full-rank check, because `rref`'s first-nonzero pivoting can plant pivot
-        // columns inside the appended identity block once `A`'s columns run out of pivots — that
-        // silently inflates the reported rank to `n` even when `A` is singular.
         if self.rank() < n {
             return None;
         }
@@ -279,8 +275,6 @@ impl<T: Field> MatG<T> {
     pub fn solve(&self, b: &VecG<T>) -> Option<VecG<T>> {
         assert_eq!(self.rows, self.cols, "MatG::solve: requires a square matrix");
         let n = self.rows;
-        // 🐛️ See `inverse`: rank must be checked on `self` alone, not on the `[A | b]` augmented
-        // rref, since a stray pivot found inside the `b` column can otherwise mask a singular `A`.
         if self.rank() < n {
             return None;
         }
@@ -357,7 +351,6 @@ impl<T: IntegralDomain> MatG<T> {
     where
         T: GcdDomain,
     {
-        // Fraction-free rank via row-reduction to echelon form, counting nonzero pivot rows.
         let mut m = self.clone();
         let mut prev_pivot = T::one();
         let mut pivot_row = 0;
@@ -406,9 +399,6 @@ impl<T: Field> MatG<T> {
         if n == 0 {
             return vec![T::one()];
         }
-        // `T::from_i64(k)` alone can be an "unbound" value for runtime-modulus types like `ModInt`
-        // (no modulus known yet) — anchor it to the matrix's own modulus via a bound zero derived from
-        // an actual entry before inverting, which is a no-operation for ordinary fields like `Rational`.
         let bound_zero = self.get(0, 0).sub(self.get(0, 0));
         let mut m = MatG::<T>::zeros(n, n);
         let mut c = bound_zero.add(&T::one());
@@ -447,7 +437,6 @@ impl<T: EuclideanDomain> MatG<T> {
         let mut v = Self::identity(self.cols);
         let mut t = 0;
         while t < s.rows.min(s.cols) {
-            // Find a nonzero pivot in the remaining submatrix.
             let Some((pr, pc)) = (t..s.rows).flat_map(|r| (t..s.cols).map(move |c| (r, c))).find(|&(r, c)| !s.get(r, c).is_zero()) else {
                 break;
             };
@@ -487,8 +476,6 @@ impl<T: EuclideanDomain> MatG<T> {
                     break;
                 }
             }
-            // Ensure the pivot divides every remaining entry; if not, add its row into an offending row
-            // and restart the reduction at this pivot (classical Smith-form cleanup step).
             let mut clean = true;
             'scan: for r in (t + 1)..s.rows {
                 for c in (t + 1)..s.cols {

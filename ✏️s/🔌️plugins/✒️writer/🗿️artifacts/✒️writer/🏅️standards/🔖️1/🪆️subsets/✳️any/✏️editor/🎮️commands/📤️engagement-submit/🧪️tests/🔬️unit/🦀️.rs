@@ -13,7 +13,6 @@ fn view() -> ViewModel {
 async fn engagement_submit_parses_font_size() {
     let mut app = new_app().await;
     let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::EngagementSubmit(EngagementSubmit { value: Some("font 16".into()) })).await;
-    // Font size is ephemeral config state — no history entry.
     assert!(result.mutations.is_empty());
     let measures = app.window_measures(&view()).await;
     let main = measures.get(WINDOW_ID).expect("main measures");
@@ -22,8 +21,6 @@ async fn engagement_submit_parses_font_size() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_parses_separatorless_drafts() {
-    // The verb token is matched ignoring case and separators, so a name-token line that carries no
-    // spaces ("Font16", "Tab4", "LineNumbers") reads the same as the spaced line above.
     let mut app = new_app().await;
     let before_toggle = app.window_engagements(&view()).await.get(WINDOW_ID).and_then(|engagement| engagement.options.as_ref()).and_then(|options| options.first()).and_then(|option| option.pressed).expect("line-numbers pressed state");
 

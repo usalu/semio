@@ -47,7 +47,6 @@ mod tests {
     fn laplace_smoothing_adds_pseudocount() {
         let counts = Counts::from_symbols(&[0, 0, 1], 2).unwrap();
         let p = counts.smoothed_probabilities(SmoothingPrior::Laplace);
-        // (2+1)/(3+2), (1+1)/(3+2)
         assert!((p[0] - 0.6).abs() < 1e-12);
         assert!((p[1] - 0.4).abs() < 1e-12);
     }

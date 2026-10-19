@@ -2,7 +2,7 @@ use super::*;
 use crate::typed_operation_page::{TypedOperationResultPage,TypedOperationResultLane,TYPED_OPERATION_RESULT_PAGE_BYTES};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn original()->RetainedCloneGrant{let law=corpus();let g=&law["originalHost"];RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize}}
 fn denied(d:RetirementDemand,g:RetainedCloneGrant)->Vec<RetainedCloneGrant>{let mut grants=vec![RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g}];if d.copy_bytes>0{grants.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g})}if d.capacity_bytes>0{grants.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..g})}if d.release_bytes>0{grants.push(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g})}grants}
 fn receipt(p:RetainedCloneProgress,heap:semio_framework_trace::HeapAllocationObservation,g:RetainedCloneGrant){assert!(p.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}

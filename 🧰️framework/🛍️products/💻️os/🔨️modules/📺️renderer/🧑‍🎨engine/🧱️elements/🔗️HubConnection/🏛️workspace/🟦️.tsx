@@ -45,10 +45,6 @@ export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onOpe
   const closeLabel = useLabel(hubUiLabel("os.hub.signIn.cancel"));
   const replayLabel = useLabel(hubUiLabel("os.hub.firstRun.replay"));
   const firstRunState = hubFirstRunStateFromV1(hub.session.phase, hub.rows, activeSpaceId);
-  // 🎓️ Auto-start is decided ONCE, when this surface first mounts, and never re-derived: reading the
-  // seen flag in a later render would reopen the tour the moment `markHubFirstRunSeenV1` had not yet
-  // been observed, and re-deriving `signedIn` would reopen it the instant a session expired. `replay`
-  // is the explicit re-open, which ignores the flag by design.
   const [tour, setTour] = useState<"auto" | "replay" | null>(() => (hubFirstRunSeenV1(port.storage) ? null : "auto"));
   const dismissTour = (): void => {
     markHubFirstRunSeenV1(port.storage);

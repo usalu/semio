@@ -1,6 +1,8 @@
 //! 🧳️ Original JSON operation bytes become typed native projections without a cold conversion.
 use crate::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor,JsonGrammarCursor,JsonMemberPolicy,JsonError};
-use semio_framework_value::{DslValue,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,ArtifactOwnedValueRetirementFactory,FactoryOwnedSourceAuthority,FactoryAuthority,retained_clone::{RetainedCloneSource,RetainedOwnedProjection,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits},native_decoding::{NativeReceive,owned::NativeReceivingOriginal}};
+use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind, ArtifactOwnedValueRetirementFactory, FactoryAuthority, retained_clone::{RetainedCloneSource, RetainedOwnedProjection, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::owned::NativeReceivingOriginal};
+use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -92,7 +94,7 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   owner!(parser,JsonGrammarCursor<DslValue>);owner!(parsed,DslValue);owner!(typed,M);owner!(authority,FactoryOwnedSourceAuthority<M>);owner!(error,JsonError);
   if self.factory.is_some(){return Ok(header::<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>());}if let Some(factory)=self.factory_close.as_ref(){return factory.demands(body);}Ok(Default::default())
  }
- pub fn close_step(&mut self,control:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,control:&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if control.ledger_identity()!=self.ledger{return Err(invalid("original JSON cleanup changed its decoder ledger"));}if !self.closing{return Err(invalid("original JSON cleanup was not started"));}let d=self.close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
   if !self.retirement.is_empty(){return self.retirement.step_granted(g);}
   if let Some(canonical)=self.canonical.as_mut(){if canonical.terminal_is_empty(){self.canonical.take();return Ok(unit());}return canonical.advance(&mut[],g).map(|step|step.ownership);}

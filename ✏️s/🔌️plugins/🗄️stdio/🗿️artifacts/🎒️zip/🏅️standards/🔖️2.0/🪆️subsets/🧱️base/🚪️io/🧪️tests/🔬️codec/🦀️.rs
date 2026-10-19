@@ -27,8 +27,6 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
     for e in &entries {
         let payload = match e.method {
             8 => semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::deflate_raw(&e.data),
-            // Unsupported-method fixtures (e.g. 12/BZIP2) never reach decompression —
-            // `decode_zip` rejects them by method code before touching payload bytes.
             _ => e.data.clone(),
         };
         let crc = crc32(&e.data);
@@ -51,8 +49,8 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
         local.extend_from_slice(&u16_le(if e.force_zip64_sentinel { 45 } else { 20 }));
         local.extend_from_slice(&u16_le(e.flags));
         local.extend_from_slice(&u16_le(e.method));
-        local.extend_from_slice(&u16_le(0x1234)); // dos time
-        local.extend_from_slice(&u16_le(0x5678)); // dos date
+        local.extend_from_slice(&u16_le(0x1234));
+        local.extend_from_slice(&u16_le(0x5678));
         if e.use_descriptor {
             local.extend_from_slice(&u32_le(0));
             local.extend_from_slice(&u32_le(0));
@@ -90,7 +88,7 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
         cen.extend_from_slice(&u16_le(e.comment.len() as u16));
         cen.extend_from_slice(&u16_le(0));
         cen.extend_from_slice(&u16_le(0));
-        cen.extend_from_slice(&u32_le(0o100644 << 16)); // unix external attrs, -rw-r--r--
+        cen.extend_from_slice(&u32_le(0o100644 << 16));
         cen.extend_from_slice(&u32_le(offset));
         cen.extend_from_slice(&e.name);
         cen.extend_from_slice(&extra);
@@ -123,7 +121,6 @@ fn build_raw_zip(entries: Vec<RawZipEntry>, archive_comment: &[u8]) -> Vec<u8> {
 
 #[test]
 fn crc32_known_vector() {
-    // CRC of "123456789" is 0xCBF43926
     assert_eq!(crc32(b"123456789"), 0xCBF4_3926);
 }
 
@@ -173,7 +170,7 @@ fn decode_rich_synthetic_archive() {
                 name: b"stored.txt".to_vec(),
                 data: b"stored payload, no compression".to_vec(),
                 method: 0,
-                flags: 0x0800, // utf8
+                flags: 0x0800,
                 extra: vec![0xFE, 0xCA, 3, 0, 1, 2, 3],
                 comment: b"a stored entry".to_vec(),
                 use_descriptor: false,
@@ -183,17 +180,17 @@ fn decode_rich_synthetic_archive() {
                 name: "café-\u{1F600}.txt".as_bytes().to_vec(),
                 data: b"deflate me please, this text should compress reasonably well well well".to_vec(),
                 method: 8,
-                flags: 0x0800, // utf8
+                flags: 0x0800,
                 extra: Vec::new(),
                 comment: Vec::new(),
                 use_descriptor: false,
                 force_zip64_sentinel: false,
             },
             RawZipEntry {
-                name: vec![0x63, 0x61, 0x66, 0x82, 0x2E, 0x74, 0x78, 0x74], // "caf<0x82>.txt" — CP437 0x82 = 'é'
+                name: vec![0x63, 0x61, 0x66, 0x82, 0x2E, 0x74, 0x78, 0x74],
                 data: b"legacy codepage name entry".to_vec(),
                 method: 0,
-                flags: 0x0000, // no utf8 bit -> CP437 fallback
+                flags: 0x0000,
                 extra: Vec::new(),
                 comment: Vec::new(),
                 use_descriptor: false,
@@ -203,7 +200,7 @@ fn decode_rich_synthetic_archive() {
                 name: b"streamed.bin".to_vec(),
                 data: b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec(),
                 method: 8,
-                flags: 0x0800 | 0x0008, // utf8 + data descriptor
+                flags: 0x0800 | 0x0008,
                 extra: Vec::new(),
                 comment: Vec::new(),
                 use_descriptor: true,
@@ -236,7 +233,6 @@ fn decode_rich_synthetic_archive() {
 
     assert_eq!(member("stored.txt"), b"stored payload, no compression".to_vec());
     assert_eq!(member("café-\u{1F600}.txt"), b"deflate me please, this text should compress reasonably well well well".to_vec());
-    // 0x82 in CP437 decodes to 'é'.
     assert_eq!(member("caf\u{00e9}.txt"), b"legacy codepage name entry".to_vec());
     assert_eq!(member("streamed.bin"), b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec());
     assert_eq!(member("huge-in-theory.bin"), b"tiny payload but declared via a ZIP64 extra field for test purposes".to_vec());
@@ -419,7 +415,7 @@ fn decode_rejects_unsupported_method() {
         vec![RawZipEntry {
             name: b"bzip2.bin".to_vec(),
             data: b"payload never reaches decompression".to_vec(),
-            method: 12, // BZIP2 — never implemented
+            method: 12,
             flags: 0x0800,
             extra: Vec::new(),
             comment: Vec::new(),
@@ -428,9 +424,6 @@ fn decode_rejects_unsupported_method() {
         }],
         b"",
     );
-    // build_raw_zip always writes real (stored/deflate) payload bytes for its `data` field
-    // regardless of the declared method, matching what a real archive with an unimplemented
-    // method's raw compressed bytes would look like to this decoder.
     let err = decode_zip(&raw).expect_err("method 12 must be rejected, not silently dropped");
     match err {
         ZipError::UnsupportedMethod { method, .. } => assert_eq!(method, 12),
@@ -441,7 +434,6 @@ fn decode_rejects_unsupported_method() {
 #[test]
 fn decode_rejects_crc_mismatch() {
     let mut raw = build_raw_zip(vec![RawZipEntry { name: b"a.txt".to_vec(), data: b"original".to_vec(), method: 0, flags: 0x0800, extra: Vec::new(), comment: Vec::new(), use_descriptor: false, force_zip64_sentinel: false }], b"");
-    // Corrupt the stored payload byte in place (after the 30-byte local header + name).
     let payload_offset = 30 + "a.txt".len();
     raw[payload_offset] ^= 0xFF;
     let err = decode_zip(&raw).expect_err("corrupted payload must fail crc check");
@@ -522,12 +514,6 @@ async fn deterministic_logical_round_trip() {
 
 #[test]
 fn encode_rejects_would_be_zip64_entry_size() {
-    // Rather than allocate a real 4GiB buffer, exercise the guard directly: an entry whose
-    // *compressed* size would exceed u32::MAX must be rejected, never silently truncated.
-    // We simulate this cheaply by checking the guard logic's boundary via a crafted deflate
-    // payload is impractical in a unit test, so instead assert the documented contract on
-    // the archive-wide guard (entry count), which is cheap to construct and exercises the
-    // same `UnsupportedZip64Write` code path.
     let mut entries = Vec::new();
     for i in 0..=0xFFFFu32 {
         entries.push(ZipEntry { name: format!("f{i}"), data: Vec::new(), ..Default::default() });

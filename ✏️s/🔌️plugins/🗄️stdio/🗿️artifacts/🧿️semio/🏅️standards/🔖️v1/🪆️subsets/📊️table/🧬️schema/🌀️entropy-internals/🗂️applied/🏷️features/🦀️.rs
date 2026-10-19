@@ -74,7 +74,6 @@ impl FeatureRegistry {
     /// 📋️ The built-in standard feature set: histogram entropy, sample entropy, permutation
     /// entropy, spectral entropy, and normalized Lempel-Ziv complexity (over a median-split
     /// binary encoding).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn standard() -> Self {
         Self {
             entries: vec![
@@ -89,7 +88,6 @@ impl FeatureRegistry {
 
     /// 📋️ Registers an additional named feature function, appended after the existing entries
     /// (preserving deterministic ordering).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_feature(mut self, name: &'static str, f: FeatureFn) -> Self {
         self.entries.push((name, f));
         self
@@ -98,7 +96,6 @@ impl FeatureRegistry {
     /// 📋️ Computes every registered feature over `x`, in registration order. The first feature
     /// that errors short-circuits the whole batch (no partial/best-effort results) — callers
     /// that want per-feature failure isolation should call individual feature functions directly.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(&self, x: &[f64]) -> Result<Vec<Feature>, EntropyError> {
         self.entries.iter().map(|&(name, f)| Ok(Feature { name, estimate: f(x)? })).collect()
     }

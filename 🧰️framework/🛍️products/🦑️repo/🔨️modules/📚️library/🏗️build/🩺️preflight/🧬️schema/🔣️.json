@@ -1,33 +1,39 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "Requirements": {
+    "Platform": {
       "type": "object", "additionalProperties": false,
-      "required": ["version", "platform", "architecture", "distribution", "distributionVersion", "minimumAvailableBytes", "minimumFreeLoops", "tools"],
+      "required": ["architectures", "minimumAvailableBytes", "tools", "exchange"],
       "properties": {
-        "version": {"const": 1}, "platform": {"const": "linux"}, "architecture": {"enum": ["x64", "arm64"]},
-        "distribution": {"type": "string", "pattern": "^[a-z0-9-]+$"}, "distributionVersion": {"type": "string", "pattern": "^[0-9]+$"},
-        "minimumAvailableBytes": {"type": "integer", "minimum": 1}, "minimumFreeLoops": {"type": "integer", "minimum": 1, "maximum": 64},
-        "tools": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"}}
+        "architectures": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["x64", "arm64"]}},
+        "minimumAvailableBytes": {"type": "integer", "minimum": 1},
+        "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"}},
+        "exchange": {"type": "boolean"}
+      }
+    },
+    "Policy": {
+      "type": "object", "additionalProperties": false, "required": ["version", "platforms"],
+      "properties": {
+        "version": {"const": 1},
+        "platforms": {
+          "type": "object", "additionalProperties": false, "required": ["linux", "darwin", "win32"],
+          "properties": {
+            "linux": {"$ref": "#/definitions/Platform"},
+            "darwin": {"$ref": "#/definitions/Platform"},
+            "win32": {"$ref": "#/definitions/Platform"}
+          }
+        }
       }
     },
     "Facts": {
       "type": "object", "additionalProperties": false,
-      "required": ["platform", "architecture", "distribution", "distributionVersion", "capEff", "availableBytes", "loopControl", "freeLoops", "tools"],
+      "required": ["platform", "architecture", "availableBytes", "tools", "exchange", "caseSensitive"],
       "properties": {
-        "platform": {"type": "string"}, "architecture": {"type": "string"}, "distribution": {"type": "string"}, "distributionVersion": {"type": "string"},
-        "capEff": {"type": "string", "pattern": "^[0-9a-fA-F]{1,16}$"}, "availableBytes": {"type": "integer", "minimum": 0},
-        "loopControl": {"type": "boolean"}, "freeLoops": {"type": "integer", "minimum": 0},
-        "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
-      }
-    },
-    "Registry": {
-      "type": "object", "additionalProperties": false, "required": ["version", "scopes"],
-      "properties": {
-        "version": {"const": 1},
-        "scopes": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["owner", "project"], "properties": {
-          "owner": {"type": "string", "pattern": "^@[a-z0-9-]+/[a-z0-9-]+$"}, "project": {"type": "string", "minLength": 1}
-        }}}
+        "platform": {"type": "string"}, "architecture": {"type": "string"},
+        "availableBytes": {"type": "integer", "minimum": 0},
+        "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "exchange": {"enum": ["supported", "unsupported", "unprobed"]},
+        "caseSensitive": {"enum": ["yes", "no", "unprobed"]}
       }
     }
   }

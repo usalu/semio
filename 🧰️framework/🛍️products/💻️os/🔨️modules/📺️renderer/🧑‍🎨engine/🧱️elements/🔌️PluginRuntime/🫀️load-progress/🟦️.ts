@@ -7,7 +7,7 @@
  * (`🔌️PluginRuntime/🟦️.tsx`). Nothing here touches React, the DOM or a `Worker`, so the accounting is
  * testable on its own — see `🧪️tests/🫀️plugin-load-progress/🟦️.ts`. */
 
-import { SHARD_LIVENESS_POLICY } from "@semio-tech/framework-actor/shard-client";
+import { SHARD_LIVENESS_POLICY } from "@semio-tech/framework/actor/shard-client";
 
 /** 🫀️ Both numbers come from the ONE schema-owned liveness policy — never a literal here.
  * `pluginLoadIdleTimeoutMs` is an IDLE budget, not a total one: the deadline is pushed forward every
@@ -97,15 +97,11 @@ export function notePluginLoadProgressForInFlightV1(atMs: number = Date.now()): 
 const descriptorRequestsByUrl = new Map<string, Promise<unknown>>();
 
 export function sharedDescriptorManifestV1<T>(pluginId: string, moduleUrl: string, fetchManifest: () => Promise<T>): Promise<T> {
-  // 🔐️ Keyed by the plugin too, never by the url alone: the fetch's own identity check ("this
-  // descriptor names the plugin I asked for") is per-caller, and sharing one answer across two
-  // different plugin ids would hand the second caller a manifest nobody checked for it.
   const key = `${pluginId}\n${moduleUrl}`;
   const shared = descriptorRequestsByUrl.get(key);
   if (shared) return shared as Promise<T>;
   const request = fetchManifest().finally(() => descriptorRequestsByUrl.delete(key));
   descriptorRequestsByUrl.set(key, request);
-  // 🚑️ A rejection settles every waiter; this bookkeeping copy must never become one of its own.
   request.catch(() => {});
   return request;
 }

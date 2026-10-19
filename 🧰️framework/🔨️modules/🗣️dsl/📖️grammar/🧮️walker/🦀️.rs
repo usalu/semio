@@ -158,7 +158,6 @@ fn walk_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &mut WalkState, 
             }
         }
         Prim::Ref(name) => return Err(mismatch(*pos, format!("unresolved protocol Ref({name}) during walk"))),
-        // P2-M2 item 1c.
         Prim::MarkerScan(prefix) => {
             while *pos < bytes.len() && bytes[*pos] == *prefix {
                 *pos += 1;
@@ -166,7 +165,6 @@ fn walk_prim(prim: &Prim, bytes: &[u8], pos: &mut usize, state: &mut WalkState, 
             need(bytes, *pos, 1, "marker byte")?;
             *pos += 1;
         }
-        // P2-M2 item 6.
         Prim::Endian(arms) => {
             let width = arms.first().map_or(0, |(k, _)| k.len());
             let slice = need(bytes, *pos, width, "endian marker")?;
@@ -270,7 +268,6 @@ fn find_last_occurrence(bytes: &[u8], pattern: &[u8]) -> Option<usize> {
 
 fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, state: &mut WalkState, reserved_tail: usize) -> Result<(), ProtocolMismatch> {
     for (index, field) in fields.iter().enumerate() {
-        // P2-M2 item 4: a field absent under its guard is simply skipped — not read at all.
         if let Some(cond) = &field.cond {
             if !eval_cond(cond, &state.env, *pos)? {
                 continue;
@@ -291,7 +288,6 @@ fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, state: &mut Walk
                 state.env.insert(field.name.clone(), u64::from(slice[0]));
                 *pos += 1;
             }
-            // P2-M2 item 6: plain U16/U32/U64 honor the walker's current runtime endian mode.
             Prim::U16 => {
                 let slice = need(bytes, *pos, 2, &field.name)?;
                 let value = u64::from(decode_u16(slice, state.big_endian));
@@ -310,7 +306,6 @@ fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, state: &mut Walk
                 state.env.insert(field.name.clone(), value);
                 *pos += 8;
             }
-            // P2-M2 item 2: *Be variants are ALWAYS big-endian, regardless of the runtime mode.
             Prim::U16Be => {
                 let slice = need(bytes, *pos, 2, &field.name)?;
                 state.env.insert(field.name.clone(), u64::from(decode_u16(slice, true)));
@@ -330,7 +325,6 @@ fn walk_fields(fields: &[Field], bytes: &[u8], pos: &mut usize, state: &mut Walk
                 let value = read_varint_u64(bytes, pos)?;
                 state.env.insert(field.name.clone(), value);
             }
-            // P2-M2 item 6: the endian-marker field itself — mutates walker state, binds no value.
             Prim::Endian(arms) => {
                 let width = arms.first().map_or(0, |(k, _)| k.len());
                 let slice = need(bytes, *pos, width, "endian marker")?;
@@ -408,7 +402,6 @@ fn walk_repeat(dispatch: &RepeatDispatch, bytes: &[u8], pos: &mut usize, state: 
                     *pos = expected_end;
                 }
             }
-            // P2-M2 item 1a: unrecognized discriminator — skip its declared length as opaque bytes.
             None => match length_value {
                 Some(len) => {
                     need(bytes, *pos, len as usize, "repeat skip")?;
@@ -464,9 +457,7 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
     let skip_named_records = matches!(spec.framing, Framing::Magic(_) | Framing::Chunked);
     let record_body_as_rest = matches!(spec.framing, Framing::Record);
     let mut consumed_record_body = false;
-    // P2-M2 items 3+6: ONE state, shared across every block in this walk (see `WalkState` doc).
     let mut state = WalkState::default();
-    // P2-M2 item 5: set once a BackwardScan/JumpTo block executes — relaxes the final EOF check.
     let mut jumped = false;
 
     for (index, block) in spec.blocks.iter().enumerate() {
@@ -506,7 +497,6 @@ pub fn walk_protocol(spec: &ProtocolFile, bytes: &[u8]) -> Result<ProtocolTrace,
             Block::Repeat { dispatch, .. } => walk_repeat(dispatch, bytes, &mut pos, &mut state)?,
             Block::BackwardScan { magic, fields, .. } => {
                 let found = find_last_occurrence(bytes, magic).ok_or_else(|| mismatch(bytes.len(), "backward-scan magic not found in buffer"))?;
-                // `fields` describe what comes AFTER the magic pattern itself, not the magic bytes.
                 pos = found + magic.len();
                 jumped = true;
                 walk_fields(fields, bytes, &mut pos, &mut state, 0)?;

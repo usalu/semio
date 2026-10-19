@@ -485,7 +485,6 @@ pub(super) fn check_product_indexes(catalogue: &Catalogue, report: &mut CheckRep
                 q_dim(tag_n as f64),
                 Vec::new(),
             ));
-            // Per-tag content participates in Part 1 §6.4 index consistency.
             for (ti, tag) in index.search_tags.iter().enumerate() {
                 let tl = tag.trim().to_ascii_lowercase();
                 let tag_match = expected_needles.iter().any(|n| !n.is_empty() && tl.contains(&n.to_ascii_lowercase()));

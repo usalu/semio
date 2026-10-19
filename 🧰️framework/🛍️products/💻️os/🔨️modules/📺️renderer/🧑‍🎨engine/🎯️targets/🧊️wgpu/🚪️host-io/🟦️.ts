@@ -19,7 +19,7 @@
 
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
 import moduleRoutes from "@semio-tech/plugin-registry/deployment/routes.json";
-import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts";
+import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "@semio-tech/framework/modules/ui/contract/presentation/host-temporal-format";
 
 const WGPU_EXTENSION_INSTALL_PATH = `${moduleRoutes.extension}/install`;
 
@@ -144,8 +144,6 @@ function downloadBytes(filename: string, mimeType: string, bytes: Uint8Array): v
     anchor.click();
   } finally {
     anchor.remove();
-    // 🧹️ Revoked on the next macrotask, never synchronously: Chromium starts the download from the
-    // object URL asynchronously, and revoking it in the same task cancels the save it just began.
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 }
@@ -469,8 +467,6 @@ function createSocketDoor(): (request: Extract<WgpuHostIoRequest, { op: "socket"
         const data = event.data;
         if (typeof data === "string") admitSocketFrame(entry, { text: data });
         else if (data instanceof ArrayBuffer) admitSocketFrame(entry, { binary: socketBytesToBase64(data) });
-        // 🛟️ A `Blob` payload cannot appear: `binaryType` is pinned to `arraybuffer` above. Anything
-        // else is counted rather than silently ignored, so a shell that sees `dropped` knows.
         else entry.dropped += 1;
       };
       socket.onerror = () => {
@@ -491,9 +487,7 @@ function createSocketDoor(): (request: Extract<WgpuHostIoRequest, { op: "socket"
       sockets.delete(request.socketId);
       try {
         entry.socket.close();
-      } catch {
-        // 🛟️ best-effort — a socket already closing refuses a second close in some engines.
-      }
+      } catch {}
       return answerFor(entry, [], false);
     }
 
@@ -516,8 +510,6 @@ function createSocketDoor(): (request: Extract<WgpuHostIoRequest, { op: "socket"
       return answerFor(entry, [], entry.queue.length > 0);
     }
 
-    // 📥️ `poll`: one PAGE of what the peer sent, never the whole queue, with `more` telling the shell
-    // whether another hop would return without waiting.
     const maxMessages = Math.max(1, Math.min(request.maxMessages ?? WGPU_SOCKET_POLL_MAX_MESSAGES, WGPU_SOCKET_POLL_MAX_MESSAGES));
     const maxBytes = Math.max(1, Math.min(request.maxBytes ?? WGPU_SOCKET_POLL_MAX_BYTES, WGPU_SOCKET_POLL_MAX_BYTES));
     const page: WgpuSocketFrame[] = [];
@@ -533,9 +525,6 @@ function createSocketDoor(): (request: Extract<WgpuHostIoRequest, { op: "socket"
       entry.queueBytes -= socketFrameBytes(next);
     }
     const answer = answerFor(entry, page, entry.queue.length > 0);
-    // 🧯️ A closed socket is forgotten only once everything it really received has been handed over —
-    // frames that arrived before the close are the consumer's, and dropping them with the entry would
-    // lose the peer's last word (a `bye`, a revocation close reason) exactly when it matters most.
     if (entry.state === "closed" && entry.queue.length === 0) sockets.delete(request.socketId);
     return answer;
   };

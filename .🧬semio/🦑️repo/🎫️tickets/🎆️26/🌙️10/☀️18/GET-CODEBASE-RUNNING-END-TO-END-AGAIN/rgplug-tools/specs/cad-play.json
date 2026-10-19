@@ -1,0 +1,16 @@
+{
+ "ws": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml",
+ "dir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🧾️play-model",
+ "name": "semio-s-artifact-cad-cad-play-model-document",
+ "const": "CAD_PLAY_MODEL_JSON",
+ "emoji": "🧾️",
+ "doc": "The bundled concrete-forest play model JSON document of the cad play scene, held by its own crate so the play crate stays inside the source gate.",
+ "json_rel": "../../../📚️examples/🖼️assets/🎮️play/🔣️.json",
+ "workspace_rel": "../../../../../../../../..",
+ "desc": "cad bundled play model JSON document",
+ "after": "semio-s-artifact-cad-cad-play",
+ "user_rs": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️.rs",
+ "include_old": "include_str!(\"../../📚️examples/🖼️assets/🎮️play/🔣️.json\")",
+ "user_manifest": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/📦️packages/🦀️rust/Cargo.toml",
+ "scope": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad"
+}

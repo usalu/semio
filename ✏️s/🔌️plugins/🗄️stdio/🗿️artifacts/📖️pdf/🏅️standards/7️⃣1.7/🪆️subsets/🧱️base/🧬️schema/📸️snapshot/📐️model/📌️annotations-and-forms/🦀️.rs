@@ -143,12 +143,10 @@ pub struct PdfAnnotation {
 }
 
 impl PdfAnnotation {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(rect: PdfRect, kind: PdfAnnotationKind) -> Self {
         Self { rect, kind, contents: None, name: None, modified: None, flags: 4, border: None, color: Vec::new(), appearance: None, appearance_state: None, markup: None, optional_content: None, struct_parent: None, extra: Vec::new() }
     }
     /// 🔗 A URI link over `rect` with no visible border.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn link(rect: PdfRect, uri: impl Into<String>) -> Self {
         let mut annotation = Self::new(rect, PdfAnnotationKind::Link { action: Some(PdfAction::uri(uri)), destination: None, highlight: None, quad_points: Vec::new() });
         annotation.border = Some(PdfBorderStyle { width: 0.0, style: None, dash: None, radii: None });

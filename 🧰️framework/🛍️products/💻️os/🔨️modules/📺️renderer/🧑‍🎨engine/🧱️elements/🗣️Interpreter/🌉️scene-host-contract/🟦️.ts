@@ -64,9 +64,7 @@ export function parseSelectionDomainsFromSession(json: string): { readonly nodes
         handles: Array.isArray(record.handles) ? (record.handles as string[]) : Array.isArray(record.handleIds) ? (record.handleIds as string[]) : [],
       };
     }
-  } catch {
-    /* invalid json */
-  }
+  } catch {}
   return { nodes: [], edges: [], handles: [] };
 }
 

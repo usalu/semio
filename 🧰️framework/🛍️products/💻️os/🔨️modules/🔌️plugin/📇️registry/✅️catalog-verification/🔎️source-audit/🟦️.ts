@@ -64,9 +64,6 @@ export function auditPluginCatalogSources(repoRoot = findWorkspaceRoot(), contro
     }
     control?.progress?.(index + 1, manifestPaths.length, relative(repoRoot, manifestPath));
   }
-  // 🔗️ A declared runtime dependency names a PLUGIN ID, so it either resolves against the discovered
-  // catalog or it is an authoring defect — never silently dropped, the way the previous Cargo-package
-  // derivation had to drop linked sub-crates (`draw-fsm`, `imperative-control`) that are not plugins.
   for (const entry of entries) {
     for (const dependencyId of entry.dependsOn) {
       if (byPlugin.has(dependencyId)) continue;

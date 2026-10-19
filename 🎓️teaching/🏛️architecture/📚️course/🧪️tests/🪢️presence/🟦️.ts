@@ -4,7 +4,7 @@ import { createServer, type Socket } from "node:net";
 import type { AddressInfo } from "node:net";
 import { expect, it } from "vitest";
 import cases from "../../🧫️fixtures/🪢️presence/🔣️.json" with { type: "json" };
-import { presenceUpgradeStatus, waitForPresenceSocket } from "../../🚀️deploy/🟦️.ts";
+import { presenceUpgradeStatus, waitForPresenceSocket } from "../../🚀️deploy/🩺️docker-image-check/🟦️.ts";
 
 type OracleSocket = EventEmitter & { close(): void; terminate(): void };
 type OracleResponse = { statusCode?: number; destroy(): void };

@@ -79,7 +79,7 @@ export async function compileNativeUnknownGrammar(execution:PrintExecutionV1): P
   console.log(`[native-grammar] ${expected.size} shared typed unknown scale inputs matched independent D3`);
 });}
 
-/** \u{1f573}\uFE0F Checks shared renderer gap and nullable paint vectors against D3 coordinates. */
+/** 🕳️ Checks shared renderer gap and nullable paint vectors against D3 coordinates. */
 export async function compileNativeMissingGrammar(execution:PrintExecutionV1): Promise<void> {return withPrintScratchV1(execution,"native/missing-grammar",async({directory:workDir,execution})=>{
   const typed = (value: unknown): string => value === undefined ? '\\SemioVizUndefined{}' : value === null ? '\\SemioVizNull{}' : String(value);
   const rows = unknownRender.rows.map(row => '\\SemioVizRow{shared-missing}{' + ['x','y','paint'].map(key => typed((row as Record<string,unknown>)[key])).join(',') + '}').join('\n');

@@ -1,6 +1,6 @@
 /** 🔍 Owns the window search line, its completion model and the key routing that focuses it. */
 import * as React from "react";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "../🔣️Icons/🟦️.tsx";
@@ -15,7 +15,7 @@ import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Action } from "../⚡️ActionGroup/🟦️.tsx";
 import { Input } from "../✏️Input/🟦️.tsx";
 
-/** @emoji 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
+/** 🏷️ i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
 export const UI_WINDOW_SEARCH = {
   title: "ui.windowSearch.title",
   action: "ui.windowSearch.action",
@@ -24,7 +24,7 @@ export const UI_WINDOW_SEARCH = {
   noMatches: "ui.windowSearch.noMatches",
 } as const satisfies Record<string, UiTranslationKey>;
 
-/** @emoji ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
+/** ⌨️ Normalizes an action NAME for display and matching: no separators, PascalCase tokens (`set height` → `SetHeight`, `box` → `Box`), preserving decimal points inside numbers (`3.5` stays `3.5`, not `35`). Names only — the typed engagement line reaches the program verbatim (a grammar like `move <dx> <dy>` needs its spaces), so this never touches {@link SearchInput.onChange}/`onSubmit` payloads. */
 export function normalizeEngagementActionText(text: string): string {
   const decimalMarker = "\u0001";
   const withProtectedDecimals = text.replace(/(\d)\.(\d)/g, `$1${decimalMarker}$2`);
@@ -39,21 +39,21 @@ export function normalizeEngagementActionText(text: string): string {
   return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join("");
 }
 
-/** @emoji ⌨️ One typed action line for a window's {@link SearchSpec}. */
+/** ⌨️ One typed action line for a window's {@link SearchSpec}. */
 export interface SearchInput {
   id?: string;
   value?: string;
   placeholder?: UiLabel;
   onChange?: (value: string) => void;
   onSubmit?: (value: string) => void;
-  /** @emoji 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
+  /** 🔁️ Restarts the last finalized engagement when Space is pressed with an empty action. */
   onRepeatLast?: () => void;
-  /** @emoji ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
+  /** 🛑️ ⎋️ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
   onAbort?: () => void;
   disabled?: boolean;
 }
 
-/** @emoji 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
+/** 🔎️ One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
 export interface SearchPossible {
   id: string;
   label: string;
@@ -75,7 +75,7 @@ function searchPossibleRankScore(query: string, item: SearchPossible): number {
   return -1;
 }
 
-/** @emoji 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
+/** 🔎️ Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
 export function filterSearchPossibles(query: string, items: readonly SearchPossible[]): SearchPossible[] {
   const trimmed = normalizeEngagementActionText(query).toLowerCase();
   if (!trimmed) return [...items];
@@ -86,13 +86,13 @@ export function filterSearchPossibles(query: string, items: readonly SearchPossi
     .map((row) => row.item);
 }
 
-/** @emoji ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
+/** ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
 export interface SearchInlineCompletion {
   readonly prefix: string;
   readonly suffix: string;
 }
 
-/** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
+/** ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
 export function searchInlineCompletion(query: string, item: SearchPossible | undefined): SearchInlineCompletion | null {
   if (!query.trim() || !item) return null;
   const q = query;
@@ -112,7 +112,7 @@ export function searchInlineCompletion(query: string, item: SearchPossible | und
   return best;
 }
 
-/** @emoji ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
+/** ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
 export function searchActiveInlineCompletion(query: string, matches: readonly SearchPossible[], index: number): SearchInlineCompletion | null {
   if (!query.trim() || !matches.length) return null;
   const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
@@ -126,7 +126,7 @@ export function searchActiveInlineCompletion(query: string, matches: readonly Se
   return null;
 }
 
-/** @emoji 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
+/** 🔎️ Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
 export function searchHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
   const displayLabel = normalizeEngagementActionText(label);
   const trimmed = normalizeEngagementActionText(query);
@@ -146,10 +146,10 @@ export function searchHighlightedLabel(label: string, query: string, detail?: st
   );
 }
 
-/** @emoji 🚫️ React props that disable native browser affordances on editable UI controls. */
+/** 🚫️ React props that disable native browser affordances on editable UI controls. */
 
 
-/** @emoji ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
+/** ⌨️ True when the event target should receive typed characters (skip engagement routing and global REPL capture). */
 export function isUiTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   if (t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement) return true;
@@ -165,13 +165,13 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
 }
 
-/** @emoji ⌨️ True when the event target is already the active window search action field. */
+/** ⌨️ True when the event target is already the active window search action field. */
 export function isWindowSearchTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
   return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] textarea'));
 }
 
-/** @emoji ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
+/** ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
 export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
   if (isWindowSearchTypingTarget(t)) return false;
   const searchField = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
@@ -182,13 +182,13 @@ export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
   return true;
 }
 
-/** @emoji ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
+/** ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
 export function queryWindowSearchInput(activeOnly = false): HTMLInputElement | null {
   const searchActive = activeOnly ? '[data-active="true"]' : "";
   return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="search"]${searchActive} [data-slot="input"]`);
 }
 
-/** @emoji ⌨️ Focuses the action input in the active window search overlay, if present. */
+/** ⌨️ Focuses the action input in the active window search overlay, if present. */
 export function focusActiveSearchInput(): boolean {
   const active = document.activeElement;
   if (active instanceof HTMLElement && active.closest('[data-slot="engagement-control"]')) return false;
@@ -198,7 +198,7 @@ export function focusActiveSearchInput(): boolean {
   return true;
 }
 
-/** @emoji ✍️ One local edit of a controlled search line: the text the user typed, the published value
+/** ✍️ One local edit of a controlled search line: the text the user typed, the published value
  * that stood when the edit began, and every line this edit already dispatched through `onChange` (a
  * program that echoes the line back republishes exactly those). */
 export interface SearchLineEdit {
@@ -207,12 +207,12 @@ export interface SearchLineEdit {
   readonly sent?: readonly string[];
 }
 
-/** @emoji 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
+/** 🧾️ How many dispatched lines one edit remembers for echo detection — a slow program may still be
  * echoing the first keystrokes of a long verb when the last ones are typed. */
 export const SEARCH_LINE_EDIT_SENT_LIMIT = 64;
 
 /**
- * @emoji ✍️ Which line a controlled window search field shows. The published value is a program's
+ * ✍️ Which line a controlled window search field shows. The published value is a program's
  * property, and a program that stores the line without republishing it (or that answers a full round trip
  * later) used to make the field unwritable: every keystroke dispatched `onChange` and the field snapped
  * straight back to the stale `value`, so every submit carried an empty line. The local edit therefore
@@ -229,14 +229,14 @@ export function searchControlledLineV1(published: string, edit: SearchLineEdit |
   return edit.sent?.includes(published) ? edit.text : published;
 }
 
-/** @emoji ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
+/** ✅️ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
 export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
   if (!filteredCount) return false;
   return showPossiblesList || Boolean(draft.trim());
 }
 
 /**
- * @emoji ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
+ * 🧲️ ␣️ Whether Space CONFIRMS the line inside the action field instead of typing a separator.
  * An empty line confirms (repeat-last when idle, step submit during a session) and a live engagement
  * session keeps the step-value grammar where each Space commits the typed number. A typed line with no
  * session is prose the program tokenizes itself (`move 50 25`), so Space belongs in the text.
@@ -245,7 +245,7 @@ export function searchSpaceConfirmsLine(draft: string, sessionActive: boolean): 
   return !draft.trim() || sessionActive;
 }
 
-/** @emoji ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
+/** 📱️ ␣️ Applies Space on a window search action line (step submit vs repeat-last when idle). */
 export function applySearchSpaceAction(input: SearchInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
   if (!draft.trim()) {
@@ -263,7 +263,7 @@ export function applySearchSpaceAction(input: SearchInput, draft: string, sessio
   return true;
 }
 
-/** @emoji 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
+/** 🔁️ Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
 export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = search?.input;
   if (!input || event.defaultPrevented || event.isComposing) return false;
@@ -274,7 +274,7 @@ export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pi
   return applySearchSpaceAction(input, draft, Boolean(search?.sessionActive));
 }
 
-/** @emoji ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
+/** ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
 export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
   const input = search?.input;
   if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
@@ -288,7 +288,7 @@ export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: 
   return true;
 }
 
-/** @emoji ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
+/** 📈️ ⎋️ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
 export function routeWindowSearchEscape(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">, zone: { readonly chromeVisible: boolean; readonly actionActive: boolean }): boolean {
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = search?.input?.onAbort;
@@ -301,9 +301,9 @@ export function routeWindowSearchEscape(search: SearchSpec | undefined, event: P
   return true;
 }
 
-/** @emoji 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
+/** 🔎️ Floating top-middle window search payload: typed action input and autocomplete possibles. */
 export interface SearchSpec {
-  /** @emoji 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
+  /** 🎯️ Ongoing engagement: chrome stays visible; action input accepts step values. */
   sessionActive?: boolean;
   input?: SearchInput;
   possibles?: SearchPossible[];
@@ -311,11 +311,11 @@ export interface SearchSpec {
 
 export interface SearchProps extends SearchSpec {
   className?: string;
-  /** @emoji 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
+  /** 🎯️ When true, focuses the action input whenever this search pane belongs to the globally active window. */
   active?: boolean;
 }
 
-/** @emoji 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
+/** 🔎️ Floating top-middle window search pane: action input with optional right chevron for possibles. */
 const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
   const { inline } = useFlow();
   const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);

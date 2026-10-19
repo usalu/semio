@@ -90,7 +90,7 @@ impl ToValue for Synapse {
 }
 
 impl FromValue for Synapse {
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_synapse(value, control) }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_synapse(value, control) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Synapse")) };
         Ok(Self {
@@ -116,7 +116,7 @@ impl ToValue for Neuron {
 }
 
 impl FromValue for Neuron {
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_neuron(value, control) }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_neuron(value, control) }
     fn retire_decoded(self) { native_controlled::retire_neuron(self) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Neuron")) };
@@ -136,7 +136,7 @@ impl ToValue for Tree {
 }
 
 impl FromValue for Tree {
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_tree(value, control) }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode_tree(value, control) }
     fn retire_decoded(self) { native_controlled::retire_tree(self) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Object(_) = &value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for Tree")) };

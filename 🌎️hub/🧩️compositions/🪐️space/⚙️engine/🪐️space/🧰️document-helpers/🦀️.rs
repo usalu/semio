@@ -89,8 +89,6 @@ pub(super) async fn space_workflow_context_menu_items(
     let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
     let mut menu = Menu::of(registry, axes);
     if hits.is_empty() {
-        // 🗂️ Empty-canvas menu: paste/select-all stay top-level (the two most frequent verbs here),
-        // reorganize is a rarer layout action so it moves into its own taxonomy group.
         menu = menu
             .item(ContextMenuItemSpec { id: "paste-instance".into(), label: Some(labels.context_paste.into()), icon: Some("clipboard".into()), action: Some("pasteAppInstance".into()), ..Default::default() })
             
@@ -100,10 +98,6 @@ pub(super) async fn space_workflow_context_menu_items(
             ;
     }
     if hit_node.is_some() || !nodes.is_empty() {
-        // 🗂️ Node menu: open/duplicate stay top-level (the two most frequent verbs); copy moves into
-        // "transfer" (clipboard), rename into "settings" (identity/label editing), remove stays a
-        // trailing destructive leaf — `organize_context_menu` (run automatically at the
-        // `VcsArtifactApp::context_menu` funnel) inserts the pre-destructive separator itself.
         menu = menu
             .item(ContextMenuItemSpec { id: "open-instance".into(), label: Some(labels.context_open_instance.into()), icon: Some("external-link".into()), action: Some("openInstance".into()), ..Default::default() })
             
@@ -122,8 +116,6 @@ pub(super) async fn space_workflow_context_menu_items(
         }
         let phrase = selection_count_phrase(axes.locale, &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), semio_framework_plugin::SelectionKind::Node)]);
         let remove_label = phrase.map_or_else(|| labels.context_remove.as_str().to_string(), |phrase| format!("{} ({phrase})", labels.context_remove.as_str()));
-        // 🎯️ Destructive tail always comes last — kept unconditionally after the "selection" group so
-        // remove-instance is the final row regardless of whether clear-selection was appended above.
         let args = hit_node.map(|node_id| DslValue::object([("nodeId".to_string(), DslValue::String(node_id.into()))]));
         menu = menu.item(ContextMenuItemSpec { id: "remove-instance".into(), label: Some(remove_label), icon: Some("trash".into()), action: Some("removeAppInstance".into()), args, destructive: Some(true), ..Default::default() });
     }

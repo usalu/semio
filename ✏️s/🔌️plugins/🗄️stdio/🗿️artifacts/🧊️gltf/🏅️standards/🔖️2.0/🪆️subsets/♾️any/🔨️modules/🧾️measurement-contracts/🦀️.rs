@@ -70,12 +70,9 @@ pub struct GltfVec3 {
 }
 
 impl GltfVec3 {
-    // 🚫️async: E1/R9 pure field-shuffle, zero I/O, consumed synchronously throughout
-    // 🔨️geometry-kernel (a whole-file R9 revert) — see that file's header for the full rationale.
     pub fn new(v: [f64; 3]) -> Self {
         Self { x: v[0], y: v[1], z: v[2] }
     }
-    // 🚫️async: E1/R9 — see `new` above
     pub fn array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
     }

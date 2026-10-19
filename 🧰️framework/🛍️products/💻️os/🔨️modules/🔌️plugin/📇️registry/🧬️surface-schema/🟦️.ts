@@ -178,10 +178,6 @@ function structIndexOf(root: string): Map<string, string> {
   const index = new Map<string, string>();
   for (const file of rustFilesOf(root)) {
     const text = readFileSync(file, "utf8");
-    // 🔁️ A projected leaf is never a source of truth for the next run: once 269 lanes each declare
-    // `pub struct NoConfig {}`, indexing them makes a second run resolve `NoConfig` to a sibling
-    // projection instead of the framework sentinel, rewriting every `@see` line — the projection
-    // would never converge and `--check` would fail on a tree it had just written.
     if (text.includes(SURFACE_SCHEMA_BANNER)) continue;
     for (const match of text.matchAll(/\bpub\s+struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/gu)) {
       if (!index.has(match[1]!)) index.set(match[1]!, file);
@@ -270,9 +266,6 @@ export function surfaceSchemaProjectionBlocker(extract: PolicySchemaLeafExtract,
   const shapes = [extract, ...definitions];
   const foreign = shapes.flatMap((shape) => shape.fields.filter((field) => !SCALARS[field.scalar] && !declared.has(field.scalar)).map((field) => `${field.name}: ${field.scalar}`));
   if (foreign.length) return `composite field type(s) ${foreign.join(", ")} have no resolvable Rust declaration to nest`;
-  // 🈳️ GraphQL has no map type and proto3 forbids `optional` on a repeated or map field, so these two
-  // shapes cannot hold identical optionality/cardinality across all five leaves; the repo library's
-  // field-parity law would (rightly) report the divergence. They are authored, never projected.
   const inexpressible = shapes.flatMap((shape) => shape.fields.filter((field) => field.cardinality === "map" || (field.optional && (field.cardinality === "list" || field.cardinality === "fixedList"))).map((field) => field.name));
   return inexpressible.length ? `field(s) ${inexpressible.join(", ")} have no cross-format-identical spelling (map, or optional repeated)` : null;
 }
@@ -465,8 +458,6 @@ export function findSurfaceMountAnchor(pluginRoot: string, surfaceAbs: string): 
     glue = MOUNT_INDEX.get(pluginRoot)!.get(componentAbs);
   }
   if (!glue) return null;
-  // 🔄️ The glue file is re-read here rather than caching a line number: the projection inserts lines
-  // into these very files, so every anchor after the first write would otherwise be off by five.
   const lines = readFileSync(glue, "utf8").split("\n");
   for (let index = 0; index < lines.length; index++) {
     const match = /^\s*#\[path\s*=\s*"([^"]+)"\]\s*$/u.exec(lines[index]!);
@@ -487,9 +478,6 @@ export function mountProjectedRustLeaf(pluginRoot: string, owner: SurfaceSchemaO
   const moduleName = owner.lane;
   const leafRel = relative(dirname(anchor.glueAbs), join(owner.facetAbs, TAXONOMY_LEAF_FILENAME)).replaceAll("\\", "/");
   if (text.includes(`#[path = "${leafRel}"]`)) return { ok: true, glueAbs: null };
-  // 🪆️ When the lane owns a real `🦀️.rs` the wiring mounts it as a FILE module (`pub mod config;`), so
-  // the schema leaf belongs inside that file — the authored convention 21 lanes already use — and
-  // never as a second `config` beside it (`E0428`).
   const laneLeafAbs = join(owner.laneAbs, TAXONOMY_LEAF_FILENAME);
   if (existsSync(laneLeafAbs)) {
     const laneText = readFileSync(laneLeafAbs, "utf8");
@@ -505,10 +493,6 @@ export function mountProjectedRustLeaf(pluginRoot: string, owner: SurfaceSchemaO
     insertAt += 1;
   }
   if (insertAt >= lines.length) return { ok: false, reason: "the surface mount is not the canonical `mod component; pub use component::*;` shape" };
-  // 🧱️ A sibling `pub mod config`/`pub mod presence` may sit anywhere inside the SAME enclosing module,
-  // not within a fixed window of the anchor — `🀄️wfc`'s wiring declares it 40 lines later, and a
-  // windowed guard silently emitted a second one (`E0428: the name 'config' is defined multiple
-  // times`). The scan therefore runs to the end of the enclosing block, tracked by brace depth.
   const sibling = findSiblingModule(lines, insertAt + 1, indent, moduleName);
   if (sibling !== null) {
     if (!lines[sibling]!.includes("{")) return { ok: false, reason: `the wiring module declares \`pub mod ${moduleName};\` but the lane has no ${TAXONOMY_LEAF_FILENAME} to mount the schema leaf from` };

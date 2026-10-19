@@ -37,19 +37,16 @@ impl Default for ZipArtifact {
 
 impl ZipArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> ZipSnapshot {
         ZipSnapshot { schema: self.schema.clone(), entries: self.entries.clone(), comment: self.comment.clone(), comment_utf8: self.comment_utf8 }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: ZipSnapshot) -> Self {
         Self { schema: snapshot.schema, entries: snapshot.entries, comment: snapshot.comment, comment_utf8: snapshot.comment_utf8 }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: ZipSnapshot) {
         self.schema = snapshot.schema;
         self.entries = snapshot.entries;
@@ -78,9 +75,6 @@ pub fn empty_zip_snapshot() -> ZipSnapshot {
 pub fn demo_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot {
         schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        // 🔤️ Canonical (`name`-ascending) member order — the order this artifact's own writer emits
-        // and its reader hands back (`🚪️io`'s `encode_zip`/`decode_zip`), so the demo is a fixpoint
-        // of its own codec rather than a snapshot no round trip could reproduce.
         entries: vec![
             ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec(), ..Default::default() },
             ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec(), ..Default::default() },

@@ -25,9 +25,13 @@ const IN_SOURCE_TEST_PATH = "(^|/)🧪️tests/";
 const BUILDER_SOURCE_PATH = "(^|/)🏗️builder/";
 const UI_TEST_SOURCE_PATH = "(^|/)🧪️(?:tests|testing)/|\\.(?:test|spec|story)\\.[cm]?[jt]sx?$";
 const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(🎯️targets/⚛️react|🧱️elements)/";
+/** 🖥️ The renderer host's UI contract with the OS package: only the declared `elements` subpaths of `@semio-tech/framework-os` (the published entries of the host's own element modules), never any other OS internals. */
+const RENDERER_HOST_UI_CONTRACT = Object.freeze({ package: "@semio-tech/framework-os", subpathPrefixes: Object.freeze(["./modules/renderer/engine/elements/"]) });
+const RENDERER_HOST_UI_CONTRACT_TARGETS = exportTargetPatterns(workspacePackages.filter(pkg => pkg.name === RENDERER_HOST_UI_CONTRACT.package).map(pkg => ({ ...pkg, exportTargets: pkg.exportTargets.filter(row => RENDERER_HOST_UI_CONTRACT.subpathPrefixes.some(prefix => row.subpath.startsWith(prefix))) })));
 const RESOLVED_NODE_BUILTIN_PATH = `^(?:node:)?(?:${[...new Set(nodeBuiltins.map((name) => name.replace(/^node:/, "")).filter((name) => !name.includes(":")))].map(escapeRegex).join("|")})(?:$|/)`;
 const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   RENDERER_HOST_ROOT,
+  ...RENDERER_HOST_UI_CONTRACT_TARGETS,
   "^🧰️framework/🔨️modules/🖱️ui/",
   "^🧰️framework/📦️packages/",
   installedPackagePath(["react", "react-dom"]),
@@ -148,6 +152,8 @@ function assertFocusedBoundarySemantics() {
     "🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
     "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts",
   ];
   const allowed = (candidate) => rendererAllows.some((pattern) => pattern.test(candidate));

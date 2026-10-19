@@ -67,9 +67,6 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, LayoutSnapshot
     }
     let hit = hit_test_at(doc.snapshot, &current(cfg), payload.x, payload.y, payload.width, payload.height);
     let effect = match hit {
-        // ⚖️ `Invertive` merge is the toggle-on-shift-click `extend` used to hand-roll (add if absent,
-        // remove if present); `Replace` is a plain click. Both now resolve against the CURRENT
-        // framework-owned selection inside `dispatch_interaction_action`, not a locally-read snapshot.
         Some(id) => crate::layout_select_effect(std::slice::from_ref(&id), if payload.extend { "invertive" } else { "replace" }),
         None => crate::layout_clear_selection_effect(),
     };

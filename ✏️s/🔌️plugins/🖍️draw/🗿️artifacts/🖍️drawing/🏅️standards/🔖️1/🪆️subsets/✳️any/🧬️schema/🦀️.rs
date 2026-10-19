@@ -19,7 +19,7 @@ pub mod identity;
 use identity::{DrawingIdentity,DrawingIdentityAssignment};
 
 /// 🖍️ Constructs an authored path layer from decoded domain segments.
-pub fn create_drawing_path_layer(identity: DrawingIdentity, name: &str, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> DrawingLayerNode {
+pub fn create_drawing_path_layer(identity: DrawingIdentity, name: &str, segments: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>) -> DrawingLayerNode {
     DrawingLayerNode::Path(DrawingPathBody {
         base: DrawingLayerBase {
             id: identity.into_key(),
@@ -66,7 +66,7 @@ pub struct DrawingArtifact {
     #[state(artifact)]
     pub title: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     #[state(artifact)]
-    pub layers: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
+    pub layers: semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>,
     #[state(artifact)]
     pub assets: semio_framework_value::paged::PagedMap<DrawingImageAsset, {usize::MAX}>,
     #[state(artifact)]
@@ -288,7 +288,7 @@ pub struct DrawingTransform {
     pub rotation: f64,
 }
 
-// No keyword either: reached only through `semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>` (a plain, un-tagged list) —
+// No keyword either: reached only through `semio_framework_value_persistent::list::PagedList<GradientStop, {usize::MAX}>` (a plain, un-tagged list) —
 // `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
 // verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
@@ -316,14 +316,14 @@ pub enum FillStyle {
         x2: f64,
         y2: f64,
         #[dsl(table)]
-        stops: semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>,
+        stops: semio_framework_value_persistent::list::PagedList<GradientStop, {usize::MAX}>,
     },
     RadialGradient {
         cx: f64,
         cy: f64,
         r: f64,
         #[dsl(table)]
-        stops: semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>,
+        stops: semio_framework_value_persistent::list::PagedList<GradientStop, {usize::MAX}>,
     },
 }
 
@@ -339,7 +339,7 @@ pub struct StrokeStyle {
     pub join: StrokeJoin,
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
-    pub dash: Option<semio_framework_value::list::PagedList<f64, {usize::MAX}>>,
+    pub dash: Option<semio_framework_value_persistent::list::PagedList<f64, {usize::MAX}>>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
@@ -351,9 +351,6 @@ pub struct DrawingAttributes {
     #[value(default)]
     #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     pub fill_rule: FillRule,
-    // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
-    // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
-    // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
     #[value(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     #[dsl(statements, block)]
@@ -382,7 +379,7 @@ pub struct DrawingTraceParams {
 pub struct DrawingImageAsset {
     pub width: u32,
     pub height: u32,
-    pub samples: semio_framework_value::list::PagedList<[u8; 4], {usize::MAX}>,
+    pub samples: semio_framework_value_persistent::list::PagedList<[u8; 4], {usize::MAX}>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
@@ -458,7 +455,7 @@ pub struct DrawingLine {
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct DrawingPolygon {
-    pub points: semio_framework_value::list::PagedList<[f64; 2], {usize::MAX}>,
+    pub points: semio_framework_value_persistent::list::PagedList<[f64; 2], {usize::MAX}>,
 }
 
 // Each body carries its own `#[dsl(keyword = ...)]` — required by the single-field tuple
@@ -511,7 +508,7 @@ pub struct DrawingPathBody {
     #[dsl(block)]
     pub base: DrawingLayerBase,
     #[dsl(statements, block)]
-    pub segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>,
+    pub segments: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
@@ -560,7 +557,7 @@ pub struct DrawingGroupBody {
     #[cfg_attr(any(test, feature = "testkit"),serde(default,skip_serializing_if="group_isolation_disabled"))]
     pub isolation:bool,
     #[dsl(statements, block)]
-    pub children: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
+    pub children: semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>,
 }
 
 fn group_isolation_disabled(value:&bool)->bool {!*value}
@@ -576,7 +573,7 @@ pub struct DrawingBooleanBody {
     #[dsl(block)]
     pub base: DrawingLayerBase,
     pub operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
-    pub children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
+    pub children: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]

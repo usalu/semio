@@ -5,49 +5,10 @@ import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, p
 import { posix, relative, sep } from "node:path";
 import { listSourceFamily, readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
-import { TOOL_JOB_FRAMEWORK_RESERVED_IDS, TOOL_JOB_HOST_CONFIGURATION_IDS, toolJobAppOwnedRows, toolJobDispositions, toolJobProductionProtocolSource, toolJobProductionSource, type ToolJobProof, toolJobProofIdentity, toolJobProofs, toolJobResolveTypeAlias, toolJobRustBlock, toolJobScanThenMonolithRows, type ToolJobStaticRow, toolJobStaticRows } from "../📋️inventory/🟦️.ts";
+import { TOOL_JOB_FRAMEWORK_RESERVED_IDS, TOOL_JOB_HOST_CONFIGURATION_IDS, toolJobAppOwnedRows, toolJobDispositions, toolJobProductionProtocolSource, toolJobProductionSource, type ToolJobProof, toolJobProofIdentity, toolJobProofs, toolJobResolveTypeAlias, toolJobRustBlock, toolJobScanThenMonolithRows, type ToolJobStaticRow, toolJobStaticRows, toolJobFactoryModuleFile } from "../📋️inventory/🟦️.ts";
 import { toolJobMountedDispatchOneTurnExact, toolJobRetainedDispatchSetup } from "../📤️publication/🟦️.ts";
 
 //#region 🧭️ConcreteFactoryResolution
-/** 🗿️ An artifact crate's own lib root (`🗿️artifacts/<artifact>/🦀️.rs`, declared by that artifact's
- * `📦️packages/🦀️rust/Cargo.toml` `[lib] path = "../../🦀️.rs"`), which owns the `#[path]` module tree
- * since the plugin package root became a re-export shell. */
-function toolJobArtifactCrateRoot(file: string): string | undefined {
-  const match = file.match(/^(.*\/🗿️artifacts\/[^/]+)\/🦀️\.rs$/);
-  return match?.[1];
-}
-
-/** 🧭️ Resolves one crate module through its package's explicit taxonomy declarations. */
-export function toolJobFactoryModuleFile(files: ReadonlyMap<string, string>, ownerFile: string, modulePath: string): string | undefined {
-  const candidates = new Set<string>();
-  const visit = (source: string, directory: string, prefix: string): void => {
-    const declaration = /#\[path\s*=\s*"([^"]+)"\]\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*([;{])/g;
-    let match: RegExpExecArray | null;
-    while ((match = declaration.exec(source))) {
-      const target = posix.normalize(posix.join(directory, match[1]!));
-      const name = `${prefix}::${match[2]}`;
-      if (match[3] === ";") {
-        const exportedComponent = prefix === modulePath && match[2] === "component" && /pub\s+use\s+component::\*\s*;/.test(source);
-        if ((name === modulePath || exportedComponent) && files.has(target)) candidates.add(target);
-        else if (modulePath.startsWith(`${name}::`) && files.has(target)) visit(files.get(target)!, posix.dirname(target), name);
-      } else {
-        const block = toolJobRustBlock(source, source.indexOf("{", match.index));
-        if (!block) return;
-        visit(block.body, target, name);
-        declaration.lastIndex = block.end;
-      }
-    }
-  };
-  for (const [file, source] of files) {
-    if (!file.endsWith("/🦀️.rs")) continue;
-    const packageBoundary = file.lastIndexOf("/📦️packages/");
-    const owningRoot = packageBoundary >= 0 ? file.slice(0, packageBoundary) : toolJobArtifactCrateRoot(file);
-    if (owningRoot === undefined || !ownerFile.startsWith(`${owningRoot}/`)) continue;
-    visit(source, posix.dirname(file), "crate");
-  }
-  return candidates.size === 1 ? [...candidates][0] : undefined;
-}
-
 /** 🧬️ Resolves a compiler type token, including an explicit import alias, to one concrete source type; a path through a carved sibling crate's re-export resolves to the one definition of that name inside the owner's artifact. */
 function toolJobFactoryType(files: ReadonlyMap<string, string>, ownerFile: string, reference: string): { file: string; name: string } | undefined {
   if (!/^(?:crate::)?[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*$/.test(reference)) return undefined;
@@ -217,11 +178,12 @@ export function toolJobFactoryProofActivationScan(root: string): { owners: numbe
 }
 
 //#region ⏱️MicrosecondBudgetLaws
-/** 🪢️ The production sources the exact microsecond worker law binds: typed dispatch, the mounted operation and its job, the worker authority, the job runtime, the trace clock and the step driver. */
+/** 🪢️ The production sources the exact microsecond worker law binds: typed dispatch, the mounted operation and its job, the session admission, the worker authority, the job runtime, the trace clock and the step driver. */
 export interface ToolJobMicrosecondSources {
   readonly dispatch: string;
   readonly mounted: string;
   readonly operation: string;
+  readonly session: string;
   readonly worker: string;
   readonly job: string;
   readonly trace: string;
@@ -236,6 +198,7 @@ export function toolJobMicrosecondWorkerSources(root: string): ToolJobMicrosecon
     dispatch: policyReadModuleTreeSource(root, `${plugin}/🧵️instance/📨️dispatch/🦀️.rs`),
     mounted: policyReadModuleTreeSource(root, `${plugin}/🧵️retained-command/🦀️.rs`),
     operation: policyReadModuleTreeSource(root, `${plugin}/👷️job/🦀️.rs`),
+    session: policyReadModuleTreeSource(root, `${plugin}/👷️job/🚪️session/🦀️.rs`),
     worker: policyReadModuleTreeSource(root, `${job}/👷️worker/🎟️authority/🦀️.rs`),
     job: policyReadModuleTreeSource(root, `${job}/🦀️.rs`),
     trace: policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"),
@@ -243,11 +206,14 @@ export function toolJobMicrosecondWorkerSources(root: string): ToolJobMicrosecon
   };
 }
 
+const compactSource = (text: string): string => text.replace(/\s+/g, "");
+
 /** ⏱️ Cross-checks exact microsecond deadlines with strict Ajv and independent BigInt arithmetic. */
 export function toolJobMicrosecondWorkerExact(raw: ToolJobMicrosecondSources): boolean {
   const dispatch = toolJobProductionSource(raw.dispatch);
   const mounted = toolJobProductionSource(raw.mounted);
   const operation = toolJobProductionSource(raw.operation);
+  const session = compactSource(toolJobProductionSource(raw.session));
   const worker = toolJobProductionSource(raw.worker);
   const job = toolJobProductionSource(raw.job);
   const trace = toolJobProductionSource(raw.trace);
@@ -256,13 +222,13 @@ export function toolJobMicrosecondWorkerExact(raw: ToolJobMicrosecondSources): b
     if (source.split(marker).length !== 2) return undefined;
     return toolJobRustBlock(source, source.indexOf("{", source.indexOf(marker)))?.body;
   };
-  const compact = (text: string | undefined): string | undefined => text?.replace(/\s+/g, "");
+  const compact = compactSource;
   const setup = body(dispatch, "pub async fn start_typed_command_operation(");
-  const step = compact(body(mounted, "pub fn drive_worker_step("));
+  const step = compact(body(mounted, "pub fn drive_worker_step(") ?? "");
   const job_step = body(operation, "impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
-  const driver = compact(body(loan, "pub fn drive_step<"));
-  const fault = compact(body(worker, "fn publish_original_worker_fault<"));
-  const authority = compact(body(worker, "fn drive_worker_job_authority<"));
+  const driver = compact(body(loan, "pub fn drive_step<") ?? "");
+  const fault = compact(body(worker, "fn publish_original_worker_fault<") ?? "");
+  const authority = compact(body(worker, "fn drive_worker_job_authority<") ?? "");
   const duration = body(job, "pub fn from_duration(");
   const clock = body(job, "pub fn default_now_us(");
   const preflight = "ifcx.fuel_remaining()==0||cx.latest_us().map(|now|now>=cx.deadline_us()).unwrap_or_else(||cx.deadline_exceeded())";
@@ -280,6 +246,7 @@ export function toolJobMicrosecondWorkerExact(raw: ToolJobMicrosecondSources): b
     && authority.includes("letretained=authority.issued_retained;")
     && authority.includes("letstart_us=(params.now_us)();")
     && authority.includes("start_us.and_then(|start_us|StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,retained))")
+    && ["letmutjob=Some($job);", "letmutparams=Some($params);", "Ok(None)=>Err(refused(job,params,None)),", "$session::try_admit_owned(&mutjob,&mutparams,$cx)"].every((token) => session.includes(token))
     && authority.includes("authority.clock.begin(start_us)") && authority.includes("authority.last_step_end_us=start_us;")
     && fault.includes("JobOutcomeBorrow::admit_original_fault(params.operation,params.generation,authority.issued_retained,&mutauthority.retained_step_progress,")
     && driver.includes(preflight) && driver.indexOf(preflight) < driver.indexOf("job.step(cx)")

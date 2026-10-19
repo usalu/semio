@@ -19,7 +19,6 @@ pub struct GrowBuffer {
 }
 
 impl GrowBuffer {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn buffer(&self) -> Option<&MetalBuffer> {
         self.buffer.as_deref()
     }
@@ -28,7 +27,6 @@ impl GrowBuffer {
     /// CPU-visible `contents()` pointer — `Shared` storage keeps this synchronized with the GPU
     /// without an explicit flush. Returns `None` (and leaves any existing buffer untouched) for empty
     /// input, matching the wgpu target's "nothing to draw" no-op.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn upload(&mut self, device: &Device, bytes: &[u8]) -> Option<&MetalBuffer> {
         if bytes.is_empty() {
             return None;

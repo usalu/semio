@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/repo/ide-retirement-census",
+  "title": "Physical IDE Retirement Census",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "directories",
+    "files",
+    "suffixes",
+    "excludedDirectories",
+    "manifestNames",
+    "maximumEntries",
+    "maximumDirectories",
+    "maximumMilliseconds",
+    "pathCases",
+    "manifestCases",
+    "contentProbeBytes",
+    "semanticRoles",
+    "roleCases",
+    "maximumXmlPrologSections"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "directories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "suffixes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "excludedDirectories": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "manifestNames": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "maximumEntries": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumDirectories": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumMilliseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pathCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "kind",
+          "expected"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "file",
+              "directory",
+              "symlink"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "retired",
+              "excluded",
+              "accepted"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "manifestCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "document",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "document": {
+            "type": "object"
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "contentProbeBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1048576
+    },
+    "semanticRoles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ticketRoots",
+        "retainedInputDirectories",
+        "ticketCommandName",
+        "ticketDocumentName"
+      ],
+      "properties": {
+        "ticketRoots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "retainedInputDirectories": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "ticketCommandName": {
+          "const": "🎮️commands.json"
+        },
+        "ticketDocumentName": {
+          "const": "🎫️ticket.json"
+        }
+      }
+    },
+    "roleCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "text",
+          "ticketStatus",
+          "expectedRole",
+          "expectedParse",
+          "expectedReferences"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "ticketStatus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRole": {
+            "enum": [
+              "active",
+              "ticket",
+              "retained",
+              "neutral"
+            ]
+          },
+          "expectedParse": {
+            "enum": [
+              "not-read",
+              "invalid",
+              "valid"
+            ]
+          },
+          "expectedReferences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "maximumXmlPrologSections": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1024
+    }
+  }
+}

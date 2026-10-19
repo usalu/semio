@@ -80,7 +80,6 @@ fn worst_distance(best: &[(f64, usize)], k: usize) -> f64 {
 impl KdTree {
     /// 🌲️ Builds a tree over `points` (row-major `n x dim`). `O(n (log n)^2)` due to per-level
     /// sort-based median selection.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn build(points: &[f64], dim: usize) -> Result<Self, EntropyError> {
         if dim == 0 {
             return Err(EntropyError::InvalidConfig { field: "dim", reason: "must be at least 1" });
@@ -98,24 +97,20 @@ impl KdTree {
         Ok(Self { points: points.to_vec(), dim, n, nodes, root })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn len(&self) -> usize {
         self.n
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.n == 0
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn point(&self, idx: usize) -> &[f64] {
         &self.points[idx * self.dim..(idx + 1) * self.dim]
     }
 
     /// 🌲️ The `k` nearest neighbors to `query` by `metric`, excluding stored index `exclude` if
     /// given (used for leave-one-out self-queries). Returns `(index, distance)` sorted ascending.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn k_nearest(&self, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>) -> Vec<(usize, f64)> {
         let mut best: Vec<(f64, usize)> = Vec::with_capacity(k);
         self.search_knn(self.root, query, k, metric, exclude, &mut best);
@@ -123,7 +118,6 @@ impl KdTree {
         best.into_iter().map(|(d, i)| (i, d)).collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn search_knn(&self, node: Option<usize>, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>, best: &mut Vec<(f64, usize)>) {
         let Some(pos) = node else { return };
         let node_ref = &self.nodes[pos];
@@ -144,14 +138,12 @@ impl KdTree {
     /// 🌲️ Strict count of points with `distance(query, point) < radius` (the KSG/Kozachenko-
     /// Leonenko convention: a closed radius equal to the k-th neighbor distance always excludes
     /// that neighbor itself, avoiding a `log(0)` in the digamma-based estimators).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn count_within_radius(&self, query: &[f64], radius: f64, metric: Metric, exclude: Option<usize>) -> usize {
         let mut count = 0usize;
         self.count_recursive(self.root, query, radius, metric, exclude, &mut count);
         count
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn count_recursive(&self, node: Option<usize>, query: &[f64], radius: f64, metric: Metric, exclude: Option<usize>, count: &mut usize) {
         let Some(pos) = node else { return };
         let node_ref = &self.nodes[pos];
@@ -163,8 +155,7 @@ impl KdTree {
         let diff = query[split_dim] - self.point(point_idx)[split_dim];
         self.count_recursive(node_ref.left, query, radius, metric, exclude, count);
         self.count_recursive(node_ref.right, query, radius, metric, exclude, count);
-        let _ = diff; // 🌲️ both children can contain in-radius points at any split; no pruning
-                      // is safe here beyond what the recursion above already limits to O(n) worst case.
+        let _ = diff;
     }
 }
 // #endregion 🔖️KdTree

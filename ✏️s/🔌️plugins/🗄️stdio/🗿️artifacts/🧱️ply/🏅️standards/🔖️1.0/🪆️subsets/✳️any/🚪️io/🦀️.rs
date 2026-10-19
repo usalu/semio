@@ -20,10 +20,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_TXT)
@@ -177,13 +173,12 @@ fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
             continue;
         }
         if let Some(rest) = line.strip_prefix("comment") {
-            // 💬 `comment` may be followed by a space and text, or stand bare.
             comments.push(rest.strip_prefix(' ').unwrap_or(rest).to_string());
             continue;
         }
         if line.starts_with("obj_info") {
             continue;
-        } // 🕳️ not modeled (documented deviation).
+        }
         if let Some(rest) = line.strip_prefix("format ") {
             let mut parts = rest.split_whitespace();
             let kind = parts.next().ok_or("ply: missing format kind")?;
@@ -254,7 +249,7 @@ fn push_scalar_bin(out: &mut Vec<u8>, v: &PlyValue, big: bool) {
         PlyValue::UInt(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
         PlyValue::Float(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
         PlyValue::Double(x) => out.extend_from_slice(&if big { x.to_be_bytes() } else { x.to_le_bytes() }),
-        PlyValue::List(_) => {} // 🕳️ nested lists never appear as a top-level scalar write.
+        PlyValue::List(_) => {}
     }
 }
 //#endregion 🔖️BinaryScalarIo
@@ -565,10 +560,6 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            // 🔍 PLY files (ascii or either binary variant) always start with a literal ASCII
-            // "ply" magic line — `ply\n` or `ply\r\n` — per the format spec. Unlike png/las,
-            // stdio.ply's text envelope embeds the raw ply bytes directly (no hex dump), so both
-            // sources are checked against the same literal prefix.
             const MAGIC_LF: &[u8] = b"ply\n";
             const MAGIC_CRLF: &[u8] = b"ply\r\n";
             let starts_with_magic = |bytes: &[u8]| bytes.starts_with(MAGIC_LF) || bytes.starts_with(MAGIC_CRLF);

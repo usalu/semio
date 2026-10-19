@@ -79,10 +79,6 @@ impl PluginHost {
         let next_apps: Vec<String> = program.manifest.apps.iter().map(|app| app.id.clone()).collect();
         for app in &program.manifest.apps {
             self.registry.register_app(app.clone());
-            // 🪐️ B1 ripple resolved: seeds `registry::APP_REGISTRATIONS` (`workflow_palette()`'s
-            // backing store) at native/test load time — the wasm-hosted browser shell has no direct
-            // call path here, so it pushes the equivalent over the wire instead (see the space app's
-            // `SpaceCommand::SetAppRegistrations`).
             crate::registry::register_app_io(&plugin_id, app);
         }
         crate::registry::register_artifact_descriptors(&program.manifest);
@@ -120,7 +116,6 @@ impl PluginHost {
         let version = program.manifest.version.clone();
         for app in &program.manifest.apps {
             self.registry.register_app(app.clone());
-            // 🪐️ See the `load_plugin` sibling loop's comment above.
             crate::registry::register_app_io(&plugin_id, app);
         }
         crate::registry::register_artifact_descriptors(&program.manifest);
@@ -273,7 +268,6 @@ impl HotSwapRollback {
             for app in &previous.manifest.apps {
                 host.registry.register_app(app.clone());
             }
-            // 🚧️ B1 ripple: see `PluginHost::load_plugin`'s sibling loop comment.
             host.programs.insert(previous.plugin_id.clone(), previous.clone());
         }
         for (instance_id, generation) in &self.instance_generations {

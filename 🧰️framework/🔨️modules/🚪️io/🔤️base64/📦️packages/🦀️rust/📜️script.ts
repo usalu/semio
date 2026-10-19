@@ -9,28 +9,29 @@ import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } fro
 import {resolveTestLevel,testLevelBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {cmdBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
+import { resolveTypescriptCompilerV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🔤️ Runs every standard, URL and controlled allocation law in the defining native owner. */
 class NativeScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
   const{rest}=resolveTestLevel(segments);
-  if(rest.length)throw Error("test-native accepts only an execution level");
+  if(rest.length)throw new Error("test-native accepts only an execution level");
   await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-base64-tests"],cwd:this.root,extraArgs:["--all-targets","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
 }
 /** 🧫️ Runs the complete shared corpus against the TypeScript codec and independent system bytes. */
 class SourceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-source accepts no arguments");
+  if(segments.length)throw new Error("test-source accepts no arguments");
   await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
  }
 }
 /** 🛂️ Enforces strict typing for the production codec and its complete shared corpus. */
 class StrictScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-strict accepts no arguments");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",resolve(this.root,"../../🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
+  if(segments.length)throw new Error("test-strict accepts no arguments");
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",resolve(this.root,"../../🧪️tests/🔬️unit/🟦️.ts")],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
  }
 }
 const router=new ScriptRouter(import.meta.dir).register("test-native",NativeScript).register("test-source",SourceScript).register("test-strict",StrictScript);
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"test-native"}) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test-native" }));

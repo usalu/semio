@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 
 #[derive(crate::RetireOwned,crate::SnapshotProjection)]
@@ -44,6 +45,6 @@ fn project_owned(count:usize,schema:&str,octet:u8,optional:bool,cut:Option<usize
 
 #[test]
 fn owned_snapshot_projection_composes_real_string_and_byte_fields_with_exact_custody(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️owned/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../📽️projection/🧪️tests/🧫️fixtures/📦️owned/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){let count=row["count"].as_u64().unwrap()as usize;let schema=row["schema"].as_str().unwrap();let octet=row["octet"].as_u64().unwrap()as u8;let optional=row["optionalPayload"].as_bool().unwrap();project_owned(count,schema,octet,optional,None);for cut in corpus["cancelCuts"].as_array().unwrap(){project_owned(count,schema,octet,optional,Some(cut.as_u64().unwrap()as usize));}}
 }

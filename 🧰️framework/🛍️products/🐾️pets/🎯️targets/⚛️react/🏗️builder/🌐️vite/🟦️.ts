@@ -2,7 +2,7 @@
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineOwnedBuildConfig, uiReactBuildPlugin, type OwnedBuildPlugin, type OwnedBuildServer } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { defineOwnedBuildConfig, uiReactBuildPlugin, type OwnedBuildPlugin, type OwnedBuildServer } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import { semioEmojiIndexHtmlVitePlugin, semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 import { hostBuildPlugins } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 // #endregion 🔌️Adapters

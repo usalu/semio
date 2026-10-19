@@ -3,8 +3,6 @@ mod tests {
 
     #[test]
     fn haar_periodic_one_level_preserves_energy() {
-        // 🔐️ Parseval / energy-preservation: Haar under periodic boundary is exactly orthonormal,
-        // so sum(a^2) + sum(d^2) == sum(s^2) to tight tolerance.
         let x = [1.0, 3.0, -2.0, 5.0, 0.5, -1.5, 4.0, 2.0];
         let cfg = WaveletConfig::new(WaveletFamily::Haar, 1, BoundaryMode::Periodic).unwrap();
         let dwt = Dwt::decompose(&x, cfg).unwrap();
@@ -73,8 +71,6 @@ mod tests {
 
     #[test]
     fn decompose_stops_early_when_signal_runs_out_of_levels() {
-        // 🔐️ 8 samples with Haar (filter_len 2) can only produce 3 dyadic halvings (8->4->2->1)
-        // before the approximation would drop below the filter length on a 4th level.
         let x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let cfg = WaveletConfig::new(WaveletFamily::Haar, 10, BoundaryMode::Periodic).unwrap();
         let dwt = Dwt::decompose(&x, cfg).unwrap();
@@ -103,8 +99,6 @@ mod tests {
         for family in [WaveletFamily::Haar, WaveletFamily::Daubechies4, WaveletFamily::Daubechies6, WaveletFamily::Daubechies8] {
             let h = family.low_pass();
             let sum: f64 = h.iter().sum();
-            // 🔐️ published Daubechies-6 coefficients are truncated to 12 decimal digits, so their
-            // sum only approximates sqrt(2) to about 1e-8, not full f64 precision.
             assert!((sum - core::f64::consts::SQRT_2).abs() < 1e-6, "{family:?} sum={sum}");
         }
     }

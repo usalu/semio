@@ -11,7 +11,7 @@ import { configureHostPorts, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it } from "vitest";
 import { IconRenderHost } from "../../🟦️.tsx";
 import fixture from "../🧫️fixtures/🖼️frame-presentation/🔣️.json";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 
 afterEach(cleanup);
 

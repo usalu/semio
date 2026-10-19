@@ -129,9 +129,6 @@ pub fn beam_search<T: Topology>(model: &CompiledModel, topo: &T, beam_config: Be
             return contradiction(metrics);
         }
 
-        // Shuffle before the stable sort so equally-scored candidates aren't always ordered by
-        // ascending pattern id — `seed` gives every beam search a genuinely different tie-break
-        // rather than a purely deterministic-by-pattern-index one.
         rng.shuffle(&mut candidates);
         candidates.sort_by(|a, b| score(&b.domains).partial_cmp(&score(&a.domains)).expect("score is never NaN"));
         candidates.truncate(beam_config.width.max(1));

@@ -2,8 +2,9 @@ use crate::solve_linear_static;
 use crate::Elements;
 use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Dof;
+use semio_s_fem_elements3d::Tet4;
 
 fn fixture_number(value: &serde_json::Value, field: &str) -> f64 {
     value[field].as_f64().unwrap_or_else(|| panic!("{field} fixture number"))
@@ -108,17 +109,13 @@ fn frame3_y_plane_mass_and_geometric_blocks_carry_the_theta_y_sign_flip() {
 /// 🪵️ Headless axial elongation check along an arbitrary (non-axis-aligned) 3D direction.
 #[test]
 fn bar3_axial_matches_hand_calc_on_skew_member() {
-    // A free 3D joint needs ≥3 non-coplanar bars to be determinate (see `truss_fixture` below),
-    // so `b` gets two extra fixed-node bars (to `d` and `c`) besides the member under test (`e1`).
-    // Loading exactly along e1's own axis (0.6,0.8,0) makes e1 carry the full load by equilibrium
-    // (hand-solved: N_e1 = p, N_bd = N_bc = 0) — a clean, unambiguous check on a genuinely skew direction.
     let (e, a) = (200e9, 0.001);
     let l = 5.0;
     let p = 2000.0;
     let model = Model {
         nodes: vec![
             Node { id: "a".into(), pos: [0.0, 0.0, 0.0] },
-            Node { id: "b".into(), pos: [3.0, 4.0, 0.0] }, // length 5 from a, direction (0.6, 0.8, 0.0)
+            Node { id: "b".into(), pos: [3.0, 4.0, 0.0] },
             Node { id: "c".into(), pos: [3.0, 4.0, 2.0] },
             Node { id: "d".into(), pos: [3.0, 0.0, 0.0] },
         ],

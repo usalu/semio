@@ -1,4 +1,4 @@
-//! playback transport for the addressed results window.
+//! ▶️ playback transport for the addressed results window.
 //! 📊️ Fem3d play app panel — `results`: the results source/mode controls and the deformation
 //!
 //! Every control is tagged with the `windowId` it speaks for (the puzzle3d Settings panel's rule), so
@@ -12,7 +12,7 @@ use semio_s_fem_app_surface::ANIMATION_SPEED_MAXIMUM;
 
 use semio_s_fem_app_surface::ANIMATION_SPEED_MINIMUM;
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsWindowConfig;
-use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::fem3d_action;
 use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::ui_label;

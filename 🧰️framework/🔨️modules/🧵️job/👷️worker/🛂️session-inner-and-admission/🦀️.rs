@@ -1,6 +1,7 @@
 //! 🛂️ Session inner and admission: the shared session inner custody, the session handle, the admission rejection and the submission records. See [`super`].
 
 use super::*;
+use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadPageSource;
 
 //#region 🏭️RetainedSessions
 pub(crate) struct WorkerJobSessionInner<J> {

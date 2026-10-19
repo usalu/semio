@@ -8,7 +8,7 @@ export interface WiresTopology {
 }
 
 export interface WiresInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: WiresTopology;
 }
 

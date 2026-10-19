@@ -92,7 +92,7 @@ fn BOARD_HOST_SOURCE() -> &'static str {
             && !codec.contains("single_page()")
             && !codec.contains("const BOARD_FILL_COMMIT_BYTES: usize = 13")
             && !codec.contains("result.encode")
-            && job.contains("start.saturating_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)")
+            && job.contains("start.saturating_add(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)")
             && job.contains("if end < BOARD_FILL_COMMIT_BYTES")
             && job.contains("encoder.output_cursor = end")
     }
@@ -103,7 +103,7 @@ fn BOARD_HOST_SOURCE() -> &'static str {
         let source = BOARD_HOST_SOURCE();
         assert_eq!(BOARD_FILL_COMMIT_BYTES, 10_406);
         assert_eq!(BOARD_FILL_COMMIT_PAGE_COUNT, 1);
-        assert!(BOARD_FILL_COMMIT_BYTES <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES * BOARD_FILL_COMMIT_PAGE_COUNT);
+        assert!(BOARD_FILL_COMMIT_BYTES <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES * BOARD_FILL_COMMIT_PAGE_COUNT);
         assert!(fill_full_commit_candidate_contract(source));
         let dynamic = source.replacen("pub struct BoardFillCommitPlacement {\n        pub node_id: BoardFillText,", "pub struct BoardFillCommitPlacement {\n        pub dynamic: String,\n        pub node_id: BoardFillText,", 1);
         assert!(!fill_full_commit_candidate_contract(&dynamic));

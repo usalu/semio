@@ -155,11 +155,6 @@ export function mutationManifestProblems(value: unknown, owner?: string): string
     if (typeof value[key] !== "string" || (value[key] as string).length === 0) problems.push(`${key} must be a non-empty string`);
   }
   const subset = typeof value.subset === "string" ? value.subset : "";
-  // 🪆️Whether a wildcard SPELLING is actually a wildcard depends on what else the artifact declares,
-  // which this record-level validator cannot see — so it is decided by `mutationInventoryBreaches`,
-  // which can. Refusing the spelling here made a manifest unrepresentable for the 82 artifacts whose
-  // only declared subset IS `*`, and an unrepresentable manifest is an unmeasured vocabulary: exactly
-  // the outcome v2 exists to remove.
   if (subset.length === 0) problems.push("subset must be a non-empty string");
   const coordinates = owner === undefined ? null : subsetCoordinatesOfOwner(owner);
   if (coordinates !== null) {

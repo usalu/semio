@@ -93,7 +93,7 @@ impl semio_framework_value::FromValue for ProbeSnapshot {
         probe_json::validate(&value)?;
         Ok(ProbeSnapshot(value))
     }
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { probe_json::validate_with(value, &mut |_| control.checkpoint())?; <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self) }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { probe_json::validate_with(value, &mut |_| control.checkpoint())?; <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self) }
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
@@ -140,7 +140,7 @@ impl semio_framework_value::FromValue for ProbeDiff {
         probe_json::validate(&value)?;
         Ok(ProbeDiff(value))
     }
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { probe_json::validate_with(value, &mut |_| control.checkpoint())?; <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self) }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { probe_json::validate_with(value, &mut |_| control.checkpoint())?; <semio_framework_value::DslValue as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self) }
 }
 
 /// 🧪️ Replaces the complete ordered JSON node tree.
@@ -206,7 +206,7 @@ impl semio_framework_value::FromValue for ProbeMutation {
             Err(entries) => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected exactly one variant key, found {}", entries.len()))),
         }
     }
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         control.checkpoint()?;
         let semio_framework_value::DslValue::Object(entries) = value else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Probe mutation requires a single variant object")) };
         let [(key, payload)] = entries.as_slice() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "Probe mutation requires exactly one variant")) };

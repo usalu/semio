@@ -10,37 +10,37 @@ fn section_field_intent_follows_committed_vectors() {
     let vectors = [
         (
             "🩹️changes",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🔺️diff/🔣️.json"))
         ),
         (
             "📐️coordinates",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/📐️coordinates/🔺️diff/🔣️.json"))
         ),
         (
             "⏸️same",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            Some(include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🔺️diff/🔣️.json"))
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            Some(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⏸️same/🔺️diff/🔣️.json"))
         ),
         (
             "⛔️missing",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
         (
             "⚗️invalid",
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/🦠️mutation/🔣️.json"),
-            include_str!("../../../../../🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/🦠️mutation/🔣️.json"),
+            include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
             None
         ),
     ];
@@ -83,7 +83,7 @@ fn structural_patch_wire_distinguishes_absence_from_null() {
     assert_eq!(semio_framework_pack_json::from_json_str::<Fem3dSectionPatch>("{}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("no fields"), Fem3dSectionPatch::default());
     let value = semio_framework_value::ToValue::to_value(&patch);
     let mut allow = |_| true;
-    let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut allow);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
     let decoded = <Fem3dSectionPatch as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).expect("controlled sparse field decode");
     assert_eq!(decoded, patch);
     semio_framework_value::FromValue::retire_decoded(decoded);
@@ -92,7 +92,7 @@ fn structural_patch_wire_distinguishes_absence_from_null() {
         assert!(semio_framework_pack_json::from_json_str::<Fem3dSectionPatch>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{wire} must be refused");
         let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire tree");
         let mut allow = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut allow);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
         assert!(<Fem3dSectionPatch as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).is_err(), "{wire} controlled decode must be refused");
     }
 }

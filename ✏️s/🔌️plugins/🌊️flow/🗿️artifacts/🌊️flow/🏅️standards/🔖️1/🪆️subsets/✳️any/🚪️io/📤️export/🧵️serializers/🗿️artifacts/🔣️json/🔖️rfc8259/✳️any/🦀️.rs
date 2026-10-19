@@ -1,4 +1,4 @@
-//! Serialize flow to stdio.json.
+//! 📤️ Serialize flow to stdio.json.
 use crate::FlowSnapshot;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 

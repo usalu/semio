@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {readFileSync,mkdtempSync,mkdirSync,writeFileSync,rmSync} from "node:fs";
 import {join,resolve,relative,basename,dirname} from "node:path";
-import {readRustSourceClosureV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import {readRustSourceClosureV1} from "@semio-tech/process/artifacts/native-build/source";
 const corpus = JSON.parse(readFileSync(new URL("../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")) as {closures:{name:string;cfg:string[];entry:string;files:Record<string,string>;expected:{path:string;kind:"source"|"embedded"}[]}[]};
 import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";

@@ -1,6 +1,7 @@
 //! 📸️ Controlled native snapshot factories preserve the caller’s complete admission.
 use semio_framework_dsl_record::{RecordSpecProducer,RecordValue};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_io_schema::IoPayload;
 
 use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding};

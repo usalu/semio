@@ -72,8 +72,6 @@ fn finds_a_valid_solution_on_a_harder_coloring_instance() {
 
 #[test]
 fn reports_contradiction_not_a_panic_on_an_unsatisfiable_instance() {
-    // K5 needs 5 colors, only 4 available: genuinely unsatisfiable. Beam search must still
-    // terminate cleanly and report Contradiction, never claim Solved or panic.
     let (model, topo, _arcs) = k_graph(5, 4);
     let config = BeamConfig { width: 4, max_steps: 50, ..Default::default() };
     let outcome = beam_search(&model, &topo, config, 1, None, &[]);
@@ -82,8 +80,6 @@ fn reports_contradiction_not_a_panic_on_an_unsatisfiable_instance() {
 
 #[test]
 fn width_one_still_finds_a_solution_when_no_backtrack_is_needed() {
-    // A checkerboard path never needs more than one live branch at a time (propagation alone
-    // forces every other node), so width=1 should still succeed here.
     let (model, topo, arcs) = checkerboard(10);
     let config = BeamConfig { width: 1, ..Default::default() };
     match beam_search(&model, &topo, config, 3, None, &[]) {
@@ -106,7 +102,6 @@ fn respects_fixed_pins() {
 fn contradictory_fixed_pins_report_contradiction_immediately() {
     let (model, topo, _arcs) = checkerboard(2);
     let config = BeamConfig::default();
-    // Both nodes pinned to the same pattern is impossible under the mirrored adjacency rule.
     let outcome = beam_search(&model, &topo, config, 1, None, &[(NodeId(0), PatternId(0)), (NodeId(1), PatternId(0))]);
     assert!(matches!(outcome, SolveOutcome::Contradiction(_)));
 }

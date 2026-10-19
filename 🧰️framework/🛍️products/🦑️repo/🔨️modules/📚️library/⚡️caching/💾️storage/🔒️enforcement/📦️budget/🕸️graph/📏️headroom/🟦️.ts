@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
-import {constants,lstatSync,opendirSync,statfsSync,unlinkSync,type BigIntStats} from "node:fs";
+import {constants,lstatSync,opendirSync,unlinkSync,type BigIntStats} from "node:fs";
+import {nativeImageSpaceV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {open} from "node:fs/promises";
 import {join} from "node:path";
 import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -30,7 +31,7 @@ const authorityProgramV1=`const fs=require('node:fs'),workerData=JSON.parse(proc
 async function publicationGraphV1(image:NativeImageStorageV1,row:LeafV1,control:ResourceLeaseControl):Promise<string>{
  checkResourceLeaseControl(control);unchanged(image,row);await control.publish({resource:"repository:graph-receipt-authentication",mode:"exclusive",elapsedMs:0});const output=await captureOwnedCommandV1(process.versions.bun?"node":process.execPath,["--max-old-space-size="+protocol.receiptHeapMiB,"-e",authorityProgramV1,JSON.stringify({path:row.path,stamp:row.stamp,kinds:authorityKindsV1})],image.root,{control,output:{maximumBytes:8192,maximumLines:64}}),value=JSON.parse(output.trim());if(!value||Object.keys(value).join()!=="graph"||typeof value.graph!=="string"||!/^[a-f0-9]{64}$/u.test(value.graph))throw Error("Closed graph receipt child result required");checkResourceLeaseControl(control);unchanged(image,row);return value.graph;
 }
-function available(image:NativeImageStorageV1):number{const row=statfsSync(image.root),bytes=row.bavail*row.bsize;if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Actual graph image capacity required");return bytes;}
+function available(image:NativeImageStorageV1):number{const row=nativeImageSpaceV1(image.root,image.filesystemBytes),bytes=row.bavail*row.bsize;if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Actual graph image capacity required");return bytes;}
 /** 🧹️ Reclaims only authenticated snapshots and current publications beneath the actual image's exclusive lifetime; a queued request waits for concurrent readers with progress and cancellation while an opportunistic one reports them as not acquired. */
 export async function recoverBuildGraphImageHeadroomV1(options:NativeFixedPlatformOptionsV1,value:unknown):Promise<BuildGraphHeadroomResultV1>{
  const request=readBuildGraphHeadroomRequestV1(value),control=options.control;checkResourceLeaseControl(control);const image=await openNativePlatformStorageV1(options);let retiredBytes=0,retiredFiles=0;

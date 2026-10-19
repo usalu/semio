@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{list::persistent::{PersistentList,PERSISTENT_PAGE_FANOUT},retained_clone::{RetainedCloneSource,RetainedCloneCursor},retirement::{RetireOwned,shared::sealed::{SealedShared,SharedIssuer}}};
+use semio_framework_value::{retained_clone::{RetainedCloneSource, RetainedCloneCursor}, retirement::{RetireOwned, shared::sealed::{SealedShared, SharedIssuer}}};
+use semio_framework_value_persistent::{list::persistent::PersistentList, list::persistent::PERSISTENT_PAGE_FANOUT};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=crate)]
@@ -12,7 +13,7 @@ fn rows(count:usize,prefix:&str,stride:i64)->PersistentList<Row>{
 /// 📋️ Real persistent and sealed native trees borrow original rows and encode exact canonical arrays through cancellation.
 #[test]
 fn original_persistent_canonical_tree_preserves_native_rows_and_exact_wire(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let prefix=fixture["prefix"].as_str().unwrap();let stride=fixture["stride"].as_i64().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let prefix=fixture["prefix"].as_str().unwrap();let stride=fixture["stride"].as_i64().unwrap();
  for count in fixture["lengths"].as_array().unwrap(){let count=count.as_u64().unwrap()as usize;let oracle=serde_json::to_vec(&(0..count).map(|i|serde_json::json!({"label":format!("{prefix}{i}"),"rank":i as i64*stride})).collect::<Vec<_>>()).unwrap();for cut in std::iter::once(None).chain(fixture["cuts"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){
  let(original,mut total)=observe(||rows(count,prefix,stride));let(_,heap)=observe(||{assert!(matches!(original.canonical_tree_node().unwrap(),Node::Array(n)if n==count));for i in 0..count{assert_eq!(original.canonical_tree_child(i).unwrap()as*const dyn ArtifactCanonicalJsonTree as*const(),original.get(i).unwrap()as*const Row as*const());}assert!(original.canonical_tree_child(count).is_err());});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  let d=RetainedCloneSource::<PersistentList<Row>>::owned_constructor_demand::<()>();let g=grant(RetirementDemand{copy_bytes:RetainedCloneSource::<PersistentList<Row>>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()});let((mut source,p),heap)=observe(||RetainedCloneSource::admit_owned(original,(),g).unwrap_or_else(|_|panic!("original canonical source")));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));total.requested_bytes+=heap.requested_bytes;total.released_bytes+=heap.released_bytes;

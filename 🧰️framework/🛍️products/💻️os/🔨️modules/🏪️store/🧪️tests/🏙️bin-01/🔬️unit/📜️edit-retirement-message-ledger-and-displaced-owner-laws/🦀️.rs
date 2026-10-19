@@ -6,7 +6,7 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../♻️retirement/📦️backing/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["editRetirement"];
     let strings = law["strings"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize)).collect::<Vec<_>>();
-    let mut inverse = semio_framework_value::list::PagedList::new(); inverse.try_push(DemoMutation::SetN(SetN { n: 7 })).unwrap(); drop(inverse.pop());
+    let mut inverse = semio_framework_value_persistent::list::PagedList::new(); inverse.try_push(DemoMutation::SetN(SetN { n: 7 })).unwrap(); drop(inverse.pop());
     assert!(!inverse.terminal_is_empty());
     let forwards = Vec::with_capacity(law["forwardBackingSlots"].as_u64().unwrap() as usize); let forward_pointer = forwards.as_ptr();
     let edit = Edit::<DemoMutation> { line: None, id: strings[0].clone(), actor: Some(strings[1].clone().into()), forwards, inverse, mutation_meta: Vec::with_capacity(law["metadataBackingSlots"].as_u64().unwrap() as usize), verb: None, sequence_number: 1, started_at: strings[2].clone(), finished_at: Some(strings[3].clone()) };

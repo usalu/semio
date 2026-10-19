@@ -43,11 +43,7 @@ export function useBoardContextMenuAndDrop(core: BoardCore4) {
           if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(JSON.stringify(selectionIds));
           try {
             session.renderFrame();
-          } catch {
-            /* gpu not ready */
-          }
-          // 🕹️ The guest owns no `setSelection` verb: a right-click pick travels as the engine's own
-          // `select` board event, which `applyBoardEvents` turns into the framework selection write.
+          } catch {}
           dispatch("applyBoardEvents", { eventsJson: JSON.stringify([{ name: "select", payload: { ids: selectionIds, exitHighlightIds: [] } }]) });
         }
         const hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));

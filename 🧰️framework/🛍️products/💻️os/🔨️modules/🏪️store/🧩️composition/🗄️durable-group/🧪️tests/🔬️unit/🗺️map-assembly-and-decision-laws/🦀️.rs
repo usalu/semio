@@ -309,7 +309,7 @@ fn durable_semantic_sources_preserve_original_decision_order_without_value_proje
 #[cfg(feature = "deflate")]
 fn durable_pack_planning_borrows_original_and_reports_codec_heap_and_cancellation() {
     use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant};
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["packPlanning"];
+    let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();let policy=&law["packPlanning"];
     let source=decision();let address=&source as *const _ as usize;let expected=source.encode_pack();
     let prefix=(0..crate::os_store::semio_format::declared_envelope_prefix_len(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Pack,1).unwrap()).map(|offset|crate::os_store::semio_format::declared_binary_prefix_byte(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(),crate::os_store::semio_format::Component::Pack,1,offset).unwrap().unwrap()).collect::<Vec<_>>();assert_eq!(hex_string(&prefix),policy["prefixHex"].as_str().unwrap());
     for cancel in [false,true] {
@@ -333,12 +333,12 @@ fn durable_pack_planning_borrows_original_and_reports_codec_heap_and_cancellatio
 fn durable_canonical_planning_preserves_source_and_reports_each_physical_turn() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant};
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
     let policy = &law["planningOutput"];
     for source in policy["sources"].as_array().unwrap() {
         let expected = source.as_str().unwrap();
         let original: DslValue = semio_framework_pack_json::from_json_str(expected, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let source = super::super::ArtifactCanonicalTreeSource::view(&original);
+        let source = semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactCanonicalTreeSource::view(&original);
         let mut output = planning::DurableCanonicalOutputV1::default();
         let mut accepted = |_| true;
         let mut native = NativeEncodeControl::new_retained(&mut accepted);
@@ -400,7 +400,7 @@ fn durable_canonical_planning_preserves_source_and_reports_each_physical_turn() 
         let zero:DslValue=semio_framework_pack_json::from_json_str("0",semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let original=if row["kind"]=="items"{DslValue::Array(vec![zero;row["count"].as_u64().unwrap()as usize])}else{let mut value=zero;for _ in 0..row["count"].as_u64().unwrap(){value=DslValue::Array(vec![value]);}value};
         let expected=semio_framework_pack_json::to_json_string(&original);assert!(serde_json::from_str::<serde_json::Value>(&expected).is_ok());
-        let source=super::super::ArtifactCanonicalTreeSource::view(&original);let mut output=planning::DurableCanonicalOutputV1::default();let mut accepted=|_|true;let mut native=NativeEncodeControl::new_retained(&mut accepted);let mut refused=false;
+        let source=semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::ArtifactCanonicalTreeSource::view(&original);let mut output=planning::DurableCanonicalOutputV1::default();let mut accepted=|_|true;let mut native=NativeEncodeControl::new_retained(&mut accepted);let mut refused=false;
         for _ in 0..1_000_000{let demand=output.next_demand();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(result,heap)=observe(||output.advance(source,policy["maximumBytes"].as_u64().unwrap()as usize,grant,&mut native));match result{Ok(receipt)=>{assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));},Err(reason)=>{assert!(matches!(reason.kind,semio_framework_value::ValueRefusalKind::DepthLimit|semio_framework_value::ValueRefusalKind::OwnershipLimit));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));refused=true;break;}}}
         assert!(refused);let demand=output.next_close_demand();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth,..Default::default()};let(receipt,heap)=observe(||output.close(grant));assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert!(output.terminal_is_empty());assert_eq!(semio_framework_pack_json::to_json_string(&original),expected);
     }
@@ -420,7 +420,7 @@ fn durable_inline_terminal_retirement_requires_its_original_frame_grant(){
         fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
         fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(0)}
     }
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
     for row in law["inlineTerminalRetirement"]["cases"].as_array().unwrap(){
         let mut owner=Some(Terminal(true));let original=std::ptr::from_ref(owner.as_ref().unwrap());
         let d=crate::os_store::snapshot_read::artifact_retirement_owner_demands(&owner,512).unwrap();
@@ -436,10 +436,10 @@ fn durable_inline_terminal_retirement_requires_its_original_frame_grant(){
 #[test]
 fn durable_edit_wire_projection_preserves_sequence_without_changing_semantic_seal(){
     use semio_framework_value::{NativeEncodeControl,RetainedCloneGrant};
-    let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
+    let policy:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
     let original=Edit::<bool>{id:"wire-edit".into(),actor:None,line:None,forwards:vec![true],inverse:Default::default(),mutation_meta:Vec::new(),verb:None,sequence_number:policy["editProjection"]["sequenceNumber"].as_i64().unwrap()as i32,started_at:"now".into(),finished_at:None};
-    let address=std::ptr::from_ref(&original)as usize;let wire=::protocol::io::text::canonical::EditWireTree::view(&original);assert_eq!(std::ptr::from_ref(wire)as usize,address);let mut values=Vec::new();
-    for source in [crate::os_store::ArtifactCanonicalTreeSource::view(&original)as &dyn super::super::canonical_edit::ArtifactCanonicalJson,crate::os_store::ArtifactCanonicalTreeSource::view(wire)]{
+    let address=std::ptr::from_ref(&original)as usize;let wire=semio_framework_replication_edit::canonical::EditWireTree::view(&original);assert_eq!(std::ptr::from_ref(wire)as usize,address);let mut values=Vec::new();
+    for source in [crate::os_store::ArtifactCanonicalTreeSource::view(&original)as &dyn semio_framework_os_store_testing_prelude::ArtifactCanonicalJson,crate::os_store::ArtifactCanonicalTreeSource::view(wire)]{
         let mut output=planning::DurableCanonicalOutputV1::default();let mut accepted=|_|true;let mut native=NativeEncodeControl::new_retained(&mut accepted);
         for _ in 0..10000{if output.ready(){break;}let d=output.next_demand();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let(receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||output.advance(source,162000,grant,&mut native).unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));assert_eq!(std::ptr::from_ref(&original)as usize,address);}
         assert!(output.ready());let bytes=output.take(copy_grant(4096).retained_grant()).unwrap().0;values.push(serde_json::from_slice::<serde_json::Value>(&bytes).unwrap());assert!(output.terminal_is_empty());
@@ -453,7 +453,7 @@ fn durable_binding_plans_before_consumption_and_transfers_one_original_member_pe
     std::panic::set_hook(Box::new(|information|{use std::io::Write as _;let _=writeln!(std::io::stderr().lock(),"[DEBUG] durable binding panic={information}");}));
     ::semio_framework_async::poll::resolve_ready(async {
         let (mut parent, mut drawing, mut value) = owned_three_stores().await;
-        let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
+        let law: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
         for row in law["receiptCases"].as_array().unwrap(){let receipt=semio_framework_value::RetainedCloneProgress{copied_items:row["copiedItems"].as_u64().unwrap()as usize,copied_bytes:row["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:row["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:row["releasedBytes"].as_u64().unwrap()as usize};assert_eq!(receipt!=Default::default(),row["visible"].as_bool().unwrap());}
         assert_eq!(law["durableExecution"]["retirementIssuer"],"captured-original");assert_eq!(law["durableExecution"]["retirementIssuerOwnership"],"moves-with-candidate");assert_eq!(law["durableExecution"]["currentFactorySlotsDuringRetirement"],"empty");
         for row in law["durableExecution"]["cases"].as_array().unwrap() {

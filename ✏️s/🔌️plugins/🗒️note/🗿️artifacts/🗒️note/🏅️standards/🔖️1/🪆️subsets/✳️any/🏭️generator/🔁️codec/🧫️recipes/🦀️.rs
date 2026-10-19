@@ -101,12 +101,7 @@ fn with_appended(doc: &NoteDoc, block: Block) -> NoteDoc {
 pub fn recipes() -> Vec<Recipe> {
     let base = base_document();
     vec![
-        // 🏷️ rename-note — pdf only (title is the first thing NoteIntoPdf concatenates; DXF/SVG never read it).
         Recipe { id: "retitles-the-document", mutation: "rename-note", carriers: &["pdf"], before: base.clone(), after: NoteDoc { title: Some("Project Kickoff Notes".to_string()), ..base.clone() } },
-        // 🆕 create-asset — svg only. `diagram-image` already references key "diagram" in BOTH states;
-        // before, that key is undefined so the block falls back to an outline rect; after, the newly
-        // created asset resolves it into a real <image>. This is the only shape that actually witnesses
-        // "creating an asset" through a carrier that reads REFERENCED, RESOLVED image bytes.
         Recipe {
             id: "adds-the-diagram-asset",
             mutation: "create-asset",
@@ -118,7 +113,6 @@ pub fn recipes() -> Vec<Recipe> {
                 NoteDoc { title: base.title.clone(), blocks: base.blocks.clone(), assets }
             },
         },
-        // 🔁 replace-asset-payload — svg only.
         Recipe {
             id: "swaps-the-logo-payload",
             mutation: "replace-asset-payload",
@@ -130,7 +124,6 @@ pub fn recipes() -> Vec<Recipe> {
                 NoteDoc { title: base.title.clone(), blocks: base.blocks.clone(), assets }
             },
         },
-        // 🗑️ delete-asset — svg only. Removing "logo" drops `logo-image` back to the fallback outline.
         Recipe {
             id: "removes-the-logo-asset",
             mutation: "delete-asset",
@@ -138,9 +131,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: { let mut assets = base.assets.clone(); assets.remove("logo"); NoteDoc { title: base.title.clone(), blocks: base.blocks.clone(), assets } },
         },
-        // ➕ create-block (Ink) — dxf+svg. An Ink block is the one kind that reaches BOTH carriers at
-        // once; PDF is untouched by this scenario (Ink never reaches PDF) — see `deletes-the-ink-and-text-blocks`
-        // below for a scenario that exercises all three of this verb-family's declared carriers.
         Recipe {
             id: "creates-an-ink-block",
             mutation: "create-block",
@@ -148,12 +138,8 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_appended(&base, Block::Ink { id: "new-ink", x: 300.0, y: 300.0, rotation: 0.0, width: 60.0, height: 60.0, visible: true, points: vec![[300.0, 300.0], [330.0, 330.0], [360.0, 300.0]], stroke_width: 2.0 }),
         },
-        // ❌ delete-block (Text) — svg+pdf. Text reaches PDF+SVG, never DXF.
         Recipe { id: "deletes-the-intro-text-block", mutation: "delete-block", carriers: &["svg", "pdf"], before: base.clone(), after: without_blocks(&base, &["intro-text"]) },
-        // 🧺 delete-blocks (Ink + Text together) — dxf+svg+pdf, all three: this plural verb removes two
-        // blocks in one mutation, so a single recipe can legitimately witness every declared carrier.
         Recipe { id: "deletes-the-ink-and-text-blocks", mutation: "delete-blocks", carriers: &["dxf", "svg", "pdf"], before: base.clone(), after: without_blocks(&base, &["sketch-ink", "intro-text"]) },
-        // 🎯 duplicate-block (Ink) — dxf+svg.
         Recipe {
             id: "duplicates-the-ink-block",
             mutation: "duplicate-block",
@@ -161,7 +147,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_appended(&base, Block::Ink { id: "sketch-ink-copy", x: 0.0, y: 0.0, rotation: 0.0, width: 100.0, height: 100.0, visible: true, points: vec![[10.0, 10.0], [40.0, 60.0], [80.0, 20.0]], stroke_width: 2.0 }),
         },
-        // 👥 duplicate-blocks (Ink + Text together) — dxf+svg+pdf, all three.
         Recipe {
             id: "duplicates-the-ink-and-text-blocks",
             mutation: "duplicate-blocks",
@@ -172,9 +157,6 @@ pub fn recipes() -> Vec<Recipe> {
                 Block::Text { id: "intro-text-copy", x: 20.0, y: 90.0, rotation: 0.0, width: 200.0, height: 60.0, visible: true, font_size: 14.0, text: "Welcome to the note.".to_string() },
             ),
         },
-        // 🤏 drag-blocks — svg only. Drags `callout-group`'s WHOLE subtree (the group node itself and
-        // its child ink) by the same (+20,+20) offset — `note_block_transform` reads each node's own
-        // x/y independently, so both the group's rect and the child's path move.
         Recipe {
             id: "drags-the-callout-group-subtree",
             mutation: "drag-blocks",
@@ -186,7 +168,6 @@ pub fn recipes() -> Vec<Recipe> {
                 |b| if let Block::Ink { id, x, y, rotation, width, height, visible, points, stroke_width } = b { Block::Ink { id, x: x + 20.0, y: y + 20.0, rotation, width, height, visible, points: points.iter().map(|p| [p[0] + 20.0, p[1] + 20.0]).collect(), stroke_width } } else { b },
             ),
         },
-        // 📍 move-block — svg only.
         Recipe {
             id: "moves-the-math-block",
             mutation: "move-block",
@@ -194,7 +175,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_block(&base, "pythagoras-math", |b| if let Block::Math { id, x: _, y: _, rotation, width, height, visible } = b { Block::Math { id, x: 260.0, y: 340.0, rotation, width, height, visible } } else { b }),
         },
-        // ↔️ resize-block — svg only.
         Recipe {
             id: "resizes-the-image-block",
             mutation: "resize-block",
@@ -202,9 +182,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_block(&base, "logo-image", |b| if let Block::Image { id, x, y, rotation, width: _, height: _, visible, image_key } = b { Block::Image { id, x, y, rotation, width: 96.0, height: 96.0, visible, image_key } } else { b }),
         },
-        // 👀 change-block-visible — svg ONLY (the confirmed DXF/PDF cross-carrier bug: neither ever
-        // filters by visibility, so a Text block chosen here would read IDENTICAL in a PDF probe before
-        // and after — reported, not worked around, hence no pdf pair for this mutation).
         Recipe {
             id: "hides-the-intro-text-block",
             mutation: "change-block-visible",
@@ -212,7 +189,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_block(&base, "intro-text", |b| if let Block::Text { id, x, y, rotation, width, height, visible: _, font_size, text } = b { Block::Text { id, x, y, rotation, width, height, visible: false, font_size, text } } else { b }),
         },
-        // 📝 edit-block-text — pdf+svg.
         Recipe {
             id: "edits-the-intro-paragraph",
             mutation: "edit-block-text",
@@ -220,7 +196,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_block(&base, "intro-text", |b| if let Block::Text { id, x, y, rotation, width, height, visible, font_size, text: _ } = b { Block::Text { id, x, y, rotation, width, height, visible, font_size, text: "Project kickoff scheduled for Monday.".to_string() } } else { b }),
         },
-        // 🖊️ change-block-ink-width — svg ONLY (DXF's `Line` entity carries no width field at all).
         Recipe {
             id: "thickens-the-sketch-stroke",
             mutation: "change-block-ink-width",
@@ -228,7 +203,6 @@ pub fn recipes() -> Vec<Recipe> {
             before: base.clone(),
             after: with_block(&base, "sketch-ink", |b| if let Block::Ink { id, x, y, rotation, width, height, visible, points, stroke_width: _ } = b { Block::Ink { id, x, y, rotation, width, height, visible, points, stroke_width: 5.0 } } else { b }),
         },
-        // 🎨 edit-block-ink-stroke — dxf+svg (rewrites `points` itself, so both carriers see it).
         Recipe {
             id: "redraws-the-sketch-polyline",
             mutation: "edit-block-ink-stroke",

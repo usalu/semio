@@ -567,6 +567,18 @@ impl CallToolResult {
         Self { content, structured_content, is_error: false }
     }
 
+    /// 📦️ What reaches the wire as `structuredContent`, which MCP defines as a JSON object: object data is
+    /// kept, null is omitted, array or scalar data is wrapped as `{"result": <value>}` when the tool declares
+    /// an `outputSchema` (`declares_output_schema`, evaluated only for such data; every widened schema admits
+    /// the wrapper, see `tool_result_wrapper_shape`) and omitted otherwise.
+    pub fn wire_structured_content(&self, declares_output_schema: impl FnOnce() -> bool) -> Option<serde_json::Value> {
+        match self.structured_content.as_ref()? {
+            value if value.is_object() => Some(value.clone()),
+            serde_json::Value::Null => None,
+            value => declares_output_schema().then(|| serde_json::json!({ "result": value })),
+        }
+    }
+
     /// 🚧️ A TOOL-execution failure — the JSON-RPC envelope stays a success; only `is_error` says the
     /// tool itself failed. Content carries the human-readable message, `structuredContent` the full
     /// [`GatewayError`] payload.

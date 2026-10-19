@@ -84,13 +84,6 @@ pub fn render(host_snapshot: &SequenceHostSnapshot, config: &SequenceMainWindowC
     host.layout_expanded_slots();
     let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
-    // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
-    // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) and
-    // `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
-    // (unlike `UiNode::Tree` — see `stamp_and_cache_interaction_ui`), so `selection`/`hover` are left
-    // at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
-    // highlight until a future wave threads interaction into scene rendering. Flagged as a
-    // discovered framework gap, not worked around here (same gap `space`'s workflow window carries).
     semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render

@@ -1,6 +1,7 @@
 //! 🧳️ Typed immutable Energy authority separates path-local persisted fields from numerical runtime views.
 use crate::model::*;
-use semio_framework_value::{list::persistent::PersistentList,retirement::shared::sealed::SealedShared};
+use semio_framework_value::retirement::shared::sealed::SealedShared;
+use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_framework_value_derive::ToValue;
 #[path="🔺️diff/🦀️.rs"]pub mod diff;
 
@@ -622,12 +623,12 @@ macro_rules! id_projection{
 }
 id_projection!(EntityId,ScheduleId);
 macro_rules! id_receiving{
- ($($id:ident),*)=>{$(impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource> semio_framework_value::native_decoding::owned::tree::NativeScalarValue<I> for $id{
-  fn read(original:&I)->Result<Self,semio_framework_value::ValueError>{<u32 as semio_framework_value::native_decoding::owned::tree::NativeScalarValue<I>>::read(original).map(Self)}
+ ($($id:ident),*)=>{$(impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource> semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I> for $id{
+  fn read(original:&I)->Result<Self,semio_framework_value::ValueError>{<u32 as semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarValue<I>>::read(original).map(Self)}
   fn read_copy_bytes(_: &I)->Result<usize,semio_framework_value::ValueError>{Ok(std::mem::size_of::<Self>())}
  }
- impl<I:semio_framework_value::native_decoding::owned::tree::NativeValueSource> semio_framework_value::NativeReceive<I> for $id{
-  type Receiver=semio_framework_value::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;
+ impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource> semio_framework_value_native_owned::native_decoding::NativeReceive<I> for $id{
+  type Receiver=semio_framework_value_native_owned::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;
   fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth()}
   fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{Self::Receiver::begin(grant)}
  })*};

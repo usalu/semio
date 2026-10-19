@@ -27,15 +27,12 @@ impl Default for TsvArtifact {
 }
 
 impl TsvArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> TsvSnapshot {
         TsvSnapshot { schema: self.schema.clone(), records: self.records.clone(), trailing_newline: self.trailing_newline, line_ending: self.line_ending }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: TsvSnapshot) -> Self {
         Self { schema: snapshot.schema, records: snapshot.records, trailing_newline: snapshot.trailing_newline, line_ending: snapshot.line_ending }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: TsvSnapshot) {
         self.schema = snapshot.schema;
         self.records = snapshot.records;

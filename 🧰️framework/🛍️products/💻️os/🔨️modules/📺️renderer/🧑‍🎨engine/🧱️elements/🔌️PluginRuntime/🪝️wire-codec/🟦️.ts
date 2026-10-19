@@ -19,7 +19,7 @@ import {
   packWireNatural
 } from "@semio-tech/framework/packs";
 import { type UiNodeRecord, type UiPatchOp } from "@semio-tech/framework";
-import { leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { leftoverShellInvocationFrames as wireLeftoverShellInvocationFrames, shellFrameBytes as wireShellFrameBytes } from "@semio-tech/framework/actor/wire-turn";
 // #region 🔌️Adapters
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import { decodeBackboneMessage } from "@semio-tech/framework/backbone";
@@ -233,7 +233,6 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
     if (Array.isArray(record.data)) return Uint8Array.from(record.data as number[]);
   }
   if (typeof raw === "string") {
-    // base64 fallback
     const binary = atob(raw);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

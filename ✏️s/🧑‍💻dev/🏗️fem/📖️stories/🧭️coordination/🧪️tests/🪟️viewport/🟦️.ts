@@ -3,7 +3,8 @@ import Ajv from "ajv/dist/2020.js";
 import { applyPatch } from "fast-json-patch";
 import { viewport3dSchema as orbitSchema } from "@semio-tech/framework-ui-viewport-ts/3d/schema";
 import rendererGestures from "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/testing/fixtures/pointer-gestures.json";
-import { buildFem3dSceneNode, fem2dStoryStateFor, fem3dStoryStateFor, reduceFem2dStoryAction, reduceFem3dStoryAction } from "../../🟦️.ts";
+import { buildFem3dSceneNode } from "../../🎞️scenes/🟦️.ts";
+import { fem2dStoryStateFor, fem3dStoryStateFor, reduceFem2dStoryAction, reduceFem3dStoryAction } from "../../🔁️story-reducers/🟦️.ts";
 
 test("story window ownership admits and echoes the renderer's closed orbit pose", () => {
   const initial = fem3dStoryStateFor("demo", "de-DE");

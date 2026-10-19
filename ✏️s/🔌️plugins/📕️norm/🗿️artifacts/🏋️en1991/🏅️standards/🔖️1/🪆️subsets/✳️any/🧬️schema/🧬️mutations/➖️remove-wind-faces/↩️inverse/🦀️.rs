@@ -1,4 +1,4 @@
-//! Inverse for `remove-wind-faces`.
+//! ↩️ Inverse for `remove-wind-faces`.
 use crate::remove_wind_faces::RemoveWindFaces;
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn inverse<Op>(payload: &RemoveWindFaces, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_wind_faces::InsertWindFaces> {

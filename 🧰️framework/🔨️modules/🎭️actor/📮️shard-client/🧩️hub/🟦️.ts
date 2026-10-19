@@ -1,5 +1,5 @@
 import type { ResidentGrant, ResidentStep } from "@semio-tech/value-ts/resident";
-import type { OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import type { OwnedUiPatchAcknowledgement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import type { OwnedActorTurnOutput } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import type { ActorInstanceLifecycleReceipt } from "../../🚪️lifetime/🟦️.ts";
 import type { HostEffectLedger, ShardActivation, ShardActorActivationLease, ShardClientIdentity, ShardInstanceOwner, ShardReturnAdmission, ShardSlot, CapturedReturn, CapturedReturnWork } from "../🔐️activation/🟦️.ts";

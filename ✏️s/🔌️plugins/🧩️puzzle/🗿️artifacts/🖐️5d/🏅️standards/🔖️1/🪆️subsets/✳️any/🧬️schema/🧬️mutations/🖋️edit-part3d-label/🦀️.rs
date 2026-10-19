@@ -1,9 +1,9 @@
-//! Puzzle5d mutation — `EditPart3dLabel`: replaces a part's 3D-projection authored display label.
+//! 🧩️ Puzzle5d mutation — `EditPart3dLabel`: replaces a part's 3D-projection authored display label.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Mutation
-/// `edit-part3d-label` payload.
+/// ⌨️ `edit-part3d-label` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -32,7 +32,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for EditPart3dLabel {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for EditPart3dLabel
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<EditPart3dLabel>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

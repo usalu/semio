@@ -1,4 +1,4 @@
-//! there, then click to place a free one. The candidate search is a read-only framework tool run
+//! 🔘️ there, then click to place a free one. The candidate search is a read-only framework tool run
 //! 🖌️ Main-window utility — Brush: point at a vortex and WATCH the engine test every candidate that could dock
 //! (`📋️tool-run-contract.md` §2.4, §3.7): the manifest carries its [`ToolRunDefinition`], the framework owns the
 //! run, its progress panel and its trace, and the viewport paints every tested candidate with its verdict.

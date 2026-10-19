@@ -13,11 +13,6 @@ where
     let Some((index, existing)) = base.model.fenestrations.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
         return Vec::new();
     };
-    // 🔶️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`), so a
-    // window that carried its own polygon lists the polygon step FIRST and the re-creation LAST —
-    // reversed, the aperture exists again before its shape is put back. `create-fenestration` does
-    // not carry `vertices_m` itself, which keeps its payload (and every committed vector over it)
-    // exactly as landed.
     let mut steps = Vec::new();
     if !existing.vertices_m.is_empty() {
         steps.push(vocabulary::replace_fenestration_vertices(existing.id, existing.vertices_m.clone()));

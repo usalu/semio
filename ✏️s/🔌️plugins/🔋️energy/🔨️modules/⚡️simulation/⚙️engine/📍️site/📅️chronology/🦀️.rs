@@ -1,6 +1,6 @@
 //! 📅️ Hourly authored source chronology, exact calendar selection and explicit warmup-day neighbours.
 use super::{WeatherCalendar,WeatherRecord};
-use crate::calendar::SimDate;
+use semio_s_plugin_energy_engine_calendar::SimDate;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NeighbourPolicy{Continuous,RepeatDay}
 fn month_days(year:u16,month:u8)->u8{let leap=year%4==0&&(year%100!=0||year%400==0);match month{1|3|5|7|8|10|12=>31,4|6|9|11=>30,2=>if leap{29}else{28},_=>0}}

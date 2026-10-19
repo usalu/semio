@@ -1,6 +1,14 @@
 //! 📋️ Manifest: the typed media I/O, the interaction definition, the shipped object kinds and `create_puzzle3d_app`.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main;
+use semio_s_artifact_puzzle_3d_editor_panels::artifact;
+use semio_s_artifact_puzzle_3d_editor_panels::catalogue;
+use semio_s_artifact_puzzle_3d_editor_panels::inspection;
+use semio_s_artifact_puzzle_3d_editor_modes::windows::main::utilities;
+use semio_s_artifact_puzzle_3d_editor_modes as edit;
+use semio_s_artifact_puzzle_3d_editor_panels::settings as settings_panel;
+use semio_s_artifact_puzzle_3d_editor_terminology::Puzzle3dLabels;
 
 //#region 🔖️Manifest
 /// 🔌️ Declares puzzle3d's typed media I/O surface — the implicit document ports plus the flagship
@@ -153,18 +161,9 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("tab", "cycleBrushCandidate")
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
-            // 🔧️ Document-mutating operations (emit the concrete kinds of the gesture).
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
-            // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog. Declared HERE, in
-            // front of every other create verb, because the shell fallback menu and the ribbon keep only
-            // the first `CONTEXT_MENU_PRIMARY_BUDGET` leaves at top level and fold the rest into "More ›" —
-            // the user-facing "Add Object…" row has to be the one that opens the declared dialog.
             .action_with(ActionDefinition::bounded_catalog("openAddObjectDialog", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")), ActionKind::Shell).category("create"))
-            // 🌱️ The dialog's (and the catalogue row's / the viewport drop's) parametrized verb, never a
-            // user-facing menu row of its own: its `objectKind` select IS the dialog, so offering it in the
-            // palette/menu published a SECOND row carrying the identical "Add Object…" label that opened a
-            // bare action pane instead (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 7).
             .action_with(ActionDefinition::bounded_catalog("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")), ActionKind::Mutation).category("create").in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
             .action_destructive("deleteSelection")
@@ -184,12 +183,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .mutation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
             .mutation("createAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Create {w}"), |w| format!("{w} erstellen")))
-            // 🎯️ Entity-scoped and therefore NOT palette/shell-menu vocabulary: `delete_attraction` acts
-            // on the `id` its own context-menu row carries, and the action declares no args, so a generic
-            // surface can only ever dispatch it empty. Offering it anyway put "Delete Attraction" /
-            // "Delete Target Volume" in the shell fallback menu of a plain OBJECT selection (measured
-            // 2026-09-09 21:05) where they name nothing and do nothing. The attraction's own row in
-            // `puzzle3d_context_menu_items` is unaffected — it supplies the id.
             .action_with(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets").in_palette(false))
             .action_destructive("deleteAttraction")
             .mutation("addTargetVolume", puzzle3d_localized_phrase(|l| l.target_volume, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
@@ -198,7 +191,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets").in_palette(false))
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
-            // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"), ActionKind::View, "scan"))
             .action_with(ActionDefinition::new("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"), ActionKind::View, "scan"))
@@ -241,10 +233,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
-            // 📝️ Staged argument forms for the panel-visible create/query actions (P1).
             .action_args("addObjectKind", vec![puzzle3d_object_kind_arg()])
-            // 🧰️ Flat per-window set of utilities; no utility is active until the host presses one — the
-            // transform gumball exposes translate and rotate together via Move/Rotate flags.
             .utility(semio_s_artifact_puzzle_3d_editor_transform::definition())
             .utility(utilities::brush::definition(puzzle3d_localized(|l| l.brush)))
             .utility(utilities::volume_brush::definition(puzzle3d_localized(|l| l.volume_brush)))
@@ -255,12 +244,8 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                 utilities::volume_brush::UTILITY_ID.into(),
                 utilities::world_relocate::UTILITY_ID.into(),
             ])
-            // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
-            // its viewport interaction via `Puzzle3dConfig::active_tool_id`.
             .tool(fill_tool::definition(puzzle3d_localized(|l| l.fill)))
             .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID))])
-            // 🎓️ Reference introduction: a short first-run walkthrough of the viewport, the catalogue
-            // panel, adding an object, and the Transform utility.
             .introduction(IntroductionDefinition {
                 title: puzzle3d_localized_phrase(|l| l.window_main, |w| format!("Welcome to {w}"), |w| format!("Willkommen bei {w}")),
                 steps: vec![
@@ -320,8 +305,6 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                         .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::utility(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID, "Activate Transform"))]),
                 ],
             })
-            // 🗨️ Reference dialog opened by `openAddObjectDialog`, driving the existing `addObjectKind`
-            // operation's `objectKind` select arg.
             .dialog(
                 DialogDefinition::new(
                     "addObject",

@@ -94,6 +94,7 @@
     "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
@@ -109,6 +110,7 @@
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
+    "../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg",
     "../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -149,6 +151,7 @@
   },
   "devDependencies": {
     "@iarna/toml": "2.2.5",
+    "@semio-tech/course": "workspace:*",
     "@semio-tech/process": "workspace:*",
     "@semio-tech/repo-lib": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",

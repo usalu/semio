@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "./../../../../../🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync, existsSync } from "node:fs";

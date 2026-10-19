@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "body": 1,
+      "overhead": 0,
+      "physical": 8192,
+      "child": 1,
+      "selected": 1
+    },
+    {
+      "body": 1,
+      "overhead": 2,
+      "physical": 8192,
+      "child": 1,
+      "selected": 1
+    },
+    {
+      "body": 1,
+      "overhead": 128,
+      "physical": 8192,
+      "child": 1,
+      "selected": 1
+    },
+    {
+      "body": 7,
+      "overhead": 0,
+      "physical": 8192,
+      "child": 7,
+      "selected": 7
+    },
+    {
+      "body": 7,
+      "overhead": 2,
+      "physical": 8192,
+      "child": 7,
+      "selected": 7
+    },
+    {
+      "body": 7,
+      "overhead": 128,
+      "physical": 8192,
+      "child": 7,
+      "selected": 7
+    },
+    {
+      "body": 4096,
+      "overhead": 0,
+      "physical": 8192,
+      "child": 4096,
+      "selected": 4096
+    },
+    {
+      "body": 4096,
+      "overhead": 2,
+      "physical": 8192,
+      "child": 4096,
+      "selected": 4096
+    },
+    {
+      "body": 4096,
+      "overhead": 128,
+      "physical": 8192,
+      "child": 4096,
+      "selected": 4096
+    }
+  ],
+  "sourceGuards": [
+    {
+      "file": "🪡️field/🦀️.rs",
+      "contains": "self.cursor.advance(source,body,grant)"
+    },
+    {
+      "file": "🪡️field/🟰️change/🦀️.rs",
+      "contains": "self.authored.advance(authored,body,Self::child(g))"
+    },
+    {
+      "file": "🪡️field/🟰️change/🎚️record/🦀️.rs",
+      "contains": ".advance(a,o,self.output.as_mut().unwrap(),body,child(g))"
+    },
+    {
+      "file": "🪡️field/🟰️change/📋️indexed/🦀️.rs",
+      "contains": "self.field.decide(a,o,body,child(g))"
+    },
+    {
+      "file": "⚠️diagnostic/🦀️.rs",
+      "contains": "field.advance(source,body,RetainedCloneGrant"
+    },
+    {
+      "file": "🩹️patch/🦀️.rs",
+      "contains": "self.$field.advance(source,body,grant)"
+    },
+    {
+      "file": "🦀️.rs",
+      "contains": ".decide(mutation,original,body,child(grant))"
+    },
+    {
+      "file": "🔺️diff/🦀️.rs",
+      "contains": "apply.preflight(diff,original,post,body,child,receiving)"
+    },
+    {
+      "file": "🔺️diff/🪢️sequence/🦀️.rs",
+      "contains": ".projection.advance(Self::current(&self.intermediate,original),body,child_grant)"
+    },
+    {
+      "file": "🩹️patch/🚚️apply/🦀️.rs",
+      "contains": ".advance(patch,row,body,child(grant))"
+    },
+    {
+      "file": "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🦀️.rs",
+      "contains": "#ports::decide(owner.as_mut(),#payload,original,body,::semio_framework_value::retained_clone::RetainedCloneGrant"
+    },
+    {
+      "file": "../../../../🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧳️retained/🦀️.rs",
+      "contains": "#ports::inverse(owner.as_mut(),#payload,original,diff,body,::semio_framework_value::retained_clone::RetainedCloneGrant"
+    },
+    {
+      "file": "✂️span/🦀️.rs",
+      "contains": "letd=self.demand(original,body)?;"
+    }
+  ],
+  "byteRange": {
+    "source": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "start": 5,
+    "length": 21,
+    "expected": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ]
+  }
+}

@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn fixture() -> serde_json::Value { serde_json::from_str(crate::text("../../🌱️value/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 #[test]
 fn controlled_json_refusal_preserves_real_kind_and_nested_path() {
@@ -11,7 +12,7 @@ fn controlled_json_refusal_preserves_real_kind_and_nested_path() {
             "decodeCancel" => from_json_str_controlled::<DslValue>(text, JsonMemberPolicy::Reject, &mut NativeDecodeControl::new(65536, &mut cancel_decode)).unwrap_err(),
             "decodeOwnership" => from_json_str_controlled::<DslValue>(text, JsonMemberPolicy::Reject, &mut NativeDecodeControl::new(0, &mut accept_decode)).unwrap_err(),
             "decodeNestedInvalid" => from_json_str_controlled::<Vec<Vec<u32>>>(text, JsonMemberPolicy::Reject, &mut NativeDecodeControl::new(65536, &mut accept_decode)).unwrap_err(),
-            "decodeNestedCancel" => { let mut cancel = |p: semio_framework_value::native_decoding::NativeDecodeProgress| p.completed != 1 || p.total != 1; from_json_str_controlled::<Vec<Vec<u32>>>(text, JsonMemberPolicy::Reject, &mut NativeDecodeControl::new(65536, &mut cancel)).unwrap_err() },
+            "decodeNestedCancel" => { let mut cancel = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| p.completed != 1 || p.total != 1; from_json_str_controlled::<Vec<Vec<u32>>>(text, JsonMemberPolicy::Reject, &mut NativeDecodeControl::new(65536, &mut cancel)).unwrap_err() },
             "encodeCancel" => to_json_string_controlled(&text, &mut NativeEncodeControl::new(65536, &mut cancel_encode)).unwrap_err(),
             "encodeOwnership" => to_json_string_controlled(&text, &mut NativeEncodeControl::new(0, &mut accept_encode)).unwrap_err(),
             _ => panic!("closed actual JSON refusal operation"),

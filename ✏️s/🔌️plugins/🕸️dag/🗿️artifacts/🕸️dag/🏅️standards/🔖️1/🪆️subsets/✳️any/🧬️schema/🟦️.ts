@@ -12,8 +12,8 @@ export function parseDagContentChild(value: unknown, at = "$"): ArtifactChild {
 }
 
 export interface DagArtifact {
-  /** @state artifact */ schema: "dag.dag";
-  /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
+  /** 📐️ @state artifact */ schema: "dag.dag";
+  /** 📄️ @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
 }
 
 /** 🪪️ Validates the document marker, declared fields and each exact child dialect. */

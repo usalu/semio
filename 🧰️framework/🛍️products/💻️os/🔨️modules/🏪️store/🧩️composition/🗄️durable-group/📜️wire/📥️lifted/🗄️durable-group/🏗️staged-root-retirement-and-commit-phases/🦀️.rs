@@ -1,6 +1,7 @@
 //! 🏗️ Staged root retirement and commit phases: the staged root retirement, the retained stacks, the three store commit phases and advances, the map recovery and the map assembly phases. See [`super`].
 
 use super::*;
+use crate::lifted_durable_group::outcome_and_journal_receipt_types::DurablePlanningOutputV1;
 
 pub struct StagedRootRetirement<P, Mutation> {
         pub planning_output: Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
@@ -293,7 +294,7 @@ pub fn close_assembly_publication<P: Send + Sync + 'static, Mutation: Send + 'st
     }
 }
 
-pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: super::ArtifactStoreOneItemGrant) -> Result<(ArtifactStoreOneItemPrepared<P, Mutation>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
+pub fn take_assembly_prepared<P, Mutation>(publication: &mut Option<semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication<P, Mutation>>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<(ArtifactStoreOneItemPrepared<P, Mutation>,semio_framework_value::retained_clone::RetainedCloneProgress), DurableOwnedGroupDecisionError> {
     let publication = publication.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     if publication.phase() != semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);

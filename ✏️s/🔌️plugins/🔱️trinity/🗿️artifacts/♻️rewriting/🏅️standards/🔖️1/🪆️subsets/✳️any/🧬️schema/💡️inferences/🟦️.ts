@@ -13,7 +13,7 @@ export interface RewritingBounds {
 }
 
 export interface RewritingInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: RewritingBounds;
 }
 

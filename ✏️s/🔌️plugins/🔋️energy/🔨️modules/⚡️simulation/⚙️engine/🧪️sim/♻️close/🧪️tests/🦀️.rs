@@ -13,7 +13,7 @@ fn original_terminal_backings_are_retired_before_energy_authority_drop(){
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(901),Generation(17),stock(),clock,u64::MAX,1_000_000);
  let mut decoder=OriginalJobDecodeOwner::empty();let mut original=None;
  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(stock(),&mut decoder,|cx|{
-  let result=cx.with_native_receiving::<_,semio_framework_value::native_decoding::NativeConstructionStepFailure<ValueError>>(|control|control.receive_construction_step(RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()},|control,_|{
+  let result=cx.with_native_receiving::<_,semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>>(|control|control.receive_construction_step(RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()},|control,_|{
    control.charge(bytes)?;
    let mut tail=EnergyAuthorityRetirement::default();
    tail.model.name.try_reserve_exact(text.len()).unwrap();tail.model.name.push_str(text);

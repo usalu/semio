@@ -55,7 +55,8 @@
     { "type": "error", "message": "input is not taken", "code": "input_backlog", "session_id": "test" },
     { "type": "error", "message": "an error of no kind" },
     { "type": "pong" },
-    { "type": "shutdown" }
+    { "type": "shutdown" },
+    {"type": "session_changed", "session": {"session_id": "process-deadline", "command": {"cmd": "bun", "args": [], "cwd": ".", "env": [], "cols": 80, "rows": 24, "command_id": "", "label": {"verb": "", "owner": [], "subject": "", "qualifier": "", "parameters": [], "members": 0}}, "status": "timed_out", "pid": null, "code": 124, "started_ms": 1790000000000, "ended_ms": 1790000002000}}
   ],
   "invalid": [
     { "type": "spawn", "session_id": "test" },

@@ -254,10 +254,6 @@ export async function registerTutorialEngineAndMoreTests(vitest: Tests2Vitest, d
       });
   
       it("resolves every ui.presence.* key in both en and de", () => {
-        // 🐚️ Mirrors the ribbon-category coverage test above: reads `uiI18n.t` directly instead of round-tripping
-        // through a React render, since this huge in-source suite shares one global i18next instance and a
-        // full-render assertion racing another test's own in-flight `changeLanguage` is exactly the kind of
-        // cross-test flake that pattern avoids.
         const keys: UiTranslationKey[] = ["ui.presence.roster", "ui.presence.empty", "ui.presence.overflow", "ui.presence.role.author", "ui.presence.role.spectator"];
         const seenByLocale: Record<string, string[]> = {};
         for (const locale of ["en", "de"] as const) {
@@ -273,21 +269,16 @@ export async function registerTutorialEngineAndMoreTests(vitest: Tests2Vitest, d
         void uiI18n.changeLanguage("en");
       });
   
-      // 👥️ Pinned index/appearance table (contract freeze §C7.5) — the Rust twin's
-      // `presence_color_wraps_after_twelve_with_lightness_then_saturation_shift` (`🧊️component.rs`)
-      // pins the same formula against the same `ui_styling::presence`-generated constants
-      // (`hues`/`light`/`dark` from `🎨️styling/🔣️tokens.json`), so identical inputs here prove the two
-      // implementations compute byte-identical HSL — this is the "TS twin" half of that cross-check.
       it("presenceColor matches the Rust twin's pinned index/appearance table", () => {
         const cases: readonly [index: number, appearance: PresenceAppearance, expected: PresenceHsl][] = [
           [0, "light", { h: 0, s: 0.68, l: 0.32 }],
           [5, "light", { h: 180, s: 0.68, l: 0.32 }],
           [11, "dark", { h: 90, s: 0.72, l: 0.62 }],
-          [12, "light", { h: 0, s: 0.68, l: 0.46 }], // k=1 (odd, <2): lightness +0.14, no desaturation
-          [12, "dark", { h: 0, s: 0.72, l: 0.48 }], // k=1: dark shifts lightness DOWN instead
-          [24, "light", { h: 0, s: 0.43, l: 0.32 }], // k=2 (even, >=2): desaturate -0.25, no lightness shift
-          [25, "dark", { h: 210, s: 0.47, l: 0.62 }], // k=2
-          [37, "light", { h: 210, s: 0.43, l: 0.46 }], // k=3 (odd, >=2): both shifts apply
+          [12, "light", { h: 0, s: 0.68, l: 0.46 }],
+          [12, "dark", { h: 0, s: 0.72, l: 0.48 }],
+          [24, "light", { h: 0, s: 0.43, l: 0.32 }],
+          [25, "dark", { h: 210, s: 0.47, l: 0.62 }],
+          [37, "light", { h: 210, s: 0.43, l: 0.46 }],
         ];
         for (const [index, appearance, expected] of cases) {
           const resolved = presenceColor(index, appearance);

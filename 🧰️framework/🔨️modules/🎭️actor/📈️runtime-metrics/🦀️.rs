@@ -90,7 +90,6 @@ impl ActorMetrics {
         self.memory_bytes = usage.memory_bytes;
     }
 
-    // 🚫️async: E1 pure computation consumed by `Debug::fmt` (external trait impl above) — see R9
     pub fn wall_us_p95(&self) -> u32 {
         if self.wall_us_ring_len == 0 {
             return 0;

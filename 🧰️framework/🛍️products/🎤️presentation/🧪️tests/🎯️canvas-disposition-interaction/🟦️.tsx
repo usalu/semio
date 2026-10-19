@@ -36,10 +36,6 @@ describe("presentation interaction dom", () => {
       pointerDrag(disposition, 300, 280, 380, 320);
     });
     expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-    // 🔀️ The wrapper owns the reveal `data-id` morph anchor, so the ephemeral drag must move the
-    // wrapper frame itself (not just translate inner content). Auto-animate then morphs from the
-    // dragged frame, including the ephemeral modification. The declared frame is centered first
-    // (single box shifts +0.1/+0.1), then the 80px/40px drag adds +8.333%/+5.714%.
     expect(parseFloat(disposition.style.left)).toBeCloseTo(38.333, 1);
     expect(parseFloat(disposition.style.top)).toBeCloseTo(45.714, 1);
     expect(content.style.transform).toBe("");
@@ -106,9 +102,7 @@ describe("presentation interaction dom", () => {
     act(() => {
       pointerDrag(dispositions[0]!, 240, 280, 400, 320);
     });
-    // 🔀️ Dragged disposition's wrapper (its morph anchor) follows the ephemeral frame...
     expect(parseFloat(dispositions[0]!.style.left)).toBeCloseTo(26.667, 1);
-    // ...while peers keep their declared frames.
     expect(dispositions[1]!.style.left).toBe(peerBefore);
     expect(dispositions[0]!.querySelector<HTMLElement>(".presentation-interactive-disposition__content")?.style.transform).toBe("");
   });
@@ -226,11 +220,9 @@ describe("presentation interaction dom", () => {
     act(() => {
       pointerDrag(tile, 200, 140, 360, 260);
     });
-    // 🔀️ The tile wrapper (morph anchor) moves to the ephemeral frame so the morph starts there.
     expect(parseFloat(tile.style.left)).toBeCloseTo(26.667, 1);
     expect(tile.classList.contains("presentation-interactive-disposition--canvas-framed")).toBe(true);
     expect(tile.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-    // Pinned keeps the dragged tile unclipped while it sits outside the declared frame.
     expect(getComputedStyle(tile).overflow).not.toBe("hidden");
     expect(tile.querySelector<HTMLElement>(".presentation-interactive-disposition__content")?.style.transform).toBe("");
   });
@@ -254,8 +246,6 @@ describe("presentation interaction dom", () => {
     });
     const content = disposition.querySelector(".presentation-interactive-disposition__content") as HTMLElement;
     expect(disposition.classList.contains("presentation-interactive-disposition--pinned")).toBe(true);
-    // 🔀️ Resize grows the wrapper frame (the morph anchor) itself; the content fills it at 100%
-    // rather than carrying a scaled inline size, so auto-animate morphs from the resized frame.
     expect(parseFloat(disposition.style.width)).toBeCloseTo(48.333, 1);
     expect(parseFloat(disposition.style.height)).toBeCloseTo(28.571, 1);
     expect(content.style.width).toBe("");

@@ -5,31 +5,10 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 /** 🧭️ Builds and tests the Go repository implementation used by dashboard tasks. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { FileLinter } from "../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
-import { defineLint } from "../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
 import { goCoverageArgs, goLevelTestArgs, runCanonicalGoTests, runCanonicalGoBuild } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
-
-export const policyFile = "🐹️.go";
-
-/** 📏️Keeps the moved repo CLI godfile under the reviewable line budget. */
-export const policy = defineLint("repo-cli-go-godfile", (l: FileLinter) => {
-  const n = l.lines().length;
-  if (n > 10000) {
-    return [
-      l.breach({
-        id: "line-budget",
-        summary: `File has ${n} lines (> 10000)`,
-        kind: "lint/file/line-budget",
-        priority: "medium",
-        reason: "Large files are harder to review",
-        solution: "Split into smaller modules",
-      }),
-    ];
-  }
-  return [];
-});
+import {  } from "../../🧪️tests/🔬️go-package-commands/🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> {

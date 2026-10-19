@@ -1,4 +1,4 @@
-//! initial connection-parameterization payload included (rule 4: `connect-<nouns>{endpoints,
+//! 🌱️ initial connection-parameterization payload included (rule 4: `connect-<nouns>{endpoints,
 //! 🔗 Puzzle2d mutation — `ConnectHandles`: creates a directed link between two handles, full
 //! payload}`). A connection a drop records from proximity also states its precondition, the `tolerance` its two
 //! handles lay within: replayed on a base where they no longer do, it still connects and reports

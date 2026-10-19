@@ -69,10 +69,6 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
         .viewer_mutation_roster::<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>()
         .editor_mutation_roster::<semio_s_artifact_puzzle_5d::editor::puzzle5d::Puzzle5dPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_puzzle_5d::viewer::puzzle5d::Puzzle5dViewer>()
-        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
-        // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed for
-        // stdio/draw/forms/mathematical/layout/raster. One activation per owned artifact kind, read
-        // live from each kind's own `artifact_kind().id` (never hardcoded).
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_2d::standards::v1::subsets::any::schema::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_3d_model::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_puzzle_5d::artifact_kind().id })

@@ -136,7 +136,7 @@ impl semio_framework_plugin::ToolJobFactory for EnergyModelViewCommandJobFactory
         energy_model_view_contract()
     }
 
-    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_VIEW_RAW_BYTES, checkpoint_resume: false);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_VIEW_RAW_BYTES, checkpoint_resume: false);
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
@@ -302,8 +302,6 @@ impl ArtifactViewer for EnergyModelViewer {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
             simulation::BODY_KEY => simulation::render(&doc.snapshot.model),
-            // 🎥️ `config::current` is the addressed window's retained orbit pose, `None` until it has
-            // been moved — an unmoved window keeps the model-derived camera and `fit_json`'s framing.
             model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model, model_window::config::current(cfg))?,
             _ => {
                 semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?

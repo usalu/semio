@@ -10,9 +10,6 @@ use super::*;
 // (the brush suggestions link) in its instance operation owner.
 // Each action mutates a transient {@link Puzzle5dScene}, then emits the granular operation delta.
 // Undo/redo/checkpoints are handled by the wrapper.
-#[derive(Default)]
-pub struct Puzzle5dPlayApp;
-
 impl Puzzle5dPlayApp {
     /// 🖱️ The ONE context-menu implementation — `ArtifactEditor::context_menu` and
     /// `context_menu_with_request_context` funnel here, differing only in whether `interaction` carries a live
@@ -72,7 +69,7 @@ impl ToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         self.contract
     }
 
-    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: |payload| payload.maximum_raw_bytes, checkpoint_resume: true);
 
     
 }

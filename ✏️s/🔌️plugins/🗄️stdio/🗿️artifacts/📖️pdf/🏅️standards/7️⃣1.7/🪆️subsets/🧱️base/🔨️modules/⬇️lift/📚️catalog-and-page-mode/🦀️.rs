@@ -10,7 +10,6 @@ use crate::standards::v1_7::subsets::base::modules::lift::*;
 
 //#region 🔖️Catalog
 impl Lifter<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lift_optional_content(&mut self, catalog: &[PdfDictEntry]) {
         let Some(properties) = dict_get(catalog, "OCProperties").map(|p| self.source.deref(p)) else { return };
         let Some(properties) = properties.as_dict().map(<[PdfDictEntry]>::to_vec) else { return };
@@ -43,7 +42,6 @@ impl Lifter<'_> {
     }
 
     /// 🔁 Replaces optional-content-group references in an `/Order` entry by their ids.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn map_oc_refs(&mut self, value: &PdfObject) -> PdfObject {
         match value {
             PdfObject::Ref(_) => self.existing_id(Category::OptionalContent, value).map(PdfObject::Name).unwrap_or(PdfObject::Null),
@@ -53,7 +51,6 @@ impl Lifter<'_> {
     }
 
     /// 📎 Lifts the `/EmbeddedFiles` name tree first so its keys become the file ids.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lift_embedded_files(&mut self, catalog: &[PdfDictEntry]) {
         let Some(names) = dict_get(catalog, "Names").map(|n| self.source.deref(n)) else { return };
         let Some(files) = names.dict_get("EmbeddedFiles").cloned() else { return };
@@ -65,7 +62,6 @@ impl Lifter<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lift_catalog(&mut self, catalog: &[PdfDictEntry]) {
         if let Some(outlines) = dict_get(catalog, "Outlines") {
             self.snapshot.outlines = self.lift_outlines(outlines);
@@ -181,7 +177,6 @@ impl Lifter<'_> {
         self.snapshot.catalog_extra = extra_entries(catalog, &["Type", "Version", "Pages", "Outlines", "Names", "Dests", "PageLabels", "OutputIntents", "AcroForm", "PageLayout", "PageMode", "ViewerPreferences", "OpenAction", "Lang", "MarkInfo", "Metadata", "OCProperties"]);
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lift_acro_form(&mut self, form: &[PdfDictEntry]) -> PdfAcroForm {
         let mut default_fonts = Vec::new();
         if let Some(resources) = dict_get(form, "DR").cloned() {
@@ -202,7 +197,6 @@ impl Lifter<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lift_form_field(&mut self, value: &PdfObject, inherited_type: Option<&str>, depth: usize) -> Option<PdfFormField> {
         if depth > 32 {
             return None;

@@ -80,28 +80,24 @@ pub fn slider(value: f64) -> SliderBuilder {
 
 impl SliderBuilder {
     /// ⬇️ Sets the minimum value.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn min(mut self, min: f64) -> Self {
         self.min = min;
         self
     }
 
     /// ⬆️ Sets the maximum value.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn max(mut self, max: f64) -> Self {
         self.max = max;
         self
     }
 
     /// 🔢️ Sets the step increment.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn step(mut self, step: f64) -> Self {
         self.step = step;
         self
     }
 
     /// 📏️ Sets the displayed unit suffix.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn unit(mut self, unit: crate::UiText) -> Self {
         self.unit = Some(unit);
         self
@@ -156,14 +152,12 @@ impl SliderBuilder {
 }
 
 impl HasBase for SliderBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<SliderBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: SliderBuilder) -> Self {
         assemble(
             builder.base,
@@ -322,7 +316,6 @@ pub fn progress(completed: f64, value_text: crate::Label) -> ProgressBuilder {
 
 impl ProgressBuilder {
     /// 🏁️ Makes the bar determinate on `0..=total`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn total(mut self, total: f64) -> Self {
         self.total = Some(total);
         self
@@ -330,14 +323,12 @@ impl ProgressBuilder {
 }
 
 impl HasBase for ProgressBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<ProgressBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ProgressBuilder) -> Self {
         assemble(builder.base, crate::Component::Progress(crate::ProgressProps { completed: builder.completed, total: builder.total, value_text: builder.value_text }))
     }

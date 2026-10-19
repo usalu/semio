@@ -28,8 +28,6 @@ fn render_drawing_body(
     let document=doc.snapshot;
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
     let active_utility = drawing_active_utility(view_state);
-    // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the containers
-    // that body owns, plus the shared first-paint budget the panel spends in document order.
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
         DRAWING_PLAY_BODY_COMPOSITE => semio_s_artifact_draw_drawing_editor_interaction::geometry_session::with_visual(doc.render_operation(),|plan,revision,fresh|{let idle=DrawingGesturePreview::default();canvas_window::render(plan,revision,document,config,if fresh{preview}else{&idle},active_utility,if fresh{selection}else{&[]},if fresh{point_selection}else{&[]})}),
@@ -241,13 +239,6 @@ impl ArtifactEditor for DrawingPlayApp {
             _ => Err(MediaError::NotImplemented),
         }
     }
-
-    // 🖼️ No override: whole-document replacement has no `Mutation` vehicle any more (banned
-    // vocabulary — see `🧬️mutations/🦀️.rs`'s module doc). The default `None` disables the
-    // generic `import_media("artifact:in")` port for drawing; explicit whole-document load/replace
-    // stays reachable through the `set_snapshot`/`commit_document`/`load_document_json`/
-    // `set_active_example` commands, which now emit `Effect::LoadDocument` (the sanctioned
-    // non-history reset path) instead.
 
     fn clipboard_media_type()->Option<MediaType>{Some(semio_s_artifact_draw_drawing_editor_interaction::clipboard::media_type())}
 

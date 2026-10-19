@@ -1,6 +1,6 @@
 import { COMPONENT_PACKAGE_ID, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🟦️.ts";
-import { SHIPPED_COMPONENT_MAX_BYTES } from "../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
-import type { ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
+import type { ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 
 //#region 🔖️CatalogCompleteness
 export const CATALOG_NODE_MAX = 256;

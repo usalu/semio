@@ -20,9 +20,6 @@ fn canvas2d_scene_round_trips_with_and_without_snapshot() {
 fn tiled_map_scene_round_trips() {
     let tiled = TiledMapScene::base("{}".into(), "{}".into());
     assert_eq!(TiledMapScene::from_value(tiled.to_value()), Ok(tiled.clone()));
-    // 🕳️ Every field but `mapDescriptorJson`/`cameraJson` carries a `#[serde(default = ...)]`
-    // fallback — omitting just the defaulted ones must reproduce `base`'s own defaults exactly,
-    // matching `serde`'s behaviour for a missing key on a `#[serde(default = "fn")]` field.
     assert_eq!(TiledMapScene::from_value(DslValue::object([("mapDescriptorJson".to_string(), DslValue::String("{}".into())), ("cameraJson".to_string(), DslValue::String("{}".into()))])), Ok(tiled));
 }
 

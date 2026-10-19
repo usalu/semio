@@ -66,7 +66,6 @@ impl PageDoc {
     pub const DEFAULT_WIDTH: f64 = 612.0;
     pub const DEFAULT_HEIGHT: f64 = 792.0;
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(width: f64, height: f64) -> Self {
         Self { width, height, text: String::new() }
     }
@@ -108,13 +107,11 @@ impl PdfSnapshot {
     /// 📄️ The first page, which is the one every `1.4/🗄️a` and `1.4/🖨️x` conformance axis is read
     /// from. `None` only for a snapshot carrying no pages at all — a state the codec never
     /// produces but serde can deserialize.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn first_page(&self) -> Option<&PageDoc> {
         self.pages.first()
     }
 
     /// 📄️ Mutable first page, created as a blank US-Letter page if the snapshot carries none.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn first_page_mut(&mut self) -> &mut PageDoc {
         if self.pages.is_empty() {
             self.pages.push(PageDoc::default());
@@ -123,7 +120,6 @@ impl PdfSnapshot {
     }
 
     /// 📝️ The first page's shown text, or the empty string when the snapshot carries no pages.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn first_page_text(&self) -> &str {
         self.pages.first().map_or("", |page| page.text.as_str())
     }

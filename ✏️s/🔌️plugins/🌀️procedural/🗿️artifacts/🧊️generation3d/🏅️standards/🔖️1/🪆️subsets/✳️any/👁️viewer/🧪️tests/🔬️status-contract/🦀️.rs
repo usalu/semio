@@ -30,8 +30,6 @@ fn the_viewer_publishes_the_framework_run_abort_it_earns_by_declaring_the_run() 
     assert!(definition.tools.iter().any(|tool| tool.id == preview_eval::PREVIEW_EVAL_TOOL_ID && tool.run.is_some()), "the viewer declares the preview-evaluation RUN, which is what injects the abort");
     assert!(definition.modes.iter().any(|mode| mode.tools.iter().any(|tool_ref| tool_ref.as_str() == preview_eval::PREVIEW_EVAL_TOOL_ID)), "a declared tool no mode references is refused outright by the builder");
     assert!(!definition.commands.iter().any(|command| command.id == viewer.cancel_action), "the abort is injected, never a plugin command");
-    // 🧯️ The kernel RELEASE the abort's close hands the extensions is the plugin's own retained verb,
-    // and it is the one that still needs a route and a host-only lane.
     assert!(GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&"flowEvalRelease"), "the release hop needs a retained route");
     let release = definition.commands.iter().find(|command| command.id == "flowEvalRelease").expect("the viewer declares the release hop");
     assert_eq!(release.kind, ActionKind::View, "a release retires ephemeral runtime work, never the document");

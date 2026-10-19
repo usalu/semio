@@ -202,7 +202,7 @@ pub struct TsdfExtractionPreparation {
     iso: f64,
     bounds_min: [i32; 3],
     bounds_max: [i32; 3],
-    /// Lattice points per step along each axis: `1` is the full-resolution net, and a coarser
+    /// 🕸️ Lattice points per step along each axis: `1` is the full-resolution net, and a coarser
     /// stride is what [`MeshPipeline`] falls back to when the full net would not fit the
     /// interactive element envelope.
     stride: i32,

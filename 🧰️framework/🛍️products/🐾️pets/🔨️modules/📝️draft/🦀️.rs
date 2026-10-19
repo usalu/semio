@@ -11,17 +11,19 @@ use semio_framework_pets_contract::schema::{Activity, Actor, Clip, Facing, Gait,
 use semio_framework_pets_kinematics::animation::clip_ticks;
 use semio_framework_pets_kinematics::randomness::{random_words, unit_of, STAGE_STREAM};
 use std::borrow::Borrow;
+use semio_framework_pets_contract::schema::Trick;
+use semio_framework_pets_character::feeling::Occasion;
 
 //#region 🔖️Constants
-pub(crate) const RATE: f64 = TICKS_PER_SECOND as f64;
-pub(crate) const BLINK_LOW: Ticks = 128;
-pub(crate) const BLINK_HIGH: Ticks = 384;
+pub const RATE: f64 = TICKS_PER_SECOND as f64;
+pub const BLINK_LOW: Ticks = 128;
+pub const BLINK_HIGH: Ticks = 384;
 pub(crate) const ORIGIN: Point = Point { x: 0.0, y: 0.0 };
 //#endregion 🔖️Constants
 
 //#region 🔖️Draft
 /// 🗒️ A stage being folded: its actors in `menagerie.species` order, each beside its species and its stream.
-pub(crate) struct Draft<'a> {
+pub struct Draft<'a> {
     pub(crate) stage: Stage,
     pub(crate) kinds: Vec<&'a Species>,
     pub(crate) streams: Vec<u32>,
@@ -48,7 +50,7 @@ pub(crate) struct Launch {
 }
 
 /// 📝️ A working copy of a stage: its actors in `menagerie.species` order, each beside its species and its stream; of two actors of one species the first stays, and an actor of a species the menagerie does not have is dropped.
-pub(crate) fn draft_of(menagerie: &Menagerie, mut stage: Stage) -> Draft<'_> {
+pub fn draft_of(menagerie: &Menagerie, mut stage: Stage) -> Draft<'_> {
     let mut waiting: Vec<Option<Actor>> = std::mem::take(&mut stage.actors).into_iter().map(Some).collect();
     let mut kinds = Vec::with_capacity(waiting.len());
     let mut streams = Vec::with_capacity(waiting.len());
@@ -64,14 +66,14 @@ pub(crate) fn draft_of(menagerie: &Menagerie, mut stage: Stage) -> Draft<'_> {
 }
 
 /// 📦️ The stage a draft has become.
-pub(crate) fn sealed(draft: Draft<'_>) -> Stage {
+pub fn sealed(draft: Draft<'_>) -> Stage {
     draft.stage
 }
 //#endregion 🔖️Draft
 
 //#region 🔖️Lookups
 /// 🎈️ How high a species floats above its perch: its hover when its gait is `float`, else 0.
-pub(crate) fn hover_of(kind: &Species) -> f64 {
+pub fn hover_of(kind: &Species) -> f64 {
     if kind.locomotion.gait == Gait::Float {
         kind.locomotion.hover.unwrap_or(0.0)
     } else {
@@ -80,12 +82,12 @@ pub(crate) fn hover_of(kind: &Species) -> f64 {
 }
 
 /// 🔎️ The index of the actor of a species on stage, or `None` (the twin's −1).
-pub(crate) fn index_of<A: Borrow<Actor>>(actors: &[A], species: &str) -> Option<usize> {
+pub fn index_of<A: Borrow<Actor>>(actors: &[A], species: &str) -> Option<usize> {
     actors.iter().position(|actor| Borrow::<Actor>::borrow(actor).species == species)
 }
 
 /// 🪵️ The surface with an id, or `None`.
-pub(crate) fn surface_of<'s>(surfaces: &'s [Surface], id: &str) -> Option<&'s Surface> {
+pub fn surface_of<'s>(surfaces: &'s [Surface], id: &str) -> Option<&'s Surface> {
     surfaces.iter().find(|surface| surface.id == id)
 }
 
@@ -103,7 +105,7 @@ fn clips_of(kind: &Species, activity: Activity) -> &[Slug] {
 }
 
 /// 🎞️ The clip a unit draw picks for an activity, uniformly among [`clips_of`]; `None` when there is none.
-pub(crate) fn clip_at(kind: &Species, activity: Activity, unit: f64) -> Option<Slug> {
+pub fn clip_at(kind: &Species, activity: Activity, unit: f64) -> Option<Slug> {
     let clips = clips_of(kind, activity);
     if clips.is_empty() {
         return None;
@@ -113,19 +115,19 @@ pub(crate) fn clip_at(kind: &Species, activity: Activity, unit: f64) -> Option<S
 }
 
 /// 📼️ The clip of a species with an id, or `None`.
-pub(crate) fn clip_of<'s>(kind: &'s Species, id: Option<&str>) -> Option<&'s Clip> {
+pub fn clip_of<'s>(kind: &'s Species, id: Option<&str>) -> Option<&'s Clip> {
     let id = id?;
     kind.clips.iter().find(|clip| clip.id == id)
 }
 
 /// 🫁️ The first idle clip of a species, the loop that keeps running underneath everything else; `None` when it has none.
-pub(crate) fn breath_of(kind: &Species) -> Option<&Clip> {
+pub fn breath_of(kind: &Species) -> Option<&Clip> {
     let idle = kind.repertoire.idle.as_deref()?;
     clip_of(kind, Some(idle.first()?))
 }
 
 /// 🔑️ The key of the next draw of an actor; the draw is counted.
-pub(crate) fn actor_key(draft: &mut Draft<'_>, index: usize) -> [u32; 3] {
+pub fn actor_key(draft: &mut Draft<'_>, index: usize) -> [u32; 3] {
     let body = &mut draft.stage.actors[index];
     let counter = body.draws;
     body.draws = counter.wrapping_add(1);
@@ -133,7 +135,7 @@ pub(crate) fn actor_key(draft: &mut Draft<'_>, index: usize) -> [u32; 3] {
 }
 
 /// 🗝️ The key of the next draw of the stage; the draw is counted.
-pub(crate) fn stage_key(draft: &mut Draft<'_>) -> [u32; 3] {
+pub fn stage_key(draft: &mut Draft<'_>) -> [u32; 3] {
     let counter = draft.stage.draws;
     draft.stage.draws = counter.wrapping_add(1);
     [draft.stage.seed, STAGE_STREAM, counter]
@@ -149,12 +151,12 @@ pub(crate) fn facing_to(towards: f64, x: f64) -> Facing {
 }
 
 /// 🎰️ The blink of an actor that begins anew at tick `now`: 2…6 s ahead for a unit draw.
-pub(crate) fn blink_at(now: Ticks, unit: f64) -> Ticks {
+pub fn blink_at(now: Ticks, unit: f64) -> Ticks {
     now + BLINK_LOW + ((BLINK_HIGH - BLINK_LOW) as f64 * unit).floor() as Ticks
 }
 
 /// 🫂️ How far apart the feet of two actors on one perch must stay for their bodies not to overlap: half of both widths.
-pub(crate) fn shoulders(one: &Species, other: &Species) -> f64 {
+pub fn shoulders(one: &Species, other: &Species) -> f64 {
     (one.size.width + other.size.width) / 2.0
 }
 
@@ -169,7 +171,7 @@ pub(crate) fn beat_of(kind: &Species, clip: Option<&Clip>) -> Ticks {
 
 //#region 🔖️Activities
 /// 🔀️ An actor takes up an activity at tick `now`: its needs are settled over the span of the one it leaves.
-pub(crate) fn shift(draft: &mut Draft<'_>, index: usize, activity: Activity, now: Ticks) {
+pub fn shift(draft: &mut Draft<'_>, index: usize, activity: Activity, now: Ticks) {
     let previous = draft.stage.actors[index].activity;
     let since = draft.stage.actors[index].since;
     if previous == Activity::Trick {
@@ -187,7 +189,7 @@ pub(crate) fn shift(draft: &mut Draft<'_>, index: usize, activity: Activity, now
 }
 
 /// 🛋️ An actor comes to rest: idle where it stands for a drawn dwell with a drawn idle clip, without a partner.
-pub(crate) fn settle(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn settle(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let words = random_words(&actor_key(draft, index), 2);
     shift(draft, index, Activity::Idle, now);
     let until = now + dwell_of(Activity::Idle, draft.stage.mode, unit_of(words[0]));
@@ -202,7 +204,7 @@ pub(crate) fn settle(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// ✂️ An actor lets go of its partner: both links are cut, and a partner that was on its way, waiting or in the middle of the encounter comes to rest (one that sulks keeps sulking).
-pub(crate) fn release(draft: &mut Draft<'_>, index: usize, now: Ticks) {
+pub fn release(draft: &mut Draft<'_>, index: usize, now: Ticks) {
     let Some(partner) = draft.stage.actors[index].partner.take() else {
         return;
     };
@@ -219,7 +221,7 @@ pub(crate) fn release(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🚪️ An actor leaves the stage for good: it is taken out of the draft.
-pub(crate) fn remove(draft: &mut Draft<'_>, index: usize) {
+pub fn remove(draft: &mut Draft<'_>, index: usize) {
     let species = &draft.stage.actors[index].species;
     draft.stage.claims.retain(|claim| claim.owner != *species);
     draft.stage.courses.retain(|course| course.owner != *species);
@@ -256,18 +258,18 @@ pub(crate) fn trick_of<'a>(kind: &'a Species, id: Option<&str>) -> Option<&'a Tr
 }
 
 /// 🫀️ The feeling settled to a tick without changing its event anchor.
-pub(crate) fn present(draft: &Draft<'_>, index: usize, now: Ticks) -> Feeling {
+pub fn present(draft: &Draft<'_>, index: usize, now: Ticks) -> Feeling {
     settled(draft.stage.actors[index].feeling, draft.kinds[index].mood, now)
 }
 
 /// 🚩️ The actor's state after its authored timed transitions.
-pub(crate) fn standing(draft: &Draft<'_>, index: usize, now: Ticks) -> Standing {
+pub fn standing(draft: &Draft<'_>, index: usize, now: Ticks) -> Standing {
     let body = &draft.stage.actors[index];
     state_at(draft.kinds[index], &body.state, body.state_since, now)
 }
 
 /// 🌊️ The event-anchored feeling after an occasion as the species takes it.
-pub(crate) fn feel(draft: &mut Draft<'_>, index: usize, occasion: Occasion, now: Ticks) {
+pub fn feel(draft: &mut Draft<'_>, index: usize, occasion: Occasion, now: Ticks) {
     draft.stage.actors[index].feeling = appraised(present(draft, index, now), occasion, draft.kinds[index].into(), now);
 }
 
@@ -317,7 +319,7 @@ pub(crate) fn stand(draft: &mut Draft<'_>, index: usize, now: Ticks) {
 }
 
 /// 🪄️ Perform a trick for its clip or drawn dwell, with the authored emitter.
-pub(crate) fn perform(draft: &mut Draft<'_>, index: usize, trick: &Trick, now: Ticks) {
+pub fn perform(draft: &mut Draft<'_>, index: usize, trick: &Trick, now: Ticks) {
     shift(draft, index, Activity::Trick, now);
     let clip = clip_of(draft.kinds[index], Some(&trick.clip));
     let span = clip.filter(|clip| !clip.looping).map_or_else(|| dwell_of(Activity::Trick, draft.stage.mode, 0.0), clip_ticks);
@@ -332,7 +334,7 @@ pub(crate) fn perform(draft: &mut Draft<'_>, index: usize, trick: &Trick, now: T
 }
 
 /// 😻️ Begin or extend purring through a whole authored loop and the requested duration.
-pub(crate) fn purr(draft: &mut Draft<'_>, index: usize, ticks: Ticks, now: Ticks) {
+pub fn purr(draft: &mut Draft<'_>, index: usize, ticks: Ticks, now: Ticks) {
     let kind = draft.kinds[index];
     let span = clip_of(kind, Some(&kind.purr.clip)).map_or(ticks, |clip| Ticks::max(clip_ticks(clip), ticks));
     let body = &mut draft.stage.actors[index];
@@ -367,7 +369,7 @@ pub(crate) fn carve(stretches: &[[f64; 2]], low: f64, high: f64) -> Vec<[f64; 2]
 }
 
 /// 👪️ How many actors stand on a perch: on its surface, within its ends.
-pub(crate) fn crowd_on(draft: &Draft<'_>, perch: &Perch) -> usize {
+pub fn crowd_on(draft: &Draft<'_>, perch: &Perch) -> usize {
     let mut crowd = 0;
     for body in &draft.stage.actors {
         if body.perch.as_deref() == Some(perch.surface.as_str()) && body.x >= perch.x0 && body.x <= perch.x1 {
@@ -377,7 +379,3 @@ pub(crate) fn crowd_on(draft: &Draft<'_>, perch: &Perch) -> usize {
     crowd
 }
 //#endregion 🔖️Stretches
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

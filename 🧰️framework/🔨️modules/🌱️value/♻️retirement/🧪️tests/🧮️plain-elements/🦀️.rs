@@ -100,7 +100,7 @@ fn composite_of_options_and_arrays_becomes_plain_through_the_derive() {
 
 #[test]
 fn a_plain_derived_vector_retires_in_pages_and_matches_the_leaf_macro_receipt_for_receipt() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️plain-elements/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️plain-elements/🔣️.json")).unwrap();
     let work = fixture["workBytes"].as_u64().unwrap() as usize;
     let overhead = fixture["overheadTurns"].as_u64().unwrap() as usize;
     let mut previous: Option<(usize, usize)> = None;
@@ -146,7 +146,7 @@ fn data_enums_options_and_arrays_of_plain_elements_retire_in_pages() {
 
 #[test]
 fn a_vector_with_an_owning_field_stays_element_wise() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️plain-elements/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧮️plain-elements/🔣️.json")).unwrap();
     let count = fixture["elementWiseControlCount"].as_u64().unwrap() as usize;
     let minimum = fixture["elementWiseControlMinimumTurns"].as_u64().unwrap() as usize;
     let named: Vec<Named> = (0..count).map(|index| Named { name: format!("n{index}"), id: index as u32 }).collect();

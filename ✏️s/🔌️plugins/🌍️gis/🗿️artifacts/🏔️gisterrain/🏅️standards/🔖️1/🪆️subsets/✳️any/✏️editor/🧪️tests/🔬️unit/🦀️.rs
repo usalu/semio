@@ -109,7 +109,7 @@ use view::set_camera;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
     use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// 🗺️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
 pub struct Gis3dApp(pub VcsArtifactApp<EditorApp<Gis3dPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 

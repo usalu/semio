@@ -111,7 +111,7 @@ impl Puzzle3dApp {
     /// `sessionWindowInstances` grows the moment a pane is opened or split. Idempotent.
     fn ensure_window(&mut self, window_id: &str) {
         if !self.view.window_instances.iter().any(|instance| instance.id == window_id) {
-            self.view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+            self.view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into() });
         }
     }
 
@@ -135,7 +135,7 @@ impl Puzzle3dApp {
     pub fn window_view(&self, window_id: &str) -> ViewModel {
         let mut view = self.view.clone();
         if !view.window_instances.iter().any(|instance| instance.id == window_id) {
-            view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: main::WINDOW_KIND_ID.into() });
+            view.window_instances.push(ViewWindowInstance { id: window_id.into(), window_kind_id: semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.into() });
         }
         view.for_window_instance(window_id).expect("puzzle3d test window roster")
     }
@@ -265,8 +265,8 @@ pub async fn app() -> Puzzle3dApp {
 /// 🖌️ Host-session utility activation without minting a typed operation or running `settle`.
 #[inline(never)]
 pub fn activate_window_utility(app: &mut Puzzle3dApp, utility_id: &str) {
-    app.ensure_window(main::WINDOW_KIND_ID);
-    app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), main::WINDOW_KIND_ID);
+    app.ensure_window(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
+    app.activate(semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utility_id })), semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
 }
 
 /// 🪪️ A process-unique instance identity per scene_snapshot app. The puzzle 3d session registry is process-global
@@ -328,10 +328,6 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
     let instance_id = app.instance_id;
     if let Some(page) = app.take_typed_operation_result_page(instance_id) {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-        // ⬇️ The Download lane's page is the ONLY place the segmented handle is named, and the ACK
-        // below is what admits the chunks into the app's `segmented_downloads` authority — so the
-        // handle is captured here, exactly where the host's own `consumeTypedOperationEffects`
-        // captures it, or a law can never drain what it just published.
         if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Download {
             settled.downloads.push(Puzzle3dDownload::from_page(page.token.operation, page.bytes()));
         }

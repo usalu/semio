@@ -171,7 +171,6 @@ fn streams_diff(diff: &SemioVideoDiff) -> &semio_s_artifact_stdio_semio_video_mo
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
     {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
@@ -186,7 +185,6 @@ async fn absorb_law() {
         assert_eq!(triple.added[0].item, f);
     }
 
-    // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
     {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
@@ -201,7 +199,6 @@ async fn absorb_law() {
         assert!(triple.added.iter().any(|a| a.item == g));
     }
 
-    // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
     {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
@@ -216,7 +213,6 @@ async fn absorb_law() {
         assert_eq!(triple.added[0].item.kind, SemioVideoStreamKind::Audio);
     }
 
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
     {
         let base = fixture();
         let d1 = Mutation::diff(&SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Video, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }), &base);
@@ -228,7 +224,6 @@ async fn absorb_law() {
         assert_eq!(triple.removed, vec![1]);
     }
 
-    // Associativity over a triple.
     {
         let base = fixture();
         let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };

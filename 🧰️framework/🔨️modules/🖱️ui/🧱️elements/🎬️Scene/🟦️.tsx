@@ -41,13 +41,11 @@ const updateSceneCameraProjection = (camera: THREE.Camera): void => {
  **/
 const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const { size } = useThree();
-  // 🧭️ drei GizmoViewport is Y-up; Scene is Z-up so colors remap Y↔Z while staying CAD-axis (X primary, Y secondary, Z tertiary).
   const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => {
     const axes = resolveSpatialAxisColors();
     return [axes.x, axes.z, axes.y];
   });
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
-  // GizmoViewport axis box uses boxGeometry args [length, thickness, thickness]; uniform scale yields a chunky cube.
   const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
 
   reactHostPort.useEffect(() => {

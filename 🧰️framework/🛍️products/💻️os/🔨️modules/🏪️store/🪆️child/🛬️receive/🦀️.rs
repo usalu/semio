@@ -1,7 +1,8 @@
 //! 🛬️ Persisted child headers receive from their original fields without inventing local materialization.
 use super::ArtifactChild;
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,native_decoding::{NativeReceive,NativeReceiver,owned::{NativeRecordFields,tree::{NativeValueSource,child_grant,nested,add_receipt}}},retained_clone::{RetainedCloneRef,retained_clone_grant_admits}};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, retained_clone::{RetainedCloneRef, retained_clone_grant_admits}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver, native_decoding::owned::NativeRecordFields, native_decoding::owned::tree::NativeValueSource, native_decoding::owned::tree::child_grant, native_decoding::owned::tree::nested, native_decoding::owned::tree::add_receipt};
 use std::{marker::PhantomData,mem::size_of};
 
 #[derive(semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
@@ -25,7 +26,7 @@ impl<I:NativeValueSource,S:Send+'static> NativeReceive<I> for ArtifactChild<S> {
         nested(<PersistedChildHeader as NativeReceive<I>>::receive_birth_demand(),size_of::<Self::Receiver>()).expect("fixed child receiving birth fits usize")
     }
     fn begin_receive(grant:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError> {
-        if !retained_clone_grant_admits(grant,<Self as NativeReceive<I>>::receive_birth_demand()) { return Err(semio_framework_value::native_decoding::owned::tree::invalid()); }
+        if !retained_clone_grant_admits(grant,<Self as NativeReceive<I>>::receive_birth_demand()) { return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid()); }
         let overhead=size_of::<Self::Receiver>();
         let (header,progress)=<PersistedChildHeader as NativeReceive<I>>::begin_receive(child_grant(grant,overhead))?;
         Ok((ArtifactChildNativeReceiver { header,snapshot:PhantomData },add_receipt(progress,overhead)?))

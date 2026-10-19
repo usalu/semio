@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "testOwners": ["🧪️tests/🧱️boxed-fixed-slots/🟦️.ts", "🪃️continuation/🧪️tests/🪃️scheduler/🟦️.ts"],
+  "testOwners": ["🔁️jittered-backoff/🧪️tests/🟦️.ts", "🧪️tests/🧱️boxed-fixed-slots/🟦️.ts", "🪃️continuation/🧪️tests/🪃️scheduler/🟦️.ts"],
   "exports": [
     { "name": "CancelState", "kind": "type", "owner": "wire" },
     { "name": "CapabilityTokenId", "kind": "type", "owner": "wire" },

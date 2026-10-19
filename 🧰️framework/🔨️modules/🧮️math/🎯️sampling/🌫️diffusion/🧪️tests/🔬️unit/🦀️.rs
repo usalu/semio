@@ -45,9 +45,6 @@ async fn custom_schedule_returns_its_values_verbatim() {
 
 #[semio_framework_async_macros::async_test]
 async fn euler_solver_converges_exactly_to_a_constant_target_when_schedule_reaches_zero() {
-    // 📐️ With a constant (x-independent) `Sample` prediction, the Euler update at the final
-    // step (sigma_next == 0) reduces algebraically to `x_next = denoised` exactly — a good
-    // closed-form check that doesn't depend on any specific schedule shape.
     let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![10.0, 5.0, 2.0, 0.5, 0.0]), solver: Solver::Euler, steps: 4, guidance: None, seed: 0 };
     let mut latent = vec![0.0f32; 4];
     let mut denoiser = ConstantDenoiser { target: 5.0 };
@@ -142,7 +139,6 @@ async fn heun_solver_uses_two_evaluations_per_non_final_step() {
     let mut latent = vec![0.0f32; 2];
     let mut denoiser = CountingDenoiser { calls: 0 };
     run_diffusion(&config, &mut latent, [1, 1, 1, 2], &mut denoiser, |_, _, _| StepControlFlow::Continue).await.unwrap();
-    // step 0 (sigma_next=2.0, not final): 2 evaluations; step 1 (sigma_next=0.0, final): 1 evaluation.
     assert_eq!(denoiser.calls, 3);
 }
 
@@ -174,8 +170,6 @@ async fn apply_inpaint_mask_blends_by_mask_weight() {
     let original = [0.0f32, 0.0, 0.0];
     let mask = [1.0f32, 0.0, 0.5];
     let mut rng: RandomSources = CounterRng::from_seed(1).await.into();
-    // 🌫️ sigma = 0.0 means the re-noised original equals the original exactly, isolating the
-    // blend-weight arithmetic from the injected-noise term.
     apply_inpaint_mask(&mut x, &original, &mask, 0.0, &mut rng).await;
     assert!((x[0] - 0.0).abs() < 1e-6, "fully masked (1.0) must fall back to the original");
     assert_eq!(x[1], 10.0, "unmasked (0.0) must stay untouched");
@@ -191,7 +185,6 @@ async fn prediction_type_conversions_round_trip_through_denoised() {
     let sample_raw = target;
     assert_eq!(to_denoised(PredictionType::Sample, &x, sigma, &sample_raw).await, target.to_vec());
 
-    // 📐️ epsilon such that `x - sigma*eps == target` exactly.
     let eps: Vec<f32> = x.iter().zip(target).map(|(&xi, ti)| (xi - ti) / sigma as f32).collect();
     let denoised = to_denoised(PredictionType::Epsilon, &x, sigma, &eps).await;
     for (d, t) in denoised.iter().zip(target) {

@@ -1,6 +1,7 @@
 //! 🏷️ Iterative exact kind/of construction with cumulative native ownership admission.
 use super::ValueType;
-use crate::{DecodedValue, DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError};
+use crate::{DecodedValue, DslValue, FromValue, NativeEncodeControl, ToValue, ValueError};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub(super) fn retire(mut value: ValueType) {
     while let ValueType::List(inner) = value {
         value = *inner

@@ -20,9 +20,9 @@ export interface DocxDocument { body: DocxBlock[]; styles: DocxStyle[] }
 export interface DocxXmlPart { path: string; contentType: string; document: RetainedXmlDocument }
 /** 🧬️ Complete lossless DOCX snapshot. */
 export interface DocxSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ opc: RetainedOpcPackage;
-  /** @state artifact */ xmlParts: DocxXmlPart[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🧾️ @state artifact */ opc: RetainedOpcPackage;
+  /** 📊️ @state artifact */ xmlParts: DocxXmlPart[];
 }
 import type { RetainedXmlDocument,XmlNode,XmlAttr } from '@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot';
 

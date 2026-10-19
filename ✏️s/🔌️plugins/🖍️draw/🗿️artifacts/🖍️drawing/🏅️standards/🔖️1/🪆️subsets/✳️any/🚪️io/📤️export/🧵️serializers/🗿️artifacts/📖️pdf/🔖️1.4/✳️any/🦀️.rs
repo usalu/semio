@@ -144,7 +144,6 @@ fn paint_node(writer: &mut PdfWriter, content: &mut PdfContent, doc: &DrawingSna
                 let _ = writeln!(content, "{}", paint(true, has_stroke));
             }
             Some(gradient) => {
-                // 🌈️ Shading fills paint through the outline as a clip, then the outline strokes on top.
                 let shading = writer.shading(gradient)?;
                 resources.insert(shading.clone());
                 content.push_str("q\n");
@@ -190,8 +189,6 @@ fn paint_node(writer: &mut PdfWriter, content: &mut PdfContent, doc: &DrawingSna
         if image.width > 0.0 && image.height > 0.0 {
             if let Some(name) = writer.image(doc, &image.asset_id)? {
                 resources.insert(name.clone());
-                // 🖼️ The unit square's top row is v = 1: under the flipped page a `-h` scale with a
-                // `+h` offset keeps the image upright at the node origin.
                 let _ = writeln!(content, "q {} 0 0 {} 0 {} cm /{name} Do Q", num(image.width), num(-image.height), num(image.height));
             }
         }
@@ -471,7 +468,7 @@ impl PdfWriter {
         Ok(name)
     }
 
-    fn stop_function(&mut self, stops: &semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>) -> Result<u32, String> {
+    fn stop_function(&mut self, stops: &semio_framework_value_persistent::list::PagedList<GradientStop, {usize::MAX}>) -> Result<u32, String> {
         let mut sorted: Vec<&GradientStop> = stops.iter().filter(|stop| stop.offset.is_finite()).collect();
         if sorted.is_empty() {
             return Err("a gradient needs at least one stop".into());
@@ -482,7 +479,6 @@ impl PdfWriter {
             let color = rgb(sorted[0]);
             return Ok(self.allocate(format!("<< /FunctionType 2 /Domain [0 1] /C0 [{color}] /C1 [{color}] /N 1 >>").into_bytes()));
         }
-        // 🧵️ Offsets are clamped into [0, 1] and made strictly increasing so the stitching bounds are legal.
         let mut offsets: Vec<f64> = sorted.iter().map(|stop| stop.offset.clamp(0.0, 1.0)).collect();
         for index in 1..offsets.len() {
             if offsets[index] <= offsets[index - 1] {
@@ -492,7 +488,6 @@ impl PdfWriter {
         if offsets.len() == 2 && offsets[0] <= 0.0 && offsets[1] >= 1.0 {
             return Ok(self.allocate(format!("<< /FunctionType 2 /Domain [0 1] /C0 [{}] /C1 [{}] /N 1 >>", rgb(sorted[0]), rgb(sorted[1])).into_bytes()));
         }
-        // 🪡️ Pad to the domain ends with flat pieces so /Extend does not have to guess the end colors.
         let mut pieces: Vec<(f64, f64, String, String)> = Vec::new();
         if offsets[0] > 0.0 {
             pieces.push((0.0, offsets[0], rgb(sorted[0]), rgb(sorted[0])));

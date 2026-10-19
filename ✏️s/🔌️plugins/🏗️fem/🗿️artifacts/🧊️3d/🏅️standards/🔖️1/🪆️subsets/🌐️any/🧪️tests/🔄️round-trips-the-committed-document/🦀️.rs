@@ -1,4 +1,4 @@
-//! the artifact-level `mutate-fem3d-1` case in ticket
+//! 📶️ the artifact-level `mutate-fem3d-1` case in ticket
 //! 🧊 `s.fem.fem3d` whole-document identity round trip — Rust SUBJECT adapter. Relocated out of
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION`.
 //! This scenario carries no mutation kind and no vector, so it stays with `✳️any`, the owner of the

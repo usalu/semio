@@ -28,6 +28,7 @@ semio-framework-io-control = { path = "../../../../🚪️io/⏱️control/📦�
 semio-framework-dsl-record-model = { path="../../📐️model/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 

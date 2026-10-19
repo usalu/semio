@@ -139,7 +139,6 @@ async fn symmetric_difference_keeps_edges_unique_to_either_side() {
 // #subregion Complement
 #[semio_framework_async_macros::async_test]
 async fn complement_of_a_path_matches_a_hand_count() {
-    // 🔺️ Path 0-1-2 (undirected, 3 nodes, 2 edges) has C(3,2)-2 = 1 missing pair: 0-2.
     let mut g: Storage<Normal, Undirected> = Storage::new();
     for id in [0, 1, 2] {
         g.add_node_with_id(id, PropertyBag::new());
@@ -192,7 +191,6 @@ async fn tensor_product_requires_adjacency_on_both_sides() {
     let h = und_edge(0, 1);
     let (prod, _map) = tensor_product(&g, &h);
     assert_eq!(prod.node_count(), 4);
-    // 🔗️ (0,0)-(1,1) and (0,1)-(1,0): exactly 2 edges.
     assert_eq!(prod.edge_count(), 2);
 }
 
@@ -213,7 +211,6 @@ async fn lexicographic_product_includes_cross_block_edges() {
     let h = und_edge(0, 1);
     let (lex, _map) = lexicographic_product(&g, &h);
     assert_eq!(lex.node_count(), 4);
-    // 🔗️ g-adjacent pairs pull in all 4 combinations of (v1, v2) for u1~u2, plus the within-block h edges.
     assert!(lex.edge_count() >= 4);
 }
 // #endsubregion
@@ -245,7 +242,7 @@ async fn contracted_nodes_merges_v_into_u_and_respects_self_loops_flag() {
     for id in [0, 1, 2] {
         g.add_node_with_id(id, PropertyBag::new());
     }
-    g.add_edge(0, 1); // the edge that becomes a self-loop when 1 merges into 0
+    g.add_edge(0, 1);
     g.add_edge(1, 2);
 
     let dropped = contracted_nodes(&g, 0, 1, false);

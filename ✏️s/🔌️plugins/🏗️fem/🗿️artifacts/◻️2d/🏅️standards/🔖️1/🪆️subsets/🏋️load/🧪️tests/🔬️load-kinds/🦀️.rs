@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` load mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/➕️add-load/🧪️tests/👻️dangling-node-8d113b/🦀️.rs"]
 mod add_load_refuses_to_push_a_wind_load_at_a_node_the_frame_does_not_have;
@@ -28,3 +29,5 @@ mod replace_load_refuses_to_move_a_wind_load_onto_a_node_the_steel_frame_never_h
 mod replace_load_strengthens_the_wind_point_load_on_the_braced_steel_frame;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🪪️denies-rename-732de0/🦀️.rs"]
 mod replace_load_refuses_to_relabel_a_wind_load_through_a_replace_load;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-load/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_load_field_intent;

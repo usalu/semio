@@ -38,6 +38,7 @@ semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️op
 semio-framework-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-patches = { path = "../../../🩹️patches/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-surfaces = { path = "../../../📥️cold-pair/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-turn-limits = { path = "../../🧯️retirement-drivers-and-turn-limits/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-core = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-plugin-runtime-exchange = { path = "../../../🏃️runtime/🔄️exchange/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-tasks = { path = "../../../⏲️tasks/📦️packages/🦀️rust" }
@@ -48,6 +49,7 @@ semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust"
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-payload = { path = "../../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-job-native-decode = { path = "../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }

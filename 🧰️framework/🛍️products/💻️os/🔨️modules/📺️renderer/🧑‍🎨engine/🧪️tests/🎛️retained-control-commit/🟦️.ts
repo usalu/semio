@@ -100,7 +100,6 @@ const stepperSegmentSign = (bounds: readonly [number, number, number, number], x
 
 const expectedDispatch = (testCase: FixtureCase): { action: string; args: Record<string, unknown> } | undefined => {
   const { node, bounds, gesture } = testCase;
-  // 🎚️ A drag ends where `to` says; every other gesture acts at `at`.
   const point = gesture.to ?? gesture.at;
   const x = bounds[0] + bounds[2] * point[0];
   const y = bounds[1] + bounds[3] * point[1];
@@ -155,8 +154,6 @@ describe("retained control commit", () => {
       expect(derived).toBeDefined();
       expect(testCase.expected.press).toBe(expectedPress(testCase));
       expect(derived!.action).toBe(testCase.expected.action);
-      // 🔢️ Numbers compare by value, not by float identity — the fixture carries the decimal the
-      // guest receives, and both targets round the same gesture to it.
       expect(Object.keys(derived!.args).sort()).toEqual(Object.keys(testCase.expected.args).sort());
       for (const [key, value] of Object.entries(testCase.expected.args)) {
         if (typeof value === "number") expect(derived!.args[key] as number).toBeCloseTo(value, 9);

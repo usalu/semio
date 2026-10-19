@@ -21,10 +21,16 @@
 
 //#region 🔌️Adapters
 import { runRepositoryMutationBridgeScriptV1 } from "../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry
-const BRIDGE_VERSION=1;
-if(import.meta.main)await runRepositoryMutationBridgeScriptV1(import.meta.dir,"semio-puzzle-mutation-bridge");
-export {BRIDGE_VERSION};
+/** 🚪️ `list-mutations` — delivers the production mutation inventory of this owner through its bridge binary. */
+class ListMutationsScript extends BundleScript {
+  async run(): Promise<void> {
+    await runRepositoryMutationBridgeScriptV1(this.root, "semio-puzzle-mutation-bridge");
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("list-mutations", ListMutationsScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 //#endregion 🚪️Entry

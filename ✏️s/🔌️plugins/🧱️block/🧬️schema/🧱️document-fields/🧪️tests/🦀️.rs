@@ -5,8 +5,8 @@ fn roundtrip<T: serde::de::DeserializeOwned + serde::Serialize + semio_framework
  let mut encode_calls=0usize;let mut encode_progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{encode_calls+=1;event.owned_bytes<=65536&&(event.total==0||event.completed<=event.total)};
  let mut encode=semio_framework_value::NativeEncodeControl::new(65536,&mut encode_progress);
  let owned=value.to_value_controlled(&mut encode).expect("controlled shared record projection");drop(encode);assert!(encode_calls>0);assert_eq!(serde_json::Value::from(&owned),input);
- let mut decode_calls=0usize;let mut decode_progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{decode_calls+=1;event.owned_bytes<=65536&&(event.total==0||event.completed<=event.total)};
- let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut decode=semio_framework_value::NativeDecodeControl::new(65536,&mut decode_progress);decode.install_retirement_recipient(&mut recipient).expect("explicit shared record retirement recipient");
+ let mut decode_calls=0usize;let mut decode_progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{decode_calls+=1;event.owned_bytes<=65536&&(event.total==0||event.completed<=event.total)};
+ let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut decode_progress);decode.install_retirement_recipient(&mut recipient).expect("explicit shared record retirement recipient");
  let actual=T::from_value_controlled(&owned,&mut decode).expect("controlled shared record construction");drop(decode);assert!(decode_calls>0);assert!(semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&recipient));
  serde_json::to_value(actual).expect("independent shared record output")
 }

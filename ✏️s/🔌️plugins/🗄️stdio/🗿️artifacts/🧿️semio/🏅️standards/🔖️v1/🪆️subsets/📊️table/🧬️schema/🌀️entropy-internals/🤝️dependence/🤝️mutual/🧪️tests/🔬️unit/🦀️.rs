@@ -39,7 +39,6 @@ mod tests {
 
     #[test]
     fn ksg1_matches_gaussian_closed_form() {
-        // 🔐️ bivariate Gaussian with correlation rho: I(X;Y) = -0.5*ln(1-rho^2).
         let mut rng = semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::numeric::Xorshift64::new(4);
         let rho = 0.6_f64;
         let n = 2000;
@@ -106,7 +105,6 @@ mod tests {
 
     #[test]
     fn o_information_of_redundant_copy_is_positive() {
-        // 🔐️ X1=X2=X3 (perfect redundancy): O-information should be strongly positive.
         let mut rng = semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::numeric::Xorshift64::new(8);
         let x: Vec<u32> = (0..2000).map(|_| rng.next_below(4) as u32).collect();
         let est = o_information(&[&x, &x, &x], &[4, 4, 4], LogBase::Nats).unwrap();

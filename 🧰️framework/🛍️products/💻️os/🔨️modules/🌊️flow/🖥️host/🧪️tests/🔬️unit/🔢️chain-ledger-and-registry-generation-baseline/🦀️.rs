@@ -26,8 +26,6 @@ fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
     assert!(armed.working && armed.nodes_total > 0, "an armed chain publishes a census to measure against");
     assert!(armed.nodes_done < armed.nodes_total, "an armed chain has not settled every node");
 
-    // ⏳️ THE HOP BOUNDARY: the window is waiting on an extension answer, so nothing is armed and no
-    // finer ledger holds a row. Only the latch knows, and the chain ledger is what reads it.
     session.arm_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap().0;
     session.begin_window_tick("preview-1",FIXTURE_SESSION_GRANT).unwrap();
     session.note_window_extensions_in_flight("preview-1", 1,FIXTURE_SESSION_GRANT).unwrap();

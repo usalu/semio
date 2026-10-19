@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-tool-run-tick-wire"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Tool-run tick wire: the canonical tick record encoder and the funded native receiving of ticks, identities, steps, progress, entity columns and trace pages."
+
+[package.metadata.semio]
+role = "framework"
+id = "tool-run-tick-wire"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_tool_run_tick_wire"
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-tool-run = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

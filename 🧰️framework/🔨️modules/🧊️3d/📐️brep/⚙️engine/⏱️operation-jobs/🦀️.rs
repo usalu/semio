@@ -63,7 +63,6 @@ pub enum BrepOperation {
 
 impl BrepOperation {
     /// 🏷️ The stable camelCase name every host and fixture calls this operation by.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tag(&self) -> &'static str {
         match self {
             Self::Fillet { .. } => "fillet",
@@ -111,7 +110,6 @@ pub struct BrepOperationProgress {
 }
 
 impl From<StageProgress> for BrepOperationProgress {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn from(progress: StageProgress) -> Self {
         Self { done: progress.done, total: progress.total, phase: progress.phase }
     }
@@ -161,14 +159,12 @@ pub struct BrepOperationJob {
 
 impl BrepOperationJob {
     /// 📈️ Progress right now — safe to read between steps and after termination.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn progress(&self) -> BrepOperationProgress {
         self.running.as_ref().map_or(self.last, |running| running.stage.progress().into())
     }
 
     /// 🛑️ Retires the job at the next observable boundary and frees its working copy. A finished job
     /// is never cancelled — supersession may only retire work still in flight.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cancel(&mut self) {
         if matches!(self.outcome, Outcome::Pending) {
             self.last = self.progress();
@@ -178,7 +174,6 @@ impl BrepOperationJob {
     }
 
     /// ✅️ True once the job reached a terminal state (ready, cancelled or failed).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_terminal(&self) -> bool {
         !matches!(self.outcome, Outcome::Pending)
     }
@@ -196,32 +191,26 @@ struct Extraction {
 }
 
 impl Extraction {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn translate<K: Copy + Eq + std::hash::Hash + std::fmt::Display>(map: &HashMap<K, K>, id: K) -> Result<K, BrepError> {
         map.get(&id).copied().ok_or_else(|| BrepError::MissingHandle(id.to_string()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn solid(&self, id: SolidId) -> Result<SolidId, BrepError> {
         Self::translate(&self.map.solids, id)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn face(&self, id: FaceId) -> Result<FaceId, BrepError> {
         Self::translate(&self.map.faces, id)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn faces(&self, ids: &[FaceId]) -> Result<Vec<FaceId>, BrepError> {
         ids.iter().map(|&id| self.face(id)).collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn edges(&self, ids: &[EdgeId]) -> Result<Vec<EdgeId>, BrepError> {
         ids.iter().map(|&id| Self::translate(&self.map.edges, id)).collect()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn wire(&self, wire: &Wire) -> Result<Wire, BrepError> {
         let members = wire.members.iter().map(|&(edge, forward)| Ok((Self::translate(&self.map.edges, edge)?, forward))).collect::<Result<Vec<_>, BrepError>>()?;
         let vertices = wire.vertices.iter().map(|&vertex| Self::translate(&self.map.vertices, vertex)).collect::<Result<Vec<_>, BrepError>>()?;
@@ -502,7 +491,6 @@ impl Brep {
     /// ⏱️ Admits `operation`: resolves its handles, validates it and returns it as a budgetable job —
     /// or answers at once when the operation is the identity (a pattern of fewer than two instances).
     /// Nothing in the session changes, whatever happens to the job afterwards.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn operation_job_sync(&self, operation: BrepOperation) -> Result<BrepOperationAdmission, BrepError> {
         match &operation {
             BrepOperation::LinearPattern { shape, count, .. } if *count <= 1 => return Ok(BrepOperationAdmission::Answered(vec![shape.clone()])),
@@ -541,7 +529,6 @@ impl Brep {
     /// ⏱️ Advances `job` by at most `budget` units against its own working copy. The job borrows
     /// nothing, so a host may retain it across turns and re-present the kernel on every step. The
     /// session changes exactly once, in the step that returns [`BrepOperationStep::Ready`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn step_operation_job_sync(&mut self, job: &mut BrepOperationJob, budget: usize) -> Result<BrepOperationStep, BrepError> {
         match &job.outcome {
             Outcome::Ready(handles) => return Ok(BrepOperationStep::Ready(handles.clone())),
@@ -582,7 +569,6 @@ impl Brep {
     }
 
     /// ♾️ Admits `operation` and drives it to completion — the one-shot form of every operation here.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn run_operation_sync(&mut self, operation: BrepOperation) -> Result<Vec<GeometryHandle>, BrepError> {
         match self.operation_job_sync(operation)? {
             BrepOperationAdmission::Answered(handles) => Ok(handles),
@@ -607,107 +593,81 @@ impl Brep {
 // #region 🔖️OneShot
 
 impl Brep {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn convex_hull_sync(&mut self, points: &[EVec3]) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::ConvexHull { points: points.to_vec() })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn offset_face_sync(&mut self, face: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::OffsetFace { face: face.clone(), distance })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn thicken_face_sync(&mut self, face: &GeometryHandle, thickness: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::ThickenFace { face: face.clone(), thickness })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn extrude_wire_sync(&mut self, wire: &GeometryHandle, vector: EVec3) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::ExtrudeWire { wire: wire.clone(), vector })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn extrude_sync(&mut self, face: &GeometryHandle, direction: EVec3, distance: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Extrude { face: face.clone(), direction, distance })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn revolve_sync(&mut self, face: &GeometryHandle, axis_origin: EVec3, axis_direction: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Revolve { face: face.clone(), axis_origin, axis_direction, angle })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn loft_sync(&mut self, profiles: &[GeometryHandle], smooth: bool) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Loft { profiles: profiles.to_vec(), smooth })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sweep_sync(&mut self, profile: &GeometryHandle, path: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Sweep { profile: profile.clone(), path: path.clone() })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn pipe_sync(&mut self, profile: &GeometryHandle, path: &GeometryHandle, guide: Option<&GeometryHandle>) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Pipe { profile: profile.clone(), path: path.clone(), guide: guide.cloned() })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn helical_sweep_sync(&mut self, profile: &GeometryHandle, axis_origin: EVec3, axis_direction: EVec3, radius: f64, pitch: f64, turns: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::HelicalSweep { profile: profile.clone(), axis_origin, axis_direction, radius, pitch, turns })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compound_cut_sync(&mut self, target: &GeometryHandle, tools: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::CompoundCut { target: target.clone(), tools: tools.to_vec() })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn linear_pattern_sync(&mut self, shape: &GeometryHandle, direction: EVec3, spacing: f64, count: usize) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::LinearPattern { shape: shape.clone(), direction, spacing, count })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn circular_pattern_sync(&mut self, shape: &GeometryHandle, axis: EVec3, count: usize) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::CircularPattern { shape: shape.clone(), axis, count })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn grid_pattern_sync(&mut self, shape: &GeometryHandle, dir_x: EVec3, dir_y: EVec3, (spacing_x, spacing_y): (f64, f64), count_x: usize, count_y: usize) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::GridPattern { shape: shape.clone(), dir_x, dir_y, spacing_x, spacing_y, count_x, count_y })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fillet_sync(&mut self, shape: &GeometryHandle, radius: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Fillet { shape: shape.clone(), radius })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fillet_variable_sync(&mut self, shape: &GeometryHandle, radius_start: f64, radius_end: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::FilletVariable { shape: shape.clone(), radius_start, radius_end })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fillet_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], radius: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::FilletEdges { shape: shape.clone(), edges: edges.to_vec(), radius })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn chamfer_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Chamfer { shape: shape.clone(), distance })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn chamfer_asymmetric_sync(&mut self, shape: &GeometryHandle, d1: f64, d2: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::ChamferAsymmetric { shape: shape.clone(), first: d1, second: d2 })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn chamfer_edges_sync(&mut self, shape: &GeometryHandle, edges: &[GeometryHandle], distance: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::ChamferEdges { shape: shape.clone(), edges: edges.to_vec(), distance })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn shell_sync(&mut self, shape: &GeometryHandle, thickness: f64, open_faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Shell { shape: shape.clone(), thickness, open_faces: open_faces.to_vec() })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn draft_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle], pull_direction: EVec3, neutral_point: EVec3, angle: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Draft { shape: shape.clone(), faces: faces.to_vec(), pull_direction, neutral_point, angle })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn offset_solid_sync(&mut self, shape: &GeometryHandle, distance: f64) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::OffsetSolid { shape: shape.clone(), distance })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn defeature_sync(&mut self, shape: &GeometryHandle, faces: &[GeometryHandle]) -> Result<GeometryHandle, BrepError> {
         self.run_single(BrepOperation::Defeature { shape: shape.clone(), faces: faces.to_vec() })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn section_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<Vec<GeometryHandle>, BrepError> {
         self.run_operation_sync(BrepOperation::Section { solid: solid.clone(), plane_origin, plane_normal })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn split_sync(&mut self, solid: &GeometryHandle, plane_origin: EVec3, plane_normal: EVec3) -> Result<(GeometryHandle, GeometryHandle), BrepError> {
         let mut sides = self.run_operation_sync(BrepOperation::Split { solid: solid.clone(), plane_origin, plane_normal })?.into_iter();
         match (sides.next(), sides.next()) {

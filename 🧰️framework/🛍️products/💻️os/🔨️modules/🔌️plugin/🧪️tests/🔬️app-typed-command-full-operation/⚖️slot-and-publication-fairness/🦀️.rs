@@ -20,7 +20,8 @@
     /// step WORD is the rotation's verdict, not stage 18's. What stage 18 owes while the
     /// cancellation state is locked is that it reclaims nothing and leaves its own cursor exactly
     /// where it was — asserted directly below, over the property instead of its proxy.
-    pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
+use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane;
+pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
@@ -110,11 +111,11 @@
         let stuck = app.tools.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
-        while let Some(mut page) = crate::app_testing::artifact_app_laws::take_fixture_result_page(&mut app,7,crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
+        while let Some(mut page) = semio_framework_plugin_testing_laws::artifact_app_laws::take_fixture_result_page(&mut app,7,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("original fixture page presentation") {
             let code = if page.lane == TypedOperationResultLane::Fault { semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
-            let token =crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+            let token =semio_framework_plugin_testing_laws::artifact_app_laws::close_fixture_result_page(&mut page,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
                 let acknowledged = app.tools.acknowledge_typed_operation_result(token).expect("each original published page accepts its exact ACK after receiver closure");
                 assert!(acknowledged, "published operation {operation} must retain its original ACK authority");
 

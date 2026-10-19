@@ -263,15 +263,11 @@ async fn inverse_law() {
 async fn absorb_law() {
     let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
-    // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
-    // no interaction), net effect must match sequential application.
     let d1 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2"), index: None }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }).diff(&mid);
     assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
 
-    // Add+SetField: insert a comment, then immediately edit that SAME comment -- the edit must
-    // patch into the carried `added` payload, not become a dangling `modified` entry.
     let comment = sample_comment("c9", None);
     let d1 = BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: comment.clone(), index: None }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
@@ -284,8 +280,6 @@ async fn absorb_law() {
     let added_comment = comments_diff.added.iter().find(|c| c.item.guid == "c9").expect("c9 still in added");
     assert_eq!(added_comment.item.text, "edited after insert");
 
-    // Modify+Remove: edit a viewpoint's camera, then remove that same viewpoint -- must
-    // annihilate to a plain removal, not a dangling modify+remove pair.
     let d1 = BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }).diff(&mid);
@@ -296,7 +290,6 @@ async fn absorb_law() {
     assert_eq!(viewpoints_diff.removed, vec![0usize]);
     assert!(viewpoints_diff.modified.is_empty());
 
-    // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
     let d1 = BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }).diff(&base);
     let mid1 = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t3"), index: None }).diff(&mid1);

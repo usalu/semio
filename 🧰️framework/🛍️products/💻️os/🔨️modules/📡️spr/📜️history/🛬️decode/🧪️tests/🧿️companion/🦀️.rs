@@ -22,7 +22,7 @@ pub mod retained_history_records {
 pub mod retained_history_paged_records {
     pub use semio_framework_os_history_record_decode::testkit::retained_history_paged_records::*;
     use semio_framework_os_history_record_decode::RetainedHistoryRecordsStep;
-    use semio_framework_value::list::{PagedList, PagedListError};
+    use semio_framework_value_persistent::{list::PagedList, list::PagedListError};
     use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, RetainedCloneGrant, RetainedCloneProgress};
 
     #[path = "🦀️.rs"]
@@ -78,7 +78,8 @@ pub mod retained_history_origin {
     pub mod json {
         pub use semio_framework_os_history_record_decode::testkit::retained_history_origin::json::*;
         use semio_framework_pack_json::{JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy, JsonError, JsonReadSource};
-        use semio_framework_value::{DslValue, NativeDecodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+        use semio_framework_value::{DslValue, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+        use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
         use protocol::MutationOrigin;
         use protocol::codec::{OriginalWireSourceIdentity, RetainedWireByteSource};
 
@@ -95,7 +96,8 @@ pub mod retained_history_metadata {
     use protocol::dictionary::RetainedSourceDictionary;
     use protocol::{MutationOrigin, TransactionRef};
     use semio_framework_pack_json::{JsonReadLimits, JsonGrammarCursor, JsonError};
-    use semio_framework_value::{DslValue, SharedUtf8, NativeDecodeControl, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+    use semio_framework_value::{DslValue, SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use std::mem::size_of_val;
 
     #[path = "🦀️.rs"]
@@ -107,7 +109,8 @@ pub mod retained_history_transition {
     pub use semio_framework_os_history_record_decode::testkit::retained_history_transition::*;
     use protocol::codec::{RetainedWireByteSource, OriginalWireSourceIdentity, HistoryReadLimits, RetainedWireFieldDecode};
     use protocol::dictionary::RetainedSourceDictionary;
-    use semio_framework_value::{SharedUtf8, NativeDecodeControl, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+    use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
     #[path = "🦀️.rs"]
     mod tests;
@@ -119,7 +122,8 @@ pub mod retained_history_edit {
     use semio_framework_os_history_record_decode::{OriginalHistoryEdits, HistoryEdit};
     use protocol::codec::{RetainedWireByteSource, OriginalWireSourceIdentity, HistoryReadLimits, RetainedWireFieldDecode};
     use protocol::dictionary::RetainedSourceDictionary;
-    use semio_framework_value::{SharedUtf8, NativeDecodeControl, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+    use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
     #[path = "🦀️.rs"]
     mod tests;
@@ -130,7 +134,8 @@ pub mod retained_history_identity_records {
     pub use semio_framework_os_history_record_decode::testkit::retained_history_identity_records::*;
     use protocol::codec::{RetainedWireByteSource, OriginalWireSourceIdentity, HistoryReadLimits};
     use protocol::dictionary::RetainedSourceDictionary;
-    use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+    use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
     #[path = "🦀️.rs"]
     mod tests;
@@ -142,7 +147,8 @@ pub mod retained_history_conflict {
     use semio_framework_os_history_record_decode::{OriginalHistoryEdits, HistoryEdit};
     use protocol::codec::{RetainedWireByteSource, OriginalWireSourceIdentity, HistoryReadLimits, RetainedWireFieldDecode};
     use protocol::dictionary::RetainedSourceDictionary;
-    use semio_framework_value::{SharedUtf8, NativeDecodeControl, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+    use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
     #[path = "🦀️.rs"]
     mod tests;
@@ -153,7 +159,8 @@ pub mod retained_history_transition_validation {
     pub use semio_framework_os_history_record_decode::testkit::retained_history_transition_validation::*;
     use protocol::codec::HistoryReadLimits;
     use pack::format::RetainedUtf8Cursor;
-    use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+    use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
     #[path = "🦀️.rs"]
     mod tests;

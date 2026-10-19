@@ -131,3 +131,8 @@ pub struct RetirementDemand {
     pub release_bytes: usize,
     pub depth: usize,
 }
+
+/// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
+pub fn retained_clone_grant_admits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool {
+    grant.maximum_items>0 && grant.maximum_copy_bytes>=demand.copy_bytes && grant.maximum_capacity_bytes>=demand.capacity_bytes && grant.maximum_release_bytes>=demand.release_bytes && grant.maximum_depth>=demand.depth
+}

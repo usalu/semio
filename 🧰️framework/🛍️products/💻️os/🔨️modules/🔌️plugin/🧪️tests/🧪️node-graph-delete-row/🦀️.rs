@@ -19,6 +19,7 @@ use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
 use semio_framework_ui_contract::*;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeGraphEditRow};
+use semio_framework::ViewModel;
 
 const NODE_GRAPH_EDIT_ROWS_FIXTURE_JSON: &str = include_str!("../../../../../../🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 

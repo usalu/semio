@@ -1,4 +1,4 @@
-//! Inverse for `change-masonry-wall-ratio`.
+//! ↩️ Inverse for `change-masonry-wall-ratio`.
 use crate::change_masonry_wall_ratio::ChangeMasonryWallRatio;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

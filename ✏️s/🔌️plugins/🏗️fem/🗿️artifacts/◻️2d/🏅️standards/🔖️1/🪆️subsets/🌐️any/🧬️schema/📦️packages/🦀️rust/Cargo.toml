@@ -27,9 +27,15 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-fem-model = { workspace = true }
 semio-s-fem-sqlite = { workspace = true }
 
 [dev-dependencies]
 semio-framework-dsl = { workspace = true }
+
+[[test]]
+name = "structure_laws"
+path = "../../🏗️structure/🎟️fixed-dofs/🧪️tests/🔬️model-2d/🦀️.rs"

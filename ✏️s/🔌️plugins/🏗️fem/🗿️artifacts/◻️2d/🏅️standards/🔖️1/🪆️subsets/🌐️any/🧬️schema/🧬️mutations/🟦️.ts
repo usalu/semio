@@ -11,6 +11,25 @@ import type { Fem2dMaterialPatch } from "../🔺️diff/🟦️.ts";
 import type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 export type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad,FemLoadCase,FemRegion,FemCombinationTerm,FemCombination,FemAnalysisSettings} from "../📸️snapshot/🟦️.ts";
 
+/** 🩹️ Changes supplied node fields without replacing concurrent fields. */
+export interface ChangeNode { id: string; patch: Fem2dNodePatch; }
+/** 🩹️ Changes supplied material fields without replacing concurrent fields. */
+export interface ChangeMaterial { id: string; patch: Fem2dMaterialPatch; }
+/** 🩹️ Changes supplied section fields without replacing concurrent fields. */
+export interface ChangeSection { id: string; patch: Fem2dSectionPatch; }
+/** 🩹️ Changes only supplied support fields. */
+export interface ChangeSupport { id: string; patch: Fem2dSupportPatch; }
+/** 🩹️ Changes only supplied region fields. */
+export interface ChangeRegion { id: string; patch: Fem2dRegionPatch; }
+/** 🩹️ Changes only supplied element fields. */
+export interface ChangeElement { id: string; patch: Fem2dElementPatch; }
+/** 🩹️ Changes only supplied fields of a load with the addressed current kind. */
+export interface ChangeLoad { caseId: string; id: string; patch: Fem2dLoadPatch; }
+/** 🏷️ Owns one combination name. */
+export interface ChangeCombinationName { id: string; name: string; }
+/** ⚖️ Owns one keyed factor; null removes the term. */
+export interface ChangeCombinationTerm { id: string; caseId: string; factor: Binary64 | null; index?: number; }
+
 //#region 🔖️Mutations
 /** 🌱⚪️ Brings a new structural node into existence. */
 export interface CreateNode {

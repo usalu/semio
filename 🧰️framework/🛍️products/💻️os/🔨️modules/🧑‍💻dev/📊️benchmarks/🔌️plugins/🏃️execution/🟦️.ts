@@ -37,9 +37,6 @@ class BenchPluginsScript extends BundleScript {
     const outPath = benchFlag(segments, "out", join(outDir, `terra-v1b-bench-${renderer}.json`));
 
     const registryPath = join(outDir, "🔣️bench-registry.json");
-    // 🔁️ Reuses `renderScaleFixtureArtifacts` verbatim (`//#region 🔖️ScaleFixture` above) — same
-    // deterministic generator the committed `🤖️generated/📇️registry/🔣️.json` comes from, just scoped to
-    // THIS run's `--count`/`--extensions` rather than whatever happens to be checked in.
     const { registryJson, registry } = renderScaleFixtureArtifacts(pluginCount, extensionsPerPlugin, 1);
     writeFileSync(registryPath, registryJson);
 

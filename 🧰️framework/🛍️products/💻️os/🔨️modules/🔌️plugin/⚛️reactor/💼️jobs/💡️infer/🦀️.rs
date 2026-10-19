@@ -301,17 +301,17 @@ fn decode_request(input: &[u8]) -> Result<semio_framework_plugin_plugin_program:
 
 enum SeenInference { Yield, Preview(Vec<u8>), Checkpoint(Vec<u8>), Complete(Vec<u8>, Vec<u8>), Cancelled, Fault(Vec<u8>) }
 
-fn copy_optional_payload(payload: Option<&semio_framework_job::RetainedJobPayload>, maximum_bytes: usize) -> Result<Vec<u8>, semio_framework::Fault> {
+fn copy_optional_payload(payload: Option<&semio_framework_job_payload::RetainedJobPayload>, maximum_bytes: usize) -> Result<Vec<u8>, semio_framework::Fault> {
     payload.map_or_else(|| Ok(Vec::new()), |payload| copy_retained_payload(payload, maximum_bytes))
 }
 
-fn copy_retained_payload(payload: &semio_framework_job::RetainedJobPayload, maximum_bytes: usize) -> Result<Vec<u8>, semio_framework::Fault> {
+fn copy_retained_payload(payload: &semio_framework_job_payload::RetainedJobPayload, maximum_bytes: usize) -> Result<Vec<u8>, semio_framework::Fault> {
     if payload.len() > maximum_bytes {
         return Err(crate::fault("job.infer.payload-limit", format!("interactive inference retained payload has {} bytes, above {maximum_bytes}", payload.len())));
     }
     let mut bytes = Vec::with_capacity(payload.len());
     let mut reader = payload.reader();
-    while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+    while let Some(page) = reader.read_page(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) {
         bytes.extend_from_slice(page);
     }
     if !reader.terminal_is_empty() {

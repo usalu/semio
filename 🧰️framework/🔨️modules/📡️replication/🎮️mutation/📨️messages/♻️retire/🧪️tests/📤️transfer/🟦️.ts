@@ -6,7 +6,7 @@ import { applyPatch } from "fast-json-patch";
 
 /** 📤️ Independent RFC6902 move semantics validate the shared original diagnostic transfer corpus. */
 export function testDiagnosticTransferOracle(): void {
-  const selection=JSON.parse(readFileSync(new URL("../../../✂️clamp/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+  const selection=JSON.parse(readFileSync(new URL("../../../✂️clamp/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
   for(const row of selection.cases){
     const db=new Database(":memory:");db.exec("CREATE TABLE rows(ordinal INTEGER PRIMARY KEY,severity INTEGER,bytes INTEGER)");
     for(const[index,message]of row.rows.entries())db.query("INSERT INTO rows VALUES(?,?,?)").run(index,message.level,selection.rowCharge+Buffer.byteLength("mutation.invariant")+Buffer.byteLength(message.text.repeat(message.repeat))+message.targets.reduce((bytes:number,target:string)=>bytes+selection.targetCharge+Buffer.byteLength(target),0));
@@ -18,7 +18,7 @@ export function testDiagnosticTransferOracle(): void {
     const original=kept.map(index=>row.rows[index]);const copied=applyPatch({original,report:[]},[{op:"copy",from:"/original",path:"/report"}],true,false).newDocument;assert.deepEqual(copied.original,copied.report);assert.notEqual(copied.original,copied.report);db.close();
   }
 
-  const law = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const law = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   for (const row of law.transferCases) {
     const source = law.cases[0].messages;
     const initial = { source, destination: [] };
@@ -61,7 +61,7 @@ export function testDiagnosticTransferOracle(): void {
   const severity = ["info", "warning", "error", "fatal"];
   for (const row of stage.cases) {
     const original = { editId: row.editId, messages: row.rows };
-    const copied = applyPatch({ durable: original, report: [] }, [{ op: "copy", from: "/durable", path: "/report/0" }], true, false).newDocument;
+    const copied = applyPatch({ durable: original, report: [] }, [{ op: "copy", from: "/durable", path: "/report/0" }], true, false).newDocument as { durable: typeof original; report: (typeof original)[] };
     assert.deepEqual(copied.report, [original]);
     assert.notEqual(copied.report[0].messages, copied.durable.messages);
     assert.equal(row.rows.reduce((worst: string | null, message: { level: string }) => worst === null || severity.indexOf(message.level) > severity.indexOf(worst) ? message.level : worst, null), row.worst);
@@ -69,14 +69,14 @@ export function testDiagnosticTransferOracle(): void {
   }
   const group = JSON.parse(readFileSync(new URL("../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const admitted = { editId: group.edit, messages: group.diagnostics };
-  const delivered = applyPatch({ durable: admitted, report: [] }, [{ op: "copy", from: "/durable", path: "/report/0" }], true, false).newDocument;
+  const delivered = applyPatch({ durable: admitted, report: [] }, [{ op: "copy", from: "/durable", path: "/report/0" }], true, false).newDocument as { durable: typeof admitted; report: (typeof admitted)[] };
   assert.deepEqual(delivered.report, [admitted]);
   assert.equal(group.diagnostics.reduce((worst: string, row: { level: string }) => severity.indexOf(row.level) > severity.indexOf(worst) ? row.level : worst, "info"), group.worst);
   assert.deepEqual(applyPatch({ n: group.before }, [{ op: "replace", path: "/n", value: group.after }], true, false).newDocument, { n: group.after });
   const custodyRoot = "../../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🔗️binding/";
   const custody = JSON.parse(readFileSync(new URL(`${custodyRoot}🧫️fixtures/🔣️.json`, import.meta.url), "utf8"));
   const custodySchema = JSON.parse(readFileSync(new URL(`${custodyRoot}🧬️schema/🔣️.json`, import.meta.url), "utf8"));
-  assert(new Ajv2020({ strict: true }).compile(custodySchema)(custody));
+  assert(Boolean(new Ajv2020({ strict: true }).compile(custodySchema)(custody)));
   const original = { edit: { mutationMeta: [{}], forwards: ["forward"], inverses: ["inverse"] }, postSnapshot: "post", authority: "original", localActor: "actor", appliedEditId: "edit", tailEditId: "edit", outcomeMessages: [{ level: "warning", code: "NOTICE", message: "original warning" }], foreignStepPresence: true };
   for (const phase of custody.refusalPhases) {
     const admitted = applyPatch(structuredClone(original), [{ op: "add", path: "/edit/mutationMeta/0/groupId", value: "group" }], true, false).newDocument;

@@ -150,7 +150,6 @@ async fn two_instances_converge_disjoint_object_edits_via_backbone() {
     dispatch(&mut instance_a, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("a adds object");
     dispatch(&mut instance_b, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("b adds object");
 
-    // A neutral history action always calls store.dispatch(), which pumps inbound operations first.
     dispatch(&mut instance_a, "commitCheckpoint", None, None).await.expect("pump a");
     dispatch(&mut instance_b, "commitCheckpoint", None, None).await.expect("pump b");
 

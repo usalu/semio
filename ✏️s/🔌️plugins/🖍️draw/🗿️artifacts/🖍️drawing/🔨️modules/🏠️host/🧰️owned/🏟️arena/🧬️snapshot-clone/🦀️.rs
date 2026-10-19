@@ -93,11 +93,11 @@ pub type DrawingFillCloneAuthority = DrawingNativeCloneAuthority<FillStyle>;
 
 pub type DrawingStrokeCloneAuthority = DrawingNativeCloneAuthority<StrokeStyle>;
 
-pub type DrawingNativeLayers = semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>;
+pub type DrawingNativeLayers = semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>;
 
 pub type DrawingNativeText = semio_framework_value::paged::PagedUtf8<{usize::MAX}>;
 
-pub type DrawingNativeSegments = semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>;
+pub type DrawingNativeSegments = semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>;
 
 pub type DrawingTextCloneAuthority = DrawingNativeCloneAuthority<DrawingNativeText>;
 
@@ -147,7 +147,7 @@ impl DrawingLayerCloneWorkAuthority {
         Ok(())
     }
 
-    pub fn vector<T, const N: usize>(value: &semio_framework_value::list::PagedList<T, N>) -> Result<(usize, usize), &'static str> {
+    pub fn vector<T, const N: usize>(value: &semio_framework_value_persistent::list::PagedList<T, N>) -> Result<(usize, usize), &'static str> {
         Ok((1usize.checked_add(value.capacity()).ok_or("drawing-store.mutation-clone-item-overflow")?, value.allocated_bytes()))
     }
 

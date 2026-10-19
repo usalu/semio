@@ -247,8 +247,8 @@ pub mod editor {
         pub use semio_s_artifact_stdio_tiff_mutation_regressions::editor::tiff_any::*;
 
         pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_any::edit_rules;
-        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_any::presence;
-        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_any::config;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::editor::tiff_any::presence;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::editor::tiff_any::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -263,9 +263,9 @@ pub mod editor {
     pub mod tiff_baseline {
         pub use semio_s_artifact_stdio_tiff_mutation_regressions::editor::tiff_baseline::*;
 
-        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::edit_rules;
-        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::presence;
-        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::config;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::editor::tiff_baseline::edit_rules;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::editor::tiff_baseline::presence;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::editor::tiff_baseline::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -284,7 +284,7 @@ pub mod viewer {
     pub mod tiff_any {
         pub use semio_s_artifact_stdio_tiff_mutation_regressions::viewer::tiff_any::*;
 
-        pub use semio_s_artifact_stdio_tiff_snapshot::viewer::tiff_any::presence;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::viewer::tiff_any::presence;
         pub use semio_s_artifact_stdio_tiff_schema::viewer::tiff_any::config;
         #[path = "."]
         pub mod modes {

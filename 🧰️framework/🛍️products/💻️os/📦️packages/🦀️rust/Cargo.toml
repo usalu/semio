@@ -150,6 +150,7 @@ semio-framework-schema-state = { path = "../../../../🔨️modules/🧬️schem
 semio-framework-schema-composition = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-validator = { workspace = true }
 semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-native-owned = { path = "../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { path = "../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -170,6 +171,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-hash = { path = "../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 # 🧮️ `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES`/`GUEST_HOST_ANSWER_CEILING_BYTES` — the one declared
 # linear-memory budget `📡️spr/🧵️channel`'s paged command ingress derives its page and byte
 # authorities from, so no transport here re-chooses a ceiling the guest allocator already fixes.

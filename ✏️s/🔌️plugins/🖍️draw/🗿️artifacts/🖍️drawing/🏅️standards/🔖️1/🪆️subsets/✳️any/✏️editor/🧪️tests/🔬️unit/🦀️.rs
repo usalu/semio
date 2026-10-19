@@ -16,7 +16,7 @@ pub mod context {
 
     pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
 
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    /// 📐️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
     pub struct DrawingAppFixture(pub DrawingApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for DrawingAppFixture {

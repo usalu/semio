@@ -44,16 +44,12 @@ fn group_closure_every_composition_stays_in_d4() {
 
 #[test]
 fn apply_offset_matches_apply_window_orientation() {
-    // Rotating the offset (1,0) ("east") by Rot90 should match where the tile that was at the
-    // window's east edge ends up after rotating the window itself.
     let w = 3usize;
     let h = 3usize;
     let tiles: Vec<TileId> = (0..9).map(TileId).collect();
     let (nw, nh, rotated) = Transform2d::Rot90.apply_window(w, h, &tiles);
     assert_eq!((nw, nh), (h, w));
-    // The east-offset direction (1,0) rotates to (0,1) under Rot90.
     assert_eq!(Transform2d::Rot90.apply_offset((1, 0)), (0, 1));
-    // Sanity: rotated window is a permutation of the same 9 tiles.
     let mut sorted = rotated;
     sorted.sort();
     let mut expected: Vec<TileId> = tiles;
@@ -141,7 +137,6 @@ fn z_rot4_is_four_distinct_quarter_turns_returning_to_identity() {
             assert_ne!(elements[i], elements[j], "ZRot4 elements must be pairwise distinct");
         }
     }
-    // A fifth quarter-turn from the last element returns to identity.
     let z90 = elements[1];
     assert_eq!(elements[3].semio_compose_rs(z90), Transform3d::identity());
 }

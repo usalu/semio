@@ -465,18 +465,9 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch, offerScope: options.offerScope });
   const config = options.config === undefined ? discovered : options.config;
   const shellKind = options.shellKind ?? "react";
-  // 🔒️ Minted ONCE per hook instance. It was `?? \`shell-${Math.random()…}\`` computed in the render
-  // body while also sitting in the socket effect's dep array, so every state change this hook makes —
-  // a tool call arriving, a message echoing, a cancel — tore the bridge socket down and redialled it.
-  // Found by slice U1's `cancelToolCall` test, whose cancel frame was followed by an immediate `bye`.
   const generatedShellSessionIdRef = useRef(`shell-${Math.random().toString(36).slice(2)}`);
   const shellSessionId = options.shellSessionId ?? generatedShellSessionIdRef.current;
   const principalActor = options.principalActor ?? "agent:unknown";
-  // 🚩️ `relayAppCommands` is a CLAIM, and the claim is what the gateway routes on: a shell that
-  // declared it and then answers `plugin.unavailable` to every command is worse than one that never
-  // claimed it (the gateway would have picked its own headless workspace instead). So the flag is
-  // derived from the handler actually being mounted, not from a hand-set option — an explicit
-  // `flags` option still wins for the tests and embedders that pin the whole mask.
   const declaredFlags = options.flags ?? NO_BRIDGE_FLAGS;
   const relayAppCommands = options.flags ? declaredFlags.relayAppCommands : options.onAppCommand !== undefined;
   const flagsIdentityRef = useRef<BridgeFlags>({ ...declaredFlags, relayAppCommands });
@@ -502,8 +493,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCommandAppliedRef = useRef(options.onCommandApplied);
   onCommandAppliedRef.current = options.onCommandApplied;
-  // 🗿️ A ref, for the same reason `onCommandApplied` is one: the socket effect must not re-dial
-  // because a host re-created its handler closure on a render (`📓️m7` §2's no-redial-storm law).
   const onAppCommandRef = useRef(options.onAppCommand);
   onAppCommandRef.current = options.onAppCommand;
   const instances = options.instances ?? EMPTY_INSTANCES;
@@ -642,8 +631,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
           setStatus("open");
           setLastError(null);
           send(buildShellStateFrame(shellStateRef.current));
-          // 📇️ The instance census travels with the first snapshot: an `appCommand` that arrives
-          // before the gateway knows what this shell has open cannot be addressed at all.
           send({ variant: "instances", entries: [...instancesRef.current] });
           break;
         }
@@ -681,9 +668,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
           break;
         }
         case "agentReply": {
-          // 💬️ One turn is ONE row: a chunk whose `replyId` is already on screen appends to it, and
-          // only the first chunk of a turn adds a row. An out-of-order or duplicated frame therefore
-          // costs a wrong sentence, never a duplicated turn.
           setConversation((current) => {
             const existing = current.find((entry) => entry.kind === "agentMessage" && entry.id === frame.replyId);
             if (!existing) return appendConversationEntry(current, { kind: "agentMessage", id: frame.replyId, text: frame.text, state: frame.complete ? "complete" : "streaming", inReplyTo: frame.inReplyTo, atMs: Date.now() });
@@ -706,9 +690,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
           break;
         }
         case "appCommand": {
-          // 🗿️ The live artifact route. Decoding happens here so a malformed payload answers a
-          // named `channel.not-wired` error on the SAME correlation id instead of being dropped —
-          // a dropped `appCommand` costs the agent its whole wall budget and tells it nothing.
           let request: AgentAppCommandRequest;
           try {
             request = { seq: frame.seq, instanceId: frame.instanceId, command: decodeShellAppCommand(frame.command) };
@@ -790,9 +771,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
         socket.onclose = null;
         try {
           socket.send(encodeShellToGateway({ variant: "bye" }));
-        } catch {
-          // best-effort — socket may already be closing
-        }
+        } catch {}
         socket.close();
       }
       setStatus("disabled");
@@ -800,8 +779,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.url, config?.admissionProof, shellKind, shellSessionId, principalActor, send]);
 
-  // 📇️ Re-publishes the census whenever the host's array identity changes — opening or closing an
-  // artifact in the shell must change what an agent can address, without a reconnect.
   useEffect(() => {
     if (status !== "open") return;
     send({ variant: "instances", entries: [...instances] });

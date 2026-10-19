@@ -6,7 +6,7 @@ use super::*;
 
 #[test]
 fn cooperative_presentation_vectors() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/👥️presentation/🔣️.json")).expect("cooperative presentation vectors");
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧫️fixtures/👥️presentation/🔣️.json")).expect("cooperative presentation vectors");
     for vector in vectors.as_array().expect("vectors") {
         let mut state = vector["state"].clone();
         if let Some(count) = vector["repeatProfileRuns"].as_u64() { state["view"]["profile"]["runs"] = serde_json::Value::Array(vec![state["view"]["profile"]["runs"][0].clone(); count as usize]); }
@@ -25,9 +25,9 @@ fn cooperative_presentation_vectors() {
         }
     }
 }
-use crate::schema::Anchor;
-use crate::views::learner_tag;
+use course::views::learner_tag;
 use course_schema::Anchor;
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::json;
 
 fn place(screen: Screen, quiz: Option<&str>, task: Option<&str>) -> Place {

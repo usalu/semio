@@ -11,7 +11,7 @@ use semio_framework_os_infinite_board_normal_model::{append_edge_tips_on_curve, 
 use semio_framework_os_infinite_board_normal_scene::{append_handle_marker, board_edge_curve, board_json_string_bytes, board_lod_uses_bounded_drag, BoardSceneState, BoardStyleState, BoardWheelPlan, current_draw_lod, edge_effectively_visible, edge_selectable, edge_world_bounds_for_cull, effective_handle_radius, handle_eligible_link_target_ring, handle_world_bounds_cull, handle_world_pos, handles_link_compatible_for_drag, indirect_handle_marker_radius_world, indirect_handle_world_bounds_cull, indirect_handle_world_pos, link_compatible_handle_count_on_node, link_compatible_handle_ids_on_node, link_drag_compatible_target_node_ids, link_drag_ring_target_node_id, link_drag_wire_curve_world, lod_disables_discrete_pick, node_sole_free_link_compatible_handle, paint_node_icon, wire_curve};
 use semio_framework_canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Rect, Scene, Stroke, Vec2};
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use graph::{NodeShape, property_bag_from_value};
 use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_canvas::geom_sel::{cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box, world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox};

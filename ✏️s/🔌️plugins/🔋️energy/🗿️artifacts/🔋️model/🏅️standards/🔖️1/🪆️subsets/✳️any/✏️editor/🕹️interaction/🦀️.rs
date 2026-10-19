@@ -66,11 +66,6 @@ pub fn energy_model_interaction_definition() -> InteractionDefinition {
             granularity(ENERGY_GRANULARITY_SCHEDULE, "Schedule", "Zeitplan", "calendar"),
         ],
         hierarchy: HierarchyProvider::Flat,
-        // 🐁️ Stated field by field rather than `HoverSpec::default()`: the 3d window's hover tint only
-        // exists because `enabled` is true AND `ENERGY_POINTER_CHANNEL` is an accepted channel — that
-        // is the exact channel `EnergyModelInteractionSnapshot::from_interaction` reads back, and a
-        // silently changed default would make every hover arrive empty with nothing to point at.
-        // `transitive` must stay false while `hierarchy` is `Flat` (the framework requires it).
         hover: HoverSpec { enabled: true, transitive: false, channels: vec![ENERGY_POINTER_CHANNEL.to_string()], broadcast: true },
         selection: SelectionSpec {
             modes: vec![SelectionMode::Multiple, SelectionMode::Single],

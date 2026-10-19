@@ -1,6 +1,6 @@
 /** 🧩 Native component normalisation, typed node fields, node index, operation, validation, hash and read lease laws. */
 import { grant, type UiNodeRecord, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies } from "../🪛️typedwire-helpers/🟦️.tsx";
-import { loadRetainedWireTypedFixture, loadRetainedWireFieldsFixture, loadRetainedOwnedNodesFixture, loadRetainedOwnedOperationsFixture, loadRetainedOwnedValidationFixture, loadRetainedOwnedHashFixture, loadRetainedReadLeaseFixture, loadRetainedReadPublicationFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadRetainedWireTypedFixture, loadRetainedWireFieldsFixture, loadRetainedOwnedNodesFixture, loadRetainedOwnedOperationsFixture, loadRetainedOwnedValidationFixture, loadRetainedOwnedHashFixture, loadRetainedReadLeaseFixture, loadRetainedReadPublicationFixture } from "@semio-tech/framework/ui/testing/fixtures";
 
 export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies): Promise<void> {
   const { describe, expect, it } = vitest;
@@ -10,9 +10,9 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
   //#region 🧾️TypedWireTests
   describe("TypedWire", () => {
     it("normalizes all native component variants and defaults with strict neutral and Immer oracles", async () => {
-      const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedWireTypedFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       for (const vector of fixture.components) {
         const cursor = new RetainedUiTypedCursor(encodePackValue(vector.wire), "component");
         expect(cursor.takeResult()).toBeNull(); expect(finish(cursor), cursor.failure ?? vector.wire.type).toBe("ready");
@@ -30,8 +30,8 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("validates real upsert and set-component entry roots, safe IDs, and every layout variant", async () => {
-      const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const layouts = [
         { kind: "leaf", width: "hug", height: "fill" },
         { kind: "stack", axis: "vertical", gap: "sm", padding: { all: "none" }, align: "stretch", justify: "start", grow: false, wrap: true },
@@ -50,8 +50,8 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("captures exact surface bytes before decoder close and retains older snapshots until their own final retirement", async () => {
-      const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const expected = Buffer.alloc(32768); for (let i = 0; i < expected.length; i++) expected[i] = (i * 17 + 3) & 255;
       const wire = { tag: "set-component", val: { node: 7, component: encodePackValue({ type: "surface", kind: "node-graph", docSchema: "node-graph@1", doc: { bytes: Array.from(expected) } }) } };
       const cursor = new RetainedUiTypedCursor(wire.val.component, "component"); expect(finish(cursor), cursor.failure ?? "").toBe("ready"); const published = cursor.takeResult()!; const oldReader = published.capture(); const concurrentReader = published.capture(); close(cursor);
@@ -63,9 +63,9 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("TypedNodeFields retains seven direct fields without ancestor chains across repeated replacement", async () => {
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const input = new RetainedUiTypedCursor(encodePackValue(fixture.node), "node"); expect(finish(input)).toBe("ready"); const payload = input.takeResult()!;
       expect(() => Object.defineProperty(payload, "value", { value: { ...payload.value, id: 1 } })).toThrow();
       let current = OwnedUiNode.captureFrom(payload); const oldReader = current.capture(); close(input); retire(payload.beginClose());
@@ -83,9 +83,9 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("TypedNodeFields rejects rebound field authority before moving it and cancels without releasing current", async () => {
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const input = new RetainedUiTypedCursor(encodePackValue(fixture.node), "node"); expect(finish(input)).toBe("ready"); const payload = input.takeResult()!; const current = OwnedUiNode.captureFrom(payload); close(input); retire(payload.beginClose());
       const style = new RetainedUiTypedCursor(encodePackValue({}), "style"); expect(finish(style)).toBe("ready"); const wrong = style.takeResult()!; close(style);
       expect(() => Reflect.apply(current.replace, current, [{ field: "component", payload: wrong }])).toThrow(); expect(wrong.terminalIsEmpty()).toBe(false);
@@ -94,9 +94,9 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("TypedNodeFields closes each partial field builder and rejects forged node projection owners", async () => {
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const reference = new RetainedUiTypedCursor(encodePackValue(fixture.node), "node"); let count = 0;
       for (let n = 0; n < 10000; n++) { const current = reference.advance(grant); if (current.phase === "typed-normalize") count++; if (current.kind === "ready") break; }
       close(reference); expect(count).toBeGreaterThan(50);
@@ -110,11 +110,11 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("OwnedNodeIndex captures exact readers across removal and closes final surface owners in bounded steps", async () => {
-      const { OwnedUiNodeIndex } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts");
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiNodeIndex } = await import("@semio-tech/framework/modules/ui/contract/retained/nodes");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedOwnedNodesFixture();
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const node = (id: number) => { const cursor = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, id }), "node"); expect(finish(cursor)).toBe("ready"); const payload = cursor.takeResult()!; const result = OwnedUiNode.captureFrom(payload); close(cursor); retire(payload.beginClose()); return result; };
       let index = OwnedUiNodeIndex.empty();
       const oracle = new Map<number, true>();
@@ -134,10 +134,10 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("OwnedNodeIndex cancels every persistent edit phase without closing a concurrently captured source", async () => {
-      const { OwnedUiNodeIndex } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts");
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiNodeIndex } = await import("@semio-tech/framework/modules/ui/contract/retained/nodes");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const cursor = new RetainedUiTypedCursor(encodePackValue(fields.node), "node"); expect(finish(cursor)).toBe("ready"); const payload = cursor.takeResult()!; const input = OwnedUiNode.captureFrom(payload); close(cursor); retire(payload.beginClose());
       const source = OwnedUiNodeIndex.empty(); const reference = source.beginSet(input); let count = 0;
       for (;;) { count++; if (reference.advance(grant).kind === "ready") break; } retire(reference.beginClose());
@@ -146,12 +146,12 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("OwnedOperation applies typed field owners and removes subtrees while preserving concurrent source snapshots", async () => {
-      const { OwnedUiOperation, OwnedUiOperationCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/🟦️.ts");
-      const { OwnedUiNodeIndex } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts");
-      const { RetainedUiTypedCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiOperation, OwnedUiOperationCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/operations");
+      const { OwnedUiNodeIndex } = await import("@semio-tech/framework/modules/ui/contract/retained/nodes");
+      const { RetainedUiTypedCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedOwnedOperationsFixture();
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       let source = OwnedUiNodeIndex.empty();
       for (const id of [fixture.parent, fixture.child]) {
         const input = new RetainedUiTypedCursor(encodePackValue({ ...fields.node, id, children: id === fixture.parent ? [fixture.child] : [] }), "node"); expect(finish(input)).toBe("ready"); const payload = input.takeResult()!; const op = OwnedUiOperation.upsert(payload); retire(payload.beginClose()); close(input);
@@ -171,12 +171,12 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("OwnedValidation preserves graph violation order, captured byte lifetimes and every cancellation frontier", async () => {
-      const { OwnedUiValidationCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts");
-      const { OwnedUiNodeIndex } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts");
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiValidationCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/validation");
+      const { OwnedUiNodeIndex } = await import("@semio-tech/framework/modules/ui/contract/retained/nodes");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedOwnedValidationFixture();
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       let prefixes = 0;
       for (const vector of fixture.cases) {
         let source = OwnedUiNodeIndex.empty(); const reference = new Map<number, UiNodeRecord>();
@@ -201,12 +201,12 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("OwnedHash streams exact insertion-ordered JSON bytes while retaining old surface owners through cancellation", async () => {
-      const { OwnedUiSnapshotHashCursor } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔢️hash/🟦️.ts");
-      const { OwnedUiNodeIndex } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts");
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiSnapshotHashCursor } = await import("@semio-tech/framework/modules/ui/contract/retained/hash");
+      const { OwnedUiNodeIndex } = await import("@semio-tech/framework/modules/ui/contract/retained/nodes");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedOwnedHashFixture();
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       let source = OwnedUiNodeIndex.empty(); const records: unknown[] = []; let nested: unknown = fixture.text; for (let i = 0; i < fixture.depth; i++) nested = { next: nested };
       for (const [ordinal, id] of fixture.ids.entries()) {
         const component = ordinal === 0 ? { ...fields.node.component, doc: { bytes: Array.from({ length: fixture.surfaceBytes }, (_, i) => i % 251) } } : { type: "extension", extension: "hash", props: { nested, numbers: [-0, 1e-7, 1e21], "0": true, ["__proto__"]: null } };
@@ -225,11 +225,11 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("ReadLease binds exact consumer commits, keeps stable snapshots and backpressures until retired roots are empty", async () => {
-      const { OwnedUiNodeReadLease } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts");
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiNodeReadLease } = await import("@semio-tech/framework/modules/ui/contract/retained/read-lease");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fixture = await loadRetainedReadLeaseFixture();
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os");
+      const { encodePackValue } = await import("@semio-tech/framework/packs");
       const make = () => { const decoder = new RetainedUiTypedCursor(encodePackValue(fields.node), "node"); expect(finish(decoder)).toBe("ready"); const payload = decoder.takeResult()!; const node = OwnedUiNode.captureFrom(payload); close(decoder); retire(payload.beginClose()); return node; };
       const input = make(); const lease = new OwnedUiNodeReadLease(fixture.node, fixture.versions[0]!, input); const independent = new OwnedUiNodeReadLease(fixture.node, fixture.versions[0]!, input); retire(input.beginClose());
       const initial = lease.snapshot; expect(Reflect.apply(lease.acknowledge, lease, [null])).toBe(false); expect(lease.snapshot).toBe(initial); expect(lease.snapshot).toBe(initial); const firstBytes = initial.record!.component; if (firstBytes.type !== "surface") throw new Error("Expected surface");
@@ -245,10 +245,10 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
 
     it("ReadLease React subscriptions own StrictMode remounts and independently acknowledge exact committed snapshots", async () => {
       const { useOwnedUiNode } = await import("../../📖️owned/🟦️.tsx");
-      const { OwnedUiNodeReadLease } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts");
-      const { RetainedUiTypedCursor, OwnedUiNode } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts");
+      const { OwnedUiNodeReadLease } = await import("@semio-tech/framework/modules/ui/contract/retained/read-lease");
+      const { RetainedUiTypedCursor, OwnedUiNode } = await import("@semio-tech/framework/modules/ui/contract/retained/wire/typed");
       const fields = await loadRetainedWireFieldsFixture();
-      const { encodePackValue } = await import("@semio-tech/framework-os"); const { render, act, cleanup } = await import("@testing-library/react"); const { StrictMode, createElement } = await import("react");
+      const { encodePackValue } = await import("@semio-tech/framework/packs"); const { render, act, cleanup } = await import("@testing-library/react"); const { StrictMode, createElement } = await import("react");
       const decoder = new RetainedUiTypedCursor(encodePackValue(fields.node), "node"); expect(finish(decoder)).toBe("ready"); const payload = decoder.takeResult()!; const node = OwnedUiNode.captureFrom(payload); close(decoder); retire(payload.beginClose());
       type Subscription = import("../../📖️owned/🟦️.tsx").OwnedUiReadSubscription & { readonly lease: InstanceType<typeof OwnedUiNodeReadLease>; readonly notify: () => void };
       const active = new Set<Subscription>(); const closing: Subscription[] = []; const acknowledgements: number[] = [];
@@ -269,7 +269,7 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
 
     it("ReadLease source and node replacement reject stale layout acknowledgements while retaining detached owners", async () => {
       const { useOwnedUiNode } = await import("../../📖️owned/🟦️.tsx");
-      const { OwnedUiNodeReadLease } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts");
+      const { OwnedUiNodeReadLease } = await import("@semio-tech/framework/modules/ui/contract/retained/read-lease");
       const { render, cleanup } = await import("@testing-library/react"); const { createElement } = await import("react");
       type Source = import("../../📖️owned/🟦️.tsx").OwnedUiReadSource;
       type Subscription = import("../../📖️owned/🟦️.tsx").OwnedUiReadSubscription & { readonly lease: InstanceType<typeof OwnedUiNodeReadLease> };
@@ -295,7 +295,7 @@ export async function registerNodeFieldsAndValidationTests(vitest: TypedWireVite
     });
 
     it("ReadPublication exposes all staged reads at one epoch and retains cancelled captures until bounded close", async () => {
-      const { OwnedUiNodeReadLease, OwnedUiReadPublication, OwnedUiReadCommit } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts");
+      const { OwnedUiNodeReadLease, OwnedUiReadPublication, OwnedUiReadCommit } = await import("@semio-tech/framework/modules/ui/contract/retained/read-lease");
       const fixture = await loadRetainedReadPublicationFixture();
       const publication = new OwnedUiReadPublication(fixture.versions[0]!); const other = new OwnedUiReadPublication(0);
       const a = new OwnedUiNodeReadLease(7, 0, null, publication); const b = new OwnedUiNodeReadLease(8, 0, null, publication);

@@ -1,4 +1,4 @@
-//! each deferred body's producer (`ExampleSource::document_json`); a snapshot the DSL grammar no longer reads panics
+//! ⏳️ each deferred body's producer (`ExampleSource::document_json`); a snapshot the DSL grammar no longer reads panics
 //! 📚️ Every example the puzzle 2d subset registers builds its document. The descriptor probe and the example picker run
 //! there and traps the guest (ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`, S3-PUZZLE). Twins:
 //! `🧊️3d/…/🧪️tests/🧪️every-example`, `🖐️5d/…/🧪️tests/🧪️every-example`.

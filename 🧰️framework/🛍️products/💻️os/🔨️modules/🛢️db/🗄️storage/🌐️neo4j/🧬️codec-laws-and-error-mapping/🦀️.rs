@@ -107,9 +107,6 @@ pub(super) fn map_neo4rs_error(err: neo4rs::Error) -> DbError {
         neo4rs::Error::IOError { .. } | neo4rs::Error::ConnectionError => DbError::Unavailable(err.to_string()),
         neo4rs::Error::AuthenticationError(_) => DbError::Unauthorized(err.to_string()),
         neo4rs::Error::Neo4j(neo4j_err) => map_neo4j_error(neo4j_err),
-        // 🎯️ Everything else (protocol/serialization/config-shape errors) is this driver/process's
-        // own fault, not a caller-correctable condition — `Internal` rather than guessing a more
-        // specific variant.
         _ => DbError::Internal(err.to_string()),
     }
 }

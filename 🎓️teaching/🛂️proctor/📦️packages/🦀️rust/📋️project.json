@@ -14,7 +14,27 @@
       "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/target/**",
+      "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/dist/**",
+      "sharedGlobals"
+    ],
+    "cargoSources": [
+      "cargo",
+      "^cargo",
+      "sharedGlobals",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/*.rs",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/**/Cargo.toml",
+      "{workspaceRoot}/🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts",
+      "{projectRoot}/📜️script.ts",
+      "!{workspaceRoot}/🎓️teaching/🛂️proctor/**/target/**"
+    ],
+    "cargoTests": [
+      "cargoSources",
+      "default",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧫️fixtures/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📚️course/🧬️schema/**/*"
     ]
   },
   "targets": {
@@ -25,7 +45,11 @@
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": true,
+      "inputs": [
+        "cargoSources"
+      ],
+      "outputs": ["{projectRoot}/.🧾️store/build.json"]
     },
     "test": {
       "executor": "repo:script",
@@ -33,7 +57,12 @@
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "inputs": [
+        "cargoTests"
+      ],
+      "outputs": []
     },
     "dev": {
       "metadata": {

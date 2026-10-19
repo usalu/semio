@@ -363,9 +363,6 @@ impl SequenceHost {
             .collect();
         let mut edges = Vec::new();
         for (from, to) in dag_pairs {
-            // 🧯️ `map_unwrap_or` — `map_or_else` would need to build the `&mut self`-capturing
-            // fallback closure alongside the `self.snapshot.edges`-borrowing lookup in one call,
-            // which the borrow checker rejects; the two-step form sequences the borrows correctly.
             #[allow(clippy::map_unwrap_or)]
             let id = self.snapshot.edges.iter().find(|edge| edge.from == from && edge.to == to).map(|edge| edge.id.clone()).unwrap_or_else(|| self.next_edge_id());
             edges.push(SequenceEdge { id, from, to });
@@ -534,8 +531,6 @@ impl SequenceHost {
             let count = self.slot_member_count(&step.id);
             abbreviation = if step.collapsed { format!("▸️ {count}") } else { format!("▾️ {count}") };
         }
-        // 🛡️ falls back to execution-only ports for a function-kind step whose kind isn't (yet) registered,
-        // rather than assuming the registry always resolves it — matches the non-function-kind fallback below.
         let (inputs, outputs) = match info.filter(|_| is_function_kind(&step.kind)) {
             Some(info) => {
                 let mut inputs: Vec<IoPortSpec> = info.inputs.iter().map(|spec| input_spec_to_port(spec, &step.params)).collect();

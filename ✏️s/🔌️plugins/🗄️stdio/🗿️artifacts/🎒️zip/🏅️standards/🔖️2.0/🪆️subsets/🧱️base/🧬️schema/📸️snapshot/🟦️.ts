@@ -43,10 +43,10 @@ export interface ZipEntry {
 
 /** 📸️ Logical `stdio.zip` snapshot with ordered entries and their original names. */
 export interface ZipSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: ZipEntry[];
-  /** @state artifact */ comment: string;
-  /** @state artifact */ commentUtf8: boolean;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📚️ @state artifact */ entries: ZipEntry[];
+  /** 🗨️ @state artifact */ comment: string;
+  /** 🗒️ @state artifact */ commentUtf8: boolean;
 }
 
 //#region 🚪️Parsers

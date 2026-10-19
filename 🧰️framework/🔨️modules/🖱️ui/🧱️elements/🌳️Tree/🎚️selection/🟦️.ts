@@ -1,5 +1,5 @@
 import { type InteractionDefinition, validateState, type DomainTopology, type DomainSelection, nextSelection } from "../../../../🕹️interaction/🟦️.ts";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { type TreeDataItem, TreeItemCollapsibleState, type TreeSelectionMode } from "../📋️data/🟦️.ts";
 
 interface TreeSelectionComputationArgs {

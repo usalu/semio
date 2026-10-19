@@ -1,0 +1,88 @@
+import { spawnSync } from "node:child_process";
+import { join } from "node:path";
+
+//#endregion 🔌️Adapters
+
+//#region 🧬️Contract
+/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
+type ProbeReport = {
+  schema: "semio.repository-test.probe-report/v2";
+  probe: string;
+  probeVersion: string;
+  engine: { family: string; implementation: string; version: string };
+  status: "ok" | "failed" | "unsupported";
+  durationMs: number;
+  measurements: Record<string, unknown>;
+  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
+};
+
+/** ⚙️ Three DIFFERENT parser families, one per carrier. None of them is this repository's code, and no
+ *  two of them share a kernel, so a defect in one cannot be confirmed by another. */
+const ENGINES = {
+  svg: { family: "quick-xml", implementation: "quick-xml pull reader", version: "0.42.0" },
+  dxf: { family: "ixmilia-dxf", implementation: "IxMilia.Dxf rust port", version: "0.6.1" },
+  pdf: { family: "lopdf", implementation: "lopdf document reader", version: "0.44.0" },
+} as const;
+
+const PROBE_VERSION = "quick-xml@0.42.0 + dxf@0.6.1 + lopdf@0.44.0";
+const CRATE_BIN = "semio-stdio-drawing-oracle-probe";
+
+/** ⚙️ Which reader family answers each probe — recorded per probe so the report names the engine that
+ *  actually produced the numbers rather than a single blanket family for the whole subset. */
+const PROBE_ENGINES: Record<string, (typeof ENGINES)[keyof typeof ENGINES]> = {
+  "svg-structure": ENGINES.svg,
+  "svg-compare": ENGINES.svg,
+  "style-compare": ENGINES.svg,
+  "dxf-entities": ENGINES.dxf,
+  "dxf-compare": ENGINES.dxf,
+  "pdf-text": ENGINES.pdf,
+  "pdf-compare": ENGINES.pdf,
+  "gate-inputs": ENGINES.svg,
+};
+//#endregion 🧬️Contract
+
+//#region 🚀️Entry
+function emit(report: ProbeReport): number {
+  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+  return report.status === "failed" ? 1 : 0;
+}
+
+function main(argv: readonly string[]): number {
+  const [probe = "", ...rest] = argv;
+  const started = Date.now();
+  const engine = PROBE_ENGINES[probe] ?? ENGINES.svg;
+  const envelope = (status: ProbeReport["status"], measurements: Record<string, unknown>, diagnostics?: ProbeReport["diagnostics"]): ProbeReport => ({
+    schema: "semio.repository-test.probe-report/v2",
+    probe,
+    probeVersion: PROBE_VERSION,
+    engine,
+    status,
+    durationMs: Date.now() - started,
+    measurements,
+    ...(diagnostics ? { diagnostics } : {}),
+  });
+
+  if (PROBE_ENGINES[probe] === undefined) {
+    return emit(envelope("failed", {}, [{ severity: "error", message: `unknown probe ${probe || "(none)"}`, detail: `known: ${Object.keys(PROBE_ENGINES).join(", ")}` }]));
+  }
+
+  const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...rest], {
+    cwd: join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust"),
+    encoding: "utf8",
+  });
+  if (run.status !== 0) {
+    return emit(envelope("failed", {}, [{ severity: "error", message: `${CRATE_BIN} exited ${run.status}`, detail: (run.stderr ?? "").trim().split("\n").slice(-6).join("\n") }]));
+  }
+  let parsed: { status: ProbeReport["status"]; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] };
+  try {
+    parsed = JSON.parse((run.stdout ?? "").trim().split("\n").at(-1) ?? "") as typeof parsed;
+  } catch (error) {
+    return emit(envelope("failed", {}, [{ severity: "error", message: "probe output was not JSON", detail: String((error as Error).message ?? error) }]));
+  }
+  return emit(envelope(parsed.status, parsed.measurements, parsed.diagnostics));
+}
+/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
+export async function runScriptProgram(): Promise<void> {
+  
+  if (true) process.exit(main(process.argv.slice(2)));
+}

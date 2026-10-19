@@ -2,9 +2,10 @@
 
 use super::{NATIVE_MAXIMUM_BYTES, original_grant};
 use semio_framework_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
-use semio_framework_value::{NativeDecodeControl, NativeDecodeProgress, NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 
 /// 🛬️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
 pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {

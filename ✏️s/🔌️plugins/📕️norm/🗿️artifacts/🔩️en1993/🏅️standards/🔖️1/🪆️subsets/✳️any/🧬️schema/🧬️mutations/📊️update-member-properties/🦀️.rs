@@ -1,4 +1,4 @@
-//! `upsert-member` — upsert a `SteelMember` by id into `members`.
+//! 🧬️ `upsert-member` — upsert a `SteelMember` by id into `members`.
 
 use semio_s_artifact_norm_en1993_model::{SteelMember, En1993Snapshot};
 

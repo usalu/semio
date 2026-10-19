@@ -16,7 +16,9 @@
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1).
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::{Identity, IdentityConfigMutation, IdentityDiff, IdentitySetting};
 use semio_framework_test_fixtures::fixture_path;
 

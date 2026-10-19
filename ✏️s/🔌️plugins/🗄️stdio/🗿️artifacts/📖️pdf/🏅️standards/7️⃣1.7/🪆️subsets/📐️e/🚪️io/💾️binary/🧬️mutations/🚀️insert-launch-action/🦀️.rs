@@ -1,4 +1,4 @@
-//! Direct binary identity for `insert-launch-action`.
+//! 💾️ Direct binary identity for `insert-launch-action`.
 
 pub const TAG: u8 = 4;
 pub const BINARY_TAG: u8 = TAG;

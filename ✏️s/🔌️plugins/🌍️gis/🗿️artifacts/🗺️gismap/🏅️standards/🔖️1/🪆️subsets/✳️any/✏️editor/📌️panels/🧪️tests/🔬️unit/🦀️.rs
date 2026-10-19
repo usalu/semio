@@ -169,8 +169,6 @@ async fn the_inspector_detail_section_follows_the_features_selection() {
     let document = semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = MapWindowConfig::default();
     let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    // 🧩️ A `BuiltNode` carries retained page children, so it is projected through the fixture
-    // transport (the same route `unit_tests::context::render` takes) rather than serialized directly.
     let json = |interaction: &Gis2dInteractionSnapshot| -> String {
         let tree = semio_framework_plugin::built_to_component_tree(render(&document, &cfg, interaction, labels).expect("inspector"));
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")

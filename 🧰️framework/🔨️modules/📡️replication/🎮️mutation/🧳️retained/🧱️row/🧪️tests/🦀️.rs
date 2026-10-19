@@ -49,7 +49,7 @@ fn settle_rows(rows:Vec<Operation>,messages:Vec<super::super::super::MutationMes
 /// 🧫️ Required generic row preparation follows portable projections with cold decision/inverse/apply forbidden.
 #[test]
 fn retained_row_mutation_composes_guard_original_inverse_and_owned_commit(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
   let event=Operation{id:case["target"].as_str().unwrap().into(),patch:serde_json::from_value(case["patch"].clone()).unwrap()};let mut event=source(event);let mut original=source(snapshot(&case["rows"]));let mut post=snapshot(&case["rows"]);let pointer=post.rows.as_ptr();let sibling=post.rows[0].untouched.as_ptr();
   let(mut owner,_)=begin_retained_mutation::<Snapshot,Operation>(grant(retained_mutation_birth_demand::<Snapshot,Operation>())).unwrap();let mut turns=0;

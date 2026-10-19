@@ -12,8 +12,6 @@ fn object(id: &str, origin: [f64; 3], anchor: Puzzle3dObjectAnchor, vortices: Ve
 }
 
 fn chain_snapshot() -> Puzzle3dSnapshot {
-    // root -A- mid -B- leaf: a 3-object chain — same shape as the flat-position slug's own
-    // scene_snapshot, kept independent per-file per this repo's inline-scene_snapshot convention.
     let root = object("root", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Fixed, vec![vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     let mid = object("mid", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0]), vortex("top", [0.0, 0.0, 1.0], [0.0, 0.0, 1.0])]);
     let leaf = object("leaf", [0.0, 0.0, 0.0], Puzzle3dObjectAnchor::Derived, vec![vortex("bottom", [0.0, 0.0, -1.0], [0.0, 0.0, -1.0])]);

@@ -60,7 +60,7 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
     let admission = fixture["admissionBytes"].as_u64().unwrap() as usize;
     for row in fixture["cases"].as_array().unwrap() {
-        let mut original=crate::app_testing::OriginalWorkFixture::new();
+        let mut original=semio_framework_plugin_testing_laws::OriginalWorkFixture::new();
         let extent = row["physicalBytes"].as_u64().unwrap() as usize;
         let mut buffer = Vec::new(); buffer.try_reserve_exact(extent).unwrap();
         assert_eq!(buffer.capacity(), extent);
@@ -110,7 +110,7 @@ impl semio_framework_value::ToValue for ReloadCountedOp {
 }
 
 impl semio_framework_value::FromValue for ReloadCountedOp {
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         <TestMutation as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self)
     }
     fn retire_decoded(self) { <TestMutation as semio_framework_value::FromValue>::retire_decoded(self.0) }
@@ -205,7 +205,7 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     store::install_unscheduled_catalog(&mut whole, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<TestSnapshot, ReloadCountedOp>()).expect("whole owners");
     let (operation, generation) = (semio_framework_job::OperationId(97), semio_framework_job::Generation(0));
     let mut job = bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, RELOAD_DOCUMENT_SCHEMA, operation, generation, source.local_actor_id().clone());
-    let mut original_caller=crate::app_testing::OriginalWorkFixture::with_identity(operation,generation);
+    let mut original_caller=semio_framework_plugin_testing_laws::OriginalWorkFixture::with_identity(operation,generation);
     let mut steps = 0usize;
     let mut folded = 0;
     loop {

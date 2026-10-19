@@ -1,2 +1,3 @@
 /** 🧩️ Public `@semio-tech/framework/modules/ui/modules/control-keybinding-context` entry: explicit re-exports of the source module that owns each member. */
-export { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
+export { SHELL_KEYBINDINGS, UiKeybindingsProvider, buildKeysByActionId, composeControlKeybindings, keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, useHotkeys, useUiKeybindingsByControlId } from "../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
+export type { ControlKeybindingAction, ControlKeybindingCallback, ControlKeybindingDefinition, ControlKeybindingDependencies, ControlKeybindingOptions } from "../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";

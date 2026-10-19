@@ -5,6 +5,7 @@ import { createRequire, isBuiltin } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { observedSourceAnalysisAsyncV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { repositoryBuildGraphDataDirectoryV1 } from "../../../📥️inputs/💾️storage/🟨️.mjs";
+import { buildRelativeImportProjectV1 } from "../../🚪️admission/🟦️.ts";
 const { existsSync, readFileSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -53,7 +54,7 @@ export function moduleSourceRecordCacheRootV1(workspaceRoot){
 
 /** 🏛️ Snapshots current project roots once, in deterministic ownership precedence. */
 function importProjectOwners(projects) {
-  return Object.entries(projects).filter(([name]) => name !== "workspace").map(([name, project]) => ({ name, root: buildPath(project.root) })).sort((a, b) => b.root.length - a.root.length || a.name.localeCompare(b.name));
+  return Object.entries(projects).flatMap(([name, project]) => [project.root,...project.metadata?.nativeRoot?[project.metadata.nativeRoot]:[]].map(root=>({name,root:buildPath(root)}))).sort((a,b)=>b.root.length-a.root.length||a.name.localeCompare(b.name));
 }
 
 /** 🧭️ Uses bare and explicit core loader identity so bundled packages retain their package identity. */
@@ -73,7 +74,7 @@ function importTargetsFromFacts(imports, file, workspaceRoot, owners, byPackage,
   for (const specifier of imports) {
     if (specifier.startsWith(".")) {
       const path = buildPath(relative(workspaceRoot, resolve(dirname(join(workspaceRoot, file)), specifier)));
-      const target = owners.find(project => owned(path, project.root))?.name;
+      const target = buildRelativeImportProjectV1(owners,path);
       if (target) targets.add(target);
       continue;
     }

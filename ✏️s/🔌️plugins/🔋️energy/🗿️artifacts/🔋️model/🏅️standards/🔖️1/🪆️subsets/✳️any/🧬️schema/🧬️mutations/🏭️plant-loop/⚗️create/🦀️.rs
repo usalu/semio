@@ -40,6 +40,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreatePlantLoop
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreatePlantLoop> + From<crate::DeletePlantLoop>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "plant-loop", kind: "create-plant-loop", record: "CreatedPlantLoop" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -61,7 +62,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "plant-loop", kind: "create-plant-loop", record: "CreatedPlantLoop" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

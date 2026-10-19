@@ -1,45 +1,45 @@
 /** 🧬️ CadPresence */
 
 export interface CadPresence {
-  /** @state presence */
+  /** 👉️ @state presence */
   selectedObjectIds: string[];
-  /** @state presence */
+  /** ☑️ @state presence */
   selectedNodeIds: string[];
-  /** @state presence */
+  /** 🖱️ @state presence */
   hoveredObjectId?: string;
-  /** @state presence */
+  /** 👆️ @state presence */
   hoveredTargetObjectId?: string;
-  /** @state presence */
+  /** ☝️ @state presence */
   hoveredTargetMode?: string;
-  /** @state presence */
+  /** ✨️ @state presence */
   hoveredTargetId?: number;
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeObjectId?: string;
-  /** @state presence */
+  /** 🔌️ @state presence */
   componentSelectionMode: string;
-  /** @state presence */
+  /** 🧩️ @state presence */
   componentSelectionIds: number[];
-  /** @state presence */
+  /** 🔩️ @state presence */
   componentSelectionTargetsMesh: boolean;
-  /** @state presence */
+  /** 🧱️ @state presence */
   componentSelectionTargetsVertex: boolean;
-  /** @state presence */
+  /** 🪛️ @state presence */
   componentSelectionTargetsEdge: boolean;
-  /** @state presence */
+  /** 🔋️ @state presence */
   componentSelectionTargetsFace: boolean;
-  /** @state presence */
+  /** 📷️ @state presence */
   cameraPosition: number[];
-  /** @state presence */
+  /** 🎥️ @state presence */
   cameraTarget: number[];
-  /** @state presence */
+  /** 📸️ @state presence */
   cameraZoom: number;
-  /** @state presence */
+  /** 🎞️ @state presence */
   cameraFov: number;
-  /** @state presence */
+  /** ⚡️ @state presence */
   activeUtilityId: string;
-  /** @state presence */
+  /** 🤝️ @state presence */
   engagementStep: string;
-  /** @state presence */
+  /** 🕹️ @state presence */
   engagementPane?: string;
 }
 

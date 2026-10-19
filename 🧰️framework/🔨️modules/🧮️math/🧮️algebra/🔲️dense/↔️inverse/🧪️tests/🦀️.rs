@@ -5,7 +5,7 @@ fn relative(actual:f64,expected:f64){assert!(if expected==0.0{actual.abs()<=1e-1
 
 #[test]
 fn retained_inverse_matches_neutral_values_and_exact_original_checkpoints(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["cases"].as_array().unwrap(){
   let n=row["order"].as_u64().unwrap() as usize;let mut matrix:Vec<f64>=row["matrix"].as_array().unwrap().iter().map(|v|v.as_f64().unwrap()).collect();let mut inverse=vec![7.0;n*n];let pointers=(matrix.as_ptr(),inverse.as_ptr());let mut cursor=DenseInverseCursor::new(n,matrix.len(),inverse.len());let mut turns=0;
   loop{
@@ -24,7 +24,7 @@ fn retained_inverse_matches_neutral_values_and_exact_original_checkpoints(){
 
 #[test]
 fn retained_inverse_order49_preserves_accuracy_and_original_workspace(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let row=&corpus["large"];let n=row["order"].as_u64().unwrap() as usize;let diagonal=row["diagonal"].as_f64().unwrap();let adjacent=row["adjacent"].as_f64().unwrap();let original:Vec<f64>=(0..n*n).map(|p|if p/n==p%n{diagonal}else if (p/n).abs_diff(p%n)==1{adjacent}else{0.0}).collect();let mut matrix=original.clone();let mut inverse=vec![0.0;n*n];let pointers=(matrix.as_ptr(),inverse.as_ptr());let mut cursor=DenseInverseCursor::new(n,matrix.len(),inverse.len());let mut turns=0;
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let row=&corpus["large"];let n=row["order"].as_u64().unwrap() as usize;let diagonal=row["diagonal"].as_f64().unwrap();let adjacent=row["adjacent"].as_f64().unwrap();let original:Vec<f64>=(0..n*n).map(|p|if p/n==p%n{diagonal}else if (p/n).abs_diff(p%n)==1{adjacent}else{0.0}).collect();let mut matrix=original.clone();let mut inverse=vec![0.0;n*n];let pointers=(matrix.as_ptr(),inverse.as_ptr());let mut cursor=DenseInverseCursor::new(n,matrix.len(),inverse.len());let mut turns=0;
  loop{let turn=cursor.step(&mut matrix,&mut inverse,funded());assert_eq!(pointers,(matrix.as_ptr(),inverse.as_ptr()));assert!(turn.receipt.items<=1&&turn.receipt.copy_bytes<=32);assert_eq!(turn.receipt.capacity_bytes,0);cursor=DenseInverseCursor::from_snapshot(cursor.snapshot()).unwrap();turns+=1;match turn.status{DenseSolveStatus::Complete=>break,DenseSolveStatus::Pending=>{},status=>panic!("order49 inverse {status:?}")};assert!(turns<1000000);}
  for i in 0..n{relative(inverse[i*n+i],row["samples"]["diagonal"][i].as_f64().unwrap());relative(inverse[i],row["samples"]["first"][i].as_f64().unwrap());relative(inverse[(n-1)*n+i],row["samples"]["last"][i].as_f64().unwrap());for j in 0..n{let residual=(0..n).map(|k|original[i*n+k]*inverse[k*n+j]).sum::<f64>()-if i==j{1.0}else{0.0};assert!(residual.abs()<=row["residualTolerance"].as_f64().unwrap());}}
  println!("[DEBUG] common49x49 original inverse matched actual Mathjs samples and every identity residual in {turns} bounded turns without capacity birth");

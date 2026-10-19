@@ -230,10 +230,6 @@ export function surfaceOwnershipSelfTests(): number {
   const handback: SurfaceHandbackFixture = JSON.parse(readFileSync(new URL("../../🚪️handback/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   assert.equal(Buffer.from(handback.surface).toString("hex"), handback.surfaceUtf8);
   const document: SurfaceDocumentFixture = JSON.parse(readFileSync(new URL("../../📃️document/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
-  // ⚖️ The aggregate funds every resident SLOT at one full DOCUMENT each, so the byte ledger and the
-  // slot ledger refuse together. Read as a multiple of the per-surface CEILING it funded four holders
-  // against sixty-four slots, and a twenty-six-surface React session was refused at 99.8 % with
-  // thirty-eight slots free (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   assert.equal(document.aggregateCeilingBytes / document.documentBytes, document.residentSlots);
   assert(document.documentBytes < document.surfaceCeilingBytes);
   assert(document.surfaces <= document.residentSlots);

@@ -8,7 +8,7 @@ export interface BcfTopicStats {
 }
 
 export interface BcfInference {
-  /** @derived */
+  /** 📊️ @derived */
   topicStats: BcfTopicStats;
 }
 

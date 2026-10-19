@@ -1,4 +1,4 @@
-//! Direct text identity for `insert-launch-action`.
+//! 🆔️ Direct text identity for `insert-launch-action`.
 
 pub const OPCODE: &str = "insert-launch-action";
 pub const TEXT_OPCODE: &str = OPCODE;

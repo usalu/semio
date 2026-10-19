@@ -8,7 +8,6 @@ use {crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge, crate::s
 
 //#region 🧸️Fixtures
 fn parent_child_snapshot() -> Puzzle2dSnapshot {
-    // p (Fixed, off-origin) --e-- c (Derived): edge x/y offsets place c relative to p.
     let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }].into(), ..Default::default() };
     let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }].into(), ..Default::default() };
     let e = Puzzle2dEdge { id: "e".into(), source: "p:h".into(), target: "c:h".into(), x: 3.0, y: -2.0, ..Default::default() };
@@ -35,8 +34,6 @@ fn fixed_parent_keeps_its_coordinates_and_derived_child_offsets_by_edge_xy() {
     assert_eq!(p.x, 5.0);
     assert_eq!(p.y, 7.0);
     let c = flat.positions.get("c").expect("c present");
-    // DIAGRAM_HORIZONTAL_SCALE = 3.0633 (⚙️engine/📐️geometry/🎛flatten's real diagram constant,
-    // reused verbatim by fastened_layout_snapshot's off-origin-parent branch).
     assert!((c.x - (5.0 + 3.0 * 3.0633)).abs() < 1e-9, "c.x = {}", c.x);
     assert!((c.y - (7.0 + -2.0 * 3.0633)).abs() < 1e-9, "c.y = {}", c.y);
 }

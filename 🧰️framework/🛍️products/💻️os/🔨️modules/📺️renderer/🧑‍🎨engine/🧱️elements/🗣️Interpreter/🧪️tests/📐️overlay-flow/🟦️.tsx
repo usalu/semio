@@ -1,4 +1,4 @@
-import { loadUiOverlayFlowFixture } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadUiOverlayFlowFixture } from "@semio-tech/framework/ui/testing/fixtures";
 type TestSource = { readonly url: string };
 
 /** 📐️ Proves the renderer-neutral Overlay/Absolute positioning contract against the shared geometry

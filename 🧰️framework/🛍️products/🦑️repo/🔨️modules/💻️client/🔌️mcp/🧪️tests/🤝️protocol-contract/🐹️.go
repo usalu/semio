@@ -26,6 +26,7 @@ import (
 	"testing"
 	"github.com/usalu/semio/repo/providers"
 	"github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 
 )
 
@@ -63,7 +64,7 @@ type entrypointContractFixture struct {
 
 // 🧫️ Resolves protocol vectors owned by the sibling protocol module from this module's own directory, never from a repository root.
 func repositoryContractFixture(name string) string {
-	return filepath.Join("..", "..", "🔌️mcp", "🧪️tests", "🧫️fixtures", name)
+	return sandbox.OriginPath("..", "..", "🔌️mcp", "🧪️tests", "🧫️fixtures", name)
 }
 
 func TestRepositoryEntrypointContract(t *testing.T) {
@@ -159,7 +160,7 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 }
 
 func TestRepositoryReopenPromptContract(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🚪️entrypoint-contract.json"))
+	data, err := os.ReadFile(repositoryContractFixture("🚪️entrypoint-contract.json"))
 	if err != nil { t.Fatal(err) }
 	var fixture entrypointContractFixture
 	if err := decodeExact(data, &fixture); err != nil { t.Fatal(err) }
@@ -167,10 +168,8 @@ func TestRepositoryReopenPromptContract(t *testing.T) {
 	if err != nil { t.Fatal(err) }
 	t.Cleanup(func() { os.RemoveAll(root) })
 	if err := os.Mkdir(filepath.Join(root, ".git"), 0700); err != nil { t.Fatal(err) }
-	previous := workspace.GetRootDir()
-	workspace.SetRootDir(root)
-	t.Cleanup(func() { workspace.SetRootDir(previous) })
-	if workspace.GetRootDir() != root { t.Fatal("private repository root refused") }
+	sandbox.BindRoot(t, root)
+	if workspace.CanonicalPath(workspace.GetRootDir()) != workspace.CanonicalPath(root) { t.Fatal("private repository root refused") }
 	for _, prompt := range fixture.ReopenPrompt.Invalid {
 		arguments := json.RawMessage(fmt.Sprintf(`{"path":"26/09/23/PROMPT-CONTRACT","prompt":%s,"no_management":true}`, prompt))
 		_, err := NewClientRepository(providers.McpClientGeneric).Call(context.Background(), "ticket_reopen", arguments)
@@ -188,7 +187,7 @@ func TestRepositoryReopenPromptContract(t *testing.T) {
 }
 
 func TestResourceContentContract(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🚪️entrypoint-contract.json"))
+	data, err := os.ReadFile(repositoryContractFixture("🚪️entrypoint-contract.json"))
 	if err != nil { t.Fatal(err) }
 	var fixture entrypointContractFixture
 	if err := decodeExact(data, &fixture); err != nil { t.Fatal(err) }
@@ -428,7 +427,7 @@ func TestG2ProductionOwnedRuntimePipe(t *testing.T) {
 }
 
 func TestG2ProductionComponentRejectsDirectDelegationMutation(t *testing.T) {
-	source, err := os.ReadFile("🧩️component/🐹️.go")
+	source, err := os.ReadFile(sandbox.OriginPath("🧩️component", "🐹️.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -445,7 +444,7 @@ func TestG2ProductionComponentRejectsDirectDelegationMutation(t *testing.T) {
 }
 
 func TestG2TransportRejectsBusyBranchMutation(t *testing.T) {
-	source, err := os.ReadFile("🚚️transport/🐹️.go")
+	source, err := os.ReadFile(sandbox.OriginPath("🚚️transport", "🐹️.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -488,3 +487,63 @@ func verifyBusyBranch(source []byte) error {
 }
 
 // #endregion 🤝️ProtocolContract
+
+// 🧱️The tool-result shape fixture is owned by the `🔌️mcp` module (every twin reads the same file): `content` is always an array, `structuredContent` is omitted or an object, array or scalar data is wrapped as `result` for a tool that declares an `outputSchema`.
+func TestToolResultShapeContract(t *testing.T) {
+	data, err := os.ReadFile(repositoryContractFixture("🧱️tool-result-shape.json"))
+	if err != nil { t.Fatal(err) }
+	var fixture struct {
+		Schema       string          `json:"schema"`
+		OutputSchema json.RawMessage `json:"outputSchema"`
+		Vectors []struct {
+			Name         string          `json:"name"`
+			OutputSchema bool            `json:"outputSchema"`
+			Content      []Content       `json:"content"`
+			Structured   *string         `json:"structured"`
+			IsError      bool            `json:"isError"`
+			Expected     json.RawMessage `json:"expected"`
+		} `json:"vectors"`
+	}
+	if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
+	if fixture.Schema != "semio.mcp.tool-result-shape/2" || len(fixture.Vectors) == 0 { t.Fatalf("unexpected fixture identity: %#v", fixture.Schema) }
+	declared, err := json.Marshal(ToolResultOutputSchema())
+	if err != nil { t.Fatal(err) }
+	var declaredValue, fixtureValue any
+	if err := json.Unmarshal(declared, &declaredValue); err != nil { t.Fatal(err) }
+	if err := json.Unmarshal(fixture.OutputSchema, &fixtureValue); err != nil { t.Fatal(err) }
+	if !reflect.DeepEqual(declaredValue, fixtureValue) { t.Errorf("declared output schema got=%s want=%s", declared, fixture.OutputSchema) }
+	for _, vector := range fixture.Vectors {
+		t.Run(vector.Name, func(t *testing.T) {
+			result := CallToolResult{Content: vector.Content, IsError: vector.IsError, OutputSchemaDeclared: vector.OutputSchema}
+			if vector.Structured != nil { result.StructuredContent = json.RawMessage(*vector.Structured) }
+			actual, err := json.Marshal(result)
+			if err != nil { t.Fatal(err) }
+			var actualValue, expectedValue any
+			if err := json.Unmarshal(actual, &actualValue); err != nil { t.Fatal(err) }
+			if err := json.Unmarshal(vector.Expected, &expectedValue); err != nil { t.Fatal(err) }
+			if !reflect.DeepEqual(actualValue, expectedValue) { t.Errorf("tool result got=%s want=%s", actual, vector.Expected) }
+		})
+	}
+}
+
+// 🧱️Every repository tool listed by the server declares the fixture's `outputSchema`, and a registration with a non-object `outputSchema` is refused.
+func TestRepositoryToolsDeclareTheSharedOutputSchema(t *testing.T) {
+	data, err := os.ReadFile(repositoryContractFixture("🧱️tool-result-shape.json"))
+	if err != nil { t.Fatal(err) }
+	var fixture struct { OutputSchema json.RawMessage `json:"outputSchema"` }
+	if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
+	server, err := NewRepositoryServer(ClientRepository{})
+	if err != nil { t.Fatal(err) }
+	var want any
+	if err := json.Unmarshal(fixture.OutputSchema, &want); err != nil { t.Fatal(err) }
+	if len(server.tools) != 6 { t.Fatalf("tools=%d want 6", len(server.tools)) }
+	for name, registration := range server.tools {
+		encoded, err := json.Marshal(registration.schema.OutputSchema)
+		if err != nil { t.Fatal(err) }
+		var got any
+		if err := json.Unmarshal(encoded, &got); err != nil { t.Fatal(err) }
+		if !reflect.DeepEqual(got, want) { t.Errorf("%s outputSchema got=%s want=%s", name, encoded, fixture.OutputSchema) }
+	}
+	bad := Tool{Name: "bad", InputSchema: Schema{Type: "object"}, OutputSchema: &Schema{Type: "array"}}
+	if err := server.RegisterTool(bad, func(context.Context, CallToolParams, ProgressReporter) (CallToolResult, error) { return CallToolResult{}, nil }); err == nil { t.Error("a non-object outputSchema must be refused") }
+}

@@ -91,10 +91,6 @@ fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels, windows: 
     let selected = selected_objects(envelope);
     let (pane, object) = selected.first()?;
     let build = || -> UiAssemblyResult<BuiltNode> {
-        // 🪟️ The ids block grows with the selection, so it is a windowed section of its OWN, keyed by
-        // the RAW object id — an offset window must never renumber a row key, and the object's own
-        // fields must not be pushed out of the window by a wide selection (they are an author-fixed
-        // group of nine rows, paid for by `TREE_WINDOW_FIXED_NODE_HEADROOM`).
         let ids: Vec<String> = selected.iter().map(|(_, selected)| selected.id.clone()).collect();
         let mut fields = UiFixedList::default();
         read_only(&mut fields, "object.label", labels.label.as_str(), &object.label)?;
@@ -121,7 +117,6 @@ fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels, windows: 
 /// one field of the selected reference, dispatched through the real `ChangeReference*`/
 /// `MoveReference` mutation path.
 fn reference_patch_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, model_definition_id: &str, reference_id: &str, field: &str, value: Option<bool>, delta: Option<f64>) -> UiAssemblyResult<()> {
-    // 🔑️ `UiMapBuilder::push` admits keys in strictly ascending order only.
     let mut entries: Vec<(&'static str, UiValue)> = Vec::new();
     if let Some(delta) = delta {
         entries.push(("delta", UiValue::Number(delta)));

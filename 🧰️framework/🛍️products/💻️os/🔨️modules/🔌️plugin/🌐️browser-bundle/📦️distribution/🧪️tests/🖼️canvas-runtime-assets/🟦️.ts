@@ -6,7 +6,7 @@ import { join, relative, resolve } from "node:path";
 import { stageArtifacts } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts";
 import { copyBrowserArtifacts } from "../../🟦️.ts";
 import { PACKAGE_ASSET_ROUTE, packageAssetUrl } from "../../../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📦️package-assets/🟦️.ts";
-import { GUEST_RUNTIME_ASSET_FILES, RUNTIME_ASSET_CHANNELS, RUNTIME_ASSET_FILES } from "../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import { GUEST_RUNTIME_ASSET_FILES, RUNTIME_ASSET_CHANNELS, RUNTIME_ASSET_FILES } from "@semio-tech/framework-canvas-ts/runtime-assets";
 import { PACKAGE_ASSET_DESTINATION, PACKAGE_ASSET_STAGE_OWNER, RUNTIME_ASSET_STAGE_OWNER, canvasRuntimeAssetSources, runtimeAssetStageTrees } from "@semio-tech/framework-canvas-ts/runtime-assets/staging";
 
 type Fixture = { channels: { id: string; route: string; directory: string }[]; assets: { role: string; channel: string; file: string; bytes?: number; sha256?: string }[]; guestAssets: string[]; iconPackDigestFile: string };

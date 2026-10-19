@@ -1,4 +1,4 @@
-//! implements, the result records and the error vocabulary. The closed element set, the assembled `Model` and the
+//! 🧩️ implements, the result records and the error vocabulary. The closed element set, the assembled `Model` and the
 //! 🏗️ FEM element contract: degrees of freedom, nodes, supports, loads, the `Element` trait every finite element
 //! linear-static solve live in `semio-s-fem-static`; the element libraries in `semio-s-fem-elements2d`/`-elements3d`.
 

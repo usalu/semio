@@ -723,15 +723,11 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
         .action_interactive_job("updatePlaybook", InteractiveJobClassification::Migrated)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
-        // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
-        // dispatches this at boot and on every navbar pick; with no declaration at all every one of
-        // those was dropped `undeclared-action` before it reached the app.
         .action_with(
             semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
                 .with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]),
         )
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-        // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).
         .action_args("addBlock", vec![
             ActionArgDef::select(
                 "kind",
@@ -740,13 +736,6 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
             )
             .default_value(&"text"),
         ])
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "blocks" interaction
-        // domain — two granularities ("block" default, "step"), `HierarchyProvider::Topology` from
-        // the document's own step/block nesting (`playbook_blocks_topology`/
-        // `PlaybookPlayApp::interaction_topology`). Selection is pick-only (no canvas marquee
-        // surface exists for this domain); the framework auto-injects interactionSelect/
-        // interactionHover/clearSelection/selectAll/setSelectionMode/setInteractionGranularity,
-        // replacing the deleted `setSelection` view action.
         .interaction(InteractionDefinition {
             id: PLAYBOOK_INTERACTION_BLOCKS.into(),
             label: LocalizedLabel::native("Blocks", "Bausteine"),
@@ -765,9 +754,6 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
             },
         })
         .window_kind_interactions(PLAYBOOK_PLAY_WINDOW_BUILDER, vec![InteractionRef::new(PLAYBOOK_INTERACTION_BLOCKS)])
-        // 🎯️ Typed channel surface (mirrors `writer_ui::create_writer_app`'s identical wiring) —
-        // `crate::editor::playbook::engine::playbook_io()` is the single source of truth for both
-        // the trait's `io()` override and this manifest declaration.
         .config(PlaybookPlayApp::config_spec())
         .io(playbook_io())
         .action_describe("addStep", LocalizedLabel::native("Appends a new, empty step to the end of the playbook.", "Hängt dem Playbook am Ende einen neuen, leeren Schritt an."))

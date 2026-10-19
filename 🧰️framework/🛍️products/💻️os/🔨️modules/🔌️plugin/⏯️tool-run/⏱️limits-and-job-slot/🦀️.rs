@@ -1,6 +1,7 @@
 //! ⏱️ Limits and job slot of the tool run ledger: the turn, refold, discard, panel and trace limits, the job site, the job handle and slot with their transitions and the trace lane helpers. See [`super`].
 
 use super::*;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one driver turn; every job step inside it keeps its own interactive-lane slice.
@@ -46,7 +47,7 @@ pub struct ToolRunJobSlot<C> {
     pub cancel: Option<semio_framework_job::CancelToken>,
     pub cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
     pub preview_sequence: u64,
-    pub authority: Option<semio_framework_job::JobPayloadAuthority>,
+    pub authority: Option<semio_framework_job_payload::JobPayloadAuthority>,
     pub outcome: Option<semio_framework_job::JobOutcomeDescriptor>,
     pub outcome_received: bool,
     pub original_failure: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,

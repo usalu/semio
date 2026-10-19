@@ -369,8 +369,8 @@ impl semio_framework_value::ToValue for DagNodeSpec {
     }
 }
 impl semio_framework_value::FromValue for DagNodeSpec {
-    fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{native_binding::decode_node(value,control)}
-    fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::default())}
+    fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{native_binding::decode_node(value,control)}
+    fn default_value_controlled(control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::default())}
     fn retire_decoded(self){native_binding::retire_node(self)}
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = DslValue::into_object(value)?;

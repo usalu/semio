@@ -543,7 +543,6 @@ fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {
         let id = command.command_id();
         let args = semio_framework_value::ToValue::to_value(&command);
-        // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
         let payload = match &args {
             semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
@@ -676,9 +675,6 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {
-    // 🪟️ An engagement is ADDRESSED: `window_engagements` answers for the window the view names and
-    // for no other, so covering both windows means asking for each in turn — a view with no
-    // `window_id` addresses nothing and gets an empty map, not both windows at once.
     let mut app = layout_app().await;
     for window_id in [LAYOUT_PLAY_WINDOW_BLUEPRINT, LAYOUT_PLAY_WINDOW_PREVIEW] {
         let view = semio_framework_plugin::ViewModel {
@@ -697,10 +693,7 @@ async fn window_engagements_cover_both_windows() {
 
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_add_frame_emits_operation() {
-    // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
     let mut app = layout_app_with_registry().await;
-    // 🧾️ Mounted: `result.mutations` is EMPTY, the SETTLED document is the record (bucket 3). What this
-    // law proves is that the registry-backed wrapper lets a `Mutation` verb's operation through at all.
     let before = app.snapshot().expect("projection").pages[0].frames.len();
     dispatch(&mut app, LayoutCommand::AddFrame(semio_s_artifact_layout_layout_editor_commands::add_frame::AddFrame { kind: "rect".into(), x: None, y: None })).await;
     assert_eq!(app.snapshot().expect("projection").pages[0].frames.len(), before + 1);
@@ -708,8 +701,6 @@ async fn registry_backed_add_frame_emits_operation() {
 
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_pointer_move_is_view_only() {
-    // 🧬️ canvasPointerMove is declared `View`: it mutates only config hover state and must never emit
-    // an operation, which the registry kind-discipline check enforces.
     let mut app = layout_app_with_registry().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
     let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(semio_s_artifact_layout_layout_editor_commands::canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0, samples: Vec::new() })).await;

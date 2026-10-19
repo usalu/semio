@@ -204,9 +204,6 @@ mod value_round_trip_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn surface_kind_round_trips() {
-        // 🔀️ `SurfaceKind` lives in the sibling `pub mod ui`, not here in `layout` —
-        // imported explicitly rather than via `use super::*` to avoid pulling that whole
-        // module's re-exports into this test scope.
         use crate::ui::SurfaceKind;
         for kind in [SurfaceKind::Canvas2d, SurfaceKind::World3d, SurfaceKind::VirtualFileSystem, SurfaceKind::EventFeed] {
             assert_eq!(SurfaceKind::from_value(kind.to_value()).expect("valid DslValue decodes"), kind);

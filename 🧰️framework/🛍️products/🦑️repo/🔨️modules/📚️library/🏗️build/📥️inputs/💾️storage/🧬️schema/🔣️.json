@@ -8,6 +8,8 @@
     "admission"
   ],
   "definitions": {
+    "GraphWriterLeaseProtocol": {"const":{"version":1,"partition":"leases","role":"infrastructure-reader","artifactReservation":false}},
+    "GraphWriterLeaseCase": {"type":"object","additionalProperties":false,"required":["id","failAt","releaseFails","closeFails","usedBytes","expectedFailure","expectedClosed","expectedAcquired"],"properties":{"id":{"type":"string","minLength":1,"maxLength":64},"failAt":{"enum":["none","open","recheck","acquire","graph","body","cancel","body-undefined","cancel-body"]},"releaseFails":{"type":"boolean"},"closeFails":{"type":"boolean"},"usedBytes":{"type":"integer","minimum":0,"maximum":9007199254740991},"expectedFailure":{"enum":[null,"open","recheck","acquire","graph","body","cancel","release","close","capacity","body-undefined","cancel-body"]},"expectedClosed":{"type":"boolean"},"expectedAcquired":{"type":"boolean"}}},
     "OptionalQuota": {
       "title": "Optional Graph Cache Quota",
       "type": "object",

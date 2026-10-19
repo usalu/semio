@@ -1,6 +1,7 @@
     /// 🔎️ Census oracles and fixture machine: the typed command census decision with its owned and serde oracles and the owned fixture transition machine.
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    use serde_json::Value;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
     struct TypedCommandCensusDecision {
         pub bytes: usize,
         pub accepted: bool,

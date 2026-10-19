@@ -8,14 +8,14 @@ use crate::standards::v1::subsets::any::schema::transfer::{owning_part_id};
 
 use crate::standards::v1::subsets::any::schema::transfer::*;
 use crate::standards::v1::subsets::any::schema::document_records::Puzzle5dCatalogPartKind;
-use crate::Puzzle5dCompatSpecificity;
-use crate::Puzzle5dGrip;
-use crate::Puzzle5dGripTemplate;
-use crate::Puzzle5dKindCatalogs;
-use crate::Puzzle5dKindCompatibility;
-use crate::Puzzle5dPart2d;
-use crate::Puzzle5dPart3d;
-use crate::Puzzle5dPartAnchor;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dCompatSpecificity;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dGrip;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dGripTemplate;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart2d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart3d;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPartAnchor;
 
 fn part_at(id: &str, x: f64, y: f64) -> Puzzle5dPart {
     Puzzle5dPart {
@@ -41,7 +41,6 @@ fn three_part_projection() -> Puzzle5dSnapshot {
 #[test]
 fn copy_selection_pulls_in_fastener_endpoints_and_internal_links() {
     let projection = three_part_projection();
-    // Selecting only p1 and p2 (no fastener) should still close over f1 since both endpoints are selected.
     let (parts, fasteners) = copy_selection(&projection, &["p1".into(), "p2".into()], &[]);
     assert_eq!(parts.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), vec!["p1", "p2"]);
     assert_eq!(fasteners.iter().map(|f| f.id.as_str()).collect::<Vec<_>>(), vec!["f1"]);
@@ -50,7 +49,6 @@ fn copy_selection_pulls_in_fastener_endpoints_and_internal_links() {
 #[test]
 fn copy_selection_expands_parts_from_selected_fastener() {
     let projection = three_part_projection();
-    // Selecting only fastener f2 should pull in its endpoint parts p2 and p3.
     let (parts, fasteners) = copy_selection(&projection, &[], &["f2".into()]);
     assert_eq!(parts.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), vec!["p2", "p3"]);
     assert_eq!(fasteners.iter().map(|f| f.id.as_str()).collect::<Vec<_>>(), vec!["f2"]);
@@ -69,7 +67,6 @@ fn paste_selection_mints_fresh_ids_shifts_positions_and_remaps_fastener_endpoint
     let (fragment_parts, fragment_fasteners) = copy_selection(&projection, &["p1".into(), "p2".into()], &[]);
     let (fresh_parts, fresh_fasteners) = paste_selection(&projection, &fragment_parts, &fragment_fasteners, (100.0, 0.0));
     assert_eq!(fresh_parts.len(), 2);
-    // Fresh ids must not collide with the existing p1/p2/p3.
     for part in &fresh_parts {
         assert!(!["p1", "p2", "p3"].contains(&part.id.as_str()));
     }

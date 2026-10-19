@@ -56,7 +56,6 @@ impl Default for PdfPage {
 }
 
 impl PdfPage {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(width: f64, height: f64) -> Self {
         Self {
             media_box: [0.0, 0.0, width, height],
@@ -78,17 +77,14 @@ impl PdfPage {
             extra: Vec::new(),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn width(&self) -> f64 {
         self.media_box[2] - self.media_box[0]
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn height(&self) -> f64 {
         self.media_box[3] - self.media_box[1]
     }
     /// 🔤️ The Unicode text this page shows, in painting order — every `Text` operand of every
     /// text-showing operator, lines separated where the stream starts a new line.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn text(&self) -> String {
         fn push(out: &mut String, text: &PdfTextString) {
             if let PdfTextString::Text { text } = text {

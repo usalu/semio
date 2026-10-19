@@ -86,7 +86,6 @@ function replay(row: Row): { generation: number; tally: Tally } {
       switch (step.op) {
         case "input":
         case "metrics":
-          // 🔢️ Delivered either way; the NUMBER is held only while a build is live.
           if (liveBuild === undefined) generation += 1;
           tally.delivered += 1;
           break;
@@ -152,8 +151,6 @@ describe("wgpu frame generation hold and shared presentation authority", () => {
         framesPresented: row.expect.framesPresented,
         quarantines: row.expect.quarantines,
       });
-      // 🩸️ The counterfactual: a presenter that re-read the LIVE authority refuses a correctly-built
-      // packet and quarantines the surface, which is exactly what was measured.
       expect(tally.quarantinesAgainstLive).toBe(row.quarantinesIfPresenterRereadsLiveAuthority ?? 0);
     });
   }

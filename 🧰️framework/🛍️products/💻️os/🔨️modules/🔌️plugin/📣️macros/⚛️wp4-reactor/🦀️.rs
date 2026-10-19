@@ -95,9 +95,6 @@ macro_rules! __semio_actor_exports {
                 $describe()
             }
         }
-        // 🌱️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): `world actor`'s `codec` export. Every
-        // function resolves the owning app from the installed bundle by `artifact-schema` and
-        // runs on a throwaway instance, so none of them observe or disturb live actor state.
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         impl $crate::component::wasip2::exports::semio::framework::codec::Guest for $guest {
             async fn sqlite_schema(dialect: String) -> Result<String, $crate::component::wasip2::semio::framework::types::PluginError> {
@@ -347,10 +344,6 @@ macro_rules! __semio_owned_core_exports {
         pub extern "C" fn semio_owned_channel_version_v1() -> u64 {
             $crate::owned_abi::return_json(&$crate::component::wasip2::channel_version())
         }
-        // 🌱️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the owned-ABI twin of `world actor`'s
-        // `codec` export, so the repository-owned interpreter (the production `describe` path,
-        // and the hub's only guest execution path) reaches the same four functions wasmtime and
-        // jco reach through the WIT.
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub unsafe extern "C" fn semio_owned_sqlite_schema_v1(pointer: u32, length: u32) -> u64 {
@@ -510,7 +503,6 @@ macro_rules! __semio_plugin_actor_exports {
         }
         $crate::__semio_owned_core_exports!(__SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
         $crate::__semio_actor_exports!(__SemioComponentGuest, __SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
-        // 🚫️async: E1 called from the sync `std::sync::Once` closure of `__semio_ensure_plugin_runtime`.
         fn __semio_install_plugin_bundle() {
             __SEMIO_PLUGIN_RUNTIME.with(|runtime| {
                 $crate::plugin_runtime::install_plugin_bundle_result(runtime, ($bundle_fn)());
@@ -519,24 +511,6 @@ macro_rules! __semio_plugin_actor_exports {
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[used]
         static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = $crate::component_export_anchor;
-        // 🛂️ E1-describe (`📓️design-abi.md` §3), path corrected by E2-builder-descriptor: freshness
-        // without wasm in the loop — natively installs the bundle and byte-compares
-        // `describe::describe_plugin()`'s packed
-        // output against the crate's checked-in `<owner>/🛂️.descriptor.semio`. Registrar ruling
-        // (`📌️important.md`, this ticket): descriptors live at the plugin/extension OWNER ROOT,
-        // sibling of the tracked `🛂️manifest.json` — NOT under `🤖️generated/`, which is globally
-        // gitignored (`.gitignore` 87-88) and would mean this checked-in file could never survive
-        // a commit; `📓️design-abi.md` §3's `🤖️generated` path is superseded.
-        //
-        // 🚦️ D0-descriptor-plumbing ratchet: a missing committed descriptor is a HARD failure only
-        // for a plugin explicitly named in `DESCRIPTOR_MIGRATED_PLUGINS` below — this is the
-        // "explicit opt-in, visible per plugin" gate `important.md` calls for, so the fleet does not
-        // go red before each plugin's own emission packet lands. Extend this list from a plugin's
-        // D-packet report the moment its `🛂️.descriptor.semio` + `🔣️.json` are committed —
-        // never remove a name once added (that would be silently re-hiding a regression). The
-        // repo-wide ratchet metric this ladder climbs against is `📇️registry:check`'s own
-        // "descriptor gate: N/<total> crates have a 🔣️.json" census line — that count is
-        // the thing that should trend toward `<total>` as this list grows, never this test alone.
         $crate::__semio_plugin_descriptor_fresh_test!($describe);
     };
 }
@@ -597,7 +571,6 @@ macro_rules! extension_exports {
         }
         $crate::__semio_owned_core_exports!(__SEMIO_EXTENSION_RUNTIME, __semio_ensure_extension_runtime, __semio_describe_component);
         $crate::__semio_actor_exports!(__SemioExtensionGuest, __SEMIO_EXTENSION_RUNTIME, __semio_ensure_extension_runtime, __semio_describe_component);
-        // 🚫️async: E1 called from the sync `std::sync::Once` closure of `__semio_ensure_extension_runtime`.
         fn __semio_install_extension_bundle() {
             __SEMIO_PENDING_EXTENSION.with(|pending| {
                 let mut pending = pending.borrow_mut();
@@ -607,22 +580,9 @@ macro_rules! extension_exports {
                 $crate::__async::poll::resolve_ready($crate::plugin_runtime::install_extension_bundle(&mut pending)).expect("retained extension admission");
             });
         }
-        // 🧬️ A2 (design-abi.md §1): one `world actor` for both roles now — extensions link the
-        // SAME `component_export_anchor` a plugin does (the old separate `extension-world`
-        // component/anchor is deleted, see `important.md`'s "Replace, never wrap" list).
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[used]
         static _SEMIO_EXTENSION_COMPONENT_LINK: fn() = $crate::component_export_anchor;
-        // 🛂️ E1-describe (`📓️design-abi.md` §3) — see `plugin_exports!`'s identical test for the
-        // full rationale (native install, no wasm) and for E2-builder-descriptor's path correction
-        // (owner root, not `🤖️generated/` — that's gitignored, see the registrar ruling quoted
-        // there). `describe::describe_extension()` is this macro's own counterpart of
-        // `describe_plugin()`.
-        //
-        // 🚦️ D0-descriptor-plumbing ratchet — see `plugin_exports!`'s identical test for the full
-        // rationale. `DESCRIPTOR_MIGRATED_EXTENSIONS` starts empty: no extension has committed a
-        // descriptor yet as of this packet; extend it, never shrink it, as each extension's own
-        // emission packet lands.
         $crate::__semio_extension_descriptor_fresh_test!();
     };
 }

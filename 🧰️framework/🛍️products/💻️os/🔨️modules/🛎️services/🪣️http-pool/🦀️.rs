@@ -38,7 +38,6 @@ impl TokenBucket {
         }
     }
 
-    // 🚫️async: E1-adjacent — same reasoning as `new` above (R9).
     #[doc(hidden)] pub fn try_consume(&mut self, bytes: u64) -> bool {
         if bytes > self.remaining_bytes {
             false
@@ -51,7 +50,6 @@ impl TokenBucket {
     /// ♻️ Refills back toward capacity. Driven for real, once a minute, by
     /// [`HttpPool::spawn_refill_driver`] — see that method's doc; this method itself stays the pure
     /// arithmetic step so tests can also exercise refill deterministically without a driver.
-    // 🚫️async: E1-adjacent — same reasoning as `new` above (R9).
     fn refill(&mut self, bytes: u64) {
         self.remaining_bytes = (self.remaining_bytes + bytes).min(self.capacity_bytes);
     }
@@ -194,7 +192,6 @@ impl HttpPool {
     }
 
     /// 💰️ `package`'s budget right now — an untracked package reads as a full bucket.
-    // 🚫️async: E1 pure in-memory read a blocking gateway thread polls while it waits for a refill turn — see R9.
     pub fn package_budget_now(&self, package: &PackageId) -> HttpPackageBudget {
         let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
         let mut buckets = self.buckets.lock().expect("HttpPool buckets mutex poisoned");
@@ -208,7 +205,6 @@ impl HttpPool {
     /// ▶️ Starts one finite maintenance turn per refill interval. A turn advances a shared epoch
     /// in O(1); each package observes that epoch and refills lazily on its next access, so no turn
     /// scans an unbounded package map or occupies a worker while waiting.
-    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job). See R9.
     pub fn spawn_refill_driver(&self, pool: &WorkerPool, interval_ms: u64) {
         if self.refill_driver_started.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
             schedule_http_refill_turn(pool, self.refill_epoch.clone(), interval_ms.max(1));
@@ -343,8 +339,6 @@ impl HttpPoolBody {
         self.inner.cancellation_handle()
     }
 
-    // 🚫️async: E1 pure bookkeeping consumed by `Drop::drop` below (external trait, cannot be
-    // async) — see R9.
     pub(super) fn finish(&mut self, cancel_in_flight: bool) {
         if cancel_in_flight && self.credit.is_some() {
             let _ = self.inner.cancellation_handle().cancel_in_flight();

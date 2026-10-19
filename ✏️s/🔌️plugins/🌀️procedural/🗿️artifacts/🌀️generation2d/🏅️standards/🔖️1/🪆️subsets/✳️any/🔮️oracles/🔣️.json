@@ -140,6 +140,10 @@
             {
               "id": "removes-an-unselected-middle-generation",
               "directoryName": "🔓️removes-an-unselected-middle-row"
+            },
+            {
+              "id": "removes",
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -236,6 +240,28 @@
             {
               "id": "selects-generation-2",
               "directoryName": "👆️picks"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-slider-value",
+          "sourceMutationDirectoryName": "🎚️change-slider-value",
+          "mutationDirectoryName": "🎚️change-slider-value",
+          "scenarios": [
+            {
+              "id": "sets",
+              "directoryName": "🎚️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-nodes",
+          "sourceMutationDirectoryName": "🚚️move-nodes",
+          "mutationDirectoryName": "🚚️move-nodes",
+          "scenarios": [
+            {
+              "id": "shifts",
+              "directoryName": "🚚️shifts"
             }
           ]
         }

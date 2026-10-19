@@ -64,9 +64,6 @@ describe("tree helpers", () => {
       });
   
       it("clampToReady suppresses a no-op attempt at the ready extent", async () => {
-        // 🪣️ Opt-in: most `ready` consumers (the test above) want the highlight without a hard limit;
-        // a background-planned count (e.g. puzzle3d's fill slider) needs `clampToReady` to make the
-        // un-planned tail physically unreachable.
         const { fireEvent, render } = await import("@testing-library/react");
         const onValueChange = vi.fn();
         const { container } = render(<Slider id="ui.slider.ready-clamped" value={[55]} min={0} max={100} ready={55} step={1} clampToReady onValueChange={onValueChange} />);
@@ -230,9 +227,6 @@ describe("tree helpers", () => {
           />,
         );
         expect(document.querySelector('[data-slot="select-content"]')).toBeNull();
-        // 🆔️ The component's own id names the TRIGGER: it is the control a press addresses and the one
-        // element whose text is the active example, so `#playground.navbar.fixture` must resolve to the
-        // combobox itself and read exactly that label — never the visually-hidden "Example" caption.
         const exampleTrigger = document.getElementById("playground.navbar.fixture")!;
         expect(exampleTrigger.getAttribute("role")).toBe("combobox");
         expect(exampleTrigger.textContent).toContain("Nakagin Capsule Tower with an intentionally long label");

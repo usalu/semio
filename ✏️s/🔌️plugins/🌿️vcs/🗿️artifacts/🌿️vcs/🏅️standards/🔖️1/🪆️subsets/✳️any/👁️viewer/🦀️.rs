@@ -53,9 +53,6 @@ pub struct VcsViewer;
 
 impl ArtifactViewer for VcsViewer {
     type Snapshot = VcsSnapshot;
-    // 👁️ Decode-only per contract §2.2 — the store's op log must still decode every historical
-    // mutation even though a viewer never constructs or dispatches one itself. Same artifact-level
-    // type the editor uses, imported from the shared `🗿️artifacts/🌿️vcs` root, never from `editor`.
     type Mutation = crate::VcsDemoMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;

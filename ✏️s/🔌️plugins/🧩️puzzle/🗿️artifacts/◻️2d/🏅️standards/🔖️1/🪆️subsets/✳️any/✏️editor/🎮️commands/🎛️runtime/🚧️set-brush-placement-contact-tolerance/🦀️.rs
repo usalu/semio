@@ -1,4 +1,4 @@
-//! placement footprint is grown by before the collision test, a shared `Puzzle2dConfig` preference a
+//! 📍️ placement footprint is grown by before the collision test, a shared `Puzzle2dConfig` preference a
 //! ⚙️ `set-brush-placement-contact-tolerance` command — the world-unit margin every brush/fill
 //! live fill run re-reads through `ToolRunSettingsReads`.
 

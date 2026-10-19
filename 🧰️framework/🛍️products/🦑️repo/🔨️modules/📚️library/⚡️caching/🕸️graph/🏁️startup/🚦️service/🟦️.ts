@@ -11,7 +11,7 @@ import {withNxToolingUseV1,nxToolingUseStorageV1,type NxToolingUseWitnessV1} fro
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {readPhysicalCargoSourceV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import {readPhysicalCargoSourceV1} from "@semio-tech/process/artifacts/native-build/source/admission/read";
 import {withRepositoryNxStorageV1,nxDaemonNamespaceResourceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import servicePolicy from "../🧬️lifetime/🧬️schema/📋️policy.json" with {type:"json"};
 import lifetimeSchema from "../🧬️lifetime/🧬️schema/🔣️.json" with {type:"json"};

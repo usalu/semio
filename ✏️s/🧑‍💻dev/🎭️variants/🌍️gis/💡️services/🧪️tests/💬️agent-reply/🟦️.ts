@@ -61,9 +61,6 @@ class Peer {
   readonly diagnostics: string[] = [];
   private buffer = "";
   private nextId = 1;
-  // 🧭️ No annotation: `Bun.spawn` is declared twice (bun-types and the repo's own ambient), so
-  // `ReturnType<typeof Bun.spawn>` loses `stdin.write`. Inferring from the assignment binds the
-  // signature this call actually resolved to.
   private readonly child;
 
   constructor(command: string, args: readonly string[], environment: Record<string, string> = {}) {
@@ -245,7 +242,6 @@ try {
   });
   record("0 rendezvous", offer ? "pass" : "fail", offer ? `offer before=${offerBefore ? offerBefore.url : "(none)"}, after=${offer.url}` : `this gateway published no offer of its own; ${OFFER_URL} still answers ${offerBefore ? offerBefore.url : "no offer"}`);
 
-  // 1. the tool exists on the live surface, with a real schema.
   const listed = await gateway.request("tools/list", {});
   const tools = ((listed.result?.tools ?? []) as Record<string, any>[]).map((tool) => tool);
   const reply = tools.find((tool) => tool.name === "conversation_reply") ?? null;
@@ -275,7 +271,6 @@ try {
   });
   record("0 ui_reveal opens the chat panel", chatVisible ? "pass" : "fail", `${describe(revealed)}; chat panel in DOM=${chatVisible !== null}`);
 
-  // 2. the scope is real — the NEGATIVE control, on its own gateway.
   unscoped = await open("gateway — same line, conversation.write removed", unscopedEntry(entry));
   const refused = await unscoped.call("conversation_reply", { text: "this must never reach a human's screen" });
   const refusal = structured(refused);
@@ -285,7 +280,6 @@ try {
     describe(refused),
   );
 
-  // 3. a streamed turn becomes ONE row, streaming then complete.
   const toolRowsBefore = (await readShell(page)).toolRows.length;
   const replyId = `rep_gate_${Date.now()}`;
   const firstChunk = await gateway.call("conversation_reply", { text: "Widening that wall means", replyId, inReplyTo: "msg_gate", complete: false });
@@ -306,7 +300,6 @@ try {
     `chunk1=${describe(firstChunk)} chunk2=${describe(secondChunk)}; streaming(busy=${streaming?.busy}) → complete(busy=${settled?.busy}); rows for this turn=${rowsForTurn}; inReplyTo=${settled?.inReplyTo}; text=${JSON.stringify(settled?.text ?? "")}`,
   );
 
-  // 4. and it did NOT also print as a tool-call row.
   const toolRowsAfter = (await readShell(page)).toolRows;
   const duplicated = toolRowsAfter.filter((text) => text.includes("conversation_reply")).length;
   record(
@@ -315,7 +308,6 @@ try {
     `tool-call rows before=${toolRowsBefore} after=${toolRowsAfter.length}, of which naming conversation_reply=${duplicated} (SELF_PUBLISHING_CONVERSATION_TOOLS)`,
   );
 
-  // 5. the reverse direction: a turn typed into the REAL composer reaches the agent.
   const typed = `gate turn ${Date.now()}`;
   const composer = page.locator("#framework\\.chat\\.draft").first();
   await composer.waitFor({ state: "visible", timeout: 20_000 }).catch(() => undefined);

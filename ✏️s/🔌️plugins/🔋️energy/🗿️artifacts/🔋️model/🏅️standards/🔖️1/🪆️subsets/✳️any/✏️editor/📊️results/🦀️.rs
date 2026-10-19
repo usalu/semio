@@ -149,11 +149,6 @@ pub fn surface_colors(map: &SurfaceEnergyMap, field: ResultField) -> (HashMap<u3
     }
     values.sort_by(|a, b| a.partial_cmp(b).expect("finite values are totally ordered"));
     let (minimum, maximum) = (values[0], values[values.len() - 1]);
-    // 🌡️ A field that is identically zero everywhere is not a flat result, it is NO result: a cooling
-    // design day has no conduction LOSS at all, and a heating one has no conduction GAIN. Painting
-    // every face the coldest band would read as "measured, and all equal". Colouring nothing leaves the
-    // window on its neutral family palette, which reads correctly — and the caption still prints the
-    // honest `0.0 – 0.0 kWh`.
     if minimum == 0.0 && maximum == 0.0 {
         return (HashMap::new(), 0.0, 0.0);
     }
@@ -182,8 +177,6 @@ fn rank_band(ranks: &[f64], value: f64) -> usize {
     if ranks.len() < 2 {
         return 0;
     }
-    // 🔎️ An exact hit is its own rank; anything in between was folded into the rank below it by the
-    // epsilon dedup, so it shares that rank's band rather than being nudged up a stop.
     let rank = match ranks.binary_search_by(|candidate| candidate.partial_cmp(&value).expect("finite values are totally ordered")) {
         Ok(rank) => rank,
         Err(next) => next.saturating_sub(1),

@@ -74,7 +74,6 @@ async fn compile_ops_rejects_malformed_text() {
 async fn extract_range_returns_contiguous_slice_covering_requested_edits() {
     let bytes = build_history_bytes("doc-1", "schema-1", 4).await;
 
-    // Independently compute each edit frame's [offset, offset+frame_len) span for cross-check.
     let mut cursor = FrameCursor::new(&bytes, crate::format::HEADER_SIZE as u64).await;
     let mut edit_spans = Vec::new();
     while let Some(frame) = cursor.next_frame().await.unwrap() {
@@ -90,7 +89,6 @@ async fn extract_range_returns_contiguous_slice_covering_requested_edits() {
     assert_eq!(slice.count, 2);
     assert_eq!(slice.bytes, &bytes[edit_spans[1].0 as usize..edit_spans[2].1 as usize]);
 
-    // The slice must itself be a structurally valid record stream (re-parseable from offset 0).
     let mut inner = FrameCursor::new(slice.bytes, 0).await;
     let mut edit_kinds_in_slice = 0;
     while let Some(frame) = inner.next_frame().await.unwrap() {
@@ -134,7 +132,6 @@ async fn content_frontier_reports_head_edit_and_chain_tip() {
     assert_eq!(frontier.last_commit_seq, 3);
     assert!(frontier.alternatives.is_empty());
 
-    // Cross-check chain_hash independently via the last REC_COMMIT frame's payload.
     let mut reverse = ReverseFrameCursor::at_end(&bytes[crate::format::HEADER_SIZE..]).await;
     let last_commit = loop {
         let frame = reverse.prev_frame().await.unwrap().unwrap();

@@ -15,11 +15,9 @@ impl Point {
     pub fn distance(self, other: Self) -> f64 {
         ((other.x - self.x).powi(2) + (other.y - self.y).powi(2)).sqrt()
     }
-    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
     pub fn x(&self) -> f64 {
         self.x
     }
-    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
     pub fn y(&self) -> f64 {
         self.y
     }
@@ -63,18 +61,15 @@ impl Vec2 {
     pub fn dot(self, other: Self) -> f64 {
         self.x * other.x + self.y * other.y
     }
-    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
     pub fn x(&self) -> f64 {
         self.x
     }
-    // 🚫️async: E1 pure field accessor consumed by sync closures (sort_by/dedup_by/map) — see R9
     pub fn y(&self) -> f64 {
         self.y
     }
 }
 
 impl From<(f64, f64)> for Vec2 {
-    // 🚫️async: E1 `From::from` — pure field construction, inlined sync rather than routed through the async `Vec2::new` — see R9
     fn from((x, y): (f64, f64)) -> Self {
         Self { x, y }
     }

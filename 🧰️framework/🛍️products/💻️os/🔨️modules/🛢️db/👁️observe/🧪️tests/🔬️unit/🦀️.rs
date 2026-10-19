@@ -134,7 +134,6 @@ async fn cardinality_limiter_admits_up_to_the_limit_then_collapses_to_overflow()
     assert_eq!(c, Labels::new([("cardinality", "overflow".to_string())]));
     assert_eq!(limiter.series_count("m").await, 2);
 
-    // 🔒️ a previously-admitted series stays itself, never gets swept into overflow later.
     let a_again = limiter.admit("m", Labels::new([("k", "a".to_string())])).await;
     assert_eq!(a_again, Labels::new([("k", "a".to_string())]));
 }

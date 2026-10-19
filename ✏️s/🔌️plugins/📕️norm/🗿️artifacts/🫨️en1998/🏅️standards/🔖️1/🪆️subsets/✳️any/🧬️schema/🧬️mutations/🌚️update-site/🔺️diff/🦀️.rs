@@ -1,4 +1,4 @@
-//! Diff for `update-site`.
+//! 🔺️ Diff for `update-site`.
 use crate::update_site::UpdateSite;
 use semio_s_artifact_norm_en1998_diff::En1998Diff;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

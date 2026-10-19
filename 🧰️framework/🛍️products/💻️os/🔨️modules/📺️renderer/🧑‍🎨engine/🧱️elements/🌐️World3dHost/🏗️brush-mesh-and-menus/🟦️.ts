@@ -23,34 +23,6 @@ import type { WorldCore2 } from "../🧭️fit-and-presence/🟦️.ts";
 /** 🏗️ Runs the brush mesh queue and builds the world context menu and suggestion rows. */
 export function useWorldBrushMeshAndMenus(core: WorldCore2) {
   const { adoptViewportCamera, autoFitBounds, brushMode, cameraState, contextMenu, dispatch, dispatchSettled, hostRef, instances, instancesGroupRef, interaction, meshes, node, noteUserMovedCamera, onAction, selection, setConnectDragHoverPosition, setConnectDragSource, setSuggestionFocus, setVortexPointerArm, suggestionMenuCheckingPlacementLabel, suggestionMenuNoPlacementLabel, suggestionMenuOwnsThisWindow, windowInstanceId } = core;
-  // 🥽️ One GLB's collision geometry never fitted a single retained command: the shared puzzle contract
-  // admits 8 192 raw JSON bytes and the Concrete Forest mesh alone encoded to 64 KB, so every upload is
-  // a page run (`puzzle3dBrushMeshPages`) — the plugin stages the pages
-  // under `(url, digest)` and installs the mesh when the last one lands. A mesh THIS GUEST already holds
-  // is re-announced by `{url, digest}` alone, which it serves from its own content-addressed store
-  // instead of taking the bytes again.
-  //
-  // 🚚️ Which meshes that is is `puzzle3dBrushMeshRegistry`'s to say, not this component's: the claim is
-  // scoped to the guest instantiation that justified it, confirmed only when a run's LAST page goes out,
-  // and voided by a fallen `meshResidency`. The claim used to live in a bare page-lifetime `Map` written
-  // at enqueue time, so every activation after a guest restart re-announced seven identities the guest
-  // held nothing for and the brush utility silently kept no collision geometry until a full reload.
-  //
-  // ⏳️ The run is a BACK-PRESSURED stream, never a burst. A macrotask drain (`setTimeout(drain, 0)`) put
-  // every page of every mesh into the actor's one command queue within a couple of hundred milliseconds
-  // and then left them there: browser-measured 2026-09-12 on wasm #47, 202 pages enqueued in 21 s, 40 of
-  // them settled over the next 420 s, and ONE user click that landed mid-run waited 44.3 s behind 15
-  // pages (`📓️2026-09-12-wave-B22-brush-mesh-upload.md`). Awaiting each page's own settle before the
-  // next is queued bounds what a user action can ever queue behind at ONE page, whatever the run's
-  // length — `onAction` settles on the dispatched action's typed-operation completion, which is exactly
-  // the "this page is in" signal the old fire-and-forget shape threw away.
-  //
-  // 🪢️ And a run is only ever paged ONCE PER DIGEST. Every `dist/mesh/*.glb` in this repo is the same
-  // 771 728-byte capsule, so a scene placing several object kinds paged byte-identical geometry once per
-  // mesh id — 72 commands each. A digest this page already put into THIS guest is announced by
-  // `{url, digest}` alone and the guest aliases its own derived page onto the new id
-  // (`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`); a guest that cannot serve it answers
-  // on `meshReuploadUrls` and the claim is re-driven, so an optimistic announcement is self-healing.
   const brushMeshQueueRef = useRef<Puzzle3dBrushMeshPage[]>([]);
   const brushMeshRunsRef = useRef(new Map<string, string>());
   const brushMeshDrainingRef = useRef(false);
@@ -125,12 +97,6 @@ export function useWorldBrushMeshAndMenus(core: WorldCore2) {
     },
     [],
   );
-  // 🚚️ The guest's two published facts about what it actually holds, folded in before anything is
-  // announced: a residency that fell proves a restarted guest (its mesh store is not part of any
-  // checkpoint), which voids EVERY claim this page holds, and `meshReuploadUrls` names identities an
-  // announcement already sent is waiting on bytes for. Either way the answer is the same — bump the
-  // revision the mounted `BrushMeshRegistrar`s carry, so they re-announce their already-loaded GLB
-  // and, with the claim gone, take the page path instead of the id-only one.
   const meshResidency = interaction.meshResidency;
   const meshReuploadUrls = interaction.meshReuploadUrls;
   useEffect(() => {
@@ -145,10 +111,6 @@ export function useWorldBrushMeshAndMenus(core: WorldCore2) {
     });
   }, [meshResidency, meshReuploadUrls]);
 
-  // 🥽️ Every mesh the scene lane names — placed kinds and catalogue kinds alike — is uploaded for collision, so
-  // the brush suggestions run tests a candidate against its real geometry.
-  //
-  // 🚪️ …but only for a guest that OWNS that lane — see `puzzle3dAnnounceableBrushMeshUrls`.
   const brushMeshUrls = useMemo(() => puzzle3dAnnounceableBrushMeshUrls(meshResidency, meshes), [meshResidency, meshes]);
 
   const handleFrameVisibleInstances = useCallback(() => {

@@ -18,16 +18,9 @@ import { parseJsonArray, WindowInstanceIdContext } from "../../🗣️Interprete
 /** 🌍️ Reads every lane of the assembled `node.world3d` scene into memoised, identity-stable values. */
 export function useWorldSceneLanes({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
-  // 🪟️ Non-empty only — an empty-string `domainId` (never emitted by the Rust side, but defensive
-  // against a hand-authored fixture) must fall back to the plugin-private action pathway below.
   const interactionDomainId = scene?.domainId ? scene.domainId : undefined;
   const interactionGranularity = scene?.domainGranularityId ? scene.domainGranularityId : WORLD3D_DEFAULT_INTERACTION_GRANULARITY;
-  // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
   const shellScope = useShellScopeOptional();
-  // 🐚️ Read as reactive state (not `shellScope.selection.get()` inline at each use) because this value
-  // is consumed inside `<Canvas>` r3f subtrees (`WorldInstancesLayer`) via a prop, not context — R3F
-  // primitives aren't guaranteed to re-render just because an *outer* DOM component's context changed,
-  // so the toolbar's mode toggle needs an explicit subscription to actually propagate.
   const [persistentSelectionMode, setPersistentSelectionMode] = useState<MergeMode>(() => shellScope?.selection.get() ?? "replace");
   useEffect(() => {
     if (!shellScope) return;
@@ -42,8 +35,6 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
   const sceneCameraJson = scene?.cameraJson ?? "{}";
   const parsedCamera = useMemo(() => parseCameraState(sceneCameraJson), [sceneCameraJson]);
-  // 🚚️ B44: the retained instance set advances by the producer's own per-object delta when it can, so a
-  // pose edit on a 180-object document substitutes the moved records by id instead of re-parsing 55 KiB.
   const instanceResidencyRef = useRef<WorldInstanceResidencyV1 | null>(null);
   const instances = useMemo(() => {
     const advanced = advanceWorldInstanceResidency(instanceResidencyRef.current, scene?.instancesJson ?? "[]", scene?.instancesDeltaJson ?? null);
@@ -129,8 +120,6 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
     });
   }, [detachEpoch, retainViewport, sceneCameraAttachJson, userMovedFitRevision, viewportCamera, viewportOwned]);
   useEffect(() => {
-    // 🧭️ Always advance the tracking ref, even when we're about to suppress a reattach below — otherwise the
-    // NEXT comparison would still diff against this stale value instead of the pose we just saw.
     const previousSceneCameraJson = previousSceneCameraJsonRef.current;
     previousSceneCameraJsonRef.current = sceneCameraJson;
     retainViewport({ observedSceneCameraJson: sceneCameraJson });
@@ -138,12 +127,6 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
     setSceneCameraAttachJson(sceneCameraJson);
     setViewportCamera(null);
     setViewportOwned(false);
-    // 🎯️ A reattach DISCARDS whatever pose the viewport held — the auto-fit's framing and the user's own
-    // gesture alike — so the one-shot framing is re-armed with it. Measured 2026-09-15: the generation3d
-    // editor framed `rectangle-extrude-volume`, the guest then republished its seed camera on the window
-    // config lane, the reattach reset the viewport to that seed, and `WorldAutoFit` never fired again
-    // because its key had already been consumed — leaving the example cut off on exactly the boot a user
-    // sees (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
     setUserMovedFitRevision(null);
     setCameraNavigating(false);
     setDetachEpoch(0);
@@ -154,11 +137,6 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
 
   const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraAttachJson, detachEpoch);
 
-  // 🎥️ Registers this window's live camera get/set for tutorial playback/recording (see
-  // `registerTutorialCameraDriver` — modeled on `registerIntroductionSurfaceResolver`). `get` reads the
-  // CURRENT pose via a ref (never a stale closure) for deviation-then-play convergence; `set` writes a
-  // viewport-owned override and bumps `detachEpoch` so `OrbitControls` reseeds from the new pose instead
-  // of fighting it, exactly like a programmatic view-preset apply already does.
   const cameraStateRef = useRef(cameraState);
   cameraStateRef.current = cameraState;
   useEffect(() => {
@@ -185,8 +163,6 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
     };
     return registerTutorialCameraDriver(windowInstanceId, driver);
   }, [retainViewport, windowInstanceId]);
-  // 📏️ The typed modelling lanes keep their identity while their content hash is unchanged, so an unrelated refresh
-  // that re-parses every JSON lane never re-validates a multi-megabyte scalar field.
   const laneHash = (lane: string) => scene?.lanes?.find((reference) => reference.lane === lane)?.hash;
   const rawAnnotations = useStableWorld3dLane(scene?.annotations, laneHash("annotations"));
   const rawScalarField = useStableWorld3dLane(scene?.scalarField, laneHash("scalarField"));
@@ -198,8 +174,6 @@ export function useWorldSceneLanes({ node, onAction, requestContextMenu }: Compo
   const highlightPaint = useMemo(() => resolveWorld3dHighlightPaint(modellingOptions?.highlight), [modellingOptions?.highlight, meshStylePalette]);
   const subElementPaint = useMemo(() => world3dSubElementPaint(colors, highlightPaint, { edgeWidth: 3, vertexMarkPx: WORLD_VERTEX_MARK_PX }), [colors, highlightPaint]);
   const sectionCapHex = useMemo(() => (modellingOptions?.section?.cap ? resolveWorld3dToneHex(modellingOptions.section.cap.tone) : undefined), [modellingOptions?.section?.cap, meshStylePalette]);
-  // 🧊️ The retained mesh set advances per mesh, so a refresh that republishes an unchanged mesh keeps
-  // that record's object identity and the instanced layer keeps its already-built buffers.
   const geometryRevisionRef = useRef({source: scene?.meshesJson, instances: scene?.instancesJson, revision: 1});
   if (geometryRevisionRef.current.source !== scene?.meshesJson || geometryRevisionRef.current.instances !== scene?.instancesJson) geometryRevisionRef.current = {source: scene?.meshesJson, instances: scene?.instancesJson, revision: geometryRevisionRef.current.revision + 1};
   const meshResidencyRef = useRef<WorldMeshResidencyV1 | null>(null);

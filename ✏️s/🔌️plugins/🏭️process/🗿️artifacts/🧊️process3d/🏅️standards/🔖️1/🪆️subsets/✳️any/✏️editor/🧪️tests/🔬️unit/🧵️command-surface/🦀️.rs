@@ -135,8 +135,6 @@ fn retained_resumable_extent_accepts_exact_byte_maximum_and_rejects_max_plus_one
     let config = Process3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let snapshot = retained_snapshot(0);
-    // 🧩️ `setContributions` carries a host pack, not a gesture, so its wire lane is
-    // `CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES` — the gesture envelope prices every OTHER command.
     let ceiling = semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES;
     let exact = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(ceiling) });
     let rejected = Process3dCommand::SetContributions(set_contributions::SetContributions { json: "x".repeat(ceiling + 1) });

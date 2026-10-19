@@ -1,14 +1,14 @@
-//! Serialize stdio.zip to stdio.deflate (encode ZIP then zlib-compress).
+//! 📤️ Serialize stdio.zip to stdio.deflate (encode ZIP then zlib-compress).
 
 use crate::ZipSnapshot;
 use semio_s_artifact_stdio_deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 
 //#region Codec
-/// Register serializer hooks.
+/// 💾️ Register serializer hooks.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
-/// Encode ZIP bytes as the deflate artifact's typed payload (real zlib compression happens on
+/// 🖨️ Encode ZIP bytes as the deflate artifact's typed payload (real zlib compression happens on
 /// `ArtifactPack`/`ArtifactDsl` encode, via `engine::encode_deflate_snapshot`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError> {
@@ -16,7 +16,7 @@ pub fn serialize(from: &ZipSnapshot) -> Result<DeflateSnapshot, store::PackError
     Ok(DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: semio_s_artifact_stdio_deflate::schema::snapshot::DeflateLevelHint::default(), dict_id: None, payload: zip_bytes })
 }
 
-/// Encode as deflate pack bytes.
+/// ✍️ Encode as deflate pack bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize_bytes(from: &ZipSnapshot) -> Result<Vec<u8>, store::PackError> {
     pack::snapshot::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())

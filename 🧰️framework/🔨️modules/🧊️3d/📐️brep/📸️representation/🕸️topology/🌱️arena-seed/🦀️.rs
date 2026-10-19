@@ -155,7 +155,6 @@ impl Body {
     /// from `self`. Needed by the round-trip law (`Body::from_seed(&seed).to_seed() == seed`) and
     /// by a future diff constructor, which reads post-op state back out this way to translate into
     /// a `SemioBrepDiff` via the label↔snapshot-id map it owns.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn to_seed(&self) -> BrepArenaSeed {
         let vertex_label = |id: VertexId| -> PersistentLabel { self.vertices.get(id).expect("live vertex").label };
         let edge_label = |id: EdgeId| -> PersistentLabel { self.edges.get(id).expect("live edge").label };
@@ -166,8 +165,6 @@ impl Body {
 
         let edges: Vec<SeedEdge> = self.edges.iter().map(|(_, e)| SeedEdge { label: e.label, v0: vertex_label(e.v0), v1: vertex_label(e.v1), curve: self.curves3.get(e.curve).expect("live curve").clone(), range: e.range, tol: e.tol }).collect();
 
-        // One entry per distinct LoopId, in the order faces first reference it — the same order
-        // `from_seed` assigns indices in, which is what the round-trip law needs to hold.
         let mut loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();
         let mut loop_index: HashMap<LoopId, usize> = HashMap::new();
         let mut faces: Vec<SeedFace> = Vec::with_capacity(self.faces.len());

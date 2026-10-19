@@ -1,4 +1,4 @@
-//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Fem3dViewer` implements
+//! 📷️ 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Fem3dViewer` implements
 //! 👁️ FEM 3D viewer — the read-only counterpart of `✏️editor` for this subset (ticket
 //! `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Fem3dViewer>` (framework SDK) is
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
@@ -87,7 +87,7 @@ impl ArtifactViewer for Fem3dViewer {
     }
 
     fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot, windows: &semio_framework_plugin::WindowConfigOwnerRegistry, view: Option<&semio_framework_plugin::ViewModel>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_plugin::MountedSnapshotReadPreparation {
-        crate::live_visual::prepare_snapshot_read(operation, snapshot, windows, view, grant)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::prepare_snapshot_read(operation, snapshot, windows, view, grant)
     }
 
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
@@ -115,7 +115,7 @@ impl ArtifactViewer for Fem3dViewer {
     }
 
     fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
-        crate::live_visual::reconcile(doc)
+        semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::reconcile(doc)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {

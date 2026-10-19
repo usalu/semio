@@ -134,7 +134,6 @@ async fn evaluate_reaches_claimed_product_sheets_when_present() {
 #[semio_framework_async_macros::async_test]
 async fn edition_profile_legacy_missing_keys_fails() {
     let mut doc = conforming_valve_dataset();
-    // Sheet 8 multi-profile: Current requires type_code; put a sheet-8 product without it under Current.
     doc.catalog.products[0].sheet = SheetId(8);
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Generic(GenericAttributes::default());
     doc.catalog.products[0].records.retain(|r| r.family.0 == RecordFamilyId::R100);
@@ -207,7 +206,6 @@ async fn every_emitted_path_resolves() {
             }
             for remedy in &check.remedies {
                 parse_path(&remedy.target.path).unwrap_or_else(|e| panic!("remedy path {} parse: {e}", remedy.target.path));
-                // Writable leaf may be absent before insert; parse success is required.
                 let _ = get_value_at_path(&tree, &remedy.target.path);
             }
         }
@@ -252,7 +250,6 @@ use semio_framework_value::ToValue;
     assert!(!leaves.is_empty(), "expected editable leaves");
     let mut missing = Vec::new();
     for path in &leaves {
-        // Map-keyed geometry/curves use concrete ids; field meta uses [] wildcards / prefix fallbacks.
         match vdi3805_field_meta(path) {
             Some(NormFieldMeta { label_en, label_de, .. }) if !label_en.is_empty() && !label_de.is_empty() => {}
             other => missing.push((path.clone(), other.map(|m| (m.label_en.to_string(), m.label_de.to_string())))),
@@ -305,7 +302,6 @@ async fn sheet_routing_uses_product_sheet_even_when_attributes_generic() {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].sheet = SheetId(5);
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Generic(GenericAttributes::default());
-    // Native 210 implies pump fields so attributes_from_records yields PumpHeating.
     doc.catalog.products[0].records = vec![
         semio_s_artifact_norm_vdi3805_model::NativeRecord {
             family: RecordFamilyId(RecordFamilyId::R210.to_string()),
@@ -336,7 +332,6 @@ fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit:
     match value {
         semio_framework_value::DslValue::Object(map) => {
             for (k, v) in map.iter() {
-                // Map keys with `.` (geometry/curve ids) must use [id=…] so set_value_at_path can resolve them.
                 let path = if prefix.is_empty() {
                     if k.contains('.') { format!("[id={k}]") } else { k.clone() }
                 } else if k.contains('.') {
@@ -415,7 +410,6 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
                 let base = if v < 0.0 { (v as i64).saturating_sub(1) as u64 } else { (v as u64).saturating_add(1) };
                 semio_framework_value::DslValue::uint(base.max(0))
             } else if path.contains(".points[") || path.contains("si_factor") || path.contains("siFactor") {
-                // Break monotonicity / unit scale rather than a ratio-preserving stretch.
                 let next = if v.abs() < 1e-12 { -1.0 } else { -v.abs() * 1.5 - 0.5 };
                 semio_framework_value::DslValue::float(next)
             } else {
@@ -448,7 +442,6 @@ use semio_framework_value::ToValue;
         .into_iter()
         .map(|(sheet, doc)| (format!("blatt-{sheet}"), doc))
         .collect();
-    // Nonconforming counterpart is asserted separately; perturbation subjects are conforming assessed Blätter only.
     let mut inert = Vec::new();
     for (label, base) in subjects {
         let base_report = evaluate(&base);

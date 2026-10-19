@@ -1,0 +1,4 @@
+[
+{"parent":"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts","leaf":"📄️retirement-file","base":"..","names":["readNativeImageRetirementFileV1"],"doc":"📄️ Reads one bounded native image retirement file through a pinned descriptor and returns its bytes with its identity stamp; the storage core and both retirement backends read receipts and claim sidecars through it, so it sits below all of them.","closure":true,"exportStar":"append"},
+{"parent":"/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🧾️claim/🟦️.ts","leaf":"🧾️claim-records","base":"..","names":["readNativeCreatorClaimRecordsV1"],"doc":"🧾️ Parses the append-only creator claim sidecar records of one native storage child request; the storage core reads them below the claim owner, which depends on the core.","closure":true,"exportStar":"append"}
+]

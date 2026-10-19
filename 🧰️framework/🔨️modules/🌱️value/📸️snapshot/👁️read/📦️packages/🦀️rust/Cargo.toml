@@ -25,6 +25,7 @@ testkit = ["dep:semio-framework-trace", "dep:semio-framework-value-testing-prese
 
 [dependencies]
 semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-testing-presence-retirement = { path = "../../../../🧪️testing/👥️presence-retirement/📦️packages/🦀️rust", optional = true }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust", optional = true }
 
@@ -35,3 +36,5 @@ serde_json = "1.0.140"
 
 semio-framework-value = { path="../../../../📦️packages/🦀️rust", features=["testkit"] }
 semio-framework-value-testing-presence-retirement = { path = "../../../../🧪️testing/👥️presence-retirement/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-io = { path = "../../../../../../🛍️products/💻️os/🔨️modules/🚪️io/📦️packages/🦀️rust" }

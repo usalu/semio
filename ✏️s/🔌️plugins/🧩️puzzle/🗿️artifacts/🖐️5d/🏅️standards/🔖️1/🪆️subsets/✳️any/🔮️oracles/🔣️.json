@@ -266,6 +266,10 @@
             {
               "id": "removes-part-a-and-severs-fastener",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-middle-part",
+              "directoryName": "🗑️removes-middle-part"
             }
           ]
         },
@@ -285,6 +289,10 @@
             {
               "id": "rejects-deleting-a-volume-the-model-never-held",
               "directoryName": "🚫️rejects"
+            },
+            {
+              "id": "removes-middle-volume",
+              "directoryName": "🪦️removes-middle-volume"
             }
           ]
         },
@@ -296,6 +304,10 @@
             {
               "id": "removes-fast-1",
               "directoryName": "🚫️removes-fast-1"
+            },
+            {
+              "id": "severs-middle-fastener",
+              "directoryName": "✂️severs-middle-fastener"
             }
           ]
         },
@@ -307,6 +319,10 @@
             {
               "id": "removes-grip-pair",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "withdraws-middle-row",
+              "directoryName": "💔️withdraws-middle-row"
             }
           ]
         },
@@ -381,6 +397,10 @@
             {
               "id": "removes-grip-1-and-severs-fastener",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-middle-grip",
+              "directoryName": "➖removes-middle-grip"
             }
           ]
         },

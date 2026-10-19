@@ -80,11 +80,6 @@ export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" |
  * resolveSceneGizmoViewportPlacement holds the data fields for a resolveSceneGizmoViewportPlacement record.
  **/
 export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; height: number }): SceneGizmoViewportPlacement => {
-  // 🧭️ GizmoHelper `margin` is the offset to the widget CENTER. Match pane chrome (`anchorPositionStyle`
-  // uses `--spacing-single` from the edge to the widget's outer edge) by adding half the navigation-cube
-  // screen extent so face/corner tips clear the edge by the same inset as panes/windows. Bottom margin
-  // additionally clears the folded projection pane chrome (`h-medium`) plus one spacing gap so the cube
-  // sits directly above it; when that pane unfolds it grows upward over the cube (DOM overlay on canvas).
   const chromeInset = Math.max(4, Math.round(uiSpacingPx(1)));
   const foldedPaneChromePx = Math.round(uiSpacingPx(7));
   const gizmoHalfExtentPx = 28;

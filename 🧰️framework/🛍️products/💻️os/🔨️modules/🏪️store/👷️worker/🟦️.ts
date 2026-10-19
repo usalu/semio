@@ -1,6 +1,5 @@
 
 
-import { LOCAL_CATALOG_CONFIG_SCHEMA, applyIdentityDiff, applyLocalCatalogDiff, decodeIdentityDiff, decodeIdentityValue, decodeLocalCatalogDiff, decodeLocalCatalogValue } from "@semio-tech/framework/config/schema/mutations";
 import {admitCheckpointSelectionV1} from "../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
 import { parseDirectorySessionAuthorityJsonV1 } from "@semio-tech/framework/directory/io/text/session-authority-v1";
 import { parseDirectoryEventPageV1 } from "@semio-tech/framework/directory/io/text";
@@ -68,13 +67,15 @@ import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT
 import { DEV_STREAM_ROUTES, DirectoryClient, DirectoryCommandError, DirectoryHttpError, DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, admitRemoteEnvelopes, noteAuthoredEnvelopeIds, hubCommandRejectionV1, hubTransientApplyRefusalV1, localCommandRejectionV1, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, createSocketGrantIssuerV1, documentLinkExpiresAtMs, documentLinkStatus, documentLinkTransition, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeDocumentArchiveBytes, decodeAppCommand, decodePackWire, decodePackValue, packValueToExactJson, faultDisplayMessage, documentRuntimeKeyV1, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeAppCommand, encodePackValue, isPackInteger, packUIntSafeOrNull, packWireNatural, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, HUB_SESSION_CAPABILITY_PATTERN_V1, parseHubSessionPortRequestV1, parseDocumentBackboneMessage, parseInboundDocumentBackboneMessage, parseDocumentSocketGrantReceiptV1, parseSocketGrantReceiptV1 } from "../../../🟦️";
 import type { PackValue } from "../../../🟦️";
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
-import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
+import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
 import { DOCUMENT_ACTOR_RECOVERY_FRESH_V1, DOCUMENT_ACTOR_RECOVERY_V1, documentActorRecoveryStepV1, type DocumentActorLossCauseV1, type DocumentActorRecoveryMemoryV1 } from "./🚑️actor-recovery/🟦️.ts";
-import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
+import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "@semio-tech/framework-plugin/browser-bundle/describe";
 import { BROWSER_ACTOR_CHILD_LIMITS, COMMAND_INGRESS_KINDS, boundChildText, measureChildValue, type CommandIngressKindV1 } from "@semio-tech/framework/browser-bundle/child/schema";
-import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairCursor, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
-import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { driveSpawnedJob, spawnedJobCompletedEvent, typedOperationPageAnswerV1, typedOperationResult, wireSpawnJob } from "../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairCursor, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "@semio-tech/framework-actor/cold-pair";
+import { createShardCommandIngressPages, type ShardCommandIngressPage } from "@semio-tech/framework-actor/shard-client/wire";
+import { wireSpawnJob } from "@semio-tech/framework-actor/wire-turn";
+import { typedOperationPageAnswerV1, typedOperationResult } from "@semio-tech/framework-actor/wire-turn";
+import { driveSpawnedJob, spawnedJobCompletedEvent } from "@semio-tech/framework-actor/wire-turn";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { BROWSER_ACTOR_UI_PATCH_SURFACE_MAXIMUM, browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "@semio-tech/framework/browser-bundle/patch-handoff";
@@ -88,6 +89,7 @@ import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatus
 /** 🪪️ Identity and local-catalog config lanes (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS
  * §C3) — the neutral backbone module owns the actor configs and the identity fold; never redefined here. */
 import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent, identityActorConfig } from "@semio-tech/framework/backbone/config-lane";
+import { configFacetArchiveV1 } from "./🗂️config-lane/🟦️.ts";
 import { COLD_PAIR_WAIT_POLICY, browserActorActionDisposition, browserActorAppCommandV1, coldPairWaitDelay, documentRuntimeKeyForConfig, hubBinding, retryColdPairBackpressure, settleColdPairLoading } from "./🧩️actor-wire-helpers/🟦️.ts";
 import { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, documentExecutionTargetLeaseMintToken, workerScope } from "./⚙️constants/🟦️.ts";
 import { artifactState, artifacts, documentServices, dropVerifiedColdDocumentPair, emitEvent, post, setWorkerPostTestSink, workerPostTestSink } from "./🧾️document-state/🟦️.ts";
@@ -204,7 +206,6 @@ if (workerScope) {
       installStreamMuxEndpoint(new StreamMuxPortEndpointV1(Reflect.get(messageEvent.data, "port") as MessagePort));
       return;
     }
-    // 🛡️ React DevTools and other injectors postMessage into every Worker; ignore non-wire traffic.
     if (!isBackboneWorkerWireMessage(messageEvent.data)) return;
     const request = decodeWorkerRequest(messageEvent.data);
     queueMicrotask(() => dispatchBackboneWorkerRequest(request, null));
@@ -522,92 +523,3 @@ if (import.meta.vitest) {
 
 }
 //#endregion 🧪️Tests
-
-export type ConfigFacetV1 = Readonly<{
-  schema: string;
-  initial: unknown;
-  decodeValue: (payload: unknown) => unknown;
-  decodeDiff: (payload: unknown) => unknown;
-  apply: (base: unknown, diff: unknown) => unknown;
-}>;
-
-/** 🎚️ The facets the store folds, keyed by their schema (which is also their document id). */
-export const CONFIG_FACETS: ReadonlyMap<string, ConfigFacetV1> = new Map<string, ConfigFacetV1>([
-  [IDENTITY_CONFIG_SCHEMA, { schema: IDENTITY_CONFIG_SCHEMA, initial: null, decodeValue: decodeIdentityValue, decodeDiff: decodeIdentityDiff, apply: (base, diff) => applyIdentityDiff(base as Parameters<typeof applyIdentityDiff>[0], diff as Parameters<typeof applyIdentityDiff>[1]) }],
-  [LOCAL_CATALOG_CONFIG_SCHEMA, { schema: LOCAL_CATALOG_CONFIG_SCHEMA, initial: { documents: [] }, decodeValue: decodeLocalCatalogValue, decodeDiff: decodeLocalCatalogDiff, apply: (base, diff) => applyLocalCatalogDiff(base as Parameters<typeof applyLocalCatalogDiff>[0], diff as Parameters<typeof applyLocalCatalogDiff>[1]) }],
-]);
-
-/** 🗃️ A facet's persisted form: its whole value as the archive's pack value, no history log. */
-export function configFacetArchiveV1(value: unknown): Uint8Array {
-  return encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(value as PackValue)), parent_spr: [], members: [] });
-}
-
-/** 🗃️ The value a facet archive holds, or `undefined` when the archive is not one of this facet. */
-function decodeConfigFacetArchive(facet: ConfigFacetV1, archive: Uint8Array): unknown {
-  try {
-    return facet.decodeValue(decodePackValue(new Uint8Array(decodeDocumentArchiveBytes(archive).parent_pack)));
-  } catch {
-    return undefined;
-  }
-}
-
-/** 🧮️ Folds the diffs of `envelopes` onto `base`, in order, through the facet's applier. `null` when one is not a diff of this facet. */
-function foldConfigFacetEnvelopes(facet: ConfigFacetV1, base: unknown, envelopes: readonly MutationEnvelope[]): { readonly value: unknown } | null {
-  let value = base;
-  for (const envelope of envelopes) {
-    const diff = facet.decodeDiff(envelope.diff.payload);
-    if (diff === undefined) return null;
-    value = facet.apply(value, diff);
-  }
-  return { value };
-}
-
-/** 🎚️ Seeds a facet document from what its folder holds (`archive`), or from the facet's empty value when the folder holds none,
- * then folds the envelopes that waited for that first answer. */
-function seedConfigFacet(state: ArtifactState, archive: Uint8Array | null): void {
-  const facet = CONFIG_FACETS.get(state.config.schema);
-  if (facet === undefined) return;
-  const held = archive === null ? undefined : decodeConfigFacetArchive(facet, archive);
-  if (held !== undefined) state.facetValue = held;
-  else if (state.facetValue === undefined) state.facetValue = facet.initial;
-  const waiting = state.facetBacklog;
-  state.facetBacklog = [];
-  if (waiting.length > 0) foldConfigFacet(state, waiting);
-}
-
-/** 🎚️ The store's fold of locally admitted facet envelopes: each diff applies through the facet's central twin onto the held
- * value, the resulting archive is persisted to the facet's folder, and every client of the document is handed that archive as
- * the new projection. Envelopes that arrive before the folder's first answer wait for it. */
-function foldConfigFacet(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
-  const facet = CONFIG_FACETS.get(state.config.schema);
-  if (facet === undefined) return;
-  const folder = folderBinding(state.config);
-  if (folder !== null && !state.folderBootstrapped) {
-    state.facetBacklog.push(...envelopes);
-    return;
-  }
-  const folded = foldConfigFacetEnvelopes(facet, state.facetValue === undefined ? facet.initial : state.facetValue, envelopes);
-  if (folded === null) {
-    rejectLocally(state, localCommandRejectionV1("local.backbone-malformed", "a config facet envelope must carry the facet's sparse diff", { envelopes: envelopes.length }));
-    return;
-  }
-  state.facetValue = folded.value;
-  const archive = configFacetArchiveV1(folded.value);
-  if (folder !== null) {
-    void writeFolder(state, folder, Array.from(archive)).then(() => {
-      releaseDocumentBackboneOwnership(state, state.pendingMutations);
-      state.pendingMutations = [];
-      setStatus(state, { pendingMutations: 0 });
-    }, (error) => console.error("[backbone-worker] folder write failed", state.config.documentId, error));
-  }
-  emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
-}
-
-/** 🎚️ Folds the envelopes another tab's store admitted (they arrive on the document's channel) into the held value. That tab
- * persisted them; this one only keeps its own projection current and tells its clients. */
-function foldRemoteConfigFacet(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
-  const facet = CONFIG_FACETS.get(state.config.schema);
-  if (facet === undefined) return;
-  const folded = foldConfigFacetEnvelopes(facet, state.facetValue === undefined ? facet.initial : state.facetValue, envelopes);
-  if (folded !== null) state.facetValue = folded.value;
-}

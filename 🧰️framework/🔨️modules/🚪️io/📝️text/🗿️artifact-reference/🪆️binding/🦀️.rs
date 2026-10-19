@@ -1,6 +1,7 @@
 //! 🔗️ Literal owned artifact identity preserves unrestricted snapshot fields.
 use crate::{ArtifactDialect,ArtifactRef};
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::{DslField,FieldSpec,FieldValue,NativeSchemaControl,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,Shape};
 
 impl semio_framework_dsl_record::BorrowedDslRecord for ArtifactRef{

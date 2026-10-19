@@ -28,3 +28,5 @@ path = "../../🧪️tests/🧭️oracle/🦀️.rs"
 semio-framework-io-sqlite-model.workspace = true
 semio-framework-io-control.workspace = true
 semio-framework-value.workspace = true
+semio-framework-value-persistent.workspace = true
+semio-framework-value-native-owned.workspace = true

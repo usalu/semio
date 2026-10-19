@@ -88,9 +88,6 @@ pub fn retained_hit_registration(
 ) -> Option<RetainedHitRegistration> {
     use semio_framework_ui_declaration::ui::UiNode;
     let node = tree.node(id)?;
-    // 🕳️ A mounted-but-unplaced node (a collapsed branch's row, a `Tree` item action that the row
-    // geometry never gives a rect of its own) must never take the pointer from the node actually
-    // drawn there.
     if !node.spec.0.presence().visible() || rect.w <= 0.0 || rect.h <= 0.0 {
         return None;
     }
@@ -138,10 +135,6 @@ pub fn retained_hit_registration(
         UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
         UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, if toggle.appearance == ui_contract::ToggleAppearance::Checkbox { semio_framework_ui_wgpu_layout::layout::tree_checkbox_hit_rect(rect, metrics.inline) } else { rect }),
         UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
-        // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
-        // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained
-        // router never saw the gesture at all, which is half of why those kinds could not commit
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
         UiNode::NumberStepper(stepper) => entry(HitKind::NumberStepper, stepper.id.clone(), None, rect),
         UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
         UiNode::IconSelect(select) => entry(HitKind::IconSelect, select.id.clone(), None, rect),

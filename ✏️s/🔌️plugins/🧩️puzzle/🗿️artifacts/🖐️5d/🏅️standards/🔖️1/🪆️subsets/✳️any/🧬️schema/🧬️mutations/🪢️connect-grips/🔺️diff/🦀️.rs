@@ -1,4 +1,4 @@
-//! already exists in `base`.
+//! 🔗️ already exists in `base`.
 //! 🔺️ Sparse diff builder for `ConnectGrips` — a real append-only insert. No-op when the id
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dFastenersDelta;

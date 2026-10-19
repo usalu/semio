@@ -14,8 +14,6 @@ async fn render_lists_real_handle_kind_and_handle_geometry() {
     let mut document = semio_s_artifact_block_2d_io::text::snapshot::empty_block2d_snapshot();
     document.handle_kinds.push(Block2dHandleKind { id: "k1".into(), name: "k1".into(), label: "Cable".into(), color: "#ff0000".into(), default_wire_kind: "cable.link".into() });
     document.handles.push(Block2dHandleTemplate { id: "h1".into(), handle_kind: "k1".into(), angle: std::f64::consts::PI, radius: 0.5 });
-    // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
-    // node's `BuiltChildren` only serialises through the retained page transport.
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&document).expect("board render"))).expect("board projection");
     assert!(json.contains("Cable"), "board render must surface real handle-kind geometry: {json}");
     assert!(json.contains("radius 0.50"), "board render must surface real handle-template geometry: {json}");

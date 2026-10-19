@@ -67,10 +67,6 @@ export function computeRunKey(opts: {
     testEvidenceDigest: setDigest(opts.fixtures.map((fixture) => [fixture.id, digest(JSON.stringify(canonicalize(fixture)))] as const)),
     fixtureFileDigests: setDigest(opts.fixtures.flatMap((fixture) => fixture.files.map((file) => [`${fixture.id}/${file.role}`, file.sha256] as const))),
     oracleLockDigest: opts.oracle === undefined ? "" : (opts.oracle.lockDigest ?? `${opts.oracle.package}@${opts.oracle.version ?? "*"}`),
-    // ⚙️KIND and QUALIFICATION belong in the key, not beside it. Reclassifying an oracle from
-    // `cross-semio-implementation` to `third-party-library`, or promoting a probe from `provisional` to
-    // `qualified`, changes what a verdict MEANS — and without them in the key the reclassified run
-    // reused the old verdict and the promotion was never actually measured.
     oracleEngineDigest: opts.oracle === undefined ? "" : `${opts.oracle.kind ?? "unclassified"}/${engineFamilyId(opts.oracle.engine)}@${opts.oracle.engine?.version ?? "*"}`,
     probeDigest: setDigest(opts.probes.map((probe) => [probe.id, `${probe.qualification?.status ?? "unqualified"}/${probe.lockDigest ?? `${probe.package}@${probe.version ?? "*"}`}`] as const)),
     comparisonProfileDigest: digest(JSON.stringify(canonicalize({ profile: opts.comparison ?? null, pipeline: opts.pipeline ?? null, tolerance: opts.tolerance ?? null }))),

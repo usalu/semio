@@ -127,7 +127,7 @@ fn numerical_page_ldlt_checkpoint_restores_maximum_admitted_matrix() {
     assert!(closed);
     assert!(!write_fault);
     let mut expected_pages=Vec::new();let mut item=0;let mut owner=0;
-    while item<count{let overhead=usize::from(owner==0)*8;let scalars=((semio_framework_job::JOB_PAYLOAD_PAGE_BYTES-NUMERICAL_CHECKPOINT_HEADER_BYTES-overhead)/8).min(count-item);expected_pages.push(serde_json::json!({"owner":owner,"item":item,"bytes":NUMERICAL_CHECKPOINT_HEADER_BYTES+overhead+scalars*8,"scalars":scalars}));item+=scalars;owner+=1;}
+    while item<count{let overhead=usize::from(owner==0)*8;let scalars=((semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES-NUMERICAL_CHECKPOINT_HEADER_BYTES-overhead)/8).min(count-item);expected_pages.push(serde_json::json!({"owner":owner,"item":item,"bytes":NUMERICAL_CHECKPOINT_HEADER_BYTES+overhead+scalars*8,"scalars":scalars}));item+=scalars;owner+=1;}
     assert_eq!(pages,expected_pages);
     assert_eq!(restore_fault, None);
     assert_eq!(actual, Some(expected));
@@ -495,7 +495,7 @@ fn numerical_page_ldlt_checkpoint_restores_matrix_across_original_pages() {
     eprintln!("[DEBUG] LDLT paged owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
     assert!(closed);
     assert!(!write_fault);
-    let first = (semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - NUMERICAL_CHECKPOINT_HEADER_BYTES - 8) / 8;
+    let first = (semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - NUMERICAL_CHECKPOINT_HEADER_BYTES - 8) / 8;
     assert_eq!(pages, vec![serde_json::json!({ "owner": 0, "item": 0, "bytes": NUMERICAL_CHECKPOINT_HEADER_BYTES + 8 + first * 8, "scalars": first }), serde_json::json!({ "owner": 1, "item": first, "bytes": NUMERICAL_CHECKPOINT_HEADER_BYTES + (count - first) * 8, "scalars": count - first })]);
     assert_eq!(restore_fault, None);
     assert_eq!(actual, Some(expected));

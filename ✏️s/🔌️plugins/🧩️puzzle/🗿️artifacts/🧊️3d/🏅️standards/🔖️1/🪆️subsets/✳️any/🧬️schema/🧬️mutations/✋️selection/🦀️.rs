@@ -1,4 +1,4 @@
-//! and the selection, outcome and attraction-follow helpers they share.
+//! 👉️ and the selection, outcome and attraction-follow helpers they share.
 //! ✋️ Puzzle3d selection mutations — the three parametric selection transforms (`drag-`, `rotate-`, `scale-selection`)
 
 #![allow(clippy::result_large_err)]

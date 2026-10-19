@@ -21,9 +21,6 @@ impl<'a> Font<'a> {
     }
 
     pub fn units_per_em(&self) -> u16 {
-        // Real fonts always report a units_per_em well within u16 range (1000/2048 are the
-        // near-universal values); ttf-parser's own type is `i32` only because the accessor is
-        // shared with a raw-table read that doesn't validate range up front.
         self.face.units_per_em() as u16
     }
 

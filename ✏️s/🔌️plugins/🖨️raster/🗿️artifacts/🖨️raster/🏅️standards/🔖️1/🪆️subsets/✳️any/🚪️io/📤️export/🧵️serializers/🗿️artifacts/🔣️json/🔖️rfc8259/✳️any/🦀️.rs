@@ -1,4 +1,4 @@
-//! raster -> json
+//! 🖼️ raster -> json
 //!
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see w5b-close-report.md):
 //! `JsonSnapshot::from_value`/stdio's own real `write_json_pretty` do the structural conversion —

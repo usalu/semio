@@ -3,7 +3,7 @@
 //! step's `inverse` restores its pre-state, and the reversed step inverses sum to the negative; a second randomized law runs the same
 //! sequences over fail-closed rows and proves every displaced or abandoned row went through the cold-disposal hook.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_mutation_diff::ColdDiffAlgebra;
 use crate::__value_derive::{FromValue, ToValue};
 use crate::{ItemList, KeyOf, Parts, RowPatch};
 use crate::{list_delta, row_patch};
@@ -48,7 +48,7 @@ impl semio_framework_mutation_diff::DiffAlgebra<Vec<Item>> for ItemDelta {
     }
 }
 
-impl crate::ColdDiffAlgebra<Vec<Item>> for ItemDelta {
+impl ColdDiffAlgebra<Vec<Item>> for ItemDelta {
     fn inverse(&self, base: &Vec<Item>) -> Self {
         ItemDelta::inverse(self, base)
     }
@@ -67,7 +67,7 @@ impl semio_framework_mutation_diff::MutationDiff<Vec<Item>> for ItemDelta {
         ItemDelta::absorb(self, other)
     }
 
-    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> crate::MutationApplyResult<()> {
+    fn apply(&self, base: &mut Vec<Item>, capability: ApplyCapability) -> semio_framework_mutation_diff::diff::MutationApplyResult<()> {
         CAPABILITY.with(|cell| cell.set(Some(capability)));
         let next = self.commit_onto(base, capability)?;
         ItemDelta::retire_list(std::mem::replace(base, next));
@@ -254,13 +254,13 @@ struct IdentityRow {
     value: i64,
 }
 
-impl crate::list_delta::Keyed for IdentityRow {
+impl crate::Keyed for IdentityRow {
     type Key = String;
     fn key(&self) -> String { self.id.clone() }
 }
 
 impl RowPatch<IdentityRow> for IdentityRow {
-    fn commit_into(&self, row: &mut IdentityRow, _: ApplyCapability) -> crate::MutationApplyResult<()> { *row = self.clone(); Ok(()) }
+    fn commit_into(&self, row: &mut IdentityRow, _: ApplyCapability) -> semio_framework_mutation_diff::diff::MutationApplyResult<()> { *row = self.clone(); Ok(()) }
     fn absorb(&mut self, later: Self) { *self = later; }
     fn inverse(&self, row: &IdentityRow) -> Self { row.clone() }
     fn is_empty(&self) -> bool { false }
@@ -395,7 +395,7 @@ type FragileParts = Parts<Fragile, FragilePatch, FragileKeys>;
 struct FragileIdentityPatch(String);
 
 impl RowPatch<Fragile> for FragileIdentityPatch {
-    fn commit_into(&self, row: &mut Fragile, _: ApplyCapability) -> crate::MutationApplyResult<()> { row.id.clone_from(&self.0); Ok(()) }
+    fn commit_into(&self, row: &mut Fragile, _: ApplyCapability) -> semio_framework_mutation_diff::diff::MutationApplyResult<()> { row.id.clone_from(&self.0); Ok(()) }
     fn absorb(&mut self, later: Self) { *self = later; }
     fn inverse(&self, row: &Fragile) -> Self { Self(row.id.clone()) }
     fn is_empty(&self) -> bool { false }

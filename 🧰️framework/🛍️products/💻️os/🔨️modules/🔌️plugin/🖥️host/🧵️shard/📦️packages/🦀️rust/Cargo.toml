@@ -55,5 +55,6 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-plugin-host-guest-runtime = { path = "../../../🎭️guest-runtime/📦️packages/🦀️rust" }
 semio-framework-plugin-host-process-transport = { path = "../../🚚️process-transport/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]

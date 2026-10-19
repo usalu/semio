@@ -125,7 +125,6 @@ fn node_record_to_spec_defaults_position_when_missing() {
 fn node_record_to_spec_falls_back_to_id_when_label_missing() {
     let record = GraphNodeRecord { id: "n4".into(), ..Default::default() };
     let spec = node_record_to_spec(&record);
-    // 🔤️ Computation kind routes through `DagNodeSpec::computation`, which pascal-cases the display name.
     assert_eq!(spec.name, "N4");
 }
 //#endregion 🔖️NodeRecordConversion

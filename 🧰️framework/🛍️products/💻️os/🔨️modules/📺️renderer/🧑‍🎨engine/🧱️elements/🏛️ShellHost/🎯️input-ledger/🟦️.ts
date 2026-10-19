@@ -379,8 +379,6 @@ export function createVersionedRegisterV1<T>(initial: T, equals: (a: T, b: T) =>
         return { kind: "refused", reason: "stale-generation", register, expected: expectedGeneration };
       }
       const changed = !equals(register.value, next);
-      // 🔢️ A write that changes nothing leaves the generation alone: a widget that rendered the current
-      // register must not be refused because an idle resync wrote the same value back.
       if (changed) register = { value: next, generation: register.generation + 1 };
       return { kind: "applied", register, changed };
     },

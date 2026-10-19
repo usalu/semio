@@ -78,9 +78,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
                 dispatch(textEditorActions.hover, { start: hover.start, end: hover.end });
               }
             }
-          } catch {
-            /* hover range unavailable */
-          }
+          } catch {}
         }}
         onPointerUp={(event) => {
           const session = sessionRef.current;
@@ -168,9 +166,7 @@ export function WasmEditorSurface(props: WasmEditorSurfaceProps) {
             lintDocument: () => dispatch("lintDocument"),
           };
           for (const target of pickTargets) {
-            localActions[`pick:${target.domain}:${target.id}`] = () => {
-              /* pick handled via menu row args if present */
-            };
+            localActions[`pick:${target.domain}:${target.id}`] = () => {};
           }
           const dispatchTextEditorMenu = (action: string, args?: Record<string, unknown>) => {
             if (localActions[action]) {

@@ -80,18 +80,18 @@ pub(super) enum GuestRelayMountedLifecycle {
 }
 
 pub(super) struct GuestRelayMountedOutput {
-    pub(super) storage: Box<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>,
+    pub(super) storage: Box<[std::mem::MaybeUninit<u8>; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES]>,
     pub(super) length: usize,
 }
 
 impl GuestRelayMountedOutput {
     pub(crate) fn new() -> Self {
-        let storage = Box::<[std::mem::MaybeUninit<u8>; semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES]>::new_uninit();
+        let storage = Box::<[std::mem::MaybeUninit<u8>; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES]>::new_uninit();
         Self { storage: unsafe { storage.assume_init() }, length: 0 }
     }
 
     pub(super) fn write_page(&mut self, page: &[u8]) -> Result<(), PluginHostError> {
-        let end = self.length.checked_add(page.len()).filter(|end| *end <= semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES).ok_or_else(|| PluginHostError::Plugin("plugin cold relay mounted output exceeds its admitted authority".into()))?;
+        let end = self.length.checked_add(page.len()).filter(|end| *end <= semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES).ok_or_else(|| PluginHostError::Plugin("plugin cold relay mounted output exceeds its admitted authority".into()))?;
         for (target, byte) in self.storage[self.length..end].iter_mut().zip(page.iter().copied()) {
             target.write(byte);
         }

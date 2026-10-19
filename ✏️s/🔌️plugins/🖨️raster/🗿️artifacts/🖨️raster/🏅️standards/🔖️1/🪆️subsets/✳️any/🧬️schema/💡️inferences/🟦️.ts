@@ -8,7 +8,7 @@ export interface RasterTopology {
 }
 
 export interface RasterInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: RasterTopology;
 }
 

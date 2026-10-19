@@ -31,11 +31,11 @@ import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️
 import { activationReasonForAppId } from "@semio-tech/framework";
 import { descriptorPackageAssets, fetchDescriptorManifest } from "@semio-tech/framework";
 import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
-import { settleFailedInstanceOpen } from "@semio-tech/framework-actor/shard-client/heartbeat";
-import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
-import { OwnedUiInstance } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { settleFailedInstanceOpen } from "@semio-tech/framework/actor/shard-client/heartbeat";
+import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
+import { OwnedUiInstance } from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import { hopTrace } from "@semio-tech/framework/trace";
-import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "@semio-tech/framework/actor/wire-turn";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import {
   ActorDocumentBindingV1,
@@ -130,10 +130,6 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
         uiOwnerByInstance.set(instanceId, owner);
         uiSurfaceByInstance.set(instanceId, new Map());
         uiIntakesByInstance.set(instanceId, new Set());
-        // 🚑️ From here on this instance has real guest state, so losing its worker is a loss the
-        // shell has to be told about — see {@link onPluginInstancesLost}. Registered AFTER the open
-        // bound a UI owner, because an instance whose open never got that far is already handled by
-        // `settleFailedInstanceOpen`'s own path.
         rememberInstanceForRecovery({ pluginId, instanceId, actorId, release: () => releaseInstanceMaps(instanceId, actorId) });
         requireOpening();
         await withTypedOperationCall(actorId, `open#${instanceId}`, async (call) => {
@@ -296,11 +292,6 @@ function createExtensionCompletionCapture(scope: PluginHandleScope, instances: R
           scope: { instanceId: String(instanceId) }, retryable: false,
         });
       }
-      // 📄️ The guest is handed this answer through ONE `cabi_realloc` per event, and a block its
-      // allocator refuses aborts the actor before any guest code runs — no fault, no diagnosis, an
-      // endless restore loop (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, boot #12). So the answer
-      // crosses as prologue pages inside the guest's declared contiguous-request ceiling, with the
-      // terminal page riding the completion that answers `req`, all in ONE turn.
       const { prologue, terminal } = guestAnswerPages(answer);
       const events: ShardEventEnvelope[] = [
         ...prologue.map((page) => ({ kind: "http-chunk" as const, payload: { req, params: { bytes: Array.from(page), done: false } } })),

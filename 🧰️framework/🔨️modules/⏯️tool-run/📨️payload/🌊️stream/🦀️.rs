@@ -1,6 +1,7 @@
 //! 🌊️ Closed payload updates and immutable original page directories expose indexed reads without flattening.
 use crate::ToolRunIdentity;
-use semio_framework_value::{list::persistent::PersistentList,RetireOwned,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::persistent::PersistentList;
 
 pub const TOOL_RUN_PAYLOAD_CHUNK_BYTES:usize=65536;
 pub const TOOL_RUN_PAYLOAD_READ_BYTES:usize=64;

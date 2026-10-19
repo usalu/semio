@@ -39,7 +39,7 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLoc
     }
 }
 
-impl crate::os_spr::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
+impl semio_framework_os_command::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for DetachLocalFolder {
     fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
         if !base.bindings.iter().any(|entry| entry.document_id == self.document_id) {
             return MutationOutcome::new(LocalFoldersDiff::default()).warning("mutation.no-op", format!("\"{}\" is not attached to a folder on this device.", self.document_id));

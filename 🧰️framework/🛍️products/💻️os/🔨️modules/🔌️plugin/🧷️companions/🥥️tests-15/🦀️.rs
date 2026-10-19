@@ -8,6 +8,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as protocol;
 #[cfg(test)]
 extern crate semio_framework_os_kernel as pack;
+extern crate semio_framework_os_kernel as dsl;
 
 #[cfg(test)]
 #[path = "../../🪝️mounts/🧵️wp7-instance-tier2/🧪️test-hosts/⚖️testing-laws/🧱️unit-4/🦀️.rs"]

@@ -1,73 +1,22 @@
 #!/usr/bin/env bun
 /** 📦️ layout layout Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
-import { BundleScript, ScriptRouter, scriptInvocationBudget, scriptInvocationEnvironment } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
-import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runOwnedVerifyScript, runMediaAdoptionSourceScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length === 1 && segments[0] === "physical-codecs") {
-      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
-      return;
-    }
-
-if (segments[0] === "layout-window-ownership") {
-      const windowsRoot = join(this.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
-      const configRoot = join(windowsRoot, "📐️blueprint/🎚️config");
-      const { testLayoutWindowOwnershipOracle } = await import(`${configRoot}/🧪️tests/🔬️window/🟦️.ts`);
-      testLayoutWindowOwnershipOracle();
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📐️blueprint/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window/🟦️.ts")], { cwd: this.repoRoot });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_window_ownership_", "--", "--nocapture"], this.repoRoot);
-      }
-      return;
-    }
-if (segments[0] === "layout-document-contract") {
-      const schemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.repoRoot });
-      if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "layout_document_contract", "--", "--nocapture"], this.repoRoot);
-      }
-      return;
-    }
-if (segments[0] === "layout-frame-selection") {
-      const mutationsRoot = join(this.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
-      runCmd("bun", ["test", join(mutationsRoot, "🧪️tests/🧪️frame-selection/🟦️.ts")], { cwd: this.repoRoot });
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", "--types", "bun", join(mutationsRoot, "🟦️.ts"), join(mutationsRoot, "🧪️tests/🧪️frame-selection/🟦️.ts")], { cwd: this.repoRoot });
-      if (segments[1] === "native") {
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-layout-layout", "--lib", "frames", "--", "--nocapture"], this.repoRoot);
-      }
-      return;
-    }
-    throw new Error('Unknown owned verification '+segments.join(' '));
+    await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 /** 🎞️ Checks S Layout's owned Source adoption under the original caller's control. */
 class MediaAdoptionSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-media-adoption-source accepts no arguments");
-    const source = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🟦️.ts");
-    const phases = [
-      { name: "strict", budget: 120_000, args: [Bun.resolveSync("typescript/bin/tsc", this.repoRoot), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--types", "bun", source] },
-      { name: "source", budget: 15_000, args: ["test", source] },
-    ];
-    for (const phase of phases) await runOwnedCommand(process.execPath, phase.args, this.repoRoot, `layout:media-adoption:${phase.name}`, scriptInvocationBudget(this.invocation, phase.budget), {
-      signal: this.invocation.control.signal,
-      env: scriptInvocationEnvironment(this.invocation, process.env),
-      onProgress: () => this.invocation.control.publish({ owner: this.invocation.policy.owner, command: "test-media-adoption-source", stage: "running" }),
-    });
+    await runMediaAdoptionSourceScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { testPackages: ["semio-s-artifact-layout-layout", "semio-s-artifact-layout-layout-editor-commands-tests", "semio-s-artifact-layout-layout-mutations-content-tests-1", "semio-s-artifact-layout-layout-mutations-content-tests-2", "semio-s-artifact-layout-layout-mutations-frames-tests-1", "semio-s-artifact-layout-layout-mutations-frames-tests-2"], commands: { verify: OwnedVerifyScript, "test-media-adoption-source": MediaAdoptionSourceScript } });
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript).register("test-media-adoption-source", MediaAdoptionSourceScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { testPackages: ["semio-s-artifact-layout-layout", "semio-s-artifact-layout-layout-editor-commands-tests", "semio-s-artifact-layout-layout-mutations-content-tests-1", "semio-s-artifact-layout-layout-mutations-content-tests-2", "semio-s-artifact-layout-layout-mutations-frames-tests-1", "semio-s-artifact-layout-layout-mutations-frames-tests-2"], commands: router });
 
 
 

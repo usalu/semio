@@ -1,7 +1,8 @@
 use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
 use crate::footer::paint_footer;
 use semio_framework_ui_tui_core::geometry::{Pos, Rect};
-use crate::layout::{solve_window_layout, weight_of, WindowLayout, WindowStackCorner, WINDOW_GAP};
+use crate::layout::{solve_window_layout, weight_of, WindowLayout};
+use semio_framework_ui_tui_core::docking::{WindowStackCorner, WINDOW_GAP};
 use crate::navbar::paint_navbar;
 use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
 use semio_framework_ui_tui_core::text::{display_width, elide_end};
@@ -301,7 +302,7 @@ impl ChromeState {
                 return Some(group.corner);
             }
         }
-        match crate::tui::layout::DockPlacement::at(rect, pos) { Some(crate::tui::layout::DockPlacement::Corner(corner)) => Some(corner), _ => None }
+        match semio_framework_ui_tui_core::docking::DockPlacement::at(rect, pos) { Some(semio_framework_ui_tui_core::docking::DockPlacement::Corner(corner)) => Some(corner), _ => None }
     }
 
     /// 📍️ Corner-local insertion index after excluding the held tab, just like the regular UI.
@@ -417,7 +418,7 @@ pub(crate) fn window_drag_glyph(set: GlyphSet) -> &'static str {
 }
 
 /// 🧭️ The concrete tab box including its seam, clipped by the same chip layout used for painting.
-pub(crate) fn window_tab_rect(w: &WindowState, rect: Rect, index: usize) -> Option<Rect> {
+pub fn window_tab_rect(w: &WindowState, rect: Rect, index: usize) -> Option<Rect> {
     let layout = window_chip_layout(w, rect);
     layout.groups.iter().find_map(|group| group.tabs.iter().find(|tab| tab.kind == TabKind::Tab && tab.index == index).map(|tab| {
         let compact = layout.mode == ChromeMode::Compact;
@@ -754,7 +755,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
     use crate::layout::{Constraint, Dimension, Direction, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
 
     scene.window_layouts.retain(|mounted| mounted.canvas != canvas);
-    scene.window_layouts.push(crate::tui::scene::MountedWindowLayout { canvas, layout: layout.clone(), windows: windows.to_vec() });
+    scene.window_layouts.push(crate::scene::MountedWindowLayout { canvas, layout: layout.clone(), windows: windows.to_vec() });
 
     if let Some(old) = *mount_root {
         for (_, window) in windows {

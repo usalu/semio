@@ -10,7 +10,7 @@ import * as React from "react";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 // 🧱️core: cn imported directly from its presentation module, NOT via the barrel — this component calls
 // cn(...) at module top level (inside a top-level styleVariants(cn(...)) call), which requires a non-circular
 // import because the barrel imports this component.
@@ -34,26 +34,26 @@ import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/
 // Consumers MUST provide action items for the group.
 
 /**
- * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
+ * 🎮️ actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
 const actionGroupItemVariants = styleVariants(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny aspect-square h-small p-single"));
 
 /**
- * ActionGroupContext holds the data fields for a ActionGroupContext record.
+ * ⌨️ ActionGroupContext holds the data fields for a ActionGroupContext record.
  **/
 const ActionGroupContext = reactHostPort.createContext<{ level: Level }>({
   level: "base",
 });
 
 /**
- * ActionGroupProps holds the data fields for a ActionGroupProps record.
+ * 🕹️ ActionGroupProps holds the data fields for a ActionGroupProps record.
  **/
 interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children"> {
   children: React.ReactNode;
 }
 
 /**
- * ActionGroup holds the data fields for a ActionGroup record.
+ * 🎬️ ActionGroup holds the data fields for a ActionGroup record.
  **/
 function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
@@ -66,7 +66,7 @@ function ActionGroup({ className, children, ...props }: ActionGroupProps) {
 }
 
 /**
- * ActionGroupItem holds the data fields for a ActionGroupItem record.
+ * 👥️ ActionGroupItem holds the data fields for a ActionGroupItem record.
  **/
 function ActionGroupItem({
   className,
@@ -118,7 +118,7 @@ function ActionGroupItem({
 }
 
 /**
- * ActionDropdownOption holds the data fields for a ActionDropdownOption record.
+ * 📋️ ActionDropdownOption holds the data fields for a ActionDropdownOption record.
  **/
 interface ActionDropdownOption {
   value: string;
@@ -127,7 +127,7 @@ interface ActionDropdownOption {
 }
 
 /**
- * ActionDropdownProps holds the data fields for a ActionDropdownProps record.
+ * 🍔️ ActionDropdownProps holds the data fields for a ActionDropdownProps record.
  **/
 interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "children" | "id"> {
   id: string;
@@ -139,7 +139,7 @@ interface ActionDropdownProps extends Omit<React.ComponentProps<"button">, "chil
 }
 
 /**
- * ActionDropdown holds the data fields for a ActionDropdown record.
+ * 🧾️ ActionDropdown holds the data fields for a ActionDropdown record.
  **/
 function ActionDropdown({ className, id, options, value, onValueChange, startTransaction, finalizeTransaction, ...props }: ActionDropdownProps) {
   const [open, setOpen] = reactHostPort.useState(false);
@@ -187,7 +187,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
 }
 
 /**
- * ActionProps holds the data fields for a ActionProps record.
+ * 🏷️ ActionProps holds the data fields for a ActionProps record.
  **/
 interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   as?: "button" | "div";
@@ -199,7 +199,7 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 }
 
 /**
- * Action holds the data fields for a Action record.
+ * 📦️ Action holds the data fields for a Action record.
  **/
 function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ...props }: ActionProps) {
   const level = useLevel();

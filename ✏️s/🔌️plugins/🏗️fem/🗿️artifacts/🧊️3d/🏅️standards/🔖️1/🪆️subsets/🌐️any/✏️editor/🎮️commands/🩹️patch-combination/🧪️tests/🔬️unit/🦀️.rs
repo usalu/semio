@@ -12,6 +12,7 @@ use semio_framework_value_derive::ToValue;
 use crate::context::dispatch;
 use crate::context::fem3d_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchCombination) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let history = semio_framework_plugin::HistoryView::empty();
@@ -41,7 +42,7 @@ async fn patch_combination_reweights_adds_and_removes_terms_3d() {
 /// 👥️ Keyed term changes and combination name commands preserve independently authored intent.
 #[test]
 fn combination_name_and_terms_preserve_independent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-name/🩹️renames/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let name=emit(&base,PatchCombination{id:"c1".into(),field:"name".into(),value:"Independent".into()}).unwrap().artifact_mutations.remove(0);
     let first=emit(&base,PatchCombination{id:"c1".into(),field:format!("{TERM_FIELD_PREFIX}lc1"),value:"2".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchCombination{id:"c1".into(),field:format!("{TERM_FIELD_PREFIX}lc2"),value:"3".into()}).unwrap().artifact_mutations.remove(0);

@@ -45,7 +45,6 @@ semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-tool-run-actions = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -62,6 +61,7 @@ semio-s-artifact-puzzle-2d-mut-any-7 = { path = "../../../../🧬️schema/🧬�
 semio-s-artifact-puzzle-2d-mut-any-8 = { path = "../../../../🧬️schema/🧬️mutations/〰️edge/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-mutations = { path = "../../../../🧬️schema/📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../../../🧬️schema/🧱️records/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-retained-panels = { workspace = true }
 semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tests = { path = "../../../../🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/🧪️tests/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../🧬️schema/🧬️mutations/🔤️text/↩️inverse/📦️packages/🦀️rust" }

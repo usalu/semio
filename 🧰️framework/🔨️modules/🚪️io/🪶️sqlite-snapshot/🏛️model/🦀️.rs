@@ -128,7 +128,7 @@ pub type SqliteSnapshotStageAllocation<'a>=dyn FnMut(usize)->std::result::Result
 #[cfg(target_arch="wasm32")]
 pub type SqliteSnapshotStageAllocation<'a>=dyn FnMut(usize)->std::result::Result<(),ValueError>+'a;
 /// 🛑️ One progress and cancellation authority spanning typed projection and physical I/O.
-pub struct SqliteSnapshotControl<'a> { required_allocation:bool, forwarded_bytes:usize, allocation:Option<&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>>, native_retirement:Option<&'a mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient>, callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, ledger: SqliteSnapshotLedgerSlot<'a> }
+pub struct SqliteSnapshotControl<'a> { required_allocation:bool, forwarded_bytes:usize, allocation:Option<&'a mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'a>>, native_retirement:Option<&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient>, callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, ledger: SqliteSnapshotLedgerSlot<'a> }
 
 /// 🔐️ Borrows one original control and restores its preceding allocation requirement on lexical close.
 pub struct SqliteSnapshotReceivingControl<'scope,'caller>{control:&'scope mut SqliteSnapshotControl<'caller>,previous:bool}
@@ -173,7 +173,7 @@ impl<'a> SqliteSnapshotControl<'a> {
     }
     pub fn limits(&self) -> SqliteDatabaseLimits { self.limits }
     /// 🫴️ Installs one explicit empty caller recipient before any retained prefix ownership is created.
-    pub fn install_native_retirement_recipient(&mut self,recipient:&'a mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient)->std::result::Result<(),ValueError>{
+    pub fn install_native_retirement_recipient(&mut self,recipient:&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient)->std::result::Result<(),ValueError>{
         if self.native_retirement.is_some()||!semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(ownership_limit("SQLite snapshot requires one empty explicit retirement recipient"));}
         self.native_retirement=Some(recipient);Ok(())
     }
@@ -187,7 +187,7 @@ impl<'a> SqliteSnapshotControl<'a> {
         result
     }
     /// 🧬️ Lends the same ledger, callback and allocation port to a nested producer that retires into its own empty recipient.
-    pub fn with_retirement_child<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
+    pub fn with_retirement_child<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
         if !self.native_retirement.as_ref().is_some_and(|parent|parent.is_reserved())||!semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(E::from(ownership_limit("SQLite snapshot child needs an active parent slot and an empty original recipient")));}
         let(forwarded,limits)=(self.forwarded_bytes,self.limits);
         let mut child=SqliteSnapshotControl{required_allocation:self.required_allocation,forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
@@ -197,7 +197,7 @@ impl<'a> SqliteSnapshotControl<'a> {
         result
     }
     /// 🗄️ Lends the same ledger, callback and allocation port to a whole receiving operation whose retained prefixes retire into the caller's empty recipient, whether or not this control already has one.
-    pub fn with_workspace_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
+    pub fn with_workspace_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
         if !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(E::from(ownership_limit("SQLite snapshot workspace needs an empty original recipient")));}
         let(forwarded,limits)=(self.forwarded_bytes,self.limits);
         let mut child=SqliteSnapshotControl{required_allocation:self.required_allocation,forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
@@ -214,7 +214,7 @@ impl<'a> SqliteSnapshotControl<'a> {
     }
     /// 🫴️ Runs `operation` as the original caller: it owns the empty retirement recipient and funds its physical close from the allocation ceiling of `limits` before returning.
     pub fn run_as_original_caller<T,E:From<ValueError>>(callback:&mut dyn FnMut(SqliteSnapshotProgress)->bool,limits:SqliteDatabaseLimits,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
-        let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+        let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
         let result={let mut control=SqliteSnapshotControl::new(callback,limits);control.install_native_retirement_recipient(&mut recipient)?;operation(&mut control)};
         match close_original_recipient(&mut recipient,limits){
             Ok(())=>result,
@@ -283,7 +283,7 @@ impl<'a> SqliteSnapshotControl<'a> {
 const ORIGINAL_CLOSE_DEPTH: usize = 4096;
 
 /// ♻️ Drains the original recipient turn by turn under the allocation ceiling; a turn that is refused or makes no progress is retried with the grant widened to the owner's own quote, and a recipient that still stops progressing is refused.
-fn close_original_recipient(recipient:&mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,limits:SqliteDatabaseLimits)->Result<()>{
+fn close_original_recipient(recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,limits:SqliteDatabaseLimits)->Result<()>{
     use semio_framework_value::ErasedSnapshotRetirement as _;
     let ceiling=limits.max_allocation_bytes;
     let base=semio_framework_value::RetainedCloneGrant{maximum_items:ceiling.max(1),maximum_copy_bytes:ceiling,maximum_capacity_bytes:ceiling,maximum_release_bytes:ceiling,maximum_depth:ORIGINAL_CLOSE_DEPTH};

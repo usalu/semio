@@ -3,7 +3,8 @@ use super::{invalid,lane,ArtifactCommand,HistoryLane,SupersedeInput,Author,Mutat
 use protocol::{OpBinaryReceiving,OpBinaryReceivingCursor,codec::RetainedWireFieldDecode};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued,OriginalNativeDecodeOutcome};
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,SharedUtf8,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, SharedUtf8, ValueError, ValueRefusalKind, retirement::{RetireOwned, RetirementCursor, RetirementStep, controlled::ControlledRetirement}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 
 #[derive(Clone,Copy)]

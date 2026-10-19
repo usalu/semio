@@ -1,5 +1,5 @@
 import schema from "./🔣️.json" with { type: "json" };
-import type { ComponentProfileV1, ComponentReceiptV1 } from "../../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
+import type { ComponentProfileV1, ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 
 /** 🏷️ The schema tag every component receipt carries (`ComponentReceiptV1.schema`). */
 export const COMPONENT_RECEIPT_SCHEMA_ID = schema.$defs.ComponentReceiptV1.properties.schema.const;

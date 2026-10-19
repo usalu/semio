@@ -72,15 +72,6 @@ fn render_block(block: &MdBlock, out: &mut String) {
             out.push_str(raw);
             out.push_str("\n\n");
         }
-        // 📃 A list must CLOSE, exactly like every other block above: a tight list's items each end
-        // with a single `\n`, so without the blank line added here the next block's first line is a
-        // lazy continuation of the last item's paragraph, and a following list merges into this one
-        // — which CommonMark then reads back as ONE LOOSE list. That is how the real README fixture's
-        // tight `**Title symbols:**` list came back `"tight": false` through `comrak` (ticket
-        // 26/08/23/END-TO-END-TESTING-REFACTOR, `📝️mutate-md-commonmark`'s first subject run: all six
-        // `inverse-<kind>` rows and the round trip failed on this one block). A loose list already
-        // ends with the blank line `render_list_item` writes after every item, so the guard below
-        // adds nothing there.
         MdBlock::List { ordered, start, tight, items } => {
             for (n, item) in (start.unwrap_or(1)..).zip(items.iter()) {
                 let marker = if *ordered { format!("{n}. ") } else { "- ".to_string() };

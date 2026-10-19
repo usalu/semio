@@ -1,4 +1,4 @@
-//! combinations and analysis settings — the records every fem2d facet (snapshot, diff, mutations, io, editor) names.
+//! 🗃️ combinations and analysis settings — the records every fem2d facet (snapshot, diff, mutations, io, editor) names.
 //! 🏗️ FEM 2D structural model entities: nodes, members, materials, sections, supports, loads, load cases, regions,
 
 use semio_framework_value::DslValue;
@@ -57,7 +57,7 @@ impl ToValue for FemDof {
     }
 }
 impl FromValue for FemDof {
-    fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+    fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{
         control.checkpoint()?;
         match value.as_str(){Some("Tx")=>Ok(Self::Tx),Some("Ty")=>Ok(Self::Ty),Some("Tz")=>Ok(Self::Tz),Some("Rx")=>Ok(Self::Rx),Some("Ry")=>Ok(Self::Ry),Some("Rz")=>Ok(Self::Rz),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a canonical DOF key"))}
     }
@@ -84,7 +84,7 @@ impl FemDof {
 }
 
 /// 🛂️ Checks at most six borrowed restraint keys before any decoded output exists.
-fn validate_fixed_dofs(value:&DslValue,mut control:Option<&mut semio_framework_value::NativeDecodeControl<'_>>)->Result<(),ValueError>{
+fn validate_fixed_dofs(value:&DslValue,mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>)->Result<(),ValueError>{
     if let Some(control)=control.as_deref_mut(){control.checkpoint()?;}
     let values=value.as_array().ok_or_else(fixed_dof_refusal)?;
     if values.len()>FemDof::ALL.len(){return Err(fixed_dof_refusal());}
@@ -106,7 +106,7 @@ pub fn decode_fixed_dofs(value:DslValue)->Result<Vec<FemDof>,ValueError>{
 }
 
 /// 🎟️ Validates borrowed keys through the supplied control before funded vector decoding.
-pub fn decode_fixed_dofs_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Vec<FemDof>,ValueError>{
+pub fn decode_fixed_dofs_controlled(value:&DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Vec<FemDof>,ValueError>{
     validate_fixed_dofs(value,Some(&mut *control))?;
     Vec::<FemDof>::from_value_controlled(value,control)
 }
@@ -277,10 +277,6 @@ impl Default for FemAnalysisSettings {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
 pub use semio_s_fem_node::planar::FemNode;
 
 pub use semio_s_fem_node::planar::FemNodeValue;
@@ -289,6 +285,3 @@ pub use semio_s_fem_material::planar::FemMaterial;
 
 pub use semio_s_fem_material::planar::FemMaterialValue;
 
-#[cfg(test)]
-#[path="🎟️fixed-dofs/🧪️tests/🦀️.rs"]
-mod fixed_dof_tests;

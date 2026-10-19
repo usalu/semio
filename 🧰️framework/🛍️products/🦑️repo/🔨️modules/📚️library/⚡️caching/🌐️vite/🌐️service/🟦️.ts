@@ -22,11 +22,11 @@ export async function runViteBunxDev(
     portEnv?: string;
     defaultPort?: string;
     strictPort?: boolean;
-    /** When true, bind only `defaultPort` / env — never bump into another playground port. */
+    /** 📌️ When true, bind only `defaultPort` / env — never bump into another playground port. */
     fixedPort?: boolean;
     reservedPorts?: ReadonlySet<number>;
     env?: NodeJS.ProcessEnv;
-    /** When set with `fixedPort`, only reuse an existing listener serving this play entry. */
+    /** 🎮️ When set with `fixedPort`, only reuse an existing listener serving this play entry. */
     expectedPlayEntry?: string;
   },
 ): Promise<void> {

@@ -12,7 +12,8 @@ extern crate semio_s_artifact_energy_model_diff_splice as diff_splice;
 use crate::diff_splice::{Splice, SpliceFault};
 use std::fmt::Debug;
 use protocol::MutationApplyError;
-use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError};
+use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue, ValueError};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Traits
@@ -576,6 +577,7 @@ impl<P: FieldPatch + Default> Field<P> for Rec {
 //#endregion 🔖️Fields
 
 //#region 🔖️Macros
+#[macro_export]
 macro_rules! patch {
     (@ $(#[$meta:meta])* $patch:ident for $row:ty; [$($key:ident: $key_ty:ty)?]; $($kind:ident $field:ident: $ty:ty),*) => {
         $(#[$meta])*
@@ -621,6 +623,7 @@ macro_rules! patch {
     };
 }
 
+#[macro_export]
 macro_rules! row_patch {
     ($(#[$meta:meta])* $patch:ident for $row:ty { key $key:ident: $key_ty:ty; $($kind:ident $field:ident: $ty:ty),* $(,)? }) => {
         patch!(@ $(#[$meta])* $patch for $row; [$key: $key_ty]; $($kind $field: $ty),*);
@@ -640,6 +643,7 @@ macro_rules! row_patch {
     };
 }
 
+#[macro_export]
 macro_rules! record_patch {
     ($(#[$meta:meta])* $patch:ident for $row:ty { $($kind:ident $field:ident: $ty:ty),* $(,)? }) => {
         patch!(@ $(#[$meta])* $patch for $row; []; $($kind $field: $ty),*);
@@ -652,5 +656,4 @@ macro_rules! record_patch {
     };
 }
 
-pub(crate) use {patch, record_patch, row_patch};
 //#endregion 🔖️Macros

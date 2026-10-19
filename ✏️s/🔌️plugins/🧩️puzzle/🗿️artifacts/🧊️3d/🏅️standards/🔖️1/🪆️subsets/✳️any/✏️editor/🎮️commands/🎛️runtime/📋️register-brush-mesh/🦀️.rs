@@ -28,12 +28,6 @@ use semio_framework::kernel::Effect;
 /// (`✏️editor/⏳️precompute/🦀️.rs`), keyed by `(engine id, url, geometry)`, so one identity decodes once
 /// per process and every open document reads the identical derived page.
 pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
-    // 🖌️ A `HostOnly`-lane upload publishes to no store and paints nothing — `registerBrushMesh` is
-    // declared `Puzzle3dScopeClass::Quiet` in the ONE scope table (`✏️editor/🦀️.rs`), so every accepting
-    // exit of this arm, the shared-mesh fast path included, leaves the UI clean. A refused PAGE stays
-    // visible through `Effect::Notify`, which the host applies before it ever consults the scope; a
-    // refused IDENTITY widens the scope instead, so the world body republishes the re-upload request —
-    // see `request_reupload`.
     let Some(url) = args.and_then(|value| value.get("url")).and_then(Value::as_str) else {
         return;
     };

@@ -7,6 +7,7 @@ import { spawn } from "node:child_process";
 import { OwnedCommandFailure } from "./📪️outcome/🟦️.ts";
 import stdoutDestination from "./🧬️schema/📤️stdout.json" with { type: "json" };
 import outputSchema from "./🧬️schema/📬️output.json" with { type: "json" };
+import processBudgetSchema from "../⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
 import {Transform} from "node:stream";
 import{requireIssuedResourceControlV1}from"../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -43,6 +44,14 @@ export function startNativeProgress(label: string, intervalMs = 10_000, output: 
   const started = Date.now(),
     progress = setInterval(() => output(`[${label}] running elapsedMs=${Date.now() - started}`), intervalMs);
   return () => clearInterval(progress);
+}
+
+/** ⌛️ Checks one monotonic command deadline in intervals within the native timer range. */
+function startOwnedCommandTimeoutV1(milliseconds:number,expire:()=>void):()=>void {
+  const started=performance.now();let active=milliseconds>0,timer:ReturnType<typeof setTimeout>|undefined;
+  const check=():void=>{if(!active)return;const remaining=milliseconds-(performance.now()-started);if(remaining<=0){active=false;expire();}else timer=setTimeout(check,Math.min(processBudgetSchema.$defs.TimerMaximumMilliseconds.const,Math.ceil(remaining)));};
+  if(active)check();
+  return()=>{active=false;if(timer!==undefined)clearTimeout(timer);};
 }
 
 /** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. Its stdout (unless ignored) and stderr are piped and
@@ -117,7 +126,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     });
   };
   const stopProgress = startNativeProgress(label, 10_000, publish);
-  const timeout = timeoutMs > 0 ? setTimeout(() => terminate(`timeout ${timeoutMs}ms`), timeoutMs) : undefined;
+  const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`));
   try {
     const inputPublication = options.input === undefined || !child.stdin ? Promise.resolve() : new Promise<void>(accept => {
       child.stdin!.once("finish", accept); child.stdin!.once("close", accept);
@@ -143,7 +152,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     for(const stream of deliveryStreams)stream.off("error",deliveryRefused);
     options.signal?.removeEventListener("abort", abort);
     stopProgress();
-    if (timeout) clearTimeout(timeout);
+    stopTimeout();
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", stop);
   }

@@ -9,8 +9,8 @@ fn live_read_factory_admission_preserves_exact_registry_generation_on_refusal() 
     let original = Arc::new(17i32);
     let factory: Arc<dyn ArtifactOwnedValueRetirementFactory<i32>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<i32>::default());
     let lease = registry.as_ref().unwrap().try_issue(Arc::clone(&original)).unwrap();
-    let index = lease.slot_index();let generation = lease.slot_generation();
     let mut read = ErasedSnapshotRead::new(Arc::clone(&original),lease);
+    let (_, index, generation) = read.lease_identity().unwrap();
     let pointer = read.get::<i32>().unwrap() as *const i32;
     let birth = ReturnedSnapshotReadRetirement::<i32>::constructor_capacity_bytes();
     assert!(birth<=grant.maximum_capacity_bytes);

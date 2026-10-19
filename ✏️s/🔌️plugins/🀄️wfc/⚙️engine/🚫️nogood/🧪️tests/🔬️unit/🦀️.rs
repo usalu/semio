@@ -53,8 +53,6 @@ fn eviction_keeps_store_at_max_count() {
 
 #[test]
 fn rewatch_unit_propagates_a_length_one_nogood_at_attempt_start() {
-    // A length-1 nogood means "node=pattern alone is impossible" — rewatch should exclude it
-    // immediately, before any decision.
     let model = model3();
     let topo = no_arcs_topology(2);
     let w = w3();
@@ -92,8 +90,6 @@ fn rewatch_reports_conflict_when_length_one_nogood_wipes_a_singleton_domain() {
 
 #[test]
 fn rewatch_leaves_a_fully_excluded_nogood_inert() {
-    // Every literal already impossible before any decision (e.g. `fixed` pinned node 0 away
-    // from pattern 0 independent of this nogood): nothing to watch, nothing to propagate.
     let model = model3();
     let topo = no_arcs_topology(2);
     let w = w3();
@@ -123,8 +119,6 @@ fn on_decision_unit_propagates_the_partner_literal() {
     store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
     store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 
-    // Decide node0 = pattern0: the nogood's other literal (node1=pattern1) must now be forced
-    // out of node1's domain, since keeping it open risks completing the known-bad combination.
     domains.get_mut(NodeId(0)).assign(PatternId(0), &w);
     let conflict = store.on_decision(&model, &topo, NodeId(0), PatternId(0), &mut domains, &mut queue, &mut trail, &mut metrics);
     assert!(conflict.is_none());
@@ -133,11 +127,6 @@ fn on_decision_unit_propagates_the_partner_literal() {
 
 #[test]
 fn on_decision_detects_conflict_when_the_other_watch_was_already_resolved_true() {
-    // Models the realistic conflict path: node1 reaches singleton=pattern1 via ordinary
-    // propagation the store never reacts to (per its documented scope — only explicit
-    // decisions trigger `on_decision`), leaving its watch stale-but-unprocessed. When node0 is
-    // then genuinely decided to pattern0, the fresh re-check of the (unmoved) partner watch
-    // must discover it's already false too — the exact combination this nogood forbids.
     let model = model3();
     let topo = no_arcs_topology(2);
     let w = w3();
@@ -151,7 +140,7 @@ fn on_decision_detects_conflict_when_the_other_watch_was_already_resolved_true()
 
     let mut singleton_p1 = crate::bitset::PatternSet::new_empty(3);
     singleton_p1.set(PatternId(1), true);
-    domains.get_mut(NodeId(1)).restrict(&singleton_p1, &w); // propagation-forced, not a decision
+    domains.get_mut(NodeId(1)).restrict(&singleton_p1, &w);
 
     domains.get_mut(NodeId(0)).assign(PatternId(0), &w);
     let conflict = store.on_decision(&model, &topo, NodeId(0), PatternId(0), &mut domains, &mut queue, &mut trail, &mut metrics);
@@ -160,8 +149,6 @@ fn on_decision_detects_conflict_when_the_other_watch_was_already_resolved_true()
 
 #[test]
 fn on_decision_finds_a_third_literal_as_replacement_watch_instead_of_propagating() {
-    // A 3-literal nogood: deciding node0=pattern0 (one watch) must find node2's still-open
-    // literal as a replacement watch rather than prematurely forcing node1's exclusion.
     let model = model3();
     let topo = no_arcs_topology(3);
     let w = w3();
@@ -181,9 +168,6 @@ fn on_decision_finds_a_third_literal_as_replacement_watch_instead_of_propagating
 
 #[test]
 fn on_decision_ignores_a_watch_whose_partner_is_already_stale() {
-    // The partner literal was excluded by something outside this store's notice (simulated by
-    // directly removing it); on_decision must re-check liveness live and do nothing, not act
-    // on a stale cached assumption.
     let model = model3();
     let topo = no_arcs_topology(2);
     let w = w3();
@@ -195,7 +179,7 @@ fn on_decision_ignores_a_watch_whose_partner_is_already_stale() {
     store.record(vec![(NodeId(0), PatternId(0)), (NodeId(1), PatternId(1))]);
     store.rewatch_for_new_attempt(&model, &topo, &mut domains, &mut queue, &mut trail, &mut metrics);
 
-    domains.get_mut(NodeId(1)).remove(PatternId(1), &w); // partner literal silently goes false
+    domains.get_mut(NodeId(1)).remove(PatternId(1), &w);
     domains.get_mut(NodeId(0)).assign(PatternId(0), &w);
     let conflict = store.on_decision(&model, &topo, NodeId(0), PatternId(0), &mut domains, &mut queue, &mut trail, &mut metrics);
     assert!(conflict.is_none());
@@ -203,10 +187,6 @@ fn on_decision_ignores_a_watch_whose_partner_is_already_stale() {
 
 #[test]
 fn on_decision_forced_exclusion_cascades_through_ac3_to_a_third_node() {
-    // node0 --r--> node1 --r--> node2, where `r` only allows equal patterns (so excluding a
-    // pattern at node1 must cascade to node2 too). The nogood forbids node0=0 AND node1=1
-    // simultaneously; deciding node0=0 forces node1 away from pattern1 — and that exclusion
-    // must cascade via AC-3 to remove pattern1 from node2 as well, not just node1.
     let mut b = ModelBuilder::new();
     let p0 = b.add_pattern(1.0);
     let p1 = b.add_pattern(1.0);

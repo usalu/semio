@@ -37,7 +37,6 @@ pub struct PdfSimpleEncoding {
 }
 
 impl PdfSimpleEncoding {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn win_ansi() -> Self {
         Self { base: Some(PdfBaseEncoding::WinAnsi), differences: Vec::new() }
     }
@@ -169,7 +168,6 @@ pub enum PdfCMap {
 }
 
 impl PdfCMap {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn identity_h() -> Self {
         Self::Predefined { name: "Identity-H".into() }
     }
@@ -245,7 +243,6 @@ pub struct PdfCidFont {
 }
 
 impl PdfCidFont {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn default_width() -> f64 {
         1000.0
     }
@@ -288,12 +285,10 @@ pub struct PdfFont {
 impl PdfFont {
     /// 🅰️ One of the standard 14 Type 1 fonts (§9.6.2.2) with WinAnsi encoding (or the built-in
     /// encoding for Symbol/ZapfDingbats), no descriptor and no program.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn standard(id: impl Into<String>, base_font: &str) -> Self {
         let symbolic = matches!(base_font, "Symbol" | "ZapfDingbats");
         Self { id: id.into(), kind: PdfFontKind::Type1 { base_font: base_font.into(), encoding: if symbolic { PdfSimpleEncoding::default() } else { PdfSimpleEncoding::win_ansi() }, first_char: 0, widths: Vec::new(), descriptor: None, program: None }, to_unicode: None, extra: Vec::new() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn base_font(&self) -> &str {
         match &self.kind {
             PdfFontKind::Type1 { base_font, .. } | PdfFontKind::TrueType { base_font, .. } | PdfFontKind::Type0 { base_font, .. } => base_font,
@@ -301,7 +296,6 @@ impl PdfFont {
         }
     }
     /// 🔢 Whether character codes of this font are two bytes wide (Type 0 with a two-byte CMap).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_composite(&self) -> bool {
         matches!(self.kind, PdfFontKind::Type0 { .. })
     }

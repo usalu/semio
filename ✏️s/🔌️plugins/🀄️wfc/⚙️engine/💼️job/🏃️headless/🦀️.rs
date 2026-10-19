@@ -1,6 +1,7 @@
 //! 🏃️ Synchronous headless driver over the same retained worker session the interactive hosts submit.
 
-use semio_framework_job::{root_cancel_token,CancelToken,Generation,InteractiveJob,InteractiveJobCloseStep,InteractiveStage,JobOutcomeView,Operation,OperationId,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedJobPayload,StepBudget,StepContext};
+use semio_framework_job::{root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeView, Operation, OperationId, OriginalTurnFailure, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepBudget, StepContext};
+use semio_framework_job_payload::{RetainedJobPayload};
 use semio_framework_job_worker::{BatchJobSession,WorkerJobDemandError,WorkerJobPoll};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
@@ -34,15 +35,15 @@ fn self_funded(demand: semio_framework_value::RetirementDemand) -> RetainedClone
 }
 
 /// 🧾️ Admits the one payload authority a locally driven operation keeps across every step, so its publications share one ledger.
-pub fn admit_payload_authority(operation: Operation) -> semio_framework_job::JobPayloadAuthority {
-    semio_framework_job::JobPayloadAuthority::admit(operation.operation, operation.generation, HEADLESS_GRANT)
+pub fn admit_payload_authority(operation: Operation) -> semio_framework_job_payload::JobPayloadAuthority {
+    semio_framework_job_payload::JobPayloadAuthority::admit(operation.operation, operation.generation, HEADLESS_GRANT)
         .expect("the headless wallet quotes its payload authority")
         .expect("the headless wallet admits its payload authority")
         .0
 }
 
 /// 🧹️ Closes the authority through its own quoted grants once every payload sharing its ledger is closed.
-pub fn close_payload_authority(authority: &mut semio_framework_job::JobPayloadAuthority) {
+pub fn close_payload_authority(authority: &mut semio_framework_job_payload::JobPayloadAuthority) {
     while !authority.terminal_is_empty() {
         let step = authority.close_step(self_funded(authority.retirement_demands()));
         assert!(step.is_ok(), "a locally owned payload authority closes without an external owner");
@@ -80,7 +81,7 @@ struct HeadlessCaller {
     generation: Generation,
     now_us: fn() -> Option<u64>,
     cancel: CancelToken,
-    authority: semio_framework_job::JobPayloadAuthority,
+    authority: semio_framework_job_payload::JobPayloadAuthority,
     sequence: u64,
 }
 

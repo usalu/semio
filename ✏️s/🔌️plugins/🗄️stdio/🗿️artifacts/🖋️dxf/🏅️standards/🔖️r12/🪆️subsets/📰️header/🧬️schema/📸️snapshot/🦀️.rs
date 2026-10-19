@@ -161,7 +161,7 @@ pub struct DxfVertex {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
+/// ✏️ `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -173,7 +173,7 @@ pub struct DxfLine {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
+/// 🗜️ `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -185,7 +185,7 @@ pub struct DxfCircle {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
+/// 🏗️ `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -199,7 +199,7 @@ pub struct DxfArc {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
+/// 📏️ `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
 /// `LWPOLYLINE` entity, which does not exist in R12) — 70 bit 0 (closed), 8 (layer), each
 /// vertex its own `DxfVertex`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -213,7 +213,7 @@ pub struct DxfPolyline {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
+/// 🧭️ `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -226,7 +226,7 @@ pub struct DxfText {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
+/// 🧊️ `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -237,7 +237,7 @@ pub struct DxfSolid {
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
-/// `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
+/// ➕️ `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
 /// (rotation), 8 (layer).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -270,27 +270,27 @@ pub struct DxfOther {
 #[value(rename_all = "camelCase")]
 pub enum DxfEntity {
 
-    /// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
+    /// 🔤️ `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
     Line(DxfLine),
 
-    /// `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
+    /// 〰️ `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
     Circle(DxfCircle),
 
-    /// `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
+    /// 🌀️ `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
     Arc(DxfArc),
 
-    /// `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
+    /// 📈️ `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
     /// `LWPOLYLINE` entity, which does not exist in R12) — 70 bit 0 (closed), 8 (layer), each
     /// vertex its own `DxfVertex`.
     Polyline(DxfPolyline),
 
-    /// `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
+    /// 🗺️ `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
     Text(DxfText),
 
-    /// `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
+    /// 🔷️ `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
     Solid(DxfSolid),
 
-    /// `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
+    /// 🆕️ `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
     /// (rotation), 8 (layer).
     Insert(DxfInsert),
 

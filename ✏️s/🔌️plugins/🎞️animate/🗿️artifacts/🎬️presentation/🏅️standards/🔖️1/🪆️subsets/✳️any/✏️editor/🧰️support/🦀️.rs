@@ -136,11 +136,6 @@ pub fn tile_morph_prompt_effect(deck: &PresentationSnapshot) -> Effect {
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_presentation_document_effect(document: &PresentationSnapshot) -> Effect {
     let pack = <PresentationSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    // 🪦️ NOT `create_document_envelope` + `print_document_spr`: an envelope is a terminal store shell
-    // whose `Drop` asserts that its app-owned bounded retirement authority detached every nested
-    // owner first, and nothing here ever mounts or retires it — so building this effect panicked the
-    // guest (`unreachable`) at boot, before any window kind existed. `🗒️note`/`✒️writer`/`📐️cad` all
-    // take the `empty_document_spr` route; the log is edit-free by construction either way.
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }

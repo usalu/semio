@@ -356,7 +356,6 @@ impl Natural {
                 rhat += v_top as u128;
             }
 
-            // Multiply v by qhat and subtract from u[j..j+n+1].
             let mut borrow: i128 = 0;
             let mut carry: u128 = 0;
             for i in 0..n {
@@ -373,7 +372,6 @@ impl Natural {
             }
             let top_sub = u.limbs[j + n] as i128 - carry as i128 - borrow;
             if top_sub < 0 {
-                // qhat was one too large: add back v once and decrement qhat.
                 u.limbs[j + n] = (top_sub + (1i128 << 64)) as u64;
                 qhat -= 1;
                 let mut carry2 = 0u64;
@@ -438,7 +436,6 @@ impl Natural {
             }
             x = next;
         }
-        // Correct rounding: Newton converges to floor(root) or floor(root)+1; step down until x^n <= self.
         while x.pow(n as u64) > *self {
             x = x.checked_sub(&Self::one()).unwrap_or_else(Self::zero);
         }

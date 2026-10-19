@@ -30,7 +30,7 @@ pub fn create_drawing_group_layer(identity: DrawingIdentity, name: &str) -> Draw
     })
 }
 
-pub fn create_drawing_boolean_layer(identity: DrawingIdentity, name: &str, operation: &str, children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> DrawingLayerNode {
+pub fn create_drawing_boolean_layer(identity: DrawingIdentity, name: &str, operation: &str, children: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> DrawingLayerNode {
     DrawingLayerNode::Boolean(DrawingBooleanBody {
         base: DrawingLayerBase {
             id: identity.into_key(),

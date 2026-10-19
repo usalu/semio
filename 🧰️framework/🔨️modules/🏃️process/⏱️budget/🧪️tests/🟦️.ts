@@ -3,6 +3,8 @@ import { readFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
+import { Database } from "bun:sqlite";
+import "../../🧭️routing/📥️invocation/🏃️process/⏲️expiry/🧪️tests/⏱️timers/🟦️.ts";
 
 test("execution budgets follow portable environment laws and independent native oracles", async () => {
   const owner = resolve(import.meta.dir, ".."), source = join(owner, "🟦️.ts");
@@ -31,3 +33,35 @@ test("execution budgets follow portable environment laws and independent native 
     expect(oracle.status, oracle.stderr).toBe(0); expect(JSON.parse(oracle.stdout)).toEqual(values);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 });
+
+
+/** 🧭️ Keeps finite compiler preparation distinct from a long-lived caller session. */
+test("build preparation has an authored finite fallback and honors explicit finite caller limits", async () => {
+  const owner = resolve(import.meta.dir, ".."), corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")), schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
+  const api = await import(join(owner, "🟦️.ts")), require = createRequire(import.meta.url), ajv = new (require("ajv").default)(), validate = ajv.compile({ ...schema, $ref: "#/$defs/BuildPreparationMilliseconds" }), database = new Database(":memory:");
+  try { for (const row of corpus.preparation) {
+    if (row.expected === null) { expect(() => api.buildPreparationBudgetMs(row.environment)).toThrow(/Invalid process budget/u); continue; }
+    const value = api.buildPreparationBudgetMs(row.environment), independent = database.query("select coalesce(nullif(cast(?1 as integer),0),?2) value").get(row.environment.SEMIO_BUILD_BUDGET_MS ?? "0", schema.$defs.BuildPreparationDefault.const) as { value: number };
+    expect(value).toBe(row.expected); expect(value).toBe(independent.value); expect(validate(value)).toBe(true);
+    expect(api.buildBudgetMs({})).toBe(0);
+  } } finally { database.close(); }
+});
+
+test("owned process timers preserve a single deadline beyond the native timer range", async () => {
+  const owner=resolve(import.meta.dir,".."),corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")),require=createRequire(import.meta.url),ajv=new(require("ajv").default)(),validate=ajv.compile({...schema,$ref:"#/$defs/TimerCase"}),ts=require("typescript"),source=resolve(owner,"../🎛️owned-execution/🟦️.ts"),file=ts.createSourceFile(source,readFileSync(source,"utf8"),ts.ScriptTarget.Latest,true),declaration=file.statements.find((node:any)=>ts.isFunctionDeclaration(node)&&node.name?.text==="startOwnedCommandTimeoutV1");
+  expect(declaration).toBeDefined();
+  const implementation=require("esbuild").transformSync(declaration.getText(file),{loader:"ts",format:"cjs"}).code,database=new Database(":memory:");
+  try { for(const row of corpus.timers){
+    expect(validate(row),JSON.stringify(validate.errors)).toBe(true);
+    let elapsed=0,expirations=0,next=0;const delays:number[]=[],pending=new Map<number,()=>void>();
+    const create=new Function("processBudgetSchema","performance","setTimeout","clearTimeout",implementation+";return startOwnedCommandTimeoutV1;")(schema,{now:()=>elapsed},(callback:()=>void,delay:number)=>{delays.push(delay);pending.set(++next,callback);return next;},(handle:number)=>pending.delete(handle)),stop=create(row.budget,()=>expirations++);
+    for(const[index,check]of row.checks.entries()){const entry=pending.entries().next().value as[number,()=>void]|undefined;if(entry)pending.delete(entry[0]);if(row.cancelBeforeCheck===index)stop();elapsed=check;entry?.[1]();}
+    stop();stop();expect(pending.size).toBe(0);expect(delays).toEqual(row.expectedDelays);expect(expirations).toBe(row.expectedExpirations);
+    const oracle=database.query("WITH observations AS (SELECT -1 ordinal,0 elapsed UNION ALL SELECT CAST(key AS INTEGER),CAST(value AS INTEGER) FROM json_each(?1)) SELECT json_group_array(delay) delays FROM (SELECT min(?4,?2-o.elapsed) delay FROM observations o WHERE ?2>0 AND o.elapsed<?2 AND o.ordinal<coalesce(?3,2147483647) AND NOT EXISTS (SELECT 1 FROM observations e WHERE e.ordinal<o.ordinal AND e.elapsed>=?2) ORDER BY o.ordinal)").get(JSON.stringify(row.checks),row.budget,row.cancelBeforeCheck??null,schema.$defs.TimerMaximumMilliseconds.const)as{delays:string},expiry=database.query("SELECT CASE WHEN ?2>0 AND EXISTS (SELECT 1 FROM json_each(?1) WHERE CAST(value AS INTEGER)>=?2 AND CAST(key AS INTEGER)<coalesce(?3,2147483647)) THEN 1 ELSE 0 END value").get(JSON.stringify(row.checks),row.budget,row.cancelBeforeCheck??null)as{value:number};
+    expect(delays).toEqual(JSON.parse(oracle.delays));expect(expirations).toBe(expiry.value);
+  } } finally { database.close(); }
+  const{runOwnedCommand}=await import(source);
+  for(const budget of[2147483647,2147483648,9007199254740991])await runOwnedCommand(process.execPath,["-e","setTimeout(()=>process.exit(0),60)"],process.cwd(),"process:large-timer",budget,{stdout:"ignore",input:""});
+  await expect(runOwnedCommand(process.execPath,["-e","setTimeout(()=>process.exit(0),1000)"],process.cwd(),"process:short-timer",30,{stdout:"ignore",input:""})).rejects.toThrow(/timeout 30ms/u);
+  console.log("[DEBUG] process timer laws: 9 neutral cases, 3 real large-budget exits, 1 real finite expiry");
+},15000);

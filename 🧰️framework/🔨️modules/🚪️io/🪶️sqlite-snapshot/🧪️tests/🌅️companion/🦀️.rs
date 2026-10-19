@@ -50,7 +50,8 @@ pub mod component {
         pub mod receiving {
             pub use semio_framework_io_sqlite_snapshot::testkit::component::artifact::receiving::*;
             use semio_framework_io_sqlite_snapshot::testkit::component::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl};
-            use semio_framework_value::{ValueError, ValueRefusalKind, NativeDecodeControl, NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
+            use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
+            use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
             #[path = "🦀️.rs"]
             mod tests;

@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "above-native-range",
+      "remaining": [
+        [
+          2147483650,
+          2147483650
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "unref": true,
+      "expectedDelays": [
+        2147483647,
+        3
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "monotonic-roll-back-wall",
+      "remaining": [
+        [
+          2147483650,
+          2147483650
+        ],
+        [
+          2147483650,
+          3
+        ],
+        [
+          2147483650,
+          0
+        ]
+      ],
+      "unref": false,
+      "expectedDelays": [
+        2147483647,
+        3
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "wall-forward",
+      "remaining": [
+        [
+          2147483650,
+          2147483650
+        ],
+        [
+          0,
+          2147483640
+        ]
+      ],
+      "unref": true,
+      "expectedDelays": [
+        2147483647
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "early-callback-does-not-renew",
+      "remaining": [
+        [
+          100,
+          100
+        ],
+        [
+          100,
+          60
+        ],
+        [
+          100,
+          1
+        ],
+        [
+          100,
+          0
+        ]
+      ],
+      "unref": false,
+      "expectedDelays": [
+        100,
+        60,
+        1
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "fractional-round-up",
+      "remaining": [
+        [
+          1.5,
+          1.5
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "unref": true,
+      "expectedDelays": [
+        2
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "expired-immediate",
+      "remaining": [
+        [
+          -1,
+          100
+        ]
+      ],
+      "unref": false,
+      "expectedDelays": [],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "retired-stale-callback",
+      "remaining": [
+        [
+          2147483650,
+          2147483650
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "cancelBeforeCheck": 0,
+      "unref": true,
+      "expectedDelays": [
+        2147483647
+      ],
+      "expectedExpirations": 0
+    },
+    {
+      "name": "retired-after-rearm",
+      "remaining": [
+        [
+          2147483650,
+          2147483650
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "cancelBeforeCheck": 1,
+      "unref": false,
+      "expectedDelays": [
+        2147483647,
+        3
+      ],
+      "expectedExpirations": 0
+    }
+  ],
+  "bodyRetirement": {
+    "scheduled": 4,
+    "bodyRetired": 2,
+    "wholeRetained": 2,
+    "staleCallbackAborts": false,
+    "staleCallbackRearms": false
+  }
+}

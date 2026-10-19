@@ -23,8 +23,6 @@ pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVer
     let windows: Vec<String> = CAD_WORLD_BODY_KEYS.iter().map(|key| (*key).to_string()).collect();
     Some(match verb {
         InteractionVerb::Hover => UiDirtyScope::Partial { window_bodies: windows, panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
-        // 🎯️ A selection change: the world bodies, the two panels that render the selection, and the
-        // engagement HUD's `N selected` count.
         InteractionVerb::Select | InteractionVerb::ClearSelection | InteractionVerb::SelectAll => UiDirtyScope::Partial {
             window_bodies: windows,
             panel_bodies: vec![inspection::CAD_PLAY_BODY_PROPERTIES.to_string(), document::CAD_PLAY_BODY_ARTIFACT.to_string()],

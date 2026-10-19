@@ -1,4 +1,4 @@
-//! 🕸️ `s.fem.fem3d` mesh mutations of sections and solids, and the selection move.
+//! 🕸️ `s.fem.fem3d` mesh mutations of node changes and the selection move.
 
 #![allow(clippy::result_large_err)]
 
@@ -19,27 +19,6 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "."]
-                        pub mod change_solid {
-                            #[path = "../../🩹️change-solid/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🩹️change-solid/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🩹️change-solid/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-
-                        #[path = "."]
-                        pub mod change_section {
-                            #[path = "../../🩹️change-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🩹️change-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🩹️change-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
 
                         #[path = "."]
                         pub mod change_node {
@@ -48,78 +27,6 @@ pub mod standards {
                             #[path = "../../🩹️change-node/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../🩹️change-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-
-                        #[path = "."]
-                        pub mod change_element {
-                            #[path = "../../🩹️change-element/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🩹️change-element/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🩹️change-element/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-
-                        #[path = "."]
-                        pub mod create_section {
-                            #[path = "../../📐️create-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../📐️create-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../📐️create-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod delete_section {
-                            #[path = "../../✂️delete-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../✂️delete-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../✂️delete-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_section {
-                            #[path = "../../📏️replace-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../📏️replace-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../📏️replace-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod create_solid {
-                            #[path = "../../🧊️create-solid/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🧊️create-solid/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🧊️create-solid/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod delete_solid {
-                            #[path = "../../🚫️delete-solid/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🚫️delete-solid/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🚫️delete-solid/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_solid {
-                            #[path = "../../🔄️replace-solid/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🔄️replace-solid/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🔄️replace-solid/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }

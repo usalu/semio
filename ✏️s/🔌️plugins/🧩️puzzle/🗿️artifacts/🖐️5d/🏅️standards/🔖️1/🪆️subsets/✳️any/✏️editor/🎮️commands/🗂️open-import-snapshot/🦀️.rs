@@ -1,6 +1,6 @@
 //! 🗂 Asks the host to pick a document JSON file and re-dispatch import.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_plugin::kernel::Effect;
 
 /// 🗂 The request id this app's file picker answers on — distinct from puzzle 3d's (121) and puzzle

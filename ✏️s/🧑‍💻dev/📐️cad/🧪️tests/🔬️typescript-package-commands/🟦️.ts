@@ -1,0 +1,126 @@
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { resolveTestLevel } from "@semio-tech/process/test-budget";
+import { join, resolve } from "node:path";
+import { BundleLinter } from "@semio-tech/repo-lib/policy";
+import { dependencyBoundaryBreachesForBundleDir, defineLint } from "@semio-tech/repo-lib/policy";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { runVitest } from "@semio-tech/repo-lib/testing";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+
+export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter) => {
+  const repoRoot = findWorkspaceRoot();
+  return dependencyBoundaryBreachesForBundleDir(repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine");
+});
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+type RetainedAuditRoute = {
+  id: string;
+  disposition: "migrated" | "batchOnlyPendingRewrite";
+};
+type RetainedAuditFixture = {
+  routeCount: number;
+  excludedFrameworkRoutes: string[];
+  admittedRoutes: string[];
+  routes: RetainedAuditRoute[];
+  limits: { rawBytes: number; decodedItems: number; workItems: number; outputBytes: number; stepMicros: number; closePageBytes: number };
+};
+
+/** 🏃️ Runs the `FixtureScript` command under the caller's roots and invocation. */
+export async function runFixtureScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
+  const { rest } = resolveTestLevel(segments);
+  process.env.CAD_GENERATE_STEP_FIXTURES = "1";
+  await runVitest(context.root, ["--configLoader", "runner", ...rest], "../../🧪️tests/🎚️config/🟦️.ts");
+}
+
+/** 🏃️ Runs the `GenerateScript` command under the caller's roots and invocation. */
+export async function runGenerateScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, extra: string[]): Promise<void> {
+  const { bootstrapCadModules } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts");
+  const { defaultModelDefinitionId } = await import("../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/📐️geometry/📥️definition-catalog/🟦️.ts");
+  const { buildSpatialStatelyMachineCatalogView } = await import("../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts");
+  bootstrapCadModules();
+  let outPath = join(context.repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📚️examples/🔣️machine.json");
+  let modelDefinitionId = defaultModelDefinitionId();
+  const interactionIds: string[] = [];
+  for (let i = 0; i < extra.length; i++) {
+    const a = extra[i]!;
+    if (a === "--out" && extra[i + 1]) {
+      outPath = resolve(context.root, extra[i + 1]!);
+      i++;
+      continue;
+    }
+    if (a === "--model-definition" && extra[i + 1]) {
+      modelDefinitionId = extra[i + 1]!;
+      i++;
+      continue;
+    }
+    if (!a.startsWith("-")) interactionIds.push(a);
+  }
+  const doc = buildSpatialStatelyMachineCatalogView({
+    modelDefinitionId,
+    interactionIds: interactionIds.length > 0 ? interactionIds : undefined,
+  });
+  await Bun.write(outPath, `${JSON.stringify(doc, null, 2)}\n`);
+  console.error(`wrote ${outPath} (${doc.machines.length} machine(s))`);
+}
+
+/** 🏃️ Runs the `RetainedAuditScript` command under the caller's roots and invocation. */
+export async function runRetainedAuditScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
+  const fixturePath = resolve(context.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json");
+  const ownerPath = resolve(context.root, "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const fixture = (await Bun.file(fixturePath).json()) as RetainedAuditFixture;
+  const owner = readModuleTreeSource(ownerPath);
+
+  const commandBlock = owner.slice(owner.indexOf("semio_framework_plugin::app_commands!"), owner.indexOf("/// 🌉️ Converts"));
+  const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);
+  const routeIds = fixture.routes.map((route) => route.id);
+  const expectedAdmitted = [
+    "addNode", "renameNode", "patchCadPlayReference", "addObject", "patchObject", "patchSelection", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection",
+    "engagementSubmit", "worldPointerDown",
+    "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
+    "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions", "setActiveExample", "loadRawRequest",
+  ];
+  const retainedToolBlock = owner.slice(owner.indexOf("const CAD_RETAINED_TOOL_IDS"), owner.indexOf("const CAD_RETAINED_COMMAND_SCHEMA"));
+  const retainedToolIds = [...retainedToolBlock.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);
+  const semanticValid = (source: string): boolean => {
+    const occurrences = (needle: string): number => source.split(needle).length - 1;
+    const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", (?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
+    const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`);
+    return fixture.routeCount === 37
+      && new Set(routeIds).size === 37
+      && JSON.stringify(commandIds) === JSON.stringify(routeIds)
+      && JSON.stringify(annotationPairs.sort()) === JSON.stringify(expectedPairs.sort())
+      && JSON.stringify(fixture.excludedFrameworkRoutes) === JSON.stringify([])
+      && JSON.stringify(fixture.admittedRoutes) === JSON.stringify(expectedAdmitted)
+      && JSON.stringify(retainedToolIds) === JSON.stringify(expectedAdmitted)
+      && fixture.limits.closePageBytes === 16_384
+      && source.includes('factory: "CadRetainedCommandJobFactory"')
+      && source.includes("impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory")
+      && source.includes("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory")
+      && source.includes("type Owner = semio_framework_plugin::EditorApp<CadPlayApp>;")
+      && source.includes("registry.register(CadRetainedCommandJobFactory::new(&controller))")
+      && source.includes("fn build_config_store_one_item_preparation_factory()")
+      && source.includes("fn build_artifact_store_one_item_preparation_factory()")
+      && source.includes("CadConfigStorePreparationFactory")
+      && source.includes("CadArtifactStorePreparationFactory")
+      && source.includes("authority.prepare_one_item(edit, std::sync::Arc::new(post))")
+      && source.includes("digest: prepared.edit_digest()")
+      && source.includes('contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500)')
+      && occurrences('tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly]') === 1
+      && !source.includes('factory: "BoundedFirstStepCommandJobFactory"');
+  };
+  if (!semanticValid(owner)) throw new Error("CAD retained audit fixture and canonical Rust owner diverged");
+
+  const hostileSources = [
+    owner.replace('factory: "CadRetainedCommandJobFactory"', 'factory: "BoundedFirstStepCommandJobFactory"'),
+    owner.replace('.action_interactive_job("saveCurrent", InteractiveJobClassification::BatchOnlyPendingRewrite)', '.action_interactive_job("saveCurrent", InteractiveJobClassification::Migrated)'),
+    owner.replace("fn build_config_store_one_item_preparation_factory()", "fn removed_config_store_one_item_preparation_factory()"),
+    owner.replace('tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly]', 'tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::Config]'),
+    owner.replace('bounded_first_step(8_192, 64, 1, 16_384, 7_500)', 'bounded_first_step(8_192, 64, 1, 32_768, 7_500)'),
+    owner.replace("impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory", "impl ToolJobFactory for CadRetainedCommandJobFactory"),
+    owner.replace("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory", "impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory"),
+    owner.replace("type Owner = semio_framework_plugin::EditorApp<CadPlayApp>;", "type Owner = EditorApp<CadPlayApp>;"),
+    owner.replace("registry.register(CadRetainedCommandJobFactory::new(&controller))", "registry.register(BoundedFirstStepCommandJobFactory::new(&controller))"),
+  ];
+  const acceptedHostile = hostileSources.map((source, index) => semanticValid(source) ? index : -1).filter((index) => index >= 0);
+  if (acceptedHostile.length > 0) throw new Error(`CAD retained audit accepted hostile source mutations ${acceptedHostile.join(",")}`);
+  console.error(`validated ${routeIds.length} CAD routes; admitted=${fixture.admittedRoutes.join(",")}; schema=Ajv`);
+}

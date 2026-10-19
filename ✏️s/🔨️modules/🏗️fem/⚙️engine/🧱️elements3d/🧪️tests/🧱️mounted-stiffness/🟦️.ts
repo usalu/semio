@@ -5,7 +5,7 @@ import fixture from "../🧫️fixtures/🧱️mounted-stiffness/🔣️.json" w
 
 
 import { multiply } from "mathjs";
-import ownerAdmission from "../../../🧮️analyses/🧫️fixtures/📦️owner-admission/🔣️.json" with { type: "json" };
+import ownerAdmission from "../../../🧮️analyses/🧪️tests/🧫️fixtures/📦️owner-admission/🔣️.json" with { type: "json" };
 export function testFem3dMountedStiffnessOracle(): void {
   const admission = new Ajv2020().compile({ type: "integer", minimum: 0, maximum: ownerAdmission.pageBytes / ownerAdmission.itemBytes });
   for (const row of ownerAdmission.cases) assert.equal(admission(row.requested), row.accepted);

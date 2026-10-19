@@ -251,7 +251,6 @@ async fn arc_curve_respects_start_end_angles() {
     let chord = ((p1[0] - p0[0]).powi(2) + (p1[1] - p0[1]).powi(2) + (p1[2] - p0[2]).powi(2)).sqrt();
     let expected_chord = (2.0 * radius * radius * (1.0 - (end - start).cos())).sqrt();
     assert!((chord - expected_chord).abs() < 1e-3, "chord {chord} expected {expected_chord}");
-    // Full circle would land start≈end; a quarter arc must keep endpoints distinct.
     assert!(chord > radius * 0.5);
     let kappa = k.curve_curvature_sync(&arc, (start + end) * 0.5).expect("kappa");
     assert!((kappa - 1.0 / radius).abs() < 5e-2, "kappa {kappa}");

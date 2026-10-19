@@ -176,8 +176,6 @@ impl AliasTable {
         }
         let mut prob = vec![0.0; n];
         let mut alias = vec![0usize; n];
-        // `(small.pop(), large.pop())` would evaluate both pops unconditionally even when one list is
-        // already empty, silently dropping an element from the non-empty side — check lengths first.
         while !small.is_empty() && !large.is_empty() {
             let s = small.pop().expect("small is non-empty per the loop condition");
             let l = large.pop().expect("large is non-empty per the loop condition");

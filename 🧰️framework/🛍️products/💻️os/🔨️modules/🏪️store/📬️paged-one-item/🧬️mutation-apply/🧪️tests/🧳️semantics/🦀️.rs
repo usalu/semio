@@ -1,7 +1,8 @@
 //! 🧳️ Explicit fixture semantics produce original typed operations from admitted field fragments.
 use super::*;
 use protocol::{RetainedMutation,RetainedMutationPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext,RetainedFieldPreparation};
-use semio_framework_value::{RetirementDemand,FactoryVectorRetirement,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose}};
+use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose}};
+use semio_framework_value_factory::vector::FactoryVectorRetirement;
 use std::mem::{ManuallyDrop,size_of};
 #[path="🔺️apply/🦀️.rs"] mod apply;
 fn demand(copy_bytes:usize,capacity_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()}}

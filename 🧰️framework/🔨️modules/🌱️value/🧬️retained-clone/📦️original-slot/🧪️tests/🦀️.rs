@@ -3,7 +3,7 @@ use super::*;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes+d.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 #[test]
 fn original_slot_preserves_native_payload_and_waits_for_every_projected_reader(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["policy"]["maximumItems"],1);
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["policy"]["maximumItems"],1);
  let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<String>>=Arc::new(crate::retirement::OwnedValueRetirementFactory::<String>::default());
  let mut original=RetainedOriginalSlot::new("original α\0😀".repeat(8192));let pointer=original.get().as_ptr();let key=original.key();let foreign=RetainedOriginalSlot::new(String::new()).key();assert!(original.demands(foreign).is_err());
  for _ in 0..2{let d=original.demands(key).unwrap();for axis in 0..5{let mut denied=grant(d);match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes=d.copy_bytes-1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes=d.capacity_bytes-1,3 if d.release_bytes>0=>denied.maximum_release_bytes=d.release_bytes-1,4 if d.depth>0=>denied.maximum_depth=d.depth-1,_=>continue}let(step,heap)=crate::observe_retirement_allocations(||original.advance_read(key,&factory,denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(original.get().as_ptr(),pointer);}
@@ -22,7 +22,7 @@ fn original_slot_generation_exhaustion_refuses_before_native_exchange(){let mut 
 
 #[test]
 fn original_slot_exchange_matches_all_independent_portable_outputs(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for law in corpus["cases"].as_array().unwrap(){let mut slot=RetainedOriginalSlot::new(serde_json::to_string(&law["original"]).unwrap());let old_pointer=slot.get().as_ptr();let key=slot.key();let mut next=Some(serde_json::to_string(&law["replacement"]).unwrap());let next_pointer=next.as_ref().unwrap().as_ptr();let d=RetainedOriginalSlot::<String>::replace_demand();
   for axis in [0,1,4]{let mut denied=grant(d);match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,_=>denied.maximum_depth-=1}let(result,heap)=crate::observe_retirement_allocations(||slot.replace(&mut next,denied).unwrap());assert!(result.is_none());assert_eq!(heap,(0,0));assert_eq!(slot.get().as_ptr(),old_pointer);assert_eq!(next.as_ref().unwrap().as_ptr(),next_pointer);assert_eq!(slot.key(),key);}
   let(result,heap)=crate::observe_retirement_allocations(||slot.replace(&mut next,grant(d)).unwrap());let(previous,p)=result.unwrap();assert_eq!(heap,(0,0));assert_eq!(p.copied_bytes,d.copy_bytes);assert_eq!(p.copied_items,1);assert!(next.is_none());assert_eq!(previous.as_ptr(),old_pointer);assert_eq!(slot.get().as_ptr(),next_pointer);assert_ne!(slot.key(),key);assert_eq!(serde_json::from_str::<serde_json::Value>(slot.get()).unwrap(),law["expected"]);

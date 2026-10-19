@@ -1,12 +1,12 @@
 //! 🛬️ Controlled physical record decoding for explicitly declared snapshot owners.
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::ParseOptions;
 use semio_framework_dsl_record::RecordSpecProducer;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_io_sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase};
 use semio_framework_io_sqlite_snapshot::{ValueError, ValueRefusalKind};
 use semio_framework_diagnostic::Limits;
-use semio_framework_value::native_decoding::NativeDecodeProgress;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 
 /// 🧮️ Preserves one cumulative ownership budget through borrowed envelope, physical parser and typed binding.
 pub fn decode_sqlite_snapshot_record_native<T:semio_framework_value::retirement::RetireOwned>(

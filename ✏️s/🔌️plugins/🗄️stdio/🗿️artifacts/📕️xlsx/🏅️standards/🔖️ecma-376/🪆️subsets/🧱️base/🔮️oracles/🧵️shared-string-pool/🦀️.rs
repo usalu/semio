@@ -52,9 +52,6 @@ pub mod shared_strings {
                     _ => {}
                 },
                 Event::Text(run) if in_text => current.push_str(&run.xml10_content()),
-                // 🔣️ `quick-xml` 0.42 surfaces `&amp;`, `&lt;`, `&#233;` and friends as their own
-                // event rather than folding them into the text, so a shared string carrying one is
-                // reassembled here instead of silently losing the character.
                 Event::GeneralRef(reference) if in_text => current.push_str(&resolve_reference(&reference.xml10_content())?),
                 Event::End(end) => match local_name(end.name().as_ref()) {
                     "t" => in_text = false,

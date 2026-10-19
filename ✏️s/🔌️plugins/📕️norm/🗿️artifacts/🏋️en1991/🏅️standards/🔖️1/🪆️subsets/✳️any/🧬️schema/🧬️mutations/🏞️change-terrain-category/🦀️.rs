@@ -1,4 +1,4 @@
-//! ️ `change-terrain-category`.
+//! 🧬️ `change-terrain-category`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

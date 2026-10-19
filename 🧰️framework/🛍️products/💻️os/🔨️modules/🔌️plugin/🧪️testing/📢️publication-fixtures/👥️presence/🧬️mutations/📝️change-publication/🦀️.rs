@@ -68,7 +68,7 @@ impl MutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePu
     }
 }
 
-impl crate::os_spr::ColdMutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
+impl semio_framework_os_command::ColdMutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePublicationPresence {
     fn diff(&self, _base: &PublicationPresence) -> MutationOutcome<crate::publication_fixture::presence::PublicationPresenceDiff> {
         MutationOutcome::new(crate::publication_fixture::presence::PublicationPresenceDiff { revision: Some(self.revision) })
     }

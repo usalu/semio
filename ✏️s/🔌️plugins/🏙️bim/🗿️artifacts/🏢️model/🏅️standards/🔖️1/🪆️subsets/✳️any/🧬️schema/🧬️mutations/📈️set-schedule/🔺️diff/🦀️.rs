@@ -1,4 +1,4 @@
-//! \u{1f53a}\uFE0F Diff constructor for \u00B6SetSchedule\u00B6: a sparse schedule patch of exactly the fields that change. The definition that results must stand (see \u00B6schedule_problem\u00B6: columns that exist in
+//! 🔺️ Diff constructor for \u00B6SetSchedule\u00B6: a sparse schedule patch of exactly the fields that change. The definition that results must stand (see \u00B6schedule_problem\u00B6: columns that exist in
 //! the category, no repeated key, filters with their values, a scope without repeats) and every storey of a new scope must exist; providing only equal values is a no-op. A list replaces the whole
 //! list, because columns, sort keys, filters and grouping levels are one ordered definition and not addressable records.
 

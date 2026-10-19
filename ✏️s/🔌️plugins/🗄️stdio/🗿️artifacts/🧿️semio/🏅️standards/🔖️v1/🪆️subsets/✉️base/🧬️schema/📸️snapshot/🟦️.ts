@@ -41,6 +41,6 @@ export type SemioSubsetSnapshot =
   | ({ subset: "kit" } & SemioKitSnapshot);
 
 export interface SemioSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ subset: SemioSubsetSnapshot;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📜️ @state artifact */ subset: SemioSubsetSnapshot;
 }

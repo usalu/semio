@@ -12,7 +12,8 @@ use semio_framework_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 use std::cell::RefCell;
 use std::collections::HashSet;
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::Puzzle2dScene;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene;
+use semio_s_artifact_puzzle_2d_text_inverse::editor::puzzle2d::recorder::Puzzle2dRecorder;
 
 //#region 🔖️ActionContext
 /// 🎬️ Everything one `🎮️commands/*` arm may read or write. The prologue/epilogue around the dispatch
@@ -159,8 +160,6 @@ pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppA
     use semio_framework_plugin::Menu;
     use semio_framework_plugin::SelectionKind;
     let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
-    // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
-    // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool| ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
@@ -172,8 +171,6 @@ pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppA
         ..Default::default()
     };
     if selected.is_empty() {
-        // 🗨️ The empty-board branch is the second declared entry point of the Add Node dialog (the
-        // shell palette is the first) — the same pair puzzle3d binds `openAddObjectDialog` to.
         return Menu::of(registry, view_state)
             .item(item("openAddNodeDialog", if is_de { "Knoten hinzufügen…" } else { "Add Node…" }, "plus", "openAddNodeDialog", None, false, false))
             .item(item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false))
@@ -222,15 +219,10 @@ pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppA
         (false, true) => "Entsperren",
         (false, false) => "Unlock",
     };
-    // 💡️ One selected handle is the one-shot placement picker's entry point — the row the brush
-    // utility never had: it opens the suggestions popup on that handle WITHOUT arming the brush.
     let mut menu = Menu::of(registry, view_state);
     if let [only] = selected_handle_ids.as_slice() {
         menu = menu.item(item("suggestNodes", if is_de { "Knoten vorschlagen" } else { "Suggest nodes" }, "sparkles", "openHandleSuggestions", Some(semio_framework::dsl_value!({ "handleId": only })), false, false));
     }
-    // 🔗️ Two selected handles are the `createEdge` gesture: the row stays visible but refuses itself
-    // when either end is already connected or no compatibility rule admits the pair, so the menu says
-    // what the document allows instead of offering a verb that would only raise a notice.
     if let [source, target] = selected_handle_ids.as_slice() {
         let occupied = puzzle2d_occupied_handles(snapshot);
         let kinds = puzzle2d_handle_kind(snapshot, source).zip(puzzle2d_handle_kind(snapshot, target));
@@ -241,15 +233,6 @@ pub async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppA
         .item(item("toggleLocked", lock_label, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(semio_framework::dsl_value!({ "flag": "locked", "value": any_unlocked })), false, false))
         .item(item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, !has_selected_node))
         .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
-        // 📋️ The framework declares copy/cut/paste (and their mod+c/x/v keys); these rows are the
-        // pointer route to the same three reserved verbs [`Puzzle2dClipboardJob`] answers.
-        //
-        // 🗂️ ONE disclosure group, not three top-level leaves. `organize_context_menu` counts
-        // INTERACTIVE rows against `CONTEXT_MENU_ROW_BUDGET = 9` and only then appends the
-        // `separator-organized-*` row ahead of the destructive one — so nine interactive rows take the
-        // within-budget path and still render TEN rows. Three clipboard verbs that every shell already
-        // binds to mod+c/x/v are the right three to fold: the menu is shorter, the budget is respected
-        // as the shell measures it, and no verb is lost.
         .group("clipboard", |m| {
             m.item(item("copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", None, false, !has_selected_node))
                 .item(item("cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", None, false, !has_selected_node || !any_unlocked))

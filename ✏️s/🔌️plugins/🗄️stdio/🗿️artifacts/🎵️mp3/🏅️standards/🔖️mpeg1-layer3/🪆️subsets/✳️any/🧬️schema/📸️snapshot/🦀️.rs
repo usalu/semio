@@ -14,17 +14,17 @@ pub use metadata::{Id3Content, Id3Frame, Id3v1Tag, Id3v2Tag, id3_content_kind, v
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Mp3FrameHeader {
-    /// `0`=MPEG2.5, `2`=MPEG2, `3`=MPEG1 (`1` is the spec-reserved value).
+    /// 🎞️ `0`=MPEG2.5, `2`=MPEG2, `3`=MPEG1 (`1` is the spec-reserved value).
     pub mpeg_version_id: u8,
-    /// `1`=Layer III, `2`=Layer II, `3`=Layer I (`0` is spec-reserved).
+    /// 🥞️ `1`=Layer III, `2`=Layer II, `3`=Layer I (`0` is spec-reserved).
     pub layer: u8,
-    /// `true` = protection bit set = NO CRC follows the header.
+    /// 🎲️ `true` = protection bit set = NO CRC follows the header.
     pub protection_bit: bool,
     pub bitrate_index: u8,
     pub sample_rate_index: u8,
     pub padding: bool,
     pub private_bit: bool,
-    /// `0`=stereo, `1`=joint stereo, `2`=dual channel, `3`=mono.
+    /// 🚦️ `0`=stereo, `1`=joint stereo, `2`=dual channel, `3`=mono.
     pub channel_mode: u8,
     pub mode_extension: u8,
     pub copyright: bool,

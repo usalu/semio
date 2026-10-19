@@ -304,6 +304,8 @@
         "journalProjectionCacheEntries": 8,
         "informationMaximumBytes": 1048576,
         "informationMaximumLines": 32768,
+        "informationAttempts": 8,
+        "informationBackoffMilliseconds": 75,
         "publicationDirectory": ".publication",
         "attachArguments": [
           "-nobrowse",
@@ -313,8 +315,9 @@
         ],
         "mountProgram": "/sbin/mount",
         "mountWithoutOwnersFlag": "noowners",
-        "reservedApplicationDirectories": [
-          ".fseventsd"
+        "reservedApplicationEntries": [
+          ".fseventsd",
+          ".metadata_never_index"
         ]
       }
     },

@@ -339,7 +339,7 @@
   "execution": {
     "target": "test-rust-physical-reference-context",
     "command": "bun ./📜️script.ts test rust-physical-reference-context long",
-    "cache": false,
+    "cache": true,
     "artifactRoute": "rust-physical-reference-context"
   },
   "oracle": {

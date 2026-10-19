@@ -235,7 +235,7 @@ pub fn synchronize_text_editor_host(host: &mut EditorHost, editor: &semio_framew
         engine_canvas_fault_log(&format!("[text-editor] scene member left unchanged — {fault}"));
     }
     let mut admitted = |_| true;
-    let mut control = semio_framework_value::NativeDecodeControl::new(TEXT_EDITOR_SCENE_OWNED_BYTES, &mut admitted);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(TEXT_EDITOR_SCENE_OWNED_BYTES, &mut admitted);
     let scene = framework_editor::scene::from_json(&document, &mut control).map_err(|error| error.to_string())?;
     host.synchronize_scene(scene);
     Ok(())

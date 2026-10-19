@@ -12,7 +12,9 @@ use crate::standards::v1::subsets::any::schema::preparation::connect_handles_pre
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::connect_handles_preparation::edge::Puzzle2dConnectEdgeCursor;
 #[allow(unused_imports)]
-use semio_framework_value::{ValueRefusalKind, list::PagedListEditCursor, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use semio_framework_value_persistent::list::PagedListEditCursor;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
 #[allow(unused_imports)]
@@ -56,8 +58,8 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_connect_candidate_preserves_ordered_native_fields_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dConnectHandlesCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
-    let base: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
+    let base: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/🔣️.json")).unwrap();
     let full: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", base["control"]["largePrefix"].as_str().unwrap().repeat(base["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;

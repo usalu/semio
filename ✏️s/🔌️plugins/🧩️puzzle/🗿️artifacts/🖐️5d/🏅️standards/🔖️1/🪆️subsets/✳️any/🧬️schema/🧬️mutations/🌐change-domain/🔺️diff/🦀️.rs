@@ -4,8 +4,6 @@ use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeDomain, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
-    // 🌐️ `domain` is a document-root singleton field (not a catalog member addressed by id), so
-    // there is no missing-target case — only the no-op check applies.
     if payload.new_domain == base.domain {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Domain is already \"{}\".", payload.new_domain));
     }

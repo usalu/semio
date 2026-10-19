@@ -1,8 +1,8 @@
 /** 🧬️ FlowPresence */
 export interface FlowPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   previewOffNodeIds: string[];
-  /** @state presence */
+  /** 📷️ @state presence */
   camera: CameraJson;
 }
 

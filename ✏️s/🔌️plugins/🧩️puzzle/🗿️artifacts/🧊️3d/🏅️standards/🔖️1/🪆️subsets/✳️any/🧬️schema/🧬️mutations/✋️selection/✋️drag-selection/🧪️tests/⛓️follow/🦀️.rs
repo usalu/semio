@@ -2,7 +2,7 @@
 //!
 //! Drags the chain root `object-a` up by 1: `object-b` and `object-d`, which hang off it, are re-placed from their moved parents with unchanged attractions; the LOCKED `object-c` stays, so `attraction-bc` is re-derived — one Info-level `mutation.cascade` names both followers and the re-derived attraction.
 //!
-//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️drag-selection/⛓️follow/`
+//! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⛓️follow/`
 //! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
 
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
@@ -12,11 +12,11 @@ use semio_s_artifact_puzzle_3d_mutations::inverse_puzzle3d_mutation;
 
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
-static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-selection/⛓️follow/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
-static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-selection/⛓️follow/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
-static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-selection/⛓️follow/🦠️mutation/🔣️.json")).expect("committed test data reads"));
-static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-selection/⛓️follow/🔺️diff/🔣️.json")).expect("committed test data reads"));
-static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-selection/⛓️follow/🎯️outcome/🔣️.json")).expect("committed test data reads"));
+static BEFORE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⛓️follow/📸️snapshot/⬅️before/🔣️.json")).expect("committed test data reads"));
+static AFTER: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⛓️follow/📸️snapshot/➡️after/🔣️.json")).expect("committed test data reads"));
+static MUTATION: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⛓️follow/🦠️mutation/🔣️.json")).expect("committed test data reads"));
+static DIFF: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⛓️follow/🔺️diff/🔣️.json")).expect("committed test data reads"));
+static OUTCOME: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️selection/✋️drag-selection/⛓️follow/🎯️outcome/🔣️.json")).expect("committed test data reads"));
 
 fn before() -> Puzzle3dSnapshot {
     semio_framework_pack_json::from_json_str(BEFORE.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")

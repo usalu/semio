@@ -1,0 +1,80 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/split-fw-tools/orig/terminal-tests.rs",
+ "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🧪️tests/🔬️unit/🦀️.rs",
+ "fragments": [
+  {
+   "dir": "🔗️open-ready",
+   "doc": "/// 🔗️ Opening a ready task's URL from the keyboard, the overview and the context menu with shared vectors, and its localized, deduplicated and cancellable customization.",
+   "ranges": [
+    [
+     48,
+     96
+    ]
+   ]
+  },
+  {
+   "dir": "🧲️docking",
+   "doc": "/// 🧲️ Window docking: tabs into every corner and zone with preview and committed geometry, pointer and keyboard drags, cancellation, identity-owned controls and splitter capture.",
+   "ranges": [
+    [
+     99,
+     105
+    ],
+    [
+     109,
+     575
+    ]
+   ]
+  },
+  {
+   "dir": "🎹️keymap-and-launcher",
+   "doc": "/// 🎹️ The keymap and the launcher: leader bytes and canonical spellings, prefix actions, starting, parameters and confirmation, the footer hints and the keyboard help.",
+   "ranges": [
+    [
+     623,
+     904
+    ]
+   ]
+  },
+  {
+   "dir": "🖼️window-focus-and-sessions",
+   "doc": "/// 🖼️ Windows, focus and sessions: tab titles, mouse operation, restored output, terminal sizes, shutdown, copy, repainting, context menus, compounds, daemon errors and replays.",
+   "ranges": [
+    [
+     905,
+     1170
+    ]
+   ]
+  },
+  {
+   "dir": "🩺️runtime-audit",
+   "doc": "/// 🩺️ The runtime audit: selection and status per task row, incremental repainting, launcher filtering, hint fit, catalogue-only text, the armed prefix and reconnect backoff.",
+   "ranges": [
+    [
+     1171,
+     1311
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️scenario-proofs-and-batching",
+   "doc": "/// 🧭️ The scenario proofs of the window, session and pane features, the silent terminal, restoring, glyph capabilities, the armed-prefix notice and batched launcher navigation.",
+   "ranges": [
+    [
+     1313,
+     1495
+    ]
+   ],
+   "replace": [
+    [
+     "let source = include_str!(\"🦀️.rs\");",
+     "let sources = [include_str!(\"../🦀️.rs\"), include_str!(\"../🔗️open-ready/🦀️.rs\"), include_str!(\"../🧲️docking/🦀️.rs\"), include_str!(\"../🎹️keymap-and-launcher/🦀️.rs\"), include_str!(\"../🖼️window-focus-and-sessions/🦀️.rs\"), include_str!(\"../🩺️runtime-audit/🦀️.rs\"), include_str!(\"🦀️.rs\")];"
+    ],
+    [
+     "&[source]",
+     "&sources"
+    ]
+   ]
+  }
+ ]
+}

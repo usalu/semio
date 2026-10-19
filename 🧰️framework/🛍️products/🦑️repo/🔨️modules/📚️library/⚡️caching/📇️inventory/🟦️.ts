@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from "node:fs";
-import { createRequire } from "node:module";
+import { openNxSdkV1 } from "../🚀️bootstrap/🛠️tools/🔌️sdk/🟦️.ts";
 import { relative, resolve, sep } from "node:path";
 
 export type InventoryProject = { name: string; root: string; targets: Record<string, any>; namedInputs?: Record<string, any>; [key: string]: any };
@@ -7,9 +7,9 @@ export type InventoryGraph = { projects: InventoryProject[]; sources: Record<str
 
 /** 🧭️ Reads the graph already resolved by the outer Nx invocation, with every provider and target's provenance. */
 export function readInventoryGraph(workspace: string): InventoryGraph {
-  const require = createRequire(import.meta.url), root = realpathSync(workspace);
-  if (root !== realpathSync(require("nx/src/utils/workspace-root").workspaceRoot)) throw new Error("Inventory must use the active Nx workspace");
-  const graph = require("@nx/devkit").readCachedProjectGraph(), sourceMaps = require("nx/src/project-graph/nx-deps-cache").readSourceMapsCache();
+  const sdk = openNxSdkV1(import.meta.url), root = realpathSync(workspace);
+  if (root !== realpathSync(sdk.workspaceRoot())) throw new Error("Inventory must use the active Nx workspace");
+  const graph = sdk.readCachedProjectGraph(), sourceMaps = sdk.readSourceMapsCache();
   if (!sourceMaps) throw new Error("Nx configuration provenance is unavailable; run the audit through Nx");
   const projects: InventoryProject[] = Object.values(graph.nodes).map((node: any) => ({ ...node.data, targets: node.data.targets ?? {} }));
   projects.sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);

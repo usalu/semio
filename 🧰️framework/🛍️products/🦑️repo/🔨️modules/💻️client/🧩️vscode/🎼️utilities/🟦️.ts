@@ -16,7 +16,7 @@ import { cachedRepoBaseUrl, outputChannel } from "../🎩️globals/🟦️.ts";
 
 // #region 🔌️Adapters
 /**
- * execFileAsync holds the data fields for a execFileAsync record.
+ * 🏃️ execFileAsync holds the data fields for a execFileAsync record.
  **/
 export const execFileAsync = promisify(execFile);
 // #endregion 🔌️Adapters
@@ -25,7 +25,7 @@ export const execFileAsync = promisify(execFile);
 // Utilities provide logging, fixed read-only query execution and binary resolution.
 
 /**
- * writeLog holds the data fields for a writeLog record.
+ * 📤️ writeLog holds the data fields for a writeLog record.
  **/
 function writeLog(level: string, args: any[]): void {
   const message = args.map((a) => (typeof a === "object" ? JSON.stringify(a, null, 2) : String(a))).join(" ");
@@ -38,21 +38,21 @@ function writeLog(level: string, args: any[]): void {
 }
 
 /**
- * log holds the data fields for a log record.
+ * 📜️ log holds the data fields for a log record.
  **/
 export function log(...args: any[]): void {
   writeLog("LOG", args);
 }
 
 /**
- * logError holds the data fields for a logError record.
+ * 🧾️ logError holds the data fields for a logError record.
  **/
 export function logError(...args: any[]): void {
   writeLog("ERROR", args);
 }
 
 /**
- * getWorkspaceRoot holds the data fields for a getWorkspaceRoot record.
+ * 🗂️ getWorkspaceRoot holds the data fields for a getWorkspaceRoot record.
  **/
 export function getWorkspaceRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -66,14 +66,14 @@ export function resolveRepoBinaryPath(root: string, env: NodeJS.ProcessEnv = pro
   return fs.existsSync(candidate) ? candidate : undefined;
 }
 
-/** getRepoBinaryPath holds the data fields for a getRepoBinaryPath record.
+/** 🏗️ getRepoBinaryPath holds the data fields for a getRepoBinaryPath record.
  **/
 export function getRepoBinaryPath(): string | undefined {
   const root = getWorkspaceRoot();
   return root ? resolveRepoBinaryPath(root) : undefined;
 }
 
-/** getRepoCommand holds the data fields for a getRepoCommand record.
+/** 📁️ getRepoCommand holds the data fields for a getRepoCommand record.
  **/
 export function getRepoCommand(): string {
   const binaryPath = getRepoBinaryPath();
@@ -81,14 +81,14 @@ export function getRepoCommand(): string {
 }
 
 /**
- * hasRepoAccess holds the data fields for a hasRepoAccess record.
+ * 🧰️ hasRepoAccess holds the data fields for a hasRepoAccess record.
  **/
 export function hasRepoAccess(): boolean {
   return getRepoCommand() !== "";
 }
 
 /**
- * getUiString holds the data fields for a getUiString record.
+ * 📦️ getUiString holds the data fields for a getUiString record.
  **/
 function getUiString(key: keyof typeof UI_STRINGS.en): string {
   const language = vscode.env.language.split("-")[0];
@@ -97,7 +97,7 @@ function getUiString(key: keyof typeof UI_STRINGS.en): string {
 }
 
 /**
- * resolveCheckpointSha holds the data fields for a resolveCheckpointSha record.
+ * 📇️ resolveCheckpointSha holds the data fields for a resolveCheckpointSha record.
  **/
 function resolveCheckpointSha(checkpoint: string | { sha?: string } | undefined): string | undefined {
   if (!checkpoint) return undefined;
@@ -105,7 +105,7 @@ function resolveCheckpointSha(checkpoint: string | { sha?: string } | undefined)
   return checkpoint.sha;
 }
 
-/** getGitHubRepoBaseUrl holds the data fields for a getGitHubRepoBaseUrl record.
+/** 🌿️ getGitHubRepoBaseUrl holds the data fields for a getGitHubRepoBaseUrl record.
  **/
 export function getGitHubRepoBaseUrl(): string | undefined {
   if (cachedRepoBaseUrl.current !== undefined) return cachedRepoBaseUrl.current;
@@ -127,7 +127,7 @@ export function getGitHubRepoBaseUrl(): string | undefined {
 }
 
 /**
- * Parses raw CLI output into structured repo events.
+ * 📥️ Parses raw CLI output into structured repo events.
  * Implementations MUST split output by newlines and parse each non-empty line as JSON.
  **/
 export function parseRepoEvents(output: string): RepoEvent[] {
@@ -139,7 +139,7 @@ export function parseRepoEvents(output: string): RepoEvent[] {
 }
 
 /**
- * Extracts the final result payload from a sequence of repo events.
+ * 🌳️ Extracts the final result payload from a sequence of repo events.
  * Implementations MUST throw on fatal errors and return the last meaningful result.
  **/
 export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {

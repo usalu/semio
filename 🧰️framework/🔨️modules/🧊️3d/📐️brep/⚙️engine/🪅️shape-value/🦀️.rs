@@ -63,7 +63,6 @@ pub struct ImportedShape {
 
 impl ImportedShape {
     /// 🏷️ The session label a label of the imported [`ShapeValue`] resolves to (identity in a fresh session).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn session_label(&self, label: PersistentLabel) -> PersistentLabel {
         PersistentLabel(label.0 + self.label_offset)
     }
@@ -71,7 +70,6 @@ impl ImportedShape {
 
 impl ShapeValue {
     /// 🧭️ The geometry kind of the root.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn kind(&self) -> GeometryKind {
         match &self.root {
             ShapeRoot::Vertex(_) => GeometryKind::Vertex,
@@ -87,7 +85,6 @@ impl ShapeValue {
     }
 
     /// 🏷️ The persistent label of the root.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn label(&self) -> Option<PersistentLabel> {
         match &self.root {
             ShapeRoot::Vertex(id) => self.body.vertices.get(*id).map(|vertex| vertex.label),
@@ -101,7 +98,6 @@ impl ShapeValue {
     }
 
     /// 🏷️ Every labelled element of `kind` in the closure, in deterministic arena order, root included when it has that kind.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn components(&self, kind: GeometryKind) -> Vec<ShapeComponent> {
         let labels: Vec<PersistentLabel> = match kind {
             GeometryKind::Vertex => self.body.vertices.iter().map(|(_, vertex)| vertex.label).collect(),
@@ -115,13 +111,11 @@ impl ShapeValue {
     }
 
     /// 🔑️ Content hash of the canonical encoding: equal exactly when the values are equal.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn content_hash(&self) -> String {
         semio_framework_hash::hash_bytes(semio_framework_pack_json::to_json_string(self).as_bytes())
     }
 
     /// 🩺️ Refuses a value whose ids dangle, so a decoded value can never panic an import.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn check(&self) -> Result<(), BrepError> {
         let body = &self.body;
         let broken = |what: String| BrepError::InvalidInput(format!("shape value is inconsistent: {what}"));
@@ -173,7 +167,6 @@ impl ShapeValue {
     }
 
     /// ⏱️ A resumable, cancellable tessellation of this value that needs no session.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_job(&self, deflection: f64) -> Result<ShapeTessellationJob, BrepError> {
         self.check()?;
         let job=match &self.root {
@@ -185,7 +178,6 @@ impl ShapeValue {
     }
 
     /// 🔺️ One-shot tessellation of this value.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate(&self, deflection: f64) -> Result<MeshTransfer, BrepError> {
         let mut job = self.tessellate_job(deflection)?;
         loop {
@@ -206,7 +198,6 @@ pub struct ShapeTessellationJob {
 
 impl ShapeTessellationJob {
     /// ⏱️ Advances by at most `budget` units.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn step(&mut self, budget: usize) -> Result<TessellationStep, BrepError> {
         use semio_framework_3d_brep_tessellation::TessellationInput;
         let input=match &self.shape.root {
@@ -216,25 +207,21 @@ impl ShapeTessellationJob {
     }
 
     /// 📈️ Progress right now.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn progress(&self) -> TessellationProgress {
         self.job.progress()
     }
 
     /// 🛑️ Retires the job at the next observable boundary.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cancel(&mut self) {
         self.job.cancel();
     }
 
     /// ✅️ True once the job reached a terminal phase.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_terminal(&self) -> bool {
         self.job.is_terminal()
     }
 
     /// 📤️ Takes the finished mesh, `None` unless the job completed.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn into_mesh(self) -> Option<(MeshTransfer, TessellationReport)> {
         self.job.into_mesh()
     }

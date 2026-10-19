@@ -1,6 +1,6 @@
 //! 🎨️ Typed fill editing for the inspector and canvas gradient handles.
 use crate::{FillStyle, GradientStop};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 static EMPTY_STOPS: std::sync::LazyLock<PagedList<GradientStop, {usize::MAX}>> = std::sync::LazyLock::new(Default::default);
 #[path="🎨️sampling/🦀️.rs"]
 pub mod sampling;

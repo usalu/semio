@@ -4,7 +4,7 @@ use semio_framework_value::DslValue;
 
 use semio_framework_value::ErasedSnapshotRetirement;
 
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 use semio_framework_value::ValueError;
 

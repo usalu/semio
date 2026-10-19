@@ -150,35 +150,7 @@ impl protocol::ColdMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
 
 use protocol::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 
-impl ColdMutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn absorb(&mut self, other: Self) {
-        ColdMutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
-    }
 
-    fn apply(&self, projection: &mut Puzzle2dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
-        ColdMutationDiff::<Puzzle2dSnapshot>::apply(self, std::sync::Arc::make_mut(&mut projection.typed), capability).map_err(|error| error.under(["document"]))?;
-        projection.value = std::sync::OnceLock::new();
-        Ok(())
-    }
-}
 
-impl ColdDiffAlgebra<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
-    fn inverse(&self, base: &Puzzle2dPlaySnapshot) -> Self {
-        ColdDiffAlgebra::<Puzzle2dSnapshot>::inverse(self, base.typed())
-    }
-}
-
-impl protocol::ColdMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
-    type ReferenceDiff = Puzzle2dDiff;
-    fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        ColdMutation::<Puzzle2dSnapshot>::diff(self, projection.typed())
-    }
-    fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Result<Vec<Puzzle2dMutation>, semio_framework_value::ValueError> {
-    Ok({
-        ColdMutation::<Puzzle2dSnapshot>::inverse(self, projection.typed())?
-    
-    })
-}
-}
 
 

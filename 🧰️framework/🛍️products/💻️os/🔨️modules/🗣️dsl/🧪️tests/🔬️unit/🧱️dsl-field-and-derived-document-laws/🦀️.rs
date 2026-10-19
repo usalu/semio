@@ -32,17 +32,14 @@ impl DslIdiom for GreetIdiom {
     const LANG: &'static str = "greet";
     type Ast = GreetAst;
 
-    // 🚫️async: E4 fn-pointer slot — DslIdiom::parse must stay sync, see the trait's own tag.
     fn parse(text: &str) -> Result<Self::Ast, TextError> {
         text.strip_prefix("hello ").map(|name| GreetAst { name: name.trim().to_string() }).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected 'hello <name>'", TextSpan::at(1, 1)))
     }
 
-    // 🚫️async: E4 fn-pointer slot — see parse above
     fn print(ast: &Self::Ast) -> String {
         format!("hello {}", ast.name)
     }
 
-    // 🚫️async: E4 fn-pointer slot — see parse above
     fn classify(_text: &str) -> Vec<(TokenClass, TextSpan)> {
         Vec::new()
     }

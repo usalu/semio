@@ -25,10 +25,6 @@ pub async fn definition() -> WindowKindDefinition {
         options: Default::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
-        // 🕹️ No interaction domain — this VFS window renders through `scene_surface`/
-        // `VirtualFileSystemScene` (a `Component::Surface`), not a tree node, so the framework's
-        // `stamp_and_cache_interaction_ui` post-pass never binds it; it is also a root-only stub with
-        // `selected_row_ids_json`/`hovered_row_id` always `None` (see `render`'s own comment).
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -52,18 +48,12 @@ pub async fn render(projection: &WorkflowSnapshot, view_state: &ViewModel) -> se
         ("descriptorValues".to_string(), semio_framework_pack_json::object([])),
     ])];
     // 🚧️ `flatten_media_vfs_rows` is a no-op stub (os-core dissolve deleted the `🔖️WorkflowVfs` region
-    // it depended on) — the media VFS window shows only its root node until a full collection-browser
-    // UI replaces it in a later wave.
     semio_hub_space_operations::flatten_media_vfs_rows(OS_WORKFLOW_VFS_ROOT_ID, &projection.graph, &projection.parameter_bindings, &projection.parameters, &mut rows).await;
     let schema = semio_framework_pack_json::object([
         ("descriptorKinds".to_string(), semio_framework_pack_json::object([])),
         ("fileNodeKinds".to_string(), semio_framework_pack_json::object([("root".to_string(), semio_framework_pack_json::object([("id".to_string(), semio_framework_pack_json::Value::from("root")), ("name".to_string(), semio_framework_pack_json::Value::from("Workflow")), ("descriptors".to_string(), semio_framework_pack_json::array([]))]))])),
         ("descriptorColumnIds".to_string(), semio_framework_pack_json::array([])),
     ]);
-    // 🕹️ The old `UiNode`-tree builder also stamped `pane_id: Some(S_PLAY_WINDOW_MEDIA_VFS)` /
-    // `binding_id: None` onto the surface node; the contract's `SurfaceBuilder` carries no such
-    // fields (only `NodeBase` + `SurfaceProps`) — flagged as a discovered framework gap, not worked
-    // around here, matching the `workflow` window's identical interaction-domain gap.
     semio_framework_plugin::scene_surface(
         S_PLAY_SURFACE_MEDIA_VFS,
         semio_framework_ui_contract::SurfaceKind::VirtualFileSystem,

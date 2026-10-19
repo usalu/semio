@@ -1,0 +1,25 @@
+{
+ "ws": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml",
+ "old_dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer",
+ "new_dir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️window-layer-optics",
+ "old_name": "semio-s-artifact-energy-model-mut-window-layer",
+ "new_name": "semio-s-artifact-energy-model-mut-window-layer-optics",
+ "old_alias": "window_layer_mutations",
+ "new_alias": "window_layer_optics_mutations",
+ "old_slug": "window-layer",
+ "new_slug": "window-layer-optics",
+ "new_emoji": "🌈️",
+ "new_desc": "Energy model mutation domain window-layer-optics: radiative property payloads, builders, diff and inverse of its operations",
+ "script": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/📜️script.ts",
+ "subtree": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+ "move": [
+  "change_glazing_material_solar_transmittance",
+  "change_glazing_material_visible_transmittance",
+  "change_glazing_material_infrared_emissivity",
+  "change_glazing_material_solar_reflectance_front",
+  "change_glazing_material_solar_reflectance_back",
+  "change_glazing_material_visible_reflectance_front",
+  "change_glazing_material_visible_reflectance_back",
+  "change_glazing_material_infrared_transmittance"
+ ]
+}

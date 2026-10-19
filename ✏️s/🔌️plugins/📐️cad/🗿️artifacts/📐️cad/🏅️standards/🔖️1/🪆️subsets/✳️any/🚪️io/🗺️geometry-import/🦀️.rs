@@ -21,10 +21,9 @@ pub fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, label: imp
     CadObject { id: id.into(), label: label.into(), typology: typology.into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, extent, solid_handle, primitives }
 }
 
-use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadWorkingScene};
 use semio_s_artifact_cad_cad_inferences::cad_brep_kernel;
 use std::sync::{Arc,OnceLock};
-    const FOREST_LEFT_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+    const FOREST_LEFT_MODEL_JSON: &str = semio_s_artifact_cad_cad_play_model_document::CAD_PLAY_MODEL_JSON;
     const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
     const CAD_MODEL_INDEX_ENERGY: usize = 2;
     const CAD_MODEL_INDEX_BUILDING: usize = 1;
@@ -71,7 +70,7 @@ use std::sync::{Arc,OnceLock};
     }
 
 
-const CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
+const CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON: &str = semio_s_artifact_cad_cad_play_model_document::CAD_PLAY_MODEL_JSON;
 
 /// 🌲️ Face loops for the shape-pane solid in the Hexagonal Cut Concrete Forest Left play fixture.
 pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_framework_3d_brep_engine::SolidFaceLoops, String> {

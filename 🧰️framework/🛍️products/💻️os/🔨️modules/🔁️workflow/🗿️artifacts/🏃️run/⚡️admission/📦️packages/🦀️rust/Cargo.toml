@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-artifact-workflow-run-admission"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Workflow run checked admission seam"
+
+[package.metadata.semio]
+role = "artifact"
+id = "workflow-run-admission"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-workflow-run = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }

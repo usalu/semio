@@ -24,6 +24,7 @@ semio-framework-job = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

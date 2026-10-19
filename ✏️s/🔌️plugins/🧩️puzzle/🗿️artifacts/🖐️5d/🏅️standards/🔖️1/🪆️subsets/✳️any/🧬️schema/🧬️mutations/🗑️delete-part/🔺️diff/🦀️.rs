@@ -1,4 +1,4 @@
-//! that touches one of its grips), never a whole-snapshot capture. Grip full ids are `part_id:grip_id`.
+//! 🤝️ that touches one of its grips), never a whole-snapshot capture. Grip full ids are `part_id:grip_id`.
 //! 🔺️ Sparse diff builder for `DeletePart` — a real cascade-aware removal (part + any fastener
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dFastenersDelta;

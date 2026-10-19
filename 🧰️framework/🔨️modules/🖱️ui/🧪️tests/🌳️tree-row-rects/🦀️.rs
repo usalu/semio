@@ -132,7 +132,6 @@ fn the_row_metric_is_the_one_the_fixture_was_pinned_against() {
     let theme = Theme::default();
     assert!(close(theme.tree_row_height, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
     assert!(close(theme.tree_row_height, metrics["uiSpacingCompactPx"].as_f64().expect("uiSpacingCompactPx") * metrics["treeRowUiSpacing"].as_f64().expect("treeRowUiSpacing")));
-    // 🌳️ The immediate-mode chrome twin reads the same token, so this target has ONE row pitch.
     assert!(close(semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
     let row_metrics = semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::from_theme(&theme);
     assert_eq!(row_metrics.row_height, theme.tree_row_height);
@@ -178,8 +177,6 @@ fn a_pointer_aimed_at_a_painted_row_hits_that_row() {
 
 #[test]
 fn the_defect_geometry_is_refused() {
-    // ⚖️ The exact rect the live target published for `Add Generation`: a row measured as its own
-    // padding. A row is never shorter than the metric its label is painted on.
     let law = law();
     let entry = case(&law, "two-sections-stack-in-order");
     let (tree, root) = laid_out(entry);

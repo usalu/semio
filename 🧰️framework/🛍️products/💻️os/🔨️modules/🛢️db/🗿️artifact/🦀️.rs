@@ -41,7 +41,9 @@
 extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as store;
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use db_artifact_contract::{ArtifactDurableGroupJournalAppendV1, ArtifactDurableGroupRecoveryOwnerV1, ArtifactMessage, CheckpointPublicationSnapshot, CommandBatch, CommandReceipt, SubmitOptions};
 use db_artifact_engine::{ArtifactEngine, ArtifactEngineOpenRejected};
 use db_artifact_history::{ArtifactHistoryView, HistoryReplayFuture, HistoryReplayReservation};

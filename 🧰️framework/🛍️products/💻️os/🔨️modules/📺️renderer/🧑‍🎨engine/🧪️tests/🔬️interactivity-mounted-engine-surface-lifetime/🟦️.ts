@@ -4,10 +4,6 @@ import { policyReadRustPolicySource, policyReadModuleTreeSource } from "@semio-t
 /** 🧪️ Executes interactivity mounted engine surface lifetime policy assertions. */
 export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: string): void {
   const read = (file: string): string => policyReadRustPolicySource(repoRoot, file);
-  // 🧭️ `Parameters<…>` is what keeps this list and the audit's ten positional parameters in step:
-  // `Array.prototype.map` answers `string[]`, whose length TypeScript does not know, so spreading its
-  // result into a fixed-arity call is a `TS2556` — and a source added here without a parameter to
-  // receive it would pass unnoticed.
   const clean: Parameters<typeof interactivityMountedEngineSurfaceLifetimeFailures> = [
     read(INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
     read(INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),

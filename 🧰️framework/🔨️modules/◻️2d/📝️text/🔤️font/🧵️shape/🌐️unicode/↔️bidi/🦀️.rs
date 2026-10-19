@@ -1,7 +1,8 @@
 //! ↔️ Original Unicode16 scalars resolve bounded logical levels and visual order under real private custody.
 use super::{UnicodeLayout,UnicodePropertyCursor,UnicodeMappingCursor,UnicodeMapping,normalize::NormalizedScalar};
 use semio_framework_2d_text_font::{FontReader,FontProgress,reserve_slot};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 type List<T>=PagedList<T,{usize::MAX}>;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum UnicodeBidiDirection{Auto,LeftToRight,RightToLeft}

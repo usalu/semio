@@ -1,8 +1,9 @@
 //! ♻️ Actual clone close-frame private custody preserves original terminal release laws.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 #[test]
 fn cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗺️ordered-map/🧪️tests/🧫️fixtures/📏️close/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🗺️ordered-map/🧪️tests/🧫️fixtures/📏️close/🔣️.json")).unwrap();
     let admission = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     let mut mismatches = 0;
     for row in fixture["cases"].as_array().unwrap() {

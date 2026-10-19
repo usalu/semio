@@ -583,8 +583,6 @@ fn absorb_block_rows(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
                 (Some(x), Some(y)) => Some(absorb_list_items_rows(x, &y)),
             },
         },
-        // 🛡️ Kind-mismatched arms (should not arise outside a prior `Replace`, handled above) --
-        // graceful fallback: the later diff wins rather than panicking.
         (_, b) => b,
     }
 }
@@ -942,7 +940,6 @@ pub fn demo_diff_cases() -> Vec<MdDiff> {
             }),
         },
     ];
-    // 🍃 Manual case: `ThematicBreak` diff + `Replace` at a nested `BlockQuote` depth, proving the codec handles both.
     cases.push(MdDiff {
         blocks: Some(MdBlocksDiff {
             removed: Vec::new(),

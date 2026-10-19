@@ -1,8 +1,9 @@
 //! 🔣️ Original History origin JSON retains its native grammar while borrowing the same source under complete caller policy.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::{RetainedHistoryOriginProjection,permits,metadata};
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError,JsonReadSource};
-use semio_framework_value::{DslValue,NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 use ::protocol::MutationOrigin;
 use ::protocol::codec::{OriginalWireSourceIdentity,RetainedWireByteSource};

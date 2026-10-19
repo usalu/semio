@@ -76,7 +76,6 @@ pub fn append_mesh_spec(base: &mut MeshDataSpec, other: MeshDataSpec) {
 /// 📐️ Builds an axis-aligned box mesh centered at the origin, with per-face flat normals.
 pub fn box_mesh_spec(width: f64, height: f64, depth: f64) -> MeshDataSpec {
     let (hw, hh, hd) = ((width * 0.5) as f32, (height * 0.5) as f32, (depth * 0.5) as f32);
-    // 6 faces * 4 verts, wound counter-clockwise when viewed from outside along the face normal.
     let faces: [([f32; 3], [[f32; 3]; 4]); 6] = [
         ([0.0, 0.0, 1.0], [[-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd]]),
         ([0.0, 0.0, -1.0], [[hw, -hh, -hd], [-hw, -hh, -hd], [-hw, hh, -hd], [hw, hh, -hd]]),
@@ -369,9 +368,6 @@ pub enum CurationDecision {
 /// 🎯️ Resolves a relative count adjustment against `document`'s CURRENT `curated`/`stock`, clamped
 /// to `0..=availability`. Unknown `object_id` (absent from stock) resolves to `NoOp`.
 pub fn curation_decision_for_delta(document: &CurationSnapshot, object_id: &str, delta: i64) -> CurationDecision {
-    // 🔎️ `availability` lives on `stock_extra` (the sourcing-owned overflow half) — no need to
-    // resolve the composed `catalog` child just to clamp a count, so this reads `stock_extra`
-    // directly rather than going through `stock_of`'s full reassembly.
     let Some(extra) = document.stock_extra.iter().find(|extra| extra.id == object_id) else { return CurationDecision::NoOp };
     let next = (curated_count(document, object_id) as i64 + delta).clamp(0, extra.availability as i64) as u32;
     curation_decision_for_set(document, object_id, next)

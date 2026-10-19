@@ -97,7 +97,7 @@
         let app = contract_app_raw(mounted_policy, &mut identity).await;
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         let mut sequence = 0;
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(4_096, u64::MAX, mounted_policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::artifact_app_laws::fixture_progress());
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(4_096, u64::MAX, mounted_policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_progress());
         let response = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap(), &mut cx).await.unwrap();
         let response: Value = serde_json::from_str(&response).unwrap();
         assert_eq!(response["panels"][0]["key"], "properties");

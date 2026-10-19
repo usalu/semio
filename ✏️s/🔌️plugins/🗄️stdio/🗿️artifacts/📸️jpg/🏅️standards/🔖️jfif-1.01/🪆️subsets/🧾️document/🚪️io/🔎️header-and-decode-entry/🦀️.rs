@@ -150,7 +150,7 @@ pub(crate) fn parse_jpg_header(data: &dyn JpgByteSource, inspect:bool) -> Result
         let marker = data.byte(i.checked_add(1).ok_or_else(|| JpgError::Malformed("marker cursor overflow".into()))?).ok_or_else(|| JpgError::Malformed("truncated marker".into()))?;
         i += 2;
         match marker {
-            0xD8 => continue, // stray SOI, tolerate
+            0xD8 => continue,
             0xD9 => return Err(JpgError::Malformed("EOI before SOS".into())),
             0xC0 | 0xC1 | 0xC2 | 0xC3 | 0xC5 | 0xC6 | 0xC7 | 0xC9 | 0xCA | 0xCB | 0xCD | 0xCE | 0xCF => {
                 if !inspect && marker!=0xc0 {return Err(JpgError::Unsupported(format!("non-baseline frame process 0x{marker:02x}")));}
@@ -319,7 +319,7 @@ pub(crate) fn parse_jpg_header(data: &dyn JpgByteSource, inspect:bool) -> Result
                 other_segments.push(JpgSegment { marker, data: seg });
                 i += len;
             }
-            0x01 | 0xD0..=0xD7 => {} // TEM / stray restart outside a scan: no length field, skip
+            0x01 | 0xD0..=0xD7 => {}
             _ => return Err(JpgError::Malformed(format!("unhandled marker 0xFF{marker:02X} before SOS"))),
         }
     }

@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue};
 use store::sqlite_snapshot::SqliteDatabaseLimits;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const TABLES:[(&str,usize);12]=[("avi_document",3),("avi_main_header",11),("avi_main_reserved",4),("avi_stream",4),("avi_stream_header",20),("avi_bitmap_info",12),("avi_wave_format",8),("avi_raw_format",2),("avi_stream_chunk",6),("avi_stream_extra",5),("avi_unknown_chunk",5),("avi_hdrl_extra",5)];
 pub(super) fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  let mut bytes=0usize;for statement in AviSnapshot::SQLITE_SCHEMA.split(';'){bytes=bytes.checked_add(statement.trim().len()).ok_or_else(||ownership("AVI authored schema byte count overflow"))?;}for(name,_)in TABLES{bytes=bytes.checked_add(name.len()).ok_or_else(||ownership("AVI authored schema name count overflow"))?;}

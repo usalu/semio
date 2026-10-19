@@ -1,4 +1,4 @@
-//! schema `🧬️schema/🔣️selection-time-travel/🔣️.json`), driven through the store's time-travel reads: every recorded
+//! 📡️ schema `🧬️schema/🔣️selection-time-travel/🔣️.json`), driven through the store's time-travel reads: every recorded
 //! ⏪️ The language-agnostic time-travel corpus of the selection leaves (`🧫️fixtures/🧫️selection-time-travel/🔣️.json`,
 //! gesture is ONE edit carrying its `TransactionRef`; editing one gesture's inputs — its offset, angle, factors or
 //! targets — previews as the state right before it plus the draft with nothing downstream applied, its Report replay
@@ -103,7 +103,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
     for mut case in cases {
         let id = case.id.clone();
         let id = id.as_str();
-        let mut store = crate::host::owned::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = semio_s_artifact_puzzle_3d_host::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(semio_s_artifact_puzzle_3d_model::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a recorded gesture applies");
         }

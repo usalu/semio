@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-course-presence"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Course presence rooms: the scopes of the roster, page, quiz and thinking rooms and the admission rules of the ephemeral presence, cursor and thinking states, judged against the normative quiz schema."
+
+[package.metadata.semio]
+role = "product"
+id = "course-presence"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "course_presence"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-course = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework-course-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true, features = ["float_roundtrip"] }

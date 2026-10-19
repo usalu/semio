@@ -1,6 +1,12 @@
 /** 👷️ Child: child-process script that receives the issued script-process invocation and runs the case its arguments select. */
-import{join}from"node:path";
-import{writeFileSync}from"node:fs";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"@semio-tech/process/routing";
-import{withVscodeSourceSnapshotV1,vscodeSourceFactsV1,type VscodeSourceSnapshotV1}from"../../../🏗️builder/📥️source/🟦️.ts";
-const root=process.argv[2],kind=process.argv[3];if(!root||!["error","undefined","tamper"].includes(kind??""))throw Error("Closed VSCode Source failure case required");const primary=kind==="undefined"?undefined:Error("Exact VSCode Source primary");let late=false,escaped:VscodeSourceSnapshotV1|undefined;try{await receiveScriptProcessInvocation(process.env,async original=>{const control=createIssuedResourceControlV1(original,"vscode:source-failure",10000);await withVscodeSourceSnapshotV1(root,join(root,"dependencies"),[join(root,"entry.ts")],control,async(snapshot,actual)=>{escaped=snapshot;void withRequestedIssuedResourceControlV1(actual,0,async phase=>{await phase.yieldContinuation();vscodeSourceFactsV1(snapshot);late=true;});if(kind==="tamper"){const file=vscodeSourceFactsV1(snapshot).find(row=>row.path===join(root,"entry.ts"));if(!file)throw Error("Actual retained Source extent required");writeFileSync(join(root,"entry.ts"),Buffer.alloc(file.bytes,32));return;}throw primary;});});throw Error("Failed VSCode Source Original unexpectedly succeeded");}catch(error){let retired=false;try{if(escaped)vscodeSourceFactsV1(escaped);}catch{retired=true;}console.log(JSON.stringify({kind,failed:true,exact:kind==="tamper"?error instanceof Error&&error.message==="VSCode Source changed during compilation":Object.is(error,primary),late,retired}));process.exitCode=1;}
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
+
+/** 🚪️ `run` — runs the program of this script. */
+class RunScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));

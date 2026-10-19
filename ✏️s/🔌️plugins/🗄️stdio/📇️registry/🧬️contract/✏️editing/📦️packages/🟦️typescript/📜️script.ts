@@ -9,7 +9,7 @@ class TestScript extends BundleScript {
   run(): void {
     const root = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing");
     runCmd(process.execPath, ["x", "--no-install", "tsc", "--noEmit", "--strict", "--skipLibCheck", "--target", "esnext", "--module", "nodenext", "--moduleResolution", "nodenext", join(root, "🟦️.ts"), join(root, "🩹️patch/🟦️.ts"), join(root, "🖼️raster/🟦️.ts")], { cwd: this.repoRoot });
-    runCmd(process.execPath, ["test", join(root, "🧪️tests/🔬️unit/🟦️.test.ts"), join(root, "🩹️patch/🧪️tests/🟦️.test.ts"), join(root, "🖼️raster/🧪️tests/🟦️.test.ts")]);
+    runCmd(process.execPath, ["test", join(root, "🧪️tests/🔬️unit/🟦️.ts"), join(root, "🩹️patch/🧪️tests/🟦️.ts"), join(root, "🖼️raster/🧪️tests/🟦️.ts")]);
   }
 }
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -35,7 +35,7 @@ test("every owned command is explicitly registered in the actual router", () => 
 test("the actual router bundles with every specific source owner unavailable", async () => {
   const workspace = resolve(framework, "..");
   const refused = fixture.refusedOwners.map((path) => resolve(workspace, path).replaceAll("\\", "/") + "/");
-  const result = await build({ entryPoints: [entry], bundle: true, platform: "node", format: "esm", write: false, metafile: true, logLevel: "silent", plugins: [{ name: "removed-framework-owner", setup(builder) { builder.onLoad({ filter: /.*/ }, (input) => { const path = input.path.replaceAll("\\", "/"); return refused.some((prefix) => path.startsWith(prefix)) ? { errors: [{ text: "Framework command imports an unavailable owner: " + path }] } : undefined; }); } }] });
+  const result = await build({ entryPoints: [entry], bundle: true, platform: "node", format: "esm", external: ["bun:*"], write: false, metafile: true, logLevel: "silent", plugins: [{ name: "removed-framework-owner", setup(builder) { builder.onLoad({ filter: /.*/ }, (input) => { const path = input.path.replaceAll("\\", "/"); return refused.some((prefix) => path.startsWith(prefix)) ? { errors: [{ text: "Framework command imports an unavailable owner: " + path }] } : undefined; }); } }] });
   expect(result.outputFiles?.length).toBe(1);
   const inputs = Object.keys(result.metafile!.inputs);
   expect(inputs.length).toBeGreaterThan(3);

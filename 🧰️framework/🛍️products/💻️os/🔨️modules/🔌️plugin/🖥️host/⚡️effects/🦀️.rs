@@ -44,8 +44,10 @@ use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLa
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
 #[cfg(test)]
 use semio_framework_job::CommitCandidate;
-use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedPayloadBuilder, InteractiveJob, InteractiveJobCloseStep, JobPayloadStream, RetainedJobPayload, StepContext};
-#[cfg(test)] use semio_framework_job::{JobFault, RetainedJobPayloadWriter, StepOutcome};
+use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, InteractiveJob, InteractiveJobCloseStep, StepContext};
+use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream, RetainedJobPayload};
+#[cfg(test)] use semio_framework_job::{JobFault, StepOutcome};
+use semio_framework_job_payload::payload_writer_and_grant::RetainedJobPayloadWriter;
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };

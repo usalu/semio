@@ -61,6 +61,7 @@ export class DecisionRouting {
    * one the proctor is asked once while it is the proctor's to decide, and the deputy decides whenever it is not or
    * the proctor did not answer; a sent command the proctor did decide is the same command when it arrives again. */
   async decided(command: Command, signal: AbortSignal): Promise<Decided> {
+    signal.throwIfAborted();
     if (!this.deputising.present || !this.decidable(command)) return { verdict: await this.link.retrying(() => this.link.proctor.command(command, signal), signal), by: "proctor" };
     if (this.direct()) {
       try {

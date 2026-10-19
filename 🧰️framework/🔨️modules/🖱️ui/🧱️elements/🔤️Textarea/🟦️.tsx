@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/🟦️.tsx";
 import { type UiLabel, uiDataLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { CollapsedFieldDisplay } from "../✏️Input/🟦️.tsx";
@@ -23,7 +23,7 @@ import { useIdLabel, useLabel, Label } from "../🏷️Label/🟦️.tsx";
 // Consumers MUST provide an id for the field.
 
 /**
- * TextareaProps holds the data fields for a TextareaProps record.
+ * 🏷️ TextareaProps holds the data fields for a TextareaProps record.
  **/
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;

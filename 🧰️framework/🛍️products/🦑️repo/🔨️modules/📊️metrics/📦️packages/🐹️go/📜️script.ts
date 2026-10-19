@@ -1,30 +1,18 @@
-#!/usr/bin/env bun
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-/** 🧭️ `@semio-tech/repo-metrics-go` router: `bun ./📜️script.ts build|test`. */
-import { join } from "node:path";
-import { goCoverageArgs, goLevelTestArgs, runCanonicalGoBuild, runCanonicalGoTests } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-
-const PACKAGE_DIR = import.meta.dir;
-
-function goEnvironment(repoRoot: string): NodeJS.ProcessEnv {
-  return { ...process.env, GOWORK: join(repoRoot, "go.work") };
-}
+import { runBuildScript, runTestScript } from "../../🧪️tests/🔬️go-package-commands/🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> {
-    await runCanonicalGoBuild(PACKAGE_DIR, ["./..."], { control: scriptCompilerAdmissionControlV1(this.invocation, "go:build", 0),  env: goEnvironment(this.repoRoot), budgetMs: buildBudgetMs(),  });
+    await runBuildScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { level, rest } = resolveTestLevel(segments);
-    await runCanonicalGoTests(PACKAGE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, PACKAGE_DIR), ...rest], { env: goEnvironment(this.repoRoot) });
+    await runTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 

@@ -43,7 +43,6 @@ impl Default for SemioBrepArtifact {
 }
 
 impl SemioBrepArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioBrepSnapshot {
         SemioBrepSnapshot {
             schema: self.schema.clone(),
@@ -57,11 +56,9 @@ impl SemioBrepArtifact {
             next_label: self.next_label,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioBrepSnapshot) -> Self {
         Self { schema: snapshot.schema, vertices: snapshot.vertices, edges: snapshot.edges, loops: snapshot.loops, faces: snapshot.faces, shells: snapshot.shells, solids: snapshot.solids, coedges: snapshot.coedges, next_label: snapshot.next_label }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioBrepSnapshot) {
         *self = Self::from_snapshot(snapshot);
     }

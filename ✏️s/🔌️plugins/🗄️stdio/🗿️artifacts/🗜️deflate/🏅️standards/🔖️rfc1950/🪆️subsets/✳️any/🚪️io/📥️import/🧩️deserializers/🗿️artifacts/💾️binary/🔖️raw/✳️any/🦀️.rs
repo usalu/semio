@@ -1,10 +1,10 @@
-//! Deserialize stdio.deflate from stdio.binary (zlib-compress payload).
+//! 📥️ Deserialize stdio.deflate from stdio.binary (zlib-compress payload).
 
 use crate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
-/// Register deserializer hooks.
+/// 📤️ Register deserializer hooks.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
@@ -15,7 +15,7 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<DeflateSnapshot, store::Pack
     Ok(DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), payload, ..Default::default() })
 }
 
-/// Decode a Binary pack then zlib-compress.
+/// 📂️ Decode a Binary pack then zlib-compress.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<DeflateSnapshot, store::PackError> {
     deserialize(&<BinarySnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?)

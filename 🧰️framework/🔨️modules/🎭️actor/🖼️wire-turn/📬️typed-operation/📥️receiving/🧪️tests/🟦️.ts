@@ -1,9 +1,9 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import {semioSchemaAjvV1} from "../../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import {TYPED_OPERATION_PAGE_MAGIC,scanTypedOperationPages} from "../../../🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
+import {TYPED_OPERATION_PAGE_MAGIC,scanTypedOperationPages} from "../../../🔖️turn-result/🟦️.ts";
 
 test("original host wire receiving matches Buffer ABI and SQLite custody at every cancellation prefix",()=>{
  expect(semioSchemaAjvV1({strict:true,allErrors:true}).compile(schema)(corpus)).toBe(true);

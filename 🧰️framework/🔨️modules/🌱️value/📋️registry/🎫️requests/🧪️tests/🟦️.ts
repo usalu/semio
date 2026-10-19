@@ -1,10 +1,10 @@
 import {test,expect} from "bun:test";
 import {ContentRequestKeyCursor,FixedRequestOwners,RequestSourceLookup,RetainedRequestText} from "../🟦️.ts";
 import {blake3} from "@noble/hashes/blake3.js";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import fc from "fast-check";
 import {Database} from "bun:sqlite";
-import {semioSchemaAjvV1} from "../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
 import schema from "../🧬️schema/🔣️.json";
 test("bounded original source lookup derives current operands matching SQLite exact identity",()=>{
  const encoder=new TextEncoder(),grant={maximumItems:1,maximumCopyBytes:257,maximumCapacityBytes:131072,maximumReleaseBytes:131072,maximumDepth:1};const database=new Database(":memory:");database.exec("CREATE TABLE sources(position INTEGER PRIMARY KEY,id TEXT UNIQUE)");

@@ -13,7 +13,7 @@ import {
   type ElementSkeletonKind
 } from "@semio-tech/ui-react";
 import { type Component, type UiNodeRecord } from "@semio-tech/framework";
-import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
+import { uiAccessibilityValueV1, uiProgressFractionV1 } from "@semio-tech/framework/modules/ui/contract/presentation/accessibility";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { resolveExtensionHost } from "../🗺️element-host-registry/🟦️.ts";

@@ -39,7 +39,7 @@ export interface LasPointDiff {
   pointSourceId?: number;
   /** 🫥️ Absent leaves GPS time unchanged, null clears it, and Binary64 sets exact native bits. */
   gpsTime?: Binary64 | null;
-  /** tri-state: absent = unchanged, null = cleared, tuple = set */
+  /** 🎨️ tri-state: absent = unchanged, null = cleared, tuple = set */
   rgb?: [number, number, number] | null;
 }
 

@@ -125,9 +125,7 @@ semio_framework_plugin_abi::component_persistent_local! {
     };
 }
 
-#[path = "🧯️retirement-drivers-and-turn-limits/🦀️.rs"]
-mod retirement_drivers_and_turn_limits;
-pub use retirement_drivers_and_turn_limits::*;
+use semio_framework_plugin_reactor_turn_limits::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_CLOSE_UNITS_PER_TURN, REACTOR_TURN_EXECUTOR_HOLD_MS, retire_until_complete, retire_while_progress, retire_while_progress_bounded, retire_while_progress_fallible};
 
 #[path = "🩹️reconcile-drive-and-publication-receipts/🦀️.rs"]
 mod reconcile_drive_and_publication_receipts;

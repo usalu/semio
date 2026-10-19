@@ -1,4 +1,4 @@
-//! archive carrying that member), parsed as this artifact's own DSL (`IoFidelity::Exact`).
+//! 🗜️ archive carrying that member), parsed as this artifact's own DSL (`IoFidelity::Exact`).
 //! puzzle5d ← zip — the DSL member of a document archive written by the sibling export leaf (or any
 use crate::Puzzle5dSnapshot;
 use semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_document_archive;

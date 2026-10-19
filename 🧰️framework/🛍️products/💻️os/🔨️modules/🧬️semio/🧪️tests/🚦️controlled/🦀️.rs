@@ -1,5 +1,5 @@
 use semio_framework_os_kernel::os_semio::*;
-use semio_framework_value::native_decoding::*;
+use semio_framework_value_native_owned::native_decoding::*;
 
 #[test]
 fn sqlite_snapshot_native_envelope_borrows_admitted_payload() {

@@ -33,10 +33,6 @@ pub fn handle(payload: &AddPrimitive, doc: &ArtifactView<'_, LowpolySnapshot>, c
     };
     new_object.paint_layers = new_object.paint_layers.into_iter().map(semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolyPaintLayer::compacted).collect();
     let index = projection.objects.len();
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the newly-added object used to also
-    // reset the mesh domain's selection/targets to whole-object/empty here — that state is
-    // framework-owned `InteractionState` now, only ever mutated by the framework's own injected
-    // `interactionSelect` handling, never by an app command's `Emit::config_mutations`.
     Ok(Emit {
         artifact_mutations: vec![LowpolyMutation::CreateObject(semio_s_artifact_lowpoly_lowpoly_mut_objects::create_object::CreateObject { index, object: new_object })],
         config_mutations: vec![LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id: new_id })],

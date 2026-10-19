@@ -48,7 +48,7 @@ function configExternalizedEntries(): string[] {
   const listed = spawnSync("git", ["ls-files", "-z", "--", "*.ts", "*.mts"], { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
   expect(listed.status, listed.stderr).toBe(0);
   const markers = fixture.configImportSpecifiers.map((specifier) => `from "${specifier}"`);
-  const configs = listed.stdout.split("\0").filter(Boolean).map((path) => join(root, path)).filter((path) => {
+  const configs = listed.stdout.split("\0").filter((path) => path && !path.startsWith(".\u{1F9EC}semio/")).map((path) => join(root, path)).filter((path) => {
     try { const text = readFileSync(path, "utf8"); return markers.some((marker) => text.includes(marker)); } catch { return false; }
   });
   const entries = new Set<string>();

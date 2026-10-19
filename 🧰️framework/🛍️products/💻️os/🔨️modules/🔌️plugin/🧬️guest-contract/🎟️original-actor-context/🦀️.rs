@@ -3,7 +3,8 @@
 //! 🧭️ Owned by `semio-framework-plugin-guest-contract`; the call sources stay in `⚛️reactor/🎟️context/🌉️call` and the plugin reactor re-exports this module. The wasm guest export bindings are not part of the contract: they name plugin runtime types and stay with the reactor.
 use semio_framework_actor::RetainedTurnInput;
 use semio_framework_async::{CancelToken,CancelTokenRetirement,CancelTokenRetirementError};
-use semio_framework_job::{Generation,JobPayloadAuthority,OperationId,OriginalCallerSourceParent,StepBudget,StepContext};
+use semio_framework_job::{Generation, OperationId, OriginalCallerSourceParent, StepBudget, StepContext};
+use semio_framework_job_payload::{JobPayloadAuthority};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::mem::ManuallyDrop;
 

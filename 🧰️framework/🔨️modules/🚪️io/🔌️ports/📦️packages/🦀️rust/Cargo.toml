@@ -27,6 +27,7 @@ testkit = []
 
 [dependencies]
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 

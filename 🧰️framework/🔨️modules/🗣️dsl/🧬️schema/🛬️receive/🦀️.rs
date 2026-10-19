@@ -1,6 +1,7 @@
 //! 🛬️ Text record receiving borrows actual ordinal fields under the same required native construction port.
 use super::{FieldValue,RecordValue};
-use semio_framework_value::{Number,ValueError,ValueRefusalKind,native_decoding::owned::{NativeRecordKey,NativeRecordSource}};
+use semio_framework_value::{Number, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::{native_decoding::owned::NativeRecordKey, native_decoding::owned::NativeRecordSource};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native text record member has a different original type or rank")}
 impl NativeRecordSource for RecordValue{
  fn field_count(&self)->Result<usize,ValueError>{Ok(self.fields.len())}

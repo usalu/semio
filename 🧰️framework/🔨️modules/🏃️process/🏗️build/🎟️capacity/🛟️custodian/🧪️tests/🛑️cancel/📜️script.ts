@@ -1,24 +1,41 @@
-import {existsSync,writeFileSync,readFileSync} from "node:fs";
-import {fileURLToPath} from "node:url";
-import {withPaidProcessCustodianV1} from "../../🟦️.ts";
-import {receiveScriptProcessInvocation,withScriptInvocationSignalV1} from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
-
-const mode=process.argv[6]??"cancel",primary=mode==="undefined"?undefined:Error("test primary callback failure");let failed=false,failure:unknown;
-try{await receiveScriptProcessInvocation(process.env,original=>{
- const controller=new AbortController(),directory=process.argv[2]!,ready=process.argv[3]!,gate=process.argv[4]!,trigger=process.argv[5]!,job={program:process.execPath,args:[fileURLToPath(new URL("../👷️worker/📜️script.ts",import.meta.url)),ready,gate],cwd:process.cwd(),parallelism:fixture.parallelism,output:fixture.output};
- return withScriptInvocationSignalV1(original,controller.signal,derived=>withPaidProcessCustodianV1(derived,{version:1,coverage:"direct-child",directory,parallelism:fixture.parallelism,jobs:[job,job]},async port=>{
-  const work=port.run(0);
-  if(["overgrant","detached"].includes(mode)){
-   while(!existsSync(ready)){derived.control.signal.throwIfAborted();await Bun.sleep(10);}
-   const refusal=port.run(1).catch(()=>undefined);if(mode!=="detached")await refusal;writeFileSync(gate,"");await work;return;
+import { receiveScriptProcessInvocation } from "../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { BundleScript, ScriptRouter, runScriptMain } from "../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
+/** 🚪️ `undefined` — runs the program of this script. */
+class UndefinedScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
   }
-  if(["replay","error","undefined"].includes(mode)){
-   await work;if(mode==="replay"){await port.run(0).catch(()=>undefined);return;}
-   process.kill(JSON.parse(readFileSync(ready,"utf8")).parent,"SIGKILL");throw primary;
+}
+/** 🧭️ `overgrant` — runs the program of this script. */
+class OvergrantScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
   }
-  while(!existsSync(trigger)){derived.control.signal.throwIfAborted();await Bun.sleep(10);}
-  if(mode==="crash")process.kill(process.pid,"SIGKILL");controller.abort(Error("test custodian cancellation"));await work;
- }));
-});}catch(error){failed=true;failure=error;}
-process.stdout.write(JSON.stringify({failed,primaryPreserved:failed&&failure===primary}));
+}
+/** 🏭️ `detached` — runs the program of this script. */
+class DetachedScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+/** 🧪️ `replay` — runs the program of this script. */
+class ReplayScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+/** 📦️ `error` — runs the program of this script. */
+class ErrorScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+/** 🔧️ `crash` — runs the program of this script. */
+class CrashScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("undefined", UndefinedScript).register("overgrant", OvergrantScript).register("detached", DetachedScript).register("replay", ReplayScript).register("error", ErrorScript).register("crash", CrashScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

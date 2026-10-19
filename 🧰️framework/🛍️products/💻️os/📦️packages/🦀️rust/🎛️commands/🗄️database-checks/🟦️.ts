@@ -481,9 +481,7 @@ export class DbErrorOwnershipCheckScript extends BundleScript {
     }
     if (segments[0] === "--native") {
       if (selectedLaw && !laws.includes(selectedLaw)) throw new Error("db-error-ownership-check requires an authored exact law");
-      const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: selectedLaw ? [selectedLaw] : laws }], progress(event) { console.log(`[DEBUG] db-error-ownership ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
-      console.log(`[DEBUG] db-error-ownership-native-receipts: ${JSON.stringify(receipts)}`);
+      await runAdmittedExactCargoLawsV1({ control: exactCargoCallerControlV1(this.invocation, "exact-cargo:caller", 0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: selectedLaw ? [selectedLaw] : laws }] });
     }
-    console.log(`[DEBUG] db-error-ownership-check: AJV validated ${fixture.cases.length} typed cases; ${laws.length} exact laws registered`);
   }
 }

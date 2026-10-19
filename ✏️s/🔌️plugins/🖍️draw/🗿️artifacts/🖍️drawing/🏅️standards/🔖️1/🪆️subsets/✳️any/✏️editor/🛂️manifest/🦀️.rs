@@ -220,7 +220,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(layers_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(properties_panel::definition())
-            // ✏️ Palette-visible content operations.
             .action_with(
                 semio_framework_plugin::ActionDefinition::bounded_catalog("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native(
@@ -335,7 +334,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     .with_args([semio_framework_plugin::ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).required()]),
             )
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 📤️ Export — a host download effect (`DownloadMediaExport`), never a document operation.
             .action_with(
                 semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export Drawing", "Zeichnung exportieren"), ActionKind::View) }
                     .describe(LocalizedLabel::native(
@@ -358,8 +356,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     semio_framework_plugin::ActionArgDef::toggle("transparent",LocalizedLabel::native("Transparent PNG Background","Transparenter PNG-Hintergrund")).default_value(&true)]),
             )
             .action_interactive_job("exportDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands,
-            // but every one of them is an intent an agent can hold, so they stay agent-addressable.
             .action_with(
                 drawing_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native("Replaces the entire drawing document with a supplied snapshot.", "Ersetzt das gesamte Zeichnungsdokument durch einen übergebenen Snapshot."))
@@ -439,8 +435,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     .with_args([semio_framework_plugin::ActionArgDef::text_list("layerIds", LocalizedLabel::native("Layer Ids", "Ebenen-Ids")).required(), drawing_layer_field_arg(), drawing_layer_value_arg()]),
             )
             .action_interactive_job("patchLayers", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are
-            // pure View. All of it is `CapabilityAudience::Input`: the canvas feeds these, agents never do.
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer").input_event())
             .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation, "mouse-pointer").input_event())
@@ -453,29 +447,19 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("canvasPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_input_event("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
             .action_interactive_job("canvasEscape", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 👁️ Ephemeral view state — selection/hover are framework-owned now (see `.interaction(...)`
-            // below): interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-            // setInteractionGranularity auto-inject, never declared here (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").input_event())
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 📷️ Camera — session-only runtime pose, never a document operation.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🤖️ Named after a drag-and-drop gesture but fully specified by its arguments, so an
-            // agent can reach it: declared `Agent` on purpose, which is also what stops the
-            // capability audit asking about it again.
             .action_audience("dropLayerKind", semio_framework_plugin::CapabilityAudience::Agent)
-            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("deleteLayer")
             .action_destructive("setSnapshot")
             .action_destructive("loadDocumentJson")
             .action_destructive("setActiveExample")
             .action_destructive("commitDocument")
             .action_destructive("exportDocument")
-            // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(drawing_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectDirect", LocalizedLabel::native("Direct Select", "Direktauswahl"), "mouse-pointer-2", "Select", UtilityCategory::Selection))
@@ -494,12 +478,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                 "booleanCombine".into(), "trace".into(), "transformMove".into(),
             ])
             .window_kind_initial_utility(DRAWING_PLAY_WINDOW_CANVAS, "selectDirect")
-            // 🕹️ The framework-owned "strokes" interaction domain (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the layers panel tree
-            // (`.interaction_domain("strokes")?`) and the canvas's pick/marquee/lasso layer selection;
-            // auto-injects interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-            // setInteractionGranularity, replacing every deleted bespoke setSelection/setHover/
-            // clearSelection/selectAll action.
             .interaction(InteractionDefinition {
                 id: DRAWING_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Strokes", "Striche"),
@@ -538,18 +516,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("arrowdown", "nudgeSelectionDown")
             .keybinding("shift+arrowdown", "nudgeSelectionDownFast")
             .default_layout(edit::layout())
-            // 🎯️ Typed channel surface — the SAME `drawing_io()` the trait's `io()` override returns,
-            // declared on the manifest so the committed descriptor carries it too. Without this the
-            // app shipped a DEFAULT `AppIo` (`artifactSchema: ""`, `ports: []`) while
-            // `DrawingPlayApp::export_media` answered `vector:out` for real, so every host that reads
-            // the descriptor to decide what a drawing can be exported through — the MCP gateway's
-            // `installed_artifact_kinds` among them — saw an app with no export surface at all
-            // (`📓️wr2-headless-command-response-wire.md` §7.2, measured as `declaredExportFormats: []`).
-            // Mirrors `writer_io()`/`lowpoly_io()`'s identical wiring.
             .io(drawing_io())
-            // 📚️ Examples are declared once, on the subset (`🪆️subsets/✳️any/🦀️.rs`'s `examples()`,
-            // reached by the shell through `SubsetDeclaration.examples`), never a second time on this
-            // builder — `setActiveExample` resolves its `example_id` against that same slice, so the
-            // switcher's ids and the command's ids cannot drift apart.
             .build_definition()
 }

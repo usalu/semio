@@ -11,7 +11,7 @@ use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_pack_json::{json,Value};
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_SURFACE_ID;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_SURFACE_ID;
 
 //#region 🔖️PaneCamera
 const PUZZLE2D_VIEWPORT_REF_SHORT_PX: f64 = 640.0;
@@ -22,7 +22,7 @@ const PUZZLE2D_VIEWPORT_ZOOM_BOOST: f64 = 2.5;
 fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
     match pane {
         crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_WINDOW_KIND_ID => crate::editor::puzzle2d::config::PUZZLE2D_DETAIL_ZOOM_SCALE,
-        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => crate::standards::v1::subsets::any::schema::mutations::crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_ZOOM_SCALE,
+        crate::editor::puzzle2d::config::PUZZLE2D_SELECTION_WINDOW_KIND_ID => crate::mirror::editor::puzzle2d::config::PUZZLE2D_SELECTION_ZOOM_SCALE,
         _ => crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_ZOOM_SCALE,
     }
 }
@@ -135,8 +135,6 @@ fn puzzle2d_suggestion_menu_json(envelope: &Puzzle2dScene, glyph_catalogs_json: 
             "windowId": menu.window_id,
             "handleId": menu.handle_id,
             "hoveredIndex": envelope.runtime.brush_candidate_index,
-            // 🔎️ Pending only while the slot has resolved nothing AND still names the handle it opened
-            // on; an empty page on a resolved slot is the polite refusal, not a spinner that never ends.
             "pending": candidates.is_empty() && envelope.runtime.brush_candidate_source_handle_id.is_empty(),
             "candidates": candidates,
         })
@@ -151,8 +149,6 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
     let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(snapshot, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
     let glyph_catalogs_json = crate::editor::puzzle2d::snapshot::board_kind_catalogs_json_or_inferred(snapshot).unwrap_or_else(|| "{}".into());
-    // 🕹️ The framework-owned `vortex` selection, resolved once per render by
-    // `Puzzle2dPlayApp::render_with_request_context`, echoes back to the board engine here.
     let selection_json = envelope.interaction.selection_json();
     let brush_weights_json = semio_framework_pack_json::to_json_string(&json!({
         "nodeWeights": envelope.runtime.node_kind_weights,
@@ -168,9 +164,6 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         selection_json,
         highlighted_ids_json: envelope.interaction.referenced_json(),
         interactive: pane == crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID,
-        // 🐁️ The framework-owned `vortex` hover, echoed into every pane: the interactive overview
-        // publishes it from its own pointer raycast, the detail/selection panes and the outliner
-        // tree rows read it back, so hovering anywhere highlights the same entity everywhere.
         hovered_id: envelope.interaction.hovered_id(),
         active_utility: Some(envelope.active_utility.clone()),
         selection_method: "rectangle".into(),
@@ -185,8 +178,6 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         placement_compatibility_json,
         lod_mode,
         transform_flags: Some(json!({ "move": envelope.runtime.transform_move, "rotate": envelope.runtime.transform_rotate }).to_string()),
-        // 🖍️ The Area Brush's own W/H steppers as world extent — what ONE click paints. The regions
-        // themselves ride the snapshot lane (the document's `targetRegions`), not a second carrier.
         area_brush_size: Some({
             let (width, height) = crate::editor::puzzle2d::snapshot::puzzle2d_area_brush_extent_world(&envelope.runtime);
             json!({ "width": width, "height": height }).to_string()
@@ -236,8 +227,6 @@ pub fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &st
         control: None,
         controls: None,
         status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} {} · {edge_count} {} · {} {lod}", labels.nodes.as_str(), labels.edges.as_str(), labels.lod.as_str()) }]),
-        // 🧰️ The select/brush/fill switcher lives in the framework utility bar (declared via `.utility` +
-        // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
         options: None,
         possible_engagements: None,
     }

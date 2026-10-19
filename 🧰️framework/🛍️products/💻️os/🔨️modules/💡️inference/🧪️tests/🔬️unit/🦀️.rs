@@ -12,9 +12,6 @@ struct DagSnapshot {
 struct WeightSum;
 impl InferredField<DagSnapshot> for WeightSum {
     type Dependency = Vec<u8>;
-    // 🔑️ String, not &'static str: FromValue (needed for the session's whole-result cache in
-    // `infer_field_after_diff`, via `decode_map`) can't be satisfied by a borrowed str —
-    // matches real usage (e.g. Puzzle3dFlatPlane's Key = object id String).
     type Key = String;
     type Value = i64;
     const FIELD_ID: &'static str = "test.dag.weight-sum";
@@ -49,9 +46,9 @@ async fn infer_field_computes_expected_values_over_the_dag() {
     let snapshot = base_snapshot().await;
     let values = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
     assert_eq!(values["root"], 1);
-    assert_eq!(values["leaf_a"], 3); // 2 + root(1)
-    assert_eq!(values["leaf_b"], 4); // 3 + root(1)
-    assert_eq!(values["leaf_both"], 4 + 3 + 4); // 4 + leaf_a(3) + leaf_b(4)
+    assert_eq!(values["leaf_a"], 3);
+    assert_eq!(values["leaf_b"], 4);
+    assert_eq!(values["leaf_both"], 4 + 3 + 4);
 }
 //#endregion 🧪️PlanShape
 
@@ -105,10 +102,6 @@ async fn changing_a_leaf_weight_only_recomputes_that_leaf_and_its_descendants() 
     let values = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache));
     let after = cache.stats().await;
 
-    // root is untouched by leaf_a's weight change (identical dep chain) => cache hit.
-    // leaf_a changed directly => miss. leaf_b's own dep chain (root's hash) is unchanged => hit.
-    // leaf_both depends on leaf_a's NEW value => its dep_input is unaffected but its parent
-    // chain folds leaf_a's (changed) hash, so it also misses.
     assert_eq!(after.misses - before.misses, 2, "only leaf_a and leaf_both (its descendant) may miss");
     assert_eq!(values["leaf_a"], 99 + 1);
     assert_eq!(values["leaf_b"], 3 + 1, "leaf_b must be unaffected by leaf_a's weight change");

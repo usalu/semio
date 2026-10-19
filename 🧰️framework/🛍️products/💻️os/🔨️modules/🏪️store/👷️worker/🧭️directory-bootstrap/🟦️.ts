@@ -54,11 +54,6 @@ export function openScopedDirectory(baseUrl: string, scope: DocumentScope, since
     () => {
       if (scopedDirectoryStreams.get(key) !== stream) return;
       scopedDirectoryStreams.delete(key);
-      // 🧯️ A scoped 4401 is an authoritative membership revocation for exactly this space. If the one
-      // retained administration operation is administering it, that operation must erase its page,
-      // receipt and capability NOW rather than keep an authoritative-looking pane alive until the next
-      // read happens to answer 403/404 (packet §3: "unmount, identity/session generation change,
-      // 401/403, or scoped 4401").
       revokeDirectoryAdministrationForScope(scope.spaceId);
       closeArtifactRuntime(key);
       post({ kind: "directory-scope-revoked", scope });

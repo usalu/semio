@@ -43,8 +43,6 @@ async fn deserializes_real_step_fixture_into_topologically_faithful_brep() {
 
 #[semio_framework_async_macros::async_test]
 async fn dangling_curve_reference_errors_rather_than_fabricating() {
-    // A LINE whose `dir` points at a nonexistent VECTOR must fail loudly, not silently
-    // produce a zero direction.
     let bad = FIXTURE.replace("#20=LINE('',#1,#30);", "#20=LINE('',#1,#999);");
     let doc = semio_s_artifact_stdio_contract::part21::parse_part21(&bad).expect("parse");
     let step = StepSnapshot::from_part21_document(&doc);
@@ -54,7 +52,6 @@ async fn dangling_curve_reference_errors_rather_than_fabricating() {
 
 #[semio_framework_async_macros::async_test]
 async fn unsupported_surface_kind_errors_rather_than_fabricating() {
-    // Swap PLANE for a surface kind outside this leaf's supported vocabulary.
     let bad = FIXTURE.replace("#16=PLANE('',#40);", "#16=SURFACE_OF_REVOLUTION('',#20,#40);");
     let doc = semio_s_artifact_stdio_contract::part21::parse_part21(&bad).expect("parse");
     let step = StepSnapshot::from_part21_document(&doc);

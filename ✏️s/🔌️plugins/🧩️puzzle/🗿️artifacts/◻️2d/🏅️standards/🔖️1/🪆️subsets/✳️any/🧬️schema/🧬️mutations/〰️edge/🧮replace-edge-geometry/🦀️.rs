@@ -1,4 +1,4 @@
-//! `gap`+`shift`+`rise`+`rotation`+`turn`+`tilt`+`x`+`y` together are the one connection geometry.
+//! 🔗️ `gap`+`shift`+`rise`+`rotation`+`turn`+`tilt`+`x`+`y` together are the one connection geometry.
 //! 🧮 Puzzle2d mutation — `ReplaceEdgeGeometry`: whole-value swap of an edge's connection-pose —
 
 use semio_framework_value::paged::PagedUtf8;

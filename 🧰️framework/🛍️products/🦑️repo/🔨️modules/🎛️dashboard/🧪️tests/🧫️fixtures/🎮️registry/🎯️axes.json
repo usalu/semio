@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "accepted": [
+    {
+      "all": true
+    },
+    {
+      "all": true,
+      "playground": false
+    },
+    {
+      "all": true,
+      "playground": true
+    },
+    {
+      "verbs": [
+        "build"
+      ],
+      "playground": false
+    },
+    {
+      "playground": true
+    }
+  ],
+  "rejected": [
+    {},
+    {
+      "all": false
+    },
+    {
+      "all": true,
+      "verbs": [
+        "build"
+      ]
+    },
+    {
+      "all": true,
+      "verbs": []
+    },
+    {
+      "playground": false
+    }
+  ],
+  "cases": [
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "build",
+      "command": "target",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "setup",
+      "command": "target",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "future-verb",
+      "command": "target",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "future-verb",
+      "command": "tool",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "flag",
+        "appliesTo": {
+          "all": true
+        },
+        "buildFlags": [
+          "--skip-cache"
+        ]
+      },
+      "verb": "setup",
+      "command": "tool",
+      "expected": false
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "dev",
+      "command": "playground",
+      "expected": false
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true,
+          "playground": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "dev",
+      "command": "playground",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "all": true,
+          "playground": false
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "future-verb",
+      "command": "target",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "verbs": [
+            "build"
+          ]
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "setup",
+      "command": "target",
+      "expected": false
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "playground": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "build",
+      "command": "target",
+      "expected": false
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "appliesTo": {
+          "playground": true
+        },
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "dev",
+      "command": "playground",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "future-verb",
+      "command": "target",
+      "expected": true
+    },
+    {
+      "parameter": {
+        "id": "scope",
+        "kind": "text",
+        "valueEnv": "SCOPE_VALUE"
+      },
+      "verb": "future-verb",
+      "command": "tool",
+      "expected": false
+    }
+  ]
+}

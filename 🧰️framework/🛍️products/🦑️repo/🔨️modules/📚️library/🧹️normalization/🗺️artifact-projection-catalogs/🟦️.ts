@@ -87,7 +87,7 @@ export function artifactProjectionDirectoryMappings(sourceRoot: string, destinat
 
 export function applyArtifactProjectionPath(entry: MutableInventoryEntry, destinationPath: string, taxonomy: LoadedTaxonomy): void {
   entry.normalizedPath = destinationPath.normalize("NFC");
-  const superseded = new Set(["directory-kind-ambiguous", "directory-kind-unresolved", "file-kind-ambiguous", "file-kind-unresolved", "semantic-stem-ambiguous", "semantic-stem-unresolved", "path-too-long", "trailing-dot-or-space", "windows-reserved-name"]);
+  const superseded = new Set(["directory-kind-ambiguous", "directory-kind-unresolved", "file-kind-ambiguous", "file-kind-unresolved", "semantic-stem-ambiguous", "semantic-stem-unresolved", "path-too-long", "path-component-too-long", "trailing-dot-or-space", "windows-reserved-name"]);
   entry.violations = [...entry.violations.filter((row) => !superseded.has(row.code)), ...pathPolicyViolations(entry.normalizedPath, taxonomy)];
 }
 

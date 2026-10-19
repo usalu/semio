@@ -8,6 +8,8 @@ use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::ToValue;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_job::{OperationId, Generation, StepBudget, root_cancel_token};
+use semio_framework_plugin_extension::extension_invocation_failure::ExtensionInvocationCause;
+use semio_framework_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply;
 #[doc(hidden)]
 pub fn fault_bytes(fault:&Fault)->usize{
  let scope=&fault.scope;let mut bytes=std::mem::size_of::<FaultScope>()+fault.code.0.capacity()+fault.message.capacity()+fault.causes.capacity()*std::mem::size_of::<FaultCause>();
@@ -107,7 +109,7 @@ fn original_extension_context_failure_preserves_complete_canonical_wire(){
 /// 🛬️ Receiving publication retains three distinct inner causes and both outer refusals through the same original caller.
 #[test]
 fn original_extension_receiving_failure_preserves_five_causes_and_paid_output(){
- use crate::app_testing::OriginalFixtureCaller;
+ use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
  use semio_framework_job::{OriginalReceivingPrimary,OriginalTurnPrimary};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let wire=&corpus["receivingWire"];let receiving=&wire["primary"]["original"];
  let progress=|row:&serde_json::Value|RetainedCloneProgress{copied_items:row["copiedItems"].as_u64().unwrap()as usize,copied_bytes:row["copiedBytes"].as_u64().unwrap()as usize,retained_capacity_bytes:row["retainedCapacityBytes"].as_u64().unwrap()as usize,released_bytes:row["releasedBytes"].as_u64().unwrap()as usize};

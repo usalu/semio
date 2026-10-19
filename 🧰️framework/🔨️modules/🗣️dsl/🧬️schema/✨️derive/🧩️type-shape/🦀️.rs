@@ -9,12 +9,12 @@ pub(super) enum FieldKind {
     VecList(Box<Type>),
     VecTuple(Box<Type>),
     VecStatements(Box<Type>),
-    /// `#[dsl(statements, block)]` — same tagged-variant collection as `VecStatements`, but wrapped
+    /// 📚️ `#[dsl(statements, block)]` — same tagged-variant collection as `VecStatements`, but wrapped
     /// in `{ ... }` so it can sit anywhere in field order (not just as an unbounded trailing field).
     VecBlockStatements(Box<Type>),
-    /// `BTreeMap<String, V>` — `V` must itself implement `DslField`; keys print sorted.
+    /// 🖨️ `BTreeMap<String, V>` — `V` must itself implement `DslField`; keys print sorted.
     MapField(Box<Type>),
-    /// `#[dsl(statements)] Option<T>` — a "sum type" scalar field (`fill: Option<FillStyle>`,
+    /// 🔢️ `#[dsl(statements)] Option<T>` — a "sum type" scalar field (`fill: Option<FillStyle>`,
     /// exactly one of several keyword-tagged variants, or none) rather than a collection. Reuses
     /// `Shape::Statements`/`DslVariants` at 0-or-1 length instead of a new shape: a record isn't
     /// allowed more than one *bare* `Statements` field, but two `Option<T>` fields of this kind can
@@ -28,7 +28,7 @@ pub(super) enum FieldKind {
     RequiredStatements(Box<Type>),
     RequiredInlineStatements(Box<Type>),
     Bytes64,
-    /// `#[dsl(table)] Vec<T>` (`T: DslRecord`) — Structure-of-Arrays columnar `Shape::Table`.
+    /// 📜️ `#[dsl(table)] Vec<T>` (`T: DslRecord`) — Structure-of-Arrays columnar `Shape::Table`.
     /// `to_value`/`from_value` are identical to `VecList` (both produce `FieldValue::List(Vec<
     /// FieldValue::Record>)`) — only the `Shape` differs, so every binder/diff path downstream
     /// keeps working unchanged.

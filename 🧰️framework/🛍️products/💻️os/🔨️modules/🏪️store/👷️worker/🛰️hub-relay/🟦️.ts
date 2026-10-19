@@ -41,8 +41,6 @@ export function resendAfterTransientRefusal(state: ArtifactState, sent: readonly
  * grant actor is proven, so nothing is lost or sent pre-authority. */
 export function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
   if (envelopes.length === 0) return;
-  // 🔒️ A verified read-only execution target rejects publication locally, before a worker frame or
-  // an outbox entry exists. Server authorization stays an independent fence.
   if (state.executionTargetLease !== null && state.executionTargetLease.live && !state.executionTargetLease.fields().grant.write) {
     releaseDocumentBackboneOwnership(state, envelopes);
     const refusedIds = new Set(envelopes.map((envelope) => envelope.id));

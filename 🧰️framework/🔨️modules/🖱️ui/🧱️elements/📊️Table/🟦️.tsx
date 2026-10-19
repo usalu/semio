@@ -9,7 +9,7 @@
 import * as React from "react";
 import { closestCenter, DndContext, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { borderNormalBottomClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
@@ -31,7 +31,7 @@ const tableRowInteractiveClass = cn("text-element", interactiveControlTransition
 const tableRowSelectedClass = interactiveActiveFillClass;
 
 /**
- * Union type for ascending or descending sort order.
+ * 🔢️ Union type for ascending or descending sort order.
  **/
 export type SortDirection = "asc" | "desc";
 
@@ -47,7 +47,7 @@ export function tableSortAriaV1(columnId: string, sortColumn: string | undefined
 }
 
 /**
- * Configuration interface for a table column definition.
+ * 🗺️ Configuration interface for a table column definition.
  **/
 export interface TableColumn<T = unknown> {
   id: string;
@@ -61,7 +61,7 @@ export interface TableColumn<T = unknown> {
 }
 
 /**
- * Interface for hierarchical row data with parent/child relations.
+ * 🌳️ Interface for hierarchical row data with parent/child relations.
  **/
 export interface HierarchicalRowData {
   readonly id: string;
@@ -72,7 +72,7 @@ export interface HierarchicalRowData {
 }
 
 /**
- * Configuration interface for table drag-and-drop behavior.
+ * ➡️ Configuration interface for table drag-and-drop behavior.
  **/
 export interface DragDropConfig {
   enabled?: boolean;
@@ -90,7 +90,7 @@ export interface DragDropConfig {
 }
 
 /**
- * Props interface for the Table component.
+ * 📇️ Props interface for the Table component.
  **/
 export interface TableProps<T = unknown> {
   columns: TableColumn<T>[];
@@ -287,7 +287,7 @@ function TableDraggableRow<T>({ row, rowId, index, isSelected, customRowClassNam
 }
 
 /**
- * Table holds the data fields for a Table record.
+ * 🗂️ Table holds the data fields for a Table record.
  **/
 const Table = <T,>({
   columns,
@@ -523,7 +523,7 @@ const Table = <T,>({
 export { Table };
 
 /**
- * Props interface for the TableSkeleton component.
+ * 🗄️ Props interface for the TableSkeleton component.
  **/
 export interface TableSkeletonProps {
   columns: TableColumn[];
@@ -532,7 +532,7 @@ export interface TableSkeletonProps {
 }
 
 /**
- * Skeleton loading placeholder for a table.
+ * 🧮️ Skeleton loading placeholder for a table.
  **/
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>

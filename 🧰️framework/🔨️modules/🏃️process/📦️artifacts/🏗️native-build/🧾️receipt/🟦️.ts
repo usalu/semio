@@ -235,10 +235,13 @@ export class CargoProvenanceStreamV1 {
   private section = 0;
   private count = 0;
 
+  private readonly sink: CargoProvenanceSinkV1;
+  private readonly flushLength: number;
   constructor(
-    private readonly sink: CargoProvenanceSinkV1,
-    private readonly flushLength: number = 1 << 20,
-  ) {}
+    sink: CargoProvenanceSinkV1,
+    flushLength: number = 1 << 20,) {
+    this.sink = sink; this.flushLength = flushLength;
+  }
 
   /** 🚩️ Opens the document with the invocation identity and the units array. */
   async begin(header: CargoProvenanceHeaderV1): Promise<void> {

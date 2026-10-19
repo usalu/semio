@@ -14,7 +14,7 @@ import{requireNativeStorageReservationV1}from"../../../../../../../../../../🔨
 import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{readPhysicalCargoSourceV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import type{RepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import{repositoryLeaseDirectoryV1,repositoryCachePartitionRootV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import{repositoryLeaseDirectoryV1,repositoryCachePartitionRootV1}from"../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import type{NxSdkDerivativeProjectionV1}from"../../📥️source/🔗️derivative/📋️projection/🟦️.ts";
 import{verifyNxSdkSharedSourcesV1}from"../../📥️source/🔗️derivative/🔏️index/🟦️.ts";
 /** 📸️ Owns immutable identity images while exposing only detached byte copies. */

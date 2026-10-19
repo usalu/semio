@@ -1,2 +1,2 @@
-/** writer export pdf */
+/** 💾️ writer export pdf */
 export function register(): void {}

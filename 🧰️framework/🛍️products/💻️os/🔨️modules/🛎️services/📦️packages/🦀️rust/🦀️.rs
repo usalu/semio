@@ -7,21 +7,12 @@
 mod component;
 #[path = "../../👀️file-watcher/🦀️.rs"]
 mod file_watcher;
-#[path = "../../🚪️native-io/🦀️.rs"]
-mod native_io;
 pub use component::*;
 pub use file_watcher::OwnedFileChangeWatcher;
-pub use native_io::{NATIVE_IO_PATH_CAPACITY, NativeIoJob, NativeIoRequest, NativeIoValue, NativeModifiedSet, NativePathSet};
 
 /// 🪝️ Test hook of the companion crate `semio-framework-os-services-tests`: the private host modules next to the owner's service hooks, public only behind the `testkit` feature.
 #[cfg(feature = "testkit")]
 #[doc(hidden)]
 pub mod testkit {
     pub use super::component::testkit::*;
-    pub mod file_watcher {
-        pub use crate::file_watcher::*;
-    }
-    pub mod native_io {
-        pub use crate::native_io::*;
-    }
 }

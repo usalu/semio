@@ -178,7 +178,6 @@ fn a_search_line_aborts_on_escape_and_repeats_last_on_space_over_an_empty_line()
     let escaped = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });
     assert_eq!(fired_verbs(&escaped), vec![("Abort".to_string(), "engagementAbort".to_string())], "⎋️ Escape cancels the session through `onAbort`");
 
-    // ⎋️ An OPEN overlay swallows the same key, exactly as React's popover does before the abort.
     let popup = leaf(&mut tree, Some(root), 2, stack_ui(), (10.0, 10.0, 50.0, 50.0));
     router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
     let escaped = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });

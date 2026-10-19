@@ -33,7 +33,6 @@ pub(super) fn camera_emit(command: &EnergyModelViewCommand, view_state: Option<&
     let mutation = model_window::config::EnergyModelViewerWindowConfigMutation::SetCamera(model_window::config::SetCamera { camera: pose });
     Ok(Emit {
         window_config_mutations: vec![model_window::config::addressed(view, mutation)?],
-        // 🐢️ Nothing to repaint: the pane that sent the pose already holds it.
         ui_scope: UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false },
         ..Default::default()
     })

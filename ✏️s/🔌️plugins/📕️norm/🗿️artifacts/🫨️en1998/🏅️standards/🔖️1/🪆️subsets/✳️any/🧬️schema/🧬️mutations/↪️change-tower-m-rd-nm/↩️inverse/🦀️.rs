@@ -1,4 +1,4 @@
-//! Inverse for `change-tower-m-rd-nm`.
+//! ↩️ Inverse for `change-tower-m-rd-nm`.
 use crate::change_tower_m_rd_nm::ChangeTowerMRdNm;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

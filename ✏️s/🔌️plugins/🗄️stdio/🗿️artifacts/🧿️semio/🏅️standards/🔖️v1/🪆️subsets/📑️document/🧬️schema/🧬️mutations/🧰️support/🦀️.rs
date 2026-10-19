@@ -44,7 +44,6 @@ pub struct DocBlockPath {
 }
 
 impl DocBlockPath {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn top(index: usize) -> Self {
         Self { segments: Vec::new(), index }
     }
@@ -81,7 +80,6 @@ pub enum DocBlockLeaf {
 }
 
 impl DocBlockLeaf {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn into_blocks_diff(self, index: usize) -> BlocksDiff {
         match self {
             Self::Modified(diff) => BlocksDiff { modified: vec![IndexModified { index, diff }], ..Default::default() },
@@ -96,7 +94,6 @@ impl DocBlockLeaf {
 /// to that depth (mirrors docx's `wrap_body_diff`, generalized to 3 container kinds).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn go(segments: &[DocPathSegment], index: usize, leaf: DocBlockLeaf) -> BlocksDiff {
         match segments.split_first() {
             None => leaf.into_blocks_diff(index),

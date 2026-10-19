@@ -122,16 +122,6 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                         return Err(format!("Flow settings crossed exact window partitions: left {left_grid:?}, right {right_grid:?}"));
                     }
                     if app.window_transient_snapshot(&generation).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<FlowGenerationsWindowTransientOwner>().cloned()).is_none() { return Err("Flow generation transient was not owned by its invoking window".into()); }
-                    // 📄️ Checked AFTER the content laws above, so a lane-count change reports as itself
-                    // instead of masking (or being masked by) a camera/settings regression.
-                    // 📄️ FOUR window-config pages, one per dispatched config command, and one window
-                    // transient page — checked AFTER the content laws above, so a lane-count change reports
-                    // as itself instead of masking a camera/settings regression. Each command is settled
-                    // before the next is dispatched (see the loop): dispatching two config commands for the
-                    // SAME window back to back drops the second silently — no page, no fault, its amend lost
-                    // (measured: lanes (2, 1), left grid stuck at the default `(true, 10.0)` instead of
-                    // `(false, 10.0)`, right at `10.0` instead of `20.0`). That is a live production defect,
-                    // recorded in 📓️flow.md §5; it is NOT this law's subject, which is exact-window partitioning.
                     if lanes != (4, 1) { return Err(format!("Flow exact-window publication lane count changed: {lanes:?} instead of (4, 1) window-config/window-transient pages")); }
                     let config_packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     let operation = artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
@@ -147,12 +137,6 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     if status.state != protocol::DocumentArchiveLoadState::Ready { return Err(format!("Flow complete archive reload refused: {:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault))); }
                     let restored = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     if restored.pack != document_before.pack || restored.spr != document_before.spr { return Err("Flow complete reload changed exact document bytes".into()); }
-                    // 🫧️ A same-byte reload is still a NEW document instance for every window: the whole
-                    // window-transient registry is replaced at `document_generation + 1`, so each partition
-                    // is reborn at generation 0 holding its own `Default` state. `capture` answers `Some`
-                    // for every REGISTERED window kind (it materialises the partition on demand), so
-                    // "the transient did not survive" is exactly "generation 0 and default state", never
-                    // `None` — `None` only ever means "this window kind registers no transient owner at all".
                     if app.window_transient_generation(&generation).map_err(|error| format!("{error:?}"))? != Some(0) { return Err("Flow generation transient survived same-byte document reload".into()); }
                     if app.window_transient_snapshot(&generation).map_err(|error| format!("{error:?}"))?.and_then(|snapshot| snapshot.get::<FlowGenerationsWindowTransientOwner>().cloned()) != Some(FlowWindowTransient::default()) {
                         return Err("Flow generation transient state survived same-byte document reload".into());

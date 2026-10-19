@@ -43,7 +43,6 @@ impl DwgSnapshot {
     /// header variables with AutoCAD 2010's defaults (their relations pointing at that graph, extents
     /// recomputed from the geometry), the classes of its three class-numbered objects, and empty
     /// file-level sections. Deterministic: the same drawing always yields the same document.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_drawing(drawing: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<Self, String> {
         use new_document_handles as h;
         let mut drawing = drawing.clone();
@@ -324,7 +323,6 @@ impl Default for DwgSnapshot {
 }
 impl DwgSnapshot {
     /// 🪞️ Clones the deterministic logical projection.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn projection(&self) -> Self {
         self.clone()
     }

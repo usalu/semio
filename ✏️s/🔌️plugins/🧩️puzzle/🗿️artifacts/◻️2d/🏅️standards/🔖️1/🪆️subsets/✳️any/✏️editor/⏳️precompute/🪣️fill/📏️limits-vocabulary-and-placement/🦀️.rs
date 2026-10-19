@@ -303,7 +303,7 @@ pub(super) fn fill_placement_mutations(placement: &BoardFillPlacement) -> Result
             let (id, handle_kind, angle, radius) = placement.handle(index).ok_or("puzzle2d-fill-apply-handle")?;
             Ok(crate::standards::v1::subsets::any::schema::records::Puzzle2dHandle { id: id.into(), handle_kind: Some(handle_kind.into()), angle, radius, ..Default::default() })
         })
-        .collect::<Result<semio_framework_value::list::PagedList<_, { usize::MAX }>, &'static str>>()?;
+        .collect::<Result<semio_framework_value_persistent::list::PagedList<_, { usize::MAX }>, &'static str>>()?;
     let node = crate::standards::v1::subsets::any::schema::records::Puzzle2dNode {
         id: placement.node_id.as_str().into(),
         node_kind: Some(placement.node_kind.as_str().into()),

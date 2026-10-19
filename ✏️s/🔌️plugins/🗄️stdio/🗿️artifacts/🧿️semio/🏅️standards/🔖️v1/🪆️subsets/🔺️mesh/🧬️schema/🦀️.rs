@@ -28,15 +28,12 @@ impl Default for SemioMeshArtifact {
 }
 
 impl SemioMeshArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioMeshSnapshot {
         SemioMeshSnapshot { schema: self.schema.clone(), meshes: self.meshes.clone(), materials: self.materials.clone(), textures: self.textures.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioMeshSnapshot) -> Self {
         Self { schema: snapshot.schema, meshes: snapshot.meshes, materials: snapshot.materials, textures: snapshot.textures }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioMeshSnapshot) {
         self.schema = snapshot.schema;
         self.meshes = snapshot.meshes;

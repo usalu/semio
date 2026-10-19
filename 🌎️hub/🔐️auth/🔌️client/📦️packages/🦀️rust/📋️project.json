@@ -2,7 +2,7 @@
   "name": "@semio-tech/hub-auth-client-rs",
   "targets": {
     "check": {
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "executor": "repo:script",
       "options": {
@@ -13,10 +13,11 @@
         "workspaceCommand": [
           "check"
         ]
-      }
+      },
+      "outputs": []
     },
     "test": {
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "executor": "repo:script",
       "options": {
@@ -27,10 +28,11 @@
         "workspaceCommand": [
           "test"
         ]
-      }
+      },
+      "outputs": []
     },
     "test-source": {
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "executor": "repo:script",
       "options": {
@@ -41,7 +43,17 @@
         "workspaceCommand": [
           "test-source"
         ]
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🌎️hub/🔐️auth/🔌️client/**/*",
+        "{workspaceRoot}/🌎️hub/🔐️auth/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️agent-credential/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/⌨️entrypoint/🦀️.rs"
+      ]
     }
   }
 }

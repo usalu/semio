@@ -89,7 +89,7 @@ async fn encode_gif_rejects_empty_frame_list() {
 #[semio_framework_async_macros::async_test]
 async fn encode_gif_rejects_frame_exceeding_logical_screen() {
     let mut snap = sample_snapshot();
-    snap.frames[0].left = 100; // pushes the frame past the 12x10 logical screen
+    snap.frames[0].left = 100;
     assert!(encode_gif(&snap).is_err());
 }
 
@@ -98,7 +98,6 @@ async fn no_loop_extension_when_loop_count_is_none() {
     let mut snap = sample_snapshot();
     snap.loop_count = None;
     let bytes = encode_gif(&snap).expect("encode");
-    // NETSCAPE2.0 must not appear anywhere in the stream when there's no loop count to encode.
     assert!(!bytes.windows(11).any(|w| w == b"NETSCAPE2.0"));
     let decoded = decode_gif(&bytes).expect("decode");
     assert_eq!(decoded.loop_count, None);
@@ -180,7 +179,7 @@ async fn encode_gif_rejects_index_past_color_table() {
 #[semio_framework_async_macros::async_test]
 async fn rgba_derived_accessor_honors_transparent_index() {
     let snap = sample_snapshot();
-    let transparent_frame = &snap.frames[1]; // built with transparent_corner=true
+    let transparent_frame = &snap.frames[1];
     assert!(transparent_frame.transparent_index.is_some());
     let rgba = transparent_frame.rgba(snap.gct.as_ref());
     assert_eq!(&rgba[0..4], &[0, 0, 0, 0], "top-left pixel must be the normalized-transparent color");

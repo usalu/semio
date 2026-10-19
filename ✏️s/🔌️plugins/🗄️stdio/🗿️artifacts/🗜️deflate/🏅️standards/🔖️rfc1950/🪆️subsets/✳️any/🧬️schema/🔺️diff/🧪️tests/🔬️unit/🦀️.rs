@@ -55,7 +55,6 @@ async fn inverse_law_mutation_and_diff_level() {
         DeflateMutation::SetPayload(set_payload::SetPayload { payload: b"inverse-law".to_vec() }),
     ];
     for m in variants {
-        // 🔁️ mutation-level: apply then apply every inverse mutation restores base.
         let mut round = base.clone();
         apply_mutation(&mut round, &m);
         for inv in m.inverse(&base).expect("the admitted mutation has an inverse").into_iter().rev() {
@@ -63,7 +62,6 @@ async fn inverse_law_mutation_and_diff_level() {
         }
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
-        // 🔁️ diff-level: d.diff().inverse(base).apply(&d.diff().apply(base)) == base.
         let d = m.diff(&base);
         let applied = protocol::apply_diff(d.diff(), &base).unwrap();
         let undone = protocol::apply_diff(&d.diff().inverse(&base), &applied).unwrap();
@@ -80,7 +78,6 @@ async fn inverse_law_mutation_and_diff_level() {
 async fn absorb_law_scalar_lww_and_associativity() {
     let base = sweep_a();
 
-    // Disjoint fields: both survive.
     let d1 = diff_set_compression_params(8, 5, DeflateLevelHint::Fast);
     let d2 = diff_set_payload(b"absorbed-payload".to_vec());
     let mut absorbed = d1.clone();
@@ -90,7 +87,6 @@ async fn absorb_law_scalar_lww_and_associativity() {
     assert_eq!(absorbed.compression_method, Some(8));
     assert_eq!(absorbed.payload, Some(b"absorbed-payload".to_vec()));
 
-    // Same field twice: last write wins.
     let d3 = diff_set_payload(b"first".to_vec());
     let d4 = diff_set_payload(b"second".to_vec());
     let mut lww = d3.clone();
@@ -98,7 +94,6 @@ async fn absorb_law_scalar_lww_and_associativity() {
     assert_eq!(lww.payload, Some(b"second".to_vec()));
     assert_eq!(protocol::apply_diff(&lww, &base).unwrap(), protocol::apply_diff(&d4, &protocol::apply_diff(&d3, &base).unwrap()).unwrap());
 
-    // Associativity over a triple: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
     let da = diff_set_compression_params(9, 6, DeflateLevelHint::Maximum);
     let db = diff_set_preset_dictionary(Some(11));
     let dc = diff_set_payload(b"triple".to_vec());
@@ -120,9 +115,6 @@ async fn absorb_law_scalar_lww_and_associativity() {
 //#region codec_retention_law
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_self_round_trip_is_byte_exact() {
-    // 🔁️ Encoding with OUR OWN encoder and decoding back must be exactly byte- and
-    // field-preserving (both directions use the same codec, so there is no cross-encoder
-    // Huffman-strategy mismatch to normalize away).
     let snap = sweep_a();
     let bytes = encode_deflate_snapshot(&snap);
     let decoded = decode_deflate_snapshot(&bytes).expect("decode self-encoded stream");

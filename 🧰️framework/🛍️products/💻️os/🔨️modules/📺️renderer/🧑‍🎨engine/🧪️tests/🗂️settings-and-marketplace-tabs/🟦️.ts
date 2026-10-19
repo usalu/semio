@@ -60,8 +60,6 @@ describe("Display Windows tab — projection drag templates", () => {
     const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }]);
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
-    // Raw (pre-render) order is reversed once more so that after the Tree's own "up" reversal on render,
-    // Parallel reads Orthographic, Axonometric, Oblique — top to bottom.
     expect([...parallel.items!].reverse().map((row) => row.label)).toEqual(["Orthographic", "Axonometric", "Oblique"]);
     const axonometric = byLabel(parallel.items!, "Axonometric")!;
     expect([...axonometric.items!].reverse().map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);

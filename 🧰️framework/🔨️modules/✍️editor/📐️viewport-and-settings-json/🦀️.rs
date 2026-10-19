@@ -63,19 +63,19 @@ fn default_tab_size() -> usize {
     DEFAULT_TAB_SIZE
 }
 
-fn default_font_px_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<f64, semio_framework_value::ValueError> {
+fn default_font_px_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<f64, semio_framework_value::ValueError> {
  control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_font_px())})
 }
 
-fn default_line_height_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<f64, semio_framework_value::ValueError> {
+fn default_line_height_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<f64, semio_framework_value::ValueError> {
  control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_line_height())})
 }
 
-fn default_show_line_numbers_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<bool, semio_framework_value::ValueError> {
+fn default_show_line_numbers_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<bool, semio_framework_value::ValueError> {
  control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_show_line_numbers())})
 }
 
-fn default_tab_size_controlled(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<usize, semio_framework_value::ValueError> {
+fn default_tab_size_controlled(control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<usize, semio_framework_value::ValueError> {
  control.scoped_stage(|control| {control.begin_stage(1)?;control.step()?;Ok(default_tab_size())})
 }
 
@@ -134,7 +134,7 @@ pub(super) struct TextEditJson {
 }
 
 #[derive(Clone, Debug, Deserialize, FromValue, ToValue)]
-struct TextRangeJson {
+pub(super) struct TextRangeJson {
     pub(super) start: TextPosJson,
     pub(super) end: TextPosJson,
 }

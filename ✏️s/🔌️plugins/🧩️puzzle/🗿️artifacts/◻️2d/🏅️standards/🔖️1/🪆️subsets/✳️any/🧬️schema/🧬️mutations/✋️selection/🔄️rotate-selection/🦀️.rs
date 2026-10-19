@@ -1,10 +1,10 @@
-//! Positions orbit the pivot and every handle angle turns with its node, so edges keep their geometry —
+//! 📍️ Positions orbit the pivot and every handle angle turns with its node, so edges keep their geometry —
 //! 🔄️ Puzzle2d mutation — `RotateSelection`: a parametric rotation of a set of nodes about one pivot.
 //! the same rule as the editor's `Puzzle2dTransform::Rotate`, with the pivot recorded instead of derived.
 
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::replace_node_handle::ReplaceNodeHandle;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;

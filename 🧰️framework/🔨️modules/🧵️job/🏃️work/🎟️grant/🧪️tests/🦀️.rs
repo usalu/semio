@@ -17,7 +17,8 @@ fn original_retained_work_funding_preserves_axes_and_physical_receipts(){
 }
 #[test]
 fn original_step_context_forwards_independent_work_funding(){
- use semio_framework_job::{StepBudget,StepContext,OperationId,Generation,CancelToken,JobPayloadAuthority};
+ use semio_framework_job::{StepBudget, StepContext, OperationId, Generation, CancelToken};
+ use semio_framework_job_payload::{JobPayloadAuthority};
  fn now()->Option<u64>{Some(0)}
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  let owner_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};

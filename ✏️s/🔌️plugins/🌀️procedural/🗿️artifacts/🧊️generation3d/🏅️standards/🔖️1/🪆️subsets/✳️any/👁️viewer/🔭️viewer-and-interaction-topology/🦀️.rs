@@ -245,8 +245,6 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                     .unwrap_or_default(),
             })),
             "toggleSun" => Ok(Generation3dViewCommand::ToggleSun(toggle_sun::ToggleSun {})),
-            // 🎨️ `buildActiveExampleAction` (`🛠️ShellHelpers/🟦️.tsx`) sends `{exampleId}`; an empty
-            // selection means "the document this session opened", never "no argument".
             "setActiveExample" => Ok(Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "setSunAzimuth" => Ok(Generation3dViewCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_arg(&["value"]).unwrap_or(0.0) })),
             "setSunElevation" => Ok(Generation3dViewCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_arg(&["value"]).unwrap_or(0.0) })),
@@ -256,9 +254,6 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 page: u64_arg(&["page"]).unwrap_or_default(),
                 page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
             })),
-            // ⏱️ The runtime chain. `windowId`/`windowKindId` are the address the tick, both
-            // resolves and every re-arm carry; `nodeHash`/`outputJson` are echoed back onto a
-            // response action by `reactor::extension_response_args`.
             "flowEvalTick" => Ok(Generation3dViewCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
@@ -277,7 +272,6 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
                 let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let handle=original_reply_text(&mut args,"handle",true).unwrap();let output=original_reply_output(&mut args).unwrap();
                 Ok(Generation3dViewCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
             },
-            // 🔓️ The kernel release hop a closed `previewEval` run hands the host.
             "flowEvalRelease" => Ok(Generation3dViewCommand::FlowEvalRelease(flow_eval_release::FlowEvalRelease {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),

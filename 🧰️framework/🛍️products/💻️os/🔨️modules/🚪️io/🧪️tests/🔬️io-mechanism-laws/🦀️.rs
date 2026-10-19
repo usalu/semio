@@ -25,10 +25,10 @@ mod laws {
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️control/🔣️.json")).unwrap();
         let maximum=fixture["nativeBytes"].as_u64().unwrap() as usize;
         let mut receive=|_|true;let mut publish=|_|true;
-        let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);
+        let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut receive);
         let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
         let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["snapshotGrant"].clone()).unwrap();
-        let mut decode_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+        let mut decode_recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
         let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
         decode.install_retirement_recipient(&mut decode_recipient).expect("the run owns an explicit decode retirement slot");
         encode.install_retirement_recipient(&mut encode_recipient).expect("the run owns an explicit encode retirement slot");
@@ -108,7 +108,6 @@ mod laws {
 
     #[semio_framework_async_macros::async_test]
     async fn identify_only_sniffs_carriers() {
-        // 🚫️async: E4 fn-pointer slot
         fn always_high(_: &IoPayload) -> Confidence {
             Confidence::High
         }

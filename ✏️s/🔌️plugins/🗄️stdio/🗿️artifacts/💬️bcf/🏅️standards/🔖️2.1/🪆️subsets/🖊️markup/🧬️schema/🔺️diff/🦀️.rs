@@ -26,7 +26,6 @@ pub struct IndexedDiff<T, D> {
 }
 
 impl<T, D> IndexedDiff<T, D> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }

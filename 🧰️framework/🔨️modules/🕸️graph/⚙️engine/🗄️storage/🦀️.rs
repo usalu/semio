@@ -164,9 +164,6 @@ mod storage_handle_owner_bridge {
 }
 
 impl<P: PortModel, D: Directedness> Default for Storage<P, D> {
-    // 🚫️async: E1 impl of external trait `std::default::Default` — must stay sync. Mirrors `new()`'s
-    // literal (I/O-free) body directly rather than calling it, since `new()` stays `async` for
-    // call-site uniformity with the rest of this crate. See R9.
     fn default() -> Self {
         Self {
             nodes: BTreeMap::new(),
@@ -222,9 +219,6 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     }
 
     fn unlink_adjacency(&mut self, u: NodeId, v: NodeId, edge_id: EdgeId) {
-        // 🚨️ all four branches were dropped-future no-ops: none of these `unlink_one` calls were
-        // ever awaited, so `unlink_adjacency` silently did nothing — the outer `.await` fixed at
-        // its own call sites (`remove_edge`) was necessary but not sufficient.
         unlink_one(&mut self.successors, u, v, edge_id);
         if D::DIRECTED {
             unlink_one(&mut self.predecessors, v, u, edge_id);
@@ -235,7 +229,6 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         }
     }
 
-    // #subregion Nodes
     pub fn add_node(&mut self) -> NodeId {
         self.add_node_with(PropertyBag::new())
     }
@@ -288,8 +281,6 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
             }
         }
         for edge_id in incident {
-            // 🚨️ was a dropped-future no-op: incident edges were never actually removed when
-            // their node was — `remove_edge`'s side effects on `self.edges`/adjacency never ran.
             self.remove_edge(edge_id);
         }
         if let Some(record) = self.nodes.remove(&id) {
@@ -305,9 +296,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     pub fn node_attrs_mut(&mut self, id: NodeId) -> Option<&mut PropertyBag> {
         self.nodes.get_mut(&id).map(|r| &mut r.attrs)
     }
-    // #endsubregion
 
-    // #subregion Edges
     pub fn add_edge(&mut self, source: P::Endpoint, target: P::Endpoint) -> EdgeId {
         self.add_edge_with(source, target, PropertyBag::new())
     }
@@ -330,9 +319,6 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
         let id = self.next_edge_id;
         self.next_edge_id += 1;
         self.edges.insert(id, EdgeRecord { source, target, attrs });
-        // 🚨️ was a dropped-future no-op: `link_adjacency` (mutates `successors`/`predecessors`)
-        // was never awaited, so every edge added through this path was silently absent from
-        // adjacency — traversal/neighbor/degree queries would all have missed it. See R10 header.
         self.link_adjacency(un, vn, id);
         id
     }
@@ -340,8 +326,6 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     pub fn remove_edge(&mut self, id: EdgeId) -> bool {
         let Some(record) = self.edges.remove(&id) else { return false };
         let (u, v) = (self.endpoint_node(record.source), self.endpoint_node(record.target));
-        // 🚨️ was a dropped-future no-op: `unlink_adjacency` was never awaited, so a removed edge's
-        // adjacency entries were silently left in place. Same class as `add_edge_with` above.
         self.unlink_adjacency(u, v, id);
         true
     }
@@ -353,9 +337,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     pub fn edge_endpoints(&self, id: EdgeId) -> Option<(P::Endpoint, P::Endpoint)> {
         self.edges.get(&id).map(|r| (r.source, r.target))
     }
-    // #endsubregion
 
-    // #subregion Handles
     /// 🪝️ Allocates a new handle anchored on `node`; only meaningful when `P::HAS_PORTS` — returns `None` otherwise (or if `node` doesn't exist), never panics.
     pub fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
         if !P::HAS_PORTS || !self.nodes.contains_key(&node) {
@@ -375,9 +357,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     pub fn handle_owner(&self, handle: HandleId) -> Option<NodeId> {
         self.handle_owner.get(&handle).copied()
     }
-    // #endsubregion
 
-    // #subregion Whole graph
     pub fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
         &mut self.graph_attrs
     }
@@ -402,7 +382,6 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
             adj.clear();
         }
     }
-    // #endsubregion
 }
 // #endregion 🔖️Storage
 
@@ -507,8 +486,6 @@ impl<P: PortModel, D: Directedness> GraphView for Storage<P, D> {
     }
     /// 📇️ One `EdgeRef` per stored edge, in `EdgeId` order — a self-loop appears once here even though it counts twice towards `degree`.
     fn edges(&self) -> impl Iterator<Item = EdgeRef> {
-        // 🔀️ Rewritten from `.map(..)` — `endpoint_node` is async and cannot be called inside the
-        // sync closure that used to build each `EdgeRef` (R10 residue shape #1).
         let mut out = Vec::with_capacity(self.edges.len());
         for (&id, record) in &self.edges {
             let u = self.endpoint_node(record.source);

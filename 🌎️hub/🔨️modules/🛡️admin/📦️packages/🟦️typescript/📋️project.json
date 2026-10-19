@@ -46,7 +46,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/📤️dist/{options.env.SEMIO_BUILD_MODE}"
+        "{projectRoot}/.🧾️store/build.json"
       ]
     },
     "test": {
@@ -56,7 +56,9 @@
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     }
   }
 }

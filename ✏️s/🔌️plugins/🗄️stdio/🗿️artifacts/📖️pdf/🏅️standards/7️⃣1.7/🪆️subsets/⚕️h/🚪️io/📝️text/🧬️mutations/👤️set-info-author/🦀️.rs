@@ -1,4 +1,4 @@
-//! Direct text identity for `set-info-author`.
+//! 🆔️ Direct text identity for `set-info-author`.
 
 pub const OPCODE: &str = "set-info-author";
 pub const TEXT_OPCODE: &str = OPCODE;

@@ -391,8 +391,8 @@ impl<'c, 'p> Reconstruction<'c, 'p> {
     pub fn paged_text(&mut self, text: &str) -> Result<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, ValueError> {
         self.reserve(text.len())?;
         self.control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress,allocation|{
-            let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-            let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+            let mut callback = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
+            let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result = semio_framework_value::paged::PagedUtf8::try_from_str_controlled(text, &mut native);
             (result, native.owned_bytes())
         })?

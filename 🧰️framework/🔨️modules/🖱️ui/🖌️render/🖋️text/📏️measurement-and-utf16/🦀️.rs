@@ -32,7 +32,6 @@ impl TextSystem {
     /// 📏️ Unwrapped intrinsic size. Short-circuits to `Measurement::Pending` without shaping at all
     /// when `style.family` names a [`FontDependencyId`] that has not resolved yet — the placeholder is
     /// a crude `chars × size_px × 0.6` estimate, deliberately not a real shape with the wrong font.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn measure(&mut self, text: &str, style: &TextStyle) -> Measurement {
         if !self.family_ready(style.family) {
             return Self::placeholder_measurement(text, style.size_px);
@@ -44,7 +43,6 @@ impl TextSystem {
     /// 📏️ Wrapped bounding size at `max_width`. Uncached (unlike [`Self::measure`]/[`Self::shape`]) —
     /// wrapping is keyed on a float `max_width` a caller typically varies continuously during resize,
     /// which would fragment a cache rather than serve it.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn measure_wrapped(&mut self, text: &str, style: &TextStyle, max_width: f32) -> Measurement {
         if !self.family_ready(style.family) {
             return Self::placeholder_measurement(text, style.size_px);
@@ -53,7 +51,6 @@ impl TextSystem {
         Measurement::Ready { width: layout.width(), height: layout.height() }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn placeholder_measurement(text: &str, size_px: f32) -> Measurement {
         let placeholder_width = text.chars().count() as f32 * size_px * 0.6;
         let placeholder_height = size_px * 1.35;
@@ -64,7 +61,6 @@ impl TextSystem {
     /// unlike the wgpu-old target's whitespace-split `wrap_text`. Returns byte ranges into `text`
     /// rather than owned `String` copies (the old API's shape): a caller that wants owned lines slices
     /// `text` itself, and a caller building glyph runs per line avoids a copy entirely.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn wrap(&mut self, text: &str, style: &TextStyle, max_width: f32) -> Vec<Range<usize>> {
         let layout = self.layout_for(text, style, Some(max_width));
         let mut lines: Vec<Range<usize>> = layout.lines().map(|line| line.text_range()).collect();
@@ -78,14 +74,12 @@ impl TextSystem {
     /// `parley::Cursor::next_visual`, which is what arrow-key movement should use in mixed-direction
     /// text. Returns `byte_index` itself at the end of `text` (parley's own `Cursor` clamps rather than
     /// panicking).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn next_grapheme(&mut self, text: &str, style: &TextStyle, byte_index: usize) -> usize {
         let layout = self.layout_for(text, style, None);
         Cursor::from_byte_index(&layout, byte_index, Affinity::Downstream).next_visual(&layout).index()
     }
 
     /// ⬅️ The previous cursor-safe byte offset before `byte_index` — see [`Self::next_grapheme`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn previous_grapheme(&mut self, text: &str, style: &TextStyle, byte_index: usize) -> usize {
         let layout = self.layout_for(text, style, None);
         Cursor::from_byte_index(&layout, byte_index, Affinity::Downstream).previous_visual(&layout).index()
@@ -93,7 +87,6 @@ impl TextSystem {
 
     /// 🖍️ Highlight rectangles for `range`, multi-line-safe, via `parley::Selection::geometry`. Returns
     /// `[x, y, width, height]` — `peniko::kurbo::Rect` never crosses this file's public boundary.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn selection_geometry(&mut self, text: &str, style: &TextStyle, range: Range<usize>) -> Vec<[f32; 4]> {
         let layout = self.layout_for(text, style, None);
         let anchor = Cursor::from_byte_index(&layout, range.start, Affinity::Downstream);

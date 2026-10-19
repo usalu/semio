@@ -1,4 +1,4 @@
-//! of the sibling export leaf (`IoFidelity::Exact`).
+//! 👶️ of the sibling export leaf (`IoFidelity::Exact`).
 //! puzzle5d ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 use crate::Puzzle5dSnapshot;
 

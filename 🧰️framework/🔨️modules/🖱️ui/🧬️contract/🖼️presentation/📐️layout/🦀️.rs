@@ -176,7 +176,6 @@ pub enum EdgeSpace {
 }
 
 impl Default for EdgeSpace {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn default() -> Self {
         Self::All(SpaceToken::None)
     }
@@ -281,7 +280,6 @@ pub enum LayoutSpec {
 /// 🍃️ A record whose layout was never set must not silently become a container, so the default is the
 /// terminal one. `#[derive(Default)]` cannot express this — the attribute only accepts unit variants.
 impl Default for LayoutSpec {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn default() -> Self {
         Self::Leaf(LeafLayout::default())
     }

@@ -1,4 +1,4 @@
-//! Diff for `retire-geometry-object`.
+//! 🔄️ Diff for `retire-geometry-object`.
 
 use crate::retire_geometry_object::mutation::RetireGeometryObject;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

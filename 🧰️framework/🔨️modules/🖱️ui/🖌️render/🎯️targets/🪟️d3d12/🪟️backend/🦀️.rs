@@ -127,7 +127,6 @@ impl D3d12Backend {
     /// `window_handle`'s `HWND`. Only construction is async per U1 — the body below performs no real
     /// `.await` because D3D12/DXGI device and swapchain creation is synchronous, unlike wgpu's
     /// adapter/device request (same reasoning as the Metal backend's `new`).
-    // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new(window_handle: WindowHandle<'_>, size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
         let RawWindowHandle::Win32(handle) = window_handle.as_raw() else {
             return Err(BackendError::UnsupportedFormat("d3d12 backend requires a Win32 window handle"));
@@ -145,14 +144,12 @@ impl D3d12Backend {
     /// exercises the full render pipeline for `backend-testing` without any window at all. Never used
     /// outside tests/the conformance harness.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new_headless(size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
         let (device, queue, factory) = create_device_and_queue()?;
         let swapchain = create_swapchain_for_composition(&factory, &queue, size.width.max(1), size.height.max(1))?;
         Ok(Self::from_parts(device, queue, swapchain, size, dpr))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from_parts(device: Device, queue: ID3D12CommandQueue, swapchain: IDXGISwapChain3, size: PhysicalSize, dpr: f32) -> Self {
         let allocator: ID3D12CommandAllocator = unsafe { device.CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT) }.expect("d3d12 backend: failed to allocate the render command allocator");
         let list: ID3D12GraphicsCommandList = unsafe { device.CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, &allocator, None) }.expect("d3d12 backend: failed to allocate the render command list");
@@ -205,13 +202,11 @@ impl D3d12Backend {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn update_globals(&mut self, width: f32, height: f32, time_seconds: f32) {
         let values: [f32; 4] = [width, height, time_seconds, 0.0];
         self.ui_globals.upload(&self.device, bytemuck::cast_slice(&values));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn validate_known_resources(&self, packet: &RenderPacket) -> Result<(), BackendError> {
         for batch in &packet.batches {
             if let Some(texture) = batch.texture {
@@ -338,7 +333,6 @@ fn build_dsv_heap(device: &Device, depth_texture: &ID3D12Resource) -> ID3D12Desc
 //#region Rendering
 
 impl D3d12Backend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn dsv_handle(&self) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         unsafe { self.dsv_heap.GetCPUDescriptorHandleForHeapStart() }
     }
@@ -348,7 +342,6 @@ impl D3d12Backend {
     /// into `scene_target` mip 0 + `depth_texture`, cleared once at pass start. Establishes the root
     /// signature, descriptor heaps and IA topology once — they persist for the rest of this frame's
     /// one command list, including `encode_composite_pass`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn encode_scene_pass(&mut self, packet: &RenderPacket, time_seconds: f32) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -399,7 +392,6 @@ impl D3d12Backend {
     /// on top, then paint glass-foreground 2D content (normal then overlay) directly onto the back
     /// buffer, reusing `depth_texture` (no clear — "Load") so it still clips against the same stencil
     /// silhouettes the offscreen pass wrote.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn encode_composite_pass(&mut self, back_buffer_index: u32, packet: &RenderPacket) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -428,13 +420,11 @@ impl D3d12Backend {
         self.encode_2d_batches(quad_address, vector_address, ui_globals_address, foreground_overlay, width, height);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn back_buffer_rtv(&self, index: u32) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         let start = unsafe { self.rtv_heap.GetCPUDescriptorHandleForHeapStart() };
         D3D12_CPU_DESCRIPTOR_HANDLE { ptr: start.ptr + (index as usize) * (self.rtv_stride as usize) }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn transition_scene_mip(&mut self, mip: u32, after: D3D12_RESOURCE_STATES) {
         let before = self.scene_state[mip as usize];
         if before.0 != after.0 {
@@ -443,7 +433,6 @@ impl D3d12Backend {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn transition_blur_scratch(&mut self, mip: u32, after: D3D12_RESOURCE_STATES) {
         let before = self.blur_scratch_state;
         if before.0 != after.0 {
@@ -460,7 +449,6 @@ impl D3d12Backend {
     /// barrier call — mip 0 was left in `RENDER_TARGET` by `encode_scene_pass`, mips `1..` were each
     /// left in `RENDER_TARGET` by their own downsample draw — so the whole chain is sampleable for
     /// `blit_scene_to_back_buffer`/`composite_glass`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn run_blur_chain(&mut self) {
         let mut blur_globals_bytes = vec![0u8; (SCENE_MIP_LEVELS as usize) * (WORLD_GLOBALS_SLOT_SIZE as usize)];
         for mip in 1..SCENE_MIP_LEVELS {
@@ -524,7 +512,6 @@ impl D3d12Backend {
     /// 🪟️ Ports `blit_scene_to_swapchain`: samples mip 0 of the fully-blurred scene chain into the
     /// back buffer, clearing it first (this is the frame's real "clear colour" as seen by the user —
     /// the offscreen scene clear earlier is invisible, fully overwritten here).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn blit_scene_to_back_buffer(&mut self, back_buffer_index: u32) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -550,7 +537,6 @@ impl D3d12Backend {
     /// same "one draw, `instanceCount = glass_instances.len()`" simplification the Metal backend's
     /// `composite_glass` documents (glass has no stencil mask and every instance shares one pipeline/
     /// state, so a single instanced draw is pixel-identical to a per-region loop).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn composite_glass(&mut self, back_buffer_index: u32, packet: &RenderPacket) {
         if packet.glass_instances.is_empty() {
             return;
@@ -575,7 +561,6 @@ impl D3d12Backend {
 
     /// 🎞️ Replays one filtered group of `DrawBatch`es verbatim — the trait's own invariant. Makes no
     /// ordering/batching/clipping decision of its own.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn encode_2d_batches<'a>(&mut self, quad_address: Option<u64>, vector_address: Option<u64>, ui_globals_address: u64, batches: impl Iterator<Item = &'a DrawBatch>, width: f32, height: f32) {
         let quad_stride = std::mem::size_of::<QuadInstance>() as u64;
         let vector_stride = std::mem::size_of::<VectorVertex>() as u64;
@@ -608,10 +593,7 @@ impl D3d12Backend {
                         self.list.DrawInstanced(batch.instance_range.1, 1, 0, 0);
                     }
                 }
-                PipelineKind::Glass | PipelineKind::BlurMipChain | PipelineKind::SceneBlit | PipelineKind::StencilMask | PipelineKind::World3dMesh | PipelineKind::World3dLines | PipelineKind::World3dTextured => {
-                    // 🕳️ Never constructed by `Scene::finish` into `RenderPacket::batches` — see the
-                    // Metal backend's identical match arm's doc comment for the full reasoning.
-                }
+                PipelineKind::Glass | PipelineKind::BlurMipChain | PipelineKind::SceneBlit | PipelineKind::StencilMask | PipelineKind::World3dMesh | PipelineKind::World3dLines | PipelineKind::World3dTextured => {}
             }
         }
         unsafe { self.list.RSSetScissorRects(&[RECT { left: 0, top: 0, right: width as i32, bottom: height as i32 }]) };
@@ -621,7 +603,6 @@ impl D3d12Backend {
     /// stencil ref `0`, then every remaining "piece" instance with ref `1`, leaving ref `1` set for the
     /// content draw that follows.
     #[allow(clippy::too_many_arguments)]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn draw_silhouette_mask(&mut self, quad_address: Option<u64>, ui_globals_address: u64, start: u32, count: u32, quad_stride: u64, width: f32, height: f32) {
         let Some(quad_address) = quad_address else {
             unsafe { self.list.OMSetStencilRef(1) };
@@ -653,7 +634,6 @@ impl D3d12Backend {
     /// 🖼️ `t0`/`s0` are always the shared glyph atlas; `t1`/`s1` are the shared icon atlas for
     /// `UiQuad` batches, or the batch's specific raster texture for `UiRasterTextured` batches
     /// (`batch.texture`) — mirrors the Metal backend's `bind_ui_textures`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn bind_ui_textures(&mut self, texture: Option<TextureId>) -> D3D12_GPU_DESCRIPTOR_HANDLE {
         let icon_or_raster = match texture {
             Some(id) => self.resources.raster_texture_handle(id).unwrap_or_else(|| self.resources.icon_atlas_handle()),
@@ -668,7 +648,6 @@ impl D3d12Backend {
 //#region 🔌️GraphicsBackendImpl
 
 impl GraphicsBackend for D3d12Backend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn name(&self) -> &'static str {
         "d3d12"
     }
@@ -679,7 +658,6 @@ impl GraphicsBackend for D3d12Backend {
     /// to `D3D12CreateDevice` for the default adapter). Flagged plainly rather than reported as a real
     /// capability query, unlike Metal's `capabilities()` which does query `hasUnifiedMemory()`/
     /// `isLowPower()` for real.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities {
         DeviceCapabilities {
             max_texture_dimension: 16384,
@@ -698,7 +676,6 @@ impl GraphicsBackend for D3d12Backend {
     /// documents `0` width/height as "keep the current value", not "resize to zero", so this crate
     /// must skip the call entirely rather than pass zeros through). `render` itself refuses to draw
     /// while parked, so the staleness is never observed.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError> {
         self.size = size;
         self.dpr = dpr;
@@ -727,12 +704,10 @@ impl GraphicsBackend for D3d12Backend {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ResourceOp]) -> Result<(), BackendError> {
         self.resources.apply(&self.device, &self.queue, ops).map_err(Into::into)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, time_seconds: f32) -> Result<RenderReport, BackendError> {
         if let DeviceStatus::Lost(reason) = self.device_status() {
             return Err(BackendError::DeviceLost(reason));
@@ -745,12 +720,6 @@ impl GraphicsBackend for D3d12Backend {
         wait_for_fence_value(&self.fence, self.fence_value);
         unsafe { self.allocator.Reset() }.map_err(|_| BackendError::DeviceLost(LossReason::Device))?;
         unsafe { self.list.Reset(&self.allocator, None) }.map_err(|_| BackendError::DeviceLost(LossReason::Device))?;
-        // 🧮️ Beyond one `allocate_pair` per batch (the per-batch upper bound `encode_2d_batches`/
-        // `bind_ui_textures` actually draws from), this frame also always spends: 1 default pair
-        // (`encode_scene_pass`'s baseline root-table bind), `SCENE_MIP_LEVELS - 1` blur pairs
-        // (`run_blur_chain`'s per-mip downsample, unconditional every frame), 1 blit pair
-        // (`blit_scene_to_back_buffer`, unconditional), and 1 glass pair (`composite_glass`, only when
-        // `glass_instances` is non-empty) — `+ 8` covers all of that with headroom.
         self.frame_descriptors.begin_frame(&self.device, (packet.batches.len() as u32) + 8);
 
         let back_buffer_index = unsafe { self.swapchain.GetCurrentBackBufferIndex() };
@@ -785,7 +754,6 @@ impl GraphicsBackend for D3d12Backend {
     /// 🚦️ Unlike Metal (which has no programmatic device-loss detection and simulates it entirely),
     /// D3D12 exposes a *real* check — `ID3D12Device::GetDeviceRemovedReason`. `forced_loss` (test-only)
     /// layers the same simulated-loss surface `backend-testing` needs on top.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn device_status(&self) -> DeviceStatus {
         #[cfg(feature = "backend-testing")]
         if self.forced_loss {
@@ -811,7 +779,6 @@ impl GraphicsBackend for D3d12Backend {
     /// and reconstructed by the caller. Flagged plainly — this is a real gap, not silently assumed
     /// away, and the honest reason `GraphicsBackend`'s current `recover()` contract cannot fully cover
     /// a real device loss on any backend, D3D12 included.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
         let (lost_textures, lost_meshes, lost_atlases) = self.resources.drain_known();
         self.status = DeviceStatus::Healthy;
@@ -823,7 +790,6 @@ impl GraphicsBackend for D3d12Backend {
     }
 
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn debug_force_device_loss(&mut self) {
         self.forced_loss = true;
     }
@@ -833,7 +799,6 @@ impl GraphicsBackend for D3d12Backend {
     /// the tightly packed RGBA8 `ReadbackImage` the conformance suite expects, same sRGB-vs-linear
     /// byte-reinterpretation acceptable-for-tolerance caveat the Metal backend's `read_back` documents.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError> {
         if self.size.is_zero() {
             return Err(BackendError::ZeroSizeSurface);
@@ -875,7 +840,6 @@ impl D3d12Backend {
     /// reallocated at the current size rather than cached, since this path only ever runs inside the
     /// conformance harness (never a hot path worth optimizing) — mirrors the Metal backend's
     /// `capture_readback`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capture_readback(&mut self, back_buffer_index: u32) {
         let width = self.size.width;
         let height = self.size.height;

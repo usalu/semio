@@ -1,4 +1,4 @@
-//! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
+//! 🚫️ never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
 //! ↩️ Inverse for `RotateSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 use crate::standards::v1::subsets::any::schema::diff::puzzle5d_selection;
 use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul, rotate_part_3d, rotate_target_volume};

@@ -1,0 +1,16 @@
+{
+ "file": "🌎️hub/🧪️tests/🤝️two-client-document/🟦️.ts",
+ "scopeLine": 58,
+ "scopeParam": "invocation",
+ "stateName": "scenario",
+ "lets": [
+  "directoryTimings",
+  "spaceId",
+  "documentId",
+  "surfaceId",
+  "artifactSchema",
+  "packSchemaHashHex",
+  "hubOutput"
+ ],
+ "lateInit": true
+}

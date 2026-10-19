@@ -186,9 +186,6 @@ pub async fn beam_search(
     }
 
     finished.extend(beams);
-    // 🔀️ `Vec::sort_by`'s comparator is a sync `FnMut` — cannot `.await` inside it (E0728). The
-    // normalized score is precomputed per hypothesis (decorate-sort-undecorate) instead (O1
-    // de-dyn, math-dedyn).
     let mut scored: Vec<(f64, BeamHypothesis)> = Vec::with_capacity(finished.len());
     for hyp in finished {
         let normalized = hyp.score / gnmt_length_penalty(hyp.state.generated().await.len(), beam_config.length_penalty).await;
@@ -215,10 +212,6 @@ impl BestOfN {
         adapter: Option<&TokenTextAdapters>,
         max_steps: usize,
         observer: &mut SamplingObservers,
-        // 🔀️ `impl Fn(usize) -> Result<SequenceState, SamplingError>` no longer type-checks now
-        // that `SequenceState::new` is `async fn` — `AsyncFn` (stable since 1.85) is the direct
-        // async-closure replacement, not a `Pin<Box<dyn Future>>` factory (R1 bans `dyn Future` in
-        // this kind of position too; O1 de-dyn, math-dedyn).
         mut make_initial: impl AsyncFnMut(usize) -> Result<SequenceState, SamplingError>,
         mut next_logits: impl AsyncFnMut(&SequenceState) -> Vec<f32>,
     ) -> Result<Vec<(SequenceState, f64)>, SamplingError> {

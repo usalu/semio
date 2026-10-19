@@ -5,7 +5,7 @@ use crate::{FormExpr,FormQuestion,FormStep,FormQuestionOption,FormVectorField};
 use crate::schema::definition::FormsDefinition;
 use crate::schema::response::{FormsAnswer, FormsResponse};
 use semio_framework_value::DslValue;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema_controlled};
 use std::ops::Range;
 const NAMES:[&str;30]=["forms_document","forms_structure_child","forms_results_child","forms_step","forms_question","forms_option","forms_vector_field","forms_response","forms_answer","forms_condition","forms_condition_const","forms_condition_var","forms_condition_eq","forms_condition_and","forms_condition_or","forms_condition_truthy","forms_condition_item","forms_value","forms_null","forms_boolean","forms_unsigned","forms_signed","forms_float","forms_text","forms_bytes","forms_octet","forms_array","forms_array_element","forms_object","forms_object_member"];
@@ -128,6 +128,6 @@ fn sort(rows:&mut[Relation],control:&mut NativeDecodeControl<'_>)->Result<(),Val
 }
 pub fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<FormsSnapshot,ValueError>{
  control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema_controlled(database,SQL,SqliteSnapshotPhase::ReconstructSnapshot,control)?;let maximum=control.limits().max_value_bytes;
- let result=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{let mut callback=|p:semio_framework_value::native_decoding::NativeDecodeProgress|progress(p.completed,p.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining.min(maximum),&mut callback,&mut native_allocation);let result=(||{let mut reader=Reader::new(database,&mut native)?;reader.snapshot()})();(result,native.owned_bytes())})??;
+ let result=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{let mut callback=|p:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress(p.completed,p.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining.min(maximum),&mut callback,&mut native_allocation);let result=(||{let mut reader=Reader::new(database,&mut native)?;reader.snapshot()})();(result,native.owned_bytes())})??;
  let mut owner=SnapshotOwner(Some(result));super::admission::forecast(owner.0.as_ref().unwrap(),control,SqliteSnapshotPhase::ReconstructSnapshot)?;Ok(owner.0.take().unwrap())
 }

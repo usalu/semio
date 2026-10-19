@@ -3,6 +3,14 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use crate::context::dispatch;
 use crate::context::fem3d_demo_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_load::PatchLoad;
+#[cfg(test)] use semio_framework_plugin::component::Emit;
+#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_framework::Fault;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchLoad) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let history = semio_framework_plugin::HistoryView::empty();
@@ -32,7 +40,7 @@ async fn patch_load_edits_each_variant_through_its_owning_case_3d() {
 /// 👥️ Same-base field commands preserve both nodal edits and undo only their authored field.
 #[test]
 fn sibling_load_commands_preserve_independent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let base=semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-load/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let first=emit(&base,PatchLoad{id:semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target("lc1", "l1").unwrap(),field:"value".into(),value:"20".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchLoad{id:semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_load_target("lc1", "l1").unwrap(),field:"nodeId".into(),value:"n2".into()}).unwrap().artifact_mutations.remove(0);
     let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;

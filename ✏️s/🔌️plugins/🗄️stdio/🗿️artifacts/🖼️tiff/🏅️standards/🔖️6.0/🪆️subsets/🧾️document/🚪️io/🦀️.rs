@@ -373,7 +373,7 @@ fn read_native_uncontrolled(data: &[u8]) -> Result<NativeSnapshot, String> {
             let values = read_tag_values(data, entry, e, kind)?;
             entries.push(TiffTag { tag: entry.tag, values });
         }
-        entries.sort_by_key(|t| t.tag); // TIFF6 §2: entries "must be sorted in ascending order by Tag".
+        entries.sort_by_key(|t| t.tag);
         ifds.push(NativeIfd { entries, storage: NativeStorage::default() });
     }
 
@@ -541,7 +541,7 @@ fn write_native(snapshot: &NativeSnapshot,c:&mut semio_framework_value::NativeEn
 
 /// 📖️ Admits native TIFF once into exact owned sample identities.
 pub fn decode_tiff(data:&[u8])->Result<TiffSnapshot,String>{
- controlled_decoding::decode_tiff_controlled(data,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).map_err(|error|error.message.into_owned())
+ controlled_decoding::decode_tiff_controlled(data,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut |_|true),usize::MAX).map_err(|error|error.message.into_owned())
 }
 /// 📤️ Emits an owned TIFF page under explicit physical policy.
 pub fn encode_tiff_with(snapshot:&TiffSnapshot,options:TiffNativeOptions)->Result<Vec<u8>,String>{let mut progress=|_|true;let mut c=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut progress);let native=owned_samples::lower(snapshot,options,&mut c).map_err(|e|e.to_string())?;write_native(&native,&mut c)}

@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any
 use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::drawing;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::tables;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::records;
-use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::entities;
+use semio_s_artifact_stdio_dwg_sqlite_entities::standards::v_ac1024::subsets::any::io::sqlite::snapshot::entities;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::objects;
 use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::associativity;
 use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation;
@@ -73,9 +73,9 @@ fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnaps
   Ok(Self{schema:document.schema,version:document.version,maintenance_version:document.maintenance_version,codepage:document.codepage,drawing,header,classes:document.classes,dependencies:document.dependencies,summary:document.summary,application:document.application,template:document.template,auxiliary_header:document.auxiliary_header,revision_history:document.revision_history,preview:document.preview,application_history:document.application_history})
  }
 }
-pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
+pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
 #[cfg(test)]
-pub fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
+pub fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
 fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,ValueError>{
     let mut projection=number::Projection::admission(DwgSnapshot::SQLITE_SCHEMA,phase,control)?;
     document::project(&mut projection,snapshot)?;header::project(&mut projection,&snapshot.header)?;

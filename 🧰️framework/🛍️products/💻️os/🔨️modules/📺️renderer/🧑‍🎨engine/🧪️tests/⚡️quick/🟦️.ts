@@ -1,5 +1,5 @@
-import "../../🧱️elements/📊️Table/🧪️tests/✏️editable-text/🟦️.test.tsx";
-import "../../🧱️elements/✏️TextEditor/🧪️tests/📝️explicit-draft/🟦️.test.ts";
+import "../../🧱️elements/📊️Table/🧪️tests/✏️editable-text/🟦️.tsx";
+import "../../🧱️elements/✏️TextEditor/🧪️tests/📝️explicit-draft/🟦️.ts";
 import { isDeepStrictEqual } from "node:util";
 import Ajv from "ajv";
 import React from "react";

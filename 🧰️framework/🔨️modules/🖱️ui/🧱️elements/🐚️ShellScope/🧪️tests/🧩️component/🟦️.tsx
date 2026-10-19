@@ -7,20 +7,25 @@ import { currentStylingAppearanceName, resolveSemanticColorHex, setStylingAppear
 import { act, fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ChromeControlHint } from "../../../💡️ChromeControlHint/🟦️.tsx";
+import { colord, extend } from "colord";
+import a11yPlugin from "colord/plugins/a11y";
 import { DEFAULT_UI_DRIVER, UiDriverProvider } from "../../../🚗️UiDriver/🟦️.tsx";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../../../💬️Dialog/🟦️.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover/🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../🔽️Select/🟦️.tsx";
 import { ShellScopeProvider, createShellScope } from "../../🟦️.tsx";
 
-/** 🎚️ Minimal surface of the third-party `color` package used as the independent WCAG oracle.
- * Loaded through a non-literal specifier because the package ships no type declarations. */
+/** 🎚️ Minimal surface of the third-party `colord` package (WCAG contrast plugin) used as the independent oracle. */
 interface ThirdPartyColor {
+  readonly value: string;
   contrast(other: ThirdPartyColor): number;
   luminosity(): number;
 }
-const thirdPartyColorSpecifier = "color";
-const { default: Color } = (await import(thirdPartyColorSpecifier)) as { default: (value: string) => ThirdPartyColor };
+extend([a11yPlugin]);
+const Color = (value: string): ThirdPartyColor => {
+  const parsed = colord(value);
+  return { value, contrast: (other) => parsed.contrast(other.value), luminosity: () => parsed.luminance() };
+};
 // #endregion 🔌️Adapters
 
 // #region 🎨️TokenOracle
@@ -319,7 +324,7 @@ describe("floating surface token pair stays readable in both appearances", () =>
 // #region 🚧️PortalHostOwnership
 describe("one owning layer resolves every floating surface host", () => {
   it("routes every portaling element through useShellFloatingSurfaceHost", () => {
-    for (const element of ["🔽️Select", "🗨️Popover", "💬️Dialog", "🖱️ContextMenu", "💡️ChromeControlHint", "🌳️Tree"]) {
+    for (const element of ["🔽️Select", "🗨️Popover", "💬️Dialog", "🖱️ContextMenu", "💡️ChromeControlHint", "🌳️Tree/🧲️drag-drop"]) {
       const source = readFileSync(sourcePath(`../../../${element}/🟦️.tsx`), "utf8");
       expect(source, element).toContain("useShellFloatingSurfaceHost");
       expect(/\?\?\s*document\.body\s*,/.test(source), element).toBe(false);

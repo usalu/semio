@@ -287,16 +287,10 @@ export function useDocumentTransferAndTabs(core: ShellCoreAfterThemeDriverSettin
     }
   }, [agentBridge.pendingApprovals, revealAgentApproval]);
 
-  // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
-  // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
-  // shell) for every keystroke on the page regardless of which shell the user was actually using.
   const handleAppKeydown = useCallback(
     (event: globalThis.KeyboardEvent) => {
       if (event.defaultPrevented || controlOwnsKeyboardEvent(event)) return;
       if (!session) return;
-      // ⌨️ Chords belong to the program that OWNS the canvas. Reading `session.app` unconditionally
-      // meant a spawned foreign editor's own verbs — and the framework-universal undo/redo chords —
-      // were resolved against, and dispatched to, the LANDING app (`🪟️spawned-program`).
       const keyApp = focusedApp ?? session.app;
       const parseKeys = (keys: string) =>
         keys
@@ -305,22 +299,15 @@ export function useDocumentTransferAndTabs(core: ShellCoreAfterThemeDriverSettin
           .filter(Boolean);
       const instances = focusedWindowInstancesRef.current;
       const focusedWindowId = activeWindowIdRef.current ?? (focusedSpawnedId !== null ? (instances[0]?.id ?? null) : (session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null));
-      // 🪟️ Only the windows the ACTIVE MODE mounts, in layout order. A verb owned by a window this mode
-      // does not show has no reachable owner and must say so rather than dispatch into a dead address.
       const mounted: readonly WindowScopeInstanceV1[] = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null)
         .flatMap((stack) => [...stack.windowIds])
         .map((id) => ({ id, windowKindId: instances.find((instance) => instance.id === id)?.windowKindId ?? id }));
       const scopeKinds: readonly WindowScopeKindV1[] = keyApp.windowKinds.map((kind) => ({ id: kind.id, actionIds: resolveWindowActions(keyApp, kind).map((action) => action.id) }));
-      // 🛡️ The shell's own chrome chords are never an app's to shadow. `build_definition` mints a
-      // keybinding for each reserved `toolRun*` action a declared tool run injects, and `toolRunStep`'s
-      // is `mod+alt+arrowright` — the navbar's own mode-step chord.
       const reservedChords = reservedShellChordsV1(SHELL_KEYBINDINGS, uiKeybindingOverrides);
       const actionDefinition = (windowKindId: string, actionId: string) => {
         const kind = keyApp.windowKinds.find((entry) => entry.id === windowKindId);
         return kind ? resolveWindowActions(keyApp, kind).find((action) => action.id === actionId) : undefined;
       };
-      // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
-      // the active mode-level tool, when nothing is being typed.
       if (event.key === "Escape") {
         const windowId = activeWindowIdRef.current;
         if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
@@ -338,16 +325,9 @@ export function useDocumentTransferAndTabs(core: ShellCoreAfterThemeDriverSettin
         for (const chord of parseKeys(binding.keys)) {
           if (!keyboardEventMatchesChord(event, chord)) continue;
           if (reservedChords.has(chord)) continue;
-          // ⌨️ An app-wide chord for a WINDOW-OWNED verb resolves to the window that owns it in the
-          // active mode, focused or not — which is what makes `mod+shift+g` reach `addGeneration` on the
-          // Generations window without the user first clicking it, and what kept it dead before
-          // (`⌨️window-scope/🟦️.ts`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
           const target = resolveKeybindingTargetWindowV1({ kinds: scopeKinds, mounted, focusedWindowId, actionId: binding.action.action });
           event.preventDefault();
           if (target.windowId === null) {
-            // 🚦️ No window of this mode owns the verb: a deliberate, HINTED no-op. A chord that silently
-            // does nothing is indistinguishable from a broken keyboard, which is exactly how
-            // `mod+shift+g` read in edit mode.
             const anyDefinition = keyApp.windowKinds.flatMap((kind) => resolveWindowActions(keyApp, kind)).find((action) => action.id === binding.action.action);
             const label = anyDefinition ? resolveAppLabel(appLabelsOverlay, "action", anyDefinition.id, resolveManifestLabel(anyDefinition.label as LocalizedLabel | string, uiTerminology, uiLocale)) : binding.action.action;
             showTransientNotice(keybindingUnownedTextV1(uiLocale, formatKeybindingShortcut(chord), label), "info", KEYBINDING_UNOWNED_CODE);
@@ -358,8 +338,6 @@ export function useDocumentTransferAndTabs(core: ShellCoreAfterThemeDriverSettin
           const definition = actionDefinition(targetKindId, binding.action.action);
           if (!definition) return;
           if (target.kind === "owner") dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: targetWindowId });
-          // ✍️ Arg-carrying hotkeys never silent-fire defaults (P4): open the staged form, or — if that
-          // form is already expanded in the target window — treat the hotkey as Execute (with validation).
           if (actionRequiresStagedForm(definition)) {
             const retainedPaste = pasteActionWithRetainedFragment<ClipboardActionDescriptor>({ action: definition.id }, clipboardFragmentRef.current);
             const retainedArgs = retainedPaste.args;
@@ -382,9 +360,6 @@ export function useDocumentTransferAndTabs(core: ShellCoreAfterThemeDriverSettin
           return;
         }
       }
-      // ⏪️ Framework-universal undo/redo chords — apps shadow them via their own keybindings above;
-      // routed through the same `onAction` funnel as the History panel's Undo/Redo tree rows, so the
-      // remote/local routing in the `action === "undo"` branch applies identically.
       if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z") {
         event.preventDefault();
         onAction({ controllerId: keyApp.controllerId, action: event.shiftKey ? "redo" : "undo" });
@@ -454,9 +429,6 @@ export function useDocumentTransferAndTabs(core: ShellCoreAfterThemeDriverSettin
     if (hostMode && focusedApp.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginArtifactTab = flattenPanelTabNodes(pluginLeftTabs).some((tab) => tab.id === FRAMEWORK_PANEL_TAB_ARTIFACT_ID);
     if (hasPluginArtifactTab) return pluginLeftTabs;
-    // 👁️✏️ "Open with…" — contract freeze §5's Document-panel surface: one section per role,
-    // `AppRouter` entries owner-first, each row opens that surface for the SAME artifact; the
-    // pinned default gets a "Set as default" toggle already on, everyone else gets it off.
     const openWithSection = (role: AppRole, entries: readonly OpenWithEntry[]) => ({
       id: `artifact.openWith.${role}`,
       label: `${openArtifactWithText(uiLocale)} — ${surfaceRoleChipText(role, uiLocale)}`,

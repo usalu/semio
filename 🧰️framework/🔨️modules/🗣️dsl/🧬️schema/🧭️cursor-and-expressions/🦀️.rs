@@ -16,14 +16,6 @@ pub(super) struct Cursor {
 }
 
 impl Cursor {
-    // 🚫️async: E1 pure in-memory cursor consumed by `Iterator::position` sync closures (`:1345`, `:1354` via `at_keyword`) — see R9.
-    // The whole impl block is one call graph (`peek`/`peek_at`/`span`/`advance`/`expect`/`at_attr_key`/`at_keyword` all call each
-    // other with no suspension point ever possible), so the language barrier on `at_keyword` propagates to every method here.
-    //
-    // `SourceMode` no longer participates in parsing (its only consumer, `RawLines`, is gone —
-    // `Shape::Text` now accepts `Ident|Text` identically regardless of Document/Inline); it stays
-    // a `ParseOptions`/`parse` public-API distinction only, still meaningful to callers choosing
-    // between `dsl::__rt::parse_document_record`/`parse_inline_record`.
     pub(super) fn new(tokens: Vec<SpannedToken>, limits: Limits) -> Self {
         let tokens: Vec<SpannedToken> = tokens.into_iter().filter(|t| !t.kind.is_trivia()).collect();
         Self { tokens, pos: 0, limits }
@@ -193,11 +185,6 @@ pub(super) fn parse_expr(cursor: &mut Cursor, min_prec: u8) -> Result<ExprValue,
 /// (which would re-consume nothing, since the token was already consumed to build that operand).
 fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) -> Result<ExprValue, TextError> {
     loop {
-        // The shared lexer glues a leading `-` onto an immediately-following digit as ONE negative
-        // number token (`y=-2`'s existing, load-bearing behavior — see dsl_core's lexer) — so
-        // `10-2` lexes as `Int(10), Int(-2)`, not `Int(10), Minus, Int(2)`. Detect that shape here
-        // and reinterpret it as `Sub` with a positive right operand, rather than requiring authors
-        // to always space out `-` (canonical PRINT output always does; hand-written input may not).
         let glued_negative = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) && cursor.peek().text.as_str().starts_with('-');
         let (op, prec) = if glued_negative {
             (ExprOp::Sub, ExprOp::Sub.precedence())

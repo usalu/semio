@@ -2,28 +2,12 @@
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { runOwnedVerifyScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-if (segments[0] === "framework-ui-protocol-ownership") {
-      if (segments.length !== 1) throw new Error("framework-ui-protocol-ownership accepts no arguments");
-      const testPath = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/🟦️.ts");
-      const { testRetainedCommandSchemaOwnership } = await import(testPath);
-      const { runVitest } = await import("../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts");
-      testRetainedCommandSchemaOwnership();
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", testPath], { cwd: this.repoRoot });
-      await runVitest(join(this.repoRoot, "🧰️framework/📦️packages/🟦️typescript"), ["-t", "organizeContextMenu"], "../../🧪️tests/🎚️config/🟦️.ts");
-      process.env.SEMIO_TEST_LEVEL = "long";
-      await runVitest(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"), ["-t", "world-3d paged scene carrier"], "../../🧪️tests/🎚️config/🟦️.ts");
-      runCmd("bun", [join(this.repoRoot, "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts"), "interactive-job-catalog-check"], { cwd: this.repoRoot });
-      return;
-    }
-    throw new Error('Unknown owned verification '+segments.join(' '));
+    await runOwnedVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);

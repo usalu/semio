@@ -27,13 +27,10 @@ async fn group_commit_batches_until_policy_threshold_then_commits() {
     let policy = GroupCommitPolicy { max_delay_ms: 1_000_000, max_bytes: u64::MAX, max_records: 5 };
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), policy, 0)).unwrap();
 
-    // Each submit writes 3 records (begin/command/commit); Memory durability never forces a
-    // commit, so nothing should be flushed to storage until pending_records >= 5.
     let receipt_1 = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"a").await), DurabilityClass::Memory, 10).await;
     assert!(!receipt_1.committed);
     assert_eq!(db_actor::block_on(storage.segment_len(&document, 0)).unwrap(), wal.active.flushed_len, "nothing new should have flushed yet");
 
-    // Second submit pushes pending_records to 6 (>= max_records 5), which must commit.
     let receipt_2 = submit_one(&storage, &mut wal, WalRecord::Command(retained(b"b").await), DurabilityClass::Memory, 11).await;
     assert!(receipt_2.committed);
     assert_eq!(wal.active.pending_records, 0);
@@ -62,8 +59,6 @@ async fn torn_tail_is_recovered_by_truncating_only_the_uncommitted_suffix() {
         wal.close().await.unwrap();
     }
 
-    // Simulate a crash mid-append: bytes physically present past the last trusted commit,
-    // written directly to storage (bypassing SprWriter, exactly like a torn OS-level write).
     let committed = segment_bytes(&storage, &document, 0).await;
     let writer = storage.acquire_writer(&document).await.unwrap();
     storage.append(&writer, 0, pages(b"\x0Fgarbage")).await.unwrap();
@@ -153,7 +148,7 @@ async fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
     let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
-    wal.max_segment_bytes = 200; // force rotation quickly for this test
+    wal.max_segment_bytes = 200;
 
     for i in 0..20u32 {
         submit_one(&storage, &mut wal, WalRecord::Command(retained(format!("cmd-{i}").as_bytes()).await), DurabilityClass::Fsync, u64::from(i)).await;
@@ -162,8 +157,6 @@ async fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
     let segments = db_actor::block_on(storage.list_segments(&document)).unwrap();
     assert!(segments.len() >= 2, "the byte threshold must have forced at least one rotation");
 
-    // Cross-check segment 1's WAL_SEGMENT_HEADER.prev_chain_hash against segment 0's
-    // independently-recomputed tip chain_hash.
     let seg0_bytes = segment_bytes(&storage, &document, 0).await;
     let seg0_report = protocol::format::recover(&seg0_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.unwrap();
     let commit_frame_end = (seg0_report.last_commit_offset + protocol::format::COMMIT_FRAME_LEN) as usize;
@@ -191,14 +184,11 @@ async fn recovery_rejects_a_torn_non_active_sealed_segment() {
     let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let document = doc("doc-1").await;
     let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
-    wal.max_segment_bytes = 1; // rotate on the very next submit
+    wal.max_segment_bytes = 1;
     submit_one(&storage, &mut wal, WalRecord::Command(retained(b"forces-rotation").await), DurabilityClass::Fsync, 0).await;
     assert!(db_actor::block_on(storage.list_segments(&document)).unwrap().len() >= 2);
     wal.close().await.unwrap();
 
-    // Corrupt the now-sealed segment 0 by truncating a byte off its tail directly in storage
-    // — WalStorage::truncate_tail refuses a sealed segment, so simulate on-disk bit rot
-    // instead via delete+recreate+append of a shortened copy.
     let seg0_bytes = segment_bytes(&storage, &document, 0).await;
     let writer = storage.acquire_writer(&document).await.unwrap();
     storage.delete_segment(&writer, 0).await.unwrap();

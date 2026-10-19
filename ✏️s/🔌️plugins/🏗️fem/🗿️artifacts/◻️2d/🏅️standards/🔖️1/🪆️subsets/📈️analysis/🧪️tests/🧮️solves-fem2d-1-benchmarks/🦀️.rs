@@ -16,7 +16,7 @@
 //! without either one being told the order.
 //!
 //! **What is asserted HERE, in role.** The committed SI reference values in
-//! `🧫️fixtures/📊️expected.results.json` are held to relatively, against each case's own peak
+//! `🧪️tests/🧫️fixtures/📊️expected.results.json` are held to relatively, against each case's own peak
 //! response rather than an absolute metre; the closed forms each benchmark declares are held to
 //! directly; and each mutation kind's declared effect — `changes` or `invariant` — is held against
 //! the base model's own answer. The cross-language projection carries the scale-normalised result of

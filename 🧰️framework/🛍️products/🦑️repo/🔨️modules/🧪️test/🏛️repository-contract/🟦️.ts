@@ -33,20 +33,9 @@ import { validateCaseContract } from "../📃️case-contract/🟦️.ts";
  * production source importing an oracle.
  */
 export function oracleImportsInProduction(repoRoot: string, registry: OracleRegistry = loadOracleRegistry(repoRoot), allCases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): { path: string; oracle: string }[] {
-  // 🧩️An owner's whole contribution directory is test-owned BY DEFINITION — that is what the
-  // directory is for — so it is derived from the discovered manifests rather than listed by hand.
   const contributionRoots = registry.contributions.map((entry) => entry.manifestPath.slice(0, entry.manifestPath.lastIndexOf("/")));
   const hostRoots = [...contributionRoots, ...registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined)];
   const caseDirs = new Set(allCases.map((entry) => entry.caseDir));
-  // 🧩️Both halves of a host's third-party surface are probed: the packages a registered oracle
-  // names, and the EXTERNAL distributions an owner puts on a generated host's import path. The
-  // second half is how a Python or npm reference library reaches an adapter, so leaving it out
-  // would make the purity rule enforceable in Rust only.
-  // 🎯️An oracle must be independent of the PRODUCTION PATH UNDER TEST: the owner that registers it.
-  // Whether the package may be production-reachable at all is the dependency gate's question, answered
-  // at the declaration (the baseline must classify it test-only or record the debt), so an import here
-  // counts only inside the registering owner's own production sources. A core-registry oracle has no
-  // owner and is scanned repository-wide.
   const oracleOwners = new Map<string, string[]>();
   for (const contribution of registry.contributions) for (const oracle of contribution.oracles) oracleOwners.set(oracle.id, [...(oracleOwners.get(oracle.id) ?? []), contribution.owner]);
   const hostOwners = new Map<string, string[]>();
@@ -55,29 +44,12 @@ export function oracleImportsInProduction(repoRoot: string, registry: OracleRegi
     ...registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => ({ label: entry.id, name, scope: oracleOwners.get(entry.id), ...importProbe(entry.ecosystem, name) }))),
     ...externalOracleHostPackages(registry).map((entry) => ({ label: `host package ${entry.ecosystem}:${entry.name}`, name: entry.name, scope: hostOwners.get(`${entry.ecosystem}:${entry.name}`), ...importProbe(entry.ecosystem, entry.name) })),
   ];
-  // 🧩️A contribution directory is test-owned because of WHAT IT IS, which the taxonomy names, not
-  // because its manifest happens to parse. Deriving ownership from the discovered manifests alone
-  // made a directory production source the moment its JSON was absent or malformed — so an owner
-  // adding one would see its own reference libraries reported as a production dependency.
-  // 🧩️A contribution, a probe, a fixture generator and anything under a tests directory are all
-  // test-owned by WHAT THEY ARE. A unit test beside production code is compiled only under `cfg(test)`
-  // or a test runner, exactly as the dependency classifier already treats every `🧪️tests/` declaration;
-  // a scan that disagreed reported a unit test's reference library as a production dependency.
   const taxonomy = testTaxonomy(repoRoot);
   const testOwnedDirs = [taxonomy.testProbeDirName, taxonomy.testGeneratorDirName, taxonomy.testsDirName];
   const inContributionDir = (rel: string): boolean => isTestOraclePath(taxonomy, rel) || rel.split("/").some((segment) => testOwnedDirs.includes(segment));
-  // 🚫️The repository's OWN meta directory — tickets, caches, notes, metrics — is never production
-  // source. Walking into it reported a scratch file inside somebody's ticket folder as a production
-  // import of a registered oracle, which is a finding about a scratch file, not about what ships.
   const metaRoot = relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/");
   const isRepositoryMeta = (rel: string): boolean => rel === metaRoot || rel.startsWith(`${metaRoot}/`);
   const isTestOwned = (rel: string): boolean => isRepositoryMeta(rel) || caseDirs.has(rel) || inContributionDir(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
-  // 🔒️Recorded, shrink-only production debt: a package that was ALREADY production-reachable before
-  // it was registered as an oracle. The path is named in the registry entry so the debt is visible
-  // in the report instead of silently excused, and `dependency` prints it every run.
-  // 🔒️Debt is recorded against a PACKAGE at a path, not against an oracle id, so the same library
-  // registered twice — once as an oracle, once as a host package — is excused once rather than
-  // reported twice with only one of the two suppressible.
   const recordedDebt = new Set(registry.oracles.flatMap((entry) => (entry.productionDebt?.reachableFrom ?? []).flatMap((path) => oraclePackages(entry).map((name) => `${path}::${name}`))));
   const hits: { path: string; oracle: string }[] = [];
   const reported = new Set<string>();
@@ -151,8 +123,6 @@ export function mutationVocabularyRequiresCatalog(vocabularyRel: string, feature
 /** 🧾️ Contract breaches of the selected cases alone: each case's own contract and the discovery self-check. */
 export function caseContractBreaches(repoRoot: string, cases: readonly DiscoveredCase[], registry: OracleRegistry = loadOracleRegistry(repoRoot)): BreachRecord[] {
   const breaches = cases.flatMap((discovered) => validateCaseContract(repoRoot, discovered, registry));
-  // 🚫️Self-check: discovery must never return a path the taxonomy excludes. The excluded set is
-  // vocabulary, so this check names no area of its own.
   for (const leak of cases.filter((discovered) => isExcludedTestPath(repoRoot, discovered.caseDir))) {
     breaches.push(breach("testing/discovery", "excluded-path-leak", leak.caseDir, "Discovery returned a path the taxonomy excludes", "An excluded area is excluded in the discovery library itself, not by a caller's filter.", "Fix pathExclusions in 🔣️taxonomy.json."));
   }
@@ -168,12 +138,6 @@ export function repositoryContractBreaches(repoRoot: string, registry: OracleReg
   for (const hit of oracleHits) {
     breaches.push(breach("testing/dependency", "oracle-in-production", hit.path, `Production source imports the registered oracle ${hit.oracle}`, "An oracle is evidence a test host gathers. Once production code can reach it, the differential test compares an implementation with itself and the dependency stops being test-only.", "Move the usage into the oracle host, or remove the oracle from the registry."));
   }
-  // 🔒️Shrink-only migration ratchet: the legacy backlog may only get smaller. Reported as one
-  // ratcheted count per area rather than thousands of individual findings, so the signal stays
-  // meaningful while Phase 6 migrates owners.
-  // 🦠️A catalog-governed vocabulary declared in the TREE but in no manifest is more invisible still:
-  // the catalog check above can only see what a manifest declares. Standards and owners with Gherkin
-  // behaviour therefore stay in scope even when they have not registered anything yet.
   const vocabularyDir = testTaxonomy(repoRoot).testMutationVocabularyDirName;
   const schemaDir = schemaModuleDirName(repoRoot);
   {
@@ -191,20 +155,12 @@ export function repositoryContractBreaches(repoRoot: string, registry: OracleReg
     });
   }
 
-  // 🦠️A declared mutation vocabulary that no feature claims is worse than an undeclared one: it reads
-  // as covered surface in the manifest while nothing exercises it.
-  //
-  // 🔍️The claimed set is derived from a FULL discovery rather than from `cases`. Callers narrow the
-  // sweep — every generated Nx target runs `--case <one>` — and a repository-wide question answered
-  // over one caller's selection would report every other case's catalog as unclaimed.
   const claimed = new Set(allCases.map((discovered) => parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")).mutationCatalog).filter((id): id is string => id !== null));
   for (const catalog of registry.mutationCatalogs) {
     if (claimed.has(catalog.id)) continue;
     breaches.push(breach("testing/contract", "mutation-catalog-unclaimed", catalog.id, `Mutation catalog ${catalog.id} (${catalog.kinds.length} kinds) is claimed by no feature`, "The catalog declares what an artifact can do to itself. Declared and unclaimed means the whole vocabulary is untested while the manifest suggests otherwise.", `Add a case whose feature tags @mutations-${catalog.id}, or remove the catalog.`));
   }
 
-  // 🧬️v2: the three gates v1 structurally could not run — runtime dispatch against the owner manifest
-  // against the claimed test inventory, the qualifying-oracle requirement, and fixture provenance.
   for (const contribution of registry.contributions) {
     for (const problem of contribution.problems) {
       breaches.push(breach("testing/contract", "contribution-manifest-invalid", contribution.manifestPath, problem, "An owner contribution is the platform's only view of that owner's oracles, probes, catalogs, manifests and fixtures. A malformed one is not skipped surface — it is surface the gates cannot see at all.", "Correct the contribution record."));

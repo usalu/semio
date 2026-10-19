@@ -1,6 +1,8 @@
 //! 🧪️ Original product tick payload keeps caller authority, source identity and physical closure.
-use crate::original_tick_payload::{advance_original_tick_payload, close_original_tick_payload};
-use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTickWriter, ToolRunTickWireCursor, ToolRunTraceSubject, ToolRunVerdict,ToolRunTickPayloadSource};
+use crate::original_tick_payload::advance_original_tick_payload;
+use crate::original_tick_payload::close_original_tick_payload;
+use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunTickWriter, ToolRunTraceSubject, ToolRunVerdict};
+use semio_framework_tool_run_tick_wire::{ToolRunTickWireCursor, ToolRunTickPayloadSource};
 use semio_framework_value::RetainedCloneGrant as Grant;
 
 struct OriginalBytes<'a>(&'a[u8]);
@@ -12,7 +14,8 @@ impl ToolRunTickPayloadSource for OriginalBytes<'_>{
 }
 #[test]
 fn original_tick_payload_preserves_same_context_authority_and_cancellation(){
- use semio_framework_job::{Generation,OperationId,JobPayloadAuthority,RetainedPayloadBuilder,JobPayloadStream,StepContext,StepBudget,JobOutcomeBorrow};
+ use semio_framework_job::{Generation, OperationId, StepContext, StepBudget, JobOutcomeBorrow};
+ use semio_framework_job_payload::{JobPayloadAuthority, RetainedPayloadBuilder, JobPayloadStream};
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let p=&law["grant"];let grant=Grant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize};let cancel=semio_framework_job::root_cancel_token();
  for mode in law["sources"].as_array().unwrap(){let identity=ToolRunIdentity::new(ToolRunId{app_instance_id:7,run:11},[17;32]);let mut writer=ToolRunTickWriter::new(identity);let bytes=vec![law["byte"].as_u64().unwrap()as u8;law["payloadBytes"].as_u64().unwrap()as usize];let source_pointer=bytes.as_ptr();let original=OriginalBytes(&bytes);let native=(mode.as_str().unwrap()=="native").then_some(&original as &dyn ToolRunTickPayloadSource);if native.is_none(){writer.payload(bytes.clone());}let writer_pointer=writer.payload_bytes().map(|bytes|bytes.as_ptr());writer.append_op(vec![1,2,3]).unwrap();writer.append_op(vec![4,5,6]).unwrap();writer.append_entity(5);writer.append_entity(8);writer.upsert(5,ToolRunVerdict::Success,1,ToolRunTraceSubject::Entity{entity:5});let mut oracle=writer.clone();if native.is_some(){oracle.payload(bytes.clone());}let expected=oracle.finish().unwrap().encode().unwrap();assert_eq!(bytes.as_ptr(),source_pointer);assert_eq!(writer.payload_bytes().map(|bytes|bytes.as_ptr()),writer_pointer);
  for cut in law["cancelCuts"].as_array().unwrap(){let cut=cut.as_u64().map(|n|n as usize).unwrap_or(usize::MAX);let operation=OperationId(77341);let generation=Generation(3);let((mut authority,birth),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||JobPayloadAuthority::admit(operation,generation,grant).unwrap().unwrap());assert!(birth.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(birth.retained_capacity_bytes,birth.released_bytes));let mut born=heap.requested_bytes;let mut released=heap.released_bytes;let(mut cursor,receipt)=ToolRunTickWireCursor::admit(&writer,native,grant).unwrap().unwrap();assert!(receipt.fits(grant));let mut payload=RetainedPayloadBuilder::new(JobPayloadStream::Preview);let mut offset=0;let mut sequence=0;let mut turns=0;let mut ready=false;

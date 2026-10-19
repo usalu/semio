@@ -1,7 +1,8 @@
 // 🧩️ Canonical child-group framing projects the retained source without a whole byte or value copy.
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V,projection_path_error};
 use semio_framework_ui_locale::{Locale,Terminology,LocalizedLabel};
-use semio_framework_value::{NativeEncodeControl,ValueError,list::PagedList};
+use semio_framework_value::{NativeEncodeControl, ValueError};
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_os_kernel::{os_pack,os_spr};
 
 /// 🏷️ Borrows labels from their admitted outer page owner.

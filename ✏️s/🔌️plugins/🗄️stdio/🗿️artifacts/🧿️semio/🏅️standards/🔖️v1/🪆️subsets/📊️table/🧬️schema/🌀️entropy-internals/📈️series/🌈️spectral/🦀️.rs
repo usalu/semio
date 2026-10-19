@@ -37,7 +37,6 @@ impl Default for SpectralConfig {
 
 impl SpectralConfig {
     /// 📶️ Builds a config, validating that `overlap` is a finite fraction in `[0, 1)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(window: WindowKind, segment_len: usize, overlap: f64) -> Result<Self, EntropyError> {
         validate_overlap(overlap)?;
         Ok(Self { window, segment_len, overlap, band: None, normalize: false })

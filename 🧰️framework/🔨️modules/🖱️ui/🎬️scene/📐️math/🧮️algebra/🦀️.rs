@@ -69,9 +69,6 @@ pub trait Mat4Math: Sized {
 }
 
 impl Mat4Math for Mat4 {
-    // 🚫️async: E6 sync mirror of `semio_framework_geometry::Mat4::to_cols_array` (that crate's
-    // own `pub async fn`, out of packet scope per this file's header) — identical column-major
-    // flatten, verified against its `mat4_to_cols_array_matches_column_major_layout` test.
     fn to_cols_array_m(self) -> [f32; 16] {
         let mut out = [0.0; 16];
         for col in 0..4 {

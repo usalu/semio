@@ -1,4 +1,4 @@
-//! `26/08/23/END-TO-END-TESTING-REFACTOR`.
+//! 🧪️ `26/08/23/END-TO-END-TESTING-REFACTOR`.
 //! 🦀️ Puzzle 3d 1 exhaustive mutation case — Rust adapter. Ticket
 //!
 //! Recorded no-oracle decision `puzzle-3d-mutation-semantics`
@@ -271,7 +271,7 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// the committed file is pretty-printed and the writer is compact, so a handler that returned the
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "shared://🧬️mutations/🌱create-object/appends-object-c/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/🧊️object/🌱create-object/appends-object-c/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.input_bytes(SNAPSHOT)?;
     let parsed = ctx.input_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

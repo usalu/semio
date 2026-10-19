@@ -63,9 +63,6 @@ export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) 
     if (nextDirection === 0) return;
     if (direction === 0 || nextDirection === direction) queued[queued.length - 1] = value;
     else queued.push(value);
-    // 🔁️ A jittery drag (rapid direction reversals while a round trip is in flight) would otherwise grow
-    // `queued` by one entry per reversal; only the last two are ever needed (the pending value and the
-    // anchor used to detect the next reversal), so cap it there.
     if (queued.length > 2) queued.splice(0, queued.length - 2);
   };
 }
@@ -202,10 +199,6 @@ export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unkn
     if (lastSent !== undefined && isEqual(lastSent, next)) return;
     lastSent = next;
     inFlight = true;
-    // 🩹️ A REFUSED round trip frees the gate exactly like a settled one, and its rejection is already
-    // reported through the runtime's own fault channel — one `then(release, release)` handles both in the
-    // SAME microtask hop a bare `finally` took, so a caller that now hands over a real awaitable
-    // (wave B33 §4) cannot turn a refused hover into an unhandled rejection or a wedged lane.
     const release = () => {
       inFlight = false;
       flush();

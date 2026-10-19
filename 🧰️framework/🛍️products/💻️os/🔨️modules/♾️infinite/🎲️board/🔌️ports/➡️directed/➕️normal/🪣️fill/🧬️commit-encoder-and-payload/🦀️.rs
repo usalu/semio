@@ -48,7 +48,7 @@ const BOARD_FILL_COMMIT_HANDLE_BYTES: usize = BOARD_FILL_COMMIT_TEXT_SLOT_BYTES 
 
 pub const BOARD_FILL_COMMIT_BYTES: usize = BOARD_FILL_COMMIT_HANDLE_OFFSET + BOARD_FILL_KIND_HANDLE_CAPACITY * BOARD_FILL_COMMIT_HANDLE_BYTES;
 
-pub const BOARD_FILL_COMMIT_PAGE_COUNT: usize = BOARD_FILL_COMMIT_BYTES.div_ceil(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+pub const BOARD_FILL_COMMIT_PAGE_COUNT: usize = BOARD_FILL_COMMIT_BYTES.div_ceil(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum BoardFillCommitEncodeStage {
@@ -274,11 +274,11 @@ impl BoardFillCommitEncoder {
 }
 
 struct BoardFillCommitPayload<'a> {
-    pub payload: &'a semio_framework_job::RetainedJobPayload,
+    pub payload: &'a semio_framework_job_payload::RetainedJobPayload,
 }
 
 impl<'a> BoardFillCommitPayload<'a> {
-    pub fn new(payload: &'a semio_framework_job::RetainedJobPayload) -> Option<Self> {
+    pub fn new(payload: &'a semio_framework_job_payload::RetainedJobPayload) -> Option<Self> {
         (payload.len() == BOARD_FILL_COMMIT_BYTES && payload.page_count() == BOARD_FILL_COMMIT_PAGE_COUNT && payload.page(0)?.len() == BOARD_FILL_COMMIT_BYTES).then_some(Self { payload })
     }
 
@@ -291,8 +291,8 @@ impl<'a> BoardFillCommitPayload<'a> {
         let mut copied = 0usize;
         while copied < N {
             let absolute = offset + copied;
-            let page_index = absolute / semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
-            let page_offset = absolute % semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+            let page_index = absolute / semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
+            let page_offset = absolute % semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
             let page = self.payload.page(page_index)?;
             let count = (N - copied).min(page.len().checked_sub(page_offset)?);
             if count == 0 {
@@ -327,7 +327,7 @@ impl BoardFillCommitCandidate {
         value.is_finite().then_some(value)
     }
 
-    pub fn from_complete(state: Option<&semio_framework_job::RetainedJobPayload>, output: Option<&semio_framework_job::RetainedJobPayload>) -> Option<Self> {
+    pub fn from_complete(state: Option<&semio_framework_job_payload::RetainedJobPayload>, output: Option<&semio_framework_job_payload::RetainedJobPayload>) -> Option<Self> {
         let payload = BoardFillCommitPayload::new(output?)?;
         if state.is_some_and(|state| !state.is_empty()) || payload.read::<4>(0)? != BOARD_FILL_COMMIT_MAGIC || payload.byte(4)? != BOARD_FILL_COMMIT_VERSION {
             return None;

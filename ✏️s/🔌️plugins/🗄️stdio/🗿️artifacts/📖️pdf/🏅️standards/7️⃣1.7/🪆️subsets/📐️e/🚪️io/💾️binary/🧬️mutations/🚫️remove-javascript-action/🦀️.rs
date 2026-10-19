@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-javascript-action`.
+//! 💾️ Direct binary identity for `remove-javascript-action`.
 
 pub const TAG: u8 = 3;
 pub const BINARY_TAG: u8 = TAG;

@@ -16,6 +16,9 @@
     },
     {
       "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts",
+      "facades": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📦️publication/🟦️.ts"
+      ],
       "exports": [
         "runWgpuPackageGenerator"
       ],

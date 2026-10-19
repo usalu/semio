@@ -1,4 +1,4 @@
-import { encodeScopedIdentity, decodeScopedIdentity } from "../../../../../../🧰️framework/🔨️modules/📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts";
+import { encodeScopedIdentity, decodeScopedIdentity } from "@semio-tech/framework-replication";
 
 /** 🏷️ A physical result is addressed by its source kind and semantic identifier. */
 export interface ResultSource { readonly kind: "loadCase" | "combination"; readonly id: string; }

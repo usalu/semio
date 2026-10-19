@@ -84,7 +84,6 @@ fn walk_block(block: &MdBlock, headings: &mut Vec<MdHeadingEntry>, block_count: 
 }
 
 impl MdOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &MdSnapshot) -> Self {
         let mut section_outline = Vec::new();
         let mut block_count = 0u32;

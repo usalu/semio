@@ -35,7 +35,7 @@ fn blend(mode: &str) -> &str {
     match mode { "colorDodge" => "color-dodge", "colorBurn" => "color-burn", "hardLight" => "hard-light", "softLight" => "soft-light", "multiply" | "screen" | "overlay" | "darken" | "lighten" | "difference" | "exclusion" | "hue" | "saturation" | "color" | "luminosity" => mode, _ => "normal" }
 }
 
-fn stops(values: &semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>) -> Vec<SvgElement> {
+fn stops(values: &semio_framework_value_persistent::list::PagedList<GradientStop, {usize::MAX}>) -> Vec<SvgElement> {
     let mut values = values.iter().collect::<Vec<_>>();
     values.sort_by(|a,b| a.offset.total_cmp(&b.offset));
     values.into_iter().map(|stop| SvgElement::Stop { common: CommonAttrs::default(), offset: stop.offset.clamp(0.0,1.0).to_string(), stop_color: Some(rgb(&stop.color)), stop_opacity: Some(stop.color[3].to_string()) }).collect()

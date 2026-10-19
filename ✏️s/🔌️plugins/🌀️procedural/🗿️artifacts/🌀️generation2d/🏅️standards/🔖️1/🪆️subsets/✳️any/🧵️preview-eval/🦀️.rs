@@ -191,8 +191,6 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
     let more = session.tick_cold(&mut host, None);
     let pending_extension_evals = host.take_pending_extension_evals();
     host.retire_cold();
-    // 🌊️ ONE WAVE, ONE HOP — see the generation3d twin: every parked request had its inputs ready in
-    // the same walk, so the whole level crosses to its plugin together.
     let extension_invocations: Vec<ExtensionInvocation> = pending_extension_evals.iter().map(|pending| extension_invocation(pending, window_id, window_kind_id, &retained_grant)).collect();
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
     if !extension_invocations.is_empty() {

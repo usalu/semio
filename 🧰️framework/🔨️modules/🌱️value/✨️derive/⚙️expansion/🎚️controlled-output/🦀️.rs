@@ -4,7 +4,7 @@ use quote::{quote, format_ident};
 use syn::{Data, DeriveInput, Fields};
 use super::{ContainerAttrs, FieldAttrs, FieldDefault, field_wire_name, parse_field_attrs, parse_variant_attrs, type_is_option, variant_wire_name};
 
-fn controlled_semantic_admission(body: proc_macro2::TokenStream, container: &ContainerAttrs, c: &syn::Path, custom_constructor: bool) -> syn::Result<proc_macro2::TokenStream> {
+pub(super) fn controlled_semantic_admission(body: proc_macro2::TokenStream, container: &ContainerAttrs, c: &syn::Path, custom_constructor: bool) -> syn::Result<proc_macro2::TokenStream> {
     if let Some(path) = &container.validate_controlled {
         let validator: syn::Path = syn::parse_str(path)?;
         return Ok(quote! {

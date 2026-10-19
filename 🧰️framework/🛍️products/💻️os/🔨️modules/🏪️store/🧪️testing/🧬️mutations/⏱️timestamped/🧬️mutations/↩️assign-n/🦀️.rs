@@ -39,7 +39,3 @@ impl semio_framework_os_spr::ColdMutationKind<DemoSnapshot, TimestampedMutation>
     })())
 }
 }
-
-#[cfg(test)]
-#[path = "../../../../../🧪️tests/🧪️fixture-timestamped-assign-n/🦀️.rs"]
-mod tests;

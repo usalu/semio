@@ -1,6 +1,6 @@
 use super::*;
 fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,heap.requested_bytes,heap.released_bytes)}
-fn decode<T:semio_framework_value::FromValue>(text:&str)->T{let mut receive=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(16*1024*1024,&mut receive);semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut control).unwrap()}
+fn decode<T:semio_framework_value::FromValue>(text:&str)->T{let mut receive=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16*1024*1024,&mut receive);semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut control).unwrap()}
 #[derive(semio_framework_value::RetireOwned)]
 struct Sources{snapshot:FlowHostSnapshot,channels:EvalChannels,infos:HistoryFoldIndex<String,OperatorInfo>,cursor:FlowDisplayCursor}
 #[test]

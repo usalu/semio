@@ -3,7 +3,7 @@
 use semio_framework_math_sampling_vocabulary::{SamplingError, TokenId};
 use semio_framework_math_sampling_config::PenaltyScope;
 use semio_framework_math_sampling_workspace::{LogitsWorkspace, ProcessorKind, StateMark, StepView};
-use super::LogitsProcessor;
+use super::{LogitsProcessor, LogitsProcessors};
 
 // #region 🔖️Penalties
 /// ⚖️ Dense-enough token→count map for repetition-style penalties. Backed by a `HashMap` (not a
@@ -152,9 +152,6 @@ impl LogitsProcessor for RepetitionPenalty {
     async fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
         self.include_prompt_if_needed(view.prompt).await;
         let penalty = self.penalty;
-        // 🔀️ `transform_processed_over_live`'s closure is a sync `FnMut` — `FreqTable::count` is
-        // now `async fn`, so counts are snapshotted into a plain sync-lookup map first (O1
-        // de-dyn, math-dedyn).
         let mut seen: std::collections::HashSet<TokenId> = std::collections::HashSet::new();
         for &idx in ws.live().await {
             let token = TokenId::new(idx);
@@ -238,8 +235,6 @@ impl LogitsProcessor for PresencePenalty {
     async fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
         self.include_prompt_if_needed(view.prompt).await;
         let penalty = self.penalty;
-        // 🔀️ See `RepetitionPenalty::process`'s note: `add_bias_over_live`'s closure is a sync
-        // `FnMut`, so counts are snapshotted first (O1 de-dyn, math-dedyn).
         let mut seen: std::collections::HashSet<TokenId> = std::collections::HashSet::new();
         for &idx in ws.live().await {
             let token = TokenId::new(idx);
@@ -312,8 +307,6 @@ impl LogitsProcessor for FrequencyPenalty {
     async fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
         self.include_prompt_if_needed(view.prompt).await;
         let penalty = self.penalty;
-        // 🔀️ See `RepetitionPenalty::process`'s note: counts are snapshotted before the sync
-        // closure (O1 de-dyn, math-dedyn).
         let mut counts_by_token: std::collections::HashMap<TokenId, u32> = std::collections::HashMap::new();
         for &idx in ws.live().await {
             let token = TokenId::new(idx);

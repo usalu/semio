@@ -1,6 +1,6 @@
 use super::*;
 use crate::kernel::HourWeather;
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 use std::time::Instant;
 use crate::model::test_model_single_zone;
 

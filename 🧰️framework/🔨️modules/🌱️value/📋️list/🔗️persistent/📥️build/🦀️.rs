@@ -8,13 +8,13 @@ type Roots<T>=[Option<PersistentList<T>>;PERSISTENT_PAGE_FANOUT];
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Wait,Leaf,Carry,Branch,Scan,Ready,Spent}
 /// 🌳️ A native address-space bound limits original construction custody independently of stream length.
-pub struct PersistentListBuilder<T:Send+Sync+'static>{
+pub struct PersistentListBuilder<T:crate::retirement::RetireOwned+Send+Sync+'static>{
  rows:ManuallyDrop<Rows<T>>,levels:ManuallyDrop<[Option<Box<Roots<T>>>;LEVELS]>,carry:ManuallyDrop<Option<PersistentList<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,
  retirement:RetainedCloneClose,counts:[u8;LEVELS],expected:usize,adopted:usize,row_count:usize,level:usize,close_index:usize,phase:Phase,finishing:bool,closing:bool,
 }
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
-impl<T:Send+Sync+'static> PersistentListBuilder<T>{
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentListBuilder<T>{
  /// 🌱️ The fixed owned header has no heap birth and requires its original movement authority.
  pub fn constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()*2,depth:1,..Default::default()}}
  /// 🪪️ Construction captures no payload or root until an explicitly owned receiving slot is admitted.
@@ -66,4 +66,4 @@ impl<T:Send+Sync+'static> PersistentListBuilder<T>{
  /// 🧹️ Terminal owned custody is determined from real slots and the actual native cleanup frontier.
  pub fn terminal_is_empty(&self)->bool{self.rows.iter().all(Option::is_none)&&self.levels.iter().all(Option::is_none)&&self.carry.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
-impl<T:Send+Sync+'static> Drop for PersistentListBuilder<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"original persistent builder retains owned rows and roots until funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.rows);ManuallyDrop::drop(&mut self.levels);ManuallyDrop::drop(&mut self.carry);ManuallyDrop::drop(&mut self.output);}}}}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Drop for PersistentListBuilder<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"original persistent builder retains owned rows and roots until funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.rows);ManuallyDrop::drop(&mut self.levels);ManuallyDrop::drop(&mut self.carry);ManuallyDrop::drop(&mut self.output);}}}}

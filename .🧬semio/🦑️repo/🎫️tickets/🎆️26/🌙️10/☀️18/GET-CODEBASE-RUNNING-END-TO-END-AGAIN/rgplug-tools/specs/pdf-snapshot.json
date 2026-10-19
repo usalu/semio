@@ -1,0 +1,19 @@
+{
+ "ws": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.toml",
+ "old_name": "semio-s-artifact-stdio-pdf-snapshot",
+ "old_pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+ "mirror_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust/🪞️mirror/🦀️.rs",
+ "chunks": [
+  "editor",
+  "viewer"
+ ],
+ "subtree": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf",
+ "script": null,
+ "new": {
+  "name": "semio-s-artifact-stdio-pdf-snapshot-surfaces",
+  "dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪟️surfaces",
+  "emoji": "🪟️",
+  "doc": "The editor and viewer config and presence schema mounts of `semio-s-artifact-stdio-pdf`'s snapshot, held by their own crate so the snapshot crate stays inside the source gate.",
+  "desc": "Stdio pdf editor and viewer surface schema mounts of the snapshot"
+ }
+}

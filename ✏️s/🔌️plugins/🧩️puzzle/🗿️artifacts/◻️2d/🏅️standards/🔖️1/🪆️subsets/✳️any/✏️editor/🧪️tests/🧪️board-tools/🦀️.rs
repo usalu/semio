@@ -1,4 +1,4 @@
-//! an area painted, a region grip dragged, a brush stamped, a wire dropped, a wire cut, a delete — reaches the app as
+//! 📐️ an area painted, a region grip dragged, a brush stamped, a wire dropped, a wire cut, a delete — reaches the app as
 //! 🧱️ Laws of the board tools (`🧫️fixtures/🧫️board-tools`): every board gesture that is not a selection transform —
 //! its release and is ONE tool transaction of `<appId>#<kind>` holding exactly its leaves; a release that changes
 //! nothing and a flush of transient rows alone commit nothing. Driven through the registered app, one

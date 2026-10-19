@@ -30,9 +30,6 @@ async fn round_trip(base: &PresentationSnapshot, mutation: &PresentationMutation
         let (next, _messages) = vcs::apply_mutation(&restored, undo).expect("valid inverse mutation");
         restored = next;
     }
-    // 🔒️ Structural equality, not just working-scene equality: `presentation_child_handle_and_cache`
-    // content-addresses deterministically off `(source, tiles)`, so restoring the exact pre-mutation
-    // working-scene content also restores the exact pre-mutation child handle byte-for-byte.
     assert_eq!(&restored, base, "inverse (reversed) must exactly restore the pre-mutation snapshot");
     forward
 }

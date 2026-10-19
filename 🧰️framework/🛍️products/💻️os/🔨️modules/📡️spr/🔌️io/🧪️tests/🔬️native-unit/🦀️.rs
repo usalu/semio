@@ -109,7 +109,6 @@ mod tests {
             file.appender().await.append_edit(&sample_edit("edit-1").await).await.unwrap();
             file.appender().await.commit().await.unwrap();
         }
-        // Simulate a crash mid-write: append garbage bytes past the last valid commit.
         {
             use std::io::Write;
             let mut f = std::fs::OpenOptions::new().append(true).open(&path).unwrap();
@@ -164,8 +163,6 @@ mod tests {
         let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit, &test_command_context()).await.unwrap();
         assert_eq!(report.last_commit_seq, 1);
         assert_eq!(report.torn_tail_bytes, 0);
-        // At least REC_DOC + 2x REC_EDIT + REC_COMMIT; may include extra REC_STR_DICT delta
-        // frames for interned actor/doc-id/schema strings, so this is a lower bound, not exact.
         assert!(report.records_recovered >= 4);
         assert!(report.bytes_recovered > HEADER_SIZE as u64);
     }
@@ -262,9 +259,6 @@ mod tests {
         let after = decode_history(&after_bytes, &DecodeOptions::default()).await.unwrap();
         assert_eq!(before, after, "compact must be identity-preserving over everything HistoryLog models");
 
-        // The REC_COMPACTION provenance marker is present immediately after REC_DOC (there may
-        // be a REC_STR_DICT delta frame before REC_DOC, for the interned doc-id/schema/actor
-        // strings, but nothing is ever written between REC_DOC and REC_COMPACTION).
         let mut cursor = FrameCursor::new(&after_bytes, HEADER_SIZE as u64).await;
         let mut kinds = Vec::new();
         while let Some(frame) = cursor.next_frame().await.unwrap() {
@@ -276,7 +270,6 @@ mod tests {
         assert_eq!(compaction_payload[1], 1, "drop_ephemeral encoded as 1");
         assert_eq!(compaction_payload[2], 2, "keep_snapshots tag 2 = LatestN");
 
-        // The commit chain genuinely restarted: exactly one commit, seq 1.
         let report = recover_file(&path, &ProtocolLimits::default(), RecoveryMode::LastCommit, &test_command_context()).await.unwrap();
         assert_eq!(report.last_commit_seq, 1);
     }

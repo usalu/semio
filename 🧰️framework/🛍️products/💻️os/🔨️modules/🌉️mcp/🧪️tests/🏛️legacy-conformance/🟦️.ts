@@ -31,11 +31,6 @@ const TOOL_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/;
 
 describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () => {
   //#region 🔖️RawHandshake
-  // The `Client` class never exposes the negotiated `protocolVersion` string it received (only
-  // `getServerCapabilities()`/`getServerVersion()`/`getInstructions()` survive `connect()` —
-  // confirmed against `dist/esm/client/index.d.ts`), so this one field is asserted directly off the
-  // wire, sending the EXACT body `Client.connect()` sends (same method, same
-  // `LATEST_PROTOCOL_VERSION` constant imported from the SDK itself, not re-typed by hand).
   it("initialize succeeds and negotiates protocolVersion 2025-11-25", async () => {
     const raw = spawnRawMcp(bin);
     try {
@@ -83,9 +78,6 @@ describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () =>
         expect(outputCheck.valid, `tool ${tool.name} outputSchema: ${!outputCheck.valid && outputCheck.error}`).toBe(true);
       }
     }
-    // With `McpServer::with_defaults()` (zero registered tools today) this loop is vacuously true —
-    // it activates for real once P2/P6 register the catalog; kept unconditional so it starts
-    // asserting automatically rather than needing a follow-up edit.
   });
 
   it("resources/list and resources/templates/list return schema-shaped (possibly empty) arrays", async () => {
@@ -114,9 +106,6 @@ describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () =>
   it("prompts/list serves the real registered prompts and prompts/get on an unknown name is a well-formed MCP error", async () => {
     const prompts = await client.listPrompts();
     expect(Array.isArray(prompts.prompts)).toBe(true);
-    // 🎫️ 26/08/29/AI-MCP-END-TO-END registered the first real prompts; this assertion used to read
-    // "empty (no registrations yet)" in its NAME while only ever checking the array shape, so it
-    // would have kept passing either way. It now actually pins the registered set.
     expect(prompts.prompts.length).toBeGreaterThan(0);
     for (const prompt of prompts.prompts) expect(prompt.name).toMatch(/^[a-z][a-z0-9_]*$/);
     await expect(client.getPrompt({ name: "does-not-exist" })).rejects.toBeInstanceOf(McpError);

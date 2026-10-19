@@ -1,6 +1,8 @@
 //! 🧹️ Member retirement and close of the instance tool run turns: the member retire step and the retire, entry close and close steps of the tool run ledger. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     /// ♻️ One bounded unit of member-run retirement: one alias of a member run's typed owners handed to its member store's

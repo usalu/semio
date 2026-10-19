@@ -1,6 +1,6 @@
 fn canonical_scene(json:&str)->EditorScene {
  let mut accepted=|_|true;
- let mut control=semio_framework_value::NativeDecodeControl::new(16_777_216,&mut accepted);
+ let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16_777_216,&mut accepted);
  scene::from_json(json,&mut control).unwrap()
 }
 

@@ -246,7 +246,6 @@ pub(crate) fn decode_entities(raw: &str) -> String {
     let mut i = 0usize;
     while i < bytes.len() {
         if bytes[i] != b'&' {
-            // 🧭️ Advance by one CHAR (not byte) to stay on UTF-8 boundaries.
             let ch_len = utf8_char_len(bytes[i]);
             out.push_str(&raw[i..i + ch_len]);
             i += ch_len;
@@ -319,22 +318,18 @@ pub(crate) struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn new(text: &'a str) -> Self {
         Self { src: text, bytes: text.as_bytes(), pos: 0, line: 1, col: 1 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn peek(&self) -> Option<u8> {
         self.bytes.get(self.pos).copied()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn peek_at(&self, offset: usize) -> Option<u8> {
         self.bytes.get(self.pos + offset).copied()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn advance(&mut self) -> Option<u8> {
         let byte = self.peek()?;
         self.pos += 1;
@@ -347,24 +342,20 @@ impl<'a> Parser<'a> {
         Some(byte)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn span(&self) -> TextSpan {
         TextSpan::at(self.line, self.col)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn err(&self, message: impl Into<String>) -> TextError {
         TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, self.span())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn skip_ws(&mut self) {
         while matches!(self.peek(), Some(b' ' | b'\t' | b'\n' | b'\r' | 0x0C)) {
             self.advance();
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn expect(&mut self, byte: u8) -> Result<(), TextError> {
         match self.peek() {
             Some(b) if b == byte => {
@@ -377,7 +368,6 @@ impl<'a> Parser<'a> {
     }
 
     /// 🔎 Literal, case-sensitive prefix check at the current position (no consumption).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn peek_str(&self, lit: &str) -> bool {
         self.src[self.pos..].starts_with(lit)
     }
@@ -387,20 +377,17 @@ impl<'a> Parser<'a> {
     /// with no guarantee of landing on a UTF-8 char boundary, and `&str` slicing at a non-boundary
     /// offset panics where `&[u8]` slicing does not (same rationale as
     /// `read_raw_text_until_close`'s probe).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn peek_str_ci(&self, lit: &str) -> bool {
         let end = self.pos + lit.len();
         end <= self.bytes.len() && self.bytes[self.pos..end].eq_ignore_ascii_case(lit.as_bytes())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn slice(&self, start: usize, end: usize) -> &'a str {
         &self.src[start..end]
     }
 
     /// 🔎 Whether the byte at `pos + offset` is a "tag boundary" (whitespace, `>`, `/`) — used to
     /// avoid matching `</script2>` when looking for `</script>`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn is_boundary_at(&self, offset: usize) -> bool {
         match self.peek_at(offset) {
             None => true,
@@ -417,7 +404,6 @@ pub(crate) fn is_name_byte(b: u8) -> bool {
 }
 
 impl<'a> Parser<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_name(&mut self) -> Result<String, TextError> {
         let start = self.pos;
         while matches!(self.peek(), Some(b) if is_name_byte(b)) {
@@ -430,7 +416,6 @@ impl<'a> Parser<'a> {
     }
 
     /// 🏷️ `name` / `name=value` / `name="value"` / `name='value'`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_attribute(&mut self) -> Result<HtmlAttr, TextError> {
         let name = self.parse_name()?;
         let save = self.pos;
@@ -448,7 +433,7 @@ impl<'a> Parser<'a> {
                         }
                     }
                     let raw = self.slice(start, self.pos).to_string();
-                    self.advance(); // closing quote
+                    self.advance();
                     raw
                 }
                 Some(_) => {
@@ -462,15 +447,12 @@ impl<'a> Parser<'a> {
             };
             Ok(HtmlAttr { name, value: Some(decode_entities(&raw)) })
         } else {
-            // ↩️ No '=' -- rewind past any whitespace we speculatively skipped; the caller's own
-            // loop re-does `skip_ws()` before deciding what comes next.
             self.pos = save;
             Ok(HtmlAttr { name, value: None })
         }
     }
 
     /// 🏗️ `<name attr...>` or `<name attr.../>`, returning `(name, attributes, self_closed)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_start_tag(&mut self) -> Result<(String, Vec<HtmlAttr>, bool), TextError> {
         self.expect(b'<')?;
         let name = self.parse_name()?;
@@ -496,7 +478,6 @@ impl<'a> Parser<'a> {
 
     /// 🚪️ `</name>` (whitespace before `>` tolerated). Returns the closing tag's own name (NOT
     /// forced to match the caller's expectation — the caller compares case-insensitively).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_end_tag(&mut self) -> Result<String, TextError> {
         self.expect(b'<')?;
         self.expect(b'/')?;
@@ -506,9 +487,7 @@ impl<'a> Parser<'a> {
         Ok(name)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn read_comment(&mut self) -> Result<String, TextError> {
-        // 🎯 Assumes "<!--" already consumed by the caller.
         let start = self.pos;
         while !self.peek_str("-->") {
             if self.advance().is_none() {
@@ -530,7 +509,6 @@ impl<'a> Parser<'a> {
     /// right after a stray `</`, and `&str` slicing at a non-boundary offset panics; `&[u8]`
     /// slicing never does, so byte comparison keeps this parser panic-free on adversarial input
     /// (falls through to "not a match, keep scanning" instead of crashing).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn read_raw_text_until_close(&mut self, tag: &str) -> Result<String, TextError> {
         let start = self.pos;
         loop {
@@ -551,7 +529,6 @@ impl<'a> Parser<'a> {
         Ok(self.slice(start, self.pos).to_string())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn read_text_until_lt(&mut self) -> String {
         let start = self.pos;
         while !matches!(self.peek(), Some(b'<') | None) {
@@ -561,7 +538,6 @@ impl<'a> Parser<'a> {
     }
 
     /// 🌳 Parses one element and its full subtree, starting at `<`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_element(&mut self) -> Result<HtmlNode, TextError> {
         let open_span = self.span();
         let (name, attributes, self_closed) = self.parse_start_tag()?;

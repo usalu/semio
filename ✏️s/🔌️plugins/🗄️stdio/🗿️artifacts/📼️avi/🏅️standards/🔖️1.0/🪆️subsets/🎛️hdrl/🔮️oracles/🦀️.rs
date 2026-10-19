@@ -427,16 +427,14 @@ mod oracles {
                                         match fourcc_str(strl_child.id()).as_str() {
                                             "strh" => strh = Some(parse_strh(&strl_child.read_contents(&mut Cursor::new(bytes)).map_err(|error| error.to_string())?)?),
                                             "strf" => strf_bytes = Some(strl_child.read_contents(&mut Cursor::new(bytes)).map_err(|error| error.to_string())?),
-                                            _ => {} // 📦 JUNK/vprp/other strl auxiliaries — no slot in this subset's schema, see module doc
+                                            _ => {}
                                         }
                                     }
                                     let strh = strh.ok_or("avi: strl missing strh")?;
                                     let strf = parse_strf(&strh.fcc_type, &strf_bytes.ok_or("avi: strl missing strf")?);
                                     streams.push(OStream { strh, strf, chunks: Vec::new() });
                                 }
-                                // other nested LIST types inside hdrl: no slot in this subset's schema, dropped
                             }
-                            // other hdrl children (e.g. JUNK padding): no slot in this subset's schema, dropped
                         }
                     }
                     "movi" => {
@@ -502,7 +500,7 @@ mod oracles {
 
         if doc.idx1_present {
             let mut payload = Vec::new();
-            let mut offset = 4u32; // 🧭 relative to the movi LIST payload start, including its own "movi" tag.
+            let mut offset = 4u32;
             for stream in &doc.streams {
                 for chunk in &stream.chunks {
                     payload.extend_from_slice(&fourcc4(&chunk.fourcc));

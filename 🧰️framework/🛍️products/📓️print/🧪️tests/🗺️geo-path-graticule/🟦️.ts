@@ -54,9 +54,9 @@ function projectedVertices(projection: geo.GeoProjection): number[] {
     point(x: number, y: number) { current.push(grid(x), grid(y)); },
     lineStart() { current = []; },
     lineEnd() { out.push(...current); },
-    polygonStart() { /* rings are streamed as lines */ },
-    polygonEnd() { /* rings are streamed as lines */ },
-    sphere() { /* the landmass carries no sphere */ },
+    polygonStart() { },
+    polygonEnd() { },
+    sphere() { },
   };
   geo.geoStream(REGIONS as never, projection.stream(sink as never));
   return out;

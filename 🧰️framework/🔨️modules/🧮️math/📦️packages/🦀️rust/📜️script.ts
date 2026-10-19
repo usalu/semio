@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
@@ -12,6 +12,7 @@ const PACKAGES = ["vocabulary", "config", "workspace", "testing", "processors", 
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runRankScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -30,27 +31,25 @@ class LintScript extends BundleScript {
 }
 
 /** 🔲️ Portable retained dense cases and independent Mathjs reference. */
-class DenseSourceScript extends BundleScript { async run(): Promise<void> { const source=resolve(this.root,"../../../🧮️math/🧮️algebra/🔲️dense/🧪️tests/🟦️.ts");await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"math:dense-source-typecheck",scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal,output:{maximumBytes:8388608,maximumLines:65536}});const {verifyRetainedDenseOracle}=await import("../../../🧮️math/🧮️algebra/🔲️dense/🧪️tests/🟦️.ts");verifyRetainedDenseOracle(); } }
+class DenseSourceScript extends BundleScript { async run(): Promise<void> { const source=resolve(this.root,"../../../🧮️math/🧮️algebra/🔲️dense/🧪️tests/🟦️.ts");await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"math:dense-source-typecheck",scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal,output:{maximumBytes:8388608,maximumLines:65536}});const {verifyRetainedDenseOracle}=await import("../../../🧮️math/🧮️algebra/🔲️dense/🧪️tests/🟦️.ts");verifyRetainedDenseOracle(); } }
 
 
 /** ↔️ Original retained inverse cases, full49-order residuals and independent Mathjs reference. */
 class InverseSourceScript extends BundleScript {async run():Promise<void>{
  const source=resolve(this.root,"../../../🧮️math/🧮️algebra/🔲️dense/↔️inverse/🧪️tests/🟦️.ts");
- await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"math:inverse-source-typecheck",scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal,output:{maximumBytes:8388608,maximumLines:65536}});
+ await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"math:inverse-source-typecheck",scriptInvocationBudget(this.invocation,120000),{signal:this.invocation.control.signal,output:{maximumBytes:8388608,maximumLines:65536}});
  const {verifyRetainedInverseOracle}=await import("../../../🧮️math/🧮️algebra/🔲️dense/↔️inverse/🧪️tests/🟦️.ts");verifyRetainedInverseOracle();
 }}
 
 /** 📶️ Verifies original rank preparation against its neutral SQLite oracle and actual native custody. */
-class RankScript extends BundleScript{async run(args:string[]):Promise<void>{
- if(args.length>1||(args.length===1&&args[0]!=="source"))throw Error("Expected verify-rank [source]");
- const file=resolve(this.root,"../../../🧮️math/📶️rank/🧪️tests/🟦️.ts"),options={signal:this.invocation.control.signal};
- await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",file],this.repoRoot,"math:rank:types",scriptInvocationBudget(this.invocation,120000),options);
- await runOwnedCommand(process.execPath,["test",file],this.repoRoot,"math:rank:source",scriptInvocationBudget(this.invocation,30000),options);
- if(args[0]!=="source")await runCargoTestsV1({manifestPath:resolve(this.repoRoot,"🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust/Cargo.toml"),packages:["semio-framework-math-rank"],cwd:this.root,extraArgs:["--lib","original_scalar_rank","--","--nocapture"]},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);
-}}
+class RankScript extends BundleScript {
+  async run(args:string[]): Promise<void> {
+    await runRankScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
+  }
+}
 
 /** 🧮️ Native algebra gates select their actual narrow retained owner. */
-class DenseNativeScript extends BundleScript{async run(args:string[]):Promise<void>{await runCargoTestsV1({manifestPath:resolve(this.repoRoot,"🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust/Cargo.toml"),packages:["semio-framework-math-dense"],cwd:this.root,extraArgs:args},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation);}}
+class DenseNativeScript extends BundleScript{async run(args:string[]):Promise<void>{await runCargoTestsV1({manifestPath:resolve(this.repoRoot,"🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust/Cargo.toml"),packages:["semio-framework-math-dense"],cwd:this.root,extraArgs:args},readCargoTestPolicyV1(process.env),this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0));}}
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("lint", LintScript).register("verify-dense-source", DenseSourceScript).register("verify-inverse-source",InverseSourceScript).register("verify-rank",RankScript).register("verify-dense-native",DenseNativeScript).register("verify-inverse-native",DenseNativeScript);
 

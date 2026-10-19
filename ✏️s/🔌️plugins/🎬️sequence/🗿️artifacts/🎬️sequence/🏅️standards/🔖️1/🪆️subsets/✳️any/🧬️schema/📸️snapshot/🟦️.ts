@@ -2,8 +2,8 @@
 import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface SequenceSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📄️ @state artifact @child kind=s.stdio.semio */ content: ArtifactChild;
 }
 export interface SequenceStep { id: string; kind: string; params: Record<string, unknown>; x: number; y: number; slot?: SlotRef; collapsed: boolean; }
 export interface SequenceEdge { id: string; from: string; to: string; }

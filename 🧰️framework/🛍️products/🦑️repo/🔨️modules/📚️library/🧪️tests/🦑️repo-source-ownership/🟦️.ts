@@ -120,4 +120,21 @@ describe("repository source ownership", () => {
       expect(classifyPackageSource(source, taxonomy.packageGlueGrammar.typescript!).role, row.legacy).toBe("declaration");
     }
   });
+
+  test("classifies JSON re-exports with an import attribute exactly like their attribute-free forms", () => {
+    const grammar = taxonomy.packageGlueGrammar.typescript!;
+    const cases: readonly Readonly<{ source: string; role: string; wiringOnly: boolean }>[] = [
+      { source: 'export { default } from "../../🔨️modules/🧬️schema/🔣️.json" with { type: "json" };\n', role: "declaration", wiringOnly: true },
+      { source: 'export { default } from "../../🔨️modules/🧬️schema/🔣️.json";\n', role: "declaration", wiringOnly: true },
+      { source: 'import schema from "./🔣️.json" with { type: "json" };\nexport default schema;\n', role: "thin-delegation", wiringOnly: false },
+      { source: 'export * from "./🟦️.ts" with { type: "json" };\n', role: "declaration", wiringOnly: true },
+      { source: 'import schema from "./🔣️.json" with { type: "json" };\nexport const doubled = schema.count * 2;\n', role: "implementation", wiringOnly: false },
+    ];
+    for (const { source, role, wiringOnly } of cases) {
+      const parsed = ts.createSourceFile("case.ts", source, ts.ScriptTarget.Latest, true);
+      expect(parsedDiagnostics(parsed), source).toHaveLength(0);
+      expect(parsed.statements.every((statement) => ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)), source).toBe(wiringOnly);
+      expect(classifyPackageSource(source, grammar).role, source).toBe(role);
+    }
+  });
 });

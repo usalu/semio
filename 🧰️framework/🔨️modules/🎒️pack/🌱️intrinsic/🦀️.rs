@@ -2,7 +2,8 @@
 
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_pack_record::DecodeOptions;
-use semio_framework_value::{DslValue, NativeDecodeControl};
+use semio_framework_value::DslValue;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[cfg(test)]
 #[global_allocator]

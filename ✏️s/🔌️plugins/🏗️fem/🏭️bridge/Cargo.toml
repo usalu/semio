@@ -23,3 +23,4 @@ semio-s-artifact-fem-2d-model = { path = "../🗿️artifacts/◻️2d/🏅️st
 semio-s-artifact-fem-2d-mutations = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-model = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-fem-3d-mutations = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d-results-state = { path = "../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }

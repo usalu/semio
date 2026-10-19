@@ -67,8 +67,6 @@ pub use property_members::PropertyBag;
 mod property_control;
 
 impl PropertyValue {
-    // 🚫️async: E1 pure accessor passed by name into `Option::and_then` (a sync fn-pointer slot) at
-    // every call site in this crate; no consumer awaits it directly. See R9.
     pub fn as_str(&self) -> Option<&str> {
         match self {
             Self::String(s) => Some(s.as_str()),
@@ -76,7 +74,6 @@ impl PropertyValue {
         }
     }
 
-    // 🚫️async: E1 pure accessor, same reason as `as_str` above — see R9.
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             Self::Number(n) => Some(*n),
@@ -109,7 +106,6 @@ fn property_value_to_dsl_value(value: &PropertyValue) -> semio_framework_value::
         PropertyValue::Number(n) => semio_framework_value::DslValue::float(*n),
         PropertyValue::String(s) => semio_framework_value::DslValue::String(s.clone()),
         PropertyValue::Array(items) => {
-            // 🔀️ Plain sync recursion — no suspension point, so no `Box::pin` is needed.
             let mut out = Vec::with_capacity(items.len());
             for item in items {
                 out.push(property_value_to_dsl_value(item));
@@ -134,7 +130,6 @@ fn dsl_value_to_property_value(value: &semio_framework_value::DslValue) -> Prope
         semio_framework_value::DslValue::String(s) => PropertyValue::String(s.clone()),
         semio_framework_value::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
         semio_framework_value::DslValue::Array(items) => {
-            // 🔀️ Same rewrite as `property_value_to_dsl_value` above, mirrored.
             let mut out = Vec::with_capacity(items.len());
             for item in items {
                 out.push(dsl_value_to_property_value(item));
@@ -156,11 +151,8 @@ impl semio_framework_dsl_record::BorrowedDslField for PropertyValue{const SHAPE:
 impl semio_framework_dsl_record::DslField for PropertyValue {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{property_control::encode(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{match value{semio_framework_dsl_record::FieldValue::Value(value)=>property_control::decode(value,control),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"graph property requires intrinsic field value"))}}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{match value{semio_framework_dsl_record::FieldValue::Value(value)=>property_control::decode(value,control),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"graph property requires intrinsic field value"))}}
     fn retire_decoded(self){property_control::retire(self)}
-    // 🚫️async: E1 impl of externally-declared trait `dsl_core::DslField` — every method is
-    // E4-tagged sync in the trait itself (fn-pointer transitivity through `Shape::Record`/`Table`),
-    // see `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs`.
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Value
     }
@@ -195,8 +187,8 @@ impl semio_framework_value::ToValue for PropertyValue {
 }
 
 impl semio_framework_value::FromValue for PropertyValue {
-    fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{property_control::decode(value,control)}
-    fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::Null)}
+    fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{property_control::decode(value,control)}
+    fn default_value_controlled(control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::Null)}
     fn retire_decoded(self){property_control::retire(self)}
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Ok(dsl_value_to_property_value(&value))
@@ -218,9 +210,6 @@ pub enum PropertyKind {
 pub struct PropertyDef {
     pub name: String,
     pub kind: PropertyKind,
-    // 🌉️ `deserialize_with` mirrors the old serde hook — see `value_type_from_value`'s own
-    // docstring above (this crate's `⚠️ Errors` region) for why it is still needed. The plain
-    // per-field `ToValue::to_value` stays for the encode direction (no `serialize_with`).
     #[value(default, deserialize_with = "value_type_from_value", deserialize_controlled_with = "type_binding::decode", retire_with = "type_binding::retire")]
     pub value_type: ValueType,
     #[value(default, skip_serializing_if = "Option::is_none")]

@@ -6,10 +6,10 @@ fn original_dynamic_value_clone_cold_input_requires_original_authority(){
     assert_eq!(law["rootTransferCopyBytes"],0);
     let source=std::sync::Arc::new(DslValue::Null);let original=std::sync::Arc::as_ptr(&source);
     use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant};
-    let (mut cursor,heap)=crate::value::observe_retirement_allocations(DslValue::retained_clone_cursor);
+    let (mut cursor,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(DslValue::retained_clone_cursor);
     assert_eq!(std::sync::Arc::as_ptr(&source),original);
     assert_eq!(heap,(0,0),"[DEBUG] Original dynamic cold input cannot birth a source frame under copy0/capacity0/release0 authority");
-    assert!(cursor.begin_close());let(step,heap)=crate::value::observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert!(cursor.terminal_is_empty());assert_eq!(std::sync::Arc::as_ptr(&source),original);assert_eq!(crate::value::observe_retirement_allocations(||drop(cursor)).1,(0,0));
+    assert!(cursor.begin_close());let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||cursor.close_step(RetainedCloneGrant {maximum_items:1,..Default::default()}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));assert!(cursor.terminal_is_empty());assert_eq!(std::sync::Arc::as_ptr(&source),original);assert_eq!(crate::value::observe_retirement_allocations(||drop(cursor)).1,(0,0));
 }
 use std::sync::Arc;
 

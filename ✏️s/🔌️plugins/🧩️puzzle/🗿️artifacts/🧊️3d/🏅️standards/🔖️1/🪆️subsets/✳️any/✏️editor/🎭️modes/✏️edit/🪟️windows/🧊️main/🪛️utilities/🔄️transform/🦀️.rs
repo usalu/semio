@@ -1,4 +1,4 @@
-//! flags that compose which handles the gumball draws (scale handles are deliberately absent — a
+//! 🚩️ flags that compose which handles the gumball draws (scale handles are deliberately absent — a
 //! 🔄️ Main-window utility — Transform: the world gumball. Its Utility Options are the Move/Rotate
 //! puzzle-3d object's scale comes from its kind catalog, not from a free drag).
 //!

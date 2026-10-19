@@ -64,13 +64,11 @@ export function testMediaExportEncodingContract(): void {
   assert.equal(fixture.textEncoding, MEDIA_EXPORT_UTF8_ENCODING, "the fixture names the textual spelling a producer may state");
   assert.ok(fixture.cases.length >= 8, "the fixture must keep driving both lanes");
 
-  // 1️⃣ Every fixture export decodes to exactly its declared bytes.
   for (const row of fixture.cases) {
     const bytes = mediaExportBytes(row.data, row.encoding ?? undefined);
     assert.deepEqual([...bytes], [...row.bytes], `${row.id}: decoded bytes`);
   }
 
-  // 2️⃣ A base64 export is NEVER its own base64 text — the assertion every broken shell passed.
   const binary = fixture.cases.filter((row) => row.encoding === MEDIA_EXPORT_BASE64_ENCODING && row.bytes.length > 0);
   assert.ok(binary.length > 0, "the fixture must keep a binary lane");
   for (const row of binary) {
@@ -78,7 +76,6 @@ export function testMediaExportEncodingContract(): void {
     assert.notDeepEqual([...bytes], [...new TextEncoder().encode(row.data)], `${row.id}: was saved as its own base64 text`);
   }
 
-  // 3️⃣ A textual export is its own UTF-8 bytes under BOTH spellings a live producer uses.
   const textual = fixture.cases.filter((row) => row.encoding !== MEDIA_EXPORT_BASE64_ENCODING);
   assert.ok(textual.length >= 3, "the fixture must keep both textual spellings");
   assert.ok(textual.some((row) => row.encoding === null) && textual.some((row) => row.encoding === MEDIA_EXPORT_UTF8_ENCODING), "both spellings must be driven");
@@ -87,7 +84,6 @@ export function testMediaExportEncodingContract(): void {
     assert.deepEqual([...mediaExportBytes(row.data, MEDIA_EXPORT_UTF8_ENCODING)], [...new TextEncoder().encode(row.data)], `${row.id}: declared textual bytes`);
   }
 
-  // 4️⃣ Refusals are loud and typed — never a silent text save.
   for (const row of fixture.refusals) {
     let thrown: unknown;
     try {
@@ -99,7 +95,6 @@ export function testMediaExportEncodingContract(): void {
     assert.equal((thrown as MediaExportEncodingError).reason, row.error, `${row.id}: refusal reason`);
   }
 
-  // 5️⃣ Third-party oracles: Node's Buffer and the platform `atob`, neither of them ours.
   for (const row of binary) {
     assert.deepEqual([...base64StandardDecode(row.data)], [...Buffer.from(row.data, "base64")], `${row.id}: Buffer oracle`);
     const viaAtob = Uint8Array.from(atob(row.data), (character) => character.charCodeAt(0));
@@ -107,8 +102,6 @@ export function testMediaExportEncodingContract(): void {
     assert.equal(base64StandardEncode(Uint8Array.from(row.bytes)), Buffer.from(Uint8Array.from(row.bytes)).toString("base64"), `${row.id}: Buffer encode oracle`);
   }
 
-  // 6️⃣ Where we are deliberately STRICTER than `atob` — the reason this codec exists rather than a
-  // call into the platform. Each of these is a silent, wrong-bytes save if the platform answers.
   for (const lenient of ["QQ", "Zh==", "Zm=v"]) {
     let atobAccepted = false;
     try {
@@ -126,7 +119,6 @@ export function testMediaExportEncodingContract(): void {
     assert.ok(oursRefused, `${lenient}: the contract must refuse non-canonical base64 (atob accepted=${atobAccepted})`);
   }
 
-  // 7️⃣ The hop the defect lived on: BOTH WIT `option<string>` shapes must reach the same bytes.
   for (const row of fixture.cases) {
     const shapes: readonly unknown[] = row.encoding === null ? [undefined, fixture.wireOptionShapes.taggedNone] : [row.encoding, { tag: "some", val: row.encoding }];
     for (const shape of shapes) {
@@ -138,7 +130,6 @@ export function testMediaExportEncodingContract(): void {
     }
   }
 
-  // 8️⃣ The option reader itself, used by both renderer doors.
   assert.equal(wireMediaExportEncoding(fixture.wireOptionShapes.tagged), MEDIA_EXPORT_BASE64_ENCODING);
   assert.equal(wireMediaExportEncoding(fixture.wireOptionShapes.bare), MEDIA_EXPORT_BASE64_ENCODING);
   assert.equal(wireMediaExportEncoding(fixture.wireOptionShapes.taggedNone), undefined);

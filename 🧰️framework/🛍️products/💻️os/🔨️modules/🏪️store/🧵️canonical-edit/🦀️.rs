@@ -76,7 +76,7 @@ enum CanonicalEditNode<'a, M> {
     Edit(&'a Edit<M>),
     Mutation(&'a M),
     Mutations(&'a [M]),
-    PagedMutations(&'a semio_framework_value::list::PagedList<M, {usize::MAX}>),
+    PagedMutations(&'a semio_framework_value_persistent::list::PagedList<M, {usize::MAX}>),
     Metas(&'a [MutationMeta]),
     Meta(&'a MutationMeta),
     Clock(&'a HybridLogicalTimestamp),

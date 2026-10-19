@@ -1,4 +1,4 @@
-//! Inverse for `change-bridge-lane-width`.
+//! ↩️ Inverse for `change-bridge-lane-width`.
 use crate::change_bridge_lane_width::ChangeBridgeLaneWidth;
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 pub fn inverse<Op>(_payload: &ChangeBridgeLaneWidth, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_bridge_lane_width::ChangeBridgeLaneWidth> {

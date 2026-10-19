@@ -79,17 +79,14 @@ pub struct DxfHeaderVarsDiff {
 }
 
 impl DxfHeaderVarsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply(&self, base: &[DxfHeaderVar]) -> Vec<DxfHeaderVar> {
         let modified: Vec<(String, DxfHeaderVarDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfHeaderVar)> = self.added.iter().map(|a| (a.index, a.header_var.clone())).collect();
         named_apply(base, &self.removed, &modified, &added)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &[DxfHeaderVar]) -> Option<Self> {
         let modified: Vec<(String, <DxfHeaderVar as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfHeaderVar)> = self.added.iter().map(|a| (a.index, a.header_var.clone())).collect();
@@ -101,7 +98,6 @@ impl DxfHeaderVarsDiff {
             Some(d)
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfHeaderVarDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfHeaderVar)> = d1.added.into_iter().map(|a| (a.index, a.header_var)).collect();
@@ -204,17 +200,14 @@ pub struct DxfLayersDiff {
 }
 
 impl DxfLayersDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply(&self, base: &[DxfLayer]) -> Vec<DxfLayer> {
         let modified: Vec<(String, DxfLayerDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLayer)> = self.added.iter().map(|a| (a.index, a.layer.clone())).collect();
         named_apply(base, &self.removed, &modified, &added)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &[DxfLayer]) -> Option<Self> {
         let modified: Vec<(String, <DxfLayer as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLayer)> = self.added.iter().map(|a| (a.index, a.layer.clone())).collect();
@@ -226,7 +219,6 @@ impl DxfLayersDiff {
             Some(d)
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfLayerDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfLayer)> = d1.added.into_iter().map(|a| (a.index, a.layer)).collect();

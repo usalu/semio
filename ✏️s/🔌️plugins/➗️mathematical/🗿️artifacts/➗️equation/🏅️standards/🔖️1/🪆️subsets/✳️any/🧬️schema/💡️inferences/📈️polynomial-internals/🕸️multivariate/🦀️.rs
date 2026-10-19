@@ -72,7 +72,6 @@ impl Monomial {
             MonomialOrder::GrevLex => {
                 match self.total_degree().cmp(&other.total_degree()) {
                     Ordering::Equal => {
-                        // Reverse lex on the reversed exponent vector, with comparison sense flipped.
                         for (a, b) in self.exps.iter().rev().zip(other.exps.iter().rev()) {
                             match a.cmp(b) {
                                 Ordering::Equal => continue,
@@ -100,9 +99,6 @@ pub struct PolyM<C> {
 
 impl<C: Ring> PartialEq for PolyM<C> {
     fn eq(&self, other: &Self) -> bool {
-        // Compare canonically regardless of stored order: both term lists are already order-sorted,
-        // but two PolyM values with different `order` fields can still represent the same polynomial,
-        // so compare as sets via a Lex-sorted clone.
         let a = self.with_order(MonomialOrder::Lex);
         let b = other.with_order(MonomialOrder::Lex);
         a.terms == b.terms && a.nvars == b.nvars
@@ -291,8 +287,6 @@ impl<C: Field> PolyM<C> {
         while let Some((i, j)) = pairs.pop() {
             let (lm_i, _) = basis[i].leading_term().unwrap();
             let (lm_j, _) = basis[j].leading_term().unwrap();
-            // Coprimality criterion: if the leading monomials share no variables, the S-polynomial
-            // reduces to zero and can be skipped (Buchberger's first criterion).
             let coprime = lm_i.exps().iter().zip(lm_j.exps().iter()).all(|(&a, &b)| a == 0 || b == 0);
             if coprime {
                 continue;

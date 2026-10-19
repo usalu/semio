@@ -30,7 +30,7 @@ pub struct SequenceImportJob {
     pub media: Option<Media>,
     parser: Option<semio_framework_pack_json::JsonParseCursor>,
     projection: Option<semio_framework_pack_json::JsonValueProjection>,
-    decode_receipt: Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
+    decode_receipt: Option<semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation>,
     pub input: Option<neural_engine::retirement::RetainedDictionaryInput>,
     pub params: Option<Dictionary>,
     pub retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
@@ -109,7 +109,7 @@ impl SequenceImportJob {
     pub fn fault<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, detail: &str) -> SequenceJobTurn<'a> {
         if self.fault_detail.is_none() {
             let bytes = detail.as_bytes();
-            self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
+            self.fault_detail = Some(bytes[..bytes.len().min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)].to_vec());
         }
         let bytes = self.fault_detail.as_deref().unwrap_or_default();
         self.fault_publication.advance_from_source(semio_framework_job_publication::JobPublicationKind::Fault, bytes, cx)
@@ -150,7 +150,7 @@ impl SequenceImportJob {
                 } else {
                     let result = {
                         let mut accept = |_| !cx.is_cancelled();
-                        let control = match self.decode_receipt.take() { Some(receipt) => semio_framework_value::NativeDecodeControl::resume(receipt, &mut accept), None => Ok(semio_framework_value::NativeDecodeControl::new(SEQUENCE_STORE_MAXIMUM_BYTES, &mut accept)) };
+                        let control = match self.decode_receipt.take() { Some(receipt) => semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt, &mut accept), None => Ok(semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(SEQUENCE_STORE_MAXIMUM_BYTES, &mut accept)) };
                         match control {
                             Ok(mut control) => {
                                 let result = if let Some(projection) = self.projection.as_mut() {

@@ -32,11 +32,6 @@ async fn canonical_leaf_roundtrip_is_id_bound() {
     let encoded = encode_gltf_inference_leaf_text(&value).unwrap();
     assert_eq!(decode_gltf_inference_leaf_text(&encoded).unwrap(), value);
 
-    // 🔢️ The envelope's payload is CANONICAL JSON (`canonical_number`, ECMA-262 `Number::toString`
-    // as RFC 8785 mandates), so an INTEGRAL float is not a fixed point: `1.0` is written `1` and
-    // `pack::json`'s lexer reads an integer literal back as an integer carrier. That folding is
-    // the canonical form's own contract, and this asserts it rather than leaving it implicit --
-    // which is why the round-trip law above is stated on a non-integral float.
     let integral = GltfInferenceLeafEnvelope { value: semio_framework_value::DslValue::float(1.0), ..value.clone() };
     let folded = GltfInferenceLeafEnvelope { value: semio_framework_value::DslValue::uint(1), ..value.clone() };
     assert_eq!(decode_gltf_inference_leaf_text(&encode_gltf_inference_leaf_text(&integral).unwrap()).unwrap(), folded);

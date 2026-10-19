@@ -549,8 +549,6 @@ export async function loadPluginModuleResilient(pluginId: string, moduleUrl: str
         signal?.addEventListener("abort", () => reject(new Error(`plugin-install.cancelled: ${pluginId}`)), { once: true });
       }),
       new Promise<never>((_, reject) => {
-        // ⏱️ Re-arms itself for whatever the idle rule still allows instead of firing once at a fixed
-        // wall-clock offset, so an attempt that keeps reporting progress keeps its deadline moving.
         const arm = () => {
           const remaining = pluginLoadRemainingMs(startedAtMs, pluginLoadProgressAt(pluginId), Date.now());
           if (remaining > 0) {
@@ -677,9 +675,6 @@ export function windowEngagementToSearchSpec(engagement: WindowEngagement | unde
 }
 
 function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }> {
-  // 🌱️ `group === "workbench"` already covers every host-app catalogue tab (each such app declares its
-  // catalogue tab under `PanelGroup::Workbench` — see `s/plugin/rs`'s `App::builder(...).panel_tab(...)`)
-  // so no separate app-specific tab-id literal is needed here.
   if (group === "workbench") return shellTabIcon(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
   if (tabId.includes("parameters")) return shellTabIcon(FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID);
   if (tabId.includes("inspector")) return shellTabIcon(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID);

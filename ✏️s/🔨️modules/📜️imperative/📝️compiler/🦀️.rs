@@ -11,8 +11,6 @@ pub fn compile_to_text(path: &Path) -> String {
 
 fn compile_steps(steps: &[Step], indent: usize) -> String {
     let pad = "  ".repeat(indent);
-    // 🪜️ `Iterator::map` is a sync closure — recursive async calls are hoisted into a for-loop
-    // instead of chained through it (R10 residue shape #1).
     let mut lines = Vec::with_capacity(steps.len());
     for step in steps {
         lines.push(compile_step(step, indent, &pad));
@@ -60,7 +58,7 @@ fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
                 if key.as_str() == SCHEMA_KEY {
                     continue;
                 }
-                let value = step.params.get(key).expect("key just yielded by params.keys()"); // 🛡️ infallible: key sourced from this same dict's own keys()
+                let value = step.params.get(key).expect("key just yielded by params.keys()");
                 params.push(format!("{}={}", key, format_value(value)));
             }
             if params.is_empty() {

@@ -13,8 +13,6 @@ where
     let Some(existing) = base.model.fenestrations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
-    // ↩️ The same three guards the forward diff refuses on, restated — a refused step has nothing
-    // to undo, and restating them keeps this function computed from BASE alone.
     let on_host_plane = match base.model.surfaces.iter().find(|item| item.id == existing.surface_id) {
         Some(host) => crate::geometry::polygon_lies_on_plane(&payload.new_vertices_m, &host.vertices_m, crate::model::FENESTRATION_PLANE_TOLERANCE_M),
         None => true,

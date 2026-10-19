@@ -7,7 +7,7 @@ export interface CsvFieldDiff {
   quoted?: boolean;
 }
 
-/** Positional per-field patch list; `null` at a position means that field is unchanged. */
+/** 🧾️ Positional per-field patch list; `null` at a position means that field is unchanged. */
 export interface CsvRecordDiff {
   fields?: (CsvFieldDiff | null)[];
 }

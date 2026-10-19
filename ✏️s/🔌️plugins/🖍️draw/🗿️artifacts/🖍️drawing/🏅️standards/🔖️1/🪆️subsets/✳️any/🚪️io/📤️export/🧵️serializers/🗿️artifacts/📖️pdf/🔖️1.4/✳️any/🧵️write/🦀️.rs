@@ -3,7 +3,8 @@ use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, Docume
 use semio_s_artifact_draw_drawing_geometry::{ArcGeometry, arc_geometry};
 use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, StrokeStyle, PathSegment};
 use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 use std::fmt::Write;
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;
 #[derive(Clone,Copy)]

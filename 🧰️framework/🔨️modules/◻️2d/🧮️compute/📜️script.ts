@@ -10,15 +10,15 @@ import { cmdBudgetMs } from "../../🏃️process/📦️packages/🟦️typescr
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 1 || !["schema", "ownership", "neutral-ownership"].includes(segments[0]!)) throw Error("Expected test schema or test ownership");
-    if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+    if (segments.length !== 1 || !["schema", "ownership", "neutral-ownership"].includes(segments[0]!)) throw new Error("Expected test schema or test ownership");
+    if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
     await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, segments[0] === "schema" ? "🧪️tests/🟦️.ts" : segments[0] === "ownership" ? "🧪️tests/📍️ownership/🟦️.ts" : "🧪️tests/📍️ownership/🧭️direction/🟦️.ts")], { cwd: this.root, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
   }
 }
 
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 1 || segments[0] !== "types") throw Error("Expected check types");
+    if (segments.length !== 1 || segments[0] !== "types") throw new Error("Expected check types");
     await runOwnedCommand(process.execPath, ["x", "tsc", "--noEmit", "--incremental", "false", "-p", resolve(this.root, "tsconfig.json")], this.root, "compute-contract-types", cmdBudgetMs(), { env: process.env });
   }
 }

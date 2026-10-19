@@ -107,7 +107,6 @@ fn diagnose_synthetic_orbit_geometry() {
     }
     let intrinsics = intrinsics.expect("one frame");
     engine.observe();
-    // One unit at a time: the first pose-estimation unit hands the pair table to the SfM.
     while engine.stage() != EngineStage::EstimatingPoses {
         if let EngineStatus::Failed(message) = engine.advance(1) {
             panic!("engine failed before pose estimation: {message}");
@@ -164,9 +163,6 @@ fn diagnose_synthetic_orbit_geometry() {
         let median = errors.get(errors.len() / 2).copied().unwrap_or(f64::NAN);
         eprintln!("[GEO] pair ({a},{b}): {} matches, {good} true-epipolar inliers (<0.005 normalized), median sampson {median:.4}", matches.len());
     }
-    // 🎯️ Detector repeatability and matcher correctness through the true scene: every frame-0
-    // keypoint on the cube is transferred to frame 1 by ray-casting the known cube, then compared with
-    // (a) the nearest frame-1 keypoint and (b) the keypoint the matcher paired it with.
     {
         let cube_half = number(&truth["scene"]["halfExtentM"]);
         let camera_to_world = |frame: usize| world_to_camera[frame].inverse();
@@ -219,9 +215,6 @@ fn diagnose_synthetic_orbit_geometry() {
         eprintln!("[GEO] matched keypoints vs true transfer: {} matched, median {:.2} px, within 2 px {}, within 5 px {}", matched_errors.len(), quantile(&matched_errors, 0.5), matched_errors.iter().filter(|e| **e < 2.0).count(), matched_errors.iter().filter(|e| **e < 5.0).count());
         let first: Vec<(f32, f32, u8, f32)> = engine.keypoints_per_frame[a].iter().take(8).map(|k| (k.x, k.y, k.octave, k.response)).collect();
         eprintln!("[GEO] first frame-{a} keypoints (x, y, octave, response): {first:?}");
-        // 🧬️ Descriptor discrimination over TRUE pairs: for every base-level frame-0 keypoint whose
-        // transfer lands within 1.5 px of a base-level frame-1 keypoint, the Hamming distance of that
-        // true pair against the best distance to any other frame-1 descriptor.
         let mut true_distances = Vec::new();
         let mut best_other = Vec::new();
         let mut angle_deltas = Vec::new();
@@ -262,8 +255,6 @@ fn diagnose_synthetic_orbit_geometry() {
             if let Some(sfm) = engine.sfm.as_ref() {
                 if seen_cursor < engine.frames.len() {
                     eprintln!("[GEO] registering frame {seen_cursor}: {} 2D-3D correspondences, {} points, {} cameras so far", sfm.correspondence_count(seen_cursor), sfm.point_count(), sfm.registered_count());
-                    // 🔍️ Why a frame's registration is starved: its tracks by how many registered
-                    // frames they span and whether they carry a point.
                     if seen_cursor <= 8 {
                         let registered: std::collections::BTreeSet<usize> = (0..seen_cursor).filter(|&f| sfm.camera_pose(f).is_some()).collect();
                         let mut by_span = std::collections::BTreeMap::<usize, (usize, usize)>::new();
@@ -299,7 +290,6 @@ fn diagnose_synthetic_orbit_geometry() {
     let reconstruction = engine.sfm.as_ref().expect("sfm");
     let registered: Vec<(usize, remodeling_camera::CameraPose)> = (0..engine.frames.len()).filter_map(|frame| reconstruction.camera_pose(frame).map(|pose| (frame, pose))).collect();
     report("after registration", &registered);
-    // 🌐️ Through the bundle stage: the global adjustment and the cleanup, then the finalized snapshot.
     while engine.stage() == EngineStage::BundleAdjusting {
         if let EngineStatus::Failed(message) = engine.advance(64) {
             panic!("engine failed during bundle adjustment: {message}");
@@ -341,7 +331,6 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
         let inside = (half - p[0].abs()).min(half - p[1].abs()).min(half - p[2].abs()).max(0.0);
         (outside + inside) / half
     };
-    // Slab test: distance along a unit ray from `origin` to the cube, if it hits.
     let hit = |origin: [f64; 3], direction: [f64; 3]| -> Option<f64> {
         let (mut near, mut far) = (f64::NEG_INFINITY, f64::INFINITY);
         for axis in 0..3 {

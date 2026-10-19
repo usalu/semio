@@ -72,9 +72,6 @@ export async function readBackboneEnvelope(uri: string, signal?: AbortSignal): P
         try {
           return await readBackboneEnvelopeOnce(uri, retryAbort.signal);
         } catch (error) {
-          // 🛟️ a definitive server response ends the retry loop immediately (via the abort reason)
-          // instead of being retried like a transport failure — see `BackboneEnvelopeResponseError`'s
-          // docstring.
           if (error instanceof BackboneEnvelopeResponseError && !retryAbort.signal.aborted) retryAbort.abort(error);
           throw error;
         }

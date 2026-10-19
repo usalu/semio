@@ -333,9 +333,6 @@ impl PrecomputeBuilder {
         let Some(host) = self.output.surfaces.get(&fenestration.surface_id) else { return };
         let siblings: Vec<&model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == fenestration.surface_id).collect();
         let position = siblings.iter().position(|other| other.id == fenestration.id).unwrap_or(0);
-        // 🔶️ `host.polygon` is already turned into world coordinates by the site's north axis, so
-        // an aperture's OWN polygon — stated in the same model frame as its host's vertices — has
-        // to make the same turn before the two can share a plane.
         let north = model.site.north_axis_deg;
         let own: Vec<[f64; 3]> = fenestration.vertices_m.iter().map(|vertex| rotate(*vertex, north)).collect();
         let polygon = place_aperture(&host.polygon, &own, fenestration.area_m2, fenestration.height_m, fenestration.sill_height_m, position, siblings.len());

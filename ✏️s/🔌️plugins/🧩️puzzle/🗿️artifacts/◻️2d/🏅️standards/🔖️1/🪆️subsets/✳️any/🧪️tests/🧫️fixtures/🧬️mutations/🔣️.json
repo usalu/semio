@@ -2,2404 +2,2404 @@
   "schema": "semio.fixture-catalog/v1",
   "files": [
     {
-      "path": "⚓change-node-anchor/⚓️derives/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️derives/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "25664be3611df128840959ef3e3de6be74e03fd182c2ea54176ec2c3c5d8ffe7"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️derives/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️derives/🔺️diff/🔣️.json",
-      "sha256": "b26bd32ff78c158462988a9b57fd219cef69c83e2304b31fc769833c01139fb2"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️derives/🦠️mutation/🔣️.json",
-      "sha256": "364aacb4796609179348bffbbdfa12d38454880dc3464492c2d40b0fa35a84dc"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️fixed-to-derived/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️fixed-to-derived/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "4ed825b07ce7d37d6000f8209ff3dcc4b810574ecd251c51c9ad74e1ef3bd229"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️fixed-to-derived/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️fixed-to-derived/🔺️diff/🔣️.json",
-      "sha256": "81b793bab5a5fcdbb5371dbc5eb3b8be090eedf3545bed8e43e6cd0c7459e977"
-    },
-    {
-      "path": "⚓change-node-anchor/⚓️fixed-to-derived/🦠️mutation/🔣️.json",
-      "sha256": "e0b57ae50b0933e1fcebcecd78d66adadd8ae66d3f4140ef250c9328ae4d6ca1"
-    },
-    {
-      "path": "⚓change-node-anchor/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "⚓change-node-anchor/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "⚓change-node-anchor/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "⚓change-node-anchor/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "⚓change-node-anchor/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "21eccebcc830648792ad3443ff6a917fafdf993654505ddc86311f0a69da2ce1"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs-middle-edge/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs-middle-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d13a36ea81b4d849216e85c4cf223b1e21d4ea6ad8d5b17496aad0775de95f17"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs-middle-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs-middle-edge/🔺️diff/🔣️.json",
-      "sha256": "537277b48eb96b41feb91ac9cd09553edb626b26553ac46d9abbf0334107503f"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs-middle-edge/🦠️mutation/🔣️.json",
-      "sha256": "b0605eefef09a9e023fc98fe918c44503c77c2f9fd66e8a99c11aa1b1d754e95"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d4a8ba92da68d4eb6511a9355c0ab7781ece6f702b81ab4e99e85e9261b4e971"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs/🔺️diff/🔣️.json",
-      "sha256": "b109994526a9aa739e9a2eeb9dabca5915a28a0da5711067e7a6e584b762ed11"
-    },
-    {
-      "path": "✂️disconnect-handles/✂️severs/🦠️mutation/🔣️.json",
-      "sha256": "218c6de65b50bcc07b51cc92e70591b27f8d9800c6cae927f2bc4be7ea3e216c"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "03632d32fd674ff5236b346b448a24c1bb39ae2fd485f7003c82ad920114e0bf"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️removes-edge-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️removes-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "642605709e5620f9725b328d461d9a94f74d8151f859d59355c8a71a645e1e49"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️removes-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️removes-edge-1/🔺️diff/🔣️.json",
-      "sha256": "0e7cdbce5a1c996106dca80691f9b77897d3e23c2b643b2645c3bd02e90fe03a"
-    },
-    {
-      "path": "✂️disconnect-handles/🚫️removes-edge-1/🦠️mutation/🔣️.json",
-      "sha256": "b9916104be14861fe79542fe335c96d08ccc1b78754eb23e6a337befb2be0ffa"
-    },
-    {
-      "path": "✋️drag-selection/⏸️keeps-a-zero-offset/🎯️outcome/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset/🎯️outcome/🔣️.json",
       "sha256": "12bcaaf2caf6f595255644ae15559bc2e53ba46e8b3731d7a5306482512a01cf"
     },
     {
-      "path": "✋️drag-selection/⏸️keeps-a-zero-offset/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/⏸️keeps-a-zero-offset/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/⏸️keeps-a-zero-offset/🔺️diff/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset/🔺️diff/🔣️.json",
       "sha256": "001aa667b82989f7209087d74fb09750ddb59bce0b2509d8d32a8ef14c7177ba"
     },
     {
-      "path": "✋️drag-selection/⏸️keeps-a-zero-offset/🦠️mutation/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset/🦠️mutation/🔣️.json",
       "sha256": "f2acb640fb456b956783fa556242cad28684f1238001b1dc98733b754e3ec4b4"
     },
     {
-      "path": "✋️drag-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
       "sha256": "c167f347dc9f4f55d0fd5ef906297281852cb21266246474b7b448eb50bfde58"
     },
     {
-      "path": "✋️drag-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
       "sha256": "8415fcdd9f0b684cb0d1bba26ba8a73675d8d62b9554335970f761b25b0d01e0"
     },
     {
-      "path": "✋️drag-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json",
       "sha256": "85090a5972c1ebe6fdb526f687bbe79418fcd0cb6289ca8787a0df7901777baf"
     },
     {
-      "path": "✋️drag-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
       "sha256": "579cf7da91ca56abcd87ec1cda50fac562db0536040c60a536fd40ac5c4e4bcc"
     },
     {
-      "path": "✋️drag-selection/✋️drags-two-nodes/🎯️outcome/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/✋️drags-two-nodes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "✋️drag-selection/✋️drags-two-nodes/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/✋️drags-two-nodes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "02eb058b0c2a8a6fef9ed81aea7dcefedcd3373dc743a9d8bde011eceb5aab51"
     },
     {
-      "path": "✋️drag-selection/✋️drags-two-nodes/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/✋️drags-two-nodes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/✋️drags-two-nodes/🔺️diff/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/✋️drags-two-nodes/🔺️diff/🔣️.json",
       "sha256": "cfc99a670155a9dc4fe23cf6e7245c2d259a27e6323d2702418910e0a9859fb9"
     },
     {
-      "path": "✋️drag-selection/✋️drags-two-nodes/🦠️mutation/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/✋️drags-two-nodes/🦠️mutation/🔣️.json",
       "sha256": "51f3349f35756746b4de238d4645e320fa0bd44e4e849be41db88d12caea5c09"
     },
     {
-      "path": "✋️drag-selection/🎯️drags-node-and-region/🎯️outcome/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🎯️drags-node-and-region/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "✋️drag-selection/🎯️drags-node-and-region/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🎯️drags-node-and-region/📸️snapshot/➡️after/🔣️.json",
       "sha256": "82ff02a4a309143c12c559eceb2e53508e68cb0e5d4c6a0ac871e4561a72d148"
     },
     {
-      "path": "✋️drag-selection/🎯️drags-node-and-region/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🎯️drags-node-and-region/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/🎯️drags-node-and-region/🔺️diff/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🎯️drags-node-and-region/🔺️diff/🔣️.json",
       "sha256": "8f79b47697a6c97095f345962eb3c4ae12ca94ca26a9e9f235c6ce7dc45d92e4"
     },
     {
-      "path": "✋️drag-selection/🎯️drags-node-and-region/🦠️mutation/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🎯️drags-node-and-region/🦠️mutation/🔣️.json",
       "sha256": "638ad53dba5d80c76c09c76eb832e018a5ff0a4a768a7ef3d045dae9b5a15504"
     },
     {
-      "path": "✋️drag-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json",
       "sha256": "f8c22bad10ea6083a87bc7dbadf02bff6f488962bc8878cb39ddd98f84721c2d"
     },
     {
-      "path": "✋️drag-selection/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/🚫️rejects-ghosts/🔺️diff/🚫️.absent",
+      "path": "✋️selection/✋️drag-selection/🚫️rejects-ghosts/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "✋️drag-selection/🚫️rejects-ghosts/🦠️mutation/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🚫️rejects-ghosts/🦠️mutation/🔣️.json",
       "sha256": "5ce4258d95847e07de10efc91def5274274f3056d101866a2d95478093c5c533"
     },
     {
-      "path": "✋️drag-selection/🧱️no-targets/🎯️outcome/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🧱️no-targets/🎯️outcome/🔣️.json",
       "sha256": "944cfb92fc6fca73664e119a29283bdc681d620ed002853e377b56f33fae6f91"
     },
     {
-      "path": "✋️drag-selection/🧱️no-targets/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🧱️no-targets/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/🧱️no-targets/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🧱️no-targets/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "✋️drag-selection/🧱️no-targets/🔺️diff/🚫️.absent",
+      "path": "✋️selection/✋️drag-selection/🧱️no-targets/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "✋️drag-selection/🧱️no-targets/🦠️mutation/🔣️.json",
+      "path": "✋️selection/✋️drag-selection/🧱️no-targets/🦠️mutation/🔣️.json",
       "sha256": "38b4f439f6193a2382af9be5311ef8669a1e9ecbf3617cb7a208707f7c1a7b7e"
     },
     {
-      "path": "✏️edit-node-text/✏️recodes/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "✏️edit-node-text/✏️recodes/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7544f3702e5a761a535d81c7dd2bec37bacd95fce901c9c265549436d8d3ce5a"
-    },
-    {
-      "path": "✏️edit-node-text/✏️recodes/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "✏️edit-node-text/✏️recodes/🔺️diff/🔣️.json",
-      "sha256": "36eacac2f2999b7ced36ca3bf279456c829b6d69fdaad075742932fc89139fcc"
-    },
-    {
-      "path": "✏️edit-node-text/✏️recodes/🦠️mutation/🔣️.json",
-      "sha256": "732ab1e006aaa184a393165f3c1734efdcd1b005591048d7b917fa8e33198ee2"
-    },
-    {
-      "path": "✏️edit-node-text/✏️retitles-node-a/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "✏️edit-node-text/✏️retitles-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "af83dcc61a61765132413abe464d3536a96e225dea08034f2e5eaeaff4ed1ed5"
-    },
-    {
-      "path": "✏️edit-node-text/✏️retitles-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "✏️edit-node-text/✏️retitles-node-a/🔺️diff/🔣️.json",
-      "sha256": "64edce9159ef07c48120662227cb609a27b16ef78c40eb6e7ff8dfd052d84a65"
-    },
-    {
-      "path": "✏️edit-node-text/✏️retitles-node-a/🦠️mutation/🔣️.json",
-      "sha256": "cc73c947f7907483f1fb11a664cf63bade0ec9b0f15695e95f2b2c8a02b3b38c"
-    },
-    {
-      "path": "✏️edit-node-text/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "✏️edit-node-text/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "✏️edit-node-text/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "✏️edit-node-text/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "✏️edit-node-text/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "f0eebdb0571c89494c936439f86c4a3bfac0471ccc65ae3b5b6c0b97c0f979f9"
-    },
-    {
-      "path": "➕add-node-handle/➕️adds/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "➕add-node-handle/➕️adds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "cedb3863abafa867056e1f1863d1fa69a247128623f1b5cb93742825ad7154e8"
-    },
-    {
-      "path": "➕add-node-handle/➕️adds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "➕add-node-handle/➕️adds/🔺️diff/🔣️.json",
-      "sha256": "d104b972d99e2ad695c4a8a56307d7a9985d85851a5c3bd2a6ce92e373d35af3"
-    },
-    {
-      "path": "➕add-node-handle/➕️adds/🦠️mutation/🔣️.json",
-      "sha256": "0d51f6b7421ce96983bb31ed7a64b14304d97ce0cf2e28b415c85504d71344fd"
-    },
-    {
-      "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "cb722734359082997cf61775d7df3b7232188ee34bd0a7ca8e545c47dbe2e9d5"
-    },
-    {
-      "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/🔺️diff/🔣️.json",
-      "sha256": "4cc86fa05f099b7344a4376876282f539d1e38d320fc1fcf687304f279ce0de1"
-    },
-    {
-      "path": "➕add-node-handle/➕️appends-handle-3-to-node-b/🦠️mutation/🔣️.json",
-      "sha256": "d0c20dfc2c8c88a7b0f86477a9f3cf1f505fbf324dbe66e69963b94fa855d609"
-    },
-    {
-      "path": "➕add-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "➕add-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "➕add-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "➕add-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "➕add-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "8dff1c53dc01c2203efd4279a7f691df7d7d2dcd5e88c8f6c7ce169ce072bcc8"
-    },
-    {
-      "path": "➕add-node-handle/🧱️zero-radius-handle/🎯️outcome/🔣️.json",
-      "sha256": "d0a34ae700546f464b18af2efd67802828eb174f6bebdc08fadc887af8b35d32"
-    },
-    {
-      "path": "➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "➕add-node-handle/🧱️zero-radius-handle/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "➕add-node-handle/🧱️zero-radius-handle/🦠️mutation/🔣️.json",
-      "sha256": "8bb4ccfb577dfa79c8f091957ebb721e77a218020192a24792a06593a4af8eb9"
-    },
-    {
-      "path": "➖remove-node-handle/➖removes-middle-handle/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "➖remove-node-handle/➖removes-middle-handle/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "48f4b96dcddda342d22fa3bb862bf7bc70ee9429553b29f480e7ec3c7131cb19"
-    },
-    {
-      "path": "➖remove-node-handle/➖removes-middle-handle/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
-    },
-    {
-      "path": "➖remove-node-handle/➖removes-middle-handle/🔺️diff/🔣️.json",
-      "sha256": "e8a72b2b6c51f409c5446883bfb7edfb62f2915d122208db1888729b38aa6d5b"
-    },
-    {
-      "path": "➖remove-node-handle/➖removes-middle-handle/🦠️mutation/🔣️.json",
-      "sha256": "f2d5a8ad218f707f664bd5a2b6e71be3c4257c8fdc027179323334e7046d7f6c"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "a3a754795b0f9beb957e8368a02b8d74d19c9e67596d35202c4b4bcb668e712e"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "cc92c1f981ef87a34f57db61b3fb5bc2f2f1637ed8d6b8b5a4ce732f25b16023"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "6fc8a0af29a7e6a2e47739110e53f600451f7f478469a9b7593c3b7e9a5c29ba"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes/🔺️diff/🔣️.json",
-      "sha256": "57893874d6d012c8d08bcd85fa1f918c6cd0a851ea500062ab4cffae94695f43"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes/🦠️mutation/🔣️.json",
-      "sha256": "5cc9b75930ec957c81cc00a9a65c1e1d0ea9edd99b11e2c0b279d36b271f1901"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes2/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes2/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "9a29991962b33955beb78607ec3d5c8b889b74d4d17b8195c620f2dfa64b81d6"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes2/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes2/🔺️diff/🔣️.json",
-      "sha256": "c84eeee8daa4847b6ffa0d2043f9d0b8e856c088f29e573a19a4e4abc7fc9519"
-    },
-    {
-      "path": "➖remove-node-handle/🚫️removes2/🦠️mutation/🔣️.json",
-      "sha256": "993aa8f3d1feaad63e64e8bf973f853af59d5e7fd256ba5029e05c9f9c5113a6"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints-manifest/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "6e64527ea682de0f3508afe7080f6ce423144010add9559c7771ec65200b705e"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints-manifest/🔺️diff/🔣️.json",
-      "sha256": "369ff1a8b01fcbf38bd3eb0c1dd47bb3b20cc8dd041015c2cc0bf448182ecd9e"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints-manifest/🦠️mutation/🔣️.json",
-      "sha256": "f3a8b2b57e939d3dadb5afc7ab3eee1cab2fb7ad3b1fd079565dc11991f25822"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "3b47c9eb51cdc0756b7ff4d900b2f93eb3f7a642c1829c3c963576a9a7b874de"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints/🔺️diff/🔣️.json",
-      "sha256": "752fec598d9bb22efa1b6fe10b29061e64703b8eec132e28a13bae0c523236f3"
-    },
-    {
-      "path": "🆔change-manifest-id/📦️repoints/🦠️mutation/🔣️.json",
-      "sha256": "941ce98754fb7d4232258e665bf9d2143ea1c4270bc3b0e330616cdcd0f4c828"
-    },
-    {
-      "path": "🌍create-target-region/🌍️appends-region-2/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌍create-target-region/🌍️appends-region-2/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "71a78ee874ca20b5c2f39c3d011cd4da43fee394bedf0b5235ab8e18e4d1d45a"
-    },
-    {
-      "path": "🌍create-target-region/🌍️appends-region-2/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🌍create-target-region/🌍️appends-region-2/🔺️diff/🔣️.json",
-      "sha256": "c1035c7a6b6ad200702b6abad7abd2a2643d6506a78249e863fd74f970818fb5"
-    },
-    {
-      "path": "🌍create-target-region/🌍️appends-region-2/🦠️mutation/🔣️.json",
-      "sha256": "bcb2d51949fcf499540d29ad8dd4b05f453196a0f7ed811f15aeaa66a4ba3b88"
-    },
-    {
-      "path": "🌍create-target-region/🌍️paints/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌍create-target-region/🌍️paints/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "092cbb339368b7bdc303496f281963f683209aacef0ce372cc85ed0b5ea0a8b6"
-    },
-    {
-      "path": "🌍create-target-region/🌍️paints/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2fe7c55cd6a9d27bf27ed4d504c43343dffc41fba5243a2df83abcfb45a14b82"
-    },
-    {
-      "path": "🌍create-target-region/🌍️paints/🔺️diff/🔣️.json",
-      "sha256": "c480e44661f07dfe30665b0118fc7d606713f31a806928d1cc18516524a402b3"
-    },
-    {
-      "path": "🌍create-target-region/🌍️paints/🦠️mutation/🔣️.json",
-      "sha256": "64c9e4b81c7d2f8b9a5450714e440f3a09d6cc0f694efee56c8df13674421323"
-    },
-    {
-      "path": "🌍create-target-region/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "d90c7bc6d58ca87d2b7ff85991730bb6acd2d2232fdacf1d9ba92a46c822b544"
-    },
-    {
-      "path": "🌍create-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🌍create-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🌍create-target-region/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🌍create-target-region/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "37c26cba0fb2ecac0ef771c7b2320bb2c134444c4ccbec64bd32b6acf4bcdad1"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes-node-a-to-root/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes-node-a-to-root/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "f77ded247e849c0bd18bbbf7619277f8bbd4e5b38b349d6020542c84b9ecb812"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes-node-a-to-root/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes-node-a-to-root/🔺️diff/🔣️.json",
-      "sha256": "842c669654204940c3f90d21f9ab81251af9295337bc2e23a02bb393a0a1cc91"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes-node-a-to-root/🦠️mutation/🔣️.json",
-      "sha256": "0b82171fd201ccaa2b5c9e1884da8d64c0deb4f5197cd714481bf391711502f1"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "4753aa61b956a3be1ce3f4ef62852be104a3035a87c289396fe970bd231e39d5"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes/🔺️diff/🔣️.json",
-      "sha256": "ef1fd810c92cdf56a1ee44c146bf0962360ed27f7a8bf50731a26ceedb037dba"
-    },
-    {
-      "path": "🌟change-node-root/🌳️promotes/🦠️mutation/🔣️.json",
-      "sha256": "45d9d67a059f9828e500a104f55791e1d3b6985e0bec811aeb64a31385c74f8d"
-    },
-    {
-      "path": "🌟change-node-root/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "🌟change-node-root/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🌟change-node-root/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🌟change-node-root/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🌟change-node-root/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "c45dd12bb82fc6935f8b220b287cbcd2e53ad1660fbb9448493ec5b03c7bb274"
-    },
-    {
-      "path": "🌱create-node/🌱️appends-node-c/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌱create-node/🌱️appends-node-c/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "0d75d10b882c29bc48e472a2dfefbab321e00970c253cb239d8bde4963e5886d"
-    },
-    {
-      "path": "🌱create-node/🌱️appends-node-c/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🌱create-node/🌱️appends-node-c/🔺️diff/🔣️.json",
-      "sha256": "f788e8cd58a3515a216f70d64c96a48affeaffa9f58d62896de76588496232bf"
-    },
-    {
-      "path": "🌱create-node/🌱️appends-node-c/🦠️mutation/🔣️.json",
-      "sha256": "a42f919247a287e8adc3bcd0358b9c50f6aa26b4b61491d834fe09bd9a8c09ea"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "33a44a1eb80d0ce61ff006968b272602d69a5fc15b8454fe6921e294a1c22102"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/🔺️diff/🔣️.json",
-      "sha256": "e5ca2effb736250c22cb635252c74ccefe8dbfa588aa93e4aeb9e81cbc799b43"
-    },
-    {
-      "path": "🌱create-node/🌱️appends/🦠️mutation/🔣️.json",
-      "sha256": "96525f8d57aa00acce263e72f68ceecf010586c87e2cf601e4a0fa2b0cb8bee1"
-    },
-    {
-      "path": "🌱create-node/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "9b722d0ae5ad5a36aaf67674c10fbabdf825e9c929fe049a72ad256fe333c2d1"
-    },
-    {
-      "path": "🌱create-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🌱create-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🌱create-node/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🌱create-node/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "51d1d534f12da2b83f86340d795004bbdc13e4cb67c2ec73cbd2e3fad266713a"
-    },
-    {
-      "path": "🌱create-node/🧱️zero-width-node/🎯️outcome/🔣️.json",
-      "sha256": "72869ed4b15cd84741bfec35d031dd92a4072b89d24616dc186af353847576f4"
-    },
-    {
-      "path": "🌱create-node/🧱️zero-width-node/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "🌱create-node/🧱️zero-width-node/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "🌱create-node/🧱️zero-width-node/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🌱create-node/🧱️zero-width-node/🦠️mutation/🔣️.json",
-      "sha256": "ca0964a2690aa7f09de9d799ae4329af087204184af45f126c9e73ef30a0bc3a"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "1180cc5706543eebd5b6d7b8da6eca9b4e9ff11c98969f538e275531e2e59da0"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/🔺️diff/🔣️.json",
-      "sha256": "cf2881d07e28d93badf90d87ecb5c79dd48998bb7994c3ddd01f78766f99c7ac"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-a-capsule-icon/🦠️mutation/🔣️.json",
-      "sha256": "2dadf5afee9f8bb5c10e313576299a5de77f8450ef3055acd144c649e04a1d79"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-node-a-icon/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "60b4e46ccddc075fdd9490a891e382ebd36b15d3faa33c3b8b754777d6f37617"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-node-a-icon/🔺️diff/🔣️.json",
-      "sha256": "6cfeaf9b38e83082d9106e1037189bb4168a25170b5cedb89a7aa7505ae54067"
-    },
-    {
-      "path": "🎨change-node-icon/🎨️swaps-node-a-icon/🦠️mutation/🔣️.json",
-      "sha256": "303152c170f3619f9d64c4c8c6dddc20f9ce42f948bb32ba53ed3a7b967624e9"
-    },
-    {
-      "path": "🎨change-node-icon/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "🎨change-node-icon/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🎨change-node-icon/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🎨change-node-icon/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🎨change-node-icon/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "f219ad6a588fdfd7927d85a7174d5b8671376972177f7fcf83bae2ddda6dda51"
-    },
-    {
-      "path": "🏗️change-node-kind/🏗️rekinds/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🏗️change-node-kind/🏗️rekinds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d83ced5e156a45f6dd3c13be9a3ea637378f2ed47c6b23b2cb75c08405a22f89"
-    },
-    {
-      "path": "🏗️change-node-kind/🏗️rekinds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🏗️change-node-kind/🏗️rekinds/🔺️diff/🔣️.json",
-      "sha256": "f17334df5c994a2b7ac6769ad7018465665b1c46affa0e7525450c51883ed00e"
-    },
-    {
-      "path": "🏗️change-node-kind/🏗️rekinds/🦠️mutation/🔣️.json",
-      "sha256": "4593ed06587bfc028ac4bfe80f6d6b761ad061c0730b769c321a44bbac165186"
-    },
-    {
-      "path": "🏗️change-node-kind/🏷️reassigns/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🏗️change-node-kind/🏷️reassigns/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "ec27d48fbfd93d0c2c4d196cf424a7641a7cd036c8d49725f1a3f504d5ca7191"
-    },
-    {
-      "path": "🏗️change-node-kind/🏷️reassigns/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🏗️change-node-kind/🏷️reassigns/🔺️diff/🔣️.json",
-      "sha256": "994fa33a0cbc9ca9294b2645b6472e4849e3609c3b2c0d974b39011b906df374"
-    },
-    {
-      "path": "🏗️change-node-kind/🏷️reassigns/🦠️mutation/🔣️.json",
-      "sha256": "da651877022a78f8050038662011fbbc313c40b4e2f4a70fda98877c9d8ec0b3"
-    },
-    {
-      "path": "🏗️change-node-kind/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "🏗️change-node-kind/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🏗️change-node-kind/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🏗️change-node-kind/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🏗️change-node-kind/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "450fa25ad0ddc3b6cc7cd4e6292ffb386b8456d821930e6367c58a1d0437f550"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️kinds/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️kinds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "acf22b1aaf8e90c7e30a5d15c90877f2540392abe8211b5a842dd2db98e33ea7"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️kinds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️kinds/🔺️diff/🔣️.json",
-      "sha256": "86115515fcd897a63ad5ae6da1ffe1e2e88c92bbea0d38ba57be97ac24cc0fc4"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️kinds/🦠️mutation/🔣️.json",
-      "sha256": "a3c7927b576f2087369f7f9b51dc9da1dad71af977a9fad8bac7c34fb09f0322"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "59445a1aa173a5be9e3ef643743b14a68668e80eca6e40abf5bdc017d46bff7d"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/🔺️diff/🔣️.json",
-      "sha256": "23dc3bc4c54e161b14a6ceb342f22a0cca0da1130cd7b85b1e790b2c0c81e928"
-    },
-    {
-      "path": "🏷️change-edge-kind/🏷️rekinds-edge-1/🦠️mutation/🔣️.json",
-      "sha256": "00d87c7b5a688a2a485d9371c7accf6bdbf486006aa1ebad29c3c57336dcfa76"
-    },
-    {
-      "path": "🏷️change-edge-kind/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
-    },
-    {
-      "path": "🏷️change-edge-kind/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🏷️change-edge-kind/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🏷️change-edge-kind/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🏷️change-edge-kind/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "fd9a1de39343a338f4a62a8bf52a3fa2f2880ff3874929d7a25528e97b9d484b"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides-edge-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides-edge-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7d758b376fb14efa55b4e47c0b98878170fcfebbf1f2372d6b6ee9a45e95a910"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides-edge-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides-edge-1/🔺️diff/🔣️.json",
-      "sha256": "56eccfa007af09fcf197238aeb4c676176614ac19e4c82db7ea72de2568c2e8d"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides-edge-1/🦠️mutation/🔣️.json",
-      "sha256": "5ffd87a3c4f1950631deee5a8c72146b30e226528a7f4fe23e09e14867900ef0"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "236b018823581963fdb975eadb6b97cd66d66db3ddef950aa4d5621aefea8ee8"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/🔺️diff/🔣️.json",
-      "sha256": "6a8e706e4f35af476a618adae60bf0773a08251ab4e02fc8edea26435a836af2"
-    },
-    {
-      "path": "👀change-edge-visible/🙈️hides/🦠️mutation/🔣️.json",
-      "sha256": "91aec51ff869df288525dcc10eb7e6b1a7e086803d7a5d13db5a7048cab075ce"
-    },
-    {
-      "path": "👀change-edge-visible/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
-    },
-    {
-      "path": "👀change-edge-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "👀change-edge-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "👀change-edge-visible/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "👀change-edge-visible/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "8145f5183653c7781dd7e2c97dff899fcff4c022c01be42675283b5e84890e02"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-a-capsule/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-a-capsule/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "f4d10ecd097d1dbdce60b5e536386b96caa0cb3348d7d8a1c0e74ff5ac054500"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-a-capsule/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-a-capsule/🔺️diff/🔣️.json",
-      "sha256": "bab43bac583cae7fe0b12f4e7f47a01cdb5997e23423bd90dfbe3cfe32f03163"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-a-capsule/🦠️mutation/🔣️.json",
-      "sha256": "54c79e1f4833266f6fb23100ab5e8404b1ce9318e0ce866f16c38e9ce1cbd0db"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-node-a/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "b2eaa9365284cdbb62faee177fbe3f466d3ab2dd3fe58ebb26cf11cb0634447e"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-node-a/🔺️diff/🔣️.json",
-      "sha256": "2ee0ef82020d914f1ca4fe4410ff41387868e04d19756b6ca765f59aeab37589"
-    },
-    {
-      "path": "👁️change-node-visible/🙈️hides-node-a/🦠️mutation/🔣️.json",
-      "sha256": "4ccdd6ff1f57e1159558e39f2a3c0f54469c634cd9ce7d9d4a7bad6948b63408"
-    },
-    {
-      "path": "👁️change-node-visible/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "👁️change-node-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "👁️change-node-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "👁️change-node-visible/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "👁️change-node-visible/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "98050b8ea0553f1b2d8280f0408b9c89084c5993b1c66ea2476ca005e1895ba9"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-middle-row/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-middle-row/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "876475dee6b112ee371a0a8ecf60901a3146c37b11c6d630d66c4473c179b8d6"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-middle-row/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-middle-row/🔺️diff/🔣️.json",
-      "sha256": "f17b726398f86dddc5df2a45e699e32d47032886401a5cb63abeab4963fa06d9"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-middle-row/🦠️mutation/🔣️.json",
-      "sha256": "af2ffbc641fa23e962915c5e3f8d4dcc4e3e0fc4a9480d06d8f3a8fa26020d40"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "e1e8f23055ddd7c6be9fa515f0f59ea919e71f4de3a1bcfa3e22d24d6e2075e3"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws/🔺️diff/🔣️.json",
-      "sha256": "525081c24d4bc965941f219536ca4206e454f96062413acfa02c4c80406d0231"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws/🦠️mutation/🔣️.json",
-      "sha256": "6fab1cad1f6e42da3b6e2b568801dc6a06ccee1dca9d1672747f971ad477b821"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "d8edf89df7819a39e4aad1fd6b081567e1b89651b108a2926d058f8237e39ef3"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "7ed634aaab629daa8c0769b97139a22ed8c02f235034b983f9f9697b1b7451f5"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️removes/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️removes/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "66df2f1fa26849aa06141e67886771ce772bb958bab243ae33313ab37d2c9c23"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️removes/🔺️diff/🔣️.json",
-      "sha256": "cc0eb51fc72ca0cfb97049215e0e7f652ffa9f89f48709528462f1a8ad4b81ec"
-    },
-    {
-      "path": "💔disconnect-kind-compatibility/🚫️removes/🦠️mutation/🔣️.json",
-      "sha256": "779efce4226b9341d7b4d760d86f9d6ebfd13ec7736ca424ecb4daccb6921bc0"
-    },
-    {
-      "path": "📍move-node/📍️moves-node-a/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📍move-node/📍️moves-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "bad957bc9f13aa465551d4da0b01dd170b2698f26e865145facf3bdf3797a190"
-    },
-    {
-      "path": "📍move-node/📍️moves-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "📍move-node/📍️moves-node-a/🔺️diff/🔣️.json",
-      "sha256": "b6aafc4e0107d8dcdd4dd36fe421fcb49ecea46e022253f85baa602bc261f69b"
-    },
-    {
-      "path": "📍move-node/📍️moves-node-a/🦠️mutation/🔣️.json",
-      "sha256": "91272b6484557b84f651fe0d845bb5ed253f9df572b5ef1f66b1dd705b3aa85d"
-    },
-    {
-      "path": "📍move-node/📍️moves/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d29ec9092756536a70c5d222553a4d11d509100ef681b869a4a6785871db166a"
-    },
-    {
-      "path": "📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📍move-node/📍️moves/🔺️diff/🔣️.json",
-      "sha256": "3f643071661b25a5f7cf5594dc07d3bc0851652e7da46a508ce1e6f4d644478e"
-    },
-    {
-      "path": "📍move-node/📍️moves/🦠️mutation/🔣️.json",
-      "sha256": "42787aafd8a48e050022dfe2da49ca59a64db59f6ffb3b0b052ec17e5f59f837"
-    },
-    {
-      "path": "📍move-node/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "📍move-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📍move-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📍move-node/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "📍move-node/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "1e5ff7527cb283ac0a935f758d7d3cc2b8849c3d8f6dc19c6e047ec50ca99358"
-    },
-    {
-      "path": "📏scale-node/📏️doubles-node-a/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📏scale-node/📏️doubles-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "23eb187c79ff186d848baa10cf225d6eb203ed56575d9b6509935d2b721c96d3"
-    },
-    {
-      "path": "📏scale-node/📏️doubles-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "📏scale-node/📏️doubles-node-a/🔺️diff/🔣️.json",
-      "sha256": "7196cc0d2f2835c6a6b9e51da8364d6487dbb0fabd579a51ee6938f914afc7bd"
-    },
-    {
-      "path": "📏scale-node/📏️doubles-node-a/🦠️mutation/🔣️.json",
-      "sha256": "1492da06181f92cb0070e8c3b93afe1898c09b6d79054b7268512192f8b896ab"
-    },
-    {
-      "path": "📏scale-node/📏️scales/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📏scale-node/📏️scales/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "67fe28c792445363278aa6907528f4f23964e01a3c9c769169754d62fa0e2c5a"
-    },
-    {
-      "path": "📏scale-node/📏️scales/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📏scale-node/📏️scales/🔺️diff/🔣️.json",
-      "sha256": "21bc2b8b578186d1613a5952e6d8ee307d51c26894c36b9ff8880d0ea6b0558a"
-    },
-    {
-      "path": "📏scale-node/📏️scales/🦠️mutation/🔣️.json",
-      "sha256": "65b766f9b48d5fd6dc9378f1ae9d4019cce552f1206be96ca86785259b165761"
-    },
-    {
-      "path": "📏scale-node/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "📏scale-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📏scale-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📏scale-node/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "📏scale-node/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "d954c9eb2db83cd7b6f2bbd37996f42d17342fd5637715c6dcf340c9b776a9de"
-    },
-    {
-      "path": "📏scale-node/🧱️zero-scale/🎯️outcome/🔣️.json",
-      "sha256": "a32f75be44d6be507fabf86d590b6d7f67aa6f4aa8201db28998de851176ed29"
-    },
-    {
-      "path": "📏scale-node/🧱️zero-scale/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "📏scale-node/🧱️zero-scale/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "📏scale-node/🧱️zero-scale/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "📏scale-node/🧱️zero-scale/🦠️mutation/🔣️.json",
-      "sha256": "644f718f42243dc8163bf0210edf3d66bee4d427a3a26f3a69ba71aa31d40fd3"
-    },
-    {
-      "path": "📐resize-target-region/📐️widens-region-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📐resize-target-region/📐️widens-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "9036901cbbe9aeab98ce95e26d974e2f2aad87ea4aa8fcd68698f144b07abcbd"
-    },
-    {
-      "path": "📐resize-target-region/📐️widens-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "📐resize-target-region/📐️widens-region-1/🔺️diff/🔣️.json",
-      "sha256": "9dcc28350cf259be5beb7f3ff4aef2853e15fbbe445396f2abb66326b22f9b29"
-    },
-    {
-      "path": "📐resize-target-region/📐️widens-region-1/🦠️mutation/🔣️.json",
-      "sha256": "086638f0b940f2d368eabd30cafb248c71345d63dc1df2353e9296f51229cc19"
-    },
-    {
-      "path": "📐resize-target-region/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
-    },
-    {
-      "path": "📐resize-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "📐resize-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "📐resize-target-region/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "📐resize-target-region/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "909ac97c93a8597512e950e171f0852797ba595631ca53075aa3c8b44734a6c3"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "6854c743a09914bbc3fc0ec5337efe821318769fabf092e1a77b3b63ef9f818c"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs/🔺️diff/🔣️.json",
-      "sha256": "7afbd238e891758e9cc8a97b9bec4973c0051a55bb34a11c0000ec477d9c1af4"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs/🦠️mutation/🔣️.json",
-      "sha256": "3bdfdaef9a35145d0907e2ced62403978a0d246f3adfa490189c48225d6d6949"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs2/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs2/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "fb6c9ae6b56f2d1a6078051d1547c128c833404b05fcbf2048c168425e9d05e5"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs2/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs2/🔺️diff/🔣️.json",
-      "sha256": "279f2b0984a1810ce3d3a8e81f0429957a6fc72958a6a602369b86883d51e7f5"
-    },
-    {
-      "path": "📚replace-kind-catalogs/📇️installs2/🦠️mutation/🔣️.json",
-      "sha256": "2c4bfd734ec7c0f67e118aded2dbd4f15dda2cbb4719f8446503332636886ad4"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🗑️clears/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🗑️clears/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🗑️clears/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "fb6c9ae6b56f2d1a6078051d1547c128c833404b05fcbf2048c168425e9d05e5"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🗑️clears/🔺️diff/🔣️.json",
-      "sha256": "843a3c06c4a2020fe234a7854c7155d35fc393c0c5323a6d3faddfbc75c52020"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🗑️clears/🦠️mutation/🔣️.json",
-      "sha256": "91b35121853bdde7d415b515b37acf84acc53d1f212de174d96816f4da18d5a1"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🧱️off-rim-template/🎯️outcome/🔣️.json",
-      "sha256": "944cfb92fc6fca73664e119a29283bdc681d620ed002853e377b56f33fae6f91"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🧱️off-rim-template/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🧱️off-rim-template/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🧱️off-rim-template/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "📚replace-kind-catalogs/🧱️off-rim-template/🦠️mutation/🔣️.json",
-      "sha256": "0e8835f4f7b12c4aca819ca3c16b1d47ce9b678d640f67a2789683b0deb0a751"
-    },
-    {
-      "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⏸️keeps-a-zero-angle/🎯️outcome/🔣️.json",
       "sha256": "12bcaaf2caf6f595255644ae15559bc2e53ba46e8b3731d7a5306482512a01cf"
     },
     {
-      "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⏸️keeps-a-zero-angle/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⏸️keeps-a-zero-angle/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⏸️keeps-a-zero-angle/🔺️diff/🔣️.json",
       "sha256": "001aa667b82989f7209087d74fb09750ddb59bce0b2509d8d32a8ef14c7177ba"
     },
     {
-      "path": "🔄️rotate-selection/⏸️keeps-a-zero-angle/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⏸️keeps-a-zero-angle/🦠️mutation/🔣️.json",
       "sha256": "e850ea9b46cfcbe7437c6871c537bcb7fa9da5d82ea303cf8cb584ae08cbd7a5"
     },
     {
-      "path": "🔄️rotate-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
       "sha256": "5ed168acf142b4767608c4afd1ba301feaea0a4c06e4540f84f47f14d4d1e472"
     },
     {
-      "path": "🔄️rotate-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
       "sha256": "227c638580ac2b7dcaf3bcb8ea5bbc7a0fcee6366964fee0724206e17253d512"
     },
     {
-      "path": "🔄️rotate-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json",
       "sha256": "348b802d9568f16ee7a772402ab836fdc53e3013ebb1292cec71c8c1a160d54e"
     },
     {
-      "path": "🔄️rotate-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
       "sha256": "f2c2ee0c8cd0b6a9383801374f8a7c4280d08c6fda910e8e31686d699d36da9f"
     },
     {
-      "path": "🔄️rotate-selection/🎯️skips-the-region/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🎯️skips-the-region/🎯️outcome/🔣️.json",
       "sha256": "178f9ec8e20b40a2c727b4f77c9bb842696e6159669860896fab613259e2ba0d"
     },
     {
-      "path": "🔄️rotate-selection/🎯️skips-the-region/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🎯️skips-the-region/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d3096568cb1cbd9149178c83449cfd8671f9d75a1584e53b5e5f93348cb42d3f"
     },
     {
-      "path": "🔄️rotate-selection/🎯️skips-the-region/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🎯️skips-the-region/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/🎯️skips-the-region/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🎯️skips-the-region/🔺️diff/🔣️.json",
       "sha256": "2a767b77e3175bbecd33dc60491e39d1f56906ef2f6af36d857fdfed2c923c7d"
     },
     {
-      "path": "🔄️rotate-selection/🎯️skips-the-region/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🎯️skips-the-region/🦠️mutation/🔣️.json",
       "sha256": "177b745c1c07ea8770e4b256e8c0ef16fe08bbd22ab157a56896697d11703740"
     },
     {
-      "path": "🔄️rotate-selection/🔄️turns-two-nodes/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🔄️turns-two-nodes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔄️rotate-selection/🔄️turns-two-nodes/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🔄️turns-two-nodes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "688397b2bba8df588002324d04860c263ccdadbd0d21815855f2ef19fa76d7c5"
     },
     {
-      "path": "🔄️rotate-selection/🔄️turns-two-nodes/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🔄️turns-two-nodes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/🔄️turns-two-nodes/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🔄️turns-two-nodes/🔺️diff/🔣️.json",
       "sha256": "a6d29f7963e4281af2fb7225ebef4df08635ea0dd2a1114b54fc3d270bb45634"
     },
     {
-      "path": "🔄️rotate-selection/🔄️turns-two-nodes/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🔄️turns-two-nodes/🦠️mutation/🔣️.json",
       "sha256": "1ab410fce402fc8884ba8c3e91502732143d02d15624aef21e3d718840583a58"
     },
     {
-      "path": "🔄️rotate-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json",
       "sha256": "c67cb6fb0a7429cd631a019569b47fc1f07d023790b431443a637bd094a74107"
     },
     {
-      "path": "🔄️rotate-selection/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/🚫️rejects-ghosts/🔺️diff/🚫️.absent",
+      "path": "✋️selection/🔄️rotate-selection/🚫️rejects-ghosts/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔄️rotate-selection/🚫️rejects-ghosts/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🚫️rejects-ghosts/🦠️mutation/🔣️.json",
       "sha256": "9d51ae669e2c928276b326fbc72e7678571ec3dde3cebee5643b04534257b0c3"
     },
     {
-      "path": "🔄️rotate-selection/🧱️repeated-targets/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🧱️repeated-targets/🎯️outcome/🔣️.json",
       "sha256": "5af94525ad0b6b9909932c2d34adeed13f8269a5865b7e50675a7b9a5430dd38"
     },
     {
-      "path": "🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🧱️repeated-targets/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔄️rotate-selection/🧱️repeated-targets/🔺️diff/🚫️.absent",
+      "path": "✋️selection/🔄️rotate-selection/🧱️repeated-targets/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔄️rotate-selection/🧱️repeated-targets/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔄️rotate-selection/🧱️repeated-targets/🦠️mutation/🔣️.json",
       "sha256": "0aade4ef9f033ec0faae7842ca53ec8a3c2f24f74f168eaa6649648e6e74555a"
     },
     {
-      "path": "🔌replace-node-handle/🔌️rekinds/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🔌replace-node-handle/🔌️rekinds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7aa50f174407d572cd71e0adfc95a851658ffc2ec7d884bd7192abf202f0e604"
-    },
-    {
-      "path": "🔌replace-node-handle/🔌️rekinds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🔌replace-node-handle/🔌️rekinds/🔺️diff/🔣️.json",
-      "sha256": "a0cfdd16430af467cdcfacbbeccd982b42cd9d10dab42d5d360662c16769fe79"
-    },
-    {
-      "path": "🔌replace-node-handle/🔌️rekinds/🦠️mutation/🔣️.json",
-      "sha256": "8eeeb9b6388e67a416fc83bb234772fdf44b5c84c72c5765bbbb2ce3064c4dfb"
-    },
-    {
-      "path": "🔌replace-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "8961c82e18927fbdb5cb0d5d55a8f4d9f9b7bc0fcf49e40b35d9773eaaf15d93"
-    },
-    {
-      "path": "🔌replace-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🔌replace-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🔌replace-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🔌replace-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "ac473fc3a9b892d581e0467c3bdfe10b985a4e3b6a81b86dc5e94d5db6da1193"
-    },
-    {
-      "path": "🔌replace-node-handle/🧱️negative-scale/🎯️outcome/🔣️.json",
-      "sha256": "d4a9333d9a3fa9648cc03d7b6132395c609d7bcad98d47cde2484e66b1afa2d2"
-    },
-    {
-      "path": "🔌replace-node-handle/🧱️negative-scale/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "🔌replace-node-handle/🧱️negative-scale/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "🔌replace-node-handle/🧱️negative-scale/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🔌replace-node-handle/🧱️negative-scale/🦠️mutation/🔣️.json",
-      "sha256": "725fff10660871c119aa1e6c239b6d6f3baf0ac3e46338ff85c2ee81561efd18"
-    },
-    {
-      "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⏸️keeps-a-unit-factor/🎯️outcome/🔣️.json",
       "sha256": "12bcaaf2caf6f595255644ae15559bc2e53ba46e8b3731d7a5306482512a01cf"
     },
     {
-      "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⏸️keeps-a-unit-factor/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⏸️keeps-a-unit-factor/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⏸️keeps-a-unit-factor/🔺️diff/🔣️.json",
       "sha256": "001aa667b82989f7209087d74fb09750ddb59bce0b2509d8d32a8ef14c7177ba"
     },
     {
-      "path": "🔍️scale-selection/⏸️keeps-a-unit-factor/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⏸️keeps-a-unit-factor/🦠️mutation/🔣️.json",
       "sha256": "1ee509f1216dae6714da2bb0e0c07af6e88480fec6a04376c4c4eedf4c517981"
     },
     {
-      "path": "🔍️scale-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/🎯️outcome/🔣️.json",
       "sha256": "c167f347dc9f4f55d0fd5ef906297281852cb21266246474b7b448eb50bfde58"
     },
     {
-      "path": "🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/➡️after/🔣️.json",
       "sha256": "7e7873fa5f183f18fdbafecddd441f4f656f767aa758b6ecb9c70c44981e2575"
     },
     {
-      "path": "🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/🔺️diff/🔣️.json",
       "sha256": "9775164b27f41ea0fe8f4835d5b363c3056d028f64c3978f6e1374a6d45f9782"
     },
     {
-      "path": "🔍️scale-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⚠️skips-locked-ghost/🦠️mutation/🔣️.json",
       "sha256": "28cb6861b02948f11c5e391dfc15006225d18f1dff96817a8a66d6ccbea5ac73"
     },
     {
-      "path": "🔍️scale-selection/⛔️negative-factor/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⛔️negative-factor/🎯️outcome/🔣️.json",
       "sha256": "a32f75be44d6be507fabf86d590b6d7f67aa6f4aa8201db28998de851176ed29"
     },
     {
-      "path": "🔍️scale-selection/⛔️negative-factor/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⛔️negative-factor/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/⛔️negative-factor/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⛔️negative-factor/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/⛔️negative-factor/🔺️diff/🚫️.absent",
+      "path": "✋️selection/🔍️scale-selection/⛔️negative-factor/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔍️scale-selection/⛔️negative-factor/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/⛔️negative-factor/🦠️mutation/🔣️.json",
       "sha256": "6c9dc281ac904395481232b9ae2c620376bc595360e024f67c97327284f552ed"
     },
     {
-      "path": "🔍️scale-selection/🎯️halves-node-region/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🎯️halves-node-region/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔍️scale-selection/🎯️halves-node-region/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🎯️halves-node-region/📸️snapshot/➡️after/🔣️.json",
       "sha256": "9850667d8e40735bafc4cab991e9e9831d1b6972aa3a25bd4fa58f3e5f0e25b4"
     },
     {
-      "path": "🔍️scale-selection/🎯️halves-node-region/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🎯️halves-node-region/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/🎯️halves-node-region/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🎯️halves-node-region/🔺️diff/🔣️.json",
       "sha256": "c4f18a5068e527e686dc96a3c3b3b9a2c5efe7f521b34170348b2c8fc8f64a86"
     },
     {
-      "path": "🔍️scale-selection/🎯️halves-node-region/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🎯️halves-node-region/🦠️mutation/🔣️.json",
       "sha256": "29f750924656693c39245e9abaa5f4e11d71e7985319477af2d922c067f5555f"
     },
     {
-      "path": "🔍️scale-selection/🔍️doubles-two-nodes/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "8e5493cd25272a9d4b2f82744f92e50d9e78a74f4d659dfc446a6f3924d8b413"
     },
     {
-      "path": "🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/🔍️doubles-two-nodes/🔺️diff/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/🔺️diff/🔣️.json",
       "sha256": "8f7918002977ea82f1c0af51a51619f2f1f77553661f2f84a364eaf5fc36a059"
     },
     {
-      "path": "🔍️scale-selection/🔍️doubles-two-nodes/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🔍️doubles-two-nodes/🦠️mutation/🔣️.json",
       "sha256": "6d5ee069b984b32903695e6c48ea08434f4f0f2921548771bd8144456c64213e"
     },
     {
-      "path": "🔍️scale-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🚫️rejects-ghosts/🎯️outcome/🔣️.json",
       "sha256": "f8c22bad10ea6083a87bc7dbadf02bff6f488962bc8878cb39ddd98f84721c2d"
     },
     {
-      "path": "🔍️scale-selection/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🚫️rejects-ghosts/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🚫️rejects-ghosts/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/🚫️rejects-ghosts/🔺️diff/🚫️.absent",
+      "path": "✋️selection/🔍️scale-selection/🚫️rejects-ghosts/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔍️scale-selection/🚫️rejects-ghosts/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🚫️rejects-ghosts/🦠️mutation/🔣️.json",
       "sha256": "8cc646f4b0e982d70d652b3ebfb4ba737a233f2309e8c3759e7c685b05903055"
     },
     {
-      "path": "🔍️scale-selection/🧱️zero-factor/🎯️outcome/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🧱️zero-factor/🎯️outcome/🔣️.json",
       "sha256": "a32f75be44d6be507fabf86d590b6d7f67aa6f4aa8201db28998de851176ed29"
     },
     {
-      "path": "🔍️scale-selection/🧱️zero-factor/📸️snapshot/➡️after/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🧱️zero-factor/📸️snapshot/➡️after/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/🧱️zero-factor/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🧱️zero-factor/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
     },
     {
-      "path": "🔍️scale-selection/🧱️zero-factor/🔺️diff/🚫️.absent",
+      "path": "✋️selection/🔍️scale-selection/🧱️zero-factor/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔍️scale-selection/🧱️zero-factor/🦠️mutation/🔣️.json",
+      "path": "✋️selection/🔍️scale-selection/🧱️zero-factor/🦠️mutation/🔣️.json",
       "sha256": "de06909fd06fcde840e9ff8607454aeaf05e353b14e4e48441243aa324a773c7"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🏷️change-edge-kind/🏷️kinds/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "0bc27c30ff8f5dff382cdf023acfd910411cc1aefeabb26d68967633e8497cac"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️kinds/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "acf22b1aaf8e90c7e30a5d15c90877f2540392abe8211b5a842dd2db98e33ea7"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️kinds/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks/🔺️diff/🔣️.json",
-      "sha256": "fe2f270ce1d50c71b3047063b08531e074349725c91cd7fc13ef0c568e0d2561"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️kinds/🔺️diff/🔣️.json",
+      "sha256": "86115515fcd897a63ad5ae6da1ffe1e2e88c92bbea0d38ba57be97ac24cc0fc4"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks/🦠️mutation/🔣️.json",
-      "sha256": "ffa5e188a59752be2114107cd34f85342153118c0b64bb890f184ce8cbd3f2e3"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️kinds/🦠️mutation/🔣️.json",
+      "sha256": "a3c7927b576f2087369f7f9b51dc9da1dad71af977a9fad8bac7c34fb09f0322"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️rekinds-edge-1/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "59445a1aa173a5be9e3ef643743b14a68668e80eca6e40abf5bdc017d46bff7d"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+      "path": "〰️edge/🏷️change-edge-kind/🏷️rekinds-edge-1/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects/🔺️diff/🚫️.absent",
+      "path": "〰️edge/🏷️change-edge-kind/🏷️rekinds-edge-1/🔺️diff/🔣️.json",
+      "sha256": "23dc3bc4c54e161b14a6ceb342f22a0cca0da1130cd7b85b1e790b2c0c81e928"
+    },
+    {
+      "path": "〰️edge/🏷️change-edge-kind/🏷️rekinds-edge-1/🦠️mutation/🔣️.json",
+      "sha256": "00d87c7b5a688a2a485d9371c7accf6bdbf486006aa1ebad29c3c57336dcfa76"
+    },
+    {
+      "path": "〰️edge/🏷️change-edge-kind/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
+    },
+    {
+      "path": "〰️edge/🏷️change-edge-kind/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "〰️edge/🏷️change-edge-kind/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "〰️edge/🏷️change-edge-kind/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "2d9bdcdf87d56a167cef5ad4096388a0c7c68e1a5d0099a192849072bec55ad5"
+      "path": "〰️edge/🏷️change-edge-kind/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "fd9a1de39343a338f4a62a8bf52a3fa2f2880ff3874929d7a25528e97b9d484b"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-edge-1/🎯️outcome/🔣️.json",
+      "path": "〰️edge/👀change-edge-visible/🙈️hides-edge-1/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/👀change-edge-visible/🙈️hides-edge-1/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7d758b376fb14efa55b4e47c0b98878170fcfebbf1f2372d6b6ee9a45e95a910"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides-edge-1/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides-edge-1/🔺️diff/🔣️.json",
+      "sha256": "56eccfa007af09fcf197238aeb4c676176614ac19e4c82db7ea72de2568c2e8d"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides-edge-1/🦠️mutation/🔣️.json",
+      "sha256": "5ffd87a3c4f1950631deee5a8c72146b30e226528a7f4fe23e09e14867900ef0"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "236b018823581963fdb975eadb6b97cd66d66db3ddef950aa4d5621aefea8ee8"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides/🔺️diff/🔣️.json",
+      "sha256": "6a8e706e4f35af476a618adae60bf0773a08251ab4e02fc8edea26435a836af2"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🙈️hides/🦠️mutation/🔣️.json",
+      "sha256": "91aec51ff869df288525dcc10eb7e6b1a7e086803d7a5d13db5a7048cab075ce"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "〰️edge/👀change-edge-visible/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "8145f5183653c7781dd7e2c97dff899fcff4c022c01be42675283b5e84890e02"
+    },
+    {
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks-edge-1/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/➡️after/🔣️.json",
       "sha256": "9d76c0bc3d5bba550ef18e892461cd76e89b1660eb1dca141058575fa18ffcf0"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks-edge-1/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-edge-1/🔺️diff/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks-edge-1/🔺️diff/🔣️.json",
       "sha256": "2b4b43fadc271983041a1292bc65e9ff9fbf19dc2dfce29c0162a2a28ccd50b9"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-edge-1/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks-edge-1/🦠️mutation/🔣️.json",
       "sha256": "637c2c4f33632428388fc9c10f0bda79a847b00f08c86cd6523d2cf25aecc23c"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json",
       "sha256": "93d3bcd494431cfac589088c9f894788374bb157ae02e364889c2128731fa187"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks/🔺️diff/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks/🔺️diff/🔣️.json",
       "sha256": "4d7b71b6acddbfbf2b0071ca9de5cb09d3546f68680cbe8f616d72be843d2820"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🔒️locks/🦠️mutation/🔣️.json",
       "sha256": "0a3cf11287a051dbf7b2e22803d26b024813a68e5cc8f8fd0bce3d84ec2872a9"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects/🔺️diff/🚫️.absent",
+      "path": "〰️edge/🔐change-edge-locked/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🔐change-edge-locked/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "4a1f1f68995f6eac96327738f7a34d060935d46e785cf51653ac84154a22a8cd"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-node-a/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🔀️swaps-edge-1-tips/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-node-a/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "0e0602f490c341f3649e229ed5526066efca7906626851164257d4f96d92538b"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks-node-a/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks-node-a/🔺️diff/🔣️.json",
-      "sha256": "30dedb7bf3cb40add5a605077b81185d50edbd84449ec32b3e6a517cc378b4eb"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks-node-a/🦠️mutation/🔣️.json",
-      "sha256": "8c484e2b62a4e618b2a06539342965b06218aebbdd3085a6a6b471895cd6272f"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "5f8534d39c4828dbfe05ae0153b50397ff16507c09ef792ff2f001eab945ce0d"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks/🔺️diff/🔣️.json",
-      "sha256": "2fd782aebee6bbf6dd7e91750b2fa496c61f67bfeefe3d482443c5bedc3a6482"
-    },
-    {
-      "path": "🔒change-node-locked/🔒️locks/🦠️mutation/🔣️.json",
-      "sha256": "4ff9f24470234c358f6e0a18614bbd5a452ff4712309f77b1501a0ed46c897fb"
-    },
-    {
-      "path": "🔒change-node-locked/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "🔒change-node-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🔒change-node-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🔒change-node-locked/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🔒change-node-locked/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "5343596e0beeaf8973df91c1d65e6720123ea31f1a2a1596f9c84a982cc6083b"
-    },
-    {
-      "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/➡️after/🔣️.json",
       "sha256": "644ea343fb5731c0998cd2f114f32e064aa8c7e4528b427cd206c66d3967e543"
     },
     {
-      "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🔀️swaps-edge-1-tips/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
     },
     {
-      "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/🔺️diff/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🔀️swaps-edge-1-tips/🔺️diff/🔣️.json",
       "sha256": "403731bc723b770920bd0d17abf0d80bc63762608ca23a6d3ecdc3c063b30e2c"
     },
     {
-      "path": "🖇️change-edge-tips/🔀️swaps-edge-1-tips/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🔀️swaps-edge-1-tips/🦠️mutation/🔣️.json",
       "sha256": "8ec0a598484831f28538864b7a986bac2d43495733c0c6c0cc90e751a1a3f60d"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🖇️tips/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🖇️tips/📸️snapshot/➡️after/🔣️.json",
       "sha256": "fcf2a6ed7a97b37a00f3c02499a546fa7cf03ad09e9347e647633cb5246c0f30"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🖇️tips/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips/🔺️diff/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🖇️tips/🔺️diff/🔣️.json",
       "sha256": "e93f968703ddf4a2cfb64e20c22364e880638d66ba47a9aa8ccc9129cd933eb0"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🖇️tips/🦠️mutation/🔣️.json",
       "sha256": "466b418fe05f7f0f44608913978d4db2183f00762606e1e356d3d425c1c804c5"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects/🔺️diff/🚫️.absent",
+      "path": "〰️edge/🖇️change-edge-tips/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🖇️change-edge-tips/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "a9fcfa4e14c0ea554082e9bc7304245aad1920457edb0b28b2b501e51c15db17"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/📍️repositions-edge-1/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "310d6e69553745719b047056cbb3442b421bedc0c61d4f6b80ee9333db1251a2"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🖋️renames/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🖋️renames/🔺️diff/🔣️.json",
-      "sha256": "77ad657fb074589164c99324f7bb302a5bc5f37f145b5ce998310d47c9f27c7d"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🖋️renames/🦠️mutation/🔣️.json",
-      "sha256": "2a260c64ea2f1cfd3cb20a21eb9b0ddecf54b80febccbc1a9ade804192692b60"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🖋️edit-target-region-label/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "53fec4e9f363009b0035fb446f57980355e5dc77606591aab6cf4c1eaf680a2b"
-    },
-    {
-      "path": "🗑️delete-node/🗑️removes-middle-node/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🗑️delete-node/🗑️removes-middle-node/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d0ca5f655fd4f3edcb7d6aa950e84e0ad4e4b4864ae70f71635a76d0145ba154"
-    },
-    {
-      "path": "🗑️delete-node/🗑️removes-middle-node/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
-    },
-    {
-      "path": "🗑️delete-node/🗑️removes-middle-node/🔺️diff/🔣️.json",
-      "sha256": "e24c92bdea88a402396a8c029a9b222b22b1adda192b88bbd0c85a6b713ed9fd"
-    },
-    {
-      "path": "🗑️delete-node/🗑️removes-middle-node/🦠️mutation/🔣️.json",
-      "sha256": "cd9c7e31b9219948a030729e449134c4d703284677bcfb5d60cca23791460b5e"
-    },
-    {
-      "path": "🗑️delete-node/🚫️deletes/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🗑️delete-node/🚫️deletes/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "17670ba5ff3ef3c8ea0c3f337cf0e09cc86e34b475e37ec45679185a2a6623d9"
-    },
-    {
-      "path": "🗑️delete-node/🚫️deletes/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🗑️delete-node/🚫️deletes/🔺️diff/🔣️.json",
-      "sha256": "3a5f6ab1e6e245d72c575882dd778fcd2fc41a2d2f09140bcdd3b84279754f8b"
-    },
-    {
-      "path": "🗑️delete-node/🚫️deletes/🦠️mutation/🔣️.json",
-      "sha256": "7b4cf5de149d6323804afb0daafd581574cb78da9daa271c67c23bf1ee6c4fca"
-    },
-    {
-      "path": "🗑️delete-node/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "🗑️delete-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🗑️delete-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🗑️delete-node/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🗑️delete-node/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "394b0551c5a83df73c0dea04e3afb181e218741f8ef7a4c9325dff0018cc67ff"
-    },
-    {
-      "path": "🗑️delete-node/🚫️removes/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🗑️delete-node/🚫️removes/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "31128ffe57b302265cc64b741533c30d4116777646d1efeb76b173fd69fab0f1"
-    },
-    {
-      "path": "🗑️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🗑️delete-node/🚫️removes/🔺️diff/🔣️.json",
-      "sha256": "97aff39616364ac4e68d8c2a96a3b3ed5a05f15fcb25d0498ff49e82d5af586b"
-    },
-    {
-      "path": "🗑️delete-node/🚫️removes/🦠️mutation/🔣️.json",
-      "sha256": "651a24d0919ac81938e7673b8fa62122de67d006ab9e7f0cb5756da20c6e6b39"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🙈️hides/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🙈️hides/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "297911fe9be21ca54924c546659c82f4add2771a7db76ae3a53e01ed2acfab41"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🙈️hides/🔺️diff/🔣️.json",
-      "sha256": "09486f729e8bf94478ecdd556d9cd9a7e5d246a9540b32cfe56d7bf5a59d6cdd"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🙈️hides/🦠️mutation/🔣️.json",
-      "sha256": "681d117174f79640e620c79000e08d2a319de6a86fdd241ef1c34bf02d543cf4"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🙈change-target-region-hidden/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "4c6f34af3137e51b1610d4cbb5ca4e07e560854b892e0bdddfed0f04915414f5"
-    },
-    {
-      "path": "🚀move-target-region/🚀️slides-region-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🚀move-target-region/🚀️slides-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "bda7e9234d1fede66f11432493958b8c383560d7e6ac21c7e767fc7cf8e7f3ab"
-    },
-    {
-      "path": "🚀move-target-region/🚀️slides-region-1/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🚀move-target-region/🚀️slides-region-1/🔺️diff/🔣️.json",
-      "sha256": "15616f9c4cdec7f70778c4e150ba3141d3b16b7183bed66ac6183fb434324d9c"
-    },
-    {
-      "path": "🚀move-target-region/🚀️slides-region-1/🦠️mutation/🔣️.json",
-      "sha256": "4aaadba78e8e875810e2f480e4bdf3d2dfd48c1af1c8ce5973e5b22d14625b2a"
-    },
-    {
-      "path": "🚀move-target-region/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
-    },
-    {
-      "path": "🚀move-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🚀move-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
-    },
-    {
-      "path": "🚀move-target-region/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🚀move-target-region/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "a19a33ac9ab754cd6bff337115a5309aa65ccd79a144b669a52d0be6d78d889d"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️adds/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️adds/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "fe33f0d712cdf74528b08be1d06072a33bc0910c12958ae96a8701547f7ac765"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️adds/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️adds/🔺️diff/🔣️.json",
-      "sha256": "2caed795f7ebf316ed471aa5d05c44fdf608a852b1f034d4e231c554814fe33e"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️adds/🦠️mutation/🔣️.json",
-      "sha256": "da3e6e3266f53d882c39479caab761864f0d5ec2a465531af069c325c8705556"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️admits/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️admits/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2a36e538e65a16b5405a1c503f7aaf866069d5aaedc83ca0cbbf40ac57b6fec6"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️admits/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️admits/🔺️diff/🔣️.json",
-      "sha256": "911f528242003fc92dee43560f29e8efc519ad2b3d8d9f13f711536315433861"
-    },
-    {
-      "path": "🤝connect-kind-compatibility/🤝️admits/🦠️mutation/🔣️.json",
-      "sha256": "d05388ba53a9cf3cd2a748ca96fd45ea3cc7cab164bff77744cba32b4d1cfd04"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️circle/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️circle/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "ce12d4f51a70a7c926e07cf4a7463b9f4dfacee20bd08689fa43397425adbf5a"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️circle/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️circle/🔺️diff/🔣️.json",
-      "sha256": "efd7770ab9136f9f754364fbb7b52d6590013a959a274f38b92de2248e0a7c97"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️circle/🦠️mutation/🔣️.json",
-      "sha256": "44ba2bc5d6eba703e119a34f759e8f1c91b6743da24a524bc319e2b953c88f16"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️squares/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️squares/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "6bd30e93f4fd007cf517a3f2d40a4cea88672ade00b25c045c37e88098768871"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️squares/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2fe7c55cd6a9d27bf27ed4d504c43343dffc41fba5243a2df83abcfb45a14b82"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️squares/🔺️diff/🔣️.json",
-      "sha256": "11420991fe77c920b599ba9b1f58453236ff7224d08861142f5957bf1116c238"
-    },
-    {
-      "path": "🧊replace-node-geometry/🔳️squares/🦠️mutation/🔣️.json",
-      "sha256": "e2a98b666e8837ac9dba7ee0557bb071a270ceeaea45fdbc101b2284b85f7d99"
-    },
-    {
-      "path": "🧊replace-node-geometry/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
-    },
-    {
-      "path": "🧊replace-node-geometry/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🧊replace-node-geometry/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🧊replace-node-geometry/🚫️rejects/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🧊replace-node-geometry/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "acd48d78bfb3eedd7e0abfaf12782ccdccf811f5160779e6c157c2700d0bdfc5"
-    },
-    {
-      "path": "🧊replace-node-geometry/🧱️negative-radius/🎯️outcome/🔣️.json",
-      "sha256": "a32f75be44d6be507fabf86d590b6d7f67aa6f4aa8201db28998de851176ed29"
-    },
-    {
-      "path": "🧊replace-node-geometry/🧱️negative-radius/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "🧊replace-node-geometry/🧱️negative-radius/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
-    },
-    {
-      "path": "🧊replace-node-geometry/🧱️negative-radius/🔺️diff/🚫️.absent",
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    },
-    {
-      "path": "🧊replace-node-geometry/🧱️negative-radius/🦠️mutation/🔣️.json",
-      "sha256": "e91b949193a8b93da9c1646da0631d957182264e2588d975505315aa89126d93"
-    },
-    {
-      "path": "🧮replace-edge-geometry/📍️repositions-edge-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/➡️after/🔣️.json",
       "sha256": "54d86786fb4379c98e53d0fa2e55fe88b4f984800d2e3688f4cfb56cbdc690f2"
     },
     {
-      "path": "🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/📍️repositions-edge-1/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
     },
     {
-      "path": "🧮replace-edge-geometry/📍️repositions-edge-1/🔺️diff/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/📍️repositions-edge-1/🔺️diff/🔣️.json",
       "sha256": "467dad7b21fc6eac33b7ba794b299fe913b722988412fdb15ca647519ee524b0"
     },
     {
-      "path": "🧮replace-edge-geometry/📍️repositions-edge-1/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/📍️repositions-edge-1/🦠️mutation/🔣️.json",
       "sha256": "56a21b3821582f6a53f2dd8df8553d22ebd8404b50bb88408a9e31fb07f492c1"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects/🔺️diff/🚫️.absent",
+      "path": "〰️edge/🧮replace-edge-geometry/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "787b948960756968aceba4f2d9b2910d3167ddb5ce3e7abf66b274ee0c507138"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes/🎯️outcome/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🧮️reposes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes/📸️snapshot/➡️after/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🧮️reposes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "218f69bfc4c3fc4297e8724678e3b3d16d63bc00c9ab274a5597232d1132867d"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes/📸️snapshot/⬅️before/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🧮️reposes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes/🔺️diff/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🧮️reposes/🔺️diff/🔣️.json",
       "sha256": "8db6c3e9867aa14e8e430150edf9e7807c21b64ccfcb9ff15d2d7f6e5ccf4adf"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes/🦠️mutation/🔣️.json",
+      "path": "〰️edge/🧮replace-edge-geometry/🧮️reposes/🦠️mutation/🔣️.json",
       "sha256": "5e3ebc4f0818b7a605d8f56a47a4dd1e266f7182920179f9c011bbacb2b7e2e1"
     },
     {
-      "path": "🪢️connect-handles/⏸️keeps/🎯️outcome/🔣️.json",
-      "sha256": "d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6"
-    },
-    {
-      "path": "🪢️connect-handles/⏸️keeps/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🪢️connect-handles/⏸️keeps/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
-    },
-    {
-      "path": "🪢️connect-handles/⏸️keeps/🔺️diff/🔣️.json",
-      "sha256": "001aa667b82989f7209087d74fb09750ddb59bce0b2509d8d32a8ef14c7177ba"
-    },
-    {
-      "path": "🪢️connect-handles/⏸️keeps/🦠️mutation/🔣️.json",
-      "sha256": "a036bac19b62a793e6b33ee20a183c7fbf08295189b6dc0392d751c287d1de67"
-    },
-    {
-      "path": "🪢️connect-handles/🪢️adds-second-edge/🎯️outcome/🔣️.json",
+      "path": "🌍️region/🌍create-target-region/🌍️appends-region-2/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "f21d626a08c40b51a0b3d2e6953d37a8140bea55b73ffe5e607bfec8192be615"
+      "path": "🌍️region/🌍create-target-region/🌍️appends-region-2/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "71a78ee874ca20b5c2f39c3d011cd4da43fee394bedf0b5235ab8e18e4d1d45a"
     },
     {
-      "path": "🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+      "path": "🌍️region/🌍create-target-region/🌍️appends-region-2/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
     },
     {
-      "path": "🪢️connect-handles/🪢️adds-second-edge/🔺️diff/🔣️.json",
-      "sha256": "bcf5cb08c79fd6d08a67393c633d9633ceffc0c280ae40fccc08d348232047a2"
+      "path": "🌍️region/🌍create-target-region/🌍️appends-region-2/🔺️diff/🔣️.json",
+      "sha256": "c1035c7a6b6ad200702b6abad7abd2a2643d6506a78249e863fd74f970818fb5"
     },
     {
-      "path": "🪢️connect-handles/🪢️adds-second-edge/🦠️mutation/🔣️.json",
-      "sha256": "1c06fb31e1f687cd07e1c2e339b014ec1f3d15960584f5fbcea8c3ed7b31bdaa"
+      "path": "🌍️region/🌍create-target-region/🌍️appends-region-2/🦠️mutation/🔣️.json",
+      "sha256": "bcb2d51949fcf499540d29ad8dd4b05f453196a0f7ed811f15aeaa66a4ba3b88"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires/🎯️outcome/🔣️.json",
+      "path": "🌍️region/🌍create-target-region/🌍️paints/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "d477d04fe881e9b41de1c6d5bad3dba314fbbfed95c885a79ed97ab937dcdb1b"
+      "path": "🌍️region/🌍create-target-region/🌍️paints/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "092cbb339368b7bdc303496f281963f683209aacef0ce372cc85ed0b5ea0a8b6"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+      "path": "🌍️region/🌍create-target-region/🌍️paints/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2fe7c55cd6a9d27bf27ed4d504c43343dffc41fba5243a2df83abcfb45a14b82"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires/🔺️diff/🔣️.json",
-      "sha256": "80e31b60a5b6494b0e72180eae6cc1fd2650773ad81aed257d70bf7021d06414"
+      "path": "🌍️region/🌍create-target-region/🌍️paints/🔺️diff/🔣️.json",
+      "sha256": "c480e44661f07dfe30665b0118fc7d606713f31a806928d1cc18516524a402b3"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires/🦠️mutation/🔣️.json",
-      "sha256": "fb41cdb2018dca15b31a1055f055646f0360e5ba8581afc2783a4e59e36f85ad"
+      "path": "🌍️region/🌍create-target-region/🌍️paints/🦠️mutation/🔣️.json",
+      "sha256": "64c9e4b81c7d2f8b9a5450714e440f3a09d6cc0f694efee56c8df13674421323"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects/🎯️outcome/🔣️.json",
-      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+      "path": "🌍️region/🌍create-target-region/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "d90c7bc6d58ca87d2b7ff85991730bb6acd2d2232fdacf1d9ba92a46c822b544"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌍️region/🌍create-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌍️region/🌍create-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects/🔺️diff/🚫️.absent",
+      "path": "🌍️region/🌍create-target-region/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects/🦠️mutation/🔣️.json",
-      "sha256": "e973ade03ff628c26fb678b9986be196c5a0c539028e65294a5ca6ff09e44e2a"
+      "path": "🌍️region/🌍create-target-region/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "37c26cba0fb2ecac0ef771c7b2320bb2c134444c4ccbec64bd32b6acf4bcdad1"
     },
     {
-      "path": "🪦delete-target-region/🪦️removes-middle-region/🎯️outcome/🔣️.json",
+      "path": "🌍️region/📐resize-target-region/📐️widens-region-1/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🪦delete-target-region/🪦️removes-middle-region/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "8df43126be68fea6b17bc74666e81c260be494e26751656ea8fde52d3cf48fa3"
+      "path": "🌍️region/📐resize-target-region/📐️widens-region-1/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "9036901cbbe9aeab98ce95e26d974e2f2aad87ea4aa8fcd68698f144b07abcbd"
     },
     {
-      "path": "🪦delete-target-region/🪦️removes-middle-region/📸️snapshot/⬅️before/🔣️.json",
-      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
-    },
-    {
-      "path": "🪦delete-target-region/🪦️removes-middle-region/🔺️diff/🔣️.json",
-      "sha256": "1e1f27a7648b0e2c39836ca8d6895fd0d4c6b45260b070751ccf34f034928488"
-    },
-    {
-      "path": "🪦delete-target-region/🪦️removes-middle-region/🦠️mutation/🔣️.json",
-      "sha256": "7eae81326918d8bba47b67da5249249ac675752d85993fa83c9090a4b38560fc"
-    },
-    {
-      "path": "🪦delete-target-region/🪦️removes-region-1/🎯️outcome/🔣️.json",
-      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
-    },
-    {
-      "path": "🪦delete-target-region/🪦️removes-region-1/📸️snapshot/➡️after/🔣️.json",
-      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
-    },
-    {
-      "path": "🪦delete-target-region/🪦️removes-region-1/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌍️region/📐resize-target-region/📐️widens-region-1/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
     },
     {
-      "path": "🪦delete-target-region/🪦️removes-region-1/🔺️diff/🔣️.json",
+      "path": "🌍️region/📐resize-target-region/📐️widens-region-1/🔺️diff/🔣️.json",
+      "sha256": "9dcc28350cf259be5beb7f3ff4aef2853e15fbbe445396f2abb66326b22f9b29"
+    },
+    {
+      "path": "🌍️region/📐resize-target-region/📐️widens-region-1/🦠️mutation/🔣️.json",
+      "sha256": "086638f0b940f2d368eabd30cafb248c71345d63dc1df2353e9296f51229cc19"
+    },
+    {
+      "path": "🌍️region/📐resize-target-region/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+    },
+    {
+      "path": "🌍️region/📐resize-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/📐resize-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/📐resize-target-region/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🌍️region/📐resize-target-region/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "909ac97c93a8597512e950e171f0852797ba595631ca53075aa3c8b44734a6c3"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🔏️locks/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🔏️locks/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "0bc27c30ff8f5dff382cdf023acfd910411cc1aefeabb26d68967633e8497cac"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🔏️locks/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🔏️locks/🔺️diff/🔣️.json",
+      "sha256": "fe2f270ce1d50c71b3047063b08531e074349725c91cd7fc13ef0c568e0d2561"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🔏️locks/🦠️mutation/🔣️.json",
+      "sha256": "ffa5e188a59752be2114107cd34f85342153118c0b64bb890f184ce8cbd3f2e3"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🌍️region/🔏change-target-region-locked/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "2d9bdcdf87d56a167cef5ad4096388a0c7c68e1a5d0099a192849072bec55ad5"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🖋️renames/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🖋️renames/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "310d6e69553745719b047056cbb3442b421bedc0c61d4f6b80ee9333db1251a2"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🖋️renames/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🖋️renames/🔺️diff/🔣️.json",
+      "sha256": "77ad657fb074589164c99324f7bb302a5bc5f37f145b5ce998310d47c9f27c7d"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🖋️renames/🦠️mutation/🔣️.json",
+      "sha256": "2a260c64ea2f1cfd3cb20a21eb9b0ddecf54b80febccbc1a9ade804192692b60"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🌍️region/🖋️edit-target-region-label/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "53fec4e9f363009b0035fb446f57980355e5dc77606591aab6cf4c1eaf680a2b"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🙈️hides/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🙈️hides/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "297911fe9be21ca54924c546659c82f4add2771a7db76ae3a53e01ed2acfab41"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🙈️hides/🔺️diff/🔣️.json",
+      "sha256": "09486f729e8bf94478ecdd556d9cd9a7e5d246a9540b32cfe56d7bf5a59d6cdd"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🙈️hides/🦠️mutation/🔣️.json",
+      "sha256": "681d117174f79640e620c79000e08d2a319de6a86fdd241ef1c34bf02d543cf4"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🌍️region/🙈change-target-region-hidden/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "4c6f34af3137e51b1610d4cbb5ca4e07e560854b892e0bdddfed0f04915414f5"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚀️slides-region-1/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚀️slides-region-1/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "bda7e9234d1fede66f11432493958b8c383560d7e6ac21c7e767fc7cf8e7f3ab"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚀️slides-region-1/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚀️slides-region-1/🔺️diff/🔣️.json",
+      "sha256": "15616f9c4cdec7f70778c4e150ba3141d3b16b7183bed66ac6183fb434324d9c"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚀️slides-region-1/🦠️mutation/🔣️.json",
+      "sha256": "4aaadba78e8e875810e2f480e4bdf3d2dfd48c1af1c8ce5973e5b22d14625b2a"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🌍️region/🚀move-target-region/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "a19a33ac9ab754cd6bff337115a5309aa65ccd79a144b669a52d0be6d78d889d"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "e973ade03ff628c26fb678b9986be196c5a0c539028e65294a5ca6ff09e44e2a"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-middle-region/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-middle-region/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "8df43126be68fea6b17bc74666e81c260be494e26751656ea8fde52d3cf48fa3"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-middle-region/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-middle-region/🔺️diff/🔣️.json",
+      "sha256": "1e1f27a7648b0e2c39836ca8d6895fd0d4c6b45260b070751ccf34f034928488"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-middle-region/🦠️mutation/🔣️.json",
+      "sha256": "7eae81326918d8bba47b67da5249249ac675752d85993fa83c9090a4b38560fc"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-region-1/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-region-1/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-region-1/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "7477c27f413444462caac2bd460c9bfb984667d4a989abe639970d3d12345861"
+    },
+    {
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-region-1/🔺️diff/🔣️.json",
       "sha256": "8dafe5b98e726cd02f45576ffed2e37fce2cf5827f139758adcbf541e67f8dc3"
     },
     {
-      "path": "🪦delete-target-region/🪦️removes-region-1/🦠️mutation/🔣️.json",
+      "path": "🌍️region/🪦delete-target-region/🪦️removes-region-1/🦠️mutation/🔣️.json",
       "sha256": "fcd082f4dbbc3368bd15ab57a8f92615717426e8877297468f8716f8c7246b17"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints-manifest/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "6e64527ea682de0f3508afe7080f6ce423144010add9559c7771ec65200b705e"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints-manifest/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints-manifest/🔺️diff/🔣️.json",
+      "sha256": "369ff1a8b01fcbf38bd3eb0c1dd47bb3b20cc8dd041015c2cc0bf448182ecd9e"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints-manifest/🦠️mutation/🔣️.json",
+      "sha256": "f3a8b2b57e939d3dadb5afc7ab3eee1cab2fb7ad3b1fd079565dc11991f25822"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "3b47c9eb51cdc0756b7ff4d900b2f93eb3f7a642c1829c3c963576a9a7b874de"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints/🔺️diff/🔣️.json",
+      "sha256": "752fec598d9bb22efa1b6fe10b29061e64703b8eec132e28a13bae0c523236f3"
+    },
+    {
+      "path": "📚️catalog/🆔change-manifest-id/📦️repoints/🦠️mutation/🔣️.json",
+      "sha256": "941ce98754fb7d4232258e665bf9d2143ea1c4270bc3b0e330616cdcd0f4c828"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws-middle-row/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws-middle-row/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "876475dee6b112ee371a0a8ecf60901a3146c37b11c6d630d66c4473c179b8d6"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws-middle-row/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws-middle-row/🔺️diff/🔣️.json",
+      "sha256": "f17b726398f86dddc5df2a45e699e32d47032886401a5cb63abeab4963fa06d9"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws-middle-row/🦠️mutation/🔣️.json",
+      "sha256": "af2ffbc641fa23e962915c5e3f8d4dcc4e3e0fc4a9480d06d8f3a8fa26020d40"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "e1e8f23055ddd7c6be9fa515f0f59ea919e71f4de3a1bcfa3e22d24d6e2075e3"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws/🔺️diff/🔣️.json",
+      "sha256": "525081c24d4bc965941f219536ca4206e454f96062413acfa02c4c80406d0231"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/💔️withdraws/🦠️mutation/🔣️.json",
+      "sha256": "6fab1cad1f6e42da3b6e2b568801dc6a06ccee1dca9d1672747f971ad477b821"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "d8edf89df7819a39e4aad1fd6b081567e1b89651b108a2926d058f8237e39ef3"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "7ed634aaab629daa8c0769b97139a22ed8c02f235034b983f9f9697b1b7451f5"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️removes/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️removes/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "66df2f1fa26849aa06141e67886771ce772bb958bab243ae33313ab37d2c9c23"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️removes/🔺️diff/🔣️.json",
+      "sha256": "cc0eb51fc72ca0cfb97049215e0e7f652ffa9f89f48709528462f1a8ad4b81ec"
+    },
+    {
+      "path": "📚️catalog/💔disconnect-kind-compatibility/🚫️removes/🦠️mutation/🔣️.json",
+      "sha256": "779efce4226b9341d7b4d760d86f9d6ebfd13ec7736ca424ecb4daccb6921bc0"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "6854c743a09914bbc3fc0ec5337efe821318769fabf092e1a77b3b63ef9f818c"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs/🔺️diff/🔣️.json",
+      "sha256": "7afbd238e891758e9cc8a97b9bec4973c0051a55bb34a11c0000ec477d9c1af4"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs/🦠️mutation/🔣️.json",
+      "sha256": "3bdfdaef9a35145d0907e2ced62403978a0d246f3adfa490189c48225d6d6949"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs2/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs2/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "fb6c9ae6b56f2d1a6078051d1547c128c833404b05fcbf2048c168425e9d05e5"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs2/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs2/🔺️diff/🔣️.json",
+      "sha256": "279f2b0984a1810ce3d3a8e81f0429957a6fc72958a6a602369b86883d51e7f5"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/📇️installs2/🦠️mutation/🔣️.json",
+      "sha256": "2c4bfd734ec7c0f67e118aded2dbd4f15dda2cbb4719f8446503332636886ad4"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🗑️clears/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🗑️clears/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🗑️clears/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "fb6c9ae6b56f2d1a6078051d1547c128c833404b05fcbf2048c168425e9d05e5"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🗑️clears/🔺️diff/🔣️.json",
+      "sha256": "843a3c06c4a2020fe234a7854c7155d35fc393c0c5323a6d3faddfbc75c52020"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🗑️clears/🦠️mutation/🔣️.json",
+      "sha256": "91b35121853bdde7d415b515b37acf84acc53d1f212de174d96816f4da18d5a1"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🧱️off-rim-template/🎯️outcome/🔣️.json",
+      "sha256": "944cfb92fc6fca73664e119a29283bdc681d620ed002853e377b56f33fae6f91"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🧱️off-rim-template/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🧱️off-rim-template/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🧱️off-rim-template/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "📚️catalog/📚replace-kind-catalogs/🧱️off-rim-template/🦠️mutation/🔣️.json",
+      "sha256": "0e8835f4f7b12c4aca819ca3c16b1d47ce9b678d640f67a2789683b0deb0a751"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️adds/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️adds/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "fe33f0d712cdf74528b08be1d06072a33bc0910c12958ae96a8701547f7ac765"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️adds/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️adds/🔺️diff/🔣️.json",
+      "sha256": "2caed795f7ebf316ed471aa5d05c44fdf608a852b1f034d4e231c554814fe33e"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️adds/🦠️mutation/🔣️.json",
+      "sha256": "da3e6e3266f53d882c39479caab761864f0d5ec2a465531af069c325c8705556"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️admits/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️admits/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "2a36e538e65a16b5405a1c503f7aaf866069d5aaedc83ca0cbbf40ac57b6fec6"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️admits/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️admits/🔺️diff/🔣️.json",
+      "sha256": "911f528242003fc92dee43560f29e8efc519ad2b3d8d9f13f711536315433861"
+    },
+    {
+      "path": "📚️catalog/🤝connect-kind-compatibility/🤝️admits/🦠️mutation/🔣️.json",
+      "sha256": "d05388ba53a9cf3cd2a748ca96fd45ea3cc7cab164bff77744cba32b4d1cfd04"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs-middle-edge/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs-middle-edge/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d13a36ea81b4d849216e85c4cf223b1e21d4ea6ad8d5b17496aad0775de95f17"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs-middle-edge/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs-middle-edge/🔺️diff/🔣️.json",
+      "sha256": "537277b48eb96b41feb91ac9cd09553edb626b26553ac46d9abbf0334107503f"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs-middle-edge/🦠️mutation/🔣️.json",
+      "sha256": "b0605eefef09a9e023fc98fe918c44503c77c2f9fd66e8a99c11aa1b1d754e95"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d4a8ba92da68d4eb6511a9355c0ab7781ece6f702b81ab4e99e85e9261b4e971"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs/🔺️diff/🔣️.json",
+      "sha256": "b109994526a9aa739e9a2eeb9dabca5915a28a0da5711067e7a6e584b762ed11"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/✂️severs/🦠️mutation/🔣️.json",
+      "sha256": "218c6de65b50bcc07b51cc92e70591b27f8d9800c6cae927f2bc4be7ea3e216c"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "03632d32fd674ff5236b346b448a24c1bb39ae2fd485f7003c82ad920114e0bf"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️removes-edge-1/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️removes-edge-1/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "642605709e5620f9725b328d461d9a94f74d8151f859d59355c8a71a645e1e49"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️removes-edge-1/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️removes-edge-1/🔺️diff/🔣️.json",
+      "sha256": "0e7cdbce5a1c996106dca80691f9b77897d3e23c2b643b2645c3bd02e90fe03a"
+    },
+    {
+      "path": "🔌️handle/✂️disconnect-handles/🚫️removes-edge-1/🦠️mutation/🔣️.json",
+      "sha256": "b9916104be14861fe79542fe335c96d08ccc1b78754eb23e6a337befb2be0ffa"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️adds/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️adds/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "cedb3863abafa867056e1f1863d1fa69a247128623f1b5cb93742825ad7154e8"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️adds/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️adds/🔺️diff/🔣️.json",
+      "sha256": "d104b972d99e2ad695c4a8a56307d7a9985d85851a5c3bd2a6ce92e373d35af3"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️adds/🦠️mutation/🔣️.json",
+      "sha256": "0d51f6b7421ce96983bb31ed7a64b14304d97ce0cf2e28b415c85504d71344fd"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️appends-handle-3-to-node-b/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️appends-handle-3-to-node-b/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "cb722734359082997cf61775d7df3b7232188ee34bd0a7ca8e545c47dbe2e9d5"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️appends-handle-3-to-node-b/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️appends-handle-3-to-node-b/🔺️diff/🔣️.json",
+      "sha256": "4cc86fa05f099b7344a4376876282f539d1e38d320fc1fcf687304f279ce0de1"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/➕️appends-handle-3-to-node-b/🦠️mutation/🔣️.json",
+      "sha256": "d0c20dfc2c8c88a7b0f86477a9f3cf1f505fbf324dbe66e69963b94fa855d609"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "8dff1c53dc01c2203efd4279a7f691df7d7d2dcd5e88c8f6c7ce169ce072bcc8"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🧱️zero-radius-handle/🎯️outcome/🔣️.json",
+      "sha256": "d0a34ae700546f464b18af2efd67802828eb174f6bebdc08fadc887af8b35d32"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🧱️zero-radius-handle/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🧱️zero-radius-handle/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🔌️handle/➕add-node-handle/🧱️zero-radius-handle/🦠️mutation/🔣️.json",
+      "sha256": "8bb4ccfb577dfa79c8f091957ebb721e77a218020192a24792a06593a4af8eb9"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/➖removes-middle-handle/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/➖removes-middle-handle/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "48f4b96dcddda342d22fa3bb862bf7bc70ee9429553b29f480e7ec3c7131cb19"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/➖removes-middle-handle/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/➖removes-middle-handle/🔺️diff/🔣️.json",
+      "sha256": "e8a72b2b6c51f409c5446883bfb7edfb62f2915d122208db1888729b38aa6d5b"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/➖removes-middle-handle/🦠️mutation/🔣️.json",
+      "sha256": "f2d5a8ad218f707f664bd5a2b6e71be3c4257c8fdc027179323334e7046d7f6c"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "a3a754795b0f9beb957e8368a02b8d74d19c9e67596d35202c4b4bcb668e712e"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "cc92c1f981ef87a34f57db61b3fb5bc2f2f1637ed8d6b8b5a4ce732f25b16023"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "6fc8a0af29a7e6a2e47739110e53f600451f7f478469a9b7593c3b7e9a5c29ba"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes/🔺️diff/🔣️.json",
+      "sha256": "57893874d6d012c8d08bcd85fa1f918c6cd0a851ea500062ab4cffae94695f43"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes/🦠️mutation/🔣️.json",
+      "sha256": "5cc9b75930ec957c81cc00a9a65c1e1d0ea9edd99b11e2c0b279d36b271f1901"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes2/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes2/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "9a29991962b33955beb78607ec3d5c8b889b74d4d17b8195c620f2dfa64b81d6"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes2/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes2/🔺️diff/🔣️.json",
+      "sha256": "c84eeee8daa4847b6ffa0d2043f9d0b8e856c088f29e573a19a4e4abc7fc9519"
+    },
+    {
+      "path": "🔌️handle/➖remove-node-handle/🚫️removes2/🦠️mutation/🔣️.json",
+      "sha256": "993aa8f3d1feaad63e64e8bf973f853af59d5e7fd256ba5029e05c9f9c5113a6"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🔌️rekinds/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🔌️rekinds/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7aa50f174407d572cd71e0adfc95a851658ffc2ec7d884bd7192abf202f0e604"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🔌️rekinds/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🔌️rekinds/🔺️diff/🔣️.json",
+      "sha256": "a0cfdd16430af467cdcfacbbeccd982b42cd9d10dab42d5d360662c16769fe79"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🔌️rekinds/🦠️mutation/🔣️.json",
+      "sha256": "8eeeb9b6388e67a416fc83bb234772fdf44b5c84c72c5765bbbb2ce3064c4dfb"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "8961c82e18927fbdb5cb0d5d55a8f4d9f9b7bc0fcf49e40b35d9773eaaf15d93"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "ac473fc3a9b892d581e0467c3bdfe10b985a4e3b6a81b86dc5e94d5db6da1193"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🧱️negative-scale/🎯️outcome/🔣️.json",
+      "sha256": "d4a9333d9a3fa9648cc03d7b6132395c609d7bcad98d47cde2484e66b1afa2d2"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🧱️negative-scale/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🧱️negative-scale/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🧱️negative-scale/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🔌️handle/🔌replace-node-handle/🧱️negative-scale/🦠️mutation/🔣️.json",
+      "sha256": "725fff10660871c119aa1e6c239b6d6f3baf0ac3e46338ff85c2ee81561efd18"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/⏸️keeps/🎯️outcome/🔣️.json",
+      "sha256": "d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/⏸️keeps/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/⏸️keeps/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/⏸️keeps/🔺️diff/🔣️.json",
+      "sha256": "001aa667b82989f7209087d74fb09750ddb59bce0b2509d8d32a8ef14c7177ba"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/⏸️keeps/🦠️mutation/🔣️.json",
+      "sha256": "a036bac19b62a793e6b33ee20a183c7fbf08295189b6dc0392d751c287d1de67"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️adds-second-edge/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "f21d626a08c40b51a0b3d2e6953d37a8140bea55b73ffe5e607bfec8192be615"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️adds-second-edge/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️adds-second-edge/🔺️diff/🔣️.json",
+      "sha256": "bcf5cb08c79fd6d08a67393c633d9633ceffc0c280ae40fccc08d348232047a2"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️adds-second-edge/🦠️mutation/🔣️.json",
+      "sha256": "1c06fb31e1f687cd07e1c2e339b014ec1f3d15960584f5fbcea8c3ed7b31bdaa"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️rewires/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️rewires/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d477d04fe881e9b41de1c6d5bad3dba314fbbfed95c885a79ed97ab937dcdb1b"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️rewires/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️rewires/🔺️diff/🔣️.json",
+      "sha256": "80e31b60a5b6494b0e72180eae6cc1fd2650773ad81aed257d70bf7021d06414"
+    },
+    {
+      "path": "🔌️handle/🪢️connect-handles/🪢️rewires/🦠️mutation/🔣️.json",
+      "sha256": "fb41cdb2018dca15b31a1055f055646f0360e5ba8581afc2783a4e59e36f85ad"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️derives/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️derives/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "25664be3611df128840959ef3e3de6be74e03fd182c2ea54176ec2c3c5d8ffe7"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️derives/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️derives/🔺️diff/🔣️.json",
+      "sha256": "b26bd32ff78c158462988a9b57fd219cef69c83e2304b31fc769833c01139fb2"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️derives/🦠️mutation/🔣️.json",
+      "sha256": "364aacb4796609179348bffbbdfa12d38454880dc3464492c2d40b0fa35a84dc"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️fixed-to-derived/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️fixed-to-derived/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "4ed825b07ce7d37d6000f8209ff3dcc4b810574ecd251c51c9ad74e1ef3bd229"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️fixed-to-derived/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️fixed-to-derived/🔺️diff/🔣️.json",
+      "sha256": "81b793bab5a5fcdbb5371dbc5eb3b8be090eedf3545bed8e43e6cd0c7459e977"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/⚓️fixed-to-derived/🦠️mutation/🔣️.json",
+      "sha256": "e0b57ae50b0933e1fcebcecd78d66adadd8ae66d3f4140ef250c9328ae4d6ca1"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/⚓change-node-anchor/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "21eccebcc830648792ad3443ff6a917fafdf993654505ddc86311f0a69da2ce1"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️recodes/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️recodes/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "7544f3702e5a761a535d81c7dd2bec37bacd95fce901c9c265549436d8d3ce5a"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️recodes/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️recodes/🔺️diff/🔣️.json",
+      "sha256": "36eacac2f2999b7ced36ca3bf279456c829b6d69fdaad075742932fc89139fcc"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️recodes/🦠️mutation/🔣️.json",
+      "sha256": "732ab1e006aaa184a393165f3c1734efdcd1b005591048d7b917fa8e33198ee2"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️retitles-node-a/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️retitles-node-a/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "af83dcc61a61765132413abe464d3536a96e225dea08034f2e5eaeaff4ed1ed5"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️retitles-node-a/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️retitles-node-a/🔺️diff/🔣️.json",
+      "sha256": "64edce9159ef07c48120662227cb609a27b16ef78c40eb6e7ff8dfd052d84a65"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/✏️retitles-node-a/🦠️mutation/🔣️.json",
+      "sha256": "cc73c947f7907483f1fb11a664cf63bade0ec9b0f15695e95f2b2c8a02b3b38c"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/✏️edit-node-text/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "f0eebdb0571c89494c936439f86c4a3bfac0471ccc65ae3b5b6c0b97c0f979f9"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes-node-a-to-root/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes-node-a-to-root/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "f77ded247e849c0bd18bbbf7619277f8bbd4e5b38b349d6020542c84b9ecb812"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes-node-a-to-root/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes-node-a-to-root/🔺️diff/🔣️.json",
+      "sha256": "842c669654204940c3f90d21f9ab81251af9295337bc2e23a02bb393a0a1cc91"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes-node-a-to-root/🦠️mutation/🔣️.json",
+      "sha256": "0b82171fd201ccaa2b5c9e1884da8d64c0deb4f5197cd714481bf391711502f1"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "4753aa61b956a3be1ce3f4ef62852be104a3035a87c289396fe970bd231e39d5"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes/🔺️diff/🔣️.json",
+      "sha256": "ef1fd810c92cdf56a1ee44c146bf0962360ed27f7a8bf50731a26ceedb037dba"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🌳️promotes/🦠️mutation/🔣️.json",
+      "sha256": "45d9d67a059f9828e500a104f55791e1d3b6985e0bec811aeb64a31385c74f8d"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🌟change-node-root/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "c45dd12bb82fc6935f8b220b287cbcd2e53ad1660fbb9448493ec5b03c7bb274"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends-node-c/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends-node-c/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "0d75d10b882c29bc48e472a2dfefbab321e00970c253cb239d8bde4963e5886d"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends-node-c/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends-node-c/🔺️diff/🔣️.json",
+      "sha256": "f788e8cd58a3515a216f70d64c96a48affeaffa9f58d62896de76588496232bf"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends-node-c/🦠️mutation/🔣️.json",
+      "sha256": "a42f919247a287e8adc3bcd0358b9c50f6aa26b4b61491d834fe09bd9a8c09ea"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "33a44a1eb80d0ce61ff006968b272602d69a5fc15b8454fe6921e294a1c22102"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends/🔺️diff/🔣️.json",
+      "sha256": "e5ca2effb736250c22cb635252c74ccefe8dbfa588aa93e4aeb9e81cbc799b43"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🌱️appends/🦠️mutation/🔣️.json",
+      "sha256": "96525f8d57aa00acce263e72f68ceecf010586c87e2cf601e4a0fa2b0cb8bee1"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "9b722d0ae5ad5a36aaf67674c10fbabdf825e9c929fe049a72ad256fe333c2d1"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "51d1d534f12da2b83f86340d795004bbdc13e4cb67c2ec73cbd2e3fad266713a"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🧱️zero-width-node/🎯️outcome/🔣️.json",
+      "sha256": "72869ed4b15cd84741bfec35d031dd92a4072b89d24616dc186af353847576f4"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🧱️zero-width-node/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🧱️zero-width-node/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🧱️zero-width-node/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🌱create-node/🧱️zero-width-node/🦠️mutation/🔣️.json",
+      "sha256": "ca0964a2690aa7f09de9d799ae4329af087204184af45f126c9e73ef30a0bc3a"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "1180cc5706543eebd5b6d7b8da6eca9b4e9ff11c98969f538e275531e2e59da0"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon/🔺️diff/🔣️.json",
+      "sha256": "cf2881d07e28d93badf90d87ecb5c79dd48998bb7994c3ddd01f78766f99c7ac"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon/🦠️mutation/🔣️.json",
+      "sha256": "2dadf5afee9f8bb5c10e313576299a5de77f8450ef3055acd144c649e04a1d79"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-node-a-icon/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "60b4e46ccddc075fdd9490a891e382ebd36b15d3faa33c3b8b754777d6f37617"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-node-a-icon/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-node-a-icon/🔺️diff/🔣️.json",
+      "sha256": "6cfeaf9b38e83082d9106e1037189bb4168a25170b5cedb89a7aa7505ae54067"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🎨️swaps-node-a-icon/🦠️mutation/🔣️.json",
+      "sha256": "303152c170f3619f9d64c4c8c6dddc20f9ce42f948bb32ba53ed3a7b967624e9"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🎨change-node-icon/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "f219ad6a588fdfd7927d85a7174d5b8671376972177f7fcf83bae2ddda6dda51"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏗️rekinds/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏗️rekinds/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d83ced5e156a45f6dd3c13be9a3ea637378f2ed47c6b23b2cb75c08405a22f89"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏗️rekinds/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏗️rekinds/🔺️diff/🔣️.json",
+      "sha256": "f17334df5c994a2b7ac6769ad7018465665b1c46affa0e7525450c51883ed00e"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏗️rekinds/🦠️mutation/🔣️.json",
+      "sha256": "4593ed06587bfc028ac4bfe80f6d6b761ad061c0730b769c321a44bbac165186"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏷️reassigns/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏷️reassigns/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "ec27d48fbfd93d0c2c4d196cf424a7641a7cd036c8d49725f1a3f504d5ca7191"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏷️reassigns/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏷️reassigns/🔺️diff/🔣️.json",
+      "sha256": "994fa33a0cbc9ca9294b2645b6472e4849e3609c3b2c0d974b39011b906df374"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🏷️reassigns/🦠️mutation/🔣️.json",
+      "sha256": "da651877022a78f8050038662011fbbc313c40b4e2f4a70fda98877c9d8ec0b3"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🏗️change-node-kind/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "450fa25ad0ddc3b6cc7cd4e6292ffb386b8456d821930e6367c58a1d0437f550"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-a-capsule/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-a-capsule/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "f4d10ecd097d1dbdce60b5e536386b96caa0cb3348d7d8a1c0e74ff5ac054500"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-a-capsule/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-a-capsule/🔺️diff/🔣️.json",
+      "sha256": "bab43bac583cae7fe0b12f4e7f47a01cdb5997e23423bd90dfbe3cfe32f03163"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-a-capsule/🦠️mutation/🔣️.json",
+      "sha256": "54c79e1f4833266f6fb23100ab5e8404b1ce9318e0ce866f16c38e9ce1cbd0db"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-node-a/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-node-a/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "b2eaa9365284cdbb62faee177fbe3f466d3ab2dd3fe58ebb26cf11cb0634447e"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-node-a/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-node-a/🔺️diff/🔣️.json",
+      "sha256": "2ee0ef82020d914f1ca4fe4410ff41387868e04d19756b6ca765f59aeab37589"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🙈️hides-node-a/🦠️mutation/🔣️.json",
+      "sha256": "4ccdd6ff1f57e1159558e39f2a3c0f54469c634cd9ce7d9d4a7bad6948b63408"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/👁️change-node-visible/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "98050b8ea0553f1b2d8280f0408b9c89084c5993b1c66ea2476ca005e1895ba9"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks-node-a/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks-node-a/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "0e0602f490c341f3649e229ed5526066efca7906626851164257d4f96d92538b"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks-node-a/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks-node-a/🔺️diff/🔣️.json",
+      "sha256": "30dedb7bf3cb40add5a605077b81185d50edbd84449ec32b3e6a517cc378b4eb"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks-node-a/🦠️mutation/🔣️.json",
+      "sha256": "8c484e2b62a4e618b2a06539342965b06218aebbdd3085a6a6b471895cd6272f"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "5f8534d39c4828dbfe05ae0153b50397ff16507c09ef792ff2f001eab945ce0d"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks/🔺️diff/🔣️.json",
+      "sha256": "2fd782aebee6bbf6dd7e91750b2fa496c61f67bfeefe3d482443c5bedc3a6482"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🔒️locks/🦠️mutation/🔣️.json",
+      "sha256": "4ff9f24470234c358f6e0a18614bbd5a452ff4712309f77b1501a0ed46c897fb"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🔒change-node-locked/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "5343596e0beeaf8973df91c1d65e6720123ea31f1a2a1596f9c84a982cc6083b"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🗑️removes-middle-node/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🗑️removes-middle-node/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d0ca5f655fd4f3edcb7d6aa950e84e0ad4e4b4864ae70f71635a76d0145ba154"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🗑️removes-middle-node/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "4db6cca9bfd35f870e2fabb472c199fe93d5fbc28be122917d476f749260322f"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🗑️removes-middle-node/🔺️diff/🔣️.json",
+      "sha256": "e24c92bdea88a402396a8c029a9b222b22b1adda192b88bbd0c85a6b713ed9fd"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🗑️removes-middle-node/🦠️mutation/🔣️.json",
+      "sha256": "cd9c7e31b9219948a030729e449134c4d703284677bcfb5d60cca23791460b5e"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️deletes/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️deletes/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "17670ba5ff3ef3c8ea0c3f337cf0e09cc86e34b475e37ec45679185a2a6623d9"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️deletes/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️deletes/🔺️diff/🔣️.json",
+      "sha256": "3a5f6ab1e6e245d72c575882dd778fcd2fc41a2d2f09140bcdd3b84279754f8b"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️deletes/🦠️mutation/🔣️.json",
+      "sha256": "7b4cf5de149d6323804afb0daafd581574cb78da9daa271c67c23bf1ee6c4fca"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "394b0551c5a83df73c0dea04e3afb181e218741f8ef7a4c9325dff0018cc67ff"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️removes/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️removes/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "31128ffe57b302265cc64b741533c30d4116777646d1efeb76b173fd69fab0f1"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️removes/🔺️diff/🔣️.json",
+      "sha256": "97aff39616364ac4e68d8c2a96a3b3ed5a05f15fcb25d0498ff49e82d5af586b"
+    },
+    {
+      "path": "🟢️node/🗑️delete-node/🚫️removes/🦠️mutation/🔣️.json",
+      "sha256": "651a24d0919ac81938e7673b8fa62122de67d006ab9e7f0cb5756da20c6e6b39"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️circle/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️circle/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "ce12d4f51a70a7c926e07cf4a7463b9f4dfacee20bd08689fa43397425adbf5a"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️circle/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️circle/🔺️diff/🔣️.json",
+      "sha256": "efd7770ab9136f9f754364fbb7b52d6590013a959a274f38b92de2248e0a7c97"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️circle/🦠️mutation/🔣️.json",
+      "sha256": "44ba2bc5d6eba703e119a34f759e8f1c91b6743da24a524bc319e2b953c88f16"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️squares/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️squares/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "6bd30e93f4fd007cf517a3f2d40a4cea88672ade00b25c045c37e88098768871"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️squares/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2fe7c55cd6a9d27bf27ed4d504c43343dffc41fba5243a2df83abcfb45a14b82"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️squares/🔺️diff/🔣️.json",
+      "sha256": "11420991fe77c920b599ba9b1f58453236ff7224d08861142f5957bf1116c238"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🔳️squares/🦠️mutation/🔣️.json",
+      "sha256": "e2a98b666e8837ac9dba7ee0557bb071a270ceeaea45fdbc101b2284b85f7d99"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "acd48d78bfb3eedd7e0abfaf12782ccdccf811f5160779e6c157c2700d0bdfc5"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🧱️negative-radius/🎯️outcome/🔣️.json",
+      "sha256": "a32f75be44d6be507fabf86d590b6d7f67aa6f4aa8201db28998de851176ed29"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🧱️negative-radius/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🧱️negative-radius/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🧱️negative-radius/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🟢️node/🧊replace-node-geometry/🧱️negative-radius/🦠️mutation/🔣️.json",
+      "sha256": "e91b949193a8b93da9c1646da0631d957182264e2588d975505315aa89126d93"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves-node-a/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves-node-a/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "bad957bc9f13aa465551d4da0b01dd170b2698f26e865145facf3bdf3797a190"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves-node-a/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves-node-a/🔺️diff/🔣️.json",
+      "sha256": "b6aafc4e0107d8dcdd4dd36fe421fcb49ecea46e022253f85baa602bc261f69b"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves-node-a/🦠️mutation/🔣️.json",
+      "sha256": "91272b6484557b84f651fe0d845bb5ed253f9df572b5ef1f66b1dd705b3aa85d"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "d29ec9092756536a70c5d222553a4d11d509100ef681b869a4a6785871db166a"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves/🔺️diff/🔣️.json",
+      "sha256": "3f643071661b25a5f7cf5594dc07d3bc0851652e7da46a508ce1e6f4d644478e"
+    },
+    {
+      "path": "🧭️pose/📍move-node/📍️moves/🦠️mutation/🔣️.json",
+      "sha256": "42787aafd8a48e050022dfe2da49ca59a64db59f6ffb3b0b052ec17e5f59f837"
+    },
+    {
+      "path": "🧭️pose/📍move-node/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🧭️pose/📍move-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🧭️pose/📍move-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🧭️pose/📍move-node/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🧭️pose/📍move-node/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "1e5ff7527cb283ac0a935f758d7d3cc2b8849c3d8f6dc19c6e047ec50ca99358"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️doubles-node-a/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️doubles-node-a/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "23eb187c79ff186d848baa10cf225d6eb203ed56575d9b6509935d2b721c96d3"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️doubles-node-a/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "2768217279ba18d85522fde5c9ed4f3cfe816c673fe87c150bafb64d858d86be"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️doubles-node-a/🔺️diff/🔣️.json",
+      "sha256": "7196cc0d2f2835c6a6b9e51da8364d6487dbb0fabd579a51ee6938f914afc7bd"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️doubles-node-a/🦠️mutation/🔣️.json",
+      "sha256": "1492da06181f92cb0070e8c3b93afe1898c09b6d79054b7268512192f8b896ab"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️scales/🎯️outcome/🔣️.json",
+      "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️scales/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "67fe28c792445363278aa6907528f4f23964e01a3c9c769169754d62fa0e2c5a"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️scales/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️scales/🔺️diff/🔣️.json",
+      "sha256": "21bc2b8b578186d1613a5952e6d8ee307d51c26894c36b9ff8880d0ea6b0558a"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/📏️scales/🦠️mutation/🔣️.json",
+      "sha256": "65b766f9b48d5fd6dc9378f1ae9d4019cce552f1206be96ca86785259b165761"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🚫️rejects/🎯️outcome/🔣️.json",
+      "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "272e741a8be044e15920f4c466f2137a47354fd3d29881f79fe1e5ca450a8d3e"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🚫️rejects/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🚫️rejects/🦠️mutation/🔣️.json",
+      "sha256": "d954c9eb2db83cd7b6f2bbd37996f42d17342fd5637715c6dcf340c9b776a9de"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🧱️zero-scale/🎯️outcome/🔣️.json",
+      "sha256": "a32f75be44d6be507fabf86d590b6d7f67aa6f4aa8201db28998de851176ed29"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🧱️zero-scale/📸️snapshot/➡️after/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🧱️zero-scale/📸️snapshot/⬅️before/🔣️.json",
+      "sha256": "380b6bea4b09f2dc4ca57ce7a7ca0708034d2215e98ec8663a28541f4c860ae2"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🧱️zero-scale/🔺️diff/🚫️.absent",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "🧭️pose/📏scale-node/🧱️zero-scale/🦠️mutation/🔣️.json",
+      "sha256": "644f718f42243dc8163bf0210edf3d66bee4d427a3a26f3a69ba71aa31d40fd3"
     }
   ]
 }

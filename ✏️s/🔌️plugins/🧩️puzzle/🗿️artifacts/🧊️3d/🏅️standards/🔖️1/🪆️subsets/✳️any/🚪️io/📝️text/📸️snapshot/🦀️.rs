@@ -1,4 +1,4 @@
-//! two handcrafted example fixtures the play app's example picker loads.
+//! ✍️ two handcrafted example fixtures the play app's example picker loads.
 //! 🗣️ Puzzle 3d artifact — the textual `.puzzle3d` document grammar surface and its laws, plus the
 
 //#region 📖️SemioGrammar

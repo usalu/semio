@@ -163,7 +163,6 @@ fn ptext_edits_are_persistent() {
 fn ptree_insert_get_and_ordered_iteration() {
     let mut tree: PTree<i64, String> = PTree::new();
     let mut keys: Vec<i64> = (0..300).collect();
-    // insertion order deliberately not sorted, to exercise rebalancing on both sides.
     keys.sort_by_key(|k| (k * 2654435761u32 as i64) % 9973);
     for k in &keys {
         tree = tree.insert(*k, format!("v{k}"));
@@ -182,8 +181,6 @@ fn ptree_insert_get_and_ordered_iteration() {
 fn ptree_stays_balanced_within_the_avl_bound() {
     let tree: PTree<i64, ()> = (0..1000i64).fold(PTree::new(), |t, k| t.insert(k, ()));
     let n = tree.len() as f64;
-    // AVL worst-case height bound: h <= 1.4405 * log2(n + 2) - 0.3277 (Knuth); a couple of
-    // integer units of slack keeps this from being brittle to +/-1 rotation-count differences.
     let bound = (1.4405 * (n + 2.0).log2() - 0.3277).ceil() as u32 + 2;
     assert!(tree.height() <= bound, "height {} exceeds AVL bound {}", tree.height(), bound);
 }

@@ -52,7 +52,6 @@ impl Frontier {
     /// 🏔️ True iff `self` has observed everything `other` has — mirrors
     /// `Frontier::dominates`, re-derived here since this type's `document` field has a
     /// different type than `Frontier`'s.
-    // 🚫️async: E1 pure accessor consumed by a sync Iterator::filter — see R9
     pub fn dominates(&self, other: &Frontier) -> Result<bool, DbError> {
         if self.document != other.document {
             return Err(DbError::InvalidArgument(format!("frontier document mismatch: {} vs {}", self.document.0, other.document.0)));

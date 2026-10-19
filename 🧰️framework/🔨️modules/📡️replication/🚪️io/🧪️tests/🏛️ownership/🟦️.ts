@@ -137,7 +137,7 @@ test("Presence Binary IO Implements Original Semantic Types Outside the Componen
  for (const name of presence.functions as string[]) assert.match(binary, new RegExp(`export function ${name}\\b`));
  assert.doesNotMatch(component, /class PresencePeerReader\b/);
  assert.match(binary, /class PresencePeerReader\b/);
- assert.match(binary, /import type \{[^}]*ArtifactPresencePeer[^}]*\} from "\.\.\/\.\.\/\.\.\/🟦️\.ts"/);
+ assert.match(binary, /import type \{[^}]*ArtifactPresencePeer[^}]*\} from "\.\.\/\.\.\/\.\.\/🔖️sync-protocol\/🟦️\.ts"/);
 });
 
 
@@ -189,14 +189,14 @@ test("Strict Document Backbone Bytes Are Owned by IO and Retention Stays Semanti
  const backbone=fixture.typescriptBackbone, component=readFileSync(resolve(owner,backbone.semanticOwner),"utf8");
  for(const name of backbone.functions)assert.equal(new RegExp(`(?:export )?function ${name}\\b`).test(component),false,name);
  for(const name of backbone.semanticTypes)assert.match(component,new RegExp(`export type ${name}\\b`));
- for(const name of backbone.semanticConstants)assert.match(component,new RegExp(`export const ${name}\\b`));
+ const constants=readFileSync(resolve(owner,backbone.constantsOwner),"utf8");for(const name of backbone.semanticConstants)assert.match(constants,new RegExp(`export const ${name}\\b`));
  assert.equal(minimatch(backbone.binaryOwner,"🚪️io/💾️binary/**/*.ts"),true);
  const binary=readFileSync(resolve(owner,backbone.binaryOwner),"utf8");
  for(const name of backbone.functions)assert.match(binary,new RegExp(`(?:export )?function ${name}\\b`));
  for(const name of backbone.codecTypes)assert.match(binary,new RegExp(`export type ${name}\\b`));
  for(const name of backbone.codecErrors)assert.match(binary,new RegExp(`export class ${name}\\b`));
  for(const name of backbone.codecConstants)assert.match(binary,new RegExp(`export const ${name}\\b`));
- assert.match(binary,/import type \{ ExactWireMutationEnvelope \} from "\.\.\/\.\.\/\.\.\/\.\.\/🟦️\.ts"/);
+ assert.match(binary,/import type \{ ExactWireMutationEnvelope \} from "\.\.\/\.\.\/\.\.\/\.\.\/🔖️sync-protocol\/🟦️\.ts"/);
  assert.match(readFileSync(resolve(owner,fixture.typescriptWire.owner),"utf8"),/import \{[^}]*readDocumentBackboneEnvelopeBatchExact[^}]*\} from "\.\.\/🔗️causal\/🧮️backbone\/🟦️\.ts"/);
 });
 

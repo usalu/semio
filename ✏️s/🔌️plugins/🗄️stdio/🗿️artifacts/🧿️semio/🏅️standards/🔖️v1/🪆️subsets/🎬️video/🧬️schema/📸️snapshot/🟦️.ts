@@ -11,7 +11,7 @@ export interface SemioRational {
 export interface SemioVideoSample {
   pts: bigint;
   key: boolean;
-  /** hex-encoded opaque bytes on the wire */
+  /** 🔢️ hex-encoded opaque bytes on the wire */
   data: number[];
 }
 
@@ -25,6 +25,6 @@ export interface SemioVideoStream {
 }
 
 export interface SemioVideoSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ streams: SemioVideoStream[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🌊️ @state artifact */ streams: SemioVideoStream[];
 }

@@ -205,8 +205,6 @@ async fn lcg_decrypt_is_its_own_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn lz_round_trip_literal_only_stream() {
-    // opcode low-nibble 3 -> literal run length 3+3=6, followed by 6 literal bytes, then the
-    // 0x11 terminator (read as the "next opcode" by `copy_bytes`'s trailing byte read).
     let mut comp = vec![0x03u8];
     comp.extend_from_slice(b"abcdef");
     comp.push(0x11);
@@ -233,8 +231,6 @@ async fn page_checksum_supports_seeded_stages() {
 
 #[semio_framework_async_macros::async_test]
 async fn lz_rejects_out_of_bounds_backref() {
-    // opcode 0x40 (short-match branch, comp_bytes=(0x40>>4)-1=3) with a huge encoded offset
-    // and nothing decoded yet -- must error, never panic or fabricate bytes.
     let comp = vec![0x40u8, 0xFFu8];
     let err = decompress_r2004_section(&comp, 16);
     assert!(err.is_err(), "backref past the start of output must be a typed error");
@@ -255,13 +251,6 @@ async fn real_fixture_d1_locates_every_named_section() {
     for name in expected_names {
         assert!(sections.iter().any(|s| s.name == name), "missing real section {name}");
     }
-    // Every located page must carry a real, IN-BOUNDS file address resolved through the page
-    // directory -- proof this is genuine location, not a stub returning empty placeholders.
-    // Decoded CONTENT is deliberately not asserted here: `locate_r2004_sections` is the locator
-    // and hands every page back with `decoded: Vec::new()` by construction (its own loop), so a
-    // `!page.decoded.is_empty()` assertion measured D2's function, not D1's, and could never hold
-    // for any file. D2 (`real_fixture_d2_decompresses_every_section`, next) is where nonzero
-    // decoded bytes are the bar.
     for section in &sections {
         assert!(!section.pages.is_empty(), "section {} has no pages", section.name);
         for page in &section.pages {
@@ -348,8 +337,6 @@ async fn real_fixture_page_directory_matches_header_cross_check() {
     let page_dir = parse_page_directory(&map_dec, hdr.section_array_size);
     assert_eq!(page_dir.len() as u32, hdr.numgaps + hdr.numsections);
 
-    // Independent re-derivation straight from the decompressed bytes (not reusing
-    // `parse_page_directory`'s own running-address bookkeeping) as the actual cross-check.
     let mut pos = 0usize;
     let mut total: u64 = 0x100;
     while pos + 8 <= map_dec.len() {

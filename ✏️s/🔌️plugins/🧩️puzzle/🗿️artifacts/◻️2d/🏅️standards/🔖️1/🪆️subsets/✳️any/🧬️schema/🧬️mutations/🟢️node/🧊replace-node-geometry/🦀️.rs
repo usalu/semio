@@ -1,4 +1,4 @@
-//! `shape`+`radius`+`width`+`height` together are the node's one geometric representation, the
+//! 🔘️ `shape`+`radius`+`width`+`height` together are the node's one geometric representation, the
 //! 🧊 Puzzle2d mutation — `ReplaceNodeGeometry`: whole-value swap of a node's shape/extent —
 //! same grouping cad's `replace-object-geometry` uses for `mesh_url`+`extent`+`solid_handle`.
 

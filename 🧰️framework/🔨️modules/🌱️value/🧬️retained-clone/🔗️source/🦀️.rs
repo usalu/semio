@@ -138,7 +138,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetireOwned for RetainedCloneSource<T,A>
 
 impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  /// 🎟️ Moves one original authority and its projection into sealed custody only after one complete constructor grant.
- pub fn admit_borrowed<A:RetireOwned+Sync,F>(authority:A,project:F,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)> where F:for<'source>FnOnce(&'source A)->&'source T{
+ pub fn admit_borrowed<F>(authority:A,project:F,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)> where F:for<'source>FnOnce(&'source A)->&'source T{
   RetainedCloneSource::<T,A>::admit_with(authority,(),project,false,grant).map_err(|(error,authority,())|(error,authority))
  }
 }

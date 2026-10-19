@@ -121,7 +121,6 @@ fn intersect_line2_circle((ox, oy): (f64, f64), (dx, dy): (f64, f64), radius: f6
     if disc < -(tol * tol) * a * a {
         return Ok(vec![]);
     }
-    // Discriminant within tolerance of zero: geometric tangency, exactly one contact point.
     if disc.abs() <= (tol * tol) * a * a * 4.0 {
         let t = -b / (2.0 * a);
         let x = ox + dx * t;
@@ -193,7 +192,6 @@ fn intersect_circle_circle(f1: &Frame3, r1: f64, f2: &Frame3, r2: f64, tol: f64)
         let local = frame.to_local(point);
         local.y.atan2(local.x).rem_euclid(std::f64::consts::TAU)
     };
-    // Discriminant within tolerance of zero: the circles kiss at exactly one point.
     if h_sq.max(0.0).sqrt() <= tol {
         let point = mid;
         return Ok(vec![CurveCurveHit { point, t_a: angle_at(point, f1), t_b: angle_at(point, f2), tangent: true, multiplicity: 1 }]);

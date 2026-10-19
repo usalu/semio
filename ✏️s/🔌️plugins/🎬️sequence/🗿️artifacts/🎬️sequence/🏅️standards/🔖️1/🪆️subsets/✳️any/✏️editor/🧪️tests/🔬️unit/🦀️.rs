@@ -55,10 +55,6 @@ pub mod context {
         let child_id = snapshot.content.child_id.clone();
         let dialect = snapshot.content.target.dialect.clone();
         assert_eq!(child_id, materialized.content.child_id, "Sequence concrete app and canonical child identities diverged");
-        // 🌱️ `with_registry` seeds the app's declared genesis children itself (`seed_genesis_children`
-        // → `genesis_sequence_child_pack`), so the `content` slot is usually already occupied and a
-        // second `register_child` is refused with `interactive-job.child-member-duplicate`. The
-        // fixture only has to FILL the slot when the host left it empty.
         if app.child_store("content", &child_id).await.is_some() {
             return;
         }
@@ -267,8 +263,6 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair("mem://sequence-convergence", "mem://sequence-convergence").await;
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
-    // 🧩️ Measured on the CHILD, not on the parent projection: `moveStep` publishes on the `Child`
-    // lane and leaves the parent's composed handle untouched, so a parent-side probe can never move.
     let genesis = live_host_snapshot(&instance_a).await.steps.iter().map(|step| (step.id.clone(), step.x)).collect::<Vec<_>>();
     let receiver = meta("actor-a").instance_id;
     instance_a.0.dispatch_typed(SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
@@ -285,8 +279,6 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(positions(&*live_host_snapshot(&instance_a).await), positions(&*live_host_snapshot(&instance_b).await), "a replicated checkpoint keeps both instances converged");
     assert_ne!(positions(&*live_host_snapshot(&instance_a).await), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
-    // 🔌️ Both paired ends have to detach before either guard closes: a live backbone end blocks the
-    // store's close loop.
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
 }
@@ -420,8 +412,6 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    // 🧾️ Measured against the enum's own generated roster rather than a hand-copied count, so a row
-    // added to (or removed from) `app_commands!` can never leave `every_command()` silently stale.
     let mut declared: Vec<&str> = SequenceCommand::TOOL_JOB_IDS.to_vec();
     declared.sort_unstable();
     assert_eq!(sorted, declared, "every SequenceCommand row must be covered by every_command()");

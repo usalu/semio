@@ -74,8 +74,6 @@ pub(super) async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<Ed
         app.take_typed_operation_effect();
         app.take_typed_operation_event();
         app.take_typed_operation_ui_scope();
-        // 🧹️ The terminal witness lands in its own completion outbox, which `has_pending_typed_operations`
-        // counts — left undrained this loop spins to its deadline (`query operations did not finish`).
         while app.take_typed_operation_completion().await.map_err(|error| format!("{error:?}"))?.is_some() {}
         while let Some(reply) = app.take_local_interaction_query_reply() {
             if let protocol::LocalInteractionQueryReply::Page { page } = reply {
@@ -244,12 +242,6 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
     assert!(!result.requested_effects.is_empty() || !receipt.effects.is_empty(), "the registered example id must request the LoadDocument effect");
     app.close(cx);
 
-    // 📇️ An action is resolved either on the app roster (`AppDefinition.actions`, where an unscoped
-    // verb such as `setActiveExample` stays) or on the window kind that owns it
-    // (`WindowKindDefinition.actions`) — the shell's `undeclaredActionDiagnostic` accepts both — and
-    // `ArgSchema::Select` folded into `ArgSchema::String { options, .. }` (`ActionArgDef::select`).
-    // Wherever it is resolved, the staged form it offers must still be the subset's registered
-    // example set.
     let definition = create_trinity_jack_app();
     let offered: Vec<String> = definition
         .actions

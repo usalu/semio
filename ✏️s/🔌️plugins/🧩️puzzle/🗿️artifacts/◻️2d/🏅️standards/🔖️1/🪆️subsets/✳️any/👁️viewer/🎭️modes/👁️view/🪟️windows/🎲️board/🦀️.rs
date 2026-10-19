@@ -1,4 +1,4 @@
-//! `MeshWindowKit` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6), from the
+//! 🎫️ `MeshWindowKit` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6), from the
 //! 🎲️ Puzzle 2d viewer — the Board window: a read-only mesh scene built with the shared
 //! same artifact-level `Puzzle2dSnapshot` the editor's own overview/selection/detail panes render —
 //! this file itself imports nothing from the sibling editor surface (`policyViewerPurityBreaches`

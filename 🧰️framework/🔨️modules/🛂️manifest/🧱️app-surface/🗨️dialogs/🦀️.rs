@@ -131,7 +131,6 @@ impl DialogDefinition {
             body: None,
             args: Vec::new(),
             submit_action,
-            // 🌐️ "OK" is identical in both locales — a real (not placeholder) translation choice.
             submit_label: LocalizedLabel::native("OK", "OK"),
             cancel_action: None,
             cancel_label: None,

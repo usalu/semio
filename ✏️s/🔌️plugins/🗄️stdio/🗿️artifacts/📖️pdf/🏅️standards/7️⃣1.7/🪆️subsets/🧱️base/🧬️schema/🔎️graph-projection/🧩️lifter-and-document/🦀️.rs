@@ -33,12 +33,10 @@ pub struct Lifter<'s> {
 }
 
 impl<'s> Lifter<'s> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(source: &'s mut dyn ObjectSource) -> Self {
         Self { source, snapshot: PdfSnapshot::default(), admitted_stream_roles: Vec::new(), ids: HashMap::new(), used: HashMap::new(), inline_ids: HashMap::new(), in_progress: HashSet::new(), page_refs: Vec::new(), annotation_refs: HashMap::new(), scope: 0 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn text(&mut self, value: Option<&PdfObject>) -> Option<String> {
         let value = self.source.deref(value?);
         match value {
@@ -48,13 +46,11 @@ impl<'s> Lifter<'s> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn date(&mut self, value: Option<&PdfObject>) -> Option<PdfDate> {
         match value.map(|value|self.source.deref(value)) {Some(PdfObject::Date(date))=>Some(date),_=>None}
     }
 
     /// 🆔 Registers (or looks up) the id of a resource object bound under `name`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn claim_id(&mut self, category: Category, name: &str, reference: Option<ObjRef>) -> (String, bool) {
         if let Some(reference) = reference {
             if let Some(id) = self.ids.get(&(category, reference)) {
@@ -83,12 +79,10 @@ impl<'s> Lifter<'s> {
         (candidate, true)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn existing_id(&self, category: Category, value: &PdfObject) -> Option<String> {
         self.ids.get(&(category, value.as_ref()?)).cloned()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn page_index(&self, value: &PdfObject) -> Option<u32> {
         let reference = value.as_ref()?;
         self.page_refs.iter().position(|candidate| *candidate == reference).map(|index| index as u32)
@@ -139,7 +133,6 @@ pub fn lift_document_with<'s>(trailer: &[PdfDictEntry], declared_version: &str, 
 }
 
 impl Lifter<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_info(&mut self, dict: &[PdfDictEntry]) -> PdfInfo {
         PdfInfo {
             title: self.text(dict_get(dict, "Title")),
@@ -156,7 +149,6 @@ impl Lifter<'_> {
     }
 
     /// 🌳 Walks `/Pages → /Kids` to the leaves, cycle-guarded, recording page references in order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_pages(&mut self, catalog: &[PdfDictEntry]) {
         let Some(pages_ref) = dict_get(catalog, "Pages").and_then(PdfObject::as_ref) else { return };
         let mut visited = HashSet::new();
@@ -167,7 +159,6 @@ impl Lifter<'_> {
         self.page_refs = order;
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn walk_pages(&mut self, node_ref: ObjRef, visited: &mut HashSet<u32>, order: &mut Vec<ObjRef>, depth: usize) {
         if !visited.insert(node_ref.num) || depth > 64 {
             return;
@@ -191,7 +182,6 @@ impl Lifter<'_> {
     }
 
     /// 🧬 The inherited attribute `key` of a page: its own entry, else the nearest ancestor's.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inherited(&mut self, page: &[PdfDictEntry], key: &str) -> Option<PdfObject> {
         let mut current = page.to_vec();
         let mut depth = 0;
@@ -209,7 +199,6 @@ impl Lifter<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_page(&mut self, index: u32, page_ref: ObjRef) -> PdfPage {
         let dict = self.source.get(page_ref).and_then(|page| page.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
         let media_box = self.inherited(&dict, "MediaBox").and_then(|v| rect_of(Some(&v))).unwrap_or([0.0, 0.0, 612.0, 792.0]);
@@ -258,13 +247,11 @@ impl Lifter<'_> {
         page
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_group(&mut self, group: &[PdfDictEntry]) -> PdfTransparencyGroup {
         PdfTransparencyGroup { color_space: dict_get(group, "CS").map(|cs| lift_colour_space(cs, self.source)), isolated: dict_get(group, "I").and_then(PdfObject::as_bool).unwrap_or(false), knockout: dict_get(group, "K").and_then(PdfObject::as_bool).unwrap_or(false) }
     }
 
     /// 🖋️ Parses a content stream against `map` and rewrites its resource names to ids.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn parse_and_rename(&mut self, owner: &PdfObject, map: &ResourceMap) -> Vec<PdfOp> {
         let ops = match self.source.semantic_role(owner, PdfStreamRoleKind::Operators) { Some(PdfStreamRoleValue::Operators { content }) => content, _ => Vec::new() };
         rename_content(ops, map)

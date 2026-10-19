@@ -45,7 +45,6 @@ mod conformance_laws {
     /// protocol facet walks a genuine `encode_diff` frame.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        // Pack (snapshot binary facet).
         let snap = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::demo_csv_snapshot();
         let pack_bytes = <snapshot::CsvSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snap);
         let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
@@ -53,14 +52,12 @@ mod conformance_laws {
         let trace = semio_framework_dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
         assert_eq!(trace.consumed, payload.len(), "snapshot protocol must consume the whole post-envelope payload");
 
-        // Spr (mutations binary facet) — a real, non-trivial mutation.
         let mutation = CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } });
         let op_bytes = <CsvMutation as OpBinary>::encode_op(&mutation).expect("encode_op");
         let spr_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_rfc4180::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         let trace = semio_framework_dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
         assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
 
-        // Diff binary facet.
         let mut before = snap.clone();
         let diff = crate::apply_mutation(&mut before, &mutation);
         let diff_bytes = <CsvDiff as DiffBinary>::encode_diff(diff.diff()).expect("encode_diff");

@@ -134,8 +134,6 @@ async fn renders_raster_scene() {
 async fn renders_navigator_scene() {
     let mut app = app().await;
     let json = render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::navigator::RASTER_PLAY_BODY_NAVIGATOR).await;
-    // 🧾️ A `scene_surface` node publishes its payload as a PACKED document (`"kind":"paint-2d"`,
-    // `"docSchema":"paint-2d@1"`, `doc.bytes`), never as inline tree text.
     assert!(json.contains("\"kind\":\"paint-2d\""), "{json}");
     assert!(packed_scene_text(&json).contains("navigator"), "{json}");
 }
@@ -202,20 +200,10 @@ async fn raster_labels_resolve_german_locale() {
 async fn composite_scene_syncs_document_and_assets() {
     let mut app = semio_app().await;
     let json = render(&mut app, semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    // 🧾️ A `scene_surface` node publishes the scene's SPINE inside the fixed-capacity surface doc and
-    // every lane `Paint2dScene::split_lanes` declares (`documentSync`, `assets`) as its own
-    // `paged_text_carrier` child BESIDE that doc — unconditionally, both lanes, every render. Reading
-    // them off the packed doc bytes (`packed_scene_text`) therefore never saw a single asset byte: the
-    // spine carries only the lane manifest (`SceneLaneRef { lane, bytes, hash }`). The assembled scene
-    // a render host actually reads is the doc PLUS its lanes.
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::Paint2dScene>(&json).expect("paint-2d scene with its lanes");
     assert!(json.contains("\"kind\":\"paint-2d\""), "{json}");
     assert_eq!(scene.view_mode, "composite");
     assert!(scene.document_sync_json.contains("\"layers\""), "the documentSync lane carries the layer forest: {}", scene.document_sync_json);
-    // 🖼️ The pixels themselves: a document that was packed (`print_document_pack`) and reopened
-    // (`load_document_pack`) must still resolve its composed asset children to real bytes, because
-    // `Paint2dHost` uploads one texture per `assetsJson` entry and a pixel-less handle pool renders a
-    // blank canvas (play pane measured blank on :6033, 2026-09-21).
     assert!(scene.assets_json.contains("semio-emblem"), "the reopened document keeps its asset entry: {}", scene.assets_json);
     assert!(scene.assets_json.contains("image/png"), "the semio fixture's embedded asset must resolve to real pixels: {}", scene.assets_json);
     let document = semio_s_artifact_raster_raster_io::testing::raster_image_test_snapshot();

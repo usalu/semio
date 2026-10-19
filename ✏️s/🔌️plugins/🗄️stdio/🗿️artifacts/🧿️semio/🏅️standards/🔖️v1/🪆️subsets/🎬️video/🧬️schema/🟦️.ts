@@ -4,6 +4,6 @@ export type { SemioVideoStream, SemioVideoSample, SemioVideoStreamKind, SemioRat
 import type { SemioVideoStream } from "./📸️snapshot/🟦️.ts";
 
 export interface SemioVideoArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ streams: SemioVideoStream[];
+  /** 🎞️ @state artifact */ schema: string;
+  /** 🌊️ @state artifact */ streams: SemioVideoStream[];
 }

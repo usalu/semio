@@ -1,4 +1,4 @@
-//! tolerance and the part/grip distribution trees; the brush suggestions run's candidates show as its trace in the
+//! ↔️ tolerance and the part/grip distribution trees; the brush suggestions run's candidates show as its trace in the
 //! 🖌️ Edit-mode window option — the Brush utility's Utility Options group: suggestion offset, contact
 //! windows. Tagged `Some("brush")`.
 //!

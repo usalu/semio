@@ -194,14 +194,12 @@ fn poll_once<F: Future + Unpin>(future: &mut F) -> Poll<F::Output> {
 fn bounded_demand_priority_ordering_under_contention() {
     let demand = BoundedDemand::new(1);
 
-    // Fill the single slot so every subsequent acquire() has to queue.
     let mut held = Box::pin(demand.acquire(LoadPriority::Critical));
     let permit0 = match poll_once(&mut held) {
         Poll::Ready(permit) => permit,
         Poll::Pending => panic!("first acquire on an empty BoundedDemand must be immediate"),
     };
 
-    // Arrival order deliberately reversed from priority order.
     let mut background = Box::pin(demand.acquire(LoadPriority::Background));
     let mut prefetch = Box::pin(demand.acquire(LoadPriority::Prefetch));
     let mut requested = Box::pin(demand.acquire(LoadPriority::Requested));

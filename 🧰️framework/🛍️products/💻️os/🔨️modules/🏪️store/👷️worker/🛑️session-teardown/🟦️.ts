@@ -114,12 +114,7 @@ export function closeArtifactRuntime(runtimeKey: string): void {
   state.browserActorViewState = null;
   abortArtifactRebootstrap(state);
   abortArtifactBootstrap(state);
-  // 🛑️ Finding 3: cancels every in-flight folder/blob fetch this document owns and unblocks any
-  // pending reconnect backoff delay immediately — no fetch or reconnect loop can pin this document
-  // after this line.
   state.docAbort.abort();
-  // 💡️ The inference port exists only while this document's lease does — a close retires it with a
-  // localized terminal before the lease buffers are wiped.
   documentServices.documentClosed(runtimeKey);
   dropDocumentExecutionTargetLease(state);
   state.socket?.close();

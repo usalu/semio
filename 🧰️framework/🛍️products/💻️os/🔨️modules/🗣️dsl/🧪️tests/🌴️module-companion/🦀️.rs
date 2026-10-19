@@ -128,7 +128,8 @@ mod receiving_tests {
     pub use semio_framework_os_dsl::original_receiving::*;
     use semio_framework_dsl_record::{FieldValue,receiving::{DslOwnedReceivingVariants,OwnedFieldReceiving,OwnedSlot}};
     use semio_framework_os_pack::record::RetainedRecordReceiving;
-    use semio_framework_value::{NativeDecodeControl,RetainedCloneStep,RetirementDemand,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+    use semio_framework_value::{RetainedCloneStep, RetirementDemand, ValueRefusalKind, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use std::mem::{ManuallyDrop,size_of};
     #[path = "../../🫴️receiving/🧪️tests/🦀️.rs"]
     mod tests;

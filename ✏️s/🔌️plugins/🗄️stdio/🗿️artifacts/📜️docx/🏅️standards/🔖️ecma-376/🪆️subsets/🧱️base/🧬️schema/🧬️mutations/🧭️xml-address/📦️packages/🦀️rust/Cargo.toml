@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-docx-base-xml-address"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio docx base canonical xml addresses"
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-docx-base-diff = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-docx-base-model = { workspace = true }

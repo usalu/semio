@@ -1,4 +1,4 @@
-//! `upsert-fatigue-detail` — upsert a `FatigueDetail` by id into `fatigue_details`.
+//! 🧬️ `upsert-fatigue-detail` — upsert a `FatigueDetail` by id into `fatigue_details`.
 
 use semio_s_artifact_norm_en1993_model::{FatigueDetail, En1993Snapshot};
 

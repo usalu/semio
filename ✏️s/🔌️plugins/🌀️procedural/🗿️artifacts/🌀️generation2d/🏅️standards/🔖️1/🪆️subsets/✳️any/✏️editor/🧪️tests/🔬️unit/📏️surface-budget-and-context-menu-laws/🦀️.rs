@@ -2,7 +2,7 @@
 
 //#region 📏️SurfaceBudgetTests
 /// 🗂️ Every authored body key, in the order `generation2d_render_body` matches them.
-const GENERATION2D_BODY_KEYS: [&str; 8] = [
+#[cfg(test)]#[cfg(test)]#[cfg(test)]#[cfg(test)]#[cfg(test)]#[cfg(test)]const GENERATION2D_BODY_KEYS: [&str; 8] = [
     flow_window::GENERATION2D_PLAY_BODY_MAIN,
     edit_preview::GENERATION2D_PLAY_BODY_PREVIEW,
     generations::GENERATION2D_PLAY_BODY_GENERATIONS,

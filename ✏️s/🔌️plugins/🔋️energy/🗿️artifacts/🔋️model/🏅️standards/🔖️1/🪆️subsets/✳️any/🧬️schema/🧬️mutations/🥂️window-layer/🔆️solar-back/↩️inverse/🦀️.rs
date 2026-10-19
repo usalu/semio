@@ -1,4 +1,5 @@
 //! ↩️ The original base supplies one explicit inverse; refused and unchanged intents own no inverse.
-use crate::{mutations::{self,EnergyModelMutation},EnergyModelSnapshot};
+use crate as vocabulary;
+use crate::EnergyModelSnapshot;
 /// 🧷️ Retains independent peer fields by naming only the original optical scalar.
-pub fn inverse<Op: From<super::ChangeGlazingMaterialSolarReflectanceBack>>(payload:&super::ChangeGlazingMaterialSolarReflectanceBack,base:&EnergyModelSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{Ok(match base.model.glazing_materials.iter().find(|row|row.id==payload.id){Some(original)if payload.new_solar_reflectance_back.is_finite()&&(0.0..=1.0).contains(&payload.new_solar_reflectance_back)&&original.solar_reflectance_back!=payload.new_solar_reflectance_back=>vec![mutations::change_glazing_material_solar_reflectance_back(payload.id,original.solar_reflectance_back)],_=>Vec::new()})}
+pub fn inverse<Op: From<super::ChangeGlazingMaterialSolarReflectanceBack>>(payload:&super::ChangeGlazingMaterialSolarReflectanceBack,base:&EnergyModelSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{Ok(match base.model.glazing_materials.iter().find(|row|row.id==payload.id){Some(original)if payload.new_solar_reflectance_back.is_finite()&&(0.0..=1.0).contains(&payload.new_solar_reflectance_back)&&original.solar_reflectance_back!=payload.new_solar_reflectance_back=>vec![vocabulary::change_glazing_material_solar_reflectance_back(payload.id,original.solar_reflectance_back)],_=>Vec::new()})}

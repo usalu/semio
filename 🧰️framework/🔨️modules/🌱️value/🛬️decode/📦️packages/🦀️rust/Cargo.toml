@@ -24,6 +24,7 @@ path = "🦀️.rs"
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-native-encoding = { path="../../../🛫️encode/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path="../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

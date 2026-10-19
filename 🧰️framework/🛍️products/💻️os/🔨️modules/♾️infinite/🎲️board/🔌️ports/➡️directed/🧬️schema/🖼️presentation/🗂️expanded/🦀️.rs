@@ -1,5 +1,6 @@
 //! 🗂️ Expanded preview paths retain sorted unique literal strings in concrete slots.
-use semio_framework_value::{DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,ToValue,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(transparent)]

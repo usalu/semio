@@ -9,6 +9,8 @@ use semio_s_artifact_procedural_3d_testkit::retirement_driver::Stepped;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT;
 use semio_s_artifact_procedural_3d_io_binary::mutations::decode_op;
 use semio_s_artifact_procedural_3d_io_binary::mutations::encode_op;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+#[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 const SEMANTIC_WIRE_CORPUS: &str = include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json");
 

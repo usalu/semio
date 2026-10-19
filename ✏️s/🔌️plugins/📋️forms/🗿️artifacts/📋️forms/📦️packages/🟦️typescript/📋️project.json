@@ -20,7 +20,7 @@
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
       },
-      "cache": false
+      "cache": true
     },
     "test": {
       "executor": "repo:script",
@@ -32,7 +32,7 @@
     },
     "verify-physical-codecs": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify physical-codecs"

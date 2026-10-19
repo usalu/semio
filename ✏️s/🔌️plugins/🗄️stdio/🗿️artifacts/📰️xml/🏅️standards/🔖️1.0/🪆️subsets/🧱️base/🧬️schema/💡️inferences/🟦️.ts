@@ -7,7 +7,7 @@ export interface XmlOutline {
 }
 
 export interface XmlInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: XmlOutline;
 }
 

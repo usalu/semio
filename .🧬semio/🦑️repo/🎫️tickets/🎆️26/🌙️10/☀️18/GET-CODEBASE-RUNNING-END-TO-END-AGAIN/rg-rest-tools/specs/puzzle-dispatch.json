@@ -1,0 +1,40 @@
+{
+ "ws": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml",
+ "old_name": "semio-s-artifact-puzzle-5d-dispatch",
+ "old_pkg": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📦️packages/🦀️rust",
+ "root_file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📦️packages/🦀️rust/🪞️mirror/🦀️.rs",
+ "moves": [
+  "editor::puzzle5d::panels"
+ ],
+ "new": {
+  "name": "semio-s-artifact-puzzle-5d-dispatch-panels",
+  "dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📌️panel-mounts",
+  "emoji": "📌️",
+  "doc": "The catalogue, artifact, inspection and settings panel mounts of the puzzle 5d editor, held by their own crate so the dispatch crate stays inside the source gate.",
+  "desc": "Puzzle 5d editor panel mounts"
+ },
+ "subtree": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+ "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+ "rewrites": [
+  {
+   "re": "\\bcrate::editor::puzzle5d::interaction::",
+   "to": "semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::terminology::",
+   "to": "semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::catalog::",
+   "to": "semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::catalog::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::view::",
+   "to": "semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::entities::",
+   "to": "semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::"
+  }
+ ]
+}

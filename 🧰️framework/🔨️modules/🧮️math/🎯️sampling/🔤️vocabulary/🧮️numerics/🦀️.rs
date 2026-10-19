@@ -37,9 +37,7 @@ pub async fn sanitize_logits(logits: &mut [f32], policy: SanitizePolicy) -> Resu
                     altered += 1;
                 }
             }
-        } else if *l == f32::NEG_INFINITY {
-            // 📐️ Negative infinity is always a valid "hard masked" representation; never altered.
-        }
+        } else if *l == f32::NEG_INFINITY {}
     }
     Ok(altered)
 }
@@ -171,8 +169,6 @@ pub struct DistributionHealth {
 
 impl DistributionHealth {
     pub async fn assess(live_count: usize, prob_sum: f64) -> Self {
-        // 📐️ `is_nan() || <= 0.0` (not `!(prob_sum > 0.0)`) so NaN is explicitly, intentionally
-        // flagged degenerate rather than relying on `>` being false for NaN — same result, clearer.
         Self { live_count, prob_sum, is_degenerate: live_count == 0 || prob_sum.is_nan() || prob_sum <= 0.0 }
     }
 }

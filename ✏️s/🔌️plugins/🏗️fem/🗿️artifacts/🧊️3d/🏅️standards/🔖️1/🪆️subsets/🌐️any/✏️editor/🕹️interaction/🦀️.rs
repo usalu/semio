@@ -1,4 +1,4 @@
-//! snapshot every render reads, the entity-kind and model-point lookups the panels and the camera
+//! 🌐️ snapshot every render reads, the entity-kind and model-point lookups the panels and the camera
 //! 🕹️ Fem3d play app — the framework-owned interaction domain: its definition, the selection/hover
 //! share, the `World3d` selection record the host paints and arms its gumball from, and the
 //! `interactionSelect` request a panel row emits. The viewport itself never hit-tests here: the

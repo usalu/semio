@@ -28,8 +28,7 @@ pub use component::*;
 #[path = "../../🌍️world/🦀️.rs"]
 pub mod world;
 
-#[cfg(test)] use semio_framework_canvas as canvas;
-
+#[cfg(test)]
 //#region 🔖️BoardFacade
 /// ♾️ Explicit re-exports of the board family: every name here lives in a producer crate `semio-framework-os-infinite-board-*`.
 pub use semio_framework_os_infinite_board_schema::{board_edge_handle_ids, board_locked_option, board_visible_option, board_visible_or_true, BoardPalette, BoardPaletteOverlay, BoardSnapshot, BoardVisibility, CameraDescriptor, NodeDescriptor, Selection};
@@ -49,7 +48,6 @@ pub use semio_framework_graph_drawing::routing::{circle_handle_angle_toward, com
 pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
 pub use semio_framework_canvas::camera::CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX;
 pub use semio_framework_canvas::camera::CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN;
-pub use semio_framework_canvas as canvas;
 pub use graph;
 pub mod board {
     pub use semio_framework_os_infinite_board_schema::{board_edge_handle_ids, board_locked_option, board_visible_option, board_visible_or_true, BoardPalette, BoardPaletteOverlay, BoardVisibility, CameraDescriptor, NodeDescriptor, Selection};
@@ -292,4 +290,5 @@ pub use semio_framework_os_infinite_board_normal_focus::board_set_camera;
 pub use semio_framework_os_infinite_board_normal_host::board_delete_selection;
 pub use semio_framework_os_infinite_board_dag_graph::{dag_draw_lod_label, dag_pick_targets_at_screen_json, dag_set_wheel_zoom_active};
 pub use semio_framework_os_infinite_board_dag_host::dag_set_canvas_palette;
+use semio_framework_canvas as canvas;
 //#endregion 🔖️BoardFacade

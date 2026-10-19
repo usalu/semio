@@ -196,10 +196,6 @@ fn architect_window_ownership_interactive_classification_matches_retained_owners
     use crate::editor::architect::{create_architect_app, ArchitectExchangeCommandJobFactory, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_EXCHANGE_TOOL_IDS, ARCHITECT_RETAINED_TOOL_IDS};
     use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
 
-    // 🧵️ Every declared action lives in the APP ROSTER (`definition.actions`); a window kind only
-    // carries the rows it explicitly references plus the framework's own synthesized interaction/tool-run
-    // rows (`try_build_definition`). The union is this app's whole declared action surface, and every
-    // one of its verbs runs on one of the two retained factories — no batch-only verb is left.
     let definition = create_architect_app();
     let actions = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).collect::<Vec<_>>();
     let retained = ARCHITECT_RETAINED_TOOL_IDS.iter().chain(ARCHITECT_EXCHANGE_TOOL_IDS.iter()).copied().collect::<std::collections::BTreeSet<_>>();
@@ -276,10 +272,6 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
 fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
     std::thread::Builder::new()
         .name("architect-window-ownership-law".into())
-        // 🧵️ 8 MiB, the repo-wide budget every other window-ownership law thread uses. The original
-        // 2 MiB was a diagnostic aid, not a contract (nothing here asserts a stack bound), and the
-        // mounted wrapper's dispatch/settle/close ladder has since outgrown it — the whole test
-        // binary aborted with `fatal runtime error: stack overflow`.
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
             block_on_architect_windows(Box::pin(async {

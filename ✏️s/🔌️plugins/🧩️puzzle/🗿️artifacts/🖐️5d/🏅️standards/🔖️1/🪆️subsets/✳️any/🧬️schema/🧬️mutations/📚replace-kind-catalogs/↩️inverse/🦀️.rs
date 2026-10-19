@@ -1,4 +1,4 @@
-//! `base`'s composed `kind_catalogs` handle + `kind_catalogs_extra` overflow back into the payload's
+//! 🧬️ `base`'s composed `kind_catalogs` handle + `kind_catalogs_extra` overflow back into the payload's
 //! ↩️ Inverse for `ReplaceKindCatalogs` — restores the BASE catalogs (or lack thereof). Reassembles
 //! original `Option<Puzzle5dKindCatalogs>` shape via `kind_catalogs_of` (working-scene cache read).
 use crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of;

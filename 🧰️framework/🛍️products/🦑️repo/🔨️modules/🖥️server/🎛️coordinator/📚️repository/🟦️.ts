@@ -11,10 +11,10 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 // #endregion 🔌️Adapters
 
-import { replaceScopes } from "../../📚️library/🗄️persistence/🟦️.ts";
-import { requireAuth, isAuthError } from "../../📚️library/🔐️authentication/🟦️.ts";
-import { publishEvent } from "../../📚️library/📡️event/🟦️.ts";
-import { buildScopesForFile } from "../../📚️library/🔎️source-index/🟦️.ts";
+import { replaceScopes } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
+import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
+import { buildScopesForFile } from "@semio-tech/framework/products/repo/modules/server/library/source-index";
 
 const REPO_ROOT = process.env.COMPOSE_SERVER_REPO_ROOT || process.cwd();
 
@@ -32,9 +32,7 @@ function walkFiles(dir: string): string[] {
         files.push(rel);
       }
     }
-  } catch {
-    // Skip inaccessible directories
-  }
+  } catch {}
   return files;
 }
 

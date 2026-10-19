@@ -6,11 +6,11 @@ type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
   const { UiDocumentStore, UiNodeView } = dependencies;
-  type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").AccessibilitySpec;
-  type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").Component;
-  type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").StyleSpec;
-  type UiIntent = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiIntent;
-  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiNodeRecord;
+  type AccessibilitySpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").AccessibilitySpec;
+  type Component = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").Component;
+  type StyleSpec = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").StyleSpec;
+  type UiIntent = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiIntent;
+  type UiNodeRecord = import("@semio-tech/framework/manifest/ui-contract-and-canvas-types").UiNodeRecord;
 
   const { describe, expect, it } = vitest;
   const STYLE: StyleSpec = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };

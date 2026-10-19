@@ -6,9 +6,9 @@
 import { decodeAppFrame, encodeAppFrame } from "@semio-tech/framework/app-channel";
 import { FRAMEWORK_RESERVED_JOB_KIND } from "@semio-tech/framework";
 import { type PluginDispatchHintV1 } from "@semio-tech/framework";
-import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "@semio-tech/framework-actor/shard-client/wire";
+import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "@semio-tech/framework/actor/shard-client/wire";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
-import { wireTurnStatusTag } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import { type ActorDocumentMessagePortV1 } from "@semio-tech/framework/backbone/binding";
 import { beginSpawnedJobV1 } from "../💼️job-ledger/🟦️.ts";
 import {
@@ -29,14 +29,8 @@ import {
   requestIsolatedJobUiPoll
 } from "../🛰️runtime-singletons/🟦️.ts";
 import { commandStallWatch, serializeCommandIngressForActor } from "../🧵️turn-dispatch/🟦️.ts";
-import {
-  commandIngressContinuationCeilingV1,
-  commandIngressNeedsReplyStampV1,
-  commandIngressUnownedV1,
-  settleAcknowledgedPluginTurns,
-  settlePluginTurn,
-  yieldPluginUiContinuation
-} from "../🔁️turn-settle/🟦️.ts";
+import { commandIngressContinuationCeilingV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, settleAcknowledgedPluginTurns, settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
+import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import {
   drainTypedOperationTurns,
   pendingCompletionEffects,
@@ -352,9 +346,6 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
           });
           const crossingStartedMs = performance.now();
           const observedStatuses = new Set<string>();
-          // 🧾️ Every turn this drain submits reports the ingress, and `acceptTurn` submits turns of its
-          // own (the batched `issued-ui-acks` lifecycle turn), so the terminal is folded over ALL of
-          // them: a `command-complete` that landed on a supplemental turn used to be read past.
           let collected = results.length;
           const foldIngress = (): string | undefined => {
             let folded: string | undefined;
@@ -453,10 +444,6 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
         return { status: settled.status, nextWake: settled.nextWake };
       });
       if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
-        // 🪃️ The guest's own requested wake. `nextWake: 0` means "immediately" and MUST cost one
-        // event-loop turn, not a throttled timer tick — this is the same continuation lane the
-        // `Effect::DispatchAction` re-arm rides. Coalesced per instance so a burst of idle turns
-        // that each ask for a wake leaves exactly one pending, at the earliest deadline asked for.
         hostContinuations.schedule(() => void drainTypedOperations(instanceId), Math.min(Math.max(outcome.nextWake, 0), PLUGIN_OPERATION_WAKE_MAX_MS), `operation-wake#${instanceId}`);
       }
     } catch (error) {

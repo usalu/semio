@@ -50,7 +50,6 @@ pub mod derived_composition {
         let known_images: std::collections::HashSet<&str> = snapshot.images.iter().map(|i| i.id.as_str()).collect();
         let known_styles: std::collections::HashSet<&str> = snapshot.styles.iter().map(|s| s.id.as_str()).collect();
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn walk(blocks: &[DocBlock], known_images: &std::collections::HashSet<&str>, known_styles: &std::collections::HashSet<&str>, out: &mut Vec<semio_framework_diagnostic::Diagnostic>) {
             for block in blocks {
                 match block {
@@ -201,19 +200,16 @@ pub mod derived_construction {
 
     impl SemioDocumentBuilderConstruction {
         /// 🎨️ Fluent: appends a named style.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_style(mut self, style: DocStyle) -> Self {
             self.snapshot.styles.push(style);
             self
         }
         /// 🖼️ Fluent: appends a named image.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_image(mut self, image: DocImage) -> Self {
             self.snapshot.images.push(image);
             self
         }
         /// 🧱️ Fluent: appends a top-level block.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_block(mut self, block: DocBlock) -> Self {
             self.snapshot.blocks.push(block);
             self

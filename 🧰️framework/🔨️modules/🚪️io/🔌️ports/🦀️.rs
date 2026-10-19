@@ -8,7 +8,8 @@
 
 use semio_framework_io_sqlite_snapshot::artifact::RowWriter;
 use semio_framework_io_sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl};
-use semio_framework_value::{DslValue, NativeDecodeControl, ValueError};
+use semio_framework_value::{DslValue, ValueError};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::OnceLock;
 

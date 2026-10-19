@@ -24,9 +24,6 @@ pub fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack:
         FlowCommand::Evaluate(_) | FlowCommand::OpenSpotlight(_) => [None, None, None],
         FlowCommand::ContextMenuAt(command) => [Some(Field::Text(&command.id)), None, None],
         FlowCommand::ReplaceImage(command) => [Some(Field::Text(&command.id)), None, None],
-        // 📏️ Three slots, at most two of them text (`🎒️pack/🔎️scalar-witness`) — which is exactly what
-        // an ADDRESSED evaluation hop and its answer need, and the reason the answer carries no
-        // `extensionId`/`ok`/`fault_*`.
         FlowCommand::FlowEvalTick(command) => [Some(Field::Text(&command.window_id)), Some(Field::Text(&command.window_kind_id)), None],
         FlowCommand::FlowEvalResolve(command) => [Some(Field::Text(&command.window_id)), Some(Field::U64(command.node_hash)), command.output_json.as_deref().map(Field::Text)],
         _ => return Err("Flow command does not have an admitted scalar record witness"),

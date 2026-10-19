@@ -232,8 +232,6 @@ export function overlayReducer(state: OverlayState, action: ShellAction): Overla
       return state.introductionCompletedInteractions.includes(action.index)
         ? state
         : { ...state, introductionCompletedInteractions: [...state.introductionCompletedInteractions, action.index] };
-    // 🎥️ Starting a tutorial (a non-null id) is mutually exclusive with an active introduction — mirrors
-    // the `SET_INTRODUCTION_STEP` case below clearing the tutorial slice.
     case "SET_TUTORIAL":
       return action.value != null && state.introductionStepIndex != null ? { ...state, introductionStepIndex: null, introductionCompletedInteractions: [] } : state;
     case "SET_DIALOG":
@@ -350,9 +348,6 @@ export function tutorialReducer(state: TutorialState, action: ShellAction): Tuto
       return withField(state, "recording", action.value);
     case "SET_TUTORIAL_DEVIATED":
       return withField(state, "deviated", action.value);
-    // 🎓️ Only literal (non-updater) values can be checked here without this slice's own prior value —
-    // every real call site dispatches a literal step index or `null` (never a functional updater), so
-    // this conservatively no-ops on the (currently unused) updater form rather than guessing.
     case "SET_INTRODUCTION_STEP":
       return typeof action.value !== "function" && action.value != null && state.activeTutorialId != null ? { ...state, activeTutorialId: null, playing: false, deviated: false } : state;
     default:

@@ -33,12 +33,6 @@ pub struct UiFieldNode {
 #[value(rename_all = "camelCase")]
 pub struct UiSectionNode {
     pub id: String,
-    // ⚠️ `alias = "title"` is deliberately NOT mirrored into `#[value(...)]` — the first-party
-    // derive (`🌱️value/✨️derive`) has no `alias` attribute and an unrecognized key is a hard
-    // compile error (see `WindowLayoutWindowNode::active_window_kind_id` and
-    // `UiTreeItemNode::icon_id`/`default_open` for the same pattern). `ToValue`/`FromValue`
-    // round-trips on the canonical `label` key only; the serde path keeps accepting the legacy
-    // `title` alias unchanged.
     #[serde(skip_serializing_if = "Option::is_none", alias = "title")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub label: Option<Label>,

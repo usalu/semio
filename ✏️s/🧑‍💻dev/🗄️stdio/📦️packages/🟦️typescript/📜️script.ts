@@ -11,6 +11,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check", StdioCompositionCheckScript)
   .register("test", StdioCompositionTestScript)
   .register("package-contract", StdioArtifactPackageContractScript)
-  .register("package-graph", StdioArtifactPackageGraphScript);
+  .register("package-graph", StdioArtifactPackageGraphScript)
+  .registerLazy("verify", async () => (await import("../../🏘️composition/🏃️artifact-commands/🟦️.ts")).StdioVerifyScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

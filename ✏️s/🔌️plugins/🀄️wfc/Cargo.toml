@@ -55,6 +55,10 @@ path = "../../../🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦�
 [workspace.dependencies.semio-framework-job]
 path = "../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-framework-job-payload]
+path = "../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 

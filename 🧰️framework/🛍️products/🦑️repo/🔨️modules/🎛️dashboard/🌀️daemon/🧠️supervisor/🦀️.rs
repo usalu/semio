@@ -38,6 +38,8 @@ const EXIT_QUIET: Duration = Duration::from_millis(250);
 const FINISH_WAIT: Duration = if cfg!(windows) { Duration::from_secs(3) } else { Duration::ZERO };
 const EXIT_LIMIT: Duration = Duration::from_secs(8);
 const SIGKILL_EXIT: i32 = 137;
+const TIME_LIMIT_EXIT: i32 = 124;
+const MAX_PROCESS_BUDGET_MS: u64 = 9_007_199_254_740_991;
 const DROPPED_ENVIRONMENT: [&str; 5] = ["SEMIO_BUILD_INVOCATION_PID", "NX_INVOCATION_ROOT_PID", "SEMIO_SCRIPT_PROCESS_INVOCATION", "SEMIO_SCRIPT_CAPABILITIES", "SEMIO_SCRIPT_POLICY"];
 
 /// 🚨 A request the daemon refuses, with the kind of failure a view can act on.
@@ -57,6 +59,22 @@ fn fail<T>(code: ErrorCode, message: impl Into<String>) -> Outcome<T> {
 fn failed_for<T>(code: ErrorCode, message: impl Into<String>, session_id: &str) -> Outcome<T> {
     Err(Fail { code, message: message.into(), session_id: Some(session_id.to_string()) })
 }
+
+/** ⏱️ Reads the shared safe-integer millisecond selection without creating process authority. */
+pub fn selected_process_budget_ms(raw:Option<&str>)->Result<u64,String>{
+    let raw=raw.unwrap_or("").trim_matches(|value:char| matches!(value,'\u{0009}'..='\u{000d}'|'\u{0020}'|'\u{00a0}'|'\u{1680}'|'\u{2000}'..='\u{200a}'|'\u{2028}'|'\u{2029}'|'\u{202f}'|'\u{205f}'|'\u{3000}'|'\u{feff}'));
+    if raw.is_empty(){return Ok(0);}
+    let invalid=||"invalid process time limit SEMIO_BUILD_BUDGET_MS".to_string();
+    let radix=if raw.starts_with("0x")||raw.starts_with("0X"){Some(16)}else if raw.starts_with("0b")||raw.starts_with("0B"){Some(2)}else if raw.starts_with("0o")||raw.starts_with("0O"){Some(8)}else{None};
+    let value=if let Some(radix)=radix{let digits=&raw[2..];if digits.is_empty()||!digits.chars().all(|value|value.to_digit(radix).is_some()){return Err(invalid());}let digits=digits.trim_start_matches('0');if digits.is_empty(){0.0}else{u64::from_str_radix(digits,radix).map_err(|_|invalid())? as f64}}else{raw.parse::<f64>().map_err(|_|invalid())?};
+    if !value.is_finite()||value<0.0||value.fract()!=0.0||value>MAX_PROCESS_BUDGET_MS as f64{return Err(invalid());}
+    Ok(value as u64)
+}
+
+/** 🕰️ Compares elapsed monotonic time without constructing an overflowing future Instant. */
+pub fn process_budget_expired(milliseconds:u64,elapsed:Duration)->bool{milliseconds!=0&&elapsed>=Duration::from_millis(milliseconds)}
+
+fn selected_environment_budget(env:&[(String,String)])->Result<u64,String>{selected_process_budget_ms(env.iter().find(|(name,_)|if cfg!(windows){name.eq_ignore_ascii_case("SEMIO_BUILD_BUDGET_MS")}else{name=="SEMIO_BUILD_BUDGET_MS"}).map(|(_,value)|value.as_str()))}
 
 /// 🧵 One session: its projection, its output and the process that produces it while there is one.
 pub struct Live {
@@ -81,12 +99,14 @@ pub struct Live {
     announced_wait: bool,
     flushed: Instant,
     created: u64,
+    deadline: Option<(Instant,u64)>,
+    timed_out: bool,
 }
 
 impl Live {
     fn new(info: SessionInfo, log: SessionLog) -> Self {
         let created = info.started_ms.max(1);
-        Self { info, log, pty: None, input: VecDeque::new(), input_owner: None, input_progress: Instant::now(), stopping: None, stage: None, forced: None, ended: None, closed: false, finishing: None, last_output: Instant::now(), title_due: None, candidate: None, probe: None, probe_due: Instant::now(), probe_delay: PROBE_FIRST, announced_wait: false, flushed: Instant::now(), created }
+        Self { info, log, pty: None, input: VecDeque::new(), input_owner: None, input_progress: Instant::now(), stopping: None, stage: None, forced: None, ended: None, closed: false, finishing: None, last_output: Instant::now(), title_due: None, candidate: None, probe: None, probe_due: Instant::now(), probe_delay: PROBE_FIRST, announced_wait: false, flushed: Instant::now(), created, deadline:None, timed_out:false }
     }
 }
 
@@ -214,6 +234,7 @@ impl Supervisor {
         let mut timeout = Duration::from_secs(1);
         for live in self.sessions.values() {
             if live.pty.is_some() { timeout = timeout.min(Duration::from_millis(100)); }
+            if live.info.status==SessionStatus::Running {if let Some((started,milliseconds))=live.deadline{timeout=timeout.min(Duration::from_millis(milliseconds).saturating_sub(started.elapsed()));}}
             if live.candidate.is_some() && live.probe.is_none() && live.info.status == SessionStatus::Running { timeout = timeout.min(live.probe_due.saturating_duration_since(Instant::now()).max(Duration::from_millis(5))); }
             if !live.input.is_empty() || live.stopping.is_some() || live.ended.is_some() { timeout = timeout.min(Duration::from_millis(20)); }
         }
@@ -435,9 +456,11 @@ impl Supervisor {
         if self.sessions.values().any(|live| running(live) && (live.info.session_id == session_id || live.info.command.same_task(&command))) {
             return failed_for(code::ALREADY_RUNNING, "task is already running; select its session or restart it", session_id);
         }
-        self.register(session_id, command.clone(), SessionStatus::Pending)?;
         let env = child_environment(base, &command.env);
+        let milliseconds=selected_environment_budget(&env).map_err(|message|Fail{code:code::INVALID,message,session_id:Some(session_id.into())})?;
+        self.register(session_id, command.clone(), SessionStatus::Pending)?;
         let args: Vec<&str> = command.args.iter().map(String::as_str).collect();
+        let deadline=(milliseconds!=0).then(||(Instant::now(),milliseconds));
         let spawned = Pty::spawn_exact(&command.cmd, &args, &env, Some(&cwd), PtySize { cols: command.cols, rows: command.rows });
         let Some(live) = self.sessions.get_mut(session_id) else { return fail(code::SPAWN, "session vanished") };
         let separator = live.log.separator();
@@ -452,6 +475,8 @@ impl Supervisor {
         live.input_owner = requester;
         (live.stopping, live.stage, live.forced, live.ended, live.title_due) = (None, None, None, None, None);
         live.last_output = Instant::now();
+        live.deadline=deadline;
+        live.timed_out=false;
         let outcome = match spawned {
             Ok(pty) => {
                 self.waker.watch_pty(&pty);
@@ -483,6 +508,7 @@ impl Supervisor {
     fn restart(&mut self, session_id: &str, base: &[(String, String)], requester: u64) -> Outcome {
         let Some(live) = self.sessions.get(session_id) else { return failed_for(code::UNKNOWN_SESSION, "unknown session", session_id) };
         let command = live.info.command.clone();
+        selected_environment_budget(&child_environment(base,&command.env)).map_err(|message|Fail{code:code::INVALID,message,session_id:Some(session_id.into())})?;
         self.halt(session_id);
         self.start(session_id, command, base, Some(requester))
     }
@@ -592,6 +618,16 @@ impl Supervisor {
     /// readiness that waits for its last byte, logs, and the end of processes.
     fn maintain(&mut self) {
         let now = Instant::now();
+        let expired:Vec<String>=self.sessions.iter_mut().filter_map(|(id,live)|{
+            if live.info.status!=SessionStatus::Running||live.ended.is_some()||live.pty.is_none(){return None;}
+            let(started,milliseconds)=live.deadline?;
+            if !process_budget_expired(milliseconds,now.saturating_duration_since(started)){return None;}
+            if let Ok(Some(status))=live.pty.as_mut().unwrap().try_wait(){live.ended=Some((status,now));return None;}
+            live.timed_out=true;
+            live.log.append(format!("[semio] process time limit exhausted after {milliseconds} ms; stopping owned process tree\r\n").as_bytes());
+            Some(id.clone())
+        }).collect();
+        for id in expired{let _=self.stop(&id);}
         let ids: Vec<String> = self.sessions.keys().cloned().collect();
         let mut publish = Vec::new();
         let mut finished = Vec::new();
@@ -693,8 +729,10 @@ impl Supervisor {
         drop(live.pty.take());
         live.input.clear();
         live.stopping = None;
-        live.info.status = SessionStatus::Exited;
-        live.info.code = Some(live.forced.take().unwrap_or(status));
+        live.info.status = if live.timed_out{SessionStatus::TimedOut}else{SessionStatus::Exited};
+        let status=live.forced.take().unwrap_or(status);
+        live.info.code = Some(if live.timed_out{TIME_LIMIT_EXIT}else{status});
+        live.deadline=None;
         live.info.ended_ms = Some(ipc::now_ms());
         live.info.ready_url = None;
         live.probe = None;
@@ -709,6 +747,7 @@ impl Supervisor {
         if self.groups.contains_key(group_id) { return fail(code::ALREADY_RUNNING, "a group of this identifier is already running"); }
         let mut steps: Vec<Step> = requires.into_iter().map(|member| (member, true)).chain(members.into_iter().map(|member| (member, false))).map(|(member, service)| Step { session_id: member.session_id, command: member.command, service }).collect();
         if let Err(error) = ipc::bind_build_tools(&self.root, ipc::build_tool_environment(&environment), steps.iter_mut().map(|step| &mut step.command)) { return fail(code::INVALID, error.to_string()); }
+        for step in &steps{selected_environment_budget(&child_environment(&environment,&step.command.env)).map_err(|message|Fail{code:code::INVALID,message,session_id:Some(step.session_id.clone())})?;}
         for step in steps.iter().filter(|step| !step.service) {
             if self.sessions.get(&step.session_id).is_some_and(|live| live.info.status.live()) { return failed_for(code::ALREADY_RUNNING, "session is already running", &step.session_id); }
         }
@@ -731,7 +770,7 @@ impl Supervisor {
     fn readiness(&self, session_id: &str) -> Option<bool> {
         let live = self.sessions.get(session_id)?;
         match live.info.status {
-            SessionStatus::Exited | SessionStatus::Failed | SessionStatus::Interrupted => None,
+            SessionStatus::Exited | SessionStatus::Failed | SessionStatus::Interrupted | SessionStatus::TimedOut => None,
             _ if live.info.ready_url.is_some() => Some(true),
             SessionStatus::Running if live.info.command.ready.is_none() => Some(true),
             _ => Some(false),

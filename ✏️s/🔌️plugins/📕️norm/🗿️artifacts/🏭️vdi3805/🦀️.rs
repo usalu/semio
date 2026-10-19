@@ -195,17 +195,17 @@ impl SchemaCatalog {
 
 // #region Part1
 
-fn sheet_attribute_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<String,semio_framework_value::ValueError> {
+fn sheet_attribute_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<String,semio_framework_value::ValueError> {
     control.copy_text(sheet_attribute_field(fields, key)?.as_str().ok_or_else(||vdi3805_invalid("expected VDI3805 attribute text"))?)
 }
-fn sheet_attribute_optional_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<String>,semio_framework_value::ValueError> {
+fn sheet_attribute_optional_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Option<String>,semio_framework_value::ValueError> {
     match fields.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
         None | Some(semio_framework_value::DslValue::Null) => Ok(None),
         Some(semio_framework_value::DslValue::String(text)) => control.copy_text(text).map(Some),
         _ => Err(vdi3805_invalid("expected optional VDI3805 attribute text")),
     }
 }
-fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<SheetAttributes,semio_framework_value::ValueError> {
+fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SheetAttributes,semio_framework_value::ValueError> {
     control.step()?;
     let semio_framework_value::DslValue::Object(fields) = value else { return Err(vdi3805_invalid("expected VDI3805 sheet attribute object")); };
     if fields.len() > 8 { return Err(vdi3805_invalid("VDI3805 sheet attribute object has excess fields")); }
@@ -353,7 +353,6 @@ fn base_header() -> ManufacturerFile {
 fn generic_product(article: &str, sheet: u16, group: &str, title_de: &str, title_en: &str, attrs: Vec<(&str, &str)>) -> CatalogueProduct {
     let mut fields = vec!["210".into()];
     let mut entries = Vec::new();
-    // R100 product_group is also mirrored into 210/Generic so attributes↔records sync stays Pass.
     if !attrs.iter().any(|(k, _)| k.eq_ignore_ascii_case("product_group")) {
         fields.push("product_group".into());
         fields.push(group.into());
@@ -621,7 +620,6 @@ pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
         6 => nonconforming_blatt_6_dataset(),
         _ => {
             let mut doc = conforming_blatt_dataset(sheet);
-            // Corrupt mandatory enum + numeric domains.
             if let Some(product) = doc.catalog.products.get_mut(0) {
                 if let SheetAttributes::Generic(ref mut g) = product.configuration.attributes {
                     for e in &mut g.entries {
@@ -633,7 +631,6 @@ pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
                         }
                     }
                 }
-                // Resync 210 from generic entries
                 let kv: BTreeMap<String, String> = match &product.configuration.attributes {
                     SheetAttributes::Generic(g) => g.entries.iter().map(|e| (e.key.clone(), e.value.clone())).collect(),
                     _ => Default::default(),
@@ -646,7 +643,7 @@ pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
                     }
                     r210.fields = fields;
                 }
-                doc.catalog.file.record_count = 0; // structure fail
+                doc.catalog.file.record_count = 0;
             }
             doc
         }

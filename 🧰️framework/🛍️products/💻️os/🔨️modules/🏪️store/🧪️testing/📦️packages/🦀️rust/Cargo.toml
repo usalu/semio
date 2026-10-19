@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 
 
 [dependencies]
+semio-framework-os-store-testing-prelude = { path = "../../🧭️prelude/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

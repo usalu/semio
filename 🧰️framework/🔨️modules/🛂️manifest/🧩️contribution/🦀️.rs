@@ -151,15 +151,11 @@ impl std::fmt::Display for VersionParseError {
 impl std::error::Error for VersionParseError {}
 
 impl Version {
-    // 🚫️async: E1 transitive — `TryFrom<String>`/`FromStr` (external) construct this synchronously;
-    // pure field assembly, no I/O (R9).
     pub fn new(major: u64, minor: u64, patch: u64) -> Self {
         Self { major, minor, patch }
     }
 
     /// 🔢️ Parses a strict `major.minor.patch` triple — no pre-release/build metadata, no leniency.
-    // 🚫️async: E1 transitive — `FromStr::from_str`/`TryFrom<String>` (external) call this
-    // synchronously; pure string parsing, no I/O (R9).
     pub fn parse(input: &str) -> Result<Self, VersionParseError> {
         let mut segments = input.split('.');
         let (Some(major), Some(minor), Some(patch), None) = (segments.next(), segments.next(), segments.next(), segments.next()) else {
@@ -205,8 +201,6 @@ pub struct VersionPin(pub Version);
 
 impl VersionPin {
     /// 🔢️ Parses the one wire form, `=X.Y.Z`; every range (`*`, `^`, `~`, `>=`, a bare triple) is refused.
-    // 🚫️async: E1 transitive — `FromValue::from_value` (this file, below) calls this synchronously; pure string
-    // parsing, no I/O (R9).
     pub fn parse(input: &str) -> Result<Self, VersionPinParseError> {
         let trimmed = input.trim();
         let Some(rest) = trimmed.strip_prefix('=') else { return Err(VersionPinParseError::NotExact(trimmed.to_string())) };
@@ -245,14 +239,11 @@ impl VersionPin {
     }
 
     /// ✅️ Whether `version` is exactly the pinned version.
-    // 🚫️async: E1 transitive — pure comparison consumed by `matches_raw`, itself required sync (R9).
     pub fn matches(&self, version: &Version) -> bool {
         &self.0 == version
     }
 
     /// ✅️ Convenience for the dependency graph: parses `raw` and compares; an unparsable target version never matches.
-    // 🚫️async: E1 transitive — dependency-graph validation calls this synchronously via `!`; pure parse-and-compare,
-    // no I/O (R9).
     pub fn matches_raw(&self, raw: &str) -> bool {
         Version::parse(raw).is_ok_and(|version| self.matches(&version))
     }

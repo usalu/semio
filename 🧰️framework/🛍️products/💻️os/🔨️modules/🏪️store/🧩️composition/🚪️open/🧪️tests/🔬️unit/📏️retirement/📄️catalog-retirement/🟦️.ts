@@ -28,7 +28,8 @@ test("erased retirement uses separate fallible demands and a paid terminal box t
     expect(result.retained + result.released).toBe(storage.byteLength);
   }
   const source = readModuleTreeSource(frameworkSourcePath("🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs"));
-  const helpers = source.slice(source.indexOf("pub fn artifact_retirement_box_"));
+  const helperStart = source.indexOf("pub fn artifact_retirement_box_"), helperLast = source.lastIndexOf("pub fn artifact_retirement_box_");
+  const helpers = source.slice(helperStart, source.indexOf("\n}\n", helperLast) + 3);
   expect(helpers).toContain("pub fn artifact_retirement_box_demands");
   const native=readModuleTreeSource(new URL("../../../../../../🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs",import.meta.url));
   const law=native.slice(native.indexOf("fn current_box_retirement_preserves_denied_owner"),native.indexOf("fn artifact_store_group_visibility",native.indexOf("fn current_box_retirement_preserves_denied_owner")));

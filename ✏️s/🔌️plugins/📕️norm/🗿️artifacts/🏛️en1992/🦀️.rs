@@ -1,4 +1,4 @@
-//! En1992 — document entities (constitutional: general).
+//! 📏️ En1992 — document entities (constitutional: general).
 
 #![allow(async_fn_in_trait)]
 

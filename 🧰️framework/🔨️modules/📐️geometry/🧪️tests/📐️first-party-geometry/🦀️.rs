@@ -3,7 +3,7 @@ use semio_framework_geometry::{Affine, Arc, BezPath, Circle, CubicBez, Line, Pat
 #[test]
 fn shared_selection_geometry_matches_language_neutral_cases() {
     use semio_framework_geometry::geom_sel;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔲️selection/🔣️.json")).expect("selection fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔲️selection/🔣️.json")).expect("selection fixture");
     let points = |value: &serde_json::Value| value.as_array().expect("points").iter().map(|point| Point::new(point[0].as_f64().expect("x"), point[1].as_f64().expect("y"))).collect::<Vec<_>>();
     for case in fixture["cases"].as_array().expect("cases") {
         let selection = points(&case["selection"]);

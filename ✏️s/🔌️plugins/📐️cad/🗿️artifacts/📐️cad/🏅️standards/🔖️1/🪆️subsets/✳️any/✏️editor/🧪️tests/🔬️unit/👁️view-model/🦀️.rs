@@ -1,6 +1,7 @@
 //! 👁️ View model tests of the CAD editor unit tests: the gumball, camera, utility, context menu and sun measure behaviour. See [`super`].
 
 use super::*;
+#[cfg(test)] use semio_s_artifact_cad_cad_modes as edit;
 
 //#region 🔖️ViewModel
 #[semio_framework_async_macros::async_test]
@@ -104,10 +105,6 @@ async fn dislocate_utility_is_scoped_by_each_window_view_context() {
 
 #[semio_framework_async_macros::async_test]
 async fn context_menu_resolves_labels_from_the_registry() {
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `context_menu` is no longer
-    // selection-gated — `ArtifactApp::context_menu` has no `InteractionView` parameter, so it
-    // can no longer tell whether anything is selected (see its own doc comment); it always
-    // shows the transform/duplicate/delete section now.
     let app = CadPlayApp::default();
     let scene = default_document();
     let history = empty_history();

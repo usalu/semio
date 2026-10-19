@@ -1,4 +1,4 @@
-//! entry AT ITS OWN INDEX, so undoing a delete restores the order too. Missing target ⇒ `Vec::new()`.
+//! 🗃️ entry AT ITS OWN INDEX, so undoing a delete restores the order too. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DeleteTargetVolume` — reconstructs a `create-target-volume` of the captured BASE
 use crate::Puzzle5dSnapshot;
 

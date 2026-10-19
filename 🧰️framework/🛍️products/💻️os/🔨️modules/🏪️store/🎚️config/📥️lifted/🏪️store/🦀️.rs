@@ -31,7 +31,7 @@ pub type ConfigEnvelope<C, ConfigMutation> = ArtifactEnvelope<C, ConfigMutation>
 //#region 🔖️CodecRegistry
 //#region 🔖️Config
 /// 🎚️ A config store's envelope: a document envelope whose history holds undo and redo only
-/// ([`crate::os_spr::HistoryShape::Config`]).
+/// ([`semio_framework_os_spr::HistoryShape::Config`]).
 pub async fn create_config_envelope<C, ConfigMutation>(schema: &str, id: &str, initial_snapshot: C, backbone: Option<ArtifactBackboneRef>) -> ConfigEnvelope<C, ConfigMutation>
 where
     C: Clone + pack::snapshot::ArtifactPack,

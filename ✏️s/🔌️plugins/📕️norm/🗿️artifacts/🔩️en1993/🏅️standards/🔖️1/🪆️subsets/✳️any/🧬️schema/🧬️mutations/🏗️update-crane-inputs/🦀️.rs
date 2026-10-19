@@ -1,4 +1,4 @@
-//! `upsert-crane-runway` — upsert a `CraneRunway` by id into `crane_runways`.
+//! 🧬️ `upsert-crane-runway` — upsert a `CraneRunway` by id into `crane_runways`.
 
 use semio_s_artifact_norm_en1993_model::{CraneRunway, En1993Snapshot};
 

@@ -1,6 +1,12 @@
 //! 🚀️ App assembly: the internal action, fault notice and flag value helpers and the app creation with its manifest stitch. See [`super`].
 
 use super::*;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::overview;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::detail;
+use crate::mirror::editor::puzzle2d::modes::edit::windows::selection;
+use crate::mirror::editor::puzzle2d::panels::catalogue;
+use crate::mirror::editor::puzzle2d::panels::inspection;
+use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::settings;
 
 //#region 🔖️Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
@@ -60,39 +66,28 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
             .panel_tab_def(settings::definition())
-            // ✏️ Palette-visible content operations.
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
-            // 🗣️ Locale and terminology are real user-facing settings verbs (mirrors puzzle3d's own
-            // `.view_action` pair); the labels stay inline `LocalizedLabel::native` like every other
-            // action here, since `puzzle2d_localized` resolves a `Puzzle2dLabels` field, not a phrase.
-            // 🗂️ Referenced by `puzzle2d_context_menu_items` — categorized for grouped-context-menu disclosure.
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .action_destructive("deleteSelection")
             .keybinding("delete,backspace", "deleteSelection")
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
             .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
             .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
-            // 🔄️ Transform verbs over the live selection — the 2d twins of puzzle3d's gumball commits.
             .action_with(ActionDefinition::bounded_catalog("translateSelection", puzzle2d_localized(|l| l.translate), ActionKind::Mutation).with_category("transform"))
             .action_with(ActionDefinition::bounded_catalog("rotateSelection", puzzle2d_localized(|l| l.rotate), ActionKind::Mutation).with_category("transform"))
             .action_with(ActionDefinition::bounded_catalog("scaleSelection", puzzle2d_localized(|l| l.scale), ActionKind::Mutation).with_category("transform"))
             .keybinding("mod+d", "duplicateSelection")
-            // 📤📥 Fixture round trip: a JSON download of the document and a file-picker import.
             .action_with(ActionDefinition::bounded_catalog("exportSnapshot", puzzle2d_localized(|l| l.export), ActionKind::Shell).with_category("file"))
             .action_with(ActionDefinition::bounded_catalog("openImportSnapshot", puzzle2d_localized(|l| l.import), ActionKind::Shell).with_category("file"))
             .action_with(puzzle2d_internal_action("importSnapshot", LocalizedLabel::native("Import Fixture", "Fixture importieren"), ActionKind::Mutation))
-            // 🔗️ Edge CRUD over two handles — the host-dispatchable twin of the board engine's own
-            // drag-connect gesture, and the drop-time auto-connect's programmatic entry point.
             .action_with(ActionDefinition::bounded_catalog("createEdge", puzzle2d_localized(|l| l.connect), ActionKind::Mutation).with_category("create"))
             .action_with(ActionDefinition::bounded_catalog("deleteEdge", puzzle2d_localized(|l| l.disconnect), ActionKind::Mutation).with_category("selection"))
             .action_destructive("deleteEdge")
             .action_with(ActionDefinition::bounded_catalog("proximityConnect", LocalizedLabel::native("Connect Nearby", "In der Nähe verbinden"), ActionKind::Mutation).with_category("create"))
             .action_with(puzzle2d_internal_action("setProximityRadius", puzzle2d_localized(|l| l.proximity_radius), ActionKind::View).with_category("settings"))
-            // 👁️ Palette-visible ephemeral view/selection commands.
             .action_with(ActionDefinition::bounded_catalog("selectSameKind", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).with_category("selection"))
-            // 🔧️ Internal content operations — inspector/panel/board/import-bound, not palette commands.
             .action_with(puzzle2d_internal_action("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(puzzle2d_flag_value_action("setSelectionHidden", "settings", ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs")), "hidden", LocalizedLabel::native("Set Hidden", "Verborgen festlegen"), LocalizedLabel::native("Hidden", "Verborgen")))
             .action_with(puzzle2d_flag_value_action("setSelectionLocked", "settings", ActionArgDef::text_list("ids", LocalizedLabel::native("Ids", "IDs")), "locked", LocalizedLabel::native("Set Locked", "Gesperrt festlegen"), LocalizedLabel::native("Locked", "Gesperrt")))
@@ -102,16 +97,9 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("applyBoardEvents", LocalizedLabel::native("Apply Board Events", "Board-Ereignisse anwenden"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("acceptSuggestion", puzzle2d_localized(|l| l.accept_suggestion), ActionKind::Mutation))
-            // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
-            // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
-            // ⌨️ A submitted engagement line ("move 50 25", "connect …") EDITS the document — its own
-            // publication contract declares the Artifact lane — so it is a `Mutation`, exactly as
-            // `📐️cad` and `🏭️process`'s identical verb declare it. Declared `View`, kind discipline
-            // refused every submitted line at dispatch with "View-kind command 'engagementSubmit' must
-            // not emit operations", i.e. the command line could not move, connect or place anything.
             .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
@@ -124,9 +112,6 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("setBrushNodeSize", LocalizedLabel::native("Set Brush Node Size", "Pinsel-Knotengröße festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setSuggestionOffset", LocalizedLabel::native("Set Suggestion Offset", "Vorschlagsversatz festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setTransformGumballFlag", LocalizedLabel::native("Set Transform Gumball Flag", "Transformationsgriff festlegen"), ActionKind::View))
-            // 🎯️ Target regions — the flat analogue of puzzle3d's target volumes. `addTargetRegion` is
-            // the Area Brush's Alt+click commit and the only palette-visible one; the three
-            // entity-scoped verbs stay off the palette exactly as puzzle3d keeps its own off it.
             .mutation("addTargetRegion", puzzle2d_localized_phrase(|l| l.target_region, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteTargetRegion", LocalizedLabel::native("Delete Target Region", "Zielbereich löschen"), ActionKind::Mutation).with_category("targets") })
             .action_destructive("deleteTargetRegion")
@@ -145,19 +130,12 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(puzzle2d_internal_action("openHandleSuggestions", puzzle2d_localized(|l| l.suggest_nodes), ActionKind::View))
             .action_with(puzzle2d_internal_action("closeHandleSuggestions", puzzle2d_localized(|l| l.close_suggestions), ActionKind::View))
             .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))
-            // 🌐️🎯️ Window-option verbs: the grid's show/hide toggle and the per-granularity pick filter.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridVisible", LocalizedLabel::native("Set Grid Visible", "Raster einblenden"), ActionKind::View, "layout-grid") })
             .action_with(puzzle2d_internal_action("setSelectableKind", LocalizedLabel::native("Set Selectable Kind", "Auswählbare Art festlegen"), ActionKind::View))
-            // 🚧️🫂️ Placement tuning — the two settings-panel steppers a brush/fill collision test reads.
             .action_with(puzzle2d_internal_action("setBrushPlacementContactTolerance", LocalizedLabel::native("Set Brush Placement Contact Tolerance", "Kontakttoleranz der Pinselplatzierung festlegen"), ActionKind::View))
             .action_with(puzzle2d_internal_action("setBrushPlacementOverlapBudget", LocalizedLabel::native("Set Brush Placement Overlap Budget", "Überlappungsbudget der Pinselplatzierung festlegen"), ActionKind::View))
-            // 🔂️ The engagement bar's repeat-last: one more placement from the armed fill tool.
             .action_with(puzzle2d_internal_action("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"), ActionKind::View))
-            // 🗨️ Shell-only effect (no document mutation): opens the declared "addNode" dialog. The
-            // user-facing "Add Node…" row is this one, so the parametrized `addNode` verb below stays
-            // the dialog's/catalogue row's/drop's target rather than a palette entry of its own.
             .action_with(ActionDefinition::bounded_catalog("openAddNodeDialog", puzzle2d_localized_phrase(|l| l.node, |w| format!("Add {w}…"), |w| format!("{w} hinzufügen…")), ActionKind::Shell).with_category("create"))
-            // 📝️ Staged palette args for the two content commands that need a target.
             .action_args("addNode", vec![puzzle2d_node_kind_arg()])
             .action_args("translateSelection", vec![
                 ActionArgDef::number("dx", LocalizedLabel::native("Δx", "Δx")).default_value(&0.0),
@@ -236,20 +214,15 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setBrushPlacementOverlapBudget", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementRepeatLast", InteractiveJobClassification::Migrated)
             .action_interactive_job("openAddNodeDialog", InteractiveJobClassification::Migrated)
-            // 🗨️ The dialog `openAddNodeDialog` opens, driving the existing `addNode` operation's LIVE
-            // `kind` select.
             .dialog(
                 DialogDefinition::new(PUZZLE2D_ADD_NODE_DIALOG_ID, puzzle2d_localized_phrase(|l| l.node, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")), ActionRef::new("addNode"))
                     .body(puzzle2d_localized_phrase(|l| l.node, |w| format!("Choose the kind of {w} to add to the board."), |_w| "Wählen Sie die Art zum Hinzufügen.".to_string()))
                     .args(vec![puzzle2d_node_kind_arg()])
                     .submit_label(LocalizedLabel::native("Add", "Hinzufügen")),
             )
-            // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document
-            // operation); bound to the interactive overview pane by that window's own definition.
             .utility(select_utility::definition(puzzle2d_localized(|l| l.select)))
             .utility(brush_utility::definition(puzzle2d_localized(|l| l.brush)))
             .utility(area_brush_utility::definition(puzzle2d_localized(|l| l.area_brush)))
-            // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
             .tool(fill::definition(puzzle2d_localized(|l| l.fill)))
             .default_layout(edit::layout())
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole 2D puzzle with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte 2D-Puzzle durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))

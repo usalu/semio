@@ -66,7 +66,7 @@ export {
 };
 export { type FlowInline, type FlowBlock, type Flow, FlowProvider, useFlow };
 
-/** @emoji 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
+/** 🪟️ Default mode-dock tab label — element gray; emphasize on hover/active only. */
 
 export { ResponsiveLabel, shellChromeTitleClassName } from "../🪟️chrome/🏷️responsive-label/🟦️.tsx";
 export { WINDOW_CHROME_BODY_PLANE_STYLE, WINDOW_CHROME_CHIP_ROW_STYLE, WINDOW_SILHOUETTE_BORDER_KINDS, WindowChrome, WindowChromeSilhouetteBorder, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, resolveWindowSilhouetteBorderKind, useWindowSilhouetteGeometry, windowCapFrameClass, windowChromeTitleChipClass, windowControlsCapClass, windowGapFrameClass, windowSilhouetteBorderPaint, type WindowChromeControlAction, type WindowChromeProps, type WindowSilhouetteBorderKind };
@@ -132,7 +132,7 @@ export {
 };
 export type { ElementProps };
 
-/** @emoji 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
+/** 🧭️ The shared, compile-time-enforced state model every rendered UI element carries — explicit
  * re-export from `@semio-tech/ui-styling` (this package must not leak types from outside the codebase).
  * `state`/`status`/`hover`/`selected` mirror the Rust `UiState`/`UiStatus`/`UiPresence` model in `ui_wgpu`
  * (see `framework/ui/wgpu/rs/lib.rs`'s 🔖️Presence region) byte-for-byte. */

@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_replication_history::*;
+use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
+
+#[global_allocator]
+static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
 fn every_transition() -> Vec<HistoryTransition> {
     vec![
@@ -131,7 +135,7 @@ fn none() -> std::collections::HashSet<String> {
 /// 🪪️ Operation ownership is unique and tied HLC events follow UTF-8 order across reload and arrival permutations.
 #[test]
 fn history_invariants_follow_portable_ownership_and_utf8_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪪️history-invariants/🔣️.json")).expect("history invariants fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🪪️history-invariants/🔣️.json")).expect("history invariants fixture");
     let strings = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_owned()).collect::<Vec<_>>();
     for case in fixture["cases"].as_array().unwrap() {
         let mut edits: Vec<_> = case["edits"].as_array().unwrap().iter().map(|row| {

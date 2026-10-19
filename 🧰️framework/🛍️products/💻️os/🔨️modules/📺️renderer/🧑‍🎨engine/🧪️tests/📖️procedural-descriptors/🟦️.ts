@@ -302,8 +302,6 @@ describe("example switch — the completion's scope is what re-takes the flow wi
     expect(mergeUiDirtyScopeV1({ kind: "full" }, { kind: "partial", windowBodies: [] })).toEqual({ kind: "full" });
     expect(mergeUiDirtyScopeV1({ kind: "none" }, { kind: "partial", windowBodies: ["procedural.play.main"] })).toEqual({ kind: "partial", windowBodies: ["procedural.play.main"] });
     expect(mergeUiDirtyScopeV1({ kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] }, { kind: "none" })).toEqual({ kind: "partial", panelBodies: [FRAMEWORK_HISTORY_BODY_KEY] });
-    // ⚖️ The union of two window-body passes still asks the guest for BOTH bodies — the whole point
-    // of coalescing instead of letting the newer pass supersede (and discard) the older one.
     const union = mergeUiDirtyScopeV1({ kind: "partial", windowBodies: ["procedural.play.main"] }, { kind: "partial", windowBodies: ["procedural.play.preview"] });
     expect(buildUiRefreshRequest(union, generation3dWindows, historyPanel, {}, new Map())?.windows?.map((entry) => entry.bodyKey)).toEqual(["procedural.play.main", "procedural.play.preview"]);
   });

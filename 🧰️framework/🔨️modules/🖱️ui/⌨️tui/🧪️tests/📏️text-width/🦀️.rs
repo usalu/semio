@@ -31,7 +31,7 @@ fn oracle_scalar_cells(c: char) -> u8 {
 
 #[test]
 fn physical_probe_strings_have_independent_unicode_widths() {
-    let fixture = parse(include_str!("../../🧫️fixtures/📏️text-width/🪟️console/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let fixture = parse(include_str!("../🧫️fixtures/📏️text-width/🪟️console/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     let samples = fixture.as_object().unwrap().get("cases").unwrap().as_array().unwrap();
     for case in samples {
         let object = case.as_object().unwrap();
@@ -47,7 +47,7 @@ fn physical_probe_strings_have_independent_unicode_widths() {
 
 #[test]
 fn physical_windows_scalar_profile_matches_the_console_oracle() {
-    let fixture = parse(include_str!("../../🧫️fixtures/📏️text-width/🪟️console/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let fixture = parse(include_str!("../🧫️fixtures/📏️text-width/🪟️console/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     for case in fixture.as_object().unwrap().get("cases").unwrap().as_array().unwrap() {
         let object = case.as_object().unwrap();
         let text = object.get("scalarText").unwrap().as_str().unwrap();

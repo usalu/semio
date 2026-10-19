@@ -26,7 +26,6 @@ describe("♿️ diagram keyboard and ARIA affordances", () => {
     expect(surface).toBeTruthy();
     expect(surface.getAttribute("tabindex")).toBe("0");
     expect(surface.getAttribute("aria-roledescription")).toBeTruthy();
-    // ♿️ The label counts what is actually on the canvas, so a reader hears the graph's size.
     expect(surface.getAttribute("aria-label")).toContain("4");
     expect(surface.getAttribute("aria-label")).toContain("1");
     const describedBy = surface.getAttribute("aria-describedby");

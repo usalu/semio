@@ -1,4 +1,4 @@
-//! window config only. The staged form speaks the TYPED fields; a results-panel control speaks
+//! 🖼️ window config only. The staged form speaks the TYPED fields; a results-panel control speaks
 //! 👁️ Fem3d play app command — `result-display`: the results window's source/mode selection —
 //! `{field, value, windowId}`, because the host merges a control's own scalar under `value`.
 

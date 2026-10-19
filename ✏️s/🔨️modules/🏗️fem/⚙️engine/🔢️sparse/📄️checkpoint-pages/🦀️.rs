@@ -29,7 +29,7 @@ impl SparseColumns {
         self.entries.get(self.offsets.get(column)?.checked_add(entry)?).copied()
     }
     pub fn entry_depth_demand(&self, column: usize, entry: usize) -> Result<usize, ValueError> {
-        let failure = |error: semio_framework_value::list::PagedListError| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason);
+        let failure = |error: semio_framework_value_persistent::list::PagedListError| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason);
         let after = column.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "factor column offset overflow"))?;
         let outer = self.offsets.next_get_depth_demand(after).map_err(failure)?;
         if self.column_len(column).is_some_and(|length| entry >= length) { return outer.checked_mul(2).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "factor path depth overflow")); }
@@ -208,7 +208,7 @@ fn write_numerical_bytes(target: &mut [std::mem::MaybeUninit<u8>], bytes: &[u8])
 }
 
 struct NumericalBytesSource<'a>(&'a [u8]);
-impl semio_framework_job::JobPayloadStagedSource for NumericalBytesSource<'_> {
+impl semio_framework_job_payload::JobPayloadStagedSource for NumericalBytesSource<'_> {
     fn byte_len(&self) -> usize { self.0.len() }
     fn copy_byte_demand(&self) -> Result<usize, JobPayloadAdmissionFault> { Ok(self.0.len()) }
     fn depth_demand(&self) -> Result<usize, JobPayloadAdmissionFault> { Ok(1) }
@@ -252,7 +252,7 @@ impl<T: NumericalWireScalar, const N: usize> NumericalReadView<T> for PagedList<
 }
 
 struct NumericalScalarSource<'a, T: NumericalWireScalar, S: NumericalReadView<T> + ?Sized> { values: &'a S, index: usize, marker: std::marker::PhantomData<T> }
-impl<T: NumericalWireScalar, S: NumericalReadView<T> + ?Sized> semio_framework_job::JobPayloadStagedSource for NumericalScalarSource<'_, T, S> {
+impl<T: NumericalWireScalar, S: NumericalReadView<T> + ?Sized> semio_framework_job_payload::JobPayloadStagedSource for NumericalScalarSource<'_, T, S> {
     fn byte_len(&self) -> usize { T::WIDTH }
     fn copy_byte_demand(&self) -> Result<usize, JobPayloadAdmissionFault> { Ok(size_of::<T>() + T::WIDTH) }
     fn depth_demand(&self) -> Result<usize, JobPayloadAdmissionFault> { self.values.read_depth(self.index) }
@@ -309,7 +309,7 @@ pub trait NumericalMatrixView { fn rows(&self) -> usize; fn columns(&self) -> us
 impl NumericalMatrixView for MatD { fn rows(&self) -> usize { self.rows } fn columns(&self) -> usize { self.cols } fn length(&self) -> usize { self.data.len() } fn scalar(&self, index: usize) -> Option<f64> { self.data.get(index).copied() } fn scalar_depth(&self, _: usize) -> Result<usize, JobPayloadAdmissionFault> { Ok(1) } }
 impl NumericalMatrixView for semio_s_fem_algebra::PagedMatD { fn rows(&self) -> usize { self.rows } fn columns(&self) -> usize { self.cols } fn length(&self) -> usize { self.data.len() } fn scalar(&self, index: usize) -> Option<f64> { self.data.get(index).copied() } fn scalar_depth(&self, index: usize) -> Result<usize, JobPayloadAdmissionFault> { self.data.next_get_depth_demand(index).map_err(|_| JobPayloadAdmissionFault::StreamBytes) } }
 struct NumericalMatrixScalar<'a, M: NumericalMatrixView> { matrix: &'a M, index: usize }
-impl<M: NumericalMatrixView> semio_framework_job::JobPayloadStagedSource for NumericalMatrixScalar<'_, M> {
+impl<M: NumericalMatrixView> semio_framework_job_payload::JobPayloadStagedSource for NumericalMatrixScalar<'_, M> {
     fn byte_len(&self) -> usize { 8 }
     fn copy_byte_demand(&self) -> Result<usize, JobPayloadAdmissionFault> { Ok(16) }
     fn depth_demand(&self) -> Result<usize, JobPayloadAdmissionFault> { self.matrix.scalar_depth(self.index) }
@@ -427,7 +427,7 @@ impl NumericalOwnerRestoreCursor {
             None => return Err(NumericalCheckpointFault::Field),
         };
         let remaining = shape.length.checked_sub(self.next_item).ok_or(NumericalCheckpointFault::Field)?;
-        let page_values = remaining.min((semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - NUMERICAL_CHECKPOINT_HEADER_BYTES - prefix) / width);
+        let page_values = remaining.min((semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - NUMERICAL_CHECKPOINT_HEADER_BYTES - prefix) / width);
         if page.bytes.len() != prefix + page_values * width { return Err(NumericalCheckpointFault::Truncated); }
         self.shape = Some(shape);
         self.page_item = page.item;

@@ -24,8 +24,6 @@ use super::*;
 pub enum ArgFormat {
     ArtifactRef,
     WindowId,
-    // 🐛️ `entity_kind`, not `kind`: a struct-variant field literally named `kind` collides with this
-    // enum's own internal tag key (`#[serde(tag = "kind")]`) and serde's derive hard-errors on it.
     EntityId {
         entity_kind: String,
     },

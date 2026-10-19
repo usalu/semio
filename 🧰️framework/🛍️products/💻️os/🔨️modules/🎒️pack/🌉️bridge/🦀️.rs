@@ -94,7 +94,7 @@ pub fn encode_wire_value_controlled(value:&DslValue,options:&PackEncodeOptions,c
 }
 
 /// 🎞️ Materializes the full terminal intrinsic owner under the caller's decode control.
-pub fn decode_wire_value_controlled(bytes:&[u8],options:&PackDecodeOptions,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
+pub fn decode_wire_value_controlled(bytes:&[u8],options:&PackDecodeOptions,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
     pack::record::decode_value_record_body_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
 }
 
@@ -105,7 +105,7 @@ pub fn encode_wire_value_into(value:&DslValue,options:&PackEncodeOptions,output:
 }
 
 /// 🎞️ Decodes the exact declared intrinsic field by borrowing the complete caller source.
-pub fn decode_wire_value_span(bytes:crate::ByteSpan<'_>,options:&PackDecodeOptions,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
+pub fn decode_wire_value_span(bytes:crate::ByteSpan<'_>,options:&PackDecodeOptions,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<DslValue,PackRefusal>{
     pack::record::decode_value_record_body_span_exact_controlled(bytes,VALUE_BRIDGE_FIELD_ID,options,control)
 }
 

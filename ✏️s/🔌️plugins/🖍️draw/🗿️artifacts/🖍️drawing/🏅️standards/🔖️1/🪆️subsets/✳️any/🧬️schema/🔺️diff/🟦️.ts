@@ -26,17 +26,17 @@ import {
 } from "../🟦️.ts";
 
 export interface DrawingDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   id?: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string | null;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers?: DrawingLayersDelta;
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets?: DrawingAssetsDelta;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   artboard?: DrawingArtboard | null;
 }
 

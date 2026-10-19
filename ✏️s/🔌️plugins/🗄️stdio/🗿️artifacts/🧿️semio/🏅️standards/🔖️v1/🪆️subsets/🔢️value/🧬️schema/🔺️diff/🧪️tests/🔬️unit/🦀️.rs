@@ -53,7 +53,6 @@ fn list_diff(d: IndexedTripleDiff<SemioValueDiff, SemioValue>) -> SemioValueTree
 
 #[test]
 fn absorb_list_insert_then_remove_before() {
-    // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
     let base = snap(listv(vec![strv("a"), strv("b"), strv("c")]), vec![]);
     let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("f") }], ..Default::default() });
     let d2 = list_diff(IndexedTripleDiff { removed: vec![0], ..Default::default() });

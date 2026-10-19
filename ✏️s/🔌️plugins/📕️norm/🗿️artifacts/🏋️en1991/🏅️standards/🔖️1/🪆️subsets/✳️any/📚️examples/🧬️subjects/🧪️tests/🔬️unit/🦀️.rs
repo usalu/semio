@@ -8,6 +8,5 @@ async fn dump_example_dsl_and_pack_assets() {
     use crate::standards::v1::subsets::any::io::text::snapshot::{encode_en1991_dsl};
     use std::path::PathBuf;
     let root = fixture_path!("../../🏅️standards/🔖️1/Nest");
-    // resolve via relative from package
     let any = fixture_path!("../../🏅️standards/🔖️1/Nest");
 }

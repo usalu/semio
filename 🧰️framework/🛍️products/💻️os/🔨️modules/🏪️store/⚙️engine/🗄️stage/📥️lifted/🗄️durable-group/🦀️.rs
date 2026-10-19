@@ -393,7 +393,7 @@ where
     Mutation: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     if slot.is_none() {return Err(DurableOwnedGroupDecisionError::InvalidOutcome);}
-    let copy=size_of::<DurableStoreBoundOutcomeV1<P,Mutation>>() +size_of:: < ArtifactStoreOneItemPrepared<P,Mutation>>()+size_of::<StagedRootRetirement<P, Mutation>>() +size_of::<super::ArtifactStoreDecodedEditRetirement<Mutation>>()+size_of::<DurablePlanningOutputV1>();
+    let copy=size_of::<DurableStoreBoundOutcomeV1<P,Mutation>>() +size_of:: < ArtifactStoreOneItemPrepared<P,Mutation>>()+size_of::<StagedRootRetirement<P, Mutation>>() +size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<Mutation>>()+size_of::<DurablePlanningOutputV1>();
     let capacity=size_of::<StagedRootRetirement<P,Mutation>>();let release=size_of::<Edit<Mutation>>();
     if !grant.permits_one()||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{ return Ok(None); }
     let mutation_factory = (*store.owners.mutation_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
@@ -648,7 +648,7 @@ where
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
         let mut admitted = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, &mut admitted);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, &mut admitted);
         let identities = [authority.actor(), edit.id.as_str(), edit.id.as_str()].map(|identity| semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str_controlled(identity, &mut control));
         let [actor, applied_edit_id, tail_edit_id] = identities;
         let identities = [actor, applied_edit_id, tail_edit_id].map(|identity| identity.map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string())));

@@ -212,8 +212,6 @@ async fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
     let root = tempdir("profile").await;
     let root_str = root.to_string_lossy().to_string();
     assert_eq!(main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]).await, 0);
-    // 🎯️ The 5 profiled commands are real, durable commits — verified via the query subcommand
-    // rather than parsing this test's own stdout (`println!` isn't easily captured in-process).
     assert_eq!(main_impl(&[String::from("query"), root_str, String::from("doc-1"), String::from("cli/profile/counter")]).await, 0);
 }
 

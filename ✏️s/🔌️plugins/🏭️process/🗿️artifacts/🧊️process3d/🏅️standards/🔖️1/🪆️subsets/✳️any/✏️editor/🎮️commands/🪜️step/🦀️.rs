@@ -44,12 +44,6 @@ pub mod add_step {
         let Some((machine, capability)) = resolved else {
             return Ok(Emit::default());
         };
-        // 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `fixture.stock_solid` is a
-        // composed `s.stdio.semio.brep` CHILD HANDLE now, not a `WorkingSolid` — this plugin-scoped
-        // migration cannot resolve it back to real dimensions without a `LinkResolver` (see
-        // `ProcessWorkingScene`'s doc comment), so the stock-dimension capability-rule gate
-        // (`validate_capability`/`validation_context_for_stock`) is a documented gap here: every
-        // capability is treated as dimensionally valid rather than guessing at unknown extents.
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
         let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, payload.position) };
         Ok(insert_step_emit(fixture, cfg.snapshot, step))

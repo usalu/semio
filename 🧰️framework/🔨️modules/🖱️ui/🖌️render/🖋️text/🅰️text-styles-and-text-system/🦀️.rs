@@ -41,7 +41,7 @@ pub struct TextRunStyle {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct FontHandle(pub(super) u32);
 
-struct FontSlot {
+pub(super) struct FontSlot {
     pub(super) data: Blob<u8>,
     pub(super) index: u32,
 }
@@ -74,7 +74,6 @@ struct CustomFontSlot {
 /// to be implemented outside it; see this packet's report for the registrar-request to wire it into
 /// `ui-host` once that packet exists.
 pub trait FontSource {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn poll_font(&mut self, key: &str) -> FontFetch;
 }
 
@@ -118,7 +117,6 @@ impl TextSystem {
     /// deterministic and dependency-free (no network, no system-font scan:
     /// `CollectionOptions { system_fonts: false, .. }`), same guarantee the wgpu-old target's
     /// `FontAtlas::builtin()`/`shaped()` merge gave. Fails naming the role whose bytes are not a font.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(fonts: &TextFontSet<'_>) -> Result<Self, TextFontError> {
         let mut collection = Self::empty_collection();
         let sans_id = Self::register_builtin(&mut collection, fonts, TextFontRole::Sans)?;
@@ -142,17 +140,14 @@ impl TextSystem {
     /// [`Self::request_font`]/[`Self::provide_font_bytes`] shape. `FontFamilyChoice::{SansSerif,Serif,
     /// Monospace}` and every generic fallback resolve to nothing, so a glyph the provided font lacks
     /// shapes as that font's own `.notdef`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn without_builtin_fonts() -> Self {
         Self::with_collection(Self::empty_collection())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn empty_collection() -> Collection {
         Collection::new(CollectionOptions { shared: false, system_fonts: false })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn with_collection(collection: Collection) -> Self {
         Self {
             font_cx: FontContext { collection, source_cache: SourceCache::default() },
@@ -172,12 +167,10 @@ impl TextSystem {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn register_builtin(collection: &mut Collection, fonts: &TextFontSet<'_>, role: TextFontRole) -> Result<FamilyId, TextFontError> {
         Self::register_font(collection, fonts.get(role), role.family()).ok_or(TextFontError { role })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn register_font(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
         let over = FontInfoOverride { family_name: Some(family), width: None, style: None, weight: None, axes: None };
         collection.register_fonts(Blob::new(Arc::new(bytes.to_vec())), Some(over)).into_iter().next().map(|(id, _)| id)
@@ -186,7 +179,6 @@ impl TextSystem {
     /// 🔗️ Interns `(font, glyph_id)`'s font identity to a stable [`FontHandle`], allocating on first
     /// sight. `Blob::id()` is already a unique monotonic id per allocation, so `(id, index)` is a
     /// correct identity key without hashing font bytes or comparing pointers.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn intern_font(&mut self, data: Blob<u8>, index: u32) -> FontHandle {
         let key = (data.id(), index);
         if let Some(handle) = self.font_identity.get(&key) {
@@ -201,7 +193,6 @@ impl TextSystem {
     /// 🕓️ Idempotent: requesting the same `key` twice returns the same [`FontDependencyId`], same
     /// interning idiom `ResourceRegistry::intern_texture` uses for texture keys. Never blocks — the
     /// actual bytes arrive later via [`Self::provide_font_bytes`], driven by a host's [`FontSource`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_font(&mut self, key: &str) -> FontDependencyId {
         if let Some(&id) = self.custom_fonts.get(key) {
             return id;
@@ -217,7 +208,6 @@ impl TextSystem {
     /// -resolved id, or empty/unparseable bytes (marked `Failed` in the last case) — never panics on a
     /// bad host response. On success, `id` is queued for [`Self::take_ready_dependencies`] so whoever
     /// owns this window's `FrameScheduler` can invalidate it with `InvalidationReason::RESOURCE_READY`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn provide_font_bytes(&mut self, id: FontDependencyId, bytes: &[u8]) -> bool {
         let Some(slot) = self.custom_font_slots.get(id.0 as usize) else { return false };
         if slot.status == FontStatus::Ready || bytes.is_empty() {
@@ -241,7 +231,6 @@ impl TextSystem {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn font_status(&self, id: FontDependencyId) -> FontStatus {
         self.custom_font_slots.get(id.0 as usize).map_or(FontStatus::Failed, |slot| slot.status)
     }
@@ -250,12 +239,10 @@ impl TextSystem {
     /// `Measurement::Pending`'s contract (`layout.rs`'s own docstring: "whoever completes that
     /// dependency ... is responsible for invalidating the window once it lands"). Same take-and-reset
     /// idiom as `ResourceRegistry::drain_ops`/the old `FontAtlas::take_dirty`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn take_ready_dependencies(&mut self) -> Vec<FontDependencyId> {
         std::mem::take(&mut self.ready_dependencies)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn family_ready(&self, family: FontFamilyChoice) -> bool {
         match family {
             FontFamilyChoice::Custom(id) => matches!(self.custom_font_slots.get(id.0 as usize).map(|slot| slot.status), Some(FontStatus::Ready)),
@@ -267,7 +254,6 @@ impl TextSystem {
     /// custom font falls back to `FAMILY_SANS` here — this is the paint-phase fallback; the
     /// layout-phase `Measurement::Pending` short-circuit in `🔖️Measure` is what actually keeps a
     /// pending font from being measured with the wrong metrics.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn font_stack_for(&self, family: FontFamilyChoice) -> FontStack<'static> {
         match family {
             FontFamilyChoice::SansSerif => FontStack::Source(Cow::Borrowed(FAMILY_SANS)),

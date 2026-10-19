@@ -30,17 +30,14 @@ impl Default for LasArtifact {
 }
 
 impl LasArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> LasSnapshot {
         LasSnapshot { schema: self.schema.clone(), header: self.header.clone(), vlrs: self.vlrs.clone(), points: self.points.clone() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: LasSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, vlrs: snapshot.vlrs, points: snapshot.points }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: LasSnapshot) {
         self.schema = snapshot.schema;
         self.header = snapshot.header;
@@ -143,7 +140,7 @@ pub fn demo_las_snapshot() -> LasSnapshot {
             generating_software: "semio-las-engine".into(),
             creation_day_of_year: 100,
             creation_year: 2026,
-            offset_to_point_data: 289, // structural: 227 (fixed header) + 54 (vlr header) + 8 (vlr data)
+            offset_to_point_data: 289,
             number_of_vlrs: 1,
             point_data_format_id: 0,
             point_data_record_length: 20,

@@ -10,7 +10,7 @@ export interface Puzzle2dFlatPosition {
 }
 
 export interface Puzzle2dInference {
-  /** @derived */
+  /** ⬜️ @derived */
   flatPosition: Puzzle2dFlatPosition;
 }
 

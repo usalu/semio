@@ -5,8 +5,6 @@ use semio_s_artifact_block_2d_diff::Block2dDiff;
 
 //#region 🔖️Diff
 pub fn diff(payload: &crate::rename_node_kind::RenameNodeKind, base: &Block2dSnapshot) -> protocol::MutationOutcome<Block2dDiff> {
-    // 🪪️ `node_kind` is the document's single root kind (not a catalog member addressed by id), so
-    // there is no missing-target case and no collection to collide with — only the no-op check applies.
     if payload.new_name == base.node_kind.name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Node kind name is already \"{}\".", payload.new_name));
     }

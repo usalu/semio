@@ -1,6 +1,7 @@
 //! 🧪️ Integration tests of the `s.fem.fem2d` play app editor that drive the whole mounted app through the shared `context` harness.
 
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
 
 pub mod context {
     use semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app;
@@ -102,9 +103,6 @@ pub mod context {
         let mut action = meta("local");
         action.view_state = Some(view(kind));
         let mut result = app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
-        // 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
-        // way the plugin host's continuation does, and fold the settled receipt's effects into the answer
-        // (either surface may be the one carrying a `LoadDocument` or a playback re-arm).
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {

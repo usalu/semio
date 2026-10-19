@@ -65,8 +65,6 @@ pub(super) fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: 
 /// 📝️ Moves the merged control `value` into the JSON-text `value_json` field the reducers re-parse.
 pub(super) fn value_json(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
     if !entries.iter().any(|(key, _)| key == "value_json") {
-        // 🎛️ A window toggle measure dispatches its new state as `pressed` (`WindowMeasureToggle`),
-        // a slider/number as `value`; both are the param's value.
         if let Some((_, value)) = entries.iter().find(|(key, _)| key == "value" || key == "pressed").cloned() {
             put(&mut entries, "value_json", DslValue::String(semio_framework_pack_json::to_json_string(&value)));
         }

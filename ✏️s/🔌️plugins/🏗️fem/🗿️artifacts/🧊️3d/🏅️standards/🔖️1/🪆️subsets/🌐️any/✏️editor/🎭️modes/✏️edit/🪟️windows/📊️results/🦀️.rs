@@ -1,4 +1,4 @@
-//! [`config::Fem3dResultsWindowConfig`] owns the camera, the result display selection and the
+//! 👪️ [`config::Fem3dResultsWindowConfig`] owns the camera, the result display selection and the
 //! 📊️ Static, modal and buckling analysis views read their concrete Results window config.
 //! deformation transport; [`transient::FemResultsWindowTransient`] carries the running playback
 //! clock while the window plays. Mounted views borrow bounded job fields and retain the last
@@ -25,6 +25,58 @@ use semio_framework_ui_contract::Buildable;
 use semio_framework_ui_contract::HasChildren;
 use semio_framework_ui_contract::HasStackLayout;
 use std::collections::HashMap;
+
+/// 🧮️ Source and mode indices belong to the admitted generation original document.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Fem3dResultRequest {
+    pub source: Fem3dResultSource,
+    pub mode: Option<usize>,
+    pub buckling: Option<usize>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Fem3dResultSource {
+    #[default]
+    FirstCase,
+    Case(usize),
+    Combination(usize),
+}
+
+/// 🎯️ Resolves the displayed source and mode against the admitted document.
+pub fn result_request(doc: &Fem3dSnapshot, source: Option<&str>, mode: Option<usize>) -> Result<Fem3dResultRequest, &'static str> {
+    if mode.is_some_and(|index| index >= doc.analysis.modal_count) { return Err("fem3d.results-mode-missing"); }
+    let source = match source {
+        None => Fem3dResultSource::FirstCase,
+        Some(identity) => {
+            let source = semio_s_fem_analyses_model::borrow_result_source_identity(identity).map_err(|_| "fem3d.results-source-identity")?;
+            match source.kind {
+                "loadCase" => Fem3dResultSource::Case(doc.load_cases.iter().position(|case| case.id == source.id).ok_or("fem3d.results-source-missing")?),
+                "combination" => Fem3dResultSource::Combination(doc.combinations.iter().position(|combination| combination.id == source.id).ok_or("fem3d.results-source-missing")?),
+                _ => return Err("fem3d.results-source-kind"),
+            }
+        }
+    };
+    Ok(Fem3dResultRequest { source, mode, buckling: None })
+}
+
+/// 📊️ Validated result fields lent by the mounted session for one render.
+pub trait Fem3dResultFields {
+    fn snapshot(&self) -> &Fem3dSnapshot;
+    fn len(&self) -> usize;
+    fn is_empty(&self) -> bool { self.len() == 0 }
+    fn node_id(&self, index: usize) -> Option<&str>;
+    fn current_revision(&self) -> bool;
+    fn static_values(&self, index: usize) -> Option<[f64; 6]>;
+    fn mode_values(&self, index: usize) -> Option<([f64; 6], f64)>;
+    fn stress(&self, index: usize) -> Option<f64>;
+}
+
+/// 🧵️ The mounted session as the results window sees it: the window depends on this contract, the session implements it.
+pub trait Fem3dLiveSession {
+    fn result_stage(&self, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>) -> Option<&'static str>;
+    fn with_result_fields(&self, operation: Option<semio_framework_plugin::AppRenderOperationContext>, doc: &Fem3dSnapshot, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, request: Fem3dResultRequest, read: &mut dyn FnMut(Option<&dyn Fem3dResultFields>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode>;
+    fn with_live_visual(&self, operation: Option<semio_framework_plugin::AppRenderOperationContext>, build: &mut dyn FnMut(Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode>;
+}
 
 /// 🪟️ The manifest's Results window kind id.
 pub const FEM3D_WINDOW_RESULTS: &str = "fem3d-results";
@@ -235,13 +287,13 @@ fn results_scene(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interac
     results_scene_with_visual(doc, window, interaction, displacements, scale, stress, None)
 }
 
-fn results_scene_with_visual(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, scale: f64, stress: Option<&HashMap<String, f64>>, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn results_scene_with_visual(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, scale: f64, stress: Option<&HashMap<String, f64>>, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, displacements, scale, stress).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("fem3d.scene-identity", "FEM3d scene target identity refused"))?;
     let gumball = semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::config::Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
     let mut scene = semio_framework_plugin::world3d_scene(semio_s_artifact_fem_3d_scene::viewport::scene_camera_json(&window.camera), meshes_json, instances_json, fem3d_selection_json(doc, interaction, false, &gumball), &semio_framework_plugin::WorldSunConfig::default());
     scene.domain_id = Some(FEM3D_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(FEM3D_GRANULARITY_NODE.into());
-    scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
+    scene.snapshot = visual.map(semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease::snapshot);
     semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_RESULTS, &scene)
 }
 
@@ -253,16 +305,16 @@ fn failed(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interaction: &
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on the window's
 /// display selection, at the playback phase the window sits at.
-pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let display = config_result_display(cfg);
     if operation.is_some() {
         let mode = match display.mode { DisplayMode::Modal(index) => Some(index), _ => None };
-        let mut request = crate::live_visual::result_request(doc, display.source_id.as_deref(), mode).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("fem3d.results-source", message))?;
+        let mut request = result_request(doc, display.source_id.as_deref(), mode).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("fem3d.results-source", message))?;
         request.buckling = match display.mode { DisplayMode::Buckling(index) => Some(index), _ => None };
-        let live_stage = crate::live_visual::result_stage(operation, authority);
-        return crate::live_visual::with_result_fields(operation, doc, authority, request, |fields| {
+        let live_stage = live.result_stage(operation, authority);
+        return live.with_result_fields(operation, doc, authority, request, &mut |fields| {
             let Some(fields) = fields else {
-                return render_pending(doc, cfg, interaction, operation, authority);
+                return render_pending(doc, cfg, interaction, operation, authority, live);
             };
             let doc = fields.snapshot();
             let mut values = HashMap::with_capacity(fields.len());
@@ -300,10 +352,10 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
 }
 
 /// ⏳️ Gestures and pending generations retain the last admitted visualization without solving.
-pub fn render_pending(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_pending(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mode = cfg.result_mode.display(cfg.result_mode_index);
-    let stage = crate::live_visual::result_request(doc, cfg.result_source_id.as_deref(), match mode { DisplayMode::Modal(index) => Some(index), _ => None }).ok().and_then(|mut request| { request.buckling = match mode { DisplayMode::Buckling(index) => Some(index), _ => None }; crate::live_visual::result_stage(operation, authority) });
-    crate::live_visual::with_live_visual(operation, |visual| {
+    let stage = result_request(doc, cfg.result_source_id.as_deref(), match mode { DisplayMode::Modal(index) => Some(index), _ => None }).ok().and_then(|mut request| { request.buckling = match mode { DisplayMode::Buckling(index) => Some(index), _ => None }; crate::live_visual::result_stage(operation, authority) });
+    live.with_live_visual(operation, &mut |visual| {
         with_caption(results_scene_with_visual(doc, cfg, interaction, None, doc.analysis.deformation_scale, None, visual)?, progress_caption(stage).into())
     })
 }

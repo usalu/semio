@@ -11,9 +11,8 @@ use crate::wire::{ENERGY_CHECKPOINT_BYTES, ENERGY_WIRE_HEADER_BYTES, ENERGY_WIRE
 use crate::sim::{ENERGY_ABANDONMENT_SLOTS, EnergyJob, EnergyJobAuthority, EnergyRun};
 use crate::kernel::{SimulationConfig, SimulationEnvironment};
 use crate::model::Model;
-use semio_framework_job::{
-    InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId, StepContext,
-};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, RetainedCloneGrant, RetainedCloneProgress, RevisionId, StepContext};
+use semio_framework_job_payload::{RetainedJobPayload};
 use semio_framework_value::{RetirementDemand, ValueError,RetainedCloneStep};
 use std::mem::size_of;
 use std::sync::Mutex;

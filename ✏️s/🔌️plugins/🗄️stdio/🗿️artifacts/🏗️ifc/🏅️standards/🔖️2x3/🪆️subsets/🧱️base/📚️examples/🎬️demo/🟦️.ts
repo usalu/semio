@@ -1,2 +1,2 @@
-/** demo ifc */
+/** 🎬️ demo ifc */
 export const ID = 'demo';

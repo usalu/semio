@@ -1,7 +1,9 @@
 //! 🧬️ Flat paged ownership for shared XML documents.
 
 use super::{XmlAttr, XmlDeclaration, XmlDocument, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote};
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, paged::PagedUtf8};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_persistent::list::PagedList;
 
 pub const RETAINED_XML_MAX_TEXT_BYTES: usize = u32::MAX as usize;
 pub const RETAINED_XML_MAX_NODES: usize = u32::MAX as usize;

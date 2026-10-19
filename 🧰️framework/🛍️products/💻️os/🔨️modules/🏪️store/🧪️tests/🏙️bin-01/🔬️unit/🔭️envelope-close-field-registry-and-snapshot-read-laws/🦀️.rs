@@ -151,9 +151,8 @@ fn stale_snapshot_read_generation_cannot_aba_remove_a_reused_slot() {
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(1u16);
     let first = registry.try_issue(owner.clone()).expect("first exact lease");
-    let stale_index = first.slot_index();
-    let stale_generation = first.slot_generation();
     let first_read = ErasedSnapshotRead::new(owner, first);
+    let (_, stale_index, stale_generation) = first_read.lease_identity().unwrap();
     drop(match first_read.into_typed::<u16>(&registry) {
         Ok(owner) => owner,
         Err(_) => panic!("first exact lease retires"),
@@ -164,10 +163,12 @@ fn stale_snapshot_read_generation_cannot_aba_remove_a_reused_slot() {
     for value in 0..SNAPSHOT_READ_LEASE_CAPACITY {
         let owner = Arc::new(value as u16);
         let lease = registry.try_issue(owner.clone()).expect("fixed ring re-admits every slot");
-        if lease.slot_index() == stale_index {
-            reused_generation = Some(lease.slot_generation());
+        let read = ErasedSnapshotRead::new(owner, lease);
+        let (_, index, generation) = read.lease_identity().unwrap();
+        if index == stale_index {
+            reused_generation = Some(generation);
         }
-        reads.push(ErasedSnapshotRead::new(owner, lease));
+        reads.push(read);
     }
     assert!(reused_generation.is_some_and(|generation| generation != stale_generation));
     assert!(registry.try_take(stale_index, stale_generation).is_err(), "stale generation cannot remove the reused exact slot");

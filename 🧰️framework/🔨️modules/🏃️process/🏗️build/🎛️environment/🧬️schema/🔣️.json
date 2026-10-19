@@ -21,21 +21,6 @@
           "null"
         ]
       }
-    },
-    "Protocol": {
-      "const": {
-        "version": 1,
-        "catalogs": [
-          ".vscode/launch.json",
-          ".vscode/🧩️launch.seed.jsonc"
-        ],
-        "type": "node-terminal",
-        "request": "launch",
-        "environment": {
-          "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
-          "NODE_DISABLE_COMPILE_CACHE": "1"
-        }
-      }
     }
   }
 }

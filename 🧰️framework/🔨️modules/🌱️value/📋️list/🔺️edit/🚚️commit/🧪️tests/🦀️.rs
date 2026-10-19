@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{IndexedEditShape,IndexedEditStep,retained_clone::RetainedCloneSource,retirement::{RetireOwned,controlled::ControlledRetirement}};
 #[derive(crate::RetainedClone,crate::RetireOwned)]
@@ -32,7 +33,7 @@ fn check(base:Vec<String>,removed:Vec<usize>,added:Vec<(usize,String)>,expected:
 /// 🧪️ Actual native object headers preserve survivor allocations and close exact originals at every neutral frontier.
 #[test]
 fn indexed_collection_commit_preserves_original_payloads_and_exact_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🚚️commit/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){for cut in std::iter::once(None).chain(fixture["cancelCuts"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){
   let strings=|key:&str|row[key].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_string()).collect::<Vec<_>>();let removed=row["removed"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize).collect();let added=row["added"].as_array().unwrap().iter().map(|value|(value["index"].as_u64().unwrap()as usize,value["item"].as_str().unwrap().to_string())).collect();check(strings("base"),removed,added,strings("expected"),cut);
  }}

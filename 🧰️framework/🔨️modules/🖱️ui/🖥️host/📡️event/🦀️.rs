@@ -254,12 +254,10 @@ const FINGER_MASK: u64 = u32::MAX as u64;
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PointerRegistry {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self::default()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn slot(&mut self, device: winit::event::DeviceId) -> u32 {
         if let Some(&slot) = self.slots.get(&device) {
             return slot;
@@ -272,7 +270,6 @@ impl PointerRegistry {
 
     /// 🖱️ A native platform exposes exactly one logical mouse pointer per device, so the device's own
     /// slot plus the mouse tag is the whole identity.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pointer_id_for_mouse(&mut self, device: winit::event::DeviceId) -> PointerId {
         PointerId(MOUSE_TAG | ((self.slot(device) as u64) << 32))
     }
@@ -281,7 +278,6 @@ impl PointerRegistry {
     /// bits. Two fingers on the *same* device still differ by finger id, and a finger can never
     /// collide with that device's mouse because the tags differ — a real defect this replaced, where
     /// finger id 0 XORed into a slot produced exactly the mouse's id.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pointer_id_for_touch(&mut self, touch: &winit::event::Touch) -> PointerId {
         PointerId(TOUCH_TAG | ((self.slot(touch.device_id) as u64) << 32) | (touch.id & FINGER_MASK))
     }

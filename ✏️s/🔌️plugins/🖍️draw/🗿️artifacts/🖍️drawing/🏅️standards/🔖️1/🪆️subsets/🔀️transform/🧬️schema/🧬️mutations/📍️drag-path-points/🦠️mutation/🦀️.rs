@@ -27,13 +27,13 @@ pub struct DrawingPathPointTarget {
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "drag-path-points")]
 pub struct DragPathPoints {
-    pub targets: semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>,
+    pub targets: semio_framework_value_persistent::list::PagedList<DrawingPathPointTarget, {usize::MAX}>,
     pub dx: f64,
     pub dy: f64,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn drag_path_points<Op: From<DragPathPoints>>(targets: semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>, dx: f64, dy: f64) -> Op {
+pub fn drag_path_points<Op: From<DragPathPoints>>(targets: semio_framework_value_persistent::list::PagedList<DrawingPathPointTarget, {usize::MAX}>, dx: f64, dy: f64) -> Op {
     Op::from(DragPathPoints { targets, dx, dy })
 }
 
@@ -60,8 +60,8 @@ impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for DragPathPoints where Op
 }
 
 /// 🗂️ The addressed path layer ids in first-seen order, each once.
-pub fn drag_path_points_layers(targets: &semio_framework_value::list::PagedList<DrawingPathPointTarget, {usize::MAX}>) -> semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}> {
-    let mut layers = semio_framework_value::list::PagedList::default();
+pub fn drag_path_points_layers(targets: &semio_framework_value_persistent::list::PagedList<DrawingPathPointTarget, {usize::MAX}>) -> semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}> {
+    let mut layers = semio_framework_value_persistent::list::PagedList::default();
     for target in targets {
         if !layers.iter().any(|id| id == &target.layer_id) {
             layers.push(target.layer_id.clone());

@@ -30,6 +30,7 @@ semio-framework-replication-ids = { path = "../../../🆔️ids/📦️packages/
 semio-framework-replication-wire-core = { path = "../../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }

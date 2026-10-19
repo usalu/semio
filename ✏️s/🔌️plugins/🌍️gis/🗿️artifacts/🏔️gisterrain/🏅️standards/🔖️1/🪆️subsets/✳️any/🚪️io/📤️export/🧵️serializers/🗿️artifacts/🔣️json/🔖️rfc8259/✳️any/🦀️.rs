@@ -1,4 +1,4 @@
-//! gisterrain -> json
+//! 🧾️ gisterrain -> json
 use crate::GisTerrainSnapshot;
 use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};

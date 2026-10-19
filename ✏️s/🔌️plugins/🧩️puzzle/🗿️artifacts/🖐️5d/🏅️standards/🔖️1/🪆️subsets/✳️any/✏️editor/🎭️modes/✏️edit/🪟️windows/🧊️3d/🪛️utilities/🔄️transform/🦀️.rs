@@ -1,4 +1,4 @@
-//! Utility Options are the Move/Rotate flags that compose which handles the gumball draws (scale handles
+//! 🔧️ Utility Options are the Move/Rotate flags that compose which handles the gumball draws (scale handles
 //! 🔄️ 3D-window utility — Transform: the world gumball, puzzle 3d's `🪛️utilities/🔄️transform` twin. Its
 //! are deliberately absent — a part's scale comes from its kind catalog, not from a free drag). Bound
 //! only by the 3D world window — the 2D board window drags parts natively.

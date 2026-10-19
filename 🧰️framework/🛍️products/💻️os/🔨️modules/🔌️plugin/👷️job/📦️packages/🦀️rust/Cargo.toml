@@ -37,6 +37,7 @@ semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️a
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-payload = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-job-native-decode = { path = "../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-job-fault-publication = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
@@ -54,6 +55,8 @@ semio-framework-ui-layout = { path = "../../../../../../../🔨️modules/🖱�
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio_framework_ui_scene = { path = "../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 serde_json = "1.0.140"
+semio-framework-trace = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-plugin-app-builder = { path = "../../../🏗️builder/🧩️app/📦️packages/🦀️rust" }

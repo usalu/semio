@@ -1,4 +1,4 @@
-//! fields (kind/angle/radius/color/icon/scale/visible/locked together, one property-panel gesture).
+//! 📐️ fields (kind/angle/radius/color/icon/scale/visible/locked together, one property-panel gesture).
 //! 🔌 Puzzle2d mutation — `ReplaceNodeHandle`: whole-value swap of one handle's presentation
 
 use semio_framework_value::paged::PagedUtf8;

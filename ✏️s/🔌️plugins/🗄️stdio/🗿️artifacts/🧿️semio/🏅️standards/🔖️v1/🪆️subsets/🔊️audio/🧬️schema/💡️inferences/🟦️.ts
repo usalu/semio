@@ -7,7 +7,7 @@ export interface SemioAudioDuration {
 }
 
 export interface SemioAudioInference {
-  /** @derived */
+  /** ⏱️ @derived */
   duration: SemioAudioDuration;
 }
 

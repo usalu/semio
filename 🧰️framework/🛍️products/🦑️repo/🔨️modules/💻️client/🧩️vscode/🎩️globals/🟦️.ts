@@ -12,7 +12,7 @@ import * as vscode from "vscode";
 // 🔌️Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
 export const outputChannel = ephemeralBox<vscode.OutputChannel | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.outputChannel", undefined);
 /**
- * kitDiagnosticCollection.current holds the data fields for a kitDiagnosticCollection.current record.
+ * 🎒️ kitDiagnosticCollection.current holds the data fields for a kitDiagnosticCollection.current record.
  **/
 export const kitDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.kitDiagnosticCollection", undefined);
 
@@ -22,18 +22,18 @@ export function kitDiagnostics(): vscode.DiagnosticCollection {
   return kitDiagnosticCollection.current;
 }
 /**
- * BundleInfo holds the data fields for a BundleInfo record.
+ * 🗜️ BundleInfo holds the data fields for a BundleInfo record.
  **/
 export interface BundleInfo {
   id: string;
   root: string;
 }
 /**
- * bundleCache.current holds the data fields for a bundleCache.current record.
+ * 📦️ bundleCache.current holds the data fields for a bundleCache.current record.
  **/
 export const bundleCache = ephemeralBox<BundleInfo[]>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.bundleCache", []);
 /**
- * cachedRepoBaseUrl.current holds the data fields for a cachedRepoBaseUrl.current record.
+ * 🗄️ cachedRepoBaseUrl.current holds the data fields for a cachedRepoBaseUrl.current record.
  **/
 export const cachedRepoBaseUrl = ephemeralBox<string | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.cachedRepoBaseUrl", undefined);
 // 🔢️Maximum number of concurrent CLI subprocess spawns to prevent system overload.

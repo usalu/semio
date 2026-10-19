@@ -4,14 +4,12 @@ use super::*;
 
 // #region 🔖️SyncApi
 impl Brep {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn heal_solid_sync(&mut self, shape: &GeometryHandle, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut rec = OpRecorder::new();
         let _ = heal_solid(&mut self.body, solid, tolerance, &mut rec).map_err(|error| map_err(&error))?;
         Ok(shape.clone())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn convert_to_nurbs_sync(&mut self, shape: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut rec = OpRecorder::new();
@@ -20,7 +18,6 @@ impl Brep {
     }
     /// 🏷️ Uses the same shape reach as validation and retirement, sorted by arena identity.
     /// [`Brep::mint`] retains each component's [`PersistentLabel`] across repeated decomposition.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn deconstruct_sync(&mut self, shape: &GeometryHandle) -> Result<BrepTopology, BrepError> {
         let reach = self.body.reachable_from(&entity_roots(self.entity(shape)?));
         let mut vertices: Vec<_> = reach.vertices.into_iter().collect(); vertices.sort_unstable_by_key(|id| id.raw_index());
@@ -34,28 +31,22 @@ impl Brep {
             shells: shells.into_iter().map(|id| self.register_shell(id)).collect(),
         })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_stl_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_stl(&self.body, solid, deflection).map_err(|error| map_err(&error))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_obj_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<String, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_obj(&self.body, solid, deflection).map_err(|error| map_err(&error))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_gltf_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         self.export_glb_sync(shapes, deflection)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_glb_sync(&self, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_glb(&self.body, solid, deflection).map_err(|error| map_err(&error))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_glb_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = import_glb_to_body(&mut self.body, data, tolerance).map_err(|error| map_err(&error))?;
         self.register_import_entity(solid)
@@ -63,14 +54,11 @@ impl Brep {
     /// 🧩️ Merges the imported body into `self.body` (see [`Body::merge`]) rather than replacing
     /// it — handles minted before this call stay resolvable, since nothing already in `self.body`
     /// is renumbered or dropped; only the freshly imported solids get new handles.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_stl_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = import_stl_to_body(&mut self.body, data, tolerance).map_err(|error| map_err(&error))?;
         self.register_import_entity(solid)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_obj_sync(&mut self, text: &str, tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let solid = import_obj_to_body(&mut self.body, text, tolerance).map_err(|error| map_err(&error))?;
         self.register_import_entity(solid)
@@ -89,17 +77,14 @@ impl Brep {
         if cursor.cleanup_complete() && cursor.is_active() {cursor.set_active(false);self.pending_mutations=self.pending_mutations.checked_sub(1).expect("owned import mutation");}
         Ok(step)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn export_mesh_sync(&self, shapes: &[GeometryHandle], deflection: f64, exporter: &dyn semio_framework_mesh_engine::io::MeshExporter) -> Result<Vec<u8>, BrepError> {
         let solid = self.solid_id(shapes.first().ok_or_else(|| BrepError::InvalidInput("empty".into()))?)?;
         export_solid_mesh(&self.body, solid, deflection, exporter).map_err(|error| map_err(&error))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn import_mesh_sync(&mut self, data: &[u8], tolerance: f64, importer: &dyn semio_framework_mesh_engine::io::MeshImporter) -> Result<GeometryHandle, BrepError> {
         let solid = import_mesh_to_body(&mut self.body, data, tolerance, importer).map_err(|error| map_err(&error))?;
         self.register_import_entity(solid)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn kind_sync(&self, shape: &GeometryHandle) -> Result<GeometryKind, BrepError> {
         Ok(match self.entity(shape)? {
             Entity::Vertex(_) => GeometryKind::Vertex,
@@ -114,7 +99,6 @@ impl Brep {
         })
     }
     /// 🧠 Face outer/hole loops as position indices into the returned vertex buffer.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn solid_face_loops_sync(&self, shape: &GeometryHandle) -> Result<SolidFaceLoops, BrepError> {
         let solid = self.solid_id(shape)?;
         let mut vertex_to_index: HashMap<u32, u32> = HashMap::new();
@@ -154,7 +138,6 @@ impl Brep {
         }
         Ok((positions, face_loops))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_sync(&self,shape:&GeometryHandle,deflection:f64)->Result<MeshTransfer,BrepError> {
         self.tessellate_job_sync(shape,deflection)?.run_to_completion(&self.body,self.tessellation_input(shape)?).map(|(mesh,_)|mesh).map_err(|error|map_err(&error))
     }
@@ -162,7 +145,6 @@ impl Brep {
     /// [`Brep::tessellate_sync`]. The caller drives [`Brep::step_tessellation_job_sync`]
     /// with the same original shape and an interactive work grant,
     /// reads `progress()` between steps, and `cancel()`s it when a newer request supersedes it.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellate_job_sync(&self, shape: &GeometryHandle, deflection: f64) -> Result<TessellationJob, BrepError> {
         match self.entity(shape)? {
             Entity::Vertex(id)=>TessellationJob::for_vertex(&self.body,*id,deflection).map_err(|error|map_err(&error)),
@@ -196,7 +178,6 @@ impl Brep {
 
     /// 🧬 The topology a [`TessellationJob`] steps against — the job borrows nothing, so a host can
     /// retain it across turns and re-present the body on every step.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tessellation_body(&self) -> &Body {
         &self.body
     }

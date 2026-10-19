@@ -1,9 +1,9 @@
 //! 🎯️ Selection samplers: greedy, multinomial, Gumbel-max and Gumbel top-k over an alias table.
 
-use semio_framework_math_sampling_vocabulary::{RandomSources, SamplingError, cdf_binary_search};
+use semio_framework_math_sampling_vocabulary::{RandomSource, RandomSources, SamplingError, cdf_binary_search};
 use semio_framework_math_sampling_config::{Candidate, MultinomialStrategy, TieBreak};
 use semio_framework_math_sampling_workspace::{Distribution, SelectionBuffer, StepView};
-use super::TokenSampler;
+use super::{TokenSampler, TokenSamplers};
 
 // #region 🔖️Selection
 async fn candidate_from(dist: &Distribution<'_>, index: usize) -> Candidate {
@@ -42,11 +42,6 @@ impl AliasTable {
         }
         let mut prob = vec![0.0f32; n];
         let mut alias = vec![0u32; n];
-        // ⚖️ `while let (Some(s), Some(l)) = (small.pop(), large.pop())` looks equivalent but isn't:
-        // both `.pop()` calls run unconditionally as call arguments before the pattern is tested, so
-        // the moment either vec empties, the other's last element is silently discarded (popped and
-        // dropped) instead of falling through to the `prob[x] = 1.0` cleanup loops below — leaving
-        // that bucket's `prob`/`alias` at their zeroed defaults. Explicit `is_empty()` checks avoid it.
         while !small.is_empty() && !large.is_empty() {
             let s = small.pop().expect("checked non-empty above");
             let l = large.pop().expect("checked non-empty above");
@@ -195,8 +190,6 @@ impl TokenSampler for GumbelTopKSampler {
             return Err(SamplingError::EmptyDistribution);
         }
         let k = self.k.min(dist.tokens.len());
-        // 🔀️ `.map(async closure)` doesn't type-check — an explicit loop replaces it, since
-        // `rng.gumbel()` must be sequentially `.await`ed (O1 de-dyn, math-dedyn).
         let mut scored: Vec<(f64, usize)> = Vec::with_capacity(dist.tokens.len());
         for i in 0..dist.tokens.len() {
             scored.push((dist.logprobs[i] as f64 + rng.gumbel().await, i));

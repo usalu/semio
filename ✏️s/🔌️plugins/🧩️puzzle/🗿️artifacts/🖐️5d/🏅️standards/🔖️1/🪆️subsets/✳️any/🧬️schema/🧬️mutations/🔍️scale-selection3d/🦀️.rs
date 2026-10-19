@@ -1,4 +1,4 @@
-//! its own world origin. The gesture's own inputs (which ids, which factors) are the payload, so editing the scaling in
+//! 🗺️ its own world origin. The gesture's own inputs (which ids, which factors) are the payload, so editing the scaling in
 //! 🔍️ Puzzle5d mutation — `ScaleSelection3d`: a relative, parametric per-axis scaling of a set of parts and target volumes, each about
 //! history re-derives every scale from whatever base it replays on.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
@@ -40,12 +40,11 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScaleSelection3d {
 
-
-}
-
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ScaleSelection3d {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ScaleSelection3d
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ScaleSelection3d>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

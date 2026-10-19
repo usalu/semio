@@ -6,11 +6,12 @@ import {BundleScript,ScriptRouter} from "../../../🏃️process/📦️packages
 import {runScriptMain} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runBudgetedTestCommand} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {resolveTestLevel,testLevelBudgetMs} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 class Test extends BundleScript{
  async run(segments:string[]):Promise<void>{
-  const {rest}=resolveTestLevel(segments);if(rest.length)throw Error("Mesh attribute ownership accepts no remaining arguments");if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("Caller-owned test output required");
+  const {rest}=resolveTestLevel(segments);if(rest.length)throw new Error("Mesh attribute ownership accepts no remaining arguments");if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw new Error("Caller-owned test output required");
   const source=resolve(this.root,"🧪️tests/🟦️.ts"),options={cwd:this.repoRoot,env:process.env,budgetMs:testLevelBudgetMs(),throwOnFailure:true};
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],options);
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],options);
   await runBudgetedTestCommand(process.execPath,["test",source],options);
  }
 }

@@ -26,12 +26,15 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-docx-base-diff = { workspace = true }
+semio-s-artifact-stdio-docx-base-edit-rules = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-stdio-docx-base = { workspace = true }
 semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

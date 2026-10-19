@@ -2,7 +2,7 @@
 import { uiSpacingPx } from "@semio-tech/ui-styling";
 import * as React from "react";
 import { type IconName } from "@semio-tech/assets";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surface/🟦️.tsx";
@@ -16,28 +16,28 @@ import { type Anchor, anchorHorizontal, anchorPositionStyle, flowFromAnchor, nea
 import { chromePanelSafeAreaStyle, useChromePanelSafeArea } from "../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 
 interface PaneHostContextValue {
-  /** @emoji 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
+  /** 🎯️ Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
-  /** @emoji 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
+  /** 🌱️ Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
   readonly container: HTMLDivElement | null;
 }
 
 const PaneHostContext = reactHostPort.createContext<PaneHostContextValue | undefined>(undefined);
 
-/** @emoji 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
+/** 🪟️ The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
 export function usePaneHostContext(): PaneHostContextValue | undefined {
   return reactHostPort.useContext(PaneHostContext);
 }
 
 /**
- * PaneHostProps holds the data fields for a PaneHostProps record.
+ * 🖥️ PaneHostProps holds the data fields for a PaneHostProps record.
  **/
 export interface PaneHostProps {
   readonly className?: string;
   readonly children?: React.ReactNode;
 }
 
-/** @emoji 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
+/** 🪟️ Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
  * {@link Pane} inside — direct JSX children or portaled in via {@link usePaneSlot} — shares one anchor coordinate
  * space to drag between and one DOM parent to measure drag drops against.
  *
@@ -67,7 +67,7 @@ export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   );
 };
 
-/** @emoji ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
+/** ↔ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
 function PaneResizeHandle({
   side,
   size,
@@ -111,17 +111,17 @@ function PaneResizeHandle({
 }
 
 /**
- * Props interface for the Pane component.
+ * 🔲️ Props interface for the Pane component.
  **/
 export interface PaneProps {
-  /** @emoji 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
+  /** 🆔️ The pane container's own DOM id — rendered on the overlay root, and the stem every derived chrome id (`<id>.pane.fold`) falls back to. */
   readonly id: string;
   readonly anchor: Anchor;
-  /** @emoji 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
+  /** 🧭️ Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
   readonly onAnchorChange?: (anchor: Anchor) => void;
   readonly folded?: boolean;
   readonly onFoldToggle?: () => void;
-  /** @emoji 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
+  /** 🖼️ Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
   readonly icon: IconName;
   readonly label?: UiLabel;
   readonly size?: number;
@@ -129,7 +129,7 @@ export interface PaneProps {
   readonly minSize?: number;
   readonly maxSize?: number;
   readonly resizable?: boolean;
-  /** @emoji ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
+  /** 🪣️ ⛶️ Fill the {@link PaneHost} (programmatic span across the host). */
   readonly expanded?: boolean;
   readonly overlaySlot?: string;
   readonly overlayRef?: React.Ref<HTMLDivElement>;
@@ -143,9 +143,9 @@ export interface PaneProps {
   readonly toggleDisabled?: boolean;
   readonly dimWhenOpen?: boolean;
   readonly onResizeActiveChange?: (active: boolean) => void;
-  /** @emoji 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
+  /** 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
   readonly order?: number;
-  /** @emoji 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
+  /** 🛟️ Extra inline inset on this anchor's own edge — see {@link chromePanelSafeArea}. */
   readonly inlineEdgeReservePx?: number;
   /** 🪟️ Explicit bounds for panes mounted beside, rather than inside, their host context. */
   readonly hostRef?: React.RefObject<HTMLElement | null>;
@@ -162,7 +162,7 @@ const PANE_DEFAULT_MIN_SIZE = 200;
 
 const PANE_DEFAULT_MAX_SIZE = 600;
 
-/** @emoji 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
+/** 🪟️ One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
  * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable (inner edge for
  * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
  * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the

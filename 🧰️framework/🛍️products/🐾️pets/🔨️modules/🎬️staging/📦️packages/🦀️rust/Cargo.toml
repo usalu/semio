@@ -22,11 +22,14 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-pets-staging-draft = { path = "../../../📝️draft/📦️packages/🦀️rust" }
 semio-framework-pets-character = { path = "../../../🎭️character/📦️packages/🦀️rust" }
 semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust" }
 semio-framework-pets-interaction = { path = "../../../🖱️interaction/📦️packages/🦀️rust" }
 semio-framework-pets-kinematics = { path = "../../../⚙️kinematics/📦️packages/🦀️rust" }
+semio-framework-pets-traversal = { path = "../../../🧭️traversal/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-pets-contract = { path = "../../../📜️contract/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }

@@ -32,9 +32,9 @@ export type CommandStallClockV1 = Readonly<{
 }>;
 
 export type CommandStallWatchV1 = Readonly<{
-  /** Runs `run` as one watched turn; rejects with {@link CommandCancelledErrorV1} when the person cancels it. */
+  /** 👂️ Runs `run` as one watched turn; rejects with {@link CommandCancelledErrorV1} when the person cancels it. */
   watch<T>(label: CommandStallLabelV1, run: () => Promise<T>): Promise<T>;
-  /** Cancels a reported stall; `false` when it already settled. */
+  /** ⏹️ Cancels a reported stall; `false` when it already settled. */
   cancel(id: number): boolean;
   stalls(): readonly CommandStallV1[];
   subscribe(listener: () => void): () => void;

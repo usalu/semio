@@ -51,21 +51,21 @@ export interface LayoutCharacterStylesDelta { removed: LayoutRemoval[]; inserted
 export interface LayoutParentPagesDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<ParentPage>[]; moved: LayoutRelocation[]; modified: LayoutParentPagesModification[] }
 export interface LayoutSpreadsDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<Spread>[]; moved: LayoutRelocation[]; modified: LayoutSpreadsModification[] }
 export interface LayoutDiff {
-  /** @state artifact */ schema: string | null;
-  /** @state artifact */ name: string | null;
-  /** @state artifact */ grid: GridPatch | null;
-  /** @state artifact */ paragraphStyles: LayoutParagraphStylesDelta | null;
-  /** @state artifact */ characterStyles: LayoutCharacterStylesDelta | null;
-  /** @state artifact */ stories: LayoutStoriesDelta | null;
-  /** @state artifact */ links: LayoutLinksDelta | null;
-  /** @state artifact */ parentPages: LayoutParentPagesDelta | null;
-  /** @state artifact */ spreads: LayoutSpreadsDelta | null;
-  /** @state artifact */ pages: LayoutPagesDelta | null;
-  /** @state artifact */ printTarget: PrintTargetChange | null;
-  /** @state artifact */ dataFields: LayoutDataFieldsDelta | null;
-  /** @state artifact @child kind=s.stdio.semio */ backgroundDrawing: LayoutDrawingChild | null;
-  /** @state artifact */ drawingTexts: LayoutDrawingTextRow[];
-  /** @state artifact @link_slot roles=model */ referencedModel: ArtifactLink | null;
+  /** 🔄️ @state artifact */ schema: string | null;
+  /** ✏️ @state artifact */ name: string | null;
+  /** 🔳️ @state artifact */ grid: GridPatch | null;
+  /** 📑️ @state artifact */ paragraphStyles: LayoutParagraphStylesDelta | null;
+  /** 🔤️ @state artifact */ characterStyles: LayoutCharacterStylesDelta | null;
+  /** 📖️ @state artifact */ stories: LayoutStoriesDelta | null;
+  /** ⛓️ @state artifact */ links: LayoutLinksDelta | null;
+  /** 👪️ @state artifact */ parentPages: LayoutParentPagesDelta | null;
+  /** 📰️ @state artifact */ spreads: LayoutSpreadsDelta | null;
+  /** 📃️ @state artifact */ pages: LayoutPagesDelta | null;
+  /** 🖨️ @state artifact */ printTarget: PrintTargetChange | null;
+  /** 📝️ @state artifact */ dataFields: LayoutDataFieldsDelta | null;
+  /** 🪣️ @state artifact @child kind=s.stdio.semio */ backgroundDrawing: LayoutDrawingChild | null;
+  /** 📐️ @state artifact */ drawingTexts: LayoutDrawingTextRow[];
+  /** 📎️ @state artifact @link_slot roles=model */ referencedModel: ArtifactLink | null;
 }
 
 const required = (row: Record<string, unknown>, keys: readonly string[], at: string): Record<string, unknown> => {

@@ -1,4 +1,4 @@
-//! ️tests for app example `🎬️demo-session`.
+//! 🧪️tests for app example `🎬️demo-session`.
 
 use semio_framework_test_fixtures::fixture_text;
 

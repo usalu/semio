@@ -219,7 +219,7 @@ pub struct Resolved {
     pub session: Option<SessionId>,
     pub device: Option<DeviceId>,
     pub via: String,
-    /// Hub-issued document actor id bound to this credential (session-stable), when the rung knows one.
+    /// 👤️ Hub-issued document actor id bound to this credential (session-stable), when the rung knows one.
     pub actor: Option<String>,
 }
 

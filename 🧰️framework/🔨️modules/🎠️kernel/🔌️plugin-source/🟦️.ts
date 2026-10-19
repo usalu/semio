@@ -125,9 +125,6 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
 export function createBundledPluginSource(registry: readonly PluginRegistryEntry[]): PluginSource {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   const bootVersion = Date.now();
-  // 🚫️ No per-plugin `rebuiltAt` on the connect-time snapshot — static hosts replay the same build the
-  // primary boot already installed; naming a timestamp would hot-swap the session-owning plugin
-  // (`pluginAvailabilityRouteV1`). First-time installs still cache-bust via `moduleUrl`'s `bootVersion`.
   const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: registry.map((entry) => ({ pluginId: entry.pluginId, rebuiltAt: undefined })) };
   return {
     id: "bundled",

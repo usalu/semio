@@ -1,4 +1,4 @@
-//! `setSelectionLocked`).
+//! 🎮️ `setSelectionLocked`).
 //! 🚩️ `set-selection-flag` command, and the two set-verbs a document-tree part row names (`setSelectionHidden`,
 
 use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;

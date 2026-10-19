@@ -19,8 +19,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn monomial_ordering_grlex_uses_total_degree_first() {
-        let a = mono(vec![1, 0]); // degree 1
-        let b = mono(vec![0, 2]); // degree 2
+        let a = mono(vec![1, 0]);
+        let b = mono(vec![0, 2]);
         assert_eq!(a.cmp_by(&b, MonomialOrder::GrLex), std::cmp::Ordering::Less);
     }
 
@@ -35,7 +35,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ring_ops_hand_case() {
-        // f = x + y, g = x - y ; f*g = x^2 - y^2
         let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
         let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
         let f = x.add(&y);
@@ -49,13 +48,12 @@ mod tests {
     async fn eval_hand_case() {
         let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
         let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
-        let f = x.mul(&x).add(&y); // x^2 + y
+        let f = x.mul(&x).add(&y);
         assert_eq!(f.eval(&[r(3), r(2)]), r(11));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn groebner_basis_of_line_intersection() {
-        // {x^2 + y^2 - 1, x - y} over Q: eliminating gives a univariate relation in y.
         let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
         let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
         let one = PolyM::<Rational>::constant(r(1), 2, MonomialOrder::Lex);
@@ -63,7 +61,6 @@ mod tests {
         let f2 = x.sub(&y);
         let gb = PolyM::groebner_basis(&[f1, f2]);
         assert!(!gb.is_empty());
-        // Every original generator must reduce to zero against the basis (membership check).
         for g in [x.mul(&x).add(&y.mul(&y)).sub(&one), x.sub(&y)] {
             let (_, rem) = g.reduce(&gb);
             assert!(rem.is_zero());
@@ -74,8 +71,8 @@ mod tests {
     async fn partial_derivative_hand_case() {
         let x = PolyM::<Rational>::var(0, 2, MonomialOrder::Lex);
         let y = PolyM::<Rational>::var(1, 2, MonomialOrder::Lex);
-        let f = x.mul(&x).mul(&y); // x^2 y
-        let df_dx = f.partial_derivative(0); // 2xy
+        let f = x.mul(&x).mul(&y);
+        let df_dx = f.partial_derivative(0);
         assert_eq!(df_dx, x.mul(&y).mul_scalar(&r(2)));
     }
 }

@@ -1,12 +1,34 @@
 {
   "version": 1,
   "help": [
-    {"args": [], "expected": true},
-    {"args": ["--help"], "expected": true},
-    {"args": ["-h"], "expected": true},
-    {"args": ["run", "owner:test", "--help"], "expected": true},
-    {"args": ["run", "owner:test", "--", "--help"], "expected": false},
-    {"args": ["run", "owner:test", "--", "-h"], "expected": false},
-    {"args": ["show", "projects"], "expected": false}
+    {"args":[],"expected":true},
+    {"args":["--help"],"expected":true},
+    {"args":["-h"],"expected":true},
+    {"args":["run","owner:test","--help"],"expected":true},
+    {"args":["run","owner:test","--","--help"],"expected":false},
+    {"args":["run","owner:test","--","-h"],"expected":false},
+    {"args":["show","projects"],"expected":false}
+  ],
+  "originalModeCases": [
+    {"id":"default-prototype","args":["run","@fixture/rehearsal:test-e2e"],"authored":null,"inherited":null,"expected":"prototype"},
+    {"id":"explicit-prototype","args":["run","@fixture/rehearsal:test-e2e","--configuration=prototype"],"authored":null,"inherited":null,"expected":"prototype"},
+    {"id":"inherited-release","args":["run","@fixture/rehearsal:test-e2e"],"authored":null,"inherited":"release","expected":"release"},
+    {"id":"explicit-release","args":["run","@fixture/rehearsal:test-e2e","--configuration=release"],"authored":null,"inherited":null,"expected":"release"},
+    {"id":"authored-release","args":["run","@fixture/rehearsal:test-e2e"],"authored":"release","inherited":null,"expected":"release"},
+    {"id":"target-configuration-release","args":["run","@fixture/rehearsal:test-e2e:release"],"authored":null,"inherited":null,"expected":"release"},
+    {"id":"run-many-release","args":["run-many","--targets=test-e2e"],"authored":null,"inherited":"release","expected":"release"},
+    {"id":"affected-release","args":["affected","--target","test-e2e","-c","release"],"authored":null,"inherited":null,"expected":"release"},
+    {"id":"release-agreement","args":["run","@fixture/rehearsal:test-e2e","--configuration=release"],"authored":"release","inherited":"release","expected":"release"},
+    {"id":"conflicting-original","args":["run","@fixture/rehearsal:test-e2e","--configuration=prototype"],"authored":null,"inherited":"release","expected":null}
+  ],
+  "fixedTargetCases": [
+    {"name":"test-e2e","mode":null},
+    {"name":"dev","mode":"prototype"},
+    {"name":"serve","mode":"prototype"},
+    {"name":"prepare-e2e","mode":"prototype"},
+    {"name":"serve-e2e","mode":"prototype"},
+    {"name":"build-release","mode":"release"},
+    {"name":"prepare-release","mode":"release"},
+    {"name":"build-prototype","mode":"prototype"}
   ]
 }

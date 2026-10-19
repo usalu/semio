@@ -1,7 +1,9 @@
     /// 📌️ Document cancellation and latest-wins keys: the retained document cancellation, exact keys against the serde oracle, producer child claims, contended finish, rebase and full registry reclaim.
 
-    pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+use semio_framework_plugin_command::command_admission::ToolLatestWinsRegistry;
+use semio_framework_os_store_command::HistoryLane;
+pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
                 let boundary = case["cancelAt"].as_str().unwrap();
@@ -99,32 +101,32 @@
                     assert!(!mounted.reject_cancelled_publication().unwrap());
                     assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), receipt.1.as_slice());
                     if delayed_ack {
-                        let mut presented = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
+                        let mut presented = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                         assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
                         assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                         for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
                             assert!(mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).is_none());
                         }
                         assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut presented,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).unwrap());
-                mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+                mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
                     } else {
                         assert!(mounted.acknowledge_result_page(receipt.0).unwrap());
-                mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+                mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
                     }
                 }
                 app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 let mut final_page = if delayed_ack {
-                    let mut presented = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
+                    let mut presented = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                     let mut deliveries = 1;
                     for _ in 0..fixture["resultAck"]["preAckPolls"].as_u64().unwrap() {
-                        deliveries += usize::from(mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).is_some());
+                        deliveries += usize::from(mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).is_some());
                     }
                     assert_eq!(deliveries, fixture["resultAck"]["deliveries"].as_u64().unwrap() as usize);
                     assert_eq!(presented.token.attempt, fixture["resultAck"]["attempt"].as_u64().unwrap() as u8);
                     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
                     presented
                 } else {
-                    mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap()
+                    mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap()
                 };
                 assert_eq!(final_page.lane, TypedOperationResultLane::Fault);
                 let committed = case["committed"].as_bool().unwrap();
@@ -144,7 +146,7 @@
 
     #[test]
     fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let first = &fixture["first"];
         assert_eq!(first["target"].as_str().unwrap().len(), 8_192);
         for case in fixture["cases"].as_array().unwrap() {

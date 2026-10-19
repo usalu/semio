@@ -190,7 +190,6 @@ fn apply_si_path(doc: &mut En1991Snapshot, path: &str, value: f64) {
             if field == "assumedPressure" || field.ends_with("assumedPressure") {
                 if let Some(ex) = c.explosion.first_mut() { ex.assumed_pressure = value; return; }
             }
-            // Nested path impact[0].assumedForce / explosion[0].assumedPressure
             if let Some(rest) = field.strip_prefix("impact[0].") {
                 if let Some(imp) = c.impact.first_mut() {
                     match rest {
@@ -407,8 +406,6 @@ async fn scope_aware_perturbation_of_editable_leaves() {
         de_accidental_variants, de_bridge_compliant, de_fire_parametric_compliant, de_office_compliant,
     };
     use crate::{FireMode, StructureKind};
-    // Out-of-scope top-level keys per committed example (bridge/fire/accidental discriminators stay in scope).
-    // Leaf exemptions: descriptive id/name/title/labelEn/labelDe only — never whole nested key lists.
     let office_na = [
         "enSk", "enVb", "thermalBridgeType", "mixedTerrainUpwind",
         "fireCurve", "fireDuration", "assumedGasTemperature", "assumedHNet", "fireCompartmentArea",
@@ -520,7 +517,6 @@ async fn scope_aware_perturbation_of_editable_leaves() {
                 f64::from(if i >= 4 { 1 } else { i + 1 })
             }
             "storeyCount" => f64::from(if (f as u8) < 2 { 4 } else { 1 }),
-            // Fig. 7.2: A≤1 → c_pe,1; A≥10 → c_pe,10; else log-interp — cross the plateau.
             "loadedArea" => if f >= 10.0 - 1e-9 { 5.0 } else if f <= 1.0 + 1e-9 { 5.0 } else { 15.0 },
             _ => if f.abs() < 1e-12 { 1.0 } else { f * 1.37 + 25.0 },
         }

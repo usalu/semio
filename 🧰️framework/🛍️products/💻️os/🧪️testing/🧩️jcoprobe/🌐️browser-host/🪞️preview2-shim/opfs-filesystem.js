@@ -29,7 +29,7 @@ async function writeSymlinksFile(handle, symlinks) {
     await writable.write(JSON.stringify(symlinks));
     await writable.close();
 }
-/** Collect every symlink under `dir` into a flat path -> target map, relative to `dir` itself. */
+/** ⬜️ Collect every symlink under `dir` into a flat path -> target map, relative to `dir` itself. */
 function collectSymlinks(dir, prefix, out) {
     for (const [name, entry] of Object.entries(dir)) {
         const path = prefix ? `${prefix}/${name}` : name;
@@ -41,7 +41,7 @@ function collectSymlinks(dir, prefix, out) {
         }
     }
 }
-/** Place each recorded symlink back into the tree at its path, skipping any path whose parent is missing. */
+/** 📍️ Place each recorded symlink back into the tree at its path, skipping any path whose parent is missing. */
 function injectSymlinks(root, symlinks) {
     for (const [path, target] of Object.entries(symlinks)) {
         const parts = path.split("/").filter(Boolean);
@@ -102,7 +102,7 @@ async function writeEntries(handle, dir) {
         await writable.close();
     }
 }
-/** Load an OPFS directory into an in-memory tree, ready to hand to `OpfsFilesystemAdapter.getRoot`. */
+/** 🏋️ Load an OPFS directory into an in-memory tree, ready to hand to `OpfsFilesystemAdapter.getRoot`. */
 export async function loadOpfsCapability(handle) {
     const dir = await readEntries(handle);
     injectSymlinks(dir, await readSymlinksFile(handle));
@@ -118,7 +118,7 @@ const LOCK_METHODS = new Set([
 function lockModeOf(prop) {
     return prop.endsWith("Exclusive") ? "exclusive" : "shared";
 }
-/** Join an OPFS-relative path onto an existing one, for naming a cross-tab lock. */
+/** 🤝️ Join an OPFS-relative path onto an existing one, for naming a cross-tab lock. */
 function joinLockPath(base, segment) {
     let path = base;
     for (const part of segment.split("/")) {
@@ -134,7 +134,7 @@ function joinLockPath(base, segment) {
     return path;
 }
 /**
- * Wrap a descriptor so its advisory locking also makes a best-effort request against
+ * 📑️ Wrap a descriptor so its advisory locking also makes a best-effort request against
  * `BrowserLockManager`, in addition to the default same-process reader/writer lock.
  * The Web Locks request is fire-and-forget - there's no way to block a synchronous
  * `lockExclusive()` on a cross-tab grant without JSPI, so this only coordinates
@@ -190,7 +190,7 @@ function withCrossTabLocking(descriptor, lockName, lockManager) {
     });
 }
 /**
- * Browser filesystem adapter backed by the Origin Private File System.
+ * 💽️ Browser filesystem adapter backed by the Origin Private File System.
  *
  * Every guest-facing `Descriptor` operation - including advisory locking, which
  * comes for free as `InMemoryFilesystemAdapter`'s same-process reader/writer lock -
@@ -228,7 +228,7 @@ export class OpfsFilesystemAdapter {
             void this.flush();
         });
     }
-    /** Persist every loaded root's current in-memory state back to OPFS. */
+    /** 📸️ Persist every loaded root's current in-memory state back to OPFS. */
     async flush() {
         await Promise.all(this.#roots.map(async (root) => {
             const dir = root.data.dir ?? {};

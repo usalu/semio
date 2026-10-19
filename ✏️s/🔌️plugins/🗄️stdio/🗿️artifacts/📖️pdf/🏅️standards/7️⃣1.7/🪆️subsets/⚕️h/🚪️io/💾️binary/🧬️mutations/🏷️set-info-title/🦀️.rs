@@ -1,4 +1,4 @@
-//! Direct binary identity for `set-info-title`.
+//! 💾️ Direct binary identity for `set-info-title`.
 
 pub const TAG: u8 = 0;
 pub const BINARY_TAG: u8 = TAG;

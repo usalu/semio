@@ -23,5 +23,14 @@
       "version": 2,
       "kind": "consumer-lifetime"
     }
-  ]
+  ],
+  "directoryReservationRecovery": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008,
+    "initialBytes": 4096,
+    "warmBytes": 33558528,
+    "expectedAcquisitions": 1,
+    "expectedRecoveries": 2,
+    "orphanFreshAccepted": false
+  }
 }

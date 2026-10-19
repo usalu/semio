@@ -1,4 +1,4 @@
-//! `Effect::LoadDocument` of the example, shared by the retained job and the batch `handle` path — this module only owns
+//! 📚️ `Effect::LoadDocument` of the example, shared by the retained job and the batch `handle` path — this module only owns
 //! 🛍️ `set-active-example` example sources. The switch itself is `puzzle2d_active_example_emit` (`✏️editor/🦀️.rs`): an
 //! the warmed example snapshots it reads.
 

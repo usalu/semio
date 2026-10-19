@@ -1,4 +1,4 @@
-//! (`📋️tool-run-contract.md` §2.4, §3.7), not a window utility. The manifest carries its
+//! 🪟️ (`📋️tool-run-contract.md` §2.4, §3.7), not a window utility. The manifest carries its
 //! 🪣️ Edit-mode tool — Fill: a whole-document generator declared as a framework tool run
 //! [`ToolRunDefinition`]; the framework injects start/pause/resume/step/abort/finalize/dismiss, owns the
 //! provisional placements in its ledger and publishes them as ONE edit on finalize. The run job itself is the

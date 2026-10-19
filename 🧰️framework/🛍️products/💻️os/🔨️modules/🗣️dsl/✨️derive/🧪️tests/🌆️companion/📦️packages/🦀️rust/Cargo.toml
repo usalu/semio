@@ -4,7 +4,7 @@ name = "semio-framework-os-kernel-dsl-derive-tests"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Companion tests of the DSL derive expansion library"
+description = "Companion tests of the DSL derive expansion library through source and public facts"
 publish = false
 
 [package.metadata.semio]
@@ -22,14 +22,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[dependencies]
-semio-framework-os-kernel-dsl-derive-expand = { path = "../../../../🧩️expand/📦️packages/🦀️rust", features = ["testkit"] }
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 proc-macro2 = "1.0"
 quote = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sha2 = "0.10"
 syn = { version = "2.0", features = ["full", "extra-traits", "visit", "visit-mut"] }
-
-[dev-dependencies]
-semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

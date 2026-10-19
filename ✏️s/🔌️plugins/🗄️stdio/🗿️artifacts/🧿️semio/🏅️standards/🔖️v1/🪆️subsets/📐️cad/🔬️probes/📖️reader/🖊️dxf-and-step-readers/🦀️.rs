@@ -174,7 +174,6 @@ trait FirstRefDir {
 }
 
 impl FirstRefDir for Vec<Parameter> {
-    // 🚫️async: pure codec helper.
     fn first_ref_dir(&self, by_id: &BTreeMap<u64, Record>) -> Option<[f64; 2]> {
         let id = as_ref_id(self.get(1)?)?;
         let record = by_id.get(&id)?;

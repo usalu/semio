@@ -9,8 +9,8 @@ use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case;
 use semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material;
 use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node;
-use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_section;
-use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_solid;
+use semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section;
+use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::delete_solid;
 use semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
 use semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::*;
@@ -46,10 +46,10 @@ pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, 
             Some(FEM3D_GRANULARITY_COMBINATION) => (1, Fem3dMutation::DeleteCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_combination::DeleteCombination { id: id.into() })),
             Some(FEM3D_GRANULARITY_SUPPORT) => (2, Fem3dMutation::DeleteSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport { id: id.into() })),
             Some(FEM3D_GRANULARITY_ELEMENT) => (3, Fem3dMutation::DeleteElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element::DeleteElement { id: id.into() })),
-            Some(FEM3D_GRANULARITY_SOLID) => (4, Fem3dMutation::DeleteSolid(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid { id: id.into() })),
+            Some(FEM3D_GRANULARITY_SOLID) => (4, Fem3dMutation::DeleteSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::delete_solid::DeleteSolid { id: id.into() })),
             Some(FEM3D_GRANULARITY_LOAD_CASE) => (5, Fem3dMutation::DeleteLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase { id: id.into() })),
             Some(FEM3D_GRANULARITY_NODE) => (6, Fem3dMutation::DeleteNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id: id.into() })),
-            Some(FEM3D_GRANULARITY_SECTION) => (7, Fem3dMutation::DeleteSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: id.into() })),
+            Some(FEM3D_GRANULARITY_SECTION) => (7, Fem3dMutation::DeleteSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: id.into() })),
             Some(FEM3D_GRANULARITY_MATERIAL) => (8, Fem3dMutation::DeleteMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: id.into() })),
             _ => continue,
         };

@@ -10,17 +10,17 @@ use super::*;
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ShellCapability {
-    /// Stable dotted id, e.g. `ui.window.focus`. Reuses the wgpu shell's existing informal
+    /// 🧊️ Stable dotted id, e.g. `ui.window.focus`. Reuses the wgpu shell's existing informal
     /// `shell.*` verb strings where one already names this exact mutation (see
     /// `📓️terra-P9-report.md` "existing-verb → variant mapping" for the full table); coined fresh,
     /// domain-shaped, where no verb existed yet.
     pub id: String,
     pub title: String,
     pub description: String,
-    /// JSON Schema for this variant's payload (schemars-derived from [`ShellCommand`]).
+    /// 🧾️ JSON Schema for this variant's payload (schemars-derived from [`ShellCommand`]).
     #[value(with = "json_value_bridge")]
     pub schema: JsonValue,
-    /// True for commands that only stage/observe data (no mutation with externally-visible
+    /// ✅️ True for commands that only stage/observe data (no mutation with externally-visible
     /// consequence beyond the field itself) — none of today's commands are observable-only, this
     /// flag exists for the gateway to distinguish future read-modeling commands if any are added.
     pub observable_only: bool,

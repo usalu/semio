@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
+import { pathBudgetCodes, pathBudgetStatement } from "../📏️path-budget/🟦️.ts";
 
 /** 🪆️ Stable profile identity rendered only from captured standard/subset values. */
 export interface SemanticProjectionProfileIdentity {
@@ -42,7 +43,7 @@ export interface SemanticPathProjectionAuthority {
   readonly destinationDirectoryCount: number;
   readonly destinationNodeCount: number;
   readonly mappingDigest: string;
-  readonly maxPathBytes: number;
+  readonly maxPathUtf16Units: number;
   readonly problems: readonly string[];
 }
 
@@ -108,7 +109,7 @@ export function artifactProjectionPathProblems(paths: readonly Readonly<{ path: 
   const occupied = projectionOccupancyIndex(occupiedPaths), occupant = (candidate: string): boolean => occupiedExclusionRoot === undefined || candidate !== occupiedExclusionRoot && !candidate.startsWith(`${occupiedExclusionRoot}/`);
   for (const { path } of paths) {
     if ([path, projectionCanonicalKey(path, "nfc"), projectionCanonicalKey(path, "case-fold"), projectionCanonicalKey(path, "vs16-fold")].some((key) => occupied.get(key)?.some(occupant))) problems.push(`Projected destination ${JSON.stringify(path)} is occupied.`);
-    if (new TextEncoder().encode(path).length > taxonomy.collisionPolicy.maxPathBytes) problems.push(`Projected destination ${JSON.stringify(path)} exceeds maxPathBytes ${taxonomy.collisionPolicy.maxPathBytes}.`);
+    for (const code of pathBudgetCodes(path, taxonomy.collisionPolicy)) problems.push(`Projected destination ${JSON.stringify(path)} violates ${code} (${pathBudgetStatement(taxonomy.collisionPolicy)}).`);
   }
   return problems;
 }

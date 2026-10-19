@@ -1,0 +1,819 @@
+{
+ "generatedFrom": "rfix.ts dry run on a scoped cruise of the OS renderer",
+ "summary": {
+  "@semio-tech/framework": {
+   "entries": 18,
+   "edges": 50
+  },
+  "@semio-tech/framework-actor": {
+   "entries": 4,
+   "edges": 5
+  },
+  "@semio-tech/framework-canvas-ts": {
+   "entries": 1,
+   "edges": 1
+  },
+  "@semio-tech/framework-os-node-graph-rs": {
+   "entries": 1,
+   "edges": 1
+  },
+  "@semio-tech/framework-renderer-wgpu": {
+   "entries": 1,
+   "edges": 1
+  },
+  "@semio-tech/ui-react": {
+   "entries": 1,
+   "edges": 1
+  }
+ },
+ "byPackage": {
+  "@semio-tech/framework": {
+   "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json": {
+    "target": "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json",
+    "proposedSubpath": "./interaction/schema",
+    "glueFile": "",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎯️world3d-pick-bounds/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework",
+      "subpath": "./interaction/schema"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/📣️delivery/🟦️.ts",
+    "proposedSubpath": "./wire-turn/diagnostic/delivery",
+    "glueFile": "",
+    "symbols": [
+     "OperationDiagnosticObservers"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui",
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn/diagnostic/delivery"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🟦️.ts",
+    "proposedSubpath": "./wire-turn/diagnostic",
+    "glueFile": "",
+    "symbols": [
+     "OperationDiagnosticInbox"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui",
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn/diagnostic"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+    "proposedSubpath": "./wire-turn/turn-result",
+    "glueFile": "",
+    "symbols": [
+     "TypedOperationToken",
+     "typedOperationDiagnosticFragment",
+     "TYPED_OPERATION_LANE_FAULT",
+     "TYPED_OPERATION_LANE_TERMINAL",
+     "typedOperationAcknowledgements",
+     "typedOperationResult"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui",
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn/turn-result"
+     }
+    }
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/📇️directory-and-hub-contracts/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/📇️directory-and-hub-contracts/🟦️.ts",
+    "proposedSubpath": "./renderer/engine/oracles/directory-and-hub-contracts",
+    "glueFile": "",
+    "symbols": [
+     "directoryHomeBootstrapOracle",
+     "directoryInviteCapabilityOracle",
+     "hubAuthContractOracle",
+     "scopedPresenceOracle"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui",
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-os",
+      "subpath": "./renderer/engine/oracles/directory-and-hub-contracts"
+     }
+    }
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🖱️world3d-gestures-and-selection/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🖱️world3d-gestures-and-selection/🟦️.ts",
+    "proposedSubpath": "./renderer/engine/oracles/world3d-gestures-and-selection",
+    "glueFile": "",
+    "symbols": [
+     "interactionSelectionSetOracle",
+     "selectionMergeVocabularyOracle",
+     "world3dPointerGestureOracle"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui",
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-os",
+      "subpath": "./renderer/engine/oracles/world3d-gestures-and-selection"
+     }
+    }
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🪪️surface-host-retention/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🪪️surface-host-retention/🟦️.ts",
+    "proposedSubpath": "./renderer/engine/oracles/surface-host-retention",
+    "glueFile": "",
+    "symbols": [
+     "surfaceHostRetentionOracle"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui",
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-os",
+      "subpath": "./renderer/engine/oracles/surface-host-retention"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts",
+    "proposedSubpath": "./process/build",
+    "glueFile": "",
+    "symbols": [
+     "typecheckAdmittedProjectV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx": {
+    "target": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx",
+    "proposedSubpath": "./infinite/world/r3f",
+    "glueFile": "",
+    "symbols": [
+     "worldSceneContentBounds",
+     "WorldCameraState",
+     "WorldProjectionSpec",
+     "GLB_MESH_FRAME_ROTATION_X",
+     "WORLD_MESH_OUTLINE_USER_DATA_KEY",
+     "DEFAULT_LOD_GRID_FACTOR",
+     "DEFAULT_MANUAL_LOD",
+     "frameWorldProjectionPose",
+     "lodFromCameraDistance",
+     "lodGridStepWorld",
+     "lodOrbitDistanceForCamera",
+     "WORLD_REFERENCE_DEFAULT_WIDTH",
+     "worldProjectionModeFov",
+     "worldSceneContentBoundsKey",
+     "WorldSceneContentBounds",
+     "cadVec3ToThree",
+     "worldProjectionDefaults",
+     "worldProjectionOrbitConstraints",
+     "worldProjectionSpecIconId",
+     "worldProjectionSpecLabel",
+     "computeWorldProjectionPose",
+     "worldProjectionFamily",
+     "WorldProjectionKindSwitch",
+     "worldProjectionTemplateSelectionId",
+     "WorldVolumeRelocatePayload",
+     "worldProjectionGumballPlane",
+     "WorldLayerStack",
+     "WorldCanvas",
+     "WorldLodBridge",
+     "WorldOrbitGated",
+     "WorldOrbitViewControls",
+     "WorldOrbitViewSnapGateProvider",
+     "WorldProjectionRig",
+     "WorldReferenceLayer",
+     "WorldVolumeLayer",
+     "decodeWorldProjectionTemplateId",
+     "createWorldProjectionTemplates",
+     "encodeWorldProjectionTemplateId",
+     "WorldProjectionTemplateDescriptor",
+     "worldProjectionTemplateApplySpec"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🌍️scene-lanes/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🪟️glb-bounds-and-styling/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🔀️paint-and-projection/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧩️glb-surface/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🔀️projection-pane/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧭️fit-and-presence/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧮️gumball-math/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧱️instance-layers/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📐️layout-hotkeys/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🖥️display-panel/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧪️tests/🌐️instance-title/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
+    "proposedSubpath": "./os/modules/plugin/window-kits/media",
+    "glueFile": "",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🌐️browser.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🧪️tests/♻️lifecycle/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎬️MediaTransportHost/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/💾️resident/🟦️.ts",
+    "proposedSubpath": "./value/resident",
+    "glueFile": "",
+    "symbols": [
+     "OwnedResidentReader",
+     "OwnedResidentAdmission",
+     "OwnedResidentLedger",
+     "OwnedResidentRecord",
+     "OwnedResidentPage",
+     "OwnedResidentOwner"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/📄️paged-payload/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧠️resident-pool-and-metadata/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts",
+    "proposedSubpath": "./actor/page",
+    "glueFile": "",
+    "symbols": [
+     "actorBytePageSchema",
+     "createActorBytePage"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/📄️paged-payload/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🔢️scalar-source-oracles/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+    "proposedSubpath": "./os",
+    "glueFile": "",
+    "symbols": [
+     "decodeAppCommand",
+     "decodePackValue",
+     "packUInt",
+     "encodeBackboneWorkerRequest",
+     "decodeBackboneWorkerRequest"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🔏️retained-and-store/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {},
+    "note": "tests import pack helpers through the @semio-tech/framework-os root barrel; import them from their owners (packs, app-channel) instead of a new entry"
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+    "proposedSubpath": "./actor/lifetime",
+    "glueFile": "",
+    "symbols": [
+     "encodeActorInstanceLifecycle",
+     "ActorInstanceLifecycleReceipt"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧠️resident-pool-and-metadata/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🧾️owned-intake-and-surface/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+    "proposedSubpath": "./actor/lifetime/patch",
+    "glueFile": "",
+    "symbols": [
+     "encodeActorUiPatchReceipt",
+     "decodeActorUiPatchReceipt"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🧪️tests/🪛️typedwire-helpers/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🖼️surface-refresh/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts",
+    "proposedSubpath": "./diagnostic/controlled",
+    "glueFile": "",
+    "symbols": [
+     "Diagnostic"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📥️invocation-frames/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📬️typed-result/🟦️.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
+    "proposedSubpath": "./actor",
+    "glueFile": "",
+    "symbols": [
+     "Lane",
+     "TurnScheduler"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔁️turn-settle/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧵️turn-dispatch/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🪢️handle-scope/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts",
+    "proposedSubpath": "./repo/modules/library/process",
+    "glueFile": "",
+    "symbols": [
+     "isGeneratedPath"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧵️worker-cell/🧪️tests/🟦️.ts"
+    ],
+    "rules": [
+     "renderer-hosts-only-ui"
+    ],
+    "status": "unplanned",
+    "plannedIn": {}
+   }
+  },
+  "@semio-tech/framework-actor": {
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🧫️fixtures/🔣️.json": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🧫️fixtures/🔣️.json",
+    "proposedSubpath": "./wire-turn/diagnostic/testing/fixtures",
+    "glueFile": "",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📃️typed-operation-pages/🟦️.tsx"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn/diagnostic/testing/fixtures"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+    "proposedSubpath": "./wire-turn",
+    "glueFile": "",
+    "symbols": [
+     "wireEffectToFriendly",
+     "wireRespondAnswer"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📥️inbound-request/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay9+lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay9": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn"
+     },
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+    "proposedSubpath": "./wire-turn/turn-result",
+    "glueFile": "",
+    "symbols": [
+     "TYPED_OPERATION_PAGE_MAGIC",
+     "scanTypedOperationPages",
+     "shellFrameBytes",
+     "coerceTurnResult"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🗞️wgpu-typed-operation-reply/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️package-integration/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn/turn-result"
+     }
+    }
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
+    "proposedSubpath": "./wire-turn/more-work-drive",
+    "glueFile": "",
+    "symbols": [
+     "driveShardTurnMoreWorkV1",
+     "shardTurnCarriesNothingV1",
+     "shardTurnDriveBudgetMsV1",
+     "shardTurnDriveStepsV1",
+     "ShardTurnCarriers"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🚚️more-work-drive/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay13": {
+      "pkg": "@semio-tech/framework-actor",
+      "subpath": "./wire-turn/more-work-drive"
+     }
+    }
+   }
+  },
+  "@semio-tech/framework-canvas-ts": {
+   "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+    "proposedSubpath": "./runtime-assets",
+    "glueFile": "",
+    "symbols": [
+     "RUNTIME_ASSET_CHANNELS",
+     "RUNTIME_ASSET_FILES",
+     "installRuntimeAssets",
+     "runtimeAssetDeliveries",
+     "RuntimeAssetBindings"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔤️wgpu-runtime-assets/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay9+lay13-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay9": {
+      "pkg": "@semio-tech/framework-canvas-ts",
+      "subpath": "./runtime-assets"
+     },
+     "lay13": {
+      "pkg": "@semio-tech/framework-canvas-ts",
+      "subpath": "./runtime-assets"
+     }
+    }
+   }
+  },
+  "@semio-tech/framework-os-node-graph-rs": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx": {
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧭️wasm-graph-surface/🟦️.tsx",
+    "proposedSubpath": "./wasm-graph-surface",
+    "glueFile": "",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🛑️scene-pointer-cancellation/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay9-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay9": {
+      "pkg": "@semio-tech/framework-os-node-graph-rs",
+      "subpath": "./wasm-graph-surface"
+     }
+    }
+   }
+  },
+  "@semio-tech/framework-renderer-wgpu": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts": {
+    "target": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts",
+    "proposedSubpath": "./renderer-boot",
+    "glueFile": "",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay9-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay9": {
+      "pkg": "@semio-tech/framework-renderer-wgpu",
+      "subpath": "./renderer-boot"
+     }
+    }
+   }
+  },
+  "@semio-tech/ui-react": {
+   "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts": {
+    "target": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+    "proposedSubpath": "./i18n",
+    "glueFile": "",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts"
+    ],
+    "rules": [
+     "no-cross-package-relative"
+    ],
+    "status": "planned-in-lay9-manifest-key-not-yet-added",
+    "plannedIn": {
+     "lay9": {
+      "pkg": "@semio-tech/ui-react",
+      "subpath": "./i18n"
+     }
+    }
+   }
+  }
+ },
+ "wgpuBlocked": [
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🍽️ui-intake-and-route/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🍽️ui-intake-and-route/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🩹️retained-ui-patch/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🧵️shard-and-actor-calls/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🧾️typed-operations-and-handle/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/📋️contract/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-actor"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-canvas-ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🧬️bindings-types/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-canvas-ts"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/⏳️boot-lifecycle/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️presented-media-slots/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🎬️media-slots/🎟️collect/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/📤️slot/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🎬️media-slots/📤️slot/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/📥️props/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🎬️media-slots/📥️props/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🪪️identity/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🛂️admission/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎬️media-app/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🎬️media-app-acceptance/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🪆️embedded-browser/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🪆️embedded-browser/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🧊️wgpu/🧵️frame-job/📬️outcome/🔣️.json",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/framework-os"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/process"
+  },
+  {
+   "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+   "reason": "wgpu browser bundle: needs profile.workspaceImports binding first",
+   "entryOwner": "@semio-tech/repo-lib"
+  }
+ ],
+ "policy": "renderer-hosts-only-ui additionally allows the declared @semio-tech/framework-os subpaths under ./modules/renderer/engine/elements/ (RENDERER_HOST_UI_CONTRACT in the dependency policy construction)"
+}

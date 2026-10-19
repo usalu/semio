@@ -713,7 +713,7 @@ fn subspace_iteration_returns_only_certified_physical_positive_modes() {
 
 #[test]
 fn subspace_shape_admission_matches_exact_paged_layout_arithmetic() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🎼️shape/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎼️shape/🔣️.json")).unwrap();
     assert_eq!(law["indexBits"], u32::BITS);
     assert_eq!(law["scalarBytes"], size_of::<f64>());
     for row in law["cases"].as_array().unwrap() {

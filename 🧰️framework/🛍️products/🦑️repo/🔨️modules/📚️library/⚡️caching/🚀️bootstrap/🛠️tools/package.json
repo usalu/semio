@@ -29,7 +29,7 @@
     "./retention/physical": "./🧹️retention/📥️physical/🟦️.ts",
     "./retention/generation": "./🧹️retention/📦️generation/🟦️.ts",
     "./patch": "./🩹️patch/🟦️.ts",
-    "./bun/script": "./🟦️bun/📜️script.ts",
+    "./bun/script": "./🟦️bun/🟦️.ts",
     "./bun/schema.json": "./🟦️bun/🧬️schema/🔣️.json"
   },
   "packageManager": "bun@1.4.2",
@@ -45,7 +45,9 @@
     }
   },
   "devDependencies": {
+    "@semio-tech/process": "workspace:*",
     "ajv": "8.20.0",
-    "diff": "8.0.4"
+    "diff": "8.0.4",
+    "tree-sitter-wasms": "0.1.13"
   }
 }

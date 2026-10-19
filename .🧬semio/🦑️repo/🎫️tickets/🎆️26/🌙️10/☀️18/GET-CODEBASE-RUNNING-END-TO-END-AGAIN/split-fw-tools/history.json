@@ -1,0 +1,66 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/split-fw-tools/orig/history-tests.rs",
+ "root": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs",
+ "fragments": [
+  {
+   "dir": "🧩️composition-and-retained-decode",
+   "doc": "/// 🧩️ The composition overlay in the binary log and the retained history decode: yielding across granted turns, closing every original owner, rejecting malformed and repeated transitions.",
+   "ranges": [
+    [
+     116,
+     291
+    ]
+   ]
+  },
+  {
+   "dir": "⚔️conflicts-and-messages",
+   "doc": "/// ⚔️ The conflict records and the op-meta messages: both kinds byte-identically, dictionary and ordinal references, rejected tags, severity shapes and message code interning.",
+   "ranges": [
+    [
+     293,
+     501
+    ]
+   ]
+  },
+  {
+   "dir": "📜️text-grammar-and-payloads",
+   "doc": "/// 📜️ The `.ops` text grammar as the shared log and the doc, edit and transition payloads with their language-agnostic fixture.",
+   "ranges": [
+    [
+     503,
+     730
+    ]
+   ]
+  },
+  {
+   "dir": "🔐️codec-and-append",
+   "doc": "/// 🔐️ The history codec identity and its verification, tamper detection, critical transition records and streamed append against the buffered encode.",
+   "ranges": [
+    [
+     732,
+     848
+    ]
+   ]
+  },
+  {
+   "dir": "🧮️fold-scan-frontier-and-index",
+   "doc": "/// 🧮️ The fold of edits, commits and reverts, the forward and reverse scans, the frontier delta and the index.",
+   "ranges": [
+    [
+     850,
+     1021
+    ]
+   ]
+  },
+  {
+   "dir": "⏳️native-fold-law",
+   "doc": "/// ⏳️ Native history normalization under the neutral cancellation law.",
+   "ranges": [
+    [
+     1023,
+     1077
+    ]
+   ]
+  }
+ ]
+}

@@ -12,9 +12,9 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 #[allow(unused_imports)]
 use collection_algebra_core::*;
-use crate::standards::v_r12::subsets::any::schema::diff::{collection_algebra_core};
+use semio_s_artifact_stdio_dxf_diff_algebra as collection_algebra_core;
 use crate::standards::v_r12::subsets::any::schema::diff::*;
-use crate::standards::v_r12::subsets::any::schema::diff::collection_algebra_core::*;
+use semio_s_artifact_stdio_dxf_diff_algebra::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 /// 🧪️ `DiffCodec` text/binary round-trip laws over every `demo_diff_cases()` fixture (`#region

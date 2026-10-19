@@ -7,12 +7,12 @@
 // Constants MUST define static configuration for diagnostics and UI strings.
 
 /**
- * COMPOSE_KIT_LANGUAGE holds the data fields for a COMPOSE_KIT_LANGUAGE record.
+ * 🧬️ COMPOSE_KIT_LANGUAGE holds the data fields for a COMPOSE_KIT_LANGUAGE record.
  **/
 export const COMPOSE_KIT_LANGUAGE = "json";
 
 /**
- * UI_STRINGS holds the data fields for a UI_STRINGS record.
+ * 🔤️ UI_STRINGS holds the data fields for a UI_STRINGS record.
  **/
 export const UI_STRINGS = {
   en: {

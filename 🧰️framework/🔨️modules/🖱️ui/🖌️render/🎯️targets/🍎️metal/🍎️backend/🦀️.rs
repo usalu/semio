@@ -65,7 +65,6 @@ pub enum MetalGraphicsError {
 }
 
 impl From<MetalGraphicsError> for BackendError {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(error: MetalGraphicsError) -> Self {
         match error {
             MetalGraphicsError::AllocationFailed(_) => BackendError::OutOfMemory,
@@ -125,7 +124,6 @@ impl MetalBackend {
     /// 🏗️ Builds a device, command queue, and a `CAMetalLayer` attached to `window_handle`'s
     /// `NSView`. Only construction is async per U1 — the body below performs no real `.await` because
     /// Metal's device/queue/layer creation is synchronous, unlike wgpu's adapter/device request.
-    // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new(window_handle: WindowHandle<'_>, size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
         let _pool = AutoreleasePool::new();
         let RawWindowHandle::AppKit(handle) = window_handle.as_raw() else {
@@ -149,14 +147,12 @@ impl MetalBackend {
     /// presence, so this exercises the full render pipeline for `backend-testing` without an AppKit
     /// window. Never used outside tests/the conformance harness.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new_headless(size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
         let _pool = AutoreleasePool::new();
         let DeviceQueueLayer { device, queue, layer } = create_device_queue_layer(size, dpr)?;
         Ok(Self::from_parts(device, queue, layer, size, dpr))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from_parts(device: Owned<Device>, queue: Owned<Queue>, layer: Owned<MetalLayer>, size: PhysicalSize, dpr: f32) -> Self {
         let pipelines = Pipelines::new(&device, SURFACE_FORMAT, SCENE_FORMAT);
         let resources = GpuResources::new(&device);
@@ -189,7 +185,6 @@ impl MetalBackend {
     /// ✍️ Rewrites the shared `{screen_size, _pad}` uniform (`_pad.x` carries elapsed seconds, read by
     /// the UI megashader's animated border kinds — mirrors `UiGlobals`/`update_globals` in the wgpu
     /// target).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn update_globals(&self, width: f32, height: f32, time_seconds: f32) {
         let values: [f32; 4] = [width, height, time_seconds, 0.0];
         // 🔓️ SAFETY: `ui_globals_buffer` is a 16-byte `Shared`-storage buffer allocated in
@@ -201,7 +196,6 @@ impl MetalBackend {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn validate_known_resources(&self, packet: &RenderPacket) -> Result<(), BackendError> {
         for batch in &packet.batches {
             if let Some(texture) = batch.texture {
@@ -272,7 +266,6 @@ impl MetalBackend {
     /// pass start. One encoder for the whole pass — see this file's header for why a single encoder
     /// suffices where the wgpu target used several (its per-group buffer re-collection, not a Metal
     /// requirement; `📬️frame_buffers.rs`'s header has the full reasoning).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn encode_scene_pass(&mut self, command_buffer: &CommandBuffer, packet: &RenderPacket, time_seconds: f32) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -303,7 +296,6 @@ impl MetalBackend {
     /// swapchain drawable, composite every glass region on top, then paint glass-foreground 2D content
     /// (normal then overlay) directly onto the drawable, reusing `depth_texture` with `Load` ops so it
     /// still clips against the same stencil silhouettes the offscreen pass wrote.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn encode_composite_pass(&mut self, command_buffer: &CommandBuffer, drawable_texture: &MetalTexture, packet: &RenderPacket) {
         let width = self.size.width as f32;
         let height = self.size.height as f32;
@@ -335,7 +327,6 @@ impl MetalBackend {
     /// same texture within one pass, same reasoning as the wgpu target), then renders a fullscreen
     /// 5-tap box downsample from the scratch texture into this mip. No per-mip `TextureView`s are
     /// needed on either side — see `✨️msl.rs`'s header.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn run_blur_chain(&self, command_buffer: &CommandBuffer) {
         let levels = crate::scene_target::supported_mip_levels(self.scene_target.width(), self.scene_target.height());
         for mip in 1..levels {
@@ -382,7 +373,6 @@ impl MetalBackend {
     /// 🪟️ Ports `blit_scene_to_swapchain`: samples mip 0 of the fully-blurred scene chain into the
     /// swapchain drawable, clearing it first (this is the frame's real "clear colour" as seen by the
     /// user — the offscreen scene clear earlier is invisible, fully overwritten here).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn blit_scene_to_drawable(&self, command_buffer: &CommandBuffer, drawable_texture: &MetalTexture) {
         let descriptor = make_render_pass_descriptor(drawable_texture, 0, MTLLoadAction::Clear, Some((0.05, 0.05, 0.06, 1.0)), None, MTLLoadAction::DontCare);
         let Some(encoder) = command_buffer.renderCommandEncoderWithDescriptor(&descriptor) else { return };
@@ -403,7 +393,6 @@ impl MetalBackend {
     /// draw is pixel-identical to sequential per-region draws (GPUs rasterize/blend instances of one
     /// draw call in submission order, same as separate draw calls would) — one API round-trip instead
     /// of N.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn composite_glass(&mut self, command_buffer: &CommandBuffer, drawable_texture: &MetalTexture, packet: &RenderPacket) {
         if packet.glass_instances.is_empty() {
             return;
@@ -516,10 +505,7 @@ fn encode_2d_batches<'a>(
                     encoder.drawPrimitives_vertexStart_vertexCount(MTLPrimitiveType::Triangle, 0, batch.instance_range.1 as usize);
                 }
             }
-            PipelineKind::Glass | PipelineKind::BlurMipChain | PipelineKind::SceneBlit | PipelineKind::StencilMask | PipelineKind::World3dMesh | PipelineKind::World3dLines | PipelineKind::World3dTextured => {
-                // 🕳️ Never constructed by `Scene::finish` into `RenderPacket::batches` — see this
-                // function's doc comment.
-            }
+            PipelineKind::Glass | PipelineKind::BlurMipChain | PipelineKind::SceneBlit | PipelineKind::StencilMask | PipelineKind::World3dMesh | PipelineKind::World3dLines | PipelineKind::World3dTextured => {}
         }
     }
     encoder.setScissorRect(objc2_metal::MTLScissorRect { x: 0, y: 0, width: width as usize, height: height as usize });
@@ -588,12 +574,10 @@ fn bind_ui_textures(encoder: &Encoder, pipelines: &Pipelines, resources: &GpuRes
 //#region 🔌️GraphicsBackendImpl
 
 impl GraphicsBackend for MetalBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn name(&self) -> &'static str {
         "metal"
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities {
         DeviceCapabilities {
             max_texture_dimension: 16384,
@@ -611,7 +595,6 @@ impl GraphicsBackend for MetalBackend {
     /// are left untouched (never resized to zero) so `render` has a valid — if stale — target the
     /// instant a nonzero `resize` restores it. `render` itself refuses to draw while parked (`size.is_zero()`
     /// → `SkippedZeroSize`), so the staleness is never observed.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError> {
         let _pool = AutoreleasePool::new();
         self.size = size;
@@ -624,13 +607,11 @@ impl GraphicsBackend for MetalBackend {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ResourceOp]) -> Result<(), BackendError> {
         let _pool = AutoreleasePool::new();
         self.resources.apply(&self.device, ops).map_err(Into::into)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, time_seconds: f32) -> Result<RenderReport, BackendError> {
         let _pool = AutoreleasePool::new();
         if let DeviceStatus::Lost(reason) = self.status {
@@ -658,7 +639,6 @@ impl GraphicsBackend for MetalBackend {
         Ok(RenderReport::Presented { stats })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn device_status(&self) -> DeviceStatus {
         self.status
     }
@@ -668,7 +648,6 @@ impl GraphicsBackend for MetalBackend {
     /// device loss would actually invalidate) and rebuilds `GpuResources` fresh — the caller's
     /// `ResourceRegistry::report_device_loss` re-marks the returned ids `Requested`, and the next
     /// frame's `apply_resources` repopulates them for real.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
         let _pool = AutoreleasePool::new();
         let (lost_textures, lost_meshes, lost_atlases) = self.resources.drain_known();
@@ -681,7 +660,6 @@ impl GraphicsBackend for MetalBackend {
     /// state a real fault would, so `render`/`recover` behave identically to the real-fault path from
     /// this point forward.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn debug_force_device_loss(&mut self) {
         self.status = DeviceStatus::Lost(LossReason::Device);
     }
@@ -692,7 +670,6 @@ impl GraphicsBackend for MetalBackend {
     /// full colour-managed conversion — acceptable for the suite's `|Δ| ≤ 3/255` tolerance, called out
     /// here rather than silently assumed correct).
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError> {
         let _pool = AutoreleasePool::new();
         if self.size.is_zero() {
@@ -731,7 +708,6 @@ impl MetalBackend {
     /// 🧪️ Blits the just-composited drawable into a fresh `Shared`-storage readback texture — always
     /// reallocated at the current size rather than cached, since this path only ever runs inside the
     /// conformance harness (never a hot path worth optimizing).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capture_readback(&mut self, command_buffer: &CommandBuffer, drawable_texture: &MetalTexture) {
         let width = self.size.width;
         let height = self.size.height;

@@ -1,6 +1,7 @@
 //! 🔗️ Original history slots yield genuine retained projections and return the same owner under independent grants.
 use super::{ArtifactHistoryKey,ArtifactHistoryLedger};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,FactoryOwnedSourceAuthority,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use semio_framework_value::retained_clone::{RetainedCloneBorrowAuthority,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneSourceTake,RetainedCloneStep,retained_clone_grant_admits};
 use std::sync::Arc;
 fn fault(message:&'static str)->ValueError {ValueError::literal(ValueRefusalKind::InvariantViolated,message)}

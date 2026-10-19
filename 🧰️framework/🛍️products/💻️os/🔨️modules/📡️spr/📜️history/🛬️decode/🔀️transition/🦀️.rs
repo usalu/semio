@@ -1,8 +1,9 @@
 //! 🔀️ Original transition fields retain their real native owners under the original caller ledger and paid receiving grants.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::{HistoryTransitionRecord,RetainedHistoryIdDecode,RetainedHistoryRecords,RetainedHistoryRecordsStep};
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity,HistoryReadLimits,RetainedWireFieldDecode},dictionary::RetainedSourceDictionary};
-use semio_framework_value::{SharedUtf8,NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 #[derive(semio_framework_value::RetireOwned)]
 pub struct RetainedHistoryTransitionPartial{pub id:Option<String>,pub actor_text:Option<String>,pub actor:Option<SharedUtf8>,pub hlt:Option<(u64,u64,u64)>,pub dependencies:Option<Vec<String>>,pub pending_dependency:Option<String>,pub payload:Option<Vec<u8>>,pub observed:Option<String>}

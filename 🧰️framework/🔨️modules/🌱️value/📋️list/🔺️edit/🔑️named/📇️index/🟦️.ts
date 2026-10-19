@@ -1,8 +1,8 @@
-import {NamedEditPlan,type NamedEditSource,type NamedEditDemand,type NamedEditGrant,type NamedEditReceipt} from "../🟦️.ts";
+import {NamedEditPlan,type NamedEditAdmittedBase,type NamedEditSource,type NamedEditDemand,type NamedEditGrant,type NamedEditReceipt} from "../🟦️.ts";
 import {BuiltPersistentList,type PersistentListSet} from "../../../🔗️persistent/📥️build/🟦️.ts";
 const issuer=Symbol("original named index admission");
 /** 🔐️ Original private sorted coordinates reuse their exact borrowed base root. */
-export class AdmittedNamedKeyIndex{
+export class AdmittedNamedKeyIndex implements NamedEditAdmittedBase{
  readonly #original:NamedEditSource;
  readonly #order:readonly number[];
  constructor(original:NamedEditSource,order:number[],authority:symbol){if(authority!==issuer||Object.isExtensible(order))throw Error("original sealed named index issuer required");this.#original=original;this.#order=order;}

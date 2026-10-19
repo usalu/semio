@@ -256,7 +256,6 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     }
     let records = node_records(&tree);
 
-    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
     let mut keys = Vec::new();
     node_keys(&tree, &mut keys);
     let mut unique = keys.clone();

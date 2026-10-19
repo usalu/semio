@@ -161,7 +161,7 @@ fn match_multiset(p_terms: &[Expr], s_terms: &[Expr], bindings: Bindings, budget
     }
     let seq_positions: Vec<usize> = p_terms.iter().enumerate().filter(|(_, t)| matches!(t.kind(), Kind::Wild(_, WildKind::Seq))).map(|(i, _)| i).collect();
     if seq_positions.len() > 1 {
-        return None; // unsupported: more than one Seq wildcard in a single Add/Mul pattern
+        return None;
     }
     let seq_id = seq_positions.first().map(|&i| match p_terms[i].kind() {
         Kind::Wild(id, _) => *id,

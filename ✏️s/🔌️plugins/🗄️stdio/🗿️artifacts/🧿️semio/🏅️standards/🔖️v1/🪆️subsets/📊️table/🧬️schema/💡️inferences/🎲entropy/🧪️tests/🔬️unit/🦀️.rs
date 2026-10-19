@@ -92,11 +92,6 @@ async fn changing_one_columns_cells_misses_only_that_columns_cache_entry() {
 
 #[semio_framework_async_macros::async_test]
 async fn changing_the_other_column_misses_only_its_own_entry() {
-    // 🔁️ Unlike `📊moments` (which has a non-numeric column genuinely OFF the plan to edit for a
-    // zero-miss control), `entropy` tracks EVERY declared column, so this fixture has no untracked
-    // column at all — the isolation law instead is: editing `always_a` misses ONLY `always_a`'s
-    // own cache entry, proven in both directions together with
-    // `changing_one_columns_cells_misses_only_that_columns_cache_entry` above.
     let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
     let base = two_column_snapshot();
     let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));

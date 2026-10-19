@@ -34,10 +34,10 @@ import {
   type PluginContextMenuSurfaceTarget,
   type PresencePeer
 } from "@semio-tech/framework";
-import { mapContextMenuSpecs, openSurfaceContextMenu } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { parseJsonArray, selectionGroupsFromDomains } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { isFlowGraphScene } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { useUIFindSafe } from "../🔎️ShellSearch/🟦️.tsx";
+import { mapContextMenuSpecs, openSurfaceContextMenu } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
+import { parseJsonArray, selectionGroupsFromDomains } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
+import { isFlowGraphScene } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
+import { useUIFindSafe } from "@semio-tech/framework-os/modules/renderer/engine/elements/ShellSearch";
 import {
   flowJsonText,
   type GraphKeyboardPort,
@@ -349,8 +349,6 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
     <div
       ref={containerRef}
       className="relative h-full w-full"
-      // 🧱️ The board paints itself; nothing inside this box may make the document relayout or
-      // restyle, so a gesture's 60 repaints never reach the shell's own style/layout work.
       style={{ contain: "layout paint" }}
       onDragOver={onDragOverCanvas}
       onDragLeave={() => {
@@ -497,17 +495,9 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
           const session = sessionRef.current;
           if (!session) return;
           const client = { x: event.clientX, y: event.clientY };
-          // 🖱️ The gesture belongs to this canvas until the button comes back up. Without capture, a
-          // drag that leaves the canvas — dragging a wire out to cut it, or past the edge on the way
-          // to a far port — releases over whatever is underneath (the outline tree, another window),
-          // and the host never sees `pointer_up_screen`: the wire stays in flight forever and the
-          // gesture makes no edit at all. Measured on 6018: the press entered `InteractionMode::DrawEdge`
-          // and no release ever arrived.
           try {
             event.currentTarget.setPointerCapture(event.pointerId);
-          } catch {
-            /* capture is unavailable for this pointer — the gesture still works inside the canvas */
-          }
+          } catch {}
           pickInteraction.onCanvasPointerDown(client);
           cameraPanRef.current = flowGestureIsCameraPan(event.button, event.buttons);
           issueFlowGestureStep(session.pointerDownScreen(event.clientX - rect.left, event.clientY - rect.top, event.button, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey, cameraPanRef.current));
@@ -542,9 +532,7 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
           const client = { x: event.clientX, y: event.clientY };
           try {
             if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-          } catch {
-            /* nothing was captured */
-          }
+          } catch {}
           pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
           setWireRefusal(null);
           const wasCameraPan = cameraPanRef.current;
@@ -555,8 +543,6 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
             if (operations.length > 0) dispatch(nodeGraphActions.edit, { operations });
           });
           handleGesturePointerUp();
-          // 🎥️ A pan moved the camera and nothing else, so its settle owes the plugin the viewport and
-          // never a selection/hover round trip the board's own state did not change.
           if (wasCameraPan) publishCameraRef.current();
           else emitInteractionState();
         }}
@@ -567,9 +553,7 @@ export function FlowGraphCanvasHost(props: FlowGraphCanvasHostProps) {
           const session = sessionRef.current;
           try {
             if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-          } catch {
-            /* nothing was captured */
-          }
+          } catch {}
           setWireRefusal(null);
           cameraPanRef.current = false;
           cameraOnlyGestureEndRef.current = false;

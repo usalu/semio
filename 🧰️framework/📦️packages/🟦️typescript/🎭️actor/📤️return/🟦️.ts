@@ -1,2 +1,3 @@
 /** 🧩️ Public `@semio-tech/framework/actor/return` entry: explicit re-exports of the source module that owns each member. */
-export * from "@semio-tech/framework-actor/return";
+export { ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES, ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES, ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES, ACTOR_RETURN_CONTROL_MAXIMUM_BYTES, ACTOR_RETURN_DRIVE_MAXIMUM_BYTES, ACTOR_RETURN_RESULT_MAXIMUM_BYTES, encodeActorReturnDrive, decodeActorReturnDrive, encodeActorReturnResult, ActorReturnResultFraming, decodeActorReturnResult } from "@semio-tech/framework-actor/return";
+export type { ActorReturnOrigin, ActorReturnIdentity, ActorReturnPageReceipt, ActorReturnControl, ActorReturnDrive, ActorReturnResult, ActorReturnResultProjection, ActorReturnFault } from "@semio-tech/framework-actor/return";

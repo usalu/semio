@@ -1,6 +1,6 @@
 use crate::retained_clone::FixtureSourceBirth;
 use crate::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep};
-use crate::value::observe_retirement_allocations;
+use semio_framework_value_testing_allocator::observe_retirement_allocations;
 
 
 #[test]

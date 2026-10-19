@@ -1,4 +1,4 @@
-//! lowpoly <- txt
+//! 🔺️ lowpoly <- txt
 //!
 //! 📜️ Exact inverse of the export leaf: the txt body IS lowpoly's own `.lowpoly` DSL text
 //! verbatim (CARRIER_TEXT law, see the export leaf's doc comment), so import is just

@@ -13,7 +13,7 @@ import { parseFem3dResultsWindowConfig } from "../../🟦️.ts";
 export function testFem3dResultsWindowConfigContract(): void {
   const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
   const base = fixture.valid[0];
-  const sources = JSON.parse(readFileSync(new URL("../../../../../../../../🕹️interaction/🧫️fixtures/📊️result-source/🔣️.json", import.meta.url), "utf8")) as { cases: Array<{ identity: string; mode: string; admitted: boolean }> };
+  const sources = JSON.parse(readFileSync(new URL("../../../../../../../../🕹️interaction/🧪️tests/🧫️fixtures/📊️result-source/🔣️.json", import.meta.url), "utf8")) as { cases: Array<{ identity: string; mode: string; admitted: boolean }> };
   for (const row of sources.cases) {
     const candidate = { ...structuredClone(base), resultSourceId: row.identity, resultMode: row.mode };
     if (row.admitted) assert.equal(parseFem3dResultsWindowConfig(candidate).resultSourceId, row.identity);

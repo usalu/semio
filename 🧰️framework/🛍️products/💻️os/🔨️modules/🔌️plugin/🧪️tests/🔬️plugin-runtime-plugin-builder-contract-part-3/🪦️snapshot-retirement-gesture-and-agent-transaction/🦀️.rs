@@ -1,6 +1,7 @@
 /// 🪦️ Snapshot retirement, gesture and agent transaction: the test snapshot retirement, closed dialect pin rejection, the composite undo group and the owned child op groups of an agent transaction.
 
-    struct TestSnapshotRetirement {
+    use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
+struct TestSnapshotRetirement {
         pub owner: Option<Box<dyn store::ErasedSnapshotRetirement>>,
         lie_about_terminal: bool,
     }

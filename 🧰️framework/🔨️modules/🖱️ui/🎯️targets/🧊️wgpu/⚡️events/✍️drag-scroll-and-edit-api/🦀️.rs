@@ -281,10 +281,6 @@ impl EventRouter {
     pub(super) fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) -> Vec<UiCommand> {
         let mut out = Vec::new();
         let Some(id) = self.focus.focused else { return out };
-        // ␣️ React's `searchSpaceConfirmsLine`/`applySearchSpaceAction`: Space on an EMPTY action line
-        // CONFIRMS instead of typing — repeat-last when the program bound one, otherwise the submit
-        // it did bind. A line with neither keeps typing its space, and a non-empty line always does
-        // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10507`/`:10512`).
         if text == " " {
             let confirmed =
                 tree.node(id).filter(|node| node.state.edit.as_ref().is_none_or(|edit| edit.text.trim().is_empty())).and_then(|node| search_line_action(node, Trigger::RepeatLast, "").or_else(|| search_line_action(node, Trigger::Submit, "")));
@@ -343,10 +339,6 @@ impl EventRouter {
     pub(super) fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
         let mut out = Vec::new();
         let Some(id) = self.focus.focused else { return out };
-        // ⏎️ Enter is the other half of a blur-committing node's contract (`Trigger::Commit`, which
-        // `🖼️semantic-ui/🦀️.rs`'s own docstring names "Enter / blur") — the gesture generation3d's
-        // inline rename editor is built on. A change-committing node already dispatched every
-        // keystroke, so Enter adds nothing there and must not double-fire.
         if matches!(key, "Enter" | "NumpadEnter") {
             if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Slider(_)) && node.state.edit.is_some()) {
                 let fired = self.finish_slider_readout_edit(tree, id);
@@ -368,9 +360,6 @@ impl EventRouter {
                 out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 return out;
             }
-            // ⏎️ A line that binds `Trigger::Submit` CONFIRMS on Enter and keeps its per-keystroke
-            // `Trigger::Change` — React's window search fires both from one field, so resolving Enter
-            // into the commit slot would have silenced one of them.
             let submitted = tree.node(id).and_then(|node| {
                 let fallback = editable_value(&node.spec.0).unwrap_or_default();
                 search_line_action(node, Trigger::Submit, node.state.edit.as_ref().map_or(fallback.as_str(), |edit| edit.text.as_str()))

@@ -37,7 +37,7 @@ function usePluginArtifactAvailable(moduleUrl: string): boolean | undefined {
 // #region 🔖️OsBootHost
 export type OsBootHostProps = {
   readonly inventory:StoryCatalogV1;
-  /** Registry `pluginId`, e.g. `"s"`, `"puzzle"`, `"gis"`. Also used as the shell's `pluginFilter`. */
+  /** 🔌️ Registry `pluginId`, e.g. `"s"`, `"puzzle"`, `"gis"`. Also used as the shell's `pluginFilter`. */
   readonly plugin: string;
   readonly appId?: string;
   readonly locks?: FrameworkOsLocks;
@@ -94,7 +94,7 @@ export function OsBootHost({ plugin, appId, locks, inventory }: OsBootHostProps)
 // #region 🔖️WgpuBootHost
 export type WgpuBootHostProps = {
   readonly inventory:StoryCatalogV1;
-  /** Registry `pluginId` passed through to the wgpu renderer as its `pluginFilter`. */
+  /** 🧩️ Registry `pluginId` passed through to the wgpu renderer as its `pluginFilter`. */
   readonly plugin: string;
 };
 

@@ -250,8 +250,6 @@ fn fair_new_vertices(mesh: &mut TriMesh, patch_faces: &[u32], new_vertices: &Has
             neighbors.entry(b).or_default().insert(a);
         }
     }
-    // 🎲️ Sorted, not set order: the conjugate-gradient rounding depends on the unknown and
-    // neighbour order, and a mesh must not differ between two runs of the same input.
     let mut free: Vec<u32> = new_vertices.iter().copied().collect();
     free.sort_unstable();
     let index_of: HashMap<u32, usize> = free.iter().enumerate().map(|(i, &v)| (v, i)).collect();

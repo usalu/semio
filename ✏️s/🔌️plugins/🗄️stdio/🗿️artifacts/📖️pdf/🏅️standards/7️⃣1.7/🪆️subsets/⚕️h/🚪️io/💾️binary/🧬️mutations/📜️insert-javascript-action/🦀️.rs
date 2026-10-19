@@ -1,4 +1,4 @@
-//! Direct binary identity for `insert-javascript-action`.
+//! 💾️ Direct binary identity for `insert-javascript-action`.
 
 pub const TAG: u8 = 2;
 pub const BINARY_TAG: u8 = TAG;

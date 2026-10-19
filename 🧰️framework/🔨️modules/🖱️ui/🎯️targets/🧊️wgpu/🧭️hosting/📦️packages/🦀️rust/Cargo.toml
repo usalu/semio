@@ -40,6 +40,7 @@ semio-framework-ui-wgpu-input = { path = "../../../📥️input/📦️packages/
 semio-framework-ui-wgpu-layout = { path = "../../../🧱️layout-stack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-job-payload = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wasm-bindgen = { version = "0.2.106", optional = true }

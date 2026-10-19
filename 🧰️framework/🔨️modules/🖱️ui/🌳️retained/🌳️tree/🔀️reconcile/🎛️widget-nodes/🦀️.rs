@@ -32,11 +32,6 @@ pub(super) fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         display_factor: props.display_factor.filter(|_| props.kind == ui_contract::InputKind::Number),
         limits: props.limits.clone().filter(|_| props.kind == ui_contract::InputKind::Number),
         on_change: input_commit_action(record, props, controller),
-        // ⏎️⎋️🔁️ The three moments React's `SearchInput` binds BESIDE `onChange`. They are read
-        // per-trigger (not resolved into the single `on_change` slot the way `input_commit_action`
-        // resolves Change/Commit) because React fires them at the SAME time as `onChange`, never
-        // instead of it: the window search line feeds the guest's autocomplete on every keystroke
-        // and runs the verb on Enter (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`).
         on_submit: record_action(record, ui_contract::Trigger::Submit, controller),
         on_abort: record_action(record, ui_contract::Trigger::Abort, controller),
         on_repeat_last: record_action(record, ui_contract::Trigger::RepeatLast, controller),

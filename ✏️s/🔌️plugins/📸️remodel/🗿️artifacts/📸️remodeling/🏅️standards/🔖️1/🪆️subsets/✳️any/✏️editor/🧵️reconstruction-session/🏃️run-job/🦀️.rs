@@ -356,9 +356,6 @@ impl ReconstructionRunJob {
         match status {
             EngineStatus::Working { .. } => Ok(evidence),
             EngineStatus::Done => {
-                // 📈️ The dense trace replays the fused cloud AFTER meshing finished, so naming its
-                // own stage would walk the reported stage backwards (Surface -> Fusion); the run's
-                // visible stage only ever moves forward.
                 self.stage = self.stage.max(ReconstructionRunStage::Fusion);
                 self.phase = RunPhase::DenseTrace { cursor: 0 };
                 Ok(evidence)

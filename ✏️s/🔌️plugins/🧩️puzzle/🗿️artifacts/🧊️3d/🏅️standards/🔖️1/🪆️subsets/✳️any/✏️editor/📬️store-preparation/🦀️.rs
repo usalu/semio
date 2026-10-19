@@ -209,7 +209,7 @@ pub(super) struct Puzzle3dArtifactStorePreparation {
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
     fn operation_wire_source<'a>(&self, operation: &'a Puzzle3dMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
-        semio_s_artifact_puzzle_3d_mutations::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
+        semio_s_artifact_puzzle_3d_mutations::io::binary::mutations::prepared_operation_wire_source(operation)
     }
 
     fn begin_batch_digest(

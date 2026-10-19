@@ -27,8 +27,6 @@ fn from_coords_dedups_and_assigns_stable_first_seen_ids() {
 fn to_graph_topology_only_connects_occupied_neighbors() {
     let mut b = ModelBuilder::new();
     let rels = face6_relations(&mut b);
-    // An L-shape: (0,0,0), (1,0,0), (1,1,0) — (0,0,0) and (1,1,0) are NOT face-adjacent, and
-    // the "missing" cell (0,1,0) must not silently create a phantom connection either.
     let volume = SparseVolume::from_coords([(0, 0, 0), (1, 0, 0), (1, 1, 0)]);
     let topo = volume.to_graph_topology(&rels).unwrap();
 

@@ -11,7 +11,7 @@ export interface LasBounds {
 }
 
 export interface LasInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: LasBounds;
 }
 

@@ -1,12 +1,26 @@
 {
   "name": "@semio-tech/compiler-syntax-rust-ts",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "targets": {
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
         "sharedGlobals"
       ],
@@ -18,10 +32,14 @@
     },
     "test-absence": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
         "sharedGlobals"
       ],
@@ -33,10 +51,14 @@
     },
     "test-path-literals": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/**/*",
         "sharedGlobals"
       ],
@@ -48,10 +70,14 @@
     },
     "test-module-tree": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/**/*",
         "sharedGlobals"
       ],

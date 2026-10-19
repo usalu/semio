@@ -259,14 +259,12 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
         expect(container.querySelector('[data-slot="mode-dock-stack"]')?.getAttribute("data-introduction-elevated")).toBe("true");
       });
       expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduction-elevated")).toBeNull();
-      // 🎓️ Kind-id stamps the inner scroll surface — not `[data-slot="window"]` — matching Aggregator/OS.
       expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduced")).toBe("true");
       expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduced")).toBeNull();
       expect(resolveWindowSilhouetteBorderKind(container.querySelector('[data-slot="window"]'))).toBe("introduced");
       await waitFor(() => {
         expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
       });
-      // 🪟️ Stack owns `z-window` so silhouette `z-[40]` stays below floating Panels; elevation still overrides.
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("z-window");
       expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
       const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
@@ -433,10 +431,6 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
         </div>,
       );
       const veil = container.querySelector('[data-slot="introduction-veil"]')!;
-      // 🧯️ A screen step (no `introduce`) blocks every pointer in the application — B47 §5.1 measured the
-      // whole app inert behind it, with `elementFromPoint` returning the veil for every control, so the
-      // scrim itself MUST be the way out. `aria-hidden` keeps the bare div out of the accessibility tree;
-      // the keyboard route is the `ui.introduction.skip` ("escape") keybinding bound by this component.
       expect(veil.className).toContain("pointer-events-auto");
       expect(veil.getAttribute("aria-hidden")).toBe("true");
       fireEvent.pointerDown(veil);

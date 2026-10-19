@@ -27,6 +27,14 @@ fn concurrent_section_fields_preserve_both_authors_intent() {
 use crate::context::dispatch;
 use crate::context::fem3d_demo_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+#[cfg(test)] use semio_s_artifact_fem_3d_editor_commands::editor::fem3d::commands::patch_section::PatchSection;
+#[cfg(test)] use semio_framework_plugin::component::Emit;
+#[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
+#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_framework::Fault;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchSection) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let history = semio_framework_plugin::HistoryView::empty();

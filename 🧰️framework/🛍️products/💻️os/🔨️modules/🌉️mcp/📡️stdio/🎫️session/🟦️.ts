@@ -1,8 +1,8 @@
 import{AsyncLocalStorage}from"node:async_hooks";
 import{types}from"node:util";
 import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,type ScriptInvocation}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1}from"@semio-tech/process/owned-execution/capture";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/📥️capture/🟦️.ts";
 import{snapshotMcpJsonV1,readMcpWireMessageV1,writeMcpWireMessageV1,type McpJsonRecordV1,type McpJsonValueV1,type McpWireNotificationV1,type McpWireSuccessV1,type McpWireFailureV1}from"../📋️protocol/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 const policy=Object.freeze({...schema.definitions.Policy.const});

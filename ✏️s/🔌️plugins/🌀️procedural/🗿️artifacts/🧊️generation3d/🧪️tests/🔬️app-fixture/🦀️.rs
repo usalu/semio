@@ -7,7 +7,7 @@ use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry, set
 use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
 pub(crate) type Generation3dApp = VcsArtifactApp<EditorApp<Generation3dPlayApp>>;
-/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+/// 🪄️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
     pub(crate) struct Generation3dAppFixture(pub Generation3dApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 impl std::ops::Deref for Generation3dAppFixture {
     type Target = Generation3dApp;

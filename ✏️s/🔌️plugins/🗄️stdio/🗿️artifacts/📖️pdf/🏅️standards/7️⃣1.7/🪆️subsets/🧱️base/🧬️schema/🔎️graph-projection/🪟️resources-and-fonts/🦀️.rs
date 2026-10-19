@@ -6,7 +6,6 @@ use super::*;
 impl Lifter<'_> {
     /// 📚 Lifts every entry of a resource dictionary into the document collections and returns
     /// the name → id map its content streams are rewritten with.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn lift_resources(&mut self, resources: &PdfObject) -> ResourceMap {
         let resources = self.source.deref(resources);
         let mut map = ResourceMap::default();
@@ -60,7 +59,6 @@ impl Lifter<'_> {
         map
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_ext_g_state_entry(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::ExtGState, name, value.as_ref());
         if fresh {
@@ -68,7 +66,6 @@ impl Lifter<'_> {
             let dict = resolved.as_dict().map(<[PdfDictEntry]>::to_vec).unwrap_or_default();
             let form_id_of = |group: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_form_id(group) };
             let font_id_of = |font: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_font_id(font) };
-            // 🧷 Soft-mask groups and fonts are lifted first so the closures above only look up.
             if let Some(mask) = dict_get(&dict, "SMask").map(|m| self.source.deref(m)) {
                 if let Some(group) = mask.dict_get("G").cloned() {
                     self.lift_x_object("SMaskGroup", &group);
@@ -88,7 +85,6 @@ impl Lifter<'_> {
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_shading_entry(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::Shading, name, value.as_ref());
         if fresh {
@@ -100,7 +96,6 @@ impl Lifter<'_> {
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_pattern(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::Pattern, name, value.as_ref());
         if !fresh {
@@ -131,7 +126,6 @@ impl Lifter<'_> {
     }
 
     /// 🖼️ Lifts an XObject (image or form) and returns its id (`""` when it is neither).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn lift_x_object(&mut self, name: &str, value: &PdfObject) -> String {
         if let Some(reference) = value.as_ref() {
             if self.in_progress.contains(&(Category::XObject, reference)) {
@@ -146,7 +140,6 @@ impl Lifter<'_> {
     }
 
     /// 🖼️ Lifts an XObject under an already-claimed id.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_x_object_claimed(&mut self, id: &str, value: &PdfObject) -> String {
         let id = id.to_string();
         let resolved = self.source.deref(value);
@@ -245,7 +238,6 @@ pub(super) fn self_font_id(_font: &PdfObject) -> Option<String> {
 //#region 🔖️Fonts
 impl Lifter<'_> {
     /// 🔤 Lifts a font dictionary and returns its id.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn lift_font(&mut self, name: &str, value: &PdfObject) -> String {
         let (id, fresh) = self.claim_id(Category::Font, name, value.as_ref());
         if !fresh {
@@ -301,7 +293,6 @@ impl Lifter<'_> {
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_simple_encoding(&mut self, value: Option<&PdfObject>) -> PdfSimpleEncoding {
         let Some(value) = value else { return PdfSimpleEncoding::default() };
         match self.source.deref(value) {
@@ -329,7 +320,6 @@ impl Lifter<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_descriptor(&mut self, dict: &[PdfDictEntry]) -> (PdfFontDescriptor, Option<PdfFontProgram>) {
         let program = ["FontFile", "FontFile2", "FontFile3"].iter().find_map(|key| {
             match self.source.semantic_role(dict_get(dict, key)?, PdfStreamRoleKind::FontProgram)? { PdfStreamRoleValue::FontProgram { program } => Some(program), _ => None }
@@ -358,7 +348,6 @@ impl Lifter<'_> {
         (descriptor, program)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_cid_font(&mut self, dict: &[PdfDictEntry]) -> PdfCidFont {
         let (descriptor, program) = dict_get(dict, "FontDescriptor").map(|d| self.source.deref(d)).and_then(|d| d.as_dict().map(|d| self.lift_descriptor(d))).unwrap_or_default();
         let system_info = dict_get(dict, "CIDSystemInfo").map(|s| self.source.deref(s)).and_then(|s| s.as_dict().map(<[PdfDictEntry]>::to_vec)).map(|s| PdfCidSystemInfo { registry: self.text(dict_get(&s, "Registry")).unwrap_or_else(|| "Adobe".into()), ordering: self.text(dict_get(&s, "Ordering")).unwrap_or_else(|| "Identity".into()), supplement: dict_i64(&s, "Supplement").unwrap_or(0).max(0) as u32 }).unwrap_or_default();
@@ -385,7 +374,6 @@ impl Lifter<'_> {
     }
 
     /// 📏 `/W` array: `c [w1 w2 …]` runs and `cfirst clast w` ranges (§9.7.4.3).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_cid_widths(&mut self, items: &[PdfObject]) -> Vec<PdfCidWidthRun> {
         let mut runs = Vec::new();
         let mut index = 0;
@@ -412,7 +400,6 @@ impl Lifter<'_> {
         runs
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_cid_vertical(&mut self, items: &[PdfObject]) -> Vec<PdfCidVerticalRun> {
         let mut runs = Vec::new();
         let mut index = 0;

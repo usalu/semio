@@ -192,8 +192,8 @@ describe("Vitest configuration ownership", () => {
     
     expect(fixture["schemaVersion"]).toEqual(1);
     
-    expect(fixture.owners).toHaveLength(57);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(57);
+    expect(fixture.owners).toHaveLength(55);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(55);
     const taxonomy = loadCatalogTaxonomy();
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   }, 30_000);
@@ -278,7 +278,7 @@ describe("Vitest configuration ownership", () => {
     const owner = fixture.owners.find(({ configurationRoot }) => configurationRoot === ".")!;
     const source = readFileSync(resolve(repoRoot, owner.ownerPath), "utf8");
     expect(source).toContain("include: []");
-    expect(source).toContain("passWithNoTests: false");
+    expect(source).toContain("passWithNoTests: true");
     const syntax = ts.createSourceFile(owner.ownerPath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const configuration = syntax.statements.find((node) => ts.isExportAssignment(node));
     expect(configuration && ts.isExportAssignment(configuration) && ts.isCallExpression(configuration.expression)).toBe(true);

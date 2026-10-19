@@ -1,6 +1,16 @@
 {
   "absentFiles": [
     ".vscode",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/commands/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/actor-publication-port-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/catalog-closed-cache-retirement-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/fem2d-surface-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/i41/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/mounted-owner-turn-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/n8-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/n9-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pb-inputs/launch.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/s-composition-execution-inputs/launch.json",
     "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🚀️launch/🟦️.ts",
     "🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🚀️launch/🔣️.json",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts",
@@ -62,6 +72,14 @@
     }
   ],
   "sources": [
+    {
+      "file": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL/commands/📜️script.ts",
+      "absent": [
+        ".vscode",
+        "--launch",
+        "launch.json"
+      ]
+    },
     {
       "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts",
       "absent": [
@@ -136,5 +154,307 @@
   ],
   "instructionAliases": [
     "CLAUDE.md"
-  ]
+  ],
+  "namedInputs": [
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+      "name": "dotnet",
+      "absent": [
+        "{workspaceRoot}/Monorepo.sln"
+      ],
+      "present": [
+        "{projectRoot}/**/*.cs",
+        "{projectRoot}/**/*.csproj",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"
+      ]
+    },
+    {
+      "file": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "name": "default",
+      "absent": [
+        "{workspaceRoot}/.vscode/launch.json",
+        "{workspaceRoot}/.vscode/tasks.json"
+      ],
+      "present": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"
+      ]
+    }
+  ],
+  "dashboardRoutes": [
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "commands",
+        "--check"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "native"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "commands",
+        "--check"
+      ],
+      "installed": true,
+      "mode": "release",
+      "status": 0,
+      "expected": "native"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--help"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "native"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "commands",
+        "--check"
+      ],
+      "installed": false,
+      "mode": "release",
+      "status": 7,
+      "expected": "failed"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--graph"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--batch"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--parallel=2"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--exclude-dependencies"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:build"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:compile"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:install"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:test"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "build"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--",
+        "--graph"
+      ],
+      "installed": false,
+      "mode": "prototype",
+      "status": 0,
+      "expected": "native"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:daemon",
+        "status"
+      ],
+      "installed": false,
+      "mode": "release",
+      "status": 0,
+      "expected": "native"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:workflow",
+        "status"
+      ],
+      "installed": false,
+      "mode": "release",
+      "status": 0,
+      "expected": "native"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:preferences",
+        "status"
+      ],
+      "installed": false,
+      "mode": "release",
+      "status": 0,
+      "expected": "native"
+    }
+  ],
+  "dashboardHelp": [
+    {
+      "args": [
+        "--help"
+      ],
+      "expected": "help"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:build",
+        "--help"
+      ],
+      "expected": "help"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--help"
+      ],
+      "expected": "open"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--",
+        "--help"
+      ],
+      "expected": "open"
+    },
+    {
+      "args": [
+        "run",
+        "@semio-tech/repo-dashboard-rs:run",
+        "--graph",
+        "--help"
+      ],
+      "expected": "help"
+    }
+  ],
+  "sharedProviders": {
+    "canonical": "package.json",
+    "consumer": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+    "locks": [
+      "bun.lock",
+      "♻️mit-bestand/bun.lock",
+      "✏️s/bun.lock",
+      "🌎️hub/bun.lock",
+      "🎓️teaching/bun.lock",
+      "🏢️semio-tech/bun.lock"
+    ],
+    "dependencies": [
+      {
+        "name": "postcss",
+        "group": "devDependencies",
+        "version": "8.5.30"
+      },
+      {
+        "name": "react-resizable-panels",
+        "group": "dependencies",
+        "version": "4.14.5"
+      }
+    ],
+    "vectors": [
+      {
+        "packages": {
+          "postcss": [
+            "postcss@8.5.30"
+          ]
+        },
+        "expected": true
+      },
+      {
+        "packages": {
+          "postcss": [
+            "postcss@8.5.30"
+          ],
+          "@semio-tech/ui-react/postcss": [
+            "postcss@8.5.31"
+          ]
+        },
+        "expected": false
+      },
+      {
+        "packages": {
+          "postcss": [
+            "postcss@8.5.31"
+          ],
+          "@semio-tech/ui-react/postcss": [
+            "postcss@8.5.30"
+          ]
+        },
+        "expected": true
+      }
+    ]
+  }
 }

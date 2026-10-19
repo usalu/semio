@@ -12,7 +12,7 @@
       "executor": "repo:script",
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "inputs": [
         "default",

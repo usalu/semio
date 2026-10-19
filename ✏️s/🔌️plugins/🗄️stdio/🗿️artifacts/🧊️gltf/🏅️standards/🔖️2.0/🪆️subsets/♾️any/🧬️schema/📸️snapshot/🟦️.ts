@@ -338,10 +338,10 @@ export interface GltfDocument {
 export type GltfSourceForm = "json" | "glb";
 
 export interface GltfSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ document: GltfDocument;
-  /** @state artifact */ buffers: number[][];
-  /** @state artifact */ sourceForm: GltfSourceForm;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📄️ @state artifact */ document: GltfDocument;
+  /** 💾️ @state artifact */ buffers: number[][];
+  /** ⌨️ @state artifact */ sourceForm: GltfSourceForm;
 }
 //#endregion 🧾️Records
 

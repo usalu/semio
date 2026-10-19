@@ -3,17 +3,17 @@ use super::{Page,PersistentList,PERSISTENT_PAGE_FANOUT,fits};
 use crate::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 use std::mem::size_of;
 const DEPTH:usize=usize::BITS as usize/4;
-struct Frame<T:Send+Sync+'static>{page:*const Page<T>,next:usize}
-impl<T:Send+Sync+'static> Copy for Frame<T>{}
-impl<T:Send+Sync+'static> Clone for Frame<T>{fn clone(&self)->Self{*self}}
+struct Frame<T:crate::retirement::RetireOwned+Send+Sync+'static>{page:*const Page<T>,next:usize}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Copy for Frame<T>{}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Clone for Frame<T>{fn clone(&self)->Self{*self}}
 /// 🪪️ Every row projection uses the supplied original source; the fixed page pointers remain alive through its bound lease.
-pub struct PersistentListRead<T:Send+Sync+'static>{original:Option<RetainedCloneBinding>,stack:[Option<Frame<T>>;DEPTH],depth:usize,index:usize,started:bool,done:bool,closing:bool,cleared:bool}
-unsafe impl<T:Send+Sync+'static> Send for PersistentListRead<T>{}
-unsafe impl<T:Send+Sync+'static> Sync for PersistentListRead<T>{}
+pub struct PersistentListRead<T:crate::retirement::RetireOwned+Send+Sync+'static>{original:Option<RetainedCloneBinding>,stack:[Option<Frame<T>>;DEPTH],depth:usize,index:usize,started:bool,done:bool,closing:bool,cleared:bool}
+unsafe impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Send for PersistentListRead<T>{}
+unsafe impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Sync for PersistentListRead<T>{}
 /// 👁️ A returned row borrows its genuine immutable source and transfers no row payload owner.
-pub enum PersistentListReadStep<'a,T:Send+Sync+'static>{Progress(RetainedCloneProgress),Row(RetainedCloneProgress,usize,RetainedCloneRef<'a,T>),Complete(RetainedCloneProgress)}
-impl<T:Send+Sync+'static> PersistentListReadStep<'_,T>{pub fn progress(&self)->RetainedCloneProgress{match self{Self::Progress(p)|Self::Row(p,..)|Self::Complete(p)=>*p}}}
-impl<T:Send+Sync+'static> PersistentListRead<T>{
+pub enum PersistentListReadStep<'a,T:crate::retirement::RetireOwned+Send+Sync+'static>{Progress(RetainedCloneProgress),Row(RetainedCloneProgress,usize,RetainedCloneRef<'a,T>),Complete(RetainedCloneProgress)}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentListReadStep<'_,T>{pub fn progress(&self)->RetainedCloneProgress{match self{Self::Progress(p)|Self::Row(p,..)|Self::Complete(p)=>*p}}}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentListRead<T>{
  /// 🌱️ The enclosing owner admits these fixed cursor headers in its own constructor quote.
  pub fn new()->Self{Self{original:None,stack:[None;DEPTH],depth:0,index:0,started:false,done:false,closing:false,cleared:false}}
  /// 📏️ Normal reads admit one source alias, page frame, stack transition or genuine row projection.
@@ -48,5 +48,5 @@ impl<T:Send+Sync+'static> PersistentListRead<T>{
  /// 🫙️ No original page address or source alias survives terminal closure.
  pub fn terminal_is_empty(&self)->bool{self.cleared&&self.original.is_none()&&self.depth==0}
 }
-impl<T:Send+Sync+'static> Drop for PersistentListRead<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"immutable read requires original source closure");}}
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Drop for PersistentListRead<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"immutable read requires original source closure");}}
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

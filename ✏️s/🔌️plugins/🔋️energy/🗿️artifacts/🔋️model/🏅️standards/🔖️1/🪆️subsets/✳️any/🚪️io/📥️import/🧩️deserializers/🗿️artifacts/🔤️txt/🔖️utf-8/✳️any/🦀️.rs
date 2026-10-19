@@ -1,4 +1,4 @@
-//! energy ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
+//! 🏋️ energy ← txt — the body of a `s.stdio.txt` carrier parsed as this artifact's own DSL, the inverse
 //! of the sibling export leaf (`IoFidelity::Exact`).
 use crate::snapshot::EnergyModelSnapshot;
 

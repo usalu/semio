@@ -8,7 +8,7 @@ const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),
 type Snapshot={a:number;b:number;text:string};
 type Edit={setA?:number;setB?:number;requireA?:number;warning?:boolean};
 test("ordered diff reference preserves intermediate originals and transactional refusal",()=>{
- const law=read("../🧫️fixtures/🔣️.json");expect(new Ajv({strict:true}).compile(read("../🧬️schema/🔣️.json"))(law)).toBe(true);
+ const law=read("🧫️fixtures/🔣️.json");expect(new Ajv({strict:true}).compile(read("../🧬️schema/🔣️.json"))(law)).toBe(true);
  for(const wide of[false,true])for(const source of law.cases){
   const base={...law.base,text:wide?law.wideText.text.repeat(law.wideText.repeat):law.base.text},row={...source,expected:source.accepted?{...source.expected,text:base.text}:undefined};
   const db=new Database(":memory:");db.run("CREATE TABLE original_state(a INTEGER,b INTEGER,text TEXT)");db.run("INSERT INTO original_state VALUES(?,?,?)",[base.a,base.b,base.text]);db.run("BEGIN");let accepted=true,messageCount=0;

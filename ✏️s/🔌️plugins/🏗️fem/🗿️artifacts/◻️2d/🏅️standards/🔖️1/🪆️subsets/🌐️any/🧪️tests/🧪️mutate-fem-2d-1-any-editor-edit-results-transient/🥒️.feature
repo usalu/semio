@@ -16,7 +16,7 @@ Feature: Apply every transient state-lane mutation of s.fem.2d's ✏️editor/�
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Apply <id> and land on the committed after-snapshot, diff and outcome
-    Given the committed <id> vector under ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures
+    Given the committed <id> vector under ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures
     When <id> is applied to that vector's before-snapshot through fem_results_window_transient_mutation_report_json
     Then the applied snapshot, the produced diff and the diagnostics are exactly what the vector commits, and the snapshot moved
     Examples:
@@ -27,7 +27,7 @@ Feature: Apply every transient state-lane mutation of s.fem.2d's ✏️editor/�
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> restores the committed before-snapshot
-    Given the committed <id> vector under ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧫️fixtures
+    Given the committed <id> vector under ✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧪️tests/🧫️fixtures
     When <id> is applied to that vector's before-snapshot through fem_results_window_transient_mutation_report_json
     Then the mutation's own inverse steps apply without refusal and restore the before-snapshot exactly
     Examples:

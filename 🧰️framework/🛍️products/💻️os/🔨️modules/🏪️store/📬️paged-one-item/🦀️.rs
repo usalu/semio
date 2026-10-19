@@ -17,13 +17,14 @@ use semio_framework_os_store_command::HistoryLane;
 use semio_framework_os_spr::ActorId;
 use semio_framework_value::retained_clone::{ RetainedCloneBirthDemand, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, RetainedCloneRef, RetainedCloneSourceTake};
 use semio_framework_value::snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, FactoryOwnedSourceAuthority};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use std::{marker::PhantomData, mem::{size_of, ManuallyDrop}, sync::Arc};
 
 
 #[path = "🧬️mutation-apply/🦀️.rs"]
 mod mutation_apply;
-pub use mutation_apply::{mutation_apply_preparation_factory, MutationApplyEdit};
+pub use mutation_apply::{mutation_apply_preparation_factory, MutationApplyEdit, Stage};
 
 
 fn original_mutation_factory<'a, M: Send + Sync + 'static>(
@@ -35,7 +36,7 @@ fn original_mutation_factory<'a, M: Send + Sync + 'static>(
     if let Some(authority) = captured.as_ref() { return Ok(authority.factory().as_ref()); }
     source.as_ref().ok_or_else(|| fault("structural", "mutation-source-issuer"))?.try_authority().map(|authority| authority.factory().as_ref())
 }
-fn retain_seal_returns<S,M>(
+pub fn retain_seal_returns<S,M>(
     authority:&mut Option<Arc<ArtifactStoreOneItemLiveAuthority>>,edit:&mut Option<Edit<M>>,post:&mut Option<Arc<S>>,
     mutations:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,snapshots:&mut Option<Arc<dyn SnapshotRetirementFactory<S>>>,
     returned:(Arc<ArtifactStoreOneItemLiveAuthority>,Edit<M>,Arc<S>,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,Arc<dyn SnapshotRetirementFactory<S>>),
@@ -44,14 +45,14 @@ fn retain_seal_returns<S,M>(
     *authority=Some(original_authority);*edit=Some(original_edit);*post=Some(original_post);*mutations=Some(original_mutations);*snapshots=Some(original_snapshots);
 }
 
-fn returned_edit_demands<M:Send+'static>(original:&Option<Edit<M>>,close:&Option<crate::os_store::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,body:usize)->Result<RetirementDemand,ValueError>{
+pub fn returned_edit_demands<M:Send+'static>(original:&Option<Edit<M>>,close:&Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,body:usize)->Result<RetirementDemand,ValueError>{
     if let Some(owner)=close.as_ref(){
-        return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<crate::os_store::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};
+        return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})};
     }
-    Ok(if original.is_some(){RetirementDemand{copy_bytes:size_of::<crate::os_store::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()}}else{Default::default()})
+    Ok(if original.is_some(){RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>(),depth:1,..Default::default()}}else{Default::default()})
 }
 
-fn close_returned_edit<M:Send+'static>(original:&mut Option<Edit<M>>,close:&mut Option<crate::os_store::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+pub fn close_returned_edit<M:Send+'static>(original:&mut Option<Edit<M>>,close:&mut Option<semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement<M>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
     if original.is_none()&&close.is_none(){return Ok(None);}
     let demand=returned_edit_demands(original,close,grant.maximum_copy_bytes)?;
     if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
@@ -64,17 +65,17 @@ fn close_returned_edit<M:Send+'static>(original:&mut Option<Edit<M>>,close:&mut 
     if factory.is_none(){return Err(fault("structural","returned-edit-issuer"));}
     let edit=original.take().ok_or_else(||fault("structural","returned-edit"))?;
     let issuer=factory.take().ok_or_else(||fault("structural","returned-edit-issuer"))?;
-    *close=Some(crate::os_store::edit_retirement::ArtifactStoreDecodedEditRetirement::new(edit,issuer));
+    *close=Some(semio_framework_os_store_ledger::edit_retirement::ArtifactStoreDecodedEditRetirement::new(edit,issuer));
     Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
 }
 
-fn returned_post_demands<S>(original:&Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>)->Result<RetirementDemand,ValueError>{
+pub fn returned_post_demands<S>(original:&Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>)->Result<RetirementDemand,ValueError>{
     let Some(post)=original.as_ref()else{return Ok(Default::default());};
     let issuer=factory.as_ref().ok_or_else(||fault("structural","returned-post-issuer"))?;
     Ok(RetirementDemand{copy_bytes:2*size_of::<Arc<S>>(),capacity_bytes:issuer.retirement_birth_bytes(post),depth:1,..Default::default()})
 }
 
-fn close_returned_post<S>(original:&mut Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+pub fn close_returned_post<S>(original:&mut Option<Arc<S>>,factory:&Option<Arc<dyn SnapshotRetirementFactory<S>>>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
     if original.is_none(){return Ok(None);}
     let demand=returned_post_demands(original,factory)?;
     if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
@@ -231,9 +232,9 @@ struct PagedOneItemPreparation<S: SnapshotProjection, M: Send + Sync + 'static, 
     pub post: ManuallyDrop<Option<S>>,
     pub edit: E,
     pending_inverse: ManuallyDrop<Option<Vec<M>>>,
-    inverse_retirement: ManuallyDrop<Option<semio_framework_value::FactoryVectorRetirement<M>>>,
-    outcome_messages: Option<crate::os_spr::command::MutationMessageLedgerRetirement>,
-    outcome_publication: Option<crate::os_spr::command::MutationMessagePublication>,
+    inverse_retirement: ManuallyDrop<Option<semio_framework_value_factory::vector::FactoryVectorRetirement<M>>>,
+    outcome_messages: Option<protocol::MutationMessageLedgerRetirement>,
+    outcome_publication: Option<protocol::MutationMessagePublication>,
     pub mutation: ManuallyDrop<Option<M>>,
     pub authority: ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,
     pub mutation_retirement: ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
@@ -266,7 +267,7 @@ where
         ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, progress)
     }
 
-    fn advance_sealer(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance_sealer(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         let prefix = E::PREFIX;
         let sealer = self.sealer.as_mut().ok_or_else(|| fault(prefix, "sealer"))?;
         let step = sealer.advance(grant,receiving)?;
@@ -300,7 +301,7 @@ where
     fn advance_messages(&mut self, grant: RetainedCloneGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         if let Some(publication) = self.outcome_publication.as_mut() {
             if publication.ready() {
-                let copy = size_of::<Option<crate::os_spr::command::MutationMessagePublication>>();
+                let copy = size_of::<Option<protocol::MutationMessagePublication>>();
                 if grant.maximum_copy_bytes < copy { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
                 self.phase = Phase::Seal;
                 return Ok(self.record(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..Default::default() }));
@@ -317,13 +318,13 @@ where
             self.phase = Phase::Seal;
             return Ok(self.record(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         };
-        let frame = size_of::<crate::os_spr::command::MutationMessagePublication>();
+        let frame = size_of::<protocol::MutationMessagePublication>();
         let copy = frame.checked_add(messages.transfer_copy_byte_demand()).ok_or_else(|| fault(E::PREFIX, "message-layout"))?;
         if grant.maximum_copy_bytes < copy { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - frame, ..grant };
         let Some((original, progress)) = messages.take_messages_controlled(child)? else { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); };
         let progress = semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "structural original diagnostic transfer")?;
-        self.outcome_publication = Some(crate::os_spr::command::MutationMessagePublication::new(original));
+        self.outcome_publication = Some(protocol::MutationMessagePublication::new(original));
         Ok(self.record(RetainedCloneProgress { copied_items: 1, copied_bytes: progress.copied_bytes.checked_add(frame).ok_or_else(|| fault(E::PREFIX, "message-receipt"))?, ..progress }))
     }
 
@@ -370,7 +371,7 @@ where
     M: ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     E: PagedOneItemEdit<S, M>,
 {
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         let prefix = E::PREFIX;
         if !grant.permits_one() || self.cancelled || self.closing {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
@@ -483,11 +484,11 @@ where
                     PagedOneItemEditStep::Complete(progress, inverse) => self.finish_edit(clone_grant, progress, vec![inverse]),
                     PagedOneItemEditStep::CompleteRows(progress, inverse) => self.finish_edit(clone_grant, progress, inverse),
                     PagedOneItemEditStep::CompleteOutcome(progress, inverse, messages) => {
-                        self.outcome_messages = Some(crate::os_spr::command::MutationMessageLedgerRetirement::new(String::new(), messages));
+                        self.outcome_messages = Some(protocol::MutationMessageLedgerRetirement::new(String::new(), messages));
                         self.finish_edit(clone_grant, progress, inverse)
                     }
                     PagedOneItemEditStep::RefusedOutcome(progress, messages) => {
-                        self.outcome_messages = Some(crate::os_spr::command::MutationMessageLedgerRetirement::new(String::new(), messages));
+                        self.outcome_messages = Some(protocol::MutationMessageLedgerRetirement::new(String::new(), messages));
                         self.cancelled = true;
                         let progress = semio_framework_value::retained_clone::admit_retained_clone_progress(clone_grant, progress, "structural semantic refusal")?;
                         Err(ValueError::literal(ValueRefusalKind::InvalidValue, "structural mutation produced a refused semantic outcome").with_retained_progress(progress))
@@ -529,10 +530,10 @@ where
         }
     }
 
-    fn outcome_messages(&self) -> &[crate::os_spr::MutationMessage] {
+    fn outcome_messages(&self) -> &[semio_framework_os_spr::MutationMessage] {
         if let Some(publication) = self.outcome_publication.as_ref() { return publication.original_messages(); }
         if let Some(prepared) = self.sealer.as_ref().and_then(ArtifactStoreOneItemSealer::prepared) { return prepared.outcome_messages(); }
-        self.outcome_messages.as_ref().map_or(&[], crate::os_spr::command::MutationMessageLedgerRetirement::retained_messages)
+        self.outcome_messages.as_ref().map_or(&[], protocol::MutationMessageLedgerRetirement::retained_messages)
     }
 
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint {
@@ -628,7 +629,7 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(original) = self.pending_inverse.take() {
-            return match semio_framework_value::FactoryVectorRetirement::admit(original, child) {
+            return match semio_framework_value_factory::vector::FactoryVectorRetirement::admit(original, child) {
                 Ok((inverse, progress)) => { *self.inverse_retirement = Some(inverse); Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, original)) => { *self.pending_inverse = Some(original); Err(error) }
             };
@@ -757,9 +758,9 @@ where
             Ok(value)
         };
         let child = |demand: RetirementDemand| nested(demand);
-        if let Some(messages) = self.outcome_publication.as_ref() { return if messages.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<crate::os_spr::command::MutationMessagePublication>(),depth:1,..Default::default()})}else{child(messages.close_demands()?)}; }
+        if let Some(messages) = self.outcome_publication.as_ref() { return if messages.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<protocol::MutationMessagePublication>(),depth:1,..Default::default()})}else{child(messages.close_demands()?)}; }
         if let Some(messages) = self.outcome_messages.as_ref() {
-            if messages.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<crate::os_spr::command::MutationMessageLedgerRetirement>(),depth:1,..Default::default()});}
+            if messages.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<protocol::MutationMessageLedgerRetirement>(),depth:1,..Default::default()});}
             return child(RetirementDemand { copy_bytes: messages.next_copy_byte_demand(), capacity_bytes: messages.next_capacity_byte_demand(body)?, release_bytes: messages.next_release_byte_demand()?, depth: messages.next_depth_demand()? });
         }
         if let Some(owner) = self.external_retirement.as_ref() {
@@ -785,11 +786,11 @@ where
             return child(RetirementDemand{copy_bytes:size_of::<S>()+size_of::<Arc<S>>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<S>(),depth:1,..Default::default()});
         }
         if let Some(inverse) = self.inverse_retirement.as_ref() {
-            if inverse.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::FactoryVectorRetirement<M>>(),depth:1,..Default::default()});}
+            if inverse.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value_factory::vector::FactoryVectorRetirement<M>>(),depth:1,..Default::default()});}
             let factory=original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?;
             return child(inverse.demands(factory, body)?);
         }
-        if self.pending_inverse.is_some() { return child(semio_framework_value::FactoryVectorRetirement::<M>::constructor_demand()); }
+        if self.pending_inverse.is_some() { return child(semio_framework_value_factory::vector::FactoryVectorRetirement::<M>::constructor_demand()); }
         if self.returned_edit.is_some()||self.returned_edit_retirement.is_some(){return child(returned_edit_demands(&self.returned_edit,&self.returned_edit_retirement,body)?);}
         if self.returned_post.is_some(){return child(returned_post_demands(&self.returned_post,&self.snapshot_retirement)?);}
         if let Some(owner)=self.mutation_source.as_ref(){
@@ -855,18 +856,18 @@ impl<S: SnapshotProjection, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>>
     }
 }
 
-impl<S,M,E> crate::os_store::ArtifactReplayPreparationFactory<S,M> for PagedOneItemPreparationFactory<S,M,E>
+impl<S,M,E> semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationFactory<S,M> for PagedOneItemPreparationFactory<S,M,E>
 where S:SnapshotProjection,M:ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned+Mutation<S>+Send+Sync+'static,E:PagedOneItemEdit<S,M>{
  fn preparation_birth_demand(&self)->RetirementDemand{
-  type Producer<S,M,E>=crate::os_store::replay_preparation::native::NativeSemanticPreparation<S,M,crate::os_store::replay_preparation::native::PagedProjection<S>,crate::os_store::replay_preparation::native::PagedSemanticEdit<S,M,E>>;
-  RetirementDemand{copy_bytes:size_of::<crate::os_store::ArtifactReplayPreparationRequest<S,M>>()+size_of::<Producer<S,M,E>>(),capacity_bytes:size_of::<Producer<S,M,E>>(),depth:1,..Default::default()}
+  type Producer<S,M,E>=semio_framework_os_store_replay::replay_preparation::native::NativeSemanticPreparation<S,M,semio_framework_os_store_replay::replay_preparation::native::PagedProjection<S>,semio_framework_os_store_replay::replay_preparation::native::PagedSemanticEdit<S,M,E>>;
+  RetirementDemand{copy_bytes:size_of::<semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<S,M>>()+size_of::<Producer<S,M,E>>(),capacity_bytes:size_of::<Producer<S,M,E>>(),depth:1,..Default::default()}
  }
- fn begin(&self,request:crate::os_store::ArtifactReplayPreparationRequest<S,M>,grant:RetainedCloneGrant)->Result<(Box<dyn crate::os_store::ArtifactReplayPreparation<S,M>>,RetainedCloneProgress),(ValueError,crate::os_store::ArtifactReplayPreparationRequest<S,M>)>{
-  let d=crate::os_store::ArtifactReplayPreparationFactory::preparation_birth_demand(self);
+ fn begin(&self,request:semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<S,M>,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparation<S,M>>,RetainedCloneProgress),(ValueError,semio_framework_os_store_replay::replay_preparation::native::ArtifactReplayPreparationRequest<S,M>)>{
+  let d=semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparationFactory::preparation_birth_demand(self);
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"semantic paged producer birth not funded"),request));}
   let admitted=request.input.borrow().and_then(|input|{if !E::recognizes(input.get()){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"semantic paged operation has no installed issuer"));}E::preflight(input.get()).map(|_|()).map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"semantic paged operation footprint refused"))});
   if let Err(error)=admitted{return Err((error,request));}
-  let owner=crate::os_store::replay_preparation::native::NativeSemanticPreparation::new(request,crate::os_store::replay_preparation::native::PagedProjection::<S>::default(),crate::os_store::replay_preparation::native::PagedSemanticEdit::<S,M,E>::default());
+  let owner=semio_framework_os_store_replay::replay_preparation::native::NativeSemanticPreparation::new(request,semio_framework_os_store_replay::replay_preparation::native::PagedProjection::<S>::default(),semio_framework_os_store_replay::replay_preparation::native::PagedSemanticEdit::<S,M,E>::default());
   Ok((Box::new(owner),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
  }
 }

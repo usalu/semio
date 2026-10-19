@@ -21,9 +21,6 @@ pub fn execute<G: QueryableGraph>(graph: &G, query: &Query) -> Result<QueryResul
         match clause {
             Clause::Match(patterns) => bindings = match_patterns(graph, patterns)?,
             Clause::Where(expr) => {
-                // 🔀️ Rewritten from `.retain(..)` — `eval_expr` is async (it may call the
-                // caller-provided `QueryableGraph`, which is not assumed I/O-free) and cannot run
-                // inside a sync `retain` predicate (R10 residue shape #1).
                 let mut kept = Vec::with_capacity(bindings.len());
                 for b in bindings {
                     if eval_expr(graph, &b, expr) {
@@ -253,8 +250,6 @@ fn binding_has_entity(binding: &Binding, var: &str) -> bool {
 }
 
 fn return_items_want_graph(items: &[ReturnItem], bindings: &[Binding]) -> bool {
-    // 🔀️ Rewritten from `.any(..)` — `binding_has_entity` is async and cannot be called inside a
-    // sync `Iterator::any` predicate (R10 residue shape #1).
     for item in items {
         let ReturnItem::Var(v) = item else { continue };
         for b in bindings {

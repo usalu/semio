@@ -31,4 +31,4 @@ class ApprovalRequestFixtureScript extends BundleScript {
 
 router.register("test-approval-request-fixture", ApprovalRequestFixtureScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

@@ -1,6 +1,6 @@
 //! 🎟️ One inline native I/O invocation retains its authentic source through semantic acknowledgement and page returns.
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptorSlot,JobOutcomeKind,JobOutcomeView,OriginalCallerSourceLoan,OriginalJobPageReservation,OriginalJobPageReturnRegistry,OriginalSuppliedJobPage,OriginalTurnFailure,StepContext,close_original_retained_step};
-use semio_framework_os_services::{NativeIoJob,NativeIoRequest,NativeIoResultStatus};
+use semio_framework_os_services_native_io::{NativeIoJob, NativeIoRequest, NativeIoResultStatus};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::mem::size_of;
 
@@ -72,7 +72,7 @@ impl<const N:usize> RendererOriginalIoNode<N>{
  pub fn result_page(&self,index:usize)->Option<&[u8]>{self.acknowledged.then(||self.job.as_ref().and_then(|job|job.result_page(index))).flatten()}
  pub fn result_modified(&self,index:usize)->Option<(&std::path::Path,std::time::SystemTime)>{self.acknowledged.then(||self.job.as_ref().and_then(|job|job.result_modified(index))).flatten()}
  /// 🧭️ The original invocation validates source and acknowledgement before moving its actual selected path.
- pub fn supply_selected_path<const P:usize>(&mut self,reservation:&mut semio_framework_os_services::OriginalNativePathReservation<P>,output:&mut Option<semio_framework_os_services::OriginalSuppliedNativePath>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||!self.outcome_is_acknowledged(){return Err(invalid("selected native path requires its acknowledged original invocation"))}self.job.as_mut().unwrap().supply_result_last_path(reservation,output,cx)}
+ pub fn supply_selected_path<const P:usize>(&mut self,reservation:&mut semio_framework_os_services_native_io::OriginalNativePathReservation<P>,output:&mut Option<semio_framework_os_services_native_io::OriginalSuppliedNativePath>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.closing||!self.outcome_is_acknowledged(){return Err(invalid("selected native path requires its acknowledged original invocation"))}self.job.as_mut().unwrap().supply_result_last_path(reservation,output,cx)}
  /// 📮️ A small original page carrier is retained in the caller's output slot before its receipt can refuse publication.
  pub fn supply_next_page(&mut self,output:&mut Option<OriginalSuppliedJobPage>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;

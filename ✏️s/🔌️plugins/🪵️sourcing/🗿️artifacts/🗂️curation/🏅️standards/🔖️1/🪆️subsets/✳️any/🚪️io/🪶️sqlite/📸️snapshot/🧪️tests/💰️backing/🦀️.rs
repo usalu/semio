@@ -1,4 +1,4 @@
-//! \u{1f52c}\uFE0F Curation test requests are independently delegated to the system allocator.
+//! 🔬️ Curation test requests are independently delegated to the system allocator.
 use std::{alloc::{GlobalAlloc,Layout,System},cell::Cell};
 std::thread_local!{static ACTIVE:Cell<bool>=const{Cell::new(false)};static REQUESTED:Cell<usize>=const{Cell::new(0)};}
 fn request(bytes:usize){let _=ACTIVE.try_with(|active|{if active.get(){let _=REQUESTED.try_with(|requested|requested.set(requested.get().checked_add(bytes).expect("bounded Curation test requests")));}});}

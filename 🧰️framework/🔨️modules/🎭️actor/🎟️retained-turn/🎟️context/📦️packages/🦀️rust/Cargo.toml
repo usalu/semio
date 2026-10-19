@@ -16,6 +16,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-actor-retained-turn = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]

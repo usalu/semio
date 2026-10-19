@@ -298,9 +298,6 @@ impl ArtifactEditor for FlowPlayApp {
                 question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
                 value: args.get("value").cloned().unwrap_or(semio_framework_value::DslValue::Null),
             })),
-            // 🪟️ Both hops are ADDRESSED: `windowId` rides on the tick's own args and is echoed back
-            // onto the answer by `reactor::extension_response_args`, so a hop discharges the latch of
-            // the window it evaluated instead of whichever window happened to be current.
             "flowEvalTick" => Ok(FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_else(|| FLOW_PLAY_WINDOW_MAIN.into()),
@@ -348,7 +345,6 @@ impl ArtifactEditor for FlowPlayApp {
             FlowCommand::FocusSelection(payload) => focus_selection::apply(payload, doc, cfg, &mut session, interaction),
             _ => command.dispatch(doc, cfg, &mut session),
         };
-        // 🧹️ A throwaway evaluation session refuses a bare drop; it is closed, never dropped.
         session.retire_cold();
         emitted
     }
@@ -429,7 +425,6 @@ impl ArtifactEditor for FlowPlayApp {
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         };
-        // 🧹️ A throwaway evaluation session refuses a bare drop; it is closed, never dropped.
         session.retire_cold();
         rendered
     }

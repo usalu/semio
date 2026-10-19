@@ -1,4 +1,4 @@
-//! fields (kind/label/position/direction/radius/hidden/locked together, one property-panel gesture).
+//! 🏷️ fields (kind/label/position/direction/radius/hidden/locked together, one property-panel gesture).
 //! 🔌 Puzzle3d mutation — `ReplaceObjectVortex`: whole-value swap of one vortex's presentation
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use {semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};

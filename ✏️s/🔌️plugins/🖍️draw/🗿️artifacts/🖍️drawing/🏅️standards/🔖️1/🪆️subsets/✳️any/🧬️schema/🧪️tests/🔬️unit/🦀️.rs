@@ -593,7 +593,7 @@ fn scene_preserves_authored_curve_segments_for_canvas_and_vector_export() {
     assert_eq!(flatten_drawing_document_to_scene_nodes(&snapshot)[0].segments,segments);
 }
 
-fn clone_assignments(node:&DrawingLayerNode)->semio_framework_value::list::PagedList<crate::identity::DrawingIdentityAssignment,{usize::MAX}>{
+fn clone_assignments(node:&DrawingLayerNode)->semio_framework_value_persistent::list::PagedList<crate::identity::DrawingIdentityAssignment,{usize::MAX}>{
  fn visit(node:&DrawingLayerNode,output:&mut Vec<crate::identity::DrawingIdentityAssignment>){let source=layer_id(node).clone();let target=format!("copy:{source}").into();output.push(crate::identity::DrawingIdentityAssignment{source,target});if let DrawingLayerNode::Group(group)=node{for child in &group.children{visit(child,output);}}}
  let mut output=Vec::new();visit(node,&mut output);output.into()
 }

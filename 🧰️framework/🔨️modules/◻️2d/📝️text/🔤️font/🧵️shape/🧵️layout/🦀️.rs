@@ -2,7 +2,8 @@
 use super::{FontLookup,FontLookupPlanCursor,class::FontGlyphClassCursor,ligature::FontLigatureCursor,substitute::FontSubstitutionCursor,face::{FontClusterMapping,FontMappedScalar}};
 use semio_framework_2d_text_font::{FontFace,FontOutlineLimits,FontProgress,reserve_slot};
 use super::context::apply::FontContextLayoutCursor;
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(semio_framework_value::RetireOwned)]
 struct Owners{contextual:Option<FontContextLayoutCursor>,contexts:PagedList<FontContextLayoutCursor,{usize::MAX}>,plan:FontLookupPlanCursor,lookups:Option<PagedList<FontLookup,{usize::MAX}>>,current:Vec<FontMappedScalar>,next:Vec<FontMappedScalar>,buffers:PagedList<Vec<FontMappedScalar>,{usize::MAX}>,ids:Vec<u16>,positions:Vec<usize>,classes:Vec<u16>,retained_ids:PagedList<Vec<u16>,{usize::MAX}>,retained_positions:PagedList<Vec<usize>,{usize::MAX}>,ligature:Option<FontLigatureCursor>,substitution:Option<FontSubstitutionCursor>,ligatures:PagedList<FontLigatureCursor,{usize::MAX}>,substitutions:PagedList<FontSubstitutionCursor,{usize::MAX}>,output:Option<FontClusterMapping>,failure:Option<String>}
 pub struct FontClusterLayoutCursor{owners:Owners,face:FontFace,mapping_face:usize,limits:FontOutlineLimits,phase:u8,cluster_scan:usize,cluster_source:usize,lookup_at:usize,at:usize,eligible_at:usize,copy_until:usize,class_probe:Option<FontGlyphClassCursor>,replacement:[u16;64],replacement_count:Option<usize>,replacement_at:usize,consumed:usize,work:u64,cancelled:bool,source_pointer:Option<usize>}

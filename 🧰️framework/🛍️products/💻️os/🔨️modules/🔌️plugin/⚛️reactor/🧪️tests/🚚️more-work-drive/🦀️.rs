@@ -1,5 +1,6 @@
 use semio_framework_plugin_reactor_lifecycle::with_state as with_pending;
-use semio_framework_plugin_reactor_turn::{drive_reconcile_within, more_work_drive_budget_ms, more_work_drive_steps, reconcile_arms_turn, MEASURED_GUEST_TURN_COST_MS, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_TURN_EXECUTOR_HOLD_MS};
+use semio_framework_plugin_reactor_turn::{drive_reconcile_within, more_work_drive_budget_ms, more_work_drive_steps, reconcile_arms_turn};
+use semio_framework_plugin_reactor_turn_limits::{MEASURED_GUEST_TURN_COST_MS, PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT, REACTOR_TURN_EXECUTOR_HOLD_MS};
 use std::cell::RefCell;
 use semio_framework_plugin_reactor_turn::TurnMoreWorkSources;
 use semio_framework::kernel::UiPatch;

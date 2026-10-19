@@ -187,9 +187,6 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
         }))
         .collect();
 
-    // 🕹️ `.selected()?`/`.highlighted()?`/`.selection_change()` deleted — the framework stamps this
-    // tree's presence from the "elements" `InteractionState` post-render and would overwrite
-    // whatever this function stamped anyway (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     PanelTreeBuilder::new(LAYOUT_DOCUMENT_ROOT)?
         .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[0], Some(semio_s_artifact_layout_layout_editor_commands::ui_label(labels.artifact.as_str())?), true, std::slice::from_ref(doc), |document| {
             layout_tree_item("layout-document.document.root", Label::data(document.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None, None)
@@ -208,12 +205,6 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
                 None,
             )
         })?
-        // 🕹️ Row `id` is the BARE frame id (not a `frame_row_id(...)`-prefixed row id) — the domain's
-        // presence stamping matches `state.selection`/`.hover` ids against a row's own `id` verbatim,
-        // and canvas hit-testing (`DisplayList::hit_test`) resolves those exact bare ids too; a
-        // prefixed row id would desync tree/canvas cross-highlighting. The row DECLARES its pick
-        // through `granularity` and binds nothing: a window of frame rows authoring one
-        // `interactionSelect` argument map each is exactly what exhausts the `UiValue` arena.
         .window_section_or_placeholder(
             windows,
             LAYOUT_DOCUMENT_SECTIONS[3],

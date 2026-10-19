@@ -84,9 +84,6 @@ async fn selected_stock_id_renders_its_dimensions() {
     let snapshot = app.snapshot().expect("snapshot");
     let stock_id = snapshot.stock_id.clone();
     let stock = snapshot.stock_payload.clone();
-    // 📏️ The dimensions come from the seeded document, never from a literal: the curated default
-    // example is a timber beam (3 × 0.2 × 0.3), not the 1 × 1 × 1 box this law used to assume, and
-    // `push_working_solid_fields` prints exactly this `WorkingSolid`'s own extents.
     let semio_s_artifact_process_process3d_model::snapshot::WorkingSolid::Box { width, height, .. } = &stock.solid else { panic!("the seeded example's stock is a box: {:?}", stock.solid) };
     select(&mut app, &stock_id);
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);

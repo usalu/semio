@@ -21,8 +21,6 @@ fn finds_the_first_type_matching_both_the_bitmask_and_the_required_flags() {
 #[test]
 fn refuses_a_type_the_requirements_bitmask_excludes_even_if_flags_match() {
     let properties = memory_properties_with(&[(0, vk::MemoryPropertyFlags::HOST_VISIBLE)]);
-    // 🎯️ bit 0 excluded from the mask — the only host-visible type is not actually usable for
-    // this resource, and the scan must not fall back to it anyway.
     let requirements = vk::MemoryRequirements { size: 256, alignment: 16, memory_type_bits: 0b0 };
     assert_eq!(find_memory_type(&properties, &requirements, vk::MemoryPropertyFlags::HOST_VISIBLE), None);
 }

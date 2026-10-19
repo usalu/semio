@@ -1,8 +1,8 @@
 //! 📥️ The original invocation borrows caller octets and retains every native grammar owner.
 use super::*;
 use semio_framework_pack_json::{JsonGrammarCursor,JsonReadLimits,JsonSourceCursor,JsonMemberPolicy,Value,Number};
-use semio_framework_value::native_decoding::NativeDecodeContinuation;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[path="🎟️context/🦀️.rs"] mod original_context;
 pub use original_context::EvaluationRequestContextInput;
@@ -306,7 +306,8 @@ mod tests{
  /// 🧯️ Actual original invocation donates the complete JSON failure only after source closure, then closes its full native owner.
  #[test]
  fn original_completed_preview_sdk_fault_donates_whole_original_domain_on_same_caller(){
-  use semio_framework_job::{OriginalCallerSourceParent,JobPayloadAuthority,OperationId,Generation,StepBudget,OriginalDomainView as V,close_original_retained_step};
+  use semio_framework_job::{OriginalCallerSourceParent, OperationId, Generation, StepBudget, OriginalDomainView as V, close_original_retained_step};
+  use semio_framework_job_payload::{JobPayloadAuthority};
   use semio_framework_value::retirement::controlled::ControlledRetirement;
   let law:serde_json::Value=serde_json::from_str(include_str!("../⚠️failure/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let stock=RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:134217728,maximum_capacity_bytes:268435456,maximum_release_bytes:536870912,maximum_depth:4096};
   for body in[1,3,64]{let((mut parent,mut resources,request),initial)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let(cancel,_)=semio_framework_job::CancelToken::admit_root(stock).unwrap().unwrap();let(authority,_)=JobPayloadAuthority::admit(OperationId(71),Generation(3),stock).unwrap().unwrap();let(parent,_)=OriginalCallerSourceParent::admit(authority,cancel,stock).ok().unwrap();(parent,ExtensionEvaluationResources::new(Registry::new()),law["source"].as_str().unwrap().to_owned())});let(mut born,mut freed)=(initial.requested_bytes,initial.released_bytes);let mut sequence=0;let mut recipient=Default::default();let mut cx=parent.borrow_context(StepBudget::new(32768,1500,stock),||Some(1000),&mut sequence,&mut recipient).unwrap();let identity=cx.original_recipient_identity();let mut failure=None;

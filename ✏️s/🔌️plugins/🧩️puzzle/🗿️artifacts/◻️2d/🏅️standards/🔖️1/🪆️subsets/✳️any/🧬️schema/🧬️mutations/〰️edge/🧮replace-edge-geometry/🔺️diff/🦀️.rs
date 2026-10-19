@@ -1,4 +1,4 @@
-//! pose.
+//! 🔀️ pose.
 //! 🔺️ Sparse diff builder for `ReplaceEdgeGeometry` — patches the one addressed edge's connection
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgePatch;

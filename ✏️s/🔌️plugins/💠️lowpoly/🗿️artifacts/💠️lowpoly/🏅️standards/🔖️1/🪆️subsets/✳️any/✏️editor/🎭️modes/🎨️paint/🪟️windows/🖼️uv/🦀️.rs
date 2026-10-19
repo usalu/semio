@@ -31,8 +31,6 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::None },
         actions: Vec::new(),
         utilities: ["brush", "eraser", "fill", "eyedropper"].iter().map(|id| UtilityRef::from(*id)).collect(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the UV window paints textures —
-        // it never selects/hovers mesh components, so it declares no interaction domain.
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -66,7 +64,6 @@ fn uv_canvas_layers_json(doc: &LowpolyDocument, view: LowpolyView<'_>, texture_c
         if let Ok(transfer) = LowpolyDocument::tessellate_transfer_json(mesh) {
             let edge_uvs: Vec<f32> = transfer.get("edgeUvs").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
             let edge_is_seam: Vec<u8> = transfer.get("edgeIsSeam").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or_default();
-            // ✂️ ~48 printed bytes per segment (two rounded points + a seam flag).
             let segments = (LOWPOLY_UV_LAYERS_BUDGET_BYTES / 48).min(edge_uvs.len() / 4);
             let round = |value: f64| (value * 10.0).round() / 10.0;
             let mut points: Vec<[f64; 2]> = Vec::with_capacity(segments * 2);

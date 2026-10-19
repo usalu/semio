@@ -304,7 +304,6 @@ describe("useAgentBridge discovery", () => {
       expect(opened[0]!.url).toBe("ws://127.0.0.1:6300/bridge");
       expect(opened[0]!.protocols).toEqual(["semio.mcp.bridge.v1", "live.proof"]);
 
-      // 🔁️ Many more polls of the SAME offer must not open a second socket.
       await vi.advanceTimersByTimeAsync(BRIDGE_DISCOVERY_MIN_INTERVAL_MS * 200);
       expect(opened.length).toBe(1);
 

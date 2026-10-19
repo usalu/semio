@@ -3,7 +3,7 @@ use super::*;
 use db_storage::FaultScript;
 use std::{cell::RefCell, rc::Rc};
 #[cfg(test)]
-use semio_framework_pack::corruption_testing as pack_corruption;
+use pack::corruption_testing as pack_corruption;
 
 /// 🧵️ Each law owns its pool: the process entry-point pool belongs to the process's real entry
 /// point (the CLI), and a law that claimed it with its own sizing would refuse every other one.
@@ -48,8 +48,6 @@ async fn workload_gen_disjoint_batch_is_deterministic_and_covers_distinct_paths(
     let ops_c = WorkloadGen::new(43).disjoint_batch(&document, 8).await;
     assert_eq!(ops_a, ops_b, "same seed must generate byte-identical envelopes");
     assert_ne!(ops_a, ops_c, "a different seed must generate different actor/value draws");
-    // 🪡 `.flat_map` takes a sync closure, so the per-envelope decode (now async) is hoisted
-    // into an explicit loop instead — same accumulation, no `.await` inside a sync closure.
     let mut paths: std::collections::HashSet<String> = std::collections::HashSet::new();
     for envelope in ops_a.iter() {
         let decoded = db_artifact_contract::decode_pathmap_json(&envelope.diff.payload).await.unwrap();
@@ -91,10 +89,6 @@ async fn explore_interleavings_every_permutation_of_disjoint_writes_converges_to
         return;
     }
     let document = protocol::ArtifactId("explore-doc".to_string());
-    // 🪡 Hoisted out of the sync closure below: `explore_interleavings` takes `impl FnMut(u64) -> T`
-    // (deliberately sync — it drives a deterministic sim clock), so `.await` cannot live inside it.
-    // The batch never depended on the per-permutation `seed` anyway (fixed generator seed 55), so
-    // computing it once and cloning per permutation is behavior-identical to the original in-closure call.
     let ops = WorkloadGen::new(55).disjoint_batch(&document, 5).await;
     let hashes = explore_interleavings(4242, 12, |seed| {
         let ops = ops.clone();
@@ -105,12 +99,6 @@ async fn explore_interleavings_every_permutation_of_disjoint_writes_converges_to
             let engine = engine.clone();
             runtime.schedule(envelope.mutation_id.0.clone(), move |clock| {
                 let now = clock.now_ms() + i as u64;
-                // 🪡 `SimRuntime::schedule` takes a plain sync `FnOnce` (the whole point is
-                // deterministic single-threaded step ordering), so the now-async `submit` is
-                // driven synchronously via the same `db_actor::block_on` bridge every other
-                // test in this crate already uses — sound here because the backing storage is
-                // in-memory (`MemoryStorage`) and the default security gate never suspends, so nothing
-                // in `submit`'s call graph ever actually suspends.
                 db_actor::block_on(engine.borrow_mut().submit(db_actor::block_on(single_envelope_batch(envelope)), db_artifact_contract::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, now)).expect("submit");
             });
         }
@@ -135,8 +123,6 @@ async fn crash_harness_recovers_cleanly_after_every_injected_write_failure() {
 #[semio_framework_async_macros::async_test]
 async fn document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail() {
     let storage: Arc<DbBackend> = new_fault_backend().await;
-    // Call #1 is the document's own genesis header write; torn-write call #2 is the first
-    // `submit()`'s commit — truncated to 1 byte, an unrecoverable partial commit frame.
     as_fault(&storage).await.set_script(FaultScript { torn_write_at: Some((2, 1)), ..FaultScript::default() }).await;
     let document = protocol::ArtifactId("torn-doc".to_string());
     {
@@ -216,6 +202,7 @@ async fn law_overlay_structural_sharing() {
 /// per this crate's own module doc), proving `db_wal::replay_document` never panics on a
 /// corrupted WAL segment, only ever returns an `Err` (or, rarely, coincidentally still decodes).
 mod exhaustive {
+    use pack::corruption_testing as pack_corruption;
     use super::*;
 
     // 🚫️async: E1-adjacent — consumed as `impl Fn(&[u8]) -> Result<(), String>` by

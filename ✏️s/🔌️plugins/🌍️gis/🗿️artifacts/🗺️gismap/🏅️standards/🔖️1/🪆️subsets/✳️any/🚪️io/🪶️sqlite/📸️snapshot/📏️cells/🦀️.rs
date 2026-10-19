@@ -5,7 +5,7 @@ use store::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}
 impl Census{
- fn row(&mut self,table:usize,cells:&[usize],native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<()>{
+ fn row(&mut self,table:usize,cells:&[usize],native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<()>{
   native.step()?;let rows=self.rows.checked_add(1).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS semantic rows overflow"))?;
   let bytes=cells.iter().try_fold(self.bytes.checked_add(8).ok_or_else(||invalid("GIS semantic cells overflow"))?,|sum,size|sum.checked_add(*size).ok_or_else(||invalid("GIS semantic cells overflow")))?;
   if crate::standards::v1::subsets::any::io::sqlite::snapshot::WIDTHS[table]>self.limits.max_columns||rows>self.limits.max_rows{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS semantic row or column limit exceeded"));}
@@ -17,10 +17,10 @@ fn required(value:Option<&F>)->Result<&F>{value.ok_or_else(||invalid("GIS requir
 fn record(value:Option<&F>)->Result<&R>{match required(value)?{F::Record(value)=>Ok(value),_=>Err(invalid("GIS native role requires record"))}}
 fn text(value:Option<&F>)->Result<&str>{match required(value)?{F::Text(value)=>Ok(value),_=>Err(invalid("GIS native role requires text"))}}
 fn list(value:Option<&F>)->Result<&[F]>{match required(value)?{F::List(value)=>Ok(value),_=>Err(invalid("GIS native role requires list"))}}
-fn scalar<T:DslField>(value:Option<&F>,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T>{native.scoped_stage(|native|{native.begin_stage(0)?;T::from_value_controlled(required(value)?,native)})}
-fn child(value:&R,table:usize,census:&mut Census,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<()>{census.row(table,&[text(value.get(0))?.len(),text(value.get(1))?.len(),text(value.get(2))?.len(),text(value.get(3))?.len(),text(value.get(4))?.len()],native)}
+fn scalar<T:DslField>(value:Option<&F>,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T>{native.scoped_stage(|native|{native.begin_stage(0)?;T::from_value_controlled(required(value)?,native)})}
+fn child(value:&R,table:usize,census:&mut Census,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<()>{census.row(table,&[text(value.get(0))?.len(),text(value.get(1))?.len(),text(value.get(2))?.len(),text(value.get(3))?.len(),text(value.get(4))?.len()],native)}
 /// 🗺️ Visits every flat value, feature and child using its exact declared storage-class role.
-pub(super)fn admit_record(source:&R,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub(super)fn admit_record(source:&R,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  native.scoped_stage(|native|{
   native.begin_stage(0)?;if limits.max_tables<20||crate::standards::v1::subsets::any::io::sqlite::snapshot::WIDTHS.iter().any(|width|*width>limits.max_columns){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"GIS authored schema extent exceeds caller limits"));}
   let mut c=Census{limits,rows:0,bytes:0};c.row(0,&[],native)?;child(record(source.get(3))?,5,&mut c,native)?;

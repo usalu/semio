@@ -150,9 +150,6 @@ fn drive_production_envelope(app: &mut Generation2dApp, handle: semio_framework_
 /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-    // 🧹️ Registry-backed, never `VcsArtifactApp::new` — this app publishes
-    // `bounded_first_step_tool_proofs!`, so a registryless instance faults at construction with
-    // `interactive-job.catalog-authority` and its unwind aborts the binary.
     let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
     let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();

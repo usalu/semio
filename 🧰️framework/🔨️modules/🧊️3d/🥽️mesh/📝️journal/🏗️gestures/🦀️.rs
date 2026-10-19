@@ -6,7 +6,7 @@
 //! 🧱️ A gesture that renumbers corners refuses a mesh carrying authored channels or uv seams (they address corners and need a declared
 //! source remap), exactly as the kernel's reconstruction refuses them without one.
 
-use super::super::{triangulate_polygon, EdgeId, FaceId, HalfedgeMesh, MeshKernelError, MeshResult, MirrorAxis, Vec3, VertexId, WeldMode};
+use semio_framework_3d_mesh_document::{triangulate_polygon, EdgeId, FaceId, HalfedgeMesh, MeshKernelError, MeshResult, MirrorAxis, Vec3, VertexId, WeldMode};
 use super::editor::{loop_normal, Normal, Soup};
 use super::{MeshOverlay, Orphans};
 use std::collections::{BTreeMap, BTreeSet, HashSet};

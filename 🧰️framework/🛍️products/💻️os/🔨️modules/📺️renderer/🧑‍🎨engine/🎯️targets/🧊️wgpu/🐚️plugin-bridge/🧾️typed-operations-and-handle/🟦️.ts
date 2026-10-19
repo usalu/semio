@@ -1,8 +1,8 @@
 import { type Effect, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages, type InvocationResponse, type PluginDispatchHintV1, type PluginManifest, SemioFaultError } from "@semio-tech/framework";
 import { AppChannelClient, type AppFrameValue, decodeAppFrame, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, type WindowConfigPackEntry } from "@semio-tech/framework-os";
-import { leftoverShellInvocationFrames, scanTypedOperationPages, type TypedOperationAckEvent, type WireTurnResult, wireTurnStatusTag, type WireVariant } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { leftoverShellInvocationFrames, scanTypedOperationPages, type TypedOperationAckEvent, type WireTurnResult, wireTurnStatusTag, type WireVariant } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 import { pendingTurnEffects, wgpuHostEffect } from "../🎛️contributions-and-effects/🟦️.ts";
-import type { MediaTransportPort } from "../../../../🎬️media/🚚️lifecycle/🟦️.ts";
+import type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import type { ActorCodecRequest, ActorCodecSuccess } from "../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 
 export type WgpuPluginExtensionCompletion = {

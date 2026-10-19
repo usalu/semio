@@ -1,4 +1,4 @@
-//! Inverse for `change-beam-transverse-as`.
+//! ↩️ Inverse for `change-beam-transverse-as`.
 use crate::change_beam_transverse_as::ChangeBeamTransverseAs;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn inverse<Op>(payload: &ChangeBeamTransverseAs, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_beam_transverse_as::ChangeBeamTransverseAs> {

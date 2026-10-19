@@ -195,9 +195,6 @@ async function freshSessionContinuesFromTheHead(documentId: string, capabilityId
 
 const declared = mcpServerEntries(repoRoot).semio;
 const scopes = declared?.args.includes("--scopes") ? String(declared.args[declared.args.indexOf("--scopes") + 1]) : "workspace.read,artifact.write,inference.execute,ui.observe,ui.control";
-// 🚧️ `.mcp.json`'s `semio` entry binds a `--folder`, and `--folder`/`--hub` are mutually
-// exclusive, so a hub-bound agent is a DIFFERENT argv, not an extension of that one. This gate
-// spawns the identical binary the wrapper execs, with the hub selector in its place.
 await withDelegatedMcpClientSessionV1(original,phaseControl,{hubOrigin:ORIGIN,spaceId,token:String(delegation.json.token),scopes},async session=>{
 row("4 the credential file is written at mode 0600",true,"owned Diagnostics credential retained through session");
 try {
@@ -230,7 +227,6 @@ try {
 
   const kind = String(opened.structuredContent?.kind ?? "");
   const search = await session.call("capabilities_search", { query: "add", kind: "mutation" });
-  // 🔎️ `results`, the key `capabilities_search_output_shape` declares (`🌉️mcp/🧬️schema/🦀️.rs:340`).
   const hits = (search.structuredContent?.results ?? []) as Array<Record<string, any>>;
   row("10 the catalog the agent searches is the HUB's own", search.isError !== true && hits.length > 0, `${hits.length} hit(s) over the hub-selected roster; opened kind ${kind || "<none>"}`);
   const capabilityId = String(hits[0]?.id ?? hits[0]?.capabilityId ?? "");

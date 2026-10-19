@@ -4,8 +4,6 @@ use crate::standards::v_raw::subsets::any::schema::diff::*;
 
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_before_matches_canonical_shape() {
-    // Insert(0xAA) at offset 2, then Remove 1 byte at offset 0 -- byte-level analog of the
-    // line-diff canonical case: {removed:[0], added:[(1,0xAA)]}.
     let d1 = vec![ByteSplice { offset: 2, remove_len: 0, insert: vec![0xAA] }];
     let d2 = vec![ByteSplice { offset: 0, remove_len: 1, insert: vec![] }];
     let merged = absorb_splices(&d1, &d2);

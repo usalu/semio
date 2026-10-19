@@ -271,15 +271,6 @@ impl ArtifactRunner {
                 let replay = engine.history_replay(operation_generation, cancelled, reservation);
                 ArtifactTurn::History { engine: Some(engine), replay, reply: Some(reply) }
             }
-            // 🪜️ One boxed coroutine PER message kind, never one coroutine with a ten-arm `match`
-            // inside it. A coroutine's frame is the SUM of its suspend points' live locals, and a
-            // debug build overlaps nothing: with all ten engine methods awaited inside a single
-            // async block, `start_turn::{closure}` reserved **10,711,040 B** and the runner entered
-            // it twice, which is 20.4 MiB of the 21,520,944 B that aborted three hub laws
-            // (ticket 26/09/18 slice HS1, `🐍️hs1-frame-sizes.py` over the nextest crash reports).
-            // Splitting the match OUT of the async block turns that sum into a max: each arm's
-            // coroutine holds exactly one engine-method future, and `ArtifactTurnFuture` erases them
-            // all to the same type, so nothing downstream changes.
             ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => ArtifactTurn::Future(Box::pin(async move {
                 let mut engine = engine;
                 reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await);

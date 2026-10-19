@@ -46,10 +46,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the matrix's cells cycle
-        // their `AdjacencyKind` directly on click (`setAdjacencyKind`) — there is no genuine
-        // select-then-act step here to model as an interaction domain (see the crate's migration
-        // notes), so this window declares none.
         interactions: Vec::new(),
     }
 }

@@ -116,7 +116,7 @@ async fn a_named_missing_case_is_not_redirected_to_another_case() {
     let history = semio_framework_plugin::HistoryView::empty();
     let snapshot = app.snapshot().expect("snapshot");
     let view = ArtifactView::new(&snapshot, &history);
-    let load = FemLoad::Nodal { id: "new-load".into(), node_id: "node".into(), dof: crate::FemDof::Tx, value: 1.0 };
+    let load = FemLoad::Nodal { id: "new-load".into(), node_id: "node".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx, value: 1.0 };
     let mutation = add_load_mutation(&view, Some("missing-case"), load).expect("lowered load");
     let Fem3dMutation::AddLoad(operation) = mutation else { panic!("named target must stay explicit") };
     assert_eq!(operation.case_id, "missing-case");

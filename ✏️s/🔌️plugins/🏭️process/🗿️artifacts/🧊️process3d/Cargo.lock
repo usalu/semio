@@ -428,7 +428,10 @@ dependencies = [
  "semio-framework-3d-mesh-clipping",
  "semio-framework-3d-mesh-contract",
  "semio-framework-3d-mesh-document",
+ "semio-framework-3d-mesh-journal",
+ "semio-framework-3d-mesh-quality",
  "semio-framework-3d-mesh-reconstruction",
+ "semio-framework-3d-mesh-surface",
  "semio-framework-3d-rigid",
  "semio-framework-mesh-engine",
  "semio-framework-value",
@@ -685,6 +688,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-mesh-journal"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-mesh-document",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-quality"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-mesh-document",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
 name = "semio-framework-3d-mesh-reconstruction"
 version = "0.1.0"
 dependencies = [
@@ -692,6 +712,13 @@ dependencies = [
  "semio-framework-3d-mesh-document",
  "semio-framework-mesh-engine",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-3d-mesh-surface"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-mesh-document",
 ]
 
 [[package]]

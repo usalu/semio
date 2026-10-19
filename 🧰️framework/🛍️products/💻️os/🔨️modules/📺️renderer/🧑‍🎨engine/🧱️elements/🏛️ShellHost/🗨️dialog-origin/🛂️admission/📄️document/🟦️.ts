@@ -269,7 +269,7 @@ export class FolderArchivePersistenceV1 {
   #folding = 0;
   #folded = false;
 
-  /** `write` saves the program's current archive as the folder's content. */
+  /** 💾️ `write` saves the program's current archive as the folder's content. */
   constructor(write: () => Promise<void>) {
     this.#save = latestWins(write);
   }

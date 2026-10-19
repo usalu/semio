@@ -1,11 +1,13 @@
 //! 📎️ `AttachLocalFolder` is the authoritative direct Rust leaf for remembering which local folder one program's document is
 //! attached to on this device.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::detach_local_folder::DetachLocalFolder;
 use super::LocalFoldersConfigMutation;
-use protocol::{MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema
@@ -135,7 +137,7 @@ impl MutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLoc
     }
 }
 
-impl crate::os_spr::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLocalFolder {
+impl semio_framework_os_command::ColdMutationKind<LocalFolderBindings, LocalFoldersConfigMutation> for AttachLocalFolder {
     fn diff(&self, base: &LocalFolderBindings) -> MutationOutcome<LocalFoldersDiff> {
         let attached = LocalFolderBinding::from(self);
         if base.bindings.iter().any(|entry| *entry == attached) {

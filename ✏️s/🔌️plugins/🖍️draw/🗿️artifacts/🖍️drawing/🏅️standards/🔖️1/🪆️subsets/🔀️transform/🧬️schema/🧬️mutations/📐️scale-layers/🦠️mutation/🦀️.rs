@@ -13,7 +13,7 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "scale-layers")]
 pub struct ScaleLayers {
-    pub targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
+    pub targets: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
     pub pivot_x: f64,
     pub pivot_y: f64,
     pub scale_x: f64,
@@ -21,7 +21,7 @@ pub struct ScaleLayers {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_layers<Op: From<ScaleLayers>>(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> Op {
+pub fn scale_layers<Op: From<ScaleLayers>>(targets: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> Op {
     Op::from(ScaleLayers { targets, pivot_x, pivot_y, scale_x, scale_y })
 }
 

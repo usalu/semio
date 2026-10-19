@@ -374,8 +374,6 @@ impl SchemaComponent {
     fn success_output(&self, instance: &Dictionary) -> Result<Dictionary, NeuralEngineError> {
         let mut output = ColdDictionaryBuilder::from_dictionary(Dictionary::new().insert(produced_channel_id(&self.schema.id), Value::Dictionary(instance.clone())));
         for field in &self.schema.fields {
-            // 🛡️ `instance` only reaches here after `Schema::validate` confirmed every
-            // declared field.key is present, so this lookup can never miss.
             let value = instance.get(&field.key).expect("validated field");
             let channel = field_to_channel(value, &field.value)?;
             output.insert(produced_channel_id(&field.key), channel);
@@ -645,7 +643,6 @@ impl Registry {
     /// (`flow_extension_sdk::evaluate_json` wraps both its input and its answer in a
     /// [`ColdOwner`]); it is named here so every batch caller — test harness, export bridge,
     /// catalogue probe — states one cold scope instead of open-coding two.
-    // 🚫️async: E1 pure registry dispatch mirroring `dispatch` (no I/O) — see R9
     pub fn dispatch_cold(&self, operator_id: &str, input: Dictionary) -> Result<ColdOwner<Dictionary>, EvalError> {
         let input = ColdOwner::new(input);
         self.dispatch(operator_id, &input).map(ColdOwner::new)

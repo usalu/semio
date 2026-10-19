@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// counterpart, added per the packet brief for the layouts those two collapsed variants could not
+/// 🐳️ counterpart, added per the packet brief for the layouts those two collapsed variants could not
 /// previously express as a single node.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]

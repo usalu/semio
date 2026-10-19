@@ -69,14 +69,10 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let snapshot = app.snapshot().expect("loaded snapshot");
     assert_eq!(snapshot.id, "semio", "the demo document replaced the boot document");
     assert!(!snapshot.layers.is_empty(), "the demo example carries layers");
-    // 📦️ The store's envelope keeps the loaded initial snapshot: the host reads the document back
-    // through `print_document_pack` (initial + `.spr`), so an edit-free load must read back byte-equal
-    // to its live fold — draw's initializer used to MOVE the initial out and leave an empty one behind.
     let loaded = app.document_pack().await.expect("live document pack");
     let initial = <DrawingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&loaded.pack).expect("initial pack decodes");
     assert_eq!(initial, snapshot, "an edit-free load reads back its exact initial snapshot");
     assert_eq!(initial.assets.values().map(|asset| asset.samples.len()).sum::<usize>(), 262_144, "the demo's emblem asset survives the paged initial clone");
-    // 🧹️ Every store closes before drop (the store's shallow-shell Drop witness is fail-closed).
     for _ in 0..100_000 {
         if app.close_terminal_is_empty() {
             break;

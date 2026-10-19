@@ -120,7 +120,7 @@ async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside
     let identity = fill_run_identity(&mut app).await.expect("a live fill run");
     let run = identity[semio_framework_tool_run::TOOL_RUN_ARG_RUN_ID].as_str().and_then(|run| run.parse().ok()).expect("run id");
     let generation = identity[semio_framework_tool_run::TOOL_RUN_ARG_GENERATION].as_u64().and_then(|generation| u32::try_from(generation).ok()).expect("generation");
-    app.echo_tool_run_trace_cursor(main::WINDOW_KIND_ID, semio_framework_tool_run::ToolRunTraceCursor { run, generation, page: 1 });
+    app.echo_tool_run_trace_cursor(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, semio_framework_tool_run::ToolRunTraceCursor { run, generation, page: 1 });
     let escape = dispatch_unsettled(&mut app, "engagementAbort", None, None).await.expect("Escape");
     let settled = settle(&mut app).await;
     let effects: Vec<&Effect> = escape.requested_effects.iter().chain(&settled.effects).collect();
@@ -147,7 +147,7 @@ async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside
 #[semio_framework_async_macros::async_test]
 async fn set_fill_count_dispatches_through_the_tool_job_path_and_updates_the_requested_count() {
     async fn fill_count_entry(app: &mut Puzzle3dApp) -> Option<f64> {
-        let view = app.window_view(main::WINDOW_KIND_ID);
+        let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
         let measures = app.tool_measures(&view).await;
         find_measure_number(measures.get(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count")
     }
@@ -209,7 +209,7 @@ async fn the_fill_count_has_no_ceiling_and_the_entry_declares_none() {
     let mut app = app().await;
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("select fill tool");
     dispatch(&mut app, "setFillCount", Some(&json!({ "value": 5_000 })), None).await.expect("setFillCount");
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures = app.tool_measures(&view).await;
     let tool_measures = measures.get(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures");
     assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(5_000.0), "a request far above anything planned is kept verbatim — no clamp");
@@ -257,7 +257,7 @@ async fn a_committed_fill_count_survives_the_renders_that_follow_it() {
     for _ in 0..3 {
         render_composite(&mut app).await;
     }
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures = app.tool_measures(&view).await;
     let tool_measures = measures.get(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures");
     assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(250.0), "three renders later the requested count is still what the user asked for");
@@ -273,7 +273,6 @@ async fn puzzle3d_normalize_kind_weight_group_redistributes_siblings_proportiona
     let sum: f64 = ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum();
     assert!((sum - 1.0).abs() < 1e-9, "simplex must stay at 1, got {sum}");
     assert!((weights.get("a").copied().unwrap_or(0.0) - 0.5).abs() < 1e-9);
-    // b:c were 0.3:0.5 — remainder 0.5 splits 0.3/0.8 and 0.5/0.8
     assert!((weights.get("b").copied().unwrap_or(0.0) - 0.5 * 0.3 / 0.8).abs() < 1e-9);
     assert!((weights.get("c").copied().unwrap_or(0.0) - 0.5 * 0.5 / 0.8).abs() < 1e-9);
 }
@@ -474,9 +473,9 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
 async fn assert_brush_options_after_open_vortex_suggestions() {
     let mut app = app().await;
     activate_window_utility(&mut app, utilities::brush::UTILITY_ID);
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let brush_app_measures = app.window_measures(&view).await;
-    let window_measures = brush_app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
+    let window_measures = brush_app_measures.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())), "the brush Utility Options group surfaces on the live window-measures path when brush is the active utility");
 }
 //#endregion 🔖️Distribution

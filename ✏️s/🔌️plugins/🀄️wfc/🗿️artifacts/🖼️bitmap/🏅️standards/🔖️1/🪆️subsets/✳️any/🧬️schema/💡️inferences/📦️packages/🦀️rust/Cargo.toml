@@ -45,6 +45,7 @@ semio-s-artifact-wfc-bitmap-mut-family = { path = "../../../🧬️mutations/�
 semio-s-artifact-wfc-bitmap-mut-family-2 = { path = "../../../🧬️mutations/🖼️resize-output/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-plugin-wfc-engine = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

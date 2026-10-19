@@ -91,7 +91,6 @@ pub struct CausalDag {
 impl CausalDag {
     /// 🧭️ Builds a DAG from index edges, validating acyclicity via
     /// `semio_framework_graph_algorithms::topo_sort`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(names: Vec<String>, edges: &[(usize, usize)]) -> Result<Self, CausalError> {
         let n = names.len();
         for &(a, b) in edges {
@@ -123,7 +122,6 @@ impl CausalDag {
     }
 
     /// 🧭️ Builds a DAG from named edges, resolving each name against `names`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_named_edges(names: Vec<String>, edges: &[(&str, &str)]) -> Result<Self, CausalError> {
         let index: HashMap<&str, usize> = names.iter().enumerate().map(|(i, n)| (n.as_str(), i)).collect();
         let mut resolved = Vec::with_capacity(edges.len());
@@ -135,22 +133,18 @@ impl CausalDag {
         Self::new(names, &resolved)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn n(&self) -> usize {
         self.names.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn names(&self) -> &[String] {
         &self.names
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn index_of(&self, name: &str) -> Option<usize> {
         self.index.get(name).copied()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn edges(&self) -> Vec<(usize, usize)> {
         let mut out = Vec::new();
         for (child, parents) in self.parents.iter().enumerate() {
@@ -162,18 +156,15 @@ impl CausalDag {
         out
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parents(&self, v: usize) -> &[usize] {
         &self.parents[v]
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn children(&self, v: usize) -> &[usize] {
         &self.children[v]
     }
 
     /// 🧭️ Strict ancestors of `v` (excludes `v` itself), ascending.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ancestors(&self, v: usize) -> Vec<usize> {
         let mut visited = HashSet::new();
         let mut stack = self.parents[v].clone();
@@ -188,7 +179,6 @@ impl CausalDag {
     }
 
     /// 🧭️ Strict descendants of `v` (excludes `v` itself), ascending.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn descendants(&self, v: usize) -> Vec<usize> {
         let mut visited = HashSet::new();
         let mut stack = self.children[v].clone();
@@ -202,13 +192,11 @@ impl CausalDag {
         out
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn topological_order(&self) -> &[usize] {
         &self.topo
     }
 
     /// 🕸️ Undirected moral-graph edges (`a < b`): the skeleton plus edges marrying every pair of co-parents.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn moralize(&self) -> Vec<(usize, usize)> {
         let mut edges: BTreeSet<(usize, usize)> = BTreeSet::new();
         for (child, parents) in self.parents.iter().enumerate() {

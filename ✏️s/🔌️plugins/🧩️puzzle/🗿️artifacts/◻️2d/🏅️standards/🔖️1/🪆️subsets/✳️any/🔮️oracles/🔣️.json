@@ -637,6 +637,10 @@
             {
               "id": "removes-node-a-and-severs-edge",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-middle-node",
+              "directoryName": "🗑️removes-middle-node"
             }
           ]
         },
@@ -652,6 +656,10 @@
             {
               "id": "rejects-deleting-a-region-the-board-never-held",
               "directoryName": "🚫️rejects"
+            },
+            {
+              "id": "removes-middle-region",
+              "directoryName": "🪦️removes-middle-region"
             }
           ]
         },
@@ -671,6 +679,10 @@
             {
               "id": "removes-edge-1",
               "directoryName": "🚫️removes-edge-1"
+            },
+            {
+              "id": "severs-middle-edge",
+              "directoryName": "✂️severs-middle-edge"
             }
           ]
         },
@@ -690,6 +702,10 @@
             {
               "id": "removes-handle-kind-pair",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "withdraws-middle-row",
+              "directoryName": "💔️withdraws-middle-row"
             }
           ]
         },
@@ -808,6 +824,10 @@
             {
               "id": "removes-handle-2-and-severs-edge",
               "directoryName": "🚫️removes2"
+            },
+            {
+              "id": "removes-middle-handle",
+              "directoryName": "➖removes-middle-handle"
             }
           ]
         },

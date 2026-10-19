@@ -9,7 +9,7 @@ export interface SequenceTopology {
 }
 
 export interface SequenceInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: SequenceTopology;
 }
 

@@ -6,7 +6,7 @@ export interface TsvOutline {
 }
 
 export interface TsvInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: TsvOutline;
 }
 

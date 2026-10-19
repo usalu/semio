@@ -1,68 +1,68 @@
 /** 🧬️ LowpolyConfig */
 export interface LowpolyConfig {
-  /** @state config */
+  /** 🟢️ @state config */
   activeObjectId: string;
-  /** @state config */
+  /** 👉️ @state config */
   selectionMode: string;
-  /** @state config */
+  /** ☑️ @state config */
   selectionIds: number[];
-  /** @state config */
+  /** 🎯️ @state config */
   selectionTargetsMesh: boolean;
-  /** @state config */
+  /** 🔲️ @state config */
   selectionTargetsVertex: boolean;
-  /** @state config */
+  /** 🖱️ @state config */
   selectionTargetsEdge: boolean;
-  /** @state config */
+  /** 📌️ @state config */
   selectionTargetsFace: boolean;
-  /** @state config */
+  /** ⌨️ @state config */
   selectionKeys: string[];
-  /** @state config */
+  /** 🎨️ @state config */
   paintUtility: string;
-  /** @state config */
+  /** ⚡️ @state config */
   activePaintLayer: number;
-  /** @state config */
+  /** 🪝️ @state config */
   selectionMethod: string;
-  /** @state config */
+  /** 🚦️ @state config */
   selectionModeDefault: string;
-  /** @state config */
+  /** ✔️ @state config */
   selectedObjectIds: string[];
-  /** @state config */
+  /** 👆️ @state config */
   hoveredObjectId?: string;
-  /** @state config */
+  /** ☝️ @state config */
   hoveredTargetObjectId?: string;
-  /** @state config */
+  /** ✨️ @state config */
   hoveredTargetMode?: string;
-  /** @state config */
+  /** 🖲️ @state config */
   hoveredTargetId?: number;
-  /** @state config */
+  /** 🛠️ @state config */
   utilityParamsJson: string;
-  /** @state config */
+  /** 🌈️ @state config */
   paintColorR: number;
-  /** @state config */
+  /** 🖌️ @state config */
   paintColorG: number;
-  /** @state config */
+  /** 🖍️ @state config */
   paintColorB: number;
-  /** @state config */
+  /** 🪣️ @state config */
   paintColorA: number;
-  /** @state config */
+  /** 🗺️ @state config */
   worldCameraPosition: number[];
-  /** @state config */
+  /** 🌍️ @state config */
   worldCameraTarget: number[];
-  /** @state config */
+  /** 🏔️ @state config */
   worldCameraFov: number;
-  /** @state config */
+  /** 🤝️ @state config */
   engagementInput: string;
-  /** @state config */
+  /** 👁️ @state config */
   showEdges: boolean;
-  /** @state config */
+  /** 💡️ @state config */
   sunEnabled: boolean;
-  /** @state config */
+  /** ☀️ @state config */
   sunAzimuth: number;
-  /** @state config */
+  /** 🔦️ @state config */
   sunElevation: number;
-  /** @state config */
+  /** 🌞️ @state config */
   sunIntensity: number;
-  /** @state config */
+  /** 🕯️ @state config */
   sunColor: string;
 }
 

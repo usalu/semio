@@ -89,8 +89,6 @@ impl IdIndex {
     }
 
     fn edges_to_indices(&self, edges: &[(String, String)]) -> Vec<(usize, usize)> {
-        // 🔀️ Rewritten from `.filter_map(..)` — the closure was sync and could not `.await` the
-        // per-id `index_of` lookups (R10 residue shape #1).
         let mut out = Vec::with_capacity(edges.len());
         for (a, b) in edges {
             if let (Some(ia), Some(ib)) = (self.index_of(a), self.index_of(b)) {

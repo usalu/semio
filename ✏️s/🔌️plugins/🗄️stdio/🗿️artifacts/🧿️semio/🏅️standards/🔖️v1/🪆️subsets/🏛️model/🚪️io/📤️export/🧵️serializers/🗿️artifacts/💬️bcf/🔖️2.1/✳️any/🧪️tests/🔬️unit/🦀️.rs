@@ -36,7 +36,6 @@ async fn bcf_to_model_to_bcf_to_model_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn non_topic_elements_and_spatial_are_dropped_not_forced() {
     let mut s1 = model_from_bcf(&fixture());
-    // hand-add content BCF cannot represent
     s1.spatial.push(semio_s_artifact_stdio_semio_model::schema::snapshot::SpatialNode {
         id: "site-1".into(),
         kind: semio_s_artifact_stdio_semio_model::schema::snapshot::SpatialKind::Site,

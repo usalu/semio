@@ -1,6 +1,7 @@
 //! 🗂️ Rule layout owns literal unique keys and concrete contiguous point slots.
 use crate::standards::v1::subsets::any::schema::model::LayoutPoint;
-use semio_framework_value::{DecodedValue,DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,ToValue,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, DslValue, FromValue, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone)]
 pub struct RuleLayout { members:Vec<(String,LayoutPoint)> }
 impl RuleLayout {

@@ -1,4 +1,4 @@
-//! deser json via txt
+//! 🧾️ deser json via txt
 use crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use crate::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_txt::TxtSnapshot;

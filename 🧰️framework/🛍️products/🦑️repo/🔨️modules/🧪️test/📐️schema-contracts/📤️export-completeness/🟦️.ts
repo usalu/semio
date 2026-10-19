@@ -78,7 +78,6 @@ export function schemaExportCompletenessDiagnostics(repoRoot: string, scopeId: s
   const normative = normativeFormat;
   const declared = new Map<string, unknown>();
   for (const [exported, row] of Object.entries(scope.exports)) {
-    // 📚️The export's OWN file answers, not the module root: a facet child carries its own `$defs`.
     const exportFile = schemaExportFile(scope, row, normative, normative);
     const carrier = exportFile === jsonFile ? document : readJson(join(repoRoot, exportFile));
     if (carrier === undefined) {
@@ -96,13 +95,9 @@ export function schemaExportCompletenessDiagnostics(repoRoot: string, scopeId: s
       found.push(schemaDiagnostic("schema-export-formats-annotation-invalid", `export ${JSON.stringify(exported)} ${invalid}`, { scope: scopeId, export: exported, path: schemaExportFile(scope, row, normative, normative) }));
       continue;
     }
-    // 🏷️A declared format the scope does not implement at all cannot carry the export, so the
-    // annotation is a promise the module never kept — reported against the format, not the file.
     if (restricted !== null) for (const format of restricted) if (!Object.hasOwn(scope.formats, format)) found.push(schemaDiagnostic("schema-export-incomplete", `export ${JSON.stringify(exported)} declares ${format} support, and scope ${JSON.stringify(scopeId)} implements no ${format} file`, { scope: scopeId, export: exported, format }));
     for (const format of Object.keys(scope.formats)) {
       const supported = restricted === null || restricted.includes(format);
-      // 🧬️The normative format is where the export was READ from, so its presence is already
-      // established; the only question left is whether the annotation admitted to it.
       if (format === normative) {
         if (!supported) found.push(schemaDiagnostic("schema-export-format-undeclared", `export ${JSON.stringify(exported)} is defined in ${format} and its ${SCHEMA_EXPORT_FORMATS_KEYWORD} does not name ${format}`, { scope: scopeId, export: exported, format, path: schemaExportFile(scope, row, normative, normative) }));
         continue;
@@ -116,8 +111,6 @@ export function schemaExportCompletenessDiagnostics(repoRoot: string, scopeId: s
       const source = readFileSync(abs, "utf8");
       const present = declaresSchemaExport(format, source, exported);
       if (supported && !present) found.push(schemaDiagnostic("schema-export-incomplete", `${file} declares no ${format} entity named ${exported}`, { scope: scopeId, export: exported, format, path: file }));
-      // 🚪️The entry point is asked for only where the entity exists: a format missing the export
-      // entirely is one defect, already named, and reporting it twice would make the count a lie.
       if (supported && present && !declaresSchemaExportParser(format, source, exported)) found.push(schemaDiagnostic("schema-export-parser-missing", `${file} declares ${exported} and no parse${exported}(), so the export has a type and no entry point`, { scope: scopeId, export: exported, format, path: file }));
       if (!supported && present) found.push(schemaDiagnostic("schema-export-format-undeclared", `${file} declares a ${format} entity named ${exported}, and the export's ${SCHEMA_EXPORT_FORMATS_KEYWORD} restricts it to ${restricted!.join(", ")}`, { scope: scopeId, export: exported, format, path: file }));
     }

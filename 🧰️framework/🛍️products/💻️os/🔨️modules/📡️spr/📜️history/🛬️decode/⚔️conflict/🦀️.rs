@@ -1,9 +1,10 @@
 //! ⚔️ Original conflict fields retain typed receiving, original edit references and paid cancellation custody.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::OriginalHistoryEdits;
 use super::{HistoryConflict,HistoryEdit,HistoryMessage,RetainedHistoryIdDecode,RetainedHistoryMessageDecode,RetainedHistoryMessagePartial,RetainedHistoryRecords,RetainedHistoryRecordsStep};
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity,HistoryReadLimits,RetainedWireFieldDecode},dictionary::RetainedSourceDictionary};
-use semio_framework_value::{SharedUtf8,NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of_val};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct RetainedHistoryConflictPartial{pub id:Option<String>,pub kind:u8,pub status:u8,pub actor_text:Option<String>,pub pending_actor:Option<SharedUtf8>,pub actors:Option<Vec<SharedUtf8>>,pub hlt:Option<(u64,u64,u64)>,pub pending_edit:Option<String>,pub edit_ids:Option<Vec<String>>,pub pending_envelope:Option<Vec<u8>>,pub envelopes:Option<Vec<Vec<u8>>>,pub pending_message:Option<HistoryMessage>,pub messages:Option<Vec<HistoryMessage>>}

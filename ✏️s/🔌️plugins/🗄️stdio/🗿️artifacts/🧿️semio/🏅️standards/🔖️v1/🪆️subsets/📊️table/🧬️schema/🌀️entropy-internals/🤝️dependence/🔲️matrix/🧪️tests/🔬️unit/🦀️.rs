@@ -55,7 +55,6 @@ mod tests {
 
     #[test]
     fn jacobi_hand_3x3_matches_known_eigenvalues() {
-        // 🔐️ A = [[2,-1,0],[-1,2,-1],[0,-1,2]] has eigenvalues 2, 2±sqrt(2).
         let a = vec![2.0, -1.0, 0.0, -1.0, 2.0, -1.0, 0.0, -1.0, 2.0];
         let (eigenvalues, _) = jacobi_eigen_symmetric(&a, 3).unwrap();
         let expected = {
@@ -82,7 +81,7 @@ mod tests {
 
     #[test]
     fn cholesky_regularizes_near_singular_matrix() {
-        let a = vec![1.0, 1.0, 1.0, 1.0]; // rank-1, singular
+        let a = vec![1.0, 1.0, 1.0, 1.0];
         let result = cholesky(&a, 2);
         assert!(result.is_ok());
     }
@@ -99,9 +98,9 @@ mod tests {
         let rows = 4;
         let cols = 3;
         let a = vec![
-            1.0, 0.0, 0.0, //
-            0.0, 2.0, 0.0, //
-            0.0, 0.0, 3.0, //
+            1.0, 0.0, 0.0,
+            0.0, 2.0, 0.0,
+            0.0, 0.0, 3.0,
             1.0, 1.0, 1.0,
         ];
         let (u, s, v) = svd_jacobi(&a, rows, cols).unwrap();
@@ -118,7 +117,6 @@ mod tests {
 
     #[test]
     fn svd_entropy_of_equal_singular_values_is_maximal() {
-        // 🔐️ identity-like: all singular values equal -> normalized entropy = 1.
         let a = vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
         let est = svd_entropy(&a, 3, 3, LogBase::Bits).unwrap();
         assert!((est.value - 3.0_f64.log2()).abs() < 1e-6);
@@ -126,7 +124,7 @@ mod tests {
 
     #[test]
     fn svd_entropy_of_rank_one_matrix_is_zero() {
-        let a = vec![1.0, 2.0, 3.0, 2.0, 4.0, 6.0]; // rank 1, 2x3
+        let a = vec![1.0, 2.0, 3.0, 2.0, 4.0, 6.0];
         let est = svd_entropy(&a, 2, 3, LogBase::Bits).unwrap();
         assert!(est.value.abs() < 1e-6);
     }
@@ -152,7 +150,6 @@ mod tests {
     #[test]
     fn von_neumann_clips_tiny_negative_eigenvalues() {
         let density = vec![0.5 + 1e-16, 0.5, 0.5, 0.5 - 1e-16];
-        // 🔐️ near-singular; should not error, should clip.
         let result = von_neumann_entropy(&density, 2, LogBase::Nats);
         assert!(result.is_ok());
     }

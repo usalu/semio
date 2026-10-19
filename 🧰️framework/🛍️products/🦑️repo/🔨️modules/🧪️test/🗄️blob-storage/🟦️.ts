@@ -49,7 +49,6 @@ export function installFixtureBlob(repoRoot: string, bytes: Uint8Array): string 
   try {
     renameSync(staging, target);
   } catch {
-    // 🏁️Another agent won the race and the blob is already correct by construction — its name IS its content.
     rmSync(staging, { force: true });
   }
   return sha256;
@@ -76,16 +75,12 @@ export function materializeFixtureBlob(repoRoot: string, sha256: string, targetP
   try {
     cpSync(source, targetPath, { mode: constants.COPYFILE_FICLONE_FORCE });
     return "reflink";
-  } catch {
-    /* 🧭️No copy-on-write on this filesystem. */
-  }
+  } catch {}
   if (opts.mutable !== true) {
     try {
       linkSync(source, targetPath);
       return "hardlink";
-    } catch {
-      /* 🧭️Cross-device or a filesystem without hard links. */
-    }
+    } catch {}
   }
   cpSync(source, targetPath);
   return "copy";

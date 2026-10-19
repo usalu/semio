@@ -1,4 +1,5 @@
 mod tests {
+    use semio_s_artifact_architect_program_mutations::standards::v1::subsets::any::io::tables::MergeStrategy;
     use super::*;
     use crate::standards::v1::subsets::any::schema::registers::catalog::{RegisterKey, RegisterRow};
     use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;

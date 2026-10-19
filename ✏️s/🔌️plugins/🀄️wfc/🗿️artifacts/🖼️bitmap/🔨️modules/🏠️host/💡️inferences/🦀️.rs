@@ -148,8 +148,8 @@ pub struct BitmapInferenceJob {
     pub(crate) restore: Option<engine::job::WfcRestore<engine::grid2d::Grid2dTopology>>,
     pub(crate) child: Option<engine::job::WfcJob<engine::grid2d::Grid2dTopology>>,
     pub(crate) child_commit: Option<engine::job::WfcCommit>,
-    pub(crate) output: Option<semio_framework_job::RetainedJobPayloadWriter>,
-    pub(crate) rejected_output_page: Option<semio_framework_job::JobPayloadPageSource>,
+    pub(crate) output: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
+    pub(crate) rejected_output_page: Option<semio_framework_job_payload::JobPayloadPageSource>,
     pub(crate) encode_phase: EncodePhase,
     pub(crate) encode_cursor: usize,
     pub(crate) preview_units: u64,
@@ -158,7 +158,7 @@ pub struct BitmapInferenceJob {
     pub(crate) lent: BitmapInferenceJobLent,
     pub(crate) restore_done: bool,
     pub(crate) child_end: Option<InferenceChildEnd>,
-    pub(crate) output_payload: Option<semio_framework_job::RetainedJobPayload>,
+    pub(crate) output_payload: Option<semio_framework_job_payload::RetainedJobPayload>,
     pub(crate) closing: bool,
 }
 
@@ -198,7 +198,7 @@ impl BitmapInferenceJob {
             restore: None,
             child: None,
             child_commit: None,
-            output: Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput)),
+            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
             rejected_output_page: None,
             encode_phase: EncodePhase::Open,
             encode_cursor: 0,
@@ -399,7 +399,7 @@ impl BitmapInferenceJob {
         outcome
     }
 
-    pub(crate) fn encode_into(&mut self, context: &mut semio_framework_job::StepContext<'_>, writer: &mut semio_framework_job::RetainedJobPayloadWriter, source: semio_framework_job::JobPayloadPageSource) -> Result<bool, String> {
+    pub(crate) fn encode_into(&mut self, context: &mut semio_framework_job::StepContext<'_>, writer: &mut semio_framework_job_payload::RetainedJobPayloadWriter, source: semio_framework_job_payload::JobPayloadPageSource) -> Result<bool, String> {
         let mut page = match context.admit_payload_page(writer, source) {
             Ok(page) => page,
             Err(rejected) => {

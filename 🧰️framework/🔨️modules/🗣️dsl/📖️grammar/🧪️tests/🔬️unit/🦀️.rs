@@ -280,8 +280,6 @@ async fn string_header_directive_drives_backslash_decode_end_to_end() {
     assert_eq!(g.lex.strings, vec![StringMode { quote: '"', escape: StringEscape::Backslash }]);
     let rec = Recognizer::compile(&g, &FragmentRegistry::new(), Vec::new()).expect("selected fragments");
     assert!(rec.recognize(r#""café""#).expect("recognize"), "the json-dialect grammar must recognize a \\uXXXX-escaped string");
-    // Prove real decoding happened (not just successful lexing) by relexing with the grammar's
-    // own compiled dialect and inspecting the Text token's content.
     let tokens = core_lex_with(r#""café""#, &Limits::default(), false, &g.lex).expect("lex_with");
     let text = tokens.iter().find(|t| t.kind == CoreKind::Text).expect("Text token");
     assert_eq!(text.text.as_str().as_ref(), "café");
@@ -319,9 +317,6 @@ async fn string_header_directive_supports_step_single_quote_doubling() {
 async fn grammar_without_string_or_comment_directives_keeps_default_lex_options() {
     let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").expect("parse_grammar");
     assert_eq!(g.lex, LexOptions::default());
-    // print_grammar must NOT emit comment/string lines for the default case (round trip proof
-    // already covered by `round_trip_matrix_over_representative_grammars`; this asserts the
-    // specific absence).
     let printed = print_grammar(&g);
     assert!(!printed.contains("comment"), "default comment config must not be printed");
     assert!(!printed.contains("\nstring "), "default string config must not be printed");
@@ -332,8 +327,6 @@ async fn grammar_without_string_or_comment_directives_keeps_default_lex_options(
 async fn line_terminal_captures_rest_of_physical_line_verbatim_stl_style() {
     let g = parse_grammar("grammar stltest\nstart doc\ndoc = \"solid\" LINE\n").expect("parse_grammar");
     let rec = Recognizer::compile(&g, &FragmentRegistry::new(), Vec::new()).expect("selected fragments");
-    // "My Cube" is two Ident tokens with a space between them — LINE must swallow both AND
-    // the space, ending exactly at end-of-input since there's no trailing newline.
     assert!(rec.recognize("solid My Cube").expect("recognize"), "LINE must capture the whole 'My Cube' rest-of-line as one span");
     assert!(rec.recognize("solid").expect("recognize"), "a raw span may legitimately be empty (no name)");
 }
@@ -342,9 +335,6 @@ async fn line_terminal_captures_rest_of_physical_line_verbatim_stl_style() {
 async fn rest_terminal_captures_to_eof_txt_style_over_out_of_alphabet_characters() {
     let g = parse_grammar("grammar txttest\nstart doc\ndoc = \"BODY\" REST\n").expect("parse_grammar");
     let rec = Recognizer::compile(&g, &FragmentRegistry::new(), Vec::new()).expect("selected fragments");
-    // `~` and `%` are still outside the fixed token alphabet even after P2-M1's promotions —
-    // REST must swallow them without the whole document failing to lex (forgiving mode) and
-    // without needing to re-tokenize the interior.
     assert!(rec.recognize("BODY arbitrary prose with ~weird~ %chars% and trailing punctuation!!!").expect("recognize"));
 }
 
@@ -360,10 +350,6 @@ async fn promoted_tokens_are_real_terminals_the_recognizer_can_require_positiona
 // Item 4: per-grammar comment dialect — line marker override, disabled, block comment.
 #[semio_framework_async_macros::async_test]
 async fn comment_header_directive_disables_hash_and_enables_block_comment_step_style() {
-    // '#' isn't itself promoted to a token (it stays the DEFAULT line-comment marker unless a
-    // grammar overrides it), so a real STEP entity sigil needs `comment none`/`comment line
-    // none`; DOLLAR stands in for it here as a real promoted token (item 3) — the point of
-    // THIS test is the comment dialect (item 4), proven directly against `g.lex` below.
     let g = parse_grammar("grammar steplike\ncomment none\ncomment block \"/*\" \"*/\"\nstring single doubled\nstart doc\ndoc = DOLLAR INT EQUALS IDENT LPAREN TEXT RPAREN SEMICOLON\n").expect("parse_grammar");
     assert_eq!(g.lex.comment.line, None);
     assert_eq!(g.lex.comment.block, Some(("/*".to_string(), "*/".to_string())));
@@ -400,16 +386,9 @@ async fn ref_self_recursion_matches_a_three_level_nested_shape_tree_pptx_style()
     let source = "grammar shapetree\nstart tree\ntree = \"spTree\" group\ngroup = \"{\" node* \"}\"\nnode = leaf | nested\nleaf = \"sp\" IDENT\nnested = \"grpSp\" group\n";
     let g = parse_grammar(source).expect("parse_grammar");
     let rec = Recognizer::compile(&g, &FragmentRegistry::new(), Vec::new()).expect("selected fragments");
-    // Level 0 (tree) -> level 1 group contains a leaf and a grpSp -> level 2 group contains a
-    // leaf and ANOTHER grpSp -> level 3 group contains one leaf. `nested` recursively refers
-    // back to `group`, which refers back to `node`, which refers back to `nested` — genuine
-    // mutual/self recursion through three real nesting levels, not a synthetic single hop.
     let fixture = "spTree { sp a grpSp { sp b grpSp { sp c } sp d } }";
     assert!(rec.recognize(fixture).expect("recognize"), "3-level self-recursive Ref chain must match a real nested fixture");
-    // A malformed variant (unclosed innermost group) must NOT spuriously match.
     assert!(!rec.recognize("spTree { sp a grpSp { sp b grpSp { sp c } sp d }").expect("recognize"));
-    // Confirm every production in the recursive chain was actually exercised, not merely
-    // present — `uncovered_productions` must report none of them as unreached.
     let uncovered = rec.uncovered_productions(fixture).expect("uncovered_productions");
     assert!(uncovered.is_empty(), "every production in the recursive shape-tree grammar should be covered by the 3-level fixture, got uncovered: {uncovered:?}");
 }
@@ -438,18 +417,15 @@ arm "IEND" { }
 "#;
     let spec = parse_protocol(source).expect("parse pngish");
     let mut bytes = Vec::new();
-    // Known arm: IHDR, length=8, two u32be fields, then a crc32be trailer.
     bytes.extend_from_slice(&8u32.to_be_bytes());
     bytes.extend_from_slice(b"IHDR");
     bytes.extend_from_slice(&100u32.to_be_bytes());
     bytes.extend_from_slice(&200u32.to_be_bytes());
     bytes.extend_from_slice(&0xDEAD_BEEFu32.to_be_bytes());
-    // Unknown chunk type ("tEXt"): must be skipped as opaque via its declared length.
     bytes.extend_from_slice(&5u32.to_be_bytes());
     bytes.extend_from_slice(b"tEXt");
     bytes.extend_from_slice(&[1, 2, 3, 4, 5]);
     bytes.extend_from_slice(&0x1234_5678u32.to_be_bytes());
-    // Sentinel: IEND, length=0, no fields, trailer crc, then the repeat block must stop.
     bytes.extend_from_slice(&0u32.to_be_bytes());
     bytes.extend_from_slice(b"IEND");
     bytes.extend_from_slice(&0xCAFE_BABEu32.to_be_bytes());
@@ -457,8 +433,6 @@ arm "IEND" { }
     let trace = walk_protocol(&spec, &bytes).expect("walk pngish");
     assert_eq!(trace.consumed, bytes.len(), "every declared+skipped+trailer byte must be consumed exactly");
 
-    // Truncating the unknown chunk's declared payload must fail (proves the skip genuinely
-    // reads `length`, not a fixed/guessed amount).
     let mut truncated = bytes.clone();
     truncated.truncate(bytes.len() - 9);
     assert!(walk_protocol(&spec, &truncated).is_err());
@@ -490,25 +464,20 @@ arm 0x3B { }
 "#;
     let spec = parse_protocol(source).expect("parse gifish");
     let mut bytes = Vec::new();
-    // Image descriptor (0x2C): left/top u16 LE.
     bytes.push(0x2C);
     bytes.extend_from_slice(&10u16.to_le_bytes());
     bytes.extend_from_slice(&20u16.to_le_bytes());
-    // Extension introducer (0x21) -> nested dispatch on label 0xF9 (GCE): flags u8, delay u16.
     bytes.push(0x21);
     bytes.push(0xF9);
     bytes.push(0);
     bytes.extend_from_slice(&100u16.to_le_bytes());
-    // Trailer (0x3B) — sentinel, empty fields, loop must stop right after.
     bytes.push(0x3B);
 
     let trace = walk_protocol(&spec, &bytes).expect("walk gifish");
     assert_eq!(trace.consumed, bytes.len());
 
-    // An unrecognized nested label must fail (proves the second dispatch level is real, not a
-    // no-op fallthrough).
     let mut bad = bytes.clone();
-    bad[5] = 0xAA; // corrupt the label byte inside the extension block
+    bad[5] = 0xAA;
     assert!(walk_protocol(&spec, &bad).is_err());
 }
 
@@ -532,13 +501,9 @@ arm 0xD9 { }
 "#;
     let spec = parse_protocol(source).expect("parse jpgish");
     let mut bytes = Vec::new();
-    // SOI preceded by an extra 0xFF fill byte — the scan must skip both leading 0xFFs and land
-    // on the real 0xD8 marker code.
     bytes.extend_from_slice(&[0xFF, 0xFF, 0xD8]);
-    // APP0 (0xE0), ordinary single-prefix marker, with a u16be field.
     bytes.extend_from_slice(&[0xFF, 0xE0]);
     bytes.extend_from_slice(&5u16.to_be_bytes());
-    // EOI (0xD9) — sentinel.
     bytes.extend_from_slice(&[0xFF, 0xD9]);
 
     let trace = walk_protocol(&spec, &bytes).expect("walk jpgish");
@@ -562,12 +527,10 @@ async fn be_prim_variants_round_trip_and_decode_big_endian_for_real() {
     let trace = walk_protocol(&spec, &bytes).expect("walk be-driven array");
     assert_eq!(trace.consumed, bytes.len());
 
-    // The same 2 count bytes read as LE (0x0900 = 2304) must NOT satisfy the buffer — proves a
-    // real big-endian decode happened, not an accidental LE fallback.
     let le_misread_would_want = u16::from_le_bytes([3u8.to_be_bytes()[0], 0]);
-    let _ = le_misread_would_want; // documentation only; the real proof is the failing walk below
+    let _ = le_misread_would_want;
     let mut too_short = bytes.clone();
-    too_short.truncate(2); // count bytes only, no item bytes at all
+    too_short.truncate(2);
     assert!(walk_protocol(&spec, &too_short).is_err());
 }
 
@@ -595,10 +558,8 @@ items Array(u8, Field(count))
     let trace = walk_protocol(&spec, &bytes).expect("segment must resolve `count` decoded by the earlier header block");
     assert_eq!(trace.consumed, bytes.len());
 
-    // A `count` that doesn't match the actual trailing bytes must fail, proving the segment
-    // genuinely used the decoded value (not silently accepting anything).
     let mut wrong = bytes.clone();
-    wrong[0] = 9; // count now claims 9 items but only 4 bytes of payload exist
+    wrong[0] = 9;
     assert!(walk_protocol(&spec, &wrong).is_err());
 }
 
@@ -620,26 +581,22 @@ field trailer u8
 "#;
     let spec = parse_protocol(source).expect("parse bmpish");
 
-    // compression==3 -> mask present; bpp==8 -> palette present.
     let mut present = Vec::new();
     present.push(3u8);
     present.extend_from_slice(&0x0000_00FFu32.to_le_bytes());
     present.push(8u8);
-    present.push(200u8); // palette.colors
-    present.push(1u8); // trailer
+    present.push(200u8);
+    present.push(1u8);
     let trace = walk_protocol(&spec, &present).expect("walk with mask+palette present");
     assert_eq!(trace.consumed, present.len());
 
-    // compression==0 -> mask absent; bpp==24 -> palette absent.
     let mut absent = Vec::new();
     absent.push(0u8);
     absent.push(24u8);
-    absent.push(1u8); // trailer
+    absent.push(1u8);
     let trace2 = walk_protocol(&spec, &absent).expect("walk with mask+palette absent");
     assert_eq!(trace2.consumed, absent.len());
 
-    // A buffer sized for the ABSENT shape must not satisfy the PRESENT shape's byte demands
-    // (proves presence genuinely changes how many bytes are consumed, not a no-op guard).
     assert!(walk_protocol(&spec, &absent[..2]).is_err());
 }
 
@@ -665,31 +622,22 @@ entry_value u32
     let spec = parse_protocol(source).expect("parse zipish");
 
     let mut bytes = Vec::new();
-    // 16 bytes standing in for a "local header region" this protocol doesn't describe at all.
     bytes.extend(std::iter::repeat_n(0xAAu8, 16));
     let central_dir_offset = bytes.len() as u32;
-    // Central-directory entry (jumped to via `cd_offset`).
     bytes.extend_from_slice(&0xCAFE_BABEu32.to_le_bytes());
     bytes.extend_from_slice(&42u32.to_le_bytes());
-    // EOCD: magic + cd_offset (points back at the entry above) + entry_count.
     bytes.extend_from_slice(&[0x50, 0x4B, 0x05, 0x06]);
     bytes.extend_from_slice(&central_dir_offset.to_le_bytes());
     bytes.extend_from_slice(&1u16.to_le_bytes());
 
     let trace = walk_protocol(&spec, &bytes).expect("walk zipish");
-    // The walk's FINAL position is wherever the last-declared block (the jump) left `pos` —
-    // NOT bytes.len(), since a jump is a deliberate exception to linear forward accounting
-    // (see `walk_protocol`'s own doc comment). Here that's right after the jumped-to entry's
-    // two u32 fields.
     assert_eq!(trace.consumed, central_dir_offset as usize + 8);
 
-    // Corrupting the EOCD magic must make the backward scan fail to find it at all.
     let mut corrupt_magic = bytes.clone();
     let magic_at = bytes.len() - 10;
     corrupt_magic[magic_at] = 0x00;
     assert!(walk_protocol(&spec, &corrupt_magic).is_err());
 
-    // Print/reparse round trip for the new block syntax itself.
     let printed = print_protocol(&spec);
     assert!(printed.contains("backward eocd magic"));
     assert!(printed.contains("jump central from cd_offset"));
@@ -703,7 +651,6 @@ async fn endian_marker_field_switches_runtime_byte_order_for_the_rest_of_the_wal
     let source = "dialect protocol\nprotocol demo.tiffish\nversion 1\nschema demo.tiffish\nstart frame\nframing record\nfield byte_order endian { \"II\"=le \"MM\"=be }\nfield count u16\nfield items Array(u8, Field(count))\n";
     let spec = parse_protocol(source).expect("parse tiffish");
 
-    // "II" -> little-endian mode for the rest of the walk.
     let mut le_bytes = Vec::new();
     le_bytes.extend_from_slice(b"II");
     le_bytes.extend_from_slice(&2u16.to_le_bytes());
@@ -711,9 +658,6 @@ async fn endian_marker_field_switches_runtime_byte_order_for_the_rest_of_the_wal
     let trace_le = walk_protocol(&spec, &le_bytes).expect("walk II/LE");
     assert_eq!(trace_le.consumed, le_bytes.len());
 
-    // "MM" -> big-endian mode for the rest of the walk — the SAME declared field (`count u16`,
-    // no `Be` suffix) must now be read big-endian, proving the marker genuinely flips a runtime
-    // mode rather than being cosmetic.
     let mut be_bytes = Vec::new();
     be_bytes.extend_from_slice(b"MM");
     be_bytes.extend_from_slice(&2u16.to_be_bytes());
@@ -721,12 +665,10 @@ async fn endian_marker_field_switches_runtime_byte_order_for_the_rest_of_the_wal
     let trace_be = walk_protocol(&spec, &be_bytes).expect("walk MM/BE");
     assert_eq!(trace_be.consumed, be_bytes.len());
 
-    // An unrecognized marker must be rejected outright.
     let mut bad = le_bytes.clone();
     bad[0] = b'X';
     assert!(walk_protocol(&spec, &bad).is_err());
 
-    // Round trip the `endian {...}` syntax itself.
     let printed = print_protocol(&spec);
     assert!(printed.contains("endian {"));
     assert_eq!(parse_protocol(&printed).expect("reparse tiffish"), spec);

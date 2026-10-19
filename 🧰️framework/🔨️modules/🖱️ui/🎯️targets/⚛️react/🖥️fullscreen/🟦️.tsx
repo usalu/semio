@@ -1,4 +1,4 @@
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { resolveElementsSurfaceChromeRoot } from "../🌓️appearance/🟦️.ts";
 import { shellNavbarTrailingEndWidthByRoot, shellNavbarTrailingEndWidthListenersByRoot } from "../../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
@@ -107,12 +107,6 @@ export function NavbarTrailingChromeSlot({
   readonly onFullscreenToggle?: () => void;
 } = {}) {
   const shellScope = useShellScopeOptional();
-  // 🐚️ Resolved at render time (not read from `shellScope.rootRef` inside the effect): the ref object's
-  // identity never changes, so a dep array holding the ref itself would never re-fire this effect once
-  // the root attaches after this component's own mount commit (shell roots attach bottom-up, after
-  // deeply-nested descendants like this one). Reading `.current` here and depending on the resolved
-  // element instead picks up the populated root on the guaranteed re-render `FrameworkOsShell` triggers
-  // once its own root ref callback fires.
   const root = shellScope?.rootRef.current ?? undefined;
   const shellRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [parkedMinWidth, setParkedMinWidth] = reactHostPort.useState(0);

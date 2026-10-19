@@ -288,7 +288,7 @@ fn the_operation_image_is_the_exact_default_authoring_wire_of_its_bytes() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let image_bytes = serde_json::to_vec(&row["body"]).unwrap();
-        let image = super::ArtifactOperationImage::from_bytes(image_bytes.clone());
+        let image = semio_framework_ui_scene_pack::from_bytes(image_bytes.clone());
         let header: &'static [u8] = b"op";
         let mut expected = header.to_vec();
         expected.extend_from_slice(&image_bytes);

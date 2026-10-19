@@ -46,11 +46,6 @@ describe("Shell components", () => {
     });
 
     it("reserves an in-window affordance against the box an anchored chrome panel occupies", () => {
-      // 🛟️ B47 §1.3 measured the Inspection panel body at x 1137‑1437 over the perspective window's
-      // measures rail at x 1130‑1430, and the generation3d world pane measured the Tool runs panel at
-      // (1137, 3) 300×120 over its own top-right overlay rail at (1355, 83) 75×16 — `Frame visible`
-      // and the compute `Cancel` unreachable at every press. The reserve is the overlap and nothing
-      // more; an affordance a panel does not cover keeps its flush inset exactly as authored.
       const worldPane = { left: 493, top: 26, right: 1440, bottom: 840 };
       const toolRunPanel = { left: 1137, top: 3, right: 1437, bottom: 123 };
       const overlayRail = { left: 1355, top: 83, right: 1430, bottom: 99 };
@@ -58,24 +53,16 @@ describe("Shell components", () => {
 
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [], "either", 8)).toEqual({ inlinePx: 0, blockPx: 0 });
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [{ left: 0, top: 3, right: 300, bottom: 123 }], "either", 8)).toEqual({ inlinePx: 0, blockPx: 0 });
-      // 🛟️ Dropping below the panel costs 48 px, moving in past its left edge 301 — `"either"` takes the cheaper axis.
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel], "either", 8)).toEqual({ inlinePx: 0, blockPx: 48 });
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel], "block", 8)).toEqual({ inlinePx: 0, blockPx: 48 });
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel], "inline", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
-      // 🛟️ A full-height right column has no bottom edge to drop under, so the block axis is not viable.
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [{ left: 1137, top: 3, right: 1437, bottom: 900 }], "either", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
-      // 🛟️ Two panels sharing the corner reserve their union, not one of them.
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-right", [toolRunPanel, { left: 1300, top: 3, right: 1437, bottom: 240 }], "either", 8)).toEqual({ inlinePx: 0, blockPx: 165 });
-      // 🛟️ The window's own right-edge chrome is pinned to its window's top and only yields inline.
       expect(chromePanelSafeArea(windowRightChromeColumn, worldPane, "top-right", [toolRunPanel], "inline", 0)).toEqual({ inlinePx: 303, blockPx: 0 });
       expect(chromePanelSafeArea(windowRightChromeColumn, worldPane, "top-right", [{ left: 300, top: 26, right: 470, bottom: 840 }], "inline", 0)).toEqual({ inlinePx: 0, blockPx: 0 });
-      // 🛟️ An affordance a panel covers with no room to clear inside its host does not move at all —
-      // a half-step frees nothing, and the answer there is a re-anchoring, not a clamp.
       expect(chromePanelSafeArea(windowRightChromeColumn, { left: 1300, top: 26, right: 1440, bottom: 840 }, "top-right", [toolRunPanel], "inline", 0)).toEqual({ inlinePx: 0, blockPx: 0 });
-      // 🛟️ A middle anchor has no edge on that axis to reserve against.
       expect(chromePanelSafeArea(overlayRail, worldPane, "top-middle", [toolRunPanel], "either", 8)).toEqual({ inlinePx: 0, blockPx: 48 });
       expect(chromePanelSafeArea(overlayRail, worldPane, "right-middle", [toolRunPanel], "either", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
-      // 🛟️ A bottom-left affordance clears a bottom-left panel on its own two edges.
       expect(chromePanelSafeArea({ left: 500, top: 800, right: 620, bottom: 830 }, worldPane, "bottom-left", [{ left: 493, top: 700, right: 793, bottom: 840 }], "either", 8)).toEqual({ inlinePx: 0, blockPx: 138 });
       expect(chromePanelSafeArea({ left: 500, top: 800, right: 620, bottom: 830 }, worldPane, "bottom-left", [{ left: 493, top: 700, right: 793, bottom: 840 }], "inline", 8)).toEqual({ inlinePx: 301, blockPx: 0 });
 
@@ -115,13 +102,6 @@ describe("Shell components", () => {
     });
 
     it("keeps a window content overlay rail hit-testable under an anchored chrome panel", async () => {
-      // 🛟️ The generation3d defect as its own law. A `z-panel` chrome panel in the app root's stacking
-      // context always paints above `z-window` window content, so while the two boxes overlap the rail can
-      // never take a press — `document.elementFromPoint` on `Frame visible`'s own centre returns the panel,
-      // which is what made `fit` 0/8 and the preview `Cancel` unreachable. jsdom runs no layout, so the
-      // geometry is stubbed and that stacking premise is modelled directly: the point resolves to the
-      // chrome panel wherever it covers it, and to the rail's button otherwise. Runtime `elementFromPoint`
-      // evidence is the ticket's own browser battery on :6022.
       const panelBox = { x: 1137, y: 3, width: 300, height: 120, top: 3, right: 1437, bottom: 123, left: 1137 };
       const hostBox = { x: 493, y: 26, width: 947, height: 814, top: 26, right: 1440, bottom: 840, left: 493 };
       const railTopBase = 57;

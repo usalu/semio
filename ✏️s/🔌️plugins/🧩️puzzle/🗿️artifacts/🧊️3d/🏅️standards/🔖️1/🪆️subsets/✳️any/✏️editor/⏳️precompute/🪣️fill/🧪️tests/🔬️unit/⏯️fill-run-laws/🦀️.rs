@@ -62,7 +62,7 @@ enum FillRunTurn {
 fn settle_fill_run_outcome(turn: JobTurn) -> FillRunTurn {
     match turn {
         JobTurn::Preview(page) => {
-            assert!(page.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && page.len() <= TOOL_RUN_TRACE_PAGE_BYTES_MAX);
+            assert!(page.len() <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES && page.len() <= TOOL_RUN_TRACE_PAGE_BYTES_MAX);
             FillRunTurn::Tick(ToolRunTick::decode(&page).expect("tick decodes"))
         }
         JobTurn::Checkpoint { state, .. } => FillRunTurn::Checkpoint(state),
@@ -337,8 +337,6 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
     let mut tally = FillRunOracleTally::default();
     for record in job.verdicts.iter().filter(|record| matches!(record.reason, FillRunReason::SolidOverlap | FillRunReason::Fits)).take(records) {
         let candidate = parry_hull(&pose_isometry(record.origin, record.orientation, &None), rendered(Some(&record.mesh_url)));
-        // 🪞️ `contact` reads 0 for hulls that coincide exactly (a duplicate at an occupied pose), so a candidate whose own center
-        // lies inside another body counts as a collision all the way through.
         let center = parry3d::shape::Shape::compute_local_aabb(&candidate).center();
         let deepest = bodies[..base + record.placements_before]
             .iter()
@@ -567,7 +565,6 @@ fn fill_run_job_step_with_one_unit_of_fuel_shows_each_candidate_before_its_verdi
 /// provisional document instance, never as a pile of past collision records.
 #[test]
 fn fill_run_job_keeps_only_the_current_candidate_on_screen() {
-    // 🧫️ The scene_snapshot's concrete-forest seed 3 run: 40 placements, collisions and marked vortices all occur.
     let (roots, lane, _) = example_fill_roots("concrete-forest", 3);
     let mut job = fill_run_job(roots, lane, 3, 40);
     let mut mirror = FillRunMirror::new();
@@ -783,8 +780,6 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
     let ticks = drive_revalidation(&mut clean);
     assert!(clean.conflicts().iter().all(|conflict| !conflict) && clean.conflicts().len() == PLACED);
     assert!(ticks.iter().all(|tick| tick.retract_to.is_none() && tick.append_ops.is_empty()));
-    // 👁️ One placement on screen at a time, none after the finish: a finalize never leaves a verdict mesh over every
-    // committed object.
     let mut screen = ToolRunTraceStore::new(fill_run_identity());
     for tick in &ticks {
         for page in &tick.trace {

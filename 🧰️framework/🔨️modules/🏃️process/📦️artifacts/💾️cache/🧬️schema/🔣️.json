@@ -1373,6 +1373,94 @@
           "type": "boolean"
         }
       }
+    },
+    "DescriptorRefusalPolicy": {
+      "const": {
+        "maximumPathCodePoints": 256
+      }
+    },
+    "DescriptorRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "expectedPid",
+        "observedPid",
+        "path",
+        "pathTruncated",
+        "guardPath"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "compiler-descriptor"
+        },
+        "expectedPid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "observedPid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "pathTruncated": {
+          "type": "boolean"
+        },
+        "guardPath": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DescriptorRefusalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "format",
+        "observedPid",
+        "pathSuffix",
+        "guardPath",
+        "pathTruncated"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "format": {
+          "enum": [
+            "nul-pcfatn",
+            "newline-pn"
+          ]
+        },
+        "observedPid": {
+          "enum": [
+            71,
+            72
+          ]
+        },
+        "pathSuffix": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "guardPath": {
+          "type": "boolean"
+        },
+        "pathTruncated": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

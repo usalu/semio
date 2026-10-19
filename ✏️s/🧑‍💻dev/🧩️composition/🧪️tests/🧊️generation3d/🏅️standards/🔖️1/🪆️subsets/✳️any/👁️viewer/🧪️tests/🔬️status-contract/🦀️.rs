@@ -194,16 +194,9 @@ fn replay(state: &StatusState, session: &mut FlowEvalSession) {
                 preview_eval::resolve_eval(&resolve, session);
             }
             "cancel" => {
-                // 🛑 The gesture is the framework's `toolRunAbort` on the run; the kernel RELEASE below is
-                // how that abort's close reaches the two extension registries the guest cannot see
-                // (`preview_eval::release_invocations_for`). The session latch is what turns the published
-                // phase into `cancelled`.
                 session.cancel_preview_evaluation(VIEW_PREVIEW_WINDOW_ID);
                 let payload = preview_eval::FlowEvalRelease { window_id: VIEW_PREVIEW_WINDOW_ID.to_string(), window_kind_id: preview::WINDOW_KIND_ID.to_string() };
                 let invocations = preview_eval::release_invocations_for(&payload, address(state.addressable));
-                // 🚪️ HOW MANY doors the gesture knocks on is the cancellation lane's own law
-                // (`rows[].invocations`); this law only states the half the STATUS depends on — an
-                // addressable kernel is told, an unaddressable one has no actor to tell.
                 assert_eq!(!invocations.is_empty(), state.addressable, "{}: an addressable kernel is told, an unaddressable one is not", state.id);
             }
             other => panic!("{}: unknown status-contract event {other}", state.id),
@@ -443,9 +436,6 @@ fn a_settled_chain_publishes_no_spinner_and_no_abort_however_stale_the_run_view_
     let working = semio_s_artifact_procedural_3d_preview_eval::preview_scene_status_json(Some(&session), Some(&live_run), None).expect("a working chain publishes a status");
     let working: serde_json::Value = serde_json::from_str(&working).expect("status json");
     assert_eq!(working["computing"], serde_json::json!(true), "a working chain is computing");
-    // 🛑 The abort affordance is asserted through the ADDRESS-RESOLVED projection: the scene status
-    // resolves the geometry extension itself, and a native `--lib` binary addresses none, which would
-    // make `cancellable` false for a reason that has nothing to do with this law.
     let working_addressed: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(&session), Some(&live_run), Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json");
     assert_eq!(working_addressed["cancellable"], serde_json::json!(true), "and its work can be stopped");
 

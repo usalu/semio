@@ -1,5 +1,6 @@
 //! ↩️ Inverse for `MoveNode` — restores the BASE position. Missing target ⇒ `Vec::new()`.
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::move_node::component::MoveNode;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<MoveNode>>(payload: &super::MoveNode, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

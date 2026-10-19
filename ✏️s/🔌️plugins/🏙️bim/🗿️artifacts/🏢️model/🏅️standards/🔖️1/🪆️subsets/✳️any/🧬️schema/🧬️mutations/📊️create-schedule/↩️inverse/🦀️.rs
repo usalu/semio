@@ -1,4 +1,4 @@
-//! \u21A9\uFE0F Inverse of \u00B6CreateSchedule\u00B6: the concrete \u00B6DeleteSchedule\u00B6 of the id it created, none when the id was already taken.
+//! ↩️ Inverse of \u00B6CreateSchedule\u00B6: the concrete \u00B6DeleteSchedule\u00B6 of the id it created, none when the id was already taken.
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_schedule::DeleteSchedule;
 use crate::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule;

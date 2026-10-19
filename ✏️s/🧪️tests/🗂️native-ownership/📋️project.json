@@ -8,7 +8,7 @@
   "targets": {
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🧪️tests/🗂️native-ownership"

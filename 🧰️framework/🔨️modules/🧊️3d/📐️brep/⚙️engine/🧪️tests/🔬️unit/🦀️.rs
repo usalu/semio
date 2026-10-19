@@ -126,8 +126,6 @@ async fn the_validate_gate_judges_the_shape_it_was_asked_about_and_not_the_arena
     let stranger = kernel.box_prim_sync(2.0, 2.0, 2.0).expect("a second box");
     let stranger_solid = kernel.solid_id(&stranger).expect("the second box is a solid");
     assert_ne!(solid, stranger_solid, "the two boxes are different solids");
-    // 🧨️ Break the STRANGER's outer shell orientation, which `validate_body` reports as a blocking
-    // `shell-orientation-inward` issue against that solid alone.
     let outer = kernel.body.solids.get(stranger_solid).expect("stranger solid").outer;
     let faces = kernel.body.shells.get(outer).expect("stranger shell").faces.clone();
     for face in faces {

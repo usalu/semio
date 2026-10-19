@@ -42,7 +42,6 @@ fn walk_blocks(blocks: &[DocxBlock], paragraph_count: &mut u32, table_count: &mu
 }
 
 impl DocxOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &DocxSnapshot) -> Self {
         let mut paragraph_count = 0u32;
         let mut table_count = 0u32;

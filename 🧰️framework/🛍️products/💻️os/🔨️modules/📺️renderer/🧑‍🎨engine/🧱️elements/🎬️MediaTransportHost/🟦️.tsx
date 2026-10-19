@@ -1,11 +1,11 @@
 /// <reference types="vitest/importMeta" />
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { MEDIA_TRANSPORT_EXTENSION_ID, parseMediaTransportProps, type MediaTransportProps } from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts";
-import { collectMediaTransportBytes, type MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
+import { collectMediaTransportBytes, type MediaTransportPort } from "@semio-tech/framework/os/modules/renderer/engine/media/lifecycle";
 
 export { MEDIA_TRANSPORT_EXTENSION_ID };
 
-export type { MediaTransportPort } from "../../🎬️media/🚚️lifecycle/🟦️.ts";
+export type { MediaTransportPort } from "@semio-tech/framework/os/modules/renderer/engine/media/lifecycle";
 
 export type MediaTransportOwner = {
   readonly instanceId: number;

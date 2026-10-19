@@ -45,9 +45,6 @@ export type ContributionsPublisher<E> = {
  * `retire(instanceId)` forgets what an instance that went away had installed.
  */
 export function createContributionsPublisher<E>(ports: ContributionsPublisherPorts<E>): ContributionsPublisher<E> {
-  // 📦️ The scoped pack is a quarter-megabyte cut of the whole loaded closure and depends on nothing
-  // but `(receiver, registry generation)` — cutting it again on every refresh burned real CPU for a
-  // byte-identical answer (71 rebuilds in one 60 s boot, measured).
   const packByKey = new Map<string, string>();
   const installedByInstance = new Map<number, string>();
   return {

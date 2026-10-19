@@ -20,7 +20,7 @@ struct Puzzle5dStorePreparation {
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparationFactory {
     fn operation_wire_source<'a>(&self, operation: &'a Puzzle5dMutation) -> Option<store::ArtifactPreparedOperationSource<'a>> {
-        crate::standards::v1::subsets::any::io::binary::mutations::prepared_operation_wire_source(operation)
+        crate::mirror::standards::v1::subsets::any::schema::mutations::prepared_operation_wire_source(operation)
     }
 
     fn begin_batch_digest(

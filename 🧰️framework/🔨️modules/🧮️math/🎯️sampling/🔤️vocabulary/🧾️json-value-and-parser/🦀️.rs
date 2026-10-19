@@ -134,7 +134,6 @@ async fn parse_json_string(bytes: &[u8], pos: &mut usize) -> Result<String, Samp
                 }
             }
             _ => {
-                // 📜️ Re-decode the UTF-8 codepoint starting at this byte instead of pushing raw bytes.
                 let start = *pos - 1;
                 let ch_len = utf8_sequence_len(byte).await.ok_or(SamplingError::Corrupted { reason: "invalid UTF-8 in JSON string" })?;
                 let end = start + ch_len;
@@ -192,10 +191,6 @@ async fn parse_json_array(bytes: &[u8], pos: &mut usize, depth: usize, max_depth
         return Ok(JsonValue::Array(items));
     }
     loop {
-        // 🔀️ `Box::pin(..)` breaks the `parse_json_value` ↔ `parse_json_array`/`parse_json_object`
-        // mutual-recursion cycle — an `async fn` calling itself (even indirectly) has an
-        // infinite-size future type otherwise (E0733). Not `dyn Future` (R1 only bans that in
-        // trait-method return position): this is `Pin<Box<impl Future>>`, a concrete opaque type.
         items.push(Box::pin(parse_json_value(bytes, pos, depth + 1, max_depth)).await?);
         skip_json_whitespace(bytes, pos).await;
         match bytes.get(*pos) {

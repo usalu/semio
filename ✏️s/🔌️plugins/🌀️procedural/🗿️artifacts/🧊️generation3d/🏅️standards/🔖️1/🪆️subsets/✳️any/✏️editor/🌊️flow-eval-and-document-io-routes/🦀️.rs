@@ -69,20 +69,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dFlowEva
     const TOOL_IDS: &'static [&'static str] = GENERATION3D_FLOW_EVAL_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
-        // ⏱️ The tick's ONLY store lane is the addressed preview window's OWN transient
-        // (`Generation3dFlowEvalWindowWork::step`'s `CompleteWithEphemeral`); its extension
-        // invocations are not store lanes at all and need no declaration.
-        // `Config` was doubly wrong — it grants a lane the tick never writes and withholds the one it
-        // does, so every dispatched tick was refused with `typed-operation emitted a store lane absent
-        // from its exact factory publication contract`. Pairing `HostOnly` with it was equally wrong:
-        // `HostOnly` MEANS "no store lane" and `ArtifactToolFactoryRegistry::register` rejects it
-        // alongside any other lane with `interactive-job.publication-contract`
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
-        // 🔁️ Both window-addressed FOLDS publish the same lane the tick does, because they now run
-        // the wave the settle unblocked inline and owe the addressed window the geometry and the
-        // status it advanced to. A fold that declines the continuation publishes nothing — a lane is
-        // what a route MAY write, never what it must (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "flowTessellateResolve", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
         ArtifactToolPublicationContract { tool_id: "flowEvalRelease", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -175,7 +162,7 @@ impl Generation3dDocumentIoWork {
         use semio_framework_value::retained_clone::RetainedCloneGrant;
         if let Some(owner)=self.retirement.as_ref(){let d=owner.selected_demand(copy)?;return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth})}
         if !self.owns_retirement_source(){return Ok(RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0})}
-        let frontier=semio_framework_value::list::PagedList::<Box<dyn semio_framework_value::retirement::RetirementCursor>,{usize::MAX}>::default();
+        let frontier=semio_framework_value_persistent::list::PagedList::<Box<dyn semio_framework_value::retirement::RetirementCursor>,{usize::MAX}>::default();
         Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:frontier.next_capacity_allocation_bytes(1).map_err(semio_framework_value::ValueError::from)?.unwrap_or(0),maximum_release_bytes:0,maximum_depth:1})
     }
 
@@ -303,7 +290,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
                 let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
                 self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                     let mut emit = import_document::emit(payload, &doc, &cfg)?;
-                    // 🔁️ An import that changed nothing owes the previews nothing.
                     if !emit.artifact_mutations.is_empty() {
                         owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
                     }

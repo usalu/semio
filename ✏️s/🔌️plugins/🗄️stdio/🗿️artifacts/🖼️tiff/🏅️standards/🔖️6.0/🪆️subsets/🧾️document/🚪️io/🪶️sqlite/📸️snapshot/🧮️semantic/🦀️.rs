@@ -1,6 +1,7 @@
 //! 🧮️ Authored TIFF storage cells are admitted before complete logical Snapshot construction.
  use super::{TiffSnapshot,ValueError,ValueRefusalKind,SqliteSnapshotControl,SqliteSnapshotPhase,RowWriter};
- use semio_framework_value::{DslValue as D,NativeDecodeControl};
+ use semio_framework_value::DslValue as D;
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  use semio_framework_dsl_record::{RecordValue,FieldValue as F};
  use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost as _,sqlite_snapshot::SqliteDatabaseLimits};
  type Result<T>=std::result::Result<T,ValueError>;

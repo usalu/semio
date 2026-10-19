@@ -146,13 +146,11 @@ use semio_framework_diagnostic::Severity;
     }
 
     impl Ifc2x3SavBuilderConstruction {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, diagnostics: Vec::new() }
         }
 
         /// ⚖️ Adds a load group (`IFCSTRUCTURALLOADGROUP`) instance.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_load_group(mut self, id: u64) -> Self {
             let (next, outcome) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] }, index: None }), &self.snapshot));
             self.snapshot = next;

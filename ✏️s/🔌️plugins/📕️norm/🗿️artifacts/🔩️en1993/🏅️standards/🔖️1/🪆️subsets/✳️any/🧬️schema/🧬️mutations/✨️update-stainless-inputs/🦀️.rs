@@ -1,4 +1,4 @@
-//! `upsert-material` — upsert a `SteelMaterial` by id into `materials`.
+//! 🧬️ `upsert-material` — upsert a `SteelMaterial` by id into `materials`.
 
 use semio_s_artifact_norm_en1993_model::{SteelMaterial, En1993Snapshot};
 

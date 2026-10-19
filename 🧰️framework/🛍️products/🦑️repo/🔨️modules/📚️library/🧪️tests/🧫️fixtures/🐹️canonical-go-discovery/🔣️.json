@@ -49,6 +49,13 @@
       "production": "func main() { println(\"oracle\") }"
     }
   ],
+  "hostAdapterCases": [
+    {
+      "owner": ".",
+      "case": "🔌️host-adapter",
+      "test": "func TestHostAdapterMustStayOutside() {}"
+    }
+  ],
   "opaqueCases": [
     {
       "owner": "🧫️fixtures/opaque-go-repository",

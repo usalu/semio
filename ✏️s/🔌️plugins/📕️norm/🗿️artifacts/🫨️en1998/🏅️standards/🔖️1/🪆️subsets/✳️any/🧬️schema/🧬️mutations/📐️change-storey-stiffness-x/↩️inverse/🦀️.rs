@@ -1,4 +1,4 @@
-//! Inverse for `change-storey-stiffness-x`.
+//! ↩️ Inverse for `change-storey-stiffness-x`.
 use crate::change_storey_stiffness_x::ChangeStoreyStiffnessX;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

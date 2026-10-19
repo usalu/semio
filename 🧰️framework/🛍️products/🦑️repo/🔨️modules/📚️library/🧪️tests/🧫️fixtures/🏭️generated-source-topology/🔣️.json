@@ -218,40 +218,40 @@
     },
     {
       "contractId": "plugin-registry",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🏗️framework.ts",
-      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🏗️framework/🟦️.ts",
+      "previousPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🏗️framework.ts",
+      "canonicalPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🏗️framework/🟦️.ts",
       "fileKindId": "typescript-source",
       "semanticOwnerKindId": "generated",
       "inclusion": "ignored"
     },
     {
       "contractId": "plugin-registry",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🖥️hosts.rs",
-      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🖥️hosts/🦀️.rs",
+      "previousPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🖥️hosts.rs",
+      "canonicalPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🖥️hosts/🦀️.rs",
       "fileKindId": "rust-source",
       "semanticOwnerKindId": "generated",
       "inclusion": "ignored"
     },
     {
       "contractId": "plugin-registry",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds.ts",
-      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+      "previousPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds.ts",
+      "canonicalPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts",
       "fileKindId": "typescript-source",
       "semanticOwnerKindId": "generated",
       "inclusion": "ignored"
     },
     {
       "contractId": "plugin-registry",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins.ts",
-      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
+      "previousPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins.ts",
+      "canonicalPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
       "fileKindId": "typescript-source",
       "semanticOwnerKindId": "generated",
       "inclusion": "ignored"
     },
     {
       "contractId": "plugin-registry",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts.rs",
-      "canonicalPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs",
+      "previousPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🗿️artifacts.rs",
+      "canonicalPath": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🗿️artifacts/🦀️.rs",
       "fileKindId": "rust-source",
       "semanticOwnerKindId": "generated",
       "inclusion": "ignored"

@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-native-owned"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Native receiving of retained owners from original input: the receive and receiver traits, record, list, shared, default, field, original and value tree receivers."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-owned"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_native_owned"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+serde = { workspace = true }

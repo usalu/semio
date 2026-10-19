@@ -1,4 +1,4 @@
-//! Inverse for `change-slab-action-q-area-pa`.
+//! ↩️ Inverse for `change-slab-action-q-area-pa`.
 use crate::change_slab_action_q_area_pa::ChangeSlabActionQAreaPa;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn inverse<Op>(payload: &ChangeSlabActionQAreaPa, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_slab_action_q_area_pa::ChangeSlabActionQAreaPa> {

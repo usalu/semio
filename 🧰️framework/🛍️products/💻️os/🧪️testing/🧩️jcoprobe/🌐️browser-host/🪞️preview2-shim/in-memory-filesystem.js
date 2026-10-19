@@ -5,7 +5,7 @@ const timeZero = {
     seconds: 0n,
     nanoseconds: 0,
 };
-/** Coerce the given object to a safe integer */
+/** 🛡️ Coerce the given object to a safe integer */
 function coerceToSafeIntegerNumber(obj) {
     let n;
     if (typeof obj === "number") {
@@ -25,7 +25,7 @@ function coerceToSafeIntegerNumber(obj) {
 // Bound the total number of symlinks followed during a single path resolution.
 const MAX_SYMLINK_DEPTH = 40;
 /**
- * Resolve from the descriptor's base directory, retaining the directory stack
+ * 🗃️ Resolve from the descriptor's base directory, retaining the directory stack
  * across symlink expansions so `..` cannot escape that capability. Intermediate
  * symlinks always follow; the final segment follows only when requested.
  * Creation may return a missing final entry, together with its resolved parent.
@@ -149,7 +149,7 @@ function lockState(entry) {
 }
 const touchListeners = new Set();
 /**
- * Subscribe to every mutation across every in-memory tree (regardless of which
+ * 👆️ Subscribe to every mutation across every in-memory tree (regardless of which
  * adapter loaded it). Lets a persistence layer (e.g. `OpfsFilesystemAdapter`)
  * react to writes without wrapping every mutating method individually. Returns
  * an unsubscribe function.
@@ -535,7 +535,7 @@ class Descriptor {
         return { upper: value.id, lower: value.version };
     }
     /**
-     * Default advisory-locking implementation: a same-process reader/writer lock
+     * 🔒️ Default advisory-locking implementation: a same-process reader/writer lock
      * keyed on the underlying entry. There's no real contention to wait out in a
      * single-threaded environment, so `lockShared`/`lockExclusive` don't block -
      * they throw `would-block` immediately when the lock isn't free, same as the
@@ -590,7 +590,7 @@ const descriptorCreate = Descriptor._create;
 // @ts-expect-error - Deleting static method
 delete Descriptor._create;
 /**
- * Well-known symbol a `BrowserFilesystemDescriptor` wrapper (e.g. the cross-tab-locking
+ * 📜️ Well-known symbol a `BrowserFilesystemDescriptor` wrapper (e.g. the cross-tab-locking
  * `Proxy` from `OpfsFilesystemAdapter`) can implement to hand back the real descriptor it
  * wraps. `renameAt`/`linkAt`/`isSameObject` reach into a *second* descriptor argument's
  * private `#entry` field directly - private-field access bypasses `Proxy` traps and fails
@@ -608,7 +608,7 @@ function unwrapDescriptor(descriptor) {
         current = inner;
     }
 }
-/** Explicit ephemeral storage adapter for browser applications and tests. */
+/** 🧠️ Explicit ephemeral storage adapter for browser applications and tests. */
 export class InMemoryFilesystemAdapter {
     getRoot(capability) {
         if (!capability.dir) {

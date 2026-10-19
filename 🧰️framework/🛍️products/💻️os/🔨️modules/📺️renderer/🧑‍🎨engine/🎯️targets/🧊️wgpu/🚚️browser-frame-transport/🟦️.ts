@@ -1,10 +1,10 @@
 import { BrowserInteractiveJobPort } from "../🔌️browser-interactive-job-port/🟦️.ts";
 import { type BrowserFrameDiagnostic, type BrowserFrameDirectives, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameLosslessEvent, type BrowserFrameReplaceableEvent, type BrowserFrameTransportOptions, type BrowserFrameWireLosslessEvent, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStatus, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote, FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY, FRAME_WORKER_POINTER_CAPACITY, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, type QueuedLossless } from "./📋️contract/🟦️.ts";
 import { TurnClock, TurnLedger, type TurnOutcome } from "../⏱️turn-budget/🟦️.ts";
-import { BROWSER_MEDIA_CAPACITY, type BrowserMediaOperation, type BrowserMediaValue, mediaSlotAuthorityKey, parsePresentedMediaSlots, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
+import { BROWSER_MEDIA_CAPACITY, type BrowserMediaOperation, type BrowserMediaValue, mediaSlotAuthorityKey, parsePresentedMediaSlots, type PresentedMediaSlot } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 import { bootPhaseCeilingMs, type BrowserBootPhase, describeBrowserBootSilence, evaluateBrowserBootLiveness, FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../🫀️boot-liveness/🟦️.ts";
 import { OriginalBootstrapRootPort } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
-import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
+import type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import { nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 import type { WgpuHostAppearance, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
@@ -295,9 +295,7 @@ export class BrowserFrameTransport {
     try {
       this.worker.postMessage({ kind: "host-appearance", lifecycle: this.lifecycle, appearance });
       this.requestFrame();
-    } catch {
-      /* a Worker that cannot take an appearance change is already failing on its own channel */
-    }
+    } catch {}
   }
 
   /** 🫥️ Tells the Worker the page was hidden. Posted at once, never batched: a hidden page gets no animation frame, so
@@ -306,9 +304,7 @@ export class BrowserFrameTransport {
     if (this.status === "faulted" || this.status === "closed") return;
     try {
       this.worker.postMessage({ kind: "host-page-hidden", lifecycle: this.lifecycle });
-    } catch {
-      /* a Worker that cannot take the hidden page is already failing on its own channel */
-    }
+    } catch {}
   }
 
   /** 🫥️ Tells the Worker the page's `window` lost focus. Posted at once, never batched, fire-and-forget like
@@ -317,9 +313,7 @@ export class BrowserFrameTransport {
     if (this.status === "faulted" || this.status === "closed") return;
     try {
       this.worker.postMessage({ kind: "host-window-blur", lifecycle: this.lifecycle });
-    } catch {
-      /* a Worker that cannot take the window blur is already failing on its own channel */
-    }
+    } catch {}
   }
 
   /** 🛰️ Hands the page's latest agent-bridge offer to the Worker. Fire-and-forget like {@link setHostAppearance}:
@@ -329,9 +323,7 @@ export class BrowserFrameTransport {
     try {
       this.worker.postMessage({ kind: "host-agent-bridge", lifecycle: this.lifecycle, offer });
       this.requestFrame();
-    } catch {
-      /* a Worker that cannot take an offer is already failing on its own channel */
-    }
+    } catch {}
   }
 
   /** 🗄️ Re-seeds the Worker's synchronous preference cache from the page's store. Fire-and-forget
@@ -342,9 +334,7 @@ export class BrowserFrameTransport {
     if (this.status === "faulted" || this.status === "closed") return;
     try {
       this.worker.postMessage({ kind: "host-storage", lifecycle: this.lifecycle, storage });
-    } catch {
-      /* a Worker that cannot take a storage change is already failing on its own channel */
-    }
+    } catch {}
   }
 
   /** 🔬️ Requests one read-only introspection dump from the frame Worker's renderer thread-local.
@@ -683,9 +673,6 @@ export class BrowserFrameTransport {
     this.acceptedFrameSequence = message.frameSequence;
     if (message.workerStepVerdict === "sustained-overrun") this.workerStepOverruns++;
     if (message.quarantined) {
-      // 🏷️ Every renderer fault code keeps its OWN name. `frame-credits` used to land on
-      // `worker-step-overrun`, so a frame the runtime refused to build was reported as a slow step and
-      // read as a budget problem for days (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
       const code = message.faultCode === "present-failed" ? "worker-present-failed" : message.faultCode === "text-input-failed" ? "worker-input-failed" : message.faultCode === "frame-credits" ? "worker-frame-failed" : "worker-step-overrun";
       this.quarantine(code, message.faultDetail ?? `worker frame step executed ${message.workerExecutingMs.toFixed(3)} ms`);
       return;

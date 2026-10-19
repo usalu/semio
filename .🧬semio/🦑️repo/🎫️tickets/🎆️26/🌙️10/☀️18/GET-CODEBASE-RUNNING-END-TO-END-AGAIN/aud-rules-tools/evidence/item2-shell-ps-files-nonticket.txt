@@ -1,0 +1,5 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🖥️associations/🪟️windows/🔵️.ps1
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/🧪️tests/🧫️fixtures/🐚️sample.sh
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/🧪️tests/🧫️fixtures/💎️sample.rb

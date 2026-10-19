@@ -762,19 +762,16 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
     if total_len > limits.max_file_len {
         return Err(ProtocolError::LimitExceeded("file exceeds ProtocolLimits::max_file_len"));
     }
-    // (1) validate header
     validate_header(source).await?;
 
     if total_len == HEADER_SIZE as u64 {
         return Ok(RecoveryReport { records_recovered: 0, bytes_recovered: HEADER_SIZE as u64, last_commit_seq: 0, last_commit_offset: 0, torn_tail_bytes: 0 });
     }
 
-    // (2) fast path
     if let Some(report) = try_fast_path(source, total_len, limits).await {
         return Ok(report);
     }
 
-    // (3) forward scan from offset 32, tracking last_valid_end and last_commit_end
     let mut pos = HEADER_SIZE as u64;
     let mut last_valid_end = HEADER_SIZE as u64;
     let mut last_commit_end = HEADER_SIZE as u64;
@@ -806,7 +803,6 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
         }
     }
 
-    // (4) LastCommit trusts only [0, last_commit_end); LastValidRecord trusts through last_valid_end
     let (trusted_end, records_recovered) = match mode {
         RecoveryMode::LastCommit => (last_commit_end, records_at_commit),
         RecoveryMode::LastValidRecord => (last_valid_end, records_valid),

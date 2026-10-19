@@ -1,7 +1,11 @@
 //! 🧭️ Stable, namespace-aware addresses for canonical DOCX XML mutations.
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use super::*;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::apply_bindings;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::expanded_name;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::namespaces::scoped_bindings;
@@ -298,7 +302,7 @@ pub fn resolve_docx_xml_address(snapshot: &DocxSnapshot, address: &DocxXmlAddres
     Ok(ResolvedDocxXmlAddress { part_index, node: node.clone(), bindings, parent_bindings })
 }
 
-pub(super) fn revision_after_replacement(snapshot: &DocxSnapshot, address: &DocxXmlAddress, replacement: &XmlNode) -> Result<String, ValueError> {
+pub fn revision_after_replacement(snapshot: &DocxSnapshot, address: &DocxXmlAddress, replacement: &XmlNode) -> Result<String, ValueError> {
     let document = materialized_document(snapshot, &address.part_path)?;
     let root = document.root.as_ref().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX XML part {} has no root", address.part_path)))?;
     address_revision(root, &address.node_path, Some(replacement))
@@ -458,8 +462,8 @@ pub fn docx_top_level_text_targets(snapshot: &DocxSnapshot, block_index: usize) 
     Ok(targets)
 }
 
-/// 🌱️ Prepares a first run inside an empty paragraph without replacing its existing markup.
-pub fn empty_paragraph_text_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, ValueError> {
+/// 🌱️ The insertion index and first run of an empty paragraph that receives its first text without replacing its existing markup.
+pub fn empty_paragraph_run_insertion(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<(usize, XmlNode)>, ValueError> {
     let resolved = resolve_docx_xml_address(snapshot, address)?;
     if !is_word_name(&resolved.node, "p", &resolved.bindings) || contains_word_run(&resolved.node, &resolved.parent_bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX text target must be an existing run or an empty WordprocessingML paragraph"));
@@ -471,7 +475,7 @@ pub fn empty_paragraph_text_mutation(snapshot: &DocxSnapshot, address: &DocxXmlA
     let mut attrs = Vec::new();
     set_xml_space(&mut attrs, needs_preserved_space(text));
     let node = XmlNode::Element { name: word_name_like(&resolved.node, "r")?, attrs: Vec::new(), children: vec![XmlNode::Element { name: word_name_like(&resolved.node, "t")?, attrs, children: vec![XmlNode::Text { text: text.into() }] }] };
-    Ok(Some(DocxMutation::InsertXmlNode(insert_xml_node::InsertXmlNode { parent: address.clone(), index: children.len(), node })))
+    Ok(Some((children.len(), node)))
 }
 
 /// 🧭️ Resolves a projected block/run selection to its canonical XML address without projecting the document.
@@ -597,7 +601,7 @@ fn direct_word_child_indices(node: &XmlNode, parent_bindings: &[(String, String)
         .collect()
 }
 
-pub(super) fn run_with_text(resolved: &ResolvedDocxXmlAddress, text: &str) -> Result<XmlNode, ValueError> {
+pub fn run_with_text(resolved: &ResolvedDocxXmlAddress, text: &str) -> Result<XmlNode, ValueError> {
     if !is_word_name(&resolved.node, "r", &resolved.bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("set-run-text requires a WordprocessingML run, got {}", resolved.node_name())));
     }
@@ -636,7 +640,7 @@ fn edited_run_text(mut run: XmlNode, scope: &[(String, String)], text: &str) -> 
     Ok(run)
 }
 
-pub(super) fn run_with_formatting(resolved: &ResolvedDocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<XmlNode, ValueError> {
+pub fn run_with_formatting(resolved: &ResolvedDocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<XmlNode, ValueError> {
     if !is_word_name(&resolved.node, "r", &resolved.bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("set-run-formatting requires a WordprocessingML run, got {}", resolved.node_name())));
     }
@@ -702,7 +706,7 @@ fn paragraph_style_exists(snapshot: &DocxSnapshot, style_id: &str) -> Result<boo
     Ok(false)
 }
 
-pub(super) fn paragraph_with_style(snapshot: &DocxSnapshot, resolved: &ResolvedDocxXmlAddress, style_id: Option<&str>) -> Result<XmlNode, ValueError> {
+pub fn paragraph_with_style(snapshot: &DocxSnapshot, resolved: &ResolvedDocxXmlAddress, style_id: Option<&str>) -> Result<XmlNode, ValueError> {
     if !is_word_name(&resolved.node, "p", &resolved.bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("set-paragraph-style requires a WordprocessingML paragraph, got {}", resolved.node_name())));
     }
@@ -766,7 +770,7 @@ fn table_row_node(table: &XmlNode, cells: &[String]) -> Result<XmlNode, ValueErr
     Ok(XmlNode::Element { name: q("tr")?, attrs: Vec::new(), children: row_cells })
 }
 
-pub(super) fn table_row_insertion(resolved: &ResolvedDocxXmlAddress, index: usize, cells: &[String]) -> Result<(usize, XmlNode), ValueError> {
+pub fn table_row_insertion(resolved: &ResolvedDocxXmlAddress, index: usize, cells: &[String]) -> Result<(usize, XmlNode), ValueError> {
     if !is_word_name(&resolved.node, "tbl", &resolved.bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("insert-table-row requires a WordprocessingML table, got {}", resolved.node_name())));
     }
@@ -781,7 +785,7 @@ pub(super) fn table_row_insertion(resolved: &ResolvedDocxXmlAddress, index: usiz
     Ok((physical, table_row_node(&resolved.node, cells)?))
 }
 
-pub(super) fn table_row_removal(resolved: &ResolvedDocxXmlAddress, index: usize) -> Result<(usize, XmlNode), ValueError> {
+pub fn table_row_removal(resolved: &ResolvedDocxXmlAddress, index: usize) -> Result<(usize, XmlNode), ValueError> {
     if !is_word_name(&resolved.node, "tbl", &resolved.bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("remove-table-row requires a WordprocessingML table, got {}", resolved.node_name())));
     }
@@ -794,7 +798,7 @@ pub(super) fn table_row_removal(resolved: &ResolvedDocxXmlAddress, index: usize)
     Ok((physical, children[physical].clone()))
 }
 
-pub(super) fn child_identity(resolved: &ResolvedDocxXmlAddress, node: &XmlNode) -> Result<String, ValueError> {
+pub fn child_identity(resolved: &ResolvedDocxXmlAddress, node: &XmlNode) -> Result<String, ValueError> {
     let bindings = scoped_bindings(node, &resolved.bindings);
     node_identity(node, &bindings)
 }

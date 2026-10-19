@@ -1,7 +1,7 @@
 use super::*;
-use semio_framework_pack_json::self as json;
+use semio_framework_pack_json as json;
 use semio_framework_pack_json::JsonMemberPolicy;
-use semio_framework_value::native_decoding::NativeDecodeProgress;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 use semio_framework_value::NativeEncodeControl;
 
 fn unbounded_grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {

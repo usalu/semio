@@ -2,7 +2,7 @@ import{constants}from"node:fs";
 import{open,lstat,type FileHandle}from"node:fs/promises";
 import{dirname,isAbsolute,resolve}from"node:path";
 import{createHash}from"node:crypto";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 

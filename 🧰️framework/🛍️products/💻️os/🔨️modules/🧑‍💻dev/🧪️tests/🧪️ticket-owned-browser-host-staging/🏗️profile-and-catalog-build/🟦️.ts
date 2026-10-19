@@ -76,7 +76,7 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
       const results = await Promise.all(tasks);
       expect(results.slice().sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4, 5]);
       expect(maxActive).toBeLessThanOrEqual(2);
-      expect(maxActive).toBe(2); // proves it actually overlaps, not just an accidental serialization
+      expect(maxActive).toBe(2);
     });
   });
 
@@ -128,8 +128,8 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
       expect(maxCargoActive).toBeGreaterThan(1);
       expect(maxCargoActive).toBeLessThanOrEqual(3);
       expect(maxMaterializeActive).toBeGreaterThan(1);
-      expect(maxMaterializeActive).toBeLessThanOrEqual(3); // never past the cap
-      expect(shardWorkerPublishCount).toBe(1); // once per catalog build, not once per plugin
+      expect(maxMaterializeActive).toBeLessThanOrEqual(3);
+      expect(shardWorkerPublishCount).toBe(1);
     });
 
     it("continues past both a cargo failure and a materialize failure, reporting each pluginId exactly once", async () => {

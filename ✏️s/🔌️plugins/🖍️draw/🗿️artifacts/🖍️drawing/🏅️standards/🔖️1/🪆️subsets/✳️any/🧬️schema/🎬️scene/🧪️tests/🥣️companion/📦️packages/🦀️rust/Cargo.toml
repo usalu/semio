@@ -28,6 +28,7 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-framework-trace = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
 semio-s-artifact-draw-drawing-editor-interaction = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-editor-tool = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }

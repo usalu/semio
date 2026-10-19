@@ -7,8 +7,8 @@ fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtur
 fn grant()->RetainedCloneGrant{serde_json::from_value(fixture()["control"]["snapshotGrant"].clone()).unwrap()}
 pub(crate) fn with_control<T>(operation:impl FnOnce(&mut IoRunControl<'_,'_>)->T)->T{
  let maximum=fixture()["control"]["nativeBytes"].as_u64().unwrap()as usize;let mut receive=|_|true;let mut publish=|_|true;
- let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
- let mut decode_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+ let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut publish);
+ let mut decode_recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
  decode.install_retirement_recipient(&mut decode_recipient).unwrap();encode.install_retirement_recipient(&mut encode_recipient).unwrap();
  let result={let mut original=IoRunControl::new(&mut decode,&mut encode,grant());operation(&mut original)};
  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant()).unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant()).unwrap();}result

@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-launch-action`.
+//! 🆔️ Direct text identity for `remove-launch-action`.
 
 pub const OPCODE: &str = "remove-launch-action";
 pub const TEXT_OPCODE: &str = OPCODE;

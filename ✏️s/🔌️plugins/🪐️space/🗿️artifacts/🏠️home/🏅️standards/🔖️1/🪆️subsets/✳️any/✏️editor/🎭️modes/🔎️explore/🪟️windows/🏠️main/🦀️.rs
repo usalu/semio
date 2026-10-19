@@ -218,20 +218,6 @@ pub fn render_rows_wrapped(rows: &[semio_s_space_core::HomeSpaceRow], table: &Ho
 pub fn render(cfg: &HomeConfig, directory: &HomeDirectoryProjection, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     let actions = semio_framework_plugin::resolve_labels::<SHomeLabels>(view_state);
-    // 🪪️ SIGNED OUT IS A STATE, NOT A FAULT. Refusing here (`s.home.session-identity-required`) meant
-    // the landing window of the whole product never published for anyone who was not already signed in
-    // — which is the ordinary first paint of every hub-configured shell. The host then had an app that
-    // declined to render, and the human's later sign-in had nothing to re-render (ticket 26/09/18, S2
-    // §3.3: measured live, this was the operative blocker of a usable `s`).
-    //
-    // A signed-out human simply owns no spaces, so the honest answer is this same window with an empty
-    // row set — the table kit already states its own empty case in en+de — next to the shell's own
-    // "Sign in" affordance, which is chrome and is mounted on every device regardless of this surface.
-    // Nothing here is faked: no row is invented, and the moment an identity arrives the host
-    // re-establishes and the real rows replace this.
-    //
-    // 🌉️ `semio_s_space_core::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
-    // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
     let rows = match semio_s_space_core::home_session_identity(view_state) {
         Some(identity) => ::semio_framework_async::poll::resolve_ready(semio_s_space_core::home_space_rows(directory.spaces(), &identity.user_id, &cfg.retired_local_studio_ids)),
         None => Vec::new(),

@@ -8,11 +8,11 @@ import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
 // Tone-based status-surface kit: badges, status chips, stat tiles, and empty/error placeholders.
 // Consumers MUST use StatusTone (never hardcoded palette colors) for tone-driven styling.
 
-/** @emoji 🚦️ Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
+/** 🚦️ Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
 export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 /**
- * STATUS_TONE_SURFACE_CLASS holds the border/background/foreground classes for a StatusTone.
+ * 🎶️ STATUS_TONE_SURFACE_CLASS holds the border/background/foreground classes for a StatusTone.
  **/
 const STATUS_TONE_SURFACE_CLASS: Record<StatusTone, string> = {
   neutral: "bg-muted text-muted-foreground",
@@ -23,7 +23,7 @@ const STATUS_TONE_SURFACE_CLASS: Record<StatusTone, string> = {
 };
 
 /**
- * STATUS_TONE_DOT_CLASS holds the solid dot background class for a StatusTone.
+ * 🎼️ STATUS_TONE_DOT_CLASS holds the solid dot background class for a StatusTone.
  **/
 const STATUS_TONE_DOT_CLASS: Record<StatusTone, string> = {
   neutral: "bg-muted-foreground",
@@ -34,7 +34,7 @@ const STATUS_TONE_DOT_CLASS: Record<StatusTone, string> = {
 };
 
 /**
- * Props interface for the Badge component.
+ * 🎖️ Props interface for the Badge component.
  **/
 export interface BadgeProps {
   id?: string;
@@ -43,7 +43,7 @@ export interface BadgeProps {
   icon?: React.ReactNode;
 }
 
-/** @emoji 🏷️ Small tone-colored pill for inline status labels. */
+/** 🏷️ Small tone-colored pill for inline status labels. */
 export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
   return (
     <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
@@ -54,7 +54,7 @@ export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.R
 }
 
 /**
- * Props interface for the StatusChip component.
+ * 🏅️ Props interface for the StatusChip component.
  **/
 export interface StatusChipProps {
   id?: string;
@@ -63,7 +63,7 @@ export interface StatusChipProps {
 }
 
 /**
- * STATUS_CHIP_TONE maps a StatusChip status to its StatusTone.
+ * 🔰️ STATUS_CHIP_TONE maps a StatusChip status to its StatusTone.
  **/
 const STATUS_CHIP_TONE: Record<StatusChipProps["status"], StatusTone> = {
   ok: "success",
@@ -72,7 +72,7 @@ const STATUS_CHIP_TONE: Record<StatusChipProps["status"], StatusTone> = {
   offline: "neutral",
 };
 
-/** @emoji 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
+/** 🟢️ Inline dot-and-label indicator for live status (connection, task, presence). */
 export function StatusChip({ id, status, label }: StatusChipProps): React.ReactElement {
   const tone = STATUS_CHIP_TONE[status];
   return (
@@ -84,7 +84,7 @@ export function StatusChip({ id, status, label }: StatusChipProps): React.ReactE
 }
 
 /**
- * Props interface for the StatCard component.
+ * 🎛️ Props interface for the StatCard component.
  **/
 export interface StatCardProps {
   id?: string;
@@ -94,7 +94,7 @@ export interface StatCardProps {
   icon?: React.ReactNode;
 }
 
-/** @emoji 📊️ Labelled metric tile with an optional tone-colored delta badge. */
+/** 📊️ Labelled metric tile with an optional tone-colored delta badge. */
 export function StatCard({ id, label, value, delta, icon }: StatCardProps): React.ReactElement {
   return (
     <div id={id} data-slot="stat-card" className="flex flex-col gap-single border p-single">
@@ -111,7 +111,7 @@ export function StatCard({ id, label, value, delta, icon }: StatCardProps): Reac
 }
 
 /**
- * Props interface for the EmptyState component.
+ * 🫥️ Props interface for the EmptyState component.
  **/
 export interface EmptyStateProps {
   id?: string;
@@ -121,7 +121,7 @@ export interface EmptyStateProps {
   action?: { label: string; onClick: () => void };
 }
 
-/** @emoji 📭️ Centered placeholder for lists or panels with no content yet. */
+/** 📭️ Centered placeholder for lists or panels with no content yet. */
 export function EmptyState({ id, icon, title, description, action }: EmptyStateProps): React.ReactElement {
   return (
     <div id={id} data-slot="empty-state" className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
@@ -138,7 +138,7 @@ export function EmptyState({ id, icon, title, description, action }: EmptyStateP
 }
 
 /**
- * Props interface for the ErrorView component.
+ * 💥️ Props interface for the ErrorView component.
  **/
 export interface ErrorViewProps {
   id?: string;
@@ -147,7 +147,7 @@ export interface ErrorViewProps {
   onRetry?: () => void;
 }
 
-/** @emoji 🚨️ Centered error placeholder with an optional retry action. */
+/** 🚨️ Centered error placeholder with an optional retry action. */
 export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): React.ReactElement {
   const somethingWentWrongLabel = useLabel("ui.common.somethingWentWrong");
   const retryLabel = useLabel("ui.common.retry");
@@ -169,5 +169,5 @@ export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): Reac
 
 // #endregion 🚦️StatusSurface
 
-/** @emoji 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
+/** 🧭️ Compile-time checklist of chrome components that must accept the shared {@link UiElementStateProps} axes. */
 export const UI_ELEMENT_REGISTRY = ["Window", "Panel", "Canvas", "Button", "Slider", "TreeItem", "Action"] as const;

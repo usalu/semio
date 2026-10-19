@@ -18,7 +18,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
       it("schedules captured lifecycle work through the original owner after operation revocation", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
-        const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+        const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
         const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
@@ -60,7 +60,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
-        const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+        const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
         const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
@@ -280,7 +280,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: equal } = await import("fast-deep-equal");
         const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
-        const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+        const { OwnedUiInstance } = await import("@semio-tech/framework/modules/ui/contract/retained/instance");
         for (const row of fixture.disposal.retirementRetry) {
           const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
           const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };

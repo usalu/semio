@@ -112,9 +112,6 @@ fn raster_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group:
 pub fn create_raster_app() -> AppDefinition {
     Editor::builder(semio_s_artifact_raster_raster_model::RASTER_DIALECT).document(["semio", "raster"])
             .artifact_kind(semio_s_artifact_raster_raster_io::artifact_kind())
-            // 🖼️ `2d.image` — the interchange kind `image:out` produces (WORKFLOWS-END-TO-END-TYPED-PORTS
-            // Wave 2 port recipe); `shooting`'s `photos:out` already declares the identical shape — a
-            // harmless duplicate registration (registry dedupes by id).
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.image".into(),
                 label: LocalizedLabel::native("2D Image", "2D-Bild"),
@@ -139,11 +136,6 @@ pub fn create_raster_app() -> AppDefinition {
             .panel_tab_def(crate::panels::catalogue::definition())
             .panel_tab_def(crate::panels::masks::definition())
             .panel_tab_def(crate::panels::inspection::definition())
-            // ✏️ Palette-visible content operations. The old whole-document `setSnapshot` replace is not
-            // expressible as an in-history `RasterMutation`; file-open, import and load-example go through
-            // `store::ArtifactStore::reset` via the `.example(...)` registrations below. `setActiveExample`
-            // is a real, undoable batch of `RasterMutation`s rather than a snapshot swap, so it is an
-            // ordinary palette mutation like block2d's and puzzle3d's.
             .shell_action("exportPng", LocalizedLabel::native("Export PNG", "PNG exportieren"))
             .action_describe("exportPng", LocalizedLabel::native("Downloads the visible image as PNG with transparency. Layers remain editable.", "Lädt das sichtbare Bild als PNG mit Transparenz herunter. Die Ebenen bleiben bearbeitbar."))
             .action_interactive_job("exportPng", InteractiveJobClassification::Migrated)
@@ -173,7 +165,6 @@ pub fn create_raster_app() -> AppDefinition {
             .action_describe("maskFromSelection", LocalizedLabel::native("Creates an undoable layer mask from the current pixel selection.", "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."))
             .action_interactive_job("maskFromSelection", InteractiveJobClassification::Migrated)
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
-            // 🔧️ Internal content operations — layer-tree / catalogue-drop / inspector bound.
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
             .action_with(raster_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation))
@@ -183,11 +174,6 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
             .action_with(raster_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
             .action_with(raster_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Mutation))
-            // 🕹️ The framework-owned "layers" interaction domain (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the layer tree's selection;
-            // auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
-            // setSelectionMode/setInteractionGranularity, replacing the deleted bespoke
-            // setSelection/setHover/selectAll actions below.
             .interaction(InteractionDefinition {
                 id: RASTER_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Layers", "Ebenen"),
@@ -203,7 +189,6 @@ pub fn create_raster_app() -> AppDefinition {
                 },
             })
             .window_kind_interactions(composite::RASTER_PLAY_WINDOW_COMPOSITE, vec![InteractionRef::new(RASTER_INTERACTION_DOMAIN)])
-            // 👁️ Ephemeral view state — live brush controls, navigator viewport, camera.
             .action_with(raster_internal_action("setBrushSize", LocalizedLabel::native("Set Brush Size", "Pinselgröße festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushOpacity", LocalizedLabel::native("Set Brush Opacity", "Pinseldeckkraft festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setBrushColor", LocalizedLabel::native("Set Foreground Color", "Vordergrundfarbe festlegen"), ActionKind::View))
@@ -215,7 +200,6 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
-            // 📝️ Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Layer Kind", "Ebenenart"), vec![
                     ActionArgOption::new("pixel", LocalizedLabel::native("Pixel", "Pixel")),
@@ -223,7 +207,6 @@ pub fn create_raster_app() -> AppDefinition {
                     ActionArgOption::new("adjustment", LocalizedLabel::native("Adjustment", "Anpassung")),
                 ]).required().default_value(&"pixel"),
             ])
-            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
             .action_describe("addLayer", LocalizedLabel::native("Adds a new raster layer to the image — a pixel layer, a group, or an adjustment layer.", "Fügt dem Bild eine neue Rasterebene hinzu — Pixelebene, Gruppe oder Anpassungsebene."))
             .action_use_when("addLayer", vec!["add a pixel layer".into(), "add an adjustment layer".into(), "new layer in the image".into()])
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole image with one of the plugin's declared playground examples.", "Ersetzt das gesamte Bild durch eines der deklarierten Beispiele des Plugins."))
@@ -239,20 +222,8 @@ pub fn create_raster_app() -> AppDefinition {
             .action_describe("setBrushSize", LocalizedLabel::native("Sets the painting brush diameter for this session.", "Legt den Pinseldurchmesser für diese Sitzung fest."))
             .action_describe("setFillTolerance", LocalizedLabel::native("Sets how far a pixel's colour may differ from the clicked pixel for the bucket to fill it, for this session.", "Legt fest, wie weit die Farbe eines Pixels vom angeklickten Pixel abweichen darf, damit der Farbeimer ihn füllt, für diese Sitzung."))
             .action_describe("setBrushOpacity", LocalizedLabel::native("Sets the painting brush opacity for this session.", "Legt die Pinseldeckkraft für diese Sitzung fest."))
-            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("deleteLayer")
             .action_destructive("setActiveExample")
-            // 🧵️ Phase-8 dispositions. Every id declared above is `Migrated`: each one is backed by the
-            // exact-owner `RasterRetainedCommandJobFactory` proof in `🧵️RetainedCommands`, so UI dispatch
-            // (which rejects anything that is not `Migrated`) and the release-blocking
-            // `validate_interactive_job_classification` gate both admit it. The kind is untouched — the six
-            // `ActionKind::View` rows above stay View/session-only (they publish into the CONFIG lane, see
-            // `RASTER_PUBLICATION_CONTRACTS`), exactly as the camera ticket 26/07/31 requires.
-            //
-            // 🧰️ `setActiveUtility` — the 16th `RasterCommand` row — is NOT listed here on purpose: it is
-            // framework-injected by `.utility(..)` inside `build_definition`, after this builder chain has
-            // run, and this owning declaration already classifies it `Migrated`.
-            // Calling `.action_interactive_job("setActiveUtility", ..)` here would silently match nothing.
             .action_interactive_job("addLayer", InteractiveJobClassification::Migrated)
             .action_interactive_job("dropLayerKind", InteractiveJobClassification::Migrated)
             .action_interactive_job("setLayerVisible", InteractiveJobClassification::Migrated)
@@ -274,7 +245,6 @@ pub fn create_raster_app() -> AppDefinition {
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCameraZoom", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            // 🧰️ Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(raster_utility("paintBrush", LocalizedLabel::native("Brush", "Pinsel"), "paintbrush", "Paint", UtilityCategory::Utilities))
             .utility(raster_utility("paintEraser", LocalizedLabel::native("Eraser", "Radiergummi"), "eraser", "Paint", UtilityCategory::Utilities))

@@ -1,7 +1,7 @@
 const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not request a package receipt");}};
 import { devServeCommandV1 } from "@semio-tech/framework-os-dev/local-hub/execution";
 import graphlib from "graphlib";
-import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
+import { resolveFrameworkOsCatalogConfigurationV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/catalog";
 import { prepareWgpuPluginModules, assertWgpuPluginPlan } from "@semio-tech/framework-renderer-wgpu/plugin-modules";
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";

@@ -1,4 +1,4 @@
-//! BASE entry. Missing target ⇒ `Vec::new()`.
+//! 🫥️ BASE entry. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DeleteTargetVolume` — reconstructs a `create-target-volume` of the captured
 use super::mutation::DeleteTargetVolume;
 use crate::create_target_volume::mutation::CreateTargetVolume;

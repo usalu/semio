@@ -61,7 +61,6 @@ impl GifImage {
     /// 🖌️ Derived RGBA accessor — decodes `indices` through `lct` (falling back to `gct` when this
     /// image has no local table). `rgba()` is intentionally NOT a stored field: GIF87a has no
     /// transparency concept at all, so every pixel is fully opaque.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rgba(&self, gct: Option<&GifColorTable>) -> Vec<u8> {
         let table = self.lct.as_ref().or(gct);
         let mut out = Vec::with_capacity(self.indices.len() * 4);

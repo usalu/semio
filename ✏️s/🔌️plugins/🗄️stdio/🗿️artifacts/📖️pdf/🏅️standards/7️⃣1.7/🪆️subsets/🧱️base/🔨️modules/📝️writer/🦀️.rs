@@ -46,7 +46,6 @@ pub struct PdfWriter {
 
 impl PdfWriter {
     /// 🏁 Starts a document; returns the header bytes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn begin(version: &str, options: &WriteOptions, document_id: &[u8], seed: &[u8]) -> (Self, Vec<u8>) {
         let version = if version.is_empty() { "1.7" } else { version };
         let mut header = format!("%PDF-{version}\n%").into_bytes();
@@ -62,7 +61,6 @@ impl PdfWriter {
         (writer, header)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn version(&self) -> &str {
         &self.version
     }
@@ -70,7 +68,6 @@ impl PdfWriter {
     /// 🧱 Serializes one indirect object (filters applied, encrypted when sealed); returns the
     /// bytes to append. With object streams enabled, non-stream objects are held back and
     /// packed at `finish`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn object(&mut self, object: &PdfIndirectObject) -> Vec<u8> {
         self.max_number = self.max_number.max(object.id.num);
         let mut value = materialize_streams(&object.value);
@@ -90,7 +87,6 @@ impl PdfWriter {
     }
 
     /// 🏁 Writes the cross-reference section and trailer; returns the closing bytes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn finish(mut self, trailer: &DocumentTrailer) -> Vec<u8> {
         let mut out = Vec::new();
         let mut trailer_entries: Vec<PdfDictEntry> = Vec::new();
@@ -121,7 +117,6 @@ impl PdfWriter {
         out
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn finish_classic(self, out: &mut Vec<u8>, trailer_entries: Vec<PdfDictEntry>) {
         let size = self.max_number + 1;
         let xref_offset = self.offset;
@@ -143,7 +138,6 @@ impl PdfWriter {
         out.extend_from_slice(format!("\nstartxref\n{xref_offset}\n%%EOF\n").as_bytes());
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn finish_xref_stream(mut self, out: &mut Vec<u8>, trailer_entries: Vec<PdfDictEntry>) {
         let mut compressed: BTreeMap<u32, (u32, u32)> = BTreeMap::new();
         let held = std::mem::take(&mut self.compressible);

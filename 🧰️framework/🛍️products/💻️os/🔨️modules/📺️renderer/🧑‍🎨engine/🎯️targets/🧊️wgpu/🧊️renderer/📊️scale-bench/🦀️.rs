@@ -371,7 +371,7 @@ impl Env {
 }
 //#endregion 🔖️Env
 
-async fn process_rss_bytes()->Result<Option<u64>,crate::RendererSourceIoError>{crate::read_renderer_resident_bytes().await}
+async fn process_rss_bytes()->Result<Option<u64>,semio_framework_os_renderer_wgpu_kernel_protocol::RendererSourceIoError>{semio_framework_os_renderer_wgpu_host_plumbing::native_io::read_renderer_resident_bytes().await}
 
 //#region 🔖️Budget2ColdBoot
 async fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
@@ -825,7 +825,7 @@ async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &Com
 /// not set up (bad registry/wasm/report path).
 pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf,original_clock:fn()->Option<u64>) -> Result<i32, semio_framework_os_renderer_wgpu_contracts::ProgramFault> {
     let process_start = Instant::now();
-    let registry_bytes=match crate::read_renderer_source_bytes(&registry_path,semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES as u64).await{
+    let registry_bytes=match semio_framework_os_renderer_wgpu_kernel_protocol::read_renderer_source_bytes(&registry_path,semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES as u64).await{
         Ok(bytes)=>bytes,
         Err(error)=>{eprintln!("scale-bench: failed to read {}: {error}",registry_path.display());return Ok(1)}
     };
@@ -838,7 +838,7 @@ pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, r
             return Ok(1);
         }
     };
-    let wasm_bytes_owner=match super::kernel_runtime::read_native_component(&wasm_path).await{
+    let wasm_bytes_owner=match crate::read_native_component(&wasm_path).await{
         Ok(bytes)=>bytes,
         Err(error)=>{eprintln!("scale-bench: failed to read {}: {error}",wasm_path.display());return Ok(1)}
     };

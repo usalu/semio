@@ -64,7 +64,7 @@ pub mod part_1_1 {
         let lambda_p = (c / section.tf) / (28.0 * epsilon);
         let rho = plate_rho(lambda_p, 1.0);
         let a_flange = 2.0 * section.b * section.tf;
-        let _a_web = section.h.max(section.tw) * section.tw; // approx
+        let _a_web = section.h.max(section.tw) * section.tw;
         section.area - a_flange * (1.0 - rho).max(0.0) * 0.5
     }
 
@@ -81,7 +81,7 @@ pub mod part_1_1 {
 
     /// 📐️ M_c,Rd = W_pl·fy/γ_M0 for class ≤ 2 [N·m].
     pub fn bending_resistance_nm(w_pl: f64, fy_pa: f64, class: u8, params: AnnexParams) -> f64 {
-        let w = if class <= 2 { w_pl } else { w_pl }; // class 3 uses Wel — caller selects
+        let w = if class <= 2 { w_pl } else { w_pl };
         w * fy_pa / params.gamma_m0
     }
 
@@ -705,7 +705,6 @@ pub mod part_1_10 {
             "K2" | "M" | "N" => 3,
             _ => 2,
         };
-        // Table 2.1 bilinear simplified at σ_Ed = 0.75 fy
         let base_mm = [20.0, 30.0, 50.0, 70.0][idx];
         let adj = if t_ed_c < -20.0 { -10.0 } else if t_ed_c < 0.0 { -5.0 } else { 0.0 };
         (base_mm + adj) / 1000.0
@@ -751,7 +750,6 @@ pub mod part_3 {
 pub mod part_4 {
     /// 🛢️ Janssen horizontal pressure [Pa].
     pub fn janssen_pressure(k: f64, gamma: f64, depth: f64) -> f64 {
-        // gamma is N/m³ (formerly kN/m³ * 1000)
         k * gamma * depth
     }
 

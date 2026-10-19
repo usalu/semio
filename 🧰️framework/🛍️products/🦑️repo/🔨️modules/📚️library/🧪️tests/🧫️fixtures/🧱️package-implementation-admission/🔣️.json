@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "contractId": "package-implementation-admission-v1",
+  "semantics": {
+    "admissionCases": "Whether a package file at relativePath (below the language package root) may hold implementation under the rule's implementationAdmission. directoryFiles lists the file names next to it.",
+    "sourceCases": "The glue-grammar role of a package source. Every source parses with the language's own formatter (gofmt -e, rustfmt)."
+  },
+  "manifestFilenames": {
+    "cargo-manifest": "Cargo.toml"
+  },
+  "admissionCases": [
+    {
+      "id": "go-subpackage-admitted",
+      "admission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
+      "relativePath": "🐚️unix-durability/🐹️.go",
+      "kindId": "go-source",
+      "directoryFiles": [],
+      "expected": true
+    },
+    {
+      "id": "go-root-file-not-admitted",
+      "admission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
+      "relativePath": "🐹️.go",
+      "kindId": "go-source",
+      "directoryFiles": [],
+      "expected": false
+    },
+    {
+      "id": "go-nested-non-source-not-admitted",
+      "admission": {
+        "form": "nested-source-unit",
+        "unitSourceFileKindId": "go-source"
+      },
+      "relativePath": "🪟️windows-durability/📋️project.json",
+      "kindId": "json",
+      "directoryFiles": [],
+      "expected": false
+    },
+    {
+      "id": "cargo-crate-with-own-manifest-admitted",
+      "admission": {
+        "form": "nested-manifest-unit",
+        "unitManifestContractId": "cargo-manifest"
+      },
+      "relativePath": "🧩️crate/🦀️.rs",
+      "kindId": "rust-source",
+      "directoryFiles": [
+        "Cargo.toml",
+        "🦀️.rs"
+      ],
+      "expected": true
+    },
+    {
+      "id": "cargo-module-directory-without-manifest-not-admitted",
+      "admission": {
+        "form": "nested-manifest-unit",
+        "unitManifestContractId": "cargo-manifest"
+      },
+      "relativePath": "🪞️mirror/🦀️.rs",
+      "kindId": "rust-source",
+      "directoryFiles": [
+        "🦀️.rs"
+      ],
+      "expected": false
+    },
+    {
+      "id": "cargo-root-crate-file-not-admitted",
+      "admission": {
+        "form": "nested-manifest-unit",
+        "unitManifestContractId": "cargo-manifest"
+      },
+      "relativePath": "🦀️.rs",
+      "kindId": "rust-source",
+      "directoryFiles": [
+        "Cargo.toml",
+        "🦀️.rs"
+      ],
+      "expected": false
+    },
+    {
+      "id": "no-admission-never-admits",
+      "admission": null,
+      "relativePath": "🧩️crate/🦀️.rs",
+      "kindId": "rust-source",
+      "directoryFiles": [
+        "Cargo.toml"
+      ],
+      "expected": false
+    }
+  ],
+  "sourceCases": [
+    {
+      "id": "go-raw-string-with-backslash-is-balanced",
+      "language": "go",
+      "source": [
+        "package files",
+        "",
+        "var separators = `/\\`"
+      ],
+      "expectedRole": "implementation"
+    },
+    {
+      "id": "go-method-is-implementation",
+      "language": "go",
+      "source": [
+        "package graphql",
+        "",
+        "import (",
+        "\tmodel \"github.com/usalu/semio/repo/model\"",
+        ")",
+        "",
+        "func (c *RepoContext) scanTodos() []*model.Todo {",
+        "\treturn model.Scan(c.rootDir)",
+        "}"
+      ],
+      "expectedRole": "implementation"
+    },
+    {
+      "id": "go-aliased-single-import-declaration",
+      "language": "go",
+      "source": [
+        "package x",
+        "",
+        "import model \"github.com/usalu/semio/repo/model\""
+      ],
+      "expectedRole": "declaration"
+    },
+    {
+      "id": "go-main-delegates",
+      "language": "go",
+      "source": [
+        "package main",
+        "",
+        "import \"github.com/usalu/semio/repo/run\"",
+        "",
+        "func main() {",
+        "\trun.Run()",
+        "}"
+      ],
+      "expectedRole": "bootstrap"
+    },
+    {
+      "id": "rust-module-names-containing-keywords",
+      "language": "rust",
+      "source": [
+        "#[path = \".\"]",
+        "pub mod house {",
+        "    #[path = \"../../🧪️/🦀️.rs\"]",
+        "    pub mod tests;",
+        "}",
+        "pub mod reuse;",
+        "pub mod bimodal {",
+        "    pub mod prototype;",
+        "}"
+      ],
+      "expectedRole": "declaration"
+    },
+    {
+      "id": "rust-struct-is-implementation",
+      "language": "rust",
+      "source": [
+        "pub struct Mirror {",
+        "    pub id: u32,",
+        "}"
+      ],
+      "expectedRole": "implementation"
+    }
+  ]
+}

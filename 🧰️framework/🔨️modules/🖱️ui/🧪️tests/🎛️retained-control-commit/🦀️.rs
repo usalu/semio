@@ -147,8 +147,6 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
     let bounds = case["bounds"].as_array().expect("fixture bounds");
     let rect = (bounds[0].as_f64().expect("x") as f32, bounds[1].as_f64().expect("y") as f32, bounds[2].as_f64().expect("w") as f32, bounds[3].as_f64().expect("h") as f32);
     let mut tree = UiTree::new();
-    // 🪟️ A container generous enough that a blur press lands inside the window but outside the
-    // control — `hit_test` never answers a plain container, so that press clears focus.
     let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, rect.0 + rect.2 + 400.0, rect.1 + rect.3 + 400.0));
     let control = place(&mut tree, Some(root), 1, control_node(case), rect);
     let mut router = EventRouter::new("main");
@@ -159,8 +157,6 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
     let y = rect.1 + rect.3 * at[1].as_f64().expect("gesture y") as f32;
     let mut commands = Vec::new();
     commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() }));
-    // 🎚️ A drag keeps the press's capture while the pointer leaves the control, exactly as a browser
-    // does — the release still belongs to the node the gesture started on.
     if let Some(to) = gesture["to"].as_array() {
         let to_x = rect.0 + rect.2 * to[0].as_f64().expect("drag x") as f32;
         let to_y = rect.1 + rect.3 * to[1].as_f64().expect("drag y") as f32;
@@ -215,9 +211,6 @@ fn split_press(action: &ActionDescriptor) -> (ActionDescriptor, Option<(String, 
 
 fn expected_descriptor(expected: &Value) -> ActionDescriptor {
     let args = expected["args"].as_object().expect("fixture expected args");
-    // 🔤️ Sorted, because `serde_json::Map`'s own iteration order is its (alphabetical) BTree order
-    // while a merged `DslValue::Object` keeps the authored order with the payload appended. The LAW
-    // is the SET of key/value pairs, not the order the two sides happen to carry them in.
     let mut entries: Vec<(String, DslValue)> = args.iter().map(|(key, value)| (key.clone(), json_to_dsl(value))).collect();
     entries.sort_by(|left, right| left.0.cmp(&right.0));
     ActionDescriptor { controller_id: "ctrl".into(), action: expected["action"].as_str().expect("fixture expected action").to_string(), args: Some(DslValue::Object(entries)) }
@@ -405,15 +398,12 @@ fn an_intent_fired_against_a_revision_the_user_never_saw_is_dropped() {
     let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
     let control = place(&mut tree, Some(root), 1, number_input("spacing", "", None, None, None), (0.0, 0.0, 120.0, 24.0));
     publish_revision(&mut tree, 9);
-    // 🕰️ Recorded at 6 against a live 9 — the user pressed against geometry three revisions of churn
-    // ago, which is exactly the case master.md's rule ("revision < current − 1") refuses.
     stamp(&mut tree, control, 6, &[(Trigger::Commit, "setValue")]);
     let mut router = EventRouter::new("main");
 
     let commands = type_and_commit(&mut tree, &mut router, root, "7");
     assert!(committed_values(&commands).is_empty(), "a gesture more than one revision away from the live document must never reach the guest: {commands:?}");
 
-    // 🆕️ A fresh tree, because the refused gesture left its own typed buffer behind on the node.
     let mut tree = UiTree::new();
     let root = place(&mut tree, None, 0, root_stack(), (0.0, 0.0, 400.0, 400.0));
     let control = place(&mut tree, Some(root), 1, number_input("spacing", "", None, None, None), (0.0, 0.0, 120.0, 24.0));
@@ -459,8 +449,6 @@ fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
             max: None,
             precision: None,
             on_absolute: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
-            // 🩸️ Both descriptors are NON-empty here, so only the stamped binding list can decide —
-            // which is precisely the case React's `NumberStepperView` gates on `record.bindings`.
             on_delta: ActionDescriptor { controller_id: "ctrl".into(), action: "bumpValue".into(), args: None },
             presence: UiPresence::default(),
             menu: None,

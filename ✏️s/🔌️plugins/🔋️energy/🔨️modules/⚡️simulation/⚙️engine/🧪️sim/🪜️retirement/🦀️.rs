@@ -87,7 +87,6 @@ pub fn close_results_step(results: &mut Results, close_string_owner: &mut String
     if let Some(released) = close_sizing_step(&mut results.sizing, maximum_bytes) {
         return Some(released);
     }
-    // 🧱️ Per-surface rows are plain `Copy` scalars — one bounded pop per step, no owned strings.
     if results.per_surface.pop().is_some() {
         return Some((1, 0));
     }

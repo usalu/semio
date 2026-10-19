@@ -39,7 +39,6 @@ pub mod part_1 {
         match cat { ComfortCategory::I => 6.0, ComfortCategory::II => 10.0, ComfortCategory::III => 15.0, ComfortCategory::IV => 25.0 }
     }
     pub fn operative_temp_band(cat: ComfortCategory, season: &str) -> (f64, f64) {
-        // EN 16798-1 Table B.2 design operative temperatures for offices (sedentary)
         match (cat, season) {
             (ComfortCategory::I, "winter") => (21.0, 23.0),
             (ComfortCategory::II, "winter") => (20.0, 24.0),
@@ -60,7 +59,6 @@ pub mod part_1 {
         }
     }
     pub fn co2_above_outdoor_ppm(cat: ComfortCategory) -> f64 {
-        // EN 16798-1 Table B.6
         match cat { ComfortCategory::I => 550.0, ComfortCategory::II => 800.0, ComfortCategory::III => 1350.0, ComfortCategory::IV => 1350.0 }
     }
     pub fn illuminance_min_lx(usage: OccupancyType, cat: ComfortCategory) -> f64 {
@@ -95,7 +93,6 @@ pub mod part_1 {
     fn saturation_pressure_pa(t_c: f64) -> f64 { 611.2 * (17.67 * t_c / (t_c + 243.5)).exp() }
 
     fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
-        // ISO 7730 clothing temperature — use max(natural, forced) h_c and under-relaxation so winter clo≈1.0 converges.
         let mut t_cl = t_a + (35.5 - t_a) / (3.5 * i_cl + 1.0);
         for _ in 0..100 {
             let h_c_nat = 2.38 * (t_cl - t_a).abs().max(1e-6).powf(0.25);
@@ -216,7 +213,6 @@ pub mod part_1 {
         match method {
             VentMethod::Method1PerceivedAirQuality => required_outdoor_air_m3_h(occupants, area_m2, cat, pollution),
             VentMethod::Method3PredefinedRates => {
-                // Annex B predefined rates combine area intensity (× pollution class) with a per-person term.
                 let q_area = area_m2 * predefined_outdoor_air_l_s_m2(cat) * pollution_scale(pollution) * 3.6;
                 let q_person = occupants as f64 * outdoor_air_per_person_l_s(cat) * 3.6;
                 q_area + q_person

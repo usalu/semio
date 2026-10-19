@@ -18,13 +18,11 @@ pub(crate) struct SurfaceState {
 }
 
 impl SurfaceState {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn resize(&mut self, size: PhysicalSize, dpr: f32) {
         self.size = size;
         self.dpr = dpr.max(0.0001);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn is_parked(&self) -> bool {
         self.size.is_zero()
     }
@@ -46,7 +44,6 @@ pub(crate) enum DeviceHealth {
 }
 
 impl DeviceHealth {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn as_status(self) -> DeviceStatus {
         match self {
             DeviceHealth::Healthy => DeviceStatus::Healthy,
@@ -55,7 +52,6 @@ impl DeviceHealth {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub(crate) fn is_lost(self) -> bool {
         matches!(self, DeviceHealth::Lost(_))
@@ -85,7 +81,6 @@ impl ScenePhase {
     #[cfg(test)]
     pub(crate) const ORDER: [ScenePhase; 4] = [ScenePhase::BackdropContent, ScenePhase::ForegroundContent, ScenePhase::BackdropOverlay, ScenePhase::ForegroundOverlay];
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub(crate) fn renders_offscreen(self) -> bool {
         matches!(self, ScenePhase::BackdropContent | ScenePhase::BackdropOverlay)

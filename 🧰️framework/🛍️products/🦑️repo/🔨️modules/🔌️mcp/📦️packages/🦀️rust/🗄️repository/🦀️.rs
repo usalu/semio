@@ -212,7 +212,7 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
         }
         Profile::Generic => {}
     }
-    let tool = |name: &str, schema: Schema| Tool { name: name.to_string(), title: String::new(), description: describe(profile, &format!("tool_{name}")), input_schema: schema };
+    let tool = |name: &str, schema: Schema| Tool { name: name.to_string(), title: String::new(), description: describe(profile, &format!("tool_{name}")), input_schema: schema, output_schema: Some(Tool::result_output_schema()) };
     vec![
         tool("ticket_open", Schema::object(open, &["emoji", "title", "prompt", "goal"])),
         tool(
@@ -301,6 +301,7 @@ pub fn repository_server(repository: impl Repository + 'static, profile: Profile
     })?;
     for schema in tool_schemas(profile) {
         let name = schema.name.clone();
+        let declared = schema.output_schema.is_some();
         let owned = Arc::clone(&repository);
         server.register_tool(
             schema,
@@ -308,7 +309,7 @@ pub fn repository_server(repository: impl Repository + 'static, profile: Profile
                 progress.report(context, 0.0, None, "started").map_err(|_| HandlerError::tool("progress failed"))?;
                 let result = owned.call(context, &name, &params.arguments)?;
                 progress.report(context, 1.0, None, "completed").map_err(|_| HandlerError::tool("progress failed"))?;
-                Ok(CallToolResult { content: vec![Content::text(&result.text)], structured_content: result.structured, is_error: result.is_error })
+                Ok(CallToolResult { content: vec![Content::text(&result.text)], structured_content: result.structured, is_error: result.is_error, output_schema_declared: declared })
             }),
         )?;
     }
@@ -336,11 +337,11 @@ pub fn repository_server(repository: impl Repository + 'static, profile: Profile
 pub fn contract_server(limits: Limits) -> Result<Server, Error> {
     let mut server = Server::new(Config { server_name: "repo".to_string(), server_version: "1.0.0".to_string(), instructions: "owned".to_string(), limits })?;
     server.register_tool(
-        Tool { name: "echo".to_string(), title: String::new(), description: String::new(), input_schema: Schema { kind: "object".to_string(), ..Schema::default() } },
+        Tool { name: "echo".to_string(), title: String::new(), description: String::new(), input_schema: Schema { kind: "object".to_string(), ..Schema::default() }, output_schema: None },
         Box::new(|context, params, progress| {
             let text = params.arguments.get("text").and_then(serde_json::Value::as_str).unwrap_or_default().to_string();
             progress.report(context, 1.0, None, "echo").map_err(|_| HandlerError::tool("progress failed"))?;
-            Ok(CallToolResult { content: vec![Content::text(&text)], structured_content: None, is_error: false })
+            Ok(CallToolResult { content: vec![Content::text(&text)], structured_content: None, is_error: false, output_schema_declared: false })
         }),
     )?;
     server.register_resource(

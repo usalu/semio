@@ -93,8 +93,6 @@ pub(super) fn parse_xml(bytes: &[u8]) -> Result<XNode, String> {
         let event = reader.read_event().map_err(|error| format!("quick-xml parse error at byte {}: {error}", reader.error_position()))?;
         match event {
             Event::Decl(_) => continue,
-            // 🩹 Real OOXML parts carry `\r\n` (or plain whitespace) between the declaration and
-            // the root element — only NON-whitespace text before the root is actually malformed.
             Event::Text(text) if text.as_ref().trim().is_empty() => continue,
             Event::Start(start) => return parse_element(&mut reader, start),
             Event::Empty(start) => return Ok(XNode::Element { name: start.name().as_ref().to_string(), attrs: read_attrs(&start)?, children: Vec::new() }),

@@ -1,7 +1,12 @@
 /// 📜️ Manifest and cross-cutting laws of the generation2d editor routes: the manifest stitch, the declared action bridge, the canvas wire defaults and the widget undo and convergence laws.
 
 //#region 🔖️ManifestSanity
-#[test]
+#[cfg(test)] use semio_s_artifact_procedural_2d_mode_edit::windows::flow as flow_window;
+#[cfg(test)] use semio_s_artifact_procedural_2d_mode_edit::windows::preview as edit_preview;
+#[cfg(test)]#[cfg(test)] use semio_s_artifact_procedural_2d_editor_panels::document as document_panel;
+#[cfg(test)] use semio_s_artifact_procedural_2d_editor_panels::catalogue as catalogue_panel;
+#[cfg(test)] use semio_s_artifact_procedural_2d_editor_panels::inspection as inspection_panel;
+#[cfg(test)]#[test]
 fn the_manifest_stitches_every_taxonomy_node() {
     let json = serde_json::to_string(&create_generation2d_app()).expect("app definition json");
     for id in [
@@ -113,9 +118,6 @@ async fn two_instances_converge_disjoint_widget_moves() {
     close(fixture);
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-    // 🧹️ The REGISTERED pair, never `assert_two_instances_converge` — this app publishes
-    // `bounded_first_step_tool_proofs!`, so a registryless instance faults with
-    // `interactive-job.catalog-authority` and its unwind aborts the binary.
     semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation2dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation2d-convergence",
         || async { crate::app_fixture::generation2d_manifest_for_tests() },

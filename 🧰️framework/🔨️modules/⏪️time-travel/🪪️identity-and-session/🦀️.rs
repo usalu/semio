@@ -142,7 +142,7 @@ pub struct TimeTravelSession {
     pub generation: u32,
     pub base: TimeTravelBase,
     pub stage: TimeTravelStage,
-    pub accepted: semio_framework_value::list::PagedList<TimeTravelDraft, {usize::MAX}>,
+    pub accepted: semio_framework_value_persistent::list::PagedList<TimeTravelDraft, {usize::MAX}>,
     pub pending: Option<TimeTravelPending>,
     pub report: Option<ReplayReport>,
     pub progress: Option<TimeTravelProgress>,

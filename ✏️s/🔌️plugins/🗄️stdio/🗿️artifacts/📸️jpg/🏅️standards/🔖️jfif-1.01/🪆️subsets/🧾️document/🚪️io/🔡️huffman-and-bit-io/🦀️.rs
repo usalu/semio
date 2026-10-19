@@ -61,11 +61,9 @@ pub(crate) struct BitWriter {
 }
 
 impl BitWriter {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn new() -> Self {
         Self { bytes: Vec::new(), acc: 0, nbits: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn put_bits(&mut self, value: u16, len: u8) {
         if len == 0 {
             return;
@@ -81,7 +79,6 @@ impl BitWriter {
             }
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn flush(&mut self) {
         if self.nbits > 0 {
             let pad = 8 - self.nbits;
@@ -108,19 +105,15 @@ pub(crate) struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn new(data: &'a dyn JpgByteSource, pos: usize) -> Self {
         Self { data, pos, acc: 0, nbits: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn next_byte(&mut self) -> Option<u8> {
         if self.pos >= self.data.len() {
             return None;
         }
         let b = self.data.byte(self.pos)?;
         if b == 0xFF {
-            // A lone 0xFF as the final byte of the source is a truncated stuffing pair or
-            // marker, never data — reporting it as a stuffed 0xFF decoded bits the input lacks.
             let b2 = self.data.byte(self.pos.checked_add(1)?)?;
             if b2 == 0x00 {
                 self.pos += 2;
@@ -131,7 +124,6 @@ impl<'a> BitReader<'a> {
         self.pos += 1;
         Some(b)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn read_bit(&mut self) -> Result<u8, JpgError> {
         if self.nbits == 0 {
             match self.next_byte() {
@@ -145,7 +137,6 @@ impl<'a> BitReader<'a> {
         self.nbits -= 1;
         Ok(((self.acc >> self.nbits) & 1) as u8)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
         let mut v = 0u16;
         for _ in 0..n {
@@ -153,7 +144,6 @@ impl<'a> BitReader<'a> {
         }
         Ok(v)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
         let mut code: u16 = 0;
         for len in 1..=table.max_len {
@@ -169,7 +159,6 @@ impl<'a> BitReader<'a> {
     /// fill bytes (§B.1.1.2). Any other state after the last MCU (source exhausted, a missing or
     /// partial `EOI`, trailing entropy bytes) means the scan was truncated or malformed, and
     /// decoding it anyway would hand out pixels the input never carried.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn expect_end_of_image(&self) -> Result<(), JpgError> {
         let mut pos = self.pos;
         while self.data.byte(pos) == Some(0xFF) && pos.checked_add(1).and_then(|next| self.data.byte(next)) == Some(0xFF) {
@@ -184,7 +173,6 @@ impl<'a> BitReader<'a> {
     }
     /// 🔁 Byte-align and consume one `RSTn` marker at a restart boundary;
     /// also resets the DC predictors (caller's responsibility) per T.81 F.2.2.5.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn skip_restart_marker(&mut self) -> Result<(), JpgError> {
         self.nbits = 0;
         self.acc = 0;
@@ -287,8 +275,8 @@ pub(crate) fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: 
             if run == 15 {
                 z += 16;
                 continue;
-            } // ZRL
-            break; // EOB
+            }
+            break;
         }
         z += run as usize;
         if z >= 64 {

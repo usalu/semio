@@ -1,5 +1,5 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { CATALOGUE_DRAG_MIME, type TreeDragAndDropController, catalogueTreeDragController } from "../🧲️drag-drop/🟦️.tsx";
 import type { TreeDataSection } from "../📋️data/🟦️.ts";
 import { Tree } from "../🟦️.tsx";

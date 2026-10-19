@@ -1,6 +1,6 @@
 /** 🧬️ Block2dPresence */
 export interface Block2dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   selectedIds: string[];
 }
 

@@ -1,0 +1,104 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts",
+ "function": "loadPluginModule",
+ "keep": [
+  687
+ ],
+ "resolve": true,
+ "typesFromProducers": true,
+ "typeOverrides": {
+  "admittedDescriptor": "import(\"@semio-tech/framework\").PluginPackageDescriptor | undefined"
+ },
+ "shared": {
+  "dir": "🧰️module-instance-ids",
+  "doc": "/** 🧰️ The module-wide instance id counter every `loadPluginModule` call draws from.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */"
+ },
+ "files": [
+  {
+   "dir": "🪪️descriptor-and-instance-state",
+   "doc": "/** 🪪️ The admitted package descriptor, the activation registry and the per-instance bookkeeping maps and guards.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */",
+   "phases": [
+    {
+     "name": "acquirePluginDescriptor",
+     "emoji": "🆔️",
+     "doc": "Admits the package descriptor and binds the activation registry and the shard client.",
+     "from": 30,
+     "to": 37
+    },
+    {
+     "name": "createInstanceBookkeeping",
+     "emoji": "🗃️",
+     "doc": "Creates the per-instance maps, the lifecycle flags and the actor, channel and ui route guards.",
+     "from": 38,
+     "to": 69
+    }
+   ]
+  },
+  {
+   "dir": "🖼️render-and-turn-drivers",
+   "doc": "/** 🖼️ The serialized surface render, the spawned job and typed operation drains and the queued turn driver.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */",
+   "phases": [
+    {
+     "name": "createRenderSurface",
+     "emoji": "🎨️",
+     "doc": "Renders one surface through the owned ui route inside the actor chain.",
+     "from": 79,
+     "to": 81
+    },
+    {
+     "name": "createTurnDrivers",
+     "emoji": "🔁️",
+     "doc": "Builds the outcome broadcast, the spawned job drain, the typed operation drain and the queued turn driver.",
+     "from": 117,
+     "to": 317
+    }
+   ]
+  },
+  {
+   "dir": "📥️extension-and-request-actors",
+   "doc": "/** 📥️ The extension completion capture, the request actor and the extension invoke and dispatch paths.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */",
+   "phases": [
+    {
+     "name": "createExtensionCompletion",
+     "emoji": "🧩️",
+     "doc": "Builds the empty invocation and the extension completion capture.",
+     "from": 323,
+     "to": 331
+    },
+    {
+     "name": "createRequestActor",
+     "emoji": "📮️",
+     "doc": "Builds the lazily activated request actor and the extension invoke and dispatch functions.",
+     "from": 395,
+     "to": 443
+    }
+   ]
+  },
+  {
+   "dir": "📡️contributions-and-backbone",
+   "doc": "/** 📡️ The scoped contributions push and the document backbone control and payload turns.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */",
+   "phases": [
+    {
+     "name": "createContributionsAndBackbone",
+     "emoji": "🛰️",
+     "doc": "Builds the scoped contributions push and the document backbone turns.",
+     "from": 467,
+     "to": 549
+    }
+   ]
+  },
+  {
+   "dir": "🔌️plugin-handle",
+   "doc": "/** 🔌️ The plugin handle: app creation and destruction, actions, rendering, codec access and disposal.\n *\n * 🧱️ Child module of {@link ../🟦️.ts | loadPluginModule}: each function builds one group of the handle's closure state and helpers and returns them for the later groups. */",
+   "phases": [
+    {
+     "name": "buildPluginHandle",
+     "emoji": "🧷️",
+     "doc": "Assembles the plugin handle over the closure state of the earlier groups.",
+     "from": 555,
+     "to": 555
+    }
+   ]
+  }
+ ]
+}

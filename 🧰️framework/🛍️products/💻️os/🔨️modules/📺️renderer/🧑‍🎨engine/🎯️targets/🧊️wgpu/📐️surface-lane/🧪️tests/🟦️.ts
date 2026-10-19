@@ -2,7 +2,7 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
-import { KernelOriginalOperationIssuer, KernelOriginalResourcePool, OriginalOperationSource } from "../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts";
+import { KernelOriginalOperationIssuer, KernelOriginalResourcePool, OriginalOperationSource } from "@semio-tech/framework-actor/retained-turn";
 import law from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 import Ajv from "ajv";

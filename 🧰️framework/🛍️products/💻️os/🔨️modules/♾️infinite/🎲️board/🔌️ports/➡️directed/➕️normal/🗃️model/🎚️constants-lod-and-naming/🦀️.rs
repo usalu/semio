@@ -12,7 +12,7 @@ pub const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = ui_styling::metrics::board::I
 /// Nakagin carries 358 handles; a DOM attribute is not a place to stream a document.
 pub const BOARD_HANDLE_VITALS_CAP: usize = 128;
 
-/// Radial offset from node rim to indirect-handle center, as a fraction of node half-extent (circle radius or half the shorter rectangle side).
+/// 🤚️ Radial offset from node rim to indirect-handle center, as a fraction of node half-extent (circle radius or half the shorter rectangle side).
 pub const INDIRECT_HANDLE_RING_GAP_NODE_SCALE: f64 = ui_styling::metrics::board::INDIRECT_HANDLE_RING_GAP_SCALE;
 
 pub const LINK_DRAG_MIN_DISTANCE_PX: f64 = ui_styling::metrics::board::LINK_DRAG_MIN_DISTANCE_PX;

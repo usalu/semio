@@ -1,7 +1,7 @@
 //! ⚖️ Borrowed design actions and genuine nullable owner references before typed ownership.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn actions_count(root:&R)->Result<usize,ValueError>{let mut count=0;for id in 13..=16{count=n::add(count,n::list(n::field(root,id)?)?.len())?}Ok(count)}

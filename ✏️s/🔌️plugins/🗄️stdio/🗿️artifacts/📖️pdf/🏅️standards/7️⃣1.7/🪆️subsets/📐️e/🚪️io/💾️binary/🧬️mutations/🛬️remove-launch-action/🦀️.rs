@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-launch-action`.
+//! 💾️ Direct binary identity for `remove-launch-action`.
 
 pub const TAG: u8 = 5;
 pub const BINARY_TAG: u8 = TAG;

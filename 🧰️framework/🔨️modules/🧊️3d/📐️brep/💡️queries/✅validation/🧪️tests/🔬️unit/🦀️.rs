@@ -19,14 +19,6 @@ fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
             origin: semio_framework_3d_brep_vector::Pnt2::new(local_o.x, local_o.y),
             dir: semio_framework_3d_brep_vector::Vec2::new(local_d.x, local_d.y),
         });
-        // 🩺 A p-curve is always parametrized in the EDGE's own curve order — never reversed
-        // to match a particular coedge's traversal direction (W1-E's binding convention, see
-        // 📓️w1e-primitives.md §"p-curve convention"): both coedges sharing an edge get the
-        // IDENTICAL `(pcurve, prange)`. `pcurve`/`local_o`/`local_d` above are built to trace
-        // A→B exactly as `curve3` does over `edge.range = (0.0, 1.0)`, so `prange` must match
-        // that same order regardless of `co.forward` — reversing it here (the previous bug)
-        // desynchronized `check_same_parameter`'s per-`s` correspondence for every backward
-        // coedge, by a full edge length at each sample's far end.
         let prange = (0.0, 1.0);
         let co = body.coedges.get_mut(coedge_id).unwrap();
         co.pcurve = Some(pcurve);
@@ -106,7 +98,6 @@ async fn a_broken_ring_pointer_is_detected() {
     let face = body.solid_faces(solid)[0];
     let outer = body.faces.get(face).unwrap().outer.unwrap();
     let coedges = body.loop_coedges(outer);
-    // Corrupt the ring: point the first coedge's `next` at itself instead of its real neighbor.
     let first = coedges[0];
     body.coedges.get_mut(first).unwrap().next = first;
     let issues = validate_body(&body);
@@ -126,8 +117,6 @@ async fn a_vertex_tolerance_exceeding_its_edge_tolerance_is_detected() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_non_manifold_edge_is_flagged() {
-    // Build a free-standing edge with three coedges referencing it (impossible in a clean
-    // 2-manifold build, so constructed directly).
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let v0 = make_vertex(&mut body, Pnt3::new(0.0, 0.0, 0.0), Tol::DEFAULT, &mut rec);
@@ -157,8 +146,6 @@ async fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curv
     let face = body.solid_faces(solid)[0];
     let outer = body.faces.get(face).unwrap().outer.unwrap();
     let coedge_id = body.loop_coedges(outer)[0];
-    // Attach a pcurve that does NOT correspond to the face's surface at all — a constant,
-    // clearly-wrong 2D point far from where the 3D edge actually projects.
     let bad_pcurve = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Line {
         origin: semio_framework_3d_brep_vector::Pnt2::new(500.0, 500.0),
         dir: semio_framework_3d_brep_vector::Vec2::new(0.0, 0.0),

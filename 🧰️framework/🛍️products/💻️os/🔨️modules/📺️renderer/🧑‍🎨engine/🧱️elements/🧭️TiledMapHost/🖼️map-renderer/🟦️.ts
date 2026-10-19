@@ -81,9 +81,6 @@ export class MapRenderer {
 
   setLodMode(mode: string): void {
     this.session.setLodMode(mode);
-    // 🧭️ The byte caches are keyed by `z/x/y`, which is LOD-independent — an LOD switch only
-    // changes which tiles are visible, not their content, so keep them warm and just force a fresh
-    // visibility read (miss sets + revision trackers reset).
     this.tileMiss.clear();
     this.vectorTileMiss.clear();
     this.lastRasterVisibleRevision = Number.NaN;
@@ -191,12 +188,7 @@ export class MapRenderer {
       if (this.needsRasterTiles()) tasks.push(this.refreshRasterTiles());
       if (this.needsVectorTiles()) tasks.push(this.refreshVectorTiles());
       await Promise.all(tasks);
-      // 🪶️ Newly-uploaded tiles need a fresh frame to actually become visible — the old unconditional
-      // render loop covered this implicitly; the demand scheduler needs telling explicitly.
       this.invalidate();
-      // 🍩️ Prefetch the ring just outside the viewport strictly AFTER visible tiles are in, sharing
-      // — never competing for — `MAX_CONCURRENT_TILE_FETCHES`. Abandoned mid-flight if a newer
-      // refresh has since been scheduled (`generation` mismatch) or the renderer got disposed.
       await this.prefetchTiles(generation);
     })().finally(() => {
       this.refreshInFlight = null;

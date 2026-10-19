@@ -325,30 +325,26 @@ describe("DirectoryClient.stream", () => {
     try {
       FakeDirectoryWebSocket.instances = [];
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
-      randomSpy.mockReturnValue(0); // 🎯️ pins the jitter draw to the lower bound of its range.
+      randomSpy.mockReturnValue(0);
       const client = testDirectoryClient();
       const handle = client.stream(0, () => {});
       await Promise.resolve();
       const first = FakeDirectoryWebSocket.instances[0]!;
       first.triggerMessage({ kind: "event", event: sampleDirectoryEvent(7) });
       first.triggerClose();
-      await Promise.resolve(); // 🪧️ let the rejection's microtask reach retryWithJitteredBackoff's catch (which schedules the backoff timer) before advancing fake time — advanceTimersByTime does not itself drain microtasks.
+      await Promise.resolve();
 
-      // attempt 1: cap = min(MAX, MIN·2¹) = 2·MIN; random()=0 ⇒ delay lands exactly on the lower
-      // bound (MIN) — no reconnect fires a tick earlier, and one fires the instant it's due.
       await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MIN_MS - 1);
       expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
       await vi.advanceTimersByTimeAsync(1);
       expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
       const second = FakeDirectoryWebSocket.instances[1]!;
-      expect(second.url).toBe("ws://hub.test/directory/socket/v1?since=7"); // resumes from lastSeq, never the original `since`.
+      expect(second.url).toBe("ws://hub.test/directory/socket/v1?since=7");
 
-      randomSpy.mockReturnValue(1); // 🎯️ pins the jitter draw to the upper bound of its range.
+      randomSpy.mockReturnValue(1);
       second.triggerClose();
       await Promise.resolve();
 
-      // attempt 2: cap = min(MAX, MIN·2²) = 4·MIN; random()=1 ⇒ delay lands exactly on that upper
-      // bound — proving the delay grows and stays within [MIN, cap], not a fixed exponential value.
       const attempt2Cap = Math.min(HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS * 2 ** 2);
       await vi.advanceTimersByTimeAsync(attempt2Cap - 1);
       expect(FakeDirectoryWebSocket.instances).toHaveLength(2);
@@ -400,21 +396,17 @@ describe("DirectoryClient.stream", () => {
     try {
       FakeDirectoryWebSocket.instances = [];
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
-      randomSpy.mockReturnValue(0); // 🎯️ pins every jittered delay to its lower bound.
+      randomSpy.mockReturnValue(0);
       const client = testDirectoryClient();
       const handle = client.stream(0, () => {});
       await Promise.resolve();
       const first = FakeDirectoryWebSocket.instances[0]!;
       first.triggerOpen();
 
-      // 🩺️ let it prove itself healthy, then drop it.
       await vi.advanceTimersByTimeAsync(HUB_HEALTHY_RESET_MS);
       first.triggerClose();
-      await Promise.resolve(); // let the resolved connectOnce reach runCycles' next-cycle setup.
+      await Promise.resolve();
 
-      // The next cycle is primed: its first (synthetic) failure is attempt 1 of a FRESH counter —
-      // cap = min(MAX, MIN·2¹) = 2·MIN; random()=0 ⇒ delay lands exactly on the lower bound, MIN —
-      // never the far larger delay an un-reset counter would have reached by this point.
       await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MIN_MS - 1);
       expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
       await vi.advanceTimersByTimeAsync(1);
@@ -433,7 +425,7 @@ describe("DirectoryClient.stream", () => {
     try {
       FakeDirectoryWebSocket.instances = [];
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeDirectoryWebSocket;
-      randomSpy.mockReturnValue(1); // 🎯️ pins every jittered delay to its upper bound (== cap), so a reset shows up unmistakably as a delay dropping back down.
+      randomSpy.mockReturnValue(1);
       const client = testDirectoryClient();
       const handle = client.stream(0, () => {});
       await Promise.resolve();
@@ -442,11 +434,11 @@ describe("DirectoryClient.stream", () => {
       for (let attempt = 1; attempt <= 3; attempt++) {
         const socket = FakeDirectoryWebSocket.instances[instanceCount - 1]!;
         socket.triggerOpen();
-        socket.triggerClose(); // drops instantly — nowhere near HUB_HEALTHY_RESET_MS, so `healthy` stays false.
+        socket.triggerClose();
         await Promise.resolve();
         const cap = Math.min(HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS * 2 ** attempt);
         await vi.advanceTimersByTimeAsync(cap - 1);
-        expect(FakeDirectoryWebSocket.instances).toHaveLength(instanceCount); // still escalated — a reset would have reconnected far sooner than this growing cap.
+        expect(FakeDirectoryWebSocket.instances).toHaveLength(instanceCount);
         await vi.advanceTimersByTimeAsync(1);
         instanceCount += 1;
         expect(FakeDirectoryWebSocket.instances).toHaveLength(instanceCount);
@@ -469,12 +461,12 @@ describe("DirectoryClient.stream", () => {
       await Promise.resolve();
       const first = FakeDirectoryWebSocket.instances[0]!;
       first.triggerOpen();
-      await vi.advanceTimersByTimeAsync(HUB_HEALTHY_RESET_MS / 2); // health timer armed, not yet fired.
+      await vi.advanceTimersByTimeAsync(HUB_HEALTHY_RESET_MS / 2);
       handle.close();
       first.triggerClose();
       await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS * 2);
-      expect(FakeDirectoryWebSocket.instances).toHaveLength(1); // no reconnect was ever attempted.
-      expect(vi.getTimerCount()).toBe(0); // 🛟️ neither the health timer nor any backoff timer is left pending.
+      expect(FakeDirectoryWebSocket.instances).toHaveLength(1);
+      expect(vi.getTimerCount()).toBe(0);
     } finally {
       vi.useRealTimers();
     }

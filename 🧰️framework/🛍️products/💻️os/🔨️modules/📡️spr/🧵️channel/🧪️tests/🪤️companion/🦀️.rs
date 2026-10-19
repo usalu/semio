@@ -16,7 +16,8 @@ mod tests;
 pub mod archive_decoding {
     pub use semio_framework_os_channel::archive_decoding::*;
     use semio_framework_os_channel::archive_schema::*;
-    use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant, ValueError, ValueRefusalKind};
+    use semio_framework_value::{RetainedCloneGrant, ValueError, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use semio_framework_value::retained_clone::RetainedCloneProgress;
     use semio_framework_io_control::NativeSnapshotBodyWallet;
 

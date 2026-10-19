@@ -61,8 +61,6 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
         frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
         source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
     });
-    // 🧩️ Seeded through `create-asset` itself so the handle's durable leaves exist — a bare
-    // `assets.insert` leaves a handle without content, which no inverse can restore.
     let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
     let mut scene = applied(&scene, &create_asset("asset-1".into(), asset_one));
     scene.calibration.cameras.push(CameraCalibration {
@@ -78,7 +76,6 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
         rms_reprojection_px: Some(0.4),
         locked: false,
     });
-    // 🧷️ A rig extrinsic may only name a known camera (`create-rig-extrinsic`'s invariant).
     scene.calibration.rig.push(RigExtrinsic { camera_id: "cam-1".into(), ..RigExtrinsic::default() });
     scene.gcps.push(GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }] });
     scene.params.ingest.min_sharpness = 0.4;
@@ -136,8 +133,6 @@ async fn create_delete_stream_inverse_law() {
     let base = populated_scene_fixture();
     let stream = MediaStream { id: "stream-99".into(), name: "extra".into(), ..MediaStream::default() };
     laws(&base, &create_stream(stream)).await;
-    // 🔗️ `gcp-1` observes `stream-1`; the delete refuses (`mutation.target-referenced`) until that
-    // observation is removed.
     let detached = applied(&base, &remove_gcp_observation("gcp-1".into(), 0));
     laws(&detached, &delete_stream("stream-1".into())).await;
 }
@@ -152,8 +147,6 @@ async fn change_stream_sync_inverse_law() {
 async fn add_remove_stream_frame_inverse_law() {
     let base = populated_scene_fixture();
     laws(&base, &add_stream_frame("stream-1".into(), FrameRef { index: 1, timestamp_ms: 33.0, asset_id: "asset-2".into() }, MediaKind::Video)).await;
-    // 🎯️ `remove-stream-frame`'s inverse only round-trips exactly for the LAST frame (see its
-    // payload's doc comment) — target index 0, the only frame `populated_scene_fixture` seeds.
     laws(&base, &remove_stream_frame("stream-1".into(), 0)).await;
 }
 
@@ -169,7 +162,6 @@ async fn create_delete_asset_inverse_law() {
     let asset = ImageAsset { mime: "image/png".into(), data: "zzzz".into(), width: 2, height: 2 };
     laws(&base, &create_asset("asset-1".into(), asset.clone())).await;
     laws(&base, &create_asset("asset-2".into(), asset)).await;
-    // 🔗️ `stream-1`'s only frame addresses `asset-1`; detach it before the delete.
     let detached = applied(&base, &remove_stream_frame("stream-1".into(), 0));
     laws(&detached, &delete_asset("asset-1".into())).await;
 }
@@ -181,8 +173,6 @@ async fn camera_calibration_inverse_law() {
     laws(&base, &create_camera_calibration(camera)).await;
     let updated = CameraCalibration { id: "cam-1".into(), fx: 2000.0, ..base.calibration.cameras[0].clone() };
     laws(&base, &update_camera_calibration(updated)).await;
-    // 🔗️ `stream-1` binds `cam-1` and the rig carries its extrinsic; detach both (the stream first
-    // loses its GCP observation, which would otherwise refuse the stream delete).
     let detached = applied(&base, &remove_gcp_observation("gcp-1".into(), 0));
     let detached = applied(&detached, &delete_stream("stream-1".into()));
     let detached = applied(&detached, &delete_rig_extrinsic("cam-1".into()));
@@ -192,7 +182,6 @@ async fn camera_calibration_inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn rig_extrinsic_inverse_law() {
     let base = populated_scene_fixture();
-    // 📷️ An extrinsic may only name a known camera: calibrate `cam-99` before rigging it.
     let calibrated = applied(&base, &create_camera_calibration(CameraCalibration { id: "cam-99".into(), model: "pinhole".into(), ..CameraCalibration::default() }));
     let extrinsic = RigExtrinsic { camera_id: "cam-99".into(), ..RigExtrinsic::default() };
     laws(&calibrated, &create_rig_extrinsic(extrinsic)).await;
@@ -208,7 +197,6 @@ async fn gcp_inverse_law() {
     laws(&base, &create_gcp(gcp)).await;
     laws(&base, &delete_gcp("gcp-1".into())).await;
     laws(&base, &add_gcp_observation("gcp-1".into(), GcpObservation { stream_id: "stream-1".into(), frame_index: 1, pixel: [1.0, 2.0] })).await;
-    // 🎯️ Same last-index constraint as `remove-stream-frame` — target the only seeded observation.
     laws(&base, &remove_gcp_observation("gcp-1".into(), 0)).await;
 }
 
@@ -300,7 +288,6 @@ async fn dispatch_registers_semantic_descriptors() {
 #[semio_framework_async_macros::async_test]
 async fn concurrent_create_asset_ops_converge_regardless_of_order() {
     let base = populated_scene_fixture();
-    // 🧩️ `ImageAsset.data` is base64 — a non-base64 payload is refused (`mutation.invariant`).
     let asset_a = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(b"frame-one"), width: 8, height: 8 };
     let asset_b = ImageAsset { mime: "image/jpeg".into(), data: base64_codec::base64_standard_encode(b"frame-two"), width: 8, height: 8 };
     let op_a = create_asset("frame-a".into(), asset_a.clone());
@@ -312,8 +299,6 @@ async fn concurrent_create_asset_ops_converge_regardless_of_order() {
     let b_then_a = applied(&b, &op_a);
 
     assert_eq!(a_then_b, b_then_a, "concurrent create-asset on disjoint keys must converge regardless of order");
-    // 🎯️ The handle is content-addressed (`image_asset_child_handle`), so it is identical for identical
-    // `(mime, data)` regardless of who mints it; the durable leaves read back the exact asset.
     assert_eq!(a_then_b.assets.get("frame-a"), Some(&semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle("frame-a", &asset_a)));
     assert_eq!(a_then_b.assets.get("frame-b"), Some(&semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle("frame-b", &asset_b)));
     assert_eq!(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset(&a_then_b, "frame-a"), Some(asset_a));

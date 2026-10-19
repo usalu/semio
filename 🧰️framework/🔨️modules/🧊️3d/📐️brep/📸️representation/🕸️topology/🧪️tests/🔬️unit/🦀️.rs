@@ -142,10 +142,6 @@ async fn vertex_edges_and_edge_coedges_find_all_incident_entries() {
 
 #[semio_framework_async_macros::async_test]
 async fn json_round_trips_a_whole_body() {
-    // 🌉️ First-party `ToValue`/`FromValue` + `pack::{to_json_string,from_json_str}` codec
-    // (`Body` derives both, see its struct definition above) — same pattern as
-    // `📸️snapshot/🏟️arena/🦀️.rs`'s own `TestId` round-trip test, not `serde_json` (removed
-    // from `Body`'s derive list by the serde-elimination wave).
     let mut body = Body::new();
     let frame = Frame3::WORLD;
     let surface = body.surfaces.insert(Surface::Plane { frame });

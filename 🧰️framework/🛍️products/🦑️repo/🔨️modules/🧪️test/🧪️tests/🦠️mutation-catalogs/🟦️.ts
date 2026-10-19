@@ -34,10 +34,6 @@ describe("🪆️ case above subset", () => {
     expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact/🏅️standards/🔖️1/🪆️subsets/✳️only"), featureTagged("@mutations-thing-v1"), registry)).toEqual([]);
   });
 
-  // 🚫️Confirmed live: `gif/🐯️create-and-round-trip-gif`, `jpg/📖️create-and-read-jpeg` and
-  // `zip/✏️create-and-edit-archive` each import exactly one real subset's `io` from their adapter while
-  // C4 confirmed all three genuinely stay artifact-wide — a case with no `@mutations-` tag is never a
-  // mutation-catalog candidate at all, whatever its adapter happens to import.
   test("a case with no @mutations- tag is never a candidate, whatever its adapter names", () => {
     expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureUntagged, registry)).toEqual([]);
   });
@@ -52,8 +48,6 @@ describe("🪆️ case above subset", () => {
     expect(caseAboveSubsetBreaches(discoveredAt("🧪️synthetic/📦️artifact"), featureTagged("@mutations-does-not-exist"), registry)).toEqual([]);
   });
 
-  // 🔍️The real gate: the one case C4 left above its subset (`mutate-obj-3-0-material`) now lives in
-  // `🗽️obj/…/🎨️material/🧪️tests/`, so no live case may sit above the subset its catalog names.
   test("no live case sits above the subset its mutation catalog names", () => {
     const liveRegistry = repoRegistry;
     const scopes = repoCases
@@ -110,8 +104,6 @@ describe("🧫️ mutation without fixture", () => {
     expect(mutationFixtureBreaches(registryWith([manifest], [fixture("change-a")]))).toEqual([]);
   });
 
-  // 🌱️`🏛️architect/🏛️program`'s own live shape: 266 mutations, zero v2 fixtures, 266 v1 vectors —
-  // the survey that shrank this rule's live count from 1,650 to 343 before it was even wired in.
   test("a v1 physical vector sharing the mutation's own capability discharges it too", () => {
     const manifest = manifestWith([mutation("change-a", "test-fixture-1-mutate")]);
     expect(mutationFixtureBreaches(registryWith([manifest], [], [catalog("test-fixture-1-mutate", ["change-a"])]))).toEqual([]);
@@ -187,8 +179,6 @@ describe("🧫️ mutation without fixture", () => {
 //#endregion 🧪️Tests
 
 describe("🦠️ mutation completeness gate", () => {
-  // 🦠️A synthetic owner keeps the gate's arithmetic independent of whichever formats happen to be
-  // committed today — the framework is not allowed to know that PDF or PNG exist.
   const owner = "🧪️synthetic/📦️artifact";
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);
   const discovered = { owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/${featureFilename}`, adapters: {}, sharedFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("../../📦️packages/🟦️typescript/🟦️.ts").DiscoveredCase;
@@ -207,8 +197,6 @@ describe("🦠️ mutation completeness gate", () => {
     expect(ids.some((entry) => entry.summary.includes("remove-item"))).toBe(true);
   });
 
-  // 🔁️A mutation that cannot be undone breaks undo for a real user, so the inverse half is held to
-  // the same standard as the mutation half rather than being optional evidence.
   test("a kind that is applied but never inverted is a breach of its own", () => {
     const ids = mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "mutate-remove-item"]), registry);
     expect(ids.map((entry) => entry.id)).toContain("mutation-inverse-uncovered");
@@ -261,10 +249,6 @@ describe("🧬️ physical mutation vector registry", () => {
     expect(mutationCatalogProblems({ ...catalog, standardDirectoryName: "1" }, "artifact/🏅️standards/1/🪆️subsets/✳️any")).toContain("standardDirectoryName must be one canonical semantic emoji followed by a standard slug");
   });
 
-  // 🪆️A framework facet owns a mutation vocabulary too, and its path carries no
-  // `🏅️standards/🪆️subsets` coordinates to restate. Requiring them unconditionally made such a
-  // catalog unrepresentable, which silently dropped the whole contribution — and an owner whose
-  // contribution never loads is an owner the completeness gate never measures.
   test("an owner with no standards/subsets coordinates declares a catalog without them", () => {
     const facetOwner = "🧰️framework/🛍️products/💻️os/🎚️config";
     const { standardDirectoryName: _standard, subsetDirectoryName: _subset, ...profileless } = catalog;
@@ -278,24 +262,13 @@ describe("🧬️ physical mutation vector registry", () => {
     const registry = repoRegistry;
     const vectors = registry.mutationCatalogs.flatMap((entry) => entry.vectors);
 
-    // 🧬️STRUCTURAL invariants, not frozen counts. This test used to pin `144` catalogs and `1_555`
-    // vectors and to assert an exact three-element breach list. Those numbers are a function of the
-    // whole repository's in-flight state: any peer wave that adds an owner or renames a bundle file
-    // changed them, and the test then failed for a reason that had nothing to do with the contract it
-    // is meant to guard. What IS invariant is the shape.
     expect(registry.mutationCatalogs.length).toBeGreaterThan(0);
     expect(vectors.length).toBeGreaterThan(0);
-    // 🧪️One scenario per vector is the registry's own rule: a vector with no scenario registers
-    // physical evidence that does not exist, and `mutationCatalogProblems` rejects it outright.
     expect(vectors.every((entry) => entry.scenarios.length > 0)).toBe(true);
     expect(vectors.flatMap((entry) => entry.scenarios).length).toBeGreaterThanOrEqual(vectors.length);
-    // 🆔️Registered identities are unique across the whole repository, so no two owners can claim the
-    // same physical bundle.
     const directories = vectors.map((entry) => entry.mutationDirectoryName);
     expect(new Set(directories).size).toBeLessThanOrEqual(directories.length);
 
-    // 🧾️Every finding the audit produces must belong to a KNOWN family. A new, unnamed breach id is a
-    // gate nobody has read; the count itself is repository state and is reported, never pinned.
     const breaches = mutationVectorRegistryBreaches(repoRoot, registry);
     const known = new Set(["mutation-vector-catalog-invalid", "mutation-vector-mixed-state", "mutation-vector-duplicate-owner", "mutation-vector-bundle-invalid", "mutation-vector-source-id-mismatch", "mutation-vector-missing", "mutation-vector-unregistered"]);
     for (const entry of breaches) expect(known.has(entry.id), `unknown vector breach id ${entry.id}`).toBe(true);
@@ -304,8 +277,6 @@ describe("🧬️ physical mutation vector registry", () => {
 });
 
 describe("🧫️ real-world artifact fixtures", () => {
-  // 🧫️A multi-megabyte real document is read where the domain already keeps it. Copying it into a
-  // fixtures directory would duplicate megabytes of git history for no gain.
   const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base";
   const thesis = `${owner}/🖼️assets/🎓️bachelor-thesis/🎓️bachelor-thesis.pdf`;
   const featureFilename = testFilenameForKind(testTaxonomy(repoRoot), testTaxonomy(repoRoot).testFeatureFileKindId);

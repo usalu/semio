@@ -252,9 +252,6 @@ fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content
     let surface_at = surface_at.expect("the overlay surface is painted at the placement layout resolved");
     assert!(bucket.len() > surface_at + 1, "the overlay's own content paints into the SAME bucket, after the chrome — otherwise the surface covers it");
 
-    // 🔽️ A `SelectPopup` paints its own glass inside `paint_select`, and its overlay ROOT is the
-    // trigger's rect, not the popup's — chrome at that placement would draw a menu panel over a
-    // closed trigger. The ladder must leave those three kinds alone.
     let _ = ui.close_overlay("w", content);
     ui.open_overlay("w", content, OverlayKind::SelectPopup, OverlayAnchor::Node(content));
     drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
@@ -400,9 +397,6 @@ fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
 
 #[test]
 fn frame_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot() {
-    // 🌳️ Nests the ComponentScene under a Group (not just a bare Stack) — regression for the
-    // shadow-walk gap this bridge replaces: `collect_scene_slots` must still find it, and the
-    // Group's own header/frame chrome (unrelated to the scene leaf) must still paint normally.
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let mut atlas = FontAtlas::builtin();
     let group_node = UiNode::Group(UiGroupNode {

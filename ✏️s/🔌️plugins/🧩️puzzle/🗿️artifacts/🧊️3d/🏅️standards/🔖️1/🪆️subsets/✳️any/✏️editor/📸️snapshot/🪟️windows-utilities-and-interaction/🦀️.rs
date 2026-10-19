@@ -70,7 +70,7 @@ pub fn puzzle3d_addressed_window_id<'a>(view_state: Option<&'a semio_framework_p
 /// 🛠️ The shared window owner resolves pane utilities; the mode-wide fill tool retains its viewport interaction.
 pub fn puzzle3d_scene_active_utility(config: &Puzzle3dRuntime, view_state: Option<&semio_framework_plugin::ViewModel>, window_id: Option<&str>) -> String {
     if puzzle3d_fill_tool_active(config) {
-        return fill_tool::TOOL_ID.to_string();
+        return PUZZLE3D_FILL_TOOL_ID.to_string();
     }
     view_state
         .and_then(|view| view.window_utility(window_id))

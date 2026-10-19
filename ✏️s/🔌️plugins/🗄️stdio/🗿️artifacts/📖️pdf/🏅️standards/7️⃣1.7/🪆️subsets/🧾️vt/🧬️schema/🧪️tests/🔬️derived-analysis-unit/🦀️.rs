@@ -51,7 +51,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn x_violations_are_inherited_as_hard() {
-        // No OutputIntent at all -- an X-4 violation must surface through vt too.
         let snapshot = PdfSnapshot::default();
         let diagnostics = check_vt_conformance(&snapshot);
         assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v1_7::subsets::x::io::CODE_OUTPUT_INTENT && d.severity == Severity::Error), "got {diagnostics:?}");

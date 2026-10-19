@@ -3,12 +3,8 @@
  */
 import type { PolicyRustSourceEvidence } from "../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 
-/** 📥️ The structural slice of the member-store producer sources the self-test mutates: the producer and member bodies of each explicit extension. */
-export type MemberProducerSourcesPort = Readonly<{ extensions: readonly Readonly<{ producer: Readonly<{ source: string }>; members: Readonly<{ source: string }>; declaration: unknown }>[] }>;
-
 /** 🧭️ One entry per hostile-mutation self-test lane; `📜️script.ts` binds each to its test module. */
 export interface SelfTestLanes {
-  readonly semioMemberStoreProducerSourceSelfTests: (check: (sources: MemberProducerSourcesPort) => boolean, sources: MemberProducerSourcesPort, domainSchema: Readonly<{ $id: string }>) => number;
   readonly toolJobArtifactEnvelopeRejectionTransferSelfTests: (store: PolicyRustSourceEvidence) => number;
   readonly toolJobLiveFixedReplaySelfTests: (actor: string, shard: string, executor: string, wgpu: string, actionBus: string, pluginApp: string, pluginHost: string, programBridge: string) => number;
   readonly toolJobFixedOperationRegistrySelfTests: (source: string) => number;

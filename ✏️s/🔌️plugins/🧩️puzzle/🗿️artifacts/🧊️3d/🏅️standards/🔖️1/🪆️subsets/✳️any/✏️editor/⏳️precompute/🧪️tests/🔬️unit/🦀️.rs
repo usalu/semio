@@ -605,8 +605,6 @@ fn a_retransmitted_page_is_acknowledged_without_dropping_the_run() {
 #[test]
 fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
     let _store = brush_mesh_store_laws_guard();
-    // 🎲️ Geometry no other law derives: the store is content-addressed since B22, so the shared cube
-    // would be adoptable by digest and the refusal this law is about could never happen.
     let (positions, indices) = seeded_cube_mesh_buffers(11.0);
     let digest = brush_mesh_digest(&positions, &indices);
     let url = "/test/reupload-requested.glb";
@@ -646,8 +644,6 @@ fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
 #[test]
 fn a_resident_identity_never_stays_in_the_re_upload_request_set() {
     let _store = brush_mesh_store_laws_guard();
-    // 🎲️ A seed no other law derives: the process-wide store outlives one test, and
-    // `an_uploaded_mesh_is_adopted_by_url_and_digest` asserts that seed 97 geometry is UNKNOWN to it.
     let (positions, indices) = seeded_cube_mesh_buffers(149.0);
     let digest = brush_mesh_digest(&positions, &indices);
     let mut session = Puzzle3dPrecomputeSession::new();
@@ -657,21 +653,16 @@ fn a_resident_identity_never_stays_in_the_re_upload_request_set() {
     assert_eq!(session.stage_mesh_page(paged, &digest, 0, 1, &positions, &indices), Ok(None), "the client answers with the page run");
     assert!(session.mesh_reupload_requests().is_empty(), "an installed identity retires its own request");
 
-    // 🪢️ Path 1 — the resident FAST RETURN: this identity is already non-fallback, so `adopt_shared_mesh`
-    // answers `true` without installing anything.
     assert!(session.request_mesh_reupload(paged), "a client whose bookkeeping is stale re-announces a resident id");
     assert!(session.adopt_shared_mesh(paged, Some(&digest)), "and this session can serve it");
     assert!(session.mesh_reupload_requests().is_empty(), "so the request it answered must be gone, not left for the world body to republish");
 
-    // 🪢️ Path 2 — `stage_mesh_page`'s page-0 SHORT CIRCUIT over geometry the process already derived.
     let aliased = "/test/b48-retire-aliased.glb";
     assert!(session.request_mesh_reupload(aliased), "a sibling id over the same geometry is refused by id alone and recorded");
     assert_eq!(session.stage_mesh_page(aliased, &digest, 0, 8, &positions, &indices), Ok(None), "its run closes on page 0 by digest");
     assert!(session.has_mesh(aliased), "the short circuit still installs live collision geometry");
     assert!(session.mesh_reupload_requests().is_empty(), "a run the guest closed early still answers its request");
 
-    // 🪢️ Path 3 — `place_collision_mesh`'s ALREADY-RESIDENT bail: real geometry is never overwritten, and
-    // the refusal to overwrite is not a reason to keep asking for bytes this session already holds.
     assert!(session.request_mesh_reupload(paged), "the client asks once more");
     session.register_mesh_fallback(paged, &positions, &indices);
     assert!(session.mesh_reupload_requests().is_empty(), "a refused overwrite of resident geometry retires the request it cannot improve on");

@@ -19,12 +19,12 @@ where
     pub state: Option<Arc<P>>,
     pub candidate: Option<Arc<P>>,
     pub edit_messages: semio_framework_os_spr::command::ReplayMessageAccumulator,
-    pub edit_inverse: semio_framework_value::list::PagedList<Mutation, {usize::MAX}>,
+    pub edit_inverse: semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>,
     pub message_settlement: Option<semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement>,
     pub(super) closed_outcomes: usize,
     pub committed: Vec<String>,
     pub(crate) quarantined: Vec<String>,
-    pub rebased_inverse: Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)>,
+    pub rebased_inverse: Vec<(String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>)>,
     pub replayed: Vec<semio_framework_os_spr::EditMessages>,
     pub outcomes: Vec<protocol::MutationReplayOutcome>,
     pub(crate) report_worst: Option<semio_framework_diagnostic::Severity>,
@@ -88,7 +88,7 @@ where
     pub converged_at: Option<usize>,
     pub committed: Vec<String>,
     pub(crate) quarantined: Vec<String>,
-    pub rebased_inverse: Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)>,
+    pub rebased_inverse: Vec<(String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>)>,
     pub replayed: Vec<semio_framework_os_spr::EditMessages>,
     pub recorded: Vec<(usize, Arc<P>)>,
     pub report: protocol::ReplayReport,
@@ -169,7 +169,7 @@ where
     }
 
     /// 🔙️ Takes every kept edit's rebased inverse; their retirement moves to the caller.
-    pub fn take_rebased_undo_rows(&mut self) -> Vec<(String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>)> {
+    pub fn take_rebased_undo_rows(&mut self) -> Vec<(String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>)> {
         std::mem::take(&mut self.rebased_inverse)
     }
 }

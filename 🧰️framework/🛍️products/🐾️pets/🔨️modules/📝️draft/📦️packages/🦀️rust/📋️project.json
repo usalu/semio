@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/pets-staging-draft-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

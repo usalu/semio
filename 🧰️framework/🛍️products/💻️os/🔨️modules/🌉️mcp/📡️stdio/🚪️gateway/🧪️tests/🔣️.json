@@ -1,0 +1,68 @@
+{
+  "schema": "semio.os.mcp.warm-gateway/1",
+  "rule": "Before the real server is staged the gateway answers initialize, ping and every list method itself and queues the rest; once staged it handshakes with the real server under a gateway-owned id, replays the queue in order, announces list_changed and then relays both ways. A failed staging answers every queued and later request with -32603.",
+  "replies": [
+    { "name": "initialize-echoes-the-requested-version", "request": { "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": { "name": "t", "version": "1" } } }, "reply": { "jsonrpc": "2.0", "id": 1, "result": { "protocolVersion": "2025-11-25", "capabilities": { "tools": { "listChanged": true }, "resources": { "listChanged": true }, "prompts": { "listChanged": true } }, "serverInfo": { "name": "semio", "version": "warming" }, "instructions": "The semio server is starting; its tools appear through list_changed notifications once its binary is staged." } } },
+    { "name": "ping", "request": { "jsonrpc": "2.0", "id": "p", "method": "ping" }, "reply": { "jsonrpc": "2.0", "id": "p", "result": {} } },
+    { "name": "tools-list", "request": { "jsonrpc": "2.0", "id": 2, "method": "tools/list" }, "reply": { "jsonrpc": "2.0", "id": 2, "result": { "tools": [] } } },
+    { "name": "resources-list", "request": { "jsonrpc": "2.0", "id": 3, "method": "resources/list" }, "reply": { "jsonrpc": "2.0", "id": 3, "result": { "resources": [] } } },
+    { "name": "resource-templates-list", "request": { "jsonrpc": "2.0", "id": 4, "method": "resources/templates/list" }, "reply": { "jsonrpc": "2.0", "id": 4, "result": { "resourceTemplates": [] } } },
+    { "name": "prompts-list", "request": { "jsonrpc": "2.0", "id": 5, "method": "prompts/list" }, "reply": { "jsonrpc": "2.0", "id": 5, "result": { "prompts": [] } } },
+    { "name": "tool-call-waits", "request": { "jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": { "name": "x" } }, "reply": null },
+    { "name": "notification-waits", "request": { "jsonrpc": "2.0", "method": "notifications/cancelled", "params": { "requestId": 6 } }, "reply": null }
+  ],
+  "journeys": [
+    {
+      "name": "staged-successfully",
+      "steps": [
+        { "client": { "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": { "name": "t", "version": "1" } } } },
+        { "client": { "jsonrpc": "2.0", "method": "notifications/initialized" } },
+        { "client": { "jsonrpc": "2.0", "id": 2, "method": "tools/list" } },
+        { "client": { "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": { "name": "x" } } },
+        { "staged": 0 },
+        { "server": { "jsonrpc": "2.0", "id": "semio-gateway-initialize", "result": { "protocolVersion": "2025-06-18", "capabilities": { "tools": {} }, "serverInfo": { "name": "semio", "version": "1" } } } },
+        { "client": { "jsonrpc": "2.0", "id": 4, "method": "tools/list" } },
+        { "server": { "jsonrpc": "2.0", "id": 4, "result": { "tools": [{ "name": "x", "inputSchema": { "type": "object" } }] } } }
+      ],
+      "transcript": [
+        { "toClient": { "jsonrpc": "2.0", "id": 1, "result": { "protocolVersion": "2025-06-18", "capabilities": { "tools": { "listChanged": true }, "resources": { "listChanged": true }, "prompts": { "listChanged": true } }, "serverInfo": { "name": "semio", "version": "warming" }, "instructions": "The semio server is starting; its tools appear through list_changed notifications once its binary is staged." } } },
+        { "toClient": { "jsonrpc": "2.0", "id": 2, "result": { "tools": [] } } },
+        { "toServer": { "jsonrpc": "2.0", "id": "semio-gateway-initialize", "method": "initialize", "params": { "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": { "name": "t", "version": "1" } } } },
+        { "toServer": { "jsonrpc": "2.0", "method": "notifications/initialized" } },
+        { "toServer": { "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": { "name": "x" } } },
+        { "toClient": { "jsonrpc": "2.0", "method": "notifications/tools/list_changed" } },
+        { "toClient": { "jsonrpc": "2.0", "method": "notifications/resources/list_changed" } },
+        { "toClient": { "jsonrpc": "2.0", "method": "notifications/prompts/list_changed" } },
+        { "toServer": { "jsonrpc": "2.0", "id": 4, "method": "tools/list" } },
+        { "toClient": { "jsonrpc": "2.0", "id": 4, "result": { "tools": [{ "name": "x", "inputSchema": { "type": "object" } }] } } }
+      ]
+    },
+    {
+      "name": "staged-before-the-client-speaks",
+      "steps": [
+        { "staged": 0 },
+        { "client": { "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": { "name": "t", "version": "1" } } } }
+      ],
+      "transcript": [
+        { "toClient": { "jsonrpc": "2.0", "id": 1, "result": { "protocolVersion": "2025-06-18", "capabilities": { "tools": { "listChanged": true }, "resources": { "listChanged": true }, "prompts": { "listChanged": true } }, "serverInfo": { "name": "semio", "version": "warming" }, "instructions": "The semio server is starting; its tools appear through list_changed notifications once its binary is staged." } } },
+        { "toServer": { "jsonrpc": "2.0", "id": "semio-gateway-initialize", "method": "initialize", "params": { "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": { "name": "t", "version": "1" } } } }
+      ]
+    },
+    {
+      "name": "staging-failed",
+      "steps": [
+        { "client": { "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": { "name": "t", "version": "1" } } } },
+        { "client": { "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": { "name": "x" } } },
+        { "staged": 3 },
+        { "client": { "jsonrpc": "2.0", "id": 4, "method": "tools/list" } },
+        { "client": { "jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": { "name": "y" } } }
+      ],
+      "transcript": [
+        { "toClient": { "jsonrpc": "2.0", "id": 1, "result": { "protocolVersion": "2025-06-18", "capabilities": { "tools": { "listChanged": true }, "resources": { "listChanged": true }, "prompts": { "listChanged": true } }, "serverInfo": { "name": "semio", "version": "warming" }, "instructions": "The semio server is starting; its tools appear through list_changed notifications once its binary is staged." } } },
+        { "toClient": { "jsonrpc": "2.0", "id": 3, "error": { "code": -32603, "message": "semio-os-mcp is unavailable: staging exited with status 3" } } },
+        { "toClient": { "jsonrpc": "2.0", "id": 4, "result": { "tools": [] } } },
+        { "toClient": { "jsonrpc": "2.0", "id": 5, "error": { "code": -32603, "message": "semio-os-mcp is unavailable: staging exited with status 3" } } }
+      ]
+    }
+  ]
+}

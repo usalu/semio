@@ -1,6 +1,9 @@
 /// 🎛️ Command surface laws of the generation2d editor routes: the retained route dispositions, the contributions ceiling, the run-start and preview-eval laws, the demo run job and the command ids with their wire forms.
 
 //#region 🔖️CommandSurface
+#[cfg(test)] use semio_s_artifact_procedural_2d_mode_generate::windows::preview as generate_preview;
+#[cfg(test)] use semio_s_artifact_procedural_2d_mode_edit::windows::preview as edit_preview;
+#[cfg(test)] use semio_framework_plugin::component::EditorApp;
 #[test]
 fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
@@ -227,7 +230,7 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
     let snapshot = semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshotRead::new(semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot());
     let history = context::empty_history_view();
     let config = Generation2dConfig::default();
-    let tick = Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: window_id.into(), window_kind_id: kind.into() });
+    let tick = Generation2dCommand::FlowEvalTick(semio_s_artifact_procedural_2d_preview_eval::FlowEvalTick { window_id: window_id.into(), window_kind_id: kind.into() });
     let cancel = semio_framework_job::root_cancel_token();
     let (mut sequence, mut worst_us, mut hops_performed) = (0_u64, 0_u64, 0_usize);
     let mut ticks: Vec<ToolRunTick> = Vec::new();

@@ -181,7 +181,6 @@ pub(super) fn evaluate_assessments(report: &mut CheckReport, document: &En1998Sn
             let req = e_d * cf * a.gamma_el;
             c = c.remedy(Remedy::at_least(SubjectRef::new(&a.id, format!("{path}.rKN"), lc("R_k", "R_k")), q_force(a.r_k_n), q_force(req), lc(&format!("Increase R_k to at least {req:.0} N (or lower limit-state demand)."), &format!("R_k auf mindestens {req:.0} N erhöhen (oder Grenzzustandslast senken)."))));
         }
-        // Explicit limit-state selection check (reads limitState).
         let ls_ok = matches!(ls.as_str(), "nc" | "near_collapse" | "near-collapse" | "sd" | "significant_damage" | "significant-damage" | "dl" | "damage_limitation" | "damage-limitation");
         let mut ls_c = CheckResult::assess(format!("en1998.3.{}.limitState", a.id), "DIN EN 1998-3", ClauseId::new("EN 1998-3", "3", "2.1"), SubjectRef::new(&a.id, format!("{path}.limitState"), lc(&a.id, &a.id)), lc("EN 1998-3 limit state (NC/SD/DL)", "EN-1998-3-Grenzzustand (NC/SD/DL)")).utilization(q_dim(if ls_ok { 0.5 } else { 2.0 }), q_dim(1.0)).annex(annex).explanation(lc(
                 &format!("limitState={}", a.limit_state),
@@ -315,7 +314,7 @@ pub(super) fn evaluate_foundations_walls(report: &mut CheckReport, document: &En
             c = c.remedy(Remedy::at_least(SubjectRef::new(&f.id, format!("{path}.areaM2"), lc("Area", "Fläche")), Quantity::area_m2(f.area_m2), Quantity::area_m2(req_area), lc(&format!("Increase foundation area to at least {req_area:.2} m²."), &format!("Gründungsfläche auf mindestens {req_area:.2} m² erhöhen."))));
         }
         report.push(c.build());
-        let h_ed = v_b; // EN 1998-5 §5.3 — horizontal demand from supported building base shear
+        let h_ed = v_b;
         let mut sld = CheckResult::assess(format!("en1998.5.{}.sliding", f.id), "DIN EN 1998-5", ClauseId::new("EN 1998-5", "5", "5.3"), SubjectRef::new(&f.id, format!("{path}.hRdN"), lc(&f.id, &f.id)), lc("Foundation sliding", "Gleiten der Gründung")).utilization(q_force(h_ed), q_force(f.h_rd_n)).annex(annex).explanation(lc(&format!("Hed=Vb={h_ed:.0} N from {support_id}, Hrd={:.0}", f.h_rd_n), &format!("Hed=Vb={h_ed:.0} N aus {support_id}, Hrd={:.0}", f.h_rd_n)));
         if h_ed > f.h_rd_n {
             sld = sld.remedy(Remedy::at_least(SubjectRef::new(&f.id, format!("{path}.hRdN"), lc("H_Rd", "H_Rd")), q_force(f.h_rd_n), q_force(h_ed), lc("Increase sliding resistance.", "Gleitwiderstand erhöhen.")));

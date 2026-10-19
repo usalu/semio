@@ -161,8 +161,6 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
       const elements = clone.querySelectorAll("*").length;
       return { surface, kind: "dom", painted: text > 0 || elements >= minimumElements, detail: `${text} content characters, ${elements} content elements` };
     };
-    // 🪟️ A pane whose windows are plain documents (the `norm` codes, `stdio-json`, `block2d`, `home`)
-    // mounts no `[data-surface-id]` host at all — its content is the window body itself.
     const surfaces = [...pane.querySelectorAll("[data-surface-id]")];
     if (surfaces.length === 0) {
       return [...pane.querySelectorAll('[data-slot="window-body"]')].sort((a, b) => area(b) - area(a)).map((body, index) => domWitness(body, `(window body ${index})`));
@@ -471,19 +469,11 @@ test.describe("semio-tech play", () => {
       expect(errors.resourceErrors).toEqual([]);
       expect(errors.refusedInputs).toEqual([]);
 
-      // 🏷️ The chrome must SAY which document it opened, in the words that document publishes. The trigger
-      // renders the active example's `label.native.en` and nothing else (`🧪️NavbarExampleSelect/🟦️.ts`),
-      // and the catalog pins that same text as `exampleLabel`, so this compares label to label — never the
-      // kebab-case id to prose, the mistake `📓️default-example.md` retracted. A pane whose app declares no
-      // `setActiveExample` has no trigger at all and is covered by the play unit gate instead
-      // (`🧪️tests/🧪️playpanedefaults`: "names every pane whose curated example cannot reach its app").
       const fixture = page.locator(`[data-layered-pane="${pane.variant}"] [id="playground.navbar.fixture"]`);
       if (pane.exampleLabel !== undefined && (await fixture.count()) > 0) {
         await expect(fixture, `${pane.variant} chrome must name its curated example ${pane.example}`).toHaveText(pane.exampleLabel);
       }
 
-      // 🖼️ …and a window must SHOW something. A shell that reports ready over an unpainted viewport is
-      // the defect class `📓️audit-visual-2.md` had to find by eye on 69 screenshots.
       const witness = await paintWitness(page, pane.variant);
       expect(witness.painted, `${pane.variant} paints nothing — ${witness.detail}`).toBe(true);
       await dismissPaneIntroduction(page, pane);

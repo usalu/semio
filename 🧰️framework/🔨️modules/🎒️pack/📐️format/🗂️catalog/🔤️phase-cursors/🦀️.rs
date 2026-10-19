@@ -228,7 +228,7 @@ impl RetainedChunksCursor {
         Self { phase: RetainedChunksPhase::Count(RetainedVarintCursor::default()), expected: 0, maximum, values: [0; 3], crc: [0; 4], hash: [0; 32] }
     }
 
-    pub(super) fn admit<const N:usize>(&mut self,byte:u8,offset:u64,limits:&PackLimits,chunks:&mut semio_framework_value::list::PagedList<RetainedPackChunkEntry,N>)->Result<Option<u64>,RetainedPackCatalogFault>{
+    pub(super) fn admit<const N:usize>(&mut self,byte:u8,offset:u64,limits:&PackLimits,chunks:&mut semio_framework_value_persistent::list::PagedList<RetainedPackChunkEntry,N>)->Result<Option<u64>,RetainedPackCatalogFault>{
         match self.phase {
             RetainedChunksPhase::Count(mut cursor)=>match cursor.admit(byte,offset).map_err(|fault|fault.into_catalog_fault("retained-pack.catalog-chunk-count-varint"))?{
                 RetainedVarintStep::Pending => self.phase = RetainedChunksPhase::Count(cursor),

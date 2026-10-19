@@ -49,6 +49,7 @@ semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️r
 semio-framework-replication = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+semio-framework-pack = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel-db-artifact-history = { path = "../../../📜️history/📦️packages/🦀️rust", features = ["testkit"] }

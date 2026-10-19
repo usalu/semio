@@ -1,7 +1,7 @@
-//! modal and buckling result records, the DOF map, reference validation and the RCM equation permutation.
+//! 💬️ modal and buckling result records, the DOF map, reference validation and the RCM equation permutation.
 //! 🗂️ Analysis model: load cases, combinations, the owned and mounted analysis models with their bounded close,
 
-use replication::value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -28,7 +28,7 @@ pub fn decode_value<T: semio_framework_value::FromValue>(bytes: &[u8]) -> Result
     T::from_value(value).map_err(|error| error.to_string())
 }
 
-fn reserve_exact_owner_page<T>(owner: &mut Vec<T>, additional: usize) -> bool {
+pub fn reserve_exact_owner_page<T>(owner: &mut Vec<T>, additional: usize) -> bool {
     if owner.len().checked_add(additional).and_then(|count| count.checked_mul(size_of::<T>())).is_none_or(|bytes| bytes > MOUNTED_OWNER_PAGE_BYTES) { return false; }
     owner.try_reserve_exact(additional).is_ok() && owner.capacity().checked_mul(size_of::<T>()).is_some_and(|bytes| bytes <= MOUNTED_OWNER_PAGE_BYTES)
 }
@@ -59,7 +59,7 @@ pub fn close_paged_owner_step<T, const N: usize>(owner: &mut PagedList<T, N>, ma
     progress.progressed.then_some(Some((1, progress.released_allocation_bytes))).ok_or(())
 }
 
-fn cold_paged_owner<T, const N: usize>(capacity: usize) -> Result<PagedList<T, N>, FemError> {
+pub fn cold_paged_owner<T, const N: usize>(capacity: usize) -> Result<PagedList<T, N>, FemError> {
     let mut owner = PagedList::default();
     while owner.capacity() < capacity {
         if !owner.reserve_capacity_one(capacity, MOUNTED_OWNER_PAGE_BYTES).map_err(|_| FemError::ResourceAdmission)?.progressed {

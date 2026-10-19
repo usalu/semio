@@ -1,7 +1,7 @@
 import{resolve}from"node:path";
 import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{createHash}from"node:crypto";
-import{readNativeCallerAuthorityV1}from"../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{decodeNxPackageArchiveV1,type NxPackageArchiveV1}from"../🗃️archive/🟦️.ts";

@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle2d artifact schema — every field of the artifact with its state class.
 
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 
 use semio_framework_value::paged::PagedUtf8;
 
@@ -117,7 +117,6 @@ pub use semio_s_artifact_puzzle_2d_snapshot::standards::v1::subsets::any::schema
 pub use records::*;
 
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
-use {semio_framework_value::paged::PagedUtf8};
 
 /// 📍️ The board position of the handle `handle_id` on `document`: its node's rim point at the handle's angle, the
 /// same rim geometry the board engine draws with and the editor's proximity search measures

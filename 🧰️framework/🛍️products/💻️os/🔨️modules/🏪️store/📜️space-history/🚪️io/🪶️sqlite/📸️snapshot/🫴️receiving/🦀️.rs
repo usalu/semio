@@ -48,5 +48,5 @@ macro_rules! receive{
  }
  };
 }
-receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&SpaceHistorySnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
+receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&SpaceHistorySnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
 receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,SpaceHistorySnapshot,|_:Option<&SpaceHistorySnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|reconstruct(database.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.snapshot,SpaceHistorySnapshot{checkpoints:Vec::new(),alternatives:Vec::new(),active_alternative_id:None})));

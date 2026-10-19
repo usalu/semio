@@ -3,6 +3,9 @@
 #[path = "../📐️geometry/🦀️.rs"]
 pub mod geometry;
 
+#[path = "../🧲️docking/🦀️.rs"]
+pub mod docking;
+
 #[path = "../🎨️theme/🦀️.rs"]
 pub mod theme;
 

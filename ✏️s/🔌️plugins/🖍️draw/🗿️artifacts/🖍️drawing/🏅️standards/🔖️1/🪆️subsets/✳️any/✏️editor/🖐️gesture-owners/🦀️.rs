@@ -121,12 +121,6 @@ impl DrawingInstanceOperationOwner {
         }
         let live_key = self.active.map_or(key, |(active, _)| active);
         if self.operations.get(live_key).is_none() {
-            // 🧹️ The registry is direct-mapped by `operation_id % slots` and the framework mints every
-            // tool operation id INTO the first vacant residue class of its own 64-slot table — so the
-            // next gesture reuses residue 0 the moment the previous one settled, and lands on the slot
-            // still held by that gesture's cancelled-but-not-yet-retired owner. Retire the retiring
-            // owners now (bounded: one cursor sweep, each owner closes within its declared grant)
-            // instead of answering `saturated` (every browser gesture failed so, 2026-09-17).
             if !self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
                 for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS * 2 {
                     if self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
@@ -238,7 +232,6 @@ impl DrawingInstanceOperationOwner {
         }
         if let DrawingCommand::CanvasPointerMove(payload) = command {
             if session.tool.at_rest() {
-                // 🧵️ Idle hover hit-tests the LAST sample of a batch only (design L4 / §2 D).
                 let [x, y] = payload.last_sample();
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, x, y, payload.width, payload.height);
                 let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX / session.window_config.viewport.zoom.max(1e-6);
@@ -260,7 +253,6 @@ impl DrawingInstanceOperationOwner {
                 Some(Some(session.sample([x,y],pointer.shift,pointer.alt)?))
             }
             DrawingCommand::CanvasPointerMove(payload) if session.tool.matches("marqueeing") && session.tool.context().method == "lasso" => Some(session.advance_lasso_move(payload)?),
-            // 🚫️ A cancelled release aborts a live gesture with zero trace and selects/commits nothing.
             DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(session.cancel())),
             DrawingCommand::CanvasPointerUp(payload) => {
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);

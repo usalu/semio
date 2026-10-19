@@ -55,11 +55,6 @@ export async function activateDocumentBrowserActorAfterSession(state: ArtifactSt
     lease.assertBrowserActorDescribeCapacity();
     owner = await reserveDocumentBrowserActorChild(state);
     if (!owner) throw new Error("document browser actor: reservation unavailable");
-    // 🪢️ The cold pair is seeded HERE, between the reservation and the activation, because
-    // `installArtifactBootstrap` requires a live reservation and the hub's `Session` frame — the one
-    // that admits this reservation — arrives strictly AFTER the `Welcome` that would have carried a
-    // pair. Installing before `activate()` also means the transfer is the activation's own cold
-    // step, not a second pass over a running guest.
     const tailFrontier = state.requiredTailFrontier,
       tailResumeToken = state.pendingResumeToken;
     let seeded = false;

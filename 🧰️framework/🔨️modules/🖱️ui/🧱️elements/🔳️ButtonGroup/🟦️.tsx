@@ -24,7 +24,7 @@ import { type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️.tsx
 // Consumers MUST provide ButtonGroupItem children.
 
 /**
- * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
+ * 🔘️ buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
 const buttonGroupItemVariants = styleVariants(chromeControlItemClass, {
   variants: {
@@ -40,14 +40,14 @@ const buttonGroupItemVariants = styleVariants(chromeControlItemClass, {
 });
 
 /**
- * ButtonGroupContext holds the data fields for a ButtonGroupContext record.
+ * 🖱️ ButtonGroupContext holds the data fields for a ButtonGroupContext record.
  **/
 const ButtonGroupContext = reactHostPort.createContext<{ level: Level }>({
   level: "base",
 });
 
 /**
- * ButtonGroupProps holds the data fields for a ButtonGroupProps record.
+ * 👆️ ButtonGroupProps holds the data fields for a ButtonGroupProps record.
  **/
 interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
   detailPanelWidthMode?: "fit" | "fill";
@@ -57,7 +57,7 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 }
 
 /**
- * ButtonGroup holds the data fields for a ButtonGroup record.
+ * ⏺️ ButtonGroup holds the data fields for a ButtonGroup record.
  **/
 function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useLevel();
@@ -89,7 +89,7 @@ function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, c
 }
 
 /**
- * ButtonGroupItem holds the data fields for a ButtonGroupItem record.
+ * 🕹️ ButtonGroupItem holds the data fields for a ButtonGroupItem record.
  **/
 type ButtonGroupItemProps = React.ComponentProps<"button"> &
   StyleVariantProps<typeof buttonGroupItemVariants> & {

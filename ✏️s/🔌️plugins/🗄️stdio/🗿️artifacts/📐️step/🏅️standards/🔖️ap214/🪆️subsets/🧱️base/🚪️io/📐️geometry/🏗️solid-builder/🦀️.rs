@@ -18,12 +18,10 @@ pub(super) struct StepBuilder<'a> {
 }
 
 impl<'a> StepBuilder<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn new(body: &'a mut Body, entities: &'a HashMap<u64, StepEntity>, rec: &'a mut OpRecorder) -> Self {
         Self { body, entities, rec, vertex_cache: HashMap::new(), edge_cache: HashMap::new(), tol: Tol::DEFAULT }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn build_all_solids(&mut self) -> Result<(), StepError> {
         let brep_ids: Vec<u64> = self.entities.iter().filter(|(_, e)| e.entity_type == "MANIFOLD_SOLID_BREP").map(|(&id, _)| id).collect();
         for brep_id in brep_ids {
@@ -32,7 +30,6 @@ impl<'a> StepBuilder<'a> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_solid(&mut self, brep_id: u64) -> Result<(), StepError> {
         let attrs = self.get_entity(brep_id)?.attrs.clone();
         let shell_ref = parse_refs(&attrs).first().copied().ok_or(StepError::Syntax(format!("MANIFOLD_SOLID_BREP #{brep_id} missing shell")))?;
@@ -41,7 +38,6 @@ impl<'a> StepBuilder<'a> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_shell(&mut self, shell_ref: u64) -> Result<semio_framework_3d_brep_representation::arena::ShellId, StepError> {
         let attrs = self.get_entity(shell_ref)?.attrs.clone();
         let face_refs = parse_list_refs(&attrs);
@@ -52,7 +48,6 @@ impl<'a> StepBuilder<'a> {
         Ok(add_shell(self.body, face_ids, self.rec))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_face(&mut self, face_ref: u64) -> Result<FaceId, StepError> {
         let attrs = self.get_entity(face_ref)?.attrs.clone();
         let orient_tail = attrs.trim_end_matches(')').trim();
@@ -93,7 +88,6 @@ impl<'a> StepBuilder<'a> {
     /// planes) — the same contract the kernel's own primitives honour, and the one every boolean's
     /// imprint/classification samples through; a STEP body without them could be tessellated and
     /// measured but never cut, fused or classified.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn attach_pcurves(&mut self, face_id: FaceId, surface_id: SurfaceId) {
         let Some(surface) = self.body.surfaces.get(surface_id).cloned() else { return };
         for coedge_id in self.body.face_coedges(face_id) {
@@ -108,7 +102,6 @@ impl<'a> StepBuilder<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_loop_members(&mut self, loop_ref: u64) -> Result<Vec<(EdgeId, bool)>, StepError> {
         let attrs = self.get_entity(loop_ref)?.attrs.clone();
         let oe_refs = parse_list_refs(&attrs);
@@ -119,7 +112,6 @@ impl<'a> StepBuilder<'a> {
         Ok(members)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_oriented_edge(&mut self, oe_ref: u64) -> Result<(EdgeId, bool), StepError> {
         let attrs = self.get_entity(oe_ref)?.attrs.clone();
         let refs = parse_refs(&attrs);
@@ -129,7 +121,6 @@ impl<'a> StepBuilder<'a> {
         Ok((edge_id, forward))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_edge_curve(&mut self, ec_ref: u64) -> Result<EdgeId, StepError> {
         if let Some(&cached) = self.edge_cache.get(&ec_ref) {
             return Ok(cached);
@@ -147,7 +138,6 @@ impl<'a> StepBuilder<'a> {
         Ok(edge_id)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_curve_geometry(&mut self, curve_ref: u64, v0: VertexId, v1: VertexId) -> Result<Curve3Id, StepError> {
         let entity = self.get_entity(curve_ref)?;
         let entity_type = entity.entity_type.clone();
@@ -183,7 +173,6 @@ impl<'a> StepBuilder<'a> {
         Ok(self.body.curves3.insert(curve))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_bspline_curve(&self, curve_ref: u64, attrs: &str, p0: Pnt3, p1: Pnt3) -> Result<Curve3, StepError> {
         let (degree, cp_refs, mults, knot_vals) = parse_bspline_curve_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_CURVE #{curve_ref} parse failed")))?;
         let mut control_points = Vec::with_capacity(cp_refs.len());
@@ -200,7 +189,6 @@ impl<'a> StepBuilder<'a> {
         Ok(Curve3::Nurbs { knots: knot_vec, controls: control_points, weights })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_surface(&mut self, surface_ref: u64) -> Result<SurfaceId, StepError> {
         let entity = self.get_entity(surface_ref)?;
         let entity_type = entity.entity_type.clone();
@@ -253,7 +241,6 @@ impl<'a> StepBuilder<'a> {
         Ok(self.body.surfaces.insert(surface))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_bspline_surface(&self, surface_ref: u64, attrs: &str) -> Result<Surface, StepError> {
         let (degree_u, degree_v, cp_grid_refs, u_mults, v_mults, u_knots, v_knots) = parse_bspline_surface_attrs(attrs).ok_or_else(|| StepError::Syntax(format!("B_SPLINE_SURFACE #{surface_ref} parse failed")))?;
         let mut cp_grid: Vec<Vec<Pnt3>> = Vec::new();
@@ -274,7 +261,6 @@ impl<'a> StepBuilder<'a> {
         Ok(Surface::Nurbs { u_knots: u_kv, v_knots: v_kv, controls: cp_grid, weights })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_vertex_point(&mut self, vp_ref: u64) -> Result<VertexId, StepError> {
         if let Some(&cached) = self.vertex_cache.get(&vp_ref) {
             return Ok(cached);
@@ -287,7 +273,6 @@ impl<'a> StepBuilder<'a> {
         Ok(vid)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_cartesian_point(&self, cp_ref: u64) -> Result<Pnt3, StepError> {
         let coords = parse_floats(&self.get_entity(cp_ref)?.attrs);
         if coords.len() < 3 {
@@ -296,7 +281,6 @@ impl<'a> StepBuilder<'a> {
         Ok(Pnt3::new(coords[0], coords[1], coords[2]))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_direction(&self, dir_ref: u64) -> Result<Vec3, StepError> {
         let coords = parse_floats(&self.get_entity(dir_ref)?.attrs);
         if coords.len() < 3 {
@@ -309,7 +293,6 @@ impl<'a> StepBuilder<'a> {
     /// slots honoured: an absent (`$`) `axis` is `+Z`, an absent `ref_direction` is the standard's
     /// `first_proj_axis` derivation (`+X` projected onto the axis plane, `+Y` when the axis is `±X`) —
     /// real Rhino/ST-Developer exports write `$` for the ref direction of every planar face.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn build_axis2_placement(&self, axis_ref: u64) -> Result<(Pnt3, Vec3, Vec3), StepError> {
         let attrs = self.get_entity(axis_ref)?.attrs.clone();
         let slots = parse_slots(&attrs);
@@ -327,7 +310,6 @@ impl<'a> StepBuilder<'a> {
         Ok((origin, axis, ref_direction))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn get_entity(&self, id: u64) -> Result<&StepEntity, StepError> {
         self.entities.get(&id).ok_or(StepError::UnresolvedReference(id))
     }

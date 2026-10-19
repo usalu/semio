@@ -8,6 +8,7 @@ members = [
   "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪟️surfaces/📦️packages/🦀️rust",
   "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
 ]
@@ -113,3 +114,5 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+[workspace.dependencies.semio-s-artifact-stdio-tiff-snapshot-surfaces]
+path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪟️surfaces/📦️packages/🦀️rust"

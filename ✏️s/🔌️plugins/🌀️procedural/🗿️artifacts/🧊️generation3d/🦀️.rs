@@ -172,17 +172,12 @@ pub mod manifest {
                 .window_kind_def(generations::definition())
                 .window_kind_def(form::definition())
                 .window_kind_def(generate_preview::definition())
-                // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
-                // injects its reserved actions. Both modes reference it (`🎭️modes/✏️edit`, `🎭️modes/🧬️generate`)
-                // because both mount a preview window that starts it — a declared tool no mode references is
-                // refused by `build_definition` (`app-definition.invalid: … not referenced by any mode`).
                 .tool(semio_s_artifact_procedural_3d_preview_eval::preview_eval_tool_definition())
                 .default_layout(edit::layout())
                 .named_layout(generate::layout())
                 .panel_tab_def(artifact_panel::definition())
                 .panel_tab_def(catalogue_panel::definition())
                 .panel_tab_def(inspection_panel::definition())
-                // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
                 .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
                 .action_with(categorized_action("editMeshSelection", LocalizedLabel::native("Edit Mesh Selection", "Netzauswahl bearbeiten"), ActionKind::Mutation, "methods"))
                 .action_with(categorized_action("knifeMeshSelection", LocalizedLabel::native("Knife Cut Selected Face", "Ausgewählte Fläche schneiden"), ActionKind::Mutation, "methods"))
@@ -203,35 +198,14 @@ pub mod manifest {
                 .action_destructive("removeGeneration")
                 .action_with(categorized_action("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Mutation, "methods"))
                 .action_with(categorized_action("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Mutation, "methods"))
-                // 📄️ Palette-visible host round-trips — the artifact's whole IO surface. `Shell` because
-                // neither authors a document row by itself: one asks the shell for a file, the other
-                // hands it a download (`🎮️commands/📂️import-document-request`, `📤️export-document`).
                 .shell_action("importDocumentRequest", LocalizedLabel::native("Import Artifact…", "Artefakt importieren…"))
                 .shell_action("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"))
-                // 📥️ Not palette-worthy: the shell dispatches it with the picked file, args no human
-                // types (`dispatchOpenedFiles`, `🛠️ShellHelpers/🟦️.tsx`).
                 .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importDocument", LocalizedLabel::native("Import Artifact File", "Artefaktdatei importieren"), ActionKind::Mutation) })
-                // 👁️ Ephemeral view actions — world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
-                // Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
-                // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
-                // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
                 .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
                 .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
                 .view_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"))
-                // 🔁️ The keyboard halves of the two display pickers. `AppDefinition.keybinding` carries a
-                // chord and an action id and NOTHING else, so `setShowMode`/`setLodMode` — both of which
-                // require a `value` — can never be bound to one: a chord that opened a staged arg form
-                // would be slower than the picker it replaces. These two read their own next value off the
-                // config ladder instead (`config::next_show_mode`/`next_lod_mode`), which is the same
-                // ladder the pickers build their rows from.
                 .action_with(ActionDefinition::new("cycleShowMode", LocalizedLabel::native("Cycle Show Mode", "Anzeigemodus wechseln"), ActionKind::View, "eye"))
                 .action_with(ActionDefinition::new("cycleLodMode", LocalizedLabel::native("Cycle Lod Mode", "LOD-Modus wechseln"), ActionKind::View, "layers"))
-                // 🧭️ Node-by-node keyboard traversal of the graph canvas — the five verbs
-                // `📓️react-i18n-a11y-customization-2026-09-13.md` §4.1 named as missing. All five are
-                // ARG-FREE by construction (a chord carries a key and an action id and nothing else) and
-                // read their next target off the document's own wires and layout
-                // (`🎮️commands/🧭️navigate-graph`). `ActionKind::View`, never `Mutation`: a traversal moves
-                // the framework's selection lane and authors no document op.
                 .action_with(ActionDefinition::new("selectNextNode", LocalizedLabel::native("Select Next Node", "Nächsten Knoten auswählen"), ActionKind::View, "arrow-down"))
                 .action_with(ActionDefinition::new("selectPreviousNode", LocalizedLabel::native("Select Previous Node", "Vorherigen Knoten auswählen"), ActionKind::View, "arrow-up"))
                 .action_with(ActionDefinition::new("selectUpstreamNode", LocalizedLabel::native("Select Upstream Node", "Vorgelagerten Knoten auswählen"), ActionKind::View, "arrow-left"))
@@ -353,9 +327,6 @@ pub mod manifest {
                     ActionArgDef::number("destination", LocalizedLabel::native("Destination Index", "Zielindex")),
                     ActionArgDef::text_list("path", LocalizedLabel::native("Mesh field", "Netzfeld")),
                 ])
-                // 📤️ One option per `document_io::EXPORT_FORMATS` row, in that table's order — asserted
-                // equal to it by `export_document_action_offers_every_declared_format`, so a format this
-                // artifact stops claiming cannot linger in the picker.
                 .action_args("exportDocument", vec![
                     ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl"),
                     ActionArgDef::text("widgetId", LocalizedLabel::native("Export output", "Exportausgabe")),
@@ -377,32 +348,7 @@ pub mod manifest {
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2") })
                 .window_kind_utilities(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
-                // 🕹️ The generate preview is the SAME World3d surface as the edit preview, over the same
-                // `graph` interaction domain and the same `preview_selection_json` (whose `transformMode`/
-                // `gumballActive` pair is what `World3dHost` gates the gumball on) — it was simply never
-                // handed the transform utility rail, so `ViewModel.active_utility_id` stayed empty there and
-                // the gumball could never appear. A user could select a generated instance in generate mode
-                // and then had no way to move it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #5).
                 .window_kind_utilities(generate_preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW, vec!["move".into(), "rotate".into(), "scale".into()])
-                // 📇️ Window-scoped action ownership (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Each list is
-                // exactly what THAT window's own surface dispatches — the node-graph host's verbs and the LOD
-                // measure on the flow window, the world host's camera/gumball verbs and the show/sun measures on
-                // the two 3D previews, the generation tree's four row verbs on the Generations window, the form's
-                // one change verb on the Form window. Asserted by
-                // `every_emitted_action_is_declared_on_its_window_kind`.
-                //
-                // Everything NOT listed here stays deliberately unowned and is therefore copied onto every window
-                // by `build_definition` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`) —
-                // that is the correct home for the app-scoped verbs no single window emits: the navbar's
-                // `setActiveExample`, the catalogue palette's `addWidget`, the inspector's `patchFlowWidgets`, the
-                // context menu's `reorganize`/`removeWidget`/`deleteSelection`, and the
-                // framework's own history/clipboard/tutorial ids.
-                // 🧭️ The five keyboard-traversal verbs are OWNED by the flow window, and that ownership is
-                // their whole scope: `ShellHost`'s keybinding loop resolves a chord against the FOCUSED
-                // window kind's own actions, so the bare arrow chords below are live exactly while the node
-                // graph has focus and are inert in every other window — which is what lets them be bare
-                // arrows at all. `activateSelection` is owned here for the same reason and because the flow
-                // canvas's own `Trigger::Activate` binding dispatches it (`declaredAction` gate).
                 .window_kind_action_refs(
                     flow_window::GENERATION_3D_PLAY_WINDOW_MAIN,
                     vec![
@@ -442,11 +388,6 @@ pub mod manifest {
                     "rotateSelection".into(),
                     "scaleSelection".into(),
                 ])
-                // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-                // one domain over the flow-graph widget DAG, node/edge/handle granularities,
-                // `HierarchyProvider::Topology` (see `Generation3dPlayApp::interaction_topology` below) —
-                // transitive hover is the headline feature: hovering a Cluster group node highlights every
-                // widget nested in its tree.
                 .interaction(InteractionDefinition {
                     id: "graph".into(),
                     label: LocalizedLabel::native("Graph", "Graph"),
@@ -485,42 +426,13 @@ pub mod manifest {
                 .keybinding("mod+shift+k", "knifeMeshSelection")
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo")
-                // 🗺️ `reorganize` had exactly ONE reachable trigger, the flow canvas's right-click menu —
-                // mouse-only, and therefore unreachable by keyboard (`📓️audit-user-journey-gaps-2026-09-13.md`
-                // §3 "every other one of the 30 editor commands"). `mod+alt+l` ("layout") is arg-free, so
-                // `ShellHost`'s keybinding loop fires it straight through `onAction` with no staged form.
                 .keybinding("mod+alt+l", "reorganize")
-                // 📄️ The two IO verbs get the chords every application in the world uses for them.
-                // `importDocumentRequest` is arg-free, so `ShellHost`'s keybinding loop fires it straight
-                // through `onAction`; `exportDocument` carries a required `format`, so the same loop opens
-                // its staged arg form rather than exporting a format nobody picked.
                 .keybinding("mod+o", "importDocumentRequest")
                 .keybinding("mod+shift+e", "exportDocument")
-                // ⌨️ The graph / preview / generate verbs a user repeats, each on the chord its own verb
-                // class already uses elsewhere in this repo: `delete,backspace` is the deleteSelection
-                // chord three sibling artifacts declare, `mod+shift+g` follows the `mod+shift+<initial>` create
-                // chords. Stopping a preview evaluation is the framework's `toolRunAbort` chord, injected with
-                // the `previewEval` run, never a plugin binding. All four are ARG-FREE actions, which is what `ShellHost`'s keybinding loop requires to fire
-                // an action straight through `onAction` instead of opening a staged form
-                // (`📓️audit-user-journey-gaps-2026-09-13.md` §3, "every other one of the 30 editor
-                // commands: MISSING keyboard path"). Framing the flow graph is the app action `zoomToFlow`,
-                // not shell overlay chrome — declare it here once the command lands.
                 .keybinding("delete,backspace", "deleteSelection")
                 .keybinding("mod+shift+g", "addGeneration")
                 .keybinding("mod+alt+d", "cycleShowMode")
                 .keybinding("mod+alt+k", "cycleLodMode")
-                // 🧭️ Node-by-node traversal of the graph canvas. BARE arrows, with no modifier, because
-                // `role="application"` — which `accessibility_role` already implies for every
-                // `Component::Surface` and which the React shell now paints on the canvas — is the ARIA
-                // contract for "this widget handles its own arrow keys"; a modifier would break the promise
-                // the canvas makes to a screen reader. They are safe as bare chords for two measured
-                // reasons: all five verbs are owned by the flow window above, and `ShellHost`'s keybinding
-                // loop resolves a chord against the FOCUSED window kind's actions only, so they are inert
-                // anywhere else; and that loop returns early on `event.defaultPrevented` and on any
-                // editable target, so a tree row or a text field that handles its own arrows keeps them.
-                // ⌨️ The key token is the DOM `event.key` lowercased (`arrowdown`), never a shorthand:
-                // `keyboardEventMatchesChord` compares the last `+` segment against `event.key` verbatim,
-                // which is the same rule that made `mod+period` a silently dead chord.
                 .keybinding("arrowdown", "selectNextNode")
                 .keybinding("arrowup", "selectPreviousNode")
                 .keybinding("arrowleft", "selectUpstreamNode")

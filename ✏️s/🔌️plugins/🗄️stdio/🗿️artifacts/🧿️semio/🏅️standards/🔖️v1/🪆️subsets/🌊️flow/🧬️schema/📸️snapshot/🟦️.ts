@@ -27,7 +27,7 @@ export interface FlowEdge {
   kind: string;
 }
 export interface SemioFlowSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ nodes: FlowNode[];
-  /** @state artifact */ edges: FlowEdge[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🔘️ @state artifact */ nodes: FlowNode[];
+  /** 🔗️ @state artifact */ edges: FlowEdge[];
 }

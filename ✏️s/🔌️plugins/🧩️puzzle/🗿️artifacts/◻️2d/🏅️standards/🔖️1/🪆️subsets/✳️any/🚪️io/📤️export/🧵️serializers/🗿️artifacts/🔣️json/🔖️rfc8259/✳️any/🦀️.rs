@@ -1,4 +1,4 @@
-//! puzzle2d -> json
+//! 🧩️ puzzle2d -> json
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix — see the paired import leaf's doc comment (same wave,
 //! `JsonSnapshot.value: serde_json::Value` -> stdio's own `JsonValue`). Routes through

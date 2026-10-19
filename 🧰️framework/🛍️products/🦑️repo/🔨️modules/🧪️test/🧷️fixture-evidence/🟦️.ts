@@ -65,11 +65,6 @@ export function testEvidenceProblems(value: unknown, repoRoot?: string): string[
   else {
     for (const key of ["artifact", "standard", "subset"] as const) if (typeof (value.target as Record<string, unknown>)[key] !== "string") problems.push(`target.${key} must be a string`);
     const subset = String((value.target as Record<string, unknown>).subset ?? "");
-    // 🪆️Settled the same way a MUTATION's scope is, when the repository is available to ask. A subset
-    // literally named `any` is a hard breach only when the artifact has real sibling subsets to be
-    // scoped against; an artifact with exactly one subset is not "everything", it is a naming choice,
-    // and `subsetPolicy: "single"` settles it. Judging fixtures by the bare spelling while judging
-    // mutations by the resolved rule made 27 fixtures of genuinely single-subset owners unregisterable.
     const artifact = String((value.target as Record<string, unknown>).artifact ?? "");
     const standard = String((value.target as Record<string, unknown>).standard ?? "");
     const surface = (value.target as Record<string, unknown>).surface;

@@ -24,3 +24,9 @@ semio-s-fem-elements2d = { workspace = true }
 semio-s-fem-mesh = { workspace = true }
 semio-s-fem-model = { workspace = true }
 semio-s-fem-static = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-material = { path = "../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
+semio-s-fem-node = { path = "../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-s-artifact-fem-2d-mutations = { workspace = true }

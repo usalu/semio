@@ -1,6 +1,7 @@
 //! 🧱️ Records of the puzzle2d schema: the camera, node, handle, edge, region, catalog and meta records, the schema identity and the payload invariants every leaf diff checks.
 
-use {semio_framework_value::list::PagedList, semio_framework_value::paged::PagedUtf8};
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value_persistent::list::PagedList;
 
 pub const PUZZLE_2D_SCHEMA: &str = "board.ports.directed.v1";
 

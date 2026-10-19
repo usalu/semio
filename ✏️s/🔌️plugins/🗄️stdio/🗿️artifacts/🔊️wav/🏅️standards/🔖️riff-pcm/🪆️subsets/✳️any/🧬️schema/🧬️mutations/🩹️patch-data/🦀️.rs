@@ -16,7 +16,6 @@ pub struct PatchData {
 
 impl PatchData {
     /// ✂️ The splices this patch asks of `base`'s sample lane — none for a patch that changes nothing — or why the patch is outside the lane.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn splices(&self, base: &WavSnapshot) -> Result<Vec<WavSplice>, String> {
         let lane = &base.data;
         let len = data_len(lane);

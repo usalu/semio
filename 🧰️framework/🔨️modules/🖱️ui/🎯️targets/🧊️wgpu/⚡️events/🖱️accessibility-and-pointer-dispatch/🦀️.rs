@@ -254,8 +254,6 @@ impl EventRouter {
                 match self.capture.target {
                     Some((_, _, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
                     Some((_, scrollable, CaptureKind::ScrollThumb(axis))) => self.update_scroll_thumb(tree, scrollable, axis, *x, *y),
-                    // 🎚️ A captured `Slider`/`Ring` reports EVERY intermediate value, not only the
-                    // release — Radix's own behaviour, which React's `SliderView`/`RingView` delegate to.
                     Some((_, pressed, CaptureKind::Press)) => {
                         if tree.node(pressed).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
                             commands.extend(self.pointer_commit(tree, pressed, *x, *y));
@@ -325,10 +323,6 @@ impl EventRouter {
                             }
                             commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                         }
-                        // 🫳️ W2 wiring: a `Tree` row's `draggable`/`drag_data` (re-derived by key —
-                        // see `find_tree_item_spec`) registers this press as a promotable drag
-                        // source, exactly like a widget spec would call `set_drag_payload` itself if
-                        // `UiStackNode` had room for the field (it doesn't — see that fn's own doc).
                         if let Some(item) = find_tree_item_spec(tree, id) {
                             let arms = self.tree_drag_press_arms(tree, id, *x, *y);
                             let payload = arms.then(|| item.drag_data.clone().unwrap_or_default());
@@ -377,14 +371,6 @@ impl EventRouter {
                                 tree.node(active_id).filter(|node| matches!(node.spec.0, UiNode::Select(_))).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).is_some();
                             if !suppress_tree_handle_click && (select_scroll_release || self.resolve_target(tree, root, *x, *y) == Some(active_id)) && tree.node(active_id).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled) {
                                 let slider_readout = *button == PointerButton::Primary && self.note_slider_readout_click(tree, active_id, *x, *y);
-                                // 🔽️🎴️ W2 wiring: `Select` toggles its popup (`toggle_select_popup`);
-                                // a `Button` (this covers `Select`'s own synthesized item rows too —
-                                // see `reconcile::children_of`'s `Select` arm — since they're plain
-                                // `UiNode::Button`s) fires its action, additionally closing an open
-                                // `SelectPopup` if this button *is* one of that popup's rows (picking
-                                // an item closes the popup, per `toggle_select_popup`'s doc comment);
-                                // a `Stack` with `activate` set fires that action (see
-                                // `paint::paint_stack_frame`'s matching visual for the same field).
                                 let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
                                 let row_action = self.pointer_row_action(tree, active_id, *x, *y);
                                 let disclosed = row_action.is_none() && self.pointer_toggle_disclosure(tree, active_id, *x, *y);
@@ -412,9 +398,6 @@ impl EventRouter {
                                             }
                                         }
                                     } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_) | UiNode::Slider(_) | UiNode::Ring(_))) {
-                                        // 🎬️ Every other value-carrying kind — `Toggle` — commits its own gesture here,
-                                        // through the same one authority (see 🔖️Commit); a `Slider` or `Ring` released its
-                                        // press above, wherever the pointer let go.
                                         commands.extend(self.pointer_commit(tree, active_id, *x, *y));
                                     }
                                 }
@@ -457,9 +440,6 @@ impl EventRouter {
                 let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
                 if key == "Escape" && self.set_row_reason(tree, None) {
                 } else if key == "Escape" {
-                    // ⎋️ React's `Search` closes its possibles popover first and only aborts the
-                    // engagement when there is none open (`onKeyDown`'s Escape arm, `🖱️ui/🎯️targets/
-                    // ⚛️react/🟦️.tsx:10869`), so an overlay swallows this key exactly as it does there.
                     let over_overlay = self.overlays.topmost().is_some();
                     commands.extend(self.close_topmost_overlay(tree));
                     if !over_overlay {

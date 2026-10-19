@@ -1,0 +1,92 @@
+[
+ {
+  "name": "single use",
+  "input": "use semio_framework_value::list::persistent::PersistentList;\n",
+  "expected": "use semio_framework_value_persistent::list::persistent::PersistentList;\n"
+ },
+ {
+  "name": "mixed group splits per owner",
+  "input": "use semio_framework_value::{DslValue, FixedKeySlot, list::persistent::PersistentList};\n",
+  "expected": "use semio_framework_value::DslValue;\nuse semio_framework_value_registry::fixed_key_slots::FixedKeySlot;\nuse semio_framework_value_persistent::list::persistent::PersistentList;\n"
+ },
+ {
+  "name": "attributes and visibility are copied",
+  "input": "mod a {\n    #[cfg(test)]\n    pub(crate) use semio_framework_value::{ToValue, sort::HeapSortWork};\n}\n",
+  "expected": "mod a {\n    #[cfg(test)]\n    pub(crate) use semio_framework_value::ToValue;\n    #[cfg(test)]\n    pub(crate) use semio_framework_value_edit::sort::HeapSortWork;\n}\n"
+ },
+ {
+  "name": "expression and type paths",
+  "input": "fn f(x: &semio_framework_value::HeapSortWork) { let _ = semio_framework_value::list::persistent::PersistentList::<u8>::default(); let _: semio_framework_value::DslValue; }\n",
+  "expected": "fn f(x: &semio_framework_value_edit::sort::HeapSortWork) { let _ = semio_framework_value_persistent::list::persistent::PersistentList::<u8>::default(); let _: semio_framework_value::DslValue; }\n"
+ },
+ {
+  "name": "derive macro name stays on the facade",
+  "input": "use semio_framework_value::RetainedEquality;\n#[derive(RetainedEquality)]\nstruct A;\n",
+  "expected": "use semio_framework_value::RetainedEquality;\n#[derive(RetainedEquality)]\nstruct A;\n"
+ },
+ {
+  "name": "derive and trait use keeps both",
+  "input": "use semio_framework_value::RetainedEquality;\n#[derive(RetainedEquality)]\nstruct A;\nimpl RetainedEquality for A {}\n",
+  "expected": "use semio_framework_value::RetainedEquality;\nuse semio_framework_value_persistent::retained_equality::RetainedEquality;\n#[derive(RetainedEquality)]\nstruct A;\nimpl RetainedEquality for A {}\n"
+ },
+ {
+  "name": "trait only moves",
+  "input": "use semio_framework_value::RetainedEquality;\nimpl RetainedEquality for A {}\n",
+  "expected": "use semio_framework_value_persistent::retained_equality::RetainedEquality;\nimpl RetainedEquality for A {}\n"
+ },
+ {
+  "name": "self leaf and alias",
+  "input": "use semio_framework_value::list::{self, persistent::PersistentList as PL};\n",
+  "expected": "use semio_framework_value_persistent::list::{self, persistent::PersistentList as PL};\n"
+ },
+ {
+  "name": "module glob",
+  "input": "use semio_framework_value::native_decoding::*;\n",
+  "expected": "use semio_framework_value_native_owned::native_decoding::*;\n"
+ },
+ {
+  "name": "root glob gains explicit imports",
+  "input": "use semio_framework_value::*;\nfn f(s: FixedKeySlots) { sort::HeapSortWork::default(); }\n",
+  "expected": "use semio_framework_value::*;\nuse semio_framework_value_registry::fixed_key_slots::FixedKeySlots;\nuse semio_framework_value_edit::sort;\nfn f(s: FixedKeySlots) { sort::HeapSortWork::default(); }\n"
+ },
+ {
+  "name": "strings untouched, comments updated",
+  "input": "/// [`semio_framework_value::list`]\nconst S: &str = \"semio_framework_value::list\";\n",
+  "expected": "/// [`semio_framework_value_persistent::list`]\nconst S: &str = \"semio_framework_value::list\";\n"
+ },
+ {
+  "name": "unresolved target stays",
+  "input": "use semio_framework_value::list::Missing;\n",
+  "expected": "use semio_framework_value::list::Missing;\n"
+ },
+ {
+  "name": "value module prefix",
+  "input": "use semio_framework_value::value::list::persistent::PersistentList;\n",
+  "expected": "use semio_framework_value_persistent::list::persistent::PersistentList;\n"
+ },
+ {
+  "name": "sibling crates untouched",
+  "input": "use semio_framework_value_edit::sort::HeapSortWork;\nuse semio_framework_value::DslValue;\n",
+  "expected": "use semio_framework_value_edit::sort::HeapSortWork;\nuse semio_framework_value::DslValue;\n"
+ },
+ {
+  "name": "moves under one module merge into one tree",
+  "input": "use semio_framework_value::{native_decoding::NativeReceiver, NativeDecodeControl, native_decoding::owned::NativeRecordSource};\n",
+  "expected": "use semio_framework_value_native_owned::native_decoding::{NativeReceiver, NativeDecodeControl, owned::NativeRecordSource};\n"
+ },
+ {
+  "name": "alias crate re-export paths",
+  "input": "use pack::value::list::persistent::PersistentList;\nfn f(x: pack::value::sort::HeapSortWork, y: pack::value::DslValue) {}\n",
+  "expected": "use semio_framework_value_persistent::list::persistent::PersistentList;\nfn f(x: semio_framework_value_edit::sort::HeapSortWork, y: pack::value::DslValue) {}\n"
+ },
+ {
+  "name": "escaped char literals keep the lexer in sync",
+  "input": "fn f(c: char) -> bool { matches!(c, '\\\\' | '\"' | '\\'' | '\\u{0008}') && \"semio_framework_value::list\".len() > 0 }\nuse semio_framework_value::list::persistent::PersistentList;\n",
+  "expected": "fn f(c: char) -> bool { matches!(c, '\\\\' | '\"' | '\\'' | '\\u{0008}') && \"semio_framework_value::list\".len() > 0 }\nuse semio_framework_value_persistent::list::persistent::PersistentList;\n"
+ },
+ {
+  "name": "glob re-exporter paths",
+  "input": "use protocol::{FixedKeySlots, DslValue};\nfn f(x: protocol::sort::HeapSortWork) {}\n",
+  "expected": "use protocol::DslValue;\nuse semio_framework_value_registry::fixed_key_slots::FixedKeySlots;\nfn f(x: semio_framework_value_edit::sort::HeapSortWork) {}\n"
+ }
+]

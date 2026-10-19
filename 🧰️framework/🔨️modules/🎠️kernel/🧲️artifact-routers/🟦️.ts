@@ -122,7 +122,7 @@ export class ArtifactInferenceRouter {
     const dependents = new Map<string, string[]>();
     for (const key of keys) {
       for (const dependency of this.dependsOn.get(key) ?? []) {
-        if (!indegree.has(dependency)) continue; // an unregistered dependency is a registration-time error, not this pass's concern
+        if (!indegree.has(dependency)) continue;
         indegree.set(key, (indegree.get(key) ?? 0) + 1);
         const list = dependents.get(dependency) ?? [];
         list.push(key);

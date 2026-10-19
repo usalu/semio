@@ -455,7 +455,6 @@ fn a_tier_boundary_and_the_completing_tick_carry_the_per_surface_map() {
     assert_eq!(count, surfaces, "one row per opaque surface and per fenestration");
     assert_eq!(bytes.len(), energy_surface_payload_bytes(count));
 
-    // 🔮️ The published map is the same table `Results::per_surface` projects.
     let results = job.numerical.as_mut().expect("numerical owner").take_results().expect("streamed results");
     let scalar = |row: &[u8], offset: usize| f64::from(f32::from_le_bytes(row[offset..offset + 4].try_into().unwrap()));
     let published: std::collections::HashMap<u32, (f64, f64)> = bytes[ENERGY_SURFACE_PAYLOAD_HEADER_BYTES..]
@@ -495,7 +494,7 @@ fn a_tick_carrying_two_thousand_surfaces_stays_far_inside_the_tick_byte_ceiling(
 /// 🪪️ Original paid canonical bytes publish monotone activity with unknown total and untouched timestep units.
 #[test]
 fn input_identity_progress_matches_neutral_bytes_unknown_total_and_original_counter(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪪️input-identity/🧫️fixtures/🔣️.json")).unwrap();let mut cursor=EnergyRunCursor::new();let mut writer=ToolRunTickWriter::new(identity());
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪪️input-identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut cursor=EnergyRunCursor::new();let mut writer=ToolRunTickWriter::new(identity());
  for row in fixture["progress"]["samples"].as_array().unwrap(){let live=EnergyJobCursor{input_identity_bytes:row[0].as_u64().unwrap()as usize,input_identity_ready:row[1].as_bool().unwrap(),stage:EnergyJobStage::Validate,tier:EnergyQualityTier::SteadyStateEstimate,warmup_hour:0,warmup_hours:0,timestep:0,total_timesteps:0,facility_electricity_kwh:0.0};let(activity,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.observe(live,&mut writer));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(activity,row[2].as_bool().unwrap());let progress=cursor.progress(identity(),ToolRunState::Running,EnergySimulationRunStage::Prepare);assert_eq!(progress.completed,0);assert!(progress.total.is_none());assert_eq!(progress.counters.len(),5);assert_eq!(progress.counters[4].counter,EnergySimulationRunCounter::InputIdentityBytes.index());assert_eq!(progress.counters[4].value,row[0].as_u64().unwrap());}
  let mut owner=ControlledRetirement::new(writer).unwrap_or_else(|_|panic!("original progress writer close"));while !owner.terminal_is_empty(){let demand=RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap(),capacity_bytes:owner.next_capacity_byte_demand(4096).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()};owner.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).unwrap();}
  eprintln!("[DEBUG] Energy input bytes8 neutral monotone progress events unknown total original fifth counter heap0");

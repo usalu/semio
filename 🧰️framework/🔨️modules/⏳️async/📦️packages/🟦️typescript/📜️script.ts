@@ -6,14 +6,11 @@ import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/📦️
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { resolve } from "node:path";
-import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** 📏️ Executes the actual closed public API compiler and runtime laws. */
 class ApiContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-api-contract accepts no arguments");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../📏️api/🧪️tests/🟦️.ts")], this.repoRoot, "async:public-api", 30_000);
+    await runApiContractScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
@@ -45,22 +42,15 @@ class TwinScript extends BundleScript {
 /** 🔐️ Checks the closed language-neutral publication admission contract with independent oracles. */
 class PublicationContractScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Expected test-publication-contract");
-    const tests = [resolve(this.root, "../../🔐️publication/🧪️tests/🟦️.ts"), resolve(this.root, "../../🔐️publication/🛂️checkpoint/🧪️tests/🟦️.ts")];
-    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--target", "ES2022", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.root, "async:publication:strict", 30000);
-    await runOwnedCommand(process.execPath, ["test", ...tests], this.root, "async:publication:contract", 30000);
+    await runPublicationContractScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-
-import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import { runApiContractScript, runPublicationContractScript, runSinglePollCheckScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 
 /** 🔂️ Verifies immediate one-poll semantics in the owned language-neutral corpus. */
 class SinglePollCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("single-poll-check accepts no arguments");
-    const test = resolve(this.root, "../../🔂️poll/🧪️tests/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
-    await runBudgetedTestCommand(process.execPath, ["test", test], {cwd: this.repoRoot, budgetMs: 15000, throwOnFailure: true});
+    await runSinglePollCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 

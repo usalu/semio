@@ -1,6 +1,7 @@
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
+import {readSourceFamilySource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import {expect,test} from "bun:test";
 import law from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
@@ -49,7 +50,7 @@ test("bulk grant boundaries agree with independent SQLite physical and logical p
 });
 
 test("defining clone contract bounds zero-sized runs and retains only initialized array prefixes",()=>{
-  const source=readFileSync(new URL("../../🧬️contract/🦀️.rs",import.meta.url),"utf8");
+  const source=readSourceFamilySource(new URL("../../🧬️contract/",import.meta.url));
   expect(source).toContain(`pub const RETAINED_CLONE_BULK_PAGE_ITEMS: usize = ${law.maximumZeroSizedElementsPerTurn};`);
   const bulk=source.slice(source.indexOf("pub fn bulk_run_elements"),source.indexOf("pub fn bulk_run_progress"));
   expect(bulk).toContain("if width == 0 { return RETAINED_CLONE_BULK_PAGE_ITEMS; }");
@@ -75,7 +76,7 @@ test("bulk native selector reaches the defining retained clone crate",()=>{
   expect(owner).toContain('"semio_framework_value_retained_clone"');
   expect(owner).toContain('"retained_clone::bulk_vec_tests::bulk_array_zero_sized_work_is_bounded_and_every_prefix_closes"');
   expect(owner).toContain("invocation:this.invocation");
-  expect(owner).toContain("configuredRepositoryCargoPreparationPolicyV1()");
+  expect(owner).toContain("configuredExactCargoLawPolicyV1()");
 });
 
 
@@ -92,7 +93,7 @@ test("logical clone bodies remain independent from admitted physical headers",()
    expect(copy.byteLength).toBeLessThanOrEqual(row.physical);
   }
  }finally{db.close();}
- const source=readFileSync(new URL("../../🧬️contract/🦀️.rs",import.meta.url),"utf8");
+ const source=readSourceFamilySource(new URL("../../🧬️contract/",import.meta.url));
  expect(source).toContain("source: RetainedCloneRef<'_, T>, body: usize, grant: RetainedCloneGrant");
  expect(source).not.toContain("self.advance_demands(source,grant.maximum_copy_bytes)");
  expect(source).toContain("let demand = self.advance_demands(source,body)?;");

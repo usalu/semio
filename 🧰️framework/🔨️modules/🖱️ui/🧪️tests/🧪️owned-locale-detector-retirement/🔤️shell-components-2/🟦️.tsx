@@ -46,11 +46,9 @@ describe("Shell components", () => {
       const downMarkup = renderToStaticMarkup(<Tree sections={sections} />);
       const upMarkup = renderToStaticMarkup(<Tree sections={sections} direction="up" />);
 
-      // Default (down): sections render in declared order, each header before its content.
       expect(downMarkup.indexOf("Section A")).toBeLessThan(downMarkup.indexOf("Section B"));
       expect(downMarkup.indexOf("Section A")).toBeLessThan(downMarkup.indexOf("Item A"));
 
-      // Up: sibling sections reverse (B before A), and within each section the header comes after its own content.
       expect(upMarkup.indexOf("Section B")).toBeLessThan(upMarkup.indexOf("Section A"));
       expect(upMarkup.indexOf("Item A")).toBeLessThan(upMarkup.indexOf("Section A"));
     });
@@ -118,36 +116,29 @@ describe("Shell components", () => {
         { kind: "branch", id: "root-b", icon: StubIcon, name: "Root B", children: [leaf("child-c", "Child C")] },
       ];
 
-      // Fresh branch press reveals only its own row — no auto-descend.
       const revealed = progressPanelTabSelection(tabs, [], ["root-a"], {});
       expect(revealed).toEqual({ path: ["root-a"], memory: {}, fold: false });
 
-      // Selecting a leaf records a memory hop for every step of the final path.
       const leafSelected = progressPanelTabSelection(tabs, ["root-a"], ["root-a", "child-b"], {});
       expect(leafSelected.path).toEqual(["root-a", "child-b"]);
       expect(leafSelected.memory).toEqual({ "root-a": "child-b" });
 
-      // Re-visiting a branch with remembered drill-down restores it, chained through nested branches.
       const withDeepMemory = { "root-a": "child-a", "child-a": "grandchild-a" };
       const restored = progressPanelTabSelection(tabs, [], ["root-a"], withDeepMemory);
       expect(restored.path).toEqual(["root-a", "child-a", "grandchild-a"]);
       expect(restored.memory).toEqual(withDeepMemory);
 
-      // Collapsing a branch (re-pressing it while active) truncates before it and clears its subtree's memory, but keeps the parent's own hop.
       const collapsed = progressPanelTabSelection(tabs, ["root-a", "child-a", "grandchild-a"], ["root-a", "child-a"], withDeepMemory);
       expect(collapsed).toEqual({ path: ["root-a"], memory: { "root-a": "child-a" }, fold: false });
 
-      // Root re-press always folds the hosting panel while preserving the selected child path and tree-memory for reopening.
       const folded = progressPanelTabSelection(tabs, ["root-a", "child-a", "grandchild-a"], ["root-a"], withDeepMemory);
       expect(folded).toEqual({ path: ["root-a", "child-a", "grandchild-a"], memory: withDeepMemory, fold: true });
 
-      // A stale memory entry (no longer a valid child) is pruned rather than followed.
       const staleMemory = { "root-a": "no-longer-exists" };
       const pruned = progressPanelTabSelection(tabs, [], ["root-a"], staleMemory);
       expect(pruned.path).toEqual(["root-a"]);
       expect(pruned.memory).toEqual({});
 
-      // Selecting a sibling at a deeper row keeps ancestor segments intact.
       const siblingPick = progressPanelTabSelection(tabs, ["root-a", "child-a"], ["root-a", "child-b"], {});
       expect(siblingPick.path).toEqual(["root-a", "child-b"]);
     });

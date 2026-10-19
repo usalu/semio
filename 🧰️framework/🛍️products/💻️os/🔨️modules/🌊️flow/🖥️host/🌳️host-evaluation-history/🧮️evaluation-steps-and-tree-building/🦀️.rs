@@ -43,10 +43,6 @@ tree.retire_cold();
             seeds.retire_cold();
             return Ok(Vec::new());
         }
-        // 🔢 Read BEFORE the registry it describes: a replacement landing between the two reads
-        // then stamps the baseline with the OLDER generation, which over-dirties the next step
-        // (extra work, never a stale answer). Reading it after could stamp a generation the
-        // evaluation never used.
         let evaluated_generation = self.operator_registry_generation();
         let registry = self.operator_registry();
         let evaluator = Evaluator::new(registry.as_ref());
@@ -67,22 +63,6 @@ tree.retire_cold();
                     return Ok(remaining);
                 }
                 self.neural_cache.sweep();
-                // 🧹️ The converged channel set is this host's CLAIM on the process-wide geometry
-                // store, never its authority over it. Retiring straight from here pruned the kernel
-                // to ONE host's handles, so any other live evaluation — a second preview window's
-                // session, a viewer instance, a headless oracle — lost the shapes its own cached
-                // nodes still name, and the very next evaluation that reused one of those cached
-                // dictionaries faulted `missing handle: <digest>` on a node whose inputs had not
-                // moved at all. That is what made a moved slider settle on an empty payload while
-                // the census reported the chain done. The one authority is
-                // the supplied geometry authority, over the MERGED claim of every live session, and
-                // [`FlowEvalSession::capture_baseline_from`] publishes this host's claim into it on
-                // exactly this convergence. A session-free host owns no claim and therefore retires
-                // nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-                // `📓️slider-reevaluation-correctness-2026-09-15.md`).
-                // 🔒️ Only advance the snapshot/channels/generation triple together, and only on
-                // success — a failed evaluation keeps diffing against the last known-good state
-                // next time, which is always a safe (never under-dirty) baseline.
                 self.begin_baseline_publication(snapshot,channels,evaluated_generation).unwrap_or_else(|_|unreachable!("original evaluation intake was checked before constructing owners"));
                 Ok(Vec::new())
             }
@@ -124,11 +104,6 @@ tree.retire_cold();
         }
         let tree = self.build_tree();
         let mut outputs = self.build_seeds();
-        // 🧹️ `self.outputs` republishes every SEEDED widget's channel too, so a plain `extend`
-        // displaces those seed dictionaries and lets `HashMap::insert`'s returned `Option<Dictionary>`
-        // drop — and `Dictionary` fail-closes on a bare drop
-        // (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop`). Retire what is displaced
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         for (widget_id, channels) in self.output_entries() {
             if let Some(displaced) = outputs.insert(widget_id.clone(), channels.clone()) {
                 displaced.retire_cold();

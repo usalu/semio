@@ -2,8 +2,8 @@
 
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::DwgBitReader;
 use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::dwg_crc16;
-use crate::standards::v_ac1024::subsets::any::io::import::objects::associativity::{decode_assoc_2d_constraint_group_object, decode_assoc_dependency_object, decode_assoc_dimension_dependency_body_object, decode_assoc_geometry_dependency_object, decode_assoc_network_object, decode_assoc_value_dependency_object, decode_assoc_variable_object, decode_evaluation_graph_object};
-use crate::standards::v_ac1024::subsets::any::io::import::objects::blocks::{decode_block_alignment_and_action_object, decode_block_constraint_parameter_object, decode_block_flip_parameter_object, decode_block_grip_location_component_object, decode_block_linear_parameter_object, decode_block_move_action_object, decode_block_parameter_dependency_body_object, decode_block_parameter_grip_object, decode_block_representation_data_object, decode_block_visibility_parameter_object, decode_dynamic_block_proxy_node_object, decode_dynamic_block_purge_preventer_object};
+use semio_s_artifact_stdio_dwg_read_objects_dynamic_blocks::standards::v_ac1024::subsets::any::io::import::objects::associativity::{decode_assoc_2d_constraint_group_object, decode_assoc_dependency_object, decode_assoc_dimension_dependency_body_object, decode_assoc_geometry_dependency_object, decode_assoc_network_object, decode_assoc_value_dependency_object, decode_assoc_variable_object, decode_evaluation_graph_object};
+use semio_s_artifact_stdio_dwg_read_objects_dynamic_blocks::standards::v_ac1024::subsets::any::io::import::objects::blocks::{decode_block_alignment_and_action_object, decode_block_constraint_parameter_object, decode_block_flip_parameter_object, decode_block_grip_location_component_object, decode_block_linear_parameter_object, decode_block_move_action_object, decode_block_parameter_dependency_body_object, decode_block_parameter_grip_object, decode_block_representation_data_object, decode_block_visibility_parameter_object, decode_dynamic_block_proxy_node_object, decode_dynamic_block_purge_preventer_object};
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::container::decode_r2004_sections;
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::container::r2004_section_data;
 use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::io::import::records::entities::DWG_TYPE_BLOCK;
@@ -33,10 +33,6 @@ use semio_s_artifact_stdio_dwg_read_records::standards::v_ac1024::subsets::any::
 use crate::standards::v_ac1024::subsets::any::io::import::objects::styles::{decode_material_object, decode_mleader_style_object, decode_mline_style_object, decode_table_style_object, decode_visual_style_object};
 use crate::standards::v_ac1024::subsets::any::io::import::objects::tables::{decode_table_control_object, decode_table_record_object};
 
-#[path = "🧩️blocks/🦀️.rs"]
-pub mod blocks;
-#[path = "🔗️associativity/🦀️.rs"]
-pub mod associativity;
 #[path = "🖌️styles/🦀️.rs"]
 pub mod styles;
 #[path = "🗃️tables/🦀️.rs"]

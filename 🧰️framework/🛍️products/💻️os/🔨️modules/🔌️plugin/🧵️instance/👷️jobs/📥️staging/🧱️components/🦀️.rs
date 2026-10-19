@@ -42,7 +42,7 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub pending_render_tree_close:std::mem::ManuallyDrop<Option<semio_framework_ui_contract::OriginalBuiltTreeRetirement>>,
     pub pending_configuration_source:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
     pub pending_configuration_rejected:bool,
-    pub pending_configuration_worker:Option<crate::reserved_jobs::configuration_worker::ConfigurationWorker<A>>,
+    pub pending_configuration_worker:Option<semio_framework_plugin_job::reserved_jobs::configuration_worker::ConfigurationWorker<A>>,
     pub pending_configuration_completion:Option<semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement<A::ConfigMutation>>,
     pub pending_configuration_command:std::mem::ManuallyDrop<Option<ArtifactCommand<A::ConfigMutation>>>,
     pub pending_configuration_command_close:Option<ControlledRetirement<ArtifactCommand<A::ConfigMutation>>>,
@@ -91,6 +91,12 @@ impl<A: ArtifactApp> PendingReserved<A> {
             reserved_commit_outcome: None,
             pending_document_window_admission: std::mem::ManuallyDrop::new(None),
         }
+    }
+
+    pub fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<semio_framework_ui_runtime::ComponentTree>,semio_framework_job::OriginalTurnFailure>{
+        self.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
+        if !self.pending_render_tree_ready || self.pending_render_failure.is_some() || self.pending_render_compound.is_some() || self.pending_render_close_failure.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
+        Ok(&mut self.pending_render_tree)
     }
 }
 
@@ -180,5 +186,18 @@ impl<A: ArtifactApp> ToolOperations<A> {
             latest_wins_keys: ToolLatestWinsRegistry::new(),
             latest_wins_turn: true,
         }
+    }
+
+    pub fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, semio_framework_value::retained_clone::RetainedCloneGrant, semio_framework_value::retained_clone::RetainedCloneProgress)> {
+        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS{
+            let Some((_,owner))=self.latest_wins_commands.entry_mut(index)else{continue;};
+            if let Some((grant,progress))=owner.receipt.take(){return Some((owner.operation.operation,grant,progress));}
+        }
+
+        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS{
+            let Some((_,owner))=self.tool_operations.entry_mut(index)else{continue;};
+            if let Some((grant,progress))=owner.publication_ownership_progress.take(){return Some((owner.operation.operation,grant,progress));}
+        }
+        None
     }
 }

@@ -139,7 +139,7 @@ export type ArtifactPresenceWindowView = {
   readonly kind: ArtifactPresenceViewKind;
   readonly size: readonly [number, number];
   readonly pointer?: readonly [number, number, number];
-  /** World-space ray origin for 3D presence (Orbit); absent for canvas/geo. */
+  /** ➖️ World-space ray origin for 3D presence (Orbit); absent for canvas/geo. */
   readonly rayOrigin?: readonly [number, number, number];
 };
 

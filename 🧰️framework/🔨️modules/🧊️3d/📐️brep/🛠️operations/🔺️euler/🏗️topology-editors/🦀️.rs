@@ -114,11 +114,8 @@ pub fn split_edge_with_vertex(body: &mut Body, edge_id: EdgeId, t: f64, vertex: 
             }
             None => (None, (0.0, 0.0), None, (0.0, 0.0)),
         };
-        // `coedge_e1`/`coedge_e2` reference `e1`/`e2` respectively — always the (range.0..t) and
-        // (t..range.1) halves in the edge's OWN curve order, independent of `forward`.
         let coedge_e1 = body.coedges.insert(Coedge { edge: e1, forward: coedge.forward, pcurve: pcurve1, prange: prange1, loop_id: coedge.loop_id, next: dummy_coedge(), prev: dummy_coedge() });
         let coedge_e2 = body.coedges.insert(Coedge { edge: e2, forward: coedge.forward, pcurve: pcurve2, prange: prange2, loop_id: coedge.loop_id, next: dummy_coedge(), prev: dummy_coedge() });
-        // Ring order follows traversal direction: forward visits e1 then e2; reversed visits e2 then e1.
         let (c1, c2) = if coedge.forward { (coedge_e1, coedge_e2) } else { (coedge_e2, coedge_e1) };
         if self_loop {
             body.coedges.get_mut(c1).unwrap().prev = c2;
@@ -239,7 +236,6 @@ pub fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, p1: Pn
     if hits.len() != 2 {
         return Err(KernelError::Operation(format!("cutting line must cross the outer boundary at exactly two places (got {})", hits.len())));
     }
-    // Same-edge double hits are supported: split higher curve_t first so the lower parameter stays valid.
     if hits[0].edge == hits[1].edge {
         hits.sort_by(|a, b| b.curve_t.partial_cmp(&a.curve_t).unwrap_or(std::cmp::Ordering::Equal));
     }
@@ -283,9 +279,6 @@ pub fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, p1: Pn
     let pb = body.vertices.get(vb).expect("vertex B").position;
     let cut_curve = body.curves3.insert(Curve3::Line { origin: pa, dir: pb - pa });
     let cut = make_edge(body, cut_curve, (0.0, 1.0), va, vb, tol, &mut rec);
-    // Same planar face on both sides of the chord, so the chord's own p-curve is a straight line
-    // in UV, in the edge's own curve order (`p = uv_a + (uv_b - uv_a) * t`, matching `t ∈ (0, 1)`
-    // on the 3D curve above) — never reparametrized per coedge, per the p-curve convention.
     let uv_a = project_uv(&frame, pa);
     let uv_b = project_uv(&frame, pb);
     let cut_pcurve = body.curves2.insert(Curve2::Line { origin: uv_a, dir: uv_b - uv_a });

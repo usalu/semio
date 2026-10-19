@@ -195,7 +195,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
             }
         }
-        // 🔗️ An `Arc` clone, so the cached rows stay readable while the arms below take `&mut self`.
         let before = self.before.clone().unwrap_or_default();
         let Some(target) = Self::target(command) else {
             self.stage = Puzzle5dSetActiveExampleStage::Complete;
@@ -208,11 +207,11 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     for id in before.fastener_ids[range].to_vec() {
                         self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id))?;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
                 }
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::ClearParts;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearParts => {
                 let range = Self::take_chunk(&mut self.cursor, before.part_ids.len());
@@ -220,27 +219,27 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     for id in before.part_ids[range].to_vec() {
                         self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id))?;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
                 }
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::Label;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-label", "Updating document label", "Dokumenttitel wird aktualisiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-label", "Updating document label", "Dokumenttitel wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Label => {
                 self.push(crate::standards::v1::subsets::any::schema::mutations::rename_puzzle5d(target.label.clone()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::Domain;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-domain", "Updating document domain", "Dokumentdomäne wird aktualisiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-domain", "Updating document domain", "Dokumentdomäne wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Domain => {
                 self.push(crate::standards::v1::subsets::any::schema::mutations::change_domain(target.domain.clone()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::Description;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-description", "Updating description", "Beschreibung wird aktualisiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-description", "Updating description", "Beschreibung wird aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Description => {
                 let description = target.meta.as_ref().and_then(|meta| meta.get("description")).and_then(Value::as_str).unwrap_or("");
                 self.push(crate::standards::v1::subsets::any::schema::mutations::change_description(description.to_string()))?;
                 self.stage = Puzzle5dSetActiveExampleStage::ClearCompatibility;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearCompatibility => {
                 let range = Self::take_chunk(&mut self.cursor, before.compatibility.len());
@@ -248,11 +247,11 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     for (source, target) in before.compatibility[range].to_vec() {
                         self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(source, target))?;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
                 }
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::AddCompatibility;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"))
             }
             Puzzle5dSetActiveExampleStage::AddCompatibility => {
                 let rows = Self::compatibility_rows(target);
@@ -262,17 +261,17 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         let row: crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility as FromValue>::from_value(row.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity, None))?;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
                 }
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::Catalogs;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Catalogs => {
                 let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCatalogs as FromValue>::from_value(catalogs.to_value())).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
                 self.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(catalogs))?;
                 self.stage = Puzzle5dSetActiveExampleStage::AddParts;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
             }
             Puzzle5dSetActiveExampleStage::AddParts => {
                 let range = Self::take_chunk(&mut self.cursor, target.parts.len());
@@ -282,11 +281,11 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         let part = <crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart as FromValue>::from_value(value.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
                 }
                 self.cursor = 0;
                 self.stage = Puzzle5dSetActiveExampleStage::AddFasteners;
-                Ok(crate::puzzle_progress_step!("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"))
             }
             Puzzle5dSetActiveExampleStage::AddFasteners => {
                 let range = Self::take_chunk(&mut self.cursor, target.fasteners.len());
@@ -307,11 +306,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                             fastener.y, None,
                         ))?;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"));
                 }
                 self.stage = Puzzle5dSetActiveExampleStage::Complete;
-                // 🧹️ Every part the old document held is gone, so a surviving selection would address ids that
-                // no longer exist; it is cleared with a SUBTRACTIVE write naming exactly what is selected now.
                 let selection = _interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN);
                 let targets: Vec<InteractionTarget> = selection
                     .map(|selection| selection.ids.iter().map(|id| InteractionTarget { granularity: selection.granularity.clone(), id: id.clone() }).collect())
@@ -459,7 +456,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 if end >= page.len() {
                     self.stage = Puzzle5dRegisterBrushMeshStage::Indices;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-register-brush-mesh-position", "Reading mesh positions", "Mesh-Positionen werden gelesen"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-register-brush-mesh-position", "Reading mesh positions", "Mesh-Positionen werden gelesen"))
             }
             Puzzle5dRegisterBrushMeshStage::Indices => {
                 let page = Self::array(command, "indices");
@@ -469,7 +466,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 if end >= page.len() {
                     self.stage = Puzzle5dRegisterBrushMeshStage::Derive;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-register-brush-mesh-index", "Reading mesh indices", "Mesh-Indizes werden gelesen"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-register-brush-mesh-index", "Reading mesh indices", "Mesh-Indizes werden gelesen"))
             }
             Puzzle5dRegisterBrushMeshStage::Derive => {
                 self.stage = Puzzle5dRegisterBrushMeshStage::Complete;

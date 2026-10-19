@@ -69,10 +69,6 @@ pub(crate) use semio_framework_value_clone_source_testing::{FixtureSource,Fixtur
 #[path="🧪️tests/♻️close/🦀️.rs"]
 mod original_close_frame_tests;
 
-/// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
-pub fn retained_clone_grant_admits(grant:RetainedCloneGrant,demand:crate::RetirementDemand)->bool {
-    grant.maximum_items>0 && grant.maximum_copy_bytes>=demand.copy_bytes && grant.maximum_capacity_bytes>=demand.capacity_bytes && grant.maximum_release_bytes>=demand.release_bytes && grant.maximum_depth>=demand.depth
-}
 
 /// 🎟️ Preserves the exact admitted original action across its enclosing clone frame.
 pub fn retained_clone_close_demands<T:RetainedClone>(cursor:&impl RetainedCloneCursor<T>,maximum_body_bytes:usize)->Result<crate::RetirementDemand,crate::ValueError> {

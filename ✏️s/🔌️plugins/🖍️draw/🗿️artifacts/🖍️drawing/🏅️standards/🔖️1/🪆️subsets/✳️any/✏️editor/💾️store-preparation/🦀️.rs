@@ -1,30 +1,39 @@
 //! 💾️ Drawing store preparation: the one item publication preparation factory and its preparation state.
 
-use super::*;
+#![allow(clippy::result_large_err)]
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+
+/// 🧮️ Work item bound shared by the bounded drawing commands and the store preparation.
+pub const DRAWING_BOUNDED_WORK_ITEMS: usize = 4_096;
 
 //#region 📬️StorePreparation
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(super) struct DrawingArtifactStorePreparationFactory;
+pub struct DrawingArtifactStorePreparationFactory;
 
 struct DrawingArtifactStorePreparation {
-    pub(super) base: std::mem::ManuallyDrop<Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,
-    pub(super) mutation: std::mem::ManuallyDrop<Option<DrawingMutation>>,
-    pub(super) inverse: std::mem::ManuallyDrop<Option<Vec<DrawingMutation>>>,
-    pub(super) refused: std::mem::ManuallyDrop<Option<(::protocol::Edit<DrawingMutation>, std::sync::Arc<DrawingSnapshot>)>>,
+    pub(crate) base: std::mem::ManuallyDrop<Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,
+    pub(crate) mutation: std::mem::ManuallyDrop<Option<DrawingMutation>>,
+    pub(crate) inverse: std::mem::ManuallyDrop<Option<Vec<DrawingMutation>>>,
+    pub(crate) refused: std::mem::ManuallyDrop<Option<(::protocol::Edit<DrawingMutation>, std::sync::Arc<DrawingSnapshot>)>>,
     apply_refusal: std::mem::ManuallyDrop<Option<::protocol::MutationApplyError>>,
     authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority>>>,
-    pub(super) prepared: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>>>,
+    pub(crate) prepared: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<DrawingSnapshot, DrawingMutation>>>,
     mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<DrawingMutation>>>>,
     snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<DrawingSnapshot>>>>,
-    pub(super) active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    pub(crate) active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     factories: std::mem::ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
-    pub(super) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
-    pub(super) cancelled: bool,
-    pub(super) closing: bool,
+    pub(crate) checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    pub(crate) cancelled: bool,
+    pub(crate) closing: bool,
 }
 
 impl DrawingArtifactStorePreparation {
-    pub(super) fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub(crate) fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preparation close depth overflow"))?; Ok(demand) };
         if let Some(active) = self.active.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?); }
         if self.prepared.is_some() { let birth = store::os_store::one_item_publication::ArtifactStoreOneItemPrepared::<DrawingSnapshot, DrawingMutation>::retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }

@@ -131,9 +131,6 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let window_transient_snapshot = context.and_then(|context| context.window_transient.as_ref());
         let document = snapshot.typed();
         let transient = window_ownership::transient_from_snapshot(window_transient_snapshot);
-        // 🧯️ The popup always retires, but a dismissed popup that placed nothing is
-        // indistinguishable from a successful one unless the refusal itself speaks — `accept_suggestion_
-        // closes_menu_even_when_placement_fails` is literally named after that silence.
         let Some(catalogs) = document.meta.kind_catalogs.as_ref() else {
             self.stage = Puzzle3dAcceptSuggestionStage::Complete;
             return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));

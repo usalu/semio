@@ -13,14 +13,14 @@ use {semio_s_artifact_puzzle_3d_mutations_object::change_object_anchor::mutation
 use protocol::OpText;
 
 fn ops() -> Vec<Puzzle3dMutation> {
-    let object = puzzle_3d::Puzzle3dObject {
+    let object = semio_s_artifact_puzzle_3d_model::Puzzle3dObject {
         id: "o1".into(),
         label: Some("L".into()),
         object_kind: Some("Capsule".into()),
-        anchor: puzzle_3d::Puzzle3dObjectAnchor::Fixed,
+        anchor: semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor::Fixed,
         origin: [1.0, 2.0, 3.0],
         orientation: Some([0.0, 0.0, 0.0, 1.0]),
-        scale: Some(puzzle_3d::Puzzle3dScale::Vec3([2.0, 3.0, 4.0])),
+        scale: Some(semio_s_artifact_puzzle_3d_model::Puzzle3dScale::Vec3([2.0, 3.0, 4.0])),
         mesh_url: Some("/m.glb".into()),
         vortices: Vec::new(),
         hidden: false,

@@ -79,8 +79,6 @@ describe("semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK)", () =>
   it("a _meta-tagged request is served statelessly with NO initialize, on a completely fresh process with no prior handshake", async () => {
     const proc = freshProcess();
     try {
-      // The FIRST line this process ever receives is a plain capability call, not server/discover
-      // and not initialize — proving the spec's "no negotiation handshake" contract for real.
       const response = await proc.request("tools/list", { _meta: { [META_KEY]: MODERN_VERSION } });
       expect(response.error).toBeUndefined();
       const result = response.result as { tools: unknown[] };

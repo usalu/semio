@@ -1,4 +1,4 @@
-//! lowpoly -> obj
+//! 🔺️ lowpoly -> obj
 //!
 //! Writes real Wavefront OBJ geometry through `engine::encode_obj` (never a second bespoke
 //! grammar): every object whose persisted `mesh_content` is non-empty contributes an `o <name>`

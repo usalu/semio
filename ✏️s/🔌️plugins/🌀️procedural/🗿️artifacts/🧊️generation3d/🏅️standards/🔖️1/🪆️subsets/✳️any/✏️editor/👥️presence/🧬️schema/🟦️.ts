@@ -1,12 +1,12 @@
 /** 🧬️ Generation3dPresence */
 export interface Generation3dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   camera: CameraJson;
-  /** @state presence */
+  /** 👻️ @state presence */
   previewCamera: Generation3dPreviewCamera;
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeUtilityId: string;
-  /** @state presence */
+  /** 👁️ @state presence */
   showMode: string;
 }
 

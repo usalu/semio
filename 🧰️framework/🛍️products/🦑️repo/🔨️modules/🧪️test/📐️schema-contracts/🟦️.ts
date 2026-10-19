@@ -56,9 +56,6 @@ export function schemaJsonDialect(repoRoot: string): string {
 export function forbiddenSchemaPlacements(repoRoot: string): { directories: readonly string[]; files: readonly string[]; exceptions: ReadonlyMap<string, string> } {
   const declared = rawTaxonomy(repoRoot).schemaExportResolution as { forbiddenPlacementPatterns?: unknown; placementExceptions?: unknown } | undefined;
   const patterns = Array.isArray(declared?.forbiddenPlacementPatterns) ? (declared.forbiddenPlacementPatterns as readonly unknown[]).filter((entry): entry is string => typeof entry === "string") : [];
-  // 🧭️A pattern the list also carries in `<pattern>/**` form names a forbidden DIRECTORY — the
-  // descendant form is how the taxonomy says "and everything under it". Every other pattern names a
-  // forbidden FILE. The split is read off the declaration; no directory or filename is named here.
   const set = new Set(patterns);
   const directories = patterns.filter((pattern) => set.has(`${pattern}/**`));
   const descendants = new Set(directories.map((pattern) => `${pattern}/**`));
@@ -272,8 +269,6 @@ function loadSchemaCatalog(repoRoot: string): { catalog: SchemaCatalog | null; d
   const found: SchemaDiagnostic[] = [];
   const rows: Record<string, SchemaCatalogScope> = {};
   const byPath = new Map<string, string>();
-  // 🪞️A scope id declared twice in the catalog TEXT collapses on parse, so the raw bytes are counted
-  // ONCE, here: two owners claiming one id is an ambiguity nothing downstream could otherwise see.
   const declarations = new Map<string, number>();
   for (const match of text.matchAll(/"([^"\\]+)"\s*:\s*\{/gu)) declarations.set(match[1]!, (declarations.get(match[1]!) ?? 0) + 1);
   for (const [id, row] of Object.entries(scopes as Record<string, unknown>)) {
@@ -282,9 +277,6 @@ function loadSchemaCatalog(repoRoot: string): { catalog: SchemaCatalog | null; d
       found.push(schemaDiagnostic("schema-catalog-malformed", `catalog scope ${JSON.stringify(id)} must carry \`path\`, \`formats\`, an \`exports\` object of ExportId → { file, facet } and \`dependsOn\``, { scope: id, path: resolution.catalogPath }));
       continue;
     }
-    // 🧭️A row that survives the shape check is the only kind anything downstream may read: a malformed
-    // row let through would be re-reported once per export and once per format, turning one catalog
-    // defect into thousands of derived ones.
     rows[id] = scope as SchemaCatalogScope;
     for (const [exported, row] of Object.entries(scope.exports)) {
       const file = (row as Partial<SchemaCatalogExport> | null)?.file;
@@ -355,9 +347,6 @@ export function resolveSchemaExport(repoRoot: string, uri: string, format?: stri
   if (typeof relative !== "string") return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-format-unavailable", `scope ${JSON.stringify(parsed.scope)} declares no ${chosen} implementation`, { scope: parsed.scope, export: parsed.export, format: chosen })] };
   const file = schemaExportFile(scope, exported, chosen, normativeSchemaFormat(repoRoot));
   if (!existsSync(join(repoRoot, file))) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-file-missing", `the catalog names ${file} for ${chosen}, and that file does not exist`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
-  // 🧫️A contract may never be answered out of a fixture or test tree. Resolution reaching one means
-  // the catalog itself was built over an ineligible owner, and every consumer of it is reading an
-  // example as if it were the contract.
   if (isFixtureOwnedPath(repoRoot, file)) return { resolved: null, diagnostics: [...diagnostics, schemaDiagnostic("schema-fixture-local-schema-fallback", `${file} lies under a fixture or test directory, so it cannot answer ${uri}`, { scope: parsed.scope, export: parsed.export, format: chosen, path: file })] };
   return { resolved: { uri, scope: parsed.scope, export: parsed.export, format: chosen, path: file, digest: fileDigest(join(repoRoot, file)) }, diagnostics };
 }
@@ -373,9 +362,6 @@ export function resolveSchemaExport(repoRoot: string, uri: string, format?: stri
  * collection of its own examples.
  */
 export function isFixtureOwnedPath(repoRoot: string, rel: string): boolean {
-  // 🧭️Only the SELF patterns (`**/🧪️*`) name a collection ROOT; the `/**` siblings name its descendants
-  // and are redundant here, because every ancestor of the path is tested. Keeping them would make
-  // `🔨️modules/🧪️test/🧬️schema` a collection by virtue of an ancestor the carve-out had just excused.
   const declared = schemaScopeOwnerLevels(repoRoot);
   const patterns = (declared?.fixtureOwnerPathPatterns ?? []).filter((pattern) => !pattern.endsWith("/**"));
   const moduleMemberDirName = declared?.moduleMemberDirName;
@@ -452,9 +438,7 @@ export function submodulePaths(repoRoot: string): ReadonlySet<string> {
   let text = "";
   try {
     text = readFileSync(join(repoRoot, ".gitmodules"), "utf8");
-  } catch {
-    /* 🧭️A repository with no submodules declares none; an absent file is that statement. */
-  }
+  } catch {}
   const declared = new Set<string>();
   for (const line of text.split(/\r?\n/u)) {
     const match = /^\s*path\s*=\s*(.+?)\s*$/u.exec(line);

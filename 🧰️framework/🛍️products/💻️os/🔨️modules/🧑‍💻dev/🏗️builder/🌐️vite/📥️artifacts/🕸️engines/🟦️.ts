@@ -1,7 +1,7 @@
 import {join} from "node:path";
-import {repositoryWasmPackageRequestV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts";
+import {repositoryWasmPackageRequestV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import type {RepositoryArtifactRequestV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
+import type {RepositoryArtifactRequestV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
 import catalog from "./📇️catalog.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type FrameworkOsEngineDeliveryV1=Readonly<{id:string;packageName:string;sourceOwner:string;root:string;entry:string;files:readonly string[];entrypoint:"source"|"generated";request:RepositoryArtifactRequestV1}>;

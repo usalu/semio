@@ -1,7 +1,7 @@
 /// 🧰️ Group outcome and store fixtures: the durable group fixture, the hex, revision and reference helpers, the member, prepared outcome and decision builders, the owned three stores and the erased snapshot authority assertion.
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
+    serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
 fn copy_grant(bytes: usize) -> semio_framework_os_store_one_item::ArtifactStoreOneItemGrant {
@@ -186,7 +186,7 @@ async fn owned_three_stores() -> (ArtifactStore<DemoSnapshot, DemoMutation>, Art
 }
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../📦️prepared/🔗️binding/🧫️fixtures/🔣️.json")).unwrap();
     let body=law["storeClosure"]["maximumBodyBytes"].as_u64().unwrap()as usize;
     for turn in 0..law["storeClosure"]["maximumTurns"].as_u64().unwrap() {
         let demand = store.close_owned_demands(body).expect("durable fixture quotes original close frontier");

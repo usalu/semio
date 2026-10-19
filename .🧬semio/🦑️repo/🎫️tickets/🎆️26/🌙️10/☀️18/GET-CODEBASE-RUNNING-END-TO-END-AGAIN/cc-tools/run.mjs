@@ -17,8 +17,9 @@ const graphFile=manifest==="🧰️framework/Cargo.toml"?dir+"/cc-tools/meta-fra
 const graph=graphFile&&existsSync(graphFile)?loadGraph(graphFile):null;
 const withDev=args.includes("--tests")||args.includes("--all-targets");
 const env={...process.env,SEMIO_SCRIPT_POLICY:'{"version":1,"owner":"repository:cargo:caller","maximumElapsedMilliseconds":14400000}'};
-const waitForeign=()=>{for(let i=0;i<360;i++){const r=spawnSync("pgrep",["-f","bun repo cargo|script.ts repo cargo"],{encoding:"utf8"});if(!r.stdout.trim())return;spawnSync("sleep",["10"]);}};
-const launch=a=>{waitForeign();return spawnSync("bun",["repo","cargo","--store=shared","--configuration=prototype","--parallelism=4","--",...a],{cwd:process.cwd(),env,encoding:"utf8",maxBuffer:1<<30});};
+const waitForeign=()=>{if(process.env.CC_NOWAIT)return;for(let i=0;i<360;i++){const r=spawnSync("pgrep",["-f","bun repo cargo|script.ts repo cargo"],{encoding:"utf8"});if(!r.stdout.trim())return;spawnSync("sleep",["10"]);}};
+const waitManifests=()=>{for(let i=0;i<60;i++){const r=spawnSync("bun",[dir+"/cc-tools/mlint.mjs","."],{encoding:"utf8",maxBuffer:1<<26});if(!r.stdout.trim())return;appendFileSync(dir+"/🗑️generated/cc2-seq.log",`${new Date().toTimeString().slice(0,5)} manifest churn (${r.stdout.trim().split("\n").length}): ${r.stdout.trim().split("\n")[0].slice(0,200)}\n`);spawnSync("sleep",["60"]);}};
+const launch=a=>{waitManifests();waitForeign();return spawnSync("bun",["repo","cargo","--store=shared","--configuration=prototype","--parallelism=4","--",...a],{cwd:process.cwd(),env,encoding:"utf8",maxBuffer:1<<30});};
 let skipped=[],text="",r;
 for(let attempt=0;attempt<14;attempt++){
  const refused=readRefused();
@@ -28,8 +29,9 @@ for(let attempt=0;attempt<14;attempt++){
  r=launch([...cur,...extra]);
  const t=(r.stdout??"")+(r.stderr??"");text=t;
  if(/System image plist required|Bounded unique parent kernel roster required|Stale loaded repository|topology changed/u.test(t)&&attempt<10){spawnSync("sleep",["25"]);continue;}
- const ref=t.match(/Source refused before compiler: (\S+) \((Rust crate Source extent or boundary exceeded[^)]*|[^)]*boundary exceeded[^)]*)\)/u);
+ const ref=t.match(/^error: Rust crate Source refused before compiler: (\S+) \(([^\n]*)\)$/mu);
  if(ref&&!refused.has(ref[1])){appendFileSync(refusedFile,`${ref[1]}\t${ref[2]}\tbatch ${idx}\n`);continue;}
+ if(/SyntaxError: Export named|Cannot find module|Cannot find package/u.test(t)&&attempt<12){spawnSync("sleep",["60"]);continue;}
  if(/cannot update the lock file/u.test(t)){launch(["update","--workspace","--manifest-path",manifest]);continue;}
  if(/Original Cargo workspace topology changed/u.test(t)){spawnSync("sleep",["20"]);continue;}
  break;

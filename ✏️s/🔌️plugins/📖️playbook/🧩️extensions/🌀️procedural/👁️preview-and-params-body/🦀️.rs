@@ -81,7 +81,6 @@ pub(super) fn render_preview_body(owner: &mut ModuleGeometryOwner, payload: &Mod
     let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(owner, &host_snapshot, &params);
-    // 🧊️ The decoded learning program is this function's own owner of the widgets' dictionaries.
     host_snapshot.retire_cold();
     scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
 }
@@ -169,9 +168,6 @@ pub(super) fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleL
     };
     let host_snapshot: FlowHostSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginAssemblyError::new("procedural.learning-program", error.to_string()))?;
     let spec = flow_host_snapshot_to_form_spec(&host_snapshot, &PlaybookFlowFormProducer);
-    // 🧊️ `spec` is an OWNED form projection, so the decoded learning program is done here — closed, never
-    // dropped (see `evaluated_preview_payload`). Retired BEFORE the `?`-returning body below so no
-    // early exit can leak it.
     host_snapshot.retire_cold();
     let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
     let Some(step) = spec.steps.first() else {

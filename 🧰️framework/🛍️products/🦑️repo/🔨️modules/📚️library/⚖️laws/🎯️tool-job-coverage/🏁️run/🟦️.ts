@@ -1,7 +1,7 @@
 /** 🏁️ Tool-job coverage: retained-command checkpoint laws and the census run behind `verify interactivity tool-jobs`.
  * @see 📜️script.ts
  */
-import { toolJobMemberStoreProducerExact, type ToolJobMemberStoreProducerSources } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
+import { toolJobMemberStoreProducerExact } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
 import { readMcpGatewaySource } from "@semio-tech/framework-os-mcp";
 import { policyReadFileSafe, policyReadModuleTreeSource, policyReadWitPackageSource, POLICY_SPLIT_SOURCE_ROOTS } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { relative } from "node:path";
@@ -228,7 +228,7 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   } catch {
     fixedOperationFixture = undefined;
   }
-  const selfTests = (await lanes.toolJobCoverageSelfTests()) + lanes.semioMemberStoreProducerSourceSelfTests((candidate) => toolJobMemberStoreProducerExact(candidate as ToolJobMemberStoreProducerSources), policyReadMemberStoreProducerSources(root), JSON.parse(policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧬️schema/🔣️.json"))) + lanes.toolJobFixedOperationRegistrySelfTests(jobRuntime) + lanes.toolJobDrawingGestureOperationOwnerSelfTests() + lanes.toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
+  const selfTests = (await lanes.toolJobCoverageSelfTests()) + lanes.toolJobFixedOperationRegistrySelfTests(jobRuntime) + lanes.toolJobDrawingGestureOperationOwnerSelfTests() + lanes.toolJobArtifactRetainedCommandSelfTests(artifactRetainedCommand, plugin) + (fixedOperationFixture?.results.length ?? 0) + Number(fixedOperationRustFixtureFresh);
   const factoryContracts: { file: string; line: number; factory: string; status: "explicit" | "missing" }[] = [];
   for (const [file, source] of allRustFiles) {
     const implementation = /impl(?:<[^>]+>)?\s+(?:semio_framework::)?ToolJobFactory\s+for\s+([^\s<{]+(?:<[^>{]+>)?)\s*\{/g;

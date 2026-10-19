@@ -1,2 +1,2 @@
-/** equation import md */
+/** ➗️ equation import md */
 export function register(): void {}

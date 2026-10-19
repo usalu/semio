@@ -74,8 +74,6 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
         const [socketA, socketB] = FakeHubWebSocket.instances;
         socketA!.open();
         socketB!.open();
-        // 🧊️ The cold pair is minted over the socket it was transferred on: `assertCurrent()`
-        // (`🏪️store/👷️worker/🟦️.ts:971`) refuses an owner whose `state.socket` has since changed.
         for (const documentId of ["doc-a", "doc-b"]) installVerifiedDocumentBackbonePair(artifactState(documentId, "space-1")!);
         await handleHubFrame(artifactState("doc-a", "space-1")!, { Session: { actor: actorA, color: 1 } });
         await handleHubFrame(artifactState("doc-b", "space-1")!, { Session: { actor: actorB, color: 2 } });
@@ -475,8 +473,6 @@ export async function registerDocumentBackboneBatchTests(vitest: Vitest, depende
       const duringBootstrap = { ...first, id: "edit-during-bootstrap" };
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
-      // 🧭️ A holder, not a `let`: TypeScript narrows a local that is only ever assigned inside a
-      // callback down to its initializer, which makes the optional call below a call on `never`.
       const mirrorRetirement: { release: (() => void) | null } = { release: null };
       try {
         openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller", actorIdentityGrant: WORKER_LAW_ACTOR_IDENTITY_GRANT });

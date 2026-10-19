@@ -31,6 +31,8 @@ semio-framework-io-base64 = { path = "../../../../🚪️io/🔤️base64/📦�
 semio-framework-pack-error = { path = "../../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
 semio-framework-replication-error = { path = "../../../⚠️error/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-persistent.workspace = true
+semio-framework-value-native-owned.workspace = true
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

@@ -1,4 +1,4 @@
-//! the world pane may even reach. The marquee method and merge mode live in the framework's own
+//! 🗺️ the world pane may even reach. The marquee method and merge mode live in the framework's own
 //! 🎯️ 3D-window option — the selection group: which entity kinds (parts/grips/fasteners) a pick in
 //! `vortex` interaction domain (`interactionSelect`'s `method`/`merge`), never here.
 //!

@@ -45,7 +45,7 @@ function targetOf(pkg: Pkg, targetFile: string, proposedGlue: string | undefined
   if (pkg.name === "@semio-tech/framework") ownerRel = ownerRel.replace(/^🔨️modules\//u, "");
   if (targetFile.endsWith(".json")) {
     const stem = ownerRel.split("/").pop()!.replace(/\.json$/u, "").replace(/[^\x00-\x7f]/gu, "");
-    ownerRel = `${ownerRel.split("/").slice(0, -1).join("/")}/🔣️json/${stem ? stem + "/" : ""}🟦️.ts`;
+    ownerRel = [...ownerRel.split("/").slice(0, -1), "🔣️json", ...(stem ? [stem] : []), "🟦️.ts"].join("/");
   } else if (proposedGlue) ownerRel = proposedGlue.replace(/^📦️packages\/[^/]+\//u, "");
   ownerRel = ownerRel.replace(/(^|\/)🧪️tests(?=\/|$)/gu, "$1🧪️testing");
   return { target: "./" + ownerRel, glue: posix(`${pkg.dir}/${ownerRel}`) };

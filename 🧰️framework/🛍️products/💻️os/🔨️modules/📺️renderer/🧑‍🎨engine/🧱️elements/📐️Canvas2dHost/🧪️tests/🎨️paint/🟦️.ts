@@ -5,7 +5,7 @@ import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { drawSceneNode } from "../../🎨️paint/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020.js";
 import {JSDOM} from "jsdom";
-import { wgpuTextCatalogFixture as catalogFixture, wgpuTextCatalogSchema as catalogSchema } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { wgpuTextCatalogFixture as catalogFixture, wgpuTextCatalogSchema as catalogSchema } from "@semio-tech/framework/ui/testing/fixtures";
 import fixture from "../🧫️fixtures/🎨️paint/🔣️.json";
 import { paintDrawingScene, type PathSegment, type StrokeStyle } from "@semio-tech/framework/2d";
 

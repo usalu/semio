@@ -1,4 +1,4 @@
-//! Puzzle2d mutation — `ChangeEdgeVisible`: changes an edge's visibility flag.
+//! 🧩️ Puzzle2d mutation — `ChangeEdgeVisible`: changes an edge's visibility flag.
 
 use semio_framework_value::paged::PagedUtf8;
 
@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 
 //#region 🔖️Mutation
-/// `change-edge-visible` payload.
+/// 🔗️ `change-edge-visible` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

@@ -21,13 +21,6 @@ fn real_world_animation() -> SemioAnimationSnapshot {
                 AnimChannel {
                     target: AnimTarget { node: "spine".into(), property: AnimTargetProperty::Rotation },
                     interpolation: AnimInterpolation::Step,
-                    // 🧭️ x/y/z/w chosen exactly f32-representable (0.5/0.25, not e.g. 0.7071)
-                    // -- accessor storage is real IEEE-754 single precision per glTF's own
-                    // componentType=FLOAT spec (see this file's module doc comment); an f64
-                    // value NOT exactly representable in f32 would not byte-for-byte survive
-                    // this round trip, which is glTF's own real numeric boundary, not a defect
-                    // in this bridge -- picking exact values here isolates the MAPPING's
-                    // correctness from that separately-documented precision fact.
                     keyframes: vec![AnimKeyframe { t: 0.5, value: AnimValue::Quat { value: SemioQuaternion { x: 0.0, y: 0.0, z: 0.5, w: 0.25 } } }],
                 },
             ],

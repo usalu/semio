@@ -525,7 +525,6 @@ export function WorldLodBridge(props: WorldLodBridgeProps): ReactElement {
   const lodForWorldPosition = reactHostPort.useCallback((position: Vec3) => {
     const r = lodRuntimeRef.current;
     if (!r.depthVariable || !r.camera) return r.sceneLod;
-    // Parallel projection has uniform screen scale — depth-variable LOD collapses to the scene band (already zoom-aware).
     if (worldCameraIsOrthographic(r.camera)) return r.sceneLod;
     r.tmpWorld.set(position[0], position[1], position[2]);
     return lodFromCameraDistance(r.camera.position.distanceTo(r.tmpWorld), r.distanceReference);

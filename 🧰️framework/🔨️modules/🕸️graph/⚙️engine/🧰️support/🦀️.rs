@@ -164,8 +164,6 @@ pub struct MappedHeap<K: Ord, V: Eq + std::hash::Hash + Clone> {
 }
 
 impl<K: Ord, V: Eq + std::hash::Hash + Clone> Default for MappedHeap<K, V> {
-    // 🚫️async: E1 impl of external trait `std::default::Default` — must stay sync; mirrors `new()`'s
-    // literal (I/O-free) body directly. See R9, and the identical `Storage::default` fix above.
     fn default() -> Self {
         Self { heap: Vec::new(), position: std::collections::HashMap::new() }
     }
@@ -235,10 +233,6 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
         self.position.insert(self.heap[j].1.clone(), j);
     }
 
-    // 🚨️ was a dropped-future no-op throughout: `sift_up`/`sift_down`/`swap` were never awaited at
-    // ANY of their call sites in this struct (including here, sift_up/sift_down calling their own
-    // `swap`), so the whole `MappedHeap` never actually maintained the heap invariant — every push,
-    // decrease-key, and pop silently left `self.heap` in insertion order. See R10 header.
     fn sift_up(&mut self, mut i: usize) {
         while i > 0 {
             let parent = (i - 1) / 2;

@@ -1,4 +1,4 @@
-//! Direct text identity for `embed-font-file`.
+//! 🆔️ Direct text identity for `embed-font-file`.
 
 pub const OPCODE: &str = "embed-font-file";
 pub const TEXT_OPCODE: &str = OPCODE;

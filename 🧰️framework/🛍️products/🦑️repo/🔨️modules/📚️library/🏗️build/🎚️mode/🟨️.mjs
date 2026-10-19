@@ -3,7 +3,7 @@ import { buildModesV1 } from "../../../../../../🔨️modules/🏃️process/�
 /** 🎯️ Fixed preparation and release targets retain the mode encoded by their workflow. */
 export function fixedTargetBuildMode(name) {
   if (/^(?:prepare|activate|serve|dev|run|smoke|native-build|wasm|build|mcp)(?:-|$)/.test(name) && /-release$/.test(name)) return "release";
-  if (/^(?:prepare|activate|serve|dev|run|smoke|native-build|wasm|build|mcp)(?:-|$)/.test(name) && /-prototype$/.test(name) || /^(?:prepare|activate|serve|dev|run|smoke)(?:-|$)/.test(name) && /-dev$/.test(name) || ["dev", "serve", "prepare-e2e", "serve-e2e", "test-e2e"].includes(name)) return "prototype";
+  if (/^(?:prepare|activate|serve|dev|run|smoke|native-build|wasm|build|mcp)(?:-|$)/.test(name) && /-prototype$/.test(name) || /^(?:prepare|activate|serve|dev|run|smoke)(?:-|$)/.test(name) && /-dev$/.test(name) || ["dev", "serve", "prepare-e2e", "serve-e2e"].includes(name)) return "prototype";
   return undefined;
 }
 

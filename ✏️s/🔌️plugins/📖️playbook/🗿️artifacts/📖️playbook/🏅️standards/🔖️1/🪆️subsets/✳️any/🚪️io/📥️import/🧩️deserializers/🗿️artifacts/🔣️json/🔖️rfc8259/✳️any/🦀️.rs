@@ -1,4 +1,4 @@
-//! playbook <- json
+//! 📖️ playbook <- json
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix: `JsonSnapshot.value` was retyped from `serde_json::Value` to
 //! stdio's own lexeme-preserving `JsonValue` (own type, `#[serde(tag = "kind")]` — an intentional

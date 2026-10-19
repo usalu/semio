@@ -1,7 +1,7 @@
 use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
 use semio_framework_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, TabKind, WindowStackTabState, WindowState};
 use semio_framework_ui_tui_core::geometry::{Rect, Size};
-use semio_framework_ui_tui_frame::layout::WindowStackCorner;
+use semio_framework_ui_tui_core::docking::WindowStackCorner;
 use semio_framework_ui_tui_core::theme::{Role, Theme};
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -51,7 +51,7 @@ fn mask(ch: char) -> u8 {
 #[test]
 fn window_contour_fixture_matches_connected_direction_graph_and_independent_raster() {
     assert!(include_str!("🥒️.feature").starts_with("@capability-tui-window-contour"));
-    let fixture = parse(include_str!("../../🧫️fixtures/🖼️window-contour/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let fixture = parse(include_str!("../🧫️fixtures/🖼️window-contour/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     for appearance in [AppearanceName::Dark, AppearanceName::Light] {
         let theme = Theme::new(appearance);
         for case in fixture.get("cases").unwrap().as_array().unwrap() {

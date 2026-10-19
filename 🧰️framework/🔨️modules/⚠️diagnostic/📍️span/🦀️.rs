@@ -28,8 +28,8 @@ impl semio_framework_value::ToValue for TextSpan {
 
 /// 🌉️ Mirror of the `ToValue` bridge above.
 impl semio_framework_value::FromValue for TextSpan {
-    fn from_value_controlled(value: &semio_framework_value::DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { crate::component::controlled::decode_span(value, c) }
-    fn default_value_controlled(c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { c.checkpoint()?; Ok(Self::default()) }
+    fn from_value_controlled(value: &semio_framework_value::DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { crate::component::controlled::decode_span(value, c) }
+    fn default_value_controlled(c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { c.checkpoint()?; Ok(Self::default()) }
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         let entries = match value {
             semio_framework_value::DslValue::Object(entries) => entries,

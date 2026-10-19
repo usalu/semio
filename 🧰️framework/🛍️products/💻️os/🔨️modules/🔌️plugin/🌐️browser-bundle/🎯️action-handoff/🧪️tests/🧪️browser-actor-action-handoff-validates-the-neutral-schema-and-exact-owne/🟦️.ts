@@ -1,5 +1,5 @@
-import * as ModuleUnderTest from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
-import * as Dep0 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
+import * as ModuleUnderTest from "@semio-tech/framework/browser-bundle/action-handoff";
+import * as Dep0 from "@semio-tech/framework/browser-bundle/action-handoff/requests";
 import * as Dep1 from "@semio-tech/framework/browser-bundle/action-handoff/command";
 import * as Dep2 from "@semio-tech/framework/browser-bundle/action-handoff/intent";
 import { decodeAppCommand as Dep3decodeAppCommand } from "@semio-tech/framework/app-channel";

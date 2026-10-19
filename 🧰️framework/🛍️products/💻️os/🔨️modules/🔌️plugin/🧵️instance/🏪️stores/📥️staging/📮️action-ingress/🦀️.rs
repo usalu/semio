@@ -120,7 +120,7 @@ impl OriginalParsedCommandSource{
  /// 🪹️ The fixed receiving header owns no body allocation before the actual issuer funds decoding.
  pub fn new(kind:OriginalParsedCommandKind)->Self{Self{kind,envelope:None,args:None,view_source:None,view:None,action_address:None,command_address:None,meta:None,failure:None,args_extracted:false}}
  /// 🫴️ Fixed typed address slots receive exact original text backing without allocating a copied projection.
- pub fn prepare(&mut self,control:&mut semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant,maximum_work:u64)->semio_framework_job_native_decode::OriginalNativeDecodeIssued<bool>{
+ pub fn prepare(&mut self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,maximum_work:u64)->semio_framework_job_native_decode::OriginalNativeDecodeIssued<bool>{
   let mut progress=RetainedCloneProgress::default();let mut work=0usize;
   let value=(||{
    if maximum_work<128{return Ok(false)}

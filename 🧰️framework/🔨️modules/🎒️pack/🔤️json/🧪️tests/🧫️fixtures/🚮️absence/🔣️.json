@@ -19,14 +19,8 @@
   "testDependencies": [
     "typescript",
     "@types/bun",
-    "bun-types",
     "@types/node",
-    "undici-types",
     "ajv",
-    "fast-deep-equal",
-    "fast-uri",
-    "json-schema-traverse",
-    "require-from-string",
     "@iarna/toml",
     "jsonc-parser"
   ]

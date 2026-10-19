@@ -3,7 +3,7 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { inspectRustModuleChildren, listModuleTree, readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { inspectRustModuleChildren, listModuleTree, readModuleTreeSource } from "@semio-tech/framework-compiler-rs/syntax/module-tree";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧯️test-support/🔣️.json"), "utf8"));
 const scratch = mkdtempSync(join(tmpdir(), "semio-test-support-"));

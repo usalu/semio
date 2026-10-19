@@ -192,21 +192,12 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
     `{workspaceRoot}/${locationPath(vocabulary, vocabulary.testOracleRegistryLocation)}`,
     `{workspaceRoot}/${locationPath(vocabulary, vocabulary.testSchemaLocation)}`,
     `{workspaceRoot}/${TAXONOMY_REL}`,
-    // 🧩️Whatever the platform itself is made of, wherever the taxonomy says it lives.
     `{workspaceRoot}/${domain}/**/*`,
-    // 🧩️And every owner contribution, so adding or changing an oracle invalidates the cases that use it.
     `{workspaceRoot}/**/${vocabulary.testOraclesDirName}/**/*`,
-    // 🦀️The rust adapter's own crate root, wherever it actually sits — often an ancestor of the owner.
     ...(rustSutCrate === null ? [] : [`{workspaceRoot}/${rustSutCrate}/**/*`]),
-    // 🔮️Every path-based oracle host package an ancestor (or the owner itself) contributes: the crate
-    // or module a generated host actually links, not just the manifest that names it.
     ...oracleContributionPaths(workspaceRoot, vocabulary, ownerRel).map((path) => `{workspaceRoot}/${path}/**/*`),
     "sharedGlobals",
   ];
-  // 🧭️ A change to the owner's own sources must invalidate the case, or a subject regression would
-  // be served from cache as a pass. Fixture directories are excluded here because the owner fixture glob
-  // above already covers them: a real-world fixture is megabytes, and Nx hashes file CONTENT, so
-  // counting it twice per target doubles the hashing cost of every case that owns one.
   inputs.push(`{workspaceRoot}/${ownerRel}/**/*`);
   inputs.push(`!{workspaceRoot}/${ownerRel}/**/${vocabulary.testFixturesDirName}/**/*`);
   return inputs;
@@ -219,8 +210,6 @@ function target(domain, command, inputs, cacheable = true, scope, forwardAllArgs
     options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
     inputs,
     configurations: Object.fromEntries(["prototype", "release"].map(mode => [mode, { env: { SEMIO_TEST_OUTPUT_SCOPE: `${scope}/${mode}` } }])),
-    // 📤️Only the durable products of a run are cache outputs. The work directory holds each case's
-    // mutable fixture copies, which are large, regenerated on every run and meaningless to restore.
     outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/tasks/${scope}/{options.env.SEMIO_BUILD_MODE}/${child}`),
     cache: cacheable,
   });

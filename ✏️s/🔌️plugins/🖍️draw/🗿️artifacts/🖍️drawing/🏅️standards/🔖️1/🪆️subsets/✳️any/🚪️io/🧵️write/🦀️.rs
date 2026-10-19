@@ -1,5 +1,5 @@
 //! 📄️ Fixed scalar buffers and explicit typed page metadata reserve for owned writers.
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 pub const PAGE:usize=3072;
 pub struct Fragment{pub bytes:[u8;4096],pub len:usize,pub at:usize}
 impl Default for Fragment{fn default()->Self{Self{bytes:[0;4096],len:0,at:0}}}

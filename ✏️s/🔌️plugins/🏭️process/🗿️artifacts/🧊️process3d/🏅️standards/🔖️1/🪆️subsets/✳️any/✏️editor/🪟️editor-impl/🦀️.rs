@@ -12,8 +12,6 @@ pub(super) fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, con
     let labels = process3d_labels(view_state);
     let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);
     let base_body_key = body_key.split_once(':').map_or(body_key, |(base, _)| base);
-    // 🪟️ One `TreeWindows` per panel body: the host's open/scroll state for exactly the body being
-    // rendered, read straight off `ViewModel.tree_windows` (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, base_body_key);
     match base_body_key {
         PROCESS_3D_PLAY_BODY_MAIN => workpiece::render(doc, config, active_utility).map(semio_framework_plugin::built_to_component_tree),
@@ -241,9 +239,6 @@ impl ArtifactEditor for Process3dPlayApp {
                 if schema != semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA && schema != "3d.process" {
                     return Err(MediaError::Payload("geometry:in".into(), format!("unrecognized schema: {schema}")));
                 }
-                // 📦️ `export_process3d_model("step")` hands back raw (non-base64) STEP text — the
-                // "stdio.step" format is not binary — so this re-encodes it as base64 to satisfy
-                // `import_process3d_model`'s `data:...,<base64>` expectation.
                 let data_url = format!("data:application/octet-stream;base64,{}", base64_codec::base64_standard_encode(json.as_bytes()));
                 match semio_s_artifact_process_process3d_io::import_process3d_model("geometry-in.step", &data_url) {
                     Some(snapshot) => Ok(Emit { effects: vec![reset_process3d_document_effect(&snapshot)], ..Default::default() }),

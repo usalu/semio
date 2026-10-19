@@ -1,4 +1,4 @@
-//! Inverse for `change-storey-drift-x-m`.
+//! ↩️ Inverse for `change-storey-drift-x-m`.
 use crate::change_storey_drift_xm::ChangeStoreyDriftXM;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

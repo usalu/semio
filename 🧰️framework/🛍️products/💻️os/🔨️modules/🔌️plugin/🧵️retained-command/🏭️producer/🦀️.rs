@@ -1,6 +1,6 @@
 //! 🏭️ Original retained producers transfer every source only inside their actual native construction turn.
 use super::{ArtifactCommandWork,ArtifactRetainedCommandInputs,ArtifactRetainedCommandPayload,ArtifactRetainedCommandJob};
-use crate::tool_contract::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest;
 use semio_framework::{ErasedToolJob,action_bus::{OriginalToolJobIdentity,OriginalToolConstructionScope,ToolJobAdmissionDemand,admit_original_tool_construction_scoped}};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::RetainedCloneProgress};
@@ -27,7 +27,7 @@ pub fn admit_retained_tool_producer_measured_scoped<A:super::ArtifactApp,W:Artif
   let (work,extra)=work(request.as_ref().expect("admitted original retained request"),scope)?;
   let original=request.take().expect("admitted original retained request");
   let ArtifactOwnedToolJobRequest{source_binding:_,retained,command,input,checkpoint,operation,controller_id,tool_id,payload_schema_id,contract:_,decoded_items:_,app_instance_id,parent_document_id,canonical_base_revision,authoring_seed,snapshot,snapshot_read,config,window_config,history,interaction_state,interaction_hover,context,instance_operation_owner,output_chunks,completion}=original;
-  let operation_context=crate::app_views::AppOperationContext{app_instance_id,parent_document_id,operation_id:operation.operation.0,generation:operation.generation.0,canonical_base_revision,retained,authoring_seed};
+  let operation_context=semio_framework_plugin_decl_views::AppOperationContext{app_instance_id,parent_document_id,operation_id:operation.operation.0,generation:operation.generation.0,canonical_base_revision,retained,authoring_seed};
   let mut payload=ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs{command:*command.into_box(),snapshot,snapshot_read,config,history,interaction_state,interaction_hover,context:Some(context),operation:operation_context,completion},command_id,maximum_raw_bytes,maximum_work_items,Box::new(work));
   payload.producer_window_config=window_config;payload.producer_instance_operation_owner=Some(instance_operation_owner);payload.producer_output_chunks=Some(output_chunks);payload.producer_controller_id=Some(controller_id);payload.producer_tool_id=Some(tool_id);payload.producer_payload_schema_id=Some(payload_schema_id);
   let mut job=ArtifactRetainedCommandJob::from_payload(payload,input,checkpoint);

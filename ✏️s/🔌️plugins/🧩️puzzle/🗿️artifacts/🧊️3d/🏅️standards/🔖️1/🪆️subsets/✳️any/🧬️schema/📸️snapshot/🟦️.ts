@@ -23,13 +23,13 @@ export interface Puzzle3dKindCatalogs{objects:Puzzle3dCatalogObjectKind[];vortic
 export interface Puzzle3dKindCompatibility{source:string;target:string;bidirectional:boolean;important:boolean;specificity:Puzzle3dCompatSpecificity}
 export interface Puzzle3dMeta{kindCatalogs:Puzzle3dKindCatalogs|null;kindCompatibility:Puzzle3dKindCompatibility[]}
 export interface Puzzle3dSnapshot{
- /** @state artifact */ schema:string;
- /** @state artifact */ domain:string;
- /** @state artifact */ meta:Puzzle3dMeta;
- /** @state artifact */ objects:Puzzle3dObject[];
- /** @state artifact */ attractions:Puzzle3dAttraction[];
- /** @state artifact */ targetVolumes:Puzzle3dTargetVolume[];
- /** @state artifact */ references:Puzzle3dReference[];
+ /** 📐️ @state artifact */ schema:string;
+ /** 🧭️ @state artifact */ domain:string;
+ /** 📇️ @state artifact */ meta:Puzzle3dMeta;
+ /** 📦️ @state artifact */ objects:Puzzle3dObject[];
+ /** 🎡️ @state artifact */ attractions:Puzzle3dAttraction[];
+ /** 🔊️ @state artifact */ targetVolumes:Puzzle3dTargetVolume[];
+ /** 📎️ @state artifact */ references:Puzzle3dReference[];
 }
 /** 🚪️ Reject an invalid canonical native field. */
 export class puzzlePuzzle3dArtifactGuardRefusal extends Error{constructor(readonly at:string,readonly why:string){super(at+": "+why)}}

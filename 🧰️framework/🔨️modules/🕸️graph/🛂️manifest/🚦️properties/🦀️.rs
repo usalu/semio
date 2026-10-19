@@ -1,6 +1,7 @@
 //! 🌿️ Iterative actual property variants retain all owned backing and partial values.
 use super::{PropertyBag,PropertyValue};
-use semio_framework_value::{DecodedValue,DslValue,FromValue,NativeDecodeControl,NativeEncodeControl,Number,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, DslValue, FromValue, NativeEncodeControl, Number, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::NativeSchemaControl;
 fn grow<T,C:NativeSchemaControl>(values:&mut Vec<T>,control:&mut C)->Result<(),ValueError>{if values.len()==values.capacity(){let count=values.capacity().max(1).checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"property frontier overflow"))?;let mut next=control.allocate_vec(count)?;for _ in 0..values.len(){control.step()?;}next.extend(std::mem::take(values));*values=next;}Ok(())}
 fn push<T:FromValue,C:NativeSchemaControl>(values:&mut Vec<T>,value:T,control:&mut C)->Result<(),ValueError>{let value=DecodedValue::new(value,T::retire_decoded);grow(values,control)?;values.push(value.take());Ok(())}

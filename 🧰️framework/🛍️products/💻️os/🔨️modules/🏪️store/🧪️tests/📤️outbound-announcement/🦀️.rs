@@ -100,7 +100,7 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
 
 #[semio_framework_async_macros::async_test]
 async fn every_locally_authored_operation_is_announced_exactly_once() {
-    let fixture: Fixture = serde_json::from_str(include_str!("../🧫️fixtures/📤️outbound-announcement/🔣️.json")).expect("outbound announcement fixture");
+    let fixture: Fixture = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/📤️outbound-announcement/🔣️.json")).expect("outbound announcement fixture");
     assert_eq!(fixture.schema, "semio.store.outbound-announcement/v1");
     let mut steps = 0usize;
     for vector in &fixture.vectors {

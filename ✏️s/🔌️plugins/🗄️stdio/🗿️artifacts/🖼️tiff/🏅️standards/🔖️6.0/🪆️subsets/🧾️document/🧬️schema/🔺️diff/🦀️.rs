@@ -45,7 +45,6 @@ pub struct TiffTagsDiff {
 }
 
 impl TiffTagsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -84,7 +83,6 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
 
     for r in d2.removed {
         if added.remove(&r).is_some() {
-            // A d2-removal of a d1-added tag annihilates the add (recipe's canonical case).
         } else {
             modified.remove(&r);
             removed.insert(r);
@@ -92,12 +90,10 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
     }
     for m in d2.modified {
         if let Some(a) = added.get_mut(&m.tag) {
-            // d2 patch on a d1-added tag patches INTO the still-pending added payload.
             a.values = m.values;
         } else if !removed.contains(&m.tag) {
             modified.insert(m.tag, m);
         }
-        // modified-of-removed (by d1) is illegal per the apply contract — ignored here too.
     }
     for a in d2.added {
         removed.remove(&a.tag);
@@ -219,7 +215,6 @@ pub struct TiffIfdDiff {
 }
 
 impl TiffIfdDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty() && self.blocks.is_none() && self.runs.is_empty()
     }

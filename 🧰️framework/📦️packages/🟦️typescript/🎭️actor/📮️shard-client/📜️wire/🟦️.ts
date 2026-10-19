@@ -1,2 +1,3 @@
 /** 🧩️ Public `@semio-tech/framework/actor/shard-client/wire` entry: explicit re-exports of the source module that owns each member. */
-export * from "@semio-tech/framework-actor/shard-client/wire";
+export { MAINTENANCE_LANE_DEFAULT_BUDGET, SHARD_COMMAND_MAXIMUM_PAGES, SHARD_FRAME_VARIANT_FIELDS, createGrantedBudgetTracker, createShardCommandIngressPages, interpretShardFrame, orderEnvelopesByLane } from "@semio-tech/framework-actor/shard-client/wire";
+export type { GrantedBudgetTracker, ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardCommandPageCursor, ShardEnvelope, ShardEventEnvelope, ShardFrame, ShardFrameDispatch, ShardJobBudget, ShardJobStep, ShardMetrics, ShardMetricsSample, ShardOrigin } from "@semio-tech/framework-actor/shard-client/wire";

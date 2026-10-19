@@ -44,6 +44,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateSetpointManag
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateSetpointManager> + From<crate::DeleteSetpointManager>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "setpoint-manager", kind: "create-setpoint-manager", record: "CreatedSetpointManager" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -65,7 +66,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "setpoint-manager", kind: "create-setpoint-manager", record: "CreatedSetpointManager" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

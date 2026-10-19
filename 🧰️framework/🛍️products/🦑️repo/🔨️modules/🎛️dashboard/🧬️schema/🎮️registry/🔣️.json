@@ -111,7 +111,7 @@
     },
     "AppliesTo": {
       "type": "object",
-      "description": "🎯️ Where a global axis is offered: on every command with a listed verb (tools included: their `buildFlags` are ignored, and an axis with nothing else to say is not offered on them), and on playgrounds when `playground` is true. Without `appliesTo` the axis is offered on every command the build runner runs.",
+      "description": "🎯️ Offer a global axis for every current and future authored command verb with all:true, or only listed verbs. Playground selection is independent and requires playground:true. Commands outside the build runner require an environment or argument effect; build flags alone are ignored. An absent appliesTo selects build-runner commands.",
       "properties": {
         "verbs": {
           "type": "array",
@@ -123,10 +123,41 @@
         },
         "playground": {
           "type": "boolean"
+        },
+        "all": {
+          "const": true
         }
       },
       "minProperties": 1,
-      "additionalProperties": false
+      "additionalProperties": false,
+      "not": {
+        "required": [
+          "all",
+          "verbs"
+        ]
+      },
+      "anyOf": [
+        {
+          "required": [
+            "all"
+          ]
+        },
+        {
+          "required": [
+            "verbs"
+          ]
+        },
+        {
+          "required": [
+            "playground"
+          ],
+          "properties": {
+            "playground": {
+              "const": true
+            }
+          }
+        }
+      ]
     },
     "ParameterValue": {
       "type": "object",

@@ -21,7 +21,8 @@ fn requests<T>(operation:impl FnOnce()->T)->(T,usize,usize){let restore=Restore(
 #[test]
 fn sqlite_snapshot_framework_dag_property_backing_is_admitted_before_actual_requests(){
  use semio_framework_graph_manifest::PropertyBag;
- use semio_framework_value::{NativeDecodeControl,ValueRefusalKind};
+ use semio_framework_value::ValueRefusalKind;
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  for cardinality in laws()["propertyMembers"]["cardinalities"].as_array().unwrap(){
   let count=cardinality.as_u64().unwrap()as usize;
   let value=DslValue::Object((0..count).map(|index|("\0".repeat(index),DslValue::float(index as f64))).collect());

@@ -22,27 +22,21 @@ pub struct Mat3 {
 impl Mat3 {
     pub const IDENTITY: Mat3 = Mat3 { rows: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]] };
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_rows(rows: [[f64; 3]; 3]) -> Self {
         Mat3 { rows }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_columns(c0: Vec3, c1: Vec3, c2: Vec3) -> Self {
         Mat3 { rows: [[c0.x, c1.x, c2.x], [c0.y, c1.y, c2.y], [c0.z, c1.z, c2.z]] }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn column(&self, i: usize) -> Vec3 {
         Vec3::new(self.rows[0][i], self.rows[1][i], self.rows[2][i])
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transform(&self, v: Vec3) -> Vec3 {
         Vec3::new(self.rows[0][0] * v.x + self.rows[0][1] * v.y + self.rows[0][2] * v.z, self.rows[1][0] * v.x + self.rows[1][1] * v.y + self.rows[1][2] * v.z, self.rows[2][0] * v.x + self.rows[2][1] * v.y + self.rows[2][2] * v.z)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transpose(&self) -> Mat3 {
         Mat3::from_rows([[self.rows[0][0], self.rows[1][0], self.rows[2][0]], [self.rows[0][1], self.rows[1][1], self.rows[2][1]], [self.rows[0][2], self.rows[1][2], self.rows[2][2]]])
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mul(&self, o: &Mat3) -> Mat3 {
         let mut out = [[0.0; 3]; 3];
         for (r, out_row) in out.iter_mut().enumerate() {
@@ -52,13 +46,11 @@ impl Mat3 {
         }
         Mat3::from_rows(out)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn determinant(&self) -> f64 {
         let m = &self.rows;
         m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
     }
     /// 🧭️ From an axis-angle rotation (Rodrigues' formula). `axis` need not be normalized.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_axis_angle(axis: Vec3, angle: f64) -> Mat3 {
         let a = axis.normalized().unwrap_or(Vec3::Z);
         let (s, c) = angle.sin_cos();
@@ -66,11 +58,9 @@ impl Mat3 {
         Mat3::from_rows([[t * a.x * a.x + c, t * a.x * a.y - s * a.z, t * a.x * a.z + s * a.y], [t * a.x * a.y + s * a.z, t * a.y * a.y + c, t * a.y * a.z - s * a.x], [t * a.x * a.z - s * a.y, t * a.y * a.z + s * a.x, t * a.z * a.z + c]])
     }
     /// 🧭️ The diagonal matrix `diag(d.x, d.y, d.z)` — an axis-aligned (possibly non-uniform) scale.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_diagonal(d: Vec3) -> Mat3 {
         Mat3::from_rows([[d.x, 0.0, 0.0], [0.0, d.y, 0.0], [0.0, 0.0, d.z]])
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scaled(&self, s: f64) -> Mat3 {
         let mut out = self.rows;
         for row in out.iter_mut() {
@@ -80,7 +70,6 @@ impl Mat3 {
         }
         Mat3::from_rows(out)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sub(&self, o: &Mat3) -> Mat3 {
         let mut out = [[0.0; 3]; 3];
         for (r, row) in out.iter_mut().enumerate() {
@@ -94,7 +83,6 @@ impl Mat3 {
     /// inverse, and `C` alone (unscaled by `det`) is the standard robust normal-transform matrix
     /// `(M⁻¹)ᵀ · det` — used by [`Affine3::apply_normal`] so a normal transform never divides by a
     /// near-zero determinant.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cofactor(&self) -> Mat3 {
         let m = &self.rows;
         let minor = |r0: usize, r1: usize, c0: usize, c1: usize| m[r0][c0] * m[r1][c1] - m[r0][c1] * m[r1][c0];
@@ -119,18 +107,15 @@ pub struct Quat {
 impl Quat {
     pub const IDENTITY: Quat = Quat { w: 1.0, x: 0.0, y: 0.0, z: 0.0 };
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_axis_angle(axis: Vec3, angle: f64) -> Self {
         let a = axis.normalized().unwrap_or(Vec3::Z);
         let half = angle * 0.5;
         let (s, c) = half.sin_cos();
         Quat { w: c, x: a.x * s, y: a.y * s, z: a.z * s }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn norm(self) -> f64 {
         (self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn normalized(self) -> Quat {
         let n = self.norm();
         if n <= f64::EPSILON {
@@ -139,12 +124,10 @@ impl Quat {
             Quat { w: self.w / n, x: self.x / n, y: self.y / n, z: self.z / n }
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn conjugate(self) -> Quat {
         Quat { w: self.w, x: -self.x, y: -self.y, z: -self.z }
     }
     #[allow(clippy::should_implement_trait)]
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mul(self, o: Quat) -> Quat {
         Quat {
             w: self.w * o.w - self.x * o.x - self.y * o.y - self.z * o.z,
@@ -153,13 +136,11 @@ impl Quat {
             z: self.w * o.z + self.x * o.y - self.y * o.x + self.z * o.w,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rotate(self, v: Vec3) -> Vec3 {
         let qv = Quat { w: 0.0, x: v.x, y: v.y, z: v.z };
         let r = self.mul(qv).mul(self.conjugate());
         Vec3::new(r.x, r.y, r.z)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_mat3(self) -> Mat3 {
         let q = self.normalized();
         let (w, x, y, z) = (q.w, q.x, q.y, q.z);
@@ -171,7 +152,6 @@ impl Quat {
     }
     /// 🧭️ Recovers the unit quaternion for a proper rotation matrix (`det ≈ +1`), via Shepperd's
     /// branch-on-largest-diagonal method for numerical stability near every rotation angle.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_mat3(m: &Mat3) -> Quat {
         let r = &m.rows;
         let trace = r[0][0] + r[1][1] + r[2][2];
@@ -191,7 +171,6 @@ impl Quat {
         q.normalized()
     }
     /// 🧭️ Spherical linear interpolation, taking the short arc between `self` and `o`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn slerp(self, o: Quat, t: f64) -> Quat {
         let a = self.normalized();
         let mut b = o.normalized();
@@ -231,39 +210,31 @@ pub struct Trsf {
 impl Trsf {
     pub const IDENTITY: Trsf = Trsf { rotation: Quat::IDENTITY, translation: Vec3::ZERO, scale: 1.0 };
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn translation(t: Vec3) -> Self {
         Trsf { translation: t, ..Trsf::IDENTITY }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rotation(q: Quat) -> Self {
         Trsf { rotation: q, ..Trsf::IDENTITY }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn uniform_scale(s: f64) -> Self {
         Trsf { scale: s, ..Trsf::IDENTITY }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_point(&self, p: Pnt3) -> Pnt3 {
         let scaled = p.to_vec() * self.scale;
         Pnt3::from_array(self.rotation.rotate(scaled).to_array()) + self.translation
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_vector(&self, v: Vec3) -> Vec3 {
         self.rotation.rotate(v * self.scale)
     }
     /// 🧭️ Transforms a surface normal correctly under non-uniform-free `Trsf` (uniform scale
     /// leaves direction unchanged, so this is just the rotation — kept as its own method so
     /// callers never reach for `apply_vector` on a normal by habit).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_normal(&self, n: Vec3) -> Vec3 {
         self.rotation.rotate(n)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn semio_compose_rs(&self, inner: &Trsf) -> Trsf {
         Trsf { rotation: self.rotation.mul(inner.rotation), translation: self.apply_vector(inner.translation) + self.translation, scale: self.scale * inner.scale }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self) -> Trsf {
         let inv_rot = self.rotation.conjugate();
         let inv_scale = 1.0 / self.scale;
@@ -294,22 +265,18 @@ impl Affine3 {
     pub const IDENTITY: Affine3 = Affine3 { linear: Mat3::IDENTITY, translation: Vec3::ZERO };
 
     /// 🧭️ Lifts a rigid+uniform-scale [`Trsf`] into the affine group.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_trsf(t: &Trsf) -> Self {
         Affine3 { linear: t.rotation.to_mat3().scaled(t.scale), translation: t.translation }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn translation(t: Vec3) -> Self {
         Affine3 { translation: t, ..Affine3::IDENTITY }
     }
     /// 🧭️ A pure rotation about the world origin — compose with [`Self::translation`] (or use
     /// [`Self::rotation_about`] directly) for rotation about an arbitrary point.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rotation_axis_angle(axis: Vec3, angle: f64) -> Self {
         Affine3 { linear: Mat3::from_axis_angle(axis, angle), translation: Vec3::ZERO }
     }
     /// 🧭️ A rotation about an explicit `origin` — the origin is the map's one fixed point.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn rotation_about(origin: Pnt3, axis: Vec3, angle: f64) -> Self {
         let linear = Mat3::from_axis_angle(axis, angle);
         let t = origin.to_vec() - linear.transform(origin.to_vec());
@@ -318,7 +285,6 @@ impl Affine3 {
     /// 🧭️ Per-axis (possibly non-uniform) scale by `factors` about `center` — `center` is the
     /// map's one fixed point. `factors` uses the world axes; compose with a rotation for scale
     /// along arbitrary axes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scaling(center: Pnt3, factors: Vec3) -> Self {
         let linear = Mat3::from_diagonal(factors);
         let t = center.to_vec() - linear.transform(center.to_vec());
@@ -326,7 +292,6 @@ impl Affine3 {
     }
     /// 🧭️ Reflection across the plane through `origin` with unit `normal` (Householder matrix
     /// `I - 2·n·nᵀ`); `origin` is a fixed point of the map.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mirror(origin: Pnt3, normal: Vec3) -> Self {
         let n = normal.normalized().unwrap_or(Vec3::Z);
         let outer = Mat3::from_rows([[n.x * n.x, n.x * n.y, n.x * n.z], [n.y * n.x, n.y * n.y, n.y * n.z], [n.z * n.x, n.z * n.y, n.z * n.z]]);
@@ -334,11 +299,9 @@ impl Affine3 {
         let t = origin.to_vec() - linear.transform(origin.to_vec());
         Affine3 { linear, translation: t }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_point(&self, p: Pnt3) -> Pnt3 {
         Pnt3::from_array(self.linear.transform(p.to_vec()).to_array()) + self.translation
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_vector(&self, v: Vec3) -> Vec3 {
         self.linear.transform(v)
     }
@@ -348,21 +311,17 @@ impl Affine3 {
     /// normalize the result. A `det < 0` (mirror/reflection) flips the returned direction, which
     /// is why every caller that needs a consistently-outward face normal also flips `Face::flipped`
     /// when `self.determinant() < 0`, rather than expecting this method to compensate.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_normal(&self, n: Vec3) -> Vec3 {
         self.linear.cofactor().transform(n)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn determinant(&self) -> f64 {
         self.linear.determinant()
     }
     /// 🧭️ `self ∘ inner`: applying the result to a point matches applying `inner` then `self`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compose(&self, inner: &Affine3) -> Affine3 {
         Affine3 { linear: self.linear.mul(&inner.linear), translation: self.apply_vector(inner.translation) + self.translation }
     }
     /// 🧭️ `None` iff `linear` is (numerically) singular.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self) -> Option<Affine3> {
         let det = self.linear.determinant();
         if det.abs() <= 1e-300 {
@@ -381,7 +340,6 @@ impl Affine3 {
     /// `linear/uniform_scale` must be orthogonal (checked numerically) to qualify at all; a
     /// negative `det` means that orthogonal matrix is an improper rotation (`det = -1`), factored
     /// as `rotation · diag(1,1,-1)` so `rotation` itself is always a proper (`det = +1`) quaternion.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_similarity(&self) -> Option<(Quat, f64, bool)> {
         let det = self.linear.determinant();
         if det.abs() <= 1e-12 {
@@ -413,7 +371,6 @@ impl Affine3 {
     /// the geometry it bounds. Exact and cheap (`= uniform_scale`) for a similarity; otherwise the
     /// largest root of `MᵀM`'s cubic characteristic polynomial (`M = linear`, symmetric positive
     /// semi-definite, so every root is real and ≥ 0), square-rooted.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn max_singular_value(&self) -> f64 {
         if let Some((_, scale, _)) = self.is_similarity() {
             return scale;
@@ -448,7 +405,6 @@ impl Frame3 {
 
     /// 🧭️ Builds a frame from an origin and a normal `z`-axis; `x`/`y` are derived deterministically
     /// via [`Vec3::any_orthogonal`] so the same normal always produces the same frame.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_normal(origin: Pnt3, normal: Vec3) -> Option<Frame3> {
         let z = normal.normalized()?;
         let x = z.any_orthogonal();
@@ -457,7 +413,6 @@ impl Frame3 {
     }
     /// 🧭️ Builds a frame from an origin, a preferred `x` direction and a `z` normal — `x` is
     /// Gram-Schmidt orthogonalized against `z`, `y` completes the right-handed triad.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_x_z(origin: Pnt3, x_hint: Vec3, z_hint: Vec3) -> Option<Frame3> {
         let z = z_hint.normalized()?;
         let x_proj = x_hint - z * x_hint.dot(z);
@@ -465,20 +420,16 @@ impl Frame3 {
         let y = z.cross(x);
         Some(Frame3 { origin, x, y, z })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_world(&self, local: Pnt3) -> Pnt3 {
         self.origin + self.x * local.x + self.y * local.y + self.z * local.z
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_world_vector(&self, local: Vec3) -> Vec3 {
         self.x * local.x + self.y * local.y + self.z * local.z
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_local(&self, world: Pnt3) -> Pnt3 {
         let v = world - self.origin;
         Pnt3::new(v.dot(self.x), v.dot(self.y), v.dot(self.z))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_local_vector(&self, world: Vec3) -> Vec3 {
         Vec3::new(world.dot(self.x), world.dot(self.y), world.dot(self.z))
     }
@@ -490,7 +441,6 @@ impl Frame3 {
     /// `Frame3` uses `frame.x`/`frame.y`/`frame.z` directly in its `eval`/`derivatives`, never
     /// re-derives `z`. Only valid for a similarity map — call under [`Affine3::is_similarity`]'s
     /// `Some` arm, passing back its own `scale`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transformed(&self, map: &Affine3, scale: f64) -> Frame3 {
         let inv_scale = 1.0 / scale;
         Frame3 { origin: map.apply_point(self.origin), x: map.apply_vector(self.x) * inv_scale, y: map.apply_vector(self.y) * inv_scale, z: map.apply_vector(self.z) * inv_scale }

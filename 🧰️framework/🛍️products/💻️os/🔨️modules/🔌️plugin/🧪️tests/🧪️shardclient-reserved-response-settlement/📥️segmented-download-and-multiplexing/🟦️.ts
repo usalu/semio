@@ -98,8 +98,6 @@ export function registerSegmentedDownloadAndMultiplexingTests(kit: ShardClientSe
       expect(Object.prototype.toString.call(first)).toBe("[object Uint8Array]");
       expect(admitSegmentedDownloadChunk(first)).toBe(first);
       await expect(api.takeSegmentedDownloadChunk(1, 91n)).resolves.toBeUndefined();
-      // 🔮️ Independent oracle for the same bytes: handed on RAW, that is precisely what every hop refuses —
-      // which is why the fault read as an exceeded byte cap while nothing was over any cap at all.
       expect(() => admitSegmentedDownloadChunk({ tag: "some", val: chunk })).toThrow(SEGMENTED_DOWNLOAD_REFUSAL.chunkType);
       expect(() => admitSegmentedDownloadChunk({ tag: "none" })).toThrow(SEGMENTED_DOWNLOAD_REFUSAL.chunkType);
     });
@@ -193,7 +191,6 @@ export function registerSegmentedDownloadAndMultiplexingTests(kit: ShardClientSe
       const p2 = client.activate("b", "https://x/b.js", [], BUDGET);
       await flushAdmission();
       const [msgA, msgB] = workers[0]!.sent as { readonly requestId: string }[];
-      // out-of-order reply: b's activate lands before a's
       workers[0]!.deliver({ kind: "result", requestId: msgB!.requestId, ok: true, value: undefined });
       workers[0]!.deliver({ kind: "result", requestId: msgA!.requestId, ok: true, value: undefined });
       await expect(p1).resolves.toBeUndefined();
@@ -208,7 +205,7 @@ export function registerSegmentedDownloadAndMultiplexingTests(kit: ShardClientSe
         void client.activate(id, "https://x/y.js", [], BUDGET);
         return client.shardIndexFor(id);
       });
-      expect(new Set(indices).has(3)).toBe(false); // shard 3 reserved exclusive
+      expect(new Set(indices).has(3)).toBe(false);
       expect(indices).toEqual([0, 1, 2]);
     });
   });

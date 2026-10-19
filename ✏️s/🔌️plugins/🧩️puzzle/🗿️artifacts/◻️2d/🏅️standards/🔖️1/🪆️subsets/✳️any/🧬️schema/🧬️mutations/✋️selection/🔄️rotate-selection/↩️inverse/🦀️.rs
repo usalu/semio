@@ -1,10 +1,11 @@
-//! rotation turns (exact, never a negated angle that would accumulate float error). Nothing moved ⇒
+//! 📐️ rotation turns (exact, never a negated angle that would accumulate float error). Nothing moved ⇒
 //! ↩️ Inverse for `RotateSelection` — the absolute setters restoring every BASE position and handle the
 //! `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::replace_node_handle::ReplaceNodeHandle;
 use {crate::standards::v1::subsets::any::schema::mutations::move_node, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_rotated, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection, crate::standards::v1::subsets::any::schema::mutations::replace_node_handle};
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::rotate_selection::component::RotateSelection;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<RotateSelection> + From<MoveNode> + From<ReplaceNodeHandle>>(payload: &super::RotateSelection, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

@@ -1,7 +1,8 @@
 //! 🏭️ Borrowed VDI catalogue, custom tagged values and physical cells before typed ownership.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{RecordValue as R,FieldValue as F};
-use semio_framework_value::{DslValue as V,NativeDecodeControl};
+use semio_framework_value::DslValue as V;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 type Object<'a>=&'a[(String,V)];

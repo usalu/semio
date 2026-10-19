@@ -24,10 +24,6 @@ pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnaps
         let base64_part = payload.payload.split_once(',').map_or(payload.payload.as_str(), |(_, data)| data);
         let bytes = base64_codec::base64_standard_decode(base64_part).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.payload"), error.to_string()))?;
         let node = doc.snapshot.graph.nodes.iter().find(|row| row.id == node_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.node"), format!("workflow node `{node_id}` not found")))?;
-        // 📥️ Decoding/validation happens here; the decoded content is applied to the
-        // node's own document-ref document by the host (a cross-document operation the
-        // shell can't author from its own store), so this arm emits no studio document
-        // operation.
         let _imported_document = semio_framework_os::import_os_app_instance_media_kind(node, &bytes, &format_kind).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.import"), error))?;
         config_mutations.push(SpaceConfigMutation::SetPendingImport(PendingImportSetting { node_id: None, format: None }));
     }

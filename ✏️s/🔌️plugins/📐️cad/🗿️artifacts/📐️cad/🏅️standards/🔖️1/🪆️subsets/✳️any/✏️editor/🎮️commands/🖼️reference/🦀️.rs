@@ -129,11 +129,6 @@ pub mod set_reference_selection {
         runtime.selected_reference_model_definition_id = Some(pane_id.model_definition_id().into());
         runtime.selected_reference_id = payload.reference_id.clone();
         runtime.selected_node_ids.clear();
-        // 🕹️ Mesh object selection is the framework-owned `"cad"` domain: a reference pick clears it
-        // through the sanctioned `InteractionWrite` lane (never a new verb), so the inspection panel —
-        // which lets a live object selection win — shows the reference the user just picked. An
-        // empty `Replace` is a no-op by `next_selection`'s contract, so the write SUBTRACTS the ids
-        // the dispatch snapshot says are selected (the same shape as puzzle 3d's `clear_selection`).
         let mut emit = Emit::config(vec![snapshot_of(&runtime, cfg.snapshot)?]);
         if !ctx.interaction.ids.is_empty() {
             let granularity = if ctx.interaction.granularity.is_empty() { CAD_WORLD_PICK_GRANULARITY } else { ctx.interaction.granularity.as_str() };

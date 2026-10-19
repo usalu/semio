@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemDof;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;

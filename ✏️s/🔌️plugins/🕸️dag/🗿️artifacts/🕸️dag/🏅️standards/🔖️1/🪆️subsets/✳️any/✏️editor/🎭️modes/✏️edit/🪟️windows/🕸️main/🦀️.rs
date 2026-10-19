@@ -39,8 +39,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 🕹️ Populated post-hoc by `create_dag_app`'s `.window_kind_interactions(..)` call — the
-        // `graph` domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         interactions: Vec::new(),
     }
 }

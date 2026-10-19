@@ -1,4 +1,4 @@
-//! (panels, windows, commands) reaches for. One struct for the whole app: the artifact tree, the
+//! 🔲️ (panels, windows, commands) reaches for. One struct for the whole app: the artifact tree, the
 //! 🗣️ Fem2d play app — the single `app_labels!` block plus the locale resolvers every taxonomy node
 //! inspector and the results/playback panel all resolve their nouns, field names and verbs here, so
 //! a term is spelled once per locale and never drifts between two panels showing the same entity.

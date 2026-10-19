@@ -1,6 +1,6 @@
 //! 🔗️ Decoded and pressed native operations keep the original owner and captured retirement issuer.
 use super::*;
-use semio_framework_value::FactoryOwnedSourceAuthority;
+use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 /// 🧳️ Retains the same operation through source birth, projection handoff, and exact issuer closure.
 pub struct ArtifactMutationSource<M:Send+Sync+'static>{
  authority:ManuallyDrop<Option<FactoryOwnedSourceAuthority<M>>>,

@@ -23,9 +23,6 @@ async fn scene_svg_embeds_active_asset_name_and_shot_shape() {
     let asset = active_asset(&snapshot).expect("default fixture asset");
     assert_eq!((width, height), (shot.width, shot.height));
     assert!(svg.contains(&asset.name), "svg emblem includes active asset name");
-    // 🌉️ The shape now lowers through the semio/drawing bridge as a real `<path d="...">`
-    // (drawing's own svg export leaf has no `<rect>`/`<ellipse>` element, only `<path>`);
-    // ellipse shots draw via an SVG `A`rc command, rectangle shots via straight lines only.
     assert!(svg.contains("<path"), "shape renders as a real <path> element, not a raw <rect>/<ellipse>");
     let has_arc_command = svg.contains(" A ");
     assert_eq!(has_arc_command, shot.shape == "ellipse", "ellipse shots draw an SVG arc command, rectangle shots never do");

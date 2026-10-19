@@ -1,6 +1,7 @@
 //! 🎚️ Typed fields share original typed equality, authored cloning, and exact inverse ownership.
 use crate::retained::{RetainedFieldPreparation,retained_mutation_demand_fits};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedEquality,RetainedEqualityOwner,retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedClone, RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_persistent::{retained_equality::RetainedEquality, retained_equality::RetainedEqualityOwner};
 use std::mem::size_of;
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn scalar(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}

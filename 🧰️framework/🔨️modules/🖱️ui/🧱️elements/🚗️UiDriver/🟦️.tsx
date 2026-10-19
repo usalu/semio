@@ -110,9 +110,7 @@ export function readStoredUiCustomDrivers(storage: StoragePort): Record<string, 
     for (const [id, value] of Object.entries(parsed)) {
       try {
         out[id] = parseUiDriver(value);
-      } catch {
-        /* drop invalid saved driver */
-      }
+      } catch {}
     }
     return out;
   } catch {

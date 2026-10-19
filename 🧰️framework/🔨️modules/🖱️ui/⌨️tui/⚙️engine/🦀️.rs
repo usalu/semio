@@ -4,7 +4,7 @@ use semio_framework_ui_tui_frame::chrome::{window_tab_rect, ChromeState, WindowH
 use semio_framework_ui_tui_widgets::dialog::DialogState;
 use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
-use crate::tui::layout::DockPlacement;
+use semio_framework_ui_tui_core::docking::DockPlacement;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🪟️drag-preview/🦀️.rs"]

@@ -64,15 +64,16 @@ import { ActivationRegistry } from "@semio-tech/framework";
 import { createTurnOutcomeBroadcast } from "@semio-tech/framework";
 import { fetchDescriptorManifest } from "@semio-tech/framework";
 // #region 🔌️Adapters
-import { assertShardJspiAvailable, isShardLostError } from "@semio-tech/framework-actor/shard-client/heartbeat";
-import { createShardCommandIngressPages } from "@semio-tech/framework-actor/shard-client/wire";
-import { SHARD_LIVENESS_POLICY, ShardClient } from "@semio-tech/framework-actor/shard-client";
-import { SHARD_WORKER_URL } from "@semio-tech/framework-actor/shard-runtime";
+import { assertShardJspiAvailable, isShardLostError } from "@semio-tech/framework/actor/shard-client/heartbeat";
+import { createShardCommandIngressPages } from "@semio-tech/framework/actor/shard-client/wire";
+import { SHARD_LIVENESS_POLICY, ShardClient } from "@semio-tech/framework/actor/shard-client";
+import { SHARD_WORKER_URL } from "@semio-tech/framework/actor/shard-runtime";
 import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 import { rendererResidentLedger } from "@semio-tech/framework/canvas/renderer-resident";
 import { TurnScheduler } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
-import { TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, wireExtensionInvocation, wireTurnStatusTag } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { wireExtensionInvocation } from "@semio-tech/framework/actor/wire-turn";
+import { TYPED_OPERATION_ACK_MAGIC, TYPED_OPERATION_PAGE_MAGIC, wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../📤️SegmentedDownload/🟦️.ts";
 import { BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES } from "@semio-tech/framework/wire-contracts";
 import { decodeBackboneMessage } from "@semio-tech/framework/backbone";
@@ -162,31 +163,8 @@ import {
   teardownPluginActor,
   tearingDownPluginActors
 } from "./🧵️turn-dispatch/🟦️.ts";
-import {
-  commandIngressContinuationCeilingV1,
-  commandIngressLaneForActionV1,
-  commandIngressNeedsReplyStampV1,
-  commandIngressUnownedV1,
-  createRetainedUiCloseLadderV1,
-  effectsRequestOperationProgressV1,
-  hasRequiredUiPatches,
-  PLUGIN_OPERATION_OWED_SLICE_MS,
-  PLUGIN_OPERATION_REFRESH_SLICE_MS,
-  PLUGIN_UI_CLOSE_STEPS_PER_NODE,
-  PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS,
-  PLUGIN_UI_CONTINUATION_BATCH_SIZE,
-  PLUGIN_UI_CONTINUATION_LIMIT,
-  PLUGIN_UI_INTAKE_STEP_CEILING,
-  PLUGIN_UI_INTAKE_YIELD_STRIDE,
-  PLUGIN_UI_QUIESCENT_CONTINUATIONS,
-  PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT,
-  retainedUiCloseStepCeilingV1,
-  settleAcknowledgedPluginTurns,
-  settlePluginTurn,
-  settleYieldsToRefreshV1,
-  uiPatchAdmissionRoundsV1,
-  yieldPluginUiContinuation
-} from "./🔁️turn-settle/🟦️.ts";
+import { commandIngressContinuationCeilingV1, commandIngressLaneForActionV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, createRetainedUiCloseLadderV1, effectsRequestOperationProgressV1, hasRequiredUiPatches, PLUGIN_OPERATION_OWED_SLICE_MS, PLUGIN_OPERATION_REFRESH_SLICE_MS, PLUGIN_UI_CLOSE_STEPS_PER_NODE, PLUGIN_UI_CLOSE_ZERO_PROGRESS_STEPS, PLUGIN_UI_CONTINUATION_BATCH_SIZE, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_INTAKE_STEP_CEILING, PLUGIN_UI_INTAKE_YIELD_STRIDE, PLUGIN_UI_QUIESCENT_CONTINUATIONS, PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT, retainedUiCloseStepCeilingV1, settleAcknowledgedPluginTurns, settlePluginTurn, settleYieldsToRefreshV1, uiPatchAdmissionRoundsV1 } from "./🔁️turn-settle/🟦️.ts";
+import { yieldPluginUiContinuation } from "./⏩️continuation-yield/🟦️.ts";
 import {
   drainTypedOperationTurns,
   pendingCompletionEffects,
@@ -360,7 +338,7 @@ export {
 export { fetchDescriptorManifest } from "@semio-tech/framework";
 export { type PluginDispatchHintV1 } from "@semio-tech/framework";
 export type { PluginRegistryEntry } from "@semio-tech/framework";
-export { SHARD_LIVENESS_POLICY } from "@semio-tech/framework-actor/shard-client";
+export { SHARD_LIVENESS_POLICY } from "@semio-tech/framework/actor/shard-client";
 export { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS } from "./🫀️load-progress/🟦️.ts";
 export { cancelSpawnedJobV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "./💼️job-ledger/🟦️.ts";
 

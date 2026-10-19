@@ -31,8 +31,6 @@ fn next_down(x: f64) -> f64 {
 
 #[semio_framework_async_macros::async_test]
 async fn orient2d_resolves_near_degenerate_case_correctly() {
-    // c sits exactly on line a->b->(2,2); perturbing it by a single ULP must still resolve
-    // to the geometrically correct sign, which the interval filter alone cannot certify.
     let a = Pnt2::new(0.0, 0.0);
     let b = Pnt2::new(1.0, 1.0);
     let c_on = Pnt2::new(2.0, 2.0);
@@ -104,8 +102,6 @@ mod quick {
         for _ in 0..5000 {
             let a = Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
             let b = Pnt2::new(rng.next_f64() * 20.0 - 10.0, rng.next_f64() * 20.0 - 10.0);
-            // Bias half the sample toward near-collinear configurations, where the filter
-            // is most likely to need the exact escalation path.
             let c = if rng.next_bool(0.5) {
                 let t = rng.next_f64() * 2.0 - 0.5;
                 let perturb = (rng.next_f64() - 0.5) * 1e-12;

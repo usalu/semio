@@ -4,11 +4,11 @@ use super::*;
 
 //#region 💼️MountedSession
 pub(super) struct Registry {
-    pub(super) app_slots: semio_framework_value::FixedKeySlots<u32, ACTIVE_CAPACITY>,
-    pub(super) requests: semio_framework_value::FixedRequestOwners<semio_framework_value::ContentRequestKey, ConsumerKey, ACTIVE_CAPACITY, 64>,
-    pub(super) verified_sources: [Option<(semio_framework_value::RequestCandidateVersion, RequestKey)>; 64],
+    pub(super) app_slots: semio_framework_value_registry::fixed_key_slots::FixedKeySlots<u32, ACTIVE_CAPACITY>,
+    pub(super) requests: semio_framework_value_registry::fixed_request_owners::FixedRequestOwners<semio_framework_value_registry::fixed_request_owners::ContentRequestKey, ConsumerKey, ACTIVE_CAPACITY, 64>,
+    pub(super) verified_sources: [Option<(semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion, RequestKey)>; 64],
     pub(super) request_specs: [Option<PhysicalRequestSpec>; ACTIVE_CAPACITY],
-    pub(super) shell_request: [Option<semio_framework_value::FixedKeySlot>; SHELL_CAPACITY],
+    pub(super) shell_request: [Option<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>; SHELL_CAPACITY],
     pub(super) request_cursor: usize,
     pub(super) consumer_cursor: usize,
     pub(super) shells: [Rc<RefCell<Option<MountedState>>>; SHELL_CAPACITY],

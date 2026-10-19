@@ -1,4 +1,5 @@
-use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 thread_local! {
     static RETIRED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -96,7 +97,7 @@ fn shape_law(fixture: &serde_json::Value, controlled: bool) {
 /// 🔣️ Cold semantic admission agrees with the neutral JSON Schema verdicts and retires refused roots once.
 #[test]
 fn semantic_admission_matches_neutral_schema() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         RETIRED.with(|count| count.set(0));
         let result = Probe::from_value(DslValue::from(&row["input"]));
@@ -128,7 +129,7 @@ fn controlled_admission_is_metered_and_refusals_retire_once() {
     let mut callback = |_| true;
     let mut control = NativeDecodeControl::new(10_000, &mut callback);
     assert!(ColdOnly::from_value_controlled(&input, &mut control).is_err());
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     shape_law(&fixture, true);
     RETIRED.with(|count| count.set(0));
     let mut allow = |_| true;

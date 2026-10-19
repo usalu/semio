@@ -329,49 +329,6 @@ export function patchRouterPackages(scriptText: string, artifactCrate: string, a
   return scriptText.slice(0, call.index + call[1]!.length) + `, { ${rendered} }` + scriptText.slice(call.index + call[1]!.length);
 }
 
-/** 🗂️ One build-owner row of a carved crate. */
-export type BuildOwnerRow = { readonly name: string; readonly root: string };
-
-/** 🗂️ What `syncBuildOwnerRows` changed: rows added, rows whose name changed at the same root, and rows of the artifact whose crate no longer exists. */
-export type BuildOwnerSync = { text: string; added: string[]; renamed: string[]; removed: { name: string; root: string }[] };
-
-/** 🗂️ Brings the owner rows of a carve up to date in `📋️build-owners.json` text: rows of new crates are inserted at their byte-order position, a row registered at the same root under another name (the crate was named differently by an earlier carve) takes the new name, and, when `scope` is given, rows below the artifact directory named after the artifact crate whose manifest is gone are removed. A row whose name is registered at another root is left alone. */
-export function syncBuildOwnerRows(raw: string, rows: readonly BuildOwnerRow[], scope?: { readonly artifactCrate: string; readonly artifactDir: string; readonly exists: (root: string) => boolean }, rename = true): BuildOwnerSync {
-  const document = JSON.parse(raw) as { owners: { name: string; root: string; manifest: string; packages: string[]; [key: string]: unknown }[] };
-  const wanted = new Map(rows.map((row) => [row.root, row.name]));
-  const removed: { name: string; root: string }[] = [];
-  const renamed: string[] = [];
-  if (scope) document.owners = document.owners.filter((owner) => {
-    const stale = owner.name.startsWith(`${scope.artifactCrate}-`) && owner.root.startsWith(`${scope.artifactDir}/`) && !wanted.has(owner.root) && !scope.exists(owner.root);
-    if (stale) removed.push({ name: owner.name, root: owner.root });
-    return !stale;
-  });
-  for (const owner of document.owners) {
-    const name = wanted.get(owner.root);
-    if (!rename || name === undefined || owner.name === name || document.owners.some((other) => other !== owner && other.name === name)) continue;
-    owner.name = name;
-    renamed.push(name);
-  }
-  const known = new Set(document.owners.flatMap((owner) => [owner.name, owner.root]));
-  const added: string[] = [];
-  for (const row of [...rows].sort((left, right) => compareBytes(left.name, right.name))) {
-    if (known.has(row.name) || known.has(row.root)) continue;
-    const entry = { name: row.name, root: row.root, manifest: `${row.root}/Cargo.toml`, packages: [] as string[] };
-    const at = document.owners.findIndex((owner) => compareBytes(owner.name, row.name) > 0);
-    document.owners.splice(at < 0 ? document.owners.length : at, 0, entry);
-    known.add(row.name);
-    known.add(row.root);
-    added.push(row.name);
-  }
-  return { text: JSON.stringify(document, null, 2) + "\n", added, renamed, removed };
-}
-
-/** 🗂️ Inserts the owner rows of new crates into `📋️build-owners.json` text at their byte-order position; rows whose name or root is already registered are skipped. */
-export function insertBuildOwnerRows(raw: string, rows: readonly BuildOwnerRow[]): { text: string; added: string[] } {
-  const { text, added } = syncBuildOwnerRows(raw, rows, undefined, false);
-  return { text, added };
-}
-
 /** 🧲️ Rebases the file arguments of `include_str!`, `include_bytes!` and `include!` of moved text from the directory it came from to the directory it now lives in. */
 export function rebaseRustIncludes(text: string, fromDirectory: string, toDirectory: string): string {
   if (fromDirectory === toDirectory) return text;

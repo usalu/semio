@@ -103,7 +103,7 @@ mod tests {
 
         #[test]
         fn large_prime_length_dft_matches_naive() {
-            let n = 101; // prime, not near a power of two
+            let n = 101;
             let mut rng = semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::numeric::Xorshift64::new(4242);
             let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, 0.0)).collect();
             let fast = Fft::new(n).forward(&input);

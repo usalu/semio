@@ -49,9 +49,6 @@ export function buildCasePlan(repoRoot: string, discovered: DiscoveredCase, leve
   const feature = parseFeature(source);
   const { inputs, missing } = resolveTestInputs(repoRoot, discovered, testInputUrisIn(feature));
   const selectable = new Set(levelsUpTo(level));
-  // 🪆️A case is scoped by the manifest whose owner it lives under, walking up to the nearest one. A
-  // case with no owning manifest gets a null target rather than a guessed artifact-wide one — that
-  // absence is what the contract phase reports, and inventing a scope here would hide it.
   const owning = registry.contributions
     .filter((entry) => discovered.owner === entry.owner || discovered.owner.startsWith(`${entry.owner}/`) || entry.owner.startsWith(`${discovered.owner}/`))
     .flatMap((entry) => entry.mutationManifests)
@@ -107,13 +104,8 @@ export function planExecution(repoRoot: string, discovered: DiscoveredCase, leve
   const cacheKey = digest(`${discovered.projectName}|${base.featureHash}|${setDigest(base.inputs.map((f) => [f.name, f.digest] as const))}|${level}|${role}|${implementation}`);
   const workDir = join(testCacheDir(repoRoot, "work"), `${discovered.projectName}-${role}-${implementation}`);
   const outputDir = join(testCacheDir(repoRoot, "results"), `${discovered.projectName}-${role}-${implementation}`);
-  // 📦️Produced artifacts live BESIDE the mutable scratch copy, never inside it: a run that writes its
-  // STEP output into the same directory it copied its operands into cannot later say which is which.
   const artifactDir = join(outputDir, "📦️artifacts");
   const ownerId = `${discovered.owner}::${discovered.case}`;
-  // 🏁️A directory being planned is by definition not finished. Clearing any completion marker left
-  // by a previous run keeps "in progress" and "complete" honest across re-runs, which is what stops
-  // `clean test --stale` from removing a live run's state.
   for (const dir of [workDir, outputDir]) {
     markOutputDir(repoRoot, dir, { testId: ownerId, cacheKey });
     rmSync(join(dir, "🏁️done"), { force: true });
@@ -127,9 +119,6 @@ export function planExecution(repoRoot: string, discovered: DiscoveredCase, leve
 
 /** 🏁️ Marks a generated output directory complete, so an interrupted run stays distinguishable from a finished one. */
 export function markRunComplete(absDir: string): void {
-  // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
-  // filtered out at this level never writes anything into its work directory. Crashing the whole
-  // sweep at the finish line for that is a worse failure than the empty directory it complains about.
   mkdirSync(absDir, { recursive: true });
   writeFileSync(join(absDir, "🏁️done"), "");
 }

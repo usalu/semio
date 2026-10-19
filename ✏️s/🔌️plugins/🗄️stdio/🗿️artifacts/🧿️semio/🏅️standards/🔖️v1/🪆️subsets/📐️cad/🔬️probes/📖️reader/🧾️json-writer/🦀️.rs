@@ -35,7 +35,6 @@ fn escape(s: &str) -> String {
 }
 
 impl Json {
-    // 🚫️async: pure formatting helper.
     fn render(&self, out: &mut String) {
         match self {
             Json::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
@@ -76,7 +75,6 @@ impl Json {
         }
     }
 
-    // 🚫️async: pure formatting helper.
     pub(super) fn to_text(&self) -> String {
         let mut out = String::new();
         self.render(&mut out);

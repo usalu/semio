@@ -1,4 +1,4 @@
-//! connections its drop lands with minted ids, the commit is ONE transaction under a deterministic ref,
+//! 🔗️ connections its drop lands with minted ids, the commit is ONE transaction under a deterministic ref,
 //! 🧪️ The select tool machine on its own: gesture records decode, a record yields its parametric leaf plus the
 //! all-locked, identity, missing and empty requests leave zero trace, a streamed gesture is the window's ONE gesture on
 //! the framework runner (resumed by stable ids, committed as ONE transaction or dropped with zero trace), and a committed

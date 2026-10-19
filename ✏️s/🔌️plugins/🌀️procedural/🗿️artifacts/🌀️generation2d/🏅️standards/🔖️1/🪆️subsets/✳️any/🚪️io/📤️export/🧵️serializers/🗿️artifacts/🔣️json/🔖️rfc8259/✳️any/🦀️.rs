@@ -1,4 +1,4 @@
-//! generation2d -> json
+//! 🪄️ generation2d -> json
 //!
 //! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — the deletion task itself
 //! never touched this file; see w5b-close-report.md): `JsonSnapshot::from_value`/stdio's own real

@@ -12,14 +12,11 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       const { client, advance } = harness(1);
       advance(100_000);
       client.checkHeartbeats(100_000);
-      // no throw, no rebuild callback would have fired — nothing to assert but absence of an exception
       expect(true).toBe(true);
     });
 
     it("terminates + rebuilds after 3 consecutive missed-heartbeat windows on a stuck turn", async () => {
       const lost: Array<{ index: number; actorIds: readonly string[] }> = [];
-      // 🫀️ `firstTurnTimeoutMs` collapsed onto the ordinary window: this test is about the ordinary
-      // ladder, and a stuck FIRST turn is priced against its own ceiling (see the first-turn test).
       const { client, workers, advance, setNow } = harness(1, { heartbeatTimeoutMs: 1000, firstTurnTimeoutMs: 1000, onShardLost: (index, actorIds) => lost.push({ index, actorIds }) });
       setNow(0);
       const activatePromise = client.activate("stuck", "https://x/stuck.js", [], BUDGET);
@@ -29,7 +26,7 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       await activatePromise;
 
       const originalWorker = workers[0]!;
-      client.turn("stuck", [], BUDGET).catch(() => {}); // never replies — simulates a hung guest; terminate() rejects it
+      client.turn("stuck", [], BUDGET).catch(() => {});
 
       advance(1001);
       client.checkHeartbeats();
@@ -43,7 +40,7 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
 
       expect(originalWorker.terminated).toBe(true);
       expect(lost).toEqual([{ index: 0, actorIds: ["stuck"] }]);
-      expect(client.shardIndexFor("stuck")).toBeUndefined(); // rebuild cleared routing; caller must re-activate
+      expect(client.shardIndexFor("stuck")).toBeUndefined();
     });
 
     it("a fresh heartbeat resets the miss count", async () => {
@@ -59,7 +56,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       client.checkHeartbeats();
       advance(1001);
       client.checkHeartbeats();
-      // guest emits a heartbeat right before the 3rd window would elapse
       workers[0]!.deliver({ kind: "heartbeat", turnSeq: 7 });
       advance(1001);
       client.checkHeartbeats();
@@ -130,8 +126,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       expect({ ...SHARD_LIVENESS_POLICY }).toEqual(fixture.policy);
       const { SEGMENTED_DOWNLOAD_CHUNK_BYTES, SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS } = await import("../../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts");
       expect(SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS).toBe(fixture.policy.progressIntervalMs);
-      // 📤️ The segmented-download chunk contract, same rule: one schema-owned record, four enforcing hops
-      // (guest producer, generated worker, host transport, host drain) and no literal of anyone's own.
       const schema = await loadClientSegmentedDownloadSchema();
       const contractFixture = await loadClientSegmentedDownloadFixture();
       const { default: Ajv } = await import("ajv");
@@ -149,9 +143,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       const { MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY } = await import("@semio-tech/plugin-registry/deployment");
       const { SHARD_WORKER_FILE } = await import("../../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts");
       expect(SHARD_WORKER_URL).toBe(`${MODULE_PLUGIN_ROUTE}/${MODULE_SHARD_DIRECTORY}/${SHARD_WORKER_FILE}`);
-      // 🩺️ Every browser-side spawner must use THAT url. A private ASCII transliteration
-      // (`/plugin-modules/_shard/…`) is answered by Vite's SPA fallback with `text/html`, which a
-      // module Worker rejects as a message-less `error` event — the 2026-09-05 four-dead-shard boot.
       const { readModuleTreeSource } = await import("@semio-tech/framework-compiler-ts/syntax/module-tree");
       for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts"]) {
         const source = readModuleTreeSource(new URL(spawner, testSource.url));
@@ -166,8 +157,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       const observed = fixture.jspi.vectors.map((vector) => {
         const scope: ShardJspiScope = vector.webAssembly ? { WebAssembly: { Suspending: vector.suspending ? class {} : undefined, promising: vector.promising ? () => undefined : undefined } } : {};
         const available = shardJspiAvailable(scope);
-        // 🔮️ Independent oracle: "JSPI is present when BOTH lifting primitives are callable", stated
-        // directly against the vector rather than through the implementation under test.
         expect(available, vector.id).toBe(vector.webAssembly && vector.suspending && vector.promising);
         let thrown: unknown = null;
         try { assertShardJspiAvailable(scope); } catch (error) { thrown = error; }
@@ -224,8 +213,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       expect(detail).toContain("turn (first turn) procedural#1 started 15003 ms ago");
       expect(detail).toContain("checkpoint flow#1 started 9803 ms ago");
       expect(describeShardSilence({ shardIndex: 2, nowMs: 9, lastLivenessAtMs: Number.NEGATIVE_INFINITY, lastHeartbeatPhase: null, inFlight: [] })).toContain("never sent a single message");
-      // 🩺️ The live boot's whole evidence was `shard 0 terminated`. Every rejection the watchdog
-      // hands back must now carry the cause instead, or the console is back where it started.
       const { client, workers, setNow } = harness(1, { heartbeatTimeoutMs: 1000, firstTurnTimeoutMs: 1000 });
       setNow(0);
       const activate = client.activate("silent", "https://x/s.js", [], BUDGET);
@@ -252,15 +239,12 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       const activateId = (workers[0]!.sent.find((message) => (message as { kind: string }).kind === "activate") as { requestId: string }).requestId;
       workers[0]!.deliver({ kind: "result", requestId: activateId, ok: true, value: undefined });
       await activate;
-      // 🫀️ First turn: 4 s of total silence — three ordinary windows, zero first-turn windows.
       const firstTurn = client.turn("slowboot", [], BUDGET);
       const firstTurnId = (workers[0]!.sent.at(-1) as { requestId: string }).requestId;
       for (const atMs of [1001, 2002, 3003, 4004]) { setNow(atMs); client.checkHeartbeats(); }
       expect(workers[0]!.terminated).toBe(false);
       workers[0]!.deliver({ kind: "result", requestId: firstTurnId, ok: true, value: undefined });
       await firstTurn;
-      // 🫀️ Second turn on the same activation: the one-off initialization is spent, so the same 4 s
-      // of silence is now three misses and a dead shard.
       let lost = 0;
       const second = client.turn("slowboot", [], BUDGET).catch(() => { lost += 1; });
       for (const atMs of [5005, 6006, 7007, 8008]) { setNow(atMs); client.checkHeartbeats(); }
@@ -303,8 +287,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
             outstanding.push((workers[0]!.sent.at(-1) as { requestId: string }).requestId);
             continue;
           }
-          // 🫀️ A REAL `turn` on a freshly activated actor — the only request the client classifies as
-          // a first turn, and the one whose synchronous guest initialization provably cannot beat.
           if (step.event === "pending-first-turn") {
             void client.turn("live", [], BUDGET).catch(() => {});
             outstanding.push((workers[0]!.sent.at(-1) as { requestId: string }).requestId);
@@ -319,8 +301,6 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
             workers[0]!.deliver({ kind: "heartbeat", turnSeq: beat, phase: fixture.worker.progressPhase });
             continue;
           }
-          // 🔎️ Captured BEFORE the tick: a terminating check replaces `shards[0]` with a rebuilt slot
-          // whose count is legitimately zero, and the count under test is the retired slot's.
           const slot = (shardClientInternals(client).state.shards as readonly { readonly heartbeat: { readonly missedCount: number } }[])[0]!;
           client.checkHeartbeats();
           missesAtCheck.push(slot.heartbeat.missedCount);
@@ -344,20 +324,12 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       const parsed = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
       const declaration = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "shardWorkerSource");
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
-      if (!returned || !ts.isTemplateExpression(returned)) throw new Error("Changed generated shard worker source");
+      if (!returned || !(ts.isTemplateExpression(returned) || (ts.isCallExpression(returned) && ts.isPropertyAccessExpression(returned.expression) && returned.expression.name.text === "join" && ts.isArrayLiteralExpression(returned.expression.expression)))) throw new Error("Changed generated shard worker source");
       const { shardWorkerSource } = await import("../../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
-      // 🧪️ `await import(url)` has no meaning inside a bare `vm` context; the ONE call is redirected to
-      // an injected loader so the same generated bytes can be driven with that boundary held open.
       const { classicShardWorkerSource } = await import("../../✂️worker-vm-source/🟦️.ts");
       const source = classicShardWorkerSource(shardWorkerSource())
         .replace("await import(/* @vite-ignore */ moduleUrl)", "await __import(moduleUrl)")
-        // 🩺️ The guest-diagnostics shim import is the SECOND dynamic import this worker carries
-        // (`armGuestRuntimeDiagnostics`). It is already wrapped in its own try/catch, so a bare `vm`
-        // context degrades it to "diagnostics disarmed" — it only has to stop being a bare
-        // `await import(...)` this assertion would read as an unredirected boundary.
         .replace('await import(/* @vite-ignore */ "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js")', "Promise.reject(new Error('no shim in a bare vm context'))")
-        // 🩺️ …and the switch that reaches it reads `self.location.href`, which a bare `vm` context
-        // does not have. Disarmed here rather than stubbed, because this law is about the beats.
         .replace("await armGuestRuntimeDiagnostics();", "await Promise.resolve(false);");
       expect(source).not.toContain("@vite-ignore");
       const beats: (string | undefined)[] = [];
@@ -424,7 +396,7 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
       client.pollHeartbeatSab();
       advance(1001);
       client.checkHeartbeats();
-      expect(workers[0]!.terminated).toBe(false); // heartbeat seen via SAB reset the window
+      expect(workers[0]!.terminated).toBe(false);
     });
   });
 }

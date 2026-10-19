@@ -79,18 +79,18 @@ export interface WfcCell2d {
 }
 
 export interface Grid2dSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ seed: bigint;
-  /** @state artifact */ width: number;
-  /** @state artifact */ height: number;
-  /** @state artifact */ cellWidth: Binary64;
-  /** @state artifact */ cellHeight: Binary64;
-  /** @state artifact */ periodicX: boolean;
-  /** @state artifact */ periodicY: boolean;
-  /** @state artifact */ tiles: WfcTile2d[];
-  /** @state artifact */ rules: WfcAdjacencyRule2d[];
-  /** @state artifact */ pinned: WfcPinnedCell2d[];
-  /** @state artifact */ masked: WfcCell2d[];
+  /** 🧬️ @state artifact */ schema: string;
+  /** 🌱️ @state artifact */ seed: bigint;
+  /** ↔️ @state artifact */ width: number;
+  /** ↕️ @state artifact */ height: number;
+  /** 🧩️ @state artifact */ cellWidth: Binary64;
+  /** 🀄️ @state artifact */ cellHeight: Binary64;
+  /** 🌀️ @state artifact */ periodicX: boolean;
+  /** ⏱️ @state artifact */ periodicY: boolean;
+  /** 🗺️ @state artifact */ tiles: WfcTile2d[];
+  /** 📜️ @state artifact */ rules: WfcAdjacencyRule2d[];
+  /** 🧷️ @state artifact */ pinned: WfcPinnedCell2d[];
+  /** 📐️ @state artifact */ masked: WfcCell2d[];
 }
 
 export const WFC_GRID2D_DOCUMENT_SCHEMA = "s.wfc.grid2d";

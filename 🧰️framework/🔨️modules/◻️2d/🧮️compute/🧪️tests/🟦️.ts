@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { createRequire } from "node:module";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { LRUCache } from "lru-cache";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { engineKey, engineKeyPreimage } from "../🟦️.ts";
@@ -13,7 +14,19 @@ type Scenario = { id: string; budgetBytes: number; operations: Operation[]; expe
 type Corpus = { retainedNativeLaws: string[]; keys: Key[]; invalidIdentities: { id: string; utf16Units: number[]; reason: string }[]; distinctTuples: { id: string; left: string; right: string }[]; representations: { id: string; values: number[]; expected: { total: number; len: number } }[]; scenarios: Scenario[] };
 type LruReference = { length: number; itemCount: number; set(key: string, value: Uint8Array): void; get(key: string): Uint8Array | undefined; peek(key: string): Uint8Array | undefined; pop(): unknown; keys(): string[] };
 const require = createRequire(import.meta.url);
-const Lru = require("lru-cache") as new (options: { max: number; length(value: Uint8Array): number }) => LruReference;
+class Lru implements LruReference {
+  length = 0;
+  private readonly cache: LRUCache<string, Uint8Array>;
+  constructor(private readonly options: { max: number; length(value: Uint8Array): number }) {
+    this.cache = new LRUCache<string, Uint8Array>({ maxSize: options.max, sizeCalculation: () => 1, dispose: value => { this.length -= options.length(value); } });
+  }
+  get itemCount(): number { return this.cache.size; }
+  set(key: string, value: Uint8Array): void { this.cache.set(key, value); this.length += this.options.length(value); }
+  get(key: string): Uint8Array | undefined { return this.cache.get(key); }
+  peek(key: string): Uint8Array | undefined { return this.cache.peek(key); }
+  pop(): unknown { return this.cache.pop(); }
+  keys(): string[] { return [...this.cache.keys()]; }
+}
 const sum = require("lodash/sum") as (values: readonly number[]) => number;
 const owner = resolve(import.meta.dir, "..");
 const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")) as Corpus;

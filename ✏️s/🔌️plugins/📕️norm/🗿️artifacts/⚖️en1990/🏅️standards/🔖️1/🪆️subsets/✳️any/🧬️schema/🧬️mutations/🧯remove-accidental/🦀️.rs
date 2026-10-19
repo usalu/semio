@@ -1,4 +1,4 @@
-//! `remove-accidental` mutation for EN 1990.
+//! 🧬️ `remove-accidental` mutation for EN 1990.
 use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

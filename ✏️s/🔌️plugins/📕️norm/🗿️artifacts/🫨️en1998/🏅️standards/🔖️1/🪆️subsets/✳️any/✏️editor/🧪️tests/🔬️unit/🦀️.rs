@@ -10,7 +10,7 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_en1998_app(), examples: Vec::new() }
     }
     
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// 📜️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
     /// scope pays the caller's terminal retirement after the app's paid close.
     pub struct NormApp(pub VcsArtifactApp<EditorApp<En1998PlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     
@@ -27,7 +27,7 @@ pub(crate) mod context {
         }
     }
     
-    /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
         let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<En1998PlayApp>>(en1998_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
@@ -94,7 +94,7 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 }
 
 //#region ðï¸CommandSurface
-/// ð¯ï¸ One value per `En1998Command` row â the whole-command-surface laws below iterate it, so a new row
+/// 🎯️ One value per `En1998Command` row â the whole-command-surface laws below iterate it, so a new row
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<En1998Command> {
     vec![
@@ -114,7 +114,7 @@ async fn command_ids_cover_every_row_and_are_unique() {
     assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex"]);
 }
 
-/// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
+/// 🧷️ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
@@ -126,7 +126,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
     }
 }
 
-/// ð§·ï¸ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
+/// 🧷️ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
 /// could have silently rewritten â the fieldless `Evaluate` (was a unit variant) and both `Option`
 /// cases of `SetSelectedCheckIndex`. Hex copied verbatim from the ticket's
 /// `ð§ªï¸wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
@@ -152,7 +152,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT)));
 }
 
-/// ðï¸ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
+/// 🔌️ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
 /// ports, and `report:out` is pinned to this family's already-declared artifact kind.
 #[semio_framework_async_macros::async_test]
 async fn declares_model_in_and_report_out_ports() {
@@ -198,7 +198,7 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
     context::close(&mut app);
 }
 
-/// ð§®ï¸ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
+/// 🧮️ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_is_a_config_only_edit() {
     let mut app = context::app_with_registry().await;
@@ -209,7 +209,7 @@ async fn selected_check_index_is_a_config_only_edit() {
     context::close(&mut app);
 }
 
-/// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
+/// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
 /// operations.
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
@@ -235,7 +235,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     context::close(&mut app);
 }
 
-/// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
+/// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;

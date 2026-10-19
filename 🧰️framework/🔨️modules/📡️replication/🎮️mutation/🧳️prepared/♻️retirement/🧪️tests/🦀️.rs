@@ -1,4 +1,5 @@
 //! 🧪️ Prepared native publication, inverse and refusal backing remains original through exact admitted custody.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::{FactoryAuthority,FactoryRetirement,close_factory_ticket,factory_ticket_demands,retirement::OwnedValueRetirementFactory};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
@@ -7,7 +8,7 @@ fn text(value:&str)->String{let mut original=String::with_capacity(65536);origin
 fn grant(demand:RetirementDemand,body:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 #[test]
 fn prepared_retirement_original_publication_and_independent_refusal_custody(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧳️prepared/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in corpus["branches"].as_array().unwrap(){for body in [1,17,4096]{
   let((mut prepared,factory),heap)=observe_heap_allocations_on_this_thread(||{
    let factory=crate::registered_replay_retirement_factory(Arc::new(OwnedValueRetirementFactory::<String>::default()),Arc::new(OwnedValueRetirementFactory::<String>::default()));

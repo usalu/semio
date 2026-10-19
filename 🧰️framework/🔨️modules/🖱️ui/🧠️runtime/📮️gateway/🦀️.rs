@@ -69,7 +69,6 @@ pub struct SinkFull;
 pub trait CommandSink {
     /// 📤️ Hands `command` to the backing mailbox without blocking. `Err(SinkFull)` on a full mailbox —
     /// never panics, never waits.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn try_send(&self, command: Command) -> Result<(), SinkFull>;
 }
 //#endregion 🔖️Sink
@@ -120,7 +119,6 @@ pub struct CommandGateway<S: CommandSink> {
 
 impl<S: CommandSink> CommandGateway<S> {
     /// 🏭️ A gateway over `sink`, tracking at most `capacity` outstanding (unresolved) commands at once.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(capacity: usize, sink: S) -> Self {
         Self { queue: VecDeque::new(), capacity, sink, resolved: HashMap::new() }
     }
@@ -129,7 +127,6 @@ impl<S: CommandSink> CommandGateway<S> {
     /// first — fast-failing before ever touching `sink` if already at `capacity` — then forwards to
     /// [`CommandSink::try_send`]; either way a full mailbox comes back as [`GatewayError::Full`]
     /// synchronously, on this same call, never as a dropped command nobody hears about.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn try_submit(&mut self, command: Command) -> Result<CommandTicket, GatewayError> {
         if self.queue.len() >= self.capacity {
             return Err(GatewayError::Full { command_id: command.id });
@@ -142,26 +139,22 @@ impl<S: CommandSink> CommandGateway<S> {
 
     /// ✅️ Resolves `command_id` as [`OptimisticStatus::Acknowledged`]. `false` if no outstanding ticket
     /// carries that id (already resolved, or never submitted).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn acknowledge(&mut self, command_id: CommandId) -> bool {
         self.resolve(command_id, OptimisticStatus::Acknowledged)
     }
 
     /// ❌️ Resolves `command_id` as [`OptimisticStatus::Rejected`]. `false` if no outstanding ticket
     /// carries that id.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn reject(&mut self, command_id: CommandId) -> bool {
         self.resolve(command_id, OptimisticStatus::Rejected)
     }
 
     /// ⚡️ Resolves `command_id` as [`OptimisticStatus::Conflicted`] — the command reached the actor but
     /// lost to a concurrent write. `false` if no outstanding ticket carries that id.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mark_conflicted(&mut self, command_id: CommandId) -> bool {
         self.resolve(command_id, OptimisticStatus::Conflicted)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resolve(&mut self, command_id: CommandId, status: OptimisticStatus) -> bool {
         let Some(index) = self.queue.iter().position(|ticket| ticket.command_id == command_id) else { return false };
         self.queue.remove(index);
@@ -172,7 +165,6 @@ impl<S: CommandSink> CommandGateway<S> {
     /// 📊️ The [`OptimisticStatus`] a presenter should layer over its projection read for `command_id` —
     /// `Pending` while still outstanding, the resolved status once acknowledged/rejected/conflicted, or
     /// `None` if `command_id` was never submitted through this gateway.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn status(&self, command_id: CommandId) -> Option<OptimisticStatus> {
         if self.queue.iter().any(|ticket| ticket.command_id == command_id) {
             return Some(OptimisticStatus::Pending);
@@ -181,13 +173,11 @@ impl<S: CommandSink> CommandGateway<S> {
     }
 
     /// 🔢️ Outstanding (`Pending`) commands right now.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn len(&self) -> usize {
         self.queue.len()
     }
 
     /// 🈳️ `true` when [`Self::len`] is zero.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }

@@ -36,6 +36,9 @@ pub fn bytes(relative: &str) -> &'static [u8] {
 #[path = "../../♻️retirement/🧪️tests/🔬️unit/🦀️.rs"]
 mod original_retirement_integration_tests;
 
+#[path = "../../♻️retirement/🎟️demand/🧪️tests/🦀️.rs"]
+mod original_demand_tests;
+
 #[path = "../../⚠️refusal/🧪️tests/🦀️.rs"]
 mod refusal_tests;
 

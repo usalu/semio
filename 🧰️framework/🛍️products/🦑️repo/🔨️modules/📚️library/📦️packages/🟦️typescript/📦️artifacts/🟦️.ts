@@ -9,7 +9,7 @@ export { typeScriptArtifactLayoutV1, withArtifactDestinationTaskV1, withArtifact
 export type { ArtifactDestinationContextV1, ArtifactDestinationV1 } from "../../../⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
 export { default as artifactsStorageSchema } from "../../../⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 export { repositoryCargoPreparationStorageV1 } from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-export { createNativeWindowsSystemGrantV1, nativeCallerPhaseV1, readNativeCallerAuthorityV1, readNativeOwnerCapabilities } from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+export { nativeCallerPhaseV1, readNativeCallerAuthorityV1, readNativeOwnerCapabilities } from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 export type { NativeCallerPhaseV1, NativeOrchestrationCallerV1, NativeOwnerCapabilities } from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 export { NativeScript } from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts";
 export { withRepositoryExecutablePinV1 } from "../../../⚡️caching/📦️artifacts/📌️executable/🟦️.ts";

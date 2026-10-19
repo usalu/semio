@@ -20,15 +20,12 @@ pub struct Mp4Artifact {
 }
 
 impl Mp4Artifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> Mp4Snapshot {
         Mp4Snapshot { schema: self.schema.clone(), ftyp: self.ftyp.clone(), movie: self.movie.clone(), tracks: self.tracks.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: Mp4Snapshot) -> Self {
         Self { schema: snapshot.schema, ftyp: snapshot.ftyp, movie: snapshot.movie, tracks: snapshot.tracks }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: Mp4Snapshot) {
         self.schema = snapshot.schema;
         self.ftyp = snapshot.ftyp;

@@ -12,13 +12,48 @@
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🧪️tests/🧫️fixtures/🪟️collection-tree-shape/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/**/*",
-      "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧫️fixtures/**/*"
+      "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🧫️fixtures/**/*",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⚠️diagnostic/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌐️browser-bundle/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎁️packs/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕹️interaction/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧾️app-channel/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🪢️wire-contracts/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "viewport-presence-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts viewport-presence-check"
@@ -26,6 +61,7 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
+            "verify",
             "viewport-presence-check"
           ]
         }
@@ -33,12 +69,15 @@
     },
     "paint2d-editing-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing"
       },
       "inputs": [
+        "default",
+        "^default",
+        "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🔲️pixels/**/*",
@@ -52,7 +91,12 @@
     },
     "causal-input-publication-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts causal-input-publication-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
@@ -61,7 +105,12 @@
     },
     "row-action-admission-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts row-action-admission-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
@@ -70,6 +119,11 @@
     },
     "scoped-presence-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts scoped-presence-check",
@@ -79,6 +133,11 @@
     },
     "directory-invite-capability-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-invite-capability-check",
@@ -88,6 +147,11 @@
     },
     "hub-sign-in-spaces-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts hub-sign-in-spaces-check",
@@ -97,6 +161,11 @@
     },
     "directory-home-bootstrap-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-home-bootstrap-check",
@@ -106,11 +175,17 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
@@ -124,6 +199,13 @@
     },
     "lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts lint",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
@@ -131,6 +213,13 @@
     },
     "typecheck": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts typecheck",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
@@ -138,6 +227,11 @@
     },
     "tutorial-interaction-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts tutorial-interaction-check",
@@ -147,6 +241,11 @@
     },
     "flow-browser-runtime-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts flow-browser-runtime-check",
@@ -156,6 +255,11 @@
     },
     "artifact-creation-progress-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts artifact-creation-progress-check",
@@ -165,6 +269,11 @@
     },
     "document-opening-scope-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-opening-scope-check",
@@ -174,6 +283,11 @@
     },
     "view-state-carriage-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts view-state-carriage-check",
@@ -183,6 +297,11 @@
     },
     "surface-switch-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts surface-switch-check",
@@ -192,6 +311,11 @@
     },
     "window-scope-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts window-scope-check",
@@ -201,6 +325,11 @@
     },
     "surface-retention-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts surface-retention-check",
@@ -210,6 +339,11 @@
     },
     "world3d-interaction-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts world3d-interaction-check",
@@ -219,6 +353,11 @@
     },
     "world3d-modelling-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts world3d-modelling-check",
@@ -228,6 +367,11 @@
     },
     "agent-bridge-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts agent-bridge-check",
@@ -237,7 +381,12 @@
     },
     "scene-shading-pixel-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
       "dependsOn": [
         {
           "projects": [
@@ -254,7 +403,13 @@
     },
     "operation-diagnostic-host-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -263,6 +418,7 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
+            "verify",
             "operation-diagnostic-host-check"
           ]
         }

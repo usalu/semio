@@ -2,9 +2,10 @@ use crate::solve_linear_static;
 use crate::Elements;
 use crate::Model;
 use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
-use semio_s_fem_algebra::*;
+use semio_s_fem_model::ElementResult;
+use semio_s_fem_model::Dof;
+use semio_s_fem_elements2d::PlaneKind;
+use semio_s_fem_model::PlaneStress;
 
 /// 📐️ Builds a node-major `[u_i,v_i]` displacement vector by sampling the linear field
 /// `u = a.0 + a.1*x + a.2*y`, `v = b.0 + b.1*x + b.2*y` at every node coordinate — the standard
@@ -301,7 +302,6 @@ fn quad4_mass_total_equals_rho_t_area() {
     let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness, kind: PlaneKind::Strain, density };
     let ctx = ctx_of(&coords);
     let m = el.mass(&ctx).expect("quad4 reports mass");
-    // Shoelace area of the (convex) quad, split as two triangles from vertex 0.
     let area = triangle_signed_area(&[coords[0], coords[1], coords[2]]).abs() + triangle_signed_area(&[coords[0], coords[2], coords[3]]).abs();
     let sum_tx: f64 = (0..4).flat_map(|r| (0..4).map(move |c| (2 * r, 2 * c))).map(|(r, c)| m.get(r, c)).sum();
     let expected = density * thickness * area;

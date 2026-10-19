@@ -7,7 +7,7 @@
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
-use semio_framework_os_store_testing_fixtures::prelude::*;
+use semio_framework_os_store_testing_prelude::*;
 use semio_framework_os_store_testing_fixtures::*;
 use semio_framework_os_store_testing_doubles::*;
 use semio_framework_os_store_testing_doubles::store::ArtifactStore;

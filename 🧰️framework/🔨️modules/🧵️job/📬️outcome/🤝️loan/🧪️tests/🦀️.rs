@@ -2,6 +2,9 @@
 use semio_framework_job::*;
 use semio_framework_value::ValueError;
 use std::mem::size_of;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::RetainedJobPayload;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
 #[path="../../../🧪️testing/📬️payload/🦀️.rs"]
 mod original_payload;
 #[global_allocator]

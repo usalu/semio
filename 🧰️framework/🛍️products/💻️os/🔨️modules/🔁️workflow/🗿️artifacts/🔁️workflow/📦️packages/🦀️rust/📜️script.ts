@@ -1,24 +1,19 @@
 #!/usr/bin/env bun
 /** 🏃️ Workflow workflow artifact package router. */
-import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import {BundleScript} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {resolve} from "node:path";
+import { runArtifactRustPackageMain } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runWorkflowSqliteTestScript, runWorkflowSqliteVerifyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🪶️ Runs the authored Workflow ownership laws through the existing task budgets. */
-class WorkflowSqliteTestScript extends BundleScript{
- async run(segments:string[]):Promise<void>{
-  const mode=segments[0];if(segments.length>1||(mode!==undefined&&mode!=="source"&&mode!=="native"))throw Error("Unknown Workflow SQLite test mode");
-  if(mode!=="source")await runArtifactRustTests("semio-framework-artifact-workflow-workflow-schema-laws", this.repoRoot, ["--lib","sqlite_","--no-fail-fast"], this.invocation);
-  if(mode!=="native")await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:60000});
- }
+class WorkflowSqliteTestScript extends BundleScript {
+  async run(segments:string[]): Promise<void> {
+    await runWorkflowSqliteTestScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
 /** 🔎️ Verifies the Workflow source facade with strict public types. */
-class WorkflowSqliteVerifyScript extends BundleScript{
- async run(segments:string[]):Promise<void>{
-  if(segments.length!==1||segments[0]!=="snapshot-sqlite-source")throw Error("Unknown Workflow SQLite verification");
-  const snapshot=resolve(this.root,"../../🧬️schema/📸️snapshot");
-  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],this.repoRoot,"workflow-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
- }
+class WorkflowSqliteVerifyScript extends BundleScript {
+  async run(segments:string[]): Promise<void> {
+    await runWorkflowSqliteVerifyScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
-await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-workflow",{packages:["semio-framework-artifact-workflow-workflow","semio-framework-artifact-workflow-workflow-graph","semio-framework-artifact-workflow-workflow-snapshot","semio-framework-artifact-workflow-workflow-schema","semio-framework-artifact-workflow-workflow-schema-laws"],commands:{"test-snapshot-sqlite":WorkflowSqliteTestScript,verify:WorkflowSqliteVerifyScript}});
+const router = new ScriptRouter(import.meta.dir).register("test-snapshot-sqlite", WorkflowSqliteTestScript).register("verify", WorkflowSqliteVerifyScript);
+await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-workflow",{packages:["semio-framework-artifact-workflow-workflow","semio-framework-artifact-workflow-workflow-graph","semio-framework-artifact-workflow-workflow-snapshot","semio-framework-artifact-workflow-workflow-schema","semio-framework-artifact-workflow-workflow-schema-laws"],commands: router});

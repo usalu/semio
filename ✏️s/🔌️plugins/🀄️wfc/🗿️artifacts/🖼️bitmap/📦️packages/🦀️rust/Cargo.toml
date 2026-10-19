@@ -41,6 +41,7 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-tool-run = { workspace = true }

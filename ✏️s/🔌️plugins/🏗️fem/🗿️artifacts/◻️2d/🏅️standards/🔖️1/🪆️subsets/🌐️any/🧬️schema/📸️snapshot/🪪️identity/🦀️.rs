@@ -3,7 +3,7 @@ use semio_framework_dsl_record::FieldValue;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
 
@@ -76,7 +76,7 @@ fn validate_sorted(identities: &mut [(&str, &str, &str)], control: &mut NativeDe
 pub(super) fn validate(record: &RecordValue, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(0)?;
-        let spec = crate::Fem2dSnapshotValue::__dsl_spec();
+        let spec = crate::standards::v1::subsets::any::schema::snapshot::component::reference::Fem2dSnapshotValue::__dsl_spec();
         let mut count = 0usize;
         walk(record, &spec, &mut |_, _, _| {
             control.step()?;

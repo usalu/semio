@@ -3,6 +3,7 @@ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableCell;
 use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTableRow;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn counts_paragraphs_tables_and_words_including_nested_cells() {
@@ -19,7 +20,7 @@ async fn counts_paragraphs_tables_and_words_including_nested_cells() {
     let outline = DocxOutline::compute(&snapshot);
     assert_eq!(outline.paragraph_count, 2);
     assert_eq!(outline.table_count, 1);
-    assert_eq!(outline.word_count, 5); // "hello world" (2) + "nested cell text" (3)
+    assert_eq!(outline.word_count, 5);
 }
 
 #[semio_framework_async_macros::async_test]

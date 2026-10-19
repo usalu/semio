@@ -24,7 +24,9 @@ path = "../../🦀️.rs"
 semio-framework-manifest-actions = { path = "../../../🛂️manifest/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-manifest-app-surface = { path = "../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-payload = { path = "../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -35,3 +37,5 @@ semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️pa
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-declaration = { path = "../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }

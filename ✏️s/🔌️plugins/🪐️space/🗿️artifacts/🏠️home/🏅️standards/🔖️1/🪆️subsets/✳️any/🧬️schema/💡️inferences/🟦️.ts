@@ -1,7 +1,7 @@
 /** 💡️ SHome inference schema — contentDigest fingerprint of the persisted document. */
 
 export interface SHomeInference {
-  /** @derived */
+  /** 📄️ @derived */
   contentDigest: string;
 }
 

@@ -21,8 +21,8 @@ import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFrameP
 import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
 import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 import { browserClipboardPasteCandidate } from "@semio-tech/framework-renderer-wgpu/input-wire";
-import type { OrderedScrollEvent, OrderedScrollFixture } from "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts";
-import { inputOrderedScrollFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import type { OrderedScrollEvent, OrderedScrollFixture } from "@semio-tech/framework/modules/ui/host/input/ordered-scroll/testing/ordered-scroll";
+import { inputOrderedScrollFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce

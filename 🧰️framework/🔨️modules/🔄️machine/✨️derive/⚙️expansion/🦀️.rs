@@ -168,7 +168,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
                 Ok(())
             }
 
-            /// Fires any `after`-timers/invokes whose deadline has passed. Call this
+            /// ⏱️ Fires any `after`-timers/invokes whose deadline has passed. Call this
             /// from a JS-side `setInterval`/`requestAnimationFrame` loop.
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = tick)]
             pub fn tick(&self) {
@@ -216,7 +216,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
                 })
             }
 
-            /// Static — the manifest doesn't depend on any instance, so tooling can
+            /// 📜️ Static — the manifest doesn't depend on any instance, so tooling can
             /// read it (for TypeScript generation) without constructing a machine.
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = manifestJson)]
             pub fn manifest_json() -> String {

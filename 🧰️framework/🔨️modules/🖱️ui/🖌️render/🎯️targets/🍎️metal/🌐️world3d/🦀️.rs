@@ -46,7 +46,6 @@ pub struct WorldGlobalsRing {
 
 impl WorldGlobalsRing {
     /// 📏️ Grows (recreating, never shrinking) to hold at least `slots` slots.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn ensure_slots(&mut self, device: &Device, slots: u32) {
         if slots <= self.capacity_slots && self.buffer.is_some() {
             return;
@@ -58,7 +57,6 @@ impl WorldGlobalsRing {
     }
 
     /// ✍️ Writes every pass's globals into its slot via the `Shared`-storage `contents()` pointer.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn write_passes(&self, globals: &[WorldGlobalsGpu]) {
         let Some(buffer) = self.buffer.as_deref() else { return };
         // 🔓️ SAFETY: `ensure_slots` was called with `globals.len()` immediately before this, so every
@@ -74,7 +72,6 @@ impl WorldGlobalsRing {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn buffer(&self) -> Option<&MetalBuffer> {
         self.buffer.as_deref()
     }

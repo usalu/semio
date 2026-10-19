@@ -52,8 +52,6 @@ pub fn engagement_submit(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) 
         }
         "select" => ctx.scene.active_utility = if ctx.window_kind == crate::editor::puzzle5d::entities::PUZZLE5D_WORLD_WINDOW_KIND_ID { crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::UTILITY_ID.into() } else { PUZZLE5D_DEFAULT_UTILITY.into() },
         "brush" => ctx.scene.active_utility = "brush".into(),
-        // 🧹️ Empties the framework-owned `vortex` domain through the one sanctioned reducer channel, never by
-        // poking selection state this app does not own.
         "clear" => ctx.clear_selection(),
         "zoom" => focus_selection::focus_selection(ctx),
         "move" if numbers.len() >= 2 => translate_selection::translate_selection(ctx, Some(&semio_framework_pack_json::json!({ "dx": numbers[0], "dy": numbers[1], "dz": numbers.get(2).copied().unwrap_or(0.0) }))),

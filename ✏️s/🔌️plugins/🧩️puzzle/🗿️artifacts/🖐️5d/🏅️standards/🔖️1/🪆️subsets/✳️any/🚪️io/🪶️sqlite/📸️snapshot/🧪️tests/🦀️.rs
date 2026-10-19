@@ -15,8 +15,8 @@ fn original_caller_grant() -> semio_framework_value::RetainedCloneGrant {
 pub(super) fn with_original_decode<O>(sql: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, operation: impl FnOnce(&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> O) -> O {
     let policy = original_caller_grant();
     let mut accepted = |_| true;
-    let mut recipient = semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
-    let mut native = semio_framework_value::NativeDecodeControl::new(sql.limits().max_value_bytes, &mut accepted);
+    let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(sql.limits().max_value_bytes, &mut accepted);
     native.install_retirement_recipient(&mut recipient).unwrap();
     let result = {
         let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, policy);
@@ -206,12 +206,12 @@ fn sqlite_snapshot_puzzle5d_controlled_native_scale_preserves_both_exact_variant
    let mut accepted=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(4096,&mut accepted);
    let shape=<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::shape_controlled(&mut encoding).expect("Scale requires genuine controlled metadata");assert!(matches!(shape,semio_framework_dsl_record::Shape::List(_)));
    let field=<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut encoding).expect("Scale requires genuine controlled output");
-   let mut accepted_decode=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted_decode);let actual=<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&field,&mut decoding).expect("Scale requires genuine controlled input");
+   let mut accepted_decode=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut accepted_decode);let actual=<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&field,&mut decoding).expect("Scale requires genuine controlled input");
    match(expected,actual){(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Uniform(_),crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Uniform(actual))=>assert_eq!(actual.to_bits(),bits),(crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Vec3(_),crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Vec3(actual))=>assert_eq!(actual.map(f64::to_bits),[bits;3]),_=>panic!("Scale variant changed")}
   }
  }
  let mut cancelled=|_|false;let mut encoding=semio_framework_value::NativeEncodeControl::new(4096,&mut cancelled);assert!(<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::to_value_controlled(&crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale::Uniform(0.0),&mut encoding).is_err());
- let mut accepted=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(0,&mut accepted);assert!(<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&semio_framework_dsl_record::FieldValue::List(vec![semio_framework_dsl_record::FieldValue::Float(0.0)]),&mut decoding).is_err());
+ let mut accepted=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0,&mut accepted);assert!(<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&semio_framework_dsl_record::FieldValue::List(vec![semio_framework_dsl_record::FieldValue::Float(0.0)]),&mut decoding).is_err());
 }
 
 #[test]

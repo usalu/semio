@@ -1,9 +1,9 @@
-import { validUserPreferenceRecordV1 } from "../../../../../../../../🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
+import { validUserPreferenceRecordV1 } from "@semio-tech/framework/directory/io/text";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { createMemoryStoragePort, createScopedStoragePort, type StoragePort } from "@semio-tech/framework";
-import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "@semio-tech/framework/config/schema/mutations";
-import { type UiPreferencesConfigMutation } from "../../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { parseUserNamedLayout, type UiPreferences, type UserNamedLayout } from "../../../../../../../../🔨️modules/🎚️config/🧬️schema/🟦️.ts";
+import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "@semio-tech/framework-os/config/schema/mutations";
+import { type UiPreferencesConfigMutation } from "@semio-tech/framework/config/mutations";
+import { parseUserNamedLayout, type UiPreferences, type UserNamedLayout } from "@semio-tech/framework/config/schema";
 import { UI_PREFERENCE_DATA_CLASSES } from "../../../../../../🎚️config/🧬️schema/🟦️.ts";
 import uiPreferencesSchema from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🔣️.json" with { type: "json" };
 import mutationSchema from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json" with { type: "json" };

@@ -1,4 +1,4 @@
-//! `upsert-tower-leg` — upsert a `TowerLeg` by id into `tower_legs`.
+//! 🧬️ `upsert-tower-leg` — upsert a `TowerLeg` by id into `tower_legs`.
 
 use semio_s_artifact_norm_en1993_model::{TowerLeg, En1993Snapshot};
 

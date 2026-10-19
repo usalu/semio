@@ -27,6 +27,7 @@ use std::collections::VecDeque;
 /// semantic-mutations-overhaul rename (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`)
 /// only needs updating here if `🦀️.rs`'s directory wiring ever changes.
 use crate::standards::v1::subsets::any::schema::mutations as leaves;
+use semio_s_artifact_architect_program_catalog::standards::v1::subsets::any::schema::registers::catalog::RegisterRow;
 
 //#region 📐️Template
 /// 📋️ Result of applying a template to a program.

@@ -1,3 +1,4 @@
+import {testFlowBootstrapSources} from "../🌱️bootstrap/🟦️.ts";
 import { receiveScriptProcessInvocation, type ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🏷️ Proves Flow browser source, declaration, publication and consumer ownership from one portable contract. */
 import assert from "node:assert/strict";
@@ -47,9 +48,10 @@ async function moduleExportNames(path: string): Promise<string[]> {
 
 /** 🧪️ Runs the portable Flow browser ownership, projection, package and bundle oracle. */
 export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Promise<void> {
+  testFlowBootstrapSources();
   await testColdFlowDeclaration();
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
-  assert.equal(fixture.owners.length, 4);
+  assert.equal(fixture.owners.length, 5);
 
   for (const owner of fixture.owners) {
     const path = join(workspaceRoot, owner.path);
@@ -104,10 +106,11 @@ export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Pr
   if (typeof browserExport !== "object" || typeof hostExport !== "string") throw new Error("Flow browser package export kinds changed");
   assert.equal(readFileSync(join(workspaceRoot, authoredDeclaration.path), "utf8"), declarationText);
   const publisher = await import(pathToFileURL(join(workspaceRoot, fixture.owners.find(owner=>owner.id==="browser-publication")!.path)).href);
-  const manifest=publisher.flowBrowserPackageManifestV1("0.1.0");
+  const bootstrap=await import(pathToFileURL(join(workspaceRoot, fixture.owners.find(owner=>owner.id==="flow-bootstrap")!.path)).href);
+  const manifest=bootstrap.flowBrowserPackageManifestV1("0.1.0");
   assert.equal(manifest.name,fixture.package.name);assert.deepEqual(sorted(manifest.files),sorted(fixture.package.files));assert.deepEqual(manifest.exports,fixture.package.exports);
   const database=new(await import("bun:sqlite")).Database(":memory:");try{database.exec("create table files(name text primary key)");for(const name of fixture.package.files)database.query("insert into files values(?)").run(name);assert.deepEqual(database.query("select count(*) count from files").get(),{count:manifest.files.length});}finally{database.close();}
-  for(const snippets of [["../escape"],["snippets/a","snippets/a"],["snippets/../escape"]])assert.throws(()=>publisher.flowBrowserPackageManifestV1("0.1.0",snippets));
+  for(const snippets of [["../escape"],["snippets/a","snippets/a"],["snippets/../escape"]])assert.throws(()=>bootstrap.flowBrowserPackageManifestV1("0.1.0",snippets));
   assert.ok(Object.isFrozen(manifest));assert.ok(Object.isFrozen(manifest.exports));assert.ok(Object.isFrozen(manifest.exports["."]));
   assert.throws(()=>publisher.publishFlowBrowserPackage(Object.freeze({}),invocation));
   const ts=await import("typescript"),syntax=ts.createSourceFile("flow.d.ts",declarationText,ts.ScriptTarget.Latest,true);

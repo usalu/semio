@@ -1,6 +1,7 @@
 //! 🪆️ Unboxed actual tagged fields and literal flattened node ownership.
 use super::*;
-use semio_framework_value::{DecodedValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, FromValue, ToValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 macro_rules! tagged_field{
  ($($name:ty),+)=>{$(
   impl semio_framework_dsl_record::BorrowedDslField for $name{const SHAPE:semio_framework_dsl_record::BorrowedShape=semio_framework_dsl_record::BorrowedShape::Statements(<Self as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);}

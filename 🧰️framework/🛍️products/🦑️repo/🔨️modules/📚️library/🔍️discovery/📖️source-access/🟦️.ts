@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import { listModuleTree, readModuleTreeSource, type ModuleTreeOptions } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { listModuleTree, readModuleTreeSource, type ModuleTreeOptions } from "@semio-tech/framework-compiler-rs/syntax/module-tree";
 
 export type PolicySourceEntry = Readonly<{ name: string; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }>;
 
@@ -214,7 +214,6 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🔭️capability-open/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🥾️catalog-bootstrap/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs",

@@ -45,11 +45,6 @@ pub struct WorkflowSnapshot {
     pub parameters: Vec<WorkflowParameter>,
     #[dsl(table)]
     pub parameter_bindings: Vec<WorkflowParameterBinding>,
-    // 🧮️ NOT `#[dsl(table)]`: `WorkflowInput` hand-crafts `dsl::DslField` (its `multiplicity:
-    // PortMultiplicity` field is foreign, orphan-rule-blocked from `#[derive(dsl::DslRecord)]` — same
-    // reasoning as `CollectionEntry.body` in the `space` crate), so it has no `__dsl_spec` for the
-    // compact Structure-of-Arrays table macro; the plain (unattributed) `Vec<DslField>` shape below
-    // renders it as the expanded Array-of-Structs `Shape::List(Record)` form instead.
     pub inputs: Vec<WorkflowInput>,
     #[dsl(table)]
     pub input_bindings: Vec<WorkflowInputBinding>,

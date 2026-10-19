@@ -4,9 +4,9 @@
 //! @see ../../../🎪️stage/🧪️tests/🔬️unit/🦀️.rs — the kit: the troupe, a meadow to stand on, the events and a pet at rest
 
 use super::*;
-use crate::spacing::COMFORT_GAP;
-use crate::draft::{BLINK_HIGH, BLINK_LOW};
-use crate::schedule::arrival_tick;
+use semio_framework_pets_staging_draft::spacing::COMFORT_GAP;
+use semio_framework_pets_staging_draft::draft::{BLINK_HIGH, BLINK_LOW};
+use semio_framework_pets_staging_draft::schedule::arrival_tick;
 use crate::stage::tests::{actor_of, clicked, meadow, rested, run, summoned, surveyed, ticked, troupe, FAR, TROUPE};
 use crate::stage::{advance, frame_of, open_stage};
 use semio_framework_pets_contract::schema::{Hushed, Over, Pointed, Rate, StageEvent, Ticked, Tuned};

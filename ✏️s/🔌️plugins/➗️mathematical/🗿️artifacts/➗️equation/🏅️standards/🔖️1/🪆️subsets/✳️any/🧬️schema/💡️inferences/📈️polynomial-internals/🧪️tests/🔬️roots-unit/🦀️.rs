@@ -7,7 +7,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn isolate_roots_of_simple_quadratic() {
-        let f = ipoly(vec![-2, 0, 1]); // x^2 - 2, roots +-sqrt(2)
+        let f = ipoly(vec![-2, 0, 1]);
         let intervals = isolate_real_roots(&f);
         assert_eq!(intervals.len(), 2);
         for (lo, hi) in &intervals {
@@ -18,7 +18,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn isolate_roots_matches_known_integer_roots() {
-        // (x-1)(x-3)(x+2)
         let f = ipoly(vec![6, -1, -4, 1]);
         let intervals = isolate_real_roots(&f);
         assert_eq!(intervals.len(), 3);
@@ -37,14 +36,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cauchy_bound_contains_all_roots() {
-        let f = ipoly(vec![6, -1, -4, 1]); // roots -2, 1, 3
+        let f = ipoly(vec![6, -1, -4, 1]);
         let bound = cauchy_root_bound(&f);
         assert!(bound >= Rational::from_i64(3, 1).unwrap());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn wilkinson_like_small_case_root_count() {
-        // (x-1)(x-2)(x-3)(x-4)
         let f = ipoly(vec![-1, 1]).mul(&ipoly(vec![-2, 1])).mul(&ipoly(vec![-3, 1])).mul(&ipoly(vec![-4, 1]));
         let intervals = isolate_real_roots(&f);
         assert_eq!(intervals.len(), 4);

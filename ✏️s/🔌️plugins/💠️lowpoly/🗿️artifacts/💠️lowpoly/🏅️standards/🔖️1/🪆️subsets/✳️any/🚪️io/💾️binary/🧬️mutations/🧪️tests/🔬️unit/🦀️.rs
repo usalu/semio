@@ -19,9 +19,6 @@ async fn document_text_round_trip_after_applying_an_operation() {
     let object_id = projection.objects[0].id.clone();
     let envelope = store::os_store::document_materialize::create_document_envelope::<semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut doc_store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    // 🏪️ A bare store carries no owner catalog and refuses its first edit (`edit history insertion
-    // requires its exact mutation retirement factory`); install the exact owners production installs
-    // through `LowpolyPlayApp::build_document_store_owners`, and close them before drop.
     doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<semio_s_artifact_lowpoly_lowpoly_model::snapshot::LowpolySnapshot, LowpolyMutation>());
     let operation = LowpolyMutation::RenameObject(rename_object::RenameObject { id: object_id, new_name: "Renamed Layer".into() });
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![operation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");

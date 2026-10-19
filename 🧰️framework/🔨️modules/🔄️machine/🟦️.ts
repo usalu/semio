@@ -152,7 +152,7 @@ export interface MachineDefinition<M extends MachineSpec> {
   readonly makeOutput?: OutputFn<M>;
   readonly guards: readonly GuardFn<M>[];
   readonly actions: readonly ActionFn<M>[];
-  /** Stable hash of the compiled structure — used to gate {@link restore}. `bigint` (not `number`)
+  /** 👆️ Stable hash of the compiled structure — used to gate {@link restore}. `bigint` (not `number`)
    * since Rust's `u64` fingerprint can exceed `Number.MAX_SAFE_INTEGER`. */
   readonly fingerprint: bigint;
   readonly manifestJson: string;
@@ -170,13 +170,13 @@ export interface NodeDef {
   readonly stableId: string;
   readonly kind: NodeKind;
   readonly parent?: NodeId;
-  /** Compound: default child to enter. History: fallback target when no history is recorded. */
+  /** 🌱️ Compound: default child to enter. History: fallback target when no history is recorded. */
   readonly initial?: NodeId;
   readonly children: readonly NodeId[];
   readonly entryActions: readonly ActionId[];
   readonly exitActions: readonly ActionId[];
   readonly invokes: readonly InvokeId[];
-  /** `after` delayed transitions owned by this state: `[timer, delayMs]`. */
+  /** ⏰️ `after` delayed transitions owned by this state: `[timer, delayMs]`. */
   readonly timers: readonly (readonly [TimerId, number])[];
   readonly docIndex: number;
 }
@@ -185,9 +185,9 @@ export interface NodeDef {
 export type Trigger =
   | { readonly kind: "event"; readonly event: EventId }
   | { readonly kind: "eventless" }
-  /** Fires once every descendant of `node` reaches a final state (`on_done`). */
+  /** ⚡️ Fires once every descendant of `node` reaches a final state (`on_done`). */
   | { readonly kind: "done"; readonly node: NodeId }
-  /** Fires when the named `after` timer elapses (delivered via {@link timerElapsed}). */
+  /** 📣️ Fires when the named `after` timer elapses (delivered via {@link timerElapsed}). */
   | { readonly kind: "timer"; readonly timer: TimerId };
 
 /** 🔀 External transitions exit+re-enter their source; internal transitions to a descendant of a

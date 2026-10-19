@@ -15,8 +15,6 @@ export function testPublicationRetirementAuthorityOracle(): void {
   assert.equal(new Set(lanes.map((row) => row.id)).size, lanes.length, "every lane id is distinct");
   assert.equal(new Set(lanes.map((row) => row.storeLabel)).size, lanes.length, "every store label is distinct");
 
-  // ♻️ The two terminal messages are derived from the lane's own store label, so a lane cannot
-  // drift into another lane's wording.
   for (const row of lanes) {
     assert.equal(row.falseTerminalFault, `${row.storeLabel} publication closed without terminal emptiness`, `${row.id} false-terminal wording`);
     assert.equal(row.rejectionIsFatal, row.terminalOutcome === "rejected", `${row.id} fatality matches its terminal outcome`);

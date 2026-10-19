@@ -371,9 +371,6 @@ fn margin_confidence_rewards_well_textured_high_margin() {
     let src_views = vec![(src_img, src_pose, intr)];
     let dm = fill_plane_depth_map(width, height, &intr, &ref_pose, true_depth);
 
-    // A small depth perturbation induces only a sub-pixel reprojection shift at this
-    // depth/baseline (too little to move ZNCC), so the margin probe needs a step large enough
-    // to move the warp by several pixels.
     let scored = margin_confidence(&dm, &ref_img, &(ref_pose, intr), &src_views, 3, 3.0);
     let mut confidences = Vec::new();
     for y in 4..(height - 4) {
@@ -387,9 +384,6 @@ fn margin_confidence_rewards_well_textured_high_margin() {
     let mean: f32 = confidences.iter().sum::<f32>() / confidences.len() as f32;
     assert!(mean > 0.15, "expected a clear margin for the correct depth on textured content, got mean {mean}");
 
-    // A blank (untextured) image gives ZNCC == 0 everywhere (degenerate variance, per
-    // `remodeling_image::zncc`), so there is no margin between the accepted depth and its
-    // depth-perturbed competitors.
     let blank_ref = remodeling_image::ImageGray::new(width, height);
     let blank_src = remodeling_image::ImageGray::new(width, height);
     let blank_views = vec![(blank_src, src_pose, intr)];
@@ -531,21 +525,11 @@ fn tsdf_sphere_multi_view_zero_crossing_within_one_voxel() {
 
 #[test]
 fn tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order() {
-    // Deliberately low-resolution/low-truncation: a running weighted average is exactly
-    // order-independent only until `TSDF_MAX_WEIGHT` clamps a voxel's accumulated weight, at
-    // which point which particular samples got "locked in" is a genuine (not merely
-    // floating-point-noise) function of arrival order — an inherent property of any
-    // weight-capped Curless-Levoy fusion, not a bug. Keeping per-voxel contributions well under
-    // the cap isolates the property this test actually checks: `sample`'s pure hash-lookup
-    // addressing agrees bit-for-bit across block boundaries regardless of integration order.
     let (width, height) = (5u32, 5u32);
     let intr = intrinsics_for(width, height);
     let pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let pose2 = translated_pose(-0.05, 0.02, 0.0);
     let pose3 = translated_pose(0.04, -0.03, 0.0);
-    // Plane depth chosen so its zero-crossing lands right at a TSDF block boundary (block dim
-    // 8, voxel size 0.1 -> boundary at world z = 0.8), the exact seam `sample()` must resolve
-    // identically from either side of.
     let voxel_size = 0.1;
     let truncation = 0.1;
     let plane_z = 0.8;
@@ -571,9 +555,6 @@ fn tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order() 
                 let b = vol_reverse.sample(ix, iy, iz);
                 match (a, b) {
                     (Some((sdf_a, w_a)), Some((sdf_b, w_b))) => {
-                        // Tolerance is well above pure floating-point summation-order noise but
-                        // still far tighter than weight-cap-induced order dependence would need
-                        // (ruled out above by construction), so it stays a meaningful check.
                         assert!((sdf_a - sdf_b).abs() < 1e-3, "sdf mismatch at ({ix},{iy},{iz}): {sdf_a} vs {sdf_b}");
                         assert!((w_a - w_b).abs() < 1e-3, "weight mismatch at ({ix},{iy},{iz}): {w_a} vs {w_b}");
                         compared += 1;
@@ -675,18 +656,11 @@ fn classify_ground_pmf_achieves_high_ground_recall_with_buildings_and_vegetation
         }
     }
     let ground_count = positions.len();
-    // Elevated "building" block: a small planar cluster well above the ground.
     for iy in 0..4 {
         for ix in 0..4 {
             positions.push([2.0 + f64::from(ix) * 0.3, 5.0 + f64::from(iy) * 0.3, 3.0]);
         }
     }
-    // Scattered "vegetation": irregular heights over a patch that overlaps the ground grid's
-    // own `[0, 9.5]` extent (so PMF's opening window has nearby ground samples to erode from —
-    // a cluster placed entirely outside the ground's covered area is fundamentally unreachable
-    // for *any* ground filter, not just this one), well above the PMF's max
-    // (window <= max_iterations = 4) `max_slope * window * cell = 0.3 * 4 * 0.5 = 0.6` opening
-    // threshold so it is reliably excluded from ground.
     let mut state = 7u64;
     for _ in 0..40 {
         let x = 6.0 + lcg_next(&mut state) * 3.0;
@@ -706,12 +680,6 @@ fn classify_ground_pmf_achieves_high_ground_recall_with_buildings_and_vegetation
 
 #[test]
 fn classify_building_vegetation_splits_planar_from_scattered() {
-    // A flat planar patch (roof-like) vs a scattered noisy patch (canopy-like), both elevated
-    // above the ground and pre-labeled Unclassified as classify_ground_pmf would leave them.
-    // Interior-grid points are asserted on (not the boundary ring): a boundary point's k-NN
-    // neighborhood is one-sided even on a perfectly flat patch, which can skew its two in-plane
-    // eigenvalues apart and understate planarity — the same edge effect the other geometric
-    // tests in this module dodge by checking only interior points.
     let mut positions = Vec::new();
     let mut interior = Vec::new();
     for iy in 0..10 {

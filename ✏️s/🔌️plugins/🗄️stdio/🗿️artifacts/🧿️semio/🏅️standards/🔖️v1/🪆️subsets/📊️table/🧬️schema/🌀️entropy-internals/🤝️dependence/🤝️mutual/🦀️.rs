@@ -138,7 +138,6 @@ pub struct KsgConfig {
 }
 
 impl KsgConfig {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(k: usize, variant: KsgVariant) -> Result<Self, EntropyError> {
         if k == 0 {
             return Err(EntropyError::InvalidConfig { field: "k", reason: "must be at least 1" });

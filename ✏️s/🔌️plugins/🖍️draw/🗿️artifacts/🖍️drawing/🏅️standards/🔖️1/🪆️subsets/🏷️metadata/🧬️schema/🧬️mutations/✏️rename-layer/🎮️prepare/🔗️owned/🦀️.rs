@@ -5,7 +5,8 @@ use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::snapshot::lookup::owned::{DrawingOwnedLayerLookupCursor, DrawingOwnedLayerLookupStep};
-use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value::{paged::PagedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 
 /// 🧾️ Keeps the actual original old name through the native immutable layer projection.

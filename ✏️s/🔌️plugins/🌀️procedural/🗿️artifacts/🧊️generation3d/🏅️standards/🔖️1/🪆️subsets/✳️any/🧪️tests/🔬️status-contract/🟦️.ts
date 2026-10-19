@@ -268,7 +268,6 @@ export function testGeneration3dPreviewStatusContract(): void {
   assert.equal(fixture.version, 1);
   const contract = fixture.statusContract;
 
-  // 🪟️ Three windows, one schema, one verb.
   assert.deepEqual(
     contract.surfaces.map((row) => row.surface).sort(),
     ["editor", "generate", "viewer"],
@@ -277,11 +276,6 @@ export function testGeneration3dPreviewStatusContract(): void {
   for (const surface of contract.surfaces) {
     assert.equal(surface.cancelAction, fixture.cancelAction, `${surface.surface}: every surface names the same cancel verb`);
     assert.equal(surface.frameworkReservedVerb, true, `${surface.surface}: the verb a surface publishes is the framework-reserved run abort, injected with the declared tool run — a plugin cancel command of its own would be a second contract`);
-    // 🛑️ Declaring the COMMAND is only half of it: `ShellHost`'s `declaredAction` gate resolves the
-    // verb against the FOCUSED window kind's own action refs, so a window that publishes
-    // `cancelAction` without listing the verb paints a button whose click is dropped before
-    // `plugin.handleAction` runs — which is what all three preview windows did
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     assert.equal(surface.offersCancelOnWindow, true, `${surface.surface}: the window kind itself must offer the cancel verb`);
     assert.ok(surface.windowKindId.length > 0, `${surface.surface}: a window kind id is the address the status is published under`);
   }
@@ -303,8 +297,6 @@ export function testGeneration3dPreviewStatusContract(): void {
     const label = fixture.phaseLabels[phase];
     assert.ok(label, `${state.id}: the fixture must declare a label for phase ${phase}`);
 
-    // 🛑️ The shell half: what a surface publishing this state would actually offer the user, read
-    // through the one total parser `World3dHost` uses.
     const published = JSON.stringify({
       phase,
       phaseLabel: label,
@@ -332,17 +324,12 @@ export function testGeneration3dPreviewStatusContract(): void {
     }
   }
 
-  // 📈️ The declared shape itself — a key dropped from the projection is the defect this guards.
   for (const key of ["phase", "phaseLabel", "progress", "cancellable", "cancelAction", "debug"]) {
     assert.ok(contract.objectKeys.includes(key), `the contract must declare ${key}`);
   }
   for (const key of ["unitsDone", "unitsTotal", "facesDone", "facesTotal", "inFlight", "ratio"]) {
     assert.ok(contract.progressKeys.includes(key), `progress must declare ${key}`);
   }
-  // 🧹️ `debug` names what reached the SCENE and nothing else. `evalLen`/`evalHead` — a length and
-  // the first 240 characters of the raw evaluation text — were spilled onto every status frame of
-  // every preview window and are gone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-  // `📓️audit-user-journey-gaps-2026-09-13.md` §9 item 17).
   for (const key of ["meshesLen", "instancesLen"]) {
     assert.ok(contract.debugKeys.includes(key), `debug must declare ${key}`);
   }
@@ -350,7 +337,6 @@ export function testGeneration3dPreviewStatusContract(): void {
     assert.ok(!contract.debugKeys.includes(key), `debug must not carry the retired ${key}`);
   }
 
-  // 🏁️ The settle path, replayed against the independent latch model.
   const settle = fixture.settlePath;
   for (const row of settle.unfinishedRows) {
     assert.equal(SettleLatch.tickIsUnfinished(row.more, row.parkedInvocations), row.unfinished, `settle-path row ${row.id}`);
@@ -382,17 +368,12 @@ export function testGeneration3dPreviewStatusContract(): void {
   assert.equal(rearms, 1, "exactly one terminal tick is owed");
   assert.equal(settle.terminalTick.emits, "flowEvalTick");
   assert.deepEqual(settle.terminalTick.addressedBy, ["windowId", "windowKindId"], "the terminal tick names the window it settles");
-  // 🔒️ A finished window's answer arms NOTHING — the terminal arm is latched, never unconditional.
   const finished = new SettleLatch();
   finished.beginWindowTick();
   finished.noteTickOutcome(SettleLatch.tickIsUnfinished(false, 0));
   finished.noteExtensionsInFlight(1);
   assert.equal(finished.settleAnswer(false), 0, "a stale answer on a finished window may never spin the chain back up");
 
-  // ⛓️️ The CHAIN CENSUS: the published ratio is monotone within one evaluation AND actually moves.
-  // A ledger that aggregates only its LIVE rows shrinks both halves of its fraction when a node
-  // finishes, which is how a pill counted DOWN from `7/7 (100%)` to `2/6 (33%)` across one
-  // evaluation (`📓️wgpu-progress-visibility-2026-09-14.md` §4.3).
   const census = fixture.chainCensus;
   assert.equal(census.monotone, true, "the fixture declares the law this twin replays");
   const ratios: number[] = [];
@@ -415,7 +396,6 @@ export function testGeneration3dPreviewStatusContract(): void {
     "four contributed nodes across three dependency levels cost THREE waves, not four hops",
   );
 
-  // 🛑️ A declared `cancellable` with no action to dispatch is a dead button — worse than none.
   assert.equal(world3dComputeStatusV1('{"cancellable":true}').cancellable, false);
   assert.equal(world3dComputeStatusV1("not json").phase, "idle");
   assert.equal(world3dComputeStatusV1(undefined).computing, false);

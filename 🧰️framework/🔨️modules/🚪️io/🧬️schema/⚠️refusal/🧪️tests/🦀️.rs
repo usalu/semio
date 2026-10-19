@@ -74,20 +74,21 @@ fn io_cause_controlled_wire_retains_all_authorities_and_source_data() {
         let Some(expected)=row.get("expectedWire")else{continue};
         let expected=fixture_value(expected);
         let mut accept=|_|true;
-        let decoded=IoError::from_value_controlled(&expected,&mut semio_framework_value::NativeDecodeControl::new(1048576,&mut accept)).unwrap();
+        let decoded=IoError::from_value_controlled(&expected,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1048576,&mut accept)).unwrap();
         assert_eq!(decoded.cause.kind.as_str(),row["kind"].as_str().unwrap());
         assert_eq!(decoded.cause.message,row["message"].as_str().unwrap());
         let mut accept=|_|true;
         let encoded=decoded.to_value_controlled(&mut NativeEncodeControl::new(1048576,&mut accept)).unwrap();
         let mut accept=|_|true;
-        let roundtrip=IoError::from_value_controlled(&encoded,&mut semio_framework_value::NativeDecodeControl::new(1048576,&mut accept)).unwrap();
+        let roundtrip=IoError::from_value_controlled(&encoded,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1048576,&mut accept)).unwrap();
         assert_eq!(roundtrip,decoded);
         assert_eq!(fixture_output(&encoded),row["expectedWire"]);
     }
 }
 #[test]
 fn io_cause_wire_refuses_closed_members_and_hostile_controls() {
-    use semio_framework_value::{DslValue,NativeDecodeControl};
+    use semio_framework_value::DslValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⚠️refusal/🔁️wire/🔣️.json")).unwrap();
     for row in rows.as_array().unwrap() {
         let input=DslValue::Object(row["members"].as_array().unwrap().iter().map(|member|(member[0].as_str().unwrap().to_owned(),fixture_value(&member[1]))).collect());

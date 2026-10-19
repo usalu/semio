@@ -419,8 +419,6 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
             }
             let mut sequence = 0;
             let diagnostic = if cancelled { MemberOpenDiagnostic::Cancelled } else { MemberOpenDiagnostic::Decode };
-            // Every non-Flow arm now opens through the framework's bounded pack decoder: it may consume
-            // the retained input under budget, but a Flow envelope can never publish as another subset.
             let mut rejected = None;
             for _ in 0..100_000 {
                 let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel.clone(), || Some(1), &mut sequence, &mut step_progress);
@@ -445,8 +443,6 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
                 close_open(&mut denied_open, &[1, 7, 4096]);
                 panic!("{}: expected {diagnostic:?}, found {rejected:?}", declaration.subset);
             }
-            // A decode rejection happens only after the bounded decoder copied the whole framed snapshot,
-            // so its exact retirement is the request plus that copy; a cancelled open copied nothing.
             assert!(close_open(&mut denied_open, &[1, 7, 4096]) >= exact_retired, "{}: physically released original request and any actual decoder prefix", declaration.subset);
         }
     }

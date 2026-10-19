@@ -1,0 +1,22 @@
+{
+ "file": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🗺️document-open/🟦️.ts",
+ "scopeLine": 78,
+ "stateName": "probe",
+ "lets": [
+  "renderWakes",
+  "activeLifetime",
+  "panelRefreshes",
+  "stagedCommandSequence",
+  "stagedColdPairIngress",
+  "lifecycleAcknowledged",
+  "patchAcknowledged",
+  "patchRejected",
+  "actionPatchAcknowledged",
+  "heldActionPatch",
+  "loaded",
+  "described",
+  "terminated",
+  "owner",
+  "reservation"
+ ]
+}

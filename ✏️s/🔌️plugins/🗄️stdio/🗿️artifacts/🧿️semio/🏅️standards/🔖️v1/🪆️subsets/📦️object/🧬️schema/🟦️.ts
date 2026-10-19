@@ -5,11 +5,11 @@ export type { SemioTransform } from "../../✉️base/🧬️schema/🧮️geome
 export type { ArtifactChild } from "../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 
 export interface SemioObjectArtifact {
-  /** @state artifact */ schema: "stdio.semio.object";
-  /** @state artifact */ transform: SemioTransform;
-  /** @state artifact @child kind=s.stdio.semio */ brep?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ mesh?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ properties?: ArtifactChild;
+  /** 📐️ @state artifact */ schema: "stdio.semio.object";
+  /** 🧮️ @state artifact */ transform: SemioTransform;
+  /** 🧊️ @state artifact @child kind=s.stdio.semio */ brep?: ArtifactChild;
+  /** 🕸️ @state artifact @child kind=s.stdio.semio */ mesh?: ArtifactChild;
+  /** 🏷️ @state artifact @child kind=s.stdio.semio */ properties?: ArtifactChild;
 }
 
 /** 📦️ Parses the Object parent and its exact owned child references. */

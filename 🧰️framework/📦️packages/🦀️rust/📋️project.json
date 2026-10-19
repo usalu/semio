@@ -1,10 +1,50 @@
 {
   "name": "@semio-tech/framework-rs",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏪️time-travel/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎓️onboarding/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🧪️tests/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
+  },
   "$schema": "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test-staged-payload-funding": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
@@ -13,14 +53,22 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-staged-payload-funding"
+            "verify",
+            "staged-payload-funding"
           ]
         }
       }
     },
     "test-retained-pack-encoding": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
@@ -29,14 +77,22 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-retained-pack-encoding"
+            "verify",
+            "retained-pack-encoding"
           ]
         }
       }
     },
     "test-window-utility-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "🧰️framework",
@@ -45,14 +101,16 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-window-utility-native"
+            "verify",
+            "window-utility-native"
           ]
         }
       }
     },
     "test-source-projection": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-source-projection",
@@ -60,13 +118,18 @@
       },
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📷️snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
       ]
     },
     "test-directory-discovery": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-directory-discovery",
@@ -74,12 +137,25 @@
       },
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🔎️discovery/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
       ]
     },
     "test-action-choices": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-action-choices"
@@ -87,6 +163,15 @@
     },
     "test-tool-run-actions": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-tool-run-actions"
@@ -94,6 +179,15 @@
     },
     "test-history-edit-actions": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-edit-actions"
@@ -101,6 +195,15 @@
     },
     "test-mutation-inputs": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-mutation-inputs"
@@ -108,6 +211,15 @@
     },
     "test-host-effect-invocation": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-host-effect-invocation"
@@ -115,6 +227,15 @@
     },
     "test-snapshot-sqlite": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite"
@@ -122,6 +243,15 @@
     },
     "test-snapshot-sqlite-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite native"
@@ -129,6 +259,15 @@
     },
     "test-core-modules": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-core-modules",
@@ -137,6 +276,15 @@
     },
     "test-deflate-encoding": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-deflate-encoding",
@@ -145,6 +293,15 @@
     },
     "test-wire-retirement-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-wire-retirement-source"
@@ -152,6 +309,15 @@
     },
     "test-wire-retirement-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-wire-retirement-native",
@@ -160,6 +326,15 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test",
@@ -168,6 +343,15 @@
     },
     "test-package-descriptor-value-codec": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-package-descriptor-value-codec"
@@ -175,6 +359,14 @@
     },
     "lint": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts lint",
@@ -183,6 +375,7 @@
     },
     "generate": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts generate",
@@ -191,6 +384,13 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated"
@@ -199,6 +399,7 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts check",
@@ -207,7 +408,15 @@
     },
     "test-fixture-ownership-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-fixture-ownership-source"
@@ -215,6 +424,13 @@
     },
     "test-snapshot-sqlite-source": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -224,7 +440,15 @@
     },
     "test-artifact-kind-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-artifact-kind-source"
@@ -232,7 +456,8 @@
     },
     "test-command-ingress-consumer": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-command-ingress-consumer",
@@ -241,6 +466,9 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/Cargo.toml",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/**/*",
@@ -251,6 +479,15 @@
     },
     "test-history-progress": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-progress"
@@ -258,7 +495,15 @@
     },
     "test-snapshot-receiving-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-snapshot-receiving-source",
@@ -267,6 +512,15 @@
     },
     "test-argument-retirement-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework",
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-argument-retirement-native",
@@ -275,10 +529,14 @@
     },
     "test-original-factory-admission": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/**/*"
       ],
@@ -289,10 +547,14 @@
     },
     "test-original-factory-admission-source": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎯️action-bus/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/**/*"
       ],

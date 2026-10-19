@@ -9,10 +9,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseDiffIngestRequest } from "../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
-import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "../../📚️library/🗄️persistence/🟦️.ts";
-import { requireAuth, isAuthError } from "../../📚️library/🔐️authentication/🟦️.ts";
-import { publishEvent } from "../../📚️library/📡️event/🟦️.ts";
-import { parseUnifiedDiff, buildScopesForFile } from "../../📚️library/🔎️source-index/🟦️.ts";
+import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
+import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
+import { parseUnifiedDiff, buildScopesForFile } from "@semio-tech/framework/products/repo/modules/server/library/source-index";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -43,13 +43,11 @@ export async function POST(request: NextRequest) {
     files: changedFiles,
   });
 
-  // 📸️Build snapshot map
   const contentByFile: Record<string, string> = {};
   for (const s of snapshots) {
     contentByFile[s.path] = s.content;
   }
 
-  // ♻️Index changed files
   const allScopes: Scope[] = [];
   for (const file of changedFiles) {
     let content = contentByFile[file];
@@ -65,7 +63,6 @@ export async function POST(request: NextRequest) {
     allScopes.push(...scopes);
   }
 
-  // 🗺️Map claims
   const claimedIds: string[] = [];
   for (const diffFile of diffFiles) {
     if (!diffFile.path) continue;
@@ -86,7 +83,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 🔷️Detect conflicts
   const conflicts = await listConflicts();
   const warnings: Warning[] = conflicts.map((c) => ({
     id: newId(),

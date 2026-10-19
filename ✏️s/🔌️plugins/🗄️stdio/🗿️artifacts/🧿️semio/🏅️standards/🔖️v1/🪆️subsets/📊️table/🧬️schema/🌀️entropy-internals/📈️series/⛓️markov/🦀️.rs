@@ -45,7 +45,6 @@ impl MarkovChain {
     /// ⛓️ Row-major `num_contexts x alphabet_size` raw transition counts (diagnostic access to
     /// the fitted state, e.g. for inspecting per-context sample sizes before trusting
     /// [`MarkovChain::entropy_rate`] on sparsely observed contexts).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn raw_counts(&self) -> &[f64] {
         &self.counts
     }
@@ -54,7 +53,6 @@ impl MarkovChain {
     /// `order >= 1` and `seq.len() >= order + 1`; rejects sequences that are too short with
     /// [`EntropyError::InsufficientData`] and out-of-range symbols or an overflowing
     /// `alphabet_size^order` context space with [`EntropyError::InvalidConfig`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fit(seq: &[u32], alphabet_size: usize, order: usize) -> Result<Self, EntropyError> {
         if order == 0 {
             return Err(EntropyError::InvalidConfig { field: "order", reason: "must be >= 1" });
@@ -98,7 +96,6 @@ impl MarkovChain {
     /// symbol-to-symbol transition matrix). Iterates a uniform-start distribution until the L1
     /// change drops below `1e-12` or `10_000` iterations elapse, returning
     /// [`EntropyError::NotConverged`] on the latter.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn stationary(&self) -> Result<Vec<f64>, EntropyError> {
         let k = self.num_contexts;
         let modulus = k / self.alphabet_size;
@@ -109,7 +106,6 @@ impl MarkovChain {
                 let row = &self.conditional[context * self.alphabet_size..(context + 1) * self.alphabet_size];
                 let row_total = neumaier_sum(row.iter().copied());
                 if row_total <= 0.0 {
-                    // ⛓️ Absorbing self-loop for an unobserved context (see struct docs).
                     next_pi[context] += pi[context];
                     continue;
                 }
@@ -133,7 +129,6 @@ impl MarkovChain {
     /// ⛓️ Entropy rate `-sum_context pi(context) * sum_next P(next|context) * ln P(next|context)`,
     /// computed in nats from [`MarkovChain::stationary`] and the fitted conditional
     /// distributions, then converted to `base`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn entropy_rate(&self, base: LogBase) -> Result<Estimate, EntropyError> {
         base.validate()?;
         let pi = self.stationary()?;

@@ -1,3 +1,2 @@
 /** 🧩️ Public `@semio-tech/framework/os/testing/fixtures/directory/command-receipt-v1.json` entry: the JSON document, re-exported unchanged. */
-import document from "../../../../../../../../../🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json" with { type: "json" };
-export default document;
+export { default } from "../../../../../../../../../🛍️products/💻️os/🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json" with { type: "json" };

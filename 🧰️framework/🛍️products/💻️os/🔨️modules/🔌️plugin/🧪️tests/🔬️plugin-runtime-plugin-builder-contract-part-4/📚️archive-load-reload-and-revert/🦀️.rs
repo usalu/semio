@@ -1,7 +1,8 @@
 /// 📚️ Archive load, reload and revert: the test archive load, the child persist and reload cycle, the child content view across undo, group undo and revert to command.
 
     /// 📥️ Drives one stepped document archive load on `app` to its terminal status and acknowledges it.
-    async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack) -> protocol::DocumentArchiveLoadStatus {
+    use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
+async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack) -> protocol::DocumentArchiveLoadStatus {
         PluginApp::begin_document_archive_load(app, operation, archive).expect("the runtime admits the archive");
         let status = loop {
             let status = PluginApp::poll_document_archive_load(app, operation, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("poll");

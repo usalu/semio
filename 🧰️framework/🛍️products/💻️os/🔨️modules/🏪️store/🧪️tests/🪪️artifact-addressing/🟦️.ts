@@ -15,17 +15,24 @@ import setDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️mut
 import clearDefaultSchema from "../../../../🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🧬️schema/🔣️.json" with { type: "json" };
 import { surfaceAppId, parseSurfaceAppId } from "@semio-tech/framework/manifest/schema";
 
+/** 🔢️ Projects the exact-JSON integer carrier of a committed fixture row into the typed 64-bit `size` the TypeScript admission requires. */
+function exactBlobSizes(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(exactBlobSizes);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, key === "size" && typeof entry === "number" && Number.isInteger(entry) ? BigInt(entry) : exactBlobSizes(entry)]));
+}
+
 export function testSharedArtifactAddressingOracle(): void {
   const ajv = new Ajv({ strict: false, allErrors: true }).addSchema(artifactReferenceSchema);
   ajv.addSchema(ioSchema).addSchema(manifestSchema).addSchema(blobSchema);
   const validateLink = ajv.compile(linkSchema);
   for (const row of fixture.validLinks) {
     assert.equal(validateLink(row), true, JSON.stringify(validateLink.errors));
-    assert.deepEqual(parseArtifactLink(row), row);
+    assert.deepEqual(parseArtifactLink(exactBlobSizes(row)), exactBlobSizes(row));
   }
   for (const row of fixture.invalidLinks) {
     assert.equal(validateLink(row), false, JSON.stringify(row));
-    assert.throws(() => parseArtifactLink(row));
+    assert.throws(() => parseArtifactLink(exactBlobSizes(row)));
   }
   const validate = ajv.compile(childSchema);
   const opening = ajv.compile(openingSchema);
@@ -33,7 +40,7 @@ export function testSharedArtifactAddressingOracle(): void {
   const clearDefault = ajv.compile(clearDefaultSchema);
   for (const row of fixture.valid) {
     assert.equal(validate(row.child), true, JSON.stringify(validate.errors));
-    assert.deepEqual(parseArtifactChild(row.child), row.child);
+    assert.deepEqual(parseArtifactChild(exactBlobSizes(row.child)), exactBlobSizes(row.child));
     assert.equal(dialectCoordinate(row.child.target.dialect), row.coordinate);
     assert.deepEqual(parseDialectCoordinate(row.coordinate), row.child.target.dialect);
     assert.equal(artifactRefUri(row.child.target), row.uri);
@@ -49,7 +56,7 @@ export function testSharedArtifactAddressingOracle(): void {
   }
   for (const row of fixture.invalidChildren) {
     assert.equal(validate(row), false);
-    assert.throws(() => parseArtifactChild(row));
+    assert.throws(() => parseArtifactChild(exactBlobSizes(row)));
   }
   for (const coordinate of fixture.invalidCoordinates) assert.throws(() => parseDialectCoordinate(coordinate));
   for (const uri of fixture.invalidUris) assert.throws(() => parseArtifactRefUri(uri));

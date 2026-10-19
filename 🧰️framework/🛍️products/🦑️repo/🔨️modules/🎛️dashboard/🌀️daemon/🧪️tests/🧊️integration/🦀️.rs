@@ -108,6 +108,19 @@ fn child() {
             }
         }
         "stubborn" => { platform::ignore_interrupts_and_end_on_termination(); println!("stubborn"); idle() }
+        "budget-heartbeat" => {
+            platform::ignore_interrupts_and_end_on_termination();
+            let path=std::env::var("SEMIO_DEADLINE_HEARTBEAT").unwrap();
+            for counter in 0u64.. {std::fs::write(&path,counter.to_string()).unwrap();println!("deadline-descendant-{counter}");std::thread::sleep(Duration::from_millis(25));}
+        }
+        "budget-tree" => {
+            platform::ignore_interrupts_and_end_on_termination();
+            let command=child_command("budget-heartbeat",&std::env::current_dir().unwrap());
+            let _child=std::process::Command::new(command.cmd).args(command.args).envs(command.env).spawn().unwrap();
+            let port=std::env::var("SEMIO_DEADLINE_PORT").unwrap().parse().unwrap();
+            std::thread::spawn(move||serve_http(port));
+            for counter in 0u64.. {println!("deadline-output-{counter}");std::thread::sleep(Duration::from_millis(25));}
+        }
         "title" => { print!("\x1b]0;daemon test title\x07titled\r\n"); std::io::stdout().flush().ok(); idle() }
         "alt" => { print!("before\r\n\x1b[?1049h\x1b[2J\x1b[H\x1b[5;10Hfull screen marker"); std::io::stdout().flush().ok(); idle() }
         "burst" => {
@@ -255,7 +268,7 @@ impl View {
 
     fn session(&self, session_id: &str) -> SessionInfo { self.sessions.get(session_id).cloned().unwrap_or_else(|| panic!("no session {session_id}: {:?}", self.sessions.keys().collect::<Vec<_>>())) }
 
-    fn has_ended(&self, session_id: &str) -> bool { self.sessions.get(session_id).is_some_and(|session| matches!(session.status, SessionStatus::Exited | SessionStatus::Failed)) }
+    fn has_ended(&self, session_id: &str) -> bool { self.sessions.get(session_id).is_some_and(|session| matches!(session.status, SessionStatus::Exited | SessionStatus::Failed | SessionStatus::TimedOut)) }
 
     fn errors(&self) -> Vec<(String, String)> { self.control.iter().filter_map(|message| match message { ServerMsg::Error { code, message, .. } => Some((code.map_or("", ipc::ErrorCode::as_str).to_string(), message.clone())), _ => None }).collect() }
 }
@@ -318,6 +331,63 @@ fn spawn(view: &mut View, session_id: &str, mode: &str, root: &Path) {
 // #endregion 🔖️Harness
 
 // #region 🔖️Output
+#[test]
+fn process_deadline_stops_external_descendants_despite_output_readiness_and_reconnect() {
+    let daemon = Daemon::start("process-deadline");
+    let heartbeat = daemon.root.join("deadline-heartbeat");
+    let mut first = daemon.view();
+    first.send(&ClientMsg::Attach { client_id: "deadline-first".into() });
+    let mut command = child_command("budget-tree", &daemon.root);
+    let port = free_port();
+    command.env.extend([("SEMIO_BUILD_BUDGET_MS".into(), "3000".into()), ("SEMIO_DEADLINE_HEARTBEAT".into(), heartbeat.display().to_string()), ("SEMIO_DEADLINE_PORT".into(), port.to_string())]);
+    command.ready = Some(Ready { port, path: "/".into(), printed: false });
+    first.send(&ClientMsg::Spawn { session_id: "limited".into(), command: Box::new(command) });
+    assert!(first.until(Duration::from_secs(5), |view| heartbeat.is_file() && view.sessions.get("limited").is_some_and(|session| session.ready_url.is_some())), "{:?} {:?}", first.sessions, first.errors());
+    let started = first.session("limited").started_ms;
+    drop(first);
+    let mut second = daemon.view_with(&[("SEMIO_BUILD_BUDGET_MS", "900000")]);
+    second.send(&ClientMsg::Attach { client_id: "deadline-second".into() });
+    let limit=Instant::now()+Duration::from_secs(15);
+    while Instant::now()<limit&&!second.sessions.get("limited").is_some_and(|session|session.status==SessionStatus::TimedOut){second.send(&ClientMsg::List{});second.pump(Duration::from_millis(20));}
+    assert_eq!(second.session("limited").status,SessionStatus::TimedOut,"{:?} {:?}",second.sessions,second.errors());
+    let timed_out = second.session("limited");
+    assert_eq!(timed_out.started_ms, started);
+    assert_eq!(timed_out.code, Some(124));
+    assert!(second.control.iter().any(|message| matches!(message, ServerMsg::SessionChanged { session } if session.session_id == "limited" && session.status == SessionStatus::Stopping)));
+    assert!(second.text("limited").contains("process time limit exhausted"), "{}", second.text("limited"));
+    let last = std::fs::read(&heartbeat).unwrap();
+    std::thread::sleep(Duration::from_millis(350));
+    assert_eq!(std::fs::read(&heartbeat).unwrap(), last, "the supervised descendant stopped with its parent");
+    second.send(&ClientMsg::Restart { session_id: "limited".into() });
+    assert!(second.until(Duration::from_secs(5), |view| view.sessions.get("limited").is_some_and(|session| session.started_ms > started && session.status == SessionStatus::Running && session.ready_url.is_some())));
+    second.send(&ClientMsg::Stop { session_id: "limited".into() });
+    assert!(second.until(Duration::from_secs(10), |view| view.has_ended("limited")));
+    assert_eq!(second.session("limited").status, SessionStatus::Exited, "explicit restart received a fresh deadline");
+}
+
+#[test]
+fn process_deadline_refuses_invalid_before_spawn_and_leaves_absent_or_zero_unbounded() {
+    let daemon = Daemon::start("process-deadline-unbounded");
+    let environment = environment(&[]).into_iter().filter(|(name, _)| !name.eq_ignore_ascii_case("SEMIO_BUILD_BUDGET_MS")).collect();
+    let mut view = View::new(Connection::connect_with(&daemon.root, "deadline", environment).unwrap());
+    view.send(&ClientMsg::Attach { client_id: "deadline".into() });
+    let mut invalid = child_command("env", &daemon.root);
+    invalid.env.push(("SEMIO_BUILD_BUDGET_MS".into(), "not-number".into()));
+    view.send(&ClientMsg::Spawn { session_id: "invalid".into(), command: Box::new(invalid) });
+    assert!(view.until(Duration::from_secs(5), |view| !view.errors().is_empty()));
+    assert!(!view.sessions.contains_key("invalid"), "invalid budget registered or spawned a process");
+    for id in ["absent", "zero"] {
+        let mut command = child_command("sleep", &daemon.root);
+        if id == "zero" { command.env.push(("SEMIO_BUILD_BUDGET_MS".into(), "0".into())); }
+        view.send(&ClientMsg::Spawn { session_id: id.into(), command: Box::new(command) });
+        assert!(view.until(Duration::from_secs(5), |view| view.sessions.get(id).is_some_and(|session| session.status == SessionStatus::Running)));
+    }
+    let observe = Instant::now();
+    while observe.elapsed() < Duration::from_millis(350) { view.pump(Duration::from_millis(20)); }
+    for id in ["absent", "zero"] { assert_eq!(view.session(id).status, SessionStatus::Running); view.send(&ClientMsg::Kill { session_id: id.into() }); }
+    assert!(view.until(Duration::from_secs(10), |view| view.has_ended("absent") && view.has_ended("zero")));
+}
+
 #[test]
 fn a_task_runs_to_its_exit_code_and_later_views_and_a_restarted_daemon_replay_its_output() {
     let daemon = Daemon::start("replay");

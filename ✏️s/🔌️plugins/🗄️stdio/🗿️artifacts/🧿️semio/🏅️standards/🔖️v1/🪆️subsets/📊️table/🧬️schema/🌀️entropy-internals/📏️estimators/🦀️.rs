@@ -143,8 +143,8 @@ fn xi_of_alpha(alpha: f64, k: f64) -> f64 {
 /// in alpha, mapping `alpha in (0, inf)` onto `xi in (0, ln K)`).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn invert_xi(target: f64, k: f64) -> f64 {
-    let mut lo = -27.0_f64; // 🔬️ alpha ~ 1e-12
-    let mut hi = 27.0_f64; // 🔬️ alpha ~ 1e12
+    let mut lo = -27.0_f64;
+    let mut hi = 27.0_f64;
     for _ in 0..80 {
         let mid = 0.5 * (lo + hi);
         let alpha = mid.exp();

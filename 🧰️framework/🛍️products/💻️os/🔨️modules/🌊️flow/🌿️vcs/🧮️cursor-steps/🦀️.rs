@@ -205,7 +205,7 @@ fn flow_vcs_move_adjacent(document: &mut FlowVcsDocument, widgets: bool, from: u
     flow_vcs_apply(document, if widgets { FlowMutation::MoveWidget(MoveWidget { id, to_index }) } else { FlowMutation::MoveSynapse(MoveSynapse { id, to_index }) })
 }
 
-fn flow_vcs_step_shift(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
+pub(crate) fn flow_vcs_step_shift(document: &mut FlowVcsDocument, operation: &mut FlowVcsOperation) -> Result<(), FlowVcsFault> {
     let cursor = &mut operation.cursor;
     match cursor.kind {
         FlowVcsCursorKind::InsertWidget | FlowVcsCursorKind::InsertSynapse => {

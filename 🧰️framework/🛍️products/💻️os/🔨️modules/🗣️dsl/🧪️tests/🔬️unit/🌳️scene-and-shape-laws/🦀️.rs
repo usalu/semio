@@ -28,8 +28,6 @@ struct SceneCamera {
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, DslArtifact, serde::Serialize, serde::Deserialize)]
 #[artifact(id = "scene.doc", extension = "scenedoc")]
 struct SceneDocument {
-    // `#[dsl(block)]` alone (no `statements`) wraps a plain nested-record scalar field so it
-    // prints as a bare `camera { x=.. y=.. }` line instead of a `camera=...` attribute.
     #[dsl(block)]
     camera: SceneCamera,
     #[dsl(statements, block)]
@@ -184,8 +182,6 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 async fn derived_newtype_tuple_variants_round_trip() {
     let doc = ShapeDocument { shapes: vec![ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 }), ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 })] };
     let printed = <ShapeDocument as pack::snapshot::ArtifactDsl>::print_dsl(&doc);
-    // `"c1"` is bare-ident-shaped, so the unified "strings bare-preferred" law prints it
-    // unquoted (`circle c1 r=2`, not `circle "c1" r=2`) — see `crate::os_dsl::is_bare_ident`.
     assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
     let parsed = <ShapeDocument as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
     assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");

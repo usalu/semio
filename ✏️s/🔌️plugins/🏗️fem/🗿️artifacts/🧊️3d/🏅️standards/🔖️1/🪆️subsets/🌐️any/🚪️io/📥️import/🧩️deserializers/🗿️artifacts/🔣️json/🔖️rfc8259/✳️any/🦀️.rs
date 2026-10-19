@@ -1,4 +1,4 @@
-//! channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`. Parsing goes
+//! 🔬️ channel, the exact inverse of the sibling `📤️export` leaf: `IoFidelity::Exact`. Parsing goes
 //! 🚪️ fem3d ← json — foreign `Deserializer<Fem3dSnapshot>` on the framework's `io_mechanism`
 //! through stdio's own real RFC 8259 codec (`parse_json_text`), never a re-derived parser.
 

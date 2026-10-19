@@ -33,6 +33,7 @@ semio-s-artifact-puzzle-3d-mutations-selection = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
 serde = { workspace = true, optional = true }
+semio-framework-replication = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 
 [features]
 testing = ["dep:serde", "semio-s-artifact-puzzle-3d-model/testing", "semio-s-artifact-puzzle-3d-mutations-catalog/testing", "semio-s-artifact-puzzle-3d-mutations-object/testing", "semio-s-artifact-puzzle-3d-mutations-pose/testing", "semio-s-artifact-puzzle-3d-mutations-reference/testing", "semio-s-artifact-puzzle-3d-mutations-selection/testing", "semio-s-artifact-puzzle-3d-mutations-volume/testing", "semio-s-artifact-puzzle-3d-mutations-vortex/testing"]
@@ -52,6 +53,11 @@ semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true, features = ["t
 semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-s-artifact-puzzle-3d-host = { workspace = true }
+semio-framework-os-spr = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 
 [[test]]
 name = "scenes-object"

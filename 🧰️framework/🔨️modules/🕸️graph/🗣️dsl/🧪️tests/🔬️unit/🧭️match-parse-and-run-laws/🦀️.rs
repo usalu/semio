@@ -50,9 +50,6 @@ fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
 #[test]
 fn run_dag_fixture_query() {
     block_on_test(async {
-        // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same dag-fixture JSON this
-        // test actually parses (`from_dag_host_snapshot_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.host_snapshot",
   "camera": { "x": 0, "y": 0, "zoom": 1 },
@@ -159,8 +156,6 @@ fn parse_match_with_port() {
 #[test]
 fn parse_undirected_edge() {
     block_on_test(async {
-        // 🩹️ unified undirected sigil is `--`, not the old bare `-` (not even lexable in the
-        // shared `dsl_core` alphabet, which has no standalone dash token).
         let q = parse("MATCH (a:computation)--(b:slider) RETURN a.name").unwrap();
         let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
         let edge = patterns[0].edge.as_ref().expect("edge");
@@ -173,8 +168,6 @@ fn parse_back_arrow_edge_swaps_left_and_right() {
     block_on_test(async {
         let q = parse("MATCH (a:computation)<-(b:slider) RETURN a.name").unwrap();
         let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
-        // `<-` means the edge points INTO the parenthesized-first node — represented by swapping
-        // which parsed node plays "left" so `edge.right` is always the forward-direction target.
         assert_eq!(patterns[0].nodes[0].kind, "slider");
         let edge = patterns[0].edge.as_ref().expect("edge");
         assert!(edge.directed);
@@ -202,9 +195,6 @@ fn parse_labeled_directed_and_undirected_edges_use_double_dash_connector() {
 #[test]
 fn run_port_filtered_query() {
     block_on_test(async {
-        // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same dag-fixture JSON this
-        // test actually parses (`from_dag_host_snapshot_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.host_snapshot",
   "camera": { "x": 0, "y": 0, "zoom": 1 },

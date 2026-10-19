@@ -3,7 +3,7 @@ use super::*;
 /// 🪪️ Portable result identities distinguish identical case and combination names.
 #[test]
 fn result_source_identities_are_typed_canonical_and_borrowed() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("independent fixture parser");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("independent fixture parser");
     for row in fixture["sources"].as_array().expect("sources") {
         let kind = row["kind"].as_str().expect("kind");
         let id = row["id"].as_str().expect("id");
@@ -27,7 +27,7 @@ fn result_source_identities_are_typed_canonical_and_borrowed() {
 #[test]
 fn result_source_namespaces_preserve_same_named_case_and_combination() {
     use crate::{analyses::{AnalysisModel, Combination, LoadCase, solve_multi_case}, elements2d::BeamEb2, model::{Node, Support, Dof, NodalLoad}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("independent fixture parser");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("independent fixture parser");
     let beam = &fixture["cantilever"];
     let scalar = |key: &str| beam[key].as_f64().expect("scalar");
     let model = AnalysisModel {

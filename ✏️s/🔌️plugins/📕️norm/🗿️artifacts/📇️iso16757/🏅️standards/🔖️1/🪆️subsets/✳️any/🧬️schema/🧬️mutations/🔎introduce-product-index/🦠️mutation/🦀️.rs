@@ -1,4 +1,4 @@
-//! `introduce-product-index` — insert into catalogue.product_indexes.
+//! ➕️ `introduce-product-index` — insert into catalogue.product_indexes.
 
 use semio_s_artifact_norm_iso16757_model::part_1::ProductIndex;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

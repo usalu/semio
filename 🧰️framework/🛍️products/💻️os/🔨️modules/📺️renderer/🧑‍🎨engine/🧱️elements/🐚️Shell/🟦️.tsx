@@ -24,7 +24,7 @@ import { clearDurableShellStorage, type FrameworkOsDefaults, type FrameworkOsLoc
 /** 🎬️ Owns host service and worker construction capabilities for one React mount. */
 export type FrameworkOsBootExecution = {
   readonly backboneWorkerFactory?: () => Worker;
-  readonly documentServices?: readonly import("../🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx").InstalledServicePresentationV1[];
+  readonly documentServices?: readonly import("@semio-tech/framework/inference/service").InstalledServicePresentationV1<import("react").ReactNode>[];
   readonly hostPorts?: import("../🏛️ShellHost/🪝️host-ports/🟦️.ts").ShellHostPortsV1;
 };
 
@@ -54,12 +54,8 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions, execution
   const ephemeral = isEphemeralShellBrand(options.brand);
   if (ephemeral) clearDurableShellStorage();
   if (options.brand) document.title = options.brand.windowTitle;
-  // 🐚️ This pre-paint bootstrap runs before any `ShellScope` exists (React hasn't mounted yet), so it
-  // resolves storage the same way `resolveShellScopeStorage` will once the shell below actually mounts.
   const storage = ephemeral ? createMemoryStoragePort() : createBrowserStoragePort();
   bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readUiPreferences(storage).appearance ?? "system");
-  // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
-  // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);
   const mounted = createRoot(root);
   mounted.render(<FrameworkOsShell catalog={composition.catalog} backboneWorkerFactory={execution.backboneWorkerFactory} documentServices={execution.documentServices} hostPorts={execution.hostPorts} pluginFilter={options.plugin} plugins={options.plugins ?? composition.boot.plugins} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);

@@ -21,21 +21,21 @@ class IndexEntryTestScript extends BundleScript {
 
 /** 🧺️ Runs the original generic set custody neutral oracle. */
 class IndexSetTestScript extends BundleScript {
-  async run():Promise<void>{await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set.ts");}
+  async run():Promise<void>{await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🧺️set/🟦️.ts");}
 }
 
 /** 🎟️ Exercises independently authored original index insertion references. */
 class IndexInsertionTestScript extends BundleScript{async run():Promise<void>{const {testHistoryIndexInsertion}=await import("../../🔗️causal/🔀️transition/🔁️fold/🗂️index/🧪️tests/🎟️insertion/🟦️.ts");testHistoryIndexInsertion();}}
 /** 🗂️ Runs shared map transport, composition and inverse laws against Ajv and RFC6902. */
 class MapDeltaTestScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("test-map-delta accepts no arguments");const{testSharedMapDeltaOracle}=await import("../../🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts");testSharedMapDeltaOracle();console.log("[DEBUG] shared map inverse/composition verified with Ajv and RFC6902");}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-map-delta accepts no arguments");const{testSharedMapDeltaOracle}=await import("../../🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts");testSharedMapDeltaOracle();}
 }/** 🧳️ Runs the required retained semantic owner neutral SQLite oracle. */
 class RetainedMutationTestScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("test-retained-mutation accepts no arguments");const{testRetainedMutationOracle}=await import("../../🎮️mutation/🧳️retained/🧪️tests/🟦️.ts");testRetainedMutationOracle();console.log("[DEBUG] required retained mutation outcomes verified with Ajv and SQLite");}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-retained-mutation accepts no arguments");const{testRetainedMutationOracle}=await import("../../🎮️mutation/🧳️retained/🧪️tests/🟦️.ts");testRetainedMutationOracle();}
 }
 /** 📤️ Verifies original diagnostic bundle moves against an independent JSON Patch oracle. */
 class DiagnosticTransferTestScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("test-diagnostic-transfer accepts no arguments");const{testDiagnosticTransferOracle}=await import("../../🎮️mutation/📨️messages/♻️retire/🧪️tests/📤️transfer/🟦️.ts");testDiagnosticTransferOracle();console.log("[DEBUG] diagnostic transfer neutral cases verified with RFC6902");}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-diagnostic-transfer accepts no arguments");const{testDiagnosticTransferOracle}=await import("../../🎮️mutation/📨️messages/♻️retire/🧪️tests/📤️transfer/🟦️.ts");testDiagnosticTransferOracle();}
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-map-delta",MapDeltaTestScript).register("test-diagnostic-transfer",DiagnosticTransferTestScript).register("test-retained-mutation",RetainedMutationTestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
 

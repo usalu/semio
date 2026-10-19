@@ -17,5 +17,6 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }

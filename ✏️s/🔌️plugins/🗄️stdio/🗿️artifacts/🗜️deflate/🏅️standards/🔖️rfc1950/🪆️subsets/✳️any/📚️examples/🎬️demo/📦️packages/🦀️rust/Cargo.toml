@@ -45,6 +45,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
 miniz_oxide = "0.8.9"

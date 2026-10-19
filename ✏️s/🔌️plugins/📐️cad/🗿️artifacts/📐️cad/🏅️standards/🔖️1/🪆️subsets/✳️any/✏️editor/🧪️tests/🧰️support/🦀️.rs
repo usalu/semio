@@ -87,7 +87,6 @@ use semio_framework_pack_json::Value;
 use std::collections::HashMap;
 use semio_framework_2d_compute::EngineHandles;
 use protocol::Mutation;
-use semio_framework_plugin::app::EditorApp;
 use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, UiMenuRef, VcsArtifactApp};
 
 pub fn meta(actor: &str) -> ActionMeta {
@@ -125,7 +124,7 @@ pub async fn new_app() -> CadFixtureApp {
 /// 🪪️ The one live instance id this crate's mounted fixtures run on.
 pub const TEST_INSTANCE: u32 = 1;
 
-/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// 📐️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
 pub struct CadFixtureApp(pub VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 

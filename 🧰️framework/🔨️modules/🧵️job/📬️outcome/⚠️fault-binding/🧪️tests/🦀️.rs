@@ -1,5 +1,7 @@
 //! ⚠️ Original paid fault admission preserves the retained page and every caller receipt axis.
 use semio_framework_job::*;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::RetainedJobPayload;
 #[path="../../../🧪️testing/📬️payload/🦀️.rs"]
 mod original_payload;
 #[global_allocator]

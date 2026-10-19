@@ -101,10 +101,6 @@ pub fn render(view: LowpolyView<'_>, active_utility: &str, labels: &LowpolyLabel
     .map_err(|_| inspector_error("smooth-binding"))?;
     let smooth_row = control_row(&format!("{ROOT}.object.smooth"), labels.smooth_shading, smooth_toggle.try_build().map_err(|_| inspector_error("smooth-input-build"))?);
 
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the selection summary/mode
-    // rows used to read `LowpolyConfig`; the mesh domain's selection is framework-owned
-    // `InteractionState` now, and `ArtifactApp::render` is not threaded an `InteractionView`
-    // this wave — dropped rather than shown stale. Peer/self selection surfaces generically.
     let object_rows = ui_node_list([name_row, smooth_row])?;
     let transform_rows = ui_node_list([tree_item_desc(format!("{ROOT}.transform.utility"), ui_label(labels.utility.as_str())?, Some(active_utility.to_string()))])?;
     let utility_params: [(&str, semio_framework_ui_locale::LabelText, &str); 11] = [

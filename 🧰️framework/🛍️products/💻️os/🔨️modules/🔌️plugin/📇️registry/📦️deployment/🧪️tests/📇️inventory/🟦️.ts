@@ -5,7 +5,7 @@ import { build } from "esbuild";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import schema from "../../🧬️schema/🔣️.json";
-import { identityInstallationSchema as extensionSchema } from "../../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
+import { identityInstallationSchema as extensionSchema } from "@semio-tech/framework/identity/installation/schema";
 import corpus from "../🧫️fixtures/📇️inventory/🔣️.json";
 import { moduleDirectoryName, moduleIdForDirectoryName, parseModuleDirectories } from "../../🟦️.ts";
 import { emitTypeScript } from "../../../📽️projection/🟦️.ts";

@@ -485,9 +485,7 @@ impl BoundedStillDecoder {
             }
             BoundedDecodeState::Jpeg { rope, decoder } => {
                 let outcome = match decoder {
-                    // 🧾️ First unit: the marker segments up to SOS (tables, frame, scan header).
                     None => semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgStepDecoder::new(&rope).map(|decoder| Err(Box::new(decoder))),
-                    // 🎞️ Every later unit: one MCU of the entropy-coded scan, then one output row.
                     Some(OpaqueOwner(mut decoder)) => match decoder.step(&rope, JPEG_UNITS_PER_STEP) {
                         Ok(Some(snapshot)) => Ok(Ok(snapshot)),
                         Ok(None) => Ok(Err(decoder)),
@@ -777,11 +775,6 @@ pub fn zncc(a: &Patch, b: &Patch) -> f32 {
         var_a += da * da;
         var_b += db * db;
     }
-    // 🧱️ Each patch needs texture of its own: a flat patch's variance is float rounding around its
-    // mean (~1e-13 per pixel), and against a textured partner the product still clears any joint
-    // guard, so the ratio returns noise that PatchMatch then maximises — a flat background fused
-    // into a shell around the object. A pixel standard deviation of 1e-3 (a quarter grey level on
-    // the `[0, 1]` scale) is the floor.
     const MIN_PIXEL_VARIANCE: f32 = 1e-6;
     if var_a < MIN_PIXEL_VARIANCE * n || var_b < MIN_PIXEL_VARIANCE * n {
         return 0.0;

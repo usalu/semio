@@ -387,16 +387,6 @@ pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut Previe
         link.applied_edits = Some(applied_edits);
         return Vec::new();
     }
-    // 🧾️ The document moved by a route this app does not handle — an undo, a redo, a revert, a
-    // checkpoint checkout (`super::applied_document_edits_digest`).
-    //
-    // 🔒️ The DEBT is recorded and a live run woken; the request latch is deliberately NOT released,
-    // which is what `owe_attached_previews` does and why this does not call it. A gesture that moved
-    // the stack has already asked for its run on its own emit, and releasing the latch here made the
-    // very next poll ask for a second one — `a_shell_dispatched_example_switch_republishes_both_windows_and_rearms_the_eval_chain`
-    // caught exactly that ("the refresh poll must ask for no second run"). With the latch held, a
-    // gesture's own ask stands and a history verb — which asked for nothing — is served by the ladder
-    // below on this same poll.
     if link.applied_edits.is_some_and(|held| held != applied_edits) {
         for (window_id, _) in windows {
             if session.note_window_tick_outcome(window_id, true, PREVIEW_EVAL_BOOKKEEPING_GRANT).is_err() {
@@ -408,18 +398,8 @@ pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut Previe
     link.applied_edits = Some(applied_edits);
     let owed = windows.iter().any(|(window_id, _)| session.window_tick_owed(window_id));
     let run = run.filter(|run| run.tool_id == PREVIEW_EVAL_TOOL_ID);
-    // ⏯️ A start and a finalize are REQUESTS, not state changes: the document's run view keeps
-    // answering what it answered before until the host has turned one into a run state. Asking once
-    // per REFRESH instead of once per ANSWER is what spent three starts in 500 ms on a quiet boot and
-    // 1 053 in one busy session — so the link holds its request until the view ANSWERS it, and a
-    // landed gesture (`owe_attached_previews`) is the one other thing that releases it, which bounds
-    // the ask at one per gesture and keeps a dropped request from wedging the preview for good
-    // (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`).
     let state = run.map(|run| run.state);
     let identity = run.map(|run| (run.identity.id.run, run.identity.generation));
-    // 🔓️ A request the ledger has already moved past is refused as stale, so waiting on it forever is a
-    // deadlock; a request that named NO identity (a gesture's own start, taken before any poll) is
-    // released by its answer alone.
     if link.requested.is_some_and(|(requested, asked)| requested.answered_by(state) || asked.is_some_and(|asked| Some(asked) != identity)) {
         link.requested = None;
     }
@@ -429,15 +409,6 @@ pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut Previe
     let (request, effects) = match state {
         Some(ToolRunState::Complete) => {
             let run = run.expect("a complete run is present");
-            // 🏁️ A complete run is FINALIZED as soon as it is seen, owed or not. `Complete` means "the job
-            // is done and the run awaits its finalize", and a run left standing in it makes every later
-            // `toolRunStart` a no-op against the run already there — which is exactly how an inspector
-            // edit could owe two windows a perfect debt and still never re-evaluate. Pairing the finalize
-            // with the start in one poll does not help: the host schedules a poll's effects
-            // independently, so the start lands while the run is still complete and is dropped again
-            // (measured on 6018, `📓️preview-rearm-after-inspector-edit-2026-09-14.md`). Finalizing
-            // promptly leaves the surface in the ONE state from which a single start — a gesture's own,
-            // or the next poll's — really starts a run.
             link.restart_owed = owed;
             (Some((PreviewEvalRunRequest::Finalize, identity)), vec![run_action_effect(TOOL_RUN_FINALIZE_ACTION_ID, semio_framework_value::DslValue::object([(TOOL_RUN_ARG_RUN_ID.to_string(), semio_framework_value::DslValue::String(run.identity.id.run.to_string())), (TOOL_RUN_ARG_GENERATION.to_string(), semio_framework_value::DslValue::uint(u64::from(run.identity.generation)))]))])
         }

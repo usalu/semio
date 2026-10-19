@@ -20,9 +20,7 @@ describe("Shell components", () => {
         expect(nearestAnchor(10, 290, hostRect)).toBe("bottom-left");
         expect(nearestAnchor(150, 290, hostRect)).toBe("bottom-middle");
         expect(nearestAnchor(290, 290, hostRect)).toBe("bottom-right");
-        // Dead center, nudged slightly toward the vertical midline (closer horizontally than vertically) -> the nearer side-middle.
         expect(nearestAnchor(160, 155, hostRect)).toBe("right-middle");
-        // Dead center, nudged slightly toward the horizontal midline -> the nearer top/bottom-middle.
         expect(nearestAnchor(155, 160, hostRect)).toBe("bottom-middle");
       });
 

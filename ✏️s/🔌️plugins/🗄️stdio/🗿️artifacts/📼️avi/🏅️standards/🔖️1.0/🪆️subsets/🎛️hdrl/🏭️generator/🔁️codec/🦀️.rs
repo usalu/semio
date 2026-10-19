@@ -1,4 +1,4 @@
-//! riff-avi-codec — standalone AVI 1.0 hdrl/strl/movi/idx1 codec on top of `riff` 2.0's own
+//! 🎞️ riff-avi-codec — standalone AVI 1.0 hdrl/strl/movi/idx1 codec on top of `riff` 2.0's own
 //! generic RIFF chunk reader/writer (`riff::Chunk`/`riff::ChunkContents`). Zero dependencies
 //! beyond `riff` itself (see this crate's own Cargo.toml — its own `[workspace]`, isolated from
 //! the repository's root workspace and Cargo.lock).

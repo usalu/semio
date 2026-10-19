@@ -441,7 +441,7 @@ pub struct EnergyJobAuthority {
     pub(super) final_resilience: Option<ResilienceMetrics>,
     pub finalization: FinalizationWork,
     pub result_build: ResultBuildWork,
-    pub(super) output_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
+    pub(super) output_writer: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
     pub(super) output_payload: Option<RetainedJobPayload>,
     pub(super) commit_census: Option<CommitCensusWork>,
     pub(super) commit_reservation: Option<EnergyCommitReservation>,

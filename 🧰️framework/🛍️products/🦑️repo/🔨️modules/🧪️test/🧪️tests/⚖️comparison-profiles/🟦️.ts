@@ -110,8 +110,6 @@ describe("⚖️ comparison profiles", () => {
     expect(compareProjections("semantic-pdf-v1", oracle, subject, contributed()).equal).toBe(true);
     expect(compareProjections("semantic-pdf-v1", oracle, { ...subject, pageCount: 2 }, contributed()).equal).toBe(false);
   },
-  // ⏱️ First touch of the contributed profile table walks the whole repository for owner manifests,
-  // which is well past bun's 5 s default on a loaded machine.
   30_000);
 
   test("utf8-text-v1 normalizes line endings and trailing whitespace only", () => {

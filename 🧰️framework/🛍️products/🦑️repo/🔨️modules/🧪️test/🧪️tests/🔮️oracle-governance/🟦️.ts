@@ -65,23 +65,10 @@ describe("🔒️ dependency ratchet", () => {
       expect(["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"]).toContain(entry.kinds[0]);
       for (const area of exemptAreas()) expect(entry.users.every((user) => !user.startsWith(`${area}/`)), `${entry.name} is attributed to the exempt area ${area}`).toBe(true);
     }
-    // 🧩️EVERY package an oracle links, not only the one its id is named after: a composed reference
-    // (reader + writer, archive + XML) that declared just its primary package would leave the others
-    // linked into the host and absent from the ratchet, which is a gate that cannot see its subject.
     for (const oracle of repoRegistry.oracles) {
       for (const linked of oracleLinkedPackages(oracle)) {
         const entry = baseline.entries.find((candidate) => candidate.name === linked.package);
-        // 🔒️A package present in the baseline at all is the invariant; being absent is what makes the
-        // gate blind to its own subject.
         expect(entry, `${linked.package} is linked by oracle ${oracle.id} but is absent from the dependency baseline`).toBeDefined();
-        // 🔒️RECORDED DEBT IS EXEMPT, and only recorded debt. `productionDebt` exists precisely to
-        // record a package that was ALREADY production-reachable before it was registered as an
-        // oracle — `brepjs` is, because ✏️s/🔌️plugins/📐️cad ships an OpenCASCADE B-Rep implementation.
-        // Asserting `test-oracle` unconditionally made the honest record of that debt fail the very
-        // gate that demanded it be recorded, which leaves an owner two options: hide the reachability,
-        // or leave the suite permanently red. The classification must therefore agree with the
-        // registry rather than contradict it, and an UNRECORDED production-reachable oracle is still
-        // a hard failure below.
         if (oracle.productionDebt === undefined) {
           expect(entry?.kinds, `${linked.package} is linked by oracle ${oracle.id} and records no productionDebt, so it must classify as test-oracle`).toEqual(["test-oracle"]);
           expect(entry?.productionReachable).toBe(false);
@@ -237,7 +224,6 @@ describe("🌱️ native second implementation", () => {
   test("the kind field alone, with no recorded evidence, still mechanically discharges — which is exactly why the claim must also be earned", () => {
     const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
     const registry = registryWith("test/owner", [entry("unearned-claim", ["test-code-1-mutate"])], [manifest]);
-    // 🚫️Discharge is purely mechanical on `kind` — this is the gap `nativeSecondImplementationBreaches` exists to close.
     expect(oracleRequirementBreaches(registry, "scope", manifest, manifest.mutations[0]!)).toEqual([]);
     const breaches = nativeSecondImplementationBreaches(registry);
     expect(breaches.length).toBe(1);
@@ -319,8 +305,6 @@ describe("🌱️ native second implementation", () => {
   });
 
   test("every registered verified-native-second-implementation entry in the live registry is earned", () => {
-    // 🔍️The real gate: whatever this shard (or a later one) actually registers under the new kind must
-    // pass its own checks — a regression here means a promoted entry in the committed registry is lying.
     const registry = repoRegistry;
     const live = registry.oracles.filter((oracle) => oracle.kind === "verified-native-second-implementation");
     expect(live.length).toBeGreaterThan(0);
@@ -335,8 +319,6 @@ describe("🚫️ oracle purity", () => {
   });
 
   test("narrowing a run to one case must not make other cases' adapters look like production source", () => {
-    // 🧭️Regression: the exclusion set was once derived from the CALLER's selected cases, so
-    // `contract --case X` reported every other case's adapter as a production oracle import.
     expect(repoCases.length).toBeGreaterThan(1);
     expect(caseContractBreaches(repoRoot, repoCases.slice(0, 1), repoRegistry).filter((breach) => breach.id === "oracle-in-production")).toEqual([]);
     expect(repoWideBreaches.filter((breach) => breach.id === "oracle-in-production").map((breach) => breach.scope)).toEqual(repoOracleHits.map((hit) => hit.path));
@@ -361,8 +343,6 @@ describe("🧩️ cross-language oracle hosts", () => {
     const registry = repoRegistry;
     const owners = new Set(repoCases.map((entry) => entry.owner));
     const selected = [...owners].flatMap((owner) => (["rust", "typescript", "python", "go", "dotnet"] as const).flatMap((implementation) => oracleHostPackagesFor(registry, owner, implementation).map((entry) => entry.implementation)));
-    // 🧩️Every implementation an owner declared must be reachable through the selector; a value that
-    // parses, merges and is then discarded is a manifest field that silently does nothing.
     for (const declared of registry.contributions.flatMap((entry) => entry.oracleHostPackages)) expect(selected, `no owner reaches the declared ${declared.implementation} host package ${declared.package}`).toContain(declared.implementation);
     expect(new Set(selected).size).toBeGreaterThan(1);
   }, 60_000);
@@ -416,9 +396,6 @@ describe("🧩️ cross-language oracle hosts", () => {
   });
 
   test("an ecosystem's import syntax is only looked for in that ecosystem's files", () => {
-    // 🚫️Regression guard: one regular expression pretending to be five languages matched a Rust
-    // crate named `json` against every Python `import json` in the repository, so the gate had to
-    // stay blind to Python imports altogether to avoid reporting breaches that do not exist.
     const taxonomy = testTaxonomy(repoRoot);
     const pythonFilename = testFilenameForKind(taxonomy, taxonomy.testAdapterFileKinds["🐍️python"]!);
     const rustFilename = testFilenameForKind(taxonomy, taxonomy.testAdapterFileKinds["🦀️rust"]!);
@@ -539,8 +516,6 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
 
   test("POSITIVE — a genuine re-implementation registered as third-party still fires", () => {
     withOracleFile("test/owner-positive", predictingRustText, (root) => {
-      // 🎯 ecosystem "rust": this entry's own claimed code IS this file — exactly the `ruststep`/
-      // `quick-xml` shape A10 found and reclassified. The gate must still catch it.
       const registry = registryWith("test/owner-positive", [entry("mislabelled-rust-reimplementation", "rust")]);
       const breaches = reimplementationOracleBreaches(root, registry);
       expect(breaches.length).toBe(1);
@@ -551,8 +526,6 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
 
   test("NEGATIVE — a real third-party wrapper sharing a file with re-implementation code does not fire", () => {
     withOracleFile("test/owner-negative", predictingRustText, (root) => {
-      // 🎯 ecosystem "python": this entry's own claimed code runs in a Python venv the file never
-      // touches — exactly `python-pptx`/`ifcopenshell`/`yauzl` sitting beside a predicting `🦀️.rs`.
       const registry = registryWith("test/owner-negative", [entry("genuine-python-reader", "python")]);
       expect(reimplementationOracleBreaches(root, registry)).toEqual([]);
     });
@@ -560,9 +533,6 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
 
   test("BOUNDARY — a genuine non-Rust reader is never named even when a Rust sibling in the SAME contribution is correctly caught", () => {
     withOracleFile("test/owner-boundary", predictingRustText, (root) => {
-      // 🎯 One owner, one shared file, two qualifying entries — the exact shape every one of this
-      // ticket's 20 flagged owners actually has. Entry granularity means the verdict must differ
-      // per entry even though both entries share everything else: owner, file, contribution.
       const registry = registryWith("test/owner-boundary", [entry("mislabelled-rust-reimplementation", "rust"), entry("genuine-python-reader", "python")]);
       const breaches = reimplementationOracleBreaches(root, registry);
       expect(breaches.length).toBe(1);

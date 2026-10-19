@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { Root } from "protobufjs";
 import { parse, buildASTSchema } from "graphql";
-import { binary64, binary64Value, type Binary64 } from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
 import { parseFem2dNodePatch, parseFem2dSectionPatch } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 import { parseFem3dNodePatch, parseFem3dSectionPatch } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 
@@ -22,7 +22,7 @@ describe("node and section field intent mirrors", () => {
       const parsePatch = entity === "node" ? dimension === "2d" ? parseFem2dNodePatch : parseFem3dNodePatch : dimension === "2d" ? parseFem2dSectionPatch : parseFem3dSectionPatch;
       const schema = read(resolve(subsets, `🕸️mesh/🧬️schema/🧬️mutations/🩹️change-${entity}/🧬️schema/🔣️.json`));
       const validate = new Ajv({ strict: false, strictNumbers: true, validateFormats: false }).compile(schema);
-      const fixtures = resolve(subsets, `🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-${entity}`);
+      const fixtures = resolve(subsets, `🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-${entity}`);
       const scenarios = ["🩹️changes", "📐️coordinates"];
 
       it(`${dimension} ${entity} preserves independent edits in either arrival order`, () => {

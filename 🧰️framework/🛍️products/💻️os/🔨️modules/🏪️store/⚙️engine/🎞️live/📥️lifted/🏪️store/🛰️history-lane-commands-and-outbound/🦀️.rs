@@ -1,6 +1,7 @@
 //! 🛰️ History lane commands and outbound: the local alternatives and checkpoints, the command application, the edit messages, the conflict resolution, the quarantined events and the outbound flushes. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -245,7 +246,7 @@ where
         let  replay = Self::replay_suffix_partitioned(store_log.envelope.vcs.genesis.facts().share_snapshot(), &fold.applied, 0, &OriginalReplayEdits::new(&self.envelope.vcs.edits,&admitted), &store_log.envelope.schema, &fold.supersessions, semio_framework_os_spr::MergePolicy::LaissezFaire);
         let (state, quarantined_ids, mut rebased_inverse, replayed) = match replay {
             Ok(mut replay) => {
-                let taken = (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed());
+                let taken = (replay.take_state(), replay.take_quarantined(), replay.take_rebased_undo_rows().into_iter().collect::<HashMap<String, semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>>>(), replay.take_replayed());
                 let _ = store_owners.retire_replay_result(replay);
                 taken
             }

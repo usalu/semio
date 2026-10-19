@@ -21,12 +21,10 @@ pub struct SceneLayer {
 
 #[cfg(any(test, feature = "backend-testing"))]
 impl SceneLayer {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn is_empty(&self) -> bool {
         self.quad_instances.is_empty() && self.raster_instances.is_empty() && self.vector_vertices.is_empty() && self.overlay_quad_instances.is_empty() && self.overlay_vector_vertices.is_empty()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn merge_from(&mut self, mut other: Self) {
         self.quad_instances.append(&mut other.quad_instances);
         self.raster_instances.append(&mut other.raster_instances);
@@ -56,12 +54,10 @@ impl Default for SceneBuilder {
 }
 
 impl SceneBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn active_foreground_of(&self) -> Option<usize> {
         self.glass_content_stack.last().copied()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn active_layer(&mut self) -> &mut SceneLayer {
         if self.layers.is_empty() {
             self.layers.push(SceneLayer::default());
@@ -71,7 +67,6 @@ impl SceneBuilder {
 
     //#region Lifecycle
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn clear(&mut self) {
         self.scene_passes.clear();
         self.layers.clear();
@@ -86,7 +81,6 @@ impl SceneBuilder {
 
     //#region Scissor
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_scissor(&mut self, rect: LayoutRect) {
         let mut scissor = ScissorRect::from_rect(rect);
         if let Some(parent) = self.scissor_stack.last() {
@@ -96,7 +90,6 @@ impl SceneBuilder {
         self.layers.push(SceneLayer { scissor: Some(scissor), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..SceneLayer::default() });
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pop_scissor(&mut self) {
         self.scissor_stack.pop();
         let parent = self.scissor_stack.last().copied();
@@ -108,7 +101,6 @@ impl SceneBuilder {
     //#region SilhouetteClip
 
     /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn begin_silhouette_clip(&mut self, rects: &[LayoutRect]) {
         let mut clip = ClipRegion::from_rects(rects);
         if let Some(parent) = self.clip_stack.last() {
@@ -118,7 +110,6 @@ impl SceneBuilder {
         self.layers.push(SceneLayer { scissor: self.scissor_stack.last().copied(), clip: Some(clip), foreground_of: self.active_foreground_of(), ..SceneLayer::default() });
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn end_silhouette_clip(&mut self) {
         self.clip_stack.pop();
         self.layers.push(SceneLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..SceneLayer::default() });
@@ -128,7 +119,6 @@ impl SceneBuilder {
 
     //#region Surface
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_scene_pass(&mut self, mut pass: SurfacePass) {
         if self.layers.is_empty() {
             self.layers.push(SceneLayer::default());
@@ -145,52 +135,42 @@ impl SceneBuilder {
 
     //#region Quad
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_solid(&mut self, rect: [f32; 4], color: [f32; 4]) {
         self.active_layer().quad_instances.push(QuadInstance::solid(rect, color));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_rounded(&mut self, rect: [f32; 4], color: [f32; 4], radius: f32) {
         self.active_layer().quad_instances.push(QuadInstance::rounded(rect, color, radius, 0.0, color));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_loading_border(&mut self, rect: [f32; 4], color: [f32; 4], radius: f32, stroke: f32) {
         self.active_layer().quad_instances.push(QuadInstance::loading_border(rect, color, radius, stroke));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_waiting_border(&mut self, rect: [f32; 4], color: [f32; 4], radius: f32, stroke: f32) {
         self.active_layer().quad_instances.push(QuadInstance::waiting_border(rect, color, radius, stroke));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_finished_border(&mut self, rect: [f32; 4], color: [f32; 4], radius: f32, stroke: f32) {
         self.active_layer().quad_instances.push(QuadInstance::finished_border(rect, color, radius, stroke));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_introducing_border(&mut self, rect: [f32; 4], color: [f32; 4], radius: f32, stroke: f32) {
         self.active_layer().quad_instances.push(QuadInstance::introducing_border(rect, color, radius, stroke));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_glyph(&mut self, rect: [f32; 4], color: [f32; 4], uv_rect: [f32; 4]) {
         self.active_layer().quad_instances.push(QuadInstance::glyph(rect, color, uv_rect));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: [f32; 4], uv_rect: [f32; 4]) {
         self.active_layer().overlay_quad_instances.push(QuadInstance::glyph(rect, color, uv_rect));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_solid_overlay(&mut self, rect: [f32; 4], color: [f32; 4]) {
         self.active_layer().overlay_quad_instances.push(QuadInstance::solid(rect, color));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: [f32; 4]) {
         self.active_layer().quad_instances.push(QuadInstance::textured(rect, uv_rect, color));
     }
@@ -198,7 +178,6 @@ impl SceneBuilder {
     /// 🖼️ Interns `key` into the resource registry (never re-allocating an id for a key seen before)
     /// and appends the instance tagged with that [`TextureId`] — replacing the wgpu target's
     /// `Vec<(String, UiInstance)>`, which cloned a `String` per instance per frame.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_raster_quad(&mut self, resources: &mut ResourceRegistry, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
         let texture = resources.intern_texture(key);
         self.active_layer().raster_instances.push((texture, QuadInstance::raster(rect, uv_rect, alpha)));
@@ -208,7 +187,6 @@ impl SceneBuilder {
 
     //#region Vector
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: [f32; 4], width: f32) {
         let layer = self.active_layer();
         for position in tessellate::thick_line_positions(x0, y0, x1, y1, width) {
@@ -216,7 +194,6 @@ impl SceneBuilder {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: [f32; 4], width: f32) {
         let layer = self.active_layer();
         for position in tessellate::thick_line_positions(x0, y0, x1, y1, width) {
@@ -224,7 +201,6 @@ impl SceneBuilder {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_triangle_fan(&mut self, points: &[[f32; 2]], color: [f32; 4]) {
         let layer = self.active_layer();
         for triangle in tessellate::triangle_fan_positions(points) {
@@ -232,7 +208,6 @@ impl SceneBuilder {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_triangle_fan_overlay(&mut self, points: &[[f32; 2]], color: [f32; 4]) {
         let layer = self.active_layer();
         for triangle in tessellate::triangle_fan_positions(points) {
@@ -244,7 +219,6 @@ impl SceneBuilder {
     /// bare statement with no `.await`; the constructed `Future` was immediately dropped and the dash
     /// silently drew nothing. Both `push_line` and this function are plain sync `fn` here, so that
     /// call site cannot exist — see `tessellate::dashed_line_segments`'s doc comment.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_dashed_line(&mut self, start: [f32; 2], end: [f32; 2], color: [f32; 4], width: f32, dash: f32, gap: f32) {
         for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(start[0], start[1], end[0], end[1], dash, gap) {
             self.push_line(sx0, sy0, sx1, sy1, color, width);
@@ -253,7 +227,6 @@ impl SceneBuilder {
 
     /// 〰️ Overlay counterpart of [`Self::push_dashed_line`]; the wgpu target's overlay variant had the
     /// same dropped-future bug against `push_line_overlay`, fixed the same way.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_dashed_line_overlay(&mut self, start: [f32; 2], end: [f32; 2], color: [f32; 4], width: f32, dash: f32, gap: f32) {
         for (sx0, sy0, sx1, sy1) in tessellate::dashed_line_segments(start[0], start[1], end[0], end[1], dash, gap) {
             self.push_line_overlay(sx0, sy0, sx1, sy1, color, width);
@@ -266,20 +239,17 @@ impl SceneBuilder {
 
     /// 🧊️ Appends a glass region rendered with an already-resolved `style` — callers derive `style`
     /// from their own theme/level lookup rather than this method picking one.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
         let index = self.glass_regions.len();
         self.glass_regions.push(GlassRegion { rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
         index
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn begin_glass_content(&mut self, region: usize) {
         self.glass_content_stack.push(region);
         self.layers.push(SceneLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: Some(region), ..SceneLayer::default() });
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn end_glass_content(&mut self) {
         self.glass_content_stack.pop();
         self.layers.push(SceneLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..SceneLayer::default() });

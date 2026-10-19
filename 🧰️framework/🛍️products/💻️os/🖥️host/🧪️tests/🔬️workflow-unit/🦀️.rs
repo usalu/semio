@@ -36,13 +36,7 @@ mod tests {
             Ok(IoOutcome::clean(NewIoPayload::Binary(raw.into_bytes())))
         }
 
-        // 🧷️ Built directly as a one-element array literal (never a separately-named `static`
-        // copied into an array) -- `IoEntry` derives no `Copy`/`Clone`, so moving a value OUT of
-        // a separate `static` to build `[ENTRY]` would not compile; a single constant-expression
-        // array literal has no such move.
         static ENTRIES: [IoEntry; 1] = [IoEntry { owned_serializer: None, from: TEST_DIALECT, into: CARRIER_BINARY, fidelity: IoFidelity::Exact, direction: IoEntryDirection::Export, sniff: None, run }];
-        // 📌️ Idempotent re-registration (nextest runs this file's tests in one process) -- a
-        // second run of this same test binary registering the identical static entry must not error.
         io_register(&ENTRIES).ok();
 
         register_artifact_descriptor(&semio_framework::ArtifactKindSpec {
@@ -260,8 +254,6 @@ mod tests {
 
     #[test]
     fn plans_a_diamond_with_one_delivery_per_incoming_edge() {
-        // 🔀️ One delivery per edge, not per node: D has two producers (B and C), so D is the
-        // target of two separate deliveries rather than a single merged one.
         let mut graph = resolve_kernel_future(empty_workflow());
         graph.nodes.push(media_node("node-a", 0.0, 0.0));
         graph.nodes.push(media_node("node-b", 200.0, -80.0));

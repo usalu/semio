@@ -245,10 +245,6 @@ impl CatalogStorage for PostgresDbIoExecutor {
         let prepared = db_io_prepare_platform(&new_bytes)?.await?;
         let result = async {
             let mut tx = self.pool.begin().await.map_err(map_sqlx_error)?;
-            // 🎯️ The bootstrap-seeded singleton row (`id = 1`) always exists, so `SELECT ... FOR
-            // UPDATE` here is a real, always-present row lock — unlike `FsStorage::cas_root`'s
-            // documented in-process-only mutex, this fences concurrent writers across connections
-            // and processes for free via Postgres's own lock manager.
             let (current_epoch,): (i64,) = sqlx::query_as("SELECT epoch FROM db_catalog_root WHERE id = 1 FOR UPDATE").fetch_one(&mut *tx).await.map_err(map_sqlx_error)?;
             let current_fence = EpochFence { epoch: current_epoch as u64 };
             expected.check(current_fence)?;

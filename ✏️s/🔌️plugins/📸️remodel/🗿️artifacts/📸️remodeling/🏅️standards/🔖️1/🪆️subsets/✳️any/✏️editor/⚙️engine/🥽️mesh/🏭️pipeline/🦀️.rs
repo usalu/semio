@@ -269,9 +269,6 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
                 if let (Some(extraction), Some(volume)) = (state.extraction.as_mut(), state.tsdf.as_ref()) {
                     let complete = extraction.advance(volume, TSDF_EXTRACTION_POINTS_PER_DISPATCH);
                     if extraction.exceeded() {
-                        // 🧊️ The full-resolution net does not fit the element envelope: restart it one
-                        // stride coarser (a reconstruction volume is 32 cells per axis, so the surface
-                        // survives the coarsening) rather than refusing the reconstruction outright.
                         match extraction.coarsened() {
                             Some(coarser) => {
                                 state.extraction = Some(coarser);
@@ -360,8 +357,6 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
             }
             Stage::Close => {
                 if state.interactive {
-                    // 🧾️ The refusal names what the validation saw, so a run's failure line says whether
-                    // the net came out open (boundary loops), fragmented (components) or non-manifold.
                     let seen = state.report.as_ref().map_or_else(String::new, |report| {
                         format!(
                             " (validated {} vertices / {} triangles: {} boundary edges in {} loops, {} non-manifold edges, {} non-manifold vertices, {} components, oriented={})",
@@ -491,10 +486,6 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
                         return MeshPipelineStatus::Working { stage: "interchange", progress: state.stage_index as f32 / STAGE_ORDER.len() as f32 };
                     }
                 } else {
-                    // 🧱️ A batch pipeline runs every stage whole per dispatch (see the non-interactive
-                    // arms above); only the interactive worker is micro-stepped. Driving the
-                    // interchange cursor 64 items per dispatch here made a batch pipeline's step
-                    // count scale with the mesh size instead of the stage count.
                     while !preparation.advance(&state.mesh, state.uvs.as_deref(), state.texture.as_ref(), 64) {}
                 }
                 state.result = state.interchange.take().map(|preparation| preparation.mesh_data);

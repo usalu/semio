@@ -15,7 +15,7 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members as framework_new_app_with_registry;
     use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
     
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// 🕸️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
 pub struct DagApp(pub VcsArtifactApp<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 

@@ -48,8 +48,6 @@ describe("🪟️ mounted-window refresh fetch", () => {
     const { fetched, skipped } = partitionRefreshWindowInstancesV1(scenario.declared, new Set(scenario.mounted));
     for (const instance of skipped) cache.delete(`window:${instance.id}`);
     expect(fetched.map((instance) => cache.get(`window:${instance.id}`)?.hash)).toEqual(scenario.expect.fetched.map((id) => `h-${id}`));
-    // 🪟️ After a mode switch every declared window is mounted again; the ones this pass skipped own no
-    // hash, which is what makes the guest answer with a whole body instead of "unchanged".
     const remounted = partitionRefreshWindowInstancesV1(scenario.declared, new Set(scenario.declared.map((instance) => instance.id)));
     expect(remounted.skipped).toEqual([]);
     expect(remounted.fetched.filter((instance) => cache.get(`window:${instance.id}`) === undefined).map((instance) => instance.id)).toEqual(scenario.expect.skipped);

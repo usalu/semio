@@ -1,4 +1,4 @@
-//! artifact-level `mutate-fem2d-1` case in ticket
+//! 📶️ artifact-level `mutate-fem2d-1` case in ticket
 //! 🏗️ `s.fem.fem2d` material mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
@@ -87,39 +87,39 @@ struct Vector {
 fn vector(scenario: &str) -> Vector {
     match scenario {
         "spec-vector-change-material" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/🩹️renames/🎯️outcome/🔣️.json"),
         },
         "frame-vector-change-material" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🎯️outcome/🔣️.json"),
         },
         "reject-change-material-1" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🔺️diff/🔣️.json")),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⏸️same/🎯️outcome/🔣️.json"),
         },
         "reject-change-material-2" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⛔️missing/🎯️outcome/🔣️.json"),
         },
         "reject-change-material-3" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
             diff: None,
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-material/⚗️invalid/🎯️outcome/🔣️.json"),
         },
         "spec-vector-create-material" => Vector {
             before: include_str!("../🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/📸️snapshot/⬅️before/🔣️.json"),

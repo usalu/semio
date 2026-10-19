@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` support mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props/🦀️.rs"]
 mod create_support_props_the_canopy_tip_on_a_vertical_roller;
@@ -26,3 +27,5 @@ mod replace_support_upgrades_the_roller_at_n2_to_a_full_fixity;
 mod replace_support_pins_the_left_column_base_by_releasing_its_rotation;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies/🦀️.rs"]
 mod replace_support_refuses_to_rename_the_roof_tie_support_through_a_replace_support;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-support/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_support_field_intent;

@@ -1,7 +1,7 @@
 import type { IconName } from "@semio-tech/assets";
 import type { WindowStackCorner, WindowLayoutStackNode, WindowLayoutAxisNode } from "../../../🔨️modules/🗺️window-layout/🟦️.ts";
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { useLabel } from "../../🏷️Label/🟦️.tsx";
 import { modeDockTabLabelClassName, modeDockActiveTabClass, modeDockInactiveTabClass, modeDockActiveTabFillClass, dropZoneReadyClass, windowBodyFrameClass } from "../../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
 import { Icon, Minimize2Icon, Maximize2Icon, CloseIcon } from "../../🔣️Icons/🟦️.tsx";
@@ -264,8 +264,6 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
   }, [dock, stackPath, node.children.length, dragActive, byCorner.topLeft.length, byCorner.topRight.length, byCorner.bottomLeft.length, byCorner.bottomRight.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
-  // 🪟 Layout focus (command routing / tab fills) stays on `activeWindowId`. The silhouette primary
-  // stroke only follows surface selection — same click/focus lifecycle as panels and panes.
 
   const renderCornerBar = (corner: WindowStackCorner) => {
     const tabs = mapCornerTabs(corner);
@@ -312,8 +310,6 @@ export const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, w
     </SurfaceScope>
   );
 
-  // 🪟 `z-window` isolates dock chrome / silhouette z-indexes so they cannot paint above floating Panels
-  // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
     <SurfaceScope level="window">
       <WindowChrome
@@ -382,8 +378,6 @@ export function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStac
   } else {
     sizeList = node.children.map(() => 100 / childCount);
   }
-  // react-resizable-panels requires Layout = Record<panelId, number>; arrays only work when ids are "0","1",…
-  // and a stale 2-size edit layout applied to a 3-panel generate dock throws Invalid N panel layout.
   if (sizeList.length !== childCount) {
     sizeList = node.children.map(() => 100 / childCount);
   }

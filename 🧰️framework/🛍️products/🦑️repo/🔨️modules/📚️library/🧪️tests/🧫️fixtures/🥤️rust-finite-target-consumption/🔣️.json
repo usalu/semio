@@ -449,7 +449,7 @@
     "command": "bun ./📜️script.ts test rust-finite-target-consumption",
     "route": "rust-finite-target-consumption",
     "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts",
-    "cache": false
+    "cache": true
   },
   "retention": {
     "parentSegments": [

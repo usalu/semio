@@ -7,12 +7,12 @@ export type { GisMapFeature } from "./📍️feature/🟦️.ts";
 export type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface GisMapArtifact {
-  /** @state artifact */ positions: GisMapFeature[];
-  /** @state artifact */ routes: GisMapFeature[];
-  /** @state artifact */ regions: GisMapFeature[];
-  /** @state artifact @child kind=s.stdio.semio */ drawing: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ image?: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ value: ArtifactChild;
+  /** 📍️ @state artifact */ positions: GisMapFeature[];
+  /** 📈️ @state artifact */ routes: GisMapFeature[];
+  /** 🗾️ @state artifact */ regions: GisMapFeature[];
+  /** 📐️ @state artifact @child kind=s.stdio.semio */ drawing: ArtifactChild;
+  /** 🖼️ @state artifact @child kind=s.stdio.semio */ image?: ArtifactChild;
+  /** 💎️ @state artifact @child kind=s.stdio.semio */ value: ArtifactChild;
 }
 
 /** 📚️ Parses a domain feature collection through its single feature schema. */

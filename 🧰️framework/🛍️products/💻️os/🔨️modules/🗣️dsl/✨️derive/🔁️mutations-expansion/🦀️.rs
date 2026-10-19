@@ -192,10 +192,10 @@ let mut timestamp_arms = Vec::new();
         }
         let expected_variant = variant_ident.to_string();
         let expected_kebab = to_kebab(&expected_variant);
-        let kind = quote! { <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #aggregate_ty>> };
-        let leaf = quote! { <#payload_ty as ::semio_framework_os_kernel::MutationLeaf> };
+        let kind = quote! { <#payload_ty as ::semio_framework_os_command::MutationKind<#snapshot_ty, #aggregate_ty>> };
+        let leaf = quote! { <#payload_ty as ::semio_framework_os_command::MutationLeaf> };
         if let Some((reference_ty, _)) = &reference {
-            let cold_kind = quote! { <#payload_ty as ::semio_framework_os_kernel::ColdMutationKind<#reference_ty, #aggregate_ty>> };
+            let cold_kind = quote! { <#payload_ty as ::semio_framework_os_command::ColdMutationKind<#reference_ty, #aggregate_ty>> };
             diff_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::diff(payload, base) });
             inverse_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::inverse(payload, base) });
             cold_foreign_source_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::foreign_step_source(payload, base, index) });
@@ -250,20 +250,20 @@ let mut timestamp_arms = Vec::new();
 
     let register_fn_ident = syn::Ident::new(&format!("register_{}_descriptors", to_kebab(&name.to_string()).replace('-', "_")), name.span());
     let cold_reference = reference.as_ref().map(|(reference_ty, reference_diff_ty)| quote! {
-        impl #impl_generics ::semio_framework_os_kernel::ColdMutation<#reference_ty> for #aggregate_ty #where_clause {
+        impl #impl_generics ::semio_framework_os_command::ColdMutation<#reference_ty> for #aggregate_ty #where_clause {
             type ReferenceDiff = #reference_diff_ty;
-            fn diff(&self, base: &#reference_ty) -> ::semio_framework_os_kernel::MutationOutcome<Self::ReferenceDiff> {
-                let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
+            fn diff(&self, base: &#reference_ty) -> ::semio_framework_os_command::MutationOutcome<Self::ReferenceDiff> {
+                let _ = <Self as ::semio_framework_os_command::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#diff_arms),* }
             }
             fn inverse(&self, base: &#reference_ty) -> Result<Vec<Self>, ::semio_framework_value::ValueError> {
-                let outcome = <Self as ::semio_framework_os_kernel::ColdMutation<#reference_ty>>::diff(self, base);
+                let outcome = <Self as ::semio_framework_os_command::ColdMutation<#reference_ty>>::diff(self, base);
                 if !outcome.admit_inverse::<#reference_ty>(|| {
-                    Ok(<Self as ::semio_framework_os_kernel::ColdMutation<#reference_ty>>::foreign_step_source(self, base, 0)?.is_some())
+                    Ok(<Self as ::semio_framework_os_command::ColdMutation<#reference_ty>>::foreign_step_source(self, base, 0)?.is_some())
                 })? { return Ok(Vec::new()); }
                 match self { #(#inverse_arms),* }
             }
-            fn foreign_step_source<'a>(&'a self, base: &'a #reference_ty, index: usize) -> Result<Option<::semio_framework_os_kernel::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
+            fn foreign_step_source<'a>(&'a self, base: &'a #reference_ty, index: usize) -> Result<Option<::semio_framework_os_command::ForeignStepSource<'a>>, ::semio_framework_value::ValueError> {
                 match self { #(#cold_foreign_source_arms),* }
             }
         }
@@ -404,7 +404,7 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
     let test_ident = syn::Ident::new(&format!("semio_payload_law_{}", to_kebab(&name.to_string()).replace('-', "_")), name.span());
         let cold_footprint = reference_ty.map(|wire| quote! {
-        let (footprint_failures, _) = ::semio_framework_os_kernel::os_spr::fold::mutation_inverse_rows_failures::<#snapshot_ty, #wire, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
+        let (footprint_failures, _) = ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #wire, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
         failures.extend(footprint_failures);
     });
 quote! {

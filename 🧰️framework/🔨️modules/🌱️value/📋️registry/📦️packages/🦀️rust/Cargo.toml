@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Fixed exact-key slot leases, exact scoped request ownership and the exact immutable key lookup that funds byte pages."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-registry"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_registry"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-hash = { workspace = true }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+blake3 = "1.8.2"

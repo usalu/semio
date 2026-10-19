@@ -1,4 +1,4 @@
-import type { BrowserInput } from "./🌐️browser.tsx";
+import type { BrowserInput } from "./🌐️browser/🟦️.tsx";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -12,7 +12,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     import("node:path"),
     import("node:url"),
     import("../../../../../../🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts"),
-    import("../../../../🎬️media/🚚️lifecycle/🟦️.ts"),
+    import("@semio-tech/framework/os/modules/renderer/engine/media/lifecycle"),
     import("../../../📤️SegmentedDownload/🟦️.ts"),
   ]);
   const { createElement } = React;
@@ -172,7 +172,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         encode(value = ""): Uint8Array { return Uint8Array.from(Buffer.from(value)); }
       });
       const { build } = await import("esbuild");
-      const bundle = await build({ entryPoints: [resolve(dirname(fileURLToPath(source.url)), "🌐️browser.tsx")], bundle: true, format: "iife", platform: "browser", target: "chrome120", write: false, logLevel: "silent", define: { "import.meta.vitest": "undefined" } });
+      const bundle = await build({ entryPoints: [resolve(dirname(fileURLToPath(source.url)), "🌐️browser/🟦️.tsx")], bundle: true, format: "iife", platform: "browser", target: "chrome120", write: false, logLevel: "silent", define: { "import.meta.vitest": "undefined" } });
       const browser = await chromium.launch({ headless: true });
       try {
         const page = await browser.newPage();

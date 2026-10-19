@@ -1,5 +1,11 @@
-import {writeFileSync,existsSync} from "node:fs";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
 
-writeFileSync(process.argv[2]!,JSON.stringify({parent:process.ppid,worker:process.pid}));
-while(!existsSync(process.argv[3]!))await Bun.sleep(10);
-process.stdout.write("paid-child");
+/** 🚪️ `run` — runs the program of this script. */
+class RunScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
+}
+const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));

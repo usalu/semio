@@ -1,20 +1,20 @@
-//! concrete `Puzzle2dMutation` kinds it consists of, one entity at a time, and never builds a whole board to
+//! 🔩️ concrete `Puzzle2dMutation` kinds it consists of, one entity at a time, and never builds a whole board to
 //! 📼️ Puzzle 2d kind-emitting recorder: every editor command that edits the board states its user action as the
 //! difference it against the document. The recorder keeps the document as it stands after the kinds recorded so far
 //! (applied through the central applier), so a later row of the same gesture — a second clone's label, a second
 //! wire's id — reads what the earlier rows made.
 
-use super::board_snapshot_edges;
-use super::board_snapshot_nodes;
-use super::new_edge_id;
-use super::new_node_id;
-use super::patched_field_value;
-use super::puzzle2d_next_node_label;
-use super::puzzle2d_placed_handles;
-use super::set_member;
-use super::unique_edge_id;
-use super::unique_node_id;
-use crate::Puzzle2dPlaySnapshot;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_edges;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::new_edge_id;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::new_node_id;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::patched_field_value;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_next_node_label;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_placed_handles;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::set_member;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::unique_edge_id;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::unique_node_id;
+use semio_s_artifact_puzzle_2d_mut_any_10::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations as kinds;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;

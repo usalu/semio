@@ -1,0 +1,27 @@
+import{createHash}from"node:crypto";
+import{relative,isAbsolute,resolve,sep}from"node:path";
+import{receiveScriptProcessInvocation}from"@semio-tech/process/routing";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
+import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import{writeOwnedCommandOutputV1}from"@semio-tech/process/execution";
+import { repositoryCachePartitionRootDataV1 } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import{readVscodeCompilerFilesV1}from"../📡️data/🟦️.ts";
+import{extensionBuildConfig}from"../🟦️.ts";
+import schema from"../🧬️schema/🔣️.json"with{type:"json"};
+
+/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
+export async function runScriptProgram(): Promise<void> {
+  if(true)await receiveScriptProcessInvocation(process.env,async original=>{
+   if(process.argv.length!==3||process.argv[2]!=="compile")throw new Error("Expected bounded VSCode compile DATA on stdin");const control=scriptCompilerAdmissionControlV1(original,"vscode:compiler-data",0),authority=readNativeCallerAuthorityV1(original.capabilities),chunks:Buffer[]=[];let bytes=0;
+   for await(const chunk of process.stdin){control.signal.throwIfAborted();bytes+=chunk.byteLength;if(bytes>16777216)throw new Error("Finite VSCode compiler input required");chunks.push(Buffer.from(chunk));}
+   const request=JSON.parse(new TextDecoder("utf8",{fatal:true}).decode(Buffer.concat(chunks)));if(validateJsonSchemaSubset(schema.definitions.WorkerRequest,request).length||request.root!==authority.repositoryRoot||request.mode!==authority.original.buildMode||request.dependencies!==repositoryCachePartitionRootDataV1(request.root,"dependencies"))throw new Error("Exact Original VSCode compiler DATA required");
+   const products=repositoryCachePartitionRootDataV1(request.root,"products"),inside=(root:string,path:string)=>{const child=relative(root,path);return resolve(path)===path&&child!==".."&&!child.startsWith(".."+sep)&&!isAbsolute(child);};if(!inside(products,request.directory)||!inside(products,request.state)||!inside(request.root,request.packageRoot))throw new Error("Owned parent VSCode data paths required");const images=new Map<string,string>();let sourceBytes=0;
+   for(const row of request.images){if(!inside(request.root,row.path)||inside(request.dependencies,row.path)||images.has(row.path))throw new Error("Closed own VSCode compiler Source required");const data=Buffer.from(row.base64,"base64");sourceBytes+=data.length;if(data.toString("base64")!==row.base64||data.length>schema.definitions.Policy.const.maximumSourceFileBytes||sourceBytes>schema.definitions.Policy.const.maximumSourceBytes||createHash("sha256").update(data).digest("hex")!==row.sha256)throw new Error("Bounded exact VSCode compiler Source bytes required");images.set(row.path,new TextDecoder("utf8",{fatal:true}).decode(data));}
+   const{build}=await import("vite"),files:Array<{name:string;base64:string;sha256:string}>=[];let outputBytes=0;
+   for(const[row,output,prefix]of[["🟦️.ts","extension.js",""],["../../🧪️tests/🧩️extension/🟦️.ts","extension.test.js","test/"]]as const){control.signal.throwIfAborted();const configuration=extensionBuildConfig(request.packageRoot,row,request.directory,output,request.mode),result=await build({...configuration,cacheDir:request.state,logLevel:"silent",plugins:[{name:"semio-vscode-owned-source",enforce:"pre",load(id){if(id.startsWith("\0"))return;const path=id.split("?",1)[0]!;if(!isAbsolute(path)||inside(request.dependencies,path))return;const contents=images.get(path);if(contents===undefined)throw new Error("Uncaptured own VSCode compiler load refused: "+path);return contents;}},...configuration.plugins],build:{...configuration.build,write:false}});
+    for(const batch of Array.isArray(result)?result:[result]){if(!("output"in batch))throw new Error("One-shot VSCode compiler output required");for(const file of batch.output){const data=Buffer.from(file.type==="chunk"?file.code:typeof file.source==="string"?file.source:Buffer.from(file.source));outputBytes+=data.length;if(outputBytes>schema.definitions.Policy.const.maximumOutputBytes||outputBytes>Math.floor(authority.transport.maximumBytes/2))throw new Error("VSCode output exceeds original transport");files.push({name:prefix+file.fileName,base64:data.toString("base64"),sha256:createHash("sha256").update(data).digest("hex")});}}
+   }
+   const response={version:1,mode:authority.original.buildMode,files},encoded=JSON.stringify(response);readVscodeCompilerFilesV1(encoded,authority.original.buildMode,authority.transport.maximumBytes);if(Buffer.byteLength(encoded)>authority.transport.maximumBytes)throw new Error("Original VSCode output transport required");await writeOwnedCommandOutputV1(process.stdout,encoded,control);
+  });
+}

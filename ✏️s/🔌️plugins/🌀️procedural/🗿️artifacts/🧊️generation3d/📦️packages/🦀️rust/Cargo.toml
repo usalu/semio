@@ -35,6 +35,7 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework = { workspace = true }
@@ -132,6 +133,7 @@ semio-s-artifact-procedural-3d-testkit = { workspace = true }
 semio-s-artifact-procedural-3d-transforms = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-commands = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-procedural-3d-mut-synapses = { workspace = true }
 
 [[test]]
 name = "editor-routes"

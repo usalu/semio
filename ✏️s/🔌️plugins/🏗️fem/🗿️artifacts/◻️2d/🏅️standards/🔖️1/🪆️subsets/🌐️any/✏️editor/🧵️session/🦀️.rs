@@ -21,7 +21,7 @@ use semio_s_fem_mesh::PlanarDomain;
 use semio_s_fem_mesh::TriMesh2;
 use semio_s_fem_model::Element;
 use crate::sparse::Csr;
-use crate::sparse::MountedScalarSlots;
+use semio_s_fem_sparse::MountedScalarSlots;
 use semio_s_fem_sparse_pcg::PcgJob;
 use semio_s_fem_sparse_pcg::PcgJobConstruction;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
@@ -36,7 +36,7 @@ use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeBorrow;
 use semio_framework_job::Operation;
 use semio_framework_job::OperationId;
-use semio_framework_job::RetainedJobPayload;
+use semio_framework_job_payload::RetainedJobPayload;
 use semio_framework_job::StepContext;
 use semio_framework_plugin::reactor::jobs::BoundedJob;
 use semio_framework_plugin::reactor::jobs::BoundedJobFactory;
@@ -54,10 +54,9 @@ use semio_framework_value::ValueRefusalKind;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-#[path = "🪪️session-constants-and-owner-catalog/🦀️.rs"]
-mod session_constants_and_owner_catalog;
-pub use session_constants_and_owner_catalog::{ConsumerKey, FEM2D_MOUNTED_JOB_KIND};
-use session_constants_and_owner_catalog::{
+pub use semio_s_artifact_fem_2d_editor_session_catalog::{ConsumerKey, FEM2D_MOUNTED_JOB_KIND};
+use semio_s_artifact_fem_2d_editor_session_catalog::{
+    SESSION_MAXIMUM_BYTES, SESSION_MAXIMUM_ITEMS,
     MountedProcessOwnerCatalog, RequestKey, SESSION_CONSUMER_CAPACITY, FEM2D_JOB_COUNTER_MAXIMUM, FEM2D_JOB_TAG, INPUT_BYTES,
     SESSION_ACTIVE_CAPACITY, SESSION_MAXIMUM_BOUNDARY_POINTS, SESSION_MAXIMUM_ELEMENTS,
     SESSION_MAXIMUM_FAULT_BYTES, SESSION_MAXIMUM_INPUT_BYTES, SESSION_MAXIMUM_INPUT_ITEMS,
@@ -68,13 +67,12 @@ use session_constants_and_owner_catalog::{
     SESSION_UNITS_PER_STEP,
 };
 #[cfg(test)]
-use session_constants_and_owner_catalog::MountedOwnerClass;
+use semio_s_artifact_fem_2d_editor_session_catalog::MountedOwnerClass;
 
 #[path = "🏗️model-build-job/🦀️.rs"]
 mod model_build_job;
 use model_build_job::{
     bounded_string_capacities, ModelBuildStage, MountedIdentity, MountedModelBuild, MountedStage,
-    SESSION_MAXIMUM_BYTES, SESSION_MAXIMUM_ITEMS,
 };
 
 #[path = "🏁️model-build-close/🦀️.rs"]

@@ -284,7 +284,7 @@ fn material_patch_wire_distinguishes_absence_from_null() {
     assert_eq!(semio_framework_pack_json::from_json_str::<Fem3dMaterialPatch>("{}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("no fields"), Fem3dMaterialPatch::default());
     let value = semio_framework_value::ToValue::to_value(&patch);
     let mut allow = |_| true;
-    let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut allow);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
     let decoded = <Fem3dMaterialPatch as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).expect("controlled sparse field decode");
     assert_eq!(decoded, patch);
     semio_framework_value::FromValue::retire_decoded(decoded);
@@ -293,7 +293,7 @@ fn material_patch_wire_distinguishes_absence_from_null() {
         assert!(semio_framework_pack_json::from_json_str::<Fem3dMaterialPatch>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{wire} must be refused");
         let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire tree");
         let mut allow = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(65536, &mut allow);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
         assert!(<Fem3dMaterialPatch as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).is_err(), "{wire} controlled decode must be refused");
     }
 }

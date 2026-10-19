@@ -1,6 +1,6 @@
 /** 🧬️ Forms app configuration. */
 export interface FormsConfig {
-  /** @state config Host contribution projection. */
+  /** 🤝️ @state config Host contribution projection. */
   contributionsJson: string;
 }
 

@@ -1,4 +1,4 @@
-//! `🌱️metabolism/🔣️icons` asset directory through a static `board_metabolism_icon_svg(key)` match table
+//! 🎞️ `🌱️metabolism/🔣️icons` asset directory through a static `board_metabolism_icon_svg(key)` match table
 //! 🔣️ Puzzle 2d app engine — the metabolism icon table: this module reads the shared
 //! per SVG, keyed by the bare stem after the repo's emoji filename prefix. The board's icon codec
 //! reaches it through [`puzzle_themed_icon_lookup`].

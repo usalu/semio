@@ -1,4 +1,4 @@
-//! Norm command — `insert-item`.
+//! 📜️ Norm command — `insert-item`.
 
 use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;

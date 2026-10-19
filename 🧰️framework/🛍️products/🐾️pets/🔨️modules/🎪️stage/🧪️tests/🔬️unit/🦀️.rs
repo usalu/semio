@@ -14,22 +14,35 @@ use semio_framework_pets_contract::schema::{
 };
 use semio_framework_pets_contract::testkit::{assert_same, entries, fixture, json, typed};
 use semio_framework_pets_interaction::gesture::{no_hover, COLD};
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
+use semio_framework_pets_contract::schema::ToolFrame;
 
-const SOURCES: [(&str, &str); 11] = [
-    ("stage", include_str!("../../🦀️.rs")),
-    ("draft", include_str!("../../../📝️draft/🦀️.rs")),
-    ("spacing", include_str!("../../../📏️spacing/🦀️.rs")),
-    ("schedule", include_str!("../../../🗓️schedule/🦀️.rs")),
-    ("attention", include_str!("../../../👀️attention/🦀️.rs")),
-    ("locomotion", include_str!("../../../🚶️locomotion/🦀️.rs")),
-    ("sociability", include_str!("../../../💞️sociability/🦀️.rs")),
-    ("choice", include_str!("../../../🎯️choice/🦀️.rs")),
-    ("population", include_str!("../../../👥️population/🦀️.rs")),
-    ("clock", include_str!("../../../🕰️clock/🦀️.rs")),
-    ("projection", include_str!("../../../🎥️projection/🦀️.rs")),
-];
+fn sources() -> [(&'static str, &'static str); 20] {
+    [
+        ("stage", fixture_text!("../../../🎪️stage/🦀️.rs")),
+        ("draft", fixture_text!("../../../📝️draft/🦀️.rs")),
+        ("spacing", fixture_text!("../../../📏️spacing/🦀️.rs")),
+        ("schedule", fixture_text!("../../../🗓️schedule/🦀️.rs")),
+        ("attention", fixture_text!("../../../👀️attention/🦀️.rs")),
+        ("locomotion", fixture_text!("../../../🚶️locomotion/🦀️.rs")),
+        ("locomotion/footing", fixture_text!("../../../🚶️locomotion/⚓️footing/🦀️.rs")),
+        ("locomotion/courses", fixture_text!("../../../🚶️locomotion/🛬️courses/🦀️.rs")),
+        ("locomotion/departure", fixture_text!("../../../🚶️locomotion/🛫️departure/🦀️.rs")),
+        ("locomotion/motion", fixture_text!("../../../🚶️locomotion/🏃️motion/🦀️.rs")),
+        ("locomotion/hand", fixture_text!("../../../🚶️locomotion/✋️hand/🦀️.rs")),
+        ("locomotion/outings", fixture_text!("../../../🚶️locomotion/🪜️outings/🦀️.rs")),
+        ("locomotion/trips", fixture_text!("../../../🚶️locomotion/🧳️trips/🦀️.rs")),
+        ("locomotion/mischief", fixture_text!("../../../🚶️locomotion/🪄️mischief/🦀️.rs")),
+        ("locomotion/leaving", fixture_text!("../../../🚶️locomotion/🚪️leaving/🦀️.rs")),
+        ("sociability", fixture_text!("../../../💞️sociability/🦀️.rs")),
+        ("choice", fixture_text!("../../../🎯️choice/🦀️.rs")),
+        ("population", fixture_text!("../../../👥️population/🦀️.rs")),
+        ("clock", fixture_text!("../../../🕰️clock/🦀️.rs")),
+        ("projection", fixture_text!("../../../🎥️projection/🦀️.rs")),
+    ]
+}
 const FORBIDDEN: [&str; 21] =
     [".sin(", ".cos(", ".tan(", ".atan2(", ".exp(", ".powf(", ".powi(", ".hypot(", ".ln(", ".mul_add(", ".max(", ".min(", "f64::max", "f64::min", "println!", "eprintln!", "dbg!", "static ", "thread_local!", "HashMap", "BTreeMap"];
 pub(crate) const FAR: Ticks = 100_000_000;
@@ -332,7 +345,7 @@ fn the_calm_home_replays_into_its_committed_trace() {
 
 #[test]
 fn the_arithmetic_is_what_the_typescript_twin_can_reproduce() {
-    for (part, source) in SOURCES {
+    for (part, source) in sources() {
         for forbidden in FORBIDDEN {
             assert!(!source.contains(forbidden), "{part}: {forbidden}");
         }

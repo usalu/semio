@@ -1,5 +1,6 @@
 //! 🧭️ Canonical unsigned64 XML doctype position scalar.
-use semio_framework_value::{DslValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{DslValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub fn parse(text: &str) -> Result<u64, String> {
     if text.is_empty() || text.len() > 1 && text.starts_with('0') || !text.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err("XML position requires canonical decimal text".into());

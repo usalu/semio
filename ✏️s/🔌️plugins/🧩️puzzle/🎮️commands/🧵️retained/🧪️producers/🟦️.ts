@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv";
 test("Puzzle producers retain exact original routing and use same-source direct admission",()=>{
- const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+ const fixture=JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
  expect(new Ajv({strict:true}).validate({type:"object",required:["schema","owners"],additionalProperties:false,properties:{schema:{const:"semio.puzzle.original-producers.v1"},owners:{type:"array",minItems:3,maxItems:3,items:{type:"object",required:["path","command","raw","work","resume"],additionalProperties:false,properties:{path:{type:"string"},command:{type:"string"},raw:{type:"string"},work:{type:"string"},resume:{const:true}}}}}},fixture)).toBe(true);
  for(const row of fixture.owners){
   const rust=readFileSync(new URL(row.path,import.meta.url),"utf8");

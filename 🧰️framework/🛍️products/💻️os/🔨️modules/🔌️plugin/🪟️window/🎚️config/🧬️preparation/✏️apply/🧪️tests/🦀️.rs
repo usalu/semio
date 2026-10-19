@@ -1,6 +1,6 @@
 //! 🧪️ The field-set apply edit conserves physical custody for Copy and heap-owning window states through every partial frontier, and its inverse row restores the base exactly.
-use super::{WindowConfigApplyEdit,WindowConfigApplyMutation};
-use crate::store;
+extern crate semio_framework_os_kernel as store;
+use semio_framework_plugin_window_config::{WindowConfigApplyEdit,WindowConfigApplyMutation};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep}};
 use serde_json::{Value,json};

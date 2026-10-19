@@ -1,11 +1,17 @@
 //! 🧮️ Collection algebra of the DXF diff: the index-keyed and name-keyed element traits with their generic apply, inverse and absorb-pair cores. See [`super`].
 
-use super::*;
+use std::collections::HashSet;
+
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
+
+/// 🧩 Ordered removed keys, modified values, and inserted items.
+pub type NamedDiffParts<D, T> = (Vec<String>, Vec<(String, D)>, Vec<(usize, T)>);
 
 //#region 🔖️IndexCollectionCore
 /// 🧮 Per-item sparse-diff behavior shared by the two index-keyed collections (`DxfEntity`,
 /// `DxfBlock` — the latter's own nested `entities` field reuses `DxfEntity`'s impl directly).
-pub(super) trait DxfIndexElem: Clone + PartialEq {
+pub trait DxfIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
     fn diff_is_empty(d: &Self::Diff) -> bool;
     fn field_changes(a: &Self, b: &Self) -> Self::Diff;
@@ -18,7 +24,7 @@ pub(super) trait DxfIndexElem: Clone + PartialEq {
 /// positions first, then removed descending, then added ascending clamped to `min(index,len)`
 /// (recipe's normative apply order).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn generic_apply<T: DxfIndexElem>(base: &[T], removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
+pub fn generic_apply<T: DxfIndexElem>(base: &[T], removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
     let mut items = base.to_vec();
     for (idx, d) in modified {
         T::diff_apply(d, &mut items[*idx]);
@@ -39,7 +45,7 @@ pub(super) fn generic_apply<T: DxfIndexElem>(base: &[T], removed: &[usize], modi
 /// ↩️ Negative rows of an index-keyed triple against its BASE items: added rows become removals at their final index, removed
 /// rows return at their base index, and each modified row restores its base fields at the index the row has after the diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn generic_inverse<T: DxfIndexElem>(removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)], base: &[T]) -> IndexedDiffParts<T::Diff, T> {
+pub fn generic_inverse<T: DxfIndexElem>(removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)], base: &[T]) -> IndexedDiffParts<T::Diff, T> {
     let removed_sorted = semio_s_artifact_stdio_contract::ordered_unique(&removed);
     let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
     added_final.sort_unstable();
@@ -56,7 +62,7 @@ pub(super) fn generic_inverse<T: DxfIndexElem>(removed: &[usize], modified: &[(u
 /// ↩️ Negative rows of a name-keyed triple against its BASE items: added entries become removals by name, removed entries return
 /// at their base index, and each modified entry restores its base fields.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn named_inverse<T: DxfNamedElem>(removed: &[String], modified: &[(String, T::Diff)], added: &[(usize, T)], base: &[T]) -> NamedDiffParts<T::Diff, T> {
+pub fn named_inverse<T: DxfNamedElem>(removed: &[String], modified: &[(String, T::Diff)], added: &[(usize, T)], base: &[T]) -> NamedDiffParts<T::Diff, T> {
     let mut added_ordered: Vec<&(usize, T)> = added.iter().collect();
     added_ordered.sort_by_key(|(index, _)| *index);
     let inverse_removed = added_ordered.iter().map(|(_, item)| item.key().to_string()).collect();
@@ -91,7 +97,7 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// ➕️ Absorbs `d1` (base→mid) then `d2` (mid→after) into a single base→after triple.
 #[allow(clippy::type_complexity)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn generic_absorb_pair<T: DxfIndexElem>(d1_removed: &[usize], d1_modified: &[(usize, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[usize], d2_modified: &[(usize, T::Diff)], d2_added: &[(usize, T)]) -> IndexedDiffParts<T::Diff, T> {
+pub fn generic_absorb_pair<T: DxfIndexElem>(d1_removed: &[usize], d1_modified: &[(usize, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[usize], d2_modified: &[(usize, T::Diff)], d2_added: &[(usize, T)]) -> IndexedDiffParts<T::Diff, T> {
     use std::collections::HashMap;
     let max_ref =
         d1_removed.iter().copied().chain(d1_modified.iter().map(|(i, _)| *i)).chain(d1_added.iter().map(|(i, _)| *i)).chain(d2_removed.iter().copied()).chain(d2_modified.iter().map(|(i, _)| *i)).chain(d2_added.iter().map(|(i, _)| *i)).max();
@@ -181,7 +187,7 @@ pub(super) fn generic_absorb_pair<T: DxfIndexElem>(d1_removed: &[usize], d1_modi
 /// identical ones. No rename tracking: nothing in this artifact's mutation vocabulary renames a
 /// header var/layer/style/linetype in place (matches `stdio.obj`'s groups/objects, not `stdio.zip`'s
 /// entries).
-pub(super) trait DxfNamedElem: Clone + PartialEq {
+pub trait DxfNamedElem: Clone + PartialEq {
     type Diff: Clone + PartialEq + Default;
     fn key(&self) -> &str;
     fn field_changes(a: &Self, b: &Self) -> Self::Diff;
@@ -191,7 +197,7 @@ pub(super) trait DxfNamedElem: Clone + PartialEq {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(String, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
+pub fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modified: &[(String, T::Diff)], added: &[(usize, T)]) -> Vec<T> {
     let mut items = base.to_vec();
     for (key, d) in modified {
         for item in &mut items {
@@ -212,7 +218,7 @@ pub(super) fn named_apply<T: DxfNamedElem>(base: &[T], removed: &[String], modif
 
 #[allow(clippy::type_complexity)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn named_absorb_pair<T: DxfNamedElem>(d1_removed: &[String], d1_modified: &[(String, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[String], d2_modified: &[(String, T::Diff)], d2_added: &[(usize, T)]) -> NamedDiffParts<T::Diff, T> {
+pub fn named_absorb_pair<T: DxfNamedElem>(d1_removed: &[String], d1_modified: &[(String, T::Diff)], d1_added: &[(usize, T)], d2_removed: &[String], d2_modified: &[(String, T::Diff)], d2_added: &[(usize, T)]) -> NamedDiffParts<T::Diff, T> {
     let added_keys: HashSet<String> = d1_added.iter().map(|(_, t)| t.key().to_string()).collect();
     let mut merged_removed: Vec<String> = Vec::from(d1_removed);
     let mut annihilated: HashSet<String> = HashSet::new();

@@ -146,8 +146,6 @@ puzzle3d_command_variants! {
     TargetBrushSuggestions = "targetBrushSuggestions",
     RegisterBrushMesh = "registerBrushMesh",
     WorldPointerDown = "worldPointerDown",
-    // 🗣️ B1: locale/terminology used to be host-pushed `ViewState` fields with no app-level action of
-    // their own; now that `ViewState` is gone from the app-facing surface, they need a real Command.
 }
 
 impl protocol::OpBinary for Puzzle3dCommand {
@@ -215,11 +213,6 @@ impl protocol::OpBinary for Puzzle3dCommand {
         "targetBrushSuggestions",
         "registerBrushMesh",
         "worldPointerDown",
-        // 🧭️ The two framework-injected host-configuration verbs. They are `interactiveJob: "migrated"`
-        // in the manifest and `host_configuration_mutation` resolves each to one Config mutation, so
-        // they need a generated tool id here for `validate_tool_job_rows` to admit
-        // `Puzzle3dHostConfigurationProofs`' generic bounded proofs — without which `dispatch_action`
-        // fails closed with `interactive-job.missing-factory` before the hook is ever consulted.
         "setActiveTool",
         "setActiveUtility",
     ];

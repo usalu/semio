@@ -104,8 +104,6 @@ function oweAttachedPreviewsForMutations(latches: Map<string, WindowLatch>, link
   for (const window of windows) latches.get(window)!.noteOutcome(true);
   link.requested = null;
   const effects: string[] = [];
-  // ⏰️ Only a job that has NOT settled can be woken into more work: a settled one answers "complete" to
-  // every wake, so a surface holding one is as unable to pay a fresh debt as a surface holding none.
   const woken = link.live && link.settled === null;
   if (windows.length > 0 && servable && !woken && link.requested === null) {
     link.requested = "start";
@@ -124,10 +122,6 @@ function previewEvalRunEffects(latches: Map<string, WindowLatch>, link: RunLink,
   let request: RunRequest | null = null;
   let effects: string[] = [];
   if (state === "complete") {
-    // 🏁️ A complete run is FINALIZED as soon as it is seen, owed or not: `complete` means the job is done
-    // and the run awaits its finalize, and a run left standing in it makes every later `toolRunStart` a
-    // no-op against the run already there. Pairing the start into this poll does not help either — the
-    // host schedules a poll's effects independently, so it would land while the run is still complete.
     link.restartOwed = owed;
     request = "finalize";
     effects = ["toolRunFinalize"];
@@ -178,17 +172,13 @@ export function testGeneration3dGestureRearm(): void {
       return [latches, link];
     };
 
-    // 🤫️ A settled run stays quiet however often the host polls it — the baseline the storm broke.
     const [quiet, quietLink] = stage();
     if (row.windowsSettled) {
-      // 🏁️ A complete run is finalized ONCE, however often the host polls it while the view still answers
-      // `complete` — the request latch, not the poll cadence, decides how often it asks.
       const asked: string[] = [];
       for (let poll = 0; poll < row.polls; poll += 1) asked.push(...previewEvalRunEffects(quiet, quietLink, row.windows, { id: 1, generation: 0, state: "complete" }, true));
       assert.deepEqual(asked, row.windows.length === 0 ? [] : ["toolRunFinalize"], `${row.id}: a settled complete run is finalized exactly once, however often the host polls it`);
     }
 
-    // 🩹️ The gesture.
     const [latches, link] = stage();
     const gesture = oweAttachedPreviewsForMutations(latches, link, row.windows, row.artifactMutations, row.servable);
     assert.equal(gesture.owes, row.expected.owes, `${row.id}: a gesture owes the previews exactly when it moved the document`);
@@ -196,7 +186,6 @@ export function testGeneration3dGestureRearm(): void {
     const owedWindows = row.windows.filter((window) => latches.get(window)!.tickOwed());
     assert.deepEqual(owedWindows, row.expected.owedWindows, `${row.id}: owed windows`);
 
-    // 🦶️ One landed mutation arms each attached window exactly ONCE.
     const hops: string[] = [];
     for (let guard = 0; guard <= row.windows.length; guard += 1) {
       const hop = nextHop(latches, row.windows);
@@ -210,8 +199,6 @@ export function testGeneration3dGestureRearm(): void {
     }
     assert.deepEqual(hops, row.expected.hops, `${row.id}: hop schedule`);
 
-    // ⏯️ The storm half, on a fresh staging: the gesture again, then the host's own poll ladder with its
-    // run view lagging `startLagPolls` behind every request it was handed.
     const [spinning, spinningLink] = stage();
     let starts = oweAttachedPreviewsForMutations(spinning, spinningLink, row.windows, row.artifactMutations, row.servable).effects.length;
     let view: { id: number; generation: number; state: RunState } | null = row.pollStartView === "none" ? null : { id: 1, generation: 0, state: row.pollStartView };
@@ -232,10 +219,6 @@ export function testGeneration3dGestureRearm(): void {
     console.log(`generation3d gestureRearm ${row.id} owes=${gesture.owes} owed=${owedWindows.join(",") || "-"} hops=${hops.join(",") || "-"} carried=${gesture.effects.join(",") || "-"} starts=${starts}`);
   }
 
-  // 🧹️ Only the run job the link currently belongs to may quiesce the session on close. A start retires
-  // the previous entry, so the OLD job's close runs after the NEW job installed its own port and reset
-  // the settled marker; a closing job that reads those as its own cancels the evaluation the fresh run
-  // is in the middle of.
   for (const row of fixture.jobSupersession.rows) {
     const link = { jobRun: row.linkRun, port: "live" as string | null, settled: row.settled ? "1/0" : null };
     const owns = link.jobRun === row.closingRun && link.jobRun !== null;
@@ -254,8 +237,6 @@ export function testGeneration3dGestureRearm(): void {
     console.log(`generation3d jobSupersession ${row.id} owns=${owns} cancels=${cancels} clearsPort=${clearsPort}`);
   }
 
-  // 🩹️ The rule is the EMIT, not the roster: the same window, the same latch, only the mutation count
-  // differs — and that alone decides.
   const one = new Map([["only", new WindowLatch()]]);
   one.get("only")!.arm();
   one.get("only")!.begin();

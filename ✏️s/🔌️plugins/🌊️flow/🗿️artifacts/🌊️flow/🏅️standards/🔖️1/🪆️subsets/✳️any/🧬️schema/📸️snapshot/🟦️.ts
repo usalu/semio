@@ -2,8 +2,8 @@
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface FlowSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact @child kind=s.stdio.semio standard=v1 subset=flow */ content: ArtifactChild;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📄️ @state artifact @child kind=s.stdio.semio standard=v1 subset=flow */ content: ArtifactChild;
 }
 
 export function parseFlowSnapshot(value: unknown, at = "$"): FlowSnapshot {

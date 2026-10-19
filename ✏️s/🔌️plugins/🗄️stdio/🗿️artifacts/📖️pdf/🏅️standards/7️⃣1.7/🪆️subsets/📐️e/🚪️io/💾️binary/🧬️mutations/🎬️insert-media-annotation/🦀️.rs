@@ -1,4 +1,4 @@
-//! Direct binary identity for `insert-media-annotation`.
+//! 💾️ Direct binary identity for `insert-media-annotation`.
 
 pub const TAG: u8 = 6;
 pub const BINARY_TAG: u8 = TAG;

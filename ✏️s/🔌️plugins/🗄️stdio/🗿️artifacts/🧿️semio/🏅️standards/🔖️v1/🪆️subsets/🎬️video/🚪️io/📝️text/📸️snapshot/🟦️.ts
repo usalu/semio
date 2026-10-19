@@ -2,7 +2,7 @@
  * hex(JSON) body. The JSON body's own structure is `../../../🧬️schema/📸️snapshot/🟦️.ts`'s `SemioVideoSnapshot`. */
 export interface SemioVideoSnapshotTextEnvelope {
   header: "schema stdio.semio.video";
-  /** hex-encoded UTF-8 JSON, decodes as `SemioVideoSnapshot` (see ../🟦️.ts) */
+  /** 🧊️ hex-encoded UTF-8 JSON, decodes as `SemioVideoSnapshot` (see ../🟦️.ts) */
   bodyHex: string;
 }
 

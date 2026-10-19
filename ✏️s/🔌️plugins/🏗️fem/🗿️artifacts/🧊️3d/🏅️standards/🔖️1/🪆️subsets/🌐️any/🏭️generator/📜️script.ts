@@ -35,8 +35,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { receiveScriptProcessInvocation } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -225,45 +225,45 @@ const RECIPE_DIRECTORIES = {
 const EXPORTED_FILE_NAMES = { stl: "🧊️expected.stl", obj: "🗿️expected.obj" } as const;
 
 const CARRIER_FIXTURES = {
-  "create-solid": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🧊️create-solid" },
-  "delete-solid": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🚫️delete-solid" },
-  "replace-solid": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🔄️replace-solid" },
-  "move-selection": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🧭️move-selection" },
-  "create-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/⚪️create-node" },
-  "delete-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🕳️delete-node" },
-  "create-element": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🧩️create-element" },
-  "delete-element": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🗑️delete-element" },
-  "replace-element": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/♻️replace-element" },
-  "create-material": { subset: "material", path: "🧱️material/🧫️fixtures/🌱️create-material" },
-  "delete-material": { subset: "material", path: "🧱️material/🧫️fixtures/🗑️delete-material" },
-  "replace-material": { subset: "material", path: "🧱️material/🧫️fixtures/🔁️replace-material" },
-  "change-material": { subset: "material", path: "🧱️material/🧫️fixtures/🩹️change-material" },
-  "change-load": { subset: "load", path: "🏋️load/🧫️fixtures/🩹️change-load" },
-  "change-combination-term": { subset: "load", path: "🏋️load/🧫️fixtures/🩹️change-combination-term" },
-  "change-combination-name": { subset: "load", path: "🏋️load/🧫️fixtures/🩹️change-combination-name" },
-  "change-element": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-element" },
-  "change-support": { subset: "boundary", path: "🛡️boundary/🧫️fixtures/🩹️change-support" },
-  "change-solid": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-solid" },
-  "change-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-section" },
-  "change-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🩹️change-node" },
-  "create-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/📐️create-section" },
-  "delete-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/✂️delete-section" },
-  "replace-section": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/📏️replace-section" },
-  "create-support": { subset: "boundary", path: "🛡️boundary/🧫️fixtures/🛡️create-support" },
-  "delete-support": { subset: "boundary", path: "🛡️boundary/🧫️fixtures/🗑️delete-support" },
-  "replace-support": { subset: "boundary", path: "🛡️boundary/🧫️fixtures/🔁️replace-support" },
-  "create-load-case": { subset: "load", path: "🏋️load/🧫️fixtures/📋️create-load-case" },
-  "delete-load-case": { subset: "load", path: "🏋️load/🧫️fixtures/🗑️delete-load-case" },
-  "add-load": { subset: "load", path: "🏋️load/🧫️fixtures/➕️add-load" },
-  "remove-load": { subset: "load", path: "🏋️load/🧫️fixtures/➖️remove-load" },
-  "change-load-case-self-weight": { subset: "load", path: "🏋️load/🧫️fixtures/⚖️change-load-case-self-weight" },
-  "create-combination": { subset: "load", path: "🏋️load/🧫️fixtures/🔗️create-combination" },
-  "delete-combination": { subset: "load", path: "🏋️load/🧫️fixtures/✂️delete-combination" },
-  "update-analysis-settings": { subset: "analysis", path: "📈️analysis/🧫️fixtures/🎛️update-analysis-settings" },
-  "replace-node": { subset: "mesh", path: "🕸️mesh/🧫️fixtures/🔁️replace-node" },
-  "replace-load": { subset: "load", path: "🏋️load/🧫️fixtures/🔁️replace-load" },
-  "change-load-case-name": { subset: "load", path: "🏋️load/🧫️fixtures/🏷️change-load-case-name" },
-  "replace-combination": { subset: "load", path: "🏋️load/🧫️fixtures/🔁️replace-combination" },
+  "create-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🧊️create-solid" },
+  "delete-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🚫️delete-solid" },
+  "replace-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🔄️replace-solid" },
+  "move-selection": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🧭️move-selection" },
+  "create-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/⚪️create-node" },
+  "delete-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🕳️delete-node" },
+  "create-element": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🧩️create-element" },
+  "delete-element": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🗑️delete-element" },
+  "replace-element": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/♻️replace-element" },
+  "create-material": { subset: "material", path: "🧱️material/🧪️tests/🧫️fixtures/🌱️create-material" },
+  "delete-material": { subset: "material", path: "🧱️material/🧪️tests/🧫️fixtures/🗑️delete-material" },
+  "replace-material": { subset: "material", path: "🧱️material/🧪️tests/🧫️fixtures/🔁️replace-material" },
+  "change-material": { subset: "material", path: "🧱️material/🧪️tests/🧫️fixtures/🩹️change-material" },
+  "change-load": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-load" },
+  "change-combination-term": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-combination-term" },
+  "change-combination-name": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🩹️change-combination-name" },
+  "change-element": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-element" },
+  "change-support": { subset: "boundary", path: "🛡️boundary/🧪️tests/🧫️fixtures/🩹️change-support" },
+  "change-solid": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-solid" },
+  "change-section": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-section" },
+  "change-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🩹️change-node" },
+  "create-section": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/📐️create-section" },
+  "delete-section": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/✂️delete-section" },
+  "replace-section": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/📏️replace-section" },
+  "create-support": { subset: "boundary", path: "🛡️boundary/🧪️tests/🧫️fixtures/🛡️create-support" },
+  "delete-support": { subset: "boundary", path: "🛡️boundary/🧪️tests/🧫️fixtures/🗑️delete-support" },
+  "replace-support": { subset: "boundary", path: "🛡️boundary/🧪️tests/🧫️fixtures/🔁️replace-support" },
+  "create-load-case": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/📋️create-load-case" },
+  "delete-load-case": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🗑️delete-load-case" },
+  "add-load": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/➕️add-load" },
+  "remove-load": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/➖️remove-load" },
+  "change-load-case-self-weight": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/⚖️change-load-case-self-weight" },
+  "create-combination": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🔗️create-combination" },
+  "delete-combination": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/✂️delete-combination" },
+  "update-analysis-settings": { subset: "analysis", path: "📈️analysis/🧪️tests/🧫️fixtures/🎛️update-analysis-settings" },
+  "replace-node": { subset: "mesh", path: "🕸️mesh/🧪️tests/🧫️fixtures/🔁️replace-node" },
+  "replace-load": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🔁️replace-load" },
+  "change-load-case-name": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🏷️change-load-case-name" },
+  "replace-combination": { subset: "load", path: "🏋️load/🧪️tests/🧫️fixtures/🔁️replace-combination" },
 } as const;
 //#endregion 🧪️Corpus
 
@@ -278,7 +278,7 @@ async function contentDigest(bytes: Uint8Array | string): Promise<string> {
 
 /** 📎️ Fixture file paths are resolved against the OWNER'S ORACLE directory (`🔮️oracles/`), not this
  *  generator's directory — the exact prefix bug the mesh pilot's playbook records finding. */
-const FIXTURE_PATH_PREFIX = "../../🕸️mesh/🧫️fixtures";
+const FIXTURE_PATH_PREFIX = "../../🕸️mesh/🧪️tests/🧫️fixtures";
 
 function write(path: string, body: string): void {
   mkdirSync(dirname(path), { recursive: true });
@@ -330,7 +330,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
     for (const [format, text] of Object.entries(exported) as [keyof typeof EXPORTED_FILE_NAMES, string][]) {
       const filename = EXPORTED_FILE_NAMES[format];
       write(join(dir, filename), text);
-      files.push({ role: `expected-${format}`, path: `${FIXTURE_PATH_PREFIX}${directoryName}/${filename}`, mediaType: `model/${format}`, sha256: await contentDigest(text), bytes: Buffer.byteLength(text) });
+      files.push({ role: `expected-${format}`, path: `${FIXTURE_PATH_PREFIX}/${directoryName}/${filename}`, mediaType: `model/${format}`, sha256: await contentDigest(text), bytes: Buffer.byteLength(text) });
     }
 
     const { measured, weld, crossFormatTriangleCounts } = await reimportAndMeasure(t, exported);
@@ -374,7 +374,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
 
   const metricsBody = `${JSON.stringify(measurements, null, 2)}\n`;
   write(join(dir, "📊️expected.metrics.json"), metricsBody);
-  files.push({ role: "expected-measurements", path: `${FIXTURE_PATH_PREFIX}${directoryName}/📊️expected.metrics.json`, mediaType: "application/json", sha256: await contentDigest(metricsBody), bytes: Buffer.byteLength(metricsBody) });
+  files.push({ role: "expected-measurements", path: `${FIXTURE_PATH_PREFIX}/${directoryName}/📊️expected.metrics.json`, mediaType: "application/json", sha256: await contentDigest(metricsBody), bytes: Buffer.byteLength(metricsBody) });
 
   return {
     id: recipe.id,

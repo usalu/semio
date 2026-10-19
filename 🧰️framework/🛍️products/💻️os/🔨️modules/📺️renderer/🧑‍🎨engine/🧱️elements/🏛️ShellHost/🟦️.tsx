@@ -192,12 +192,6 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
     const initialLocale = locks?.locale ?? readUiPreferences(storage).locale ?? requestedLocale ?? detectShellLocale(typeof navigator !== "undefined" ? navigator.language : undefined);
     return createShellScope({ shellId, ownsPage, storage, initialLocale });
   });
-  // 🐚️ `scope.rootRef` is a stable object (its identity never changes), so a descendant hook that puts
-  // the REF ITSELF in a `useEffect`/`useLayoutEffect` dependency array would never re-fire once the ref
-  // attaches. This state bump forces one guaranteed re-render right after attachment so descendants that
-  // read `scope.rootRef.current` fresh at render time (see `FrameworkOsShellInner`'s
-  // `useElementsSurfaceChrome`/`useCanvasAppearanceSync` calls) pick up the real element instead of
-  // sticking with whatever they saw (usually `null`) on the very first render.
   const [, bumpAfterRootAttach] = useState(0);
   const setRoot = useCallback((node: HTMLDivElement | null) => {
     scope.rootRef.current = node;
@@ -205,7 +199,6 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
   }, [scope]);
   const setPortalLayer = useCallback((node: HTMLDivElement | null) => {
     scope.portalLayerRef.current = node;
-    // Same attach bump as setRoot: UIIntroduction portals into this layer and must re-render once it exists.
     bumpAfterRootAttach((n) => n + 1);
   }, [scope]);
   useEffect(() => () => disposeShellI18nInstance(scope.i18n), [scope]);
@@ -289,12 +282,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
           className="flex h-full min-h-0 w-full flex-col bg-transparent"
           data-level="base"
           data-semio-os-ready={session && initialExampleReady && !error ? "" : undefined}
-          /* 🪪️ The identity an AGENT names this document by, published into the DOM so "the browser
-             shows the artifact the agent edited" is an assertion rather than a skip. It is the one
-             the shell's own artifact route hands back on every `historySnapshot`
-             (`${pluginId}:${appId}:${instanceId}`, the `artifactRef` the bridge census declares), so
-             a gateway reading `expectedRevision.artifactId` off `action_prepare` can resolve its
-             session straight onto this element. */
           data-semio-artifact-id={agentBridgeInstances[0]?.artifactRef}
           ref={historyDomRef}
         >
@@ -321,9 +308,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               ))}
             </div>
           ) : null}
-          {/* 💡️ The host-owned ephemeral inference port for exactly one document. It is mounted
-           * only while the retained worker operation is live, renders solely from the worker's own
-           * bounded status, and writes nothing into the document. */}
           {inferencePortRuntimeKey !== null && inferencePort !== undefined && documentServices.some((entry) => entry.owner === inferencePort.owner && entry.serviceId === inferencePort.serviceId) ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 w-[28rem] -translate-x-1/2 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               <InstalledServicePanelV1 presentation={documentServices.find((entry) => entry.owner === inferencePort.owner && entry.serviceId === inferencePort.serviceId)!} status={inferencePort} locale={uiLocale === "de" ? "de" : "en"} onAction={(action) => dispatchInferencePortIntent(inferencePortRuntimeKey, action)} />
@@ -334,10 +318,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               <DirectoryBootstrapStatusNotice state={directoryBootstrapUi} locale={uiLocale} onCancel={cancelDirectoryBootstrap} />
             </div>
           ) : null}
-          {/* 🔗️ AU2 — the hub connection surface, over the running session. In host mode it is also
-           * addressed at `/hub`, and closing it navigates back to the open space (or the landing
-           * route) so the shell is never left behind an overlay that still owns focus; in a plugin
-           * playground there is no shell router to address, and the overlay is plain shell state. */}
           {hubWorkspaceOpen ? (
             <div data-elevation-root="" className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
               <HubWorkspace
@@ -353,9 +333,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               />
             </div>
           ) : null}
-          {/* 🏛️ The Shell-owned administration pane for exactly one space. It is mounted only while
-           * the retained worker operation is live, and it renders solely from the hub's own canonical
-           * page — never from a locally stored role. */}
           {spaceAdministration !== null ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[70vh] w-[36rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
               <SpaceAdministrationPane
@@ -380,8 +357,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               )}
             </div>
           )}
-          {/* 🧯️ Non-blocking notice — e.g. a `"viewer.read-only"` fault (contract freeze §2.3/§5): never
-           * a crash, never blocks interaction with the rest of the shell. */}
           {transientNotice ? (
             <div
               role="status"
@@ -396,9 +371,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
               </button>
             </div>
           ) : null}
-          {/* 🎬️ The lazy plugin install — the one long-running phase the shell itself owns. It sits
-           * under the notice slot so an install that also raised a notice shows both, and its control
-           * is a real cancel (every in-flight load aborts and lands in `"failed"`), not a dismiss. */}
           {installingPluginIds.length > 0 ? (
             <div
               role="status"
@@ -475,10 +447,6 @@ function FrameworkOsShellInner(props: FrameworkOsShellInnerProps) {
                 ) : undefined
               }
               footer={<Footer items={footerItems} />}
-              /* ⏪️📌️ The persistent bottom bands, in the layout's subfooter row — the last row of the shell, under the footer, where
-                 each reserves its own space and no docked panel's cap reaches, so none lies over or under other text: a live history-edit session of the focused program
-                 (whichever panel is open), a history change replaying before adoption, the running or finished hub Check In of the
-                 current document and the offer to reconnect the folder this device remembers, each with its own real controls. */
               subfooter={
                 focusedTimeTravel !== null || focusedReprojection !== null || currentCheckIn !== undefined || folderReconnectOffer !== null ? (
                   <div data-semio-bottom-bands="" className="flex flex-col items-center gap-single px-double py-single">

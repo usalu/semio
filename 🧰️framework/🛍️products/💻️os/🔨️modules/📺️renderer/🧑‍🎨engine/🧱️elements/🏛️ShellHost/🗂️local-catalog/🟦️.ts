@@ -28,7 +28,7 @@ import {
   type LocalDocument,
   type LocalDocumentStorage
 } from "@semio-tech/framework/config/mutations";
-import { applyLocalCatalogDiff, decodeLocalCatalogDiff, decodeLocalCatalogValue } from "@semio-tech/framework/config/schema/mutations";
+import { applyLocalCatalogDiff, decodeLocalCatalogDiff, decodeLocalCatalogValue } from "@semio-tech/framework/config/mutations";
 
 //#region 🔖️Contract
 /** 🧭️ The lane's two guest commands and the landing app's re-hydration action. */

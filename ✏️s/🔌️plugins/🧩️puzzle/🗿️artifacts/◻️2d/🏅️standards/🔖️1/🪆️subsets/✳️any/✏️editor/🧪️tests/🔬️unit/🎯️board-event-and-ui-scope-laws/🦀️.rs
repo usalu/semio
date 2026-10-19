@@ -109,7 +109,6 @@ async fn apply_board_events_select_persists_across_the_next_action() {
     let node_id = first_node_id(&app);
     dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
     assert!(render_body(&mut app, overview::BODY_KEY).contains(&node_id), "selection must be visible immediately after the select action");
-    // A second, unrelated action used to silently clear the selection via the stale `host.selection` re-sync.
     dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), None).expect("no-operation");
     assert!(render_body(&mut app, overview::BODY_KEY).contains(&node_id), "selection must survive a subsequent unrelated action");
     close_app(&mut app);
@@ -154,9 +153,6 @@ async fn select_action_declares_partial_ui_scope() {
     let result = dispatch(&mut app, "applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), None).expect("select");
     match result.ui_scope {
         UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
-            // 🐢️ Regression: `window_bodies` must list the window *body keys* (matched against
-            // `AppDefinition.windowKinds[].bodyKey` by the shell's `buildUiRefreshRequest`), not
-            // the pane/kind-id constants (`PUZZLE2D_PANES`) — those are a different id space.
             assert_eq!(window_bodies, vec![overview::BODY_KEY, detail::BODY_KEY, crate::standards::v1::subsets::any::schema::mutations::selection::BODY_KEY], "window_bodies must be body keys, not pane ids");
             assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_LAYERS.to_string()));
             assert!(panel_bodies.contains(&crate::editor::puzzle2d::config::PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()));

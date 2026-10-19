@@ -110,7 +110,7 @@ impl IoFidelityClass {
         }
     }
 
-    /// Ordered strength: Exact > Canonical > Semantic > Lossy
+    /// 🔢️ Ordered strength: Exact > Canonical > Semantic > Lossy
     pub async fn rank(self) -> u8 {
         match self {
             Self::Exact => 3,

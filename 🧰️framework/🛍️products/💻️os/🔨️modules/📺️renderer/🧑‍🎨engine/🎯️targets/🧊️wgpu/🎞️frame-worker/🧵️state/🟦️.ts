@@ -5,7 +5,7 @@ import type { BrowserFrameUiMessage } from "../../🚚️browser-frame-transport
 import type { BrowserRendererWorkerHandle, RendererBindings } from "../🧬️bindings-types/🟦️.ts";
 import { InteractiveWorkerScheduler } from "../../📇️interactive-job-registry/🟦️.ts";
 import { loadPluginModule } from "../../🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts";
-import { BrowserMediaRegistry } from "../../../../🎬️media/🌐️browser/🟦️.ts";
+import { BrowserMediaRegistry } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 import { FrameTurnScheduler, WorkerTurnTaskQueue } from "../../🧵️frame-turn-scheduler/🟦️.ts";
 import type { WgpuPluginModule } from "../../🧩️plugin-modules/🟦️.ts";
 import { BrowserAssetCancellationCursor } from "../🧩️asset-cancellation/🟦️.ts";

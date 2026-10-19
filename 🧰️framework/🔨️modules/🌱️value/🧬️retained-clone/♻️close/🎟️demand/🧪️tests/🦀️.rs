@@ -1,12 +1,12 @@
 use super::*;
 fn grant(demand:crate::RetirementDemand,body:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
-#[derive(crate::RetainedClone,crate::RetireOwned)]
+#[derive(crate::RetainedClone,crate::RetireOwned)]#[value(crate="crate")]
 struct NestedRecord {body:Option<Vec<Vec<Vec<Vec<Vec<Vec<u8>>>>>>>}
 
 /// 🌳️ Actual derived and container cursors preserve source custody and release only under paid turns.
 #[test]
 fn original_nested_close_preserves_paid_source_and_cancellation(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["cases"].as_array().unwrap().len(),6);
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["cases"].as_array().unwrap().len(),6);
  let body=fixture["native"]["closeBody"].as_u64().unwrap()as usize;let original_bytes=fixture["native"]["originalBytes"].as_u64().unwrap()as usize;
  for cut in fixture["native"]["cuts"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as usize){
   let(original,original_heap)=crate::observe_retirement_allocations(||NestedRecord{body:Some(vec![vec![vec![vec![vec![vec![7u8;original_bytes]]]]]])});
@@ -24,9 +24,9 @@ fn original_nested_close_preserves_paid_source_and_cancellation(){
  }
 }
 
-#[derive(crate::RetainedClone,crate::RetireOwned)]
+#[derive(crate::RetainedClone,crate::RetireOwned)]#[value(crate="crate")]
 struct DerivedOriginalRecord { small:u8, wide:u64 }
-#[derive(crate::RetainedClone,crate::RetireOwned)]
+#[derive(crate::RetainedClone,crate::RetireOwned)]#[value(crate="crate")]
 enum DerivedOriginalEnum { Empty, Payload { count:u32, record:DerivedOriginalRecord } }
 
 fn denied_derived_grant(mut funded:RetainedCloneGrant,demand:crate::RetirementDemand,axis:&str)->Option<RetainedCloneGrant>{
@@ -72,7 +72,7 @@ fn original_derived_custody<T:RetainedClone>(original:T,cut:usize,axes:&[serde_j
 /// 🪄️ Actual generated record and enum cursors retain separately funded transfers and every denied original frontier.
 #[test]
 fn derived_original_record_and_enum_preflight_all_axes_and_close_exact_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let axes=fixture["derive"]["denials"].as_array().unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let axes=fixture["derive"]["denials"].as_array().unwrap();
  for cut in fixture["derive"]["cuts"].as_array().unwrap().iter().map(|cut|cut.as_u64().unwrap()as usize){
   original_derived_custody(DerivedOriginalRecord{small:7,wide:37},cut,axes);
   original_derived_custody(DerivedOriginalEnum::Payload{count:3,record:DerivedOriginalRecord{small:7,wide:37}},cut,axes);

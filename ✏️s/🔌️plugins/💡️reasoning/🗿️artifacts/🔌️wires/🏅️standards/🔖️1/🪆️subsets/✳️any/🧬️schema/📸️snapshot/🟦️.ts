@@ -3,11 +3,11 @@ import {parseWiresValue,type WiresValue}from"../🌱️value/🟦️.ts";
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface WiresSnapshot {
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   wiresSnapshot: WiresValue;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 📄️ @state artifact @child kind=s.stdio.semio */
   content: ArtifactChild;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta: WiresValue;
 }
 

@@ -3,13 +3,17 @@ use crate::context::dispatch;
 use crate::context::fem3d_empty_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
 use protocol::Mutation;
-use protocol::SemanticMutation;
+use semio_framework_os_command::SemanticMutation;
 use protocol::ColdMutation;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::FromValue;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+#[cfg(test)] use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 
 fn vector() -> DslValue {
-    semio_framework_pack_json::from_json_str(include_str!("../../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
+    semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
 
 fn removal(base: &Fem3dSnapshot, ids: Vec<String>) -> Vec<Fem3dMutation> {

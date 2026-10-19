@@ -70,11 +70,6 @@ pub trait SpaceBackbonePort: Send + Sync {
 /// it, so this only narrows the blanket, never the port trait.
 impl<T: store::os_store::backbone::BackbonePort + Send + Sync> SpaceBackbonePort for T {
     fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError> {
-        // 🌉️ `store::os_store::backbone::BackbonePort::read`/`write` turned `async fn` under the runtime-dependency
-        // sweep; `resolve_kernel_future` (`🖥️host/🗂️registry/🦀️.rs`) resolves them
-        // synchronously here, same justification as its own doc comment: every real backbone port
-        // this crate wraps (`store::os_store::backbone::MemoryBackbonePort`/`store::os_store::backbone::LocalStorageBackbonePort`, the host
-        // file/folder ports) is an in-memory/local lookup, never a park-worthy network await.
         let text = resolve_kernel_future(store::os_store::backbone::BackbonePort::read(self, uri))?;
         if text.is_empty() {
             return Ok(Vec::new());
@@ -433,9 +428,6 @@ pub fn real_artifact_reader(pack_files: &HashMap<String, store::os_store::serial
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) -> Result<Vec<u8>, SpaceZipError> + '_ {
     move |hash: &str| -> Result<Vec<u8>, SpaceZipError> {
-        // 🌉️ Resolved synchronously via `resolve_kernel_future`, same justification as
-        // `SpaceBackbonePort`'s blanket impl above — `export_collection_zip`'s injected
-        // `read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>` callback shape stays sync.
         resolve_kernel_future(blob_store.get(hash)).map_err(|error| SpaceZipError::Pack(error.to_string()))?.ok_or_else(|| SpaceZipError::MissingPath(hash.to_string()))
     }
 }

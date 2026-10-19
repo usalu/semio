@@ -1,11 +1,11 @@
-//! Deserialize stdio.pptx from stdio.binary (parse ZIP bytes).
+//! 📥️ Deserialize stdio.pptx from stdio.binary (parse ZIP bytes).
 
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
-/// Register deserializer hooks.
+/// 📤️ Register deserializer hooks.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
@@ -20,7 +20,7 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<PptxSnapshot, store::PackErr
     Ok(snap)
 }
 
-/// Decode a Binary pack then parse ZIP.
+/// 📂️ Decode a Binary pack then parse ZIP.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PptxSnapshot, store::PackError> {
     deserialize(&<BinarySnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?)

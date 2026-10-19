@@ -3,7 +3,7 @@
 use semio_framework_math_sampling_vocabulary::{SamplingError, entropy_nats};
 use semio_framework_math_sampling_config::Schedule;
 use semio_framework_math_sampling_workspace::{LogitsWorkspace, ProcessorKind, StepView, schedule_input};
-use super::LogitsProcessor;
+use super::{LogitsProcessor, LogitsProcessors};
 
 // #region 🔖️Warpers
 /// 🌡️ `logit / temperature`; `temperature <= 0` collapses to greedy via [`LogitsWorkspace::collapse_live_to_argmax`].

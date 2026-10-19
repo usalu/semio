@@ -64,10 +64,6 @@ async fn codec_retention_law() {
     };
     assert_eq!(samples.len(), 8000, "1.0s at 8000Hz");
 
-    // 🔬️ Independent re-synthesis (not reusing the writer's array): max abs diff must be 0.
-    // `make_wav.py`'s own `max_amp = int(AMPLITUDE * 32767)` truncates to an integer BEFORE
-    // multiplying by `sin(t)` — reproduced here bit-for-bit (not `0.5 * 32767.0` as a
-    // continuous `f64`, which rounds a peak sample to 16384 instead of the fixture's 16383).
     let max_amp = (0.5 * 32767.0) as i32 as f64;
     let mut max_abs_diff = 0i32;
     for (n, &sample) in samples.iter().enumerate() {
@@ -76,11 +72,9 @@ async fn codec_retention_law() {
     }
     assert_eq!(max_abs_diff, 0, "decoded samples must exactly match a freshly re-synthesized 440Hz sine");
 
-    // 🔁️ Re-encode must reproduce the real fixture byte-for-byte (no other_chunks, no ext).
     let re_encoded = encode_wav(&decoded);
     assert_eq!(re_encoded, fixture, "encode(decode(real fixture)) must be byte-identical");
 
-    // 🔁️ Second round trip (decode the re-encoded bytes) must also match exactly.
     let re_decoded = decode_wav(&re_encoded).expect("decode re-encoded");
     assert_eq!(re_decoded, decoded);
 }

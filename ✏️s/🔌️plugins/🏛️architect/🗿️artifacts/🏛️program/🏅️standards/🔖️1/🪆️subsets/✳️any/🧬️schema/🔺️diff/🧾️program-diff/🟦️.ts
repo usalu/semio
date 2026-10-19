@@ -4,144 +4,144 @@ import type { ProgramAccessibilityDelta, ProgramCommunicationDelta, ProgramCosts
 import type { GovernanceEdit, ProgramAnalysesDelta, ProgramApprovalsDelta, ProgramArtifactsDelta, ProgramAssumptionsDelta, ProgramAuditEventsDelta, ProgramBenchmarksDelta, ProgramChangesDelta, ProgramCollaborationDelta, ProgramComplianceRecordsDelta, ProgramConflictsDelta, ProgramConstraintsDelta, ProgramDecisionsDelta, ProgramIssuesDelta, ProgramKnowledgeDelta, ProgramMeetingsDelta, ProgramMetaEdit, ProgramOptionsDelta, ProgramPerformanceDelta, ProgramPrioritiesDelta, ProgramQualityDelta, ProgramReportsDelta, ProgramRequirementsDelta, ProgramRisksDelta, ProgramScenariosDelta, ProgramSearchFiltersDelta, ProgramStatusRecordsDelta, ProgramSurveysDelta, ProgramTemplatesDelta, ProgramTracesDelta, ProgramValidationsDelta, ProgramWorkshopsDelta, ProjectDefinitionEdit } from "../🗃️deltas-records/🟦️.ts";
 
 export interface ProgramDiff {
-  /** @state artifact */
+  /** 🗓️ @state artifact */
   schema: string | null;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta: ProgramMetaEdit | null;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   project: ProjectDefinitionEdit | null;
-  /** @state artifact */
+  /** 👥️ @state artifact */
   stakeholders: ProgramStakeholdersDelta | null;
-  /** @state artifact */
+  /** 📋️ @state artifact */
   users: ProgramUsersDelta | null;
-  /** @state artifact */
+  /** 🏃️ @state artifact */
   activities: ProgramActivitiesDelta | null;
-  /** @state artifact */
+  /** 🧮️ @state artifact */
   functions: ProgramFunctionsDelta | null;
-  /** @state artifact */
+  /** 🔬️ @state artifact */
   elements: ProgramElementsDelta | null;
-  /** @state artifact */
+  /** 🔢️ @state artifact */
   quantities: ProgramQuantitiesDelta | null;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   relationships: ProgramRelationshipsDelta | null;
-  /** @state artifact */
+  /** 🤝️ @state artifact */
   adjacencies: ProgramAdjacenciesDelta | null;
-  /** @state artifact */
+  /** ⚙️ @state artifact */
   processes: ProgramProcessesDelta | null;
-  /** @state artifact */
+  /** 🌊️ @state artifact */
   flows: ProgramFlowsDelta | null;
-  /** @state artifact */
+  /** 🛂️ @state artifact */
   accessRules: ProgramAccessRulesDelta | null;
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   operations: ProgramOperationsDelta | null;
-  /** @state artifact */
+  /** 🖨️ @state artifact */
   equipment: ProgramEquipmentDelta | null;
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   resources: ProgramResourcesDelta | null;
-  /** @state artifact */
+  /** 🗄️ @state artifact */
   storage: ProgramStorageDelta | null;
-  /** @state artifact */
+  /** 🌿️ @state artifact */
   environmental: ProgramEnvironmentalDelta | null;
-  /** @state artifact */
+  /** 🧑️ @state artifact */
   humanFactors: ProgramHumanFactorsDelta | null;
-  /** @state artifact */
+  /** ♿️ @state artifact */
   accessibility: ProgramAccessibilityDelta | null;
-  /** @state artifact */
+  /** 🔏️ @state artifact */
   privacy: ProgramPrivacyDelta | null;
-  /** @state artifact */
+  /** 🦺️ @state artifact */
   safety: ProgramSafetyDelta | null;
-  /** @state artifact */
+  /** 🛡️ @state artifact */
   security: ProgramSecurityDelta | null;
-  /** @state artifact */
+  /** ⚖️ @state artifact */
   regulatory: ProgramRegulatoryDelta | null;
-  /** @state artifact */
+  /** 🏞️ @state artifact */
   siteContext: ProgramSiteContextDelta | null;
-  /** @state artifact */
+  /** 🏢️ @state artifact */
   organizational: ProgramOrganizationalDelta | null;
-  /** @state artifact */
+  /** 🛎️ @state artifact */
   services: ProgramServicesDelta | null;
-  /** @state artifact */
+  /** 🛣️ @state artifact */
   infrastructure: ProgramInfrastructureDelta | null;
-  /** @state artifact */
+  /** ℹ️ @state artifact */
   information: ProgramInformationDelta | null;
-  /** @state artifact */
+  /** 📡️ @state artifact */
   communication: ProgramCommunicationDelta | null;
-  /** @state artifact */
+  /** 🧭️ @state artifact */
   wayfinding: ProgramWayfindingDelta | null;
-  /** @state artifact */
+  /** ⏱️ @state artifact */
   schedules: ProgramSchedulesDelta | null;
-  /** @state artifact */
+  /** 🤸️ @state artifact */
   flexibility: ProgramFlexibilityDelta | null;
-  /** @state artifact */
+  /** 📈️ @state artifact */
   growth: ProgramGrowthDelta | null;
-  /** @state artifact */
+  /** ♻️ @state artifact */
   sustainability: ProgramSustainabilityDelta | null;
-  /** @state artifact */
+  /** 💪️ @state artifact */
   resilience: ProgramResilienceDelta | null;
-  /** @state artifact */
+  /** 💰️ @state artifact */
   costs: ProgramCostsDelta | null;
-  /** @state artifact */
+  /** 📦️ @state artifact */
   delivery: ProgramDeliveryDelta | null;
-  /** @state artifact */
+  /** ⚠️ @state artifact */
   risks: ProgramRisksDelta | null;
-  /** @state artifact */
+  /** 💥️ @state artifact */
   conflicts: ProgramConflictsDelta | null;
-  /** @state artifact */
+  /** ❗️ @state artifact */
   requirements: ProgramRequirementsDelta | null;
-  /** @state artifact */
+  /** 📶️ @state artifact */
   priorities: ProgramPrioritiesDelta | null;
-  /** @state artifact */
+  /** 🎬️ @state artifact */
   scenarios: ProgramScenariosDelta | null;
-  /** @state artifact */
+  /** 🗺️ @state artifact */
   options: ProgramOptionsDelta | null;
-  /** @state artifact */
+  /** 🗳️ @state artifact */
   decisions: ProgramDecisionsDelta | null;
-  /** @state artifact */
+  /** ✅️ @state artifact */
   validations: ProgramValidationsDelta | null;
-  /** @state artifact */
+  /** 🏎️ @state artifact */
   performance: ProgramPerformanceDelta | null;
-  /** @state artifact */
+  /** 💎️ @state artifact */
   quality: ProgramQualityDelta | null;
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   artifacts: ProgramArtifactsDelta | null;
-  /** @state artifact */
+  /** 🤔️ @state artifact */
   assumptions: ProgramAssumptionsDelta | null;
-  /** @state artifact */
+  /** 📜️ @state artifact */
   constraints: ProgramConstraintsDelta | null;
-  /** @state artifact */
+  /** 🏛️ @state artifact */
   complianceRecords: ProgramComplianceRecordsDelta | null;
-  /** @state artifact */
+  /** 👍️ @state artifact */
   approvals: ProgramApprovalsDelta | null;
-  /** @state artifact */
+  /** 📅️ @state artifact */
   meetings: ProgramMeetingsDelta | null;
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   changes: ProgramChangesDelta | null;
-  /** @state artifact */
+  /** 🫂️ @state artifact */
   collaboration: ProgramCollaborationDelta | null;
-  /** @state artifact */
+  /** 🧪️ @state artifact */
   analyses: ProgramAnalysesDelta | null;
-  /** @state artifact */
+  /** 📊️ @state artifact */
   reports: ProgramReportsDelta | null;
-  /** @state artifact */
+  /** 🔍️ @state artifact */
   searchFilters: ProgramSearchFiltersDelta | null;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   statusRecords: ProgramStatusRecordsDelta | null;
-  /** @state artifact */
+  /** 🛠️ @state artifact */
   workshops: ProgramWorkshopsDelta | null;
-  /** @state artifact */
+  /** 🔭️ @state artifact */
   surveys: ProgramSurveysDelta | null;
-  /** @state artifact */
+  /** 🩺️ @state artifact */
   issues: ProgramIssuesDelta | null;
-  /** @state artifact */
+  /** 🕰️ @state artifact */
   auditEvents: ProgramAuditEventsDelta | null;
-  /** @state artifact */
+  /** 📐️ @state artifact */
   templates: ProgramTemplatesDelta | null;
-  /** @state artifact */
+  /** 🧠️ @state artifact */
   knowledge: ProgramKnowledgeDelta | null;
-  /** @state artifact */
+  /** 🏁️ @state artifact */
   benchmarks: ProgramBenchmarksDelta | null;
-  /** @state artifact */
+  /** 📒️ @state artifact */
   traces: ProgramTracesDelta | null;
-  /** @state artifact */
+  /** 🪪️ @state artifact */
   governance: GovernanceEdit | null;
 }

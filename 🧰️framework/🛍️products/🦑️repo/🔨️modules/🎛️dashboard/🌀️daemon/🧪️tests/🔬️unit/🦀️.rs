@@ -13,6 +13,23 @@ fn schema() -> Value {
     serde_json::from_str(include_str!("../../../🧬️schema/🌀️daemon/🔣️.json")).unwrap()
 }
 
+#[test]
+fn process_deadline_uses_shared_number_semantics_and_never_renews_on_continuations() {
+    let vectors: Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌀️control-plane/⏱️deadline.json")).unwrap();
+    for row in vectors["parseCases"].as_array().unwrap() {
+        assert_eq!(supervisor::selected_process_budget_ms(row["raw"].as_str()).ok(), row["expected"].as_u64(), "{row}");
+    }
+    for row in vectors["expirationCases"].as_array().unwrap() {
+        assert_eq!(supervisor::process_budget_expired(row["milliseconds"].as_u64().unwrap(), std::time::Duration::from_millis(row["elapsed"].as_u64().unwrap())), row["expired"].as_bool().unwrap(), "{row}");
+    }
+    for row in vectors["continuations"].as_array().unwrap() {
+        assert_eq!(supervisor::process_budget_expired(100, std::time::Duration::from_millis(row["elapsed"].as_u64().unwrap())), row["expired"].as_bool().unwrap(), "{row}");
+    }
+    let terminal = control_plane()["valid"].as_array().unwrap().iter().find(|row| row["session"]["status"] == "timed_out").unwrap().clone();
+    assert_eq!(reencode(&terminal), Some(terminal));
+    assert_eq!(schema()["definitions"]["ProcessDeadlineProtocol"]["const"]["code"], 124);
+}
+
 fn reencode(value: &Value) -> Option<Value> {
     if let Ok(message) = serde_json::from_value::<ClientMsg>(value.clone()) {
         return message.validate().ok().and_then(|()| serde_json::to_value(&message).ok());

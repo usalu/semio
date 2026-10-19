@@ -2,7 +2,7 @@
 use crate::{ValueError,ValueRefusalKind};
 #[path="../🔁️codec/🦀️.rs"]
 mod codec;
-pub use codec::{edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
+pub use codec::{path_index,controlled_sequence,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
 //#region 🔖️Number
 /// 🔢️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
 /// an integer literal (`UInt`/`Int`) round-trips without a decimal point, `Float` always keeps one

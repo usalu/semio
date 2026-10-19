@@ -84,7 +84,7 @@ async fn paged_dsl_operation_decodes_same_8194_source_and_checks_complete_canoni
         }else{variants_binary::encode_op_into(&mut capsule,&Default::default(),&mut source,&mut encoding).unwrap();}
         let retained=source.allocated_bytes();
         let mut allow=|_|true;
-        let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+        let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
         let mut allow=|_|true;
         let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
         let mut canonical_owner=None;
@@ -143,7 +143,7 @@ async fn paged_dsl_operation_whole_frame_policy_includes_exact_header_and_admitt
         let exact=source.iter().eq(expected[..length.min(expected.len())].iter().copied());
         let decoded=if result.is_ok()&&maximum==expected.len(){
             let mut decoding_options=semio_framework_os_kernel::os_pack::record::DecodeOptions::default();decoding_options.limits.max_file_len=maximum as u64;
-            let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+            let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
             let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
             let mut canonical_owner=None;
             let result=variants_binary::decode_op_span::<DerivedMutation>(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&decoding_options,&options,&mut decoding,&mut encoding,&mut canonical_owner);
@@ -181,7 +181,7 @@ async fn paged_dsl_operation_store_intrinsic_bridge_keeps_actual_field_and_sourc
     assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
     let retained=source.allocated_bytes();
     let mut options=semio_framework_os_kernel::os_pack::record::DecodeOptions::default();options.limits.max_file_len=expected.len()as u64;
-    let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+    let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value_span(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&options,&mut decoding).unwrap(),value);
     options.limits.max_file_len-=1;
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value_span(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&options,&mut decoding).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::WorkLimit);
@@ -195,7 +195,7 @@ async fn paged_dsl_operation_store_intrinsic_bridge_keeps_actual_field_and_sourc
     let mut foreign=expected.clone();foreign[2]=case["foreignFieldId"].as_u64().unwrap()as u8;
     let mut allow=|_|true;let mut encoding=semio_framework_value::NativeEncodeControl::new(131072,&mut allow);
     source.write_bytes(&foreign,&mut encoding).unwrap();
-    let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(131072,&mut allow);
+    let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(131072,&mut allow);
     assert_eq!(semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value_span(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&Default::default(),&mut decoding).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::InvalidValue);
     assert!(source.iter().eq(foreign));close(&mut source);
 }
@@ -221,7 +221,7 @@ async fn paged_dsl_operation_original_variant_borrows8194_payload_under512_metad
     encoding.scoped_maximum(paid+512,|encoding|Ok::<_,semio_framework_value::ValueError>(variants_binary::encode_op_into(&mut capsule,&options,&mut prepared,encoding))).unwrap().unwrap();
     assert_eq!(prepared.allocated_bytes(),backing);assert!(encoding.owned_bytes()-paid<512);
     let mut source=prepared.take_ready().unwrap();assert!(source.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
-    let mut allow=|_|true;let mut decoding=semio_framework_value::NativeDecodeControl::new(65536,&mut allow);
+    let mut allow=|_|true;let mut decoding=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536,&mut allow);
     let mut allow=|_|true;let mut canonical=semio_framework_value::NativeEncodeControl::new(512,&mut allow);
     let mut canonical_owner=None;
     assert_eq!(variants_binary::decode_op_span::<DerivedMutation>(semio_framework_os_kernel::os_pack::ByteSpan::from_source(&source),&Default::default(),&options,&mut decoding,&mut canonical,&mut canonical_owner).unwrap(),());assert_eq!(take_paged_dsl_decoded(&mut canonical_owner).unwrap(),operation);

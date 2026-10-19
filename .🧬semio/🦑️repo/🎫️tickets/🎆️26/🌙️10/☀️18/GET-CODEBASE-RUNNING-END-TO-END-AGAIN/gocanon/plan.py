@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
-"""Faithful port of canonicalGoPlan (go-plan/🟦️.ts). usage: plan.py <moduleRoot> <overlay.json> -> prints packages (one per line) on stdout."""
+"""Faithful port of canonicalGoPlan (go-plan/🟦️.ts). usage: plan.py <moduleRoot> <overlay.json> [layout.json] -> prints packages (one per line) on stdout."""
 import hashlib, json, os, re, sys
 
 TAX = '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json'
-t = json.load(open(TAX))
-SRC = set(t['semanticDirectoryMemberKinds']['members-of-members-of-members-of-modules']['memberNames'])
-TESTS = t['testsDirName']
-PKGS = t['packagesDirName']
-FIX = t['testFixturesDirName']
-ORA = t['testOraclesDirName']
-IMPL = '🐹️.go'
+ADAPTER = 'adapter'
 LANG = '🐹️go'
+
+
+def load_layout(path=None):
+    if path:
+        l = json.load(open(path))
+        return set(l['sourceDirectoryNames']), l['testsDirectory'], l['packagesDirectory'], l['implementationFilename'], tuple(l['opaqueDirectoryNames'])
+    t = json.load(open(TAX))
+    return (set(t['semanticDirectoryMemberKinds']['members-of-members-of-members-of-modules']['memberNames']), t['testsDirName'], t['packagesDirName'], '🐹️.go', (t['testFixturesDirName'], t['testOraclesDirName'], t['packagesDirName']))
+
+
+SRC, TESTS, PKGS, IMPL, OPAQUE = load_layout()
+
+
+def use_layout(path):
+    global SRC, TESTS, PKGS, IMPL, OPAQUE
+    SRC, TESTS, PKGS, IMPL, OPAQUE = load_layout(path)
 
 
 def clause(source):
@@ -68,10 +78,10 @@ def module_plan(root):
                     if not os.path.isdir(cp) or os.path.islink(cp):
                         continue
                     s = os.path.join(cp, IMPL)
-                    if os.path.isfile(s) and not os.path.islink(s):
+                    if os.path.isfile(s) and not os.path.islink(s) and clause(open(s, encoding='utf8').read()) != ADAPTER:
                         mp(d, s, True)
                 continue
-            if name in ('.git', 'node_modules', 'target', 'vendor', FIX, ORA, PKGS):
+            if name in ('.git', 'node_modules', 'target', 'vendor') or name in OPAQUE:
                 continue
             walk(p)
 
@@ -151,6 +161,8 @@ def plan(root):
 
 if __name__ == '__main__':
     root, out = sys.argv[1], sys.argv[2]
+    if len(sys.argv) > 3:
+        use_layout(sys.argv[3])
     s, tt, pk = plan(root)
     rep = dict(s)
     rep.update(tt)

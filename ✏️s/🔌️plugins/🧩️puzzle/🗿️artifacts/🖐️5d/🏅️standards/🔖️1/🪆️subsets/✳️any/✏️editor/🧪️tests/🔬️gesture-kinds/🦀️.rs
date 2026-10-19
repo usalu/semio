@@ -1,4 +1,4 @@
-//! kinds they consist of, built from the typed base alone; every law replays the kinds forward through the central
+//! 🧬️ kinds they consist of, built from the typed base alone; every law replays the kinds forward through the central
 //! 🧭️ Host gesture protocol laws for the 5d editor: gestures (verbs with ids and values) become the concrete mutation
 //! applier and the recorded inverse rows last-to-first, and requires the base back.
 

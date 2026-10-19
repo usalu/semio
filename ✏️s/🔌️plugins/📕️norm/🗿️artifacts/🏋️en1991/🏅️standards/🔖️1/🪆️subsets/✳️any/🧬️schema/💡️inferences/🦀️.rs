@@ -462,7 +462,6 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
             Some(Remedy::at_least(SubjectRef::new("", "bridgeLoadGroup", copy("Load group", "Lastgruppe")), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("Set bridgeLoadGroup to a governing group ({governing})."), &format!("bridgeLoadGroup auf eine maßgebende Gruppe ({governing}) setzen."))))
         } else { None };
         let selected_demand = selected_row.map(|s| s.1).unwrap_or(0.0);
-        // Utilization of selected Table 4.4a group; inflate when not covered / not governing so status fails.
         let computed_g = if !selected_ok { selected_demand.max(1.0) + 1.0 } else if !governs { selected_demand.max(1.0) + 0.5 } else { selected_demand };
         let mut group_check = CheckResult::assess(
             "en1991.2.group.selected",

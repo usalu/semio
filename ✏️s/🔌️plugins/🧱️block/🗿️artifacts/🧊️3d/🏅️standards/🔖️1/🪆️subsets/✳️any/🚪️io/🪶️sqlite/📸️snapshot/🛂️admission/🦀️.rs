@@ -4,7 +4,7 @@ use store::sqlite_snapshot::{SqliteSnapshotControl, SqliteSnapshotPhase};
 use crate::snapshot::Cells;
 use semio_framework_value::ValueError;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 fn required(r:&R,id:u16)->Result<&F,ValueError>{r.get(id).ok_or_else(||crate::snapshot::invalid("Block3d required native field absent"))}
 fn record(value:&F)->Result<&R,ValueError>{match value{F::Record(r)=>Ok(r),F::Block(value)=>record(value),_=>Err(crate::snapshot::invalid("Block3d native record required"))}}

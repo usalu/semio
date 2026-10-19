@@ -79,11 +79,6 @@ async fn plane_cylinder_parallel_two_lines() {
 
 #[semio_framework_async_macros::async_test]
 async fn plane_cylinder_tangent_is_one_line_not_error() {
-    // 🏄 The plane's normal is `z_hint = Vec3::X` (see `Frame3::from_x_z`), so the origin must
-    // be offset along X by exactly `radius` to put the plane at distance `radius` from the
-    // cylinder's axis (tangent) — an offset along Y (the plane's own in-plane `x_hint`
-    // direction) leaves the plane's distance from the axis at 0, the "contains the axis, two
-    // lines" case `plane_cylinder_parallel_two_lines` already covers.
     let plane = Surface::Plane { frame: Frame3::from_x_z(Pnt3::new(2.0, 0.0, 0.0), Vec3::Y, Vec3::X).unwrap() };
     let cyl = Surface::Cylinder { frame: Frame3::WORLD, radius: 2.0 };
     let curves = intersect_surface_surface(&plane, &cyl, 1e-7).expect("tangent plane/cyl");

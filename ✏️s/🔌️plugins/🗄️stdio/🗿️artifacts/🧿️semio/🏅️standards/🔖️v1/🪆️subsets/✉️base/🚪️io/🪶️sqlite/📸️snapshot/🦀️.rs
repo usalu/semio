@@ -78,7 +78,7 @@ fn visit_rows(snapshot:&SemioSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),Valu
 mod union_decoding {
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 use crate::schema::snapshot::{SemioSnapshot,SemioSubsetSnapshot as S};
 macro_rules! select{($output:expr,$variant:ident,$domain:ident,$method:ident,$body:expr,$control:expr,$limits:expr)=>{{$output.subset=S::$variant($domain::io::sqlite::snapshot::native_decoding::empty());let S::$variant(inner)=&mut $output.subset else{unreachable!()};$domain::io::sqlite::snapshot::native_decoding::$method(inner,$body,$control,$limits)?}}}

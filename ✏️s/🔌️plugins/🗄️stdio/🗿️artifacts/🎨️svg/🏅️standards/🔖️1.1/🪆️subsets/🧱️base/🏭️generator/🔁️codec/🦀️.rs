@@ -1,4 +1,4 @@
-//! quick-xml-svg-codec — standalone SVG 1.1 declaration/doctype/element-tree codec on top of
+//! 🧾️ quick-xml-svg-codec — standalone SVG 1.1 declaration/doctype/element-tree codec on top of
 //! `quick-xml` 0.42's own generic streaming XML reader/writer (`quick_xml::Reader`/`Writer`).
 //! Zero dependencies beyond `quick-xml` itself (see this crate's own Cargo.toml — its own
 //! `[workspace]`, isolated from the repository's root workspace and Cargo.lock).

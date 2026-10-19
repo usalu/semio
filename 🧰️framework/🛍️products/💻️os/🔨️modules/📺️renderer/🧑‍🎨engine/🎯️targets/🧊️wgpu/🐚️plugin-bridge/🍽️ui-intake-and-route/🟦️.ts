@@ -1,12 +1,13 @@
 import type { BuiltNode, Component, Effect } from "@semio-tech/framework";
 import { decodePackWire, packWireNatural } from "@semio-tech/framework-os";
-import { OwnedUiPatchIntake, RETAINED_UI_INTAKE_SLICE_STEPS, retainedUiIntakeStepCeiling } from "../../../../🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts";
-import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
+import { OwnedUiPatchIntake, RETAINED_UI_INTAKE_SLICE_STEPS, retainedUiIntakeStepCeiling } from "@semio-tech/framework-os/modules/renderer/engine/elements/UiDocumentStore/intake";
+import { DEFAULT_UI_DOCUMENT_LIMITS } from "@semio-tech/framework/modules/ui/contract/limits";
 import { WORKER_STEP_BUDGET_MS } from "../../⏱️turn-budget/🟦️.ts";
-import type { RetainedUiNodeRecord } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
+import type { RetainedUiNodeRecord } from "@semio-tech/framework/modules/ui/contract/retained/wire/typed";
 import type { ShardInstanceLifecycleLease } from "@semio-tech/framework-actor/shard-client/activation";
-import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { applyUiPatchToRetained, coerceTurnResult, decodeWirePatchOps, type RetainedSurface, type WireTurnResult, type WireUiPatch } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
+import { coerceTurnResult, type WireTurnResult, type WireUiPatch } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
+import { applyUiPatchToRetained, decodeWirePatchOps, type RetainedSurface } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🩹️retained-ui-patch/🟦️.ts";
 import { OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework-actor/shard-client/ui-patch";
 import { DEFAULT_SHARD_BUDGET } from "@semio-tech/framework-actor/shard-runtime";
 import { stashLeftoverEffects } from "../🎛️contributions-and-effects/🟦️.ts";

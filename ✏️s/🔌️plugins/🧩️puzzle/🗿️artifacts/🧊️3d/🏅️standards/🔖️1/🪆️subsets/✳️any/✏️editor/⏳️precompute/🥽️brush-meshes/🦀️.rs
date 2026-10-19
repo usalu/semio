@@ -274,10 +274,6 @@ pub fn stage_brush_mesh_page(url: &str, digest: &str, page: u32, page_count: u32
     let held = uploads.slots.iter().position(|slot| slot.url == url && slot.digest == digest);
     let index = match held {
         Some(index) if uploads.slots[index].next_page == page && uploads.slots[index].page_count == page_count => index,
-        // 🔁️ A page this run already admitted is a RETRANSMISSION, not a gap: the bytes are staged, the
-        // cursor is ahead of it, and nothing is missing. Dropping the run here made every duplicate cost
-        // the client the whole 72-page upload again, so a lane that retries one page paid for all of
-        // them. Acknowledged at the cursor it actually stands on, with no second append.
         Some(index) if page != 0 && page < uploads.slots[index].next_page && uploads.slots[index].page_count == page_count => {
             let slot = &mut uploads.slots[index];
             slot.touched = sequence;

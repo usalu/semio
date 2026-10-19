@@ -108,8 +108,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
   const contributionsPublisherRef = useRef<ReturnType<typeof createContributionsPublisher<ContributionsEnvironment>> | null>(null);
   if (contributionsPublisherRef.current === null) {
     contributionsPublisherRef.current = createContributionsPublisher<ContributionsEnvironment>({
-      // 🔢 The identity of the closure the pack is cut from: a plugin load/unload or an extension
-      // toggle is a new generation and re-runs the unit; a plain refresh is not.
       registryGeneration: (environment) => `${environment.hostMode ? "host" : "focused"}|${environment.loadedPlugins.map((entry) => entry.handle.pluginId).join(",")}|${[...environment.disabledExtensionIds].sort().join(",")}`,
       buildPack: (session, environment) => {
         const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(programPluginIdV1(entry))).map((entry) => ({ pluginId: programPluginIdV1(entry), manifest: { topicContributions: entry.manifest.topicContributions } }));
@@ -128,11 +126,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
             const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
             const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
             if (!targetApp || !pluginEntry.handle.handleCommand || instanceId == null || skipped !== undefined) continue;
-            // 📦️ One pack crossing: handleCommand already encodePackValue's the invocation
-            // (`PluginRuntime` performInvocation). The 4 KiB public-invocation string cap is the
-            // JSON entry point, not this path. Paging that envelope was 99 guest turns / ~202 s
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). An app that declares pageCount still
-            // receives page 0 of 1 so the addressed schema matches.
             const args = takesPageRun ? { json, page: 0, pageCount: 1 } : { json };
             try {
               const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
@@ -183,8 +176,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
       });
       return outcome;
     },
-    // 🐢️ `applyHostEffects` is declared later in this component and is referenced in the body only,
-    // never in this array — the same temporal-dead-zone avoidance `refreshUi` below documents.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [captureProgramEffectOwner, hostMode, registry, resolvedTargetViewState],
   );
@@ -208,41 +199,18 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
    * that races a refresh cannot leave a freshly mounted pane on a pending body. */
   const unmountedSkippedWindowBodiesRef = useRef<ReadonlyMap<string, string>>(new Map<string, string>());
   const runUiRefreshPass = useCallback(
-    // 🪟️ `extraInstancesOverride` lets a caller that just synchronously computed a NEW extra-window list
-    // (split/drop, layout/mode switch) hand it straight to this fetch instead of reading `extraWindowInstances`
-    // from React state, which wouldn't reflect the just-dispatched change until the next render.
     async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[], replaceBodies = false) => {
       if (scopeArg.kind === "none") return;
       const refreshOwner = captureEffectOwner(nextSession, captureDialogOrigin(nextSession));
       const generation = ++refreshGenerationRef.current;
       if (replaceBodies) replaceBodiesGenerationRef.current = generation;
       let pendingRefreshEffects: readonly Effect[] = [];
-      // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — reads `loadedPluginsRef`
-      // (kept in sync every render, line ~1145), NOT the `loadedPlugins` array closed over by this
-      // callback: this function's own identity depended on `loadedPlugins` (deps array below), so it was
-      // RECREATED on every one of the ~50+ sequential catalogue plugin loads during boot — and every
-      // `useEffect` that calls `refreshUi` (line ~2461's session-refresh effect, in particular) lists
-      // `refreshUi` itself in its own deps array, so a fresh `refreshUi` identity re-fired a FULL
-      // `refreshUi(session)` call on the SAME already-open session for each unrelated background plugin
-      // finishing its load — live-confirmed (`🧪️5-e-live-postmessage-probe.md`) as the dominant contributor
-      // to the `plugin.internal: plugin instance busy` storm: dozens of overlapping `refreshUi` calls
-      // colliding on the wasm guest's single-flight `InstanceGuard`, each retried up to 8× on the worker
-      // side and 8× more by `withSerializedPluginWasmHandle` on the host side. Mirrors lane 5-A's own
-      // `readHistory` effect fix (line ~992) one level up the call graph — that fix stopped `readHistory`
-      // itself from refiring but could not stop THIS callback's identity churn, since `readHistory`'s
-      // effect and this one are independent call sites, not nested.
       const loadedPlugins = loadedPluginsRef.current;
       const program = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!program) return;
-      // 🧩️ Started BEFORE this refresh's first await and never guarded by `generation`: the push is
-      // its own owned unit (see the `🧩️ContributionsPush` region above). A refresh superseded mid
-      // document-read therefore no longer abandons it, and a later refresh joins the same run rather
-      // than starting a second one (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
       const contributionsInstalled = publishContributions(nextSession, sessionProgramsV1(loadedPlugins, nextSession.pluginId));
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       const isSessionSwitch = layoutSeedKeyRef.current !== layoutSeedKey;
-      // 🐢️ A session switch invalidates every cached hash from the previous instance — force a full
-      // fetch regardless of what scope this particular call was given.
       let scope = scopeArg;
       if (isSessionSwitch) {
         await retireContributorInstances(contributorInstancesRef.current, (entry) => !entry.ownerId.startsWith(`${nextSession.pluginId}:${nextSession.instanceId}:`));
@@ -250,19 +218,11 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         externalSlotNodesRef.current.clear();
         uiRefreshCacheRef.current = new Map();
         scope = { kind: "full" };
-        // 🪟️ Tree windows name authored keys of the app that is going away; carrying them into the next
-        // app asks a guest for containers it has never heard of, and the cached `TreePanelConfig`s hold
-        // stores minted against the previous session's bodies.
         treeWindowSchedulerRef.current?.reset();
         panelTreeConfigCacheRef.current = new Map();
       }
       const cache = uiRefreshCacheRef.current;
-      // 🪟️ On a session switch, seed the default layout's extra instances BEFORE fetching (not after), so
-      // this very first fetch already requests every default-layout pane's body/measures/engagements
-      // instead of leaving newly-seeded panes to show "missing window" until some later, unrelated refresh.
       const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, withLocalizedWindowKindLabels(nextSession.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale) : undefined;
-      // 🪟️ Prefer the override, then the just-computed session-switch seed, then the live ref (never the
-      // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
       dispatch({
@@ -273,55 +233,20 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
             windowInstances.map((instance) => [instance.id, current[instance.id] ?? pendingWindowUiNode()] as const),
           ),
       });
-      // 🪐️ Every loaded plugin's declared apps, flattened for the space app's catalogue — an opt-in
-      // hint-push (below), never a view-state field, because the space app is its own wasm component:
-      // `semio_framework_os::APP_REGISTRATIONS` (populated at native/test
-      // `PluginHost::load_plugin`/`hot_swap_plugin` time) lives in a separate linear memory from the
-      // space app's own statically-linked copy of the same os-core crate, so nothing crosses the wasm
-      // boundary unless this shell pushes it explicitly.
       const appRegistrationsJson = JSON.stringify(localProgramsV1(loadedPlugins).flatMap((entry) => (entry.manifest.apps ?? []).map((app) => ({ pluginId: entry.handle.pluginId, app }))));
-      // 🧩️ Contributions are deliberately absent here: `publishContributions` (the unit started above)
-      // installs them into the guest through the paged `setContributions` run, which the guest folds
-      // into its own registry. Riding the aggregated closure inside this view state put 248 635
-      // characters against the view-context schema's 65 536-character `panelJson`/long-field bound —
-      // rejected at `parseResolvedPluginViewState` as `view context: invalid panel data`, which
-      // replaced every window body with a fault card (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
       const viewState: ViewModel = injectActiveTool({
         ...nextSession.viewState,
         locale: uiLocale,
         terminology: uiTerminology,
-        // 🪪️ The signed-in human, stamped at plugin-call time from the live ref — the same field, from
-        // the same source, as `resolvedTargetViewState`. It is NOT optional chrome: a program that
-        // names the human renders a different surface without it, and the refresh pass is where every
-        // window body of every app is built. `🪐️space`'s Home reads
-        // `crate::home_session_identity(view_state)` and renders its EMPTY case (`No studios yet`) on
-        // `None` — a signed-out state, not a fault — so the studios table of a fully signed-in shell
-        // sat empty for the whole session over a hub that held the human's studio, with the directory
-        // bootstrap green, the receipt byte-exact and the ACK published (ticket 26/09/18, S9 §2;
-        // measured live on serve 6190 → hub 7611, and named by the guest's own
-        // `s.home.session-identity-required` on the dispatch twin below).
         sessionIdentity: identityRef.current ? { userId: identityRef.current.userId, displayName: identityRef.current.displayName } : undefined,
         windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
         toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(windowInstances.map((instance) => instance.id)),
         activeUtilityId: undefined,
-        // 🎯️ The pane the user is LOOKING at, carried into every section of this refresh. Window
-        // sections are re-projected per instance by the guest and ignore it; an app-level panel body
-        // has no `windowId` at all and this is the only thing that lets one address a live pane.
         focusedWindowId: activeWindowIdRef.current ?? undefined,
-        // 🪟️ Every body's open containers and on-screen rows, flattened — the same fields
-        // `baseDispatchViewState` carries, so a render triggered by a refresh and a render triggered by
-        // an action see exactly one set of windows and never disagree about what is materialised.
         ...treeWindowSchedulerRef.current!.viewStateFields(),
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
-      // 🐢️ One batched, hash-conditional round trip replaces the old ~12 sequential
-      // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
-      // any section whose hash still matches what `cache` already holds.
-      // 🪟️ Only the windows the mode layout mounts are fetched. A declared-but-unmounted window is a
-      // whole guest render per pass — in edit mode that meant re-serializing the generate-mode preview,
-      // meshes included, twice per `flowEvalTick` hop. Its cached body is dropped so nothing can serve
-      // it stale, and the effect beside `effectiveModeLayout` re-fetches it the moment it is mounted.
       const { fetched: fetchWindowInstances, skipped: unmountedWindowInstances } = partitionRefreshWindowInstancesV1(windowInstances, isSessionSwitch ? new Set<string>() : mountedWindowIdsRef.current);
       if (unmountedWindowInstances.length) {
         for (const instance of unmountedWindowInstances) {
@@ -361,17 +286,8 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         );
         if (generation !== refreshGenerationRef.current && !(replaceBodies && generation === replaceBodiesGenerationRef.current)) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
-        // 🩺️ Which sections this pass ASKED for and which the guest actually re-serialized — the one
-        // line that separates "the guest re-rendered the previous document" from "this pass never
-        // applied" (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        // ⏱️ pending_effects (e.g. flowEvalTick) wait until contributions are installed — an earlier
-        // tick faults `flow.extension-not-contributed` and retires the window-transient authority.
         pendingRefreshEffects = response.requestedEffects ?? [];
       }
-      // 🐢️ Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
-      // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
-      // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
-      // `modeWindows`'s `useMemo`) skip reconciling the whole shell on every interaction.
       const closeApplySpan = hopTrace.open("refresh.apply", { instanceId: nextSession.instanceId, scope: scope.kind });
       dispatch({
         type: "SET_WINDOW_UI_BY_WINDOW_ID",
@@ -393,8 +309,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
       dispatch({ type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => mergeRecordPreservingIdentity(current, withProgramEntriesV1(current, null, spawnedIdsRef.current, panelStores)) });
       if (replaceBodies) forceReloadLiveUiStoresV1(cache);
       closeApplySpan();
-      // 🖼️ React commit + paint: the state above is dispatched, not yet reconciled, so the cost of
-      // turning it into pixels is the interval from here to the next frame the compositor runs.
       traceCommitToNextFrame({ instanceId: nextSession.instanceId, scope: scope.kind });
       if (isSessionSwitch && layoutSeed) {
         layoutSeedKeyRef.current = layoutSeedKey;
@@ -404,21 +318,13 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
         dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(layoutSeed.modeLayout) });
       }
-      // 🧩️ The contributions unit started at the top of this refresh. `await`ing it HERE, and not
-      // running it here, is what keeps `pendingRefreshEffects` (an early `flowEvalTick`) waiting until
-      // the closure is installed, while leaving the push itself outside this refresh's generation
-      // race (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
       await contributionsInstalled;
-      // 🤝️ Handed BACK to the lane, never awaited here: applying an effect re-enters `refreshUi`, and a
-      // pass that awaits its own re-entrant request waits on itself (`createUiRefreshCoalescerV1`
-      // property 3). The lane voids this application and the effect's refresh lands as the next pass.
       if (pendingRefreshEffects.length) owedPassEffectsRef.current = { effects: pendingRefreshEffects, session: nextSession, owner: refreshOwner, scope: scopeArg };
       if (appRegistrationsJson) {
         const appRegistrationsPushKey = `${nextSession.instanceId}::${appRegistrationsJson}`;
         if (appRegistrationsPushKey !== appRegistrationsJsonRef.current) {
           appRegistrationsJsonRef.current = appRegistrationsPushKey;
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId);
-          // 🪐️ The space app explicitly declares this hidden app command; other apps never receive it.
           if (pluginEntry?.handle.handleCommand && appOwnsCommand(nextSession.app, "setAppRegistrations")) {
             try {
               const wire = encodeAppCommandInvocation(nextSession.pluginId, nextSession.app, "setAppRegistrations", { json: appRegistrationsJson });
@@ -430,18 +336,12 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
         }
       }
     },
-    // 🐢️ `owedPassEffectsRef` is declared just below (it belongs to the lane that applies what this pass
-    // asked for) — referenced here in the body only, never added to this array, which both avoids a
-    // temporal-dead-zone reference-before-init and keeps this callback's identity off the effect lane.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [appLabelsOverlay, hostMode, injectActiveTool, publishContributions, uiLocale, uiTerminology],
   );
 
   //#region 🤝️UiRefreshCoalescing
   
-  // 🧰️ The lane is built ONCE (it owns the owed slot and the drain loop, which no render may reset), so
-  // it reaches the current pass and the current effect applier through refs rather than through a
-  // closure — the same reason `runUiRefreshPass` itself reads `loadedPluginsRef`.
   const runUiRefreshPassRef = useRef(runUiRefreshPass);
   runUiRefreshPassRef.current = runUiRefreshPass;
   const applyHostEffectsRef = useRef<(effects: readonly Effect[], baseSession: ActiveSession, uiScope: UiDirtyScope | undefined, effectOwner: ReturnType<typeof captureEffectOwner>) => Promise<void>>(async () => {});
@@ -500,18 +400,6 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
   //#endregion 🤝️UiRefreshCoalescing
   refreshDirectoryHomeRef.current = async (nextSession) => refreshUi(nextSession);
 
-  /** 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale.
-   *
-   * 🌐️ And asks the GUEST to re-render, because the titles are only the shell's own half. Every label
-   * inside a guest-authored body — the outliner's section headings, its per-row Hide/Lock actions, the
-   * inspector's field names — is resolved by the program against `ViewModel::locale` at the moment it
-   * rendered (`🗣️terminology/🦀️.rs`'s `puzzle3d_labels`), so a language switch that requests no refresh
-   * leaves every one of those bodies in the previous language for as long as nothing else happens to
-   * dirty them. Measured on `:6013`: with the actor-revocation of §1 fixed, `locale-switch` brought the
-   * whole shell roster back German while the outliner still read "OBJECTS / Hide / Lock / REFERENCES"
-   * (ticket 26/09/02 wave B40 §3). `replaceBodies` because a language change re-authors EVERY string:
-   * the hash-conditional path must not be allowed to keep a body it cached under the old locale, and
-   * the live UI stores hold rendered text of their own. */
   useEffect(() => {
     const windowKinds = session?.app.windowKinds;
     if (!windowKinds) return;

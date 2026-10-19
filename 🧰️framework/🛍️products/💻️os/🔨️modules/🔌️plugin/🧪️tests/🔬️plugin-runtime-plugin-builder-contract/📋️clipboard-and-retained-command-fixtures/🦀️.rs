@@ -202,7 +202,7 @@ pub struct TestRetainedCommandFactory {
             ToolExecutionContract::resumable(TEST_RETAINED_COMMAND_RAW_BYTES, 4, 1, TEST_RETAINED_COMMAND_RAW_BYTES, 7_500, 1, 1)
         }
 
-        crate::retained_command_factory_admission!(maximum_raw_bytes:TEST_RETAINED_COMMAND_RAW_BYTES,checkpoint_resume:true);
+        semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes:TEST_RETAINED_COMMAND_RAW_BYTES,checkpoint_resume:true);
     }
 
     #[doc(hidden)]
@@ -217,10 +217,10 @@ pub fn test_retained_command_id(command: &TestCommand) -> &'static str {
 pub const TEST_COMMAND_RETAINED_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
 
     #[doc(hidden)]
-pub  async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::app_testing::mutation_fixture::job_close::FixtureSnapshotOwner) {
+pub  async fn test_retained_command_payload(completion: ArtifactToolCompletion<TestApp>) -> (semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>,crate::job_close_fixture::FixtureSnapshotOwner) {
         let snapshot=std::sync::Arc::new(TestSnapshot::default());
-        let(snapshot_read,issuer)=crate::app_testing::mutation_fixture::job_close::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
-        let payload=crate::retained_command::ArtifactRetainedCommandPayload::new(
+        let(snapshot_read,issuer)=crate::job_close_fixture::FixtureSnapshotOwner::new(snapshot.clone(),3,[5;32]);
+        let payload=semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin_retained_command::ArtifactRetainedCommandInputs {
                 command: TestCommand::SetLabel { value: "wire".into() },
                 snapshot,

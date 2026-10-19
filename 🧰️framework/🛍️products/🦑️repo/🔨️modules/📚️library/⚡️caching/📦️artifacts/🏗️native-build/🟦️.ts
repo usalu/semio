@@ -11,9 +11,11 @@ import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { cargoDirectories } from "../../🦀️cargo/🗂️directories/🟦️.ts";
+import { publishedCargoArtifactDirectoryV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { buildCargoArtifacts, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import {recordStoreContentV1} from "../../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -42,6 +44,7 @@ export async function buildRepositoryCargoArtifacts(manifest: string, args: stri
   await withRepositoryCompilerStoreV1(root,policy.mode,control,environment,async (store,control)=>{
     const storage={...repositoryCargoPreparationStorageV1(root),directory:requireNativeStoragePathV1(store.root,join(store.buildDirectory,"preparation"))},preparedEnvironment={...store.environment,CARGO_NET_OFFLINE:String(options.network.offline)},request=cargoWorkspacePreparationInvocationV1(storage,root,[options.command??"build","--manifest-path",path,...args],root,preparedEnvironment);
     if(request){await store.storage.recheck();const output=await captureOwnedCommandV1(request.command,[...request.args],request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);await store.storage.recheck();}
-    const withCargoInputs=repositoryCargoCompilerInputsV1({invocation:options.invocation,consumption,workspace:root,network:options.network,control,storage:store.storage});return buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,withCargoInputs,control,maximumObservationBytes:Math.min(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,authority.transport.maximumBytes),storage:store.storage,sourceBoundary:store.sourceBoundary,environment:preparedEnvironment});
+    const withCargoInputs=repositoryCargoCompilerInputsV1({invocation:options.invocation,consumption,workspace:root,network:options.network,control,storage:store.storage});await buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,withCargoInputs,control,maximumObservationBytes:Math.min(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,authority.transport.maximumBytes),storage:store.storage,sourceBoundary:store.sourceBoundary,environment:preparedEnvironment});
+    if(!options.observationOutput)await recordStoreContentV1({workspaceRoot:root,paths:[options.output===undefined?publishedCargoArtifactDirectoryV1(store.storage.backing.root,path,policy.mode):resolve(dirname(path),options.output)]});
   });
 }

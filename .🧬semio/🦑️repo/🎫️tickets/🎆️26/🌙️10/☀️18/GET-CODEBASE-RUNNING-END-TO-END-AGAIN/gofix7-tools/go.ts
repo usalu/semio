@@ -1,0 +1,20 @@
+import { spawnSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { canonicalGoPlan, writeCanonicalGoWorkspaceOverlay } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
+
+const root = resolve(import.meta.dir, "../../../../../../../..");
+const [verb, ...rest] = process.argv.slice(2);
+const moduleRoot = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp");
+const plan = canonicalGoPlan(moduleRoot);
+const generated = join(import.meta.dir, "../🗑️generated/gofix7-logs");
+mkdirSync(generated, { recursive: true });
+const overlay = join(generated, "overlay.json");
+writeCanonicalGoWorkspaceOverlay(overlay, [moduleRoot]);
+const merged = JSON.parse(readFileSync(overlay, "utf8"));
+Object.assign(merged.Replace, plan.replacements);
+writeFileSync(overlay, JSON.stringify(merged));
+const env = { ...process.env, GOWORK: join(root, "go.work") };
+const args = [verb, `-overlay=${overlay}`, ...rest, ...plan.packages];
+console.log("[go]", args.join(" ").slice(0, 400));
+process.exit(spawnSync("go", args, { cwd: moduleRoot, env, stdio: "inherit" }).status ?? 1);

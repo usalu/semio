@@ -1,6 +1,6 @@
 //! 🔤️ Borrowed optional UTF8 intents compare original native owners before plan publication.
 use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeIcon;
-use super::EditTargetRegionLabel;
+use semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::mutations::EditTargetRegionLabel;
 use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
 use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,paged::PagedUtf8BoundedOrdCursor,ordered_map::{BoundedOrdCursor,BoundedOrdGrant,BoundedOrdStep}}};
 

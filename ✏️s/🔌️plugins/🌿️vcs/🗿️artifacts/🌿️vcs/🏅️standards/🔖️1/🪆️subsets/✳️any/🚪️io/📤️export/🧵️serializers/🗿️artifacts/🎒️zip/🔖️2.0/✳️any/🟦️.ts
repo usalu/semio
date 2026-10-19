@@ -1,2 +1,2 @@
-/** vcs export zip */
+/** 🍴️ vcs export zip */
 export function register(): void {}

@@ -21,10 +21,12 @@ semio-s-artifact-fem-3d-editor-results-window = { path = "../../../🎭️modes/
 semio-s-fem-app-surface = { path = "../../../../../../../../../../⚙️engine/🖥️app-surface/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-registry = { workspace = true }
 semio-s-artifact-fem-3d-editor-visual-job = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
 semio-s-fem-analyses-model = { workspace = true }

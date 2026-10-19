@@ -1,5 +1,6 @@
 //! 🪆️ Unmounted canonical typed child metadata and exact existing registry read owner.
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use {semio_framework_artifact_reference::ArtifactRef,semio_framework_artifact_reference::ArtifactDialect};
 use crate::ArtifactChildRead;
 

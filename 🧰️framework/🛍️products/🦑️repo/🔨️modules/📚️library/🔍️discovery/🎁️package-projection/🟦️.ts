@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import { basename, dirname, join, posix } from "node:path";
 import { type CanonicalWgpuPackageCatalog, type SemanticPackageAdapter, type SemanticPackageBrowserProfile, type SemanticPackageProjectionCase, type SemanticPackageProjectionCatalog, type SemanticPackageProjectionMapping, exactOwnerPath, parseCurrentJcoPackageDestination, semanticPackageAuthoredFragmentProblem, semanticPackageAuthoredFragmentReferences, semanticPackageJoinedPathBindingRecords, semanticPackageJoinedPathReferenceAuthority } from "../📦️package-projection-contracts/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
+import { pathBudgetCodes } from "../📏️path-budget/🟦️.ts";
 import { classifyPackageSource, classifyPackageSourceDisposition, requiredPackageGlueGrammar } from "../🏷️package-source-classification/🟦️.ts";
 import { tomlTableBody } from "../🪧️owner-markers/🟦️.ts";
 import { type SemanticProjectionAuthorityNode, projectionByteCompare } from "../🧱️path-projection-contracts/🟦️.ts";
@@ -85,7 +86,7 @@ export function semanticPackageProjectionCatalog(repoRoot: string, taxonomy: Tax
       destinations.add(key);
     }
     for (const adapter of row.adapters) {
-      if (!exactOwnerPath(adapter.path) || !adapter.path.startsWith(row.destinationRoot + "/") || Buffer.byteLength(adapter.path) > taxonomy.collisionPolicy.maxPathBytes || adapter.targetPaths.some((path) => !row.mappings.some((mapping) => mapping.destinationPath === path) && !row.derivedLeaves.some((leaf) => leaf.path === path)) || classifyPackageSource(adapter.content, requiredPackageGlueGrammar(taxonomy, adapter.language)).role !== adapter.expectedRole) throw new Error("Nested Cargo adapter authority drift");
+      if (!exactOwnerPath(adapter.path) || !adapter.path.startsWith(row.destinationRoot + "/") || pathBudgetCodes(adapter.path, taxonomy.collisionPolicy).length > 0 || adapter.targetPaths.some((path) => !row.mappings.some((mapping) => mapping.destinationPath === path) && !row.derivedLeaves.some((leaf) => leaf.path === path)) || classifyPackageSource(adapter.content, requiredPackageGlueGrammar(taxonomy, adapter.language)).role !== adapter.expectedRole) throw new Error("Nested Cargo adapter authority drift");
     }
     if (!Array.isArray(row.sourceSplices) || row.sourceSplices.length !== (row.id === "wgpu-renderer" ? 2 : 0)) throw new Error("Nested Cargo source splice census drift");
     for (const splice of row.sourceSplices) if (!row.mappings.some((mapping) => mapping.sourcePath === splice.sourcePath && mapping.destinationPath === splice.destinationPath) || !splice.oldValue || !splice.newValue) throw new Error("Nested Cargo source splice ownership drift");

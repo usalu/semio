@@ -17,8 +17,10 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-job-publication = { path = "../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-dispatch-panels = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-document-records = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️document-records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-kind-catalogs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗂️kind-catalogs/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-mut-any-part2d = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️part2d-leaves/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-snapshot = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-diff = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
@@ -31,10 +33,10 @@ semio-s-artifact-puzzle-5d-mut-any-5 = { path = "../../🏅️standards/🔖️1
 semio-s-artifact-puzzle-5d-mut-any-6 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/🧪️tests/📍️moves-part-a/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-7 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-mut-any-8 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-5d-store-preparation-commands = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/🎮️command-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-catalog = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-interaction = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-5d-store-preparation = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-dispatch = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎬️dispatch/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-retained = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d-puzzle5d = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
@@ -66,6 +68,7 @@ semio-framework-schema-composition = { path = "../../../../../../../🧰️frame
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 wasm-bindgen = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
@@ -103,6 +106,7 @@ semio-framework-ui-scene = { workspace = true }
 semio-s-plugin-puzzle-board-scene = { workspace = true }
 semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

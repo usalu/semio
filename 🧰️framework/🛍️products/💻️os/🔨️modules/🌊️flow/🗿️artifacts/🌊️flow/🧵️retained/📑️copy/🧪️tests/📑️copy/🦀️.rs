@@ -26,7 +26,7 @@ fn paid<R:RetireOwned+Send+Sync+'static,T:Copy>(cursor:&CopyCursor<R,T>,copy:usi
 
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
     let fixture = semio_framework_pack_json::parse(include_str!("../../../🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let native=semio_framework_value::FromValue::guard_decoded(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap()));let mut receive=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(16*1024*1024,&mut receive);
+    let native=semio_framework_value::FromValue::guard_decoded(semio_framework_pack_json::to_dsl_value(fixture.get("hostSnapshot").unwrap()));let mut receive=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16*1024*1024,&mut receive);
     let host_snapshot: FlowHostSnapshot = semio_framework_value::FromValue::from_value_controlled(native.get(),&mut control).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
     (Arc::new(Root { host_snapshot: Some(host_snapshot), drops: drops.clone() }), drops)

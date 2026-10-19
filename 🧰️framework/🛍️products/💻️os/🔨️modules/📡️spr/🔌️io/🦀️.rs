@@ -32,7 +32,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
     }
 
     /// 📖️ Re-derives a `ResumeState` from whatever `path` currently contains: runs
-    /// `crate::os_spr::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
+    /// `crate::format::recover` (`RecoveryMode::LastCommit`), then reads back either the
     /// header-only `chain_0` (no commit yet) or the trusted tail's `REC_COMMIT` payload.
     async fn resume_state_for(path: &Path, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<ResumeState, ProtocolError> {
         let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
@@ -44,9 +44,6 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         }
         let mut commit_bytes = vec![0u8; COMMIT_FRAME_LEN as usize];
         source.read_exact_at(recovery.last_commit_offset, &mut commit_bytes).await?;
-        // `FrameCursor::new` indexes directly into the slice it's given, so the cursor's own
-        // `start_offset` must be 0 here (the local offset within `commit_bytes`), not the file's
-        // absolute `last_commit_offset` — see crate::os_spr::format::FrameCursor::new's doc.
         let mut cursor = FrameCursor::new(&commit_bytes, 0).await;
         let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "resume commit frame", offset: recovery.last_commit_offset, detail: "expected a REC_COMMIT frame at the recovered commit offset".to_string() })?;
         let commit = parse_commit_payload(frame.payload().await)?;
@@ -78,8 +75,8 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
 
         /// ▶️ Opens an existing `.spr` file to keep appending to it.
         ///
-        /// 🎯️ Design choice (forced by the crate boundary): `crate::os_spr::format::SprWriter::begin` and
-        /// `crate::os_spr::history::HistoryAppender::begin` are the ONLY public constructors for those
+        /// 🎯️ Design choice (forced by the crate boundary): `crate::format::SprWriter::begin` and
+        /// `crate::history::HistoryAppender::begin` are the ONLY public constructors for those
         /// types, and both unconditionally write a fresh header (`begin`) / fresh header+`REC_DOC`
         /// (`HistoryAppender::begin`) at the sink's current position — there is no "resume a writer
         /// mid-stream, preserving its running chain hash / dictionary / commit sequence" entry point
@@ -98,7 +95,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         /// of those (this crate deliberately has no `protocol_materialize` dependency to decode
         /// snapshot bodies with). The op log itself — every edit and transition — is
         /// fully preserved; only acceleration/snapshot data is lost, which the wider system already
-        /// tolerates gracefully (`crate::os_spr::materialize::resolve_plan` falls back to full replay from
+        /// tolerates gracefully (`crate::materialize::resolve_plan` falls back to full replay from
         /// genesis when a snapshot is missing/corrupt).
         pub async fn open_append(path: &Path, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
             let source = semio_framework_os_pack::io::FilePackSource::open(path, context.transport().clone())?;
@@ -135,7 +132,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
         }
 
         /// 👓️ Opens an existing `.spr` file purely for inspection: computes `resume_state()`
-        /// via `crate::os_spr::format::recover` without writing a single byte to `path`. `appender()` must
+        /// via `crate::format::recover` without writing a single byte to `path`. `appender()` must
         /// never be called on a handle opened this way (see its doc).
         pub async fn open_read_only(path: &Path, limits: &ProtocolLimits, context: &semio_framework_os_pack_tools::control::CommandContext) -> Result<Self, ProtocolError> {
             let resume = resume_state_for(path, limits, context).await?;
@@ -220,7 +217,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
 
         /// 🔁️ Re-reads the whole file and re-decodes from the start every call.
         ///
-        /// 🎯️ Design choice: `crate::os_spr::history::HistoryReader::edits()` always begins its own fresh
+        /// 🎯️ Design choice: `crate::history::HistoryReader::edits()` always begins its own fresh
         /// `DictReader`/edit-id table at the start of the trusted record stream (`REC_*_DICT` deltas
         /// are interleaved incrementally through the file, so any single edit's dictrefs can only be
         /// resolved by walking from the top) — there is no public way to seed an `EditIter` with a
@@ -277,7 +274,7 @@ use crate::wire::{DictBuilder, ProtocolLimits, RecordHasher};
 
     /// ✂️ Flushes a `REC_STR_DICT` delta record if `dict` grew since `*base` — byte-for-byte
     /// the same wire format `protocol_history`'s own (private) writer uses, reimplemented here since
-    /// `compact` cannot drive `crate::os_spr::history::encode_history`/`HistoryAppender` as a black box (it
+    /// `compact` cannot drive `crate::history::encode_history`/`HistoryAppender` as a black box (it
     /// needs to interleave one extra `REC_COMPACTION` record into the same commit generation, and
     /// neither type exposes a raw `write_record` passthrough for that).
     async fn flush_dict(writer: &mut SprWriter<Vec<u8>>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {

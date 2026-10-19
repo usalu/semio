@@ -14,7 +14,9 @@
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     }
   }
 }

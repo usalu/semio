@@ -3,11 +3,15 @@ cargo-features = ["trim-paths"]
 [workspace]
 resolver = "2"
 members = [
+    "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/⚡️admission/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/📚️course/🔨️modules/👥️presence/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/📚️course/🧪️tests/🍰️companion-primitives/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/📚️course/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/📚️course/🧪️tests/🧷️companion-support/📦️packages/🦀️rust",
@@ -16,6 +20,7 @@ members = [
     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎬️staging/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🐾️pets/🔨️modules/📝️draft/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/🎭️character/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/📜️contract/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/🖱️interaction/📦️packages/🦀️rust",
@@ -145,6 +150,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/📦️packages/🦀️rust",
@@ -314,6 +320,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧯️retirement-drivers-and-turn-limits/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔌️app/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/📦️packages/🦀️rust",
@@ -423,6 +430,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preparation/🔁️replace/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪪️identity/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -435,6 +443,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🍎️companion/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚔️conflict/📦️packages/🦀️rust",
@@ -509,6 +518,7 @@ members = [
     "🧰️framework/🛍️products/🖥️server/🔨️modules/🎭️authority/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/🔨️modules/🗄️storage/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/🔨️modules/🚦️throttle/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🖥️server/🔨️modules/📡️gateway/👥️presence/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/🔨️modules/🛡️policy/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/🔨️modules/🧬️contract/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/🧪️tests/🥣️companion/📦️packages/🦀️rust",
@@ -527,6 +537,7 @@ members = [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📚️inventory/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🚀️launcher/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️invocation-catalog/📦️packages/🦀️rust",
@@ -859,17 +870,21 @@ semio-framework-graph-layout-run = { path = "🧰️framework/🔨️modules/�
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-value = { path = "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-resident = { path = "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
 semio-framework-course = { path = "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust" }
+semio-framework-course-presence = { path = "🧰️framework/🛍️products/📚️course/🔨️modules/👥️presence/📦️packages/🦀️rust" }
 semio-framework-pets = { path = "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job = { path = "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-payload = { path = "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-tool-run-tick-wire = { path = "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/📦️packages/🦀️rust" }
 semio-framework-tool-run-entities = { path = "🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📦️packages/🦀️rust" }
 semio-framework-tool-run-presentation = { path = "🧰️framework/🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/📦️packages/🦀️rust" }
 semio-framework-time-travel = { path = "🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust" }
@@ -883,6 +898,7 @@ semio-framework-schema-registry = { path = "🧰️framework/🔨️modules/🧬
 schema = { path = "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-os-services = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust" }
+semio-framework-os-services-native-io = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust" }
 semio-framework-plugin-describe = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust" }
 # 🌐️ Canonical versions for the highest-fanout external deps, chosen as the newest
 # explicit requirement string already used somewhere in the 630 manifests (matches what
@@ -970,3 +986,12 @@ redundant_clone = "warn"
 
 [workspace.dependencies.semio-framework-plugin-ownership]
 path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-artifact-workflow-run-admission]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/⚡️admission/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-config-merge-policy]
+path = "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🛡️change-merge-policy/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin-instance-surface]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust"

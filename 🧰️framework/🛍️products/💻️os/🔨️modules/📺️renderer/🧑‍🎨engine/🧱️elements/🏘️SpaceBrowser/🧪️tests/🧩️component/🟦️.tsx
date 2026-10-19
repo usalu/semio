@@ -14,8 +14,8 @@ import { useEffect, useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, parseDirectoryCommandV1, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { type DirectoryCommandReceiptV1, type DirectorySpaceListEntryV1, type DirectoryCommand } from "@semio-tech/framework/directory/schema";
-import { directorySpacesFixture as fixture } from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
-import receiptFixture from "../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🧾️command-receipt-v1.json";
+import { directorySpacesFixture as fixture } from "@semio-tech/framework/os/modules/directory/testing/fixtures";
+import receiptFixture from "@semio-tech/framework/os/testing/fixtures/directory/command-receipt-v1.json";
 import {
   INVITE_TTL_CHOICES_SECS_V1,
   archiveSpaceCommandV1,
@@ -525,10 +525,6 @@ describe("space members from the hub's own projection", () => {
     ]);
   });
 
-  // 🪟️ `members` is a `DirectorySpaceAdministrationWindowV1` — `{ rows, nextCursor? }` — and an
-  // `access: "public"` page carries no `members` key at all. This slice's first implementation read
-  // it as a bare array, which only the live hub caught; these vectors are the shape the running hub
-  // actually served (`🗑️generated/au3-live-transcript-*.txt`).
   it("reads the administration page's member WINDOW and refuses rows the hub could not have served", () => {
     expect(parseHubSpaceMemberRowsV1(JSON.stringify({ access: "member", members: { rows: [{ userId: "usr_ok", displayName: "Ok", email: "ok@example.invalid", role: "author", owner: true }] } }))).toHaveLength(1);
     expect(parseHubSpaceMemberRowsV1(JSON.stringify({ access: "member", members: { rows: [], nextCursor: "c" } }))).toHaveLength(0);

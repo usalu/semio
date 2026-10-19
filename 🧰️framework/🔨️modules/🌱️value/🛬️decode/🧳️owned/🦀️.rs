@@ -9,7 +9,7 @@ pub use original::NativeReceivingOriginal;
 #[path="📋️list/🦀️.rs"]mod list;
 pub use list::{NativeListSource,NativePersistentListReceiver};
 
-#[path="🔗️shared/🦀️.rs"]mod shared;
+#[path="🔗️sealed-shared-receiver/🦀️.rs"]mod shared;
 pub use shared::NativeSharedReceiver;
 #[path="📥️default/🦀️.rs"]
 mod defaults;

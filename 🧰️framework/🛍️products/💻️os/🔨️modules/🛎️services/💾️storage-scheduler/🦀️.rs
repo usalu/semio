@@ -191,11 +191,6 @@ impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
     /// [`StorageError::BytesQuotaExceeded`] immediately if the reservation itself does not fit —
     /// the wheel is left untouched on that path, same discipline as [`WheelCore::arm`]. The ticket
     /// captures `ctx.deadline_ms` (if set) to race against in [`StorageTicket::await_result`].
-    // 🚫️async: E1-adjacent — forced synchronous by `🔌️plugin/🖥️host/📥️imports/🦀️.rs`'s
-    // `storage_read`/`storage_write`, which call this un-awaited inside an already-`async fn` then
-    // `.await` the returned `StorageTicket` separately (that file is outside this packet's
-    // `path_scope`, so it cannot be updated to `.await` this call instead). See `resolve_ready`'s
-    // doc comment above for the full cross-crate reasoning (R9).
     pub fn submit(&self, ctx: &OperationContext, plugin: PackageId, bytes: u64, work: impl FnOnce() -> Result<Vec<u8>, std::io::Error> + Send + 'static) -> Result<StorageTicket<R>, StorageError> {
         {
             let mut usage = self.0.per_plugin_bytes.lock().expect("StorageScheduler per_plugin_bytes mutex poisoned");

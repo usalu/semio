@@ -134,8 +134,6 @@ impl SamplingConfig {
 
     /// ⚙️ Structured JSON form (versioned: top-level `"version": 1`).
     pub async fn to_json(&self) -> JsonValue {
-        // 🔀️ Sequential `.await` loop, not `.iter().map(processor_spec_to_json).collect()` — a
-        // sync iterator closure cannot call an `async fn` (O1 de-dyn, math-dedyn).
         let mut processors = Vec::with_capacity(self.processors.len());
         for p in &self.processors {
             processors.push(processor_spec_to_json(p).await);
@@ -161,9 +159,6 @@ impl SamplingConfig {
     /// ⚙️ Parses the `"version": 1` JSON form back into a config, tolerating unknown top-level
     /// fields (forward compatibility) but rejecting a version it does not recognize.
     pub async fn from_json(value: &JsonValue) -> Result<Self, SamplingError> {
-        // 🔀️ See `Schedule::from_json`'s note: `and_then`/iterator-adapter closures cannot call
-        // `async fn`s, so lookups are `match`ed and array elements loop-and-`.await`ed explicitly
-        // (O1 de-dyn, math-dedyn).
         async fn num(value: &JsonValue, key: &'static str, default: f64) -> f64 {
             match value.get(key).await {
                 Some(v) => v.as_f64().await,

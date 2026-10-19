@@ -1,5 +1,6 @@
 //! 🔁️ Asset decode jobs: asset probe, decode job and session, prefix validators and the renderer worker pool with its I/O slots.
 use super::*;
+use semio_framework_ui_contract as ui_contract;
 
 //#region 📡️RendererAssetAuthority
 #[derive(Clone, Copy)]

@@ -9,6 +9,8 @@ use protocol::SemanticDescriptor;
 use protocol::ColdMutationKind;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
+use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode;
+use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid;
 
 //#region 🔖️Mutation
 /// 🧭️ One gumball gesture over the selection's geometry, stated RELATIVELY so it replays on any base: every named
@@ -187,7 +189,7 @@ where
 #[cfg(test)]
 pub mod laws {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-    use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
+    use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation_cold;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
     use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
@@ -234,7 +236,7 @@ pub mod laws {
     /// ↩️ The inverse restores `before` exactly, one sparse geometry patch per moved node and solid.
     pub fn inverse_restores(before: &str, operation: &str) {
         let (base, operation) = (snapshot(before), mutation(operation));
-        let inverse = inverse_fem3d_mutation(&base, &operation).expect("valid retained mutation inverse fixture");
+        let inverse = inverse_fem3d_mutation_cold(&base, &operation).expect("valid retained mutation inverse fixture");
         let moved = applied(&base, &operation);
         let changed = moved.nodes.iter().filter(|node| !base.nodes.contains(node)).count() + moved.solids.iter().filter(|solid| !base.solids.contains(solid)).count();
         assert_eq!(inverse.len(), changed, "one inverse step per moved record: {inverse:?}");
@@ -277,7 +279,7 @@ pub mod laws {
             }
             other => panic!("a refusal vector declares rejected or no-op, not {other:?}"),
         }
-        assert!(inverse_fem3d_mutation(&base, &operation).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
+        assert!(inverse_fem3d_mutation_cold(&base, &operation).expect("valid retained mutation inverse fixture").is_empty(), "nothing moved, nothing to restore");
     }
 
     /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.

@@ -1,4 +1,4 @@
-//! may move), the pivot the host anchors its gumball at, the `World3d` selection record that arms the host gumball
+//! ↔️ may move), the pivot the host anchors its gumball at, the `World3d` selection record that arms the host gumball
 //! 🧭️ Fem3d transform gumball — what the live selection resolves to geometrically (the nodes and solids a gesture
 //! with live dispatch, and the gumball TOOL: a `🔄️machine` statechart whose effects are `ToolYield`s, driven by the
 //! `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one relative `move-selection` tick leaf; a

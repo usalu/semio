@@ -65,7 +65,6 @@ pub fn create_forms_app() -> AppDefinition {
             .action_args("exportResponses", vec![ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), vec![ActionArgOption::new("json", LocalizedLabel::data("JSON")), ActionArgOption::new("csv", LocalizedLabel::data("CSV"))]).default_value(&"json")])
             .action_describe("exportResponses", LocalizedLabel::native("Downloads stored submissions with their original labels and typed answer values.", "Lädt gespeicherte Antworten mit ihren ursprünglichen Bezeichnungen und typisierten Werten herunter."))
             .action_describe("discardResponse", LocalizedLabel::native("Removes one saved response. Undo restores it.", "Entfernt eine gespeicherte Antwort. Rückgängig stellt sie wieder her."))
-            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
             .action_describe("addStep", LocalizedLabel::native("Appends a new step (a page of questions) to the form.", "Fügt dem Formular einen neuen Schritt (eine Seite mit Fragen) hinzu."))
             .action_use_when("addStep", vec!["add a page to the form".into(), "new step".into()])
             .action_describe("patchStep", LocalizedLabel::native("Changes a page title or description.", "Ändert den Titel oder die Beschreibung einer Seite."))
@@ -89,7 +88,6 @@ pub fn create_forms_app() -> AppDefinition {
             .action_describe("setSpecJson", LocalizedLabel::native("Imports the title and questions from a saved Forms JSON document. Existing answers stay with this form.", "Importiert Titel und Fragen aus einem gespeicherten Forms-JSON-Dokument. Vorhandene Antworten bleiben in diesem Formular."))
             .action_describe("exportSnapshot", LocalizedLabel::native("Downloads a Forms document containing its design and saved answers.", "Lädt ein Forms-Dokument mit Entwurf und gespeicherten Antworten herunter."))
             .action_describe("submit", LocalizedLabel::native("Submits the answers currently entered in the form preview.", "Sendet die aktuell in der Formularvorschau eingegebenen Antworten ab."))
-            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("removeBlock")
             .action_destructive("discardResponse")
             .action_destructive("removeQuestionOption")
@@ -97,7 +95,6 @@ pub fn create_forms_app() -> AppDefinition {
             .action_destructive("removeVectorField")
             .action_destructive("setActiveExample")
             .action_destructive("setSpecJson")
-            // 🖱️ Preview-runner input plumbing — the form preview feeds these, agents never do.
             .action_audience("setTryValue", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("setTryValues", semio_framework_plugin::CapabilityAudience::Input)
@@ -131,7 +128,6 @@ pub fn create_forms_app() -> AppDefinition {
             .action_interactive_job("exportSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportResponses", InteractiveJobClassification::Migrated)
             .action_interactive_job("discardResponse", InteractiveJobClassification::Migrated)
-            // 📝️ Staged argument forms for the panel-visible create/switch actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select(
                     "kind",
@@ -151,13 +147,6 @@ pub fn create_forms_app() -> AppDefinition {
             .action_args("setSpecJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Spec JSON", "Spezifikations-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "fields" interaction
-            // domain — two granularities ("field" default, "section"), `HierarchyProvider::Topology`
-            // from the document's own step/question nesting (`forms_fields_topology`/
-            // `FormsPlayApp::interaction_topology`), both hover and selection transitive (selecting/
-            // hovering a step covers its questions). Selection is pick-only (no canvas marquee surface
-            // exists for this domain today); the framework auto-injects interactionSelect/
-            // interactionHover/clearSelection/selectAll/setSelectionMode/setInteractionGranularity.
             .interaction(InteractionDefinition {
                 id: FORMS_INTERACTION_FIELDS.into(),
                 label: LocalizedLabel::native("Fields", "Felder"),
@@ -176,8 +165,6 @@ pub fn create_forms_app() -> AppDefinition {
                 },
             })
             .window_kind_interactions(builder::FORMS_PLAY_WINDOW_BLUEPRINT, vec![InteractionRef::new(FORMS_INTERACTION_FIELDS)])
-            // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`forms_io()`
-            // are this same information's single source of truth, reused here rather than duplicated.
             .config(FormsPlayApp::config_spec())
             .io(forms_io())
             .build_definition()

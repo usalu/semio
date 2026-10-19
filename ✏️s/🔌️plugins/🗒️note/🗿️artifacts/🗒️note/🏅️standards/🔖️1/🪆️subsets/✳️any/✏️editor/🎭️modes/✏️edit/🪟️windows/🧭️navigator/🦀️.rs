@@ -35,7 +35,6 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
-        // 🕹️ Non-interactive overview — no `.window_kind_interactions(..)` reference for this window.
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,

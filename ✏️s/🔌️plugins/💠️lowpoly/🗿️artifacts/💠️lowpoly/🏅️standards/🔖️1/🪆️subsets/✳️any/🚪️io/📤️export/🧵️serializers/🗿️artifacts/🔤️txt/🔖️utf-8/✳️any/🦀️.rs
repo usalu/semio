@@ -1,4 +1,4 @@
-//! lowpoly -> txt
+//! 🔺️ lowpoly -> txt
 //!
 //! 📜️ `s.stdio.txt@utf-8/*` is CARRIER_TEXT (its native `Text` payload IS the raw external file
 //! text, verbatim -- see `TxtSnapshot`'s own `pack::snapshot::ArtifactDsl` impl doc, "CARRIER LAW"). The

@@ -9,7 +9,7 @@ use semio_framework_ui_runtime::ComponentTree;
 mod receipts;
 
 #[derive(Clone, Copy, Default)]
-struct Probe { step: MountedSnapshotReadPreparation, calls: usize, reads: usize, parent_identity:usize, source_version:Option<semio_framework_value::RequestSourceVersion>, pre_heap:Option<semio_framework_trace::HeapAllocationObservation>, grant: RetainedCloneGrant }
+struct Probe { step: MountedSnapshotReadPreparation, calls: usize, reads: usize, parent_identity:usize, source_version:Option<semio_framework_value_registry::fixed_request_owners::RequestSourceVersion>, pre_heap:Option<semio_framework_trace::HeapAllocationObservation>, grant: RetainedCloneGrant }
 std::thread_local! { static ORIGINAL: std::cell::Cell<Option<Probe>> = const { std::cell::Cell::new(None) }; }
 
 #[derive(Default)]
@@ -30,7 +30,7 @@ impl ArtifactApp for PreparationApp {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
     async fn initial_snapshot() -> Self::Snapshot { NoConfig::default() }
-    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d::compute::EngineHandles) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
+    async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d_compute::EngineHandles) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
         Ok(Emit::default())
     }
     fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot, _windows: &WindowConfigOwnerRegistry, _view: Option<&ViewModel>, grant: RetainedCloneGrant) -> MountedSnapshotReadPreparation {
@@ -83,4 +83,4 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
 }
 
 #[test]
-fn mounted_pending_source_version_compares_complete_original_authority(){let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let version=|v:&serde_json::Value|{let hex=v["canonicalRevision"].as_str().unwrap();let canonical_revision=std::array::from_fn(|i|u8::from_str_radix(&hex[i*2..i*2+2],16).unwrap());(semio_framework_value::RequestSourceVersion{base_revision:v["baseRevision"].as_u64().unwrap(),generation:v["generation"].as_u64().unwrap(),canonical_revision},v["overlay"].as_u64().unwrap())};for row in f["sourceVersions"].as_array().unwrap(){assert_eq!(version(&row["before"])!=version(&row["after"]),row["changed"].as_bool().unwrap());println!("[DEBUG] original pending full version {} changed={}",row["name"],row["changed"]);}}
+fn mounted_pending_source_version_compares_complete_original_authority(){let f:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();let version=|v:&serde_json::Value|{let hex=v["canonicalRevision"].as_str().unwrap();let canonical_revision=std::array::from_fn(|i|u8::from_str_radix(&hex[i*2..i*2+2],16).unwrap());(semio_framework_value_registry::fixed_request_owners::RequestSourceVersion{base_revision:v["baseRevision"].as_u64().unwrap(),generation:v["generation"].as_u64().unwrap(),canonical_revision},v["overlay"].as_u64().unwrap())};for row in f["sourceVersions"].as_array().unwrap(){assert_eq!(version(&row["before"])!=version(&row["after"]),row["changed"].as_bool().unwrap());println!("[DEBUG] original pending full version {} changed={}",row["name"],row["changed"]);}}

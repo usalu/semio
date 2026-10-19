@@ -68,7 +68,6 @@ async fn regenerate_mutation_fixtures_when_env_set() {
             }
             let before_text = std::fs::read_to_string(&before_path).expect("read before");
             let mut before: Vdi3805Snapshot = serde_json::from_str(&before_text).unwrap_or_else(|e| panic!("decode before {}: {e}", before_path.display()));
-            // Canonicalize before
             let before_canon = serde_json::to_string_pretty(&before).expect("encode before") + "\n";
             std::fs::write(&before_path, &before_canon).expect("write before");
             before = serde_json::from_str(&before_canon).expect("redecode before");

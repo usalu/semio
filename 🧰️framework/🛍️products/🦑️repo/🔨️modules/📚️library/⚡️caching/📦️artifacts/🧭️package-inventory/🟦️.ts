@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { resolveBuildInputsV1, type BuildGraphV1 } from "../../../🏗️build/🕸️graph/🟦️.ts";
+import { storeReceiptOutputV1 } from "../../../🏗️build/🧾️store-receipt/🟨️.mjs";
 import { CACHE_POLICY, slash } from "../../🔍️discovery/📂️source/🟦️.ts";
 
 export type ArtifactPackageRecord = {
@@ -45,7 +46,7 @@ export function artifactPackageInventory(root: string, graph: BuildGraphV1): { s
       const nativeSources = resolveBuildInputsV1(graph, rustProject, rustProject.namedInputs?.nativeSources ?? []);
       const ownsSource = nativeSources.some((input: unknown) => typeof input === "string" && input.startsWith("{workspaceRoot}/") && !input.startsWith("!") && new (globalThis as any).Bun.Glob(input.slice("{workspaceRoot}/".length)).match(source));
       assert.ok(ownsSource, `${rustProject.name} does not hash its taxonomy source`);
-      assert.ok(rustProject.targets?.build?.outputs?.includes("{projectRoot}/dist/build"), `${rustProject.name} omits its build output contract`);
+      assert.ok(rustProject.targets?.build?.outputs?.includes(storeReceiptOutputV1("build")), `${rustProject.name} omits its store receipt output`);
       const record: ArtifactPackageRecord = { root: owner, source, rust: { cargoName: cargo.package.name, projectName: rustProject.name, manifest: rustManifest } };
       const typescriptSource = `${owner}/🟦️.ts`;
       if (existsSync(join(root, typescriptSource))) {

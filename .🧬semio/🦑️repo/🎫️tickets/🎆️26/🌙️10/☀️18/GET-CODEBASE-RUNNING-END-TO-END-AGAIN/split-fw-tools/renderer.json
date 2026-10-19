@@ -1,0 +1,102 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/split-fw-tools/orig/renderer-script.ts",
+ "origDir": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/",
+ "ignore": [
+  [
+   1,
+   1
+  ],
+  [
+   6,
+   6
+  ]
+ ],
+ "parts": [
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+   "header": "#!/usr/bin/env bun\n/** 🎨️ `@semio-tech/framework-renderer-react` task router. */",
+   "ranges": [
+    [
+     38,
+     157
+    ],
+    [
+     239,
+     249
+    ],
+    [
+     294,
+     308
+    ],
+    [
+     356,
+     365
+    ],
+    [
+     427,
+     436
+    ],
+    [
+     752,
+     808
+    ],
+    [
+     922,
+     1010
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/📇️directory-and-hub-contracts/🟦️.ts",
+   "header": "/** 📇️ The language-neutral Node oracles of the directory and hub contracts: the visible retained Home identity/ACK bridge, the os sign-in contract against the hub's own `hub.auth` schema, the invite transfer machine and the exact-scope presence projection.\n * @see ../../🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts — the verbs that run it */",
+   "ranges": [
+    [
+     159,
+     237
+    ],
+    [
+     251,
+     292
+    ],
+    [
+     310,
+     354
+    ],
+    [
+     367,
+     425
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🖱️world3d-gestures-and-selection/🟦️.ts",
+   "header": "/** 🖱️ The language-neutral Node oracles of the `World3dHost` interaction laws: the gesture to action law, the selection-set law and the selection-merge vocabulary, each re-derived from its fixture without React, three or the DOM.\n * @see ../../🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts — the verbs that run it */",
+   "ranges": [
+    [
+     439,
+     750
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🪪️surface-host-retention/🟦️.ts",
+   "header": "/** 🪪️ The language-neutral Node oracle of the retained-surface-host law, re-derived from the shared fixture.\n * @see ../../🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts — the verbs that run it */",
+   "ranges": [
+    [
+     810,
+     920
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🧬️owned-schema-exports/🟦️.ts",
+   "header": "/** 🧬️ The owning `🧬️schema/` modules the renderer oracles judge against, and the strict draft-07 validator that compiles one named `$defs` export of each.\n * @see ../../🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts — the verbs that run the oracles */",
+   "ranges": [
+    [
+     20,
+     36
+    ]
+   ]
+  }
+ ]
+}

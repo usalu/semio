@@ -2,7 +2,8 @@
 use super as sqlite;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use semio_framework_dsl_record::{FieldValue,RecordValue};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,RowWriter}};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn unwrap(value:&FieldValue)->&FieldValue{match value{FieldValue::Block(value)=>value,_=>value}}

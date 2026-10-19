@@ -2,10 +2,22 @@
   "name": "@semio-tech/s-space-composition-tests",
   "projectType": "library",
   "sourceRoot": "✏️s/🧑‍💻dev/🪐️space",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🌎️hub/🧩️compositions/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/**/*"
+    ]
+  },
   "targets": {
     "verify-framework-ui-protocol-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify framework-ui-protocol-ownership",

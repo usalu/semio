@@ -54,8 +54,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert_eq!(retained, every_command().iter().map(RasterCommand::command_id).collect::<BTreeSet<_>>(), "every RasterCommand row must be a retained route");
     assert_eq!(retained, RasterCommand::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>(), "the retained table must equal the generated tool-job id set");
 
-    // 🛣️ Lane discipline, read off the handlers: the document verbs publish into the artifact lane, the session verbs
-    // into the config lane, and no route publishes into both.
     let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample", "paintStroke", "fillRegion", "applyFilter", "transformImage", "fillSelection", "maskFromSelection", "flattenLayers", "mergeDown"].into_iter().collect();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
@@ -69,7 +67,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     assert!(<RasterPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the Artifact lane is rejected outright without a document one-item preparation factory");
     assert!(<RasterPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the Config lane is rejected outright without a config one-item preparation factory");
 
-    // 🧵️ Every retained plugin command id must be UI-dispatchable.
     let definition = create_raster_app();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let action = definition
@@ -80,9 +77,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
             .unwrap_or_else(|| panic!("action {tool_id} declared"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be UI-dispatchable");
     }
-    // ⚖️ No declaration in raster's catalog may stay `Unclassified` — that is the release-blocking
-    // gate `validate_interactive_job_classification` enforces. Every action lands on a window kind
-    // (both app-declared and framework-injected ones), so this sweep sees the whole action surface.
     for action in definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())) {
         assert_ne!(action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "action {} is unclassified", action.id);
     }
@@ -90,11 +84,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         assert_ne!(command.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "command {} is unclassified", command.id);
     }
 
-    // ⚖️ The gate's own arithmetic, spelled out: `expected = TOOL_JOB_IDS ∩ migrated` must equal the
-    // proof set. `RASTER_RETAINED_TOOL_IDS` names that proof set (its length is asserted equal to
-    // `bounded_first_step_tool_proofs().len()` above, and the macro derives the proofs from the same
-    // literal list), so a route that is proven but left unclassified — or classified but unproven —
-    // fails here instead of at runtime with `interactive-job.catalog-authority`.
     let migrated_ids: BTreeSet<&str> = definition
         .actions
         .iter()
@@ -215,7 +204,6 @@ fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {
         let id = command.command_id();
         let args = semio_framework_value::ToValue::to_value(&command);
-        // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
         let payload = match &args {
             semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),

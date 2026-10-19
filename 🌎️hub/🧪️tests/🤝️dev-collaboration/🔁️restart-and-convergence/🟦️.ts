@@ -43,7 +43,6 @@ export async function collabRunRestartStep(opts: {
     const hasEditor = (await editor1.count()) > 0;
     await liveHub.kill();
     // 🧵️ We hold the hub's own `child` handle — await its `exit` event via 🔖️PollHelpers's
-    // `awaitChildExit` instead of polling `exitCode` (THE RULE above). Same 30s budget as before.
     const terminal = await waitForLocalHubExitV1(liveHub.run), exited = terminal.status!==null||terminal.signal!==null?"exited":"pending";
     spaceE2eAssert(exited === "exited", "hub process did not exit within 30s of being killed");
     const portFreed = await awaitTcpReady("127.0.0.1", opts.hubPort, { deadlineMs: 30_000, intervalMs: 250, mode: "closed" });

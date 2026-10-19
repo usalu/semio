@@ -136,17 +136,8 @@ async function runCollabE2eVerifyOwnedV1(opts: { readonly invocation:ScriptInvoc
       throw error;
     }
 
-    // 🎭️ Matches `SetupScript`'s own install location (the shared cache root's `tools/ms-playwright`) —
-    // without this, Playwright falls back to the OS default cache (`~/Library/Caches/ms-playwright`),
-    // which can hold a different/older browser revision than the one this repo's `playwright` version
-    // expects (confirmed during this lane's own iteration: the default cache had `chromium-1223`, this
-    // repo's `playwright` wanted `chromium_headless_shell-1234`, which only exists under the repo-scoped path).
     process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(repoRoot, "tools", "ms-playwright");
     const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-    // 🖥️ `--use-angle=metal` because headless Chromium otherwise falls back to SwiftShader, whose WebGL
-    // is slow enough to turn a shell's first paint into a timeout; the explicit viewport keeps the shell
-    // out of its narrow/mobile layout, where the presence bar and the toolbar ids STEP 1/3/5 click are
-    // collapsed behind an overflow chip.
     browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
     const context1 = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: COLLAB_E2E_LOCALES[opts.locale].browser });
     const context2 = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: COLLAB_E2E_LOCALES[opts.locale].browser });
@@ -192,9 +183,6 @@ async function runCollabE2eVerifyOwnedV1(opts: { readonly invocation:ScriptInvoc
     await user2Page.goto(`http://127.0.0.1:${user2Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
     await collabWaitForApp(user1Page, "s-home-create-space", 120_000);
     await collabWaitForApp(user2Page, "s-home-create-space", 120_000);
-    // 🔐️ Two DIFFERENT humans, each signing in from their own browser context against the same hub.
-    // Serially, because the hub's sign-in bucket is keyed per address and both contexts share
-    // 127.0.0.1 (AU3 gap 12): two simultaneous mints spend the bucket and the second gets a 429.
     await collabSignIn(user1Page, COLLAB_E2E_USER1_EMAIL, passwords[COLLAB_E2E_USER1_EMAIL]!);
     await collabSignIn(user2Page, COLLAB_E2E_USER2_EMAIL, passwords[COLLAB_E2E_USER2_EMAIL]!);
     console.log(`[collab-e2e] both humans hold a verified session authority on ${hubBaseUrl}`);

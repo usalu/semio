@@ -27,15 +27,12 @@ impl Default for SemioDrawingArtifact {
 }
 
 impl SemioDrawingArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioDrawingSnapshot {
         SemioDrawingSnapshot { schema: self.schema.clone(), canvas: self.canvas, styles: self.styles.clone(), layers: self.layers.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioDrawingSnapshot) -> Self {
         Self { schema: snapshot.schema, canvas: snapshot.canvas, styles: snapshot.styles, layers: snapshot.layers }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioDrawingSnapshot) {
         self.schema = snapshot.schema;
         self.canvas = snapshot.canvas;

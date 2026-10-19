@@ -7,10 +7,19 @@
     "role:kernel",
     "family:space"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/**/*"
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ],
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
@@ -19,7 +28,7 @@
     },
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -28,7 +37,7 @@
     },
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

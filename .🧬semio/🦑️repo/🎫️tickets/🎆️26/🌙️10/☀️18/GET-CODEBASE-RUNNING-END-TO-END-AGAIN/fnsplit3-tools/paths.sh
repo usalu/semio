@@ -1,0 +1,13 @@
+R=/Users/ueli/Documents/semio
+C="$R/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN"
+OS="$R/🧰️framework/🛍️products/💻️os/🔨️modules"
+SH="$OS/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost"
+F1="$R/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🗺️document-open/🟦️.ts"
+F2="$SH/🖱️shell-actions/🟦️.ts"
+F3="$OS/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/🦀️.rs"
+F4="$R/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts"
+F5="$OS/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts"
+F6="$OS/🔌️plugin/🧪️tests/🌐️browser-bundle/🟦️.ts"
+F7="$SH/⚡️host-effects/🟦️.ts"
+F8="$R/🌎️hub/🧪️tests/🤝️two-client-document/🟦️.ts"
+F9="$SH/🧵️backbone-worker/🟦️.ts"

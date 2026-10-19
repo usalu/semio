@@ -203,8 +203,6 @@ impl AppChannelHost for FakeHost {
                 continue;
             }
             match command {
-                // 🧬️ Channel v12 retires `Hello`/`Welcome` — `open` (above) is what now
-                // establishes the instance, matching the reactor ABI's `Event::InstanceOpen`.
                 AppCommand::LoadConfig { seq, pack, spr } => {
                     self.configs.insert(node, (pack, spr));
                     frames.push(AppFrame::Done { in_reply_to: seq });
@@ -232,10 +230,6 @@ impl AppChannelHost for FakeHost {
                 AppCommand::MediaFingerprint { seq, port } => match self.outputs.get(&(app_id.clone(), port)) {
                     Some(media) => {
                         let fingerprint = MediaFingerprint::of(media);
-                        // 🩹️ Pre-existing bug fixed in passing: `store::pack_rt::encode_wire_value` takes
-                        // `&dsl::DslValue`, not `&serde_json::Value` — `decode_fingerprint_wire` (this
-                        // file) already expects the `DslValue`-transparent-string encoding `to_dsl_value`
-                        // produces for a `MediaFingerprint(String)` newtype.
                         let value = semio_framework_value::ToValue::to_value(&fingerprint);
                         frames.push(AppFrame::MediaFingerprint { in_reply_to: seq, port: String::new(), fingerprint: store::pack_rt::encode_wire_value(&value) });
                     }
@@ -382,8 +376,6 @@ async fn first_run_recomputes_every_node_second_run_is_a_no_operation() {
     assert!(report_1.clean.is_empty());
     sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
 
-    // 🔒️ Non-destructive: the SOURCE `documents`/`configs` maps `run()` read are byte-identical to
-    // what was passed in — nothing was written back into them (the load-bearing proof for this wave).
     assert_eq!(documents, empty_documents(&graph), "run() must never mutate its source documents map");
     assert_eq!(configs, empty_configs(&graph), "run() must never mutate its source configs map");
 
@@ -409,10 +401,6 @@ async fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
     sink_1.record(RunMutation::SealRun(SealRun { status: semio_framework_artifact_workflow_run::RunStatus::Succeeded })).await.expect("seal first run");
 
     let mut documents_2 = documents.clone();
-    // 🧮️ Fingerprints are still `.spr`-bytes hashes (see `node_fingerprints`) — editing the op log
-    // (`spr`), not the pack, is what must dirty the node. `documents` (the first run's SOURCE map)
-    // is untouched by `run()` itself — this test edits its OWN local copy to simulate a live UI edit
-    // landing on the source between runs.
     documents_2.insert("artifacts/node-a".to_string(), (b"pack".to_vec(), b"edited".to_vec()));
     let prior = prior_node_records_from(&sink_1.document);
     let mut sink_2 = fresh_sink().await;
@@ -611,8 +599,6 @@ async fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
     let configs = empty_configs(&graph);
     let mut sink = fresh_sink().await;
 
-    // 🛑️ Cancel BEFORE the run even starts — deterministic, no real sleep/race needed: the very
-    // first `compute_node` call (node-a) must already observe `Cancelled`.
     cancel.cancel().await;
     let result = runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink).await;
     assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled before its first node must fail with RunError::Cancelled, got {result:?}");
@@ -835,9 +821,6 @@ async fn validate_rejects_unregistered_conversion() {
     let source = workflow_node("src", vec![media_port("src", "out", MediaPortDirection::Out, "data.value", PortMultiplicity::One, true)], Vec::new());
     let target = workflow_node("dst", Vec::new(), vec![media_port("dst", "in", MediaPortDirection::In, "data.value", PortMultiplicity::One, false)]);
     let mut contract = placeholder_media_contract("data.value").await;
-    // 🧪️ A conversion form pair this test file never registers a converter for — distinct from
-    // any pair the `media_converter_registry_*` tests below register, so the global
-    // `MEDIA_CONVERTERS` table (shared across all tests in this process) can't race with this one.
     contract.conversion = Some((MediaForm::Trinity, MediaForm::Dag));
     let graph = Workflow {
         schema: WORKFLOW_SCHEMA.into(),
@@ -857,8 +840,6 @@ async fn convert_media_is_identity_when_contract_has_no_conversion() {
 
 #[semio_framework_async_macros::async_test]
 async fn media_converter_registry_applies_registered_converter() {
-    // 🧪️ A `(class, from, to)` triple unique to this test (see `validate_rejects_unregistered_
-    // conversion`'s note on the shared global table).
     register_media_converter(MediaClass::Kit, MediaForm::Design, MediaForm::Sequence, |media| Ok(Media { media_type: media.media_type, payload: MediaPayload::Structured { schema: "converted".into(), json: "\"converted\"".into() } }));
     let mut contract = placeholder_media_contract("kit.design").await;
     contract.media_type = MediaType { class: MediaClass::Kit, form: MediaForm::Sequence };

@@ -46,9 +46,6 @@ fn compile_rejects_unknown_schema_version() {
 
 #[test]
 fn hand_authored_asymmetric_allow_fails_validate_on_compile() {
-    // A hand-edited document declares `adj` self-inverse but only allows black->white, never
-    // the reverse: `compile()` must still run `validate()` and reject it, not just build
-    // silently-broken bitset tables.
     let doc = SourceModelDoc {
         version: SOURCE_MODEL_VERSION,
         patterns: vec![PatternDoc { weight: 1.0, tags: vec![] }, PatternDoc { weight: 1.0, tags: vec![] }],
@@ -111,8 +108,6 @@ fn checkpoint_doc_rejects_wrong_bitset_length() {
 
 #[test]
 fn checkpoint_doc_rejects_tampered_bitset_from_raw_json() {
-    // Simulates a hand-edited file: valid JSON shape, but a bitset with a stray bit set past
-    // its declared `len` in the `words` array — must be caught by `is_well_formed`, not panic.
     let (model, topo) = checkerboard();
     let json = format!(r#"{{"version":1,"domains":[{{"words":[999999],"len":2}}{}],"model_fingerprint":{},"seed":0}}"#, ",{\"words\":[3],\"len\":2}".repeat(topo.node_count() - 1), model.fingerprint());
     let doc: CheckpointDoc = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

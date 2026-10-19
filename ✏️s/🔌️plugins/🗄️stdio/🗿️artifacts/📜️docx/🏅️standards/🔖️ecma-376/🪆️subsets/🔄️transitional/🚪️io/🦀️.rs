@@ -102,7 +102,7 @@ pub mod derived_construction {
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxTable;
     use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxBuilderConstruction as DocxAnyBuilder;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::check_transitional_conformance;
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
@@ -117,33 +117,28 @@ use semio_framework_diagnostic::Severity;
 
     impl DocxTransitionalBuilderConstruction {
         /// ➕️ Appends a paragraph.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.inner = self.inner.add_paragraph(paragraph);
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
             self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
             self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
 
         /// ➕️ Appends a table.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_table(mut self, table: DocxTable) -> Self {
             self.inner = self.inner.add_table(table);
             self
         }
 
         /// ➕️ Appends (or replaces, by `id`) a named style.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_style(mut self, style: DocxStyle) -> Self {
             self.inner = self.inner.add_style(style);
             self

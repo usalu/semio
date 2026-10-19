@@ -5,7 +5,6 @@ use super::*;
 //#region 🔖️Navigation
 impl Lifter<'_> {
     /// 🎯 Lifts a destination: an explicit array, a name/string, or a dictionary with `/D`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_destination(&mut self, value: &PdfObject) -> Option<PdfDestination> {
         let resolved = self.source.deref(value);
         match resolved {
@@ -39,7 +38,6 @@ impl Lifter<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_file_specification(&mut self, value: &PdfObject) -> Option<PdfFileSpecification> {
         let resolved = self.source.deref(value);
         match resolved {
@@ -64,7 +62,6 @@ impl Lifter<'_> {
     }
 
     /// 📎 Lifts a file specification with an embedded file stream, returning its id.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_embedded_file(&mut self, name: &str, value: &PdfObject, listed: bool) -> Option<String> {
         let resolved = self.source.deref(value);
         let dict = resolved.as_dict()?.to_vec();
@@ -99,7 +96,6 @@ impl Lifter<'_> {
     }
 
     /// 🎬 Lifts an action dictionary (with its `/Next` chain).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_action(&mut self, value: &PdfObject) -> Option<PdfAction> {
         let resolved = self.source.deref(value);
         let dict = resolved.as_dict()?.to_vec();
@@ -156,7 +152,6 @@ impl Lifter<'_> {
     }
 
     /// 📑 Lifts the outline tree.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_outlines(&mut self, root: &PdfObject) -> Vec<PdfOutlineItem> {
         let root = self.source.deref(root);
         let Some(first) = root.dict_get("First").cloned() else { return Vec::new() };
@@ -164,7 +159,6 @@ impl Lifter<'_> {
         self.lift_outline_siblings(&first, &mut visited, 0)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_outline_siblings(&mut self, first: &PdfObject, visited: &mut HashSet<u32>, depth: usize) -> Vec<PdfOutlineItem> {
         let mut items = Vec::new();
         let mut cursor = Some(first.clone());
@@ -196,7 +190,6 @@ impl Lifter<'_> {
     }
 
     /// 🌳 Flattens a name tree (§7.9.6) into (key, value) pairs in tree order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn name_tree(&mut self, node: &PdfObject, out: &mut Vec<(String, PdfObject)>, visited: &mut HashSet<u32>) {
         if let Some(reference) = node.as_ref() {
             if !visited.insert(reference.num) {
@@ -223,7 +216,6 @@ impl Lifter<'_> {
     }
 
     /// 🔢 Flattens a number tree (§7.9.7) into (key, value) pairs.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn number_tree(&mut self, node: &PdfObject, out: &mut Vec<(i64, PdfObject)>, visited: &mut HashSet<u32>) {
         if let Some(reference) = node.as_ref() {
             if !visited.insert(reference.num) {
@@ -249,7 +241,6 @@ impl Lifter<'_> {
 
 //#region 🔖️Annotations
 impl Lifter<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_appearance_entry(&mut self, id: &str, value: &PdfObject) -> Option<PdfAppearanceEntry> {
         let resolved = self.source.deref(value);
         match resolved {
@@ -271,7 +262,6 @@ impl Lifter<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lift_annotation(&mut self, dict: &[PdfDictEntry]) -> PdfAnnotation {
         let subtype = dict_name(dict, "Subtype").unwrap_or("").to_string();
         let rect = rect_of(dict_get(dict, "Rect")).unwrap_or([0.0; 4]);

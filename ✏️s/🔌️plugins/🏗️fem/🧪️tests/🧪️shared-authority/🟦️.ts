@@ -11,7 +11,7 @@ import renderFixture from "../../../../../🧰️framework/🛍️products/💻�
 import Decimal from "decimal.js";
 import { parseResultMode, resultModeUsesShape, resultModeEigenvalue } from "../../⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🟦️.ts";
 import projectionSchema from "../../⚙️engine/🖥️app-surface/🧬️schema/👁️result-projection/🔣️.json";
-import projectionFixture from "../../⚙️engine/🖥️app-surface/🧫️fixtures/👁️result-projection/🔣️.json";
+import projectionFixture from "../../⚙️engine/🖥️app-surface/🧪️tests/🧫️fixtures/👁️result-projection/🔣️.json";
 
 test("shared FEM result modes project eigenvectors and the declared physical units", () => {
   const validate = new Ajv({ strict: true }).compile(projectionSchema);

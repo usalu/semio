@@ -52,8 +52,8 @@ export const NATIVE_DISCOVERY_OPERATIONS: PackagePayloadOperations = {
   state: nativeState,
 };
 
-type PhysicalPayloadOwnership = (owner: PackagePayloadOwner, payload: PackagePayloadOwner, operations: Pick<PackagePayloadOperations, "state">) => boolean;
-const physical: { readonly ownsPayload: PhysicalPayloadOwnership } = createRequire(import.meta.url)("./🟨️.cjs");
+type PackagePayloadOwnership = (owner: PackagePayloadOwner, payload: PackagePayloadOwner) => boolean;
+const physical: { readonly ownsPayload: PackagePayloadOwnership } = createRequire(import.meta.url)("./🟨️.cjs");
 
-/** 🔗️ Binds a payload to its nearest package owner through a concrete physical export. */
-export const ownsPayload: PhysicalPayloadOwnership = physical.ownsPayload;
+/** 🔗️ Binds a payload to its nearest package owner through a concrete authored export namespace. */
+export const ownsPayload: PackagePayloadOwnership = physical.ownsPayload;

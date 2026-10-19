@@ -1,6 +1,6 @@
 import runtimeFixture from "../../🧫️fixtures/🧊️native-runtime/🔣️.json" with {type:"json"};
 import runtimeFixtureSchema from "../../🧫️fixtures/🧊️native-runtime/🧬️schema.json" with {type:"json"};
-import {readRustSourceClosureV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import {readRustSourceClosureV1} from "@semio-tech/process/artifacts/native-build/source";
 import {createRequire} from "node:module";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";

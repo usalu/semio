@@ -1,9 +1,20 @@
 //! 🛡️ `ChangeMergePolicy` is the authoritative direct leaf for the OS-wide conflict policy.
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
-use super::MergePolicyConfigMutation;
-use protocol::{Mutation, MutationDiff, ColdMutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+
+use protocol::{ColdDiffAlgebra, ColdMutation, ColdMutationDiff, Mutation, MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
+
+//#region 🔖️MergePolicy
+/// 🛡️ Typed, invertible merge-policy mutation vocabulary.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
+#[mutations(snapshot = MergePolicySetting, diff = MergePolicyDiff, schema = "os.config.merge-policy", reference = MergePolicySetting, reference_diff = MergePolicyDiff)]
+pub enum MergePolicyConfigMutation {
+    ChangeMergePolicy(ChangeMergePolicy),
+}
+//#endregion 🔖️MergePolicy
 
 //#region 🔖️Schema
 /// 🛡️ `os.config.merge-policy` — the authority-local policy choice.
@@ -88,7 +99,7 @@ impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMerge
     }
 }
 
-impl crate::os_spr::ColdMutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMergePolicy {
+impl protocol::ColdMutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMergePolicy {
     fn diff(&self, base: &MergePolicySetting) -> MutationOutcome<MergePolicyDiff> {
         if base.policy == self.policy {
             return MutationOutcome::new(MergePolicyDiff::default()).warning("mutation.no-op", format!("Merge policy is already \"{:?}\".", self.policy));

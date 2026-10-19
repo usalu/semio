@@ -20,7 +20,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import { SHELL_KEYBINDINGS, ariaKeyshortcutsText, composeControlKeybindings, formatKeybindingShortcut } from "@semio-tech/ui-react";
-import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
+import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "@semio-tech/framework/modules/ui/modules/control-keybinding-context";
 import type { AppRole, ArtifactDialect } from "@semio-tech/framework";
 import { resolveBootQueryAppRole } from "@semio-tech/framework-os-dev/boot-query";
 import {
@@ -227,9 +227,6 @@ function recordingSwitchHost(
         steps.push(`create:${app.id}`);
         return nextInstanceId;
       },
-      // 🚪️ `never` models the close ladder measured on 6018 — 62–87 s and then
-      // `plugin-ui.lifecycle-close-budget-exhausted`. A switch that awaited THIS is a switch the user
-      // waits a minute for, which is the whole defect these rows encode.
       retire: (retiring: SwitchSession): Promise<void> => {
         retired.push(retiring.instanceId);
         steps.push(`retire:${retiring.instanceId}`);
@@ -388,8 +385,6 @@ export async function testSurfaceSwitch(): Promise<void> {
         )
       : await runSessionAppSwitchV1<SwitchApp, string>(host.ports, request, host.onRetireFailed);
     assert.deepEqual(host.steps, row.expected.steps, `${row.id}: steps`);
-    // 🚪️ Read at the moment the switch's OWN promise resolved: the successor is already published,
-    // whatever the predecessor's close ladder is still doing.
     const publishedAtResolve = host.trace.includes("publish");
     await settleBackgroundWork();
     assert.deepEqual(host.trace, [...row.expected.trace], `${row.id}: trace vocabulary`);
@@ -404,9 +399,6 @@ export async function testSurfaceSwitch(): Promise<void> {
     assert.deepEqual(host.sealed, row.expected.retired.map((instanceId) => sessionInstanceKeyV1(row.request.pluginId, instanceId)).concat(row.createFails ? [sessionInstanceKeyV1(row.request.pluginId, row.session?.instanceId ?? 0)] : []), `${row.id}: every retired instance was sealed first`);
     assert.deepEqual(host.unsealed, row.createFails ? [sessionInstanceKeyV1(row.request.pluginId, row.session?.instanceId ?? 0)] : [], `${row.id}: only a kept predecessor is unsealed`);
     assert.equal(host.createdCount() - host.retired.length, row.session === null ? row.expected.created : 0, `${row.id}: no leaked instance`);
-    // ⚖️ Second reading: the independent oracle, plus the orderings that ARE the defect — a predecessor
-    // may never be retired before it went quiet, and it must be sealed before `createApp` runs, because
-    // `createApp` itself revokes its activation.
     assert.deepEqual(host.trace, oracleSettledTrace(oracleSwitchTrace(row.session?.appId ?? null, row.request.appId, apps.some((app) => app.id === row.request.appId), row.request.viewState, row.quiesce.settled, row.createFails), row.retireMode), `${row.id}: oracle`);
     const retireAt = host.trace.indexOf("retire-started");
     if (retireAt !== -1) {
@@ -414,11 +406,6 @@ export async function testSurfaceSwitch(): Promise<void> {
       assert.ok(host.trace.indexOf("seal") !== -1 && host.trace.indexOf("seal") < host.trace.indexOf("create"), `${row.id}: the predecessor is sealed before the successor is created`);
       assert.ok(host.trace.indexOf("create") !== -1 && host.trace.indexOf("create") < retireAt, `${row.id}: the successor exists before the predecessor is retired`);
       assert.ok(host.trace.indexOf("publish") > retireAt, `${row.id}: the successor is published only after the predecessor was sealed and its ladder started`);
-      // 🚪️ THE law of this lane: the successor is MOUNTED by the time the switch answers, whatever the
-      // predecessor's close ladder is still doing. A ladder that fails, and one that never finishes at
-      // all, both leave the successor published and the outcome `switched` — before the fix the shell
-      // awaited the ladder, so a 62–87 s close (measured on 6018, `🗑️generated/journey-5/console.txt`)
-      // was 62–87 s of the user still looking at the predecessor.
       assert.ok(publishedAtResolve, `${row.id}: the successor is published before the switch answers`);
       const reportedAt = Math.max(host.trace.indexOf("retire"), host.trace.indexOf("retire-failed"));
       assert.ok(reportedAt === -1 || reportedAt > host.trace.indexOf("refresh"), `${row.id}: the close ladder reports after the successor's session started, never before`);
@@ -429,9 +416,6 @@ export async function testSurfaceSwitch(): Promise<void> {
     assert.equal(host.retireFailures.length, row.expected.retireFailures, `${row.id}: retirement failures reported`);
   }
 
-  // 🚦️ Mid-chain law: the second chord arrives while the first switch is still awaiting its quiesce
-  // pass — exactly the `⌘️⌥️V` pressed twice during an in-flight evaluation — and is REFUSED, not
-  // queued, so only one tear-down ever runs.
   {
     const gate = createSessionAppSwitchGateV1<SwitchApp, string>();
     const apps = appsOf("procedural");
@@ -459,14 +443,10 @@ export async function testSurfaceSwitch(): Promise<void> {
     for (const index of row.release) releases[index]!();
     for (const [pluginId, instanceId, expected] of row.pending) {
       assert.equal(ledger.pending(pluginId, instanceId), expected, `${row.id}: pending ${pluginId}#${instanceId}`);
-      // 🔎️ The split a refusal prints must add up to the number the quiesce pass polls — a diagnostic
-      // that disagreed with the gate would be worse than none.
       const split = ledger.outstanding(pluginId, instanceId);
       assert.equal([...split.matchAll(/=(\d+)/gu)].reduce((sum, match) => sum + Number(match[1]), 0), expected, `${row.id}: outstanding ${pluginId}#${instanceId} = ${split}`);
     }
     assert.equal(ledger.total(), row.total, `${row.id}: total`);
-    // ⚖️ Oracle: the count is begins minus DISTINCT releases, which is only true because a release is
-    // idempotent — the property the shell's `finally` blocks depend on.
     assert.equal(ledger.total(), row.begin.length - new Set(row.release).size, `${row.id}: oracle`);
   }
 
@@ -513,10 +493,6 @@ export async function testSurfaceSwitch(): Promise<void> {
     assert.equal(SHELL_KEYBINDINGS[row.controlId], row.chord, `${row.controlId}: declared chord`);
     assert.equal(composed.get(row.controlId), row.chord, `${row.controlId}: reaches the settings registry`);
     assert.equal(ariaKeyshortcutsText(row.chord, "Win32"), row.aria, `${row.controlId}: aria-keyshortcuts`);
-    // 🍎 The chord a screen reader is told must be the chord that FIRES: `mod` is Command on Apple, so
-    // `aria-keyshortcuts` and the visual badge resolve it through one predicate
-    // (`keybindingPlatformUsesMetaV1`). Publishing `Control+Alt+V` beside a rendered `⌘️⌥️V` told a
-    // macOS screen-reader user a chord that does nothing.
     assert.equal(ariaKeyshortcutsText(row.chord, "MacIntel"), row.ariaApple, `${row.controlId}: aria-keyshortcuts on Apple`);
     assert.equal(formatKeybindingShortcut(row.chord, "MacIntel"), row.badgeApple, `${row.controlId}: badge on Apple`);
     assert.equal(formatKeybindingShortcut(row.chord, "Win32"), row.badge, `${row.controlId}: badge off Apple`);

@@ -141,8 +141,6 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
 
-    // 🔒️ The switch carries the run start on its OWN emit, and the shell feeds those `requestedEffects`
-    // back — exactly what is replayed here, together with every hop the run hands the host.
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "setActiveExample carries exactly one run start");
     let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &flow_view, &receipt.effects).await;
     assert!(ticks > 0, "the run setActiveExample started must dispatch at least one addressed flowEvalTick");
@@ -206,9 +204,6 @@ async fn add_generation_from_the_generations_window_drives_the_generate_preview_
     let entry_scene: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&entry).expect("the generate-mode entry preview is a world-3d status host");
     let entry_status = entry_scene.status_json.clone().expect("the generate preview publishes a status host before anything is generated");
     let entry_json: serde_json::Value = serde_json::from_str(&entry_status).expect("entry status json");
-    // 🪪️ With the geometry extension actually contributed the entry phase is IDLE — nothing is
-    // evaluating and nothing is faulted, which is what the shell's world host needs to show a quiet
-    // window rather than a spinner or a fault badge.
     assert_eq!(entry_json.get("phase").and_then(serde_json::Value::as_str), Some("idle"), "entry status must be idle under a contributed geometry extension: {entry_status}");
     assert!(entry_json.get("hint").and_then(serde_json::Value::as_str).unwrap_or_default().contains("evaluate a generation"), "entry status must carry the hint: {entry_status}");
     assert_eq!(entry_scene.instances_json, "[]", "entry state draws no instances: {}", entry_scene.instances_json);

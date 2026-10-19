@@ -73,8 +73,8 @@ export interface ModelRelation {
 }
 
 export interface SemioModelSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ spatial: SpatialNode[];
-  /** @state artifact */ elements: SemioModelElement[];
-  /** @state artifact */ relations: ModelRelation[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 🌌️ @state artifact */ spatial: SpatialNode[];
+  /** 🧮️ @state artifact */ elements: SemioModelElement[];
+  /** 👫️ @state artifact */ relations: ModelRelation[];
 }

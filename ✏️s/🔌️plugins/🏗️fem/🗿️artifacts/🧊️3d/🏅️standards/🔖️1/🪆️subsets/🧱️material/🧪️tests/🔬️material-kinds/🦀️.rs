@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` material mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️hall/🦀️.rs"]
 mod create_material_hall_hall_new_steel;
@@ -30,3 +31,5 @@ mod replace_material_softens_the_steel_shear_modulus_in_place;
 mod replace_material_edge_negative_e;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️renames/🦀️.rs"]
 mod replace_material_edge_renames_c24;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-material/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_material_field_intent;

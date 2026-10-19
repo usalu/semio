@@ -1,4 +1,4 @@
-//! Direct binary identity for `insert-signature-field`.
+//! 💾️ Direct binary identity for `insert-signature-field`.
 
 pub const TAG: u8 = 6;
 pub const BINARY_TAG: u8 = TAG;

@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 test("protocol logical body survives expanded enclosing physical headers",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.rows){const oracle=db.query("SELECT ? AS child, CASE WHEN ?>=?+? THEN ? ELSE 0 END AS selected").get(row.body,row.physical,row.overhead,row.body,row.body) as {child:number;selected:number};expect(oracle.child).toBe(row.child);expect(oracle.selected).toBe(row.selected);expect(Buffer.alloc(row.physical,7).subarray(0,row.selected).byteLength).toBe(row.selected);expect(row.selected).toBeLessThan(row.physical);}}finally{db.close();}
@@ -23,9 +23,9 @@ test("central native fixture implementations preserve each original quoted body 
  for(const header of headers)expect(/body:usize,(?:grant|g):/.test(header)).toBe(true);
  const compact=(source:string)=>source.replace(/\s+/gu,"");
  expect(compact(preparation).includes("decide_retained_mutation(o,m.borrow(),p.borrow(),4096,g)")).toBe(true);
- expect(compact(preparation).includes("s.next_close_demand(4096)")).toBe(true);
- expect(compact(apply).includes("source.next_close_demand(4096)")).toBe(true);
- expect(compact(sequence).includes("source.next_close_demand(4096)")).toBe(true);
+ expect(compact(preparation).includes("o.close_demand(4096)")).toBe(true);
+ expect(compact(apply).includes("owner.close_demand(4096)")).toBe(true);
+ expect(compact(sequence).includes("owner.close_demand(body)")).toBe(true);
  expect(compact(apply).includes("preflight_retained_diff(&mutowner,diff.borrow(),before.borrow(),&post,128,quote,&mutreceiving)")).toBe(true);
  expect(compact(sequence).includes("protocol::preflight_retained_diff(&mutowner,diff.borrow(),original.borrow(),&post,body,grant(d),&mutreceiving)")).toBe(true);
  expect(compact(sequence).includes("self.0.preflight(d.project(0,|d|&d.edits),s,post,body,g,&mut*receiving)")).toBe(true);

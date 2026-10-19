@@ -4,8 +4,6 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
       "declarations": [
-        "RepositoryCommandOptionsV1",
-        "RepositoryCommandPolicyV1",
         "readRepositoryCommandPolicyV1",
         "runRepositoryCommand"
       ],
@@ -174,7 +172,7 @@
     {
       "path": "🌎️hub/🧪️tests/🪪️check-in-process/🟦️.ts",
       "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+        "@semio-tech/process/native-build"
       ]
     },
     {

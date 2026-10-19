@@ -46,7 +46,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-i18next": "^16.5.2",
-    "react-resizable-panels": "^4.2.1",
+    "react-resizable-panels": "4.14.5",
     "three": "^0.182.0",
     "three-mesh-bvh": "^0.9.14",
     "xstate": "^5.25.0"
@@ -66,7 +66,7 @@
     "d3-color": "3.1.0",
     "d3-ease": "3.0.1",
     "polygon-clipping": "0.15.7",
-    "postcss": "^8.5.6",
+    "postcss": "8.5.30",
     "tailwindcss": "^4.0.0",
     "terser": "5.49.1",
     "typescript": "^5.9.3",

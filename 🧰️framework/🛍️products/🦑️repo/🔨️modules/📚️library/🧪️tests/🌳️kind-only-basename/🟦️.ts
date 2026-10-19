@@ -124,6 +124,22 @@ describe("kind-only implementation leaf taxonomy", () => {
     }
   });
 
+  test("walks only admitted paths so a withheld subtree and a withheld file never breach", async () => {
+    const root = materialize();
+    try {
+      const all = (await taxonomyImplementationFilesystemFindings(root, taxonomy)).map((finding) => finding.path).sort();
+      expect(all.length).toBeGreaterThan(1);
+      const withheld = all[0]!, withheldRoot = withheld.split("/")[0]!;
+      const filesOnly = (await taxonomyImplementationFilesystemFindings(root, taxonomy, { admitted: (path, nodeKind) => !(nodeKind === "file" && path === withheld) })).map((finding) => finding.path).sort();
+      expect(filesOnly).toEqual(all.filter((path) => path !== withheld));
+      const subtree = (await taxonomyImplementationFilesystemFindings(root, taxonomy, { admitted: (path) => path !== withheldRoot && !path.startsWith(`${withheldRoot}/`) })).map((finding) => finding.path).sort();
+      expect(subtree).toEqual(all.filter((path) => !path.startsWith(`${withheldRoot}/`)));
+      expect(subtree.length).toBeLessThan(all.length);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("cancels the focused census before filesystem traversal", async () => {
     const controller = new AbortController();
     controller.abort();

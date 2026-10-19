@@ -1,4 +1,4 @@
-//! framework-owned `"fem3d"` selection resolves to (a node, element, solid, material, section,
+//! 📦️ framework-owned `"fem3d"` selection resolves to (a node, element, solid, material, section,
 //! 🔍️ Fem3d play app panel — the inspection panel: real editable controls for whatever the
 //! support, load, load case or combination), or the document summary when nothing is selected.
 //!

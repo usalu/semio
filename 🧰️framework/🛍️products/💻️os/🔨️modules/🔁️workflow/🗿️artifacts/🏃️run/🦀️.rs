@@ -1,5 +1,7 @@
 //! 🏃️ Composable persisted workflow run artifact.
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -16,19 +18,6 @@ pub use diff::{RunDiff, RunHeaderEdit, RunSealEdit, RunStep};
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::{AppendRunLog, FinishRunNode, RemoveRunLog, RemoveRunNode, RunMutation, SealRun, SetRunHeader, SetRunSeal, StartRun, StartRunNode};
-#[path = "🧬️schema/🧬️mutations/⚡️apply/🦀️.rs"]
-mod apply;
-pub use apply::admit_run_operation;
-
-/// 🔒️ The one real write seam for a `RunArtifact`: a refusal travels as the outcome's own messages (codes and levels
-/// unchanged), and an apply-time rejection of the same `RunDiff` ordinary application uses joins them as the `Fatal`
-/// `mutation.apply.*` message the store persists.
-pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> Result<RunArtifact, Vec<protocol::MutationMessage>> {
-    let (diff, messages) = admit_run_operation(document, &operation)?;
-    protocol::apply_diff_cold(&diff, document).map_err(|error| messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect())
-}
-
-
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;

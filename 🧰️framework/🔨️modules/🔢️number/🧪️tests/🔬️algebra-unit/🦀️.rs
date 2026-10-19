@@ -55,8 +55,7 @@ mod tests {
     #[test]
     fn cayley_hamilton_holds_for_3x3() {
         let m = rat_mat(vec![vec![2, 0, 0], vec![0, 3, 4], vec![0, 4, 9]]);
-        let poly = m.charpoly(); // low-to-high coefficients, char(A)(x) = poly[0] + poly[1] x + ... + poly[n] x^n
-        // Evaluate poly(M) = sum poly[i] * M^i and check it is the zero matrix.
+        let poly = m.charpoly();
         let n = m.rows;
         let mut power = MatG::<Rational>::identity(n);
         let mut acc = MatG::<Rational>::zeros(n, n);
@@ -92,7 +91,6 @@ mod tests {
         let d = ModInt::new(3, p);
         let m = MatG::from_rows(vec![vec![a, b], vec![c, d]]);
         let poly = m.charpoly();
-        // trace = a+d, det = ad-bc; char poly(x) = det - trace*x + x^2 (low-to-high: [det, -trace, 1])
         let trace = a.add(&d);
         let det = a.mul(&d).sub(&b.mul(&c));
         assert_eq!(poly[0], det);
@@ -106,7 +104,6 @@ mod tests {
         let (s, u, v) = m.smith_normal_form();
         let reconstructed = u.matmul(&m).matmul(&v);
         assert_eq!(reconstructed, s);
-        // off-diagonal entries are zero and each diagonal entry divides the next.
         assert!(s.get(0, 1).is_zero());
         assert!(s.get(1, 0).is_zero());
         assert!(s.get(1, 1).exact_div(s.get(0, 0)).is_some());

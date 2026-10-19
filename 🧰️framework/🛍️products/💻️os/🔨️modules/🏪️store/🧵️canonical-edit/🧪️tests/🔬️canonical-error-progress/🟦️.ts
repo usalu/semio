@@ -8,7 +8,7 @@ import { toolJobRustBlock } from "@semio-tech/repo-lib/laws";
  * spelling makes them fail on formatting instead of on lost initialized bytes. */
 const looseStatements = (statements: string): RegExp => new RegExp(statements.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\s+/g, "\\s+"));
 
-/** \u{1f9ed}\uFE0F Locates the method body after balanced generic and parameter declarations. */
+/** 🧭️ Locates the method body after balanced generic and parameter declarations. */
 export function canonicalRustMethodBody(text: string, pattern: RegExp): string {
   const start = text.search(pattern);
   if (start < 0) return "";
@@ -117,7 +117,7 @@ test("canonical preparation refusal preserves its original physical authority",(
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");const row=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json"),"utf8"));
  const schema=JSON.parse(readFileSync(valueRefusalCodecSchemaUrl,"utf8"));const admit=new Ajv({strict:true}).compile(schema);expect(admit(row.preparationRefusal)).toBe(true);expect(admit({...row.preparationRefusal,retainedProgress:{...row.preparationRefusal.retainedProgress,copiedBytes:-1}})).toBe(false);
  const wire=JSON.parse(JSON.stringify(row.preparationRefusal));expect(wire).toEqual(row.preparationRefusal);const p=wire.retainedProgress;const g=row.retainedPolicy;expect(p.copiedItems<=g.maximumItems&&p.copiedBytes<=g.maximumCopyBytes&&p.retainedCapacityBytes<=g.maximumCapacityBytes&&p.releasedBytes<=g.maximumReleaseBytes).toBe(true);expect(Buffer.byteLength(row.expectedPrefix)).toBe(p.copiedBytes);
- const source=readFileSync(join(base,"../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs"),"utf8");const start=source.indexOf("pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant)");expect(start).toBeGreaterThan(0);const header=source.slice(start,source.indexOf("{",start));expect(header).toContain("Result<ArtifactStoreOneItemPreparationStep, ValueError>");const body=toolJobRustBlock(source,source.indexOf("{",start))?.body??"";expect(body).not.toContain("ValueError::into_message");expect(body).toContain("error.retained_progress()");expect(body).toContain("self.cancelled=true");
+ const source=readFileSync(join(base,"../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs"),"utf8");const start=source.indexOf("pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:");expect(start).toBeGreaterThan(0);const header=source.slice(start,source.indexOf("{",start));expect(header).toContain("Result<ArtifactStoreOneItemPreparationStep, ValueError>");const body=toolJobRustBlock(source,source.indexOf("{",start))?.body??"";expect(body).not.toContain("ValueError::into_message");expect(body).toContain("error.retained_progress()");expect(body).toContain("self.cancelled=true");
 });
 
 test("original preparation owner retains typed refusal without copying the failure authority",()=>{

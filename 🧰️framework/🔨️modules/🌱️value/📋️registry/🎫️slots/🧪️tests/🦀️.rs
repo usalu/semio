@@ -1,9 +1,10 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 
 /// 🧪️ The portable admission corpus preserves exact keys and fixed slots through stale releases.
 #[test]
 fn fixed_key_slots_match_portable_admission_and_stale_release(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../🎫️slots/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let (mut owner,heap)=crate::observe_retirement_allocations(FixedKeySlots::<u64,3>::new);
  assert_eq!(heap,(0,0));
  let mut leases=std::collections::BTreeMap::new();

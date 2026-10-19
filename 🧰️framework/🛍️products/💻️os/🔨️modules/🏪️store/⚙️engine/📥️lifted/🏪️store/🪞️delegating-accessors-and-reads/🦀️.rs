@@ -1,6 +1,7 @@
 //! 🪞️ Delegating accessors and reads: the store accessors that delegate to the wire, cursor, log, owners and live components. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -92,7 +93,7 @@ where
     #[inline] pub fn open_transaction(&self) -> Option<&OpenToolTransaction> { self.log.open_transaction() }
 
     /// 🪞️ Delegates to [`StoreLog::edit_mutations`].
-    #[inline] pub fn edit_mutations(&self) -> Option<(&[Mutation], &semio_framework_value::list::PagedList<Mutation, {usize::MAX}>, &[MutationMeta])> { self.log.edit_mutations() }
+    #[inline] pub fn edit_mutations(&self) -> Option<(&[Mutation], &semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>, &[MutationMeta])> { self.log.edit_mutations() }
 
     /// 🪞️ Delegates to [`StoreLog::history_columns`].
     #[inline] pub async fn history_columns(&self) -> Vec<HistoryColumn> { self.log.history_columns().await }

@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import {applyPatch,compare} from "fast-json-patch";
-import corpus from "../🧫️fixtures/🔣️.json" with {type:"json"};
-import schema from "../🧫️fixtures/schema.json" with {type:"json"};
+import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import schema from "./🧫️fixtures/schema.json" with {type:"json"};
 import closeSchema from "../🧬️schema/🎟️close/🔣️.json";
-import closeFixture from "../🧫️fixtures/🎟️close/🔣️.json";
+import closeFixture from "./🧫️fixtures/🎟️close/🔣️.json";
 import {Database} from "bun:sqlite";
 
 /** 🧪️ Portable sparse row outputs and original inverse fields match independent RFC6902 application. */

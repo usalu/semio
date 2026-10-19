@@ -113,6 +113,9 @@ pub use close_host_drop_and_pair_merge::{
     merge_by_id, preflight_merge_by_id, retract_history_transitions_from_spr, HistoryFinalization,
     SupersedeScope,
 };
+use semio_framework_os_store_replay::replay_preparation::derived_operation::ArtifactDerivedOperationMode;
+#[cfg(test)] use semio_framework_os_spr::ColdMutation;
+#[cfg(test)] use semio_framework_os_spr::MutationDiff;
 
 //#endregion 🔖️Backbone
 //#endregion 🔖️Backbone
@@ -229,7 +232,7 @@ where
         self.owners.admit_history_owner_retirement(owner,grant,|retirement,replay|*retirement.replay=Some(replay))
     }
 
-    pub fn step_derived_history_preview(&mut self, preview: &mut ArtifactDerivedHistoryPreview<P, Mutation>, retirement_grant:RetainedCloneGrant, control:&mut semio_framework_value::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step_derived_history_preview(&mut self, preview: &mut ArtifactDerivedHistoryPreview<P, Mutation>, retirement_grant:RetainedCloneGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         self.admit_derived_source(&preview.registry, preview.generation, preview.revision)?;
         if preview.plan_retirement.is_some() {
             preview.retire_completed_plan(retirement_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
@@ -279,7 +282,7 @@ where
         match self.step_derived_operation(owner,retirement_grant.maximum_copy_bytes,retirement_grant,control,deadline){Ok(step)=>{preview.preparation_receipt=step.progress();Ok(ReplayStep::Pending(preview.progress))},Err(error)=>{preview.preparation_receipt=error.retained_progress();Err(VcsError::InverseRefused(error))}}
     }
 
-    pub fn step_derived_report_replay(&mut self, owner: &mut ArtifactDerivedReplay<P, Mutation>, retirement_grant:RetainedCloneGrant, control:&mut semio_framework_value::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step_derived_report_replay(&mut self, owner: &mut ArtifactDerivedReplay<P, Mutation>, retirement_grant:RetainedCloneGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         self.admit_derived_source(&owner.registry, owner.generation, owner.revision)?;
         if owner.plan_retirement.is_some() {
             owner.retire_completed_plan(retirement_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;

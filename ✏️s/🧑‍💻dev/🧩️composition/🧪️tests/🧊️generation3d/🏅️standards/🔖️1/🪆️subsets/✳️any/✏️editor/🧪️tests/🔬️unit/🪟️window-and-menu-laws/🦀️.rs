@@ -29,8 +29,6 @@ fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malf
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_editor_installs_every_declared_bounded_command_proof() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    // 🧹️ Through the self-closing host_snapshot, never a bare `new_app_with_registry` — a plainly-dropped
-    // `VcsArtifactApp` fails its own store's terminal-empty witness and aborts the binary.
     let _app = app_with_registry().await;
 }
 
@@ -120,10 +118,6 @@ async fn undo_redo_round_trips_flow_graph_edits() {
     let before = context::snapshot(&app).host_snapshot.widgets.len();
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputNote".into(), x: None, y: None }), |app| context::snapshot(&app).host_snapshot.widgets.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
-    // 🧹️ `undo`/`redo` run a framework-RESERVED spawn job, and a fixture that ran one has to be
-    // drained through the registered close ladder rather than the plain `close_step` loop the
-    // fixture's own `Drop` runs — the same reason every `select_graph` test ends this way
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
@@ -136,9 +130,6 @@ async fn two_instances_converge_disjoint_widget_moves() {
     };
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-    // 🧹️ The REGISTERED pair, never `assert_two_instances_converge` — this app publishes
-    // `bounded_first_step_tool_proofs!`, so a registryless instance faults with
-    // `interactive-job.catalog-authority` and its unwind aborts the binary.
     semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<Generation3dPlayApp>, (Option<f64>, Option<f64>), _, _>(
         "mem://generation3d-convergence",
         || async { context::generation3d_app_manifest_for_tests() },
@@ -197,9 +188,6 @@ async fn context_menu_grouped_disclosure_stays_within_budget() {
 async fn context_menu_reads_the_framework_owned_graph_selection() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    // 🧊️ A literal default-fixture widget id, not `app.snapshot()`: that accessor hands back an OWNED
-    // `Generation3dSnapshot`, whose `FlowHostSnapshot.layout: OrderedMap` aborts the process on drop
-    // (`🌱️value/🗂️ordered/🦀️.rs:81`) unless explicitly retired.
     let node_id = "extrude".to_string();
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
     let ids_of = |menu: &[semio_framework_plugin::ContextMenuItemSpec]| -> Vec<String> {
@@ -333,9 +321,6 @@ async fn window_measure_labels_are_localized() {
 async fn sun_measures_are_exposed_on_preview_windows() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    // 🪟️ `PluginApp::window_measures` projects per ATTACHED window instance
-    // (`🔌️plugin/🦀️.rs`'s `for window in view_state.window_instances`), so an empty `ViewModel`
-    // can only ever answer an empty map — the roster is what makes this assertion mean anything.
     let view = semio_framework_plugin::ViewModel {
         window_instances: vec![
             semio_framework_plugin::ViewWindowInstance { id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), window_kind_id: edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() },

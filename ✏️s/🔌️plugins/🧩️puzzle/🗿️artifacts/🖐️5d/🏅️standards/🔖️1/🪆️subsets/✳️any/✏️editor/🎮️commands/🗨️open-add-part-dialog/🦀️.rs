@@ -1,6 +1,6 @@
 //! 🗨️ Opens the declared "addPart" dialog, whose submit dispatches `addPartKind`.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 use semio_framework_plugin::kernel::Effect;
 
 /// 🗨️ The dialog id `create_puzzle5d_app` registers, named once so the effect and the

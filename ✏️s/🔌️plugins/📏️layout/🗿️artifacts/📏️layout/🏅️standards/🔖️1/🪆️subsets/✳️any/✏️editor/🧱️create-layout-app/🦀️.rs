@@ -35,7 +35,6 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(preflight_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // ✏️ Palette-visible content commands — dispatched as VCS operations with a true inverse.
             .mutation("addFrame", LocalizedLabel::native("Add Frame", "Rahmen hinzufügen"))
             .mutation("addPage", LocalizedLabel::native("Add Page", "Seite hinzufügen"))
             .action_args("addFrame", vec![
@@ -47,12 +46,10 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("x", LocalizedLabel::native("X", "X")),
                 ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")),
             ])
-            // 🐚️ Palette-visible shell exports — round-trip through the host.
             .shell_action("exportPng", LocalizedLabel::native("Export Png", "Png exportieren"))
             .shell_action("exportSvg", LocalizedLabel::native("Export Svg", "Svg exportieren"))
             .shell_action("exportPdf", LocalizedLabel::native("Export Pdf", "Pdf exportieren"))
             .shell_action("exportPackage", LocalizedLabel::native("Export Package", "Paket exportieren"))
-            // 🔧️ Internal document operations — inspector/DnD-bound, not palette commands.
             .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchDocument", LocalizedLabel::native("Patch Document", "Dokument aktualisieren"), ActionKind::Mutation))
@@ -63,9 +60,6 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("exportPdf")
             .action_destructive("exportPackage")
             .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
-            // 👁️ Ephemeral view state — active page, drop ghost, pointer, camera, engagement draft.
-            // Selection/hover are framework-owned now (domain "elements") — no app-declared verbs;
-            // `interactionSelect`/`interactionHover`/`clearSelection` auto-inject below.
             .action_with(layout_internal_action("setActivePage", LocalizedLabel::native("Set Active Page", "Aktive Seite festlegen"), ActionKind::View))
             .action_with(layout_internal_action("focusPreflightIssue", LocalizedLabel::native("Focus Preflight Issue", "Preflight-Problem fokussieren"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
@@ -75,9 +69,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_with(layout_internal_action("canvasDragOver", LocalizedLabel::native("Canvas Drag Over", "Ziehen über Leinwand"), ActionKind::View))
             .action_with(layout_internal_action("canvasDragLeave", LocalizedLabel::native("Canvas Drag Leave", "Ziehen verlässt Leinwand"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
-            // 🐚️ Engagement submit — routes typed export intents through the host, emits only shell effects.
             .action_with(layout_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Shell))
-            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
             .action_describe("addPage", LocalizedLabel::native("Appends a new page to the layout document.", "Fügt dem Layoutdokument eine neue Seite hinzu."))
             .action_use_when("addPage", vec!["add a page".into(), "new page in the layout".into()])
             .action_describe("addFrame", LocalizedLabel::native("Places a new frame on a page — the box that holds an image, a text block or a nested artifact.", "Platziert einen neuen Rahmen auf einer Seite — den Kasten für Bild, Textblock oder eingebettetes Artefakt."))
@@ -96,7 +88,6 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("exportPackage", LocalizedLabel::native("Bundles the layout and every asset it references into one downloadable package.", "Bündelt das Layout und alle referenzierten Assets in ein herunterladbares Paket."))
             .action_describe("setActivePage", LocalizedLabel::native("Brings one page of the layout into view.", "Holt eine Seite des Layouts in die Ansicht."))
             .action_describe("focusPreflightIssue", LocalizedLabel::native("Scrolls to and highlights one reported preflight issue.", "Springt zu einem gemeldeten Preflight-Problem und hebt es hervor."))
-            // 🖱️ Raw input plumbing — the canvas feeds these, agents never do.
             .action_audience("canvasDrop", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("canvasDragOver", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("canvasDragLeave", semio_framework_plugin::CapabilityAudience::Input)
@@ -136,18 +127,9 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_use_when("translateSelection", vec!["move the selected frames".into(), "shift this frame to the right".into()])
             .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected frames by an angle in radians about the centroid of their centres.", "Dreht die ausgewählten Rahmen um einen Winkel im Bogenmaß um den Schwerpunkt ihrer Mittelpunkte."))
             .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected frames by a factor per axis about the centroid of their centres.", "Skaliert die ausgewählten Rahmen um einen Faktor je Achse um den Schwerpunkt ihrer Mittelpunkte."))
-            // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
-            // interactive Blueprint surface; the read-only Preview surface renders output and never
-            // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
-            // surface-discriminated (via `surfaceId`) or global, so they stay unscoped orphans and
-            // appear on both windows.
             .window_kind_action_refs(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
                 "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(), "patchDocument".into(), "translateSelection".into(), "rotateSelection".into(), "scaleSelection".into(),
             ])
-            // 🕹️ Domain "elements": frames on the Blueprint canvas (pages are never targets — canvas
-            // hit-testing only ever resolves frame ids). Flat: layout has no real parent/child
-            // structure among frames. `Invertive` merge is the toggle-on-shift-click old
-            // `CanvasPointerDown.extend` used to hand-roll; `Replace` is a plain click.
             .interaction(InteractionDefinition {
                 id: LAYOUT_INTERACTION_ELEMENTS.into(),
                 label: LocalizedLabel::native("Elements", "Elemente"),
@@ -163,16 +145,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![InteractionRef::new(LAYOUT_INTERACTION_ELEMENTS)])
-            // 🎯️ Typed channel surface (WORKFLOWS-END-TO-END-TYPED-PORTS) — `config_spec()`/`layout_io()`
-            // are this same information's single source of truth, reused here rather than duplicated.
             .io(semio_s_artifact_layout_layout_engine::layout_io())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old `"sample"`/`"cylinder"`
-            // app-level example registration and the no-op `.workflow("layout", …)` call are dropped
-            // here (not silently: reported in this packet's migration notes). The subset's own
-            // `📚️examples/🎬️demo` facet (`crate::examples::...`, real content,
-            // pre-existing) is the modern, role-agnostic replacement surface for this.
             .build_definition()
 }
 //#endregion 🔖️Manifest

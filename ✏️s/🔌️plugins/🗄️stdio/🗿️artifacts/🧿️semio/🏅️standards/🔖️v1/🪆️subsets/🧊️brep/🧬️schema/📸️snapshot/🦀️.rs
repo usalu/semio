@@ -495,9 +495,6 @@ pub fn demo_brep_snapshot() -> SemioBrepSnapshot {
         },
     ];
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
-    // 🧱️ Coedges mirror `loops[0].edges` one-for-one, in ring order, with a p-curve stored on the
-    // first coedge only — exercising both the `Some(pcurve)` and `None` (fallback-to-projection)
-    // arms of `crate::schema::snapshot::body::body_from_snapshot` in one fixture.
     s.coedges = vec![
         BrepCoedge {
             id: "co1".into(),

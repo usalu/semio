@@ -4,9 +4,9 @@ import requestSchema from "./🧬️schema/🔣️.json";
 import {validateJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧬️ Schema-owned requests keep debugger options fixed and program arguments literal. */
-export type DeveloperRequest = Readonly<{command:"open-source";file:string;line?:number;editor:"system"|"vscode"|"codium"|"sublime"}> | Readonly<{command:"git-status";path?:string;untracked?:"normal"|"all"|"no"}> | Readonly<{command:"git-diff";path?:string;revision?:string;area?:"worktree"|"staged"}> | Readonly<{command:"git-history";path?:string;revision?:string;count?:number}> | Readonly<{command:"git-show";path?:string;revision?:string;view?:"summary"|"patch"}> | Readonly<{command:"git-blame";file:string;revision?:string;line?:number;count?:number}> | Readonly<{command:"terminal";directory?:string;shell:"system"|"powershell"|"bash"|"zsh"|"cmd"}> | Readonly<{command:"debug";profile:"node-inspect"|"python-pdb"|"gdb"|"lldb";program:string;directory?:string;arguments?:readonly string[]}>;
+export type DeveloperRequest = Readonly<{command:"open-source";file:string;line?:number;editor:"system"|"vscode"|"codium"|"sublime"}> | Readonly<{command:"git-status";path?:string;untracked?:"normal"|"all"|"no"}> | Readonly<{command:"git-diff";path?:string;revision?:string;area?:"worktree"|"staged"}> | Readonly<{command:"git-history";path?:string;revision?:string;count?:number}> | Readonly<{command:"git-show";path?:string;revision?:string;view?:"summary"|"patch"}> | Readonly<{command:"git-blame";file:string;revision?:string;line?:number;count?:number}> | Readonly<{command:"terminal";directory?:string;shell:"system"|"powershell"|"bash"|"zsh"|"cmd"}> | Readonly<{command:"debug";profile:"node-inspect"|"python-pdb"|"gdb"|"lldb";program:string;directory?:string;arguments?:readonly string[]}> | Readonly<{command:"setup-debugger";profile:"lldb"}>;
 /** 📝️ One process request contains an exact argument vector and workspace custody. */
-export interface DeveloperPlan {readonly command:string;readonly args:string[];readonly cwd:string;readonly detached:boolean;}
+export interface DeveloperPlan {readonly command:string;readonly args:string[];readonly cwd:string;readonly detached:boolean;readonly environment?:Readonly<Record<string,string|undefined>>;}
 /** 🎛️ Adapts only the repository-owned process interface, with the original cancellation signal. */
 export interface DeveloperProcess {run(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;open(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;}
 
@@ -18,9 +18,20 @@ function debuggerProfile(profile:string,platform:string){
  const declaration=requestSchema.$defs.DebuggerProfiles.const.find(row=>row.id===profile);if(!declaration)throw Error("developer.debug.profile-invalid");return{...declaration,program:declaration.programs[platform]};
 }
 
+/** 📁️ Keeps the managed Windows debugger and its Python ABI private to LLDB children. */
+export function nativeDebuggerLocations(platform:string,environment:Readonly<Record<string,string|undefined>>):Readonly<{candidates:string[];environment:Readonly<Record<string,string|undefined>>;llvmRoot?:string;pythonRoot?:string}>{
+ const policy=requestSchema.$defs.NativeDebuggerSetupPolicy.const;
+ if(platform!=="win32")return{candidates:platform==="darwin"?policy.macPrefixes.map(prefix=>join(prefix,"bin/lldb")):[],environment};
+ const read=(name:string)=>Object.entries(environment).find(([key])=>key.toLowerCase()===name.toLowerCase())?.[1],programFiles=read("ProgramFiles"),local=read("LOCALAPPDATA");
+ if(!programFiles||!local)return{candidates:[],environment};
+ const valid=(path:string)=>win32.isAbsolute(path)&&!/["\u0000-\u001f\u007f]/u.test(path)&&!path.split(/[\\/]/u).includes("..");if(!valid(programFiles)||!valid(local))throw Error("developer.setup.location-invalid");
+ const llvmRoot=win32.join(programFiles,policy.windows.llvmDirectory),pythonRoot=win32.join(local,policy.windows.pythonDirectory),candidate=win32.join(llvmRoot,"bin/lldb.exe");if([candidate,win32.join(pythonRoot,"DLLs")].some(path=>path.length>256))throw Error("developer.setup.location-invalid");
+ const child={...environment};for(const key of Object.keys(child))if(key.toLowerCase()==="path")delete child[key];child.PATH=[win32.join(llvmRoot,"bin"),pythonRoot,win32.join(pythonRoot,"DLLs"),read("PATH")??""].join(";");return{candidates:[candidate],environment:child,llvmRoot,pythonRoot};
+}
+
 /** 🔎️ Reports each fixed profile against the caller's executable discovery port. */
-export function developerDebuggers(platform:string,find:(program:string)=>string|null):DeveloperDebugger[]{
- return requestSchema.$defs.DebuggerProfiles.const.map(row=>{const profile=debuggerProfile(row.id,platform),path=find(profile.program);return{profile:profile.id,program:profile.program,title:profile.title,installed:path!==null,...(path?{path}:{}),...(platform==="win32"&&profile.id==="gdb"?{constraint:"windows-ascii-paths" as const}:{})};});
+export function developerDebuggers(platform:string,find:(program:string)=>string|null,environment:Readonly<Record<string,string|undefined>>={}):DeveloperDebugger[]{
+ return requestSchema.$defs.DebuggerProfiles.const.map(row=>{const profile=debuggerProfile(row.id,platform),path=(profile.id==="lldb"?nativeDebuggerLocations(platform,environment).candidates.map(find).find(Boolean):null)??find(profile.program);return{profile:profile.id,program:profile.program,title:profile.title,installed:path!==null,...(path?{path}:{}),...(platform==="win32"&&profile.id==="gdb"?{constraint:"windows-ascii-paths" as const}:{})};});
 }
 
 /** 🔐️ Refuses unknown schema fields before filesystem or process access. */
@@ -45,8 +56,9 @@ async function physicalWorkspacePath(root:string,value:string,kind:"file"|"direc
 /** 🧭️ Selects passive navigation, supervised debugging, a terminal or read-only Git through fixed portable argv. */
 export async function planDeveloperRequest(root:string,value:unknown,platform:string,environment:Readonly<Record<string,string|undefined>>):Promise<DeveloperPlan> {
  const request=readDeveloperRequest(value),cwd=resolve(root);
+ if(request.command==="setup-debugger")throw Error("developer.setup.workflow-required");
  if(request.command==="debug"){
-  const profile=debuggerProfile(request.profile,platform),program=await physicalWorkspacePath(cwd,request.program,"file"),directory=await physicalWorkspacePath(cwd,request.directory??".","directory"),target=relative(directory,program).replaceAll("\\","/");if(platform==="win32"&&request.profile==="gdb"&&/[^\u0020-\u007e]/u.test(program+directory))throw Error("developer.debug.windows-gdb-unicode");return{command:profile.program,args:[...profile.arguments,target.startsWith(".")?target:`./${target}`,...request.arguments??[]],cwd:directory,detached:false};
+  const profile=debuggerProfile(request.profile,platform),program=await physicalWorkspacePath(cwd,request.program,"file"),directory=await physicalWorkspacePath(cwd,request.directory??".","directory"),target=relative(directory,program).replaceAll("\\","/");if(platform==="win32"&&request.profile==="gdb"&&/[^\u0020-\u007e]/u.test(program+directory))throw Error("developer.debug.windows-gdb-unicode");const native=request.profile==="lldb"?nativeDebuggerLocations(platform,environment):undefined;let command=profile.program;for(const candidate of native?.candidates??[])if((await lstat(candidate).catch(()=>undefined))?.isFile()){command=candidate;break;}return{command,args:[...profile.arguments,target.startsWith(".")?target:`./${target}`,...request.arguments??[]],cwd:directory,detached:false,...(native?{environment:native.environment}:{})};
  }
  if(request.command==="terminal"){
   const directory=await physicalWorkspacePath(cwd,request.directory??".","directory"),shell=request.shell==="system"?(platform==="win32"?"powershell":platform==="darwin"?"zsh":"sh"):request.shell;
@@ -84,5 +96,5 @@ export async function executeDeveloperRequest(root:string,value:unknown,process:
 /** ⌨️ Parses a closed typed flag vocabulary and refuses duplicate or unowned argv. */
 export function parseDeveloperArguments(words:readonly string[]):DeveloperRequest {
  const command=words[0],request:Record<string,unknown>={command};for(let index=1;index<words.length;index+=2){const flag=words[index]!,value=words[index+1];if(!/^--(?:file|line|editor|path|untracked|revision|area|view|count|directory|shell|profile|program|arguments)$/u.test(flag)||value===undefined||Object.hasOwn(request,flag.slice(2)))throw Error("developer.arguments.invalid");const key=flag.slice(2);request[key]=key==="arguments"?JSON.parse(value):key==="line"||key==="count"?(/^\d+$/u.test(value)?Number(value):NaN):value;}
- if(command==="open-source"&&request.editor===undefined)request.editor="system";if(command==="terminal"&&request.shell===undefined)request.shell="system";return readDeveloperRequest(request);
+ if(command==="setup-debugger"&&request.profile===undefined)request.profile="lldb";if(command==="open-source"&&request.editor===undefined)request.editor="system";if(command==="terminal"&&request.shell===undefined)request.shell="system";return readDeveloperRequest(request);
 }

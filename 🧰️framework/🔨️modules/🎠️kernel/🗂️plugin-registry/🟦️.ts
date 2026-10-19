@@ -17,12 +17,6 @@ export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], pr
   const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
   const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
   const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
-  // 🔗️ Transitive `dependencies` closure of primary + contribution matches — `consumes`/`contributes`
-  // alone never pulls a DECLARED runtime dependency (demonstrator → cad/gis/…), which left every
-  // demonstrator pane boot with "needs X which is not installed" and an empty usable load order.
-  // These edges are declared (`[package.metadata.semio].depends-on` / the builder's `.depends_on`),
-  // never derived from Cargo library links: a crate that merely links `stdio`'s codecs in-process
-  // does not belong in this load set and must not be blocked when `stdio`'s own actor is unavailable.
   const selected = new Map<string, PluginRegistryEntry>();
   const queue: PluginRegistryEntry[] = [...primaryEntries, ...contributorEntries];
   for (const entry of queue) selected.set(entry.pluginId, entry);

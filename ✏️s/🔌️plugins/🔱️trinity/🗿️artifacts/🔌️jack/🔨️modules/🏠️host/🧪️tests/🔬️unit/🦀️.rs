@@ -139,7 +139,6 @@ fn jack_store_initializer_cancel_and_stale_generation_return_every_owner_termina
 
     let mut stale = empty_jack_initializer(operation, generation);
     assert_eq!(drive_jack_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), DrivenOutcome::Fault);
-    // 🔚 The fault publication and its Fault owner close page by page under the job's own funded turns.
     close_jack_initializer(&mut stale);
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);

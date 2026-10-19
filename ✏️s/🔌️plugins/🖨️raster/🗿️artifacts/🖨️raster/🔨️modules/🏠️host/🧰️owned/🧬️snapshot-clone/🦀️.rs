@@ -123,9 +123,6 @@ impl RasterSnapshotCloneAuthority {
                         return Ok(false);
                     }
                     let (key, mut child) = self.pending_asset.take().expect("Raster pending asset handoff remains exact");
-                    // 🪆 A clone rebuilds every handle string into exact-capacity storage, so the
-                    // source child's materialization has to be carried across explicitly — a cloned
-                    // snapshot whose assets lost their pixels renders an empty composite.
                     if let Some(source_child) = source.assets.get(&key) {
                         semio_s_artifact_raster_raster_model::adopt_raster_asset_owner(source_child, &mut child);
                     }

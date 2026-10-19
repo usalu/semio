@@ -106,7 +106,6 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const resolved = layoutLeaf.kind === "leaf" ? (layoutLeaf.trees[0]!.tree as { resolveTree: () => { sections: { items?: { id: string }[] }[] } }).resolveTree() : { sections: [] };
     expect(resolved.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.os.resetDock"]);
 
-    // Executing routes through the injected onCommand with the command's own source.
     const executeRow = resolved.sections[0]!.items!.find((item: { id: string }) => item.id === "command.os.os.resetDock") as unknown as { onClick: (event: never, context: never) => void };
     executeRow.onClick({} as never, {} as never);
     expect(onCommand).toHaveBeenCalledWith({ owner: "os", commandId: "os.resetDock" }, undefined);
@@ -176,12 +175,6 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     expect(host.nowMs()).toBe(0);
   });
 
-  // 🪃️ THE regression law for ticket 26/09/09/PROCEDURAL-3D-END-TO-END's ~24 s extension hop. The guest
-  // re-arms with `Effect::DispatchAction { delay_ms: 0 }` from inside the previous dispatch's own
-  // callback; on a nested `setTimeout` chain a hidden/unfocused/headless Chrome renderer clamps that to
-  // ~1 tick/s, which is what turned a 0.58 s native chain into 112 s in the browser. This simulates the
-  // clamp by making EVERY `globalThis.setTimeout` a second late and then asserts the ten-hop chain still
-  // finishes in well under one clamped tick — impossible unless the re-arm avoids timers entirely.
   it("scheduleDispatchAction (D2): a ten-hop re-arm chain beats a throttled setTimeout by two orders of magnitude", async () => {
     vi.useRealTimers();
     const realSetTimeout = globalThis.setTimeout;
@@ -227,7 +220,6 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     const dispatchOne = vi.fn().mockImplementation(async (_action: string, args: unknown) => {
       calls.push(args as (typeof calls)[number]);
     });
-    // 📏️ The product's own payload class: the Nakagin Capsule Tower export is 145 714 B (wave B53/B57).
     const contents = `{"schema":"puzzle.3d.fixture","objects":[${"x".repeat(145_000)}]}`;
     await dispatchOpenedFiles([{ contents, name: "nakagin-capsule-tower.json" }], "importSnapshot", false, dispatchOne);
     expect(calls.length).toBe(Math.ceil(contents.length / IMPORT_CHUNK_BYTES));
@@ -268,13 +260,9 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
   });
 
   it("sampleMediaFrameTimestampsMs (D5): steps by sampleStride/fpsHint seconds, capped at maxFrames", () => {
-    // Expected timestamps mirror the implementation's own `k * stepMs` computation exactly (bit-for-bit)
-    // rather than independently-derived literals — plain float division/multiplication isn't perfectly
-    // associative, so e.g. `k * (5 / 30 * 1000)` and `(k * 5000) / 30` can differ by a ULP.
     const stepAt5_30 = (5 / 30) * 1000;
     expect(sampleMediaFrameTimestampsMs(1000, 5, 0, 30)).toEqual([0, 1, 2, 3, 4, 5].map((k) => k * stepAt5_30));
     expect(sampleMediaFrameTimestampsMs(1000, 5, 2, 30)).toEqual([0, stepAt5_30]);
-    // sampleStride 0 floors to 1, fpsHint 0 falls back to 30 — never divides by zero.
     const stepAt1_30 = (1 / 30) * 1000;
     expect(sampleMediaFrameTimestampsMs(100, 0, 0, 0)).toEqual([0, 1, 2].map((k) => k * stepAt1_30));
     expect(sampleMediaFrameTimestampsMs(0, 5, 10, 30)).toEqual([]);
@@ -322,7 +310,6 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     const doneCalls = calls.filter((call) => call.action === "done");
     expect(frameCalls.length).toBeGreaterThan(0);
     expect(doneCalls).toHaveLength(1);
-    // frame/done ordering: every frame dispatch precedes the single done dispatch.
     expect(calls.at(-1)!.action).toBe("done");
     expect(frameCalls.map((call) => call.args.index)).toEqual(frameCalls.map((_, index) => index));
     expect(frameCalls[0]!.args).toMatchObject({ payload: "data:image/jpeg;base64,ZmFrZQ==", name: "clip.mp4", streamId: "s1" });

@@ -223,9 +223,6 @@ fn worksheet_cells_from_xml(doc: &XmlDocument, sst_len: usize, part: &str) -> Re
 //#region 🔖️Codec
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn project_snapshot_workbook(snapshot: &XlsxSnapshot) -> Result<XlsxWorkbook, XlsxError> {
-    // 🏅️ Recognizes either the Transitional or Strict officeDocument relationship TYPE (see the
-    // `REL_TYPE_OFFICE_DOCUMENT_STRICT` doc comment above) -- additive, doesn't change decode for
-    // any existing Transitional package.
     let workbook_path = snapshot.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT).or_else(|| snapshot.opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT)).ok_or(XlsxError::MissingWorkbookRelationship)?;
     let workbook_xml = &snapshot.xml_part(&workbook_path).ok_or_else(|| XlsxError::MissingPart(workbook_path.clone()))?.document;
     let sheet_refs = workbook_sheets_from_xml(workbook_xml, &workbook_path)?;

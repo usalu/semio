@@ -10,9 +10,6 @@ async fn renders_blueprint_canvas_scene() {
 
 #[semio_framework_async_macros::async_test]
 async fn blueprint_scene_has_page_background_and_guides() {
-    // 🧷️ `layers_json` is read off the DECODED scene: the built surface carries its scene as a binary
-    // pack, so the projected tree's text holds none of these ids. Inside that field the layer list is
-    // still ordinary JSON, asserted on unquoted substrings rather than an exact `"key":"value"` shape.
     let mut app = layout_app().await;
     let json = body_scene(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json;
     assert!(json.contains("layout.page-bg"));

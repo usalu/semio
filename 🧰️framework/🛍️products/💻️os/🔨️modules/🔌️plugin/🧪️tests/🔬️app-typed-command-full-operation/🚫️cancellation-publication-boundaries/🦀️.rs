@@ -1,7 +1,18 @@
     /// 🚫️ Cancellation publication boundaries: the retained cancellation publication boundaries and the owned latest-wins key with its zero and sub-exact headers.
 
-    pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-        let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
+    use semio_framework_plugin_instance_app::VcsArtifactApp;
+use semio_framework_plugin_decl_emission::Emit;
+use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+use semio_framework_plugin_decl_views::child_view::ChildContentView;
+use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
+use semio_framework_plugin_composition_publication::PendingArtifactStorePublication;
+use semio_framework_plugin_operation::ToolCancellationHandle;
+use semio_framework_plugin_command::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
+use semio_framework_plugin_decl_app::tool_contract::TypedOperationResultPage;
+pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
+        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
         let bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
         assert_eq!(grant.maximum_items, 1);
@@ -100,12 +111,12 @@
             }
             mounted.cancellation_lease.as_ref().unwrap().cancel();
             if boundary == "awaitingAck" {
-                let mut page = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
+                let mut page = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                 assert!(!mounted.reject_cancelled_publication().unwrap());
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, page.token);
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
                 assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).unwrap());
-                mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+                mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
             }
             app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
             assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
@@ -200,7 +211,7 @@
     #[test]
     fn latest_wins_owned_key_retains_zero_and_subexact_headers() {
         use semio_framework_value::{ordered::SharedOwner, retained_clone::RetainedCloneGrant};
-        let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+        let fixture:Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         let scope=&fixture["first"];
         let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
         let page=RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };

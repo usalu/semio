@@ -18,6 +18,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 miniz_oxide = "0.8"

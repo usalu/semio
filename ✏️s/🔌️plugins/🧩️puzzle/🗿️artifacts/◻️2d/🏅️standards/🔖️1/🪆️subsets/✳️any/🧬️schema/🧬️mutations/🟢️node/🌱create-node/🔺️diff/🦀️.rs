@@ -1,4 +1,4 @@
-//! capture). No-op when the id already exists in `base`.
+//! 📸️ capture). No-op when the id already exists in `base`.
 //! 🔺️ Sparse diff builder for `CreateNode` — a real append-only insert (never a whole-snapshot
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dNodesDelta;

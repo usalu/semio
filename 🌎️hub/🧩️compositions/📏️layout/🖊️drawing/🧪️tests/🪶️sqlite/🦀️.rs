@@ -39,26 +39,26 @@ fn component_fixture()->LayoutDrawingChild {
 #[test]
 fn sqlite_snapshot_layout_inline_drawing_controlled_metadata(){crate::bind_layout_background_drawing().unwrap();
     let mut callback=|_|true;
-    let mut decode=semio_framework_value::NativeDecodeControl::new(1024*1024,&mut callback);
+    let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024*1024,&mut callback);
     let shape=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::shape_controlled(&mut decode).unwrap();
     let semio_framework_dsl_record::Shape::Record(producer)=shape else{panic!("inline Drawing record")};
     let spec=producer.decode(&mut decode).unwrap();
     assert_eq!(spec.fields.len(),2);assert_eq!(spec.fields[0].key,"handle");assert_eq!(spec.fields[1].key,"content");
     let mut encode_callback=|_|true;let mut encode=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut encode_callback);
     assert_eq!(producer.encode(&mut encode).unwrap().fields.len(),2);
-    assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(1,&mut |_|true)).is_err());
+    assert!(producer.decode(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1,&mut |_|true)).is_err());
     assert!(producer.encode(&mut semio_framework_value::NativeEncodeControl::new(1,&mut |_|true)).is_err());
 }
 #[test]
 fn sqlite_snapshot_layout_inline_drawing_owned_fields_controlled_input_output(){crate::bind_layout_background_drawing().unwrap();
     let expected=component_fixture();let value=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value(&expected);
-    let restored=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
+    let restored=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
     assert_eq!(restored,expected);assert_eq!(restored.content.canvas.width.to_bits(),(-0.0f64).to_bits());
     let output=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
     assert_eq!(output,value);
-    assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(1,&mut |_|true)).is_err());
+    assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1,&mut |_|true)).is_err());
     assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(1,&mut |_|true)).is_err());
-    assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut |_|false)).is_err());
+    assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(8*1024*1024,&mut |_|false)).is_err());
     assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut |_|false)).is_err());
 }
 #[test]
@@ -67,8 +67,8 @@ fn sqlite_snapshot_layout_inline_drawing_long_native_copy_is_interior_controlled
     let total=fixture["intrinsicBytes"].as_u64().unwrap() as usize;
     let mut expected=component_fixture();let mut drawing=typed(&expected);drawing.schema="x".repeat(total);expected.content=drawing.to_value();
     let value=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value(&expected);
-    let mut input=false;let mut input_callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==total&&event.completed>=65536&&event.completed<total{input=true;false}else{true}};
-    assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut input_callback)).is_err());
+    let mut input=false;let mut input_callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.total==total&&event.completed>=65536&&event.completed<total{input=true;false}else{true}};
+    assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(8*1024*1024,&mut input_callback)).is_err());
     assert!(input,"must cancel during literal inline Drawing ownership copy");
     let mut output=false;let mut output_callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if event.total==total&&event.completed>=65536&&event.completed<total{output=true;false}else{true}};
     assert!(<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut output_callback)).is_err());
@@ -132,7 +132,7 @@ fn sqlite_snapshot_layout_deep_inline_drawing_component_has_owned_controlled_bou
     for _ in 0..depth{let mut parent=DrawNode::default();let DrawNode::Group{children,..}=&mut parent else{panic!("declared default group")};children.push(node);node=parent;}
     drawing.layers[0].root=node;expected.content=drawing.to_value();<SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(drawing);
     let value=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
-    let restored=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
+    let restored=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&value,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
     assert_eq!(restored.handle,expected.handle);let restored_drawing=typed(&restored);let mut current=&restored_drawing.layers[0].root;let mut count=0;
     while let DrawNode::Group{children,..}=current{assert_eq!(children.len(),1);current=&children[0];count+=1;}
     assert_eq!(count,depth);let DrawNode::Image{bytes,..}=current else{panic!("complete image leaf")};assert_eq!(bytes,&[0,127,255]);
@@ -153,7 +153,7 @@ fn sqlite_snapshot_layout_inline_drawing_all_node_fields_preserve_ieee_words(){c
             DrawNode::Image{at:point,width:number,height:-0.0,mime:String::new(),bytes:vec![0,127,255]},
         ]};expected.content=drawing.to_value();<SemioDrawingSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(drawing);
         let output=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::to_value_controlled(&expected,&mut semio_framework_value::NativeEncodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
-        let restored=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&output,&mut semio_framework_value::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
+        let restored=<LayoutDrawingChild as semio_framework_dsl_record::DslField>::from_value_controlled(&output,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(8*1024*1024,&mut |_|true)).unwrap();
         assert_eq!(restored.handle,expected.handle);
         assert_eq!(restored.content,expected.content,"every authored Drawing node and path field must remain exact");
         let restored_drawing=typed(&restored);let DrawNode::Group{transform,children}=&restored_drawing.layers[0].root else{panic!("literal group")};

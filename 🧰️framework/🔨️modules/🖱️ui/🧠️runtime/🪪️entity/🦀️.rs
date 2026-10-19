@@ -74,7 +74,6 @@ impl<T: 'static> Entity<T> {
 
     /// 👁️ Reads through to `store` — the same lookup as [`EntityStore::read`], as a convenience for a
     /// caller (e.g. `crate::PresentCx`) that already holds a store reference alongside the entity.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn read<'s>(&self, store: &'s EntityStore) -> &'s T {
         store.read(self)
     }
@@ -154,13 +153,11 @@ pub struct EntityStore {
 
 impl EntityStore {
     /// 🌱️ An empty store.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self { slots: Vec::new(), free: Vec::new(), release_queue: Rc::new(RefCell::new(Vec::new())), effects: EffectQueues::new() }
     }
 
     /// ➕️ Allocates a slot and returns the first strong [`Entity<T>`] handle to it.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn insert<T: 'static>(&mut self, value: T) -> Entity<T> {
         let slot = self.free.pop().unwrap_or_else(|| {
             self.slots.push(Slot { generation: 0, payload: SlotPayload::Vacant });
@@ -174,7 +171,6 @@ impl EntityStore {
     }
 
     /// 👁️ Reads the entity, or `None` if it is leased, released, or the id is stale.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn try_read<T: 'static>(&self, entity: &Entity<T>) -> Option<&T> {
         let slot = self.slots.get(entity.id.slot() as usize)?;
         if slot.generation != entity.id.generation() {
@@ -187,7 +183,6 @@ impl EntityStore {
     }
 
     /// 👁️ [`EntityStore::try_read`], panicking instead of returning `None`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn read<T: 'static>(&self, entity: &Entity<T>) -> &T {
         self.try_read(entity).expect("🚫️ entity read rejected: leased, released, or a stale generation")
     }
@@ -195,7 +190,6 @@ impl EntityStore {
     /// 🧹️ Actually frees every queued release, bumping each slot's generation so no stale handle can
     /// ever resolve to the new occupant. This is the *only* place a slot is freed — call it at a safe
     /// effect boundary (end of a transaction), never mid-lease.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn flush_releases(&mut self) {
         let pending: Vec<EntityId> = self.release_queue.borrow_mut().drain(..).collect();
         for id in pending {
@@ -216,7 +210,6 @@ impl EntityStore {
     /// whether this cycle did anything. Listener invocation re-enters through [`EntityStore::update`],
     /// so a listener that mutates its own observed entity hits the same nested-lease guard as any
     /// other caller.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn flush_effects(&mut self) -> bool {
         self.effects.prune_detached();
         let notifications: Vec<EntityId> = self.effects.notify.drain(..).collect();
@@ -234,7 +227,6 @@ impl EntityStore {
     /// 📤️ Hands `runtime-transact` every deferred effect queued since the last drain, in order. Each
     /// closure takes `&mut EntityStore` — the caller invokes them at its own safe point, outside any
     /// lease.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_deferred(&mut self) -> Vec<DeferredEffect> {
         self.effects.defer.drain(..).collect()
     }
@@ -251,7 +243,6 @@ impl EntityStore {
 
     /// 📤️ Hands the embedder every future queued via `Context::spawn_local` since the last drain.
     /// This crate never polls a future itself — the embedder's executor owns that.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_tasks(&mut self) -> Vec<PendingTask> {
         self.effects.tasks.drain(..).collect()
     }
@@ -283,7 +274,6 @@ impl EntityStore {
     /// 🔒️ Leases the entity out of its slot for the closure's duration — this is what makes a nested
     /// `update`/`read` of the same entity a detected error rather than an alias. The value is
     /// restored to its slot by an RAII guard, so it survives even if the closure panics.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn update<T: 'static, R>(&mut self, entity: &Entity<T>, update: impl FnOnce(&mut T, &mut Context<'_, T>) -> R) -> R {
         let boxed = self.take_for_lease::<T>(entity.id);
 

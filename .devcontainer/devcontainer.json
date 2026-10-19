@@ -34,14 +34,14 @@
     }
   },
   "workspaceFolder": "/workspaces/semio",
-  "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"],
+  "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache", "/workspaces/semio/.cache"],
   "postCreateCommand": ["bun", "repo", "run", "workspace:setup"],
   "postStartCommand": ["bun", "repo", "run", "workspace:setup-devcontainer-start"],
   "postAttachCommand": ["bun", "repo", "run", "workspace:setup-devcontainer-attach"],
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
-    "storage": "32gb"
+    "storage": "128gb"
   },
   "forwardPorts": [8787, 6070, 6072, 6073, 6066, 6067, 6068, 6010, 6274, 6277],
   "portsAttributes": {
@@ -96,7 +96,8 @@
     "source=${localWorkspaceFolderBasename}-gitkraken-cli,target=/home/vscode/.local/share/GitKrakenCLI,type=volume",
     "source=${localWorkspaceFolderBasename}-gitkraken-workspaces,target=/home/vscode/.local/share/gk,type=volume",
     "source=${localWorkspaceFolderBasename}-f3d,target=/home/vscode/.config/F3D,type=volume",
-    "source=semio-cache-${devcontainerId},target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume"
+    "source=semio-cache-${devcontainerId},target=${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache,type=volume",
+    "source=semio-native-cache-${devcontainerId},target=${containerWorkspaceFolder}/.cache,type=volume"
   ],
   "remoteUser": "vscode",
   "containerEnv": {

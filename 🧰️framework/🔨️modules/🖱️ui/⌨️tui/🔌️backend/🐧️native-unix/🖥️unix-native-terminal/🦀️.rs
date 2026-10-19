@@ -94,7 +94,7 @@ impl NativeTerminal {
 }
 
 impl TerminalBackend for NativeTerminal {
-            fn width_mode(&self) -> crate::tui::text::WidthMode { crate::tui::text::WidthMode::WindowsConsole }
+            fn width_mode(&self) -> semio_framework_ui_tui_core::text::WidthMode { semio_framework_ui_tui_core::text::WidthMode::WindowsConsole }
 
 fn size(&self) -> io::Result<Size> {
         unsafe {

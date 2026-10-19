@@ -513,8 +513,6 @@ impl EnergyJobAuthority {
                     environmental: self.final_environmental.take().unwrap_or_default(),
                     resilience: self.final_resilience.take().unwrap_or_default(),
                     diagnostics: Default::default(),
-                    // 🧱️ The per-surface accumulator, projected to kWh. `self.state` is still resident
-                    // here — it is only released by `close_step`'s bounded retirement.
                     per_surface: self.state.as_ref().map(|state| state.per_surface.summaries().collect()).unwrap_or_default(),
                     run_metadata: RunMetadata {
                         model_name: std::mem::take(&mut self.result_build.model_name),
@@ -691,15 +689,15 @@ impl EnergyJobAuthority {
                 work.stage = CommitCensusStage::Reserve;
             }
             CommitCensusStage::Reserve => {
-                let pages = work.output_bytes.checked_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1).ok_or(OutputFault::BackingRejected)? / semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+                let pages = work.output_bytes.checked_add(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - 1).ok_or(OutputFault::BackingRejected)? / semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
                 let aggregate_pages = work.resident_pages.checked_add(pages).ok_or(OutputFault::BackingRejected)?;
                 let aggregate_bytes = work.resident_bytes.checked_add(work.output_bytes).ok_or(OutputFault::BackingRejected)?;
                 let aggregate_items = work.resident_items.checked_add(work.output_items).and_then(|items| items.checked_add(pages)).ok_or(OutputFault::BackingRejected)?;
                 if self.publication.commits.len >= ENERGY_WIRE_QUEUE_SLOTS
                     || pages > self.numerical_census.pages
-                    || aggregate_pages > semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES
+                    || aggregate_pages > semio_framework_job_payload::JOB_PAYLOAD_OPERATION_PAGES
                     || aggregate_bytes > self.numerical_census.observed_bytes
-                    || aggregate_bytes > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES
+                    || aggregate_bytes > semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES
                     || aggregate_items > self.numerical_census.observed_items
                 {
                     return Err(OutputFault::BackingRejected);
@@ -711,7 +709,7 @@ impl EnergyJobAuthority {
             CommitCensusStage::ReservePage => {
                 let reservation = work.reservation.as_mut().ok_or(OutputFault::BackingRejected)?;
                 if reservation.prepared < reservation.pages {
-                    reservation.sources[reservation.prepared] = Some(semio_framework_job::JobPayloadPageSource::new());
+                    reservation.sources[reservation.prepared] = Some(semio_framework_job_payload::JobPayloadPageSource::new());
                     reservation.prepared += 1;
                 } else {
                     self.commit_reservation = work.reservation.take();

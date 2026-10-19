@@ -536,7 +536,6 @@ async fn every_bounded_unit_stays_under_the_interactive_ceiling_on_every_example
         let (worst, stage) = best.iter().copied().max_by_key(|(elapsed, _)| *elapsed).expect("units");
         let over_target = best.iter().filter(|(elapsed, _)| *elapsed >= target).count();
         let over_ceiling = best.iter().filter(|(elapsed, _)| *elapsed >= ceiling).count();
-        // The longest run of consecutive overruns and the index of its last unit.
         let (mut sustained, mut sustained_end, mut run) = (0u32, 0usize, 0u32);
         for (index, (elapsed, _)) in best.iter().enumerate() {
             run = if *elapsed >= ceiling { run + 1 } else { 0 };

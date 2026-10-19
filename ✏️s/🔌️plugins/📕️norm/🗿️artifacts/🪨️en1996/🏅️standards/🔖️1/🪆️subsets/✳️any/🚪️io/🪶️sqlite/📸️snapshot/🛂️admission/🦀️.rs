@@ -1,7 +1,7 @@
 //! 🪨️ Borrowed masonry walls, openings and load cells before typed ownership.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let walls=n::list(n::field(root,4)?)?;let mut rows=n::add(1,walls.len())?;for wall in walls{let wall=n::record(wall)?;rows=n::add(rows,n::list(n::field(wall,8)?)?.len())?;let cases=n::list(n::field(wall,32)?)?;rows=n::add(rows,cases.len())?;for case in cases{rows=n::add(rows,n::list(n::field(n::record(case)?,11)?)?.len())?}}Ok(rows)}

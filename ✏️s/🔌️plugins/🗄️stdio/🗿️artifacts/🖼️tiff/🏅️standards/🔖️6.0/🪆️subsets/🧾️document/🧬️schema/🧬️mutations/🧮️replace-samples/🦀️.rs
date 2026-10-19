@@ -20,7 +20,6 @@ pub struct ReplaceSamplesMutation {
 //#region Semantics
 impl ReplaceSamplesMutation {
     /// 🔍️ The words `base` carries over the span this payload addresses, or `None` when the span leaves its block.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn current<'a>(&self, base: &'a TiffSnapshot) -> Option<&'a [TiffWord64]> {
         let end = self.offset.checked_add(self.samples.len())?;
         base.ifds.get(self.ifd_index)?.blocks.get(self.block)?.samples.get(self.offset..end)

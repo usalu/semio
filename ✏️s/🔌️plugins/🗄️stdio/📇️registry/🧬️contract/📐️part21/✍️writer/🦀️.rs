@@ -193,7 +193,6 @@ fn write_value(out: &mut String, v: &Part21Value) {
 pub(super) fn escape_part21_string(s: &str) -> String {
     let mut out = String::new();
     let mut run: Vec<char> = Vec::new();
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn flush(run: &mut Vec<char>, out: &mut String) {
         if run.is_empty() {
             return;

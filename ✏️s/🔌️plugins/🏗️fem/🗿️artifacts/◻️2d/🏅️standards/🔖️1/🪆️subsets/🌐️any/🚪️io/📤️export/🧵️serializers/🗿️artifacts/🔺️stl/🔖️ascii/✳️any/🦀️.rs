@@ -1,4 +1,4 @@
-//! and REAL geometry: every `FemRegion` footprint is triangulated and extruded by its own real
+//! 🟢️ and REAL geometry: every `FemRegion` footprint is triangulated and extruded by its own real
 //! 🚪️ fem2d → stl — foreign `Serializer<Fem2dSnapshot>` on the framework's `io_mechanism` channel,
 //! `thickness` into a `SemioMeshSnapshot`
 //! (`crate::standards::v1::subsets::any::io::export::geometry::build_semio_mesh_snapshot`, the same kernel the

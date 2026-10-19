@@ -72,7 +72,7 @@ fn validate_fails_on_asymmetric_declaration() {
     let a = b.add_pattern(1.0);
     let c = b.add_pattern(1.0);
     let r = b.add_relation("one_way");
-    b.allow(r, a, c); // only one direction declared; r is self-inverse by default
+    b.allow(r, a, c);
     let m = b.compile().unwrap();
     assert!(matches!(m.validate().unwrap_err(), ModelError::AsymmetricInverse { .. }));
 }
@@ -97,7 +97,7 @@ fn fingerprint_is_deterministic_and_sensitive() {
 
     let mut b = ModelBuilder::new();
     let a = b.add_pattern(1.0);
-    let c = b.add_pattern(2.0); // different weight
+    let c = b.add_pattern(2.0);
     let r = b.add_relation("adjacent");
     b.allow_mirrored(r, a, c);
     b.allow_mirrored(r, c, a);
@@ -115,7 +115,7 @@ fn lint_flags_unconstrained_and_unsupported() {
     b.allow_mirrored(free, a, a);
     b.allow_mirrored(free, c, c);
     let starved = b.add_relation("starved");
-    b.allow(starved, a, a); // c has no supporters at all under `starved`
+    b.allow(starved, a, a);
     let m = b.compile().unwrap();
     let findings = m.lint();
     assert!(findings.contains(&LintFinding::UnconstrainedRelation { relation: free }));

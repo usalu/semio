@@ -1,4 +1,4 @@
-//! verbatim, so the hop is `IoFidelity::Exact`.
+//! 📜️ verbatim, so the hop is `IoFidelity::Exact`.
 //! puzzle3d → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 

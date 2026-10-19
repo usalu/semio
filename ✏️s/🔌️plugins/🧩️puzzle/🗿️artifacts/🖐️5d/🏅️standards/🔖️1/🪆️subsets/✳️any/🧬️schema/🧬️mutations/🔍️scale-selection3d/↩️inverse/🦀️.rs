@@ -1,4 +1,4 @@
-//! never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
+//! 🚫️ never a negated parameter that would accumulate float error). Nothing moved ⇒ `Vec::new()`.
 //! ↩️ Inverse for `ScaleSelection3d` — the absolute setters restoring every BASE pose field the transform changes (exact,
 use crate::standards::v1::subsets::any::schema::mutations::puzzle5d_scaled;
 use crate::standards::v1::subsets::any::schema::mutations::{scale_part_3d, scale_target_volume};

@@ -1,4 +1,4 @@
-//! EN 1999 mutation binary unit smoke.
+//! 📏️ EN 1999 mutation binary unit smoke.
 
 use semio_s_artifact_norm_en1999_mut_inputs::change_annex::ChangeAnnex;
 use semio_s_artifact_norm_en1999_mutations::En1999Mutation;

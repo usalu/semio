@@ -1,4 +1,4 @@
-//! any fastener whose `source`/`target` referenced this grip is severed too).
+//! 🔩️ any fastener whose `source`/`target` referenced this grip is severed too).
 //! ➖ Puzzle5d mutation — `RemovePartGrip`: detaches a rim grip from a part (captures cascade —
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -41,7 +41,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RemovePartGrip {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for RemovePartGrip
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<RemovePartGrip>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

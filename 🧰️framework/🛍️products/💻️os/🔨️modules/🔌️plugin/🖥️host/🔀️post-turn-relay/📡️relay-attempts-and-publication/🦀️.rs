@@ -144,19 +144,19 @@ pub(super) struct GuestRelayPublication {
     pub(super) retired: bool,
     pub(super) oversized: bool,
     pub(super) delivered: bool,
-    pub(super) writer: Option<semio_framework_job::RetainedPayloadBuilder>,
+    pub(super) writer: Option<semio_framework_job_payload::RetainedPayloadBuilder>,
 }
 
 impl GuestRelayPublication {
     pub(crate) fn new(kind: GuestRelayPublicationKind, source: Vec<u8>) -> Self {
-        let oversized = source.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES;
+        let oversized = source.len() > semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES;
         let kind = if oversized { GuestRelayPublicationKind::Fault } else { kind };
         let stream = match kind {
-            GuestRelayPublicationKind::Preview => semio_framework_job::JobPayloadStream::Preview,
-            GuestRelayPublicationKind::Commit => semio_framework_job::JobPayloadStream::CommitOutput,
-            GuestRelayPublicationKind::Fault => semio_framework_job::JobPayloadStream::Fault,
+            GuestRelayPublicationKind::Preview => semio_framework_job_payload::JobPayloadStream::Preview,
+            GuestRelayPublicationKind::Commit => semio_framework_job_payload::JobPayloadStream::CommitOutput,
+            GuestRelayPublicationKind::Fault => semio_framework_job_payload::JobPayloadStream::Fault,
         };
-        Self { kind, source:std::mem::ManuallyDrop::new(source), cursor: 0, copied: false, retired: false, oversized, delivered: false, writer: Some(semio_framework_job::RetainedPayloadBuilder::new(stream)) }
+        Self { kind, source:std::mem::ManuallyDrop::new(source), cursor: 0, copied: false, retired: false, oversized, delivered: false, writer: Some(semio_framework_job_payload::RetainedPayloadBuilder::new(stream)) }
     }
 
     /// 🏁️ A commit or fault ends the relay; only a preview is retired inside the running job.
@@ -220,7 +220,7 @@ impl GuestRelayPublication {
 
     /// 🤝️ Resolves a descriptor against the same sealed pages this publication lent.
     pub(crate) fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        let payload = self.writer.as_ref().and_then(semio_framework_job::RetainedPayloadBuilder::published).filter(|_| self.delivered).ok_or_else(|| Self::invalid("guest relay descriptor requires its delivered payload"))?;
+        let payload = self.writer.as_ref().and_then(semio_framework_job_payload::RetainedPayloadBuilder::published).filter(|_| self.delivered).ok_or_else(|| Self::invalid("guest relay descriptor requires its delivered payload"))?;
         match self.kind {
             GuestRelayPublicationKind::Preview => descriptor.preview(payload),
             GuestRelayPublicationKind::Commit => descriptor.complete(None, Some(payload)),
@@ -261,7 +261,7 @@ impl GuestRelayPublication {
     }
 
     pub(crate) fn retirement_demands(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
-        if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::RetainedPayloadBuilder>>(),depth:1,..Default::default()})}else{let mut demand=writer.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Host publication writer depth overflow"))?;Ok(demand)};}
+        if let Some(writer)=self.writer.as_ref(){return if writer.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job_payload::RetainedPayloadBuilder>>(),depth:1,..Default::default()})}else{let mut demand=writer.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"Host publication writer depth overflow"))?;Ok(demand)};}
         Ok(self.original_source_demand())
     }
 

@@ -17,7 +17,7 @@ pub struct ArtifactHistoryReservation {
     pub(super) generation: u32,
 }
 
-#[path="🔗️read/🦀️.rs"]
+#[path="../🔗️read/🦀️.rs"]
 pub mod history_read;
 pub use history_read::ArtifactHistoryReadKey;
 

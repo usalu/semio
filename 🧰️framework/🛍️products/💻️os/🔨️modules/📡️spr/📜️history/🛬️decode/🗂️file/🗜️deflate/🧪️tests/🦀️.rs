@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::ErasedSnapshotRetirement;
 fn observe<T>(f:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(f)}
 fn receipt(owner:&mut RetainedHistoryDeflateDecode,g:RetainedCloneGrant,b:usize,r:usize)->usize{let(issued,p)=owner.take_receipt().unwrap();assert_eq!(issued,g);assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(b,r));p.copied_bytes}

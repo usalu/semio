@@ -1,10 +1,10 @@
 import { type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies, useUiKeybindingsByControlId, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useHotkeys } from "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import type { Anchor } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import { SHELL_PANEL_ANCHOR_KEY_IDS } from "../⌨️keybindings/🟦️.ts";
 
 /**
- * Hook binding a keyboard shortcut from the control registry, shell table, or a raw chord literal.
+ * 🎮️ Hook binding a keyboard shortcut from the control registry, shell table, or a raw chord literal.
  **/
 export function useActionHotkey(
   hotkeyOrControlId: string,
@@ -30,7 +30,7 @@ export function useActionHotkey(
 /** ⌨️ Requires the actual declared chord for one authored panel anchor. */
 function requiredPanelToggleHotkey(anchor:Anchor):string{const chord=SHELL_KEYBINDINGS[SHELL_PANEL_ANCHOR_KEY_IDS[anchor]];if(chord===undefined)throw Error("Declared panel toggle chord required");return chord;}
 
-/** @emoji ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
+/** ⌨️ Chords for toggling each panel's fold/unfold state (derived from {@link SHELL_KEYBINDINGS}). */
 export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
   "top-left": requiredPanelToggleHotkey("top-left"),
   "top-middle": requiredPanelToggleHotkey("top-middle"),

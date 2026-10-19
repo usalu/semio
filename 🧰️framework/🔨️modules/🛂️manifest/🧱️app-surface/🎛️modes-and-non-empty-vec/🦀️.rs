@@ -98,7 +98,6 @@ impl<'a, T> IntoIterator for &'a NonEmptyVec<T> {
 
 impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
     type Error = String;
-    // 🚫️async: E1 impl of external `TryFrom`; pure list-shape check, no I/O.
     fn try_from(mut values: Vec<T>) -> Result<Self, Self::Error> {
         if values.is_empty() {
             return Err("expected a non-empty list, got zero entries".to_string());
@@ -109,7 +108,6 @@ impl<T> TryFrom<Vec<T>> for NonEmptyVec<T> {
 }
 
 impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
-    // 🚫️async: E1 impl of external `From`; pure collection reshape, no I/O.
     fn from(value: NonEmptyVec<T>) -> Self {
         std::iter::once(value.first).chain(value.rest).collect()
     }

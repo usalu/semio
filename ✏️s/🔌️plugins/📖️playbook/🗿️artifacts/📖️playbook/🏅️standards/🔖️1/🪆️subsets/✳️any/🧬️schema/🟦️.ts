@@ -2,15 +2,15 @@
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface PlaybookArtifact {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🆔️ @state artifact */
   id: string;
-  /** @state artifact */
+  /** 🔖️ @state artifact */
   version: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title: string | null;
-  /** @state artifact @child kind=s.stdio.semio */
+  /** 🌊️ @state artifact @child kind=s.stdio.semio */
   flow: ArtifactChild;
 }
 

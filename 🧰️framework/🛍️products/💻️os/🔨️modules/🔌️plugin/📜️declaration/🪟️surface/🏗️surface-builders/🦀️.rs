@@ -233,7 +233,7 @@ where
 }
 
 #[cfg(test)]
-#[path = "🏗️snapshot-builder/🧪️tests/🦀️.rs"]
+#[path = "../🏗️snapshot-builder/🧪️tests/🦀️.rs"]
 mod snapshot_builder_ownership_tests;
 
 fn subset_example_table() -> &'static std::sync::Mutex<HashMap<Dialect, Vec<ExampleSource>>> {

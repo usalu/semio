@@ -1,4 +1,4 @@
-//! Inverse for `remove-bridge`.
+//! ↩️ Inverse for `remove-bridge`.
 use crate::remove_bridge::RemoveBridge;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::insert_bridge;

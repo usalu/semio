@@ -211,14 +211,12 @@ fn check_ifc_exchange(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 for token in body.split(|c: char| !c.is_ascii_digit() && c != '#') {
                     if let Some(r) = token.strip_prefix('#') {
                         if !r.is_empty() && !entity_ids.contains(r) && !body.contains(&format!("#{r}")) {
-                            // forward refs allowed within STEP; collect unresolved after pass
                         }
                     }
                 }
             }
         }
     }
-    // Second pass: every #N reference must resolve
     let mut unresolved = Vec::new();
     for line in step.lines() {
         let body = line.trim();
@@ -290,7 +288,6 @@ fn check_ifc_exchange(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 
 fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let runtime = helpers::DefaultScriptRuntime;
-    // Use document script limits for Script rules
     let result = match &doc.part_number_rule {
         PartNumberRule::Script { function_id, source } => {
             if function_id.trim().is_empty() {
@@ -331,7 +328,6 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 
     match result {
         Ok(part_no) => {
-            // Determinism: re-run
             let again = match &doc.part_number_rule {
                 PartNumberRule::Script { source, .. } => {
                     let numeric: HashMap<String, f64> = doc
@@ -450,7 +446,6 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 
 fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let limits = doc.script_limits;
-    // Part 5 §8 — limits always govern evaluation capacity (even when rule is not a script).
     report.push(assess(
         "iso16757.5.8.scriptLimits.capacity",
         "5",
@@ -523,7 +518,6 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     Vec::new(),
                 ));
             }
-            // Guard: document script must not allow division by zero when zero denominators appear
             if source.contains("/0") || source.contains("/ 0") || source.contains("/(0)") || source.contains("/ (0)") {
                 report.push(fail(
                     "iso16757.5.8.scriptSafety",
@@ -544,7 +538,6 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 ));
                 return;
             }
-            // Source participates via operator/token structure (Part 5 §8) — not string length.
             let source_ops = source.chars().filter(|c| matches!(c, '+' | '-' | '*' | '/' | '(' | ')')).count() as f64;
             let source_idents = source.split(|c: char| !c.is_ascii_alphanumeric() && c != '_').filter(|s| !s.is_empty()).count() as f64;
             report.push(assess(
@@ -632,8 +625,6 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     }
                     match runtime.execute(&source, &numeric, limits) {
                         Ok(_) | Err(_) => {
-                            // Safe expressions may succeed or fail numerically; both are acceptable if not unsafe.
-                            // Still refuse classic unsafe probes if somehow injected via concatenation.
                             match runtime.execute("1/(0)", &HashMap::new(), limits) {
                                 Err(_) => {
                                     let steps = f64::from(limits.max_steps).max(1.0);

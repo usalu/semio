@@ -124,10 +124,6 @@ async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
         fixture_text!("../../../../🧱️base/🚪️io/💾️binary/🧬️mutations/🟦️.ts"),
     ];
     for facet in persistence_facets {
-        // 🧾️ A JSON-Schema facet necessarily names `json-schema.org` in `$schema` and carries a
-        // `…/text.json` `$id`; those two meta keys say where the SCHEMA lives, never what the
-        // persisted form is. The law is about the described CODEC — the body must not offer a JSON
-        // serialization of a diff/mutation — so the meta header is not part of what it reads.
         let described: String = facet.lines().filter(|line| !line.trim_start().starts_with("\"$schema\"") && !line.trim_start().starts_with("\"$id\"")).collect::<Vec<_>>().join("\n");
         assert!(!described.to_ascii_lowercase().contains("json"), "SVG diff/mutation persistence facet must describe the structured codec");
     }
@@ -158,7 +154,6 @@ async fn path_implicit_lineto_repetition_after_moveto() {
 
 #[semio_framework_async_macros::async_test]
 async fn path_arc_flag_squeeze_decomposes_correctly() {
-    // 🚩 THE classic bug: "A5 5 0 108 8" must decompose as flags 1,0 then x=8,y=8 -- not 10,8,8.
     let cmds = parse_path_data("M40,20 A5 5 0 108 8").unwrap();
     match cmds.last().unwrap() {
         PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative } => {
@@ -209,7 +204,6 @@ async fn transform_parses_all_functions() {
 
 #[semio_framework_async_macros::async_test]
 async fn transform_composition_order_matches_svg_semantics() {
-    // translate(10,0) rotate(90) applied to (1,0) => (10,1): rotate happens in local space first.
     let m = transform_ops_to_matrix(&parse_transform_list("translate(10,0) rotate(90)").unwrap());
     let (px, py) = (m.a * 1.0 + m.c * 0.0 + m.e, m.b * 1.0 + m.d * 0.0 + m.f);
     assert!((px - 10.0).abs() < 1e-9 && (py - 1.0).abs() < 1e-9);
@@ -256,8 +250,6 @@ async fn view_box_and_points_parse() {
 //#region TypedParse
 #[semio_framework_async_macros::async_test]
 async fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path() {
-    // 🚧️ `r##"..."##` (not `r#"..."#`) because the fixture's `stop-color="#ff0000"` contains
-    // the literal 2-char sequence `"#`, which would otherwise close a single-hash raw string.
     let text = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
@@ -274,10 +266,6 @@ async fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path(
     let doc = xml_document_from_text(text).expect("xml parses");
     let typed = svg_document_to_typed(&doc).expect("typed conversion");
 
-    // 🧵 The fixture is pretty-printed, so raw XML children include whitespace-only text nodes
-    // between elements (preserved losslessly, per the typed model's design) -- filter those
-    // out before indexing into the REAL element children.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn elements_only(v: &[SvgElement]) -> Vec<&SvgElement> {
         v.iter().filter(|c| !matches!(c, SvgElement::TextNode(_))).collect()
     }
@@ -325,7 +313,6 @@ async fn typed_parse_of_multi_element_document_with_gradient_group_and_arc_path(
     match group_children[1] {
         SvgElement::Circle { common, cx, cy, r } => {
             assert_eq!((*cx, *cy, *r), (60.0, 20.0, 15.0));
-            // 🎨 style="" must win and be REAL-parsed, not string-matched.
             assert_eq!(common.presentation.fill.as_deref(), Some("green"));
             assert_eq!(common.presentation.stroke.as_deref(), Some("black"));
             assert_eq!(common.presentation.stroke_width.as_deref(), Some("2"));
@@ -366,7 +353,6 @@ async fn unknown_element_and_attrs_survive_losslessly() {
         }
         other => panic!("expected Unknown, got {other:?}"),
     }
-    // Round trip: the typed model lowers back to an SvgDocument that reparses identically.
     let doc2 = typed_to_svg_document(&typed, None);
     let typed2 = svg_document_to_typed(&doc2).unwrap();
     assert_eq!(typed, typed2);

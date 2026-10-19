@@ -63,3 +63,17 @@ test("ordinary cleanup cannot retire the authored fixed cache backings",()=>{
  const database=new Database(":memory:"),root=process.cwd(),protectedPaths=cleanProtectedPrefixes(root),view={kind:()=>"missing" as const,children:()=>[],read:()=>undefined};
  try{for(const row of Object.values(policy.partitions)){const path=resolve(root,row.directory),oracle=database.query("SELECT ? || '/' || ? AS path").get(root,row.directory) as {path:string};expect(path).toBe(oracle.path);expect(protectedPaths).toContain(path);for(const candidate of fixture.cleanupSuffixes.map(suffix=>suffix?join(path,suffix):path)){expect(cleanRemovalProtection(root,candidate,view)).toContain(candidate);for(const incremental of [false,true])expect(cleanRemovePath(root,candidate,true,[],false,false,incremental)).toBe(false);}}for(const relative of [...fixture.protectedAncestors,fixture.bootstrapControlDirectory]){const path=resolve(root,relative);expect(cleanRemovalProtection(root,path,view)).toContain(path);expect(cleanRemovePath(root,path,true,[],true,true,true)).toBe(false);}}finally{database.close();}
 });
+
+/** 🪫️ Keeps the logical limit of the tiny lease image inside the bytes its filesystem can hold after APFS metadata and journals. */
+test("tiny cache partitions bound their logical limit by the usable bytes of the filesystem overhead model",()=>{
+ const database=new Database(":memory:");
+ try{
+  const actual=readRepositoryCacheBudgetV1(policy).partitions,leases=actual.leases,fs=leases.filesystemBytes-40960;
+  const oracle=database.query("SELECT ?1-(1048576+(?1+255)/256)-1048576-524288 AS usable").get(fs) as{usable:number};
+  expect(leases.usableBytes).toBe(oracle.usable);expect(leases.maximumLogicalBytes).toBeLessThanOrEqual(leases.usableBytes);expect(leases.maximumLogicalBytes).toBeLessThan(leases.filesystemBytes-2000000);
+  const value:any=structuredClone(policy);value.partitions.leases.maximumLogicalBytes=leases.filesystemBytes;
+  expect(()=>readRepositoryCacheBudgetV1(value)).toThrow("Tiny cache partition");
+  value.partitions.leases.maximumLogicalBytes=leases.usableBytes;expect(()=>readRepositoryCacheBudgetV1(value)).not.toThrow();
+  for(const[id,partition]of Object.entries(actual))if(partition.capacityBytes>schema.$defs.filesystemOverhead.const.tinyCapacityBytes)expect(partition.usableBytes,id).toBeLessThan(partition.filesystemBytes);
+ }finally{database.close();}
+});

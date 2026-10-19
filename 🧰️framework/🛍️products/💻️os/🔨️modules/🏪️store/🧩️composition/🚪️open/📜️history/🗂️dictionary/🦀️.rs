@@ -535,7 +535,7 @@ impl VerifiedMemberHistoryDictionary {
 }
 
 impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.owners, body) }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.owners, body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.closing = true; }
         semio_framework_os_store_read::retirement_owner_close(&mut self.owners, grant)

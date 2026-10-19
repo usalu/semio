@@ -76,7 +76,7 @@ pub fn evolve<S: SoftConstraint>(base_seed: u64, config: EvolveConfig, scorer: &
             scored.push(Attempt { seed, assignment, score });
         }
         if scored.is_empty() {
-            break; // nothing survived this generation to evolve from; further generations can't help
+            break;
         }
         scored.sort_by(|a, b| b.score.partial_cmp(&a.score).expect("score is never NaN"));
         scored.truncate(elite_count);

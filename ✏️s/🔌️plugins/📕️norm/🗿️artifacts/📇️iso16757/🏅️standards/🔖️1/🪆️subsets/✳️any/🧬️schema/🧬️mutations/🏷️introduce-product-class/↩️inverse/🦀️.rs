@@ -1,4 +1,4 @@
-//! Inverse for `introduce-product-class`.
+//! ↪️ Inverse for `introduce-product-class`.
 
 use crate::retire_product_class;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

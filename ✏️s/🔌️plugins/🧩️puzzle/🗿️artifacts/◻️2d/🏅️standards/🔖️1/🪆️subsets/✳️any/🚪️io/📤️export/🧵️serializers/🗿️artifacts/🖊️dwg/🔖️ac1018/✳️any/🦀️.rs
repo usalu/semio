@@ -1,4 +1,4 @@
-//! export leaf, the one dwg writer every owner shares.
+//! 📤️ export leaf, the one dwg writer every owner shares.
 //! puzzle2d → dwg — the page drawing (`puzzle2d_board_drawing`) written as DWG entities by `s.stdio.semio/v1/drawing`'s own
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no dwg import.

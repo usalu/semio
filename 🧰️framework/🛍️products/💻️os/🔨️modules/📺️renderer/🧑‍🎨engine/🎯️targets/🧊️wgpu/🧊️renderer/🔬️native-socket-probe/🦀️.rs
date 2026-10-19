@@ -1,5 +1,6 @@
 //! 🔬️ Native socket probe: probe snapshots and diffs, the native runners, the smoke runner and the icon atlas upload.
 use super::*;
+use semio_framework_os_store_testing_doubles::store;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]

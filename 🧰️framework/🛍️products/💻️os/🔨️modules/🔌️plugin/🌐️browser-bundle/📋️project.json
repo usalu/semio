@@ -1,9 +1,19 @@
 {
   "name": "@semio-tech/browser-actor-import-test",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ]
+  },
   "$schema": "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "runtime-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts runtime-check"
@@ -15,6 +25,11 @@
     },
     "pending-host-close-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts pending-host-close-check"

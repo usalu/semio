@@ -185,9 +185,6 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(gis2d_io())
     }
 
-    // 🧬️ Whole-document replace has no in-history mutation — `document:in`, `features:in` and
-    // `setActiveExample` are document loads (`Effect::LoadDocument`, no history row, no before/after diffing).
-
     /// 🎞️ `map:out` (see `gis2d_map_media` in `🔖️Io` below) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).

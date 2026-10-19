@@ -1,4 +1,4 @@
-//! Deserialize stdio.png from stdio.deflate (raw file bytes in deflate snapshot).
+//! 📥️ Deserialize stdio.png from stdio.deflate (raw file bytes in deflate snapshot).
 
 use crate::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_deflate::DeflateSnapshot;

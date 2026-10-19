@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync, existsSync, readFileSync } from "node:fs";
 import { SEMIO_FAVICON_HEAD_HTML, faviconVitePlugins, semioFaviconVitePlugin } from "../🔖️favicon/🟦️.ts";
 import { PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, semioHostBootHeadTags } from "../🚀️boot-html/🟦️.ts";
 
-/** @emoji 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
+/** 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
 export type ShellBrandHostChrome = {
   readonly windowTitle: string;
   readonly logoSvg?: string;
@@ -13,7 +13,7 @@ export type ShellBrandHostChrome = {
   readonly cnameHost?: string;
 };
 
-/** @emoji 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
+/** 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
  * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
  * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
 export function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
@@ -38,7 +38,7 @@ export function staticDeployMarkerVitePlugins(cnameHost: string | undefined): Ow
   ];
 }
 
-/** @emoji 🧭️ Rewrites Vite's SPA fallback target `/index.html` onto the constitutional emoji entry path. */
+/** 🧭️ Rewrites Vite's SPA fallback target `/index.html` onto the constitutional emoji entry path. */
 export function rewriteSpaFallbackToEmojiEntry(url: string, entryPath: string): string {
   const [pathOnly, ...rest] = url.split(/(?=[?#])/);
   const base = pathOnly ?? url;
@@ -63,10 +63,10 @@ function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddlew
   };
 }
 
-/** @emoji 📄️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
+/** 📄️ Conventional static-host entry filenames emitted beside the constitutional emoji HTML entry. */
 export const STATIC_SITE_HTML_ALIASES = ["index.html", "404.html"] as const;
 
-/** @emoji 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
+/** 🌐️ Vite: treat hand-authored `🌐️.html` as the app index (`/` + build input). Vite's default
  * `index.html` name does not match the constitutional emoji entry filename. */
 export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️.html"): OwnedBuildPlugin {
   const entry = `/${fileName}`;
@@ -112,7 +112,7 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
   };
 }
 
-/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
+/** 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/🛡️favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
 export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): OwnedBuildPlugin[] {
   if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
   return [
@@ -128,14 +128,14 @@ export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHos
   ];
 }
 
-/** @emoji 🗣️ One text of a host document in one language: a BCP 47 tag and the text in that language. */
+/** 🗣️ One text of a host document in one language: a BCP 47 tag and the text in that language. */
 export type SemioHostHtmlText = { readonly lang: string; readonly text: string };
 
-/** @emoji 🗣️ A text of a host document: one string in the document's language, or — for a document that assumes no
+/** 🗣️ A text of a host document: one string in the document's language, or — for a document that assumes no
  * language — the same text once per offered language, in the order the languages are offered. */
 export type SemioHostHtmlTexts = string | readonly SemioHostHtmlText[];
 
-/** @emoji 🧬️ Full-document spec for a semio host `🌐️.html`: title, entry module, mount point, and
+/** 🧬️ Full-document spec for a semio host `🌐️.html`: title, entry module, mount point, and
  * optional CSP + pre-mount loading copy — everything an app needs beyond the shared boot scripts so it
  * stops hand-authoring its own splash screen and `<style>` blocks. A document whose `title` is given per language
  * declares no language of its own: `<html>` carries no `lang`, the title joins the languages, every other text marks
@@ -160,18 +160,18 @@ function semioHostEscapedText(text: string): string {
   return text.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;");
 }
 
-/** @emoji 🏷️ The title of a host document as plain text: the one string, or every language's title joined. */
+/** 🏷️ The title of a host document as plain text: the one string, or every language's title joined. */
 export function semioHostTitleText(title: SemioHostHtmlTexts): string {
   return typeof title === "string" ? title : title.map((part) => semioHostEscapedText(part.text)).join(SEMIO_HOST_TEXT_SEPARATOR);
 }
 
-/** @emoji 🗣️ A text as markup: the one string as it is, or one element per language carrying its `lang`. */
+/** 🗣️ A text as markup: the one string as it is, or one element per language carrying its `lang`. */
 function semioHostTextsHtml(texts: SemioHostHtmlTexts, tag: "span" | "p", attributes = ""): string {
   if (typeof texts === "string") return tag === "span" ? texts : `<${tag}${attributes}>${texts}</${tag}>`;
   return texts.map((part) => `<${tag} lang="${semioHostEscapedText(part.lang)}"${attributes}>${semioHostEscapedText(part.text)}</${tag}>`).join(tag === "span" ? SEMIO_HOST_TEXT_SEPARATOR : "");
 }
 
-/** @emoji 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
+/** 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
  * replaces it — inline-styled so it renders before any external stylesheet loads. */
 function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
   if (!loading) {
@@ -180,7 +180,7 @@ function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
   return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${semioHostTextsHtml(loading.title, "span")}</div>`;
 }
 
-/** @emoji 🚫️ What a reader without scripts gets: the boot style keeps `<body>` hidden until a script reveals it, so each
+/** 🚫️ What a reader without scripts gets: the boot style keeps `<body>` hidden until a script reveals it, so each
  * paragraph makes itself visible. */
 function semioHostNoscriptHtml(noscript: SemioHostHtmlSpec["noscript"]): string {
   if (!noscript) {
@@ -189,7 +189,7 @@ function semioHostNoscriptHtml(noscript: SemioHostHtmlSpec["noscript"]): string 
   return `\n    <noscript>${semioHostTextsHtml(noscript, "p", ' style="visibility:visible;margin:1em;font:14px system-ui,sans-serif"')}</noscript>`;
 }
 
-/** @emoji 📄️ Generates a complete semio host `🌐️.html` document: doctype/head (title, favicon,
+/** 📄️ Generates a complete semio host `🌐️.html` document: doctype/head (title, favicon,
  * optional CSP, boot style + appearance/theme scripts) and body (`#{rootId}` mount with pre-mount loading
  * copy, the reveal script, and the entry module script) — the single source of truth
  * {@link semioHostHtmlVitePlugin} renders from, reusable as-is by non-Vite hosts such as a VS Code webview. */
@@ -217,7 +217,7 @@ export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
 `;
 }
 
-/** @emoji 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️.html` on every request/build
+/** 🎬️ Vite: renders {@link semioHostHtmlString} as the app's `🌐️.html` on every request/build
  * (full-document replace, `order: "pre"` so later plugins such as `@vitejs/plugin-react`'s HMR preamble
  * still layer on top), bundles semio favicon serving ({@link semioFaviconVitePlugin}), and writes the
  * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `CNAME` when

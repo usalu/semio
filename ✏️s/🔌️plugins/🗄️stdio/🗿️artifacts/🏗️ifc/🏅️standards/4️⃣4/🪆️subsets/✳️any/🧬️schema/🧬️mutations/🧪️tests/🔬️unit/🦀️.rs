@@ -104,34 +104,26 @@ fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
 fn absorb_law() {
     let base = base_snapshot();
 
-    // Insert+Remove-before: added entity's carried final index shifts once an earlier base
-    // survivor is removed by the second mutation (the recipe's own canonical shift case).
     assert_absorb_law(&base, IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: entity(100, "IFCSITE", vec![]) }), IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: 1 }));
 
-    // Insert+Insert-same-index: both survive.
     assert_absorb_law(
         &base,
         IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: entity(100, "IFCSITE", vec![]) }),
         IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: entity(101, "IFCBUILDING", vec![]) }),
     );
 
-    // Add+SetField: the second mutation patches directly into the still-pending added entity.
     assert_absorb_law(
         &base,
         IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 0, entity: entity(100, "IFCSITE", vec![IfcValue::Unset]) }),
         IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: 100, name: "IFCBUILDING".into() }),
     );
 
-    // Modify+Remove: a pending field patch on a since-removed base entity vanishes.
     assert_absorb_law(&base, IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: 6, name: "IFCSLAB".into() }), IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: 6 }));
 
-    // Insert then annihilate the very same insert.
     assert_absorb_law(&base, IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 0, entity: entity(100, "IFCSITE", vec![]) }), IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: 100 }));
 
-    // Insert-arg then set-that-same-arg patches into the still-pending added arg.
     assert_absorb_law(&base, IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 6, index: 0, value: IfcValue::Unset }), IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: 6, index: 0, value: IfcValue::Derived }));
 
-    // Two unrelated scalar sets absorb via LWW.
     assert_absorb_law(
         &base,
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("first".into())] }),
@@ -202,9 +194,6 @@ fn sweep_b() -> IfcSnapshot {
             IfcEntity {
                 id: 2,
                 name: "IFCQUANTITYVOLUME".into(),
-                // index 0 modified, index 1 removed (b is shorter here), index 2 unchanged
-                // relative position collapses -- exercised precisely via direct field asserts
-                // below rather than index-fragile equality.
                 args: vec![IfcValue::String("changed".into()), IfcValue::Reference(9)],
                 complex: vec![],
             },

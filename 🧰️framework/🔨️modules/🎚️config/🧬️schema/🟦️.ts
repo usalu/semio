@@ -143,6 +143,6 @@ export interface DefaultApp {
 }
 
 export interface OpeningPreferences {
-  /** @state config */
+  /** 🌱️ @state config */
   defaults: DefaultApp[];
 }

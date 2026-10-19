@@ -20,8 +20,6 @@ export function schemaPlacementDiagnostics(repoRoot: string, files: readonly str
     const segments = rel.split("/");
     const name = segments[segments.length - 1]!;
     const dirSegments = segments.slice(0, -1);
-    // 🧭️The outermost forbidden ANCESTOR directory is the defect; naming the deeper one would report
-    // the same violation at the wrong level.
     const forbiddenDir = dirSegments.reduce<string | null>((carry, _segment, index) => {
       if (carry !== null) return carry;
       const prefix = dirSegments.slice(0, index + 1).join("/");
@@ -41,8 +39,6 @@ export function schemaPlacementDiagnostics(repoRoot: string, files: readonly str
     if (document === undefined) continue;
     const moduleDir = schemaModuleDirOf(dirSegments, moduleDirName);
     if (moduleDir === null) {
-      // 🧬️Inside a forbidden directory the directory finding already says the whole thing must go;
-      // repeating it once per file inside would report one defect as many.
       if (forbiddenDir === null) found.push(schemaDiagnostic("schema-placement-outside-module", `${rel} defines a schema outside any ${moduleDirName}/ module`, { path: rel }));
       continue;
     }
@@ -89,9 +85,6 @@ export function schemaMeasurementDisagreementDiagnostics(repoRoot: string, files
   const { catalog } = readSchemaCatalog(repoRoot);
   if (catalog === null) return [];
   const selected = (path: string): boolean => under.length === 0 || path === under || path.startsWith(`${under}/`);
-  // 🧫️A module inside a `🧪️`/`🧫️` collection is one the catalog is RIGHT not to name, and
-  // `schema-fixture-defines-schema` already reports it. Counting it here too would report one defect
-  // twice and make the disagreement number a claim about the catalog that is not true.
   const onDisk = [...schemaModuleDirectoriesOnDisk(repoRoot, files)].filter((path) => selected(path) && !isFixtureOwnedPath(repoRoot, path));
   const catalogued = new Map<string, string>();
   for (const [id, scope] of Object.entries(catalog.scopes)) if (selected(scope.path) && !catalogued.has(scope.path)) catalogued.set(scope.path, id);
@@ -113,8 +106,6 @@ export function schemaOwnerEligibilityDiagnostics(repoRoot: string, files: reado
     owners.add(moduleDir.slice(0, moduleDir.length - moduleDirName.length - 1));
   }
   for (const owner of [...owners].sort()) {
-    // 🧬️A mutation leaf's own `🧬️schema/` sits INSIDE its owner's `🧬️schema/🧬️mutations/` — the leaf
-    // is the declared authority for its payload, so the leaf path is what is judged, not its ancestor.
     const verdict = schemaScopeEligibility(repoRoot, owner);
     if (!verdict.eligible) found.push(schemaDiagnostic("schema-owner-ineligible", `${owner} carries a ${moduleDirName}/ module and is not an eligible scope owner — ${verdict.reason}`, { path: owner }));
   }

@@ -141,7 +141,7 @@ impl WindowConfigOwner for RetirementWindowConfigOwner {
     const MAXIMUM_PREPARATION_DEPTH:usize=64;
     fn build_retained_edit()->std::sync::Arc<Self::Edit>{std::sync::Arc::new(semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit)}
 
-    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{crate::window_config::bounded_window_config_preparation_source_birth::<Self>()}
+    fn preparation_source_birth()->semio_framework_value::retained_clone::RetainedCloneBirthDemand{semio_framework_plugin_window_config::bounded_window_config_preparation_source_birth::<Self>()}
     fn build_store_owners(grant:semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>,semio_framework_value::RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State,Self::Mutation>> {
         semio_framework_plugin_window_config::bounded_window_config_store_owners::<Self>(grant)
     }
@@ -322,14 +322,14 @@ async fn drive_rejected_retirement(app:&mut semio_framework_plugin_instance_app:
   mounted.stage=semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage::Retiring;
  }else{
   app.typed_ctx().publish_mounted_typed_operation_unit(&mut mounted, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance).expect("one final fault after physical retirement");
-  let mut page=mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).expect("single final fault");
+  let mut page=mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).expect("single final fault");
   assert_eq!(page.lane,semio_framework_plugin_decl_app::tool_contract::TypedOperationResultLane::Fault);
   let fault=semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes());
   assert_eq!(fault.code.0,"interactive-job.publication-rejected");
   assert_eq!(fault.message,reason);
   assert!(mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).is_none(),"fault terminal cannot repeat before ACK");
   assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).unwrap());
-mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
  }
  app.tools.tool_operations.insert_admitted(1,mounted);
  turns
@@ -467,7 +467,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
                     .begin_publish_one(operation, generation, ChangePublicationPresence { revision: 1 }.into(), Some(factory.as_ref()), retirement.clone())
                     .unwrap_or_else(|rejected| panic!("presence publication admitted: {}", rejected.into_owners().0));
                 let mut superseding = app.stores.presence_store.begin_publish_one(operation, generation, ChangePublicationPresence { revision: 2 }.into(), Some(factory.as_ref()), retirement).expect("superseding presence publication admitted");
-                publish_ephemeral(&mut superseding, grant, |publication, grant|  receiving_job.receive(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance,|receiving|app.stores.presence_store.advance_publish_one(publication, grant,receiving)));
+                publish_ephemeral(&mut superseding, grant, |publication, grant|  receiving_job.receive(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance,|receiving|app.stores.presence_store.advance_publish_one(publication, grant,receiving)));
                 superseding_owner = Some(PendingArtifactStorePublication::Presence(superseding));
                 assert!(receiving_job.receive(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance,|receiving|app.stores.presence_store.advance_publish_one(&mut publication, grant,receiving)).is_err(), "the superseded presence publication is rejected");
                 PendingArtifactStorePublication::Presence(publication)
@@ -481,7 +481,7 @@ async fn every_publication_lane_retires_a_rejected_authority_without_faulting_ea
                     .begin_publish_one(operation, generation, ChangePublicationTransient { revision: 1 }.into(), Some(factory.as_ref()), retirement.clone())
                     .unwrap_or_else(|rejected| panic!("transient publication admitted: {}", rejected.into_owners().0));
                 let mut superseding = app.stores.transient_store.begin_publish_one(operation, generation, ChangePublicationTransient { revision: 2 }.into(), Some(factory.as_ref()), retirement).expect("superseding transient publication admitted");
-                publish_ephemeral(&mut superseding, grant, |publication, grant|  receiving_job.receive(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance,|receiving|app.stores.transient_store.advance_publish_one(publication, grant,receiving)));
+                publish_ephemeral(&mut superseding, grant, |publication, grant|  receiving_job.receive(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance,|receiving|app.stores.transient_store.advance_publish_one(publication, grant,receiving)));
                 superseding_owner = Some(PendingArtifactStorePublication::Transient(superseding));
                 assert!(receiving_job.receive(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance,|receiving|app.stores.transient_store.advance_publish_one(&mut publication, grant,receiving)).is_err(), "the superseded transient publication is rejected");
                 PendingArtifactStorePublication::Transient(publication)

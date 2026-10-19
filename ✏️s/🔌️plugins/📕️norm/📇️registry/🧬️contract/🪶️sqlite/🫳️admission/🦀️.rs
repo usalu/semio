@@ -1,6 +1,7 @@
 //! 🫳️ Borrowed native field primitives for handwritten norm SQL entity admission.
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteSnapshotProgress,artifact::{Cell,RowWriter}};
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 /// 📌️ Required authored slot; defaults do not create missing native fields.

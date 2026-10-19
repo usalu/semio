@@ -204,7 +204,6 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 
         pos = comment_end;
 
-        // ---- Local header ----
         if read_u32(data, local_off)? != SIG_LOCAL {
             return Err(ZipError::BadSignature { what: "local file header", at: local_off });
         }
@@ -260,7 +259,6 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         }
         let payload = &data[data_off..data_end];
 
-        // ---- Optional trailing data descriptor (general-purpose bit 3) ----
         let mut data_descriptor_signature = false;
         if uses_descriptor {
             let is_zip64_entry = zip64.uncomp_size.is_some() || zip64.comp_size.is_some() || local_zip64.uncomp_size.is_some() || local_zip64.comp_size.is_some();

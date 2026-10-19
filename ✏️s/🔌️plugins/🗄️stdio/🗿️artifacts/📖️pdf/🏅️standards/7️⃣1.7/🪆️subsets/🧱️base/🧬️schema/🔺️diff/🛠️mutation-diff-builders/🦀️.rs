@@ -147,11 +147,9 @@ pub fn keyed_remove<T: Clone + PartialEq + Keyed>(base: &[T], key: &str) -> Opti
 macro_rules! keyed_builders {
     ($($set:ident / $remove:ident => $field:ident : $ty:ty),* $(,)?) => {
         $(
-            // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
             pub fn $set(base: &PdfSnapshot, value: $ty, index: Option<usize>) -> PdfDiff {
                 PdfDiff { $field: keyed_upsert(&base.$field, value, index), ..Default::default() }
             }
-            // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
             pub fn $remove(base: &PdfSnapshot, key: &str) -> PdfDiff {
                 PdfDiff { $field: keyed_remove(&base.$field, key), ..Default::default() }
             }
@@ -201,7 +199,6 @@ pub fn diff_set_output_intents(base: &PdfSnapshot, intents: &[PdfOutputIntent]) 
 macro_rules! tri_builders {
     ($($name:ident => $field:ident : $ty:ty),* $(,)?) => {
         $(
-            // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
             pub fn $name(base: &PdfSnapshot, value: Option<$ty>) -> PdfDiff {
                 PdfDiff { $field: tri(&base.$field, &value), ..Default::default() }
             }

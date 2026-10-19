@@ -15,7 +15,7 @@ import{rustUnitNxProjectV1}from"../../../../🔌️nx/🟦️.ts";
 import{materializeCargoRustUnitsV1}from"../../../🕸️graph/🟦️.ts";
 import{prepareRustUnitDescriptorGraphV2,withRustUnitDescriptorGraphV2,rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2,selectRustUnitDescriptorNodeV2}from"../../../🕸️nodes/🟦️.ts";
 import{readCargoCompilationGraphV1}from"@semio-tech/process/artifacts/native-build/units";
-import{readRustSourceClosureV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+import{readRustSourceClosureV1}from"@semio-tech/process/artifacts/native-build/source";
 import fixture from"../../../../🧪️tests/🧫️fixtures/🔣️.json"with{type:"json"};
 import raw from"@semio-tech/process/artifacts/native-build/units/testing/fixtures.json";
 import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";

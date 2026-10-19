@@ -17,7 +17,7 @@ import namespaceSchema from "../../🧬️schema/📦️namespace.json" with {ty
 import socketSchema from "../../🧬️schema/🔌️socket.json" with {type:"json"};
 import {withRepositoryCacheStoreV1} from "../../../📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import * as leaseApi from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import * as leaseApi from "@semio-tech/process/leases";
 import {acquireResourceLease} from "@semio-tech/process/leases";
 import {readFileSync} from "node:fs";
 import {createRequire} from "node:module";

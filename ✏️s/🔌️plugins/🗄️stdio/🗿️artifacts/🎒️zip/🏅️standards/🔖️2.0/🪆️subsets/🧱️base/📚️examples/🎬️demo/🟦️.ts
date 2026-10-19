@@ -1,2 +1,2 @@
-/** demo zip */
+/** 🎬️ demo zip */
 export const ID = 'demo';

@@ -1,0 +1,15 @@
+{
+ "ws": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/Cargo.toml",
+ "old_name": "semio-s-artifact-stdio-tiff-snapshot",
+ "old_pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+ "moves": ["editor::tiff_any::presence", "editor::tiff_any::config", "editor::tiff_baseline", "viewer"],
+ "new": {
+  "name": "semio-s-artifact-stdio-tiff-snapshot-surfaces",
+  "dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🪟️surfaces",
+  "emoji": "🪟️",
+  "doc": "The editor config, editor presence and viewer presence schema mounts of `semio-s-artifact-stdio-tiff`'s snapshot, held by their own crate so the snapshot crate stays inside the source gate.",
+  "desc": "Stdio tiff editor and viewer surface schema mounts of the snapshot"
+ },
+ "subtree": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff",
+ "script": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/📜️script.ts"
+}

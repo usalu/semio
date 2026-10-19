@@ -1,7 +1,7 @@
 //! 🧰️ The harness of the proctor end to end suite: a scratch directory per test, the server booted on an ephemeral port, the wire with the §9a encoding, the websocket client of the presence rooms, and the builders of answers and runs.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
+//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
@@ -26,7 +26,7 @@ pub(super) fn scratch(label: &str) -> Scratch {
 }
 
 pub(super) fn fixtures() -> PathBuf {
-    fixture_path!("../../🧫️fixtures")
+    fixture_path!("../../🧪️tests/🧫️fixtures")
 }
 
 pub(super) fn id(seed: u32) -> String {
@@ -49,7 +49,7 @@ pub(super) fn boot(data: &Path, gate: Gate) -> Running {
     let thread = std::thread::spawn(move || {
         let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("runtime");
         runtime.block_on(async move {
-            let course = Arc::new(load_course(&fixtures().join("📚️course/🔣️.json")).expect("fixture course"));
+            let course = Arc::new(load_course(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture course"));
             let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, course, gate, PresenceSettings::default()).await.expect("assembled");
             proctor.prepare().await.expect("prepared");
             proctor.reconcile().await.expect("reconciled");

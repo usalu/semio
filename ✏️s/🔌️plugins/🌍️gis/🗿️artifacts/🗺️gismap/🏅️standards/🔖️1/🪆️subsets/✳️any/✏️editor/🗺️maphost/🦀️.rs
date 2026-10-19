@@ -25,11 +25,6 @@ pub fn map_host_from(document: &GisMapSnapshot, cfg: &MapWindowConfig) -> MapHos
     host.set_render_mode(&cfg.render_mode);
     host.set_vector_style(&cfg.vector_style);
     host.set_lod_mode(&cfg.lod_mode);
-    // 🕹️ Feature selection is framework-owned config now (ticket
-    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `MapHost::set_selection_json` was
-    // deleted along with it; the surface's `MapHost::sync_interaction(granularity, ids, hovered_id)`
-    // replacement is driven from `InteractionState` by the renderer glue, not from here (this
-    // function only ever had `MapWindowConfig`, never `InteractionView`).
     host
 }
 //#endregion 🔖️MapHost

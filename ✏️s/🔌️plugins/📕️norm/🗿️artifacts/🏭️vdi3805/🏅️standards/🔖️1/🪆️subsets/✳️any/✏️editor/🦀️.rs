@@ -1,4 +1,4 @@
-//! ð°ï¸ VDI 3805 play app â the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
+//! 🚰️ VDI 3805 play app â the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
@@ -46,9 +46,9 @@ use semio_framework_plugin::app::Dialect;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region ðï¸Constants
-/// ð·ï¸ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
+/// 🏷️ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
 pub const LABEL: &str = "VDI 3805";
-/// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
+/// 🆔️ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "vdi3805";
 /// 🆔️ Retained-command / UI action controller id.
 pub const CONTROLLER_ID: &str = "s.norm.vdi3805@1/*#editor";
@@ -57,7 +57,7 @@ pub const DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
 
 //#region ðï¸Commands
 semio_framework_plugin::app_commands! {
-    /// ð¯ï¸ `Vdi3805PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
+    /// 🎯️ `Vdi3805PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
     /// action `create_vdi3805_app` declares. Row order IS the binary variant ordinal (appending is safe,
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
     /// id and the kebab `#[dsl(key)]` wire keyword respectively â both copied verbatim off the
@@ -195,14 +195,14 @@ impl ArtifactEditor for Vdi3805PlayApp {
     }
 
     //#region ðï¸MediaPorts
-    /// ðï¸ `"report:out"`/`"artifact:out"` â see `crate::app_surface::export_media`, which all fifteen apps
+    /// 🎞️ `"report:out"`/`"artifact:out"` â see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Media, MediaError> {
         semio_s_plugin_norm_app_surface::export_media::<Vdi3805Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
-    /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
+    /// 🎞️ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         let _base = doc.snapshot.clone();
         semio_s_plugin_norm_app_surface::import_media(port, media)

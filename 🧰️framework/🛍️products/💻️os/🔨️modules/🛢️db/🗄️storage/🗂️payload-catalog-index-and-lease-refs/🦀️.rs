@@ -107,9 +107,6 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
             Self::Sqlite(s) => s.read_root().await,
             Self::Postgres(s) => s.read_root().await,
             Self::Neo4j(s) => s.read_root().await,
-            // 🔀️ `FaultStorage::read_root` calls back through `self.inner: DbBackend`, so this
-            // arm is mutually recursive with this very fn — `Box::pin` breaks the otherwise-
-            // infinitely-sized future (E0733), same as `DbBackend::capabilities`'s `Fault` arm.
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read_root()).await,
         }

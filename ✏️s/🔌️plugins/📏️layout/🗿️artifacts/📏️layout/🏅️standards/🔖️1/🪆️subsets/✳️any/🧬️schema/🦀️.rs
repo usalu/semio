@@ -323,7 +323,7 @@ fn layout_drawing_child_spec_producer()->semio_framework_dsl_record::RecordSpecP
 /// 🧬️ Record binding for the derived `LayoutSnapshot` pack: the child handle through the framework's own `ArtifactChild` record, the content as its first-party value, admitted by the bound codec.
 impl semio_framework_dsl_record::DslField for LayoutDrawingChild {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(layout_drawing_child_spec_producer()))}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::drawing_child::decode(value,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::drawing_child::decode(value,control)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{crate::snapshot::drawing_child::encode(self,control)}
     fn retire_decoded(self){crate::snapshot::drawing_child::retire(self)}
     fn shape() -> semio_framework_dsl_record::Shape {
@@ -359,7 +359,7 @@ fn drawing_error(error: impl std::fmt::Display) -> semio_framework_value::ValueE
 
 /// ✅️ The wire reader of the child content: the bound codec admits the value, or the child is refused.
 fn validated_drawing_content(value: Value) -> Result<Value, semio_framework_value::ValueError> {
-    drawing_codec().map_err(drawing_error)?.validate(&value, &mut semio_framework_value::NativeDecodeControl::new(UNCONTROLLED_VALIDATION_BYTES, &mut |_| true))?;
+    drawing_codec().map_err(drawing_error)?.validate(&value, &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(UNCONTROLLED_VALIDATION_BYTES, &mut |_| true))?;
     Ok(value)
 }
 

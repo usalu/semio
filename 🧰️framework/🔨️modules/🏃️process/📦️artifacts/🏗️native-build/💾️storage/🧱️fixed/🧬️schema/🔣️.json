@@ -60,7 +60,7 @@
       "required": ["name", "fault", "retained"],
       "properties": {
         "name": {"type": "string", "minLength": 1, "maxLength": 64},
-        "fault": {"enum": ["none", "associated", "mount-payload", "foreign-entry", "collision", "changed-backing", "changed-parent", "writer", "child"]},
+        "fault": {"enum": ["none", "associated", "mount-payload", "foreign-entry", "collision", "changed-backing", "changed-parent", "writer", "child", "swap-pending", "swap-pending-attached"]},
         "retained": {"type": "boolean"}
       }
     },
@@ -162,9 +162,7 @@
             "action": {
               "enum": [
                 "allocate",
-                "format",
                 "activate",
-                "information",
                 "inactive",
                 "deactivate"
               ]
@@ -356,8 +354,7 @@
         },
         "filename": {
           "enum": [
-            "fixed.img",
-            "fixed.vhd"
+            "fixed.dir"
           ]
         },
         "canonicalDirectory": {
@@ -450,245 +447,6 @@
         "mode": 448,
         "fileMode": 384,
         "maximumEntries": 2
-      }
-    },
-    "WindowsBackingIdentity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "volumeSerial",
-        "fileId",
-        "volume",
-        "attributes",
-        "creationTime",
-        "securitySha256",
-        "streamsSha256"
-      ],
-      "properties": {
-        "volumeSerial": {
-          "type": "string",
-          "pattern": "^(0|[1-9][0-9]{0,19})$"
-        },
-        "fileId": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{32}$"
-        },
-        "volume": {
-          "type": "string",
-          "pattern": "^\\\\\\\\\\?\\\\Volume\\{[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\\}\\\\$"
-        },
-        "attributes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "creationTime": {
-          "type": "string",
-          "pattern": "^-?(0|[1-9][0-9]{0,19})$"
-        },
-        "securitySha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        },
-        "streamsSha256": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        }
-      }
-    },
-    "WindowsImageReceipt": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "platform",
-        "dev",
-        "ino",
-        "size",
-        "filesystemBytes",
-        "maximumPhysicalBytes",
-        "mountDirectory",
-        "backing"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
-        },
-        "platform": {
-          "const": "win32"
-        },
-        "dev": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "ino": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "size": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 1099511627776
-        },
-        "filesystemBytes": {
-          "type": "integer",
-          "minimum": 33554432,
-          "maximum": 1099511627776
-        },
-        "maximumPhysicalBytes": {
-          "type": "integer",
-          "minimum": 33554432,
-          "maximum": 1099511627776
-        },
-        "mountDirectory": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/platform/contract/mount/component.json#/definitions/WindowsDirectory"
-        },
-        "backing": {
-          "$ref": "#/definitions/WindowsBackingIdentity"
-        }
-      }
-    },
-    "WindowsReceiptObservation": {
-      "const": {
-        "version": 1,
-        "maximumReceiptBytes": 4096,
-        "legacyMaximum": 9007199254740991,
-        "unsignedMaximum": "18446744073709551615",
-        "signedMinimum": "-9223372036854775808",
-        "signedMaximum": "9223372036854775807",
-        "backingKind": "file",
-        "backingLinks": 1,
-        "deniedAttributes": 1024,
-        "identityFields": [
-          "volumeSerial",
-          "fileId",
-          "volume",
-          "attributes",
-          "creationTime",
-          "securitySha256",
-          "streamsSha256"
-        ],
-        "authority": false
-      }
-    },
-    "WindowsCurrentObservation": {
-      "const": {
-        "version": 1,
-        "names": [
-          "fixed.vhd",
-          "image.json",
-          "m"
-        ],
-        "navigation": [
-          ".",
-          ".."
-        ],
-        "maximumParents": 64,
-        "maximumHostEntries": 3,
-        "maximumNavigationEntries": 2,
-        "maximumReceiptBytes": 4096,
-        "footerBytes": 512,
-        "authority": false
-      }
-    },
-    "WindowsOrdinaryReadPolicy": {
-      "const": {
-        "version": 1,
-        "factsPerHandle": 16,
-        "workPerFacts": 16,
-        "workPerHandle": 8,
-        "ancestorReplays": 4,
-        "extraHandles": 8,
-        "workPerRead": 8,
-        "directoryCensuses": 2,
-        "workPerDirectoryNext": 8,
-        "libraryWork": 6,
-        "progressWork": 64,
-        "callerBudget": false,
-        "originalRenewal": false,
-        "authority": false
-      }
-    },
-    "WindowsOrdinaryReceiverPolicy": {
-      "const": {
-        "version": 1,
-        "bodyStages": [
-          "reserved",
-          "shared",
-          "ready"
-        ],
-        "cleanupStage": "ready",
-        "leaseMode": "shared",
-        "rootOnly": true,
-        "bodyAcceptedCleanup": false,
-        "guardChange": "refuse"
-      }
-    },
-    "WindowsMappedObservation": {
-      "const": {
-        "version": 1,
-        "purpose": "ordinary-mapped-root-observation",
-        "physicalSnapshotCount": 1,
-        "metadataAuthority": false,
-        "rootOnly": true,
-        "rootMustDifferFromHostVolume": true,
-        "sameAccount": true,
-        "maximumExtraRootHandles": 1
-      }
-    },
-    "WindowsOrdinaryMappingPolicy": {
-      "const": {
-        "version": 1,
-        "purpose": "ordinary-receiver-mapping",
-        "observationsPerRead": 2,
-        "canonicalAction": "information",
-        "rootOnly": true,
-        "sameAccount": true,
-        "callerProgram": false,
-        "authorityFromMapping": false
-      }
-    },
-    "WindowsHeldCurrentObservation": {
-      "const": {
-        "version": 1,
-        "purpose": "held-current-receiver-read",
-        "rootOnly": true,
-        "sampledDataAuthority": false,
-        "exactIssuedHandles": true,
-        "maximumHeldViews": 4,
-        "sameAccount": true,
-        "consumerOwnChildrenDrain": true,
-        "copyAndEscape": "refuse",
-        "finalCloseBeforeResult": true
-      }
-    },
-    "WindowsReceiverObservation": {
-      "const": {
-        "version": 1,
-        "purpose": "ordinary-native-receiver-observation",
-        "leaseMode": "shared",
-        "baseline": "private-current-native",
-        "sameFrameNested": true,
-        "sampledAuthority": false,
-        "bodyStage": "ready",
-        "mutableFields": [
-          "writeTime",
-          "changeTime"
-        ]
-      }
-    },
-    "WindowsReceiverOperationAccount": {
-      "const": {
-        "version": 1,
-        "purpose": "actual-outer-borrower-operation-account",
-        "key": "private-outermost-borrower-frame",
-        "callerBudget": false,
-        "nested": "same-account",
-        "receiverFailure": "sticky",
-        "newAfter": "successful-drain-close-and-association",
-        "concurrent": "refuse-before-effects"
       }
     }
   }

@@ -248,13 +248,6 @@ fn ear_clip(poly: &[Pnt2]) -> Vec<[Pnt2; 3]> {
                 break;
             }
         }
-        // 🩹 No ear at all means the remaining ring is numerically degenerate somewhere (a run of
-        // exactly-collinear boundary samples, which every dense curve discretisation produces), NOT
-        // that the polygon is untriangulable. Bailing out here silently returns a PARTIAL
-        // triangulation, and every moment integrated over it — area, volume, centroid — is then
-        // short by whatever the abandoned tail covered. Clip the flattest remaining corner instead:
-        // its own triangle contributes ~nothing to the integral, and removing it always makes
-        // progress, so the loop terminates with the whole polygon consumed.
         let ear_at = ear_at.or_else(|| {
             let n = idx.len();
             (0..n)

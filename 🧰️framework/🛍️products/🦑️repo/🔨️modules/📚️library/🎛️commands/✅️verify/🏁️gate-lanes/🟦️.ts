@@ -143,6 +143,10 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
         throw new Error(`[verify] ${appSchemaBreaches.length} app-schema policy breach(es)`);
       }
     }
+    console.log("[verify] build owner registry…");
+    this.runBuildOwners([]);
+    console.log("[verify] zero-touch closures…");
+    this.runZeroTouch([]);
     console.log("[verify] package language purity…");
     {
       const packagePurityBreaches = policyPackageLanguagePurityBreaches(this.root).filter((b) => b.priority === "high");

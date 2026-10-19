@@ -1,4 +1,4 @@
-//! dispatches of one streamed gesture — its tool statechart configuration by stable ids, the admission and base
+//! 📡️ dispatches of one streamed gesture — its tool statechart configuration by stable ids, the admission and base
 //! 🫧️ The FEM editors' local-only transient: the gumball gesture each window has in flight, persisted between the
 //! revision it opened on, and its open `ToolTransaction`'s provisional entries in value form. Artifact-level rather
 //! than window-level so the SIBLING windows paint the gesture's preview too (the results window re-solves the moved

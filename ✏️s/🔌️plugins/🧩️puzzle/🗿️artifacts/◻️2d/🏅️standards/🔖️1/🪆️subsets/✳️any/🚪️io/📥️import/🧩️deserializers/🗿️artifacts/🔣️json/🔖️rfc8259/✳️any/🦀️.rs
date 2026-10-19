@@ -1,4 +1,4 @@
-//! puzzle2d <- json
+//! 🧩️ puzzle2d <- json
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix (not part of this wave's svg/dwg-pattern scope — see
 //! `w5b--puzzle-report.md`): `JsonSnapshot.value` was retyped from `serde_json::Value` to stdio's

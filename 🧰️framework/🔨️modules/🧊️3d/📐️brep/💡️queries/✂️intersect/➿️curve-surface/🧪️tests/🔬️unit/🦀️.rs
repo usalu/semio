@@ -92,8 +92,6 @@ mod quick {
 
     #[semio_framework_async_macros::async_test]
     async fn circle_coincident_with_plane_is_tangent_degenerate() {
-        // The circle lies entirely *in* the plane (every point is an "intersection") — the
-        // same degenerate convention `intersect_line_plane` already uses for an in-plane line.
         let curve = Curve3::Circle { frame: Frame3::WORLD, radius: 2.0 };
         let surface = Surface::Plane { frame: Frame3::WORLD };
         assert!(matches!(intersect_curve_surface(&curve, &surface, 1e-6), Err(IntersectError::Tangent)));

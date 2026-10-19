@@ -8,6 +8,6 @@
   "execution": {
     "target": "test-taxonomy-cli-cancellation",
     "command": "bun ./📜️script.ts test taxonomy-cli-cancellation",
-    "cache": false
+    "cache": true
   }
 }

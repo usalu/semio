@@ -8,9 +8,10 @@ use semio_framework_os_kernel::io::io_mechanism::{io_run_with_snapshot_control, 
 use semio_framework_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
 use semio_framework_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
-use semio_framework_value::{ErasedSnapshotRetirement as _, NativeDecodeControl, NativeEncodeControl, RetainedCloneGrant};
+use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl, RetainedCloneGrant};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 /// 📏️ Native allocation ceiling the original test callers grant.
 pub const NATIVE_MAXIMUM_BYTES: usize = 1 << 30;

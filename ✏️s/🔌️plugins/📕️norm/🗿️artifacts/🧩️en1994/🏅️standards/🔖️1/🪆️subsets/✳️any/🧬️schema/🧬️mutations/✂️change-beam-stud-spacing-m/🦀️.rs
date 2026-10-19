@@ -1,4 +1,4 @@
-//! `change-beam-stud-spacing-m` mutation leaf.
+//! 🧬️ `change-beam-stud-spacing-m` mutation leaf.
 
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 

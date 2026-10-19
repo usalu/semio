@@ -56,8 +56,6 @@ mod tests {
 
     #[test]
     fn ordinal_pattern_symbol_hand_computed_example() {
-        // 🔤️ Window [3, 1, 4]: ascending order is index1(1) < index0(3) < index2(4), whose
-        // Lehmer code (base 3!) is [1, 0, 0] -> 1*2! + 0*1! + 0*0! = 2.
         let symbol = ordinal_pattern_symbol(&[3.0, 1.0, 4.0], TiePolicy::StableRank).unwrap();
         assert_eq!(symbol, 2);
     }
@@ -69,7 +67,6 @@ mod tests {
         assert_eq!(symbolizer.alphabet_size(), 6);
         let base = [10.0, 20.0, 30.0];
         let mut symbols = Vec::new();
-        // 🔤️ Enumerate all 3! permutations of a 3-element index array.
         for a in 0..3 {
             for b in 0..3 {
                 for c in 0..3 {
@@ -99,7 +96,7 @@ mod tests {
         let symbols = symbolizer.symbolize(&x).unwrap();
         assert_eq!(symbols.len(), 8);
         assert!(symbols.iter().all(|&s| s == symbols[0]));
-        assert_eq!(symbols[0], 0); // 🔤️ strictly ascending window == identity permutation
+        assert_eq!(symbols[0], 0);
     }
 
     #[test]
@@ -118,8 +115,6 @@ mod tests {
 
     #[test]
     fn ordinal_ties_stable_rank_breaks_by_original_index() {
-        // 🔤️ [2, 2, 1]: ascending stable order is index2(1) < index0(2) < index1(2), whose
-        // Lehmer code (base 3!) is [2, 0, 0] -> 2*2! + 0*1! + 0*0! = 4.
         let symbol = ordinal_pattern_symbol(&[2.0, 2.0, 1.0], TiePolicy::StableRank).unwrap();
         assert_eq!(symbol, 4);
     }

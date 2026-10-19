@@ -10,6 +10,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
 pub use semio_framework_artifact_workflow_run::*;
+pub use semio_framework_artifact_workflow_run_admission::{admit_run_operation, apply_run_operation_checked};
 
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 

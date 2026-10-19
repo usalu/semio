@@ -24,8 +24,10 @@ use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::a
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
 use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::dwg_xrecord_value_spec_producer;
 use semio_framework_dsl_record::{DslField,NativeSchemaControl,RecordSpecProducer,Shape};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
-use semio_framework_value::{native_decoding::NativeDecodeProgress, native_encoding::NativeEncodeProgress};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value::native_encoding::NativeEncodeProgress;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 use serde_json::{json, Value};
 
 fn fixture() -> Value { serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎛️metadata/🔣️.json")).unwrap() }

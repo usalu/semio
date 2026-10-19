@@ -120,7 +120,6 @@ async fn exercise_catalog_storage(storage: &impl CatalogStorage) {
     assert_eq!(bytes, b"root-v1");
     assert_eq!(fence, epoch_1);
 
-    // A stale `expected` (still `INITIAL`, but the root already moved to `epoch_1`) is fenced.
     assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, pages(b"root-stale"))).await, Err(DbError::Fenced { .. })));
 
     let epoch_2 = block_on_ready(storage.cas_root(epoch_1, pages(b"root-v2"))).await.unwrap();
@@ -156,11 +155,9 @@ async fn exercise_lease_storage(storage: &impl LeaseStorage) {
     let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).await.unwrap();
     assert_eq!(fence_1, EpochFence::INITIAL);
 
-    // Re-acquiring the same, unexpired lease by the same holder is idempotent (same fence).
     let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).await.unwrap();
     assert_eq!(fence_reacquire, fence_1);
 
-    // A different holder cannot acquire an unexpired lease.
     assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)).await, Err(DbError::Conflict(_))));
 
     block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).await.unwrap();
@@ -172,13 +169,10 @@ async fn exercise_lease_storage(storage: &impl LeaseStorage) {
     assert_eq!(current.fence, fence_1);
     current.close_step();
 
-    // After expiry (renewed at 500 for 1_000ms => expires at 1_500), a different holder can
-    // take over, bumping the fence — the fencing law a stale former holder is later rejected by.
     assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).await.unwrap(), None);
     let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).await.unwrap();
     assert_eq!(fence_2, fence_1.next());
 
-    // The old holder's stale fence is now rejected.
     assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)).await, Err(DbError::Unauthorized(_))));
 
     block_on_ready(storage.release("shard-1", "node-b", fence_2)).await.unwrap();

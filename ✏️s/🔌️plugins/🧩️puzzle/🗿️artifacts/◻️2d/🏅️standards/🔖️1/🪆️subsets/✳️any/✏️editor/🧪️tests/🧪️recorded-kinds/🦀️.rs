@@ -1,4 +1,4 @@
-//! document — and undoing the emitted rows (inverse rows replayed last-to-first) restores the board. Driven through
+//! 📄️ document — and undoing the emitted rows (inverse rows replayed last-to-first) restores the board. Driven through
 //! 🧪️ Every board-editing command emits the concrete kinds of its user action — never a board differenced against the
 //! `puzzle2d_dispatch_emit`, the one pipeline every command runs; whole-document import leaves through the load path.
 

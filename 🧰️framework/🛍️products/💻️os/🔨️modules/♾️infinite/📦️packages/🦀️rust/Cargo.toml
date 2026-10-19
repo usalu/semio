@@ -41,6 +41,7 @@ semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 # ⏯️ Decodes the `World3dScene.tool_run_trace` delta for the world's trace layer (`🌍️world/⏯️tool-run-trace`).
 # Renderer-side only: ui/ui-scene/os-kernel/job never depend on it (`📓️wave-W0-A.md` cycle rule).
 semio-framework-tool-run = { workspace = true }

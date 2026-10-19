@@ -14,7 +14,6 @@ fn edge(id: &str, from_node: &str, to_node: &str) -> FlowEdge {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn chain_snapshot() -> SemioFlowSnapshot {
-    // root -e1- mid -e2- leaf: a 3-node chain.
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root", "mid"), edge("e2", "mid", "leaf")] }
 }
 

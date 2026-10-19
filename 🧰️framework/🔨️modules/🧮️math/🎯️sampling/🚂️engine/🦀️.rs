@@ -130,8 +130,6 @@ impl SequenceState {
 
     /// 🧬️ Captures the current position of every component's undo log.
     pub async fn checkpoint(&mut self) -> SequenceCheckpoint {
-        // 🔀️ Sequential `.await` loops, not `.iter_mut().map(..).collect()` — see the matching
-        // note on `SequenceState::fork` (O1 de-dyn, math-dedyn).
         let mut processor_marks = Vec::with_capacity(self.processors.len());
         for p in self.processors.iter_mut() {
             processor_marks.push(p.save().await);
@@ -179,9 +177,6 @@ impl SequenceState {
     /// 🧬️ Independent copy sharing no mutable state, with its own RNG stream split from `self`'s
     /// via `rng_split_key` — the basis for beam search and speculative decoding forks.
     pub async fn fork(&self, new_id: SequenceId, rng_split_key: StreamKey) -> Self {
-        // 🔀️ Sequential `.await` loops, not `.iter().map(..).collect()` (O1 de-dyn, math-dedyn):
-        // an iterator adapter's closure cannot itself be `async`, so a sync closure calling an
-        // `async fn` like `fork` no longer type-checks once these traits are enum-dispatched.
         let mut processors = Vec::with_capacity(self.processors.len());
         for p in &self.processors {
             processors.push(p.fork().await);
@@ -346,8 +341,6 @@ pub async fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorks
     let chosen = *selection.chosen.first().ok_or(SamplingError::EmptyDistribution)?;
 
     let next_len = input.generated.len() + 1;
-    // 🚂️ Check the length cap before EOS: when `max_tokens` is what forced EOS to be selected (see
-    // `MaxLengthForceEos` in the stateful engine), `MaxTokens` is the more informative reason.
     let finish = if next_len >= config.max_tokens {
         Some(FinishReason::MaxTokens)
     } else if input.vocab.is_eos(chosen.token).await {
@@ -356,8 +349,6 @@ pub async fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorks
         None
     };
 
-    // 🔀️ `bool::then(|| ..)` takes a sync `FnOnce`, which cannot `.await` inside it (E0728) — a
-    // plain `if` replaces it (O1 de-dyn, math-dedyn).
     let diagnostics = if config.diagnostics.enabled {
         let prob_sum: f64 = ws.probs().await.iter().map(|&p| p as f64).sum();
         Some(StepDiagnostics { entropy, effective_count: entropy.exp(), truncation_mass: 0.0, masked_by: Vec::new(), timings_ns: Vec::new(), fallback, health: Some(DistributionHealth::assess(ws.live().await.len(), prob_sum).await) })
@@ -457,10 +448,6 @@ pub async fn sample_step(
     let tokens = cast_u32_slice_to_token_ids(ws.live().await).await;
     let dist = Distribution { tokens, probs: ws.probs().await, logprobs: &logprobs, cdf: &cdf, entropy };
 
-    // 🎲️ `state.rng` is this sequence's own persistent stream (established once at construction or
-    // fork time via `StreamKey`/`split`); every step draws from it directly so its counter advances
-    // step over step. Re-deriving via `split(stream_key)` here would be wrong — `stream_key` is
-    // invariant across steps within one sequence, so every step would draw the same first value.
     let stream_key = StreamKey { request: 0, sequence: sequence_id.get(), beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
     let mut selection = SelectionBuffer::default();
     {
@@ -469,8 +456,6 @@ pub async fn sample_step(
     }
     let chosen = *selection.chosen.first().ok_or(SamplingError::EmptyDistribution)?;
 
-    // 🚂️ Transactional commit: every phase above only read `state`; only now — because a token was
-    // definitively selected — do processors/constraints/stops/history actually change.
     let mut stop_reason = None;
     {
         let view = StepView { sequence: sequence_id, step, prompt: &state.prompt, generated: &state.generated, vocab, adapter, last_entropy: Some(entropy) };
@@ -492,9 +477,6 @@ pub async fn sample_step(
     state.checkpoints.push(checkpoint);
 
     let next_len = state.generated.len();
-    // 🔀️ `Option::or_else(|| ..)` takes a sync `FnOnce` too (E0728) — same fix as the
-    // `bool::then` sites (O1 de-dyn, math-dedyn).
-    // 🚂️ Same MaxTokens-before-EosToken priority as `sample_step_stateless` — see its comment.
     let finish = match stop_reason {
         Some(reason) => Some(reason),
         None => {

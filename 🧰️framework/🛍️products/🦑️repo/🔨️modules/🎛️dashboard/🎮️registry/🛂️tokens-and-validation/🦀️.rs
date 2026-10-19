@@ -122,13 +122,14 @@ impl Scope<'_> {
                 }
             }
             let applies = declaration.applies_to.clone().unwrap_or_default();
-            if declaration.applies_to.is_some() && applies.verbs.is_none() && applies.playground.is_none() { scope.report("`appliesTo` needs `verbs` or `playground`"); }
-            if declaration.applies_to.is_some() && applies.verbs.is_none() && applies.playground == Some(false) { scope.report("`appliesTo` selects nothing"); }
+            if applies.all == Some(false) { scope.report("`appliesTo.all` must be true"); }
+            if applies.all.is_some() && applies.verbs.is_some() { scope.report("`appliesTo` cannot combine `all` and `verbs`"); }
+            if declaration.applies_to.is_some() && applies.all != Some(true) && applies.verbs.is_none() && applies.playground != Some(true) { scope.report("`appliesTo` selects nothing"); }
             for verb in applies.verbs.iter().flatten() { if !is_verb(verb) { scope.report(format!("verb {verb:?} must be a lowercase word")); } }
             if applies.verbs.as_ref().is_some_and(Vec::is_empty) { scope.report("`appliesTo.verbs` lists no verb"); }
             let forbid = |scope: &mut Scope<'_>, kind: &str, members: &[(&str, bool)]| for (name, present) in members { if *present { scope.report(format!("a {kind} has no `{name}`")); } };
             let (effects, values, destinations) = ([("env", declaration.env.is_some()), ("buildFlags", declaration.build_flags.is_some()), ("args", declaration.args.is_some())], [("values", declaration.values.is_some())], [("valueEnv", declaration.value_env.is_some()), ("valueFlag", declaration.value_flag.is_some()), ("valuePositional", declaration.value_positional.is_some())]);
-            let mut parameter = Parameter { id: declaration.id.clone(), title: scope.localized("title", declaration.title.as_ref()), description: scope.localized("description", declaration.description.as_ref()), kind: declaration.kind, origin, default: None, required: declaration.required.unwrap_or(false), values: Vec::new(), effect: Effect::default(), destination: Destination::Token, suggestions: declaration.suggestions.clone(), verbs: applies.verbs.clone(), playground: applies.playground.unwrap_or(false), scoped: declaration.applies_to.is_some() };
+            let mut parameter = Parameter { id: declaration.id.clone(), title: scope.localized("title", declaration.title.as_ref()), description: scope.localized("description", declaration.description.as_ref()), kind: declaration.kind, origin, default: None, required: declaration.required.unwrap_or(false), values: Vec::new(), effect: Effect::default(), destination: Destination::Token, suggestions: declaration.suggestions.clone(), all: applies.all.unwrap_or(false), verbs: applies.verbs.clone(), playground: applies.playground.unwrap_or(false), scoped: declaration.applies_to.is_some() };
             match declaration.kind {
                 ParameterKind::Choice => {
                     forbid(&mut scope, "choice", &effects); forbid(&mut scope, "choice", &destinations);

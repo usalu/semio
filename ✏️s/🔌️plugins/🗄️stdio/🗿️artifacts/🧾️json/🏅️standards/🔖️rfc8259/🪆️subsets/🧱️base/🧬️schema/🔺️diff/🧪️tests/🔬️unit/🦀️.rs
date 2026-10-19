@@ -61,7 +61,6 @@ fn object_diff(d: JsonObjectDiff) -> JsonDiff {
 
 #[test]
 fn absorb_array_insert_then_remove_before() {
-    // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
     let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
@@ -81,7 +80,6 @@ fn absorb_array_insert_then_remove_before() {
 
 #[test]
 fn absorb_array_insert_insert_same_index_both_survive() {
-    // base = [a,b]; d1 = Insert(2,f); d2 = Insert(2,g) (against mid=[a,b,f]) -> [a,b,g,f].
     let base = snap(arr(vec![str_("a"), str_("b")]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("g") }], ..Default::default() });
@@ -98,7 +96,6 @@ fn absorb_array_insert_insert_same_index_both_survive() {
 
 #[test]
 fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
-    // base = [a]; d1 = Insert(1,f) -> mid=[a,f]; d2 = Remove(1) -> after=[a].
     let base = snap(arr(vec![str_("a")]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { removed: vec![1], ..Default::default() });
@@ -112,7 +109,6 @@ fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
 
 #[test]
 fn absorb_array_add_then_setfield_patches_added_payload() {
-    // base = []; d1 = Insert(0,{x:1}) -> mid=[{x:1}]; d2 = SetMember([0],y,2) -> [{x:1,y:2}].
     let base = snap(arr(vec![]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 0, item: objv(vec![("x", num("1"))]) }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff {
@@ -136,7 +132,6 @@ fn absorb_array_add_then_setfield_patches_added_payload() {
 
 #[test]
 fn absorb_array_modify_then_remove_drops_pending_patch() {
-    // base = [1,2]; d1 = Modify(0,9) -> mid=[9,2]; d2 = Remove(0) -> after=[2].
     let base = snap(arr(vec![num("1"), num("2")]));
     let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });

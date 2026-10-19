@@ -77,9 +77,7 @@ function createMockWasmCanvasSession(onPointerCount: (count: number) => void): W
     pointerUp(x, y, _modifiers?: CanvasInputModifiers) {
       trackPointer(x, y);
     },
-    wheel() {
-      /* no zoom in this mock */
-    },
+    wheel() {},
   };
 }
 //#endregion MockSession

@@ -13,7 +13,7 @@ use number::{Integer, Rational};
 // #region 🔖️OdeSolution
 #[derive(Clone, Debug, PartialEq)]
 pub struct OdeSolution {
-    /// For first-order results this is the solved (or implicit) relation for `y`; for the
+    /// 🌳️ For first-order results this is the solved (or implicit) relation for `y`; for the
     /// constant-coefficient homogeneous case it's the general solution `y(x)` itself.
     pub rhs: Expr,
     pub constants: Vec<Expr>,

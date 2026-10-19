@@ -32,7 +32,7 @@ pub(crate) mod native;
 #[path="🫴️receiving/🦀️.rs"]
 mod receiving;
 /// 🫴️ Shares the original paid raw carrier binder with the required pack receiver.
-pub(crate)fn bind_raw_pack(bytes:&[u8],slot:&mut Option<BinarySnapshot>,native:&mut semio_framework_value::NativeDecodeControl<'_>,body:&mut store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
+pub(crate)fn bind_raw_pack(bytes:&[u8],slot:&mut Option<BinarySnapshot>,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,body:&mut store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
  receiving::bind(receiving::Carrier::Raw(bytes),crate::STDIO_BINARY_DOCUMENT_SCHEMA,slot,native,body)
 }
 

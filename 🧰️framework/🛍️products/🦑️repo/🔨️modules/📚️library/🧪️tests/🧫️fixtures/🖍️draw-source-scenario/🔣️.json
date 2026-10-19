@@ -337,7 +337,7 @@
       "realizedNodeCount": 16,
       "pathBudgetReserve": {
         "derivation": "longest-canonical-descendant-suffix",
-        "bytes": 72
+        "utf16Units": 52
       }
     }
   },

@@ -321,12 +321,16 @@ impl McpServer {
         match outcome {
             Ok(result) => {
                 broadcast_tool_result_changes(name, result.is_error, result.structured_content.as_ref());
-                DispatchOutcome::Result(serde_json::json!({
+                let structured = result.wire_structured_content(|| self.tools.list().iter().any(|tool| tool.name == name && tool.output_schema.is_some()));
+                let mut wire = serde_json::json!({
                     "resultType": "complete",
                     "content": result.content,
-                    "structuredContent": result.structured_content,
                     "isError": result.is_error,
-                }))
+                });
+                if let Some(structured) = structured {
+                    wire["structuredContent"] = structured;
+                }
+                DispatchOutcome::Result(wire)
             }
             Err(error) => {
                 let (code, message, data) = error.to_json_rpc_parts();

@@ -16,6 +16,8 @@ use semio_s_artifact_procedural_3d_mut_transforms::rotate_transforms::rotate_tra
 use semio_s_artifact_procedural_3d_mut_transforms::scale_transforms::scale_transforms;
 use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
 use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::create_widget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 const TRANSLATE: &str = "shape__gumball_translate";
 const ROTATE: &str = "shape__gumball_rotate";
@@ -154,8 +156,6 @@ fn payload_invariants_are_fatal() {
 #[test]
 fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
     use semio_framework_diagnostic::Severity::Error;
-use semio_framework_diagnostic::Severity::Warning;
-use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
     let base = base([0.0; 3]);
     for (value, range) in [(7.5, (0.0, 10.0)), (42.0, (0.0, 50.0))] {
         let applied = applied_and_restored(&change_slider_value("height", value), &base);

@@ -194,16 +194,16 @@ pub struct HeadedStuds {
 #[value(rename_all = "camelCase")]
 pub struct CharacteristicAction {
     pub id: String,
-    /// permanent | imposed | snow | wind | construction | fatigue
+    /// 📌️ permanent | imposed | snow | wind | construction | fatigue
     pub kind: String,
-    /// self_steel | wet_concrete | finishes | A..H | flm3 | …
+    /// 🚦️ self_steel | wet_concrete | finishes | A..H | flm3 | …
     pub category: String,
-    /// construction | composite
+    /// 🪜️ construction | composite
     pub stage: String,
-    /// Characteristic area load q_k [Pa = N/m²] (× member tributary width → line).
+    /// 🗺️ Characteristic area load q_k [Pa = N/m²] (× member tributary width → line).
     #[dsl(unit = "Pa")]
     pub q_area_pa: f64,
-    /// Sole characteristic concentrated force [N] when `q_area_pa ≈ 0` (never both).
+    /// ☝️ Sole characteristic concentrated force [N] when `q_area_pa ≈ 0` (never both).
     #[dsl(unit = "N")]
     pub f_k_n: f64,
     #[dsl(unit = "Pa")]
@@ -220,14 +220,14 @@ pub struct CharacteristicAction {
 #[value(rename_all = "camelCase")]
 pub struct ColumnAction {
     pub id: String,
-    /// permanent | imposed | snow | wind | construction
+    /// 📜️ permanent | imposed | snow | wind | construction
     pub kind: String,
     pub category: String,
-    /// construction | composite
+    /// 👣️ construction | composite
     pub stage: String,
     #[dsl(unit = "N")]
     pub n_k_n: f64,
-    /// Characteristic bending moment [N·m].
+    /// 🪢️ Characteristic bending moment [N·m].
     pub m_k_nm: f64,
 }
 
@@ -243,7 +243,7 @@ pub struct CompositeBeam {
     pub span_m: f64,
     #[dsl(unit = "m")]
     pub spacing_m: f64,
-    /// simply_supported | continuous_2_span
+    /// 🪝️ simply_supported | continuous_2_span
     pub support: String,
     pub construction: String,
     pub steel: SteelSection,
@@ -276,11 +276,11 @@ pub struct CompositeBeam {
 #[value(rename_all = "camelCase")]
 pub struct CompositeColumn {
     pub id: String,
-    /// encased | concrete_filled | partially_encased
+    /// 🔩️ encased | concrete_filled | partially_encased
     pub kind: String,
     #[dsl(unit = "m")]
     pub length_m: f64,
-    /// Outer diameter (CHS) or side length (SHS) for local buckling / confinement [m].
+    /// 📤️ Outer diameter (CHS) or side length (SHS) for local buckling / confinement [m].
     #[dsl(unit = "m")]
     pub outer_size_m: f64,
     #[dsl(unit = "m")]
@@ -314,7 +314,7 @@ pub struct CompositeSlab {
     pub id: String,
     #[dsl(unit = "m")]
     pub span_m: f64,
-    /// simply_supported | continuous_2_span
+    /// 🤝️ simply_supported | continuous_2_span
     pub support: String,
     pub sheeting: ProfiledSheeting,
     #[dsl(unit = "m")]

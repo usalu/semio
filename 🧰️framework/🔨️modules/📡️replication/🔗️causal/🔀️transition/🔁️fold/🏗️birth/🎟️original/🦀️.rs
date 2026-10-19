@@ -1,6 +1,6 @@
 //! 🎟️ History coroutines retain original runners and decoder lineage through construction and closure.
 use super::super::*;
-use semio_framework_value::{NativeDecodeControl, native_decoding::{NativeDecodeCloseControl, OriginalReceivingPrimary, NativeConstructionStepOutcome, NativeConstructionStepResult}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeCloseControl, native_decoding::OriginalReceivingPrimary, native_decoding::NativeConstructionStepOutcome, native_decoding::NativeConstructionStepResult};
 
 fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, message) }
 

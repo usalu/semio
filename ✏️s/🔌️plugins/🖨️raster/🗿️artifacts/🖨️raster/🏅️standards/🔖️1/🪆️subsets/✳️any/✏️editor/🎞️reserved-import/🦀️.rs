@@ -78,7 +78,7 @@ impl RasterImportJob {
     /// 🧯️ Stages one bounded fault description for the next publication turns.
     pub(super) fn stage_fault(&mut self, detail: &str) {
         let bytes = detail.as_bytes();
-        self.source = bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec();
+        self.source = bytes[..bytes.len().min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)].to_vec();
         self.publishing = Some(JobPublicationKind::Fault);
     }
 

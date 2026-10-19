@@ -116,7 +116,6 @@ semio_framework_plugin::app_commands! {
     /// ordinal and the two literals are two different vocabularies (camelCase manifest action id,
     /// kebab wire keyword) — both are copied verbatim from the pre-consolidation `CadCommand` enum.
     pub enum CadCommand for CadSnapshot, CadMutation, CadConfig, CadConfigMutation, ctx = CadDispatchCtx {
-        // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
         "addObject" as "add-object" => add_object::AddObject,
         "patchObject" as "patch-object" => patch_object::PatchObject,
         "patchSelection" as "patch-selection" => patch_selection::PatchSelection,
@@ -136,7 +135,6 @@ semio_framework_plugin::app_commands! {
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
 
-        // 👁️ Local configuration only — emit app or exact-window configuration, never document operations.
         "setCamera" as "camera" => set_camera::SetCamera,
         "setProjection" as "projection" => set_projection::SetProjection,
         "setProjectionParam" as "projection-param" => set_projection_param::SetProjectionParam,
@@ -155,7 +153,6 @@ semio_framework_plugin::app_commands! {
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
         "setContributions" as "contributions" => set_contributions::SetContributions,
 
-        // 🐚️ Shell effects — export/import round-trips through the host, no operations either way.
         "saveSelected" as "save-selected" => save_selected::SaveSelected,
         "saveInPlay" as "save-in-play" => save_in_play::SaveInPlay,
         "saveCurrent" as "save-current" => save_current::SaveCurrent,
@@ -232,8 +229,6 @@ impl CadPlayApp {
             building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
             energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
             structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
-            // 🪟️ One `TreeWindows` per rendered body, read from the host's `ViewModel.tree_windows`:
-            // it decides which containers are open and which row slice each one materialises.
             document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels, &TreeWindows::for_body(view_state, document::CAD_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
             catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels, &TreeWindows::for_body(view_state, catalogue::CAD_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
             inspection::CAD_PLAY_BODY_PROPERTIES => {

@@ -26,7 +26,7 @@ import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
 export interface SelectionModeStore {
   get(): MergeMode;
   set(mode: MergeMode): void;
-  /** Registers a callback invoked whenever `set` changes the mode. Returns an unsubscribe function. */
+  /** 👂️ Registers a callback invoked whenever `set` changes the mode. Returns an unsubscribe function. */
   subscribe(callback: () => void): () => void;
 }
 
@@ -52,21 +52,21 @@ function createSelectionModeStore(): SelectionModeStore {
  * on one page. Populated incrementally: theming/i18n/keyboard fields land with their own waves. */
 export interface ShellScope {
   readonly shellId: string;
-  /** The shell's own root element (the `.semio-scope` div `FrameworkOsShell` renders into). */
+  /** 🌳️ The shell's own root element (the `.semio-scope` div `FrameworkOsShell` renders into). */
   readonly rootRef: { current: HTMLElement | null };
-  /** Fixed-position overlay layer, last child of the shell root — the portal target for menus, drag
+  /** 🥞️ Fixed-position overlay layer, last child of the shell root — the portal target for menus, drag
    * ghosts, and dialogs so they never escape to `document.body` and collide with another shell. */
   readonly portalLayerRef: { current: HTMLElement | null };
   readonly storage: StoragePort;
-  /** True only for the shell `bootFrameworkOs` mounts as the sole app on its own page — gates the
+  /** 👪️ True only for the shell `bootFrameworkOs` mounts as the sole app on its own page — gates the
    * handful of behaviors that are legitimately page-global (document title, browser history sync). */
   readonly ownsPage: boolean;
-  /** `querySelector` scoped to this shell's root, replacing document-wide lookups. */
+  /** 🔍️ `querySelector` scoped to this shell's root, replacing document-wide lookups. */
   query(selector: string): HTMLElement | null;
-  /** `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
+  /** 🔎️ `querySelectorAll` scoped to this shell's root, replacing document-wide lookups. */
   queryAll(selector: string): HTMLElement[];
   readonly selection: SelectionModeStore;
-  /** This shell's own i18next instance (see `createShellI18nInstance`) — `useUiTranslation`/`useLabel`
+  /** 🥚️ This shell's own i18next instance (see `createShellI18nInstance`) — `useUiTranslation`/`useLabel`
    * pick it up automatically via the nearest `I18nextProvider` ancestor (`FrameworkOsShell` renders one
    * around its subtree), so no call site outside `ShellScope` plumbing itself needs to change. */
   readonly i18n: typeof i18next;

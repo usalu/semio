@@ -180,7 +180,7 @@ func TestExhaustiveSectionCommands(t *testing.T) {
 		{"Go", ".go", "package main\n// #region 🔖️%s\nvar y = 2\n// #endregion 🔖️%s\n", "Renamed"},
 		{"Python", ".py", "# #region 🔖️%s\ny = 2\n# #endregion 🔖️%s\n", "Renamed"},
 		{"CSharp", ".cs", "// #region 🔖️%s\nvar y = 2;\n// #endregion 🔖️%s\n", "Renamed"},
-		{"Rust", ".rs", "// #region 🔖️%s\nlet y = 2;\n// #endregion 🔖️%s\n", "Renamed"},
+		{"Rust", ".rs", "mod my_section { // 🔖️%s\nconst Y: i32 = 2;\n} // 🔖️%s\n", "Renamed"},
 		{"Ruby", ".rb", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
 		{"Shell", ".sh", "# region %s\ny=2\n# endregion %s\n", "Renamed"},
 		{"TOML", ".toml", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
@@ -192,9 +192,6 @@ func TestExhaustiveSectionCommands(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.name == "Rust" {
-				t.Skip("Rust section move/extract has a known issue with mod-based section format")
-			}
 			sectionName := "MySection"
 			filename := "test" + tc.ext
 			filePath := filepath.Join(testDir, filename)

@@ -180,8 +180,6 @@ describe("document backbone worker wire", () => {
       expect(sent).toHaveLength(1);
       expect(sent[0].actionSequence).toBe(1);
       expect(mailbox.pending()).toBe(1);
-      // 📬️ A second intent during the first is QUEUED, not refused: it owns sequence 2 but is not sent yet, and a
-      // receipt naming that unsent sequence is foreign.
       const queued = mailbox.dispatchIntent(owner, "map", intent);
       expect(sent).toHaveLength(1);
       expect(mailbox.pending()).toBe(2);
@@ -192,7 +190,6 @@ describe("document backbone worker wire", () => {
       expect(mailbox.settle(acknowledged)).toBe(true);
       expect(equal(await pending, acknowledged)).toBe(true);
       expect(mailbox.settle(acknowledged)).toBe(false);
-      // 🚚️ Settling the first sends the queued one; its receipt settles it alone.
       expect(sent).toHaveLength(2);
       expect(sent[1].actionSequence).toBe(2);
       expect(mailbox.pending()).toBe(1);
@@ -211,7 +208,6 @@ describe("document backbone worker wire", () => {
     } finally {
       mailbox.close("test cleanup");
     }
-    // 🎛️ Three rapid commands: sent one at a time in issue order, each settled by its own receipt, resolved in order.
     const rapidSent: number[] = [];
     const rapid = new BrowserActorActionMailboxV1((request) => { rapidSent.push(request.actionSequence); });
     try {
@@ -233,7 +229,6 @@ describe("document backbone worker wire", () => {
     } finally {
       rapid.close("test cleanup");
     }
-    // 🧮️ Capacity bounds the queue behind the in-flight request; the overflow is a typed `queue-full` refusal.
     const boundedSent: number[] = [];
     const bounded = new BrowserActorActionMailboxV1((request) => { boundedSent.push(request.actionSequence); }, 1000, 1);
     try {
@@ -244,7 +239,6 @@ describe("document backbone worker wire", () => {
       expect(await overflow.catch((error) => browserActorActionRefusalReasonV1(error))).toBe("queue-full");
       expect(boundedSent).toEqual([1]);
       expect(bounded.pending()).toBe(2);
-      // 🛑️ `close` rejects the in-flight AND the queued waiter, once.
       const firstClosed = expect(first).rejects.toThrow("owner retired");
       const secondClosed = expect(second).rejects.toThrow("owner retired");
       bounded.close("browser-actor-action: owner retired");
@@ -292,8 +286,6 @@ describe("document backbone worker wire", () => {
     const timedSent: number[] = [];
     const timed = new BrowserActorActionMailboxV1((request) => { timedSent.push(request.actionSequence); }, 10);
     try {
-      // ⏱️ The completion timer starts when a request is SENT: the queued second request cannot expire while it
-      // waits behind the first, and the first's expiry settles it alone and sends the next.
       const expired = expect(timed.dispatchIntent(owner, "map", intent)).rejects.toThrow("unconfirmed");
       const behind = timed.dispatchIntent(owner, "map", intent);
       expect(timedSent).toEqual([1]);

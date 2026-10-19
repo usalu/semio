@@ -4,7 +4,7 @@ import {readHubDrillRequestV1} from "../../🧪️testing/💾️backup-restore/
 import {createRequestedIssuedResourceControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runHubVitestV1} from "../../🧪️testing/🎛️run/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
@@ -16,8 +16,8 @@ import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃�
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { TEST_LEVEL_BUDGET_MS,type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runBunxStatus } from "../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runVitest } from "../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runBunxStatus } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
+import { runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { runRepositoryTestCommand } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -43,7 +43,7 @@ class TestScript extends BundleScript {
 abstract class BackendE2eScript extends BundleScript {
   protected abstract readonly scenario: "two-client-document"|"document-growth";
   protected abstract readonly minimumLevel: TestLevel;
-  async run(segments:string[]):Promise<void>{const[name,...extra]=segments,{level,rest}=resolveTestLevel(extra,this.minimumLevel);if(name!=="sqlite")throw Error("Hub external backend e2e requires a genuine owned claim, funded cleanup and writer observer; only sqlite is currently admitted");await runHubVitestV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"hub:e2e",TEST_LEVEL_BUDGET_MS[level]),{version:1,level,scenario:this.scenario,backend:name,arguments:rest});}
+  async run(segments:string[]):Promise<void>{const[name,...extra]=segments,{level,rest}=resolveTestLevel(extra,this.minimumLevel);if(name!=="sqlite")throw new Error("Hub external backend e2e requires a genuine owned claim, funded cleanup and writer observer; only sqlite is currently admitted");await runHubVitestV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"hub:e2e",TEST_LEVEL_BUDGET_MS[level]),{version:1,level,scenario:this.scenario,backend:name,arguments:rest});}
 }
 
 /** 📈️ Prints one backend start step on stderr: `[os-hub-ts] backend postgres start 12 s`. */
@@ -174,7 +174,7 @@ function missingHubPrecondition(error: unknown): boolean {
 /** 💾️ Runs bounded backup/restore rounds between actual candidate Host roots and owned tar children. */
 class BackupRestoreDrillScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
+    if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw new Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
     const startedAt = new Date();
     const interrupt = interruptSignal();
     const { runBackupRestoreDrill } = await import("../../🧪️testing/💾️backup-restore/🟦️.ts");
@@ -207,7 +207,7 @@ class BackupRestoreDrillScript extends BundleScript {
 /** 🛑️ Runs bounded actual Host shutdown and same-data restart rounds under the carried phase. */
 class ShutdownDrillScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
+    if(segments.includes("--catalog-root")||segments.includes("--keep")||process.env.OS_HUB_BINARY!==undefined)throw new Error("Drill executable, catalog and data are owned by actual Host callbacks; free path and retained scratch options are unsupported");
     const startedAt = new Date();
     const interrupt = interruptSignal();
     const { runShutdownDrill, SHUTDOWN_EXIT_BOUND_MS } = await import("../../🧪️testing/💾️backup-restore/🟦️.ts");
@@ -529,4 +529,4 @@ class TypecheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("document-growth-e2e", DocumentGrowthE2eScript).register("backend", BackendScript).register("backup-restore-drill", BackupRestoreDrillScript).register("shutdown-drill", ShutdownDrillScript).register("residency-watch", ResidencyWatchScript).register("boot-watch", BootWatchScript).register("hub-freshness", HubFreshnessScript).register("agent-ceiling-check", AgentCeilingCheckScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("typecheck", TypecheckScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

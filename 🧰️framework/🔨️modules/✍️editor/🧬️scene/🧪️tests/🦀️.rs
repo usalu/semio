@@ -1,7 +1,8 @@
 //! 🧪️ Canonical typed scene inputs preserve exact values under caller-declared framing.
 use semio_framework_editor::scene::{decode, from_json};
 use semio_framework_editor::EditorHost;
-use semio_framework_value::{DslValue, NativeDecodeControl, ToValue};
+use semio_framework_value::{DslValue, ToValue};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use pack::intrinsic::IntrinsicFormat;
 use semio_framework_dsl_record::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
 use serde_json::Value;

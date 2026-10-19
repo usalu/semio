@@ -245,6 +245,8 @@ struct ContainerAttrs {
     transparent: bool,
     bound: Option<String>,
     crate_path: Option<String>,
+    native_owned_path: Option<String>,
+    persistent_path: Option<String>,
     retire_with: Option<String>,
     default_controlled: Option<String>,
     deserialize_controlled_with: Option<String>,
@@ -341,6 +343,8 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "bound" => out.bound = value,
             "rename_all_fields" => out.rename_all_fields = value,
             "crate" => out.crate_path = value,
+            "native_owned" => out.native_owned_path = value,
+            "persistent" => out.persistent_path = value,
             "retire_with" => out.retire_with = value,
             "default_controlled" => out.default_controlled = value,
             "deserialize_controlled_with" => out.deserialize_controlled_with = value,
@@ -361,6 +365,18 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
 fn container_crate_path(container: &ContainerAttrs) -> syn::Path {
     let path = container.crate_path.as_deref().unwrap_or("::semio_framework_value");
     syn::parse_str(path).expect("valid #[value(crate = \"...\")] path")
+}
+
+/// 🛬️ Resolves the crate that owns `native_decoding`: an explicit `native_owned` key, else the authored `crate` root that supplies everything, else the owner crate.
+fn container_native_owned_path(container: &ContainerAttrs) -> syn::Path {
+    let path = container.native_owned_path.as_deref().or(container.crate_path.as_deref()).unwrap_or("::semio_framework_value_native_owned");
+    syn::parse_str(path).expect("valid #[value(native_owned = \"...\")] path")
+}
+
+/// 🟰️ Resolves the crate that owns `retained_equality`: an explicit `persistent` key, else the authored `crate` root that supplies everything, else the owner crate.
+fn container_persistent_path(container: &ContainerAttrs) -> syn::Path {
+    let path = container.persistent_path.as_deref().or(container.crate_path.as_deref()).unwrap_or("::semio_framework_value_persistent");
+    syn::parse_str(path).expect("valid #[value(persistent = \"...\")] path")
 }
 
 fn parse_variant_attrs(attrs: &[syn::Attribute]) -> syn::Result<VariantAttrs> {
@@ -474,10 +490,6 @@ fn named_fields(fields: &Fields, container: &ContainerAttrs) -> syn::Result<Vec<
             Ok(NamedField { ident, wire_name, attrs, is_option: type_is_option(&field.ty) })
         })
         .collect::<syn::Result<_>>()?;
-    // 🛡️ Serde itself rejects `flatten` alongside `deny_unknown_fields` on the same struct — a
-    // flattened field's whole job is to absorb keys the container does not itself recognize, which
-    // is the exact opposite of an unknown-key check — so this derive rejects the same combination
-    // up front instead of silently picking one behavior over the other.
     if container.deny_unknown_fields && out.iter().any(|field| field.attrs.flatten) {
         return Err(syn::Error::new_spanned(named, "#[value(...)] does not support combining `flatten` with `deny_unknown_fields` (matches serde's own restriction)"));
     }
@@ -541,9 +553,6 @@ fn deny_unknown_keys(entries_expr: &proc_macro2::TokenStream, allowed: &[String]
 }
 
 fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, value_crate: &syn::Path) -> proc_macro2::TokenStream {
-    // 🌾 The wire keys a `flatten` field is entitled to absorb are everything NOT claimed by a
-    // sibling — so the deny-check's own allow-list (when no field flattens) and each flatten
-    // field's own "remaining entries" filter both key off this same non-flatten name list.
     let non_flatten_names: Vec<String> = fields.iter().filter(|field| !field.attrs.flatten).map(|field| field.wire_name.clone()).collect();
     let deny_check = if container.deny_unknown_fields {
         deny_unknown_keys(&quote! { __entries }, &non_flatten_names, value_crate)
@@ -739,6 +748,8 @@ mod canonical_tree;
 pub fn expand_canonical_tree(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{canonical_tree::expand(input)}
 
 /// 🧭️ Resolves the authored value namespace for an actual typed generator owner.
-pub(crate) fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_crate_path(&parse_container_attrs(&input.attrs)?))}
+pub fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_crate_path(&parse_container_attrs(&input.attrs)?))}
+/// 🟰️ Resolves the authored owner namespace of structural retained equality for an actual typed generator owner.
+pub fn declared_persistent_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_persistent_path(&parse_container_attrs(&input.attrs)?))}
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;
 pub fn expand_native_receive(input:&syn::DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}

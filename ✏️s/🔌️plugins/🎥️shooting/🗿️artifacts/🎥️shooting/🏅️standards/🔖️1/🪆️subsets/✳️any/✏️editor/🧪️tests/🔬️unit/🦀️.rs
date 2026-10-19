@@ -707,8 +707,6 @@ async fn shooting_io_mirrors_the_declared_artifact_kind() {
     let io = shooting_io();
     assert_eq!(io.artifact_schema, crate::SHOOTING_DOCUMENT_SCHEMA);
     assert_eq!(io.artifact.id, "2d.shooting");
-    // 🗂️ `AppIo` has no `export_stdio_kinds`/`import_stdio_kinds` string peer (see `shooting_io`'s
-    // doc comment) — the real format list lives on `artifact_kind()` instead, asserted below.
     assert_eq!(io.export_formats.len(), 0);
     assert_eq!(io.import_formats.len(), 0);
     let kind = crate::artifact_kind();

@@ -72,7 +72,6 @@ export const PresentationDeck: FC<{
       autoAnimateUnmatched: true,
       center: true,
     };
-    // Custom hash format appends `?slide=` after the path; reveal.js hash sync stays off.
     if (options?.slideNumber === true) {
       revealOptions.slideNumber = true;
     }
@@ -97,9 +96,7 @@ export const PresentationDeck: FC<{
         if (playResult !== undefined) {
           void playResult.catch(() => undefined);
         }
-      } catch {
-        // jsdom and browser autoplay policies
-      }
+      } catch {}
     };
     const syncPresentSlideMedia = (): void => {
       for (const video of deckEl.querySelectorAll<HTMLVideoElement>("video.presentation-media-video")) {
@@ -273,9 +270,7 @@ export const PresentationDeck: FC<{
       deck.off("autoanimate", onAutoAnimate);
       try {
         deck.destroy();
-      } catch {
-        // reveal destroy may throw if already torn down
-      }
+      } catch {}
       deckRef.current = null;
     };
   }, []);

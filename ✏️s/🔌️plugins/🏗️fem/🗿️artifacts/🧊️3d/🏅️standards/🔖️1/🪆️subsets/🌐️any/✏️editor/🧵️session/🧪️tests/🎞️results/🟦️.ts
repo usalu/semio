@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { applyPatch, type Operation } from "fast-json-patch";
-import corpus from "../../🧫️fixtures/🎞️results/🔣️.json" with { type: "json" };
+import corpus from "../🧫️fixtures/🎞️results/🔣️.json" with { type: "json" };
 
 /** 🎞️ Independently applies result-window publication and source-refusal transitions. */
 export function testFem3dRetainedResultsOracle(): void {

@@ -152,7 +152,6 @@ async fn op_text_binary_roundtrip_law() {
 /// `"mutation"`, not this file's own kebab-case `KINDS` convention -- see module doc comment).
 #[semio_framework_async_macros::async_test]
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) -- see R9
     fn kind_of(m: &AviMutation) -> &'static str {
         match m {
             AviMutation::SetMainHeader(_) => "set-main-header",

@@ -21,7 +21,7 @@ export interface NamedTripleDiff<K, D, T> {
 export interface DrawCanvasDiff {
   width?: DrawCanvas["width"];
   height?: DrawCanvas["height"];
-  /** tri-state: absent = unchanged, null = cleared, value = set */
+  /** 🪣️ tri-state: absent = unchanged, null = cleared, value = set */
   background?: Rgba | null;
 }
 

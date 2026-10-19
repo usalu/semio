@@ -62,6 +62,11 @@ impl ArtifactStoreOneItemFootprint {
         Ok(Self { work_items: rows, retained_bytes: 0 })
     }
 
+    /// 🔁️ The declaration of one whole-record replacement: its forward row plus the single inverse row that restores the previous record by construction.
+    pub fn for_point_invertible_item(retained_bytes: usize) -> Self {
+        Self { work_items: ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes }
+    }
+
     /// 🫧️ The declaration of one ephemeral (presence, transient, window-transient) item: its single forward row, which no
     /// inverse ever accompanies.
     pub fn for_ephemeral_item(retained_bytes: usize) -> Self {

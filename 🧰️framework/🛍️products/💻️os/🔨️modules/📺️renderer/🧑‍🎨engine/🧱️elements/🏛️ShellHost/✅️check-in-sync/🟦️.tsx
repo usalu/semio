@@ -48,7 +48,7 @@ import { shellUncommittedEditCountV1 } from "../🏁️operation-settle/🟦️.
 import { encodeAppCommandInvocation } from "../📨️window-invocation/🟦️.ts";
 import { findSpaceIndexEditor, mintDirectoryCommandRequestId, selectedSpaceArtifactCreationCatalogV1, SPACE_INDEX_DOCUMENT_ID } from "../🧾️space-artifact-creation/🟦️.ts";
 import type { ShellCoreAfterDocumentTransferAndTabs } from "../📤️document-transfer-tabs/🟦️.tsx";
-import type { BackgroundSpaceIndexSession } from "../🔒️identity-document-ports/🟦️.ts";
+import type { BackgroundSpaceIndexSession } from "../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
 
 export type ShellCoreAfterCheckInAndSync = ShellCoreAfterDocumentTransferAndTabs & ReturnType<typeof useCheckInAndSync>;
 
@@ -67,11 +67,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
   } = core;
   //#region FrameworkOsShell
   //#region 🔖️CheckIn — ticket §C5 "when the user edits an artifact, the mutations are saved and
-  // checked into vcs": status pill (`#s-sync-status`), auto check-in (idle ≥ 20s or ≥ 200 uncommitted
-  // edits), explicit check-in (`#s-checkin`), checkpoint-on-close, and the post-checkpoint
-  // `TouchArtifact` relay to the space index. Placed ahead of `🧰️FooterUtilityLeaves`/`🔄️SyncLeaf`
-  // (their `useMemo`s below close over these) — everything here is additive, no existing behaviour
-  // changed for a session outside a hub-bound space.
   const currentDocumentId = currentDocumentRuntimeKey === null ? null : (openDocumentSessionsRef.current.get(currentDocumentRuntimeKey)?.documentId ?? null);
   const selectedSpaceArtifactCreationCatalog = useMemo(() => selectedSpaceArtifactCreationCatalogV1(
     spaceArtifactCreationCatalog,
@@ -81,8 +76,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
   const selectedSpaceArtifactKinds = selectedSpaceArtifactCreationCatalog?.kinds;
   const artifactCreationChoiceRevisionRef = useRef<string | undefined>(undefined);
 
-  // 👥️ Host-only normalized roster, keyed by the exact verified document runtime. It never enters a
-  // plugin view-state payload, so an app cannot forge or persist Shell presence chrome.
   const presencePeers = useMemo((): readonly ScopedPresencePeerV1[] => currentDocumentRuntimeKey === null ? [] : (presencePeersByRuntimeKey[currentDocumentRuntimeKey] ?? []), [currentDocumentRuntimeKey, presencePeersByRuntimeKey]);
   /** ⏪️👥️ Peers' open history edits, labelled from this program's own history rows: the roster chip says who edits
    * which mutation, and the history body's affected rows carry a note through the interpreter's presence overlay. */
@@ -247,10 +240,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
     [focusedHistoryV1, session, onAction],
   );
 
-  // 📌️ §C5 item 6 continued — `TouchArtifact` fires once per checkpoint THIS shell asked for,
-  // detected as the focused program's `currentCheckpointId` changing away from whatever it was the last
-  // time this effect ran (never on the initial mount/session-snapshot, which isn't a checkpoint WE
-  // just made).
   const previousCheckpointIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     const previous = previousCheckpointIdRef.current;
@@ -265,11 +254,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
     }
   }, [historyCheckpointId, currentDocumentId, currentDocumentRuntimeKey, requestHubCheckIn, touchSpaceIndexArtifact]);
 
-  // 📌️ §C5 item 2 — auto check-in, delegated to the framework-free `AutoCheckinScheduler`
-  // (`ShellHelpers`) so the debounce/storm-guard logic is unit-testable with fake timers without
-  // mounting this component. One scheduler instance per open editor session (rebuilt whenever
-  // `session`/`currentDocumentId` changes — a document switch is a fresh idle clock), `cancel`ed on
-  // unmount/switch (the effect's own cleanup).
   const autoCheckinSchedulerRef = useRef<AutoCheckinScheduler | null>(null);
   useEffect(() => {
     if (!isEditorSession || !currentDocumentId) {
@@ -297,12 +281,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
     return historyStore.subscribe(observe);
   }, [historyStore, focusedHistoryV1]);
 
-  // 📌️ §C5 item 4 — checkpoint on close: fires from the cleanup of an effect keyed on the program's
-  // identity and `currentDocumentId`, so it runs the instant either changes (switching document/app —
-  // this shell keeps exactly one session mounted, so "switch away" IS "close" here) as well as on true
-  // unmount — never on a new session object of the same program (every view-state rewrite mints one, and the
-  // New-alternative submit fired a close check-in into the frozen history, e2e R2-6). Best-effort (fire-and-forget, not gated on the success-detection effect above — by the
-  // time the response arrives `historyProjection` may already belong to the NEW session).
   const closingSpaceId = openSpaceIdRef.current;
   useCheckpointOnCloseV1(checkpointOnCloseKeyV1(isEditorSession, session, currentDocumentId), () => {
     if (uncommittedEditCountRef.current === 0) return;
@@ -310,8 +288,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
     if (closingSpaceId && currentDocumentId && currentDocumentId !== SPACE_INDEX_DOCUMENT_ID) void touchSpaceIndexArtifact(closingSpaceId, currentDocumentId);
   });
 
-  // 📌️ §C5 item 3 — explicit check-in: the history body's `#s-checkin` dispatches `framework.checkin` `submit`, which
-  // `onAction` answers through this ref (the same fallback message the wgpu shell uses).
   dispatchCheckpointRef.current = dispatchCheckpoint;
   //#endregion 🔖️CheckIn
 
@@ -330,8 +306,6 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
   }, [historyStore, focusedHistoryV1, uiTerminology, uiLocale]);
 
   //#region 🧰️FooterUtilityLeaves — bottom-right's History leaf: the framework-injected `framework.panel.history` tab
-  // (every app gets one — see `AppBuilder::build_definition`) rendered from the focused program's own
-  // `framework.body.history` through the interpreter, like every other panel body.
   const frameworkHistoryTab = useMemo((): PanelTabNode | null => {
     const tab = session && focusedApp ? partitionFrameworkHistoryPanelTab(focusedApp.panelTabs).history : undefined;
     return tab === undefined ? null : panelTabDefinitionToNode(tab, tab.group, focusedPanelBodyStores, onAction, 1, appLabelsOverlay, uiTerminology, uiLocale, treeWindowHost, panelTreeConfigCacheRef.current, focusedBrowserActorPanels);
@@ -341,18 +315,9 @@ export function useCheckInAndSync(core: ShellCoreAfterDocumentTransferAndTabs) {
   //#region 🔄️SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
   const quarantinedConflicts = useMemo(() => selectQuarantinedConflicts(shellState), [shellState]);
   const frameworkSyncTab = useMemo((): PanelTabNode | null => {
-    // 🩹️ `buildFrameworkSyncUtilities` already returns `readonly FrameworkSyncUtilityLeaf[]` — the
-    // `as readonly UtilityNode[]` cast this line used to carry was simply the wrong target type for
-    // `SyncAttachCard`'s own prop (a stale workaround, not a real narrowing need).
     const syncUtilities = buildFrameworkSyncUtilities(syncBackboneUri);
     if (!syncUtilities.length) return null;
     const syncStatus = syncBackboneUri ? (syncStatusByDocumentId[syncBackboneUri.replace(/^actor:\/\//, "")] ?? null) : null;
-    // 📌️ §C5 item 1 — the status pill lives on THIS tab's own folded chrome button (`id`/`name`,
-    // always visible in the footer's tab strip, no click needed) rather than the manual sync-card's
-    // OWN status line further below (`SyncAttachCard`'s `syncStatusLabel`, peer-owned, unchanged) —
-    // the pill reflects the CURRENT session's document (`syncPillState`, computed in `🔖️CheckIn`
-    // above from `currentDocumentId`), not just a manually-attached `remote://` override, so it
-    // updates for the common case (identity auto-bound to a hub space) too.
     return singleTreeLeaf({
       id: "s-sync-status",
       icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.sync),

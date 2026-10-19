@@ -9,7 +9,7 @@ import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1,openRepositoryCachePartitionV1}from"../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{repositoryCacheBudgetV1}from"../../../../../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import*as owner from"../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import*as leases from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import*as leases from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import schema from"./🧬️schema.json";
 import corpus from"./🔣️.json";
 import physical from"../🔣️.json";

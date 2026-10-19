@@ -109,11 +109,6 @@ async fn regenerate_committed_diff_fixtures() {
                 walk(&path, out);
             } else if path.file_name().is_some_and(|name| name == "🔣️.json")
                 && path.parent().is_some_and(|parent| parent.file_name().is_some_and(|name| name == "🔺️diff"))
-                // 🚧️ `🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json` is the committed JSON *SCHEMA* for
-                // `NoteDiff`, not a fixture instance of one — and `NoteDiff` decodes it leniently
-                // (its `title` field swallows the schema's own `"title": "NoteDiff"`), so a
-                // regeneration pass that reaches it silently replaces 309 lines of schema with a
-                // 17-line diff instance. Only fixtures under `🧫️fixtures/` are regenerable.
                 && path.components().any(|component| component.as_os_str().to_string_lossy() == "🧫️fixtures")
             {
                 out.push(path);

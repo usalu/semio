@@ -29,8 +29,8 @@ export interface FlowEdgeDiff {
 }
 export type FlowEdgesDiff = NamedTripleDiff<string, FlowEdgeDiff, FlowEdge>;
 export interface SemioFlowDiff {
-  /** @state artifact */ nodes?: FlowNodesDiff;
-  /** @state artifact */ edges?: FlowEdgesDiff;
+  /** 🔘️ @state artifact */ nodes?: FlowNodesDiff;
+  /** 🔗️ @state artifact */ edges?: FlowEdgesDiff;
 }
 
 /** 🧩 One positional add: the row and the final index it lands at. */

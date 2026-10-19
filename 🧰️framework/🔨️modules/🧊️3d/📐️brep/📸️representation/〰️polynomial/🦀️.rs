@@ -18,13 +18,11 @@ pub struct Poly {
 }
 
 impl Poly {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(coeffs: Vec<f64>) -> Self {
         Poly { coeffs }
     }
     /// ∿ Degree of the polynomial after trimming trailing (highest-order) exact zeros; a
     /// constant zero polynomial has degree `0`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn degree(&self) -> usize {
         let mut d = self.coeffs.len().saturating_sub(1);
         while d > 0 && self.coeffs[d] == 0.0 {
@@ -33,13 +31,11 @@ impl Poly {
         d
     }
     /// ∿ Horner evaluation.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, x: f64) -> f64 {
         self.coeffs.iter().rev().fold(0.0, |acc, &c| acc * x + c)
     }
     /// ∿ Simultaneous Horner evaluation of the polynomial and its derivative (one pass, no
     /// separate `derivative()` allocation on the hot Newton-iteration path).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval_with_derivative(&self, x: f64) -> (f64, f64) {
         let mut value = 0.0;
         let mut deriv = 0.0;
@@ -49,7 +45,6 @@ impl Poly {
         }
         (value, deriv)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn derivative(&self) -> Poly {
         if self.coeffs.len() <= 1 {
             return Poly::new(vec![0.0]);
@@ -139,16 +134,13 @@ pub struct Bernstein {
 }
 
 impl Bernstein {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(coeffs: Vec<f64>) -> Self {
         Bernstein { coeffs }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn degree(&self) -> usize {
         self.coeffs.len().saturating_sub(1)
     }
     /// ∿ De Casteljau evaluation at `t` (need not lie in `[0, 1]`; the polynomial extends).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, t: f64) -> f64 {
         let mut work = self.coeffs.clone();
         let n = work.len();
@@ -161,7 +153,6 @@ impl Bernstein {
     }
     /// ∿ De Casteljau subdivision at `t`: returns the control points of the restriction to
     /// `[0, t]` and to `[t, 1]`, each reparameterized back onto `[0, 1]`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn subdivide(&self, t: f64) -> (Bernstein, Bernstein) {
         let n = self.coeffs.len();
         let mut table = vec![self.coeffs.clone()];
@@ -176,7 +167,6 @@ impl Bernstein {
     }
     /// ∿ Converts to monomial (power) basis via repeated finite differences of the control net:
     /// `coeff[k] = C(n,k) · Δ^k b_0`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_monomial(&self) -> Poly {
         let n = self.degree();
         let mut diffs = self.coeffs.clone();
@@ -193,7 +183,6 @@ impl Bernstein {
         Poly::new(monomial)
     }
     /// ∿ Converts a monomial polynomial to Bernstein form on `[0, 1]` (inverse of [`Self::to_monomial`]).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_monomial(p: &Poly) -> Bernstein {
         let n = p.degree();
         let coeffs = (0..=n).map(|i| (0..=i).map(|j| p.coeffs.get(j).copied().unwrap_or(0.0) * binomial(i, j) / binomial(n, j)).sum::<f64>()).collect();
@@ -203,7 +192,6 @@ impl Bernstein {
     /// `coeffs` (ignoring exact zeros) is an upper bound on, and has the same parity as, the
     /// number of real roots in `(0, 1)`. `0` sign changes certifies *no* root; `1` certifies
     /// *exactly one*.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn sign_variations(&self) -> usize {
         let nonzero: Vec<f64> = self.coeffs.iter().copied().filter(|c| *c != 0.0).collect();
         nonzero.windows(2).filter(|w| w[0].signum() != w[1].signum()).count()

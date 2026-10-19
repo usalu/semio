@@ -48,7 +48,7 @@ test("removes root implementation declarations and binds direct consumers", () =
   }
   for (const consumer of fixture.consumers) {
     const source = readFileSync(resolve(repoRoot, consumer.path), "utf8");
-    for (const owner of consumer.owners) expect(source.includes(relativeSpecifier(consumer.path, owner)) || source.includes(owner), `${consumer.path} -> ${owner}`).toBe(true);
+    for (const owner of consumer.owners) expect(source.includes(relativeSpecifier(consumer.path, owner)) || source.includes(owner) || source.includes(fixture.owners.find((row: { path: string }) => row.path === owner)?.specifier ?? "\0"), `${consumer.path} -> ${owner}`).toBe(true);
   }
 });
 

@@ -1,5 +1,5 @@
 import { WORKSPACE_ROOT } from "../../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { policyReadFileSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyAllRustFiles } from "../../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import { toolJobStoreInitializerRetainedExact } from "../📄️caller-retained-documents/🟦️.ts";
@@ -16,7 +16,7 @@ export function toolJobRasterEnvelopeSourceEvidence(root: string = WORKSPACE_ROO
   const editorPaths = [subset + "/✏️editor/🦀️.rs", subset + "/✏️editor/📤️export/🦀️.rs"];
   const testPaths = [raster + "/🔨️modules/🏠️host/🧰️owned/🧪️tests/🦀️.rs", subset + "/✏️editor/🧪️tests/🔬️unit/🦀️.rs", subset + "/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs", subset + "/✏️editor/📤️export/🧪️tests/🦀️.rs"];
   const retainedMutation = "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained";
-  const sharedPaths = [store + "/📦️codec/🧬️owned-schema/🦀️.rs", store + "/📬️paged-one-item/🦀️.rs", store + "/📬️paged-one-item/🧬️mutation-apply/🦀️.rs", store + "/🏗️initialization/🔁️replay/🦀️.rs", retainedMutation + "/🦀️.rs", retainedMutation + "/🔺️diff/🦀️.rs", value + "/🧬️retained-clone/🧺️std-collections/🦀️.rs", value + "/♻️retirement/🦀️.rs", value + "/♻️retirement/🔗️shared/🦀️.rs", value + "/♻️retirement/🎮️controlled/🦀️.rs"];
+  const sharedPaths = [store + "/📦️codec/🧬️owned-schema/🦀️.rs", store + "/📬️paged-one-item/🦀️.rs", store + "/📬️paged-one-item/🧬️mutation-apply/🦀️.rs", store + "/🏗️initialization/🔁️replay/🦀️.rs", retainedMutation + "/🦀️.rs", retainedMutation + "/🔺️diff/🦀️.rs", value + "/🧬️retained-clone/🧺️std-collections/🦀️.rs", value + "/♻️retirement/🦀️.rs", value + "/♻️retirement/🔗️arc-custody/🦀️.rs", value + "/♻️retirement/🎮️controlled/🦀️.rs"];
   const pluginPaths = [plugin + "/🦀️.rs", plugin + "/🏛️ownership/🦀️.rs", plugin + "/🧵️instance/🦀️.rs", plugin + "/🌱️initialization/♻️retirement/🦀️.rs", plugin + "/👷️job/🏛️reserved/🦀️.rs", plugin + "/♻️lifecycle/🦀️.rs", plugin + "/🗃️document/🦀️.rs", plugin + "/📜️declaration/🧩️app/🦀️.rs", plugin + "/📜️declaration/🪟️surface/🦀️.rs", plugin + "/👷️job/🚪️session/🦀️.rs"];
   const files = [...policyAllRustFiles(root).filter(path => path.startsWith(raster + "/")), raster + "/📦️packages/🦀️rust/Cargo.toml"];
   const graph = inspectRustModuleGraph(files, path => policyReadFileSafe(root, path) || undefined);

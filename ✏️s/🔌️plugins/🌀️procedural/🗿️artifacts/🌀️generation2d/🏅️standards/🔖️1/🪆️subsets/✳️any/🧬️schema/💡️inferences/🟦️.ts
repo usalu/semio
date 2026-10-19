@@ -9,7 +9,7 @@ export interface Generation2dTopology {
 }
 
 export interface Generation2dInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: Generation2dTopology;
 }
 

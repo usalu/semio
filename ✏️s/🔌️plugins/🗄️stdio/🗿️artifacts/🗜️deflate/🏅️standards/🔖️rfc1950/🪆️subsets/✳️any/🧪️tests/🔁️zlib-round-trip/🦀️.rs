@@ -37,8 +37,6 @@ mod subject {
     pub fn run(ctx: &Context) -> Result<Outcome, String> {
         let input = payload(ctx);
         let bytes = zlib_compress(&input)?;
-        // 🔁️Our own inflater must recover the input too — a compressor that only its own reader can
-        // read is not a conforming compressor.
         let recovered = zlib_decompress(&bytes)?;
         if recovered != input {
             return Err(format!("zlib_decompress(zlib_compress(input)) lost data: {} bytes in, {} bytes out", input.len(), recovered.len()));

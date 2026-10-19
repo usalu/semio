@@ -18,7 +18,10 @@ path = "../../🦀️.rs"
 [dependencies]
 replication = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-edit = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-fem-algebra = { workspace = true }
 

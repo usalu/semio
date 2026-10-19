@@ -4,7 +4,7 @@
 use semio_framework_pack_error::PackRefusal;
 use semio_framework_replication_codec::{ContentHash, PackLimits};
 use semio_framework_value::{ValueRefusalKind, RetirementDemand, ValueError};
-use semio_framework_value::list::{PagedListError, PagedListAllocationError, PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 use std::mem::size_of;
 use semio_framework_pack_format::{FOOTER_MAGIC, FOOTER_SIZE, FORMAT_VERSION_MAJOR, Footer, HEADER_SIZE, Header, MAGIC, REQUIRED_KNOWN_MASK, Superblock};
 #[cfg(test)]

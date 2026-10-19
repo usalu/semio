@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-services = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-services-native-io = { path = "../../../../🚪️native-io/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
@@ -35,3 +36,4 @@ semio-framework-value = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job-payload = { workspace = true }

@@ -1,5 +1,5 @@
 import { treeBranchSlots, rowForBranch, treeRowSlots, resolveHoverRow } from "../🧭️hover-path/🟦️.ts";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import * as React from "react";
 
 const treeHoverPathAttr = "data-tree-hover-path";

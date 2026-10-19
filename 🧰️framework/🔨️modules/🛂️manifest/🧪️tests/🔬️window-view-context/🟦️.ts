@@ -1,4 +1,4 @@
-import { windowUtility } from "../../🟦️.ts";
+import { windowUtility } from "../../👁️view-state-and-public-invocation/🟦️.ts";
 /** 🧪️ Runs the shared window-context vectors against the TypeScript implementation. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

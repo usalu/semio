@@ -145,7 +145,7 @@ function moveMouseOver(fx: number, fy: number): void {
 }
 
 function peer(anchor: string): PeerCursor {
-  return { session: `w-${anchor}`, tag: "0badc0de", label: "Mira K.", colour: 3, cursor: { anchor, x: 0.5, y: 0.5 }, focus: undefined, drag: undefined };
+  return { session: `w-${anchor}`, tag: "0badc0de", label: "Mira K.", colour: 3, place: { screen: "home" }, home: undefined, cursor: { anchor, x: 0.5, y: 0.5 }, focus: undefined, drag: undefined };
 }
 
 function cards(): readonly HTMLElement[] {

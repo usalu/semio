@@ -10,8 +10,8 @@ export interface SemioTextRun {
   marks: SemioTextMark[];
 }
 export interface SemioTextArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ runs: SemioTextRun[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🏃️ @state artifact */ runs: SemioTextRun[];
 }
 
 //#region 🚪️Parsers

@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import { encodePresencePeer, decodePresencePeer } from "../../../../../../../🔨️modules/📡️replication/🚪️io/💾️binary/👥️presence/🟦️.ts";
-import { orbitPointToScreen } from "../../../../../../../🔨️modules/📡️replication/👕️peer-overlay/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { encodePresencePeer, decodePresencePeer } from "@semio-tech/framework-replication";
+import { orbitPointToScreen } from "@semio-tech/framework-replication";
 import { PerspectiveCamera, Vector3 } from "three";
 import { publishLocalPresenceWindowViewV1, collectLocalPresenceWindowViewsV1, clearLocalPresenceWindowViewV1, publishArtifactPresenceRosterV1, artifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1, localPresenceActorV1, publishLocalActiveToolV1, collectLocalActiveToolV1 } from "../../../../📺️renderer/🧑‍🎨engine/🧱️elements/👕️canvas-presence/🟦️.ts";
 

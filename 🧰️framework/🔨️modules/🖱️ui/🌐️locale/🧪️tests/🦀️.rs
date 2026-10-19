@@ -1,7 +1,8 @@
 //! 🧪️ Replays the closed multilingual corpus through real native codecs and the Serde oracle.
 use crate::{Locale, LocalizedLabel, Terminology};
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, NativeDecodeControl, NativeEncodeControl};
-use semio_framework_value::native_decoding::NativeDecodeProgress;
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 use semio_framework_value::native_encoding::NativeEncodeProgress;
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("closed locale corpus") }

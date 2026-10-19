@@ -244,7 +244,6 @@ fn orient_consistently(triangles: &mut [[u32; 3]]) {
                 if visited[neighbour] {
                     continue;
                 }
-                // A consistently wound neighbour traverses the shared edge the other way round.
                 if directed(triangles[neighbour], from, to) {
                     let [a, b, c] = triangles[neighbour];
                     triangles[neighbour] = [a, c, b];
@@ -441,9 +440,6 @@ fn triangle_triangle_intersect(t1: [Point3; 3], t2: [Point3; 3]) -> bool {
     }
 
     let dir = n1.cross(n2);
-    // 🛡️ Scale-invariant parallel check: `n1`/`n2` carry each triangle's raw area (unnormalized),
-    // so comparing `|dir|` against a bare `TRI_EPS` would misclassify small triangles as
-    // coplanar; comparing against `|n1|²·|n2|²` compares `sin(angle-between-planes)` instead.
     if dir.dot(dir) < TRI_EPS * TRI_EPS * n1.dot(n1).max(1e-12) * n2.dot(n2).max(1e-12) {
         return coplanar_triangle_intersect(t1, t2, n1);
     }
@@ -548,7 +544,6 @@ pub fn clip_behind_triangle(a: [Point3; 3], b: [Point3; 3]) -> ClippedPolygon {
     let mut current = ClippedPolygon { vertices: [a[0]; 8], len: 3 };
     current.vertices[1] = a[1];
     current.vertices[2] = a[2];
-    // Each plane keeps `direction · (p - origin) >= 0`.
     let planes = [(b[0], -normal), (b[0], normal.cross(b[1] - b[0])), (b[1], normal.cross(b[2] - b[1])), (b[2], normal.cross(b[0] - b[2]))];
     for (origin, direction) in planes {
         let mut next = ClippedPolygon { vertices: [Point3::new(0.0, 0.0, 0.0); 8], len: 0 };
@@ -615,7 +610,6 @@ fn ray_triangle(origin: Point3, direction: Vector3, a: Point3, b: Point3, c: Poi
         return RayTriangle::Miss;
     }
     if determinant.abs() <= RAY_GRAZE * scale {
-        // 🪞️ Parallel to the plane: only a ray running inside the plane can touch the triangle, and that is ambiguous.
         let normal = ab.cross(ac);
         let height = normal.dot(origin - a).abs() / normal.norm().max(f32::MIN_POSITIVE);
         return if height <= RAY_GRAZE * extent { RayTriangle::Graze } else { RayTriangle::Miss };

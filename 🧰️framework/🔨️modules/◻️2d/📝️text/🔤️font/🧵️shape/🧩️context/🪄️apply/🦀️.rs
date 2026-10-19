@@ -1,7 +1,8 @@
 //! 🪢️ Actual nested substitutions preserve original mapping owners and progressive input-position changes.
 use super::super::{FontLookup,context::{FontContextCursor,FontContextMatch},class::FontGlyphClassCursor,ligature::FontLigatureCursor,substitute::FontSubstitutionCursor,face::{FontClusterMapping,FontMappedScalar}};
 use semio_framework_2d_text_font::{FontFace,FontOutlineLimits,FontProgress,FontReader,reserve_slot};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[path="🏪️workspace/🦀️.rs"]
 mod workspace;
 use workspace::FontWorkingMapping;

@@ -86,8 +86,8 @@ fn sqlite_snapshot_vcs_large_text_ownership_has_real_interior_copy_cancellation(
 #[test]
 fn sqlite_snapshot_vcs_typed_tag_collection_declares_its_own_interior_workload(){
  let mut snapshot=fixture();let count=laws()["control"]["tagCount"].as_u64().unwrap()as usize;snapshot.tags=vec![String::new();count];let record=snapshot.__dsl_to_record();let mut reached=false;
- let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.total==count&&event.completed>=256{reached=true;false}else{true}};
- assert!(VcsSnapshot::__dsl_from_record_controlled(&record,&mut semio_framework_value::NativeDecodeControl::new(256*1024*1024,&mut progress)).is_err());assert!(reached);
+ let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.total==count&&event.completed>=256{reached=true;false}else{true}};
+ assert!(VcsSnapshot::__dsl_from_record_controlled(&record,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(256*1024*1024,&mut progress)).is_err());assert!(reached);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -188,12 +188,12 @@ match self.press.take() {
         let tab_index = corner.map(|corner| state.window_corner_insert_index(rect, pos, corner, source));
         let mounted = self.scene.window_layouts.iter().find(|mounted| self.scene.contains(mounted.canvas) && mounted.windows.iter().any(|(_, node)| *node == chrome) && mounted.windows.iter().any(|(_, node)| *node == held_chrome))?;
         let mut projected = mounted.layout.clone();
-        if !crate::tui::layout::dock_window(&mut projected, source, &target, placement, tab_index) { return None; }
-        let window_rect = crate::tui::layout::solve_window_layout(&projected, self.scene.rect(mounted.canvas)).into_iter().find(|measure| measure.window_kind_id == source)?.rect;
+        if !semio_framework_ui_tui_frame::layout::dock_window(&mut projected, source, &target, placement, tab_index) { return None; }
+        let window_rect = semio_framework_ui_tui_frame::layout::solve_window_layout(&projected, self.scene.rect(mounted.canvas)).into_iter().find(|measure| measure.window_kind_id == source)?.rect;
         let source_node = mounted.windows.iter().find(|(id, _)| id == source)?.1;
         let NodeContent::Chrome(ChromeState::Window(source_state)) = &self.scene.try_node(source_node)?.content else { return None };
         let mut window = (**source_state).clone();
-        let stack = crate::tui::layout::stack_hosting(&projected, source)?;
+        let stack = semio_framework_ui_tui_frame::layout::stack_hosting(&projected, source)?;
         window.stack_tabs = stack.children.iter().map(|child| WindowStackTabState {
             label: child.title.clone().unwrap_or_else(|| child.window_kind_id.clone()),
             corner: child.corner.unwrap_or_default(),

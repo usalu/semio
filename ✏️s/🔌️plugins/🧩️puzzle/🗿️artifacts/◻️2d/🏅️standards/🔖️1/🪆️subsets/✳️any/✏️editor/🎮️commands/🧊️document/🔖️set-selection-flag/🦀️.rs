@@ -1,4 +1,4 @@
-//! `setSelectionLocked`).
+//! 📄️ `setSelectionLocked`).
 //! 🗂️ `set-selection-flag` command, and the two set-verbs an outliner row names (`setSelectionHidden`,
 
 use crate::editor::puzzle2d::interaction::Puzzle2dActionCtx;

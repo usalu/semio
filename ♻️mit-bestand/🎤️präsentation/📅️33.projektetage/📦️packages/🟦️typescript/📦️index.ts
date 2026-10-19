@@ -65,10 +65,7 @@ function zukunftBauSlide(id: string, name: string): Slide {
   };
 }
 
-function addZukunftBauTitleMorph(slide: Slide | undefined): Slide | undefined {
-  if (!slide) {
-    return slide;
-  }
+function addZukunftBauTitleMorph(slide: Slide): Slide {
   return {
     ...slide,
     arrangement: {

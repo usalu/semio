@@ -187,7 +187,7 @@ export function cleanIsWindowsIllegalName(name: string): boolean {
 export function cleanManagedStoragePrefixes(root:string):string[]{const budget=repositoryCacheBudgetV1(root);return [...Object.values(budget.partitions).map(partition=>partition.directory),budget.controlDirectory];}
 
 /** 🏪️ Native image backing names owned by the storage layer: only its canonical retirement may remove them. */
-export const CLEAN_NATIVE_IMAGE_BACKING_NAMES: ReadonlySet<string> = new Set(["fixed.dmg", "fixed.img", "fixed.vhd"]);
+export const CLEAN_NATIVE_IMAGE_BACKING_NAMES: ReadonlySet<string> = new Set(["fixed.dmg", "fixed.dir"]);
 
 /** 🏪️ True when a path is a native image backing file, its receipt or mount directory, or any directory holding that pair, wherever it lives. */
 export function cleanIsNativeImagePath(abs: string): boolean {

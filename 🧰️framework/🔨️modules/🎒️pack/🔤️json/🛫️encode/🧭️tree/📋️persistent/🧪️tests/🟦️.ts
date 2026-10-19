@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020.js";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 test("original persistent rows retain canonical logical array order",()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
  const db=new Database(":memory:");

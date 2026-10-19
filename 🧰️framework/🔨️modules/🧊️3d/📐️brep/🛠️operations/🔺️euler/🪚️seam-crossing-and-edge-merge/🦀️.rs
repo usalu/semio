@@ -42,12 +42,6 @@ pub fn split_face_by_seam_crossing(body: &mut Body, face: FaceId, edge_id: EdgeI
         return Err(KernelError::Operation("seam-crossing edge does not partition the outer loop into two non-empty chains".into()));
     }
 
-    // Which way round the closed imprint edge runs is NOT free: it has to continue from where the
-    // boundary chain it closes left off. Topology cannot say — a closed edge has `v0 == v1`, so
-    // both senses "connect" — but the p-curve can, and it must, because getting it wrong hands one
-    // of the two pieces a reversed ring, which then traverses every edge it shares with the other
-    // operand the same way that operand does (`orientation-inconsistent`) and leaves a UV boundary
-    // that runs backwards through itself. Fixing it to `false`/`true` was right half the time.
     let junction = member_uv(body, members[ib], true);
     let forward_a = match (junction, body.curves2.get(pcurve)) {
         (Some(uv), Some(pc)) => {

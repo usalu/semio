@@ -1,4 +1,4 @@
-//! count is a mode-level tool measure over the shared config; progress, pause, single step, abort and finalize
+//! 📶️ count is a mode-level tool measure over the shared config; progress, pause, single step, abort and finalize
 //! 🪣️ Edit-mode tool — Fill: a whole-document generator (not a window utility) declared as a tool run. Its
 //! are the framework ToolRun panel and actions (`📋️tool-run-contract.md` §2.4–§2.6), and tested candidates are
 //! `placement2d` trace records.
@@ -21,7 +21,7 @@ use semio_framework_tool_run::ToolRunReconfigurePolicy;
 use semio_framework_tool_run::ToolRunSettingsReads;
 use semio_framework_tool_run::ToolRunStageDefinition;
 use semio_framework_tool_run::ToolRunTraceKind;
-use semio_s_artifact_puzzle_2d::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
+use semio_s_artifact_puzzle_2d_tests::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "fill";

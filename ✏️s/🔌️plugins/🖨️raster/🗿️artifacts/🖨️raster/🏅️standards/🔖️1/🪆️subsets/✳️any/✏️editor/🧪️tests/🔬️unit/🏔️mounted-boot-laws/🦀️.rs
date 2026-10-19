@@ -15,7 +15,7 @@ pub mod mounted {
 
     pub const RASTER_TEST_INSTANCE: u32 = 1;
 
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    /// 🔌️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
     pub struct MountedRasterApp(pub VcsArtifactApp<EditorApp<RasterPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for MountedRasterApp {

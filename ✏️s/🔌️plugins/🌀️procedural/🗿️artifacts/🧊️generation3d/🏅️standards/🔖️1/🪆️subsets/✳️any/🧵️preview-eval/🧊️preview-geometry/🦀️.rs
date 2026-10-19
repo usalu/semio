@@ -56,7 +56,6 @@ pub fn is_brep_geometry_handle(handle: &str) -> bool {
     {
         return true;
     }
-    // Blake3 hex digests minted by `BrepKernel::mint` (no kind prefix).
     handle.len() == 64 && handle.as_bytes().iter().all(u8::is_ascii_hexdigit)
 }
 
@@ -389,8 +388,6 @@ pub fn mesh_data_for_session_preview_channel(
     if let Some(data) = mesh_data_for_preview_handle(handle, tolerance, Some(session)) {
         return Some(data);
     }
-    // 🚦️ A refused handle must not keep painting the last converged solid on top of the fault the
-    // status pill already names — the supersession fallback is only for "new pack still crossing".
     if session.preview_diagnostics(handle).is_some() {
         return None;
     }
@@ -530,12 +527,6 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
         return Ok(Vec::new());
     };
     let tolerance_bits = tolerance.to_bits();
-    // 🖼️ The PAINTED evaluation, not the live walk's own: `retain_preview_meshes` below drops every
-    // mesh whose handle is not in this set, and a node that is merely recomputing has no handle in
-    // the live answer at all — so retaining against it threw away the very mesh the preview is still
-    // showing, and the geometry could not come back without a fresh round trip it had already paid
-    // (`📓️slider-latency-incremental-eval-2026-09-15.md` §3.2). A stale handle that already holds a
-    // mesh is skipped by `pending_preview_tessellate_handles`, so nothing is re-tessellated for it.
     let (live, pending) = {
         let eval_json = session.painted_eval_json();
         if eval_json.is_empty() {

@@ -3,7 +3,8 @@
     /// 🔐️ Adopts the exact member owner catalog a product child carries from
     /// `create_member_store`, for a law that first drove the refusal an owner-less member owes and
     /// then has to close the app it registered that member into.
-    fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
+    use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
+fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         let TestMembers::Child(child) = &mut app.child_composition.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child owner").member;
         store::install_funded_member_store_owners(child,&semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer).expect("actual funded member catalog");
     }

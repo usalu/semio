@@ -1,4 +1,4 @@
-//! Diff for `change-beam-action-q-area-pa`.
+//! 🔺️ Diff for `change-beam-action-q-area-pa`.
 use crate::change_beam_action_q_area_pa::ChangeBeamActionQAreaPa;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch, En1994BeamsActionsRows, En1994BeamsActionsPatch};

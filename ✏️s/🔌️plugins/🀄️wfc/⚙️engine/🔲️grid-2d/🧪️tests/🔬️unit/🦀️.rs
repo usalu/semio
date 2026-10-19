@@ -48,7 +48,7 @@ fn open_boundary_drops_out_of_range_arcs() {
     let corner = topo.node_at(0, 0).unwrap();
     let mut out = Vec::new();
     topo.for_each_out_arc(corner, |m, _| out.push(m));
-    assert_eq!(out.len(), 2); // only east and south exist from the top-left corner
+    assert_eq!(out.len(), 2);
 }
 
 #[test]
@@ -60,9 +60,9 @@ fn wrap_boundary_connects_opposite_edges() {
     let corner = topo.node_at(0, 0).unwrap();
     let mut out = Vec::new();
     topo.for_each_out_arc(corner, |m, _| out.push(m));
-    assert_eq!(out.len(), 4); // wraps to all four neighbors
-    assert!(out.contains(&topo.node_at(2, 0).unwrap())); // west wraps to x=2
-    assert!(out.contains(&topo.node_at(0, 2).unwrap())); // north wraps to y=2
+    assert_eq!(out.len(), 4);
+    assert!(out.contains(&topo.node_at(2, 0).unwrap()));
+    assert!(out.contains(&topo.node_at(0, 2).unwrap()));
 }
 
 #[test]
@@ -74,7 +74,6 @@ fn size_one_axis_wrap_self_loops() {
     let n = topo.node_at(0, 1).unwrap();
     let mut out = Vec::new();
     topo.for_each_out_arc(n, |m, _| out.push(m));
-    // east/west both wrap to the same single column -> self-loop arcs, plus north/south.
     assert_eq!(out.len(), 4);
 }
 
@@ -88,8 +87,8 @@ fn mirror_boundary_reflects_at_edges() {
     let mut out = Vec::new();
     topo.for_each_out_arc(corner, |m, _| out.push(m));
     assert_eq!(out.len(), 4);
-    assert!(out.contains(&topo.node_at(1, 0).unwrap())); // west mirrors back to x=1
-    assert!(out.contains(&topo.node_at(0, 1).unwrap())); // north mirrors back to y=1
+    assert!(out.contains(&topo.node_at(1, 0).unwrap()));
+    assert!(out.contains(&topo.node_at(0, 1).unwrap()));
 }
 
 #[test]
@@ -98,12 +97,12 @@ fn mask_excludes_inactive_cells_from_arcs() {
     b.add_pattern(1.0);
     let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
     let mut mask = vec![true; 9];
-    mask[4] = false; // center of 3x3 inactive
+    mask[4] = false;
     let topo = Grid2dTopology::new(3, 3, &Stencil2d::VonNeumann, rels, Boundary::Open, Boundary::Open, Some(mask)).unwrap();
     let north_of_center = topo.node_at(1, 0).unwrap();
     let mut out = Vec::new();
     topo.for_each_out_arc(north_of_center, |m, _| out.push(m));
-    assert!(!out.contains(&topo.node_at(1, 1).unwrap())); // no arc into the masked-out center
+    assert!(!out.contains(&topo.node_at(1, 1).unwrap()));
     assert_eq!(topo.inactive_cells(), vec![NodeId(4)]);
 }
 
@@ -114,7 +113,6 @@ fn fixed_outside_restrictions_only_on_boundary_facing_axis() {
     let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
     let topo = Grid2dTopology::new(2, 2, &Stencil2d::VonNeumann, rels, Boundary::FixedOutside(solid), Boundary::Open, None).unwrap();
     let restrictions = topo.fixed_outside_restrictions();
-    // Only x-axis boundary is FixedOutside; every cell touches an x-edge in a 2x2 grid.
     assert_eq!(restrictions.len(), 4);
     assert!(restrictions.iter().all(|&(_, _, p)| p == solid));
 }

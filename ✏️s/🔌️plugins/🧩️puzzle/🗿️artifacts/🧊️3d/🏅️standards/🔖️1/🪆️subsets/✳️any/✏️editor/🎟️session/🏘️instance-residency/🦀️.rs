@@ -165,10 +165,6 @@ impl Puzzle3dInstanceResidency {
         }
         let reordered = self.order != order;
         self.order = order;
-        // 🪟️ A no-op refresh leaves the LAST delta standing: two window instances of one document render
-        // off one session, so the second render must still be able to hand its own consumer the delta the
-        // first render produced (both carry the same `base`/`revision`, and a consumer whose retained set
-        // is not at `base` falls back to `instancesJson`).
         if !reordered && changed.is_empty() && removed.is_empty() && !self.assembled.is_empty() {
             self.rebuilt = 0;
             return false;

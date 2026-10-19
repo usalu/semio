@@ -2,16 +2,17 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
 use protocol::Mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::records::puzzle2d_targets_invariant;
 #[allow(unused_imports)]
 use protocol::DiffAlgebra;
 #[allow(unused_imports)]
-use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+use semio_framework_value::paged::PagedUtf8;
+#[allow(unused_imports)]
+use semio_framework_value_persistent::list::PagedList;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::Puzzle2dPlaySnapshot;
-use crate::records::PUZZLE_2D_SCHEMA;
+use semio_s_artifact_puzzle_2d_mut_any_10::Puzzle2dPlaySnapshot;
+use semio_s_artifact_puzzle_2d_records::standards::v1::subsets::any::schema::records::PUZZLE_2D_SCHEMA;
 use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
 use protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_law;
@@ -212,16 +213,15 @@ use protocol::os_spr::protocol_laws::assert_missing_target_is_error;
 fn missing_target_is_error_per_verb_family() {
     use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
     let base = empty_puzzle2d_snapshot();
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &delete_node("missing".into()))); // delete
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &remove_node_handle("missing".into(), "h0".into()))); // remove
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &change_node_visible("missing".into(), Some(false)))); // change/set/update
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0))); // move/drag/rotate/scale/resize
-    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into())))); // edit/replace
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &delete_node("missing".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &remove_node_handle("missing".into(), "h0".into())));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &change_node_visible("missing".into(), Some(false))));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &move_node("missing".into(), 1.0, 1.0)));
+    ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &edit_node_text("missing".into(), Some("x".into()))));
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &disconnect_handles("missing".into())));
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &drag_selection(vec!["missing".into()].into(), 1.0, 1.0)));
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &rotate_selection(vec!["missing".into()].into(), 0.0, 0.0, 1.0)));
     ::semio_framework_async::poll::resolve_ready(assert_missing_target_is_error(&base, &scale_selection(vec!["missing".into()].into(), 0.0, 0.0, 2.0)));
-    // disconnect/unbind
 }
 
 #[test]

@@ -1,6 +1,12 @@
 //! 🧪️ The generic `Mutation<S>` structural edit prepares insert, remove, replace and multi-row removal over documents of any size, restores the base through its ordered inverse rows and conserves custody through every cancellation frontier.
 use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
-use super::mutation_apply_preparation_factory;
+use semio_framework_os_store_one_item_batch::paged_one_item as paged;
+use semio_framework_os_spr as protocol;
+use paged::mutation_apply_preparation_factory;
+
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+
 use semio_framework_os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
 use semio_framework_os_store_one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep};
 use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest};
@@ -336,7 +342,7 @@ fn mutation_apply_wire_values_round_trip_through_the_value_contract() {
 #[derive(semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone,semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 struct ScalarConfig{value:i64}
-impl crate::snapshot_clone_preparation::ConfigApplyMutation<i64> for ScalarConfig{
+impl semio_framework_os_store_snapshot_clone::config_apply::ConfigApplyMutation<i64> for ScalarConfig{
     fn exchange(self,post:&mut i64)->Result<Self,(ValueError,Self)>{Ok(Self{value:std::mem::replace(post,self.value)})}
 }
 
@@ -349,7 +355,7 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
     let mutations:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<ScalarConfig>>=Arc::new(OwnedValueRetirementFactory::<ScalarConfig>::default());
     let snapshots:Arc<dyn semio_framework_value::SnapshotRetirementFactory<i64>>=Arc::new(SharedValueRetirementFactory::<i64>::default());
     let request=ArtifactStoreOneItemPreparationRequest{operation:semio_framework_job::OperationId(1),generation:semio_framework_job::Generation(1),base_revision:[0;32],lane:HistoryLane::Document,authority,base:SnapshotRead::new(Arc::clone(&root),lease),mutation:ScalarConfig{value:expected},mutation_retirement:Arc::clone(&mutations),snapshot_retirement:Arc::clone(&snapshots)};
-    let factory=crate::snapshot_clone_preparation::config_apply_preparation_factory::<i64,ScalarConfig>();let policy=grant(1<<16,WIDE);
+    let factory=semio_framework_os_store_snapshot_clone::config_apply::config_apply_preparation_factory::<i64,ScalarConfig>();let policy=grant(1<<16,WIDE);
     let(mut owner,receipt)=factory.begin(request,policy).unwrap_or_else(|_|panic!("scalar config birth"));assert!(receipt.fits(policy.retained_grant()));
     let mut prepared=None;let mut turns=0;
     for _ in 0..100000{
@@ -378,7 +384,7 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
 /// 🎬️ Prefix, ordinary history and policy merge preserve the same semantic refusal and original row.
 #[test]
 fn replay_diagnostics_decide_before_inverse_and_application() {
-    use crate::os_store::replay::{apply_outcome, fold_operation, EditReplay, ReplayEdits, ReplayMode};
+    use semio_framework_os_store_replay::{apply_outcome, fold_operation, EditReplay, ReplayEdits, ReplayMode};
     struct Edits(Vec<protocol::Edit<DocumentMutation>>);
     impl ReplayEdits<DocumentMutation> for Edits {
         fn replay_edit(&self, id: &str) -> Option<&protocol::Edit<DocumentMutation>> { self.0.iter().find(|edit| edit.id == id) }
@@ -389,7 +395,7 @@ fn replay_diagnostics_decide_before_inverse_and_application() {
         let mutation = DocumentMutation::Diagnostic { level: case["level"].as_str().unwrap().into(), code: case["code"].as_str().unwrap().into(), message: case["message"].as_str().unwrap().into() };
         let expected = mutation.diff(&original).stamp_op_index(0).messages().to_vec();
         APPLY_CALLS.set(0);
-        let (initial, initial_messages) = crate::os_vcs::apply_mutation(&original, &mutation).unwrap();
+        let (initial, initial_messages) = semio_framework_os_vcs::apply_mutation(&original, &mutation).unwrap();
         assert_eq!(initial_messages, mutation.diff(&original).messages());
         assert_eq!(APPLY_CALLS.get(), case["applyCalls"].as_u64().unwrap() as usize);
         if !case["applied"].as_bool().unwrap() { assert_eq!(initial, original); }
@@ -405,7 +411,7 @@ fn replay_diagnostics_decide_before_inverse_and_application() {
         if !case["applied"].as_bool().unwrap() { assert_eq!(built, original); assert!(outcome.diff().ops.is_empty()); }
         for (route, mode, from) in [("history", ReplayMode::Report, 0), ("prefix", ReplayMode::Report, 1), ("merge", ReplayMode::Merge(protocol::MergePolicy::Normal), 0)] {
             let count = from + 1;
-            let edits = Edits((0..count).map(|index| protocol::Edit { id: format!("e{index}"), actor: None, line: None, forwards: vec![mutation.clone()], inverse: protocol::value::list::PagedList::empty(), mutation_meta: Vec::new(), verb: None, sequence_number: index as i32, started_at: String::new(), finished_at: None }).collect());
+            let edits = Edits((0..count).map(|index| protocol::Edit { id: format!("e{index}"), actor: None, line: None, forwards: vec![mutation.clone()], inverse: semio_framework_value_persistent::list::PagedList::empty(), mutation_meta: Vec::new(), verb: None, sequence_number: index as i32, started_at: String::new(), finished_at: None }).collect());
             APPLY_CALLS.set(0); INVERSE_CALLS.set(0); DIFF_CALLS.set(0);
             let result = EditReplay::new_after_prefix(mode, 0, Arc::new(original.clone()), edits.0.iter().map(|edit| edit.id.clone()).collect(), from, "test/document", Default::default(), &edits).unwrap()
                 .with_retirement_factories(Arc::new(OwnedValueRetirementFactory::<PlainDocument>::default()), Arc::new(OwnedValueRetirementFactory::<DocumentMutation>::default())).run(&edits).unwrap();
@@ -496,7 +502,7 @@ fn paged_preparation_preserves_original_admitted_diagnostics_until_typed_retirem
 /// ♻️ A provider receipt refusal keeps every returned inverse in its exact installed issuer custody.
 #[test]
 fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
-    use super::super::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
+    use paged::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
     use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
     #[derive(Default)]
     struct InvalidReceiptEdit;
@@ -505,7 +511,7 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         fn recognizes(_:&DocumentMutation)->bool { true }
         fn preflight(_:&DocumentMutation)->Result<usize,String> { Ok(1) }
         fn advance_demands(&self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,_post:&Document,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
-        fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:&mut Document,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError> {
+        fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:&mut Document,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError> {
             let inverse=vec![DocumentMutation::SetText {index:0,text:node_text(post,0).clone()}];
             Ok(PagedOneItemEditStep::CompleteRows(RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()},inverse))
         }
@@ -572,15 +578,15 @@ fn mutation_apply_refuses_semantic_errors_and_closes() {
 }
 #[test]
 fn mutation_apply_diagnostics_gate_atomic_publication() {
-    use super::super::PagedOneItemEdit;
-    use super::super::PagedOneItemEditStep;
+    use paged::PagedOneItemEdit;
+    use paged::PagedOneItemEditStep;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let original = plain_document_json(&fixture()["base"]);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
     for case in law["cases"].as_array().unwrap() {
         let mutation = DocumentMutation::Diagnostic { level: case["level"].as_str().unwrap().into(), code: case["code"].as_str().unwrap().into(), message: case["message"].as_str().unwrap().into() };
-        let mut owner = super::super::MutationApplyEdit::<Document, DocumentMutation>::default();
+        let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
         let mut before_source=OriginalSource::new(document_from_plain(original.clone()));
         let mut mutation_source=OriginalSource::new(mutation.clone());
         let issuer=OwnedValueRetirementFactory::<DocumentMutation>::default();
@@ -615,7 +621,7 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
 }
 #[test]
 fn mutation_apply_inverse_cancellation_uses_original_factory() {
-    use super::super::{PagedOneItemEdit, PagedOneItemEditStep};
+    use paged::{PagedOneItemEdit, PagedOneItemEditStep};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     let law: Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️inverse-cancellation/🔣️.json")).unwrap();
     for case in law["cases"].as_array().unwrap() {
@@ -625,10 +631,10 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
         let mut mutation_source = OriginalSource::new(mutation);
         let issuer = OriginalMutationIssuer;
         let mut post = document_from_plain(original.clone());
-        let mut owner = super::super::MutationApplyEdit::<Document, DocumentMutation>::default();
+        let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
         ORIGINAL_ISSUER_RETIRES.set(0); APPLY_CALLS.set(0); INVERSE_CALLS.set(0);
-                let boundary=match case["boundary"].as_str().unwrap(){"decision"=>super::super::Stage::Source,"inverse"=>super::super::Stage::Commit,_=>unreachable!()};
+                let boundary=match case["boundary"].as_str().unwrap(){"decision"=>paged::Stage::Source,"inverse"=>paged::Stage::Commit,_=>unreachable!()};
         for turn in 0..10000 {
             if owner.stage==boundary{break;}
             assert!(turn<9999,"retained semantic boundary was not reached");
@@ -654,7 +660,7 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
 }
 #[test]
 fn mutation_apply_cancellation_after_decision_preserves_base() {
-    use super::super::{PagedOneItemEdit, PagedOneItemEditStep};
+    use paged::{PagedOneItemEdit, PagedOneItemEditStep};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     let mut post = document(&fixture()["base"]);
     let original = plain_document(&post);
@@ -662,11 +668,11 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
     let mut before_source=OriginalSource::new(document_from_plain(original.clone()));
     let mut mutation_source=OriginalSource::new(mutation.clone());
     let issuer=OwnedValueRetirementFactory::<DocumentMutation>::default();
-    let mut owner = super::super::MutationApplyEdit::<Document, DocumentMutation>::default();
+    let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
     APPLY_CALLS.set(0); INVERSE_CALLS.set(0); DIFF_CALLS.set(0);
     for turn in 0..10000 {
-        if owner.stage == super::super::Stage::Source { break; }
+        if owner.stage == paged::Stage::Source { break; }
         assert!(turn < 9999, "original typed decision boundary was not reached");
         assert!(matches!(owner.advance(before_source.borrow(),mutation_source.borrow(),&mut post,grant).unwrap(), PagedOneItemEditStep::Progress(_)));
     }
@@ -685,11 +691,11 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
 }
 #[test]
 fn mutation_apply_rejects_same_data_different_method_table_inverse_issuer(){
- use super::super::{PagedOneItemEdit,PagedOneItemEditStep};use semio_framework_value::retained_clone::RetainedCloneGrant;
+ use paged::{PagedOneItemEdit,PagedOneItemEditStep};use semio_framework_value::retained_clone::RetainedCloneGrant;
  let manifest=std::path::Path::new(env!("CARGO_MANIFEST_DIR"));let root=manifest.ancestors().find(|p|p.join(".🧬semio").is_dir()).expect("native fixture repository root");let law:Value=serde_json::from_str(&std::fs::read_to_string(root.join("🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧫️fixtures/🔣️.json")).unwrap()).unwrap();let law=&law["issuerAlias"];let index=law["pendingId"].as_u64().unwrap()as usize;
  let slot=EditIssuerSlot{original:ZstEditOriginal};let original_issuer=unsafe{&slot.original};let foreign=unsafe{&slot.other};assert_eq!(std::ptr::from_ref(original_issuer).cast::<()>(),std::ptr::from_ref(foreign).cast::<()>());OTHER_EDIT_ISSUER_CALLS.set(0);
- let original=plain_document_json(&fixture()["base"]);let mut before=OriginalSource::new(document_from_plain(original.clone()));let mut input=OriginalSource::new(DocumentMutation::SetText{index,text:"changed".into()});let mut post=document_from_plain(original.clone());let mut owner=super::super::MutationApplyEdit::<Document,DocumentMutation>::default();let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:WIDE,maximum_capacity_bytes:WIDE,maximum_release_bytes:WIDE,maximum_depth:4096};
- for turn in 0..10000{if owner.stage==super::super::Stage::Commit{break;}assert!(matches!(owner.advance(before.borrow(),input.borrow(),&mut post,wide).unwrap(),PagedOneItemEditStep::Progress(_)));assert!(turn<9999);}
+ let original=plain_document_json(&fixture()["base"]);let mut before=OriginalSource::new(document_from_plain(original.clone()));let mut input=OriginalSource::new(DocumentMutation::SetText{index,text:"changed".into()});let mut post=document_from_plain(original.clone());let mut owner=paged::MutationApplyEdit::<Document,DocumentMutation>::default();let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:WIDE,maximum_capacity_bytes:WIDE,maximum_release_bytes:WIDE,maximum_depth:4096};
+ for turn in 0..10000{if owner.stage==paged::Stage::Commit{break;}assert!(matches!(owner.advance(before.borrow(),input.borrow(),&mut post,wide).unwrap(),PagedOneItemEditStep::Progress(_)));assert!(turn<9999);}
  let inverse=owner.inverse.as_ref().unwrap();let backing=inverse.as_ptr();let text=match &inverse[0]{DocumentMutation::SetText{index:actual,text}=>{assert_eq!(*actual,index);text.as_ptr()},_=>panic!("original inverse shape")};owner.begin_close();let d=owner.close_demands(original_issuer,WIDE).unwrap();let q=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};owner.close_step(original_issuer,q).unwrap();
  let(result,heap)=observe(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse.as_ref().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&post),original);
  for turn in 0..100000{if owner.terminal_is_empty(){break;}let d=owner.close_demands(original_issuer,WIDE).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let s=owner.close_step(original_issuer,g).unwrap();assert!(s.progress().fits(g));assert!(turn<99999);}
@@ -705,7 +711,7 @@ fn mutation_apply_admits_large_immutable_documents_with_bounded_changed_paths() 
     let large = PlainDocument { title: "large".into(), nodes: (0..1400).map(|index| PlainNode { id: format!("n{index}"), text: text.clone() }).collect() };
     let build = || (document_from_plain(large.clone()), DocumentMutation::SetText { index: 700, text: "edited".into() });
     let bytes: usize = large.nodes.iter().map(|node| node.id.len() + node.text.len()).sum();
-    assert!(bytes > crate::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
+    assert!(bytes > semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
     let factory = mutation_apply_preparation_factory::<Document, DocumentMutation>();
     let probe=DocumentMutation::SetText{index:700,text:"edited".into()};
     let footprint = factory.preflight(&probe, HistoryLane::Document).unwrap();

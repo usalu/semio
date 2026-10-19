@@ -82,7 +82,8 @@ fn shared_map_inverse_preserves_collaborator_fields() {
 /// 🛬️ The same neutral wire crosses explicit native and DSL controls without a payload fallback.
 #[test]
 fn shared_map_controlled_codec_and_dsl() {
-    use semio_framework_value::{NativeDecodeControl, NativeEncodeControl};
+    use semio_framework_value::NativeEncodeControl;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use semio_framework_dsl_record::DslField;
     let fixture: Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
 

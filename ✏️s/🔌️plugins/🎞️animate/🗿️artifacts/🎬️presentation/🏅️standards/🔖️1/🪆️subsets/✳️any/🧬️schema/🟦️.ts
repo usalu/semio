@@ -27,11 +27,11 @@ export interface FigureTileDraft {
 }
 
 export interface PresentationArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ source: FigureTileSource;
-  /** @state artifact */ tiles: FigureTileDraft[];
-  /** @state artifact @child kind=s.stdio.semio */ presentation: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ animation: ArtifactChild;
+  /** 📜️ @state artifact */ schema: string;
+  /** 🧭️ @state artifact */ source: FigureTileSource;
+  /** 🗺️ @state artifact */ tiles: FigureTileDraft[];
+  /** 🔬️ @state artifact @child kind=s.stdio.semio */ presentation: ArtifactChild;
+  /** 🎬️ @state artifact @child kind=s.stdio.semio */ animation: ArtifactChild;
 }
 
 function parseRecord(value: unknown, at: string, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> {

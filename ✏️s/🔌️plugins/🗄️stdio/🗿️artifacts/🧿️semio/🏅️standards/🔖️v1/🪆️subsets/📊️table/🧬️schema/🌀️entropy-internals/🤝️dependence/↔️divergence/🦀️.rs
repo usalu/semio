@@ -272,8 +272,6 @@ pub fn log_det_divergence(cov_p: &[f64], cov_q: &[f64], n: usize) -> Result<f64,
     let ld_p = crate::schema::entropy_internals::matrix::log_det(cov_p, n)?;
     let ld_q = crate::schema::entropy_internals::matrix::log_det(cov_q, n)?;
     let l_q = crate::schema::entropy_internals::matrix::cholesky(cov_q, n)?;
-    // 🔢️ tr(Sigma_q^-1 Sigma_p) via solving L_q L_q^T X = Sigma_p column-by-column, then summing
-    // the diagonal of X (forward/backward substitution, no explicit inverse).
     let mut trace = 0.0_f64;
     for col in 0..n {
         let rhs: Vec<f64> = (0..n).map(|row| cov_p[row * n + col]).collect();

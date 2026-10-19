@@ -65,24 +65,20 @@ struct SurfaceSlot {
 }
 
 impl SurfaceSlot {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn new<P: crate::HandleIntent + crate::Present + 'static>(presenter: crate::Entity<P>, reconciler: crate::SurfaceReconciler) -> Self {
         Self { presenter: Box::new(presenter), vtable: PresenterVTable { dispatch: dispatch_erased::<P>, present: present_erased::<P> }, reconciler }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn dispatch(&self, intent: &ui_contract::UiIntent, store: &mut crate::EntityStore) -> crate::DispatchOutcome {
         (self.vtable.dispatch)(self.presenter.as_ref(), intent, store)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present(&self, cx: &mut crate::PresentCx<'_>) -> crate::ComponentTree {
         (self.vtable.present)(self.presenter.as_ref(), cx)
     }
 
     /// 🔢️ The revision `crate::dispatch::is_stale_intent` compares an incoming intent against. Reads
     /// through the reconciler's allocation-free revision accessor.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn current_revision(&self) -> ui_contract::UiRevision {
         self.reconciler.revision()
     }
@@ -200,7 +196,6 @@ pub struct UiRuntime<S: crate::CommandSink, D: crate::ProjectionDelta> {
 impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
     /// 🏭️ A runtime over `gateway`, whose `crate::ProjectionInbox` holds at most `inbox_capacity`
     /// distinct delta keys at once, and whose `apply_delta` thunk applies each drained delta.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(gateway: crate::CommandGateway<S>, inbox_capacity: usize, apply_delta: fn(&mut crate::EntityStore, D)) -> Self {
         Self {
             store: crate::EntityStore::new(),
@@ -221,7 +216,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
     /// 🗄️ Direct access to the entity store — for constructing presenter/model entities before
     /// registering a surface. `transact` is the only place this crate itself calls
     /// `crate::EntityStore::update` outside a `crate::HandleIntent` handler.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn store_mut(&mut self) -> &mut crate::EntityStore {
         self.input_epoch = self.input_epoch.wrapping_add(1);
         &mut self.store
@@ -234,7 +228,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
     /// [`SurfaceSlot`]'s own docstring). The next `transact` unconditionally presents this surface
     /// once, regardless of dependency-tracker dirtiness, so a freshly registered surface's first
     /// patch always arrives.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn register_surface<P: crate::HandleIntent + crate::Present + 'static>(&mut self, surface: ui_contract::SurfaceId, presenter: crate::Entity<P>, reconciler: crate::SurfaceReconciler) {
         self.input_epoch = self.input_epoch.wrapping_add(1);
         self.surfaces.insert(surface.clone(), SurfaceSlot::new(presenter, reconciler));
@@ -243,7 +236,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
 
     /// ➕️ Queues one `ui_contract::UiIntent` for the next `transact` call to route — the only way an
     /// intent enters this runtime. `transact` drains this queue in FIFO order every call.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn submit_intent(&mut self, intent: ui_contract::UiIntent) {
         self.input_epoch = self.input_epoch.wrapping_add(1);
         self.pending_intents.push_back(intent);
@@ -251,7 +243,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
 
     /// 📥️ The bounded, coalescing entry point for a projection delta — a CQRS subscription pushes
     /// here; `transact` drains and applies it.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push_delta(&mut self, delta: D) -> Result<(), crate::InboxOverflow> {
         let result = self.inbox.push(delta);
         if result.is_ok() {
@@ -263,7 +254,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
     /// 🧩️ Registers the fn-pointer thunk `crate::DeferredOp::Custom(key)` invokes — a key with no
     /// registered handler is a safe no-op, never a panic (see `crate::DeferredOp::Custom`'s
     /// docstring).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn register_custom_deferred(&mut self, key: crate::DeferredKey, handler: fn(&mut crate::EntityStore)) {
         self.custom_handlers.insert(key.0, handler);
     }
@@ -272,7 +262,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
     /// deadline has passed — the mechanism behind "compute `next_wake_ms` from the earliest pending
     /// deadline" for anything this crate cannot infer a deadline for on its own (a presenter's own
     /// animation/debounce/retry timer, say).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_wake(&mut self, at_ms: u64) {
         self.input_epoch = self.input_epoch.wrapping_add(1);
         self.pending_wakes.push(at_ms);
@@ -280,7 +269,6 @@ impl<S: crate::CommandSink, D: crate::ProjectionDelta> UiRuntime<S, D> {
 
     /// 📮️ Read-only access to this runtime's command gateway — e.g. for a presenter to layer
     /// `crate::OptimisticStatus` over its own projection read.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn gateway(&self) -> &crate::CommandGateway<S> {
         &self.gateway
     }

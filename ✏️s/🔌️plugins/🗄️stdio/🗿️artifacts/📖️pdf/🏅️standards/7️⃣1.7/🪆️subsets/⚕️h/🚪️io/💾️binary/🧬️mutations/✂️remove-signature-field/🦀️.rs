@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-signature-field`.
+//! 💾️ Direct binary identity for `remove-signature-field`.
 
 pub const TAG: u8 = 7;
 pub const BINARY_TAG: u8 = TAG;

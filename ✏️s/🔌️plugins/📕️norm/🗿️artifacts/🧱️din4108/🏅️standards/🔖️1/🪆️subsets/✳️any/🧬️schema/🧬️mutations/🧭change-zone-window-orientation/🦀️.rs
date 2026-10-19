@@ -1,4 +1,4 @@
-//! `change-zone-window-orientation`.
+//! 🧬️ `change-zone-window-orientation`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

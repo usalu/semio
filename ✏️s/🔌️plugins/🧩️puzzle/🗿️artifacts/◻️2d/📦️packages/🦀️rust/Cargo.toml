@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-s-artifact-puzzle-2d-records = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-engine = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-retained-panels = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-end-storeys = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧱️tambour-end-storeys/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tambour-single-storey = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔣️icons/🌱️metabolism/🧩️tambour-single-storey/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-graph-manifest = { path = "../../🤖️generated/📇️registry/📦️packages/🦀️rust" }
@@ -97,6 +98,7 @@ semio-framework-tool-machine = { workspace = true }
 semio-s-plugin-puzzle-board-scene = { workspace = true }
 semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }
@@ -120,3 +122,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { workspace = true }
+
+[features]
+testkit = []

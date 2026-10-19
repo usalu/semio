@@ -140,7 +140,7 @@ impl Compressor for Lz78Compressor {
         let mut total_bits: f64 = 0.0;
 
         let index_bits = |dict_len: usize| -> f64 {
-            let addressable = dict_len as f64 + 1.0; // 🗜️ +1 for the implicit empty-phrase index 0
+            let addressable = dict_len as f64 + 1.0;
             (addressable + 1.0).log2().ceil().max(1.0)
         };
 
@@ -155,8 +155,6 @@ impl Compressor for Lz78Compressor {
             }
         }
         if !phrase.is_empty() {
-            // 🗜️ Trailing phrase matched an existing entry but the input ended before a new
-            // extension was discovered; emit one final index-only reference (no literal).
             total_bits += index_bits(dict.len());
         }
         ((total_bits / 8.0).ceil() as usize).max(1)

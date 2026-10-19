@@ -22,7 +22,6 @@ semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️mo
 # 🧩️ Composition Dependencies
 semio-s-artifact-stdio-docx = { workspace = true }
 semio-s-artifact-stdio-docx-base = { workspace = true }
-semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
 semio-s-artifact-stdio-docx-strict = { workspace = true }
 semio-s-artifact-stdio-docx-strict-mutations = { workspace = true }

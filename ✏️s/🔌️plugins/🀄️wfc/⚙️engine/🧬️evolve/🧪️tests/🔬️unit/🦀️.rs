@@ -46,10 +46,6 @@ fn evolve_finds_a_solution_and_tracks_evaluated_count() {
 
 #[test]
 fn evolve_prefers_higher_scores_across_generations() {
-    // A scorer with a clear maximum (3 black nodes is the best achievable on this 5-node
-    // path — see the identical checkerboard fixture in 🦀️search.rs's own tests) lets us assert
-    // the loop actually converges toward it rather than just returning whatever it finds
-    // first.
     let (model, topo) = checkerboard(5);
     let config = SearchConfig::default();
     let scorer = ScoreFn { f: |a: &[PatternId]| a.iter().filter(|&&p| p == PatternId(0)).count() as f64 };

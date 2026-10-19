@@ -1,9 +1,10 @@
 //! 🗂️ Original verified History frames hydrate through paid typed receivers and the actual original edit index.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::{HistoryEdits,OriginalHistoryEdits,RetainedHistoryPagedRecords};
 use super::{HistoryLog,HistoryEdit,HistoryTransitionRecord,HistoryConflict,HistoryComposition,RetainedHistorySourceFrames,RetainedHistorySourceFrame,RetainedHistoryEditDecode,RetainedHistoryEditPartial,RetainedHistoryTransitionDecode,RetainedHistoryTransitionPartial,RetainedHistoryConflictDecode,RetainedHistoryConflictPartial,RetainedHistoryIdentityRecordDecode,RetainedHistoryIdentityRecord,RetainedHistoryIdentityRecordKind,RetainedHistoryIdentityRecordPartial,RetainedHistoryOpMetaFault,RetainedHistoryRecords,RetainedHistoryRecordsStep,RetainedHistoryTransitionPayloadValidation,RetainedHistoryTransitionPayloadValidationReceipt};
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity,HistoryReadLimits},dictionary::RetainedSourceDictionary};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of_val};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct RetainedHistorySourcePartial{pub doc_id:Option<String>,pub schema:Option<String>,pub edits:Option<HistoryEdits>,pub transitions:Option<Vec<HistoryTransitionRecord>>,pub conflicts:Option<Vec<HistoryConflict>>,pub composition:Option<HistoryComposition>,pub viewer_line:Option<String>,pub viewer_checkpoint:Option<String>,pub pending_edit:Option<HistoryEdit>,pub pending_transition:Option<HistoryTransitionRecord>,pub pending_conflict:Option<HistoryConflict>,pub pending_identity:Option<RetainedHistoryIdentityRecord>,pub old_identity:Option<RetainedHistoryIdentityRecord>,pub edit_partial:Option<RetainedHistoryEditPartial>,pub transition_partial:Option<RetainedHistoryTransitionPartial>,pub conflict_partial:Option<RetainedHistoryConflictPartial>,pub identity_partial:Option<RetainedHistoryIdentityRecordPartial>,pub child_fault:Option<ValueError>}

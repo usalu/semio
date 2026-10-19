@@ -2,7 +2,7 @@
 //!
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
-use semio_framework_os_store_testing_fixtures::prelude::*;
+use semio_framework_os_store_testing_prelude::*;
 use semio_framework_os_store_testing_fixtures::*;
 use crate::*;
 use semio_framework_os_store_testing_fixtures::demo::{AddN, AssignN, DeleteN, DemoMutation, SetN};
@@ -229,7 +229,7 @@ impl DemoOneItemPreparation {
 }
 
 impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItemPreparation {
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -267,7 +267,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let id_capacity=self.stamped_mutation_id.as_ref().map_or(29,|id|id.0.len());
         let mutation_identity_capacity=if self.stamped_mutation_id.is_some(){0}else{id_capacity+2};
         let group_capacity=authority.group_id().map_or(0,str::len);
-        let mut inverse_list=semio_framework_value::list::PagedList::<DemoMutation,{usize::MAX}>::empty();
+        let mut inverse_list=semio_framework_value_persistent::list::PagedList::<DemoMutation,{usize::MAX}>::empty();
         let inverse_metadata=inverse_list.next_exact_capacity_allocation_bytes(1).map_err(ValueError::from)?.unwrap();
         let mutation_bytes=std::mem::size_of::<DemoMutation>();
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<DemoSnapshot>()+id_capacity+mutation_identity_capacity+group_capacity+3*mutation_bytes+std::mem::size_of::<MutationMeta>()+inverse_metadata;

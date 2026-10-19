@@ -29,6 +29,8 @@ semio-framework-replication-ids = { path = "../../../../🆔️ids/📦️packag
 semio-framework-replication-mutation = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-persistent.workspace = true
+semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
 blake3 = "1.8.2"

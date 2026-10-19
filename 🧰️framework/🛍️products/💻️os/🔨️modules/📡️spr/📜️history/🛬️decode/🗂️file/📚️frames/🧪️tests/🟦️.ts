@@ -5,7 +5,7 @@ import{existsSync,readFileSync}from"node:fs";
 import crc from"crc-32/crc32c.js";
 import {createRequire} from "node:module";
 /** 🧪️ Only this first-party test port observes the independent LEB128 reference implementation. */
-interface Leb128Oracle {encodeU32(value:number):number[];decodeUInt32(bytes:Uint8Array):{value:number;nextIndex:number}}
+interface Leb128Oracle {encodeU32(value:number):number[];decodeUInt32(bytes:Uint8Array,index:number):{value:number;nextIndex:number}}
 const leb=createRequire(import.meta.url)("@webassemblyjs/leb128") as Leb128Oracle;
 import schema from"../../🧬️schema/🔣️.json";
 import law from"../../🧪️tests/🧫️fixtures/🔣️.json";

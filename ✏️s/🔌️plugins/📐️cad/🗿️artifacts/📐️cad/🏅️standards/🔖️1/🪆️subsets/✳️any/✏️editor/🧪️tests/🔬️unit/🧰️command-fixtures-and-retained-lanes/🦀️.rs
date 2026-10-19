@@ -266,8 +266,6 @@ fn every_cad_mutation_inverse_fits_the_one_invertible_item_footprint() {
     let doc = ArtifactView::new(&base, &history);
     let config = CadConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    // 🚪️ The I/O commands mint envelopes/effects the bare dispatch harness cannot retire; the
-    // document-mutating vocabulary this law guards lives in the node/reference/transform commands.
     let io_commands = ["importCadFile", "saveSelected", "saveInPlay", "saveCurrent", "loadRawRequest", "setActiveExample"];
     for command in every_command().into_iter().filter(|command| !io_commands.contains(&command.command_id())) {
         let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, CadWorldWindowTransient::default());
@@ -307,7 +305,7 @@ fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
     assert_eq!(routes.len(), command_ids.len());
     assert_eq!(route_ids, command_ids);
     assert_eq!(fixture.get("admittedRoutes"), Some(&Value::Array(CAD_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
-    assert_eq!(fixture.pointer("/limits/closePageBytes").and_then(Value::as_u64), Some(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES as u64));
+    assert_eq!(fixture.pointer("/limits/closePageBytes").and_then(Value::as_u64), Some(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES as u64));
     assert_eq!(fixture.get("laws"), Some(&json!(["ownerLocal", "progress", "cancel", "freshness", "ackBeforeClose", "incrementalClose", "terminalEmpty"])));
     assert!(routes.iter().all(|route| {
         let id = route.get("id").and_then(Value::as_str);

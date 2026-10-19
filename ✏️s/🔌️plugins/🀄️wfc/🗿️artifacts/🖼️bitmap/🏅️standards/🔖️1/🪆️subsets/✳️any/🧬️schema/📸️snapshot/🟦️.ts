@@ -20,7 +20,7 @@ export interface BitmapInput {
   width: number;
   height: number;
   palette: BitmapColor[];
-  /** One owned palette index per pixel, row-major, width * height bytes. */
+  /** 🏞️ One owned palette index per pixel, row-major, width * height bytes. */
   pixels: Uint8Array;
 }
 
@@ -44,17 +44,17 @@ export interface BitmapPinnedPixel {
 }
 
 export interface BitmapSnapshot {
-  /** @state artifact */
+  /** 🧬️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🌱️ @state artifact */
   seed: bigint;
-  /** @state artifact */
+  /** ⌨️ @state artifact */
   input: BitmapInput;
-  /** @state artifact */
+  /** 📬️ @state artifact */
   output: BitmapOutputSpec;
-  /** @state artifact */
+  /** 🏗️ @state artifact */
   model: BitmapOverlappingModel;
-  /** @state artifact */
+  /** 📍️ @state artifact */
   pinned: BitmapPinnedPixel[];
 }
 

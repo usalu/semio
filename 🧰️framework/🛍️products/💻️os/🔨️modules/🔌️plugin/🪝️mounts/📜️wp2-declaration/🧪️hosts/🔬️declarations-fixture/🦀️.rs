@@ -25,5 +25,5 @@ use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoo
 #[allow(unused_imports)]
 use semio_framework_plugin_decl_registry::declarations::{ArtifactDeclaration, IoDeclaration, LanguagePair, MediaDeclaration, NativeCodecs, SchemaDeclaration, StandardDeclaration, SubsetDeclaration, format_descriptor_of, project_artifact_declarations};
 #[allow(unused_imports)]
-use semio_framework_plugin_instance_app::lifted_tree::{editor_surface, viewer_surface};
+use semio_framework_plugin_instance_surface::{editor_surface, viewer_surface};
 include!("../../../../🧪️tests/🔬️app-declarations-fixture/🦀️.rs");

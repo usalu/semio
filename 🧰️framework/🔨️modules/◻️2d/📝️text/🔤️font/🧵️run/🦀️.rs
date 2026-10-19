@@ -6,7 +6,8 @@ use semio_framework_2d_text_font_shape::class::FontGlyphClassCursor;
 use semio_framework_2d_text_font_shape_unicode::UnicodePropertyCursor;
 use semio_framework_2d_text_font_shape_unicode::bidi::{UnicodeBidiCursor,UnicodeBidiOutput,UnicodeBidiDirection};
 use semio_framework_2d_engine::PathSegment;
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Copy)]
 pub struct FontRunStyle{pub size:f64,pub origin:[f64;2],pub line_height:f64,pub kerning:bool}
 #[derive(Clone,Copy)]

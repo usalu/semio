@@ -35,10 +35,10 @@ fn sqlite_snapshot_controlled_catalogue_custom_binding_is_iterative_and_cancella
  use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue as F;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  let mut value=semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("雪".into()))]);for _ in 0..2048{value=semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("list".into())),("items".into(),D::Array(vec![value]))]);}let input=semio_framework_dsl_record::FieldValue::Value(value);
- let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(16*1024*1024,&mut accepted);let out=<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).unwrap();let mut count=0;let mut current=&out;while let semio_s_artifact_norm_iso16757_model::CatalogueValue::List{items}=current{assert_eq!(items.len(),1);current=&items[0];count+=1;}assert_eq!(count,2048);assert!(matches!(current,semio_s_artifact_norm_iso16757_model::CatalogueValue::Text{value}if value=="雪"));out.retire_decoded();
- let mut interior=false;let mut canceled=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.completed>=256{interior=true;false}else{true}};let mut control=semio_framework_value::NativeDecodeControl::new(16*1024*1024,&mut canceled);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).is_err());drop(control);assert!(interior);let mut control=semio_framework_value::NativeDecodeControl::new(128,&mut accepted);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).is_err());
+ let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16*1024*1024,&mut accepted);let out=<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).unwrap();let mut count=0;let mut current=&out;while let semio_s_artifact_norm_iso16757_model::CatalogueValue::List{items}=current{assert_eq!(items.len(),1);current=&items[0];count+=1;}assert_eq!(count,2048);assert!(matches!(current,semio_s_artifact_norm_iso16757_model::CatalogueValue::Text{value}if value=="雪"));out.retire_decoded();
+ let mut interior=false;let mut canceled=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.completed>=256{interior=true;false}else{true}};let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16*1024*1024,&mut canceled);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).is_err());drop(control);assert!(interior);let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(128,&mut accepted);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).is_err());
  let semio_framework_dsl_record::FieldValue::Value(value)=input else{unreachable!()};retire_native_intrinsic(value);
 }
 #[test]
@@ -46,9 +46,9 @@ fn sqlite_snapshot_controlled_catalogue_binding_rejects_shape_and_admits_before_
  use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue as F;
-use semio_framework_value::NativeDecodeControl;let mut accepted=|_|true;
- for value in [semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("decimal".into())),("value".into(),D::Bool(true))]),semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".into())),("extra".into(),D::Null)]),semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".into())),("value".into(),D::String("y".into()))])]{let mut control=semio_framework_value::NativeDecodeControl::new(100000,&mut accepted);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&F::Value(value),&mut control).is_err());}
- let value=semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".repeat(100000)))]));let mut control=semio_framework_value::NativeDecodeControl::new(128,&mut accepted);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&value,&mut control).is_err());assert!(control.owned_bytes()<=128);
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;let mut accepted=|_|true;
+ for value in [semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("decimal".into())),("value".into(),D::Bool(true))]),semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".into())),("extra".into(),D::Null)]),semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".into())),("value".into(),D::String("y".into()))])]{let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(100000,&mut accepted);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&F::Value(value),&mut control).is_err());}
+ let value=semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".repeat(100000)))]));let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(128,&mut accepted);assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&value,&mut control).is_err());assert!(control.owned_bytes()<=128);
 }
 
 #[test]
@@ -56,12 +56,12 @@ fn sqlite_snapshot_controlled_catalogue_frontier_cancels_before_wide_admission()
  use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue as F;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let f=&fixture["controlledAdmission"];
  let items=(0..f["wideListItems"].as_u64().unwrap()).map(|_|semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("null".into())),("state".into(),D::String("Unknown".into()))])).collect();
  let input=semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("list".into())),("items".into(),D::Array(items))]));
- let boundary=f["cancelAfter"].as_u64().unwrap() as usize;let mut observed=None;let mut canceled=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if event.completed>=boundary{observed=Some(event);false}else{true}};
- let error=<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut semio_framework_value::NativeDecodeControl::new(f["maximumOwnedBytes"].as_u64().unwrap() as usize,&mut canceled)).unwrap_err();assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::Canceled,"{error}");assert!(observed.unwrap().owned_bytes<f["maximumFrontierBytes"].as_u64().unwrap() as usize);
+ let boundary=f["cancelAfter"].as_u64().unwrap() as usize;let mut observed=None;let mut canceled=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if event.completed>=boundary{observed=Some(event);false}else{true}};
+ let error=<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(f["maximumOwnedBytes"].as_u64().unwrap() as usize,&mut canceled)).unwrap_err();assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::Canceled,"{error}");assert!(observed.unwrap().owned_bytes<f["maximumFrontierBytes"].as_u64().unwrap() as usize);
 }
 
 #[test]
@@ -69,10 +69,10 @@ fn sqlite_snapshot_controlled_catalogue_unknown_keys_have_bounded_diagnostics(){
  use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue as F;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let f=&fixture["controlledAdmission"];
  let input=semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("text".into())),("value".into(),D::String("x".into())),("k".repeat(f["unknownKeyBytes"].as_u64().unwrap() as usize),D::Null)]));
- let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(128,&mut accepted);let error=<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).unwrap_err();assert!(error.message.len()<f["maximumErrorBytes"].as_u64().unwrap() as usize);assert!(control.owned_bytes()<=128);
+ let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(128,&mut accepted);let error=<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut control).unwrap_err();assert!(error.message.len()<f["maximumErrorBytes"].as_u64().unwrap() as usize);assert!(control.owned_bytes()<=128);
 }
 
 #[test]
@@ -80,11 +80,11 @@ fn sqlite_snapshot_controlled_optional_catalogue_presence_never_swallows_cancell
  use semio_framework_dsl_record::DslField;
 use semio_framework_value::DslValue as D;
 use semio_framework_dsl_record::FieldValue as F;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let f=&fixture["controlledAdmission"];
  let range=||semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("range".into())),("min".into(),D::float(0.5)),("max".into(),D::float(0.5)),("unit".into(),D::Null)]);
  let input=semio_framework_dsl_record::FieldValue::Value(semio_framework_value::DslValue::Object(vec![("kind".into(),D::String("list".into())),("items".into(),D::Array((0..f["rangeListItems"].as_u64().unwrap()).map(|_|range()).collect()))]));
- let mut reached=false;let boundary=f["cancelAfter"].as_u64().unwrap() as usize;let mut cancel_once=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{if !reached&&event.completed>=boundary{reached=true;false}else{true}};
+ let mut reached=false;let boundary=f["cancelAfter"].as_u64().unwrap() as usize;let mut cancel_once=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{if !reached&&event.completed>=boundary{reached=true;false}else{true}};
  assert!(<semio_s_artifact_norm_iso16757_model::CatalogueValue as DslField>::from_value_controlled(&input,&mut NativeDecodeControl::new(1024*1024,&mut cancel_once)).is_err());assert!(reached);
 }
 

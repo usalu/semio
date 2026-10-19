@@ -16,9 +16,6 @@ pub(super) async fn selected_strokes(app: &DrawingAppFixture) -> Vec<String> {
 #[semio_framework_async_macros::async_test]
 async fn marquee_select_covers_contained_layer_only() {
     // 🔖 Built through dispatched commands (`add-layer` + `patch-layer` transform fields), never
-    // a whole-document swap — `SetSnapshot` is banned vocabulary now (see
-    // `🧬️mutations/🦀️.rs`'s module doc); this exercises the same real semantic
-    // `create-layer`/`update-layer-transform` mutations a live editor session would emit.
     let (mut app, meta) = inline_selection_app().await;
     let utility_meta = with_utility(&meta, "selectMarquee");
     let initial_id = layer_id(&app.snapshot().unwrap().layers[0]).to_string();
@@ -57,10 +54,6 @@ async fn marquee_select_covers_contained_layer_only() {
     .await;
     settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 460.0, y: 360.0, width: 800.0, height: 600.0, samples: Vec::new() }), &utility_meta).await;
     let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
-    // 🕹️ Selection is framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-    // the marquee hit-test emits `interactionSelect` for exactly the contained rect via an
-    // `Effect::ReplayShellCommand` — folded in-reactor (§2 C), so the host never sees it and the
-    // selection already holds the rect when the release settles.
     assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_strokes(&app).await, vec![rect_a_id.clone()], "only the contained rect is selected, not the outside ellipse");

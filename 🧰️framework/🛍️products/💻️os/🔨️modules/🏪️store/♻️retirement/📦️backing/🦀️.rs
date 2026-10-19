@@ -134,17 +134,17 @@ impl<T: semio_framework_value::retirement::RetireOwned> Drop for SourceIterator<
 
 /// 📋️ Keeps original paged source backing through paid ordered publication and controlled close.
 pub struct PagedSourceIterator<T:semio_framework_value::retirement::RetireOwned,const N:usize={usize::MAX}>{
-    source:std::mem::ManuallyDrop<Option<semio_framework_value::list::PagedList<T,N>>>,
+    source:std::mem::ManuallyDrop<Option<semio_framework_value_persistent::list::PagedList<T,N>>>,
     position:usize,
     vacant:fn()->T,
-    active:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::list::PagedList<T,N>>>,
+    active:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value_persistent::list::PagedList<T,N>>>,
     terminal:bool,
 }
 impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSourceIterator<T,N>{
-    pub fn new(source:semio_framework_value::list::PagedList<T,N>,vacant:fn()->T)->Self{Self{source:std::mem::ManuallyDrop::new(Some(source)),position:0,vacant,active:None,terminal:false}}
+    pub fn new(source:semio_framework_value_persistent::list::PagedList<T,N>,vacant:fn()->T)->Self{Self{source:std::mem::ManuallyDrop::new(Some(source)),position:0,vacant,active:None,terminal:false}}
     pub fn peek(&self)->Option<&T>{self.source.as_ref().and_then(|source|source.get(self.position))}
     pub fn publication_complete(&self)->bool{self.source.as_ref().is_none_or(|source|self.position==source.len())}
-    pub fn backing_bytes(&self)->usize{self.source.as_ref().map_or(0,semio_framework_value::list::PagedList::allocated_bytes)}
+    pub fn backing_bytes(&self)->usize{self.source.as_ref().map_or(0,semio_framework_value_persistent::list::PagedList::allocated_bytes)}
     pub fn take_next_into(&mut self,receiving:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
         if receiving.is_some()||self.active.is_some()||self.terminal{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source has an occupied or closing receiver"))}
         let source=self.source.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source lost its retained backing"))?;
@@ -158,7 +158,7 @@ impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> PagedSource
     pub fn demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         if self.terminal{return Ok(Default::default())}
         if let Some(active)=self.active.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:active.next_copy_byte_demand()?,capacity_bytes:active.next_capacity_byte_demand(copy)?,release_bytes:active.next_release_byte_demand()?,depth:active.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source child depth overflow"))?})}
-        Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::list::PagedList<T,N>>>(),depth:1,..Default::default()})
+        Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value_persistent::list::PagedList<T,N>>>(),depth:1,..Default::default()})
     }
 }
 impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> ErasedSnapshotRetirement for PagedSourceIterator<T,N>{

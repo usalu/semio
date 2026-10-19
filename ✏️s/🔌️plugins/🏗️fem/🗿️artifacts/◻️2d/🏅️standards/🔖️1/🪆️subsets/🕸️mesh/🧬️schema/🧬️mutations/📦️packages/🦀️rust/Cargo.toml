@@ -4,7 +4,7 @@ name = "semio-s-artifact-fem-2d-mesh"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "FEM 2d section and region mutations and the selection move"
+description = "FEM 2d node changes and the selection move"
 
 [package.metadata.semio]
 role = "library"
@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -23,8 +24,8 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-mesh-regions = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

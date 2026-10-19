@@ -8,7 +8,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️InteractionSpec
-/// A path root within an expression/effect target — `context` (session context), `event` (the
+/// ➗️ A path root within an expression/effect target — `context` (session context), `event` (the
 /// event payload being handled), or `params` (an enclosing action's parameters; unused by the
 /// interaction machine interpreter itself, only by `spatial.action` step specs).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
@@ -41,7 +41,7 @@ pub struct ExprBinding {
     pub value: Box<Expr>,
 }
 
-/// `spatial://schema/json/expression` — a small declarative expression AST. Only the kinds
+/// 🧮️ `spatial://schema/json/expression` — a small declarative expression AST. Only the kinds
 /// actually used by the interaction machine specs' guards/effects/display are interpreted here
 /// (`kernel.call`/`distance`/`fold` appear only in `spatial.action` step specs, which are not
 /// executed generically — see the commit-action runner in `cad/plugin/rs/interaction.rs`).
@@ -103,7 +103,7 @@ pub enum Expr {
     },
 }
 
-/// Evaluation environment for {@link Expr}: `context` is the engagement session's persistent
+/// ➕️ Evaluation environment for {@link Expr}: `context` is the engagement session's persistent
 /// state, `event` is the payload of the event currently being handled (if any).
 pub struct ExprEnv<'a> {
     pub context: &'a std::collections::HashMap<String, DslValue>,
@@ -148,7 +148,7 @@ fn expr_as_f64(value: &DslValue) -> f64 {
     value.as_f64().unwrap_or(0.0)
 }
 
-/// Evaluates an {@link Expr} against `env` and an outer `let`-binding scope (`vars`).
+/// ⚙️ Evaluates an {@link Expr} against `env` and an outer `let`-binding scope (`vars`).
 pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::HashMap<String, DslValue>) -> DslValue {
     match expr {
         Expr::Path { root, segments } => {
@@ -277,7 +277,7 @@ pub enum Effect {
         #[value(default, rename = "assignTo")]
         assign_to: Option<ExprPathTarget>,
     },
-    /// Asset-only extension (not in the formal schema): delegates to a nested sub-interaction
+    /// 🤝️ Asset-only extension (not in the formal schema): delegates to a nested sub-interaction
     /// (`interaction`), then maps each of its `outputs[].value` expressions (evaluated against
     /// the sub-interaction's context) onto `outputs[].target` in the parent context. Used only by
     /// the curve-drawing sub-flow (`mode.curve` in the wall/slab/column specs) — not yet
@@ -494,7 +494,7 @@ pub enum DisplayItemSpec {
         #[value(default)]
         role: Option<String>,
     },
-    /// Asset-only extension kind (`"preview"`) not in the formal schema: a generic wireframe
+    /// 👻️ Asset-only extension kind (`"preview"`) not in the formal schema: a generic wireframe
     /// preview keyed by `previewKind`, evaluated params passed through verbatim to the renderer.
     Preview {
         id: String,
@@ -546,7 +546,7 @@ pub struct InteractionProducesSpec {
     pub typology: Option<String>,
 }
 
-/// `spatial://schema/json/interaction` — the full declarative construction-interaction spec, as
+/// 🕹️ `spatial://schema/json/interaction` — the full declarative construction-interaction spec, as
 /// authored in `cad/asset/modelDefinition/*/interaction/*.json`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]

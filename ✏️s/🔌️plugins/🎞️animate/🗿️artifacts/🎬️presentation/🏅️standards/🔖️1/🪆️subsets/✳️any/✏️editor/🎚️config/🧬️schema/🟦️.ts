@@ -1,8 +1,8 @@
 /** 🧬️ PresentationConfig */
 export interface PresentationConfig {
-  /** @state config */
+  /** 🤝️ @state config */
   engagementInput: string;
-  /** @state config */
+  /** ⚙️ @state config */
 }
 
 //#region 🚪️Parsers

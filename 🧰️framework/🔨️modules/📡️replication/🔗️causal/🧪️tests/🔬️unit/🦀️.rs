@@ -351,10 +351,6 @@ mod quick {
 
     #[test]
     fn topological_order_a_b_d_c_is_rejected_as_non_topological() {
-        // "d" before "c" is NOT a valid topological order (d depends on c) — insert must not
-        // silently accept it as Applied; it must classify as Pending instead, proving this
-        // test suite actually distinguishes topological from non-topological orderings rather
-        // than accepting anything.
         let nodes = diamond("A", "B", "C", "D");
         let mut dag = MutationDag::new();
         for label in ["a", "b", "d"] {
@@ -501,7 +497,6 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
     assert_eq!(envelopes[0].diff.payload, semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
     assert_eq!(envelopes[0].inverse.payload, semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
-    // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
     assert_eq!(envelopes[1].mutation_id, semio_framework_replication_ids::MutationId("op-b".into()));
     assert_eq!(envelopes[1].actor, semio_framework_replication_ids::ActorId("actor-fallback".into()));
     assert_eq!(envelopes[0].transaction, None, "an operation authored outside a tool transaction carries none");
@@ -544,9 +539,6 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         started_at: "2026-07-27T00:00:00Z".into(),
         finished_at: None,
     };
-    // CausalAddOp::encode_op is infallible by construction, so this test instead documents
-    // the law via the Result signature: a real Op whose encode_op can fail (e.g. exceeding a
-    // size limit) aborts the whole batch rather than returning a partial Vec.
     let document_id = semio_framework_replication_ids::ArtifactId("doc-3".into());
     let schema = semio_framework_replication_ids::SchemaId("causal-add.v1".into());
     assert!(mutation_envelope_from_edit(&edit, &document_id, &schema).is_ok());

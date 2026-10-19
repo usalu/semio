@@ -215,7 +215,7 @@ pub struct SessionCommand {
 /// 🚦 The lifecycle projected from the daemon's persisted local-only events.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum SessionStatus { #[default] Pending, Running, Stopping, Exited, Failed, Interrupted }
+pub enum SessionStatus { #[default] Pending, Running, Stopping, Exited, Failed, Interrupted, TimedOut }
 
 impl SessionStatus {
     /// 🔴 Whether the session still waits for or owns a process.

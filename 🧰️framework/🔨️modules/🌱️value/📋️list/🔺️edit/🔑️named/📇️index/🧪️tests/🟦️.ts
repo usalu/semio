@@ -3,12 +3,12 @@ import {test,expect} from "bun:test";
 import "../♻️transfer/🧪️tests/🟦️.ts";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import edits from "../../🧫️fixtures/🔣️.json";
+import edits from "../../🧪️tests/🧫️fixtures/🔣️.json";
 import {NamedKeyIndexPreparation} from "../🟦️.ts";
 import {NamedEditPlan,type NamedEditSource,type NamedEditGrant,observeContiguousNamedKey} from "../../🟦️.ts";
-const encode=new TextEncoder();
+const encode={encode:(text:string)=>new Uint8Array(Buffer.from(text,"utf8"))};
 function source(keys:readonly string[],removed:readonly string[]=[],modified:readonly string[]=[],added:readonly string[]=[],indices:readonly number[]=[]):NamedEditSource{const lanes={base:keys.map(key=>encode.encode(key)),removed:removed.map(key=>encode.encode(key)),modified:modified.map(key=>encode.encode(key)),added:added.map(key=>encode.encode(key))};return{originalBase:keys,shape:{baseLen:keys.length,removed:removed.length,modified:modified.length,added:added.length},keyDemand:()=>({copyBytes:64,capacityBytes:0,depth:1}),observeKey:(lane,ordinal,grant)=>observeContiguousNamedKey(()=>lanes[lane][ordinal]!,grant),addedIndex:ordinal=>indices[ordinal]!};}
 function admit(input:NamedEditSource){const owner=new NamedKeyIndexPreparation(input);for(let turn=0;!owner.settled;turn++){expect(turn).toBeLessThan(1000000);const d=owner.demand(4096);owner.advance({maximumItems:1,maximumCopyBytes:d.copyBytes,maximumCapacityBytes:d.capacityBytes,maximumDepth:d.depth});}const d=owner.takeDemand();return owner.take({maximumItems:1,maximumCopyBytes:d.copyBytes,maximumCapacityBytes:d.capacityBytes,maximumDepth:d.depth});}
 function settle(plan:NamedEditPlan,input:NamedEditSource){for(let turn=0;!plan.settled;turn++){expect(turn).toBeLessThan(1000000);const d=plan.demand(input,4096),g={maximumItems:1,maximumCopyBytes:d.copyBytes,maximumCapacityBytes:d.capacityBytes,maximumDepth:d.depth};const before=plan.demand(input,4096);const p=plan.advance(input,{...g,maximumItems:0});expect(p.copiedItems).toBe(0);expect(plan.demand(input,4096)).toEqual(before);plan.advance(input,g);}return plan.ready;}

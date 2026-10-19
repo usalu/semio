@@ -32,7 +32,6 @@ async fn export_round_trips_through_every_format() {
         assert!(!mime.is_empty() && !text.is_empty());
         let imported = import_mesh_bytes(&filename, text.as_bytes()).expect("re-import");
         if format == "stl" {
-            // 🔺️ STL is triangles only: every n-gon comes back as its fan, never fewer faces.
             assert!(faces(&imported) >= expected, "stl keeps every face as triangles: {} < {expected}", faces(&imported));
         } else {
             assert_eq!(faces(&imported), expected, "{format} keeps every face");

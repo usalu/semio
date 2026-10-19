@@ -447,7 +447,6 @@ pub struct SnapshotLease;
 
 impl SnapshotLease {
     /// 🏷️ The `LeaseStorage` resource name guarding `document`'s snapshot builder.
-    // 🚫️async: E1 pure accessor consumed synchronously by `acquire`/`renew`/`release`/`current` — see R9
     pub fn resource(document: &ArtifactId) -> String {
         format!("snapshot:{document}")
     }

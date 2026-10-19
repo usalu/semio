@@ -7,8 +7,9 @@
 //!
 //! 🔗️ [Polyhedral mass properties](https://www.geometrictools.com/Documentation/PolyhedralMassProperties.pdf)
 
-use super::HalfedgeMesh;
-use crate::inertia::{principal_inertia, to_centroid, InertiaTensor, PrincipalInertia};
+extern crate semio_framework_value_derive as value_derive;
+use semio_framework_3d_mesh_document::inertia::{principal_inertia, to_centroid, InertiaTensor, PrincipalInertia};
+use semio_framework_3d_mesh_document::HalfedgeMesh;
 use std::collections::{BTreeMap, HashMap};
 
 /// 📊 Minimum, maximum and arithmetic mean of one measured quantity.

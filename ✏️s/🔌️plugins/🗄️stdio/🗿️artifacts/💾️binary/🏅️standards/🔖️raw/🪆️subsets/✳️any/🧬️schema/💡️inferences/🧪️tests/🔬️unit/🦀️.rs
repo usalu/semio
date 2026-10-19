@@ -119,8 +119,6 @@ mod conformance_laws {
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
 
-        // 🔬️ Also the empty-bytes case (`BinarySnapshot::default()`), exercising the `hex`
-        // macro's zero-width match.
         let empty_text = pack::snapshot::ArtifactDsl::print_dsl(&empty_binary_snapshot());
         let (empty_envelope, empty_body) = store::semio_format::split_text_preamble(&empty_text).expect("split preamble");
         let empty_reconstructed = format!("{}\n{empty_body}", empty_envelope.envelope_id());
@@ -159,10 +157,6 @@ mod conformance_laws {
     /// bytes.len()`.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        // 🧬️ CARRIER LAW: `encode_pack` is now the raw `bytes` payload directly (no SEMIO
-        // envelope to unwrap first) — `walk_protocol` already expects "bytes that start at
-        // the payload" per this file's own protocol.semio doc comment, so it walks `packed`
-        // unmodified.
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let packed = pack::snapshot::ArtifactPack::encode_pack(&demo_binary_snapshot());
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &packed).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));

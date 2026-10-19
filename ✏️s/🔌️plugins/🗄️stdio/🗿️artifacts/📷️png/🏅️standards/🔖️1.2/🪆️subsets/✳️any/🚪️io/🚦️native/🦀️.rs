@@ -1,7 +1,8 @@
 //! 🚦️ Precise PNG native admission and canonical publication.
 use super::*;
 use crate::store::sqlite_snapshot::SqliteDatabaseLimits;
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn invalid(message:impl Into<String>)->ValueError {ValueError::new(ValueRefusalKind::InvalidValue,message)}
 pub fn decode_png(data:&[u8],limits:SqliteDatabaseLimits,control:&mut NativeDecodeControl<'_>)->Result<PngSnapshot,ValueError> {
  if data.len()>limits.max_file_bytes {return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"PNG input exceeds file limit"));}

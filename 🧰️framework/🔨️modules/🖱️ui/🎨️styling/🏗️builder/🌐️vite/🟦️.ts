@@ -134,8 +134,6 @@ export function staticDirVitePlugin(repoRoot: string, spec: StaticDirectoryAsset
       apply: "build",
       enforce: "pre",
       configResolved(config) {
-        // 🖼️ `config.build.outDir` is root-relative unless already absolute — `resolve` handles both, so a
-        // brand's custom `outDir` (see `ShellBrand.distDir`) is honored instead of assuming `<root>/dist`.
         outDir = resolve(config.root, config.build.outDir);
         writeOutput = config.build.write !== false;
       },
@@ -219,9 +217,7 @@ export function findWorkspacePackages(repoRoot: string): string[] {
       try {
         const pkg = JSON.parse(readFileSync(full, "utf8"));
         if (pkg.name && typeof pkg.name === "string" && pkg.name.startsWith("@semio-tech/")) packages.push(pkg.name);
-      } catch {
-        /* an unreadable or malformed manifest declares no workspace package */
-      }
+      } catch {}
     }
   };
   scan(repoRoot);

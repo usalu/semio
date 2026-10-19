@@ -287,7 +287,7 @@ export function mdBytes(source: Doc): Uint8Array {
 const RECIPES: readonly Recipe[] = [
   ...(await import("./🧱️blocks/📜️script.ts")).RECIPES,
   ...(await import("./🖋️runs/📜️script.ts")).RECIPES,
-  ...(await import("./🎨️styles/📜️script.ts")).RECIPES,
+  ...(await import("./🎨️styles/🟦️.ts")).RECIPES,
 ];
 //#endregion 🧪️Corpus
 

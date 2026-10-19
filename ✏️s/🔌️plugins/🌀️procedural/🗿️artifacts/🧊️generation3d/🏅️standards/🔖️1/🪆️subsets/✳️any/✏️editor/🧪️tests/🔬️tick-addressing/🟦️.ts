@@ -25,7 +25,6 @@ export function testGeneration3dPreviewTickAddressingContract(): void {
   assert.equal(generateAdmitted?.payloadWindowKind, "generatePreview");
   assert.equal(generateAdmitted?.admitted, true);
 
-  // 👁️ The read-only surface is part of the SAME law, not an exception to it.
   const viewerRows = fixture.arming.filter((row) => row.surface === "viewer");
   assert.ok(viewerRows.length >= 2, "the viewer surface must declare its own arming rows");
   assert.deepEqual(viewerRows.find((row) => row.id === "viewer-no-surface-mounted")?.armedWindowIds, []);

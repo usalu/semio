@@ -1,11 +1,11 @@
-//! Deserialize stdio.xlsx from stdio.binary (parse ZIP bytes).
+//! 📥️ Deserialize stdio.xlsx from stdio.binary (parse ZIP bytes).
 
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 //#region Codec
-/// Register deserializer hooks.
+/// 📤️ Register deserializer hooks.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 
@@ -17,7 +17,7 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<XlsxSnapshot, store::PackErr
     Ok(snap)
 }
 
-/// Decode a Binary pack then parse ZIP.
+/// 📂️ Decode a Binary pack then parse ZIP.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<XlsxSnapshot, store::PackError> {
     deserialize(&<BinarySnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?)

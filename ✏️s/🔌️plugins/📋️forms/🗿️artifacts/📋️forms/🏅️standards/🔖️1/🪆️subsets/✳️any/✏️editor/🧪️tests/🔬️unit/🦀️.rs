@@ -198,7 +198,6 @@ fn command_from_action_round_trips_every_command_id() {
     for command in every_command() {
         let id = command.command_id();
         let args = semio_framework_value::ToValue::to_value(&command);
-        // 🔁️ The `DslOps` wire shape is `{keyword: payload}`; the shell sends the bare payload object.
         let payload = match &args {
             semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
@@ -257,7 +256,6 @@ fn command_from_action_bridges_block_list_verbs_and_control_values() {
     assert_eq!(try_value.window_kind_id, "forms-try");
     assert_eq!(try_value.value_json.as_deref(), Some("\"Column A\""));
     assert!(FormsPlayApp::command_from_action("patchStep", Some((args(serde_json::json!({ "stepId": "s1" }))).clone()), None).is_err(), "a required field must not be defaulted silently");
-    // 🔢️ Host JSON delivers integers as floats; the exact-integer codecs must still decode them.
     let float_index = semio_framework_value::DslValue::object([("stepId".to_string(), semio_framework_value::DslValue::String("s1".into())), ("index".to_string(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]);
     assert_eq!(FormsPlayApp::command_from_action("moveStep", Some((float_index).clone()), None).expect("integral float bridge"), FormsCommand::MoveStep(move_step::MoveStep { step_id: "s1".into(), index: 2 }));
 }
@@ -322,9 +320,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "setTryValues" => "try-values".to_string(),
             "setSpecJson" => "spec-json".to_string(),
             "setActiveExample" => "active-example".to_string(),
-            // 📍️ Post-migration row (`📍️set-try-value-step`), keyed into the same `try-value`
-            // family as its `setTryValue`/`setTryValues` siblings rather than the default
-            // `set-`-prefixed kebab — the key the `app_commands!` declaration carries.
             "setTryValueStep" => "try-value-step".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };

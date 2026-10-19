@@ -11,7 +11,9 @@
         "cwd": "🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     }
   }
 }

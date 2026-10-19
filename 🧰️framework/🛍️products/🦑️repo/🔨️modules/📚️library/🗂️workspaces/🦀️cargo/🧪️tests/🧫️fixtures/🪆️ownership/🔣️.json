@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "all-known-owner-publication",
+      "selectedOnly": false,
+      "retained": [],
+      "expected": [
+        "nested",
+        "product"
+      ],
+      "expectedMembers": [
+        "general",
+        "products/plugin"
+      ]
+    },
+    {
+      "name": "selected-nested-owner-retains-ancestor-boundaries",
+      "selectedOnly": true,
+      "retained": [
+        "retained-native"
+      ],
+      "expected": [
+        "nested",
+        "product",
+        "retained-native"
+      ],
+      "expectedMembers": [
+        "general",
+        "products/plugin"
+      ]
+    }
+  ]
+}

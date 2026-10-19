@@ -258,8 +258,6 @@ pub fn apply(kind: &str, bytes: &[u8]) -> Result<Vec<u8>, String> {
             dict.remove(b"TrimBox");
         }
         "embed-font-file" => {
-            // 🔗️Re-embeds the DONOR program (descriptor ordinal 1's) into descriptor ordinal 0, whose own
-            // program `arrange` stripped — so the mutation is an observable re-linking, not a no-op.
             let ids = descriptor_ids(&document);
             let donor = document
                 .get_object(ids[1])

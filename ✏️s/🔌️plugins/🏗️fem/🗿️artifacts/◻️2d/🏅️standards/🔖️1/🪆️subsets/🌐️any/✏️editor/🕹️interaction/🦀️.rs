@@ -1,4 +1,4 @@
-//! snapshot every render reads, screen-space hit-testing of document entities and the
+//! 🌐️ snapshot every render reads, screen-space hit-testing of document entities and the
 //! 🕹️ Fem2d play app — the framework-owned interaction domain: its definition, the selection/hover
 //! `interactionSelect`/`interactionHover` request effects a pick emits. Slice A fills this in.
 
@@ -20,6 +20,7 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::ViewModel;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 
 //#region 🔖️Constants
 pub const FEM2D_INTERACTION_DOMAIN: &str = "fem2d";

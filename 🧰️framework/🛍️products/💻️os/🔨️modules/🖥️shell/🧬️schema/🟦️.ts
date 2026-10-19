@@ -13,12 +13,12 @@
  * @see ./🦀️.rs
  */
 import { OsConfigSchemaError, parseUiLocale } from "@semio-tech/framework/config/schema";
-import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "../../../../../🔨️modules/🐚️shell/🤖️generated/🟦️.js";
+import type { ActiveSession, Anchor, AppRole, ArtifactSyncStatus, ByAnchor, Conflict, DialogState, DockUiState, ExtraWindowInstance, IconName, InferencePortStatus, LayoutNode, LoadedPlugin, MergePolicy, NoticeKind, PluginPanelStatus, PluginSupervisorState, ShellCapability, ShellCommand, ShellError, ShellEvent, ShellScope, ShellState, SplitOrientation, SyncCardKind, TransientNotice } from "@semio-tech/framework/shell/generated";
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
 export { OsConfigSchemaError, parseUiAppearance, parseUiChromeLayout, parseUiDriver, parseUiLocale, parseUiPreferences, parseUiTheme } from "@semio-tech/framework/config/schema";
 export type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "@semio-tech/framework/config/schema";
-export * from "../../../../../🔨️modules/🐚️shell/🤖️generated/🟦️.js";
+export * from "@semio-tech/framework/shell/generated";
 
 //#region 🪪️Authority
 /** 🪪️ The `$id` `🔣️.json` declares — the identity every consumer resolves `#/$defs/<ExportId>` against. */

@@ -1,4 +1,4 @@
-//! ️ `change-coast-or-island`.
+//! 🧬️ `change-coast-or-island`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

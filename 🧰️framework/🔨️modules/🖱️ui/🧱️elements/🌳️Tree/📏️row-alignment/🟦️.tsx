@@ -1,7 +1,7 @@
 /** 📏 Owns the tree row alignment contexts and detail-panel row metrics shared by Label and the tree. */
 import * as React from "react";
 import { STYLING_DOM, domSizePx, sizeVar, uiSpacingLen } from "@semio-tech/ui-styling";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 
 /** 🧭️ Vertical unfold direction for a tree's foldable groups — `"up"` mirrors the {@link Ribbon} `"up"` pattern: a group's children render above its own header row, in reverse order, so the tree grows toward a fixed anchor (e.g. a bottom corner panel's pinned chrome) instead of away from it. */

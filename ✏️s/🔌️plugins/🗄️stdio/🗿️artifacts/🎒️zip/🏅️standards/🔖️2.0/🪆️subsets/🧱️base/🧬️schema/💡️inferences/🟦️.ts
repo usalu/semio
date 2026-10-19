@@ -7,7 +7,7 @@ export interface ZipEntries {
 }
 
 export interface ZipInference {
-  /** @derived */
+  /** 📚️ @derived */
   entries: ZipEntries;
 }
 

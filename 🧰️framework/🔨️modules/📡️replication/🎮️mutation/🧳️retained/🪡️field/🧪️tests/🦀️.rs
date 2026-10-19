@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneSource;
 
@@ -34,7 +35,7 @@ fn close(field: &mut RetainedFieldPreparation<String>, source: &mut RetainedClon
 /// 🪡️ SQLite-verified Unicode and empty setters use bounded original field custody and owned exchange.
 #[test]
 fn retained_field_exchange_matches_neutral_strings_and_physical_receipts() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(fixture_text!("../../🪡️field/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for vector in vectors.as_array().unwrap() {
         let mut original = source(vector["authored"].as_str().unwrap().into());
         let mut field = RetainedFieldPreparation::<String>::default();
@@ -81,7 +82,7 @@ fn retained_field_cancellation_closes_every_typed_frontier() {
 /// 📏️ Original logical quantum survives an expanded physical field header grant on every real copy turn.
 #[test]
 fn retained_field_logical_body_survives_expanded_physical_headers() {
-    let vectors:serde_json::Value=serde_json::from_str(include_str!("../../📏️body/🧫️fixtures/🔣️.json")).unwrap();
+    let vectors:serde_json::Value=serde_json::from_str(fixture_text!("../../📏️body/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in vectors["rows"].as_array().unwrap() {
         let body=row["body"].as_u64().unwrap() as usize;
         let expected="original field payload ".repeat(32);

@@ -250,7 +250,7 @@ where
     }
 
     /// 📨️ Runs one typed command against `store`.
-    pub  async fn run(&mut self, store: &mut ArtifactStore<P, Mu>, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
+    pub  async fn run(&mut self, store: &mut ArtifactStore<P, Mu>, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
         Ok(match command {
             TimeTravelStoreCommand::Open { target, current, withdraw } => TimeTravelStoreOutput::Opened(self.open(store, &target, current.as_ref(), withdraw)),
             TimeTravelStoreCommand::Adopt(adopt) => {
@@ -404,7 +404,7 @@ where
       if let Some((owner,p))=store.retire_derived_report_replay(&mut self.replay,grant)?{self.retirements.push_back(owner);return Ok(p)}Ok(self.replay.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))
     }
     /// 🖼️ One bounded prefix slice; only a completed preview displaces the last complete projection.
-    fn step_preview(&mut self,store:&mut ArtifactStore<P,Mu>,deadline_us:u64,clock:fn()->Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<TimeTravelPreviewStep,Fault>{
+    fn step_preview(&mut self,store:&mut ArtifactStore<P,Mu>,deadline_us:u64,clock:fn()->Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<TimeTravelPreviewStep,Fault>{
         self.snapshot_custody_available(2)?;
         let idle=RetainedCloneProgress::default();let mut deadline=||clock().is_none_or(|now|now>=deadline_us);
         if self.preview_cancelled{return Ok(TimeTravelPreviewStep::Pending);}
@@ -428,7 +428,7 @@ where
     }
 
     /// ⏭️ Steps the replay until `deadline_us` on `clock`; completion swaps the replayed head in and keeps the finished result.
-    fn step_replay(&mut self, store: &mut ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<TimeTravelReplayStep, Fault> {
+    fn step_replay(&mut self, store: &mut ArtifactStore<P, Mu>, deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<TimeTravelReplayStep, Fault> {
         self.snapshot_custody_available(1)?;
         let Some(replay) = self.replay.as_mut() else { return Ok(TimeTravelReplayStep::Faulted) };
         let mut deadline = || clock().is_none_or(|now| now >= deadline_us);

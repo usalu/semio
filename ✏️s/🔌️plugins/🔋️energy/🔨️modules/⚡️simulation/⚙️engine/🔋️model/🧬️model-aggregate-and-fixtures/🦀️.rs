@@ -147,9 +147,6 @@ impl Model {
             if construction.layer_material_ids.is_empty() {
                 diag.push(Error::severe(format!("construction {} has no layers", construction.name)));
             }
-            // 🪟️ A construction is glazing when a fenestration binds it OR when every layer is a pane
-            // or a gas gap — a layered glazing construction re-imported from epJSON (`WindowMaterial:
-            // Glazing`/`:Gas`) is not yet bound by any fenestration and must not be judged as opaque.
             let all_glazing_layers = !construction.layer_material_ids.is_empty() && construction.layer_material_ids.iter().all(|id| glazing_ids.contains(id) || gas_ids.contains(id));
             if glazing_construction_ids.contains(&construction.id) || all_glazing_layers {
                 let alternates = construction.layer_material_ids.iter().enumerate().all(|(index, id)| if index % 2 == 0 { glazing_ids.contains(id) } else { gas_ids.contains(id) });
@@ -283,8 +280,6 @@ impl Model {
             if !(0.0..=1.0).contains(&fen.shgc) {
                 diag.push(Error::severe(format!("fenestration {} has an SHGC outside 0..1", fen.name)));
             }
-            // 🔶️ An aperture that carries its own polygon must be a real planar ring in its host's
-            // plane — otherwise the solar code would shade against a shape the envelope does not have.
             if !fen.vertices_m.is_empty() {
                 if fen.vertices_m.len() < 3 {
                     diag.push(Error::severe(format!("fenestration {} has fewer than 3 vertices", fen.name)));

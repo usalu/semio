@@ -63,12 +63,10 @@ pub struct Transform2D {
 impl Transform2D {
     pub const IDENTITY: Self = Self { matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0] };
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn translation(tx: f32, ty: f32) -> Self {
         Self { matrix: [1.0, 0.0, 0.0, 1.0, tx, ty] }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn apply_point(&self, point: [f32; 2]) -> [f32; 2] {
         let [a, b, c, d, tx, ty] = self.matrix;
         [a * point[0] + c * point[1] + tx, b * point[0] + d * point[1] + ty]
@@ -76,7 +74,6 @@ impl Transform2D {
 
     /// 🔁️ `None` for a singular matrix (zero determinant) — a degenerate transform an upstream layout
     /// bug produced, never silently treated as identity.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn invert(&self) -> Option<Self> {
         let [a, b, c, d, tx, ty] = self.matrix;
         let det = a * d - b * c;
@@ -147,7 +144,6 @@ pub struct SurfaceResourceNeeds {
 }
 
 impl SurfaceResourceNeeds {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn is_empty(&self) -> bool {
         self.textures == 0 && self.meshes == 0
     }
@@ -212,22 +208,17 @@ pub trait Surface {
     type Snapshot: 'static;
     type Intent: 'static;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn update_snapshot(&mut self, snapshot: Rc<Self::Snapshot>);
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepare(&mut self, placement: &SurfacePlacement, caps: &DeviceCapabilities) -> SurfacePrepare;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, cx: &mut SurfaceRenderCx<'_>) -> Result<(), SurfaceError>;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_input(&mut self, event: &SurfaceInput, placement: &SurfacePlacement) -> Vec<Self::Intent>;
 
     /// ⏰️ The surface's own contribution to the zero-idle-frames guarantee: an animating camera
     /// returns its next due time so [`crate::FrameScheduler`] wakes exactly then; a still
     /// surface returns `None` and costs nothing between real changes.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn next_deadline(&self) -> Option<Deadline>;
 }
 
@@ -322,7 +313,6 @@ pub struct AnySurface {
 }
 
 impl AnySurface {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new<S: Surface + 'static>(kind: SurfaceKind, surface: S) -> Self {
         Self {
             kind,
@@ -331,28 +321,23 @@ impl AnySurface {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn kind(&self) -> SurfaceKind {
         self.kind
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn update_snapshot(&mut self, snapshot: Rc<dyn Any>) {
         (self.vtable.update_snapshot)(self.inner.as_mut(), snapshot);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn prepare(&mut self, placement: &SurfacePlacement, caps: &DeviceCapabilities) -> SurfacePrepare {
         (self.vtable.prepare)(self.inner.as_mut(), placement, caps)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn render(&mut self, cx: &mut SurfaceRenderCx<'_>) -> Result<(), SurfaceError> {
         (self.vtable.render)(self.inner.as_mut(), cx)
     }
 
     /// 🖌️ [`render_placed_surface`]'s equivalent for an already-erased surface.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn render_placed(&mut self, placement: &SurfacePlacement, scene: &mut SceneBuilder, resources: &mut ResourceRegistry, time_seconds: f32) -> Result<(), SurfaceError> {
         scene.push_scissor(placement.bounds);
         let mut cx = SurfaceRenderCx { scene, resources, placement, time_seconds };
@@ -361,12 +346,10 @@ impl AnySurface {
         result
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn handle_input(&mut self, event: &SurfaceInput, placement: &SurfacePlacement) -> Vec<Box<dyn Any>> {
         (self.vtable.handle_input)(self.inner.as_mut(), event, placement)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn next_deadline(&self) -> Option<Deadline> {
         (self.vtable.next_deadline)(self.inner.as_ref())
     }
@@ -424,7 +407,6 @@ pub struct SurfaceRegistry {
 }
 
 impl SurfaceRegistry {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self::default()
     }
@@ -433,19 +415,16 @@ impl SurfaceRegistry {
     /// contract: a fresh surface starts empty and receives its real content through
     /// [`Surface::update_snapshot`] on the next frame, the same lifecycle every other retained-per-id
     /// state in this crate follows ([`crate::element::RetainedStore`]'s `get_or_insert_with`).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn register<S: Surface + Default + 'static>(&mut self, kind: SurfaceKind) {
         self.factories.insert(kind, make_surface::<S>);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_registered(&self, kind: SurfaceKind) -> bool {
         self.factories.contains_key(&kind)
     }
 
     /// 🏗️ Builds a fresh surface for `kind`. `Some(SurfaceError::Unregistered(kind))` alongside a
     /// working placeholder is this registry's explicit degrade path — never a panic, never a blank.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn create(&self, kind: SurfaceKind) -> (AnySurface, Option<SurfaceError>) {
         match self.factories.get(&kind) {
             Some(factory) => (factory(kind), None),

@@ -63,7 +63,7 @@ test("the entire retained mutation source and original reader callers preserve e
   expect(source).toContain(`use ${contract.library}::reference_support;`);
   expect(source).not.toContain("pub fn project_dxf_r12");
   expect(inspectRustCompileReferences(source).some(({ path }) => path.endsWith("🧰️support/🦀️.rs"))).toBe(false);
-  expect(JSON.parse(read(`${contract.owner}/🧪️tests/🧪️tests/🧫️fixtures/🖊️semantic/🔣️.json`))).toEqual(contract.cases);
+  expect(JSON.parse(read(`${contract.owner}/🧪️tests/🧫️fixtures/🖊️semantic/🔣️.json`))).toEqual(contract.cases);
 
 });
 

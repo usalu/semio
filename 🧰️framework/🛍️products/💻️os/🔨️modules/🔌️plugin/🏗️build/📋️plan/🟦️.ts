@@ -13,7 +13,7 @@ import { loadFrameworkOsPlaygroundCatalog } from "@semio-tech/repo-lib/dev";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection,readCatalogBuildTargetsV1, runtimeCatalogProjectionRootV1, type CatalogSelection } from "@semio-tech/plugin-registry/catalog-view";
+import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection,readCatalogBuildTargetsV1, runtimeCatalogProjectionRootV1, type CatalogSelection, type PlaygroundBuildTarget } from "@semio-tech/plugin-registry/catalog-view";
 
 import { discoverPluginBuildTargets, type ComponentSourceOwnerV1, type PluginBuildTargetV1 } from "@semio-tech/plugin-registry/discovery";
 
@@ -71,7 +71,7 @@ function resolvePluginBuildTargets(filterPlugin?: string, catalog: CatalogSelect
 
 //#region 🔖️PlaygroundVariantResolution
 /** 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🎮️playgrounds/🟦️.ts`). */
-const playgroundCatalog = () => loadFrameworkOsPlaygroundCatalog();
+const playgroundCatalog = () => loadFrameworkOsPlaygroundCatalog<PlaygroundBuildTarget>();
 
 /** 🧭️ A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
 type ResolvedPlaygroundFilter = {

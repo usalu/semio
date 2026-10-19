@@ -8,7 +8,7 @@
  * list rather than a hand-kept copy.
  */
 import { describe, expect, it } from "vitest";
-import { traceHopStagesFixture as fixture } from "../../../../../../../🔨️modules/⏱️trace/🧪️tests/🧫️fixtures/🟦️.ts";
+import { traceHopStagesFixture as fixture } from "@semio-tech/framework/trace/testing/fixtures";
 import {
   createHopTracer,
   HOP_TRACE_MEASURE_PREFIX,
@@ -20,7 +20,7 @@ import {
   hopTraceTotalsByStage,
   type HopTraceDetail,
   type HopTracePorts,
-} from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+} from "@semio-tech/framework/trace";
 
 /** 🕰️ A virtual clock plus a User Timing sink, so a law drives the real tracer with no browser. */
 const virtualPorts = (): HopTracePorts & { readonly tick: (ms: number) => void; readonly measured: { name: string; startMs: number; endMs: number; detail: HopTraceDetail }[] } => {
@@ -136,8 +136,6 @@ describe("⏱️ renderer hop trace", () => {
     ports.tick(1_000);
     tracer.record("worker.guest", 120, 6.25, { actorId: "a", patches: 0 });
     tracer.record("worker.reply", 126.25, 3.5, { actorId: "a" });
-    // 🧭️ A recorded span is placed where it HAPPENED, not where the clock is now — otherwise the
-    // worker's stages would pile up at the reply instant and the breakdown would not add up.
     expect(tracer.spans().map((span) => [span.stage, span.startMs, span.durationMs])).toEqual([
       ["worker.guest", 120, 6.25],
       ["worker.reply", 126.25, 3.5],

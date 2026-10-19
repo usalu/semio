@@ -1,4 +1,4 @@
-//! Norm command — `apply-remedy` (the shared remedy resolution coerces Exactly→bool when the target leaf is boolean).
+//! 📜️ Norm command — `apply-remedy` (the shared remedy resolution coerces Exactly→bool when the target leaf is boolean).
 
 use crate::En1998Family;
 use semio_s_artifact_norm_en1998_mutations::En1998Mutation;

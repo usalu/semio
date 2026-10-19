@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{Number,observe_retirement_allocations as observe};
 
@@ -91,7 +92,7 @@ fn close_output(value:DslValue,copy:usize,born:&mut usize,freed:&mut usize){
 
 #[test]
 fn original_dynamic_value_clone_fullgrant_and_original_custody(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut cases=law["cases"].as_array().unwrap().iter().map(|row|(row["name"].as_str().unwrap().to_owned(),row["value"].clone())).collect::<Vec<_>>();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut cases=law["cases"].as_array().unwrap().iter().map(|row|(row["name"].as_str().unwrap().to_owned(),row["value"].clone())).collect::<Vec<_>>();
     for depth in law["depths"].as_array().unwrap(){let depth=depth.as_u64().unwrap()as usize;let mut value=serde_json::json!({"kind":"text","value":"ä日🌱"});for _ in 0..depth{value=serde_json::json!({"kind":"array","value":[value]});}cases.push((format!("depth-{depth}"),value));}
     for(name,encoded)in cases {for copy in [1,3,64] {for cancelled in [None,Some(0),Some(1),Some(3),Some(8),Some(17)]{
         let(owner,heap)=observe(||decode(&encoded));let(mut born,mut freed)=heap;let mut original=Vec::new();pointers(&owner,&mut original);

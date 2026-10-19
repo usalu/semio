@@ -61,13 +61,13 @@ export type PluginModuleStoreWorkerContainerV1 = Readonly<{
 }>;
 
 export type HubPluginSourceOptionsV1 = Readonly<{
-  /** The hub mount the shell reaches its hub through ({@link HUB_SAME_ORIGIN_MOUNT}). */
+  /** 🛞️ The hub mount the shell reaches its hub through ({@link HUB_SAME_ORIGIN_MOUNT}). */
   hubMount: string;
-  /** The store's service worker script (a module worker; it must be allowed scope `/`). */
+  /** 📸️ The store's service worker script (a module worker; it must be allowed scope `/`). */
   storeWorkerUrl: string;
-  /** The page origin the store's keys live under. */
+  /** 🌳️ The page origin the store's keys live under. */
   origin: string;
-  /** Receives every notice the person should see. */
+  /** 👤️ Receives every notice the person should see. */
   onNotice: (notice: HubPluginSourceNoticeV1) => void;
   caches: Readonly<{ open(name: string): Promise<PluginModuleCacheV1> }>;
   locks: PluginModuleLocksV1;

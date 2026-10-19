@@ -2,7 +2,8 @@
 //! 📏️ Every Remodeling native role is counted before constructing its typed snapshot.
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::{NativeDecodeControl as N,ValueRefusalKind};
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 const WIDTHS:&[(&str,usize)]=&[("remodel_asset",9),("remodel_byte_buffer",4),("remodel_calibration",2),("remodel_camera",25),("remodel_camera_distortion",6),("remodel_camera_pose",25),("remodel_cloud",3),("remodel_dense_parameters",9),("remodel_document",3),("remodel_durable_artifact",8),("remodel_durable_byte",5),("remodel_durable_chunk",8),("remodel_durable_float",6),("remodel_durable_integer",4),("remodel_durable_text",3),("remodel_feature_parameters",8),("remodel_float_buffer",7),("remodel_float_sample",6),("remodel_frame",8),("remodel_geo_parameters",22),("remodel_geo_products",5),("remodel_ground_control_observation",11),("remodel_ground_control_point",14),("remodel_ingest_parameters",8),("remodel_match_parameters",10),("remodel_mesh_parameters",15),("remodel_mesh_result",9),("remodel_motion_parameters",9),("remodel_motion_track",9),("remodel_parameters",2),("remodel_qc_report",17),("remodel_qc_warning",4),("remodel_results",2),("remodel_rig_extrinsic",25),("remodel_sfm_parameters",12),("remodel_stream",13),("remodel_trajectory",2),("remodel_video_source",11),("remodel_watertight_report",21)];

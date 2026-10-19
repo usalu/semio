@@ -1,4 +1,6 @@
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_kernel::ColdMutation;
+use semio_framework_os_kernel::ColdMutationDiff;
+use semio_framework_os_kernel::ColdDiffAlgebra;
 use crate::io::text::snapshot::{decode_local_folder_bindings_json, encode_local_folder_bindings_json};
 use super::*;
 use super::super::{apply_local_folders_config_mutation, apply_local_folders_config_mutation_reporting};

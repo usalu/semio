@@ -58,10 +58,6 @@ pub(super) fn set_surface_property(model: &crate::model::Model, surface: u32, pr
     let boundary = match property {
         "boundary" => {
             let kind = outside_boundary_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
-            // 🚧️ An interzone boundary needs its other half. A control that carries only the kind can
-            // name the partner nowhere, so a partner already on the surface is CARRIED FORWARD rather
-            // than dropped — re-picking `interzone` on a surface that is already interzone keeps its
-            // neighbour instead of refusing.
             let held = model.surfaces.iter().find(|entry| entry.id.0 == surface).and_then(|entry| interzone_partner(entry.outside_boundary_condition));
             let partner = (partner_surface != 0).then_some(EntityId(partner_surface)).or(held);
             if let Some(partner) = partner {
@@ -71,9 +67,6 @@ pub(super) fn set_surface_property(model: &crate::model::Model, surface: u32, pr
             }
             Some(OutsideBoundary::from_parts(kind, partner).ok_or_else(|| invalid_value(property, value))?)
         }
-        // 🚧️ The one control that can MAKE a surface interzone: `value` is the partner surface, and the
-        // boundary becomes `Interzone(partner)` in the same step. `partner_surface` stays the palette's
-        // spelling; the inspector's flat `{field, id, value}` shape has only one slot to carry it in.
         "interzonePartner" => {
             let partner = EntityId(as_u32(property, value, |parsed| parsed != 0)?);
             if partner.0 == surface {
@@ -229,39 +222,39 @@ pub(super) fn set_glazing_material_property(material: &crate::model::GlazingMate
         }
         "solarTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.solar_transmittance != parsed, || crate::window_layer_mutations::change_glazing_material_solar_transmittance(id, parsed))
+            step_if(material.solar_transmittance != parsed, || crate::window_layer_optics_mutations::change_glazing_material_solar_transmittance(id, parsed))
         }
         "solarReflectanceFront" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.solar_reflectance_front != parsed, || mutations::change_glazing_material_solar_reflectance_front(id, parsed))
+            step_if(material.solar_reflectance_front != parsed, || crate::window_layer_optics_mutations::change_glazing_material_solar_reflectance_front(id, parsed))
         }
         "solarReflectanceBack" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.solar_reflectance_back != parsed, || mutations::change_glazing_material_solar_reflectance_back(id, parsed))
+            step_if(material.solar_reflectance_back != parsed, || crate::window_layer_optics_mutations::change_glazing_material_solar_reflectance_back(id, parsed))
         }
         "visibleReflectanceFront" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.visible_reflectance_front != parsed, || mutations::change_glazing_material_visible_reflectance_front(id, parsed))
+            step_if(material.visible_reflectance_front != parsed, || crate::window_layer_optics_mutations::change_glazing_material_visible_reflectance_front(id, parsed))
         }
         "visibleReflectanceBack" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.visible_reflectance_back != parsed, || mutations::change_glazing_material_visible_reflectance_back(id, parsed))
+            step_if(material.visible_reflectance_back != parsed, || crate::window_layer_optics_mutations::change_glazing_material_visible_reflectance_back(id, parsed))
         }
         "infraredTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.infrared_transmittance != parsed, || mutations::change_glazing_material_infrared_transmittance(id, parsed))
+            step_if(material.infrared_transmittance != parsed, || crate::window_layer_optics_mutations::change_glazing_material_infrared_transmittance(id, parsed))
         }
         "visibleTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.visible_transmittance != parsed, || crate::window_layer_mutations::change_glazing_material_visible_transmittance(id, parsed))
+            step_if(material.visible_transmittance != parsed, || crate::window_layer_optics_mutations::change_glazing_material_visible_transmittance(id, parsed))
         }
         "infraredEmissivityFront" => {
             let front = as_f64(property, value, fraction)?;
-            step_if(material.infrared_emissivity_front != front, || crate::window_layer_mutations::change_glazing_material_infrared_emissivity(id, front, material.infrared_emissivity_back))
+            step_if(material.infrared_emissivity_front != front, || crate::window_layer_optics_mutations::change_glazing_material_infrared_emissivity(id, front, material.infrared_emissivity_back))
         }
         "infraredEmissivityBack" => {
             let back = as_f64(property, value, fraction)?;
-            step_if(material.infrared_emissivity_back != back, || crate::window_layer_mutations::change_glazing_material_infrared_emissivity(id, material.infrared_emissivity_front, back))
+            step_if(material.infrared_emissivity_back != back, || crate::window_layer_optics_mutations::change_glazing_material_infrared_emissivity(id, material.infrared_emissivity_front, back))
         }
         _ => return Err(unknown_property("glazing material", property)),
     })

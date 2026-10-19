@@ -200,9 +200,6 @@ export function parseFeature(source: string): ParsedFeature {
   const comparisonRaw = tagValue(featureTags, "@comparison-");
   const oracleInput = tagValue(featureTags, "@oracle-input-");
   const mutationCatalog = tagValue(featureTags, "@mutations-");
-  // 🧭️The parser records the declared profile; whether that profile EXISTS is registry knowledge and
-  // is checked in the contract phase, so the Gherkin profile stays independent of which formats the
-  // repository happens to own today.
   const comparison: ComparisonProfile | null = comparisonRaw;
 
   const seen = new Set<string>();

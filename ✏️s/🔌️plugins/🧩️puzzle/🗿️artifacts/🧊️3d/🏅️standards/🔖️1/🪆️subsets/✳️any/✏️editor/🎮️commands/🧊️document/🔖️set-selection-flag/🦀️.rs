@@ -1,4 +1,4 @@
-//! `setSelectionLocked`).
+//! 📄️ `setSelectionLocked`).
 //! 🧊️ `set-selection-flag` command, and the two set-verbs a document-tree row names (`setSelectionHidden`,
 
 use {semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id, semio_s_artifact_puzzle_3d_editor_session::Puzzle3dActionCtx};

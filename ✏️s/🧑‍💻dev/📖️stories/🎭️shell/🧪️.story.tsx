@@ -13,7 +13,7 @@ const meta = {
   title: "🛠️framework🖥️os/Shell",
   component: OsBootHost,
   parameters: { layout: "fullscreen" },
-  tags: [], // heavy WASM boot — no autodocs page
+  tags: [],
   argTypes: {
     plugin: { control: "select", options: PLUGIN_BUILD_TARGETS.map((t) => t.pluginId) },
   },

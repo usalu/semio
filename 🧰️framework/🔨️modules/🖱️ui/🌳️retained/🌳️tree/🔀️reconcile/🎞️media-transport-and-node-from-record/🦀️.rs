@@ -140,9 +140,6 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
                 description: props.description.as_ref().map(|value| value.as_str().to_string()),
                 required: props.required,
                 error: props.error.as_ref().map(|value| value.as_str().to_string()),
-                // 🍃️ The field's real child is an ARENA child (the record's `children[0]`); this
-                // placeholder only satisfies `UiFieldNode`'s non-optional shape and is never painted
-                // — `paint_node_step`'s `Field` arm paints the label and nothing of `child`.
                 child: Box::new(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(), menu: None })),
                 presence,
                 menu,
@@ -203,13 +200,6 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
                 interaction_domain: props.interaction_domain.as_ref().map(|value| value.as_str().to_string()),
             })
         }
-        // 🌳️ A tree's section and item records mount as the keyed `Stack` ROWS this engine's
-        // interactive sync resolves by id — the document-path twin of `children_of`'s `Tree` arm
-        // (`tree_section_row`/`tree_item_row`). Their content is painted from the owning `Tree`'s own
-        // inline spec; these rows carry identity, layout and drag/drop state. 🪟️ `TreeSectionProps.
-        // window`/`TreeItemProps.window` are therefore NOT read here: the spacer pitch belongs to the
-        // painted spec (`UiTreeSectionNode.window`/`UiTreeItemNode.window`, stamped in the `Tree` arm
-        // above), not to the identity row, which has no extent of its own.
         ui_contract::Component::TreeSection(_) | ui_contract::Component::TreeItem(_) | ui_contract::Component::TableRow(_) => UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
             gap: None,

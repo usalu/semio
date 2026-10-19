@@ -210,7 +210,6 @@ async fn create_delete_block_round_trip_grows_and_shrinks_projection() {
 #[semio_framework_async_macros::async_test]
 async fn delete_block_at_a_non_last_index_restores_exact_position_on_undo() {
     let base = sample_snapshot();
-    // b1 is index 0 of 4; deleting then undoing must restore it there, not append it at the end.
     round_trip(&base, &delete_block("b1".into()));
 }
 //#endregion 🔖️MutationLaws

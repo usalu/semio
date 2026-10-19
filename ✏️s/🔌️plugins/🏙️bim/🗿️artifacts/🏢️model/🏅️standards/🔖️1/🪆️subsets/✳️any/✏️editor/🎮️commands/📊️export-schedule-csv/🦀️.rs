@@ -25,9 +25,9 @@ pub const RECORDS_PER_STEP: usize = 512;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(keyword = "export-schedule-csv")]
 pub struct ExportScheduleCsv {
-    /// The schedule to export; empty means the one the addressed schedule window shows.
+    /// ⏱️ The schedule to export; empty means the one the addressed schedule window shows.
     pub id: String,
-    /// The state a toggle that triggers the export reports; the export ignores it.
+    /// 🔘️ The state a toggle that triggers the export reports; the export ignores it.
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub pressed: Option<bool>,
 }

@@ -6,8 +6,6 @@ export async function registerPlaygroundActionAndPluginSourceTests(vitest: NonNu
   const { createDevPluginSource, createExtensionSource, createLeasePool, effectiveActionArgs, PluginModuleUnavailableError, extensionSourceEventToPluginSourceEvent, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId } = dependencies;
   const { describe, expect, it, vi } = vitest;
 
-  // 🧪️ Framework-level tests must not know about real product plugin ids (`"puzzle3d"`, `"s"`, …) — a
-  // small synthetic catalog stands in for the OS product's generated `PLUGIN_CATALOG` here.
   const SYNTHETIC_PLUGIN_CATALOG: PluginCatalog = {
     plugins: [
       { pluginId: "alpha", wasmOut: "alpha.wasm", role: "plugin", contributes: [], consumes: [] },
@@ -89,9 +87,6 @@ export async function registerPlaygroundActionAndPluginSourceTests(vitest: NonNu
     });
 
     it("shares the Rust fixture's grouped structure for a flat 12-item over-budget menu", () => {
-      // 🗂️ Mirrors `organize_context_menu_buckets_overflow_leaves_by_category_of` (5 primaries + N
-      // categorized overflow leaves) combined with `organize_context_menu_puts_destructive_leaves_last_after_a_separator`
-      // (a trailing destructive leaf) — same shape the Rust test suite asserts for an equivalent input.
       const items: ContextMenuItemSpec[] = [
         menuLeaf("primary0"),
         menuLeaf("primary1"),

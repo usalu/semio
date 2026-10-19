@@ -90,21 +90,10 @@ enum LowpolyCommandDisposition {
 
 pub(super) fn lowpoly_command_disposition(tool_id: &str) -> Option<LowpolyCommandDisposition> {
     Some(match tool_id {
-        // 🧲️ A fill commits one one-shot transaction; the gumball reads the live mesh cache to resolve its selection but
-        // writes only its relative leaves, so its rehydrated cache is never republished.
         "patchObject" | "addPaintLayer" | "paintFill" | "fillBucket" | "translateSelection" | "rotateSelection" | "scaleSelection" => LowpolyCommandDisposition::Artifact,
-        // 🕸️ Every one of these reaches `session::build_doc`/`mesh_edit`, which needs the session-local `mesh_workspace`
-        // cache seeded from the LIVE persisted `LowpolyTransient` — `LowpolyDocument::reload_meshes` rejects a stale one
-        // with `StaleMeshWorkspace` — so `lowpoly_retained_reduce`'s `threaded!` arms rehydrate scratch from
-        // `context.transient` and publish the post-handle cache back: `Artifact` (the edit) `+ Transient` (the cache).
         "extrude" | "inset" | "bevel" | "loopCut" | "subdivide" | "triangulate" | "mirror" | "decimate" | "flipFaces" | "merge" | "dissolve" | "snap" | "toggleSmooth" | "unwrapActive" | "markUvSeam" | "clearSeam" | "engagementSubmit" | "deleteSelection" => LowpolyCommandDisposition::ArtifactTransient,
         "importSnapshotJson" | "replaceSnapshotJson" | "exportMesh" | "loadMeshRequest" | "importMeshFile" => LowpolyCommandDisposition::HostOnly,
-        // 🖌️ Every paint verb drives the window's paint gesture in the transient, commits its transaction on release (or as a
-        // one-shot) and, under the eyedropper, samples into config — the tick cannot tell statically which.
         "paintStroke" | "paintAt" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => LowpolyCommandDisposition::ArtifactConfigTransient,
-        // 🌱️ `addPrimitive`'s handler unconditionally emits both a `CreateObject` Artifact mutation and
-        // a `SetActiveObject` Config mutation, and it reaches `session::build_doc` — same as every
-        // `ArtifactTransient` command above — so it needs the identical scratch rehydration/republication.
         "addPrimitive" | "duplicateObject" => LowpolyCommandDisposition::ArtifactConfigTransient,
         tool_id if LOWPOLY_MIGRATED_TOOL_IDS.contains(&tool_id) => LowpolyCommandDisposition::Config,
         _ => return None,
@@ -193,8 +182,6 @@ fn lowpoly_sample_pixel(snapshot: &LowpolySnapshot, config: &LowpolyConfig, payl
     let offset = (y * size + x) * 4;
     let mut color = [0_u8; 4];
     for layer in object.paint_layers.iter().filter(|layer| layer.visible) {
-        // 🎨️ A sparse (never painted) layer IS opaque white everywhere; only a buffer too short for the
-        // sample point is skipped.
         let source = if layer.pixels.is_empty() {
             [255_u8; 4]
         } else if offset.saturating_add(4) > layer.pixels.len() {
@@ -229,24 +216,12 @@ fn lowpoly_retained_reduce(
 ) -> Result<ArtifactCommandWorkStep<EditorApp<LowpolyPlayApp>>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window: None };
-    // 🕹️ The mesh domain's live selection for THIS dispatch, read straight from the retained job's own
-    // scheduler-owned `InteractionState` — `selection_from_state`'s own doc comment names this exact
-    // seam ("typed retained reducers read the same immutable domain selection directly from their
-    // scheduler-owned request context, without manufacturing a host-only InteractionView").
     let empty_domain_selection = protocol::DomainSelection::default();
     let domain_selection = interaction.selection.get(MESH_INTERACTION_DOMAIN).unwrap_or(&empty_domain_selection);
     let active_object_id = semio_s_artifact_lowpoly_lowpoly_view::active_object_for_selection(snapshot, config, domain_selection);
     let selection = selection_from_state(&active_object_id, domain_selection);
     let selection_object_id = semio_s_artifact_lowpoly_lowpoly_view::selection_object_id(snapshot, domain_selection);
-    // 🗿️ The whole objects the selection names (object-granularity rows), for delete/duplicate.
     let selected_object_ids: Vec<String> = domain_selection.ids.iter().filter_map(|raw| semio_s_artifact_lowpoly_lowpoly_view::parse_mesh_target_id(raw)).filter(|(_, component)| component.is_none()).map(|(object_id, _)| object_id).collect();
-    // 🕸️ Commands whose handler reaches `session::build_doc`/`mesh_edit`, the mid-drag paint stroke
-    // scratch, or the mid-drag gumball transform scratch cannot use a blank `LowpolyScratch::default()`
-    // — `LowpolyDocument::reload_meshes` (`⚙️engine/🦀️.rs`) rejects every mesh edit past the
-    // very first with `StaleMeshWorkspace` unless scratch is rehydrated from the LIVE persisted
-    // `LowpolyTransient`. This macro does that rehydration, runs the handler, then publishes the
-    // post-handle scratch back as the new transient root (`ArtifactToolPublicationLane::Transient`) —
-    // see `LowpolyCommandDisposition::ArtifactTransient`/`ConfigTransient`'s doc comments.
     macro_rules! threaded {
         ($handle:expr) => {{
             let mut threaded = LowpolyScratch::from_transient(&context.transient, selection.clone());
@@ -257,7 +232,6 @@ fn lowpoly_retained_reduce(
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: step_emit, ephemeral: EphemeralEmit { presence: Vec::new(), transient: vec![LowpolyTransientMutation::Snapshot { transient }], window_transient: Vec::new() } });
         }};
     }
-    // 🧲️ The gumball reads the live mesh cache to resolve its selection and publishes nothing but its transaction.
     macro_rules! read_threaded {
         ($handle:expr) => {{
             let mut threaded = LowpolyScratch::from_transient(&context.transient, selection.clone());
@@ -315,20 +289,9 @@ fn lowpoly_retained_reduce(
             let (phase, reason) = payload.phase();
             return paint::lowpoly_paint_step(Some(phase), reason, None, &[], false, snapshot, config, context, operation);
         }
-        // 🌱️ `add_primitive::handle` reaches `session::build_doc` (to read the live mesh state) AND
-        // calls `ctx.set_mesh_workspace_map` (to record the new primitive's mesh) — both a read and a
-        // write of the session-local cache, exactly the shape `ArtifactTransient` commands above are
-        // threaded for. A blank `LowpolyScratch::default()` here made `build_doc` return `None` (hence
-        // a silent no-op) for every `addPrimitive` after the first mesh edit, because
-        // `LowpolyDocument::reload_meshes` rejects a `mesh_workspace` cache that doesn't cover every
-        // object the persisted snapshot already has. The handler's own `Emit` still carries both the
-        // `CreateObject` artifact mutation and the `SetActiveObject` config mutation; `threaded!` adds
-        // the `Transient` republication `PUBLICATION_CONTRACTS`'s `["addPrimitive", lanes: &[Artifact,
-        // Config, Transient]]` entry now admits.
         LowpolyCommand::AddPrimitive(payload) => threaded!(|doc, cfg, ctx| add_primitive::handle(payload, doc, cfg, ctx)),
         LowpolyCommand::DeleteSelection(payload) => threaded!(|doc, cfg, ctx| delete_selection::handle(payload, doc, cfg, ctx)),
         LowpolyCommand::DuplicateObject(payload) => threaded!(|doc, cfg, ctx| duplicate_object::handle(payload, doc, cfg, ctx)),
-        // 🪣️ A one-shot fill reads only the committed layer, so it needs no transient rehydration.
         LowpolyCommand::PaintFill(payload) => paint_fill::handle(payload, &doc, &cfg, &mut bounded),
         LowpolyCommand::FillBucket(payload) => fill_bucket::handle(payload, &doc, &cfg, &mut bounded),
     }?;

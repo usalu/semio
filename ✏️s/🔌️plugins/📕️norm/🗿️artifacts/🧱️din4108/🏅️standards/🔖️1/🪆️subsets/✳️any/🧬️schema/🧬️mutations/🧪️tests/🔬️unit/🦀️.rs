@@ -1,4 +1,4 @@
-//! Mutation unit smoke — vocabulary kinds.
+//! 🧬️ Mutation unit smoke — vocabulary kinds.
 
 use crate::{KINDS, Din4108Mutation};
 

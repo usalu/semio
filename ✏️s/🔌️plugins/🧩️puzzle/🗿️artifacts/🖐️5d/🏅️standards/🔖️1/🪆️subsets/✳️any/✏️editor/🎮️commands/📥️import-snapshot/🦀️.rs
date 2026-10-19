@@ -1,16 +1,16 @@
-//! (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per `IMPORT_CHUNK_BYTES` page)
+//! 📄️ (`Effect::RequestFileOpen` → one `importSnapshot {payload, name, chunk, chunkCount}` per `IMPORT_CHUNK_BYTES` page)
 //! 📥 Loads an imported puzzle 5d JSON file as the whole document (`Effect::LoadDocument`, outside history). The host's chunked inbound lane
 //! is reassembled by the framework before this action runs (`semio_framework::kernel::ImportStaging`, admitted in the
 //! SDK's `dispatch_action`), so the action reads ONE whole `payload`; an agent may hand the document inline as a
 //! inline `payload` object instead.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::entities::{Puzzle5dDocument, PUZZLE5D_SCHEMA};
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{Puzzle5dDocument, PUZZLE5D_SCHEMA};
 
 
 
 
-use crate::retained_command::PUZZLE_IMPORT_TOTAL_BYTES;
+use semio_s_plugin_puzzle_retained::PUZZLE_IMPORT_TOTAL_BYTES;
 use semio_framework_pack_json::Value;
 use semio_framework::kernel::Effect;
 use semio_framework::kernel::IMPORT_ARGUMENT_PAYLOAD;
@@ -65,9 +65,9 @@ pub fn puzzle5d_import_value(args: &Value) -> Result<Value, Puzzle5dImportFault>
 
 /// 🌱️ The sanctioned whole-document replacement: the imported `document` as a pack plus a fresh, edit-free op log. A
 /// natural-file import is the load path, not a mutation — it carries no inverse and journals no history row.
-pub fn puzzle5d_load_document_effect(document: &crate::Puzzle5dSnapshot) -> Effect {
-    let pack = <crate::Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_APP_ID, crate::PUZZLE_5D_SCHEMA));
+pub fn puzzle5d_load_document_effect(document: &semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot) -> Effect {
+    let pack = <semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_PLAY_APP_ID, semio_s_artifact_puzzle_5d_snapshot::PUZZLE_5D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -79,7 +79,7 @@ pub fn import_snapshot(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
         Ok(document) => document,
         Err(fault) => return refuse(ctx, fault),
     };
-    let Ok(typed) = crate::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(&document) else {
+    let Ok(typed) = semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::puzzle5d_snapshot_from_document(&document) else {
         return refuse(ctx, Puzzle5dImportFault::Payload);
     };
     ctx.effects.push(puzzle5d_load_document_effect(&typed));

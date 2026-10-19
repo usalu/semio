@@ -66,8 +66,6 @@ fn a_commit_stays_admissible_at_every_step_of_the_retirement_it_owns() {
     let occupied = law["admission"]["occupied"].as_str().expect("fixture occupied fault");
     let mut steps = 0usize;
     loop {
-        // 🩺️ THE defect: this admission used to turn into a refusal the moment the cursor consumed
-        // the candidate slot's first field.
         assert_eq!(ledger.begin_retirement(operation), Ok(RasterWitnessAdmission::Retire), "an operation is never stale against its own retirement");
         assert_eq!(ledger.retirement_admission(second), Err(occupied), "…and nobody else may take the slots it is consuming");
         steps += 1;

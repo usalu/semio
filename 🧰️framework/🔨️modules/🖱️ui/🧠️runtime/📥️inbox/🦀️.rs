@@ -23,7 +23,6 @@ use std::collections::{HashMap, VecDeque};
 pub trait ProjectionDelta {
     type Key: Eq + std::hash::Hash + Clone;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn key(&self) -> Self::Key;
 }
 
@@ -43,7 +42,6 @@ pub struct ProjectionInbox<T: ProjectionDelta> {
 
 impl<T: ProjectionDelta> ProjectionInbox<T> {
     /// 🏭️ An inbox that holds at most `capacity` distinct keys at once.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(capacity: usize) -> Self {
         Self { capacity, order: VecDeque::new(), entries: HashMap::new() }
     }
@@ -51,7 +49,6 @@ impl<T: ProjectionDelta> ProjectionInbox<T> {
     /// 📤️ Coalesces `delta` into its key's slot if that key is already queued; otherwise enqueues it as
     /// a new slot, or returns [`InboxOverflow`] if `capacity` distinct keys are already outstanding.
     /// [`InboxOverflow`] never discards an already-queued entry — the new delta alone is refused.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn push(&mut self, delta: T) -> Result<(), InboxOverflow> {
         let key = delta.key();
         if !self.entries.contains_key(&key) {
@@ -68,7 +65,6 @@ impl<T: ProjectionDelta> ProjectionInbox<T> {
     /// transaction bounds its own work with `limit` — draining an unbounded backlog in one call is how
     /// one slow projection turns into a dropped frame — so any remainder past `limit` stays queued
     /// exactly as it was, ready for the next `drain_into` call.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_into(&mut self, limit: usize, out: &mut Vec<T>) {
         for _ in 0..limit {
             let Some(key) = self.order.pop_front() else { break };
@@ -79,13 +75,11 @@ impl<T: ProjectionDelta> ProjectionInbox<T> {
     }
 
     /// 🔢️ Distinct keys currently queued.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn len(&self) -> usize {
         self.order.len()
     }
 
     /// 🈳️ `true` when [`Self::len`] is zero.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_empty(&self) -> bool {
         self.order.is_empty()
     }

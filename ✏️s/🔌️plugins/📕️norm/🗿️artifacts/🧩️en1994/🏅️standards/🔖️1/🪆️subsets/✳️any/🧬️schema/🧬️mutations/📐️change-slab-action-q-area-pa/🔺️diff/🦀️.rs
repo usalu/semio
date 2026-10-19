@@ -1,4 +1,4 @@
-//! Diff for `change-slab-action-q-area-pa`.
+//! 🔺️ Diff for `change-slab-action-q-area-pa`.
 use crate::change_slab_action_q_area_pa::ChangeSlabActionQAreaPa;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994SlabsRows, En1994SlabsPatch, En1994SlabsActionsRows, En1994SlabsActionsPatch};

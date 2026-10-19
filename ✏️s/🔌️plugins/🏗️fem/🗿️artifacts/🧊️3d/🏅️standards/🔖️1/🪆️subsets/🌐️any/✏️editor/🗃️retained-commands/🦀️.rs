@@ -232,13 +232,13 @@ impl ArtifactCommandWork<EditorApp<Fem3dPlayApp>> for Fem3dCommandWork {
             Fem3dCommand::ResultAnimationTick(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
                 let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem3d.result-animation-tick.window-context-required"))?;
-                let clock = window_results::transient::required_clock::<window_results::transient::Fem3dResultsWindowTransientOwner>(context.and_then(|context| context.window_transient.as_ref()), &payload.window_id)?;
+                let clock = semio_s_artifact_fem_2d_results_state::transient::required_clock::<window_results::transient::Fem3dResultsWindowTransientOwner>(context.and_then(|context| context.window_transient.as_ref()), &payload.window_id)?;
                 Some(result_animation_tick::result_animation_tick_step::<set_result_animation::Fem3dResultsPlayback>(payload, &cfg, view, clock)?)
             }
             Fem3dCommand::SetResultAnimation(payload) => {
                 let cfg = ConfigView { snapshot: config, window: context.and_then(|context| context.window_config.as_ref()) };
                 let view = context.and_then(|context| context.view_state.as_ref()).ok_or_else(|| Fault::from("fem3d.result-animation.window-context-required"))?;
-                let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| window_results::transient::captured_clock::<window_results::transient::Fem3dResultsWindowTransientOwner>(context.window_transient.as_ref(), id)));
+                let clock = payload.window_id.as_deref().filter(|id| !id.is_empty()).and_then(|id| context.and_then(|context| semio_s_artifact_fem_2d_results_state::transient::captured_clock::<window_results::transient::Fem3dResultsWindowTransientOwner>(context.window_transient.as_ref(), id)));
                 Some(set_result_animation::set_result_animation_step::<set_result_animation::Fem3dResultsPlayback>(payload, &cfg, view, clock)?)
             }
             _ => None,
@@ -283,7 +283,7 @@ impl ToolJobFactory for Fem3dRetainedCommandJobFactory {
         fem3d_retained_contract()
     }
 
-    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: FEM3D_RETAINED_RAW_BYTES, checkpoint_resume: true);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: FEM3D_RETAINED_RAW_BYTES, checkpoint_resume: true);
 
     
 }

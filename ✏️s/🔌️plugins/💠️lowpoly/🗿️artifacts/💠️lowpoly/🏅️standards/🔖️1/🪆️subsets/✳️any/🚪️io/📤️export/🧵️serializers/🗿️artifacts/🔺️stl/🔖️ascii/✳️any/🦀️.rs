@@ -1,4 +1,4 @@
-//! lowpoly -> stl
+//! 🔺️ lowpoly -> stl
 //!
 //! Real ASCII STL export through `engine::encode_stl_ascii`: every object whose persisted
 //! `mesh_content` is non-empty is transformed into world space (scale -> Euler-degree rotation ->

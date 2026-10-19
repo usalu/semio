@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-font-file`.
+//! 🆔️ Direct text identity for `remove-font-file`.
 
 pub const OPCODE: &str = "remove-font-file";
 pub const TEXT_OPCODE: &str = OPCODE;

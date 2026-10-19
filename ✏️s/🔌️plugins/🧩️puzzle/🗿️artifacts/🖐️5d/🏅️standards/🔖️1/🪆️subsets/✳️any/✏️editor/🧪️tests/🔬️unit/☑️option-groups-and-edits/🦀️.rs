@@ -284,9 +284,6 @@ pub(super) fn seeded_parts(app: &mut Puzzle5dTestApp, count: usize) -> Vec<Strin
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_switches_the_document_and_never_faults_on_capacity() {
     let mut app = Box::new(app_with_registry());
-    // 🌙️ `capsule-dream` is deliberately NOT switched here — it is the one example whose switch is
-    // blocked in the FRAMEWORK, and driving it costs this binary ~380 s on its way to a known fault.
-    // See `set_active_example_reaches_the_capsule_dream_document` below.
     for (example_id, document) in [("", empty_document()), ("concrete-forest", concrete_forest_example_document()), ("nakagin", nakagin_example_document())] {
         dispatch(&mut app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
         assert_eq!(part_count(&app), document.parts.len(), "setActiveExample {example_id} really replaced the document");

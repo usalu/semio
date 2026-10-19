@@ -47,7 +47,7 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     direct_identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer,
     service_identities:HashMap<String,semio_framework_plugin_host::shard::OriginalShardIdentity>,
     service_openings:Option<ServiceActorOpening>,
-    service_identity_refusal:Option<semio_framework_plugin_host::shard::ShardIdentityIssueRefused>,
+    service_identity_refusal:Option<semio_framework_plugin_host_shard::identity::ShardIdentityIssueRefused>,
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real kernel this
     /// host now drives instead of minting `RuntimeActorId`s ad hoc — see `semio-framework-os`'s
     /// `🎠️activation/🦀️.rs` module doc. `open`'s real per-app-instance actor uses `kernel.activate`
@@ -349,11 +349,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                             return Err(RunError::Host(format!("kernel: actor {} was preempted and its resume was not Accept-ed", actor.0)));
                         }
                     }
-                    // 🚧️ `run`'s own turns never send `Suspend`/`Resume`/`Cancel` payloads — any
-                    // other `ShardOutcome` variant reaching here belongs to a DIFFERENT actor `Kernel::
-                    // tick` happened to grant in the same call (DRR is global even with one shard),
-                    // same "silently ignored, never aborts an otherwise-successful turn" policy the
-                    // wgpu target's own `run_turn` documents for the identical reason.
                     _ => {}
                 }
             }
@@ -467,12 +462,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
         if !self.compiled_for_plugin.contains_key(plugin_id) {
             let bytes = std::fs::read(&path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
-            // 🔏️ The component's OWN 32-byte digest, not `hash_bytes`' 64-char HEX STRING: that
-            // string's `into_bytes()` is 64 long, so `try_into::<[u8; 32]>()` always failed and every
-            // plugin loaded here took the `[0u8; 32]` fallback. `WasmtimeRuntime::compile` keys its
-            // on-disk `.cwasm` cache on this hash, so the placeholder made every plugin in this
-            // process collide on ONE cache entry and replay whichever component compiled first
-            // (found 2026-09-20 by ticket 26/09/18 slice WR1, which carried the same defect).
             let package = semio_framework_plugin_host::PackageRef { package: PackageId(plugin_id.to_string()), hash: semio_framework_plugin_host::PackageHash(*framework_hash::hash(&bytes).as_bytes()) };
             let compiled = self.guest_runtime.compile(&package, &bytes).await.map_err(|error| RunError::Host(error.to_string()))?;
             self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
@@ -486,17 +475,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         }
 
         let compiled = self.compiled_for_plugin.get(plugin_id).cloned().expect("just compiled or already present above");
-        // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the ad hoc
-        // `RuntimeActorId::new(0, 0, self.next_actor_ordinal as u32, 0)` counter this used to mint
-        // from is GONE — `Kernel::activate` mints the id and pins a shard for real now (this is the
-        // literal "🏃️run ... mints its own RuntimeActorIds" bypass this packet's brief names).
-        // `kernel.kernel_mut().activate` (NOT the full `kernel.activate` facade below) deliberately:
-        // this instance's `GuestInstance` stays HELD BY `PluginInstanceHandle`, which calls
-        // `GuestRuntime::execute_turn` on it directly for post-turn job dispatch
-        // (`io_router`/`inference_router`) — routing that through `ShardExecutor` ownership (what the
-        // full facade does) would take the instance away from `PluginInstanceHandle` entirely, a much
-        // bigger change than this packet's own `path_scope` (`🔌️plugin/🖥️host/**`'s `io_router`
-        // internals are not owned here) — see `kernel`'s own struct-field doc.
         let plugin_ordinal=self.plugin_ordinal(plugin_id);
         let actor=if let Some(original)=&self.service_openings{if original.plugin_ordinal!=plugin_ordinal||original.package_hash!=compiled.package_hash{return Err(RunError::Host("another original service opening still owns the fixed pending slot".into()))}original.actor}else{
             let kind=ActorKind::PluginApp{plugin:PackageId(plugin_id.to_string()),app_id:"<plugin-runtime>".to_string(),instance_id:0};
@@ -521,14 +499,6 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let handle=Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor,Arc::clone(&self.guest_runtime),instance,original_input,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:self.host_driver.clone()}).await);
 
         let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
-        // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/
-        // `sniffs` — `io_schema::IoEntryDescriptor`'s fields (a DIFFERENT type of the same name in
-        // `🚪️io/🧬️schema/🦀️component.rs`) the descriptor schema does not emit yet. `&[]` here is
-        // honest, not a shortcut: fabricating a fidelity/sniffs value would be a real correctness
-        // lie, and `note`'s own committed descriptor has zero `io_entries` either way, so this gap
-        // is invisible on today's only fully-wired smoke path. A future packet must either widen
-        // `ContributionSet.io_entries` with those two fields at emission time (E1/A2) or resolve
-        // them from `IoFidelityDeclaration` elsewhere before this can be more than `&[]`.
         self.io_router.register_plugin(plugin_id, Arc::clone(&handle), &artifact_dialect_entries, &[]).await.map_err(|error| RunError::Host(error.to_string()))?;
 
         let mut mutation_roster: Vec<semio_framework_plugin_host::HostMutationRosterEntry> = descriptor
@@ -836,14 +806,6 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             if !self.retained_command_closes.can_insert(operation) || !self.rejected_command_builds.can_insert(operation) {
                 return Err(RunError::Host("retained command close registry is saturated or collided".to_string()));
             }
-            // ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real body
-            // this comment used to describe as future work — `node` now DOES resolve, since `open`
-            // (above) genuinely activates an instance through the kernel. Each passthrough
-            // `AppCommand` becomes a retained fixed-page owner. One page is lowered per reactor turn;
-            // the next command remains untouched until the guest acknowledges the current terminal.
-            // `TurnResult.effects` is then scanned for `Effect::Respond{req, result}`,
-            // decoding `RequestOutcome::Ok(bytes)` as the guest's own `protocol::AppFrame` reply and
-            // `Err(bytes)` as `AppFrame::Error` — exactly the shape this comment always described.
             let actor = *self.instance_actors.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
             let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| RunError::Host(format!("{}: {}", fault.code.0, fault.message)))?;
             for command in &passthrough {

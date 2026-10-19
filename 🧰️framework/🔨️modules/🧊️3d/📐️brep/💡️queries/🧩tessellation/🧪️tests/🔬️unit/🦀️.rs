@@ -62,11 +62,6 @@ fn build_plane_face_with_hole(body: &mut Body, rec: &mut OpRecorder) -> FaceId {
     let outer = make_loop(body, FaceId::from_raw(0, 0), &outer_members);
     let hole_center = Pnt3::new(2.0, 1.5, 0.0);
     let hole_frame = Frame3::from_normal(hole_center, Vec3::Z).unwrap();
-    // `Frame3::from_normal`'s x/y axes are derived from `Vec3::any_orthogonal` (deterministic
-    // but NOT necessarily world X/Y) — the hole vertex must sit at the circle's own t=0 point
-    // (`frame.to_world(radius, 0, 0)`), matching `make_cylinder`/`make_cone`'s own convention
-    // (`w1e-primitives.md`), otherwise the edge's topological endpoint disagrees with its
-    // curve's actual evaluation, which fractures the closed ring at that one sample.
     let hole_v = make_vertex(body, hole_frame.to_world(Pnt3::new(0.5, 0.0, 0.0)), tol, rec);
     let circle_curve = body.curves3.insert(Curve3::Circle { frame: hole_frame, radius: 0.5 });
     let hole_edge = make_edge(body, circle_curve, (0.0, std::f64::consts::TAU), hole_v, hole_v, tol, rec);

@@ -320,8 +320,6 @@ export async function registerArtifactBootstrapRestoreTests(vitest: Vitest, depe
           state.socket = activeSocket;
           const decoded = structuredClone(decodeFixtureFrame(fixture.wire.inlineWelcomeHex));
           if (!("Welcome" in decoded)) throw new Error("welcome fixture missing");
-          // 🧭️ `bootstrap` is readonly on the decoded frame — the variant is chosen by rebuilding the
-          // frame, which is also what the wire does, rather than by writing over a decoded one.
           const welcome = outcome === "success" ? decoded : { Welcome: { ...decoded.Welcome, bootstrap: outcome === "none" ? ("None" as const) : ("Tail" as const) } };
           await handleHubFrame(state, welcome, null, activeSocket);
           if (outcome === "success") {

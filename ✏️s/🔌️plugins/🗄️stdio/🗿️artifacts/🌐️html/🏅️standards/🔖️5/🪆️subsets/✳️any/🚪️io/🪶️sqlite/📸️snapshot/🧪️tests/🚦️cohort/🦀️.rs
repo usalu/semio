@@ -30,7 +30,7 @@ async fn sqlite_snapshot_html_public_plugin_wrapper_uses_actual_factory(){
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let value=native();let input=payload(&value,encoding);let (kind,bytes)=match &input{IoPayload::Binary(b)=>("binary",b.clone()),IoPayload::Text(t)=>("text",t.as_bytes().to_vec())};
   let mut receive=|_|true;let mut emit=|_|true;let mut progress=|_|true;
-  let mut decoder=semio_framework_value::NativeDecodeControl::new(semio_s_artifact_stdio_contract::testing::NATIVE_MAXIMUM_BYTES,&mut receive);
+  let mut decoder=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(semio_s_artifact_stdio_contract::testing::NATIVE_MAXIMUM_BYTES,&mut receive);
   let mut encoder=semio_framework_value::NativeEncodeControl::new(semio_s_artifact_stdio_contract::testing::NATIVE_MAXIMUM_BYTES,&mut emit);
   let mut native_control=semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decoder,&mut encoder,grant);
   let mut snapshot_control=SqliteSnapshotControl::new(&mut progress,limits);

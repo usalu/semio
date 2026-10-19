@@ -30,19 +30,16 @@ impl Default for CsvArtifact {
 
 impl CsvArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> CsvSnapshot {
         CsvSnapshot { schema: self.schema.clone(), has_header: self.has_header, records: self.records.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: CsvSnapshot) -> Self {
         Self { schema: snapshot.schema, has_header: snapshot.has_header, records: snapshot.records }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: CsvSnapshot) {
         self.schema = snapshot.schema;
         self.has_header = snapshot.has_header;

@@ -171,12 +171,6 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
     let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), selected, &[]);
     let hit_edge_id = request.surface.as_ref().and_then(|target| target.hits.iter().find(|hit| hit.domain == "edge")).map(|hit| hit.id.clone());
 
-    // 🗂️ Grouped disclosure: `addNode` stays top-level (the most frequent verb; reorganize is the edit mode's tool run);
-    // `renameDagNode` joins them only for a single-node selection; `disconnect` folds into the
-    // "transfer" taxonomy group when an edge is hit — `organize_context_menu` (applied automatically at
-    // the `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
-    // inserts the pre-destructive separator itself, so no `.separator()` call is needed ahead of the
-    // `deleteSelection`/`nodeGraphEdit` destructive row below.
     let mut menu = Menu::of(registry, view_state).action_args("addNode", semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("computation".to_string()))]));
     if nodes.len() == 1 {
         menu = menu.action("renameDagNode");
@@ -861,8 +855,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
-            // 🗂️ Referenced by `dag_context_menu_items` — categorized for grouped-context-menu disclosure.
             .action_with(ActionDefinition::bounded_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("removeNode", LocalizedLabel::native("Remove Node", "Knoten entfernen"))
             .action_destructive("removeNode")
@@ -874,20 +866,11 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
             .action_with(ActionDefinition::bounded_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
             .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
-            // 👁️ Ephemeral view state — camera/viewport. Selection/hover no longer declared here: the
-            // framework auto-injects interactionSelect/interactionHover/clearSelection/selectAll/
-            // setSelectionMode/setInteractionGranularity for every domain declared via `.interaction(...)`
-            // below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM — never declare those
-            // actions yourself).
             .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .action_audience("graphPointerDown", semio_framework_plugin::CapabilityAudience::Input)
-            // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
-            // dispatches this at boot and on every navbar pick; with no declaration at all every one of
-            // those was dropped `undeclared-action` before it reached the app.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file").with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]))
             .keybinding("delete,backspace", "deleteSelection")
-            // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![
                     ActionArgOption::new("computation", LocalizedLabel::native("Computation", "Berechnung")),
@@ -898,15 +881,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
                     ActionArgOption::new("preview", LocalizedLabel::native("Preview", "Vorschau")),
                 ]).default_value(&"computation"),
             ])
-            // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-            // one `graph` domain over the node graph, node/edge granularities, `HierarchyProvider::Topology`
-            // from the DAG's own edges (see `DagPlayApp::interaction_topology`), transitive HOVER only (a
-            // hovered node lights up everything downstream, a nice "what does this feed?" highlight) —
-            // selection stays NON-transitive: a downstream node is a dependent, not a structural child (no
-            // AST-style containment), so clicking one node must not silently drag every node it feeds into
-            // the selection (and so `deleteSelection` never cascade-deletes downstream nodes the user never
-            // clicked). `nodeGraphSelect`'s old marquee behavior is now the framework's own
-            // `SelectionMethod::Rectangle` method, no app geometry needed.
             .interaction(InteractionDefinition {
                 id: DAG_PLAY_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Graph", "Graph"),
@@ -919,17 +893,6 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
                 selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
             })
             .window_kind_interactions(DAG_PLAY_WINDOW_MAIN, vec![InteractionRef::new(DAG_PLAY_INTERACTION_DOMAIN)])
-            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
-            // dag has no user-visible config defaults to expose, so `config_spec()` stays the trait
-            // default `ConfigSpec::empty()`; declaring it explicitly here still keeps this app's typed
-            // channel surface consistent with `shooting_ui::create_shooting_app`'s convention.
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example_source(...)`/`.workflow(...)` on this builder, so the app-level
-            // `crate::examples::demo` example registration and the no-op `.workflow("dag", …)`
-            // call are dropped here (reported in the migration report, not silently lost). The
-            // subset's own `📚️examples/🎬️demo` facet (`crate::examples::demo`,
-            // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
             .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("removeNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)

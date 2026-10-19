@@ -50,9 +50,7 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
             } else {
                 effective.push((def.id.clone(), value.clone()));
             }
-        } else if effective.iter().any(|(k, _)| *k == def.id) {
-            // 🌱️ seeded value already present for this declared field — keep it as the pre-fill.
-        } else if let Some(default) = &def.default {
+        } else if effective.iter().any(|(k, _)| *k == def.id) {} else if let Some(default) = &def.default {
             effective.push((def.id.clone(), default.clone()));
         }
     }

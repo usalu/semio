@@ -338,7 +338,6 @@ pub enum Effect {
         request_json: String,
     },
 
-    // --- new variants (📓️design-abi.md §2's table; nothing constructs these yet) ---
     /// 📨️ Replaces every non-UI/non-event `AppFrame::*` plus `backbone-send` — `target`
     /// picks shell vs. backbone vs. a specific plugin/extension/topic.
     SendMessage {

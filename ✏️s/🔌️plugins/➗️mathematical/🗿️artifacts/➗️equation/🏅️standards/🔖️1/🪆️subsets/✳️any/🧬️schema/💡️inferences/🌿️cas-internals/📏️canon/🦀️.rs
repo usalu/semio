@@ -191,9 +191,6 @@ pub(crate) fn make_mul(factors: Vec<Expr>) -> Expr {
         }
     }
 
-    // `zoo` (directionless complex infinity) swallows every finite factor's sign, so it must be
-    // checked before the signed `oo`/`-oo` contagion below: `0 * zoo` is still `Undefined`, but
-    // `zoo * -oo` (or any other signed infinity) collapses to `zoo`, not a signed infinity.
     if symbolic.iter().any(|t| matches!(t.kind(), Kind::Constant(Constant::ComplexInf))) {
         return if numeric.is_zero() { Expr::constant(Constant::Undefined) } else { Expr::constant(Constant::ComplexInf) };
     }
@@ -216,7 +213,6 @@ pub(crate) fn make_mul(factors: Vec<Expr>) -> Expr {
         return Expr::integer(0);
     }
 
-    // Combine like bases: x^a * x^b -> x^(a+b).
     let mut by_base: BTreeMap<Expr, Expr> = BTreeMap::new();
     let mut base_order: Vec<Expr> = Vec::new();
     for f in symbolic {
@@ -240,7 +236,6 @@ pub(crate) fn make_mul(factors: Vec<Expr>) -> Expr {
         let exp = by_base.remove(&base).unwrap();
         result_terms.push(make_pow(base, exp));
     }
-    // Any newly-introduced numeric terms from pow folding (e.g. 2^3 -> 8) must be re-merged.
     if result_terms.iter().filter(|t| Num::from_expr(t).is_some()).count() > 1 {
         return make_mul(result_terms);
     }
@@ -297,7 +292,6 @@ pub(crate) fn make_pow(base: Expr, exp: Expr) -> Expr {
         };
     }
 
-    // i^n cycles with period 4.
     if matches!(base.kind(), Kind::Constant(Constant::I)) {
         if let Kind::Integer(n) = exp.kind() {
             if let Some(e) = n.to_i64() {
@@ -312,7 +306,6 @@ pub(crate) fn make_pow(base: Expr, exp: Expr) -> Expr {
         }
     }
 
-    // (x^a)^b -> x^(a*b) when b is an integer, or when x is known positive.
     if let Kind::Pow(inner_base, inner_exp) = base.kind() {
         let b_is_integer = matches!(exp.kind(), Kind::Integer(_));
         if b_is_integer || is_positive(&inner_base.clone()) == Some(true) {
@@ -363,7 +356,7 @@ fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
     }
     let is_neg = base.is_negative();
     if q.is_multiple_of(2) && is_neg {
-        return None; // even root of a negative number: not real, leave symbolic
+        return None;
     }
     let bm = base.abs();
     let factors = primes::factor(&bm);
@@ -377,7 +370,6 @@ fn fold_radical(base: &Integer, exp: Rational) -> Option<Expr> {
     }
     let p_abs = p.abs().to_u64()?;
     if inside == Natural::one() {
-        // Exact q-th power: base^(p/q) folds fully to an integer/rational.
         let sign_factor = if is_neg && p_abs % 2 == 1 { -1i64 } else { 1i64 };
         let magnitude = outside.pow(p_abs);
         let signed = if sign_factor < 0 { Integer::from_natural(magnitude).neg() } else { Integer::from_natural(magnitude) };

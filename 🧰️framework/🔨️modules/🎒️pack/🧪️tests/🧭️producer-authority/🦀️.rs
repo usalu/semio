@@ -3,7 +3,7 @@ use semio_framework_pack_error::{PackRefusal,PackRetryDisposition,PackCauseKind}
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
-use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 
 fn authored_kind(text:&str)->ValueRefusalKind {
  match text {

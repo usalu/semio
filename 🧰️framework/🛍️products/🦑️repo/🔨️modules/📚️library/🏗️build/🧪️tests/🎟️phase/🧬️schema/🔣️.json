@@ -135,6 +135,34 @@
           }
         }
       }
+    },
+    "DependencyBootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "install",
+        "queuedWrites"
+      ],
+      "properties": {
+        "command": {
+          "enum": [
+            "run",
+            "show",
+            "dependencies",
+            "tools",
+            "reset"
+          ]
+        },
+        "install": {
+          "type": "boolean"
+        },
+        "queuedWrites": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
     }
   }
 }

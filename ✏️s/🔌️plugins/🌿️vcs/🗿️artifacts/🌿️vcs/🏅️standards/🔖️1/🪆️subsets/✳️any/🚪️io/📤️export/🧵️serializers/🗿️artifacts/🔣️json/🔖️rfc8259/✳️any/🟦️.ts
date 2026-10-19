@@ -1,2 +1,2 @@
-/** vcs export json */
+/** 🌿️ vcs export json */
 export function register(): void {}

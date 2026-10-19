@@ -15,7 +15,7 @@ export type ShardHeartbeatState = {
   lastMissCountedAtMs: number;
 };
 
-/** A freshly spawned shard has never actually heartbeated yet — `-Infinity` (never `nowMs`) so a turn
+/** 🌱️ A freshly spawned shard has never actually heartbeated yet — `-Infinity` (never `nowMs`) so a turn
  * that starts in the very same tick as `spawnShard` doesn't spuriously count spawn-time as proof of
  * life for that turn's whole timeout window. */
 export function freshHeartbeatState(nowMs: number): ShardHeartbeatState {

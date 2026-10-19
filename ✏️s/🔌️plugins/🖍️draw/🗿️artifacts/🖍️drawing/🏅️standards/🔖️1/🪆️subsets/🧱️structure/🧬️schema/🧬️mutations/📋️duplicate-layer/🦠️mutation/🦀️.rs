@@ -13,12 +13,12 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "duplicate-layer")]
 pub struct DuplicateLayer {
-    pub identities: semio_framework_value::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>,
+    pub identities: semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>,
     pub layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn duplicate_layer<Op: From<DuplicateLayer>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, identities: semio_framework_value::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>) -> Op {
+pub fn duplicate_layer<Op: From<DuplicateLayer>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, identities: semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>) -> Op {
     Op::from(DuplicateLayer { layer_id, identities })
 }
 

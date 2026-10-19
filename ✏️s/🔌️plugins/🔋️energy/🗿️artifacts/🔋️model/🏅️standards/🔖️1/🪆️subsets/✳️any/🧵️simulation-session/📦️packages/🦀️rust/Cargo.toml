@@ -20,7 +20,9 @@ semio-framework-math-rank = { path = "../../../../../../../../../../../../🧰�
 
 semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-tool-run = { workspace = true }
+semio-framework-tool-run-tick-wire = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }

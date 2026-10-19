@@ -157,11 +157,11 @@ pub enum CommandOutcome {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum OfflinePolicy {
-    /// Applied speculatively at once; the authority may later transform or reject it.
+    /// 🔮️ Applied speculatively at once; the authority may later transform or reject it.
     Optimistic,
-    /// Queued durably in the outbox, never applied locally, submitted on reattach.
+    /// ⏳️ Queued durably in the outbox, never applied locally, submitted on reattach.
     Deferred,
-    /// Refused outright while detached — the authority alone may decide it.
+    /// 👑️ Refused outright while detached — the authority alone may decide it.
     AuthorityRequired,
 }
 //#endregion 🔖️Command
@@ -180,11 +180,11 @@ pub struct QueryCursor(pub String);
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum QueryConsistency {
-    /// Answer from the local replica/projection as-is; never waits.
+    /// 🏠️ Answer from the local replica/projection as-is; never waits.
     Local,
-    /// Do not answer until the projection reflects this frontier (read-your-writes).
+    /// 🔭️ Do not answer until the projection reflects this frontier (read-your-writes).
     AtFrontier { frontier: FrontierSummary },
-    /// Answer from the current authority state.
+    /// 📜️ Answer from the current authority state.
     Authority,
 }
 
@@ -243,11 +243,11 @@ pub struct EphemeralFrame {
 //#endregion 🔖️Lanes
 
 //#region 🔖️Presence
-/// @emoji 🧩️ An opaque JSON value an instance defines and the gateway never interprets — the state
+/// 🧩️ An opaque JSON value an instance defines and the gateway never interprets — the state
 /// one presence session shares. Reexported so an instance names it without naming the JSON library.
 pub use serde_json::Value as OpaqueJson;
 
-/// @emoji 🧍️ One session of a presence room as every member sees it: the server-generated session
+/// 🧍️ One session of a presence room as every member sees it: the server-generated session
 /// id, the palette slot it leases, the surface it joined from and its latest shared state (`null`
 /// until it sent one).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -259,7 +259,7 @@ pub struct PresenceEntry {
     pub state: OpaqueJson,
 }
 
-/// @emoji 👥️ One text frame of the presence socket (`semio.presence.v1`). `welcome` (the joining
+/// 👥️ One text frame of the presence socket (`semio.presence.v1`). `welcome` (the joining
 /// session, its colour and the roster, led by the session itself) and a `batch` at most once per
 /// tick (the sessions whose state changed since the socket's last frame, and those that left)
 /// travel server → client; `state` (the sender's latest state, latest wins) travels client →

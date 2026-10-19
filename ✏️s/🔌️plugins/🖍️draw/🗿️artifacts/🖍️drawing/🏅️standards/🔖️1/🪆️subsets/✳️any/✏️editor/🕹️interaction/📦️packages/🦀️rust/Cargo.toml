@@ -37,6 +37,8 @@ semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true }
 semio-s-artifact-draw-drawing-io = { workspace = true }
@@ -45,6 +47,7 @@ semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-structure = { workspace = true }
 serde = { workspace = true, optional = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 blake3 = { workspace = true }

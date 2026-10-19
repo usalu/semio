@@ -22,6 +22,7 @@ semio-framework-value-shared-issuance = { path = "../../../🌱️value/♻️re
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../📡️replication/📦️packages/🦀️rust" }
 # 🗣️ `LocalizedLabel`/`Locale` live in the declarative-only `wgpu` feature (no `wgpu` crate).
@@ -29,3 +30,7 @@ serde = { workspace = true }
 
 [features]
 testkit = []
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

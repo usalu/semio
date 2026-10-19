@@ -262,11 +262,10 @@ use semio_framework_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applie
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {
     let base = empty_block3d_snapshot();
-    assert_missing_target_is_error(&base, &delete_vortex_kind("missing".into())).await; // delete
-    assert_missing_target_is_error(&base, &remove_author("missing".into())).await; // remove
-    assert_missing_target_is_error(&base, &change_vortex_kind_color("missing".into(), "#fff".into())).await; // change/set/update
+    assert_missing_target_is_error(&base, &delete_vortex_kind("missing".into())).await;
+    assert_missing_target_is_error(&base, &remove_author("missing".into())).await;
+    assert_missing_target_is_error(&base, &change_vortex_kind_color("missing".into(), "#fff".into())).await;
     assert_missing_target_is_error(&base, &move_vortex("missing".into(), [0.0, 0.0, 0.0], [1.0, 0.0, 0.0])).await;
-    // move/drag/rotate/scale/resize
 }
 
 #[semio_framework_async_macros::async_test]

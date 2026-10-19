@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::config::Puzzle5dKindWeights;
 
 #[test]
 fn retained_weight_dictionary_preserves_authored_wire_cases() {

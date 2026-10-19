@@ -65,7 +65,7 @@ export function testFormsDocumentContractOracle(): void {
     const primary = ({ structure: _structure, results: _results, ...rest }: Record<string, unknown>) => rest;
     assert.deepEqual(primary(formsArtifactJson(applyFormsDiff(base, parseFormsJsonDiff(item.diff))) as Record<string, unknown>), primary(item.after as Record<string, unknown>), item.name);
     assert.deepEqual(applyPatch(structuredClone(item.before), compare(item.before, item.after)).newDocument, item.after, item.name);
-    for (const field of ["structure", "results"] as const) assert.equal(applyFormsDiff(base, parseFormsJsonDiff(item.diff))[field], base[field], "the reference apply leaves the derived handles to the central applier");
+    for (const field of ["structure", "results"] as const) assert.deepEqual(applyFormsDiff(base, parseFormsJsonDiff(item.diff))[field], base[field], "the reference apply leaves the derived handles to the central applier");
   }
 }
 

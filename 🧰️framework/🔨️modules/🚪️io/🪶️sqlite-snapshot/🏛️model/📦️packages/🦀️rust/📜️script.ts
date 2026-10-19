@@ -9,6 +9,6 @@ import { resolveTestLevel, testLevelBudgetMs } from "../../../../../🏃️proce
 import { cmdBudgetMs } from "../../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
 /** 🏛️ Checks real model ownership against independent TOML, Ajv and SQLite. */
-class SourceScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-source accepts no arguments");await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧪️tests/🏛️ownership.ts")],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});}}
+class SourceScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-source accepts no arguments");await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧪️tests/🏛️ownership/🟦️.ts")],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});}}
 const router=new ScriptRouter(import.meta.dir).register("test-source",SourceScript);
 await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original,defaultCommand:"test-source"}));

@@ -1,6 +1,6 @@
 //! 📋️ forms -> zip — the shared document archive (`encode_document_archive`): this artifact's DSL as
 //! the authoritative member plus its rfc8259 rendition, as real zip 2.0 bytes (`IoFidelity::Exact`).
-use crate::FormsSnapshot;
+use semio_s_artifact_forms_forms_snapshot::FormsSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};

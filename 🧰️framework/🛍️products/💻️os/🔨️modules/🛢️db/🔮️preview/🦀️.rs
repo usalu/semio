@@ -234,7 +234,6 @@ pub struct DbConflictOracle {
 impl DbConflictOracle {
     /// 🏗️ Builds an oracle around a caller-supplied detector (e.g. one configured with a
     /// `db_conflict::CommandKindMatrix`, though this crate never populates one of its own).
-    // 🚫️async: E1 pure constructor consumed by `impl Default`, itself E1 — see R9
     pub fn new(detector: db_conflict::ConflictDetector) -> Self {
         DbConflictOracle { detector }
     }
@@ -472,10 +471,6 @@ impl PreviewStore {
     /// `Superseded` ("stale"), or it doesn't and its `base` is advanced to `landed.frontier`
     /// ("rebase") while it stays `Active`. Previews already at or ahead of `landed.frontier` are
     /// left untouched (nothing to reconcile).
-    // 🔀️ `oracle: &impl ConflictOracle` (was `&dyn`) — `conflicts`'s `fn` broke `dyn`
-    // object-safety (R1); every call site passes exactly one concrete oracle type
-    // (`DbConflictOracle`, `TouchedRegionOracle`, or the test-only `AlwaysConflicts`), never a
-    // runtime-chosen mix and never stored — R11(a) parameter-position generic.
     pub fn reconcile_with(&mut self, landed: &LandedCommand, oracle: &impl ConflictOracle) -> ReconcileOutcome {
         let mut outcome = ReconcileOutcome::default();
         for preview in self.previews.values_mut() {

@@ -636,6 +636,7 @@
         "workspace",
         "outputs",
         "actions",
+        "server",
         "temporary"
       ],
       "properties": {
@@ -668,6 +669,11 @@
           "maxLength": 256
         },
         "actions": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "server": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256
@@ -714,11 +720,659 @@
     "Policy": {
       "const": {
         "version": 1,
-        "serverIdleSeconds": 60,
+        "serverIdleSeconds": 120,
         "moduleSetupMilliseconds": 120000,
         "terminationReceiptMilliseconds": 5000,
         "maximumControlMessageBytes": 65536
       }
+    },
+    "CachePolicy": {
+      "const": {
+        "version": 1,
+        "diskCache": {
+          "productsShareBasisPoints": 4000,
+          "garbageCollectionMaximumAgeDays": 30,
+          "garbageCollectionIdleDelaySeconds": 10,
+          "garbageCollectionWindowSeconds": 110
+        },
+        "repositoryContents": {
+          "garbageCollectionMaximumAgeDays": 3
+        },
+        "remote": {
+          "endpointEnvironment": "SEMIO_BAZEL_REMOTE_CACHE",
+          "uploadEnvironment": "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD",
+          "credentialHelperEnvironment": "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER",
+          "compression": true,
+          "timeoutSeconds": 30,
+          "retries": 3
+        }
+      }
+    },
+    "CacheEnvironment": {
+      "description": "Environment switch for the optional shared remote Bazel cache. Unset or empty keeps the remote cache off. The endpoint is a grpc, grpcs, http, https or unix URI. Local results are uploaded only when the upload variable is the literal true, because Bazel actions here run unsandboxed and a shared cache must not receive unreviewed results by default. The credential helper is an absolute path or a bare command name resolved on PATH; secrets never travel in flags.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SEMIO_BAZEL_REMOTE_CACHE": {
+          "type": "string",
+          "pattern": "^((grpc|grpcs|http|https)://[^\\s\\u0000/][^\\s\\u0000]*|unix:[^\\s\\u0000]+)$",
+          "maxLength": 1024
+        },
+        "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": {
+          "enum": [
+            "true",
+            "false"
+          ]
+        },
+        "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": {
+          "type": "string",
+          "pattern": "^((/|[A-Za-z]:[\\\\/])[^\\u0000]*|[^\\u0000\\s/\\\\-][^\\u0000/\\\\]*)$",
+          "maxLength": 1024
+        }
+      }
+    },
+    "CacheFlags": {
+      "description": "Closed Bazel flags derived from the storage layout, the products budget and the remote cache environment. The startup flag binds one output base, and therefore one server, to one workspace directory; the disk cache garbage collector only runs inside such a persistent server, never under --batch.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "startup",
+        "command",
+        "remote"
+      ],
+      "properties": {
+        "startup": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/CacheFlags/definitions/Flag"
+          }
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/CacheFlags/definitions/Flag"
+          }
+        },
+        "remote": {
+          "type": "boolean"
+        }
+      },
+      "definitions": {
+        "Flag": {
+          "type": "string",
+          "pattern": "^--(no)?[a-z][a-z_]*(=[^\\u0000]+)?$",
+          "maxLength": 1024
+        }
+      }
+    },
+    "HostPaths": {
+      "const": {
+        "version": 1,
+        "guarded": [
+          "install",
+          "outputs",
+          "server"
+        ],
+        "platforms": {
+          "darwin": {
+            "pattern": "^[\\u0020-\\u007e]+$",
+            "reason": "The macOS JVM opens its classpath from Bazel's byte-wise path strings as UTF-8, so a non-ASCII install base crashes the server at startup (main class not found). Bazel writes the darwin-sandbox profile (sandbox.sb) from the same byte-wise strings but encodes each byte as UTF-8 again, so a non-ASCII output base (sandbox directory, execroot and stats.out) is allow-listed under mojibake and every sandboxed action fails with Operation not permitted unless the base happens to sit under an allow-listed directory such as /private/tmp. Source labels, output names inside the execroot, disk cache and workspace paths accept non-ASCII names."
+          }
+        }
+      }
+    },
+    "HostPathPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "guarded",
+        "platforms"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "guarded": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "install",
+              "outputs",
+              "server"
+            ]
+          }
+        },
+        "platforms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "pattern",
+              "reason"
+            ],
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 16
+              }
+            }
+          }
+        }
+      }
+    },
+    "Actions": {
+      "const": {
+        "version": 1,
+        "sources": {
+          "link": "s",
+          "label": "^(?:[A-Za-z0-9_@=,+~%./\\-]|[^\\u0000-\\u007f])+$",
+          "boundaries": [
+            "BUILD",
+            "BUILD.bazel"
+          ],
+          "bundled": [
+            "bun.lock",
+            "package.json"
+          ]
+        },
+        "kinds": {
+          "task": {
+            "sandbox": false,
+            "reason": "The task process runs in the real checkout: its working directory, the declared source-tree and shared-store writes, the loopback control socket and the out-of-tree runtime channel are host state that a Bazel sandbox hides or blocks."
+          },
+          "launcher": {
+            "sandbox": false,
+            "reason": "Action birth binds exact execroot output paths and obtains authority from the owning invocation over its loopback control socket and out-of-tree runtime channel, which a sandbox execroot would change."
+          },
+          "noop": {
+            "sandbox": true
+          }
+        },
+        "uncached": {
+          "continuous": "A long-running service is started on demand and never produced.",
+          "declared": "The target declares itself uncacheable: it publishes, deploys or exercises a live environment.",
+          "skipped": "The invocation skips the action cache.",
+          "undeclared": "cache not declared: the target states no cache policy, so undeclared side effects could be lost on a cache hit and it reruns until it declares one.",
+          "unbounded": "outputs not declared: the target says cache true but names no outputs, so a cache hit could not restore what it produced."
+        }
+      }
+    },
+    "ActionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "sources",
+        "kinds",
+        "uncached"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "link",
+            "label",
+            "boundaries",
+            "bundled"
+          ],
+          "properties": {
+            "link": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "boundaries": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "bundled": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "kinds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "task",
+            "launcher",
+            "noop"
+          ],
+          "properties": {
+            "task": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox",
+                    "reason"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": false
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 16
+                    }
+                  }
+                }
+              ]
+            },
+            "launcher": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox",
+                    "reason"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": false
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 16
+                    }
+                  }
+                }
+              ]
+            },
+            "noop": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sandbox",
+                    "reason"
+                  ],
+                  "properties": {
+                    "sandbox": {
+                      "const": false
+                    },
+                    "reason": {
+                      "type": "string",
+                      "minLength": 16
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "uncached": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "continuous",
+            "declared",
+            "skipped",
+            "undeclared",
+            "unbounded"
+          ],
+          "properties": {
+            "continuous": {
+              "type": "string",
+              "minLength": 16
+            },
+            "declared": {
+              "type": "string",
+              "minLength": 16
+            },
+            "skipped": {
+              "type": "string",
+              "minLength": 16
+            },
+            "undeclared": {
+              "type": "string",
+              "minLength": 16
+            },
+            "unbounded": {
+              "type": "string",
+              "minLength": 16
+            }
+          }
+        }
+      }
+    },
+    "CacheDecision": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cache"
+          ],
+          "properties": {
+            "cache": {
+              "const": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cache",
+            "reason"
+          ],
+          "properties": {
+            "cache": {
+              "const": false
+            },
+            "reason": {
+              "enum": [
+                "continuous",
+                "declared",
+                "skipped",
+                "undeclared",
+                "unbounded",
+                "driver-owned",
+                "managed-output",
+                "side-effecting",
+                "live",
+                "aggregate",
+                "diagnostic"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "task",
+        "implementation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "task": {
+          "type": "object",
+          "required": [
+            "id",
+            "project",
+            "target",
+            "label",
+            "dependencies",
+            "args",
+            "definition",
+            "root"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "project": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            },
+            "configuration": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string",
+              "pattern": "^t_[a-f0-9]{16}$"
+            },
+            "dependencies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "definition": {
+              "type": "object"
+            },
+            "root": {
+              "type": "string"
+            }
+          }
+        },
+        "implementation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "sha256",
+            "loaderSha256"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "loaderSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "orchestration": {
+          "type": "object"
+        }
+      }
+    },
+    "Runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "workspace",
+        "environment"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "InputExpansionPolicy": {
+      "const": {
+        "maximumDepth": 128,
+        "maximumEntries": 1000000
+      }
+    },
+    "InputExpansionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "inputs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array"
+        },
+        "expected": {
+          "type": "array"
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "expected": {
+              "type": "array"
+            }
+          },
+          "required": [
+            "expected"
+          ]
+        },
+        {
+          "properties": {
+            "error": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "error"
+          ]
+        }
+      ]
+    },
+    "NamedInputReference": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "input"
+          ],
+          "properties": {
+            "input": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "dependencies": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "input",
+            "projects"
+          ],
+          "properties": {
+            "input": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "projects": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 65536,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                }
+              ]
+            },
+            "dependencies": {
+              "const": false
+            }
+          }
+        }
+      ]
     }
   }
 }

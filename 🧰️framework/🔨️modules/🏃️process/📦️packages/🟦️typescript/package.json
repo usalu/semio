@@ -95,8 +95,6 @@
     "./artifacts/native-build/storage/publication": "./📦️artifacts/🏗️native-build/💾️storage/📤️publication/🟦️.ts",
     "./artifacts/native-build/storage/borrower": "./📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
     "./artifacts/native-build/storage/schema.json": "./📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️json/🟦️.ts",
-    "./artifacts/native-build/storage/fixed/system/schema.json": "./📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🔣️json/schema/🟦️.ts",
-    "./artifacts/native-build/storage/fixed/system": "./📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts",
     "./artifacts/native-build/storage/fixed/testing.json": "./📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️testing/🔣️json/🟦️.ts",
     "./artifacts/native-build/storage/fixed/schema.json": "./📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️json/🟦️.ts",
     "./artifacts/native-build/storage/fixed": "./📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",

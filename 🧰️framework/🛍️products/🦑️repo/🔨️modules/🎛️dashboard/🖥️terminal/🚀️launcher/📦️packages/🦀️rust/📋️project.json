@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/repo-dashboard-launcher-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

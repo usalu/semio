@@ -3,7 +3,7 @@
 use semio_framework_math_sampling_vocabulary::{SamplingError, TokenBitset, TokenId};
 use semio_framework_math_sampling_config::ForcedSpec;
 use semio_framework_math_sampling_workspace::{LogitsWorkspace, ProcessorKind, StepView};
-use super::LogitsProcessor;
+use super::{LogitsProcessor, LogitsProcessors};
 
 // #region 🔖️Biases
 /// 🧲️ Sparse per-token additive logit bias.

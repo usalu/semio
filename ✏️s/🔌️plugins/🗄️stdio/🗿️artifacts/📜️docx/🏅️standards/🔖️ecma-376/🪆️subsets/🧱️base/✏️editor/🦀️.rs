@@ -6,7 +6,7 @@
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_run_formatting;
-use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_docx_base_edit_rules as edit_rules;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::prepare_addressed_xml_mutation;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_formatting;
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_text;

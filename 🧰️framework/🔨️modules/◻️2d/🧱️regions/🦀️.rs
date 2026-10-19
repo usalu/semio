@@ -19,11 +19,11 @@ pub struct Region {
 /// 📐️ Corner treatment of an offset.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum OffsetJoin {
-    /// Sharp corner; beyond `limit * distance` from the original vertex the corner is bevelled (`limit >= 1`).
+    /// 📌️ Sharp corner; beyond `limit * distance` from the original vertex the corner is bevelled (`limit >= 1`).
     Miter { limit: f64 },
-    /// Straight cut between the two offset edge ends.
+    /// 🔪️ Straight cut between the two offset edge ends.
     Bevel,
-    /// Circular arc around the vertex flattened within `tolerance`.
+    /// ⭕️ Circular arc around the vertex flattened within `tolerance`.
     Round { tolerance: f64 },
 }
 

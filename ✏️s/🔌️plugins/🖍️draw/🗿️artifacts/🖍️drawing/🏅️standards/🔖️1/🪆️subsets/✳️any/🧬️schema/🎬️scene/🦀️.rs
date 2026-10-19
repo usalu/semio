@@ -59,7 +59,7 @@ pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<Dra
 /// ↔️ Preview world-space transforms through the same group traversal as the committed scene.
 pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, transformation: Option<&(Vec<String>,[f64;6])>) -> Vec<DrawingSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, groups:&mut Vec<DrawingSceneGroup>, out: &mut Vec<DrawingSceneNode>) {
+    fn walk(doc: &DrawingSnapshot, layers: &semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, groups:&mut Vec<DrawingSceneGroup>, out: &mut Vec<DrawingSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {

@@ -30,6 +30,8 @@ semio-framework-os-renderer-wgpu-kernel-retained = { path = "../../../🗃️ker
 semio-framework-plugin-interpreter-runtime = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-job-payload = { workspace = true }
+semio-framework-os-renderer-wgpu-host-plumbing = { path = "../../../🔧️host-plumbing/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }

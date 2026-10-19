@@ -2,7 +2,7 @@
 use crate::sqlite::snapshot::*;
 use store::sqlite_snapshot::artifact::RowWriter;
 use semio_framework_dsl_record::RecordValue as R;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in 7..=12{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(8,6),(9,12)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(owner)?,nested)?)?.len())?}}Ok(rows)}

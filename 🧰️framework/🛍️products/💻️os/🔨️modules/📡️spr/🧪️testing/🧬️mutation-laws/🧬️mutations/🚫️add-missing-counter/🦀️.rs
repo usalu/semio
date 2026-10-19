@@ -18,7 +18,7 @@ impl MutationKind<i64, CounterMutation> for AddMissingCounter {
 
 }
 
-impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddMissingCounter {
+impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddMissingCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
     }
@@ -48,9 +48,3 @@ impl OpText for AddMissingCounter {
     }
 }
 //#endregion 📜️Text
-
-//#region 🧪️Contract
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Contract

@@ -128,7 +128,7 @@ fn sqlite_snapshot_puzzle3d_controlled_scale_has_real_metadata_and_both_variants
             <Puzzle3dScale as semio_framework_dsl_record::DslField>::shape_controlled(&mut output).unwrap();
             let value = <Puzzle3dScale as semio_framework_dsl_record::DslField>::to_value_controlled(&s, &mut output).unwrap();
             let mut callback = |_| true;
-            let mut input = semio_framework_value::NativeDecodeControl::new(4096, &mut callback);
+            let mut input = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096, &mut callback);
             let out = <Puzzle3dScale as semio_framework_dsl_record::DslField>::from_value_controlled(&value, &mut input).unwrap();
             match (s, out) {
                 (Puzzle3dScale::Uniform(a), Puzzle3dScale::Uniform(b)) => assert_eq!(a.to_bits(), b.to_bits()),
@@ -254,7 +254,7 @@ fn sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases() {
 }
 
 mod populated_public_owner {
-use super::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
+use super::*;use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact_puzzle_3d_editor::Puzzle3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_puzzle_3d_viewer::Puzzle3dViewer>>),}
@@ -262,7 +262,7 @@ pub enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<semio_s_artifact
 struct PublicOwned(Option<Puzzle3dSnapshot>);impl PublicOwned{fn new(value:Puzzle3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Puzzle3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Puzzle3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshotHost>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Puzzle3dSnapshot,b:&Puzzle3dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
-fn register(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::NeedsLabel, PublicApps>::new("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
+fn register(){semio_framework_plugin::PluginBuilder::<semio_framework_plugin::component::app::NeedsLabel, PublicApps>::new("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(semio_s_artifact_puzzle_3d::artifact::<PublicApps>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle3d_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};

@@ -172,7 +172,7 @@ pub struct HandleData {
     pub locked: bool,
     pub style: Option<String>,
     pub handle_kind: String,
-    /// Parsed from descriptor `color` when set (overrides catalog fill).
+    /// 🌈️ Parsed from descriptor `color` when set (overrides catalog fill).
     pub color_fill: Option<Color>,
     /// 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
     pub icon_kind: Option<String>,
@@ -200,7 +200,7 @@ pub struct HandleDescriptor {
     #[serde(default)]
     #[value(default)]
     pub handle_kind: Option<String>,
-    /// CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
+    /// 🖌️ CSS `#rgb` / `#rrggbb` / `#rrggbbaa` overriding catalog color for this handle.
     #[serde(default)]
     #[value(default)]
     pub color: Option<String>,
@@ -241,7 +241,7 @@ pub fn redraw_snapshot_json(source:&str,options:&str,decode:&mut NativeDecodeCon
 pub fn force_snapshot_json(source:&str,options:&str,decode:&mut NativeDecodeControl<'_>,work:&mut LayoutControl<'_>,encode:&mut NativeEncodeControl<'_>)->Result<String,LayoutIoError>{
  let mut snapshot=decode_board_snapshot_json(source,decode)?;
  let opts:ForceGraphLayoutOptions=if options.trim().is_empty(){ForceGraphLayoutOptions::default()}else{{let admission:ForceAdmission=semio_framework_pack_json::from_json_str_controlled(options,semio_framework_pack_json::JsonMemberPolicy::Reject,decode)?;admission.admit(decode)?}};
- if snapshot.schema.as_str()=="board.ports.directed.v1"{force::apply_ported_force_layout(&mut snapshot,&opts,work)?;}else{force::apply_force_layout(&mut snapshot,&opts,work)?;}
+ if snapshot.schema.as_str()=="board.ports.directed.v1"{apply_ported_force_layout(&mut snapshot,&opts,work)?;}else{apply_force_layout(&mut snapshot,&opts,work)?;}
  Ok(semio_framework_pack_json::to_json_string_controlled(&snapshot,encode)?)
 }
 

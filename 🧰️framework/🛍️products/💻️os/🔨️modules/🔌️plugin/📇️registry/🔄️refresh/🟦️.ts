@@ -14,11 +14,11 @@ import type { PluginBuildTargetV1 } from "../🔎️discovery/🟦️.ts";
 
 const repoRoot = findWorkspaceRoot();
 
-import { createConcurrencyLimiter, cargoConcurrencyLimit, materializeConcurrencyLimit } from "../../🏗️build/🏃️execution/🟦️.ts";
+import { createConcurrencyLimiter, cargoConcurrencyLimit, materializeConcurrencyLimit } from "@semio-tech/framework-plugin/build/execution";
 
 
 
-import type { ComponentDeliverableV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import type { ComponentDeliverableV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 
 
 

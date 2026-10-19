@@ -221,7 +221,7 @@ pub fn session_protocol_bearer(headers: &HeaderMap) -> Option<String> {
     Some(token.to_string())
 }
 
-/// header claiming it would be a header granting itself the administration plane.
+/// 🔑️ header claiming it would be a header granting itself the administration plane.
 pub fn credential(headers: &HeaderMap, peer: Option<SocketAddr>) -> Credential {
     Credential { bearer: bearer(headers).or_else(|| session_protocol_bearer(headers)), capability: headers.get(CAPABILITY_HEADER).and_then(|value| value.to_str().ok()).map(|value| crate::contract::CapabilityProof(value.to_string())), loopback: peer.is_some_and(|peer| peer.ip().is_loopback()) }
 }

@@ -5,6 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import { semioAssetsVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
+import { hostBuildPlugins } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 //#endregion 🔌️Adapters
@@ -15,7 +16,7 @@ const repoRoot = resolve(dir, "../../../../..");
 /** 🧪️ Vitest for `@semio-tech/mit-bestand-praesentation-projektetage`. */
 export default defineConfig({
   root: testRoot,
-  plugins: [...semioAssetsVitePlugin(repoRoot), tailwindcss(), react()],
+  plugins: [...hostBuildPlugins(semioAssetsVitePlugin(repoRoot)), tailwindcss(), react()],
   server: { fs: { allow: [repoRoot] } },
   resolve: {
     alias: [
@@ -32,7 +33,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/mit-bestand-praesentation-projektetage",
-    mode: "test",
     environment: "jsdom",
     setupFiles: [resolve(repoRoot, "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧰️vitest.setup.ts")],
     include: ["long", "exhaustive"].includes(process.env.SEMIO_TEST_LEVEL ?? "") ? ["../../🧪️tests/🎞️react-deck/🟦️.tsx"] : [],

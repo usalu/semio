@@ -102,12 +102,6 @@ pub(super) fn collect_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, e
                 }
             }
             let (raw_uv, is_pole) = coedge_point_uv(body, surface, coedge, edge, t, p);
-            // A pole's own `u` is meaningless and gets pinned to whatever branch we arrived from
-            // (below) — but that pinned value must NOT then anchor the departing seam's own branch
-            // once we leave the pole: a lune-shaped face (sphere/cone) legitimately re-enters the
-            // seam at the OPPOSITE `u` branch after a pole (e.g. `0` in, `2π` out), and treating the
-            // pinned pole value as still-live continuity would wrongly snap that outgoing branch
-            // back to the incoming one, collapsing the whole loop onto a single meridian.
             let unwrap_ref = if prev_is_pole { None } else { prev };
             let uv = unwrap_uv(surface, raw_uv, unwrap_ref, is_pole);
             prev = Some(uv);

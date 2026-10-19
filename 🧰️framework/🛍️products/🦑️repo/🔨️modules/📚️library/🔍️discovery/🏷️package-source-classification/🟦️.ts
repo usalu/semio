@@ -44,12 +44,12 @@ function packageStructuralSource(content: string, analyzer?: PackageGlueGrammarS
       if (lifetime && content[index + lifetime[0].length] !== "'") { source += lifetime[0]; index += lifetime[0].length; continue; }
     }
     if (char === '"' || char === "'" || char === "`") {
-      const quote = char;
+      const quote = char, raw = quote === "`" && analyzer === "go";
       let end = index + 1, escaped = false;
       for (; end < content.length; end++) {
         const value = content[end]!;
         if (!escaped && value === quote) { end++; break; }
-        escaped = !escaped && value === "\\";
+        escaped = !raw && !escaped && value === "\\";
         if (value !== "\\") escaped = false;
       }
       if (end > content.length || content[end - 1] !== quote) balanced = false;
@@ -149,9 +149,9 @@ function classifyEcmaPackageSource(content: string, grammar: PackageGlueGrammarS
   if (functions.some((row) => !ecmaDelegatedBody(row.body, imports, grammar.maxDelegationStatements))) return { role: "implementation", evidence: "function body performs non-delegating work" };
   let rest = packageWithoutRanges(source, functions);
   rest = rest
-    .replace(/\bimport\s*[\s\S]*?\s*from\s*["'][\s\S]*?["']\s*;?/gu, "")
-    .replace(/\bimport\s*["'][\s\S]*?["']\s*;?/gu, "")
-    .replace(/\bexport\s*(?:type(?:\s+|(?=\{))[^;]+|\*\s*(?:as\s+[A-Za-z_$][\w$]*\s+)?from\s*["'][\s\S]*?["']|\{[^}]*\}(?:\s*from\s*["'][\s\S]*?["'])?)\s*;?/gu, "")
+    .replace(/\bimport\s*[\s\S]*?\s*from\s*["'][\s\S]*?["'](?:\s*with\s*\{[^{}]*\})?\s*;?/gu, "")
+    .replace(/\bimport\s*["'][\s\S]*?["'](?:\s*with\s*\{[^{}]*\})?\s*;?/gu, "")
+    .replace(/\bexport\s*(?:type(?:\s+|(?=\{))[^;]+|\*\s*(?:as\s+[A-Za-z_$][\w$]*\s+)?from\s*["'][\s\S]*?["'](?:\s*with\s*\{[^{}]*\})?|\{[^}]*\}(?:\s*from\s*["'][\s\S]*?["'](?:\s*with\s*\{[^{}]*\})?)?)\s*;?/gu, "")
     .replace(/\b(?:export\s+)?(?:declare\s+)?type\s+[A-Za-z_$][\w$]*[\s\S]*?;/gu, "")
     .replace(/\b(?:export\s+)?(?:declare\s+)?interface\s+[A-Za-z_$][\w$]*[^{}]*\{[^{}]*\}\s*;?/gu, "")
     .trim();
@@ -186,15 +186,15 @@ function classifyRustPackageSource(content: string, grammar: PackageGlueGrammarS
   if (functions.some((row) => !delegated(row.body))) return { role: "implementation", evidence: "Rust function body performs non-delegating work" };
   let rest = packageWithoutRanges(source, functions)
     .replace(/#!?\[[^\]]*\]/gu, "")
-    .replace(/(?:pub(?:\([^)]*\))?\s+)?(?:unsafe\s+)?extern\s+crate\s+[^;]+;/gu, "")
-    .replace(/(?:pub(?:\([^)]*\))?\s+)?use\s+[^;]+;/gu, "")
-    .replace(/(?:pub(?:\([^)]*\))?\s+)?(?:mod|type)\s+[^;{}]+;/gu, "")
+    .replace(/\b(?:pub(?:\([^)]*\))?\s+)?(?:unsafe\s+)?extern\s+crate\s+[^;]+;/gu, "")
+    .replace(/\b(?:pub(?:\([^)]*\))?\s+)?use\s+[^;]+;/gu, "")
+    .replace(/\b(?:pub(?:\([^)]*\))?\s+)?(?:mod|type)\s+[^;{}]+;/gu, "")
     .replace(/\binclude!?\s*\([^;]+;/gu, "")
     .trim();
   let previous = "";
   while (rest !== previous) {
     previous = rest;
-    rest = rest.replace(/(?:pub\s+)?mod\s+[A-Za-z_]\w*\s*\{(?:\s*(?:(?:pub\s+)?(?:use|mod|type)\s+[^;{}]+;|#!?\[[^\]]*\]))*\s*\}/gu, "").trim();
+    rest = rest.replace(/\b(?:pub\s+)?mod\s+[A-Za-z_]\w*\s*\{(?:\s*(?:\b(?:pub\s+)?(?:use|mod|type)\s+[^;{}]+;|#!?\[[^\]]*\]))*\s*\}/gu, "").trim();
   }
   const macros = [...rest.matchAll(/(?:^|;)\s*((?:[A-Za-z_]\w*::)*[A-Za-z_]\w*)!\s*[({][\s\S]*[)}]\s*;?/gu)];
   const macroRest = macros.reduce((value, row) => value.replace(row[0], ""), rest).trim();
@@ -226,9 +226,9 @@ function classifyGoPackageSource(content: string, grammar: PackageGlueGrammarSpe
   if (functions.some((row) => row.name !== "main" && row.name !== "init" || !delegated(row.body))) return { role: "implementation", evidence: "Go function body performs non-bootstrap work" };
   let rest = packageWithoutRanges(source, functions)
     .replace(/^\s*package\s+[A-Za-z_]\w*/mu, "")
-    .replace(/\bimport\s*(?:\([^)]*\)|"[^"]*"|'[^']*')/gu, "")
+    .replace(/\bimport\s*(?:[A-Za-z_.]\w*\s*)?(?:\([^)]*\)|"[^"]*"|'[^']*')/gu, "")
     .trim();
-  if (/\b(?:type|var|const)\b/u.test(rest)) return { role: "implementation", evidence: "Go runtime declaration remains" };
+  if (/\b(?:func|type|var|const)\b/u.test(rest)) return { role: "implementation", evidence: "Go method, type or runtime declaration remains" };
   if (rest) return { role: "unresolved", evidence: "unsupported Go package form" };
   return functions.length > 0 ? { role: "bootstrap", evidence: "main or init only delegates to imported owner" } : { role: "declaration", evidence: "package and import declarations only" };
 }

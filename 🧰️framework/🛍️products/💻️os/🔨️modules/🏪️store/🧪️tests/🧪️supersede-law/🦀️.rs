@@ -198,7 +198,7 @@ async fn reloaded(store: &LawStore) -> LawStore {
 /// no-op for a withdrawal, a no-op carrying one `Fatal` `mutation.invariant` for an input the law refuses.
 #[semio_framework_async_macros::async_test]
 async fn every_input_row_is_admitted_and_folded_as_the_table_says() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     for row in corpus()["inputs"].as_array().expect("input rows") {
@@ -233,7 +233,7 @@ async fn every_input_row_is_admitted_and_folded_as_the_table_says() {
 /// recorded input — restores it.
 #[semio_framework_async_macros::async_test]
 async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_input_restores_it() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = law_store("planner-withdraw").await;
@@ -281,7 +281,7 @@ async fn a_withdrawn_planner_folds_as_a_no_op_at_every_site_and_its_recorded_inp
 /// a planner whose plan is empty included, withdraws.
 #[semio_framework_async_macros::async_test]
 async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table_says() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     for row in corpus()["units"].as_array().expect("unit rows") {
@@ -341,7 +341,7 @@ async fn every_unit_row_names_its_unit_and_refuses_its_supersession_as_the_table
 /// refused whole.
 #[semio_framework_async_macros::async_test]
 async fn a_refused_inverse_is_one_fatal_mutation_and_the_session_stays_repairable() {
-    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const IDENTITY_CEILING:usize=201*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
     let mut store = law_store("inverse-refused").await;

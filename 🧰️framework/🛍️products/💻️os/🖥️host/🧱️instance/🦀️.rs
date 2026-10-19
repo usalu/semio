@@ -255,7 +255,6 @@ pub fn set_json_pointer_value(root: &mut Value, pointer: &str, value: Value) {
         if !current.is_object() {
             *current = Value::Object(Default::default());
         }
-        // infallible: the branch above just forced `current` to `Value::Object(_)` when it wasn't already one.
         let object = current.as_object_mut().expect("current is always an object here");
         let entry = object.entry(segment.clone()).or_insert_with(|| Value::Object(Default::default()));
         if !entry.is_object() {

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ownedScriptRoutes, resolveOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
@@ -35,7 +35,7 @@ test("real contributions bind Nx package commands and root coordinator imports n
     const project = JSON.parse(readFileSync(join(root, route.packageRoot, "📋️project.json"), "utf8"));
     expect(project.name).toBe(route.project);
     expect(project.targets[route.target].options.command).toContain("📜️script.ts");
-    expect(project.targets[route.target].options.cwd).toBe(route.packageRoot);
+    {const cwd = project.targets[route.target].options.cwd as string;expect(cwd === "{projectRoot}" || cwd === route.packageRoot || route.packageRoot.startsWith(cwd + "/"), route.project + ":" + route.target).toBe(true);}
   }
   const imports: string[] = [];
   const visit = (node: ts.Node): void => {
@@ -49,7 +49,7 @@ test("real contributions bind Nx package commands and root coordinator imports n
 
 test("every real contribution is reachable from a dispatcher call site and no verify route shadows a root verify command", () => {
   const root = findWorkspaceRoot(import.meta.dir), routes = ownedScriptRoutes(root);
-  const scripts = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "--", "📜️script.ts", "*/📜️script.ts"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 }).split("\n").filter((path) => path && !path.includes("/🎫️tickets/"));
+  const scripts = execFileSync("git", ["ls-files", "-co", "--exclude-standard", "--", "📜️script.ts", "*/📜️script.ts"], { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 }).split("\n").filter((path) => path && !path.includes("/🎫️tickets/") && existsSync(join(root, path)));
   const rootPaths = new Set(policyRootScriptModulePaths(root));
   for (const path of rootPaths) if (!scripts.includes(path)) scripts.push(path);
   const dispatchers: { prefix: string[]; open: boolean; site: string }[] = [];

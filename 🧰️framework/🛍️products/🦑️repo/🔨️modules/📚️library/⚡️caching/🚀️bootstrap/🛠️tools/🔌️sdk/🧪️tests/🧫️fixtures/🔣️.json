@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "scannerCases": [
+    { "name": "static import", "source": "import {x} from \"nx/src/native\";", "specifiers": ["nx/src/native"] },
+    { "name": "reexport", "source": "export {x} from \"@nx/devkit\";", "specifiers": ["@nx/devkit"] },
+    { "name": "dynamic import", "source": "const m = await import(\"nx/src/utils/workspace-root\");", "specifiers": ["nx/src/utils/workspace-root"] },
+    { "name": "require", "source": "const m = require(\"nx/package.json\");", "specifiers": ["nx/package.json"] },
+    { "name": "require resolve", "source": "const p = require.resolve(\"nx/bin/nx.js\");", "specifiers": ["nx/bin/nx.js"] },
+    { "name": "created require call", "source": "const m = createRequire(import.meta.url)(\"nx/src/native\");", "specifiers": ["nx/src/native"] },
+    { "name": "created require resolve", "source": "const p = createRequire(join(root, \"package.json\")).resolve(\"nx/bin/nx.js\");", "specifiers": ["nx/bin/nx.js"] },
+    { "name": "path join is not a module", "source": "const p = join(root, \"nx/artifacts\");", "specifiers": [] },
+    { "name": "path resolve is not a module", "source": "const p = resolve(root, \"nx/tmp\");", "specifiers": [] },
+    { "name": "tool name literal is not a module", "source": "const tool = \"nx\"; const list = [\"nx\", \"bazel\"];", "specifiers": [] },
+    { "name": "comment is not a module", "source": "// require(\"nx/src/native\")\n", "specifiers": [] },
+    { "name": "string is not a module", "source": "const text = 'import x from \"nx/src/native\"';", "specifiers": [] },
+    { "name": "other packages are not nx", "source": "import fg from \"fast-glob\"; const a = require(\"nxt/x\");", "specifiers": [] }
+  ],
+  "refused": ["nx/src/unknown", "nx/src/native/../daemon", "fs", ""],
+  "ports": {
+    "packageDirectory": "nx/package.json",
+    "cli": "nx/bin/nx.js"
+  }
+}

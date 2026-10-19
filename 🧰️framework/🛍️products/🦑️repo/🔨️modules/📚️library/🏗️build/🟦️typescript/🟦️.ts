@@ -1,6 +1,6 @@
 import {join,resolve} from "node:path";
-import {typecheckProject,readTypeScriptCheckArgumentsV1,type TypeScriptCheckOptions} from "@semio-tech/process/typescript-check";
-import {requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1} from "@semio-tech/process/routing";
+import {typecheckProject,readTypeScriptCheckArgumentsV1,type TypeScriptCheckOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";

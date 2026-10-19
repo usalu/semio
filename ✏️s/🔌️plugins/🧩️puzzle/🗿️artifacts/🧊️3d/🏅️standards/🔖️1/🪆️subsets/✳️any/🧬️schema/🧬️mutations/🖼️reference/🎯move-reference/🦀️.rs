@@ -1,9 +1,9 @@
-//! Puzzle3d mutation — `MoveReference`: absolute reposition of a reference plane's pinned origin.
+//! 🧩️ Puzzle3d mutation — `MoveReference`: absolute reposition of a reference plane's pinned origin.
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Mutation
-/// `move-reference` payload.
+/// ↔️ `move-reference` payload.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]

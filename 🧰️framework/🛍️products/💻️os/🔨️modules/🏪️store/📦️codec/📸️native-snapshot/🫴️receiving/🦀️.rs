@@ -1,9 +1,11 @@
 //! 🫴️ Complete Pack Records and authored typed fields retain the exact genesis source through every turn.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use semio_framework_dsl_record::{BorrowedDslRecord,FieldValue,receiving::{DslOwnedReceivingRecord,DslOwnedReceivingField,OwnedFieldReceiving,OwnedSlot}};
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::size_of;
-use crate::os_pack::{PackLimits,record::RetainedRecordReceiving};
+use protocol::PackLimits;
+use pack::record::RetainedRecordReceiving;
 
 /// 🗿️ Native genesis declares a required persistent original receiver independently of cold Pack decoding.
 pub trait OriginalArtifactPackReceiving:semio_framework_value::RetireOwned+Sync+Sized {
@@ -38,7 +40,7 @@ fn receipt(demand:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceiving<T>{
  /// 🎟️ Binds actual immutable source and static schema without constructing a second wire or record.
  pub fn admit(source:&[u8],envelope:&'static str,limits:PackLimits,native:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-  let demand=metadata::<Self>();if !funds(grant,demand){return Ok(None)}let prefix=crate::os_semio::declared_envelope_prefix_len(envelope,crate::os_semio::Component::Pack,1)?;
+  let demand=metadata::<Self>();if !funds(grant,demand){return Ok(None)}let prefix=semio_framework_os_semio::declared_envelope_prefix_len(envelope,semio_framework_os_semio::Component::Pack,1)?;
   if source.len()<prefix||source.len()as u64>limits.max_file_len{return Err(invalid("original snapshot Pack is outside its declared source extent"))}
   Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),control:(native.ledger_identity(),native.retirement_recipient_identity()),envelope,prefix,position:0,phase:0,limits,record:None,generic:Default::default(),binding:Default::default(),output:Default::default(),closing:false,closed:false},receipt(demand))))
  }
@@ -57,7 +59,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
  pub fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   self.validate_control(native)?;let demand=self.demands(source,body)?;if self.phase>=4||self.closing||self.closed||!funds(grant,demand){return Ok(Default::default())}native.checkpoint()?;
   match self.phase{
-   0=>{let expected=crate::os_semio::declared_binary_prefix_byte(self.envelope,crate::os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
+   0=>{let expected=semio_framework_os_semio::declared_binary_prefix_byte(self.envelope,semio_framework_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
    1=>{let Some((record,progress))=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant))?else{return Ok(Default::default())};self.record=Some(record);self.phase=2;return Ok(progress)},
    2=>{let record=self.record.as_mut().unwrap();if !record.is_ready(){return record.step(source,native,child(grant))}let mut original=None;let progress=record.take_into(&mut original,child(grant))?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(progress)},
    3=>{if !self.binding.is_ready(){return self.binding.step(&mut self.generic.value,native,body,child(grant))}let progress=self.binding.take_into(&mut self.output.value,child(grant))?;if self.output.value.is_some(){self.phase=4;}return Ok(progress)},

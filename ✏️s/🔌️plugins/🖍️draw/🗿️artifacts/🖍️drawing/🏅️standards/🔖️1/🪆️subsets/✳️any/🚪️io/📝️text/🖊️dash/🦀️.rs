@@ -1,5 +1,6 @@
 //! 🖊️ Controlled physical whitespace-separated stroke dash samples.
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Invalid bounded stroke dash text")}
 pub fn decode_dash_text(source:&str,control:&mut NativeDecodeControl<'_>)->Result<Option<Vec<f64>>,ValueError>{
  control.checkpoint()?;if source.len()>128||!source.bytes().all(|byte|byte.is_ascii_digit()||matches!(byte,b'.'|b' '|b'\t'|b'\r'|b'\n')){return Err(invalid());}let mut output=control.allocate_vec(source.split_ascii_whitespace().count())?;for token in source.split_ascii_whitespace(){control.step()?;let sample=token.parse::<f64>().map_err(|_|invalid())?;if !sample.is_finite()||sample<0.0{return Err(invalid());}output.push(sample);}Ok(output.iter().any(|value|*value>0.0).then_some(output))

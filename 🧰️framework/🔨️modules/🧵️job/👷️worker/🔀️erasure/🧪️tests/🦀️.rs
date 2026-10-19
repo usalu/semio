@@ -1,6 +1,7 @@
 //! 🧪️ Actual native header births, refused receipts and every paid partial return preserve one source.
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
 struct OriginalJob{target:usize,closing:bool}
 struct OriginalInitializer{stage:u8,target:Option<usize>}
 unsafe impl WorkerJobInitializer<OriginalJob> for OriginalInitializer{

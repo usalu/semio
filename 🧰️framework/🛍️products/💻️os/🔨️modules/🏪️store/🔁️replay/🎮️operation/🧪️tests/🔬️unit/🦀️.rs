@@ -20,7 +20,7 @@ struct TextPreparation {
     pub prepared: Option<ArtifactReplayPrepared<String, String>>,
     pub active: Option<ControlledRetirement<String>>,
     shared: Option<SharedControlledRetirement<String>>,
-    inverse_list: Option<ControlledRetirement<semio_framework_value::list::PagedList<String, {usize::MAX}>>>,
+    inverse_list: Option<ControlledRetirement<semio_framework_value_persistent::list::PagedList<String, {usize::MAX}>>>,
     pub phase: u8,
     pub context: ArtifactReplayPreparationContext,
     calls: Arc<AtomicUsize>,
@@ -45,7 +45,7 @@ impl TextPreparation {
 impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let mut demand=if let Some(owner)=self.input_close.as_ref(){owner.next_demand(body)?}else if let Some(owner)=self.active.as_ref(){owner.next_demand(body)?}else if let Some(owner)=self.shared.as_ref(){owner.next_demand(body)?}else{self.inverse_list.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))?};demand.depth=demand.depth.max(1);Ok(demand)}
     fn advance_demands(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:match self.phase{1=>self.base.as_ref().unwrap().get(self.inverse.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),3=>self.original.as_ref().unwrap().text.get(self.next.as_ref().unwrap().len()..).unwrap().chars().next().map_or(0,char::len_utf8),_=>0},capacity_bytes:match self.phase{0=>self.base.as_ref().unwrap().len(),2=>self.original.as_ref().unwrap().text.len(),_=>0},release_bytes:0,depth:1})}
-    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError> {
+    fn advance(&mut self, body:usize,grant: ArtifactStoreOneItemGrant,_control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError> {
         if self.cancelled || self.closing || !grant.permits_one() { return Ok(ArtifactReplayPreparationStep::Blocked); }
         let original=self.original.as_ref().unwrap();
         self.calls.fetch_add(1, Ordering::SeqCst);
@@ -121,7 +121,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
     fn next_close_capacity_byte_demand(&self, bytes:usize) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.active.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.shared.as_ref(){return owner.next_capacity_byte_demand(bytes);} self.inverse_list.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(bytes)) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_release_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_depth_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} self.inverse_list.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand().map(|depth|depth.max(1))) }
-    fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
         if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}if demand.capacity_bytes!=0{receiving.charge(demand.capacity_bytes)?;}
@@ -148,7 +148,7 @@ impl Drop for TextPreparation {
     fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "fixture replay producer dropped live owners"); }
 }
 
-fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>,control:&mut semio_framework_value::NativeDecodeControl<'_>){
+fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>){
     let mut last=None;
     for _ in 0..4096 {
         let body=retirement.next_copy_byte_demand().unwrap();
@@ -217,7 +217,7 @@ struct EmptyPreparation { pub payload: [u8; 513], pub closing: bool }
 impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn close_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
     fn advance_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
-    fn advance(&mut self,body:usize,_:ArtifactStoreOneItemGrant,_control:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError> { Ok(ArtifactReplayPreparationStep::Blocked) }
+    fn advance(&mut self,body:usize,_:ArtifactStoreOneItemGrant,_control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactReplayPreparationStep, ValueError> { Ok(ArtifactReplayPreparationStep::Blocked) }
     fn take_prepared(&mut self) -> Option<ArtifactReplayPrepared<(), ()>> { None }
     fn cancel(&mut self) { self.payload[0] = 1; }
     fn begin_close(&mut self) { self.closing = true; }
@@ -225,7 +225,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-    fn close_step(&mut self, _: RetainedCloneGrant, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn close_step(&mut self, _: RetainedCloneGrant, _: &mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
@@ -261,7 +261,7 @@ fn cooperative_history_preparation_receipts_keep_each_physical_currency() {
 #[test]
 fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame() {
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
-    let mut callback=|_:semio_framework_value::NativeDecodeProgress|true;let mut recipient=semio_framework_value::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
+    let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
     let cursor = Box::new(EmptyPreparation { payload: [0; 513], closing: false });
     let (mut owner, heap) = observe_heap_allocations_on_this_thread(|| ArtifactReplayPreparationRetirement::new(cursor));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

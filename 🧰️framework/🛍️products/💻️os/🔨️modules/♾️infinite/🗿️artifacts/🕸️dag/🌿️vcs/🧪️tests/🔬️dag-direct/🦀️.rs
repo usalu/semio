@@ -511,7 +511,7 @@ async fn change_node_icon_inverse_diffs_sum_to_the_negative_diff() {
 async fn replace_node_properties_inverse_diffs_sum_to_the_negative_diff() {
     let mut cases = vec![self::witness_mutation(10)];
     cases.extend([
-        DagMutation::ReplaceNodeProperties(ReplaceNodeProperties { id: "b".into(), new_properties: PropertyBag::from([("weight".into(), ::graph::manifest::PropertyValue::Number(3.0))]) }),
+        DagMutation::ReplaceNodeProperties(ReplaceNodeProperties { id: "b".into(), new_properties: PropertyBag::from([("weight".into(), semio_framework_graph_manifest::PropertyValue::Number(3.0))]) }),
     ]);
     for mutation in cases {
         crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &self::base()).await;

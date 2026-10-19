@@ -12,7 +12,7 @@ pub fn spec<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->
     })
 }
 pub fn producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:crate::layout_drawing_child_spec,decoding:|control|spec(control),encoding:|control|spec(control)}}
-pub fn decode(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<LayoutDrawingChild,ValueError>{
+pub fn decode(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<LayoutDrawingChild,ValueError>{
     control.scoped_stage(|control|{
         control.begin_stage(2)?;
         let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expected inline Drawing record"))};

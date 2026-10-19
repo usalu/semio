@@ -1,4 +1,4 @@
-//! lowpoly -> ply
+//! 🔺️ lowpoly -> ply
 //!
 //! Real ASCII PLY export through `engine::encode_ply`: a `vertex` element (`float x/y/z`, world
 //! space — scale → Euler-degree rotation → translation) and a `face` element

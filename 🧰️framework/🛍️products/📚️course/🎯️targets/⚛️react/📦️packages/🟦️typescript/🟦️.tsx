@@ -1,2 +1,2 @@
-/** @emoji ⚛️ `@semio-tech/course-react` — package glue (reexports only). */
+/** ⚛️ `@semio-tech/course-react` — package glue (reexports only). */
 export * from "../../🟦️.tsx";

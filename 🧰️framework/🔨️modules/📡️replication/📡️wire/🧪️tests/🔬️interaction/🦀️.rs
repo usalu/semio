@@ -3,7 +3,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn interaction_set_laws_follow_portable_vectors() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🕹️interaction/🧫️fixtures/🎯️set-laws/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🕹️interaction/🧪️tests/🧫️fixtures/🎯️set-laws/🔣️.json")).unwrap();
     let topology = |rows: &serde_json::Value| DomainTopology { ordered: rows.as_array().unwrap().iter().map(|row| TopologyNode { id: row["id"].as_str().unwrap().into(), granularity: row["granularity"].as_str().unwrap().into(), parent: row["parent"].as_str().map(Into::into) }).collect() };
     let strings = |rows: &serde_json::Value| rows.as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect::<Vec<_>>();
     let topo = topology(&corpus["topology"]);

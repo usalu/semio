@@ -189,7 +189,6 @@ async fn softmax_live_sums_to_one_and_matches_hand_computed() {
     softmax_live(&logits, &live, &mut probs, Accum::F64).await;
     let sum: f32 = probs.iter().sum();
     assert!((sum - 1.0).abs() < 1e-6);
-    // 📐️ Hand-computed via exp(x - 3): [exp(-2), exp(-1), exp(0)] / sum
     let expected = [0.09003057f32, 0.24472847, 0.66524096];
     for (p, e) in probs.iter().zip(expected.iter()) {
         assert!((p - e).abs() < 1e-5, "{p} vs {e}");
@@ -428,7 +427,6 @@ async fn counter_rng_split_is_independent_of_call_order() {
     let key_a = StreamKey { request: 1, sequence: 2, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
     let key_b = StreamKey { request: 1, sequence: 3, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
 
-    // 🎲️ Splitting in either order from the same parent must produce identical child streams.
     let mut a_first = parent.split(key_a).await;
     let mut b_first = parent.split(key_b).await;
     let mut a_vals_1: Vec<u64> = Vec::new();

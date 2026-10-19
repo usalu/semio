@@ -1,4 +1,4 @@
-//! document order, written as real RFC 4180 text by stdio's own `encode_csv`. Coordinates use Rust's
+//! 📄️ document order, written as real RFC 4180 text by stdio's own `encode_csv`. Coordinates use Rust's
 //! 🚪️ fem2d → csv — the node coordinate table: header `id, x, y`, then one row per node in
 //! shortest round-trip float spelling, so a reader recovers every coordinate bit for bit.
 //!

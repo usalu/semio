@@ -1,0 +1,127 @@
+files_read=7738 files_with_body_comments=426 total_lines=4439
+TOP FILES:
+299	🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js
+299	🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js
+88	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts
+75	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx
+75	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx
+63	🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🌀️revolve/🦀️.rs
+63	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts
+60	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts
+58	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts
+53	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🚀️plugin-lifecycle/🟦️.ts
+50	🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🚧️mutation-gates/🟦️.ts
+49	🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs
+44	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧵️backbone-worker/🟦️.ts
+43	🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏛️repository-contract/🟦️.ts
+42	🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🌿️mutation-leaves/🟦️.ts
+41	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx
+39	✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts
+38	🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🚦️engine-submit-pipeline/🦀️.rs
+37	✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained-commands/🦀️.rs
+36	🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🎯️expand-entries/🦀️.rs
+36	🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs
+34	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🏗️brush-mesh-and-menus/🟦️.ts
+34	🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛂️directory-route/🟦️.ts
+33	✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/🦀️.rs
+29	🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🌳️host-evaluation-history/🧮️evaluation-steps-and-tree-building/🦀️.rs
+BY AREA:
+2600	🧰️framework/🛍️products
+1119	✏️s/🔌️plugins
+613	🧰️framework/🔨️modules
+43	🌎️hub/🏗️bootstrap
+21	🌎️hub/🧩️compositions
+16	.storybook/main.ts
+7	✏️s/🧑‍💻dev
+5	.storybook/preview.tsx
+5	.storybook/📖️stories
+4	🧰️framework/📦️packages
+3	🧪️tests/🎚️config
+2	✏️s/🔨️modules
+1	♻️mit-bestand/🧺️demonstrator
+SAMPLES:
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/⏯️tool-run/🦀️.rs:436: // with the start in one poll does not help: the host schedules a poll's effects
+✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧊️preview-geometry/🦀️.rs:536: // showing, and the geometry could not come back without a fresh round trip it had already paid
+✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📋️manifest/🦀️.rs:140: // ⏯️ Deformation playback — results-window view state, self re-armed through `DispatchAction`.
+✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🦀️.rs:66: // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching
+✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📬️publication-authority/🦀️.rs:212: // 🔒️ Leases BEFORE admissions — the same order `process3d_admit_publication_authority` and
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📐️part2/🦀️.rs:122: // Looking at BoundingBox::overlaps - need to check semantics.
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📐️part2/🦀️.rs:141: // u≤1 when computed=have and limit=needed with forced Pass), status Passes.
+✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🔄️part5/🦀️.rs:635: // Safe expressions may succeed or fail numerically; both are acceptable if not unsafe.
+✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🏃️run/🦀️.rs:215: // completed timestep: `step` already charged this call's unit at entry, so a one-unit
+✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖐️gesture-owners/🦀️.rs:128: // owners now (bounded: one cursor sweep, each owner closes within its declared grant)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🛡️robustness/📜️script.ts:434: // (1.2-2.4 GB and rising), when it was killed after 12+ minutes. The generator meshes every non-empty
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts:411: // pass and byte-comparison, never a default or an assumption. See that function's docstring.
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🔄️geometry-replace/📜️script.ts:164: //#endregion ➰replace-curve
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🦀️.rs:80: // `"puzzle2d-play"`, not the base `Puzzle2dSnapshot`'s `"puzzle2d"`.
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs:30: // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs:248: // INTERACTIVE rows against `CONTEXT_MENU_ROW_BUDGET = 9` and only then appends the
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🧱️board-event-limits-window-export-and-dispatch-work/🦀️.rs:162: // 🐚️ ArtifactApp::handle is pure (no &self) — rebuild a fresh BoardHost from the document
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/✍️artifact-editor/🦀️.rs:423: // the body being rendered — every panel container below shares its first-paint row budget.
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs:294: // path that ignores it. Its fasteners stay too — disconnecting an edge whose part
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs:1584: // the pre-migration code returned `Emit::default()` here, which `abort` reproduces exactly.
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🧱️board-events-and-fasteners/🦀️.rs:440: // until 5A2) made pan/zoom in the board window revert on every refresh.
+✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🧱️board-events-and-fasteners/🦀️.rs:459: // an empty `Replace` is a silent no-op in `protocol::next_selection`.
+✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/🦀️.rs:499: // "1" (the implicit owner) is the honest synthesis, not a directory-sourced count.
+🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🏠️space-app/🦀️.rs:484: // builder's own sync-only ruling), so no `.await` here, only the `map` bridge into `ComponentTree`.
+🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🎯️expand-entries/🦀️.rs:514: // where the allowed set depends on the variant and is checked per-arm above instead.
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts:57: // #endregion 🇬️🇧️ English Bundle
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx:280: // When the overlay is absolutely positioned inside the shell portal layer (multi-shell hosts that
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧮️control-commit-rules/🦀️.rs:258: // (an empty action name), which `fired_action` already answers `None` for. The keyboard
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔄️interactive-state-sync/🦀️.rs:368: // One row per step, keyed by the item's own `value` so `SelectScan` above finds it again
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs:221: // pass returns. With no host, fall back to the unchanged placeholder chrome.
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs:398: // 🎯️ Same `formControlFocusBorderClass` border-swap as `paint_button`/`paint_select` — the icon-
+🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs:658: // already present on `UiTreeItemNode` that the old paint pass never rendered at all.
+🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx:452: // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
+🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs:487: // `-inf` is its own special float literal (the negative-infinity half of the "nan/inf/-inf"
+🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs:627: // Leading-dot enum literal (P2-M1): STEP Part 21's `.T.` / `.UNSPECIFIED.` — a dot, an
+🧰️framework/🔨️modules/🗣️dsl/🔍️lexer/🦀️.rs:668: // start of `<-` (checked earlier and `continue`s on match), so no collision with
+🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🏗️record-field-codegen/🦀️.rs:141: // `Iterator::map` (R10 residue shape 1), so those go through a sequential loop instead of
+🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts:705: // 🔔️ The push the subscription promised: a `notifications/resources/updated` naming the exact
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/⏳️deferred-reprojection-and-supersede-reports/🦀️.rs:259: //#endregion 🔖️DeferredReprojection
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧮️time-travel-reads-publication-and-supersede-inputs/🦀️.rs:22: //#region 🔖️TimeTravelReads
+🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🦀️.rs:732: // pure in-memory byte-buffer parsing with no real suspension point, so they are resolved via
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts:263: // reserved tool job's completion turn, when one ran. Reading the command's own last turn would
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🧵️shard-and-actor-calls/🟦️.ts:118: // `MainThreadShardWorker`, so a compute-bound guest turn blocks the very progress ticker the
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🏗️brush-mesh-and-menus/🟦️.ts:31: // instead of taking the bytes again.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts:512: // (opening a workflow node depends on this — otherwise nothing appears to happen).
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts:576: // 🔁️ What the ui-refresh lane applies for a pass that asked for effects of its own, outside that pass.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts:597: // 🏁️ Release every `onAction` promise waiting on this operation BEFORE the (async) effect pass —
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🟦️.ts:687: // job's retained output re-renders through the same lane.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx:687: // for an already-loaded plugin routes to `reloadPlugin` (hot-swap) instead of `installPlugin`.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎮️focus-and-input/🟦️.tsx:697: // `loadPluginModulesInDependencyOrder`'s own `signal` documents.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx:188: // since category-active state itself is just this anchor's `activeTabPath`). Categories sit under
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔒️identity-document-ports/🟦️.ts:471: // build already injects as non-secret collaborative endpoint metadata
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🖼️canvas-footer/🟦️.tsx:158: // a spawned app was a single window whose id was the instance id itself.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts:98: // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — same fix as `refreshUi`
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🛫️spawned-session/🟦️.ts:209: // `loadedPluginsRef.current` at call time regardless. Before this fix, `loadedPlugins` getting a new
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts:480: // 🪟️ Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧵️backbone-worker/🟦️.ts:676: // in their language, and why.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/📥️intake/🟦️.ts:97: //#region ♻️Retirement
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🔗️channel-adapter/🟦️.ts:166: // 🪦️ `async` on purpose, all three of them: `requireChannel` REFUSES a retired instance, and a
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/💡️board-suggestions-and-events/🟦️.ts:37: // slot — hovering a row moves the ghost this frame instead of a round trip later. The commit is never
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/💡️board-suggestions-and-events/🟦️.ts:145: // stays the guest-confirmed one, so a probe can tell the two apart the way 3d's does.
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🔁️board-lifecycle-and-sync/🟦️.ts:272: //#endregion SceneSync
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🧰️board-session-state/🟦️.ts:129: // known gap, not a silent guess: `scene.snapshotJson`'s node schema isn't a framework-owned shape
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts:415: //#region NestedFacetWalk
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts:456: // Soft: undeclared schema child dirs close under WP-P2.
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔮️preview/🦀️.rs:237: // 🚫️async: E1 pure constructor consumed by `impl Default`, itself E1 — see R9
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🚦️engine-submit-pipeline/🦀️.rs:175: // outcome step (contract §C9): union this batch's own `db_conflict::ConflictDetector`
+🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔐️lease/🟦️.ts:104: // We hold no handle to it (no child object, no stream, no promise), only its pid, so there is no
+🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️.rs:378: // declared field.key is present, so this lookup can never miss.
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:999: // as the host will intermediate the value storage/movement between calls.
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:1019: // TODO: centralize calling of returnFn to *one place* (if possible)
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:1952: // TODO: do cleanup here to reset the machinery so we can run again?
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:2810: // core wasm export) that is embedded in the component, but is not executed or wizer'd
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:5048: // If the buffer came from the same component that is currently doing the operation
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/jcoprobe.js:6187: // run at a time)
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2244: // via PrepareCall, we can use that function rather than performing lifting manually.
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2546: result = asyncRes.payload1; // varies (e.g. task state)
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2697: // NOTE: at this point we know that we are working with an async lowered import
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:2972: // initially merged to enable asynchronously returning values from the host)
+🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js:4965: // If the write was blocked, the pending event produced by the
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔀️rust-non-repo-join-bases/🟦️.ts:100: // varying aliases/qualifiers (`store::test_support::tempdir()`, `crate::os_store::test_support
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🦀️rust-reference-graph/🟦️.ts:306: // was tripping it after the bare-`!` fix), so it is neutralized the same way: comparison operators
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎬️execution-plan/🟦️.ts:130: // 🏁️A run can legitimately finish without the directory existing — a case whose scenarios were all
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔀️comparison-pipelines/🟦️.ts:115: // 🚫️A stage whose probe is not registered at all cannot be evaluated, so the pipeline is not equal —
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🚧️mutation-gates/🟦️.ts:88: // 🪆️The artifact declares NO narrower scope at all. That is sometimes the truth — RFC 8259

@@ -6,21 +6,21 @@ import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦�
 import { surfaceClass } from "../../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { borderNormalClass } from "../../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { usePanelGhost } from "../../../🧱️elements/👻️PanelGhost/🟦️.tsx";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 
-/** @emoji 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
+/** 🌱️ One draggable tree granule inside a leaf tab — dockable between leaf tabs, rendered as its own collapsible section. */
 // Composable drag-and-drop: tabs dock between all eight anchors (pointer-capture drag, mirrors 🧭️ModeDockDrag);
 // tree units dock between leaf tabs (native HTML5 drag-and-drop, mirrors the window-template palette-drag session).
 
 //#region 🔀️Transforms
 
-/** @emoji 🔀️ True if `id` is `node.id` itself or belongs to one of its descendants. */
+/** 🔀️ True if `id` is `node.id` itself or belongs to one of its descendants. */
 export function isPanelTabInSubtree(node: PanelTabNode, id: string): boolean {
   if (node.id === id) return true;
   return node.kind === "branch" && node.children.some((child) => isPanelTabInSubtree(child, id));
 }
 
-/** @emoji 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
+/** 🔀️ Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
 export function findPanelTabInDock(dock: PanelDock, id: string): { readonly anchor: Anchor; readonly node: PanelTabNode } | null {
   for (const anchor of ANCHORS) {
     const path = findPanelTabPath(dock.anchors[anchor], id);
@@ -36,18 +36,18 @@ function collectPanelTabSubtreeIds(node: PanelTabNode, into: Set<string>): void 
   if (node.kind === "branch") node.children.forEach((child) => collectPanelTabSubtreeIds(child, into));
 }
 
-/** @emoji 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
+/** 🔀️ Reassigns `order` to match array position — call after any transform that reorders a sibling array so the existing order-based sort renders the new arrangement. */
 export function normalizePanelTabOrder(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   return tabs.map((tab, index) => (tab.order === index ? tab : { ...tab, order: index }));
 }
 
-/** @emoji 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
+/** 🔀️ Recursively drops branch tabs left with zero children. The complementary half of "deliberately emptied" — keeping such branches out of {@link applyDockSkeleton}'s auto-append — is handled there by its subtree-mention check, so an emptied branch never resurfaces with default children restored. */
 export function pruneEmptyPanelBranches(tabs: readonly PanelTabNode[]): readonly PanelTabNode[] {
   const pruned = tabs.map((tab) => (tab.kind === "branch" ? { ...tab, children: pruneEmptyPanelBranches(tab.children) } : tab)).filter((tab) => tab.kind !== "branch" || tab.children.length > 0);
   return pruned.length === tabs.length && pruned.every((tab, index) => tab === tabs[index]) ? tabs : pruned;
 }
 
-/** @emoji 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
+/** 🔀️ Removes `id` wherever it lives in `tabs` (searching recursively into branches), pruning any ancestor branch left empty by the removal. Removal-first: callers compute insertion indices against this result, never the pre-removal tree. */
 function removePanelTabFromSiblings(tabs: readonly PanelTabNode[], id: string): { readonly tabs: readonly PanelTabNode[]; readonly removed: PanelTabNode | null } {
   const directIndex = tabs.findIndex((tab) => tab.id === id);
   if (directIndex >= 0) {
@@ -88,7 +88,7 @@ function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, 
   });
 }
 
-/** @emoji 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
+/** 🎯️ A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
 export interface PanelTabDockMove {
   readonly tabId: string;
   readonly fromAnchor: Anchor;
@@ -133,7 +133,7 @@ function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNo
   return { anchors };
 }
 
-/** @emoji 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
+/** 🎯️ Pure move transform for tree units — reorders within a leaf's own unit list, or moves a unit from one leaf tab's list into another's. */
 export function moveTreeUnitInDock(dock: PanelDock, move: PanelTreeUnitDockMove): PanelDock {
   const from = findPanelTabInDock(dock, move.fromTabId);
   if (!from || from.node.kind !== "leaf") return dock;
@@ -167,7 +167,7 @@ function normalizePanelTreeUnitOrder(units: readonly PanelTreeUnit[]): readonly 
 
 //#region 🎯️HitTesting
 
-/** @emoji 🎯️ A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
+/** 🎯️ A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
 export interface PanelTabRowDropTarget {
   readonly anchor: Anchor;
   readonly parentPath: readonly string[];
@@ -210,7 +210,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
 const DOCK_DRAG_CURSOR_OFFSET_X = 8;
 const DOCK_DRAG_CURSOR_OFFSET_Y = 10;
 
-/** @emoji 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
+/** 🪟️ Floating label following the cursor while dragging a panel tab or tree unit. */
 const DockDragChip: React.FC<{ readonly label: string; readonly x: number; readonly y: number }> = ({ label, x, y }) => (
   <div
     data-slot="dock-drag-chip"
@@ -242,7 +242,7 @@ interface PanelDockPendingDrag {
   readonly startY: number;
 }
 
-/** @emoji 🎛️ Props for {@link PanelDockProvider}. */
+/** 🎛️ Props for {@link PanelDockProvider}. */
 export interface PanelDockProviderProps {
   readonly dock: PanelDock;
   readonly onTabDockDrop: (move: PanelTabDockMove) => void;
@@ -250,7 +250,7 @@ export interface PanelDockProviderProps {
   readonly children: React.ReactNode;
 }
 
-/** @emoji 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
+/** 🎛️ Wraps a layout's panels, wiring pointer-capture tab dragging (mirrors {@link Mode}'s window-tab drag) across all of them. Tree-unit drags are native HTML5 DnD and don't need this provider — see {@link beginPanelTreeUnitDrag}. */
 export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTabDockDrop, onTreeUnitDockDrop, children }) => {
   const panelGhost = usePanelGhost();
   const [pendingDrag, setPendingDrag] = reactHostPort.useState<PanelDockPendingDrag | null>(null);

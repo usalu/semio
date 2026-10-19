@@ -6,12 +6,25 @@
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
-    "test-native": { "executor": "repo:script", "cache": false, "inputs": ["default"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native" } },
-    "test-source": { "executor": "repo:script", "cache": false, "inputs": ["default"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source" } },
-    "test-strict": { "executor": "repo:script", "cache": false, "inputs": ["default"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-strict" } }
+    "test-native": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native" } },
+    "test-source": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source" } },
+    "test-strict": { "executor": "repo:script", "outputs": [], "cache": true, "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-strict" } }
   }
 }

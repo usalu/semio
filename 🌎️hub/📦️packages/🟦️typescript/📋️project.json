@@ -14,11 +14,22 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test build-freshness"
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "typecheck": {
       "executor": "repo:script",
       "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🌎️hub/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/tsconfig.json",
+        {"externalDependencies":["typescript"]}
+      ],
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",

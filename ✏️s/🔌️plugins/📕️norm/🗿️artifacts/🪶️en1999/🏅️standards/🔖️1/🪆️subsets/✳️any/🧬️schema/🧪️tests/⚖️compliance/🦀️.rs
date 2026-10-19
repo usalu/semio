@@ -1,4 +1,4 @@
-//! EN 1999 numeric compliance tests — hand-derived worked examples + DoD gates.
+//! 📏️ EN 1999 numeric compliance tests — hand-derived worked examples + DoD gates.
 
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
 use semio_s_artifact_norm_en1999_model::En1999Snapshot;

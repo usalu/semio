@@ -1,6 +1,7 @@
 //! 📇️ Explicit shipped families retain their actual immutable bytes through progressive admission.
 use semio_framework_2d_text_font::{AdmittedFont,StaticFontBytes,FontFaceAdmissionJob,FontOutlineLimits,FontProgress,reserve_slot};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 pub const DEFAULT_FAMILY:&str="Anta";
 pub struct FontSourceLocation{pub family:&'static str,pub id:&'static str,pub bytes:StaticFontBytes}
 pub static FONT_SOURCES:[FontSourceLocation;20]=[

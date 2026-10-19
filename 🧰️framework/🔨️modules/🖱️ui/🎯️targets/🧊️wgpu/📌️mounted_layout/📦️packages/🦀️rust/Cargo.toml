@@ -27,6 +27,7 @@ testkit = []
 [dependencies]
 semio-framework-async = { path = "../../../../../../⏳️async/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-payload = { path = "../../../../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-ui-arena = { path = "../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
 semio-framework-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-framework-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }

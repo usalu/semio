@@ -242,6 +242,10 @@
             {
               "id": "removes-object-a-and-severs-attraction",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-middle-object",
+              "directoryName": "🗑️removes-middle-object"
             }
           ]
         },
@@ -253,6 +257,10 @@
             {
               "id": "removes-reference-1",
               "directoryName": "🚫️removes-reference-1"
+            },
+            {
+              "id": "removes-middle-reference",
+              "directoryName": "🚮️removes-middle-reference"
             }
           ]
         },
@@ -264,6 +272,10 @@
             {
               "id": "removes-volume-1",
               "directoryName": "🚫️removes-volume-1"
+            },
+            {
+              "id": "removes-middle-volume",
+              "directoryName": "🪦️removes-middle-volume"
             }
           ]
         },
@@ -275,6 +287,10 @@
             {
               "id": "removes-vortex-kind-pair",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "withdraws-middle-row",
+              "directoryName": "💔️withdraws-middle-row"
             }
           ]
         },
@@ -286,6 +302,10 @@
             {
               "id": "removes-attraction-1",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "severs-middle-attraction",
+              "directoryName": "✂️severs-middle-attraction"
             }
           ]
         },
@@ -341,6 +361,10 @@
             {
               "id": "removes-vortex-2-and-severs-attraction",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-middle-vortex",
+              "directoryName": "➖removes-middle-vortex"
             }
           ]
         },

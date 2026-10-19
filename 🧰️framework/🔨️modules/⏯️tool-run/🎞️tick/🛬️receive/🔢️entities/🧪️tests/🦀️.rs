@@ -4,7 +4,7 @@ use pack::record::RetainedRecordBodySourceDecode;
 use pack::record::RetainedRecordBodyToken;
 use pack::record::RetainedValueRole;
 use pack::record::RetainedValueToken;
-use semio_framework_tool_run::testkit::entity_column_receiving::Phase;
+use semio_framework_tool_run_tick_wire::testkit::entity_column_receiving::Phase;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value::RetainedCloneProgress;
 use protocol::codec::{OriginalWireSourceIdentity,RetainedWireByteSource};

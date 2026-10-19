@@ -1,0 +1,568 @@
+{
+  "schema": "semio.puzzle.publication-authority.v1",
+  "closePageBytes": 16384,
+  "owners": [
+    {
+      "owner": "Puzzle2dPlayApp",
+      "source": "🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "mounted": [
+        "🕹️interaction/🦀️.rs",
+        "🧰️kit/🦀️.rs",
+        "🧵️retained/🦀️.rs",
+        "🧵️retained/🧱️board-event-limits-window-export-and-dispatch-work/🦀️.rs",
+        "🧵️retained/🕸️force-layout-work/🦀️.rs",
+        "🧵️retained/🎨️force-layout-command-and-redraw-handles-work/🦀️.rs",
+        "🖌️session/🦀️.rs",
+        "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
+        "🧠️artifact-editor/🦀️.rs",
+        "🚀️app-assembly/🦀️.rs"
+      ],
+      "groups": [
+        {
+          "status": "migrated",
+          "lanes": [
+            "host-only"
+          ],
+          "routes": [
+            "copy",
+            "exportSnapshot",
+            "importSnapshot",
+            "lodScaleJson",
+            "openAddNodeDialog",
+            "openImportSnapshot",
+            "setActiveExample",
+            "setBrushNodeSize"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact"
+          ],
+          "routes": [
+            "addNode",
+            "addTargetRegion",
+            "createEdge",
+            "deleteEdge",
+            "deleteTargetRegion",
+            "forceLayout",
+            "import-media",
+            "proximityConnect",
+            "redrawHandles",
+            "relocateTargetRegion",
+            "reorganize",
+            "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
+            "setTargetRegionFlag",
+            "setTargetRegionHidden",
+            "setTargetRegionLocked"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient"
+          ],
+          "routes": [
+            "patchInspectorNodes",
+            "rotateSelection",
+            "scaleSelection",
+            "translateSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "config"
+          ],
+          "routes": [
+            "setBrushKindWeights",
+            "setBrushPlacementContactTolerance",
+            "setBrushPlacementOverlapBudget",
+            "setFillCount"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config"
+          ],
+          "routes": [
+            "focusSelection",
+            "setAreaBrushSize",
+            "setCamera",
+            "setGridFactor",
+            "setGridSnapEnabled",
+            "setGridVisible",
+            "setLodModeForPane",
+            "setProximityRadius",
+            "setSelectableKind",
+            "setSuggestionOffset",
+            "setTransformGumballFlag"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-transient"
+          ],
+          "routes": [
+            "closeHandleSuggestions",
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementRepeatLast",
+            "hoverSuggestion",
+            "openHandleSuggestions",
+            "targetBrushSuggestions"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "acceptSuggestion"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "interaction"
+          ],
+          "routes": [
+            "selectSameKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "cut",
+            "deleteSelection",
+            "duplicateSelection",
+            "paste"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "applyBoardEvents"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "engagementSubmit"
+          ]
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle3dPlayApp",
+      "source": "🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "mounted": [
+        "🧰️retained-commands/🦀️.rs",
+        "📬️store-preparation/🦀️.rs",
+        "✂️clipboard-job/🦀️.rs",
+        "🧩️play-app/🦀️.rs",
+        "📋️manifest/🦀️.rs"
+      ],
+      "groups": [
+        {
+          "status": "migrated",
+          "lanes": [
+            "host-only"
+          ],
+          "routes": [
+            "exportSnapshot",
+            "openAddObjectDialog",
+            "openImportSnapshot",
+            "registerBrushMesh",
+            "targetBrushSuggestions",
+            "worldPointerDown"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "config"
+          ],
+          "routes": [
+            "setBrushPlacementContactTolerance",
+            "setFillCount",
+            "setObjectKindWeight",
+            "setVortexKindWeight"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config",
+            "interaction"
+          ],
+          "routes": [
+            "addObjectKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config"
+          ],
+          "routes": [
+            "setActiveExample"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact"
+          ],
+          "routes": [
+            "addTargetVolume",
+            "createAttraction",
+            "deleteAttraction",
+            "deleteTargetVolume",
+            "importSnapshot",
+            "patchInspector",
+            "relocateTargetVolume",
+            "rotateSelection",
+            "scaleSelection",
+            "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
+            "setTargetVolumeFlag",
+            "translateSelection",
+            "worldRelocate"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "interaction"
+          ],
+          "routes": [
+            "selectSameKindSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "deleteSelection",
+            "duplicateSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "acceptSuggestion",
+            "addBrushObject"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-transient"
+          ],
+          "routes": [
+            "closeVortexSuggestions",
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementRepeatLast",
+            "hoverSuggestion",
+            "openVortexSuggestions"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config"
+          ],
+          "routes": [
+            "focusSelection",
+            "setCamera",
+            "setChunkSize",
+            "setGridSnapEnabled",
+            "setGridSpacing",
+            "setGridVisible",
+            "setLodAutomatic",
+            "setLodDepthVariable",
+            "setLodManual",
+            "setProjection",
+            "setProjectionParam",
+            "setProximityRadius",
+            "setSelectableKind",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setTransformGumballFlag",
+            "setVortexDirection",
+            "setVortexShow",
+            "setVoxelDims",
+            "toggleSun"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "engagementSubmit"
+          ]
+        }
+      ]
+    },
+    {
+      "owner": "Puzzle5dPlayApp",
+      "source": "🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+      "mounted": [
+        "🧩️entities/🦀️.rs",
+        "🧭️view/🦀️.rs",
+        "🗂️catalog/🦀️.rs",
+        "🕹️interaction/🦀️.rs",
+        "🖌️session/🦀️.rs",
+        "🧵️retained/🦀️.rs",
+        "👆️gestures/🦀️.rs",
+        "🧰️kit/🦀️.rs",
+        "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
+        "✍️artifact-editor/🦀️.rs",
+        "🚀️app-assembly/🦀️.rs"
+      ],
+      "groups": [
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact"
+          ],
+          "routes": [
+            "addTargetVolume",
+            "createFastener",
+            "cut",
+            "deleteFastener",
+            "deleteSelection",
+            "deleteTargetVolume",
+            "duplicateSelection",
+            "editFastener",
+            "import-media",
+            "importSnapshot",
+            "paste",
+            "patchFastener",
+            "patchGrip",
+            "patchPart",
+            "proximityConnect",
+            "relocateTargetVolume",
+            "retargetFastener",
+            "rotateSelection",
+            "scaleSelection",
+            "setSelectionFlag",
+            "setSelectionHidden",
+            "setSelectionLocked",
+            "setTargetVolumeFlag",
+            "setTargetVolumeHidden",
+            "setTargetVolumeLocked",
+            "translateSelection",
+            "worldRelocate"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "config"
+          ],
+          "routes": [
+            "setBrushPlacementContactTolerance",
+            "setChunkSize",
+            "setFillCount",
+            "setGripKindWeight",
+            "setPartKindWeight",
+            "setProximityRadius"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "host-only"
+          ],
+          "routes": [
+            "canvasPointerDown",
+            "copy",
+            "exportSnapshot",
+            "openAddPartDialog",
+            "openImportSnapshot",
+            "registerBrushMesh",
+            "targetBrushSuggestions",
+            "worldPointerDown"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "interaction"
+          ],
+          "routes": [
+            "selectSameKindSelection"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-config"
+          ],
+          "routes": [
+            "focusSelection",
+            "setCamera",
+            "setCamera2d",
+            "setCamera3d",
+            "setGridFactor",
+            "setGridSnapEnabled",
+            "setGridSpacing",
+            "setGridVisible",
+            "setGripDirection",
+            "setGripShow",
+            "setLodAutomatic",
+            "setLodDepthVariable",
+            "setLodManual",
+            "setLodMode",
+            "setProjection",
+            "setProjectionParam",
+            "setSelectableKind",
+            "setSuggestionOffset",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setTransformGumballFlag",
+            "setVoxelDims",
+            "toggleSun"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "window-transient"
+          ],
+          "routes": [
+            "closeVortexSuggestions",
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementRepeatLast",
+            "hoverSuggestion",
+            "openVortexSuggestions"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "acceptSuggestion"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "interaction"
+          ],
+          "routes": [
+            "addBrushPart",
+            "addNode",
+            "addPartKind"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "config",
+            "interaction"
+          ],
+          "routes": [
+            "setActiveExample"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "interaction"
+          ],
+          "routes": [
+            "applyBoardEvents"
+          ]
+        },
+        {
+          "status": "migrated",
+          "lanes": [
+            "artifact",
+            "window-config",
+            "window-transient",
+            "interaction"
+          ],
+          "routes": [
+            "engagementSubmit"
+          ]
+        }
+      ]
+    }
+  ],
+  "laws": {
+    "activationBeforeDecode": true,
+    "contractBijection": true,
+    "hostOnlyExclusive": true,
+    "storeAuthorityRequired": true,
+    "operationOwnedCursor": true,
+    "boundedProgress": true,
+    "cancellation": true,
+    "freshnessValidation": true,
+    "exactOwnerReturn": true,
+    "incrementalClose": true,
+    "terminalEmpty": true
+  }
+}

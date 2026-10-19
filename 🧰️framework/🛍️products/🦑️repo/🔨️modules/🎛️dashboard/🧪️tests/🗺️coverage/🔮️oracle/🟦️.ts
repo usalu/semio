@@ -16,6 +16,14 @@ export type Ready = { port: number; path: string; printed?: boolean };
 export type Resolved = { cmd: string; args: string[]; env: Record<string, string>; cwd: string; ready?: Ready; requires: Selection[]; members?: { selection: Selection; resolved: Resolved }[]; stop?: string; longRunning: boolean };
 
 export const VERBS = ["setup", "start", "dev", "serve", "watch", "activate", "prepare", "run", "build", "package", "test", "smoke", "check", "typecheck", "verify", "gate", "lint", "format", "generate", "publish", "deploy", "preview", "bench", "clean"];
+
+/** 🎯️ Selects authored process axes independently of the open verb vocabulary. */
+export function axisApplies(axis:Json,verb:string,command:"target"|"tool"|"playground"):boolean{
+  const scope=axis.appliesTo,selected=scope?.all===true||scope?.verbs?.includes(verb)===true;
+  if(command==="playground")return scope?.playground===true;
+  const effect=(value:Json)=>Object.keys(value.env??{}).length>0||(value.args??[]).length>0;
+  return command==="target"?scope===undefined||selected:Boolean(scope)&&selected&&(effect(axis)||Boolean(axis.valueEnv||axis.valueFlag||axis.valuePositional)||(axis.values??[]).some(effect));
+}
 const SKIPPED = new Set(["node_modules", "target", "dist", "build", "generated", "cache", "fixtures"]);
 const MANIFESTS = ["📋️project.json", "project.json"];
 const unique = <T>(words: T[]): T[] => [...new Set(words)];
@@ -125,22 +133,23 @@ export class Oracle {
     return VERBS.includes(word) ? word : "task";
   }
 
-  private applicableAxes(verb: string, owned: Json[]): Json[] {
-    return this.axes.filter((axis) => !owned.some((parameter) => parameter.id === axis.id) && (!axis.appliesTo?.verbs || axis.appliesTo.verbs.includes(verb)));
+  private applicableAxes(verb: string, owned: Json[],command:"target"|"tool"|"playground"="target"): Json[] {
+    return this.axes.filter((axis) => !owned.some((parameter) => parameter.id === axis.id) && axisApplies(axis,verb,command));
   }
 
-  /** 🎚️ The parameters a command offers: its own, then the global axes that apply to its verb. */
+  /** 🎚️ The parameters a command offers: applicable global axes, then its own declarations. */
   parameters(id: string): Json[] {
     id = this.canonical(id);
     const colon = id.indexOf(":");
     const kind = id.slice(0, colon);
     const rest = id.slice(colon + 1);
-    if (kind === "tool") return this.tool(rest).parameters ?? [];
+    if (kind === "tool") {const tool=this.tool(rest),own=tool.parameters??[];return [...this.applicableAxes(this.verbOf(tool.id,tool.verb),own,"tool"),...own];}
     if (kind === "group") return this.applicableAxes(this.verbOf(this.group(rest).targets[0]), []);
-    if (kind === "playground" || kind === "compound") return [];
+    if (kind === "playground") return this.applicableAxes("dev",[],"playground");
+    if (kind === "compound") return [];
     const { project, target } = this.nx(id);
     const declared = this.declaration(project, target);
-    return [...(declared.parameters ?? []), ...this.applicableAxes(this.verbOf(target, declared.verb), declared.parameters ?? [])];
+    return [...this.applicableAxes(this.verbOf(target, declared.verb), declared.parameters ?? []), ...(declared.parameters ?? [])];
   }
 
   /** 🪪 Splits `project:target[:configuration]`; the target keeps its configuration. */
@@ -249,8 +258,9 @@ export class Oracle {
   private playground(variant: string, selection: Selection): Resolved {
     const entry = this.playgrounds.find((candidate) => candidate.variant === variant);
     if (!entry) throw new Error(`playground ${variant} is not in the catalog`);
+    const effects:Effects={env:{},buildFlags:[],args:[],values:{}};for(const parameter of this.applicableAxes("dev",[],"playground"))this.effect(parameter,selection.parameters[parameter.id],effects);
     const renderer = String(selection.parameters.renderer ?? "react");
-    if (renderer === "wgpu-native") return { cmd: "bun", args: ["repo", "run", "@semio-tech/framework-renderer-wgpu:native", "--", variant, ...selection.extraArgs], env: { ...(selection.env ?? {}) }, cwd: "", requires: [], longRunning: true };
+    if (renderer === "wgpu-native") return { cmd: "bun", args: ["repo", "run", "@semio-tech/framework-renderer-wgpu:native", ...effects.buildFlags, "--", variant, ...effects.args,...selection.extraArgs], env: {...effects.env,...(selection.env ?? {}) }, cwd: "", requires: [], longRunning: true };
     const key = renderer === "react" ? "react" : "wgpu";
     const slot = selection.parameters["user-slot"] === undefined ? undefined : Number(selection.parameters["user-slot"]);
     const port = slot === undefined ? entry.ports[key] : entry.userPorts?.[key]?.[slot - 1];
@@ -258,7 +268,7 @@ export class Oracle {
     const env: Record<string, string> = { S_OS_PORT: String(port), SEMIO_PLUGIN: variant, SEMIO_RENDERER: key, ...(entry.app ? { SEMIO_APP_ID: entry.app } : {}) };
     if (selection.parameters.example !== undefined) env.SEMIO_DEFAULT_EXAMPLE = String(selection.parameters.example);
     if (selection.parameters["app-role"] !== undefined) env.SEMIO_APP_ROLE = String(selection.parameters["app-role"]);
-    return { cmd: "bun", args: ["repo", "run", "workspace:dev", "--", variant, ...selection.extraArgs], env: { ...env, ...(selection.env ?? {}) }, cwd: "", ready: { port, path: "" }, requires: [], longRunning: true };
+    return { cmd: "bun", args: ["repo", "run", "workspace:dev", ...effects.buildFlags,"--", variant, ...effects.args,...selection.extraArgs], env: { ...env,...effects.env,...(selection.env ?? {}) }, cwd: "", ready: { port, path: "" }, requires: [], longRunning: true };
   }
 }
 

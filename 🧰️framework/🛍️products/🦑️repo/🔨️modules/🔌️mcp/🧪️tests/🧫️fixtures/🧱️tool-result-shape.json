@@ -1,0 +1,30 @@
+{
+  "schema": "semio.mcp.tool-result-shape/2",
+  "rule": "A tools/call result always carries `content` as an array. `structuredContent` is either omitted or a JSON object, never null, an array or a scalar. null is omitted. Object data is kept. Array or scalar data is wrapped as {\"result\": <value>} when the tool declares an outputSchema (`outputSchema: true`) and omitted when it does not.",
+  "outputSchema": {
+    "type": "object",
+    "description": "Object data as is; array or scalar data wrapped as result.",
+    "additionalProperties": true,
+    "properties": { "result": { "description": "Array or scalar data of the tool." } }
+  },
+  "vectors": [
+    { "name": "omitted", "content": [{ "type": "text", "text": "ok" }], "expected": { "content": [{ "type": "text", "text": "ok" }] } },
+    { "name": "null-is-omitted", "content": [{ "type": "text", "text": "ok" }], "structured": "null", "expected": { "content": [{ "type": "text", "text": "ok" }] } },
+    { "name": "declared-null-is-omitted", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "null", "expected": { "content": [{ "type": "text", "text": "ok" }] } },
+    { "name": "error-with-null-is-omitted", "content": [{ "type": "text", "text": "Error: ticket not found" }], "structured": "null", "isError": true, "expected": { "content": [{ "type": "text", "text": "Error: ticket not found" }], "isError": true } },
+    { "name": "declared-error-with-null-is-omitted", "outputSchema": true, "content": [{ "type": "text", "text": "Error: ticket not found" }], "structured": "null", "isError": true, "expected": { "content": [{ "type": "text", "text": "Error: ticket not found" }], "isError": true } },
+    { "name": "empty-object-is-kept", "content": [{ "type": "text", "text": "ok" }], "structured": "{}", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": {} } },
+    { "name": "object-is-kept", "content": [{ "type": "text", "text": "ok" }], "structured": "{\"id\":\"26/10/19/x\",\"files\":[\"a\"]}", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "id": "26/10/19/x", "files": ["a"] } } },
+    { "name": "declared-object-is-kept", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "{\"id\":\"26/10/19/x\"}", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "id": "26/10/19/x" } } },
+    { "name": "array-without-output-schema-is-omitted", "content": [{ "type": "text", "text": "ok" }], "structured": "[1,2]", "expected": { "content": [{ "type": "text", "text": "ok" }] } },
+    { "name": "string-without-output-schema-is-omitted", "content": [{ "type": "text", "text": "ok" }], "structured": "\"ok\"", "expected": { "content": [{ "type": "text", "text": "ok" }] } },
+    { "name": "number-without-output-schema-is-omitted", "content": [{ "type": "text", "text": "ok" }], "structured": "0", "expected": { "content": [{ "type": "text", "text": "ok" }] } },
+    { "name": "declared-array-is-wrapped", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "[1,2]", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "result": [1, 2] } } },
+    { "name": "declared-empty-array-is-wrapped", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "[]", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "result": [] } } },
+    { "name": "declared-string-is-wrapped", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "\"ok\"", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "result": "ok" } } },
+    { "name": "declared-number-is-wrapped", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "0", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "result": 0 } } },
+    { "name": "declared-false-is-wrapped", "outputSchema": true, "content": [{ "type": "text", "text": "ok" }], "structured": "false", "expected": { "content": [{ "type": "text", "text": "ok" }], "structuredContent": { "result": false } } },
+    { "name": "declared-array-in-error-is-wrapped", "outputSchema": true, "content": [{ "type": "text", "text": "Error: partial" }], "structured": "[\"a\"]", "isError": true, "expected": { "content": [{ "type": "text", "text": "Error: partial" }], "structuredContent": { "result": ["a"] }, "isError": true } },
+    { "name": "missing-content-is-empty-array", "structured": "{}", "expected": { "content": [], "structuredContent": {} } }
+  ]
+}

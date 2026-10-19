@@ -118,7 +118,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.fastener = Some(puzzle5d_record_from_projection(row).map_err(|_| Fault::from("puzzle5d-edit-fastener-malformed"))?);
                     self.stage = Puzzle5dEditFastenerStage::Kind;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-edit-fastener-scan", "Finding fastener", "Verbindung wird gesucht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-edit-fastener-scan", "Finding fastener", "Verbindung wird gesucht"))
             }
             Puzzle5dEditFastenerStage::Kind => {
                 let Some(fastener) = self.fastener.as_ref() else { return Err(Fault::from("puzzle5d-edit-fastener-owner")) };
@@ -126,7 +126,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_fastener_kind(fastener.id.clone(), kind));
                 }
                 self.stage = Puzzle5dEditFastenerStage::Geometry;
-                Ok(crate::puzzle_progress_step!("puzzle5d-edit-fastener-kind", "Updating fastener kind", "Verbindungsart wird aktualisiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-edit-fastener-kind", "Updating fastener kind", "Verbindungsart wird aktualisiert"))
             }
             Puzzle5dEditFastenerStage::Geometry => {
                 let Some(fastener) = self.fastener.as_ref() else { return Err(Fault::from("puzzle5d-edit-fastener-owner")) };
@@ -319,18 +319,18 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.grip_cursor = 0;
                     self.stage = Puzzle5dRetargetFastenerStage::SourceGrip;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-retarget-fastener", "Finding fastener", "Verbindung wird gesucht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-fastener", "Finding fastener", "Verbindung wird gesucht"))
             }
             Puzzle5dRetargetFastenerStage::SourceGrip => {
                 let source = self.source.as_deref().unwrap_or("").to_string();
                 match self.scan_grip(snapshot, &source) {
-                    Puzzle5dGripScan::Progress => Ok(crate::puzzle_progress_step!("puzzle5d-retarget-source", "Finding source grip", "Quellgriff wird gesucht")),
+                    Puzzle5dGripScan::Progress => Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-source", "Finding source grip", "Quellgriff wird gesucht")),
                     Puzzle5dGripScan::Found(kind) => {
                         self.source_kind = kind;
                         self.part_cursor = 0;
                         self.grip_cursor = 0;
                         self.stage = Puzzle5dRetargetFastenerStage::TargetGrip;
-                        Ok(crate::puzzle_progress_step!("puzzle5d-retarget-target", "Finding target grip", "Zielgriff wird gesucht"))
+                        Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-target", "Finding target grip", "Zielgriff wird gesucht"))
                     }
                     Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
                 }
@@ -338,12 +338,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dRetargetFastenerStage::TargetGrip => {
                 let target = self.target.as_deref().unwrap_or("").to_string();
                 match self.scan_grip(snapshot, &target) {
-                    Puzzle5dGripScan::Progress => Ok(crate::puzzle_progress_step!("puzzle5d-retarget-target", "Finding target grip", "Zielgriff wird gesucht")),
+                    Puzzle5dGripScan::Progress => Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-target", "Finding target grip", "Zielgriff wird gesucht")),
                     Puzzle5dGripScan::Found(kind) => {
                         self.target_kind = kind;
                         self.fastener_cursor = 0;
                         self.stage = Puzzle5dRetargetFastenerStage::Duplicate;
-                        Ok(crate::puzzle_progress_step!("puzzle5d-retarget-duplicate", "Checking duplicate fastener", "Doppelte Verbindung wird geprüft"))
+                        Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-duplicate", "Checking duplicate fastener", "Doppelte Verbindung wird geprüft"))
                     }
                     Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
                 }
@@ -360,16 +360,16 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     if id != own_id && ((source == next_source && target == next_target) || (source == next_target && target == next_source)) {
                         return Ok(self.complete_empty());
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-retarget-duplicate", "Checking duplicate fastener", "Doppelte Verbindung wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-duplicate", "Checking duplicate fastener", "Doppelte Verbindung wird geprüft"));
                 }
                 self.stage = Puzzle5dRetargetFastenerStage::Compatibility;
-                Ok(crate::puzzle_progress_step!("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dRetargetFastenerStage::Compatibility => {
                 let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if rows.is_empty() || self.source_kind.is_none() || self.target_kind.is_none() {
                     self.stage = Puzzle5dRetargetFastenerStage::Disconnect;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-retarget-disconnect", "Disconnecting old fastener", "Alte Verbindung wird getrennt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-disconnect", "Disconnecting old fastener", "Alte Verbindung wird getrennt"));
                 }
                 let Some(row) = rows.get(self.compatibility_cursor) else { return Ok(self.complete_empty()) };
                 self.compatibility_cursor += 1;
@@ -381,13 +381,13 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 if (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind) {
                     self.stage = Puzzle5dRetargetFastenerStage::Disconnect;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dRetargetFastenerStage::Disconnect => {
                 let id = self.fastener.as_ref().map(|fastener| fastener.id.clone()).ok_or_else(|| Fault::from("puzzle5d-retarget-fastener-owner"))?;
                 self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id));
                 self.stage = Puzzle5dRetargetFastenerStage::Connect;
-                Ok(crate::puzzle_progress_step!("puzzle5d-retarget-connect", "Connecting retargeted fastener", "Neu ausgerichtete Verbindung wird erstellt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-retarget-connect", "Connecting retargeted fastener", "Neu ausgerichtete Verbindung wird erstellt"))
             }
             Puzzle5dRetargetFastenerStage::Connect => {
                 let fastener = self.fastener.as_ref().ok_or_else(|| Fault::from("puzzle5d-retarget-fastener-owner"))?;
@@ -503,7 +503,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id.to_string()));
             }
         }
-        Ok(crate::puzzle_progress_step!("puzzle5d-delete-fastener", "Scanning fastener", "Verbindung wird geprüft"))
+        Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-delete-fastener", "Scanning fastener", "Verbindung wird geprüft"))
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     

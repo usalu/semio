@@ -71,6 +71,12 @@ export interface BuildInferenceInternalsV1 extends Readonly<Record<string,unknow
  bunLockGraph(lock:Readonly<Record<string,unknown>>,patches?:Readonly<Record<string,Uint8Array|string>>):BunLockGraphV1;
  cargoTargets(root:string,workspaceRoot:string,commandInputs?:readonly string[],scripts?:ScriptInputCacheV1):Promise<Record<string,GeneratedTargetV1>>;
  collectPlaygroundCatalog(configFiles:readonly string[],workspaceRoot:string,catalogContributions?:readonly import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts").CatalogBuildContributionV1[]):readonly PlaygroundCatalogRowV1[];
+ cacheDecisionV1(decisionClass:string,reason:string):Readonly<{version:1;class:string;reason:string}>;
+ nativeTargetRunsTestsV1(name:string,execution:Readonly<{kind:string;scope?:string}>|undefined,commandSources:readonly string[]):boolean;
+ nativeAuthoredInputsV1(policyInputs:readonly unknown[],commandInputs:readonly unknown[]|undefined):unknown[];
+ nativeTargetInputsV1(runsTests:boolean,generated:readonly unknown[],declared:readonly unknown[]):unknown[];
+ pluginSiteTargetsForCrate(root:string,allPlaygrounds:readonly PlaygroundCatalogRowV1[],stagingProjectRoot:string|undefined,workspaceRoot:string):Record<string,GeneratedTargetV1>;
+ walkCargoTomlControlledV1(workspaceRoot:string,control:Readonly<{check():void;advance(phase:string):Promise<void>}>):Promise<string[]>;
  createMetadataImplementation(graph:BuildMetadataGraphV1,options:Readonly<Record<string,unknown>>,context:BuildInferenceContextV1):Readonly<Record<string,BuildMetadataEntryV1>>;
  createRustSourceCache(limit?:number):RustSourceCacheV1;
  inferenceCandidates(configFiles:readonly string[],workspaceRoot:string):string[];

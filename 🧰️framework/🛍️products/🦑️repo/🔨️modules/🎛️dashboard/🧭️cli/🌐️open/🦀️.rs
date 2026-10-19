@@ -62,7 +62,7 @@ pub(crate) fn open(url: &str) -> io::Result<()> { execute(&selected_plan(url)?, 
 pub struct Job { cancelled: Arc<AtomicBool>, pub receiver: mpsc::Receiver<io::Result<()>> }
 
 impl Job {
-    pub fn start(url: &str, waker: Option<ui_tui::tui::backend::Waker>) -> io::Result<Self> {
+    pub fn start(url: &str, waker: Option<semio_framework_ui_tui_terminal::backend::Waker>) -> io::Result<Self> {
         let words = selected_plan(url)?;
         let cancelled = Arc::new(AtomicBool::new(false));
         let signal = cancelled.clone();

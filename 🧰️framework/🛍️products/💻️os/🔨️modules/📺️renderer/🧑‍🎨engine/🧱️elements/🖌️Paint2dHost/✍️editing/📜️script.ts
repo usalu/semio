@@ -10,7 +10,7 @@ import { runScriptMain } from "../../../../../../../../📦️packages/🟦️ty
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("Paint2dHost editing test accepts no arguments");
+    if (segments.length) throw new Error("Paint2dHost editing test accepts no arguments");
     const source = join(this.root,"🟦️.ts"), tests = join(this.root,"🧪️tests/🟦️.ts"), ownership = join(this.root,"🧪️tests/🧭️ownership/🟦️.ts");
     await Promise.all([access(source),access(tests),access(ownership)]);
     await runOwnedCommand(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",source],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
@@ -18,4 +18,4 @@ class TestScript extends BundleScript {
   }
 }
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript), { invocation: original, ...({defaultCommand:"test"}) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test",TestScript), { invocation: original, defaultCommand: "test" }));

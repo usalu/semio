@@ -61,9 +61,6 @@ struct SliderGestureRow {
 fn slider_values_fixture() -> SliderValuesFixture {
     let mut fixture: SliderValuesFixture = serde_json::from_str(slider_values_fixture_json()).expect("the slider-values fixture parses");
     assert_eq!(fixture.schema, "s.procedural.generation3d.slider-values/v1", "the slider-values fixture declares its own schema");
-    // 🔬️ `SEMIO_SLIDER_EXAMPLES=a,b` narrows a DIAGNOSTIC run to those examples. The kernel's shape
-    // store is process-wide, so "does this row still fail when nothing else is in the store?" is a
-    // question a diagnosis has to be able to ask; an unset variable grades the whole roster.
     if let Ok(only) = std::env::var("SEMIO_SLIDER_EXAMPLES") {
         let wanted: Vec<&str> = only.split(',').map(str::trim).filter(|entry| !entry.is_empty()).collect();
         fixture.rows.retain(|row| wanted.contains(&row.example.as_str()));
@@ -252,9 +249,6 @@ async fn drive_slider_press(app: &mut context::Generation3dAppFixture, flow_view
 async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let fixture = slider_values_fixture();
-    // 🧿️ Every oracle FIRST, before the app exists. The kernel's shape store is process-wide, so an
-    // oracle taken between two gestures would be a second live evaluation competing for it — which is
-    // exactly the interference this lane fixed and must not re-introduce into its own measurement.
     let oracles = oracle_table(&fixture);
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
@@ -263,8 +257,6 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
         semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": row.example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
         let switched = context::settle(&mut app).await;
         context::drive_preview_run(&mut app, &flow_view, &switched.effects).await;
-        // 🪪️ The example's OWN authored value, before any slider moves — so a row that was already
-        // broken on arrival is attributed to the example and never to the gesture.
         let authored = authored_slider_value(&row.example, &row.slider);
         let boot_oracle = &oracles[&(row.example.clone(), authored.to_bits())];
         let boot = delivered_preview(&context::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await);
@@ -306,9 +298,6 @@ fn press_faults(label: &str, oracle: &PreviewReading, delivered: &DeliveredPrevi
         faults.push(format!("{label}: the chain settled but the surface still publishes `computing`"));
     }
     if !oracle.widget_errors.is_empty() {
-        // 🚦️ A value the kernel cannot build owes a NAMED fault, not a silent empty payload. The
-        // message need not be the oracle's word for word — the chain reaches the kernel through the
-        // extension and the oracle in-process — but SOMETHING must name a node and say why.
         let named: Vec<&String> = delivered.reading.widget_errors.iter().filter(|(_, message)| !message.trim().is_empty()).map(|(widget, _)| widget).collect();
         if named.is_empty() {
             faults.push(format!(

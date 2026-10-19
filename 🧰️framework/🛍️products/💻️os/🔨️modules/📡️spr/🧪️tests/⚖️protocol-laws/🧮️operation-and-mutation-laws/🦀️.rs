@@ -19,8 +19,8 @@ where
 /// `🔖️Mutation` region doc). Every `🧬️mutations/<kind>/🔺️diff` leaf's test region should call this
 /// with two diffs of its own artifact known to have been produced by sequential mutations.
 ///
-/// 🧊️ Every intermediate projection goes through [`crate::os_spr::MutationDiff::retire_projection`] and the absorbed diff through
-/// [`crate::os_spr::MutationDiff::retire_cold`], so one law serves plain and fail-closed (`OrderedMap`) artifacts alike.
+/// 🧊️ Every intermediate projection goes through [`crate::MutationDiff::retire_projection`] and the absorbed diff through
+/// [`crate::MutationDiff::retire_cold`], so one law serves plain and fail-closed (`OrderedMap`) artifacts alike.
 pub async fn assert_mutation_diff_absorb_law<P, D>(base: &P, d1: D, d2: D)
 where
     P: Clone + PartialEq + std::fmt::Debug,
@@ -48,9 +48,9 @@ where
 ///
 /// 🧊️ This law is itself a generic seam that MANUFACTURES operations, diffs and projections and throws them away, so it
 /// retires every one of them exactly like the store folds do: each raised diff through
-/// [`crate::os_spr::MutationDiff::retire_cold`], each intermediate or restored projection through
-/// [`crate::os_spr::MutationDiff::retire_projection`] and every minted inverse operation through
-/// [`crate::os_spr::Mutation::retire_cold`]. Their defaults ARE a plain drop, so nothing changes for a technology built out of
+/// [`crate::MutationDiff::retire_cold`], each intermediate or restored projection through
+/// [`crate::MutationDiff::retire_projection`] and every minted inverse operation through
+/// [`crate::Mutation::retire_cold`]. Their defaults ARE a plain drop, so nothing changes for a technology built out of
 /// plain values; one whose projection or diff owns a fail-closed root (an `OrderedMap`, a neural `Dictionary`) overrides them and
 /// this one law is correct for it without a separate variant. `base` belongs to the caller and is never retired here.
 pub async fn assert_mutation_inverse_law<P, Op>(base: &P, mutation: &Op)
@@ -86,7 +86,7 @@ for undo in backward {
 
 /// ✅️ LAW (L3): the concrete inverse of `mutation` sums to the negative of its diff. With `d = mutation.diff(base)`, `after =
 /// apply_diff_cold(d, base)`, the inverse operations replayed in storage-reversed order build `d_k = inv_k.diff(s_{k-1})` and
-/// `s_k = apply_diff_cold(d_k, s_{k-1})`, then `Σ = d_1 ⊕ … ⊕ d_n` by [`crate::os_spr::ColdMutationDiff::absorb`]. Asserts (1) the inverse is
+/// `s_k = apply_diff_cold(d_k, s_{k-1})`, then `Σ = d_1 ⊕ … ⊕ d_n` by [`crate::ColdMutationDiff::absorb`]. Asserts (1) the inverse is
 /// non-empty whenever `after != base` (no `V2-EMPTY-INVERSE`), (2) the sequential replay restores `base`, (3)
 /// `apply_diff_cold(Σ, after) == base`, and (4) `canon(Σ) == canon(d.inverse(base))` with `canon(x) = absorb(default, x)` — the inverse
 /// operations are concrete, not derived from the forward diff, yet their diffs sum to exactly the negative diff.
@@ -156,7 +156,7 @@ where
     assert!(matches_negative, "the summed inverse diffs must equal the negative of the forward diff, d.inverse(base); {report}");
 }
 
-/// ✅️ LAW: `d.inverse(base).apply(&d.apply(base)) == *base` — [`crate::os_spr::DiffAlgebra`]'s
+/// ✅️ LAW: `d.inverse(base).apply(&d.apply(base)) == *base` — [`crate::DiffAlgebra`]'s
 /// diff-level undo, independent of any `Mutation` that might have produced `d`.
 pub async fn assert_diff_algebra_inverse_law<P, D>(base: &P, d: &D)
 where

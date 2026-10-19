@@ -4,16 +4,14 @@
   "rhs": null,
   "parameterBindings": null,
   "ruleLayout": {
-    "entries": [
-      {
-        "key": "lhs-match",
+    "entries": {
+      "lhs-match": {
         "precondition": "present",
         "operation": {
           "kind": "remove"
         }
       },
-      {
-        "key": "rhs-parameter-0",
+      "rhs-parameter-0": {
         "precondition": "any",
         "operation": {
           "kind": "set",
@@ -27,6 +25,6 @@
           }
         }
       }
-    ]
+    }
   }
 }

@@ -143,7 +143,7 @@ fn instance_mesh_id(object: &CadObject) -> String {
     resolve_object_mesh_url(object).map_or_else(|| object.id.clone(), |url| world3d_mesh_id_from_url(&url))
 }
 
-pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) -> String {
+pub fn world_instances_json(objects: &[CadObject], view: &CadPlayView) -> String {
     let instances: Vec<DslValue> = objects
         .iter()
         .filter(|object| object.visible)
@@ -161,11 +161,6 @@ pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) ->
                 ("color".to_string(), DslValue::String(resolve_typology_style(&object.typology).color)),
                 ("selected".to_string(), DslValue::Bool(selected)),
                 ("hovered".to_string(), DslValue::Bool(hovered)),
-                // 🌫️ A LOCKED object is dimmed by `WORLD_LOCKED_OPACITY_SCALE` and painted with the
-                // muted `disabled` row of `MESH_STYLE_PAINT` — React's own locked material. The
-                // instance lane had no `opacity`/`disabled` field at all until ticket 26/09/17
-                // packet W14g, so `target_style`'s locked arm could be computed and never reach a
-                // committed mesh (`📓️w2f-cad-spatial-editor-wgpu.md` §5.5).
                 ("disabled".to_string(), DslValue::Bool(object.locked)),
                 ("opacity".to_string(), DslValue::float(if object.locked { picking::WORLD_LOCKED_OPACITY_SCALE } else { 1.0 })),
             ])
@@ -179,7 +174,7 @@ pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) ->
 /// renderer can derive from a kind, so its triangles ride the paged `meshes` lane (bounded by carrier
 /// pages, not by the 32 KiB surface spine). An empty pane keeps the fallback kind so the viewport
 /// still has a mesh to frame.
-pub(crate) fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+pub fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
     let mut meshes: Vec<DslValue> = Vec::new();
     let mut url_ids: Vec<String> = Vec::new();
     for object in objects.iter().filter(|object| object.visible) {
@@ -250,7 +245,7 @@ fn mesh_lane_objects_digest(objects: &[CadObject]) -> u64 {
 
 /// 🗄️ `world_meshes_json` behind the cache, for the pane composed over `genesis`. A pane with no objects renders the
 /// fallback roster directly (it is one built-in mesh and never worth an entry).
-pub(crate) fn world_meshes_json_cached(pane: CadPaneId, genesis: Option<&std::sync::Arc<CadWorkingScene>>, objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
+pub fn world_meshes_json_cached(pane: CadPaneId, genesis: Option<&std::sync::Arc<CadWorkingScene>>, objects: &[CadObject], geometry: Option<&CadGeometry>) -> String {
     if objects.is_empty() {
         return world_meshes_json(objects, geometry);
     }
@@ -280,7 +275,7 @@ pub(crate) fn world_meshes_json_cached(pane: CadPaneId, genesis: Option<&std::sy
 /// 🎯️ Document identity for the pane's auto-fit: the host frames the content once per revision and
 /// never takes a user-moved camera back, so this must follow the DOCUMENT (which example is open and
 /// which objects its pane holds), not the object poses a transform edits.
-pub(crate) fn world_fit_revision(document: &CadSnapshot, pane: CadPaneId, objects: &[CadObject]) -> u32 {
+pub fn world_fit_revision(document: &CadSnapshot, pane: CadPaneId, objects: &[CadObject]) -> u32 {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     document.id.hash(&mut hasher);
     pane.model_definition_id().hash(&mut hasher);
@@ -306,7 +301,7 @@ fn dsl_object_upsert(entries: &mut Vec<(String, DslValue)>, key: &str, value: Ds
 /// `World3dHost` reads the lane's `hoveredId` as "the target THIS pane is publishing" (its
 /// background click re-picks it instead of clearing), so a hover that lives in another pane must not
 /// leak into this one's lane.
-pub(crate) fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects: &[CadObject], active_utility: Option<&str>, options: CadDislocateOptions) -> String {
+pub fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects: &[CadObject], active_utility: Option<&str>, options: CadDislocateOptions) -> String {
     let runtime = &view.runtime;
     let owned = |id: &String| objects.iter().any(|object| &object.id == id);
     let ids: Vec<String> = view.interaction.ids.iter().filter(|id| owned(id)).cloned().collect();
@@ -330,13 +325,8 @@ pub(crate) fn world_selection_json(view: &CadPlayView, pane: CadPaneId, objects:
             );
         }
         dsl_object_upsert(entries, "gumballActive", DslValue::Bool(active));
-        // 🤝️ Only the pane that owns the live session takes world-pointer events (`World3dHost` turns
-        // `engagementSessionActive` into `worldPointerDown`/`worldPointerMove` dispatches).
         dsl_object_upsert(entries, "engagementSessionActive", DslValue::Bool(runtime.engagement_session.as_ref().is_some_and(|session| session.pane == pane)));
         dsl_object_upsert(entries, "showEdges", DslValue::Bool(true));
-        // 🖼️ Every pane's reference overlay reuses the same reference id (one `ref-concrete-forest` per
-        // model definition), so the app-owned reference selection is stamped only on the pane whose
-        // model definition it names — never on the three siblings sharing the id.
         if let (Some(model_definition_id), Some(reference_id)) = (runtime.selected_reference_model_definition_id.as_deref(), runtime.selected_reference_id.as_deref()) {
             if model_definition_id == pane.model_definition_id() {
                 dsl_object_upsert(entries, "referenceSelectedId", DslValue::String(reference_id.to_string()));
@@ -379,7 +369,7 @@ pub const CAD_PICK_OVERLAY_ITEM_BUDGET: usize = 192;
 /// `SpatialPickGeometryLayer`, which has no counterpart on the OS-shell path on either target.
 /// Vertex targets become preview `point`s, every other kind becomes `segment`s along the entity's
 /// own straight edges (a face/solid therefore draws as its wireframe, exactly as React does).
-pub(crate) fn pick_target_preview_items(objects: &[CadObject], geometry: Option<&CadGeometry>, pane: CadPaneId) -> Vec<DslValue> {
+pub fn pick_target_preview_items(objects: &[CadObject], geometry: Option<&CadGeometry>, pane: CadPaneId) -> Vec<DslValue> {
     let Some(geometry) = geometry else { return Vec::new() };
     let model_definition_id = pane.model_definition_id();
     let targets = picking::create_spatial_pick_targets(objects, Some(geometry), Some(model_definition_id));
@@ -463,8 +453,6 @@ pub(crate) fn pick_target_lane_items(view: &CadPlayView, objects: &[CadObject], 
             let entity_flags = flags(&target.id);
             let typology_style = typology_index.get(&picking::spatial_pick_target_member_key(target)).map(|typology| resolve_typology_style(typology));
             let style = picking::target_style(target, hovered, selected, typology_style.as_ref(), entity_flags.locked);
-            // 📍️ An edge's points ARE its sampled polyline now (`GeometryBuckets::edge_points`), so a
-            // curved edge publishes React's tessellation instead of its two endpoints.
             let mut points: Vec<[f64; 3]> = match picking::pick_target_primitive_kind(target) {
                 Some(kind) => buckets.entity_points(kind, &target.id),
                 None => target.points.clone(),
@@ -507,9 +495,6 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         world_selection_json(envelope, pane, objects, active_utility, options),
     );
     scene.references_json = world_references_json(&envelope.document, pane);
-    // 🤝️ The live construction preview (rubber-band points/segments/box/height handle) of the
-    // session this pane owns — the statechart's own `display` items for its current state, plus the
-    // geometry pick overlay while that state is waiting for a selection.
     scene.engagement_preview_json = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(|session| {
         let mut items = preview_display_items(session);
         if accepts_selection(session) {
@@ -517,9 +502,6 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         }
         semio_framework_pack_json::to_json_string(&DslValue::Array(items))
     });
-    // 🧲️ The hit-testable pick lane rides the SAME gate as the paint overlay — React's
-    // `hostSelectionEnabled` (`replHostGeometryPickingEnabled`): sub-object picking is offered while
-    // the pane's live session is waiting for a selection, and at no other time.
     scene.pick_targets_json = envelope
         .runtime
         .engagement_session
@@ -528,9 +510,6 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         .map(|_| semio_framework_pack_json::to_json_string(&DslValue::Array(pick_target_lane_items(envelope, objects, geometry, pane))));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
-    // 🕹️ Bound to the framework-owned `"cad"` domain so `World3dHost` dispatches `interactionSelect`/
-    // `interactionHover` (which `handle` reads back through `InteractionView`) instead of the legacy
-    // `worldPick`/`worldSelect`/`setHover` verbs this app has no handler for.
     scene.domain_id = Some(CAD_INTERACTION_DOMAIN.into());
     scene.domain_granularity_id = Some(CAD_WORLD_PICK_GRANULARITY.into());
     scene_surface(surface_id, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d, &scene)
@@ -543,12 +522,8 @@ fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 }
 
 pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
-    // 🕹️ `window_engagements_with_request_context` threads the live `"cad"` domain in, so this is the
-    // same selection the world scenes paint — see `CadPlayApp::window_engagements_body`.
     let selected_count = envelope.interaction.ids.len();
     let model_definition_id = pane.model_definition_id();
-    // 🤝️ One session at a time, owned by one pane: its HUD shows the keyed transitions; every other
-    // pane keeps offering its own model definition's interactions.
     let pane_session = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane);
     let session_active = pane_session.is_some();
     let possible_engagements: Vec<WindowEngagementPossible> = if let Some(session) = pane_session {
@@ -575,9 +550,6 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
     let step_text = pane_session.map_or_else(|| envelope.runtime.engagement_step.clone(), state_prompt);
     WindowEngagement {
         session_active: Some(session_active),
-        // 🧰️ The move/rotate/scale transform switcher now lives in the framework utility bar (derived
-        // from `UtilityDefinition`s + `ViewModel::active_utility_id`); the engagement HUD no longer
-        // duplicates it — utilities must have exactly one surface.
         options: None,
         input: Some(WindowEngagementInput {
             id: Some("engagement-input".into()),

@@ -1,6 +1,8 @@
 
 use super::*;
 use protocol::{Mutation, SemanticMutation};
+use semio_framework_manifest_media::PortMultiplicity;
+use semio_framework_artifact_workflow_workflow_graph::WorkflowParameter;
 #[test]
 fn descriptors_follow_the_canonical_workflow_roster() {
     assert_eq!(

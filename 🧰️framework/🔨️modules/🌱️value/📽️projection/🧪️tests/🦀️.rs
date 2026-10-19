@@ -1,10 +1,12 @@
 //! 🧪️ Immutable projections preserve exact original roots independently of payload size and cancellation.
+use semio_framework_test_fixtures::fixture_text;
 use super::{SnapshotProjection,SnapshotProjectionCursor};
 #[path="📦️owned/🦀️.rs"]
 mod owned;
 #[path="../🧳️record/🧪️tests/🦀️.rs"]
 mod record;
-use crate::{observe_retirement_allocations,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneSource},retirement::controlled::ControlledRetirement,shared_issuance::{SealedShared,SharedIssuer}};
+use crate::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneSource},retirement::controlled::ControlledRetirement,shared_issuance::{SealedShared,SharedIssuer}};
+use semio_framework_value_testing_allocator::observe_retirement_allocations;
 #[derive(crate::RetireOwned)]
 struct Payload{rows:Vec<u8>}
 impl Clone for Payload{fn clone(&self)->Self{panic!("immutable projection must never clone payloads")}}
@@ -16,7 +18,7 @@ fn drain<T:crate::retirement::RetireOwned>(value:T){
 }
 #[test]
 fn quick_immutable_snapshot_projection_original_root_and_every_prefix(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../📽️projection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){
   let count=row["items"].as_u64().unwrap()as usize;let cut=cut.as_u64().unwrap()as usize;
   let grant=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:SealedShared::<Payload>::birth_bytes(),maximum_depth:1,..Default::default()};
@@ -53,7 +55,7 @@ fn quick_immutable_snapshot_projection_bad_receipt_keeps_unadmitted_original_own
  let(mut cursor,_)=InvalidReceiptRoot::begin_projection(funded(InvalidReceiptRoot::projection_birth_demand())).unwrap();let d=cursor.demands(source.borrow(),4096).unwrap();cursor.advance(source.borrow(),funded(d)).unwrap();let d=cursor.demands(source.borrow(),4096).unwrap();
  let(error,heap)=observe_retirement_allocations(||cursor.advance(source.borrow(),funded(d)).unwrap_err());assert_eq!(error.kind,crate::ValueRefusalKind::InvariantViolated);assert_eq!(heap,(0,0));assert!(!cursor.ready());assert!(cursor.take(funded(d)).is_err());assert_eq!(source.borrow().get().rows.alias_count(),2);
  cursor.begin_close();for _ in 0..10_000{if cursor.terminal_is_empty(){break;}let d=cursor.close_demands(4096).unwrap();let grant=RetainedCloneGrant{maximum_copy_bytes:4096usize.max(d.copy_bytes),..funded(d)};let(step,heap)=observe_retirement_allocations(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
- assert!(cursor.terminal_is_empty());assert_eq!(source.borrow().get().rows.identity(),identity);assert_eq!(source.borrow().get().rows.alias_count(),1);drop(cursor);drain(source);eprintln!("[DEBUG] Immutable snapshot bad receipt retains exact candidate before validation, rejects output handoff, closes original shared issuer, original source alias count restored");
+ assert!(cursor.terminal_is_empty());assert_eq!(source.borrow().get().rows.identity(),identity);assert!(source.borrow().get().rows.original_aliases_are_returned());drop(cursor);drain(source);eprintln!("[DEBUG] Immutable snapshot bad receipt retains exact candidate before validation, rejects output handoff, closes original shared issuer, original source alias count restored");
 }
 
 #[derive(crate::RetireOwned,crate::SnapshotProjection)]
@@ -72,4 +74,4 @@ fn execute_record(count:usize,cut:Option<usize>,policy:&serde_json::Value)->usiz
  assert!(cursor.terminal_is_empty());assert_eq!((source.borrow().get().primary.identity(),source.borrow().get().secondary.identity()),roots);assert_eq!(source.borrow().get().epoch,policy["epoch"].as_u64().unwrap());assert_eq!(observe_retirement_allocations(||drop(cursor)).1,(0,0));drain(source);turns
 }
 #[test]
-fn quick_immutable_snapshot_projection_composed_record_every_prefix(){let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut fixed_turns=None;for row in law["cases"].as_array().unwrap(){let count=row["items"].as_u64().unwrap()as usize;let turns=execute_record(count,None,&law["composition"]);if let Some(fixed)=fixed_turns{assert_eq!(turns,fixed,"immutable record projection work must not depend on payload cardinality");}else{fixed_turns=Some(turns);}for cut in 0..=turns+1{execute_record(count,Some(cut),&law["composition"]);}eprintln!("[DEBUG] Immutable composed record rows={count} normalTurns={turns} all normal cancellation prefixes terminal; genuine field projections, no payloadClone, original roots stable, exact heap ownership receipts and paid output");}}
+fn quick_immutable_snapshot_projection_composed_record_every_prefix(){let law:serde_json::Value=serde_json::from_str(fixture_text!("../../📽️projection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut fixed_turns=None;for row in law["cases"].as_array().unwrap(){let count=row["items"].as_u64().unwrap()as usize;let turns=execute_record(count,None,&law["composition"]);if let Some(fixed)=fixed_turns{assert_eq!(turns,fixed,"immutable record projection work must not depend on payload cardinality");}else{fixed_turns=Some(turns);}for cut in 0..=turns+1{execute_record(count,Some(cut),&law["composition"]);}eprintln!("[DEBUG] Immutable composed record rows={count} normalTurns={turns} all normal cancellation prefixes terminal; genuine field projections, no payloadClone, original roots stable, exact heap ownership receipts and paid output");}}

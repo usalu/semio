@@ -18,9 +18,6 @@ use semio_framework_pack_json::Value;
 #[test]
 fn renders_canvas_2d_scene() {
     let deck = crate::default_presentation_snapshot();
-    // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
-    // "DslValue-free exception" for `UiValue`-embedding types), so this reads the surface kind
-    // back off the `Debug` rendering instead of round-tripping through JSON.
     let debug_str = format!("{:?}", render(&deck));
     assert!(debug_str.contains("canvas-2d") || debug_str.contains("Canvas2d"));
 }

@@ -2,7 +2,8 @@
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use semio_framework_os_kernel as store;
 use store::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_decoding::NativeDecodeProgress,native_encoding::NativeEncodeProgress};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, native_encoding::NativeEncodeProgress};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 use semio_s_artifact_stdio_xml::schema::snapshot::ownership::{XmlDocumentView,retire_xml_document};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{XmlNativeInput,XmlNativeEmission,read_xml_native_snapshot_fields,emit_xml_native_snapshot_fields};
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;

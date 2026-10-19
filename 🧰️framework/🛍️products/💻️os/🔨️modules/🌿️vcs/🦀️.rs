@@ -3,7 +3,7 @@
 //! data plus pure functions: nothing here touches a live document (that's `store::ArtifactStore`,
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use protocol::ColdMutation;
 // This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
 // below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
 // import keeps that ergonomics without re-exposing `protocol::Mutation` on `vcs`'s own public API

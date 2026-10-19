@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 semio-framework-tool-run = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]

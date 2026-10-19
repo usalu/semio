@@ -73,7 +73,6 @@ export const InWindow: Story = {
           input: { placeholder: uiDataLabel("Type an action") },
         }}
       >
-        {/* Interior content of the `<Window>` above — its root already fills `ui-surface` at level="window", so this stays bg-transparent. */}
         <div className="flex h-full items-center justify-center bg-transparent">Window body</div>
       </Window>
     </div>

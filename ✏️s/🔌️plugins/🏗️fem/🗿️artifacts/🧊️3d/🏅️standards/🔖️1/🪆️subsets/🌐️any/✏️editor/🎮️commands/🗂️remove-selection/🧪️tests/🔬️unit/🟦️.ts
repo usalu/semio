@@ -5,7 +5,7 @@ import { applyPatch } from "fast-json-patch";
 
 /** 🗂️ Confirms exact load removal and complete document removal through the reference library. */
 export function testFem3dRemovalOracle(): void {
-  const vector = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const vector = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const loads = applyPatch(structuredClone(vector.snapshot), [
     { op: "remove", path: "/loadCases/0/loads/2" },
     { op: "remove", path: "/loadCases/0/loads/1" },

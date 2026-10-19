@@ -3,7 +3,7 @@ import dashboardOnly from "../../🧫️fixtures/🎛️dashboard-only/🔣️.j
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { buildEntityEmojiPattern, buildEntityIdRegex, ENTITY_EMOJIS, ENTITY_ID_REGEX } from "../../🌪️entity-emoji-registry/🟦️.ts";
-import { collectDefinitionEntityIds, collectNativeDefinitionScopes, getAnalyzeLensIds, getCodeLenses, openWorkspaceDocument } from "../🧰️extension-test-kit/🟦️.ts";
+import { collectDefinitionEntityIds, collectNativeDefinitionScopes, getCodeLenses, openWorkspaceDocument } from "../🧰️extension-test-kit/🟦️.ts";
 
 // #region 🧪️OwnedExtensionHostTestContract
 type OwnedExtensionHostTestContext = { timeout(milliseconds: number): void };

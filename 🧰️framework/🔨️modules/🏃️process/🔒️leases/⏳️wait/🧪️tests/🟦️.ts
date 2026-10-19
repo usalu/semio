@@ -5,7 +5,7 @@ import {getEventListeners} from "node:events";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {acquireResourceLease,acquireQueuedResourceLease,resourceLeasePathV1,type ResourceLeaseControl} from "../../🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 /** ⏱️ Observes settlement within the neutral test ceiling and removes the observation timer. */

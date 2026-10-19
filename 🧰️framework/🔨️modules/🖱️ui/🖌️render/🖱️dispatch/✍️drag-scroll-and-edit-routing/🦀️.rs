@@ -5,7 +5,6 @@ use super::*;
 //#region 🔖️Outcome
 impl Dispatcher {
     //#region 🫳️DragApi
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn maybe_promote_to_drag(&mut self, pointer: PointerId, x: f32, y: f32) {
         let Some(entry) = self.capture.get(&pointer).copied() else { return };
         if entry.kind != CaptureKind::Press {
@@ -20,7 +19,6 @@ impl Dispatcher {
         self.drag = Some(DragSession { source: entry.element, payload, ghost: None, pointer_x: x, pointer_y: y, drop_target: None });
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn update_drag(&mut self, tree: &DispatchTree, root: FrameNodeId, x: f32, y: f32) {
         if let Some(drag) = self.drag.as_mut() {
             drag.pointer_x = x;
@@ -33,7 +31,6 @@ impl Dispatcher {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn nearest_accepting_drop_target(&self, tree: &DispatchTree, from: FrameNodeId) -> Option<FrameNodeId> {
         let mut found = None;
         bubble(tree, from, |id| {
@@ -57,7 +54,6 @@ impl Dispatcher {
 
     /// 👻️ Attaches a ghost to the active drag session — a host/widget calls this once a session is
     /// promoted; see [`DragGhost`]'s own doc for why painting it is next-frame work, not this call's.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn set_drag_ghost(&mut self, ghost: DragGhost) {
         if let Some(drag) = self.drag.as_mut() {
             drag.ghost = Some(ghost);
@@ -66,7 +62,6 @@ impl Dispatcher {
     //#endregion 🫳️DragApi
 
     //#region 🖱️ScrollApi
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn route_scroll(&mut self, tree: &DispatchTree, root: FrameNodeId, x: f32, y: f32, delta_x: f32, delta_y: f32) -> bool {
         let Some(hit) = hit_test(tree, root, x, y) else { return false };
         let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return false };
@@ -79,7 +74,6 @@ impl Dispatcher {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn update_scroll_thumb(&mut self, scrollable: ElementId, axis: ScrollAxis, pointer: PointerId, x: f32, y: f32) {
         let Some((origin_x, origin_y, start_x, start_y)) = self.thumb_start.get(&pointer).copied() else { return };
         let (delta_x, delta_y) = (x - origin_x, y - origin_y);
@@ -92,7 +86,6 @@ impl Dispatcher {
     //#endregion 🖱️ScrollApi
 
     //#region ✍️EditApi
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn route_text_insert(&mut self, text: &str) -> bool {
         let Some(id) = self.focus else { return false };
         let Some(edit) = self.edit_states.get_mut(&id) else { return false };
@@ -100,7 +93,6 @@ impl Dispatcher {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn route_ime(&mut self, event: &ImeEvent) -> bool {
         let Some(id) = self.focus else { return false };
         let Some(edit) = self.edit_states.get_mut(&id) else { return false };
@@ -121,7 +113,6 @@ impl Dispatcher {
     /// [`ActionId`] (`scope: "dispatch"`) rather than a bespoke `UiCommand` variant, since
     /// `DispatchOutcome` has no side-channel beyond `intents` — see this file's report for the
     /// trade-off. A no-operation if nothing is focused or the focused element has no [`EditState`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn route_edit_key(&mut self, key: &str, modifiers: EventModifiers) -> (bool, Option<UiIntent>) {
         let Some(id) = self.focus else { return (false, None) };
         let Some(edit) = self.edit_states.get_mut(&id) else { return (false, None) };
@@ -202,7 +193,6 @@ impl Dispatcher {
         (true, None)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn build_clipboard_intent(&mut self, name: &str, text: String) -> Option<UiIntent> {
         let action = ActionId::try_v1("dispatch", name)?;
         let input = (!text.is_empty()).then(|| UiText::try_from_string(text).ok()).flatten().map(UiValue::Text);

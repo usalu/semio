@@ -3,7 +3,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_os_kernel as store;
 use semio_framework_value::{DslValue,FromValue,ToValue,ErasedSnapshotRetirement,RetirementDemand,ValueRefusalKind};
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeRetirementRecipient};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, DrawCanvas, DrawLayer, SemioDrawingSnapshot};
 #[global_allocator]
@@ -79,7 +79,7 @@ fn drawing_original_document_controlled_prefix_preserves_layers_and_partial_fiel
   }
  }
  let mut long=corpus["defaults"][2]["input"].clone();let text=corpus["longText"]["text"].as_str().unwrap().repeat(corpus["longText"]["repeat"].as_u64().unwrap()as usize);let total=text.len();long["layers"][1]["root"]["children"][1]["value"]=serde_json::Value::String(text);let input=DslValue::from(&long);
- let mut interior=false;let mut callback=|event:semio_framework_value::NativeDecodeProgress|{let cancel=event.total==total&&event.completed>=corpus["longText"]["minimumCheckpointBytes"].as_u64().unwrap()as usize&&event.completed<event.total;interior|=cancel;!cancel};
+ let mut interior=false;let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|{let cancel=event.total==total&&event.completed>=corpus["longText"]["minimumCheckpointBytes"].as_u64().unwrap()as usize&&event.completed<event.total;interior|=cancel;!cancel};
  let mut recipient=NativeDecodeRetirementRecipient::new();let mut control=NativeDecodeControl::new(1048576,&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||SemioDrawingSnapshot::from_value_controlled(&input,&mut control));drop(control);assert!(interior);assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(physical.released_bytes,0);let(born,freed)=close(&mut recipient,&mut denials);assert_eq!(physical.requested_bytes+born,freed);let(_,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(recipient));assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));
  assert!(interrupted>0);
 }

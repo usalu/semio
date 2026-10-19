@@ -1,7 +1,7 @@
 //! ☁️ Borrowed LAS roles admit every handcrafted semantic cell before actual ownership.
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
 const TABLES:[(&str,usize);8]=[("las_document",2),("las_header",50),("las_return_histogram",4),("las_vlr",6),("las_vlr_octet",4),("las_point",21),("las_point_gps",4),("las_point_rgb",4)];

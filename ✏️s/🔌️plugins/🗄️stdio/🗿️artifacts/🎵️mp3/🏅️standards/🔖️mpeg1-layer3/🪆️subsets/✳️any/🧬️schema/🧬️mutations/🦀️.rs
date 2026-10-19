@@ -43,7 +43,6 @@ impl Mp3Mutation {
     /// equal. Hand-matched rather than derived, so [`KINDS`] is checked against something with its
     /// own reason to be right; and exhaustive, so a variant added to the enum is a COMPILE error
     /// here rather than a silently uncatalogued kind.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn kind(&self) -> &'static str {
         match self {
             Mp3Mutation::SetId3v2(_) => "set-id3v2",

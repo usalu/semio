@@ -4,7 +4,6 @@ use protocol::Inference;
 use semio_framework::MeshData;
 
 fn triangle_snapshot() -> RemodelingSnapshot {
-    // 🧱️ Durable content, the only mesh source `bounds` resolves in production (see its doc comment).
     let mut snapshot = RemodelingSnapshot::default();
     seed_remodeling_mesh(&mut snapshot, &MeshData { positions: vec![0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0, 0.0], indices: vec![0, 1, 2], ..MeshData::default() }).expect("a single triangle is inside the bounded envelope");
     snapshot

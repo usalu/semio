@@ -17,7 +17,6 @@ pub struct Counts {
 
 impl Counts {
     /// 🧮️ Builds a dense count table from `u32` symbols over `0..alphabet_size`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_symbols(symbols: &[u32], alphabet_size: usize) -> Result<Self, EntropyError> {
         if symbols.is_empty() {
             return Err(EntropyError::EmptyInput { what: "symbols" });
@@ -37,7 +36,6 @@ impl Counts {
 
     /// 🧮️ Builds a dense count table from weighted symbol observations. Weights must be finite
     /// and non-negative.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_weighted(symbols: &[u32], weights: &[f64], alphabet_size: usize) -> Result<Self, EntropyError> {
         if symbols.len() != weights.len() {
             return Err(EntropyError::LengthMismatch { expected: symbols.len(), actual: weights.len() });
@@ -66,7 +64,6 @@ impl Counts {
 
     /// 🧮️ Builds counts directly from a raw non-negative count vector (e.g. already-tabulated
     /// external data).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_counts(raw: &[u64]) -> Result<Self, EntropyError> {
         if raw.is_empty() {
             return Err(EntropyError::EmptyInput { what: "counts" });
@@ -77,25 +74,21 @@ impl Counts {
         Ok(Self { counts, total, n_raw })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn alphabet_size(&self) -> usize {
         self.counts.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn total(&self) -> f64 {
         self.total
     }
 
     /// 🧮️ Raw number of observations consumed (ignores weighting).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn n_raw(&self) -> usize {
         self.n_raw
     }
 
     /// 🧮️ Effective sample size `(sum w)^2 / sum(w^2)`, equal to `n_raw` for unweighted/integer
     /// counts.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn n_effective(&self) -> f64 {
         let sum_sq: f64 = self.counts.iter().map(|c| c * c).sum();
         if sum_sq <= 0.0 {
@@ -105,32 +98,27 @@ impl Counts {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn raw(&self) -> &[f64] {
         &self.counts
     }
 
     /// 🧮️ Number of symbols with strictly positive count (the occupied support size).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn support_size(&self) -> usize {
         self.counts.iter().filter(|&&c| c > 0.0).count()
     }
 
     /// 🧮️ Number of symbols observed exactly once (singletons), used by Chao-Shen/Good-Turing
     /// coverage diagnostics.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn singletons(&self) -> usize {
         self.counts.iter().filter(|&&c| (c - 1.0).abs() < 1e-12).count()
     }
 
     /// 🧮️ Number of symbols observed exactly twice (doubletons).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn doubletons(&self) -> usize {
         self.counts.iter().filter(|&&c| (c - 2.0).abs() < 1e-12).count()
     }
 
     /// 🧮️ Maximum-likelihood plug-in probability vector `count_i / total`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn probabilities(&self) -> Vec<f64> {
         if self.total <= 0.0 {
             return vec![0.0; self.counts.len()];
@@ -139,7 +127,6 @@ impl Counts {
     }
 
     /// 🧮️ Applies a smoothing prior and returns the resulting posterior probability vector.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn smoothed_probabilities(&self, prior: SmoothingPrior) -> Vec<f64> {
         let k = self.counts.len() as f64;
         let pseudo = match prior {
@@ -184,7 +171,6 @@ pub struct JointCounts {
 
 impl JointCounts {
     /// 🧮️ Builds a joint table from two equal-length symbol sequences.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_pairs(x: &[u32], y: &[u32], x_size: usize, y_size: usize) -> Result<Self, EntropyError> {
         if x.len() != y.len() {
             return Err(EntropyError::LengthMismatch { expected: x.len(), actual: y.len() });
@@ -204,23 +190,19 @@ impl JointCounts {
         Ok(Self { counts, rows: x_size, cols: y_size, total })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn total(&self) -> f64 {
         self.total
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get(&self, row: usize, col: usize) -> f64 {
         self.counts[row * self.cols + col]
     }
 
     /// 🧮️ Row-major joint probability matrix, flattened.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn joint_probabilities(&self) -> Vec<f64> {
         if self.total <= 0.0 {
             return vec![0.0; self.counts.len()];
@@ -229,20 +211,17 @@ impl JointCounts {
     }
 
     /// 🧮️ Marginal probability vector over rows (the `x` variable).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn marginal_x(&self) -> Vec<f64> {
         (0..self.rows).map(|r| (0..self.cols).map(|c| self.get(r, c)).sum::<f64>() / self.total.max(1.0)).collect()
     }
 
     /// 🧮️ Marginal probability vector over columns (the `y` variable).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn marginal_y(&self) -> Vec<f64> {
         (0..self.cols).map(|c| (0..self.rows).map(|r| self.get(r, c)).sum::<f64>() / self.total.max(1.0)).collect()
     }
 
     /// 🧮️ Flattened counts as a [`Counts`] over the joint alphabet `rows * cols`, e.g. for
     /// applying a discrete bias-corrected estimator to the joint distribution directly.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_counts(&self) -> Counts {
         Counts { counts: self.counts.clone(), total: self.total, n_raw: self.total as usize }
     }

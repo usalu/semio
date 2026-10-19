@@ -1,4 +1,4 @@
-//! the 0.5 m module the mesh conformity rests on, the meshed solids genuinely share their interface
+//! 📦️ the 0.5 m module the mesh conformity rests on, the meshed solids genuinely share their interface
 //! 🧪️ Tests for example `🏠️house`: the committed asset IS the generated house, every solid sits on
 //! nodes (one connected structure, no floating part), and the engine solves it — balanced reactions,
 //! slabs and roof sagging under gravity, ULS a linear superposition.

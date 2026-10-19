@@ -8,11 +8,11 @@ async fn shipped_examples_parse_in_the_board_engine() {
     for (name, json) in [("concrete-forest", concrete_forest_example_json()), ("nakagin", nakagin_example_json())] {
         let snapshot: Value = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("example json");
         let mut host = BoardHost::default();
-        let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)};
+        let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)};
         if !parsed {
             let nodes = board_snapshot_nodes(&snapshot).to_vec();
             let edges = board_snapshot_edges(&snapshot).to_vec();
-            let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
+            let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
             let bad_node = (1..=nodes.len()).find(|count| !probe(&nodes[..*count], &[])).map(|count| nodes[count - 1].clone());
             let bad_edge = (1..=edges.len()).find(|count| !probe(&nodes, &edges[..*count])).map(|count| edges[count - 1].clone());
             panic!("{name}: the board engine refused the example snapshot; first refused node = {bad_node:?}; first refused edge = {bad_edge:?}");
@@ -25,13 +25,13 @@ async fn shipped_examples_parse_in_the_board_engine() {
 fn painted_fixture_parses(app: &mut Puzzle2dApp, what: &str) {
     let body: Value = semio_framework_pack_json::from_json_str(&render_body(app, overview::BODY_KEY), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("overview body json");
     let snapshot_json = body.get("board2d").and_then(|scene| scene.get("snapshotJson")).and_then(Value::as_str).expect("painted snapshot lane").to_string();
-    if {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&snapshot_json,&mut control)} {
+    if {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&snapshot_json,&mut control)} {
         return;
     }
     let snapshot: Value = semio_framework_pack_json::from_json_str(&snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("painted snapshot json");
     let nodes = board_snapshot_nodes(&snapshot).to_vec();
     let edges = board_snapshot_edges(&snapshot).to_vec();
-    let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
+    let probe = |nodes: &[Value], edges: &[Value]| {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut BoardHost::default(),&json!({ "schema": "board.ports.directed.v1", "camera": { "x": 0, "y": 0, "zoom": 1 }, "nodes": nodes, "edges": edges }).to_string(),&mut control)};
     let bad_node = (1..=nodes.len()).find(|count| !probe(&nodes[..*count], &[])).map(|count| nodes[count - 1].clone());
     let bad_edge = (1..=edges.len()).find(|count| !probe(&nodes, &edges[..*count])).map(|count| edges[count - 1].clone());
     let head: String = snapshot_json.chars().take(400).collect();
@@ -93,7 +93,7 @@ async fn deleting_an_edged_handle_keeps_the_board_parseable() {
     let after = fixture_of(&app);
     assert!(!board_snapshot_edges(&after).iter().any(|edge| edge.get("id").and_then(Value::as_str) == Some(edge_id.as_str())), "the edge on the deleted handle must go with it");
     let mut host = BoardHost::default();
-    let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&after.to_string(),&mut control)};
+    let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&after.to_string(),&mut control)};
     close_app(&mut app);
     assert!(parsed, "the board engine must still parse the document after a handle delete");
 }

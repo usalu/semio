@@ -24,6 +24,7 @@ semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -50,6 +51,10 @@ semio-s-artifact-puzzle-3d-retained-action = { workspace = true }
 semio-s-artifact-puzzle-3d-retained-document = { workspace = true }
 semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
+semio-s-artifact-puzzle-3d-commands-runtime = { workspace = true }
+semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-delete-selection = { path = "../../../../../../../../../../🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-3d-precompute = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 pack = { workspace = true }
@@ -58,6 +63,7 @@ serde_json = { workspace = true }
 wasm-bindgen = { workspace = true }
 
 [dev-dependencies]
+machine = { workspace = true }
 semio-framework-job-worker = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
 

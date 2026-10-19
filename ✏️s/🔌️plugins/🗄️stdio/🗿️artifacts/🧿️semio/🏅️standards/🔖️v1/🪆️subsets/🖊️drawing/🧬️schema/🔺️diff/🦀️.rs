@@ -501,8 +501,6 @@ fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
             },
         }),
         (DrawNodeDiff::Image(ia), DrawNodeDiff::Image(ib)) => DrawNodeDiff::Image(DrawImageDiff { at: ib.at.or(ia.at), width: ib.width.or(ia.width), height: ib.height.or(ia.height), mime: ib.mime.or(ia.mime), bytes: ib.bytes.or(ia.bytes) }),
-        // 🩹 Kind-mismatched non-Replace pair should not arise from real `between`/mutation output
-        // (both always tag-match the current node or emit `Replace`) — total fallback: keep `b`.
         (_, b) => b,
     }
 }

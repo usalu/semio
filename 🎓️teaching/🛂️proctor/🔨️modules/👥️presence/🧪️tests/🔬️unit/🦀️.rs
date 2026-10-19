@@ -103,7 +103,7 @@ fn public_runs_are_admitted_only_for_the_presented_quiz_and_its_tasks() {
 
 #[test]
 fn public_display_preferences_follow_the_language_neutral_contract() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/📚️course/🧫️fixtures/👥️presentation/🔣️.json")).expect("public display fixtures");
+    let vectors: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../../🧰️framework/🛍️products/📚️course/🧫️fixtures/👥️presentation/🔣️.json")).expect("public display fixtures");
     let rooms = rooms();
     for vector in vectors.as_array().expect("vectors") {
         let id = vector["id"].as_str().expect("fixture id");

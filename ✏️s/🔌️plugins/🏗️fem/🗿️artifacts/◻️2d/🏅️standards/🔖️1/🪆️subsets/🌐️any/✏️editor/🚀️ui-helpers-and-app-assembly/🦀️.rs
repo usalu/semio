@@ -33,9 +33,6 @@ fn fem2d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin
 pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT)
             .document(["semio", "fem", "fem2d"])
-            // 🔌️ The computed-results output artifact (`results:out`'s `kind_id`, see
-            // `fem2d_io` above) — deliberately a different `media_type`
-            // (`Computation`×`Value`) than the PORT's wire-level `Data`×`Value`.
             .artifact_kind(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::document_artifact_kind())
             .artifact_kind(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::computation_artifact_kind())
             .icon_id("fem-app")
@@ -80,8 +77,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("iy", LocalizedLabel::native("Second Moment of Area", "Flächenträgheitsmoment")).required(),
             ])
             .mutation("addSupport", LocalizedLabel::native("Add Support", "Lager hinzufügen"))
-            // 🛡️ `fixed` is `Vec<FemDof>`; no `ActionArgDef` control maps to a typed enum list, so the
-            // staged form takes the separator-delimited spelling `fem2d_dofs` reads (`"tx,ty"`).
             .action_args("addSupport", vec![
                 ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
                 ActionArgDef::text("fixed", LocalizedLabel::native("Fixed Degrees of Freedom", "Gesperrte Freiheitsgrade")).default_value(&"tx,ty"),
@@ -126,9 +121,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(),
                 ActionArgDef::toggle("selfWeight", LocalizedLabel::native("Self Weight", "Eigengewicht")).default_value(&false),
             ])
-            // 🎯️ `terms` is `Fem2dCommand::AddCombination`'s typed `Vec<FemCombinationTerm>` — no single
-            // `ActionArgDef` control maps to that shape, so the staged form declares `name` only and the
-            // action bridge opens an empty combination the term rows are added to afterwards.
             .mutation("addCombination", LocalizedLabel::native("Add Combination", "Kombination hinzufügen"))
             .action_args("addCombination", vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required()])
             .mutation("setSelfWeight", LocalizedLabel::native("Set Self Weight", "Eigengewicht festlegen"))
@@ -147,10 +139,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
-            // 📚️ The option id is the bundled example's own `ExampleSource` id, because the shell's
-            // navbar switcher dispatches `setActiveExample { exampleId }` straight from
-            // `PluginManifest.examples` (`ShellHost`'s `dispatchActiveExample`) — a select option that
-            // did not match that id could never be reached from the switcher.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(
                     semio_s_artifact_fem_2d_io::examples::demo::ID,
@@ -160,12 +148,9 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
-            // 🖱️ Viewport gesture vocabulary — the Canvas2d host emits these; picks become framework
-            // `interactionSelect`/`interactionHover` requests, never a document mutation.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer-click") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), semio_framework_plugin::ActionKind::View, "mouse-pointer") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::View, "mouse-pointer") })
-            // 🩹️ Inspector field edits — one bounded edit per dispatch on one entity.
             .action_with(fem2d_patch_action("patchNode", LocalizedLabel::native("Patch Node", "Knoten ändern")))
             .action_with(fem2d_patch_action("patchElement", LocalizedLabel::native("Patch Element", "Element ändern")))
             .action_with(fem2d_patch_action("patchMaterial", LocalizedLabel::native("Patch Material", "Material ändern")))
@@ -175,7 +160,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(fem2d_patch_action("patchLoad", LocalizedLabel::native("Patch Load", "Last ändern")))
             .action_with(fem2d_patch_action("patchLoadCase", LocalizedLabel::native("Patch Load Case", "Lastfall ändern")))
             .action_with(fem2d_patch_action("patchCombination", LocalizedLabel::native("Patch Combination", "Kombination ändern")))
-            // ⏯️ Deformation playback — results-window view state, self re-armed through `DispatchAction`.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setResultAnimation", LocalizedLabel::native("Set Result Animation", "Ergebnisanimation festlegen"), semio_framework_plugin::ActionKind::View, "play") })
             .action_args("setResultAnimation", vec![
                 ActionArgDef::slider("phase", LocalizedLabel::native("Phase", "Phase"), 0.0, 1.0),
@@ -228,7 +212,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
-            // 🧰️ Canvas selection utilities — rectangle/lasso marquee and direct pick, shared with draw/note.
             .utility(fem2d_utility("selectDirect", LocalizedLabel::native("Direct Select", "Direktauswahl"), "mouse-pointer-2", UtilityCategory::Selection))
             .utility(fem2d_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", UtilityCategory::Selection))
             .utility(fem2d_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", UtilityCategory::Selection))
@@ -257,8 +240,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
             .window_kind_utilities(model_window::WINDOW_KIND_ID, FEM2D_CANVAS_UTILITIES.iter().map(|id| (*id).into()).collect())
             .window_kind_utilities(results_window::WINDOW_KIND_ID, FEM2D_CANVAS_UTILITIES.iter().map(|id| (*id).into()).collect())
-            // 🕹️ Framework-owned hover/selection: one domain over every document entity kind, bound to
-            // both Canvas2d windows; interactionSelect/interactionHover/clearSelection/selectAll auto-inject.
             .interaction(fem2d_interaction_definition())
             .window_kind_interactions(model_window::WINDOW_KIND_ID, vec![InteractionRef::new(FEM2D_INTERACTION_DOMAIN)])
             .window_kind_interactions(results_window::WINDOW_KIND_ID, vec![InteractionRef::new(FEM2D_INTERACTION_DOMAIN)])
@@ -270,8 +251,6 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("delete", "removeSelection")
             .keybinding("backspace", "removeSelection")
             .keybinding("space", "setResultAnimation")
-            // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
-            // source of truth, reused here rather than duplicated.
             .config(Fem2dPlayApp::config_spec())
             .io(fem2d_io())
             .action_describe("addNode", LocalizedLabel::native("Adds a node at x, y to the 2D structural model; elements, supports and loads attach to nodes.", "Fügt dem 2D-Tragwerksmodell einen Knoten an x, y hinzu; Elemente, Lager und Lasten hängen an Knoten."))

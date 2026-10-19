@@ -218,7 +218,7 @@
   ],
   "environmentSources": [
     "♻️mit-bestand/🧺️demonstrator/📋️project.json",
-    "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/📋️project.json",
+    "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
     "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
     "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
@@ -347,7 +347,7 @@
     }
   ],
   "ciDependencies": {
-    "path": ".github/workflows/architecture-quiz.yml",
+    "path": ".github/workflows/architecture-course.yml",
     "jobs": [
       "site",
       "proctor"

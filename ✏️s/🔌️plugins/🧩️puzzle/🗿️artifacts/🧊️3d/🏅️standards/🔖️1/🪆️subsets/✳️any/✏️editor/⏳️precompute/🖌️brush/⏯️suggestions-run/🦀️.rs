@@ -435,7 +435,7 @@ impl<O: BrushSuggestionsOwner> BrushSuggestionsRunJob<O> {
         let Some(Ok(bytes)) = self.writer.finish().map(|tick| tick.encode()) else {
             return JobTurn::Fault(b"brush-suggestions-tick-encode".to_vec());
         };
-        if bytes.len() > semio_framework_job::JOB_PAYLOAD_PAGE_BYTES {
+        if bytes.len() > semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES {
             return JobTurn::Fault(b"brush-suggestions-tick-page".to_vec());
         }
         JobTurn::Preview(bytes.to_vec())

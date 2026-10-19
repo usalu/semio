@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;
+#[cfg(test)] use semio_s_artifact_cad_cad_modes as edit;
 
 //#region 🔖️Fixtures
 /// 🔒️ Wire-format pin: the exact bytes of rows whose `Option` fields make `None`/`Some` distinct
@@ -17,13 +18,6 @@ fn optional_field_rows_keep_their_pre_migration_bytes() {
         "01010303312e35086f626a6563742d31086f726967696e2e780400060101060202060003050000000000000440"
     );
     assert_eq!(hex(&CadCommand::PatchObject(patch_object::PatchObject { object_id: "object-1".into(), field: "origin.x".into(), value: None, delta: None })), "010102086f626a6563742d31086f726967696e2e7802000600010601");
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): `SetHover`/`WorldPick` and their
-    // byte pins are DELETED (those commands no longer exist); every OTHER row's ordinal shifted
-    // too (this enum's binary encoding is a plain row-position ordinal — greenfield, no
-    // back-compat expected), so the tail-of-enum pins (`EngagementAbort`/`ToggleSun`/
-    // `SaveSelected`/`LoadRawRequest`) are dropped rather than hand-recomputed; the exact-wire-key
-    // guard for every row (including these) already lives in
-    // `every_command_round_trips_text_and_binary_under_its_own_wire_keyword` above.
 }
 
 #[semio_framework_async_macros::async_test]
@@ -61,7 +55,6 @@ async fn mesh_lane_is_cached_per_materialized_scene() {
     assert_eq!(first, second);
     assert_eq!(first, edit::world_meshes_json(objects, geometry), "the cached lane is byte-identical to a fresh tessellation");
     assert!(warm < cold / 4 || warm.as_millis() < 2, "a warm lane never tessellates (cold {cold:?}, warm {warm:?})");
-    // ✏️ An edit to a tessellation-relevant field misses: a wider object is a different lane.
     let mut widened = objects.clone();
     widened[0].extent = Some([9.0, 9.0, 9.0]);
     widened[0].solid_handle = None;
@@ -69,15 +62,12 @@ async fn mesh_lane_is_cached_per_materialized_scene() {
     let edited = edit::world_meshes_json_cached(CadPaneId::Building, Some(&scene), &widened, geometry);
     assert_ne!(edited, first);
     assert_eq!(edited, edit::world_meshes_json(&widened, geometry));
-    // 🪆️ The same objects under a re-minted scene are a miss (a new `Arc` is a new geometry identity)
-    // and then a hit again on their own allocation.
     let reminted = std::sync::Arc::new(forest_working_scene());
     let again = edit::world_meshes_json_cached(CadPaneId::Building, Some(&reminted), &reminted.building_objects, reminted.building_geometry.as_ref());
     assert_eq!(again, first);
     let started = std::time::Instant::now();
     let _ = edit::world_meshes_json_cached(CadPaneId::Building, Some(&reminted), &reminted.building_objects, reminted.building_geometry.as_ref());
     assert!(started.elapsed() < cold / 4 || started.elapsed().as_millis() < 2);
-    // 🚫️ A pane without a materialized scene renders the fallback roster and is never cached.
     let fallback = edit::world_meshes_json_cached(CadPaneId::Shape, None, &[], None);
     assert!(fallback.contains(CAD_FALLBACK_MESH_KIND));
 }
@@ -241,18 +231,6 @@ async fn align_mesh_to_host_snapshot_centroid_corrects_drifted_surface() {
 
 #[semio_framework_async_macros::async_test]
 async fn forest_surface_meshes_fall_back_to_typology_extent_without_pane_geometry() {
-    // ⚠️ CORRECTED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
-    // wave G4): this test used to assert the mesh stayed at its authored height even with no
-    // `CadGeometry` in hand — that only worked because `cad_brep_kernel()` was a process-global
-    // `BrepEngineHost` singleton, so `energy.solid_handle` (minted by an EARLIER, already-dropped
-    // call to `forest_pane_bundle`) still resolved in whatever kernel `object_mesh_data` happened
-    // to reach. `origin` on fixture-derived `CadObject`s is always `[0,0,0]`
-    // (`objects_from_host_snapshot_model`) — the authored height lived ONLY in the solid's own vertex
-    // data, addressed by that handle. A `cad_brep_kernel()` is now a fresh, local `Brep::new()`
-    // per call (doctrine tier-(d): never outlives the call that built it), so a handle from a
-    // different call is honestly unresolvable, and — exactly like `mesh_from_glb`'s documented
-    // gap elsewhere in this codebase — meshing falls back to the typology's default extent box
-    // at the kernel's local origin instead of silently fabricating a placement it cannot know.
     let scene = forest_working_scene();
     let energy = scene.energy_objects.first().expect("energy object");
     let energy_mesh = object_mesh_data(energy, None);

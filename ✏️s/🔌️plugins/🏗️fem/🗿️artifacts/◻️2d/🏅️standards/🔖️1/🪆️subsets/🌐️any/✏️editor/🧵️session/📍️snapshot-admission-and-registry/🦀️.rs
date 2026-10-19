@@ -263,17 +263,17 @@ pub(super) struct PendingSnapshotFault {
 }
 
 pub(super) struct MountedRegistry {
-    pub(super) app_slots: semio_framework_value::FixedKeySlots<u32, SESSION_ACTIVE_CAPACITY>,
-    pub(super) requests: semio_framework_value::FixedRequestOwners<RequestKey, ConsumerKey, SESSION_ACTIVE_CAPACITY, SESSION_CONSUMER_CAPACITY>,
+    pub(super) app_slots: semio_framework_value_registry::fixed_key_slots::FixedKeySlots<u32, SESSION_ACTIVE_CAPACITY>,
+    pub(super) requests: semio_framework_value_registry::fixed_request_owners::FixedRequestOwners<RequestKey, ConsumerKey, SESSION_ACTIVE_CAPACITY, SESSION_CONSUMER_CAPACITY>,
     pub(super) families: [semio_s_fem_app_surface::ResultMode; SESSION_ACTIVE_CAPACITY],
     pub(super) mode_indices: [usize; SESSION_ACTIVE_CAPACITY],
     pub(super) request_cancelled: [bool; SESSION_ACTIVE_CAPACITY],
     pub(super) model_requests: [Option<RequestKey>; SESSION_ACTIVE_CAPACITY],
-    pub(super) snapshot_owners: [Option<semio_framework_value::FixedKeySlot>; SESSION_ACTIVE_CAPACITY],
-    pub(super) shell_requests: [Option<semio_framework_value::FixedKeySlot>; SESSION_SHELL_CAPACITY],
+    pub(super) snapshot_owners: [Option<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>; SESSION_ACTIVE_CAPACITY],
+    pub(super) shell_requests: [Option<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>; SESSION_SHELL_CAPACITY],
     pub(super) request_cursor: usize,
     pub(super) consumer_cursor: usize,
-    pub(super) verified_sources: [Option<(semio_framework_value::RequestCandidateVersion,RequestKey)>;SESSION_CONSUMER_CAPACITY],
+    pub(super) verified_sources: [Option<(semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion,RequestKey)>;SESSION_CONSUMER_CAPACITY],
     pub(super) source_kinds: [u8;SESSION_ACTIVE_CAPACITY],
     pub(super) shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY],
     pub(super) current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY],

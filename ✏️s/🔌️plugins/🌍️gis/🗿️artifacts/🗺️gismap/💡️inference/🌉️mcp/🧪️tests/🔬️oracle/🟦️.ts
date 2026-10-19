@@ -225,8 +225,6 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   const hubBinSource = readFileSync(resolve(repoRoot, "🌎️hub/🏗️bootstrap/🛣️routes/🦀️.rs"), "utf8");
 
   let ajv = 0;
-  // 🧬️ The corpus no longer carries a fixture-local schema: its parts are validated against the
-  // exports `hub.inference` owns, so this oracle reads the authority instead of a fixture copy.
   must(fixture.schema === "semio.hub.gis-map-proposal-approval-fixture/v1" && fixture.version === 1, "the shared fixture envelope drifted");
   for (const [exportId, value] of [
     ["InferenceBindingIdentityV1", fixture.binding],
@@ -361,9 +359,6 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   must(approvalReceipt(approvalReceiptBody), `a well-formed approval receipt was rejected: ${JSON.stringify(approvalReceipt.errors)}`);
   reject(approvalReceipt, { ...approvalReceiptBody, command: "server bytes" }, "leaked-command-bytes");
 
-  // ↩️ The durable undo half of the approval: hub owns `GisMapApprovalUndoRequestV1` /
-  // `…ReceiptV1` and the `GisMapDocumentFrontierV1` inside them, so the client's bodies are
-  // validated against hub's exports instead of a second copy.
   const undoRequest = hubInferenceExport(repoRoot, "GisMapApprovalUndoRequestV1");
   ajv += 1;
   const undoRequestBody = { schema: "semio.hub.gis-map-approval-undo/v1", version: 1, targetId: approvalReceiptBody.undo.targetId, idempotencyKey: "33".repeat(16), expectedCurrent: approvalReceiptBody.undo.expectedCurrent };
@@ -392,9 +387,6 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   const expected = [
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/approval-undos",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs",
-    // 🔁 The hub's own job-reconciliation endpoint. This client never calls it — it is named here
-    // because the census is exact in BOTH directions: a hub route this oracle has never seen is a
-    // surface the client may have to learn, and silently widening the comparison would hide it.
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/reconcile",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel",

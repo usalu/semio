@@ -12,8 +12,8 @@ import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️m
 import{readPhysicalCargoSourceV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import type{RepositoryToolingStoreV1}from"../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
-import{readNativeCallerAuthorityV1}from"../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1}from"../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../../../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1}from"../../../../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 export const nxSdkSourceIndexPolicyV1=schema.definitions.Policy.const;
 export interface NxSdkSourceEntryV1{readonly path:string;readonly kind:"file"|"directory"|"link";readonly bytes?:number;readonly sha256?:string;readonly executable?:boolean;readonly target?:string}
 export interface NxSdkSourceIndexV1{readonly version:1;readonly snapshot:string;readonly entries:readonly NxSdkSourceEntryV1[]}

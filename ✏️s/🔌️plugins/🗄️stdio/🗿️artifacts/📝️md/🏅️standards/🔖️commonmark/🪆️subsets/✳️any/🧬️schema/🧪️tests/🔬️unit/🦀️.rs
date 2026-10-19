@@ -317,8 +317,6 @@ async fn soft_and_hard_breaks_in_paragraph() {
 
 #[semio_framework_async_macros::async_test]
 async fn unrecognized_delimiter_degrades_to_plain_text() {
-    // 🕳️ Exactly ONE `*` in the whole input -- genuinely unpairable (not to be confused with
-    // an input containing a valid pair elsewhere, which correctly parses as emphasis).
     let inline = parse_inline("plain text with one lonely *delimiter and no partner at all");
     assert!(inline.iter().all(|n| matches!(n, MdInline::Text { .. })), "unmatched * must degrade to Text, got {inline:?}");
 }
@@ -442,7 +440,6 @@ fn root_blocks_diff(diff: &MdDiff) -> &MdBlocksDiff {
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
@@ -456,7 +453,6 @@ async fn absorb_law() {
         assert!(matches!(triple.added[0].item, MdBlock::ThematicBreak));
     }
 
-    // Canonical: Insert(2,f)+Insert(2,g) -> both survive.
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
@@ -467,7 +463,6 @@ async fn absorb_law() {
         assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
     }
 
-    // Canonical: Insert(1,f)+SetField(1,v) -> patch into the added payload.
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }), &base);
@@ -483,7 +478,6 @@ async fn absorb_law() {
         }
     }
 
-    // Canonical: Modify+Remove -> the modify is annihilated by the later remove.
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &base);
@@ -495,7 +489,6 @@ async fn absorb_law() {
         assert_eq!(triple.removed, vec![1]);
     }
 
-    // Associativity over a triple.
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
@@ -518,7 +511,6 @@ async fn absorb_law() {
         assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 
-    // Nested (BlockQuote) canonical: Insert-inside-quote + Remove-before-it-inside-quote.
     {
         let base = MdSnapshot {
             schema: STDIO_MD_DOCUMENT_SCHEMA.into(),
@@ -541,10 +533,6 @@ async fn absorb_law() {
 //#region 🔖️CodecRetentionLaw
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
-    // Documented normal form (see `render_markdown_blocks`'s doc comment): semantic fixed
-    // point at the SNAPSHOT level, not byte-identical text. Fixture is written to already be
-    // a fixed point of this codec's own parse/render pair (avoids incidental normalizations --
-    // e.g. indented-vs-fenced code -- that would make a byte-diff assertion meaningless here).
     let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md");
     let blocks = parse_markdown_blocks(fixture_text);
     let re_encoded_text = render_markdown_blocks(&blocks);

@@ -6,7 +6,7 @@ use super::*;
 use crate::model::ModelBuilder;
 use crate::topology::{GraphTopology, GraphTopologyBuilder};
 
-const PUBLICATION_STEP_BOUND: usize = semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES + 64;
+const PUBLICATION_STEP_BOUND: usize = semio_framework_job_payload::JOB_PAYLOAD_OPERATION_PAGES + 64;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Seen {

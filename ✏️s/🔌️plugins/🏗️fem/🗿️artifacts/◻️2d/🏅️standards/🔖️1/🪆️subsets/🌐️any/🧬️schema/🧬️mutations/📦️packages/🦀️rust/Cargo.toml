@@ -52,6 +52,10 @@ name = "mesh_topology_kinds_2"
 path = "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds-2/🦀️.rs"
 
 [[test]]
+name = "mutation_grammar_conformance"
+path = "../../../../🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️mutation-grammar-conformance/🦀️.rs"
+
+[[test]]
 name = "boundary_kinds"
 path = "../../../../../🛡️boundary/🧪️tests/🔬️support-kinds/🦀️.rs"
 
@@ -61,6 +65,9 @@ path = "../../../../../🧱️material/🧪️tests/🔬️material-kinds/🦀�
 
 [dependencies]
 semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d-mesh-elements = { workspace = true }
+semio-s-artifact-fem-2d-mesh-regions = { workspace = true }
+semio-s-artifact-fem-2d-mesh-sections = { workspace = true }
 semio-s-fem-model = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/🏗️model/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-engine = { path = "../../../../../../../../⚙️engine/◻️2d/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { workspace = true }
@@ -70,6 +77,7 @@ semio-framework-os-command = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-2d-analysis = { workspace = true }
 semio-s-artifact-fem-2d-boundary = { workspace = true }
@@ -87,3 +95,5 @@ semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"]
 semio-framework-schema-state = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-fem-test-support = { workspace = true }
+semio-s-fem-material = { path = "../../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
+semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }

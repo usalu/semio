@@ -1,8 +1,26 @@
 {
   "name":"@semio-tech/pack-json-decode-ts",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "targets":{"test":{
-    "executor":"repo:script","cache":false,"dependsOn":[],"outputs":[],
-    "inputs":["{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/**/*","{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/**/*","sharedGlobals"],
+    "executor":"repo:script","cache":true,"dependsOn":[],"outputs":[],
+    "inputs":[
+      "default",
+      "^default",
+      "testEnv",
+      "reads",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/🧩️members/**/*",
+      "sharedGlobals"
+    ],
     "options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript","command":"bun ./📜️script.ts test","forwardAllArgs":true}
   }}
 }

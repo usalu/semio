@@ -181,11 +181,11 @@ function topology(shape: Manifold): { solids: number; genus: number | null; comp
  * extends, reviews or runs in isolation, exactly as the BRep pilot's corpus is organised.
  */
 const RECIPES: readonly Recipe[] = [
-  ...(await import("./🔷️primitives/📜️script.ts")).RECIPES,
-  ...(await import("./🧮️booleans/📜️script.ts")).RECIPES,
-  ...(await import("./🕸️topology/📜️script.ts")).RECIPES,
-  ...(await import("./📏️scale/📜️script.ts")).RECIPES,
-  ...(await import("./⚠️degenerate/📜️script.ts")).RECIPES,
+  ...(await import("./🔷️primitives/🟦️.ts")).RECIPES,
+  ...(await import("./🧮️booleans/🟦️.ts")).RECIPES,
+  ...(await import("./🕸️topology/🟦️.ts")).RECIPES,
+  ...(await import("./📏️scale/🟦️.ts")).RECIPES,
+  ...(await import("./⚠️degenerate/🟦️.ts")).RECIPES,
 ];
 
 /** 🧭️ Physical fixture directories are reviewed identities, independent of stable recipe IDs. */

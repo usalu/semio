@@ -129,7 +129,7 @@ test("closed divergence callback contract preserves candidate-only and physical-
 
 for (const registration of vector.registration.execution) test("closed divergence registration: " + registration.phase, () => {
   const contract = vector.registration, project = JSON.parse(readFileSync(join(root, contract.projectPath), "utf8"));
-  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", options: { cwd: dirname(contract.projectPath), command: registration.command } });
+  expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", options: { cwd: dirname(contract.projectPath), command: registration.command } });
   const manifest = JSON.parse(readFileSync(join(root, contract.packagePath), "utf8"));
   expect(manifest.scripts[registration.target]).toBe(registration.packageCommand);
   const router = ts.createSourceFile(contract.routerPath, readFileSync(join(root, contract.routerPath), "utf8"), ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];

@@ -247,7 +247,7 @@ impl FlowHost {
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FlowCoreError> {
         let mut accepted = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(64 * 1024, &mut accepted);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
         let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(|error| FlowCoreError::Json(error.into_message()))?;
         dag_set_canvas_palette(&mut self.dag.viewport, &mut self.dag.paint, &overlay);
         Ok(())

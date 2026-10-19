@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "name": "semio-course-builder-sol-8579fa82486d",
+  "volume": "semio-course-source-8579fa82486d-195bb7ab",
+  "image": "sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b",
+  "sourceManifestSha256": "8579fa82486d7a67d41046c62d04167914d25b4ff3747d6514f2c0c44a836c36",
+  "sourceRevision": "bd9e4e02bd0a1225c7cc47d9f2de10f116927e1d",
+  "sourceFiles": 121423,
+  "sourceBytes": 1415976711,
+  "atomicHostSnapshot": false,
+  "sourceCaptureModel": "independently-frozen-owner-provider-chunk-epochs",
+  "nativePolicyCeilingBytes": 68719476736,
+  "privateDockerAllowanceBytes": 8589934592,
+  "sourceTransportProof": true,
+  "gitTransportProof": true,
+  "remotePublication": false,
+  "sourceOverlays": [
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay.json",
+      "sha256": "4f884ce4003da1e9422d7e308855f70015f4e6df25dca8c5792883a1977423b1",
+      "paths": 4,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-2.json",
+      "sha256": "cfb0f131153d0e879d85d9edf2c4b647654202ac3a17e7f3d2e6462f2a6ab56a",
+      "paths": 9,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-3.json",
+      "sha256": "1d620c609f5cb7390f0b118fe82d2beedc1c65e400a19468cf58e11ec4312001",
+      "paths": 6,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-4.json",
+      "sha256": "146c4ea48c3dec36d6b92763456c79b229871d71c365acd930a54cb6a7c66e19",
+      "paths": 4,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-5.json",
+      "sha256": "94af06929d185e7c1fffccf7cf736a573b143d14398a5cfb58cc3918b4dcd4eb",
+      "paths": 4,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-6.json",
+      "sha256": "b800e195f2c5f0adb88474cff040a37753ddc2f2a57b62627a3862fa5443132c",
+      "paths": 12,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-7.json",
+      "sha256": "6fbba2212d9451aa526ebfd7fd55c6fcc81dabce24993d4a64b4007eda435333",
+      "paths": 4,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-8.json",
+      "sha256": "a80b0e40c5b2820940e668d7bfb09eb27aff7caa485c92a89e58b87e7a00ad62",
+      "paths": 6,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-9.json",
+      "sha256": "39c3f5da29dd02bc2408237661277e56cc9cdaccf6ea459c43377933e168c367",
+      "paths": 5,
+      "atomicHostSnapshot": false
+    },
+    {
+      "receipt": "🗑️generated/2026-10-19-source-overlay-10.json",
+      "sha256": "7cd542d8ff28bdb37ab31775a7738b3ee6512375d64d6d1340cf2aede9f38795",
+      "paths": 3,
+      "atomicHostSnapshot": false
+    }
+  ],
+  "deploymentImageTag": "architecture-20261019-8579fa82486d",
+  "plannedDeploymentCommands": [
+    [
+      "run",
+      "@teaching/architecture-course:deploy-check",
+      "--configuration=release",
+      "--",
+      "--tag",
+      "architecture-20261019-8579fa82486d"
+    ],
+    [
+      "run",
+      "@teaching/architecture-course:docker-stack-bundle",
+      "--configuration=release",
+      "--",
+      "--tag",
+      "architecture-20261019-8579fa82486d"
+    ]
+  ],
+  "postLockDescriptorProof": {
+    "receipt": "🗑️generated/2026-10-19-postlock-source-receipt.json",
+    "sha256": "0acbfd53f2a73904b351f1a3e9ca008499bc99097486dbbff1767e0b687e64e0",
+    "paths": 25,
+    "fullCurrentSourceCohort": false,
+    "atomic": false
+  },
+  "temporaryDiagnostics": [
+    {
+      "version": 1,
+      "action": "provider-remove",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "guardUnchanged": true,
+      "rangeRedacted": true,
+      "beforeSha256": "c5d43997025769a09741090e5ac52c5bd7dbcad4d008284494563947918b674a",
+      "afterSha256": "7d80fedbcb4ff7943b0b417f62f6a5168be2f07ffc1ac110c34901ead94f34f7",
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "directory-meter",
+      "action": "meter-remove",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts",
+      "guardUnchanged": true,
+      "beforeSha256": "fef88b1ffa1348d57dec4b8f2829235e9d603ada3b1d76e2bd8acb28375a0930",
+      "afterSha256": "62b9b4f0324b3458b086521c4b5ee70ebb79e7a0cdb0f05b73279739ab019b79",
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "admission-trace",
+      "action": "admission-remove",
+      "guardsUnchanged": true,
+      "maximumConsoleBytes": 65536,
+      "sourceBytesLogged": false,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+          "beforeSha256": "a161026478208b01a1302dccc5634707060de1fedcd5860bd40ff137aae936d4",
+          "afterSha256": "7cced41a9a7ebc4e2622149650daa83225c478e1b6258e84f1e3608f8ceef1b5"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+          "beforeSha256": "c366c81493cb26f17f4a72089c84c2508d542b56f796eba5a95c2eadf3bf7ecf",
+          "afterSha256": "5855a82e5a3b6b47cc77459d9cbc34ef2551065f2f741db6518758fa22af7bff"
+        }
+      ],
+      "active": false
+    },
+    {
+      "version": 1,
+      "kind": "compile-demand-trace",
+      "action": "compile-remove",
+      "guardsUnchanged": true,
+      "maximumConsoleBytes": 65536,
+      "sourceBytesLogged": false,
+      "rows": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🚪️admission/🟦️.ts",
+          "beforeSha256": "8db5db4d9dde6594d89976a7693e138877f164fa30819fa54b05e1c6fdcb071f",
+          "afterSha256": "06c365e8e789949a6d820d9e8bbe198705169f51d169aa3e1ad6eb0c11799593"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+          "beforeSha256": "bf3559e486f5230a301e855e874eb58131f85be05430f2ce8012a96b7fde7949",
+          "afterSha256": "05949a4f14f4c830ed15424259590e43889c7eab4f4c0d3e265824d8ee7c977f"
+        }
+      ],
+      "active": false
+    }
+  ]
+}

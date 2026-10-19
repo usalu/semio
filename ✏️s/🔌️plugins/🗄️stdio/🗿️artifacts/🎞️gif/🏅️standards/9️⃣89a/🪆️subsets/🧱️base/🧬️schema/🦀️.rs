@@ -43,7 +43,6 @@ impl Default for GifArtifact {
 }
 
 impl GifArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> GifSnapshot {
         GifSnapshot {
             schema: self.schema.clone(),
@@ -58,7 +57,6 @@ impl GifArtifact {
             app_extensions: self.app_extensions.clone(),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: GifSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -73,7 +71,6 @@ impl GifArtifact {
             app_extensions: snapshot.app_extensions,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: GifSnapshot) {
         self.schema = snapshot.schema;
         self.width = snapshot.width;

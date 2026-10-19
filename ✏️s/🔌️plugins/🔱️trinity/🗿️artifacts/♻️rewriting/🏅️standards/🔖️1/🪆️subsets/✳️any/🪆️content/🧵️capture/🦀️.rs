@@ -3,7 +3,8 @@ use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use store::ArtifactChildRead;
 use semio_framework_plugin::ChildContentView;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
-use semio_framework_value::{DecodedValue,NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
 pub const WORKING_CHILD_SLOT:&str="workingGraph";
@@ -30,8 +31,8 @@ pub fn owned_parent(parent:&RewritingSnapshot,read:ArtifactChildRead<SemioGraphS
  })??;
  let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(record);
  let output=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
-  let mut callback=|progress:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(progress.completed,progress.total);
-  let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+  let mut callback=|progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(progress.completed,progress.total);
+  let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=RewritingSnapshot::__dsl_from_record_controlled(record.as_record(),&mut native);
   (result,native.owned_bytes())
  })??;

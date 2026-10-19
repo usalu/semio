@@ -5,6 +5,6 @@ import {receiveScriptProcessInvocation,createIssuedResourceControlV1} from "@sem
 import {readRepositoryCargoExecutionInputV1,runRepositoryCargoExecutionV1} from "./🟦️.ts";
 
 if(import.meta.main){
- if(process.argv.length!==3||process.argv[2]!=="execute"||resolve(process.argv[1]!)!==fileURLToPath(import.meta.url))throw Error("Private Cargo execution endpoint requires its exact original command");
+ if(process.argv.length!==3||process.argv[2]!=="execute"||resolve(process.argv[1]!)!==fileURLToPath(import.meta.url))throw new Error("Private Cargo execution endpoint requires its exact original command");
  await receiveScriptProcessInvocation(process.env,async invocation=>{const control=createIssuedResourceControlV1(invocation,"cargo:execution",0),stop=()=>process.stdin.destroy(invocation.control.signal.reason);invocation.control.signal.addEventListener("abort",stop,{once:true});try{const request=await readRepositoryCargoExecutionInputV1(process.cwd(),invocation,process.stdin);await runRepositoryCargoExecutionV1(process.cwd(),request,invocation,control,process.env);}finally{invocation.control.signal.removeEventListener("abort",stop);}});
 }

@@ -1,4 +1,4 @@
-//! ️ `change-mixed-terrain-distance`.
+//! 🧬️ `change-mixed-terrain-distance`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

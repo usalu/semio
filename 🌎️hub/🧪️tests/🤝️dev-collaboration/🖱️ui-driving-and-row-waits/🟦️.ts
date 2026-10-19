@@ -279,7 +279,6 @@ export async function collabScreenshot(page: import("playwright").Page, label: s
   try {
     await page.screenshot({ path: join(collabOutDir(), `🧪️3-c-${label}.png`) });
   } catch {
-    // 🏁️ Best-effort — a screenshot failure must never mask the real assertion failure it was taken for.
   }
 }
 //#endregion 🔖️CollabE2eDom

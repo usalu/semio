@@ -7,21 +7,21 @@
       "accepted": true
     },
     {
-      "id": "linux-offset",
-      "platform": "linux",
-      "change": "offset",
-      "accepted": false
-    },
-    {
-      "id": "linux-sizelimit",
-      "platform": "linux",
-      "change": "sizelimit",
-      "accepted": false
-    },
-    {
       "id": "linux-backing",
       "platform": "linux",
       "change": "backing",
+      "accepted": false
+    },
+    {
+      "id": "linux-image",
+      "platform": "linux",
+      "change": "image",
+      "accepted": false
+    },
+    {
+      "id": "linux-volume",
+      "platform": "linux",
+      "change": "volume",
       "accepted": false
     },
     {
@@ -37,9 +37,9 @@
       "accepted": true
     },
     {
-      "id": "win32-bytes",
+      "id": "win32-backing",
       "platform": "win32",
-      "change": "bytes",
+      "change": "backing",
       "accepted": false
     },
     {
@@ -49,27 +49,15 @@
       "accepted": false
     },
     {
-      "id": "win32-extra",
-      "platform": "win32",
-      "change": "extra",
-      "accepted": false
-    },
-    {
       "id": "win32-volume",
       "platform": "win32",
       "change": "volume",
       "accepted": false
     },
     {
-      "id": "win32-disk",
+      "id": "win32-extra",
       "platform": "win32",
-      "change": "disk",
-      "accepted": false
-    },
-    {
-      "id": "win32-partition",
-      "platform": "win32",
-      "change": "partition",
+      "change": "extra",
       "accepted": false
     }
   ],
@@ -103,16 +91,9 @@
       "kind": "mounted"
     },
     {
-      "id": "linux-foreign-mount",
+      "id": "linux-foreign-text",
       "platform": "linux",
-      "effect": "foreign-mount",
-      "accepted": false,
-      "kind": "mounted"
-    },
-    {
-      "id": "linux-offset",
-      "platform": "linux",
-      "effect": "offset",
+      "effect": "foreign-text",
       "accepted": false,
       "kind": "mounted"
     },
@@ -120,13 +101,6 @@
       "id": "linux-observer",
       "platform": "linux",
       "effect": "observer",
-      "accepted": false,
-      "kind": "mounted"
-    },
-    {
-      "id": "linux-changed-mapping",
-      "platform": "linux",
-      "effect": "changed-mapping",
       "accepted": false,
       "kind": "mounted"
     },
@@ -145,16 +119,23 @@
       "kind": "inactive"
     },
     {
-      "id": "win32-short-footer",
+      "id": "win32-duplicate",
       "platform": "win32",
-      "effect": "short-footer",
+      "effect": "duplicate",
       "accepted": false,
       "kind": "mounted"
     },
     {
-      "id": "win32-wrong-image",
+      "id": "win32-missing-association",
       "platform": "win32",
-      "effect": "wrong-image",
+      "effect": "missing-association",
+      "accepted": false,
+      "kind": "mounted"
+    },
+    {
+      "id": "win32-foreign-text",
+      "platform": "win32",
+      "effect": "foreign-text",
       "accepted": false,
       "kind": "mounted"
     },
@@ -162,20 +143,6 @@
       "id": "win32-observer",
       "platform": "win32",
       "effect": "observer",
-      "accepted": false,
-      "kind": "mounted"
-    },
-    {
-      "id": "win32-wrong-volume",
-      "platform": "win32",
-      "effect": "wrong-volume",
-      "accepted": false,
-      "kind": "mounted"
-    },
-    {
-      "id": "win32-changed-footer",
-      "platform": "win32",
-      "effect": "changed-footer",
       "accepted": false,
       "kind": "mounted"
     }

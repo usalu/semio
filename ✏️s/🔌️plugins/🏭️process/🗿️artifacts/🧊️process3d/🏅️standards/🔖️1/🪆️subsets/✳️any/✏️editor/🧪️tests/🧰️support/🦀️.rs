@@ -220,8 +220,6 @@ fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
         },
     ];
     let json = semio_framework_pack_json::to_json_string(&entries);
-    // 🧵️ B1: an app's own behaviour dispatches only through the typed command channel —
-    // `handle_action` serves the framework-reserved verbs and rejects app command ids.
     dispatch(app, Process3dCommand::SetContributions(set_contributions::SetContributions { json }));
 }
 
@@ -292,10 +290,6 @@ pub fn action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> 
 /// operation publishes after the call answers.
 pub fn settled_action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
     let admitted = ::semio_framework_async::poll::resolve_ready(dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("action dispatch");
-    // 🛂️ A framework-reserved verb (`interactionSelect`, `interactionHover`, undo/redo, …) is only
-    // ADMITTED by `handle_action` — it finishes in a reserved job handed back as an
-    // `Effect::SpawnJob`. Without driving that job home the selection never lands in the
-    // interaction store and every selection-addressed render still projects the empty state.
     let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted)).expect("settle the framework-reserved admission");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());

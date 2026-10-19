@@ -62,7 +62,6 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
             .action_destructive("setActiveExample")
-            // 🛠️ Dev-only whole-snapshot import — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), ActionKind::Mutation) })
             .action_destructive("loadDocumentJson")
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
@@ -81,9 +80,6 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadDocumentJson", InteractiveJobClassification::Migrated)
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
-            // 🕹️ Domain "ast": jack's document nodes, transitive over each node's first incoming
-            // connection (see `interaction_topology`). Selection/hover, marquee, modes and merges are
-            // ALL framework-injected now — no app-declared setSelection/graphPointerDown verbs.
             .interaction(InteractionDefinition {
                 id: "ast".into(),
                 label: LocalizedLabel::native("Nodes", "Knoten"),
@@ -93,15 +89,8 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
             })
             .window_kind_interactions(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec![InteractionRef::new("ast")])
-            // 📇️ Per-window action scoping: `build_definition` copies an unowned action onto EVERY window
-            // kind. Viewport/LOD read the config of the graph window they were dispatched from, so they
-            // belong to the graph; the text verbs edit the document's query where it is typed, so they
-            // belong to the query editor. Document verbs, selection, history and the example picker stay
-            // unscoped on purpose — they read the document, not a pane.
             .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_EDITOR, vec!["textEdit".into(), "textSelect".into(), "formatDocument".into()])
             .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec!["nodeGraphViewport".into(), "setLodMode".into()])
-            // 📝️ Staged argument forms for the panel-visible preset loaders. The option list IS the
-            // subset's registered example set — the navbar picker only ever dispatches a registered id.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Fixture", "Fixtur"), vec![
                     ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label()),

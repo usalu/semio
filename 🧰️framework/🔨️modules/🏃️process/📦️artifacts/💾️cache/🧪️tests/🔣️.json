@@ -3170,5 +3170,39 @@
       "codepoints": 244,
       "allowed": true
     }
+  ],
+  "descriptorRefusals": [
+    {
+      "name": "foreign NUL output",
+      "format": "nul-pcfatn",
+      "observedPid": 72,
+      "pathSuffix": "/i/output",
+      "guardPath": false,
+      "pathTruncated": false
+    },
+    {
+      "name": "foreign inherited guard",
+      "format": "newline-pn",
+      "observedPid": 72,
+      "pathSuffix": "/guard",
+      "guardPath": true,
+      "pathTruncated": false
+    },
+    {
+      "name": "own unexpected output",
+      "format": "newline-pn",
+      "observedPid": 71,
+      "pathSuffix": "/i/own",
+      "guardPath": false,
+      "pathTruncated": false
+    },
+    {
+      "name": "bounded foreign path",
+      "format": "nul-pcfatn",
+      "observedPid": 72,
+      "pathSuffix": "/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "guardPath": false,
+      "pathTruncated": true
+    }
   ]
 }

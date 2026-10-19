@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "semio-course-preflight-stream-sol-20261019",
+  "image": "sha256:04ed9880ecae29f4b9954f72f498b2da9b3b58e4fc4b482d193b64e4a38118e0",
+  "platform": "linux/amd64",
+  "network": "none",
+  "sourceBytes": 7373177,
+  "sourceFiles": 932,
+  "binaryBytes": 79500640,
+  "binaryHash": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c",
+  "maximumMilliseconds": 120000,
+  "maximumCompressedInputBytes": 536870912,
+  "maximumTemporaryBytes": 1342177280,
+  "conservativeInputBytes": 337395620,
+  "conservativeTemporaryBytes": 1038970420,
+  "command": [
+    "bun",
+    "repo",
+    "preflight"
+  ]
+}

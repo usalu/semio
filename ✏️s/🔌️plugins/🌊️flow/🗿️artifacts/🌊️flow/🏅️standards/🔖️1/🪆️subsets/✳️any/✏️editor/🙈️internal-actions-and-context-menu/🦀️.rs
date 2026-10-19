@@ -16,11 +16,6 @@ pub(super) fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &F
 
     let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
     let groups = surface.map_or(&[][..], |target| target.selection.as_slice());
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain's live selection
-    // is framework-owned `InteractionState` now, and `ArtifactApp::context_menu` is not threaded an
-    // `InteractionView` this wave — there is no config-side fallback left to read, so an empty `surface`
-    // (no hit-test/selection groups carried on the request) means no selection, a real known gap rather
-    // than a stale-state read.
     let nodes: Vec<String> = groups.iter().filter(|group| group.domain == "node").flat_map(|group| group.ids.iter().cloned()).collect();
     let edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
     let has_selection = !nodes.is_empty() || !edges.is_empty();
@@ -35,12 +30,6 @@ pub(super) fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &F
     let primary = hits.first();
     let hit_node = primary.filter(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
 
-    // 🗂️ Grouped disclosure: `add-node`/`selectAll`/`focusSelection`/`clearSelection` stay top-level
-    // (the 3-5 most frequent verbs); `reorganize`/`replaceImage`/`toggle-preview` fold into taxonomy
-    // groups; `delete-selection` stays a direct destructive item last (disabled with its reason while nothing is
-    // selected) — `organize_context_menu`
-    // (applied automatically at the `VcsArtifactApp::context_menu` funnel) sorts the groups into
-    // `RIBBON_PARENT_CATEGORIES` order and inserts the pre-destructive separator itself.
     {
         let mut menu = Menu::of(registry, view_state);
         if hits.is_empty() {

@@ -9,7 +9,6 @@
 pub use crate::badges::*;
 pub use crate::challenge::*;
 pub use crate::lifecycle::*;
-pub use crate::presence::*;
 pub use crate::randomness::*;
 pub use crate::scoring::*;
 pub use crate::sheet::*;

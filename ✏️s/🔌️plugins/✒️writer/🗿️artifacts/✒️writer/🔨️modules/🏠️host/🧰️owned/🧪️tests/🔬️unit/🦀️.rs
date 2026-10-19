@@ -171,9 +171,6 @@ fn jack_mutations() -> Vec<WriterMutation> {
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_text_round_trips_through_the_store() {
-    // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
-    // and `reserve_edit_history_slot` then refuses every `Apply`
-    // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
@@ -189,9 +186,6 @@ async fn writer_document_text_round_trips_through_the_store() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
-    // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
-    // and `reserve_edit_history_slot` then refuses every `Apply`
-    // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

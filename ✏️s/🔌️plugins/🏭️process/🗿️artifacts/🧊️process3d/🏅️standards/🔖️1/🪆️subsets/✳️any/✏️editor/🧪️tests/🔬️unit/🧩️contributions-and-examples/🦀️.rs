@@ -98,8 +98,6 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
     let worst = Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: "x".repeat(PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES) }).encode_op().expect("encode lane-sized roster");
     assert!(worst.len() <= PROCESS3D_RESUMABLE_OUTPUT_BYTES, "a lane-filling roster encodes to {} B, past the declared {PROCESS3D_RESUMABLE_OUTPUT_BYTES} B", worst.len());
 
-    // 🚪️ The registry-backed dispatch runs the SAME `admit_host_configuration_json` + output-cap gate
-    // the browser push hits; `action` fails the test on any refusal.
     use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
     let mut app = context::unseeded_app_with_registry();
     let invocation = CommandInvocation {

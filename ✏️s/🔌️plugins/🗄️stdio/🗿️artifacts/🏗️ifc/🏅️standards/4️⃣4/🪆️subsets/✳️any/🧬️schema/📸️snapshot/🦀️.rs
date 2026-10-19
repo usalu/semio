@@ -26,22 +26,22 @@ use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part
 #[value(tag = "kind", content = "value", rename_all = "camelCase")]
 #[derive(Default)]
 pub enum IfcValue {
-    /// `$` — attribute explicitly unset.
+    /// 🎛️ `$` — attribute explicitly unset.
     #[default]
     Unset,
-    /// `*` — attribute derived from a supertype, not stored here.
+    /// 🔖️ `*` — attribute derived from a supertype, not stored here.
     Derived,
     Integer(i64),
     Real(f64),
     String(String),
-    /// `.EDGE.` style enumeration literal (name kept without the surrounding dots).
+    /// 🔀️ `.EDGE.` style enumeration literal (name kept without the surrounding dots).
     Enum(String),
-    /// `#N` — a reference to another entity's id.
+    /// 🔗️ `#N` — a reference to another entity's id.
     Reference(u64),
-    /// `(a, b, c)` — a parenthesized list of values (SET/LIST/ARRAY, all indistinguishable at the
+    /// 🤝️ `(a, b, c)` — a parenthesized list of values (SET/LIST/ARRAY, all indistinguishable at the
     /// Part-21 syntax level).
     Aggregate(Vec<IfcValue>),
-    /// `IFCLENGTHMEASURE(3000.)` — a "defined type" wrapper: EXPRESS keyword + its own arg list.
+    /// 📜️ `IFCLENGTHMEASURE(3000.)` — a "defined type" wrapper: EXPRESS keyword + its own arg list.
     TypedValue(IfcTypedValue),
 }
 

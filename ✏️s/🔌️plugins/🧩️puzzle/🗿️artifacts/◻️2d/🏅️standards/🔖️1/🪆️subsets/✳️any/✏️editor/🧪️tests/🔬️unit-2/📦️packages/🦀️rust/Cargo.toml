@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = ["semio-framework-plugin/artifact-app-testing", "semio-framework-os-kernel/protocol-laws", "semio-framework-os-kernel/mutation-testing", "semio-s-plugin-puzzle-jobs/testing"]
 
 [dependencies]
+semio-s-artifact-puzzle-2d-retained-panels = { path = "../../../../🧵️retained/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-v1 = { path = "../../../../../../../📦️packages/🦀️rust" }
 machine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 pack = { workspace = true }
@@ -102,6 +103,7 @@ semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-puzzle-2d-unit-tests = { path = "../../../🔬️unit/📦️packages/🦀️rust" }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

@@ -1,7 +1,7 @@
 //! 📐️ Exact pure append quotes preserve original text and native allocation receipts.
 use super::*;
 use crate::{RetirementDemand,retirement::controlled::ControlledRetirement};
-use crate::value::observe_retirement_allocations as observe;
+use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes+demand.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 fn exact(step:RetainedCloneStep,heap:(usize,usize),grant:RetainedCloneGrant){assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
 #[test]

@@ -66,8 +66,6 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     inference: inferenceReducer(state.inference, action),
     merge: mergeReducer(state.merge, action),
   };
-  // 🪞️ An action no slice answered with a new value is a no-op: return the SAME state so
-  // `useReducer` bails out instead of reconciling the whole shell (see `withField`).
   return shellStateUnchanged(state, next) ? state : next;
 }
 

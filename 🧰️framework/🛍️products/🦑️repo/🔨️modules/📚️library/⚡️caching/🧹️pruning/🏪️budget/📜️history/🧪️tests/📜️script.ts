@@ -4,9 +4,9 @@ import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-cap
 import {withCompilerWriterCustodyV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {withHistoricalCargoImageMaintenanceV1} from "../🟦️.ts";
 import {retireInactiveCargoStoreV1} from "../../⚙️execution/🟦️.ts";
-if(process.argv.length!==2)throw Error("Exact detached historical failure fixture required");
+if(process.argv.length!==2)throw new Error("Exact detached historical failure fixture required");
 await receiveScriptProcessInvocation(process.env,async invocation=>{
- const root=resolve(import.meta.dir,"../../../../../../../../../.."),mode=process.env.SEMIO_BUILD_MODE,control=scriptCompilerAdmissionControlV1(invocation,"test:accepted-historical-failure",120000),leaseDirectory=join(root,".cache/b/l/m/data");if(mode!=="prototype"&&mode!=="release")throw Error("Exact inherited historical test mode required");
+ const root=resolve(import.meta.dir,"../../../../../../../../../.."),mode=process.env.SEMIO_BUILD_MODE,control=scriptCompilerAdmissionControlV1(invocation,"test:accepted-historical-failure",120000),leaseDirectory=join(root,".cache/b/l/m/data");if(mode!=="prototype"&&mode!=="release")throw new Error("Exact inherited historical test mode required");
  await withHistoricalCargoImageMaintenanceV1(root,invocation,control,{version:1,mode,preview:true},async(image,buildDirectory,targetDirectory,heldControl)=>{
   let entered!:()=>void;const ready=new Promise<void>(accept=>entered=accept);
   void withCompilerWriterCustodyV1(image,leaseDirectory,heldControl,{version:1,wait:false},async()=>{
@@ -15,5 +15,5 @@ await receiveScriptProcessInvocation(process.env,async invocation=>{
   }).catch(()=>{});
   await ready;
  });
- throw Error("Detached historical retirement failure was silently lost");
+ throw new Error("Detached historical retirement failure was silently lost");
 });

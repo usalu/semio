@@ -84,9 +84,6 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: vec![set_camera_action()],
         utilities: Vec::new(),
-        // 🕹️ Left empty on purpose: the manifest binds this window's domain with
-        // `.window_kind_interactions(...)`, the same way process3d/cad do, so the binding is stated
-        // once where the domain is declared.
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: Some(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA.into()),
@@ -149,8 +146,6 @@ fn legend_strip(minimum: f64, maximum: f64) -> UiAssemblyResult<BuiltNode> {
         let source = UiText::try_from_string(legend_swatch_src(band)).map_err(|_| caption_error("a legend swatch source exceeds its UI text bound"))?;
         children.push(
             image(source)
-                // 🙈️ Each swatch is decorative: the strip as a whole carries the accessible name, so a
-                // screen reader hears one legend rather than eight unnamed rectangles.
                 .decorative()
                 .try_id(format!("{LEGEND_SWATCH_NODE_ID_PREFIX}{index}"))
                 .map_err(|_| caption_error("a legend swatch node id was refused"))?

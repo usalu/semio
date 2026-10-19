@@ -22,7 +22,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     readonly flat: readonly string[];
     readonly cases: readonly Case[];
   };
-  // 🧬️ `[7, 7]` in the fixture is the decoded pack; the double is the identity this law measures with.
   const decodePackValue = (bytes: Uint8Array): unknown => [...bytes];
 
   describe("🎁️ req-bearing effects carry their payload under `params`", () => {

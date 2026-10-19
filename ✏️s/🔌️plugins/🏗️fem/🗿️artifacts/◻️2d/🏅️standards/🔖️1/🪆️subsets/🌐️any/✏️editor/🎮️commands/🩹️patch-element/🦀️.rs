@@ -1,6 +1,6 @@
 //! 🩹️ Fem2d play app command — `patch-element`: one-field edit of an element (`kind`, `start`, `end`, `materialId`, `sectionId`) → `ChangeElement`.
 
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement;
+use semio_s_artifact_fem_2d_mesh_elements::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;

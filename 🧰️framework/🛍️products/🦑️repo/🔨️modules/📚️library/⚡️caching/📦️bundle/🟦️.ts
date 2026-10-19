@@ -2,7 +2,7 @@ import { scriptInvocationEnvironment, requireIssuedResourceControlInvocationV1,r
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { mkdir, mkdtemp, readFile, lstat, realpath, copyFile, writeFile } from "node:fs/promises";
-import type { BunBundleRequest, BunBundleResult } from "./🟦️bun/📜️script.ts";
+import type { BunBundleRequest, BunBundleResult } from "./🟦️bun/🟦️.ts";
 import { availableParallelism } from "node:os";
 import { withCompilerCapacityScopeV1, scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRequire } from "node:module";

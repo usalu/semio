@@ -130,7 +130,6 @@ pub trait Operator: Send + Sync {
     /// evaluates an operator directly therefore never becomes the final owner of either
     /// dictionary, and never has to open-code [`Dictionary`]'s drop law
     /// (`final Dictionary ownership must be explicitly retired or owned by a cold boundary`).
-    // 🚫️async: E1 pure operator evaluation mirroring `evaluate` (no I/O) — see R9
     fn evaluate_cold(&self, input: Dictionary) -> Result<ColdOwner<Dictionary>, EvalError> {
         let input = ColdOwner::new(input);
         self.evaluate(&input).map(ColdOwner::new)

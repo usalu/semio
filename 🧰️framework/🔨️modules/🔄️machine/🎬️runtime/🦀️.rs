@@ -140,8 +140,6 @@ pub fn route_command<M: Machine>(host: &mut impl Host<M>, snapshot: &mut Snapsho
             None
         }
         Command::Raise(_) => {
-            // The kernel's run-to-completion loop already re-processed this
-            // internally; forwarded here only for host-side observability.
             None
         }
         Command::Send { to, event } => Some((to, event)),

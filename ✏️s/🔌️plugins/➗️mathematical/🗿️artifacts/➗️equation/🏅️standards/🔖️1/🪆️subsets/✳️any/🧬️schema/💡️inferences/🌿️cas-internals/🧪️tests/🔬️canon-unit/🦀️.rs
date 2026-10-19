@@ -76,7 +76,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn radical_partial_extraction_matches_plan_example() {
-        // 8^(1/2) -> 2 * 2^(1/2)
         let e = make_pow(Expr::integer(8), make_rational(Rational::from_i64(1, 2).unwrap()));
         let expected = make_mul(vec![Expr::integer(2), make_pow(Expr::integer(2), make_rational(Rational::from_i64(1, 2).unwrap()))]);
         assert_eq!(e, expected);
@@ -84,7 +83,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn radical_exact_perfect_power_folds_fully() {
-        // 4^(1/2) -> 2
         let e = make_pow(Expr::integer(4), make_rational(Rational::from_i64(1, 2).unwrap()));
         assert_eq!(e, Expr::integer(2));
     }
@@ -130,7 +128,6 @@ mod tests {
             make_add(vec![make_mul(vec![Expr::integer(2), x.clone()]), make_mul(vec![Expr::integer(3), x])]),
         ];
         for e in corpus {
-            // Rebuilding from the same top-level kind should reproduce exactly the same expression.
             let rebuilt = match e.kind() {
                 Kind::Add(terms) => make_add(terms.clone()),
                 Kind::Mul(factors) => make_mul(factors.clone()),

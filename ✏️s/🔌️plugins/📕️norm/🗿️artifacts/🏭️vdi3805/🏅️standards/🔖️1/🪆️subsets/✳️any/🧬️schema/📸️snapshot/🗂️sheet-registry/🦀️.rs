@@ -23,7 +23,7 @@ impl semio_framework_dsl_record::DslField for SheetId {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<u16 as semio_framework_dsl_record::DslField>::shape_controlled(control)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<u16 as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
 
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
         <u16 as semio_framework_dsl_record::DslField>::from_value_controlled(value, control).map(Self)
     }
     fn shape() -> semio_framework_dsl_record::Shape {

@@ -8,7 +8,7 @@ export interface PlyBounds {
 }
 
 export interface PlyInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: PlyBounds;
 }
 

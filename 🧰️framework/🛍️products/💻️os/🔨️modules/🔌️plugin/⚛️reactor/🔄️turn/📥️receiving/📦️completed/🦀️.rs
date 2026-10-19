@@ -11,7 +11,7 @@ use semio_framework_plugin_actor_host::requests;
 use semio_framework_value::{DslValue, RetainedCloneGrant};
 use semio_framework_job_native_decode::{OriginalNativeDecodeSource, OriginalNativeDecodePolicy, OriginalNativeDecodeIssued};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy};
-use semio_framework_pack::record::intrinsic::{RetainedIntrinsicDocument, RetainedIntrinsicInput};
+use semio_framework_pack::record::intrinsic::{RetainedIntrinsicDocument};
 #[doc(hidden)]
 #[path="⚠️fault/🦀️.rs"]
 pub mod fault;
@@ -19,6 +19,7 @@ pub mod fault;
 #[path="⚠️failure/🦀️.rs"]
 pub mod failure;
 use crate::original_receiving::completed::failure::DecodeFailure;
+use pack::intrinsic::RetainedIntrinsicInput;
 const MAXIMUM:usize=semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES;
 type Grammar=JsonGrammarCursor<DslValue>;
 #[doc(hidden)]
@@ -69,7 +70,7 @@ impl CompletedInput{
  fn pack_step(&mut self,cx:&mut StepContext<'_>)->Result<Option<CompletedResult>,OriginalTurnFailure>{
   if self.pack.is_none(){
    if !self.wire_step(cx)?||!metadata(cx)?{return Ok(None)}let inputs=self.inputs.as_mut().unwrap();let bytes=Self::take_wire(inputs);
-   let limits=semio_framework_pack::PackLimits{max_file_len:MAXIMUM as u64,max_segment_len:MAXIMUM as u64,max_symbols:MAXIMUM as u32,max_depth:128,max_items:MAXIMUM as u64,max_total_alloc:MAXIMUM as u64};
+   let limits=pack::PackLimits{max_file_len:MAXIMUM as u64,max_segment_len:MAXIMUM as u64,max_symbols:MAXIMUM as u32,max_depth:128,max_items:MAXIMUM as u64,max_total_alloc:MAXIMUM as u64};
    match RetainedIntrinsicDocument::new(RetainedIntrinsicInput::OwnedBytes(bytes),limits,MAXIMUM){Ok(owner)=>*self.pack=Some(owner),Err((error,RetainedIntrinsicInput::OwnedBytes(bytes)))=>{inputs.wire=bytes;*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250},Err(_)=>unreachable!()}return Ok(None)
   }
   let owner=self.pack.as_mut().unwrap();let demand=match owner.original_step_demands(){Ok(demand)=>demand,Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250;return Ok(None)}};let grant=cx.retained_grant();if !permits(cx,grant,demand){return Ok(None)}let call=owner.advance_original_step(RetainedCloneGrant{maximum_items:1,..grant},false);let progress=call.progress;cx.consume_fuel(u64::from(progress.copied_items!=0));cx.consume_retained(progress)?;match call.result{Ok(step)if step.complete=>{if !metadata(cx)?{return Ok(None)}self.inputs.as_mut().unwrap().output=owner.take_output();self.phase=5},Ok(_)=>{},Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,progress));self.phase=250}}Ok(None)

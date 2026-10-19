@@ -1,0 +1,43 @@
+{
+ "ws": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/Cargo.toml",
+ "old_name": "semio-s-artifact-stdio-docx-base-model",
+ "old_pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+ "moves": [
+  "standards::v_ecma_376::subsets::base::schema::diff"
+ ],
+ "extra_decls": [
+  {
+   "in": "standards::v_ecma_376::subsets::base::io::binary",
+   "name": "diff",
+   "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+   "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/🦀️.rs",
+   "decl": "#[path = \"🔺️diff/🦀️.rs\"]\npub mod diff;\n"
+  },
+  {
+   "in": "standards::v_ecma_376::subsets::base::io::text",
+   "name": "diff",
+   "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/🦀️.rs",
+   "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📝️text/🦀️.rs",
+   "decl": "#[path = \"🔺️diff/🦀️.rs\"]\npub mod diff;\n"
+  }
+ ],
+ "inject_lines": [
+  {
+   "in": "standards::v_ecma_376::subsets::base::schema",
+   "line": "pub use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot;"
+  },
+  {
+   "in": "standards::v_ecma_376::subsets::base::schema",
+   "line": "pub use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction;"
+  }
+ ],
+ "new": {
+  "name": "semio-s-artifact-stdio-docx-base-diff",
+  "dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧱️diff-codecs",
+  "emoji": "🔺️",
+  "doc": "The docx ecma-376 base diff with its text and binary codecs, held by its own crate above the model so the model crate stays inside the source gate.",
+  "desc": "Stdio docx ecma-376 base diff and diff codecs"
+ },
+ "subtree": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx",
+ "script": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/📜️script.ts"
+}

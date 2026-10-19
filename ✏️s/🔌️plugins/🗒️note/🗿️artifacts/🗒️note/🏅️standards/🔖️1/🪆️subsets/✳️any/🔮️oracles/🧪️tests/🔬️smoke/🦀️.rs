@@ -26,8 +26,6 @@ fn project_note_svg_decomposes_the_group_transform_and_reaches_the_path() {
     let outer_layer_group = &root.array("children")[0];
     let block_group = &outer_layer_group.array("children")[0];
     let transform = block_group.get("transform").expect("transform decomposed, not left as a raw string");
-    // 🔺 `MarkupTransformOp::Matrix{a,b,c,d,e,f}` projected positionally — e/f are the translation
-    // this subject's `note_block_transform` would have written for `x: 5.0, y: 10.0`.
     assert!(format!("{transform:?}").contains('5'), "expected the translate-x component 5 somewhere in {transform:?}");
     let path = &block_group.array("children")[0];
     assert_eq!(path.str("name"), "path");

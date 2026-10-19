@@ -225,7 +225,6 @@ function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls
     controls.target.set(target[0], target[1], target[2]);
     controls.update();
   }
-  // Duck-type zoomable cameras — `instanceof` fails across duplicate `three` package copies.
   const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom: number; updateProjectionMatrix: () => void };
   if (zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) {
     zoomable.zoom = state.zoom;

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Zero-Touch Closure Roster V1",
+  "description": "The entries whose relative import closure must run on a checkout with no installed dependencies. A closure of mode full follows static imports, dynamic imports and require calls; mode static follows static imports only. A seam is a module that needs installed dependencies: a closure may load it through a dynamic import or require call (the edge is not followed) but never through a static import.",
+  "type": "object",
+  "required": ["version", "closures", "seams"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "closures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "entry", "mode", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "entry": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "mode": { "enum": ["full", "static"] },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "seams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["module", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "module": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -85,7 +85,6 @@ fn parse_definition_ranges_default(lang: &Language, lines: &[&str]) -> Vec<Defin
         let mut end = start;
         if indent_scoping {
             let start_indent = indent_of(lines[start - 1]);
-            // 📏️The index is the answer here, not the element: `end` is a line NUMBER.
             #[allow(clippy::needless_range_loop)]
             for line_index in start..lines.len() {
                 let line = lines[line_index].trim_end_matches('\r');
@@ -224,7 +223,6 @@ pub fn extra_orphan_definitions(lang: &Language, lines: &[&str]) -> Vec<Definiti
                     let start = i + 1;
                     let mut end = start;
                     if trimmed.starts_with("import (") {
-                        // 📏️The index is the answer here, and it also advances the outer cursor.
                         #[allow(clippy::needless_range_loop)]
                         for j in i + 1..lines.len() {
                             if lines[j].trim() == ")" {

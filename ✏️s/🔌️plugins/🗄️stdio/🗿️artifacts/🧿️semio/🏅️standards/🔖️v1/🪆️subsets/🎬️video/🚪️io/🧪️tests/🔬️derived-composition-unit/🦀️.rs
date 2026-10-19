@@ -54,11 +54,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn non_monotonic_pts_is_a_soft_warning_not_a_hard_error() {
         let mut snap = clean_snapshot();
-        // sample 0 has pts=0; force sample 1's pts BELOW it (a genuine decrease, not just equal).
         snap.streams[0].samples[1].pts = 0;
         snap.streams[0].samples.push(SemioVideoSample { pts: 33, key: false, data: vec![3] });
-        snap.streams[0].samples[1].pts = snap.streams[0].samples[0].pts; // equal: allowed
-        snap.streams[0].samples.push(SemioVideoSample { pts: 0, key: false, data: vec![4] }); // decrease vs prev (33)
+        snap.streams[0].samples[1].pts = snap.streams[0].samples[0].pts;
+        snap.streams[0].samples.push(SemioVideoSample { pts: 0, key: false, data: vec![4] });
         let diagnostics = check_semio_video_invariants(&snap);
         assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_video.pts-non-monotonic" && d.severity == semio_framework_diagnostic::Severity::Warning));
         assert!(diagnostics.iter().all(|d| d.severity != semio_framework_diagnostic::Severity::Error), "non-monotonic pts must never be a hard error: {diagnostics:?}");

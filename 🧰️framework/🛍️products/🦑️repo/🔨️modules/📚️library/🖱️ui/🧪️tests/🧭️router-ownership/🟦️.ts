@@ -75,7 +75,7 @@ test("portable UI ownership schema keeps exact generic and workspace routes at t
     expect(general.targets[row.command]).toBeUndefined();
     expect(repo.targets[row.target].options.command).toBe("bun ./📜️script.ts ui " + row.command);
     expect(routes(parse(corpus.repoScript))).toContain(row.command);
-    if (row.command.startsWith("check-")) expect(repo.targets[row.target].cache).toBe(false);
+    if (row.command.startsWith("check-")) expect(repo.targets[row.target].cache === false || repo.targets[row.target].inputs?.includes("reads"), row.target).toBe(true);
   }
   const taxonomy = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"));
   expect(taxonomy.semanticDirectoryKinds[corpus.directoryKind].parentKindIds).toEqual([corpus.parentKind]);

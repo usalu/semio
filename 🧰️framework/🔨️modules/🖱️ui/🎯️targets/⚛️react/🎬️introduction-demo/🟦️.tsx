@@ -1,6 +1,6 @@
 import type { IntroductionGesture, IntroductionCursor, IntroductionKeyModifier, IntroductionDemonstration, IntroductionPoint } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import * as React from "react";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, type IntroductionResolvedPoint, resolveIntroductionPoint, useIntroductionPointerIdle } from "../🧭️introduction-resolve/🟦️.ts";
@@ -125,9 +125,6 @@ export const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration
   const calloutRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const trailPathRef = reactHostPort.useRef<SVGPathElement | null>(null);
   const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
-  // 🐚️ Falls back to `document.documentElement` outside any shell (e.g. the mit-bestand demonstrator's
-  // own standalone onboarding tour) — inside one, scopes the cursor-hide to that shell's own root so one
-  // shell's demonstration never mutes the cursor over another shell (`.semio-scope[...]` in `🎨️ui.css`).
   const shellScope = useShellScopeOptional();
   const demoHost = shellScope?.portalLayerRef.current ?? null;
   const demoPositionClass = demoHost ? "absolute" : "fixed";
@@ -264,8 +261,6 @@ export const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration
         return;
       }
 
-      // 🎬️ Scroll/zoom needs a longer dwell than a click press — rings and wheel-roll read as zoom only
-      // when they have time to expand/contract instead of flashing like a middle-button click.
       const duration = isScroll && phase === "press" ? 900 : INTRODUCTION_DEMO_PHASE_MS[phase];
       const t = Math.min(1, (now - phaseStart) / duration);
       const eased = introductionDemoEaseInOutCubic(t);

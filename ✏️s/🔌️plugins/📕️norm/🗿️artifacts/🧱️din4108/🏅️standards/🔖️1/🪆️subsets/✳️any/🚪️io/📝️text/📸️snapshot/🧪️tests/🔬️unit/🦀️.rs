@@ -11,7 +11,6 @@ async fn bundled_example_fixture_parses_and_round_trips() {
     let text = crate::text::snapshot::encode_din4108_dsl(&Din4108Snapshot::default());
     let document = parse_dsl(&text).expect("parse encoded default");
     store::os_store::test_support::assert_dsl_round_trip(&document);
-    // Persist for assets / include_str consumers.
     let root = fixture_path!("../../../🖼️assets");
     let _ = std::fs::create_dir_all(root.join("🎬️demo"));
     let _ = std::fs::create_dir_all(root.join("🎬️failing-thin-insulation"));

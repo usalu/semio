@@ -130,11 +130,6 @@ mod tests {
             ("home", <SHomeDocument as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<SHomeDocument>),
             ("semio_framework_os", <WorkflowSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<WorkflowSnapshot>),
             ("sourcing", <CurationDocument as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<CurationDocument>),
-            // 🌱️ `forms` app fixtures ship as `*.forms`, but `FormSpec` is a bare `pub use` alias of
-            // `playbook::PlaybookSpec` (forms never overrode `#[dsl(extension = ...)]`), so
-            // `<FormSpec as pack::snapshot::ArtifactDsl>::envelope_id()` is actually `"playbook"`, not `"forms"` —
-            // registered here under the file's real suffix too since `parse_dsl`/`print_dsl` only
-            // care about the grammar's field shape, never the extension string.
             ("forms", "forms", semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<FormSpec>),
             ("space", <SpaceSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<SpaceSnapshot>),
             ("space", <CollectionSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(), semio_framework_os_kernel::os_store::test_support::check_dsl_fixture_text_laws::<CollectionSnapshot>),
@@ -309,9 +304,6 @@ mod tests {
 
     #[test]
     fn repo_wide_semio_example_kind_coverage() {
-        // Target: each artifact `📚️examples/<slug>/` has `🖼️assets/` with ≥1 `.semio`.
-        // Mid-migration (W1b→W3): soft-skip slugs that still lack `🖼️assets/` with a clear message.
-        // Empty `🖼️assets/` after the dir exists is a hard gap.
         let root = repo_root();
         let plugins = root.join("✏️s").join("🔌️plugins");
         let mut gaps: Vec<String> = Vec::new();

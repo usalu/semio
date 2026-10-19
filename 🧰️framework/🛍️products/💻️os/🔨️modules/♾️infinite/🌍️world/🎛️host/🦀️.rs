@@ -34,31 +34,31 @@ use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dPro
 use serde_json::json;
 
 pub struct World3dState {
-    /// Surface identity, bounds, domain binding, utilities and presentation of one 3D surface.
+    /// 📸️ Surface identity, bounds, domain binding, utilities and presentation of one 3D surface.
     pub session: WorldSessionState,
-    /// Orbit rig, projection, camera fit and camera sync.
+    /// 📷️ Orbit rig, projection, camera fit and camera sync.
     pub camera: WorldCameraState,
-    /// Hover, selection, marquee and pick-target state.
+    /// 👉️ Hover, selection, marquee and pick-target state.
     pub selection: WorldSelectionState,
-    /// Gumball, brush preview, catalogue drop preview and relocate drag.
+    /// 🧭️ Gumball, brush preview, catalogue drop preview and relocate drag.
     pub gumball: WorldGumballState,
-    /// Interaction mesh/object registries and instance interaction ids.
+    /// 🤝️ Interaction mesh/object registries and instance interaction ids.
     pub interaction: WorldInteractionState,
-    /// The interaction authority state machine with its active cursor or job.
+    /// 👑️ The interaction authority state machine with its active cursor or job.
     pub authority: WorldAuthorityState,
-    /// The in-flight dynamic retirement cursor.
+    /// 🖱️ The in-flight dynamic retirement cursor.
     pub retirement: WorldRetirementState,
-    /// Resident meshes, draws, scene records (vortices, references, lod, environment), placeholder meshes and dynamic retirement slots.
+    /// 🎬️ Resident meshes, draws, scene records (vortices, references, lod, environment), placeholder meshes and dynamic retirement slots.
     pub scene: WorldSceneState,
-    /// Terrain style, tiles, session and build.
+    /// 🗺️ Terrain style, tiles, session and build.
     pub terrain: WorldTerrainState,
-    /// Face overlay build, sub-element paint, scalar field and prepared status.
+    /// 💬️ Face overlay build, sub-element paint, scalar field and prepared status.
     pub overlay: WorldOverlayState,
-    /// Scene bridge, snapshot apply and scene digests.
+    /// 🌉️ Scene bridge, snapshot apply and scene digests.
     pub bridge: WorldBridgeState,
-    /// Asset io authority, url bookkeeping and brush mesh announce.
+    /// 🎞️ Asset io authority, url bookkeeping and brush mesh announce.
     pub assets: WorldAssetsState,
-    /// Tool run trace layer.
+    /// 📒️ Tool run trace layer.
     pub trace: WorldTraceState,
 }
 

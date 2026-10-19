@@ -119,18 +119,12 @@ async fn format_artifact_reformats_jack_query() {
     let mut app = app_with_jack().await;
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() })).await;
     let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
-    // 🧾️ A MOUNTED app never surfaces its operations in `result.mutations`: the edit lands through
-    // the retained publication lane and `InvocationResult::mutations` stays empty (fleet-brief
-    // stale-test bucket 3). Asserting a count of 1 there tested the UNMOUNTED shape this harness
-    // stopped using; the projection assertion that follows is the real proof the edit landed.
     assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     assert!(writer_text(&app.snapshot().expect("projection")).contains('\n'));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn format_document_without_change_emits_no_operation() {
-    // A no-operation format (already-formatted or non-jack empty doc) bumps the format signal but must
-    // not record a history entry.
     let mut app = new_app().await;
     let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
     assert!(result.mutations.is_empty());
@@ -140,7 +134,6 @@ async fn format_document_without_change_emits_no_operation() {
 async fn set_text_action_updates_projection() {
     let mut app = new_app().await;
     let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() })).await;
-    // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
     assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "MATCH (a) RETURN a");
 }
@@ -165,11 +158,8 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
     let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
     assert_eq!(occurrences.len(), 3);
     let (start, _) = occurrences[0];
-    // 🎯️ `CommitRename` reads the rename target from the exact main-window transient selection — set it via
-    // a real selection command first (mirrors what the editor surface does before offering rename).
     dispatch(&mut app, WriterCommand::SetEditorSelection(crate::editor::writer::commands::set_editor_selection::SetEditorSelection { start, end: start, splice: 0 })).await;
     let result = crate::editor_unit_tests::context::dispatch(&mut app, WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() })).await;
-    // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
     assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     let text = writer_text(&app.snapshot().expect("projection"));
     assert_eq!(text.matches("piece").count(), 3);

@@ -74,6 +74,12 @@ semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde_json = "1.0.140"
+semio-framework-async = { workspace = true }
+semio-framework-plugin-reactor-core = { path = "../../../../⚛️reactor/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-reconcile = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/📦️packages/🦀️rust" }
+semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-patches = { path = "../../../../⚛️reactor/🩹️patches/📦️packages/🦀️rust" }
+semio-framework-ui-runtime-presentation = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/🖼️presentation/📦️packages/🦀️rust" }
 
 [features]
 artifact-app-testing = []

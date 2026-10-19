@@ -1,4 +1,4 @@
-//! Diff for `change-fire-rating`.
+//! 🔺️ Diff for `change-fire-rating`.
 use crate::change_fire_rating::ChangeFireRating;
 use semio_s_artifact_norm_en1994_diff::En1994Diff;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

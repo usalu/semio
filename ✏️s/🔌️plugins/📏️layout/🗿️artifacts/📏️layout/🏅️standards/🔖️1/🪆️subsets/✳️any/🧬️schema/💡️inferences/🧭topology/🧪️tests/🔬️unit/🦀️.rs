@@ -28,8 +28,6 @@ async fn empty_document_has_empty_topology() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_page_dangling_its_spread_ref_still_sorts_cleanly() {
-    // 🕳️ `spreadId` points at a spread that doesn't exist in this snapshot — the edge is simply
-    // dropped (see `topological_sort`'s `indegree.contains_key` guard), not a cycle.
     let topology = compute_layout_topology(&[], &[], &[page("orphan", "missing-spread", None)]);
     assert!(topology.cycle_free);
     assert_eq!(topology.topo_order, vec!["orphan"]);

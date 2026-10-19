@@ -34,7 +34,6 @@ pub struct SceneTarget {
 }
 
 impl SceneTarget {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &Device, width: u32, height: u32, format: MTLPixelFormat) -> Self {
         let width = width.max(1);
         let height = height.max(1);
@@ -45,7 +44,6 @@ impl SceneTarget {
 
     /// 🔁️ Recreates both textures only when the requested size actually changed — mirrors
     /// `SceneColorTarget::ensure`'s early return.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn ensure(&mut self, device: &Device, width: u32, height: u32) {
         let width = width.max(1);
         let height = height.max(1);
@@ -58,22 +56,18 @@ impl SceneTarget {
         self.height = height;
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn texture(&self) -> &MetalTexture {
         &self.texture
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn blur_scratch(&self) -> &MetalTexture {
         &self.blur_scratch
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn width(&self) -> u32 {
         self.width
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn height(&self) -> u32 {
         self.height
     }

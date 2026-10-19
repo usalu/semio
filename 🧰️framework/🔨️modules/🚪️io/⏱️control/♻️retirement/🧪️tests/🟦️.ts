@@ -1,8 +1,8 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020";
-import {NativeDecodeControl} from "../../../../🌱️value/🛬️decode/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 test("original IO retirement neutral receipts preserve the cancelled original ledger and SQLite wallet",async()=>{

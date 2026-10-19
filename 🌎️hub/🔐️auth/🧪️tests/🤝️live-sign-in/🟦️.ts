@@ -102,7 +102,6 @@ try {
     await waitForLocalHubExitV1(run);return;
   }
 
-  // 1️⃣ sign in
   const minted = await call("POST", "/auth/sessions", { body: signInBody(ADA.email, ADA.password, "device-ada") });
   check("1 sign-in status", minted.status, 200);
   const adaToken: string = minted.json?.token ?? "";
@@ -110,7 +109,6 @@ try {
   check("1 minted user id", minted.json?.user_id, adaId);
   check("1 no-store", minted.body.length > 0, true);
 
-  // 2️⃣ session introspection carries the expiry the mint body withholds
   const me = await call("GET", "/auth/sessions/me", { token: adaToken });
   check("2 me status", me.status, 200);
   check("2 me userId", me.json?.userId, adaId);
@@ -119,28 +117,24 @@ try {
   check("2 me sessionKind", me.json?.sessionKind, "external");
   check("2 me expiresAt is a future epoch-ms integer", Number.isSafeInteger(me.json?.expiresAt) && me.json.expiresAt > Date.now(), true);
 
-  // 3️⃣ a wrong password is one uniform refusal
   const wrong = await call("POST", "/auth/sessions", { body: signInBody(ADA.email, "definitely not the phrase", "device-ada") });
   check("3 wrong password status", wrong.status, 401);
   check("3 wrong password body", wrong.json, { schema: "semio.hub.auth.error/v1", error: "invalid-credentials" });
   const unknown = await call("POST", "/auth/sessions", { body: signInBody("nobody@example.org", "definitely not the phrase", "device-ada") });
   check("3 unknown account is indistinguishable", unknown.json, wrong.json);
 
-  // 4️⃣ create a space
   const created = await command(adaToken, "a".repeat(32), { kind: "create-space", name: "Atelier AU3", spaceKind: "atelier", visibility: "private" });
   check("4 create-space status", created.status, 202);
   check("4 create-space outcome", created.json?.outcome, "accepted");
   const spaceId = await spaceIdByName(adaToken, "Atelier AU3");
   check("4 the new space is in the author's own listing", spaceId.length > 0, true);
 
-  // 5️⃣ create an invitation
   const invited = await command(adaToken, "b".repeat(32), { kind: "create-invite", spaceId, role: "spectator", ttlSecs: 3600 });
   check("5 create-invite status", invited.status, 202);
   check("5 create-invite result kind", invited.json?.result?.kind, "invite");
   const inviteToken: string = invited.json?.result?.inviteToken ?? "";
   check("5 invite capability shape", /^invite\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$/u.test(inviteToken), true);
 
-  // 6️⃣ a second principal signs in and redeems it
   const boMint = await call("POST", "/auth/sessions", { body: signInBody(BO.email, BO.password, "device-bo") });
   check("6 second sign-in status", boMint.status, 200);
   const boToken: string = boMint.json?.token ?? "";
@@ -149,14 +143,12 @@ try {
   const boSpaces = await call("GET", "/directory/spaces", { token: boToken });
   check("6 the second principal now sees the space", Array.isArray(boSpaces.json) && boSpaces.json.some((entry: any) => entry?.space?.id === spaceId), true);
 
-  // 7️⃣ both appear in the roster the os workspace reads
   const page = await call("GET", `/directory/spaces/${encodeURIComponent(spaceId)}`, { token: adaToken });
   check("7 space page status", page.status, 200);
   check("7 the author's page carries the member window", ["author", "member"].includes(page.json?.access), true);
   const roster = (page.json?.members?.rows ?? []).map((row: any) => [row.userId, row.role, row.owner]).sort();
   check("7 roster", roster, [[adaId, "author", true], [boId, "spectator", false]].sort());
 
-  // 8️⃣ a password change revokes every session of that principal
   const changed = await call("POST", "/auth/credentials", { token: adaToken, body: { schema: "semio.hub.auth.credential-change/v1", currentPassword: ADA.password, newPassword: NEW_ADA_PASSWORD } });
   check("8 credential change status", changed.status, 204);
   check("8 the changed principal's old capability is gone", (await call("GET", "/auth/sessions/me", { token: adaToken })).status, 401);
@@ -165,12 +157,10 @@ try {
   check("8 the old password no longer mints", (await call("POST", "/auth/sessions", { body: signInBody(ADA.email, ADA.password, "device-ada") })).status, 401);
   check("8 a change without the current password is refused", (await call("POST", "/auth/credentials", { token: reMint.json.token, body: { schema: "semio.hub.auth.credential-change/v1", currentPassword: "not the current one", newPassword: "yet another phrase here" } })).status, 401);
 
-  // 9️⃣ sign out
   check("9 sign-out status", (await call("POST", "/auth/sessions/me/sign-out", { token: boToken })).status, 204);
   check("9 sessions are never deleted as a resource", (await call("DELETE", "/auth/sessions/me", { token: boToken })).status, 405);
   check("9 the signed-out capability is gone", (await call("GET", "/auth/sessions/me", { token: boToken })).status, 401);
 
-  // 🔟 rate-limit lockout, last because it empties the bucket for this address
   let lockout: Answer | undefined;
   for (let attempt = 0; attempt < 24 && lockout === undefined; attempt += 1) {
     const answer = await call("POST", "/auth/sessions", { body: signInBody("lockout@example.org", "a wrong phrase entirely", "device-lock") });

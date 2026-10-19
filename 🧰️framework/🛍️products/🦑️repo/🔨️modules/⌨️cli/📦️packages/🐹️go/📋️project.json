@@ -2,9 +2,26 @@
   "name": "@semio-tech/repo-cli-go",
   "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
+  "namedInputs": {
+    "goToolchain": [
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "targets": {
     "build": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        "goToolchain"
+      ],
       "outputs": ["{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe", "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo"],
       "metadata": { "semio": { "dashboard": { "verb": "build", "title": { "en": "Build Go Repository Commands", "de": "Go-Repository-Befehle Bauen" }, "description": { "en": "Build the current Go implementation used by repository tasks in the dashboard.", "de": "Die aktuelle Go-Implementierung für Repository-Aufgaben im Dashboard bauen." } } } },
       "options": {
@@ -14,6 +31,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "goToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83d\udc39\ufe0fgo",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test"

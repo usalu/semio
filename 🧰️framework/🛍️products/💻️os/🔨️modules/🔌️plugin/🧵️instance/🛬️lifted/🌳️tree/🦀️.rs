@@ -1,4 +1,4 @@
-//! 🌳️ Lift file: 4 item(s), about 63 lines, of `📜️declaration/🌳️tree/🦀️.rs` that belong to crate `instance-app` (WP7).
+//! 🌳️ The editor and viewer surface declarations of the instance app: 4 item(s), about 63 lines, lifted out of `📜️declaration/🌳️tree/🦀️.rs`, held above `instance-app` so the app crate stays inside the source gate.
 //!
 //! WP2 owns the source file and cuts the items here (editor_surface, viewer_surface, EditorSurfaceApp, ViewerSurfaceApp); WP7 wires this file with one `mod` line in the crate root. Until `instance-app` exists, the source module re-exports the items with `pub use`.
 use semio_framework::AppDefinition;
@@ -7,7 +7,7 @@ use semio_framework::kernel::Rights;
 use semio_framework_plugin_window_kits::AppActionRegistry;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_decl_app::mount_natural_file_actions;
-use crate::VcsArtifactApp;
+use semio_framework_plugin_instance_app::VcsArtifactApp;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
 use semio_framework_plugin_decl_surface::ArtifactViewer;
 use semio_framework_plugin_decl_surface::EditorApp;

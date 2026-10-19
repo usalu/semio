@@ -10,7 +10,7 @@ export interface DeflateWindow {
 }
 
 export interface DeflateInference {
-  /** @derived */
+  /** 🪟️ @derived */
   window: DeflateWindow;
 }
 

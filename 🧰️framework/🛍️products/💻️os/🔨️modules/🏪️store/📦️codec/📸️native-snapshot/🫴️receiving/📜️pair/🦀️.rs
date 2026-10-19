@@ -1,12 +1,13 @@
 //! 📜️ Original Pack and committed SPR receive together without replacing their supplied source authority.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::{OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving};
-use crate::os_spr::history::{HistoryLog,RetainedHistorySourcePartial,RetainedHistorySourceDecode,RetainedHistoryOpMetaFault};
+use semio_framework_os_spr::history::{HistoryLog,RetainedHistorySourcePartial,RetainedHistorySourceDecode,RetainedHistoryOpMetaFault};
 pub use protocol::codec::HistoryReadLimits as OriginalArtifactHistoryReadLimits;
 use OriginalArtifactHistoryReadLimits as HistoryReadLimits;
-use crate::os_pack::PackLimits;
+use protocol::PackLimits;
 use semio_framework_dsl_record::receiving::OwnedSlot;
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{size_of,ManuallyDrop};
 
 /// 🧯️ The complete native or structured History failure keeps its distinct actual physical receipt.
@@ -74,10 +75,10 @@ impl<P:OriginalArtifactPackReceiving> OriginalArtifactPairReceiving<P> {
  /// 📦️ Transfers the same genesis and History owners; it does not settle, fold or discard supplied edits.
  pub fn take_into(&mut self,output:&mut Option<(P,HistoryLog)>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> { let demand=self.take_demand();if output.is_some()||!self.is_ready()||!funds(grant,demand){return Ok(Default::default())}*output=Some((self.snapshot_output.value.take().unwrap(),self.history_output.value.take().unwrap()));self.phase=9;Ok(receipt(demand)) }
  /// 👁️ Transfers the exact received History into its actual original shared source while genesis stays resident.
- pub fn admit_history_source(&mut self,pack:&[u8],spr:&[u8],output:&mut Option<crate::os_spr::history::OriginalHistorySource>,native:&mut NativeDecodeControl<'_>)->semio_framework_value::native_decoding::NativeConstructionStepOutcome<bool,semio_framework_value::native_decoding::OriginalReceivingPrimary>{
-  if let Err(error)=self.validate(pack,spr,native){return semio_framework_value::native_decoding::NativeConstructionStepOutcome{result:Some(Err(error.into())),receipt_refusal:None,progress:Default::default()}}
-  if !self.is_ready(){return semio_framework_value::native_decoding::NativeConstructionStepOutcome{result:None,receipt_refusal:None,progress:Default::default()}}
-  let outcome=crate::os_spr::history::OriginalHistorySource::admit(&mut self.history_output.value,output,native);
+ pub fn admit_history_source(&mut self,pack:&[u8],spr:&[u8],output:&mut Option<semio_framework_os_spr::history::OriginalHistorySource>,native:&mut NativeDecodeControl<'_>)->semio_framework_value_native_owned::native_decoding::NativeConstructionStepOutcome<bool,semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>{
+  if let Err(error)=self.validate(pack,spr,native){return semio_framework_value_native_owned::native_decoding::NativeConstructionStepOutcome{result:Some(Err(error.into())),receipt_refusal:None,progress:Default::default()}}
+  if !self.is_ready(){return semio_framework_value_native_owned::native_decoding::NativeConstructionStepOutcome{result:None,receipt_refusal:None,progress:Default::default()}}
+  let outcome=semio_framework_os_spr::history::OriginalHistorySource::admit(&mut self.history_output.value,output,native);
   if self.history_output.value.is_none(){self.phase=10;}
   outcome
  }

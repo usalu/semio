@@ -21,6 +21,7 @@ use crate::{ToolRunMemberEmissionOwner, ToolRunMemberOwners};
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_ui_contract::*;
 use semio_framework::kernel::RequestId;
+use semio_framework::Effect;
 
 #[test]
 fn original_tool_run_port_preserves_atomic_final_queue_and_full_grants(){

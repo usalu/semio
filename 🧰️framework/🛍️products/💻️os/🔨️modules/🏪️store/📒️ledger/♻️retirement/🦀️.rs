@@ -15,8 +15,8 @@ use semio_framework_os_vcs::Change;
 
 use semio_framework_os_pack::pack_rt;
 
-impl<Mu> From<semio_framework_value::list::PagedList<Mu, {usize::MAX}>> for ArtifactStoreOperationRowOwners<Mu> {
-    fn from(rows: semio_framework_value::list::PagedList<Mu, {usize::MAX}>) -> Self { Self::Inverse(rows) }
+impl<Mu> From<semio_framework_value_persistent::list::PagedList<Mu, {usize::MAX}>> for ArtifactStoreOperationRowOwners<Mu> {
+    fn from(rows: semio_framework_value_persistent::list::PagedList<Mu, {usize::MAX}>) -> Self { Self::Inverse(rows) }
 }
 
 impl<Mu> ArtifactStoreOperationRowOwners<Mu> {
@@ -143,11 +143,11 @@ pub struct ArtifactStoreDecodedEditRetirementFactory<Mutation> {
 
 
 /// 🧮️ Quotes the original decoded Edit issuer Arc and its installed mutation factory alias.
-pub(crate) fn history_edit_read_issuer_demands<Mutation:Send+'static>()->semio_framework_value::RetirementDemand {
+pub fn history_edit_read_issuer_demands<Mutation:Send+'static>()->semio_framework_value::RetirementDemand {
     semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>(),capacity_bytes:semio_framework_value::factory_arc_birth_bytes::<ArtifactStoreDecodedEditRetirementFactory<Mutation>>(),depth:1,..Default::default()}
 }
 /// 🎟️ Admits the existing decoded Edit retirement mechanism using its actual mutation factory.
-pub(crate) fn admit_history_edit_read_issuer<Mutation:Send+'static>(original:&Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,slot:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+pub fn admit_history_edit_read_issuer<Mutation:Send+'static>(original:&Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,slot:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<Edit<Mutation>>>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
     if slot.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
     let demand=history_edit_read_issuer_demands::<Mutation>();
     if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}

@@ -31,12 +31,6 @@ pub mod standards {
                         #[path = "../../💡️inferences/📰️document/🦀️.rs"]
                         pub mod document;
                     }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "../../🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
                 }
                 #[path = "."]
                 pub mod io {

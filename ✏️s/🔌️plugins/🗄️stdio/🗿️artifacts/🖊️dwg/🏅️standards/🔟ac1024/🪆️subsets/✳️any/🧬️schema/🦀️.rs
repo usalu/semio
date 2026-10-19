@@ -73,7 +73,6 @@ impl Default for DwgArtifact {
 }
 
 impl DwgArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> DwgSnapshot {
         DwgSnapshot {
             schema: self.schema.clone(),
@@ -94,7 +93,6 @@ impl DwgArtifact {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: DwgSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -115,7 +113,6 @@ impl DwgArtifact {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: DwgSnapshot) {
         self.schema = snapshot.schema;
         self.version = snapshot.version;

@@ -29,7 +29,7 @@ pub fn encode_avi(snapshot: &AviSnapshot) -> Vec<u8> {
 
     let mut idx1_payload = Vec::new();
     if snapshot.idx1_present {
-        let mut offset = 4u32; // 🧭 relative to the movi LIST payload start, including its own "movi" tag.
+        let mut offset = 4u32;
         for stream in &snapshot.streams {
             for c in &stream.chunks {
                 idx1_payload.extend_from_slice(&fourcc4(&c.fourcc));

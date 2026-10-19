@@ -1,4 +1,4 @@
-//! ️ `change-bridge-lane-width`.
+//! 🧬️ `change-bridge-lane-width`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

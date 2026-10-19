@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

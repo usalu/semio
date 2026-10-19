@@ -1,4 +1,4 @@
-//! typed `Puzzle5dSnapshot`, agreeing byte-for-byte with what `🗣️dsl` prints and parses.
+//! 🧬️ typed `Puzzle5dSnapshot`, agreeing byte-for-byte with what `🗣️dsl` prints and parses.
 //! 🎒️ Puzzle 5d artifact — the binary document surface and its laws: `encode`/`decode` over the
 
 //#region 📡️SemioProtocol

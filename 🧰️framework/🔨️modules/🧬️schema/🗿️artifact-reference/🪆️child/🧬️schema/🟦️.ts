@@ -1,5 +1,5 @@
 /** 🪆️ Persisted child identity excludes process-local materializations. */
-import { hexLower, sha256 } from "../../../../🔏️hash/🟦️.ts";
+import { hexLower, sha256 } from "@semio-tech/framework/hash";
 import { parseArtifactRef, type ArtifactRef } from "../../🟦️.ts";
 export interface ArtifactChild { childId: string; target: ArtifactRef }
 

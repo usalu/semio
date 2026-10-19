@@ -100,8 +100,6 @@ function scriptedPort(script: readonly SpawnedJobStep[], log: { started: { job: 
       log.stepped.push(job);
       const step = script[Math.min(cursor, script.length - 1)] ?? { status: "running" as const };
       cursor += 1;
-      // 🧬️ Answers in the RAW jco variant shape (`{tag, val}`), not the normalized one, so the
-      // decoder is exercised rather than bypassed.
       return step.status === "running" ? { tag: "running", val: undefined } : { tag: step.status, val: Array.from(step.value) };
     },
   };
@@ -110,19 +108,16 @@ function scriptedPort(script: readonly SpawnedJobStep[], log: { started: { job: 
 export async function testSpawnedJobDriveContract(): Promise<void> {
   const fixture = loadFixture();
 
-  // 1️⃣ The host's static admission budget is the fixture's — the same three numbers the Rust twin reads.
   assert.equal(fixture.budget.stepCeiling, SPAWNED_JOB_STEP_CEILING, "step ceiling");
   assert.equal(BigInt(fixture.budget.fuel), SPAWNED_JOB_FUEL, "fuel");
   assert.equal(fixture.budget.deadlineMs, SPAWNED_JOB_DEADLINE_MS, "deadline");
   assert.equal(fixture.reservedKind, FRAMEWORK_RESERVED_JOB_KIND, "reserved tool job kind");
 
-  // 2️⃣ The placement vocabulary is closed, ordered and round-trips; nothing outside it resolves.
   assert.deepEqual([...JOB_PLACEMENTS], [...fixture.placements.wire], "the WIT enum order is part of the contract");
   for (const name of fixture.placements.wire) assert.equal(jobPlacementFromWireName(name), name, `${name} must round-trip`);
   for (const name of fixture.placements.refusals) assert.equal(jobPlacementFromWireName(name), undefined, `${JSON.stringify(name)} must not resolve`);
   for (const nonString of [undefined, null, 1, { tag: "isolated" }]) assert.equal(jobPlacementFromWireName(nonString), undefined, `${JSON.stringify(nonString)} must not resolve`);
 
-  // 3️⃣ Every fixture transcript reaches exactly the declared completion.
   assert.ok(fixture.transcripts.length >= 5, `fixture must keep driving every terminal shape: ${fixture.transcripts.length}`);
   for (const row of fixture.transcripts) {
     const completion = spawnedJobCompletion(transcript(row));
@@ -130,7 +125,6 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
     assert.deepEqual(completion.outcome, outcomeOf(row.completion.outcome), `${row.id}: outcome`);
   }
 
-  // 4️⃣ Every fixture refusal refuses, typed, with the declared step count.
   assert.ok(fixture.refusals.length >= 3, "fixture must keep driving both refusal kinds");
   for (const row of fixture.refusals) {
     let thrown: unknown;
@@ -144,11 +138,8 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
     assert.equal((thrown as SpawnedJobDriveError).steps, row.error.steps, `${row.id}: refusal step count`);
   }
 
-  // 5️⃣ The exact wgpu defect as a law: a host that admits the effect and never steps it produces no
-  //    completion, loudly — where before it produced a console warning and silence.
   assert.throws(() => spawnedJobCompletion([]), SpawnedJobDriveError, "an unpumped job must not complete");
 
-  // 6️⃣ The wire decoder: the recorded `spawn-job` shape becomes a friendly effect with its u64 intact.
   const recorded: WireVariant = { tag: "spawn-job", val: { job: 916n, kind: "framework.reserved.tool", input: Uint8Array.from([70, 82, 82, 69, 83, 86, 48, 49]), placement: "isolated" } };
   const friendly = wireEffectToFriendly(recorded, (bytes) => [...bytes]);
   assert.deepEqual(friendly, { spawnJob: { job: 916n, kind: "framework.reserved.tool", input: Uint8Array.from([70, 82, 82, 69, 83, 86, 48, 49]), placement: "isolated" } }, "recorded spawn-job");
@@ -158,8 +149,6 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
   }
   assert.deepEqual(wireEffectToFriendly({ tag: "cancel-job", val: { job: 916n } }, (bytes) => [...bytes]), { cancelJob: { job: 916n } });
 
-  // 7️⃣ The `job-step` decoder reads BOTH real shapes of the same door: jco's raw `{tag, val}` and the
-  //    shard worker's normalized `{status, value}`.
   assert.deepEqual(wireJobStep({ tag: "running", val: undefined }), { status: "running" });
   assert.deepEqual(wireJobStep({ status: "running" }), { status: "running" });
   assert.deepEqual(wireJobStep({ tag: "done", val: [1, 2] }), { status: "done", value: Uint8Array.from([1, 2]) });
@@ -167,7 +156,6 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
   assert.deepEqual(wireJobStep({ status: "failed", value: Uint8Array.from([3]) }), { status: "failed", value: Uint8Array.from([3]) });
   assert.throws(() => wireJobStep({ tag: "sleeping" }), "an unknown job-step status must be loud");
 
-  // 8️⃣ The shared pump, over a SCRIPTED guest: it starts once, steps until terminal and no further.
   for (const row of fixture.transcripts) {
     const script = transcript(row);
     const log = { started: [] as { job: bigint; kind: string; input: Uint8Array }[], stepped: [] as bigint[] };
@@ -178,7 +166,6 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
     assert.deepEqual(completion.outcome, outcomeOf(row.completion.outcome), `${row.id}: pumped outcome`);
   }
 
-  // 9️⃣ A guest that never terminates stalls the pump loudly at the ceiling, having stepped that many times.
   {
     const log = { started: [] as { job: bigint; kind: string; input: Uint8Array }[], stepped: [] as bigint[] };
     await assert.rejects(
@@ -188,7 +175,6 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
     assert.equal(log.stepped.length, SPAWNED_JOB_STEP_CEILING, "the ceiling is the number of round trips, not a guess");
   }
 
-  // 🔟 The event the guest gets back, validated by ajv against the fixture's own schema.
   const ajv = new Ajv({ strict: true });
   const validate = ajv.compile({
     type: "object",
@@ -220,8 +206,6 @@ export async function testSpawnedJobDriveContract(): Promise<void> {
     assert.equal(event.payload.job, BigInt(row.job), `${row.id}: the guest correlates on the job id alone`);
     assert.equal(event.payload.outcome.tag, row.payload.outcome.tag, `${row.id}: outcome arm`);
     assert.deepEqual([...event.payload.outcome.val], [...row.payload.outcome.val], `${row.id}: outcome bytes`);
-    // 🔍️ ajv is the independent reader: it never sees our types, only the JSON shape, with `job`
-    // projected to its decimal text because a `bigint` is not JSON.
     assert.ok(validate({ kind: event.kind, payload: { job: String(event.payload.job), outcome: { tag: event.payload.outcome.tag, val: [...event.payload.outcome.val] } } }), `${row.id}: ajv ${JSON.stringify(validate.errors)}`);
   }
 

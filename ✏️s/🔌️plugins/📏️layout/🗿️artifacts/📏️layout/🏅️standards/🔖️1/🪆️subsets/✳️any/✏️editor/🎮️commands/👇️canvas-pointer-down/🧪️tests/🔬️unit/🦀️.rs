@@ -99,9 +99,6 @@ async fn pointer_down_extend_click_inverts_the_hit_frame_inline() {
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
     settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "an invertive pick on an unselected frame selects it");
-    // ⚖️ `dispatch_interaction_action` never lets a fold with targets present empty the selection —
-    // an `Invertive` pick that would toggle the last frame off re-selects the targets instead
-    // (`next.ids.is_empty() && !targets.is_empty()` fallback), so the frame stays selected.
     settled_dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     assert_eq!(selected_elements(&app).await, vec!["frame-image-1".to_string()], "a second invertive pick on the sole selected frame keeps it selected (framework fallback)");
     close_registered(app);
@@ -162,7 +159,6 @@ async fn a_batched_pointer_move_hovers_its_last_sample_only() {
     let batched = hover_targets(&canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: hit_x, y: hit_y, width: 800.0, height: 600.0, samples });
     assert_eq!(batched, single, "four samples ending on the frame hover exactly what one move there did");
 
-    // 🎯️ ...and a batch whose LAST sample is over empty space hovers nothing even though `x`/`y` name the frame.
     let ending_empty = hover_targets(&canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: hit_x, y: hit_y, width: 800.0, height: 600.0, samples: vec![[hit_x, hit_y], [empty_x, empty_y]] });
     assert!(!ending_empty.contains("frame-text-1"), "the last sample wins over x/y: {ending_empty}");
 }
@@ -193,8 +189,6 @@ async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
 async fn canvas_drop_adds_frame_at_world_coords() {
     let mut app = layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
-    // 🧾️ A MOUNTED app publishes through its retained typed operation, so `result.mutations` is EMPTY
-    // (fleet brief v2, stale-test bucket 3) — the settled document below is the committed record.
     let before = app.snapshot().expect("projection").pages[0].frames.len();
     dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() })).await;
     let doc = app.snapshot().expect("projection");
@@ -209,7 +203,6 @@ async fn canvas_drop_adds_frame_at_world_coords() {
 async fn canvas_drop_page_kind_adds_page() {
     let mut app = layout_app().await;
     let before = app.snapshot().expect("projection").pages.len();
-    // 🧾️ Mounted: the settled document is the committed record, never `result.mutations` (bucket 3).
     dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() })).await;
     assert_eq!(app.snapshot().expect("projection").pages.len(), before + 1);
 }

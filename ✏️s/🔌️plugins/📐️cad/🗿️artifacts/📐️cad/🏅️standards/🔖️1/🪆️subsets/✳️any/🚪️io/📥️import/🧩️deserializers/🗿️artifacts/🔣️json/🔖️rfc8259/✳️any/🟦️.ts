@@ -1,2 +1,2 @@
-/** Deserialize cad from stdio.json. */
+/** 📥️ Deserialize cad from stdio.json. */
 export {};

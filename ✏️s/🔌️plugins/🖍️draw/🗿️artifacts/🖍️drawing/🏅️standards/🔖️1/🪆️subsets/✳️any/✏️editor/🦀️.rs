@@ -203,9 +203,7 @@ use path_job::DrawingPathCommandJobFactory;
 
 //#region 📬️StorePreparation
 
-#[path = "💾️store-preparation/🦀️.rs"]
-mod store_preparation;
-use store_preparation::*;
+use semio_s_artifact_draw_drawing_editor_store_preparation::DrawingArtifactStorePreparationFactory;
 
 //#endregion 📬️StorePreparation
 

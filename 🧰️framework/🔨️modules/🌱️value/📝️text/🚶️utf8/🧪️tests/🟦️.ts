@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import {semioSchemaAjvV1} from "../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import fixture from "../🧫️fixtures/🔣️.json";
+import {semioSchemaAjvV1} from "@semio-tech/schema-ts/oracles/validator";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {RetainedUtf8Cursor,RetainedUtf8Buffer} from "../🟦️.ts";
 

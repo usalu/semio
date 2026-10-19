@@ -91,38 +91,24 @@ fn parse_macro_args(cursor: &mut Cursor) -> Result<Vec<MacroArg>, TextError> {
 fn parse_atom(cursor: &mut Cursor) -> Result<Symbol, TextError> {
     let base = match cursor.peek().kind {
         GKind::Text => Symbol::Literal(cursor.advance().text),
-        // 🧺 `name (group)` and `name(args)` are told apart by ADJACENCY: a macro call's `(`
-        // touches its name, a grouped alternative's does not. Spans carry each token's line,
-        // column and length, so the distinction survives trivia being dropped at lex time — which
-        // is what lets `( )` mean a group everywhere else without stealing the macro-call form.
         GKind::LBrace => {
             cursor.advance();
-            // 🔁 `parse_atom` -> `parse_alternatives` -> `parse_sequence` -> `parse_atom` is a
-            // recursion cycle through fns (E0733: an fn's future can't be infinite-
-            // sized) — `Box::pin` breaks it at this one edge, per R10 residue shape 3.
             let alts = parse_alternatives(cursor)?;
             cursor.expect(GKind::RBrace)?;
             Symbol::Group(alts)
         }
-        // 🧺 `( … )` is a grouped alternation, the ABNF spelling of `{ … }`. It is unambiguous
-        // against a macro-call argument list because a macro call is only ever read when the
-        // `(` FOLLOWS an ident in the same atom, which the `GKind::Ident` arm below handles.
         GKind::LParen => {
             cursor.advance();
             let alts = parse_alternatives(cursor)?;
             cursor.expect(GKind::RParen)?;
             Symbol::Group(alts)
         }
-        // 🧺 `[ … ]` is an optional group — `{ … }?` in this language's own spelling.
         GKind::LBracket => {
             cursor.advance();
             let alts = parse_alternatives(cursor)?;
             cursor.expect(GKind::RBracket)?;
             Symbol::Optional(Box::new(Symbol::Group(alts)))
         }
-        // 🔁 `*x`, `1*x` and `0*x` are PREFIX repetition — the ABNF spelling of this language's
-        // own postfix `x*` and `x+`. A valid postfix quantifier is consumed by the quantifier
-        // match below, so a repetition operator can only reach an atom's head as a prefix one.
         GKind::Star => {
             cursor.advance();
             Symbol::Star(Box::new(parse_atom(cursor)?))
@@ -137,9 +123,6 @@ fn parse_atom(cursor: &mut Cursor) -> Result<Symbol, TextError> {
                 other => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("a repetition count of `{other}` has no symbol in this grammar dialect; write the repeated symbol out"), count.span)),
             }
         }
-        // 🔢 `n(…)` is EXACT repetition — `9(COMMA field)` is nine of that group, the shape a
-        // fixed-column record format states directly. It expands to the n copies it means, so the
-        // recogniser needs no counted-repetition node of its own.
         GKind::Int => {
             let count = cursor.advance();
             let times = match count.text.parse::<usize>() {
@@ -186,9 +169,6 @@ fn parse_sequence(cursor: &mut Cursor) -> Result<Alternative, TextError> {
     let mut symbols = Vec::new();
     loop {
         match cursor.peek().kind {
-            // ↩️ An INDENTED line continues the sequence above it: a long rule is routinely wrapped
-            // that way. The run of newlines is only consumed when what follows is indented AND is
-            // not a production head (`IDENT "="`), so a rule that simply ended still ends here.
             GKind::Newline => {
                 let mut lookahead = cursor.pos;
                 while cursor.tokens[lookahead].kind == GKind::Newline {
@@ -214,9 +194,6 @@ fn parse_sequence(cursor: &mut Cursor) -> Result<Alternative, TextError> {
 fn parse_alternatives(cursor: &mut Cursor) -> Result<Vec<Alternative>, TextError> {
     let mut alts = vec![parse_sequence(cursor)?];
     loop {
-        // ↩️ A long alternation is routinely wrapped across lines with the operator leading the
-        // continuation line. A newline run is only consumed when an alternation operator is what
-        // follows it, so a production that simply ended still ends at its own newline.
         if cursor.peek().kind == GKind::Newline {
             let mut lookahead = cursor.pos;
             while cursor.tokens[lookahead].kind == GKind::Newline {
@@ -263,9 +240,6 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     let mut cursor = Cursor { tokens, pos: 0 };
     cursor.skip_newlines();
 
-    // 🪪 `dialect grammar <id>` names the dialect and the grammar on ONE line — the compact
-    // spelling the whole stdio family uses. A third ident on the dialect line IS the grammar id,
-    // and no separate `grammar` line follows it.
     let mut inline_id = None;
     let dialect = if cursor.peek_ident("dialect") {
         let keyword = cursor.expect(GKind::Ident)?;
@@ -297,10 +271,6 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     let mut uses = Vec::new();
     let mut start = None;
     let mut productions = Vec::new();
-    // P2-M1 items 1 & 4: per-grammar string quote+escape modes and comment dialect, declared via
-    // optional `string`/`comment` header directives. Defaults (`comment_line = Some("#")`, no
-    // block comment, no `string` overrides) reproduce `LexOptions::default()` exactly, so a
-    // grammar that never declares either directive lexes byte-identically to before P2-M1.
     let mut comment_line: Option<String> = CommentDialect::default().line;
     let mut comment_block: Option<(String, String)> = None;
     let mut strings: Vec<StringMode> = Vec::new();
@@ -310,10 +280,6 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
             break;
         }
         let head = cursor.expect(GKind::Ident)?;
-        // 🏷️ A header keyword immediately followed by `=` is a PRODUCTION NAME. `comment`, `start`
-        // and `string` are ordinary words a grammar is entitled to define a rule for — the html
-        // source defines `comment` for HTML's own `<!-- -->` — and a directive never carries an
-        // `=`, so the two can never be confused.
         let directive = if cursor.peek().kind == GKind::Equals { "" } else { head.text.as_str() };
         match directive {
             "extension" => {
@@ -328,7 +294,6 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                 start = Some(cursor.expect(GKind::Ident)?.text);
                 cursor.skip_newlines();
             }
-            // `comment none` / `comment line "MARKER"` / `comment line none` / `comment block "OPEN" "CLOSE"`
             "comment" => {
                 let sub = cursor.expect(GKind::Ident)?.text;
                 match sub.as_str() {
@@ -353,9 +318,6 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
                 }
                 cursor.skip_newlines();
             }
-            // `string double|single raw|backslash|doubled` — declaring ANY `string` directive
-            // replaces the default double-quote-Raw quote set entirely (a grammar that wants both
-            // delimiters, e.g. xml, declares both explicitly).
             "string" => {
                 let which = cursor.expect(GKind::Ident)?.text;
                 let quote = match which.as_str() {
@@ -382,8 +344,6 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     }
 
     let _ = dialect;
-    // 🎬 A file with no `start` directive starts at the production named `root` — the spelling the
-    // whole stdio family uses. Nothing else is inferred: a file with neither is still refused.
     let start = match start.or_else(|| productions.iter().any(|production| production.name == "root").then(|| "root".to_string())) {
         Some(s) => s,
         None => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "`.grammar` file is missing a `start` directive and defines no `root` production", cursor.peek().span)),
@@ -507,7 +467,6 @@ fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
                     cursor.expect(GKind::RParen)?;
                     Ok(Prim::Ref(target))
                 }
-                // P2-M2 item 2: BE counterparts of the LE-hardcoded fixed-width numerics.
                 "u16be" => Ok(Prim::U16Be),
                 "u32be" => Ok(Prim::U32Be),
                 "u64be" => Ok(Prim::U64Be),
@@ -515,15 +474,12 @@ fn parse_prim(cursor: &mut Cursor) -> Result<Prim, TextError> {
                 "i64be" => Ok(Prim::I64Be),
                 "f32be" => Ok(Prim::F32Be),
                 "f64be" => Ok(Prim::F64Be),
-                // P2-M2 item 1c: `marker(0xFF)` — scan past every 0xFF fill byte, then read the
-                // next byte as the discriminator (JPG's marker-prefix scan variant mode).
                 "marker" => {
                     cursor.expect(GKind::LParen)?;
                     let value = parse_u64_literal(cursor)?;
                     cursor.expect(GKind::RParen)?;
                     Ok(Prim::MarkerScan(value as u8))
                 }
-                // P2-M2 item 6: `endian { "II"=le "MM"=be }` — TIFF-style runtime endian marker.
                 "endian" => {
                     cursor.expect(GKind::LBrace)?;
                     cursor.skip_newlines();
@@ -833,7 +789,6 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 close_header(&mut blocks, &mut open_header);
                 close_record(&mut blocks, &mut open_record);
                 let name = cursor.expect(GKind::Ident)?.text;
-                // P2-M2 item 4: whole-segment presence guard — `segment palette if bpp le 8 {...}`.
                 let cond = if cursor.peek_ident("if") {
                     cursor.advance();
                     Some(parse_cond(&mut cursor)?)
@@ -919,7 +874,6 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 blocks.push(Block::Chain(ty));
                 cursor.skip_newlines();
             }
-            // P2-M2 item 1: `repeat <name> { tag <prim> ... arm <tag> {...} }`.
             "repeat" => {
                 close_header(&mut blocks, &mut open_header);
                 flush_open_segment(&mut blocks, &mut open_segment);
@@ -929,7 +883,6 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 blocks.push(Block::Repeat { name, dispatch });
                 cursor.skip_newlines();
             }
-            // P2-M2 item 5a: `backward <name> magic 0x... {...}` — scan backward from EOF.
             "backward" => {
                 close_header(&mut blocks, &mut open_header);
                 flush_open_segment(&mut blocks, &mut open_segment);
@@ -941,7 +894,6 @@ pub fn parse_protocol(text: &str) -> Result<ProtocolFile, TextError> {
                 blocks.push(Block::BackwardScan { name, magic, fields });
                 cursor.skip_newlines();
             }
-            // P2-M2 item 5b: `jump <name> from <field> {...}` — absolute-offset jump.
             "jump" => {
                 close_header(&mut blocks, &mut open_header);
                 flush_open_segment(&mut blocks, &mut open_segment);

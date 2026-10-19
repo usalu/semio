@@ -710,7 +710,7 @@ pub fn engagement_submit_entries(models: &CadPaneModels, runtime: &mut CadPlayRu
     runtime.engagement_step = format!("Unknown: {input}");
     Vec::new()
 }
-/// Starts a fresh engagement session for `interaction_id` in `pane` (used by
+/// 🏁️ Starts a fresh engagement session for `interaction_id` in `pane` (used by
 /// `engagementPossibleSelect`'s start-by-id path and `engagementRepeatLast`).
 pub fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, interaction_id: &str) -> bool {
     let Some(entry) = interaction::interaction_by_id(interaction_id) else {

@@ -22,7 +22,6 @@ pub enum TessellationPhase {
 
 impl TessellationPhase {
     /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn tag(self) -> &'static str {
         match self {
             Self::CollectingTopology => "collectingTopology",
@@ -160,7 +159,6 @@ impl TessellationJob {
     }
 
     /// 📈 This job's progress right now — safe to read between steps and after termination.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn progress(&self) -> TessellationProgress {
         TessellationProgress {
             units_done: self.topology.done + self.edge_cursor + self.face_cursor + self.pack_cursor + self.vertex_units_done,
@@ -171,14 +169,12 @@ impl TessellationJob {
         }
     }
 
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn units_total(&self) -> usize {
         self.topology.done + usize::from(self.phase==TessellationPhase::CollectingTopology) + self.edge_order.len() + self.faces.len() + self.edge_order.len() + self.vertex_units_done + usize::from(self.standalone_vertex.is_some())
     }
 
     /// 🛑 Retires this job at the next observable boundary — the current phase becomes `Cancelled`
     /// immediately; original buffers remain owned until granted retirement.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn cancel(&mut self) {
         if matches!(self.phase, TessellationPhase::Complete) {
             return;
@@ -188,14 +184,12 @@ impl TessellationJob {
     }
 
     /// ✅ True once the job reached a terminal phase.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn is_terminal(&self) -> bool {
         matches!(self.phase, TessellationPhase::Complete | TessellationPhase::Cancelled)
     }
 
     /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
     /// performs no work.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn step(&mut self, body: &Body,input:TessellationInput<'_>, budget: usize) -> Result<TessellationStep, KernelError> {
         match self.phase {
             TessellationPhase::Complete => return Ok(TessellationStep::Done(self.progress())),
@@ -255,7 +249,6 @@ impl TessellationJob {
     }
 
     /// 🗃️ One edge's polyline segments and analytic identity for every topology target.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn pack_edge(&mut self, body: &Body, edge_id: EdgeId) -> Result<(), KernelError> {
         let Some(points) = self.edge_cache.get(&edge_id) else { return Ok(()) };
         let start = (self.transfer.edges.len() / 6) as u32;
@@ -283,7 +276,6 @@ impl TessellationJob {
     }
 
     /// 📤 Takes the finished mesh — `None` unless the job reached `Complete`.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn into_mesh(mut self)->Option<(MeshTransfer,TessellationReport)> {
         let output=self.take_mesh();let mut owner=self.detach_retirement();
         while !owner.terminal_is_empty() {
@@ -300,7 +292,6 @@ impl TessellationJob {
 
     /// 🏁 Drives every remaining unit in one unbudgeted call — the one-shot façade every legacy-free
     /// caller of [`tessellate_solid`]/[`tessellate_face`]/[`tessellate_wire`] goes through.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn run_to_completion(mut self, body: &Body,input:TessellationInput<'_>) -> Result<(MeshTransfer, TessellationReport), KernelError> {
         loop {
             match self.step(body,input, usize::MAX)? {

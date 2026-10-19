@@ -36,6 +36,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreatePvSystem
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreatePvSystem> + From<crate::DeletePvSystem>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "pv-system", kind: "create-pv-system", record: "CreatedPvSystem" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -57,7 +58,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "pv-system", kind: "create-pv-system", record: "CreatedPvSystem" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

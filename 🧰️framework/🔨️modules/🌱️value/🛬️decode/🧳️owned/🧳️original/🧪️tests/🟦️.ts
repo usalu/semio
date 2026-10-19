@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("native receiving keeps original custody through the declared close ladder",()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,closeOrder:["original-source","receiver","output","frame"]})).toBe(false);

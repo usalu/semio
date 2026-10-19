@@ -1,4 +1,4 @@
-//! (kind/2d/3d together, one property-panel gesture).
+//! 📇️ (kind/2d/3d together, one property-panel gesture).
 //! 🔌 Puzzle5d mutation — `ReplacePartGrip`: whole-value swap of one grip's presentation fields
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::{Puzzle5dSnapshot};
@@ -45,12 +45,11 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePartGrip {
 
-
-}
-
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePartGrip {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ReplacePartGrip
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ReplacePartGrip>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

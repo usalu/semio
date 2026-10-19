@@ -4,7 +4,7 @@ import { expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 
 const owner = join(import.meta.dir,"../..");
 const repoRoot = findWorkspaceRoot(owner);

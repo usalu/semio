@@ -94,7 +94,6 @@ fn ventilation_hv_matches_hand_derivation() {
     let mut doc = semio_s_artifact_norm_din18599_model::subjects::compliant_detached_house();
     doc.ventilation.airflow_m3_h = 120.0;
     doc.ventilation.heat_recovery_eta = 0.0;
-    // H_V = ρ·c_a · (V̇_mech + n_Außen·V + n_inf·V_e) with η=0 (DIN V 18599-2 / -10).
     let row = usage_profile_row(doc.zones[0].usage_profile);
     let expected = DIN_V_18599_1_RHO_CA
         * (120.0 + row.outdoor_air_change_1_h * doc.zones[0].volume_m3 + DIN_V_18599_2_INFILTRATION_N_INF * doc.heated_volume_m3);
@@ -295,19 +294,15 @@ fn norm_table_rows_match_cited_sources() {
     use semio_s_artifact_norm_din18599_schema::{
         din_v_18599_10_dhw_specific, din_v_18599_10_fan_hours, din_v_18599_10_zone_defaults, din_v_18599_11_automation_factor, din_v_18599_12_tabelle5_qp_specific, din_v_18599_2_adjacency_fx, din_v_18599_2_solar_geometry_factors, din_v_18599_4_lighting_power_density, DIN_V_18599_1_HOURS_PER_MONTH, DIN_V_18599_1_RHO_CA, DIN_V_18599_2_UTILIZATION_A, DIN_V_18599_5_ETA_SYS_FLOOR, DIN_V_18599_5_ETA_SYS_MIN, DIN_V_18599_7_COOLING_TO_HEATING_RATIO, din_v_18599_7_g_remedy, din_v_18599_8_dhw_loss_fractions, geg_anlage1_tabelle1_heating_eta, geg_anlage2_ht_prime_limits, geg_anlage2_reference_u, geg_anlage3_mean_u, geg_anlage4_primary_energy_factors, GEG_ANLAGE1_DELTA_U_WB_REF, GEG_ANLAGE1_TABELLE1_ETA_WRG_REF, GEG_ANLAGE1_WINDOW_G_REF, GEG_SECTION10_QP_FACTOR_DEFAULT,
     };
-    // GEG Anlage 4
     assert!((geg_anlage4_primary_energy_factors::NATURAL_GAS - 1.1).abs() < 1e-12);
     assert!((geg_anlage4_primary_energy_factors::ELECTRICITY_GRID - 1.8).abs() < 1e-12);
     assert!((geg_anlage4_primary_energy_factors::BIOMASS - 0.2).abs() < 1e-12);
-    // GEG Anlage 2 / 3 U
     assert!((geg_anlage2_reference_u::WALL - 0.28).abs() < 1e-12);
     assert!((geg_anlage3_mean_u::WINDOW - 1.5).abs() < 1e-12);
-    // GEG Anlage 1 Tabelle 1 — WRG reference + ΔU_WB + heating η
     assert!((GEG_ANLAGE1_TABELLE1_ETA_WRG_REF - 0.80).abs() < 1e-12);
     assert!((GEG_ANLAGE1_DELTA_U_WB_REF - 0.05).abs() < 1e-12);
     assert!((geg_anlage1_tabelle1_heating_eta::GENERATION - 0.95).abs() < 1e-12);
     assert!((GEG_ANLAGE1_WINDOW_G_REF - 0.60).abs() < 1e-12);
-    // DIN V 18599-4 / -10 / -8 / -5 / -7 / -12
     assert!((din_v_18599_4_lighting_power_density::OFFICE - 12.0).abs() < 1e-12);
     assert!((din_v_18599_10_fan_hours::RESIDENTIAL_WFH - 5000.0).abs() < 1e-12);
     assert!((din_v_18599_10_dhw_specific::RESIDENTIAL - 500.0).abs() < 1e-12);
@@ -339,7 +334,6 @@ fn remedy_law_apply_delta_u_wb_makes_ht_check_pass() {
     assert_eq!(ht.status, CheckStatus::Fail);
     assert_eq!(ht.subject.path, "deltaUWbWM2k");
     let remedy = ht.remedies.iter().find(|r| r.applicable && r.target.path == "deltaUWbWM2k").expect("ΔU_WB remedy on failing H′T");
-    // Prove app-surface path write (same API Inputs/applyRemedy use)
     let mut tree = semio_framework_value::ToValue::to_value(&doc);
     set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("set deltaUWbWM2k");
     apply_path_f64(&mut doc, &remedy.target.path, remedy.required.value);
@@ -472,7 +466,6 @@ fn assert_fixture_leaves_influence_checks(fixture_name: &str, base: &semio_s_art
             return;
         }
         let leaf = path.rsplit(['.', '[']).next().unwrap_or(path);
-        // Descriptive entity labels only (CORRECTION 14:42 / 13:43).
         if leaf == "labelEn" || leaf == "labelDe" || leaf == "id" || leaf.starts_with("id=") {
             return;
         }

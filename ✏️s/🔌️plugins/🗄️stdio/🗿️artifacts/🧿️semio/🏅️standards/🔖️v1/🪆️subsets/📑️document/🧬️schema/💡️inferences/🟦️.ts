@@ -12,7 +12,7 @@ export interface SemioDocumentOutline {
 }
 
 export interface SemioDocumentInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: SemioDocumentOutline;
 }
 

@@ -10,7 +10,7 @@ pub trait DialectCoordinateText:Sized {fn to_coordinate(&self)->String;fn parse_
 pub trait ArtifactReferenceText:Sized {
  fn to_uri(&self)->String;
  fn parse_uri(text:&str)->Result<Self,String>;
- fn parse_uri_controlled(text:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,String>;
+ fn parse_uri_controlled(text:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,String>;
 }
 
 impl DialectCoordinateText for ArtifactDialect {
@@ -38,7 +38,7 @@ impl ArtifactReferenceText for ArtifactRef {
     }
 
     /// 🚦️ Parses identity handles with bounded borrowed scanning and admitted ownership of their four strings.
-    fn parse_uri_controlled(text:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,String>{
+    fn parse_uri_controlled(text:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,String>{
         control.scoped_stage(|control|{
             control.begin_stage(text.len())?;let mut bang=None;let mut at=None;let mut slash=None;let mut position=0;
             for chunk in text.as_bytes().chunks(256){for(byte_offset,byte)in chunk.iter().enumerate(){let offset=position+byte_offset;if bang.is_none(){if *byte==b'!'{bang=Some(offset);}}else if at.is_none(){if *byte==b'@'{at=Some(offset);}}else if *byte==b'/'{slash=Some(offset);}}position+=chunk.len();control.advance(chunk.len())?;}

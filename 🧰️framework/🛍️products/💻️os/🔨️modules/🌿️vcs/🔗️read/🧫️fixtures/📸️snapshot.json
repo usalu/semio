@@ -1,0 +1,9 @@
+{
+  "contract": "semio.original.captured-snapshot-source/v1",
+  "cases": [
+    {"id": "captured-empty", "bytes": [], "expected": []},
+    {"id": "captured-extremes", "bytes": [0,255,128,127], "expected": [0,255,128,127]},
+    {"id": "captured-utf8-multibyte", "bytes": [226,130,172,240,159,166,145], "expected": [226,130,172,240,159,166,145]},
+    {"id": "captured-repeats-keep-order", "bytes": [7,7,0,7,255,0], "expected": [7,7,0,7,255,0]}
+  ]
+}

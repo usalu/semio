@@ -1,0 +1,74 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🔄️exchange/🔀️plugin-exchange/🦀️.rs",
+ "function": "plugin_exchange",
+ "types": {
+  "frames": "Vec<protocol::AppFrame>",
+  "effect_bytes": "Vec<Vec<u8>>",
+  "event_bytes": "Vec<Vec<u8>>",
+  "retry_command": "Option<(u64, PluginCommandIngress)>",
+  "command_terminal_fault": "Option<Vec<u8>>",
+  "presence_pending": "Option<u64>",
+  "presence_terminal": "Option<u64>",
+  "presence_terminal_fault": "Option<Vec<u8>>",
+  "flags": "ExchangeFlags"
+ },
+ "modes": {
+  "frames": "val",
+  "effect_bytes": "val",
+  "event_bytes": "val",
+  "retry_command": "val",
+  "command_terminal_fault": "val",
+  "presence_pending": "val",
+  "presence_terminal": "val",
+  "presence_terminal_fault": "val",
+  "flags": "val"
+ },
+ "keep": [
+  109,
+  110,
+  111,
+  112,
+  117,
+  118,
+  119,
+  120,
+  121,
+  122,
+  123,
+  124,
+  125,
+  126,
+  173,
+  178,
+  205,
+  215
+ ],
+ "phases": [
+  {
+   "name": "finish_exchange",
+   "emoji": "🏁",
+   "doc": "🏁️ Pulls the pending effects of a mutating exchange, drives the typed operation drain, folds the ephemeral snapshot and the presence outcome into the reply frames and seals the exchange output.",
+   "from": 357,
+   "to": 442,
+   "tail": true,
+   "async": true,
+   "generics": "<PA: PluginApp>",
+   "mutparams": [
+    "frames",
+    "effect_bytes",
+    "event_bytes"
+   ],
+   "allow_control": [
+    371,
+    381,
+    383,
+    387
+   ],
+   "ret": "Result<PluginExchangeOutput, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>",
+   "child": {
+    "dir": "🏁️exchange-finish",
+    "doc": "//! 🏁️ Exchange finish: the effect pull, the typed operation drain, the ephemeral snapshot and the presence outcome that seal one plugin exchange. See [`super`]."
+   }
+  }
+ ]
+}

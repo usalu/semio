@@ -3,18 +3,19 @@
 
 use semio_s_fem_sparse::{NUMERICAL_CHECKPOINT_HEADER_BYTES, NumericalMatrixRestore, SPARSE_INDEX_SPACE, SparseColumns, advance_paged_pair_owner, close_paged_owner_step, numerical_grant_covers, numerical_restore_admit, numerical_restore_control, paged_owner_retirement_demand, restore_paged_pair_entry, restore_paged_usize_entry};
 use semio_framework_job::OriginalTurnFailure;
-use semio_framework_value::{list::PagedList, ValueRefusalKind};
+use semio_framework_value::ValueRefusalKind;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_job::InteractiveJob;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeBorrow;
 use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeView;
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 use semio_framework_job::Operation;
 use semio_framework_job::RetainedCloneGrant;
 use semio_framework_job::RetainedCloneProgress;
-use semio_framework_job::RetainedJobPayload;
-use semio_framework_job::RetainedJobPayloadWriter;
+use semio_framework_job_payload::RetainedJobPayload;
+use semio_framework_job_payload::RetainedJobPayloadWriter;
 use semio_framework_job::StepContext;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;

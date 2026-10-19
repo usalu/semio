@@ -8,7 +8,7 @@ export interface EquationTopology {
 }
 
 export interface EquationInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: EquationTopology;
 }
 

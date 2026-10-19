@@ -1,6 +1,7 @@
 //! 📦️ Typed pack load: the load original, the typed window config pack load with its stepping, its erased pack load implementation and drop, and the begin and commit entry points. See [`super`].
 
 use super::*;
+use crate::owner_contract_and_mutation::WindowConfigAuthorityIdentity;
 
 #[derive(semio_framework_value::RetireOwned)]
 enum LoadOriginal<O: WindowConfigOwner> {
@@ -70,7 +71,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         let WindowConfigPack { window_id, window_kind_id, files } = pack;
         let total_bytes = files.pack.len().saturating_mul(3).saturating_add(files.spr.len()).saturating_add(files.ops.len()) as u64;
         let expected_id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
-        let candidate_authority = super::WindowConfigAuthorityIdentity::issue();
+        let candidate_authority = crate::owner_contract_and_mutation::WindowConfigAuthorityIdentity::issue();
         let owners=None;let mut diagnostic=None;
         if candidate_authority.is_none() { diagnostic = Some(WindowConfigPackLoadDiagnostic::Capacity); }
         Self {
@@ -295,7 +296,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
     }
 
     fn advance_address(&mut self,grant:RetainedCloneGrant)->WindowConfigPackLoadStep{
-        let demand=semio_framework_value::SharedUtf8::admission_demand();if !super::registry::fits(grant,demand){return self.pending();}let original=self.window_id.take().expect("original hydrated Window keeps its exact address");match semio_framework_value::SharedUtf8::admit(original,grant){Ok((address,p))=>{self.candidate.as_mut().expect("original hydrated Window candidate remains").address=Some(ControlledRetirement::new(address).expect("original Window address supports controlled closure"));self.phase=WindowConfigPackLoadPhase::Ready;WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),p)},Err((_,original))=>{*self.window_id=Some(original);self.reject(WindowConfigPackLoadDiagnostic::Capacity)}}
+        let demand=semio_framework_value::SharedUtf8::admission_demand();if !crate::registry::fits(grant,demand){return self.pending();}let original=self.window_id.take().expect("original hydrated Window keeps its exact address");match semio_framework_value::SharedUtf8::admit(original,grant){Ok((address,p))=>{self.candidate.as_mut().expect("original hydrated Window candidate remains").address=Some(ControlledRetirement::new(address).expect("original Window address supports controlled closure"));self.phase=WindowConfigPackLoadPhase::Ready;WindowConfigPackLoadStep::OwnershipProgress(self.progress_now(),p)},Err((_,original))=>{*self.window_id=Some(original);self.reject(WindowConfigPackLoadDiagnostic::Capacity)}}
     }
 
     fn advance_inner(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {

@@ -18,7 +18,7 @@ pub use pack_load_contract_and_value_frames::{
     WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress,
     WindowConfigPackLoadStep,
 };
-pub(super) use pack_load_contract_and_value_frames::ErasedWindowConfigPackLoad;
+pub use pack_load_contract_and_value_frames::ErasedWindowConfigPackLoad;
 
 #[path = "🗃️retained-typed-state/🦀️.rs"]
 mod retained_typed_state;

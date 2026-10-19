@@ -2,7 +2,7 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use super::*;
 use semio_framework_os_store_text_io::ArtifactSqliteSnapshotHost;
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_os_io::control::NativeSnapshotDecodeOwner;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
@@ -62,7 +62,7 @@ fn sqlite_snapshot_erased_export_dispatches_only_the_declared_controlled_native_
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "fixture.buffers".into(), standard: "1".into(), subset: "*".into() };
     ORDINARY_DECODER_CALLS.with(|count| count.set(0));
     CONTROLLED_DECODER_CALLS.with(|count| count.set(0));
-    let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
     let mut callback=|_|true;
     let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
@@ -274,7 +274,7 @@ fn sqlite_snapshot_native_decoding_admits_compressed_aggregate_before_projection
         let mut limits = SqliteDatabaseLimits::default();
         limits.max_allocation_bytes = maximum;
         COMPLETED_DECODERS.with(|count| count.set(0));
-        let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+        let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
         let mut callback=|_|true;
         let mut native=NativeDecodeControl::new(fixture["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();

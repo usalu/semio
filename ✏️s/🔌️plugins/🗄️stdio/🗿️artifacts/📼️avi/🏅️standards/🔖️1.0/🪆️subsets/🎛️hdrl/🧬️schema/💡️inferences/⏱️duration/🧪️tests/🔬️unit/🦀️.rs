@@ -9,7 +9,6 @@ fn snapshot(total_frames: u32, micro_sec_per_frame: u32, stream_count: usize) ->
 
 #[semio_framework_async_macros::async_test]
 async fn duration_is_total_frames_times_micro_sec_per_frame() {
-    // 10 fps (100_000 microseconds/frame), 2 frames => 0.2s.
     let duration = compute_avi_duration(&snapshot(2, 100_000, 1));
     assert_eq!(duration, AviDuration { duration_seconds: 0.2, stream_count: 1, total_frames: 2 });
 }

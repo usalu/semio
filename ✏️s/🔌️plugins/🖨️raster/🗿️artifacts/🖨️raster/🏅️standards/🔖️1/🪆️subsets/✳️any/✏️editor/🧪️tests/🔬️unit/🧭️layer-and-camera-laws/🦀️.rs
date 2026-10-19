@@ -99,7 +99,6 @@ async fn add_layer_action_appends_and_undo_removes() {
 #[semio_framework_async_macros::async_test]
 async fn patch_layer_renames_and_toggles_visibility_round_trip() {
     let mut app = app().await;
-    // 🌱️ The mounted store boots on the empty shell, so this test plants the layer it addresses.
     dispatch(&mut app, RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() })).await;
     let layer_id = semio_s_artifact_raster_raster_model::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
     dispatch(&mut app, RasterCommand::PatchLayer(semio_s_artifact_raster_raster_editor::commands::patch_layer::PatchLayer { layer_id: layer_id.clone(), field: "name".into(), value: "Renamed".into() })).await;
@@ -113,8 +112,6 @@ async fn patch_layer_renames_and_toggles_visibility_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn move_layer_into_group() {
     let mut app = app().await;
-    // 🌱️ The mounted store boots on the empty shell: both the group and the pixel it receives are
-    // planted here.
     dispatch(&mut app, RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut app, RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "group".into() })).await;
     let (group_id, pixel_id) = {
@@ -139,8 +136,6 @@ async fn move_layer_into_group() {
 async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     let mut instance_a = app().await;
     let mut instance_b = app().await;
-    // Seed both from an identical base projection (a background layer with a fixed id) so B's
-    // rename targets the same layer A holds — per-instance `initial_snapshot` mints fresh ids.
     let mut base = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     base.layers = vec![RasterLayerNode::Pixel {
         id: "bg".into(),
@@ -167,11 +162,6 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     dispatch(&mut instance_a, RasterCommand::AddLayer(semio_s_artifact_raster_raster_editor::commands::add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut instance_b, RasterCommand::PatchLayer(semio_s_artifact_raster_raster_editor::commands::patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() })).await;
 
-    // 🔀️ Publishing an edit only PUTS it on the backbone; a replica folds what the other side put
-    // there when it ticks. `commitCheckpoint` is a history verb on the LOCAL store and never pulled
-    // anything in, so without these two ticks each instance still read only its own edit — the exact
-    // exchange `artifact_app_laws::assert_two_registered_instances_converge` performs for the apps
-    // whose genesis document is enough to carry both commands.
     instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
     instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
 
@@ -182,8 +172,6 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     assert_eq!(layer_name(&projection_a.layers[0]), "Renamed By B", "A converges on B's rename");
     assert_eq!(layer_name(&projection_b.layers[0]), "Renamed By B", "B keeps its rename");
 
-    // 🔀️ A replicated CHECKPOINT keeps both sides converged too — the second half of the framework's
-    // own convergence law, run here against the shared seeded base.
     let local = artifact_app_laws::meta("local");
     let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
     semio_framework_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
@@ -191,7 +179,6 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(instance_a.snapshot().expect("projection a").layers.len(), instance_b.snapshot().expect("projection b").layers.len(), "a replicated checkpoint keeps both instances converged");
 
-    // 🧷️ Paired backbone ends block the fixtures' close ladder until both are released.
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
 }
@@ -213,14 +200,10 @@ async fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
     let definition = create_raster_app();
     let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
     assert_eq!(utility_ids, ["selectMarquee", "paintBrush", "paintEraser", "paintBucket"]);
-    // The marquee carries the Selection category; the paint utilities are Tools.
     let selects: Vec<&str> = definition.utilities.iter().filter(|utility| utility.category == Some(UtilityCategory::Selection)).map(|utility| utility.id.as_str()).collect();
     assert_eq!(selects, ["selectMarquee"]);
     let composite = definition.window_kinds.iter().find(|window| window.id == semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_WINDOW_COMPOSITE).expect("composite window");
     assert_eq!(composite.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite window kind");
-    // The framework auto-injects the setActiveUtility View action once utilities are declared; no doc operation survives.
-    // 🧩️ The framework injects `setActiveUtility` into the APP definition's action surface (the
-    // builder's `!self.utilities.is_empty()` arm), not into each window kind's own list.
     assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
     assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
 }
@@ -244,30 +227,17 @@ async fn raster_import_media_appends_layer_from_incoming_image() {
     let boot = app.snapshot().expect("snapshot");
     let before = boot.layers.len();
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(boot);
-    // 🖼️ A REAL PNG — the crate's own committed emblem. The former `"aGVsbG8="` ("hello") decoded to
-    // five bytes with no PNG signature, so `mint_raster_asset_child` fell through to its content-less
-    // fallback and the law proved nothing about the pixels an import is for.
     let media = Media {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         payload: MediaPayload::Structured { schema: "2d.image".into(), json: base64_codec::base64_standard_encode(semio_s_artifact_raster_raster_examples::art_raster_demo::emblem_image_asset().data) },
     };
-    // 🔌️ A MOUNTED app's `InvocationResult.mutations` is always EMPTY (the host settles the typed
-    // publication), so the import is read off the DOCUMENT, exactly as sequence/animate read theirs.
     app.0.import_media("image:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import image:in");
-    // 🧹️ `ArtifactApp::snapshot` hands back an OWNED `RasterSnapshot`, and after the import that
-    // snapshot owns a POPULATED asset pool: reading `.layers.len()` off the temporary dropped a
-    // `RasterOwnedMap` that still held its page backing, which is exactly what its fail-closed `Drop`
-    // refuses ("Raster owned map reached Drop before every entry and page backing was explicitly
-    // retired", `🗑️generated/raster/test-26.txt`). Every observation is taken first, then the
-    // snapshot is retired through the artifact's own helper.
     let imported = app.snapshot().expect("snapshot");
     let layers = imported.layers.len();
     let image_key = match imported.layers.last().expect("imported layer") {
         RasterLayerNode::Pixel { image_key, .. } => image_key.clone().expect("the imported pixel layer names its asset"),
         other => panic!("image:in must import a pixel layer, got {other:?}"),
     };
-    // 🖼️ The imported asset resolves to real pixels through the same composer the composite reads —
-    // an import that lands a content-less handle renders an empty layer.
     let pixels = semio_s_artifact_raster_raster_io::raster_asset(&imported.assets, &image_key).is_some_and(|asset| asset.mime == "image/png" && !asset.data.is_empty());
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(imported);
     assert_eq!(layers, before + 1, "image:in must append one pixel layer");

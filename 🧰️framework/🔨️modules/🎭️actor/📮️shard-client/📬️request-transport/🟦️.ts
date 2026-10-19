@@ -43,8 +43,6 @@ export class ShardRequestTransport {
       this.hub.watchdog.recordHeartbeat(slot, message.turnSeq, this.state.now(), message.phase ?? null);
       return;
     }
-    // 🫀️ A beat that rode this crossing instead of costing its own message — folded into exactly the
-    // state a dedicated `heartbeat` would have reached, before anything else this message means.
     if (message.kind === "result" && message.beat && typeof message.beat.turnSeq === "number") this.hub.watchdog.recordHeartbeat(slot, message.beat.turnSeq, this.state.now(), message.beat.phase ?? null);
     if (message.kind === "worker-fault") {
       const detail = formatShardWorkerFault(slot.index, message);

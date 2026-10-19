@@ -59,8 +59,6 @@ function AgentChatEntry({
   readonly onCancelToolCall?: (invocationId: string) => boolean;
   readonly onResolveApproval?: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
 }): ReactElement {
-  // 🏷️ Every role noun is resolved unconditionally (hooks may not run behind a branch) and the one
-  // this entry needs is picked afterwards — a translated noun, never the wire's own identifier.
   const youLabel = useLabel(agentUiLabel("os.agent.chat.youRole"));
   const toolCallLabel = useLabel(agentUiLabel("os.agent.chat.toolCallRole"));
   const approvalLabel = useLabel(agentUiLabel("os.agent.chat.approvalRole"));
@@ -77,8 +75,6 @@ function AgentChatEntry({
   const replyToLabel = useLabel(agentUiLabel("os.agent.chat.replyTo"));
   const toolState = entry.kind === "toolCall" ? (entry.state === "running" ? runningLabel : entry.state === "cancelling" ? cancellingLabel : entry.state === "failed" ? failedLabel : succeededLabel) : "";
   const state = entry.kind === "toolCall" ? toolState : entry.kind === "agentMessage" && entry.state === "streaming" ? replyStreamingLabel : "";
-  // 🛑️ Only a call still reported as running can be cancelled: a `cancelling` row already sent its
-  // frame, and a settled one has nothing left to stop.
   const cancellable = entry.kind === "toolCall" && entry.state === "running" && onCancelToolCall !== undefined;
 
   return (
@@ -105,9 +101,6 @@ function AgentChatEntry({
       </div>
       {entry.kind === "userMessage" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.text}</p> : null}
       {entry.kind === "agentMessage" ? (
-        // 💬️ The agent's own prose. A live region because a streaming turn grows without the human
-        // doing anything — announced politely, never interrupting — and `aria-busy` says the turn is
-        // not finished yet, which is the same fact the visible state word carries.
         <p
           role="status"
           aria-live="polite"

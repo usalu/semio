@@ -1,5 +1,6 @@
 //! ♻️ Exact original History test recipient retirement.
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetirementDemand,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value::{RetainedCloneGrant, RetirementDemand, admit_owned_retirement, owned_retirement_birth_bytes};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::size_of_val;
 fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_depth>=d.depth&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes}

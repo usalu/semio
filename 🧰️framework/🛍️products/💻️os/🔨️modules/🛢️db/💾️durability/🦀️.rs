@@ -26,7 +26,6 @@ pub enum DurabilityClass {
 impl DurabilityClass {
     /// 🥇️ A total order key: `(tier, quorum_n)`, so `Ord`/`PartialOrd` can be derived from
     /// arithmetic comparison rather than a hand-written match ladder.
-    // 🚫️async: E1 pure accessor consumed by `impl Ord` (itself E1) — see R9
     pub fn rank(&self) -> (u8, u8) {
         match self {
             DurabilityClass::Memory => (0, 0),
@@ -66,7 +65,6 @@ pub struct Frontier {
 
 impl Frontier {
     /// 🌱️ The frontier of a freshly created, empty document.
-    // 🚫️async: E1 pure constructor consumed synchronously at every call site but one — see R9
     pub fn genesis(document: ArtifactId) -> Frontier {
         Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 }
     }
@@ -81,7 +79,6 @@ impl Frontier {
     /// 🏔️ True iff `self` has observed everything `other` has (same document, `>=` on
     /// every sequence/epoch field) — the law `Consistency::AtLeast(frontier)` query resolution
     /// checks against a document's current frontier.
-    // 🚫️async: E1 pure accessor consumed by a sync Iterator::filter — see R9
     pub fn dominates(&self, other: &Frontier) -> Result<bool, DbError> {
         if self.document != other.document {
             return Err(DbError::InvalidArgument(format!("frontier document mismatch: {} vs {}", self.document, other.document)));
@@ -192,7 +189,6 @@ impl EpochFence {
     pub const INITIAL: EpochFence = EpochFence { epoch: 0 };
 
     /// ⏭️ The fence a new leader claims after winning an ownership lease.
-    // 🚫️async: E1 pure accessor consumed synchronously throughout `db_storage` — see R9
     pub fn next(self) -> EpochFence {
         EpochFence { epoch: self.epoch + 1 }
     }
@@ -201,7 +197,6 @@ impl EpochFence {
     /// writer) exactly matches `current` (the epoch stamped on the stored root). Any mismatch —
     /// stale writer OR a writer somehow ahead of the stored root — is fenced, since the latter
     /// indicates the caller read a root written concurrently under a different epoch.
-    // 🚫️async: E1 pure accessor consumed synchronously throughout `db_storage` — see R9
     pub fn check(self, current: EpochFence) -> Result<(), DbError> {
         if self.epoch == current.epoch {
             Ok(())

@@ -27,7 +27,6 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
         design_situations.push("bsP".into());
     }
 
-    // Geotechnical category applicability (DIN 1054 / DIN 4020).
     {
         let gk_ok = (1..=3).contains(&gk);
         let mut gk_check = CheckResult::assess(
@@ -341,7 +340,6 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                 foot_gov_check = format!("en1997.6.5.3.sliding.{}.{}", footing.id, lc.id);
             }
             report.push(sliding.build());
-            // Companion undrained (Annex D.3 / short-term sliding) whenever c_u is defined — always readable.
             if layer.cohesion_undrained > 0.0 || cohesive {
                 let path_cu = format!("layers[id={}].cohesionUndrained", layer.id);
                 let r_vu = part_1::undrained_bearing_resistance_n(
@@ -430,7 +428,6 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
             report.push(ecc.build());
         }
 
-        // Settlement SLS once per footing
         {
             let mut q_sls_max: f64 = 0.0;
             let area = (footing.width * footing.length).max(1e-9_f64);
@@ -556,7 +553,6 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
 
     check_piles_walls_slopes_and_uplift(doc, &mut report, approach, annex, gwl, part1, part1054, &design_situations);
 
-    // Project governing design situation + approach (max utilization across applicable checks).
     let approach_lbl = doc.design_approach.clone();
     let governing_info = report
         .checks

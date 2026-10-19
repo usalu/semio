@@ -61,9 +61,9 @@ class BoundariesScript extends BundleScript {
     const evidence = mkdtempSync(resolve(artifactDirectory, "ui-render-boundaries-"));
     console.log("Inspecting ui-render normal dependencies (0/1).");
     const result = await captureOwnedProcess("cargo", ["tree", "--manifest-path", resolve(packageRoot, "Cargo.toml"), "-p", "semio-framework-ui-render", "--edges", "normal", "--prefix", "none", "--format", "{p}"], { invocation: this.invocation, cwd: packageRoot, env: process.env, budgetMs: buildBudgetMs(), maxOutputBytes: 4 * 1024 * 1024, stdoutPath: resolve(evidence, "stdout.log"), stderrPath: resolve(evidence, "stderr.log") });
-    if (result.reason !== "exit" || result.status !== 0) throw Error(`Cannot inspect ui-render dependencies: ${result.reason} (${result.status}). ${result.stderr}`);
+    if (result.reason !== "exit" || result.status !== 0) throw new Error(`Cannot inspect ui-render dependencies: ${result.reason} (${result.status}). ${result.stderr}`);
     const dependencies = new Set(result.stdout.trim().split(/\r?\n/u).filter(Boolean).map(line => line.trim().split(/\s+/u)[0]));
-    if (!dependencies.has("semio-framework-ui-render")) throw Error("Cargo dependency inventory does not contain its requested ui-render root");
+    if (!dependencies.has("semio-framework-ui-render")) throw new Error("Cargo dependency inventory does not contain its requested ui-render root");
     const violations: string[] = [];
     for (const [crate, reason] of FORBIDDEN_DEPENDENCIES) {
       if (dependencies.has(crate)) violations.push(`${crate}: ${reason}`);
@@ -71,7 +71,7 @@ class BoundariesScript extends BundleScript {
     if (violations.length > 0) {
       console.error("semio-framework-ui-render must stay backend-neutral, but its dependency tree contains:");
       for (const violation of violations) console.error(`  - ${violation}`);
-      throw Error("ui-render dependency boundaries are violated");
+      throw new Error("ui-render dependency boundaries are violated");
     }
     console.log(`ui-render dependency boundaries hold (1/1; ${FORBIDDEN_DEPENDENCIES.length} forbidden crates absent).`);
   }

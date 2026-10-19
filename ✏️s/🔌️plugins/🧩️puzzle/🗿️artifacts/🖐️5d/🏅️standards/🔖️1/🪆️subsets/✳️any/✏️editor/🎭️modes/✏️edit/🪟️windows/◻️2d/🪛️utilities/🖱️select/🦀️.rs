@@ -1,4 +1,4 @@
-//! picking). Bound only by the 2D board window; the 3D world window leads with the transform gumball
+//! 👉️ picking). Bound only by the 2D board window; the 3D world window leads with the transform gumball
 //! 🖱️ 2D-window utility — Select: the default pointer utility (rectangle/lasso marquee plus click
 //! instead, so this node stays under `◻️2d`.
 

@@ -1,4 +1,4 @@
-use semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunTick, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict};
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::view::engine_grip_kind;
@@ -15,7 +15,8 @@ use crate::standards::v1::subsets::any::schema::mutations::{connect_grips, creat
 #[allow(unused_imports)]
 use crate::puzzle_job::JobTurn;
 #[allow(unused_imports)]
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, RetainedJobPayload, StepBudget, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, StepBudget, StepContext};
+use semio_framework_job_payload::{RetainedJobPayload};
 #[allow(unused_imports)]
 use semio_framework_plugin::{Fault, ToolRunJob};
 #[allow(unused_imports)]

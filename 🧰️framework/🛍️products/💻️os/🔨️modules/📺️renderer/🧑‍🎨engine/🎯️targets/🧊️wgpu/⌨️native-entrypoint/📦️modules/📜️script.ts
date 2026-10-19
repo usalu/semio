@@ -25,14 +25,14 @@ class PublishScript extends BundleScript {
     const [variant, selectedProfile] = args, profile = selectedProfile as "prototype" | "release", repo = this.repoRoot, controller = new AbortController(), cancel = () => controller.abort();
     if (args.length !== 2||!variant) throw new Error("publish <variant> <prototype|release>");
     nativeRuntimeDirectory(repo,variant!,profile);
-    if(profile!==readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode)throw Error("Native publication must match actual Original mode");
+    if(profile!==readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode)throw new Error("Native publication must match actual Original mode");
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
       await withPlaygroundSessionV1(repo,this.invocation,variant,async(session,projection,control)=>{
       const catalog=projection.entries,phase=createRequestedIssuedResourceControlV1(control,0,controller.signal);
       if (session.variant !== variant || !Array.isArray(session.plugins)) throw new Error("Native session identity mismatch");
       await buildComponentClosureV1(repo, new Set(session.plugins.map((plugin: { pluginId: string }) => plugin.pluginId)), { facet:"model",invocation:this.invocation,network:repositoryCargoNetworkV1(this.invocation,repo),control:phase });
-      const modules=session.plugins.map(plugin=>{const entry=catalog.find(row=>row.pluginId===plugin.pluginId);if(!entry)throw Error("Missing Native component declaration: "+plugin.pluginId);return{pluginId:entry.pluginId,cratePath:entry.cratePath};});
+      const modules=session.plugins.map(plugin=>{const entry=catalog.find(row=>row.pluginId===plugin.pluginId);if(!entry)throw new Error("Missing Native component declaration: "+plugin.pluginId);return{pluginId:entry.pluginId,cratePath:entry.cratePath};});
       await publishNativeRuntime(repo,this.invocation,variant,modules,phase);
       console.log(`Published native ${variant} ${profile}: ${modules.length} completed components`);
       });

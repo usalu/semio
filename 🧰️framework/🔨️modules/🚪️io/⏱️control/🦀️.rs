@@ -1,5 +1,6 @@
 //! ⏱️ Only the active original native direction observes a physical IO phase.
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,retained_clone::RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[path="🛫️snapshot/🦀️.rs"]mod snapshot;
 pub use snapshot::NativeSnapshotEncodeOwner;
 /// 🧾️ Debits actual producer spans from one admitted receiving frame's original authority.
@@ -54,7 +55,7 @@ impl<'owner,'control> NativeSnapshotDecodeOwner<'owner,'control>{
  /// 🔭️ Reborrows the original callback, allocation port and cumulative decode receipt.
  pub fn native(&mut self)->&mut NativeDecodeControl<'control>{self.native}
  /// 🔗️ Keeps actual parent custody and accepted receipts through original native scopes.
- pub fn scoped_native<O>(&mut self,maximum:usize,observer:&mut dyn FnMut(semio_framework_value::native_decoding::NativeDecodeProgress)->bool,operation:impl FnOnce(&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<O,ValueError>)->Result<O,ValueError>{let grant=self.remaining_grant();let pending=self.pending.as_deref_mut();let mut performed=RetainedCloneProgress::default();let result=self.native.scoped_maximum(maximum,|native|native.scoped_observer(observer,|native|{let mut original=NativeSnapshotDecodeOwner{native,grant,progress:Default::default(),wallet:None,pending};let result=operation(&mut original);performed=original.progress();result}));self.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;result.map_err(|error|error.with_retained_progress(performed))}
+ pub fn scoped_native<O>(&mut self,maximum:usize,observer:&mut dyn FnMut(semio_framework_value_native_owned::native_decoding::NativeDecodeProgress)->bool,operation:impl FnOnce(&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<O,ValueError>)->Result<O,ValueError>{let grant=self.remaining_grant();let pending=self.pending.as_deref_mut();let mut performed=RetainedCloneProgress::default();let result=self.native.scoped_maximum(maximum,|native|native.scoped_observer(observer,|native|{let mut original=NativeSnapshotDecodeOwner{native,grant,progress:Default::default(),wallet:None,pending};let result=operation(&mut original);performed=original.progress();result}));self.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;result.map_err(|error|error.with_retained_progress(performed))}
 
  /// 🪑️ Retains a typed decoder cursor and its accepted output in the original recipient.
  pub fn drive_cursor<T:semio_framework_value::retirement::RetireOwned,O:semio_framework_value::retirement::RetireOwned>(&mut self,cursor:&mut Option<T>,advance:impl FnMut(&mut T,&mut NativeDecodeControl<'_>,RetainedCloneGrant)->(Result<Option<O>,ValueError>,RetainedCloneProgress))->Result<O,ValueError>{
@@ -114,7 +115,7 @@ impl<'a,'b> IoRunControl<'a,'b>{
  /// 🧮️ Keeps every original IO currency already consumed by accepted producer spans.
  pub fn remaining_grant(&self)->RetainedCloneGrant{let grant=match &self.owner{Owner::Native{grant,..}|Owner::Decode{grant,..}|Owner::Encode{grant,..}=>*grant};NativeSnapshotBodyWallet{grant,progress:self.progress}.remaining_grant()}
  /// ♻️ Borrows the original decoder for funded cleanup without selecting or checkpointing another phase.
- pub fn with_native_retirement(&mut self,grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, 'b>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{
+ pub fn with_native_retirement(&mut self,grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, 'b>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{
   let original=match &self.owner{Owner::Native{grant,..}|Owner::Decode{grant,..}=>*grant,Owner::Encode{..}=>return Err(Self::opposite())};
   let mut wallet=NativeSnapshotBodyWallet{grant:original,progress:self.progress};wallet.admit_frontier(grant)?;
   let result=match &mut self.owner{Owner::Native{decode,..}|Owner::Decode{native:decode,..}=>decode.with_retirement(grant,operation),Owner::Encode{..}=>unreachable!()};

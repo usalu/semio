@@ -33,7 +33,6 @@ pub struct PdfDictDiff {
 }
 
 impl PdfDictDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -150,7 +149,6 @@ pub struct PdfArrayDiff {
 }
 
 impl PdfArrayDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -454,7 +452,7 @@ fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
             data: da2.or(da1),
             filters: f2.or(f1),
         },
-        (_, other) => other, // defensive LWW fallback; real sequential diffs never hit this arm.
+        (_, other) => other,
     }
 }
 /// ↩️ The negative node diff over `base`: the node's old scalar or kind-changing replacement, or the negative collection patch
@@ -508,7 +506,6 @@ pub struct PdfObjectsDiff {
 }
 
 impl PdfObjectsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }

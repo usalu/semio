@@ -52,7 +52,6 @@ use semio_framework_diagnostic::TextSpan;
             let checks = check_iso21320_conformance(&snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
-                // 🛡️ Defensive logical gate; native constraints are enforced at the IO boundary.
                 let mut all = hard.clone();
                 all.extend(soft);
                 return Err(ComposeError { message: format!("ISO/IEC 21320-1 normalization left {} hard issue(s) -- not stamping iso21320", hard.len()), diagnostics: all });
@@ -134,27 +133,23 @@ use semio_framework_diagnostic::Severity;
     }
 
     impl ZipIso21320BuilderConstruction {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: ZipSnapshot::default() }
         }
 
         /// ➕️ Adds a member this profile declares uncompressed (ISO/IEC 21320-1 §4.4 method 0).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             apply_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: ZipEntry { name: name.into(), data, ..Default::default() }, before: None }));
             self
         }
 
         /// ➕️ Adds a member this profile declares Deflate-compressed (ISO/IEC 21320-1 §4.4 method 8).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             apply_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: ZipEntry { name: name.into(), data, ..Default::default() }, before: None }));
             self
         }
 
         /// 💬️ Sets the archive-level (EOCD) comment.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_comment(mut self, comment: impl Into<String>) -> Self {
             self.snapshot.comment = comment.into();
             self

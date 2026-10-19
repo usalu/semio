@@ -36,3 +36,6 @@ semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
 semio-s-plugin-puzzle-jobs = { workspace = true }
 semio-s-plugin-puzzle-retained = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-3d-editor-session = { workspace = true }

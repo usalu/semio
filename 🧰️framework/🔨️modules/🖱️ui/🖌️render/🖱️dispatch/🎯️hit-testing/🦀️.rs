@@ -47,12 +47,10 @@ impl DispatchFlags {
     /// ✍️ Generic replacement for matching `UiNode::Input`: focusing this node seeds an [`EditState`].
     pub const EDITABLE: Self = Self(1 << 9);
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn contains(self, other: Self) -> bool {
         self.0 & other.0 == other.0
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn insert(&mut self, other: Self) {
         self.0 |= other.0;
     }
@@ -60,7 +58,6 @@ impl DispatchFlags {
 
 impl std::ops::BitOr for DispatchFlags {
     type Output = Self;
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn bitor(self, rhs: Self) -> Self {
         Self(self.0 | rhs.0)
     }

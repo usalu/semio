@@ -75,7 +75,6 @@ semio_framework_plugin::app_commands! {
     /// kebab-case `#[dsl(key = ..)]` the codec uses) — genuinely different vocabularies:
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum RemodelingCommand for RemodelingSnapshot, RemodelingMutation, NoConfig, NoConfigMutation {
-        // 📥️ Ingestion.
         "importFramePayload" as "import-frame-payload" => import_frame_payload::ImportFramePayload,
         "importVideoFramePayload" as "import-video-frame-payload" => import_video_frame_payload::ImportVideoFramePayload,
         "importVideoDone" as "import-video-done" => import_video_done::ImportVideoDone,
@@ -83,13 +82,11 @@ semio_framework_plugin::app_commands! {
         "addStream" as "add-stream" => add_stream::AddStream,
         "removeStream" as "remove-stream" => remove_stream::RemoveStream,
         "setStreamSync" as "stream-sync" => set_stream_sync::SetStreamSync,
-        // 🎯️ Calibration / GCPs.
         "editCalibration" as "edit-calibration" => edit_calibration::EditCalibration,
         "calibrateCameras" as "calibrate-cameras" => calibrate_cameras::CalibrateCameras,
         "addGcp" as "add-gcp" => add_gcp::AddGcp,
         "removeGcp" as "remove-gcp" => remove_gcp::RemoveGcp,
         "placeGcpObservation" as "place-gcp-observation" => place_gcp_observation::PlaceGcpObservation,
-        // ⚙️ 8 param-group setters, one per `ReconstructionParams` sub-struct.
         "setIngestParams" as "ingest-params" => set_ingest_params::SetIngestParams,
         "setFeatureParams" as "feature-params" => set_feature_params::SetFeatureParams,
         "setMatchParams" as "match-params" => set_match_params::SetMatchParams,
@@ -98,7 +95,6 @@ semio_framework_plugin::app_commands! {
         "setMeshParams" as "mesh-params" => set_mesh_params::SetMeshParams,
         "setMotionParams" as "motion-params" => set_motion_params::SetMotionParams,
         "setGeoParams" as "geo-params" => set_geo_params::SetGeoParams,
-        // 🧹️ Clear/reset.
         "resetPlaceholderMesh" as "reset-placeholder-mesh" => reset_placeholder_mesh::ResetPlaceholderMesh,
         "clearSparse" as "clear-sparse" => clear_sparse::ClearSparse,
         "clearDense" as "clear-dense" => clear_dense::ClearDense,
@@ -106,18 +102,14 @@ semio_framework_plugin::app_commands! {
         "clearTracks" as "clear-tracks" => clear_tracks::ClearTracks,
         "clearGeoProducts" as "clear-geo-products" => clear_geo_products::ClearGeoProducts,
         "clearResult" as "clear-result" => clear_result::ClearResult,
-        // 👁️ Config-only — emit `config_mutations`, never document operations.
         "setCamera" as "camera" => set_camera::SetCamera,
         "setLayerVisibility" as "layer-visibility" => set_layer_visibility::SetLayerVisibility,
         "setFrameCursor" as "frame-cursor" => set_frame_cursor::SetFrameCursor,
         "setReportTable" as "report-table" => set_report_table::SetReportTable,
-        // 🐚️ Shell effects — no operations either way.
         "importFrames" as "import-frames" => import_frames::ImportFrames,
         "importVideo" as "import-video" => import_video::ImportVideo,
         "exportQcReport" as "export-qc-report" => export_qc_report::ExportQcReport,
-        // 🎬️ Example picker.
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
-        // 🛑️ Import cancellation.
         "importAbort" as "import-abort" => import_abort::ImportAbort,
     }
 }

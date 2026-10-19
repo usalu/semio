@@ -1,4 +1,5 @@
 //! 🎟️ Original native scaffolds and pending replay frames close under distinct actual grants.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::retirement::{OwnedValueRetirementFactory,controlled::ControlledRetirement};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
@@ -8,7 +9,7 @@ fn observe(work:impl FnOnce()->Result<RetainedCloneStep,ValueError>,grant:Retain
 
 #[test]
 fn cooperative_replay_capacity_release_obeys_the_neutral_law(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&law["capacityRelease"];
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&law["capacityRelease"];
     let mut owners=Vec::<u8>::new();owners.try_reserve_exact(law["emptySlots"].as_u64().unwrap()as usize).unwrap();let capacity=owners.capacity();let body=law["bodyBytes"].as_u64().unwrap()as usize;
     let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ControlledRetirement::new(owners).unwrap_or_else(|(error,_)|panic!("original vector refused: {error}")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     let mut exact=false;
@@ -27,7 +28,7 @@ fn cooperative_replay_capacity_release_obeys_the_neutral_law(){
 
 #[test]
 fn cooperative_replay_paged_inverse_preserves_semantic_array_and_releases_each_page(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&law["pagedInverse"];let count=law["rows"].as_u64().unwrap()as usize;let maximum=law["maximumTurnBytes"].as_u64().unwrap()as usize;
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let law=&law["pagedInverse"];let count=law["rows"].as_u64().unwrap()as usize;let maximum=law["maximumTurnBytes"].as_u64().unwrap()as usize;
     let expected:Vec<u8>=(0..count).map(|index|(index%256)as u8).collect();let owners=PagedList::<u8,{usize::MAX}>::try_from_iter(expected.iter().copied()).unwrap();assert_eq!(serde_json::to_value(&owners).unwrap(),serde_json::to_value(&expected).unwrap());
     let factory=Arc::new(OwnedValueRetirementFactory::<u8>::default());let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ReplayMutationsRetirement::new(owners,factory));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut releases=0;
     for turn in 0..100000{if owner.terminal_is_empty(){break;}let current=grant(&owner);assert!(current.maximum_copy_bytes+current.maximum_capacity_bytes<=maximum&&current.maximum_release_bytes<=maximum);let progress=observe(||owner.close_step(current),current);releases+=usize::from(progress.released_bytes>0);assert!(turn<99999);}
@@ -36,7 +37,7 @@ fn cooperative_replay_paged_inverse_preserves_semantic_array_and_releases_each_p
 
 #[test]
 fn cooperative_replay_pending_native_lanes_birth_and_release_each_actual_child(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for vector in law["cases"].as_array().unwrap(){
         let factory=registered_replay_retirement_factory(Arc::new(OwnedValueRetirementFactory::<u8>::default()),Arc::new(OwnedValueRetirementFactory::<u8>::default()));
         let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ReplayRetirement::<u8,u8>::new(factory));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

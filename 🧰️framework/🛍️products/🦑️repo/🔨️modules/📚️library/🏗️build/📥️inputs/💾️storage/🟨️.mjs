@@ -76,7 +76,7 @@ export async function prepareBuildGraphOptionalHeadroomV1(image,control,request)
  if(validateJsonSchemaSubset(quotaSchema.definitions.Headroom,request,schema).length)throw Error("Closed optional graph headroom request required");const minimumAvailableBytes=request.minimumAvailableBytes;
  await image.recheck();const initial=await optionalInventoryV1(image,control),policy=quotaSchema.policy,space=statfsSync(image.root),used=initial.reduce((sum,row)=>sum+row.bytes,0);
  if(used<=policy.lowWaterBytes&&space.bavail*space.bsize>=minimumAvailableBytes)return false;
- const result=await image.withExclusiveMaintenance({version:1,wait:false},async()=>{await image.recheck();const entries=await optionalInventoryV1(image,control);let remaining=entries.reduce((sum,row)=>sum+row.bytes,0);for(const row of entries.sort((a,b)=>a.modified-b.modified||Buffer.compare(Buffer.from(a.path),Buffer.from(b.path)))){const free=statfsSync(image.root);if(remaining<=policy.lowWaterBytes&&free.bavail*free.bsize>=minimumAvailableBytes)break;await image.recheck();const actual=await lstat(requireNativeStoragePathV1(image.root,row.path));if(!actual.isFile()||actual.isSymbolicLink()||actual.nlink!==1||actual.dev!==row.device||actual.ino!==row.inode||actual.size!==row.bytes)throw Error("Quiescent optional graph cache identity changed");await unlink(row.path);remaining-=row.bytes;await control.publish({resource:"repository:graph-cache-retirement",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}const free=statfsSync(image.root);if(remaining>policy.maximumBytes||free.bavail*free.bsize<minimumAvailableBytes)throw Error("Graph cache cannot admit original required publication headroom: "+JSON.stringify({retainedOptionalBytes:remaining,availableBytes:free.bavail*free.bsize,requiredAvailableBytes:minimumAvailableBytes}));console.log("[DEBUG] Original exclusive graph image retired only optional cache leaves "+JSON.stringify({beforeBytes:entries.reduce((sum,row)=>sum+row.bytes,0),retainedBytes:remaining,availableBytes:free.bavail*free.bsize}));return true;});return result.acquired;
+ const result=await image.withExclusiveMaintenance({version:1,wait:false},async()=>{await image.recheck();const entries=await optionalInventoryV1(image,control);let remaining=entries.reduce((sum,row)=>sum+row.bytes,0);for(const row of entries.sort((a,b)=>a.modified-b.modified||Buffer.compare(Buffer.from(a.path),Buffer.from(b.path)))){const free=statfsSync(image.root);if(remaining<=policy.lowWaterBytes&&free.bavail*free.bsize>=minimumAvailableBytes)break;await image.recheck();const actual=await lstat(requireNativeStoragePathV1(image.root,row.path));if(!actual.isFile()||actual.isSymbolicLink()||actual.nlink!==1||actual.dev!==row.device||actual.ino!==row.inode||actual.size!==row.bytes)throw Error("Quiescent optional graph cache identity changed");await unlink(row.path);remaining-=row.bytes;await control.publish({resource:"repository:graph-cache-retirement",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}const free=statfsSync(image.root);if(remaining>policy.maximumBytes||free.bavail*free.bsize<minimumAvailableBytes)throw Error("Graph cache cannot admit original required publication headroom: "+JSON.stringify({retainedOptionalBytes:remaining,availableBytes:free.bavail*free.bsize,requiredAvailableBytes:minimumAvailableBytes}));return true;});return result.acquired;
 }
 
 
@@ -126,12 +126,14 @@ async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,name
  const current=writers.getStore(),owner=graphDatasetWorkspaceV1(workspace);
  if(current?.workspace===owner&&current.store.invocation===invocation&&(!namespace||current.namespace===namespace)){requireRepositoryBuildGraphWriterV1(workspace);requireIssuedResourceControlRefinementV1(current.phaseControl,phaseControl);const nested={...current,live:true,phaseControl};try{return await writers.run(nested,async()=>{checkResourceLeaseControl(phaseControl);const value=await body(current.store,phaseControl);requireRepositoryBuildGraphWriterV1(workspace);return value;});}finally{nested.live=false;}}
  if(datasets.getStore()||current?.workspace===owner&&current.store.invocation!==invocation)throw Error("Original graph writer invocation identity changed");
- return withRepositoryCacheStoreV1(workspace,"leases",invocation,phaseControl,async(leases,leasePhase)=>{
+ const leasePhase=phaseControl,leases=await openRepositoryCachePartitionV1(workspace,schema.definitions.GraphWriterLeaseProtocol.const.partition,leasePhase);let leaseFailed=false;
+ try{
+  await leases.recheck();
   const check=()=>{checkResourceLeaseControl(phaseControl);checkResourceLeaseControl(leasePhase);};check();
   const held=await acquireQueuedResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:namespace?buildGraphWriterResourceV1(workspace,...namespace.split(":")):"repository-graph-facts:"+resolve(workspace),mode:"exclusive",owner:randomBytes(16).toString("base64url"),control:leasePhase,signal:leasePhase.signal});
   let primary;
   try{
-   check();
+   await leases.recheck();check();
    let maintained=false;
    const maintain=async force=>{const image=await openRepositoryCachePartitionV1(workspace,"graph",leasePhase);let failed=false;try{await image.recheck();check();const space=statfsSync(image.root);if(force||space.bavail*space.bsize<quotaSchema.policy.minimumAvailableBytes){maintained=true;await maintainBuildGraphOptionalCachesV1(image,leasePhase);check();}}catch(error){failed=true;throw error;}finally{try{await image.close();}catch(error){if(!failed)throw error;}}};
    if(!current)await maintain(false);
@@ -147,11 +149,11 @@ async function withGraphFactWriterV1(workspace,invocation,phaseControl,body,name
       try{return await writers.run(scope,async()=>{let failed=false;try{const value=await body(store,actualControl);checkActual();return value;}catch(error){failed=true;throw error;}finally{let closeFailed=false,failure;for(const close of scope.handles)try{close();}catch(error){if(!closeFailed){closeFailed=true;failure=error;}}if(closeFailed&&!failed)throw failure;}});}finally{scope.live=false;}
      }catch(error){failed=true;throw error;}finally{try{ledger.close();}catch(error){if(!failed)throw error;}}
     });
-    if(!retry)return value;
+    if(!retry){await leases.recheck();check();return value;}
     await maintain(true);
    }
   }catch(error){primary={error};throw error;}finally{try{held.release();}catch(error){if(!primary)throw error;if(primary.error instanceof Error&&Object.isExtensible(primary.error))try{Object.defineProperty(primary.error,"graphWriterLeaseReleaseFailure",{value:error});}catch{}}}
- });
+ }catch(error){leaseFailed=true;throw error;}finally{try{await leases.close();}catch(error){if(!leaseFailed)throw error;}}
 }
 
 /** 🔒️ Refuses graph fact publication outside live original fixed-volume custody. */

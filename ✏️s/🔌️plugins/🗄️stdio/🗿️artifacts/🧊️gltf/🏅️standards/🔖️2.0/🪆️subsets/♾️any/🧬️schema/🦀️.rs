@@ -33,17 +33,14 @@ impl Default for GltfArtifact {
 }
 
 impl GltfArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> GltfSnapshot {
         GltfSnapshot { schema: self.schema.clone(), document: self.document.clone(), buffers: self.buffers.clone(), source_form: self.source_form }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: GltfSnapshot) -> Self {
         Self { schema: snapshot.schema, document: snapshot.document, buffers: snapshot.buffers, source_form: snapshot.source_form }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: GltfSnapshot) {
         self.schema = snapshot.schema;
         self.document = snapshot.document;
@@ -145,12 +142,6 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
             extras: None,
         }],
         buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: 36, byte_stride: None, target: Some(34962), name: None, extensions: None, extras: None }],
-        // A real `data:` URI (not `None`) -- `None` would round-trip LOSSY through the TEXT
-        // facet specifically (`serialize_gltf_document` embeds any uri-less buffer as a data URI
-        // on print, so re-parsing would fabricate a `Some(..)` that never matches this demo's own
-        // `None`, a real asymmetry discovered by `fixture_honesty_law` -- setting a genuine data
-        // URI up front keeps BOTH the text (`parse_gltf_document`) and GLB (`decode_glb`, which
-        // never embeds when a buffer already declares a `uri`) facets byte-for-byte lossless.
         buffers: vec![GltfBuffer { byte_length: 36, uri: Some("data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA".into()), name: Some("geometry".into()), extensions: None, extras: None }],
         materials: vec![GltfMaterial {
             name: Some("triangle-material".into()),

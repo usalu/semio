@@ -9,7 +9,7 @@ export interface EpwClimateSummary {
 }
 
 export interface EpwInference {
-  /** @derived */
+  /** 🌬️ @derived */
   climate: EpwClimateSummary;
 }
 

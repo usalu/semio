@@ -12,7 +12,7 @@ import { cleanup, render } from "@semio-tech/ui-react/test";
 import type { PresencePeerInput } from "@semio-tech/framework/replication";
 import { CanvasPresenceOverlayV1 } from "../../🟦️.tsx";
 import { clearArtifactPresenceRosterV1, publishArtifactPresenceRosterV1 } from "../../🟦️.ts";
-import fixture from "../../../../🧪️tests/🧫️fixtures/👕️canvas-presence/🔣️.json";
+import fixture from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/canvas-presence.json";
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws

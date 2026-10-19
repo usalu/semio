@@ -1,6 +1,7 @@
 //! 🔄️ Exchange and turn settling: the exchange, the command exchange, the turn run and settle, the cancelled turn retirement, the serving compile and the reserved job admission. See [`super`].
 
 use super::*;
+use semio_framework_os_renderer_wgpu_kernel_protocol::CreateAppSourceFailureKind;
 
 //#region 🎠️KernelRuntime
 //#region 🔖️KernelPoolState

@@ -130,7 +130,7 @@ pub struct LoopbackTransport {
 
 #[cfg(any(test, feature = "testkit"))]
 impl LoopbackTransport {
-    /// Returns `(the transport ShardLoop::new takes ownership of, a probe this test keeps)`.
+    /// 👫️ Returns `(the transport ShardLoop::new takes ownership of, a probe this test keeps)`.
     pub async fn paired() -> (Self, crate::LoopbackProbe) {
         let transport = Self::default();
         let probe = crate::LoopbackProbe { inbound: transport.inbound.clone(), outbound: transport.outbound.clone() };

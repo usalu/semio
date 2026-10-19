@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn original_symmetric_pencil_matches_independent_sparse_storage_and_refuses_owner_transfer() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎼️pencil/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎼️pencil/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let n = case["order"].as_u64().unwrap() as usize;
         let mut first = Coo::new(n);

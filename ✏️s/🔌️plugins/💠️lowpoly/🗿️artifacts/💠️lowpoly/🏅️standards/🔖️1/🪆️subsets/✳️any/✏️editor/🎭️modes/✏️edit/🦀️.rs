@@ -109,15 +109,11 @@ pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_ut
         icon_id: Some(icon.into()),
         pressed: Some(pressed),
         disabled: None,
-        // 🎛️ An engagement option carries no toggle value, so the press flips the flag it reads.
         action: Some(lowpoly_window_action("setUtilityParam", Some(semio_framework_value::DslValue::object([("key".to_string(), semio_framework_value::DslValue::String(key.to_string())), ("value".to_string(), semio_framework_value::DslValue::Bool(!pressed))])))),
     };
     let status = if selected_components > 0 { format!("{active_utility} · {selected_components} {} {}", select.granularity, labels.selected.as_str()) } else { active_utility.to_string() };
     WindowEngagement {
         session_active: Some(true),
-        // 🧰️ The move/rotate/scale transform switcher lives in the framework utility bar (declared via
-        // `.utility` + window-level `utilities`); the rail carries what a mesh edit needs at hand: the
-        // pick granularity, the gumball handle groups, and the three chrome switches.
         options: Some(vec![
             granularity("mesh", "box", labels.mesh, MESH_GRANULARITY_OBJECT),
             granularity("vertex", "circle", labels.vertex, "vertex"),
@@ -149,11 +145,6 @@ pub fn lowpoly_window_engagement_with_selection(view: LowpolyView<'_>, active_ut
         }),
         control: None,
         controls: None,
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's live selection
-        // count used to read off `LowpolyConfig`; it is framework-owned `InteractionState` now, and
-        // `ArtifactApp::window_engagements` (unlike `handle`/`copy_fragment`/`cut_operations`) is not
-        // threaded an `InteractionView` this wave — the status line drops the selection summary rather
-        // than reading stale app-local state. Peer/self selection is surfaced generically by the shell.
         status: Some(vec![WindowEngagementStatus { id: "lowpoly-status".into(), text: status }]),
         possible_engagements: Some(vec![
             WindowEngagementPossible { id: "lowpoly.eng.extrude".into(), label: labels.extrude.into(), detail: None, action: Some(lowpoly_window_action("extrude", None)) },

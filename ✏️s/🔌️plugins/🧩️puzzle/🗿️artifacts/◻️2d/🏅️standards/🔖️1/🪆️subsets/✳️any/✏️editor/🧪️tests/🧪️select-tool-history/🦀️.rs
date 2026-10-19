@@ -1,4 +1,4 @@
-//! §16), driven by the language-agnostic corpus `🧫️fixtures/🧫️select-tool-history/🔣️.json` that the Python oracle beside
+//! 📡️ §16), driven by the language-agnostic corpus `🧫️fixtures/🧫️select-tool-history/🔣️.json` that the Python oracle beside
 //! ⏪️ Laws for the select tool's leaves under time travel (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §8 and
 //! this file re-folds with shapely. Every scenario authors its log through the real tool entry points — a board drag
 //! through the engine, a board pick, a nudge, the rotate and scale verbs, ingested leaves — edits it in a history session

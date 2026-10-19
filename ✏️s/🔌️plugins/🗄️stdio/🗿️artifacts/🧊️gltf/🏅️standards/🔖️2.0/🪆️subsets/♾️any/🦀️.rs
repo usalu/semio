@@ -23,13 +23,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts. Binary
-            // sources are analyzed with real `.glb`-vs-pack sniffing (see `GltfAnalyzer::analyze`), so
-            // a `DEP_BINARY` source carrying raw `.glb` bytes decodes through the exact same path a
-            // hand-fed `AnalyzeSource::Binary` would.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_JSON || s.dialect == DEP_BINARY)
@@ -152,22 +145,18 @@ pub mod derived_construction {
     }
 
     impl GltfAccessorSpec {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(component_type: GltfComponentType, accessor_type: GltfAccessorType, count: usize) -> Self {
             Self { buffer_view: None, byte_offset: 0, component_type, accessor_type, count, normalized: false, min: None, max: None }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_buffer_view(mut self, buffer_view: usize, byte_offset: usize) -> Self {
             self.buffer_view = Some(buffer_view);
             self.byte_offset = byte_offset;
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_normalized(mut self, normalized: bool) -> Self {
             self.normalized = normalized;
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_min_max(mut self, min: Vec<f64>, max: Vec<f64>) -> Self {
             self.min = Some(min);
             self.max = Some(max);
@@ -179,7 +168,6 @@ pub mod derived_construction {
     //#region 🔖️DocumentConstructors
     impl GltfBuilderConstruction {
         /// 🌱 Sets `asset.version` (the one glTF-mandatory field).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_asset_version(&mut self, version: &str) -> &mut Self {
             self.snapshot.document.asset.version = version.to_string();
             self
@@ -187,7 +175,6 @@ pub mod derived_construction {
 
         /// 📦️ Appends a buffer, storing its real bytes on the snapshot's `buffers` (index-aligned with
         /// `document.buffers`) and recording `byteLength` in the document. Returns the new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_buffer(&mut self, bytes: Vec<u8>) -> usize {
             let byte_length = bytes.len();
             let idx = self.snapshot.buffers.len();
@@ -199,7 +186,6 @@ pub mod derived_construction {
         /// 🪟️ Appends a `bufferView` (buffer index, byte offset/length, optional `byteStride` for
         /// interleaved data, optional `target` -- 34962 `ARRAY_BUFFER` / 34963 `ELEMENT_ARRAY_BUFFER`).
         /// Returns the new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_buffer_view(&mut self, buffer: usize, byte_offset: usize, byte_length: usize, byte_stride: Option<usize>, target: Option<u64>) -> usize {
             let idx = self.snapshot.document.buffer_views.len();
             self.snapshot.document.buffer_views.push(GltfBufferView { buffer, byte_offset, byte_length, byte_stride, target, name: None, extensions: None, extras: None });
@@ -207,7 +193,6 @@ pub mod derived_construction {
         }
 
         /// 🔢️ Appends an `accessor` from a typed [`GltfAccessorSpec`]. Returns the new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_accessor(&mut self, spec: GltfAccessorSpec) -> usize {
             let idx = self.snapshot.document.accessors.len();
             self.snapshot.document.accessors.push(GltfAccessor {
@@ -228,7 +213,6 @@ pub mod derived_construction {
         }
 
         /// 🎨️ Appends a fully typed `material`. Returns the new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_material(&mut self, material: GltfMaterial) -> usize {
             let idx = self.snapshot.document.materials.len();
             self.snapshot.document.materials.push(material);
@@ -237,7 +221,6 @@ pub mod derived_construction {
 
         /// 🕸️ Appends an empty `mesh` (primitives added via [`Self::add_mesh_primitive`]). Returns the
         /// new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_mesh(&mut self) -> usize {
             let idx = self.snapshot.document.meshes.len();
             self.snapshot.document.meshes.push(GltfMesh::default());
@@ -247,7 +230,6 @@ pub mod derived_construction {
         /// 🔺️ Appends a primitive to `meshes[mesh]` -- `attributes` are `(semantic, accessor index)`
         /// pairs (e.g. `("POSITION", 0)`), `indices`/`material` are optional accessor/material
         /// indices, `mode` is the primitive topology (defaults to `4` TRIANGLES per spec when unset).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_mesh_primitive(&mut self, mesh: usize, attributes: &[(&str, usize)], indices: Option<usize>, material: Option<usize>, mode: Option<u64>) {
             let primitive = GltfPrimitive { attributes: attributes.iter().map(|(name, idx)| ((*name).to_string(), *idx)).collect(), indices, material, mode, targets: Vec::new(), extensions: None, extras: None };
             let mesh_entry = self.snapshot.document.meshes.get_mut(mesh).expect("mesh index out of range -- call add_mesh first");
@@ -255,7 +237,6 @@ pub mod derived_construction {
         }
 
         /// 🧍️ Appends a `node`, optionally referencing a mesh. Returns the new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_node(&mut self, mesh: Option<usize>) -> usize {
             let idx = self.snapshot.document.nodes.len();
             self.snapshot.document.nodes.push(GltfNode { mesh, ..GltfNode::default() });
@@ -265,7 +246,6 @@ pub mod derived_construction {
         /// 🎬️ Appends a `scene` referencing `nodes` (root node indices), with an optional passthrough
         /// `extensions` object (real documents sometimes carry a declared-but-empty `{}` here).
         /// Returns the new index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_scene(&mut self, nodes: Vec<usize>, extensions: Option<GltfJson>) -> usize {
             let idx = self.snapshot.document.scenes.len();
             self.snapshot.document.scenes.push(GltfScene { nodes, name: None, extensions, extras: None });
@@ -273,7 +253,6 @@ pub mod derived_construction {
         }
 
         /// 🎬️ Sets the document's default `scene` index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_default_scene(&mut self, scene: usize) -> &mut Self {
             self.snapshot.document.scene = Some(scene);
             self
@@ -281,7 +260,6 @@ pub mod derived_construction {
 
         /// 🧩️ Sets `extensionsUsed` (declared, not necessarily applied -- mirrors real-world documents
         /// that declare an extension namespace without every element using it).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_extensions_used(&mut self, names: Vec<String>) -> &mut Self {
             self.snapshot.document.extensions_used = names;
             self
@@ -289,13 +267,11 @@ pub mod derived_construction {
 
         /// 📸️ Peeks the in-progress document -- used by tests/callers that need to inspect state
         /// mid-construction without consuming the builder via `build()`.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn document(&self) -> &semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument {
             &self.snapshot.document
         }
 
         /// 📦️ Peeks the in-progress resolved buffer bytes.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn buffers(&self) -> &[Vec<u8>] {
             &self.snapshot.buffers
         }
@@ -377,9 +353,6 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => {
-                        // A genuine `.gltf` JSON document parses directly through the real codec; only
-                        // fall back to the SemioEnvelope-wrapped `ArtifactDsl` preamble form (used by
-                        // this crate's own internal store round-trips) when the text isn't bare JSON.
                         let result = if looks_like_gltf_json(text) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::parse_gltf_document(text.trim().as_bytes()) } else { <GltfSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
@@ -390,9 +363,6 @@ pub mod derived_analysis {
                         }
                     }
                     AnalyzeSource::Binary(bytes) => {
-                        // A genuine raw `.glb` container decodes directly through the real codec; only
-                        // fall back to the SemioEnvelope-wrapped `ArtifactPack` form (this crate's own
-                        // internal store round-trip encoding) when the bytes aren't a `.glb` container.
                         let result = if looks_like_glb(bytes) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb(bytes) } else { <GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string()) };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),

@@ -1,4 +1,4 @@
-//! projection (part nodes with their rim grips, fastener edges), built directly on the
+//! 🔭️ projection (part nodes with their rim grips, fastener edges), built directly on the
 //! ◻️ Puzzle 5D viewer — the Board2d window: a read-only render of the unified 5d document's flat
 //! artifact-level `Puzzle5dSnapshot`. This file imports nothing from the sibling editor module
 //! (`policyViewerPurityBreaches` forbids it outright), so the board fixture is re-derived here rather

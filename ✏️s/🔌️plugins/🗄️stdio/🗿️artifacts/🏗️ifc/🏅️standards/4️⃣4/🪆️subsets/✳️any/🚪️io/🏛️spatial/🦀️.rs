@@ -35,12 +35,10 @@ impl Default for Mat4 {
 }
 
 impl Mat4 {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn identity() -> Self {
         Mat4([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]])
     }
     /// ✖️ `self * other` (self applied after other — i.e. `self` is the outer/parent transform).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn mul(&self, other: &Mat4) -> Mat4 {
         let (a, b) = (&self.0, &other.0);
         let mut out = [[0.0; 4]; 4];
@@ -51,7 +49,6 @@ impl Mat4 {
         }
         Mat4(out)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transform_point(&self, p: [f64; 3]) -> [f64; 3] {
         let m = &self.0;
         [m[0][0] * p[0] + m[0][1] * p[1] + m[0][2] * p[2] + m[0][3], m[1][0] * p[0] + m[1][1] * p[1] + m[1][2] * p[2] + m[1][3], m[2][0] * p[0] + m[2][1] * p[1] + m[2][2] * p[2] + m[2][3]]
@@ -131,7 +128,7 @@ fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, Vec<u64>>, seen: &mut HashSet<u64>) -> Option<SpatialNode> {
     if !seen.insert(id) {
-        return None; // cycle guard: never revisit the same instance
+        return None;
     }
     let inst = doc.instance(id)?;
     let (ifc_type, args) = inst.primary()?;

@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor;
 
 pub const PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT: usize = 64;
 

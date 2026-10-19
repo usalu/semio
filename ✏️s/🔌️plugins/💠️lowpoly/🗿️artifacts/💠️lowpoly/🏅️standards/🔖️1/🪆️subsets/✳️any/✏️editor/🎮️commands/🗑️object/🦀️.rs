@@ -96,9 +96,6 @@ pub mod duplicate_object {
             mesh_content: source.mesh_content.clone(),
         };
         let index = projection.objects.iter().position(|object| object.id == source_id).map_or(projection.objects.len(), |position| position + 1);
-        // 🎯️ The copy becomes the selection too — the mesh domain's selection is framework-owned, so the
-        // app asks the host to redispatch `interactionSelect` on the copy's row (a Delete right after a
-        // ⌘D then removes the copy, not the still-selected source).
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": semio_s_artifact_lowpoly_lowpoly_view::MESH_GRANULARITY_OBJECT, "id": semio_s_artifact_lowpoly_lowpoly_view::document_object_row_id(&id) })]).unwrap_or_default();
         let select = semio_framework::kernel::Effect::DispatchAction {
             req: semio_framework_plugin::RequestId(1_302),

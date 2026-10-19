@@ -31,7 +31,7 @@ impl PropQueue {
         Some(NodeId(raw))
     }
 
-    #[allow(dead_code)] // queue-introspection API exercised by the step/resume API added in a later phase
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.queue.is_empty()
     }

@@ -1,5 +1,5 @@
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import {parseBinary64Transport} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "@semio-tech/value-ts/ieee754";
+import {parseBinary64Transport} from "@semio-tech/framework/io/text/ieee754";
 import type {EnergyModelMutation} from "../🟦️.ts";
 import type {EnergyModelDiff} from "../../🔺️diff/🟦️.ts";
 import type {EnergyGlazingMaterial} from "../../📸️snapshot/⚡️model/🟦️.ts";

@@ -15,7 +15,7 @@ export interface SemioValueCensus {
 }
 
 export interface SemioValueInference {
-  /** @derived */
+  /** 🧬️ @derived */
   census: SemioValueCensus;
 }
 

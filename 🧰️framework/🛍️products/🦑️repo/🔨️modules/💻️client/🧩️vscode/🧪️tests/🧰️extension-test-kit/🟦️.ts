@@ -217,7 +217,7 @@ export async function collectNativeDefinitionScopes(document: vscode.TextDocumen
   return scopes;
 }
 
-export export async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
+export async function getCodeLenses(document: vscode.TextDocument): Promise<vscode.CodeLens[]> {
   await vscode.window.showTextDocument(document, { preview: true, preserveFocus: false });
   await new Promise((resolve) => setTimeout(resolve, 250));
   return (await vscode.commands.executeCommand<vscode.CodeLens[]>("vscode.executeCodeLensProvider", document.uri)) ?? [];

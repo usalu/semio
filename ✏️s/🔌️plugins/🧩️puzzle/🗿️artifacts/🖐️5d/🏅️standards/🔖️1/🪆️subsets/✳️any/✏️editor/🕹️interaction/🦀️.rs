@@ -171,8 +171,6 @@ impl Puzzle5dContextSelection {
                 bucket.extend(ids);
             }
         }
-        // 🎯️ Hosts list every target under the pointer, most specific first (a grip before its part), and only
-        // that one is the menu's subject.
         let mut hits = Self::default();
         if let Some(hit) = surface.hits.iter().find(|hit| hits.bucket(hit.domain.as_str()).is_some()) {
             hits.bucket(hit.domain.as_str()).into_iter().for_each(|bucket| bucket.push(hit.id.clone()));
@@ -269,17 +267,11 @@ pub fn puzzle5d_context_menu_items(
     }
     if !selection.grip_ids.is_empty() {
         let mut menu = Menu::of(registry, view_state);
-        // 🎣️ Only for EXACTLY one grip: the suggestion search points at a single grip. The row carries the
-        // world host's `openVortexSuggestions` verb, which the host turns into a live submenu: it starts the
-        // search the moment the menu opens and lists the free parts as they are found.
         if let [only] = selection.grip_ids.as_slice() {
             menu = menu.item(bespoke("suggest", labels.suggest_parts.into(), "sparkles", "openVortexSuggestions", Some(semio_framework_pack_json::json!({ "fullId": only.as_str() })), false));
         }
         return menu.action("focusSelection").item(bespoke("delete", labels.delete.into(), "trash", "deleteSelection", None, true)).build();
     }
-    // 🔗️ A fastener row carries its own id. `retargetFastener` is deliberately NOT offered here: it
-    // needs a REPLACEMENT grip a context menu cannot name, and dispatching it with an id alone is an
-    // early return — a visibly dead row. Retargeting lives in the inspector, which has both grips.
     let Some(id) = selection.fastener_ids.first() else { return Vec::new() };
     Menu::of(registry, view_state).item(bespoke("delete", labels.delete.into(), "trash", "deleteFastener", Some(semio_framework_pack_json::json!({ "id": id.as_str() })), true)).build()
 }
@@ -689,9 +681,6 @@ pub fn puzzle5d_cut_operations(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[Stri
     if parts.is_empty() {
         return Vec::new();
     }
-    // 🔒️ A LOCKED part is copied but never removed — a lock exists precisely to refuse a destructive
-    // gesture — and the fasteners of a surviving part survive with it, or the document is left half-cut.
-    // `Puzzle5dClipboardJob` applies the identical rule on the retained route; the two must never disagree.
     let locked: HashSet<&str> = parts.iter().filter(|part| part.part_2d.locked.unwrap_or(false)).map(|part| part.id.as_str()).collect();
     fasteners
         .iter()

@@ -528,7 +528,7 @@ impl FillRunJob {
         self.writer.progress(progress);
         let bytes = self.writer.finish()?.encode().ok();
         Some(match bytes {
-            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
+            Some(bytes) if bytes.len() <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
             Some(_) => JobTurn::Fault(b"fill-run-tick-page".to_vec()),
             None => JobTurn::Fault(b"fill-run-tick-encode".to_vec()),
         })

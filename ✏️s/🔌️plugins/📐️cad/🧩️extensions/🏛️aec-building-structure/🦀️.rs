@@ -71,8 +71,6 @@ fn computers_manifest() -> JsonValue {
 // bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Structure", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
-    // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
-    // extension only contributes a topic (`cad.computer`).
     let bundle = bundle.mode(ExecutionMode::Declarative);
     bundle.contributes_topic(
         "cad.computer",

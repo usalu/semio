@@ -51,15 +51,19 @@ semio-framework-replication-interaction = { path = "../../📡️wire/🕹️int
 semio-framework-replication-local-interaction = { path = "../../📡️wire/🏠️local-interaction/📦️packages/🦀️rust" }
 semio-framework-replication-mutation = { path = "../../🎮️mutation/📦️packages/🦀️rust" }
 semio-framework-replication-mutation-messages = { path = "../../🎮️mutation/📨️messages/📦️packages/🦀️rust" }
+semio-framework-replication-mutation-retained = { path = "../../🎮️mutation/🧳️retained/📦️packages/🦀️rust" }
 semio-framework-replication-presence = { path = "../../📡️wire/👥️presence/📦️packages/🦀️rust" }
 semio-framework-replication-wire-core = { path = "../../🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
+semio-framework-value-native-owned.workspace = true
 
 [dev-dependencies]
 semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../🧬️schema/📇️registry/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+semio-framework-trace = { workspace = true }
+semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 
 [[test]]
 name = "retained_diff_sequence"

@@ -37,6 +37,7 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../🧰️f
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-semio = { path = "../../../../../📦️packages/🦀️rust" }

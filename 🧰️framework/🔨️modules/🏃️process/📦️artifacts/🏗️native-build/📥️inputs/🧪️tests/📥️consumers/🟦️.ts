@@ -16,7 +16,8 @@ type Row=(typeof corpus.cases)[number];
 type Invocation=(...values:unknown[])=>Promise<void>;
 type Settlement=Readonly<{status:"settled"}|{status:"rejected";reason:unknown}>;
 type Execution=Readonly<{trace:readonly string[];failed:{error:unknown}|undefined;settlement:Settlement;primary:unknown;releaseFailure:unknown;occurrences:number}>;
-class ConsumptionRefusal extends Error{constructor(readonly port:string,readonly received:readonly string[],readonly expected:readonly string[]){super("Model refused unconsumed arguments at "+port);}}
+class ConsumptionRefusal extends Error{readonly port:string;readonly received:readonly string[];readonly expected:readonly string[];
+                                       constructor(port:string,received:readonly string[],expected:readonly string[]){super("Model refused unconsumed arguments at "+port);this.port=port;this.received=received;this.expected=expected;}}
 type LeaseRequest={args:readonly string[];control:ResourceLeaseControl;signal?:AbortSignal};
 const consumedArguments="args: actual.arguments",substitutedArguments='args: ["unconsumed"]';
 function extract(path:string,names:readonly string[],ports:Readonly<Record<string,unknown>>,occurrence?:number,mutated:(occurrences:number)=>void=()=>{}):Invocation{

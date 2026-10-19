@@ -29,7 +29,7 @@ async fn b44_measures_what_one_command_costs_per_document_size() {
 fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
     let scene_snapshot = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
     assert!(scene_snapshot.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", scene_snapshot.objects.len());
-    let mut residency = main::Puzzle3dInstanceResidency::default();
+    let mut residency = semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceResidency::default();
     assert!(residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]), "the first refresh publishes the whole set");
     assert_eq!(residency.rebuilt_records() as usize, scene_snapshot.objects.len(), "a cold residency serializes every record exactly once");
     assert!(residency.delta_json().is_none(), "a COLD publication carries no delta lane at all — a consumer with nothing retained must read the full set anyway, and the second copy is pure wire cost");
@@ -65,7 +65,7 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
 #[test]
 fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode() {
     for scene_snapshot in [CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone(), NAKAGIN_EXAMPLE_SNAPSHOT.clone()] {
-        let mut residency = main::Puzzle3dInstanceResidency::default();
+        let mut residency = semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceResidency::default();
         residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]);
         assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&scene_snapshot), "a cold residency matches the whole-set encode");
         let mut edited = scene_snapshot.clone();
@@ -193,13 +193,13 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
     let scene_snapshot = puzzle3d_scene_snapshot_from_document(&typed);
     let typed_decode_us = started.elapsed().as_micros();
     let started = Instant::now();
-    let instances = main::world_instances_geometry_json(&scene_snapshot);
+    let instances = semio_s_artifact_puzzle_3d_editor_session::world_instances_geometry_json(&scene_snapshot);
     let instances_json_us = started.elapsed().as_micros();
     let started = Instant::now();
-    let _ = main::scene_geometry_fingerprint(&scene_snapshot);
+    let _ = semio_s_artifact_puzzle_3d_editor_session::scene_geometry_fingerprint(&scene_snapshot);
     let fingerprint_us = started.elapsed().as_micros();
     let started = Instant::now();
-    let _ = main::world_meshes_json(&scene_snapshot);
+    let _ = semio_s_artifact_puzzle_3d_editor_session::world_meshes_json(&scene_snapshot);
     let meshes_json_us = started.elapsed().as_micros();
     let runtime = Puzzle3dRuntime::default();
     let started = Instant::now();

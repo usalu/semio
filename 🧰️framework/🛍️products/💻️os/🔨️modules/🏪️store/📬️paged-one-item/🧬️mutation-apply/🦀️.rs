@@ -11,9 +11,22 @@ use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneGrant, R
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::{mem::size_of, sync::Arc};
+use semio_framework_value::RetainedCloneSource;
+use protocol::MutationMessageConcat;
+use semio_framework_os_spr::RetainedMutationDecisionStep;
+use semio_framework_os_spr::RetainedDiffPreflightStep;
+use semio_framework_os_spr::RetainedMutationInverseStep;
+use semio_framework_value_factory::vector::FactoryVectorRetirement;
+use std::mem::ManuallyDrop;
+use semio_framework_value_factory::vector::FactoryIssuerIdentity;
+use semio_framework_os_spr::RetainedMutation;
+use semio_framework_value::RetainedCloneRef;
+use semio_framework_value_factory::ArtifactOwnedValueRetirementFactory;
+use semio_framework_os_spr::RetainedMutationOwner;
+use semio_framework_os_spr::RetainedDiffOwner;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Stage {
+pub enum Stage {
     Inverse,
     Apply,
     Retire,
@@ -46,7 +59,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
    Stage::Publish=>self.join.as_ref().unwrap().demand()?,Stage::Done=>unreachable!()
   };demand.copy_bytes=demand.copy_bytes.checked_add(parent).ok_or_else(||fault("retained semantic header quote overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||fault("retained semantic depth quote overflow"))?.max(2);Ok(demand)
  }
- fn advance(&mut self,before:RetainedCloneRef<'_,S>,mutation:RetainedCloneRef<'_,M>,post:&mut S,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<M>,ValueError>{
+ fn advance(&mut self,before:RetainedCloneRef<'_,S>,mutation:RetainedCloneRef<'_,M>,post:&mut S,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<M>,ValueError>{
   if self.closing||self.stage==Stage::Done{return Err(fault("retained mutation edit is closed"));}
   if grant.maximum_items==0||grant.maximum_copy_bytes<Self::parent_copy()||grant.maximum_depth<2{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
   let demand=self.advance_demands(before,mutation,post,body)?;if !protocol::retained_mutation_demand_fits(demand,grant){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
@@ -125,5 +138,3 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
 impl<S:SnapshotProjection,M:RetainedMutation<S>> Drop for MutationApplyEdit<S,M>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"retained mutation edit requires complete original ownership closure");if empty{unsafe{ManuallyDrop::drop(&mut self.semantics);ManuallyDrop::drop(&mut self.diff);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.plan);ManuallyDrop::drop(&mut self.inverse);ManuallyDrop::drop(&mut self.messages);ManuallyDrop::drop(&mut self.join);}}}}
 /// 🏭️ Every mounted mutation family supplies required retained semantics and a typed central apply plan.
 pub fn mutation_apply_preparation_factory<S,M>()->Arc<dyn ArtifactStoreOneItemPreparationFactory<S,M>>where S:SnapshotProjection,M:RetainedMutation<S>+ArtifactCanonicalJsonTree{Arc::new(PagedOneItemPreparationFactory::<S,M,MutationApplyEdit<S,M>>::default())}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"] mod tests;

@@ -1,3 +1,4 @@
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use super::*;
 
 /// 🤝️ Independently authored node properties remain independent during replay and inverse replay.
@@ -24,14 +25,21 @@ fn concurrent_node_fields_preserve_both_authors_intent() {
         assert_eq!(snapshot.nodes[0].y, 4.0);
     }
 }
-use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
 use crate::context::dispatch;
 use crate::context::fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+#[cfg(test)] use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_node::PatchNode;
+#[cfg(test)] use semio_framework_plugin::component::Emit;
+#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_framework::Fault;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchNode) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {

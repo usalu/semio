@@ -16,6 +16,7 @@ impl<T:RetainedClone> RetainedCloneOwner<T>{
 impl<T:RetainedClone> Drop for RetainedCloneOwner<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"typed clone cursor requires original partial-owner closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cursor)}}}}
 struct Close<T:RetainedClone>{owner:RetainedCloneOwner<T>}
 impl<T:RetainedClone> RetirementCursor for Close<T>{
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.owner.selected_close_demand(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.owner.closing&&self.owner.terminal_is_empty(){return RetirementStep::Complete}match self.owner.close_step(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{self.owner.closing&&self.owner.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.owner.selected_close_demand(0)?.depth)}

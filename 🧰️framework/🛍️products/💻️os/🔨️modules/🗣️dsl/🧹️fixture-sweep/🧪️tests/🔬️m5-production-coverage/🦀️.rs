@@ -33,8 +33,6 @@ async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_
         if soft_skip_missing(&format!("{}.fixture", facet.label), &fixture_text).await {
             continue;
         }
-        // A grammar that fails to even parse is grammar_conformance's failure to surface —
-        // this diagnostic only covers the uncovered-productions signal once a grammar parses.
         let Ok(grammar) = parse_grammar(&grammar_text) else { continue };
         let recognizer = Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         let body = dsl_body_from_host_snapshot(&fixture_text).await;
@@ -43,8 +41,6 @@ async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_
             eprintln!("{}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));
         }
         checked += 1;
-        // Soft assertion for now (matches the pre-P2-M3 design): recognition must succeed;
-        // the uncovered list itself stays advisory until a later wave enforces full coverage.
         if !recognizer.recognize(&body).unwrap_or(false) {
             if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()).await {
                 soft_failures.push(facet.label.clone());

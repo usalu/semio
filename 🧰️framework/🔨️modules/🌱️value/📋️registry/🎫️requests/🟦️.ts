@@ -1,6 +1,6 @@
 import {FixedKeySlots,type FixedKeySlot} from "../🎫️slots/🟦️.ts";
 import {ExactKeyCursor} from "../../🔑️lookup/🟦️.ts";
-import {Blake3Hasher} from "../../../🔏️hash/🟦️.ts";
+import {Blake3Hasher} from "@semio-tech/framework/hash";
 /** 🎟️ Canonical independent work currencies for retained original request bytes. */
 export type RequestWorkGrant={maximumItems:number;maximumCopyBytes:number;maximumCapacityBytes:number;maximumReleaseBytes:number;maximumDepth:number};
 /** 🧾️ Actual retained payload effects of one bounded request turn. */

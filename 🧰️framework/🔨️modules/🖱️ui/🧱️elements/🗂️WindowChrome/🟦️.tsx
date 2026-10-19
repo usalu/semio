@@ -461,8 +461,6 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       clipPath: geometry.contentClipPath,
       WebkitClipPath: geometry.contentClipPath,
     } as React.CSSProperties;
-    // 🪟️ The stack element itself stamps `data-level` (below), so this only needs to open the
-    // SurfaceScope (fill="glass" — every cell above already renders it) for descendants to see via useSurface().
     const wrapLevel = (node: React.ReactNode): React.ReactNode =>
       level ? (
         <SurfaceScope level={level} fill="glass">

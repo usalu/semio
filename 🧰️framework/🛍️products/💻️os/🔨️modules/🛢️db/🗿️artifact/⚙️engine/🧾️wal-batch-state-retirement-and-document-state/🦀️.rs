@@ -281,7 +281,6 @@ pub(super) struct PlannedEntries {
 }
 
 impl DocumentState {
-    // 🚫️async: E1 pure constructor, `db_state::PMap::new` is sync — see R9
     pub fn new() -> DocumentState {
         DocumentState { values: db_state::RetainedStateMap::new(), last_writer: db_state::PMap::new() }
     }

@@ -15,10 +15,10 @@ export interface Filters {
 }
 
 export interface SourcingCurationConfig {
-  /** @state config */
+  /** 🔍️ @state config */
   filters: Filters;
-  /** @state config */
-  /** @state config */
+  /** 🤝️ @state config */
+  /** 🧑️ @state config */
   contributionsJson: string;
 }
 

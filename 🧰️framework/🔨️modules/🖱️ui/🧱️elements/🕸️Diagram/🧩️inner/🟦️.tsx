@@ -1,7 +1,7 @@
 import type { NodeTypes, EdgeTypes, Node, Edge, Connection, OnNodeDrag, ReactFlowInstance, OnSelectionChangeParams } from "@xyflow/react";
 import * as React from "react";
 import { BackgroundVariant, SelectionMode, useStoreApi, applyNodeChanges, ConnectionMode, MiniMap } from "@xyflow/react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { useLabel } from "../../🏷️Label/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { HostReactFlow } from "../../🔌️Ports/🟦️.tsx";
@@ -216,8 +216,6 @@ export const DiagramInner: React.FC<DiagramProps> = ({
   const virtualizedHost = forceConfig.enabled && finalNodes.length > diagramForceHostPage.maxNodes;
   const renderedNodes = virtualizedHost ? hostNodes : finalNodes;
   const renderedEdges = virtualizedHost ? hostEdges : finalEdges;
-  // ♿️ Refs, not deps: the keyboard handler must read the CURRENT graph without being re-created on
-  // every node move, which would re-subscribe the wrapper's `onKeyDown` during a drag.
   const renderedNodesRef = reactHostPort.useRef(renderedNodes);
   renderedNodesRef.current = renderedNodes;
   const keyboardFocusedNodeIdRef = reactHostPort.useRef(keyboardFocusedNodeId);
@@ -571,9 +569,6 @@ export const DiagramInner: React.FC<DiagramProps> = ({
     <div
       ref={wrapperRef as any}
       className={`relative w-full h-full ${className}`}
-      // ♿️ `application` is the ARIA promise that this widget handles its OWN arrow/Enter keys — the exact
-      // contract `🧬️contract/♿️accessibility/🦀️.rs:108-112` writes for a canvas surface — so the role, the
-      // tab stop, the spoken key help and the keydown handler below are one indivisible commitment.
       role="application"
       tabIndex={0}
       aria-roledescription={diagramRoleDescriptionLabel}

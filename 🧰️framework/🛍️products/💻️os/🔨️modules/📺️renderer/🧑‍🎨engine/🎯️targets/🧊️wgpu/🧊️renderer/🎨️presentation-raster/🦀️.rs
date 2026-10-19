@@ -531,7 +531,7 @@ impl NativeReferenceDecodeJob {
 
 pub struct NativeAssetHandoff {
     pub fetch: Option<RendererAssetFetchOwner>,
-    pub payload: Option<semio_framework_job::RetainedJobPayload>,
+    pub payload: Option<semio_framework_job_payload::RetainedJobPayload>,
     pub seal: bool,
     pub reject: bool,
 }

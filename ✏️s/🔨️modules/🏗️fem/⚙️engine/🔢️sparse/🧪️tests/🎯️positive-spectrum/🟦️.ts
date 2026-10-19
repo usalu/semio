@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { eigs, inv, matrix, multiply } from "mathjs";
 import Ajv from "ajv/dist/2020";
-import corpus from "../../🧫️fixtures/🎯️positive-spectrum/🔣️.json";
-import schema from "../../🧫️fixtures/🎯️positive-spectrum/🧬️schema.json";
+import corpus from "../🧫️fixtures/🎯️positive-spectrum/🔣️.json";
+import schema from "../🧫️fixtures/🎯️positive-spectrum/🧬️schema.json";
 
 export function verifyPositiveSpectrumOracle(): void {
   const validate = new Ajv({ strict: false }).compile(schema);

@@ -13,7 +13,6 @@ fn checkerboard_path_is_satisfiable_and_alternates() {
             assert_ne!(w[0], w[1]);
         }
     }
-    // Exactly 2 solutions on a path with 2 colors: BWBW... or WBWB...
     assert_eq!(result.solutions.len(), 2);
 }
 
@@ -42,7 +41,7 @@ fn complete_graph_coloring_matches_chromatic_condition() {
     let r1 = enumerate(&sat.model, sat.node_count, &sat.arcs, &sat.init_domains, 1000);
     assert!(r1.complete);
     assert!(!r1.solutions.is_empty());
-    assert_eq!(r1.solutions.len(), 24); // 4! proper colorings of K4 with exactly 4 colors
+    assert_eq!(r1.solutions.len(), 24);
 
     let unsat = complete_graph_coloring(5, 4);
     let r2 = enumerate(&unsat.model, unsat.node_count, &unsat.arcs, &unsat.init_domains, 1000);

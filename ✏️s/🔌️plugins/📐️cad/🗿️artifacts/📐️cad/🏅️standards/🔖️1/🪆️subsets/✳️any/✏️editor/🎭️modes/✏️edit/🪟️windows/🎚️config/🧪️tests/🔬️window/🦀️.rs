@@ -214,17 +214,6 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     if app_config_before.pack != app_config_after.pack || app_config_before.spr != app_config_after.spr {
                         return Err("CAD window commands changed app configuration bytes".into());
                     }
-                    // 🪟️ Every CAD command handler addresses its config through
-                    // `window_config::addressed_from_context(ctx, …)` (🎮️commands/🎥️camera, 🌞️sun, 🧰️utility), so a
-                    // dispatch writes ONLY the invoking window — the `pane` a payload carries is deliberately
-                    // ignored there (`let _surface = …`). Command isolation is therefore proven above by
-                    // `assert_exact_state`, which requires the same-kind sibling `right` to still hold its
-                    // defaults for camera, projection, sun AND utility. What `window_config_packs()` returns
-                    // is one pack per declared WORLD window, materialised from the view's `window_instances`:
-                    // three here, because `cad-panel` is a `cad-document-panel` and owns no world config.
-                    // The old assertion demanded `packs.len() == 1`, confusing "only one window was written"
-                    // with "only one window exists"; it is restated here as the exact owner SET, which also
-                    // pins that the document panel receives no pack.
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     let mut owners: Vec<(String, String)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone())).collect();
                     owners.sort();
@@ -241,9 +230,6 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     assert_exact_state(&mut app, &left, &right, expected, scope.cx()).await?;
                     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                     reopened.bind_instance_id(REOPENED_INSTANCE).await;
-                    // 🪦️ Nothing between the second app's construction and its close may `?`: an early
-                    // return drops a live `VcsArtifactApp` that never ran the close ladder, and the
-                    // document store's Drop witness then panics OVER the real diagnosis.
                     let mut loaded: Result<(), String> = Ok(());
                     for pack in packs {
                         if let Err(error) = reopened.load_window_config_pack(pack).await {
@@ -361,10 +347,6 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(96).await;
                 for pack in packs {
-                    // 📍️ `CadCamera::position`/`target` are `#[dsl(coord)] [f64; 3]`, and the pack's
-                    // packed-f64 wire form carries no tuple-vs-list marker: a retained decoder that
-                    // knows only `Shape::Tuple` rebuilds them as a list and refuses the whole state
-                    // with `window-config.typed-state`.
                     reopened.load_window_config_pack(pack).await.expect("reload the exact CAD window config pack");
                 }
                 let reloaded: Vec<(String, String, Vec<u8>, Vec<u8>)> =

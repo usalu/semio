@@ -242,9 +242,6 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
     assert!(crate::editor::sourcing::sourcing_curation_config_mutation_retained_bytes(&mutation).is_ok(), "the retained config preparation must admit the installable roster");
     let mut app = new_app().await;
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json })).await;
-    // 🧺️ EXACTLY the authored stock — asserted against the authored demo document itself rather
-    // than a copied row count, so adding an authored module (`reuse` was the last one) can never
-    // leave this law asserting a stale number again.
     let authored: Vec<String> = crate::schema::filtered_stock(&crate::standards::v1::subsets::any::io::text::snapshot::default_document(), &Filters::default()).into_iter().map(|kind| kind.id).collect();
     assert_eq!(row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await, authored, "the pool still renders every authored kind, and only those, after the real pack crosses");
 }

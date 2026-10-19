@@ -1,2 +1,2 @@
-/** writer import md */
+/** 📂️ writer import md */
 export function register(): void {}

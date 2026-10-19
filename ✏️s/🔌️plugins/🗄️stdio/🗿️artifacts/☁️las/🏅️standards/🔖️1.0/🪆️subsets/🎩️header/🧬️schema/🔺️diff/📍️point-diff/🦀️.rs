@@ -200,12 +200,10 @@ pub struct LasPointsDiff {
 }
 
 impl LasPointsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply_unchecked(&self, base: &[LasPoint]) -> Vec<LasPoint> {
         let mut items = base.to_vec();
         for m in &self.modified {
@@ -224,14 +222,12 @@ impl LasPointsDiff {
         items
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
         validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points")?;
         Ok(self.apply_unchecked(base))
     }
 
     /// ↩️ The negative triple against the base points.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &[LasPoint]) -> Self {
         let modified: Vec<(usize, LasPointDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, LasPoint)> = self.added.iter().map(|a| (a.index, a.point.clone())).collect();

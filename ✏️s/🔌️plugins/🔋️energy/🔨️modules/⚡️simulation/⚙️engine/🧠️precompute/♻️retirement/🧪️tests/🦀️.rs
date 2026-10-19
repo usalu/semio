@@ -5,7 +5,7 @@ fn observed<T>(f:impl FnOnce()->T)->(T,usize,usize){let(result,heap)=semio_frame
 /// ♻️ Original precompute owners close through the shared paid factory at every portable cancellation prefix.
 #[test]
 fn original_precompute_retirement_preserves_denied_owners_and_physical_receipts(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let body=corpus["bodyBytes"].as_u64().unwrap() as usize;let mut total=0;
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let body=corpus["bodyBytes"].as_u64().unwrap() as usize;let mut total=0;
  for case in corpus["cases"].as_array().unwrap(){for cutoff in corpus["cutoffs"].as_array().unwrap(){
   let model=match case["model"].as_str().unwrap(){"empty"=>Model::default(),"single"=>crate::model::test_model_single_zone(),"600"=>semio_s_plugin_energy_engine_bestest::model("600").unwrap(),_=>unreachable!()};let mut builder=PrecomputeBuilder::new(10,10);let mut steps=0;let limit=if case["complete"].as_bool().unwrap(){usize::MAX}else{cutoff.as_u64().unwrap() as usize};while !builder.is_complete()&&steps<limit{builder.step(&model);steps+=1;assert!(steps<100_000,"original builder fixture stalled");}
   let mut original=Some(builder);let mut close=RetainedCloneClose::default();let mut turns=0;

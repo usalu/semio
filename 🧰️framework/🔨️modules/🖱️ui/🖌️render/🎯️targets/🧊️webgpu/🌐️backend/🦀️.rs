@@ -88,7 +88,6 @@ pub struct WebGpuBackend {
 
 impl WebGpuBackend {
     /// 🧊️ Consumes only a successful owned create/recover outcome; browser objects remain in JS/A2.
-    // 🌐️async: adapter/device construction remains inside the owned renderer interface until P9-C.
     pub async fn from_outcome(outcome: &GpuOutcome) -> Result<Self, BackendError> {
         let (surface_id, generation, metrics) = match outcome {
             GpuOutcome::Created { surface, generation, metrics, .. } => (*surface, *generation, *metrics),
@@ -152,14 +151,12 @@ impl WebGpuBackend {
         self.generation
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn poll_device_lost(&mut self) {
         if let Some(reason) = decode_loss_flag(self.loss_flag.load(Ordering::SeqCst)) {
             self.health = DeviceHealth::Lost(reason);
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn reconfigure(&mut self, width: u32, height: u32) {
         configure_surface(&self.device, &self.surface, self.surface_format, self.view_format, self.alpha_mode, width, height);
         self.scene_target = None;
@@ -168,7 +165,6 @@ impl WebGpuBackend {
     }
 
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn kick_off_readback(&mut self, texture: &wgpu::Texture, width: u32, height: u32) {
         let padded = padded_bytes_per_row(width);
         let buffer = self.device.create_buffer(&wgpu::BufferDescriptor { label: Some("readback_staging"), size: padded as u64 * height as u64, usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
@@ -187,17 +183,14 @@ impl WebGpuBackend {
 }
 
 impl GraphicsBackend for WebGpuBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn name(&self) -> &'static str {
         "webgpu"
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities {
         self.capabilities
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError> {
         self.state.resize(size, dpr);
         if !self.state.is_parked() {
@@ -206,12 +199,10 @@ impl GraphicsBackend for WebGpuBackend {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ResourceOp]) -> Result<(), BackendError> {
         self.resources.apply(ops, &self.device, &self.queue, &self.pipelines)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, time_seconds: f32) -> Result<RenderReport, BackendError> {
         self.poll_device_lost();
         if let DeviceHealth::Lost(reason) = self.health {
@@ -254,7 +245,6 @@ impl GraphicsBackend for WebGpuBackend {
         Ok(RenderReport::Presented { stats })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn device_status(&self) -> DeviceStatus {
         match decode_loss_flag(self.loss_flag.load(Ordering::SeqCst)) {
             Some(reason) => DeviceStatus::Lost(reason),
@@ -268,7 +258,6 @@ impl GraphicsBackend for WebGpuBackend {
     /// bookkeeping and reports every id that was resident before the loss, exactly like
     /// `NullBackend::recover` — the caller still needs to reconstruct a fresh `WebGpuBackend` from
     /// the adapter's generation-bearing recovered outcome for rendering to resume.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
         self.loss_flag.store(LOSS_NONE, Ordering::SeqCst);
         self.health = DeviceHealth::Healthy;
@@ -278,7 +267,6 @@ impl GraphicsBackend for WebGpuBackend {
     }
 
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn debug_force_device_loss(&mut self) {
         self.device.destroy();
         self.loss_flag.store(LOSS_DEVICE, Ordering::SeqCst);
@@ -294,7 +282,6 @@ impl GraphicsBackend for WebGpuBackend {
     /// `render` on the same synchronous turn returns `Err(BackendError::Timeout)`, correctly, not a
     /// stale or fabricated image.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ui_render::ReadbackImage, BackendError> {
         if self.state.is_parked() {
             return Err(BackendError::ZeroSizeSurface);

@@ -37,85 +37,14 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { spawnSync } from "node:child_process";
-import { join } from "node:path";
-//#endregion 🔌️Adapters
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptProgram } from "./🟦️.ts";
 
-//#region 🧬️Contract
-/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
-type ProbeReport = {
-  schema: "semio.repository-test.probe-report/v2";
-  probe: string;
-  probeVersion: string;
-  engine: { family: string; implementation: string; version: string };
-  status: "ok" | "failed" | "unsupported";
-  durationMs: number;
-  measurements: Record<string, unknown>;
-  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
-};
-
-const ENGINE = { family: "burntsushi-csv", implementation: "rust-csv reader", version: "1.4.0" } as const;
-const PROBE_VERSION = "csv@1.4.0";
-const CRATE_BIN = "semio-equation-oracle-probe";
-const KNOWN_PROBES = new Set(["csv-rows", "csv-compare", "gate-inputs", "fixtures"]);
-//#endregion 🧬️Contract
-
-//#region 🚀️Entry
-function emit(report: ProbeReport): number {
-  process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  return report.status === "failed" ? 1 : 0;
+/** 🚪️ `run` — runs the program of this script. */
+class RunScript extends BundleScript {
+  async run(): Promise<void> {
+    await runScriptProgram();
+  }
 }
-
-function main(argv: readonly string[]): number {
-  const [probe = "", ...rest] = argv;
-  const started = Date.now();
-  const envelope = (status: ProbeReport["status"], measurements: Record<string, unknown>, diagnostics?: ProbeReport["diagnostics"]): ProbeReport => ({
-    schema: "semio.repository-test.probe-report/v2",
-    probe,
-    probeVersion: PROBE_VERSION,
-    engine: ENGINE,
-    status,
-    durationMs: Date.now() - started,
-    measurements,
-    ...(diagnostics ? { diagnostics } : {}),
-  });
-
-  if (!KNOWN_PROBES.has(probe)) {
-    return emit(envelope("failed", {}, [{ severity: "error", message: `unknown probe ${probe || "(none)"}`, detail: `known: ${[...KNOWN_PROBES].join(", ")}` }]));
-  }
-
-  // 📌️ `--out` resolves `SEMIO_FIXTURE_OUT` first (the harness's own `fixture reproduce` sets this to
-  // a scratch root so reproduction never overwrites the committed fixture — see
-  // `🧰️framework/…/🧪️tests/📜️cript.ts`'s `reproduce` case), else an explicit `--out`, else a default
-  // relative to THIS SCRIPT'S OWN directory, never to the process's cwd — a recorded
-  // `generator.command` is replayed by the harness from an unspecified cwd, and a relative
-  // `--out ../🧫️fixtures` resolved against that cwd silently lands nowhere (mirrors
-  // `…✳️document/🏭️generator/📜️script.ts`'s own `SEMIO_FIXTURE_OUT ?? --out ?? join(import.meta.dir, "..", "🧫️fixtures")` order).
-  const args = [...rest];
-  if ((probe === "fixtures" || probe === "gate-inputs") && !args.includes("--out")) {
-    const fallback = probe === "fixtures" ? join(import.meta.dir, "..", "🧫️fixtures") : join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust", "target", "gate-inputs");
-    args.push("--out", process.env.SEMIO_FIXTURE_OUT ?? fallback);
-  }
-
-  // 🏭️`--offline`: probes run inside a test sweep alongside peer sessions; the shared build-dir
-  // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any per-probe override here.
-  const run = spawnSync("cargo", ["run", "--quiet", "--offline", "--bin", CRATE_BIN, "--", probe, ...args], {
-    cwd: join(import.meta.dir, "📖️reader", "📦️packages", "🦀️rust"),
-    encoding: "utf8",
-  });
-  if (run.status !== 0) {
-    // 🚫️A reader that cannot run must SAY SO and exit non-zero. Emitting a plausible-looking empty
-    // measurement would let the pipeline compare nothing and call it agreement.
-    return emit(envelope("failed", {}, [{ severity: "error", message: `${CRATE_BIN} exited ${run.status}`, detail: (run.stderr ?? "").trim().split("\n").slice(-6).join("\n") }]));
-  }
-  let parsed: { status: ProbeReport["status"]; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] };
-  try {
-    parsed = JSON.parse((run.stdout ?? "").trim().split("\n").at(-1) ?? "") as typeof parsed;
-  } catch (error) {
-    return emit(envelope("failed", {}, [{ severity: "error", message: "probe output was not JSON", detail: String((error as Error).message ?? error) }]));
-  }
-  return emit(envelope(parsed.status, parsed.measurements, parsed.diagnostics));
-}
-
-if (import.meta.main) process.exit(main(process.argv.slice(2)));
-//#endregion 🚀️Entry
+const router = new ScriptRouter(import.meta.dir).register("run", RunScript);
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "run" }));

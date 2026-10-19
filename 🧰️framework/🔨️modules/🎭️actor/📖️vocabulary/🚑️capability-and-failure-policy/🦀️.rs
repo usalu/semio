@@ -209,8 +209,6 @@ pub enum FailureEscalation {
 }
 
 impl FailureState {
-    // 🚫️async: E1 pure constructor consumed by `Default::default` (external trait impl above) —
-    // see R9
     pub fn new() -> Self {
         Self { stage: FailureStage::Healthy, clean_turns: 0, warn_count: 0, restart_count: 0, last_signal_ms: 0 }
     }

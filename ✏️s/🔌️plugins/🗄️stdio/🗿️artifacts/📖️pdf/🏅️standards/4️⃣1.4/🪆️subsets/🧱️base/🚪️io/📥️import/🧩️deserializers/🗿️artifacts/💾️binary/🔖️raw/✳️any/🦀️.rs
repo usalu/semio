@@ -1,4 +1,4 @@
-//! Deserialize stdio.pdf from stdio.binary.
+//! 📥️ Deserialize stdio.pdf from stdio.binary.
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use crate::standards::v1_4::subsets::base::schema::snapshot::STDIO_PDF_DOCUMENT_SCHEMA;

@@ -140,7 +140,6 @@ pub struct SemioKitDiff {
 }
 
 impl SemioKitDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.types.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
             && self.designs.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)

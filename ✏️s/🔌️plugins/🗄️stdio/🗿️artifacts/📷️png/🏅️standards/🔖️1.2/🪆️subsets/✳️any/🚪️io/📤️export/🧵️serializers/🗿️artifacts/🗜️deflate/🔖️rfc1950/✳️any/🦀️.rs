@@ -1,4 +1,4 @@
-//! Serialize stdio.png to stdio.deflate.
+//! 📤️ Serialize stdio.png to stdio.deflate.
 
 use crate::PngSnapshot;
 use semio_s_artifact_stdio_deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};

@@ -65,8 +65,6 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         let Generation3dViewCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("generation3d-view-contributions-route-rejected"));
         };
-        // 🪟️ An install that moved the registry owes the windows the SHELL says are attached an
-        // evaluation — the same trusted `ViewModel` roster `pending_effects` starts the run off.
         let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
         let mut emit = Emit::default();
         self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {

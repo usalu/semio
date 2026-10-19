@@ -4,9 +4,10 @@ use super::{NATIVE_MAXIMUM_BYTES, original_grant};
 use semio_framework_os_kernel::io::io_mechanism::{IoRunControl, io_run_with_snapshot_control};
 use semio_framework_os_kernel::io_schema::{IoPayload, IoResult, IoRoute};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotProgress};
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
-use semio_framework_value::{ErasedSnapshotRetirement as _, NativeDecodeControl, NativeEncodeControl};
+use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 /// 🗄️ Runs `operation` under a SQLite snapshot control whose caller installed the original retirement recipient, then closes it.
 pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, operation: impl FnOnce(&mut SqliteSnapshotControl<'_>) -> T) -> T {

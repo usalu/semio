@@ -1,4 +1,4 @@
-//! deser step via binary
+//! 🪜️ deser step via binary
 use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

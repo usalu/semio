@@ -1,4 +1,4 @@
-//! Deserialize flow via stdio.json.
+//! 📥️ Deserialize flow via stdio.json.
 use crate::FlowSnapshot;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 

@@ -1,4 +1,4 @@
-//! Diff for `change-column-kind`.
+//! 🔺️ Diff for `change-column-kind`.
 use crate::change_column_kind::ChangeColumnKind;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994ColumnsRows, En1994ColumnsPatch};

@@ -178,9 +178,6 @@ mod live {
         {
             let mut encoder = gif::Encoder::new(&mut out, doc.width, doc.height, &doc.gct).map_err(|error| format!("independent writer failed on the header: {}", error))?;
             for image in &doc.images {
-                // 🔀️ `indices` is always natural row order in this model (that is what the reference
-                // decoder hands back); GIF stores an interlaced image's rows in four passes, and
-                // `gif::Encoder` writes the buffer verbatim, so the reordering is the caller's.
                 let stored = if image.interlaced { semio_s_plugin_stdio_raster_test_oracle::gif_reorder_rows(&image.indices, image.width as usize, image.height as usize, true) } else { image.indices.clone() };
                 let frame = gif::Frame {
                     delay: 0,
@@ -204,20 +201,6 @@ mod live {
         out[4] = b'7';
         out[11] = doc.background_color_index;
         out[12] = doc.pixel_aspect_ratio;
-        // 🎨 Fourth constant of the same kind (see the module docstring): `Encoder::new`'s own
-        // doc comment says "if no global palette shall be used an empty slice may be supplied",
-        // and `write_global_palette` (gif 0.14.2 `src/encoder.rs:183-195`) then sets
-        // `flags |= 0b1000_0000` UNCONDITIONALLY and writes `check_color_table`'s padding — for an
-        // empty slice, `flag_size(0) = 0`, so `2 << 0 = 2` all-zero entries. A document that
-        // declares no Global Color Table therefore comes back out of the reference writer carrying
-        // a phantom two-entry one, and `set-global-color-table {"gct": null}` is silently discarded exactly
-        // the way the background index and aspect ratio were before their patches. Undone here:
-        // clear the Global Color Table Flag (GIF87a §18, bit 7 of the packed byte 10) and drop the
-        // six table bytes that follow the Logical Screen Descriptor. Every image is guaranteed to
-        // carry a Local Color Table in this branch — with an empty global palette the crate's own
-        // `write_frame` refuses a frame without one (`EncodingFormatError::MissingColorPalette`) —
-        // so the result is a conformant GIF, not one whose images resolve through a table that is
-        // no longer there.
         if doc.gct.is_empty() {
             if out.len() < 19 {
                 return Err("independent writer produced a stream too short to carry the phantom global color table".to_string());

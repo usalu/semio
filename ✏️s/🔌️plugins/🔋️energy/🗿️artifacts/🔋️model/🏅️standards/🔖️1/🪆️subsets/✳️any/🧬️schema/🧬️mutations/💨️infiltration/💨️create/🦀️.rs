@@ -67,6 +67,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateInfiltration
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateInfiltration> + From<crate::DeleteInfiltration>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "infiltration", kind: "create-infiltration", record: "CreatedInfiltration" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -88,7 +89,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "infiltration", kind: "create-infiltration", record: "CreatedInfiltration" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

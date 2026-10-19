@@ -51,8 +51,6 @@ export function payloadSchemaCommand(repoRoot: string, registry: OracleRegistry,
         continue;
       }
       undeclared.push(row.leaf);
-      // 🧾️Group by the KIND of refusal, not by the path it names, so the report says how many leaves
-      // have no descriptor at all versus how many name a contract file that is not there.
       for (const why of row.refused) {
         const kind = why
           .replace(/`[^`]*`/g, "…")
@@ -84,9 +82,6 @@ export function scaffoldCommand(repoRoot: string, registry: OracleRegistry, sele
     leaves += rows.length;
     derived += rows.filter((row) => row.descriptor !== null).length;
     for (const row of rows) for (const why of row.refused) refusals.set(why.split(":")[0]!, (refusals.get(why.split(":")[0]!) ?? 0) + 1);
-    // 🏗️An owner is written ALL-OR-NOTHING. A partial descriptor set would let a manifest be generated
-    // over a denominator that silently omits the undescribed leaves, which reads as coverage of a
-    // smaller vocabulary rather than as the gap it is.
     if (rows.some((row) => row.descriptor === null)) continue;
     ready.push(`${owner} (${rows.length} leaves)`);
     if (!write) continue;
@@ -109,8 +104,6 @@ export class GapScript extends Script {
     const registry = loadOracleRegistry(this.repoRoot);
     const selectors = readSelectors(segments);
     const manifested = new Set(registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => mutation.capability)));
-    // 🧫️A capability is only genuinely covered once fixtures exist for it too. Counting a manifest as
-    // sufficient would repeat the error this whole protocol exists to remove.
     const fixtured = new Set(registry.contributions.flatMap((contribution) => contribution.testEvidence.map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`)));
     const fixtureCountFor = (artifact: string, standard: string, subset: string): number =>
       registry.contributions.flatMap((contribution) => contribution.testEvidence).filter((fixture) => fixture.target.artifact === artifact && fixture.target.standard === standard && fixture.target.subset === subset).length;
@@ -126,12 +119,6 @@ export class GapScript extends Script {
         const qualifying = supplying.filter((oracle) => isQualifyingOracleKind(oracle.kind));
         const state = qualifying.length > 0 ? (manifested.has(catalog.capability) ? "covered" : "manifestable") : supplying.length > 0 ? "supplemental-only" : "un-oracled";
         if (selectors.status !== null && state !== selectors.status) continue;
-        // 🕳️What is OWED, stated in full. An earlier version said "only a manifest" for the qualifying
-        // group, and that was an understatement of exactly the kind this protocol exists to remove: a
-        // manifest also needs the OUTCOME CLASSES each mutation can reach, which nothing can state
-        // honestly until the production bridge has been run, and every mutation needs a fixture whose
-        // expected result that oracle actually produced. A qualifying oracle is the PREREQUISITE, not
-        // the remaining work.
         const owed =
           state === "covered"
             ? "—"
@@ -167,12 +154,8 @@ export class GapScript extends Script {
     console.log(`\n[gap] ${covered}/${total} mutation kind(s) are externally oracled and manifested — ${((covered / Math.max(total, 1)) * 100).toFixed(1)}%`);
     console.log(`[gap] ${mutationsIn("manifestable")} kind(s) have a qualifying oracle and still need a manifest, a runtime inventory and fixtures`);
     console.log(`[gap] ${mutationsIn("supplemental-only") + mutationsIn("un-oracled")} kind(s) need a qualifying third-party oracle BEFORE any of that`);
-    // 🏭️Nothing above can be completed while the production bridge cannot run: a manifest must declare
-    // the outcome classes each mutation reaches, and only dispatch can state them.
     const inventories = registry.mutationManifests.filter((manifest) => readRuntimeInventory(this.repoRoot, manifest) !== null).length;
     console.log(`[gap] ${inventories}/${registry.mutationManifests.length} manifest(s) have a runtime inventory — a manifest's outcome classes cannot be stated honestly without one`);
-    // 🕳️A cross-semio implementation is the single largest category, and naming it as such is the point:
-    // it reads as an oracle in the registry and discharges nothing.
     const semioDerived = registry.oracles.filter((oracle) => oracle.kind === "cross-semio-implementation").length;
     console.log(`[gap] ${semioDerived} of ${registry.oracles.length} registered oracles are second implementations written inside this repository, and none of them discharges a mutation's requirement`);
   }
@@ -257,12 +240,6 @@ export class ManifestScript extends Script {
       const all = (parsed.mutationManifests as MutationManifest[] | undefined) ?? [];
       const prior = all.find((entry) => entry.artifact === row.manifest!.artifact && entry.standard === row.manifest!.standard && entry.subset === row.manifest!.subset);
       const existing = all.filter((entry) => entry !== prior);
-      // 🤝️MERGE, NEVER REPLACE. The generator derives STRUCTURE from the leaf descriptors — payload
-      // schema, outcome classes, dispatch variant — but it knows nothing about SCOPE: which specific
-      // oracle discharges a mutation, and which mutations the carrier provably cannot witness. That is
-      // registration work, and a wholesale replace silently undid it: re-running this command flattened
-      // `sequence`'s hand-scoped 4-carried/4-uncarried split back to eight undifferentiated mutations,
-      // turning an honest partial into a claim of blanket coverage. Refined fields win over derived ones.
       const carried = new Map((prior?.mutations ?? []).map((mutation) => [mutation.id, mutation] as const));
       const merged = {
         ...row.manifest,

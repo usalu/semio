@@ -487,7 +487,6 @@ pub enum DwgEntityBody {
 }
 impl DwgEntityBody {
     /// 🧬️ The common entity data every body carries.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn common_mut(&mut self) -> &mut DwgEntityCommon {
         match self {
             Self::Line(value) => &mut value.common,

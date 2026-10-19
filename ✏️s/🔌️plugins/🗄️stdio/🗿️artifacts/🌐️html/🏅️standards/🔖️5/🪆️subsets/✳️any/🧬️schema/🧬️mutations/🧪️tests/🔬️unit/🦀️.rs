@@ -44,7 +44,6 @@ async fn insert_then_remove_node_apply_and_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     let base = fixture();
-    // Some(Some(v)): modify existing value.
     let m1 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "width".into(), value: Some(Some("99".into())) });
     let d1 = Mutation::diff(&m1, &base);
     let after1 = protocol::apply_diff(d1.diff(), &base).unwrap();
@@ -55,7 +54,6 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     }
     assert_eq!(write_html_document(&restored1), write_html_document(&base));
 
-    // Some(None): make valueless.
     let m2 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "width".into(), value: Some(None) });
     let mut after2 = base.clone();
     apply_mutation(&mut after2, &m2);
@@ -65,7 +63,6 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     }
     assert_eq!(write_html_document(&after2), write_html_document(&base));
 
-    // None: remove entirely.
     let m3 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "width".into(), value: None });
     let mut after3 = base.clone();
     apply_mutation(&mut after3, &m3);
@@ -75,7 +72,6 @@ async fn set_attribute_tristate_apply_and_inverse_round_trip() {
     }
     assert_eq!(write_html_document(&after3), write_html_document(&base));
 
-    // None -> Some: add a brand new attribute.
     let m4 = HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: vec![0, 0], name: "hidden".into(), value: Some(None) });
     let mut after4 = base.clone();
     apply_mutation(&mut after4, &m4);

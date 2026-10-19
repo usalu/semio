@@ -166,7 +166,7 @@ export function cargoBinarySourcesFreshnessV1(record: CargoBinarySourcesV1, modi
 
 /** 🏗️ Supplies exact caller-owned compiler storage and execution limits. */
 export type CargoArtifactBuildPolicyV1 = Readonly<{ version: 1; mode: BuildMode; compilerConfiguration?: string; cwd: string; buildDirectory: string; leaseDirectory: string; captureDirectory: string; budgetMs: number }>;
-const artifactPolicySchema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
+const artifactPolicySchema = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "./🧬️schema/🔣️.json"), "utf8"));
 function admitArtifactPolicy(value: unknown): CargoArtifactBuildPolicyV1 {
   const errors = validateJsonSchemaSubset(artifactPolicySchema, value);
   if (errors.length) throw Error(`Invalid Cargo artifact policy: ${errors.join("; ")}`);
@@ -300,7 +300,12 @@ export class BoundedDiagnosticsV1 {
   suppressed = 0;
   private logged = 0;
   private readonly newest: string[] = [];
-  constructor(private readonly log: number | null, private readonly forward: (line: string) => void, private readonly liveLines = 200, private readonly newestLines = 200, private readonly logLimitBytes = 128 * 1024 * 1024) {}
+  private readonly log: number | null;
+  private readonly forward: (line: string) => void;
+  private readonly liveLines: number;
+  private readonly newestLines: number;
+  private readonly logLimitBytes: number;
+  constructor(log: number | null, forward: (line: string) => void, liveLines = 200, newestLines = 200, logLimitBytes = 128 * 1024 * 1024) { this.log = log; this.forward = forward; this.liveLines = liveLines; this.newestLines = newestLines; this.logLimitBytes = logLimitBytes; }
   line(text: string): void {
     this.lines++;
     if (this.log !== null && this.logged < this.logLimitBytes) this.logged += writeSync(this.log, `${text}\n`);
@@ -330,10 +335,10 @@ export function cargoInputDigestV1(path: string): { path: string; kind: "file" |
   } catch { return { path, kind: null, sha256: null }; }
 }
 
-const resourceReadSchema = JSON.parse(readFileSync(new URL("./📥️resources/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+const resourceReadSchema = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),"./📥️resources/🧬️schema/🔣️.json"),"utf8"));
 /** 📋️ Retains actual completed Cargo compiler, dep-info and resource observations without changing build or staging selection. */
 export type CargoCompilerUnitEvidenceV1=Readonly<{version:1;kind:"discovery";paths:readonly string[];producer:null}|{version:1;kind:"received";paths:readonly string[];producer:Readonly<{path:string;sha256:string;unit:number}>}>;
-const unitEvidenceSchema=JSON.parse(readFileSync(new URL("./🧬️schema/🧾️unit-evidence/🔣️.json",import.meta.url),"utf8"));
+const unitEvidenceSchema=JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)),"./🧬️schema/🧾️unit-evidence/🔣️.json"),"utf8"));
 /** 🧾️ Requires exact producer custody or explicitly funded compiler discovery. */
 export function parseCargoCompilerUnitEvidenceV1(value:unknown):CargoCompilerUnitEvidenceV1{if(validateJsonSchemaSubset(unitEvidenceSchema,value).length)throw Error("Complete compiler unit evidence required");const row=value as CargoCompilerUnitEvidenceV1;if(row.paths.some(path=>!isAbsolute(path)||path.length>256)||row.kind==="discovery"&&(row.paths.length!==0||row.producer!==null)||row.kind==="received"&&(!row.paths.length||!row.producer||!isAbsolute(row.producer.path)||row.producer.path.length>256||!Number.isSafeInteger(row.producer.unit)))throw Error("Compiler unit evidence owner refused");return Object.freeze({...row,paths:Object.freeze([...row.paths]),producer:row.producer===null?null:Object.freeze({...row.producer})}) as CargoCompilerUnitEvidenceV1;}
 
@@ -346,7 +351,9 @@ const receiptTemporaryName = (receipt: string): string => requireMaterializedPat
 class ReceiptFileSinkV1 implements CargoProvenanceSinkV1 {
   bytes = 0;private readonly hash=createHash("sha256");
   sha256():string{return this.hash.digest("hex");}
-  constructor(private readonly handle: FileHandle, private readonly limit: number) {}
+  private readonly handle: FileHandle;
+  private readonly limit: number;
+  constructor(handle: FileHandle, limit: number) { this.handle = handle; this.limit = limit; }
   async write(chunk: string): Promise<void> {
     const buffer = Buffer.from(chunk, "utf8");
     this.bytes += buffer.byteLength;
@@ -408,7 +415,9 @@ export class CargoProvenanceSessionV1 {
   private readonly originalClaims=new Set<string>();
   private readonly outputRelocations=new Map<string,Readonly<{snapshot:PendingCargoCompilationSnapshotV1;claim:Readonly<{path:string;sha256:string;byteLength:number}>;identity:readonly bigint[]}>>();
 
-  constructor(private readonly custody: CargoProvenanceCustodyV1,retention?:CargoCompilationRetentionContextV1) {
+  private readonly custody: CargoProvenanceCustodyV1;
+  constructor(custody: CargoProvenanceCustodyV1,retention?:CargoCompilationRetentionContextV1) {
+    this.custody = custody;
     if (!custody || typeof custody.invocation !== "function" || typeof custody.recheck !== "function") throw Error("Complete current physical provenance authority required");
     if(retention){if(!sharedProvenanceFilesV1.has(custody))throw Error("Actual shared provenance file custody required for retained outputs");this.retention=new CargoCompilationSnapshotPoolV1(retention);}
   }

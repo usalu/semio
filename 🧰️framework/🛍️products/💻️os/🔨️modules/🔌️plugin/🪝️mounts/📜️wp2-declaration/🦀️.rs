@@ -71,7 +71,7 @@ pub(crate) mod plugin_program {
 pub mod declarations {
     pub use semio_framework_plugin_decl_registry::declarations::*;
     pub(crate) use semio_framework_plugin_extension::{commit_artifact_declarations, preflight_artifact_declarations};
-    pub use semio_framework_plugin_instance_app::{editor_surface, viewer_surface, EditorSurfaceApp, ViewerSurfaceApp};
+    pub use semio_framework_plugin_instance_surface::{editor_surface, viewer_surface, EditorSurfaceApp, ViewerSurfaceApp};
 }
 //#endregion 🧵️InstanceFacet
 //#region 🏛️OwnershipFacet

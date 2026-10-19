@@ -14,34 +14,34 @@ pub struct MutationApplyError {
 /// 🌱️ Hand-written, not derived — same DAG reason `MutationMessage`'s hand-written twin below
 /// documents (this crate sits below `os-kernel`). Mirrors the pre-existing `#[serde(default,
 /// skip_serializing_if = "Vec::is_empty")]` sparse-emission on `target` byte-for-byte.
-impl semio_framework_value::ToValue for MutationApplyError {
-    fn to_value(&self) -> semio_framework_value::DslValue {
-        let mut entries = vec![("code".to_string(), semio_framework_value::ToValue::to_value(&self.code)), ("message".to_string(), semio_framework_value::ToValue::to_value(&self.message))];
+impl semio_framework_value_intrinsic::ToValue for MutationApplyError {
+    fn to_value(&self) -> semio_framework_value_intrinsic::DslValue {
+        let mut entries = vec![("code".to_string(), semio_framework_value_intrinsic::ToValue::to_value(&self.code)), ("message".to_string(), semio_framework_value_intrinsic::ToValue::to_value(&self.message))];
         if !self.target.is_empty() {
-            entries.push(("target".to_string(), semio_framework_value::ToValue::to_value(&self.target)));
+            entries.push(("target".to_string(), semio_framework_value_intrinsic::ToValue::to_value(&self.target)));
         }
-        semio_framework_value::DslValue::object(entries)
+        semio_framework_value_intrinsic::DslValue::object(entries)
     }
 }
-impl semio_framework_value::FromValue for MutationApplyError {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        let semio_framework_value::DslValue::Object(fields) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for MutationApplyError, found {value:?}")));
+impl semio_framework_value_intrinsic::FromValue for MutationApplyError {
+    fn from_value(value: semio_framework_value_intrinsic::DslValue) -> Result<Self, semio_framework_value_intrinsic::ValueError> {
+        let semio_framework_value_intrinsic::DslValue::Object(fields) = value else {
+            return Err(semio_framework_value_intrinsic::ValueError::new(semio_framework_value_intrinsic::ValueRefusalKind::InvalidValue, format!("expected an object for MutationApplyError, found {value:?}")));
         };
         let mut code = None;
         let mut message = None;
         let mut target = Vec::new();
         for (key, entry) in fields {
             match key.as_str() {
-                "code" => code = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
-                "message" => message = Some(<String as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
-                "target" => target = <Vec<String> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                "code" => code = Some(<String as semio_framework_value_intrinsic::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
+                "message" => message = Some(<String as semio_framework_value_intrinsic::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
+                "target" => target = <Vec<String> as semio_framework_value_intrinsic::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
                 _ => {}
             }
         }
         Ok(MutationApplyError {
-            code: code.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationApplyError missing code"))?,
-            message: message.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "MutationApplyError missing message"))?,
+            code: code.ok_or_else(|| semio_framework_value_intrinsic::ValueError::new(semio_framework_value_intrinsic::ValueRefusalKind::InvalidValue, "MutationApplyError missing code"))?,
+            message: message.ok_or_else(|| semio_framework_value_intrinsic::ValueError::new(semio_framework_value_intrinsic::ValueRefusalKind::InvalidValue, "MutationApplyError missing message"))?,
             target,
         })
     }
@@ -158,7 +158,7 @@ impl<T> Drop for PreparedField<T> {
 /// 📦️ Typed persisted delta vocabulary shared by retained native application and explicit wire reference algebra.
 ///
 /// 🛬️ Typed delta admission belongs to its funded native receiver; stored diff ownership does not require a synchronous decoder.
-pub trait MutationDiff<P>: Default + PartialEq + semio_framework_value::ToValue + DiffAlgebra<P> {
+pub trait MutationDiff<P>: Default + PartialEq + semio_framework_value_intrinsic::ToValue + DiffAlgebra<P> {
 
 
     /// 🧊️ Explicit cold disposal of a diff nobody will apply again. The default IS a plain drop,
@@ -198,7 +198,7 @@ pub trait DiffAlgebra<P>: Sized {
 /// 🧮️ Wire values provide reference inversion without sharing or allocating retained native row authorities.
 pub trait ColdDiffAlgebra<P>:DiffAlgebra<P>{fn inverse(&self,base:&P)->Self;}
 /// ❄️ Reference projections apply synchronously only when callers select this distinct wire-value contract.
-pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value::FromValue{
+pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value_intrinsic::FromValue{
     /// ➕️ Composes `self` (base→mid) with `other` (mid→after) into base→after, in place.
     /// Normative absorb contract (`.claude/plans/the-current-schemas-are-scalable-journal.md`
     /// `## Absorb`): **structural** (operates on the diff's own key/index/field shape, never on
@@ -218,7 +218,7 @@ pub trait ColdMutationDiff<P>:MutationDiff<P>+semio_framework_value::FromValue{
 }
 
 /// 🎟️ Authorizes one typed original retained commit after its caller admitted the finite work grant.
-pub fn with_retained_apply_capability<P,D:MutationDiff<P>,T>(diff:semio_framework_value_retirement::RetainedCloneRef<'_,D>,grant:semio_framework_value_retirement::RetainedCloneGrant,commit:impl FnOnce(ApplyCapability)->Result<T,ValueError>)->Result<T,ValueError>{
+pub fn with_retained_apply_capability<P,D:MutationDiff<P>,T>(diff:semio_framework_value_clone_source::RetainedCloneRef<'_,D>,grant:semio_framework_value_intrinsic::RetainedCloneGrant,commit:impl FnOnce(ApplyCapability)->Result<T,ValueError>)->Result<T,ValueError>{
     if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<bool>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained diff capability requires original source and admitted commit grant"));}
     let _original=diff;
     commit(mint_capability())

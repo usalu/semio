@@ -21,7 +21,7 @@ fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqlit
 }
 
 /// 🛬️ Admit each declared native child and the resolved buffer collection before ownership transfer.
-pub fn reconstruct_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>{
+pub fn reconstruct_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>{
  let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Snapshot::__dsl_from_record_controlled(record,control)?,Snapshot::retire_decoded);let count=owner.as_mut().buffers.len();let mut owned=control.allocate_vec(count)?;control.begin_stage(count)?;for _ in&owner.as_mut().buffers{control.step()?;}control.checkpoint()?;let Snapshot{schema,document,buffers,source_form}=owner.take();for buffer in buffers{owned.push(buffer.bytes);}Ok(GltfSnapshot{schema,document,buffers:owned,source_form})
 }
 

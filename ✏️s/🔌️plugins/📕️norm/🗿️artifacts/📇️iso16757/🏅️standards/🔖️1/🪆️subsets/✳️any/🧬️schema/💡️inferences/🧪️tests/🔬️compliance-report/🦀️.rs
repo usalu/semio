@@ -439,7 +439,7 @@ fn walk_dsl_leaves(prefix: &str, value: &semio_framework_value::DslValue, visit:
     }
 }
 
-/// Descriptive name/title labels used as report entity labels (CORRECTION 13:43 exempt).
+/// 📛️ Descriptive name/title labels used as report entity labels (CORRECTION 13:43 exempt).
 /// Explicit exempt leaf names: `text`, `title`, `label`, `labelEn`, `labelDe`, `shortName`,
 /// and `locale` on name/definition records (language tags of those labels).
 fn is_descriptive_name_or_title_leaf(path: &str) -> bool {

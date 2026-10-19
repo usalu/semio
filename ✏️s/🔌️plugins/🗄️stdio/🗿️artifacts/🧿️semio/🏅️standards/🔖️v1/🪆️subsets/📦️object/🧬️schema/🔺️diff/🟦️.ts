@@ -4,10 +4,10 @@ import { parseSemioChild, type ArtifactChild } from "../../../✉️base/🧬️
 import type { SemioObjectArtifact } from "../🟦️.ts";
 
 export interface SemioObjectDiff {
-  /** @state artifact */ transform?: SemioTransform;
-  /** @state artifact */ brep?: ArtifactChild | null;
-  /** @state artifact */ mesh?: ArtifactChild | null;
-  /** @state artifact */ properties?: ArtifactChild | null;
+  /** 🔀️ @state artifact */ transform?: SemioTransform;
+  /** 🧊️ @state artifact */ brep?: ArtifactChild | null;
+  /** 🕸️ @state artifact */ mesh?: ArtifactChild | null;
+  /** 🏷️ @state artifact */ properties?: ArtifactChild | null;
 }
 
 /** 🔺️ Parses explicit child replacement, removal and untouched fields. */

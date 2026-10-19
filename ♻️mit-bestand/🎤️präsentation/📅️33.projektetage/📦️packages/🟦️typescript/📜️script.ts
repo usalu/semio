@@ -9,11 +9,12 @@ import {BundleScript, ScriptRouter} from "../../../../../🧰️framework/🔨�
 
 import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 
-import {runVitest} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import {runVitest} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, {
+      runtimeChannels: [],
       config: "../../🏗️builder/🌐️vite/🟦️.ts",
       portEnv: playgroundPortEnv("projektetage"),
       defaultPort: playgroundDevPortString("projektetage"),

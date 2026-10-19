@@ -37,8 +37,6 @@ async fn preview_withdraw_and_expire_transitions() {
 //#region 🔖️Security
 #[semio_framework_async_macros::async_test]
 async fn security_gate_rejects_a_principal_denied_by_its_policy() {
-    // An empty `RoleBasedPolicy` (no grants at all) denies every action, per its own doc — a
-    // default-deny policy, matching `db_engine`'s own equivalent test of the same gate.
     let security = db_security::SecurityGate::new(db_security::RoleBasedPolicy::new(), db_security::ReplayGuard::new(60_000, 1_024), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(NullEmit));
     let storage = storage().await;
     let config = ArtifactEngineConfig { security, ..ArtifactEngineConfig::default() };

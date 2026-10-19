@@ -23,7 +23,7 @@ pub fn from_json_str<T: FromValue>(text: &str, policy: JsonMemberPolicy) -> Resu
 }
 
 /// 🚦️ Parses and binds JSON under the caller's cumulative native ownership control.
-pub fn from_json_str_controlled<T: FromValue>(text: &str, policy: JsonMemberPolicy, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<T, ValueError> {
+pub fn from_json_str_controlled<T: FromValue>(text: &str, policy: JsonMemberPolicy, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(text.len())?;
         let mut reader = ControlledReader { lexer: Lexer::new(text), policy, control };
@@ -274,7 +274,7 @@ impl ControlledWriter {
     }
 }
 
-struct ControlledReader<'text, 'control, 'progress> { pub(super) lexer: Lexer<'text>, pub policy: JsonMemberPolicy, pub control: &'control mut semio_framework_value::NativeDecodeControl<'progress> }
+struct ControlledReader<'text, 'control, 'progress> { pub(super) lexer: Lexer<'text>, pub policy: JsonMemberPolicy, pub control: &'control mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'progress> }
 
 impl ControlledReader<'_, '_, '_> {
     pub(super) fn error(&self) -> ValueError { JsonError::UnexpectedByte { found: self.lexer.peek_byte().unwrap_or(0), offset: self.lexer.pos }.into_value_error() }
@@ -333,7 +333,7 @@ impl ControlledReader<'_, '_, '_> {
     }
 }
 
-fn controlled_key_equal(left: &str, right: &str, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<bool, ValueError> {
+fn controlled_key_equal(left: &str, right: &str, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<bool, ValueError> {
     if left.len() != right.len() { return Ok(false); } control.scoped_stage(|control| { control.begin_stage(left.len())?; let mut position = 0; while position < left.len() { let end = position.saturating_add(65536).min(left.len()); let equal = left.as_bytes()[position..end] == right.as_bytes()[position..end]; control.advance(end - position)?; if !equal { return Ok(false); } position = end; } Ok(true) })
 }
 

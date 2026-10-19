@@ -1,4 +1,4 @@
-//! von-Mises stress contours, reaction labels and moment diagrams.
+//! 🏋️ von-Mises stress contours, reaction labels and moment diagrams.
 //! 📊️ Fem2d play app — the results window: static/modal/buckling analysis views, nodal-averaged
 
 pub use semio_s_artifact_fem_2d_results_state::config;

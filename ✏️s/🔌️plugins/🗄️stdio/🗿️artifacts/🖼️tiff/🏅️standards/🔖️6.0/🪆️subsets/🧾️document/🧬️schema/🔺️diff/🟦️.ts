@@ -8,22 +8,22 @@ import type { TiffSampleBlock, TiffIfd, TiffValues, TiffWord64 } from '../📸�
 export interface TiffTagModified { tag: number; values: TiffValues }
 export interface TiffTagAdded { tag: number; values: TiffValues }
 
-/** Tag-id-keyed `entries` triple for one IFD. */
+/** 🖼️ Tag-id-keyed `entries` triple for one IFD. */
 export interface TiffTagsDiff {
   removed?: number[];
   modified?: TiffTagModified[];
   added?: TiffTagAdded[];
 }
 
-/** One contiguous run of replacement words inside block `block`, starting at word `offset` of its pixel-major sample list. */
+/** 🏞️ One contiguous run of replacement words inside block `block`, starting at word `offset` of its pixel-major sample list. */
 export interface TiffSampleRun { block: number; offset: number; samples: TiffWord64[] }
 
-/** One IFD's own delta: the recursive tag triple, a whole-value slot for its block list and the sparse sample runs applied after it. */
+/** 🎴️ One IFD's own delta: the recursive tag triple, a whole-value slot for its block list and the sparse sample runs applied after it. */
 export interface TiffIfdDiff { entries?: TiffTagsDiff; blocks?: TiffSampleBlock[]; runs?: TiffSampleRun[] }
 export interface TiffIfdModified { index: number; diff: TiffIfdDiff }
 export interface TiffIfdAdded { index: number; ifd: TiffIfd }
 
-/** Index-keyed `ifds` triple (TIFF's IFD chain is positional). */
+/** 🧩️ Index-keyed `ifds` triple (TIFF's IFD chain is positional). */
 export interface TiffIfdsDiff {
   removed?: number[];
   modified?: TiffIfdModified[];

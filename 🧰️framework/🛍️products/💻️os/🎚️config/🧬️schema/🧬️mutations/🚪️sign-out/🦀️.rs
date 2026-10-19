@@ -34,7 +34,7 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
+impl semio_framework_os_command::ColdMutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
     fn diff(&self, base: &IdentitySetting) -> MutationOutcome<IdentityDiff> {
         if base.0.is_none() {
             return MutationOutcome::empty();

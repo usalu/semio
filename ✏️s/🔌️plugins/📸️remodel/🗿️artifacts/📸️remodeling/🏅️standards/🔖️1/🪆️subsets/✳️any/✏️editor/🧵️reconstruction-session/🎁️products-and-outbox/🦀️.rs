@@ -276,10 +276,6 @@ impl ProductPreparation {
                 self.phase = ProductPhase::Done;
                 let trajectory = (!self.trajectory.is_empty()).then(|| CameraTrajectory { poses: std::mem::take(&mut self.trajectory) });
                 if self.sparse.is_none() && self.mesh.is_none() {
-                    // 🌱️ A run without geometry has nothing to publish: no edit, no placeholder
-                    // replaced. That covers a run that registered no camera (the trace says
-                    // `seedPairFailed`) and one whose seed pair solved but kept no triangulated
-                    // point (two views 50° apart): a bare trajectory is no reconstruction.
                     return ProductYield::Done;
                 }
                 ProductYield::Op(commit_reconstruction(CommitReconstruction { sparse: self.sparse.take(), trajectory, mesh: self.mesh.take(), geo: self.geo.take(), qc: self.qc.take(), assets: std::mem::take(&mut self.assets) }))

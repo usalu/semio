@@ -55,7 +55,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cayley_hamilton_holds_for_a_3x3_matrix() {
-        // Verify A^2 - tr(A)*A + det(A)*I == 0 for a 2x2 matrix (Cayley-Hamilton).
         let m = SymMatrix::from_rows(vec![vec![e(1), e(2)], vec![e(3), e(4)]]);
         let a2 = m.matmul(&m);
         let tr_a = m.trace();

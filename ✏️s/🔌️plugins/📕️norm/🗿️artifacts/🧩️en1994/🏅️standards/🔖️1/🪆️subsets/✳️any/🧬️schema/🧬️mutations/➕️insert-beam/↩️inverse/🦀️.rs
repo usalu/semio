@@ -1,4 +1,4 @@
-//! Inverse for `insert-beam`.
+//! ↩️ Inverse for `insert-beam`.
 use crate::insert_beam::InsertBeam;
 use crate::remove_beam::RemoveBeam;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

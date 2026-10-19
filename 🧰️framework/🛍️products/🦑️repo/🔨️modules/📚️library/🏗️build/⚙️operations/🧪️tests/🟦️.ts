@@ -1,0 +1,156 @@
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import {spawnSync} from "node:child_process";
+import {createRequire} from "node:module";
+import {mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {createScriptProcessEnvelope,withScriptProcessEnvelope,createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {buildExecPlanV1,runBuildCacheOperationV1,type BuildCacheToolV1} from "../🟦️.ts";
+import {buildHelpForArgumentsV1,readBuildHelpRequestV1,renderBuildHelpV1,resolveBuildHelpLanguageV1,type BuildHelpCatalogV1} from "../📖️help/🟦️.ts";
+import {buildExecEnvironmentV1} from "../🌱️exec-environment/🟦️.ts";
+import {validateBuildTaskArgumentsV1} from "../../🧭️selection/🟦️.ts";
+import snapshots from "./🧫️fixtures/📖️help/🔣️.json" with {type:"json"};
+import catalog from "../🔣️catalog.json" with {type:"json"};
+import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+
+const help=catalog as BuildHelpCatalogV1,taskOperations=["run","run-many","affected","exec","watch"],entry=(name:string)=>name==="root"?[]:name.split(" ");
+
+const root=join(import.meta.dir,"../../../../../../../..").replace(/[\\/]+$/u,""),installed=createRequire(join(root,"package.json")),ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`});
+
+/** 🌳️ The installed Nx plans the toy task graph in a clean workspace, independent of this repository's bounded cache contract. */
+function nxTaskGraph():unknown{
+ const directory=realpathSync(mkdtempSync(join(tmpdir(),"nx-plan-")));
+ try{
+  writeFileSync(join(directory,"nx.json"),"{}\n");
+  const source="const {createTaskGraph}=require(process.env.NX_PLAN);const g=JSON.parse(process.env.NX_GRAPH);process.stdout.write(JSON.stringify(createTaskGraph(g.graph,{},[g.project],[g.target],undefined,{})));",
+   graph={nodes:fixture.toyGraph.nodes,dependencies:fixture.toyGraph.dependencies},
+   result=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_PLAN:installed.resolve("nx/src/tasks-runner/create-task-graph"),NX_GRAPH:JSON.stringify({graph,project:fixture.toyGraph.project,target:fixture.toyGraph.target}),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
+  if(result.status!==0)throw Error("nx plan: "+result.stderr);
+  return JSON.parse(result.stdout);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+}
+
+test("the operation catalogue is schema-valid, unique and every synopsis and flag shows in the root help",()=>{
+ expect(ajv.compile(schema)(catalog)).toBe(true);
+ const names=catalog.operations.map(row=>row.name);
+ expect(new Set(names).size).toBe(names.length);
+ expect([...names].sort()).toEqual([...schema.definitions.OperationName.enum].sort());
+ for(const language of help.languages){const root=renderBuildHelpV1(help,{},language);for(const row of help.operations)expect(root.includes(row.synopsis),language+" "+row.name+": "+row.synopsis).toBe(true);for(const flag of help.flags)for(const name of [flag.name,...(flag.aliases??[])])expect(root.includes(name),language+" "+name).toBe(true);}
+});
+
+test("every neutral operation has a tool state, and unimplemented states are honest",async()=>{
+ for(const row of catalog.operations){
+  expect(["nx","bazel"].every(tool=>["native","adapter","neutral","missing"].includes(row.implementations[tool as "nx"|"bazel"])),row.name).toBe(true);
+  if(row.dryRun)expect(row.notes?.some(note=>note.includes("--dry-run")||note.includes("Changed files"))||row.name==="run-many"||row.name==="affected",row.name).toBe(true);
+ }
+ const cache=catalog.operations.find(row=>row.name==="cache")!,bazel=(await import("../../🔧️tools/🏗️bazel/⚙️operations/🟦️.ts")).bazelBuildCacheToolV1();
+ expect(cache.implementations.bazel).toBe("adapter");
+ expect(bazel.tool).toBe("bazel");
+ expect([typeof bazel.status,typeof bazel.clear]).toEqual(["function","function"]);
+ await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"build-operations-model",maximumElapsedMilliseconds:30000},{},Date.now()),async original=>{
+  const context={root,invocation:original,phaseControl:createIssuedResourceControlV1(original,"test:build-operations",0)};
+  await expect(runBuildCacheOperationV1("bazel",["purge"],context,async()=>bazel)).rejects.toThrow("Expected repo cache status|clear");
+ });
+});
+
+test("cache results and dry-run plans satisfy the neutral result schemas, with Nx's own task graph as the cross-check",()=>{
+ expect(validator("CacheStatus")(fixture.cacheStatus)).toBe(true);
+ expect(validator("CacheClear")(fixture.cacheClear)).toBe(true);
+ expect(validator("CacheStatus")({...fixture.cacheStatus,entries:-1})).toBe(false);
+ const plan=buildExecPlanV1(fixture.execProjects),dry=validator("DryRunPlan");
+ expect(dry(JSON.parse(JSON.stringify(plan))),JSON.stringify(dry.errors)).toBe(true);
+ expect(plan.tasks.roots).toEqual(fixture.execProjects.map(project=>project+":repo-exec"));
+ const nx=nxTaskGraph() as {tasks:Record<string,{target:{project:string;target:string}}>;roots:string[]};
+ expect(Object.keys(nx.tasks).sort()).toEqual(["app:build","lib:build"]);
+ expect(dry({tasks:nx}),JSON.stringify(dry.errors)).toBe(true);
+ expect(dry({tasks:{...nx,roots:"app:build"}})).toBe(false);
+},60_000);
+
+test("the cache operation validates its arguments and derives the clear result from before and after",async()=>{
+ await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"build-operations-clear-model",maximumElapsedMilliseconds:30000},{},Date.now()),async original=>{
+  const context={root,invocation:original,phaseControl:createIssuedResourceControlV1(original,"test:build-operations-clear",0)},calls:string[]=[];
+  let cleared=false;
+  const tool:BuildCacheToolV1={tool:"nx",status:async()=>({version:1,tool:"nx",available:true,directory:"/cache",...(cleared?fixture.removal.after:fixture.removal.before)}),clear:async()=>{calls.push("clear");cleared=true;}};
+  for(const args of fixture.refusedCacheArguments)await expect(runBuildCacheOperationV1("nx",args,context,async()=>tool),args.join(" ")).rejects.toThrow("Expected repo cache status|clear");
+  expect(await runBuildCacheOperationV1("nx",["status"],context,async()=>tool)).toEqual({version:1,tool:"nx",available:true,directory:"/cache",...fixture.removal.before});
+  expect(calls).toEqual([]);
+  const result=await runBuildCacheOperationV1("nx",["clear"],context,async()=>tool);
+  expect(result).toEqual({version:1,tool:"nx",cleared:true,removedEntries:fixture.removal.removed.entries,removedBytes:fixture.removal.removed.bytes});
+  expect(validator("CacheClear")(result)).toBe(true);
+  expect(calls).toEqual(["clear"]);
+ });
+});
+
+test("the help of every command and subcommand equals the language-agnostic snapshot in every language",()=>{
+ expect(help.languages).toEqual(Object.keys(snapshots.snapshots));
+ for(const language of help.languages){
+  const expected=(snapshots.snapshots as Record<string,Record<string,string[]>>)[language]!,rows=["root",...help.operations.flatMap(row=>[row.name,...(row.subcommands??[]).map(sub=>row.name+" "+sub.name)])];
+  expect(Object.keys(expected),language).toEqual(rows);
+  for(const row of rows)expect(renderBuildHelpV1(help,readBuildHelpRequestV1(help,entry(row)),language).split("\n"),language+" "+row).toEqual(expected[row]!);
+ }
+});
+
+test("every command prints its own usage, distinct from the root usage, and each language translates every text",()=>{
+ const english=new Set<string>();
+ for(const row of help.operations){
+  const own=renderBuildHelpV1(help,{operation:row.name},"en");
+  expect(own.includes(`bun repo ${row.name} - `),row.name).toBe(true);
+  expect(own.includes(row.synopsis),row.name).toBe(true);
+  expect(own.includes("Examples:"),row.name).toBe(true);
+  expect(own,row.name).not.toBe(renderBuildHelpV1(help,{},"en"));
+  for(const name of row.flags){const flag=help.flags.find(candidate=>candidate.name===name);expect(flag,row.name+" "+name).toBeDefined();expect(own.includes(name),row.name+" "+name).toBe(true);expect(flag!.operations?.includes(row.name),row.name+" "+name).toBe(true);}
+  english.add(own);
+ }
+ expect(english.size).toBe(help.operations.length);
+ const texts=(value:unknown):Record<string,string>[]=>Array.isArray(value)?value.flatMap(texts):value&&typeof value==="object"?("en" in value&&"de" in value?[value as Record<string,string>]:Object.values(value).flatMap(texts)):[];
+ for(const text of texts(catalog.labels).concat(texts(catalog.flags),texts(catalog.operations)))expect(text.de,text.en).not.toBe(text.en);
+});
+
+test("the documented flags are exactly the flags the task validator and the other operations accept",()=>{
+ const source=readFileSync(join(import.meta.dir,"../../🧭️selection/🟦️.ts"),"utf8"),validator=source.slice(source.indexOf("export function validateBuildTaskArgumentsV1"));
+ const names=(label:string)=>[...validator.slice(validator.indexOf(`${label}=new Set([`)).match(/Set\(\[([^\]]*)\]/u)![1]!.matchAll(/"([^"]+)"/gu)].map(match=>match[1]!);
+ const accepted=new Set([...names("const values"),...names("booleans"),...names("optional")]),documented=new Set<string>();
+ for(const flag of help.flags)if(flag.operations===undefined?flag.name==="--help":flag.operations.some(operation=>taskOperations.includes(operation)))for(const spelled of [flag.name,...(flag.aliases??[])].filter(candidate=>candidate!=="-h"))documented.add(spelled.replace(/^--?/u,""));
+ expect([...accepted].sort()).toEqual([...documented].sort());
+ for(const row of help.operations.filter(candidate=>taskOperations.includes(candidate.name)))for(const name of row.flags){
+  const flag=help.flags.find(candidate=>candidate.name===name)!,sample=({"stream|stream-without-prefixes|static":"static","prototype|release":"prototype"} as Record<string,string>)[flag.valueName??""]??"x",
+   argument=flag.value==="none"?name:`${name}=${sample}`,head=row.name==="run"?["run","app:build"]:[row.name],tail=["exec","watch"].includes(row.name)?["--","echo"]:[];
+  expect(()=>validateBuildTaskArgumentsV1([...head,argument,...tail]),row.name+" "+argument).not.toThrow();
+ }
+});
+
+test("the help language follows --lang, the environment and the catalogue order, and refuses unknown choices",()=>{
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{})).toBe(help.languages[0]);
+ expect(resolveBuildHelpLanguageV1(help.languages,["--lang=de"],{LANG:"en_US.UTF-8"})).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,["--lang","de"],{})).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{SEMIO_LANGUAGE:"de",LANG:"en_US.UTF-8"})).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{LANG:"de_DE.UTF-8"})).toBe("de");
+ expect(resolveBuildHelpLanguageV1(help.languages,[],{LC_ALL:"C",LANG:"fr_FR.UTF-8"})).toBe(help.languages[0]);
+ expect(resolveBuildHelpLanguageV1(help.languages,["--","--lang=de"],{})).toBe(help.languages[0]);
+ expect(()=>resolveBuildHelpLanguageV1(help.languages,["--lang=fr"],{})).toThrow("Unknown help language: fr");
+ expect(readBuildHelpRequestV1(help,["--tool","bazel","cache","clear","--help"])).toEqual({operation:"cache",subcommand:"clear"});
+ expect(readBuildHelpRequestV1(help,["run","a:b","--help"])).toEqual({operation:"run"});
+ expect(readBuildHelpRequestV1(help,["--help"])).toEqual({});
+ expect(()=>readBuildHelpRequestV1(help,["frobnicate","--help"])).toThrow("Unknown command: frobnicate");
+ expect(buildHelpForArgumentsV1(["dependencies","--help","--lang=de"],{})).toContain("Verwendung:");
+});
+
+test("exec exports the tool-neutral project environment and the catalogue never names an Nx variable",()=>{
+ expect(buildExecEnvironmentV1("app","packages/app")).toEqual({SEMIO_PROJECT_NAME:"app",SEMIO_PROJECT_ROOT:"packages/app"});
+ expect(validator("ExecEnvironment")(buildExecEnvironmentV1("app","packages/app"))).toBe(true);
+ expect(validator("ExecEnvironment")({NX_PROJECT_NAME:"app",NX_PROJECT_ROOT_PATH:"packages/app"})).toBe(false);
+ expect(JSON.stringify(catalog)).not.toMatch(/NX_[A-Z_]+/u);
+ expect(JSON.stringify(schema)).not.toMatch(/NX_[A-Z_]+/u);
+});
+
+test("the real CLI prints the own help of a command, also for preflight, without running it",()=>{
+ const script=join(import.meta.dir,"../../📜️script.ts");
+ const run=(args:string[])=>spawnSync(process.execPath,[script,"repo",...args],{cwd:root,encoding:"utf8",env:{...process.env,SEMIO_LANGUAGE:undefined,LANG:"C",LC_ALL:"C"} as NodeJS.ProcessEnv});
+ for(const [args,expected] of [[["preflight","--help"],"bun repo preflight - "],[["cache","clear","--help"],"bun repo cache clear - "],[["dependencies","lock","--help","--lang=de"],"Verwendung:"]] as const){
+  const result=run([...args]);
+  expect(result.status,args.join(" ")+result.stderr).toBe(0);
+  expect(result.stdout.includes(expected),args.join(" ")+"\n"+result.stdout).toBe(true);
+ }
+},120_000);

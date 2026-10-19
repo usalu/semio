@@ -56,7 +56,6 @@ pub struct Composition<T> {
 #[macro_export]
 macro_rules! compose_thunk {
     ($f:path) => {{
-        // 🚫️async: E4 fn-pointer slot
         fn __thunk<'a>(s: &'a [$crate::ErasedComposeSource]) -> $crate::ComposeFuture<'a> {
             Box::pin($f(s))
         }
@@ -75,7 +74,6 @@ pub use semio_framework_io_schema as io_schema;
 #[macro_export]
 macro_rules! io_run_thunk {
     ($f:path) => {{
-        // 🚫️async: E4 fn-pointer slot
         fn __thunk(payload: &$crate::io_schema::IoPayload) -> $crate::io_schema::IoResult<$crate::io_schema::IoPayload> {
             ::semio_framework_async::poll::resolve_ready($f(payload))
         }
@@ -88,7 +86,6 @@ macro_rules! io_run_thunk {
 #[macro_export]
 macro_rules! io_sniff_thunk {
     ($f:path) => {{
-        // 🚫️async: E4 fn-pointer slot
         fn __thunk(payload: &$crate::io_schema::IoPayload) -> $crate::io_schema::Confidence {
             ::semio_framework_async::poll::resolve_ready($f(payload))
         }

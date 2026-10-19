@@ -56,8 +56,6 @@ fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() 
     assert!(short > 0.0, "two buttons take some height, got {short}");
     assert!(short < 780.0, "two buttons do not take a 780 px column, got {short}");
 
-    // 📏️ …and the same document in a TALLER viewport answers the same height, which is what makes the
-    // hug converge instead of tracking the band it is clamped to.
     drive_layout(&mut ui, "panel", 300.0, 1_400.0, &mut atlas);
     let tall = ui.surface_content_height("panel").expect("content height");
     assert!((tall - short).abs() <= 1.0, "the document's extent is viewport-independent, got {short} then {tall}");

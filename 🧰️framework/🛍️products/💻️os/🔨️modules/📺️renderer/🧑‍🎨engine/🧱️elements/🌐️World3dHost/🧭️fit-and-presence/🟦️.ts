@@ -47,15 +47,9 @@ export function useWorldFitAndPresence(core: WorldCore1) {
     return 100;
   }, [autoFitBounds, contentBounds]);
   liveFitRevisionRef.current = fit?.revision ?? 0;
-  // 🧵️ Off-main-thread compute status (see `World3dScene.statusJson`) — the meshes above stay the
-  // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
   const computeStatus = useMemo(() => world3dComputeStatusV1(scene?.statusJson), [scene?.statusJson]);
   const computing = computeStatus.computing;
   const toolRunTrace = useToolRunTraceStore(scene?.toolRunTrace, useToolRunTraceCursorEcho(windowInstanceId));
-  // 🛑️ While this surface offers a cancel affordance it DECLARES the action id to the shell, so the
-  // shell's one action funnel can retire the requesting instance's in-flight extension requests
-  // before forwarding the gesture — without the shell ever learning a domain verb from code
-  // (`isDeclaredSurfaceCancelAction`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   const cancelActionId = computeStatus.cancellable ? computeStatus.cancelAction : "";
   useEffect(() => declareSurfaceCancelAction(cancelActionId), [cancelActionId]);
   const activeUtility = interaction.activeUtility ?? "select";
@@ -295,14 +289,6 @@ export function useWorldFitAndPresence(core: WorldCore1) {
     [retainViewport, sceneCamera],
   );
 
-  // 🧭️ Syncs a completed user-driven camera gesture (orbit/pan/zoom end, gizmo view snap) to the plugin so
-  // the guest owns one authoritative pose per window instance — the plugin re-derives every camera-dependent
-  // projection (LOD, vortex markers, sun) from it, and a reattaching pane adopts it instead of snapping back.
-  // `setCamera` is `ActionKind::View` publishing on the WindowConfig lane ONLY: it is per-window session view
-  // state, never a document edit and never an artifact-history row (the plugin runtime's `dispatch_emit`
-  // skips the command log for exactly this shape). Trailing-debounced like the 2D canvas' own camera sync
-  // (`CAMERA_SYNC_DEBOUNCE_MS`) so a scroll/wheel burst doesn't spam one dispatch per tick. Never wired into
-  // a programmatic camera change (auto-fit, scene-camera echo reattach) — only genuine user gestures call this.
   const cameraDispatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dispatchWorldCameraDebounced = useCallback(
     (state: WorldCameraState) => {

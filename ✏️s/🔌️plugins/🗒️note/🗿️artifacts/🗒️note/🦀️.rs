@@ -28,21 +28,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.note.note.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.note.note.schema.artifact", "schema", "s.note.note", &[("schema", "s.note.note")], None),
         ("s.note.note.inference.artifact", "inference", "s.note.note.inference", &[("schema", "s.note.note.inference")], None),
-        // 🐛️ Pre-existing gap (found while verifying ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-
-        // PLUGIN-RUNTIME E2-builder-descriptor's proof migration: `PluginBuilder::new("note")...
-        // try_build()` was silently failing assembly — `PluginAssemblyError{code:"artifact-
-        // definition.runtime-capability", message:"no declared composer capability owns the
-        // runtime claims"}` — never surfaced before because nothing checked `try_build()`'s
-        // `Result` against a real assertion). `io_registry::entries()` registers SEVEN composer
-        // rows (`crate::…🚪️io/🦀️.rs`'s `entries()`), not six: the six
-        // `EXPORT_*` rows below plus `composer_entry_of::<NoteAnyComposer>()`, whose `writes` is
-        // this artifact's OWN dialect (`NoteComposer::DIALECT`, `s.note@1/*`) — the native "compose
-        // my own snapshot from various format sources" composer. `PluginBuilder::declare(…)
-        // .composers(entries)` requires a declared "composer" capability whose `dialect` claim
-        // matches EVERY entry's `writes` coordinate; only the six STDIO-format rows existed, so the
-        // native self-composer's claim never matched anything. Added here rather than removing the
-        // native composer from `entries()`: the self-composer is real, load-bearing behaviour
-        // (`rebuild_native_snapshot` is the shared decode path every `EXPORT_*` composer calls).
         ("s.note.note.composer.note", "composer", "s.note.note@1/*", &[("dialect", "s.note.note@1/*")], None),
         ("s.note.note.composer.svg", "composer", "s.stdio.svg@1.1/*", &[("dialect", "s.stdio.svg@1.1/*")], None),
         ("s.note.note.composer.pdf", "composer", "s.stdio.pdf@1.4/*", &[("dialect", "s.stdio.pdf@1.4/*")], None),

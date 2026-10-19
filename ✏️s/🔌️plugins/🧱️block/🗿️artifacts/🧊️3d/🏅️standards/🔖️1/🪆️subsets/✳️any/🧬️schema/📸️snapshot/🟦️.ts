@@ -6,17 +6,17 @@ export * from "@semio-tech/block-js/schema/document-fields";
 export interface Block3dVortexKindExtra{id:string;name:string;label:string;color:string;defaultCableKind:string}
 export interface Block3dVortexTemplate{id:string;vortexKind:string;position:p.BlockVector3;direction:p.BlockVector3;radius:Binary64;label:string|null}
 export interface Block3dSnapshot{
- /** @state artifact */ schema:string;
- /** @state artifact */ objectKind:shared.BlockKindIdentity;
- /** @state artifact */ representations:shared.BlockRepresentation[];
- /** @state artifact @child kind=s.stdio.semio */ catalog:ArtifactChild;
- /** @state artifact */ vortexKindExtra:Block3dVortexKindExtra[];
- /** @state artifact */ vortices:Block3dVortexTemplate[];
- /** @state artifact */ compatibility:shared.BlockCompatibilityRule[];
- /** @state artifact */ attributes:shared.BlockAttribute[];
- /** @state artifact */ authors:shared.BlockAuthor[];
- /** @state artifact */ camera3d:shared.BlockCamera3d;
- /** @state artifact */ meta:shared.BlockMeta;
+ /** 📐️ @state artifact */ schema:string;
+ /** 📦️ @state artifact */ objectKind:shared.BlockKindIdentity;
+ /** 📜️ @state artifact */ representations:shared.BlockRepresentation[];
+ /** 📇️ @state artifact @child kind=s.stdio.semio */ catalog:ArtifactChild;
+ /** 🌪️ @state artifact */ vortexKindExtra:Block3dVortexKindExtra[];
+ /** 🌀️ @state artifact */ vortices:Block3dVortexTemplate[];
+ /** 🔌️ @state artifact */ compatibility:shared.BlockCompatibilityRule[];
+ /** 🏷️ @state artifact */ attributes:shared.BlockAttribute[];
+ /** 🖋️ @state artifact */ authors:shared.BlockAuthor[];
+ /** 📷️ @state artifact */ camera3d:shared.BlockCamera3d;
+ /** 🗂️ @state artifact */ meta:shared.BlockMeta;
 }
 /** 🧩️ Admit literal overflow metadata independent of child materialization. */
 export function parseBlock3dVortexKindExtra(v:unknown):Block3dVortexKindExtra{const r=p.row(v);return{id:p.text(r.id),name:p.text(r.name),label:p.text(r.label),color:p.text(r.color),defaultCableKind:p.text(r.defaultCableKind)}}

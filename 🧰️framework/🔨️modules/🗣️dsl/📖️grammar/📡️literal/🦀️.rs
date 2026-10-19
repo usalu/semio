@@ -1,6 +1,6 @@
 //! 📡️ Iterative literal fields and named-record protocol admission under one cumulative control.
 use super::{ProtocolFile,ProtocolTrace,ProtocolMismatch,Framing,Block,Field,Prim,Count,Cond,CondOp,mismatch};
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 enum Frame<'s>{Record{fields:&'s[Field],position:usize,env:Vec<(&'s str,u64)>},Primitive{ty:&'s Prim,name:Option<&'s str>},Array{ty:&'s Prim,remaining:usize}}
 struct Cursor<'s,'i,'a,'p>{spec:&'s ProtocolFile,bytes:&'i[u8],position:usize,frames:Vec<Frame<'s>>,control:&'a mut NativeDecodeControl<'p>,work:usize}
 impl<'s,'i,'a,'p> Cursor<'s,'i,'a,'p>{

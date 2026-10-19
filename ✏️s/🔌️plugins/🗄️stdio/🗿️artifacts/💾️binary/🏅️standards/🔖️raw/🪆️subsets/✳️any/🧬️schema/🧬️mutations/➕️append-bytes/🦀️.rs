@@ -26,7 +26,6 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for AppendBytes {
     }
     fn inverse(&self, base: &BinarySnapshot) -> Result<Vec<BinaryMutation>, semio_framework_value::ValueError> {
         Ok({
-            // ↩️ Undo an append by truncating back to the pre-append length.
             vec![BinaryMutation::TruncateAt(truncate_at::TruncateAt { offset: base.bytes.len() })]
         })
     }

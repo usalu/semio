@@ -24,7 +24,7 @@ pub struct AddSection {
 
 pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let id = doc.operation()?.entity_id("s", "sections")?;
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
         section: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j }, index: None,
     })]))
 }

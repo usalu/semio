@@ -16,7 +16,7 @@ fn original_native_grant()->semio_framework_value::RetainedCloneGrant{
  let request:semio_framework_plugin::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();request.native.native().unwrap()
 }
 fn export_native(codec:&store::serialization::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&store::io::IoPayload,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<SqliteDatabase>{
- let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotDecodeOwner::new(&mut native,grant);(codec.export)(schema,dialect,payload,sql,&mut owner)
+ let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotDecodeOwner::new(&mut native,grant);(codec.export)(schema,dialect,payload,sql,&mut owner)
 }
 fn import_native(codec:&store::serialization::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:SqliteDatabase,encoding:SnapshotEncoding,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<store::io::IoPayload>{
  let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotEncodeOwner::new(&mut native,grant);(codec.import)(schema,dialect,database,encoding,sql,&mut owner)
@@ -125,7 +125,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  let grant=neutral.native.native().unwrap();let limits=neutral.limits.native().unwrap();
  for count in counts(){let source=Snapshot{count};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut receive=|_|true;let mut publish=|_|true;let mut progress=|_|true;
-  let mut decoder=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut receive);
+  let mut decoder=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut receive);
   let mut encoder=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut publish);
   let mut native_control=semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decoder,&mut encoder,grant);
   let mut snapshot_control=SqliteSnapshotControl::new(&mut progress,limits);

@@ -32,7 +32,3 @@ impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for ChangeLoad where
 
     fn inverse(&self, base: &Fem2dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> { super::inverse::inverse(self, base) }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

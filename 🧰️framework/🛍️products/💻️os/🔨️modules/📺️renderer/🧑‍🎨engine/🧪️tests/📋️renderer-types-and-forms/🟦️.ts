@@ -1,8 +1,8 @@
 /** 📋 Renderer types, owned declarative controls, external slots and declarative forms parity. */
 import { createElement } from "react";
-import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
-import { presenceOverlayFixture, sliderPresentationFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { manifestActionSemanticsFixture as actionSemanticsFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
+import { parseResolvedPluginViewState } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
+import { presenceOverlayFixture, sliderPresentationFixture } from "@semio-tech/framework/ui/testing/fixtures";
+import { manifestActionSemanticsFixture as actionSemanticsFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema } from "@semio-tech/framework/manifest/testing/fixtures";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { actionSemanticsForKind } from "@semio-tech/framework";
@@ -44,11 +44,6 @@ describe("framework renderer types", () => {
   });
 
   it("survives an app whose manifest declares no breadcrumb at all", () => {
-    // 🛡️ `AppDefinition.breadcrumb` is OPTIONAL, so an app may legitimately ship without one — and
-    // `appBreadcrumb` runs inside `FrameworkOsShellInner`'s RENDER. Before this guard, one such app
-    // threw `Cannot read properties of undefined (reading 'join')` and took the whole shell down
-    // with it; in a multi-pane host (the demonstrator) that killed all six panes at once and left
-    // the page blank. A nameless title is the correct degradation, never a dead host.
     const app: Parameters<typeof resolveAppBreadcrumb>[0] = { breadcrumb: [], terminologyBreadcrumbs: {} };
     expect(resolveAppBreadcrumb(app, "native")).toEqual([]);
     expect(appBreadcrumb(resolveAppBreadcrumb(app, "native"))).toBe("");
@@ -346,8 +341,6 @@ describe("framework external slots", () => {
   });
 
   it("renders external slot fallback text when unresolved", () => {
-    // 🧬️ MIGRATION: `Component::Extension` (the old `ExternalSlot`) collapses `pluginId`/`appId`/
-    // `bodyKey` into one opaque `extension` address string — see `ExtensionProps`'s own doc.
     const markup = renderContractTree({ key: "missing-module", component: { type: "extension", extension: "missing-module", props: {} } });
     expect(markup).toContain("Extension unavailable: missing-module");
   });
@@ -382,8 +375,6 @@ describe("declarative forms parity", () => {
   });
 
   it("renders field description, required marker and inline error", () => {
-    // 🧬️ MIGRATION: the old `field`/`input` `UiNode` pair collapses into one `Component::Container`
-    // (`role: "field"`) whose single child IS the input — `ContainerProps`'s own doc.
     const markup = renderContractTree({
       key: "forms-try.name",
       component: { type: "container", role: "field", label: "Name", description: "Your full name", required: true, error: "Name is required", defaultOpen: null, dropOverlay: null },
@@ -414,8 +405,6 @@ describe("declarative forms parity", () => {
   });
 
   it("renders a group node as a labeled section nesting its child controls (Origin > X/Y/Z steppers)", () => {
-    // 🧬️ MIGRATION: `group`/`field` both collapse into `Component::Container` (`role: "group"` /
-    // `role: "field"`) — the old `child: Box<UiNode>` singular is simply `children[0]` on the record.
     const markup = renderContractTree({
       key: "puzzle3d-play-inspector.object.origin",
       component: { type: "container", role: "group", label: "Origin", description: null, required: null, error: null, defaultOpen: true, dropOverlay: null },
@@ -438,14 +427,6 @@ describe("declarative forms parity", () => {
     expect(markup).toContain('data-slot="stepper-group"');
   });
 
-  // 🧬️ MIGRATION: `LayoutSpec`'s stack `gap`/`padding` are now a closed `SpaceToken` enum resolved to
-  // inline CSS via `spaceTokenRem` (Interpreter's own `layoutSpecStyle`/`LayoutAndStyle` region) —
-  // the new architecture's real replacement for "never a hardcoded raw rem" is a renderer-neutral
-  // token resolved to CSS at read time, not the pre-migration Tailwind-gap-class scheme this test
-  // used to assert (`not.toContain("style=")` is no longer true BY DESIGN, not a regression — see
-  // `react-renderer` packet's own decisions doc). Rewritten to assert the token resolves through that
-  // closed scale (never an arbitrary raw number), while separators still avoid the raw
-  // `border-border` utility class.
   it("resolves stack gap/padding through the closed SpaceToken scale as inline CSS, and keeps separators off raw border-border", () => {
     const markup = renderContractTree({
       key: "forms-blueprint.section.q1",
@@ -469,9 +450,6 @@ describe("declarative forms parity", () => {
   });
 
   it("disables gated wizard buttons", () => {
-    // 🧬️ MIGRATION: `disabled` moved off the component (`ButtonProps` no longer carries it) onto the
-    // record itself (`record.disabled` — `ButtonView`'s own `disabled={record.disabled}`); `action`
-    // moved to the record's `bindings`, keyed by `Trigger::Activate`.
     const markup = renderContractTree({
       key: "forms-try.next",
       component: { type: "button", icon: "chevron-right", label: "Next" },
@@ -482,12 +460,7 @@ describe("declarative forms parity", () => {
   });
 
   it("renders selectable builder cards with selection ring", () => {
-    // 🧬️ MIGRATION: `selected` is no longer a document field — presence (hover/selection) is a
-    // separate `UiPresenceOverlayContext` channel keyed by `UiNodeRecord.key`, fed from
-    // `PresenceUpdate` wire messages, never part of the retained document (`PresenceOverlay`
     // region's own doc: "presence changes at input frequency and must not touch a document
-    // revision"). `data-ui-path` (a tree-position string) is gone too — the record's own stable
-    // `data-ui-node-id` is the only per-node DOM handle now.
     const markup = renderContractTree(
       {
         key: "forms-blueprint.card.q1",
@@ -503,10 +476,6 @@ describe("declarative forms parity", () => {
   });
 
   it("applies separate presence fixtures without replacing the retained document", () => {
-    // 🧬️ One owner for this fixture: `framework.ui.contract`'s `ContractFixture` export (ticket
-    // 26/09/08 `📋️cross-partition-requests.md` row 145). `framework.ui` no longer restates it as
-    // `PresenceOverlayFixture`; this consumer compiles the owning scope's export by its `$id`.
-    
     
     
     
@@ -531,17 +500,4 @@ describe("declarative forms parity", () => {
     expect(markup).toContain('src="https://example.com/avatar.png"');
     expect(markup).toContain('alt="Avatar"');
   });
-
-  // 🪦️ MIGRATION, deleted (not rewritten): `declarativeTreeDragController` — a standalone pure
-  // function taking a whole tree `UiNode` + a dispatch callback and returning a
-  // `TreeDragAndDropController` — was deliberately not ported forward (react-renderer packet's own
-  // decisions doc; the barrel's in-file migration comment says so too). Drag/drop for a `tree`
-  // component is now wired INSIDE `🟦️Interpreter`'s own `TreeView` (built from the record's own `drop`
-  // `ActionBinding`, dispatched through `dispatchTrigger`/`emitIntent`), not a separately-importable
-  // factory this file's OWNS can call in isolation — there is no equivalent unit boundary left.
-  // See this packet's report for a production-bug flag this deletion surfaced: `TreeView`'s current
-  // `handleDrop` (`🟦️Interpreter/🟦️.tsx`) calls `dispatchTrigger(context, record, "drop")`
-  // with NO input payload at all, discarding the drop event's target/payload/position entirely —
-  // this test's old assertion (`args: { kind, targetId, dropPosition }`) has no successor to assert
-  // against today.
 });

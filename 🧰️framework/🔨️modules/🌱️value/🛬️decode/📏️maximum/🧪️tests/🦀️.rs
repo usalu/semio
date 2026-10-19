@@ -6,7 +6,7 @@ macro_rules! maximum_law{
  ($name:ident,$control:ident)=>{
  #[test]
  fn $name(){
-  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../📏️maximum/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../📏️maximum/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
   for row in fixture["cases"].as_array().unwrap(){
    let id=row["id"].as_str().unwrap();
    let mut events=Vec::new();
@@ -48,7 +48,7 @@ macro_rules! detached_receiving_law{
  ($name:ident,$control:ident,$forwarded:path,$recipient:path)=>{
  #[test]
  fn $name(){
-  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔌️detached/🔣️.json")).unwrap();
+  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🔌️detached/🔣️.json")).unwrap();
   let mut recipient=<$recipient>::new();let mut foreign=<$recipient>::new();let mut allocation_calls=Vec::new();let mut observe=|_|true;
   let mut allocate=|next|{allocation_calls.push(next);Ok(())};
   let mut native=$control::new_forwarded(fixture["maximumBytes"].as_u64().unwrap()as usize,&mut observe,&mut allocate);

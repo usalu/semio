@@ -112,9 +112,7 @@ pub use document_port::*;
 mod fanout;
 pub use fanout::*;
 
-#[path = "👥️presence/🦀️.rs"]
-mod presence;
-pub use presence::*;
+pub use semio_framework_server_presence::*;
 
 #[path = "🛂️edge/🦀️.rs"]
 mod edge;
@@ -140,8 +138,6 @@ pub use presence_stream::*;
 mod server;
 pub use server::*;
 
-#[cfg(feature = "testkit")]
-#[doc(hidden)]
-#[path = "🪝️testkit/🦀️.rs"]
-pub mod testkit;
-mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔒️private/🦀️.rs"]
+mod private_tests;

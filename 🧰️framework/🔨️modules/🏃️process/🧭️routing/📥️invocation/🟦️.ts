@@ -10,7 +10,7 @@ const invocationKeys=compileExactKeysV1(schema.definitions.ExpectedKeys.const.in
 /** 🧬️ Names the original caller's finite or ordinary no-deadline command authority. */
 export type ScriptPolicy = Readonly<{ version: 1; owner: string; maximumElapsedMilliseconds: number }>;
 /** 📣️ Identifies actual neutral command ownership transitions. */
-export type ScriptProgress = Readonly<{ owner: string; command: string; stage: "contribution" | "loading" | "running" | "complete" }>;
+export type ScriptProgress = Readonly<{ owner: string; command: string; stage: "contribution" | "loading" | "running" | "complete"; activity?: Readonly<{ resource: string; mode: "shared" | "exclusive"; elapsedMs: number }> }>;
 /** 🎛️ Receives the caller's existing cancellation, time, progress and continuation ports. */
 export interface ScriptControl {
   readonly signal: AbortSignal;

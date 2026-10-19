@@ -62,7 +62,6 @@ pub struct StreamingCounts {
 }
 
 impl StreamingCounts {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(alphabet_size: usize, base: LogBase) -> Self {
         Self { counts: vec![0.0; alphabet_size], base, n_raw: 0 }
     }
@@ -131,7 +130,6 @@ pub struct SlidingWindowEntropy {
 }
 
 impl SlidingWindowEntropy {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(alphabet_size: usize, capacity: usize, base: LogBase) -> Result<Self, EntropyError> {
         if capacity == 0 {
             return Err(EntropyError::InvalidConfig { field: "capacity", reason: "must be at least 1" });
@@ -204,7 +202,6 @@ pub struct DecayedEntropy {
 }
 
 impl DecayedEntropy {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(alphabet_size: usize, decay: f64, base: LogBase) -> Result<Self, EntropyError> {
         if !(0.0 < decay && decay <= 1.0) {
             return Err(EntropyError::InvalidConfig { field: "decay", reason: "must be in (0, 1]" });

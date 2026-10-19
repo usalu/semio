@@ -1,6 +1,7 @@
 //! 🔄️ Reprojection turns and base watch of the instance time-travel turns: the reprojection step, its cancel and resume, the change and dirty marks and the store base watch. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ⏭️ One budget of the waiting reprojection (design §16.6, gap N17), a remote change or this replica's own history

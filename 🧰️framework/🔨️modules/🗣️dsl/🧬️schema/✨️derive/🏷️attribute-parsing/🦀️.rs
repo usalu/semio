@@ -24,27 +24,27 @@ pub(super) struct FieldAttrs {
     pub(super) base64: bool,
     pub(super) flatten: bool,
     pub(super) table: bool,
-    /// `#[dsl(unit = "GPa")]` — a scalar `f64`/`f32` field prints/parses as `Shape::Quantity`
+    /// 📏️ `#[dsl(unit = "GPa")]` — a scalar `f64`/`f32` field prints/parses as `Shape::Quantity`
     /// (glued unit suffix) instead of plain `Shape::Float`.
     pub(super) unit: Option<String>,
-    /// `#[dsl(angle = "deg")]` — same mechanism as `unit`, `Shape::Angle` instead.
+    /// 📐️ `#[dsl(angle = "deg")]` — same mechanism as `unit`, `Shape::Angle` instead.
     pub(super) angle: Option<String>,
-    /// `#[dsl(refs = "material")]` — a scalar `String`/`Option<String>` field prints/parses as
+    /// 🔗️ `#[dsl(refs = "material")]` — a scalar `String`/`Option<String>` field prints/parses as
     /// `Shape::Ref(kind)` instead of plain `Shape::Text`.
     pub(super) refs: Option<String>,
-    /// `#[dsl(defines = "material")]` — the anchor side of `refs`: this field's `FieldSpec.defines`
+    /// 📍️ `#[dsl(defines = "material")]` — the anchor side of `refs`: this field's `FieldSpec.defines`
     /// is set so `LanguageService::validate` knows which field, in a record of this kind, other
     /// records' `Shape::Ref("material")` fields are expected to resolve against.
     pub(super) defines: Option<String>,
-    /// `#[dsl(lang = "jack")]` — a scalar `String` field prints/parses as `Shape::Embed(lang)`
+    /// 🔢️ `#[dsl(lang = "jack")]` — a scalar `String` field prints/parses as `Shape::Embed(lang)`
     /// (fenced verbatim in Document mode) instead of plain `Shape::Text`.
     pub(super) lang: Option<String>,
-    /// `#[dsl(lang_from = "language_id")]` — fence language from a sibling Text field at print/parse time.
+    /// 🚧️ `#[dsl(lang_from = "language_id")]` — fence language from a sibling Text field at print/parse time.
     pub(super) lang_from: Option<String>,
-    /// `#[dsl(coord)]` — a `[f64; 3]` (or any `DslField` array) field prints/parses as
+    /// 📚️ `#[dsl(coord)]` — a `[f64; 3]` (or any `DslField` array) field prints/parses as
     /// `Shape::Coord(3)` (`@x,y,z`) instead of a bare comma tuple.
     pub(super) coord: bool,
-    /// `#[dsl(dir)]` — same mechanism as `coord`, `Shape::Dir` (`^x,y,z`) instead.
+    /// 📁️ `#[dsl(dir)]` — same mechanism as `coord`, `Shape::Dir` (`^x,y,z`) instead.
     pub(super) dir: bool,
 }
 

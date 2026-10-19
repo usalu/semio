@@ -18,6 +18,7 @@ use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_plugin_window_transient::window_transient::WindowTransientOwner;
 use semio_framework_ui_contract::*;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 
 const SUPERSEDE_LEDGER_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/🧫️supersede-ledger/🔣️.json");
 

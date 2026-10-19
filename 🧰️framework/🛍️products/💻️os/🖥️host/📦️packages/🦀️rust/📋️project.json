@@ -16,15 +16,44 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json",
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "sharedGlobals"
     ],
     "nativeSources": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/🧩️component/**/*"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "public-member-open-handoff-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts public-member-open-handoff-check",
@@ -35,6 +64,12 @@
     },
     "public-member-open-handoff-source": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -45,6 +80,12 @@
     },
     "member-factory-identity-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-factory-identity-check",
@@ -55,6 +96,12 @@
     },
     "member-history-record-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-record-check",
@@ -65,6 +112,12 @@
     },
     "member-history-foundation-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-foundation-check",
@@ -75,6 +128,12 @@
     },
     "member-history-dictionary-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-dictionary-check",
@@ -85,6 +144,12 @@
     },
     "member-history-id-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-id-check",
@@ -95,6 +160,12 @@
     },
     "member-history-input-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-input-check",
@@ -105,6 +176,12 @@
     },
     "member-history-identity-source": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -115,6 +192,12 @@
     },
     "member-open-protocol-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-open-protocol-check",
@@ -125,6 +208,12 @@
     },
     "document-retirement-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-retirement-check",
@@ -135,6 +224,13 @@
     },
     "persistence-contract-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts persistence-contract-check",
@@ -144,6 +240,12 @@
     },
     "media-projection-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts media-projection-check",
@@ -154,6 +256,14 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "{projectRoot}"
@@ -165,7 +275,7 @@
         "command": "bun 📜️script.ts wasm",
         "cwd": "{projectRoot}"
       },
-      "outputs": [],
+      "outputs": ["{projectRoot}/.🧾️store/wasm.json"],
       "cache": true,
       "metadata": {
         "semio": {
@@ -178,6 +288,16 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" },
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}"

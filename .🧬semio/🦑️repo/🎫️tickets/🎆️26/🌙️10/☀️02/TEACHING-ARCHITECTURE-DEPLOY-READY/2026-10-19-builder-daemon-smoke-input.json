@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "semio-course-inner-smoke-sol-20261019",
+  "imageId": "sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b",
+  "maximumMilliseconds": 180000,
+  "dataBytes": 536870912,
+  "memoryBytes": 805306368,
+  "cpus": 2,
+  "pids": 256,
+  "sourceFiles": 0,
+  "externalDaemonSocket": false
+}

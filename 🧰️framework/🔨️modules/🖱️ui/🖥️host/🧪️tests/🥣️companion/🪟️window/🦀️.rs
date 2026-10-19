@@ -6,7 +6,6 @@ use ui_render::{CursorRequest, DispatchEvent, FrameScheduler, ImeDirective, Inva
 pub use semio_framework_ui_host::*;
 
 pub mod browser {
-    pub use semio_framework_ui_host::linear_memory_test_import;
 }
 
 #[path = "../../🔬️window-unit/🦀️.rs"]

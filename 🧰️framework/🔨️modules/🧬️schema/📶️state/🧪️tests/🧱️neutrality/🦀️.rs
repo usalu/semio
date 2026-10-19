@@ -1,5 +1,6 @@
 use semio_framework_schema_state::{StateClass,parse_state_class_kebab};
-use semio_framework_value::{DslValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{DslValue, FromValue, ToValue, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(serde::Serialize,serde::Deserialize)]
 enum ReferenceState { Artifact,Config,Presence,Transient }
 #[test]

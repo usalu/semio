@@ -16,8 +16,6 @@ describe("dag marquee overlay", () => {
     expect(overlay).toEqual({ kind: "rect", x: 10, y: 20, width: 20, height: 30, coverage: "full" });
   });
 
-  // Regression: board rust publishes `[[x,y],…]` (not `{x,y}` objects). Object-only parsing yielded
-  // NaN bounds so the live select marquee never painted even though selection itself worked.
   it("computes a rect overlay from the rust tuple-array wire format", () => {
     const overlay = computeDagMarqueeOverlay(
       JSON.stringify([
@@ -98,10 +96,6 @@ describe("dag marquee overlay", () => {
     expect(computeDagMarqueeOverlay(JSON.stringify([{ x: 10 }, { x: 20, y: 30 }]), false, "rectangle")).toBeNull();
   });
 
-  // Regression: node-graph-host.tsx used to pass `shape={{ shape: "polygon", points }}` (a single
-  // nested-object prop) instead of separate `shape`/`points` props, so `props.shape === "rect"` was
-  // always false and the polygon branch read `props.points` as undefined — crashing on every marquee
-  // drag and tripping the shell's render error boundary (visible as an interaction "reset").
   it("renders a rect overlay from a computeDagMarqueeOverlay rect result without crashing", () => {
     const overlay = computeDagMarqueeOverlay(
       JSON.stringify([

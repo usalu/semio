@@ -2,40 +2,50 @@
   "name": "@semio-tech/fixture-generator-stdio-obj-3-0-any",
   "targets": {
     "🏭️generator": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-list-recipes": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
         "command": "bun ./📜️script.ts list-recipes",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-document": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
         "command": "bun ./📜️script.ts document",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-document-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator",
         "command": "bun ./📜️script.ts document-manifests",
         "forwardAllArgs": true
       },

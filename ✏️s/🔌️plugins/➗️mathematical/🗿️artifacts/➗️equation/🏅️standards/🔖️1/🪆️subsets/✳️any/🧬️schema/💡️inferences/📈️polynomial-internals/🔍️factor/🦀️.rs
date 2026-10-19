@@ -42,7 +42,6 @@ fn hensel_lift_factors(f: &PolyU<Integer>, mod_p_factors: &[PolyU<ModInt>], p: u
     if k <= 1 {
         return vec![f.clone()];
     }
-    // f_i = product of all mod_p_factors except the i-th, via prefix/suffix products.
     let mut prefix = vec![PolyU::<ModInt>::one(); k + 1];
     for i in 0..k {
         prefix[i + 1] = prefix[i].mul(&mod_p_factors[i]);
@@ -98,7 +97,7 @@ fn factor_coefficient_bound(f: &PolyU<Integer>) -> Natural {
     let n = f.degree().unwrap_or(0);
     let lc = f.leading_coeff().cloned().unwrap_or_else(Integer::one).abs();
     let max_coeff = f.coeffs().iter().map(Integer::abs).fold(Natural::zero(), |acc, m| if m > acc { m } else { acc });
-    let r = max_coeff.div_rem(&lc).0.add(&Natural::from_u64(2)); // ceil-ish Cauchy bound, padded
+    let r = max_coeff.div_rem(&lc).0.add(&Natural::from_u64(2));
     let mut binom = Natural::one();
     for i in 0..(n / 2) {
         binom = binom.mul(&Natural::from_u64((n - i) as u64)).div_rem(&Natural::from_u64((i + 1) as u64)).0;
@@ -127,8 +126,6 @@ pub fn factor_integer_poly(f: &PolyU<Integer>) -> (Integer, Vec<(PolyU<Integer>,
 
     let monic_factors = if lc == Integer::one() { factor_monic_integer_poly(&primitive) } else { factor_nonmonic_via_substitution(&primitive, &lc) };
 
-    // Group identical factors into multiplicities (squarefree_decomposition already separates them by
-    // multiplicity upstream of the mod-p work, but distinct square-free classes can still coincide).
     let mut grouped: Vec<(PolyU<Integer>, u32)> = Vec::new();
     for f_i in monic_factors {
         if let Some(entry) = grouped.iter_mut().find(|(g, _)| *g == f_i) {
@@ -178,22 +175,20 @@ fn factor_squarefree_monic(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
     let bound = factor_coefficient_bound(f);
     let target_modulus = bound.mul(&Natural::from_u64(2));
 
-    // Try a handful of odd primes that don't divide the leading coefficient, picking the one giving a
-    // squarefree image mod p (guarantees the mod-p factorization is separable).
     let mut best: Option<BestFactorization> = None;
-    let mut p = 100_003u64; // an odd prime comfortably away from tiny-degree coefficient collisions
+    let mut p = 100_003u64;
     let mut attempts = 0;
     while attempts < 8 {
         p = primes::next_prime(&Natural::from_u64(p + 1)).to_u64().unwrap_or(p + 2);
         attempts += 1;
         let f_modp = to_modp(f, p);
         if f_modp.degree() != f.degree() {
-            continue; // leading coefficient vanished mod p
+            continue;
         }
         let monic = f_modp.make_monic();
         let squarefree = monic.squarefree_decomposition();
         if squarefree.len() != 1 || squarefree[0].1 != 1 {
-            continue; // not squarefree mod p; try another prime
+            continue;
         }
         let (_, factors) = factor_mod_p(&f_modp, &mut rng);
         let better = best.as_ref().is_none_or(|(_, existing)| factors.len() < existing.len());
@@ -201,7 +196,7 @@ fn factor_squarefree_monic(f: &PolyU<Integer>) -> Vec<PolyU<Integer>> {
             best = Some((p, factors));
         }
         if best.as_ref().unwrap().1.len() <= 1 {
-            break; // already irreducible mod p => irreducible over Z
+            break;
         }
     }
     let Some((chosen_p, factors_mod_p)) = best else {
@@ -339,7 +334,6 @@ pub fn rational_roots(f: &PolyU<Rational>) -> Vec<Rational> {
     let Some(trailing) = integer_poly.coeffs().first().cloned() else { return Vec::new() };
     let leading = integer_poly.leading_coeff().cloned().unwrap();
     if trailing.is_zero() {
-        // x = 0 is a root; factor it out and recurse on the rest.
         let reduced = PolyU::from_coeffs(integer_poly.coeffs()[1..].to_vec());
         let reduced_rational = PolyU::from_coeffs(reduced.coeffs().iter().map(|c| Rational::from_integer(c.clone())).collect());
         let mut roots = vec![Rational::zero()];

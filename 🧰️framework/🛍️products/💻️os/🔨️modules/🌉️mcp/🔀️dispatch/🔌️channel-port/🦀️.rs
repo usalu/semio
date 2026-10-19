@@ -272,7 +272,7 @@ pub enum AppFrame {
     HistorySnapshot(RevisionStamp),
     Emit { ops: PreparedOps, warnings: Vec<String> },
     TransactionPrepared { txn_id: String },
-    /// `relay` is present when the commit relayed envelopes to a hub document: whether the hub
+    /// 💠️ `relay` is present when the commit relayed envelopes to a hub document: whether the hub
     /// acknowledged them within [`crate::workspace::HUB_RELAY_ACK_WAIT_MS`].
     TransactionCommitted { txn_id: String, edit_id: String, relay: Option<HubRelayOutcome> },
     TransactionRolledBack { txn_id: String },

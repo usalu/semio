@@ -20,14 +20,14 @@ export interface SolidPlacement {
   rotation: number;
 }
 
-/** A run of faces that share a part (`layer`, `panel`, `mullion`, `frame`, `muntin`, `glass`, `leaf`, ...), a material id and a layer index. */
+/** 🔷️ A run of faces that share a part (`layer`, `panel`, `mullion`, `frame`, `muntin`, `glass`, `leaf`, ...), a material id and a layer index. */
 export interface SolidGroup {
   part: string;
   material: string;
   layer: number;
 }
 
-/** Flat `positions` and `normals` (xyz per vertex, one vertex triple per triangle), flat `indices` (3 per triangle) and one `face_groups` entry per triangle. */
+/** 🔬️ Flat `positions` and `normals` (xyz per vertex, one vertex triple per triangle), flat `indices` (3 per triangle) and one `face_groups` entry per triangle. */
 export interface ElementSolid {
   family: SolidFamily;
   storey: string;

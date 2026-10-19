@@ -97,8 +97,6 @@ export default defineTestAdapter({
         const root = scratchRepo(ctx, true);
         const before = head(root);
         writeFileSync(join(root, "file2.txt"), "world\n");
-        // 🧭️The provider stages everything first only when nothing is staged yet, which is the state
-        // this scenario starts in — so the oracle stages, then commits, exactly once.
         const added = git(root, ["add", "-A"]);
         if (added.status !== 0) throw new Error(`git add -A failed: ${added.stderr.trim()}`);
         const committed = git(root, ["commit", "-m", "add file2"]);

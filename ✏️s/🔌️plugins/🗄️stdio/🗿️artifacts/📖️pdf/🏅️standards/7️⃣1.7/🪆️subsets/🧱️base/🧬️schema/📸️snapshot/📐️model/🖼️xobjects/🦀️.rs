@@ -106,11 +106,9 @@ pub struct PdfFormXObject {
 }
 
 impl PdfFormXObject {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn identity() -> PdfMatrix {
         PDF_IDENTITY_MATRIX
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(id: impl Into<String>, bbox: PdfRect, content: Vec<PdfOp>) -> Self {
         Self { id: id.into(), bbox, matrix: PDF_IDENTITY_MATRIX, content, group: None, optional_content: None, struct_parent: None, extra: Vec::new() }
     }

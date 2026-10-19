@@ -17,6 +17,9 @@ use semio_framework_job::StepContext;
 use semio_framework_plugin::app::ArtifactToolCompletionRejection;
 use semio_framework_plugin::{ArtifactReservedToolJobRequest, ArtifactToolCompletion, MediaPayload};
 use crate::editor::puzzle2d::{Puzzle2dPlayApp, interaction, snapshot};
+use semio_framework_plugin::component::ArtifactReservedToolInput;
+use semio_framework_job::InteractiveJob;
+use semio_framework_plugin::component::ArtifactReservedJob;
 
 //#region 🔖️PlayApp
 //#region 🧵️ReservedJobs
@@ -39,7 +42,7 @@ const PUZZLE2D_IMPORT_COLLECTIONS: &[&str] = &["portKinds", "wireKinds", "edgeKi
 
 fn puzzle2d_job_fault(detail: &str) -> crate::puzzle_job::JobTurn {
     let bytes = detail.as_bytes();
-    crate::puzzle_job::JobTurn::Fault(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec())
+    crate::puzzle_job::JobTurn::Fault(bytes[..bytes.len().min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)].to_vec())
 }
 
 fn puzzle2d_import_checkpoint(stage: u8, cursor: usize, decoded_items: usize, progress: u64) -> crate::puzzle_job::JobTurn {
@@ -93,7 +96,7 @@ fn puzzle2d_import_handle_template(node_kind_id: &str, index: usize, template: &
 fn puzzle2d_import_node_kind(row: &Value) -> Option<crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogNodeKind> {
     let id = puzzle2d_import_identity(row)?;
     let name = row.get("name").and_then(Value::as_str).unwrap_or(id);
-    let handles = puzzle2d_import_presentation(row, "handles").and_then(Value::as_array).map_or_else(semio_framework_value::list::PagedList::new, |templates| templates.iter().enumerate().filter_map(|(index, template)| puzzle2d_import_handle_template(id, index, template)).collect());
+    let handles = puzzle2d_import_presentation(row, "handles").and_then(Value::as_array).map_or_else(semio_framework_value_persistent::list::PagedList::new, |templates| templates.iter().enumerate().filter_map(|(index, template)| puzzle2d_import_handle_template(id, index, template)).collect());
     Some(crate::standards::v1::subsets::any::schema::records::Puzzle2dCatalogNodeKind {
         id: id.into(),
         label: puzzle2d_import_label(row, name),
@@ -156,7 +159,7 @@ fn puzzle2d_import_wire_kind(row: &Value) -> Option<crate::standards::v1::subset
 /// 🗂️ Id-keyed upsert — deterministic and order-independent, so a `multiplicity: Many` port that fans
 /// in several catalog producers converges on the same bundle whatever order they arrive in. Reports
 /// whether the bundle actually changed, so an idempotent re-delivery emits no operation at all.
-fn puzzle2d_upsert_catalog_row<T: PartialEq>(rows: &mut semio_framework_value::list::PagedList<T, { usize::MAX }>, incoming: T, matches: impl Fn(&T) -> bool) -> bool {
+fn puzzle2d_upsert_catalog_row<T: PartialEq>(rows: &mut semio_framework_value_persistent::list::PagedList<T, { usize::MAX }>, incoming: T, matches: impl Fn(&T) -> bool) -> bool {
     match rows.iter().position(matches) {
         Some(index) if rows[index] == incoming => false,
         Some(index) => {
@@ -591,8 +594,6 @@ impl Puzzle2dClipboardJob {
         let marks = Puzzle2dInteractionSnapshot::from_state(&interaction, &hover);
         let selected = puzzle2d_selected_node_ids(snapshot, marks.selected_ids());
         Ok(match self.tool_id.as_str() {
-            // 🧾️ An unresolvable selection answers with ZERO effects — the same shape as "the hotkey
-            // never reached the guest", exactly as puzzle3d's clipboard route answers it.
             "copy" => match puzzle2d_copy_fragment_from(snapshot, &selected) {
                 Ok(fragment) => Emit { effects: vec![Effect::ClipboardWrite { fragment }], ui_scope: UiDirtyScope::None, ..Default::default() },
                 Err(_) => Emit::default(),

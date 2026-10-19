@@ -72,7 +72,7 @@ impl Trail {
     }
 
     #[inline]
-    #[allow(dead_code)] // used by checkpointing (a later phase); exercised today only by trail tests
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.entries.len()
     }
@@ -84,7 +84,7 @@ impl Trail {
     }
 
     #[inline]
-    #[allow(dead_code)] // backs the public decision_depth() query added with the solver step API (a later phase)
+    #[allow(dead_code)]
     pub fn depth(&self) -> usize {
         self.frames.len()
     }

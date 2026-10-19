@@ -156,7 +156,6 @@ pub struct SurrogateConfig {
 
 impl SurrogateConfig {
     /// 🧪️ Validates `count >= 1` and, for [`SurrogateKind::BlockShuffle`], `block_size >= 1`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(kind: SurrogateKind, count: usize, seed: u64) -> Result<Self, EntropyError> {
         if count == 0 {
             return Err(EntropyError::InvalidConfig { field: "count", reason: "must be at least 1" });

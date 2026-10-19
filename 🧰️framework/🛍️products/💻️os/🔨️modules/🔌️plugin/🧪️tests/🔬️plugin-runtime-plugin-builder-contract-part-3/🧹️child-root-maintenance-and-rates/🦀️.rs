@@ -23,7 +23,7 @@
     /// 🧹️ The lie is spent (see `TestSnapshotRetirement::close_step`), so the very disposer that
     /// was caught now answers honestly and the fixture closes through the ordinary ladder — the
     /// law proves the refusal, not a leak.
-    #[semio_framework_async_macros::async_test]
+#[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
         let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };

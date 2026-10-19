@@ -1,9 +1,10 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:d.depth}}
 /// 🧪️ Exact denied pages and original scalar buffers obey the independent portable byte corpus.
 #[test]
 fn retained_slice_equality_matches_portable_bytes_without_allocations(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🟰️equal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for law in corpus["cases"].as_array().unwrap(){
   let left:Vec<u8>=law["left"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect();let right:Vec<u8>=law["right"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as u8).collect();let pointers=(left.as_ptr(),right.as_ptr());
   let(mut cursor,heap)=crate::observe_retirement_allocations(RetainedSliceEquality::new);assert_eq!(heap,(0,0));let mut turns=0;
@@ -28,7 +29,7 @@ impl RetainedEqualityElement for Empty{fn inline_eq(_: &Self,_:&Self)->bool{true
 /// ✂️ Wide inline point/byte buffers and zero-sized elements yield without retaining payload or invoking Clone.
 #[test]
 fn retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let length=corpus["wide"]["length"].as_u64().unwrap()as usize;let left=vec![0u8;length];let mut right=vec![0u8;length];right[length-1]=1;let pointers=(left.as_ptr(),right.as_ptr());
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../🟰️equal/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let length=corpus["wide"]["length"].as_u64().unwrap()as usize;let left=vec![0u8;length];let mut right=vec![0u8;length];right[length-1]=1;let pointers=(left.as_ptr(),right.as_ptr());
  for cut in[Some(0),Some(1),Some(7),Some(128),Some(25000),None]{
   let mut cursor=RetainedSliceEquality::new();let mut steps=0;while !cursor.ready()&&cut.is_none_or(|cut|steps<cut){let d=cursor.demand(&left,&right,RetainedSliceEquality::fixed_copy_bytes()+6).unwrap();let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(&left,&right,grant(d)).unwrap());assert_eq!(heap,(0,0));assert!(step.progress().copied_bytes<=d.copy_bytes);steps+=1;assert!(steps<length+1);}
   if cut.is_none(){assert_eq!(cursor.equal(),Some(false));}assert_eq!((left.as_ptr(),right.as_ptr()),pointers);assert_eq!(crate::observe_retirement_allocations(||std::hint::black_box(cursor)).1,(0,0));

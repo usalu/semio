@@ -1,0 +1,36 @@
+{
+ "ws": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml",
+ "old_name": "semio-s-artifact-puzzle-2d-retained",
+ "old_pkg": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📦️packages/🦀️rust",
+ "root_file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📦️packages/🦀️rust/🪞️mirror/🦀️.rs",
+ "moves": [
+  "editor::puzzle2d::panels"
+ ],
+ "new": {
+  "name": "semio-s-artifact-puzzle-2d-retained-panels",
+  "dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📌️panel-mounts",
+  "emoji": "📌️",
+  "doc": "The catalogue, artifact, inspection and settings panel mounts of the puzzle 2d editor, held by their own crate so the retained crate stays inside the source gate.",
+  "desc": "Puzzle 2d editor panel mounts"
+ },
+ "subtree": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d",
+ "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/📜️script.ts",
+ "rewrites": [
+  {
+   "re": "\\bcrate::editor::puzzle2d::terminology::",
+   "to": "semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle2d::snapshot::",
+   "to": "semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle2d::interaction::",
+   "to": "semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle2d::config::",
+   "to": "semio_s_artifact_puzzle_2d_records::editor::puzzle2d::config::"
+  }
+ ]
+}

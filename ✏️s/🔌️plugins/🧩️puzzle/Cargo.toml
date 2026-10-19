@@ -41,6 +41,10 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
     [workspace.dependencies.semio-framework-job]
     path = "../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
 
+
+    [workspace.dependencies.semio-framework-job-payload]
+    path = "../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
+
     [workspace.dependencies.semio-framework-os-kernel]
     path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
@@ -52,6 +56,9 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 
     [workspace.dependencies.semio-framework-value]
     path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-native-owned]
+    path = "../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-value-derive]
     path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"

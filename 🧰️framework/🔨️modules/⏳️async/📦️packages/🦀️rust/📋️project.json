@@ -5,14 +5,33 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
-    "test-cancel-return-source": {"executor":"repo:script","options":{"command":"bun ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":false},
-    "test-cancel-return-native": {"executor":"repo:script","options":{"command":"bun ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":false},
+    "test-cancel-return-source": {"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "outputs": [],"options":{"command":"bun ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":true},
+    "test-cancel-return-native": {"executor":"repo:script", "inputs": ["default", "^default", "testEnv", "cargoToolchain"], "outputs": [],"options":{"command":"bun ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":true},
     "worker-pool-use-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-pool-use-check",
         "cwd": "{projectRoot}"
@@ -21,6 +40,12 @@
     },
     "worker-pool-use-native-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-pool-use-check --native",
         "cwd": "{projectRoot}"
@@ -29,6 +54,12 @@
     },
     "worker-parking-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-parking-check",
         "cwd": "{projectRoot}"
@@ -37,6 +68,12 @@
     },
     "worker-parking-native-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-parking-check --native",
         "cwd": "{projectRoot}"
@@ -45,6 +82,12 @@
     },
     "worker-deferred-wake-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-deferred-wake-check",
         "cwd": "{projectRoot}"
@@ -53,6 +96,12 @@
     },
     "worker-deferred-wake-native-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-deferred-wake-check --native",
         "cwd": "{projectRoot}"
@@ -61,6 +110,12 @@
     },
     "worker-maintenance-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-maintenance-check",
         "cwd": "{projectRoot}"
@@ -69,6 +124,12 @@
     },
     "worker-maintenance-native-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts worker-maintenance-check --native",
         "cwd": "{projectRoot}"
@@ -77,6 +138,13 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts check",
         "cwd": "{projectRoot}",
@@ -85,6 +153,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -92,6 +168,13 @@
     },
     "test-publication-docs": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-publication-docs"
@@ -100,6 +183,7 @@
     },
     "typegen": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts typegen"
@@ -110,6 +194,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"

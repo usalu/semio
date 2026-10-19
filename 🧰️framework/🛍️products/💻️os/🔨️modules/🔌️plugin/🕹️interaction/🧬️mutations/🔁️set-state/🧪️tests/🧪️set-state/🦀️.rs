@@ -41,8 +41,8 @@ fn the_interaction_mutation_round_trips_its_serde_json_document_through_the_plai
         let document = serde_json::to_string(&mutation.to_value()).expect("independent serde_json document");
         let parsed: semio_framework_value::DslValue = serde_json::from_str(&document).expect("the document parses back through an independent parser");
         assert_eq!(InteractionConfigMutation::from_value(parsed.clone()).expect("plain decode"), mutation);
-        let mut allow = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+        let mut allow = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut allow);
         let decoded = InteractionConfigMutation::from_value_controlled(&parsed, &mut control).expect("controlled decode");
         assert_eq!(decoded, mutation);
         decoded.retire_decoded();

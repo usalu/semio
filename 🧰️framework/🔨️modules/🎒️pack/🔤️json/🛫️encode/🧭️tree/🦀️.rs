@@ -1,6 +1,7 @@
 //! 🧭️ Native ordinal canonical traversal retains real root-backed projections and paged frontier ownership.
 use crate::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText, ArtifactCanonicalJsonScalarBytes as ScalarBytes, canonical_escaped_byte};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, list::PagedList, paged::{PagedMap, PagedUtf8}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedOwnedProjection}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, paged::{PagedMap, PagedUtf8}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedOwnedProjection}};
+use semio_framework_value_persistent::list::PagedList;
 use std::mem::size_of;
 
 fn refusal(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
@@ -20,7 +21,7 @@ impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_fr
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get().canonical_tree_child(ordinal)}
  fn canonical_tree_key(&self,ordinal:usize)->Result<ArtifactCanonicalJsonText<'_>,ValueError>{self.get().canonical_tree_key(ordinal)}
 }
-impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value::list::persistent::PersistentList<T> {
+impl<T: ArtifactCanonicalJsonTree + Send> ArtifactCanonicalJsonTree for semio_framework_value_persistent::list::persistent::PersistentList<T> {
  fn canonical_tree_node(&self)->Result<Node<'_>,ValueError>{Ok(Node::Array(self.len()))}
  fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn ArtifactCanonicalJsonTree,ValueError>{self.get(ordinal).map(|row|row as&dyn ArtifactCanonicalJsonTree).ok_or_else(||refusal("canonical immutable row ordinal is absent"))}
 }

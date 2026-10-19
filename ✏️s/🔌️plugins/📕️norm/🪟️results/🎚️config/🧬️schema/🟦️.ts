@@ -1,6 +1,6 @@
 /** 🧬️ NormResultsWindowConfig */
 export interface NormResultsWindowConfig {
-  /** @state windowConfig */
+  /** 👉️ @state windowConfig */
   selectedCheckIndex?: number;
 }
 

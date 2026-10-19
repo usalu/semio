@@ -1,12 +1,12 @@
 /** 🧬️ DagConfig */
 export interface DagConfig {
-  /** @state config */
+  /** 📷️ @state config */
   cameraX: number;
-  /** @state config */
+  /** 🎥️ @state config */
   cameraY: number;
-  /** @state config */
+  /** 📸️ @state config */
   cameraZoom: number;
-  /** @state config */
+  /** ⚙️ @state config */
 }
 
 //#region 🚪️Parsers

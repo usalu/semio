@@ -59,14 +59,14 @@ export function registerLeaseWatchdogAndShardLossTests(kit: ShardClientSettlemen
         workers[0]!.deliver({ kind: "result", requestId: activateMsg.requestId, ok: true, value: undefined });
         await activatePromise;
 
-        client.turn("stuck", [], BUDGET).catch(() => {}); // never replies — nothing external ticks the watchdog for it
-        client.startWatchdog(1001); // same cadence the pre-existing manual test used, driven this time by the self-tick
+        client.turn("stuck", [], BUDGET).catch(() => {});
+        client.startWatchdog(1001);
 
-        vi.advanceTimersByTime(1001); // window 1
+        vi.advanceTimersByTime(1001);
         expect(lost).toEqual([]);
-        vi.advanceTimersByTime(1001); // window 2
+        vi.advanceTimersByTime(1001);
         expect(lost).toEqual([]);
-        vi.advanceTimersByTime(1001); // window 3 — self-ticked, no manual checkHeartbeats() call anywhere in this test
+        vi.advanceTimersByTime(1001);
         expect(workers[0]!.terminated).toBe(true);
         expect(lost).toEqual([{ index: 0, actorIds: ["stuck"] }]);
         expect(client.shardIndexFor("stuck")).toBeUndefined();
@@ -74,7 +74,7 @@ export function registerLeaseWatchdogAndShardLossTests(kit: ShardClientSettlemen
         client.stopWatchdog();
         const lostCountAfterStop = lost.length;
         vi.advanceTimersByTime(10_000);
-        expect(lost.length).toBe(lostCountAfterStop); // stopped — no further ticks fire
+        expect(lost.length).toBe(lostCountAfterStop);
       } finally {
         vi.useRealTimers();
       }
@@ -85,9 +85,9 @@ export function registerLeaseWatchdogAndShardLossTests(kit: ShardClientSettlemen
       try {
         const { client } = harness(1);
         client.startWatchdog(500);
-        client.startWatchdog(500); // second call while running: no-op, does not leak a second interval
+        client.startWatchdog(500);
         client.stopWatchdog();
-        client.stopWatchdog(); // already stopped: no-op, does not throw
+        client.stopWatchdog();
         expect(true).toBe(true);
       } finally {
         vi.useRealTimers();
@@ -103,10 +103,8 @@ export function registerLeaseWatchdogAndShardLossTests(kit: ShardClientSettlemen
       await activatePromise;
       expect(client.shardIndexFor("x")).toBe(0);
 
-      workers[0]!.onerror?.(new Error("boom")); // failShard runs; onerror does NOT call terminate()/rebuild()
+      workers[0]!.onerror?.(new Error("boom"));
 
-      // routing cleared right away — a dead shard must stop receiving newly routed work immediately,
-      // not only once a later rebuild() happens to run.
       expect(client.shardIndexFor("x")).toBeUndefined();
       await expect(client.turn("x", [], BUDGET)).rejects.toThrow(/not activated/);
     });
@@ -155,13 +153,13 @@ export function registerLeaseWatchdogAndShardLossTests(kit: ShardClientSettlemen
       await flushAdmission();
       workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[0] as { requestId: string }).requestId, ok: true, value: undefined });
       await activateA;
-      const activateB = client.activate("b", "https://x/b.js", [], BUDGET); // second actor, same (only) shard
+      const activateB = client.activate("b", "https://x/b.js", [], BUDGET);
       await flushAdmission();
       workers[0]!.deliver({ kind: "result", requestId: (workers[0]!.sent[1] as { requestId: string }).requestId, ok: true, value: undefined });
-      await activateB; // both activations settled — only the turn below should count toward busyRatio
+      await activateB;
 
       workers[0]!.deliver({ kind: "heartbeat", turnSeq: 1 });
-      void client.turn("a", [], BUDGET); // one in-flight turn out of two resident actors, deliberately never replied
+      void client.turn("a", [], BUDGET);
 
       setNow(300);
       const [sample] = client.shardMetricsSamples(300);

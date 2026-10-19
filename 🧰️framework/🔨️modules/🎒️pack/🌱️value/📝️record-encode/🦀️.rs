@@ -92,9 +92,6 @@ pub(super) fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &
             out.push(TAG_WIRE);
             encode_wire(ctx, w, depth + 1, out)?;
         }
-        // Canonical `print_expr` text under the string codec — deterministic (the printer is
-        // canonical), so `decode = parse_expr_text ∘ decode_string` inverts it exactly, and
-        // pack ≡ dsl holds by construction rather than needing a bespoke binary AST encoding.
         FieldValue::Expr(expr) => {
             out.push(TAG_EXPR);
             encode_string(ctx, &semio_framework_dsl_record::print_expr(expr), out);

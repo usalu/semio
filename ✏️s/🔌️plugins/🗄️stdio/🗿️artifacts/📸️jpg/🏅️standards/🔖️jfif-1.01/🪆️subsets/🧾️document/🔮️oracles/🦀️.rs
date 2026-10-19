@@ -186,10 +186,6 @@ mod oracles {
         });
         encoder.write_image(rgb.as_raw(), doc.width, doc.height, image::ExtendedColorType::Rgb8).map_err(|error| format!("jpeg encode: {error}"))?;
 
-        // 📐️ T.871 §B.2.4.6.2 fixes every offset used here: SOI is bytes 0..2, the APP0 marker
-        // 2..4, its 2-byte length 4..6, and its payload begins at byte 6 as `"JFIF\0"` followed by
-        // the two version bytes. The APP0 segment therefore ends at `4 + app0_length`, which is
-        // where the retained segments go.
         const APP0_PAYLOAD: usize = 6;
         let app0_length = out.get(4).zip(out.get(5)).map(|(high, low)| ((*high as usize) << 8) | *low as usize).ok_or("reference encoder produced a stream with no APP0")?;
         if out.get(2..4) != Some(&[0xFF, 0xE0]) || out.len() < 4 + app0_length || out.get(APP0_PAYLOAD..APP0_PAYLOAD + 5) != Some(b"JFIF\0") {

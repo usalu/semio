@@ -8,7 +8,7 @@ import { LayeredOverview } from "../../🟦️.tsx";
 import { capturePosterFromCanvases } from "../../🧰️pane-helpers/🟦️.ts";
 import { type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../📋️types/🟦️.ts";
 import chunk from "lodash/chunk";
-import swipeVectors from "../../🧫️fixtures/👀️controlled-swipe/🔣️.json";
+import swipeVectors from "../🧫️fixtures/👀️controlled-swipe/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🥞️LayeredOverviewBehaviour

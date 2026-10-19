@@ -1,0 +1,14 @@
+🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧪️conformance/🟦️.ts
+🧰️framework/📏️script-boundary/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/⏳️async/📏️api/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔐️unique/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts
+🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🖌️raster/🎥️video/🖋️svg-export/🧪️tests/🟦️.ts
+🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts
+🧰️framework/🔨️modules/🏃️process/🧪️tests/🧭️fixture-placement/🟦️.ts
+🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧭️fixture-placement/🟦️.ts
+🎓️teaching/🏛️architecture/📚️course/🧪️tests/🏗️proctor-build/🟦️.ts
+🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts

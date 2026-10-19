@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { SelfTestLanes } from "../../../⚖️laws/🧪️self-test-lanes/🟦️.ts";
@@ -10,12 +11,27 @@ import { policyMutationOutcomeMergePolicyBreaches } from "../../../⚖️laws/�
 import { HISTORY_CLOSURE_RULES, historyClosureFindings, historyClosureSources } from "../../../⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
 import { policyListSemanticVocabularyScanFiles, policyRepositoryOwnedRoots, policySemanticVocabularyBreaches } from "../../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
 import { policyPackageLanguagePurityBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🧼️clean-mechanism/🟦️.ts";
+import { reconcileBuildOwnerRegistry } from "../../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
+import { policyBuildOwnerRegistryBreaches } from "../../../⚖️laws/📋️build-owner-registry/🟦️.ts";
+import { policyZeroTouchClosureBreaches } from "../../../⚖️laws/🛗️zero-touch-closure/🟦️.ts";
 import { censusGeneratedCorruption } from "../🧟️generated-corruption/🟦️.ts";
 import { POLICY_BREACH_GATES } from "../🚨️policy-breach-gates/🟦️.ts";
 import { rustWarningTargetScope } from "../🦀️rust-warnings/🟦️.ts";
 import { runCmd } from "../../../🏃️process/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { Script } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
+/** 👁️ Admits only repository-visible paths (tracked or untracked and not git-ignored), so ignored build output, caches and vendored trees never count as authored implementation. */
+function repositoryVisibleAdmission(root: string): (path: string, nodeKind: "directory" | "file") => boolean {
+  const listing = execFileSync("git", ["-c", "core.fsmonitor=false", "ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: root, maxBuffer: 1 << 30 }).toString("utf8");
+  const files = new Set<string>(), directories = new Set<string>();
+  for (const path of listing.split("\0")) {
+    if (!path) continue;
+    files.add(path);
+    for (let cut = path.lastIndexOf("/"); cut > 0; cut = path.lastIndexOf("/", cut - 1)) directories.add(path.slice(0, cut));
+  }
+  return (path, nodeKind) => (nodeKind === "file" ? files : directories).has(path.normalize("NFC")) || (nodeKind === "file" ? files : directories).has(path);
+}
 
 /** 🧾️ Taxonomy, composed-child, mutation-outcome, history, vocabulary, purity, corruption, breach and Rust-warning verification lanes. */
 export abstract class VerifyTaxonomyLanes extends Script {
@@ -33,6 +49,7 @@ export abstract class VerifyTaxonomyLanes extends Script {
       try {
         const findings = await taxonomyImplementationFilesystemFindings(this.root, loadCatalogTaxonomy(), {
           signal: controller.signal,
+          admitted: repositoryVisibleAdmission(this.root),
           onProgress: (progress) => {
             if (progress.phase !== previousPhase || (progress.phase === "walk" ? progress.pathsVisited : progress.pathsClassified) % 4096 === 0) console.error(`[verify taxonomy implementation progress] phase=${progress.phase} visited=${progress.pathsVisited} classified=${progress.pathsClassified} findings=${progress.findings} vanished=${progress.vanishedDirectories}`);
             previousPhase = progress.phase;
@@ -174,6 +191,32 @@ export abstract class VerifyTaxonomyLanes extends Script {
     for (const b of breaches) console.error(`[verify package-purity] ${b.kind}: ${b.summary}`);
     if (breaches.length > 0) throw new Error(`[verify package-purity] ${breaches.length} package language purity breach(es)`);
     console.log("[verify package-purity] passed.");
+  }
+
+  /** 📋️ `verify build-owners` fails on any registry finding; `verify build-owners sync` first repairs every finding the tree decides (stale, moved, renamed and unregistered modules) and then fails on the authored ones that remain. */
+  protected runBuildOwners(segments: string[]): void {
+    if (segments.length > 1 || (segments.length === 1 && segments[0] !== "sync")) throw new Error("Expected verify build-owners [sync]");
+    if (segments[0] === "sync") {
+      const result = reconcileBuildOwnerRegistry(this.root, { write: true });
+      console.log(`[verify build-owners] sync removed=${result.removed.length} added=${result.added.length} renamed=${result.renamed.length} relocated=${result.relocated.length} repackaged=${result.repackaged.length}`);
+      for (const finding of result.findings) console.error(`[verify build-owners] ${finding.kind} ${finding.owner ?? ""} ${finding.path ?? ""} ${finding.detail}`);
+      if (result.findings.length > 0) throw new Error(`[verify build-owners] ${result.findings.length} finding(s) remain after the sync (authored, or rows whose paths git still tracks while the files are absent)`);
+      console.log("[verify build-owners] passed.");
+      return;
+    }
+    const breaches = policyBuildOwnerRegistryBreaches(this.root);
+    for (const b of breaches) console.error(`[verify build-owners] ${b.summary} (${b.solution})`);
+    if (breaches.length > 0) throw new Error(`[verify build-owners] ${breaches.length} build owner registry finding(s)`);
+    console.log("[verify build-owners] passed.");
+  }
+
+  /** 🪫️ `verify zero-touch` fails when a closure that runs before the dependencies are installed imports a workspace package by name, an external package or a post-install module eagerly. */
+  protected runZeroTouch(segments: string[]): void {
+    if (segments.length) throw new Error("Expected verify zero-touch");
+    const breaches = policyZeroTouchClosureBreaches(this.root);
+    for (const b of breaches) console.error(`[verify zero-touch] ${b.summary} (${b.solution})`);
+    if (breaches.length > 0) throw new Error(`[verify zero-touch] ${breaches.length} zero-touch closure finding(s)`);
+    console.log("[verify zero-touch] passed.");
   }
 
   /**

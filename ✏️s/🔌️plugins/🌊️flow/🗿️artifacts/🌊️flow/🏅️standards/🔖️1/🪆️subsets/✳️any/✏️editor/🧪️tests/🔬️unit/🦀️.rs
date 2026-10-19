@@ -436,11 +436,6 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
 async fn undo_restores_fixture_after_add_widget() {
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, settle_history_verb, settle_registered_typed_operation};
 
-    // 🧩️ Measured on the CHILD document, not on `to_host_snapshot()`. `addWidget` publishes on the
-    // `Child` lane and its own law asserts that the parent's `content` coordinate is unchanged, and
-    // `to_host_snapshot` reads exactly that coordinate's cached scene (`🌊️flow/🦀️.rs:271`) — so a
-    // parent-side widget count can never move for this verb and read `3, expected 4` whatever the
-    // command did. The child store is the surface the command writes and the window reads.
     let mut app = flow_app().await;
     let receiver = meta("local").instance_id;
     let child_id = app.snapshot().expect("snapshot").content.child_id.clone();

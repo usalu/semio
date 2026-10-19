@@ -12,7 +12,8 @@ use semio_framework_io_control::{NativeSnapshotDecodeOwner, NativeSnapshotEncode
 use semio_framework_io_schema::{IoError, IoResult};
 use semio_framework_io_sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl};
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_value::{ValueError,ValueRefusalKind,native_decoding::NativeDecodeRetirementRecipient};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 
 fn overflow()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"SQLite receiving extent overflow")}
 fn unbacked()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"SQLite receiving has no original backing allowance")}

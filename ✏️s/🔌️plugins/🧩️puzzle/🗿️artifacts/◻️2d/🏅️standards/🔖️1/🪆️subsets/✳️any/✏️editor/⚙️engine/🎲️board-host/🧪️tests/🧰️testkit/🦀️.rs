@@ -1,6 +1,7 @@
 //! 🧪️ The one board-scene test harness — `🦀️linking.rs` and `🦀️brush.rs` build on it instead of
 //! re-deriving a camera/LOD/scene scaffold of their own.
-use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescriptor, HandleDescriptor, NodeDescriptor, SceneDescriptor};
+use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescriptor, HandleDescriptor, SceneDescriptor};
+use semio_framework_os_infinite::board::NodeDescriptor;
 use semio_framework_pack_json::json;
 
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.

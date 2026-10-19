@@ -120,8 +120,6 @@ export function GlbInstanceMesh({
     if (corners.length === 8) GLB_MESH_LOCAL_BOUNDS.set(url, corners);
   }
   const celebrating = revision === "celebrated";
-  // 🎨️ Bake selection/hover paint into the clone itself. Imperative `color.set` after deselect was leaving
-  // the previous selected tint until a later hover remounted materials — style deps must recreate the tree.
   const scene = useMemo(() => {
     const cloned=cloneWorldGlbSurface(gltf.scene,revision,{meshColor:color,emissiveIntensity,opacity},emissive);
     cloned.traverse(child=>{if(child instanceof Mesh){child.castShadow=shadowEnabled===true;child.receiveShadow=shadowEnabled===true;}});
@@ -140,7 +138,6 @@ export function GlbInstanceMesh({
     });
     invalidate();
   });
-  // 🎞️ Demand frameloop: useLoader / style remounts after the mount kick would otherwise leave transparent panes.
   useLayoutEffect(() => {
     invalidate();
   }, [invalidate, scene]);

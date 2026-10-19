@@ -2,7 +2,8 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_value::{ValueError, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use semio_framework_value::{ValueError, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use semio_framework_value_persistent::list::PagedList;
 use std::mem::size_of;
 use crate::standards::v1::subsets::any::schema::preparation::flag_preparation::Puzzle2dFlagIntent;
 #[allow(unused_imports)]
@@ -16,7 +17,7 @@ use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
 use crate::standards::v1::subsets::any::schema::preparation::flag_preparation::inverse::*;
 use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeRoot;
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
-use semio_framework_test_fixtures::fixture_text;
+use semio_framework_test_fixtures::repo_text;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 
@@ -67,13 +68,13 @@ fn history_edit_puzzle2d_owned_optional_flag_inverse_preserves_first_native_owne
  use super::super:: ChangeNodeVisible;
  use super::super:: ChangeEdgeLocked;
  use super::super:: ChangeEdgeVisible;
- let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/🔣️.json")).unwrap();let inverses:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/↩️inverse/🔣️.json")).unwrap();let expand=|value:&str|match value.strip_prefix("$large:"){Some(suffix)=>format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap()as usize)),None=>value.into()};let text=|value:&serde_json::Value|PagedUtf8::<{usize::MAX}>::from(expand(value.as_str().unwrap()));
+ let corpus:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/🔣️.json")).unwrap();let inverses:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/↩️inverse/🔣️.json")).unwrap();let expand=|value:&str|match value.strip_prefix("$large:"){Some(suffix)=>format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap()as usize)),None=>value.into()};let text=|value:&serde_json::Value|PagedUtf8::<{usize::MAX}>::from(expand(value.as_str().unwrap()));
  for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let kind=row["kind"].as_str().unwrap();let locked=kind.ends_with("locked");for item in row["rows"].as_array().unwrap(){let flag=item["value"].as_bool();if kind.starts_with("node"){let mut node=crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:text(&item["id"]),..Default::default()};if locked{node.locked=flag}else{node.visible=flag}snapshot.nodes.push(node)}else{let mut edge=crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge{id:text(&item["id"]),..Default::default()};if locked{edge.locked=flag}else{edge.visible=flag}snapshot.edges.push(edge)}}let mut expected=inverses["cases"].as_array().unwrap().iter().find(|value|value["id"]==row["id"]).unwrap()["inverse"].clone();for owner in expected.as_array_mut().unwrap(){owner["id"]=expand(owner["id"].as_str().unwrap()).into();}let id=text(&row["mutation"]["id"]);let value=row["mutation"]["value"].as_bool();let large=row["id"].as_str().unwrap().ends_with("large-prefix");match kind{"node-locked"=>law(&snapshot,ChangeNodeLocked{id,new_locked:value},&expected,large),"node-visible"=>law(&snapshot,ChangeNodeVisible{id,new_visible:value},&expected,large),"edge-locked"=>law(&snapshot,ChangeEdgeLocked{id,new_locked:value},&expected,large),"edge-visible"=>law(&snapshot,ChangeEdgeVisible{id,new_visible:value},&expected,large),_=>unreachable!()}}
 }
 
 #[test]
 fn history_edit_puzzle2d_owned_root_flag_inverse_preserves_literal_absence_and_three_lane_heap_cancel(){
- let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/🌟️root/🔣️.json")).unwrap();let expand=|value:&str|match value.strip_prefix("$large:"){Some(suffix)=>format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap()as usize)),None=>value.to_owned()};
+ let corpus:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/🌟️root/🔣️.json")).unwrap();let expand=|value:&str|match value.strip_prefix("$large:"){Some(suffix)=>format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap()as usize)),None=>value.to_owned()};
  for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();for item in row["rows"].as_array().unwrap(){snapshot.nodes.push(crate::standards::v1::subsets::any::schema::records::Puzzle2dNode{id:expand(item["id"].as_str().unwrap()).into(),root:item["value"].as_bool(),..Default::default()})}let mut expected=row["inverse"].clone();for item in expected.as_array_mut().unwrap(){item["id"]=expand(item["id"].as_str().unwrap()).into()}law(&snapshot,ChangeNodeRoot{id:expand(row["mutation"]["id"].as_str().unwrap()).into(),new_root:row["mutation"]["value"].as_bool()},&expected,row["id"].as_str().unwrap().ends_with("large-prefix"))}
 }
 
@@ -81,7 +82,7 @@ fn history_edit_puzzle2d_owned_root_flag_inverse_preserves_literal_absence_and_t
 fn history_edit_puzzle2d_owned_required_region_flag_inverse_preserves_literal_bool_and_three_lane_heap_cancel(){
  use crate::standards::v1::subsets::any::schema::mutations::ChangeTargetRegionHidden;
  use crate::standards::v1::subsets::any::schema::mutations::ChangeTargetRegionLocked;
- let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/🏁️region/🔣️.json")).unwrap();let expand=|value:&str|match value.strip_prefix("$large:"){Some(suffix)=>format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap()as usize)),None=>value.to_owned()};
+ let corpus:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🚩️flag/🎮️prepare/🏁️region/🔣️.json")).unwrap();let expand=|value:&str|match value.strip_prefix("$large:"){Some(suffix)=>format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap()as usize)),None=>value.to_owned()};
  for row in corpus["cases"].as_array().unwrap(){let mut snapshot=Puzzle2dSnapshot::default();let hidden=row["kind"]=="region-hidden";for item in row["rows"].as_array().unwrap(){let mut region=crate::standards::v1::subsets::any::schema::records::Puzzle2dTargetRegion{id:expand(item["id"].as_str().unwrap()).into(),..Default::default()};if hidden{region.hidden=item["value"].as_bool().unwrap()}else{region.locked=item["value"].as_bool().unwrap()}snapshot.target_regions.push(region)}let mut expected=row["inverse"].clone();for item in expected.as_array_mut().unwrap(){item["id"]=expand(item["id"].as_str().unwrap()).into()}let id=expand(row["mutation"]["id"].as_str().unwrap()).into();let value=row["mutation"]["value"].as_bool().unwrap();let large=row["id"].as_str().unwrap().ends_with("large-prefix");if hidden{law(&snapshot,ChangeTargetRegionHidden{id,new_hidden:value},&expected,large)}else{law(&snapshot,ChangeTargetRegionLocked{id,new_locked:value},&expected,large)}}
 }
 
@@ -91,8 +92,8 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
     macro_rules! vector {
         ($kind:literal, $case:literal) => {
             (
-                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
+                repo_text!(concat!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
+                repo_text!(concat!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
             )
         };
     }

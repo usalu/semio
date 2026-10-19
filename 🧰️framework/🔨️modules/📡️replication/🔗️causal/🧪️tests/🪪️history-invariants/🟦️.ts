@@ -13,7 +13,7 @@ type Case = { id: string; edits: Edit[]; transitions: Transition[]; expected: Ou
 /** ⚖️ Pins unique operation ownership and binary event order to independent SQLite constraints and collation. */
 export function testHistoryInvariants(): void {
   const owner = join(import.meta.dir, "../..");
-  const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🪪️history-invariants/🔣️.json"), "utf8")) as { schema: string; cases: Case[] };
+  const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🪪️history-invariants/🔣️.json"), "utf8")) as { schema: string; cases: Case[] };
   const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🪪️history-invariants/🔣️.json"), "utf8"));
   const validate = new Ajv({ strict: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));

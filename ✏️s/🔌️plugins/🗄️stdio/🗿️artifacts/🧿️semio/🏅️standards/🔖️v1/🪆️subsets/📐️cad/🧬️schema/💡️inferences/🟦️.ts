@@ -1,6 +1,6 @@
 /** 💡️ Semio cad inference schema — entity-derived planar bounding box. */
 
-/** Mirrors the shared `engine::geometry::SemioPoint2` reused by the Rust side. */
+/** 🪞️ Mirrors the shared `engine::geometry::SemioPoint2` reused by the Rust side. */
 export interface SemioPoint2 {
   x: number;
   y: number;
@@ -13,7 +13,7 @@ export interface SemioCadBounds {
 }
 
 export interface SemioCadInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: SemioCadBounds;
 }
 

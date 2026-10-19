@@ -1,6 +1,6 @@
-//! 🥣️ Companion tests of the server product: the actor turn laws, the policy engine, the reference storage conformance and the whole gateway.
+//! 🥣️ Companion tests of the server product: the actor turn laws, the policy engine, the reference storage conformance and the gateway laws that need no private item.
 //!
-//! 🧭️ The tests reach the product through its public modules, the `conformance` feature and the `testkit` hooks of the gateway; the reference instance they run against lives in the product's `🧩️instance` test file.
+//! 🧭️ The tests reach the product through its public modules and the `conformance` feature; the reference instance they run against lives in the product's `🧩️instance` test file. The gateway laws that drive sibling-private functions run inside the product crate.
 #![cfg(test)]
 #![allow(async_fn_in_trait)]
 

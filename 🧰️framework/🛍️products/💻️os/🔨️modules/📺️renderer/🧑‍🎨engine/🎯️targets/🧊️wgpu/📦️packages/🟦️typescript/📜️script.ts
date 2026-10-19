@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runCargo } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runCargo, resolveTypescriptCompilerV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runRepositoryTestCommand } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { runVitest } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
@@ -20,15 +20,15 @@ import { checkBrowserBoot, renderBrowserEntry } from "../../⚙️browser-build/
 import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../🎞️frame-worker/🏗️builder/🟦️.ts";
 
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
-import { runNativeBinary } from "../../⌨️native-entrypoint/📜️script.ts";
+import { runNativeBinary } from "../../⌨️native-entrypoint/🟦️.ts";
 import { listModuleTree, readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 📇️ Verifies actual native publication and launch against the independent catalog selection oracle. */
 class NativeEntrypointCatalogTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-native-entrypoint-catalog accepts no arguments");
+  if(segments.length)throw new Error("test-native-entrypoint-catalog accepts no arguments");
   const remaining=this.invocation.control.remainingMilliseconds();
-  if(remaining!==null&&remaining<1)throw Error("Original native entrypoint catalog deadline exhausted");
+  if(remaining!==null&&remaining<1)throw new Error("Original native entrypoint catalog deadline exhausted");
   await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../⌨️native-entrypoint/🧪️tests/📇️catalog/🟦️.ts"),resolve(this.root,"../../../../../../🔌️plugin/📇️registry/📥️runtime/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:process.env,budgetMs:remaining===null?0:Math.floor(remaining),signal:this.invocation.control.signal});
  }
 }
@@ -97,7 +97,7 @@ class TestScript extends BundleScript {
 /** 🪶️ Runs the original raw-text Socket snapshot and independent physical SQLite laws. */
 class SocketSnapshotSqliteScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length!==1||segments[0]===undefined||!["source","native"].includes(segments[0]))throw Error("test-socket-snapshot-sqlite requires source or native");
+  if(segments.length!==1||segments[0]===undefined||!["source","native"].includes(segments[0]))throw new Error("test-socket-snapshot-sqlite requires source or native");
   if(segments[0]==="native"){await runAdmittedCargoPackageTestsV1([crateName], this.repoRoot, this.invocation, ["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
   const file=resolve(this.root,"../../🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts");
   await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
@@ -109,26 +109,26 @@ class SocketSnapshotSqliteScript extends BundleScript {
 class OriginalFrameSourceScript extends BundleScript {
   private childBudget(): number {
     const remaining = this.invocation.control.remainingMilliseconds();
-    if (remaining !== null && remaining < 1) throw Error("Original frame Source deadline exhausted");
+    if (remaining !== null && remaining < 1) throw new Error("Original frame Source deadline exhausted");
     return remaining === null ? 0 : Math.floor(remaining);
   }
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Expected test-original-frame-source");
+    if (args.length) throw new Error("Expected test-original-frame-source");
     const { runOwnedCommand } = await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
     const files = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📮️runtime-mailbox-core/🎟️apply/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🧪️tests/🟦️.ts","🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🎟️task-ingress/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🎟️source/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🐣️create-app/🧩️compile/🧪️tests/🟦️.ts"].map(file=>resolve(this.repoRoot,file));
-    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...files], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--noUncheckedIndexedAccess", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...files], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", ...files], this.repoRoot, "wgpu:original-frame:source", this.childBudget(), { signal: this.invocation.control.signal });
   }
 }
 
 /** 📮️ Executes the mounted native invocation source, streaming and exact page-return lifecycle laws. */
 class OriginalIoInvocationNativeScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-original-io-invocation-native");await runRepositoryCargoTests([crateName],this.repoRoot,this.invocation,["--lib","-E","test(renderer_original_io_) | test(renderer_source_io_) | test(renderer_task_ingress_) | test(renderer_create_app_source_) | test(renderer_compiler_task_) | test(a_contended_renderer_io_poll_wakes_itself_until_the_exact_session_can_register) | test(mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact) | test(headless_entrypoint_drives_retained_io_and_matches_the_json_oracle) | test(native_app_worker_completes_io_without_a_presentation_host) | test(native_kernel_worker_completes_io_without_a_presentation_host) | test(native_component_reader_admits_local_dev_artifacts_above_catalog_network_bound)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test-original-io-invocation-native");await runAdmittedCargoPackageTestsV1([crateName],this.repoRoot,this.invocation,["--lib","-E","test(renderer_original_io_) | test(renderer_source_io_) | test(renderer_task_ingress_) | test(renderer_create_app_source_) | test(renderer_compiler_task_) | test(a_contended_renderer_io_poll_wakes_itself_until_the_exact_session_can_register) | test(mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact) | test(headless_entrypoint_drives_retained_io_and_matches_the_json_oracle) | test(native_app_worker_completes_io_without_a_presentation_host) | test(native_kernel_worker_completes_io_without_a_presentation_host) | test(native_component_reader_admits_local_dev_artifacts_above_catalog_network_bound)","--","--nocapture"]);}
 }
 
 /** 📤️ Checks exact nonempty media output and the actual original Source scalar adapter. */
 class OriginalBrowserOutputSourceScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/♻️resources/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/♻️resources/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw new Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw new Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
 }
 /** 🦀️ Runs the actual retained native output with its same finite caller and complete nonempty snapshot. */
 class OriginalBrowserOutputNativeScript extends OriginalBrowserOutputSourceScript {
@@ -363,7 +363,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** 🪟️ Exercises trusted physical Dock input and neutral public layout outcomes in both renderer hosts. */
 class BrowserDockAcceptanceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { runDockBrowserAcceptanceCli } = await import("../../../../🧱️elements/🛰️Dock/🧪️tests/🌐️browser-acceptance/📜️script.ts");
+    const { runDockBrowserAcceptanceCli } = await import("../../../../../../../📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️testing/🌐️browser-acceptance/🟦️.ts");
     await runDockBrowserAcceptanceCli(segments);
   }
 }
@@ -396,7 +396,7 @@ class BrowserTestScript extends BundleScript {
 /** 🧵️ Runs the complete original worker ownership source roster. */
 class WorkerReceivingSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 0) throw Error("test-worker-receiving-source takes no filters");
+    if (segments.length !== 0) throw new Error("test-worker-receiving-source takes no filters");
     await runVitest(this.root, ["🧪️tests/🖌️wgpu-document-owner-move/🟦️.ts"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
@@ -490,7 +490,7 @@ class LintScript extends BundleScript {
 class BootCacheInputCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Expected check-boot-cache-inputs");
-    const { testWgpuBootInputs } = await import("../../../../🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
+    const { testWgpuBootInputs } = await import("../../../../../../../📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
     const { repoTestArtifactEnvironment } = await import("../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts");
     const { mkdirSync } = await import("node:fs");
     const output = repoTestArtifactEnvironment(this.repoRoot, "wgpu-boot-cache-inputs").SEMIO_TEST_ARTIFACT_DIR!;

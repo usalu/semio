@@ -2,28 +2,45 @@
   "name": "@semio-tech/norm-plugin",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/📕️norm/**/*.rs", "{projectRoot}/**/*"]
+    "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/📕️norm/**/*.rs", "{projectRoot}/**/*"],
+    "normTree": [
+      "sharedGlobals",
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/🧩️compositions/📕️norm/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/target/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/node_modules/**/*",
+      "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/🗑️generated/**/*"
+    ]
   },
   "targets": {
     "surface-render-source": {
       "executor": "repo:script",
       "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-source", "forwardAllArgs": true },
-      "outputs": []
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "surface-render-test": {
       "executor": "repo:script",
       "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts surface-render-test", "forwardAllArgs": true },
-      "outputs": []
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "results-window-config-source": {
       "executor": "repo:script",
       "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts results-window-config-source", "forwardAllArgs": true },
-      "outputs": []
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "results-window-config-test": {
       "executor": "repo:script",
       "options": { "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust", "command": "bun ./📜️script.ts results-window-config-test", "forwardAllArgs": true },
-      "outputs": []
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "check": {
       "executor": "repo:script",
@@ -31,7 +48,10 @@
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "test": {
       "executor": "repo:script",
@@ -39,7 +59,10 @@
         "cwd": "🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "component-budget-check": {
       "executor": "repo:script",
@@ -48,7 +71,9 @@
         "command": "bun ./📜️script.ts component-budget-check",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     },
     "mutation-leaf-taxonomy-generate": {
       "executor": "repo:script",
@@ -57,9 +82,11 @@
         "command": "bun ./📜️script.ts mutation-leaf-taxonomy-generate",
         "forwardAllArgs": true
       },
+      "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/🗿️artifacts/**/*", "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/target/**/*", "!{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/node_modules/**/*"],
       "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"
-      ]
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"
+      ],
+      "cache": true
     },
     "mutation-leaf-taxonomy-check": {
       "executor": "repo:script",
@@ -68,7 +95,9 @@
         "command": "bun ./📜️script.ts mutation-leaf-taxonomy-check",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "inputs": ["default", "^default", "normTree"],
+      "outputs": [],
+      "cache": true
     }
   }
 }

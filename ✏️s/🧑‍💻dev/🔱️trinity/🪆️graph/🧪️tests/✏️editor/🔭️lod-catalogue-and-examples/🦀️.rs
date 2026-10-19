@@ -30,7 +30,6 @@ async fn set_lod_mode_reflects_in_window_measures() {
     let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: "trinity-jack-graph".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let addressed = view.for_window_instance("jack-graph-main").unwrap();
     app.dispatch_typed(TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("lod");
-    // 📬️ `settle` drains the completion outbox too — a page-only loop spins forever on it.
     let receipt = settle(&mut app,cx).await;
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault));
     let measures = app.window_measures(&view).await;
@@ -70,8 +69,6 @@ async fn inspection_panel_renders_the_selection_prompt() {
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id],cx).await;
     let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.inspection", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
-    // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
-    // build per-selection fields, so it always renders the static prompt.
     assert!(node.contains("trinity-inspector.empty"));
 
     app.close(cx);
@@ -108,12 +105,6 @@ async fn set_active_example_loads_the_example_with_its_preset_query() {
     let mut app = new_app().await;
     let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("set active example");
     let receipt = settle(&mut app,cx).await;
-    // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
-    // 15:50:51 +0200 — predates this migration, not introduced by it): `set_active_example`
-    // routes the fixture swap through `Effect::LoadDocument` (whole-document replace is
-    // banned from the `Mutation` enum outright), never through `artifact_mutations`, so
-    // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
-    // the field that actually carries the swap.
     let loaded = result.requested_effects.iter().chain(receipt.effects.iter()).find_map(|effect| match effect {
         semio_framework_plugin::Effect::LoadDocument { pack, .. } => Some(<jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
         _ => None,

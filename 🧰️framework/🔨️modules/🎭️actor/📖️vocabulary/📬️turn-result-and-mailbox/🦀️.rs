@@ -245,19 +245,14 @@ impl Mailbox {
         Self { capacity, lanes: Default::default(), len: 0 }
     }
 
-    // 🚫️async: E1-adjacent pure accessor — every consumer sits inside a sync `Iterator`/`Option`
-    // combinator closure or a test assertion — see R9 residue shape 1.
     pub fn len(&self) -> u16 {
         self.len
     }
 
-    // 🚫️async: E1-adjacent pure accessor — same rationale as `len` above — see R9 residue shape 1.
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
-    // 🚫️async: E1-adjacent pure accessor — its one consumer, `Kernel::mailbox_pressure` (below),
-    // sits inside a sync `Option::map` closure — see R9 residue shape 1.
     pub fn pressure(&self) -> f32 {
         if self.capacity == 0 {
             return 1.0;
@@ -308,9 +303,6 @@ impl Mailbox {
     }
 
     /// 👀️ Earliest `deadline_ms` among all queued envelopes, for scheduler preemption checks.
-    // 🚫️async: E1-adjacent pure accessor — both consumers sit inside sync `Iterator::filter_map`
-    // closures (`Scheduler::tick`'s deadline-preemption and wake-at scans), which cannot await —
-    // see R9 residue shape 1.
     pub fn earliest_deadline(&self) -> Option<u64> {
         self.lanes.iter().flatten().filter_map(|e| e.deadline_ms).min()
     }

@@ -217,7 +217,7 @@ impl DrawingMutationCandidateAuthority {
         if !outcome.is_applicable(protocol::MergePolicy::default()) {
             return Err("drawing-store.selection-transform-rejected");
         }
-        let mut retired: semio_framework_value::list::PagedList<semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}> = Default::default();
+        let mut retired: semio_framework_value_persistent::list::PagedList<semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}> = Default::default();
         for entry in outcome.diff().layers.iter().flat_map(|delta| delta.modified.iter()) {
             let mut fault = None;
             let found = semio_s_artifact_draw_drawing_model::update_layer_in_tree(&mut source.layers, &entry.id, &mut |layer| {

@@ -32,7 +32,6 @@ pub struct HoverSpec {
 }
 
 impl Default for HoverSpec {
-    // 🚫️async: E1 impl of externally-declared `Default` trait
     fn default() -> Self {
         Self { enabled: true, transitive: false, channels: default_pointer_channels(), broadcast: true }
     }
@@ -258,8 +257,6 @@ impl MergeMode {
     /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️selection-merge-vocabulary-2026-09-12.md`: a second
     /// `add`/`remove`/`toggle` vocabulary made every modifier-click on a domain-bound world scene
     /// fault with `interactionSelect: unknown merge '…'`.
-    // 🚫️async: E1 — called from the sync `ToValue`/`FromValue` impl bodies below, and from `json!`
-    // argument position in `const`-shaped emit sites; see R9.
     pub fn wire_label(self) -> &'static str {
         match self {
             MergeMode::Replace => "replace",
@@ -273,7 +270,6 @@ impl MergeMode {
     /// 🎯️ Inverse of [`MergeMode::wire_label`] — `None` for every word outside the schema enum, so a
     /// caller decides whether an unknown merge is a fault (the domain path) or a skipped optimistic
     /// preview (the local wgpu world).
-    // 🚫️async: E1 — paired with `wire_label`, called from the sync `FromValue` impl below; see R9.
     pub fn from_wire_label(raw: &str) -> Option<Self> {
         match raw {
             "replace" => Some(MergeMode::Replace),
@@ -793,8 +789,6 @@ pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopol
         let granularity = state.active_granularity.get(&def.id).cloned().filter(|granularity| declared_granularities.contains(&granularity.as_str())).unwrap_or_else(|| default_granularity.clone());
         result.active_granularity.insert(def.id.clone(), granularity);
 
-        // 🗂️ ONE membership walk per domain, reused by both the selection and the hover prune below — see
-        // `DomainTopology::membership`. A `None` topology means "no membership information, keep every id".
         let members = match domain_topo {
             Some(topo) => Some(topo.membership().await),
             None => None,

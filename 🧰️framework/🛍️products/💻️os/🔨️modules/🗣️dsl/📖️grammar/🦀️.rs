@@ -49,10 +49,6 @@ fn macro_props_ok(text: &str) -> bool {
 /// defined — `Symbol::Ref`'s existing production-then-macro fallback routes it here automatically).
 // 🚫️async: E4 fn-pointer slot — see `macro_table_ok` above.
 fn macro_hex_ok(text: &str) -> bool {
-    // `slice_source_text` joins multi-token spans with a synthetic `" "` (no such space exists in
-    // the real source — whitespace is trivia, stripped before tokens ever reach the recognizer, so
-    // e.g. hex `"6b"` lexing as two adjacent tokens `Int("6")`/`Ident("b")` joins to `"6 b"` here);
-    // filter it back out before validating, or every multi-token hex value would spuriously fail.
     text.bytes().filter(|b| !b.is_ascii_whitespace()).all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
@@ -60,10 +56,6 @@ pub fn product_macros() -> Vec<MacroMatcher> {
     vec![
         MacroMatcher {
             name: "edge",
-            // 🚫️async: E4 fn-pointer slot — `MacroMatcher.try_match` is a bare `fn`; `parse_edge_text`
-            // `semio_framework_dsl_record::notation::parse_edge_text` was reverted to sync per R9 (whole-module,
-            // 0 await/0 io measured), so the `resolve_ready` bridge this thunk used is gone — a
-            // direct sync call now.
             try_match: |text| semio_framework_dsl_record::notation::parse_edge_text(text).is_ok(),
         },
         MacroMatcher { name: "table", try_match: macro_table_ok },

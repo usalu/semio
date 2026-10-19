@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneSource;
 
@@ -7,7 +8,7 @@ fn observe<T>(action:impl FnOnce()->T)->(T,(usize,usize)){let(value,retained,rel
 /// ✂️ Exact original byte-range output and denied work remain independent of expanded physical copy authority.
 #[test]
 fn retained_byte_span_logical_body_survives_expanded_physical_headers(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../📏️body/🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../📏️body/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let row=&fixture["byteRange"];let bytes=row["source"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();let expected=row["expected"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
  for policy in fixture["rows"].as_array().unwrap(){
   let body=policy["body"].as_u64().unwrap() as usize;

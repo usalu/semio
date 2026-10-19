@@ -1,4 +1,4 @@
-//! `setTargetRegionLocked`).
+//! 📄️ `setTargetRegionLocked`).
 //! 🚩️ `set-target-region-flag` command, and the two set-verbs an outliner region row names (`setTargetRegionHidden`,
 
 use {crate::editor::puzzle2d::snapshot::puzzle2d_selected_target_region_ids, crate::editor::puzzle2d::interaction::Puzzle2dActionCtx};

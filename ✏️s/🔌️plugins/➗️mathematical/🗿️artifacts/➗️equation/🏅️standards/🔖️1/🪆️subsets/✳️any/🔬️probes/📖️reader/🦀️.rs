@@ -385,10 +385,6 @@ fn main() {
             }
             for input in inputs.iter().take(2) {
                 if extension(input) != "csv" {
-                    // ✘️CSV is the only exported carrier of this subset. `edges`, `directed`,
-                    // `algorithm`, point-cloud geometry and the `equation` AST have no column here at
-                    // all — answering `ok` with an empty row set would let a mutation to one of those
-                    // fields pass against evidence that was never in the file.
                     return unsupported(&format!(".{} is not a CSV carrier", extension(input)));
                 }
             }

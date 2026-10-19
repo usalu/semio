@@ -8,7 +8,7 @@ export interface SemioAnimationDuration {
 }
 
 export interface SemioAnimationInference {
-  /** @derived */
+  /** ⏱️ @derived */
   duration: SemioAnimationDuration;
 }
 

@@ -12,7 +12,7 @@ export interface SemioPrimitiveDiff {
   uvs?: SemioUv[];
   colors?: SemioRgba[];
   indices?: number[];
-  /** tri-state: absent = unchanged, null = cleared, string = set */
+  /** 🎨️ tri-state: absent = unchanged, null = cleared, string = set */
   materialId?: string | null;
 }
 

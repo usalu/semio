@@ -18,5 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-kernel = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-energy-model-diff-splice = { workspace = true }

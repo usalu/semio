@@ -29,7 +29,7 @@ fn close(cursor: &mut Puzzle2dDeleteNodePreparationCursor) {
 #[test]
 fn history_edit_puzzle2d_borrowed_delete_preparation_streams_cascade_ordinals_without_owned_payloads() {
     assert!(std::mem::size_of::<Puzzle2dDeleteNodePreparationCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟢️node/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
     let controls = &corpus["control"];
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", controls["largePrefix"].as_str().unwrap().repeat(controls["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let grant = RetainedCloneGrant::one_payload_turn(32,64);

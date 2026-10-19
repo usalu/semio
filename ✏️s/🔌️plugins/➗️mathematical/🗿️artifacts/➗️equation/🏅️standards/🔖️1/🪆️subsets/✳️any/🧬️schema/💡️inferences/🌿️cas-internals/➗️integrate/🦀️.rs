@@ -158,7 +158,6 @@ fn integrate_partial_fraction_term(term: &Expr, x: &Expr) -> Option<Expr> {
     if !crate::cas::visit::contains_symbol(term, x) {
         return Some(term.clone() * x.clone());
     }
-    // ➗️ A unit numerator (e.g. `(x^2+1)^-1`) canonicalizes to a bare `Pow`, not a `Mul` of factors.
     if let Kind::Pow(factor_base, neg_exp) = term.kind() {
         if let Kind::Integer(neg_n) = neg_exp.kind() {
             if neg_n.is_negative() {
@@ -216,7 +215,7 @@ fn integrate_linear_over_irreducible_quadratic(numerator: &Expr, fp: &PolyU<Rati
     let monic_factor_expr = crate::cas::polybridge::polyu_to_expr(&PolyU::from_coeffs(vec![c_m.clone(), b_m.clone(), Rational::one()]), x);
     let d = c_m.sub(&b_m.mul(&b_m).mul(&Rational::from_i64(1, 4).unwrap()));
     if d.is_zero() || d.numer().is_negative() {
-        return None; // not actually irreducible over R -- a documented refinement gap, not a wrong answer
+        return None;
     }
     let sqrt_d_expr = crate::cas::solve::sqrt_of_rational(&d);
     let shift = b_m.mul(&half);

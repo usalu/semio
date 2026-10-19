@@ -17,12 +17,10 @@ struct DwgSectionCursor<'a> {
     position: usize,
 }
 impl<'a> DwgSectionCursor<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(bytes: &'a [u8]) -> Self {
         Self { bytes, position: 0 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn take(&mut self, length: usize) -> Result<&'a [u8], String> {
         let end = self.position.checked_add(length).ok_or("DWG section cursor overflow")?;
         let bytes = self.bytes.get(self.position..end).ok_or_else(|| format!("DWG section value at {} needs {length} bytes, only {} remain", self.position, self.bytes.len().saturating_sub(self.position)))?;
@@ -30,39 +28,32 @@ impl<'a> DwgSectionCursor<'a> {
         Ok(bytes)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn u16(&mut self) -> Result<u16, String> {
         Ok(u16::from_le_bytes(self.take(2)?.try_into().unwrap()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn u8(&mut self) -> Result<u8, String> {
         Ok(self.take(1)?[0])
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn i32(&mut self) -> Result<i32, String> {
         Ok(i32::from_le_bytes(self.take(4)?.try_into().unwrap()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn u32(&mut self) -> Result<u32, String> {
         Ok(u32::from_le_bytes(self.take(4)?.try_into().unwrap()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn u64(&mut self) -> Result<u64, String> {
         Ok(u64::from_le_bytes(self.take(8)?.try_into().unwrap()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn utf16_z(&mut self) -> Result<String, String> {
         let count = usize::from(self.u16()?);
         let units = self.take(count.checked_mul(2).ok_or("DWG UTF-16 length overflow")?)?.as_chunks::<2>().0.iter().map(|unit| u16::from_le_bytes([unit[0], unit[1]])).take_while(|unit| *unit != 0).collect::<Vec<_>>();
         String::from_utf16(&units).map_err(|error| format!("invalid DWG UTF-16 string: {error}"))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn utf16_bytes(&mut self) -> Result<String, String> {
         let byte_count = self.u32()? as usize;
         if !byte_count.is_multiple_of(2) {
@@ -72,19 +63,16 @@ impl<'a> DwgSectionCursor<'a> {
         String::from_utf16(&units).map_err(|error| format!("invalid DWG UTF-16 byte string: {error}"))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn bytes_z(&mut self) -> Result<String, String> {
         let count = usize::from(self.u16()?);
         let bytes = self.take(count)?;
         Ok(String::from_utf8_lossy(bytes.strip_suffix(&[0]).unwrap_or(bytes)).into_owned())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn has_more(&self) -> bool {
         self.position < self.bytes.len()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn finish(self, section: &str) -> Result<(), String> {
         if self.position == self.bytes.len() {
             Ok(())

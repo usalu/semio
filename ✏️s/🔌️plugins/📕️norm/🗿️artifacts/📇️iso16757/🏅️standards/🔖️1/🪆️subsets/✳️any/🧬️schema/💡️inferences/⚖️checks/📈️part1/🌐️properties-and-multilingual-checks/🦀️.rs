@@ -399,7 +399,6 @@ pub(super) fn check_property_values(catalogue: &Catalogue, dictionary: &semio_s_
 pub(super) fn check_property_definition_units(catalogue: &Catalogue, dictionary: &semio_s_artifact_norm_iso16757_model::part_4::Dictionary, report: &mut CheckReport) {
     for def in &catalogue.property_definitions {
         let path = format!("catalogue.propertyDefinitions[id={}]", def.id);
-        // dictionaryPropertyId resolvable — ISO 16757-1 §5.3 / Part 4 property dictionary binding
         if let Some(dict_prop_id) = &def.dictionary_property_id {
             let link_path = format!("{path}.dictionaryPropertyId");
             let resolved_idx = dictionary
@@ -450,7 +449,6 @@ pub(super) fn check_property_definition_units(catalogue: &Catalogue, dictionary:
                 ));
             }
         }
-        // dataType non-empty (Part 1 §6 / Part 4 property typing)
         if def.data_type.trim().is_empty() {
             report.push(fail(
                 format!("iso16757.1.6.dataType.{}", def.id),
@@ -485,7 +483,6 @@ pub(super) fn check_property_definition_units(catalogue: &Catalogue, dictionary:
                 Vec::new(),
             ));
         }
-        // cardinality min <= max (Part 1 §6)
         let max_v = def.cardinality.max.unwrap_or(u32::MAX) as f64;
         let min_v = def.cardinality.min as f64;
         if min_v > max_v {
@@ -568,7 +565,6 @@ pub(super) fn check_property_definition_units(catalogue: &Catalogue, dictionary:
                     q_dim(unit.si_factor + dim_score * 1.0),
                     Vec::new(),
                 ));
-                // Also bind symbol length so symbol edits change computed via a dedicated check id
                 report.push(assess(
                     format!("iso16757.1.6.unitSymbol.{}", def.id),
                     "1",
@@ -584,7 +580,6 @@ pub(super) fn check_property_definition_units(catalogue: &Catalogue, dictionary:
                     q_dim(1.0),
                     Vec::new(),
                 ));
-                // Dimension components bind their editable leaves (Part 1 §6 / SI).
                 for (axis, value, path_suffix) in [
                     ("length", unit.dimension.length as f64, "unit.dimension.length"),
                     ("mass", unit.dimension.mass as f64, "unit.dimension.mass"),

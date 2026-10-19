@@ -30,10 +30,6 @@ fn drr_serves_a_lane_a_run_of_messages_proportional_to_its_weight() {
         address.try_send(Priority::Query, (Priority::Query, i)).unwrap();
     }
 
-    // Command's weight (16) is exactly double Query's (8): the DRR cursor must drain 16
-    // consecutive Command messages before it ever yields to Query, then 8 consecutive Query
-    // messages before wrapping back — this is deterministic given the implementation, not a
-    // statistical approximation, so assert the exact boundary.
     for _ in 0..16 {
         assert_eq!(receiver.try_recv().unwrap().priority, Priority::Command);
     }
@@ -85,10 +81,6 @@ fn non_preview_lane_send_future_blocks_until_a_recv_frees_a_slot() {
     let blocked_address = address;
     let sender_thread = std::thread::spawn(move || blocked_address.send_blocking(Priority::Command, 2));
 
-    // No sleep/race here: `try_admit`'s register-then-re-check pattern makes this correct
-    // regardless of whether the spawned thread has even started polling yet — either it
-    // observes the freed slot on its own first poll, or it parks and this pop's wake() call
-    // reaches it. See `SendFuture::poll`'s doc.
     let freed = receiver.try_recv();
     assert_eq!(freed.map(|e| e.payload), Some(1));
     assert!(sender_thread.join().unwrap().is_ok(), "the blocked send must complete once a slot frees");

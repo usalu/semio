@@ -23,7 +23,7 @@ impl MutationKind<i64, CounterMutation> for AddObservedCounter {
 
 }
 
-impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddObservedCounter {
+impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddObservedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         let count = self.calls.fetch_add(1,std::sync::atomic::Ordering::Relaxed);
         MutationOutcome::new(CounterDiff::delta(count))
@@ -54,9 +54,3 @@ impl OpText for AddObservedCounter {
     }
 }
 //#endregion 📜️Text
-
-//#region 🧪️Contract
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Contract

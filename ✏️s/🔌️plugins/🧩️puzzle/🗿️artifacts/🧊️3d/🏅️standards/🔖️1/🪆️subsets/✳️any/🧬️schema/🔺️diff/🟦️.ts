@@ -1,4 +1,3 @@
-import { type Binary64, parseBinary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ Puzzle3d diff schema — sparse typed delta: per-field entity patches and id-keyed collection deltas. */
 import { parseBinary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
 import {
@@ -32,21 +31,21 @@ import {
 } from "../🟦️.ts";
 
 export interface Puzzle3dDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   artifact?: Puzzle3dArtifact;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** 🌐️ @state artifact */
   domain?: string;
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta?: Puzzle3dMetaPatch;
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   objects?: Puzzle3dObjectsDelta;
-  /** @state artifact */
+  /** 🧲️ @state artifact */
   attractions?: Puzzle3dAttractionsDelta;
-  /** @state artifact */
+  /** 🧊️ @state artifact */
   targetVolumes?: Puzzle3dTargetVolumesDelta;
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   references?: Puzzle3dReferencesDelta;
 }
 

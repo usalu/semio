@@ -1,4 +1,4 @@
-//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Puzzle3dViewer` implements
+//! 📷️ 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Puzzle3dViewer` implements
 //! 👁️ Puzzle 3d viewer — the read-only counterpart of `✏️editor` for this subset (ticket
 //! `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Puzzle3dViewer>` (framework
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft

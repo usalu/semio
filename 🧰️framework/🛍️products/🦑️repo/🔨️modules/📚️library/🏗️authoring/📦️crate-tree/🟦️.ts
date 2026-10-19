@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { reconcileBuildOwnerRegistry } from "../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
 import { crateIdent } from "./🗺️plan/🏷️naming/🟦️.ts";
 import { crateTreeHostCfg, measureRustCrate, readMeasureSources } from "./🗺️plan/📏️measure/🟦️.ts";
 import { identifierSet, useLeafNames } from "./🌳️module-tree/🟦️.ts";
@@ -8,7 +9,7 @@ import { readCargoLib } from "./🗺️plan/📦️cargo-lib/🟦️.ts";
 import { weaveRootEdits } from "./🗺️plan/🪢️weave/🟦️.ts";
 import { type ArtifactCratePlan, type CrateMeasure, type PlannedCrate } from "./🗺️plan/🧾️model/🟦️.ts";
 import { buildTestkitCrate, cfgFeatures, declaredNames, externalDependencies, optionalDependencyRow, planTestkitWiring, requiredTestFeatures, scanTestGates, testOnlyGate, testkitFeatureRow, withFeatureRows, withRequiredFeatures, type CrateWiring, type ExternalDependency, type ExternalGateReader, type TestkitCrate } from "./🧰️testkit/🟦️.ts";
-import { addWorkspaceMembers, syncBuildOwnerRows, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
+import { addWorkspaceMembers, manifestRowKey, rebaseManifestDirPaths, renderMirrorFiles, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest, renderMirrorRoot, type ManifestDependencyRows, type MirrorSpec, type MirrorUnit } from "./📝️render/🟦️.ts";
 import { demoteDanglingOuterDocs, parseRustSourceTree, rustOuterDocStart } from "./🌳️module-tree/🟦️.ts";
 import { FIXTURE_READER_CRATE, FIXTURE_READER_PACKAGE_DIR, resolveFixturePlaceholders } from "./🧪️test-closure/🟦️.ts";
 
@@ -454,17 +455,13 @@ export function applyCarveWrites(repoRoot: string, writes: readonly CarveFileWri
   }
 }
 
-/** 🗂️ Registers the carved crates in `📋️build-owners.json`, re-reading the file at call time because peers edit it concurrently. New rows are inserted, a row at the same root under an older name takes the new name, and the rows of this artifact whose manifest is gone are dropped; the added names are listed beside the backup so a restore removes exactly those rows instead of overwriting the shared file, and the dropped and renamed rows are listed there too so that a restore can bring them back. */
+/** 🗂️ Syncs the owner rows below the artifact directory in `📋️build-owners.json` with the crates the carve left on disk, through the registry consistency law's reconciler (re-reading the file at call time because peers edit it concurrently): new crates get rows, rows of crates that were renamed or moved follow them, rows of crates that are gone are dropped. The added names are listed beside the backup so a restore removes exactly those rows instead of overwriting the shared file, and the renamed, relocated and dropped rows are listed there too so that a restore can bring them back. */
 export function registerBuildOwnerRows(repoRoot: string, plan: ArtifactCratePlan, backupDir?: string): string[] {
-  const file = resolve(repoRoot, "📋️build-owners.json");
-  const scope = { artifactCrate: plan.artifactCrate, artifactDir: relativePosix(repoRoot, plan.artifactDir), exists: (root: string) => existsSync(resolve(repoRoot, root, "Cargo.toml")) };
-  const { text, added, renamed, removed } = syncBuildOwnerRows(readFileSync(file, "utf8"), plan.crates.map((crate) => ({ name: crate.name, root: crate.packageDir })), scope);
-  if (!added.length && !renamed.length && !removed.length) return added;
-  if (backupDir) {
+  const { added, renamed, relocated, removed } = reconcileBuildOwnerRegistry(repoRoot, { scope: relativePosix(repoRoot, plan.artifactDir), write: true });
+  if (backupDir && (added.length || renamed.length || relocated.length || removed.length)) {
     mkdirSync(dirname(backupDir), { recursive: true });
     writeFileSync(`${backupDir}-owner-rows.json`, JSON.stringify(added, null, 2) + "\n");
-    if (renamed.length || removed.length) writeFileSync(`${backupDir}-owner-rows-changed.json`, JSON.stringify({ renamed, removed }, null, 2) + "\n");
+    if (renamed.length || relocated.length || removed.length) writeFileSync(`${backupDir}-owner-rows-changed.json`, JSON.stringify({ renamed, relocated, removed }, null, 2) + "\n");
   }
-  writeFileSync(file, text);
   return added;
 }

@@ -4,9 +4,9 @@
  * @see ../../📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪝️host-ports/🟦️.ts
  */
 import type { CatalogAdmissionPortV1, DocumentAccessPortV1, PluginDistributionPortV1, ShellHostPortsV1, UiPreferenceVocabularyV1 } from "@semio-tech/framework-renderer-react";
-import accessPolicy from "../../📇️directory/🛡️access-policy/🔣️.json" with { type: "json" };
-import { directoryAccessPermits, parseDirectoryAccessPolicyV1 } from "../../📇️directory/🛡️access-policy/🧬️schema/🟦️.ts";
-import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import accessPolicy from "@semio-tech/framework-os/modules/directory/access-policy.json";
+import { directoryAccessPermits, parseDirectoryAccessPolicyV1 } from "@semio-tech/framework-os/modules/directory/access-policy/schema";
+import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "@semio-tech/framework-os/config/schema/mutations";
 import { MODULE_EXTENSION_ROUTE } from "@semio-tech/plugin-registry/deployment";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT } from "@semio-tech/plugin-registry/hub-source";
 import pluginModuleStoreWorkerUrl from "@semio-tech/plugin-registry/hub-source/service-worker?worker&url";

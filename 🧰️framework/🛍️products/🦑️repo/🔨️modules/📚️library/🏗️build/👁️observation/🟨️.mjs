@@ -86,7 +86,7 @@ export async function observeProjectInferenceV1({cachePath,key,owner,reusable},c
  const inherit=rows=>{retainSourceFactsV1(rows);retainObservationsV1(parent,rows);};
  if(previous?.identity===identity&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
   const value=JSON.parse(previous.image);
-  if(await inferenceReusableV1(reusable,value)&&current(previous.observations)){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
+  if(await inferenceReusableV1(reusable,value)&&(parent?consistentObservationsV1(previous.observations):current(previous.observations))){inherit(previous.observations);originalInferencePublications.set(cachePath,previous.publication);usedInference.set(cachePath,previous.headerDigest);return value;}
  }
  const value=await observeInferenceComputationV1({cachePath,key,reusable},async()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);const image=jsonImage(await compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);},Boolean(parent&&inferenceValidationScopes.getStore()));
  const publication=originalInferencePublications.get(cachePath);

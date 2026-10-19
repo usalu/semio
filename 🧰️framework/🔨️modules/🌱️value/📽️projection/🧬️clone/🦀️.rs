@@ -1,9 +1,10 @@
 //! 🔗️ Clones genuine original immutable roots through separately funded binding and projection turns.
 use crate::retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneRef,RetainedCloneStep};
-use crate::{RetirementDemand,ValueError,ValueRefusalKind,list::persistent::PersistentList,snapshot_projection::ImmutableRootProjection,retirement::{RetireOwned,RetirementCursor,RetirementStep},shared_issuance::SealedShared};
+use crate::{RetirementDemand, ValueError, ValueRefusalKind, snapshot_projection::ImmutableRootProjection, retirement::{RetireOwned, RetirementCursor, RetirementStep}, shared_issuance::SealedShared};
+use semio_framework_value_persistent::list::persistent::PersistentList;
 use std::mem::{ManuallyDrop,size_of};
 #[cfg(test)]
-#[path="../../🧬️retained-clone/🔗️shared/📋️list/🧪️tests/🦀️.rs"]
+#[path="../../🧬️retained-clone/🔗️sealed-shared-list/📋️list/🧪️tests/🦀️.rs"]
 mod list_tests;
 
 struct State<S>{output:Option<S>,source:Option<RetainedCloneBinding>,close:RetainedCloneClose,closing:bool,spent:bool,projected:bool,admitted:bool}

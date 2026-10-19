@@ -48,6 +48,7 @@ semio-framework-actor = { workspace = true }
 # `block_on` gate doc.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 serde_json = "1.0.140"
 # 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `HostTransactionCoordinator`
 # hashes a `ForeignStep`'s payload into `protocol::PayloadHash` for `MutationOrigin::Contributed`, the
@@ -61,6 +62,7 @@ semio-framework-plugin-host-routers = { path = "../../🧭️routers/📦️pack
 semio-framework-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️rust" }
 semio-framework-plugin-host-shard-executor = { path = "../../🧵️shard/🧵️executor/📦️packages/🦀️rust" }
 semio-framework-plugin-host-wake = { path = "../../🔔️wake/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin-host-operation = { path = "../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }

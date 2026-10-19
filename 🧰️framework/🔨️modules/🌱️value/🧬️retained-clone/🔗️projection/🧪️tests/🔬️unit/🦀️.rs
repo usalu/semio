@@ -1,11 +1,12 @@
 use super::*;
-use crate::{list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement};
+use crate::{paged::PagedUtf8, retirement::controlled::ControlledRetirement};
+use semio_framework_value_paged_list::list::PagedList;
 use crate::retained_clone::{RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep};
-use crate::value::observe_retirement_allocations;
+use semio_framework_value_testing_allocator::observe_retirement_allocations;
 
-#[derive(Debug, crate::RetireOwned, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, crate::RetireOwned, serde::Deserialize, serde::Serialize)]#[value(crate="crate")]
 struct Row { label: PagedUtf8<{usize::MAX}>, choice: Option<PagedUtf8<{usize::MAX}>> }
-#[derive(Debug, crate::RetireOwned, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, crate::RetireOwned, serde::Deserialize, serde::Serialize)]#[value(crate="crate")]
 struct Root { rows: PagedList<Row, {usize::MAX}> }
 
 #[test]

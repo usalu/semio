@@ -304,8 +304,6 @@ pub fn convex_hull_triangles(points: &[[f64; 3]]) -> Option<Vec<[[f64; 3]; 3]>> 
     if !scale.is_finite() || scale <= 1e-9 {
         return None;
     }
-    // 📏️ Every tolerance below is RELATIVE to the cloud's own extent, so a room in millimetres and a
-    // district in kilometres are judged degenerate by the same rule.
     let epsilon = scale * 1e-9;
 
     let mut unique: Vec<[f64; 3]> = Vec::new();
@@ -356,8 +354,6 @@ pub fn convex_hull_triangles(points: &[[f64; 3]]) -> Option<Vec<[[f64; 3]; 3]>> 
         if visible.is_empty() {
             continue;
         }
-        // 🕳️ The horizon: every directed edge of the removed cap that is NOT cancelled by its reverse
-        // (an edge shared by two visible faces). What survives is exactly the rim of the hole.
         let mut horizon: Vec<(usize, usize)> = Vec::new();
         for position in &visible {
             let face = faces[*position];
@@ -370,12 +366,9 @@ pub fn convex_hull_triangles(points: &[[f64; 3]]) -> Option<Vec<[[f64; 3]; 3]>> 
                 }
             }
         }
-        // `visible` is ascending, so removing from the back keeps the earlier indices valid.
         for position in visible.iter().rev() {
             faces.remove(*position);
         }
-        // 🧭️ Coning a horizon edge to the new point preserves the winding the removed face had, so
-        // every new face is outward without a second orientation pass.
         for (from, to) in horizon {
             faces.push([from, to, index]);
         }
@@ -460,10 +453,6 @@ pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> 
         instances.push(instance(&target_id, &mesh_id, &shading.name, ENERGY_SCENE_OBJECT_KIND_SHADING, style.is_selected(&target_id), style.is_hovered(&target_id)));
     }
 
-    // 📦️ Zones LAST: a translucent hull must be published after the opaque envelope it wraps (three
-    // draws transparent materials after opaque ones and sorts them back to front, so the walls are
-    // already in the colour buffer when the hull blends over them), and appending keeps every opaque
-    // family at the index it had before volumes existed.
     for zone in &model.zones {
         let Some(triangles) = convex_hull_triangles(&zone_hull_points(model, zone.id)) else { continue };
         let target_id = energy_scene_target_id(zone.id);
@@ -516,7 +505,6 @@ pub fn energy_model_fit_revision(model: &Model) -> u32 {
     }
     for surface in &model.surfaces {
         surface.id.0.hash(&mut hasher);
-        // 📦️ Zone membership is geometry now: it decides which corners a zone's drawn volume hulls.
         surface.zone_id.0.hash(&mut hasher);
         hash_vertices(&surface.vertices_m, &mut hasher);
     }

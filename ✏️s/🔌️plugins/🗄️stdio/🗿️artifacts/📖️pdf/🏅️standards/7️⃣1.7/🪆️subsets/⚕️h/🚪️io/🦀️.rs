@@ -115,19 +115,16 @@ pub mod derived_construction {
     }
 
     impl PdfHBuilderConstruction {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: PdfSnapshot::default() }
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(mut self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::InsertPage(InsertPage { index, page }));
             self
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(mut self, info: PdfInfo) -> Self {
             apply_pdf_mutation(&mut self.snapshot, &PdfMutation::SetInfo(SetInfo { info }));
             self
@@ -330,8 +327,6 @@ use semio_framework_diagnostic::TextSpan;
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let inner = PdfAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
-            // ℹ️ ALL-SOFT profile -- confidence is never downgraded by check_h_conformance's output
-            // since it never returns Error/Fatal.
             let confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
                 diagnostics.extend(check_h_conformance(snapshot));

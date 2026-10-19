@@ -24,10 +24,6 @@ fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> Semi
     let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
-    // stale pre-operation `base` — a whole-list-replace diff shape reconstructs the entire
-    // collection from whatever base it is given, so diffing against the wrong base silently
-    // discards the forward mutation's effect instead of undoing it (see `🔤️text`'s own fix).
     for back in backwards.iter().rev() {
         restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }

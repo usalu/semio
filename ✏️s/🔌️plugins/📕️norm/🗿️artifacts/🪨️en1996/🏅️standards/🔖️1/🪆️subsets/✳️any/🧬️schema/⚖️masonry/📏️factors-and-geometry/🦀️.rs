@@ -83,9 +83,7 @@ pub fn shape_factor_delta(unit_height_m: f64, unit_width_m: f64, unit_length_m: 
     let h = (unit_height_m * 1000.0).max(1.0);
     let w = (unit_width_m * 1000.0).max(1.0);
     let l = (unit_length_m * 1000.0).max(1.0);
-    // Simplified Table A.1 interpolation toward 100×100 mm reference; length enters for perpend aspect.
     let ratio = (h / 100.0).min(2.5).max(0.4);
-    // Keep mild soft-saturation so unit width/length remain live across the practical masonry range.
     let width_factor = 1.0 - (-w / 250.0).exp();
     let length_factor = 1.0 - (-l / 400.0).exp();
     ((1.15 - 0.15 * ratio) * (0.90 + 0.20 * width_factor) * (0.92 + 0.16 * length_factor)).clamp(0.70, 1.40)
@@ -94,7 +92,7 @@ pub fn shape_factor_delta(unit_height_m: f64, unit_width_m: f64, unit_length_m: 
 pub fn f_k_pa(annex: AnnexChoice, wall: &MasonryWall) -> f64 {
     let f = fk_factors(annex, wall.unit_material, wall.unit_group, wall.mortar_type);
     let delta = shape_factor_delta(wall.unit_height_m, wall.unit_width_m, wall.unit_length_m);
-    let f_b = (wall.f_b_pa / 1e6 * delta).max(0.0); // normalize declared mean with δ
+    let f_b = (wall.f_b_pa / 1e6 * delta).max(0.0);
     let f_m = if wall.mortar_strength_pa > 0.0 {
         wall.mortar_strength_pa / 1e6
     } else {
@@ -161,7 +159,6 @@ pub fn effective_length_m(wall: &MasonryWall) -> f64 {
         } else {
             let open_frac = (o.height_m / h).clamp(0.0, 1.0);
             let sill_frac = (o.sill_height_m / h).clamp(0.0, 1.0);
-            // Lower sill → longer pier-like interruption; sill shifts residual load path (§5.5.1.4).
             l -= o.width_m * open_frac * (0.35 + 0.65 * (1.0 - sill_frac));
         }
     }
@@ -216,8 +213,6 @@ pub fn eccentricity_from_slab_bearing_m(wall: &MasonryWall) -> f64 {
 /// max(0; 1,6 − ℓ_f/6) for 4,5 m ≤ ℓ_f ≤ 6,0 m). Folded into e₀ / e_mk so span moves compression Φ.
 pub fn eccentricity_from_slab_rotation_m(wall: &MasonryWall, lc: &WallLoadCase, n_ed: f64) -> f64 {
     let l_f = lc.slab_span_m.clamp(0.0, 6.0);
-    // DIN EN 1996-1-1/NA NDP 6.1.2.2 / Annex C: e_θ = (N_floor/N_Ed)·ℓ_f/25, capped at 0,05·t so Φ_i
-    // stays realistic; span above 4,5 m is additionally reduced via Φ₁ (1,6 − ℓ_f/6).
     let e_full = l_f / 25.0;
     let n_floor = (lc.g_k_slab_n + lc.q_k_imposed_pa * lc.tributary_area_m2
         + lc.q_k_snow_pa * lc.tributary_area_m2)

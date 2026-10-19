@@ -6,6 +6,7 @@
   ],
   "targets": {
     "deps": {
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -13,6 +14,7 @@
       }
     },
     "build": {
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [
         "deps"
@@ -22,7 +24,7 @@
         "^production"
       ],
       "outputs": [
-        ".cache/b/p/m/repo-test/dotnet/{options.env.SEMIO_BUILD_MODE}/out"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "command": "bun ./📜️script.ts build"

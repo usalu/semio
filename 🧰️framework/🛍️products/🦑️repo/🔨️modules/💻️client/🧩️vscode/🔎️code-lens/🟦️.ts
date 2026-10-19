@@ -151,7 +151,7 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
 }
 
 /**
- * ComposeCodeLensProvider provides navigation CodeLenses for entity IDs.
+ * 🧬️ ComposeCodeLensProvider provides navigation CodeLenses for entity IDs.
  * It uses the ENTITY_ID_REGEX built dynamically from the ENTITY_EMOJIS registry.
  **/
 export class ComposeCodeLensProvider implements vscode.CodeLensProvider {
@@ -186,11 +186,11 @@ export class ComposeCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 /**
- * composeGutterIcon.current holds the data fields for a composeGutterIcon.current record.
+ * 🤝️ composeGutterIcon.current holds the data fields for a composeGutterIcon.current record.
  **/
 export const composeGutterIcon = ephemeralBox<vscode.TextEditorDecorationType | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.composeGutterIcon", undefined);
 
-/** updateComposeDecorations holds the data fields for a updateComposeDecorations record.
+/** 🔺️ updateComposeDecorations holds the data fields for a updateComposeDecorations record.
  **/
 export function updateComposeDecorations(editor: vscode.TextEditor) {
   if (!editor || !composeGutterIcon.current) return;

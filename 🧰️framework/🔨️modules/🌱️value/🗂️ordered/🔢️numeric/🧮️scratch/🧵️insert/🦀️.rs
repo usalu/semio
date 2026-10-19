@@ -1,6 +1,7 @@
 //! 🧵️ One numeric comparison, page admission, link or AVL ancestor repair per native grant.
 use super::{NumericIndex,Node,Ordering};
-use crate::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use crate::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::retirement::{RetireOwned,RetirementCursor,sequence,deferred,sequence_birth_bytes,deferred_birth_bytes_for};
 
 pub struct NumericInsertCursor<K,V>{key:K,value:Option<V>,previous:Option<V>,current:Option<usize>,parent:Option<usize>,phase:u8}

@@ -141,9 +141,6 @@ describe("Shell components", () => {
     });
 
     it("Panel announces which tab is open through aria-pressed, not only through its styling data attributes", () => {
-      // ♿️ `data-active`/`data-state` are CSS hooks; assistive technology reads neither, so every tab in a
-      // bar announced identically and "Fill is armed" / "the Document panel is open" was invisible to a
-      // screen reader — and unassertable for any consumer that is not reading class names.
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
       const { container, rerender } = render(<Panel anchor="top-left" visible tabs={tabs} activeTabPath={["tab-b"]} />);
@@ -317,16 +314,6 @@ describe("Shell components", () => {
       expect(side.left).toBe("var(--panel-inset)");
     });
 
-    // 🪜️ Ticket 26/09/02 wave B27 §1. A chrome-hosted panel deliberately unfolds INTO the navbar/footer
-    // band, so "does the chrome cover the dock?" is a question about two numbers and one stacking level,
-    // both of which this pins from the SAME tokens the CSS is generated from:
-    //   • the open panel's cap must land exactly on the band's own centered control row — the slot
-    //     `PanelChromeTabBar` empties while the panel is open — so the panel's BODY begins at or below
-    //     that row's end and no dock row is ever geometrically under a chrome control;
-    //   • the band must stack at the BASE level, below `z-panel`, or it paints over that cap regardless.
-    // The navbar carried a `z-navbar` class that `🎨️ui.css` has always overridden with
-    // `z-index: var(--z-base) !important`; three waves read the catalogue's folded (zero-box) rows as
-    // "the navbar covers them" partly because the source said something the browser never did.
     it("keeps shell chrome at the base stacking level and lands an open chrome-hosted panel's cap exactly on the chrome control row", async () => {
       const { render } = await import("@testing-library/react");
       const { STYLING_METRICS, uiSpacingPx: spacingPx } = await import("@semio-tech/ui-styling");
@@ -369,13 +356,6 @@ describe("Shell components", () => {
       const chrome = STYLING_METRICS.chrome;
       const control = chrome.controlHeightUiSpacing;
       const pad = chrome.paddingStandardUiSpacing;
-      // 🚧️ The dock's cap row is `min-h-medium`, so its band is [0, control]. The dock body is a
-      // silhouette content plane pulled up by exactly that clearance, and its compensating padding is
-      // what puts the hosted window back below the band: the window's own top pane row then occupies
-      // [clearance + pad, clearance + pad + control]. Drop the padding (the `edgeless`/dead-line opt-out
-      // leaking through a nested window) and the same row occupies [pad, pad + control] — inside the tab
-      // bar's own band, which is how `mode-dock-tab-*` came to answer `elementFromPoint` at every window
-      // pane toggle's centre.
       const dockCapBand = [0, control] as const;
       const clearance = control;
       const chromeRowCleared = [clearance + pad, clearance + pad + control] as const;
@@ -414,8 +394,6 @@ describe("Shell components", () => {
       const plane = stack.querySelector('[data-slot="mode-dock-stack-body"]') as HTMLElement;
       expect(capRow.querySelector('[data-slot="mode-dock-tab"]')).toBeTruthy();
       expect(plane.className).toContain("window-silhouette-content-plane");
-      // 🪟️ The plane HOSTS a whole window, which is the case `🖌️ui.css`'s opt-out guard has to exclude —
-      // the window's chrome toggles live in that window, not in this plane's own content.
       expect(plane.querySelector('[data-slot="window"]')).toBeTruthy();
       expect(plane.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
       expect(capRow.compareDocumentPosition(plane) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

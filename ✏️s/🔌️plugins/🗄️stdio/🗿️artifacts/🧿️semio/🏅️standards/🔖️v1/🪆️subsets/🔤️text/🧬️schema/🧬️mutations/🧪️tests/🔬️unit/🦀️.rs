@@ -18,13 +18,6 @@ fn round_trip(base: &SemioTextSnapshot, operation: &SemioTextMutation) -> SemioT
     let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
-    // stale pre-operation `base` — `text`'s whole-list-replace diff shape (📓️taxonomy.md's
-    // `SemioTextRunList` wrapper) reconstructs the entire `runs` vec from whatever base it is
-    // given, so calling it against the wrong base silently discards the forward mutation's
-    // effect instead of undoing it. Same standard `mutation.diff(&current); current =
-    // diff.diff().apply(&current)` threading `apply_semio_image_mutation`/`apply_semio_mutation`
-    // establish elsewhere in this standard.
     for back in backwards.iter().rev() {
         restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }

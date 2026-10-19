@@ -1,7 +1,7 @@
 import"../../../../../🧪️tests/📐️phases/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import schema from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json";
+import schema from "@semio-tech/framework/modules/filesystem/observation/journal/schema.json";
 import { mkdir, mkdtemp, writeFile, rm, symlink, rename, readdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";

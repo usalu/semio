@@ -216,9 +216,6 @@ fn drive(ui: &mut Ui, window_id: &str, body: Rect, atlas: &mut FontAtlas) {
     let cancel = semio_framework_job::CancelToken::root_now();
     let pool = layout_pool();
     let mut preview_sequence = 0;
-    // 📐️ The production ladder, not the queue's verdict: `step_layouts` answers `Idle` for the QUEUE,
-    // which may be empty while THIS window is still dirty — the exact trap
-    // `UiDocumentFramePhase::Layout` re-arms with `request_layout`.
     'settle: for _ in 0..64 {
         for _ in 0..16_384 {
             let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
@@ -320,9 +317,6 @@ fn every_fixture_case_registers_resolves_and_orders_on_the_live_registry() {
             }
         }
 
-        // 🔢️ The ordering rule: the chrome registers the window's own region before the body paints,
-        // `hit_at` scans in reverse, so a pointer at ANY body entry's own centre resolves that entry
-        // and never the window under it.
         assert_eq!(input.hits().first().and_then(|target| target.control_id.as_deref()), Some(window_id.as_str()), "{name}: the window's own region must be registered first");
         for (control_id, kind, _, rect) in &published {
             let hit = input.hit_at(rect[0] + rect[2] * 0.5, rect[1] + rect[3] * 0.5).unwrap_or_else(|| panic!("{name}: {control_id} centre resolved nothing"));
@@ -403,8 +397,6 @@ fn a_frame_build_never_empties_what_the_pointer_reads() {
     assert_eq!(input.publish_hits(), 1);
     let move_hit = input.hit_at(x, y).expect("the move must resolve the row").control_id.clone();
     assert_eq!(move_hit.as_deref(), Some(want_control), "the preceding move resolved another row");
-    // 🌀️ One more complete build, so the measured cycle starts in production steady state: a full
-    // registry resolvable AND the outgoing one staged for the next build's retirement.
     for target in &targets {
         input.register_hit(target.clone());
     }
@@ -446,8 +438,6 @@ fn a_frame_build_never_empties_what_the_pointer_reads() {
     assert_eq!(resolved, presses * (2 + targets.len() * 2), "every press of every frame must resolve");
     assert!(resolved >= expected["doubleBufferedResolved"].as_u64().expect("resolved") as usize);
 
-    // ⚖️ The counter-model: ONE vector, drained by the build and scanned by the pointer — the shape
-    // the renderer had before this law. The same cycle, the same points, and it MISSES.
     let mut single = targets.clone();
     let mut single_missed = 0usize;
     let mut single_resolved = 0usize;

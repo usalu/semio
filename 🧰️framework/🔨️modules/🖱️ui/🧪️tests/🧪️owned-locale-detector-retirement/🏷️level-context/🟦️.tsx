@@ -59,21 +59,15 @@ export async function registerLevelContextTests(vitest: Tests1Vitest, dependenci
       expect(screen.getByTestId("dialog-body")).toBeTruthy();
     });
 
-    // 🪜️ D1 regression: `ui-surface`/`ui-glass`/`ui-veil` are the only per-level fills — cn() must
-    // merge them like any other bg-color utility (mutually exclusive, last-in-cn wins, both
-    // directions), never silently keeping a stray `bg-transparent`/`bg-active-base` alongside one.
     it("cn() treats ui-surface/ui-glass/ui-veil as bg-color-group utilities: last one wins, both directions", () => {
       expect(cn("bg-transparent", glassClass)).toBe(glassClass);
       expect(cn(glassClass, "bg-transparent")).toBe("bg-transparent");
       expect(cn(surfaceClass, "bg-active-base")).toBe("bg-active-base");
       expect(cn("bg-active-base", surfaceClass)).toBe(surfaceClass);
       expect(cn(surfaceClass, glassClass)).toBe(glassClass);
-      // modifier'd utilities (hover:/data-[...]:) are a distinct conflict key — never dropped by a fill
       expect(cn(surfaceClass, "hover:bg-hover-interactive-fill")).toBe(`${surfaceClass} hover:bg-hover-interactive-fill`);
     });
 
-    // 🪟️ D2 regression: the introduction/context-menu title chip must never re-paint an opaque fill
-    // or rectangular border over the already-painted chip-cap cell it sits inside.
     it("windowChromeTitleChipClass never carries an opaque fill or piecewise border of its own", () => {
       expect(windowChromeTitleChipClass).not.toContain("ui-surface");
       expect(windowChromeTitleChipClass).toContain("bg-transparent");

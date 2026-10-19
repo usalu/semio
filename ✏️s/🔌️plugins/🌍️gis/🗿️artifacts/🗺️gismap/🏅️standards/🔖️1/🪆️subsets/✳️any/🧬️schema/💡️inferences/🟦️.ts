@@ -8,13 +8,13 @@ export interface GisMapBounds {
 }
 
 export interface GisMapInference {
-  /** @derived */
+  /** 📍️ @derived */
   positionCount: number;
-  /** @derived */
+  /** 📈️ @derived */
   routeCount: number;
-  /** @derived */
+  /** 🗾️ @derived */
   regionCount: number;
-  /** @derived */
+  /** 📦️ @derived */
   bounds: GisMapBounds | null;
 }
 

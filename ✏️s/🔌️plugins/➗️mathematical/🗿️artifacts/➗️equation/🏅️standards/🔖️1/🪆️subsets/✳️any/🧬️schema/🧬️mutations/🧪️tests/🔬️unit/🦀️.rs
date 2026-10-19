@@ -16,8 +16,6 @@ fn undo_tail_first(mut state: EquationSnapshot, undo: &[EquationMutation]) -> Eq
 
 #[semio_framework_async_macros::async_test]
 async fn a_graph_diff_carries_sparse_slots_and_apply_re_derives_the_triple() {
-    // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME `(graph, geometry)` pair, so a graph-scoped
-    // mutation's diff never carries them — `apply` regenerates all three from the state it leaves behind.
     let mutation = EquationMutation::UpdateGraphAlgorithm(update_graph_algorithm::UpdateGraphAlgorithm { new_algorithm: "bfs".into(), new_algorithm_seed: None });
     let base = EquationSnapshot::default();
     let outcome = Mutation::diff(&mutation, &base);
@@ -50,9 +48,6 @@ async fn delete_node_inverse_recreates_node_and_severed_edges() {
     assert!(!after_delete.graph.nodes.iter().any(|node| node.id == "a"));
     assert!(!after_delete.graph.edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
 
-    // 🔎️ Assert on the captured payload fields directly (not just a round-trip) — a
-    // `create-node` whose id already exists is a documented no-op, which would silently mask
-    // a wrong-field bug in a pure round-trip check.
     let base_graph = base.graph.clone();
     let original_node = base_graph.nodes.iter().find(|node| node.id == "a").expect("fixture has node a");
     let undo = delete.inverse(&base).expect("valid retained mutation inverse fixture");
@@ -208,8 +203,6 @@ async fn remove_point_obeys_the_inverse_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn change_coefficient_obeys_the_inverse_law() {
-    // 🔎️ Default `equation` is the integer literal `0` at label 0 — a numeric leaf, so this
-    // exercises the real replace/restore path, not the no-op branch.
     let base = EquationSnapshot::default();
     let label = base.equation.expr.label;
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label, numer: "5".into(), denom: "2".into() });
@@ -228,8 +221,6 @@ async fn change_coefficient_sets_the_targeted_numeric_leaf() {
 
 #[semio_framework_async_macros::async_test]
 async fn change_coefficient_at_an_unknown_label_is_a_no_op() {
-    // 🔎️ Diff computed from `(payload, base)` — a stale/foreign label leaves `equation`
-    // byte-identical to `base`'s, never a panic or a silently-inserted wrong node.
     let base = EquationSnapshot::default();
     let unknown_label = crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel(999);
     let mutation = EquationMutation::ChangeCoefficient(change_coefficient::ChangeCoefficient { label: unknown_label, numer: "7".into(), denom: "1".into() });

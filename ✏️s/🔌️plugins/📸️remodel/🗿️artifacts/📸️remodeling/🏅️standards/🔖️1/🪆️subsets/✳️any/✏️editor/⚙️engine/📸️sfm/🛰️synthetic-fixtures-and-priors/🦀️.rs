@@ -26,11 +26,6 @@ fn look_at_pose(eye: [f64; 3], target: [f64; 3], up: [f64; 3]) -> Se3 {
     let forward = normalize3(sub3(target, eye));
     let right = normalize3(cross3(up, forward));
     let true_up = cross3(forward, right);
-    // Camera-to-world rotation has *columns* (right, true_up, forward) — applying it to a camera-frame
-    // basis vector (e.g. camera +z) yields that axis expressed in world coordinates. `Mat3d::from_axes`
-    // sets columns directly; using `array_to_mat3d` here (which treats its argument as *rows*) would
-    // silently build the transpose (world-to-camera) and then invert it into camera-to-world again,
-    // leaving every camera pointed backwards — verified as a real, caught bug during test development.
     let r_cw = Mat3d::from_axes(right, true_up, forward);
     let r_wc = So3(r_cw).inverse();
     let t = scale3(r_wc.act(eye), -1.0);

@@ -5,6 +5,7 @@ import {existsSync,readdirSync,readFileSync,statSync} from "node:fs";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json";
 import law from "./🧫️fixtures/🔣️.json";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const bare=(name:string)=>name.replace(/️/g,"");
 const at=(base:string,...names:string[])=>names.reduce((directory,name)=>{const entry=readdirSync(directory).find(candidate=>bare(candidate)===bare(name));if(entry===undefined)throw new Error(`${name} is absent from ${directory}`);return join(directory,entry)},base);
@@ -89,7 +90,7 @@ test("the retained History decoder shares one language-agnostic corpus with the 
  const engineRust=text(at(decode,"🗂️file","🧪️tests","🦀️.rs"));
  expect(engineRust.includes("include_str!")).toBe(true);
  for(const proof of["original_history_driver_settles_every_corpus_trial_over_granted_turns_and_cancellations","RetainedHistoryDecode::new(","assert_corpus_log","nativeTrials"])expect(engineRust.includes(proof),`corpus driver test ${proof}`).toBe(true);
- const driverRust=text(at(history,"🧪️tests","🔬️unit","🦀️.rs"));
+ const driverRust=readModuleTreeSource(at(history,"🧪️tests","🔬️unit","🦀️.rs"));
  expect(bare(driverRust).includes(bare("🛬️decode/🗂️file/🧪️tests/🧫️fixtures/🔣️.json"))).toBe(true);
  for(const proof of["RetainedHistoryDecode::new(","RetainedHistoryTurn","close_all(","nativeTrials","cancelAt"])expect(driverRust.includes(proof),`driver test ${proof}`).toBe(true);
  const oracle=text(at(decode,"🗂️file","🧪️tests","🟦️.ts"));

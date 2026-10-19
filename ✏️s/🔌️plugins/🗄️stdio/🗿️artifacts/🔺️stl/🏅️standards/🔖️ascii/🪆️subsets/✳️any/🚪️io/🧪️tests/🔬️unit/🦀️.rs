@@ -49,7 +49,6 @@ async fn binary_tetrahedron_round_trip() {
     let decoded = decode_stl_binary(&bytes).expect("decode");
     assert_eq!(decoded.solid_name, snap.solid_name);
     assert_eq!(decoded.triangles.len(), snap.triangles.len());
-    // f64 -> f32 -> f64 narrowing is lossy by spec; compare within tolerance.
     for (a, b) in decoded.triangles.iter().zip(snap.triangles.iter()) {
         for i in 0..3 {
             assert!((a.normal[i] - b.normal[i]).abs() < 1e-6);
@@ -84,7 +83,6 @@ async fn auto_detect_dispatches_ascii_vs_binary() {
 #[semio_framework_async_macros::async_test]
 async fn ascii_text_that_reads_as_a_huge_binary_triangle_count_decodes_as_ascii() {
     let mut text = String::from("solid ");
-    // 🔤️ Pad so bytes 80..84 land inside the header comment, then write 0xFFFFFFFF there as text.
     while text.len() < 80 {
         text.push('x');
     }
@@ -93,9 +91,6 @@ async fn ascii_text_that_reads_as_a_huge_binary_triangle_count_decodes_as_ascii(
     let decoded = decode_stl_auto(text.as_bytes()).expect("a long ASCII header must decode as ASCII, never panic");
     assert_eq!(decoded.triangles.len(), 1, "the one authored facet survives");
 
-    // 🧨️ The exact overflowing shape, built byte-wise so the count is unambiguously `0xFFFFFFFF` —
-    // the multiply that used to abort the guest. Those four bytes are not valid UTF-8, so the honest
-    // answer is a TYPED error naming that, and the law is that this is an error rather than a trap.
     let mut bytes = b"solid ".to_vec();
     bytes.resize(80, b'x');
     bytes.extend_from_slice(&u32::MAX.to_le_bytes());
@@ -106,9 +101,6 @@ async fn ascii_text_that_reads_as_a_huge_binary_triangle_count_decodes_as_ascii(
 
 #[semio_framework_async_macros::async_test]
 async fn ascii_facet_normal_is_persisted_not_recomputed() {
-    // A real-world "lazy writer" pattern: degenerate 0 0 0 facet normals that a naive
-    // recompute-on-encode codec would silently overwrite. This codec must round-trip them
-    // exactly as written.
     let text = "solid degenerate\n  facet normal 0 0 0\n    outer loop\n      vertex 0 0 0\n      vertex 1 0 0\n      vertex 0 1 0\n    endloop\n  endfacet\nendsolid degenerate\n";
     let decoded = decode_stl_ascii(text).expect("decode");
     assert_eq!(decoded.triangles[0].normal, [0.0, 0.0, 0.0]);

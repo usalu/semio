@@ -169,7 +169,6 @@ async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
     assert_eq!(object(&app, "obj-1").mesh, rotated.mesh, "undo pops the scale as one edit");
     act(&mut app, "undo", serde_json::json!({})).await;
     assert_eq!(object(&app, "obj-1").mesh, before.mesh, "undo pops the rotate as one edit");
-    // ✂️ A face pick, then the gumball's translate over that component selection.
     act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
     let mesh_before = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
     act(&mut app, "translateSelection", serde_json::json!({ "mode": "face", "ids": [row, "lowpoly-document.obj-1.face.0"], "dx": 0.0, "dy": 0.0, "dz": 2.0 })).await;

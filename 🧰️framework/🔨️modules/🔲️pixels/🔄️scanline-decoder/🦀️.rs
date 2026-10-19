@@ -21,11 +21,11 @@ pub struct PngScanlineDecoder {
 /// ⏭️ Outcome of one bounded [`PngScanlineDecoder::step`].
 #[derive(Debug, PartialEq, Eq)]
 pub enum PngScanlineStep {
-    /// The unit budget ran out before the next scanline was complete.
+    /// ⏳️ The unit budget ran out before the next scanline was complete.
     Pending,
-    /// One canonical RGBA8 scanline (`width * 4` bytes), top to bottom.
+    /// 🧾️ One canonical RGBA8 scanline (`width * 4` bytes), top to bottom.
     Row(Vec<u8>),
-    /// Every scanline has been yielded and the stream's checksums verified.
+    /// 🌊️ Every scanline has been yielded and the stream's checksums verified.
     Done,
 }
 
@@ -41,15 +41,15 @@ struct PngScanlineStream {
     pub(super) palette_alpha: Vec<u8>,
     pub(super) gray_trans: Option<u32>,
     pub(super) rgb_trans: Option<(u32, u32, u32)>,
-    /// Next unread byte of `data` inside the current `IDAT` chunk.
+    /// 🖱️ Next unread byte of `data` inside the current `IDAT` chunk.
     pub(super) cursor: usize,
-    /// End (exclusive) of the current `IDAT` chunk's data.
+    /// 🚰️ End (exclusive) of the current `IDAT` chunk's data.
     chunk_end: usize,
-    /// Running CRC register of the current `IDAT` chunk (type + data so far).
+    /// 💧️ Running CRC register of the current `IDAT` chunk (type + data so far).
     chunk_crc: u32,
-    /// Offset of the first chunk after the `IDAT` run.
+    /// ⏪️ Offset of the first chunk after the `IDAT` run.
     after_idat: usize,
-    /// Zlib stream bytes (all `IDAT` data) not consumed yet.
+    /// 🗜️ Zlib stream bytes (all `IDAT` data) not consumed yet.
     zlib_remaining: usize,
     pub(super) inflater: semio_framework_deflate::Inflater,
     pub(super) pending: Option<u8>,

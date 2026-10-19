@@ -135,8 +135,6 @@ export function treeWindowScrollViewport(root: HTMLElement): HTMLElement | null 
   };
   const candidates: HTMLElement[] = [];
   if (isScroller(root)) candidates.push(root);
-  // 🌳️ `TreeView` wraps `<Tree>` in a `display: contents` div, so the tree's own root is the first
-  // element child of `root` and belongs in the chain — skipping it would miss a bounded guest tree.
   const inner = root.firstElementChild;
   if (inner instanceof HTMLElement && isScroller(inner)) candidates.push(inner);
   for (let candidate = root.parentElement; candidate; candidate = candidate.parentElement) if (isScroller(candidate)) candidates.push(candidate);
@@ -194,16 +192,11 @@ export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLEleme
   for (const element of Array.from(root.querySelectorAll("[data-tree-window-key]"))) {
     if (!(element instanceof HTMLElement)) continue;
     if (element.getAttribute("data-tree-window-axis") === "column") continue;
-    // 🪟️ The window's IDENTITY is its path; `-key` is the authored node key, which is also the pick target
-    // id and is legitimately shared by containers under different parents. `-key` is the fallback only for a
-    // top-level container, where the two are the same string anyway.
     const key = element.getAttribute("data-tree-window-path") || element.getAttribute("data-tree-window-key");
     if (!key) continue;
     const total = treeWindowAttributeNumber(element, "data-tree-window-total");
     if (total <= 0) continue;
     const rect = element.getBoundingClientRect();
-    // 🧯️ A CLOSED section still renders its content element, `hidden`, so its rect is zero — it is not on
-    // screen, it materialises nothing, and measuring it would ask for rows nobody is looking at.
     if (rect.height <= 0) continue;
     measured.push({ key, total, rowExtent: treeWindowRowExtentAttribute(element), offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - originTop, height: rect.height, rows: treeWindowRowsUnder(element, originTop) });
   }
@@ -452,7 +445,6 @@ export function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>,
       const live = rootRef.current;
       if (!channel || !live || !live.isConnected) return;
       const rowHeight = treeWindowRowHeightPx();
-      // 🪟️ Client space with the viewport's content origin at 0 — see `treeWindowContainersUnder`.
       const viewportHeight = treeWindowViewportMetrics(viewport).height;
       const containers = treeWindowContainersUnder(live, viewport);
       reportDuplicateTreeWindowKeys(containers, channel.bodyKey, duplicateKeysRef.current);
@@ -472,15 +464,10 @@ export function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>,
     };
     schedule();
     viewport.addEventListener("scroll", schedule, { passive: true });
-    // 🧯️ A page scroll does not fire on the scrolling ELEMENT — it fires on the document — so a tree that
-    // has no scrolling ancestor of its own would never re-measure without this second listener.
     const pageScroller = viewport === treeWindowDocumentScroller(root) ? view : null;
     pageScroller?.addEventListener("scroll", schedule, { passive: true });
     const observer = typeof view.ResizeObserver === "function" ? new view.ResizeObserver(schedule) : null;
     observer?.observe(viewport);
-    // 🪟️ The tree's own extent moves under a fixed viewport too (a sibling branch folding, a nested window
-    // streaming in), and that changes which rows this one must show. Measuring the root as well is what
-    // makes a nested container re-report without waiting for the next store revision.
     if (observer && root !== viewport) observer.observe(root.firstElementChild instanceof HTMLElement ? root.firstElementChild : root);
     return () => {
       viewport.removeEventListener("scroll", schedule);

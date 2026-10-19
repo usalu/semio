@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import {inv,multiply} from "mathjs";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import retirementCorpus from "../../../♻️retirement/🧫️fixtures/🔣️.json";
+import retirementCorpus from "../../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json";
 import retirementSchema from "../../../♻️retirement/🧬️schema/🔣️.json";
 import {EnclosureExchangeCursor} from "../🟦️.ts";
 /** 🧮️ Reference numeric rows are validated at the third-party boundary. */

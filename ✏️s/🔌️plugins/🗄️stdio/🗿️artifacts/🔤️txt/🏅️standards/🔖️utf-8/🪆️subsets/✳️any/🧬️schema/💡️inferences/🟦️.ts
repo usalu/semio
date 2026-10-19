@@ -7,7 +7,7 @@ export interface TxtOutline {
 }
 
 export interface TxtInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: TxtOutline;
 }
 

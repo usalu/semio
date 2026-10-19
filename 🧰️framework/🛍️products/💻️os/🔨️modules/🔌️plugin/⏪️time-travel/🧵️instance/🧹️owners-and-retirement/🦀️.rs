@@ -1,11 +1,16 @@
 //! 🧹️ Owners and retirement of the instance time-travel turns: the typed store command, the commit, the owners settle, the child refresh, the member subject retirement and the retire, close, defer and dismiss steps. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
+use semio_framework::FaultOrigin;
+use semio_framework::FaultCode;
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_value_retirement::retirement::controlled::ControlledRetirement;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 📨️ Runs one typed command on the store the session edits: the document's own, or the composed member's through
     /// its typed visitor (design §12).
-    pub(super)  async fn time_travel_run(&mut self, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
+    pub(super)  async fn time_travel_run(&mut self, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
         let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
         let (store, children) = (&mut stores.store, &mut child_composition.children);
         match time_travel.member.as_mut() {

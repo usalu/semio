@@ -41,7 +41,7 @@ use store::os_store::backbone::Backbone;
 #[test]
 fn original_mounted_child_frontier_closes_after_actual_ack_under_original_policy(){
  let grant=toy_fixture_caller_policy().0.close;
- semio_framework_plugin_retained_command::typed_operation::test_original_mounted_child_frontier::<ToyRunApp>(||vec![SetCount{value:17}.into(),SetLabel{value:"original child metadata 🧵\0".repeat(8192)}.into()],grant);
+ semio_framework_plugin_retained_command::typed_operation::test_original_mounted_child_frontier::<ToyRunApp>(||vec![SetCount{value:17}.into(),SetLabel{value:"original child metadata 🧵\0".repeat(8192)}.into()],grant,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),semio_framework_plugin_testing_laws::artifact_app_laws::close_fixture_result_page);
 }
 
 #[test]

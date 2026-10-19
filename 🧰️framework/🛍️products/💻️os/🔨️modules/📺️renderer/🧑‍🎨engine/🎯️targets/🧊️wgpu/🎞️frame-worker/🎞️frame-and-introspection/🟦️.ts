@@ -5,7 +5,7 @@ import { beginClose, fault, requestFault } from "../🧯️close-and-fault/🟦�
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 import { cancelPageImageDecode } from "../🖼️page-image-decode/🟦️.ts";
 import { scheduleAssetPump } from "../📦️assets-and-host-io/🟦️.ts";
-import type { BrowserMediaCommand } from "../../../../🎬️media/🌐️browser/🟦️.ts";
+import type { BrowserMediaCommand } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 
 export function runFrameTurn(): boolean {
   if (!runtime || !frameInput || closed || closing || failed || quarantined) return false;

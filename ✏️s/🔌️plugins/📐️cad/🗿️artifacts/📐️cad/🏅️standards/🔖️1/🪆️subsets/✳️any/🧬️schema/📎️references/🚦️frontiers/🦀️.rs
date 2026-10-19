@@ -1,6 +1,7 @@
 //! 🚦️ Admitted borrowed relational frontiers and bounded literal ordering.
 use super::close;
-use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::cmp::Ordering;
 
 pub(crate) fn compare_literal(left: &str, right: &str, control: &mut NativeDecodeControl<'_>) -> Result<Ordering, ValueError> {

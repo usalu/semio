@@ -15,7 +15,6 @@ pub(super) enum BlendSpec {
 }
 
 impl BlendSpec {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn fillet_radius(&self) -> Option<f64> {
         match self {
             BlendSpec::Fillet(r) => Some(*r),
@@ -59,7 +58,6 @@ pub(super) struct Patch {
 }
 
 impl Patch {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn run_dir(&self) -> IsoDirection {
         match self.cross_dir {
             IsoDirection::U => IsoDirection::V,
@@ -67,13 +65,11 @@ impl Patch {
         }
     }
     /// 🎨️ The tangency curve on `faces[i]`, parametrized by the run parameter.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn tangency(&self, i: usize) -> Curve3 {
         self.surface.isocurve(self.cross_dir, self.cross[i])
     }
     /// 🎨️ The end curve at `slot` and its own parameter range, running from `faces[0]`'s tangency
     /// point to `faces[1]`'s.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn end_curve(&self, slot: usize) -> (Curve3, (f64, f64)) {
         match &self.ends[slot] {
             EndTrim::Iso(w) => (self.surface.isocurve(self.run_dir(), *w), (self.cross[0], self.cross[1])),
@@ -84,7 +80,6 @@ impl Patch {
     /// rectangle counter-clockwise — i.e. with `du × dv`, the outward normal of every support built
     /// here, toward the viewer. Swapping the roles of `u` and `v` reverses a rectangle's
     /// orientation, so the answer flips with `cross_dir`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn ring_is_ccw(&self) -> bool {
         match self.cross_dir {
             IsoDirection::U => self.cross[1] < self.cross[0],
@@ -131,9 +126,6 @@ fn traversal_direction(body: &Body, edge: EdgeId, face: FaceId) -> Result<Vec3, 
     let forward = body.coedges.get(cid).unwrap().forward;
     let ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
     let curve = body.curves3.get(ent.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
-    // 🧭️ An edge runs from `v0` at `range.0` to `v1` at `range.1`, and a rebuilt edge's range can
-    // DECREASE (`↔️offset`'s `rebuild_topology` reuses its source curve's own parametrization) — so
-    // the direction `v0 → v1` is the curve's tangent only when the range increases.
     let sense = if ent.range.1 >= ent.range.0 { 1.0 } else { -1.0 };
     let tangent = curve.d1(0.5 * (ent.range.0 + ent.range.1)) * sense;
     unit(if forward { tangent } else { -tangent }, "edge traversal direction")
@@ -247,10 +239,6 @@ fn cone_fillet_patch(base: Patch, curve: &Curve3, range: (f64, f64), m0: Vec3, m
     let radial0 = unit(m0 - spine * m0.dot(spine), "cone radial reference")?;
     let frame = Frame3 { origin: apex, x: radial0, y: spine.cross(radial0), z: spine };
     let radial1 = m1 - spine * m1.dot(spine);
-    // 🧭️ The spine points along GROWING radius, which is the edge's own direction or its opposite
-    // depending on which end carries the larger radius, so face 1's tangency ruling can sit on
-    // either side of face 0's; the patch simply spans the shorter way between them, and
-    // `ring_is_ccw` reads the sign back off `cross` so the ring still walks `(u, v)` positively.
     let theta = radial1.dot(frame.y).atan2(radial1.dot(frame.x));
     if !(theta.abs() > DIR_EPS && theta.abs() < PI - DIR_EPS) {
         return Err(KernelError::Operation("blend: the dihedral angle is too flat for a rolling ball".into()));

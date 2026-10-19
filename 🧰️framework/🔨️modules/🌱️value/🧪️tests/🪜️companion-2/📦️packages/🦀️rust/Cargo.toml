@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }

@@ -9,7 +9,7 @@ import{receiveScriptProcessInvocation,type ScriptInvocation}from"../../../../../
 import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{resourceLeasePathV1}from"@semio-tech/process/leases";
-import{openNativeImageStorageV1,retireNativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import{openNativeImageStorageV1,retireNativeImageStorageV1}from"@semio-tech/process/artifacts/native-build/storage/image";
 import{acquireNativeStorageV1,nativeStorageRetirementPortV1,recoverNativeStorageReservationV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1}from"../../../📦️budget/📥️opening/🟦️.ts";
 import{acquireCargoStoreLeaseV1}from"@semio-tech/process/native-build";

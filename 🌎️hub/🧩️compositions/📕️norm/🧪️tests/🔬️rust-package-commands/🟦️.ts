@@ -1,0 +1,356 @@
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import Ajv from "ajv";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { runCmd } from "@semio-tech/process/execution";
+import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+
+const NORM_COMPONENT_BUDGET_BYTES = 200 * 1024 * 1024;
+const PLUGIN_OWNER = "✏️s/🔌️plugins/📕️norm";
+type WasmSection = { readonly id: number; readonly name: string; readonly bytes: number; readonly body: number };
+type NormComponentCensus = { readonly total: number; readonly module: number; readonly name: number; readonly code: number; readonly data: number };
+type MutationLeafTaxonomyRow = {
+  readonly aggregateVariant: string;
+  readonly artifact: string;
+  readonly entity: string;
+  readonly kind: string;
+  readonly module: string;
+  readonly physicalLayout: "direct" | "split";
+  readonly record: string;
+  readonly source: string;
+  readonly standard: string;
+  readonly subset: string;
+  readonly type: string;
+  readonly verb: string;
+};
+type MutationLeafTaxonomy = {
+  readonly contractId: "semio.norm.mutation-leaf-taxonomy/v1";
+  readonly rows: readonly MutationLeafTaxonomyRow[];
+  readonly schemaVersion: 1;
+};
+function filesBelow(root: string): string[] {
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? filesBelow(join(root, entry.name)) : [join(root, entry.name)]);
+}
+function taxonomy(repoRoot: string): MutationLeafTaxonomy {
+  const artifactsRoot = join(repoRoot, PLUGIN_OWNER, "🗿️artifacts");
+  const rows: MutationLeafTaxonomyRow[] = [];
+  for (const source of filesBelow(artifactsRoot)) {
+    const normalizedSource = source.replaceAll("\\", "/");
+    if (!normalizedSource.endsWith("/🦀️.rs") || !normalizedSource.includes("/🧬️schema/🧬️mutations/")) continue;
+    const rust = readFileSync(source, "utf8");
+    if (!rust.includes("impl protocol::MutationKind<")) continue;
+    const type = rust.match(/pub struct\s+([A-Za-z0-9_]+)/)?.[1];
+    const semantics = rust.match(/const SEMANTICS:\s*protocol::SemanticDescriptor\s*=\s*protocol::SemanticDescriptor\s*\{\s*verb:\s*"([^"]+)",\s*entity:\s*"([^"]+)",\s*kind:\s*"([^"]+)",\s*record:\s*"([^"]+)",?\s*\}/s);
+    if (!type || !semantics) throw new Error(`mutation leaf metadata is unreadable: ${source}`);
+    const segments = normalizedSource.split("/");
+    const artifactIndex = segments.indexOf("🗿️artifacts");
+    const standardIndex = segments.indexOf("🏅️standards", artifactIndex + 1);
+    const subsetIndex = segments.indexOf("🪆️subsets", standardIndex + 1);
+    const mutationsIndex = segments.indexOf("🧬️mutations", subsetIndex + 1);
+    if ([artifactIndex, standardIndex, subsetIndex, mutationsIndex].some((index) => index < 0)) throw new Error(`mutation leaf taxonomy path is incomplete: ${source}`);
+    const physicalLayout = normalizedSource.endsWith("/🦠️mutation/🦀️.rs") ? "split" : "direct";
+    const owner = physicalLayout === "split" ? dirname(dirname(source)) : dirname(source);
+    const descriptorPath = join(owner, "🔣️.json");
+    if (!existsSync(descriptorPath)) {
+      console.warn(`mutation leaf taxonomy skipping incomplete leaf (missing 🔣️.json): ${relative(artifactsRoot, source)}`);
+      continue;
+    }
+    const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8"));
+    const expectedOwner = relative(repoRoot, owner).replaceAll("\\", "/");
+    if (descriptor.owner !== expectedOwner || descriptor.semanticKind !== semantics[3] || descriptor.aggregateVariant !== type) {
+      console.warn(`mutation leaf taxonomy skipping identity-mismatched leaf: ${relative(artifactsRoot, source)}`);
+      continue;
+    }
+    if (typeof descriptor.payloadSchema !== "string" || !existsSync(join(owner, descriptor.payloadSchema))) {
+      console.warn(`mutation leaf taxonomy skipping leaf with missing payload schema: ${relative(artifactsRoot, source)}`);
+      continue;
+    }
+    const module = segments[mutationsIndex + 1];
+    if (!module) throw new Error(`mutation leaf module is missing: ${source}`);
+    const localTypes = new Set([...rust.matchAll(/pub struct\s+([A-Za-z0-9_]+)/g)].map((match) => match[1]));
+    for (const binding of rust.matchAll(/^use\s+crate::.*::mutations::.*::([A-Za-z0-9_]+);\s*$/gm)) {
+      if (localTypes.has(binding[1])) throw new Error(`mutation leaf imports its own payload ${binding[1]}: ${source}`);
+    }
+    if (!rust.includes("dsl::MutationLeaf") || !rust.includes("#[mutation_leaf(contract = ::protocol)]")) {
+      console.warn(`mutation leaf taxonomy skipping leaf without MutationLeaf contract: ${relative(artifactsRoot, source)}`);
+      continue;
+    }
+    rows.push({
+      aggregateVariant: type,
+      artifact: segments[artifactIndex + 1]!,
+      entity: semantics[2]!,
+      kind: semantics[3]!,
+      module,
+      physicalLayout,
+      record: semantics[4]!,
+      source: relative(artifactsRoot, source).replaceAll("\\", "/"),
+      standard: segments[standardIndex + 1]!,
+      subset: segments[subsetIndex + 1]!,
+      type,
+      verb: semantics[1]!,
+    });
+  }
+  rows.sort((left, right) => Buffer.from(left.source).compare(Buffer.from(right.source)));
+  return { contractId: "semio.norm.mutation-leaf-taxonomy/v1", rows, schemaVersion: 1 };
+}
+function validateUniqueTaxonomy(value: MutationLeafTaxonomy): boolean {
+  const sources = new Set<string>();
+  const variants = new Set<string>();
+  for (const row of value.rows) {
+    const variant = `${row.artifact}\0${row.standard}\0${row.subset}\0${row.aggregateVariant}`;
+    if (sources.has(row.source) || variants.has(variant)) return false;
+    sources.add(row.source);
+    variants.add(variant);
+  }
+  return true;
+}
+function configBinaryFixtureOracle(hex: string): number | null | undefined {
+  const bytes = Buffer.from(hex, "hex");
+  let cursor = 0;
+  const integer = (): bigint | undefined => {
+    let value = 0n;
+    for (let index = 0; index < 10; index++) {
+      const byte = bytes[cursor++];
+      if (byte === undefined || (index === 9 && byte > 1)) return undefined;
+      value |= BigInt(byte & 127) << BigInt(index * 7);
+      if (byte < 128) return index > 0 && byte === 0 ? undefined : value;
+    }
+    return undefined;
+  };
+  if (bytes[cursor++] !== 1 || integer() !== 0n || integer() !== 0n) return undefined;
+  const count = integer();
+  if (count === 0n) return cursor === bytes.length ? null : undefined;
+  if (count !== 1n || integer() !== 0n || bytes[cursor++] !== 4) return undefined;
+  const index = integer();
+  return index !== undefined && index <= 4294967295n && cursor === bytes.length ? Number(index) : undefined;
+}
+type SurfaceRow = { variant: string; role: "editor" | "viewer"; appId: string; bodyKeys: string[] };
+type SurfaceFixture = { contractId: "semio.norm.surface-render/v1"; rows: SurfaceRow[] };
+function wasmInteger(buffer: Buffer, cursor: number): [number, number] {
+  let value = 0;
+  let shift = 0;
+  for (let index = 0; index < 5; index++) {
+    const byte = buffer[cursor + index];
+    if (byte === undefined) throw new Error("wasm integer runs past the end of the artifact");
+    value |= (byte & 127) << shift;
+    if (byte < 128) return [value >>> 0, cursor + index + 1];
+    shift += 7;
+  }
+  throw new Error("wasm integer is not a 32-bit LEB128 value");
+}
+function wasmSections(buffer: Buffer, start: number, end: number): WasmSection[] {
+  const sections: WasmSection[] = [];
+  let cursor = start;
+  while (cursor < end) {
+    const id = buffer[cursor];
+    if (id === undefined) throw new Error("wasm section identifier is missing");
+    const [bytes, body] = wasmInteger(buffer, cursor + 1);
+    if (body + bytes > end) throw new Error("wasm section runs past its container");
+    const [length, text] = id === 0 ? wasmInteger(buffer, body) : [0, body];
+    sections.push({ id, name: id === 0 ? buffer.toString("utf8", text, text + length) : "", bytes, body });
+    cursor = body + bytes;
+  }
+  return sections;
+}
+function componentCoreCensus(buffer: Buffer): NormComponentCensus {
+  if (buffer.length < 8 || buffer.toString("latin1", 0, 4) !== "\0asm") throw new Error("artifact is not a wasm binary");
+  const modules = wasmSections(buffer, 8, buffer.length).filter((section) => section.id === 1);
+  if (modules.length === 0) throw new Error("artifact carries no core module, so it is not a wasm component");
+  const core = modules.reduce((largest, section) => (section.bytes > largest.bytes ? section : largest));
+  const sections = wasmSections(buffer, core.body + 8, core.body + core.bytes);
+  const total = (admit: (section: WasmSection) => boolean): number => sections.filter(admit).reduce((sum, section) => sum + section.bytes, 0);
+  return { total: buffer.length, module: core.bytes, name: total((section) => section.id === 0 && section.name === "name"), code: total((section) => section.id === 10), data: total((section) => section.id === 11) };
+}
+
+/** 🏃️ Runs the `ResultsWindowConfigSourceScript` command under the caller's roots and invocation. */
+export function runResultsWindowConfigSourceScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
+  const configRoot = join(context.repoRoot, PLUGIN_OWNER, "🪟️results", "🎚️config");
+  for (const relativePath of [
+    "🧬️schema/🦀️.rs",
+    "🧬️schema/🟦️.ts",
+    "🧬️schema/🔣️.json",
+    "🧬️schema/🔗️.graphql",
+    "🧬️schema/🛰️.proto",
+    "🧬️schema/🧬️mutations/🦀️.rs",
+    "🧬️schema/🧬️mutations/🟦️.ts",
+    "🧬️schema/🧬️mutations/🔣️.json",
+    "🧬️schema/🧬️mutations/🔗️.graphql",
+    "🧬️schema/🧬️mutations/🛰️.proto",
+  ]) {
+    const path = join(configRoot, relativePath);
+    if (!existsSync(path) || readFileSync(path, "utf8").trim().length === 0) throw new Error(`Norm Results-window contract facet is absent: ${relativePath}`);
+  }
+  const obsoleteConfigRoot = join(context.repoRoot, PLUGIN_OWNER, "🎚️config");
+  if (existsSync(obsoleteConfigRoot) && filesBelow(obsoleteConfigRoot).some((path) => /\.(rs|ts|json|graphql|proto)$/.test(path))) {
+    throw new Error("Norm retains an application-owned config facet beside the Results-window owner");
+  }
+  const declarations = filesBelow(configRoot).filter((path) => path.endsWith(".rs")).flatMap((path) => [...readFileSync(path, "utf8").matchAll(/pub struct NormResultsWindowConfig\b/g)].map(() => path));
+  if (declarations.length !== 1 || declarations[0] !== join(configRoot, "🧬️schema", "🦀️.rs")) throw new Error("NormResultsWindowConfig must have one schema-owned Rust declaration");
+  const schema = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "☑️change-selected-check-index", "🧬️schema", "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(configRoot, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+  const aggregate = JSON.parse(readFileSync(join(configRoot, "🧬️schema", "🧬️mutations", "🔣️.json"), "utf8"));
+  const ajv = new Ajv({ allErrors: true, strict: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+  const module = JSON.parse(readFileSync(join(context.repoRoot, PLUGIN_OWNER, "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
+  ajv.addSchema(module);
+
+  if (aggregate.oneOf[0].properties.ChangeSelectedCheckIndex.$ref !== schema.$id) throw new Error("config aggregate schema does not reference its owned payload by $id");
+  ajv.addKeyword("x-semio-ui");
+  ajv.addSchema(schema);
+  const validate = ajv.getSchema(schema.$id)!;
+  const validateMutation = ajv.compile(aggregate);
+  for (const test of fixture.cases) {
+    if (!validate(test.payload) || !validateMutation({ ChangeSelectedCheckIndex: test.payload })) throw new Error(`config fixture ${test.id} failed AJV: ${JSON.stringify(validate.errors ?? validateMutation.errors)}`);
+    if ((test.payload.index ?? null) !== test.after || (test.before === test.after) !== test.warning) throw new Error(`config fixture ${test.id} has inconsistent results`);
+  }
+  for (const payload of fixture.invalid) if (validate(payload) || validateMutation(payload)) throw new Error("AJV accepted a hostile config mutation payload");
+  for (const mutation of [{ Snapshot: {} }, { SetSelectedCheckIndex: { index: 1 } }, { index: 1, unknown: true }, { index: "5" }]) if (validateMutation(mutation)) throw new Error("AJV accepted an undeclared config mutation");
+  for (const rows of [fixture.text, fixture.binary]) if (new Set(rows.map((row: { id: string }) => row.id)).size !== rows.length) throw new Error("config wire fixture has duplicate vector identities");
+  for (const row of fixture.text) {
+    const match = /^\s*change-selected-check-index(?:\s+index\s*=\s*([0-9]+))?\s*$/.exec(row.wire);
+    const after = match ? (match[1] === undefined ? null : Number(match[1])) : undefined;
+    const accepted = after !== undefined && validate({ index: after });
+    if (accepted !== row.accepted || (accepted && after !== row.after)) throw new Error(`independent text oracle disagrees with ${row.id}`);
+  }
+  for (const row of fixture.binary) {
+    const after = configBinaryFixtureOracle(row.hex);
+    const accepted = after !== undefined && validate({ index: after });
+    if (accepted !== row.accepted || (accepted && after !== row.after)) throw new Error(`independent byte oracle disagrees with ${row.id}`);
+  }
+  const operationRoot = join(configRoot, "🧬️schema", "🧬️mutations");
+  if (!readFileSync(join(operationRoot, "📝️text", "🦀️.rs"), "utf8").includes("semio_framework_dsl_record::parse_exact(")) throw new Error("config text must use the shared exact record boundary");
+  if (!readFileSync(join(operationRoot, "💾️binary", "🦀️.rs"), "utf8").includes("dsl::variants_binary::decode_op(bytes)")) throw new Error("config binary must use the shared closed canonical operation boundary");
+  const artifactRoot = join(context.repoRoot, PLUGIN_OWNER, "🗿️artifacts");
+  const editors = filesBelow(artifactRoot).filter((path) => path.endsWith("/✏️editor/🦀️.rs"));
+  if (editors.length !== 15) throw new Error(`expected 15 norm editors, found ${editors.length}`);
+  for (const editor of editors) {
+    const source = readFileSync(editor, "utf8");
+    for (const required of ["type Config = NoConfig;", "type ConfigMutation = NoConfigMutation;", "register_window_config_owners", "ResultsWindowConfigOwner", "dispatch_norm_command", "results_window_config::current"]) {
+      if (!source.includes(required)) throw new Error(`norm editor lacks ${required}: ${editor}`);
+    }
+  }
+  const viewers = filesBelow(artifactRoot).filter((path) => path.endsWith("/👁️viewer/🦀️.rs"));
+  if (viewers.length !== 15 || viewers.some((path) => {
+    const source = readFileSync(path, "utf8");
+    return !source.includes("type Config = NoConfig;") || !source.includes("type ConfigMutation = NoConfigMutation;");
+  })) throw new Error("all fifteen Norm viewers must use the empty application config facet");
+  const resultsOwners = filesBelow(artifactRoot).filter((path) => path.endsWith("/🪟️windows/📊️results/🦀️.rs"));
+  if (resultsOwners.length !== 15 || resultsOwners.some((path) => !readFileSync(path, "utf8").includes("norm_results_window_config_owner!(ResultsWindowConfigOwner, WINDOW_RESULTS)"))) {
+    throw new Error("every concrete Results kind must bind the shared config through its own exact owner");
+  }
+  const selectedChecks = filesBelow(artifactRoot).filter((path) => path.endsWith("/🎮️commands/☑️selected-check/🦀️.rs"));
+  if (selectedChecks.length !== 15 || selectedChecks.some((path) => {
+    const source = readFileSync(path, "utf8");
+    return !source.includes("pub fn window_mutation") || !source.includes("NormResultsWindowConfigMutation") || !source.includes("Ok(Emit::default())");
+  })) throw new Error("all fifteen selection commands must leave app/document lanes empty and expose the Results-window mutation");
+  const inspections = filesBelow(artifactRoot).filter((path) => path.endsWith("/✏️editor/📌️panels/🔍️inspection/🦀️.rs"));
+  if (inspections.length !== 15 || inspections.some((path) => !readFileSync(path, "utf8").includes("render_inspection(host.report(), selected_check_index, locale, controller_id)"))) {
+    throw new Error("all fifteen Inspection panels must consume the exact Results-window selection supplied by the editor");
+  }
+  const test = join(configRoot, "🧪️tests", "🔬️window-ownership", "🟦️.ts");
+  runCmd(process.execPath, ["test", test], { cwd: context.repoRoot });
+  runCmd(process.execPath, ["x", "tsc", test, "--noEmit", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: context.repoRoot });
+  console.log(`Norm Results-window config schema oracle passed: ${fixture.cases.length} codec cases, ${fixture.invalid.length} hostile payloads, ${fixture.text.length} text vectors, ${fixture.binary.length} binary vectors, 5 state + 5 mutation facets, 15 exact owners/commands/Inspection consumers, 30 empty app surfaces, strict TypeScript`);
+}
+
+/** 🏃️ Runs the `SurfaceRenderSourceScript` command under the caller's roots and invocation. */
+export function runSurfaceRenderSourceScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
+  const testRoot = join(context.root, "..", "..", "🖥️app-surface", "🧪️tests/🧫️fixtures");
+  const module = JSON.parse(readFileSync(join(context.repoRoot, PLUGIN_OWNER, "🧬️schema", "🔣️.json"), "utf8")) as { $id: string };
+  const fixture = JSON.parse(readFileSync(join(testRoot, "🔣️.json"), "utf8")) as SurfaceFixture;
+  const pluginRoot = readFileSync(join(context.root, "..", "..", "🦀️.rs"), "utf8");
+  if (!pluginRoot.includes('.package_id("semio:norm")')) throw new Error("norm plugin does not declare its exact component package identity");
+  const ajv = new Ajv({ allErrors: true, strict: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+  ajv.addSchema(module);
+
+  const manifest = Bun.TOML.parse(readFileSync(join(context.root, "Cargo.toml"), "utf8")) as { package: { metadata: { semio: { playground: { variant: string }[] } } } };
+  const variants = new Set(manifest.package.metadata.semio.playground.map((entry) => entry.variant));
+  const artifactRoot = join(context.repoRoot, PLUGIN_OWNER, "🗿️artifacts");
+  const appSurface = readFileSync(join(context.repoRoot, PLUGIN_OWNER, "📇️registry", "🧬️contract", "🖥️app-surface", "🦀️.rs"), "utf8");
+  const emptyConfig = 'config: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
+  const emptyPresence = 'presence: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" }';
+  if (!appSurface.includes(emptyConfig) || !appSurface.includes(emptyPresence)) throw new Error("norm app schema descriptor must publish absent app-owned config and presence facets");
+  const presenceRoot = join(context.repoRoot, PLUGIN_OWNER, "👥️presence", "🧬️schema");
+  if (existsSync(presenceRoot) && filesBelow(presenceRoot).some((path) => /\.(rs|ts|json|graphql|proto)$/.test(path))) {
+    throw new Error("norm duplicates the framework-owned empty presence schema");
+  }
+  const noPresenceBindings = filesBelow(artifactRoot)
+    .filter((path) => path.endsWith("🦀️.rs"))
+    .reduce((count, path) => count + [...readFileSync(path, "utf8").matchAll(/type Presence = NoPresence;/g)].length, 0);
+  if (noPresenceBindings !== variants.size * 2) throw new Error(`norm app surfaces do not all use framework NoPresence: expected ${variants.size * 2}, found ${noPresenceBindings}`);
+  const incompleteIdentity = new RegExp(`\\bs\\.(${[...variants].join("|")})\\b`);
+  for (const path of filesBelow(artifactRoot).filter((path) => /\.(rs|ts|json)$/.test(path))) {
+    if (incompleteIdentity.test(readFileSync(path, "utf8"))) throw new Error(`norm artifact uses an identity without its plugin namespace: ${path}`);
+  }
+  const admitted = (value: SurfaceFixture): boolean => {
+
+    const identities = new Set<string>();
+    for (const row of value.rows) {
+      const expected = (row.role === "editor" ? ["inputs", "results", "artifact", "catalogue", "inspection"].map((key) => `norm.${row.variant}.play.${key}`) : ["framework.window.table"]).concat("framework.body.history");
+      if (!variants.has(row.variant) || row.appId !== `s.norm.${row.variant}@1/*#${row.role}` || identities.has(row.appId) || JSON.stringify([...row.bodyKeys].sort()) !== JSON.stringify(expected.sort())) return false;
+      identities.add(row.appId);
+    }
+    return identities.size === variants.size * 2;
+  };
+  if (!admitted(fixture)) throw new Error("norm surface inventory disagrees with the owned playground variants");
+  const hostile = Array.from({ length: 5 }, () => structuredClone(fixture));
+  hostile[0]!.rows[1] = hostile[0]!.rows[0]!;
+  hostile[1]!.rows[0]!.bodyKeys.pop();
+  hostile[2]!.rows[0]!.bodyKeys = ["framework.window.table"];
+  hostile[3]!.rows[0]!.bodyKeys[0] = "unknown.body";
+  hostile[4]!.rows[0]!.appId = "s.norm.unknown@1/*#editor";
+  for (const candidate of hostile) if (admitted(candidate)) throw new Error("norm surface inventory admitted a hostile vector");
+  console.log(`Norm surface inventory: ${variants.size} variants, ${fixture.rows.length} apps, ${fixture.rows.reduce((count, row) => count + row.bodyKeys.length, 0)} bodies and ${hostile.length} hostile vectors passed`);
+}
+
+/** 🏃️ Runs the `ComponentBudgetScript` command under the caller's roots and invocation. */
+export function runComponentBudgetScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
+  const component = componentDeliverableV1(join(context.root, "../../🧩️component/📦️packages/🦀️rust"), "semio-hub-norm-component", SHIPPED_COMPONENT_PROFILE).wasm;
+  if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`bun repo run semio-hub-norm-component:component\` (${component})`);
+  const census = componentCoreCensus(readFileSync(component));
+  for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
+    let refused = false;
+    try {
+      componentCoreCensus(hostile);
+    } catch {
+      refused = true;
+    }
+    if (!refused) throw new Error("the component census accepted an artifact that is not a wasm component");
+  }
+  if (census.code === 0 || census.module <= census.code) throw new Error(`norm's component census is not a real module: code=${census.code} module=${census.module}`);
+  if (census.name !== 0) throw new Error(`norm's shipped component carries a ${census.name} B \`name\` custom section: \`[profile.wasm-release] strip = "symbols"\` is not in effect, and without it this plugin does not fit ${SHIPPED_COMPONENT_MAX_BYTES} B`);
+  if (census.total > SHIPPED_COMPONENT_MAX_BYTES) throw new Error(`norm's shipped component is ${census.total} B against the ${SHIPPED_COMPONENT_MAX_BYTES} B admission bound its own describe enforces: it is ${census.total - SHIPPED_COMPONENT_MAX_BYTES} B over`);
+  if (census.total > NORM_COMPONENT_BUDGET_BYTES) throw new Error(`norm's shipped component is ${census.total} B against this plugin's own ${NORM_COMPONENT_BUDGET_BYTES} B budget: ${census.total - NORM_COMPONENT_BUDGET_BYTES} B of headroom is gone and the admission bound is next`);
+  console.log(`Norm shipped component budget met: ${census.total} B total (core module ${census.module} B: code ${census.code} B, data ${census.data} B, name 0 B), ${SHIPPED_COMPONENT_MAX_BYTES - census.total} B under the admission bound, ${NORM_COMPONENT_BUDGET_BYTES - census.total} B under this plugin's own budget, 2 hostile artifacts refused`);
+}
+
+/** 🏃️ Runs the `MutationLeafTaxonomyGenerateScript` command under the caller's roots and invocation. */
+export function runMutationLeafTaxonomyGenerateScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
+  const value = taxonomy(context.repoRoot);
+  writeFileSync(join(context.repoRoot, "✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), `${JSON.stringify(value, null, 2)}\n`);
+  console.log(`norm mutation-leaf taxonomy generated: ${value.rows.length} payloads`);
+}
+
+/** 🏃️ Runs the `MutationLeafTaxonomyCheckScript` command under the caller's roots and invocation. */
+export function runMutationLeafTaxonomyCheckScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): void {
+  const actual = taxonomy(context.repoRoot);
+  const module = JSON.parse(readFileSync(join(context.repoRoot, PLUGIN_OWNER, "🧬️schema/🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(context.repoRoot, "✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json"), "utf8")) as MutationLeafTaxonomy;
+  const ajv = new Ajv({ allErrors: true, strict: true });
+  ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+  ajv.addSchema(module);
+
+  if (!validateUniqueTaxonomy(fixture)) throw new Error("norm mutation-leaf taxonomy contains a duplicate source or aggregate variant");
+  if (JSON.stringify(actual) !== JSON.stringify(fixture)) throw new Error("norm mutation-leaf taxonomy is stale; run the registered generate target");
+  const missing: { rows: Record<string, unknown>[] } = JSON.parse(JSON.stringify(fixture));
+  delete missing.rows[0]!.kind;
+  if (JSON.stringify(actual) === JSON.stringify(missing)) throw new Error("Actual taxonomy omitted its semantic kind");
+  const wrongLayout: { rows: Record<string, unknown>[] } = JSON.parse(JSON.stringify(fixture));
+  wrongLayout.rows[0]!.physicalLayout = "ambient";
+  if (JSON.stringify(actual) === JSON.stringify(wrongLayout)) throw new Error("Actual taxonomy used an ambient mutation-leaf layout");
+  const duplicate = structuredClone(fixture) as MutationLeafTaxonomy;
+  (duplicate.rows as MutationLeafTaxonomyRow[]).push(duplicate.rows[0]!);
+  if (validateUniqueTaxonomy(duplicate)) throw new Error("the neutral uniqueness oracle accepted a duplicate taxonomy row");
+  console.log(`norm mutation-leaf taxonomy is fresh: ${fixture.rows.length} payloads, actual source equality and independent uniqueness checks passed`);
+}

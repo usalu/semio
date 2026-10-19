@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { Root } from "protobufjs";
 import { buildSchema } from "graphql";
-import { binary64, binary64Value, type Binary64 } from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64, binary64Value, type Binary64 } from "@semio-tech/value-ts/ieee754";
 import { parseFem2dLoadPatch, parseFem2dCombinationPatch } from "../../../🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 import { parseFem3dLoadPatch, parseFem3dCombinationPatch } from "../../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🟦️.ts";
 
@@ -18,7 +18,7 @@ const query = (value: unknown): unknown => Array.isArray(value) ? value.map(quer
 describe("load and combination field intent", () => {
   for (const dimension of ["2d", "3d"] as const) {
     const subsets = resolve(owner, `🗿️artifacts/${dimension === "2d" ? "◻️2d" : "🧊️3d"}/🏅️standards/🔖️1/🪆️subsets`);
-    const fixtures = resolve(subsets, "🏋️load/🧫️fixtures/🧬️mutations");
+    const fixtures = resolve(subsets, "🏋️load/🧪️tests/🧫️fixtures/🧬️mutations");
     const parseLoad = dimension === "2d" ? parseFem2dLoadPatch : parseFem3dLoadPatch;
     const parseCombination = dimension === "2d" ? parseFem2dCombinationPatch : parseFem3dCombinationPatch;
     const ajv = new Ajv({ strict: false, strictNumbers: true, validateFormats: false });

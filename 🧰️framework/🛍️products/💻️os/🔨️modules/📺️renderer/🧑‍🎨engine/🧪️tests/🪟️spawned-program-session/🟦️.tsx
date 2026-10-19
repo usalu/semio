@@ -13,8 +13,8 @@ import { cleanup, render } from "@semio-tech/ui-react/test";
 import { Mode, type ModeWindowDescriptor, type WindowLayoutNode } from "@semio-tech/ui-react";
 import { afterEach, describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
-import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
+import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework/manifest/testing/fixtures";
+import { parseResolvedPluginViewState } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -235,7 +235,6 @@ describe("🪟️ the canvas, driven against the real Mode renderer", () => {
     render(<Mode windows={spawnedWindows} layout={hostLayout} activeWindowId="s-home-main" />);
     expect(mountedWindowIds()).toEqual([]);
     expect(document.querySelector(`[data-testid="body-${spawnedWindows[0]!.id}"]`)).toBe(null);
-    // 🧯️ The exact live symptom: `[data-window-id] = []` and the empty-shell notice.
     expect(document.querySelector('[data-slot="mode-empty"]')).not.toBe(null);
   });
 

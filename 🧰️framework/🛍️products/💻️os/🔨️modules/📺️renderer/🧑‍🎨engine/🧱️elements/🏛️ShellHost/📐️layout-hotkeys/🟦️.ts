@@ -95,7 +95,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
     [hostConfig],
   );
   dispatchDirectoryEventsRef.current = dispatchDirectoryEventBatch;
-  /** 📇️ Folds the current session's space index over its space's FULL directory history (the guest's contract). */
   foldSpaceDirectoryRef.current = () => {
     const current = sessionRef.current;
     if (current === null) return;
@@ -109,12 +108,9 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
   //#endregion 🔖️DirectoryLane
 
   const hostSessionActive = hostMode && session?.app.id === hostAppId;
-  // 🏠️🧳️ Once `hostSessionActive` is true, `session.app` *is* the host app, so its own self-declared
-  // `controllerId` is the right value — no separate app-identity lookup needed.
   const studioSessionControllerId = hostSessionActive ? session?.app.controllerId : undefined;
   useEffect(() => {
     if (!hostSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
-    // 🪪️ §C3 — a resolved sign-in shows the real user in presence chrome instead of a random Guest.
     const presenceIdentity = presenceClientIdentity(ephemeral, identityRef.current ? { clientId: shellActorIdRef.current, name: identityRef.current.displayName } : undefined);
     const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: presenceIdentity });
     const initial = window.setTimeout(beat, 1000);
@@ -128,15 +124,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
   useEffect(() => {
     if (typeof window === "undefined") return;
     const presenceIdentity = presenceClientIdentity(ephemeral, identityRef.current ? { clientId: shellActorIdRef.current, name: identityRef.current.displayName } : undefined);
-    // 🐚️ terra-web-shellhost (finding 5) — one `latestWins` trigger PER open document (lazily created,
-    // cached in `presenceBeatTriggersRef`): a slow `ephemeralSnapshot` for one document no longer
-    // delays the heartbeat for every OTHER open document — each document's beat now runs independently
-    // and concurrently. `latestWins` still protects a SINGLE document against overlapping beats if its
-    // own snapshot takes longer than one heartbeat interval (collapses to at most one trailing follow-
-    // up), the same guarantee the old shell-WIDE `publishing` flag gave the whole loop, now scoped per
-    // document instead of stalling every document behind the slowest one. `run` reads
-    // `backboneWorkerRef`/`openDocumentSessionsRef` fresh on every actual invocation (never captured at
-    // trigger-creation time), so a still-open document's beat never serves a stale plugin/session pair.
     const beatOneDocument = (runtimeKey: string): Promise<void> => {
       let trigger = presenceBeatTriggersRef.current.get(runtimeKey);
       if (!trigger) {
@@ -144,17 +131,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
           const worker = backboneWorkerRef.current;
           const entry = openDocumentSessionsRef.current.get(runtimeKey);
           if (!worker || !entry) return;
-          // 💓️ The beat is the shell's liveness signal for the HUMAN, not for the document
-          // component, so it can never be hostage to one. `ephemeralSnapshot` reaches into the
-          // plugin — in the browser through the nested browser-actor child — and a document whose
-          // component is wedged answers it never: awaiting it bare left `latestWins`' single flight
-          // permanently in flight, so this document never beat again and the hub's
-          // `PRESENCE_LEASE_TTL_MS` lease lapsed under a socket that was still open. That is the
-          // decay C3 §3.4 read as an empty roster in both browsers, reproduced deterministically on
-          // the hub's own sockets in ticket 26/09/18 slice PR1
-          // (`🗑️generated/pr1-before-hub-socket.txt` run B). Past the bound the peer beats with no
-          // app-owned pack — present, with stale ephemerals dropped, which is exactly what the hub
-          // publishes for a lapsed lease anyway.
           const snapshot = await presenceEphemeralSnapshotWithinBoundV1(entry.plugin, entry.session.instanceId);
           if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== entry.clientInstanceId) return;
           const request: BackboneWorkerRequest = {
@@ -164,11 +140,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
             ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }),
             message: {
               kind: "presenceHeartbeat",
-              // 🚧️ `cursor`/`viewport` are gone from `ArtifactPresencePeer`'s current wire shape (see
-              // that type's own field list, `@semio-tech/framework-replication`) — `presenceCursorRef`
-              // is still tracked (pointermove listener above) but has no landing spot on the wire
-              // anymore; left tracked rather than torn out, since removing the listener is a design
-              // call about whether cursor-sharing comes back, not a type fix.
               peer: {
                 actor: shellActorIdRef.current,
                 label: presenceIdentity.name,
@@ -178,9 +149,7 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
                 ...((snapshot?.activeTool ?? collectLocalActiveToolV1(runtimeKey))
                   ? { activeTool: snapshot?.activeTool ?? collectLocalActiveToolV1(runtimeKey) }
                   : {}),
-                // 👕️ Per-window camera/pointer published by Board2d/World3d/TextEditor hosts (throttled).
                 views: collectLocalPresenceWindowViewsV1(runtimeKey),
-                // ⌨️ Pending typing runs of TextEditor hosts: the ephemeral shared preview peers render at this caret.
                 ...localPresenceTypingFieldsV1(runtimeKey),
               },
             },
@@ -195,8 +164,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
     let liveViewBeat: ReturnType<typeof setTimeout> | null = null;
     const beat = () => {
       lastBeatAtMs = Date.now();
-      // 🧹️ Drops triggers for documents closed since the last tick — bounded growth instead of one
-      // entry per document ever opened this session.
       for (const runtimeKey of presenceBeatTriggersRef.current.keys()) {
         if (!openDocumentSessionsRef.current.has(runtimeKey)) presenceBeatTriggersRef.current.delete(runtimeKey);
       }
@@ -204,8 +171,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
         void beatOneDocument(runtimeKey).catch((error) => console.error("[os-shell] presence heartbeat failed for document", runtimeKey, error));
       }
     };
-    // 🖱️ A local window view (pointer, camera, caret) that changed beats at once, spaced by the live bound, so a peer's
-    // cursor follows the pointer instead of the next interval beat (`💓️presence-liveness-v1`, `a-moving-pointer-beats-live`).
     const unsubscribeLiveViews = subscribeLocalPresenceWindowViewsV1(() => {
       if (liveViewBeat !== null) return;
       liveViewBeat = setTimeout(() => {
@@ -224,9 +189,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
   }, [ephemeral, identity]);
 
   usePanelChromeHotkeys({
-    // 📱️ All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile. Same `shell.panelToggle`
-    // commandId as the mouse-driven toggle in `buildPanelSelectionProps` (so keyboard/mouse fold together),
-    // flagged `hotkey: true` in detail.
     onToggle: (anchor) => {
       if (mobile) dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible });
       else dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible });
@@ -252,11 +214,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
     }
   }, [uiLocale, uiTheme, scope]);
 
-  // 🐚️ Unmount cleanup for the embedded (non-page-owning) case — a shell that painted its own root's
-  // theme tokens must remove them on unmount, or a later, unrelated element reused at the same DOM
-  // position (React/vite HMR reuse, or another shell's canvas-clone assets in a dev harness) would
-  // silently inherit a stale theme's inline overrides. The page-owning case is intentionally left alone:
-  // `document.documentElement` outlives any single shell's lifetime.
   useEffect(() => {
     if (scope.ownsPage) return;
     return () => {
@@ -316,9 +273,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
-      // 🪟️ Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
-      // state (which wouldn't reflect this dispatch until the next render) — every newly-seeded pane's own
-      // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
       void refreshUi(session, { kind: "full" }, seeded.extraInstances).catch((error: unknown) => reportRefreshFault(session.pluginId, error));
     },
     [session, appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
@@ -326,8 +280,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
 
   const applyModeChange = useCallback(
     (modeId: string) => {
-      // 🛠️ Tools are scoped to a mode — switching modes always clears the active tool (and every
-      // window's active utility), mirroring how a fresh mode starts with no utility pressed either.
       dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
       dispatch({
         type: "SET_SESSION",
@@ -418,10 +370,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
   const handleTemplateDrop = useCallback(
     (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
       if (!session) return;
-      // 🪟️ Display ▸ Windows now offers the FOCUSED program's kinds, and a spawned program's extra
-      // panes are not modelled yet (`refreshSpawnedUi` fetches its declared kinds, not splits of
-      // them). Dropping one would mint a window instance no guest was asked to render, so the drop is
-      // refused loudly instead. Named in `📓️s5-spawned-app-windows-in-s.md` as the next owner's step.
       if (focusedSpawnedId !== null) {
         console.warn(`[os-shell] window template drop refused: ${focusedSpawnedId} is a spawned program and has no split lane yet (kind ${payload.windowKindId})`);
         return;
@@ -440,8 +388,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
         dispatch({ type: "SET_WINDOW_TITLE", windowId: instanceId, title });
         dispatch({ type: "SET_WINDOW_ICON", windowId: instanceId, iconId: worldProjectionSpecIconId(projectionSpec) as IconName });
       }
-      // 🪟️ The new split pane is its own window instance — fetch its body/measures/engagement right away
-      // (see `applyNamedLayout`'s comment) rather than waiting for an unrelated action to trigger a refresh.
       void refreshUi(session, { kind: "full" }, nextExtraInstances).catch((error: unknown) => reportRefreshFault(session.pluginId, error));
       dispatch({
         type: "SET_SHELL_LAYOUT",
@@ -459,10 +405,6 @@ export function useDirectoryLaneAndLayout(core: ShellCoreAfterTutorialOrchestrat
   );
 
   const displayHostRef = useRef<DisplayHostApi | null>(null);
-  // 🪟️ Display ▸ Windows offers the windows of the program that OWNS the canvas. It read
-  // `session.app` unconditionally, so a spawned foreign editor's Display menu listed the landing
-  // app's window instead of its own — the symptom S4 measured as
-  // "framework.display.windows.s-home-main (Studios)" after spawning `draw`.
   const displayLayoutAppId = focusedApp?.id ?? "framework-os";
   const displayUserLayouts = useMemo(
     () => Object.entries(uiNamedLayouts[displayLayoutAppId] ?? {}).sort(([left], [right]) => left.localeCompare(right)).map(([layoutId, saved]) => createNamedLayout(layoutId, saved.label, saved.layout, "user")),

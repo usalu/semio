@@ -177,9 +177,6 @@ pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     let mut data_pad_byte = 0;
     let mut other_chunks = Vec::new();
     let mut chunk_order = Vec::new();
-    // 🪆️ `data` is decoded lazily against `fmt` — real RIFF/WAVE files always place `fmt ` before
-    // `data`, but a malformed/reordered file would otherwise silently mis-type; we buffer the raw
-    // `data` body until `fmt` is known instead of assuming ordering.
     let mut pending_data_body: Option<Vec<u8>> = None;
     while pos + 8 <= bytes.len() {
         let fourcc = &bytes[pos..pos + 4];
@@ -208,7 +205,7 @@ pub fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
                 chunk_order.push(WavChunkRef::Other(index));
             }
         }
-        pos = body_end + (size % 2); // 🧮️ RIFF chunks are word-aligned: a 1-byte pad after odd-sized bodies.
+        pos = body_end + (size % 2);
     }
     let fmt = fmt.ok_or_else(|| "wav: no fmt chunk found".to_string())?;
     if let Some(body) = pending_data_body {

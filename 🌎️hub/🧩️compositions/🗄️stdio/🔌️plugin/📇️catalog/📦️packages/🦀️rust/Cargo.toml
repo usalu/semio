@@ -69,3 +69,7 @@ semio-s-artifact-stdio-html = { workspace = true }
 # /🧩️ Composition Dependencies
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[features]
+full-artifact-catalog = []
+component-app-assembly = []

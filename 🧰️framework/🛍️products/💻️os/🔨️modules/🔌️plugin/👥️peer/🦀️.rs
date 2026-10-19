@@ -182,7 +182,7 @@ mod peer_root_retirement_laws {
         let grant = RetainedCloneGrant { maximum_items: axes["items"].as_u64().unwrap() as usize, maximum_copy_bytes: axes["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: axes["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: axes["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: axes["depth"].as_u64().unwrap() as usize };
         let mut decoder_events = 0;
         let mut admit_decode = |_| { decoder_events += 1; true };
-        let mut decode = semio_framework_value::NativeDecodeControl::new(0, &mut admit_decode);
+        let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut admit_decode);
         let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut decode, grant);
         let (value, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -204,7 +204,7 @@ mod peer_root_retirement_laws {
         drop(encode);
         assert!(encode_events > 0);
         let mut reject = |_| false;
-        let mut native = semio_framework_value::NativeDecodeControl::new(0, &mut reject);
+        let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut reject);
         let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
         assert!(result.is_err());
@@ -219,7 +219,7 @@ mod peer_root_retirement_laws {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
             let mut accept = |_| true;
-            let mut native = semio_framework_value::NativeDecodeControl::new(0, &mut accept);
+            let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut accept);
             let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, denied);
             let (result, heap) = observe(|| NoPresence::decode_presence_native(&[], &mut original));
             assert!(result.is_err());
@@ -534,8 +534,8 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         let demand = self.step_demands().map_err(|error| plugin_sdk_fault(error.to_string()))?;
         if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("peer roster step exceeds its admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(PluginLifecycleStep::Progress(empty)); }
-        let mut admit = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
-        let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut admit);
+        let mut admit = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
+        let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut admit);
         let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let turn = self.step_stage(presence_store, &mut original);
         let progress = original.progress();

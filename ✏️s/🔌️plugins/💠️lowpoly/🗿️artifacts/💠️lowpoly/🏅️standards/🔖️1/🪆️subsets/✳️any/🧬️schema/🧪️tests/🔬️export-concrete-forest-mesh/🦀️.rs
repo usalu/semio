@@ -3,7 +3,7 @@ use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId}
 use semio_s_artifact_cad_cad_play::concrete_forest_left_shape_solid_face_loops;
 use std::collections::HashMap;
 
-/// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
+/// 🧪️ Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the
 /// mesh has no open boundary loops.
 fn assert_watertight(mesh: &HalfedgeMesh) {
     let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
@@ -30,7 +30,7 @@ fn open_boundary_count(mesh: &HalfedgeMesh) -> usize {
     directed.keys().filter(|&&(a, b)| !directed.contains_key(&(b, a))).count()
 }
 
-/// Spurious `fill_holes` caps on this solid spanned the open gap between vertical supports: large X
+/// ✅️ Spurious `fill_holes` caps on this solid spanned the open gap between vertical supports: large X
 /// extent *and* large Z extent on one face. Real CAD faces are either horizontal slabs (small Δz) or
 /// vertical support sides (small Δx).
 fn assert_no_spanning_face_across_support_gap(mesh: &HalfedgeMesh) {

@@ -38,7 +38,6 @@ fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
 }
 
 impl XmlOutline {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn compute(snapshot: &XmlSnapshot) -> Self {
         let (element_count, max_depth) = match &snapshot.doc.root {
             Some(root) => walk(root, 1),

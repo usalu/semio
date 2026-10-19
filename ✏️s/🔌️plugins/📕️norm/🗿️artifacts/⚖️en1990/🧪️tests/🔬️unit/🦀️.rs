@@ -1,4 +1,4 @@
-//! Package-level smoke tests for EN 1990 subject schema.
+//! 🗜️ Package-level smoke tests for EN 1990 subject schema.
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_hierarchical_subject() {

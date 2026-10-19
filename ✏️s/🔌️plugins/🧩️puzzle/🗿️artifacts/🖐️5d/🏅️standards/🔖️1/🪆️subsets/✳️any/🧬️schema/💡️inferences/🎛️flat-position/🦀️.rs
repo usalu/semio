@@ -1,4 +1,4 @@
-//! `FlattenPlane`/`FlattenPose` (the result types) stay owned by `puzzle3d::schema::inferences::flatten`
+//! 👪️ `FlattenPlane`/`FlattenPose` (the result types) stay owned by `puzzle3d::schema::inferences::flatten`
 //! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per part.
 //! (that sibling artifact's own low-level pose math); this leaf owns the puzzle5d-side projection —
 //! mapping parts/grips/fasteners onto the 3d object/vortex/attraction graph and running puzzle3d's

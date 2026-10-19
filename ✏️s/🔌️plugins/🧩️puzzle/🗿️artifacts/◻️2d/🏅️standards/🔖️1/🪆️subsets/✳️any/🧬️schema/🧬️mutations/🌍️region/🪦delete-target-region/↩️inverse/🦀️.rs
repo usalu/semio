@@ -1,7 +1,8 @@
-//! entry. Missing target ⇒ `Vec::new()`.
+//! 🫥️ entry. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DeleteTargetRegion` — reconstructs a `create-target-region` of the captured BASE
 use crate::standards::v1::subsets::any::schema::mutations::create_target_region::CreateTargetRegion;
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::delete_target_region::component::DeleteTargetRegion;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<DeleteTargetRegion> + From<CreateTargetRegion>>(payload: &super::DeleteTargetRegion, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

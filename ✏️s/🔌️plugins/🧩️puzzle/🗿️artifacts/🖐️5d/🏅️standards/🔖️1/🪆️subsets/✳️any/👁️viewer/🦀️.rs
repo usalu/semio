@@ -1,4 +1,4 @@
-//! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Puzzle5dViewer`
+//! 🎫️ (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Puzzle5dViewer`
 //! 👁️ Puzzle 5D viewer — the read-only counterpart of the sibling editor module for this subset
 //! implements `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Puzzle5dViewer>`
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact

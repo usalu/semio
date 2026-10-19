@@ -4,7 +4,7 @@
 import { parseEpwRecord } from "../📸️snapshot/🟦️.ts";
 import type { EpwLocation, EpwDataPeriods, EpwRecord } from '../📸️snapshot/🟦️.ts';
 
-/** Sparse per-column patch over EpwRecord's 35 fields; every column independently optional. */
+/** 🔄️ Sparse per-column patch over EpwRecord's 35 fields; every column independently optional. */
 export interface EpwRecordDiff {
   year?: string; month?: string; day?: string; hour?: string; minute?: string;
   dataSourceUncertainty?: string; dryBulbTemp?: string; dewPointTemp?: string; relativeHumidity?: string;

@@ -26,6 +26,7 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-diff = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true }

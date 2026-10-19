@@ -13,14 +13,11 @@ app_labels! {
     /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale×terminology combination compile-checked.
     pub struct SHomeLabels {
         window_main: native_en "Studios", native_de "Studios", reuse_en "Studios", reuse_de "Studios";
-        // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-F: the
-        // `#s-home-create-space` toolbar button's own label (contract §C0 id grammar).
         action_create: native_en "Create Space", native_de "Space erstellen", reuse_en "Create Space", reuse_de "Space erstellen";
         action_open: native_en "Open", native_de "Öffnen", reuse_en "Open", reuse_de "Öffnen";
         action_rename: native_en "Rename", native_de "Umbenennen", reuse_en "Rename", reuse_de "Umbenennen";
         action_share: native_en "Share", native_de "Teilen", reuse_en "Share", reuse_de "Teilen";
         action_delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
-        // 🏛️ Author-only administration pane (members, roles, invites) — see `row_actions`.
         action_manage: native_en "Manage", native_de "Verwalten", reuse_en "Manage", reuse_de "Verwalten";
         action_promote: native_en "Promote to hub", native_de "Zum Hub hochstufen", reuse_en "Promote to hub", reuse_de "Zum Hub hochstufen";
         action_persist: native_en "Persist locally", native_de "Lokal speichern", reuse_en "Persist locally", reuse_de "Lokal speichern";

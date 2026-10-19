@@ -2,9 +2,10 @@
 use semio_framework_os_spr::history::{HistoryLog, RetainedHistorySourceDecode, RetainedHistorySourcePartial, RetainedHistorySourceStep, RetainedHistoryOpMetaFault};
 use protocol::codec::{HistoryReadLimits,RetainedWireByteSource};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
-use semio_framework_value::{NativeDecodeControl,NativeDecodeRetirementRecipient,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::native_decoding::{NativeDecodeAllocation,NativeForwardedDecodeControl};
-use semio_framework_value::native_decoding::allocation::NativeForwardedDecodeReceipt;
+use semio_framework_value::{ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeAllocation, native_decoding::NativeForwardedDecodeControl};
+use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
 use std::{mem::ManuallyDrop,cell::UnsafeCell,sync::atomic::{AtomicBool,Ordering}};
 
 /// 🪢️ One stack loan shares the actual initiating caller only through an exclusive borrowed guard.

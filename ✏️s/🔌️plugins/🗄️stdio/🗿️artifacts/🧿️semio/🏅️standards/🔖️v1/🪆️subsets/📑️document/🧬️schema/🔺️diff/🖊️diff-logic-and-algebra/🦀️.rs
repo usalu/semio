@@ -460,9 +460,6 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             }
             DocBlockDiff::Image(ia)
         }
-        // 🩹 Mismatched non-Replace variant pair only arises from a malformed hand-built diff
-        // pair (never from real between()/mutation output, which always keys a modify against
-        // the item's own live kind) — b wins, matching docx's own fallback.
         (_, b) => b,
     }
 }

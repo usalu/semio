@@ -1,6 +1,7 @@
 //! 🎨️ Explicit indexed bitmap entities retain every current native literal without a codec carrier.
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,Projection,RowWriter}};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 const ALPHABET:&[u8;64]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 pub struct Tables{pub bitmap:&'static str,pub pixel:&'static str,pub literal:&'static str}
 pub trait BitmapRows{
@@ -75,8 +76,8 @@ fn text(rows:&[Occurrence<'_>],canonical:bool,native:&mut NativeDecodeControl<'_
 pub fn reconstruct(d:&SqliteDatabase,tables:&Tables,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<(i64,String)>,ValueError>{
  let maximum=c.reconstruction_remaining_bytes()?;let mut owned=0;
  let result=c.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{
-  let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
-  let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
+  let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
+  let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
   let result=(||{
    let bitmaps=&d.table(tables.bitmap)?.rows;let pixels=&d.table(tables.pixel)?.rows;let literals=&d.table(tables.literal)?.rows;
    let mut owners=native.allocate_vec(bitmaps.len())?;native.begin_stage(bitmaps.len())?;for row in bitmaps{owners.push(row.rowid);native.step()?;}sort(&mut owners,|owner|*owner,&mut native)?;

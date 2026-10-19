@@ -2,38 +2,7 @@
 
 use super::*;
 
-/// 🧮️ Source and mode indices belong to the admitted generation original document.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Fem3dResultRequest {
-    pub source: Fem3dResultSource,
-    pub mode: Option<usize>,
-    pub buckling: Option<usize>,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum Fem3dResultSource {
-    #[default]
-    FirstCase,
-    Case(usize),
-    Combination(usize),
-}
-
-pub fn result_request(doc: &Fem3dSnapshot, source: Option<&str>, mode: Option<usize>) -> Result<Fem3dResultRequest, &'static str> {
-    if mode.is_some_and(|index| index >= doc.analysis.modal_count) { return Err("fem3d.results-mode-missing"); }
-    let source = match source {
-        None => Fem3dResultSource::FirstCase,
-        Some(identity) => {
-            let source = semio_s_fem_analyses_model::borrow_result_source_identity(identity).map_err(|_| "fem3d.results-source-identity")?;
-            match source.kind {
-                "loadCase" => Fem3dResultSource::Case(doc.load_cases.iter().position(|case| case.id == source.id).ok_or("fem3d.results-source-missing")?),
-                "combination" => Fem3dResultSource::Combination(doc.combinations.iter().position(|combination| combination.id == source.id).ok_or("fem3d.results-source-missing")?),
-                _ => return Err("fem3d.results-source-kind"),
-            }
-        }
-    };
-    Ok(Fem3dResultRequest { source, mode, buckling: None })
-}
-
+use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::{Fem3dLiveSession, Fem3dResultFields, Fem3dResultRequest, Fem3dResultSource};
 
 //#region 💼️MountedSession
 pub fn initialize() {
@@ -53,13 +22,13 @@ pub(super) fn current_identity(app_instance_id: u32) -> Option<Identity> {
 
 pub(super) fn identity_live(identity: Identity) -> bool { MOUNTED.with(|registry| registry.borrow().current.iter().flatten().any(|current| current.identity == identity)) }
 
-pub(super) fn source_version(render: AppRenderOperationContext) -> semio_framework_value::RequestSourceVersion { semio_framework_value::RequestSourceVersion { base_revision: render.base_revision.0, generation: render.generation.0, canonical_revision: render.canonical_base_revision } }
-fn identity_version(identity: Identity) -> semio_framework_value::RequestSourceVersion { semio_framework_value::RequestSourceVersion { base_revision: identity.base_revision.0, generation: identity.generation.0, canonical_revision: identity.canonical_base_revision } }
-pub(super) fn record_terminal(identity: Identity, kind: semio_framework_value::RequestTerminalKind) {
+pub(super) fn source_version(render: AppRenderOperationContext) -> semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { base_revision: render.base_revision.0, generation: render.generation.0, canonical_revision: render.canonical_base_revision } }
+fn identity_version(identity: Identity) -> semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { semio_framework_value_registry::fixed_request_owners::RequestSourceVersion { base_revision: identity.base_revision.0, generation: identity.generation.0, canonical_revision: identity.canonical_base_revision } }
+pub(super) fn record_terminal(identity: Identity, kind: semio_framework_value_registry::fixed_request_owners::RequestTerminalKind) {
     MOUNTED.with(|registry| { let mut registry = registry.borrow_mut(); if let Some(slot) = registry.current.iter().position(|current| current.is_some_and(|current| current.identity == identity)) { if let Some((owner, _, _)) = registry.requests.at(slot) { registry.requests.record_terminal(owner, identity_version(identity), identity.job, kind); } } });
 }
 
-pub(super) type RequestKey = semio_framework_value::ContentRequestKey;
+pub(super) type RequestKey = semio_framework_value_registry::fixed_request_owners::ContentRequestKey;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConsumerKey { Model, Window(semio_framework_plugin::WindowConfigAuthorityIdentity) }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -79,9 +48,9 @@ fn resolve_physical_request(snapshot: &Fem3dSnapshot, spec: PhysicalRequestSpec,
     Some(Fem3dResultRequest { source, mode: (spec.family == 1).then_some(spec.index), buckling: (spec.family == 2).then_some(spec.index) })
 }
 #[cfg(test)]
-fn resolve_request(registry: &Registry, snapshot: &Fem3dSnapshot, owner: semio_framework_value::FixedKeySlot) -> Option<Fem3dResultRequest> { resolve_physical_request(snapshot, registry.request_specs[owner.index()]?, registry.requests.request_name(owner)?) }
-fn prepare_result_demand(registry: &mut Registry, render: AppRenderOperationContext, consumer: ConsumerKey, window: &str, spec: PhysicalRequestSpec, source: &str, version: semio_framework_value::RequestCandidateVersion, grant: RetainedCloneGrant) -> RetainedCloneProgress {
-    if registry.app_slots.lookup(render.app_instance_id).is_none() { let bytes = size_of::<u32>() + size_of::<semio_framework_value::FixedKeySlot>(); if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 || registry.app_slots.claim(render.app_instance_id).is_none() { return Default::default(); } return RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }; }
+fn resolve_request(registry: &Registry, snapshot: &Fem3dSnapshot, owner: semio_framework_value_registry::fixed_key_slots::FixedKeySlot) -> Option<Fem3dResultRequest> { resolve_physical_request(snapshot, registry.request_specs[owner.index()]?, registry.requests.request_name(owner)?) }
+fn prepare_result_demand(registry: &mut Registry, render: AppRenderOperationContext, consumer: ConsumerKey, window: &str, spec: PhysicalRequestSpec, source: &str, version: semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion, grant: RetainedCloneGrant) -> RetainedCloneProgress {
+    if registry.app_slots.lookup(render.app_instance_id).is_none() { let bytes = size_of::<u32>() + size_of::<semio_framework_value_registry::fixed_key_slots::FixedKeySlot>(); if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 || registry.app_slots.claim(render.app_instance_id).is_none() { return Default::default(); } return RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }; }
     let consumer_index = registry.requests.consumer_index(render.app_instance_id, consumer);
     if consumer == ConsumerKey::Model && consumer_index.is_none() { return registry.requests.claim_consumer_controlled(render.app_instance_id, consumer, grant).map_or(Default::default(), |step| step.progress); }
     if consumer != ConsumerKey::Model && consumer_index.is_none_or(|index| registry.requests.consumer_name(index).is_none()) { return registry.requests.prepare_consumer(render.app_instance_id, consumer, window, grant).map_or(Default::default(), |step| step.progress); }
@@ -94,7 +63,7 @@ fn prepare_result_demand(registry: &mut Registry, render: AppRenderOperationCont
     if registry.request_specs[owner.index()] != Some(spec) { return Default::default(); }
     let consumer_index = consumer_index.unwrap();
     if registry.verified_sources[consumer_index] != Some((version, key)) {
-        let bytes = size_of::<Option<(semio_framework_value::RequestCandidateVersion, RequestKey)>>(); if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 { return Default::default(); }
+        let bytes = size_of::<Option<(semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion, RequestKey)>>(); if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 { return Default::default(); }
         if spec.namespace == 2 { registry.verified_sources[consumer_index] = Some((version, key)); return RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }; }
         let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - bytes, ..grant };
         return match registry.requests.prepare_request(render.app_instance_id, key, source, child) { Ok(mut step) => { if step.ready && step.fault.is_none() { registry.verified_sources[consumer_index] = Some((version, key)); step.progress.copied_items = step.progress.copied_items.max(1); step.progress.copied_bytes += bytes; } step.progress }, Err(_) => Default::default() };
@@ -111,11 +80,11 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem3d
         if let Some(view) = view { for index in 0..64 { let Some((scope, consumer)) = registry.requests.consumer_at(index) else { continue }; let ConsumerKey::Window(authority) = consumer else { continue }; if scope != render.app_instance_id || registry.requests.consumer_retiring(index) { continue; } if !view.window_instances.iter().any(|window| windows.borrow(&window.window_kind_id, &window.id).is_some_and(|window| window.authority == authority)) { if let Some(step) = registry.requests.remove_consumer_controlled(scope, consumer, grant) { registry.verified_sources[index] = None; return step.progress; } return Default::default(); } } }
         let count = view.map_or(1, |view| view.window_instances.len().saturating_add(1));
         for _ in 0..count { let index = registry.consumer_cursor % count; registry.consumer_cursor = (index + 1) % count;
-            let (consumer, window, spec, source, version) = if index == 0 { let Some((spec, source)) = physical_parts(snapshot, Fem3dResultRequest::default()) else { continue }; (ConsumerKey::Model, "model", spec, source, semio_framework_value::RequestCandidateVersion { source: source_version(render), consumer_generation: 0, consumer_revision: [0;32] }) } else {
+            let (consumer, window, spec, source, version) = if index == 0 { let Some((spec, source)) = physical_parts(snapshot, Fem3dResultRequest::default()) else { continue }; (ConsumerKey::Model, "model", spec, source, semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion { source: source_version(render), consumer_generation: 0, consumer_revision: [0;32] }) } else {
                 let Some(window) = view.and_then(|view| view.window_instances.get(index - 1)) else { continue }; let Some(authority) = windows.borrow(&window.window_kind_id, &window.id) else { continue }; let Some(config) = authority.get::<semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::config::Fem3dResultsWindowConfigOwner>() else { continue };
                 let family = match config.result_mode { semio_s_fem_app_surface::ResultMode::Static => 0, semio_s_fem_app_surface::ResultMode::Modal => 1, semio_s_fem_app_surface::ResultMode::Buckling => 2 }; let index = if family == 0 { 0 } else { config.result_mode_index as usize };
                 let (namespace, source) = if family == 1 { (2, "none") } else if let Some(id) = config.result_source_id.as_deref() { let Ok(source) = semio_s_fem_analyses_model::borrow_result_source_identity(id) else { continue }; (if source.kind == "loadCase" { 0 } else { 1 }, source.id) } else { snapshot.load_cases.first().map_or((2, "none"), |case| (0, case.id.as_str())) };
-                (ConsumerKey::Window(authority.authority), window.id.as_str(), PhysicalRequestSpec { family, namespace, index }, source, semio_framework_value::RequestCandidateVersion { source: source_version(render), consumer_generation: authority.generation, consumer_revision: authority.revision })
+                (ConsumerKey::Window(authority.authority), window.id.as_str(), PhysicalRequestSpec { family, namespace, index }, source, semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion { source: source_version(render), consumer_generation: authority.generation, consumer_revision: authority.revision })
             };
             let progress = prepare_result_demand(&mut registry, render, consumer, window, spec, source, version, grant); if progress != Default::default() { return progress; }
         }
@@ -141,9 +110,9 @@ fn prepare_snapshot_admission(render: AppRenderOperationContext, snapshot: &Fem3
             if registry.requests.terminal(owner, source_version(render)).is_some() { continue; }
             let Some(spec) = registry.request_specs[index] else { continue };
             let source = if spec.namespace == 2 { Fem3dResultSource::FirstCase } else {
-                let (position, outcome) = registry.requests.source_lookup(owner, source_version(render)).unwrap_or((0, semio_framework_value::RequestLookupOutcome::Searching));
-                if outcome == semio_framework_value::RequestLookupOutcome::Missing { continue; }
-                if outcome == semio_framework_value::RequestLookupOutcome::Searching {
+                let (position, outcome) = registry.requests.source_lookup(owner, source_version(render)).unwrap_or((0, semio_framework_value_registry::fixed_request_owners::RequestLookupOutcome::Searching));
+                if outcome == semio_framework_value_registry::fixed_request_owners::RequestLookupOutcome::Missing { continue; }
+                if outcome == semio_framework_value_registry::fixed_request_owners::RequestLookupOutcome::Searching {
                     let candidate = if spec.namespace == 0 { snapshot.load_cases.get(position).map(|case| case.id.as_str()) } else { snapshot.combinations.get(position).map(|case| case.id.as_str()) };
                     progress = registry.requests.source_lookup_step(owner, source_version(render), candidate, grant).map_or(Default::default(), |step| step.progress); return false;
                 }
@@ -241,7 +210,7 @@ pub fn reconcile(doc: &semio_framework_plugin::ArtifactPendingView<'_, Fem3dSnap
         registry.pending[slot] = None;
         let job = JOB_TAG | counter;
         let identity = Identity { app_instance_id: render.app_instance_id, base_revision: render.base_revision, generation: render.generation, canonical_base_revision: render.canonical_base_revision, operation: OperationId(job), job };
-        if let Some(previous) = previous { if identity_version(previous.identity) != source_version(render) { let cancelled = registry.shells[previous.shell as usize].try_borrow().is_ok_and(|child| child.as_ref().is_some_and(|state| { state.cancel.cancel_now(); true })); if cancelled { registry.requests.record_terminal(request_owner, identity_version(previous.identity), previous.identity.job, semio_framework_value::RequestTerminalKind::Cancelled); } } }
+        if let Some(previous) = previous { if identity_version(previous.identity) != source_version(render) { let cancelled = registry.shells[previous.shell as usize].try_borrow().is_ok_and(|child| child.as_ref().is_some_and(|state| { state.cancel.cancel_now(); true })); if cancelled { registry.requests.record_terminal(request_owner, identity_version(previous.identity), previous.identity.job, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled); } } }
         if !registry.requests.begin_execution(request_owner, source_version(render), job) {
             registry.release_credit(shell); registry.release(shell); return Vec::new();
         }
@@ -393,7 +362,7 @@ pub fn result_stage(render: Option<AppRenderOperationContext>, authority: Option
         let registry = registry.borrow();
         let request_owner = registry.requests.live_binding(render.app_instance_id, authority.map_or(ConsumerKey::Model, ConsumerKey::Window))?;
         let slot = request_owner.index();
-        if let Some((owner, _, _)) = registry.requests.at(slot) { if let Some(terminal) = registry.requests.terminal(owner, source_version(render)) { match terminal.kind { semio_framework_value::RequestTerminalKind::Faulted => return Some("fem3d.failed"), semio_framework_value::RequestTerminalKind::Cancelled => return Some("fem3d.cancelled"), _ => {} } } }
+        if let Some((owner, _, _)) = registry.requests.at(slot) { if let Some(terminal) = registry.requests.terminal(owner, source_version(render)) { match terminal.kind { semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Faulted => return Some("fem3d.failed"), semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled => return Some("fem3d.cancelled"), _ => {} } } }
         let current = registry.current[slot]?;
         if !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) { return None; }
         let owner = registry.shells[current.shell as usize].try_borrow().ok()?;
@@ -428,5 +397,28 @@ pub fn publish_solver_progress(render: AppRenderOperationContext, state_value: F
     let Some(state) = owner.as_mut() else { return false };
     let freshness = state.identity.freshness(state.preview_sequence);
     state.solver.as_mut().is_some_and(|solver| solver.publish_progress(freshness, state_value, residual_norm, tolerance, completed, total))
+}
+
+/// 🧵️ The mounted session registry as the results window's live session contract.
+pub struct Fem3dMountedLive;
+
+impl Fem3dResultFields for Fem3dResultBorrow<'_> {
+    fn snapshot(&self) -> &Fem3dSnapshot { Fem3dResultBorrow::snapshot(self) }
+    fn len(&self) -> usize { Fem3dResultBorrow::len(self) }
+    fn node_id(&self, index: usize) -> Option<&str> { Fem3dResultBorrow::node_id(self, index) }
+    fn current_revision(&self) -> bool { Fem3dResultBorrow::current_revision(self) }
+    fn static_values(&self, index: usize) -> Option<[f64; 6]> { Fem3dResultBorrow::static_values(self, index) }
+    fn mode_values(&self, index: usize) -> Option<([f64; 6], f64)> { Fem3dResultBorrow::mode_values(self, index) }
+    fn stress(&self, index: usize) -> Option<f64> { Fem3dResultBorrow::stress(self, index) }
+}
+
+impl Fem3dLiveSession for Fem3dMountedLive {
+    fn result_stage(&self, operation: Option<AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>) -> Option<&'static str> { result_stage(operation, authority) }
+    fn with_result_fields(&self, operation: Option<AppRenderOperationContext>, doc: &Fem3dSnapshot, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, request: Fem3dResultRequest, read: &mut dyn FnMut(Option<&dyn Fem3dResultFields>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+        with_result_fields(operation, doc, authority, request, |fields| read(fields.as_ref().map(|fields| fields as &dyn Fem3dResultFields)))
+    }
+    fn with_live_visual(&self, operation: Option<AppRenderOperationContext>, build: &mut dyn FnMut(Option<&Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+        with_live_visual(operation, |visual| build(visual))
+    }
 }
 //#endregion 💼️MountedSession

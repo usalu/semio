@@ -1,6 +1,7 @@
 //! 🛬️ Controlled paid reader for the existing external TIFF6 carrier boundary.
 use super::*;
-use semio_framework_value::{ValueError,ValueRefusalKind,native_decoding::NativeDecodeControl};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 enum Refusal{Native(ValueError),Wire(String)}
 impl From<ValueError> for Refusal{fn from(error:ValueError)->Self{Self::Native(error)}}

@@ -26,12 +26,12 @@
         "forwardAllArgs": true
       },
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/.🧾️store/build.json"
       ]
     },
     "check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
         "^default",
@@ -67,7 +67,7 @@
     },
     "verify-snapshot-sqlite-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
         "^default",

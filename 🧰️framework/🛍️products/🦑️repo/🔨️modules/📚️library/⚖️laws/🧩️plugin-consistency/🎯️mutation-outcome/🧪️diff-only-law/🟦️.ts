@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
-import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
+import { POLICY_MUTATION_PLAN_DIR, POLICY_MUTATIONS_FACET, policyArtifactRootOfMutationsDir, POLICY_RS_COMPONENT_LEAF_NAME } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { policyMutationLawInventory, policyMutationLawRustFiles, policyMutationLawSourceFiles } from "../🟦️.ts";
 import { policyReadFileSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 

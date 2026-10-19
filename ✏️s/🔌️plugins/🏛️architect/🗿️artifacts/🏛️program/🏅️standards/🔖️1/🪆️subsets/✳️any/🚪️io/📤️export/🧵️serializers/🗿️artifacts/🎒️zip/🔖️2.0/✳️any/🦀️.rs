@@ -1,4 +1,4 @@
-//! program -> zip
+//! 🗓️ program -> zip
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 pub use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
 pub use semio_s_artifact_stdio_zip::ZipSnapshot;

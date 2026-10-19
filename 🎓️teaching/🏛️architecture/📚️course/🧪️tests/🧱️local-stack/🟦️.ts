@@ -20,7 +20,7 @@
  * @see https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site */
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, realpathSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:http";
@@ -118,7 +118,7 @@ it("runs the same installed Vite CLI under each declared runtime", () => {
 
 /** 📂️ A throw-away directory with `files` (relative path → content). */
 function directory(files: Record<string, string>): string {
-  const base = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : tmpdir();
+  const base = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : realpathSync(tmpdir());
   mkdirSync(base, { recursive: true });
   const root = mkdtempSync(join(base, "course-stack-"));
   scratch.push(root);

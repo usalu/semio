@@ -1,0 +1,29 @@
+# Private Full Runner Readiness Handoff
+
+## Future Command Budget After Actual Cold Setup Observation
+
+At 20:35 UTC the current normalized full dependency invocation had run 40 minutes (log creation 19:55:05 UTC); the live binding observation at 20:33:36–37 UTC showed 96 new-generation links, 25 remaining root v4 links and 187 not-yet-published endpoints. No completion was inferred. Future `command` invocations now have a bounded 7,200,000 ms supervisor timeout, recorded explicitly as `timeoutMs` in terminal receipts. The already-running invocation retains its captured 3,600,000 ms timer; it was not suspended, replaced or extended. Cancellation still stops only the owned builder and awaits stop. Actual Bun transpilation accepted the updated ticket input. This is harness syntax/budget validation, not a managed test or runtime cancellation trial.
+
+Only the retained temporary input owner `🚀️run/📜️script.ts` changed for this step. Parent assigned exclusive ownership until this handoff and will write the actual final `2026-10-19-build-input.json` only after runtime’s Source transport/hash proof reaches terminal. No runner `create`, Docker command, repository Source edit, dependency installation, compiler, Store or course build was executed for this implementation.
+
+The `create` branch now waits at most 180 seconds after container start for actual inner `docker version` and `docker info`, rather than returning immediately after the outer container starts. It repeatedly inspects the exact container’s run token, immutable image and owning Source-volume mount, and fails immediately when its actual state is no longer running. Each readiness subprocess is bounded by the remaining deadline (at most ten seconds) and awaited to terminal. The wait reports progress, supports SIGINT/SIGTERM, and wakes its between-poll delay on cancellation. Creation/start subprocesses each have a separate thirty-second bound. The existing container/volume names, no-pull immutable image, outer headroom check, 7 GiB/eight CPU/4096 PID bounds, actual inner Unix socket, release mode and unchanged Original `bun repo` command path remain intact.
+
+Before readiness succeeds, actual Bun and Node tool output must prove 1.4.2 and 24.15.0 respectively, both Linux/x64. Genuine `git rev-parse HEAD` must equal `plan.sourceRevision`; parent selected actual captured HEAD `bd9e4e02bd0a1225c7cc47d9f2de10f116927e1d`. The plan also requires `sourceManifestSha256`, recording the exact frozen Source manifest supplied by the separately verified capture. This field is an expected input/provenance record; the readiness runner does not rehash all Source files or claim a completed Source transport. Actual engine output must contain a Linux/amd64 server and Linux x64 info, a real driver and exact `/repo/.semio-private/docker` data root. Compose must execute successfully. The `facts` mode uses the same assertions and removes former `cc/make | head` pipelines, so a last pipeline process cannot conceal their tool failure.
+
+On failure or cancellation, cleanup first identifies only the new random run-token/image owned container, captures bounded console/daemon logs, awaits stop and force removal, then queries that unique run token to confirm absence. It never deletes a Source volume or touches a different container. An unconfirmed cleanup produces a refusal instead of reporting success. A create receipt records the actual ready/cancelled/failure/cleanup/facts/engine/plan result under `🗑️generated/private-builder-create-terminal.json`. Successful create intentionally retains the ready container for parent’s full Original sessions. Parent owns the container after successful create.
+
+Pure verification ran exit 0: the actual owner was parsed/transformed without executing its top-level CLI; actual assertion functions covered thirteen accepted/rejected tool/engine cases; ownership/deadline/control source assertions passed; the actual subprocess observer was exercised against controlled success and timeout/kill/await implementations. The generated console receipt is `🗑️generated/2026-10-19-builder-runner-pure.log`. No full reversible-runner test suite or actual builder creation was claimed. End-to-end create/cancellation remains for the parent-owned actual session with a terminal verified Source volume.
+
+The worker’s own OS/daemon smoke and pure-check sessions are all terminal. The separate source-free smoke evidence is in `2026-10-19-builder-daemon-smoke.md`. Course publication, native admission and learner/runtime gates remain incomplete.
+
+Final handoff owner SHA-256: `ec1bffb39d64f426adc06020186e2cce2cdd816301c7754be59946281fe1663b`.
+
+## Export Follow-Up
+
+Root subsequently authorized the owner’s bounded site/offline-bundle export mode. It is implemented and direct neutral transfer/hash/promotion/refusal checks passed, with no Docker/Original/export invocation. Exact whitelist, limits, actual test evidence and newer handoff digest are in `2026-10-19-artifact-export.md`. Exclusive file ownership returned to root before its actual builder create.
+
+Managed command runner now explicitly supplies `SEMIO_TEST_LEVEL=quick` to subsequent Original commands, matching the authored 300-second unit-test budget. Existing live sync retains its original environment. This is a test level selection, not an invented timeout or check bypass.
+
+## Preparation Route Inspection
+
+The authored build entry `tools setup all` prepares Bazel and probes Nx under the dependencies Store; it is not a general Rust/WASM installer. Root inspected the actual route without launching a competing setup lane. Native toolchain/provider preparation still needs to be derived from its real authored path and run after dependency readiness. No raw Cargo/rustup/installer invocation is authorized by this inspection.

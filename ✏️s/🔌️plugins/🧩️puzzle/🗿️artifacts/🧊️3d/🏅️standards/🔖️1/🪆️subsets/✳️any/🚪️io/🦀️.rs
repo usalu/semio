@@ -1,4 +1,4 @@
-//! (called once from ⚙️engine::register), not per-leaf register().
+//! 📨️ (called once from ⚙️engine::register), not per-leaf register().
 //! 🚪️ IO s.puzzle3d (1/✳️any) — registration now flows through 🎹️composer::register
 #![allow(clippy::result_large_err)]
 

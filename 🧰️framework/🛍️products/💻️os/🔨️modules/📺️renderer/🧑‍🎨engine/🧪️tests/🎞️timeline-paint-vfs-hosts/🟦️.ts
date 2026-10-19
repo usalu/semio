@@ -3,7 +3,7 @@ import { act as reactAct, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildVirtualFileSystemSceneRows, detectShellLocale, uiI18n } from "@semio-tech/ui-react";
 import { VirtualFileSystemHost, virtualFileSystemNavigation } from "../../🧱️elements/🗣️Interpreter/🗄️virtual-file-system/🟦️.tsx";
-import { graphTimelineAuthorsFixture, presenceOverlayFixture, virtualFileSystemInteractionFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { graphTimelineAuthorsFixture, presenceOverlayFixture, virtualFileSystemInteractionFixture } from "@semio-tech/framework/ui/testing/fixtures";
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -530,10 +530,6 @@ describe("framework renderer hosts", () => {
   });
 
   it("interprets virtual file system component scenes", async () => {
-    // 🧬️ MIGRATION: `Component::Surface`'s single `SurfaceProps.doc` (a pack-encoded opaque payload)
-    // replaces the old `componentScene`/`virtualFileSystem` field pair — `surfacePropsToComponentSceneNode`
-    // (Interpreter/🟦️.tsx) decodes `doc.bytes` back into the exact scene sub-field shape
-    // `VirtualFileSystemHost` reads.
     const doc = {
       schemaJson: JSON.stringify({
         fileNodeKinds: { instance: { id: "instance", name: "Instance", descriptors: [] } },

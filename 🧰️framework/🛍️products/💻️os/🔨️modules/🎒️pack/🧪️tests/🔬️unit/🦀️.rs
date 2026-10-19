@@ -51,7 +51,6 @@ fn facade_stored_content_hash_is_stable_across_two_encodes() {
     let bytes_a = encode_document(&spec, &record, &options).unwrap();
     let bytes_b = encode_document(&spec, &record, &options).unwrap();
 
-    // 🔒️ `encode_document` is a pure function of `(spec, record)` — byte-identical output.
     assert_eq!(bytes_a, bytes_b);
 
     let hash_a = stored_content_hash(&bytes_a).unwrap();

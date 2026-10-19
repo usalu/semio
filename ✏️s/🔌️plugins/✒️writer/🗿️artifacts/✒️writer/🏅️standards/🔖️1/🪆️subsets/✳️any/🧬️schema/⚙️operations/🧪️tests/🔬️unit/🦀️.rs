@@ -32,11 +32,6 @@ async fn writer_document_vcs_undoes_text_mutation() {
 //#region 🔖️MutationLaws
 #[semio_framework_async_macros::async_test]
 async fn rename_writer_and_edit_text_invert_to_the_prior_field_value() {
-    // 📝️ Built through the ONE consistent constructor: since `WriterSnapshot::text` became the
-    // PERSISTED body (`writer_text` reads that field, not the child handle's local owner), a base that
-    // sets only the handle carries an EMPTY body, and `EditText::inverse` then correctly answers
-    // `EditText { text: "" }`. `writer_snapshot_with_text` keeps the field and the content-addressed
-    // handle in step, which is the only shape a real document ever has.
     let snapshot = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "old-id", "plaintext", "writer://old-id", "old text");
     assert_eq!(WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }).inverse(&snapshot).expect("valid retained mutation inverse fixture"), vec![WriterMutation::RenameWriter(RenameWriter { new_id: "old-id".into() })]);
     assert_eq!(WriterMutation::EditText(EditText { text: "new text".into() }).inverse(&snapshot).expect("valid retained mutation inverse fixture"), vec![WriterMutation::EditText(EditText { text: "old text".into() })]);
@@ -60,10 +55,6 @@ async fn change_uri_and_change_language_obey_the_inverse_and_diff_absorb_laws() 
 
 #[semio_framework_async_macros::async_test]
 async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
-    // 📝️ See the note in `rename_writer_and_edit_text_invert_to_the_prior_field_value`: a base whose
-    // `text` field and `document` handle disagree cannot survive the inverse law, because `apply`
-    // re-mints the handle from the RESTORED text and gets a different content address than the one
-    // the base was hand-built with.
     let base = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "empty", "plaintext", "writer://empty", "first");
     let mutation = WriterMutation::EditText(EditText { text: "second".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
@@ -81,8 +72,6 @@ async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
 /// and the per-verb-family `assert_outcome_policy_matrix` below (rename, change/set, edit).
 #[semio_framework_async_macros::async_test]
 async fn edit_text_outcome_is_deterministic() {
-    // 📝️ See `rename_writer_and_edit_text_invert_to_the_prior_field_value` for why the base is built
-    // through `writer_snapshot_with_text` rather than by hand.
     let base = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "empty", "plaintext", "writer://empty", "first");
     let mutation = WriterMutation::EditText(EditText { text: "second".into() });
     protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
@@ -90,8 +79,6 @@ async fn edit_text_outcome_is_deterministic() {
 
 #[semio_framework_async_macros::async_test]
 async fn rename_writer_outcome_obeys_the_policy_matrix() {
-    // 📝️ See `rename_writer_and_edit_text_invert_to_the_prior_field_value` for why the base is built
-    // through `writer_snapshot_with_text` rather than by hand.
     let snapshot = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "old-id", "plaintext", "writer://old-id", "old text");
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&snapshot, &WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() })).await;
 }
@@ -105,8 +92,6 @@ async fn change_uri_and_change_language_outcomes_obey_the_policy_matrix() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_text_outcome_obeys_the_policy_matrix() {
-    // 📝️ See `rename_writer_and_edit_text_invert_to_the_prior_field_value` for why the base is built
-    // through `writer_snapshot_with_text` rather than by hand.
     let base = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "empty", "plaintext", "writer://empty", "first");
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &WriterMutation::EditText(EditText { text: "second".into() })).await;
 }

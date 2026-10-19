@@ -62,7 +62,5 @@ fn svg_outline_paths_flips_y_and_scales_exactly() {
             _ => None,
         })
         .collect();
-    // 🔢️ scale=2.0, flip_y_offset=20.0: (x,y) -> (2x, 20 - 2y). Source corners (0,0) (10,0)
-    // (10,10) (0,10) become exactly (0,20) (20,20) (20,0) (0,0).
     assert_eq!(points, vec![(0.0, 20.0), (20.0, 20.0), (20.0, 0.0), (0.0, 0.0)]);
 }

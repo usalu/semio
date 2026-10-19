@@ -62,10 +62,6 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
     };
     for field in &positional {
         if field.optional {
-            // An explicit `_` placeholder always means "absent, but consume the slot" — this is
-            // what keeps LATER positionals aligned when an earlier optional one is skipped (see
-            // `print_record`'s matching print-side logic). Only positional contexts ever see a
-            // `Placeholder` token; keyed optionals are simply omitted instead.
             if cursor.peek().kind == TokenKind::Placeholder {
                 cursor.advance();
                 record.fields.insert(field.id, FieldValue::Absent);
@@ -80,11 +76,6 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
         record.fields.insert(field.id, value);
     }
 
-    // `Statements` fields have no field-level key at all — they're recognized purely by matching
-    // one of their own variants' keywords, so at most one such field may appear per record.
-    // `Block` fields are also excluded from the `key=value` loop below: their own key acts as a
-    // bare leading keyword (`children { ... }`, no `=`) — `Table` fields (bare `key [...] {...}`
-    // SoA form) are handled the same way, via their own lookahead branch below.
     let statements_field = spec.fields.iter().find(|f| f.position.is_none() && matches!(f.shape, Shape::Statements(_)));
     let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty() && !f.is_call_name && !matches!(f.shape, Shape::Statements(_))).collect();
 
@@ -98,8 +89,6 @@ fn parse_record_fields(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> 
             record.fields.insert(field.id, value);
             continue;
         }
-        // `Table`'s bare SoA form: the keyword directly followed by `[` (no `=`) — distinct from
-        // the AoS-verbose `key=[...]` form already handled by the `at_attr_key` branch above.
         if let Some(index) = keyed.iter().position(|f| matches!(f.shape, Shape::Table(_)) && cursor.at_keyword(&f.key) && cursor.peek_at(1).kind == TokenKind::LBracket) {
             let field = keyed.remove(index);
             let Shape::Table(spec_fn) = &field.shape else { unreachable!() };
@@ -141,10 +130,6 @@ fn can_start_positional(cursor: &Cursor, shape: &Shape) -> bool {
         Shape::Dir => cursor.peek().kind == TokenKind::Caret,
         Shape::Range | Shape::Expr => cursor.peek().kind == TokenKind::LParen,
         Shape::Embed(_) | Shape::EmbedFrom(_) => matches!(cursor.peek().kind, TokenKind::Fence | TokenKind::Text | TokenKind::Placeholder),
-        // Only `Text|Placeholder` — NOT bare `Ident` — may start an optional positional `Text`
-        // field: an unquoted bare-ident value here would be indistinguishable from the next
-        // statement's leading keyword, so this deliberately narrower check (versus `Shape::Text`
-        // parsing `Ident|Text` everywhere else) resolves that ambiguity.
         Shape::Text => matches!(cursor.peek().kind, TokenKind::Text | TokenKind::Placeholder),
         Shape::Bytes64 => cursor.peek().kind == TokenKind::Text,
         Shape::List(_) => cursor.peek().kind == TokenKind::LBracket,
@@ -199,7 +184,7 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: RecordSpecProducer, depth: usiz
         let key = key_token.text.as_str().to_string();
         if cursor.peek().kind == TokenKind::Colon {
             cursor.advance();
-            cursor.expect(TokenKind::Ident)?; // type tag — documentation only, not re-validated here
+            cursor.expect(TokenKind::Ident)?;
         }
         let field_spec = element_spec.fields.iter().find(|f| f.key == key).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,format!("unknown table column '{key}'"),key_token.span))?;
         columns.push(field_spec);

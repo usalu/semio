@@ -31,7 +31,6 @@ pub fn transform_list_to_string(ops: &[TransformOp]) -> String {
 }
 
 pub fn path_data_to_string(cmds: &[PathCommand]) -> String {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn letter(base: char, relative: bool) -> char {
         if relative {
             base.to_ascii_lowercase()
@@ -437,31 +436,25 @@ struct NumCursor<'a> {
 }
 
 impl<'a> NumCursor<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn new(s: &'a str) -> Self {
         Self { s: s.as_bytes(), pos: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn peek(&self) -> Option<u8> {
         self.s.get(self.pos).copied()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn is_eof(&self) -> bool {
         self.pos >= self.s.len()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn skip_wsp_comma(&mut self) {
         while matches!(self.peek(), Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r') | Some(b',')) {
             self.pos += 1;
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn skip_wsp(&mut self) {
         while matches!(self.peek(), Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r')) {
             self.pos += 1;
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_number(&mut self) -> Result<f64, String> {
         self.skip_wsp_comma();
         let start = self.pos;
@@ -504,7 +497,6 @@ impl<'a> NumCursor<'a> {
     /// 🚩 A path arc-flag is EXACTLY one `0`/`1` byte with no separator required before the next
     /// token -- `A5 5 0 108 8` must decompose the run `108` into flags `1`,`0` then the number `8`
     /// (large-arc=1, sweep=0, x=8), never a naive 2-digit/3-digit number grab. Classic bug source.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_flag(&mut self) -> Result<bool, String> {
         self.skip_wsp_comma();
         match self.peek() {
@@ -613,9 +605,6 @@ fn read_transform_list(s:&str,mut emit:impl FnMut(TransformOp)->Result<(),String
 pub fn parse_path_data(d:&str)->Result<Vec<PathCommand>,String>{let mut values=Vec::new();read_path_data(d,|value|{values.push(value);Ok(())})?;Ok(values)}
 fn read_path_data(d:&str,mut emit:impl FnMut(PathCommand)->Result<(),String>)->Result<(),String> {
     let mut c = NumCursor::new(d);
-    // 🔁 `last_letter`/`last_relative` drive implicit command repetition: a number run with no
-    // leading letter reuses the previous command -- except a bare `M`/`m` run whose FIRST pair is
-    // the moveto and whose SUBSEQUENT pairs become implicit `L`/`l` (SVG spec 8.3.2).
     let mut last_letter: Option<u8> = None;
     let mut last_relative = false;
     loop {
@@ -752,7 +741,6 @@ pub(crate) fn parse_common_attrs(attrs: &[XmlAttr], element_specific: &[&str]) -
             "style" => {}
             "transform" => match parse_transform_list(&a.value) {
                 Ok(ops) => common.transform = Some(ops),
-                // 🚧️ malformed transform: kept verbatim rather than fabricated as an empty list.
                 Err(_) => common.extra_attrs.push(a.clone()),
             },
             "fill" | "stroke" | "stroke-width" | "opacity" | "fill-opacity" | "stroke-opacity" | "font-family" | "font-size" => {}

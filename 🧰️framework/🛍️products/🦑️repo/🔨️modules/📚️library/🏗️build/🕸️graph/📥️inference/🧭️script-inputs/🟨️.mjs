@@ -26,7 +26,7 @@ export function wire(registry) {
 /** 🗂️ Shares source reads and command closures only within one graph construction. */
 export function createScriptInputCache(context={}) {
   if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);}
-  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),context,providerDesignation:context.scriptProviderDesignation };
+  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),generatedImports:new Map(),context,providerDesignation:context.scriptProviderDesignation };
 }
 
 /** 🔌️ Names the declared provider modules a script loads at run time, which no literal import reaches: the designation, its schema and every designated module. */
@@ -66,6 +66,7 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
         const resource=buildImportResourceV1(path,entry);
+        const produced=cache.generatedOutput?.(resource.specifier);if(produced){const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);continue;}
         let resolved;
         try { resolved = observedRequireResolve(path, resource.specifier); }
         catch (error) {
@@ -117,7 +118,7 @@ export async function targetScriptSources(target, workspaceRoot, scripts, projec
    const child=selectedOperation.continuation,childBound=bindBuildCommandV1([child.program,...child.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,child.cwd,projectRoot,[]);if(!childBound.script)throw Error("Declared Cargo continuation requires an explicit script Source");retain(childBound);
   }
  }
- return {closure:entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true):undefined,fallback};
+ const closure=entries.size?await relativeScriptInputs([...entries],workspaceRoot,scripts,true):undefined,modules=new Set((closure??[]).map(path=>resolve(workspaceRoot,path.slice("{workspaceRoot}/".length)))),generatedDependencies=[...new Set([...scripts.generatedImports].filter(([path])=>modules.has(path)).flatMap(([,rows])=>rows.map(row=>row.target)))].sort();return {closure,fallback,...(generatedDependencies.length?{generatedDependencies}:{})};
 }
 
 /** ⚙️ Keeps configured recipe inheritance identical for command and lock source discovery. */

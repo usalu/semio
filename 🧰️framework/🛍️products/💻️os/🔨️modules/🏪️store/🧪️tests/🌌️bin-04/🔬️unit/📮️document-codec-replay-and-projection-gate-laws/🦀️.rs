@@ -52,7 +52,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
 
 /// 🪪 Drives a linked codec's apply-ops thunk under a fixture caller-owned identity authority and returns its original cumulative receipt.
 async fn apply_ops_under_fixture_identity(codec: &ArtifactCodec, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<(Vec<u8>, Vec<u8>, String), VcsError> {
-    const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
         assert!(progress.owned_bytes <= CEILING);
         true
@@ -301,7 +301,7 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
 
 #[semio_framework_async_macros::async_test]
 async fn original_envelope_parse_preserves_genesis_without_a_discarded_projection_clone(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️one-item/🛤️lane/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️one-item/🛤️lane/🔣️.json")).unwrap();
  for row in law["envelope"].as_array().unwrap(){
   let value=row["initial"].as_i64().unwrap()as i32;let envelope=create_document_envelope::<DemoSnapshot,DemoMutation>("demo/v1",row["name"].as_str().unwrap(),DemoSnapshot{n:Some(value)},None);let files=print_document_pack(&envelope).await.unwrap();envelope.retire_unadopted();
   DEMO_PROJECTION_CLONES.with(|count|count.set(0));

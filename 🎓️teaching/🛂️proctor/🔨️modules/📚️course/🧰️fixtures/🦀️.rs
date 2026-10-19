@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_path;
 
 /// 📚️ The course file the proctor's own tests play.
 pub fn fixture_path() -> PathBuf {
-    fixture_path!("../../../../🧪️tests/🧫️fixtures/📚️course/🔣️.json")
+    fixture_path!("../../../../🧪️tests/🧫️fixtures/📚️catalog/🔣️.json")
 }
 
 /// 📚️ The fixture course, loaded.

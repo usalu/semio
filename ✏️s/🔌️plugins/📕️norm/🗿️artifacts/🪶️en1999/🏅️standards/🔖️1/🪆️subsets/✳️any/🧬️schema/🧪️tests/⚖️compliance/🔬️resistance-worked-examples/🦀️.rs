@@ -68,7 +68,6 @@ fn haz_rho_reduces_effective_modulus() {
 
 #[test]
 fn fatigue_strength_at_5e5() {
-    // Δσ_R = Δσ_C · (N_C/N)^{1/m1} = 71 · (2e6/5e5)^{1/4.3} ≈ 98.01 MPa
     let rd = part_1_3::fatigue_strength_pa(71.0e6, 4.3, 6.3, 500_000.0);
     assert!((rd / 1e6 - 98.01).abs() < 0.5, "rd_mpa={}", rd / 1e6);
 }

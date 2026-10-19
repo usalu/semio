@@ -11,7 +11,7 @@ export interface Block2dBounds {
 }
 
 export interface Block2dInference {
-  /** @derived */
+  /** 🔲️ @derived */
   bounds: Block2dBounds;
 }
 

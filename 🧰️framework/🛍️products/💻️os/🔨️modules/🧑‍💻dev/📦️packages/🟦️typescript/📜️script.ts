@@ -17,7 +17,7 @@ class CanonicalArchitectureScript extends BundleScript {
 
 class DistributionOutputCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("distribution-output-check accepts no arguments");
+    if (args.length) throw new Error("distribution-output-check accepts no arguments");
     const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
     const { testDistributionOutputContract } = await import("../../🚚️distribution/📍️output/🧪️tests/🔬️unit/🟦️.ts");
     await testDistributionOutputContract(this.repoRoot, nextestArtifactLocation(this.repoRoot).directory);
@@ -26,7 +26,7 @@ class DistributionOutputCheckScript extends BundleScript {
 
 class SourceWatchCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("source-watch-check accepts no arguments");
+    if (args.length) throw new Error("source-watch-check accepts no arguments");
     const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
     const { testNativeSourceWatchPlanV1 } = await import("../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/👁️watch/🧪️testing/🔬️source-plan/🟦️.ts");
     await testNativeSourceWatchPlanV1(this.repoRoot, nextestArtifactLocation(this.repoRoot).directory);
@@ -35,11 +35,11 @@ class SourceWatchCheckScript extends BundleScript {
 
 /** 🔐️ Runs the permanent complete publication and lease custody laws in an owned cancellable worker. */
 class PublicationCheckScript extends BundleScript{
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-check accepts no arguments");const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{cmdBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts"),{join}=await import("node:path"),{readProcessOwnerContextV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts"),context=readProcessOwnerContextV1(process.env,process.cwd());await runOwnedCommand(process.execPath,[join(this.root,"📜️script.ts"),"publication-worker"],this.repoRoot,"publication-law",cmdBudgetMs(),{env:{...process.env,SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify({...context,cwd:this.repoRoot})}});}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("publication-check accepts no arguments");const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{cmdBudgetMs}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts"),{join}=await import("node:path"),{readProcessOwnerContextV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts"),context=readProcessOwnerContextV1(process.env,process.cwd());await runOwnedCommand(process.execPath,[join(this.root,"📜️script.ts"),"publication-worker"],this.repoRoot,"publication-law",cmdBudgetMs(),{env:{...process.env,SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify({...context,cwd:this.repoRoot})}});}
 }
 /** 🧪️ Executes every original publication law and portable lease custody case with declared artifact ownership. */
 class PublicationWorkerScript extends BundleScript{
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("publication-worker accepts no arguments");const {readProcessOwnerContextV1,processCacheDirectoryV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts"),{mkdir}=await import("node:fs/promises"),context=readProcessOwnerContextV1(process.env,process.cwd()),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??processCacheDirectoryV1(context,"publication-law");await mkdir(artifacts,{recursive:true});process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;const {testProtectedActorPublicationV1}=await import("../../🔎️verification/🧾️publication/🧪️tests/🟦️.ts");await testProtectedActorPublicationV1(this.repoRoot);}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("publication-worker accepts no arguments");const {readProcessOwnerContextV1,processCacheDirectoryV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts"),{mkdir}=await import("node:fs/promises"),context=readProcessOwnerContextV1(process.env,process.cwd()),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??processCacheDirectoryV1(context,"publication-law");await mkdir(artifacts,{recursive:true});process.env.SEMIO_TEST_ARTIFACT_DIR=artifacts;const {testProtectedActorPublicationV1}=await import("../../🔎️verification/🧾️publication/🧪️tests/🟦️.ts");await testProtectedActorPublicationV1(this.repoRoot);}
 }
 
 /** 🎮️ Publishes the General owner's explicit catalog-free session instance. */
@@ -60,7 +60,7 @@ class TicketProbeScript extends BundleScript {
     const probes = { "foreign-kind-s": "🐍️s3-foreign-kind-in-s.mjs", "pinch-diagram-contrast-s": "🐍️u4-pinch-diagram-contrast-probe.mjs" } as const;
     const file = probes[probe as keyof typeof probes];
     if (!file) throw new Error("ticket-probe requires foreign-kind-s or pinch-diagram-contrast-s");
-    const { runOwnedCommand } = await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts"), { join } = await import("node:path");
+    const { runOwnedCommand } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"), { join } = await import("node:path");
     const input = join(this.repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END", file);
     await runOwnedCommand(process.execPath, [input, ...args], this.repoRoot, `ticket-probe:${probe}`, this.invocation.control.remainingMilliseconds() ?? 0, { signal: this.invocation.control.signal });
   }
@@ -69,6 +69,7 @@ class TicketProbeScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .registerLazy("verify-staged", async () => (await import("../../🔎️verification/🧾️convergence/🟦️.ts")).VerifyStagedScript)
+  .register("ticket-probe", TicketProbeScript)
   .register("playground-session", PlaygroundSessionScript)
   .register("publication-check", PublicationCheckScript)
   .register("publication-worker", PublicationWorkerScript)
@@ -81,7 +82,7 @@ const router = new ScriptRouter(import.meta.dir)
     /** 🛎️ `serve-hold --serve <url> [--hub <url>] [--variant <v>]`: holds the shared development serve owner (`ensureDevServe`) until
      * SIGINT/SIGTERM, then stops only what it started — the zero-touch serve provider of the repository goal gate. */
     async run(segments: string[]): Promise<void> {
-      const { devServePortV1, ensureDevServe } = await import("../../🚀️local-hub/🏃️execution/🟦️.ts").register("ticket-probe", TicketProbeScript);
+      const { devServePortV1, ensureDevServe } = await import("../../🚀️local-hub/🏃️execution/🟦️.ts");
       const flag = (name: string): string | undefined => (segments.indexOf(name) >= 0 ? segments[segments.indexOf(name) + 1] : undefined);
       const serveUrl = flag("--serve");
       if (!serveUrl) throw new Error("usage: serve-hold --serve <url> [--hub <url>] [--variant <v>]");
@@ -164,6 +165,6 @@ const router = new ScriptRouter(import.meta.dir)
 
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => {
   const argv=process.argv.slice(2),at=argv.indexOf("--catalog");
-  if(at>=0){const path=argv[at+1];if(!path||argv.indexOf("--catalog",at+1)>=0)throw Error("One explicit catalog root required");process.env.SEMIO_PLUGIN_CATALOG=path;argv.splice(at,2);}
+  if(at>=0){const path=argv[at+1];if(!path||argv.indexOf("--catalog",at+1)>=0)throw new Error("One explicit catalog root required");process.env.SEMIO_PLUGIN_CATALOG=path;argv.splice(at,2);}
   return runScriptMain(router,{invocation:original,argv,defaultCommand:"dev"});
 });

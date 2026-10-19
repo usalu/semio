@@ -9,8 +9,6 @@ use semio_framework_plugin::PluginApp;
 async fn toggle_sun_flips_enabled() {
     let mut a = app().await;
     dispatch(&mut a, LowpolyCommand::ToggleSun(semio_s_artifact_lowpoly_lowpoly_commands::sun::toggle_sun::ToggleSun {})).await;
-    // 🎯️ Config isn't directly readable off `VcsArtifactApp`; assert through window measures instead
-    // (mirrors the pre-migration test's approach of reading effects, not internal state).
     let view_state = action_meta().view_state.expect("the Model window's view state");
     let measures = a.window_measures(&view_state).await;
     assert!(!measures.is_empty(), "the Model window publishes its measures: {measures:?}");

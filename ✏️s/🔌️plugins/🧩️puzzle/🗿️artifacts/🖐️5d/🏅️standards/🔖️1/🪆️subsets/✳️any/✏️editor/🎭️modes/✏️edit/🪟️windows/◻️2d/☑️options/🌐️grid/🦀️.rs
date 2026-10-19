@@ -1,4 +1,4 @@
-//! FACTOR slider the board engine multiplies its LOD-derived snap step by. The world pane's grid
+//! 🔍️ FACTOR slider the board engine multiplies its LOD-derived snap step by. The world pane's grid
 //! 🌐️ 2D-window option — the board pane's grid group: the visibility and snap toggles plus the snap
 //! slider is an absolute spacing in metres instead (`🧊️3d/☑️options/🌐️grid`) — different state,
 //! different verb, so neither file is a copy of the other.

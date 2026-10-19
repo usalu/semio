@@ -170,7 +170,7 @@ fn runtime_raster_operation_authority_rejects_stale_duplicate_and_device_close_a
     assert_eq!(first.preview_generation, 5);
     assert!(authority.matches(first));
     assert!(authority.begin(3, 5).is_err());
-    let stale = ui_gpu::RasterTextureWitness { operation: first.operation.wrapping_add(1), ..first };
+    let stale = semio_framework_ui_wgpu_raster::RasterTextureWitness { operation: first.operation.wrapping_add(1), ..first };
     assert!(!authority.matches(stale));
     assert!(authority.release(stale).is_err());
     assert!(authority.matches(first));

@@ -8,8 +8,8 @@
 //! @see ../../🧬️schema/🔣️.json — `Place`, `Anchor`, `Cursor`, `PresenceState`, `CursorState`
 //! @see ../👥️presence/🟦️.ts — the TypeScript twin
 
-use crate::schema::{ClassificationAnswer, Cursor, CursorState, Identity, LearnerView, Place, PresenceBadgeAward, PresenceProfile, PresenceRun, PresenceRunSummary, PresenceState, RunView, Screen, SortingAnswer, ThinkingAnswer, ThinkingMatchingAnswer, ThinkingState};
-use crate::validation::{is_slug, normalize_handle, pointer, IssueCode, ValidationIssue};
+use course::schema::{ClassificationAnswer, Cursor, CursorState, Identity, LearnerView, Place, PresenceBadgeAward, PresenceProfile, PresenceRun, PresenceRunSummary, PresenceState, RunView, Screen, SortingAnswer, ThinkingAnswer, ThinkingMatchingAnswer, ThinkingState};
+use course::validation::{is_id, is_slug, normalize_handle, pointer, IssueCode, ValidationIssue};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_pack_json::{self as json, Number, Object, Value};
 use serde::{Serialize, Serializer, ser::{self, SerializeMap, SerializeSeq, SerializeStruct, SerializeTuple, SerializeTupleStruct}};
@@ -151,7 +151,7 @@ fn contract_matches(schema: &Value, value: &Value, root: &Value) -> bool {
             true
         }
         Some("array") => value.as_array().is_some_and(|entries| contract_count(schema, entries.len(), "minItems", "maxItems") && entries.iter().all(|value| schema.get("items").is_none_or(|items| contract_matches(items, value, root)))),
-        Some("string") => value.as_str().is_some_and(|text| contract_count(schema, text.chars().count(), "minLength", "maxLength") && schema["pattern"].as_str().is_none_or(|pattern| match pattern { "^[a-z0-9]+(?:-[a-z0-9]+)*$" => is_slug(text), "^[0-9a-f]{32}$" => crate::validation::is_id(text), "^[0-9a-f]{8}$" => is_tag(text), pattern if root["$defs"]["Handle"]["pattern"].as_str() == Some(pattern) => normalize_handle(text).is_some_and(|handle| handle.display == text), _ => false })),
+        Some("string") => value.as_str().is_some_and(|text| contract_count(schema, text.chars().count(), "minLength", "maxLength") && schema["pattern"].as_str().is_none_or(|pattern| match pattern { "^[a-z0-9]+(?:-[a-z0-9]+)*$" => is_slug(text), "^[0-9a-f]{32}$" => is_id(text), "^[0-9a-f]{8}$" => is_tag(text), pattern if root["$defs"]["Handle"]["pattern"].as_str() == Some(pattern) => normalize_handle(text).is_some_and(|handle| handle.display == text), _ => false })),
         Some(kind @ ("number" | "integer")) => value.as_f64().is_some_and(|number| number.is_finite() && (kind != "integer" || number.fract() == 0.0) && schema["minimum"].as_f64().is_none_or(|min| number >= min) && schema["maximum"].as_f64().is_none_or(|max| number <= max) && schema["exclusiveMinimum"].as_f64().is_none_or(|min| number > min)),
         Some("boolean") => matches!(value, Value::Bool(_)),
         None => true,
@@ -372,3 +372,7 @@ impl SerializeStruct for PresentationMap {
     fn serialize_field<T: Serialize + ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), PresentationError> { self.values.insert(key, value.serialize(PresentationSerializer)?); Ok(()) }
     fn end(self) -> Result<Value, PresentationError> { Ok(Value::Object(self.values)) }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

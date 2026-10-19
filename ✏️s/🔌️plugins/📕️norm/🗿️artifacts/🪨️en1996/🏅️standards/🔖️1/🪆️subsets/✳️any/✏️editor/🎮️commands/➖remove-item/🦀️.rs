@@ -1,4 +1,4 @@
-//! Norm command — `remove-item`.
+//! 📜️ Norm command — `remove-item`.
 
 use semio_s_artifact_norm_en1996_mutations::En1996Mutation;
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;

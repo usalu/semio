@@ -4,9 +4,6 @@ use crate::topology::GraphTopologyBuilder;
 
 #[test]
 fn isomorphic_rooted_neighborhoods_get_identical_signatures() {
-    // Two disjoint triangles: every node in each triangle has the exact same rooted
-    // 1-hop neighborhood shape (two same-labeled neighbors), so 1 round of refinement must
-    // make all six nodes' signatures identical.
     let mut b = GraphTopologyBuilder::new(6);
     let r = RelationId(0);
     for &(a, c) in &[(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3)] {
@@ -14,15 +11,13 @@ fn isomorphic_rooted_neighborhoods_get_identical_signatures() {
         b.arc(NodeId(c), NodeId(a), r);
     }
     let topo = b.build().unwrap();
-    let labels = vec![7u64; 6]; // uniform base label
+    let labels = vec![7u64; 6];
     let colors = refine_colors(&topo, &labels, 1);
     assert!(colors.iter().all(|&c| c == colors[0]));
 }
 
 #[test]
 fn structurally_different_neighborhoods_get_different_signatures() {
-    // A 4-node "star" (node0 connects to 1,2,3; they don't connect to each other): the semio_hub
-    // has 3 neighbors, the leaves have 1 each — must not collide after refinement.
     let mut b = GraphTopologyBuilder::new(4);
     let r = RelationId(0);
     for leaf in [1, 2, 3] {
@@ -52,7 +47,6 @@ fn different_base_labels_propagate_into_different_signatures() {
 
 #[test]
 fn zero_rounds_is_the_identity_on_labels_modulo_hashing() {
-    // With 0 rounds, colors are exactly `initial_labels` unchanged (no hashing applied at all).
     let b = GraphTopologyBuilder::new(3);
     let topo = b.build().unwrap();
     let labels = vec![10u64, 20, 10];

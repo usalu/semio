@@ -8,7 +8,7 @@ import { runOwnedCommand } from "../../../../../🏃️process/📦️packages/�
 /** 🟨️ Checks owned ECMA lexical evidence against independent compiler oracles. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Expected test");
+    if (args.length) throw new Error("Expected test");
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🟦️.ts")], this.root, "compiler:syntax:ecma", 60_000);
   }
 }

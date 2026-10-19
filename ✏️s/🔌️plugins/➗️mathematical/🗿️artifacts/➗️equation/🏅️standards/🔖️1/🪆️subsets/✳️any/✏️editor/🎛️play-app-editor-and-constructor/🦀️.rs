@@ -180,10 +180,6 @@ impl ArtifactEditor for EquationPlayApp {
             "setDirected" => Ok(EquationCommand::SetDirected(set_directed::SetDirected {
                 directed: args.and_then(|value| value.get("directed").or_else(|| value.get("value"))).and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
             })),
-            // 🧬️ A staged `json_text` argument arrives as a STRING already holding the JSON document
-            // (the `loadDocumentJson.json`/`patchLayer.value` shape); re-stringifying it would wrap the
-            // array in quotes and `equation_edit_preflight` would refuse it as a non-array. A
-            // structured `DslValue` (an engagement or an MCP caller) still prints normally.
             "nodeGraphEdit" => Ok(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
                 operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), |value| value.as_str().map_or_else(|| semio_framework_pack_json::to_json_string(value), str::to_string)),
             })),
@@ -275,7 +271,6 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(graph_window::definition())
         .window_kind_def(geometry_window::definition())
         .default_layout(edit::layout())
-        // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
         .mutation("editEquation", LocalizedLabel::native("Edit Equation", "Gleichung bearbeiten"))
         .mutation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
         .mutation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
@@ -298,7 +293,6 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
                 .required()
                 .default_value(&crate::examples::demo::ID),
         ])
-        // 📝️ Staged argument forms for the graph analysis controls.
         .action_args("setAlgorithm", vec![
             ActionArgDef::select("algorithm", LocalizedLabel::native("Algorithm", "Algorithmus"), vec![
                 ActionArgOption::new("topo", LocalizedLabel::native("Topological Order", "Topologische Ordnung")),
@@ -310,11 +304,6 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .action_args("setDirected", vec![
             ActionArgDef::toggle("directed", LocalizedLabel::native("Directed", "Gerichtet")).default_value(&true),
         ])
-        // 🧬️ The equation's own EDIT verb, staged as JSON text — the only document verb whose whole
-        // payload the Actions pane can carry (`editEquation`/`editPoints`/`nodeGraphViewport` take
-        // structured `<block>` arguments no pane control produces). The default is one `move` gesture
-        // record, so the verb is dispatchable, invertible and visible in the graph window
-        // straight from the pane instead of only from a canvas engagement.
         .action_args("addNode", vec![
             ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required().default_value(&120.0),
             ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required().default_value(&80.0),
@@ -324,9 +313,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
                 .required()
                 .default_value(&EQUATION_DEFAULT_EDIT_OPERATIONS),
         ])
-        // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
         // WORKFLOWS-END-TO-END-TYPED-PORTS) — `equation_io()` (this file's own `🔖️Io` region) is
-        // this port information's single source of truth, reused here rather than duplicated.
         .io(equation_io())
         .action_describe("editEquation", LocalizedLabel::native("Applies the supplied graph and point geometry as the concrete node, edge and point changes that differ from the equation; nothing else is touched.", "Wendet den übergebenen Graphen und die Punktgeometrie als die konkreten Knoten-, Kanten- und Punktänderungen an, die von der Gleichung abweichen; sonst wird nichts angefasst."))
         .action_describe("setAlgorithm", LocalizedLabel::native("Chooses the graph algorithm the equation evaluates: topological order, connected components, strongly connected components or breadth-first distances.", "Wählt den Graphalgorithmus, den die Gleichung auswertet: topologische Ordnung, Zusammenhangskomponenten, starke Zusammenhangskomponenten oder Breitensuche-Distanzen."))

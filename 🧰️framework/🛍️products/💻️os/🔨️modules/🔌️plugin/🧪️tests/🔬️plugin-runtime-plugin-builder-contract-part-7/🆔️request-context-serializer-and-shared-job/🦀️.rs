@@ -4,7 +4,8 @@
     /// (`ARC-CONTEXT-3` → `-4` …) exactly when the identity's input set changes, which is what
     /// invalidates the literal — so the tag is joined here first and a drift fails on the clause
     /// that names its cause instead of on a bare number.
-    #[test]
+    use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
+#[test]
     fn app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift() {
         let fixture: Value = serde_json::from_str(include_str!("../../../🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json")).expect("request context fixture");
         let hex = |text: &str| text.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex pair"), 16).expect("hex byte")).collect::<Vec<_>>();

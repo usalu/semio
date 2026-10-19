@@ -27,6 +27,8 @@
   "inputs": [
     "default",
     "^default",
+    "testEnv",
+    "reads",
     "{workspaceRoot}/🧰️framework/🔨️modules/🗜️deflate/**/*",
     "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
     "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/**/*",

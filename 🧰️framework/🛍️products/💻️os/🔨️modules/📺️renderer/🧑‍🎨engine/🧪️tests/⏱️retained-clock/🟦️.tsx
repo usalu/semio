@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import Ajv2020 from "ajv/dist/2020";
-import { uiRenderDeadlineFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { uiRenderDeadlineFixture as fixture } from "@semio-tech/framework/ui/testing/fixtures";
 
 afterEach(() => vi.useRealTimers());
 

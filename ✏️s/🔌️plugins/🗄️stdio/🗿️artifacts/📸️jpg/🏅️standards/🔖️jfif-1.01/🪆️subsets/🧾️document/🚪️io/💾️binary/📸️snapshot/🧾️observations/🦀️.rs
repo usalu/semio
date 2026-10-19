@@ -58,7 +58,6 @@ pub enum JpgHuffmanClass {
 }
 
 impl JpgHuffmanClass {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_u8(v: u8) -> Result<Self, String> {
         match v {
             0 => Ok(JpgHuffmanClass::Dc),
@@ -66,7 +65,6 @@ impl JpgHuffmanClass {
             _ => Err(format!("jpg: unsupported huffman class {v}")),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_u8(self) -> u8 {
         match self {
             JpgHuffmanClass::Dc => 0,

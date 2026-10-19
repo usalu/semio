@@ -95,12 +95,10 @@ pub struct DwgBitReader<'a> {
     bit: u8,
 }
 impl<'a> DwgBitReader<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(bytes: &'a [u8]) -> Self {
         Self { bytes, byte_pos: 0, bit: 0 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn at_bit(bytes: &'a [u8], bit_pos: usize) -> Result<Self, String> {
         if bit_pos > bytes.len().saturating_mul(8) {
             return Err("dwg bitstream position exceeds payload".to_string());
@@ -108,7 +106,6 @@ impl<'a> DwgBitReader<'a> {
         Ok(Self { bytes, byte_pos: bit_pos / 8, bit: (bit_pos % 8) as u8 })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bit(&mut self) -> Result<bool, String> {
         if self.byte_pos >= self.bytes.len() {
             return Err("dwg bitstream underflow".to_string());
@@ -122,7 +119,6 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bits(&mut self, count: u8) -> Result<u64, String> {
         let mut value = 0u64;
         for _ in 0..count {
@@ -131,7 +127,6 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn skip_bits(&mut self, count: usize) -> Result<(), String> {
         for _ in 0..count {
             self.read_bit()?;
@@ -139,22 +134,18 @@ impl<'a> DwgBitReader<'a> {
         Ok(())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn bit_position(&self) -> usize {
         self.byte_pos.saturating_mul(8).saturating_add(self.bit as usize)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_b(&mut self) -> Result<bool, String> {
         self.read_bit()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bb(&mut self) -> Result<u8, String> {
         Ok(self.read_bits(2)? as u8)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_3b(&mut self) -> Result<u8, String> {
         let mut value = 0u8;
         for _ in 0..3 {
@@ -167,40 +158,34 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_rc(&mut self) -> Result<u8, String> {
         Ok(self.read_bits(8)? as u8)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_rs(&mut self) -> Result<u16, String> {
         let lo = self.read_rc()? as u16;
         let hi = self.read_rc()? as u16;
         Ok(lo | (hi << 8))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_rl(&mut self) -> Result<u32, String> {
         let lo = self.read_rs()? as u32;
         let hi = self.read_rs()? as u32;
         Ok(lo | (hi << 16))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_rll(&mut self) -> Result<u64, String> {
         let lo = self.read_rl()? as u64;
         let hi = self.read_rl()? as u64;
         Ok(lo | (hi << 32))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_rd(&mut self) -> Result<f64, String> {
         let lo = self.read_rl()? as u64;
         let hi = self.read_rl()? as u64;
         Ok(f64::from_bits(lo | (hi << 32)))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bs(&mut self) -> Result<u16, String> {
         match self.read_bb()? {
             0 => self.read_rs(),
@@ -210,7 +195,6 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bl(&mut self) -> Result<u32, String> {
         match self.read_bb()? {
             0 => self.read_rl(),
@@ -220,7 +204,6 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bll(&mut self) -> Result<u64, String> {
         let byte_count = usize::from(self.read_3b()?);
         let mut value = 0u64;
@@ -230,7 +213,6 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bd(&mut self) -> Result<f64, String> {
         let position = self.bit_position();
         match self.read_bb()? {
@@ -245,7 +227,6 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_dd(&mut self, default: f64) -> Result<f64, String> {
         let mut bytes = default.to_le_bytes();
         match self.read_bb()? {
@@ -268,7 +249,6 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bt(&mut self) -> Result<f64, String> {
         if self.read_b()? {
             Ok(0.0)
@@ -277,17 +257,14 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_2rd(&mut self) -> Result<[f64; 2], String> {
         Ok([self.read_rd()?, self.read_rd()?])
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_3bd(&mut self) -> Result<[f64; 3], String> {
         Ok([self.read_bd()?, self.read_bd()?, self.read_bd()?])
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_be(&mut self) -> Result<[f64; 3], String> {
         if self.read_b()? {
             Ok([0.0, 0.0, 1.0])
@@ -296,14 +273,12 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_tv(&mut self) -> Result<String, String> {
         let length = self.read_bs()? as usize;
         let bytes = (0..length).map(|_| self.read_rc()).collect::<Result<Vec<_>, _>>()?;
         Ok(bytes.iter().take_while(|byte| **byte != 0).map(|byte| char::from(*byte)).collect())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_tu(&mut self) -> Result<String, String> {
         let position = self.bit_position();
         let length = self.read_bs()? as usize;
@@ -314,7 +289,6 @@ impl<'a> DwgBitReader<'a> {
         String::from_utf16(&units).map_err(|error| format!("invalid DWG UTF-16 string: {error}"))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_ms(&mut self) -> Result<u32, String> {
         let mut value = 0u32;
         let mut shift = 0;
@@ -329,7 +303,6 @@ impl<'a> DwgBitReader<'a> {
         Ok(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_umc(&mut self) -> Result<u64, String> {
         let mut value = 0u64;
         for shift in (0..56).step_by(7) {
@@ -342,7 +315,6 @@ impl<'a> DwgBitReader<'a> {
         Err("dwg unsigned modular-char overflow".into())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_bot(&mut self) -> Result<u16, String> {
         match self.read_bb()? {
             0 => Ok(self.read_rc()?.into()),
@@ -351,7 +323,6 @@ impl<'a> DwgBitReader<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_handle(&mut self) -> Result<(u8, u64), String> {
         let head = self.read_rc()?;
         let code = head >> 4;
@@ -363,7 +334,6 @@ impl<'a> DwgBitReader<'a> {
         Ok((code, value))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn pad_to_byte(&mut self) {
         if self.bit != 0 {
             self.bit = 0;

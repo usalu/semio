@@ -121,9 +121,6 @@ function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapsh
     if (prev.activePanelTabByGroup[group] !== next.activePanelTabByGroup[group]) changes.push({ kind: "panelTab", group, tabId: next.activePanelTabByGroup[group] });
   }
   if (next.panelJson != null && prev.panelJson !== next.panelJson) changes.push({ kind: "panelState", panelJson: next.panelJson });
-  // 🕹️ `TutorialUiSnapshot.selectionJson` is gone — replaced by `interactionSelection`, the framework-
-  // owned per-domain selection map. Diffed one domain at a time, matching the granularity every other
-  // diff in this function already operates at (`activeUtilityByWindowId`/`activePanelTabByGroup`).
   const selectionDomainIds = new Set([...Object.keys(prev.interactionSelection), ...Object.keys(next.interactionSelection)]);
   for (const domainId of selectionDomainIds) {
     const prevSelection = prev.interactionSelection[domainId];

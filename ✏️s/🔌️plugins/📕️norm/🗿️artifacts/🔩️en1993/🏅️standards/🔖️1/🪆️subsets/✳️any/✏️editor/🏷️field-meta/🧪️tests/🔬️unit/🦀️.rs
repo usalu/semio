@@ -27,7 +27,6 @@ fn walk(path: &str, value: &serde_json::Value, missing: &mut Vec<String>) {
                 let child = if path.is_empty() { k.clone() } else { format!("{path}.{k}") };
                 if matches!(v, serde_json::Value::Object(_) | serde_json::Value::Array(_)) {
                     if en1993_field_meta(&child).or_else(|| en1993_field_meta(&to_template(&child))).is_none() {
-                        // containers still need labels
                         missing.push(child.clone());
                     }
                     walk(&child, v, missing);

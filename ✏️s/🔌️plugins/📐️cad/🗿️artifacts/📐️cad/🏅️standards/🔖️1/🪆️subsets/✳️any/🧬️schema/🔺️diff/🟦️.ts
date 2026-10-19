@@ -26,7 +26,7 @@ export interface CadDrawingRemoval { id: string; index: number }
 export interface CadDrawingRelocation { id: string; from: number; to: number }
 export interface CadBrepRemoval { id: string; index: number }
 export interface CadBrepRelocation { id: string; from: number; to: number }
-/** Positional delta: `removed` rows carry their base index, `inserted` rows their after index, `moved` rows both; no order list. */
+/** ✏️ Positional delta: `removed` rows carry their base index, `inserted` rows their after index, `moved` rows both; no order list. */
 export interface CadNodesDelta { removed: CadNodeRemoval[]; inserted: Array<{ index: number; row: CadNode }>; moved: CadNodeRelocation[]; modified: CadNodeModification[] }
 export interface CadModelSlot { child: ArtifactChild | null }
 export interface CadDrawingsDelta { removed: CadDrawingRemoval[]; inserted: Array<{ index: number; row: ArtifactChild }>; moved: CadDrawingRelocation[] }
@@ -49,16 +49,16 @@ export interface CadReferenceModification { id: string; patch: CadReferencePatch
 export interface CadReferencesDelta { removed: CadReferenceRemoval[]; inserted: Array<{ index: number; row: CadReference }>; moved: CadReferenceRelocation[]; modified: CadReferenceModification[] }
 
 export interface CadDiff {
-  /** @state artifact */ schema?: string | null;
-  /** @state artifact */ id?: string | null;
-  /** @state artifact @child kind=s.stdio.semio */ shapeModel?: CadModelSlot | null;
-  /** @state artifact @child kind=s.stdio.semio */ buildingModel?: CadModelSlot | null;
-  /** @state artifact @child kind=s.stdio.semio */ energyModel?: CadModelSlot | null;
-  /** @state artifact @child kind=s.stdio.semio */ structureClassicModel?: CadModelSlot | null;
-  /** @state artifact @child kind=s.stdio.semio many */ drawings?: CadDrawingsDelta | null;
-  /** @state artifact @child kind=s.stdio.semio many */ breps?: CadBrepsDelta | null;
-  /** @state artifact */ referencesByModelDefinitionId?: Record<string, CadReferencesDelta> | null;
-  /** @state artifact */ nodes?: CadNodesDelta | null;
+  /** 🔄️ @state artifact */ schema?: string | null;
+  /** 📝️ @state artifact */ id?: string | null;
+  /** 🔷️ @state artifact @child kind=s.stdio.semio */ shapeModel?: CadModelSlot | null;
+  /** 🏢️ @state artifact @child kind=s.stdio.semio */ buildingModel?: CadModelSlot | null;
+  /** 🏋️ @state artifact @child kind=s.stdio.semio */ energyModel?: CadModelSlot | null;
+  /** 🏗️ @state artifact @child kind=s.stdio.semio */ structureClassicModel?: CadModelSlot | null;
+  /** 🖍️ @state artifact @child kind=s.stdio.semio many */ drawings?: CadDrawingsDelta | null;
+  /** 🧊️ @state artifact @child kind=s.stdio.semio many */ breps?: CadBrepsDelta | null;
+  /** 🔗️ @state artifact */ referencesByModelDefinitionId?: Record<string, CadReferencesDelta> | null;
+  /** 🔘️ @state artifact */ nodes?: CadNodesDelta | null;
 }
 
 

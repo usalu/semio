@@ -292,9 +292,6 @@ describe("framework renderer hosts", () => {
         brushPreviewJson: undefined,
         interactionJson: '{"activeUtility":"select"}',
         engagementPreviewJson: '[{"kind":"point","role":"origin","position":[0,0,0]},{"kind":"box-preview","role":"preview","cornerA":[0,0,0],"cornerB":[2,2,0]}]',
-        // 🖱️ Context menus are no longer pushed as scene JSON — a right-click round-trips through
-        // `requestContextMenu`/`ContextMenuItemSpec` on demand instead (see `openSurfaceContextMenu`,
-        // renderer `🟦️.tsx`), so `World3dScene` has no `contextMenuJson` field to cover here.
         statusJson: '{"computing":true,"label":"Evaluating"}',
         terrainJson: '{"tileUrlTemplate":"/dem/{z}/{x}/{y}.png","projectOriginLon":9.7382,"projectOriginLat":52.3759,"exaggeration":1.5,"colorRamp":"hypsometric","minZoom":6,"maxZoom":14}',
       },
@@ -377,10 +374,6 @@ describe("framework renderer hosts", () => {
   });
 
   it("uses the world surface selection mode instead of a stale shared invertive mode", () => {
-    // 🐚️ "invertive" here plays the role the old page-global `__selectionMode` used to (a shell's
-    // persistent toolbar toggle) — passed explicitly now via the `persistentMode` param instead of a
-    // `globalThis` singleton, but the priority rule under test is unchanged: an explicitly *configured*
-    // world-surface mode still wins over it.
     expect(resolveWorldMergeMode("replace", {}, "invertive")).toBe("replace");
     expect(resolveWorldMergeMode("replace", { shiftKey: true }, "invertive")).toBe("additive");
     expect(resolveWorldMergeMode("invertive", {}, "invertive")).toBe("invertive");
@@ -455,8 +448,6 @@ describe("framework renderer hosts", () => {
   });
 
   it("resolves catalogue-drop ghost mesh URLs even when the kind is not yet among scene meshes", () => {
-    // 👻️ A dragged catalogue kind must load its own meshUrl directly — requiring a scene mesh match left a
-    // kind not placed yet invisible in 3D.
     expect(worldGhostMeshUrl({ meshUrl: "/meshes/new-kind.glb" }, [])).toBe("/meshes/new-kind.glb");
     expect(worldGhostMeshUrl({ meshUrl: "/meshes/placed.glb" }, [{ url: "/meshes/placed.glb" }])).toBe("/meshes/placed.glb");
     expect(worldGhostMeshUrl({}, [{ url: "/meshes/placed.glb" }])).toBeUndefined();

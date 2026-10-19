@@ -81,8 +81,8 @@ macro_rules! receive{
  }
  };
 }
-receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&ObjSnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
+receive!(project_receiving,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,SqliteDatabase,|source:Option<&ObjSnapshot>,_:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|project(source.unwrap(),frame,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.projection.database,SqliteDatabase{tables:Vec::new()})));
 receive!(reconstruct_receiving,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,ObjSnapshot,|_:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,None,port),|frame:&mut Frame|Ok(std::mem::replace(&mut frame.snapshot,empty())));
-receive!(validate_decoding,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,(),|source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
+receive!(validate_decoding,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeProgress,Decode,ProjectSnapshot,(),|source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
 receive!(validate_encoding,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeProgress,Encode,ReconstructSnapshot,(),|source:Option<&ObjSnapshot>,database:Option<&SqliteDatabase>,frame:&mut Frame,port:&mut Paid<'_,'_,'_>|read(database.unwrap(),frame,source,port),|_:&mut Frame|Ok(()));
 

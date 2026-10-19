@@ -3,7 +3,8 @@ use super::*;
 use semio_framework_dsl_record::{BorrowedRecordSpec, BorrowedShape as B};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V};
 use semio_framework_dsl_record::native_encoding::RetainedExpressionCursor;
-use semio_framework_value::{list::PagedList, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged_text::TextReadView;
 
 const SYMBOL_LIMIT: usize = isize::MAX as usize;
@@ -71,7 +72,7 @@ impl Default for BorrowedProjectedPackCursor {
 
 fn invalid(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
 fn text_view(view:V<'_>)->Result<TextReadView<'_>,ValueError>{match view{V::Text(text)|V::IntrinsicText(text)=>Ok(TextReadView::from_str(text)),V::TextSource(text)|V::IntrinsicTextSource(text)=>Ok(text),_=>Err(invalid("Pack text source changed"))}}
-fn page_error(error: semio_framework_value::list::PagedListError) -> ValueError { ValueError::literal(match error.kind { semio_framework_value::list::PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvariantViolated }, error.reason) }
+fn page_error(error: semio_framework_value_persistent::list::PagedListError) -> ValueError { ValueError::literal(match error.kind { semio_framework_value_persistent::list::PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, semio_framework_value_persistent::list::PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvariantViolated }, error.reason) }
 
 impl BorrowedProjectedPackCursor {
     pub fn set_maximum_source_depth(&mut self,maximum:usize){self.maximum_source_depth=maximum.min(63);}
@@ -317,8 +318,6 @@ impl BorrowedProjectedPackCursor {
         }
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.is_complete() })
         })();
-        #[cfg(debug_assertions)]
-        if result.as_ref().is_ok_and(|step|step.progress==RetainedCloneProgress::default())&&grant.maximum_items!=0&&!output.is_empty()&&grant.maximum_copy_bytes>=self.next_minimum_copy_bytes()&&grant.maximum_capacity_bytes>=self.next_capacity_byte_demand().unwrap_or(usize::MAX)&&grant.maximum_depth>=self.next_advance_depth_demand().unwrap_or(usize::MAX){eprintln!("[DEBUG] funded borrowed Pack blocked phase={} source-depth={} expression-mode={} source-min={} child-copy={:?} child-cap={:?} child-depth={:?} grant={grant:?}",self.phase as u8,self.depth,self.expression_state.mode,self.next_minimum_copy_bytes(),self.expression.next_copy_byte_demand(),self.expression.next_capacity_byte_demand(),self.expression.next_depth_demand());}
         result.map_err(|reason| failed_turn(reason, progress))
     }
 

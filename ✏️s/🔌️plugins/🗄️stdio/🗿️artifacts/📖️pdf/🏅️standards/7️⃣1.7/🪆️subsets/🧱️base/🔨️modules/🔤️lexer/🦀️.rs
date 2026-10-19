@@ -60,24 +60,19 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn at(&self, offset: usize) -> Self {
         Self { data: self.data, pos: offset }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn peek(&self) -> Option<u8> {
         self.data.get(self.pos).copied()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn peek_at(&self, n: usize) -> Option<u8> {
         self.data.get(self.pos + n).copied()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn skip_ws(&mut self) {
         loop {
             match self.peek() {
@@ -97,7 +92,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn read_regular_run(&mut self) -> &'a [u8] {
         let start = self.pos;
         while let Some(b) = self.peek() {
@@ -109,12 +103,10 @@ impl<'a> Lexer<'a> {
         &self.data[start..self.pos]
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn starts_with(&self, kw: &[u8]) -> bool {
         self.data.get(self.pos..self.pos + kw.len()) == Some(kw)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn consume_keyword(&mut self, kw: &[u8]) -> bool {
         if self.starts_with(kw) {
             self.pos += kw.len();
@@ -124,7 +116,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parse_number(&mut self) -> PResult<PdfObject> {
         let start = self.pos;
         if matches!(self.peek(), Some(b'+') | Some(b'-')) {
@@ -152,7 +143,6 @@ impl<'a> Lexer<'a> {
             return malformed("expected number");
         }
         let raw = std::str::from_utf8(&self.data[start..self.pos]).unwrap_or("0");
-        // 🩹 Lenient like every shipping reader: collapse repeated signs/dots real generators emit.
         let mut text = String::with_capacity(raw.len());
         let mut seen_dot = false;
         for (index, character) in raw.chars().enumerate() {
@@ -177,7 +167,6 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_name(&mut self) -> PdfObject {
         self.pos += 1;
         let mut out = Vec::new();
@@ -196,7 +185,6 @@ impl<'a> Lexer<'a> {
         PdfObject::Name(String::from_utf8(out.clone()).unwrap_or_else(|_| out.iter().map(|&b| b as char).collect()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_literal_string(&mut self) -> PResult<PdfObject> {
         self.pos += 1;
         let mut depth = 1i32;
@@ -272,7 +260,6 @@ impl<'a> Lexer<'a> {
         malformed("unterminated literal string")
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_hex_string(&mut self) -> PResult<PdfObject> {
         self.pos += 1;
         let mut nibbles = Vec::new();
@@ -301,7 +288,6 @@ impl<'a> Lexer<'a> {
         Ok(PdfObject::Str(nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_array(&mut self) -> PResult<PdfObject> {
         self.pos += 1;
         let mut items = Vec::new();
@@ -323,7 +309,6 @@ impl<'a> Lexer<'a> {
         Ok(PdfObject::Array(items))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn parse_dict_or_stream(&mut self, allow_stream: bool) -> PResult<PdfObject> {
         self.pos += 2;
         let mut entries = Vec::new();
@@ -337,7 +322,6 @@ impl<'a> Lexer<'a> {
                 None => return malformed("unterminated dictionary"),
                 Some(b'/') => {}
                 Some(_) => {
-                    // 🩹 Skip a stray value/keyword where a key belongs (malformed generators).
                     match self.next_token()? {
                         Token::End => return malformed("unterminated dictionary"),
                         _ => continue,
@@ -390,7 +374,6 @@ impl<'a> Lexer<'a> {
     }
 
     /// 📏 Whether `endstream` (after optional EOL) follows `at` — validates a declared `/Length`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn endstream_follows(data: &[u8], at: usize) -> bool {
         let mut lex = Lexer::new(data).at(at);
         lex.skip_ws();
@@ -398,7 +381,6 @@ impl<'a> Lexer<'a> {
     }
 
     /// 📏 Drops the EOL that precedes `endstream` when the length had to be searched for.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn trim_stream_eol(data: &[u8], start: usize, end: usize) -> usize {
         let mut end = end;
         if end > start && data[end - 1] == b'\n' {
@@ -413,7 +395,6 @@ impl<'a> Lexer<'a> {
     /// 🎯 Parses one value: number, `N G R` reference, name, string, array, dict/stream,
     /// `true`/`false`/`null`. A bare keyword yields `Null` (use [`Lexer::next_token`] where
     /// keywords matter).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parse_object(&mut self) -> PResult<PdfObject> {
         match self.next_token()? {
             Token::Object(value) => Ok(value),
@@ -423,7 +404,6 @@ impl<'a> Lexer<'a> {
     }
 
     /// 🎫 Reads the next token: a value (with `N G R` references folded), a keyword, or the end.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn next_token(&mut self) -> PResult<Token> {
         self.skip_ws();
         match self.peek() {

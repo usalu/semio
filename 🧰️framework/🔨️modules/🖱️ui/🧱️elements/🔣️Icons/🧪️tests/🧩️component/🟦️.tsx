@@ -5,9 +5,9 @@ import { activeUiTheme, setActiveUiTheme } from "@semio-tech/ui-styling";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
 import { CatalogIcon, Icon, decodeIcon, type IconName, type IconSizeToken } from "../../🟦️.tsx";
-import { Icon as ChromeIcon } from "../../../../🎯️targets/⚛️react/🪟️chrome/🟦️.ts";
+import { Icon as ChromeIcon } from "@semio-tech/ui-react/chrome";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
-import vectors from "../../🧫️fixtures/🗂️catalog-glyphs/🔣️.json";
+import vectors from "../🧫️fixtures/🗂️catalog-glyphs/🔣️.json";
 
 const savedTheme = activeUiTheme();
 afterEach(() => { cleanup(); setActiveUiTheme(savedTheme); });

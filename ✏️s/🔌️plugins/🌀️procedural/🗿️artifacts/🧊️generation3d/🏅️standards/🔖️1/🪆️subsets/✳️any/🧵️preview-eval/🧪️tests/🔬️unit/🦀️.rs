@@ -128,8 +128,6 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         let expected = &row["expected"];
         let mutations = row["artifactMutations"].as_u64().unwrap() as usize;
 
-        // 🏁️ A window is SETTLED when it has ticked and reported nothing left to compute — the state a
-        // finished evaluation leaves behind, and the state the inspector's edit found.
         let stage = |session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink| {
             if settled_windows {
                 for (window_id, _) in &windows {
@@ -148,8 +146,6 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         let mut link = PreviewEvalRunLink::default();
         stage(&mut session, &mut link);
         if settled_windows {
-            // 🏁️ A complete run is finalized ONCE, however often the host polls it while the view still
-            // answers `complete` — the request latch, not the poll cadence, decides how often it asks.
             let complete = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "complete" }));
             let mut asked: Vec<&str> = Vec::new();
             for _ in 0..polls {
@@ -188,8 +184,6 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         }
         assert_eq!(hops, expected["hops"].as_array().unwrap().iter().map(text).collect::<Vec<_>>(), "{id}: hop schedule");
 
-        // ⏯️ The storm half, on a fresh staging: the gesture again, then the host's own poll ladder with
-        // its run view lagging behind every request it was handed.
         let mut spinning = FlowEvalSession::new();
         let mut spinning_link = PreviewEvalRunLink::default();
         stage(&mut spinning, &mut spinning_link);
@@ -250,18 +244,13 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
     let windows = [("procedural-preview", "procedural-preview")];
     let mut session = FlowEvalSession::new();
     let mut link = PreviewEvalRunLink::default();
-    // 🚦️ First poll: the link learns the stack, the boot's own debt is paid and the run it asked for is
-    // answered — which is the state a user is in when they press undo on a settled preview.
     preview_eval_run_effects(&mut session, &mut link, &windows, None, true, edited);
     session.note_window_tick_outcome("procedural-preview", false, tick_grant()).expect("the window tick outcome is noted");
     link.requested = None;
     assert!(!session.window_tick_owed("procedural-preview"), "a paid window owes nothing while the document stands still");
-    // ⏪️ The undo: no gesture, no emit, no app command — only the stack moving.
     let effects = preview_eval_run_effects(&mut session, &mut link, &windows, None, true, undone);
     assert!(session.window_tick_owed("procedural-preview"), "an undo owes the attached preview a fresh evaluation");
     assert_eq!(effects.len(), 1, "and asks for the run that pays it: {effects:?}");
-    // 🔒️ …and it never asks for a SECOND run behind a gesture that already asked for one: the debt is
-    // recorded, the request latch is not released, and the poll returns nothing.
     let mut gesturing = FlowEvalSession::new();
     let mut gesture_link = PreviewEvalRunLink::default();
     preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, edited);
@@ -291,8 +280,6 @@ fn every_job_supersession_row_lets_only_the_owning_job_quiesce_the_session() {
         let owns = link.owned_by(closing);
         assert_eq!(owns, expected["owns"].as_bool().unwrap(), "{id}: ownership");
 
-        // 🧯️ The close body, in the order `close_step` runs it: a job that does not own the link returns
-        // before touching anything at all.
         let (mut cancels, mut clears_port) = (false, false);
         if owns {
             link.port = None;

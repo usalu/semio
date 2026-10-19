@@ -1,4 +1,4 @@
-//! `upsert-cold-formed-member` — upsert a `ColdFormedMember` by id into `cold_formed_members`.
+//! 🧬️ `upsert-cold-formed-member` — upsert a `ColdFormedMember` by id into `cold_formed_members`.
 
 use semio_s_artifact_norm_en1993_model::{ColdFormedMember, En1993Snapshot};
 

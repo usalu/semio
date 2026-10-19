@@ -1,7 +1,8 @@
 //! 🏷️ Typed literal inverses retain only their original native identifier ownership.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub trait Puzzle2dLiteralIdInverse: Send + Sync { fn inverse_id(&self) -> &PagedUtf8<{usize::MAX}>; fn inverse_payload(id: PagedUtf8<{usize::MAX}>) -> Puzzle2dMutation; }

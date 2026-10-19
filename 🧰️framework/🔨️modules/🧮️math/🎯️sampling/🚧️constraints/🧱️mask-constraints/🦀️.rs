@@ -1,8 +1,8 @@
 //! 🧱️ Token-mask constraints: regex, trie, must-include, JSON mode, EBNF and JSON schema.
 
-use semio_framework_math_sampling_vocabulary::{JsonValue, SamplingError, SamplingLimits, TokenBitset, TokenId, parse_json};
+use semio_framework_math_sampling_vocabulary::{JsonValue, SamplingError, SamplingLimits, TokenBitset, TokenId, TokenTextAdapter, parse_json};
 use semio_framework_math_sampling_workspace::{ConstraintMark, StepView};
-use super::{Constraint, Dfa, DfaTokenMemo, NfaBuilder, RegexNode, subset_construct};
+use super::{Constraint, Constraints, Dfa, DfaTokenMemo, NfaBuilder, RegexNode, subset_construct};
 
 // #region 🔖️Constraints
 /// 🧱️ Constrains generation to text matching a regex (interpreted as a whole-string match: the
@@ -337,8 +337,6 @@ impl JsonModeConstraint {
 }
 
 impl Default for JsonModeConstraint {
-    // 🚫️async: E1 impl of an externally-declared trait (`Default`) — inlines `new()`'s trivial
-    // body directly, same as `SamplingConfigBuilder`'s (O1 de-dyn, math-dedyn).
     fn default() -> Self {
         Self { stack: Vec::new(), expect: JsonExpect::Value, in_string: false, string_escaped: false, string_is_key: false, dead: false, snapshots: Vec::new() }
     }
@@ -497,8 +495,6 @@ async fn parse_grammar_atom(bytes: &[u8], pos: &mut usize) -> Result<GrammarExpr
     match bytes.get(*pos) {
         Some(b'(') => {
             *pos += 1;
-            // 🔀️ `Box::pin(..)` breaks the `parse_grammar_atom` → `parse_grammar_alt` recursion
-            // cycle (E0733) — see the matching note in `parse_json_array` (O1 de-dyn, math-dedyn).
             let inner = Box::pin(parse_grammar_alt(bytes, pos)).await?;
             skip_grammar_ws(bytes, pos).await;
             if bytes.get(*pos) != Some(&b')') {
@@ -541,11 +537,6 @@ async fn compile_grammar_expr(expr: &GrammarExpr, grammar: &EbnfGrammar, budget:
         return Err(SamplingError::AutomatonBudget { budget: "grammar expansion (possible unbounded recursion)" });
     }
     *budget -= 1;
-    // 🔀️ `Box::pin(..)` on every direct-recursive call (self-recursion needs it at each call
-    // site, not just one edge of a cycle — E0733), and sequential `.await` loops in place of
-    // `.iter().map(async_fn).collect()` (a sync closure cannot call an `async fn`, and cannot
-    // hold `&mut budget` across iterations either) — see `parse_json_array`'s note (O1 de-dyn,
-    // math-dedyn).
     match expr {
         GrammarExpr::Terminal(text) => Ok(RegexNode::Concat(text.bytes().map(RegexNode::Literal).collect())),
         GrammarExpr::Rule(name) => {
@@ -630,10 +621,6 @@ impl Constraint for EbnfConstraint {
 /// Unrecognized schema keywords (`oneOf`, `pattern`, ...) are silently ignored rather than
 /// rejected — a documented subset, not full JSON Schema.
 pub(super) async fn validates_json_schema(value: &JsonValue, schema: &JsonValue) -> bool {
-    // 🔀️ `.and_then(JsonValue::as_X)`/`.iter().all(async_fn)` no longer type-check once
-    // `JsonValue`'s accessors and this fn itself are `async fn` — see `processor_spec_from_json`'s
-    // note (O1 de-dyn, math-dedyn). `Box::pin(validates_json_schema(..))` handles the recursive
-    // call inside a loop (an `async fn` calling itself directly has an infinite-size future type).
     async fn opt_str<'a>(schema: &'a JsonValue, key: &'static str) -> Option<&'a str> {
         match schema.get(key).await {
             Some(v) => v.as_str().await,

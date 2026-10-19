@@ -11,7 +11,15 @@
   "targets": {
     "test-typed-snapshot-file-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-typed-snapshot-file-native"
@@ -19,7 +27,15 @@
     },
     "test-typed-snapshot-file-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-typed-snapshot-file-source"
@@ -27,7 +43,15 @@
     },
     "test-original-registry-alias-custody": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-registry-alias-custody"
@@ -35,7 +59,15 @@
     },
     "test-returned-read-custody": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-returned-read-custody"
@@ -43,7 +75,15 @@
     },
     "test-member-group-publication-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-member-group-publication-source"
@@ -51,7 +91,15 @@
     },
     "test-snapshot-sqlite-admission": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite-admission"
@@ -59,7 +107,15 @@
     },
     "test-artifact-kind": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-artifact-kind"
@@ -67,6 +123,12 @@
     },
     "retained-clone-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun 📜️script.ts retained-clone-check",
@@ -76,6 +138,12 @@
     },
     "document-opening-attempt-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-opening-attempt-native-check",
@@ -85,6 +153,12 @@
     },
     "database-history-completion-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-history-completion-check",
@@ -94,6 +168,12 @@
     },
     "database-history-completion-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-history-completion-check --native",
@@ -103,6 +183,13 @@
     },
     "database-catalog-read-ownership-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts database-catalog-read-ownership-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -111,6 +198,13 @@
     },
     "database-catalog-read-ownership-native-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "command": "bun ./📜️script.ts database-catalog-read-ownership-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -119,6 +213,12 @@
     },
     "database-capability-completion-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-capability-completion-check",
@@ -128,6 +228,12 @@
     },
     "database-capability-completion-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-capability-completion-check --native",
@@ -187,7 +293,13 @@
         }
       },
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts reopen-storm-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -197,6 +309,12 @@
     },
     "database-shutdown-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-shutdown-check",
@@ -206,6 +324,12 @@
     },
     "database-shutdown-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-shutdown-check --native",
@@ -215,6 +339,12 @@
     },
     "document-mount-single-flight-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-mount-single-flight-check",
@@ -224,6 +354,12 @@
     },
     "document-mount-single-flight-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-mount-single-flight-check --native",
@@ -233,6 +369,12 @@
     },
     "durable-owned-group-decision-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-owned-group-decision-check",
@@ -242,6 +384,12 @@
     },
     "durable-owned-group-decision-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-owned-group-decision-check --native",
@@ -251,6 +399,12 @@
     },
     "durable-group-journal-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-group-journal-check",
@@ -260,6 +414,12 @@
     },
     "durable-group-journal-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-group-journal-check --native",
@@ -269,6 +429,12 @@
     },
     "wal-committed-compaction-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-compaction-check",
@@ -278,6 +444,12 @@
     },
     "wal-committed-compaction-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-compaction-check --native",
@@ -287,6 +459,12 @@
     },
     "wal-committed-transactions-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-transactions-check",
@@ -296,6 +474,12 @@
     },
     "wal-committed-transactions-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-transactions-check --native",
@@ -305,6 +489,12 @@
     },
     "wal-writer-authority-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-writer-authority-check",
@@ -314,6 +504,12 @@
     },
     "wal-writer-authority-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-writer-authority-check --native",
@@ -364,6 +560,12 @@
     },
     "wal-capacity-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-capacity-check",
@@ -373,6 +575,12 @@
     },
     "wal-capacity-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-capacity-check --native",
@@ -382,6 +590,12 @@
     },
     "wal-recovery-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-recovery-check",
@@ -391,6 +605,12 @@
     },
     "wal-recovery-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-recovery-check --native",
@@ -400,6 +620,12 @@
     },
     "directory-session-authority-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-session-authority-check",
@@ -409,6 +635,12 @@
     },
     "directory-session-authority-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-session-authority-check --native",
@@ -418,6 +650,13 @@
     },
     "directory-event-page-contract-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-contract-check",
@@ -426,6 +665,13 @@
     },
     "directory-event-page-contract-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-contract-check --native",
@@ -434,6 +680,12 @@
     },
     "directory-event-page-client-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-client-check",
@@ -443,6 +695,12 @@
     },
     "directory-event-page-client-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-client-check --native",
@@ -452,6 +710,12 @@
     },
     "directory-event-page-bootstrap-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-bootstrap-check",
@@ -461,6 +725,12 @@
     },
     "wal-segment-state-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-segment-state-check",
@@ -471,6 +741,12 @@
     },
     "wal-segment-state-native-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-segment-state-check --native",
@@ -480,6 +756,15 @@
     },
     "test-directory-runtime-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-directory-runtime-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -488,6 +773,15 @@
     },
     "test-codec-send-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-codec-send-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -496,6 +790,15 @@
     },
     "test-backbone-detach-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-backbone-detach-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -504,6 +807,15 @@
     },
     "test-group-visibility-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-group-visibility-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -512,6 +824,12 @@
     },
     "member-dialect-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-dialect-check",
@@ -522,7 +840,15 @@
     },
     "test-member-input-census-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-member-input-census-source"
@@ -530,6 +856,13 @@
     },
     "test-member-dialect-source": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-member-dialect-source",
@@ -540,7 +873,15 @@
     },
     "test-space-history-sqlite-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-space-history-sqlite-native",
@@ -549,7 +890,15 @@
     },
     "test-space-history-sqlite-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-space-history-sqlite-source",
@@ -558,6 +907,15 @@
     },
     "test-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -566,6 +924,15 @@
     },
     "test-snapshot-codec-receiving-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-codec-receiving source",
         "cwd": "{projectRoot}",
@@ -574,6 +941,15 @@
     },
     "test-snapshot-codec-receiving-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-codec-receiving native",
         "cwd": "{projectRoot}",
@@ -582,6 +958,15 @@
     },
     "test-snapshot-route-admission-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-route-admission source",
         "cwd": "{projectRoot}",
@@ -590,6 +975,15 @@
     },
     "test-snapshot-route-admission-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-route-admission native",
         "cwd": "{projectRoot}",
@@ -598,6 +992,15 @@
     },
     "test-snapshot-native-admission": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-native-admission",
         "cwd": "{projectRoot}",
@@ -606,6 +1009,15 @@
     },
     "test-scalar-wire-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-scalar-wire-source",
         "cwd": "{projectRoot}"
@@ -613,6 +1025,15 @@
     },
     "test-pack-single-owner-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-pack-single-owner-source",
         "cwd": "{projectRoot}"
@@ -629,6 +1050,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "cache": true,
       "outputs": [],
       "options": {
@@ -647,6 +1074,14 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts check",
         "forwardAllArgs": true,
@@ -655,6 +1090,15 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts test",
         "forwardAllArgs": true,
@@ -672,7 +1116,15 @@
     },
     "test-list-record-boundaries": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-list-record-boundaries",
         "cwd": "{projectRoot}"
@@ -680,6 +1132,15 @@
     },
     "test-ieee-payload-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-ieee-payload-native",
         "cwd": "{projectRoot}"
@@ -687,6 +1148,15 @@
     },
     "test-ieee-payload-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-ieee-payload-source",
         "cwd": "{projectRoot}"
@@ -694,7 +1164,14 @@
     },
     "paged-history-stack-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts paged-history-stack-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -707,7 +1184,14 @@
     },
     "paged-history-stack-native-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts paged-history-stack-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -721,9 +1205,13 @@
     },
     "document-http-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain",
         "nativeTestSources",
         "^nativeTestSources"
       ],
@@ -754,6 +1242,15 @@
     },
     "test-composed-pack-schema": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test-composed-pack-schema",
         "cwd": "{projectRoot}",
@@ -762,9 +1259,15 @@
     },
     "test-assembly-lifetime-native": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*"
       ],
       "options": {
@@ -774,7 +1277,15 @@
     },
     "test-dsl-architecture": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-dsl-architecture"
@@ -782,7 +1293,8 @@
     },
     "test-command-ingress-consumer": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-command-ingress-consumer",
@@ -791,6 +1303,9 @@
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "{workspaceRoot}/Cargo.toml",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/📥️command-ingress/**/*",
@@ -806,7 +1321,15 @@
     },
     "test-command-transport-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-command-transport-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -815,7 +1338,15 @@
     },
     "test-command-transport-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-command-transport-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -824,7 +1355,15 @@
     },
     "test-borrowed-key-index-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-borrowed-key-index-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -833,7 +1372,15 @@
     },
     "test-intrinsic-retirement-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-intrinsic-retirement-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -842,7 +1389,15 @@
     },
     "test-directory-checkpoint-pair-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-directory-checkpoint-pair-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -851,7 +1406,15 @@
     },
     "test-directory-checkpoint-pair-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-directory-checkpoint-pair-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -860,7 +1423,15 @@
     },
     "test-directory-descriptor-digest-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-directory-descriptor-digest-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -869,7 +1440,15 @@
     },
     "test-directory-descriptor-digest-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-directory-descriptor-digest-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -878,7 +1457,15 @@
     },
     "test-canonical-preparation-control-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-canonical-preparation-control-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -887,7 +1474,15 @@
     },
     "test-returned-read-factory-mount": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-returned-read-factory-mount"
@@ -903,7 +1498,15 @@
     },
     "test-original-cleanup-context-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-cleanup-context-native"
@@ -911,7 +1514,15 @@
     },
     "test-config-paged-source-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-config-paged-source source"
@@ -919,7 +1530,15 @@
     },
     "test-config-paged-source-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-config-paged-source native"
@@ -927,7 +1546,15 @@
     },
     "test-space-history-validation-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-space-history-validation source"
@@ -935,7 +1562,15 @@
     },
     "test-space-history-validation-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-space-history-validation native"
@@ -943,10 +1578,15 @@
     },
     "test-crate-boundaries": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "sharedGlobals",
         "{workspaceRoot}/📋️build-owners.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
@@ -967,7 +1607,14 @@
     },
     "db-error-ownership-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts db-error-ownership-check"
@@ -975,7 +1622,14 @@
     },
     "db-error-ownership-native-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts db-error-ownership-check --native",
@@ -984,7 +1638,14 @@
     },
     "stable-identity-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts stable-identity-check",
@@ -993,6 +1654,15 @@
     },
     "test-diagnostic-admission": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts test-diagnostic-admission",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -1000,7 +1670,15 @@
     },
     "test-owned-replay": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-owned-replay"
@@ -1012,7 +1690,14 @@
         "command": "bun ./📜️script.ts test-canonical-source-identity source"
       },
       "executor": "repo:script",
-      "cache": false
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true
     },
     "canonical-source-identity-native": {
       "options": {
@@ -1020,10 +1705,26 @@
         "command": "bun ./📜️script.ts test-canonical-source-identity native"
       },
       "executor": "repo:script",
-      "cache": false
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true
     },
     "test-retained-lane-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts test-retained-lane source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -1031,46 +1732,95 @@
     },
     "test-retained-lane-native": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "command": "bun 📜️script.ts test-retained-lane native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
       }
     },
     "test-original-ingress-source": {
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-ingress source"
       },
-      "executor": "repo:script"
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": []
     },
     "test-original-history-input-source": {
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-history-input source"
       },
-      "executor": "repo:script"
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": []
     },
     "test-original-history-input-native": {
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-history-input native"
       },
-      "executor": "repo:script"
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": []
     },
     "test-original-ingress-native": {
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-ingress native"
       },
-      "executor": "repo:script"
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": []
     },
     "test-original-io-retirement-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-io-retirement source"
@@ -1078,7 +1828,15 @@
     },
     "test-original-io-retirement-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-original-io-retirement native"
@@ -1086,7 +1844,13 @@
     },
     "semantic-source-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -1101,7 +1865,13 @@
     },
     "semantic-source-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -1116,7 +1886,13 @@
     },
     "member-facets-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -1131,7 +1907,13 @@
     },
     "member-facets-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {
@@ -1153,11 +1935,18 @@
       "outputs": [],
       "dependsOn": [],
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun 📜️script.ts test-original-vcs-command source"
       },
-      "cache": false
+      "cache": true
     },
     "test-original-vcs-command-native": {
       "metadata": {
@@ -1168,15 +1957,30 @@
       "outputs": [],
       "dependsOn": [],
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "command": "bun 📜️script.ts test-original-vcs-command native"
       },
-      "cache": false
+      "cache": true
     },
     "test-original-snapshot-receiving-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -1185,7 +1989,15 @@
     },
     "test-original-snapshot-receiving-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -1196,7 +2008,30 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   }
 }

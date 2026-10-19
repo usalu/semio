@@ -31,9 +31,6 @@ fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
             let joined = args.iter().map(|a| print_expr_prec(a, 0)).collect::<Vec<_>>().join(", ");
             (format!("{}({joined})",expression_name(name)), 255)
         }
-        // min_prec=4 is higher than every binary op (max 2) and Neg's own rank (3), so a nested
-        // Binary OR another Neg always gets parenthesized — the latter specifically avoids ever
-        // printing adjacent `--`, which would relex as `DashArrow`, not two `Minus` tokens.
         ExprValue::Neg(inner) => (format!("-{}", print_expr_prec(inner, 4)), 3),
         ExprValue::Binary(op, l, r) => {
             let prec = op.precedence();
@@ -294,8 +291,6 @@ fn keyed_field_rank(shape: &Shape) -> u8 {
         Shape::List(_) | Shape::Map(_) | Shape::Record(_) | Shape::Block(_) | Shape::Value | Shape::Wire => 1,
         Shape::Table(_) => 2,
         Shape::Statements(_) => 3,
-        // Ranks LAST of all: a multi-line fence dwarfs everything else in a record, so it should
-        // print after every scalar/composite/table field, not interleaved among them.
         Shape::Embed(_) | Shape::EmbedFrom(_) => 4,
     }
 }
@@ -346,9 +341,6 @@ fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writ
         match value.get(field.id) {
             Some(fv) if !matches!(fv, FieldValue::Absent) => print_shape(fv, &field.shape, writer),
             _ => {
-                // An absent OPTIONAL positional prints as `_` only if some LATER positional in
-                // this same record is actually present — that's what keeps slots aligned for the
-                // reader (and reparse). A run of trailing absents needs no placeholder at all.
                 let later_present = positional[index + 1..].iter().any(|f| matches!(value.get(f.id), Some(fv) if !matches!(fv, FieldValue::Absent)));
                 if later_present {
                     writer.atom("_");
@@ -381,25 +373,12 @@ fn print_record_fields(value: &RecordValue, spec: &RecordSpec, writer: &mut Writ
                         writer.verbatim(lang, content);
                     }
                 }
-                // `Statements` items each carry their own leading keyword — no field-level key at
-                // all is ever printed for this shape.
                 Shape::Statements(_) => print_shape(fv, &field.shape, writer),
-                // `Block`'s own key is a bare leading keyword, not a `key=value` attribute
-                // (`children { ... }`, never `children={...}`).
                 Shape::Block(_) => {
                     writer.new_record();
                     writer.atom(&field.key);
                     print_shape(fv, &field.shape, writer);
                 }
-                // `Table`'s own key is likewise a bare leading keyword, but — unlike `Block` —
-                // it must always go through the dedicated SoA writer (`print_table`), never the
-                // generic `print_shape` dispatch: that dispatch renders `Table` as the bracketed
-                // AoS list (see its `Shape::Table` arm below) so a `Table` value reached any OTHER
-                // way (nested inside a table row, a list, ...) stays self-delimiting. Only here,
-                // directly after a record's own leading keyword, is the bare `[col:TYPE ...]
-                // {rows}` form reachable on the parse side (`parse_record_body`'s dedicated
-                // bare-SoA lookahead) — printing it via `print_shape` here would silently regress
-                // to the AoS form for every top-level table field.
                 Shape::Table(spec_fn) => {
                     writer.new_record();
                     writer.atom(&field.key);
@@ -437,10 +416,6 @@ fn scalar_to_text(value: &FieldValue) -> String {
         FieldValue::Int(i) => i.to_string(),
         FieldValue::UInt(u) => u.to_string(),
         FieldValue::Float(f) => format_f64(*f),
-        // Bare (unquoted) whenever the text lexes back as exactly this one ident — the printer's
-        // half of the "strings bare-preferred" law; `is_bare_ident` also excludes reserved literal
-        // idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and number-shaped text, which always fall
-        // through to the quoted+escaped form instead.
         FieldValue::Text(s) => {
             if semio_framework_dsl::is_bare_ident(s) {
                 s.clone()
@@ -449,7 +424,7 @@ fn scalar_to_text(value: &FieldValue) -> String {
             }
         }
         FieldValue::Bytes64(bytes) => format!("\"{}\"", base64_encode(bytes)),
-        FieldValue::Enum(_) => String::new(), // resolved by caller via variants table when needed
+        FieldValue::Enum(_) => String::new(),
         _ => String::new(),
     }
 }
@@ -469,9 +444,6 @@ fn number_tuple_component(value: &FieldValue) -> String {
 
 pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     match (value, shape) {
-        // Must precede the generic scalar arm below: that arm's shape pattern is `_` and would
-        // otherwise swallow every `FieldValue::Float` regardless of shape, printing a bare number
-        // with no unit suffix even for a `Quantity`/`Angle` field.
         (FieldValue::Float(v), Shape::Quantity(unit) | Shape::Angle(unit)) => {
             writer.atom(format!("{}{}", format_f64(*v), unit.symbol));
         }
@@ -503,7 +475,6 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
             writer.verbatim(lang, content);
         }
         (FieldValue::Text(content), Shape::EmbedFrom(lang_key)) => {
-            // Fallback when print_shape is called without sibling resolution — prefer plaintext fence.
             let _ = lang_key;
             writer.verbatim("plaintext", content);
         }
@@ -524,12 +495,6 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
             }
             writer.atom(rendered.join(","));
         }
-        // A `Table` reached here (NOT via `print_record`'s own keyed-field dispatch, which calls
-        // `print_table` directly) is nested inside another shape — a table row's own column, a
-        // list element, ... — where the bare `key [col:TYPE ...] {rows}` form has no bracket of
-        // its own to mark where it ends. Render the braced-row AoS list instead (see
-        // `print_table_list`), matching what `parse_shape`'s own `Shape::Table` arm parses in
-        // every one of these same contexts.
         (FieldValue::List(items), Shape::Table(spec_fn)) => print_table_list(*spec_fn, items, writer),
         (FieldValue::List(items), Shape::List(elem)) => {
             writer.atom("[");

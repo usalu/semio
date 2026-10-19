@@ -70,11 +70,8 @@ fn assert_native_routing_is_a_fixpoint(route: impl Fn(AnalyzeSource<'_>) -> SvgS
     let reprinted = String::from_utf8(second.export_utf8().expect("export the re-analyzed snapshot")).expect("SVG export is UTF-8");
     assert_eq!(reprinted, printed, "{label}: print(parse(print(x))) must equal print(parse(x)) byte for byte");
 
-    // 🗣️ The one piece of the source's own spelling that IS document state: a single-quoted
-    // declaration comes back single-quoted, never normalized to `"` (`📰️xml`'s `XmlQuote`).
     assert!(printed.starts_with("<?xml version='1.0' encoding='UTF-8'?>"), "{label}: the declaration keeps the delimiter the source used, got {:?}", &printed[..printed.find('\n').unwrap_or(printed.len())]);
 
-    // 📦️ The pack lane is the text lane.
     let pack = pack::snapshot::ArtifactPack::encode_pack(&first);
     let from_pack = route(AnalyzeSource::Binary(&pack));
     assert_eq!(from_pack, first, "{label}: the pack lane must recover the same snapshot as the text lane");

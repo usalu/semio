@@ -81,7 +81,6 @@ async fn builder_produces_minimal_valid_package_that_decodes_back() {
     assert!(sniff_pptx_bytes(&bytes));
     let decoded = decode_pptx(&bytes).expect("decode minimal package");
     assert_eq!(decoded.presentation().expect("derived PresentationML view"), sample_presentation().await);
-    // The synthesized boilerplate chain must actually be present — a real reader needs it.
     assert!(decoded.xml_parts.iter().any(|part| part.path == SLIDE_MASTER_PART));
     assert!(decoded.xml_parts.iter().any(|part| part.path == SLIDE_LAYOUT_PART));
     assert!(decoded.xml_parts.iter().any(|part| part.path == THEME_PART));
@@ -179,9 +178,6 @@ async fn typed_construction_appends_to_imported_canonical_package_without_rebuil
 
 #[semio_framework_async_macros::async_test]
 async fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_position() {
-    // Hand-built OOXML: a slide with TWO real shapes -- a positioned placeholder title and a
-    // positioned picture -- exercising real shape-BOUNDARY recovery (not flattened text) and
-    // real `a:xfrm` position decoding.
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -233,8 +229,6 @@ async fn decode_resolves_real_hand_built_package_with_shape_boundaries_and_posit
 
 #[semio_framework_async_macros::async_test]
 async fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
-    // A `p:graphicFrame` (chart/table/SmartArt) direct child -- not typed by this layer --
-    // must survive decode->encode->decode as a logical `PptxShape::Other` XML node.
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -270,7 +264,6 @@ async fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
     let node_model = format!("{node:?}");
     assert!(node_model.contains("p:graphicFrame") && node_model.contains("Table 1"));
 
-    // Re-encode -> re-decode: the logical XML node must survive the round trip.
     let re_encoded = encode_pptx(&decoded).expect("re-encode");
     let re_decoded = decode_pptx(&re_encoded).expect("re-decode");
     assert_eq!(re_decoded.presentation().expect("derived PresentationML view"), decoded.presentation().expect("derived PresentationML view"));
@@ -278,11 +271,6 @@ async fn decode_preserves_unmodeled_shape_kinds_as_logical_other() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_resolves_strict_office_document_relationship_too() {
-    // 🏅️ A genuine ISO/IEC 29500-1 Strict package's root relationship carries
-    // `REL_TYPE_OFFICE_DOCUMENT_STRICT`, never the Transitional type this engine's own writer
-    // emits -- `decode_pptx`/`sniff_pptx_bytes` must still recognize it (ticket
-    // 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES, so the `🔒️strict` subset's
-    // analyzer can ever see real Strict bytes).
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -315,11 +303,6 @@ async fn decode_rejects_missing_presentation_relationship() {
 #[semio_framework_async_macros::async_test]
 async fn unmodeled_slide_master_survives_decode_encode_logically() {
     let mut snap = build_minimal_pptx(sample_presentation().await);
-    // Replace the synthesized slide master with a distinguishable "real" one before encoding. The
-    // slide master is an XML part, so its authority is `xml_parts` (since the logical split,
-    // `opc.parts` carries only the parts `pptx_part_is_xml` rejects), and the package is written
-    // by the real `encode_pptx` -- `opc::encode_opc` alone would emit a package with no
-    // `ppt/presentation.xml` at all, because that part is materialized by the pptx encoder.
     let marker = "<p:sldMaster marker=\"real-file\"/>";
     let master = snap.xml_parts.iter_mut().find(|part| part.path == SLIDE_MASTER_PART).expect("synthesized slide master");
     assert_eq!(master.content_type, SLIDE_MASTER_CONTENT_TYPE);

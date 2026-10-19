@@ -151,8 +151,6 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut
     let mut doc = try_build_doc(projection, config, ctx).map_err(|error| format!("lowpoly mesh edit: compute session refused: {error}"))?;
     let object_id = doc.active_object_id().to_string();
     let before = projection.objects.iter().find(|object| object.id == object_id).cloned().ok_or_else(|| format!("lowpoly mesh edit: active object {object_id} is not in the document"))?;
-    // 🕸️ The "before" geometry is the DOCUMENT's — `reload_meshes` just resolved every object from its persisted
-    // `mesh_content`, so the compute session's cache is authoritative here and a stale transient is not.
     ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
     let before_mesh_workspace = ctx.mesh_workspace(&object_id).cloned();
     edit(&mut doc).map_err(|error| format!("lowpoly mesh edit on {object_id} (selection {:?}): {error}", doc.selection()))?;

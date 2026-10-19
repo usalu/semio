@@ -96,7 +96,7 @@ use semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule;
 impl semio_framework_dsl_record::DslField for CatalogueId {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::shape_controlled(control)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::to_value_controlled(&self.0,control)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control).map(Self)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control).map(Self)}
 
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Text
@@ -115,7 +115,7 @@ impl semio_framework_dsl_record::DslField for CatalogueId {
 impl semio_framework_dsl_record::DslField for CatalogueValue {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_value::ToValue::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::native_decoding::catalogue_value(value,control)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::native_decoding::catalogue_value(value,control)}
     fn retire_decoded(self){semio_s_artifact_norm_iso16757_model::retire_decoded_catalogue_value(self)}
 
     fn shape() -> semio_framework_dsl_record::Shape {
@@ -137,7 +137,7 @@ impl semio_framework_dsl_record::DslField for CatalogueValue {
 impl semio_framework_dsl_record::DslField for PartNumberRule {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{semio_framework_value::ToValue::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
-        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::native_decoding::part_number(value,control)}
+        fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::snapshot::native_decoding::part_number(value,control)}
 
         fn shape() -> semio_framework_dsl_record::Shape {
             semio_framework_dsl_record::Shape::Value

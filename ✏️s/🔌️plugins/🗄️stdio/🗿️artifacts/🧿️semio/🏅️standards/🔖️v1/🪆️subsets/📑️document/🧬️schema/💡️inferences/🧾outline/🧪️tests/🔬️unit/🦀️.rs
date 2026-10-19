@@ -18,9 +18,8 @@ async fn collects_headings_and_counts_words_and_blocks() {
     };
     let outline = compute_semio_document_outline(&snapshot);
     assert_eq!(outline.section_outline, vec![SemioDocumentHeadingEntry { level: 1, text: "Hello World".into() }, SemioDocumentHeadingEntry { level: 2, text: "Nested".into() }]);
-    // 5 top-level blocks + 1 nested heading (quote) + 1 nested paragraph (table cell) + 1 nested paragraph (list item) = 8
     assert_eq!(outline.block_count, 8);
-    assert_eq!(outline.word_count, 10); // Hello World + one two three + Nested + cell text + item text
+    assert_eq!(outline.word_count, 10);
 }
 
 #[semio_framework_async_macros::async_test]

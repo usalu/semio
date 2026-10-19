@@ -1,4 +1,4 @@
-//! ️ `change-silo-bulk-density`.
+//! 🧬️ `change-silo-bulk-density`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

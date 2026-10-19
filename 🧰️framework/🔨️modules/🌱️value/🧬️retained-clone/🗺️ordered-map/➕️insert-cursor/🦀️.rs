@@ -336,7 +336,7 @@ impl<K: BoundedOrd + RetireOwned, V: RetireOwned+Sync> RetainedOrderedMapInsertC
         true
     }
 
-    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError> {
+    pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError> {
         let state=&*self.state;
         if !state.lookup.terminal_is_empty(){return state.lookup.close_demands(body);}
         if !state.close.is_empty(){return state.close.next_owner_demands::<K>(false,&None,body);}

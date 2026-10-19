@@ -85,7 +85,7 @@ class ArtifactDirectoryWiringScript extends BundleScript {
     expected.set(collectionPath, `${JSON.stringify(collection, null, 2)}\n`);
     const visit = (directory: string): void => {
       for (const entry of readdirSync(directory, { withFileTypes: true })) {
-        if (entry.isDirectory() && ["target", "node_modules", "🗑️generated"].includes(entry.name)) continue;
+        if (["target", "node_modules", "🗑️generated"].includes(entry.name)) continue;
         const path = join(directory, entry.name);
         if (entry.isDirectory()) { visit(path); continue; }
         if (path === import.meta.filename) continue;
@@ -133,7 +133,7 @@ class SubsetDirectoryWiringScript extends BundleScript {
     const [mode, artifact, subset] = segments;
     if ((mode !== "generate" && mode !== "check") || artifact !== "semio" || subset !== "mesh") throw new Error("subset-directory-wiring expects generate|check semio mesh");
     
-    const fixtureRoot = join(import.meta.dir, "../../🧪️tests/🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring");
+    const fixtureRoot = join(resolve(this.repoRoot, ARTIFACT_OWNER), "🧪️tests/🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as SubsetDirectoryFixture;
     assert.equal(fixture.cases.length, 4);
     assert.equal(new Set(fixture.cases.map((row) => row.id)).size, fixture.cases.length);
@@ -169,4 +169,4 @@ class SubsetDirectoryWiringScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("composition", CompositionScript).register("mutation-inventory", MutationInventoryScript).register("snapshot-sqlite", SnapshotSqliteTestScript).register("editor-component-check", EditorComponentCheckScript).register("native-codec-projection", NativeCodecProjectionScript).register("test", TestScript).register("bench", BenchScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

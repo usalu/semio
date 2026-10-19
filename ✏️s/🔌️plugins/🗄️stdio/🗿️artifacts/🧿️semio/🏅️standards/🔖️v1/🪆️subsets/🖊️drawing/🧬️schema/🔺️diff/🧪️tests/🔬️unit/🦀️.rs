@@ -5,8 +5,6 @@ use protocol::{DiffBinary,DiffText};
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_insert_then_remove_annihilates_the_add() {
-    // 📐️ Canonical correctness case (schema-design.md): Insert(2)+Remove(index-of-that-insert)
-    // must annihilate the add entirely, never leave a dangling modified/removed entry.
     let base: Vec<DrawStyle> = vec![DrawStyle { name: "a".into(), fill: None, stroke: None, stroke_width: None, opacity: None }];
     let d1: NamedTripleDiff<String, DrawStyleDiff, DrawStyle> = NamedTripleDiff { removed: vec![], modified: vec![], added: vec![DrawStyle { name: "b".into(), fill: None, stroke: None, stroke_width: None, opacity: None }] };
     let d2: NamedTripleDiff<String, DrawStyleDiff, DrawStyle> = NamedTripleDiff { removed: vec!["b".to_string()], modified: vec![], added: vec![] };

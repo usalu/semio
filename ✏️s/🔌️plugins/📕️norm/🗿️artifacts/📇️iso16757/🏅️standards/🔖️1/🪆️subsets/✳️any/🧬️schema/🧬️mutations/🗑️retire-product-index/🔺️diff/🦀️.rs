@@ -1,4 +1,4 @@
-//! Diff for `retire-product-index`.
+//! 🔄️ Diff for `retire-product-index`.
 
 use crate::retire_product_index::mutation::RetireProductIndex;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

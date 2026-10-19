@@ -1,7 +1,7 @@
 import type { Anchor } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import { SHELL_KEYBINDINGS } from "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 
-/** @emoji ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
+/** ⌨️ Maps dock {@link Anchor} values to {@link SHELL_KEYBINDINGS} control ids. */
 export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SHELL_KEYBINDINGS & string>> = {
   "top-left": "ui.shell.panelAnchor.topLeft",
   "top-middle": "ui.shell.panelAnchor.topMiddle",

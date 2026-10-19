@@ -5,7 +5,6 @@ use super::*;
 //#region 🔥Fire
 /// 🔥 DE-NA tabulated min thickness [m] by REI, unit group, mortar type and utilization α.
 pub fn fire_min_thickness_na(rei_min: u32, material: UnitMaterial, group: UnitGroup, mortar: MortarType, alpha: f64) -> f64 {
-    // Base EN 1996-1-2 Table N.B values (α ≤ 1.0), then DE-NA α class adjustments.
     let clay = |r: u32| match r {
         0..=30 => 90.0,
         31..=60 => 100.0,
@@ -44,13 +43,11 @@ pub fn fire_min_thickness_na(rei_min: u32, material: UnitMaterial, group: UnitGr
         UnitMaterial::Aerated => aac(rei_min),
         UnitMaterial::Concrete => concrete(rei_min),
     };
-    // DE NA Tables NA.B.x: α classes — α≤0.6 (α_2) thinner allowance; α>0.6 (α_6,fi) full table.
     if alpha <= 0.60 {
-        mm *= 0.90; // α_2 column (reduced utilization)
+        mm *= 0.90;
     } else if alpha > 1.0 {
-        mm *= 1.15; // beyond α_6,fi — thicker required
+        mm *= 1.15;
     }
-    // Group 2–4 and thin-layer mortar: NA increases min thickness slightly.
     if !matches!(group, UnitGroup::Group1) {
         mm += 10.0;
     }
@@ -98,10 +95,10 @@ pub(super) fn situation_from_str(s: &str) -> DesignSituation {
 /// ⚖️ Combination factor ψ₀ for imposed floor categories (EN 1990 Table A1.1 / DE NA).
 pub fn psi0_imposed(category: &str) -> f64 {
     match category.trim().to_ascii_uppercase().chars().next().unwrap_or('A') {
-        'A' | 'B' => 0.7, // residential/office DE NA
+        'A' | 'B' => 0.7,
         'C' | 'D' => 0.7,
         'E' => 1.0,
-        'H' => 0.0, // roofs
+        'H' => 0.0,
         _ => 0.7,
     }
 }
@@ -150,7 +147,6 @@ pub(super) fn design_effects(annex: AnnexChoice, wall: &MasonryWall, lc: &WallLo
     let f_conc: f64 = lc.concentrated.iter().map(|c| c.force_n.max(0.0)).sum();
     let w_k = (lc.q_p_wind_pa * lc.c_pe.abs()).max(0.0);
     let h_earth = lc.h_k_earth_n.max(0.0);
-    // Horizontal shear from wind on facade + earth.
     let v_wind_k = w_k * wall.height_m * wall.length_m;
     let v_k = v_wind_k + h_earth;
 
@@ -174,7 +170,6 @@ pub(super) fn design_effects(annex: AnnexChoice, wall: &MasonryWall, lc: &WallLo
 
     let mut out = Vec::new();
 
-    // Max-N: imposed leading (ψ0,cat enters via accompanying snow or as companion scale on Q)
     {
         let q_lead = q_imp;
         let q_acc = if q_snow > 0.0 { psi_s * q_snow } else { psi_i * q_imp * 0.25 };
@@ -187,7 +182,6 @@ pub(super) fn design_effects(annex: AnnexChoice, wall: &MasonryWall, lc: &WallLo
             combo_de: format!("GZT max-N [{sit_label}/Kat. {}]: γ_G·G+γ_Q·Q_{name}+ψ₀,Kat={psi_i:.2}·Q_begl", lc.imposed_category),
         });
     }
-    // Max-N: snow leading (if present)
     if q_snow > 0.0 {
         let (nt, nm, nb, _) = stations(q_snow, psi_i * q_imp, 0.0, "snow");
         out.push(DesignEffects {
@@ -196,7 +190,6 @@ pub(super) fn design_effects(annex: AnnexChoice, wall: &MasonryWall, lc: &WallLo
             combo_de: "GZT max-N: γ_G·G+γ_Q·Q_Schnee+ψ₀·Q_Nutz".into(),
         });
     }
-    // Min-N / max-H: favourable G + wind/earth leading (sliding & lateral)
     {
         let n_top = yg_inf * (g_slab + f_conc);
         let n_mid = yg_inf * (g_slab + f_conc + 0.5 * g_self);
@@ -217,7 +210,6 @@ pub(super) fn governing_compression(effects: &[DesignEffects]) -> &DesignEffects
 }
 
 pub(super) fn governing_shear(effects: &[DesignEffects]) -> &DesignEffects {
-    // Critical: high V with low N (friction) — maximize V/N ratio roughly max V then min N
     effects.iter().max_by(|a, b| {
         let ka = a.v / a.n_mid.max(1.0);
         let kb = b.v / b.n_mid.max(1.0);

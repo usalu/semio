@@ -1,6 +1,7 @@
 //! 🌱️ Literal Generation cluster fields under the caller's native ownership control.
 use semio_framework_os_flow_contract::{FlowUi,FlowNodeGui,FlowPreviewGui,FlowChannelRef,CameraJson,WidgetLayout,OrderedMap,OrderedSet,neural::{Tree,Neuron,Synapse,Dictionary,ColdOwner}};
-use semio_framework_value::{DslValue,FromValue,ToValue,NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, ToValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::ordered::RetirementStep;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 type Result<T> = std::result::Result<T,ValueError>;

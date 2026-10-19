@@ -127,8 +127,6 @@ pub const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "selectGeneration",
     "cycleShowMode",
     "cycleLodMode",
-    // 🧭️ The node graph's keyboard traversal (`🎮️commands/🧭️navigate-graph`). Retained like every
-    // other gesture, but publishing ONLY the framework's selection lane.
     "selectNextNode",
     "selectPreviousNode",
     "selectUpstreamNode",

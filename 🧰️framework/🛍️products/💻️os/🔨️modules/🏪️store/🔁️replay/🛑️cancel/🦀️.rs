@@ -59,7 +59,7 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         if !s.drafts.terminal_is_empty() { return typed_birth::<protocol::HistoryInputDrafts>(); }
         if !s.unit_flags.terminal_is_empty() { return typed_birth::<protocol::HistoryFoldIndex<([u8; 32], usize), bool>>(); }
         if s.replayed.capacity() != 0 { return Ok(birth::<semio_framework_os_spr::command::EditMessageLedgerRetirement>()); }
-        let release = if s.rebased_inverse.capacity() != 0 { s.rebased_inverse.capacity() * size_of::<(String, semio_framework_value::list::PagedList<M, {usize::MAX}>)>() }
+        let release = if s.rebased_inverse.capacity() != 0 { s.rebased_inverse.capacity() * size_of::<(String, semio_framework_value_persistent::list::PagedList<M, {usize::MAX}>)>() }
         else if s.outcomes.capacity() != 0 { s.outcomes.capacity() * size_of::<protocol::MutationReplayOutcome>() }
         else if s.recorded.capacity() != 0 { s.recorded.capacity() * size_of::<(usize, Arc<P>)>() }
         else if let Some(owner) = s.convergence.as_ref() { owner.checkpoints.capacity() * size_of::<(usize, Arc<P>)>() } else { 0 };

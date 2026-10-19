@@ -35,8 +35,6 @@ fn utility_registry_declares_utilities() {
     let overview_utilities: Vec<&str> = overview_window.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(overview_utilities, vec![crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
     assert!(dispatchable_actions(&definition, overview_window).iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
-    // 🧰️ D-1: select/brush are this window's whole exclusive utility set, NOT a sub-collection, so
-    // each carries `group: None` and renders as a flat utility bar icon (never one collapsed dropdown).
     for utility in &definition.utilities {
         assert_eq!(utility.group, None, "utility {} must render flat (no shared group)", utility.id);
     }
@@ -54,9 +52,6 @@ fn every_declared_action_resolves_to_a_command() {
         for action in dispatchable_actions(&definition, window) {
             let id = action.id.as_str();
             declared.push(id.to_string());
-            // 🕰️ Framework-owned verbs never reach `command_from_action`: history, clipboard, the
-            // interaction six, the injected utility/tool switches, the tool-run and history-edit controls, the
-            // operation cancel and the whole-document export/import.
             let reserved = matches!(
                 id,
                 "undo" | "redo" | "commitCheckpoint" | "createAlternative" | "switchAlternative" | "checkoutCheckpoint" | "copy" | "cut" | "paste" | "revertToCommand" | "historyFilter" | "setHistoryCommandFilter" | "noteShellCommand" | "recordTutorial" | "interactionSelect" | "interactionHover" | "clearSelection" | "selectAll" | "setSelectionMode" | "setInteractionGranularity"
@@ -125,7 +120,6 @@ async fn two_instances_converge_disjoint_node_edits_via_backbone() {
     dispatch(&mut instance_a, "addNode", Some(&json!({ "kind": "seed" })), None).expect("a adds node");
     dispatch(&mut instance_b, "addNode", Some(&json!({ "kind": "other" })), None).expect("b adds node");
 
-    // A neutral history action always calls store.dispatch(), which pumps inbound operations first.
     dispatch(&mut instance_a, "commitCheckpoint", None, None).expect("pump a");
     dispatch(&mut instance_b, "commitCheckpoint", None, None).expect("pump b");
 
@@ -212,9 +206,6 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
     let mut app = app_with_registry();
     load_example(&mut app, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
     let node_id = first_node_id(&app);
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `context_menu` reads the
-    // CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live
-    // config field to derive it from) — see `context_menu`'s own doc comment.
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "puzzle2d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget { surface_id: "puzzle2d".into(), kind: "board".into(), hits: Vec::new(), selection: vec![ContextMenuSelectionGroup { domain: PUZZLE2D_GRANULARITY_NODE.into(), ids: vec![node_id] }], text: None }),

@@ -1,0 +1,40 @@
+# Private Original Artifact Export
+
+## Prepared Handoff, No Export Executed
+
+Root authorized one temporary export implementation in `🚀️run/📜️script.ts`. File ownership was handed back immediately after source/direct neutral verification, before root’s actual builder create. This worker invoked no Docker, Original, create or actual artifact export during this implementation. Parent may invoke the owner’s `export` mode only after assessing the real build/runtime gates. The transfer implementation does not supply those gates or a producer admission receipt.
+
+The exact guest roots are hardcoded to `/repo/🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/release/pages/course` and `/repo/🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/dist/proctor`. They map only to `site` and `proctor`. Actual builder inspection requires the planned immutable OS image, ticket label, running state and exact Source-volume mount; actual Git HEAD must equal the captured plan revision. The Source manifest and revision are recorded as private captured provenance. No host Source bind or source-file copy is introduced.
+
+## Transfer And Verification Contract
+
+The guest Node program opens each actual root through Linux directory descriptors with no-follow path components. It refuses symlinks, special files, hard-linked files and special mode bits. It obtains an exact sorted directory/file roster, file sizes, SHA-256 and modes, with file identity/time fences and a final complete roster/hash comparison after transfer. It reads and writes bounded chunks, waiting for each stdout write completion. A framed protocol sends only manifest, actual regular-file bytes and an exact completion digest; it does not use a tar extractor.
+
+The host validates the full manifest before writing files. Both artifact roots, the registered offline `.env`, Caddyfile, README.txt, compose.yaml and proctor-image.tar are required; the existing certificates subtree is retained, including an empty directory. Unknown top-level offline bundle members are refused. Paths reject traversal, separators/control/Windows-reserved names and exceedance of 256 UTF-16 units for both staging and final paths. Writes use new exclusive no-follow regular files beneath a fresh private generated staging directory. Content hashes, exact directory/file roster, sizes and modes are checked again from actual host bytes. ELF/PE/Mach-O signatures outside `proctor/proctor-image.tar` are refused, so a standalone native executable cannot be exported from custody through this path. The actual image archive remains opaque and is never unpacked.
+
+The bounds are 4 GiB artifact payload, 1 GiB per file, 8,192 files, 16,384 total roster nodes, 4 MiB manifest and ten minutes. The exporter measures host staging headroom before starting and reports transfer progress. Exceedance refuses export; it does not split or silently relax the actual bundle recipe. A real archive above 1 GiB or combined outputs above 4 GiB therefore require parent’s explicit budget adjustment after actual measurement.
+
+SIGINT/SIGTERM/deadline cancellation kills and awaits the owned host transport. On transfer failure, a separate bounded cleanup looks only for the unique environment-token-tagged guest exporter process, terminates it and confirms no active matching process; it never stops the builder or another project process. Unconfirmed guest cleanup refuses success. Actual Docker-host transport behavior and Linux descriptor execution have not been exercised in this implementation step; the first real export must retain its terminal evidence.
+
+## Host Promotion And Evidence
+
+Verified bytes first live under ticket `🗑️generated/export-<uuid>`. Promotion targets only the host course package’s `dist/2026-10-19-<sourceManifestSha256 first 12>/site` and `/proctor`. A fresh destination is reserved exclusively and its inode/device identity is checked while moving the two staged roots. The resulting full host roster/hash/modes must still match. An existing exact-match artifact is accepted without overwriting it; any differing output is refused untouched. Failed fresh promotion removes only the destination identity created by that operation. The temporary staging directory is removed after terminal transfer. Actual export makes no remote upload, image push or publication.
+
+A separate transfer receipt is written under generated as `private-artifact-transfer-<timestamp>.json`, including actual plan, limits, status, cancellation/cleanup, destination, exact manifest/digest and promotion result. It explicitly states `producerReceipt:false` and `currentCheckoutBuild:false`. Runtime terminal evidence is appended to this Markdown file. This is a verified copy of private Original artifacts; it does not claim the host admitted or compiled them, nor that the frozen Source matches a later host checkout.
+
+## Actual Neutral Verification
+
+Independent Python `hashlib` and `stat` generated an explicitly neutral eight-file, 3,146,187-byte fixture/protocol. Actual host receive/hash/inventory/mode checks matched that independent roster, including Unicode filenames and empty certificates. Negative checks covered corrupt bytes, truncation, unexpected trailing data, cancellation, symlinks, traversal/reserved/overlong paths, duplicate/missing members, invalid modes/count totals/per-file limits and standalone native signatures. No fixture claims to be a course build or actual image.
+
+Actual neutral promotion checks passed for fresh output, exact-match idempotence, differing existing-output refusal with byte preservation, and cancellation rollback. Owner and guest-program syntax checks passed; the guest Linux `/proc/self/fd` traversal itself was source-reviewed and syntax-checked, not executed on Linux because this step forbade Docker commands. Generated logs are `2026-10-19-artifact-export-pure.log` and `2026-10-19-artifact-export-promotion.log`. All neutral check sessions are terminal. No actual course files have been exported.
+
+Handoff owner SHA-256: `dd992c3712b378495b66b576565dd4b059b7c8f6a2b2f1df08169dacf80d89fa`. This supersedes the readiness-only owner digest in `2026-10-19-builder-runner.md`; readiness/Original semantics were retained while adding export.
+
+
+### Independent producer/export shape and bounds audit
+
+Export admits exactly published `dist/release/pages/course` as site and offline `dist/proctor` as proctor. Exact current limits:4GiB total,1GiB per file,8192files/16384nodes,4MiB manifest header,10minutes,256UTF-16units for every host staging/final path; guest/host refuse symlinks, hardlinked regular files(nlink!=1), foreign nodes and special permission bits. Native ELF/PE/Mach-O signatures are refused except exact `proctor/proctor-image.tar`.
+
+Fresh site publication enumerates ordinary files, removes its old staging directory, copyFileSync-copies each file and writes _headers. It does not create symlinks/hardlinks/native executables; underlying Source links are not enumerated as files. Its authored total site budget5,000,000B fits transfer bytes, with actual emitted file/node/path roster still to be measured. Stack bundler creates empty certificates directory, copyFileSync stack files, writes Compose/.env/README and Docker-save archive. Fresh output contains no authored standalone native binary; native image travels inside the exact allowed proctor-image.tar. Existing operator certificates contents are deliberately preserved by producer, so reusing a nonfresh output directory could retain foreign links/files; no such reuse/output is evidenced for the fresh private route.
+
+Previously checked longest authored font reference gives249stagingUTF16units (<256); fixed bundle paths fit. No concrete authored shape/path violation found. Docker-save producer itself has no1GiB archive cap, so Source alone cannot guarantee the archive meets export per-file limit; actual archive stat/inventory must be checked after production. This is a bounded export limitation, not an observed artifact failure or justification to raise caps. No final site/bundle exists yet, and no build/export was executed by reviewer.

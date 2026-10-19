@@ -264,8 +264,6 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
       return;
     }
     if (this.cancelledGestureAwaitingDown) return;
-    // 🖱️ Hover moves outside a gesture batch through the same lane (the guest's hover hit-test only
-    // needs the last sample either way); `begin` is reserved for the presses above.
     this.lastSample = this.sample(x,y,modifiers);
     this.lane?.offer(this.lastSample);
   }
@@ -289,9 +287,6 @@ export class JsonLayersCanvasSession implements WasmCanvasSession {
       this.lane.end(this.lastSample, extra);
       return;
     }
-    // 🐢️ A release with no open gesture (the `transform` utility swallows its press above; a press that
-    // started outside the canvas) still reaches the guest as it did before the lane — the lane's `end` is
-    // a no-op outside a gesture and this must not silently drop what the pre-lane host sent.
     void this.onPointer?.("canvasPointerUp", { x, y, ...extra, cancelled: false });
   }
 

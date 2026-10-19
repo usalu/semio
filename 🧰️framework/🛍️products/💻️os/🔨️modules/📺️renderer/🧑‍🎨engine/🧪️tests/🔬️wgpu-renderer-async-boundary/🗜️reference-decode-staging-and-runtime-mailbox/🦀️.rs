@@ -159,7 +159,7 @@ fn reference_decode_staging_reports_exact_pool_reuse_before_browser_decode() {
 #[cfg(not(target_arch = "wasm32"))]
 fn native_reference_runtime() -> AppMailbox {
     let admission=format!("{{\"version\":1,\"declaration\":{},\"scriptOwner\":\"fixture:renderer-original-io\",\"scriptDeadlineEpochMilliseconds\":null}}",include_str!("../../../🎯️targets/🧊️wgpu/⌨️native-entrypoint/🎟️launch/🔣️.json"));
-    crate::native_launch::install_native_launch_fixture(&admission).expect("fixture declares the actual native original launch policy before any asset operation");
+    semio_framework_os_renderer_wgpu_host_plumbing::native_launch::install_native_launch_fixture(&admission).expect("fixture declares the actual native original launch policy before any asset operation");
     RuntimeMailbox::new(AppRuntime {
         atlas: FontAtlas::builtin(),
         icons: IconAtlas::default(),

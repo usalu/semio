@@ -44,6 +44,14 @@ export abstract class VerifyScript extends VerifyGateLanes {
       this.runPackagePurity();
       return;
     }
+    if (segments[0] === "build-owners") {
+      this.runBuildOwners(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "zero-touch") {
+      this.runZeroTouch(segments.slice(1));
+      return;
+    }
     if (segments[0] === "generated-corruption") {
       this.runGeneratedCorruption(segments.slice(1));
       return;
@@ -352,8 +360,17 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "framework-viewport-projection") {
-      const validation = join(this.root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️08/CORRECT-COMMAND-CONFIG-AND-MUTATION-OWNERSHIP-LEVELS/validation/📜️script.ts");
-      runCmd("bun", [validation, "framework-viewport-projection", ...segments.slice(1)], { cwd: this.root });
+      if (segments.length > 2 || (segments[1] !== undefined && segments[1] !== "native")) throw new Error("framework-viewport-projection accepts only the optional native phase");
+      const testRoot = join(this.root, "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection");
+      const { testViewport3dProjectionValues } = await import(`${testRoot}/🟦️.ts`);
+      testViewport3dProjectionValues();
+      runCmd("bun", [this.root + "/node_modules/prettier/bin/prettier.cjs", "--check", this.root + "/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🔗️.graphql"], { cwd: this.root });
+      runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--esModuleInterop", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🟦️.ts`], { cwd: this.root });
+      if (segments[1] === "native") {
+        const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-viewport", "--lib", "viewport_projection_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-ui-scene", "--lib", "viewport_projection_pack_", "--", "--nocapture"], this.root);
+      }
       return;
     }
     if (segments[0] === "node-graph-viewport-ownership") {

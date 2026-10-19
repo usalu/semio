@@ -4,7 +4,7 @@ import Ajv from "ajv/dist/2020";
 import {NativeDecodeControl} from "../../🟦️.ts";
 import type {NativeDecodeCloseControl,NativeRetirementDecodeControl} from "../../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 
 test("original cancelled decoder lends only paid retirement with the same cumulative ledger",async()=>{
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(validate({...fixture,policy:"cancel-original-retirement"})).toBe(false);

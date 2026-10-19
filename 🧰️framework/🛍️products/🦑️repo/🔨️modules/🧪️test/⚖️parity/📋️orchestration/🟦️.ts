@@ -58,8 +58,6 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
   const problems: string[] = [];
   const parity: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number }[] = [];
   const oracleUnavailable: { caseDir: string; oracle: string; missing: readonly string[] }[] = [];
-  // ⚖️One effective profile table for the whole run: the framework's domain-neutral profiles plus
-  // every profile the discovered owners contribute.
   const profiles = profileTable(loadOracleRegistry(repoRoot));
   let scenarioCount = 0;
 
@@ -71,13 +69,7 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
 
     const runSubjects = async (): Promise<void> => {
       if (!phases.includes("subject") && !rawInputOracle) return;
-      // 🔬️Only the languages this repository actually implements the owner in are dispatched as
-      // subjects; see `ownerShipsImplementation`.
       const subjects = subjectImplementations(repoRoot, discovered, decision, selectImplementations(discovered, rest));
-      // 🚫️A case every one of whose adapters is a reference HOST has no subject half at all. That is
-      // a real gap and it must stay visible — reported the same way `not-exercised` is, rather than
-      // as a per-scenario `errored` result whose null projection would enter the parity ratio and
-      // read as a subject that ran and disagreed.
       if (subjects.length === 0 && selectImplementations(discovered, rest).length > 0)
         console.error(`[test] no-subject-implementation ${discovered.caseDir} (requested adapters ${selectImplementations(discovered, rest).join(", ")} host references only: the owner ships no package in their language, or the adapter is the case's own declared oracle)`);
       for (const implementation of subjects) {
@@ -106,8 +98,6 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
     mkdirSync(diffDir, { recursive: true });
     const pipelineId = buildCasePlan(repoRoot, discovered, level).plan.comparisonPipeline;
     if (decision.implementation !== null && decision.unavailable === null && pipelineId !== null) {
-      // ⚖️A profile that names a pipeline compares an artifact BUNDLE through external probes: the pipeline verdict IS
-      // the parity verdict, per scenario pair, and the two projections are never diffed against each other.
       const registry = loadOracleRegistry(repoRoot);
       const pipeline = pipelineTable(registry).get(pipelineId);
       const probes = probeTable(registry);
@@ -137,18 +127,11 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
       for (const orphan of unmatched) problems.push(`no oracle result to compare against: ${orphan}`);
     }
 
-    // 🧮️ Pairwise subject equivalence keeps two implementations from exploiting different oracle
-    // ambiguities, and is the ONLY parity evidence a recorded no-oracle case can offer — so it must
-    // then involve at least two independently written implementations to mean anything at all.
     const crossPairs = evaluateCrossSubjectParity(decision.comparison, caseResults, profiles);
     for (const pair of crossPairs) {
       parity.push({ testId: pair.pair, profile: decision.comparison, equal: pair.equal, diffs: pair.diffs });
       if (!pair.equal) problems.push(`cross-subject parity failed: ${pair.pair} (${pair.diffs} differences)`);
     }
-    // 🧭️A recorded no-oracle decision names the substitutes it relies on, and only the
-    // `independent-implementations` substitute is discharged by pairwise parity. A decision resting
-    // on specification vectors or metamorphic laws discharges itself inside the scenarios, so
-    // demanding a second implementation there would be a rule the decision never claimed to meet.
     if (decision.implementation === null && decision.noOracleDecision !== null && crossPairs.length === 0) {
       const substitutes = loadOracleRegistry(repoRoot).noOracleDecisions.find((entry) => entry.id === decision.noOracleDecision)?.substitutes ?? [];
       if (substitutes.includes("independent-implementations")) problems.push(`${discovered.caseDir}: no-oracle decision ${decision.noOracleDecision} claims the independent-implementations substitute but only one implementation ran`);
@@ -160,10 +143,6 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
     }
   }
 
-  // 🚫️A selected case that produced no result at all is not a pass — it is an absence of evidence,
-  // and the two must never look the same. The commonest cause is legitimate (asking for the oracle
-  // phase of a recorded no-oracle case, which by definition has no oracle to run), so this reports
-  // rather than fails; what it must not do is stay silent while the run prints a green summary.
   const exercised = new Set(allResults.map((result) => `${result.owner}::${result.case}`));
   const unexercised = cases.filter((discovered) => !exercised.has(`${discovered.owner}::${discovered.case}`));
   for (const discovered of unexercised) {

@@ -12,7 +12,6 @@ import { MapRenderer } from "../🖼️map-renderer/🟦️.ts";
 /** 🧰️ Holds the refs, state, labels, parsed lanes and helper callbacks of the map window. */
 export function useMapState({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.tiledMap;
-  // 🐚️ Optional — this host is also unit-tested standalone, outside any `ShellScopeProvider`.
   const shellScope = useShellScopeOptional();
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const containerRef = useRef<HTMLDivElement>(null);

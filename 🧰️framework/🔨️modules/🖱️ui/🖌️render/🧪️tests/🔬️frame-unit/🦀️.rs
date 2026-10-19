@@ -44,18 +44,15 @@ impl Element for TestLeaf {
     type LayoutState = ();
     type PrepaintState = ();
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn request_layout(&mut self, _id: ElementId, cx: &mut LayoutCx<'_>) -> (crate::layout::LayoutNodeId, ()) {
         (cx.leaf(&LayoutSpec::Leaf(LeafLayout::default()), None), ())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, _layout: &mut (), cx: &mut PrepaintCx<'_>) {
         let hitbox = crate::Hitbox { element: id, bounds, clips_children: self.flags.contains(crate::DispatchFlags::CLIPS_CHILDREN), hit_transparent: self.flags.contains(crate::DispatchFlags::HIT_TRANSPARENT) };
         cx.register(id, self.flags, self.listeners.credited_clone().expect("bounded test listener set has clone credits"), Some(hitbox));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn paint(&mut self, _id: ElementId, _bounds: Bounds, _layout: &mut (), _prepaint: &mut (), _cx: &mut PaintCx<'_>) {}
 }
 
@@ -89,7 +86,6 @@ impl<C: Element> Element for Wrap<C> {
     type LayoutState = C::LayoutState;
     type PrepaintState = C::PrepaintState;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn request_layout(&mut self, id: ElementId, cx: &mut LayoutCx<'_>) -> (crate::layout::LayoutNodeId, Self::LayoutState) {
         let child_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("child".into()));
         let (child_node, child_state) = self.child.request_layout(child_id, cx);
@@ -97,7 +93,6 @@ impl<C: Element> Element for Wrap<C> {
         (node, child_state)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, cx: &mut PrepaintCx<'_>) -> Self::PrepaintState {
         let hitbox = crate::Hitbox { element: id, bounds, clips_children: self.flags.contains(crate::DispatchFlags::CLIPS_CHILDREN), hit_transparent: self.flags.contains(crate::DispatchFlags::HIT_TRANSPARENT) };
         let node = cx.register(id, self.flags, self.listeners.credited_clone().expect("bounded test listener set has clone credits"), Some(hitbox));
@@ -111,7 +106,6 @@ impl<C: Element> Element for Wrap<C> {
         result.expect("with_children always invokes its body exactly once")
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn paint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, prepaint: &mut Self::PrepaintState, cx: &mut PaintCx<'_>) {
         let child_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("child".into()));
         let child_bounds = offset_bounds(bounds, self.offset);
@@ -134,7 +128,6 @@ impl<A: Element, B: Element> Element for Pair<A, B> {
     type LayoutState = (A::LayoutState, B::LayoutState);
     type PrepaintState = (A::PrepaintState, B::PrepaintState);
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn request_layout(&mut self, id: ElementId, cx: &mut LayoutCx<'_>) -> (crate::layout::LayoutNodeId, Self::LayoutState) {
         let a_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("a".into()));
         let b_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("b".into()));
@@ -144,7 +137,6 @@ impl<A: Element, B: Element> Element for Pair<A, B> {
         (node, (a_state, b_state))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, cx: &mut PrepaintCx<'_>) -> Self::PrepaintState {
         let hitbox = crate::Hitbox { element: id, bounds, clips_children: self.flags.contains(crate::DispatchFlags::CLIPS_CHILDREN), hit_transparent: self.flags.contains(crate::DispatchFlags::HIT_TRANSPARENT) };
         let node = cx.register(id, self.flags, self.listeners.credited_clone().expect("bounded test listener set has clone credits"), Some(hitbox));
@@ -163,7 +155,6 @@ impl<A: Element, B: Element> Element for Pair<A, B> {
         result.expect("with_children always invokes its body exactly once")
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn paint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, prepaint: &mut Self::PrepaintState, cx: &mut PaintCx<'_>) {
         let a_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("a".into()));
         let b_id = ElementId::new(Some(id), &ReconciliationKey::Explicit("b".into()));

@@ -29,10 +29,6 @@ pub struct JsonMember {
 pub enum JsonValue {
     #[default]
     Null,
-    // NOTE: every non-unit variant MUST be a struct variant (named field), never a bare tuple
-    // variant — serde's internally-tagged (`tag = "kind"`) representation can only merge the tag
-    // into map-shaped content; a tuple variant wrapping a non-map type (`bool`/`String`/`Vec<_>`)
-    // compiles fine but fails at RUNTIME serialization ("can only flatten structs and maps").
     Bool {
         value: bool,
     },
@@ -98,7 +94,6 @@ impl Default for JsonSnapshot {
 }
 
 impl JsonSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_value(value: impl Into<JsonValue>) -> Self {
         Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: value.into() }
     }

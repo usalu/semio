@@ -48,7 +48,6 @@ pub struct FrameGeneration(u64);
 impl FrameGeneration {
     pub const ZERO: Self = Self(0);
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     fn next(self) -> Self {
         Self(self.0 + 1)
@@ -157,7 +156,6 @@ pub struct FrameEngine {
 }
 
 impl FrameEngine {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self::default()
     }
@@ -165,7 +163,6 @@ impl FrameEngine {
     /// 📸️ A cheap clone of the currently presented snapshot — safe to hold across input dispatch even
     /// while a later `build_frame` call runs, since a failed build never touches `self.presented` (see
     /// this file's docstring) and a successful one only replaces it once fully formed.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn presented(&self) -> Option<Rc<FrameSnapshot>> {
         self.presented.clone()
     }
@@ -175,7 +172,6 @@ impl FrameEngine {
     /// unchanged — the caller still has the last good frame. The dispatch tree is built live, node by
     /// node, as the prepaint walk registers each element (`crate::PrepaintCx::register`/
     /// `with_children` — see this file's module docstring), never derived from geometry afterward.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub fn build_frame<E: Element>(&mut self, mut root: E, inputs: FrameInputs<'_>) -> Result<FrameGeneration, SceneError> {
         let FrameInputs { resources, text, scheduler, viewport, dpr, time_seconds } = inputs;
@@ -189,9 +185,6 @@ impl FrameEngine {
         layout_cx.compute(root_node, viewport[0], viewport[1]);
         let bounds = layout_cx.resolved(root_node);
 
-        // 🌱️ Freshly rebuilt every frame, matching the element tree it is built alongside — see this
-        // file's module docstring. `UiRevision(0)` is a placeholder until a packet threads a real
-        // `UiSnapshot`-sourced revision through `FrameInputs` (see this packet's report).
         let mut dispatch = crate::DispatchTree::new(UiRevision(0));
         let mut prepaint_cx = PrepaintCx::new(SharedFrameCx { arena: &mut self.arena, resources: &mut *resources, retained: &mut self.retained, time_seconds: time_seconds as f32 }, &mut dispatch, text);
         let mut prepaint_state = root.prepaint(root_id, bounds, &mut layout_state, &mut prepaint_cx);

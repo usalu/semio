@@ -116,7 +116,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueErr
 #[test]
 fn durable_journal_close_preserves_original_capacities_and_exact_receipts() {
     use semio_framework_value::{RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../♻️journal/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../♻️journal/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let state = Arc::new(std::sync::Mutex::new(FakeJournalState::default()));
         let mut decision = String::with_capacity(row["decisionCapacity"].as_u64().unwrap() as usize);
@@ -195,7 +195,7 @@ fn map_assembly(
 fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
         let mut receiving_fixture=super::super::tests::FixtureStoreReceiving::new(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant());
 let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["assemblyDiagnosticTransfer"]["sameTurnPreparationGrantReuse"],false);let mut handoff=false;let mut denied_mount=false;
+    let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧫️fixtures/🔣️.json")).unwrap();assert_eq!(fixture["assemblyDiagnosticTransfer"]["sameTurnPreparationGrantReuse"],false);let mut handoff=false;let mut denied_mount=false;
     for _ in 0..4_000_000 {
         if !denied_mount&&assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding&&assembly.prepared.as_ref().is_some_and(|prepared|prepared.binding_step==14){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,crate::os_store::one_item::ArtifactStoreOneItemGrant{maximum_capacity_bytes:0,..grant},receiving)));assert_eq!(result.unwrap(),DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(assembly.parent.is_some()&&assembly.drawing.is_some()&&assembly.value.is_some()&&assembly.prepared.is_some());denied_mount=true;}
         let binding=assembly.phase==DurableOwnedThreeStoreMapAssemblyPhaseV1::Binding;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||receiving_fixture.receive(|receiving|assembly.advance(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,grant,receiving)));

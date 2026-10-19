@@ -14,7 +14,7 @@ mod pack_codec {
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::NativeEncodeControl;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::*;
 impl pack::snapshot::ArtifactDsl for MdSnapshot{
  const EXTENSION:&'static str="md";
@@ -25,12 +25,10 @@ impl pack::snapshot::ArtifactDsl for MdSnapshot{
 }
 
 impl crate::MdSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_text(text: &str) -> Self {
         let blocks = crate::standards::v_commonmark::subsets::any::io::import::deserializers::parse_markdown_blocks(text);
         Self { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_text(&self) -> String {
         crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&self.blocks)
     }

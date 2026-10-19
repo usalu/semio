@@ -2,7 +2,7 @@
 use semio_framework_pack_error::PackRefusal;
 use super::*;
 use semio_framework_value::ValueRefusalKind;
-use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 
 #[test]
 fn retained_catalog_factories_preserve_actual_source_kind_reason_and_allocated_witness(){

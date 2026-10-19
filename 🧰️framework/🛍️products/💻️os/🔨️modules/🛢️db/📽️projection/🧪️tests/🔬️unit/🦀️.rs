@@ -144,16 +144,12 @@ impl ErasedProjection for AnyTestProjection {
 }
 
 impl From<ErasedWrapper<CounterProjection>> for AnyTestProjection {
-    // 🚫️async: E1 impl of std::convert::From — signature fixed outside this repo; body is a
-    // pure zero-suspension enum-variant wrap, see R9.
     fn from(wrapper: ErasedWrapper<CounterProjection>) -> Self {
         Self::Counter(wrapper)
     }
 }
 
 impl From<ErasedWrapper<SumWithDependencyProjection>> for AnyTestProjection {
-    // 🚫️async: E1 impl of std::convert::From — signature fixed outside this repo; body is a
-    // pure zero-suspension enum-variant wrap, see R9.
     fn from(wrapper: ErasedWrapper<SumWithDependencyProjection>) -> Self {
         Self::SumWithDependency(wrapper)
     }
@@ -276,12 +272,10 @@ async fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
     let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
-    // Step 1: count -> 1, sum sees count's *this-step* value (1): sum = 1 + 1 = 2.
     let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
     assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).await.unwrap(), 1);
     assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).await.unwrap(), 2);
 
-    // Step 2: count -> 2, sum = (prior sum 2) + 1 + (this-step count 2) = 5.
     let result = db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["doc"]).await)).unwrap();
     assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).await.unwrap(), 2);
     assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).await.unwrap(), 5);
@@ -295,13 +289,11 @@ async fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
         db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
     }
-    // A fresh engine registers the SAME projection id at a bumped schema version.
     let projections = vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
     assert!(matches!(db_actor::block_on(engine.state_at("count", 1)), Err(DbError::Conflict(_))));
     assert!(matches!(db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["doc"]).await)), Err(DbError::Conflict(_))));
 
-    // rebuild_and_persist recovers: replays from scratch and re-persists at the current version.
     let events = vec![(1u64, envelope("doc-1", "op-1", 1).await, touch(&["doc"]).await)];
     db_actor::block_on(engine.rebuild_and_persist(&events, 1)).unwrap();
     assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
@@ -317,9 +309,7 @@ async fn preview_augmented_never_persists_and_does_not_affect_canonical_state() 
     let previewed = db_actor::block_on(engine.preview_augmented("count", 1, &envelope("doc-1", "preview-op", 2).await)).unwrap();
     assert_eq!(u64::decode(&previewed).await.unwrap(), 2);
 
-    // Canonical state at the same frontier is untouched by the preview.
     assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
-    // And no checkpoint was ever recorded past seq 1 (the preview never persisted anything).
     assert_eq!(db_actor::block_on(engine.state_at("count", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
 }
 //#endregion 🔖️Engine
@@ -331,12 +321,10 @@ async fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touche
     let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
-    // Untouched: the projection must not run, and nothing must be persisted for it.
     let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["unrelated"]).await)).unwrap();
     assert_eq!(u64::decode(result.get(&"counter".to_string()).unwrap()).await.unwrap(), 0, "carried-forward initial state, not incremented");
     assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None, "an unaffected projection must not advance its frontier");
 
-    // Directly touched: now it runs and persists.
     db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["counter"]).await)).unwrap();
     assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None, "still nothing at seq 1 — the skip was never retroactively persisted");
     assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
@@ -346,20 +334,15 @@ async fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touche
 async fn apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own() {
     let projections: Vec<AnyTestProjection> = vec![
         erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] }).into(),
-        // "cascade" has an EMPTY reads() — per the module doc's design note, empty reads means
-        // "not directly triggered by anything"; it must only ever run via the dependency cascade.
         erase(SumWithDependencyProjection { id: "cascade", dependency_id: "counter", dependencies: &["counter"], reads: &[] }).into(),
     ];
     let storage = MemoryStorage::new(db_io_driver::db_io_test_pool()).await.unwrap();
     let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
-    // "counter" is untouched -> "cascade" has nothing to cascade from -> neither runs.
     db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["unrelated"]).await)).unwrap();
     assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None);
     assert_eq!(db_actor::block_on(engine.state_at("cascade", 1)).unwrap(), None);
 
-    // "counter" is touched -> runs -> "cascade" cascades even though "unrelated" (not "counter")
-    // is the only path in this step's touched set that "cascade" itself would ever have read.
     db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["counter"]).await)).unwrap();
     assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
     assert_eq!(db_actor::block_on(engine.state_at("cascade", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(2), "cascade = prior(0) + 1 + counter's this-step value(1) = 2");
@@ -385,19 +368,12 @@ async fn rebuild_equals_incremental_after_checkpoint_resume() {
         ]
     };
 
-    // Alternating touched paths so "count"/"sum" run on some steps and are skipped on others —
-    // "never" is never touched and has no dependents, so it should stay at its initial state.
     let touched_paths: [&[&str]; 5] = [&["doc"], &["unrelated"], &["doc"], &["doc", "unrelated"], &["unrelated"]];
-    // 🪡 `.map` takes a sync closure, so the per-step async envelope/touch construction is
-    // hoisted into an explicit loop instead of the original closure-chain shape.
     let mut events: Vec<(u64, MutationEnvelope, TouchedSet)> = Vec::new();
     for seq in 1..=5u64 {
         events.push((seq, envelope("doc-1", &format!("op-{seq}"), seq).await, touch(touched_paths[(seq - 1) as usize]).await));
     }
 
-    // Incremental path: apply seqs 1-3 against one engine instance, drop it, then resume with a
-    // FRESH engine instance (forcing seqs 4-5 to load their checkpoint from `storage`, not from
-    // any in-memory state the first engine instance happened to hold).
     {
         let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).await.unwrap();
         for (seq, env, touched) in &events[..3] {
@@ -413,7 +389,6 @@ async fn rebuild_equals_incremental_after_checkpoint_resume() {
         last
     };
 
-    // Ground-truth path: one pure in-memory replay of the whole history, touching no storage.
     let rebuild_engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).await.unwrap();
     let rebuilt_final = rebuild_engine.rebuild_in_memory(&events).await.unwrap();
 

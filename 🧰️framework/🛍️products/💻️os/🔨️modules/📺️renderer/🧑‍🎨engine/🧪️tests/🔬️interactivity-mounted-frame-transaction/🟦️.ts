@@ -4,10 +4,6 @@ import { policyReadRustPolicySource } from "@semio-tech/repo-lib/inventory";
 /** 🧪️ Executes interactivity mounted frame transaction policy assertions. */
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
   const read = (file: string): string => policyReadRustPolicySource(repoRoot, file);
-  // 🧭️ `Parameters<…>` is what keeps this list and the audit's seventeen positional parameters in step:
-  // `Array.prototype.map` answers `string[]`, whose length TypeScript does not know, so spreading its
-  // result into a fixed-arity call is a `TS2556` — and a source added here without a parameter to
-  // receive it would pass unnoticed.
   const clean: Parameters<typeof interactivityMountedFrameTransactionFailures> = [
     read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"),
     read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),

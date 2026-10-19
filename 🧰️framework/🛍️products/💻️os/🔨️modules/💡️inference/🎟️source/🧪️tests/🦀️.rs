@@ -9,7 +9,7 @@ fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100_000,maximum_
 fn clock()->Option<u64>{Some(1)}
 fn registry_step(owner:&mut SnapshotReadRegistryBirth,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
  let demand=owner.demands()?;
- let result=cx.with_native_receiving::<_,semio_framework_value::native_decoding::NativeConstructionStepFailure<ValueError>>(|control|control.receive_construction_step(demand,|control,grant|owner.advance(grant,control)));
+ let result=cx.with_native_receiving::<_,semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>>(|control|control.receive_construction_step(demand,|control,grant|owner.advance(grant,control)));
  let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let receipt=cx.consume_receiving_retained(cx.receiving_issued_grant().expect("original registry receiving grant"),progress);cx.consume_fuel(progress.copied_items as u64);
  match(result,receipt){(Ok(_),Ok(()))=>Ok(()),(Err(error),Ok(()))=>Err(error.into()),(Ok(_),Err(error))=>Err(error.into()),(Err(error),Err(receipt))=>{let mut failure=OriginalTurnFailure::from(error);failure.context_refusal=Some(receipt);Err(failure)}}
 }

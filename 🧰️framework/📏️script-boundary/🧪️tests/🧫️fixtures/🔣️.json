@@ -1,6 +1,6 @@
 {
   "version": 1,
   "entry": "📦️packages/🟦️typescript/📜️script.ts",
-  "commands": ["installation-identity-check", "test", "test-artifact-reference", "test-document-scope", "test-io-ports", "test-module-package-surface", "test-polygon-mesh", "test-script-boundary", "test-sdk-surface", "test-source-text", "typecheck"],
+  "commands": ["installation-identity-check", "test", "test-artifact-reference", "test-document-scope", "test-io-ports", "test-module-package-surface", "test-polygon-mesh", "test-script-boundary", "test-sdk-surface", "test-source-text", "typecheck", "window-utility-check"],
   "refusedOwners": ["🧰️framework/🛍️products", "✏️s", "🌎️hub"]
 }

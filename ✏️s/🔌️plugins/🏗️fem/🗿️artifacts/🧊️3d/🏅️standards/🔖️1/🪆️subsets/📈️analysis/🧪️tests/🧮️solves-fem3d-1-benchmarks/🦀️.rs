@@ -608,10 +608,6 @@ mod subject {
             if let Some(first) = law::divergence(applied, report.get("expectedSnapshot").ok_or_else(|| format!("mutate-solve-{kind}: the report carries no expectedSnapshot"))?) {
                 return Err(format!("mutate-solve-{kind}: the applied model is not the committed after-model — {first}"));
             }
-            // 🧭️Production dispatch has just been held to the committed after-model, member for
-            // member, by `law::divergence` above — so what is solved below is that model, read from
-            // the committed bytes whose shape this case's own reader is written against rather than
-            // from the report's re-encoding, which the `🌐️any` round-trip cases own.
             let before = solve(&decode::snapshot(&fixture(ctx, "mutation-base")?)?)?;
             let document = decode::snapshot(&fixture(ctx, &format!("mutation-after-{kind}"))?)?;
             let after = solve(&document)?;

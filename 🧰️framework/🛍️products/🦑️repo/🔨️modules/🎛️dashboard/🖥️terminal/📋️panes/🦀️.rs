@@ -75,6 +75,7 @@ impl Dashboard {
             SessionStatus::Exited => text.status_exited,
             SessionStatus::Failed => text.status_failed,
             SessionStatus::Interrupted => text.status_interrupted,
+            SessionStatus::TimedOut => text.status_timed_out,
         };
         let code = session.code.map(|code| format!(" · {}", text.exit_code.fill(&[("code", &code.to_string())]).as_str())).unwrap_or_default();
         let url = session.ready_url.as_deref().map(|url| format!(" · {url}")).unwrap_or_default();

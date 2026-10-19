@@ -14,7 +14,6 @@ pub async fn partial_select_top_k(logits: &[f32], live: &mut [u32], k: usize, sc
     }
     debug_assert!(scratch.len() >= n);
     let key = |token: u32| -> (f32, core::cmp::Reverse<u32>) { (logits[token as usize], core::cmp::Reverse(token)) };
-    // 📐️ Selection over a byte-key derived from (logit desc, token asc) via index-sort scratch.
     for (slot, &t) in live.iter().enumerate() {
         scratch[slot] = logits[t as usize];
     }

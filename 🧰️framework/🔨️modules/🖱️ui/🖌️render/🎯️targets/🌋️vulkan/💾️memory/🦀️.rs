@@ -89,7 +89,6 @@ impl Default for GrowBuffer {
 }
 
 impl GrowBuffer {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn buffer(&self) -> Option<vk::Buffer> {
         (self.capacity > 0).then_some(self.buffer)
     }
@@ -97,7 +96,6 @@ impl GrowBuffer {
     /// 🧨️ Frees the backing allocation. Callers (`VulkanBackend::drop`) must ensure the device is idle
     /// (no in-flight command buffer references `self.buffer`) before calling this — the same rule
     /// every other `destroy_*`/`free_*` call in this crate follows.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn destroy(&mut self, device: &ash::Device) {
         if self.capacity == 0 {
             return;
@@ -118,7 +116,6 @@ impl GrowBuffer {
     /// start. `HOST_COHERENT` means no explicit `flush_mapped_memory_ranges` is needed for the GPU to
     /// observe the write (mirrors the Metal target's `Shared`-storage reasoning). Returns `None` for
     /// empty input, matching `crate::memory`'s Metal analog's "nothing to draw" no-op.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn upload(&mut self, device: &ash::Device, memory_properties: &vk::PhysicalDeviceMemoryProperties, bytes: &[u8]) -> Result<Option<vk::Buffer>, vk::Result> {
         if bytes.is_empty() {
             return Ok(None);

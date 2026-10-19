@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "files": {
+    "nx.json": {
+      "useDaemonProcess": false,
+      "cacheDirectory": ".nx/cache",
+      "maxCacheSize": "64MB",
+      "namedInputs": {
+        "production": [
+          "{projectRoot}/source.json",
+          "{projectRoot}/toolchain.json",
+          "{projectRoot}/📜️script.ts",
+          {
+            "env": "CACHE_PROBE_MODE"
+          }
+        ],
+        "test": [
+          "production",
+          "{projectRoot}/spec.json"
+        ]
+      }
+    },
+    "package.json": {
+      "name": "cache-verification",
+      "private": true,
+      "nx": {
+        "includedScripts": []
+      }
+    },
+    ".gitignore": "node_modules\n.nx\ndist\nstate\n*.log\n",
+    "project.json": {
+      "name": "probe",
+      "targets": {
+        "build": {
+          "executor": "nx:run-commands",
+          "cache": true,
+          "inputs": [
+            "production"
+          ],
+          "outputs": [
+            "{projectRoot}/dist"
+          ],
+          "options": {
+            "command": "bun ./📜️script.ts build"
+          }
+        },
+        "test": {
+          "executor": "nx:run-commands",
+          "cache": true,
+          "inputs": [
+            "test"
+          ],
+          "outputs": [],
+          "options": {
+            "command": "bun ./📜️script.ts test"
+          }
+        },
+        "validate": {
+          "executor": "nx:run-commands",
+          "cache": false,
+          "outputs": [],
+          "options": {
+            "command": "bun ./📜️script.ts validate"
+          }
+        },
+        "guarded": {
+          "executor": "nx:run-commands",
+          "cache": true,
+          "dependsOn": [
+            "validate"
+          ],
+          "inputs": [
+            "production"
+          ],
+          "outputs": [],
+          "options": {
+            "command": "bun ./📜️script.ts guarded"
+          }
+        }
+      }
+    }
+  },
+  "invocation": {
+    "fixture": "/fixture",
+    "task": "build",
+    "environment": {
+      "PATH": "/bin",
+      "NX_TASK_TARGET_PROJECT": "x",
+      "NX_SKIP_NX_CACHE": "true",
+      "NX_SKIP_REMOTE_CACHE": "true",
+      "NX_FORCE_REUSE_CACHED_GRAPH": "true",
+      "CACHE_PROBE_MODE": "two"
+    },
+    "arguments": [
+      "run",
+      "probe:build",
+      "--output-style=static"
+    ],
+    "command": "node",
+    "expectedEnvironment": {
+      "PATH": "/bin",
+      "CACHE_PROBE_MODE": "two",
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_TUI": "false",
+      "NX_NATIVE_COMMAND_RUNNER": "false",
+      "NX_WORKSPACE_DATA_DIRECTORY": "/fixture/.nx/workspace-data"
+    },
+    "absentEnvironment": [
+      "NX_TASK_TARGET_PROJECT",
+      "NX_SKIP_NX_CACHE",
+      "NX_SKIP_REMOTE_CACHE",
+      "NX_FORCE_REUSE_CACHED_GRAPH"
+    ]
+  }
+}

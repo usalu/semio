@@ -178,7 +178,6 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     assert_eq!(scene.controller_id, law["expected"]["surfaceNode"]["controllerId"].as_str().expect("controller"));
     assert!(scene.node_graph.is_none(), "an empty doc payload renders the host's own empty viewport rather than refusing the record");
 
-    // 🖌️ …and the arena that came out of it actually paints.
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let document = document_from(&law, &ids, law["document"]["generation"].as_u64().expect("generation"), law["document"]["revision"].as_u64().expect("revision"), None);
     assert!(ui.publish_document("procedural-main", document));
@@ -368,8 +367,6 @@ fn ingest(ui: &mut Ui, window_id: &str, lease: &UiDocumentLease) -> bool {
                 }
                 admitted = true;
             }
-            // 🚦️ `ValidationPending` is the stepped validator asking for another opportunity, never a
-            // refusal — `render_ui_document_step` retries on exactly this set.
             UiDocumentIngressStatus::Pending { next_page, node_count } if next_page == node_count => match ui.finish_document(window_id, generation, &mut cx) {
                 Ok(()) | Err(UiDocumentIngressFault::ValidationPending | UiDocumentIngressFault::InterruptedClose | UiDocumentIngressFault::Cancelled | UiDocumentIngressFault::Deadline) => {}
                 Err(fault) => panic!("a fully paged document finishes: {fault:?}"),
@@ -449,7 +446,6 @@ fn a_surfaces_second_document_reaches_the_arena_and_a_constant_generation_never_
     assert!(arena_keys(&ui, "second-document").contains(&added_key), "the SECOND document's new node must reach the paintable arena: {:?}", arena_keys(&ui, "second-document"));
     assert_eq!(arena_keys(&ui, "second-document").len(), law["secondGeneration"]["expected"]["arenaNodeCount"].as_u64().expect("count") as usize);
 
-    // 🩸️ …and the producer the browser actually shipped: the same constant for both documents.
     let constant = law["ingressGeneration"]["constantProducerIsRefused"]["generations"].as_array().expect("constant generations").iter().map(|value| value.as_u64().expect("generation")).collect::<Vec<_>>();
     assert!(constant.windows(2).all(|pair| pair[0] == pair[1]), "the shipped producer's generations were all equal — that is the defect");
     let mut refused = Ui::new(semio_framework_ui_locale::Locale::En);
@@ -699,8 +695,6 @@ fn engine_surface_root_record(id: u64, key: &str, kind: &str) -> serde_json::Val
     serde_json::json!({
         "id": id,
         "key": key,
-        // 📐️ A root engine surface owns the viewport in both axes. `LeafLayout` requires both
-        // sizing fields on the wire; the renderer contract has no compatibility defaults.
         "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
         "component": { "type": "surface", "kind": kind, "docSchema": doc_schema, "doc": { "bytes": [] } },
         "style": {},

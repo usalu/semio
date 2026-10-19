@@ -5,10 +5,10 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema_controlled,artifact::read_binary64};
 #[path="./🔍️rows/🦀️.rs"]mod rows;
 fn retire(value:RunArtifact){semio_framework_dsl_record::DslField::retire_decoded(value)}
-fn fingerprints(rows:&[&SqliteRow],native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Vec<PortFingerprint>,ValueError>{
+fn fingerprints(rows:&[&SqliteRow],native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Vec<PortFingerprint>,ValueError>{
  native.scoped_stage(|native|{native.begin_stage(rows.len())?;let mut values=native.allocate_vec(rows.len())?;for row in rows{values.push(PortFingerprint{port_id:native.copy_text(row.text(4)?)?,fingerprint:native.copy_text(row.text(5)?)?});native.step()?;}Ok(values)})
 }
-fn construct(database:&SqliteDatabase,rows:&rows::Rows<'_>,native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<semio_framework_dsl_record::__rt::DecodedFieldOwner<RunArtifact>,ValueError>{
+fn construct(database:&SqliteDatabase,rows:&rows::Rows<'_>,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<semio_framework_dsl_record::__rt::DecodedFieldOwner<RunArtifact>,ValueError>{
  let count=2usize.checked_add(rows.parameters.len()).and_then(|n|n.checked_add(rows.nodes.len())).and_then(|n|n.checked_add(rows.logs.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Run native binding workload overflow"))?;
  native.begin_stage(count)?;
  let document=database.table("run_document")?.single_row()?;let trigger=database.table("run_trigger")?.single_row()?;
@@ -29,6 +29,6 @@ pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotCo
  let document=database.table("run_document")?.single_row()?;let trigger=database.table("run_trigger")?.single_row()?;
  if document.rowid!=1||document.values.len()!=11||document.integer(0)?!=1||trigger.rowid<=0||trigger.values.len()!=6||trigger.integer(0)?!=trigger.rowid||trigger.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run requires complete aliased document and trigger ownership"))}
  let rows=rows::Rows::new(database,control)?;
- let owner=control.allocation_stage(phase,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=construct(database,&rows,&mut native);(result,native.owned_bytes())})??;
+ let owner=control.allocation_stage(phase,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=construct(database,&rows,&mut native);(result,native.owned_bytes())})??;
  control.checkpoint(phase,rows.nodes.len(),rows.nodes.len())?;Ok(owner.take())
 }

@@ -182,10 +182,6 @@ pub fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, 
         presence_overlay(draw, bounds, theme, presence, node_selection_outline(&node.spec.0));
         return;
     }
-    // 🖱️ Authored `presence.hover` (default false) composes with live pointer hover: every variant's
-    // own paint already reads `NodeFlags::HOVERED` for its hover-aware fill, so folding the authored
-    // flag in here — suppressed while disabled, matching `events::EventRouter`'s own suppression —
-    // makes it effective everywhere for free, with no per-variant paint changes.
     let mut flags = node.flags;
     if presence.state != UiState::Disabled {
         flags.set(NodeFlags::HOVERED, flags.contains(NodeFlags::HOVERED) || presence.hover);
@@ -216,9 +212,6 @@ pub fn paint_node_self(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, 
             paint_group(group, bounds, theme, atlas, icons, draw);
         }
         UiNode::Tree(_) => {}
-        // 🎬️ With a `SceneHost` registered this tick, leave these two rects untouched here —
-        // `engine::Ui::frame`'s `collect_scene_slots` loop paints the real content right after this
-        // pass returns. With no host, fall back to the unchanged placeholder chrome.
         UiNode::Image(image) => {
             if !has_scene_host {
                 paint_image(image, bounds, theme, atlas, draw);
@@ -260,18 +253,8 @@ pub fn paint_text(node: &UiTextNode, bounds: Rect, theme: &Theme, atlas: &mut Fo
 }
 
 pub fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
-    // 🚫️ `disabled:opacity-50` is the shared dimming convention this codebase's React reference
-    // (`ui/js/react/index.tsx`'s form controls) uses for every disabled interactive control; ported
-    // here via `Rgba::with_alpha` since `paint` has no CSS to lean on. A disabled control also can't
-    // be hovered — `widgets::render_button` has no `disabled` concept at all (see this region's own
-    // doc comment on why `widgets` is an incomplete reference for this specific fixture), so this is
-    // an independent, `UiButtonNode.disabled`-driven fix rather than a widgets port.
     let disabled = node.presence.state == UiState::Disabled;
     let hovered = !disabled && flags.contains(NodeFlags::HOVERED);
-    // 🎯️ `formControlFocusBorderClass`'s `focus-visible:border-accent` (`ui/js/react/index.tsx`,
-    // applied to every form-control primitive including `Button`) — `widgets::render_button` never
-    // implemented a focus ring either (only `render_input` did), so this is another independent
-    // React-sourced fix, mirroring `paint_input`'s own established border-swap convention.
     let focused = !disabled && focus_ring_visible(flags);
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     let bg = dim(item_bg(theme, false, hovered));
@@ -356,9 +339,6 @@ pub fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, f
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
 pub fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
-    // 🎯️ `SelectTrigger`'s own `formControlFocusBorderClass` (`ui/js/react/index.tsx`) swaps its
-    // border to `border-accent` on `focus-visible` — mirrored via the same border-swap convention
-    // `paint_input`/`paint_button` already use, since `widgets::render_select` never implemented one.
     let focused = focus_ring_visible(flags);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
     let border = if focused { theme.accent } else { theme.border_normal };
@@ -395,8 +375,6 @@ pub fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: 
     }
     let pressed = node.presence.selected;
     let hovered = flags.contains(NodeFlags::HOVERED);
-    // 🎯️ Same `formControlFocusBorderClass` border-swap as `paint_button`/`paint_select` — the icon-
-    // button variant `Toggle` renders through (`ui/js/react/index.tsx`) carries it too.
     let focused = focus_ring_visible(flags);
     let bg = item_bg(theme, pressed, hovered);
     let border = if focused { theme.accent } else { theme.border_normal };
@@ -473,9 +451,6 @@ pub fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut Dra
 
 pub fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
-    // 🎯️ Same border-swap-on-focus convention as `paint_button`/`paint_select`/`paint_toggle` — the
-    // real `IconSelector` (`ui/js/react/index.tsx`) nests a `Select` for its mode picker, which
-    // inherits `formControlFocusBorderClass` the same way.
     let focused = focus_ring_visible(flags);
     let border = if focused { theme.accent } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, chrome_item_bg(theme, false, hovered));
@@ -559,9 +534,6 @@ pub fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: 
     let mut y = bounds.y;
     for section in &node.sections {
         if let Some(label) = &section.label {
-            // 🗂️ `widgets::render_tree_section_header` draws a folder icon before the label and
-            // dims the label to `text_muted` only while collapsed (`text_element` otherwise) —
-            // ported here; previously this always used `text_muted` regardless of collapsed state.
             let collapsed = !semio_framework_ui_wgpu_layout::layout::tree_section_default_open(section);
             let text_color = if collapsed { theme.text_muted } else { theme.text_element };
             let label_x = bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard;
@@ -576,8 +548,6 @@ pub fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: 
         }
     }
     draw.pop_scissor();
-    // 🧭️ Status/selected/introducing rings for the whole `Tree` are drawn once, centrally, by
-    // `paint_node`'s shared `presence_overlay` — not duplicated here.
 }
 
 /// 🌳️ Recursive row painter for one `Tree` item (and, if expanded, its nested `items`). Ports every
@@ -627,10 +597,6 @@ pub fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth:
             push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - SIZE_TINY) * 0.5, SIZE_TINY, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
         }
     }
-    // 🎨️ `widgets::render_tree_item`'s `text_color`: selected/previewed rows use `active_foreground`
-    // for both icon tint and label (previously this always used `text_element`/`theme.text`);
-    // `dimmed` (the eye-toggle "hidden in scene" domain flag, or `presence.state == Disabled`) halves
-    // its alpha without skipping the row — it stays visible and clickable to un-hide/re-enable.
     let text_color = foreground_on_fill(theme, item.tone.and_then(|tone| theme.tone_ink(tone)).unwrap_or(theme.text_element), selected, on_hover_fill);
     let text_color = if dimmed { text_color.with_alpha(text_color.a * 0.5) } else { text_color };
     if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
@@ -654,8 +620,6 @@ pub fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth:
             push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
         }
     }
-    // 🎛️ An inline per-row control (e.g. a small toggle/select embedded in a tree row), static data
-    // already present on `UiTreeItemNode` that the old paint pass never rendered at all.
     if let Some(control) = &item.control {
         let control_height = semio_framework_ui_wgpu_layout::layout::tree_inline_control_height(control, theme);
         let local = semio_framework_ui_wgpu_layout::layout::tree_row_control_rect_with_height(row.w, control_height, &metrics);

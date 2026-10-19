@@ -47,7 +47,6 @@ pub enum JsonIJsonRoot {
 
 impl JsonIJsonRoot {
     /// ⬆️ The equivalent `JsonValue`, for handing to the ✳️any subset's own ops.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_value(&self) -> JsonValue {
         match self {
             JsonIJsonRoot::Object { members } => JsonValue::Object { members: members.clone() },
@@ -56,7 +55,6 @@ impl JsonIJsonRoot {
     }
 
     /// ⬇️ `None` for a scalar — the whole point of the type.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_value(value: &JsonValue) -> Option<Self> {
         match value {
             JsonValue::Object { members } => Some(JsonIJsonRoot::Object { members: members.clone() }),

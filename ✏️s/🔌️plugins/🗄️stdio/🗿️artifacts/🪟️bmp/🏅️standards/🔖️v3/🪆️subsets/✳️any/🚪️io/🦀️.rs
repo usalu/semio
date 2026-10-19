@@ -20,10 +20,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY)
@@ -47,7 +43,8 @@ pub use derived_composition::*;
 /// 🧭 Native BMP v3 physical layout, admission and canonical emission.
 use crate::schema::snapshot::{BmpImage, BmpNativeSample, BmpPaletteEntry, BmpPixels, BmpProfile, BmpRowOrder};
 use crate::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn native_invalid(message:impl Into<String>)->ValueError {ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
 const BMP_MAGIC: [u8; 2] = *b"BM";
@@ -230,10 +227,6 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Diff,
         grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
         grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
-        // 🎫️ The 5-role scheme has no dedicated "diff binary" role even when a real diff
-        // protocol file exists (this ticket's own recipe §4 checklist item) — `BmpDiff`'s own
-        // `.spk`-container protocol IS real (see ../🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/
-        // 📡️.protocol.semio), just not registered here.
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.bmp.diff"),
@@ -386,8 +379,6 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    // 🔍 stdio.bmp's text envelope is a hex dump of the raw bytes after the
-                    // `semio ...` preamble line — decode the first 2 bytes to sniff the real signature.
                     let body = match store::semio_format::split_text_preamble(text) {
                         Ok((_, rest)) => rest,
                         Err(_) => text,

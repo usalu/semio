@@ -1,41 +1,26 @@
-#!/usr/bin/env bun
-import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {resolve} from "node:path";
 import {BundleScript,ScriptRouter} from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runScriptMain} from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runBudgetedTestCommand} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import {resolveTestLevel,testLevelBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import {cmdBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-
+import { runOwnershipScript, runNativeScript, runRefusalScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🏛️ Checks the actual independent vocabulary owner and literal wire fields. */
 class OwnershipScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{
-    if(segments.length)throw Error("test-ownership accepts no arguments");
-    const source=resolve(this.root,"../../🏛️ownership/🧪️tests/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
-    await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
+  async run(segments:string[]): Promise<void> {
+    await runOwnershipScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
 /** 🚪️ Runs every native vocabulary law without selecting a test name. */
 class NativeScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{
-    const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    const{rest}=resolveTestLevel(segments);
-    if(rest.length)throw Error("test-native accepts only an execution level");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-schema"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+  async run(segments:string[]): Promise<void> {
+    await runNativeScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 /** ⚠️ Proves the owned IO cause projection and wire contract against independent schemas. */
 class RefusalScript extends BundleScript {
- async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-refusal accepts no arguments");
-  const source=resolve(this.root,"../../⚠️refusal/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
-  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
- }
+  async run(segments:string[]): Promise<void> {
+    await runRefusalScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
 
 const router=new ScriptRouter(import.meta.dir).register("test-ownership",OwnershipScript).register("test-native",NativeScript).register("test-refusal",RefusalScript);

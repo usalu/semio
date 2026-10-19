@@ -153,9 +153,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
                 const closeNoted = noteShellCommand("shell.windowClose", shellLabelTextV1("ui.shellCommand.windowClose"), { windowId });
-                // 🪟️ A spawned program now owns one window per declared kind, so closing ONE of them
-                // closes that window; the instance is retired when its LAST window goes. Before this,
-                // a spawned app was a single window whose id was the instance id itself.
                 const closedSpawnedId = hostMode && panel ? spawnedIdOfWindowInstanceV1(windowId, panel.spawnedApps.map((entry) => entry.id)) : null;
                 if (closedSpawnedId !== null && panel) {
                   const closedSpawned = panel.spawnedApps.find((entry) => entry.id === closedSpawnedId);
@@ -166,16 +163,11 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
                   if (remaining.length === 0) {
                     const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== closedSpawnedId);
                     updateSpacePanel(buildSpacePanelState(nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
-                    // 🪶️ Closing a spawned app's window used to leave its plugin instance running forever
-                    // (see REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT's documented teardown gap) — the panel
-                    // entry was dropped from the UI, but nothing ever told the guest to free it.
                     if (closedSpawned) {
                       const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
                       void closeNoted.then(() => closedPlugin?.destroyApp(closedSpawned.instanceId)).catch(() => {});
                       world3dWindowViewRegistry.retireOwner(`${closedSpawned.pluginId}:${closedSpawned.appId}:${closedSpawned.instanceId}`);
                     }
-                    // 🧰️ Its per-window host registers go with it — a stale `activeUtilityByWindowId`
-                    // row keeps arming a utility for a window nobody can see.
                     for (const instance of closedInstances) writeUtilityRegister(instance.id, null, null);
                   }
                 }
@@ -196,8 +188,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
               }}
               onWindowOpenInNewWindow={(windowId) => {
                 if (!session) return;
-                // 🪟️ Same bound as `handleTemplateDrop`: a spawned program owns its declared windows,
-                // not splits of them.
                 if (spawnedIdOfWindowInstanceV1(windowId, spawnedIds) !== null) return;
                 const extra = extraWindowInstancesRef.current.find((entry) => entry.id === windowId);
                 const windowKindId = extra?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowId)?.id;
@@ -258,16 +248,7 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
     items.push(navbarFillItem("footerLeadingFill"));
     for (const item of credits.filter((item) => item.placement === "trailing")) items.push(shellFooterNavbarItem(item, uiLocale, mobile));
     if (credits.some((item) => item.placement === "trailing")) items.push({ key: "footerTrailingGap", className: "w-huge", content: null });
-    // 👥️ ticket §C0/§5 lane 4-F — `#s-presence-peers`, right-aligned in the footer, mirroring the wgpu
-    // shell's own `render_presence_bar` placement (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) rather than hiding behind a
-    // panel tab click: presence is ambient chrome, always visible while a document is open.
     if (!mobile && !(compactFooter && presencePeers.length === 0)) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={timeTravelPeers.peers} /> });
-    // 📶️ The hub link itself, beside presence and on every device — a human with several documents
-    // open used to have to open each one's own sync popover to learn the hub was unreachable
-    // (`📓️g5-ux-completeness-audit.md` §5). Mobile keeps it too: it is one short badge, and a phone is
-    // exactly where a connection drops.
-    // ⛩️ The pointer to waiting agent approvals — it decides nothing, it takes the human to the one
-    // affordance in the agent conversation. Present on every device, absent while nothing waits.
     if (agentBridge.pendingApprovals.length > 0) items.push({ key: "agentApprovals", content: <AgentApprovalsNotice approvals={agentBridge.pendingApprovals} onReview={revealAgentApproval} /> });
     if (agentBridge.status === "unavailable" || agentBridge.status === "incompatible") items.push({ key: "agentBridgeNotice", content: <AgentPresence status={agentBridge.status} presence={agentBridge.presence} versionMismatch={agentBridge.versionMismatch} /> });
     items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} link={hubLink} onSignIn={openHubWorkspace} /> });
@@ -289,11 +270,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
   );
 
   // #region 🔖️ReadinessBeacon
-  /** 🚦️ Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)
-   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, cleared on unmount.
-   * Mirrored onto this shell's own `[data-shell-id]` scope root (`data-shell-ready`/`data-shell-error`/
-   * `data-shell-not-found`) because the `document.documentElement` slot above is a single global value and
-   * cannot distinguish several `FrameworkOsShell` instances mounted on one page (e.g. the demonstrator). */
   useEffect(() => {
     const root = document.documentElement;
     const shellRoot = scope.rootRef.current;
@@ -341,13 +317,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
   // #endregion 🔖️ReadinessBeacon
 
   // #region 🔖️CatalogSmokeProbe
-  /** 🔬️ Dev-only mirror of the two facts a catalog-wide smoke cannot otherwise read from the DOM: which
-   * programs this session can spawn, and which installed plugins ended up `failed`/`crashed` (the shell
-   * only console-logs a non-primary install failure — see the streaming install effect). Shape is
-   * {@link ShellCatalogProbe}; consumed by
-   * `framework-os-dev verify catalog`. Beside it, `__semioOsInstalledContributions(instanceId)` reads the contributions
-   * closure the host last pushed into that instance through `setContributions` ({@link createContributionsPublisher}'s
-   * `installedFor`) — the witness that a topic-only extension reached its parent. Never defined in a production build. */
   useEffect(() => {
     let dev = false;
     try {
@@ -372,8 +341,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
     };
   }, [session, error, pluginFilter, registry, pluginStatusById, panel, spacePrograms, appRouter]);
 
-  /** 🔬️ Dev/test-only read seam over the actual acknowledged Shell store. The caller supplies only
-   * a scope; the returned closed projection contains no capability or mutation surface. */
   useEffect(() => {
     let dev = false;
     try {
@@ -395,9 +362,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
     return () => { if (host.__semioMountedServiceProbe === read) delete host.__semioMountedServiceProbe; };
   }, [documentServices]);
 
-  /** 🧯️ One console record per plugin the router excluded — permanent, not a `[TRACE]` trace: an
-   * excluded plugin installs cleanly, so this is the only signal outside the dev probe that its
-   * surfaces are unroutable. */
   useEffect(() => {
     for (const fault of routerFaultByPluginId.values()) console.error(`AppRouter excluded plugin ${JSON.stringify(fault.scope.pluginId ?? "")}: ${fault.code}: ${fault.message}`);
   }, [routerFaultByPluginId]);
@@ -424,9 +388,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
         dispatch({ type: "SET_SEARCH_OPEN", value: true });
         return;
       }
-      // 👁️✏️ Artifact/document context-menu "Open with…" (contract freeze §5) — same local-only
-      // navigation the palette's `open-artifact-with-viewer`/`open-artifact-with-editor` commands do,
-      // not scoped to either role here since the menu row is one generic "Open with…" entry.
       if (action === "shell.openArtifactWith") {
         dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: null });
         dispatch({ type: "SET_PANEL_PATH", anchor: "top-left", value: [FRAMEWORK_PANEL_TAB_ARTIFACT_ID] });
@@ -450,12 +411,7 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
     const specs: ContextMenuItemSpec[] = [];
     const categoryByActionId = new Map<string, string>();
     if (windowKind) {
-      // 👁️✏️ Hides every `Mutation`-kind window action from a viewer session's fallback menu
-      // (contract freeze §5) — same predicate `resolvedCommands` filters the palette with.
       for (const action of filterDefinitionsForRole(resolveWindowActions(session.app, windowKind), session.app.role)) {
-        // 🧹️ Same curation as the command palette (`if (!action.inPalette) continue`) — most apps
-        // declare internal/pointer-tracking view actions (worldHover, engagementInput, ...) as window
-        // actions purely for dispatch plumbing; only palette-worthy ones belong in a user-facing menu.
         if (!action.inPalette) continue;
         const argCarrying = actionRequiresStagedForm(action);
         categoryByActionId.set(action.id, actionCategoryId(action));
@@ -471,8 +427,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
       }
     }
     if (specs.length > 0) specs.push({ id: "shell-menu.separator", separator: true });
-    // 👁️✏️ Artifact/document context-menu "Open with…" (contract freeze §5) — only when the current
-    // dialect actually has at least one registered surface to list.
     if (hasOpenArtifactSurfaces) {
       specs.push({ id: "shell.openArtifactWith", label: openArtifactWithText(uiLocale), icon: "app-window", action: "shell.openArtifactWith" });
     }
@@ -489,12 +443,6 @@ export function useCanvasAndFooter(core: ShellCoreAfterPanelHosting) {
   useEffect(() => {
     const handleContextMenu = (event: globalThis.MouseEvent) => {
       if (isContextMenuPointerTarget(event.target)) return;
-      // 🖱️ `preventDefault()` IS how an inner surface claims a right-click (every `ComponentSceneHost`'s
-      // own `onContextMenu` calls it synchronously before awaiting its plugin menu), and this fallback is
-      // defined as "shown for any right-click no inner surface claimed" — without this guard the shell
-      // menu opened on TOP of the plugin's own viewport menu, which is what a probe reading
-      // `[role="menuitem"]` saw instead of the puzzle3d rows
-      // (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 8).
       if (event.defaultPrevented) return;
       const items = buildShellContextMenuItems();
       if (items.length === 0) return;

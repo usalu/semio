@@ -109,7 +109,7 @@ test("the real CLI options cancel incoming-reference planning without changing s
   }
 }, { timeout: 30_000 });
 
-test("registers the cancellation gate through Nx as an owner route that is never replayed from cache", () => {
+test("registers the cancellation gate through Nx as an owner route replayed only from its declared inputs", () => {
   const expected = vector.execution;
   const project = JSON.parse(readFileSync(join(root, library, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   expect(project.targets[expected.target]?.options.command).toBe(expected.command);

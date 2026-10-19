@@ -15,19 +15,19 @@ import {
 } from "../🟦️.ts";
 
 export interface RasterDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   artifact?: RasterArtifact;
-  /** @state artifact */
+  /** ✏️ @state artifact */
   schema?: string;
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   id?: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string | null;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers?: RasterLayersDelta;
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets?: RasterAssetsDelta;
-  /** @state artifact */
+  /** 🖼️ @state artifact */
   pixels?: RasterPixelRegion[];
 }
 

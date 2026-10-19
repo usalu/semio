@@ -1,16 +1,16 @@
 /** 🧬️ Shared Puzzle 5D generator preferences. */
 export interface Puzzle5dConfig {
-  /** @state config */
+  /** 🪣️ @state config */
   fillCount: number;
-  /** @state config */
+  /** 🤝️ @state config */
   contactTolerance: number;
-  /** @state config */
+  /** 🧲️ @state config */
   proximityRadius: number;
-  /** @state config */
+  /** 🌊️ @state config */
   chunkSize: number;
-  /** @state config */
+  /** 🏋️ @state config */
   objectKindWeights: Record<string, number>;
-  /** @state config */
+  /** 🌪️ @state config */
   vortexKindWeights: Record<string, number>;
 }
 

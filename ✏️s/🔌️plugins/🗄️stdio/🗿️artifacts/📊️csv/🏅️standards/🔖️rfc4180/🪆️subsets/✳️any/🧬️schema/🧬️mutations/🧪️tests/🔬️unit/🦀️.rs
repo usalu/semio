@@ -72,7 +72,6 @@ async fn inverse_law() {
         CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "changed".into(), quoted: true }),
     ];
     for m in variants {
-        // 🔁️ mutation-level round trip
         let mut forward = base.clone();
         apply_mutation(&mut forward, &m);
         for inv in m.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().rev() {
@@ -80,7 +79,6 @@ async fn inverse_law() {
         }
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
-        // 🔁️ diff-level round trip
         let d = m.diff(&base);
         let mid = protocol::apply_diff(d.diff(), &base).unwrap();
         let back = protocol::apply_diff(&d.diff().inverse(&base), &mid).unwrap();
@@ -94,7 +92,6 @@ async fn inverse_law() {
 async fn absorb_law() {
     let base = base_snapshot();
 
-    // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record(&[("ins", false)]) }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }).diff(&mid);
@@ -103,7 +100,6 @@ async fn absorb_law() {
     composed.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
-    // 🧩 Insert(2,f) + Insert(2,g): both must survive (fixes the old op-slot LWW bug).
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record(&[("f", false)]) }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record(&[("g", false)]) }).diff(&mid);
@@ -113,7 +109,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
-    // 🧩 Add + SetField: patch into the added payload.
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("orig", false)]) }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "patched".into(), quoted: true }).diff(&mid);
@@ -123,7 +118,6 @@ async fn absorb_law() {
     assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Add+SetField absorb mismatch");
     assert_eq!(after.records[1].fields[0].value, "patched");
 
-    // 🧩 Modify + Remove: modifying then removing the same record collapses to a removal.
     let d1 = CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "will-vanish".into(), quoted: false }).diff(&base);
     let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 1 }).diff(&mid);
@@ -132,7 +126,6 @@ async fn absorb_law() {
     composed.absorb(d2.diff().clone());
     assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Modify+Remove absorb mismatch");
 
-    // 🧩 Associativity over a triple.
     let base = base_snapshot();
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: record(&[("a", false)]) }).diff(&base);
     let s1 = protocol::apply_diff(d1.diff(), &base).unwrap();

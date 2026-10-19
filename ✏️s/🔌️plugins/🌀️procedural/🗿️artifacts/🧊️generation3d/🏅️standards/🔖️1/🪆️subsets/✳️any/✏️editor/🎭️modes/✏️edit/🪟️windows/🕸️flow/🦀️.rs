@@ -72,8 +72,6 @@ pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Opt
         id: "generation3d-measure-lod".into(),
         label: Some(if is_de { "Detailgrad" } else { "LOD" }.into()),
         value: current.into(),
-        // 🎚️ Rows come from the ONE ladder `cycleLodMode` walks, so the keyboard cycle and the
-        // picker can never disagree (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         items: semio_s_artifact_procedural_3d_editor_config::GENERATION_3D_LOD_MODES
             .iter()
             .map(|mode| {
@@ -333,11 +331,6 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
         labels.graph_canvas_hint.as_str(),
         semio_framework_ui_contract::Liveness::Off,
     )?;
-    // ⏎️ Enter/Space on the focused canvas opens the selected node's ports — the `activate` half of
-    // the keyboard traversal the arrow chords drive (`🎮️commands/🧭️navigate-graph`). It is a SURFACE
-    // binding and deliberately not an app chord: `SurfaceAccessibilityShell` fires it only for the
-    // focused canvas and `preventDefault`s it, whereas an `enter` chord in the app keybinding table
-    // would fire on every focused button in the shell.
     let surface = semio_s_procedural_core_semantic_ui::activatable_scene_surface(surface, GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
     semio_framework_ui_contract::column()
         .grow(true)

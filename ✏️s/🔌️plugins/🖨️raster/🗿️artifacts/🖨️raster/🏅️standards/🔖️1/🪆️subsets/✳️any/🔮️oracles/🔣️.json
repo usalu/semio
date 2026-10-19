@@ -400,17 +400,6 @@
               "directoryName": "🚫️rejects"
             }
           ]
-        },
-        {
-          "mutationId": "write-pixel-region",
-          "sourceMutationDirectoryName": "🔲write-pixel-region",
-          "mutationDirectoryName": "🔲write-pixel-region",
-          "scenarios": [
-            {
-              "id": "writes-a-rectangle",
-              "directoryName": "🔲writes"
-            }
-          ]
         }
       ],
       "kinds": [

@@ -17,9 +17,6 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_through_store() {
     let envelope = store::os_store::document_materialize::create_document_envelope("norm.en1995/v1", "en1995", En1995Snapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    // 🏪️ A bare `ArtifactStore::new` installs NO document-store owners: the first `Apply` is refused
-    // with `edit history insertion requires its exact mutation retirement factory`, and a store that
-    // survived would then trip the terminal-empty shallow-shell witness in `Drop`.
     let mut store = store::os_store::test_support::plain_test_store(envelope).await;
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![sample_mutation()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

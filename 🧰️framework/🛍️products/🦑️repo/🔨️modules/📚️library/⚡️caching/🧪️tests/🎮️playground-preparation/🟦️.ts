@@ -1,5 +1,5 @@
 import {preparePlaygroundSourceFixtureV1} from "../🧊️preparation/🟦️.ts";
-import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {mkdirSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

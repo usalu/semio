@@ -1,4 +1,41 @@
 Feature: Native Dashboard Installation and Launch
+
+  Scenario: The selected binary owns its dependency lock input
+    Given root-owned and nested-workspace-owned binary fixtures
+    When their exact Cargo source inputs are captured
+    Then each binary retains its selected workspace lock and dependency workspace manifests
+    And unrelated workspace locks and manifests do not invalidate that binary
+  Scenario: Bootstrap authority closes authored conditional build dependencies before Original birth
+    Given run, daemon, preferences and install declare build as an owned child
+    And build and installed test routes declare compile as an owned child
+    When the caller declares its initial dashboard selection
+    Then exact build and compile requests are closed before issuing its Original
+    And child projection preserves backend, mode and native resource ceilings
+    And no native argv or extra sibling request gains authority
+    And unit, windows, compile, unrelated and nonexistent workflow targets acquire no conditional child
+  Scenario Outline: Missing modes install before read-only or stop controls
+    Given the selected mode has no dashboard installation
+    When the developer requests <control>
+    Then the native owner installs that mode once before acquiring the executable reader
+    And the rebuild retains the original invocation and cancellation signal
+    And failure or cancellation prevents the native child from starting
+
+    Examples:
+      | control       |
+      | tasks         |
+      | logs          |
+      | stop          |
+      | kill          |
+      | open          |
+      | daemon status |
+      | daemon stop   |
+
+  Scenario: Existing stale controls remain available
+    Given the selected mode has an installed dashboard behind the current sources
+    When the developer observes or stops an existing task or daemon
+    Then no source staleness check or rebuild blocks the selected control
+    And its native child retains installed-reader custody and original cancellation
+
   Scenario: Ordinary launch of an installed dashboard
     Given an installation record references an immutable native executable
     When a developer starts the dashboard or its daemon controls
@@ -73,3 +110,24 @@ Feature: Native Dashboard Installation and Launch
     And at most sixteen observations are outstanding
     And every observation is settled before publication
     And symlink replacement, peer edits and cancellation still refuse publication
+
+  Scenario: Dependency workspace metadata changes invalidate the installed dashboard
+    Given a path dependency inherits package metadata and table-form dependencies from another workspace
+    When its Cargo workspace manifest or inherited local source changes
+    Then the installed dashboard source digest changes
+    And unrelated sources and the dependency workspace's independent lock do not change the digest
+    And startup checks the recorded exact manifests without reading or scanning the whole dependency workspace
+
+  Scenario: Observation and stop controls recover invalid installation metadata
+    Given an installation record is missing, unreadable or invalid for this host and mode
+    When a developer selects a stale-capable dashboard control
+    Then the existing owner rebuilds before admitting the immutable executable
+    And valid Source-stale installations retain their observation and stop access
+    And the metadata probe reads no executable bytes outside tooling custody
+
+  Scenario: Atomic edits retain source freshness despite preserved timestamps
+    Given a source file or exact dependency workspace manifest is replaced with different equal-size bytes
+    And its modification timestamp is preserved
+    When the installed Source signature is checked
+    Then device, inode and nanosecond metadata invalidate the old digest
+    And replacing an independent dependency lock remains outside the captured scope

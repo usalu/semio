@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` combination mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends/🦀️.rs"]
 mod create_combination_appends_the_six_ten_a_combination_over_dead_and_snow;
@@ -30,3 +31,7 @@ mod replace_combination_refuses_a_uls_term_that_weights_the_combination_itself;
 mod replace_combination_adds_a_wind_term_to_the_uls_combination_of_the_braced_steel_frame;
 #[path = "../../🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🪪️denies/🦀️.rs"]
 mod replace_combination_refuses_to_relabel_a_combination_through_a_replace_combination;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-combination-term/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_combination_term_field_intent;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-combination-name/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_combination_name_field_intent;

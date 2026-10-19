@@ -1,3 +1,4 @@
+import{applyBuildGeneratedTaskDependenciesV1}from"../../🚪️admission/🟦️.ts";
 /** 📦️ Infers every project node of one workspace snapshot with bounded concurrency and settlement. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { availableParallelism } from "node:os";
@@ -10,10 +11,11 @@ const { existsSync, readFileSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "project-nodes";
-let buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, declaredSourceInputs, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, revisionIdentity;
+let readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, declaredSourceInputs, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, revisionIdentity;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
+  ({readBuildGeneratedCompileOutputV1}=registry.ownerDiscovery);
   ({ buildPath, POLICY, PROJECT_BASENAME, workspaceDataDirectory } = registry.coordinates);
   ({ yieldInferenceV1, createScriptInputCache, nativeCommandInputs } = registry.scriptInputs);
   ({ catalogBuildContributionsV1, discoverNativeBuildOwnersV1, projectAssemblyAuthorityV1 } = registry.ownerDiscovery);
@@ -47,7 +49,7 @@ function projectConcurrencyV1(options) {
 
 /** 🪨️ Reports and cancels inference settlement rounds through the original invocation. */
 export function settlementOptionsV1(context) {
-  return { signal: context.phaseControl?.signal, onRound: async ({ round, conflict, failure }) => { if (process.env.SEMIO_BUILD_TRACE_AUTHORITY === "true") console.error("[DEBUG] build inference settlement round " + JSON.stringify({ round, conflict, failure: failure === undefined ? undefined : String(failure) })); await yieldInferenceV1(context,"build:settle",0,true); } };
+  return { signal: context.phaseControl?.signal, onRound: async () => { await yieldInferenceV1(context,"build:settle",0,true); } };
 }
 
 export async function emojiProjectJsonNodes(configFiles, options, context) {
@@ -55,11 +57,12 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const catalogContributions=await catalogBuildContributionsV1(workspaceRoot,options?.catalogProviders??[]);
   const owners=await discoverNativeBuildOwnersV1(configFiles,workspaceRoot,context),{nativeCache,nativeClosures}=owners;configFiles=owners.files;
   const rootsByName = new Map(), scripts = createScriptInputCache(context);
+  const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
+  const contracts = existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};
+  scripts.generatedOutput=path=>readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,context.registry);
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
   const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await nativeCommandInputs(workspaceRoot, scripts) : undefined;
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","complete");
-  const contractPath = join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json");
-  const contracts = existsSync(contractPath) ? readTaxonomyProjectionV1(contractPath).generatorContracts : {};
   const projectAuthority=createHash("sha256").update(JSON.stringify([revisionIdentity.revision,contracts])).digest("hex");
   const commandRevision=createHash("sha256").update(JSON.stringify(commandInputs??null)).digest("hex"),registryDigest=createHash("sha256").update(JSON.stringify(context.registry??null)).digest("hex");
   const playgroundCatalog = collectPlaygroundCatalog(configFiles, workspaceRoot,catalogContributions);
@@ -128,9 +131,9 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
 
   const jobs=results.flatMap(([,result])=>Object.entries(result.projects).map(([name,json])=>({result,name,json})));let projectIndex=0,cursor=0,stopped=false;
   const inferProject=async({result,name,json})=>{
+    if(options?.ownerAdmission?.generatedDependencies?.[name])json=applyBuildGeneratedTaskDependenciesV1(json,options.ownerAdmission.generatedDependencies[name]);
     const started=performance.now();
     await yieldInferenceV1(context,"build:projects",++projectIndex);
-    if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] build project start "+JSON.stringify({index:projectIndex,total:projects.length,project:name,root:json.root}));
     const inactive=options?.ownerAdmission?Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>!options.ownerAdmission.targets[json.name]?.includes(name))):{};
     const selectedTargets=options?.ownerAdmission?.targets[json.name],activeJson=options?.ownerAdmission?{...json,targets:Object.fromEntries(Object.entries(json.targets??{}).filter(([name])=>selectedTargets?.includes(name)))}:json;
     const root=json.root, nativeRoot=json.metadata?.nativeRoot??root, native=existsSync(join(workspaceRoot,nativeRoot,"Cargo.toml"))||Object.values(activeJson.targets??{}).some(target=>target.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts")), pipeline=Object.values(activeJson.targets??{}).some(target=>target.metadata?.semio?.release);
@@ -150,7 +153,6 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
     });
     if(result.projects[name].unavailable){unavailable.set(root,result.projects[name].unavailable);delete result.projects[name];return;}
     result.projects[name].targets={...inactive,...result.projects[name].targets};
-    if(process.env.SEMIO_BUILD_TRACE_AUTHORITY==="true")console.error("[DEBUG] build project complete "+JSON.stringify({index:projectIndex,total:projects.length,project:name,authorityMilliseconds:Math.round(authorityMilliseconds),elapsedMilliseconds:Math.round(performance.now()-started)}));
   };
   const workers=Array.from({length:Math.min(projectConcurrencyV1(options),jobs.length)},async()=>{while(!stopped&&cursor<jobs.length)await inferProject(jobs[cursor++]);});
   await Promise.all(workers).catch(async error=>{stopped=true;await Promise.allSettled(workers);throw error;});

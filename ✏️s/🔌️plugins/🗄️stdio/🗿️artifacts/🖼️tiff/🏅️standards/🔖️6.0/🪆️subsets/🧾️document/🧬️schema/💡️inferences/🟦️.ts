@@ -9,7 +9,7 @@ export interface TiffDimensions {
 }
 
 export interface TiffInference {
-  /** @derived */
+  /** 📏️ @derived */
   dimensions: TiffDimensions;
 }
 

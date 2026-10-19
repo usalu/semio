@@ -2,7 +2,7 @@
 //!
 //! 🧭️ Moved from the former store unit test module; the items are `pub` because the test crates of the Store use them through the public API only.
 
-use semio_framework_os_store_testing_fixtures::prelude::*;
+use semio_framework_os_store_testing_prelude::*;
 use semio_framework_os_store_testing_fixtures::*;
 use crate::*;
 use semio_framework_value::RetirementDemand;

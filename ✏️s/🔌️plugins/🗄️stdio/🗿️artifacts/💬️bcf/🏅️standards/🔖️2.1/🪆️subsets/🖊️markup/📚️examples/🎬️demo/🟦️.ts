@@ -1,2 +1,2 @@
-/** demo bcf */
+/** 🎬️ demo bcf */
 export const ID = 'demo';

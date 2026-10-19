@@ -173,28 +173,24 @@ pub fn image(src: crate::UiText) -> ImageBuilder<NoAlt> {
 
 impl<State> ImageBuilder<State> {
     /// ♿️ Supplies the accessible alt text, unlocking `.try_build()` by transitioning to [`HasAlt`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn alt(self, alt: crate::Label) -> ImageBuilder<HasAlt> {
         ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Text(alt)) }
     }
 
     /// 🙈️ Explicitly opts out: the image is decorative and hidden from the accessibility tree.
     /// Unlocks `.try_build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn decorative(self) -> ImageBuilder<HasAlt> {
         ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Decorative) }
     }
 }
 
 impl<State> HasBase for ImageBuilder<State> {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<ImageBuilder<HasAlt>> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ImageBuilder<HasAlt>) -> Self {
         let ImageBuilder { mut base, src, alt, .. } = builder;
         let HasAlt(alt) = alt;
@@ -228,7 +224,6 @@ pub fn surface(props: crate::SurfaceProps) -> SurfaceBuilder {
 }
 
 impl HasBase for SurfaceBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
@@ -243,7 +238,6 @@ impl HasBase for SurfaceBuilder {
 impl HasChildren for SurfaceBuilder {}
 
 impl From<SurfaceBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: SurfaceBuilder) -> Self {
         assemble(builder.base, crate::Component::Surface(builder.props))
     }
@@ -266,7 +260,6 @@ pub fn extension(name: crate::UiText) -> ExtensionBuilder {
 
 impl ExtensionBuilder {
     /// 📦️ Sets the opaque props payload passed to the slot.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn props(mut self, props: crate::UiValue) -> Self {
         self.props = props;
         self
@@ -274,14 +267,12 @@ impl ExtensionBuilder {
 }
 
 impl HasBase for ExtensionBuilder {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn base_mut(&mut self) -> &mut NodeBase {
         &mut self.base
     }
 }
 
 impl From<ExtensionBuilder> for BuiltNode {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ExtensionBuilder) -> Self {
         assemble(builder.base, crate::Component::Extension(crate::ExtensionProps { extension: builder.extension, props: builder.props }))
     }

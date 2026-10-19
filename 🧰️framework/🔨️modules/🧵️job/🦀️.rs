@@ -35,19 +35,12 @@ pub use semio_framework_async::CancelToken;
 pub use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 pub use semio_framework_trace::{Generation, InteractiveStage, OperationId, allocate_operation_id, allocate_operation_id_in_slot, interactive_step_contract_violated, runtime_diagnostics_enabled, set_runtime_diagnostics, INTERACTIVE_STEP_CEILING_US, RUNTIME_DIAGNOSTICS_ENV, SUSTAINED_OVERRUN_QUARANTINE_STEPS};
 
+use semio_framework_job_payload::{JobPayloadStep, JobPayloadAuthority, JobPayloadOperationLedger, JobPayloadPage, JobPayloadPageSource, JobPayloadStream, JobPayloadAdmissionFault, JobPayloadRejectedPage, RetainedJobPayload, RetainedJobPayloadReader, RetainedJobPayloadWriter, RetainedPayloadBuilder, OriginalPayloadSourceIdentity, OriginalPayloadBuilderIdentity, JobPayloadPageGrant, JOB_PAYLOAD_PROCESS_OWNED_BYTES, JOB_PAYLOAD_PAGE_BYTES, JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_OPERATION_BYTES, JOB_PAYLOAD_PROCESS_BYTES};
+
 #[path = "🕰️clock-identity-and-budget/🦀️.rs"]
 mod clock_identity_and_budget;
 use clock_identity_and_budget::poll_ready_now;
 pub use clock_identity_and_budget::{BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, CommitValidation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US, JobSequenceExhausted, MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_US, Operation, RevisionId, StepBudget, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US, child_cancel_token, default_now_ms, default_now_us, install_microsecond_clock, logical_now_us, microseconds_from_milliseconds, root_cancel_token, validate_commit};
-
-#[path = "📄️payload-pages-and-ledger/🦀️.rs"]
-mod payload_pages_and_ledger;
-use payload_pages_and_ledger::{JOB_PAYLOAD_PROCESS_OWNED_BYTES, JobPayloadPage};
-pub use payload_pages_and_ledger::{JOB_PAYLOAD_OPERATION_BYTES, JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_PAGE_BYTES, JOB_PAYLOAD_PROCESS_BYTES, JobPayloadAdmissionFault, JobPayloadOperationLedger, JobPayloadPageSource, JobPayloadRejectedPage, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadReader};
-
-#[path = "✍️payload-writer-and-grant/🦀️.rs"]
-mod payload_writer_and_grant;
-pub use payload_writer_and_grant::{JobPayloadPageGrant, RetainedJobPayloadWriter};
 
 #[path = "🚦️clock-stride-and-job-protocol/🦀️.rs"]
 mod clock_stride_and_job_protocol;
@@ -81,14 +74,13 @@ pub use outcome_loan::{JobOutcomeAdmission,JobOutcomeBorrow,drive_step};
 mod original_outcome_descriptor;
 pub use original_outcome_descriptor::{JobOutcomeDescriptor,JobOutcomeKind,JobOutcomeView};
 pub use original_outcome_descriptor::JobOutcomeDescriptorSlot;
-#[path="📬️outcome/📖️source/🦀️.rs"]
-mod original_payload_source;
 #[path="📬️outcome/📮️return/🦀️.rs"]
 mod original_payload_return;
+#[path="📬️outcome/📦️builder/📮️return/🦀️.rs"]
+mod builder_supplied_page_return;
+pub use builder_supplied_page_return::RetainedPayloadBuilderSupply;
+
 pub use original_payload_return::{OriginalJobPageReturnRegistry,OriginalJobPageReservation,OriginalSuppliedJobPage,OriginalContiguousJobBytes,OriginalJobBytesReturnRegistry,OriginalJobBytesReservation,OriginalSuppliedJobBytes};
-#[path="📬️outcome/📦️builder/🦀️.rs"]
-mod payload_builder;
-pub use payload_builder::{JobPayloadAuthority,RetainedPayloadBuilder,OriginalPayloadSourceIdentity,OriginalPayloadBuilderIdentity};
 #[path="📬️outcome/👷️worker/🦀️.rs"]
 mod original_worker_payload;
 pub use original_worker_payload::{OriginalWorkerPayload,OriginalWorkerPageReservation};
@@ -172,17 +164,27 @@ struct OriginalWorkLoan<'a>{target:*mut StepContext<'a>,fuel:u64,deadline:u64,is
 impl OriginalWorkLoan<'_>{fn matches_original(&self)->bool{let cx=unsafe{&*self.target};self.identity.matches(cx)&&self.cancel==cx.original_cancel_token()as*const CancelToken as usize&&cx.work_units_spent>=self.spent&&cx.fuel_remaining<=self.issued}}
 impl Drop for OriginalWorkLoan<'_>{fn drop(&mut self){if self.matches_original(){let cx=unsafe{&mut*self.target};let spent=cx.work_units_spent-self.spent;cx.fuel_remaining=self.fuel.saturating_sub(u64::try_from(spent).unwrap_or(u64::MAX));cx.deadline_us=self.deadline;}}}
 
+impl JobPayloadStep for StepContext<'_> {
+    fn payload_ledger(&self) -> &Arc<JobPayloadOperationLedger> { &self.payload_ledger }
+    fn payload_page_granted(&self) -> bool { self.payload_page_granted }
+    fn grant_payload_page(&mut self) { self.payload_page_granted = true; }
+    fn is_cancelled(&self) -> bool { StepContext::is_cancelled(self) }
+    fn should_yield(&self) -> bool { StepContext::should_yield(self) }
+    fn retained_grant(&self) -> RetainedCloneGrant { StepContext::retained_grant(self) }
+    fn consume_retained(&mut self, progress: RetainedCloneProgress) -> Result<(), ValueError> { StepContext::consume_retained(self, progress) }
+}
+
 impl<'a> StepContext<'a> {
     /// 🛬️ Captures the owning operation's original decoder without creating replacement capacity or cancellation authority.
     pub fn with_original_decoder(mut self,original:&'a mut OriginalJobDecodeOwner)->Self{self.original_decoder=Some(original);self}
     /// 🫴️ Loans original cancellation, clock, independent remaining credits and the exact shared construction receipt.
-    pub fn with_native_receiving<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{
-        if self.receiving_spent!=RetainedCloneProgress::default(){return Err(E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving scope still owes its enclosing semantic receipt")))}let grant=self.retained_grant();self.receiving_issued=Some(grant);let Self{original_decoder,retained,retained_progress,receiving_spent,cancel,deadline_us,now_us,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||E::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires the original Job decoder issuer")))?;let mut callback=|_:semio_framework_value::NativeDecodeProgress|!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us);let mut recipient=OriginalJobConstructionRecipient{original:*retained,spent:&mut **retained_progress,receiving_spent};owner.receive(grant,&mut callback,&mut recipient,operation)
+    pub fn with_native_receiving<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{
+        if self.receiving_spent!=RetainedCloneProgress::default(){return Err(E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving scope still owes its enclosing semantic receipt")))}let grant=self.retained_grant();self.receiving_issued=Some(grant);let Self{original_decoder,retained,retained_progress,receiving_spent,cancel,deadline_us,now_us,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||E::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires the original Job decoder issuer")))?;let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us);let mut recipient=OriginalJobConstructionRecipient{original:*retained,spent:&mut **retained_progress,receiving_spent};owner.receive(grant,&mut callback,&mut recipient,operation)
     }
     /// ♻️ Loans retirement-only authority after cancellation while retaining the original deadline, fuel and physical credits.
-    pub fn with_native_retirement<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
+    pub fn with_native_retirement<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
         if self.receiving_spent!=RetainedCloneProgress::default()||self.receiving_issued.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original receiving scope still owes its physical receipt"));}if self.fuel_remaining==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original retirement turn has no fuel"));}
-        let grant=self.retained_grant();let Self{original_decoder,cancel,deadline_us,now_us,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native retirement requires the original Job decoder issuer"))?;let mut callback=|_:semio_framework_value::NativeDecodeProgress|!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us);let mut deadline=||now_us().is_some_and(|now|now<*deadline_us);owner.retire(grant,&mut callback,&mut deadline,operation)
+        let grant=self.retained_grant();let Self{original_decoder,cancel,deadline_us,now_us,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native retirement requires the original Job decoder issuer"))?;let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|!cancel.is_cancelled_now()&&now_us().is_some_and(|now|now<*deadline_us);let mut deadline=||now_us().is_some_and(|now|now<*deadline_us);owner.retire(grant,&mut callback,&mut deadline,operation)
     }
     /// 🧾️ Debits the enclosing semantic receipt once after its original construction child already accepted physical spend.
     pub fn receiving_issued_grant(&self)->Option<RetainedCloneGrant>{self.receiving_issued}
@@ -445,7 +447,7 @@ impl<'a> StepContext<'a> {
     }
 }
 struct OriginalJobConstructionRecipient<'a>{original:RetainedCloneGrant,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress}
-impl semio_framework_value::native_decoding::NativeDecodeConstructionRecipient for OriginalJobConstructionRecipient<'_>{
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for OriginalJobConstructionRecipient<'_>{
  fn grant(&mut self,demand:semio_framework_value::RetirementDemand)->Result<RetainedCloneGrant,ValueError>{let remaining=RetainedCloneGrant{maximum_items:self.original.maximum_items.saturating_sub(self.spent.copied_items),maximum_copy_bytes:self.original.maximum_copy_bytes.saturating_sub(self.spent.copied_bytes),maximum_capacity_bytes:self.original.maximum_capacity_bytes.saturating_sub(self.spent.retained_capacity_bytes),maximum_release_bytes:self.original.maximum_release_bytes.saturating_sub(self.spent.released_bytes),..self.original};if !semio_framework_value::retained_clone::retained_clone_grant_admits(remaining,demand){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native construction exceeds original remaining Job grant"));}Ok(remaining)}
  fn accept(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{let admitted=progress.fits(grant)&&grant.maximum_items<=self.original.maximum_items.saturating_sub(self.spent.copied_items)&&grant.maximum_copy_bytes<=self.original.maximum_copy_bytes.saturating_sub(self.spent.copied_bytes)&&grant.maximum_capacity_bytes<=self.original.maximum_capacity_bytes.saturating_sub(self.spent.retained_capacity_bytes)&&grant.maximum_release_bytes<=self.original.maximum_release_bytes.saturating_sub(self.spent.released_bytes)&&grant.maximum_depth<=self.original.maximum_depth;*self.spent=self.spent.checked_add(progress)?;*self.receiving_spent=self.receiving_spent.checked_add(progress)?;if !admitted{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native construction changed its accepted original Job receipt").with_retained_progress(progress));}Ok(())}
 }

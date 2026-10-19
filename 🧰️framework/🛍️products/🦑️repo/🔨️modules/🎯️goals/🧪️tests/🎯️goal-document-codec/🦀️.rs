@@ -17,8 +17,6 @@ fn stored_documents_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let stored_parent = semio_repo_test_host::parse_json(&source)?.str("parent");
         let mut goal = goals::decode_goal(&id, &source).map_err(|error| format!("{id}: {error}"))?;
         let derived_parent = goal.parent.clone();
-        // 🧭️The stored `parent` is already a compose identifier, so putting it back exercises the
-        // encoder's leave-it-alone branch and makes the byte claim about the real file exact.
         goal.parent = stored_parent.clone();
         let encoded = goals::encode_goal(&goal).map_err(|error| format!("{id}: {error}"))?;
         let management = goal.management.clone().unwrap_or_default();

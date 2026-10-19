@@ -1,9 +1,10 @@
-//! edge. Missing target ⇒ `Vec::new()`.
+//! 🔗️ edge. Missing target ⇒ `Vec::new()`.
 //! ↩️ Inverse for `DisconnectHandles` — reconstructs a `connect-handles` of the captured BASE
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_locked::ChangeEdgeLocked;
 use crate::standards::v1::subsets::any::schema::mutations::connect_handles::ConnectHandles;
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::disconnect_handles::component::DisconnectHandles;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<DisconnectHandles> + From<ConnectHandles> + From<ChangeEdgeVisible> + From<ChangeEdgeLocked>>(payload: &super::DisconnectHandles, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

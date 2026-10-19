@@ -1,4 +1,4 @@
-//! 🎞️ Protocol laws: seeded generators for `crate::os_spr::HistoryLog`/causal-DAG fixtures, the
+//! 🎞️ Protocol laws: seeded generators for `crate::HistoryLog`/causal-DAG fixtures, the
 //! cross-crate law assertions the `protocol_*` family's round-trip/determinism/tamper-detection
 //! invariants boil down to, a re-export of the pack corruption sweeps, and the
 //! golden-hash helper. Frozen contract:
@@ -52,8 +52,8 @@ pub use policy_merge_and_corpus_laws::*;
 
 //#region 🔖️Corrupt
 /// 🛡️ Reused verbatim from the pack corruption tests — closure-generic panic-safety fuzzers plus their level/
-/// report types. LAW (exercised in this crate's own tests against `crate::os_spr::HistoryReader::open`
-/// and `crate::os_spr::format::recover`): `CorruptionReport::cases_panicked` must always be empty.
+/// report types. LAW (exercised in this crate's own tests against `crate::HistoryReader::open`
+/// and `crate::format::recover`): `CorruptionReport::cases_panicked` must always be empty.
 pub use semio_framework_os_pack::record_codec_laws::{fuzz_bit_flips, fuzz_truncation, CorruptionLevel, CorruptionReport};
 //#endregion 🔖️Corrupt
 

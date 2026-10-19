@@ -23,7 +23,7 @@ impl BorrowedRecordSpecProducer{
  /// ⛽️ Reads a static descriptor using the same cumulative output control and progress callback.
  pub fn encode(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<crate::BorrowedRecordSpec,crate::ValueError>{control.checkpoint()?;control.step()?;Ok((self.produce)())}
  /// 🛬️ Reads the same immutable declaration through the original input observer.
- pub fn decode(&self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<crate::BorrowedRecordSpec,crate::ValueError>{control.checkpoint()?;control.step()?;Ok((self.produce)())}
+ pub fn decode(&self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<crate::BorrowedRecordSpec,crate::ValueError>{control.checkpoint()?;control.step()?;Ok((self.produce)())}
 }
 
 macro_rules! borrowed_scalar_fields {
@@ -48,7 +48,7 @@ pub const fn borrowed_unit(symbol:&'static str)->&'static semio_framework_dsl::U
 impl<T:BorrowedDslField> BorrowedDslField for Box<T>{const SHAPE:crate::BorrowedShape=T::SHAPE;}
 impl<T:BorrowedDslRecord> BorrowedDslRecord for Box<T>{const RECORD:crate::BorrowedRecordSpec=T::RECORD;}
 impl<T:BorrowedDslField> BorrowedDslField for Vec<T>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::List(borrowed_field_shape::<T>);}
-impl<T:BorrowedDslField,const N:usize> BorrowedDslField for semio_framework_value::list::PagedList<T,N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::List(borrowed_field_shape::<T>);}
+impl<T:BorrowedDslField,const N:usize> BorrowedDslField for semio_framework_value_persistent::list::PagedList<T,N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::List(borrowed_field_shape::<T>);}
 impl<T:BorrowedDslField,const N:usize> BorrowedDslField for semio_framework_value::paged::PagedMap<T,N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Map(borrowed_field_shape::<T>);}
 impl<T:BorrowedDslField> BorrowedDslField for std::collections::BTreeMap<String,T>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Map(borrowed_field_shape::<T>);}
 impl<T:BorrowedDslField,const N:usize> BorrowedDslField for [T;N]{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Tuple(borrowed_field_shape::<T>,Some(N));}

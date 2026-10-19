@@ -2496,20 +2496,20 @@
     ],
     "expectedInstalls": 4,
     "moduleReceiving": {
-  "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
-  "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
-  "operation": "prepareJavascriptDependencies",
-  "scriptHeader": "#!/usr/bin/env bun",
-  "operationExports": [
-    "javascriptDependencyProducerArgumentsV1",
-    "prepareJavascriptDependencies"
-  ],
-  "commands": [
-    "SyncScript",
-    "RefreshLockScript",
-    "ContractCheckScript"
-  ]
-}
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "operation": "prepareJavascriptDependencies",
+      "scriptHeader": "#!/usr/bin/env bun",
+      "operationExports": [
+        "javascriptDependencyProducerArgumentsV1",
+        "prepareJavascriptDependencies"
+      ],
+      "commands": [
+        "SyncScript",
+        "RefreshLockScript",
+        "ContractCheckScript"
+      ]
+    }
   },
   "watch": {
     "selected": "app",
@@ -3747,5 +3747,559 @@
         }
       }
     ]
+  },
+  "generatedCompileOutputs": {
+    "demandedPackage": {
+      "specifier": "@fixture/peer",
+      "manifest": {
+        "name": "@fixture/peer",
+        "exports": {
+          ".": {
+            "types": "./index.d.ts",
+            "import": "./index.ts"
+          }
+        }
+      },
+      "files": {
+        "src/entry.ts": "import '@fixture/peer';",
+        "peer/index.ts": "export * from '../gen/api.ts';",
+        "peer/index.d.ts": "export * from './leaf.d.ts';",
+        "peer/leaf.d.ts": "export type Value=string;"
+      },
+      "generated": "gen/api.ts",
+      "producer": "fixture-generator:build",
+      "missing": [
+        "declaration",
+        "export"
+      ]
+    },
+    "sourceObservationRoles": [
+      {
+        "selected": false,
+        "declared": false,
+        "role": "freshness"
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "role": "compile"
+      },
+      {
+        "selected": false,
+        "declared": true,
+        "role": "compile"
+      },
+      {
+        "selected": true,
+        "declared": true,
+        "role": "compile"
+      }
+    ],
+    "relativeOwnership": {
+      "caseSchema": {
+        "type": "object",
+        "required": [
+          "path",
+          "physical",
+          "project"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "physical": {
+            "type": "string"
+          },
+          "project": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "owners": [
+        {
+          "name": "workspace",
+          "root": "."
+        },
+        {
+          "name": "consumer-ts",
+          "root": "domain/packages/typescript"
+        },
+        {
+          "name": "consumer-rs",
+          "root": "domain/packages/rust"
+        },
+        {
+          "name": "peer",
+          "root": "peer"
+        },
+        {
+          "name": "native-peer",
+          "root": "peer/native"
+        }
+      ],
+      "cases": [
+        {
+          "path": "domain/schema/model.ts",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "domain/modules/model.rs",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "domain/schema/model.json",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "workspace.ts",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "peer/model.ts",
+          "physical": "peer",
+          "project": "peer"
+        },
+        {
+          "path": "peer/native/model.rs",
+          "physical": "native-peer",
+          "project": "native-peer"
+        },
+        {
+          "path": "peer-sibling/model.ts",
+          "physical": "workspace",
+          "project": null
+        },
+        {
+          "path": "domain/packages/typescript/glue.ts",
+          "physical": "consumer-ts",
+          "project": "consumer-ts"
+        }
+      ]
+    },
+    "extensionlessSchema": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "outputs",
+        "accepted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "extensionless": [
+      {
+        "id": "exact-extensionless-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "ambiguous-json-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts",
+          "gen/api.json"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-index-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api/index.js"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "typescript-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "tsx-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.tsx"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "javascript-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.js"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "jsx-file",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.jsx"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "no-directory-inference",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api/index.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "stem-sibling",
+        "path": "gen/api",
+        "outputs": [
+          "gen/apis.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "unsupported-extension",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.mts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "declaration-only",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.d.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "explicit-js-not-typescript",
+        "path": "gen/api.js",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ambiguous-file-kinds",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts",
+          "gen/api.js"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ambiguous-file-index",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts",
+          "gen/api/index.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-source-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.js"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-extensionless-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-declaration-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.js"
+        ],
+        "source": [
+          "gen/api.d.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-json-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.json"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-node-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.node"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-mts-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "source": [
+          "gen/api.mts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ordinary-package-shadow",
+        "path": "gen/api",
+        "outputs": [
+          "gen/api.js"
+        ],
+        "source": [
+          "gen/api/package.json"
+        ],
+        "accepted": false
+      }
+    ],
+    "cases": [
+      {
+        "id": "cold",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "warm",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "exact-file",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen/api.ts"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "prefix-sibling",
+        "path": "generator/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "unknown",
+        "path": "missing/api.ts",
+        "outputs": [
+          "gen"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "ambiguous",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen",
+          "gen/api.ts"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "malformed",
+        "path": "gen/api.ts",
+        "outputs": [
+          "gen/../gen"
+        ],
+        "accepted": false
+      }
+    ],
+    "project": {
+      "name": "fixture-app",
+      "targets": {
+        "test": {
+          "inputs": [
+            "source"
+          ],
+          "dependsOn": [
+            "existing"
+          ]
+        },
+        "generate": {
+          "inputs": [
+            "generatorSource"
+          ]
+        }
+      }
+    },
+    "dependencies": {
+      "test": [
+        "fixture-app:generate"
+      ]
+    },
+    "invalidDependencies": [
+      null,
+      {
+        "test": [
+          "missing-colon"
+        ]
+      },
+      {
+        "test": [
+          "a:b:c"
+        ]
+      },
+      {
+        "bad:consumer": [
+          "a:b"
+        ]
+      },
+      {
+        "test": [
+          "a\u0000:b"
+        ]
+      }
+    ],
+    "caseSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "outputs",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "sourceObservationRoots": [
+      {
+        "selected": false,
+        "declared": true,
+        "resource": true,
+        "compiled": false,
+        "include": true
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "resource": true,
+        "compiled": false,
+        "include": false
+      },
+      {
+        "selected": false,
+        "declared": false,
+        "resource": true,
+        "compiled": false,
+        "include": false
+      },
+      {
+        "selected": true,
+        "declared": false,
+        "resource": true,
+        "compiled": true,
+        "include": true
+      }
+    ]
+  },
+  "libraryScriptSurface": {
+    "package": "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/package.json",
+    "entry": "./script",
+    "symbol": "proveWireValueMaterializationFixture",
+    "source": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🟦️.ts",
+    "neutral": {
+      "entry": "/fixture/domain/📦️packages/🟦️typescript/📜️script.ts",
+      "files": [
+        "/fixture/domain/🟦️.ts"
+      ],
+      "cases": [
+        {
+          "specifier": "../../📜️script.ts",
+          "expected": null
+        },
+        {
+          "specifier": "../../🟦️.ts",
+          "expected": "/fixture/domain/🟦️.ts"
+        }
+      ]
+    }
   }
 }

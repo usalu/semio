@@ -2,7 +2,8 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaybookSnapshot;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction}}};
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::{DslField,FieldValue,RecordValue,native_encoding::EncodedRecord};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{if PlaybookSnapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes||limits.max_tables<2||limits.max_columns<6||limits.max_rows<2{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Playbook authored schema extent exceeds caller limits"))}Ok(())}

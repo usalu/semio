@@ -1,5 +1,5 @@
 //! 🔢️ Paged mutable AVL indexes for fixed-width scratch keys and retained physical ownership.
-use crate::list::{PagedList,PagedListError};
+use semio_framework_value_persistent::list::{PagedList, PagedListError};
 use crate::retirement::{RetireOwned,RetirementCursor};
 use std::cmp::Ordering;
 #[path="🧵️insert/🦀️.rs"]
@@ -39,7 +39,7 @@ impl<K:Copy+Ord,V> NumericIndex<K,V>{
  pub fn get_mut(&mut self,key:&K)->Option<&mut V>{let index=self.find(key)?;let generation=self.generation;let n=self.node_mut(index);if n.generation==generation{n.value.as_mut()}else{None}}
  pub fn contains_key(&self,key:&K)->bool{self.get(key).is_some()}
  pub fn next_allocation_bytes(&self)->Result<usize,PagedListError>{self.nodes.next_allocation_bytes()}
- pub fn reserve_one(&mut self,bytes:usize)->Result<crate::list::PagedListProgress,crate::list::PagedListAllocationError>{self.nodes.reserve_one(bytes)}
+ pub fn reserve_one(&mut self,bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,semio_framework_value_persistent::list::PagedListAllocationError>{self.nodes.reserve_one(bytes)}
  pub fn insert_reserved(&mut self,key:K,value:V)->Result<Option<V>,(K,V)>{
   let mut parent=None;let mut current=self.root;while let Some(index)=current{match key.cmp(&self.node(index).key){Ordering::Equal=>{let generation=self.generation;let n=self.node_mut(index);let previous=n.value.replace(value);let previous=if n.generation==generation{previous}else{None};n.generation=generation;self.repair(Some(index));return Ok(previous)},order=>{parent=Some(index);current=if order==Ordering::Less{self.node(index).left}else{self.node(index).right}}}}
   if !self.nodes.has_reserved_slot(){return Err((key,value))}let index=self.nodes.len();let node=Node{key,value:Some(value),generation:self.generation,count_generation:self.generation,count:1,height:1,left:None,right:None,parent};self.nodes.push_reserved(node).unwrap_or_else(|_|unreachable!());if let Some(parent)=parent{if key<self.node(parent).key{self.node_mut(parent).left=Some(index)}else{self.node_mut(parent).right=Some(index)}}else{self.root=Some(index)}self.repair(parent);Ok(None)
@@ -53,7 +53,7 @@ impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{
  pub fn reset(&mut self){self.generation=self.generation.checked_add(1).expect("numeric scratch generation exhausted");}
  pub fn terminal_is_empty(&self)->bool{self.nodes.terminal_is_empty()}
  pub fn next_close_release_byte_demand(&self)->Result<usize,PagedListError>{if self.nodes.is_empty(){self.nodes.next_release_allocation_bytes()}else{Ok(0)}}
- pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<crate::list::PagedListProgress,PagedListError>{if maximum_items==0{return Ok(crate::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(crate::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}
+ pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{if maximum_items==0{return Ok(semio_framework_value_persistent::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(semio_framework_value_persistent::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericIndex<K,V>{
  fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::sequence(vec![crate::retirement::deferred(self.nodes),crate::retirement::deferred(self.root),crate::retirement::deferred(self.generation)])}

@@ -120,9 +120,7 @@ pub fn unregister_linked_flow_extension_installer(extension_id: &str) -> Option<
 }
 
 /// 🌿️ Registers built-in flow extensions into a fresh registry (composition root).
-pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {
-    // Light/draw/brep operator packs are runtime-installable packaged extensions.
-}
+pub fn install_builtin_flow_extensions(_registry: &mut neural::Registry) {}
 
 /// 📮️ A contributed operator whose real implementation lives in another plugin's actor.
 ///

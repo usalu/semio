@@ -204,12 +204,10 @@ pub struct GifImageDiff {
 }
 
 impl GifImageDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.left.is_none() && self.top.is_none() && self.width.is_none() && self.height.is_none() && self.interlace.is_none() && self.lct.is_none() && self.indices.is_none()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &GifImage) -> GifImage {
         let mut next = base.clone();
         if let Some(v) = self.left {
@@ -236,7 +234,6 @@ impl GifImageDiff {
         next
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &GifImage) -> Self {
         Self {
             left: self.left.map(|_| base.left),
@@ -249,7 +246,6 @@ impl GifImageDiff {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.left.is_some() {
             self.left = other.left;
@@ -304,12 +300,10 @@ pub struct GifImagesDiff {
 }
 
 impl GifImagesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[GifImage]) -> Vec<GifImage> {
         let mut next: Vec<Option<GifImage>> = base.iter().cloned().map(Some).collect();
         let mut removed_sorted = self.removed.clone();
@@ -337,7 +331,6 @@ impl GifImagesDiff {
         out
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
@@ -354,7 +347,6 @@ impl GifImagesDiff {
         self.added = added.into_iter().map(|(index, image)| GifImageAdded { index, image }).collect();
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_images: &[GifImage]) -> Self {
         let (removed, modified, added) =
             rewind_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.image.clone())).collect::<Vec<_>>(), base_images, |d, item| d.inverse(item));
@@ -391,7 +383,6 @@ pub struct GifDiff {
 }
 
 impl GifDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.width.is_none() && self.height.is_none() && self.gct.is_none() && self.background_color_index.is_none() && self.pixel_aspect_ratio.is_none() && self.images.as_ref().is_none_or(GifImagesDiff::is_empty)
     }

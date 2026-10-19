@@ -8,7 +8,7 @@ export interface FormsTopology {
 }
 
 export interface FormsInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: FormsTopology;
 }
 

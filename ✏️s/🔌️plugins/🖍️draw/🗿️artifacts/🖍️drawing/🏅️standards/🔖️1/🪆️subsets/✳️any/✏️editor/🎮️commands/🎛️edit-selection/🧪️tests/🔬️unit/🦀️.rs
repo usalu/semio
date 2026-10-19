@@ -120,7 +120,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
         base.transform=semio_s_artifact_draw_drawing_model::DrawingTransform {x:t["x"].as_f64().unwrap_or(0.0),y:t["y"].as_f64().unwrap_or(0.0),scale_x:t["scaleX"].as_f64().unwrap_or(1.0),scale_y:t["scaleY"].as_f64().unwrap_or(1.0),rotation:t["rotation"].as_f64().unwrap_or(0.0),shear:t["shear"].as_f64().unwrap_or(0.0)};
         layer
     }
-    fn visit(layers:&semio_framework_value::list::PagedList<DrawingLayerNode,{usize::MAX}>,parent:[f64;6],actual:&mut std::collections::BTreeMap<String,[f64;4]>) {
+    fn visit(layers:&semio_framework_value_persistent::list::PagedList<DrawingLayerNode,{usize::MAX}>,parent:[f64;6],actual:&mut std::collections::BTreeMap<String,[f64;4]>) {
         for layer in layers {
             let base=layer_base(layer);
             if let DrawingLayerNode::Group(group)=layer {

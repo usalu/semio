@@ -18,11 +18,9 @@ fn field_meta_rows_resolve_to_schema_leaves() {
         leaves.push(path.to_string());
     });
     use semio_s_artifact_norm_en1999_editor::field_meta::en1999_field_meta;
-    // Every meta TABLE path pattern must match at least one leaf prefix style — check no stale design names
     for stale in ["vYEd", "vZEd", "mZEd", "mYEd", "slopeM"] {
         assert!(leaves.iter().all(|p| !p.contains(stale)), "snapshot still has stale {stale}");
     }
-    // Member/connection/cold/shell action forces must be characteristic nK (no hand-typed *Ed design effects).
     assert!(leaves.iter().filter(|p| p.contains("actions") && p.contains("nEd")).count() == 0);
     for path in &leaves {
         let meta_path = path_to_meta_pattern(path);
@@ -43,7 +41,6 @@ fn path_to_meta_pattern(path: &str) -> String {
         }
         let end = rest.find(['.', '[']).unwrap_or(rest.len());
         if !out.is_empty() && !out.ends_with(']') { out.push('.'); }
-        // after [] we need .
         if out.ends_with(']') { out.push('.'); }
         out.push_str(&rest[..end]);
         rest = &rest[end..];
@@ -95,7 +92,6 @@ fn haz_rho_u_governs_welded_net_section() {
     assert!(alloy.rho_u_haz < alloy.rho_o_haz || alloy.rho_u_haz < 1.0);
     let mut sec = En1999Snapshot::noncompliant_multi_fail().sections[0].clone();
     for e in &mut sec.elements { e.welded = true; e.weld_position = 0.01; }
-    // §6.2.3 net tension uses ρ_u,haz · f_u; prove ρ_u < 1 reduces N_u,Rd.
     let (_, _, _, _, _, _, _) = part_1_1::section_geometry(&sec);
     let a_net = part_1_1::effective_area(&sec, alloy.f_o_pa, true, 1.0, 1.0);
     let n_u_full = a_net * alloy.f_u_pa;
@@ -106,7 +102,6 @@ fn haz_rho_u_governs_welded_net_section() {
 
 #[test]
 fn shell_chi_from_geometry_hand_value() {
-    // r=0.8 m, t=0.003 m, L=3 m, f_o=160 MPa (6060-T6), E=70 GPa → λ̄_x and χ_x
     let e = na_de::E_PA;
     let r: f64 = 0.80;
     let t: f64 = 0.003;
@@ -128,8 +123,7 @@ fn shell_chi_from_geometry_hand_value() {
 #[test]
 
 fn every_editable_leaf_influences_a_check() {
-    // Descriptive report labels only — never geometry/loads.
-    const EXEMPT_SUFFIXES: &[&str] = &[".id"]; // ids only; name/title not in this subject
+    const EXEMPT_SUFFIXES: &[&str] = &[".id"];
     for snap in [En1999Snapshot::compliant_roof_purlin(), En1999Snapshot::noncompliant_multi_fail()] {
         let base_report = evaluate_structure(&snap);
         let mut base_sig: Vec<_> = base_report

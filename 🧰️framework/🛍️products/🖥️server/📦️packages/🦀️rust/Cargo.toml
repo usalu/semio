@@ -23,9 +23,6 @@ path = "🦀️.rs"
 # against the identical bodies the reference in-memory ones are held against. Meant for a
 # dev-dependency entry only; no default build enables it.
 conformance = []
-# 🪝️ Compiles the gateway's `🪝️testkit` hooks (aliases and forwarders of sibling-private items) for the
-# companion crate `semio-framework-server-tests`. Meant for that dev-dependency entry only.
-testkit = []
 
 [dependencies]
 semio-framework-async = { workspace = true }
@@ -35,6 +32,7 @@ semio-framework-server-storage = { path = "../../🔨️modules/🗄️storage/�
 semio-framework-server-policy = { path = "../../🔨️modules/🛡️policy/📦️packages/🦀️rust" }
 semio-framework-server-authority = { path = "../../🔨️modules/🎭️authority/📦️packages/🦀️rust" }
 semio-framework-server-throttle = { path = "../../🔨️modules/🚦️throttle/📦️packages/🦀️rust" }
+semio-framework-server-presence = { path = "../../🔨️modules/📡️gateway/👥️presence/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 axum = { version = "0.8", features = ["ws"] }

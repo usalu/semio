@@ -49,7 +49,6 @@ fn retire_pdf_color_space(value: PdfColorSpace) {
 
 impl PdfColorSpace {
     /// 🔢️ Number of components a colour in this space carries (`None` for `Pattern`/`Named`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn components(&self) -> Option<u32> {
         Some(match self {
             PdfColorSpace::DeviceGray | PdfColorSpace::CalGray { .. } | PdfColorSpace::Indexed { .. } | PdfColorSpace::Separation { .. } => 1,
@@ -138,7 +137,6 @@ pub struct PdfPattern {
 }
 
 impl PdfPattern {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn identity() -> PdfMatrix {
         PDF_IDENTITY_MATRIX
     }

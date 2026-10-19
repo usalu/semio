@@ -26,7 +26,6 @@ pub struct PdfDictEntry {
 }
 
 impl PdfDictEntry {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(key: impl Into<String>, value: PdfObject) -> Self {
         Self { key: key.into(), value }
     }
@@ -67,11 +66,9 @@ pub struct PdfCcittParameters {
 }
 
 impl PdfCcittParameters {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn default_columns() -> u32 {
         1728
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn default_end_of_block() -> bool {
         true
     }
@@ -99,12 +96,10 @@ pub enum PdfStreamFilter {
 
 impl PdfStreamFilter {
     /// 🖼️ Whether this filter is an image codec whose payload stays encoded in the typed model.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_image_codec(&self) -> bool {
         matches!(self, PdfStreamFilter::Dct { .. } | PdfStreamFilter::Jpx | PdfStreamFilter::Ccitt { .. } | PdfStreamFilter::Jbig2 { .. })
     }
     /// 🏷️ The `/Filter` name this concept is written as.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn name(&self) -> &'static str {
         match self {
             PdfStreamFilter::Flate { .. } => "FlateDecode",
@@ -132,7 +127,6 @@ pub struct PdfDecimal {
 }
 
 impl PdfDecimal {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn parse(text: &str) -> Result<Self, String> {
         let (negative, unsigned) = match text.as_bytes().first() {
             Some(b'-') => (true, &text[1..]),
@@ -147,7 +141,6 @@ impl PdfDecimal {
         Ok(Self { negative, coefficient: format!("{integer}{fraction}"), scale: fraction.len() as u32 })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_f64(value: f64) -> Self {
         let text = format!("{value}");
         let (mantissa, exponent) = match text.find(['e', 'E']) {
@@ -166,7 +159,6 @@ impl PdfDecimal {
         decimal
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_f64(&self) -> Option<f64> {
         self.to_string().parse().ok()
     }
@@ -224,7 +216,6 @@ pub enum PdfObject {
 }
 
 impl PdfObject {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_dict(&self) -> Option<&[PdfDictEntry]> {
         match self {
             PdfObject::Dict(d) => Some(d),
@@ -232,46 +223,39 @@ impl PdfObject {
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn dict_get<'a>(&'a self, key: &str) -> Option<&'a PdfObject> {
         self.as_dict()?.iter().find(|e| e.key == key).map(|e| &e.value)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_name(&self) -> Option<&str> {
         match self {
             PdfObject::Name(n) => Some(n.as_str()),
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_ref(&self) -> Option<ObjRef> {
         match self {
             PdfObject::Ref(r) => Some(*r),
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_array(&self) -> Option<&[PdfObject]> {
         match self {
             PdfObject::Array(a) => Some(a),
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str_bytes(&self) -> Option<&[u8]> {
         match self {
             PdfObject::Str(bytes) => Some(bytes),
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             PdfObject::Bool(value) => Some(*value),
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             PdfObject::Int(i) => Some(*i as f64),
@@ -279,7 +263,6 @@ impl PdfObject {
             _ => None,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_i64(&self) -> Option<i64> {
         match self {
             PdfObject::Int(i) => Some(*i),
@@ -289,7 +272,6 @@ impl PdfObject {
     }
     /// 🔢️ A number operand written in canonical form: integers stay integers, everything else is
     /// an exact decimal (never exponent notation, which PDF has no syntax for).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn number(value: f64) -> PdfObject {
         if value.is_finite() && value.fract() == 0.0 && value.abs() < 1e15 {
             PdfObject::Int(value as i64)
@@ -299,11 +281,9 @@ impl PdfObject {
             PdfObject::Int(0)
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn name(name: impl Into<String>) -> PdfObject {
         PdfObject::Name(name.into())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn numbers(values: &[f64]) -> PdfObject {
         PdfObject::Array(values.iter().map(|value| PdfObject::number(*value)).collect())
     }

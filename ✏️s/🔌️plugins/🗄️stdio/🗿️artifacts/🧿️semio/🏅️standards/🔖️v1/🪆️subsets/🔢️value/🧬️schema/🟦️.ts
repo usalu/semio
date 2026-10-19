@@ -3,8 +3,8 @@
 import type { ValueId, SemioValueNode, SemioValue } from "./📸️snapshot/🟦️";
 
 export interface SemioValueArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ root: SemioValue;
-  /** @state artifact */ nodes: SemioValueNode[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🌳️ @state artifact */ root: SemioValue;
+  /** 🔘️ @state artifact */ nodes: SemioValueNode[];
 }
 export type { ValueId };

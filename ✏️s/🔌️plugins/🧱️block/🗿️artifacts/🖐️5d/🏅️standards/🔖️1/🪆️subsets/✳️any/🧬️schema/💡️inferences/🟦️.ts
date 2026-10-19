@@ -11,7 +11,7 @@ export interface Block5dBounds {
 }
 
 export interface Block5dInference {
-  /** @derived */
+  /** 🔲️ @derived */
   bounds: Block5dBounds;
 }
 

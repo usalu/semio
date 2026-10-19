@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `ChangePart2dHidden` — restores the BASE field value. Missing target ⇒ `Vec::new()`.
-use crate::Puzzle5dSnapshot;
+use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse<Op>(payload: &super::ChangePart2dHidden, base: &Puzzle5dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>

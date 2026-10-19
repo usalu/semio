@@ -94,8 +94,8 @@ mod original_native_laws {
         for row in fixture["accepted"].as_array().unwrap() {
             let bytes = row["input"].as_str().unwrap().as_bytes();
             let mut callback = |_| true;
-            let mut recipient = semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
-            let mut native = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut callback);
+            let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
+            let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
             let mut owner = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
             let (value, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| PublicationPresence::decode_presence_native(bytes, &mut owner).unwrap());
@@ -117,8 +117,8 @@ mod original_native_laws {
         for row in fixture["refused"].as_array().unwrap() {
             let bytes = row.as_str().unwrap().as_bytes();
             let mut callback = |_| true;
-            let mut recipient = semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
-            let mut native = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut callback);
+            let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
+            let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut callback);
             native.install_retirement_recipient(&mut recipient).unwrap();
             let mut owner = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
             assert!(PublicationPresence::decode_presence_native(bytes, &mut owner).is_err());

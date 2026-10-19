@@ -2,6 +2,10 @@ use protocol::{OpText,OpBinary};
 use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::*;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
+#[cfg(test)] use semio_framework_replication_mutation::Mutation;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument;
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 fn namespace_formatting_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏷️namespace-formatting/🔣️.json")).unwrap()
@@ -456,7 +460,7 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
         let item = case["targetItem"].as_u64().unwrap() as usize;
         let path = serde_json::from_value(case["paths"][block][item].clone()).unwrap();
         let address = docx_xml_address(&snapshot, &part_path, path).unwrap();
-        let prepare = xml_address::empty_paragraph_text_mutation;
+        let prepare = empty_paragraph_text_mutation;
         assert!(prepare(&snapshot, &address, "").unwrap().is_none());
         let mutation = prepare(&snapshot, &address, replacement).unwrap().unwrap();
         assert!(matches!(mutation, DocxMutation::InsertXmlNode(_)));

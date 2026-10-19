@@ -168,10 +168,6 @@ pub(crate) mod context {
     impl Drop for SeededEnvelope {
         fn drop(&mut self) {
             let Some(envelope) = self.0.take() else { return };
-            // ♻️ Detaching the shell is not enough: the seeded history is a populated
-            // `ArtifactHistoryLedger`, whose own `Drop` asserts `artifact history ledger reached Drop
-            // before every exact entry owner was retired`. The envelope leaves through the store's own
-            // bounded retirement ladder, exactly like `🔌️wires`' `retire_envelope`.
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::os_store::snapshot_read::retire_document_envelope_birth_bytes::<VcsSnapshot, VcsDemoMutation>(), maximum_depth: 4, ..Default::default() };
             let (mut retirement, _) = store::os_store::snapshot_read::retire_document_envelope(
                 envelope,
@@ -385,9 +381,6 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    // 🧾️ Measured against the enum's OWN generated roster rather than a hand-copied count: a row
-    // appended to `app_commands!` (as `setActiveExample` was) must appear here, and lowering the
-    // number instead of adding the representative silently stops covering that row.
     let mut declared: Vec<&str> = VcsCommand::TOOL_JOB_IDS.to_vec();
     declared.sort_unstable();
     assert_eq!(sorted, declared, "every VcsCommand row must be covered by every_command()");
@@ -464,9 +457,6 @@ fn retained_factories_publish_only_their_exact_declared_lanes() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let fixture: Value = parse((*RETAINED_ROUTES)).expect("VCS retained route fixture decodes");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
-    // 🛣️ The fixture is the language-neutral oracle of BOTH declared contract rosters — measured
-    // against them rather than a frozen literal, so a tool added to either roster must be declared
-    // here too instead of silently escaping the lane law.
     assert_eq!(routes.len(), VCS_BOUNDED_PUBLICATION_CONTRACTS.len() + VCS_RESUMABLE_PUBLICATION_CONTRACTS.len());
     assert_eq!(<VcsBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_BOUNDED_PUBLICATION_CONTRACTS);
     assert_eq!(<VcsResumableCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_RESUMABLE_PUBLICATION_CONTRACTS);
@@ -515,7 +505,6 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         ("canvasWheel", no_args()),
         ("setActiveExample", action_args([("exampleId", semio_s_artifact_vcs_vcs_editor::examples::demo::ID.to_string())])),
     ];
-    // 🏷️ "all vcs owned commands" is the enum's own roster, never a hand-copied subset.
     let mut bridged: Vec<&str> = rows.iter().map(|(id, _)| *id).collect();
     bridged.sort_unstable();
     let mut declared: Vec<&str> = VcsCommand::TOOL_JOB_IDS.to_vec();
@@ -761,9 +750,6 @@ async fn checkout_then_commit_forks_across_actions() {
     let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
     let children_of_root_before = envelope_before.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
 
-    // 🎬️ `checkoutCheckpoint`/`commitCheckpoint` are framework-RESERVED verbs: on a mounted app
-    // `handle_action` only ADMITS them, and the checkout/commit itself lands in the spawned reserved
-    // job plus the publication it queues — dropping either receipt left the fork uncommitted.
     let checkout = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "checkoutCheckpoint", Some(action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("checkout");
     assert!(checkout.mutations.is_empty(), "history actions never emit KernelMutations");
     settle_action(&mut instance, checkout).await;
@@ -783,8 +769,6 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let before = instance.snapshot().expect("materialize snapshot").counter;
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
-    // ↩️ `undo`/`redo` are framework-reserved jobs: `handle_action` admits, the SETTLED admission
-    // carries the `history-changed` event and the store only moves once that job has run.
     let undo = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance.0, "undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
     assert!(undo.mutations.is_empty());
     let undone = settle_reserved(&mut instance, undo).await;

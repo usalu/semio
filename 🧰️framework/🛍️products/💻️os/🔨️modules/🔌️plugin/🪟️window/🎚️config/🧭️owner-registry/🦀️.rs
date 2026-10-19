@@ -1,6 +1,7 @@
 //! 🧭️ Owner registry of the window config: the pack load turns, the owner registry, the controlled owner and window actor demands and the registry operations. See [`super`].
 
 use super::*;
+use crate::owner_contract_and_mutation::WindowConfigBorrow;
 
 /// ⏳️ Turns one registry-driven retained window config load may spend before it faults `window-config.load-bound`.
 pub const WINDOW_CONFIG_PACK_LOAD_TURNS: usize = 1_048_576;
@@ -11,7 +12,7 @@ pub struct WindowConfigOwnerRegistry {
     pub owners: WindowRegistry<&'static str, Box<dyn ErasedWindowConfigStoreOwner>>,
     owner_close_cursor: usize,
     #[doc(hidden)]
-    pub retiring: semio_framework_value::list::PagedList<WindowConfigPackLoad, {usize::MAX}>,
+    pub retiring: semio_framework_value_persistent::list::PagedList<WindowConfigPackLoad, {usize::MAX}>,
     lifetime: u64,
     #[doc(hidden)]
     pub actor: Option<protocol::ActorId>,

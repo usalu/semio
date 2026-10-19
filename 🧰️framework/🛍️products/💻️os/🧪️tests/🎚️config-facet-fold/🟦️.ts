@@ -6,8 +6,8 @@
  * The envelopes are the shell's own (`localCatalogMutationEnvelopeV1`) and cross the real wire codec before the worker sees them. */
 import { decodeBackboneWorkerRequest, decodeDocumentArchiveBytes, decodePackValue, encodeBackboneWorkerRequest, encodeDocumentArchiveBytes, type ArtifactActorConfig, type BackboneWorkerRequest, type BackboneWorkerResponse } from "../../🟦️.ts";
 import { localCatalogMutationEnvelopeV1, decodeLocalCatalogArchiveV1 } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🗂️local-catalog/🟦️.ts";
-import { admitLocalDocument, identityMutationDiffPair, LOCAL_CATALOG_CONFIG_SCHEMA, retireLocalDocument, signIn, signOut, type Identity, type LocalDocument } from "@semio-tech/framework/config/schema/mutations";
-import { decodeIdentityValue } from "@semio-tech/framework/config/schema/mutations";
+import { admitLocalDocument, identityMutationDiffPair, LOCAL_CATALOG_CONFIG_SCHEMA, retireLocalDocument, signIn, signOut, type Identity, type LocalDocument } from "@semio-tech/framework/config/mutations";
+import { decodeIdentityValue } from "@semio-tech/framework/config/mutations";
 
 type Folder = Map<string, Uint8Array>;
 const IDENTITY_SCHEMA = "os.config.identity";

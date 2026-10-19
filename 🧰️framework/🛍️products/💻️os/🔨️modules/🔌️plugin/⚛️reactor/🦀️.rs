@@ -308,7 +308,7 @@ pub async fn restore_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runt
     let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observe;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(semio_framework_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, observer).map_err(semio_framework::FaultFrom::into_fault)?;
     let mut accept = |_| true;
-    let mut native = semio_framework_value::NativeDecodeControl::new(semio_framework_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, &mut accept);
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(semio_framework_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, &mut accept);
     let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, runtime.mounted_owner_policy().preparation);
     let semio_framework_plugin_reactor_surfaces::checkpoint::RestoredCheckpoint { pack, document_loads } = semio_framework_plugin_reactor_surfaces::checkpoint::restore(runtime, state, &mut identity, &mut original).await?;
     RESTORED_DOCUMENT_LOADS.with(|loads| loads.borrow_mut().extend(document_loads));

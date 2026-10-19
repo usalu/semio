@@ -43,7 +43,6 @@ pub struct CompactionLease;
 
 impl CompactionLease {
     /// 🏷️ The `LeaseStorage` resource name guarding `document`'s compaction pass.
-    // 🚫️async: E1 pure accessor consumed synchronously by `acquire`/`renew`/`release`/`current` — see R9
     pub fn resource(document: &ArtifactId) -> String {
         format!("compact:{document}")
     }

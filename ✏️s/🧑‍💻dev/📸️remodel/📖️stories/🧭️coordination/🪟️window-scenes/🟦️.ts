@@ -127,8 +127,6 @@ export function remodelFramesLayersJson(scene: RemodelScene, cursor: RemodelConf
   if (!stream) return "[]";
   const layers: Record<string, unknown>[] = [];
   const frame = stream.frames.find((candidate) => candidate.index === cursor.frameIndex);
-  // 🖼️ `remodeling_asset` resolves the asset CHILD handle through `durable_artifacts`, which neither story
-  // document carries — so, as in the plugin, no image layer is emitted for these documents.
   if (frame !== undefined && scene.assets[frame.assetId] === undefined) void frame;
   const points = scene.gcps.flatMap((gcp) => gcp.observations.filter((observation) => observation.streamId === cursor.streamId && observation.frameIndex === cursor.frameIndex).map((observation) => ({ x: observation.pixel[0], y: observation.pixel[1], label: gcp.name })));
   if (points.length > 0) layers.push({ type: "points", id: "remodeling-gcp-observations", points });

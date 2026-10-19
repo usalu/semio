@@ -1,4 +1,4 @@
-//! playbook <- txt
+//! 📖️ playbook <- txt
 use crate::PlaybookSnapshot;
 pub fn register() {}
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PlaybookSnapshot, String> {

@@ -190,8 +190,6 @@ describe("🎯️ retained hit targets", () => {
     expect(topmost(resolved), "a registry that was never published must resolve nothing").toBeUndefined();
     expect(publish()).toBe(1);
     expect(topmost(resolved)!.controlId, "the preceding move must resolve the row").toBe(cycle.controlId);
-    // 🌀️ One more complete build, so the measured cycle starts in production steady state: a full
-    // registry resolvable AND the outgoing one staged for the next build's retirement.
     for (const row of scan) staging.push(row);
     expect(publish()).toBe(2);
     expect(staging.length, "steady state stages the outgoing registry").toBe(scan.length);
@@ -230,7 +228,6 @@ describe("🎯️ retained hit targets", () => {
     expect(hits).toBe(cycle.presses * (2 + scan.length * 2));
     expect(hits).toBeGreaterThanOrEqual(cycle.expected.doubleBufferedResolved);
 
-    // ⚖️ The counter-model: ONE registry, drained by the build and scanned by the pointer.
     let single: Registration[] = [...scan];
     let singleMissed = 0;
     for (let frame = 0; frame < cycle.presses; frame += 1) {

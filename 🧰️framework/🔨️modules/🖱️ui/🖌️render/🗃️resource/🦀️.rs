@@ -24,9 +24,7 @@ pub(crate) struct Slot {
 /// one generic implementation instead of three hand-copied ones. `pub(crate)`, never `pub` — it
 /// references the crate-private [`Slot`], and nothing outside this crate needs to implement it.
 pub(crate) trait ResourceId: Copy + Eq + std::hash::Hash + std::fmt::Debug {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from_slot(slot: Slot) -> Self;
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn slot(self) -> Slot;
 }
 
@@ -120,7 +118,6 @@ impl<Id: ResourceId> Default for ResourceTable<Id> {
 }
 
 impl<Id: ResourceId> ResourceTable<Id> {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn alloc(&mut self, key: Option<&str>, state: ResourceState) -> Id {
         let index = match self.free.pop() {
             Some(index) => {
@@ -143,18 +140,15 @@ impl<Id: ResourceId> ResourceTable<Id> {
         id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn interned(&self, key: &str) -> Option<Id> {
         self.interned.get(key).copied()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn entry(&self, id: Id) -> Option<&TableEntry> {
         let slot = id.slot();
         self.entries.get(slot.index as usize).filter(|entry| entry.generation == slot.generation)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn set_state(&mut self, id: Id, state: ResourceState) -> bool {
         let slot = id.slot();
         match self.entries.get_mut(slot.index as usize) {
@@ -168,7 +162,6 @@ impl<Id: ResourceId> ResourceTable<Id> {
 
     /// 🧨️ Retires `id`: drops the string interning so a future request re-allocates, and bumps the
     /// slot's generation so `id` itself becomes permanently stale (any stray copy fails every lookup).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn evict(&mut self, id: Id) -> bool {
         let slot = id.slot();
         let Some(entry) = self.entries.get_mut(slot.index as usize) else { return false };
@@ -206,14 +199,12 @@ impl ResourceRegistry {
 
     /// 🔗️ Resolves `key` to a stable [`TextureId`], allocating on first sight. Does not queue an
     /// upload — call [`Self::request_texture_upload`] when pixel data is ready.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn intern_texture(&mut self, key: &str) -> TextureId {
         self.textures.interned(key).unwrap_or_else(|| self.textures.alloc(Some(key), ResourceState::Requested))
     }
 
     /// 📤️ Interns `key` and queues an upload unless the texture is already `Resident`. Safe to call
     /// every frame with unchanged pixels — it becomes a no-op once resident.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_texture_upload(&mut self, key: &str, width: u32, height: u32, pixels: Vec<u8>) -> TextureId {
         let id = self.intern_texture(key);
         let resident = matches!(self.textures.entry(id).map(|entry| &entry.state), Some(ResourceState::Resident));
@@ -228,29 +219,24 @@ impl ResourceRegistry {
         id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn texture_state(&self, id: TextureId) -> Option<&ResourceState> {
         self.textures.entry(id).map(|entry| &entry.state)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     /// ✅️ Marks a texture resident and drops any still-queued upload for it. The invariant this keeps
     /// is `ops` never carries an upload for a resource the backend already holds — without it a
     /// resource that went resident mid-frame would be re-uploaded on the next drain.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mark_texture_resident(&mut self, id: TextureId) -> bool {
         self.ops.retain(|op| !matches!(op, ResourceOp::UploadTexture { id: queued, .. } if *queued == id));
         self.textures.set_state(id, ResourceState::Resident)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mark_texture_failed(&mut self, id: TextureId, message: impl Into<String>) -> bool {
         self.textures.set_state(id, ResourceState::Failed(ResourceError { message: message.into() }))
     }
 
     /// 🧨️ Retires `id` and queues [`ResourceOp::EvictTexture`]. A later request under the same key
     /// allocates a fresh id — `id` itself never resolves again.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn evict_texture(&mut self, id: TextureId) {
         if self.textures.evict(id) {
             self.ops.push(ResourceOp::EvictTexture(id));
@@ -261,12 +247,10 @@ impl ResourceRegistry {
 
     //#region Atlases
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn intern_atlas(&mut self, key: &str) -> AtlasId {
         self.atlases.interned(key).unwrap_or_else(|| self.atlases.alloc(Some(key), ResourceState::Requested))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_atlas_upload(&mut self, key: &str, width: u32, height: u32, pixels: Vec<u8>) -> AtlasId {
         let id = self.intern_atlas(key);
         let resident = matches!(self.atlases.entry(id).map(|entry| &entry.state), Some(ResourceState::Resident));
@@ -281,10 +265,8 @@ impl ResourceRegistry {
         id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     /// ✅️ Marks an atlas resident and drops any still-queued upload for it — same invariant as
     /// [`Self::mark_texture_resident`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mark_atlas_resident(&mut self, id: AtlasId) -> bool {
         self.ops.retain(|op| !matches!(op, ResourceOp::UploadAtlas { id: queued, .. } if *queued == id));
         self.atlases.set_state(id, ResourceState::Resident)
@@ -297,7 +279,6 @@ impl ResourceRegistry {
     /// 🔢️ Content hash (FNV-1a) over positions, normals and indices — the mesh-versioning scheme
     /// ported from the wgpu target's `mesh_content_version`: identical geometry hashes identically, so
     /// re-requesting an unchanged mesh resolves to the same id instead of re-uploading.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mesh_content_hash(positions: &[f32], normals: &[f32], indices: &[u32]) -> u64 {
         let mut hash = 0xcbf2_9ce4_8422_2325u64;
         for value in positions.iter().chain(normals.iter()) {
@@ -314,7 +295,6 @@ impl ResourceRegistry {
     /// 📤️ Interns `key` content-versioned by [`Self::mesh_content_hash`] and queues
     /// [`ResourceOp::CreateOrUpdateMesh`] on first sight of that exact content; an unchanged mesh
     /// resolves to the same id with no new op, exactly like the ported `MeshGpuTable::ensure_mesh`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_mesh_upload(&mut self, key: &str, positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32>) -> MeshId {
         let version = Self::mesh_content_hash(&positions, &normals, &indices);
         let versioned_key = format!("{key}:{version:016x}");
@@ -326,16 +306,13 @@ impl ResourceRegistry {
         id
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     /// ✅️ Marks a mesh resident and drops any still-queued upload for it — same invariant as
     /// [`Self::mark_texture_resident`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mark_mesh_resident(&mut self, id: MeshId) -> bool {
         self.ops.retain(|op| !matches!(op, ResourceOp::CreateOrUpdateMesh { id: queued, .. } if *queued == id));
         self.meshes.set_state(id, ResourceState::Resident)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn evict_mesh(&mut self, id: MeshId) {
         if self.meshes.evict(id) {
             self.ops.push(ResourceOp::EvictMesh(id));
@@ -348,7 +325,6 @@ impl ResourceRegistry {
 
     /// 📬️ Takes the accumulated `ResourceOp` stream, leaving the registry's queue empty. A caller
     /// hands the result to a backend before replaying the packet built in the same frame.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_ops(&mut self) -> Vec<ResourceOp> {
         std::mem::take(&mut self.ops)
     }
@@ -357,7 +333,6 @@ impl ResourceRegistry {
     /// matches) is re-marked `Requested` *without* a generation bump, so it resumes the same identity
     /// and the next frame's upload request repopulates it. An id whose slot was already evicted for
     /// another reason is silently ignored.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn report_device_loss(&mut self, lost_textures: &[TextureId], lost_meshes: &[MeshId], lost_atlases: &[AtlasId]) {
         for &id in lost_textures {
             self.textures.set_state(id, ResourceState::Requested);

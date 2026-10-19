@@ -28,15 +28,12 @@ impl Default for SemioCadArtifact {
 }
 
 impl SemioCadArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioCadSnapshot {
         SemioCadSnapshot { schema: self.schema.clone(), layers: self.layers.clone(), blocks: self.blocks.clone(), entities: self.entities.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioCadSnapshot) -> Self {
         Self { schema: snapshot.schema, layers: snapshot.layers, blocks: snapshot.blocks, entities: snapshot.entities }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioCadSnapshot) {
         self.schema = snapshot.schema;
         self.layers = snapshot.layers;

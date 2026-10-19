@@ -1,4 +1,4 @@
-//! deser ifc.2x3 via binary
+//! 🏢️ deser ifc.2x3 via binary
 
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use semio_s_artifact_stdio_binary::BinarySnapshot;

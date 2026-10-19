@@ -62,14 +62,6 @@ export class DocumentBrowserActorReservation {
     const session = new ReservationSession(state, lease, grant, this.retire, () => ++documentBrowserActorGeneration);
     this.generation = session.generation;
     this.hub = new ReservationHubWiring(this, session);
-    // ⏳️ A LIVE browser actor is bounded by its socket and its lease, never by the calendar the
-    // admission plan was minted with. `grant.retireAtMs` is `plan.expiresAtUnixMs`, whose TTL is at
-    // most `DOCUMENT_OPEN_PLAN_MAX_TTL_MS` (30 s) — the window in which the one-shot plan receipt may
-    // be exchanged for a socket grant, not a lifetime. Arming a retirement on it closed the child of
-    // every healthy hub document ~30 s after the plan was minted, with the socket still open and the
-    // guest still answering (measured 2026-09-22 on hub 7681: `grant retired at … (admitted with
-    // -10 ms left)` while the gis actor had been `actor-ready` for 21 s). The two signals below are
-    // the real bounds: the document's abort and the lease's retirement.
     session.artifact.docAbort.signal.addEventListener("abort", session.retire, { once: true });
     session.lease.retirement.addEventListener("abort", session.retire, { once: true });
   }

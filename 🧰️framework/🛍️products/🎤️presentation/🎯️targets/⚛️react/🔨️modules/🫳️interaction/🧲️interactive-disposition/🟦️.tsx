@@ -302,16 +302,12 @@ export const InteractiveDisposition: FC<{
         window.removeEventListener("pointercancel", onUp);
         try {
           origin.captureEl?.releasePointerCapture?.(pointerId);
-        } catch {
-          // jsdom may not support pointer capture
-        }
+        } catch {}
       };
 
       try {
         origin.captureEl?.setPointerCapture?.(pointerId);
-      } catch {
-        // jsdom may not support pointer capture
-      }
+      } catch {}
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", onUp);
@@ -484,10 +480,6 @@ export const InteractiveDisposition: FC<{
     Object.assign(wrapperFrame, flowDragOffsetStyle);
   }
   if (canvasFramed && canvasAnchorRect) {
-    // 🔀️ The wrapper owns the reveal `data-id` morph anchor; placing it on the live ephemeral
-    // rect (drag/resize) makes reveal.js auto-animate capture the modified frame as the morph
-    // `from`, so morphs start from the current disposition including ephemeral modifications.
-    // 👻️ Target ghosts keep label layout; live source frames are synced from slide 8 DOM before morph.
     const morphAnchorRect = disposition.revealMorphCompanion === "target" ? canvasAnchorRect : disposition.revealMorphCompanion === "source" ? canvasAnchorRect : (canvasLiveTransform ?? canvasAnchorRect);
     Object.assign(wrapperFrame, transformFrameStyle(morphAnchorRect));
     if (morphCropFrom && disposition.revealMorphFromFrame !== undefined && disposition.position !== undefined) {

@@ -1,12 +1,12 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { TreeContext, TreeAlignedRow } from "../📏️row-alignment/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { IndentationLines, getTreeSiblingGapPx, treeBranchContentStyle, treeRowVerticalPaddingPx, treeSubtreeGapPx } from "../🎨️chrome/🟦️.tsx";
 import type { TreeWindowDomAttributes } from "../🔭️virtual-window/🟦️.tsx";
 
 /**
- * Wrapper rendering tree children with connecting lines.
+ * 🌳️ Wrapper rendering tree children with connecting lines.
  **/
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);

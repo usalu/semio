@@ -398,8 +398,6 @@ impl WorldInteractionAuthority {
                     }
                 }
                 if intent.down && intent.button == 0 && selection_state.interaction_mode == "paint" && !selection_state.paint_stroke_active {
-                    // 🖌️ A press opens the paint gesture and dabs where it lands (a `paintAt` stream tick when the ray hits
-                    // a mesh); the moves stream the drag's dabs and the release commits them as ONE edit.
                     selection_state.paint_stroke_active = true;
                     session_state.interaction_revision = session_state.interaction_revision.wrapping_add(1);
                     WorldRayPickCursor::new(session_state, camera_state, generation, WorldRayPickPurpose::Paint, intent.x, intent.y).map(|cursor| WorldInteractionActive::Pick { cursor, retirement: None })

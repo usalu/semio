@@ -13,7 +13,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if (segments[0] === "retirement") {
-      if (segments.length !== 1) throw Error("Expected test retirement");
+      if (segments.length !== 1) throw new Error("Expected test retirement");
       await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-locale"], cwd: this.root, extraArgs: ["--lib", "localized_label_original_backing", "--", "--nocapture"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
       return;
     }

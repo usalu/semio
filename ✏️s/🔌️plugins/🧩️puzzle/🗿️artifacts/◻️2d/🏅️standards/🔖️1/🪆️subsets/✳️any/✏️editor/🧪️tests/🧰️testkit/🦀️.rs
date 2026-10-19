@@ -20,9 +20,10 @@ use std::collections::BTreeSet;
 #[global_allocator]
 static PUZZLE2D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::board_snapshot_nodes;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes;
+use semio_framework::Effect;
 
-/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// 🧩️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
 /// scope pays the caller's terminal retirement after the app's paid close.
 pub struct Puzzle2dApp(pub VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 

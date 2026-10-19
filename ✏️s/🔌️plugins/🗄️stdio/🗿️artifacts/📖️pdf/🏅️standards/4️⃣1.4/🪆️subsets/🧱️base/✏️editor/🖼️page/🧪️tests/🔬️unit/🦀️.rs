@@ -1,4 +1,4 @@
-//! \u{1f9ea}️ Own PDF 1.4 page drafts, mutation inverses and address admission.
+//! 🧪️ Own PDF 1.4 page drafts, mutation inverses and address admission.
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use crate::standards::v1_4::subsets::base::schema::mutations::{PdfMutation, ResizePage};
 use semio_framework_plugin::TreeWindows;

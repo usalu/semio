@@ -52,7 +52,7 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
     }
 }
 
-impl crate::os_spr::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPreflight {
+impl semio_framework_os_command::ColdMutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPreflight {
     fn diff(&self, _: &TxnSnapshot) -> MutationOutcome<TxnDiff> {
         MutationOutcome::new(TxnDiff { count: Some(self.value) })
     }

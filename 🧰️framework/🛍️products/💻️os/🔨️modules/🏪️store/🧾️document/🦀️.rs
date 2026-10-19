@@ -17,7 +17,6 @@ use semio_framework_os_store_space_schema::{ArtifactBackboneRef, ArtifactCursor,
 use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
 use semio_framework_os_pack::pack_rt;
 use semio_framework_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_history};
-use semio_framework_os_store_ledger::ColdReplayProjection;
 use semio_framework_os_store_replay::fold_effective_edit;
 #[cfg(target_arch = "wasm32")]
 use semio_framework_os_store_backbone::resolve_backbone;

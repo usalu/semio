@@ -1,4 +1,4 @@
-//! effects are `ToolYield`s, driven by the `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one
+//! 📡️ effects are `ToolYield`s, driven by the `🛠️tool-machine` runner. Every translate/rotate/scale dispatch builds one
 //! 🧭️ Fem2d transform gumball — config, pivot, meta layer, and the gumball TOOL: a `🔄️machine` statechart whose
 //! relative `move-selection` tick leaf; a one-shot dispatch commits it as ONE `ToolTransaction`, a streamed gesture
 //! accumulates its ticks into the window's ONE open transaction (persisted in the FEM gumball transient, previewed by

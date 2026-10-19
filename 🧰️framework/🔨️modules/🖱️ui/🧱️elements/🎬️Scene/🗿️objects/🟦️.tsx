@@ -1,5 +1,5 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { resolveSemanticColorHex, resolveColorHex, themeColorVar } from "@semio-tech/ui-styling";
 import { ephemeralBox } from "../../../../🫧️transient/🟦️.ts";
 import type { Plane, Point, Vector } from "../📐️geometry/🟦️.ts";
@@ -41,12 +41,12 @@ export const readSceneGridColors = (): { sectionColor: string; cellColor: string
 });
 
 /**
- * selectableCursorUsageCount.current holds the data fields for a selectableCursorUsageCount.current record.
+ * 🖱️ selectableCursorUsageCount.current holds the data fields for a selectableCursorUsageCount.current record.
  **/
 const selectableCursorUsageCount = ephemeralBox("framework.modules.ui.elements.Scene.component.tsx.selectableCursorUsageCount", 0);
 
 /**
- * Interface for a geometry entry in a 3D scene.
+ * 🎬️ Interface for a geometry entry in a 3D scene.
  **/
 export interface SceneGeometry {
   guid: string;
@@ -60,14 +60,14 @@ export interface SceneGeometry {
 }
 
 /**
- * Extended SceneGeometry with transform delta support.
+ * 🧊️ Extended SceneGeometry with transform delta support.
  **/
 export interface TransformableGeometry extends SceneGeometry {
   isTransformable?: boolean;
 }
 
 /**
- * Interface for an incremental plane transformation delta.
+ * 🔲️ Interface for an incremental plane transformation delta.
  **/
 export interface PlaneTransformDelta {
   translation?: { x: number; y: number; z: number };
@@ -76,17 +76,17 @@ export interface PlaneTransformDelta {
 }
 
 /**
- * Callback type for a single plane update.
+ * 🟦️ Callback type for a single plane update.
  **/
 export type OnPlaneUpdate = (geometryGuid: string, newPlane: Plane) => void;
 
 /**
- * Callback type for batch plane updates.
+ * 📄️ Callback type for batch plane updates.
  **/
 export type OnMultiPlaneUpdate = (updates: Array<{ geometryGuid: string; newPlane: Plane }>) => void;
 
 /**
- * Constructs a Plane from a point and direction vector.
+ * 🪟️ Constructs a Plane from a point and direction vector.
  **/
 export const planeFromPointAndDirection = (point: Point, direction: Vector): Plane => {
   const dir = new THREE.Vector3(direction.x, direction.y, direction.z).normalize();
@@ -104,28 +104,28 @@ export const planeFromPointAndDirection = (point: Point, direction: Vector): Pla
 };
 
 /**
- * Extracts the THREE.Vector3 position from a Plane.
+ * 📍️ Extracts the THREE.Vector3 position from a Plane.
  **/
 export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
   return new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
 };
 
 /**
- * Checks whether a geometry has a non-null plane.
+ * ✅️ Checks whether a geometry has a non-null plane.
  **/
 export const hasValidPlane = (geometry: SceneGeometry): boolean => {
   return geometry.plane !== undefined && geometry.plane !== null;
 };
 
 /**
- * Checks whether a geometry has a valid plane for camera focus.
+ * 🔷️ Checks whether a geometry has a valid plane for camera focus.
  **/
 export const isGeometryFocusable = (geometry: SceneGeometry): boolean => {
   return hasValidPlane(geometry) && (geometry.isFocusable === undefined || geometry.isFocusable === true);
 };
 
 /**
- * GeometryProps holds the data fields for a GeometryProps record.
+ * 🧱️ GeometryProps holds the data fields for a GeometryProps record.
  **/
 interface GeometryProps {
   children?: React.ReactNode;
@@ -144,7 +144,7 @@ interface GeometryProps {
 }
 
 /**
- * 3D geometry mesh component with selection, hover, and edge rendering.
+ * 🗿️ 3D geometry mesh component with selection, hover, and edge rendering.
  **/
 export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = reactHostPort.useMemo(() => getComputedColor("--foreground"), []);
@@ -220,7 +220,7 @@ export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, 
 };
 
 /**
- * GltfProps holds the data fields for a GltfProps record.
+ * 🕸️ GltfProps holds the data fields for a GltfProps record.
  **/
 interface GltfProps {
   src: string;
@@ -231,7 +231,7 @@ interface GltfProps {
 const getComputedColorForGltf = (variable: string): string => resolveSemanticColorHex(variable, "gray");
 
 /**
- * Gltf holds the data fields for a Gltf record.
+ * 🔺️ Gltf holds the data fields for a Gltf record.
  **/
 const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
   const { scene } = useGLTF(src);
@@ -267,7 +267,7 @@ const Gltf: React.FC<GltfProps> = ({ src, roughness = 0.8, metalness = 0 }) => {
 };
 
 /**
- * GeometryFileProps holds the data fields for a GeometryFileProps record.
+ * 📦️ GeometryFileProps holds the data fields for a GeometryFileProps record.
  **/
 interface GeometryFileProps {
   src: string;
@@ -275,7 +275,7 @@ interface GeometryFileProps {
   roughness?: number;
   metalness?: number;
 }
-/** GeometryFile holds the data fields for a GeometryFile record.
+/** 📃️ GeometryFile holds the data fields for a GeometryFile record.
  **/
 /**
  **/

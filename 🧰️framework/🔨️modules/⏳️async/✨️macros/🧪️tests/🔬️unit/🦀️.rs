@@ -79,7 +79,7 @@ fn preserves_should_panic_and_ignore_in_either_order() {
 fn preserves_cfg_and_doc_comments() {
     let item = quote! {
         #[cfg(feature = "some")]
-        /// a doc comment
+        /// 📄️ a doc comment
         async fn documented() {}
     };
     let expanded = expand_async_test(TokenStream::new(), item).expect("expansion should succeed");

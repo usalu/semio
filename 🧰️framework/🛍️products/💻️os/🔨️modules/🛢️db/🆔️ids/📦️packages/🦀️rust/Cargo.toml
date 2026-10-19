@@ -31,3 +31,4 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+serde_json = { workspace = true }

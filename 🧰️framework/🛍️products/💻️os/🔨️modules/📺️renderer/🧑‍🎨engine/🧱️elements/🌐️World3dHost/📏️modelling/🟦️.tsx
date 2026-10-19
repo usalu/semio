@@ -642,9 +642,9 @@ type GlbAttributeLike = { readonly count: number; getX(index: number): number };
 type GlbGeometryLike = { readonly index: GlbAttributeLike | null; getAttribute(name: string): GlbAttributeLike | undefined };
 
 export type World3dGlbSubElementIds = {
-  /** One topology id per triangle, read at the triangle's first corner; `null` when the geometry carries no `_FACE_ID`. */
+  /** 🔲️ One topology id per triangle, read at the triangle's first corner; `null` when the geometry carries no `_FACE_ID`. */
   readonly faceIds: readonly number[] | null;
-  /** One topology id per vertex; `null` when the geometry carries no `_VERTEX_ID`. */
+  /** 📍️ One topology id per vertex; `null` when the geometry carries no `_VERTEX_ID`. */
   readonly vertexIds: readonly number[] | null;
 };
 

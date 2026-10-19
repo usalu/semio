@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, StrictCatalogDescriptor } from "../✅️catalog-verification/🟦️.ts";
 import { boundedCatalogDiagnostic } from "../✅️catalog-verification/🛡️guards/🟦️.ts";
 import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair } from "../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";

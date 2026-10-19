@@ -28,6 +28,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateShadingSurfac
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateShadingSurface> + From<crate::DeleteShadingSurface>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "shading-surface", kind: "create-shading-surface", record: "CreatedShadingSurface" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -49,7 +50,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "shading-surface", kind: "create-shading-surface", record: "CreatedShadingSurface" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

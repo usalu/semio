@@ -1,4 +1,4 @@
-//! Direct binary identity for `embed-font-file`.
+//! 💾️ Direct binary identity for `embed-font-file`.
 
 pub const TAG: u8 = 10;
 pub const BINARY_TAG: u8 = TAG;

@@ -1,4 +1,5 @@
 mod extension_bundle_dependency_tests {
+    use semio_framework_plugin_extension::extension_runtime_lift::ExtensionBundle;
     use super::*;
 
     #[semio_framework_async_macros::async_test]

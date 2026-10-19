@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
-import { interactivityCheckedRustBlockScope } from "../../🔬️interactivity-audit/🖥️mounted/🎞️frame-transaction/🟦️.ts";
+import { interactivityCheckedRustBlockScope } from "../../🔬️interactivity-audit/🖥️mounted/🧭️checked-rust-block-scope/🟦️.ts";
 import { toolJobReservedSpecs, type ToolJobReservedSpec } from "../🏭️factory/🟦️.ts";
 import { TOOL_JOB_FRAMEWORK_RESERVED_IDS } from "../📋️inventory/🟦️.ts";
 

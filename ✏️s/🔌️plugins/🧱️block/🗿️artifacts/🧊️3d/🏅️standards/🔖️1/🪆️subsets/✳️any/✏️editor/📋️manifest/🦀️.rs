@@ -8,8 +8,6 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(BLOCK3D_DIALECT)
         .document(["semio", "block", "3d"])
         .artifact_kind(artifact_kind())
-        // 🗂️ The puzzle3d catalog artifact this surface's `"catalog:out"` port produces — see
-        // `block3d_io`/`Block3dPlayApp::export_media`.
         .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
         .icon_id("box")
         .mode_def(edit_mode::definition())
@@ -18,10 +16,6 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .utility(UtilityDefinition::new(BLOCK3D_UTILITY_SELECT, LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer"))
         .utility(UtilityDefinition::new(BLOCK3D_UTILITY_SURFACE_BRUSH, LocalizedLabel::native("Surface brush", "Flächenpinsel"), "paintbrush"))
         .window_kind_utilities(world::BLOCK3D_WINDOW_WORLD, vec![BLOCK3D_UTILITY_SELECT.into(), BLOCK3D_UTILITY_SURFACE_BRUSH.into()])
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain
-        // replaces the deleted `setSelection`/`selectVortex`/`hoverVortex` view actions — the
-        // framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/
-        // `setSelectionMode`/`setInteractionGranularity` for it.
         .interaction(InteractionDefinition {
             id: BLOCK3D_INTERACTION_VORTEX.into(),
             label: LocalizedLabel::native("Vortices", "Wirbel"),
@@ -64,16 +58,7 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .view_action("worldSurfaceLeave", LocalizedLabel::native("Surface Leave", "Fläche verlassen"))
         .mutation("worldSurfacePlace", LocalizedLabel::native("Place Vortex", "Wirbel platzieren"))
         .mutation("patchRepresentation", LocalizedLabel::native("Patch Representation", "Darstellung bearbeiten"))
-        // 🎥️ `setCamera` was the one `Block3dCommand` row with no manifest action at all — reachable
-        // only through `dispatch_typed`/binary `OpBinary`, and rejected from the real UI path with
-        // `interactive-job.unknown-key`. It writes `Block3dConfig.camera`, never the document, so it is
-        // a view action like the other camera/window/brush rows.
         .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
-        // 🧵️ Grants UI execution authority to every one of this app's 22 command rows. `.mutation(…)`/
-        // `.view_action(…)` build their `ActionDefinition` through `ActionDefinition::bounded_catalog`,
-        // which — per its own doc — is "a catalog row WITHOUT granting UI execution authority": the
-        // classification stays `Unclassified` and `validate_ui_dispatch_classification` rejects every
-        // real `handle_action` dispatch with `interactive-job.not-ui-safe`.
         .action_interactive_job("patchObjectKind", InteractiveJobClassification::Migrated)
         .action_interactive_job("addRepresentation", InteractiveJobClassification::Migrated)
         .action_interactive_job("removeRepresentation", InteractiveJobClassification::Migrated)
@@ -97,14 +82,6 @@ pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
         .action_interactive_job("patchRepresentation", InteractiveJobClassification::Migrated)
         .io(block3d_io())
-        // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
-        // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
-        // `.workflow(...)` on this builder, so the old `BLOCK3D_EXAMPLE_CAPSULE`/`BLOCK3D_EXAMPLE_FOREST_LEFT`
-        // app-level example registrations and the no-op `.workflow("block3d", …)` call are dropped here
-        // (not silently: reported in this packet's migration report). The subset's own
-        // `📚️examples/🌲️hexagonal-cut-concrete-forest-left`/`🏢️nakagin-capsule` facets (artifact-level,
-        // pre-existing, untouched by this packet) and this surface's own `setActiveExample` command
-        // (still real, still DSL-fixture-backed) are the modern, role-agnostic replacements for this.
         .action_describe("patchObjectKind", LocalizedLabel::native("Sets one field of the 3D block's object kind: its name, label, variant, description or icon.", "Setzt ein Feld der Objektart des 3D-Blocks: Name, Bezeichnung, Variante, Beschreibung oder Symbol."))
         .action_describe("addRepresentation", LocalizedLabel::native("Adds a new, empty representation (a named mesh view of the object with tags and level of detail) to the 3D block.", "Fügt dem 3D-Block eine neue, leere Darstellung hinzu (eine benannte Netzansicht des Objekts mit Tags und Detailstufe)."))
         .action_describe("removeRepresentation", LocalizedLabel::native("Removes one representation by id from the 3D block.", "Entfernt eine Darstellung anhand ihrer Id aus dem 3D-Block."))

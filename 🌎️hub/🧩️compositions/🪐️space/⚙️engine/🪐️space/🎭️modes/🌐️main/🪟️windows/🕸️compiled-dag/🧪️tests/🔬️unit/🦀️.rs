@@ -4,9 +4,6 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn renders_compiled_dag_editor() {
     use semio_framework_plugin::{PluginApp, ViewModel};
-    // 🧬️ Registry-backed: `SpaceApp` publishes a `bounded_first_step_tool_proofs!` roster, and an
-    // empty `AppActionRegistry` declares none of them as `Migrated`, so the registry-LESS
-    // `VcsArtifactApp::new` fails construction with `interactive-job.catalog-authority`.
     let mut app = crate::unit_tests::context::app_with_registry().await;
     let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("compiled DAG tree projection");

@@ -1,4 +1,4 @@
-//! Inverse for `change-slab-thickness-m`.
+//! ↩️ Inverse for `change-slab-thickness-m`.
 use crate::change_slab_thickness_m::ChangeSlabThicknessM;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn inverse<Op>(payload: &ChangeSlabThicknessM, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_slab_thickness_m::ChangeSlabThicknessM> {

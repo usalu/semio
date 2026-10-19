@@ -7,7 +7,6 @@ mod tests {
         let x = Expr::symbol("x");
         let e = Expr::func(FnKind::Exp, vec![x.clone()]);
         let s = taylor_series(&e, &x, &Expr::integer(0), 4).unwrap();
-        // exp(x) = 1 + x + x^2/2 + x^3/6 + x^4/24
         assert_eq!(s.coeffs[0], Expr::integer(1));
         assert_eq!(s.coeffs[1], Expr::integer(1));
         assert_eq!(s.coeffs[2], Expr::from(number::Rational::from_i64(1, 2).unwrap()));

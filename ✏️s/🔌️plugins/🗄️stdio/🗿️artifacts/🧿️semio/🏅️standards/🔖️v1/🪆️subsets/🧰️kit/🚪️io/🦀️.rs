@@ -177,12 +177,10 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioKitBuilderConstruction {
         /// 🏗️ Starts a fresh, empty kit (no types/designs/geometry).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: SemioKitSnapshot::default() }
         }
         /// 🏷️ Appends one TYPE to the catalog.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_type(mut self, id: impl Into<String>, name: impl Into<String>, category: impl Into<String>) -> Self {
             self.snapshot.types.push(SemioKitType { id: id.into(), name: name.into(), category: category.into() });
             self

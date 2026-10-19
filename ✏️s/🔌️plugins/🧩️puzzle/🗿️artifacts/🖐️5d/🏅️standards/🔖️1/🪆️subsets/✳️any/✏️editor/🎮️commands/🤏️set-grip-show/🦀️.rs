@@ -1,7 +1,7 @@
 //! 🤏️ `set-grip-show` command — when the world pane emits grip markers.
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::entities::{PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_GRIP_SHOW_SELECTED};
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::{PUZZLE5D_GRIP_SHOW_ALWAYS, PUZZLE5D_GRIP_SHOW_SELECTED};
 
 
 

@@ -53,9 +53,6 @@ pub mod set_projection {
         let mut config = window_config::current(cfg);
         let mut camera = config.camera.clone();
         let mut projection_config = cad_camera_projection_config(&camera);
-        // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
-        // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
-        // boundary, bridged once here from a `DslValue` built the normal way.
         let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
         let dsl_args = DslValue::object([("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String))]);
         let args_value = semio_framework_pack_json::from_dsl_value(&dsl_args);
@@ -92,9 +89,6 @@ pub mod set_projection_param {
         let mut config = window_config::current(cfg);
         let mut camera = config.camera.clone();
         let mut projection_config = cad_camera_projection_config(&camera);
-        // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
-        // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
-        // boundary, bridged once here from a `DslValue` built the normal way.
         let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
         let dsl_args = DslValue::object([("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String))]);
         let args_value = semio_framework_pack_json::from_dsl_value(&dsl_args);

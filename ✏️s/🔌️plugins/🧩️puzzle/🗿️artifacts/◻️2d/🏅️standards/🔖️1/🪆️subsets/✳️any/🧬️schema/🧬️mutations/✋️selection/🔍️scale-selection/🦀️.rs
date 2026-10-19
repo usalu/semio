@@ -1,4 +1,4 @@
-//! regions about one pivot. Node positions spread from the pivot while a node's own `scale` stays (a
+//! 🗾️ regions about one pivot. Node positions spread from the pivot while a node's own `scale` stays (a
 //! 🔍️ Puzzle2d mutation — `ScaleSelection`: a parametric similarity scale of a set of nodes and target
 //! node kind's footprint is the kind's, not the layout's); a target region scales its corner AND its
 //! extent — the same rule as the editor's `Puzzle2dTransform::Scale`, with the pivot recorded.
@@ -6,7 +6,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
 use crate::standards::v1::subsets::any::schema::mutations::move_target_region::MoveTargetRegion;
 use crate::standards::v1::subsets::any::schema::mutations::resize_target_region::ResizeTargetRegion;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;

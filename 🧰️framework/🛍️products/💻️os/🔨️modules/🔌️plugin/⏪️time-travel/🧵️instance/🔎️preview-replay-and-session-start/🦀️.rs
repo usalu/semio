@@ -1,6 +1,13 @@
 //! 🔎️ Preview, replay and session start of the instance time-travel turns: the preview, its adoption, the replay start, the commit, the member publication and the session start. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
+use semio_framework::FaultOrigin;
+use semio_framework::FaultCode;
+use semio_framework_plugin_child::MemberPath;
+use semio_framework_plugin_decl_emission::HostEvent;
+use semio_framework::MutationId;
+use semio_framework::Effect;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 🖼️ The editing preview on the store the session edits: the state before `target` with the accepted upstream

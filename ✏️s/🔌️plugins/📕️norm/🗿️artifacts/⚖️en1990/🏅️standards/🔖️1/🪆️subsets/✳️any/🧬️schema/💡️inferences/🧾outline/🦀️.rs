@@ -23,7 +23,7 @@ const SECTION_FIELDS: &[&str] = &[
     "effects",
 ];
 
-/// ️ En1990 document outline and governing-clause summary.
+/// 📏️ En1990 document outline and governing-clause summary.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

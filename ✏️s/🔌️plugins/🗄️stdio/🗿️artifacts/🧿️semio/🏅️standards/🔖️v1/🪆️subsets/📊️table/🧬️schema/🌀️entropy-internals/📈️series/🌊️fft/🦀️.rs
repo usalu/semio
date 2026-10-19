@@ -14,42 +14,34 @@ pub struct Complex {
 }
 
 impl Complex {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(re: f64, im: f64) -> Self {
         Self { re, im }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn zero() -> Self {
         Self { re: 0.0, im: 0.0 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_polar(magnitude: f64, angle: f64) -> Self {
         Self { re: magnitude * angle.cos(), im: magnitude * angle.sin() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn conj(self) -> Self {
         Self { re: self.re, im: -self.im }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn norm_sq(self) -> f64 {
         self.re * self.re + self.im * self.im
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn abs(self) -> f64 {
         self.norm_sq().sqrt()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn arg(self) -> f64 {
         self.im.atan2(self.re)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn scale(self, s: f64) -> Self {
         Self { re: self.re * s, im: self.im * s }
     }
@@ -187,23 +179,19 @@ pub struct Fft {
 }
 
 impl Fft {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(n: usize) -> Self {
         Self { n, power_of_two: n.is_power_of_two() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn len(&self) -> usize {
         self.n
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.n == 0
     }
 
     /// 🌊️ Forward DFT: `X_k = sum_j x_j * exp(-2*pi*i*j*k/n)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn forward(&self, input: &[Complex]) -> Vec<Complex> {
         assert_eq!(input.len(), self.n, "Fft::forward: input length must match plan length");
         if self.power_of_two {
@@ -216,7 +204,6 @@ impl Fft {
     }
 
     /// 🌊️ Inverse DFT (normalized by `1/n`): `x_j = (1/n) sum_k X_k * exp(+2*pi*i*j*k/n)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, input: &[Complex]) -> Vec<Complex> {
         assert_eq!(input.len(), self.n, "Fft::inverse: input length must match plan length");
         let mut data = if self.power_of_two {

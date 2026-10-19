@@ -69,8 +69,6 @@ async fn header_row_option_is_pure_metadata_first_record_always_decoded() {
 
 #[semio_framework_async_macros::async_test]
 async fn quoted_flag_round_trips_even_when_not_structurally_required() {
-    // 🔒 A field that didn't NEED quoting but WAS quoted in the source must re-encode
-    // quoted (lossless retention, not a lossy structural-minimum normal form).
     let snap = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records: vec![CsvRecord { fields: vec![CsvField { value: "plain".into(), quoted: true }] }] };
     let text = encode_csv(&snap);
     assert_eq!(text, "\"plain\"\n");

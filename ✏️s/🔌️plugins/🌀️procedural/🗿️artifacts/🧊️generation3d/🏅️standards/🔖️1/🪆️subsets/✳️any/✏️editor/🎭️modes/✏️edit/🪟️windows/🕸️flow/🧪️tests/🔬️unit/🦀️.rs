@@ -1,6 +1,7 @@
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::*;
 use crate::app_fixture::app_with_registry;
 use crate::app_fixture::render_body;
+#[cfg(test)] use semio_framework_plugin::component::TreeWindows;
 
 const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
 

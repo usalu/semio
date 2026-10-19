@@ -1,4 +1,4 @@
-import { contentId } from "../../../../../🏪️store/🪆️child/🧬️schema/🟦️.ts";
+import { contentId } from "@semio-tech/schema-ts/artifact-reference";
 
 /** 🌱️ Admitted document and actor-clock authority for replay-stable entity creation. */
 export interface OperationEntityAuthority { readonly parentDocumentId: string; readonly authoringSeed: string }

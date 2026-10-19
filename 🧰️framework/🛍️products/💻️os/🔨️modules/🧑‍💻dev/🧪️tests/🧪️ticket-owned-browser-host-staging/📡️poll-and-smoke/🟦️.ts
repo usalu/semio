@@ -51,7 +51,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
         mode: "closed",
         probe: () => {
           calls++;
-          return calls < 2; // "in use" for the first call, "free" from the second on
+          return calls < 2;
         },
         now: () => 0,
         sleep: async () => {},
@@ -73,7 +73,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
         },
       });
       expect(outcome).toBe("dead");
-      expect(fakeNow).toBe(0); // died on the very first check, before any sleep
+      expect(fakeNow).toBe(0);
     });
   });
 
@@ -102,7 +102,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
         fetchImpl: (async () => {
           calls++;
           if (calls < 2) throw new Error("ECONNREFUSED");
-          return {} as unknown as Response; // value is irrelevant — awaitHttpOk only cares that fetch resolved
+          return {} as unknown as Response;
         }) as unknown as typeof fetch,
         now: () => 0,
         sleep: async () => {},
@@ -119,7 +119,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
         isDead: () => true,
         fetchImpl: (async () => {
           fetchCalled = true;
-          return {} as unknown as Response; // value is irrelevant — awaitHttpOk only cares that fetch resolved
+          return {} as unknown as Response;
         }) as unknown as typeof fetch,
         now: () => 0,
         sleep: async () => {},
@@ -133,11 +133,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
     it("resolves as soon as the child's own 'exit' event fires, without polling", async () => {
       const fakeChild = new EventEmitter() as unknown as SpawnDaemonHandle["child"];
       Object.assign(fakeChild, { exitCode: null });
-      // 🧵️ `timeoutAfter` deliberately never resolves — if `awaitChildExit` secretly depended on a
-      // timer/poll to notice the exit (instead of the 'exit' event alone), this promise would never
-      // settle and the `await` below would hang until vitest's own test timeout fails the case.
       const resultPromise = awaitChildExit(fakeChild, 30_000, { timeoutAfter: () => new Promise<"timeout">(() => {}) });
-      // 🧵️ Simulate Node setting exitCode then emitting 'exit', exactly as a real ChildProcess does.
       (fakeChild as unknown as { exitCode: number | null }).exitCode = 0;
       (fakeChild as unknown as InstanceType<typeof EventEmitter>).emit("exit", 0, null);
       const result = await resultPromise;
@@ -147,7 +143,6 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
     it("resolves immediately for a child that had already exited before the call", async () => {
       const fakeChild = new EventEmitter() as unknown as SpawnDaemonHandle["child"];
       Object.assign(fakeChild, { exitCode: 0 });
-      // Same never-resolving `timeoutAfter` as above: only the already-set `exitCode` can win this race.
       const result = await awaitChildExit(fakeChild, 30_000, { timeoutAfter: () => new Promise<"timeout">(() => {}) });
       expect(result).toBe("exited");
     });
@@ -156,7 +151,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
       const fakeChild = new EventEmitter() as unknown as SpawnDaemonHandle["child"];
       Object.assign(fakeChild, { exitCode: null });
       const result = await awaitChildExit(fakeChild, 30_000, {
-        timeoutAfter: async () => "timeout" as const, // resolves instantly, standing in for "deadline reached"
+        timeoutAfter: async () => "timeout" as const,
       });
       expect(result).toBe("timeout");
     });

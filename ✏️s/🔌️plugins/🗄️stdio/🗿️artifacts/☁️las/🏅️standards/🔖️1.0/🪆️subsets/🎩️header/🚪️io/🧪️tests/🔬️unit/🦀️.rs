@@ -210,7 +210,7 @@ async fn point_offset_is_trusted_not_hardcoded_to_227() {
     let snap = snapshot_with(0, vec![]);
     let bytes = encode_las(&snap).expect("encode");
     let old_header = 227usize;
-    let new_header = 200usize; // still >= 179 so every fixed header field we read still fits
+    let new_header = 200usize;
     let mut shrunk = bytes[0..new_header].to_vec();
     shrunk[94..96].copy_from_slice(&(new_header as u16).to_le_bytes());
     shrunk[96..100].copy_from_slice(&(new_header as u32).to_le_bytes());
@@ -230,15 +230,15 @@ async fn las_1_4_extended_point_count_fallback() {
     let mut out = vec![0u8; header_size];
     out[0..4].copy_from_slice(b"LASF");
     out[24] = 1;
-    out[25] = 4; // version 1.4
+    out[25] = 4;
     out[94..96].copy_from_slice(&(header_size as u16).to_le_bytes());
     out[96..100].copy_from_slice(&(header_size as u32).to_le_bytes());
     out[104] = 0;
     out[105..107].copy_from_slice(&20u16.to_le_bytes());
-    out[107..111].copy_from_slice(&0u32.to_le_bytes()); // legacy count deliberately 0
-    out[131..179].copy_from_slice(&bytes[131..179]); // reuse scale/offset from the fixture
+    out[107..111].copy_from_slice(&0u32.to_le_bytes());
+    out[131..179].copy_from_slice(&bytes[131..179]);
     out[247..255].copy_from_slice(&(snap.points.len() as u64).to_le_bytes());
-    out.extend_from_slice(&bytes[227..]); // point records
+    out.extend_from_slice(&bytes[227..]);
     let decoded = decode_las(&out).expect("decode las 1.4 extended count");
     assert_eq!(decoded.points.len(), snap.points.len(), "must fall back to the extended 1.4 point count");
     for (a, b) in snap.points.iter().zip(decoded.points.iter()) {

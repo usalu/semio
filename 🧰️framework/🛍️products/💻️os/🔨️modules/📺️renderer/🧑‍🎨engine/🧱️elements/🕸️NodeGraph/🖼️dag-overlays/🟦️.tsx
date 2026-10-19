@@ -22,7 +22,7 @@ import {
   type NodeGraphScene
 } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework/packs";
-import { type FlowTask } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { type FlowTask } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
 import { flowJsonText } from "../🧰️graph-core/🟦️.ts";
 
 //#region 🔖️NodeGraphHost
@@ -581,17 +581,12 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
       continue;
     }
     const isPort = row.kind === "port" || row.align === "left" || row.align === "right";
-    // 📐️ The host publishes the caption's own screen budget (`maxScreenW`) because only it knows
-    // whether the caption sits INSIDE the node body or above it. The `nodeW` derivation is the
-    // fallback for a row that predates that field.
     const publishedW = Number(row.maxScreenW);
     const maxW = Number.isFinite(publishedW) && publishedW > 0 ? publishedW : Math.max(4, Number(row.nodeW) * zoom * inset);
     const maxH = Math.max(4, isPort && Number.isFinite(Number(row.maxScreenH)) && Number(row.maxScreenH) > 0 ? Number(row.maxScreenH) : Number(row.nodeH) * zoom * inset);
     const fontScreenPx = Number(row.fontScreenPx);
     const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : DAG_LABEL_SCREEN_PX;
     const fontPx = dagClampLabelFontPx(ctx, row.text, targetPx, maxH);
-    // ✂️ A rotated caption runs along the node's HEIGHT; the host already publishes that as its
-    // `maxScreenW`, so the fallback is the only place the axis has to be chosen here.
     const textBudget = Number.isFinite(publishedW) && publishedW > 0 ? publishedW : row.layout === "vertical" ? Math.max(4, Number(row.nodeH) * zoom * inset) : maxW;
     const text = dagEllipsizeOverlayLabel(ctx, row.text, fontPx, textBudget);
     if (!text) continue;
@@ -774,8 +769,6 @@ export function GraphSliderOverlays({
         if (occluderRect && screen.x >= occluderRect.x && screen.x <= occluderRect.x + occluderRect.width && screen.y >= occluderRect.y && screen.y <= occluderRect.y + occluderRect.height) {
           return null;
         }
-        // 🎚️ Lay out in world units and scale the whole control (track + knob tokens) with zoom —
-        // multiplying only the box left the CSS thumb (`size-small`) and track (`h-single`) fixed.
         const w = slider.w;
         const h = Math.max(slider.h, 8 / zoom);
         return (

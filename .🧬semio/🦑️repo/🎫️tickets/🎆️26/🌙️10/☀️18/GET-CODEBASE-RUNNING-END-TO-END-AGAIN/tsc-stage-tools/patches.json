@@ -1,0 +1,280 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📜️script.ts": {
+  "baseSha256": "ae50ef9c8a66bd033ed3d999b7c4855c9d7a2227fd1e73cb0c5d0a32f0015ca4",
+  "ops": [
+   [
+    "BundleScript} from \"../.",
+    "BundleScript,ScriptRouter} from \"../."
+   ],
+   [
+    "Object.fromEntries(fixture.cases[index].commands.map((name:string)=>[name,ObservedCommand]",
+    "(fixture.cases[index].commands as string[]).reduce((router,name)=>router.register(name,ObservedCommand),new ScriptRouter(import.meta.dir"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts": {
+  "baseSha256": "10295d78dceee9d27678a18fa6f14630e23f1c4d47b9d59df9b2f6d119ec6cdd",
+  "ops": [
+   [
+    "(classify({status:row.status,signal:row.signal,stderr:row.stderr})).toBe(row.expected);\n  expect",
+    "<string>(classify({status:row.status,signal:row.signal,stderr:row.stderr})).toBe(row.expected);\n  expect<string>"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🟦️.ts": {
+  "baseSha256": "a78d523374749909b1d1d096b910bc9d83fb319c64778621ae33ea2fc2fd8f13",
+  "ops": [
+   [
+    "bject.freeze({\n  tool:\"n",
+    "bject.freeze<CacheProbeToolV1>({\n  tool:\"n"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔁️probe/🧪️tests/🟦️.ts": {
+  "baseSha256": "2b8f318498484e295b53c4845688df0e647083c249254028a37ed8832428e120",
+  "ops": [
+   [
+    "import probeSpecification from \"../..",
+    "import probeDocument from \"../.."
+   ],
+   [
+    "\"../🟦️.ts\";\nimport fixtu",
+    "\"../🟦️.ts\";\nimport type {CacheProbeSpecV1} from \"../../../../../🏗️build/⚙️operations/🟦️.ts\";\nimport fixtu"
+   ],
+   [
+    "e:\"json\"};\n\nconst root=j",
+    "e:\"json\"};\n\nconst probeSpecification=probeDocument as CacheProbeSpecV1;\nconst root=j"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts": {
+  "baseSha256": "90bedd87533e295fd127c0bec7cad1e52feebca352a2b619b0e906457a910725",
+  "ops": [
+   [
+    " import(\"../📜️script.ts\"),run=(a",
+    " import(\"../🟦️.ts\"),run=(a"
+   ],
+   [
+    "ipt\"),text=readFileSync(new URL(\"../📜️script.ts\",import.meta.url),\"utf8\"),tree=p",
+    "ipt\"),text=readFileSync(new URL(\"../🟦️.ts\",import.meta.url),\"utf8\"),tree=p"
+   ],
+   [
+    "onst tools=readFileSync(new URL(\"../📜️script.ts\",import.meta.url),\"utf8\"),retent",
+    "onst tools=readFileSync(new URL(\"../🟦️.ts\",import.meta.url),\"utf8\"),retent"
+   ],
+   [
+    "nst source=readFileSync(new URL(\"../📜️script.ts\",import.meta.url),\"utf8\"),retent",
+    "nst source=readFileSync(new URL(\"../🟦️.ts\",import.meta.url),\"utf8\"),retent"
+   ],
+   [
+    " import(\"../📜️script.ts\"),iconv=",
+    " import(\"../🟦️.ts\"),iconv="
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts": {
+  "baseSha256": "2744a5305f34ac252d29e5cde1947c563276fc778d4533c4c322fe9b12c1a73f",
+  "ops": [
+   [
+    "@semio-tech/nx-bootstrap-tools/script",
+    "../../🚀️bootstrap/🛠️tools/🟦️.ts"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": {
+  "baseSha256": "7d0e0977b4788a54815b4f4e6612fc6a1d2d8d6cba7bfd9fa0fd69de1dfb4acb",
+  "ops": [
+   [
+    "()=>adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase),repair:task=>adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase)",
+    "async()=>{await adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase);},repair:async task=>{await adapter.runBazelTasksV1(root,graph,{...request,tasks:[task.id],args:request.tasks.includes(task.id)?request.args:[],skipCache:true,excludeDependencies:true},invocation,artifactPhase);}"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts": {
+  "baseSha256": "ca71bf4d070b08827412d99396025d19dc9192d07fd946685b60de3994b01d81",
+  "ops": [
+   [
+    ",type BazelTaskV1} from \"../../📜️script",
+    "} from \"../../📜️script.ts\";\nimport type {BazelTaskV1} from \"../../📋️task-plan/🟦️"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🟦️.ts": {
+  "baseSha256": "6a7a872b625f983d887baa35464eac59e2eaee76b200ecf12121bdc09922c0d3",
+  "ops": [
+   [
+    "(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect",
+    "<unknown>(actual).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect<string|null>"
+   ],
+   [
+    "(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect",
+    "<unknown>(actual,row.name).toEqual(row.expected);expect(admit(actual),row.name).toBe(true);expect<string|null>"
+   ],
+   [
+    ")=>{\n expect(Object.from",
+    ")=>{\n expect<unknown>(Object.from"
+   ],
+   [
+    " const links=process.pla",
+    " const links:Record<string,string>=process.pla"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📦️snapshot/🟦️.ts": {
+  "baseSha256": "06fd644b1257086f0d544bf48e43c0b1ea0e94bcaa84c106673cdc8948fb57e9",
+  "ops": [
+   [
+    "77;\n  await captureBazelSnapshotV1({version:1,workspace:root,runtime:join(root,\"runtime.json\"),task:{id:\"fixture:build\",project:\"f",
+    "77;\n  await captureBazelSnapshotV1({workspace:root,task:{id:\"fixture:build\",project:\"f"
+   ],
+   [
+    "red\");await captureBazelSnapshotV1({version:1,workspace:root,runtime:join(root,\"runtime.json\"),task:{id:\"fixture:build\",project:\"f",
+    "red\");await captureBazelSnapshotV1({workspace:root,task:{id:\"fixture:build\",project:\"f"
+   ],
+   [
+    "7;\n   await captureBazelSnapshotV1({version:1,workspace:root,runtime:join(root,\"runtime.json\"),task:{id:\"fixture:build\",project:\"f",
+    "7;\n   await captureBazelSnapshotV1({workspace:root,task:{id:\"fixture:build\",project:\"f"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/💾️cache/🟦️.ts": {
+  "baseSha256": "e45d581c8950930ded86e6bed3b4442d4135b7403736c80b90d9c0d83942a822",
+  "ops": [
+   [
+    "alid) expect(api.cacheDe",
+    "alid) expect<unknown>(api.cacheDe"
+   ],
+   [
+    ";\n    expect(decisionOf(",
+    ";\n    expect<unknown>(decisionOf("
+   ],
+   [
+    "ted.cache);\n      expect(decisionOf(target), nam",
+    "ted.cache);\n      expect<unknown>(decisionOf(target), nam"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🟦️.ts": {
+  "baseSha256": "a277edf80314bae1fc44c62ca3fabc009af4d9ebdeb06a9d4029f424992eb727",
+  "ops": [
+   [
+    " } from \"dotenv",
+    "Env as parse } from \"node:util"
+   ],
+   [
+    "independent dotenv parser\", ()",
+    "independent Node dotenv-format parser\", ()"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts": {
+  "baseSha256": "cc04d2ef360d13f2fcd6fe12b3286c2bcde2ef160395f765ed9f21765a5850d8",
+  "ops": [
+   [
+    "owner.name===\"fixture-app\"?{test:{}}:{build",
+    "{[owner.name===\"fixture-app\"?\"test\":\"build\"]"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🟦️.ts": {
+  "baseSha256": "6241b4ac1dd41b722f2f1b46cea1e9f6ae09c08ffb7107dde2450d73f2a753d2",
+  "ops": [
+   [
+    "ment);expect(actual.env.",
+    "ment);expect<string|null|undefined>(actual.env."
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️store-receipt/🧪️tests/🟦️.ts": {
+  "baseSha256": "db4686b1ebadd6a50dbf0b4721f864776455e502e3ca6b4f55da64980dc3297b",
+  "ops": [
+   [
+    "tries)expect(await obser",
+    "tries)expect<unknown>(await obser"
+   ],
+   [
+    ");}\n  expect((await chec",
+    ");}\n  expect<string>((await chec"
+   ],
+   [
+    ")]);\n expect(parseStoreR",
+    ")]);\n expect<unknown>(parseStoreR"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts": {
+  "baseSha256": "2334b082eef80af7a1bac7bc46e0152bddd4145e5fa1be5402070b035d795163",
+  "ops": [
+   [
+    "InverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverse",
+    "HostApplyBreaches, policyHostApplyFileBreaches, policyInverseSumLawUntestedBreaches, policyInverseSumLawUntestedLeafBreaches, policyLeafBetweenBreaches, policyLeafCentralApplyBreaches, policyLeafMutableBaseBreaches, policyOutcomeApplyToBreaches, policyRestoreInverseBreaches, policyRowEmitter"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🎁️package-projection/🟦️.ts": {
+  "baseSha256": "0d2d8d77804e924fad22751b19784658c69d5bc881efb48368bfeacf67db8ddc",
+  "ops": [
+   [
+    "Buffer.byteLength(mapping.destinationPath) > taxonomy.collisionPolicy.maxPathBytes",
+    "pathBudgetCodes(mapping.destinationPath, taxonomy.collisionPolicy).length > 0"
+   ],
+   [
+    "Buffer.byteLength(leaf.path) > taxonomy.collisionPolicy.maxPathBytes",
+    "pathBudgetCodes(leaf.path, taxonomy.collisionPolicy).length > 0"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts": {
+  "baseSha256": "0e8ba62444f6735a936eb5026b2e7c51cd4ee6aaa3f2ba271fe213bf0f15ff10",
+  "ops": [
+   [
+    "ive\");expect(args).toEqu",
+    "ive\");expect<readonly string[]|undefined>(args).toEqu"
+   ],
+   [
+    "(retiredIdePath(row.path,row.kind as CensusKind,false,\"content\"in row?row.content:undefined),row.path).toBe(row.expected);expect",
+    "<string>(retiredIdePath(row.path,row.kind as CensusKind,false,\"content\"in row?row.content:undefined),row.path).toBe(row.expected);expect<string>"
+   ],
+   [
+    "atus);expect(role,row.pa",
+    "atus);expect<string>(role,row.pa"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts": {
+  "baseSha256": "fb24d7626310c6b2cce9a23831a8b1d77dd6a4729f5fa5646ee59b6ae457d3f8",
+  "ops": [
+   [
+    "tring[] }>;\n  nodePin: R",
+    "tring[] }>;\n  nativePins: Readonly<{ hosts: readonly string[]; tools: readonly string[]; platforms: readonly string[]; architectures: readonly string[]; rowShape: string; forbiddenInstallers: readonly string[]; playwrightCache: string }>;\n  windowsLongPaths: Readonly<{ cases: readonly Readonly<{ output: string; expected: boolean | null }>[] }>;\n  nodePin: R"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦑️repo-source-ownership/🟦️.ts": {
+  "baseSha256": "e1af1c76f2d50df19c24007003b4cbfffdb082562901ece59acacf9314de48a6",
+  "ops": [
+   [
+    "iringOnly);\n      expect(classifyPackageSource(s",
+    "iringOnly);\n      expect<string>(classifyPackageSource(s"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧮️path-budget/🟦️.ts": {
+  "baseSha256": "acfaa1c9496b97b49f9af8ec56f364ce71a14057fcfaa16cbeb8b119e3227ab9",
+  "ops": [
+   [
+    "      expect(pathBudgetC",
+    "      expect<readonly string[]>(pathBudgetC"
+   ]
+  ]
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": {
+  "baseSha256": "8eb2e6dc3df293c49b20efd85ddab771d5c053e078db54470e7a8e3821d7a2ec",
+  "ops": [
+   [
+    "{ownerRoot,memberRoot}=relation,rows=relation.edges.map(edge=>{const expected=edge.expected,actual=edge.provider,sourceInstance=edge.sourceInstance;if(JSON.stringify(expected)!==JSON.stringify(sourceInstance)||(membership.scope===source.owner?JSON.stringify(expected)!==JSON.stringify(actual):expected===null||actual===null?expected!==actual:expected.version!==actual.version||expected.manifestSha256!==actual.manifestSha256)){console.error(\"[DEBUG] provider mismatch \"+JSON.stringify({source:source.path,owner:source.owner,member:membership.scope,ownerRoot,memberRoot,edge,expected,actual,sourceInstance}).slice(0,3500));throw Error(\"Same canonical Native and prospective Source provider instance required\");}",
+    "rows=relation.edges.map(edge=>{const expected=edge.expected,actual=edge.provider,sourceInstance=edge.sourceInstance;if(JSON.stringify(expected)!==JSON.stringify(sourceInstance)||(membership.scope===source.owner?JSON.stringify(expected)!==JSON.stringify(actual):expected===null||actual===null?expected!==actual:expected.version!==actual.version||expected.manifestSha256!==actual.manifestSha256))throw Error(\"Same canonical Native and prospective Source provider instance required\");"
+   ]
+  ]
+ }
+}

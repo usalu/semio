@@ -1,9 +1,9 @@
 /** 🧬️ ImperativeConfig */
 export interface ImperativeConfig {
-  /** @state config */
+  /** 🏃️ @state config */
   runOutputJson: string;
-  /** @state config */
-  /** @state config */
+  /** 🤝️ @state config */
+  /** 🧑️ @state config */
   contributionsJson: string;
 }
 

@@ -26,7 +26,7 @@ pub struct DrawingSnapshot {
     pub title: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
     #[state(artifact)]
     #[dsl(statements, block)]
-    pub layers: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
+    pub layers: semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "semio_framework_value::paged::PagedMap::is_empty")]
     #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "semio_framework_value::paged::PagedMap::is_empty"))]
@@ -44,7 +44,7 @@ pub struct DrawingSnapshot {
 
 impl Default for DrawingSnapshot {
     fn default() -> Self {
-        Self { schema: DRAWING_DOCUMENT_SCHEMA.into(), id: Default::default(), title: None, layers: semio_framework_value::list::PagedList::new(), assets: semio_framework_value::paged::PagedMap::default(), artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }) }
+        Self { schema: DRAWING_DOCUMENT_SCHEMA.into(), id: Default::default(), title: None, layers: semio_framework_value_persistent::list::PagedList::new(), assets: semio_framework_value::paged::PagedMap::default(), artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }) }
     }
 }
 

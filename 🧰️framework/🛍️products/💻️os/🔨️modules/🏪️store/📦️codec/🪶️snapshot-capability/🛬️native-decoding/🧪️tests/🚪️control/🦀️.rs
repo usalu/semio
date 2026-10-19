@@ -1,6 +1,6 @@
 //! 🧪️ Original decoder grants govern record-intermediate retirement before native publication.
 use super::*;
-use semio_framework_value::native_decoding::{NativeDecodeRetirementRecipient,NativeDecodeAllocation};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeRetirementRecipient, native_decoding::NativeDecodeAllocation};
 use semio_framework_dsl_record::{RecordSpec,RecordLayout,FieldSpec,Shape,FieldValue,NativeSchemaControl};
 fn ordinary()->RecordSpec{RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Text)])}
 fn schema<C:NativeSchemaControl>(native:&mut C)->Result<RecordSpec,ValueError>{let mut fields=native.allocate_vec(1)?;fields.push(semio_framework_dsl_record::producer::field(1,"value",Shape::Text,native)?);semio_framework_dsl_record::producer::record(None,RecordLayout::Lines,fields,native)}

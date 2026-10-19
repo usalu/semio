@@ -404,9 +404,6 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
         "conflicts": []
     }))
     .expect("schema-first P3 production fixture envelope");
-    // 🧹️ A `create-widget`/`update-widget` row owns a whole `Widget`, and the seed projection owns
-    // an `OrderedMap` layout root — both fail-close on a bare drop, so this fixture retires what it
-    // authored instead of letting the scope drop it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     for mutation in mutations {
         mutation.retire_cold();
     }
@@ -484,9 +481,6 @@ fn drive_production_envelope(app: &mut context::Generation3dAppFixture, handle: 
 /// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-    // 🧹️ Registry-backed, never `VcsArtifactApp::new` — this app publishes
-    // `bounded_first_step_tool_proofs!`, so a registryless instance faults at construction with
-    // `interactive-job.catalog-authority` and its unwind aborts the binary.
     let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
     let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();
@@ -562,7 +556,7 @@ fn document_io_import_state_values_agree_with_serde_json(){
     let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
         let mut parser=semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject);let mut accepted=|_|true;
-        let mut control=semio_framework_value::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);
+        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);
         let value=loop{if let Some(value)=parser.step(&source,budget.as_u64().unwrap()as usize,&mut control).unwrap(){break value}};
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&value)).unwrap(),oracle);
         {let mut release=semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test(((parser,value)),"document value");semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released(release.as_mut(),"document value");}
@@ -582,7 +576,7 @@ async fn document_io_import_continuation_restores_original_generation_selection_
     for index in 0..fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap(){incoming.host_snapshot.widgets.push(Widget::InputNote{id:format!("incoming-group-{index}"),text:format!("Group {index}")});}
     incoming.host_snapshot.widgets.push(Widget::InputNote{id:"incoming-retained-text".into(),text:fixture["documentContinuation"]["envelope"]["text"].as_str().unwrap().repeat(fixture["documentContinuation"]["envelope"]["textRepeats"].as_u64().unwrap()as usize)});
     incoming.host_snapshot.camera=semio_framework_artifact_flow_flow::CameraJson{x:state["camera"]["x"].as_f64().unwrap(),y:state["camera"]["y"].as_f64().unwrap(),zoom:state["camera"]["zoom"].as_f64().unwrap()};
-    let value_source=serde_json::to_string(&state["value"]).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);let value=semio_framework_pack_json::from_json_str_controlled::<semio_framework_value::DslValue>(&value_source,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();
+    let value_source=serde_json::to_string(&state["value"]).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);let value=semio_framework_pack_json::from_json_str_controlled::<semio_framework_value::DslValue>(&value_source,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();
     let generation=incoming.generation.cold_builder_mut().unwrap();generation.generations.push(FormGeneration{id:state["generationId"].as_str().unwrap().into(),name:state["generationName"].as_str().unwrap().into(),values:[(state["questionId"].as_str().unwrap().into(),value)].into()});generation.selected_generation_id=Some(state["selectedGenerationId"].as_str().unwrap().into());generation.preview_text=Some(state["previewText"].as_str().unwrap().into());
     let mut config=Generation3dConfig::default();config.selected_generation_id=Some(prior_id);
     let export=semio_s_artifact_procedural_3d_io::document_io::export_document(&incoming).unwrap();
@@ -620,7 +614,8 @@ async fn document_io_import_continuation_restores_original_generation_selection_
 /// 📥️ Actual original command constructors preserve complete malformed source and valid moved owners under one caller.
 #[test]
 fn original_preview_reply_command_keeps_malformed_source_and_fault_through_paid_close(){
- use semio_framework_job::{OriginalCallerSourceParent,JobPayloadAuthority,StepBudget,OperationId,Generation,close_original_retained_step};
+ use semio_framework_job::{OriginalCallerSourceParent, StepBudget, OperationId, Generation, close_original_retained_step};
+ use semio_framework_job_payload::{JobPayloadAuthority};
  use semio_framework_value::{DslValue,Number,RetainedCloneGrant};
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  fn source(value:&serde_json::Value)->DslValue{match value{serde_json::Value::Null=>DslValue::Null,serde_json::Value::Bool(value)=>DslValue::Bool(*value),serde_json::Value::Number(value)=>DslValue::Number(value.as_u64().map(Number::UInt).unwrap_or_else(||Number::Float(value.as_f64().unwrap()))),serde_json::Value::String(value)=>DslValue::String(value.clone()),serde_json::Value::Array(values)=>DslValue::Array(values.iter().map(source).collect()),serde_json::Value::Object(fields)=>DslValue::Object(fields.iter().map(|(key,value)|(key.clone(),source(value))).collect())}}

@@ -1,5 +1,8 @@
 
 use crate::*;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogObjectKind;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dKindCompatibility;
 
 #[test]
 fn attraction_exposes_eight_connection_parameters_with_zero_defaults() {

@@ -168,7 +168,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     #[cfg(test)]
     pub async fn test_reserved_emit_cancelled_worker_handoff(&mut self,meta:&ActionMeta)->bool{
         fn now()->Option<u64>{Some(1)}
-        let grant=crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation;
+        let grant=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation;
         let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(899),semio_framework_job::Generation(3),grant,now,u64::MAX,1_000_000);
         let mut permit=None;
         for _ in 0..128{caller.turn(grant,|cx|{permit=self.admit_reserved_emit_producer("cut",meta,cx)?;Ok(())}).unwrap();if permit.is_some(){break}}

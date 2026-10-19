@@ -305,12 +305,6 @@ fn the_editor_binds_every_keyboard_verb_the_fixture_names() {
     let fixture: serde_json::Value = serde_json::from_str(keyboard_reachability_fixture_json()).expect("keyboard fixture");
     let definition = create_generation3d_app();
     let rows = fixture["bindings"].as_array().expect("bindings");
-    // 🧾️ Exactness, expressed against the APP-AUTHORED chords only: `build_definition` also mints a
-    // keybinding for every framework `History`/`Clipboard`/`Interaction` action that carries its own
-    // `keys` — `undo`/`redo`, and the interaction domain's `escape`→`clearSelection` and
-    // `mod+a`→`selectAll` — and those are never a plugin's to declare. Exempting them by KIND rather
-    // than by id is deliberate: a framework that mints a fourth such chord tomorrow must not break a
-    // plugin fixture that never had a say in it.
     let named: std::collections::BTreeSet<&str> = rows.iter().map(|row| row["chord"].as_str().expect("chord")).collect();
     for binding in &definition.keybindings {
         if named.contains(binding.keys.as_str()) {

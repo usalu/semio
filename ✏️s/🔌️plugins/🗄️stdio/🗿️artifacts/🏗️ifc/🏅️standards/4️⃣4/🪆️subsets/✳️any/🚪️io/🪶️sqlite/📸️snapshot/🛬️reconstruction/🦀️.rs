@@ -2,7 +2,7 @@
 use super::{identity,null,unsigned,sort_paid,REAL,IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcTypedValue, IfcValue};
 use crate::standards::v4::subsets::any::io::sqlite::snapshot::native;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind,artifact::{validate_ieee754_row,ieee754_is_null,read_binary64}};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 use std::ops::Range;
 const TABLES:[(&str,usize);11]=[("ifc_document",3),("ifc_header",1),("ifc_file_description_argument",4),("ifc_file_name_argument",4),("ifc_file_schema_argument",4),("ifc_entity",5),("ifc_complex_type",4),("ifc_argument",5),("ifc_value",11),("ifc_aggregate_element",4),("ifc_typed_argument",4)];
@@ -61,4 +61,4 @@ fn reconstruct(database:&SqliteDatabase,control:&mut NativeDecodeControl<'_>)->R
  for edge in range{let row=catalog.take(6,catalog.edge(6,edge).id)?;let mut complex=DecodedFieldOwner::new(IfcComplexType{name:control.copy_text(row.text(3)?)?,args:Vec::new()},native::close::<IfcComplexType>);complex.as_mut().args=forest.arguments(&mut catalog,7,(1,row.rowid),4,&entities,&words,control)?;entity.as_mut().complex.push(complex.take());control.step()?;}out.entities.push(entity.take());control.step()?;}
  catalog.ensure_owned(control)?;if forest.values.as_mut().iter().any(Option::is_some){return Err(invalid("unowned IFC4 typed value"));}control.checkpoint()?;Ok(result.take())
 }
-pub(super) fn read(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<IfcSnapshot,ValueError>{control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())})?}
+pub(super) fn read(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<IfcSnapshot,ValueError>{control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())})?}

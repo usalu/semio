@@ -1,6 +1,7 @@
-//! \u{1f4cf}\uFE0F Complete Run SQL cells are independent of native parser and typed backing ownership.
+//! 📏️ Complete Run SQL cells are independent of native parser and typed backing ownership.
 use super::{RunArtifact,RunTrigger,list};
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeDecodeControl};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::{RecordValue,FieldValue};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

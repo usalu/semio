@@ -1,4 +1,4 @@
-//! (port shape, single-letter family, the manifest's explicit `kindCompatibility` rows, the
+//! 🔌️ (port shape, single-letter family, the manifest's explicit `kindCompatibility` rows, the
 //! 🖌️ Puzzle 3d play app — the precompute brush rulebook: which object kind may dock onto which vortex
 //! host-specific tambour/capsule rules), how the surviving candidates are ranked and weighted, how
 //! the fill lane's targets and candidates are sampled without replacement, and how one accepted

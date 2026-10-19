@@ -44,8 +44,6 @@ class ServeScript extends BundleScript {
     if (!variant || renderer !== "react" || (selectedProfile !== "prototype" && selectedProfile !== "release")) throw new Error("serve <variant> react <prototype|release> [server options]");
     const profile = selectedProfile as "prototype" | "release", runtime = developmentRuntimeRoot(this.repoRoot, variant, profile, "react");
     const receiptRoot = join(runtime, "activation");
-    // activate only PUBLISHES (never builds). Warm `served` skips activate when a matching receipt
-    // already names the host — content-hash freshness is reported read-only below without re-publishing.
     if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) {
       await new ActivationScript(this.root, this.repoRoot, this.invocation).run([variant, "react", profile]);
     }

@@ -4,6 +4,7 @@ import {join,posix,win32} from "node:path";
 import {minimatch} from "minimatch";
 import ts from "typescript";
 import { taxonomyPlatformPathViolationCodes } from "../../🧹️normalization/👥️mutation-projection/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { repositoryLocalSymlinkTargetPath } from "../../🧹️normalization/➰️symlink-targets/🟦️.ts";
 import cases from "../🧫️fixtures/🚨️transaction-sentinel-cases/🔣️.json";
 import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
@@ -17,7 +18,7 @@ test("sentinel examples have no production asset or runtime authority reader",()
 });
 for(const row of cases.virtualPathPolicyCases)test("platform path rule "+row.id,()=>{
  const segments=row.inputPath.replaceAll("\\","/").split("/"),reserved=segments.some(segment=>minimatch(segment.toUpperCase(),"{CON,PRN,AUX,NUL,COM[1-9],LPT[1-9]}{,.*}")),trailing=segments.some(segment=>segment.endsWith(".")||segment.endsWith(" "));
- const independent=[...(reserved?["windows-reserved-name"]:[]),...(trailing?["trailing-dot-or-space"]:[])];expect(independent).toContain(row.expectedViolationCode);expect(taxonomyPlatformPathViolationCodes(row.inputPath)).toEqual(independent);expect(row.physicalSourcePath).toBeNull();
+ const independent=[...(reserved?["windows-reserved-name"]:[]),...(trailing?["trailing-dot-or-space"]:[])];expect(independent).toContain(row.expectedViolationCode);expect(taxonomyPlatformPathViolationCodes(row.inputPath,loadCatalogTaxonomy().collisionPolicy)).toEqual(independent);expect(row.physicalSourcePath).toBeNull();
 });
 for(const row of cases.symlinkFlavorCases)test("repository local symlink rule "+row.id,()=>{
  const api=/^[A-Za-z]:|^\\\\/u.test(row.repositoryRoot)?win32:posix,relative=api.relative(row.repositoryRoot,row.target),independent=!api.isAbsolute(relative)&&relative!==".."&&!relative.startsWith(".."+api.sep);

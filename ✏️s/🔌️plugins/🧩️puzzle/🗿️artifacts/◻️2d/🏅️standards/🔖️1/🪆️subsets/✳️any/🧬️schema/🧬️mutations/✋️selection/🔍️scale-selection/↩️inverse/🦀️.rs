@@ -1,4 +1,4 @@
-//! scaling changes (exact, never a reciprocal factor that would accumulate float error). Nothing moved ⇒
+//! 🔍️ scaling changes (exact, never a reciprocal factor that would accumulate float error). Nothing moved ⇒
 //! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE position and extent the
 //! `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::move_node::MoveNode;
@@ -6,6 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::move_target_region::M
 use crate::standards::v1::subsets::any::schema::mutations::resize_target_region::ResizeTargetRegion;
 use {crate::standards::v1::subsets::any::schema::mutations::move_node, crate::standards::v1::subsets::any::schema::mutations::move_target_region, crate::standards::v1::subsets::any::schema::mutations::selection::puzzle2d_selection, crate::standards::v1::subsets::any::schema::mutations::resize_target_region};
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::scale_selection::component::ScaleSelection;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ScaleSelection> + From<MoveNode> + From<MoveTargetRegion> + From<ResizeTargetRegion>>(payload: &super::ScaleSelection, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

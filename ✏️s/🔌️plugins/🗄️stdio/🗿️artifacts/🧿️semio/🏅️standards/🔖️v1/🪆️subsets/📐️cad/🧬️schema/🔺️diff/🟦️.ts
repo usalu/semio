@@ -20,7 +20,7 @@ export interface CadLayerDiff {
 
 export interface CadEntityRecordDiff {
   layer?: string;
-  /** whole-value replaced (weak value, never sub-diffed) */
+  /** 🏗️ whole-value replaced (weak value, never sub-diffed) */
   entity?: CadEntity;
 }
 

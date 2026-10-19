@@ -335,6 +335,3 @@ macro_rules! view_commands {
 };
 }
 
-/// 🧬️ Declares an exact bounded-first-step proof catalog in the owning plugin source.
-pub use semio_framework_plugin_decl_app::bounded_first_step_tool_proofs;
-

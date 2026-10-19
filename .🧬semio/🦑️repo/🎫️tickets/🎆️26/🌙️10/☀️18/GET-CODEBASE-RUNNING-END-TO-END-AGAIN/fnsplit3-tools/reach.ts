@@ -1,0 +1,11 @@
+import { listModuleTree } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readdirSync, statSync } from "node:fs";
+import { join, dirname, extname } from "node:path";
+const root = process.argv[2]!;
+const reach = new Set(listModuleTree(root, { tests: true } as never));
+const all: string[] = [];
+const walk = (d: string) => { for (const e of readdirSync(d)) { const p = join(d, e); if (statSync(p).isDirectory()) { if (e !== "node_modules" && !e.startsWith("🧪️tests")) walk(p); } else if ((e.startsWith("🟦️") || e.startsWith("🦀️")) && [".ts", ".tsx", ".rs"].includes(extname(e))) all.push(p); } };
+walk(dirname(root));
+const missing = all.filter((p) => !reach.has(p) && p !== root);
+console.log(`reachable ${reach.size}, files below ${dirname(root).split("/").pop()}: ${all.length}, unreachable: ${missing.length}`);
+for (const m of missing.slice(0, 20)) console.log("  unreachable", m.slice(m.indexOf("/semio/") + 7));

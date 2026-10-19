@@ -16,7 +16,7 @@ use semio_framework_replication_codec::{crc32c, read_varint_u64, write_varint_u6
 use semio_framework_pack_source::{PackSink, PackSource};
 use semio_framework_value::{ValueRefusalKind, ValueError};
 use std::mem::size_of;
-use semio_framework_value::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[path="🛫️encoding/🦀️.rs"]
 mod controlled_encoding;

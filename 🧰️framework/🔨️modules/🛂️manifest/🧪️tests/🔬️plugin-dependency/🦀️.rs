@@ -108,8 +108,6 @@ async fn a_range_dependency_is_refused_on_every_decode_path() {
 //#region 🔖️DependencyGraphTests
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_toposorts_a_diamond() {
-    // base <- {left, right} <- top: two valid topological orders exist; the tie-break must
-    // deterministically pick `left` before `right`.
     let manifests = vec![
         manifest("top", "1.0.0", vec![PluginDependency::new("left", pin(1, 0, 0)), PluginDependency::new("right", pin(1, 0, 0))]).await,
         manifest("left", "1.0.0", vec![PluginDependency::new("base", pin(1, 0, 0))]).await,

@@ -39,19 +39,16 @@ impl Default for DeflateArtifact {
 
 impl DeflateArtifact {
     /// 📸️ Persisted subset.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> DeflateSnapshot {
         DeflateSnapshot { schema: self.schema.clone(), compression_method: self.compression_method, window_bits: self.window_bits, compression_level_hint: self.compression_level_hint, dict_id: self.dict_id, payload: self.payload.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: DeflateSnapshot) -> Self {
         Self { schema: snapshot.schema, compression_method: snapshot.compression_method, window_bits: snapshot.window_bits, compression_level_hint: snapshot.compression_level_hint, dict_id: snapshot.dict_id, payload: snapshot.payload }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: DeflateSnapshot) {
         self.schema = snapshot.schema;
         self.compression_method = snapshot.compression_method;

@@ -18,6 +18,9 @@ manifest = "../../📇️publication/🔣️.json"
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+component-app-assembly = ["semio-hub-stdio-catalog/component-app-assembly"]
+
 [dependencies]
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -192,3 +195,8 @@ path = "../../🧪️tests/🚢️shipped-fleet/🦀️.rs"
 [package.metadata.semio.preparation]
 script = "📜️script.ts"
 command = ["composition", "prepare"]
+
+[[test]]
+name = "component_assembly"
+path = "../../🧪️tests/🧩️component-assembly/🦀️.rs"
+required-features = ["component-app-assembly"]

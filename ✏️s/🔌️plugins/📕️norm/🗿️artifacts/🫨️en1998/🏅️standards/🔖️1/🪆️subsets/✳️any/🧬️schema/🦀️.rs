@@ -273,7 +273,7 @@ pub mod part_1 {
         let dc = ductility.trim().to_ascii_lowercase();
         match mat.as_str() {
             "rc" | "concrete" => match (st.as_str(), dc.as_str()) {
-                ("frame", "dch") => 5.85, // 4.5 × 1.3
+                ("frame", "dch") => 5.85,
                 ("frame", "dcm") => 3.9,
                 ("frame", _) => 1.5,
                 ("wall", "dch") => 4.4,
@@ -474,7 +474,7 @@ pub mod part_3 {
         match limit_state.trim().to_ascii_lowercase().as_str() {
             "nc" | "near_collapse" | "near-collapse" => 1.72,
             "dl" | "damage_limitation" | "damage-limitation" => 0.5,
-            _ => 1.0, // sd / significant_damage
+            _ => 1.0,
         }
     }
     /// 🔧 Whether CF applies for the limit state (DL uses CF = 1.0).

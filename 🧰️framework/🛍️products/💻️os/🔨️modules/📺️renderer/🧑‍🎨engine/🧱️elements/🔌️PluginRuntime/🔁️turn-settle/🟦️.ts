@@ -7,12 +7,12 @@ import { decodePackValue } from "@semio-tech/framework/packs";
 import { decodeAppFrame, faultDisplayMessage } from "@semio-tech/framework/app-channel";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { retainedUiIntakeStepCeiling } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
-import { type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client/activation";
-import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
+import { type ShardActorActivationLease } from "@semio-tech/framework/actor/shard-client/activation";
+import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 import { type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
-import { hostContinuations } from "@semio-tech/framework/async/continuation";
+import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import { hopTrace } from "@semio-tech/framework/trace";
-import { wireTurnStatusTag } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { wireTurnStatusTag } from "@semio-tech/framework/actor/wire-turn";
 import {
   leftoverShellInvocationFrames,
   shellFrameBytes,
@@ -257,13 +257,6 @@ export type PluginPatchAcceptance = Readonly<{
 }>;
 function isPluginPatchAcceptance(value: readonly ShardEventEnvelope[] | PluginPatchAcceptance): value is PluginPatchAcceptance { return !Array.isArray(value); }
 
-/** 🪃️ Macrotask yield for the UI continuation loops, delegated to the host's ONE
- * {@link hostContinuations} scheduler — the same object the guest's `Effect::DispatchAction` re-arm
- * goes through, so there is a single owner of "run this again, soon" on this target rather than one
- * primitive per loop. The hazard it exists for is unchanged: a `setTimeout(0)` chain is throttled to
- * one tick per second in a hidden tab (once per minute under Chrome's intensive throttling), which
- * turned a few thousand intake steps into minutes of silence; a `MessageChannel` message is a
- * macrotask page visibility never throttles. */
 /** 🎞️ Wall slice a draining settle keeps the actor once a continuation asked the shell for a refresh mid-operation (an
  * unsolicited `Invocation` frame, `in_reply_to` 0, carrying the operation's dirty scope). A long typed operation — a tool
  * run testing thousands of candidates — used to run to completion inside ONE settle, holding the actor's ingress while the
@@ -316,10 +309,6 @@ function settleOwesRequestedSurfacesV1(results: readonly WireTurnResult[], reque
 /** 🎞️ Whether turn effects carry an operation progress refresh: an `Invocation` frame answering no command with a dirty scope. */
 export function effectsRequestOperationProgressV1(effects: readonly WireVariant[]): boolean {
   return leftoverShellInvocationFrames(effects).some((frame) => "Invocation" in frame && frame.Invocation.in_reply_to === 0 && frame.Invocation.ui_scope.length > 0);
-}
-
-export async function yieldPluginUiContinuation(): Promise<void> {
-  await hostContinuations.yieldContinuation();
 }
 
 /** 🛑️ The attributable twin of the continuation timeout: it names the surfaces the settle is still

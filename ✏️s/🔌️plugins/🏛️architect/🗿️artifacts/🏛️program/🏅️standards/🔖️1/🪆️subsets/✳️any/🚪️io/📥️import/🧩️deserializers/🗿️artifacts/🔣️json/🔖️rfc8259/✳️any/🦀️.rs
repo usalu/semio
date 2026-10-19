@@ -1,4 +1,4 @@
-//! program <- json
+//! 🗓️ program <- json
 //!
 //! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave,
 //! `JsonSnapshot.value: serde_json::Value` -> stdio's own `JsonValue`). Mirrors it with the

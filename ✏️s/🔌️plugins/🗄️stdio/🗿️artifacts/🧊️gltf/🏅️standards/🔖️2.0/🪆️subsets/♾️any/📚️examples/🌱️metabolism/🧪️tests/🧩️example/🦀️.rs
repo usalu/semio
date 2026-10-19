@@ -41,23 +41,17 @@ async fn base_glb_decodes_with_real_non_trivial_invariants() {
     assert_eq!(doc.buffer_views.len(), 1095);
     assert_eq!(doc.materials.len(), 2);
 
-    // KHR material extensions genuinely declared on this fixture (Decision #4's "gltf with KHR
-    // material extensions" fixture claim -- verified against the real JSON chunk, not assumed).
     for khr in ["KHR_materials_transmission", "KHR_materials_clearcoat", "KHR_materials_ior", "KHR_materials_specular", "KHR_materials_emissive_strength", "KHR_texture_transform"] {
         assert!(doc.extensions_used.iter().any(|e| e == khr), "expected {khr} in extensionsUsed, got {:?}", doc.extensions_used);
     }
 
-    // material[0]: a real pbrMetallicRoughness.baseColorFactor, not a stub.
     assert_eq!(doc.materials[0].pbr_metallic_roughness.as_ref().unwrap().base_color_factor, [0.0, 0.0, 0.0, 1.0]);
     assert_eq!(doc.materials[0].alpha_mode, GltfAlphaMode::Opaque);
 
-    // buffer 0 is embedded (glb BIN chunk, no uri) and its real bytes were resolved.
     assert!(doc.buffers[0].uri.is_none());
     assert_eq!(doc.buffers[0].byte_length, 48064);
     assert_eq!(snap.buffers[0].len(), 48064);
 
-    // real componentType/type variety actually present (5126 FLOAT VEC3/VEC2, 5125 UNSIGNED_INT
-    // SCALAR indices) -- proves the typed accessor model, not just JSON pass-through.
     let mut component_types = std::collections::BTreeSet::new();
     let mut accessor_types = std::collections::BTreeSet::new();
     for acc in &doc.accessors {
@@ -67,20 +61,15 @@ async fn base_glb_decodes_with_real_non_trivial_invariants() {
     assert_eq!(component_types, std::collections::BTreeSet::from([5125u64, 5126]));
     assert_eq!(accessor_types, std::collections::BTreeSet::from(["SCALAR".to_string(), "VEC2".to_string(), "VEC3".to_string()]));
 
-    // accessor 0's real decoded vertex data matches its own declared min/max exactly (2 verts).
     let acc0 = decode_accessor(doc, &snap.buffers, 0).expect("decode accessor 0");
     assert_eq!(acc0.component_type, GltfComponentType::Float);
     assert_eq!(acc0.accessor_type, GltfAccessorType::Vec3);
     assert_eq!(acc0.count, 2);
-    // Real f32 buffer data widened to f64 -- compare against the accessor's own declared min/max
-    // with an epsilon (10.45 has no exact f32 representation: it decodes to 10.449999809265137),
-    // not a hand-typed literal that silently assumes exact round-tripping.
     let expected = [-4.75f64, 7.5, 10.45, -10.25, 7.5, 10.45];
     for (got, want) in acc0.components.iter().zip(expected.iter()) {
         assert!((got - want).abs() < 1e-4, "accessor 0 component {got} not within epsilon of {want}");
     }
 
-    // node[0]/mesh[0] wiring: real, specific, not a placeholder.
     assert_eq!(doc.nodes[0], GltfNode { mesh: Some(0), ..GltfNode::default() });
     assert_eq!(doc.meshes[0].primitives[0].attributes, vec![("POSITION".to_string(), 0)]);
     assert_eq!(doc.meshes[0].primitives[0].material, Some(0));
@@ -105,8 +94,6 @@ async fn base_glb_decode_encode_decode_is_semantically_equal() {
     assert_eq!(redecoded.document.scenes, original.document.scenes);
     assert_eq!(redecoded.document.extensions_used, original.document.extensions_used);
 
-    // every one of the 1095 accessors decodes to identical real numeric data both times --
-    // proves the round trip is byte-faithful for actual vertex content, not just JSON shape.
     let count = original.document.accessors.len();
     for i in 0..count {
         let before = decode_accessor(&original.document, &original.buffers, i).unwrap();
@@ -176,9 +163,6 @@ async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
 
     let rebuilt = builder.build().expect("build rebuilt snapshot");
 
-    // Structural spine this builder actually reconstructs (samplers/textures/images/skins/
-    // animations/cameras have no typed constructor yet -- out of this wave's scope, and this
-    // fixture has none of those that matter: 0 textures, 0 images, 0 skins, 0 animations).
     assert_eq!(rebuilt.document.accessors, doc.accessors);
     assert_eq!(rebuilt.document.buffer_views, doc.buffer_views);
     assert_eq!(rebuilt.document.materials, doc.materials);
@@ -188,7 +172,6 @@ async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
     assert_eq!(rebuilt.document.extensions_used, doc.extensions_used);
     assert_eq!(rebuilt.buffers, original.buffers);
 
-    // mesh primitive-by-primitive equivalence (attributes/indices/material/mode).
     let orig_meshes: &Vec<GltfMesh> = &doc.meshes;
     let rebuilt_meshes: &Vec<GltfMesh> = &rebuilt.document.meshes;
     assert_eq!(orig_meshes.len(), rebuilt_meshes.len());
@@ -197,11 +180,6 @@ async fn analyzer_builder_round_trip_reconstructs_equivalent_document() {
     }
     let _: &Vec<GltfScene> = &doc.scenes;
 
-    // The core proof: real decoded vertex/index data for the ANALYZER-produced original and the
-    // ONLY-typed-builder-calls REBUILT document must match for every one of the 1095 accessors --
-    // not just JSON shape. `original` above already came from `GltfAnalyzer::analyze` (the
-    // "analyzer" half of "analyzer->builder round-trip"); this closes the loop by re-decoding the
-    // builder's own output through the same real `decode_accessor` codepath.
     let count = doc.accessors.len();
     assert_eq!(count, 1095);
     for i in 0..count {

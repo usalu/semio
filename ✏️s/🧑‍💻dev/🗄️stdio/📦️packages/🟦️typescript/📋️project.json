@@ -97,7 +97,7 @@
   "targets": {
     "build": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "stdioCompositionBuild",
         "^production"
@@ -165,6 +165,22 @@
           "workspaceCommand": [
             "stdio",
             "package-graph"
+          ]
+        }
+      }
+    },
+    "verify-semio-member-store-producer-source": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify semio-member-store-producer-source",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "semio-member-store-producer-source"
           ]
         }
       }

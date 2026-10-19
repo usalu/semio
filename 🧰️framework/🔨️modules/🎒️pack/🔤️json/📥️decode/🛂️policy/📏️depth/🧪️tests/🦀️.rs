@@ -6,7 +6,7 @@ fn original_json_operation_enforces_semantic_container_depth_before_empty_contai
     let law:serde_json::Value=serde_json::from_str(crate::text("📥️decode/🛂️policy/📏️depth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let normal=serde_json::from_value(law["normalAuthority"].clone()).unwrap();let retirement=serde_json::from_value(law["retirementAuthority"].clone()).unwrap();let turn:RetainedCloneGrant=serde_json::from_value(law["turn"].clone()).unwrap();let close_turn:RetainedCloneGrant=serde_json::from_value(law["closeTurn"].clone()).unwrap();let maximum_turns=law["maximumTurns"].as_u64().unwrap();
     for row in law["cases"].as_array().unwrap(){
-        let source=row["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let source_pointer=source.as_ptr();let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
+        let source=row["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let source_pointer=source.as_ptr();let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted);
         let policy=JsonReadPolicy{limits:JsonReadLimits{maximum_bytes:law["maximumBytes"].as_u64().unwrap(),maximum_allocation_bytes:law["maximumAllocationBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize,maximum_items:law["maximumItems"].as_u64().unwrap()},normal,retirement};
         let mut operation=JsonReadOperation::<_,semio_framework_value::DslValue>::new(source,JsonMemberPolicy::Reject,policy,&mut control).unwrap();let mut refusal=None;let mut turns=0;
         loop{

@@ -86,7 +86,6 @@ impl std::error::Error for PublicationError {}
 /// let transaction = begin(&token);
 /// transaction.checkpoint().unwrap();
 /// drop(transaction);
-/// println!("[DEBUG] Publication transaction retains token after its progress observer ends");
 /// ```
 ///
 /// ```compile_fail,E0515
@@ -160,7 +159,6 @@ impl<'token, 'observer, Observer: PublicationObserver + ?Sized> PublicationContr
     /// let transaction = control.try_begin().unwrap();
     /// assert_eq!(control.attempts(), 1);
     /// drop(transaction);
-    /// println!("[DEBUG] Publication external owned caller acquired and released one transaction");
     /// ```
     ///
     /// ```compile_fail,E0515

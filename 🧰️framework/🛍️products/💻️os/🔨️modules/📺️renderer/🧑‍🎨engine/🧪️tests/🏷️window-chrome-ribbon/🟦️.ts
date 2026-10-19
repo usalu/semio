@@ -117,9 +117,6 @@ describe("partitionWindowMeasures", () => {
   });
 
   it("parses the real ui_wgpu camelCase wire JSON and unwraps a utility-scoped fill group into flat utilityOptions (snake_case divergence regression guard)", () => {
-    // Verbatim shape of `ui_wgpu::WindowMeasure`'s serde wire after the D-4 `rename_all_fields = "camelCase"`
-    // fix: a fill-utility slider group tagged with `activeUtilityId`, plus an untagged toggle. This is the exact
-    // class of payload whose snake_case↔camelCase divergence made the puzzle fill slider invisible in React.
     const wireJson =
       '[{"kind":"group","id":"fill-params","label":"Fill","activeUtilityId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"layout-grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
     const measures = JSON.parse(wireJson) as WindowMeasure[];
@@ -130,8 +127,6 @@ describe("partitionWindowMeasures", () => {
     const gridToggle = general[0];
     expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("layout-grid");
 
-    // Regression guard for the fixed bug: the pre-fix snake_case wire leaves `activeUtilityId` undefined, so the
-    // tagged group silently falls through to `general` and the fill slider never reaches the Utility Options rail.
     const legacyJson = wireJson
       .replace(/"activeUtilityId"/g, '"active_utility_id"')
       .replace(/"onChange"/g, '"on_change"')
@@ -377,7 +372,6 @@ describe("utility ribbon", () => {
     expect(markup).toContain('data-slot="ribbon"');
     expect(markup).toContain('data-direction="up"');
     expect(markup).toContain("flex-col-reverse");
-    // No active path given, so neither group is expanded: exactly one ribbon row (the base picker).
     expect(markup.match(/data-slot="ribbon-row"/g)?.length).toBe(1);
     expect(markup).toContain('data-slot="toggle-group"');
     expect(markup).not.toContain('id="zoom-in"');

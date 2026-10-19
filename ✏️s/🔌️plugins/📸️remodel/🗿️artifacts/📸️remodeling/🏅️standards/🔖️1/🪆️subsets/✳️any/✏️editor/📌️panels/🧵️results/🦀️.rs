@@ -26,8 +26,6 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Render
 pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let results = &scene.results;
-    // 🧩️ The composed handle resolves only fixed constants or committed bounded reconstruction
-    // content; unavailable content reports 0/0 rather than fabricating a count.
     let mesh = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &results.mesh.mesh).unwrap_or_default();
     let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, mesh.vertex_count(), labels.vertices.as_str(), mesh.triangle_count(), labels.triangles.as_str());
     let sparse_label = results

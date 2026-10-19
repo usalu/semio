@@ -1,4 +1,4 @@
-//! binary rep for stdio.step 📸️snapshot
+//! 🔢️ binary rep for stdio.step 📸️snapshot
 use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::native;
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");

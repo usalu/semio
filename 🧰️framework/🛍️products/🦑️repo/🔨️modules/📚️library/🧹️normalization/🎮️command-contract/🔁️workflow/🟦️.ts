@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
-import { dirname, relative } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { BUILD_OWNER_REGISTRY_FILE, moveOwnerScopes, reconcileBuildOwnerRegistry } from "../../../🏗️build/🕸️graph/🧾️registry-consistency/🟦️.ts";
 import { applyTaxonomyPlan } from "../../🚀️apply/🟦️.ts";
 import { inventoryTaxonomy } from "../../🔍️inventory-planning/🟦️.ts";
 import { parseTaxonomyPlan } from "../../📃️plan-document/🟦️.ts";
@@ -112,6 +113,14 @@ export function runTaxonomyCliWorkflow(root: string, args: string[]): void {
       console.log(
         `[clean taxonomy apply] state=${result.state} moves=${result.appliedMoves} relocations=${result.appliedEmbeddedTicketRootRelocations} symlinks=${result.appliedSymlinkTargetEdits} removals=${result.appliedEvidenceRemovals} edits=${result.appliedEdits} regenerations=${result.appliedRegenerations} journal=${result.journalPath}`,
       );
+    if (result.state === "committed" && existsSync(join(root, BUILD_OWNER_REGISTRY_FILE))) {
+      const scope = moveOwnerScopes(plan.moves);
+      if (scope.length > 0) {
+        const owners = reconcileBuildOwnerRegistry(root, { scope, write: true });
+        console.log(`[clean taxonomy apply] build owners removed=${owners.removed.length} added=${owners.added.length} renamed=${owners.renamed.length} relocated=${owners.relocated.length} repackaged=${owners.repackaged.length}`);
+        for (const finding of owners.findings) console.error(`[clean taxonomy apply] build owner ${finding.kind} ${finding.owner ?? ""} ${finding.path ?? ""} ${finding.detail}`);
+      }
+    }
     taxonomyCliRequireCommittedApply(result.state);
     return;
   }

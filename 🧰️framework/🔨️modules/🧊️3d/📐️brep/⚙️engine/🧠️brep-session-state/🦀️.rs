@@ -73,19 +73,16 @@ pub struct BrepBooleanJob {
 
 impl BrepBooleanJob {
     /// 📈️ Progress right now — safe to read between steps and after termination.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn progress(&self) -> BooleanProgress {
         self.job.progress()
     }
 
     /// 🛑️ Retires this boolean at the next observable boundary.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn cancel(&mut self) {
         self.job.cancel();
     }
 
     /// ✅️ True once the job reached a terminal phase.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_terminal(&self) -> bool {
         self.job.is_terminal()
     }
@@ -131,7 +128,6 @@ impl Brep {
     pub fn live_handles(&self) -> std::collections::HashSet<String> { self.live.keys().cloned().collect() }
 
     /// 🏗️ Empty native kernel session.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
         Self { body: Body::new(), live: semio_framework_mesh_engine::HistoryFoldIndex::new(), pending_mutations: 0,live_revision:0 }
     }

@@ -51,11 +51,6 @@ fn opt_str(value: Option<&str>) -> String {
 
 /// 📄️ The six resource arrays, each entry carrying the fields a create/delete of it changes.
 fn project(path: &str) -> Result<String, String> {
-    // 🚪️`Gltf::open` parses the DOCUMENT only. `gltf::import` would additionally decode every referenced
-    // buffer and image file, so a fixture carrying a deliberately tiny or malformed image payload would
-    // fail to read at all — and the resource ARRAYS, which is all this projection reports, are fully
-    // determined by the document. Reading pixel data to count images would be work done to lose
-    // information.
     let document = gltf::Gltf::open(path).map_err(|error| error.to_string())?.document;
     let mut out = String::from("{");
 

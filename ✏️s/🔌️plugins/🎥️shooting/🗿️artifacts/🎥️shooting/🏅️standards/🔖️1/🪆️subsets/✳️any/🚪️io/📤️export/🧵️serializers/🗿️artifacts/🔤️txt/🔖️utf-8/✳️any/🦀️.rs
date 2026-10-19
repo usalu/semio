@@ -1,4 +1,4 @@
-//! shooting → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
+//! 📦️ shooting → txt — `s.stdio.txt` is a carrier: its body is this artifact's own canonical DSL text,
 //! verbatim, so the hop is `IoFidelity::Exact`.
 use crate::ShootingSnapshot;
 

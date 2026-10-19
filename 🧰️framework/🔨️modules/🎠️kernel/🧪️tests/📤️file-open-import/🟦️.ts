@@ -83,8 +83,6 @@ export function testFileOpenImportContract(): void {
   assert.equal(fixture.importChunkBytes, IMPORT_CHUNK_BYTES, "the fixture records the extent both twins compute");
   assert.ok(fixture.wireCases.length >= 4 && fixture.chunkCases.length >= 6 && fixture.argumentCases.length >= 3, "the fixture must keep driving all three halves");
 
-  // 1️⃣ The wire hop the defect lived on: every recorded `request-file-open` shape decodes, and none
-  //    of them warns. A door with no case at all returns `null` and prints an `unmapped effect` line.
   const warnings: string[] = [];
   const consoleWarn = console.warn;
   console.warn = (...parts: readonly unknown[]): void => {
@@ -102,7 +100,6 @@ export function testFileOpenImportContract(): void {
     console.warn = consoleWarn;
   }
 
-  // 2️⃣ Every fixture payload slices into exactly the chunks it declares, each naming its position.
   for (const row of fixture.chunkCases) {
     const payload = payloadOf(row);
     const chunks = importPayloadChunks(payload);
@@ -115,8 +112,6 @@ export function testFileOpenImportContract(): void {
     });
   }
 
-  // 3️⃣ No chunk exceeds the extent, and the run reassembles the payload exactly — measured with a
-  //    third-party byte counter, never the slicer's own arithmetic.
   for (const row of fixture.chunkCases) {
     const payload = payloadOf(row);
     const chunks = importPayloadChunks(payload);
@@ -128,7 +123,6 @@ export function testFileOpenImportContract(): void {
     assert.equal(chunks.map((chunk) => chunk.payload).join(""), payload, `${row.id}: the run must reassemble`);
   }
 
-  // 4️⃣ One chunk's dispatch arguments are exactly the fixture's, the fan-out only for a multi pick.
   for (const row of fixture.argumentCases) {
     const args = importChunkArguments(row.name, row.chunk, row.fanOut ?? undefined);
     assert.deepEqual(args, row.arguments, `${row.id}: dispatch arguments`);
@@ -139,8 +133,6 @@ export function testFileOpenImportContract(): void {
     }
   }
 
-  // 5️⃣ A run long enough to need several chunks really does, and the LAST chunk is the only short
-  //    one — the shape the guest's staging admits without a gap.
   const long = importPayloadChunks("x".repeat(IMPORT_CHUNK_BYTES * 2 + 7));
   assert.equal(long.length, 3, "two full chunks and a remainder");
   assert.deepEqual(long.map((chunk) => chunk.payload.length), [IMPORT_CHUNK_BYTES, IMPORT_CHUNK_BYTES, 7]);

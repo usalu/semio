@@ -8,7 +8,7 @@ export interface DxfBounds {
 }
 
 export interface DxfInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: DxfBounds;
 }
 

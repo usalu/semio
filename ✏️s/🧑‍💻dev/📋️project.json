@@ -6,10 +6,20 @@
     "lang:typescript",
     "role:tool"
   ],
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/✏️s/**/*",
+      "{workspaceRoot}/✏️s/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/tsconfig.json/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/**/*"
+    ]
+  },
   "targets": {
     "composition-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts composition-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -36,7 +46,7 @@
     },
     "source-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -45,7 +55,7 @@
     },
     "catalog-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts catalog-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -54,7 +64,7 @@
     },
     "jack-graph-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "command": "bun ./📜️script.ts jack-graph-check",
         "cwd": "✏️s/🧑‍💻dev",
@@ -63,7 +73,15 @@
     },
     "typecheck": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/🧰️framework/**/*.{ts,tsx,json}",
+        "{workspaceRoot}/tsconfig.json",
+        {"externalDependencies":["typescript"]}
+      ],
+      "cache": true,
       "dependsOn": [
         "@semio-tech/writer-writer:build",
         "@semio-tech/gis-gisterrain:build",
@@ -86,7 +104,7 @@
     },
     "generate-playground-session": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [
         "{workspaceRoot}/✏️s/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"
       ],
@@ -97,7 +115,7 @@
     },
     "check-playground-session": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
@@ -106,7 +124,7 @@
     },
     "preview-playground-session": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
@@ -115,7 +133,7 @@
     },
     "verify-catalog": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication verify"
@@ -123,7 +141,7 @@
     },
     "test-catalog-publication": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication-test"
@@ -131,7 +149,7 @@
     },
     "generate": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication generate"
@@ -142,7 +160,7 @@
     },
     "check-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication check"
@@ -150,7 +168,7 @@
     },
     "preview-generated": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts catalog-publication preview"

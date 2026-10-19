@@ -5,7 +5,7 @@ import { FlowProvider } from "@semio-tech/ui-react";
 import { WorldProjectionKindSwitch, worldProjectionDefaults, worldProjectionTemplateSelectionId } from "@semio-tech/infinite-world-r3f";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import fixture from "../🧫️fixtures/🔀️projection-pane/🔣️.json" with { type: "json" };
-import { treeTextFlowFixture as readingFlow } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { treeTextFlowFixture as readingFlow } from "@semio-tech/framework/ui/testing/fixtures";
 
 afterEach(cleanup);
 

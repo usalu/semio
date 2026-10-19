@@ -1,4 +1,4 @@
-//! visibility and lock.
+//! 👁️ visibility and lock.
 //! 🧊️ Puzzle3d object mutations — creating and deleting a placed object and editing its kind, anchor, mesh, label,
 
 #![allow(clippy::result_large_err)]

@@ -44,7 +44,13 @@ semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀�
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-replication = { workspace = true }
+semio-framework-hash = { workspace = true }
 
 [dev-dependencies]
 serde_json = "1.0.140"
+semio-framework-job = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-value-retirement = { path = "../../../../../../../🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust" }

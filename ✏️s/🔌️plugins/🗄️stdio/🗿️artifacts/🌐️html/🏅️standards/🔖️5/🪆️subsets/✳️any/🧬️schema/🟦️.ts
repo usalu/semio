@@ -4,9 +4,9 @@ import { parseHtmlSnapshot, type HtmlNode } from './📸️snapshot/🟦️.ts';
 export type { HtmlNode };
 
 export interface HtmlArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ doctype?: string;
-  /** @state artifact */ root: HtmlNode;
+  /** 📐️ @state artifact */ schema: string;
+  /** 📜️ @state artifact */ doctype?: string;
+  /** 🌳️ @state artifact */ root: HtmlNode;
 }
 
 //#region 🚪️Parsers

@@ -135,7 +135,7 @@ async fn an_unrelated_sibling_edit_leaves_the_other_siblings_chain_warm() {
     let sibling_before = baseline[&key_for(0, &[1])].clone();
 
     let mut changed = base.clone();
-    changed.styles[0].stroke_width = Some(42.0); // only sibling 0 (style "s1") is affected
+    changed.styles[0].stroke_width = Some(42.0);
     let before = cache.stats().await;
     let values = store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(&changed, Some(&mut cache));
     let after = cache.stats().await;

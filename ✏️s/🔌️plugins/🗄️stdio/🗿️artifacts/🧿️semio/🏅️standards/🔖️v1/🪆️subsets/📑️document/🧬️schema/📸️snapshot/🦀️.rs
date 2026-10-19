@@ -36,7 +36,6 @@ pub struct DocRun {
     pub style: RunStyle,
 }
 impl DocRun {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn plain(text: impl Into<String>) -> Self {
         Self { text: text.into(), style: RunStyle::default() }
     }
@@ -155,7 +154,6 @@ pub enum DocBlock {
     PageBreak,
 }
 impl DocBlock {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn paragraph(text: impl Into<String>) -> Self {
         Self::Paragraph { style_id: None, runs: vec![DocRun::plain(text)] }
     }

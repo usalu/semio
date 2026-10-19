@@ -1,4 +1,4 @@
-//! Norm command — `apply-remedy`.
+//! 📜️ Norm command — `apply-remedy`.
 
 use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

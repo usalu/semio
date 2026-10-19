@@ -30,10 +30,8 @@ mod tests {
 
     #[test]
     fn sqrt_mod_hand_cases() {
-        // 4 mod 5 has sqrt 2 or 3
         let r = sqrt_mod(4, 5).unwrap();
         assert_eq!(mod_mul(r, r, 5), 4);
-        // 2 is a non-residue mod 5 (since 5 % 8 not in {1,7})
         assert!(sqrt_mod(2, 5).is_none() || mod_mul(sqrt_mod(2, 5).unwrap(), sqrt_mod(2, 5).unwrap(), 5) == 2);
     }
 

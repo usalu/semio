@@ -43,7 +43,6 @@ pub enum AvailableSpace {
 }
 
 impl AvailableSpace {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from_taffy(space: taffy::AvailableSpace) -> Self {
         match space {
             taffy::AvailableSpace::Definite(value) => Self::Definite(value),
@@ -248,7 +247,6 @@ pub struct LayoutCx<'a> {
 }
 
 impl<'a> LayoutCx<'a> {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(shared: crate::element::SharedFrameCx<'a>) -> Self {
         Self { shared, taffy: taffy::TaffyTree::new(), had_pending: false }
     }
@@ -256,7 +254,6 @@ impl<'a> LayoutCx<'a> {
     /// 🍃️ Inserts a childless node. `measure` is `None` for a node whose size comes entirely from
     /// `spec` (most containers' synthetic leaves); `Some` for a node with real intrinsic content
     /// (text, an image) that needs to answer taffy's measurement pass itself.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn leaf(&mut self, spec: &LayoutSpec, measure: Option<MeasureFn>) -> LayoutNodeId {
         let style = style_from_spec(spec);
         let node = self.taffy.new_leaf_with_context(style, LeafContext { measure }).expect("taffy leaf insert is infallible for a freshly built tree");
@@ -264,7 +261,6 @@ impl<'a> LayoutCx<'a> {
     }
 
     /// 📦️ Inserts a node with already-built `children`, in order.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn container(&mut self, spec: &LayoutSpec, children: &[LayoutNodeId]) -> LayoutNodeId {
         let style = style_from_spec(spec);
         let taffy_children: Vec<taffy::NodeId> = children.iter().map(|child| child.0).collect();
@@ -274,7 +270,6 @@ impl<'a> LayoutCx<'a> {
 
     /// 🔁️ Replaces `id`'s children wholesale — for a container whose child list is only known after
     /// some of them were themselves inserted as containers (recursive construction).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn set_children(&mut self, id: LayoutNodeId, children: &[LayoutNodeId]) {
         let taffy_children: Vec<taffy::NodeId> = children.iter().map(|child| child.0).collect();
         let _ = self.taffy.set_children(id.0, &taffy_children);
@@ -283,7 +278,6 @@ impl<'a> LayoutCx<'a> {
     /// 🏁️ Runs one taffy layout pass rooted at `root` against a definite `(available_width,
     /// available_height)` viewport. Every `Pending` measurement encountered along the way is recorded
     /// — see [`Self::had_pending_measurement`].
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn compute(&mut self, root: LayoutNodeId, available_width: f32, available_height: f32) {
         let available = taffy::geometry::Size { width: taffy::AvailableSpace::Definite(available_width), height: taffy::AvailableSpace::Definite(available_height) };
         let mut had_pending = false;
@@ -306,7 +300,6 @@ impl<'a> LayoutCx<'a> {
     /// `Layout::location` semantics — a caller accumulates ancestor offsets while walking down, the
     /// same way `paint_node`'s `origin_x + origin_y` accumulation did in the wgpu-old target), snapped
     /// to the nearest whole logical pixel.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn resolved(&self, id: LayoutNodeId) -> crate::LayoutRect {
         let layout = self.taffy.layout(id.0).expect("resolved called with a LayoutNodeId that has not been computed");
         crate::LayoutRect::new(snap_logical(layout.location.x), snap_logical(layout.location.y), snap_logical(layout.size.width), snap_logical(layout.size.height))
@@ -316,7 +309,6 @@ impl<'a> LayoutCx<'a> {
     /// — the frame proceeded on a placeholder size and the caller may want to record that fact (e.g.
     /// for diagnostics) even though, per master.md's decision #1, re-invalidating the window is the
     /// landing dependency's job, not this method's.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn had_pending_measurement(&self) -> bool {
         self.had_pending
     }

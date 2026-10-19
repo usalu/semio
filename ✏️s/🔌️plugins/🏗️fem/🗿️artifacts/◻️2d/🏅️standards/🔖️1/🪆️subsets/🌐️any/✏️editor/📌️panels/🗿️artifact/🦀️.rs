@@ -1,4 +1,4 @@
-//! order an engineer builds a model (geometry, then restraints, then actions, then the properties
+//! 📶️ order an engineer builds a model (geometry, then restraints, then actions, then the properties
 //! 📄️ Fem2d play app panel — the artifact tree (outliner): every document entity as one row, in the
 //! they reference, then the analysis settings).
 //!

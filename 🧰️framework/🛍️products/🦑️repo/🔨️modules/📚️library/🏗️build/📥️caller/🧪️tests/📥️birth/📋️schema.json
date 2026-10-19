@@ -5,7 +5,10 @@
     "cases",
     "childArguments",
     "ceilings",
-    "defaultPolicy"
+    "defaultPolicy",
+    "budgetCases",
+    "preparationCases",
+    "pressureCases"
   ],
   "additionalProperties": false,
   "properties": {
@@ -91,6 +94,94 @@
         "version": 1,
         "owner": "repository:build",
         "maximumElapsedMilliseconds": 0
+      }
+    },
+    "budgetCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "environment",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "preparationCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "requested",
+          "parent",
+          "expected"
+        ],
+        "properties": {
+          "requested": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "parent": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expected": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "pressureCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "accepted",
+          "effects"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "valid",
+              "copied-control",
+              "copied-original"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "effects": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
       }
     }
   }

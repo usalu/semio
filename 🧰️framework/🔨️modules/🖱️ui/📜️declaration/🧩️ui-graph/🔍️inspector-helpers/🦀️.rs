@@ -156,7 +156,6 @@ pub fn ui_inspector_vec3_group(id: impl Into<String>, label: impl Into<Label>, v
         default_open: Some(true),
         presence: UiPresence::default(),
         children: vec![
-            // 🔤️ Axis symbols (X/Y/Z) are mathematical notation, not translatable UI chrome.
             ui_inspector_stepper_field(format!("{id}.x"), Label::data("X"), &xs, step, axis_action("x")),
             ui_inspector_stepper_field(format!("{id}.y"), Label::data("Y"), &ys, step, axis_action("y")),
             ui_inspector_stepper_field(format!("{id}.z"), Label::data("Z"), &zs, step, axis_action("z")),

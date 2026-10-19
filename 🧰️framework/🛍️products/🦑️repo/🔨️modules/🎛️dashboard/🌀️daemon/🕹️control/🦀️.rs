@@ -137,7 +137,7 @@ impl From<std::io::Error> for RunError {
 
 fn satisfied(session: &SessionInfo, wait: Wait) -> Option<bool> {
     match (wait, session.status) {
-        (_, SessionStatus::Failed | SessionStatus::Interrupted) => None,
+        (_, SessionStatus::Failed | SessionStatus::Interrupted | SessionStatus::TimedOut) => None,
         (Wait::Accepted, _) => Some(true),
         (Wait::Exit, SessionStatus::Exited) => Some(true),
         (Wait::Exit, _) => Some(false),

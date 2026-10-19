@@ -1,27 +1,17 @@
-#!/usr/bin/env bun
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+
 /** 🧬️ Shared stdio artifact contract package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runContributionChecks } from "../../🧪️tests/📇️contributions/🟦️.ts";
 import { runDefinitionHierarchyChecks } from "../../🧪️tests/🪜️definition-hierarchy/🟦️.ts";
 import {runOriginalCopyCloseChecks} from "../../✏️editing/♻️close/🧪️tests/🟦️.ts";
-import { runAdmittedExactCargoLawsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {configuredExactCargoLawPolicyV1} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
-import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runOriginalOwnershipScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** ♻️ Executes original decoder/copy custody with one actual executable and exact physical laws. */
 class OriginalOwnershipScript extends BundleScript {
- async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-original-ownership accepts no arguments");
-  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned generated output");
-  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),cwd:this.repoRoot,env:process.env,groups:[{package:"semio-s-artifact-stdio-contract-part21",target:{kind:"lib"},laws:[
-    "controlled::tests::part21_original_decoder_returns_every_success_and_cancelled_prefix_to_actual_recipient",
-    "controlled::tests::part21_rejected_nested_child_preserves_owned_parent_text_and_siblings",
-    "controlled::tests::part21_cohort_retirement_releases_original_capacity_without_literal_byte_credit",
-   ]},{package:"semio-s-artifact-stdio-contract-editing",target:{kind:"lib"},laws:[
-    "tests::retained_copy_original_backing_uses_shared_four_axis_allocator_law",
-   ]}],invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:Number(process.env.SEMIO_BUILD_BUDGET_MS??3_600_000),listMilliseconds:60_000,lawMilliseconds:120_000},progress(event){}});
-  for(const receipt of receipts){}
- }
+  async run(segments:string[]): Promise<void> {
+    await runOriginalOwnershipScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
+  }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-contract", { packages: ["semio-s-artifact-stdio-contract", "semio-s-artifact-stdio-contract-wire", "semio-s-artifact-stdio-contract-window-kit", "semio-s-artifact-stdio-contract-assembly", "semio-s-artifact-stdio-contract-editing", "semio-s-artifact-stdio-contract-editing-patch", "semio-s-artifact-stdio-contract-editing-details", "semio-s-artifact-stdio-contract-part21", "semio-s-artifact-stdio-contract-list-delta", "semio-s-artifact-stdio-contract-media-export", "semio-s-artifact-stdio-contract-native-print", "semio-s-artifact-stdio-contract-testing"], commands: {"test-original-ownership":OriginalOwnershipScript}, twins: [{name:"original-owner-close",run:runOriginalCopyCloseChecks},{ name: "definition-hierarchy", run: runDefinitionHierarchyChecks }, { name: "contribution-removal", run: runContributionChecks }] });
+const router = new ScriptRouter(import.meta.dir).register("test-original-ownership", OriginalOwnershipScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-contract", { packages: ["semio-s-artifact-stdio-contract", "semio-s-artifact-stdio-contract-wire", "semio-s-artifact-stdio-contract-window-kit", "semio-s-artifact-stdio-contract-assembly", "semio-s-artifact-stdio-contract-editing", "semio-s-artifact-stdio-contract-editing-patch", "semio-s-artifact-stdio-contract-editing-details", "semio-s-artifact-stdio-contract-part21", "semio-s-artifact-stdio-contract-list-delta", "semio-s-artifact-stdio-contract-media-export", "semio-s-artifact-stdio-contract-native-print", "semio-s-artifact-stdio-contract-testing"], commands: router, twins: [{name:"original-owner-close",run:runOriginalCopyCloseChecks},{ name: "definition-hierarchy", run: runDefinitionHierarchyChecks }, { name: "contribution-removal", run: runContributionChecks }] });

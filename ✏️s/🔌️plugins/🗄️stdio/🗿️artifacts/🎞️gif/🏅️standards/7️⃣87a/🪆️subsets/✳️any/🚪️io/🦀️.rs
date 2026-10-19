@@ -23,10 +23,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY)
@@ -75,11 +71,9 @@ struct BitWriter {
     nbits: u32,
 }
 impl BitWriter {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new() -> Self {
         Self { out: Vec::new(), cur: 0, nbits: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_bits(&mut self, value: u32, count: u8) {
         self.cur |= value << self.nbits;
         self.nbits += count as u32;
@@ -89,7 +83,6 @@ impl BitWriter {
             self.nbits -= 8;
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn finish(mut self) -> Vec<u8> {
         if self.nbits > 0 {
             self.out.push((self.cur & 0xFF) as u8);
@@ -105,11 +98,9 @@ struct BitReader<'a> {
     nbits: u32,
 }
 impl<'a> BitReader<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0, cur: 0, nbits: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn read_bits(&mut self, count: u8) -> Result<u32, String> {
         while self.nbits < count as u32 {
             if self.pos >= self.data.len() {
@@ -154,9 +145,6 @@ pub fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
         return bw.finish();
     }
     let mut current: i64 = indices[0] as i64;
-    // 🐛→✅ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: tracks
-    // whether at least one in-loop write has happened since start/the last clear code — see the
-    // `wrote_since_clear` note below the loop for why this is needed.
     let mut wrote_since_clear = false;
     for &sym in &indices[1..] {
         let key = (current, sym);
@@ -181,19 +169,6 @@ pub fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
         }
     }
     bw.write_bits(current as u32, code_size as u8);
-    // 🐛→✅ A real, previously-latent bug (found via this ticket's field_sweep-style test data —
-    // a plain period-2 alternating sequence, never exercised by the pre-existing pseudo-random/
-    // solid-run test suite): `lzw_decode` performs an insert-then-maybe-grow step for EVERY code
-    // it reads that has a preceding code (`prev.is_some()`) — INCLUDING the very last data code
-    // before the end code, whose insert uses (prev, first-symbol-of-this-code) same as any other.
-    // The encoder's loop only performs its matching insert+growth-check for in-loop dictionary
-    // misses, never for the trailing flush of `current` (there is no further symbol to trigger
-    // one) — so without this, the end code that follows could be written at the OLD code_size
-    // while the decoder, having just grown from that final insert, expects to read it at the NEW
-    // (one bit wider) code_size, desyncing the stream exactly at its tail. Mirroring that one
-    // decoder-side insert here (only when a prior in-loop write actually happened since the last
-    // clear — matching the decoder's own `prev.is_some()` guard) fixes it without touching the
-    // decoder or the well-tested asymmetric `>`/`>=` mid-stream growth thresholds at all.
     if wrote_since_clear {
         next_code += 1;
         if next_code > (1u32 << code_size) && code_size < 12 {

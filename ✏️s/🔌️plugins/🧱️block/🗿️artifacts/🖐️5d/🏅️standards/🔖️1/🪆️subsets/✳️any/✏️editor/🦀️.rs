@@ -546,10 +546,6 @@ impl ArtifactEditor for Block5dPlayApp {
     /// (`"artifact:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block5dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"artifact:out"` behavior
-            // verbatim — overriding the trait method forfeits the ability to delegate back to its
-            // own default body, so the whole-document pack export is duplicated here rather than
-            // left unreachable for this app.
             if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }
@@ -578,18 +574,12 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(semio_s_artifact_block_5d_model::BLOCK5D_DIALECT)
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())
-            // 🗂️ The puzzle5d catalog artifact this app's new `"catalog:out"` port produces — see
-            // `block5d_io`/`Block5dPlayApp::export_media`.
             .artifact_kind(semio_s_plugin_block_catalog::artifact_kind())
             .icon_id("layers")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK5D_PLAY_MODE_EDIT)
             .window_kind_def(board::definition())
             .window_kind_def(world::definition())
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `grip` domain
-            // replaces the deleted `setSelection` view action — the framework auto-injects
-            // `interactionSelect`/`interactionHover`/`clearSelection`/`selectAll`/`setSelectionMode`/
-            // `setInteractionGranularity` for it.
             .interaction(InteractionDefinition {
                 id: BLOCK5D_INTERACTION_GRIP.into(),
                 label: LocalizedLabel::native("Grips", "Griffe"),

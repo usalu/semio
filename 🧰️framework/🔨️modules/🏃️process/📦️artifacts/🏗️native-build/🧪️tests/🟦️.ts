@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import {runCargoRelayV1} from "../🌊️relay/🟦️.ts";
+import {actualCargoCompilerPlanningPortV1} from "../🕸️units/📥️capture/🟦️.ts";
 import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicyV1, writeCompletedCargoInvocationProvenanceV1 } from "../🟦️.ts";
 import {publishedCargoArtifactDirectoryV1} from "../📤️published/🟦️.ts";
 import {withIssuedLawStorageV1,lawBuildOptionsV1,lawSourceBoundaryV1,type LawStorageV1} from "./🦀️cargo/🟦️.ts";
@@ -33,13 +34,17 @@ test("compiler custody runs after leases and refuses native work on refusal or c
   const validate = new Ajv({ strict:true }).compile(JSON.parse(readFileSync(new URL("../🔒️custody/🧬️schema/🔣️.json", import.meta.url), "utf8")));
   expect(validate(fixture.compilerCustody)).toBe(true);
   for (const vector of fixture.compilerCustody) {
-    const root=mkdtempSync(join(fixtureOutput,"custody-")), manifest=join(root,"Cargo.toml"), executed=join(root,"executed"), controller=new AbortController();
-    writeFileSync(manifest,'[package]\nname="custody"\nversion="0.1.0"\n');
-    const policy={version:1 as const,mode:"prototype" as const,cwd:root,buildDirectory:join(root,"compiler"),leaseDirectory:fixtureOutput,captureDirectory:join(root,"captures"),budgetMs:5000};
-    let called=false,failure:unknown;
-    try { await buildCargoArtifacts(manifest,[],policy,{signal:controller.signal,commandPort:{command:process.execPath,args:["-e","require('node:fs').writeFileSync("+JSON.stringify(executed)+",'unexpected compiler')"]},beforeCompile:async (signal:AbortSignal) => { called=true;expect(signal).toBeInstanceOf(AbortSignal);expect(signal.aborted).toBe(false);if(vector.operation==="refuse")throw Error(vector.id);controller.abort(); }}); } catch(error) { failure=error; }
-    expect(called).toBe(true);expect(failure).toBeInstanceOf(Error);expect(existsSync(executed)).toBe(false);
-    if(vector.operation==="refuse")expect(String(failure)).toContain(vector.id);else expect(controller.signal.aborted).toBe(true);
+    const controller = new AbortController();
+    await withBuildStorageV1(controller.signal, async (held, admission) => {
+      const root=mkdtempSync(join(held.root,"custody-")), manifest=join(root,"Cargo.toml"), executed=join(root,"executed");
+      writeFileSync(manifest,'[package]\nname="custody"\nversion="0.1.0"\n');
+      const policy={version:1 as const,mode:"prototype" as const,cwd:root,buildDirectory:join(root,"compiler"),leaseDirectory:fixtureLeaseDirectory,captureDirectory:join(root,"captures"),budgetMs:5000};
+      let called=false,failure:unknown;
+      const planner=actualCargoCompilerPlanningPortV1(),planningPort={...planner,async capture(..._arguments:Parameters<typeof planner.capture>):ReturnType<typeof planner.capture>{called=true;expect(controller.signal.aborted).toBe(false);if(vector.operation==="refuse")throw Error(vector.id);controller.abort();throw Error(vector.id);}};
+      try { await buildCargoArtifacts(manifest,[],policy,lawBuildOptionsV1(held,admission,{planningPort,commandPort:{compilerIdentity:"fixture-compiler-v1",toolchainIdentity:"fixture-toolchain-v1",command:process.execPath,args:["-e","require('node:fs').writeFileSync("+JSON.stringify(executed)+",'unexpected compiler')"]}})); } catch(error) { failure=error; }
+      expect(called).toBe(true);expect(failure).toBeInstanceOf(Error);expect(existsSync(executed)).toBe(false);
+      if(vector.operation==="refuse")expect(String(failure)).toContain(vector.id);else expect(controller.signal.aborted).toBe(true);
+    });
   }
 });
 test("completed Cargo provenance requires complete actual physical authority before publication",async()=>{

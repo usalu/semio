@@ -1,4 +1,4 @@
-//! 🕸️ `s.fem.fem2d` mesh mutations of sections and regions, and the selection move.
+//! 🕸️ `s.fem.fem2d` mesh mutations of node changes and the selection move.
 
 #![allow(clippy::result_large_err)]
 
@@ -19,27 +19,6 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "."]
-                        pub mod change_section {
-                            #[path = "../../🩹️change-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🩹️change-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🩹️change-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-
-                        #[path = "."]
-                        pub mod change_region {
-                            #[path = "../../🩹️change-region/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🩹️change-region/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🩹️change-region/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
 
                         #[path = "."]
                         pub mod change_node {
@@ -48,78 +27,6 @@ pub mod standards {
                             #[path = "../../🩹️change-node/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "../../🩹️change-node/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-
-                        #[path = "."]
-                        pub mod change_element {
-                            #[path = "../../🩹️change-element/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🩹️change-element/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🩹️change-element/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-
-                        #[path = "."]
-                        pub mod create_section {
-                            #[path = "../../📐️create-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../📐️create-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../📐️create-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod delete_section {
-                            #[path = "../../✂️delete-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../✂️delete-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../✂️delete-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_section {
-                            #[path = "../../📏️replace-section/🦀️.rs"]
-                            mod component;
-                            #[path = "../../📏️replace-section/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../📏️replace-section/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod create_region {
-                            #[path = "../../🗺️create-region/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🗺️create-region/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🗺️create-region/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod delete_region {
-                            #[path = "../../🚫️delete-region/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🚫️delete-region/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🚫️delete-region/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod replace_region {
-                            #[path = "../../🔄️replace-region/🦀️.rs"]
-                            mod component;
-                            #[path = "../../🔄️replace-region/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "../../🔄️replace-region/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }

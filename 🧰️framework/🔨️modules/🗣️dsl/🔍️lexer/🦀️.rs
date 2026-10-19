@@ -253,8 +253,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             push!(TokenKind::Whitespace, start_line, start_col, start_byte, buf);
             continue;
         }
-        // Line comment: marker is a configurable string (default "#"), `None` disables it
-        // entirely — STEP/IFC declare `comment line none` because `#` is their entity-ref sigil.
         if let Some(marker) = opts.comment.line.as_deref() {
             if chars_start_with(&chars, i, marker) {
                 let mut j = i;
@@ -270,10 +268,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                 continue;
             }
         }
-        // Block comment: configurable `(open, close)` pair, disabled by default. May span lines —
-        // line/column tracked through the body like the Fence token below. An unterminated block
-        // comment falls through unconsumed in forgiving mode (its open-marker chars — e.g. `/*`'s
-        // `/` and `*` — are each already ordinary single-char tokens) instead of looping forever.
         if let Some((open, close)) = &opts.comment.block {
             if chars_start_with(&chars, i, open) {
                 let open_len = open.chars().count();
@@ -304,7 +298,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                 if !forgiving {
                     return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated block comment (no closing marker)", TextSpan::at(start_line, start_col)));
                 }
-                // forgiving: fall through — the open marker's own chars lex as ordinary tokens.
             }
         }
         if let Some(mode) = opts.string_mode(c) {
@@ -426,14 +419,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             push!(if closed { TokenKind::Text } else { TokenKind::Error }, start_line, start_col, start_byte, buf);
             continue;
         }
-        // Fenced block: ```lang\ncontent\n``` — the ONE place this lexer scans raw multi-line
-        // content instead of token-by-token (`Shape::Embed`'s only consumer). The lang tag is
-        // everything up to the first newline (may be empty); content is everything up to a line
-        // that is EXACTLY three backticks (no leading/trailing whitespace on that line — a fence
-        // can never be indented, matching every other "structural" line in this grammar). Encoded
-        // as one token, text = "lang\u{0}content" (NUL can't occur in valid authored text, so it's
-        // a safe separator without adding a field to `SpannedToken`) — `dsl_schema`'s `Shape::Embed`
-        // splits on it, the same trick `Shape::Dim` uses for its glued `x`-separated components.
         if c == '`' && chars.get(i + 1) == Some(&'`') && chars.get(i + 2) == Some(&'`') {
             let mut j = i + 3;
             while j < chars.len() && chars[j] != '\n' {
@@ -481,13 +466,7 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             if !forgiving {
                 return Err(TextError::new(semio_framework_value_control_contract::ValueRefusalKind::InvalidValue, "unterminated fenced block (no closing '```' line)", TextSpan::at(start_line, start_col)));
             }
-            // forgiving mode: fall through to "unknown character" for the opening backtick, then
-            // the lexer naturally re-tries from the next character on its next loop iteration.
         }
-        // `-inf` is its own special float literal (the negative-infinity half of the "nan/inf/-inf"
-        // ident convention `format_f64`/`parse_f64` round-trip) — unlike ordinary numbers, `-` isn't
-        // followed by a digit here, and `-` isn't a valid ident-start character either, so without
-        // this it falls through every branch below to "unknown character".
         if c == '-' && i + 4 <= chars.len() && chars[i + 1] == 'i' && chars[i + 2] == 'n' && chars[i + 3] == 'f' && !chars.get(i + 4).is_some_and(|next| is_ident_continue(*next)) {
             i += 4;
             byte_offset += 4;
@@ -513,10 +492,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                 column += 1;
                 j += 1;
             }
-            // Trailing-dot floats (P2-M1): `0.` / `10.` — STEP Part 21's `read_number` accepts a
-            // dot with no following digit. The one case that must NOT be swallowed here is a `.`
-            // immediately followed by another `.` (the Range literal `0..10`) — anything else
-            // after the dot (digit, letter, whitespace, EOF) commits to a trailing-dot float.
             if j < chars.len() && chars[j] == '.' && chars.get(j + 1) != Some(&'.') {
                 is_float = true;
                 buf.push('.');
@@ -559,9 +534,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             let mut j = i;
             let mut buf = String::new();
             while j < chars.len() && is_ident_continue(chars[j]) {
-                // A '-' that starts an `->`/`--` operator terminates the ident here instead of
-                // being swallowed into it, so kebab-case idents ("hexagonal-mushroom-column")
-                // and the Arrow/DashArrow operators coexist without ambiguity.
                 if chars[j] == '-' && j + 1 < chars.len() && matches!(chars[j + 1], '>' | '-') {
                     break;
                 }
@@ -571,8 +543,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
                 j += 1;
             }
             i = j;
-            // A lone `_` is the placeholder sigil (positional "absent" marker), never an ident —
-            // `_foo`/`foo_bar` still lex as ordinary idents since the buffer differs from "_".
             let kind = if buf == "_" { TokenKind::Placeholder } else { TokenKind::Ident };
             push!(kind, start_line, start_col, start_byte, buf);
             continue;
@@ -615,8 +585,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             push!(TokenKind::Minus, start_line, start_col, start_byte, "-".to_string());
             continue;
         }
-        // `..` (Range literal `lo..hi`) must be checked before the single-char table below since
-        // a lone `.` isn't `is_ident_start` and would otherwise fall through to "unknown character".
         if c == '.' && i + 1 < chars.len() && chars[i + 1] == '.' {
             i += 2;
             byte_offset += 2;
@@ -624,16 +592,8 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             push!(TokenKind::DotDot, start_line, start_col, start_byte, "..".to_string());
             continue;
         }
-        // Leading-dot enum literal (P2-M1): STEP Part 21's `.T.` / `.UNSPECIFIED.` — a dot, an
-        // ident-shaped run, a closing dot, captured as one `DotEnum` token (text keeps both dots).
-        // Checked after `..` (so a bare `..` still wins) and only commits when the closing dot is
-        // actually found; otherwise falls through untouched, leaving today's behavior (a lone `.`
-        // becomes "unknown character") unchanged for every format that never used this shape.
         if c == '.' && chars.get(i + 1).is_some_and(|next| is_ident_start(*next)) {
             let mut j = i + 1;
-            // Deliberately narrower than `is_ident_continue` (which allows '.'/'-'/'/' so ordinary
-            // idents like "a..b" or "hexagonal-mushroom-column" stay one token) — a dot-enum body
-            // must stop AT its own closing dot rather than swallowing it as if it continued.
             while j < chars.len() && (chars[j].is_alphanumeric() || chars[j] == '_') {
                 j += 1;
             }
@@ -664,10 +624,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             ']' => Some(TokenKind::RBracket),
             '(' => Some(TokenKind::LParen),
             ')' => Some(TokenKind::RParen),
-            // Promoted single-char tokens (P2-M1 item 3). `<` only reaches here when it wasn't the
-            // start of `<-` (checked earlier and `continue`s on match), so no collision with
-            // BackArrow; `>` is only ever swallowed by `lex_fused_edge_arrow` from a leading `-`,
-            // never checked standalone before this table, so no collision there either.
             '<' => Some(TokenKind::Lt),
             '>' => Some(TokenKind::Gt),
             '&' => Some(TokenKind::Amp),
@@ -682,7 +638,6 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
             push!(kind, start_line, start_col, start_byte, c.to_string());
             continue;
         }
-        // Unknown character.
         i += 1;
         byte_offset += c.len_utf8() as u32;
         column += 1;
@@ -694,13 +649,9 @@ pub fn lex_with(text: &str, limits: &Limits, forgiving: bool, opts: &LexOptions)
     let eof_line = line;
     let eof_col = column;
     tokens.push(SpannedToken { id: TokenId(next_id), kind: TokenKind::Eof, text: Symbol::intern(""), span: TextSpan::at(eof_line, eof_col), byte_range: (byte_offset, byte_offset) });
-    // Strict-mode success is exactly the invariant `Sanitized` documents — brand it here so the
-    // type isn't just a paper promise, then unwrap since callers still want plain tokens.
     if forgiving {
         Ok(tokens)
     } else {
-        // `Sanitized::new_trusted`/`.into_inner` (`🗣️dsl/🎖️trust/🦀️.rs`) were reverted to
-        // sync per R9 (trivial wrapper types, 0 await/0 io) — direct sync calls now.
         Ok(Sanitized::new_trusted(tokens).into_inner())
     }
 }

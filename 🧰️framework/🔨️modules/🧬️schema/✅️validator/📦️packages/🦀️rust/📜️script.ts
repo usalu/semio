@@ -8,6 +8,7 @@ import { resolveTestLevel } from "../../../../🏃️process/📦️packages/�
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runNeutralOwnerScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -23,11 +24,10 @@ class TestScript extends BundleScript {
 
 class NeutralOwnerScript extends BundleScript {
   async run(): Promise<void> {
-    const { runOwnedCommand } = await import("../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🧩️neutral-owner/🟦️.ts")], this.repoRoot, "schema-validator:neutral-owner", 120000, { env: process.env });
+    await runNeutralOwnerScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-neutral-owner", NeutralOwnerScript);
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

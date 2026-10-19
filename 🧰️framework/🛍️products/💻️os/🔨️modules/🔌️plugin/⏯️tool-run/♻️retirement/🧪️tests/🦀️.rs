@@ -36,7 +36,8 @@ fn tool_ledger_empty_backing_preserves_undergrant_and_exact_original_release(){
 
 #[test]
 fn tool_job_outcome_original_pages_close_under_independent_common_grants(){
- use semio_framework_job::{StepOutcome,RetainedJobPayloadWriter,JobPayloadStream,StepContext,OperationId,Generation,StepBudget};
+ use semio_framework_job::{StepOutcome, StepContext, OperationId, Generation, StepBudget};
+ use semio_framework_job_payload::{RetainedJobPayloadWriter, JobPayloadStream};
  for pages in [0,1,3]{
   let(mut original,setup)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
    let mut writer=RetainedJobPayloadWriter::new(JobPayloadStream::Preview);

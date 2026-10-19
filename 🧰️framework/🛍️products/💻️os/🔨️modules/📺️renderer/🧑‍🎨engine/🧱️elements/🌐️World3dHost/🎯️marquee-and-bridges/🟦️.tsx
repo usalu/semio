@@ -141,18 +141,6 @@ export function WorldComputeStatusPane({
   const labels = language === "en" ? {loading: "Loading", cancel: "Cancel"} : language === "de" ? {loading: "Wird geladen", cancel: "Abbrechen"} : null;
   const phaseText = status.phaseLabel && labels ? (language === "de" ? status.phaseLabel.de : status.phaseLabel.en) : null;
   const percent = status.unitsTotal > 0 ? Math.round(status.ratio * 100) : null;
-  // 📢️ The live region STAYS MOUNTED while idle, rendering nothing.
-  //
-  // 🐛️ This used to `return null` at idle, which is the classic ARIA live-region trap: a reader only
-  // announces changes INSIDE a region it was already observing, so a `role="status"` element that
-  // first appears at the moment it has something to say is announced by nothing. An evaluation going
-  // idle → "Sampling edges" → "Evaluated" was therefore completely silent, which is the whole point
-  // of the region. Keeping an empty, zero-size region in the tree makes every later phase a
-  // mutation of an observed subtree, which IS announced.
-  // 🕳️ An idle surface with a HINT is not silent: the producer said why it is empty, in its own
-  // locale, and that sentence is painted. Without this the hint reached `data-status-json` and stopped
-  // there — a user looking at an empty generate preview was told nothing
-  // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `panel-i18n · de:preview_hint`).
   if (idle) {
     if (!status.hint) return <div className="sr-only" data-slot="world-compute-status" data-compute-phase={status.phase} role="status" aria-busy={undefined} />;
     return (
@@ -219,8 +207,6 @@ export function EngagementPreviewLayer({ items, color }: { readonly items: reado
           const [bx, by] = item.cornerB;
           const width = Math.max(Math.abs(bx - ax), 0.05);
           const depth = Math.max(Math.abs(by - ay), 0.05);
-          // `height` is a separate vertical extrusion from the footprint plane (az), not derived
-          // from cornerB's z — the interaction specs author cornerA/cornerB as ground-plane points.
           const height = Math.max(Math.abs(item.height ?? 0.05), 0.05);
           return (
             <mesh key={`preview-box-${index}`} position={[(ax + bx) * 0.5, (ay + by) * 0.5, az + height * 0.5]} raycast={() => null}>

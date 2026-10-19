@@ -47,7 +47,6 @@ struct AtlasSlot {
 }
 
 impl AtlasSlot {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn placeholder(device: &wgpu::Device, label: &str, format: wgpu::TextureFormat) -> Self {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some(label),
@@ -63,7 +62,6 @@ impl AtlasSlot {
         Self { texture, view, width: 1, height: 1 }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn write(&self, queue: &wgpu::Queue, pixels: &[u8], bytes_per_pixel: u32) {
         queue.write_texture(
             wgpu::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
@@ -111,7 +109,6 @@ pub(crate) struct GpuResources {
 }
 
 impl GpuResources {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(device: &wgpu::Device, pipelines: &Pipelines) -> Self {
         let glyph = AtlasSlot::placeholder(device, "glyph_atlas", wgpu::TextureFormat::R8Unorm);
         let icon = AtlasSlot::placeholder(device, "icon_atlas", wgpu::TextureFormat::Rgba8UnormSrgb);
@@ -123,7 +120,6 @@ impl GpuResources {
     /// 🧪️ `(textures, meshes, atlases)` — every id currently believed resident. Used by
     /// `ui_render::GraphicsBackend::recover` to report dead generations, and by `backend-testing`'s
     /// `debug_force_device_loss` to snapshot what a forced loss should report.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn resident_ids(&self) -> (Vec<TextureId>, Vec<MeshId>, Vec<AtlasId>) {
         let atlases = self.glyph_atlas_id.into_iter().chain(self.icon_atlas_id).collect();
         (self.textures.keys().copied().collect(), self.meshes.keys().copied().collect(), atlases)
@@ -131,7 +127,6 @@ impl GpuResources {
 
     /// 🧹️ Drops every tracked residency id (not the GPU objects themselves — the atlas placeholder
     /// textures stay put) so `recover`'s caller re-uploads from a clean slate.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn clear(&mut self) {
         self.textures.clear();
         self.meshes.clear();
@@ -139,7 +134,6 @@ impl GpuResources {
         self.icon_atlas_id = None;
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn build_content_bind_group(device: &wgpu::Device, pipelines: &Pipelines, glyph: &AtlasSlot, icon: &AtlasSlot, sampler: &wgpu::Sampler) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("ui_content_bind_group"),
@@ -157,7 +151,6 @@ impl GpuResources {
     /// 🖇️ Every raster texture's bind group also carries the glyph atlas at binding 1/2 (the canonical
     /// layout has no narrower shape), so a glyph-atlas resize invalidates every one of them along with
     /// the shared content bind group.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn rebuild_dependent_bind_groups(&mut self, device: &wgpu::Device, pipelines: &Pipelines) {
         self.content_bind_group = Self::build_content_bind_group(device, pipelines, &self.glyph, &self.icon, &self.sampler);
         let refreshed: Vec<(TextureId, RasterTexture)> = self
@@ -171,7 +164,6 @@ impl GpuResources {
         self.textures = refreshed.into_iter().collect();
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn build_raster_bind_group(device: &wgpu::Device, pipelines: &Pipelines, glyph: &AtlasSlot, sampler: &wgpu::Sampler, texture: &wgpu::Texture) -> wgpu::BindGroup {
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -187,34 +179,28 @@ impl GpuResources {
         })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn content_bind_group(&self) -> &wgpu::BindGroup {
         &self.content_bind_group
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn raster_bind_group(&self, id: TextureId) -> Option<&wgpu::BindGroup> {
         self.textures.get(&id).map(|entry| &entry.bind_group)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn mesh(&self, id: MeshId) -> Option<&GpuMesh> {
         self.meshes.get(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn has_texture(&self, id: TextureId) -> bool {
         self.textures.contains_key(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn has_mesh(&self, id: MeshId) -> bool {
         self.meshes.contains_key(&id)
     }
 
     /// 📤️ Applies one frame's worth of resource ops in order, mirroring
     /// `ui_render::GraphicsBackend::apply_resources`'s contract precisely.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn apply(&mut self, ops: &[ResourceOp], device: &wgpu::Device, queue: &wgpu::Queue, pipelines: &Pipelines) -> Result<(), BackendError> {
         for op in ops {
             match op {
@@ -232,7 +218,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_atlas(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, pipelines: &Pipelines, id: AtlasId, width: u32, height: u32, pixels: &[u8]) -> Result<(), BackendError> {
         let Some(kind) = classify_atlas_upload(width, height, pixels.len()) else {
             return Err(BackendError::UnsupportedFormat("atlas pixel length matches neither R8Unorm (glyph) nor Rgba8UnormSrgb (icon) for its width*height"));
@@ -274,7 +259,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_texture(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, pipelines: &Pipelines, id: TextureId, width: u32, height: u32, pixels: &[u8]) {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("raster_texture"),
@@ -300,7 +284,6 @@ impl GpuResources {
     /// with `[0,1,0]`, matching `MeshGpuTable::ensure_mesh`'s own `unwrap_or` fallback. Per-vertex
     /// colour has no source on this path, so every vertex carries the identity white the shader
     /// multiplies the instance tint by.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_mesh(&mut self, device: &wgpu::Device, id: MeshId, positions: &[f32], normals: &[f32], indices: &[u32]) {
         let vertex_count = positions.len() / 3;
         let mut vertices = Vec::with_capacity(vertex_count);

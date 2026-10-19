@@ -71,17 +71,14 @@ pub(crate) struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn new(text: &'a str) -> Self {
         Self { bytes: text.as_bytes(), pos: 0, line: 1, col: 1 }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn peek(&self) -> Option<u8> {
         self.bytes.get(self.pos).copied()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn advance(&mut self) -> Option<u8> {
         let byte = self.peek()?;
         self.pos += 1;
@@ -94,24 +91,20 @@ impl<'a> Parser<'a> {
         Some(byte)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn span(&self) -> TextSpan {
         TextSpan::at(self.line, self.col)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn err(&self, message: impl Into<String>) -> TextError {
         TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message, self.span())
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn skip_ws(&mut self) {
         while matches!(self.peek(), Some(b' ' | b'\t' | b'\n' | b'\r')) {
             self.advance();
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn expect(&mut self, byte: u8) -> Result<(), TextError> {
         match self.peek() {
             Some(b) if b == byte => {
@@ -123,7 +116,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_value(&mut self) -> Result<JsonValue, TextError> {
         self.skip_ws();
         match self.peek() {
@@ -139,7 +131,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_literal(&mut self, literal: &str, value: JsonValue) -> Result<JsonValue, TextError> {
         for expected in literal.bytes() {
             match self.advance() {
@@ -150,7 +141,6 @@ impl<'a> Parser<'a> {
         Ok(value)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_object(&mut self) -> Result<JsonValue, TextError> {
         self.expect(b'{')?;
         let mut members = Vec::new();
@@ -185,7 +175,6 @@ impl<'a> Parser<'a> {
         Ok(JsonValue::Object { members })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_array(&mut self) -> Result<JsonValue, TextError> {
         self.expect(b'[')?;
         let mut items = Vec::new();
@@ -216,7 +205,6 @@ impl<'a> Parser<'a> {
     /// 🔤️ Parses a quoted string, decoding escapes (incl. `\uXXXX` surrogate pairs) into their
     /// literal characters — the LITERAL decoded value is stored (never the wire escape form), the
     /// same convention `stdio.xml`'s `XmlNode::Text` uses for entity decoding.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_string(&mut self) -> Result<String, TextError> {
         self.expect(b'"')?;
         let mut out = String::new();
@@ -262,7 +250,6 @@ impl<'a> Parser<'a> {
         Ok(out)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_unicode_escape(&mut self) -> Result<char, TextError> {
         let high = self.parse_hex4()?;
         if (0xD800..=0xDBFF).contains(&high) {
@@ -285,7 +272,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_hex4(&mut self) -> Result<u32, TextError> {
         let mut value = 0u32;
         for _ in 0..4 {
@@ -303,7 +289,6 @@ impl<'a> Parser<'a> {
 
     /// 🔢️ Captures the ORIGINAL number lexeme verbatim per RFC8259 §6 grammar
     /// (`-? (0 | [1-9][0-9]*) (.[0-9]+)? ([eE][+-]?[0-9]+)?`) — never parsed into `f64`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn parse_number(&mut self) -> Result<JsonValue, TextError> {
         let start = self.pos;
         if self.peek() == Some(b'-') {
@@ -567,14 +552,12 @@ impl From<&JsonValue> for serde_json::Value {
 }
 
 impl JsonSnapshot {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_serde_value(&self) -> serde_json::Value {
         serde_json::Value::from(&self.value)
     }
 
     /// 🌉️ `to_serde_value`'s first-party analog — for a caller that has stopped depending on
     /// `serde_json` and only wants `pack::json::Value`.
-    // 🚫️async: E1 pure inherent-impl helper, same reason as `to_serde_value` above — see R9
     pub fn to_pack_value(&self) -> semio_framework_pack_json::Value {
         semio_framework_pack_json::Value::from(&self.value)
     }

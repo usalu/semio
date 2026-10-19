@@ -1,4 +1,4 @@
-//! kind-catalog bundle (`parts`/`grips`/`fasteners`/`ropes` catalogs together, one manifest-import
+//! 📇️ kind-catalog bundle (`parts`/`grips`/`fasteners`/`ropes` catalogs together, one manifest-import
 //! 📚 Puzzle5d mutation — `ReplaceKindCatalogs`: whole-value swap of the fixture-carried typed
 //! gesture).
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
@@ -40,7 +40,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplaceKindCatalogs {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ReplaceKindCatalogs
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ReplaceKindCatalogs>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

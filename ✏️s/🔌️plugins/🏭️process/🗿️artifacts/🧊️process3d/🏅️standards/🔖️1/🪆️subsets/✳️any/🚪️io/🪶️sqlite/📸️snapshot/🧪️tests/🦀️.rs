@@ -179,7 +179,7 @@ fn sqlite_snapshot_process3d_genuine_controlled_metadata_and_typed_construction_
         (producer.encoding)(&mut encode).unwrap();
         let record = expected.__dsl_to_record_controlled(&mut encode).unwrap();
         let mut accepted = |_| true;
-        let mut decode = semio_framework_value::NativeDecodeControl::new(16 << 20, &mut accepted);
+        let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 << 20, &mut accepted);
         (producer.decoding)(&mut decode).unwrap();
         let actual = Process3dSnapshot::__dsl_from_record_controlled(&record, &mut decode).unwrap();
         assert_full(&actual, &expected, word);
@@ -248,7 +248,7 @@ fn sqlite_snapshot_process3d_owned_native_large_fields_have_real_interior_contro
     assert!(reached);
     let record = expected.__dsl_to_record();
     let mut reached = false;
-    let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| {
+    let mut callback = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| {
         if event.total >= 65536 && event.completed >= 65536 && event.completed < event.total {
             reached = true;
             false
@@ -256,7 +256,7 @@ fn sqlite_snapshot_process3d_owned_native_large_fields_have_real_interior_contro
             true
         }
     };
-    let mut decode = semio_framework_value::NativeDecodeControl::new(16 << 20, &mut callback);
+    let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 << 20, &mut callback);
     assert!(Process3dSnapshot::__dsl_from_record_controlled(&record, &mut decode).is_err());
     drop(decode);
     assert!(reached);

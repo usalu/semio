@@ -17,12 +17,16 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🪜️mutations-2/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔩️elements/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧱️solids/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🪚️sections/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
@@ -70,6 +74,10 @@ path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️pa
 
 [workspace.dependencies.semio-framework-job]
 path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+
+[workspace.dependencies.semio-framework-job-payload]
+path = "../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -173,6 +181,15 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/�
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-persistent]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-registry]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-fem-2d-editor]
 path = "../◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📦️packages/🦀️rust"
 
@@ -208,6 +225,18 @@ path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/�
 
 [workspace.dependencies.semio-s-artifact-fem-3d-mesh]
 path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-3d-diff-document]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-3d-mesh-elements]
+path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔩️elements/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-3d-mesh-solids]
+path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧱️solids/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-3d-mesh-sections]
+path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🪚️sections/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-fem-3d-mesh-topology]
 path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust"

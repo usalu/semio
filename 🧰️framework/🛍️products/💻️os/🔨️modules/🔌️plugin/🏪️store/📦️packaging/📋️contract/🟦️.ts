@@ -1,4 +1,4 @@
-import {readComponentModelIntentV1,componentModelDirectoryKeyV1} from "../../../📦️model/📋️contract/🟦️.ts";
+import {readComponentModelIntentV1,componentModelDirectoryKeyV1} from "@semio-tech/framework-plugin/model/contract";
 import type { RepositoryArtifactRequestV1 } from "@semio-tech/repo-lib/artifacts";
 import { artifactsStorageSchema as policy } from "@semio-tech/repo-lib/artifacts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};

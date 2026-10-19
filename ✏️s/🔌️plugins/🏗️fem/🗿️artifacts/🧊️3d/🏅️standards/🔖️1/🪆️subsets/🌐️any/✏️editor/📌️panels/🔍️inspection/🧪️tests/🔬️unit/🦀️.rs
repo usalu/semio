@@ -242,7 +242,7 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
     assert!(json.contains("Node lc1b") && json.contains("Node lc2b"), "selection text must expose entity nouns and semantic ids");
     let de = panel(&boot(), &["lc1b", "lc2b"], &ViewModel::new(Locale::De, Terminology::Native));
     assert!(de.contains("Knoten lc1b") && de.contains("Knoten lc2b"));
-    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../../🕹️interaction/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("localized selection vectors");
+    let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../../🕹️interaction/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("localized selection vectors");
     for row in fixture["selectionLabels"].as_array().expect("selection label cases") {
         let locale = match row["locale"].as_str().unwrap() { "en" => Locale::En, "de" => Locale::De, _ => panic!("explicit supported locale") };
         let view = ViewModel::new(locale, Terminology::Native);

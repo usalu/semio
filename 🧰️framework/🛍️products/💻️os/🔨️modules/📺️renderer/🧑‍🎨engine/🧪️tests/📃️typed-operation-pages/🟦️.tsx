@@ -151,7 +151,7 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
 
 
       it("typed-operation diagnostic delivery isolates observers before the original guest ACK", async () => {
-        const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🧪️tests/🧫️fixtures/🔣️.json");
         const { operationDiagnosticFanouts, OperationDiagnosticObservers } = dependencies;
         const token = { receiver: fixture.host.observers.receiver, operation: 19n, generation: 4n, sequence: 1, attempt: 0 };
         const actorId = "diagnostic-observer#" + token.receiver;
@@ -168,7 +168,7 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
         try {
           await withTypedOperationCall(actorId, "original", async (owner: any) => {
             expect(owner.observe({ ...token, sequence: 0 })).toBe(true);
-            const settled = await withFakeShardClient(async (_actor, events) => { crossings++; expect(events).toEqual(typedOperationAcknowledgements({ effects: [page] })); return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async () => {
+            const settled = await withFakeShardClient(async (_actor, events) => { crossings++; expect(events).toEqual(typedOperationAcknowledgements({ effects: [page] } as unknown as Parameters<typeof typedOperationAcknowledgements>[0])); return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async () => {
               return settlePluginTurn(actorId, { uiPatches: [], effects: [page], nextWake: null, status: { tag: "idle" } }, "Interactive", new Set(), undefined, true, undefined, owner);
             });
             expect(invocationFromFrames([], settled.effects, "command").diagnostics).toEqual([diagnostic]);

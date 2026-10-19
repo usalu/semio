@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::modules::lower::*;
 
 //#region 🔖️Catalog
 impl Lowering<'_> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_catalog(&mut self, pages_ref: ObjRef, include_acro_form: bool) -> PResult<Vec<PdfDictEntry>> {
         let snapshot = self.snapshot;
         let mut dict = vec![entry("Type", PdfObject::name("Catalog")), entry("Pages", PdfObject::Ref(pages_ref))];
@@ -144,7 +143,6 @@ impl Lowering<'_> {
         Ok(dict)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn unmap_oc_ids(&self, value: &PdfObject) -> PdfObject {
         match value {
             PdfObject::Name(id) => self.reference(Category::OptionalContent, id).unwrap_or_else(|| value.clone()),
@@ -153,7 +151,6 @@ impl Lowering<'_> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn lower_acro_form(&mut self, form: &PdfAcroForm) -> Vec<PdfDictEntry> {
         let mut cursor = 0usize;
         let fields: Vec<PdfObject> = form.fields.iter().map(|field| PdfObject::Ref(self.lower_form_field(field, None, &mut cursor))).collect();
@@ -174,7 +171,6 @@ impl Lowering<'_> {
         dict
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn lower_form_field(&mut self, field: &PdfFormField, parent: Option<ObjRef>, cursor: &mut usize) -> ObjRef {
         let reference = match self.field_refs.get(*cursor) {
             Some(reference) => *reference,

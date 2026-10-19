@@ -254,13 +254,13 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         match self.stage {
             Puzzle5dBoardEventsStage::Open | Puzzle5dBoardEventsStage::Scan => {
                 self.scan_one(source)?;
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"))
             }
             Puzzle5dBoardEventsStage::Decode => {
                 let start = self.event_start.ok_or_else(|| Fault::from("puzzle5d-board-events-event-owner-missing"))?;
                 self.event = Some(parse(source.get(start..self.event_end).ok_or_else(|| Fault::from("puzzle5d-board-events-event-range"))?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| Fault::from("puzzle5d-board-events-event-malformed"))?);
                 self.stage = Puzzle5dBoardEventsStage::Dispatch;
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-event-decode", "Decoding board event", "Board-Ereignis wird dekodiert"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-event-decode", "Decoding board event", "Board-Ereignis wird dekodiert"))
             }
             Puzzle5dBoardEventsStage::Dispatch => {
                 let name = self.event.as_ref().and_then(|event| event.get("name")).and_then(Value::as_str).map(|name| match name { "camera" => "camera", "gesture" => "gesture", "edgeCreate" => "edgeCreate", "edgeDelete" => "edgeDelete", "select" => "select", "nodeDelete" => "nodeDelete", "brushPlace" => "brushPlace", _ => "" });
@@ -270,11 +270,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         self.camera2d = Some(<Puzzle5dCamera2d as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
                         self.next_event();
                     }
-                    // 🎬️ A board drag is ONE `drag` gesture record: its targets (each once) move by its offset as a
-                    // `drag-selection2d` leaf the transform tool yields at completion — relative, so the drag replays
-                    // on whatever flat poses its base holds. The board drag moves ONLY the flat pose: the world origin
-                    // stays where the 3d pane put it, which is what makes a board drag a plan edit. Other gesture
-                    // kinds move no part here.
                     Some("gesture") => {
                         let drag = payload.get("kind").and_then(Value::as_str) == Some("drag");
                         let offset = payload.get("dx").and_then(Value::as_f64).zip(payload.get("dy").and_then(Value::as_f64)).filter(|(dx, dy)| dx.is_finite() && dy.is_finite());
@@ -337,12 +332,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     }
                     _ => self.next_event(),
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-event-dispatch", "Applying board event", "Board-Ereignis wird angewendet"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-event-dispatch", "Applying board event", "Board-Ereignis wird angewendet"))
             }
             Puzzle5dBoardEventsStage::ScanEdge => {
                 if self.pending_source.is_none() || self.pending_target.is_none() {
                     self.next_event();
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
                 }
                 if let Some(fastener) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
@@ -352,7 +347,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                         self.pending_source = None;
                         self.pending_target = None;
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-edge", "Checking board edge", "Board-Kante wird geprüft"));
                 }
                 let id = self.pending_edge_id.take().expect("preflighted edge id");
                 let source = self.pending_source.take().expect("preflighted edge source");
@@ -360,12 +355,12 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let kind = self.pending_edge_kind.take();
                 self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None))?;
                 self.next_event();
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-edge", "Creating board edge", "Board-Kante wird erstellt"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-edge", "Creating board edge", "Board-Kante wird erstellt"))
             }
             Puzzle5dBoardEventsStage::ScanDeleteEdges => {
                 let Some(id) = self.pending_delete_id.as_deref() else {
                     self.next_event();
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"));
                 };
                 if let Some(fastener) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
                     self.fastener_cursor += 1;
@@ -376,13 +371,13 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                             self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(fastener_id.to_string()))?;
                         }
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-delete-edge", "Removing attached edge", "Verbundene Kante wird entfernt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-delete-edge", "Removing attached edge", "Verbundene Kante wird entfernt"));
                 }
                 let id = self.pending_delete_id.take().expect("preflighted deleted part");
                 self.removed_ids.push(id.clone());
                 self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id))?;
                 self.next_event();
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-delete", "Deleting board node", "Board-Knoten wird gelöscht"))
             }
             Puzzle5dBoardEventsStage::Brush => {
                 let brush = self.brush.as_mut().ok_or_else(|| Fault::from("puzzle5d-board-brush-owner-missing"))?;
@@ -399,7 +394,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                             return Err(Fault::from("puzzle5d-board-brush-output-capacity").into());
                         }
                         self.stage = Puzzle5dBoardEventsStage::DrainBrush;
-                        Ok(crate::puzzle_progress_step!("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"))
+                        Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"))
                     }
                     semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { .. } | semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => Err(Fault::from("puzzle5d-board-brush-download-unsupported").into()),
                 }
@@ -407,22 +402,22 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dBoardEventsStage::DrainBrush => {
                 if let Some(mutation) = self.brush_first.take() {
                     self.push(mutation)?;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"));
                 }
                 if let Some(mutation) = self.brush_second.take() {
                     self.push(mutation)?;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-brush-transfer", "Publishing brush mutation", "Pinselmutation wird veröffentlicht"));
                 }
                 if let Some(brush) = self.brush.as_mut() {
                     <Puzzle5dAddBrushPartWork as semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>>>::begin_close(brush);
                 }
                 self.stage = Puzzle5dBoardEventsStage::CloseBrush;
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-brush-close", "Releasing brush owners", "Pinseleigentümer werden freigegeben"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-brush-close", "Releasing brush owners", "Pinseleigentümer werden freigegeben"))
             }
             Puzzle5dBoardEventsStage::CloseBrush => {
                 let Some(brush) = self.brush.as_mut() else {
                     self.next_event();
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-event-scan", "Reading board event", "Board-Ereignis wird gelesen"));
                 };
                 let step = <Puzzle5dAddBrushPartWork as semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>>>::close_step(brush, cx)?;
                 if matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked) {
@@ -432,12 +427,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.brush.take();
                     self.next_event();
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-board-brush-close", "Releasing brush owners", "Pinseleigentümer werden freigegeben"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-board-brush-close", "Releasing brush owners", "Pinseleigentümer werden freigegeben"))
             }
             Puzzle5dBoardEventsStage::Complete => {
                 self.stage = Puzzle5dBoardEventsStage::Closing;
-                // 🪟️ A board `camera` row is the pane's own persisted pose. Dropping it (which this work did
-                // until 5A2) made pan/zoom in the board window revert on every refresh.
                 let camera2d = self.camera2d.take();
                 let window_config_mutations = match (camera2d, view_state) {
                     (Some(camera2d), Some(view)) => {
@@ -455,8 +448,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 }
                 let removed = std::mem::take(&mut self.removed_ids);
                 if !removed.is_empty() {
-                    // 🧹️ A delete clears what it removed through a SUBTRACTIVE write naming exactly those ids;
-                    // an empty `Replace` is a silent no-op in `protocol::next_selection`.
                     let targets: Vec<InteractionTarget> = removed
                         .into_iter()
                         .flat_map(|id| [InteractionTarget { granularity: PUZZLE5D_GRANULARITY_PART.to_string(), id: id.clone() }, InteractionTarget { granularity: PUZZLE5D_GRANULARITY_FASTENER.to_string(), id }])
@@ -466,8 +457,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let drags = std::mem::take(&mut self.drags);
                 let drag_at = self.drag_at.take().unwrap_or(self.mutations.len()).min(self.mutations.len());
                 let base = snapshot.typed_arc();
-                // 🔒️ A locked part refuses the drag; the rest of the batch still lands, and the leaf names the
-                // skipped part as `mutation.partial`.
                 self.locked_refused |= drags.iter().any(|record| record.targets.iter().any(|id| base.parts.iter().any(|part| &part.id == id && part.part_2d.locked == Some(true))));
                 let request = crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::TransformToolRequest { base, records: drags };
                 let committed = (!request.records.is_empty()).then(|| crate::editor::puzzle5d::modes::edit::windows::world3d::utilities::transform::puzzle5d_transform_tool_commit("applyBoardEvents", &input.operation.authoring_seed, request)).flatten();
@@ -484,7 +473,6 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 } else {
                     Vec::new()
                 };
-                // 🛠️ A committed drag transaction stamps every op of this ONE edit.
                 Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations,
                     window_config_mutations,
@@ -682,22 +670,22 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         }
         match self.stage {
             Puzzle5dCreateFastenerStage::Source => match self.scan_grip(snapshot, source) {
-                Puzzle5dGripScan::Progress => Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-source", "Finding source grip", "Quellgriff wird gesucht")),
+                Puzzle5dGripScan::Progress => Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-source", "Finding source grip", "Quellgriff wird gesucht")),
                 Puzzle5dGripScan::Found(kind) => {
                     self.source_kind = kind;
                     self.part_cursor = 0;
                     self.grip_cursor = 0;
                     self.stage = Puzzle5dCreateFastenerStage::Target;
-                    Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-target", "Finding target grip", "Zielgriff wird gesucht"))
+                    Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-target", "Finding target grip", "Zielgriff wird gesucht"))
                 }
                 Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
             },
             Puzzle5dCreateFastenerStage::Target => match self.scan_grip(snapshot, target) {
-                Puzzle5dGripScan::Progress => Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-target", "Finding target grip", "Zielgriff wird gesucht")),
+                Puzzle5dGripScan::Progress => Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-target", "Finding target grip", "Zielgriff wird gesucht")),
                 Puzzle5dGripScan::Found(kind) => {
                     self.target_kind = kind;
                     self.stage = Puzzle5dCreateFastenerStage::Existing;
-                    Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
+                    Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
                 }
                 Puzzle5dGripScan::Exhausted => Ok(self.complete_empty()),
             },
@@ -709,20 +697,20 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     if (existing_source == source && existing_target == target) || (existing_source == target && existing_target == source) {
                         return Ok(self.complete_empty());
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"));
                 }
                 self.stage = Puzzle5dCreateFastenerStage::Compatibility;
-                Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dCreateFastenerStage::Compatibility => {
                 if self.source_kind.is_none() || self.target_kind.is_none() {
                     self.stage = Puzzle5dCreateFastenerStage::Emit;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
                 }
                 let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if rows.is_empty() {
                     self.stage = Puzzle5dCreateFastenerStage::Emit;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-emit", "Creating fastener", "Verbindung wird erstellt"));
                 }
                 let Some(row) = rows.get(self.compatibility_cursor) else { return Ok(self.complete_empty()) };
                 self.compatibility_cursor += 1;
@@ -734,7 +722,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 if (row_source == source_kind && row_target == target_kind) || (bidirectional && row_source == target_kind && row_target == source_kind) {
                     self.stage = Puzzle5dCreateFastenerStage::Emit;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-create-fastener-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dCreateFastenerStage::Emit => {
                 let id = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty()).map_or_else(|| format!("fastener-{:016x}-0", self.operation_nonce), str::to_string);

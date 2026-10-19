@@ -585,7 +585,7 @@ function startShow(host: HTMLElement, menagerie: Menagerie, seed: number, tempo:
 //#endregion 🔖️Show
 
 //#region 🔖️Layer
-/** 🕹️ What a host can ask of a running layer by its `ref`: `play` hands the stage a deed the learner asked a pet on stage for without a pointer — `hello`, `trick`, `pet` or `toss` from a "Play with the pets" group of the host's settings, the keyboard equivalent of the hand (design-v2 §14.5). A deed before the show runs, after it ended, under forced colours or for a species not on stage does nothing; whether a pet answers is the stage's to decide (a still stage or play that is not permitted answers nothing). */
+/** 🕹️ What a host can ask of a running layer by its `ref`: `play` hands the stage a deed the learner asked a pet on stage for without a pointer — `hello`, `trick`, `pet`, `toss`, `circle`, `countercircle`, `stroke` or `shake` from the host's settings. A deed before the show runs, after it ended, under forced colours or for a species not on stage does nothing; whether a pet answers is the stage's to decide (a still stage or play that is not permitted answers nothing). */
 export interface PetLayerHandle {
   readonly play: (species: Slug, deed: Deed) => void;
 }

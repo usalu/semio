@@ -1,6 +1,10 @@
     /// 🌐️ Neutral hostile rows: the language neutral empty, single, max and plus-one rows and every hostile row against the owned state machine.
 
-    #[test]
+    use semio_framework::Fault;
+use semio_framework::FaultOrigin;
+use semio_framework::FaultCode;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedToolFault;
+#[test]
     fn language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle() {
         let fixture: Value = serde_json::from_str(FIXTURE).expect("language-neutral typed-command fixture");
         let maximum = fixture["capacities"]["maxOutputBytes"].as_u64().expect("maximum output bytes") as usize;

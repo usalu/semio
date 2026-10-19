@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
+import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import visitorFixture from "../🧫️fixtures/👁️visitor/🔣️.json" with {type:"json"};
+import visitorFixture from "./🧫️fixtures/👁️visitor/🔣️.json" with {type:"json"};
 import visitorSchema from "../🧬️schema/👁️visitor/🔣️.json" with {type:"json"};
 import { visitScopedIdentitySegments, encodeScopedIdentity, decodeScopedIdentity, SCOPED_IDENTITY_MAX_BYTES, SCOPED_IDENTITY_MAX_SEGMENTS } from "../🟦️.ts";
 

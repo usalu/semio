@@ -29,6 +29,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateFault
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateFault> + From<crate::DeleteFault>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "fault", kind: "create-fault", record: "CreatedFault" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -50,7 +51,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "fault", kind: "create-fault", record: "CreatedFault" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

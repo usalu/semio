@@ -114,7 +114,6 @@ pub struct DispatchOutcome {
 }
 
 impl Default for DispatchOutcome {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn default() -> Self {
         Self { handled: false, intents: Vec::new(), cursor: CursorRequest::default(), invalidation: InvalidationReason::NONE, capture: None, ime: None }
     }
@@ -143,7 +142,6 @@ pub struct Dispatcher {
 }
 
 impl Dispatcher {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         let mut dispatcher = Self { hover_chain: Vec::with_capacity(64), ..Self::default() };
         dispatcher.overlays.open = Vec::with_capacity(16);
@@ -151,49 +149,40 @@ impl Dispatcher {
     }
 
     //#region 🔎️Accessors
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn focused(&self) -> Option<ElementId> {
         self.focus
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_hovered(&self, element: ElementId) -> bool {
         self.hover_chain.contains(&element)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_captured(&self, element: ElementId) -> bool {
         self.capture.values().any(|entry| entry.element == element)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn capture_of(&self, pointer: PointerId) -> Option<(ElementId, CaptureKind)> {
         self.capture.get(&pointer).map(|entry| (entry.element, entry.kind))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drag_session(&self) -> Option<&DragSession> {
         self.drag.as_ref()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn edit_state(&self, element: ElementId) -> Option<&EditState> {
         self.edit_states.get(&element)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn scroll_offset(&self, element: ElementId) -> (f32, f32) {
         self.scroll_offsets.get(&element).copied().unwrap_or((0.0, 0.0))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn open_overlays(&self) -> &[OpenOverlay] {
         &self.overlays.open
     }
     //#endregion 🔎️Accessors
 
     //#region 🧩️Registration
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn set_drag_payload(&mut self, element: ElementId, payload: DragPayload) -> bool {
         if payload.len() > 16 || payload.iter().any(|(key, value)| key.len() > 256 || value.len() > 256) || (!self.drag_payloads.contains_key(&element) && self.drag_payloads.len() >= 256) {
             return false;
@@ -202,7 +191,6 @@ impl Dispatcher {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn set_drop_accept(&mut self, element: ElementId, predicate: impl Fn(&DragPayload) -> bool + 'static) -> bool {
         if !self.drop_accept.contains_key(&element) && self.drop_accept.len() >= 256 {
             return false;
@@ -211,7 +199,6 @@ impl Dispatcher {
         true
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn register_scroll_thumb(&mut self, thumb: ElementId, scrollable: ElementId, axis: ScrollAxis) -> bool {
         if !self.scroll_thumbs.contains_key(&thumb) && self.scroll_thumbs.len() >= 256 {
             return false;

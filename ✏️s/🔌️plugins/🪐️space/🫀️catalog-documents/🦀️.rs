@@ -201,11 +201,6 @@ pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> 
     }
     if let Ok(guard) = shared_studio_ports().await.lock() {
         if let Some(port) = guard.get(space_id) {
-            // 🚧️ Same registry blocker as `shared_studio_ports`'s own doc comment: its values are
-            // `Arc<dyn OsBackbonePort>`, which cannot recover into the closed `Arc<OsBackbonePorts>`
-            // `load_os_space_document` now requires (O1 enum dispatch, no `Any` downcast available) —
-            // so this branch reads the manifest bytes straight off the dyn port instead of routing
-            // through that helper, matching what `load_os_space_document` does internally.
             if let Ok(payload) = port.read(&space_backbone_uri(space_id)) {
                 if !payload.is_empty() {
                     if let Ok(document) = decode_backbone_payload::<SpaceSnapshot, SpaceMutation>(&payload, S_SPACE_SCHEMA) {
@@ -251,9 +246,6 @@ pub async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
         }
     }
     for port in [temp_catalog_port().await, catalog_port().await] {
-        // 🧬️ `port` is `Arc<OsBackbonePorts>`; the enum's own `impl OsBackbonePort for OsBackbonePorts`
-        // (not the `store::os_store::backbone::BackbonePort` blanket) is the only trait it satisfies, so UFCS needs the
-        // `&OsBackbonePorts` the `Arc` derefs to, not the `Arc` itself.
         if let Ok(payload) = OsBackbonePort::read(port.as_ref(), uri) {
             if !payload.is_empty() {
                 return Some(payload);
@@ -495,14 +487,10 @@ pub async fn home_space_rows<'a>(hub_spaces: impl IntoIterator<Item = &'a store:
             name: entry.name.clone(),
             kind: entry.kind,
             visibility: entry.visibility,
-            // 🧑️ The local-only catalog carries no membership roster (single-user by construction);
-            // "1" (the implicit owner) is the honest synthesis, not a directory-sourced count.
             members: "1".into(),
             updated_ms: rfc3339_utc_epoch_ms(&entry.updated_at),
             origin: "local",
             data_class: if entry.backbone_uri.is_empty() { "ephemeralLocalOnly" } else { "persistedLocalOnly" },
-            // 🏠️ The local-only catalog is single-user by construction and carries no directory
-            // membership; a local row therefore never offers a directory-owned affordance.
             role: None,
         });
     }

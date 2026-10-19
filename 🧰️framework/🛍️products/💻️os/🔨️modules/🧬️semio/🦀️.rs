@@ -195,7 +195,7 @@ pub fn unwrap_binary(bytes: &[u8]) -> SemioResult<(SemioEnvelope, Vec<u8>)> {
 }
 
 /// 🚦️ Admits the exact declared envelope and borrows its binary body without a payload copy.
-pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<&'input[u8],ValueError>{
+pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<&'input[u8],ValueError>{
     control.checkpoint()?;
     if bytes.len()<BINARY_HEADER_PREFIX_LEN||bytes[..8]!=BINARY_MAGIC{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"invalid binary semio header: invalid binary envelope prefix"));}
     let length=u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
@@ -204,7 +204,7 @@ pub fn unwrap_binary_controlled<'input>(bytes:&'input[u8],envelope_id:&str,compo
     Ok(&bytes[end..])
 }
 
-fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<bool,ValueError>{
+fn matches_declared_token(token:&[u8],envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<bool,ValueError>{
     let mut digits=[0u8;5];let mut start=digits.len();let mut remaining=version;
     loop{start-=1;digits[start]=b'0'+(remaining%10) as u8;remaining/=10;if remaining==0{break;}}
     let pieces=[envelope_id.as_bytes(),b".".as_slice(),component.as_str().as_bytes(),b" v".as_slice(),&digits[start..]];
@@ -337,7 +337,7 @@ pub fn split_text_preamble(text: &str) -> SemioResult<(SemioEnvelope, &str)> {
 }
 
 /// 🛂️ Borrows canonical text after exact owner, component and version admission.
-pub fn split_text_preamble_controlled<'input>(text:&'input str,envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->SemioResult<&'input str>{
+pub fn split_text_preamble_controlled<'input>(text:&'input str,envelope_id:&str,component:Component,version:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->SemioResult<&'input str>{
     control.checkpoint().map_err(SemioError::DecodingControl)?;
     let bytes=text.as_bytes();let token_start=6usize;
     if !bytes.starts_with(b"semio "){return Err(SemioError::InvalidPreamble("missing canonical envelope prefix".into()));}

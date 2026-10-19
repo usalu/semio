@@ -33,8 +33,6 @@ describe("🧊️ world-3d mesh residency lane", () => {
       const previous = residencyOf(scenario.previousMeshesJson);
       const advanced = advanceWorldMeshResidency(previous, scenario.meshesJson);
       expect(advanced.records.map((record) => record.id)).toEqual(scenario.expect.ids);
-      // 🪪️ Object identity is the whole point: a mesh the payload did not move must be the SAME
-      // object the consumer already held, which is what keeps its built buffers alive.
       const reused = advanced.records.filter((record) => previous?.records.includes(record)).map((record) => record.id);
       expect(reused).toEqual(scenario.expect.reusedIds);
       expect(advanced.records.length - reused.length).toBe(scenario.expect.built);

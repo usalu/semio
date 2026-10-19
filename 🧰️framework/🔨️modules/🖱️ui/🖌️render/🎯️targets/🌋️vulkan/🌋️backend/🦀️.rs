@@ -55,7 +55,6 @@ struct FrameSync {
 }
 
 impl FrameSync {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn create(device: &ash::Device) -> Result<Self, vk::Result> {
         let semaphore_info = vk::SemaphoreCreateInfo::default();
         let fence_info = vk::FenceCreateInfo::default().flags(vk::FenceCreateFlags::SIGNALED);
@@ -65,7 +64,6 @@ impl FrameSync {
         unsafe { Ok(Self { image_available: device.create_semaphore(&semaphore_info, None)?, render_finished: device.create_semaphore(&semaphore_info, None)?, in_flight: device.create_fence(&fence_info, None)? }) }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn destroy(&self, device: &ash::Device) {
         // 🔓️ SAFETY: caller (`VulkanBackend::drop`) has already `device_wait_idle`d — none of these
         // objects is referenced by any pending GPU work.
@@ -121,12 +119,10 @@ impl VulkanBackend {
     /// objects. Only construction is async per U1 — like the Metal target's `MetalBackend::new`, the
     /// body performs no real `.await`: `ash::Entry::load`/instance/device/swapchain creation are all
     /// synchronous FFI calls, unlike wgpu's adapter/device request.
-    // 🚫️async: U1 — the ONE permitted async fn per the `GraphicsBackend` docstring; construction only.
     pub async fn new(display_handle: RawDisplayHandle, window_handle: RawWindowHandle, size: PhysicalSize, dpr: f32) -> Result<Self, BackendError> {
         Self::create(display_handle, window_handle, size, dpr).map_err(Into::into)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn create(display_handle: RawDisplayHandle, window_handle: RawWindowHandle, size: PhysicalSize, dpr: f32) -> Result<Self, VulkanGraphicsError> {
         // 🔓️ SAFETY: `Entry::load` dlopens the system Vulkan loader (`libvulkan.so.1`) and resolves
         // its entry points; this crate builds only on `target_os = "linux"` (the `compile_error!`
@@ -231,7 +227,6 @@ impl VulkanBackend {
     /// existing `self.swapchain` as `old_swapchain` (the documented "resize without a black frame"
     /// pattern) and destroys the old one only *after* the new one exists, per
     /// `vkCreateSwapchainKHR`'s own retirement rules.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recreate_swapchain(&mut self) -> Result<(), VulkanGraphicsError> {
         // 🔓️ SAFETY: `device_wait_idle` has no preconditions beyond a valid device; called here so no
         // in-flight command buffer references the framebuffers/image views this function is about to
@@ -311,7 +306,6 @@ impl VulkanBackend {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn destroy_framebuffers_and_views(&mut self) {
         // 🔓️ SAFETY: called only from `recreate_swapchain` (after a `device_wait_idle`) and `Drop`
         // (which waits idle itself first) — no pending GPU work references these handles.
@@ -394,7 +388,6 @@ fn pick_physical_device(instance: &ash::Instance, surface_loader: &ash::khr::sur
 //#region 🎬️Render
 
 impl VulkanBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn validate_known_resources(&self, packet: &RenderPacket) -> Result<(), BackendError> {
         for batch in &packet.batches {
             if let Some(texture) = batch.texture {
@@ -418,7 +411,6 @@ impl VulkanBackend {
     /// acquire and present by recreating the swapchain and reporting `SkippedOutOfDate`/still
     /// `Presented` respectively (a `SUBOPTIMAL_KHR` present still shows the frame, so it is reported
     /// `Presented`, with recreation deferred to the *next* `render` call rather than forced here).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render_inner(&mut self, packet: &RenderPacket, _time_seconds: f32) -> Result<RenderReport, VulkanGraphicsError> {
         let frame = self.current_frame;
         let fences = [self.frames[frame].in_flight];
@@ -463,9 +455,6 @@ impl VulkanBackend {
         // compatible with `self.render_pass` (both built together in `recreate_swapchain`) and sized
         // to `self.swapchain_extent`, matching `render_area`.
         unsafe { self.device.cmd_begin_render_pass(command_buffer, &render_pass_begin, vk::SubpassContents::INLINE) };
-        // 🕳️ No pipeline bound, no draw issued — milestone 1 is a clear-colour frame only. Batch
-        // replay (`packet.batches`) lands with milestone 2's pipelines; `packet` is accepted and
-        // validated (see `validate_known_resources`) so the call shape is already the real one.
         let _ = packet;
         // 🔓️ SAFETY: matches the `cmd_begin_render_pass` above on the same command buffer.
         unsafe { self.device.cmd_end_render_pass(command_buffer) };
@@ -510,12 +499,10 @@ impl VulkanBackend {
 //#region 🔌️GraphicsBackendImpl
 
 impl GraphicsBackend for VulkanBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn name(&self) -> &'static str {
         "vulkan"
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities {
         DeviceCapabilities {
             max_texture_dimension: 8192,
@@ -534,7 +521,6 @@ impl GraphicsBackend for VulkanBackend {
     /// outright) so `render` has a valid, if stale, target the instant a nonzero `resize` restores it.
     /// `render` itself refuses to draw while parked (`size.is_zero()` is checked before touching the
     /// swapchain — see `GraphicsBackend::render` below), so the staleness is never observed.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError> {
         self.size = size;
         self.dpr = dpr;
@@ -544,12 +530,10 @@ impl GraphicsBackend for VulkanBackend {
         self.recreate_swapchain().map_err(Into::into)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ui_render::ResourceOp]) -> Result<(), BackendError> {
         self.resources.apply(&self.device, &self.memory_properties, self.command_pool, self.graphics_queue, ops).map_err(Into::into)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, time_seconds: f32) -> Result<RenderReport, BackendError> {
         if let DeviceStatus::Lost(reason) = self.status {
             return Err(BackendError::DeviceLost(reason));
@@ -568,7 +552,6 @@ impl GraphicsBackend for VulkanBackend {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn device_status(&self) -> DeviceStatus {
         self.status
     }
@@ -579,7 +562,6 @@ impl GraphicsBackend for VulkanBackend {
     /// `render_inner` would, and that path is unverified without hardware; see the report). The
     /// caller's `ResourceRegistry::report_device_loss` re-marks the returned ids `Requested`, and the
     /// next frame's `apply_resources` repopulates them for real.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
         // 🔓️ SAFETY: best-effort — a genuinely lost device may itself return `ERROR_DEVICE_LOST` from
         // `device_wait_idle`; that failure is deliberately ignored here (`let _ =`) because the
@@ -596,7 +578,6 @@ impl GraphicsBackend for VulkanBackend {
     /// state a real `ERROR_DEVICE_LOST` would (see `render`'s `Err(VulkanGraphicsError::Vk(ERROR_DEVICE_LOST))`
     /// arm), so `render`/`recover` behave identically to the real-fault path from this point forward.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn debug_force_device_loss(&mut self) {
         self.status = DeviceStatus::Lost(LossReason::Device);
     }
@@ -609,7 +590,6 @@ impl GraphicsBackend for VulkanBackend {
     /// frame captured" rather than fabricating pixel data. Wiring the real staging copy is
     /// milestone-2-adjacent follow-up work, called out in the report.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError> {
         if is_parked(self.size) {
             return Err(BackendError::ZeroSizeSurface);
@@ -623,7 +603,6 @@ impl GraphicsBackend for VulkanBackend {
 //#region 🧹️Drop
 
 impl Drop for VulkanBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn drop(&mut self) {
         // 🔓️ SAFETY: every `destroy_*`/`free_*` call below targets a handle this same struct created
         // on `self.device`/`self.instance`, in the reverse order of creation (children before

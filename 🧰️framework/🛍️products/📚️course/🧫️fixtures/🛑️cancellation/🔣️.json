@@ -1,0 +1,26 @@
+{
+  "admission": {
+    "cancelled": true,
+    "operationCalls": 0
+  },
+  "scenarios": [
+    {
+      "command": "start-run",
+      "cancelAt": "before",
+      "runStatus": "open",
+      "addedCommands": 0
+    },
+    {
+      "command": "submit-run",
+      "cancelAt": "before",
+      "runStatus": "open",
+      "addedCommands": 0
+    },
+    {
+      "command": "submit-run",
+      "cancelAt": "submitting",
+      "runStatus": "open",
+      "addedCommands": 0
+    }
+  ]
+}

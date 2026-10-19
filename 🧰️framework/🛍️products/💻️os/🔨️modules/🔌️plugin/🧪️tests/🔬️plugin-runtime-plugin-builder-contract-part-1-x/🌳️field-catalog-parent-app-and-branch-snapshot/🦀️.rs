@@ -240,7 +240,7 @@ impl Mutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
 
 }
 
-impl crate::os_spr::ColdMutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
+impl semio_framework_os_kernel::ColdMutation<RecursiveBranchSnapshot> for RecursiveFixtureMutation {
     type ReferenceDiff = RecursiveBranchDiff;
     fn diff(&self, _base: &RecursiveBranchSnapshot) -> protocol::MutationOutcome<Self::ReferenceDiff> { protocol::MutationOutcome::new(RecursiveBranchDiff { count: Some(self.value) }) }
     fn inverse(&self, base: &RecursiveBranchSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {

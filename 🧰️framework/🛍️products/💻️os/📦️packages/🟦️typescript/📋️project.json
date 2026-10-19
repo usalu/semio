@@ -15,12 +15,27 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/**/*",
       "{projectRoot}/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎚️config/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "generate-wgpu": {
       "executor": "repo:script",
+      "cache": true,
       "inputs": [
         "production",
         "^production"
@@ -32,6 +47,12 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
@@ -40,6 +61,12 @@
     },
     "typecheck": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts typecheck"
@@ -48,6 +75,7 @@
     },
     "check-wgpu": {
       "executor": "repo:script",
+      "cache": true,
       "inputs": [
         "production",
         "^production"
@@ -59,6 +87,12 @@
     },
     "document-opening-attempt-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts document-opening-attempt-check"
@@ -67,6 +101,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
@@ -85,7 +127,12 @@
     },
     "installed-service-check": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts installed-service-check"
@@ -94,6 +141,12 @@
     },
     "mutation-verb-vocabulary-check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts mutation-verb-vocabulary-check",
@@ -103,11 +156,13 @@
     },
     "test-actor-transport": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.{ts,json}",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,json}"
       ],
@@ -119,11 +174,13 @@
     },
     "test-media-transport": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/**/*"
       ],
@@ -135,11 +192,13 @@
     },
     "test-store-oracles": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️tool-transaction/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/**/*",
@@ -164,11 +223,13 @@
     },
     "test-channel-oracles": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "default",
         "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-archive-load-host/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️attached-document-replacement/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️document-port-control-turn/**/*",
@@ -187,6 +248,13 @@
     },
     "test-scene-wire-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
@@ -196,6 +264,13 @@
     },
     "installed-service-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts installed-service-source"
@@ -203,10 +278,14 @@
     },
     "test-pack-wire-materialization-source": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "inputs": [
         "default",
+        "^default",
+        "testEnv",
+        "reads",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🧮️wire-materialization/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🎒️pack-wire-materialization/**/*"
       ],

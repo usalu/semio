@@ -16,17 +16,17 @@ impl DagSelectionSource for DagHost {
 
 /// 🌳️ Retained DAG host: typed nodes, edges, engine, camera.
 pub struct DagHost {
-    /// Size, device ratio, LOD and grid policy, theme and pan anchor of the canvas.
+    /// 🖼️ Size, device ratio, LOD and grid policy, theme and pan anchor of the canvas.
     pub viewport: DagViewportState,
-    /// The host snapshot, the board engine and the id maps between them, with pending wire edits.
+    /// 🕸️ The host snapshot, the board engine and the id maps between them, with pending wire edits.
     pub graph: DagGraphState,
-    /// Widget drag, ghost node, pending click intents and the last pointer down.
+    /// 🖱️ Widget drag, ghost node, pending click intents and the last pointer down.
     pub pointer: DagPointerState,
-    /// Icon paint cache, computing progress, evaluation status and dimming.
+    /// 🎨️ Icon paint cache, computing progress, evaluation status and dimming.
     pub paint: DagPaintState,
-    /// The minimap widget state.
+    /// 🧭️ The minimap widget state.
     pub minimap: DagMinimapState,
-    /// The inline note editing state.
+    /// 💬️ The inline note editing state.
     pub notes: DagNotesState,
 }
 

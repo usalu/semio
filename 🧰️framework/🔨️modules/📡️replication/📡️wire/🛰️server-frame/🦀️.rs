@@ -7,8 +7,6 @@ use super::*;
 #[derive(Clone, Debug, PartialEq)]
 pub enum ApplyOutcome {
     Accepted,
-    // 🔒️ Boxed: MutationEnvelope is far larger than the other variants, and clippy's
-    // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
     Transformed {
         envelope: Box<semio_framework_replication_causal::MutationEnvelope>,
     },
@@ -28,7 +26,6 @@ pub enum ApplyOutcome {
 pub enum AckStage {
     Received,
     Persisted,
-    // 🔒️ Boxed for the same reason as ApplyOutcome::Transformed above.
     Applied { outcome: Box<ApplyOutcome> },
 }
 

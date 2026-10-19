@@ -1,4 +1,4 @@
-//! the closure selection a copy fragment expands to, its centroid, the fresh-id materialization a
+//! 🪝️ the closure selection a copy fragment expands to, its centroid, the fresh-id materialization a
 //! ✂️ Puzzle 5d schema — the typed copy/paste/translate transfer rules over a `Puzzle5dSnapshot`:
 //! paste performs, the direct position write a translate is, and the replace-kind candidate walk.
 //! Mirrors semio-compose's `copyDesign`/`pasteDesign`/`dragPieces`/`findReplaceableTypesForSelection`.

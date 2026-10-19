@@ -41,7 +41,7 @@ test("independent TypeScript semantic oracle distinguishes both authored Source 
 
 test("compiler and SQLite path DATA obey the resolved UTF16 boundary before materialization",()=>{
  const maximum=cases.admission.maximumPathUnits,short=join(output,"path-data"),absolute=join(short,"b".repeat(maximum-short.length-1-80)),leaf=resourceLeasePathV1(absolute,"boundary"),oracle=new Ajv({strict:true}).compile({type:"string",maxLength:maximum});expect(existsSync(absolute)).toBe(false);expect(oracle(leaf+"-journal")).toBe(true);expect((leaf+"-journal").length).toBe(maximum);
- const oversized=join(short,"b".repeat(maximum-short.length));expect(()=>resourceLeasePathV1(oversized,"boundary")).toThrow(/path/i);expect(()=>compilerStateDirectory({root:oversized,owner:"path",compiler:"typescript:test",configuration:"path",mode:"prototype"})).toThrow(/path/i);expect(existsSync(absolute)).toBe(false);
+ const oversized=join(short,"b".repeat(maximum-short.length));expect(()=>resourceLeasePathV1(oversized,"boundary")).toThrow(/path/i);expect(()=>compilerStateDirectory({root:oversized,owner:"path",compiler:"typescript:test",configuration:"path",mode:"prototype"})).toThrow(/path|at most 256 character/i);expect(existsSync(absolute)).toBe(false);
 });
 
 

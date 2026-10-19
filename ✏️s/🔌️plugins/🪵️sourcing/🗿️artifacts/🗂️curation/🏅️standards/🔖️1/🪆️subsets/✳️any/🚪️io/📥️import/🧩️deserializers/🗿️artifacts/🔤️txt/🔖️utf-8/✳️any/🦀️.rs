@@ -1,4 +1,4 @@
-//! txt import via framework `io_mechanism::deserialize_dsl_txt` (UTF-8 DSL carrier).
+//! 📥️ txt import via framework `io_mechanism::deserialize_dsl_txt` (UTF-8 DSL carrier).
 
 use crate::CurationSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{deserialize_dsl_txt, Deserializer};

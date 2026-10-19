@@ -11,12 +11,10 @@ pub struct FuzzySet {
 }
 
 impl FuzzySet {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(name: impl Into<String>, mf: MembershipFunction) -> Self {
         Self { name: name.into(), mf }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn grade(&self, x: f64) -> f64 {
         clamp01(self.mf.eval(x))
     }
@@ -31,19 +29,16 @@ pub struct IntervalType2Set {
 }
 
 impl IntervalType2Set {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(name: impl Into<String>, lower: MembershipFunction, upper: MembershipFunction) -> Self {
         Self { name: name.into(), lower, upper }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn grade_interval(&self, x: f64) -> (f64, f64) {
         let lo = clamp01(self.lower.eval(x));
         let hi = clamp01(self.upper.eval(x).max(lo));
         (lo, hi)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn type_reduced_centroid(&self, universe: &[f64]) -> f64 {
         if universe.is_empty() {
             return 0.0;
@@ -73,12 +68,10 @@ pub struct IntuitionisticSet {
 }
 
 impl IntuitionisticSet {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(name: impl Into<String>, membership: MembershipFunction, non_membership: MembershipFunction) -> Self {
         Self { name: name.into(), membership, non_membership }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn grades(&self, x: f64) -> FuzzyResult<(f64, f64, f64)> {
         let mu = clamp01(self.membership.eval(x));
         let nu = clamp01(self.non_membership.eval(x));

@@ -84,6 +84,7 @@ if (segments[0] === "generation3d-preview-window-transient") {
 const familyRoot = resolve(import.meta.dir, "../..");
 const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
 
+const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
 if (process.argv[2] === "canonical-io") {
   console.log(`generation3d-io-authority checks=${testGeneration3dIoAuthorityFixture()}`);
   await receiveScriptProcessInvocation(process.env, invocation=>runArtifactRustTests("semio-s-artifact-procedural-generation3d", resolve(import.meta.dir, "../../../../../../.."), ["quick", "--locked", "--test", "io-round-trip"], invocation));
@@ -98,4 +99,4 @@ if (process.argv[2] === "canonical-io") {
     { name: "generation3d-snapshot-fixture-asset", run: generation3dSnapshotFixtureAssetSelfTests },
     { name: "generation3d-graph-keyboard", run: generation3dGraphKeyboardSelfTests },
   ],
-}, commands: { verify: OwnedVerifyScript } });
+}, commands: router });

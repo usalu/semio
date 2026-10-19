@@ -6,13 +6,14 @@ import {readFileSync,mkdirSync,writeFileSync,mkdtempSync,readdirSync} from "node
 import {resolve,join,dirname} from "node:path";
 import {spawnSync} from "node:child_process";
 import {POLICY_SKIP_DIRS,policyReadFileSafe} from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
+import {policyAllRustFiles,policyNormalizeRelPath} from "../../../../⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import corpus from "./🧫️fixtures/🔣️.json";
 
 const root=resolve(import.meta.dir,"../../../../../../../../.."),read=(path:string)=>readFileSync(join(root,path),"utf8");
 test("closed compute constructor corpus agrees with independent schema admission",()=>{expect(corpus["version"]).toEqual(1);expect(corpus["constructorPolicy"]["owners"]).toEqual(["🧰️framework/🔨️modules/◻️2d/🧮️compute","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"]);expect(corpus["constructorPolicy"]["cases"]).toEqual([{"id":"canonical-owner","path":"🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs","allowed":true},{"id":"canonical-original-laws","path":"🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs","allowed":true},{"id":"retained-plugin-owner","path":"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs","allowed":true},{"id":"retained-plugin-child","path":"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs","allowed":true},{"id":"removed-os-owner","path":"🧰️framework/🛍️products/💻️os/🔨️modules/⚙️engine/🦀️.rs","allowed":false},{"id":"canonical-sibling-prefix","path":"🧰️framework/🔨️modules/◻️2d/🧮️compute-foreign/🦀️.rs","allowed":false},{"id":"plugin-sibling-prefix","path":"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin-shadow/🦀️.rs","allowed":false},{"id":"foreign-owner","path":"✏️s/🔌️plugins/🧩️puzzle/🦀️.rs","allowed":false},{"id":"native-windows-owner","path":"🧰️framework\\🔨️modules\\◻️2d\\🧮️compute\\🦀️.rs","allowed":true},{"id":"raw-parent-traversal","path":"🧰️framework/🔨️modules/◻️2d/🧮️compute/../foreign/🦀️.rs","allowed":false},{"id":"legacy-rep-debt-path","path":"🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs","allowed":false}]);for(const hostile of [{...corpus,extra:true},{...corpus,constructorPolicy:{...corpus.constructorPolicy,cases:corpus.constructorPolicy.cases.map(row=>row.id==="foreign-owner"?{...row,path:corpus.constructorPolicy.owners[0]+"/🦀️.rs",allowed:true}:row)}}]){}});
 test("actual constructor policy names the canonical owner and retained plugin only",()=>{
- const source=ts.createSourceFile("📜️script.ts",read("📜️script.ts"),ts.ScriptTarget.Latest,true);
+ const source=ts.createSourceFile("🟦️.ts",read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧊️dissolved-kernels/🟦️.ts"),ts.ScriptTarget.Latest,true);
  const declaration=source.statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(item=>item.name.getText(source)==="POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS"));
  expect(declaration).toBeDefined();
  const compiled=ts.transpileModule(declaration!.getText(source),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
@@ -20,7 +21,7 @@ test("actual constructor policy names the canonical owner and retained plugin on
  expect(new Set(corpus.constructorPolicy.cases.map(row=>row.id)).size).toBe(11);
 });
 test("actual constructor-owner predicate matches independent Node path containment",()=>{
- const source=ts.createSourceFile("📜️script.ts",read("📜️script.ts"),ts.ScriptTarget.Latest,true);
+ const source=ts.createSourceFile("🟦️.ts",read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧊️dissolved-kernels/🟦️.ts"),ts.ScriptTarget.Latest,true);
  const declaration=source.statements.find(node=>ts.isVariableStatement(node)&&node.declarationList.declarations.some(item=>item.name.getText(source)==="POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS"));
  const predicate=source.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="policyEngineCacheConstructorOwner");
  expect(predicate).toBeDefined();
@@ -38,12 +39,12 @@ test("actual constructor-owner predicate matches independent Node path containme
  expect(scanner?.getText(source)).toContain("policyEngineCacheConstructorOwner(relPath)");
 });
 test("actual constructor scanner refuses a recreated legacy debt path",()=>{
- const source=ts.createSourceFile("📜️script.ts",read("📜️script.ts"),ts.ScriptTarget.Latest,true);
- const names=new Set(["POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS","POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST","policyEngineCacheConstructorOwner","policyDissolvedEngineCacheScopeBreaches","policyAllRustFiles"]);
+ const source=ts.createSourceFile("🟦️.ts",read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧊️dissolved-kernels/🟦️.ts"),ts.ScriptTarget.Latest,true);
+ const names=new Set(["POLICY_DISSOLVED_ENGINE_CACHE_ALLOWED_DIRS","POLICY_DISSOLVED_REP_ESCAPE_ALLOWLIST","policyEngineCacheConstructorOwner","policyDissolvedEngineCacheScopeBreaches"]);
  const statements=source.statements.filter(node=>ts.isVariableStatement(node)?node.declarationList.declarations.some(item=>names.has(item.name.getText(source))):ts.isFunctionDeclaration(node)&&!!node.name&&names.has(node.name.text));
- expect(statements).toHaveLength(5);
+ expect(statements).toHaveLength(4);
  const compiled=ts.transpileModule(statements.map(node=>node.getText(source).replace(/^export\s+/,"")).join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
- const scan=new Function("POLICY_SKIP_DIRS","policyReadFileSafe","join","readdirSync",compiled+";return policyDissolvedEngineCacheScopeBreaches;")(POLICY_SKIP_DIRS,policyReadFileSafe,join,readdirSync) as (root:string)=>{scope:string;kind:string}[];
+ const scan=new Function("POLICY_SKIP_DIRS","policyReadFileSafe","join","readdirSync","policyAllRustFiles","policyNormalizeRelPath",compiled+";return policyDissolvedEngineCacheScopeBreaches;")(POLICY_SKIP_DIRS,policyReadFileSafe,join,readdirSync,policyAllRustFiles,policyNormalizeRelPath) as (root:string)=>{scope:string;kind:string}[];
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("caller-owned ticket output required");
  const fixtureRoot=mkdtempSync(join(output,"compute-constructor-policy-"));
  const rows=corpus.constructorPolicy.cases.filter(row=>!row.path.includes("\\")&&!row.path.split("/").includes(".."));

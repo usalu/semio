@@ -61,8 +61,8 @@ pub const FILL_RUN_TURNS: usize = 262_144;
 /// `handle_action`, applied to the ledger inside the same call and never queued as a typed operation.
 /// Answers the action's output (`{"toolRun": effect}` or `{"rejected": code}`).
 pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
-    app.ensure_window(main::WINDOW_KIND_ID);
-    let action_meta = ActionMeta { view_state: Some(app.window_view(main::WINDOW_KIND_ID)), ..app.meta("local") };
+    app.ensure_window(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
+    let action_meta = ActionMeta { view_state: Some(app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)), ..app.meta("local") };
     let (raw, cx) = app.parts();
     let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     semio_framework_pack_json::from_dsl_value(&result.output)
@@ -81,9 +81,9 @@ pub async fn start_fill_run(app: &mut Puzzle3dApp) -> Value {
 /// 🧭️ The live fill run's `{runId, generation}` exactly as the main window's Escape binding carries it
 /// (`on_abort` of its engagement input), or `None` while no fill run is live.
 pub async fn fill_run_identity(app: &mut Puzzle3dApp) -> Option<Value> {
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let engagements = app.window_engagements(&view).await;
-    let abort = engagements.get(main::WINDOW_KIND_ID)?.input.as_ref()?.on_abort.clone()?;
+    let abort = engagements.get(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)?.input.as_ref()?.on_abort.clone()?;
     (abort.action == semio_framework_tool_run::TOOL_RUN_ABORT_ACTION_ID).then(|| semio_framework_pack_json::from_dsl_value(abort.args.as_ref().expect("a tool run abort carries its identity")))
 }
 
@@ -110,7 +110,7 @@ pub async fn pump_fill_run(app: &mut Puzzle3dApp, what: &str, until: impl Fn(&pr
 pub async fn pump_brush_suggestions(app: &mut Puzzle3dApp, what: &str, until: impl Fn(Option<&protocol::PresenceToolRun>) -> bool) -> usize {
     let mut settled = Puzzle3dSettled::default();
     for turn in 0..FILL_RUN_TURNS {
-        let view = app.window_view(main::WINDOW_KIND_ID);
+        let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
         for effect in app.pending_effects(Some(&view)).await {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(app, &action, args.as_ref().map(semio_framework_pack_json::from_dsl_value).unwrap_or(Value::Null)).await;
@@ -131,7 +131,7 @@ pub fn brush_suggestions_settled(presence: Option<&protocol::PresenceToolRun>) -
 
 /// 🎣️ Points the armed brush of the main window at `vortex` and pumps until its search settles.
 pub async fn target_brush_suggestions(app: &mut Puzzle3dApp, vortex: &str) {
-    dispatch(app, "targetBrushSuggestions", Some(&json!({ "fullId": vortex })), Some(main::WINDOW_KIND_ID)).await.expect("targetBrushSuggestions");
+    dispatch(app, "targetBrushSuggestions", Some(&json!({ "fullId": vortex })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("targetBrushSuggestions");
     pump_brush_suggestions(app, "the brush suggestions search settles", brush_suggestions_settled).await;
 }
 
@@ -180,7 +180,7 @@ pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str
         window_instance_id: None,
         point: None,
     };
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.context_menu(&request, &view).await
 }
 
@@ -204,7 +204,7 @@ pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str)
         window_instance_id: None,
         point: None,
     };
-    let view = app.window_view(main::WINDOW_KIND_ID);
+    let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.context_menu(&request, &view).await
 }
 

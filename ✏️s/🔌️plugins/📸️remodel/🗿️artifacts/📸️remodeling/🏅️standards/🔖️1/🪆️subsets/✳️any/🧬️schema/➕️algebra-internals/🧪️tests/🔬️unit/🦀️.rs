@@ -117,7 +117,6 @@ fn matd_mul_vec_matches_matrix_vector_multiply() {
 
 #[test]
 fn matd_lu_solve_matches_hand_solved_system() {
-    // 2x + y = 5, x + 3y = 10  =>  x = 1, y = 3
     let mut a = MatD::zeros(2, 2);
     a.set(0, 0, 2.0);
     a.set(0, 1, 1.0);
@@ -149,7 +148,6 @@ fn matd_add_triple_product_matches_btdb() {
     d.set(0, 0, 3.0);
     let mut ke = MatD::zeros(2, 2);
     ke.add_triple_product(&b, &d, 1.0);
-    // Bᵀ D B = [1;2] * 3 * [1 2] = [[3,6],[6,12]]
     assert!((ke.get(0, 0) - 3.0).abs() < 1e-12);
     assert!((ke.get(0, 1) - 6.0).abs() < 1e-12);
     assert!((ke.get(1, 1) - 12.0).abs() < 1e-12);

@@ -19,7 +19,7 @@ function takeBytes(chunks, length) {
     chunks.unshift(chunk.subarray(requested));
     return chunk.subarray(0, requested);
 }
-/** The browser-side endpoint of an in-memory TCP connection. */
+/** 🧮️ The browser-side endpoint of an in-memory TCP connection. */
 export class InMemoryTcpClient {
     #toServer = [];
     #fromServer = [];
@@ -38,7 +38,7 @@ export class InMemoryTcpClient {
         ];
     }
 }
-/** Deterministic, process-local TCP namespaces with a browser-side client API. */
+/** 🧱️ Deterministic, process-local TCP namespaces with a browser-side client API. */
 export class InMemoryTcpSockets {
     #pending = new Map();
     tcp;
@@ -141,7 +141,7 @@ export class InMemoryTcpSockets {
         return client;
     }
 }
-/** The browser-side endpoint of an in-memory UDP socket. */
+/** 🧠️ The browser-side endpoint of an in-memory UDP socket. */
 export class InMemoryUdpClient {
     #send;
     #received = [];
@@ -158,7 +158,7 @@ export class InMemoryUdpClient {
         this.#received.push(new Uint8Array(bytes));
     }
 }
-/** Deterministic, process-local UDP namespaces with a browser-side client API. */
+/** 🏊️ Deterministic, process-local UDP namespaces with a browser-side client API. */
 export class InMemoryUdpSockets {
     #datagrams = new Map();
     #clients = new Map();

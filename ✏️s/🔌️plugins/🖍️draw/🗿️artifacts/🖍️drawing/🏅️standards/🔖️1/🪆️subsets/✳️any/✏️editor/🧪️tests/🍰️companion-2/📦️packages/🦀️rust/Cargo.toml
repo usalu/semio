@@ -25,6 +25,7 @@ semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
 semio-s-artifact-draw-drawing-editor = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-editor-commands = { workspace = true }
 semio-s-artifact-draw-drawing-editor-interaction = { workspace = true, features = ["testkit"] }

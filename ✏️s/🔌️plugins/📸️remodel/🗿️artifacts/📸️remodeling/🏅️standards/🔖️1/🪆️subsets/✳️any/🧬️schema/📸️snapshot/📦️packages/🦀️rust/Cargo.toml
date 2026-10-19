@@ -31,6 +31,7 @@ semio-framework-pack-json = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }

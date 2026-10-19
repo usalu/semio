@@ -1,7 +1,7 @@
 //! 🛂️ Complete borrowed Collection cells preserve intrinsic Statements bodies.
 use super::*;
 use semio_framework_dsl_record::{FieldValue,RecordValue};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::RowWriter};
 fn unwrap(value:&FieldValue)->&FieldValue{match value{FieldValue::Block(value)=>value,_=>value}}
 fn field(root:&RecordValue,id:u16)->Option<&FieldValue>{root.get(id).map(unwrap)}

@@ -65,7 +65,7 @@ pub struct PresenceActivity {
 
 pub use semio_framework_ui_theme::presence::{presence_color,PresenceAppearance,PresenceHsl};
 
-/// inline instead (contract freeze §C7.5).
+/// 🛰️ inline instead (contract freeze §C7.5).
 // 🚫️async: E1 pure accessor consumed by external-trait impls (Default) and sync render/paint call sites — see R9
 /// 🎨️ CSS custom-property reference for a peer's base-cycle palette index (`index % 12`) — only
 /// meaningful when `index / 12 == 0`; callers past the first cycle render [`presence_color`]'s HSL

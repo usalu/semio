@@ -48,7 +48,7 @@ impl MediaArtifact {
     }
 
     /// 🎞️ Reads one full inline intrinsic payload under the caller's import control.
-    pub fn decode_intrinsic(&self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Media,MediaArtifactError>{
+    pub fn decode_intrinsic(&self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Media,MediaArtifactError>{
         let MediaWireFormat::Intrinsic{schema}=&self.descriptor.wire else{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"media wire is not intrinsic").into())};
         if self.descriptor.blob_hash.is_some(){return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"intrinsic media requires inline bytes").into())}
         let media_type=self.descriptor.media_type.ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"intrinsic media requires a declared media type"))?;

@@ -26,13 +26,15 @@ use semio_s_artifact_draw_drawing_geometry::editing::{PathPointRef, translate_wo
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
-use semio_framework_value::{list::PagedList,paged::PagedUtf8};
+use semio_framework_value::paged::PagedUtf8;
+use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
 use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, find_drawing_layer, find_drawing_layer_location};
 use semio_framework_plugin::{MediaType,MediaClass,MediaForm};
 use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use semio_framework_value::{list::PagedList,paged::{PagedUtf8,Utf8Text}};
+use semio_framework_value::paged::{PagedUtf8, Utf8Text};
+use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_draw_drawing_editor_interaction::{DRAWING_INTERACTION_DOMAIN, DRAWING_INTERACTION_GRANULARITY, DRAWING_POINT_DOMAIN, DRAWING_POINT_GRANULARITY};
 use semio_s_artifact_draw_drawing_editor_interaction::points;
 use crate::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;

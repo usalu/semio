@@ -149,8 +149,6 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
         SemioSubsetSnapshot::Presentation(Default::default()),
         SemioSubsetSnapshot::Flow(Default::default()),
     ];
-    // 🔧️ `match` stays exhaustive over all 18 `SemioSubsetSnapshot` arms (compiler-enforced);
-    // the arms excluded from `bases` above are never reached.
     let wrap_absent_mutation = |s: &SemioSubsetSnapshot| -> SemioMutation {
         match s {
             SemioSubsetSnapshot::Brep(_) => unreachable!("excluded from `bases` above"),

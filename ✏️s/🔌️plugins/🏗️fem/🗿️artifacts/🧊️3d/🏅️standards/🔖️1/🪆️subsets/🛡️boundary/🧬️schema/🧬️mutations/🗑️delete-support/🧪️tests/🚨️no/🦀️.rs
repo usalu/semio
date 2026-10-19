@@ -13,7 +13,7 @@
 //! No such restraint exists, so the boundary conditions are left untouched.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation_cold;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -60,7 +60,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 /// ↩️ A BASE-derived inverse reads the record it must restore out of `before`; with nothing there to read, it collapses to no steps at all.
 #[test]
 fn inverse_has_the_declared_shape() {
-    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_fem3d_mutation_cold(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     assert!(inverse.is_empty(), "delete-support/no-such-support-edd22a: a base-derived inverse of a missing target has nothing to restore, got {inverse:?}");
 }
 

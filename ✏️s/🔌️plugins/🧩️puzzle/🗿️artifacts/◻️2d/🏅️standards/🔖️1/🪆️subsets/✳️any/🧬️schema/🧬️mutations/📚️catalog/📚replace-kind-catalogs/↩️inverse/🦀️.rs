@@ -1,5 +1,6 @@
 //! ↩️ Inverse for `ReplaceKindCatalogs` — restores the BASE catalogs (or lack thereof).
 use crate::Puzzle2dSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs::component::ReplaceKindCatalogs;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceKindCatalogs>>(_payload: &super::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

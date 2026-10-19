@@ -5,6 +5,10 @@
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/**/*.rs",
       "{projectRoot}/**/*"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/📜️imperative/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {

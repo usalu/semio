@@ -4,8 +4,8 @@ import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-refere
 import { parseDagArtifact, parseDagContentChild, type DagArtifact } from "../🟦️.ts";
 
 export interface DagDiff {
-  /** @state artifact */ schema?: "dag.dag";
-  /** @state artifact @child kind=s.stdio.semio */ content?: ArtifactChild;
+  /** 🔄️ @state artifact */ schema?: "dag.dag";
+  /** 📄️ @state artifact @child kind=s.stdio.semio */ content?: ArtifactChild;
 }
 
 /** 🔎️ Keeps absent, set and clear operations distinct at the wire boundary. */

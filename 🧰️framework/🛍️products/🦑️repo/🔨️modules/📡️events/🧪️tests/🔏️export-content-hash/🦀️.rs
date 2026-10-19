@@ -60,9 +60,6 @@ fn input_ids_are_namespaced(ctx: &Context) -> Result<Outcome, String> {
 
 fn unchanged_export_is_refused(ctx: &Context) -> Result<Outcome, String> {
     let snapshot = snapshot(ctx)?;
-    // 🧹️The harness reuses one work directory per (case, role, implementation) and never empties it,
-    // so a log left by an earlier run would make the FIRST append the duplicate. The scenario owns a
-    // directory it clears first.
     let dir = ctx.work_dir.join("unchanged-export-is-refused");
     if dir.exists() {
         fs::remove_dir_all(&dir).map_err(|error| error.to_string())?;

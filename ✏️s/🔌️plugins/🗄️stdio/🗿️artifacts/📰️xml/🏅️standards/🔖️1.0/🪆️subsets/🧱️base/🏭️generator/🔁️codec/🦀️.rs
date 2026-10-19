@@ -1,4 +1,4 @@
-//! quick-xml-oracle-codec — standalone XML 1.0 declaration/doctype/element-tree codec on top of
+//! 🧾️ quick-xml-oracle-codec — standalone XML 1.0 declaration/doctype/element-tree codec on top of
 //! `quick-xml` 0.42's own generic event reader/writer (`quick_xml::reader::Reader`,
 //! `quick_xml::writer::Writer`). Zero dependencies beyond `quick-xml` itself (see this crate's own
 //! Cargo.toml — its own `[workspace]`, isolated from the repository's root workspace and Cargo.lock).

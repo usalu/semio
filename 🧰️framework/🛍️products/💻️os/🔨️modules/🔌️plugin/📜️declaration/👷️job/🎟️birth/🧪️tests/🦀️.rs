@@ -1,6 +1,7 @@
 /// 🧪️ Original optional producer inputs survive denial and every physical frame returns to their issuer.
 use super::*;
-use semio_framework_job::{InteractiveJob,OriginalCallerSourceParent,JobPayloadAuthority,OperationId,Generation,StepBudget};
+use semio_framework_job::{InteractiveJob, OriginalCallerSourceParent, OperationId, Generation, StepBudget};
+use semio_framework_job_payload::{JobPayloadAuthority};
 
 struct Body {terminal:bool,bytes:[u8;31]}
 impl InteractiveJob for Body {

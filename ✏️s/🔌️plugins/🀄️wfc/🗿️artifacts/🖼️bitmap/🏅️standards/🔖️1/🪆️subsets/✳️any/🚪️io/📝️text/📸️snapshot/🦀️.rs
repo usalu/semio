@@ -289,7 +289,7 @@ pub fn decode_base64(text: &str) -> Option<Vec<u8>> {
 pub fn decode_pixel_text(text:&str)->Result<Vec<u8>,semio_framework_value::ValueError>{decode_base64(text).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"Bitmap pixels require canonical base64"))}
 
 /// 🫴️ Binds the literal bitmap fields under original native admission.
-pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
+pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum_rows:usize)->Result<BitmapSnapshot,semio_framework_value::ValueError>{
         let parsed=BitmapSnapshotDsl::__dsl_from_record_controlled(record,native)?;
         let entities=parsed.palette.len().checked_add(parsed.pinned.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count overflow").to_string()))?;
         if entities.checked_add(4).is_none_or(|rows|rows>maximum_rows){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("bitmap native entity count exceeds caller limit").to_string()));}

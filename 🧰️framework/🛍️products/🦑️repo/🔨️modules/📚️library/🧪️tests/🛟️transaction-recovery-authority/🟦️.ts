@@ -3,6 +3,7 @@ import { expect, test } from "bun:test";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, lstatSync, readdirSync, renameSync, symlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { requireTaxonomyValue } from "../../🧹️normalization/📜️plan-contracts/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { join, resolve } from "node:path";
 import ts from "typescript";
@@ -26,6 +27,7 @@ function evaluate(compiler: typeof compilers[number], row: any, forward: boolean
   const plan = { edits: [], moves: [], embeddedTicketRootRelocations: [], evidenceRemovals: [], embeddedTicketRoots: [], symlinkTargetEdits: [], regenerations: [{ id: "fixture", contractId: "fixture", inputs: [input], preOutputs: [], outputs: [], outputRoots: ["🧪️outputs"] }] };
   const journal = { stagingRoot: "stage", backupRoot: "backup", backups: {}, appliedEditPaths: [], startedRegenerationIds: [], completedRegenerationIds: [] };
   const adapters = {
+    requireTaxonomyValue,
     isTransactionRepositoryAuthorityError: () => false,
     absolutePath: (root: string, path: string) => join(root, path), join,
     canonicalJson: (value: unknown) => JSON.stringify(value),
@@ -88,7 +90,7 @@ test("WAL and selected-resume snapshots use owned proof while forward execution 
 test("recovery authority is mounted through its exact Nx registration", () => {
   const row = vector.registration, packagePath = join(library, "📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packagePath, "📋️project.json"), "utf8"));
-  expect(project.targets["test-" + row.id]).toEqual({ executor: "nx:run-commands", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + row.id } });
+  expect(project.targets["test-" + row.id]).toMatchObject({ executor: "repo:script", options: { cwd: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript", command: "bun ./📜️script.ts test " + row.id } });
   const router = readFileSync(join(packagePath, "📜️script.ts"), "utf8");
   expect(router).toContain('segments[0] === "' + row.id + '"');
   expect(router).toContain('🧪️tests/🛟️' + row.id + '/🟦️.ts');

@@ -76,7 +76,6 @@ impl IncrementalSfm {
         let mut best: Option<(usize, Vec<([f64; 2], [f64; 2])>)> = None;
         for &ref_f in &registered {
             let mut corr = Vec::new();
-            // Prefer direct pairwise matches (unordered) so JPEG conflicted track chains do not starve PnP fallback.
             for &(a, b, ref matches) in &self.pairwise_matches {
                 let (src, dst, flip) = if a == ref_f && b == frame {
                     (ref_f, frame, false)
@@ -105,7 +104,6 @@ impl IncrementalSfm {
         let (ref_f, mut corr) = best.ok_or(SfmError::PnpFailed)?;
         const MAX_TWO_VIEW_CORRS: usize = 64;
         if corr.len() > MAX_TWO_VIEW_CORRS {
-            // Keep a deterministic stride subsample so LO-RANSAC stays bounded on dense JPEG match tables.
             let step = corr.len().div_ceil(MAX_TWO_VIEW_CORRS);
             corr = corr.into_iter().enumerate().filter_map(|(i, c)| (i % step == 0).then_some(c)).collect();
         }
@@ -147,13 +145,9 @@ impl IncrementalSfm {
             shared.push((point, px_f));
         }
         let s = if scales.is_empty() {
-            // 🏃️ JPEG / sparse-track path: no shared triangulated point survived matching, so borrow the
-            // metric from the most recent registered baseline (sequential orbit / video assumes similar
-            // inter-frame translation magnitude) instead of abandoning the frame.
             if self.cameras.len() < 2 {
                 return Err(SfmError::PnpFailed);
             }
-            // Anchor metric to the seed pair's baseline so chained two-view poses share one scale.
             let baseline = norm3(sub3(camera_center(&self.cameras[0].1), camera_center(&self.cameras[1].1)));
             if baseline < 1e-9 {
                 return Err(SfmError::PnpFailed);
@@ -239,13 +233,6 @@ impl IncrementalSfm {
                 if preparation.correspondences.len() < 8 {
                     return Err(SfmError::InsufficientMatches);
                 }
-                // 🎯️ Five-point minimal solves, one bounded batch per call, the best-supported model
-                // kept across calls and polished once at the end: the seed pose anchors every
-                // triangulation, PnP registration and bundle adjustment downstream, so it is worth
-                // the manifold-true estimate; the unconstrained 8-point fit is only the fallback for
-                // a pair the five-point search cannot solve at all.
-                // The tolerance is the configured pixel threshold in normalized coordinates, so a
-                // 128-pixel frame is judged as leniently as a 320-pixel one.
                 let threshold = self.cfg.ransac_threshold_px / self.intrinsics.fx.max(self.intrinsics.fy).max(1.0);
                 let seed = (preparation.frame_a as u64) << 32 ^ preparation.frame_b as u64 ^ (preparation.attempts as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
                 let candidate = estimate_essential_five_point_bounded(&preparation.correspondences, &self.intrinsics, &self.intrinsics, threshold, seed, SEED_HYPOTHESES_PER_CALL, 0);
@@ -266,8 +253,6 @@ impl IncrementalSfm {
                     Ok::<TwoViewResult, SfmError>(linear)
                 };
                 if preparation.attempts == 0 {
-                    // 🛑️ Coincident correspondences (every point the same pixel) have no geometry
-                    // to solve; answer on the first call rather than after every batch failed.
                     let spread = |side: usize| {
                         let coordinate = |pair: &([f64; 2], [f64; 2])| if side == 0 { pair.0 } else { pair.1 };
                         let first = coordinate(&preparation.correspondences[0]);
@@ -278,9 +263,6 @@ impl IncrementalSfm {
                     }
                 }
                 if let Some(candidate) = candidate {
-                    // A candidate that beats the running best is polished right away, so the
-                    // comparison is between refined models (a raw five-point fit through five
-                    // integer-pixel keypoints explains only a handful of correspondences).
                     if candidate.score < preparation.best_raw_score {
                         preparation.best_raw_score = candidate.score;
                         let polished = polish_essential(candidate, &preparation.correspondences, &self.intrinsics, threshold);
@@ -293,8 +275,6 @@ impl IncrementalSfm {
                 if preparation.attempts < SEED_SOLVE_CALLS {
                     return Ok(false);
                 }
-                // 🎯️ The five-point search's best model, or the linear fit as the fallback for a
-                // pair the minimal solver could not support with eight inliers.
                 let estimate = match preparation.best.take().filter(|estimate| estimate.inliers.len() >= 8) {
                     Some(estimate) => estimate,
                     None => linear()?,
@@ -425,8 +405,6 @@ impl IncrementalSfm {
                     } else {
                         continue;
                     };
-                    // 📏️ Deterministic stride subsample so one solve never sees more than the bounded
-                    // maximum, however dense the pair's match table is.
                     let stride = matches.len().div_ceil(MAX_INTERACTIVE_REGISTRATION_CORRESPONDENCES).max(1);
                     for matched in matches.iter().step_by(stride) {
                         let pair = if flip { (self.obs_px(fallback.reference, matched.b), self.obs_px(preparation.frame, matched.a)) } else { (self.obs_px(fallback.reference, matched.a), self.obs_px(preparation.frame, matched.b)) };
@@ -444,10 +422,6 @@ impl IncrementalSfm {
                 let frame = preparation.frame;
                 let fallback = preparation.two_view.as_mut().expect("two-view fallback");
                 let seed = (frame as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ fallback.attempts as u64;
-                // 🎯️ One bounded hypothesis batch per call from each estimator; the five-point
-                // manifold survives the low-parallax video geometry the linear eight-point fit
-                // degenerates on, and MSAC scores over the same correspondences are comparable, so
-                // the better model simply wins across calls.
                 let candidates = [
                     estimate_essential_five_point_bounded(&fallback.correspondences, &intrinsics, &intrinsics, FIVE_POINT_THRESHOLD, seed, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL, 0),
                     estimate_essential_with_limit(&fallback.correspondences, &intrinsics, &intrinsics, INTERACTIVE_TWO_VIEW_HYPOTHESES_PER_CALL),
@@ -529,9 +503,6 @@ impl IncrementalSfm {
                     return Ok(false);
                 };
                 let scale = if fallback.scales.is_empty() {
-                    // 🏃️ Sparse-track path (JPEG/video matching left no shared triangulated point):
-                    // borrow the seed pair's baseline so every chained two-view pose shares one
-                    // metric, instead of abandoning the frame.
                     if self.cameras.len() < 2 {
                         preparation.phase = RegistrationPhase::Failed;
                         return Ok(false);

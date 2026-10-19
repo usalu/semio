@@ -1,7 +1,7 @@
 //! 🧩️ Borrowed composite member and nested material cells before typed ownership.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for(id,actions,nested)in[(3,17,4),(4,13,1),(5,9,2)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,nested)?;rows=n::add(rows,n::list(n::field(n::record(owner)?,actions)?)?.len())?}}Ok(rows)}

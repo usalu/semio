@@ -34,7 +34,7 @@ pub enum PluginPanelStatus {
 pub struct PluginSupervisorState {
     pub healthy: bool,
     pub restart_count: u32,
-    /// `u64`, but the wire format is plain JSON (this module has no binary codec), so the TS
+    /// 🍃️ `u64`, but the wire format is plain JSON (this module has no binary codec), so the TS
     /// mirror is explicitly `number`, since millisecond epoch timestamps never
     /// approach `u64::MAX`, let alone JS's `Number.MAX_SAFE_INTEGER`.
     pub last_signal_ms: Option<u64>,
@@ -83,7 +83,7 @@ pub enum NoticeKind {
 pub struct TransientNotice {
     pub message: String,
     pub kind: NoticeKind,
-    /// See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
+    /// 🧩️ See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
     /// a wider integer projection, in the TypeScript mirror.
     pub expires_at_ms: Option<u64>,
 }

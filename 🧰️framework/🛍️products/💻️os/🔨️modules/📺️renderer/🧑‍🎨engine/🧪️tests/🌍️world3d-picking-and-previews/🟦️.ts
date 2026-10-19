@@ -92,15 +92,10 @@ describe("framework renderer hosts", () => {
   });
 
   it("paints the pane's own raycast hover before the guest echoes it, and the guest's when the pointer is elsewhere", () => {
-    // 🎯️ Inside the pane the raycast leads: over an object it paints at once, over nothing it clears at
-    // once — both before the `interactionHover` round trip settles and regardless of what the guest's
-    // lane still says.
     expect(worldHoverPaintIdV1("bim-1", null)).toBe("bim-1");
     expect(worldHoverPaintIdV1("bim-1", "bim-1")).toBe("bim-1");
     expect(worldHoverPaintIdV1("bim-2", "bim-1")).toBe("bim-2");
     expect(worldHoverPaintIdV1(null, "bim-1")).toBeNull();
-    // 🧭️ With no local claim (the pointer left the pane) the guest's hover — an outliner row, a remote
-    // presence — is what the pane paints.
     expect(worldHoverPaintIdV1(undefined, "bim-1")).toBe("bim-1");
     expect(worldHoverPaintIdV1(undefined, null)).toBeNull();
   });
@@ -307,7 +302,6 @@ describe("framework renderer hosts", () => {
   it("boardWorldToScreen is the exact inverse of boardScreenToWorld", () => {
     const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
     const containerSize = { w: 800, h: 600 };
-    // 🎯️ The camera's own world position always maps to the viewport center.
     expect(boardWorldToScreen(cameraJson, containerSize, { x: 120, y: 80 })).toEqual({ x: 400, y: 300 });
     for (const screen of [
       { x: 0, y: 0 },

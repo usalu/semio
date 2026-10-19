@@ -516,7 +516,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(result.mappingDigest).toBe("b47425503a8ebc2a60120e91a5fd6a7e8a54411bdfc122b87a2ef7d5a7cf2d8f");
     expect(result.destinationDirectoryCount).toBe(266);
     expect(result.destinationNodeCount).toBe(495);
-    expect(result.maxPathBytes).toBe(237);
+    expect(result.maxPathUtf16Units).toBe(189);
     expect(projection.modelCatalog?.models).toHaveLength(9);
     expect(projection.modelCatalog?.categoryRules.map(({ count }) => count).reduce((sum, count) => sum + count, 0)).toBe(220);
   });
@@ -584,7 +584,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
 
     const longStem = "path".repeat(40);
     const longNodes: SemanticProjectionAuthorityNode[] = [...nodes, { path: `${modelRoot}/🎬️actions/🔣️${longStem}.json`, nodeKind: "file", content: JSON.stringify({ id: "long", schema: "spatial.action", version: "1.0.0" }) }];
-    expect(projectionAuthority(projection, longNodes).problems.some((problem) => problem.includes("maxPathBytes"))).toBe(true);
+    expect(projectionAuthority(projection, longNodes).problems.some((problem) => problem.includes("path-too-long"))).toBe(true);
     expect(projectionAuthority(projection, nodes, [projection.mappings[0]!.destinationPath]).problems.some((problem) => problem.includes("occupied"))).toBe(true);
   });
 
@@ -599,7 +599,7 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(result.mappingDigest).toBe(projection.mappingDigest);
     expect(result.destinationDirectoryCount).toBe(projection.destinationDirectoryCount);
     expect(result.destinationNodeCount).toBe(projection.destinationNodeCount);
-    expect(result.maxPathBytes).toBe(projection.maxPathBytes);
+    expect(result.maxPathUtf16Units).toBe(projection.maxPathUtf16Units);
     expect(result.mappings.filter(({ destinationPath }) => destinationPath.endsWith("/📦️packages/🦀️rust/Cargo.toml"))).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.workspaceMemberCount);
     expect(semanticPathProjectionAuthority({ ...options, nodes }, live).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
 

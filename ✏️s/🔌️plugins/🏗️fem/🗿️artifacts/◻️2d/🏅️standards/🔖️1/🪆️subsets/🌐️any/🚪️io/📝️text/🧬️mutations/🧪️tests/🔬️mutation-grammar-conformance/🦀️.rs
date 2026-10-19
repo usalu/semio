@@ -1,6 +1,10 @@
-use super::*;
+extern crate semio_framework_os_kernel as protocol;
+
 use protocol::OpText;
 use semio_framework_dsl_record::DslVariants;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::mutation_grammar_recognizer;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::io::text::mutations::MUTATION_GRAMMAR_SEMIO;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
 
 #[test]
@@ -15,11 +19,11 @@ fn component_grammar_semio_matches_the_exact_declared_mutation_language(){
         ("create-material",include_str!("../../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🌱️create-material/🏗️adds/🦠️mutation/🔣️.json")),
         ("delete-material",include_str!("../../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-material/🗑️drops/🦠️mutation/🔣️.json")),
         ("replace-material",include_str!("../../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-material/📉️cracks/🦠️mutation/🔣️.json")),
-        ("change-material",include_str!("../../../../../../🧱️material/🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🦠️mutation/🔣️.json")),
+        ("change-material",include_str!("../../../../../../🧱️material/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-material/📉️softens/🦠️mutation/🔣️.json")),
         ("create-section",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/📐️create-section/📐️appends/🦠️mutation/🔣️.json")),
         ("delete-section",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-section/📍️removes-a-middle-row/🦠️mutation/🔣️.json")),
         ("replace-section",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/📏️replace-section/💪️stiffens/🦠️mutation/🔣️.json")),
-        ("change-section",include_str!("../../../../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🦠️mutation/🔣️.json")),
+        ("change-section",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-section/🩹️changes/🦠️mutation/🔣️.json")),
         ("create-support",include_str!("../../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/🦠️mutation/🔣️.json")),
         ("delete-support",include_str!("../../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-support/🕊️frees/🦠️mutation/🔣️.json")),
         ("replace-support",include_str!("../../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-support/🔩️pins/🦠️mutation/🔣️.json")),
@@ -35,13 +39,13 @@ fn component_grammar_semio_matches_the_exact_declared_mutation_language(){
         ("delete-combination",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/✂️delete-combination/🗑️drops/🦠️mutation/🔣️.json")),
         ("update-analysis-settings",include_str!("../../../../../../📈️analysis/🧪️tests/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🎚️raises/🦠️mutation/🔣️.json")),
         ("replace-node",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-node/🕹️raises-the-ridge-e53b00/🦠️mutation/🔣️.json")),
-        ("change-node",include_str!("../../../../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🦠️mutation/🔣️.json")),
-        ("change-combination-term",include_str!("../../../../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json")),
-        ("change-combination-name",include_str!("../../../../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🦠️mutation/🔣️.json")),
-        ("change-load",include_str!("../../../../../../🏋️load/🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🦠️mutation/🔣️.json")),
-        ("change-element",include_str!("../../../../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/🦠️mutation/🔣️.json")),
-        ("change-support",include_str!("../../../../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🦠️mutation/🔣️.json")),
-        ("change-region",include_str!("../../../../../../🕸️mesh/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🦠️mutation/🔣️.json")),
+        ("change-node",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-node/🩹️changes/🦠️mutation/🔣️.json")),
+        ("change-combination-term",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-term/⚖️weights/🦠️mutation/🔣️.json")),
+        ("change-combination-name",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-combination-name/⚗️empty/🦠️mutation/🔣️.json")),
+        ("change-load",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-load/📍️target/🦠️mutation/🔣️.json")),
+        ("change-element",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-element/🔀️variant/🦠️mutation/🔣️.json")),
+        ("change-support",include_str!("../../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🦠️mutation/🔣️.json")),
+        ("change-region",include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-region/🩹️changes/🦠️mutation/🔣️.json")),
         ("replace-load",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-load/💨️strengthens/🦠️mutation/🔣️.json")),
         ("change-load-case-name",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🏷️change-load-case-name/✏️renames/🦠️mutation/🔣️.json")),
         ("replace-combination",include_str!("../../../../../../🏋️load/🧪️tests/🧫️fixtures/🧬️mutations/🔁️replace-combination/🔗️adds/🦠️mutation/🔣️.json")),

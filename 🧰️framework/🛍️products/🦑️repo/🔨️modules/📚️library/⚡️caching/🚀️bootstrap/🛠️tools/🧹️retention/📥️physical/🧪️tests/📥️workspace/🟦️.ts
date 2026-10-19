@@ -5,7 +5,7 @@ import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{mkdtemp,rm,readdir,lstat,statfs}from"node:fs/promises";
 import{existsSync}from"node:fs";
 import{join}from"node:path";
-import{withRepositoryCacheStoreV1}from"./../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{withRepositoryCacheStoreV1}from"../../../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{repositoryCacheBudgetV1}from"./../../../../../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import{repositoryLeaseDirectoryV1,openRepositoryCachePartitionV1}from"./../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{recoverNativeStorageReservationV1,observeNativeStorageStateV1,nativeStorageRetirementPortV1}from"@semio-tech/process/artifacts/native-build/storage";

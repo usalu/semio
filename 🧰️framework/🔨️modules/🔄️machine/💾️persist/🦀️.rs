@@ -24,18 +24,18 @@ pub struct PersistedSnapshot {
 /// 💾️ Why [`restore`] could not rebuild a [`Snapshot`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RestoreError {
-    /// No [`Migration`] bridges the persisted fingerprint to the current machine.
+    /// 👆️ No [`Migration`] bridges the persisted fingerprint to the current machine.
     FingerprintMismatch,
-    /// A persisted stable id no longer exists in the current machine.
+    /// 🧊️ A persisted stable id no longer exists in the current machine.
     UnknownStableId(String),
 }
 
 /// 💾️ Migrates a [`PersistedSnapshot`] captured under an older machine fingerprint.
 #[dyn_enum]
 pub trait Migration {
-    /// The fingerprint this migration accepts as input.
+    /// 🔏️ The fingerprint this migration accepts as input.
     fn source_fingerprint(&self) -> u64;
-    /// Produces a [`PersistedSnapshot`] valid under a newer fingerprint.
+    /// ✅️ Produces a [`PersistedSnapshot`] valid under a newer fingerprint.
     fn migrate(&self, snapshot: PersistedSnapshot) -> PersistedSnapshot;
 }
 

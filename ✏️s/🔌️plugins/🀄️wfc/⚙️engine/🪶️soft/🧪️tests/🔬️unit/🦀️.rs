@@ -6,7 +6,7 @@ fn best_of_n_keeps_the_highest_scoring_attempt() {
     let (best, solved) = best_of_n(0, 5, BestOfNKeep::Highest, &scorer, |seed| Some(vec![PatternId(seed as u32 % 10)]));
     assert_eq!(solved, 5);
     let best = best.unwrap();
-    assert_eq!(best.assignment, vec![PatternId(4)]); // seeds 0..5 -> patterns 0..5, max is 4
+    assert_eq!(best.assignment, vec![PatternId(4)]);
 }
 
 #[test]

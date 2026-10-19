@@ -262,7 +262,7 @@ impl PluginRuntimeRegistry {
     /// catalog tolerates exact duplicates), so an instance resolves those references whether or not a plugin assembly ran in
     /// its process (design §23).
     pub fn publish_framework_schema_documents() -> Result<(), ::semio_framework_schema_registry::SchemaExportRegistryError> {
-        semio_framework_value::register_value_schema_exports()?;
+        semio_framework_value_schema::register_value_schema_exports()?;
         store::register_store_schema_exports()?;
         store::io_schema::register_io_schema_exports()
     }

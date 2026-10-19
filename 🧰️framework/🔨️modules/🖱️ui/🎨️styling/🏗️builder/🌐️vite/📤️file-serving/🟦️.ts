@@ -26,7 +26,7 @@ export function contentTypeForStaticDirAsset(filePath: string): string | undefin
   return undefined;
 }
 
-/** @emoji 🏷️ Serves one file with HTTP validators: a weak `ETag` from its size and nanosecond mtime, `Last-Modified`,
+/** 🏷️ Serves one file with HTTP validators: a weak `ETag` from its size and nanosecond mtime, `Last-Modified`,
  * `Content-Length` and `Cache-Control: no-cache` (always revalidate — a restage rewrites files in place). A request whose
  * `If-None-Match` names the current tag (weak comparison, RFC 9110 §13.1.2), or — without one — whose `If-Modified-Since`
  * is not older than the file, is answered `304` with no body; `HEAD` gets the headers only.

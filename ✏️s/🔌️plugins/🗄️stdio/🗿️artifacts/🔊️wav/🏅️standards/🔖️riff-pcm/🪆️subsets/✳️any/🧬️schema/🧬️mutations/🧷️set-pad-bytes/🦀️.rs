@@ -16,7 +16,6 @@ pub struct SetPadBytes {
 
 impl SetPadBytes {
     /// 🔺️ The sparse diff this payload asks of `base`: each pad byte that differs.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn wanted(&self, base: &WavSnapshot) -> WavDiff {
         WavDiff { fmt_pad_byte: (base.fmt_pad_byte != self.fmt_pad_byte).then_some(self.fmt_pad_byte), data_pad_byte: (base.data_pad_byte != self.data_pad_byte).then_some(self.data_pad_byte), ..WavDiff::default() }
     }

@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-encryption-dictionary`.
+//! 💾️ Direct binary identity for `remove-encryption-dictionary`.
 
 pub const TAG: u8 = 1;
 pub const BINARY_TAG: u8 = TAG;

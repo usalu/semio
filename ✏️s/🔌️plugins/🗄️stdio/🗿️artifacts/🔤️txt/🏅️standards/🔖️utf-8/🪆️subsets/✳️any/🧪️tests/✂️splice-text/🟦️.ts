@@ -30,7 +30,6 @@ describe("plain-text splices (ajv + independent scalar oracle)", () => {
     test(`${row.id}: the ranges mean the corpus text`, () => {
       const text = spliced(row.before, row.splices);
       if (row.after === null) {
-        // a refused row is outside the text, or switches an LF document to CRLF (the ending changes only through set-line-ending)
         if (text === null) return;
         expect(!row.before.includes("\r\n") && text.includes("\r\n")).toBe(true);
       } else {

@@ -37,7 +37,7 @@ fn BOARD_HOST_SOURCE() -> &'static str {
             && !codec.contains("single_page()")
             && !codec.contains("const BOARD_FILL_COMMIT_BYTES: usize = 13")
             && !codec.contains("result.encode")
-            && job.contains("start.saturating_add(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)")
+            && job.contains("start.saturating_add(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)")
             && job.contains("if end < BOARD_FILL_COMMIT_BYTES")
             && job.contains("encoder.output_cursor = end")
     }

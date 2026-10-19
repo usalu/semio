@@ -32,8 +32,6 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
     let open_total: usize = open_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
 
     assert!(open_total > closed_total, "an open Select should paint its popup rows in addition to the closed trigger");
-    // "Beta" (value "b") is the current value — its row should paint a `row_hover`-colored
-    // highlight rect (a KIND_ROUNDED instance in exactly `theme.row_hover`).
     let has_selected_highlight = open_draw
         .layers
         .iter()

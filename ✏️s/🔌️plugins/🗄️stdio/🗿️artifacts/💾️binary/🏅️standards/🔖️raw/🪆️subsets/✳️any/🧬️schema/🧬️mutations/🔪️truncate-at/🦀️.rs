@@ -34,11 +34,6 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
         Ok({
             {
                 if *offset >= base.bytes.len() {
-                    // 🧭️ Nothing was actually dropped (offset was already past the end), so there is
-                    // no real forward step to undo — the same empty-inverse idiom the migrated `tiff`
-                    // pilot uses for its own dropped-`NoMutation` fallback arms (`RemoveTileTags`'s
-                    // "was already absent" case, `../../🖼️tiff/…/🧱️baseline/🧬️schema/🧬️mutations/
-                    // 🦀️.rs`), rather than reinstating a unit `NoMutation` variant the derive forbids.
                     Vec::new()
                 } else {
                     vec![BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: *offset, remove_len: 0, insert: base.bytes[*offset..].to_vec() })]

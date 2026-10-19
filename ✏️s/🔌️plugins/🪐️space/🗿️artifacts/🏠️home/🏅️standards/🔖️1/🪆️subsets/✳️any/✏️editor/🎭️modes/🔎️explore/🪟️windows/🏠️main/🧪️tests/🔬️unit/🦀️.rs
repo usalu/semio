@@ -157,10 +157,6 @@ async fn a_local_row_carries_open_and_remove_from_home() {
 #[semio_framework_async_macros::async_test]
 async fn seeded_local_studio_renders_a_table_row() {
     let cfg = HomeConfig::default();
-    // 🌱️ `semio_s_space_core::catalog_port()` lazily seeds a demo space on first access (plugin root's own
-    // `catalog_port_concrete`), so the local catalog is never truly empty once touched — this test
-    // exercises the REAL end-to-end `render` (not `render_rows`), deliberately not asserting on
-    // emptiness (see `empty_rows_render_the_empty_message_not_a_zero_row_table` for that, isolated).
     let _ = semio_s_space_core::list_all_space_catalog_entries().await;
     let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_framework_ui_locale::Locale::En)).expect("seeded Home rows");
     let json = project(node);

@@ -173,7 +173,7 @@
    "additionalProperties": false,
    "properties": {
     "semanticOwner": {
-     "const": "🟦️.ts"
+     "const": "🔖️sync-protocol/🟦️.ts"
     },
     "binaryOwner": {
      "const": "🚪️io/💾️binary/🟦️.ts"
@@ -201,7 +201,7 @@
    "additionalProperties": false,
    "properties": {
     "semanticOwner": {
-     "const": "🟦️.ts"
+     "const": "🔖️sync-protocol/🟦️.ts"
     },
     "binaryOwner": {
      "const": "🚪️io/💾️binary/👥️presence/🟦️.ts"
@@ -240,7 +240,7 @@
    "additionalProperties": false,
    "properties": {
     "semanticOwner": {
-     "const": "🟦️.ts"
+     "const": "🔖️sync-protocol/🟦️.ts"
     },
     "binaryOwner": {
      "const": "🚪️io/💾️binary/🔗️causal/🟦️.ts"
@@ -274,6 +274,7 @@
    "type": "object",
    "required": [
     "semanticOwner",
+    "constantsOwner",
     "binaryOwner",
     "functions",
     "semanticTypes",
@@ -285,6 +286,9 @@
    "additionalProperties": false,
    "properties": {
     "semanticOwner": {
+     "const": "🔖️sync-protocol/🟦️.ts"
+    },
+    "constantsOwner": {
      "const": "🟦️.ts"
     },
     "binaryOwner": {
@@ -367,7 +371,7 @@
    "additionalProperties": false,
    "properties": {
     "semanticOwner": {
-     "const": "🟦️.ts"
+     "const": "🔖️sync-protocol/🟦️.ts"
     },
     "owner": {
      "const": "🚪️io/📥️bootstrap/🟦️.ts"
@@ -446,7 +450,7 @@
    "additionalProperties": false,
    "properties": {
     "semanticOwner": {
-     "const": "🟦️.ts"
+     "const": "🔖️sync-protocol/🟦️.ts"
     },
     "owner": {
      "const": "🚪️io/💾️binary/📡️wire/🟦️.ts"

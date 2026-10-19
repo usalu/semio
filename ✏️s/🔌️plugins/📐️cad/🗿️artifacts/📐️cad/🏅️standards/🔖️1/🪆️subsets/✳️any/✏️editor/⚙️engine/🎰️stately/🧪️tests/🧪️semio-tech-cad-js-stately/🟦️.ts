@@ -106,11 +106,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(doc.mermaidCombined.length).toBeGreaterThan(100);
     });
 
-    // 🎓️ Differential test: `xstate` is a devDependency test oracle ONLY (never a production
-    // dependency) — asserts `buildStatelyMachine`'s `@semio-tech/machine` definition reaches the
-    // same active state as a literal XState v5 chart built from the same `InteractionSpec.machine`,
-    // for every `__advance` row of every shipped spatial interaction. Kept so a future edit to
-    // `buildStatelyMachine` can't silently drift from the XState semantics it replaced.
     it("buildStatelyMachine matches an XState v5 chart built from the same spec (oracle)", async () => {
       const { createActor, setup } = await import("xstate");
       for (const p of listSpatialInteractionsForModelDefinition(defaultModelDefinitionId())) {

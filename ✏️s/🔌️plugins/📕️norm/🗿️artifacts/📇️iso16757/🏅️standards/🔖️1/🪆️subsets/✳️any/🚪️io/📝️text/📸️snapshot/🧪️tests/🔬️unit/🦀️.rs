@@ -14,10 +14,6 @@ async fn default_example_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_value_integer_variant_round_trips_through_the_dsl_field_bridge() {
-    // ⚡️ Regression: `CatalogueValue`'s `Shape::Value` bridge goes through `dsl::DslValue::Number`,
-    // which before it gained `UInt`/`Int`/`Float` fidelity used to turn `Integer { value: 50 }`
-    // into a JSON float `50.0` that `serde_json::from_value` then rejected for the `i64` field.
-    // Not exercised by the reference fixture (it only uses `Decimal`), so covered directly here.
     let value = CatalogueValue::Integer { value: 50 };
     let printed = <CatalogueValue as semio_framework_dsl_record::DslField>::to_value(&value);
     let parsed = <CatalogueValue as semio_framework_dsl_record::DslField>::from_value(&printed).expect("integer variant must round trip");

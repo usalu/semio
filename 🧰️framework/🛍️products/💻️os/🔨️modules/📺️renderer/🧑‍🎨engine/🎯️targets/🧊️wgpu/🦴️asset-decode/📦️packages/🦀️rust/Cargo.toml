@@ -36,6 +36,8 @@ semio-framework-value = { path = "../../../../../../../../../../🔨️modules/�
 serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-ui-raster-owner = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 ui_scene = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework-hash = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }

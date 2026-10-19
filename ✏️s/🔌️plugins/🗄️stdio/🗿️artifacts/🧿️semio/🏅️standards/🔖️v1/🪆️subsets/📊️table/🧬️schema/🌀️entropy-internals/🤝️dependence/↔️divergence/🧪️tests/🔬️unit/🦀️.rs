@@ -99,7 +99,6 @@ mod tests {
 
     #[test]
     fn wasserstein_1d_matches_hand_computation_equal_size() {
-        // 🔐️ equal-size sorted samples: W1 = mean |x_sorted - y_sorted|.
         let x = [1.0, 2.0, 3.0];
         let y = [4.0, 5.0, 6.0];
         let w = wasserstein_1d(&x, &y).unwrap();

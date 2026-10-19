@@ -1,7 +1,7 @@
 /** 🛰️ The agent bridge rendezvous of the dev server: the rendezvous directory, the live offer lookup and the Vite plugin that answers offers. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeV1 } from "../../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import { AGENT_BRIDGE_OFFER_ENDPOINT, AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, agentBridgeOfferAnswerV1, parseAgentBridgeOfferRecordV2, parseAgentBridgeOfferScopeV1, selectAgentBridgeOfferV1, type AgentBridgeOfferRecordV2, type AgentBridgeOfferScopeV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentBridge/offer";
 
 //#region 🛰️AgentBridgeRendezvous
 /** 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
@@ -59,9 +59,7 @@ export function semioAgentBridgeRendezvousVitePlugin(options: { readonly shellKi
   const removeRecord = (): void => {
     try {
       if (existsSync(recordPath)) rmSync(recordPath, { force: true });
-    } catch {
-      // best effort — a stale record is swept by the gateway's own liveness probe
-    }
+    } catch {}
   };
   return {
     name: "semio-agent-bridge-rendezvous",

@@ -1,4 +1,4 @@
-//! document. Owns the world scene payload (instances/meshes/grips/fasteners, the selection and
+//! 📄️ document. Owns the world scene payload (instances/meshes/grips/fasteners, the selection and
 //! 🧊️ Puzzle 5d play app — the `World3d` window kind: the volumetric projection of the unified 5d
 //! gumball descriptor, the chunking/environment blocks and the interaction channel), binds the
 //! transform-gumball and relocate utilities plus the two shared brush/fill ones, and scopes the

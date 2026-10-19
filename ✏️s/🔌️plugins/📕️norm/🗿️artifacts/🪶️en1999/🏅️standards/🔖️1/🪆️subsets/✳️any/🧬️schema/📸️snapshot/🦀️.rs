@@ -21,7 +21,7 @@ use framework_schema::ArtifactSchema;
 #[value(rename_all = "camelCase")]
 pub struct AluminiumMaterial {
     pub id: String,
-    /// Designation key, e.g. `aw6060-t6`, `aw6082-t6`, `aw5083-o`.
+    /// 🆔️ Designation key, e.g. `aw6060-t6`, `aw6082-t6`, `aw5083-o`.
     pub designation: String,
 }
 
@@ -33,16 +33,16 @@ pub struct AluminiumMaterial {
 #[value(rename_all = "camelCase")]
 pub struct PlateElement {
     pub id: String,
-    /// Flat width b [m].
+    /// ↔️ Flat width b [m].
 #[cfg_attr(test, serde(default, skip_serializing_if = "is_zero_f64"))]
     pub width: f64,
-    /// Thickness t [m].
+    /// 📏️ Thickness t [m].
     pub thickness: f64,
-    /// Outstand flange/leg when true; internal web/flange when false.
+    /// ✔️ Outstand flange/leg when true; internal web/flange when false.
     pub outstand: bool,
-    /// Element contains a weld (applies η and HAZ).
+    /// 🪛️ Element contains a weld (applies η and HAZ).
     pub welded: bool,
-    /// Weld position along element from root [m] (0 = at junction); omitted when not welded.
+    /// 🔧️ Weld position along element from root [m] (0 = at junction); omitted when not welded.
     #[cfg_attr(test, serde(default, skip_serializing_if = "is_zero_f64"))]
     pub weld_position: f64,
 }
@@ -55,10 +55,10 @@ pub struct PlateElement {
 #[value(rename_all = "camelCase")]
 pub struct AluminiumSection {
     pub id: String,
-    /// Discriminated geometry: `extrudedI` | `channel` | `angle` | `rhs` | `box` | `tube`/`chs`.
+    /// 🧊️ Discriminated geometry: `extrudedI` | `channel` | `angle` | `rhs` | `box` | `tube`/`chs`.
     /// I/H/channel/angle/rhs/box use height/width/flangeThickness/webThickness; CHS/tube use outerDiameter + webThickness (wall).
     pub kind: String,
-    /// Zero for CHS/tube (discriminated — omitted when 0).
+    /// ↕️ Zero for CHS/tube (discriminated — omitted when 0).
     #[cfg_attr(test, serde(default, skip_serializing_if = "is_zero_f64"))]
     pub height: f64,
     #[cfg_attr(test, serde(default, skip_serializing_if = "is_zero_f64"))]
@@ -66,7 +66,7 @@ pub struct AluminiumSection {
     #[cfg_attr(test, serde(default, skip_serializing_if = "is_zero_f64"))]
     pub flange_thickness: f64,
     pub web_thickness: f64,
-    /// CHS/tube outer diameter D [m]; omitted for non-tube kinds (discriminated geometry).
+    /// 📤️ CHS/tube outer diameter D [m]; omitted for non-tube kinds (discriminated geometry).
     #[cfg_attr(test, serde(default, skip_serializing_if = "is_non_tube_od"))]
     pub outer_diameter: f64,
     #[dsl(table)]
@@ -84,25 +84,25 @@ pub struct AluminiumSection {
 #[value(rename_all = "camelCase")]
 pub struct MemberAction {
     pub id: String,
-    /// permanent | imposed | snow | wind | temperature | fire
+    /// 📌️ permanent | imposed | snow | wind | temperature | fire
     pub kind: String,
-    /// EN 1990 ψ-category (office, snow, wind, self, …).
+    /// 🚦️ EN 1990 ψ-category (office, snow, wind, self, …).
     pub category: String,
-    /// udl | external
+    /// 🪢️ udl | external
     pub source: String,
-    /// Characteristic permanent line load g_k [N/m] (udl).
+    /// 🔤️ Characteristic permanent line load g_k [N/m] (udl).
     pub g_k_line: f64,
-    /// Characteristic variable line load q_k [N/m] (udl).
+    /// 🔡️ Characteristic variable line load q_k [N/m] (udl).
     pub q_k_line: f64,
-    /// Characteristic axial force N_k [N] (external).
+    /// ⚖️ Characteristic axial force N_k [N] (external).
     pub n_k: f64,
-    /// Characteristic shear V_y,k [N].
+    /// 📉️ Characteristic shear V_y,k [N].
     pub v_y_k: f64,
-    /// Characteristic shear V_z,k [N].
+    /// 🧬️ Characteristic shear V_z,k [N].
     pub v_z_k: f64,
-    /// Characteristic moment M_y,k [N·m].
+    /// 🧲️ Characteristic moment M_y,k [N·m].
     pub m_y_k: f64,
-    /// Characteristic moment M_z,k [N·m].
+    /// 🔋️ Characteristic moment M_z,k [N·m].
     pub m_z_k: f64,
 }
 
@@ -139,7 +139,7 @@ pub struct AluminiumMember {
     pub id: String,
     pub section_id: String,
     pub material_id: String,
-    /// System length L [m] (span for UDL conversion; default L_cr when buckling lengths ≤ 0).
+    /// 🔢️ System length L [m] (span for UDL conversion; default L_cr when buckling lengths ≤ 0).
     pub length: f64,
     pub support: SupportCondition,
     pub buckling_length_y: f64,
@@ -193,9 +193,9 @@ pub struct AluminiumConnection {
     pub id: String,
     pub member_id: String,
     pub material_id: String,
-    /// `bolted` | `welded` | `combined`.
+    /// ⚙️ `bolted` | `welded` | `combined`.
     pub kind: String,
-    /// Characteristic connection load cases (same EN 1990 model as members).
+    /// 🎮️ Characteristic connection load cases (same EN 1990 model as members).
     #[dsl(table)]
     pub actions: Vec<MemberAction>,
     pub bolts: BoltGroup,
@@ -224,18 +224,18 @@ pub struct FireScenario {
 pub struct FatigueDetail {
     pub id: String,
     pub member_id: String,
-    /// Annex J detail category id (e.g. `71`, `40-weld`).
+    /// 🎛️ Annex J detail category id (e.g. `71`, `40-weld`).
     pub detail_category: String,
-    /// Detail category Δσ_C [Pa] — derived from detailCategory (one source of truth; not serialized).
+    /// 🔺️ Detail category Δσ_C [Pa] — derived from detailCategory (one source of truth; not serialized).
     #[cfg_attr(test, serde(default, skip_serializing))]
     pub delta_sigma_c: f64,
-    /// Constant-amplitude stress range Δσ [Pa] (single-range spectrum entry).
+    /// ✏️ Constant-amplitude stress range Δσ [Pa] (single-range spectrum entry).
     pub delta_sigma_ed: f64,
-    /// Cycles in the spectrum block n_i.
+    /// 🔁️ Cycles in the spectrum block n_i.
     pub n_cycles: f64,
-    /// First slope m1 (N ≤ N_D).
+    /// 🌳️ First slope m1 (N ≤ N_D).
     pub m1: f64,
-    /// Second slope m2 (N_D < N ≤ N_L).
+    /// 📜️ Second slope m2 (N_D < N ≤ N_L).
     pub m2: f64,
 }
 
@@ -248,14 +248,14 @@ pub struct FatigueDetail {
 pub struct ColdFormedSheet {
     pub id: String,
     pub material_id: String,
-    /// Design thickness t [m].
+    /// 🔭️ Design thickness t [m].
     pub thickness: f64,
-    /// Flat width between webs / supports b [m].
+    /// ⬜️ Flat width between webs / supports b [m].
     pub width: f64,
-    /// Span L [m].
+    /// 🔬️ Span L [m].
     pub span: f64,
     pub welded: bool,
-    /// Characteristic EN 1990 actions; design N_Ed/M_Ed from governing ULS/SLS.
+    /// ⌨️ Characteristic EN 1990 actions; design N_Ed/M_Ed from governing ULS/SLS.
     pub actions: Vec<MemberAction>,
 }
 
@@ -268,13 +268,13 @@ pub struct ColdFormedSheet {
 pub struct AluminiumShell {
     pub id: String,
     pub material_id: String,
-    /// Mid-surface radius r [m].
+    /// ⭕️ Mid-surface radius r [m].
     pub radius: f64,
-    /// Wall thickness t [m].
+    /// 🚧️ Wall thickness t [m].
     pub thickness: f64,
-    /// Meridian length L [m].
+    /// ➕️ Meridian length L [m].
     pub length: f64,
-    /// Characteristic membrane actions (n_k→σ_x,k, m_y_k→σ_θ,k, v_z_k→τ_k [Pa]).
+    /// 🕹️ Characteristic membrane actions (n_k→σ_x,k, m_y_k→σ_θ,k, v_z_k→τ_k [Pa]).
     pub actions: Vec<MemberAction>,
 }
 

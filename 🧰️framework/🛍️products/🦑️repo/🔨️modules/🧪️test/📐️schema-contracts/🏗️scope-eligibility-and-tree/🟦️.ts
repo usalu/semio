@@ -29,9 +29,6 @@ export function schemaScopeEligibility(repoRoot: string, ownerPath: string): Sch
 export function isJsonSchemaDefinition(document: unknown): boolean {
   if (document === null || typeof document !== "object" || Array.isArray(document)) return false;
   const dialect = (document as { $schema?: unknown }).$schema;
-  // 🧭️An INSTANCE names the schema that validates it — a relative path to a `🧬️schema/` module. A
-  // DEFINITION names a meta-schema on json-schema.org. That one distinction is what keeps every
-  // `$schema`-carrying config file out of these findings.
   return typeof dialect === "string" && /^https?:\/\/json-schema\.org\//u.test(dialect);
 }
 

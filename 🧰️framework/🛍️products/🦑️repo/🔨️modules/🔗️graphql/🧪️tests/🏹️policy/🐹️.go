@@ -4,14 +4,13 @@ package graphql
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
-	"testing"
 	"github.com/usalu/semio/repo/model"
 	"github.com/usalu/semio/repo/statutes"
 	"github.com/usalu/semio/repo/workspace"
 	"github.com/usalu/semio/repo/workspace/sandbox"
-
+	"os"
+	"path/filepath"
+	"testing"
 )
 
 func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
@@ -52,7 +51,7 @@ func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
 }
 
 func TestSystemPolicy(t *testing.T) {
-	data, err := os.ReadFile("../../../🎛️dashboard/🧫️fixtures/🧭️authority/🔣️.json")
+	data, err := os.ReadFile(sandbox.OriginPath("..", "..", "..", "🎛️dashboard", "🧪️tests", "🧫️fixtures", "🧭️authority", "🔣️.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

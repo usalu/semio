@@ -5,7 +5,7 @@ import {readFileSync,existsSync} from "node:fs";
 
 test("original tick payload uses the same declared Toy caller policy and paid borrowed context",()=>{
  const policy=JSON.parse(readFileSync(new URL("../../../../🧪️tests/🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json",import.meta.url),"utf8"));
- expect(policy.native.grant).toEqual([1,16384,65536,262144,64]);
+ expect(policy.native.grant).toEqual([1,16384,65536,1048576,4096]);
  const db=new Database(":memory:");try{
   db.exec("CREATE TABLE policy(position INTEGER PRIMARY KEY,value INTEGER)");
   for(const[i,value]of policy.native.grant.entries())db.query("INSERT INTO policy VALUES(?,?)").run(i,value);

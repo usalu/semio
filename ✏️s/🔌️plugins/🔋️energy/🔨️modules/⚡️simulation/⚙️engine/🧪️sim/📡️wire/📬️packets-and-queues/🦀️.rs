@@ -354,7 +354,7 @@ impl Default for EnergyPublicationChannels {
 pub struct EnergyWireBuild {
     pub kind: EnergyWireKind,
     pub identity: EnergyWireIdentity,
-    pub writer: semio_framework_job::RetainedJobPayloadWriter,
+    pub writer: semio_framework_job_payload::RetainedJobPayloadWriter,
     pub field: u8,
 }
 
@@ -383,7 +383,7 @@ pub struct EnergyCommitReservation {
     pub bytes: usize,
     pub items: usize,
     pub prepared: usize,
-    pub sources: [Option<semio_framework_job::JobPayloadPageSource>; semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES],
+    pub sources: [Option<semio_framework_job_payload::JobPayloadPageSource>; semio_framework_job_payload::JOB_PAYLOAD_OPERATION_PAGES],
 }
 
 impl EnergyCommitReservation {
@@ -391,11 +391,11 @@ impl EnergyCommitReservation {
         Self { pages, bytes, items, prepared: 0, sources: std::array::from_fn(|_| None) }
     }
 
-    pub fn take_source(&mut self, index: usize) -> Option<semio_framework_job::JobPayloadPageSource> {
+    pub fn take_source(&mut self, index: usize) -> Option<semio_framework_job_payload::JobPayloadPageSource> {
         self.sources.get_mut(index)?.take()
     }
 
-    pub fn restore_source(&mut self, index: usize, source: semio_framework_job::JobPayloadPageSource) {
+    pub fn restore_source(&mut self, index: usize, source: semio_framework_job_payload::JobPayloadPageSource) {
         self.sources[index] = Some(source);
     }
 

@@ -1,8 +1,9 @@
 //! ♻️ Physical message ledger capacity releases are measured independently from payload work.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use semio_framework_diagnostic::Severity;
-fn fixture()->serde_json::Value { serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
+fn fixture()->serde_json::Value { serde_json::from_str(fixture_text!("../../♻️retire/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn owners(row:&serde_json::Value)->(String,Vec<MutationMessage>,usize) {
     let mut context=String::with_capacity(row["contextCapacity"].as_u64().unwrap() as usize);context.push_str(row["context"].as_str().unwrap());
     let mut messages=Vec::with_capacity(row["rowCapacity"].as_u64().unwrap() as usize);

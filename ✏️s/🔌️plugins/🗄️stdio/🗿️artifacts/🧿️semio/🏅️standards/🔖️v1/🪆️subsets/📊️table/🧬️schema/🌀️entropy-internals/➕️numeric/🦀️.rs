@@ -11,7 +11,6 @@ const LANCZOS_COEFFICIENTS: [f64; 9] =
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub fn ln_gamma(x: f64) -> f64 {
     if x < 0.5 {
-        // 🔬️ Reflection formula: Gamma(x) * Gamma(1-x) = pi / sin(pi*x).
         let sin_term = (core::f64::consts::PI * x).sin();
         core::f64::consts::PI.ln() - sin_term.abs().ln() - ln_gamma(1.0 - x)
     } else {
@@ -122,7 +121,6 @@ pub fn inverse_normal_cdf(p: f64) -> f64 {
         let q = (-2.0 * (1.0 - p).ln()).sqrt();
         -(((((C[0] * q + C[1]) * q + C[2]) * q + C[3]) * q + C[4]) * q + C[5]) / ((((D[0] * q + D[1]) * q + D[2]) * q + D[3]) * q + 1.0)
     };
-    // 🔬️ One Halley refinement step against the CDF for full double precision.
     let e = 0.5 * erfc(-x / core::f64::consts::SQRT_2) - p;
     let u = e * (2.0 * core::f64::consts::PI).sqrt() * (x * x / 2.0).exp();
     x - u / (1.0 + x * u / 2.0)
@@ -195,7 +193,6 @@ pub struct LogFactorialCache {
 
 impl LogFactorialCache {
     /// 🔬️ Precomputes `ln(k!)` for `k` in `0..=max_n`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(max_n: usize) -> Self {
         let mut cache = Vec::with_capacity(max_n + 1);
         cache.push(0.0);
@@ -206,7 +203,6 @@ impl LogFactorialCache {
     }
 
     /// 🔬️ `ln(n!)`, falling back to `ln_gamma(n + 1)` beyond the cached range.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get(&self, n: usize) -> f64 {
         match self.cache.get(n) {
             Some(&v) => v,
@@ -285,13 +281,11 @@ pub struct Xorshift64 {
 impl Xorshift64 {
     /// 🎲️ Seeds the generator. A seed of `0` is remapped to a fixed nonzero constant since
     /// xorshift's all-zero state is a fixed point.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(seed: u64) -> Self {
         Self { state: if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed } }
     }
 
     /// 🎲️ Next raw 64-bit output.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn next_u64(&mut self) -> u64 {
         let mut x = self.state;
         x ^= x << 13;
@@ -302,14 +296,12 @@ impl Xorshift64 {
     }
 
     /// 🎲️ Uniform `f64` in `[0, 1)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn next_f64(&mut self) -> f64 {
         (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
 
     /// 🎲️ Uniform integer in `[0, bound)` via Lemire's rejection-free-in-practice method (biased
     /// only by a negligible `2^-64` amount, acceptable for permutation/bootstrap indices).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn next_below(&mut self, bound: usize) -> usize {
         if bound == 0 {
             return 0;
@@ -320,7 +312,6 @@ impl Xorshift64 {
     /// 🎲️ One standard-normal sample via Box-Muller (caller pays two uniform draws per call;
     /// simplicity over the two-sample-per-call optimization since callers rarely need high
     /// throughput Gaussian streams).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn next_gaussian(&mut self) -> f64 {
         let u1 = (self.next_f64()).max(f64::MIN_POSITIVE);
         let u2 = self.next_f64();
@@ -328,7 +319,6 @@ impl Xorshift64 {
     }
 
     /// 🎲️ In-place Fisher-Yates shuffle.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn shuffle<T>(&mut self, slice: &mut [T]) {
         for i in (1..slice.len()).rev() {
             let j = self.next_below(i + 1);

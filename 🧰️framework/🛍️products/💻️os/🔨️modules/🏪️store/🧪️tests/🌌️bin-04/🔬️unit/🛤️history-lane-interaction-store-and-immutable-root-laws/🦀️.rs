@@ -277,7 +277,7 @@ async fn interaction_store_default_seeds_from_hover_default_on_original_publicat
 
 #[test]
 fn original_side_lane_comparison_uses_granted_utf8_chunks(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../../🎮️one-item/🛤️lane/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️one-item/🛤️lane/🔣️.json")).unwrap();
  for row in law["ordering"].as_array().unwrap(){let left=row["left"].as_str().unwrap();let right=row["right"].as_str().unwrap();let wanted=row["order"].as_i64().unwrap();
   for body in law["grantCopy"].as_array().unwrap(){let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body.as_u64().unwrap()as usize,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};let mut cursor=0;let mut settled=None;
    for _ in 0..128{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||protocol::HistoryFoldIndexInsert::<String,HistoryLane>::compare_original_text(left,right,cursor,g).unwrap());let(order,next,progress)=result;assert!(progress.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if let Some(order)=order{settled=Some(match order{std::cmp::Ordering::Less=>-1,std::cmp::Ordering::Equal=>0,std::cmp::Ordering::Greater=>1});break;}if progress==Default::default(){assert_eq!(next,cursor);break;}cursor=next;}

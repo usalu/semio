@@ -2,7 +2,6 @@ use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn cubic_clamped_5cp() -> KnotVector {
-    // degree 3, 5 control points -> knot vector length 9: [0,0,0,0, 0.5, 1,1,1,1]
     KnotVector::new(vec![0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0], 3, 5).unwrap()
 }
 
@@ -121,7 +120,6 @@ async fn insert_knot_does_not_change_the_curve() {
 
 #[semio_framework_async_macros::async_test]
 async fn elevate_bezier_span_preserves_curve_value() {
-    // Single bezier span is a B-spline with degree = n and a clamped, no-interior-knot vector.
     let control_values = vec![0.0, 3.0, -2.0, 5.0];
     let elevated = elevate_bezier_span(&control_values);
     assert_eq!(elevated.len(), control_values.len() + 1);
@@ -152,7 +150,6 @@ async fn curve_derivatives_rational_matches_basis_derivatives_when_unweighted() 
 
 #[semio_framework_async_macros::async_test]
 async fn curve_derivatives_rational_matches_analytic_circle_as_nurbs() {
-    // A quarter-circle rational-quadratic NURBS: exact analytic d1/d2 are known in closed form.
     let w = std::f64::consts::FRAC_PI_4.cos();
     let controls = [(1.0, 0.0), (1.0, 1.0), (0.0, 1.0)];
     let weights = [1.0, w, 1.0];
@@ -163,7 +160,6 @@ async fn curve_derivatives_rational_matches_analytic_circle_as_nurbs() {
         let derivs = curve_derivatives_rational(&kv, &controls_h, u, 2);
         let p = (derivs[0][0], derivs[0][1]);
         assert!((p.0 * p.0 + p.1 * p.1 - 1.0).abs() < 1e-9, "point off unit circle at u={u}: {p:?}");
-        // Tangent must be perpendicular to the radius vector (a circle's defining property).
         let radial_dot_tangent = p.0 * derivs[1][0] + p.1 * derivs[1][1];
         assert!(radial_dot_tangent.abs() < 1e-8, "tangent not perpendicular to radius at u={u}: dot={radial_dot_tangent}");
     }
@@ -203,9 +199,6 @@ async fn remove_knot_round_trips_an_insertion() {
 
 #[semio_framework_async_macros::async_test]
 async fn remove_knot_rejects_a_knot_that_is_not_removable() {
-    // The interior knot of cubic_clamped_5cp carries real geometric information (it wasn't
-    // produced by a redundant insertion), so removing it should move the curve beyond a tight
-    // tolerance and be rejected.
     let kv = cubic_clamped_5cp();
     let values: Vec<Vec<f64>> = vec![0.0, 2.0, -8.0, 3.0, 1.0].into_iter().map(|v| vec![v]).collect();
     assert!(remove_knot(&kv, &values, 0.5, 1e-9).is_none());
@@ -232,8 +225,6 @@ async fn elevate_degree_preserves_a_multi_span_curve() {
         let after = de_boor(&new_kv, &new_values.iter().map(|v| v[0]).collect::<Vec<_>>(), t);
         assert!((before - after).abs() < 1e-9, "curve changed after degree elevation at t={t}: {before} vs {after}");
     }
-    // Continuity at the interior knot (originally multiplicity 1, i.e. C^2) must be preserved:
-    // after elevating by 2, multiplicity should be 1+2=3 (still C^2 for the new degree 5).
     assert_eq!(new_kv.multiplicity(0.5), 3);
 }
 
@@ -277,8 +268,6 @@ mod quick {
 
     #[semio_framework_async_macros::async_test]
     async fn de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves() {
-        // A single-span (no interior knots) clamped B-spline of degree p is exactly the
-        // Bernstein-basis polynomial with the same control values — an independent oracle.
         let mut rng = semio_framework_geometry::random::Rng::from_seed(41);
         for _ in 0..200 {
             let degree = 1 + rng.next_range(0, 5) as usize;

@@ -22,7 +22,7 @@ fn bytes(database:&SqliteDatabase)->usize{database.tables.iter().flat_map(|table
 fn sqlite_snapshot_bim_original_census_precedes_typed_birth(){
  let snapshot=fixture();let database=database(&snapshot);let record=snapshot.__dsl_to_record();let exact=bytes(&database);
  for(rows,values,expected)in[(4036,exact,true),(4035,exact,false),(4036,exact-1,false)]{let limits=SqliteDatabaseLimits{max_rows:rows,max_value_bytes:values,..SqliteDatabaseLimits::default()};let mut callback=|_|true;let mut control=NativeDecodeControl::new(0,&mut callback);let result=semantic_cells::admit_record(&record,limits,&mut control);assert_eq!(result.is_ok(),expected,"rows={rows} values={values}");assert_eq!(control.owned_bytes(),0,"borrowed census created typed ownership");}
- let mut reached=false;let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|if event.completed>=256{reached=true;false}else{true};let mut control=NativeDecodeControl::new(0,&mut callback);assert!(semantic_cells::admit_record(&record,SqliteDatabaseLimits::default(),&mut control).is_err());assert_eq!(control.owned_bytes(),0);drop(control);assert!(reached);
+ let mut reached=false;let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|if event.completed>=256{reached=true;false}else{true};let mut control=NativeDecodeControl::new(0,&mut callback);assert!(semantic_cells::admit_record(&record,SqliteDatabaseLimits::default(),&mut control).is_err());assert_eq!(control.owned_bytes(),0);drop(control);assert!(reached);
 }
 #[test]
 fn sqlite_snapshot_bim_original_borrowed_preflight_is_complete(){

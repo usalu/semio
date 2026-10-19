@@ -94,9 +94,7 @@ export function syncSessionCanvasTheme(session: CanvasThemeSession | null | unde
   try {
     clearColorResolveCache();
     session.setCanvasThemeJson(serializeCanvasThemeJson());
-  } catch {
-    /* theme tokens not ready */
-  }
+  } catch {}
 }
 
 const _builtinThemesCache = ephemeralBox<UiTheme[] | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._builtinThemesCache", undefined);
@@ -112,9 +110,7 @@ export function builtinUiThemes(): readonly UiTheme[] {
     for (const raw of Object.values(modules)) {
       themes.push(parseUiTheme(raw));
     }
-  } catch {
-    /* import.meta.glob unavailable outside Vite */
-  }
+  } catch {}
   _builtinThemesCache.current = themes;
   return themes;
 }

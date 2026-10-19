@@ -8,6 +8,7 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{DslValue,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
+use semio_framework::Fault;
 type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 /// 🪙️ Admits the serializer frame under the same fixed limits the framework applies to every owned tool birth.
 fn birth_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES,maximum_depth:1,..Default::default()}}

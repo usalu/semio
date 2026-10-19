@@ -28,7 +28,7 @@ const physical: {
 
 /** 🧬️ Admits the canonical first-party native workspace declaration. */
 export const parseBunWorkspaceDeclaration: (value: unknown) => BunWorkspaceDeclarationV1 = physical.parseBunWorkspaceDeclaration;
-/** 📦️ Resolves independently owned source packages through concrete physical exports. */
+/** 📦️ Resolves independently owned source packages through concrete authored export namespaces. */
 export const bunWorkspacePackages: (root: string, scope: BunWorkspaceScope) => readonly string[] = physical.bunWorkspacePackages;
 /** 🧾️ Emits the complete escaped concrete projection of independently owned packages. */
 export const bunWorkspaceNativePatterns: (root: string, scope: BunWorkspaceScope) => readonly string[] = physical.bunWorkspaceNativePatterns;

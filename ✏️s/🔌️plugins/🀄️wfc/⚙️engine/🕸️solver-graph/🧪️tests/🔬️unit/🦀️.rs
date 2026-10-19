@@ -151,12 +151,6 @@ fn cardinality_constraint_forces_the_unique_matching_checkerboard_coloring() {
     use crate::constraint::PatternSelector;
     use crate::constraints_card::{CardinalityConstraint, Scope};
 
-    // checkerboard(5) is a 5-node path with exactly two valid 2-colorings: [B,W,B,W,B] (3
-    // black) and [W,B,W,B,W] (2 black). Neither the constraint's `initialize` (domains start
-    // full, so its possible/required bounds can't detect infeasibility up front) nor a trivial
-    // propagation pass rules either coloring out — only `validate_complete`, invoked per
-    // candidate via `backtrack_and_repair`, can. Requiring exactly 3 black therefore forces the
-    // first coloring and proves the reject-and-backtrack path actually runs.
     let (model, topo) = checkerboard(5);
     let black = PatternId(0);
     let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 3, 3).unwrap();
@@ -175,9 +169,6 @@ fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
     use crate::constraint::PatternSelector;
     use crate::constraints_card::{CardinalityConstraint, Scope};
 
-    // Neither valid coloring of checkerboard(5) has 4+ black nodes (max achievable is 3), so
-    // this must exhaust the full (small) search tree via repeated constraint rejection and
-    // report a proven-unsatisfiable outcome, not merely an initial-domain wipeout.
     let (model, topo) = checkerboard(5);
     let black = PatternId(0);
     let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 4, 5).unwrap();
@@ -195,10 +186,6 @@ fn flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve() {
     use crate::model::ModelBuilder;
     use crate::topology::GraphTopologyBuilder;
 
-    // Two floor/wall patterns on a 4-node path; requiring flow 1 from node0 to node3 forces
-    // every node to be floor (the only way an edge-disjoint path can exist end to end),
-    // proving the constraint's initialize-through-solve-through-validate_complete path runs
-    // for real, not just FlowConstraint::validate_complete in isolation.
     let mut b = ModelBuilder::new();
     let floor = b.add_pattern(1.0);
     let wall = b.add_pattern(1.0);

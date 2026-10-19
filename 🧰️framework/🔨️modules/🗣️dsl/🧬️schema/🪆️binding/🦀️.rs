@@ -17,7 +17,7 @@ impl<T> DslSequence<T> for Vec<T> {
     fn push_controlled(&mut self, value: T) -> Result<(), ValueError> { self.push(value); Ok(()) }
 }
 
-impl<T, const N: usize> DslSequence<T> for semio_framework_value::list::PagedList<T, N> {
+impl<T, const N: usize> DslSequence<T> for semio_framework_value_persistent::list::PagedList<T, N> {
     fn from_decoded<I: IntoIterator<Item = Result<T, TextError>>>(values: I) -> Result<Self, TextError> {
         let mut output = Self::default();
         for value in values { output.try_push(value?).map_err(|error| TextError::new(ValueRefusalKind::OwnershipLimit, error.to_string(), TextSpan::at(1, 1)))?; }
@@ -49,8 +49,8 @@ impl<T> DslSequenceView<T> for Vec<T> {
     type Iter<'a> = std::slice::Iter<'a, T> where T: 'a;
     fn field_items(&self) -> Self::Iter<'_> { self.iter() }
 }
-impl<T, const N: usize> DslSequenceView<T> for semio_framework_value::list::PagedList<T, N> {
-    type Iter<'a> = semio_framework_value::list::PagedIter<'a, T, N> where T: 'a;
+impl<T, const N: usize> DslSequenceView<T> for semio_framework_value_persistent::list::PagedList<T, N> {
+    type Iter<'a> = semio_framework_value_persistent::list::PagedIter<'a, T, N> where T: 'a;
     fn field_items(&self) -> Self::Iter<'_> { self.iter() }
 }
 //#region 🔖️Field
@@ -63,9 +63,6 @@ pub trait DslField: Sized {
     fn projection_view(&self,_path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"field owner has no retained source projection"))}
     /// 🔤️ Borrows a dynamic key from the original ranked or indexed field owner.
     fn projection_key(&self,_path:&[usize],_index:usize)->Result<&str,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"field owner has no retained ranked key projection"))}
-    // 🚫️async: E4 fn-pointer transitivity — `Shape::Record`/`Table`/`Statements` hold
-    // `fn() -> RecordSpec`; every `shape()` implementation ultimately feeds one, directly or
-    // through a derived `__dsl_spec` — see R9.
     fn shape() -> Shape;
     /// 🏭️ Constructs only the explicitly declared shape metadata under caller admission.
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"field owner has no controlled native schema implementation"))}
@@ -137,7 +134,6 @@ macro_rules! impl_dsl_field_int {
     ($ty:ty, $shape:expr, $variant:ident, $as_ty:ty) => {
         impl DslField for $ty {
             fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}Ok(native_encoding::FieldProjectionView::$variant(*self as $as_ty))}
-            // 🚫️async: E4 — see `DslField::shape`'s tag above.
             fn shape() -> Shape {
                 $shape
             }
@@ -173,7 +169,6 @@ impl_dsl_field_int!(usize, Shape::UInt, UInt, u64);
 
 impl DslField for bool {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}Ok(native_encoding::FieldProjectionView::Bool(*self))}
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Bool
     }
@@ -193,7 +188,6 @@ impl DslField for bool {
 
 impl DslField for f32 {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}let FieldValue::Float(value)=self.to_value()else{return Err(native_encoding::projection_path_error())};Ok(native_encoding::FieldProjectionView::Float(value))}
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Float
     }
@@ -216,7 +210,6 @@ impl DslField for f32 {
 
 impl DslField for f64 {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}Ok(native_encoding::FieldProjectionView::Float(*self))}
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Float
     }
@@ -240,7 +233,6 @@ impl DslField for f64 {
 /// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
 impl DslField for String {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{if !path.is_empty(){return Err(native_encoding::projection_path_error())}Ok(native_encoding::FieldProjectionView::Text(self))}
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Text
     }
@@ -284,7 +276,7 @@ impl<const N: usize> DslField for semio_framework_value::paged::PagedUtf8<N> {
     fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> { match value { FieldValue::Text(text) => Self::try_from_str_controlled(text, control), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected Text")) } }
 }
 
-impl<T: DslField, const N: usize> DslField for semio_framework_value::list::PagedList<T, N> {
+impl<T: DslField, const N: usize> DslField for semio_framework_value_persistent::list::PagedList<T, N> {
     fn shape() -> Shape { Shape::List(Box::new(T::shape())) }
     fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::List(producer::boxed(T::shape_controlled(control)?, control)?))) }
     fn to_value(&self) -> FieldValue { FieldValue::List(self.iter().map(T::to_value).collect()) }
@@ -303,7 +295,7 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::Pag
     fn from_value(value: &FieldValue) -> Result<Self, String> { match value { FieldValue::Map(entries) => Self::try_from_fallible_entries(entries.iter().map(|(key, value)| Ok((semio_framework_value::paged::PagedUtf8::try_from_str(key)?, T::from_value(value).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?)))).map_err(ValueError::into_message), _ => Err("expected Map".into()) } }
     fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let FieldValue::Map(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected Map")); };
-        let mut output = __rt::DecodedFieldOwner::new(semio_framework_value::list::PagedList::<(semio_framework_value::paged::PagedUtf8<{usize::MAX}>, T), N>::default(), |entries| { for (_, value) in entries { T::retire_decoded(value); } });
+        let mut output = __rt::DecodedFieldOwner::new(semio_framework_value_persistent::list::PagedList::<(semio_framework_value::paged::PagedUtf8<{usize::MAX}>, T), N>::default(), |entries| { for (_, value) in entries { T::retire_decoded(value); } });
         for (key, value) in entries {
             control.step()?;
             if output.as_mut().iter().any(|entry| entry.0.eq_str(key)) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "duplicate paged map field key")); }
@@ -335,7 +327,6 @@ impl Wire {
 impl DslField for Wire {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{use native_encoding::{FieldProjectionView as V,projection_path_error};if path.is_empty(){return Ok(V::Wire(self.0.edge.as_ref().map(|(directed,_)|*directed)))}if path[0]==8{return DslField::projection_view(&self.0.properties,&path[1..])}if path.len()!=1{return Err(projection_path_error())}let text=match path[0]{0=>Some(self.0.from.id.as_str()),1=>self.0.from.kind.as_deref(),2=>self.0.from.port.as_deref(),3=>self.0.edge.as_ref().map(|(_,to)|to.id.as_str()),4=>self.0.edge.as_ref().and_then(|(_,to)|to.kind.as_deref()),5=>self.0.edge.as_ref().and_then(|(_,to)|to.port.as_deref()),6=>self.0.edge_label.id.as_deref(),7=>self.0.edge_label.kind.as_deref(),_=>return Err(projection_path_error())};Ok(text.map(V::Text).unwrap_or(V::Absent))}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{[8,rest @ ..]=>DslField::projection_key(&self.0.properties,rest,index),_=>Err(native_encoding::projection_path_error())}}
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Wire
     }
@@ -364,14 +355,10 @@ impl<T: DslField> DslField for Vec<T> {
     fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{native_encoding::project_list(self,control).map(FieldValue::List)}
 
     fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::List(Box::new(T::shape()))
     }
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::List(producer::boxed(T::shape_controlled(control)?,control)?)))}
-    // 🔁 `Iterator::map` cannot await per-element (residue shape 1) and `T::to_value`/`from_value`
-    // are AFIT over an arbitrary implementor, so — unlike a known-pure leaf fn — R9 does not apply;
-    // the fix is a plain sequential loop that awaits each element in turn.
     fn to_value(&self) -> FieldValue {
         let mut items = Vec::with_capacity(self.len());
         for item in self {
@@ -410,12 +397,10 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
     fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{native_encoding::project_map(self,control)}
 
     fn retire_decoded(self) { for (_,value) in self { T::retire_decoded(value); } }
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Map(Box::new(T::shape()))
     }
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::Map(producer::boxed(T::shape_controlled(control)?,control)?)))}
-    // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
     fn to_value(&self) -> FieldValue {
         let mut entries = Vec::with_capacity(self.len());
         for (k, v) in self {
@@ -457,12 +442,10 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
     fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{native_encoding::project_list(self.as_slice(),control).map(FieldValue::Tuple)}
 
     fn retire_decoded(self) { for value in self { T::retire_decoded(value); } }
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Tuple(Box::new(T::shape()), Some(N))
     }
     fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::Tuple(producer::boxed(T::shape_controlled(control)?,control)?,Some(N))))}
-    // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
     fn to_value(&self) -> FieldValue {
         let mut items = Vec::with_capacity(N);
         for item in self {
@@ -495,7 +478,6 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
 impl DslField for DslValue {
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{use native_encoding::FieldProjectionView as V;Ok(match intrinsic_projection_node(self,path)?{Self::Null=>V::IntrinsicNull,Self::Bool(v)=>V::IntrinsicBool(*v),Self::Number(v)=>V::IntrinsicNumber(*v),Self::String(v)=>V::IntrinsicText(v),Self::Bytes(v)=>V::IntrinsicBytes(v),Self::Array(v)=>V::IntrinsicArray(v.len()),Self::Object(v)=>V::IntrinsicObject(v.len())})}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match intrinsic_projection_node(self,path)?{Self::Object(v)=>v.get(index).map(|(key,_)|key.as_str()).ok_or_else(native_encoding::projection_path_error),_=>Err(native_encoding::projection_path_error())}}
-    // 🚫️async: E4 — see `DslField::shape`'s tag above.
     fn shape() -> Shape {
         Shape::Value
     }
@@ -531,8 +513,6 @@ pub trait DslVariants: Sized {
     /// 🐌️ Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
     /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
     /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
-    // 🚫️async: E4 — the returned `Vec<(String, fn() -> RecordSpec)>` IS a fn-pointer table, and
-    // `Shape::Statements(<T>::variants())` is itself called from inside a sync `__dsl_spec` — see R9.
     fn variants() -> Vec<(String, RecordSpecProducer)>;
     /// 🌿️ Owns literal variant labels and their lazy controlled schema producers.
     fn variants_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Vec<(String,RecordSpecProducer)>,ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native schema implementation"))}

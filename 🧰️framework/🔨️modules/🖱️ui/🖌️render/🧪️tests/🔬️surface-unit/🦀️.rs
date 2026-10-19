@@ -214,7 +214,6 @@ struct PaintingSurface {
 }
 
 impl PaintingSurface {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn with_color(color: [f32; 4]) -> Self {
         Self { color, seen_clip: None }
     }

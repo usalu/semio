@@ -20,10 +20,10 @@ export function testDurableOwnedGroupDecisionFixture(): void {
   const owner = testFileUrlToPath(new URL(".", testSourceUrl));
   const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
   const bindingOwner = new URL("../../📦️prepared/🔗️binding/", import.meta.url);
-  const binding = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", bindingOwner), "utf8"));
+  const binding: any = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", bindingOwner), "utf8"));
   const bindingSchema = JSON.parse(readFileSync(new URL("🧬️schema/🔣️.json", bindingOwner), "utf8"));
   const validateBinding = new Ajv2020({ strict: true, allErrors: true }).compile(bindingSchema);
-  assert(validateBinding(binding), JSON.stringify(validateBinding.errors));
+  assert(Boolean(validateBinding(binding)), JSON.stringify(validateBinding.errors));
   const token = Buffer.from("store.durable-owned-three-member-decision.pack v1");
   const length = Buffer.alloc(4); length.writeUInt32LE(token.length);
   assert.equal(Buffer.concat([Buffer.from("8953454d0d0a1a0a", "hex"), length, token]).toString("hex"), binding.packPlanning.prefixHex);

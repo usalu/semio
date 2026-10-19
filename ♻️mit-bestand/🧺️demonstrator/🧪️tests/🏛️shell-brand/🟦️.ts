@@ -133,7 +133,6 @@ describe("demonstrator shell brands", () => {
     const projectOfEnMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfEn", "en")] }));
     expect(projectOfEnMarkup).toContain("A project of");
     expect(projectOfEnMarkup).toContain("and");
-    // 📱️ iconOnly (mobile) drops the surrounding text but keeps both logos and their links.
     const fundedByIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)] }));
     expect(fundedByIconOnlyMarkup).not.toContain("Funded by");
     const projectOfIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfIconOnly", "de", true)] }));

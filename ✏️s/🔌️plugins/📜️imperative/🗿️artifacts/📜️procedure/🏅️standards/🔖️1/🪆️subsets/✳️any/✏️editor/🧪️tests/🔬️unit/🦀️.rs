@@ -171,8 +171,6 @@ fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let demo = <crate::ProcedureSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
-    // 🧬️ The two composed slots carry DIFFERENT snapshot types (`SemioFlowSnapshot`/`SemioTextSnapshot`),
-    // so they are stated one by one rather than iterated over a heterogeneous array.
     for (slot, artifact_id, child_id) in [("flow", demo.flow.target.artifact_id.as_str(), demo.flow.child_id.as_str()), ("text", demo.text.target.artifact_id.as_str(), demo.text.child_id.as_str())] {
         assert_eq!(artifact_id, child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
     }
@@ -339,12 +337,9 @@ async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
 #[semio_framework_async_macros::async_test]
 async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
     let mut app = imperative_app_with_registry().await;
-    // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
-    // materialized by the registry's action-arg default resolution.
     app.0.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add step");
     context::settle(&mut app).await;
     assert_eq!(live_scene(&app).await.path.steps.last().expect("the added step").kind, "log.print");
-    // `run` is a View-kind command: under registry enforcement it must not emit document operations.
     let result = app.0.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("run");
     assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
     context::close(&mut app);

@@ -4,7 +4,8 @@ use semio_framework_os_infinite_board_schema::{DagChannelRef, DagComputingProgre
 use semio_framework_os_infinite_board_dag_model::DagInputDisplaced;
 use semio_framework_os_infinite_board_dag_host::{DagHost, DagHostRetirement, DagInputApplication};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{DslValue, NativeDecodeControl, ValueRefusalKind};
+use semio_framework_value::{DslValue, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::retirement::{admit_owned_retirement, owned_retirement_birth_bytes, RetireOwned};
 use serde_json::Value;

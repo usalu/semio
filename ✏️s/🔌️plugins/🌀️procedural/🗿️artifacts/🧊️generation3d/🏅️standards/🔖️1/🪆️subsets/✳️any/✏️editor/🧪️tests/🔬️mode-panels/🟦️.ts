@@ -39,7 +39,6 @@ export function testGeneration3dModePanelPublicationContract(): void {
   }
   assert.equal(new Set(fixture.panels.map((panel) => panel.bodyKey)).size, fixture.panels.length, "one body key per panel");
 
-  // 🎭️ Both modes are exercised, and the generate roster never contains an edit-mode window.
   assert.deepEqual(new Set(fixture.cases.map((row) => row.mode)), new Set(["edit", "generate"]));
   for (const row of fixture.cases) {
     const projected = projectPanel(row);

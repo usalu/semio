@@ -506,12 +506,6 @@ impl Puzzle3dCollision {
         let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
         let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
         let result = self.compute_brush_cache_entry_partial(vortex_full_id, resume_from, prior_free, deadline);
-        // 🖌️ A NON-TERMINAL entry is owed another slice, whatever its resume cursor says. Gating the
-        // re-queue on `resume_candidate_index > 0` livelocked every target that could not clear its
-        // broad-phase index (`brush_index_ready`, `brush_collision_free_until`) or its very first
-        // narrow-phase candidate inside one 500 µs slice: the entry landed in `brush_cache` pending,
-        // which also stops `prepare_one_brush_target` re-enqueuing it, so the lane could never come
-        // back to it and the suggestion popup opened empty forever.
         if result.unknown_pending && !self.brush_queue.iter().any(|id| id == vortex_full_id) {
             self.brush_queue.push_front(vortex_full_id.to_string());
         }
@@ -625,8 +619,6 @@ impl Puzzle3dCollision {
                 CollisionQueryStep::Complete => break,
             }
         }
-        // 🧲️ The docking host is a collision pair like any other: a candidate may only touch it where the two faces meet, and the
-        // depth measure keeps that flush contact at 0 (`CollisionPenetrationState`).
         let page = (0..query.len()).filter_map(|index| query.candidate(index)).filter_map(|id| self.brush_placed.get(id.as_str()).cloned()).collect();
         Some((page, query.examined()))
     }
@@ -716,7 +708,6 @@ impl Puzzle3dCollision {
             let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
             let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
             let result = self.compute_brush_cache_entry_partial(&full_id, resume_from, prior_free, deadline);
-            // 🖌️ Same law as `refresh_brush_candidates`: pending IS the owed signal.
             if result.unknown_pending {
                 self.brush_queue.push_front(full_id.clone());
             }

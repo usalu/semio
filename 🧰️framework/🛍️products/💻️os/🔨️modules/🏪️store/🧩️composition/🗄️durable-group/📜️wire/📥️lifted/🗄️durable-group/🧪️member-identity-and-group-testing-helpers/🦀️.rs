@@ -69,7 +69,7 @@ where
     P: ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: ValueToValue + ValueFromValue + semio_framework_value::retirement::RetireOwned,
 {
-    let mut owners = super::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
+    let mut owners = semio_framework_os_store_one_item_batch::OneItemOwners::from_returned(member.edit, member.post_snapshot, member.mutation_retirement, member.snapshot_retirement);
     let outcome = (|| {
         let (edit, _) = owners.refused.as_ref().expect("original fixture candidates");
         let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;

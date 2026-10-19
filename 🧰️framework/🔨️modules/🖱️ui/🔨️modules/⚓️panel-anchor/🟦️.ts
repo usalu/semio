@@ -69,7 +69,6 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
 export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSProperties {
   const style = anchorPositionStyle(anchor);
   const vertical = anchorVertical(anchor);
-  // 📍️ From the middle-region edge back to the centered h-medium row inside h-large shell chrome.
   const shellHeight = vertical === "bottom" ? "var(--footer-height)" : "var(--navbar-height)";
   const intoShellChrome = `calc(-1 * (${shellHeight} + var(--panel-header-height)) / 2)`;
   const maxHeightWithChrome = `calc(100% + (${shellHeight} + var(--panel-header-height)) / 2)`;

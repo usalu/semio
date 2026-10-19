@@ -3,9 +3,9 @@ import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/sc
 export type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface ProcedureArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact @child kind=s.stdio.semio */ flow: ArtifactChild;
-  /** @state artifact @child kind=s.stdio.semio */ text: ArtifactChild;
+  /** 📐️ @state artifact */ schema: string;
+  /** 🌊️ @state artifact @child kind=s.stdio.semio */ flow: ArtifactChild;
+  /** 🔤️ @state artifact @child kind=s.stdio.semio */ text: ArtifactChild;
 }
 
 /** 🪪️ Parses the exact document identity boundary shared by all Procedure views. */

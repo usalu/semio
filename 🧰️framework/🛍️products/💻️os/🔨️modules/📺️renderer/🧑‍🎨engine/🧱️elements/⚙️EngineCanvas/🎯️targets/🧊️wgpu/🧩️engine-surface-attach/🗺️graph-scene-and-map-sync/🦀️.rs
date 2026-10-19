@@ -17,8 +17,8 @@ pub(super) fn sync_node_graph_evaluation(engine: &mut NodeGraphEngine, cache: &m
     }
     if cache.status_json.as_deref() != graph.status_json.as_deref() {
         if let Some(json) = graph.status_json.as_deref() {
-            let mut observe=|progress:semio_framework_value::NativeDecodeProgress|progress.total<=64*1024;
-            let mut control=semio_framework_value::NativeDecodeControl::new(256*1024,&mut observe);
+            let mut observe=|progress:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress.total<=64*1024;
+            let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(256*1024,&mut observe);
             if let Ok(statuses)=infinite_canvas::board::io::text::dag_input::decode_dag_node_statuses_json(json,&mut control){
                 match engine {
                     NodeGraphEngine::Flow(host)=>host.set_node_statuses(&statuses),

@@ -19,11 +19,12 @@ use protocol::ProtocolError;
 use protocol::wire::{DictBuilder, DictReader, ProtocolLimits, RecordHasher};
 use std::collections::{HashMap, HashSet};
 use protocol::codec::{HistoryReadLimits, OriginalWireSourceIdentity, RetainedWireByteSource};
-use semio_framework_value::native_decoding::allocation::NativeForwardedDecodeReceipt;
-use semio_framework_value::native_decoding::{NativeDecodeAllocation, NativeForwardedDecodeControl};
+use semio_framework_value_native_owned::native_decoding::allocation::NativeForwardedDecodeReceipt;
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeAllocation, native_decoding::NativeForwardedDecodeControl};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, admit_retained_clone_progress};
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::{admit_owned_retirement, owned_retirement_birth_bytes, ErasedSnapshotRetirement, NativeDecodeControl, NativeDecodeRetirementRecipient, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{admit_owned_retirement, owned_retirement_birth_bytes, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
 use std::mem::{size_of_val, ManuallyDrop};
 
 
@@ -493,18 +494,8 @@ pub async fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result
     flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
     writer.write_record(protocol::REC_DOC, true, &doc_payload, CodecId(0)).await?;
 
-    // 🎯️ Built incrementally (an edit's own id is inserted only AFTER it is encoded), matching
-    // `HistoryAppender::append_edit`'s streaming semantics and the decoder's causal resolution
-    // (`EditIter`/`prescan_full` only ever know edits already decoded). A one-shot, whole-list
-    // `ordinals` map would let an edit's own `mutation_meta[i].mutation_id` — legitimately equal
-    // to `edit.id` for a single-op edit — resolve to a self-referencing ordinal at encode time,
-    // which the decoder can never resolve (it hasn't registered the current edit's id yet).
     let mut ordinals: HashMap<&str, u64> = HashMap::new();
     for (index, edit) in log.edits.iter().enumerate() {
-        // 🎯️ `write_backwards_section` is a batch-level policy switch: even when `edit.inverse`
-        // is populated (e.g. by a live store that always computes it), a caller can opt out of
-        // persisting it here. `HistoryAppender::append_edit` has no such switch — its streaming,
-        // one-edit-at-a-time API gives the caller direct per-edit control via the data itself.
         let payload = if options.write_backwards_section {
             encode_edit(edit, &mut dict, |id| ordinals.get(id).copied()).await?
         } else {
@@ -560,7 +551,7 @@ async fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<
         }
         match frame.kind {
             protocol::REC_STR_DICT => apply_dict_record(&mut dict, frame.payload().await).await?,
-            protocol::REC_ACTOR_DICT => {} // v1 never splits an actor dictionary — see 🔖️Payloads note
+            protocol::REC_ACTOR_DICT => {}
             protocol::REC_DOC => {
                 let (doc_id, schema) = decode_doc(frame.payload().await, &dict).await?;
                 log.doc_id = doc_id;
@@ -600,9 +591,6 @@ async fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<
                 running_chain = recomputed;
                 pending_digests.clear();
             }
-            // Every other kind (REC_PROJECTION, REC_INDEX, REC_FRONTIER, extension range, ...) is
-            // foreign to this crate's semantic layer — skip regardless of the frame's critical bit;
-            // this reader only enforces criticality for its own known kind set handled above.
             _ => {}
         }
     }
@@ -727,10 +715,6 @@ pub struct EditIter<'a> {
 impl<'a> Iterator for EditIter<'a> {
     type Item = Result<HistoryEdit, ProtocolError>;
 
-    // 🚫️async: E1 — `Iterator::next` is an externally-declared trait method, so it must stay a
-    // plain sync `fn`. Its callees (`next_frame`/`payload`/`apply_dict_record`/`decode_edit`) are
-    // pure in-memory byte-buffer parsing with no real suspension point, so they are resolved via
-    // the crate's one sanctioned E5 bridge (`io::resolve_ready`) rather than awaited.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             match ::semio_framework_async::poll::resolve_ready(self.cursor.next_frame()) {
@@ -780,8 +764,6 @@ pub struct RevEditIter<'a> {
 impl<'a> Iterator for RevEditIter<'a> {
     type Item = Result<HistoryEdit, ProtocolError>;
 
-    // 🚫️async: E1 — same rationale as `EditIter::next` above: `Iterator::next` must stay sync, its
-    // callees are pure in-memory parsing, resolved via the crate's one `io::resolve_ready` bridge.
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.state {
             Err(pending) => pending.take().map(Err),

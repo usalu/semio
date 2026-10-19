@@ -14,7 +14,7 @@ import userEvent from "@testing-library/user-event";
 import { Tree, isElementId, type PanelTabLeaf } from "@semio-tech/ui-react";
 import type { Rgba8 } from "@semio-tech/ui-styling";
 import type { ReactElement } from "react";
-import { inlineTreeControlsFixtureUrl } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { inlineTreeControlsFixtureUrl } from "@semio-tech/framework/ui/testing/fixtures";
 
 afterEach(() => {
   cleanup();
@@ -107,8 +107,6 @@ describe("Inline Tree resolution controls", () => {
     const panel = createFrameworkSettingsPanelTab(() => null, undefined, () => host);
     const leaf = panel.children.find((child): child is PanelTabLeaf => child.kind === "leaf" && child.id === "framework.settings.conflicts")!;
     const source = leaf.trees[0]!.tree;
-    // 🌲️ The conflicts tab resolves its tree lazily (`staticTreePanelDefinition`'s twin), which is
-    // the half of `TreePanelSource` this law is about: a resolved config would not re-read the host.
     if (!("resolveTree" in source)) throw new Error("the conflicts tab must carry a lazily resolved tree");
     const tree = source.resolveTree() as { sections: { items: { id: string; control: ReactElement; items?: unknown[] }[] }[] };
     const rows = tree.sections[0]!.items;

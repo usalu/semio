@@ -1,5 +1,6 @@
 //! 🌳️ Fixture roots use actual sealed string issuers and immutable ranked pages; cold references use independent wire values.
-use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}},list::persistent::{PersistentList},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value::{retirement::{RetireOwned, controlled::ControlledRetirement, shared::sealed::{SealedShared, SharedIssuer}}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+use semio_framework_value_persistent::list::persistent::PersistentList;
 use serde::{Serialize,Deserialize};
 
 #[derive(Clone,Debug,PartialEq,Serialize,Deserialize,semio_framework_value::RetireOwned)]

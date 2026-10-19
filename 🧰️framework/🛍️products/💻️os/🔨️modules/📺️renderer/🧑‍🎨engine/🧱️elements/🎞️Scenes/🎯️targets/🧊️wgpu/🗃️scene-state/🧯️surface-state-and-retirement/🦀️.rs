@@ -92,7 +92,7 @@ pub(crate) struct SceneSurfaceRetirement {
 
 fn retire_scene_text(text: &mut String) -> bool {
     if !text.is_empty() {
-        let mut end = text.len().saturating_sub(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let mut end = text.len().saturating_sub(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
         while !text.is_char_boundary(end) {
             end += 1;
         }

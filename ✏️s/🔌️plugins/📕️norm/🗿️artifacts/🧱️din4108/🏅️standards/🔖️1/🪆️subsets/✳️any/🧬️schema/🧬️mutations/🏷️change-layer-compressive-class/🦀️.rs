@@ -1,4 +1,4 @@
-//! `change-layer-compressive-class`.
+//! 🧬️ `change-layer-compressive-class`.
 
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

@@ -30,8 +30,6 @@ fn parses_superscript_and_subscript() {
 
 #[test]
 fn subscript_does_not_glue_into_the_preceding_ident() {
-    // Regression guard for the exact bug this crate's pre-scan lexer exists to avoid:
-    // `os_dsl::lex` alone would swallow `_1` into one `Ident("x_1")`.
     let node = parse_formula("x_1").expect("parse");
     assert!(matches!(node, MathNode::Sub(..)), "expected Sub(x, 1), got {node:?}");
 }
@@ -72,8 +70,6 @@ fn parses_cases_with_text_and_relation_cells() {
             assert_eq!(name, "cases");
             assert_eq!(rows.len(), 2);
             assert_eq!(rows[0][0], MathNode::Symbol("x".to_string()));
-            // `"if" x > 0` parses as `BinOp(Gt, Sequence(["if", x]), 0)` — the juxtaposed text
-            // and symbol form the relation's left-hand side, not the whole cell.
             match &rows[0][1] {
                 MathNode::BinOp(BinOp::Gt, lhs, rhs) => {
                     assert!(matches!(**lhs, MathNode::Sequence(_)), "expected \"if\" x to be a Sequence, got {lhs:?}");
@@ -98,7 +94,6 @@ fn parses_stretchy_parens_and_brackets_distinct_from_calls() {
     assert!(matches!(paren, MathNode::Paren('(', _)));
     let bracket = round_trips("[x + y]");
     assert!(matches!(bracket, MathNode::Paren('[', _)));
-    // Same characters, different meaning when directly preceded by an Ident: a call.
     let call = round_trips("frac(x, y)");
     assert!(matches!(call, MathNode::Call(..)));
 }

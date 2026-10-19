@@ -192,7 +192,7 @@ fn fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer() {
 
 #[test]
 fn mounted_visual_complete_field_pages_match_independent_json_and_close_one_page() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧵️session/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧵️session/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let count = fixture["visual"]["fields"].as_u64().unwrap() as usize;
     assert_eq!(semio_framework_ui_scene::CANVAS2D_SNAPSHOT_PAGE_CAPACITY, fixture["visual"]["pageCapacity"].as_u64().unwrap() as usize);
     let doc = Fem2dSnapshot::default();

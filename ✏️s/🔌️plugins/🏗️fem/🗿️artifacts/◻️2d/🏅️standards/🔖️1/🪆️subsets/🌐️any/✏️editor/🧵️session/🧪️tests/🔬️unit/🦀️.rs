@@ -5,7 +5,6 @@ use super::*;
 fn session_source() -> String {
     [
         include_str!("../../🦀️.rs"),
-        include_str!("../../🪪️session-constants-and-owner-catalog/🦀️.rs"),
         include_str!("../../🏗️model-build-job/🦀️.rs"),
         include_str!("../../🏁️model-build-close/🦀️.rs"),
         include_str!("../../🗂️mounted-state-and-preparation/🦀️.rs"),
@@ -19,7 +18,7 @@ fn session_source() -> String {
 
 #[test]
 fn mounted_static_sources_use_physical_rhs_and_canonical_identity() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for source in fixture["sources"].as_array().unwrap() {
         let kind = source["kind"].as_str().unwrap();
         let id = source["id"].as_str().unwrap();
@@ -92,7 +91,7 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
     drain_mounted_job(&mut pcg);
     let free = csr.visual_equation_indices("n49", semio_s_fem_model::Dof::Tx).unwrap().1.unwrap();
     let actual = pcg.visual_scalar(free).unwrap().displacement;
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let expected = fixture["axialChain"]["tipX"].as_f64().unwrap();
     eprintln!("[DEBUG] FEM2D paged axial chain nodes={count}, elements={}, tip_x={actual:.16e}, expected={expected:.16e}, progress={:?}", count - 1, pcg.visual_progress());
     assert!((actual - expected).abs() < 1e-12);
@@ -119,7 +118,7 @@ fn mounted_cantilever_sources_match_committed_oracle() {
         combinations: vec![FemCombination { id: "tip".into(), name: "Reverse".into(), terms: vec![FemCombinationTerm { case_id: "tip".into(), factor: -2.0 }] }],
         ..Default::default()
     };
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for reversed in [false, true] {
         let mut doc = doc.clone();
         if reversed { doc.load_cases.reverse(); }
@@ -159,7 +158,7 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
     use semio_s_fem_node::planar::FemNodeValue;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let regions = vec![
         FemRegion { id: "a".into(), name: "A".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], holes: vec![], thickness: 0.1, material_id: "a".into(), mesh_size: 2.0 },
         FemRegion { id: "b".into(), name: "B".into(), outline: vec![[1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], thickness: 0.2, material_id: "b".into(), mesh_size: 2.0 },
@@ -472,7 +471,6 @@ fn source_contract_keeps_one_semantic_child_step_and_live_visual_consumer() {
         "SESSION_MAXIMUM_ITEMS",
         "SESSION_MAXIMUM_BYTES",
         "MountedProcessOwnerCatalog",
-        "MountedOwnerClass::AssemblyDofStrings",
     ] {
         assert!(source.contains(needle), "missing mounted FEM contract {needle}");
     }
@@ -487,7 +485,7 @@ fn mounted_region_generated_element_identity_collision_is_refused() {
     use semio_s_fem_node::planar::FemNodeValue;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let collision = &fixture["generatedIdentityCollision"];
     let doc = Fem2dSnapshot {
         nodes: vec![FemNodeValue { id: "a".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "b".into(), x: 1.0, y: 0.0 }],

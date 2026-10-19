@@ -6,7 +6,7 @@ import { Matrix4, Vector3 } from "three";
 
 /** 🧭️ Confirms the authored transform and peer edits through independent reference libraries. */
 export function testFem3dTransformIntentOracle(): void {
-  const vector = JSON.parse(readFileSync(new URL("../../../../../🧫️fixtures/🧭️intent/🔣️.json", import.meta.url), "utf8"));
+  const vector = JSON.parse(readFileSync(new URL("../../../../../🧪️tests/🧫️fixtures/🧭️intent/🔣️.json", import.meta.url), "utf8"));
   const transform = new Matrix4().makeTranslation(vector.move.dx, vector.move.dy, vector.move.dz);
   const node = vector.base.nodes[0];
   const [x, y, z] = new Vector3(node.x, node.y, node.z).applyMatrix4(transform).toArray();

@@ -8,7 +8,7 @@
  * which the bundler never sees. Resolution is left to the runtime that actually has it. */
 const BUN_SQLITE_MODULE = ["bun", "sqlite"].join(":");
 
-/** Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
+/** 📥️ Lazily imports `bun:sqlite` — a static top-level import breaks Vite's config bundler, which loads this module's exports under Node before the dev server (and its Bun runtime) exists. */
 let backboneDatabaseCtor: typeof import("bun:sqlite").Database | undefined;
 export async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").Database> {
   if (backboneDatabaseCtor) return backboneDatabaseCtor;

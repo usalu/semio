@@ -5,7 +5,7 @@ use semio_s_fem_test_support::{OriginalNumericalFixture, close_grant};
 
 #[test]
 fn paged_ldlt_crosses_original_owner_and_checkpoint_boundaries() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📚️paged-ldlt/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📚️paged-ldlt/🔣️.json")).unwrap();
     let tolerance = fixture["tolerance"].as_f64().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let n = case["order"].as_u64().unwrap() as usize;

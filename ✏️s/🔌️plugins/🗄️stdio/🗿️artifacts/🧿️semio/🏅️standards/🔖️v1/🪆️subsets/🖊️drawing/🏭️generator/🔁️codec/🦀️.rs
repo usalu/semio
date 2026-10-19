@@ -62,7 +62,6 @@ fn set_group_transform(scene: &mut Scene, value: &str) {
 fn corpus() -> Vec<(&'static str, Scene, Scene)> {
     let mut out: Vec<(&'static str, Scene, Scene)> = Vec::new();
 
-    // ── layer vocabulary ────────────────────────────────────────────────────────────────────────
     let mut after = base();
     after.layers.push(Layer { id: "layer-1".into(), nodes: Vec::new() });
     out.push(("create-layer", base(), after));
@@ -71,7 +70,6 @@ fn corpus() -> Vec<(&'static str, Scene, Scene)> {
     before.layers.push(Layer { id: "layer-1".into(), nodes: Vec::new() });
     out.push(("delete-layer", before, base()));
 
-    // ── node vocabulary ─────────────────────────────────────────────────────────────────────────
     let mut after = base();
     children(&mut after).push(path("path-c", "M 40 0 L 50 0 L 50 10 Z", "#0000ff", "#000000", "1"));
     out.push(("create-node", base(), after));
@@ -94,7 +92,6 @@ fn corpus() -> Vec<(&'static str, Scene, Scene)> {
     children(&mut after).swap(0, 1);
     out.push(("reorder-nodes", base(), after));
 
-    // ── spatial transforms — SVG's own `transform` attribute is the witness ─────────────────────
     let mut after = base();
     set_group_transform(&mut after, "rotate(90)");
     out.push(("rotate-node", base(), after));
@@ -103,7 +100,6 @@ fn corpus() -> Vec<(&'static str, Scene, Scene)> {
     set_group_transform(&mut after, "scale(2 2)");
     out.push(("scale-node", base(), after));
 
-    // ── structural nesting — SVG's own `<g>` nesting is the witness ─────────────────────────────
     let grouped = |inner: Vec<Node>| Node::Group { id: "group-1", transform: "translate(0 0)".into(), children: inner };
     let mut after = base();
     {
@@ -114,7 +110,6 @@ fn corpus() -> Vec<(&'static str, Scene, Scene)> {
     out.push(("group-nodes", base(), after.clone()));
     out.push(("ungroup-node", after.clone(), base()));
 
-    // flatten: the nested group's transform is folded away and its children are hoisted.
     let mut nested = base();
     {
         let kids = children(&mut nested);
@@ -128,7 +123,6 @@ fn corpus() -> Vec<(&'static str, Scene, Scene)> {
     out.push(("flatten-node", nested.clone(), flattened.clone()));
     out.push(("unflatten-node", flattened, nested));
 
-    // ── style + geometry vocabulary ─────────────────────────────────────────────────────────────
     let mut after = base();
     if let Node::Path { d, .. } = &mut children(&mut after)[0] { *d = "M 0 0 L 12 0 L 12 12 Z".into(); }
     out.push(("replace-path", base(), after));

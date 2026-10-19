@@ -2,7 +2,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { DEFAULT_UI_DRIVER, UiDriverProvider } from "@semio-tech/ui-react";
-import { tableStepperKeyboardFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { tableStepperKeyboardFixture } from "@semio-tech/framework/ui/testing/fixtures";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TableHost, tableStepperClampedDelta, tableStepperKeyDelta } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
@@ -31,10 +31,6 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("Draw");
   });
 
-  // 🆔️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F: a plugin-authored
-  // row's own `id` (now reachable from `TableWindowKit::render_rows`, `🔌️plugin/🦀️.rs`) must
-  // survive all the way to the DOM as `data-row-id` (contract §C0's `"space:<id>"`/`"artifact:<id>"`
-  // grammar) — this was already true of `TableHost`/`Table` before lane 3-F; these two tests lock it in.
   it("stamps a row's own id onto the rendered row's data-row-id attribute", () => {
     const { container } = render(
       createElement(TableHost, {
@@ -86,11 +82,6 @@ describe("framework renderer hosts", () => {
     expect(onAction).toHaveBeenCalledWith({ controllerId: "s-home", action: "deleteSpace", args: { spaceId: "abc" } });
   });
 
-  // 🪜️ Ticket 26/09/18 slice B3f: `TableCell::Stepper` is 🪵️sourcing's ONLY document mutation, and
-  // the wgpu table widget drives it by merging `{ delta: ±step }` into the cell's own descriptor and
-  // suppressing the press at the bound (`🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs`, `render_table_cell` /
-  // `table_cell_hit`). These lock the React host to the same contract, plus the spinbutton keyboard
-  // route and the touch-sizing slots the stylesheet grows at phone width.
   const stepperTableNode = (value: number) => ({
     type: "componentScene" as const,
     surfaceId: "window:sourcing-pool",

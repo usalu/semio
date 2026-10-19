@@ -106,8 +106,6 @@ fn properties_from_dsl_value(value: &semio_framework_value::DslValue) -> Propert
 
 // #region 🔖️WireLiteral
 fn render_wire_line(value: &semio_framework_dsl_record::WireValue) -> String {
-    // 🚨️ `dsl_core::Writer::new`/`print_shape`/`Writer::render` are all sync in `dsl_core` —
-    // none of them suspend, so no `.await` belongs on any of them.
     let mut writer = semio_framework_dsl_record::Writer::new();
     semio_framework_dsl_record::print_shape(&semio_framework_dsl_record::FieldValue::Wire(value.clone()), &semio_framework_dsl_record::Shape::Wire, &mut writer);
     writer.render(semio_framework_dsl_record::JoinMode::Inline)

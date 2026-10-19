@@ -23,7 +23,7 @@ impl MutationKind<TestSnapshot, TestMutation> for SetCount {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<TestSnapshot, TestMutation> for SetCount {
+impl semio_framework_os_command::ColdMutationKind<TestSnapshot, TestMutation> for SetCount {
     fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
         MutationOutcome::new(TestDiff { count: Some(self.value), label: None, slot: None })
     }

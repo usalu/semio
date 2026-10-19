@@ -35,7 +35,6 @@ pub fn check_fire(
     let gov = part_en1990::fire_member_effects(member, annex);
     let n_ed = gov.n_ed.abs();
     let m_ed = gov.m_y_ed.abs();
-    // EN 1999-1-2 §4.2: θ_a plus ISO-curve heating increment from duration.
     let theta_from_duration = 20.0 + 345.0 * ((1.0 + fire.duration_s.max(0.0) / 60.0).log10());
     let theta_eff = fire.theta_a + (theta_from_duration - 20.0).max(0.0) * 0.25;
     let k = part_1_2::k_theta(theta_eff);
@@ -55,7 +54,6 @@ pub fn check_fire(
         } else {
             f64::INFINITY
         };
-        // Clear duration heating first so θ_eff → θ_a, then set θ_a for k_θ ≥ demand.
         remedies.push(Remedy::at_most(
             SubjectRef::new(&fire.id, format!("fireScenarios[id={}].durationS", fire.id), loc("Fire duration", "Branddauer")),
             Quantity::new(QuantityKind::Time, fire.duration_s),
@@ -73,7 +71,6 @@ pub fn check_fire(
                 &format!("θ_a auf ≤ {:.0} °C senken, damit k_θ≥{k_req:.3} den Brandwiderstand wiederherstellt.", theta_req),
             ),
         ));
-        // Fire combination can still exceed ambient capacity — scale member actions to ambient Rd.
         remedies.extend(scale_action_leaf_remedies(
             "members", &member.id, &member.actions, "nK", |a| a.n_k, n_ed.max(1e-9), n_rd.max(1e-9), q_force,
             member_label(&member.id),
@@ -135,7 +132,6 @@ pub fn check_fatigue(fat: &FatigueDetail, member: Option<&AluminiumMember>, anne
     };
     let delta_ed = if member_scale == 0.0 { fat.delta_sigma_ed } else { fat.delta_sigma_ed * member_scale.max(1e-6) };
     let rd_n = part_1_3::fatigue_strength_pa(dc, fat.m1, fat.m2, fat.n_cycles);
-    // Blend a second-slope evaluation so m2 remains live when N ≤ N_D.
     let rd_m2 = part_1_3::fatigue_strength_pa(dc, fat.m1, fat.m2, fat.n_cycles.max(part_1_3::N_D * 1.01));
     let rd = (0.9 * rd_n + 0.1 * rd_m2) / gmf;
     let damage = part_1_3::damage_ratio(delta_ed, dc, fat.m1, fat.m2, fat.n_cycles, gmf);

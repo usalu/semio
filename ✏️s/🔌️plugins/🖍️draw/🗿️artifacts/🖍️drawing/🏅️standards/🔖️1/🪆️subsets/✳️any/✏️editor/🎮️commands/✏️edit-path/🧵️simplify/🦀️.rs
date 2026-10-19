@@ -6,10 +6,14 @@ use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_s_artifact_draw_drawing_geometry::editing::PathEdit;
 use semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
+use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ValueError};
+use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
+use semio_framework::Fault;
+use semio_framework_plugin::component::Emit;
+use semio_framework_interaction as interaction;
 pub type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 #[derive(semio_framework_value::RetireOwned)]
 struct Workspace {source:PagedList<semio_s_artifact_draw_drawing_model::PathSegment,{usize::MAX}>,job:Option<PathSimplifyJob>}
@@ -64,7 +68,7 @@ impl ArtifactCommandWork<App> for Work {
             let segments=job.take_result().map_err(Fault::from)?;
             let mut emit=Emit::mutations(vec![semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(path.base.id.clone(),segments)]);
             if let Some(selection)=input.interaction.selection.get(DRAWING_POINT_DOMAIN) {
-                let retained=selection.ids.iter().filter(|id|interaction::points::parse_point_id(id).is_some_and(|point|point.layer_id!=payload.layer_id)).cloned().collect::<Vec<_>>();
+                let retained=selection.ids.iter().filter(|id|semio_s_artifact_draw_drawing_editor_interaction::points::parse_point_id(id).is_some_and(|point|point.layer_id!=payload.layer_id)).cloned().collect::<Vec<_>>();
                 emit.effects.push(canvas_pointer_down::point_selection_effect(&retained));
             }
             return Ok(ArtifactCommandWorkStep::Complete(emit));

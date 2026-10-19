@@ -19,12 +19,10 @@ pub struct GltfAdjacencyIndicators {
 pub struct GltfAdjacencyInference;
 
 impl GltfAdjacencyInference {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<bool> {
         number_of_contacts::infer_pair(pair)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer_assembly(indicators: &mut GltfAdjacencyIndicators, part_count: usize, contacts: u64, sample_count: usize, topology: Topology) {
         indicators.number_of_contacts = number_of_contacts::from_assembly(part_count, contacts, sample_count, topology);
         indicators.contact_graph_degree = contact_graph_degree::from_assembly(part_count, contacts, sample_count, topology);

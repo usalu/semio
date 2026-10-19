@@ -3,7 +3,7 @@ import{createIssuedResourceControlV1}from"../../../🏃️process/📦️package
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {configuredExactCargoLawPolicyV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -23,13 +23,13 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     if (segments[0] === "original-owned-wire-source" || segments[0] === "original-owned-wire-native") {
-      if (segments.length !== 1) throw Error("Original owned wire gate requires one exact cohort");
+      if (segments.length !== 1) throw new Error("Original owned wire gate requires one exact cohort");
       const remaining = this.invocation.control.remainingMilliseconds();
-      if (remaining === null || remaining <= 0) throw Error("Original owned wire requires finite original deadline");
+      if (remaining === null || remaining <= 0) throw new Error("Original owned wire requires finite original deadline");
       await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🌱️value/🛫️encode/🫳️borrowed/📨️wire/🧪️tests/🟦️.ts")], this.repoRoot, "pack:original-owned-wire-source", remaining, { env: process.env });
       if (segments[0] === "original-owned-wire-native") {
         const left = this.invocation.control.remainingMilliseconds();
-        if (left === null || left <= 0) throw Error("Original owned wire exhausted before native admission");
+        if (left === null || left <= 0) throw new Error("Original owned wire exhausted before native admission");
         await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-pack": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-pack", target: { kind: "test", name: "original-owned-wire" }, laws: ["original_owned_source_header_returns_without_payload_copy", "original_owned_pack_wire_returns_same_source_and_matches_normal_decoder", "original_owned_pack_wire_cancellation_closes_all_original_backing", "original_owned_pack_wire_physical_retirement_closes_actual_native_fields"] }]});
       }
       return;
@@ -44,9 +44,9 @@ class TestScript extends BundleScript {
 /** 🔢️ Verifies the closed unsigned absolute-source corpus without Native execution. */
 class AbsoluteVarintSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-absolute-varint-source accepts no arguments");
+    if (segments.length) throw new Error("test-absolute-varint-source accepts no arguments");
     const test = resolve(this.root, "../../📐️format/🧪️tests/🔣️absolute-varint/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
+    await runBudgetedTestCommand(process.execPath, [resolveTypescriptCompilerV1(this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", test], {cwd: this.repoRoot, budgetMs: 30000, throwOnFailure: true});
     await runBudgetedTestCommand(process.execPath, ["test", test], {cwd: this.repoRoot, budgetMs: 15000, throwOnFailure: true});
   }
 }
@@ -55,7 +55,7 @@ class AbsoluteVarintSourceScript extends BundleScript {
 class AbsoluteVarintNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if (segments.length) throw Error("test-absolute-varint-native accepts no arguments");
+    if (segments.length) throw new Error("test-absolute-varint-native accepts no arguments");
     await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages:["semio-framework-pack-format"], cwd: this.root, extraArgs: ["--lib", "pack_absolute_unsigned_varint_complete_boundaries", "--no-fail-fast"]}, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
@@ -63,9 +63,9 @@ class AbsoluteVarintNativeScript extends BundleScript {
 /** 🫳️ Validates the closed borrowed Record forecast contract through independent Source oracles. */
 class BorrowedPreflightSourceScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    if(segments.length)throw Error("test-borrowed-preflight-source accepts no arguments");
+    if(segments.length)throw new Error("test-borrowed-preflight-source accepts no arguments");
     const test=resolve(this.root,"../../🌱️value/🧪️tests/🫳️preflight/🟦️.ts");
-    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+    await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
     await runBudgetedTestCommand(process.execPath,["test",test],{cwd:this.repoRoot,budgetMs:15000,throwOnFailure:true});
   }
 }
@@ -74,7 +74,7 @@ class BorrowedPreflightSourceScript extends BundleScript {
 class BorrowedPreflightNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if(segments.length)throw Error("test-borrowed-preflight-native accepts no arguments");
+    if(segments.length)throw new Error("test-borrowed-preflight-native accepts no arguments");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack-record-preflight"],cwd:this.root,extraArgs:["--lib","record_borrowed_preflight_","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--test","pack_record_laws","record_borrowed_preflight_","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
@@ -84,7 +84,7 @@ class BorrowedPreflightNativeScript extends BundleScript {
 class SchemaHashNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if(segments.length)throw Error("test-schema-hash-native accepts no arguments");
+    if(segments.length)throw new Error("test-schema-hash-native accepts no arguments");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--test","pack_schema_hash","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
@@ -93,7 +93,7 @@ class SchemaHashNativeScript extends BundleScript {
 class SchemaStorageNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if(segments.length)throw Error("test-schema-storage-native accepts no arguments");
+    if(segments.length)throw new Error("test-schema-storage-native accepts no arguments");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--test","pack_record_schema_laws","schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
@@ -108,9 +108,9 @@ class BuildScript extends BundleScript {
 class OriginalStorageScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-  const [kind]=segments;if(segments.length!==1||!['source','native'].includes(kind!))throw Error('test-original-storage source|native');
+  const [kind]=segments;if(segments.length!==1||!['source','native'].includes(kind!))throw new Error('test-original-storage source|native');
   const test=resolve(this.root,'../../🌱️value/🎟️storage/🧪️tests/🟦️.ts');
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync('typescript/bin/tsc',this.root),'--noEmit','--strict','--skipLibCheck','--allowImportingTsExtensions','--resolveJsonModule','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),'--noEmit','--strict','--skipLibCheck','--allowImportingTsExtensions','--resolveJsonModule','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,['test',test],{cwd:this.repoRoot,budgetMs:15000,throwOnFailure:true});
   if(kind==='native')await runCargoTestsV1({manifestPath:resolve(this.root,'Cargo.toml'),packages:['semio-framework-pack-record-retained'],cwd:this.root,extraArgs:['--lib','pack_original_value_stack_storage_','--','--nocapture']},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }
@@ -120,7 +120,7 @@ class OriginalStorageScript extends BundleScript {
 class RetainedIntrinsicNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if(segments.length)throw Error("test-retained-intrinsic-native accepts no arguments");
+    if(segments.length)throw new Error("test-retained-intrinsic-native accepts no arguments");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack-intrinsic"],cwd:this.root,extraArgs:["--lib","retained_intrinsic_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
@@ -129,7 +129,7 @@ class RetainedIntrinsicNativeScript extends BundleScript {
 class IntrinsicSchemaNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-    if(segments.length)throw Error("test-intrinsic-schema-native accepts no arguments");
+    if(segments.length)throw new Error("test-intrinsic-schema-native accepts no arguments");
     await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack-intrinsic"],cwd:this.root,extraArgs:["--lib","intrinsic_document_schema_refusal_","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
@@ -137,7 +137,7 @@ class IntrinsicSchemaNativeScript extends BundleScript {
 /** 🌐️ Validates the neutral Body vectors and actual variable request contract. */
 class RetainedIntrinsicSourceScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    if(segments.length)throw Error("test-retained-intrinsic-source accepts no arguments");
+    if(segments.length)throw new Error("test-retained-intrinsic-source accepts no arguments");
     await runRetainedIntrinsicSource(this.root,this.repoRoot);
   }
 }
@@ -150,7 +150,7 @@ async function runRetainedIntrinsicSource(root:string,repoRoot:string):Promise<v
 /** 🔤️ Validates canonical UTF8 order without depending on a product encoder. */
 class OccurrenceOrderSourceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
-  if(segments.length)throw Error("test-occurrence-order-source accepts no arguments");
+  if(segments.length)throw new Error("test-occurrence-order-source accepts no arguments");
   await runOccurrenceOrderSource(this.root,this.repoRoot);
  }
 }
@@ -171,9 +171,9 @@ router.register("test-original-storage",OriginalStorageScript);
 class OriginalRecordReceivingScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
-  const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-record-receiving requires source or native");
+  const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw new Error("test-original-record-receiving requires source or native");
   const source=resolve(this.root,"../../🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts");
-  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
   if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack-record-retained"],cwd:this.root,extraArgs:["--offline","--lib","original_record_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
  }

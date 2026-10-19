@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneSource;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
@@ -11,7 +12,7 @@ fn spec(case:&serde_json::Value)->RetainedDiagnosticSpec{match case["level"].as_
 /// 🧫️ Refusal diagnostics build the exact schema rows from immutable original targets without cold outcomes.
 #[test]
 fn retained_semantic_diagnostics_match_neutral_original_code_level_text_and_target(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../⚠️diagnostic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus.as_array().unwrap(){
   let mut source=source(case["target"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect());let mut owner=RetainedDiagnosticPreparation::<2>::default();
   let(progress,heap)=observe(||owner.start(spec(case),RetainedCloneGrant::default()).unwrap());assert_eq!(heap,(0,0));assert_eq!(progress,Default::default());
@@ -40,7 +41,7 @@ fn retained_semantic_diagnostic_cancellation_closes_all_original_construction_fr
 /// 🏷️ Declared literal target rows share funded address custody and cancellation semantics.
 #[test]
 fn retained_literal_diagnostic_targets_match_portable_outputs_and_partial_cancellation(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let case=corpus.as_array().unwrap().iter().find(|row|row["id"]=="declared-literal-targets").unwrap();let targets=[RetainedDiagnosticTarget::Literal("compression-params"),RetainedDiagnosticTarget::Literal("field-🧱")];
+ let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../⚠️diagnostic/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let case=corpus.as_array().unwrap().iter().find(|row|row["id"]=="declared-literal-targets").unwrap();let targets=[RetainedDiagnosticTarget::Literal("compression-params"),RetainedDiagnosticTarget::Literal("field-🧱")];
  for cut in std::iter::once(None).chain((0..38).map(Some)){let mut owner=RetainedDiagnosticPreparation::<2>::default();owner.start(spec(case),grant(RetainedDiagnosticPreparation::<2>::start_demand())).unwrap();let mut turns=0;let mut complete=false;while cut.is_none_or(|cut|turns<cut){let quote=grant(owner.target_demand(targets,128).unwrap());let(step,heap)=observe(||owner.advance_targets(targets,RetainedCloneGrant{maximum_items:0,..quote}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));let(step,heap)=observe(||owner.advance_targets(targets,quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));turns+=1;if owner.literal_source.is_some()&&owner.phase==0{let changed=[RetainedDiagnosticTarget::Literal("compression-params-alt"),targets[1]];assert!(owner.target_demand(changed,128).is_err());}if matches!(step,RetainedCloneStep::Complete(_)){complete=true;break;}}
   if cut.is_none(){assert!(complete);let quote=grant(RetirementDemand{copy_bytes:size_of::<Vec<MutationMessage>>(),depth:1,..Default::default()});let(rows,p)=owner.take(quote).unwrap().unwrap();assert!(p.fits(quote));assert_eq!(serde_json::to_value(&rows[0].target).unwrap(),case["target"]);let mut ledger=MutationMessageLedgerRetirement::new(String::new(),rows);while !ledger.terminal_is_empty(){let quote=grant(RetirementDemand{copy_bytes:ledger.next_copy_byte_demand(),capacity_bytes:ledger.next_capacity_byte_demand(128).unwrap(),release_bytes:ledger.next_release_byte_demand().unwrap(),depth:ledger.next_depth_demand().unwrap()});let(s,heap)=observe(||ledger.close_step(quote).unwrap());assert_eq!(heap,(s.progress().retained_capacity_bytes,s.progress().released_bytes));}}
   close(&mut owner);eprintln!("[DEBUG] declared literal diagnostic cut={cut:?} exact neutral UTF8 targets, physical allocation receipts and terminal original custody");

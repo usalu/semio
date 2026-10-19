@@ -1,5 +1,6 @@
 use super::*;
 use pack::snapshot::ArtifactDsl;
+use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model as model_window;
 
 const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;
@@ -172,7 +173,7 @@ fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
     let (fixture, mut document) = identity_fixture();
     let collision = &fixture["collision"];
     document.materials[0].id = collision["materialId"].as_str().expect("shared identity").into();
-    match &mut document.elements[0] { crate::FemElement::Bar { material_id, .. } | crate::FemElement::Beam { material_id, .. } => *material_id = document.materials[0].id.clone() }
+    match &mut document.elements[0] { semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Bar { material_id, .. } | semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Beam { material_id, .. } => *material_id = document.materials[0].id.clone() }
     let mut live = document.load_cases[0].clone();
     live.id = collision["liveCaseId"].as_str().expect("peer case").into();
     live.name = "Live".into();
@@ -240,7 +241,7 @@ fn scoped_identity_admission_refuses_unaddressable_entities_and_duplicate_load_o
     case.id = "new-case".into();
     case.loads.push(case.loads[0].clone());
     let mut load = before.load_cases[0].loads[0].clone();
-    match &mut load { crate::FemLoad::Nodal { id, .. } | crate::FemLoad::MemberUdl { id, .. } | crate::FemLoad::Area { id, .. } => id.clear() }
+    match &mut load { semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { id, .. } | semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad::MemberUdl { id, .. } | semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad::Area { id, .. } => id.clear() }
     for (operation, expected) in [
         (Fem2dMutation::CreateNode(semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: semio_s_fem_node::planar::FemNodeValue { id: String::new(), x: 0.0, y: 0.0 }, index: None }), "emptyIdentityCode"),
         (Fem2dMutation::AddLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: "dead".into(), load: Box::new(load), index: None }), "emptyIdentityCode"),
@@ -259,10 +260,10 @@ fn borrowed_identity_admission_precedes_native_snapshot_construction_and_observe
     let (_, before) = identity_fixture();
     let record = before.__dsl_to_record();
     let mut allow = |_| true;
-    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
-    crate::Fem2dSnapshot::validate_interaction_record(&record, &mut control).expect("borrowed identities admit");
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut allow);
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::validate_interaction_record(&record, &mut control).expect("borrowed identities admit");
     let mut allow = |_| true;
-    let mut limited = semio_framework_value::NativeDecodeControl::new(0, &mut allow);
+    let mut limited = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(0, &mut allow);
     assert!(crate::Fem2dSnapshot::validate_interaction_record(&record, &mut limited).is_err());
     assert_eq!(limited.owned_bytes(), 0);
     let mut invalid = before.clone();
@@ -270,12 +271,12 @@ fn borrowed_identity_admission_precedes_native_snapshot_construction_and_observe
     invalid.load_cases[0].loads.push(repeated);
     let record = invalid.__dsl_to_record();
     let mut allow = |_| true;
-    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut allow);
     assert!(crate::Fem2dSnapshot::validate_interaction_record(&record, &mut control).is_err());
     let record = before.__dsl_to_record();
     let mut callbacks = 0;
     let mut cancel = |_| { callbacks += 1; false };
-    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut cancel);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut cancel);
     assert!(crate::Fem2dSnapshot::validate_interaction_record(&record, &mut control).is_err());
     drop(control);
     assert!(callbacks > 0);
@@ -298,7 +299,7 @@ fn public_json_snapshot_admission_refuses_invalid_owners_and_accepts_distinct_na
         assert!(semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{row}");
         let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&candidate.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("borrowed native value fixture");
         let mut allow = |_| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(1 << 22, &mut allow);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 22, &mut allow);
         assert!(<Fem2dSnapshot as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).is_err(), "controlled {row}");
     }
     let mut accepted = fixture["before"].clone();
@@ -310,7 +311,7 @@ fn public_json_snapshot_admission_refuses_invalid_owners_and_accepts_distinct_na
     assert_eq!(snapshot.nodes.len(), before.nodes.len());
     assert_eq!(snapshot.load_cases.len(), 2);
     let mut allow = |_| true;
-    let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut allow);
     snapshot.validate_interaction_identities_controlled(&mut control).expect("controlled cross namespaces admit");
     assert!(control.owned_bytes() > 0, "semantic identity scratch carries original allocation authority");
     <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);

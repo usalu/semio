@@ -114,7 +114,7 @@ func NewServer(config Config) (*Server, error) {
 }
 
 func (server *Server) RegisterTool(schema Tool, handler ToolHandler) error {
-	if strings.TrimSpace(schema.Name) == "" || handler == nil || schema.InputSchema.Type != "object" {
+	if strings.TrimSpace(schema.Name) == "" || handler == nil || schema.InputSchema.Type != "object" || (schema.OutputSchema != nil && schema.OutputSchema.Type != "object") {
 		return errors.New("mcp: invalid tool registration")
 	}
 	server.mu.Lock()

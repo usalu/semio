@@ -24,7 +24,6 @@ pub struct ValueId {
 }
 
 impl ValueId {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(value: impl Into<String>) -> Self {
         Self { value: value.into() }
     }

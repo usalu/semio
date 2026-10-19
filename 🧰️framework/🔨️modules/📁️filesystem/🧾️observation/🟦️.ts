@@ -15,7 +15,7 @@ export type FileObservationControlV1=Readonly<{maxBytes:number;maxWork:number;ch
 /** 🛑️ First-party refusal categories with no backend type in the public interface. */
 export type FileObservationRefusalV1="invalid-control"|"not-regular"|"byte-capacity"|"work-capacity"|"cancelled"|"deadline"|"changed"|"io";
 /** ⚠️ Retains the owned refusal identity across filesystem backends. */
-export class FileObservationErrorV1 extends Error{constructor(readonly code:FileObservationRefusalV1,readonly path:string){super("Physical file observation: "+code+": "+path);this.name="FileObservationErrorV1";}}
+export class FileObservationErrorV1 extends Error{readonly code:FileObservationRefusalV1;readonly path:string;constructor(code:FileObservationRefusalV1,path:string){super("Physical file observation: "+code+": "+path);this.name="FileObservationErrorV1";this.code=code;this.path=path;}}
 const integer=(value:number,minimum:number)=>Number.isSafeInteger(value)&&value>=minimum;
 
 async function physicalFileObservationV1(path:string,control:FileObservationControlV1,retain:boolean):Promise<{claim:PhysicalFileClaimV1;bytes:Uint8Array|null}>{

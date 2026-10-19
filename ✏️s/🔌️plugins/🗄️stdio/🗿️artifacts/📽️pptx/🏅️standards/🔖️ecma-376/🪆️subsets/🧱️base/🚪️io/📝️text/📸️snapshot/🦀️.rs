@@ -88,7 +88,6 @@ pub(crate) struct PptxSnapshotRecord {
 }
 
 impl PptxSnapshotRecord {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn from_snapshot(snapshot: &PptxSnapshot) -> Result<Self, String> {
         let mut opc = snapshot.opc.clone();
         let binary_parts = std::mem::take(&mut opc.parts).into_iter().map(|part| PptxBinaryPartRecord { path: part.path, content_type: part.content_type, bytes: part.bytes }).collect();
@@ -98,7 +97,6 @@ impl PptxSnapshotRecord {
         Ok(Self { schema: snapshot.schema.clone(), opc: semio_framework_value::ToValue::to_value(&opc), binary_parts, relationship_groups, xml_parts: semio_framework_value::ToValue::to_value(&snapshot.xml_parts) })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn into_snapshot(self) -> Result<PptxSnapshot, String> {
         let schema = self.schema;
         let mut opc: OpcPackage = semio_framework_value::FromValue::from_value(self.opc).map_err(|error| error.to_string())?;

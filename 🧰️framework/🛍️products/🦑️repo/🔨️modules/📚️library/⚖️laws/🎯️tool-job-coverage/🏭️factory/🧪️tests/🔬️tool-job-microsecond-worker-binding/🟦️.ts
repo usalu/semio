@@ -23,6 +23,11 @@ export function toolJobMicrosecondWorkerBindingSelfTests(): number {
     "missing-output-limit": ["dispatch", "ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes)", "ArtifactOutputChunks::new(u64::MAX)"],
     "unbound-step": ["mounted", "cx.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))", "session.pump_one_for_interactive_turn(cx)"],
     "zero-budget": ["mounted", "step_budget_us:u64::from(contract.max_step_micros)}", "step_budget_us:0}"],
+    "wrong-owned-session-grant": ["session", "$session::try_admit_owned(&mut job, &mut params, $cx)", "$session::try_admit_owned(&mut job, &mut params, &mut Default::default())"],
+    "missing-parameter-custody": ["session", "let mut params = Some($params);", "let mut params = None;"],
+    "missing-job-custody": ["session", "let mut job = Some($job);", "let mut job = None;"],
+    "lost-refused-job": ["session", "Ok(None) => Err(refused(job, params, None)),", "Ok(None) => Err(refused(None, params, None)),"],
+    "unfunded-constructor": ["worker", "StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,retained)", "StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,Default::default())"],
   };
   const validBinding = new Ajv({ strict: true }).compile({ const: "none" });
   for (const law of binding.cases) {

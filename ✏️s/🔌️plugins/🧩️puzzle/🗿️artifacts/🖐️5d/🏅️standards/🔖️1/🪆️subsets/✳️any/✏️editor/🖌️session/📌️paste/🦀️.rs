@@ -257,9 +257,6 @@ impl Puzzle5dPasteJob {
                     return crate::puzzle_job::JobTurn::Prepare(std::mem::take(&mut self.raw));
                 }
                 if !self.completed {
-                    // 🕹️ The pasted parts BECOME the selection: a paste whose result is invisible until the
-                    // user hunts for it is indistinguishable from one that landed nowhere, and the fresh ids
-                    // are the only handle on it. Sorted, so one fragment always re-selects in one order.
                     let mut fresh: Vec<String> = self.id_map.values().cloned().collect();
                     fresh.sort();
                     let emit = Emit { artifact_mutations: std::mem::take(&mut self.mutations), interaction_writes: vec![InteractionWrite::replace(PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_GRANULARITY_PART, fresh)], ..Default::default() };

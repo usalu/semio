@@ -206,9 +206,6 @@ impl ClipRegion {
         Self { scissors }
     }
 
-    // 🧩️ `pub`, not private: `draw.rs`'s retained GPU pipeline (a sibling module now that
-    // `ClipRegion` moved here — ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS)
-    // calls this directly to resolve a node's effective scissor rect against its GPU render pass.
     #[cfg(any(test, feature = "testkit"))]
     pub fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
         let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };

@@ -151,9 +151,6 @@ fn point_in_face_plane(body: &Body, face: FaceId, point: Pnt3) -> Result<bool, K
     let Some(outer) = body.faces.get(face).and_then(|f| f.outer) else {
         return Ok(false);
     };
-    // No caller-supplied chord tolerance reaches this classification helper; a small fixed
-    // boundary-sampling tolerance is a reasonable default for a point-in-face boolean test (unlike
-    // the mass-integral callers above, which thread the caller's own `tol`/`chord_tol` through).
     const CLASSIFY_CHORD_TOL: f64 = 1e-4;
     let boundary = loop_uv_polygon(body, outer, surface, CLASSIFY_CHORD_TOL)?;
     if !point_in_uv_polygon(uv.x, uv.y, &boundary) {

@@ -1,7 +1,7 @@
 /** 🧪️ Buffer independently reproduces every FEM3d namespaced identity vector. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import { testSharedMapDeltaOracle } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts";
+import { testSharedMapDeltaOracle } from "@semio-tech/framework-replication/mutation/map/testing/shared-map-delta-source";
 import { readFileSync } from "node:fs";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { testDeclaredVariantFieldOracle } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🌿️variant-field/🟦️.ts";
@@ -10,7 +10,7 @@ import { testDeclaredVariantFieldOracle } from "../../../../../../../../../../..
 export function testFem3dIdentityOracle(): void {
   testDeclaredVariantFieldOracle();
   testSharedMapDeltaOracle();
-  const layerCounts = JSON.parse(readFileSync(new URL("../../../🎮️commands/🩹️patch-solid/🧫️fixtures/🔣️.json", import.meta.url), "utf8")).layerCounts;
+  const layerCounts = JSON.parse(readFileSync(new URL("../../../🎮️commands/🩹️patch-solid/🧪️tests/🧫️fixtures/🔣️.json", import.meta.url), "utf8")).layerCounts;
   const countOracle = new Ajv({ strict: true }).compile({ type: "integer", minimum: 0 });
   for (const row of layerCounts) {
     const parsed = Number(row.text);
@@ -19,7 +19,7 @@ export function testFem3dIdentityOracle(): void {
     if (admitted) assert.equal(parsed, row.layers);
   }
   console.log("[DEBUG] independent Ajv count oracle: sparse unsigned solid layers and negative/fractional refusal");
-  const vector = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const vector = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const identities = vector.targets.map(({ segments, identity }: { segments: string[]; identity: string }) => {
     const reference = "scope:1:" + segments.map(segment => `${Buffer.byteLength(segment, "utf8")}:${segment}`).join("");
     assert.equal(reference, identity);

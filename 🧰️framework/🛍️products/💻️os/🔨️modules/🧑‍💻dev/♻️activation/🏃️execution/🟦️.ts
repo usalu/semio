@@ -89,16 +89,10 @@ class ActivationScript extends BundleScript {
       const support = new Map<string, string>();
       for (const directory of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) for (const [name, path] of artifactFiles(join(moduleRoot, directory))) support.set(join(directory, name), path);
       const fontControl=createRequestedIssuedResourceControlV1(scriptCompilerAdmissionControlV1(this.invocation,"activation:font-digest",60000),0,controller.signal),supportDigest=await withInfiniteFontArtifactV1(repoRoot,profile,this.invocation,fontControl,async artifact=>{support.set(FONT_ASSET,join(artifact.path,FONT_ASSET));try{return await activationFilesDigest(support,fontControl.signal);}finally{support.delete(FONT_ASSET);}}),completed = [];
-      // 🩺️ HEALTHY SET: the receipt names what is ACTIVATED, so a component that never staged must be
-      // absent from it rather than carry a digest of nothing — that absence is what makes the serve's
-      // own freshness pass report it `unactivated` instead of the host pretending it is there.
       const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
       const healthy = healthyPreparedComponents(verdicts, playgroundCatalog().find((row) => row.variant === variant)?.pluginId ?? variant);
       for (const line of preparedComponentReportLines(healthy.excluded, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
       if (healthy.refusal) throw new Error(healthy.refusal);
-      // Content-hash warm path: when every prepared module already records the current
-      // plugin-owner source hash and the prior receipt agrees, reuse the receipt without
-      // re-digesting artifact bytes (warm `served` stays seconds, not a full republish).
       const previousWarm = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
       if (previousWarm && previousWarm.variant === variant && previousWarm.profile === profile) {
         const prior = new Map(previousWarm.plugins.map((row) => [row.pluginId, row]));
@@ -107,7 +101,6 @@ class ActivationScript extends BundleScript {
           const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories));
           const staged = readStagedSourceContentHash(activationSourceFreshnessDirectory(runtime, pluginId));
           const row = prior.get(pluginId);
-          // Trust receipt ↔ staged-marker agreement; live source re-hash is the serve freshness pass.
           if (!row?.sourceContentSha256 || staged !== row.sourceContentSha256) { warm = false; break; }
         }
         if (warm) {

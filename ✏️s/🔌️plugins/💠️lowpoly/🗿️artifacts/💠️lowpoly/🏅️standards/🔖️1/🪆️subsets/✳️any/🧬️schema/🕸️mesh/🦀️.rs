@@ -96,7 +96,7 @@ impl PartialEq for LowpolyMeshMaterial{fn eq(&self,other:&Self)->bool{self.name=
 pub mod json;
 #[path = "🌳️canonical/🦀️.rs"]
 mod canonical;
-use semio_framework_value::intrinsic_json;
+use semio_framework_value_schema::intrinsic_json;
 
 impl semio_framework_value::ToValue for LowpolyMeshState{fn to_value(&self)->DslValue{json::state_value(self)}}
 impl semio_framework_value::FromValue for LowpolyMeshState{fn from_value(value:DslValue)->Result<Self,semio_framework_value::ValueError>{json::from_value(value)?.ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"present managed mesh state requires seven fields"))}}

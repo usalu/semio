@@ -229,11 +229,11 @@ impl<P: 'static, M: 'static> semio_framework_os_store_one_item_publication::Arti
 
 
 
-impl<M:ArtifactCanonicalJsonTree+semio_framework_value::native_decoding::NativeReceive<semio_framework_value::DslValue>+Sync> ArtifactOperationWire<M>{
+impl<M:ArtifactCanonicalJsonTree+semio_framework_value_native_owned::native_decoding::NativeReceive<semio_framework_value::DslValue>+Sync> ArtifactOperationWire<M>{
     /// 📏️ Quotes original canonical operation ingress before any bytes are parsed or typed owners are created.
     pub fn original_receiving_birth_demand(&self)->semio_framework_value::RetirementDemand{semio_framework_pack_json::OriginalJsonReceiving::<M>::constructor_demand()}
     /// 🧳️ Receives this installed canonical vocabulary through its original wire projection and mutation issuer.
-    pub fn begin_original_receiving(&self,wire:semio_framework_value::RetainedOwnedProjection<Vec<u8>>,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<M>>,control:&semio_framework_value::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<(semio_framework_pack_json::OriginalJsonReceiving<M>,semio_framework_value::RetainedCloneProgress),(ValueError,semio_framework_value::RetainedOwnedProjection<Vec<u8>>)>{semio_framework_pack_json::OriginalJsonReceiving::admit(wire,factory,b"op",|mutation|mutation,control,grant)}
+    pub fn begin_original_receiving(&self,wire:semio_framework_value::RetainedOwnedProjection<Vec<u8>>,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<M>>,control:&semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<(semio_framework_pack_json::OriginalJsonReceiving<M>,semio_framework_value::RetainedCloneProgress),(ValueError,semio_framework_value::RetainedOwnedProjection<Vec<u8>>)>{semio_framework_pack_json::OriginalJsonReceiving::admit(wire,factory,b"op",|mutation|mutation,control,grant)}
 }
 
 

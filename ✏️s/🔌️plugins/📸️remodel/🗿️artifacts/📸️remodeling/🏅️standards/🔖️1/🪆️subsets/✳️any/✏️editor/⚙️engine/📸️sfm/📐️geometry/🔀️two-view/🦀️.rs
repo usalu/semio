@@ -606,9 +606,6 @@ pub fn essential_five_point_candidates(corr: &[([f64; 2], [f64; 2]); 5]) -> Vec<
     }
     let trace_poly = eet_poly[0][0].add(&eet_poly[1][1]).add(&eet_poly[2][2]);
     let mut rows: Vec<Poly3> = Vec::with_capacity(10);
-    // `c` genuinely indexes both the row-wise `eet_poly`/`e_poly` accumulation *and* is threaded through
-    // to `e_poly[r][c]` below — a real 3-index tensor contraction over fixed 3x3 arrays, not a case
-    // `.iter()`/`.enumerate()` simplifies without materializing an awkward column copy every iteration.
     #[allow(clippy::needless_range_loop, reason = "r/c/k jointly index a 3x3x3 tensor contraction; iterator rewrites would need per-iteration column copies for no clarity gain")]
     for r in 0..3 {
         for c in 0..3 {
@@ -635,12 +632,6 @@ pub fn essential_five_point_candidates(corr: &[([f64; 2], [f64; 2]); 5]) -> Vec<
         return Vec::new();
     };
 
-    // Action matrix for multiplication by `z` on the quotient basis `[1,x,y,z,x2,y2,z2,xy,xz,yz]`
-    // (columns 10..20 of `reduced`, i.e. `B`). Columns 0-3 (`z*1=z`, `z*x=xz`, `z*y=yz`, `z*z=z2`) land
-    // directly on another quotient-basis monomial; columns 4-9 overflow into a degree-3 monomial, which
-    // `B`'s row for that monomial (from `MONO3`'s degree-3 ordering) re-expresses back in the quotient
-    // basis: `x2*z=x2z` (D3 row 4), `y2*z=y2z` (row 6), `z2*z=z3` (row 2), `xy*z=xyz` (row 9),
-    // `xz*z=xz2` (row 7), `yz*z=yz2` (row 8).
     let mut t_z = MatD::zeros(10, 10);
     t_z.set(3, 0, 1.0);
     t_z.set(8, 1, 1.0);
@@ -655,11 +646,6 @@ pub fn essential_five_point_candidates(corr: &[([f64; 2], [f64; 2]); 5]) -> Vec<
     let Ok(eigs) = real_eigenvalues(&t_z) else {
         return Vec::new();
     };
-    // Stickelberger's theorem gives the evaluation-at-root vector `(1,x,y,z,x2,y2,z2,xy,xz,yz)` as a
-    // *left* eigenvector of the action matrix (`q . T_z = z0 . q`), not a right eigenvector of `T_z`
-    // itself — equivalently, a right eigenvector of `T_z`'s transpose (`T_z^T . q = z0 . q`). Verified
-    // empirically against a known ground-truth root during development (a right-eigenvector-of-`T_z`
-    // attempt was off by O(1), while the transpose recovers it to ~1e-13).
     let t_z_transpose = t_z.transpose();
     let mut candidates = Vec::new();
     for (re, im) in eigs {
@@ -736,13 +722,6 @@ pub fn estimate_essential_five_point_bounded(matches: &[([f64; 2], [f64; 2])], k
         })
         .collect();
     let cfg = RansacConfig { threshold, confidence: 0.999, max_iters: maximum_hypotheses, seed, scoring: RansacScoring::Msac };
-    // Deliberately plain `ransac`, not `lo_ransac` with a [`fit_fundamental_dlt`] local-optimization
-    // refit: that linear 8-point-style refit is exactly the estimator this solver exists to outperform
-    // on planar/low-parallax data, so refitting through it on every improved inlier set would silently
-    // reintroduce the same degeneracy the five-point solver is meant to survive (caught by this crate's
-    // own planar-scene test: the DLT refit was winning over the correct minimal-sample essential matrix).
-    // The nonlinear polish below is safe where the DLT refit isn't: it stays on the essential matrix's
-    // true 5-DOF manifold instead of an unconstrained 8-DOF linear one.
     let result = ransac(&EssentialFivePointSolver, &normalized, &cfg)?;
     Some(polish_essential_normalized(TwoViewResult { model: TwoViewModel::Fundamental(result.model), inliers: result.inliers, score: result.score }, &normalized, threshold, polish_rounds))
 }

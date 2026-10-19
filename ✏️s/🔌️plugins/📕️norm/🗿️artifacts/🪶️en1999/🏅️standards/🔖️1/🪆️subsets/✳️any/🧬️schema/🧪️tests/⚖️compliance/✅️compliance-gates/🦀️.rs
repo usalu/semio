@@ -33,7 +33,6 @@ fn de_and_en_gamma_identical() {
     let r_en = evaluate_structure(&en);
     assert_eq!(r_de.checks.len(), r_en.checks.len());
     for (a, b) in r_de.checks.iter().zip(r_en.checks.iter()) {
-        // γ_Mf differs DE (1.35) vs EN (1.0) per NA — skip fatigue.
         if a.id.contains("1-3.fat") { continue; }
         assert!((a.utilization - b.utilization).abs() < 1e-9, "{} {} vs {}", a.id, a.utilization, b.utilization);
     }
@@ -83,7 +82,6 @@ fn remedy_law_writing_required_improves_fail() {
             }
             let required = remedy.required.value;
             if let Err(e) = set_number_at_path(&mut tree, path, required) {
-                // try u64 for discrete counts
                 if set_u64_at_path(&mut tree, path, required.round() as u64).is_err() {
                     continue;
                 }
@@ -160,7 +158,6 @@ fn python_oracle_matches_rust_utilizations_within_half_percent() {
         let mut compared = 0usize;
         for pc in py_checks {
             let id = pc.get("id").and_then(|v| v.as_str()).unwrap_or("");
-            // Full-family oracle overlap (ULS, SLS, fire, fatigue, cold, shell, connections).
             let _ = id;
             let Some(pu) = pc.get("utilization").and_then(|v| v.as_f64()) else { continue; };
             let Some(rc) = rust.checks.iter().find(|c| c.id == id) else { continue; };

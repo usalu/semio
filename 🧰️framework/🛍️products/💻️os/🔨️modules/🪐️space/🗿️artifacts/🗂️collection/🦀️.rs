@@ -148,8 +148,8 @@ impl semio_framework_dsl_record::DslVariants for ArtifactBody {
             };Ok((control.copy_text(keyword)?,record.take()))
         })
     }
-    fn from_named_record_controlled(keyword:&str,record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
-        fn text(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<String,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;<String as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(id).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"collection body text is absent"))?,control)})}
+    fn from_named_record_controlled(keyword:&str,record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+        fn text(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<String,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;<String as semio_framework_dsl_record::DslField>::from_value_controlled(record.get(id).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"collection body text is absent"))?,control)})}
         let result:Result<Self,semio_framework_value::ValueError>=control.scoped_stage(|control|{
             match keyword{
                 "document"=>{control.begin_stage(2)?;let schema=text(record,0,control)?;control.step()?;let document_id=text(record,1,control)?;control.step()?;Ok(Self::Document{schema,document_id})},
@@ -247,10 +247,6 @@ pub struct CollectionSnapshot {
     pub name: String,
     #[dsl(table)]
     pub folders: Vec<CollectionFolder>,
-    // 🧮️ NOT `#[dsl(table)]`: a `#[dsl(statements)]` field (`CollectionEntry.body`) is not a
-    // self-delimiting shape, so it cannot be a compact Structure-of-Arrays table COLUMN — only the
-    // expanded Array-of-Structs `Shape::List(Record)` form (a full nested record per entry) can carry
-    // it. `folders` above has no such field, so it stays compact.
     pub entries: Vec<CollectionEntry>,
 }
 

@@ -50,7 +50,8 @@ fn sqlite_snapshot_curation_local_kit_aliases_retain_distinct_literal_target_ide
  for pair in fixture["literalChildAliases"].as_array().unwrap(){let mut value=fixture["snapshot"].clone();value["catalog"]["childId"]=pair["childId"].clone();value["catalog"]["target"]["artifactId"]=pair["artifactId"].clone();let expected:CurationSnapshot=semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Kit aliases are independent literal fields");expected.validate().unwrap();for text in[false,true]{assert_eq!(native_roundtrip(&expected,text),expected);}}
 }
 
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
+use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🗂️ The actual Curation editor and viewer declarations.
  enum SqliteApps:PluginApp{

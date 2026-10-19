@@ -1,4 +1,4 @@
-//! \u{1f4cf}\uFE0F Workflow SQL semantic cells retain every identity, relationship and IEEE companion.
+//! 📏️ Workflow SQL semantic cells retain every identity, relationship and IEEE companion.
 use super::{WorkflowSnapshot,WorkflowParameter,ValueError,native_list,native_record};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
@@ -30,7 +30,7 @@ pub fn text(value:Option<&FieldValue>)->Result<&str,ValueError>{match value{Some
 fn scalar(value:Option<&FieldValue>)->Result<f64,ValueError>{match value{Some(FieldValue::Float(n))=>Ok(*n),_=>Err(invalid("Workflow semantic IEEE cells require literal Float"))}}
 pub fn optional(value:Option<&FieldValue>)->bool{!matches!(value,None|Some(FieldValue::Absent))}
 pub fn record(value:Option<&FieldValue>)->Result<&RecordValue,ValueError>{native_record(value.ok_or_else(||invalid("Workflow semantic entity is missing"))?)}
-pub(super) fn borrowed(value:&RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,maximum:usize)->Result<(),ValueError>{
+pub(super) fn borrowed(value:&RecordValue,native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,maximum:usize)->Result<(),ValueError>{
  let mut e=Extent{bytes:0,maximum};e.add(24)?;e.text(text(value.get(0))?)?;let graph=record(value.get(1))?;e.text(text(graph.get(0))?)?;
  let nodes=native_list(graph.get(1))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(nodes.len())?;for node in nodes{let row=native_record(node)?;e.add(24)?;for field in 0..7{e.text(text(row.get(field))?)?;}for field in 7..11{e.ieee(scalar(row.get(field))?)?;}
   for(field,bucket)in[(11,"input"),(12,"output")]{let ports=native_list(row.get(field))?;native.scoped_stage(|native|->Result<(),ValueError>{native.begin_stage(ports.len())?;for port in ports{let p=native_record(port)?;e.add(64)?;e.text(bucket)?;for field in 0..3{e.text(text(p.get(field))?)?;}if optional(p.get(6)){e.text(text(p.get(6))?)?;}native.step()?;}Ok(())})?;}native.step()?;}Ok(())})?;

@@ -31,6 +31,9 @@ semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨�
 semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-os = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

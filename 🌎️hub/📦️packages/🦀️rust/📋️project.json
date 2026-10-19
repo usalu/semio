@@ -145,7 +145,9 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "test-all-features": {
       "executor": "repo:script",
@@ -161,7 +163,25 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test all-features",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": true
     },
     "directory-live-lanes": {
       "executor": "repo:script",
@@ -169,7 +189,8 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-live-lanes",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false
     },
     "artifact-cas-check": {
       "executor": "repo:script",
@@ -178,7 +199,8 @@
         "command": "bun ./📜️script.ts artifact-cas-check",
         "forwardAllArgs": true
       },
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "socket-grant-command-source-check": {
       "executor": "repo:script",
@@ -201,7 +223,8 @@
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts socket-grant-check"
       },
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "scoped-directory-socket-source-check": {
       "executor": "repo:script",
@@ -635,12 +658,27 @@
     },
     "unit-census-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts unit-census-check"
       },
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "sharedGlobals",
+        "{workspaceRoot}/**/Cargo.toml",
+        "{workspaceRoot}/**/Cargo.lock",
+        "{workspaceRoot}/rust-toolchain.toml",
+        "{workspaceRoot}/.cargo/config.toml",
+        {
+          "env": "RUSTFLAGS"
+        },
+        {
+          "env": "RUSTUP_TOOLCHAIN"
+        }
+      ]
     },
     "foundation-source-check": {
       "executor": "repo:script",
@@ -1362,11 +1400,13 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-inference-client-contract"
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "component-codec-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts component-codec-check",
@@ -1381,11 +1421,21 @@
           ],
           "target": "component"
         }
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        "{workspaceRoot}/🌎️hub/🧪️tests/🧩️component-codecs/**/*",
+        "{workspaceRoot}/🌎️hub/🧬️schema/🧩️component-codecs/**/*"
       ]
     },
     "component-codec-budget-check": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts component-codec-check budget",
@@ -1398,6 +1448,16 @@
           ],
           "target": "component"
         }
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "dependentTasksOutputFiles": "**/*"
+        },
+        "{workspaceRoot}/🌎️hub/🧪️tests/🧩️component-codecs/**/*",
+        "{workspaceRoot}/🌎️hub/🧬️schema/🧩️component-codecs/**/*"
       ]
     },
     "hub-document-sweep": {

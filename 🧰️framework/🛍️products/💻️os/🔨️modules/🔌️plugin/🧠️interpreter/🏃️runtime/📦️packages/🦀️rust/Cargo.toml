@@ -25,6 +25,7 @@ semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-pack-json-float = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/🎯️float-writer/📦️packages/🦀️rust" }
 semio-framework-plugin-guest-contract = { workspace = true }
 semio-framework-plugin-interpreter = { workspace = true }
 semio-framework-trace = { workspace = true }

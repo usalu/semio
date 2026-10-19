@@ -59,6 +59,7 @@ semio-s-artifact-puzzle-2d-mut-any-4 = { path = "../../../../../🧬️schema/�
 semio-s-artifact-puzzle-2d-mutations = { path = "../../../../../🧬️schema/📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-records = { path = "../../../../../🧬️schema/🧱️records/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-retained = { path = "../../../../🧵️retained/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d-retained-panels = { path = "../../../../🧵️retained/📌️panel-mounts/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-snapshot = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-tests = { path = "../../../../../🧬️schema/🧬️mutations/🔌️handle/🪢️connect-handles/🎮️prepare/🧪️tests/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-2d-text-inverse = { path = "../../../../../🧬️schema/🧬️mutations/🔤️text/↩️inverse/📦️packages/🦀️rust" }
@@ -97,7 +98,11 @@ semio-s-plugin-puzzle-jobs = { workspace = true, features = ["testing"] }
 semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-s-artifact-puzzle-2d-unit-tests = { path = "../../../🔬️unit/📦️packages/🦀️rust" }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+
+[features]
+testkit = []

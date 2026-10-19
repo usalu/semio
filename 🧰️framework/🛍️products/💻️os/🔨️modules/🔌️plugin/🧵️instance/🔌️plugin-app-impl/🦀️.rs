@@ -243,18 +243,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.typed_ctx().advance_typed_operation_publication_one(cx).await.map_err(Into::into)
     }
 
-    fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)> {
-        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS{
-            let Some((_,owner))=self.tools.latest_wins_commands.entry_mut(index)else{continue;};
-            if let Some((grant,progress))=owner.receipt.take(){return Some((owner.operation.operation,grant,progress));}
-        }
-
-        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS{
-            let Some((_,owner))=self.tools.tool_operations.entry_mut(index)else{continue;};
-            if let Some((grant,progress))=owner.publication_ownership_progress.take(){return Some((owner.operation.operation,grant,progress));}
-        }
-        None
-    }
+    fn take_typed_operation_preparation_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)> { self.tools.take_typed_operation_preparation_receipt() }
 
     fn take_typed_operation_retirement_receipt(&mut self) -> Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)> {
         for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS{let Some((_,owner))=self.tools.tool_operations.entry_mut(index)else{continue;};if let Some((grant,progress))=owner.original_retirement_receipt.take(){return Some((owner.operation.operation,grant,progress));}}None
@@ -578,14 +567,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         Ok(PresenceRosterAdmission { seq, generation, cancel: self.roster.peer_roster_scope.child_now() })
     }
 
-    fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64) {
-        let slot = InstanceStores::<A>::peer_roster_slot(admission.generation);
-        assert_eq!(command.seq(), admission.seq, "Presence cursor sequence is bound by its unforgeable reservation");
-        assert_eq!(self.roster.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "Presence reservation remains live under the app's exclusive owner");
-        assert!(self.roster.peer_roster_publications.can_insert(admission.generation), "Presence publication slot was reserved before cursor construction");
-        let generation = admission.generation;
-        self.roster.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::new(admission, now_ms, command));
-    }
+    fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64) { self.roster.admit_presence_ingress(admission, command, now_ms) }
 
     fn push_presence_ingress(&mut self, generation: u64, page_index: u32, page: FixedCommandPage) -> Result<(), (Fault, FixedCommandPage)> {
         let Some(publication) = self.roster.peer_roster_publications.get_mut(generation) else {
@@ -594,13 +576,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         publication.push_page(page_index, page)
     }
 
-    fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: FixedCommandPage, fault: Fault) {
-        let slot = InstanceStores::<A>::peer_roster_slot(admission.generation);
-        assert_eq!(self.roster.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "malformed Presence owner retains its exact reservation");
-        assert!(self.roster.peer_roster_publications.can_insert(admission.generation), "malformed Presence cleanup uses its pre-reserved publication slot");
-        let generation = admission.generation;
-        self.roster.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::rejected(admission, command, fault));
-    }
+    fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: FixedCommandPage, fault: Fault) { self.roster.reject_presence_ingress(admission, command, fault) }
 
     fn take_presence_outcome(&mut self) -> Option<PresenceRosterOutcome> {
         let generation = self.roster.peer_roster_outcome_generation.checked_add(1)?;
@@ -630,30 +606,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
     /// 🔢️ Sorted by `(slot, child_id)`: the map's iteration order is not stable, and a
     /// persisted child list that reshuffles between reads would make every save look like a
     /// change to anything diffing it.
-    async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+    async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, Fault> { self.child_composition.child_packs().await }
 
-        let mut entries: Vec<protocol::ChildPackEntry> = Vec::with_capacity(self.child_composition.children.len());
-        for (key, entry) in self.child_composition.children.keyed_entries() {
-            let envelope_pack = entry.member.envelope_pack_bytes().await.map_err(|error| error.into_fault())?;
-            let owner = self.child_composition.children.path_of(key).map(|path| path.owner_text()).unwrap_or_default();
-            entries.push(protocol::ChildPackEntry { slot: entry.owner.slot.clone(), child_id: entry.owner.child_id.clone(), dialect: entry.reference.dialect.to_coordinate(), envelope_pack, owner });
-        }
-        entries.sort_by(|left, right| (&left.owner, &left.slot, &left.child_id).cmp(&(&right.owner, &right.slot, &right.child_id)));
-        Ok(entries)
-    }
-
-    async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault> {
-
-        let mut entries: Vec<protocol::ChildHeadPackEntry> = Vec::with_capacity(self.child_composition.children.len());
-        for (key, entry) in self.child_composition.children.keyed_entries() {
-            let head_pack = entry.member.document_pack_bytes().await.map_err(|error| error.into_fault())?;
-            let owner = self.child_composition.children.path_of(key).map(|path| path.owner_text()).unwrap_or_default();
-            entries.push(protocol::ChildHeadPackEntry { slot: entry.owner.slot.clone(), child_id: entry.owner.child_id.clone(), dialect: entry.reference.dialect.to_coordinate(), head_pack, owner });
-        }
-        entries.sort_by(|left, right| (&left.owner, &left.slot, &left.child_id).cmp(&(&right.owner, &right.slot, &right.child_id)));
-        Ok(entries)
-    }
+    async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, Fault> { self.child_composition.child_head_packs().await }
 
     fn begin_document_archive_load(&mut self, operation: u64, archive: protocol::DocumentArchivePack) -> Result<(), Fault> { self.begin_document_archive_load(operation, archive) }
 
@@ -671,31 +626,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         self.ingest.document_archive_loads.get(operation).map(ActiveDocumentArchiveLoad::status).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "recursive document archive authority changed before status publication"))
     }
 
-    fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> {
-        let active = self.ingest.document_archive_loads.get_mut(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
-        match active.state {
-            ActiveDocumentArchiveLoadState::Pending | ActiveDocumentArchiveLoadState::Running => {
-                active.request_terminal(ActiveDocumentArchiveLoadState::Cancelled);
-                Ok(())
-            }
-            ActiveDocumentArchiveLoadState::Cancelled => Ok(()),
-            ActiveDocumentArchiveLoadState::Ready | ActiveDocumentArchiveLoadState::Fault => Err(document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive operation cannot be cancelled")),
-        }
-    }
+    fn cancel_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> { self.ingest.cancel_document_archive_load(operation) }
 
-    fn acknowledge_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> {
-        let active = self.ingest.document_archive_loads.get(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "unknown recursive document archive operation"))?;
-        if !active.terminal() {
-            return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive operation cannot be acknowledged before terminal status"));
-        }
-        if !active.inputs_are_empty() {
-            return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "terminal recursive document archive operation still owns retained input"));
-        }
-        let mut active = self.ingest.document_archive_loads.remove(operation).ok_or_else(|| document_load_fault(DOCUMENT_LOAD_OPERATION_UNKNOWN_CODE, "terminal recursive document archive authority changed before acknowledgement"))?;
-        drop(std::mem::take(&mut active.fault));
-        drop(active);
-        Ok(())
-    }
+    fn acknowledge_document_archive_load(&mut self, operation: u64) -> Result<(), Fault> { self.ingest.acknowledge_document_archive_load(operation) }
 
     fn document_load_archive(&self, files: &store::os_store::serialization::ArtifactPackFiles) -> Result<protocol::DocumentArchivePack, Fault> {
         let Effect::LoadDocument { pack, spr } = self.stores.stamp_load_document_identity(Effect::LoadDocument { pack: files.pack.clone(), spr: files.spr.clone() })? else {
@@ -803,11 +736,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure> { self.render(body_key, snapshot_override_json, view_state, cx).await }
 
-    fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<ComponentTree>,semio_framework_job::OriginalTurnFailure>{
-        self.pending.pending_render_tree_identity.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
-        if !self.pending.pending_render_tree_ready || self.pending.pending_render_failure.is_some() || self.pending.pending_render_compound.is_some() || self.pending.pending_render_close_failure.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
-        Ok(&mut self.pending.pending_render_tree)
-    }
+    fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<ComponentTree>,semio_framework_job::OriginalTurnFailure> { self.pending.original_render_tree_source(cx) }
 
     async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> { self.window_engagements(view_state).await }
 
@@ -889,32 +818,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     async fn retain_media_export_result(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.retain_media_export_result(handle, source, status, cx).await }
 
-    async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        cx.original_source_parent()?;if receiver.is_some(){return Ok(true)}let operation_id=handle.operation_id.0;
-        if *terminal&&self.media.segmented_downloads.get(operation_id).is_none(){return Ok(true)}
-        self.media.snapshot_retirements.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving lost its original source"))?.validate(cx)?;
-        let output=self.media.segmented_downloads.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving has no exact output"))?;
-        if !output.owns_media_export_loan(handle){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving requires its exact handle").into())}
-        if !*terminal{if !output.chunks.take_chunk_original(receiver,terminal,cx)?{return Ok(false)}return Ok(receiver.is_some())}
-        if !output.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download EOF retains unread original chunks").into())}
-        let grant=cx.retained_grant();let bytes=size_of::<ArtifactDownloadOutput>()+size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-        if !self.media.segmented_closures.can_insert(operation_id){return Ok(false)}let output=self.media.segmented_downloads.remove(operation_id).expect("checked exact original download");self.media.segmented_closures.insert_admitted(operation_id,semio_framework_plugin_document_media::media_export::MediaDownloadRetirement::pending(output));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
-    }
+    async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.media.take_media_export_chunk(handle, receiver, terminal, cx).await }
 
-    async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
-        let output = self.media.segmented_downloads.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-segmented-download"), format!("unknown segmented download operation {operation_id}")))?;
-        let chunk = output.chunks.take_chunk()?;
-        if chunk.is_none() {
-            let output =
-                self.media.segmented_downloads.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-authority"), "terminal segmented download changed before exact removal"))?;
-            if !output.terminal_is_empty() {
-                self.media.segmented_downloads.insert_admitted(operation_id, output);
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-terminal-not-empty"), "terminal segmented download retained unread chunks"));
-            }
-            drop(output);
-        }
-        Ok(chunk)
-    }
+    async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> { self.media.take_segmented_download_chunk(operation_id).await }
 
     async fn import_media(&mut self, port: &str, media: Media, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let log_generation_before = self.history.log_generation;

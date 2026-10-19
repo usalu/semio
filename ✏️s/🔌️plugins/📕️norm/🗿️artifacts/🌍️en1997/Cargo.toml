@@ -123,6 +123,9 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/�
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1997]
 path = "📦️packages/🦀️rust"
 

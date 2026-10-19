@@ -39,7 +39,7 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
+impl semio_framework_os_command::ColdMutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningDiff> {
         if base.defaults.iter().any(|entry| entry.dialect == self.dialect && entry.role == self.role && entry.app == self.app) {
             let role = role_name(self.role);

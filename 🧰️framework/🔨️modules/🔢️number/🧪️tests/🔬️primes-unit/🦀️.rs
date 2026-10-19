@@ -29,8 +29,7 @@ mod tests {
 
     #[test]
     fn is_prime_natural_handles_large_known_prime() {
-        // A 128-bit-ish prime candidate; validated via BPSW.
-        let p = Natural::from_str("170141183460469231731687303715884105727").unwrap(); // 2^127 - 1, a Mersenne prime
+        let p = Natural::from_str("170141183460469231731687303715884105727").unwrap();
         assert!(is_prime(&p));
         let composite = p.add(&Natural::from_u64(2));
         assert!(!is_prime(&composite) || composite.to_u64().is_some());
@@ -58,9 +57,9 @@ mod tests {
     #[test]
     fn moebius_hand_cases() {
         assert_eq!(moebius(1), 1);
-        assert_eq!(moebius(6), 1); // 2*3, two distinct primes -> +1
-        assert_eq!(moebius(4), 0); // 2^2 -> 0
-        assert_eq!(moebius(30), -1); // 2*3*5, three distinct primes -> -1
+        assert_eq!(moebius(6), 1);
+        assert_eq!(moebius(4), 0);
+        assert_eq!(moebius(30), -1);
     }
 
     #[test]
@@ -91,7 +90,6 @@ mod tests {
 
         #[test]
         fn factor_random_64bit_semiprimes() {
-            // Products of two mid-size primes.
             for &(p, q) in &[(65537u64, 65539u64), (999_983, 999_979), (7919, 104729)] {
                 let n = p * q;
                 let factors = factor_u64(n);
@@ -116,9 +114,9 @@ mod tests {
 
         #[test]
         fn factor_natural_random_semiprime() {
-            let p = Natural::from_str("1000000000000000003").unwrap(); // prime
+            let p = Natural::from_str("1000000000000000003").unwrap();
             assert!(is_prime(&p));
-            let q = Natural::from_u64(104_729); // prime, the 10,000th prime
+            let q = Natural::from_u64(104_729);
             let n = p.mul(&q);
             let factors = factor(&n);
             let product = factors.iter().fold(Natural::one(), |acc, (f, e)| acc.mul(&f.pow(*e as u64)));

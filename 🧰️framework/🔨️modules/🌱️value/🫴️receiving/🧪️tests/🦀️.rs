@@ -2,7 +2,7 @@
 use crate::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_encoding::{NativeEncodeAllocation,NativeEncodeProgress},native_decoding::NativeDecodeAllocation};
 use semio_framework_test_fixtures::fixture_text;
 use std::{cell::RefCell,sync::atomic::{AtomicBool,AtomicUsize,Ordering}};
-static ORIGINAL_RECEIVING_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json"));
+static ORIGINAL_RECEIVING_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json"));
 macro_rules! original_receiving_law {
  ($test:ident,$control:ident,$allocation:ident)=>{
   #[test]

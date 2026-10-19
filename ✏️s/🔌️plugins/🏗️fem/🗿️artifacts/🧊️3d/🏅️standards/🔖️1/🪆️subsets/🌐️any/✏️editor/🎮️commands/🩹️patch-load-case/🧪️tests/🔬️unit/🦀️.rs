@@ -13,6 +13,7 @@ use semio_framework_value_derive::ToValue;
 use crate::context::dispatch;
 use crate::context::fem3d_app;
 use semio_s_artifact_fem_3d_editor::editor::fem3d::Fem3dCommand;
+#[cfg(test)] use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchLoadCase) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
     let history = semio_framework_plugin::HistoryView::empty();

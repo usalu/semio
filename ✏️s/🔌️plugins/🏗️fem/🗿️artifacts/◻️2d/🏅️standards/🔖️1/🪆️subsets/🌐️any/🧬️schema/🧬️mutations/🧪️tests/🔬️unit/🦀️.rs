@@ -83,10 +83,6 @@ async fn material_create_replace_and_delete_round_trip() {
     let base = simply_supported_beam_doc();
     let replaced = FemMaterialValue { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, nu: 0.3, rho: 7900.0 };
     let after_replace = round_trip(&base, &Fem2dMutation::ReplaceMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial { id: "steel".into(), new_material: replaced }));
-    // 🔗️ Deletes the TRAILING SPARE, not `steel`: since this ticket's referential-integrity wave a
-    // `delete-material` naming a grade seven members still point at is refused with
-    // `mutation.target-referenced` (see `guards::material_referrers`), and a trailing record is
-    // also the only one whose `create-`-shaped inverse round-trips to a byte-identical vec order.
     round_trip(&after_replace, &Fem2dMutation::DeleteMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: "timber_spare".into() }));
 }
 
@@ -94,10 +90,8 @@ async fn material_create_replace_and_delete_round_trip() {
 async fn section_create_replace_and_delete_round_trip() {
     let base = simply_supported_beam_doc();
     let replaced = FemSection { id: "ipe300".into(), name: "IPE300 Updated".into(), area: 0.01, iy: 1e-4 };
-    let after_replace = round_trip(&base, &Fem2dMutation::ReplaceSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection { id: "ipe300".into(), new_section: replaced }));
-    // 🔗️ Same reason as the material twin above: `ipe300` is still carried by beam `e1`, so its
-    // deletion is now `mutation.target-referenced`; the trailing spare is the deletable one.
-    round_trip(&after_replace, &Fem2dMutation::DeleteSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: "shs_spare".into() }));
+    let after_replace = round_trip(&base, &Fem2dMutation::ReplaceSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection { id: "ipe300".into(), new_section: replaced }));
+    round_trip(&after_replace, &Fem2dMutation::DeleteSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: "shs_spare".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -105,11 +99,6 @@ async fn support_create_replace_and_delete_round_trip() {
     let base = simply_supported_beam_doc();
     let replaced = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Ty] };
     round_trip(&base, &Fem2dMutation::ReplaceSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support::ReplaceSupport { id: "s1".into(), new_support: replaced }));
-    // 🧮️ Deletes the LAST support: `apply_delta`'s `added` handling (`↩️inverse` recreates via
-    // `create-support`, which has no `index` field) re-appends at the end of the collection, so
-    // only a last-position delete round-trips to a byte-identical vec order — id-keyed collections
-    // with no display order (📓️derivation-rules.md rule 2) don't guarantee position preservation
-    // for a non-last delete+recreate, matching `create_support`'s fem3d sibling precedent.
     round_trip(&base, &Fem2dMutation::DeleteSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport { id: "s2".into() }));
 }
 
@@ -117,9 +106,9 @@ async fn support_create_replace_and_delete_round_trip() {
 async fn region_create_replace_and_delete_round_trip() {
     let base = rectangle_region_doc();
     let updated = FemRegion { id: "r1".into(), name: "slab v2".into(), outline: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.03, material_id: "steel".into(), mesh_size: 0.5 };
-    let after_replace = round_trip(&base, &Fem2dMutation::ReplaceRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion { id: "r1".into(), new_region: updated }));
+    let after_replace = round_trip(&base, &Fem2dMutation::ReplaceRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion { id: "r1".into(), new_region: updated }));
     assert_eq!(after_replace.regions[0].thickness, 0.03);
-    round_trip(&after_replace, &Fem2dMutation::DeleteRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion { id: "r1".into() }));
+    round_trip(&after_replace, &Fem2dMutation::DeleteRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion { id: "r1".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -227,18 +216,18 @@ async fn fem2d_op_text_round_trips_every_variant() {
         new_material: FemMaterialValue { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 },
     }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteMaterial(semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial { id: "steel".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 }, index: None }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection {
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 }, index: None }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::ReplaceSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection {
         id: "ipe300".into(),
         new_section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 },
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: "ipe300".into() }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection { id: "ipe300".into() }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }, index: None }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteSupport(semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport { id: "s1".into() }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion {
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion {
         region: FemRegion { id: "r1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![vec![[1.0, 1.0], [2.0, 1.0], [2.0, 1.5]]], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 }, index: None,
     }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion { id: "r1".into() }));
+    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::DeleteRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion { id: "r1".into() }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dMutation::CreateLoadCase(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase {
         load_case: FemLoadCase {
             id: "dead".into(),
@@ -303,9 +292,6 @@ async fn mutation_law_replace_material_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn mutation_law_add_load_inverse_and_diff_absorb() {
     let base = simply_supported_beam_doc();
-    // 🔗️ A member UDL on the beam this document actually carries: since this ticket's wave
-    // `add-load` resolves the load's own target exactly as `create-load-case` does, so the
-    // area pressure over the region `r1` this fixture never had would now be refused.
     let mutation = Fem2dMutation::AddLoad(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: "dead".into(), load: Box::new(FemLoad::MemberUdl { id: "l9".into(), element_id: "e1".into(), wx: 0.0, wy: -400.0 }), index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -469,7 +455,7 @@ async fn create_material_implausible_poisson_is_fatal() {
 async fn create_section_zero_area_is_fatal() {
     let base = simply_supported_beam_doc();
     let implausible = FemSection { id: "void".into(), name: "Void".into(), area: 0.0, iy: 1e-5 };
-    let (code, level, _) = refusal(&base, &Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: implausible, index: None }));
+    let (code, level, _) = refusal(&base, &Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: implausible, index: None }));
     assert_eq!(code, "mutation.invariant");
     assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
 }
@@ -480,7 +466,7 @@ async fn create_region_hole_outside_outline_is_fatal() {
     let base = rectangle_region_doc();
     let loose =
         FemRegion { id: "r2".into(), name: "Loose hole".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![vec![[9.0, 9.0], [10.0, 9.0], [10.0, 10.0]]], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 };
-    let (code, level, target) = refusal(&base, &Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region: loose, index: None }));
+    let (code, level, target) = refusal(&base, &Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region: loose, index: None }));
     assert_eq!(code, "mutation.invariant");
     assert_eq!(level, semio_framework_diagnostic::Severity::Fatal);
     assert_eq!(target, vec!["r2".to_string()]);
@@ -491,7 +477,7 @@ async fn create_region_hole_outside_outline_is_fatal() {
 async fn create_region_degenerate_outline_is_fatal() {
     let base = rectangle_region_doc();
     let degenerate = FemRegion { id: "r3".into(), name: "Line".into(), outline: vec![[0.0, 0.0], [4.0, 0.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 };
-    let (code, _, _) = refusal(&base, &Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region: degenerate, index: None }));
+    let (code, _, _) = refusal(&base, &Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region: degenerate, index: None }));
     assert_eq!(code, "mutation.invariant");
 }
 

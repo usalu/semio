@@ -18,14 +18,14 @@ const DEMONSTRATOR_PANE_NAVBAR_LABELS: Record<string, string> = {
 };
 
 const MANIFEST_SOURCES: Record<string, string> = {
-  "s.procedural.generation3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
-  "s.cad.cad@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
-  "s.puzzle.puzzle3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
-  "s.sourcing.curation@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
-  "s.process.process3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
-  "s.gis.gismap@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🔣️.json",
-  "s.energy.model@1/*#editor": "🌎️hub/🧩️compositions/🔋️energy/🔣️.json",
-  "s.fem.fem3d@1/*#editor": "🌎️hub/🧩️compositions/🏗️fem/🔣️.json",
+  "s.procedural.generation3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+  "s.cad.cad@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+  "s.puzzle.puzzle3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+  "s.sourcing.curation@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+  "s.process.process3d@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+  "s.gis.gismap@1/*#editor": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+  "s.energy.model@1/*#editor": "🌎️hub/🧩️compositions/🔋️energy/🧩️component/🔣️.json",
+  "s.fem.fem3d@1/*#editor": "🌎️hub/🧩️compositions/🏗️fem/🧩️component/🔣️.json",
 };
 
 type ManifestApp = {
@@ -56,7 +56,7 @@ export async function registerDemonstratorPaneBrandingTests(vitest: NonNullable<
         const manifestPath = MANIFEST_SOURCES[controllerId];
         const app = findApp(loadApps(manifestPath), controllerId);
         expect(app, `missing app in ${manifestPath}`).toBeTruthy();
-        const resolved = appBreadcrumb(resolveAppBreadcrumb(app!, "reuse"));
+        const resolved = appBreadcrumb(resolveAppBreadcrumb({ breadcrumb: [...(app!.breadcrumb ?? [])], terminologyBreadcrumbs: Object.fromEntries(Object.entries(app!.terminologyBreadcrumbs ?? {}).map(([terminology, labels]) => [terminology, [...labels]])) }, "reuse"));
         expect(resolved).toBe(expectedLabel);
         expect(resolved.toLowerCase()).not.toContain("semio");
       });

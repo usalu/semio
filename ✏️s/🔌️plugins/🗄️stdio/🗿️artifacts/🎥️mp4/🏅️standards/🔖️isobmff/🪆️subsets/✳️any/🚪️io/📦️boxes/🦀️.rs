@@ -11,11 +11,9 @@
 pub struct FourCc(pub [u8; 4]);
 
 impl FourCc {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(bytes: &[u8; 4]) -> Self {
         Self(*bytes)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_str(&self) -> std::borrow::Cow<'_, str> {
         String::from_utf8_lossy(&self.0)
     }
@@ -51,50 +49,39 @@ pub struct ByteReader<'a> {
 }
 
 impl<'a> ByteReader<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn pos(&self) -> usize {
         self.pos
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn remaining(&self) -> usize {
         self.data.len() - self.pos
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn take(&mut self, n: usize) -> Result<&'a [u8], BoxError> {
         let end = self.pos.checked_add(n).ok_or(BoxError::Truncated)?;
         let slice = self.data.get(self.pos..end).ok_or(BoxError::Truncated)?;
         self.pos = end;
         Ok(slice)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn skip(&mut self, n: usize) -> Result<(), BoxError> {
         self.take(n).map(|_| ())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn u8(&mut self) -> Result<u8, BoxError> {
         Ok(self.take(1)?[0])
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn u16_be(&mut self) -> Result<u16, BoxError> {
         Ok(u16::from_be_bytes(self.take(2)?.try_into().unwrap()))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn u32_be(&mut self) -> Result<u32, BoxError> {
         Ok(u32::from_be_bytes(self.take(4)?.try_into().unwrap()))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn u64_be(&mut self) -> Result<u64, BoxError> {
         Ok(u64::from_be_bytes(self.take(8)?.try_into().unwrap()))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn i32_be(&mut self) -> Result<i32, BoxError> {
         Ok(i32::from_be_bytes(self.take(4)?.try_into().unwrap()))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn fourcc(&mut self) -> Result<FourCc, BoxError> {
         Ok(FourCc(self.take(4)?.try_into().unwrap()))
     }

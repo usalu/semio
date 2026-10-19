@@ -2,14 +2,21 @@
   "version": 1,
   "target": "@semio-tech/semio-tech-play:build",
   "catalogAdmission": "refuse",
-  "environmentProtocol": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎛️environment/🧬️schema/🔣️.json",
-  "launch": {
-    "name": "📦️build🏢️semio-tech🎡️play🆕️fresh",
-    "files": [
-      ".vscode/🧩️launch.seed.jsonc",
-      ".vscode/launch.json"
-    ],
-    "runner": "bun repo"
+  "retiredLaunchFiles": [
+    ".vscode/🧩️launch.seed.jsonc",
+    ".vscode/launch.json"
+  ],
+  "dashboard": {
+    "registryProject": "📋️project.json",
+    "playBuildProject": "🏢️semio-tech/🎡️play/📋️project.json",
+    "parameter": "generation",
+    "value": "fresh",
+    "ship": {
+      "buildMode": "build-mode",
+      "buildModeValue": "ship",
+      "cache": "cache",
+      "cacheValue": "skip-all"
+    }
   },
   "buildMachine": {
     "cpus": 10,
@@ -33,10 +40,9 @@
     ],
     "callers": [
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts",
-      "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts"
+      "🏢️semio-tech/🎡️play/🔨️modules/📦️site/🟦️.ts"
     ],
     "bypass": "runNativeBuildDriverV1",
-    "freshLaunch": "📦️build🦑️workspace🚀️release🆕️fresh",
     "stores": {
       "target": "t",
       "build": "b",

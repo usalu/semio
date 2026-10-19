@@ -9,9 +9,9 @@ import {parseImportedMap,type ImportedMap} from "./🗺️imported-map/🟦️.t
 export {parseImportedMap} from "./🗺️imported-map/🟦️.ts";
 export type {ImportedMap,ImportedFeature} from "./🗺️imported-map/🟦️.ts";
 export interface GisTerrainArtifact {
-  /** @state artifact */ exaggeration: Binary64;
-  /** @state artifact */ importedMap?: ImportedMap;
-  /** @state artifact @child kind=s.stdio.semio */ mesh?: ArtifactChild;
+  /** 📐️ @state artifact */ exaggeration: Binary64;
+  /** 📜️ @state artifact */ importedMap?: ImportedMap;
+  /** 🔺️ @state artifact @child kind=s.stdio.semio */ mesh?: ArtifactChild;
 }
 
 /** 🪪️ Parses the document boundary independently of window or OS settings. */

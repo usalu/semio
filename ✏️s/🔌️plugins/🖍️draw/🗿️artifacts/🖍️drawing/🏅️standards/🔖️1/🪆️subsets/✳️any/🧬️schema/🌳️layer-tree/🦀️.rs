@@ -69,7 +69,7 @@ pub fn selected_drawing_layers<'a>(document: &'a DrawingSnapshot, ids: &[String]
 
 /// 🔒️ A lock on any ancestor protects its complete subtree from interactive edits.
 pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
-    fn visit(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), inherited: bool) -> Option<bool> {
+    fn visit(layers: &semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), inherited: bool) -> Option<bool> {
         for layer in layers {
             let locked = inherited || layer_base(layer).locked;
             if layer_id(layer).eq_text(id) { return Some(locked); }
@@ -82,9 +82,9 @@ pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &(impl semio_fram
     visit(&document.layers, id, false).unwrap_or(false)
 }
 
-pub fn flatten_drawing_layers(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>) -> Vec<&DrawingLayerNode> {
+pub fn flatten_drawing_layers(layers: &semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>) -> Vec<&DrawingLayerNode> {
     let mut out = Vec::new();
-    fn walk<'a>(nodes: &'a semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, out: &mut Vec<&'a DrawingLayerNode>) {
+    fn walk<'a>(nodes: &'a semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, out: &mut Vec<&'a DrawingLayerNode>) {
         for node in nodes {
             out.push(node);
             if let DrawingLayerNode::Group(group) = node {
@@ -124,8 +124,8 @@ pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
     Some(id.to_string())
 }
 
-pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>) -> Result<DrawingLayerNode,semio_framework_value::ValueError> {
-    fn identify(node: &mut DrawingLayerNode, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) -> Result<(),semio_framework_value::ValueError> {
+pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str, identities: &semio_framework_value_persistent::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>) -> Result<DrawingLayerNode,semio_framework_value::ValueError> {
+    fn identify(node: &mut DrawingLayerNode, identities: &semio_framework_value_persistent::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) -> Result<(),semio_framework_value::ValueError> {
         let base=layer_base_mut(node);let old=base.id.clone();
         let mut matches=identities.iter().filter(|assignment|assignment.source==old);
         let assignment=matches.next().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Drawing clone identity missing"))?;
@@ -160,7 +160,7 @@ pub fn mutate_drawing_layer(doc: &DrawingSnapshot, target_id: &(impl semio_frame
     next
 }
 
-pub fn update_layer_in_tree(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), mutator: &mut impl FnMut(&mut DrawingLayerNode)) -> bool {
+pub fn update_layer_in_tree(layers: &mut semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), mutator: &mut impl FnMut(&mut DrawingLayerNode)) -> bool {
     for layer in layers.iter_mut() {
         if layer_id(layer).eq_text(target_id) {
             mutator(layer);
@@ -175,7 +175,7 @@ pub fn update_layer_in_tree(layers: &mut semio_framework_value::list::PagedList<
     false
 }
 
-pub fn remove_layer_from_tree(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
+pub fn remove_layer_from_tree(layers: &mut semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> bool {
     if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(target_id)) {
         layers.remove(index);
         return true;
@@ -190,7 +190,7 @@ pub fn remove_layer_from_tree(layers: &mut semio_framework_value::list::PagedLis
     false
 }
 
-pub fn extract_layer_node(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerNode> {
+pub fn extract_layer_node(layers: &mut semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerNode> {
     if let Some(index) = layers.iter().position(|layer| layer_id(layer).eq_text(target_id)) {
         return Some(layers.remove(index));
     }
@@ -204,7 +204,7 @@ pub fn extract_layer_node(layers: &mut semio_framework_value::list::PagedList<Dr
     None
 }
 
-pub fn insert_layer(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>, index: usize, node: DrawingLayerNode) {
+pub fn insert_layer(layers: &mut semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<&str>, index: usize, node: DrawingLayerNode) {
     if let Some(parent_id) = parent_id {
         if !insert_layer_in_parent(layers, parent_id, index, node.clone()) {
             layers.push(node);
@@ -215,7 +215,7 @@ pub fn insert_layer(layers: &mut semio_framework_value::list::PagedList<DrawingL
     }
 }
 
-fn insert_layer_in_parent(layers: &mut semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: &str, index: usize, node: DrawingLayerNode) -> bool {
+fn insert_layer_in_parent(layers: &mut semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: &str, index: usize, node: DrawingLayerNode) -> bool {
     for layer in layers.iter_mut() {
         if let DrawingLayerNode::Group(group) = layer {
             if group.base.id == parent_id {
@@ -240,7 +240,7 @@ pub struct DrawingLayerLocation {
 }
 
 pub fn find_drawing_layer_location(doc: &DrawingSnapshot, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
-    fn search(layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
+    fn search(layers: &semio_framework_value_persistent::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, target_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized)) -> Option<DrawingLayerLocation> {
         for (index, layer) in layers.iter().enumerate() {
             if layer_id(layer).eq_text(target_id) {
                 return Some(DrawingLayerLocation { parent_id, index });

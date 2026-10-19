@@ -1,9 +1,10 @@
 //! 🧵️ Original edit fields assemble through actual typed child receivers without gathering wire or renewing caller custody.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::OriginalHistoryEdits;
 use super::{HistoryEdit,HistoryOpMeta,OpPayload,RetainedHistoryIdDecode,RetainedHistoryOpDecode,RetainedHistoryOpMetaDecode,RetainedHistoryOpMetaPartial,RetainedHistoryOpMetaFault,RetainedHistoryOpMetaStep,RetainedHistoryRecords,RetainedHistoryRecordsStep};
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity,HistoryReadLimits,RetainedWireFieldDecode},dictionary::RetainedSourceDictionary};
-use semio_framework_value::{SharedUtf8,NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ErasedSnapshotRetirement,admit_owned_retirement,owned_retirement_birth_bytes};
+use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ErasedSnapshotRetirement, admit_owned_retirement, owned_retirement_birth_bytes};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of_val};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct RetainedHistoryEditPartial{pub id:Option<String>,pub actor_text:Option<String>,pub actor:Option<SharedUtf8>,pub started_at:Option<String>,pub finished_at:Option<String>,pub verb:Option<String>,pub line:Option<String>,pub lane:Option<String>,pub ops:Option<Vec<OpPayload>>,pub inverse:Option<Vec<OpPayload>>,pub meta:Option<Vec<HistoryOpMeta>>,pub pending_op:Option<OpPayload>,pub pending_meta:Option<HistoryOpMeta>}

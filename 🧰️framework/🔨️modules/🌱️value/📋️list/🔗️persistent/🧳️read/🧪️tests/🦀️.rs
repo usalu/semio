@@ -1,8 +1,9 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use super::super::tests::{grant,observe,original,close_source,list};
 fn make(count:usize)->PersistentList<i64>{if count==0{Default::default()}else{list(count)}}
 fn close(cursor:&mut PersistentListRead<i64>){cursor.begin_close();for turn in 0..10000{if cursor.terminal_is_empty(){return;}let g=grant(cursor.close_demand(4096).unwrap());let(step,heap)=observe(||cursor.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<9999,"source-bound read closure stalled");}}
-fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn corpus()->serde_json::Value{serde_json::from_str(fixture_text!("../../🧳️read/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 /// 🔎️ Genuine original projections preserve ranked pointer identity with no row clone or traversal allocation.
 #[test]
 fn persistent_retained_read_matches_portable_ranked_rows_and_original_sources(){

@@ -10,7 +10,9 @@ use crate::standards::v1::subsets::any::schema::preparation::native_preparation_
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::create_node_preparation::{Puzzle2dCreateNodeDisposition, Puzzle2dCreateNodePlan, Puzzle2dCreateNodePreparationCursor, Puzzle2dCreateNodePreparationStep};
 #[allow(unused_imports)]
-use semio_framework_value::{ValueRefusalKind, list::PagedListEditCursor, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef};
+#[allow(unused_imports)]
+use semio_framework_value_persistent::list::PagedListEditCursor;
 #[allow(unused_imports)]
 use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
 use crate::standards::v1::subsets::any::schema::preparation::create_node_preparation::candidate::*;
@@ -52,7 +54,7 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_create_candidate_preserves_ordered_placement_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dCreateNodeCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟢️node/🌱create-node/🎮️prepare/🔣️.json")).unwrap();
     let full: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;

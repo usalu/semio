@@ -116,8 +116,6 @@ pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
 }
 
 impl Default for UiNode {
-    // 🚫️async: E1 impl of external trait (Default) — inlines `ui_stack_vertical`'s pure body rather
-    // than asyncifying that widely-async-consumed builder just for this one sync call site — see R9
     fn default() -> Self {
         UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: Some("standard".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, children: vec![], drop_action: None, drop_overlay: None })
     }

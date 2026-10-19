@@ -13,7 +13,7 @@
 //! 🏗️ C25/30 for the ground slab: E_cm = 31 GPa, nu = 0.2, rho = 2500 kg/m³ — appended at the tail.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation_cold;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
@@ -51,7 +51,7 @@ fn applies_to_committed_after() {
 fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
-    let inverse = inverse_fem2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_fem2d_mutation_cold(&base, &mutation).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-material/adds-the-c25-slab-11d8df: create-material undoes with exactly one step, got {inverse:?}");
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &mutation).expect("forward applies");

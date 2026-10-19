@@ -1,4 +1,4 @@
-//! that accepts pointer input, and therefore the only one binding the select/brush utilities
+//! 🛂️ that accepts pointer input, and therefore the only one binding the select/brush utilities
 //! 👁️ Puzzle 2d play app — the Overview window: the wide, interactive canvas pane. The only pane
 //! (`🪛️utilities/*`).
 

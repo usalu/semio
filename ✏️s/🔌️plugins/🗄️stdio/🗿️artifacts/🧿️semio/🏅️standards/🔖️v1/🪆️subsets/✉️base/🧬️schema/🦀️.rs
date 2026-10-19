@@ -21,15 +21,12 @@ impl Default for SemioArtifact {
 }
 
 impl SemioArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioSnapshot {
         SemioSnapshot { schema: self.schema.clone(), subset: self.subset.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioSnapshot) -> Self {
         Self { schema: snapshot.schema, subset: snapshot.subset }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioSnapshot) {
         self.schema = snapshot.schema;
         self.subset = snapshot.subset;

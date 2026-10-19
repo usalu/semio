@@ -70,12 +70,13 @@ use std::mem::size_of;
 #[path = "../../📥️ingress/📚️original/🦀️.rs"]
 mod original_ingress;
 use original_ingress::{OriginalReplayEdits, original_edits_for_ids};
+use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
 
 //#region 📬️OneItemPublication
 /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
 /// unit. Exactly one admitted mutation is folded into the staged edit per fold turn; the
 /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
-pub fn advance_apply_batch<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
+pub fn advance_apply_batch<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,

@@ -27,8 +27,6 @@ async fn pack_round_trips_and_agrees_with_dsl() {
     let bytes = encode(&document);
     let decoded = decode(&bytes).expect("decode");
     assert_eq!(decoded, document);
-    // 🧹️ Both documents own a populated asset pool, so they reach the artifact's retirement seam
-    // rather than `RasterOwnedMap`'s fail-closed `Drop`.
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(decoded);
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);
 }
@@ -122,9 +120,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
-    // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
-    // built with the artifact's own `raster_document_store_owners`, never bare.
     store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(ArtifactCommand::Apply {

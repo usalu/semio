@@ -38,11 +38,34 @@
     "RecheckFenceCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "action", "outcome"],
+      "required": [
+        "name",
+        "action",
+        "outcome"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1 },
-        "action": { "enum": ["cancel", "manifest", "topology", "symlink", "late-manifest", "unrelated", "none"] },
-        "outcome": { "enum": ["canceled", "rejected", "accepted"] }
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "enum": [
+            "cancel",
+            "manifest",
+            "topology",
+            "symlink",
+            "late-manifest",
+            "unrelated",
+            "none"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "canceled",
+            "rejected",
+            "accepted"
+          ]
+        }
       }
     },
     "OwnershipProgress": {
@@ -456,6 +479,136 @@
                   "rejected",
                   "canceled"
                 ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "PayloadOwnershipCases": {
+      "description": "Same-name nested package identity follows safe concrete authored exports under its nearest real Source owner, independently of generated leaf availability. Output files and links do not attest artifact custody.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "manifests",
+          "files",
+          "externalFiles",
+          "links",
+          "expected",
+          "duplicate",
+          "resolutions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "manifests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "directory",
+                "document"
+              ],
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "document": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "externalFiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "target",
+                "external",
+                "kind"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                },
+                "external": {
+                  "type": "boolean"
+                },
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "duplicate": {
+            "type": "boolean"
+          },
+          "resolutions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "entry",
+                "conditions",
+                "targets",
+                "payload"
+              ],
+              "properties": {
+                "owner": {
+                  "type": "string"
+                },
+                "entry": {
+                  "type": "string"
+                },
+                "conditions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "payload": {
+                  "type": "string"
+                }
               }
             }
           }

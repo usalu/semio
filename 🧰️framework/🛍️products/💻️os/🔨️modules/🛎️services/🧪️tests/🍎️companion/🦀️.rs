@@ -14,21 +14,9 @@ mod component {
     mod tests;
 }
 
-#[path = "../🔬️file-watcher-unit"]
-mod file_watcher {
-    pub use semio_framework_os_services::testkit::file_watcher::*;
-    use semio_framework_async::WorkerPool;
-    use std::sync::atomic::Ordering;
-    use std::sync::Arc;
-    use std::time::{Duration, Instant, UNIX_EPOCH};
-
-    #[path = "🦀️.rs"]
-    mod tests;
-}
-
 #[path = "../🔬️native-io-unit"]
 mod native_io {
-    pub use semio_framework_os_services::testkit::native_io::*;
+    pub use semio_framework_os_services_native_io::*;
     use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
     use semio_framework_job_worker::OriginalWorkerFixtureCaller;
     use semio_framework_value::RetirementDemand;

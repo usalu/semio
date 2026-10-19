@@ -1,4 +1,4 @@
-//! runs, the one dispatch table from an action id to its command arm, and the shell-only actions that need no scene.
+//! 🏃️ runs, the one dispatch table from an action id to its command arm, and the shell-only actions that need no scene.
 //! 🎮️ Puzzle 3d action dispatch — the shared action prologue (transient scene, precompute sync, dispatch) every action
 
 #![allow(clippy::result_large_err)]
@@ -416,7 +416,7 @@ pub fn puzzle3d_selection_panel_bodies() -> Vec<String> {
 /// catalogue (object/vortex kind rosters are document data).
 pub fn puzzle3d_artifact_panel_bodies() -> Vec<String> {
     let mut bodies = puzzle3d_selection_panel_bodies();
-    bodies.push(catalogue::BODY_KEY.to_string());
+    bodies.push(semio_s_artifact_puzzle_3d_editor_modes::windows::main::BODY_KEY.to_string());
     bodies
 }
 

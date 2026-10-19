@@ -46,12 +46,11 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectKindCompatibility {
 
-
-}
-
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectKindCompatibility {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for ConnectKindCompatibility
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<ConnectKindCompatibility>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

@@ -572,13 +572,10 @@ mod live_query {
         let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
         db_actor::block_on(live.refresh(&first, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
 
-        // An identical re-refresh: every row's dep_hash is unchanged, so every row is a cache hit.
         let identical = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
         let diff = db_actor::block_on(live.refresh(&identical, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
         assert!(diff.added.is_empty() && diff.removed.is_empty() && diff.updated.is_empty(), "an unchanged source must produce an empty diff");
 
-        // Only bob's row changes (same position, same length — isolates a value change from a
-        // position-based added/removed churn).
         let third = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 26, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
         let diff = db_actor::block_on(live.refresh(&third, None::<&NoFullTextLookup>, &QueryLimits::default(), &mut control())).expect("refresh succeeds");
         assert_eq!(diff.updated.len(), 1, "only bob's row changed");

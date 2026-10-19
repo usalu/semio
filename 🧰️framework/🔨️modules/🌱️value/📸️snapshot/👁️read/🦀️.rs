@@ -859,56 +859,9 @@ mod presence_read_tests;
 #[path="../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🦀️.rs"]
 mod returned_retirement_tests;
 
-#[cfg(any(test, feature = "testkit"))]
-impl SnapshotReadLeaseRegistry {
-    /// 🪝️ Test hook: the contention lock of the fixed registry state, held by the Store companions to witness fail-closed admission.
-    #[doc(hidden)]
-    pub fn state_lock(&self) -> &SnapshotReadLeaseStateLock {
-        &self.state
-    }
-}
-
-#[cfg(any(test, feature = "testkit"))]
-impl SnapshotReadLeaseRegistryState {
-    /// 🪝️ Test hook: positions the returned-owner cleanup visit order.
-    #[doc(hidden)]
-    pub fn set_cleanup_cursor(&mut self, cursor: usize) {
-        self.cleanup_cursor = cursor;
-    }
-}
-
-#[cfg(any(test, feature = "testkit"))]
-impl SnapshotReadLeaseRegistryOwner {
-    /// 🪝️ Test hook: the registry's own alias custody, absent after the exact owned close.
-    #[doc(hidden)]
-    pub fn alias_custody(&self) -> Option<&SnapshotReadRegistryAliasRetirement> {
-        self.0.as_ref()
-    }
-}
-
-#[cfg(any(test, feature = "testkit"))]
-impl SnapshotReadLease {
-    /// 🪝️ Test hook: the fixed registry slot of this lease.
-    #[doc(hidden)]
-    pub fn slot_index(&self) -> u16 {
-        self.index
-    }
-
-    /// 🪝️ Test hook: the generation mark of this lease.
-    #[doc(hidden)]
-    pub fn slot_generation(&self) -> u64 {
-        self.generation
-    }
-}
-
-#[cfg(any(test, feature = "testkit"))]
-impl ErasedSnapshotRead {
-    /// 🪝️ Test hook: swaps the erased owner, returning the previous custody.
-    #[doc(hidden)]
-    pub fn swap_owner(&mut self, owner: Option<Arc<dyn std::any::Any + Send + Sync>>) -> Option<Arc<dyn std::any::Any + Send + Sync>> {
-        std::mem::replace(&mut self.owner, owner)
-    }
-}
+#[cfg(test)]
+#[path="🧪️tests/🔒️registry-lock/🦀️.rs"]
+mod registry_lock_tests;
 
 #[path="🔗️source/🦀️.rs"]
 pub mod captured_snapshot_source;

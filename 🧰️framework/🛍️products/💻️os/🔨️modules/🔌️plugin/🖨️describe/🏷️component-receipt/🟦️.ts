@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitLeafV1, type CargoArtifactObservationV1, type CargoInputObservationV1, type CargoProvenanceRootsV1, type CargoResourceWitnessV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 export type { CargoProvenanceRootsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, componentToolchainV1, encodeComponentReceiptV1, parseComponentReceiptV1 } from "./🧬️schema/🟦️.ts";
-import { type ComponentProfileV1, type ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
+import { type ComponentProfileV1, type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 export {
   COMPONENT_PROFILE_POLICIES,
   COMPONENT_RECEIPT_FILE,
@@ -25,7 +25,7 @@ export {
   parseComponentReceiptV1,
 } from "./🧬️schema/🟦️.ts";
 export type { ComponentProfilePolicyV1, ComponentReceiptBindingV1 } from "./🧬️schema/🟦️.ts";
-export type { ComponentProfileV1, ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
+export type { ComponentProfileV1, ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 
 /** 📂️ Where one profile's deliverable of one component crate lives: the component bytes and the receipt naming them. */
 export type ComponentDeliverableV1 = Readonly<{ profile: ComponentProfileV1; directory: string; wasm: string; receipt: string }>;

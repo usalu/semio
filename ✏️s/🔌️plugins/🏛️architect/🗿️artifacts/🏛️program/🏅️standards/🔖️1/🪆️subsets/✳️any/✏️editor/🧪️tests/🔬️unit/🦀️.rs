@@ -119,7 +119,7 @@ use semio_framework_plugin::Emit;
 use semio_framework_plugin::Fault;
 use semio_framework_plugin::HistoryView;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
-    use semio_framework_plugin::{App, EditorApp, Effect, HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{App, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `ArchitectPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<ArchitectPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -368,9 +368,6 @@ async fn command_from_action_bridges_declared_actions() {
 async fn set_active_example_is_declared_bridged_and_loads_the_document() {
     assert!(ARCHITECT_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "setActiveExample must carry a retained catalogue row");
     assert!(ARCHITECT_DOCUMENT_TOOL_IDS.contains(&"setActiveExample"), "setActiveExample takes the document reduce lane");
-    // 📚️ `try_build_definition` keeps app-level actions in the APP ROSTER (`definition.actions`) and
-    // copies only the framework's own synthesized interaction/tool-run rows onto every window kind, so
-    // the roster — not each window — is what stops the shell dropping the navbar's boot dispatch.
     let definition = create_architect_app();
     assert!(
         definition.actions.iter().any(|action| action.id == "setActiveExample"),

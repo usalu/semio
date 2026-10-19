@@ -35,7 +35,7 @@ pub struct LowpolyDocument {
     /// document in a debug build (the 8 ms interactive-step law), for objects the edit never touched.
     dirty: Vec<bool>,
     next_object_serial: u32,
-    /// (`LowpolyScratch::mesh_workspace_map()`), updated in place by `sync_meshes_to_snapshot`/
+    /// 🧶️ (`LowpolyScratch::mesh_workspace_map()`), updated in place by `sync_meshes_to_snapshot`/
     /// `add_primitive`, and read back out via `mesh_workspace()` so the caller can merge it back into
     /// its own session cache after a successful edit.
     mesh_workspace: HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>,
@@ -58,7 +58,7 @@ impl LowpolyDocument {
         doc.ensure_all_paint_buffers();
         Ok(doc)
     }
-    /// `sync_meshes_to_snapshot`/`add_primitive` — callers merge this back into their own session
+    /// 🗺️ `sync_meshes_to_snapshot`/`add_primitive` — callers merge this back into their own session
     /// cache (`LowpolyScratch::set_mesh_workspace_map`) after a successful edit.
     pub fn mesh_workspace(&self) -> &HashMap<String, semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState> {
         &self.mesh_workspace

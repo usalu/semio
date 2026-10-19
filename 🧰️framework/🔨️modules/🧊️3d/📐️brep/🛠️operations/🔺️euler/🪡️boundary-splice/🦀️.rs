@@ -24,9 +24,6 @@ pub fn splice_boundary_vertex(body: &mut Body, loop_id: LoopId, target: VertexId
         let p0 = body.vertices.get(edge.v0).map(|v| v.position);
         let p1 = body.vertices.get(edge.v1).map(|v| v.position);
         if p0.is_some_and(|p| p.distance(position) <= linear) || p1.is_some_and(|p| p.distance(position) <= linear) {
-            // an endpoint coincides with `position` but under a *different* vertex id than
-            // `target` — a genuine coordinate collision the caller should resolve upstream
-            // (reuse the existing id instead of minting `target`); nothing to splice here.
             continue;
         }
         let Ok(curve_t) = edge_param_at_point(body, &edge, position, linear) else { continue };

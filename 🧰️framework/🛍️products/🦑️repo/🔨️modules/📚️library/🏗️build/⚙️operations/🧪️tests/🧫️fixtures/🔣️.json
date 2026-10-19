@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "toyGraph": {
+    "nodes": {
+      "app": { "name": "app", "type": "app", "data": { "root": "app", "targets": { "build": { "executor": "nx:noop", "dependsOn": ["^build"] } } } },
+      "lib": { "name": "lib", "type": "lib", "data": { "root": "lib", "targets": { "build": { "executor": "nx:noop" } } } }
+    },
+    "dependencies": { "app": [{ "source": "app", "target": "lib", "type": "static" }], "lib": [] },
+    "project": "app",
+    "target": "build"
+  },
+  "execProjects": ["app", "lib"],
+  "cacheStatus": { "version": 1, "tool": "nx", "available": true, "directory": "/cache/nx/artifacts", "entries": 3, "bytes": 23 },
+  "cacheClear": { "version": 1, "tool": "nx", "cleared": true, "removedEntries": 3, "removedBytes": 23 },
+  "refusedCacheArguments": [[], ["purge"], ["status", "extra"], ["clear", "--force"]],
+  "removal": { "before": { "entries": 5, "bytes": 100 }, "after": { "entries": 0, "bytes": 0 }, "removed": { "entries": 5, "bytes": 100 } }
+}

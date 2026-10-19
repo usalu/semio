@@ -2,13 +2,13 @@
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
-import fixture from"../🧫️fixtures/🔣️.json";
+import fixture from"./🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 import{PersistentListBuilder}from"../../../../../🔗️persistent/📥️build/🟦️.ts";
 import{NamedKeyIndexPreparation,KeyPreservingPersistentSet,persistentNamedKeySource,NamedPersistentRoot}from"../../🟦️.ts";
 import rootSchema from"../../🌳️root/🧬️schema/🔣️.json";
-import rootFixture from"../../🌳️root/🧫️fixtures/🔣️.json";
-const encode=new TextEncoder();
+import rootFixture from"../../🌳️root/🧪️tests/🧫️fixtures/🔣️.json";
+const encode={encode:(text:string)=>new Uint8Array(Buffer.from(text,"utf8"))};
 type Row={key:Uint8Array;payload:number};
 const key=(row:Row)=>row.key;
 function build(keys:readonly string[]){const rows=keys.map((text,payload)=>({key:encode.encode(text),payload}));const owner=new PersistentListBuilder<Row>(rows.length);for(const row of rows){owner.adopt(row);while(!owner.acceptsRow)owner.advance();}owner.finish();while(!owner.ready)owner.advance();const root=owner.take();owner.close();return{root,rows};}

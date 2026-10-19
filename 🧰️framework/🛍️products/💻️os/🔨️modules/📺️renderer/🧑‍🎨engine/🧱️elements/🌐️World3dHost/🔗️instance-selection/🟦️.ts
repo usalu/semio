@@ -269,14 +269,6 @@ export function leftoverOverlayCarryingSelectionV1(next: LeftoverWorldSelectionO
     ? { ...carried, activeUtility: prior?.activeUtility }
     : carried;
   const cleared = selectionCleared || utility.selectionCleared === true;
-  // 🧹️ A CLEARED overlay is an absence, so it carries no ids — see {@link leftoverWorldOverlayAppliesV1}'s
-  // own note. Every other reader of this overlay already projects it that way (`applyLeftoverInteractionView`
-  // dispatches `selectedIds: []`, `mergeWorldSelectionWithLeftoverV1` returns `ids: []`), but the object
-  // itself kept whatever ids the publication carried — and `leftoverTreeItemSelectedV1` reads `ids` BLIND,
-  // ORing them into every outline row's `isSelected`. Measured on generation3d 6018: `clearSelection`
-  // publishes `{selectedIds:["extrusion-axis"], selectionCleared:true}`, the guest's own turn retires that
-  // row's presence in the same turn, and the row still read `aria-selected="true"` until the next pick
-  // (`📓️window-gaps-followup-2026-09-14.md` G1).
   if (cleared) return { ...utility, ids: [], gumballActive: false, gumballAnchorId: null, selectionCleared: true };
   if (utility.ids.length > 0 || !prior?.ids.length) return utility;
   return {
@@ -356,7 +348,6 @@ export function leftoverWorldOverlayIdsInDocumentV1(ids: readonly string[], inst
     if (instance.interactionId) offered.add(instance.interactionId);
     if (instance.meshId) offered.add(instance.meshId);
   }
-  // 🧩️ A component target (`<interactionId>.<granularity>.<n>`) is covered by the instance it addresses.
   return ids.filter((id) => offered.has(id) || [...offered].some((prefix) => id.startsWith(`${prefix}.`)));
 }
 
@@ -390,17 +381,6 @@ export function mergeWorldSelectionWithLeftoverV1(base: WorldSelectionRecord, le
   }
   return {
     ...base,
-    // 🎯️ `activeObjectId` travels WITH the ids it belongs to. The overlay exists to make a pick visible
-    // before the guest's own lane answers, and `ids` alone only covers the readers that take a list:
-    // the gumball target, Inspection's focus and `data-selection-json`'s own `activeObjectId` all read
-    // this single field, so an overlay that replaced the list and left this null published
-    // `{selectedIds:[picked], activeObjectId:null}` for the whole window it was covering — measured on
-    // the 180-object Nakagin document, every sample of a 12-minute run
-    // (26/09/02/PUZZLE-3D-END-TO-END wave B46). The base's own active id is kept when the overlay still
-    // names it, so a re-pick of the same object does not move the active one.
-    // 🪪️ Overlay ids are INTERACTION targets (an instance's `interactionId`, e.g. lowpoly's
-    // `lowpoly-document.<id>`), while `activeObjectId` names a rendered instance: resolve back to the
-    // instance id, or every per-instance `activeObjectId` comparison (component picking, marquee) misses.
     ...(leftover.ids.length > 0 ? { ids: leftover.ids, activeObjectId: worldActiveInstanceIdV1(instances, base.activeObjectId && worldIdsCoverInstanceV1(instances, leftover.ids, base.activeObjectId) ? base.activeObjectId : leftover.ids[0]) } : {}),
     hoveredId: leftover.hoveredId ?? base.hoveredId,
     gumballActive: leftover.gumballActive || Boolean(base.gumballActive),
@@ -451,8 +431,6 @@ export function worldSurfaceSelectionDomV1(selection: WorldSelectionRecord, inte
     selectionMode: selection.selectionMode ?? selection.granularity ?? null,
     componentIds: selection.componentIds ?? [],
     targets: selection.targets ?? null,
-    // 🖱️ The guest-echoed component hover and the composable gumball's handle groups, so an outside
-    // reader can tell "the pointer is over face 4" and "rotate handles are off" apart from silence.
     hoveredComponent: selection.hoveredComponent ?? null,
     gumballConfig: selection.gumballConfig ?? null,
   };

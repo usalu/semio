@@ -1,2 +1,2 @@
-/** dag import json */
+/** 🕸️ dag import json */
 export function register(): void {}

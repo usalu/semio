@@ -92,42 +92,42 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                            | vector                                                                           |
-      | create-node                   | 🌱create-node/🌱️appends                            |
-      | delete-node                   | 🗑️delete-node/🚫️deletes             |
-      | move-node                     | 📍move-node/📍️moves                            |
-      | replace-node-geometry         | 🧊replace-node-geometry/🔳️squares                |
-      | change-node-kind              | 🏗️change-node-kind/🏗️rekinds                  |
-      | edit-node-text                | ✏️edit-node-text/✏️recodes                             |
-      | change-node-icon              | 🎨change-node-icon/🎨️swaps-a-capsule-icon                                 |
-      | scale-node                    | 📏scale-node/📏️scales                           |
-      | change-node-visible           | 👁️change-node-visible/🙈️hides-a-capsule                                  |
-      | change-node-locked            | 🔒change-node-locked/🔒️locks                     |
-      | change-node-root              | 🌟change-node-root/🌳️promotes                            |
-      | change-node-anchor            | ⚓change-node-anchor/⚓️derives          |
-      | add-node-handle               | ➕add-node-handle/➕️adds                 |
-      | remove-node-handle            | ➖remove-node-handle/🚫️removes |
-      | replace-node-handle           | 🔌replace-node-handle/🔌️rekinds               |
-      | connect-handles               | 🪢️connect-handles/🪢️rewires          |
-      | disconnect-handles            | ✂️disconnect-handles/✂️severs    |
-      | replace-edge-geometry         | 🧮replace-edge-geometry/🧮️reposes                     |
-      | change-edge-kind              | 🏷️change-edge-kind/🏷️kinds                 |
-      | change-edge-tips              | 🖇️change-edge-tips/🖇️tips                            |
-      | change-edge-visible           | 👀change-edge-visible/🙈️hides                         |
-      | change-edge-locked            | 🔐change-edge-locked/🔒️locks                     |
-      | change-manifest-id            | 🆔change-manifest-id/📦️repoints         |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️admits   |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/💔️withdraws  |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs2               |
-      | create-target-region          | 🌍create-target-region/🌍️paints                         |
-      | delete-target-region          | 🪦delete-target-region/🪦️removes-region-1                                 |
-      | move-target-region            | 🚀move-target-region/🚀️slides-region-1                                    |
-      | resize-target-region          | 📐resize-target-region/📐️widens-region-1                                  |
-      | edit-target-region-label      | 🖋️edit-target-region-label/🖋️renames                            |
-      | change-target-region-hidden   | 🙈change-target-region-hidden/🙈️hides                            |
-      | change-target-region-locked   | 🔏change-target-region-locked/🔏️locks                            |
-      | drag-selection                | ✋️drag-selection/✋️drags-two-nodes                                        |
-      | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-nodes                             |
-      | scale-selection               | 🔍️scale-selection/🔍️doubles-two-nodes                             |
+      | create-node                   | 🟢️node/🌱create-node/🌱️appends                            |
+      | delete-node                   | 🟢️node/🗑️delete-node/🚫️deletes             |
+      | move-node                     | 🧭️pose/📍move-node/📍️moves                            |
+      | replace-node-geometry         | 🟢️node/🧊replace-node-geometry/🔳️squares                |
+      | change-node-kind              | 🟢️node/🏗️change-node-kind/🏗️rekinds                  |
+      | edit-node-text                | 🟢️node/✏️edit-node-text/✏️recodes                             |
+      | change-node-icon              | 🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon                                 |
+      | scale-node                    | 🧭️pose/📏scale-node/📏️scales                           |
+      | change-node-visible           | 🟢️node/👁️change-node-visible/🙈️hides-a-capsule                                  |
+      | change-node-locked            | 🟢️node/🔒change-node-locked/🔒️locks                     |
+      | change-node-root              | 🟢️node/🌟change-node-root/🌳️promotes                            |
+      | change-node-anchor            | 🟢️node/⚓change-node-anchor/⚓️derives          |
+      | add-node-handle               | 🔌️handle/➕add-node-handle/➕️adds                 |
+      | remove-node-handle            | 🔌️handle/➖remove-node-handle/🚫️removes |
+      | replace-node-handle           | 🔌️handle/🔌replace-node-handle/🔌️rekinds               |
+      | connect-handles               | 🔌️handle/🪢️connect-handles/🪢️rewires          |
+      | disconnect-handles            | 🔌️handle/✂️disconnect-handles/✂️severs    |
+      | replace-edge-geometry         | 〰️edge/🧮replace-edge-geometry/🧮️reposes                     |
+      | change-edge-kind              | 〰️edge/🏷️change-edge-kind/🏷️kinds                 |
+      | change-edge-tips              | 〰️edge/🖇️change-edge-tips/🖇️tips                            |
+      | change-edge-visible           | 〰️edge/👀change-edge-visible/🙈️hides                         |
+      | change-edge-locked            | 〰️edge/🔐change-edge-locked/🔒️locks                     |
+      | change-manifest-id            | 📚️catalog/🆔change-manifest-id/📦️repoints         |
+      | connect-kind-compatibility    | 📚️catalog/🤝connect-kind-compatibility/🤝️admits   |
+      | disconnect-kind-compatibility | 📚️catalog/💔disconnect-kind-compatibility/💔️withdraws  |
+      | replace-kind-catalogs         | 📚️catalog/📚replace-kind-catalogs/📇️installs2               |
+      | create-target-region          | 🌍️region/🌍create-target-region/🌍️paints                         |
+      | delete-target-region          | 🌍️region/🪦delete-target-region/🪦️removes-region-1                                 |
+      | move-target-region            | 🌍️region/🚀move-target-region/🚀️slides-region-1                                    |
+      | resize-target-region          | 🌍️region/📐resize-target-region/📐️widens-region-1                                  |
+      | edit-target-region-label      | 🌍️region/🖋️edit-target-region-label/🖋️renames                            |
+      | change-target-region-hidden   | 🌍️region/🙈change-target-region-hidden/🙈️hides                            |
+      | change-target-region-locked   | 🌍️region/🔏change-target-region-locked/🔏️locks                            |
+      | drag-selection                | ✋️selection/✋️drag-selection/✋️drags-two-nodes                                        |
+      | rotate-selection              | ✋️selection/🔄️rotate-selection/🔄️turns-two-nodes                             |
+      | scale-selection               | ✋️selection/🔍️scale-selection/🔍️doubles-two-nodes                             |
 
   @id-inverse
   @level-exhaustive
@@ -148,42 +148,42 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
     And every field the committed diff declares actually differs
     Examples:
       | id                            | vector                                                                           |
-      | create-node                   | 🌱create-node/🌱️appends                            |
-      | delete-node                   | 🗑️delete-node/🚫️deletes             |
-      | move-node                     | 📍move-node/📍️moves                            |
-      | replace-node-geometry         | 🧊replace-node-geometry/🔳️squares                |
-      | change-node-kind              | 🏗️change-node-kind/🏗️rekinds                  |
-      | edit-node-text                | ✏️edit-node-text/✏️recodes                             |
-      | change-node-icon              | 🎨change-node-icon/🎨️swaps-a-capsule-icon                                 |
-      | scale-node                    | 📏scale-node/📏️scales                           |
-      | change-node-visible           | 👁️change-node-visible/🙈️hides-a-capsule                                  |
-      | change-node-locked            | 🔒change-node-locked/🔒️locks                     |
-      | change-node-root              | 🌟change-node-root/🌳️promotes                            |
-      | change-node-anchor            | ⚓change-node-anchor/⚓️derives          |
-      | add-node-handle               | ➕add-node-handle/➕️adds                 |
-      | remove-node-handle            | ➖remove-node-handle/🚫️removes |
-      | replace-node-handle           | 🔌replace-node-handle/🔌️rekinds               |
-      | connect-handles               | 🪢️connect-handles/🪢️rewires          |
-      | disconnect-handles            | ✂️disconnect-handles/✂️severs    |
-      | replace-edge-geometry         | 🧮replace-edge-geometry/🧮️reposes                     |
-      | change-edge-kind              | 🏷️change-edge-kind/🏷️kinds                 |
-      | change-edge-tips              | 🖇️change-edge-tips/🖇️tips                            |
-      | change-edge-visible           | 👀change-edge-visible/🙈️hides                         |
-      | change-edge-locked            | 🔐change-edge-locked/🔒️locks                     |
-      | change-manifest-id            | 🆔change-manifest-id/📦️repoints         |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️admits   |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/💔️withdraws  |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs2               |
-      | create-target-region          | 🌍create-target-region/🌍️paints                         |
-      | delete-target-region          | 🪦delete-target-region/🪦️removes-region-1                                 |
-      | move-target-region            | 🚀move-target-region/🚀️slides-region-1                                    |
-      | resize-target-region          | 📐resize-target-region/📐️widens-region-1                                  |
-      | edit-target-region-label      | 🖋️edit-target-region-label/🖋️renames                            |
-      | change-target-region-hidden   | 🙈change-target-region-hidden/🙈️hides                            |
-      | change-target-region-locked   | 🔏change-target-region-locked/🔏️locks                            |
-      | drag-selection                | ✋️drag-selection/✋️drags-two-nodes                                        |
-      | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-nodes                             |
-      | scale-selection               | 🔍️scale-selection/🔍️doubles-two-nodes                             |
+      | create-node                   | 🟢️node/🌱create-node/🌱️appends                            |
+      | delete-node                   | 🟢️node/🗑️delete-node/🚫️deletes             |
+      | move-node                     | 🧭️pose/📍move-node/📍️moves                            |
+      | replace-node-geometry         | 🟢️node/🧊replace-node-geometry/🔳️squares                |
+      | change-node-kind              | 🟢️node/🏗️change-node-kind/🏗️rekinds                  |
+      | edit-node-text                | 🟢️node/✏️edit-node-text/✏️recodes                             |
+      | change-node-icon              | 🟢️node/🎨change-node-icon/🎨️swaps-a-capsule-icon                                 |
+      | scale-node                    | 🧭️pose/📏scale-node/📏️scales                           |
+      | change-node-visible           | 🟢️node/👁️change-node-visible/🙈️hides-a-capsule                                  |
+      | change-node-locked            | 🟢️node/🔒change-node-locked/🔒️locks                     |
+      | change-node-root              | 🟢️node/🌟change-node-root/🌳️promotes                            |
+      | change-node-anchor            | 🟢️node/⚓change-node-anchor/⚓️derives          |
+      | add-node-handle               | 🔌️handle/➕add-node-handle/➕️adds                 |
+      | remove-node-handle            | 🔌️handle/➖remove-node-handle/🚫️removes |
+      | replace-node-handle           | 🔌️handle/🔌replace-node-handle/🔌️rekinds               |
+      | connect-handles               | 🔌️handle/🪢️connect-handles/🪢️rewires          |
+      | disconnect-handles            | 🔌️handle/✂️disconnect-handles/✂️severs    |
+      | replace-edge-geometry         | 〰️edge/🧮replace-edge-geometry/🧮️reposes                     |
+      | change-edge-kind              | 〰️edge/🏷️change-edge-kind/🏷️kinds                 |
+      | change-edge-tips              | 〰️edge/🖇️change-edge-tips/🖇️tips                            |
+      | change-edge-visible           | 〰️edge/👀change-edge-visible/🙈️hides                         |
+      | change-edge-locked            | 〰️edge/🔐change-edge-locked/🔒️locks                     |
+      | change-manifest-id            | 📚️catalog/🆔change-manifest-id/📦️repoints         |
+      | connect-kind-compatibility    | 📚️catalog/🤝connect-kind-compatibility/🤝️admits   |
+      | disconnect-kind-compatibility | 📚️catalog/💔disconnect-kind-compatibility/💔️withdraws  |
+      | replace-kind-catalogs         | 📚️catalog/📚replace-kind-catalogs/📇️installs2               |
+      | create-target-region          | 🌍️region/🌍create-target-region/🌍️paints                         |
+      | delete-target-region          | 🌍️region/🪦delete-target-region/🪦️removes-region-1                                 |
+      | move-target-region            | 🌍️region/🚀move-target-region/🚀️slides-region-1                                    |
+      | resize-target-region          | 🌍️region/📐resize-target-region/📐️widens-region-1                                  |
+      | edit-target-region-label      | 🌍️region/🖋️edit-target-region-label/🖋️renames                            |
+      | change-target-region-hidden   | 🌍️region/🙈change-target-region-hidden/🙈️hides                            |
+      | change-target-region-locked   | 🌍️region/🔏change-target-region-locked/🔏️locks                            |
+      | drag-selection                | ✋️selection/✋️drag-selection/✋️drags-two-nodes                                        |
+      | rotate-selection              | ✋️selection/🔄️rotate-selection/🔄️turns-two-nodes                             |
+      | scale-selection               | ✋️selection/🔍️scale-selection/🔍️doubles-two-nodes                             |
 
   @id-spec-vector
   @level-exhaustive
@@ -204,90 +204,90 @@ Feature: Apply every typed puzzle2d board mutation twice — once in Rust, once 
     Then each implementation gives the committed <verdict> answer in role, and the two agree
     Examples:
       | id                                    | kind                          | verdict | vector                                                                                      | diff      |
-      | create-node-alpha                     | create-node                   | applied | 🌱create-node/🌱️appends-node-c                                                       | 🔣️.json   |
-      | create-node-refused                   | create-node                   | refused | 🌱create-node/🚫️rejects                         | 🚫️.absent |
-      | delete-node-alpha                     | delete-node                   | applied | 🗑️delete-node/🚫️removes                                      | 🔣️.json   |
-      | delete-node-refused                   | delete-node                   | refused | 🗑️delete-node/🚫️rejects                     | 🚫️.absent |
-      | move-node-alpha                       | move-node                     | applied | 📍move-node/📍️moves-node-a                                                           | 🔣️.json   |
-      | move-node-refused                     | move-node                     | refused | 📍move-node/🚫️rejects                          | 🚫️.absent |
-      | replace-node-geometry-alpha           | replace-node-geometry         | applied | 🧊replace-node-geometry/🔳️circle                                        | 🔣️.json   |
-      | replace-node-geometry-refused         | replace-node-geometry         | refused | 🧊replace-node-geometry/🚫️rejects           | 🚫️.absent |
-      | change-node-kind-alpha                | change-node-kind              | applied | 🏗️change-node-kind/🏷️reassigns                                          | 🔣️.json   |
-      | change-node-kind-refused              | change-node-kind              | refused | 🏗️change-node-kind/🚫️rejects               | 🚫️.absent |
-      | edit-node-text-alpha                  | edit-node-text                | applied | ✏️edit-node-text/✏️retitles-node-a                                                  | 🔣️.json   |
-      | edit-node-text-refused                | edit-node-text                | refused | ✏️edit-node-text/🚫️rejects                  | 🚫️.absent |
-      | change-node-icon-alpha                | change-node-icon              | applied | 🎨change-node-icon/🎨️swaps-node-a-icon                                               | 🔣️.json   |
-      | change-node-icon-refused              | change-node-icon              | refused | 🎨change-node-icon/🚫️rejects                | 🚫️.absent |
-      | scale-node-alpha                      | scale-node                    | applied | 📏scale-node/📏️doubles-node-a                                                        | 🔣️.json   |
-      | scale-node-refused                    | scale-node                    | refused | 📏scale-node/🚫️rejects                        | 🚫️.absent |
-      | change-node-visible-alpha             | change-node-visible           | applied | 👁️change-node-visible/🙈️hides-node-a                                                | 🔣️.json   |
-      | change-node-visible-refused           | change-node-visible           | refused | 👁️change-node-visible/🚫️rejects               | 🚫️.absent |
-      | change-node-locked-alpha              | change-node-locked            | applied | 🔒change-node-locked/🔒️locks-node-a                                                  | 🔣️.json   |
-      | change-node-locked-refused            | change-node-locked            | refused | 🔒change-node-locked/🚫️rejects                | 🚫️.absent |
-      | change-node-root-alpha                | change-node-root              | applied | 🌟change-node-root/🌳️promotes-node-a-to-root                                         | 🔣️.json   |
-      | change-node-root-refused              | change-node-root              | refused | 🌟change-node-root/🚫️rejects                  | 🚫️.absent |
-      | change-node-anchor-alpha              | change-node-anchor            | applied | ⚓change-node-anchor/⚓️fixed-to-derived                                              | 🔣️.json   |
-      | change-node-anchor-refused            | change-node-anchor            | refused | ⚓change-node-anchor/🚫️rejects              | 🚫️.absent |
-      | add-node-handle-alpha                 | add-node-handle               | applied | ➕add-node-handle/➕️appends-handle-3-to-node-b                                       | 🔣️.json   |
-      | add-node-handle-refused               | add-node-handle               | refused | ➕add-node-handle/🚫️rejects          | 🚫️.absent |
-      | remove-node-handle-alpha              | remove-node-handle            | applied | ➖remove-node-handle/🚫️removes2                              | 🔣️.json   |
-      | remove-node-handle-refused            | remove-node-handle            | refused | ➖remove-node-handle/🚫️rejects                 | 🚫️.absent |
-      | replace-node-handle-refused           | replace-node-handle           | refused | 🔌replace-node-handle/🚫️rejects               | 🚫️.absent |
-      | connect-handles-alpha                 | connect-handles               | applied | 🪢️connect-handles/🪢️adds-second-edge                                                | 🔣️.json   |
-      | connect-handles-duplicate             | connect-handles               | noop    | 🪢️connect-handles/⏸️keeps                           | 🔣️.json   |
-      | disconnect-handles-alpha              | disconnect-handles            | applied | ✂️disconnect-handles/🚫️removes-edge-1                                               | 🔣️.json   |
-      | disconnect-handles-refused            | disconnect-handles            | refused | ✂️disconnect-handles/🚫️rejects                | 🚫️.absent |
-      | replace-edge-geometry-alpha           | replace-edge-geometry         | applied | 🧮replace-edge-geometry/📍️repositions-edge-1                                         | 🔣️.json   |
-      | replace-edge-geometry-refused         | replace-edge-geometry         | refused | 🧮replace-edge-geometry/🚫️rejects              | 🚫️.absent |
-      | change-edge-kind-alpha                | change-edge-kind              | applied | 🏷️change-edge-kind/🏷️rekinds-edge-1                                                 | 🔣️.json   |
-      | change-edge-kind-refused              | change-edge-kind              | refused | 🏷️change-edge-kind/🚫️rejects                   | 🚫️.absent |
-      | change-edge-tips-alpha                | change-edge-tips              | applied | 🖇️change-edge-tips/🔀️swaps-edge-1-tips                                              | 🔣️.json   |
-      | change-edge-tips-refused              | change-edge-tips              | refused | 🖇️change-edge-tips/🚫️rejects                   | 🚫️.absent |
-      | change-edge-visible-alpha             | change-edge-visible           | applied | 👀change-edge-visible/🙈️hides-edge-1                                                 | 🔣️.json   |
-      | change-edge-visible-refused           | change-edge-visible           | refused | 👀change-edge-visible/🚫️rejects                  | 🚫️.absent |
-      | change-edge-locked-alpha              | change-edge-locked            | applied | 🔐change-edge-locked/🔒️locks-edge-1                                                  | 🔣️.json   |
-      | change-edge-locked-refused            | change-edge-locked            | refused | 🔐change-edge-locked/🚫️rejects                  | 🚫️.absent |
-      | change-manifest-id-alpha              | change-manifest-id            | applied | 🆔change-manifest-id/📦️repoints-manifest                                             | 🔣️.json   |
-      | connect-kind-compatibility-alpha      | connect-kind-compatibility    | applied | 🤝connect-kind-compatibility/🤝️adds                                 | 🔣️.json   |
-      | disconnect-kind-compatibility-alpha   | disconnect-kind-compatibility | applied | 💔disconnect-kind-compatibility/🚫️removes                           | 🔣️.json   |
-      | disconnect-kind-compatibility-refused | disconnect-kind-compatibility | refused | 💔disconnect-kind-compatibility/🚫️rejects | 🚫️.absent |
-      | replace-kind-catalogs-alpha           | replace-kind-catalogs         | applied | 📚replace-kind-catalogs/📇️installs                               | 🔣️.json   |
-      | replace-kind-catalogs-cleared         | replace-kind-catalogs         | applied | 📚replace-kind-catalogs/🗑️clears                        | 🔣️.json   |
-      | create-target-region-alpha            | create-target-region          | applied | 🌍create-target-region/🌍️appends-region-2                                            | 🔣️.json   |
-      | create-target-region-refused          | create-target-region          | refused | 🌍create-target-region/🚫️rejects                 | 🚫️.absent |
-      | delete-target-region-refused          | delete-target-region          | refused | 🪦delete-target-region/🚫️rejects              | 🚫️.absent |
-      | move-target-region-refused            | move-target-region            | refused | 🚀move-target-region/🚫️rejects                  | 🚫️.absent |
-      | resize-target-region-refused          | resize-target-region          | refused | 📐resize-target-region/🚫️rejects              | 🚫️.absent |
-      | edit-target-region-label-refused      | edit-target-region-label      | refused | 🖋️edit-target-region-label/🚫️rejects         | 🚫️.absent |
-      | change-target-region-hidden-refused   | change-target-region-hidden   | refused | 🙈change-target-region-hidden/🚫️rejects         | 🚫️.absent |
-      | change-target-region-locked-refused   | change-target-region-locked   | refused | 🔏change-target-region-locked/🚫️rejects        | 🚫️.absent |
-      | drag-selection-mixed                  | drag-selection                | applied | ✋️drag-selection/🎯️drags-node-and-region                                            | 🔣️.json   |
-      | drag-selection-partial                | drag-selection                | applied | ✋️drag-selection/⚠️skips-locked-ghost                                            | 🔣️.json   |
-      | drag-selection-refused                | drag-selection                | refused | ✋️drag-selection/🚫️rejects-ghosts                                             | 🚫️.absent |
-      | drag-selection-unchanged              | drag-selection                | noop    | ✋️drag-selection/⏸️keeps-a-zero-offset                                               | 🔣️.json   |
-      | rotate-selection-mixed                | rotate-selection              | applied | 🔄️rotate-selection/🎯️skips-the-region                                         | 🔣️.json   |
-      | rotate-selection-partial              | rotate-selection              | applied | 🔄️rotate-selection/⚠️skips-locked-ghost                                          | 🔣️.json   |
-      | rotate-selection-refused              | rotate-selection              | refused | 🔄️rotate-selection/🚫️rejects-ghosts                                           | 🚫️.absent |
-      | rotate-selection-unchanged            | rotate-selection              | noop    | 🔄️rotate-selection/⏸️keeps-a-zero-angle                                              | 🔣️.json   |
-      | scale-selection-mixed                 | scale-selection               | applied | 🔍️scale-selection/🎯️halves-node-region                                           | 🔣️.json   |
-      | scale-selection-partial               | scale-selection               | applied | 🔍️scale-selection/⚠️skips-locked-ghost                                           | 🔣️.json   |
-      | scale-selection-refused               | scale-selection               | refused | 🔍️scale-selection/🚫️rejects-ghosts                                            | 🚫️.absent |
-      | scale-selection-unchanged             | scale-selection               | noop    | 🔍️scale-selection/⏸️keeps-a-unit-factor                                              | 🔣️.json   |
-      | drag-selection-invariant              | drag-selection                | refused | ✋️drag-selection/🧱️no-targets                                                        | 🚫️.absent |
-      | rotate-selection-invariant            | rotate-selection              | refused | 🔄️rotate-selection/🧱️repeated-targets                                                | 🚫️.absent |
-      | scale-selection-invariant             | scale-selection               | refused | 🔍️scale-selection/🧱️zero-factor                                                      | 🚫️.absent |
-      | scale-selection-invariant-negative    | scale-selection               | refused | 🔍️scale-selection/⛔️negative-factor                                                  | 🚫️.absent |
-      | scale-node-invariant                  | scale-node                    | refused | 📏scale-node/🧱️zero-scale                                                             | 🚫️.absent |
-      | replace-node-geometry-invariant       | replace-node-geometry         | refused | 🧊replace-node-geometry/🧱️negative-radius                                             | 🚫️.absent |
-      | create-node-invariant                 | create-node                   | refused | 🌱create-node/🧱️zero-width-node                                                       | 🚫️.absent |
-      | add-node-handle-invariant             | add-node-handle               | refused | ➕add-node-handle/🧱️zero-radius-handle                                                | 🚫️.absent |
-      | replace-node-handle-invariant         | replace-node-handle           | refused | 🔌replace-node-handle/🧱️negative-scale                                                | 🚫️.absent |
-      | replace-kind-catalogs-invariant       | replace-kind-catalogs         | refused | 📚replace-kind-catalogs/🧱️off-rim-template                                            | 🚫️.absent |
+      | create-node-alpha                     | create-node                   | applied | 🟢️node/🌱create-node/🌱️appends-node-c                                                       | 🔣️.json   |
+      | create-node-refused                   | create-node                   | refused | 🟢️node/🌱create-node/🚫️rejects                         | 🚫️.absent |
+      | delete-node-alpha                     | delete-node                   | applied | 🟢️node/🗑️delete-node/🚫️removes                                      | 🔣️.json   |
+      | delete-node-refused                   | delete-node                   | refused | 🟢️node/🗑️delete-node/🚫️rejects                     | 🚫️.absent |
+      | move-node-alpha                       | move-node                     | applied | 🧭️pose/📍move-node/📍️moves-node-a                                                           | 🔣️.json   |
+      | move-node-refused                     | move-node                     | refused | 🧭️pose/📍move-node/🚫️rejects                          | 🚫️.absent |
+      | replace-node-geometry-alpha           | replace-node-geometry         | applied | 🟢️node/🧊replace-node-geometry/🔳️circle                                        | 🔣️.json   |
+      | replace-node-geometry-refused         | replace-node-geometry         | refused | 🟢️node/🧊replace-node-geometry/🚫️rejects           | 🚫️.absent |
+      | change-node-kind-alpha                | change-node-kind              | applied | 🟢️node/🏗️change-node-kind/🏷️reassigns                                          | 🔣️.json   |
+      | change-node-kind-refused              | change-node-kind              | refused | 🟢️node/🏗️change-node-kind/🚫️rejects               | 🚫️.absent |
+      | edit-node-text-alpha                  | edit-node-text                | applied | 🟢️node/✏️edit-node-text/✏️retitles-node-a                                                  | 🔣️.json   |
+      | edit-node-text-refused                | edit-node-text                | refused | 🟢️node/✏️edit-node-text/🚫️rejects                  | 🚫️.absent |
+      | change-node-icon-alpha                | change-node-icon              | applied | 🟢️node/🎨change-node-icon/🎨️swaps-node-a-icon                                               | 🔣️.json   |
+      | change-node-icon-refused              | change-node-icon              | refused | 🟢️node/🎨change-node-icon/🚫️rejects                | 🚫️.absent |
+      | scale-node-alpha                      | scale-node                    | applied | 🧭️pose/📏scale-node/📏️doubles-node-a                                                        | 🔣️.json   |
+      | scale-node-refused                    | scale-node                    | refused | 🧭️pose/📏scale-node/🚫️rejects                        | 🚫️.absent |
+      | change-node-visible-alpha             | change-node-visible           | applied | 🟢️node/👁️change-node-visible/🙈️hides-node-a                                                | 🔣️.json   |
+      | change-node-visible-refused           | change-node-visible           | refused | 🟢️node/👁️change-node-visible/🚫️rejects               | 🚫️.absent |
+      | change-node-locked-alpha              | change-node-locked            | applied | 🟢️node/🔒change-node-locked/🔒️locks-node-a                                                  | 🔣️.json   |
+      | change-node-locked-refused            | change-node-locked            | refused | 🟢️node/🔒change-node-locked/🚫️rejects                | 🚫️.absent |
+      | change-node-root-alpha                | change-node-root              | applied | 🟢️node/🌟change-node-root/🌳️promotes-node-a-to-root                                         | 🔣️.json   |
+      | change-node-root-refused              | change-node-root              | refused | 🟢️node/🌟change-node-root/🚫️rejects                  | 🚫️.absent |
+      | change-node-anchor-alpha              | change-node-anchor            | applied | 🟢️node/⚓change-node-anchor/⚓️fixed-to-derived                                              | 🔣️.json   |
+      | change-node-anchor-refused            | change-node-anchor            | refused | 🟢️node/⚓change-node-anchor/🚫️rejects              | 🚫️.absent |
+      | add-node-handle-alpha                 | add-node-handle               | applied | 🔌️handle/➕add-node-handle/➕️appends-handle-3-to-node-b                                       | 🔣️.json   |
+      | add-node-handle-refused               | add-node-handle               | refused | 🔌️handle/➕add-node-handle/🚫️rejects          | 🚫️.absent |
+      | remove-node-handle-alpha              | remove-node-handle            | applied | 🔌️handle/➖remove-node-handle/🚫️removes2                              | 🔣️.json   |
+      | remove-node-handle-refused            | remove-node-handle            | refused | 🔌️handle/➖remove-node-handle/🚫️rejects                 | 🚫️.absent |
+      | replace-node-handle-refused           | replace-node-handle           | refused | 🔌️handle/🔌replace-node-handle/🚫️rejects               | 🚫️.absent |
+      | connect-handles-alpha                 | connect-handles               | applied | 🔌️handle/🪢️connect-handles/🪢️adds-second-edge                                                | 🔣️.json   |
+      | connect-handles-duplicate             | connect-handles               | noop    | 🔌️handle/🪢️connect-handles/⏸️keeps                           | 🔣️.json   |
+      | disconnect-handles-alpha              | disconnect-handles            | applied | 🔌️handle/✂️disconnect-handles/🚫️removes-edge-1                                               | 🔣️.json   |
+      | disconnect-handles-refused            | disconnect-handles            | refused | 🔌️handle/✂️disconnect-handles/🚫️rejects                | 🚫️.absent |
+      | replace-edge-geometry-alpha           | replace-edge-geometry         | applied | 〰️edge/🧮replace-edge-geometry/📍️repositions-edge-1                                         | 🔣️.json   |
+      | replace-edge-geometry-refused         | replace-edge-geometry         | refused | 〰️edge/🧮replace-edge-geometry/🚫️rejects              | 🚫️.absent |
+      | change-edge-kind-alpha                | change-edge-kind              | applied | 〰️edge/🏷️change-edge-kind/🏷️rekinds-edge-1                                                 | 🔣️.json   |
+      | change-edge-kind-refused              | change-edge-kind              | refused | 〰️edge/🏷️change-edge-kind/🚫️rejects                   | 🚫️.absent |
+      | change-edge-tips-alpha                | change-edge-tips              | applied | 〰️edge/🖇️change-edge-tips/🔀️swaps-edge-1-tips                                              | 🔣️.json   |
+      | change-edge-tips-refused              | change-edge-tips              | refused | 〰️edge/🖇️change-edge-tips/🚫️rejects                   | 🚫️.absent |
+      | change-edge-visible-alpha             | change-edge-visible           | applied | 〰️edge/👀change-edge-visible/🙈️hides-edge-1                                                 | 🔣️.json   |
+      | change-edge-visible-refused           | change-edge-visible           | refused | 〰️edge/👀change-edge-visible/🚫️rejects                  | 🚫️.absent |
+      | change-edge-locked-alpha              | change-edge-locked            | applied | 〰️edge/🔐change-edge-locked/🔒️locks-edge-1                                                  | 🔣️.json   |
+      | change-edge-locked-refused            | change-edge-locked            | refused | 〰️edge/🔐change-edge-locked/🚫️rejects                  | 🚫️.absent |
+      | change-manifest-id-alpha              | change-manifest-id            | applied | 📚️catalog/🆔change-manifest-id/📦️repoints-manifest                                             | 🔣️.json   |
+      | connect-kind-compatibility-alpha      | connect-kind-compatibility    | applied | 📚️catalog/🤝connect-kind-compatibility/🤝️adds                                 | 🔣️.json   |
+      | disconnect-kind-compatibility-alpha   | disconnect-kind-compatibility | applied | 📚️catalog/💔disconnect-kind-compatibility/🚫️removes                           | 🔣️.json   |
+      | disconnect-kind-compatibility-refused | disconnect-kind-compatibility | refused | 📚️catalog/💔disconnect-kind-compatibility/🚫️rejects | 🚫️.absent |
+      | replace-kind-catalogs-alpha           | replace-kind-catalogs         | applied | 📚️catalog/📚replace-kind-catalogs/📇️installs                               | 🔣️.json   |
+      | replace-kind-catalogs-cleared         | replace-kind-catalogs         | applied | 📚️catalog/📚replace-kind-catalogs/🗑️clears                        | 🔣️.json   |
+      | create-target-region-alpha            | create-target-region          | applied | 🌍️region/🌍create-target-region/🌍️appends-region-2                                            | 🔣️.json   |
+      | create-target-region-refused          | create-target-region          | refused | 🌍️region/🌍create-target-region/🚫️rejects                 | 🚫️.absent |
+      | delete-target-region-refused          | delete-target-region          | refused | 🌍️region/🪦delete-target-region/🚫️rejects              | 🚫️.absent |
+      | move-target-region-refused            | move-target-region            | refused | 🌍️region/🚀move-target-region/🚫️rejects                  | 🚫️.absent |
+      | resize-target-region-refused          | resize-target-region          | refused | 🌍️region/📐resize-target-region/🚫️rejects              | 🚫️.absent |
+      | edit-target-region-label-refused      | edit-target-region-label      | refused | 🌍️region/🖋️edit-target-region-label/🚫️rejects         | 🚫️.absent |
+      | change-target-region-hidden-refused   | change-target-region-hidden   | refused | 🌍️region/🙈change-target-region-hidden/🚫️rejects         | 🚫️.absent |
+      | change-target-region-locked-refused   | change-target-region-locked   | refused | 🌍️region/🔏change-target-region-locked/🚫️rejects        | 🚫️.absent |
+      | drag-selection-mixed                  | drag-selection                | applied | ✋️selection/✋️drag-selection/🎯️drags-node-and-region                                            | 🔣️.json   |
+      | drag-selection-partial                | drag-selection                | applied | ✋️selection/✋️drag-selection/⚠️skips-locked-ghost                                            | 🔣️.json   |
+      | drag-selection-refused                | drag-selection                | refused | ✋️selection/✋️drag-selection/🚫️rejects-ghosts                                             | 🚫️.absent |
+      | drag-selection-unchanged              | drag-selection                | noop    | ✋️selection/✋️drag-selection/⏸️keeps-a-zero-offset                                               | 🔣️.json   |
+      | rotate-selection-mixed                | rotate-selection              | applied | ✋️selection/🔄️rotate-selection/🎯️skips-the-region                                         | 🔣️.json   |
+      | rotate-selection-partial              | rotate-selection              | applied | ✋️selection/🔄️rotate-selection/⚠️skips-locked-ghost                                          | 🔣️.json   |
+      | rotate-selection-refused              | rotate-selection              | refused | ✋️selection/🔄️rotate-selection/🚫️rejects-ghosts                                           | 🚫️.absent |
+      | rotate-selection-unchanged            | rotate-selection              | noop    | ✋️selection/🔄️rotate-selection/⏸️keeps-a-zero-angle                                              | 🔣️.json   |
+      | scale-selection-mixed                 | scale-selection               | applied | ✋️selection/🔍️scale-selection/🎯️halves-node-region                                           | 🔣️.json   |
+      | scale-selection-partial               | scale-selection               | applied | ✋️selection/🔍️scale-selection/⚠️skips-locked-ghost                                           | 🔣️.json   |
+      | scale-selection-refused               | scale-selection               | refused | ✋️selection/🔍️scale-selection/🚫️rejects-ghosts                                            | 🚫️.absent |
+      | scale-selection-unchanged             | scale-selection               | noop    | ✋️selection/🔍️scale-selection/⏸️keeps-a-unit-factor                                              | 🔣️.json   |
+      | drag-selection-invariant              | drag-selection                | refused | ✋️selection/✋️drag-selection/🧱️no-targets                                                        | 🚫️.absent |
+      | rotate-selection-invariant            | rotate-selection              | refused | ✋️selection/🔄️rotate-selection/🧱️repeated-targets                                                | 🚫️.absent |
+      | scale-selection-invariant             | scale-selection               | refused | ✋️selection/🔍️scale-selection/🧱️zero-factor                                                      | 🚫️.absent |
+      | scale-selection-invariant-negative    | scale-selection               | refused | ✋️selection/🔍️scale-selection/⛔️negative-factor                                                  | 🚫️.absent |
+      | scale-node-invariant                  | scale-node                    | refused | 🧭️pose/📏scale-node/🧱️zero-scale                                                             | 🚫️.absent |
+      | replace-node-geometry-invariant       | replace-node-geometry         | refused | 🟢️node/🧊replace-node-geometry/🧱️negative-radius                                             | 🚫️.absent |
+      | create-node-invariant                 | create-node                   | refused | 🟢️node/🌱create-node/🧱️zero-width-node                                                       | 🚫️.absent |
+      | add-node-handle-invariant             | add-node-handle               | refused | 🔌️handle/➕add-node-handle/🧱️zero-radius-handle                                                | 🚫️.absent |
+      | replace-node-handle-invariant         | replace-node-handle           | refused | 🔌️handle/🔌replace-node-handle/🧱️negative-scale                                                | 🚫️.absent |
+      | replace-kind-catalogs-invariant       | replace-kind-catalogs         | refused | 📚️catalog/📚replace-kind-catalogs/🧱️off-rim-template                                            | 🚫️.absent |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the real First-Storey-Tambour subgraph of the Nakagin Capsule Tower
-    Given the committed before-snapshot shared://🧬️mutations/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🟢️node/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

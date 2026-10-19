@@ -36,9 +36,6 @@ mod tests {
         let encoded = writer.finalize_partial(&partial).expect("finalize");
         assert!(encoded.exists());
         let bytes = fs::read(&encoded).expect("read partial mp4");
-        // 🌉️ `decode_mp4` walks the real nested ISO-BMFF box tree (ftyp/moov/trak/mdat/...) to
-        // produce this snapshot -- a bogus or truncated box tree is a hard `Err` here, never a
-        // silently-partial result, so this `expect` succeeding IS the box-walk assertion.
         let snapshot = decode_mp4(&bytes).expect("decode real mp4 bytes: box-walk must succeed clean");
         assert!(!snapshot.ftyp.major_brand.is_empty(), "real ftyp box must have survived the box-walk with a non-empty major_brand");
         assert_eq!(snapshot.tracks.len(), 1, "track-count invariant: exactly one video track");

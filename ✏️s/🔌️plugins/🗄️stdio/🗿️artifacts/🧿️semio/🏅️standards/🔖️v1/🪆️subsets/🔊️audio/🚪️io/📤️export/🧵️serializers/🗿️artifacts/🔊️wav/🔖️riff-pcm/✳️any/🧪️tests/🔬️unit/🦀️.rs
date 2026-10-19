@@ -30,7 +30,7 @@ async fn audio_to_wav_to_audio_round_trips_losslessly_for_samples_and_rate() {
     let back = ::semio_framework_async::poll::resolve_ready(SemioAudioFromWav::deserialize(&wav)).expect("deserialize");
     assert_eq!(back.sample_rate, original.sample_rate);
     assert_eq!(back.channels, original.channels);
-    assert_eq!(back.format, SemioAudioFormat::Float32); // normalized, documented
+    assert_eq!(back.format, SemioAudioFormat::Float32);
 }
 
 #[semio_framework_async_macros::async_test]

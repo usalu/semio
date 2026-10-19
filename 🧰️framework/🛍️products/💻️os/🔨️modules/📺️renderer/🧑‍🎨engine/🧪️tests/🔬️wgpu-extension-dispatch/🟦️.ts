@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import laws from "../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
 import documentBackbone from "../🧫️fixtures/📡️wgpu-document-backbone/🔣️.json";
-import { contextIntegerCarriersFixture as integerView, manifestViewContextSchema as viewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
-import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
+import { contextIntegerCarriersFixture as integerView, manifestViewContextSchema as viewContextSchema } from "@semio-tech/framework/manifest/testing/fixtures";
+import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "@semio-tech/framework/trace/memory";
 import { extensionRequestActivationReason, serializeWgpuActorCall, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WgpuActorCallQueueFullError } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/shard-and-actor-calls";
 import { wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_CONTRIBUTIONS_SLIM_VIEW } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/contributions-and-effects";
 import { wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
@@ -11,7 +11,7 @@ import { activationEventEnvelope, createTurnOutcomeBroadcast, type TurnOutcome }
 import { AppChannelClient, type AppChannelHandle, AppChannelRequestSequence, decodeAppCommand, encodeAppCommand, encodeAppFrame, encodePackValue } from "@semio-tech/framework-os";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "@semio-tech/framework-renderer-wgpu/boot-liveness";
 import { SHARD_COMMAND_MAXIMUM_PAGES } from "@semio-tech/framework-actor/shard-client";
-import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
+import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "@semio-tech/framework/modules/manifest/view-state-and-public-invocation";
 
 async function actualAppChannelCommand(sequenceOwnerBefore: number, commandBytes: Uint8Array, viewState: unknown): Promise<Uint8Array> {
   const outcomes = createTurnOutcomeBroadcast<TurnOutcome>();
@@ -135,8 +135,6 @@ describe("wgpu contributions command ingress", () => {
   it("crosses one slim-view pack under the derived shard page ceiling", async () => {
     const json = `[{"pluginId":"flow-extension-brep","pad":"${"p".repeat(190700)}"}]`;
     const command = wgpuSetContributionsCommand("procedural", "s.procedural.generation3d@1/*#editor", json);
-    // 📌️ `panelJson` is the ONE long field a view context still carries (contributions left the
-    // contract entirely — `🪟️view-context/🧬️schema/🔣️.json`), so it is what a slim view must drop.
     const live = { locale: "en", terminology: "native", panelJson: "n".repeat(laws.laws.commandIngress.fatViewChars) };
     const sequenceCase = laws.laws.commandIngress.sequenceCases[1]!;
     const slimView = wgpuSlimContributionsView(live);

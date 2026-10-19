@@ -111,7 +111,7 @@ fn controlled_value_type_input_admits_deep_slots_and_retires_interior_cancellati
     let mut c = crate::NativeDecodeControl::new(bytes - 1, &mut yes);
     assert!(ValueType::from_value_controlled(value.get(), &mut c).is_err());
     let mut hit = false;
-    let mut cancel = |p: crate::native_decoding::NativeDecodeProgress| {
+    let mut cancel = |p: crate::NativeDecodeProgress| {
         if p.total == 0 && p.completed >= stop {
             hit = true;
             false

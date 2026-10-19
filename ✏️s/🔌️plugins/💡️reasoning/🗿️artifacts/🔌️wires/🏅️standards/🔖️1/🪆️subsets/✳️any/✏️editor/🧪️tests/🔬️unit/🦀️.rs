@@ -215,8 +215,6 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     assert_eq!(migrated, WIRES_RETAINED_TOOL_IDS);
     assert_eq!(routes.len(), 8);
     assert_eq!(<WiresRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, WIRES_RETAINED_PUBLICATION_CONTRACTS);
-    // 🛣️ Keyed by tool id, not by ordinal: the roster grew from the three canvasPointer* rows to all
-    // eight, so an index-based assertion pinned whichever row happened to sit at 0..2.
     for route in routes {
         let id = route.get("id").and_then(Value::as_str).expect("route id");
         let contract = WIRES_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == id).unwrap_or_else(|| panic!("route {id} has no publication contract"));
@@ -432,8 +430,6 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
 
     let mut instance_a = new_app().await;
     let mut instance_b = new_app().await;
-    // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
-    // as edits) so the only edits on the channel are A's and B's disjoint ones.
     let seed_node = |id: &str| semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(
         &semio_framework_pack_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }).to_string(),
         semio_framework_pack_json::JsonMemberPolicy::Reject,
@@ -444,7 +440,6 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-    // A adds node-3; B relates node-1 to node-2 — disjoint edits on the graph.
     let receiver = meta("local").instance_id;
     instance_a.0.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a adds node");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
@@ -456,7 +451,6 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
 
     let projection_a = context::board(&instance_a);
     let projection_b = context::board(&instance_b);
-    // A's added node-3 survives on both.
     assert!(board_node(&projection_a, "node-3").is_some(), "A keeps its own node");
     assert!(board_node(&projection_b, "node-3").is_some(), "B converges on A's node");
     let edges = |board: &semio_framework_value::DslValue| crate::schema::board_snapshot_edges(board).len();

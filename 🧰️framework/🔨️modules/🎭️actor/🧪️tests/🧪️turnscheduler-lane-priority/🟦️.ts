@@ -53,11 +53,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       await flush();
       expect(order.map((entry) => entry.actorId)).toEqual(["a"]);
 
-      // queue a-2 (behind a-1, still running) and a higher-lane turn for "b"
       scheduler.enqueue("a", { lane: "Interactive", payload: "a-2" });
       scheduler.enqueue("b", { lane: "Interactive", payload: "b-1" });
       await flush();
-      // "a" is busy (a-1 still in flight) so only "b" can start; a-2 must not jump ahead of a-1
       expect(order.map((entry) => entry.actorId)).toEqual(["a", "b"]);
       expect(scheduler.isBusy("a")).toBe(true);
 
@@ -111,7 +109,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       scheduler.enqueue("hi", { lane: "Background", order: 1, payload: "hi-bg-1" });
       scheduler.enqueue("hi", { lane: "Interactive", order: 40, payload: "hi-40" });
       await flush();
-      // cross-actor pick is lane-first: "hi" (Interactive pending) before "bg"; both start concurrently
       expect(order.map((entry) => entry.payload)).toEqual(["hi-40", "bg-0"]);
       settle("hi");
       await flush();
@@ -127,7 +124,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("cancelQueued drops ordered turns exactly like unordered ones and reports the mailbox order", async () => {
       const { scheduler, order, settle } = harness();
       scheduler.enqueue("c", { lane: "Interactive", payload: "c-1" });
-      await flush(); // c-1 in flight
+      await flush();
       scheduler.enqueue("c", { lane: "Interactive", order: 9, payload: "c-9" });
       scheduler.enqueue("c", { lane: "Interactive", order: 2, payload: "c-2" });
       const cancelled: string[] = [];
@@ -145,7 +142,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { scheduler } = harness(2);
       expect(scheduler.enqueue("full", { lane: "Maintenance", payload: "a" })).toEqual({ kind: "accept" });
       expect(scheduler.enqueue("full", { lane: "Maintenance", payload: "b" })).toEqual({ kind: "accept" });
-      // same lane, no coalesce key, nothing lower-priority to evict -> rejected, not silently dropped
       expect(scheduler.enqueue("full", { lane: "Maintenance", payload: "c" })).toEqual({ kind: "rejected" });
       expect(scheduler.pendingCount("full")).toBe(2);
     });
@@ -156,7 +152,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { scheduler, order, settle } = harness();
       scheduler.enqueue("x", { lane: "Interactive", payload: "x-1" });
       await flush();
-      expect(order.map((e) => e.payload)).toEqual(["x-1"]); // x-1 now in flight
+      expect(order.map((e) => e.payload)).toEqual(["x-1"]);
 
       scheduler.enqueue("x", { lane: "Interactive", payload: "x-2" });
       scheduler.enqueue("x", { lane: "Background", payload: "x-3" });
@@ -168,7 +164,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       settle("x");
       await flush();
-      // only x-1 ever ran — x-2/x-3 were cancelled before dispatch
       expect(order.map((e) => e.payload)).toEqual(["x-1"]);
     });
 
@@ -182,7 +177,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(cancelledPayloads).toEqual(["y-1", "y-2"]);
       expect(scheduler.pendingCount("y")).toBe(0);
       await flush();
-      expect(order).toHaveLength(0); // nothing ever dispatched — torn down before the first pump
+      expect(order).toHaveLength(0);
     });
   });
 
@@ -201,7 +196,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       await flush();
       expect(errors).toHaveLength(1);
       expect(errors[0]!.actorId).toBe("z");
-      expect(scheduler.isBusy("z")).toBe(false); // failure still frees the actor for its next turn
+      expect(scheduler.isBusy("z")).toBe(false);
     });
   });
 

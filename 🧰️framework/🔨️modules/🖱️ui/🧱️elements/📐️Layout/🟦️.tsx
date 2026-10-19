@@ -9,7 +9,7 @@
 import * as React from "react";
 import { panelTabFirstDraggableElementId } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { type UiStatus } from "@semio-tech/ui-styling";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
@@ -49,8 +49,6 @@ export interface LayoutMobilePanelProps {
 
 /** 📱️ Full-height tabbed panel for Layout's mobile branch. */
 const LayoutMobilePanel: React.FC<LayoutMobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, treeContentRevision, className = "" }) => {
-  // 🌱️ `visible: true` — LayoutMobilePanel has no folded state of its own (it renders nothing at all instead, below);
-  // this just keeps `usePanelTabSelection`'s open/fold branches inert so it behaves as pure path/memory selection.
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible: true, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
   const panelContentRef = reactHostPort.useRef<HTMLDivElement>(null);
   const activeNode = findPanelTabNode(tabs, resolvedPath);
@@ -115,7 +113,6 @@ export interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, panels, mobilePanel, canvas, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => (
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
-      {/* 🎨️ One continuous base floor for navbar + canvas + footer — chrome rows stay transparent over this paint. */}
       <div data-slot="layout" data-level="base" className={cn("relative flex h-full w-full flex-col overflow-hidden", surfaceClass, className)}>
         <SurfaceScope level="base" fill="surface">
           {navbar && <div className="flex-shrink-0">{navbar}</div>}
@@ -123,22 +120,12 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, subfooter, p
           {mobile ? (
             <div className="flex flex-col flex-1 min-h-0">
               {mobilePanel && mobilePanel.visible && <LayoutMobilePanel {...mobilePanel} />}
-              {/* 📱️ The canvas stays mounted (never unmounted) while the mobile panel covers it, so the WASM/3D
-                  world keeps its context instead of replugging on every toggle — it just stops being visible. */}
               <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden", chromeStatusBorderClass(canvasStatus))}>
                 {canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas}
               </div>
             </div>
           ) : (
-            // Positioned within this region (relative, between navbar and footer), not the whole display — panels
-            // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
-            // the same way a window's options rail overlays its own canvas.
             <div className="flex flex-1 min-h-0 relative">
-              {/* 🎓️ No z-index here (was z-0): trapping this column in its own stacking context would make
-                  windows unreachable by [data-introduction-elevated] — a window can only rise above the
-                  fullscreen introduction veil if it participates in the root stacking context. */}
-              {/* 🛟️ The column stays the full region. Anchored panels are absolute siblings at z-panel,
-                  so they paint over the windows instead of pushing the column aside. */}
               <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative">
                 <div className="flex flex-1 min-h-0 relative">
                   <div className={cn("flex-1 min-w-0 min-h-0 relative", chromeStatusBorderClass(canvasStatus))}>

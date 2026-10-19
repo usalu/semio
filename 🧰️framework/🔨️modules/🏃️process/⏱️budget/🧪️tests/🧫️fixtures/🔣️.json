@@ -1,15 +1,246 @@
 {
   "schema": "semio.framework.process.execution-budget/v1",
   "cases": [
-    { "name": "default", "environment": {}, "expected": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 0 } },
-    { "name": "build", "environment": { "SEMIO_BUILD_BUDGET_MS": "15000" }, "expected": { "build": 15000, "command": 0, "orchestrator": 0, "daemon": 0 } },
-    { "name": "command-exponent", "environment": { "SEMIO_CMD_BUDGET_MS": "12e2" }, "expected": { "build": 0, "command": 1200, "orchestrator": 0, "daemon": 0 } },
-    { "name": "explicit-zero-and-daemon", "environment": { "SEMIO_ORCHESTRATOR_BUDGET_MS": "0", "SEMIO_DAEMON_BUDGET_MS": "45000" }, "expected": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 45000 } },
-    { "name": "blank-keeps-zero", "environment": { "SEMIO_BUILD_BUDGET_MS": " " }, "expected": { "build": 0, "command": 0, "orchestrator": 0, "daemon": 0 } },
-    { "name": "negative", "environment": { "SEMIO_BUILD_BUDGET_MS": "-1" }, "expected": null },
-    { "name": "fractional", "environment": { "SEMIO_CMD_BUDGET_MS": "1.5" }, "expected": null },
-    { "name": "infinite", "environment": { "SEMIO_ORCHESTRATOR_BUDGET_MS": "Infinity" }, "expected": null },
-    { "name": "text", "environment": { "SEMIO_DAEMON_BUDGET_MS": "not-number" }, "expected": null },
-    { "name": "unsafe-integer", "environment": { "SEMIO_BUILD_BUDGET_MS": "9007199254740992" }, "expected": null }
+    {
+      "name": "default",
+      "environment": {},
+      "expected": {
+        "build": 0,
+        "command": 0,
+        "orchestrator": 0,
+        "daemon": 0
+      }
+    },
+    {
+      "name": "build",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "15000"
+      },
+      "expected": {
+        "build": 15000,
+        "command": 0,
+        "orchestrator": 0,
+        "daemon": 0
+      }
+    },
+    {
+      "name": "command-exponent",
+      "environment": {
+        "SEMIO_CMD_BUDGET_MS": "12e2"
+      },
+      "expected": {
+        "build": 0,
+        "command": 1200,
+        "orchestrator": 0,
+        "daemon": 0
+      }
+    },
+    {
+      "name": "explicit-zero-and-daemon",
+      "environment": {
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": "0",
+        "SEMIO_DAEMON_BUDGET_MS": "45000"
+      },
+      "expected": {
+        "build": 0,
+        "command": 0,
+        "orchestrator": 0,
+        "daemon": 45000
+      }
+    },
+    {
+      "name": "blank-keeps-zero",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": " "
+      },
+      "expected": {
+        "build": 0,
+        "command": 0,
+        "orchestrator": 0,
+        "daemon": 0
+      }
+    },
+    {
+      "name": "negative",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "-1"
+      },
+      "expected": null
+    },
+    {
+      "name": "fractional",
+      "environment": {
+        "SEMIO_CMD_BUDGET_MS": "1.5"
+      },
+      "expected": null
+    },
+    {
+      "name": "infinite",
+      "environment": {
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": "Infinity"
+      },
+      "expected": null
+    },
+    {
+      "name": "text",
+      "environment": {
+        "SEMIO_DAEMON_BUDGET_MS": "not-number"
+      },
+      "expected": null
+    },
+    {
+      "name": "unsafe-integer",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "9007199254740992"
+      },
+      "expected": null
+    }
+  ],
+  "preparation": [
+    {
+      "name": "default-finite-preparation",
+      "environment": {},
+      "expected": 21600000
+    },
+    {
+      "name": "ordinary-unbounded-finite-preparation",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "0"
+      },
+      "expected": 21600000
+    },
+    {
+      "name": "explicit-smaller-preparation",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "1200"
+      },
+      "expected": 1200
+    },
+    {
+      "name": "explicit-larger-preparation",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "28800000"
+      },
+      "expected": 28800000
+    },
+    {
+      "name": "invalid-preparation",
+      "environment": {
+        "SEMIO_BUILD_BUDGET_MS": "no"
+      },
+      "expected": null
+    }
+  ],
+  "timers": [
+    {
+      "name": "unbounded",
+      "budget": 0,
+      "checks": [
+        100
+      ],
+      "expectedDelays": [],
+      "expectedExpirations": 0
+    },
+    {
+      "name": "ordinary",
+      "budget": 1200,
+      "checks": [
+        1200
+      ],
+      "expectedDelays": [
+        1200
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "maximum-native-timer",
+      "budget": 2147483647,
+      "checks": [
+        2147483647
+      ],
+      "expectedDelays": [
+        2147483647
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "one-millisecond-overflow",
+      "budget": 2147483648,
+      "checks": [
+        2147483647,
+        2147483648
+      ],
+      "expectedDelays": [
+        2147483647,
+        1
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "maximum-safe-budget",
+      "budget": 9007199254740991,
+      "checks": [
+        2147483647,
+        4294967294,
+        9007199254740991
+      ],
+      "expectedDelays": [
+        2147483647,
+        2147483647,
+        2147483647
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "early-check-keeps-deadline",
+      "budget": 100,
+      "checks": [
+        10,
+        100
+      ],
+      "expectedDelays": [
+        100,
+        90
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "late-check-expires-once",
+      "budget": 100,
+      "checks": [
+        150,
+        200
+      ],
+      "expectedDelays": [
+        100
+      ],
+      "expectedExpirations": 1
+    },
+    {
+      "name": "cancelled-overflow-callback",
+      "budget": 2147483648,
+      "checks": [
+        2147483647
+      ],
+      "cancelBeforeCheck": 0,
+      "expectedDelays": [
+        2147483647
+      ],
+      "expectedExpirations": 0
+    },
+    {
+      "name": "cancelled-next-segment",
+      "budget": 2147483648,
+      "checks": [
+        2147483647,
+        2147483648
+      ],
+      "cancelBeforeCheck": 1,
+      "expectedDelays": [
+        2147483647,
+        1
+      ],
+      "expectedExpirations": 0
+    }
   ]
 }

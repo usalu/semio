@@ -1,4 +1,4 @@
-//! continuum solids: a raft foundation, a ground slab and an attic slab, four load-bearing walls
+//! 🧊️ continuum solids: a raft foundation, a ground slab and an attic slab, four load-bearing walls
 //! 🏠️ Example `house` — a real-world single-storey masonry house built ENTIRELY from meshed
 //! with window and door openings, and a gable roof — every solid extruded along its own
 //! [`semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis`] so a wall is drawn in ELEVATION (openings are holes in its footprint) and the

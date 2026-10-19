@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem3d` node and element mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🏗️hall-new-tie-074a69/🦀️.rs"]
 mod create_element_hall_hall_new_tie;
@@ -26,3 +27,5 @@ mod replace_element_rolls_the_column_about_its_own_axis;
 mod replace_element_edge_dangling_sec;
 #[path = "../../🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🪪️renames-brace-219be2/🦀️.rs"]
 mod replace_element_edge_renames_brace;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-node/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_node_field_intent;

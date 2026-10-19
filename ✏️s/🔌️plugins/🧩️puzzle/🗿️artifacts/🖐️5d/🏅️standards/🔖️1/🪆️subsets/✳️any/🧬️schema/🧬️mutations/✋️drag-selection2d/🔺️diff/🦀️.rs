@@ -1,4 +1,4 @@
-//! payload offset, read off the BASE position, so the leaf replays on any base. Target volumes live in the world.
+//! 📦️ payload offset, read off the BASE position, so the leaf replays on any base. Target volumes live in the world.
 //! 🔺️ Sparse diff builder for `DragSelection2d` — every unlocked addressed part's board projection moves by the
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPart2dPatch;
@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatch;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartModification;
 use protocol::list_delta::RowPatch;
 use crate::standards::v1::subsets::any::schema::diff::puzzle5d_selection;
-use crate::standards::v1::subsets::any::schema::mutations::puzzle5d_selection_outcome;
+use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::schema::diff::puzzle5d_selection_outcome;
 use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff

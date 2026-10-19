@@ -188,9 +188,6 @@ export function DemandFrameloopKick(): null {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [invalidate]);
-  // 🎞️ Keep demand mode alive briefly while WebGL textures/meshes settle; loaders resolve after the
-  // mount kick and React commits without always scheduling `invalidate`, leaving transparent empty panes.
-  // Per-asset `invalidate` in reference/GLB loaders covers late arrivals; this pump only bridges the first half-second.
   reactHostPort.useEffect(() => {
     let cancelled = false;
     let raf = 0;
@@ -411,8 +408,6 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       projection,
     });
   };
-  // 🧭️ Live zoom (not `props.zoom`, stale mid-gesture — see `reportCamera` above) so an orthographic
-  // scroll-zoom classifies correctly even before the shell's own camera-state prop round-trips.
   const captureNavigationSnapshot = (source: OrbitControlsBinding | null): WorldNavigationSnapshot | null => {
     if (!camera) return null;
     const tgt = worldCameraReportTargetV1(source ?? controls);
@@ -610,8 +605,6 @@ export function WorldCanvas(props: WorldCanvasProps): ReactElement {
       ) : null,
     [canvasEventSource, frameloop, dprKey, props.shadows, cameraKey, glKey, props.background, childrenSlot],
   );
-  /** 🖱️ The wheel hook belongs on the EVENT SOURCE, not on the canvas: a `<Canvas eventSource>`
-   * stamps `pointer-events: none` on its canvas, so a wheel listener bound there is never called. */
   reactHostPort.useEffect(() => {
     if (!canvasEventSource) return;
     const onWheel = (event: WheelEvent) => {

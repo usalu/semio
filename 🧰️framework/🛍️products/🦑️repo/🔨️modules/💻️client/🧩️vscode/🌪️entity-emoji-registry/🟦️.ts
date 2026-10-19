@@ -49,8 +49,6 @@ export function buildEntityEmojiPattern(): string {
 export function buildEntityIdRegex(): RegExp {
   const emojiAlt = buildEntityEmojiPattern();
 
-  //  Group 1+2: Markdown link [<id>](repo://uri) — group(1)=id, group(2)=uri
-  //  Group 3: Bare emoji-prefixed ID (emoji followed by non-delimiter text)
   return new RegExp("(?:\\[((?:" + emojiAlt + ")[^\\]]+)\\]\\((repo:\\/\\/[^)]+)\\)|((?:" + emojiAlt + ")[^\\s/\"'\\[\\]()]+))", "gu");
 }
 

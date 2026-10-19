@@ -1,4 +1,4 @@
-fn field_input(field:&str,source:&str)->semio_framework_value::DslValue{let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024,&mut accepted);crate::text::field_input::parse_layer_field_input(field,source,&mut control).unwrap()}
+fn field_input(field:&str,source:&str)->semio_framework_value::DslValue{let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut accepted);crate::text::field_input::parse_layer_field_input(field,source,&mut control).unwrap()}
 use super::*;
 use crate::text::apply_drawing_mutation;
 use semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect;
@@ -96,7 +96,6 @@ async fn set_layer_opacity_missing_layer_is_a_target_missing_error() {
 #[semio_framework_async_macros::async_test]
 async fn create_layer_duplicate_id_never_applies() {
     let base = base_document();
-    // Re-creating the exact existing node collides on id for real (ids are content-addressed).
     let duplicate = create_layer(None, None, base.layers[0].clone());
     assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
@@ -248,7 +247,7 @@ fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
 async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], index: usize, edited: &DrawingMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
+    store.install_document_store_owners_exact(::semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
     for mutation in log {
         store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
     }

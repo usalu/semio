@@ -137,11 +137,6 @@ export function resolveCommands(
   manifests: readonly { readonly apps: readonly unknown[] }[] = [],
   selectedArtifactKinds?: readonly ArtifactKindChoice[],
 ): ResolvedCommand[] {
-  // 🗺️ `CommandDefinition.label`/`.args[].label` are manifest `LocalizedLabel` fields — there is no
-  // "command"/"commandArg" overlay category (commands never went through `AppLabelsOverlay`), so this is
-  // the single choke point that resolves them to plain strings for every downstream consumer (the
-  // footer command panel, the command palette, `noteShellCommand`'s history label); `osCommands` are
-  // already plain strings (built by `buildOsCommands` via `shellLabel`) and pass through unchanged.
   const resolveDefinition = (definition: CommandDefinition): ResolvedCommand["definition"] => ({
     ...definition,
     label: resolveManifestLabel(definition.label, terminology, locale),
@@ -216,9 +211,6 @@ export function buildOsCommands(
   tutorialRecorderAvailable = false,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],
-  /** 👁️✏️ Whether the active session's dialect has at least one `AppRouter` entry for either role —
-   * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
-   * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above. */
   hasOpenArtifactSurfaces = false,
 ): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
@@ -238,9 +230,6 @@ export function buildOsCommands(
       ],
     },
     ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), category: "app", iconId: "graduation-cap" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] }] : []),
-    // 🎥️ `os.playTutorial` only appears once at least one tutorial is declared (app-own or brand-own);
-    // `os.recordTutorial` is dev/studio-only (see `isTutorialRecorderAvailable`) and needs no declared
-    // tutorial at all — recording an app IS the authoring path for one.
     ...(tutorials.length > 0
       ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), category: "app", iconId: "play" as const, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, keybindings: [], args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: resolveManifestLabel(tutorial.title, terminology, locale) })))] }]
       : []),
@@ -340,10 +329,6 @@ export function buildOsCommands(
         ),
       ],
     },
-    // 🧵️ The action-line entry for the `os.task-manager` window (audit `📓️g5-ux-completeness-audit.md`
-    // ranked item 1). Handled by `ShellHost`'s own `onCommand`, next to the other two os commands that
-    // need more context than `dispatchOsCommand` has — the panel id is a `📌️ChromePanels` export this
-    // module deliberately does not import.
     {
       id: OPEN_TASK_MANAGER_COMMAND_ID,
       label: shellLabel("ui.command.openTaskManager"),
@@ -355,9 +340,6 @@ export function buildOsCommands(
       args: [],
       keybindings: [],
     },
-    // 🔗️ The one discoverable entry point to the hub workspace (`📓️au2-os-sign-in-and-spaces-ui.md`
-    // §6 gap 2: it was reachable only by typing `/hub` into the address bar). Handled by `ShellHost`'s
-    // own `onCommand`, which owns the overlay state.
     {
       id: OPEN_HUB_COMMAND_ID,
       label: shellLabel("ui.command.openHub"),
@@ -369,9 +351,6 @@ export function buildOsCommands(
       args: [],
       keybindings: [],
     },
-    // 👁️✏️ Both share the frozen "Open with…" label (contract freeze §5) — the role is which picker
-    // group they focus, not a different label; `dispatchOsCommand` opens the Document panel's
-    // "Open with…" section pre-scoped to that role rather than sending a wire command itself.
     ...(hasOpenArtifactSurfaces
       ? [
           { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
@@ -425,8 +404,6 @@ export function dispatchOsCommand(
     case "os.setDriver":
       if (typeof args?.driver === "string") commitUiPreference(setDriver(args.driver));
       return true;
-    // 👁️✏️ Neither sends a wire command itself (contract freeze §5) — both just focus the Document
-    // panel's "Open with…" section, pre-expanded to the role the palette entry named.
     case OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID:
     case OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID:
       dispatch({ type: "SET_OPEN_WITH_FOCUS_ROLE", value: commandId === OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID ? "viewer" : "editor" });
@@ -476,7 +453,6 @@ export function buildCommandCategoryTree(
     const missing = unresolvedActionArgs(expanded.definition.args, effective);
     sections.push({
       id: `command.category.${expanded.definition.category}.form`,
-      // 🏷️ The command palette's twin of the Actions pane form section above — same rule, same reason.
       label: expanded.definition.label,
       items: expanded.definition.args.map(
         (def): TreeDataItem => ({

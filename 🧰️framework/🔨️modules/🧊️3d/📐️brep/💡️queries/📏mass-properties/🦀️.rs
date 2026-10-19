@@ -145,7 +145,6 @@ pub mod oracle {
 
     impl Sdf {
         /// 🔮️ Evaluates the field at a world-space point.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn eval(&self, p: Pnt3) -> f64 {
             match self {
                 Sdf::Box { half_extents, placement } => {
@@ -185,19 +184,15 @@ pub mod oracle {
             }
         }
         /// 🔮️ `true` when `p` is inside (or on, within `tol`) the field's boundary.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn contains(&self, p: Pnt3, tol: f64) -> bool {
             self.eval(p) <= tol
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn union(self, other: Sdf) -> Sdf {
             Sdf::Union(Box::new(self), Box::new(other))
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn intersect(self, other: Sdf) -> Sdf {
             Sdf::Intersect(Box::new(self), Box::new(other))
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn difference(self, other: Sdf) -> Sdf {
             Sdf::Difference(Box::new(self), Box::new(other))
         }
@@ -234,32 +229,26 @@ pub mod oracle {
 
     impl ClosedFormMass {
         /// 🔮️ Volume of an axis-aligned box with the given half-extents.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn box_volume(half_extents: Pnt3) -> f64 {
             8.0 * half_extents.x * half_extents.y * half_extents.z
         }
         /// 🔮️ Total surface area of an axis-aligned box with the given half-extents.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn box_surface_area(half_extents: Pnt3) -> f64 {
             8.0 * (half_extents.x * half_extents.y + half_extents.y * half_extents.z + half_extents.x * half_extents.z)
         }
         /// 🔮️ Volume of a sphere with the given radius.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn sphere_volume(radius: f64) -> f64 {
             (4.0 / 3.0) * std::f64::consts::PI * radius.powi(3)
         }
         /// 🔮️ Surface area of a sphere with the given radius.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn sphere_surface_area(radius: f64) -> f64 {
             4.0 * std::f64::consts::PI * radius.powi(2)
         }
         /// 🔮️ Volume of a right circular cylinder (including caps) with radius and full height `2 * half_height`.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn cylinder_volume(radius: f64, half_height: f64) -> f64 {
             std::f64::consts::PI * radius.powi(2) * (2.0 * half_height)
         }
         /// 🔮️ Total surface area of a capped right circular cylinder.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn cylinder_surface_area(radius: f64, half_height: f64) -> f64 {
             2.0 * std::f64::consts::PI * radius * (radius + 2.0 * half_height)
         }

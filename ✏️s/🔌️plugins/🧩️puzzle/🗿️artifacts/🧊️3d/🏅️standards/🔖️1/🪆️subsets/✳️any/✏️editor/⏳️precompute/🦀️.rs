@@ -1,4 +1,4 @@
-//! collision meshes and the background brush-candidate lane, plus `dispatch`, which drives
+//! 💥️ collision meshes and the background brush-candidate lane, plus `dispatch`, which drives
 //! ⏳️ Puzzle 3d play app — the precompute session: the scene the host syncs in, the registered
 //! `Puzzle3dEngineCommand`/`Puzzle3dEngineOutcome` (schema types, `semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema`)
 //! through the session. The rules the lane consults live in `🖌️brush/🦀️.rs`, the geometry in

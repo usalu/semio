@@ -44,7 +44,6 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .panel_tab_def(layers_panel::definition())
-            // 🔧️ Document-mutating operations — dispatched as VCS operations with true inverses.
             .mutation("addPrimitive", LocalizedLabel::native("Add Primitive", "Primitive hinzufügen"))
             .mutation("patchObject", LocalizedLabel::native("Patch Object", "Objekt aktualisieren"))
             .mutation("extrude", LocalizedLabel::native("Extrude", "Extrudieren"))
@@ -72,7 +71,6 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .mutation("fillBucket", LocalizedLabel::native("Fill Bucket", "Fülleimer"))
             .mutation("importSnapshotJson", LocalizedLabel::native("Import Snapshot Json", "Snapshot-JSON importieren"))
             .mutation("replaceSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
-            // 📤️ Shell effects: a mesh download, a file-open request, and the import the shell answers it with.
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
             .action_destructive("deleteSelection")
             .mutation("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"))
@@ -81,7 +79,6 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("importMeshFile", LocalizedLabel::native("Import Mesh File", "Mesh-Datei importieren"), semio_framework_plugin::ActionKind::Mutation) })
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
-            // 👁️ Ephemeral view state — selection, camera, hover and the eyedropper sample.
             .view_action("setActiveObject", LocalizedLabel::native("Set Active Object", "Aktives Objekt festlegen"))
             .view_action("setActivePaintLayer", LocalizedLabel::native("Set Active Paint Layer", "Aktive Malebene festlegen"))
             .view_action("setUtilityParam", LocalizedLabel::native("Set Utility Param", "Werkzeugparameter festlegen"))
@@ -102,11 +99,8 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
             .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("paintSample", LocalizedLabel::native("Paint Sample", "Farbe aufnehmen"), semio_framework_plugin::ActionKind::View, "paintbrush"))
-            // 📝️ Staged argument forms for the P1 actions — the panel form seeds from these defaults and
-            // stages typed overrides read out of `args`; `config.utility_params_json` remains the live backing store.
             .action_args("extrude", vec![ActionArgDef::slider("extrudeDistance", LocalizedLabel::native("Extrude Distance", "Extrusionsabstand"), 0.01, 2.0).default_value(&0.25)])
             .action_args("inset", vec![ActionArgDef::number("insetAmount", LocalizedLabel::native("Inset Amount", "Einzugsbetrag")).default_value(&0.1)])
-            // 🧲️ Numeric transform entry from the Actions pane — the gumball drag fills the same fields.
             .action_args("translateSelection", vec![
                 ActionArgDef::number("dx", LocalizedLabel::native("Move X", "Verschieben X")).default_value(&0.0),
                 ActionArgDef::number("dy", LocalizedLabel::native("Move Y", "Verschieben Y")).default_value(&0.0),
@@ -147,9 +141,6 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgOption::new("ico_sphere", LocalizedLabel::native("Ico Sphere", "Ikokugel")),
             ]).default_value(&"box")])
             .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", LocalizedLabel::native("Seam", "Naht")).default_value(&true)])
-            // 🧰️ Transform gumball + paint utilities — exclusive per-window active utility is host-owned (never a
-            // document operation). Selection method/merge/kind live as an always-visible Select window-options group
-            // (mirrors puzzle 3d); the transform group defaults to "move", paint bridges into `config.paint_utility`.
             .utility(lowpoly_utility("move", LocalizedLabel::native("Move", "Verschieben"), "move", "transform"))
             .utility(lowpoly_utility("rotate", LocalizedLabel::native("Rotate", "Drehen"), "rotate-cw", "transform"))
             .utility(lowpoly_utility("scale", LocalizedLabel::native("Scale", "Skalieren"), "maximize-2", "transform"))
@@ -157,12 +148,7 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .utility(lowpoly_utility("eraser", LocalizedLabel::native("Eraser", "Radierer"), "eraser", "paint"))
             .utility(lowpoly_utility("fill", LocalizedLabel::native("Fill", "Füllen"), "paint-bucket", "paint"))
             .utility(lowpoly_utility("eyedropper", LocalizedLabel::native("Eyedropper", "Pipette"), "pipette", "paint"))
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "mesh" interaction domain —
-            // object/vertex/edge/face granularities (u32 component ids stringify at the `InteractionTarget`
             // boundary, see `🧭️view/🦀️.rs`'s `🔖️MeshDomain` region), Flat hierarchy (a mesh has no
-            // parent/child structure of its own to derive a topology from), all five merges + all three
-            // pick methods per the migration's acceptance bar. Scoped to the Model window only — the UV
-            // window paints textures, it never selects mesh components.
             .interaction(InteractionDefinition {
                 id: MESH_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Mesh", "Netz"),
@@ -184,7 +170,6 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             })
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // ⌨️ The modeller's hands: delete what is selected, duplicate the active object, extrude/inset it.
             .keybinding("delete", "deleteSelection")
             .keybinding("backspace", "deleteSelection")
             .keybinding("mod+d", "duplicateObject")

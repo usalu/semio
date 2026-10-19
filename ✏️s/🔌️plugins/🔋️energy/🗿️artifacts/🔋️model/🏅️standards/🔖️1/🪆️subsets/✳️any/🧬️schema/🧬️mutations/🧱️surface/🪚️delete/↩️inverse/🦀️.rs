@@ -50,9 +50,6 @@ where
             window.glazing_construction_id,
             Some(window_index as u32),
         ));
-        // 🔶️ `create-fenestration` does not carry the aperture's own polygon, so a window that had
-        // one gets it back with the step right after its re-creation. This list is reversed below
-        // and the store replays it reversed again, so BUILD order IS execution order here.
         if !window.vertices_m.is_empty() {
             steps.push(crate::fenestration_mutations::replace_fenestration_vertices(window.id, window.vertices_m.clone()));
         }
@@ -60,9 +57,6 @@ where
     for (pair_index, pair) in base.model.adjacency_pairs.iter().enumerate().filter(|(_, item)| item.surface_a_id == payload.id || item.surface_b_id == payload.id) {
         steps.push(crate::boundary_mutations::connect_surfaces(pair.surface_a_id, pair.surface_b_id, Some(pair_index as u32)));
     }
-    // ↩️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`'s
-    // `back.reverse()`, pinned by `protocol_laws::assert_mutation_inverse_law`), so the parent step
-    // must be LAST in this list — reversed, it is re-created before its dependants.
     steps.reverse();
     steps
 

@@ -1,0 +1,72 @@
+{
+ "ws": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml",
+ "old_name": "semio-s-artifact-puzzle-5d-store-preparation",
+ "old_pkg": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/📦️packages/🦀️rust",
+ "root_file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/📦️packages/🦀️rust/🪞️mirror/🦀️.rs",
+ "moves": [
+  "editor::puzzle5d::commands"
+ ],
+ "new": {
+  "name": "semio-s-artifact-puzzle-5d-store-preparation-commands",
+  "dir": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/🎮️command-mounts",
+  "emoji": "🎮️",
+  "doc": "The grid, lod, camera, selection, engagement and import command mounts that prepare the puzzle 5d store, held by their own crate so the store-preparation crate stays inside the source gate.",
+  "desc": "Puzzle 5d store-preparation command mounts"
+ },
+ "subtree": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+ "script": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/📜️script.ts",
+ "rewrites": [
+  {
+   "re": "\\bcrate::editor::puzzle5d::interaction::",
+   "to": "semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::entities\\b",
+   "to": "semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::(view|window|config)\\b",
+   "to": "semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::\\1"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::modes::edit::(tools|windows::world3d::utilities::transform)\\b",
+   "to": "semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::modes::edit::\\1"
+  },
+  {
+   "re": "\\bcrate::editor::puzzle5d::commands::set_fill_count\\b",
+   "to": "semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::set_fill_count"
+  },
+  {
+   "re": "\\bcrate::standards::v1::subsets::any::schema::mutations::(create_part|delete_part|remove_part_grip)\\b",
+   "to": "semio_s_artifact_puzzle_5d_mut_any_4::standards::v1::subsets::any::schema::mutations::\\1"
+  },
+  {
+   "re": "\\bcrate::standards::v1::subsets::any::schema::mutations::disconnect_grips\\b",
+   "to": "semio_s_artifact_puzzle_5d_mut_any_2::standards::v1::subsets::any::schema::mutations::disconnect_grips"
+  },
+  {
+   "re": "\\bcrate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation\\b",
+   "to": "semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation"
+  },
+  {
+   "re": "\\bcrate::standards::v1::subsets::any::schema::document_records\\b",
+   "to": "semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records"
+  },
+  {
+   "re": "\\buse crate::\\{Puzzle5dSnapshot\\};",
+   "to": "use semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;"
+  },
+  {
+   "re": "\\bcrate::Puzzle5dSnapshot\\b",
+   "to": "semio_s_artifact_puzzle_5d_snapshot::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot"
+  },
+  {
+   "re": "\\bcrate::PUZZLE_5D_SCHEMA\\b",
+   "to": "semio_s_artifact_puzzle_5d_snapshot::PUZZLE_5D_SCHEMA"
+  },
+  {
+   "re": "\\bcrate::retained_command::",
+   "to": "semio_s_plugin_puzzle_retained::"
+  }
+ ]
+}

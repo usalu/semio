@@ -78,7 +78,7 @@ struct PagedRecord {
 struct PagedDocument {
     title: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
     #[dsl(table)]
-    rows: semio_framework_value::list::PagedList<PagedRecord, {usize::MAX}>,
+    rows: semio_framework_value_persistent::list::PagedList<PagedRecord, {usize::MAX}>,
     objects: semio_framework_value::paged::PagedMap<PagedRecord, {usize::MAX}>,
 }
 
@@ -91,7 +91,7 @@ enum PagedTree {
 #[derive(Debug, PartialEq, Serialize, Deserialize, RetainedClone, RetireOwned)]
 struct PagedBranch {
     label: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
-    children: semio_framework_value::list::PagedList<PagedTree, {usize::MAX}>,
+    children: semio_framework_value_persistent::list::PagedList<PagedTree, {usize::MAX}>,
 }
 
 #[test]

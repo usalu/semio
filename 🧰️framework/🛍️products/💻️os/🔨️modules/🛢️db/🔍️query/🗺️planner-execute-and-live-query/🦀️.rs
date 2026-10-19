@@ -301,7 +301,6 @@ impl LiveQuery {
     /// `LiveQuery`'s own `InferenceCache`) instead of being read directly off `result.rows` — a
     /// row whose content is byte-identical to one already seen by this cache is served from the
     /// cache rather than re-materialized, per `QueryResultField`'s doc above.
-    // 🔀️ `source: &impl QuerySource` (was `&dyn`) — same rationale as `execute`.
     pub async fn refresh(&mut self, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits, control: &mut QueryCursorControl) -> Result<QueryDiff, DbError> {
         let mut result = execute(&self.spec.query, source, fulltext, limits, control).await?;
         let mut diff = QueryDiff::default();

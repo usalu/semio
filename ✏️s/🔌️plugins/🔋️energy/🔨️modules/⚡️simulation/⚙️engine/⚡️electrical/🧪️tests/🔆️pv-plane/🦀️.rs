@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn pv_kernel_preserves_independent_plane_components_weather_and_authored_efficiency() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔆️pv-plane/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔆️pv-plane/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let numbers=|name:&str|row[name].as_array().unwrap().iter().map(|value|value.as_f64().unwrap()).collect::<Vec<_>>();
         let sun=numbers("sun");let collector=numbers("collector");let irradiance=numbers("irradiance");let outdoor=numbers("weather");let pv=numbers("pv");let expected=numbers("expected");

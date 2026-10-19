@@ -1,4 +1,4 @@
-//! Serialize stdio.pdf (1.7) to stdio.deflate.
+//! 📤️ Serialize stdio.pdf (1.7) to stdio.deflate.
 
 use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use semio_s_artifact_stdio_deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};

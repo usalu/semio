@@ -41,14 +41,12 @@ fn restrict_unchanged_when_already_subset() {
 
 #[test]
 fn reduced_count_is_removed_not_remaining() {
-    // 6 patterns, remove exactly 1 -> remaining 5. Reduced(_) must report 1, not 5.
     let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unwrap();
     let mut d = Domain::new_full(&w);
     let result = d.remove(PatternId(0), &w);
     assert_eq!(result, RestrictResult::Reduced(1));
     assert_eq!(d.cardinality(), 5);
 
-    // restrict from 6 down to 3 (remove 3) -> remaining 3. Reduced(_) must report 3.
     let mut d2 = Domain::new_full(&w);
     let mut allowed = PatternSet::new_empty(6);
     allowed.set(PatternId(0), true);
@@ -157,7 +155,6 @@ mod quick {
     fn resync_boundary_does_not_change_observable_state() {
         let w = WeightTable::new(&(0..70).map(|i| 1.0 + i as f64).collect::<Vec<_>>()).unwrap();
         let mut d = Domain::new_full(&w);
-        // Cross the RESYNC_INTERVAL boundary via single-pattern removals on a large domain.
         for i in 0..70u32 {
             if i % 2 == 0 {
                 continue;

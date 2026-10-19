@@ -41,11 +41,6 @@ async fn projection_round_trips_paint_pixels_through_base64_json() {
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_engine_apply_and_inverse_round_trip() {
-    // 🩹 Was `protocol::ArtifactEngine`-based (that trait doesn't exist anywhere in the
-    // codebase — a stale reference predating 26/08/12/SEMANTIC-MUTATIONS-OVERHAUL — and
-    // `LowpolyEngine` never exposed a `snapshot()`/apply-mutation API either) and constructed
-    // the since-removed `LowpolyMutation::ObjectsPatch` bag variant. Rewritten against the real
-    // `protocol::Mutation` diff/apply/inverse contract and the new `rename-object` mutation.
     use semio_s_artifact_lowpoly_lowpoly_mut_objects::rename_object;
     use semio_s_artifact_lowpoly_lowpoly_mutations::LowpolyMutation;
     use protocol::Mutation;
@@ -64,8 +59,6 @@ async fn artifact_engine_apply_and_inverse_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn pixel_runs_from_diff_captures_only_changed_pixels() {
-    // 🩸 Runs are whole RGBA pixels: bytes 4..8 are pixel 1, byte 10 lies in pixel 2 — two runs, each
-    // carrying its full pixel, and never one run per differing byte.
     let mut before = vec![0u8; 16];
     let mut after = before.clone();
     after[4] = 9;

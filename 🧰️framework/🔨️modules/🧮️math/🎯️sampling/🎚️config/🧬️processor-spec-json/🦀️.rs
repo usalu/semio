@@ -70,10 +70,6 @@ pub(super) async fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
 }
 
 pub(super) async fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, SamplingError> {
-    // 🔀️ `and_then`/`filter_map`/`map` closures cannot call `async fn`s (`JsonValue::get`/
-    // `as_str`/`as_f64`/`as_array` are all `async fn` under the universal-async decree) — every
-    // helper below is a nested `async fn` taking `value` explicitly, and every array walk is an
-    // explicit `.await`ing loop rather than an iterator-adapter chain (O1 de-dyn, math-dedyn).
     async fn opt_str<'a>(value: &'a JsonValue, key: &'static str) -> Option<&'a str> {
         match value.get(key).await {
             Some(v) => v.as_str().await,

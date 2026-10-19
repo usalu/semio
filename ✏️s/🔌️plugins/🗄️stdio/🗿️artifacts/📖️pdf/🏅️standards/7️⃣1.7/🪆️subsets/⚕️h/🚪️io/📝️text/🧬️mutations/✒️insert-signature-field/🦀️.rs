@@ -1,4 +1,4 @@
-//! Direct text identity for `insert-signature-field`.
+//! 🆔️ Direct text identity for `insert-signature-field`.
 
 pub const OPCODE: &str = "insert-signature-field";
 pub const TEXT_OPCODE: &str = OPCODE;

@@ -38,10 +38,6 @@ async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_co
     assert_eq!(mutation.semantics.kind, "create-building-storey");
     assert_eq!(mutation.semantics.record, "CreatedBuildingStorey");
 
-    // ✅️ Task requirement: "the inference's metadata passes the ownership gate" — contract
-    // freeze §4 rule 4 (owner == contributor == this extension's own plugin id, artifact_kind ==
-    // target); `.contributes()` would already have panicked had `register_contributions`
-    // rejected this, so these equalities double-check the landed values directly.
     let inference = &contribution.inferences[0];
     assert_eq!(inference.inference_schema, AEC_BUILDING_INFERENCE_SCHEMA);
     assert_eq!(inference.owner, EXTENSION_ID);
@@ -58,14 +54,10 @@ async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_co
 /// `extension_bundle_dependency_tests`.
 #[semio_framework_async_macros::async_test]
 async fn contribution_onto_cad_requires_a_declared_dependency() {
-    // 🌉️ `.contributes` is `async` since the SDK's io-async-signatures sweep, so the panic only
-    // fires when the future is POLLED — `catch_unwind` over the bare builder call would catch
-    // nothing. `resolve_ready` is the same bridge `bundle()` itself uses.
     let result = std::panic::catch_unwind(|| {
         ::semio_framework_async::poll::resolve_ready(
             ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
                 .extends("cad")
-                // ⚠️ deliberately NO `.depends_on("cad", …)` here.
                 .contributes(building_storey_contribution()),
         )
     });

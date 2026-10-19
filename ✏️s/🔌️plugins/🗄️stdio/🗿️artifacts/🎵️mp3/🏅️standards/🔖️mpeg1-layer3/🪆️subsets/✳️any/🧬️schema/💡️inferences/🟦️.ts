@@ -7,7 +7,7 @@ export interface Mp3Duration {
 }
 
 export interface Mp3Inference {
-  /** @derived */
+  /** ⏱️ @derived */
   duration: Mp3Duration;
 }
 

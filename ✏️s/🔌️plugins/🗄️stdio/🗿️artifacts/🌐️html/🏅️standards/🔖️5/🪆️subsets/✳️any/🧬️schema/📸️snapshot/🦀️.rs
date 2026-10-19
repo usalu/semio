@@ -39,11 +39,9 @@ pub struct HtmlAttr {
 }
 
 impl HtmlAttr {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
         Self { name: name.into(), value: Some(value.into()) }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn boolean(name: impl Into<String>) -> Self {
         Self { name: name.into(), value: None }
     }
@@ -62,14 +60,12 @@ pub enum RawTextKind {
 }
 
 impl RawTextKind {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn tag_name(self) -> &'static str {
         match self {
             RawTextKind::Script => "script",
             RawTextKind::Style => "style",
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn from_tag_name(name: &str) -> Option<Self> {
         if name.eq_ignore_ascii_case("script") {
             Some(RawTextKind::Script)
@@ -113,7 +109,6 @@ pub enum HtmlNode {
 }
 
 impl HtmlNode {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn element(name: impl Into<String>) -> Self {
         HtmlNode::Element { name: name.into(), attributes: Vec::new(), children: Vec::new() }
     }

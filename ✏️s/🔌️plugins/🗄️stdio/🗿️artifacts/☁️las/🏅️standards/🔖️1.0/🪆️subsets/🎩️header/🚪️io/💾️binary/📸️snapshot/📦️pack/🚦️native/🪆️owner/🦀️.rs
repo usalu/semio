@@ -1,7 +1,8 @@
 //! ☁️ Direct actual LAS fields bind to the authored raw binary64 record words.
 use crate::schema::snapshot::{LasHeader,LasPoint,LasSnapshot,LasVlr};
 use semio_framework_dsl_record::{DslField,FieldValue,RecordValue};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::NativeEncodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 use semio_framework_dsl_record::native_encoding::EncodedRecord;
 use semio_framework_value::{FromValue,ValueError,ValueRefusalKind};

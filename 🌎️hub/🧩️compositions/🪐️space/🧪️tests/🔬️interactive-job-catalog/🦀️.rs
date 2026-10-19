@@ -119,9 +119,6 @@ async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_fac
     assert_eq!(factory_contract_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), owned);
     assert_eq!(factory_host_only_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
-    // 🏠️ Home's retained (migrated) surface is the rows `HOME_RETAINED_TOOL_IDS` declares and the
-    // committed fixture pins above; the spot-check below keeps this assertion from going vacuous if
-    // the fixture and the factory ever drift to the same empty set together.
     for tool in ["openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "presenceHeartbeat"] {
         assert!(owned.contains(tool), "Home's own rows and the shell dispatch {tool}");
     }

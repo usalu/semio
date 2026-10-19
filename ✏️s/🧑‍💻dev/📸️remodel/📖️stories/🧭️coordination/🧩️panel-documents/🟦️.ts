@@ -82,8 +82,6 @@ function mediaPanel(scene: RemodelScene, labels: RemodelLabels): BuiltNode {
 /** 🧵️ `📌️panels/🧵️results` — mesh source + vertex/triangle counts, then sparse/dense/trajectory/geo. */
 function resultsPanel(scene: RemodelScene, labels: RemodelLabels): BuiltNode {
   const results = scene.results;
-  // 🧩️ The composed mesh CHILD is unresolvable without a `durableArtifacts` map, so `unwrap_or_default()`
-  // reports 0/0 rather than fabricating a count — exactly what the Rust panel does here.
   const meshLabel = `${labels.mesh}: ${debugEnum(results.mesh.source)}, 0 ${labels.vertices}, 0 ${labels.triangles}`;
   const sparse = results.sparse === null ? `${labels.sparseCloud}: ${labels.resultsNone}` : `${labels.sparseCloud}: ${Math.floor(base64ByteLength(results.sparse.points) / 4 / 3)}`;
   const dense = results.dense === null ? `${labels.denseCloud}: ${labels.resultsNone}` : `${labels.denseCloud}: ${Math.floor(base64ByteLength(results.dense.positions) / 4 / 3)}`;

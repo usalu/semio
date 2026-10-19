@@ -45,7 +45,7 @@ use protocol::{ColdMutationDiff};
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: bytes / 64, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 };
         let mut decode_callback = |_| true;
         let mut encode_callback = |_| true;
-        let mut decode = semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
+        let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
         let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
         let mut control = semio_framework_os_kernel::io::io_mechanism::IoRunControl::new(&mut decode, &mut encode, grant);
         let mut snapshot = semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(progress, limits);
@@ -96,7 +96,7 @@ pub const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fi
                 }
             }
             impl store::ArtifactNativeSnapshot for $snapshot {
-                fn decode_native_snapshot(payload: store::NativeSnapshotInput<'_>, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+                fn decode_native_snapshot(payload: store::NativeSnapshotInput<'_>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
                     control.checkpoint()?;
                     let invalid = |error: serde_json::Error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string());
                     match payload {
@@ -136,7 +136,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 }
 
             impl pack::snapshot::ArtifactNativeSnapshot for $snapshot {
-                fn decode_native_snapshot(payload: pack::snapshot::NativeSnapshotInput<'_>, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+                fn decode_native_snapshot(payload: pack::snapshot::NativeSnapshotInput<'_>, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
                     control.checkpoint()?;
                     let text = match payload {
                         pack::snapshot::NativeSnapshotInput::Binary(bytes) => control.borrow_text(bytes)?,
@@ -816,7 +816,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         foreign_strict.subset = "strict".into();
         let owner_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
         let mut decode_callback = |_| true;
-        let mut decode = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut decode_callback);
+        let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut decode_callback);
         let mut decode_owner = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut decode, owner_grant);
         assert!((provider.export)("fixture.foreign/v1", &foreign_strict, &IoPayload::Binary(snapshot.encode_pack()), &mut control, &mut decode_owner).is_err());
         let mut encode_callback = |_| true;

@@ -187,8 +187,6 @@ fn fillet_of_one_box_edge_removes_exactly_its_corner_sliver() {
         p.distance(q)
     };
     let out = fillet_edges(&mut body, solid, &[edge], r, &mut recorder).expect("single-edge fillet");
-    // 🧊 A lone blended edge keeps its two end vertices trihedral and unblended, so the surgery
-    // adds one cylinder patch and no corner patch: 7 faces, and the sliver runs the full edge.
     assert_blend_contract(&body, out, 7, a * b * c - length * r * r * (1.0 - PI / 4.0), "box fillet ×1");
 }
 
@@ -198,9 +196,6 @@ fn fillet_of_four_parallel_box_edges_matches_the_rounded_prism_closed_form() {
     let mut recorder = OpRecorder::new();
     let (a, b, c, r) = (2.4, 3.2, 1.8, 0.35);
     let solid = make_box(&mut body, a, b, c, &mut recorder).expect("box");
-    // 🧊 The four edges parallel to `Z` — the classic "round the uprights" selection, and the
-    // partial set whose eight end vertices each keep exactly one blended edge, so every one of them
-    // takes the `cap`-face branch rather than a corner patch.
     let vertical: Vec<EdgeId> = solid_edges(&body, solid)
         .into_iter()
         .filter(|&edge| {
@@ -211,8 +206,6 @@ fn fillet_of_four_parallel_box_edges_matches_the_rounded_prism_closed_form() {
         .collect();
     assert_eq!(vertical.len(), 4, "a box has four edges parallel to Z");
     let out = fillet_edges(&mut body, solid, &vertical, r, &mut recorder).expect("four-edge fillet");
-    // 🧊 A prism on a rounded rectangle: the `(a−2r)×(b−2r)` core, two slabs, and one full disc of
-    // radius `r` assembled from the four quarter-cylinders — all of height `c`.
     let section = (a - 2.0 * r) * (b - 2.0 * r) + 2.0 * r * ((a - 2.0 * r) + (b - 2.0 * r)) + PI * r * r;
     assert_blend_contract(&body, out, 10, section * c, "box fillet ×4 vertical");
 }
@@ -229,9 +222,6 @@ fn chamfer_of_all_twelve_box_edges_matches_the_closed_form() {
     let solid = make_box(&mut body, a, b, c, &mut recorder).expect("box");
     let edges = solid_edges(&body, solid);
     let out = chamfer_edges(&mut body, solid, &edges, d, d, &mut recorder).expect("twelve-edge chamfer");
-    // 🔻 The same Steiner decomposition with the ball replaced by the CUBE `[−d, d]³`'s own
-    // corner-cutting octahedron: twelve triangular prisms of section `d²/2` over the full edges,
-    // corrected at the eight corners where three of them overlap.
     let closed_form = a * b * c - 2.0 * d * d * (a + b + c) + (16.0 / 3.0) * d * d * d;
     assert_blend_contract(&body, out, 26, closed_form, "box chamfer ×12");
 }

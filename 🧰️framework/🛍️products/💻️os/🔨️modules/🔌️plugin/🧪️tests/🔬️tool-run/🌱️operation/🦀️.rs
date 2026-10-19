@@ -6,6 +6,7 @@ use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedC
 use store::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationSource};
 use std::mem::ManuallyDrop;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
+use semio_framework_os_store_testing_doubles::store;
 
 struct OriginalToyFields{pub count:i32,pub label:[u8;15],pub length:usize,pub tag:usize}
 impl FieldProjectionSource for OriginalToyFields{

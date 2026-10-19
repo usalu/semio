@@ -1,4 +1,4 @@
-//! own world origin: its BASE orientation (identity when absent) is pre-multiplied by the payload's axis-angle
+//! 🗺️ own world origin: its BASE orientation (identity when absent) is pre-multiplied by the payload's axis-angle
 //! 🔺️ Sparse diff builder for `RotateSelection3d` — every unlocked addressed part and target volume turns about its
 //! quaternion, so the leaf replays on any base.
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;

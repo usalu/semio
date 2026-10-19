@@ -3,7 +3,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 #[test]
 fn restored_actor_receives_original_decoder_and_grant_before_arc_birth(){
-    use semio_framework_value::{NativeDecodeControl,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
+    use semio_framework_value::{ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, retirement::controlled::ControlledRetirement};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner;
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     use std::cell::Cell;
@@ -41,7 +42,7 @@ async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor()
     let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
     let bytes = checkpoint(&runtime, &[], Vec::new(), Vec::new(), restarts.clone()).await.expect("must encode");
     let mut observer = |_| true;
-    let mut native = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut observer);
+    let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut observer);
     let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 });
     let pack = restore(&runtime, &bytes, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut original).await.expect("must decode back").pack;
     assert_eq!(pack.task_restarts().await.len(), 2);

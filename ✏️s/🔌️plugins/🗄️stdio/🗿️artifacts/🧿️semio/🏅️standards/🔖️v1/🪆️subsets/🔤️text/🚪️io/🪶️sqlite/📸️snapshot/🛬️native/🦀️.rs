@@ -1,7 +1,8 @@
 //! 🔤️ Explicit controlled native text run and inline mark construction.
 use crate::schema::snapshot::{SemioTextSnapshot, SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
-use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.

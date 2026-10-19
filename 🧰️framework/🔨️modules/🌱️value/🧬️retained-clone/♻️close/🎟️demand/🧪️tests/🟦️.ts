@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
 import {Database} from "bun:sqlite";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {nestedRetainedCloseDemand,type RetainedCloseDemandSource} from "../🟦️.ts";
 
@@ -32,7 +32,7 @@ test("derived clone preflights every physical axis and quotes each selected chil
  expect(source).toContain("retained_capacity_bytes:demand.capacity_bytes");
  expect(source).toContain("released_bytes:demand.release_bytes");
  expect(source).not.toContain("#(#depth_children)*");
- const root=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");
+ const root=readFileSync(new URL("../../../../🧪️tests/🥣️companion/🌱️retained-clone/🦀️.rs",import.meta.url),"utf8");
  expect(root).toContain('mod close_demand_tests;');
 });
 

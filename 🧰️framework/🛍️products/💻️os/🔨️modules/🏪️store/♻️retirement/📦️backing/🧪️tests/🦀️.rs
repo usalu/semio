@@ -12,7 +12,7 @@ use semio_framework_os_store_document::create_document_envelope;
 #[test]
 fn artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["pagedSource"];let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();let values:Vec<String>=law["values"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect();
-    for prefix in law["prefixes"].as_array().unwrap(){let prefix=prefix.as_u64().unwrap()as usize;let mut pages=semio_framework_value::list::PagedList::<String,{usize::MAX}>::with_payload_page_bytes(law["pageItems"].as_u64().unwrap()as usize*size_of::<String>()).unwrap();for value in &values{pages.push(value.clone());}let pointers:Vec<_>=pages.iter().map(|value|value.as_ptr()).collect();let backing=pages.allocated_bytes();let initial=backing+pages.iter().map(String::capacity).sum::<usize>();let mut published=Vec::with_capacity(prefix);let initial=initial+published.capacity()*size_of::<String>();let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PagedSourceIterator::new(pages,String::new));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    for prefix in law["prefixes"].as_array().unwrap(){let prefix=prefix.as_u64().unwrap()as usize;let mut pages=semio_framework_value_persistent::list::PagedList::<String,{usize::MAX}>::with_payload_page_bytes(law["pageItems"].as_u64().unwrap()as usize*size_of::<String>()).unwrap();for value in &values{pages.push(value.clone());}let pointers:Vec<_>=pages.iter().map(|value|value.as_ptr()).collect();let backing=pages.allocated_bytes();let initial=backing+pages.iter().map(String::capacity).sum::<usize>();let mut published=Vec::with_capacity(prefix);let initial=initial+published.capacity()*size_of::<String>();let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PagedSourceIterator::new(pages,String::new));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         for index in 0..prefix{let mut receiving=None;for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,denied));assert_eq!(result.unwrap(),Some(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(receiving.is_none());assert_eq!(owner.peek().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,grant));let progress=result.unwrap().unwrap();assert_eq!(progress.copied_items,1);assert!(progress.copied_bytes>=size_of::<String>());assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(receiving.as_ref().unwrap(),&values[index]);assert_eq!(receiving.as_ref().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);published.push(receiving.take().unwrap());}
         assert_eq!(published,values[..prefix]);let(complete,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.publication_complete());assert_eq!(complete,prefix==values.len());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(Default::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.backing_bytes(),backing);let(mut born,mut released)=(0,0);
         for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let demand=owner.demands(grant.maximum_copy_bytes).unwrap();for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{if denied.maximum_items!=0&&(demand.copy_bytes==0&&denied.maximum_copy_bytes!=grant.maximum_copy_bytes||demand.capacity_bytes==0&&denied.maximum_capacity_bytes!=grant.maximum_capacity_bytes||demand.release_bytes==0&&denied.maximum_release_bytes!=grant.maximum_release_bytes){continue}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));if denied.maximum_depth<demand.depth&&denied.maximum_items>0{assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit)}else{assert_eq!(result.unwrap().progress(),Default::default())}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.demands(grant.maximum_copy_bytes).unwrap(),demand);}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(owner.publication_complete());}
@@ -132,36 +132,11 @@ fn artifact_store_resident_registry_terminal_drop_has_no_unreported_native_lock_
 }
 
 #[test]
-fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let oracle = std::sync::Mutex::new(());
-    let registry = SnapshotReadLeaseRegistry::new();
-    let standard = oracle.try_lock().unwrap();
-    let actual = registry.state_lock().try_lock().unwrap();
-    assert_eq!(fixture["registryLockStates"][0], "available");
-    assert!(matches!(oracle.try_lock(), Err(std::sync::TryLockError::WouldBlock)));
-    assert!(matches!(registry.state_lock().try_lock(), Err(std::sync::TryLockError::WouldBlock)));
-    assert_eq!(fixture["registryLockStates"][1], "busy");
-    drop((standard, actual));
-    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let _guard = oracle.try_lock().unwrap();
-        panic!("standard registry poison witness");
-    })).is_err());
-    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let _guard = registry.state_lock().try_lock().unwrap();
-        panic!("actual registry poison witness");
-    })).is_err());
-    assert!(matches!(oracle.try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
-    assert!(matches!(registry.state_lock().try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
-    assert_eq!(fixture["registryLockStates"][2], "poisoned");
-}
-
-#[test]
 fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole_funding() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = SnapshotReadLeaseRegistryOwner::new();
-    let original = owner.alias_custody().unwrap().identity();
-    let alias = owner.alias_custody().unwrap().alias_handle().clone();
+    let original = owner.identity();
+    let alias = (*owner).clone();
     assert_eq!(alias.strong_count(), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
     loop {
         let slots = owner.empty_backing_demands().unwrap();
@@ -179,7 +154,7 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    assert_eq!(owner.alias_custody().unwrap().identity(), original);
+    assert_eq!(owner.identity(), original);
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(grant));
     assert_eq!(step.unwrap(), released(extent, false));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));

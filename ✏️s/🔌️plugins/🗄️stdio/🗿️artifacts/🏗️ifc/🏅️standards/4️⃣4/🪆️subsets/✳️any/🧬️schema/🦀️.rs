@@ -33,12 +33,10 @@ impl Default for IfcArtifact {
 }
 
 impl IfcArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> IfcSnapshot {
         IfcSnapshot { schema: self.schema.clone(), header: self.header.clone(), entities: self.entities.clone() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: IfcSnapshot) -> Self {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
@@ -46,7 +44,6 @@ impl IfcArtifact {
     /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never
     /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn spatial(&self) -> crate::standards::v4::subsets::any::io::spatial::SpatialAnalysis {
         let document = crate::standards::v4::subsets::any::schema::snapshot::to_part21_document(&self.to_snapshot());
         crate::standards::v4::subsets::any::io::spatial::analyze_spatial(&document)

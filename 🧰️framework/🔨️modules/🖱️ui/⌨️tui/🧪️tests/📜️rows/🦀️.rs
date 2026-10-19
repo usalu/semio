@@ -281,14 +281,14 @@ fn the_scroll_bar_draws_only_when_rows_overflow_and_the_thumb_tracks_the_offset(
 //#endregion ↕️Scroll Bar
 
 fn tree_fixture() -> Value {
-    parse(include_str!("../../🧫️fixtures/🌳️tree-emphasis/🔣️.json"), JsonMemberPolicy::Reject).expect("tree emphasis fixture")
+    parse(include_str!("../🧫️fixtures/🌳️tree-emphasis/🔣️.json"), JsonMemberPolicy::Reject).expect("tree emphasis fixture")
 }
 
-fn fixture_tree(root: &Value) -> crate::tui::tree::TreeState {
+fn fixture_tree(root: &Value) -> semio_framework_ui_tui_widgets::tree::TreeState {
     let object = root.as_object().unwrap();
-    crate::tui::tree::TreeState::new(object.get("items").and_then(Value::as_array).unwrap().iter().enumerate().map(|(id, item)| {
+    semio_framework_ui_tui_widgets::tree::TreeState::new(object.get("items").and_then(Value::as_array).unwrap().iter().enumerate().map(|(id, item)| {
         let item = item.as_array().unwrap();
-        crate::tui::tree::TreeItem::new(id.to_string(), item[0].as_str().unwrap(), item[1].as_u64().unwrap() as u16)
+        semio_framework_ui_tui_widgets::tree::TreeItem::new(id.to_string(), item[0].as_str().unwrap(), item[1].as_u64().unwrap() as u16)
     }).collect())
 }
 
@@ -315,7 +315,7 @@ fn tree_emphasis_fixture_matches_semantic_cells_and_independent_skia_color_plane
     let root = tree_fixture();
     assert_eq!(root.as_object().unwrap().get("emphasisAttribute").and_then(Value::as_str), Some("bold"));
     for appearance in [ui_styling::appearance::AppearanceName::Dark, ui_styling::appearance::AppearanceName::Light] {
-        for glyphs in [crate::tui::theme::GlyphSet::Unicode, crate::tui::theme::GlyphSet::Ascii] {
+        for glyphs in [crate::theme::GlyphSet::Unicode, crate::theme::GlyphSet::Ascii] {
             let mut theme = Theme::new(appearance);
             theme.set_glyphs(glyphs);
             for case in root.as_object().unwrap().get("cases").and_then(Value::as_array).unwrap() {
@@ -332,7 +332,7 @@ fn tree_emphasis_fixture_matches_semantic_cells_and_independent_skia_color_plane
                 let expected = case.get("rows").and_then(Value::as_array).unwrap();
                 let rect = Rect::new(0, 0, 20, expected.len() as u16);
                 let mut buf = CellBuffer::new(Size { width: rect.width, height: rect.height }, Cell::blank([0; 3], [0; 3]));
-                crate::tui::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
+                semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
                 let mut foreground = tiny_skia::Pixmap::new(u32::from(rect.width), u32::from(rect.height)).unwrap();
                 let mut background = foreground.clone();
                 assert_eq!(tree.count(), expected.len(), "{name}");
@@ -344,7 +344,7 @@ fn tree_emphasis_fixture_matches_semantic_cells_and_independent_skia_color_plane
                     let bg = match row.get("background").and_then(Value::as_str).unwrap() {
                         "active" => theme.role(Role::ActiveBase),
                         "hover" => theme.role(Role::HoverInteractive),
-                        _ => theme.surface(crate::tui::theme::Surface::Window),
+                        _ => theme.surface(crate::theme::Surface::Window),
                     };
                     let guides = row.get("guides").and_then(Value::as_array).unwrap();
                     let indent = tree.item(item).unwrap().depth * 2;
@@ -401,7 +401,7 @@ fn tree_clips_hover_guides_and_retains_keyboard_and_unfocused_selection() {
     let sentinel = Cell::blank([11, 22, 33], [44, 55, 66]);
     let mut buf = CellBuffer::new(Size { width: 8, height: 5 }, sentinel);
     let rect = Rect::new(2, 1, 3, 2);
-    crate::tui::tree::paint_tree(&tree, &theme, rect, &mut buf, false);
+    semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, rect, &mut buf, false);
     assert_eq!(tree.view.top(), 1);
     assert_eq!(buf.get(2, 2).unwrap().fg, theme.role(Role::BorderEmphasized));
     for y in 0..buf.size.height {
@@ -411,11 +411,11 @@ fn tree_clips_hover_guides_and_retains_keyboard_and_unfocused_selection() {
     }
     let wide = Rect::new(0, 0, 20, 8);
     let mut buf = CellBuffer::new(Size { width: 20, height: 8 }, sentinel);
-    crate::tui::tree::paint_tree(&tree, &theme, wide, &mut buf, false);
+    semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, wide, &mut buf, false);
     let label = buf.get(6, 2).unwrap();
     assert_eq!((label.fg, label.bg, label.attrs), (theme.role(Role::Foreground), theme.surface(crate::tui::theme::Surface::Window), crate::tui::cell::attr::BOLD));
-    assert_eq!(crate::tui::tree::tree_on_key(&mut tree, &crate::tui::event::KeyEvent { key: Key::Left, mods: 0 }), Some(crate::tui::widget::WidgetSignal::SelectionChanged(1)));
-    assert_eq!(crate::tui::tree::tree_on_key(&mut tree, &crate::tui::event::KeyEvent { key: Key::Right, mods: 0 }), Some(crate::tui::widget::WidgetSignal::SelectionChanged(2)));
+    assert_eq!(crate::tui::tree::tree_on_key(&mut tree, &semio_framework_ui_tui_core::event::KeyEvent { key: Key::Left, mods: 0 }), Some(semio_framework_ui_tui_widgets::widget::WidgetSignal::SelectionChanged(1)));
+    assert_eq!(crate::tui::tree::tree_on_key(&mut tree, &semio_framework_ui_tui_core::event::KeyEvent { key: Key::Right, mods: 0 }), Some(semio_framework_ui_tui_widgets::widget::WidgetSignal::SelectionChanged(2)));
 }
 
 #[test]
@@ -426,11 +426,11 @@ fn tree_hover_clears_over_filter_empty_space_and_scrollbar_and_updates_between_b
     let theme = Theme::new(ui_styling::appearance::AppearanceName::Dark);
     let rect = Rect::new(0, 0, 20, 9);
     let mut buf = CellBuffer::new(Size { width: 20, height: 9 }, Cell::blank([0; 3], [0; 3]));
-    crate::tui::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
+    semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
     assert!(crate::tui::tree::tree_set_hover(&mut tree, rect, Some(Pos { x: 6, y: 3 })));
     assert_eq!(tree.view.hover(), Some(2));
     assert!(crate::tui::tree::tree_set_hover(&mut tree, rect, Some(Pos { x: 6, y: 8 })));
-    crate::tui::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
+    semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
     assert_eq!(buf.get(4, 2).unwrap().fg, theme.role(Role::Foreground));
     assert_eq!(buf.get(2, 7).unwrap().fg, theme.role(Role::BorderEmphasized));
     assert!(crate::tui::tree::tree_set_hover(&mut tree, rect, Some(Pos { x: 0, y: 0 })));
@@ -439,7 +439,7 @@ fn tree_hover_clears_over_filter_empty_space_and_scrollbar_and_updates_between_b
     assert!(!crate::tui::tree::tree_set_hover(&mut tree, rect, Some(Pos { x: 6, y: 8 })));
     assert_eq!(tree.view.hover(), None);
     let short = Rect::new(0, 0, 20, 2);
-    crate::tui::tree::paint_tree(&tree, &theme, short, &mut buf, true);
+    semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, short, &mut buf, true);
     tree.view.set_hover(Some(0));
     assert!(crate::tui::tree::tree_set_hover(&mut tree, short, Some(Pos { x: 19, y: 1 })));
     assert_eq!(tree.view.hover(), None);
@@ -455,7 +455,7 @@ fn tree_filtered_ancestor_selection_keeps_its_foreground_without_hover() {
     let theme = Theme::new(ui_styling::appearance::AppearanceName::Dark);
     let rect = Rect::new(0, 0, 16, 2);
     let mut buf = CellBuffer::new(Size { width: 16, height: 2 }, Cell::blank([0; 3], [0; 3]));
-    crate::tui::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
+    semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, rect, &mut buf, true);
     let label = buf.get(2, 0).unwrap();
     assert_eq!((label.fg, label.bg), (theme.role(Role::ActiveForeground), theme.role(Role::ActiveBase)));
     assert_eq!(tree.selected_item(), Some(6));
@@ -474,12 +474,12 @@ fn tree_hover_path_labels_and_chevrons_are_bold_while_selected_and_unrelated_row
             tree.view.set_hover(tree.position_of(2));
             let rect = Rect::new(0, 0, 20, 8);
             let mut buf = CellBuffer::new(Size { width: 20, height: 8 }, Cell::blank([0; 3], [0; 3]));
-            crate::tui::tree::paint_tree(&tree, &theme, rect, &mut buf, focused);
+            semio_framework_ui_tui_widgets::tree::paint_tree(&tree, &theme, rect, &mut buf, focused);
             for item in 0..tree.len() {
                 let path = [0, 1, 2].contains(&item);
                 let expected = if item == selected {
-                    if focused { 0 } else { crate::tui::cell::attr::BOLD }
-                } else if path { crate::tui::cell::attr::BOLD } else { 0 };
+                    if focused { 0 } else { crate::cell::attr::BOLD }
+                } else if path { crate::cell::attr::BOLD } else { 0 };
                 let marker = tree.item(item).unwrap().depth * 2;
                 assert_eq!(buf.get(marker, item as u16).unwrap().attrs, expected, "{appearance:?} marker {item} selected={selected} focused={focused}");
                 assert_eq!(buf.get(marker + 2, item as u16).unwrap().attrs, expected, "{appearance:?} label {item} selected={selected} focused={focused}");

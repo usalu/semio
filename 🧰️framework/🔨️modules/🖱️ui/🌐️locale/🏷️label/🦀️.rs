@@ -29,7 +29,6 @@ impl Label {
         &self.0
     }
 
-    // 🚫️async: E1 pure accessor consumed by sync-only std call sites (Option::map fn-value) — see R9
     pub fn into_string(self) -> String {
         self.0
     }
@@ -100,7 +99,6 @@ mod retirement;
 
 impl LocalizedLabel {
     /// 🗺️ Builds the full matrix from a resolver called once per (terminology, locale) cell.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
     pub fn from_fn(mut resolve: impl FnMut(Terminology, Locale) -> String) -> Self {
         let cells = std::array::from_fn(|ti| {
             let terminology = Terminology::ALL[ti];
@@ -110,7 +108,6 @@ impl LocalizedLabel {
     }
 
     /// 📊️ Locale-invariant runtime data (fixture names, proper nouns) broadcast to every cell.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
     pub fn data(value: impl Into<String>) -> Self {
         let value = value.into();
         Self::from_fn(|_, _| value.clone())
@@ -120,7 +117,6 @@ impl LocalizedLabel {
     /// per-locale translation) — for the framework's own built-in manifest text (history actions,
     /// panel tabs, …), which has no app-declared terminology axis. The exhaustive match on `Locale`
     /// (no catch-all) means adding a locale breaks every call site here until translated.
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
     pub fn native(en: &str, de: &str) -> Self {
         Self::from_fn(|_terminology, locale| {
             match locale {
@@ -131,14 +127,12 @@ impl LocalizedLabel {
         })
     }
 
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (Serialize/Deserialize) — see R9
     pub fn resolve(&self, terminology: Terminology, locale: Locale) -> &str {
         &self.cells[terminology.index()][locale.index()]
     }
 
     /// ♻️ Every cell as an owned, mutable string — the retained close cursor pages an oversized
     /// history label cell by cell, exactly as it pages a plain retained `String` field.
-    // 🚫️async: E1 pure accessor consumed by the sync close-cursor loop — see R9
     pub fn texts_mut(&mut self) -> impl Iterator<Item = &mut String> {
         self.cells.iter_mut().flatten().map(Cow::to_mut)
     }
@@ -177,7 +171,6 @@ impl LocalizedLabel {
     /// artifact's fixed retained envelope pays for every cell, not for one string: a caller that
     /// used to admit `label.len()` admits this instead, and never under-counts the envelope by
     /// pricing one locale.
-    // 🚫️async: E1 pure accessor consumed by the sync retained-footprint admission — see R9
     pub fn retained_bytes(&self) -> usize {
         self.cells.iter().flatten().map(|cell| cell.len()).sum()
     }
@@ -280,7 +273,7 @@ impl FromValue for LocalizedLabel {
         let cells = label_cells(&value)?;
         Ok(Self { cells: cells.map(|row| row.map(|text| Cow::Owned(text.to_string()))) })
     }
-    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.checkpoint()?;
         control.scoped_depth(64, |control| control.scoped_stage(|control| {
             control.begin_stage(Terminology::COUNT * Locale::COUNT)?;

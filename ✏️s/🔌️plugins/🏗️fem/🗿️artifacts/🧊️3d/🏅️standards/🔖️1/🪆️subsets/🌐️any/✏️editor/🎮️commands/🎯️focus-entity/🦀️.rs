@@ -1,6 +1,5 @@
 //! 🎯️ Fem3d play app command — `focus-entity`: aims the addressed window's orbit at one entity.
 
-use crate::editor::fem3d::commands::set_camera::self;
 
 use crate::editor::fem3d::commands::set_camera::SetCamera;
 use semio_s_artifact_fem_3d_editor_interaction::editor::fem3d::interaction::fem3d_entity_point;
@@ -16,6 +15,7 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
+use crate::editor::fem3d::commands::set_camera;
 
 type Fem3dSnapshot = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 

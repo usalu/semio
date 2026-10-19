@@ -1,5 +1,5 @@
 import { handleIncomingRequest } from "./http.js";
-/** A fetch-like browser client for invoking an in-memory WASI HTTP handler. */
+/** 📥️ A fetch-like browser client for invoking an in-memory WASI HTTP handler. */
 export class InMemoryHttpClient {
     #handler;
     constructor(handler) {

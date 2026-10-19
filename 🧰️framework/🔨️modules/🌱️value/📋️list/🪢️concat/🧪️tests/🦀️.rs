@@ -1,7 +1,8 @@
 //! 🧪️ Real original vectors retain payload pointers and close every quoted physical allocation.
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::retirement::controlled::ControlledRetirement;
-#[derive(crate::RetireOwned)]
+#[derive(crate::RetireOwned)]#[value(crate="crate")]
 struct Row{ordinal:usize,text:String}
 impl Clone for Row{fn clone(&self)->Self{panic!("original concatenation must never clone payload rows")}}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
@@ -37,7 +38,7 @@ fn check(chunks:Vec<Vec<String>>,expected:Vec<String>,cut:Option<usize>){
 }
 #[test]
 fn original_vector_concat_preserves_original_rows_and_cancelled_custody(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();for cut in std::iter::once(None).chain(law["cancelCuts"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../🪢️concat/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();for cut in std::iter::once(None).chain(law["cancelCuts"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize))){
   let chunks=law["chunks"].as_array().unwrap().iter().map(|rows|rows.as_array().unwrap().iter().map(|row|row.as_str().unwrap().to_string()).collect()).collect();let expected=law["expected"].as_array().unwrap().iter().map(|row|row.as_str().unwrap().to_string()).collect();check(chunks,expected,cut);
  }
 }

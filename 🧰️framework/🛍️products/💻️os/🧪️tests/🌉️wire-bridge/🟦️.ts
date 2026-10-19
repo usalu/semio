@@ -65,10 +65,6 @@ export async function registerWireBridgeTests(vitest: Vitest, dependencies: Back
       expect(parseDocumentBackboneMessage(response.event.message).envelopes[0]?.timestamp.physical_ms).toBe(0xffff_ffff_ffff_ffffn);
     });
 
-    // 🎨️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
-    // `stampSession` is the ONE place `peer.color`/`peer.surface` are ever filled — shells never set
-    // them themselves. Overwrites whatever the caller handed in, and derives `surface` from the
-    // document's own hub binding (`null`/absent for a folder-only document).
     it("stampSession fills color/surface from actor state, overwriting whatever the caller set", () => {
       const installedTarget = parseDocumentExecutionTargetLeaseFieldsV1({
         schema: "semio.os.document-execution-target-lease/v1",

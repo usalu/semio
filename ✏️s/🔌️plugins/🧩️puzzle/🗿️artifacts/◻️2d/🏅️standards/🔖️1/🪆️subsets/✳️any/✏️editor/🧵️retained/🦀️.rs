@@ -21,7 +21,8 @@ use crate::editor::puzzle2d::snapshot::puzzle2d_scene_with;
 use crate::editor::puzzle2d::snapshot::Puzzle2dEditor;
 use crate::editor::puzzle2d::{interaction, recorder, snapshot};
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GENERIC_TOOL_IDS};
-use semio_s_artifact_puzzle_2d_unit_tests::{editor::puzzle2d::snapshot::Puzzle2dCommand, editor::puzzle2d::engine::board_host::puzzle_board_host};
+use crate::mirror::editor::puzzle2d::snapshot::Puzzle2dCommand;
+use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::board_host::puzzle_board_host;
 use semio_framework_value::scratch_hash::{ScratchHashMap,ScratchHashSet};
 
 

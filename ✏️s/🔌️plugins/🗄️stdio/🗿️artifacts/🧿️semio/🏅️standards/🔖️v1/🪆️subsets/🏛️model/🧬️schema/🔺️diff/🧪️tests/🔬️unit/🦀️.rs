@@ -14,7 +14,6 @@ async fn diff_codec_text_binary_roundtrip_law() {
     let decoded = SemioModelDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
     assert_eq!(decoded, d);
 
-    // Empty diff also round-trips (the common "no change" case every artifact's codec hits).
     let empty = SemioModelDiff::default();
     assert_eq!(empty.print_diff(), "");
     assert_eq!(SemioModelDiff::parse_diff("").unwrap(), empty);

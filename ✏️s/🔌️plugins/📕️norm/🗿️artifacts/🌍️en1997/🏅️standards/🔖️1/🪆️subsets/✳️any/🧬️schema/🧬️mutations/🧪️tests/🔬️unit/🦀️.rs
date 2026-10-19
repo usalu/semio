@@ -60,7 +60,6 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
 async fn every_variant_round_trips_via_inverse() {
     let base = compliant_demo();
     for mutation in every_mutation() {
-        // Skip pure removes/inserts against empty collections that would fail identity round-trip on default empty
         round_trip(&base, &mutation);
     }
 }

@@ -1,13 +1,21 @@
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use super::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
-use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
+use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example::SetActiveExample;
 use crate::context::dispatch;
 use crate::context::fem2d_app;
 use semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dCommand;
-use store::os_store::serialization::ArtifactDsl;
+use pack::snapshot::ArtifactDsl;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactView;
+#[cfg(test)] use semio_framework_plugin::component::NoConfig;
+#[cfg(test)] use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+#[cfg(test)] use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::patch_support::PatchSupport;
+#[cfg(test)] use semio_framework_plugin::component::Emit;
+#[cfg(test)] use semio_framework_plugin::component::NoConfigMutation;
+#[cfg(test)] use semio_framework::Fault;
 
 fn demo() -> Fem2dSnapshot {
-    Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
 }
 
 fn emit(snapshot: &Fem2dSnapshot, payload: PatchSupport) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
@@ -54,7 +62,7 @@ async fn patch_support_restraining_an_already_restrained_dof_emits_nothing_2d() 
 /// 👥️ Two inspector commands authored on one base compose their independent intent in either replay order.
 #[test]
 fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
-    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
+    let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
     let first=emit(&base,PatchSupport{id:"s1".into(),field:"tx".into(),value:"true".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchSupport{id:"s1".into(),field:"ty".into(),value:"true".into()}).unwrap().artifact_mutations.remove(0);
     let first_then_second=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;

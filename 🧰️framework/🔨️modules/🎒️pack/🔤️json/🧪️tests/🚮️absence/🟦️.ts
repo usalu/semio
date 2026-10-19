@@ -1,7 +1,7 @@
 /** 🚮️ Runs every canonical JSON ownership law with specialization roots physically absent. */
 import { expect, test } from "bun:test";
-import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 
 import contract from "../../🧪️tests/🧫️fixtures/🚮️absence/🔣️.json";
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -20,9 +20,9 @@ test("the complete JSON reference route executes with products, S, Hub and ticke
       cpSync(resolve(root, owner), target, {recursive: true, dereference: false, filter: (path) => { if (basename(path) === "node_modules") return false; if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path); return true; }});
     }
     for (const dependency of contract.testDependencies) {
-      const target = resolve(workspace, "node_modules", dependency);
-      mkdirSync(resolve(target, ".."), {recursive: true});
-      cpSync(resolve(root, "node_modules", dependency), target, {recursive: true, dereference: true});
+      let store = dirname(realpathSync(resolve(root, "node_modules", dependency)));
+      while (basename(store) !== "node_modules") store = dirname(store);
+      cpSync(store, resolve(workspace, "node_modules"), {recursive: true, dereference: true, force: false, filter: (path) => basename(path) !== ".bin"});
     }
     for (const absent of contract.absentRoots) expect(existsSync(resolve(workspace, absent)), absent).toBe(false);
     expect(existsSync(resolve(workspace, ".🧬semio"))).toBe(false);

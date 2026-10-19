@@ -22,8 +22,6 @@ async fn editor_declares_every_window() {
     for id in [structure::WINDOW_KIND_ID, zones::WINDOW_KIND_ID, simulation::WINDOW_KIND_ID, model_window::WINDOW_KIND_ID] {
         assert!(def.window_kinds.iter().any(|window| window.id == id), "missing window kind {id}");
     }
-    // 🧊️ The 3d window is the one bound to the shared selection/hover domain — that binding is what
-    // makes a viewport pick and a tree pick the same framework event.
     let world = def.window_kinds.iter().find(|window| window.id == model_window::WINDOW_KIND_ID).expect("the 3d model window");
     assert!(world.interactions.iter().any(|reference| reference.as_str() == ENERGY_MODEL_INTERACTION_DOMAIN), "the 3d window is not bound to the energy interaction domain: {:?}", world.interactions);
     assert!(def.interactions.iter().any(|domain| domain.id == ENERGY_MODEL_INTERACTION_DOMAIN), "the domain itself is declared exactly once on the app");
@@ -66,7 +64,6 @@ async fn document_verbs_publish_to_the_artifact_lane_settings_to_the_config_lane
         let expected = match contract.tool_id {
             id if ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&id) => ArtifactToolPublicationLane::Artifact,
             simulation::SET_SETTINGS_ACTION_ID | simulation::SET_RESULT_FIELD_ACTION_ID => ArtifactToolPublicationLane::Config,
-            // 🎥️ The 3d window's camera writes ONE window instance's own retained state.
             model_window::SET_CAMERA_ACTION_ID => ArtifactToolPublicationLane::WindowConfig,
             _ => ArtifactToolPublicationLane::HostOnly,
         };

@@ -40,7 +40,7 @@ pub struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
     state_retirement: Option<ControlledRetirement<O::State>>,
     pub(super) digest: Option<[u8; 32]>,
     hasher: semio_framework_hash::Hasher,
-    pub(super) native: Option<semio_framework_value::native_decoding::NativeDecodeContinuation>,
+    pub(super) native: Option<semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation>,
 }
 
 impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
@@ -105,10 +105,10 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         *self.segment = Some(store::mounted_pack_rt::RetainedPackSegmentCursor::try_new(limits(), maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.catalog = Some(store::mounted_pack_rt::RetainedPackCatalogCursor::try_new(limits(), maximum_items, inner_len, inner_len, maximum_items, maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.value = Some(store::mounted_pack_rt::RetainedValueCursor::try_new(limits(), maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
-        let mut accepted = |progress: semio_framework_value::native_decoding::NativeDecodeProgress| progress.completed <= grant.maximum_items;
+        let mut accepted = |progress: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| progress.completed <= grant.maximum_items;
         let mut native = match self.native.take() {
-            Some(receipt) => semio_framework_value::NativeDecodeControl::resume(receipt, &mut accepted).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?,
-            None => semio_framework_value::NativeDecodeControl::new_retained(&mut accepted),
+            Some(receipt) => semio_framework_value_native_owned::native_decoding::NativeDecodeControl::resume(receipt, &mut accepted).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?,
+            None => semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted),
         };
         native.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
         let typed = native.scoped_depth(grant.maximum_depth, |native| RetainedWindowConfigTypedState::<O>::new(native).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "Window config requires its actual authored metadata producer")));

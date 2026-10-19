@@ -1,0 +1,18 @@
+{
+ "ws": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/Cargo.toml",
+ "old_name": "semio-s-artifact-stdio-pdf-diff",
+ "old_pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+ "mirror_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust/🪞️mirror/🦀️.rs",
+ "chunks": [
+  "viewer"
+ ],
+ "subtree": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf",
+ "script": null,
+ "new": {
+  "name": "semio-s-artifact-stdio-pdf-diff-surfaces",
+  "dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🪟️surfaces",
+  "emoji": "🪟️",
+  "doc": "The viewer config and presence schema mounts of `semio-s-artifact-stdio-pdf`'s diff, held by their own crate so the diff crate stays inside the source gate.",
+  "desc": "Stdio pdf viewer surface schema mounts of the diff"
+ }
+}

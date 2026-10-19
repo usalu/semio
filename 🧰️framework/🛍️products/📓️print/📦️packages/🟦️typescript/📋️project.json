@@ -1,9 +1,27 @@
 {
   "name": "@semio-tech/print",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/**/*"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check"
@@ -32,6 +50,13 @@
     },
     "generate-viz": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate viz"
@@ -39,19 +64,21 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
       },
       "inputs": [
+        "default",
+        "^default",
+        "reads",
         "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
-        {
-          "runtime": "bun --version"
-        }
+        { "runtime": "bun --version" }
       ],
       "outputs": []
     },
@@ -81,6 +108,13 @@
     },
     "build": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🖨️tectonic-template-compilation/📜️script.ts complete templates",
@@ -108,6 +142,15 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
       "dependsOn": ["build"],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
@@ -159,6 +202,11 @@
     },
     "build-viz": {
       "executor": "repo:script",
+      "inputs": [
+        "production",
+        "^production",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
@@ -188,6 +236,12 @@
     },
     "test-viz": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
@@ -263,7 +317,14 @@
     },
     "test-viz-fixtures": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test viz fixtures",
@@ -325,7 +386,15 @@
         }
       },
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        { "dependentTasksOutputFiles": "**/*" }
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test native-grammar",
@@ -339,15 +408,27 @@
     },
     "generate-font-metrics": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ../../🔨️modules/🔤print-font-catalog/📜️script.ts metrics"
       },
-      "cache": false
+      "cache": true
     },
     "test-measurement": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "options": {

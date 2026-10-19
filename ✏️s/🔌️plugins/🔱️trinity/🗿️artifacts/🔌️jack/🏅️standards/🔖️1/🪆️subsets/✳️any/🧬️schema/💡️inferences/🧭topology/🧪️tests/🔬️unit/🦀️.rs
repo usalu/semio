@@ -26,7 +26,6 @@ fn edge(id: &str, source: &str, target: &str) -> Edge {
 }
 
 fn chain_snapshot() -> JackSnapshot {
-    // root -e1- mid -e2- leaf: a 3-node chain.
     JackSnapshot::with_content::<crate::test_support::FixtureComposition>("trinity.graph".into(), "chain".into(), None, Default::default(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
 }
 //#endregion 🧸️Fixtures

@@ -1,3 +1,4 @@
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { createHash } from "node:crypto";

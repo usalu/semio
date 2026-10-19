@@ -140,12 +140,10 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioTextBuilderConstruction {
         /// 🏗️ Starts a fresh, empty text document.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: SemioTextSnapshot::default() }
         }
         /// 🏗️ Appends one run, in order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_run(mut self, language: impl Into<String>, content: impl Into<String>, marks: Vec<SemioTextMark>) -> Self {
             self.snapshot.runs.push(SemioTextRun { language: language.into(), content: content.into(), marks });
             self

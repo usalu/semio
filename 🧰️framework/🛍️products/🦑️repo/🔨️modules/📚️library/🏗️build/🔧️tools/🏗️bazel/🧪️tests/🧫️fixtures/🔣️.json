@@ -548,5 +548,309 @@
     "captured-planner",
     "launch",
     "build"
-  ]
+  ],
+  "namedInputExpansion": {
+    "graph": {
+      "version": 1,
+      "projects": {
+        "app": {
+          "name": "app",
+          "root": "app",
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/source.ts"
+            ],
+            "consumer": [
+              "default"
+            ],
+            "cycleA": [
+              "cycleB"
+            ],
+            "cycleB": [
+              "cycleA"
+            ]
+          },
+          "targets": {}
+        },
+        "generator": {
+          "name": "generator",
+          "root": "generator",
+          "namedInputs": {
+            "default": [
+              "generatorSource"
+            ],
+            "generatorSource": [
+              "{projectRoot}/render.ts"
+            ]
+          },
+          "targets": {}
+        },
+        "library": {
+          "name": "library",
+          "root": "library",
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/lib.ts"
+            ]
+          },
+          "targets": {}
+        }
+      },
+      "dependencies": [
+        {
+          "source": "app",
+          "target": "generator",
+          "type": "static"
+        },
+        {
+          "source": "app",
+          "target": "library",
+          "type": "static"
+        }
+      ],
+      "namedInputs": {
+        "shared": [
+          "{workspaceRoot}/shared.ts"
+        ]
+      }
+    },
+    "files": {
+      "app/source.ts": "app source\n",
+      "generator/render.ts": "generator first\n",
+      "library/lib.ts": "library source\n",
+      "shared.ts": "shared source\n",
+      "gen/api.ts": "generated output must not be adopted\n"
+    },
+    "mutation": {
+      "path": "generator/render.ts",
+      "after": "generator changed\n"
+    },
+    "cases": [
+      {
+        "id": "explicit-producer-array",
+        "inputs": [
+          "consumer",
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ]
+          }
+        ],
+        "expected": [
+          "app/source.ts",
+          "generator/render.ts"
+        ]
+      },
+      {
+        "id": "explicit-producer-string",
+        "inputs": [
+          {
+            "input": "generatorSource",
+            "projects": "generator"
+          }
+        ],
+        "expected": [
+          "generator/render.ts"
+        ]
+      },
+      {
+        "id": "explicit-project-union",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator",
+              "library"
+            ]
+          }
+        ],
+        "expected": [
+          "generator/render.ts",
+          "library/lib.ts"
+        ]
+      },
+      {
+        "id": "self-named-object",
+        "inputs": [
+          {
+            "input": "consumer"
+          }
+        ],
+        "expected": [
+          "app/source.ts"
+        ]
+      },
+      {
+        "id": "same-project-name",
+        "inputs": [
+          {
+            "input": "consumer",
+            "projects": "app"
+          }
+        ],
+        "expected": [
+          "app/source.ts"
+        ]
+      },
+      {
+        "id": "caret-dependencies",
+        "inputs": [
+          "^default"
+        ],
+        "expected": [
+          "generator/render.ts",
+          "library/lib.ts"
+        ]
+      },
+      {
+        "id": "object-dependencies",
+        "inputs": [
+          {
+            "input": "default",
+            "dependencies": true
+          }
+        ],
+        "expected": [
+          "generator/render.ts",
+          "library/lib.ts"
+        ]
+      },
+      {
+        "id": "shared-named-input",
+        "inputs": [
+          {
+            "input": "shared",
+            "projects": [
+              "generator"
+            ]
+          }
+        ],
+        "expected": [
+          "shared.ts"
+        ]
+      },
+      {
+        "id": "explicit-project-dependencies-false",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ],
+            "dependencies": false
+          }
+        ],
+        "expected": [
+          "generator/render.ts"
+        ]
+      },
+      {
+        "id": "runtime-preserved",
+        "inputs": [
+          "consumer",
+          {
+            "env": "SEMIO_BUILD_MODE"
+          },
+          {
+            "runtime": "bun --version"
+          }
+        ],
+        "expected": [
+          "app/source.ts",
+          {
+            "env": "SEMIO_BUILD_MODE"
+          },
+          {
+            "runtime": "bun --version"
+          }
+        ]
+      },
+      {
+        "id": "unknown-project",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "missing"
+            ]
+          }
+        ],
+        "error": "Unknown build input project"
+      },
+      {
+        "id": "unknown-explicit-name",
+        "inputs": [
+          {
+            "input": "missing",
+            "projects": [
+              "generator"
+            ]
+          }
+        ],
+        "error": "Unknown build input group"
+      },
+      {
+        "id": "unknown-caret-name",
+        "inputs": [
+          "^missing"
+        ],
+        "error": "Unknown build input group"
+      },
+      {
+        "id": "named-cycle",
+        "inputs": [
+          "cycleA"
+        ],
+        "error": "Build input group cycle"
+      },
+      {
+        "id": "empty-projects",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": []
+          }
+        ],
+        "error": "Closed build named input"
+      },
+      {
+        "id": "conflicting-selection",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ],
+            "dependencies": true
+          }
+        ],
+        "error": "Closed build named input"
+      },
+      {
+        "id": "unknown-input-field",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ],
+            "foreign": true
+          }
+        ],
+        "error": "Closed build named input"
+      },
+      {
+        "id": "nonboolean-dependencies",
+        "inputs": [
+          {
+            "input": "default",
+            "dependencies": "yes"
+          }
+        ],
+        "error": "Closed build named input"
+      }
+    ],
+    "overDepth": 129
+  }
 }

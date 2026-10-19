@@ -65,8 +65,6 @@ pub fn register_default_imperative_contributions(provider: fn() -> String) {
 }
 
 fn ensure_bootstrapped() {
-    // 🚪️ `OnceLock::get_or_init`'s closure is sync-only, so the exactly-once guard is a manual
-    // check-then-set here instead — benign under the single-threaded guest executor (R3).
     if BOOTSTRAPPED.get().is_some() {
         return;
     }

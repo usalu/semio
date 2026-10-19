@@ -1,2 +1,2 @@
-/** demo gltf */
+/** 🎬️ demo gltf */
 export const ID = 'demo';

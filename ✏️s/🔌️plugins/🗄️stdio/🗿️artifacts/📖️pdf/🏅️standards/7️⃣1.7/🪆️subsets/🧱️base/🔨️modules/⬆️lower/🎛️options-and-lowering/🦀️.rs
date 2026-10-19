@@ -73,21 +73,18 @@ pub struct LoweredDocument {
 }
 
 impl<'a> Lowering<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(snapshot: &'a PdfSnapshot, first_number: u32, options: LowerOptions) -> PResult<Self> {
         let artifacts=NativePdfArtifactResources::from_objects(&snapshot.objects);
         let codecs = snapshot.fonts.iter().map(|font| Ok((font.id.clone(), FontCodec::new(font,&artifacts)?))).collect::<PResult<_>>()?;
         Ok(Self { snapshot, options, objects: Vec::new(), next: first_number.max(1), refs: HashMap::new(), annotation_refs: Vec::new(), field_refs: Vec::new(), widget_parents: HashMap::new(), codecs, artifacts, used_glyphs: HashMap::new() })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn reserve(&mut self) -> ObjRef {
         let reference = ObjRef { num: self.next, gen: 0 };
         self.next += 1;
         reference
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn set(&mut self, reference: ObjRef, value: PdfObject) {
         match self.objects.iter_mut().find(|object| object.id == reference) {
             Some(object) => object.value = value,
@@ -95,20 +92,17 @@ impl<'a> Lowering<'a> {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn reference(&self, category: Category, id: &str) -> Option<PdfObject> {
         self.refs.get(&(category, id.to_string())).map(|reference| PdfObject::Ref(*reference))
     }
 
     /// 🗜️ A content stream object for `ops`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn content_stream(&mut self, ops: &[PdfOp]) -> PResult<PdfObject> {
         let bytes = print_content(ops, self)?;
         Ok(if self.options.compress { stream(Vec::new(), bytes) } else { raw_stream(Vec::new(), bytes) })
     }
 
     /// 📚 The `/Resources` dictionary a content stream needs.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(crate) fn resources_for(&mut self, ops: &[PdfOp]) -> PdfObject {
         let references = content_references(ops);
         let mut dict = Vec::new();
@@ -130,7 +124,6 @@ impl<'a> Lowering<'a> {
     }
 
     /// 🔢 Records the glyphs `ops` show per font (for subsetting).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn record_glyphs(&mut self, ops: &[PdfOp]) {
         let mut current: Option<String> = None;
         let mut stack: Vec<Option<String>> = Vec::new();
@@ -252,7 +245,6 @@ pub fn lower_document_headless(snapshot: &PdfSnapshot, expected_pages: usize, op
 impl Lowering<'_> {
     /// 🆔 Reserves one reference per interactive-form field (depth-first) and notes which field
     /// every widget annotation belongs to.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn reserve_fields(&mut self) {
         fn walk(lowering: &mut Lowering<'_>, fields: &[PdfFormField]) {
             for field in fields {
@@ -271,7 +263,6 @@ impl Lowering<'_> {
 
     /// 📚 The page-tree root's `/Resources`: every document-level resource, in snapshot order —
     /// what keeps unreferenced resources (and their order) alive across a write.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn all_resources(&self) -> PdfObject {
         let snapshot = self.snapshot;
         let mut dict = Vec::new();
@@ -292,7 +283,6 @@ impl Lowering<'_> {
     }
 
     /// 🆔 Reserves one reference per document-level resource id.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn reserve_resources(&mut self) {
         let snapshot = self.snapshot;
         for (category, ids) in [

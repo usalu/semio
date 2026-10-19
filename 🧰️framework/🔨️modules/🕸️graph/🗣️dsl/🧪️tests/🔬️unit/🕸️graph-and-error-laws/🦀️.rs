@@ -200,9 +200,6 @@ fn graph_dsl_error_display_messages() {
 #[test]
 fn parse_error_on_unexpected_char() {
     block_on_test(async {
-        // `{`/`}` are valid tokens in `dsl_core`'s shared alphabet (map/object-literal braces)
-        // but aren't part of Jack's own grammar (no map literals) — Jack rejects them itself,
-        // hence `UnexpectedChar` rather than a `dsl_core`-surfaced `Lex` error.
         let err = parse("MATCH (a:x) { WHERE").unwrap_err();
         assert!(matches!(err, GraphDslError::UnexpectedChar('{')));
     });
@@ -211,8 +208,6 @@ fn parse_error_on_unexpected_char() {
 #[test]
 fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
     block_on_test(async {
-        // `?` isn't lexable by `dsl_core` at all (unlike `{`/`}` above, which lex fine but aren't
-        // valid Jack syntax) — `os_dsl::lex` itself fails, surfaced verbatim as `Lex`.
         let err = parse("MATCH (a:x) ? WHERE").unwrap_err();
         assert!(matches!(err, GraphDslError::Lex(_)));
         assert!(err.to_string().contains("unexpected character '?'"), "got: {err}");
@@ -222,8 +217,6 @@ fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
 #[test]
 fn parse_error_on_lone_bang_reports_lex_error() {
     block_on_test(async {
-        // A stray `!` not followed by `=` isn't a token in Jack's grammar at all (`dsl_core` has
-        // no relational operators, and Jack only special-cases `!=`).
         let err = parse("MATCH (a:x) WHERE a.p ! 1").unwrap_err();
         assert!(matches!(err, GraphDslError::Lex(_)));
     });

@@ -1,8 +1,10 @@
 //! ↩️ Restores exactly the geometry field mask authored by the central forward diff.
 use super::MoveSelection;
 use crate::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode;
-use crate::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid;
+use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode;
+use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceNode> + From<ReplaceSolid>>(payload: &MoveSelection, base: &Fem3dSnapshotValue) -> Result<Vec<Op>, semio_framework_value::ValueError> {

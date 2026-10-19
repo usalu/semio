@@ -35,10 +35,6 @@ export function testResumableQueryOracle(): void {
       database.run("CREATE TABLE edges (id TEXT PRIMARY KEY, kind TEXT, source TEXT, target TEXT)");
       for (const node of fixture.graph.nodes) database.run("INSERT INTO nodes (id, kind, name) VALUES (?, ?, ?)", [node.id, node.kind, node.name]);
       for (const edge of fixture.graph.edges) database.run("INSERT INTO edges VALUES (?, ?, ?, ?)", [edge.id, edge.kind, endpointNode(edge.source), endpointNode(edge.target)]);
-      // 🧭️ The six fixture cases carry four different oracle shapes, so the imported JSON's element
-      // type declares every statement OPTIONAL. `"mutate" in oracle` answers the key's presence but
-      // leaves `oracle.mutate` `string | undefined`; reading it through a local binding is what makes
-      // the absent case a branch the compiler can see rather than an `undefined` handed to SQLite.
       const oracle: Partial<Record<"cascade" | "mutate" | "select" | "nodes" | "edges", string>> = test.oracle;
       if (oracle.cascade !== undefined) database.run(oracle.cascade);
       const mutations = oracle.mutate === undefined ? 0 : database.run(oracle.mutate).changes;

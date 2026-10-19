@@ -185,12 +185,10 @@ pub struct IfcArgsDiff {
 }
 
 impl IfcArgsDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
@@ -210,7 +208,6 @@ impl IfcArgsDiff {
         next
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         let (removed, modified, added) = absorb_indexed_collection(
             std::mem::take(&mut self.removed),
@@ -227,7 +224,6 @@ impl IfcArgsDiff {
         self.added = added.into_iter().map(|(index, value)| IfcArgAdded { index, value }).collect();
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn inverse(&self, base_args: &[IfcValue]) -> Self {
         let (removed, modified, added) =
             rewind_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.value.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(), base_args, |_d, item| item.clone());
@@ -252,12 +248,10 @@ pub struct IfcEntityDiff {
 }
 
 impl IfcEntityDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &IfcEntity) -> IfcEntity {
         let mut next = base.clone();
         if let Some(v) = &self.name {
@@ -272,12 +266,10 @@ impl IfcEntityDiff {
         next
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &IfcEntity) -> Self {
         Self { name: self.name.as_ref().map(|_| base.name.clone()), args: self.args.as_ref().map(|d| d.inverse(&base.args)), complex: self.complex.as_ref().map(|_| base.complex.clone()) }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
@@ -338,12 +330,10 @@ impl IfcEntitiesDiff {
         Self { removed: removed.into_iter().map(|(_, id)| id).collect(), modified, added }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[IfcEntity]) -> Vec<IfcEntity> {
         let mut entities: Vec<IfcEntity> = base.to_vec();
         if !self.removed.is_empty() {
@@ -409,11 +399,6 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
         })
         .collect();
 
-    // 🧮️ `d1`'s adds carry positions in the INTERMEDIATE list `d2` was diffed against; `d2`'s own
-    // adds occupy their positions in the FINAL list. Transporting the former through the latter
-    // (the index-keyed sibling `absorb_indexed_collection` already does this via
-    // `unrank_excluding`) is what keeps two inserts at one position from collapsing onto the same
-    // final index — which `apply`'s own `invalid-add-target` guard rejects outright.
     let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|entry| entry.index).collect();
     added2_index_sorted.sort_unstable();
     for entry in &mut merged_added {
@@ -423,14 +408,14 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
     for dm in d2.modified {
         if added_ids.contains(&dm.id) {
             if annihilated.contains(&dm.id) {
-                continue; // modified-of-annihilated-add: moot.
+                continue;
             }
             if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
                 a.entity = apply_entity_diff_to_added(&dm.diff, &a.entity);
             }
         } else {
             if merged_removed.contains(&dm.id) {
-                continue; // modified-of-removed: illegal, ignored (matches apply()'s no-op rule).
+                continue;
             }
             if let Some(existing) = merged_modified.iter_mut().find(|m| m.id == dm.id) {
                 existing.diff.absorb(dm.diff.clone());

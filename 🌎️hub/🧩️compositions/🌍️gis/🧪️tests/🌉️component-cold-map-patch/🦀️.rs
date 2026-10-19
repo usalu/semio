@@ -185,8 +185,6 @@ impl RetainedSurface {
                 }
                 UiPatchOp::SetChildren { id, children } => self.node_mut(*id).children = children.clone(),
                 UiPatchOp::Remove { id } => self.remove_subtree(*id),
-                // 🎨️ Layout, style, activity, accessibility, bindings, menu and the root pointer are
-                // presentation, not scene content: they carry no surface doc and no lane payload.
                 _ => {}
             }
         }

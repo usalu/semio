@@ -82,7 +82,7 @@ pub use crate::channel::{
 pub use crate::command::{
     RetainedMutation, RetainedMutationPreparation, RetainedMutationLeaf, RetainedMutationLeafPreparation, RetainedMutationOwner, RetainedMutationCloseContext, RetainedFieldPreparation,    RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field, RetainedByteSpan, RetainedKeyLookup, RetainedKeyMatch, RetainedRowPatch, RetainedRowPatchFields, RetainedPatchSource, RetainedDiagnosticSpec, RetainedDiagnosticTarget, RetainedDiagnosticPreparation, RetainedMutationDecisionStep, RetainedMutationInverseStep, RetainedMutationAdvance, RetainedMutationDecision, RetainedDiff, RetainedDiffApply, RetainedDiffOwner, RetainedDiffAdmission, RetainedDiffPreflightAdvance, RetainedDiffPreflightStep, retained_diff_birth_demand, begin_retained_diff, preflight_retained_diff, commit_retained_diff, retained_mutation_birth_demand, begin_retained_mutation, decide_retained_mutation, inverse_retained_mutation, retained_mutation_demand_fits,
 };
-pub use crate::os_spr::command::{
+pub use crate::command::{
     apply_diff_cold, apply_diff_cold_into, indexed_apply, is_approved_verb, mutation_descriptor, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures,
     named_apply, outcome_code_level, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,

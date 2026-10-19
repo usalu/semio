@@ -1,7 +1,9 @@
 //! 🖼️ Packet asset entries use original paged backing and explicit candidate admission.
 use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 use super::{MAX_NODES, MAX_ID_BYTES};
-use semio_framework_value::{DslValue,ToValue,FromValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl,list::PagedList};
+use semio_framework_value::{DslValue, ToValue, FromValue, ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Debug,Default,PartialEq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
 pub struct DrawingClipboardAssets{entries:PagedList<(String,DrawingImageAsset),MAX_NODES>}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Invalid drawing clipboard asset entry")}

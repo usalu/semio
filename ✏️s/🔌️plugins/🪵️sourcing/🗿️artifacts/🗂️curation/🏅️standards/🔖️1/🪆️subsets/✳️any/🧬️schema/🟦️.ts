@@ -13,9 +13,9 @@ export interface ObjectKindExtra { id: string; name: string; moduleId: string; t
 export interface ObjectKind extends ObjectKindExtra {}
 export interface CuratedItem { objectId: string; count: number }
 export interface CurationArtifact {
-  /** @state artifact @child kind=s.stdio.semio */ catalog: ArtifactChild;
-  /** @state artifact */ stockExtra: ObjectKindExtra[];
-  /** @state artifact */ curated: CuratedItem[];
+  /** 📇️ @state artifact @child kind=s.stdio.semio */ catalog: ArtifactChild;
+  /** 📦️ @state artifact */ stockExtra: ObjectKindExtra[];
+  /** 🏛️ @state artifact */ curated: CuratedItem[];
 }
 
 /** 🔤 Admits a required sourcing identifier or label. */

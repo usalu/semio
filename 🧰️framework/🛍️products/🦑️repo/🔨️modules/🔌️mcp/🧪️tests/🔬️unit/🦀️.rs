@@ -154,3 +154,20 @@ fn resource_content_matches_shared_contract() {
         assert_eq!(&actual, expected);
     }
 }
+
+#[test]
+fn tool_result_shape_matches_shared_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧱️tool-result-shape.json")).expect("fixture");
+    for vector in fixture["vectors"].as_array().expect("vectors") {
+        let result = CallToolResult {
+            content: vector["content"].as_array().map(|items| items.iter().map(|item| Content::text(item["text"].as_str().expect("text"))).collect()).unwrap_or_default(),
+            structured_content: vector["structured"].as_str().map(str::to_string),
+            is_error: vector["isError"].as_bool().unwrap_or(false),
+            output_schema_declared: vector["outputSchema"].as_bool().unwrap_or(false),
+        };
+        let actual: serde_json::Value = serde_json::from_str(&result.json().text()).expect("serialized result");
+        assert_eq!(actual, vector["expected"], "{}", vector["name"]);
+    }
+    let declared: serde_json::Value = serde_json::from_str(&Tool::result_output_schema().json().text()).expect("serialized output schema");
+    assert_eq!(declared, fixture["outputSchema"]);
+}

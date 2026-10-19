@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🚪️ Independent JSON Schema admission verdicts for the native value derive hooks. */

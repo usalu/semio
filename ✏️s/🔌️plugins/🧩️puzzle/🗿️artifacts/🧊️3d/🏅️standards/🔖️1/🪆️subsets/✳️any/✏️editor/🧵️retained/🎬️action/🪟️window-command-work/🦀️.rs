@@ -106,19 +106,11 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.stage = Puzzle3dWindowCommandStage::Complete;
                     return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit: shell.0, ephemeral: shell.1 });
                 }
-                // 📤️ `exportSnapshot` reads the document and publishes a download; it owns no mutation, no
-                // precompute session and no placement scene, so it resolves here, from the snapshot, and
-                // picks its lane by payload size: one inline effect under the guest's contiguous-request
-                // ceiling, the framework's segmented-download lane above it (a 145 714 B Nakagin export
-                // reached no file as an inline effect — B36 §5, B38 §2).
                 if command.action_id() == "exportSnapshot" {
                     self.stage = Puzzle3dWindowCommandStage::Complete;
                     return match export_snapshot::puzzle3d_export_publication(&puzzle3d_scene_snapshot_from_document(snapshot.typed()), &runtime.active_example_id)? {
                         export_snapshot::Puzzle3dExportPublication::Inline(effect) => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::effect(effect))),
                         export_snapshot::Puzzle3dExportPublication::Segmented(download) => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() }),
-                        // 🧾️ An export above what ONE segmented download may carry is refused with a
-                        // notice, never with a fault: a payload the wire cannot admit is an answer the
-                        // user must read, and a fault here lands as a dead job instead.
                         export_snapshot::Puzzle3dExportPublication::Refused(message) => Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::effect(Effect::Notify { message }))),
                     };
                 }

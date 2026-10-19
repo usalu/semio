@@ -403,24 +403,12 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Mutation), lint re-runs
-            // diagnostics into runtime (View — an effect, not a document operation). Categorized for
-            // `Menu::group`'s ribbon-parent taxonomy (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS).
             .action_with(ActionDefinition::new("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Mutation, "typography").with_category("transform"))
             .action_with(ActionDefinition::bounded_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
-            // 🔧️ P1 example switch (whole-document load) with a staged example choice.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
-            // 🙈️ Internal document operations — text edits (typing runs, one edit each), aliases, camera, rename, engagement,
-            // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), "typography"))
-            // ✂️ The typing verb of a splice-typing host (`settingsJson.typing`): one range-text operation per delivery, composed into the
-            // window's typing run, relocated by its context, so two humans typing at once keep both runs (ticket 26/09/23 C12).
             .action_with(writer_hidden_operation("textSplice", LocalizedLabel::native("Type Text", "Text tippen"), "typography"))
-            // 🔧️ Palette-reachable Artifact-lane mutation: typing still uses hidden `textEdit`, but a
-            // human (and the outcome-1 sweep) must be able to stage a whole-buffer replace from the
-            // Actions rail. `formatDocument` stays the formatter and correctly no-ops on an already
-            // canonical buffer (ticket 26/09/18 S14).
             .action_with(ActionDefinition::new("setText", LocalizedLabel::native("Set Text", "Text festlegen"), ActionKind::Mutation, "sparkles").with_category("transform"))
             .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), "camera"))
             .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen"), "sparkles").with_category("transform"))
@@ -429,18 +417,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_operation("openDocument", LocalizedLabel::native("Open Document", "Dokument öffnen"), "folder-open"))
             .action_with(writer_hidden_operation("loadDocumentJson", LocalizedLabel::native("Load Document JSON", "Dokument-JSON laden"), "sparkles"))
             .action_destructive("loadDocumentJson")
-            // 🙈️ Internal View measures — editor caret/range, completions, editor settings. AST
-            // selection/hover no longer declared here: the framework auto-injects
-            // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-            // setInteractionGranularity for every domain declared via `.interaction(...)` below.
             .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern"), "typography").with_category("tools"))
-            // ✍️ The framework's text-editor surface dispatches a FIXED id set
-            // (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts:924` `textEditorActions`), and its caret handler
-            // emits `textSelect` with `{start, end}`. This app used to name the very same
-            // window-transient selection verb `setEditorSelection`, so every caret move was dropped
-            // before dispatch ("no window kind declares it") — one console error plus a refusal
-            // warning per keystroke. The id is the framework's; the `editor-selection` wire keyword
-            // and the `SetEditorSelection` payload stay this app's own vocabulary.
             .action_with(writer_hidden_view("textSelect", LocalizedLabel::native("Select Editor Text", "Editor-Text auswählen"), "text-cursor"))
             .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten"), "eye"))
             .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen"), "eye"))
@@ -461,7 +438,6 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("formatDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("commitRename", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            // 📝️ Staged argument forms: example choice + the dev JSON setters.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                     ActionArgOption::new("jack", LocalizedLabel::native("Jack", "Jack")),
@@ -472,12 +448,6 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_args("loadDocumentJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Fixture JSON", "Fixture-JSON"))])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // 🕹️ THE TRANSITIVE TEMPLATE (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-            // `ast` is `HierarchyProvider::Topology` from the jack AST's own parent links
-            // (`writer_ast_topology`/`WriterPlayApp::interaction_topology`); `hover.transitive`/
-            // `selection.transitive` both `true` — dispatch the deepest AST node at the caret and
-            // transitivity produces the covering behavior the old `jack_ast_node_for_selection`
-            // covering-node search used to compute by hand.
             .interaction(InteractionDefinition {
                 id: WRITER_INTERACTION_AST.into(),
                 label: LocalizedLabel::native("AST", "AST"),
@@ -487,16 +457,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
                 selection: SelectionSpec { modes: vec![SelectionMode::Single, SelectionMode::Multiple], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
             })
             .window_kind_interactions(WRITER_PLAY_WINDOW_KIND, vec![InteractionRef::new(WRITER_INTERACTION_AST)])
-            // 🎯️ Typed channel surface (mirrors `shooting_ui::create_shooting_app`'s identical wiring) —
-            // `writer_io()` is the single source of truth for both the trait's `io()` override and this
-            // manifest declaration.
             .io(writer_io())
-            // SDK GAP (contract 2.4, Editor/Viewer builder split): .example(...)/.workflow(...) do
-            // not exist on Editor::builder's type -- the two example registrations ("jack",
-            // "dag.jack", label + JSON fixture + icon) and the "writer" workflow entry ("writer",
-            // "Writer", "text.document") that used to chain here are dropped, not silently lost.
-            // The subset-level examples facet (moved whole into this editor) still ships the demo
-            // fixture; the app-level example PICKER UI is the actual regression until this SDK gap closes.
             .action_describe("formatDocument", LocalizedLabel::native("Reformats the whole text with the formatter of the document's language; text that is already formatted writes nothing.", "Formatiert den gesamten Text mit dem Formatierer der Dokumentsprache neu; bereits formatierter Text schreibt nichts."))
             .action_describe("lintDocument", LocalizedLabel::native("Checks the text with the linter of the document's language and shows the diagnostics in the editor window; the text is not changed.", "Prüft den Text mit dem Linter der Dokumentsprache und zeigt die Befunde im Editorfenster an; der Text ändert sich nicht."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole document with a bundled example (the Jack demo or the DAG Jack example), or with an empty document for any other id.", "Ersetzt das gesamte Dokument durch ein mitgeliefertes Beispiel (die Jack-Demo oder das DAG-Jack-Beispiel), bei jeder anderen Id durch ein leeres Dokument."))

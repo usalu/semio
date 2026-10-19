@@ -1,4 +1,4 @@
-//! Direct binary identity for `remove-font-file`.
+//! 💾️ Direct binary identity for `remove-font-file`.
 
 pub const TAG: u8 = 11;
 pub const BINARY_TAG: u8 = TAG;

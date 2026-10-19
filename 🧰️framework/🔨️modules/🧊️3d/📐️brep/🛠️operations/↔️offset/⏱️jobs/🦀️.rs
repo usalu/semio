@@ -24,13 +24,11 @@ enum Policy {
 }
 
 impl Policy {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn flips_new_faces(&self) -> bool {
         matches!(self, Policy::Shell { .. })
     }
 
     /// 🎯️ Where `vertex` lands given every touched face's outward normal there.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn vertex_target(&self, body: &Body, vertex: VertexId, touched: &[(FaceId, Vec3)], surfaces: &HashMap<FaceId, Surface>) -> Pnt3 {
         match self {
             Policy::Offset { distance } => {
@@ -57,7 +55,6 @@ impl Policy {
     }
 
     /// 🎯️ The anchor an edge's intersection branch is chosen nearest to.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn edge_target(&self, body: &Body, edge: EdgeId, normal: Vec3) -> Pnt3 {
         let ent = body.edges.get(edge).unwrap();
         let mid = body.curves3.get(ent.curve).unwrap().eval(0.5 * (ent.range.0 + ent.range.1));
@@ -88,7 +85,6 @@ struct Rebuild {
 }
 
 impl Rebuild {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(body: &Body, solid: SolidId, policy: Policy, materialize: HashSet<FaceId>, tol: f64) -> Self {
         let solid_faces: HashSet<FaceId> = body.solid_faces(solid).into_iter().collect();
         let edge_set = solid_edges(body, &solid_faces);
@@ -102,7 +98,6 @@ impl Rebuild {
     }
 
     /// 🧮️ Units per pass: vertices, edges, materialized faces.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn counts(&self) -> [usize; 3] {
         [self.vertex_list.len(), self.edge_list.len(), self.face_list.len()]
     }
@@ -142,12 +137,6 @@ impl Rebuild {
         let e = self.edge_list[index];
         let faces_here = edge_unique_faces(body, &self.solid_faces, e);
         let edge_ent = body.edges.get(e).ok_or_else(|| KernelError::MissingEntity("edge".into()))?.clone();
-        // An edge whose own two faces are both untouched still has to be rebuilt when one of its
-        // ENDS moved: the vertex it used to stop at no longer exists on this solid. Skipping those
-        // (what this used to do) left the far edges of a drafted box still ending at the ORIGINAL
-        // corner while the drafted face ended at the new one — ten vertices where a box has eight —
-        // so the result was neither the old shape nor the new one and its volume landed between the
-        // two (measured 0.9324 where the trapezoid is 0.8986).
         if !faces_here.iter().any(|f| self.surfaces.contains_key(f)) && !(self.out.vertex_new.contains_key(&edge_ent.v0) || self.out.vertex_new.contains_key(&edge_ent.v1)) {
             return Ok(());
         }
@@ -176,17 +165,6 @@ impl Rebuild {
                 Curve2::Line { origin, dir } if dir.y.abs() < 1e-9 => (IsoDirection::V, origin.y),
                 _ => return Err(KernelError::Operation("seam edge pcurve is not axis-aligned".into())),
             };
-            // The isocurve at the seam's own (unchanged) `u`/`v` constant is exact and already
-            // correctly positioned on the NEW surface (e.g. the new radius) — but its own native
-            // parametrization has no reason to still line up with `edge_ent.range` (growing/
-            // shrinking a solid moves the CAPS a self-adjacent lateral seam spans between, even
-            // though the lateral surface's own frame — hence its isocurve's own v=0 origin — does
-            // not move at all). Trimming it to the two already-correctly-repositioned vertex
-            // targets (same technique the real-dihedral-edge branch below uses) is exact for any
-            // op (offset, shell, draft) and needs no per-surface-kind "seam shift" special case —
-            // this replaced a previous version that reused the SEAM'S OLD p-curve's `offset`/
-            // `scale` verbatim (silently wrong the moment a cap moves, confirmed by a direct debug
-            // run: a rebuilt offset cylinder's seam spanned its OLD z-range, not the new one).
             let iso = ns.isocurve(dir, konst);
             let v0_target = self.vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
             let v1_target = self.vertex_pos.get(&edge_ent.v1).copied().unwrap_or(body.vertices.get(edge_ent.v1).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
@@ -228,15 +206,6 @@ impl Rebuild {
         let (chosen, _) = best.unwrap();
         let new_curve = chosen.curve3.clone();
         let domain = (chosen.domain.min, chosen.domain.max);
-        // A CLOSED edge (`v0 == v1`, e.g. a cylinder cap's own full-circle boundary) has no
-        // second vertex to independently project onto the curve, but it still needs `t0` (hence
-        // `t1 = t0 + period`) to land at the SHARED VERTEX's own position, not merely anywhere
-        // on the curve — this edge's neighbour (a self-adjacent lateral seam, say) starts exactly
-        // where this one's `curve.eval(t0)` sits, and `loop_uv_polygon` stitches consecutive
-        // coedges by CONTINUITY, not by re-deriving positions; landing `t0` anywhere else (e.g.
-        // the SSI candidate's own arbitrary domain start) silently opens a gap in the (u, v)
-        // boundary polygon there, corrupting the sampled area/volume (confirmed directly: with
-        // `t0 = domain.0` verbatim the rebuilt cylinder's lateral area came out ~15% too high).
         let (t0, t1) = if edge_ent.v0 == edge_ent.v1 {
             let v0_target = self.vertex_pos.get(&edge_ent.v0).copied().unwrap_or(body.vertices.get(edge_ent.v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?.position);
             let t0 = closest_parameter(&new_curve, domain, v0_target, self.tol).t;
@@ -347,7 +316,6 @@ impl OffsetFaceJob {
 }
 
 impl StagedOperation for OffsetFaceJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }
@@ -359,12 +327,6 @@ impl StagedOperation for OffsetFaceJob {
                 let surface = body.surfaces.get(self.face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", self.face_data.surface)))?.clone();
                 let new_surface = offset_surface(&surface, self.signed, OFFSET_TOL)?;
                 let new_surface_id = body.surfaces.insert(new_surface.clone());
-                // The offset face's boundary has to live ON the offset surface, so every boundary vertex and
-                // edge is rebuilt through the point map that carries the original support onto the offset one
-                // ([`offset_point_map`]) rather than shared with the original face. Sharing them — what this
-                // used to do — produced a face whose surface had moved but whose rim had not: `thicken_face`
-                // then ruled each side between an edge and ITSELF, so all four sides were degenerate,
-                // zero-area, and the thickened box measured a volume of exactly 0.
                 let map = offset_point_map(&surface, &new_surface).ok_or_else(|| KernelError::Operation(format!("offset_face: no exact boundary map from {surface:?} to its offset")))?;
                 self.surface = Some((new_surface, new_surface_id, map));
             }
@@ -469,7 +431,6 @@ impl OffsetSolidJob {
 }
 
 impl StagedOperation for OffsetSolidJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }
@@ -502,9 +463,6 @@ impl StagedOperation for OffsetSolidJob {
                 let sharp = self.sharp.expect("sharp solid closed before blending");
                 if self.blend.is_none() {
                     let round_faces: HashSet<FaceId> = body.solid_faces(sharp).into_iter().collect();
-                    // Only real dihedral edges (shared by two *distinct* faces) are meaningful fillet
-                    // targets — a self-adjacent seam edge (e.g. a cylinder's own lateral seam) has no
-                    // second face to blend against and is skipped.
                     let edges: Vec<EdgeId> = solid_edges(body, &round_faces).into_iter().filter(|&e| edge_unique_faces(body, &round_faces, e).len() == 2).collect();
                     if edges.is_empty() {
                         return Ok(StageStep::Done(StageOutput::Solid(sharp)));
@@ -581,7 +539,6 @@ impl ThickenJob {
 }
 
 impl StagedOperation for ThickenJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }
@@ -591,10 +548,6 @@ impl StagedOperation for ThickenJob {
         match unit.phase {
             0 => {
                 if let StageStep::Done(StageOutput::Face(cap)) = self.cap.advance(body, rec)? {
-                    // The solid grows along the ORIGINAL face's outward normal, so the offset cap already faces
-                    // outward and it is the original that now faces INTO the new material. Reversing the far cap
-                    // instead (what this used to do) left both caps pointing the same way: the two contributions
-                    // then cancelled instead of adding, and a 2 × 1 × 0.5 thickened quad measured 1/3 of its volume.
                     if let Some(fd) = body.faces.get_mut(self.face) {
                         fd.flipped = !fd.flipped;
                     }
@@ -634,7 +587,6 @@ pub struct ClosedShellJob {
 }
 
 impl StagedOperation for ClosedShellJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.inner.progress()
     }
@@ -672,7 +624,6 @@ pub struct OpenShellJob {
 }
 
 impl OpenShellJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(body: &Body, solid: SolidId, thickness: f64, open_faces: &[FaceId]) -> Result<Self, KernelError> {
         let distance = -thickness;
         let faces = body.solid_faces(solid);
@@ -707,7 +658,6 @@ impl OpenShellJob {
 }
 
 impl StagedOperation for OpenShellJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }
@@ -716,11 +666,6 @@ impl StagedOperation for OpenShellJob {
         let unit = self.plan.take().ok_or_else(|| KernelError::Operation("shell job already finished".into()))?;
         match unit.phase {
             0 => {
-                // An OPEN face is not a wall: the cavity runs right up to it, so its own surface stays put and
-                // only trims the inner faces that meet it. Offsetting it like every other face (what this used
-                // to do) pulled the cavity's roof `thickness` below the opening — a 2³ box shelled at 0.2 with
-                // its top open came out with a 1.6-tall cavity instead of 1.8, and a slanted ruled rim instead
-                // of the flat frame the opening actually is.
                 let f = self.faces[unit.index];
                 let fd = body.faces.get(f).unwrap().clone();
                 let s = body.surfaces.get(fd.surface).unwrap().clone();
@@ -813,7 +758,6 @@ impl ShellJob {
 }
 
 impl StagedOperation for ShellJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         match self {
             Self::Closed(job) => job.progress(),
@@ -874,7 +818,6 @@ impl DraftJob {
 }
 
 impl StagedOperation for DraftJob {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn progress(&self) -> StageProgress {
         self.plan.progress()
     }

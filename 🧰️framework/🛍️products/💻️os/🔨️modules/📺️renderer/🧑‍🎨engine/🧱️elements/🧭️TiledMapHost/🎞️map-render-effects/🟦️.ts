@@ -91,9 +91,6 @@ export function useMapRenderEffects(core: MapCore1) {
           const bootCamera = renderer.readCameraFromSession();
           if (bootCamera) {
             renderer.applyCameraToSession(bootCamera);
-            // 🧭️ Skip the dispatch when this boot-time read is just mirroring back the camera the
-            // scene/document already provided — otherwise opening the app logs a phantom "Set Camera" row
-            // in the command-history panel before the user has done anything.
             const providedCamera = parseCameraJson(scene.cameraJson);
             const isPhantomBootCamera = providedCamera != null && Math.abs(bootCamera.x - providedCamera.x) < 1e-6 && Math.abs(bootCamera.y - providedCamera.y) < 1e-6 && Math.abs(bootCamera.zoom - providedCamera.zoom) < 1e-6;
             if (!isPhantomBootCamera) dispatchCameraRef.current(bootCamera);
@@ -119,9 +116,6 @@ export function useMapRenderEffects(core: MapCore1) {
     };
   }, [clampCamera, readContainerSize, resolveMapPaneElement, scene?.tileUrlTemplate, scene?.vectorTileUrlTemplate]);
 
-  // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: theme sync used to run unconditionally every
-  // frame inside `MapRenderer`'s render loop (forcing a style recalc every frame via
-  // `serializeMapCanvasThemeJson`); now it only runs when the theme actually changes.
   useCanvasAppearanceSync(() => rendererRef.current?.syncTheme(), true, shellScope?.rootRef.current ?? undefined);
 
   useEffect(() => {

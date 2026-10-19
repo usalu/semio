@@ -1,4 +1,8 @@
 {
+  "packageManifests": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/package.json"
+  ],
   "owners": [
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts",

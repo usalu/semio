@@ -39,9 +39,12 @@ semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-editor-commands = { workspace = true }
 semio-s-artifact-draw-drawing-editor-interaction = { workspace = true }
+semio-s-artifact-draw-drawing-editor-store-preparation = { workspace = true }
 semio-s-artifact-draw-drawing-editor-tool = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true }
 semio-s-artifact-draw-drawing-host = { workspace = true }
@@ -53,6 +56,7 @@ semio-s-artifact-draw-drawing-scene = { workspace = true }
 semio-s-artifact-draw-drawing-structure = { workspace = true }
 semio-s-artifact-draw-drawing-transform = { workspace = true }
 semio-s-artifact-draw-drawing-write = { workspace = true }
+semio-framework-interaction = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job-registry = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }

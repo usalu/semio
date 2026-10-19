@@ -1,6 +1,13 @@
 {
   "name": "@semio-tech/repo-developer-tools",
   "projectType": "application",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "git-show": {
@@ -520,8 +527,14 @@
           }
         }
       },
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
       "options": {
         "forwardAllArgs": true,
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
@@ -735,6 +748,35 @@
             "description": {
               "en": "Show Node.js Inspector, Python Pdb, GNU Debugger and LLVM Debugger availability and executable paths. Missing optional tools include the next action.",
               "de": "Verfügbarkeit und Programmpfade von Node.js-Inspektor, Python-Pdb, GNU-Debugger und LLVM-Debugger anzeigen. Bei fehlenden optionalen Werkzeugen erscheint der nächste Schritt."
+            },
+            "parameters": []
+          }
+        }
+      }
+    },
+    "setup-debugger": {
+      "cache": false,
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🛠️developer-tools",
+        "command": "bun ./📜️script.ts setup-debugger",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "verb": "setup",
+            "title": {
+              "en": "Set Up Native Debugger",
+              "de": "Nativen Debugger Einrichten"
+            },
+            "description": {
+              "en": "Verify full LLDB startup, or provision its fixed host packages. Linux repair requires root or noninteractive sudo; Windows machine LLVM requires an elevated host bootstrap. Existing usable LLDB installs nothing.",
+              "de": "Vollständigen LLDB-Start prüfen oder festgelegte Host-Pakete einrichten. Linux-Reparatur erfordert root oder nichtinteraktives sudo; maschinenweites Windows-LLVM eine erhöhte Host-Einrichtung. Funktionsfähiges LLDB installiert nichts."
             },
             "parameters": []
           }

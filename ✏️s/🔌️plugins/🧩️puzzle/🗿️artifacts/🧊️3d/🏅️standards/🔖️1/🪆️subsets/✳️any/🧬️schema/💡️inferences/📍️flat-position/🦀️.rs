@@ -1,4 +1,4 @@
-//! Two independent dependency-hash chains per the closed-ticket merkle design
+//! 🏝️ Two independent dependency-hash chains per the closed-ticket merkle design
 //! 🎛 `flat-position` — one named inference: absolute flatten pose (plane + center) per object.
 //! (26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE) — an object's flatPosition entry
 //! changes iff its own vortex, an ancestor's plane/center, or the connecting attraction's params

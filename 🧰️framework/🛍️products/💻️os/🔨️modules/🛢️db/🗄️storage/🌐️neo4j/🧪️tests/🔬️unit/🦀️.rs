@@ -136,11 +136,6 @@ async fn map_neo4rs_error_maps_io_errors_to_unavailable() {
 
 #[semio_framework_async_macros::async_test]
 async fn map_de_error_maps_to_corrupt() {
-    // 🎯️ `neo4rs::DeError` has no public constructor reachable without a live row (its variants
-    // are driven by real (de)serialization failures), so this exercises the mapping function's
-    // shape via a value we CAN construct: a decode failure surfaced through `serde`'s generic
-    // `custom` constructor, which every `serde::de::Error` implementor (including `DeError`)
-    // must provide.
     use serde::de::Error as _;
     let decode_error = neo4rs::DeError::custom("missing field `bytes`");
     assert!(matches!(map_de_error(decode_error), DbError::Corrupt(_)));
@@ -181,9 +176,6 @@ async fn schema_statements_are_all_idempotent_if_not_exists_forms() {
 //#region 🔖️Capabilities
 #[semio_framework_async_macros::async_test]
 async fn capabilities_report_durable_cas_and_fsync_backed_storage() {
-    // 🎯️ Exercises the `capabilities()` shape without a live connection (constructing a full
-    // `Neo4jStorage` needs a live `Graph`); see module doc: live-DB integration testing is
-    // deferred.
     let capabilities = StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true };
     assert!(capabilities.durable);
     assert!(capabilities.supports_cas);

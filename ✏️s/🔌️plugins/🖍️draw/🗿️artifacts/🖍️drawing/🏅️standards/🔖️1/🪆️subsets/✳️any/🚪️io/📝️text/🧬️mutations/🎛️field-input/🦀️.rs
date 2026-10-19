@@ -1,6 +1,6 @@
 //! 🎛️ Controlled inspector text admission into typed field color and dash samples.
 /// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
-pub fn parse_layer_field_input(field:&str,source:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<semio_framework_value::DslValue,semio_framework_value::ValueError>{
+pub fn parse_layer_field_input(field:&str,source:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<semio_framework_value::DslValue,semio_framework_value::ValueError>{
  use semio_framework_value::{DslValue,Number,ValueRefusalKind};control.checkpoint()?;
  let parsed=match semio_framework_pack_json::from_json_str_controlled::<DslValue>(source,semio_framework_pack_json::JsonMemberPolicy::Reject,control){Ok(value)=>Some(value),Err(error)if error.kind==ValueRefusalKind::InvalidValue=>None,Err(error)=>return Err(error)};
  if matches!(field,"fillColor"|"strokeColor"|"strokeDash"){

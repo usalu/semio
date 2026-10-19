@@ -11,7 +11,7 @@ use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_dsl_record::FieldValue as F;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
-use semio_framework_value::NativeDecodeControl as N;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 type Result<T>=std::result::Result<T,ValueError>;
 #[derive(Clone,Copy)]enum Role{Text,Float,Bool,Int,OptionalText,OptionalFloat,OptionalBool,OptionalInt,Anchor,Specificity}
 use Role::*;

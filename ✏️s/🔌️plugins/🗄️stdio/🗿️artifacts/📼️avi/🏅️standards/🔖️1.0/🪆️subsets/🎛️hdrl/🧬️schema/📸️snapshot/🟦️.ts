@@ -19,11 +19,11 @@ export interface AviChunk { fourcc: string; data: number[]; keyframe: boolean; }
 export interface AviStream { strh: AviStreamHeader; strf: AviStreamFormat; chunks: AviChunk[]; strlExtra:RiffChunk[]; }
 export interface RiffChunk { fourcc: string; data: number[]; }
 export interface AviSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ mainHeader: AviMainHeader;
-  /** @state artifact */ streams: AviStream[];
-  /** @state artifact */ idx1Present: boolean;
-  /** @state artifact */ unknownChunks: RiffChunk[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 🔝️ @state artifact */ mainHeader: AviMainHeader;
+  /** 🌊️ @state artifact */ streams: AviStream[];
+  /** 🎁️ @state artifact */ idx1Present: boolean;
+  /** 🚰️ @state artifact */ unknownChunks: RiffChunk[];
   /** 📦️ @state artifact */ hdrlExtra: RiffChunk[];
 }
 

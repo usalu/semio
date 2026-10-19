@@ -53,7 +53,6 @@ pub enum D3d12GraphicsError {
 }
 
 impl From<D3d12GraphicsError> for BackendError {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(error: D3d12GraphicsError) -> Self {
         match error {
             D3d12GraphicsError::AllocationFailed(_) => BackendError::OutOfMemory,
@@ -64,7 +63,6 @@ impl From<D3d12GraphicsError> for BackendError {
 }
 
 impl From<crate::pipelines::PipelineBuildError> for D3d12GraphicsError {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(error: crate::pipelines::PipelineBuildError) -> Self {
         match error {
             crate::pipelines::PipelineBuildError::ShaderCompilationFailed(message) => Self::ShaderCompilationFailed(message),
@@ -112,14 +110,12 @@ struct ResidentSrvTable {
 }
 
 impl ResidentSrvTable {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn new(device: &Device) -> Self {
         let heap = create_heap(device, INITIAL_CAPACITY);
         let stride = unsafe { device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) };
         Self { heap, capacity: INITIAL_CAPACITY, stride, slots: (0..INITIAL_CAPACITY).map(|_| None).collect(), free_raster: (FIRST_RASTER_SLOT..INITIAL_CAPACITY).rev().collect() }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn cpu_handle(&self, index: u32) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         let start = unsafe { self.heap.GetCPUDescriptorHandleForHeapStart() };
         D3D12_CPU_DESCRIPTOR_HANDLE { ptr: start.ptr + (index as usize) * (self.stride as usize) }
@@ -127,7 +123,6 @@ impl ResidentSrvTable {
 
     /// ✏️ Writes `resource` (a resident 2D texture, `Format` inferred from `format`) into `index`,
     /// growing the heap first if `index` is beyond its current capacity.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn write(&mut self, device: &Device, index: u32, resource: ID3D12Resource, format: DXGI_FORMAT) {
         self.ensure_capacity(device, index + 1);
         let handle = self.cpu_handle(index);
@@ -135,7 +130,6 @@ impl ResidentSrvTable {
         self.slots[index as usize] = Some((resource, format));
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn clear(&mut self, index: u32) {
         if let Some(slot) = self.slots.get_mut(index as usize) {
             *slot = None;
@@ -143,7 +137,6 @@ impl ResidentSrvTable {
     }
 
     /// 🔢️ Allocates a fresh raster slot from the free list, growing first if the list is empty.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn allocate_raster_slot(&mut self, device: &Device) -> u32 {
         if let Some(index) = self.free_raster.pop() {
             return index;
@@ -154,7 +147,6 @@ impl ResidentSrvTable {
         old_capacity
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn free_raster_slot(&mut self, index: u32) {
         self.clear(index);
         self.free_raster.push(index);
@@ -163,7 +155,6 @@ impl ResidentSrvTable {
     /// 📈️ Doubles `capacity` (never shrinks) until it covers `needed`, rebuilding the heap and
     /// re-describing every still-occupied slot against it — the descriptor-count analog of
     /// `GrowBuffer::upload`'s byte-capacity doubling.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn ensure_capacity(&mut self, device: &Device, needed: u32) {
         if needed <= self.capacity {
             return;
@@ -239,7 +230,6 @@ impl GpuResources {
     /// (`NullBackend` has no such gap because it never touches a device at all; a real backend must
     /// bind *something*). Overwritten by the first real `ResourceOp::UploadAtlas` of each byte
     /// density.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(device: &Device) -> Self {
         let mut table = ResidentSrvTable::new(device);
         let glyph_dummy = create_default_texture2d(device, DXGI_FORMAT_R8_UNORM, 1, 1, 1, D3D12_RESOURCE_FLAGS(0), D3D12_RESOURCE_STATE_COPY_DEST, None, "glyph_atlas_dummy");
@@ -282,7 +272,6 @@ impl GpuResources {
     /// barriers must still be flushed once before the list is reused — called once, immediately after
     /// `new`, by `D3d12Backend::from_parts` so every later `apply` call can assume "list is open and
     /// ready to record" on entry.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn flush_construction(&mut self, queue: &ID3D12CommandQueue) {
         unsafe { self.upload_list.Close() }.expect("d3d12 backend: failed to close the upload command list");
         self.execute_and_wait(queue);
@@ -292,7 +281,6 @@ impl GpuResources {
     /// ⏱️ Executes and blocks until the GPU confirms completion, then drops every staging buffer
     /// `record_texture_upload` accumulated into `pending_staging` — only now is it sound to release
     /// them (see that field's doc comment).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn execute_and_wait(&mut self, queue: &ID3D12CommandQueue) {
         let list: ID3D12CommandList = self.upload_list.cast().expect("ID3D12GraphicsCommandList always casts to its ID3D12CommandList base");
         let lists = [Some(list)];
@@ -303,38 +291,31 @@ impl GpuResources {
         self.pending_staging.clear();
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn reopen_upload_list(&mut self) {
         unsafe { self.upload_allocator.Reset() }.expect("d3d12 backend: failed to reset the upload command allocator");
         unsafe { self.upload_list.Reset(&self.upload_allocator, None) }.expect("d3d12 backend: failed to reset the upload command list");
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn glyph_atlas_handle(&self) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         self.table.cpu_handle(GLYPH_SLOT)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn icon_atlas_handle(&self) -> D3D12_CPU_DESCRIPTOR_HANDLE {
         self.table.cpu_handle(ICON_SLOT)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn raster_texture_handle(&self, id: TextureId) -> Option<D3D12_CPU_DESCRIPTOR_HANDLE> {
         self.raster_slot.get(&id).map(|&index| self.table.cpu_handle(index))
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn mesh(&self, id: MeshId) -> Option<&MeshBuffers> {
         self.meshes.get(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn knows_texture(&self, id: TextureId) -> bool {
         self.known_textures.contains(&id)
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn knows_mesh(&self, id: MeshId) -> bool {
         self.known_meshes.contains(&id)
     }
@@ -342,7 +323,6 @@ impl GpuResources {
     /// ♻️ Drains every id this table currently believes resident, for `GraphicsBackend::recover`
     /// reporting after a device-removed transition — mirrors `NullBackend`/the Metal backend's
     /// identical method.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_known(&mut self) -> (Vec<TextureId>, Vec<MeshId>, Vec<AtlasId>) {
         self.meshes.clear();
         self.raster_slot.clear();
@@ -352,7 +332,6 @@ impl GpuResources {
     /// 📤️ Applies one `ResourceOp` stream, always *before* the `render` call whose packet references
     /// the ids it uploads (the trait's own invariant). `queue` is the caller's command queue — this
     /// table owns no queue of its own, only the allocator/list/fence it schedules work through.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn apply(&mut self, device: &Device, queue: &ID3D12CommandQueue, ops: &[ResourceOp]) -> Result<(), D3d12GraphicsError> {
         let mut recorded_any = false;
         for op in ops {
@@ -388,7 +367,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_atlas(&mut self, device: &Device, id: AtlasId, width: u32, height: u32, pixels: &[u8]) -> Result<(), D3d12GraphicsError> {
         let pixel_count = (width as usize) * (height as usize);
         if pixel_count == 0 {
@@ -411,7 +389,6 @@ impl GpuResources {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn upload_texture(&mut self, device: &Device, id: TextureId, width: u32, height: u32, pixels: &[u8]) -> Result<(), D3d12GraphicsError> {
         if width == 0 || height == 0 {
             self.known_textures.insert(id);
@@ -431,7 +408,6 @@ impl GpuResources {
     /// leave undefined" (mirrors the zero-size texture short-circuit in `upload_texture`/`upload_atlas`
     /// — never reached with non-empty `width`/`height` and empty `pixels` from this crate's own call
     /// sites, but handled defensively).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn record_texture_upload(&mut self, device: &Device, format: DXGI_FORMAT, width: u32, height: u32, pixels: &[u8], bytes_per_pixel: u32, label: &str) -> ID3D12Resource {
         let texture = create_default_texture2d(device, format, width, height, 1, D3D12_RESOURCE_FLAGS(0), D3D12_RESOURCE_STATE_COPY_DEST, None, label);
         if !pixels.is_empty() {
@@ -476,7 +452,6 @@ impl GpuResources {
         texture
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn create_or_update_mesh(&mut self, device: &Device, id: MeshId, positions: &[f32], normals: &[f32], indices: &[u32]) -> Result<(), D3d12GraphicsError> {
         let vertex_count = positions.len() / 3;
         let mut vertices = Vec::with_capacity(vertex_count);

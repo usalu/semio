@@ -104,9 +104,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.trinity.jack.grammar.3", "grammar", "jack.diff", &[("grammar", "jack.diff")], None),
         ("s.trinity.jack.grammar.4", "grammar", "jack.pack", &[("grammar", "jack.pack")], None),
         ("s.trinity.jack.grammar.5", "grammar", "jack.spr", &[("grammar", "jack.spr")], None),
-        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<TrinityJackPlayApp>>()`
-        // derives its extension claim from `<JackSnapshot as pack::snapshot::ArtifactDsl>::EXTENSION`
-        // (`…/🚪️io/📝️text/📸️snapshot/🦀️.rs`), which is `"trinity"`, not `"jack"`.
         ("s.trinity.jack.codec.document-1", "codec", "trinity.graph:trinity", &[("codec", "trinity.graph"), ("codec-extension", "13:trinity.graph:trinity")], None),
         ("s.trinity.jack.localization.en", "localization", "Jack", &[], Some(("en", "Jack"))),
         ("s.trinity.jack.localization.de", "localization", "Buchse", &[], Some(("de", "Buchse"))),

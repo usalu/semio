@@ -8,8 +8,7 @@ fn observe_compiler_resources<R>(run: impl FnOnce() -> R) -> R {
     compiler_resources::with_compiler_resources_v1(env!("CARGO_MANIFEST_DIR"), concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs"), proc_macro::Span::call_site().local_file(), proc_macro::tracked::env_var("SEMIO_COMPILER_RESOURCE_ROOT").ok(), |path| proc_macro::tracked::path(path), run)
 }
 
-#[path = "⚙️expansion/🦀️.rs"]
-mod component;
+use semio_framework_value_derive_expansion as component;
 
 #[path="📽️projection/🦀️.rs"]
 mod snapshot_projection;
@@ -114,7 +113,7 @@ pub fn derive_snapshot_projection(input:TokenStream)->TokenStream{let input=pars
 
 #[path="🟰️equality/🦀️.rs"] mod retained_equality;
 /// 🟰️ Derives bounded native field equality independently of codec skips, defaults, and roles.
-#[proc_macro_derive(RetainedEquality)]
+#[proc_macro_derive(RetainedEquality,attributes(value))]
 pub fn derive_retained_equality(input:TokenStream)->TokenStream{let input=parse_macro_input!(input as DeriveInput);retained_equality::expand(&input).unwrap_or_else(|error|error.to_compile_error()).into()}
 
 /// 🛬️ Derives funded native receiving from genuine original fields independently of cold wire admission.

@@ -57,13 +57,11 @@ pub struct TxtLinesDiff {
 
 impl TxtLinesDiff {
     /// 🕳️ No removed/modified/added entries.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
     /// ▶️ Applies this triple to a base line array. See module docs for apply order.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[String]) -> Vec<String> {
         let mut items: Vec<Option<String>> = base.iter().cloned().map(Some).collect();
         for m in &self.modified {
@@ -84,7 +82,6 @@ impl TxtLinesDiff {
 
     /// 🔁️ The negative triple against the base lines: added rows become removals at their final index, removed rows return at their
     /// base index, and each modified row restores its base text at the index the row has after this diff.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &[String]) -> Self {
         let removed_base = semio_s_artifact_stdio_contract::ordered(&self.removed);
         let mut added_final: Vec<usize> = self.added.iter().map(|a| a.index).collect();
@@ -140,10 +137,6 @@ fn simulate_labels(labels: Vec<Lbl>, removed: &[usize], added: &[(usize, Lbl)]) 
 /// simply absent from the walk, never re-emitted), and each survivor's final position.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
-    // 🧭️ `l1` (the virtual base's assumed size) must cover every index EITHER diff references,
-    // not just `d1`'s -- a `d1` that's empty/a no-op must not collapse the virtual base to zero
-    // elements when `d2` still references real base positions `d1` never touched (a real bug
-    // this exact formula had until byte-splice fuzz-testing caught its twin in `BinaryDiff`).
     let max_ref =
         d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).chain(d1.added.iter().map(|a| a.index)).chain(d2.removed.iter().copied()).chain(d2.modified.iter().map(|m| m.index)).chain(d2.added.iter().map(|a| a.index)).max();
     let l1 = max_ref.map_or(0, |m| m + 2);
@@ -152,8 +145,6 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
     let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added);
 
-    // 🔍️ Record each label's MID position (before any d2-triggered padding) -- this is exactly
-    // the φ(base_index)/mid_index_of(Added1(j)) transport the recipe calls for.
     let mut mid_pos_of_base: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
     let mut mid_pos_of_added1: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
     for (pos, l) in mid_labels.iter().enumerate() {
@@ -168,10 +159,8 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
         }
     }
 
-    // 📦 `l1` already covers `d2`'s own max reference (computed above); pad is appended at the
-    // tail only -- `Vec::push` never disturbs earlier positions, so `mid_pos_of_*` stay valid.
     while mid_labels.len() < l1 {
-        mid_labels.push(Lbl::Base(usize::MAX)); // inert padding index, never referenced by mid_pos_of_base
+        mid_labels.push(Lbl::Base(usize::MAX));
     }
 
     let d2_added: Vec<(usize, Lbl)> = d2.added.iter().enumerate().map(|(k, a)| (a.index, Lbl::Added2(k))).collect();
@@ -194,7 +183,7 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
                     modified.push(TxtLineModified { index: i, text: text.to_string() });
                 }
             }
-            Lbl::Base(_) => { /* padding survived untouched -- never real, ignore */ }
+            Lbl::Base(_) => { }
             Lbl::Added1(j) => {
                 let mid_pos = mid_pos_of_added1.get(&j).copied();
                 let base_text = &d1.added[j].text;

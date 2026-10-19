@@ -17,7 +17,7 @@ import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦
 // Consumers MUST provide NavbarItem entries.
 
 /**
- * Configuration interface for a single navbar item.
+ * 🎚️ Configuration interface for a single navbar item.
  **/
 export interface NavbarItem {
   content: React.ReactNode;
@@ -96,7 +96,7 @@ export function setNavbarTrailingChrome(component: NavbarTrailingChrome | undefi
 }
 
 /**
- * Props interface for the Navbar component.
+ * 🎛️ Props interface for the Navbar component.
  **/
 export interface NavbarProps {
   items: NavbarItem[];
@@ -110,7 +110,7 @@ export interface NavbarProps {
 }
 
 /**
- * Navbar holds the data fields for a Navbar record.
+ * 🕹️ Navbar holds the data fields for a Navbar record.
  *
  * 🪜️ The band stacks at the BASE level, never above it. A chrome-hosted {@link Panel} unfolds INTO this
  * band (see `chromeHostedOpenPanelPositionStyle`: its cap lands exactly on the centered `h-medium`

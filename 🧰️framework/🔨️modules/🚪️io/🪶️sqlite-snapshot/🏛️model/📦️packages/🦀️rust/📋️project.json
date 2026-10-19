@@ -1,5 +1,26 @@
 {
   "name": "@semio-tech/framework-io-sqlite-model-rs",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ]
+  },
   "tags": [
     "scope:framework",
     "language:rust"
@@ -7,12 +28,20 @@
   "targets": {
     "test-source": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "metadata": {"semio":{"execution":{"version":1,"kind":"source"}}},
       "options": {
         "command": "bun ./📜️script.ts test-source",
         "cwd": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust"
       },
-      "cache": false,
+      "cache": true,
       "defaultConfiguration": "prototype",
       "configurations": {
         "prototype": {

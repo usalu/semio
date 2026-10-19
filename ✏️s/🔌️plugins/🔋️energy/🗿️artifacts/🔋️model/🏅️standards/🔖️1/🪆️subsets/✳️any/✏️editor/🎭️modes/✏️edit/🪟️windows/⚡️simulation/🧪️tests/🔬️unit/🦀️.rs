@@ -14,9 +14,6 @@ fn view(state: ToolRunState) -> ToolRunView {
 #[test]
 fn actions_are_localized_and_registered_as_interactive() {
     let definition = definition();
-    // 🪟️ The three verbs this window RENDERS are declared app-level (`window_shared_action_definitions`)
-    // so every window kind carries them — a window-kind-local action is dispatchable from that window
-    // alone. This law still owns their shape.
     let own: Vec<_> = crate::window_shared_action_definitions().into_iter().filter(|action| [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor_commands::SET_RUN_PERIOD_ACTION_ID].contains(&action.id.as_str())).collect();
     assert_eq!(own.iter().map(|action| action.id.as_str()).collect::<Vec<_>>(), [SET_SETTINGS_ACTION_ID, SET_RESULT_FIELD_ACTION_ID, crate::editor_commands::SET_RUN_PERIOD_ACTION_ID]);
     assert!(own.iter().all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));

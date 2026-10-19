@@ -121,7 +121,7 @@ describe("cross-platform bootstrap", () => {
   test("keeps deferred command imports distinct from initial router imports", async () => {
     const result = await build({ stdin: { contents: fixture.freshClone.deferredImports.source, resolveDir: repoRoot, loader: "ts" }, bundle: true, write: false, metafile: true, platform: "node", format: "esm", plugins: [workspacePackages] });
     const imports = Object.values(result.metafile.outputs).flatMap((output) => output.imports.map(({ path, kind }) => ({ path, kind })));
-    expect(imports).toEqual(fixture.freshClone.deferredImports.imports);
+    expect(imports).toEqual(fixture.freshClone.deferredImports.imports as typeof imports);
     expect(Object.keys(result.metafile.inputs)).toEqual(["<stdin>"]);
   });
   test("validates the portable law fixture", () => {
@@ -240,7 +240,108 @@ describe("cross-platform bootstrap", () => {
     expect(pinned).toMatch(/^\d+\.\d+\.\d+$/u);
     expect(image).toBe(pinned);
     expect(readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8")).toContain('require("./package.json").engines.node');
-    expect(readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8")).toContain('"OpenJS.NodeJS.LTS"');
+    const windows = readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8");
+    expect(windows).toContain("$manifest.engines.node");
+    expect(windows).not.toContain("OpenJS.NodeJS");
+    expect(nativePins().assets.filter((row) => row.tool === "node").map((row) => row.version)).toEqual(Array(6).fill(pinned));
+  });
+
+  const nativePinsPath = (source: string, pattern: RegExp, separator: string) => join(repoRoot, ...source.match(pattern)![1]!.split(separator));
+  const nativePins = () => {
+    const path = nativePinsPath(readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8"), /^PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
+    return { path, schema: JSON.parse(readFileSync(path, "utf8")), ...(JSON.parse(readFileSync(path, "utf8")).definitions.Pins.const as { assets: { tool: string; version: string; platform: string; arch: string; url: string; sha256: string }[] }) };
+  };
+
+  test("pins and checksums every installer the native bootstraps download, agreeing with the image, the Bun and rustup schemas and the toolchain pins", () => {
+    const pins = nativePins(), rules = fixture.nativePins;
+    const validate = new Ajv({ allErrors: true, strict: true }).compile(pins.schema);
+    expect(validate({ assets: pins.assets }), JSON.stringify(validate.errors)).toBe(true);
+    const shell = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8"), windows = readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8");
+    const bunPath = nativePinsPath(shell, /^BUN_PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
+    expect(nativePinsPath(windows, /^\$script:PinsFile = Join-Path \$repoRoot "(.*)"$/mu, "\\")).toBe(pins.path);
+    expect(nativePinsPath(windows, /^\$script:BunPinsFile = Join-Path \$repoRoot "(.*)"$/mu, "\\")).toBe(bunPath);
+    const rowLines = readFileSync(pins.path, "utf8").split("\n").filter((line) => line.trim().startsWith('{"tool":'));
+    expect(rowLines.length).toBe(pins.assets.length);
+    for (const [index, line] of rowLines.entries()) {
+      expect(line.trim(), line).toMatch(new RegExp(rules.rowShape, "u"));
+      expect(JSON.parse(line.trim().replace(/,$/u, ""))).toEqual(pins.assets[index]!);
+    }
+    for (const row of pins.assets) expect({ url: row.url, host: rules.hosts.includes(new URL(row.url).hostname) }).toEqual({ url: row.url, host: true });
+    for (const tool of rules.tools) {
+      const rows = pins.assets.filter((row) => row.tool === tool);
+      expect(rows.map((row) => `${row.platform}-${row.arch}`).sort()).toEqual(rules.platforms.flatMap((platform: string) => rules.architectures.map((arch: string) => `${platform}-${arch}`)).sort());
+      expect(new Set(rows.map((row) => row.version)).size).toBe(1);
+      for (const row of rows) expect(row.url).toContain(row.version);
+    }
+    expect(pins.assets.filter((row) => row.tool === "dotnet-install")).toHaveLength(1);
+    const bun = JSON.parse(readFileSync(bunPath, "utf8")).definitions.Release.const as { version: string; release: string; distributions: { platform: string; arch: string; musl: boolean; archive: string; sha256: string }[] };
+    expect(bun.version).toBe((JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as { packageManager: string }).packageManager.replace("bun@", ""));
+    const image = readFileSync(join(repoRoot, fixture.nodePin.dockerfile), "utf8");
+    const imageNode = [...image.matchAll(/node_archive="([^"]+)"; node_sha="([a-f0-9]{64})"/gu)].map((match) => [match[1], match[2]]);
+    expect(imageNode).toEqual(["x64", "arm64"].map((arch) => [arch, pins.assets.find((row) => row.tool === "node" && row.platform === "linux" && row.arch === arch)!.sha256]));
+    const imageBun = [...image.matchAll(/bun_archive="([^"]+)"; bun_sha="([a-f0-9]{64})"/gu)].map((match) => [match[1], match[2]]);
+    expect(imageBun).toEqual(["x64-baseline", "aarch64"].map((archive) => [archive, bun.distributions.find((row) => row.platform === "linux" && !row.musl && row.archive === `bun-linux-${archive}.zip`)!.sha256]));
+    const rustup = JSON.parse(readFileSync(join(libraryRoot, "⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧬️schema/🔣️.json"), "utf8")).definitions.Protocol.const.bootstrapVersion as string;
+    expect(pins.assets.find((row) => row.tool === "rustup")!.version).toBe(rustup);
+    const devcontainer = Bun.JSONC.parse(readFileSync(join(repoRoot, ".devcontainer/devcontainer.json"), "utf8")) as { features: Record<string, { version?: string }> };
+    expect(pins.assets.find((row) => row.tool === "uv")!.version).toBe(devcontainer.features["ghcr.io/jsburckhardt/devcontainer-features/uv:1"]!.version!);
+    const goVersion = pins.assets.find((row) => row.tool === "go")!.version, goFeature = devcontainer.features["ghcr.io/devcontainers/features/go:1"]!.version!;
+    expect(goVersion.startsWith(`${goFeature}.`)).toBe(true);
+    expect(Bun.semver.order(goVersion, readFileSync(join(repoRoot, "go.work"), "utf8").match(/^go (\d+\.\d+(?:\.\d+)?)$/mu)![1]! + (/^go \d+\.\d+$/mu.test(readFileSync(join(repoRoot, "go.work"), "utf8")) ? ".0" : ""))).toBeGreaterThanOrEqual(0);
+    for (const fragment of rules.forbiddenInstallers) {
+      expect({ fragment, shell: shell.includes(fragment) }).toEqual({ fragment, shell: false });
+      expect({ fragment, windows: windows.includes(fragment) }).toEqual({ fragment, windows: false });
+    }
+    const curlLines = shell.split("\n").filter((line) => /^\s*curl\s/u.test(line));
+    expect(curlLines).toHaveLength(1);
+    expect(shellFunction(shell, "download_verified")).toContain(curlLines[0]!.trim());
+    expect(shellFunction(shell, "download_verified")).toContain("curl --proto '=https' --tlsv1.2");
+    expect(shellFunction(shell, "download_verified")).toContain("verify_sha256");
+    expect(windows.match(/Invoke-WebRequest/gu)).toHaveLength(1);
+    expect(windows.match(/function Save-VerifiedDownload \{[\s\S]*?Invoke-WebRequest[\s\S]*?Get-FileHash[\s\S]*?Checksum mismatch[\s\S]*?\n\}/u)).not.toBeNull();
+  });
+
+  test("selects pinned distributions in the shell exactly as the schemas declare them", () => {
+    if (process.platform === "win32") return;
+    const pins = nativePins(), source = readFileSync(join(repoRoot, fixture.unixBootstrap.path), "utf8");
+    const bunPath = nativePinsPath(source, /^BUN_PINS_FILE="\$REPO_ROOT\/(.*)"$/mu, "/");
+    const bun = JSON.parse(readFileSync(bunPath, "utf8")).definitions.Release.const as { version: string; release: string; distributions: { platform: string; arch: string; musl: boolean; archive: string; sha256: string }[] };
+    const functions = ["pin_row", "pin_field", "bun_release_row", "version_at_least"].map((name) => shellFunction(source, name)).join("\n");
+    const script = (body: string) => spawnSync("bash", ["-c", `set -euo pipefail\nPINS_FILE="$1"\nBUN_PINS_FILE="$2"\n${functions}\n${body}`, "law", pins.path, bunPath], { encoding: "utf8" });
+    for (const row of bun.distributions.filter((candidate) => candidate.platform !== "win32")) {
+      const result = script(`bun_release_row ${row.platform} ${row.arch} ${row.musl}`);
+      expect({ status: result.status, stdout: result.stdout.trim() }).toEqual({ status: 0, stdout: `${bun.version} ${bun.release} ${row.archive} ${row.sha256}` });
+    }
+    for (const row of pins.assets.filter((candidate) => candidate.platform !== "any")) {
+      const result = script(`row="$(pin_row ${row.tool} ${row.platform} ${row.arch})"; printf '%s|%s|%s' "$(pin_field "$row" version)" "$(pin_field "$row" url)" "$(pin_field "$row" sha256)"`);
+      expect({ tool: row.tool, status: result.status, stdout: result.stdout }).toEqual({ tool: row.tool, status: 0, stdout: `${row.version}|${row.url}|${row.sha256}` });
+    }
+    expect(script("pin_row node freebsd x64").stdout).toBe("");
+    for (const [installed, pinned, expected] of [["1.26.9", "1.26.9", true], ["1.26.10", "1.26.9", true], ["1.25.7", "1.26.9", false], ["2.0", "1.26.9", true]] as const) {
+      expect({ installed, status: script(`version_at_least ${installed} ${pinned}`).status === 0 }).toEqual({ installed, status: expected });
+      expect(Bun.semver.order(installed.split(".").length === 2 ? `${installed}.0` : installed, pinned) >= 0).toBe(expected);
+    }
+  });
+
+  test("applies the long-path, Playwright cache and process-safety contracts in the Windows bootstrap", async () => {
+    const windows = readFileSync(join(repoRoot, fixture.windowsBootstrap.path), "utf8");
+    for (const [key, value] of fixture.repoLocalGitConfig) expect(windows).toContain(`@("${key}", "${value}")`);
+    expect(windows).toContain("config --local $setting[0] $setting[1]");
+    expect(windows).not.toContain("this script does not self-elevate");
+    expect(windows).not.toContain("Mount-DiskImage");
+    expect(windows).not.toContain("SeManageVolumePrivilege");
+    expect(windows).toContain(fixture.nativePins.playwrightCache);
+    expect(windows).not.toContain("node_modules\\.cache\\ms-playwright");
+    expect(windows.split("\n").filter((line) => /Stop-Process/u.test(line) && !line.trim().startsWith("#"))).toEqual(["            Stop-Process -Id $process.ProcessId -ErrorAction Stop"]);
+    expect(windows).toContain("-Consent:$StopRepoPython");
+    expect(windows).toContain('Write-Step ("[readiness] LongPathsEnabled=');
+    const { parseWindowsLongPathsEnabled } = await import(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts"));
+    for (const row of fixture.windowsLongPaths.cases as { output: string; expected: boolean | null }[]) {
+      const value = row.output.split(/\r?\n/u).find((line) => line.includes("LongPathsEnabled"))?.trim().split(/\s+/u).at(-1);
+      const oracle = value === undefined ? null : Number.parseInt(value, 16) === 1;
+      expect(parseWindowsLongPathsEnabled(row.output) ?? null).toBe(oracle);
+      expect(oracle).toBe(row.expected);
+    }
   });
 
   test("guides Windows long paths in every supported language and never writes user-global tool configuration", () => {

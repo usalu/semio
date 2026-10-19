@@ -2,7 +2,8 @@
 //! artifact store performs, and a decode-in-place hands back a bounded retirement that reaches its
 //! terminal state before it is dropped.
 
-use crate::io::binary::snapshot::{decode_into, encode};
+use semio_s_artifact_wfc_grid2d_snapshot::standards::v1::subsets::any::io::binary::snapshot::decode_into;
+use crate::standards::v1::subsets::any::io::binary::snapshot::encode;
 use crate::schema::snapshot::Grid2dSnapshot;
 
 /// 🎟️ The exact frame capacity one displaced snapshot's retirement is born with.

@@ -1,4 +1,4 @@
-//! snapshot's `meta.kindCatalogs` (falling back to the kinds actually present in the document). Node
+//! 🟢️ snapshot's `meta.kindCatalogs` (falling back to the kinds actually present in the document). Node
 //! 🛍️ Puzzle 2d play app panel — the kind catalogue: node/handle/edge kind rows read from the
 //! rows are drag sources for the canvas; every row also adds a node on click — a catalogue row owns
 //! its own `addNode` binding, so it stays an ordinary interactive row.
@@ -6,8 +6,8 @@
 //! 🪟️ All three sections are windowed: each publishes its full `total` and materialises only the
 //! host's slice (see `📌️panels/🗿️artifact` for the windowing law).
 
-use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use {crate::editor::puzzle2d::snapshot::inferred_kind_entries, crate::editor::puzzle2d::snapshot::kind_catalog_entries, crate::editor::puzzle2d::interaction::ui_label, crate::editor::puzzle2d::snapshot::Puzzle2dScene, crate::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
+use semio_s_artifact_puzzle_2d_records::editor::puzzle2d::terminology::Puzzle2dLabels;
+use {semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::inferred_kind_entries, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::kind_catalog_entries, semio_s_artifact_puzzle_2d_interaction::editor::puzzle2d::interaction::ui_label, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dScene, semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_item_with_action_draggable;
 use semio_framework_plugin::ActionFactory;

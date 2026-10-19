@@ -28,7 +28,7 @@ impl BoundedJob for MountedJob {
             if deadline.is_none() || !matches!(step, JobStep::Running(None)) { break; }
         }
         if matches!(&step, JobStep::Done(_)) {
-            record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Validated);
+            record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Validated);
             self.completed = true;
         }
         Ok(step)
@@ -58,7 +58,7 @@ impl BoundedJob for MountedJob {
     }
 
     fn cancel(&mut self) {
-        record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Cancelled);
+        record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled);
         if let Ok(shell) = self.shell.try_borrow() {
             if let Some(state) = shell.as_ref() {
                 state.cancel.cancel_now();
@@ -84,7 +84,7 @@ impl BoundedJob for MountedJob {
 impl Drop for MountedJob {
     fn drop(&mut self) {
         if self.completed || self.shell.try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity == self.identity && state.done)) {
-            record_terminal(self.identity, semio_framework_value::RequestTerminalKind::Validated);
+            record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Validated);
             let _ = self.recovery.publish(self.identity, MountedRecoveryPublication::Retained);
             return;
         }

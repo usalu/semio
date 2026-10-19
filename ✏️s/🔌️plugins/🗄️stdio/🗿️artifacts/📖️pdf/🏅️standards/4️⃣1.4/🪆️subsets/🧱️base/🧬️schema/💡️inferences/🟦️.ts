@@ -7,7 +7,7 @@ export interface PdfOutline {
 }
 
 export interface PdfInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: PdfOutline;
 }
 

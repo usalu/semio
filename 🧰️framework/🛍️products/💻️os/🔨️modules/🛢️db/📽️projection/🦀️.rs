@@ -440,8 +440,6 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     }
 
     async fn projection_by_id(&self, projection_id: &str) -> Result<&E, DbError> {
-        // 🔀️ `ErasedProjection::id` genuinely awaits (an open trait, R9 does not apply) — hoisted
-        // out of `Iterator::find`'s sync closure (R10 residue shape 1) into an explicit loop.
         for projection in &self.projections {
             if projection.id().await == projection_id {
                 return Ok(projection);
@@ -451,7 +449,7 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     }
 
     async fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a, S> {
-        let _ = projection_id; // ProjectionIndex is per-document, not per-projection-id; kept as a parameter for call-site clarity.
+        let _ = projection_id;
         ProjectionIndex::new(self.storage, self.document.clone()).await
     }
 

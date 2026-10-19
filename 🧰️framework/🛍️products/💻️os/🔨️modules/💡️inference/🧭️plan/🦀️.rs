@@ -1,7 +1,8 @@
 //! 🧭️ Original graph planning retains borrowed identities and funds each comparison and scalar page event.
 use super::{InferenceWorkFailure,OriginalInferredField};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
-use semio_framework_value::{list::PagedList,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::PagedList;
 
 #[derive(Default,semio_framework_value::RetireOwned)]
 pub struct OriginalInferencePlan{

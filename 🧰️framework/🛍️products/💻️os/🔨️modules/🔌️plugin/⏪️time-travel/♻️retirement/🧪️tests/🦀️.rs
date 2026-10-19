@@ -23,6 +23,8 @@ use semio_framework_plugin_window_config::WindowConfigOwner;
 use crate::original_retirement::{permits, progress};
 use semio_framework_ui_contract::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
+use semio_framework_plugin_child::MemberPath;
+use semio_framework_plugin_instance_app::VcsArtifactApp;
 
 #[test]
 fn original_inactive_member_metadata_fields_retire_under_independent_grants(){
@@ -59,8 +61,8 @@ pub fn assert_session_original<A:ArtifactApp>() {
  }}
 }
 
-fn original_drafts(capacity:usize)->semio_framework_value::list::PagedList<semio_framework_time_travel::TimeTravelDraft,{usize::MAX}>{
- let mut owner=semio_framework_value::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(owner.reserve_exact_capacity_one(8192,native_original_actor_grant().maximum_capacity_bytes).unwrap().progressed)}}owner
+fn original_drafts(capacity:usize)->semio_framework_value_persistent::list::PagedList<semio_framework_time_travel::TimeTravelDraft,{usize::MAX}>{
+ let mut owner=semio_framework_value_persistent::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(owner.reserve_exact_capacity_one(8192,native_original_actor_grant().maximum_capacity_bytes).unwrap().progressed)}}owner
 }
 
 #[doc(hidden)]

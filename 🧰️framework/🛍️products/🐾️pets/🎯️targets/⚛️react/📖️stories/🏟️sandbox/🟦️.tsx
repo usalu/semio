@@ -123,7 +123,7 @@ function Inspect({ menagerie, reading, inspector, handle, text, scale }: { reado
     void carry(from, to(from), steps, hold).finally(() => setBusy(false));
   };
   const neighbour = actors.filter((other) => other.species !== actor.species && other.footing === "perch").sort((one, other) => Math.abs(one.x - actor.x) - Math.abs(other.x - actor.x))[0];
-  const deeds: { readonly [deed in Deed]: string } = { hello: text.deedHello, trick: text.deedTrick, pet: text.deedPet, toss: text.deedToss };
+  const deeds: { readonly [deed in Deed]: string } = { hello: text.deedHello, trick: text.deedTrick, pet: text.deedPet, toss: text.deedToss, circle: text.deedCircle, countercircle: text.deedCountercircle, stroke: text.deedStroke, shake: text.deedShake };
   const news = reading?.news ?? null;
   return (
     <div className="inspect">

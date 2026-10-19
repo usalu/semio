@@ -42,12 +42,10 @@ pub struct GrowBuffer {
 }
 
 impl GrowBuffer {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn buffer(&self) -> Option<&ID3D12Resource> {
         self.buffer.as_ref()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn gpu_address(&self) -> Option<u64> {
         // 🔓️ SAFETY: `GetGPUVirtualAddress` is a plain accessor on a live buffer this call borrows.
         self.buffer.as_ref().map(|buffer| unsafe { buffer.GetGPUVirtualAddress() })
@@ -56,7 +54,6 @@ impl GrowBuffer {
     /// 📤️ Grows (never shrinks) to fit `bytes`, then copies `bytes` into the buffer's start via
     /// `Map`/`Unmap`. Returns `None` (and leaves any existing buffer untouched) for empty input,
     /// matching the wgpu target's/Metal's "nothing to draw" no-op.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn upload(&mut self, device: &Device, bytes: &[u8]) -> Option<&ID3D12Resource> {
         if bytes.is_empty() {
             return None;
@@ -114,7 +111,6 @@ pub struct FrameDescriptors {
 }
 
 impl FrameDescriptors {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn heap(&self) -> Option<&ID3D12DescriptorHeap> {
         self.heap.as_ref()
     }
@@ -123,7 +119,6 @@ impl FrameDescriptors {
     /// complete — see this file's header for why growth never happens mid-frame instead. Recreates
     /// the heap only if `min_pairs * 2` exceeds the current capacity (never shrinks); always resets
     /// the bump cursor to 0.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn begin_frame(&mut self, device: &Device, min_pairs: u32) {
         let needed = min_pairs.max(1) * 2;
         if self.heap.is_none() || needed > self.capacity {
@@ -141,7 +136,6 @@ impl FrameDescriptors {
     /// ✏️ Copies two resident CPU descriptors (`cpu_a` at the returned handle's `t0`, `cpu_b` at
     /// `t1`) into a fresh, never-reused-this-frame pair of slots, and returns the GPU handle of the
     /// first — ready to bind directly via `SetGraphicsRootDescriptorTable(1, handle)`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn allocate_pair(&mut self, device: &Device, cpu_a: D3D12_CPU_DESCRIPTOR_HANDLE, cpu_b: D3D12_CPU_DESCRIPTOR_HANDLE) -> D3D12_GPU_DESCRIPTOR_HANDLE {
         let heap = self.heap.as_ref().expect("begin_frame always allocates a heap before any allocate_pair call");
         assert!(self.cursor + 2 <= self.capacity, "d3d12 backend: FrameDescriptors exceeded its begin_frame-sized capacity — a batch count changed between sizing and recording");

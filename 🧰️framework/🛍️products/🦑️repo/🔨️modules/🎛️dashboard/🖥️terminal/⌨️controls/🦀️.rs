@@ -10,7 +10,8 @@ use dashboard_preferences::Change;
 use dashboard_preferences::keymap::{KeyName, KeySpec, Scope};
 use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
-use semio_framework_ui_tui_frame::layout::{dock_window, reorder_stack_tab, resize_split, resize_window, zoom_window, DockPlacement};
+use semio_framework_ui_tui_frame::layout::{dock_window, reorder_stack_tab, resize_split, resize_window, zoom_window};
+use semio_framework_ui_tui_core::docking::{DockPlacement};
 use semio_framework_ui_tui_frame::scene::NodeId;
 use semio_framework_ui_tui_core::signal::WidgetSignal;
 use semio_framework_ui_tui_widgets::widget::WidgetState;
@@ -461,7 +462,7 @@ impl Dashboard {
                 }
             }
             Action::TabTopLeft | Action::TabTopRight | Action::TabBottomLeft | Action::TabBottomRight => {
-                use ui_tui::tui::layout::WindowStackCorner::*;
+                use semio_framework_ui_tui_core::docking::WindowStackCorner::*;
                 let source = self.windows[index].id.clone();
                 let corner = match action { Action::TabTopLeft => TopLeft, Action::TabTopRight => TopRight, Action::TabBottomLeft => BottomLeft, _ => BottomRight };
                 if dock_window(&mut self.layout, &source, &source, DockPlacement::Corner(corner), None) { self.focus_window(tui, index); }
@@ -570,7 +571,7 @@ impl Dashboard {
     fn footer_status(&self, tui: &Tui) -> String {
         let text = self.text();
         if let Some((placement, _)) = tui.docking_preview() {
-            let action = match placement { DockPlacement::Tabs => text.dock_tabs, DockPlacement::Corner(corner) => match corner { ui_tui::tui::layout::WindowStackCorner::TopLeft => text.dock_top_left, ui_tui::tui::layout::WindowStackCorner::TopRight => text.dock_top_right, ui_tui::tui::layout::WindowStackCorner::BottomLeft => text.dock_bottom_left, ui_tui::tui::layout::WindowStackCorner::BottomRight => text.dock_bottom_right }, DockPlacement::Left => text.dock_left, DockPlacement::Right => text.dock_right, DockPlacement::Top => text.dock_top, DockPlacement::Bottom => text.dock_bottom };
+            let action = match placement { DockPlacement::Tabs => text.dock_tabs, DockPlacement::Corner(corner) => match corner { semio_framework_ui_tui_core::docking::WindowStackCorner::TopLeft => text.dock_top_left, semio_framework_ui_tui_core::docking::WindowStackCorner::TopRight => text.dock_top_right, semio_framework_ui_tui_core::docking::WindowStackCorner::BottomLeft => text.dock_bottom_left, semio_framework_ui_tui_core::docking::WindowStackCorner::BottomRight => text.dock_bottom_right }, DockPlacement::Left => text.dock_left, DockPlacement::Right => text.dock_right, DockPlacement::Top => text.dock_top, DockPlacement::Bottom => text.dock_bottom };
             return text.dock_preview.fill(&[("action", action.as_str())]).into_string();
         }
         let link = match &self.state {

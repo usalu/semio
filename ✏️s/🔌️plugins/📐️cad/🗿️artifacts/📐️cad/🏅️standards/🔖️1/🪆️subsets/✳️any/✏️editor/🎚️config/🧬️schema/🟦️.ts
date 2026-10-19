@@ -1,16 +1,16 @@
 /** 🧬️ Persisted CAD application preferences that are independent of a window instance. */
 export interface CadConfig {
-  /** @state config */
+  /** 👉️ @state config */
   selectedNodeIds: string[];
-  /** @state config */
+  /** 🖱️ @state config */
   hoveredReferenceId?: string;
-  /** @state config */
+  /** 🟢️ @state config */
   activeExampleId?: string;
-  /** @state config */
+  /** ☑️ @state config */
   selectedReferenceModelDefinitionId?: string;
-  /** @state config */
+  /** ✔️ @state config */
   selectedReferenceId?: string;
-  /** @state config */
+  /** 🤝️ @state config */
   contributionsJson: string;
 }
 

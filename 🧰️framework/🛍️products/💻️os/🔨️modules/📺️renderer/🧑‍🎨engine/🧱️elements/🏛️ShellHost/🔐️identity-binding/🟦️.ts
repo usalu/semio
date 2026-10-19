@@ -126,10 +126,7 @@ export function hubBootstrapOriginV1(): string {
   if (declared !== undefined) {
     try {
       return new URL(declared).origin;
-    } catch {
-      /* 🚫️ A malformed define is not a reason to fail the shell; the page origin still renders the
-       * surface, and signing in against it reports `unreachable` rather than crashing. */
-    }
+    } catch {}
   }
   return typeof globalThis.location === "undefined" ? "http://127.0.0.1:7777" : globalThis.location.origin;
 }

@@ -1,4 +1,4 @@
-//! settings. The staged form speaks the TYPED optional fields; a results-panel control speaks
+//! 🎚️ settings. The staged form speaks the TYPED optional fields; a results-panel control speaks
 //! 🧮️ Fem3d play app command — `set-analysis-settings`: a partial update of the document's analysis
 //! `{field, value}` because the host merges a control's own scalar under `value`.
 

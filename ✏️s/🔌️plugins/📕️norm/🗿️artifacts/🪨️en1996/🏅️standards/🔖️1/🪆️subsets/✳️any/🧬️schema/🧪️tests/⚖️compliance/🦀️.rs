@@ -452,7 +452,6 @@ fn typed_diff_and_snapshot_facets_have_no_unknown() {
                 bad.push(format!("{rel} contains {needle}"));
             }
         }
-        // Bare `: unknown` / `?: unknown` on exported schema fields (not parse guards).
         if rel.ends_with("🔺️diff/🟦️.ts") || rel.ends_with("📸️snapshot/🟦️.ts") {
             for line in text.lines() {
                 let trimmed = line.trim();

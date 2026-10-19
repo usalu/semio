@@ -68,7 +68,7 @@ where
     /// 🔧️ The most recently created/amended edit's `(forwards, inverse, per-operation meta)`.
     /// Used right after `dispatch(Apply{..})`/`AppendTransaction` to build a `KernelMutation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.inverse`.
-    pub fn edit_mutations(&self) -> Option<(&[Mutation], &semio_framework_value::list::PagedList<Mutation, {usize::MAX}>, &[MutationMeta])> {
+    pub fn edit_mutations(&self) -> Option<(&[Mutation], &semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>, &[MutationMeta])> {
         self.envelope.vcs.edits.last().map(|edit| (edit.forwards.as_slice(), &edit.inverse, edit.mutation_meta.as_slice()))
     }
 

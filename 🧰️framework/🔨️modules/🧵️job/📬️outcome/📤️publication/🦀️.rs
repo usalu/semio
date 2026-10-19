@@ -1,5 +1,6 @@
 //! 📤️ Original source identity and physical pages remain inside one artifact-neutral publication.
-use semio_framework_job::{RetainedPayloadBuilder,JobPayloadStream,OperationId,Generation,StepContext,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobOutcomeKind,RetainedJobPayload,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use semio_framework_job::{OperationId, Generation, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobOutcomeKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream, RetainedJobPayload};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::RetirementDemand;
 

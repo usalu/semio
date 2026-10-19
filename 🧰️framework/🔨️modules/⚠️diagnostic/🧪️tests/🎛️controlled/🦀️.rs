@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{NativeDecodeControl, NativeEncodeControl, Number};
+use semio_framework_value::{NativeEncodeControl, Number};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::{io::Write, process::{Command, Stdio}};
 
 fn fixture() -> serde_json::Value {
@@ -132,13 +133,13 @@ fn controlled_diagnostic_long_text_lists_and_interior_cancellation() {
     let mut accept = |_| true;
     assert_eq!(fault.to_value_controlled(&mut NativeEncodeControl::new(maximum, &mut accept)).unwrap(), value);
     let mut reached = false;
-    let mut cancel = |p: semio_framework_value::native_decoding::NativeDecodeProgress| { if p.completed >= cutoff && p.total == fault.message.len() { reached = true; false } else { true } };
+    let mut cancel = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| { if p.completed >= cutoff && p.total == fault.message.len() { reached = true; false } else { true } };
     refusal(Fault::from_value_controlled(&value, &mut NativeDecodeControl::new(maximum, &mut cancel)).unwrap_err(), "cancel"); assert!(reached);
     let mut reached = false;
     let mut cancel = |p: semio_framework_value::native_encoding::NativeEncodeProgress| { if p.completed >= cutoff && p.total == fault.message.len() { reached = true; false } else { true } };
     refusal(fault.to_value_controlled(&mut NativeEncodeControl::new(maximum, &mut cancel)).unwrap_err(), "cancel"); assert!(reached);
     let mut reached = false;
-    let mut cancel = |p: semio_framework_value::native_decoding::NativeDecodeProgress| { if p.completed == 256 && p.total == count { reached = true; false } else { true } };
+    let mut cancel = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| { if p.completed == 256 && p.total == count { reached = true; false } else { true } };
     refusal(Fault::from_value_controlled(&value, &mut NativeDecodeControl::new(maximum, &mut cancel)).unwrap_err(), "cancel"); assert!(reached);
     let mut reached = false;
     let mut cancel = |p: semio_framework_value::native_encoding::NativeEncodeProgress| { if p.completed == 256 && p.total == count { reached = true; false } else { true } };

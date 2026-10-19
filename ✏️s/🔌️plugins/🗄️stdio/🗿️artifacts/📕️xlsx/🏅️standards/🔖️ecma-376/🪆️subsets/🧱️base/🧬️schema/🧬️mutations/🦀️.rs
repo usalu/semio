@@ -277,12 +277,6 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
             XlsxSheet { name: "stay".into(), cells: vec![] },
             XlsxSheet { name: "toDrop".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::SharedString(0) }] },
         ],
-        // 🎯️ Length 3 vs `sweep_b`'s 2: per this ticket's "known structural trap" note, a
-        // single same-direction `between()` over an index-keyed (pairwise-position-matched)
-        // collection can never show BOTH `removed` AND `added` from one call -- so `a -> b`
-        // exercises `shared_strings.removed` (index 2, since `b` is shorter) +
-        // `shared_strings.modified` (index 1); `b -> a` (asserted separately in
-        // `field_sweep`) exercises `shared_strings.added` (the same index 2, recurring).
         shared_strings: vec!["keep".into(), "toModify".into(), "toRemove".into()],
     });
     snapshot.opc.content_types.set_default("bin", SWEEP_BINARY_CONTENT_TYPE);
@@ -302,9 +296,6 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
             XlsxSheet {
                 name: "toModify".into(),
                 cells: vec![
-                    // row (1,0) survives with a changed value; row (2,0) is dropped; row
-                    // (3,0) is a NET-NEW cell -- exercises `cells.removed` +
-                    // `cells.modified` + `cells.added` all in the SAME sheet-modify.
                     XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(2.0) },
                     XlsxCell { row: 3, col: 0, value: XlsxCellValue::Formula { expr: "SUM(A1:A2)".into(), cached: Some(Box::new(XlsxCellValue::Number(3.0))) } },
                 ],
@@ -312,9 +303,6 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
             XlsxSheet { name: "stay".into(), cells: vec![] },
             XlsxSheet { name: "added".into(), cells: vec![XlsxCell { row: 1, col: 1, value: XlsxCellValue::InlineString("brand new".into()) }] },
         ],
-        // 🎯️ Length 2: index 2 ("toRemove") no longer exists — exercises
-        // `shared_strings.removed` on `a -> b` (see `sweep_a`'s doc comment); the same
-        // index recurs as `shared_strings.added` on `b -> a`.
         shared_strings: vec!["keep".into(), "toModify-changed".into()],
     });
     snapshot.opc.content_types.set_default("bin", SWEEP_BINARY_CONTENT_TYPE);

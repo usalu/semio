@@ -107,41 +107,5 @@ pub mod editor {
     pub mod tiff_any {
         #[path = "../../../../✏️editor/🧭️edit-rules/🦀️.rs"]
         pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "../../../../✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "../../../../✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-    }
-    #[path = "."]
-    pub mod tiff_baseline {
-        #[path = "../../../../../🧱️baseline/✏️editor/🧭️edit-rules/🦀️.rs"]
-        pub mod edit_rules;
-        #[path = "."]
-        pub mod presence {
-            #[path = "../../../../../🧱️baseline/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "../../../../../🧱️baseline/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-    }
-}
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod tiff_any {
-        #[path = "."]
-        pub mod presence {
-            #[path = "../../../../👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
     }
 }

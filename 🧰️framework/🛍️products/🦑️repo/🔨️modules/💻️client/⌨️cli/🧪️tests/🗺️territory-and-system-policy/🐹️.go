@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestTerritory(t *testing.T) {
@@ -187,7 +188,7 @@ func TestPolicyDefAllKinds(t *testing.T) {
 }
 
 func TestSystemPolicy(t *testing.T) {
-	data, err := os.ReadFile("../../../../🎛️dashboard/🧫️fixtures/🧭️authority/🔣️.json")
+	data, err := os.ReadFile(sandbox.OriginPath("..", "..", "🎛️dashboard", "🧪️tests", "🧫️fixtures", "🧭️authority", "🔣️.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

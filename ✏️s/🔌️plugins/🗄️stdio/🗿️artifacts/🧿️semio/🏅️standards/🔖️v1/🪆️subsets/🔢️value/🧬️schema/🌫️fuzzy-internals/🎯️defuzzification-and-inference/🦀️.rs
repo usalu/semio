@@ -16,7 +16,6 @@ pub enum Defuzzifier {
 }
 
 impl Defuzzifier {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, universe: &Universe, membership: &[f64], rule_heights: Option<&[f64]>, rule_values: Option<&[f64]>) -> FuzzyResult<f64> {
         if universe.samples.is_empty() || membership.is_empty() {
             return Err(FuzzyError::EmptyUniverse);
@@ -122,7 +121,6 @@ pub struct MimoSystem {
 }
 
 impl MimoSystem {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Explanation)> {
         if values.len() != self.inputs.len() {
             return Err(FuzzyError::DimensionMismatch("input count".into()));
@@ -141,7 +139,6 @@ impl MimoSystem {
         Ok((outputs.clone(), Explanation { model: self.model, input_values: values.to_vec(), output_values: outputs, traces, defuzzifier: self.defuzzifier, rationale }))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn infer_output(&self, out_idx: usize, output_var: &LinguisticVariable, values: &[f64]) -> FuzzyResult<(f64, Vec<RuleTrace>)> {
         let mut aggregated = vec![0.0; output_var.universe.len()];
         let mut traces = Vec::new();
@@ -257,12 +254,10 @@ pub struct HierarchicalSystem {
 }
 
 impl HierarchicalSystem {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(layers: Vec<MimoSystem>) -> Self {
         Self { layers }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn infer(&self, values: &[f64]) -> FuzzyResult<(Vec<f64>, Vec<Explanation>)> {
         let mut current = values.to_vec();
         let mut explanations = Vec::new();

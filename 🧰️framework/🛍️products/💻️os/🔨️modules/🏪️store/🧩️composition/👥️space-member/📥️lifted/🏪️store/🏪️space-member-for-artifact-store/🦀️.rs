@@ -1,6 +1,7 @@
 //! 🏪️ Space member for artifact store: the space member implementation of the artifact store over its one item publication, snapshot reads, checkpoints, undo, redo, wire dispatch and pack operations. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

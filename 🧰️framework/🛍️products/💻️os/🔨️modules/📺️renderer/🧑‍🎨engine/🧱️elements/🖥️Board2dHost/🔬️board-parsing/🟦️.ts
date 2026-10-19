@@ -175,9 +175,7 @@ export function board2dGranularityById(snapshotJson: string): ReadonlyMap<string
       for (const handle of node.handles ?? []) if (typeof handle.id === "string") byId.set(handle.id, "handle");
     }
     for (const edge of snapshot.edges ?? []) if (typeof edge.id === "string") byId.set(edge.id, "edge");
-  } catch {
-    /* a refused snapshot classifies nothing — every id then reports as a node */
-  }
+  } catch {}
   return byId;
 }
 

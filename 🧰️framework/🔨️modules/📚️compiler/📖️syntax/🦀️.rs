@@ -189,8 +189,6 @@ fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
 
     while i < bytes.len() {
         let c = bytes[i];
-        // A quoted `"..."` literal is skipped whole here (dsl_core's own escape scheme) so an
-        // extra character inside a string is never mistaken for this lexer's own operators.
         if c == b'"' {
             i += 1;
             while i < bytes.len() {
@@ -226,9 +224,6 @@ fn lex(text: &str) -> Result<Vec<MToken>, TextError> {
             }
             return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected `!=` (bare `!` is not a math notation operator)", TextSpan::at(line, col)));
         }
-        // `->` is already `Arrow` in `dsl_core`'s alphabet — when this `>` is the second half of
-        // one (immediately preceded by `-`), leave it in the ambient segment instead of cutting it
-        // off here, so `core_lex` sees the whole `->` and tokenizes it as a single `Arrow`.
         if c == b'>' && i > 0 && bytes[i - 1] == b'-' {
             i += 1;
             continue;

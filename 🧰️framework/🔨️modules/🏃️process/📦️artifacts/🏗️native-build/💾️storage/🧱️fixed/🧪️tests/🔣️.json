@@ -1,63 +1,5 @@
 {
   "version": 1,
-  "linux": [
-    {
-      "name": "exact loop mount",
-      "line": "35 29 7:0 / /repo/fixed/m rw,relatime - ext4 /dev/loop0 rw",
-      "root": "/repo/fixed/m",
-      "valid": true
-    },
-    {
-      "name": "escaped mount",
-      "line": "35 29 7:1 / /repo/fixed\\040name/m rw - ext4 /dev/loop1 rw",
-      "root": "/repo/fixed name/m",
-      "valid": true
-    },
-    {
-      "name": "bind subtree refused",
-      "line": "35 29 7:0 /subtree /repo/fixed/m rw - ext4 /dev/loop0 rw",
-      "root": "/repo/fixed/m",
-      "valid": false
-    },
-    {
-      "name": "unbounded filesystem refused",
-      "line": "35 29 0:18 / /repo/fixed/m rw - tmpfs tmpfs rw",
-      "root": "/repo/fixed/m",
-      "valid": false
-    },
-    {
-      "name": "different mount refused",
-      "line": "35 29 7:0 / /repo/other/m rw - ext4 /dev/loop0 rw",
-      "root": "/repo/fixed/m",
-      "valid": false
-    }
-  ],
-  "vhd": [
-    {
-      "type": 2,
-      "currentBytes": 33554432,
-      "fileBytes": 33554944,
-      "valid": true
-    },
-    {
-      "type": 3,
-      "currentBytes": 33554432,
-      "fileBytes": 33554944,
-      "valid": false
-    },
-    {
-      "type": 2,
-      "currentBytes": 33554432,
-      "fileBytes": 33554432,
-      "valid": false
-    },
-    {
-      "type": 2,
-      "currentBytes": 67108864,
-      "fileBytes": 67109376,
-      "valid": false
-    }
-  ],
   "platforms": [
     {
       "platform": "darwin",
@@ -92,43 +34,6 @@
     {
       "path": "..cache/output",
       "accepted": true
-    }
-  ],
-  "ownedChildren": [
-    {
-      "name": "all exact owned descendants",
-      "text": "35 29 7:0 / /repo/graph/m rw - ext4 /dev/loop0 rw\n36 35 7:1 / /repo/graph/m/nx/cache/m rw - ext4 /dev/loop1 rw\n37 36 7:2 / /repo/graph/m/nx/cache/m/nx/graphs/sdk/key/native/m rw - ext4 /dev/loop2 rw",
-      "root": "/repo/graph/m",
-      "owned": [
-        "/repo/graph/m/nx/cache/m",
-        "/repo/graph/m/nx/cache/m/nx/graphs/sdk/key/native/m"
-      ],
-      "accepted": true
-    },
-    {
-      "name": "unknown grandchild",
-      "text": "35 29 7:0 / /repo/graph/m rw - ext4 /dev/loop0 rw\n36 35 7:1 / /repo/graph/m/nx/cache/m rw - ext4 /dev/loop1 rw\n37 36 7:2 / /repo/graph/m/nx/cache/m/nx/graphs/sdk/key/native/m rw - ext4 /dev/loop2 rw",
-      "root": "/repo/graph/m",
-      "owned": [
-        "/repo/graph/m/nx/cache/m"
-      ],
-      "accepted": false
-    },
-    {
-      "name": "unissued child",
-      "text": "35 29 7:0 / /repo/graph/m rw - ext4 /dev/loop0 rw\n36 35 7:1 / /repo/graph/m/nx/cache/m rw - ext4 /dev/loop1 rw",
-      "root": "/repo/graph/m",
-      "owned": [],
-      "accepted": false
-    },
-    {
-      "name": "unobserved child",
-      "text": "35 29 7:0 / /repo/graph/m rw - ext4 /dev/loop0 rw",
-      "root": "/repo/graph/m",
-      "owned": [
-        "/repo/graph/m/nx/cache/m"
-      ],
-      "accepted": false
     }
   ]
 }

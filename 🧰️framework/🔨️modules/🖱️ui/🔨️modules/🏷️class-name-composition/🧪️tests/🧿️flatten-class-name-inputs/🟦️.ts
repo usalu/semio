@@ -15,8 +15,6 @@ import { cn, type ClassNameInput } from "../../🟦️.ts";
 function inputsOf(ctx: AdapterContext): ClassNameInput[] {
   const docString = ctx.scenario.steps.find((step) => step.docString !== undefined)?.docString;
   if (docString === undefined) throw new Error(`scenario ${ctx.scenario.id} carries no input doc string`);
-  // 🧭️ `undefined` is a legal ClassNameInput but not legal JSON, so the profile spells it as a bare
-  // literal and it is normalized to JSON `null` — both are falsey for every implementation.
   return JSON.parse(docString.replace(/\bundefined\b/g, "null")) as ClassNameInput[];
 }
 // #endregion 🧫️Vectors

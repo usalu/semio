@@ -206,12 +206,8 @@ async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generat
         }
         .expect("guest genesis producer");
         assert!(!guest.pack.is_empty() && !guest.spr.is_empty(), "{schema} guest genesis is a complete pair");
-        // 🪞️ The linked codec ACCEPTS the guest pair: it prints a mirror of it without error, which
-        // is precisely the fence `materialize_selected_genesis` applies twice before publication.
         let mirror = (codec.print_mirror)(&guest.pack, &guest.spr).await.expect("linked GIS codec prints the guest genesis pair");
         assert!(!mirror.dsl.is_empty(), "{schema} guest genesis prints a nonempty mirror");
-        // 🧬️ …and REPRODUCES it: decoding the guest pair with the linked package's own concrete
-        // snapshot and mutation types and reprinting it must return the identical pack, spr and ops.
         let reprinted = match schema {
             "gis.map" => {
                 let parsed = store::os_store::text_format::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&guest.pack, &guest.spr).await.unwrap();

@@ -1,4 +1,4 @@
-//! `upsert-pile` — upsert a `SteelPile` by id into `piles`.
+//! 🧬️ `upsert-pile` — upsert a `SteelPile` by id into `piles`.
 
 use semio_s_artifact_norm_en1993_model::{SteelPile, En1993Snapshot};
 

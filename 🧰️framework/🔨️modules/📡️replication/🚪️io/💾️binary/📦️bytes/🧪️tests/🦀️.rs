@@ -313,7 +313,7 @@ fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refu
 #[test]
 fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_without_physical_credit(){
     use super::operation_bytes::{OperationSourceCollection,OperationByteReturnStep,OperationByteOutput};
-    use semio_framework_value::list::PagedList;
+    use semio_framework_value_persistent::list::PagedList;
     use semio_framework_value::retirement::allocation_return::{ParentAllocationReturn, AllocationReturnStep};
     let f:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🏠️child-carrier.json")).unwrap();
     let max=f["maximumBytes"].as_u64().unwrap()as usize;

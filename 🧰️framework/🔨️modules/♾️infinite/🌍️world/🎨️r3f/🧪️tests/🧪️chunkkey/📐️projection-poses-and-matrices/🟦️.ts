@@ -315,7 +315,6 @@ export async function registerProjectionPoseAndMatrixTests(vitest: NonNullable<I
       expect(state.position[1]).toBe(0);
       expect(state.position[2]).toBeGreaterThan(0.01);
       expect(state.projection).toBe("orthographic");
-      // visible half-width = (viewportWidth/2) / zoom = 25 * 1.35 ⇒ zoom = 200 / 33.75
       expect(state.zoom).toBeCloseTo(200 / (25 * 1.35), 5);
     });
 

@@ -12,7 +12,7 @@ import Ajv from "ajv";
 import equal from "fast-deep-equal";
 import { useState, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { directorySignInFixture as fixture, directoryLocalSessionDocument as localSessionFixture, directoryLocalSessionSchema as localSessionSchema } from "../../../../../../📇️directory/🧪️tests/🧫️fixtures/🟦️.ts";
+import { directorySignInFixture as fixture, directoryLocalSessionDocument as localSessionFixture, directoryLocalSessionSchema as localSessionSchema } from "@semio-tech/framework/os/modules/directory/testing/fixtures";
 import {
   HUB_AUTH_ERROR_SCHEMA_V1,
   HUB_CONNECTION_BOOK_MAX_ENTRIES,

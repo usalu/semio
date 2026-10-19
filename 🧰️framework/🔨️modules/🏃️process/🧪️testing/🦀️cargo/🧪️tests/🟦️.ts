@@ -106,7 +106,7 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
   const temporary=mkdtempSync(join(law.root,"p-"));writeOwnerPackageV1(temporary);
   try {
     for(const base of fixture.policies){
-      const log=join(temporary,`${base.level}.jsonl`),policy={...base,targetDirectory:join(temporary,"t"),manifestPath:join(temporary,"Cargo.toml"),configPath:join(temporary,"nextest.toml"),targetDirectory:join(temporary,"target"),artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coveragePath:base.coveragePath?join(temporary,"coverage.lcov"):null};
+      const log=join(temporary,`${base.level}.jsonl`),policy={...base,manifestPath:join(temporary,"Cargo.toml"),configPath:join(temporary,"nextest.toml"),targetDirectory:join(temporary,"target"),artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coveragePath:base.coveragePath?join(temporary,"coverage.lcov"):null};
       const request={manifestPath:policy.manifestPath,packages:["owner-package"],cwd:temporary,extraArgs:fixture.arguments,environment:{...process.env,...law.environment,CARGO_PORT_LOG:log}};
       const program="const fs=require('node:fs'),args=process.argv.slice(1);fs.appendFileSync(process.env.CARGO_PORT_LOG,JSON.stringify(args)+'\\n');if(args[0]==='nextest'&&args[1]==='list')process.stdout.write(JSON.stringify({rust_build_meta:{},rust_binaries:{}}));";
       await api.runCargoTestsV1(request,policy,admission,{command:"node",args:["-e",program,"--"]});
@@ -141,7 +141,7 @@ test("Cargo reporter options remain execution-owned with independent Node argume
 
 
 test("Cargo coverage paths preserve native Unicode custody with an ASCII Windows runtime identity", async () => {
- const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📊️profile-path/🔣️.json"),"utf8")),api=await import("../🟦️.ts"),{Database}=await import("bun:sqlite"),oracle=new Database(":memory:");
+ const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📊️profile-path/🔣️.json"),"utf8")),api=await import("../🟦️.ts"),{Database}=await import("bun:sqlite"),oracle=new Database(":memory:");
  try {
   oracle.run("CREATE TABLE profile_path(platform TEXT,directory TEXT,native TEXT,expected TEXT)");
   for(const row of fixture.cases){oracle.query("INSERT INTO profile_path VALUES(?,?,?,?)").run(row.platform,row.directory,row.native,row.expected);let calls=0;expect(await api.cargoCoverageRuntimeDirectoryV1(row.directory,row.platform,async(directory:string)=>{expect(directory).toBe(row.directory);calls++;return row.native;})).toBe(row.expected);expect(calls).toBe(row.nativeCalls);}

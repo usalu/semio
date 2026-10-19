@@ -2,6 +2,7 @@
 use semio_framework_job::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_async::CancelTokenRetirement;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
 #[global_allocator]
 static ORIGINAL_SOURCE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 

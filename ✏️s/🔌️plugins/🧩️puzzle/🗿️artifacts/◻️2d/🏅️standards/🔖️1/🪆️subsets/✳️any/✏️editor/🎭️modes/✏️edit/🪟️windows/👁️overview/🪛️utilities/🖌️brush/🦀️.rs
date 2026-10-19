@@ -1,4 +1,4 @@
-//! options (suggestion offset, per-kind distribution, candidate picker) are the mode-level
+//! 💡️ options (suggestion offset, per-kind distribution, candidate picker) are the mode-level
 //! 🖌️ Overview-window utility — Brush: places compatible nodes into open handle slots. Its live
 //! `☑️options/🖌️brush` measure group, tagged with this utility's id.
 

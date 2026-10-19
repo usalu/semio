@@ -97,8 +97,6 @@ pub async fn decode_composition<'d>(payload: &[u8], dict: &'d DictReader) -> Res
         return Err(malformed_fmt("composition", format).await);
     }
     let presence = input.read_u8()?;
-    // 🚫️async: R10 shape 1 — `read_id_field` is async but a plain closure can't await; hoisted into
-    // a nested async fn (`dict`/`miss` threaded through explicitly, since a nested fn can't capture).
     async fn read_triple<'r>(input: &mut ByteReader<'_>, dict: &'r DictReader, miss: &(dyn Fn(u64) -> Result<&'r str, ProtocolError> + Send + Sync)) -> Result<(String, String, String), ProtocolError> {
         Ok((read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?, read_id_field(input, dict, miss)?))
     }

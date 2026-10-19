@@ -230,7 +230,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("linear prism vectors match the independent OpenCascade kernel", async () => {
       const { readFile } = await import("node:fs/promises");
-      const fixture = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/📐️cad/⚙️engine/🏗️construction/🧫️fixtures/🧱️linear-prism/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(await readFile(new URL("../../../../../🔌️plugins/📐️cad/⚙️engine/🏗️construction/🧪️tests/🧫️fixtures/🧱️linear-prism/🔣️.json", source.url), "utf8"));
       expect(new Set(fixture.cases.map((row: { id: string }) => row.id)).size).toBe(fixture.cases.length);
       const oracle = new BrepjsKernel();
       for (const row of fixture.cases) {

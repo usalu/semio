@@ -6,7 +6,7 @@ use super::*;
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the snapshot
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
 pub fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
-    let _ = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&envelope.board_snapshot.to_string(),&mut control)};
+    let _ = {let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&envelope.board_snapshot.to_string(),&mut control)};
     if let Some(json) = board_kind_catalogs_json_or_inferred(&envelope.board_snapshot) {
         let _ = host.style.set_board_kind_catalogs_from_json(&json);
     }
@@ -44,12 +44,6 @@ pub fn sync_host_runtime_state(host: &mut BoardHost, envelope: &Puzzle2dScene, s
     })); {
         host.set_brush_kind_weights(&weights_json);
     }
-    // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the marquee method is
-    // framework-owned now (`interactionSelect`'s `method` arg) — the board engine still needs SOME
-    // default to hit-test with, so it keeps "rectangle" rather than reading a deleted config field.
-    // 🎯️ …but WHICH granularities a hit-test may return is app config now (`setSelectableKind`), so
-    // a filtered pane cannot silently pick the kind the user switched off. Argument order on the
-    // normal port is `(nodes, edges, handles)`.
     let kinds = envelope.runtime.selectable_kinds;
     host.focus.set_selection_options("rectangle", "replace", kinds.nodes, kinds.edges, kinds.handles);
 }

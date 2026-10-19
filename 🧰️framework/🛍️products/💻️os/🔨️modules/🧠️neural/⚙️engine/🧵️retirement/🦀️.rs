@@ -2,7 +2,7 @@
 
 use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, Operator, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
 use protocol::value::ordered::{OrderedMap, RetirementStep,SharedOwner,UpdateCursor};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::retirement_queue::RetirementQueue;
@@ -183,7 +183,7 @@ impl ColdDictionaryBuilder {
         assert!(update.terminal_is_empty());
     }
     /// 🛬️ Constructs one canonical dictionary entry with admitted metadata and resumable key comparisons.
-    pub fn insert_controlled(&mut self, key: String, value: Value, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), ValueError> {
+    pub fn insert_controlled(&mut self, key: String, value: Value, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), ValueError> {
         let value = ColdValueOwner::new(value);
         control.charge(size_of::<String>() + size_of::<Value>() + 4 * size_of::<usize>())?;
         let dictionary = self.dictionary.as_mut().unwrap();

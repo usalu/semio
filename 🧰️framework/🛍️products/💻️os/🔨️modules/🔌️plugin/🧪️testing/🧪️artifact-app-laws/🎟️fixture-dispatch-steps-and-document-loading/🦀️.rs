@@ -179,7 +179,7 @@ pub enum FixtureStepOutcome {
 }
 
 /// 📖️ Concatenates every page of one retained payload.
-pub fn fixture_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+pub fn fixture_payload_bytes(payload: &semio_framework_job_payload::RetainedJobPayload) -> Vec<u8> {
     (0..payload.page_count()).filter_map(|index| payload.page(index)).flatten().copied().collect()
 }
 
@@ -486,7 +486,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
         cancel: Option<semio_framework_job::CancelToken>,
 
-        payload: semio_framework_job::JobPayloadAuthority,
+        payload: semio_framework_job_payload::JobPayloadAuthority,
 
         turn: semio_framework::kernel::RetainedTurnInput,
 
@@ -510,7 +510,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
             assert!(progress.fits(turn.grant));
 
-            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant).expect("fixture original payload admission").expect("fixture original input funds payload"));
+            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant).expect("fixture original payload admission").expect("fixture original input funds payload"));
 
             assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 
@@ -536,7 +536,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
         /// 🛬️ Loans original receiving to a synchronous semantic unit through its real context recipient.
 
-        pub fn receive<T>(&mut self, grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> T) -> T {
+        pub fn receive<T>(&mut self, grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> T) -> T {
 
             self.context(grant).with_native_receiving(|receiving| Ok::<_, semio_framework_value::ValueError>(operation(receiving))).expect("fixture original receiving loan")
 

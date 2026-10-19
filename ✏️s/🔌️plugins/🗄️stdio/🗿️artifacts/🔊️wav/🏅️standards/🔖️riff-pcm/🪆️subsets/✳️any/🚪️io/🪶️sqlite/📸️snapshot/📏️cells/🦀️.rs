@@ -3,7 +3,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{invalid,work,ownership,numeric_class,UnsignedWord,WavSnapshot};
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_dsl_record::{DslField,RecordValue as R,FieldValue as F};
-use semio_framework_value::{ValueError,NativeDecodeControl as N};
+use semio_framework_value::ValueError;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
 type Result<T>=std::result::Result<T,ValueError>;
 const WIDTHS:&[(&str,usize)]=&[("wav_chunk_order",8),("wav_data",3),("wav_document",2),("wav_float32_sample",6),("wav_format",8),("wav_format_extension",1),("wav_format_extension_byte",4),("wav_other_chunk",5),("wav_other_chunk_byte",4),("wav_pcm16_sample",4),("wav_pcm8_sample",4),("wav_raw_data_byte",4)];
 pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{if WavSnapshot::SQLITE_SCHEMA.len()>limits.max_schema_bytes{return Err(ownership("WAV authored SQLite schema exceeds schema byte limit"))}if limits.max_tables<WIDTHS.len()||limits.max_columns<8||limits.max_rows<3{return Err(work("WAV authored relational extent exceeds caller limits"))}Ok(())}

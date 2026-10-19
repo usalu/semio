@@ -1,6 +1,7 @@
 use semio_framework_dsl_record::{producer,DslField,ExprOp,ExprValue,FieldSpec,FieldValue,JoinMode,NativeSchemaControl,ParseOptions,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,Shape,Wire,parse_exact,parse_exact_controlled,parse_expr_text_controlled,print,print_expr};
-use semio_framework_value::{DslValue,NativeDecodeControl};
-use semio_framework_value::native_decoding::NativeDecodeProgress;
+use semio_framework_value::DslValue;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
 use semio_framework_dsl::unit_by_symbol;
 use semio_framework_diagnostic as diagnostic;
 use pack::{PackDecodeOptions,PackEncodeOptions};

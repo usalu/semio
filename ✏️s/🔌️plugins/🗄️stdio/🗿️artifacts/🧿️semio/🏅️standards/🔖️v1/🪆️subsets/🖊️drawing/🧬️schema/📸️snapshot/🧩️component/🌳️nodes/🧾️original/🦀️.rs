@@ -7,7 +7,8 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::text_into;
-use semio_framework_value::{DslValue,FromValue,NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn object<'v>(value:&'v DslValue,allowed:&[&str],control:&mut NativeDecodeControl<'_>)->Result<&'v[(String,DslValue)],ValueError>{

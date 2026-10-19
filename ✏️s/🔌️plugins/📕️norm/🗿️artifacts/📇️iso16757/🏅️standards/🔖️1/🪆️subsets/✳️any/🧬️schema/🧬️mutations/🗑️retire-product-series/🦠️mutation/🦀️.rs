@@ -1,4 +1,4 @@
-//! `retire-product-series` — remove from catalogue.product_series.
+//! ➖️ `retire-product-series` — remove from catalogue.product_series.
 
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 

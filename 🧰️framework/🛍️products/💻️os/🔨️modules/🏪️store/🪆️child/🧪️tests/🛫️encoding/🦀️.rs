@@ -17,7 +17,7 @@ fn sqlite_snapshot_native_child_metadata_owns_literal_fields_under_both_native_c
     let exact = encoding.owned_bytes();
     assert!(exact > 0);
     let mut admitted = |_| true;
-    let mut decoding = semio_framework_value::NativeDecodeControl::new(maximum, &mut admitted);
+    let mut decoding = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum, &mut admitted);
     let decoded = producer.decode(&mut decoding).unwrap();
     for record in [encoded, decoded] {
         let fields: Vec<_> = record.fields.iter().map(|field| serde_json::json!([field.id, field.key, field.optional])).collect();
@@ -30,9 +30,9 @@ fn sqlite_snapshot_native_child_metadata_owns_literal_fields_under_both_native_c
     let mut control = semio_framework_value::NativeEncodeControl::new(tiny, &mut admitted);
     assert!(producer.encode(&mut control).is_err());
     assert_eq!(control.owned_bytes(), 0);
-    assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(tiny, &mut |_| true)).is_err());
+    assert!(producer.decode(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(tiny, &mut |_| true)).is_err());
     assert!(producer.encode(&mut NativeEncodeControl::new(maximum, &mut |_| false)).is_err());
-    assert!(producer.decode(&mut semio_framework_value::NativeDecodeControl::new(maximum, &mut |_| false)).is_err());
+    assert!(producer.decode(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum, &mut |_| false)).is_err());
 }
 
 fn fixture() -> serde_json::Value {
@@ -150,7 +150,8 @@ fn sqlite_snapshot_native_child_intrinsic_output_retains_literal_value_shape_and
 
 #[test]
 fn sqlite_snapshot_native_child_intrinsic_input_retains_literal_fields_without_materialization() {
-    use protocol::value::{FromValue, NativeDecodeControl};
+    use protocol::value::FromValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture = fixture();
     independent_literal_oracle(&fixture);
     let maximum = fixture["control"]["maximumBytes"].as_u64().unwrap() as usize;
@@ -173,7 +174,8 @@ fn sqlite_snapshot_native_child_intrinsic_input_retains_literal_fields_without_m
 }
 #[test]
 fn sqlite_snapshot_native_child_intrinsic_input_cancels_within_each_borrowed_utf8_field() {
-    use protocol::value::{FromValue, NativeDecodeControl};
+    use protocol::value::FromValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture = fixture();
     let settings = &fixture["control"];
     let text = settings["seed"].as_str().unwrap().repeat(settings["repeatCount"].as_u64().unwrap() as usize);
@@ -190,7 +192,7 @@ fn sqlite_snapshot_native_child_intrinsic_input_cancels_within_each_borrowed_utf
         };
         let intrinsic = ToValue::to_value(&source);
         let mut hit = false;
-        let mut callback = |p: protocol::value::native_decoding::NativeDecodeProgress| {
+        let mut callback = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| {
             if p.total == text.len() && p.completed >= cancel && p.completed < p.total {
                 hit = true;
                 false
@@ -206,7 +208,8 @@ fn sqlite_snapshot_native_child_intrinsic_input_cancels_within_each_borrowed_utf
 }
 #[test]
 fn sqlite_snapshot_native_child_intrinsic_input_preserves_authored_field_policy() {
-    use protocol::value::{FromValue, NativeDecodeControl};
+    use protocol::value::FromValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let fixture = fixture();
     independent_literal_oracle(&fixture);
     let maximum = fixture["control"]["maximumBytes"].as_u64().unwrap() as usize;

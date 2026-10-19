@@ -97,7 +97,8 @@ mod owned_media_error_tests {
 
     #[test]
     fn intrinsic_media_wire_artifact_helpers_preserve_descriptor_full_value_and_refusals(){
-        use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,Number,ValueRefusalKind};
+        use semio_framework_value::{NativeEncodeControl, Number, ValueRefusalKind};
+        use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🎒️pack/🌱️value/🧪️tests/🧫️fixtures/🎞️intrinsic-media/🔣️.json")).unwrap();
         let mut values=vec![DslValue::Null,DslValue::Bool(true),DslValue::uint(u64::MAX),DslValue::int(i64::MIN)];
         values.extend(fixture["binary64Words"].as_array().unwrap().iter().map(|word|DslValue::float(f64::from_bits(u64::from_str_radix(word.as_str().unwrap(),16).unwrap()))));

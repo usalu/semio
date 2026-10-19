@@ -17,7 +17,6 @@ pub enum PdfTextString {
 }
 
 impl PdfTextString {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn text(text: impl Into<String>) -> Self {
         Self::Text { text: text.into() }
     }
@@ -94,7 +93,6 @@ pub enum PdfLineJoin {
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "op", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfOp {
-    // 🎛️ General graphics state (Table 57)
     SetLineWidth { width: f64 },
     SetLineCap { cap: PdfLineCap },
     SetLineJoin { join: PdfLineJoin },
@@ -103,11 +101,9 @@ pub enum PdfOp {
     SetRenderingIntent { intent: String },
     SetFlatness { flatness: f64 },
     SetExtGState { name: String },
-    // 🧷 Special graphics state
     Save,
     Restore,
     Transform { matrix: PdfMatrix },
-    // ✏️ Path construction (Table 59)
     MoveTo { x: f64, y: f64 },
     LineTo { x: f64, y: f64 },
     CurveTo { x1: f64, y1: f64, x2: f64, y2: f64, x3: f64, y3: f64 },
@@ -115,7 +111,6 @@ pub enum PdfOp {
     CurveToFinal { x1: f64, y1: f64, x3: f64, y3: f64 },
     ClosePath,
     Rectangle { x: f64, y: f64, width: f64, height: f64 },
-    // 🎨 Path painting (Table 60)
     Stroke,
     CloseStroke,
     Fill,
@@ -125,10 +120,8 @@ pub enum PdfOp {
     CloseFillStroke,
     CloseFillStrokeEvenOdd,
     EndPath,
-    // ✂️ Clipping (Table 61)
     Clip,
     ClipEvenOdd,
-    // 🔤 Text objects, state, positioning, showing (Tables 107, 105, 108, 109)
     BeginText,
     EndText,
     SetCharSpacing { spacing: f64 },
@@ -146,10 +139,8 @@ pub enum PdfOp {
     ShowTextArray { items: Vec<PdfTextArrayItem> },
     NextLineShowText { text: PdfTextString },
     NextLineShowTextSpaced { word_spacing: f64, char_spacing: f64, text: PdfTextString },
-    // 🔠 Type 3 glyph metrics (Table 113)
     SetGlyphWidth { wx: f64, wy: f64 },
     SetGlyphWidthAndBox { wx: f64, wy: f64, llx: f64, lly: f64, urx: f64, ury: f64 },
-    // 🌈 Colour (Table 74)
     SetStrokeColorSpace { name: String },
     SetFillColorSpace { name: String },
     SetStrokeColor { components: Vec<f64> },
@@ -162,20 +153,16 @@ pub enum PdfOp {
     SetFillRgb { r: f64, g: f64, b: f64 },
     SetStrokeCmyk { c: f64, m: f64, y: f64, k: f64 },
     SetFillCmyk { c: f64, m: f64, y: f64, k: f64 },
-    // 🖼️ Shading, XObjects, inline images (Tables 77, 87, 92)
     PaintShading { name: String },
     PaintXObject { name: String },
     InlineImage { image: PdfInlineImage },
-    // 🏷️ Marked content (Table 320)
     MarkedContentPoint { tag: String },
     MarkedContentPointWithProperties { tag: String, properties: PdfPropertyList },
     BeginMarkedContent { tag: String },
     BeginMarkedContentWithProperties { tag: String, properties: PdfPropertyList },
     EndMarkedContent,
-    // 🧯 Compatibility (Table 32)
     BeginCompatibility,
     EndCompatibility,
-    // 🧳 An operator this codec does not know, retained with its operands so nothing is dropped.
     Unknown { operator: String, operands: Vec<PdfObject> },
 }
 //#endregion 🔖️Content

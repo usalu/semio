@@ -1,4 +1,4 @@
-//! shapes), linear buckling and nodal-averaged stress recovery for contour rendering — sparse-backed (RCM-ordered,
+//! 🧊️ shapes), linear buckling and nodal-averaged stress recovery for contour rendering — sparse-backed (RCM-ordered,
 //! 📈️ Multi-case/combination linear-static analysis, self-weight load generation, modal analysis (frequencies and
 //! one LDLT factorization shared across every load case and eigen-solve) — plus the FEM job graph that stages them.
 
@@ -8,7 +8,7 @@ use semio_s_fem_model::Dof;
 use semio_s_fem_model::Element;
 use semio_s_fem_model::ElementContext;
 use semio_s_fem_model::ElementResult;
-use semio_s_fem_model::Elements;
+use semio_s_fem_static::Elements;
 use semio_s_fem_model::FemError;
 use semio_s_fem_model::MemberUdl;
 use semio_s_fem_model::NodalLoad;
@@ -20,29 +20,29 @@ use semio_s_fem_model::StaticResult;
 use semio_s_fem_model::Support;
 use semio_s_fem_sparse::numerical_close_gate;
 use semio_s_fem_sparse::numerical_ladder_turn;
-use crate::sparse::numerical_rung_demand;
-use crate::sparse::NumericalBatchEnd;
+use semio_s_fem_sparse::numerical_rung_demand;
+use semio_s_fem_sparse::NumericalBatchEnd;
 use semio_s_fem_sparse::NumericalOutcomeDesk;
 use semio_s_fem_sparse::NumericalRun;
-use crate::sparse::ldlt_factor;
-use crate::sparse::rcm_order;
+use semio_s_fem_sparse_ldlt::ldlt_factor;
+use semio_s_fem_sparse::rcm_order;
 use semio_s_fem_sparse_subspace::subspace_iteration;
 use semio_s_fem_sparse::Coo;
 use crate::sparse::Csr;
 use semio_s_fem_sparse_subspace::EigenPairs;
-use crate::sparse::LdltFactor;
-use replication::value::list::PagedList;
+use semio_s_fem_sparse_ldlt::LdltFactor;
+use semio_framework_value_paged_list::list::PagedList;
 use semio_framework_job::InteractiveJob;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeBorrow;
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 use semio_framework_job::Operation;
 use semio_framework_job::RetainedCloneGrant;
 use semio_framework_job::RetainedCloneProgress;
 use semio_framework_job::StepContext;
-use semio_framework_value::HeapSortCursor;
-use semio_framework_value::HeapSortWork;
+use semio_framework_value_edit::sort::HeapSortCursor;
+use semio_framework_value_edit::sort::HeapSortWork;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value_derive::FromValue;

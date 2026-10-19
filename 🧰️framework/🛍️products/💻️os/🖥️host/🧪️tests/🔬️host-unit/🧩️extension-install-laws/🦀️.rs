@@ -74,10 +74,6 @@
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[test]
     fn install_extension_package_rejects_extends_mismatch() {
-        // 🩹️ `sample_extension_sxt` always writes a matching dependency; to exercise the
-        // rejection path this test packs a manifest whose `extends` disagrees with its own
-        // first dependency directly, rather than corrupting bytes (which `verify`'s own
-        // envelope/zip checks would reject for an unrelated reason).
         let mismatched_manifest = store::extension::ExtensionPackageManifest {
             extension_id: "ext-mismatch".into(),
             directory_name: "⚖️ext-mismatch".into(),

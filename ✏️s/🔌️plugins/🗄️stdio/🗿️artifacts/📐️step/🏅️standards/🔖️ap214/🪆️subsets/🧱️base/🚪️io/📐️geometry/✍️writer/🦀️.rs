@@ -15,38 +15,32 @@ pub(super) struct StepWriteContext {
 }
 
 impl StepWriteContext {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn new() -> Self {
         Self { next: 1, entities: String::new(), vertex_map: HashMap::new(), edge_map: HashMap::new() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn next_id(&mut self) -> u64 {
         let id = self.next;
         self.next += 1;
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn write_entity(&mut self, id: u64, entity: &str, attrs: &str) {
         let _ = writeln!(self.entities, "#{id} = {entity}({attrs};");
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_point(&mut self, p: Pnt3) -> u64 {
         let id = self.next_id();
         self.write_entity(id, "CARTESIAN_POINT", &format!("'', ({}, {}, {}))", fmt_f64(p.x), fmt_f64(p.y), fmt_f64(p.z)));
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_direction(&mut self, d: Vec3) -> u64 {
         let id = self.next_id();
         self.write_entity(id, "DIRECTION", &format!("'', ({}, {}, {}))", fmt_f64(d.x), fmt_f64(d.y), fmt_f64(d.z)));
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_axis2_placement(&mut self, origin: Pnt3, axis: Vec3, ref_dir: Vec3) -> u64 {
         let origin_id = self.write_point(origin);
         let axis_id = self.write_direction(axis);
@@ -56,7 +50,6 @@ impl StepWriteContext {
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn write_geometric_context(&mut self) -> u64 {
         let len_unit = self.next_id();
         let _ = writeln!(self.entities, "#{len_unit} = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );");
@@ -77,7 +70,6 @@ impl StepWriteContext {
         ctx
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn write_product_structure(&mut self) -> ProductIds {
         let app_context = self.next_id();
         self.write_entity(app_context, "APPLICATION_CONTEXT", "'configuration controlled 3D design of mechanical parts and assemblies')");
@@ -96,7 +88,6 @@ impl StepWriteContext {
         ProductIds { definition }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_vertex(&mut self, body: &Body, vid: VertexId) -> Result<u64, StepError> {
         let key = vid.raw_index();
         if let Some(&cached) = self.vertex_map.get(&key) {
@@ -110,7 +101,6 @@ impl StepWriteContext {
         Ok(vp_id)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_edge_curve(&mut self, body: &Body, eid: EdgeId) -> Result<u64, StepError> {
         let key = eid.raw_index();
         if let Some(&cached) = self.edge_map.get(&key) {
@@ -154,7 +144,6 @@ impl StepWriteContext {
         Ok(edge_curve)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_nurbs_curve(&mut self, knots: &KnotVector, controls: &[Pnt3], weights: &[f64]) -> u64 {
         let cp_ids: Vec<u64> = controls.iter().map(|p| self.write_point(*p)).collect();
         let cp_refs: Vec<String> = cp_ids.iter().map(|id| format!("#{id}")).collect();
@@ -175,7 +164,6 @@ impl StepWriteContext {
         id
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_edge_loop(&mut self, body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId) -> Result<u64, StepError> {
         let mut oriented_edge_ids = Vec::new();
         for coedge_id in body.loop_coedges(loop_id) {
@@ -192,7 +180,6 @@ impl StepWriteContext {
         Ok(step_loop)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_surface(&mut self, body: &Body, surface_id: SurfaceId) -> Result<u64, StepError> {
         let surface = body.surfaces.get(surface_id).ok_or(StepError::Syntax("missing surface".to_string()))?;
         Ok(match surface {
@@ -235,7 +222,6 @@ impl StepWriteContext {
         })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_nurbs_surface(&mut self, u_knots: &KnotVector, v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>]) -> Result<u64, StepError> {
         if controls.is_empty() {
             return Err(StepError::Syntax("NURBS surface has no control points".to_string()));
@@ -269,7 +255,6 @@ impl StepWriteContext {
         Ok(id)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_face(&mut self, body: &Body, face_id: FaceId) -> Result<u64, StepError> {
         let face = body.faces.get(face_id).ok_or(StepError::Syntax("missing face".to_string()))?;
         let mut bound_ids = Vec::new();
@@ -293,7 +278,6 @@ impl StepWriteContext {
         Ok(advanced_face)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn write_shell(&mut self, body: &Body, shell_id: semio_framework_3d_brep_representation::arena::ShellId) -> Result<u64, StepError> {
         let shell = body.shells.get(shell_id).ok_or(StepError::Syntax("missing shell".to_string()))?;
         let mut face_step_ids = Vec::new();
@@ -306,7 +290,6 @@ impl StepWriteContext {
         Ok(closed_shell)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn write_solid(&mut self, body: &Body, solid_id: SolidId) -> Result<u64, StepError> {
         let solid = body.solids.get(solid_id).ok_or(StepError::Syntax("missing solid".to_string()))?;
         let shell = self.write_shell(body, solid.outer)?;
@@ -315,7 +298,6 @@ impl StepWriteContext {
         Ok(brep)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn finish(self) -> String {
         let mut out = String::new();
         let _ = writeln!(out, "ISO-10303-21;");

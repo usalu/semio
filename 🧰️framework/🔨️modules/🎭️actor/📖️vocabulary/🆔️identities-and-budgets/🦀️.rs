@@ -132,22 +132,18 @@ impl ActorId {
         Self(bits)
     }
 
-    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
     pub fn plugin_ordinal(self) -> u16 {
         (self.0 >> ACTOR_ID_PLUGIN_SHIFT) as u16
     }
 
-    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
     pub fn kind_tag(self) -> u8 {
         ((self.0 >> ACTOR_ID_KIND_SHIFT) & ACTOR_ID_KIND_MASK) as u8
     }
 
-    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
     pub fn ordinal(self) -> u32 {
         ((self.0 >> ACTOR_ID_ORDINAL_SHIFT) & ACTOR_ID_ORDINAL_MASK) as u32
     }
 
-    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
     pub fn generation(self) -> u16 {
         (self.0 & ACTOR_ID_GENERATION_MASK) as u16
     }
@@ -253,8 +249,6 @@ impl Lane {
     }
 
     /// ⚖️ Level-2 DRR quantum weight — biases actor selection within a plugin toward interactive work.
-    // 🚫️async: E1-adjacent pure computation — its one consumer, `Scheduler::actor_weight`, is
-    // itself sync for the same reason (see that fn's own tag) — see R9 residue shape 1.
     pub fn weight(self) -> u32 {
         match self {
             Lane::Interactive => 8,

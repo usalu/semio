@@ -1,4 +1,4 @@
-//! allowance.
+//! 🧬️ allowance.
 //! 💔 Puzzle5d mutation — `DisconnectKindCompatibility`: revokes one grip-kind-id pair's fasten
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
@@ -41,7 +41,10 @@ where
     }
 }
 
-impl protocol::ColdMutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for DisconnectKindCompatibility {
+impl<Op> protocol::ColdMutationKind<Puzzle5dSnapshot, Op> for DisconnectKindCompatibility
+where
+    Op: protocol::ColdMutation<Puzzle5dSnapshot, ReferenceDiff = Puzzle5dDiff> + From<DisconnectKindCompatibility>,
+{
     fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }

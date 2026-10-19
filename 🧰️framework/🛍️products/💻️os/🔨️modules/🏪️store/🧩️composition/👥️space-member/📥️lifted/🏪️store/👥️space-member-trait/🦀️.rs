@@ -79,7 +79,7 @@ pub trait SpaceMember {
     async fn current_alternative_id(&self) -> Option<String>;
     async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>;
     async fn create_alternative(&mut self, name: String, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError>;
-    /// 🎞️ CW3: `crate::os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
+    /// 🎞️ CW3: `semio_framework_os_spr::HybridLogicalTimestamp` (not `semio_framework`'s local one) — these
     /// read `MutationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
     async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     async fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
@@ -119,7 +119,7 @@ pub trait SpaceMember {
     /// `group_id` onto a member AFTER an ordinary `Apply` already hard-codes `group_id: None`,
     /// genesis needs a way to set `ArtifactEnvelope.owner` on a freshly-created child through the
     /// same type-erased interface, and `merge_policy` is what lets phase 1 fold every member's
-    /// `preview_wire` messages against one authority-chosen `crate::os_spr::MergePolicy` without
+    /// `preview_wire` messages against one authority-chosen `semio_framework_os_spr::MergePolicy` without
     /// downcasting.
     async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<semio_framework_os_spr::MutationMessage>;
     /// 📡️ Decodes `cmd_bytes` as one binary `ArtifactCommand<Mutation>` and dispatches it via
@@ -167,7 +167,7 @@ pub trait SpaceMember {
     /// 🔀️ Stamps `origin` onto every `MutationMeta` entry of this member's TAIL applied
     /// edit — `stamp_tail_group_id`'s provenance-direction twin, used by
     /// `TransactionCoordinator::dispatch_group`'s `Peer` relation to mark a foreign member's edit
-    /// `crate::os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
+    /// `semio_framework_os_spr::MutationOrigin::Transaction { initiator }` after dispatching it (the
     /// initiator's OWN edit is left `Owner` — it is not foreign to itself). Never called on the
     /// `Owned` relation path, which keeps every member's origin at its ordinary `Apply`-assigned
     /// default (`Owner`) — this is precisely what keeps `Owned` byte-identical to its pre-`Peer`
@@ -213,7 +213,7 @@ pub trait SpaceMember {
     /// degrading to its head.
     async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, VcsError>;
 
-    /// ⚖️ This member's own `crate::os_spr::MergePolicy` — local/authority state (§C3: never
+    /// ⚖️ This member's own `semio_framework_os_spr::MergePolicy` — local/authority state (§C3: never
     /// wire-carried, never part of shared history), consulted by `CompositionCoordinator` phase 1
     /// to decide whether the group's unioned `preview_wire` messages are accepted or rejected.
     /// Defaults to `MergePolicy::default()` (`Normal`) so every member reports a policy even before

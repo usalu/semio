@@ -1,4 +1,4 @@
-//! scale tier (minimap…micro), persisted through `setLodModeForPane`. Shared by all three canvas
+//! 🔍️ scale tier (minimap…micro), persisted through `setLodModeForPane`. Shared by all three canvas
 //! 🔭️ Edit-mode window option — the per-pane level-of-detail select: "Automatic" plus every board
 //! windows, which only differ in which pane id they bind it to.
 

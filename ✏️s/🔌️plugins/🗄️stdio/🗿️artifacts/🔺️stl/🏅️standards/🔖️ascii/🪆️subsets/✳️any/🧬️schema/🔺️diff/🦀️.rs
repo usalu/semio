@@ -110,7 +110,6 @@ pub struct StlTrianglesDiff {
 }
 
 impl StlTrianglesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
@@ -240,8 +239,6 @@ fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
     let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added);
 
-    // 🔍️ Record each label's MID position — exactly the φ(base_index)/mid_index_of(Added1(j))
-    // transport the recipe calls for.
     let mut mid_pos_of_base: HashMap<usize, usize> = HashMap::new();
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
     for (pos, l) in mid_labels.iter().enumerate() {
@@ -256,10 +253,8 @@ fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff
         }
     }
 
-    // 📦 `l1` already covers `d2`'s own max reference; pad is appended at the tail only —
-    // `Vec::push` never disturbs earlier positions, so `mid_pos_of_*` stay valid.
     while mid_labels.len() < l1 {
-        mid_labels.push(Lbl::Base(usize::MAX)); // inert padding index, never referenced by mid_pos_of_base
+        mid_labels.push(Lbl::Base(usize::MAX));
     }
 
     let d2_added: Vec<(usize, Lbl)> = d2.added.iter().enumerate().map(|(k, a)| (a.index, Lbl::Added2(k))).collect();
@@ -287,7 +282,7 @@ fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTrianglesDiff
                     modified.push(StlTriangleModified { index: i, diff: combined });
                 }
             }
-            Lbl::Base(_) => { /* padding survived untouched — never real, ignore */ }
+            Lbl::Base(_) => { }
             Lbl::Added1(j) => {
                 let mid_pos = mid_pos_of_added1.get(&j).copied();
                 let mut triangle = d1.added[j].triangle;

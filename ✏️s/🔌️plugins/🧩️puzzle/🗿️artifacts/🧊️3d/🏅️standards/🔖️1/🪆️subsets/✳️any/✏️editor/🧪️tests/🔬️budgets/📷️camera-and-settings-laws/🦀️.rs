@@ -22,9 +22,6 @@ fn one_brush_mesh_page_validates_inside_one_command_work_budget() {
 #[semio_framework_async_macros::async_test]
 async fn an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes() {
     let mut app = app().await;
-    // 🎲️ Geometry no other law in this binary derives — the brush-mesh store is content-addressed since
-    // wave B22, so the shared cube's digest would be adoptable under a new id and the refusal this law is
-    // about could never happen.
     let (positions, indices) = semio_s_artifact_puzzle_3d_model::precompute_model_tests::context::seeded_cube_mesh_buffers(23.0);
     let digest = semio_s_artifact_puzzle_3d_precompute::brush_mesh_digest(&positions, &indices);
     let url = "/test/restarted-guest-reannounce.glb";
@@ -39,12 +36,6 @@ async fn an_id_only_announcement_this_guest_cannot_serve_asks_for_the_bytes() {
     let requested = interaction_of(&render_composite(&mut app).await);
     assert_eq!(requested.pointer("/meshReuploadUrls").and_then(Value::as_array).cloned().unwrap_or_default(), vec![json!(url)], "the refused identity is published as a request for its bytes");
     let residency = requested.pointer("/meshResidency").and_then(Value::as_u64).expect("the world body publishes the guest's mesh residency");
-    // 🐢️ Wave B32: the SECOND refusal of the same id is where the storm lived. The standing request set
-    // is already published, so this announcement has nothing new for any surface — and republishing the
-    // world body for it re-drives the client's registrar, which re-announces, which refuses again. The
-    // live `:6013` shell measured 23 of 33 typed-operation completions carrying this viewport scope in a
-    // 75 s window with four user actions, 23 of 31 refresh passes answering every world body
-    // `unchanged`, and `translateSelection` needing 8–15 s to reach `data-instances-json` behind them.
     let repeated = dispatch(&mut app, "registerBrushMesh", Some(&announcement), None).await.expect("the client re-announces the same dead identity");
     assert!(matches!(repeated.ui_scope, UiDirtyScope::None), "a re-announcement of an ALREADY standing request republishes nothing and must stay Quiet; got {:?}", repeated.ui_scope);
     let unchanged = interaction_of(&render_composite(&mut app).await);
@@ -214,12 +205,6 @@ async fn the_settings_panel_is_addressed_at_the_focused_pane_not_the_base_window
             assert_eq!(bindings[0].pointer("/args/windowId").and_then(Value::as_str), Some(focused), "{field} tags the focused pane, never the base window kind: {bindings:?}");
         }
     }
-    // 🪟️ With nothing focused the panel still falls back to the ROSTER — and the roster arm of
-    // `puzzle3d_addressed_window_id` deliberately skips ids that are a window KIND
-    // (`!puzzle3d_window_id_is_kind`), so it lands on the first LIVE pane instance. That is this wave's
-    // whole point: the base kind `puzzle3d-main` is a pane nobody has open, and baking it into a
-    // stepper's args is the defect the wave measured. Pinning the base kind here was pinning the
-    // pre-wave behaviour the same law's own docstring calls the bug.
     let unfocused = render_panel_body(&mut app, settings_panel::BODY_KEY, None).await;
     let control = node_by_key(&unfocused, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-settings.grid-spacing.control")).expect("the grid spacing stepper");
     let bindings = control.get("bindings").and_then(Value::as_array).cloned().unwrap_or_default();

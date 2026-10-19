@@ -236,8 +236,6 @@ export function AdminSessionProvider({ baseUrl, children }: { readonly baseUrl: 
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        // 🩺️ Only a real HTTP rejection means "bad/absent token"; anything else (ECONNREFUSED, DNS,
-        // timeout, CORS) means the hub is not answering at all.
         setStatus(error instanceof AdminHttpError ? "unauthorized" : "unreachable");
       });
     return () => {
@@ -263,8 +261,6 @@ export function AdminAccessGate(): React.ReactElement {
   const t = useAdminT();
   const { status } = useAdminSession();
 
-  // 🔌️ No hub answering: a token form here would be a dead end, so show what is actually wrong and the
-  // command that fixes it instead of prompting for a credential that cannot help.
   if (status === "unreachable") {
     return (
       <div className="flex h-full w-full items-center justify-center">

@@ -150,7 +150,7 @@ func TestGoTypesMirrorOwnerSchemaExports(t *testing.T) {
 }
 
 func TestCoordinatorDecodesOwnerFixtures(t *testing.T) {
-	raw, err := os.ReadFile(filepath.Join("🧫️fixtures", "📨️rest-cases.json"))
+	raw, err := os.ReadFile(filepath.Join("🧪️tests", "🧫️fixtures", "📨️rest-cases.json"))
 	if err != nil {
 		t.Fatalf("read rest cases: %v", err)
 	}

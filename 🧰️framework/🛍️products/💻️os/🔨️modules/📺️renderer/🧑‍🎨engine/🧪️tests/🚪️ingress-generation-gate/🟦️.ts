@@ -127,8 +127,6 @@ describe("🚪️ refresh ingress-generation gate", () => {
   });
 
   it("asks for the intake yield on the same stride it always did, without a promise per step", () => {
-    // 🪃️ The cadence is the law, not the call shape: exactly one yield per stride, and the predicate
-    // itself must be synchronous — an `await` per intake step is what this replaced.
     const owed: number[] = [];
     for (let step = 1; step <= 4_096; step += 1) if (uiIntakeOwesYieldV1(step)) owed.push(step);
     expect(owed).toEqual([1_024, 2_048, 3_072, 4_096]);

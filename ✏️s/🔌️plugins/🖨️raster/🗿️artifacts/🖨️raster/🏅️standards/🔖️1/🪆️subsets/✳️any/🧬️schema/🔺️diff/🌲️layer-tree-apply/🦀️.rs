@@ -408,13 +408,6 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                         Some(asset) => {
                             next.assets.insert(key.clone(), semio_s_artifact_raster_raster_model::mint_raster_image_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
-                        // 🗑️ A removal used to be refused outright ("asset removal requires the retained
-                        // Raster initialization authority"), which made `remove-layer-asset` unusable on
-                        // every route the framework's own history arithmetic takes — undo, redo, a fold to
-                        // base, a `.spr` reload, a remote ingest. It needs no retained authority: the map
-                        // hands back the exact `(key, child)` pair, neither of which carries a drop guard,
-                        // and the page backing the removal empties is released explicitly, the same
-                        // `take_empty_page_backing` loop every drain in this artifact runs.
                         None => {
                             let mut removed = next.assets.remove_entry(key).expect("asset removal was validated against this projection before ownership was cloned");
                             let (removed_key, removed_child) = removed.take();

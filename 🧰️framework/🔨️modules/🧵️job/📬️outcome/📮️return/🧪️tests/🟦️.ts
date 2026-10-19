@@ -54,7 +54,7 @@ test("supplied pages preserve bounded return slots and the same source until act
  expect(native.includes("original_total_retained_grant()")).toBe(true);
  expect(native.includes("validate_original_stream_extent(length,cx)")).toBe(true);
  expect(native.includes("pub fn restart_read_page(")).toBe(true);expect(native.includes("pub fn close_result_step(")).toBe(true);expect(native.includes("reservation.publish_last(bytes,cx)")).toBe(true);
- const world=readFileSync(new URL("../../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/📡️assets/🦀️.rs",import.meta.url),"utf8");
+ const world=readFileSync(new URL("../../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧱️scene/📡️asset-io/🦀️.rs",import.meta.url),"utf8");
  expect(world.includes("WorldAssetResponseBacking::Original(page)=>page.bytes()")).toBe(true);
  const receiver=world.slice(world.indexOf("pub fn try_from_original("),world.indexOf("pub fn bytes(&self)",world.indexOf("pub fn try_from_original(")));
  expect(receiver.includes("to_vec")).toBe(false);expect(receiver.includes("Original(page)")).toBe(true);

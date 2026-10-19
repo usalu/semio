@@ -558,7 +558,6 @@ impl ArtifactEditor for ImperativePlayApp {
                 let host = crate::editor::procedure::engine::ImperativeHost::from_scene(&scene);
                 let result = host.run();
                 let json = semio_framework_pack_json::to_json_string(&result.scope);
-                // 🧊️ Same cold boundary as the `run` command: the result owns dictionaries.
                 neural_engine::ColdRetire::retire_cold(result);
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.procedure".into(), json } })
             }
@@ -611,8 +610,6 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 🔧️ Document-mutating step edits — dispatched as VCS operations with a true inverse.
-            // The `*At` variants address a nested body via owner/slot fields (drag-and-drop into blocks).
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
             .mutation("addStepAt", LocalizedLabel::native("Add Step At", "Schritt bei Position hinzufügen"))
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
@@ -623,12 +620,7 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .mutation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
             .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
             .mutation("setStepParamsAt", LocalizedLabel::native("Set Step Params At", "Schrittparameter bei Position festlegen"))
-            // 👁️ Ephemeral view state / runtime effect — `run` evaluates into config. Step selection/
-            // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .action_with(semio_framework_plugin::ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play"))
-            // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
-            // dispatches this at boot and on every navbar pick; with no declaration at all every one of
-            // those was dropped `undeclared-action` before it reached the app.
             .action_with(
                 semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
                     .with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]),
@@ -644,7 +636,6 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setStepParams", InteractiveJobClassification::Migrated)
             .action_interactive_job("setStepParamsAt", InteractiveJobClassification::Migrated)
             .action_interactive_job("run", InteractiveJobClassification::Migrated)
-            // 📝️ Staged argument form for the panel-visible create action (the step kind is a choice).
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                     ActionArgOption::new("state.set", LocalizedLabel::native("Set State", "Zustand setzen")),
@@ -656,11 +647,6 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `steps` interaction
-            // domain — one granularity ("step"), `HierarchyProvider::Topology` from the document's own
-            // `Step::bodies` nesting (`imperative_steps_topology`/`ImperativePlayApp::interaction_topology`),
-            // both hover and selection transitive (selecting/hovering a control step covers the steps
-            // nested in its bodies). Multi-select via Pick (document panel tree rows only — no canvas).
             .interaction(InteractionDefinition {
                 id: IMPERATIVE_INTERACTION_STEPS.into(),
                 label: LocalizedLabel::native("Steps", "Schritte"),
@@ -676,16 +662,7 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(IMPERATIVE_PLAY_WINDOW_MAIN, vec![IMPERATIVE_INTERACTION_STEPS.into()])
-            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
-            // WORKFLOWS-END-TO-END-TYPED-PORTS) — `imperative_io()` is this port information's single
-            // source of truth, reused here rather than duplicated.
             .io(imperative_io())
-            // 🚧️ SDK GAP (w2-cad-report "SDK gaps found" #4, still open as of w0-f): `EditorBuilder`
-            // has no `.example_source(...)`/`.workflow(...)` — `PluginBuilder::editor::<E>` only takes
-            // the bare `AppDefinition`, so the demo-session example source and the `"imperative"`
-            // workflow registration this app used to chain here are dropped, not ported. The
-            // artifact-level `📚️examples/🎬️demo` facet (`crate::examples::demo`,
-            // still mounted in `🦀️.rs`) is the surviving example registration path.
             .action_describe("addStep", LocalizedLabel::native("Appends a new step of the given kind (for example a control, math, text or effect step) to the end of the procedure.", "Hängt einen neuen Schritt der angegebenen Art (etwa einen Steuerungs-, Mathe-, Text- oder Effektschritt) an das Ende der Prozedur an."))
             .action_describe("addStepAt", LocalizedLabel::native("Appends a new step of the given kind inside a slot of a control step (such as the then or else branch of an if), or to the procedure's end without owner and slot.", "Hängt einen neuen Schritt der angegebenen Art in einen Slot eines Steuerungsschritts (etwa den Dann- oder Sonst-Zweig eines Wenn) an, ohne Besitzer und Slot an das Ende der Prozedur."))
             .action_describe("removeStep", LocalizedLabel::native("Removes one step by id from the top level of the procedure, including every step nested inside it.", "Entfernt einen Schritt anhand seiner Id aus der obersten Ebene der Prozedur, samt aller darin verschachtelten Schritte."))

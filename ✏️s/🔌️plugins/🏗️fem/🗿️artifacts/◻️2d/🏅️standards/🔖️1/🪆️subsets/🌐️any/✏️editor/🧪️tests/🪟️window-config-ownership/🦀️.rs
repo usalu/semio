@@ -135,16 +135,13 @@ fn block_on_fem_window_ownership<F: std::future::Future>(mut future: std::pin::P
 fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs() {
     std::thread::Builder::new()
         .name("fem2d-window-ownership-law".into())
-        // 🧵️ 128 MiB, the same depth `RUST_MIN_STACK` gives every other fem2d law: the window
-        // ownership walk drives a full mount → dispatch → settle → close → reopen chain, and the
-        // 2 MiB it used to ask for overflows and aborts the whole test binary with SIGABRT.
         .stack_size(128 * 1024 * 1024)
         .spawn(|| {
             block_on_fem_window_ownership(Box::pin(async {
                 use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_active_example;
-                use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_camera;
-                use semio_s_artifact_fem_2d_editor_commands::editor::fem2d::commands::set_result_display;
-                use semio_s_artifact_fem_2d_editor::editor::fem2d::modes::edit::windows::model;
+                use crate::set_camera;
+                use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_display;
+                use semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model;
                 use semio_s_artifact_fem_2d_editor::editor::fem2d::modes::edit::windows::results;
                 use semio_framework_plugin::artifact_app_laws;
                 use semio_framework_plugin::ActionMeta;

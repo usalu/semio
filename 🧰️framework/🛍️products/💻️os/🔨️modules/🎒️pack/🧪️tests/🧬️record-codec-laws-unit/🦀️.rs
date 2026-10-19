@@ -84,17 +84,12 @@ async fn record_value_gen_produces_values_the_pack_codec_accepts() {
 
 #[semio_framework_async_macros::async_test]
 async fn record_value_gen_bounds_recursion_by_max_depth() {
-    // 🌳️ `group_spec`-style self-referential Statements table: its own single variant's spec
-    // points right back at itself. A generator that ignored `max_depth` would stack-overflow.
-    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Statements` below
     fn recursive_spec() -> RecordSpec {
         RecordSpec::new(Some("group"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Statements(vec![("group".to_string(), ordinary_fixture_spec!(recursive_spec))]))])
     }
     let spec = recursive_spec();
     let mut gen = RecordValueGen::new(7);
     let record = gen.generate(&spec, 3);
-    // 🌱️ Merely surviving without a stack overflow (plus a successful pack round trip) is the
-    // assertion here — the value's shape isn't otherwise constrained.
     assert_encode_decode_identity(&spec, &record).await;
 }
 //#endregion 🔖️Arbitrary

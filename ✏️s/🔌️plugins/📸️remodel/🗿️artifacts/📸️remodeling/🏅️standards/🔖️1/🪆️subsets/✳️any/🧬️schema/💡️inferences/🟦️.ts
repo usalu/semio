@@ -12,9 +12,9 @@ export interface RemodelingBounds {
 }
 
 export interface RemodelingInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: RemodelingBounds;
-  /** @derived */
+  /** 📍️ @derived */
   relativeCameraPoses: Readonly<Record<string, RemodelingPoseDelta>>;
 }
 

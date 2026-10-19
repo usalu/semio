@@ -23,21 +23,17 @@ fn value_round_trip_matches_serde_shape() {
         assert_eq!(round_tripped, value);
     }
 
-    // Plain derive: unit-variant enum, tagged enum, tuple struct.
     check(Anchor::Left);
     check(LayoutNode::Split { orientation: SplitOrientation::Horizontal, children: vec![LayoutNode::Leaf { window_id: "w1".to_string() }], sizes: vec![1.0, 2.0] });
     check(IconName("plugin.icon".to_string()));
     check(AppRole("designer".to_string()));
 
-    // `with`-bridged JsonValue fields, both present and absent.
     check(ExtraWindowInstance { window_id: "w1".to_string(), kind: "app".to_string(), params: Some(serde_json::json!({"seed": 1})) });
     check(window("w2"));
     check(DialogState { dialog_id: "d1".to_string(), seed_args: None });
     check(UiDriver { driver_id: "custom".to_string(), label: "Custom".to_string(), config: dsl_core::DslValue::object([("a".into(),dsl_core::DslValue::Array(vec![dsl_core::DslValue::uint(1),dsl_core::DslValue::uint(2),dsl_core::DslValue::String("x".into())]))]) });
     check(ShellCapability { id: "ui.window.focus".to_string(), title: "Focus window".to_string(), description: "Focuses a window".to_string(), schema: serde_json::json!({"type": "object"}), observable_only: false });
 
-    // `with`-bridged nested-HashMap JsonValue fields on `ShellState` — round-trip the whole
-    // struct via a populated instance so the bridge's key ordering / nesting is exercised.
     let mut state = ShellState::default();
     state.staged_action_args.insert("w1".to_string(), HashMap::from([("a1".to_string(), HashMap::from([("arg1".to_string(), serde_json::json!(42))]))]));
     state.staged_command_args.insert("c1".to_string(), HashMap::from([("arg1".to_string(), serde_json::json!("value"))]));
@@ -45,8 +41,6 @@ fn value_round_trip_matches_serde_shape() {
     state.dialog_stack.push(DialogState { dialog_id: "d2".to_string(), seed_args: Some(serde_json::json!(["x", "y"])) });
     check(state);
 
-    // Hand-written `ShellCommand` bridge — including the three variants a plain derive cannot
-    // reach (enum-variant `JsonValue` fields; `#[value(with = "...")]` is unsupported there).
     check(ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "a1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!({"x": 1}) });
     check(ShellCommand::StageCommandArg { command_id: "c1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!([1, 2, 3]) });
     check(ShellCommand::OpenDialog { dialog_id: "d1".to_string(), seed_args: Some(serde_json::json!({"y": 2})) });
@@ -54,9 +48,6 @@ fn value_round_trip_matches_serde_shape() {
     check(ShellCommand::ResetDock);
     check(ShellCommand::SetPanelSize { anchor: Anchor::Top, size: 12.5 });
 
-    // Same `DslValue` a `ShellCommand` produces must carry the identical `"type"`/field-name
-    // shape `#[serde(tag = "type", rename_all_fields = "camelCase")]` produces — the round-trip
-    // contract's actual bar (not just "decodes back to itself").
     let encoded = dsl_core::ToValue::to_value(&ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "a1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!(true) });
     let via_serde: serde_json::Value = serde_json::to_value(ShellCommand::StageActionArg { window_id: "w1".to_string(), action_id: "a1".to_string(), arg_id: "arg1".to_string(), value: serde_json::json!(true) }).expect("serde encode");
     assert_eq!(serde_json::Value::from(encoded), via_serde);
@@ -207,7 +198,6 @@ fn constructed_cases_match_committed_fixtures() {
 
     let base = ShellState::default();
 
-    // One fixture per ShellCommand variant.
     assert_ok("register-loaded-plugin", base.clone(), ShellCommand::RegisterLoadedPlugin { plugin: LoadedPlugin { plugin_id: "cad".to_string(), module_url: "https://plugins.example/cad.wasm".to_string(), label: Some("CAD".to_string()) } });
     {
         let mut s = base.clone();
@@ -336,7 +326,6 @@ fn constructed_cases_match_committed_fixtures() {
     assert_ok("set-storage-scope", base.clone(), ShellCommand::SetStorageScope { scope: ShellScope::LocalStorage });
     assert_ok("set-opening-preference", base.clone(), ShellCommand::SetOpeningPreference { role: "editor".to_string(), dialect_id: Some("cad.modeler".to_string()) });
 
-    // Mode↔tool mutual exclusion tricky paths.
     {
         let mut s = base.clone();
         s.active_window_id = Some("w1".to_string());
@@ -350,7 +339,6 @@ fn constructed_cases_match_committed_fixtures() {
         assert_ok("mode-tool-exclusion-utility-clears-tool", s, ShellCommand::SetActiveUtility { window_id: "w1".to_string(), utility_id: Some("inspect".to_string()) });
     }
 
-    // Error fixtures.
     assert_err("error-unregister-unknown-plugin", base.clone(), ShellCommand::UnregisterLoadedPlugin { plugin_id: "missing".to_string() });
     assert_err("error-close-dialog-empty-stack", base.clone(), ShellCommand::CloseDialog { dialog_id: None });
     assert_err("error-close-dialog-unknown-id", base.clone(), ShellCommand::CloseDialog { dialog_id: Some("missing".to_string()) });

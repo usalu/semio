@@ -206,8 +206,6 @@ export function hostEffectsRewriteGuestRenderInputsV1(effects: readonly unknown[
 export function hostEffectRefreshScopeV1(effects: readonly unknown[], declared: UiDirtyScope, windowBodyKeys: readonly string[]): UiDirtyScope {
   if (!hostEffectsRewriteGuestRenderInputsV1(effects)) return declared;
   const rewriting = effects.filter((effect) => typeof effect === "object" && effect !== null && HOST_EFFECTS_REWRITING_GUEST_RENDER_INPUTS.some((key) => key in effect));
-  // 🪟️ `setPanel`/`loadDocument` name no body of their own — `panelJson` feeds every section, so the only
-  // honest answer is the widest one, which a hash-conditional fetch makes cheap for the unchanged parts.
   const widest = rewriting.some((effect) => "setPanel" in (effect as object) || "loadDocument" in (effect as object));
   const earned: UiDirtyScope = widest
     ? { kind: "full" }
@@ -361,9 +359,6 @@ export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: Ui
         failure = { error };
         onDecision?.("failed", pending.scope, passes);
       }
-      // 🤝️ Read AFTER the pass: a request the gate joined while this pass ran settles with it, and
-      // both the success and the failure path must reach the joiners too — a joiner was told this
-      // pass answers for it, so it inherits this pass's verdict, whichever it is.
       const covered = runningWaiters;
       running = null;
       runningWaiters = [];
@@ -373,9 +368,6 @@ export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: Ui
   return {
     request: (next: TRequest): Promise<void> => {
       if (next.scope.kind === "none") return Promise.resolve();
-      // 🚪️ The pass in flight may have already answered this request — see
-      // {@link uiRefreshAlreadyAnsweredV1} for the four conditions and what each one refuses. Joining
-      // it is what turns a converging hop's three serialized guest turns into two.
       if (running && alreadyAnswered?.(running, next)) {
         answered += 1;
         onDecision?.("answered", next.scope, passes);
@@ -384,9 +376,6 @@ export function createUiRefreshCoalescerV1<TRequest extends { readonly scope: Ui
       onDecision?.(owed ? "merged" : "owed", next.scope, passes);
       owed = owed ? merge(owed, next) : next;
       const joined = new Promise<void>((resolve, reject) => waiters.push({ resolve, reject }));
-      // 🔁️ The flag is raised BEFORE the loop is entered, never after: `run`'s own synchronous prologue is
-      // allowed to re-enter `request` (that is property 3), and a marker written after the call would let
-      // that re-entrant request start a SECOND drain — two passes crossing into the same guest at once.
       if (!draining) {
         draining = true;
         void drain().finally(() => {

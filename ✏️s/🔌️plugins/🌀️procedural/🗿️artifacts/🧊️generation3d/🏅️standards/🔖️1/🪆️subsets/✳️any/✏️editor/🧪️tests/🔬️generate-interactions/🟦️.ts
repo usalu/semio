@@ -53,7 +53,6 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   const byId = new Map(fixture.windows.map((window) => [window.id, window]));
   assert.equal(byId.size, fixture.windows.length, "one row per window kind");
 
-  // 🗂️ The Generations window is the only one with row verbs, and all four generation verbs are there.
   const generations = byId.get("generation3d-generations")!;
   assert.deepEqual(
     [...generations.rowVerbs].map((row) => row.verb).sort(),
@@ -72,10 +71,8 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
     assert.equal(window.rowVerbs.length, 0, `${window.id} is not a tree and must declare no row verbs`);
   }
 
-  // 📝️ The Form window's single verb is the value edit.
   assert.deepEqual([...byId.get("generation3d-generate-form")!.actions], ["updateGenerationValues"]);
 
-  // 🕹️ Preview parity: both World3d previews offer the same actions, the same rail, and a live gumball.
   assert.ok(fixture.previewParity.length >= 2, "parity needs at least two previews to compare");
   const previews = fixture.previewParity.map((id) => byId.get(id)!);
   for (const preview of previews) {
@@ -92,7 +89,6 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   const flow = byId.get("procedural-main")!;
   assert.equal(gumballVisible(flow, ["extrude"], "move"), false, "a window with no transform rail never shows a gumball");
 
-  // 🕸️ Wire editing: connect and disconnect are both present, and each operation names its arguments.
   const operations = new Map(fixture.nodeGraphEditOperations.map((row) => [row.operation, row]));
   for (const required of ["connect", "disconnect", "move", "setSlider", "insertPort", "delete"]) {
     assert.ok(operations.has(required), `nodeGraphEdit must handle ${required}`);
@@ -102,7 +98,6 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   assert.deepEqual([...operations.get("move")!.required].sort(), ["dx", "dy", "gestureId", "nodeIds"], "a move is the node-graph gesture record: the press, the moved nodes and their ONE relative offset");
   assert.equal(operations.get("move")!.dispatchedBy, "nodeDrag");
 
-  // 🚫️ No dead commands: every listed command has at least one trigger, and a removed one has none.
   const listed = new Set(fixture.commandTriggers.map((row) => row.command));
   for (const row of fixture.commandTriggers) {
     assert.ok(row.triggers.length > 0, `${row.command} is listed with no trigger at all`);
@@ -114,7 +109,6 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
     assert.ok(removed.reason.length > 0, `${removed.command} must say why it was removed`);
   }
 
-  // 🖊️ The rename commit's argument names — derived, not restated.
   const { authored, fromTrigger, guestReads } = fixture.renameCommitArgument;
   const merged = mergeIntentPayload(Object.fromEntries(authored.map((key) => [key, "generation-1"])), "commit", "Balcony Study");
   assert.equal(merged[fromTrigger], "Balcony Study", `a scalar commit payload must arrive under \`${fromTrigger}\``);

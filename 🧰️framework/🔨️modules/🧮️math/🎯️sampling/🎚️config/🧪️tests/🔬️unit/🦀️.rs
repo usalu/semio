@@ -75,8 +75,6 @@ async fn schedule_json_round_trips_every_non_callback_variant() {
 
 #[semio_framework_async_macros::async_test]
 async fn callback_schedule_serializes_but_refuses_to_deserialize() {
-    // 🚫️async: E4 fn-pointer slot — `Schedule::Callback` holds a plain `fn(ScheduleInput) ->
-    // f64` (an `async fn`'s pointer type is unnameable), so this helper must stay sync too.
     fn double(input: ScheduleInput) -> f64 {
         input.step.get() as f64 * 2.0
     }

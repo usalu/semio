@@ -171,8 +171,6 @@ describe("staged module freshness", () => {
       writeFileSync(join(stagedDirectory, "component.core.wasm"), "staged");
       writeFileSync(join(stagedDirectory, ".semio-artifact.json"), "{}");
       utimesSync(join(stagedDirectory, "component.core.wasm"), new Date(2_000_000), new Date(2_000_000));
-      // 🕰️ The Nx ownership marker is written AFTER every payload file, so counting it would make every
-      // staged module look newer than its own bytes and hide exactly the drift this check exists for.
       utimesSync(join(stagedDirectory, ".semio-artifact.json"), new Date(9_000_000), new Date(9_000_000));
       expect(stagedModuleMtime(stagedDirectory)).toBe(2_000_000);
       expect(stagedModuleMtime(join(sandbox, "absent"))).toBeUndefined();
@@ -398,7 +396,6 @@ describe("staged module freshness", () => {
       expect(newest?.mtimeMs).toBe(3_000_000);
       expect(newest?.path).toBe(nested);
 
-      // 🧯️ The exact live symptom: staged at 14:21, described at 15:42, no source touched — `fresh`.
       expect(stagedModuleVerdict({ pluginId: "stdio", role: "plugin", activationTracked: false, stagedAtMs: 4_000_000, newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs }).kind).toBe("fresh");
     } finally {
       rmSync(sandbox, { recursive: true, force: true });

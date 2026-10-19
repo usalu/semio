@@ -4,7 +4,7 @@ use super::*;
 
 impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     #[doc(hidden)]
-    pub fn new(native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
+    pub fn new(native: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
         let producer = <O::State as pack::snapshot::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
         let spec = producer.decode(native).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
         let stack = Vec::new();

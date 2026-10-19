@@ -1,4 +1,4 @@
-//! command addresses (kind, camera, body key). The mode owns both windows, so the interaction layer below them never
+//! 🎮️ command addresses (kind, camera, body key). The mode owns both windows, so the interaction layer below them never
 //! ✏️ Fem2d play app — the `edit` mode: its id and the lookups that resolve which of its two Canvas2d windows a
 //! names a window.
 

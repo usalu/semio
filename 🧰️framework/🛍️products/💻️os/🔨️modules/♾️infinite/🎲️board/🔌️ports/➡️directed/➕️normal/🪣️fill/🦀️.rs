@@ -30,7 +30,7 @@ pub use naming_capacities_and_pages::{
 
 #[path = "📸️snapshot-and-capture-stages/🦀️.rs"]
 mod snapshot_and_capture_stages;
-use snapshot_and_capture_stages::{
+pub use snapshot_and_capture_stages::{
     BoardFillCapturePhase, BoardFillHandleCapture, BoardFillHandleCaptureStage, BoardFillHandleSnapshot, BoardFillKindCapture, BoardFillKindCaptureStage, BoardFillKindSnapshot, BoardFillNodeCapture, BoardFillNodeSnapshot, BoardFillRuleCapture,
     BoardFillRuleCaptureStage, BoardFillRuleSnapshot, BoardFillShape, BoardFillTemplateCapture, BoardFillTemplateCaptureStage, BoardFillTemplateSnapshot,
 };

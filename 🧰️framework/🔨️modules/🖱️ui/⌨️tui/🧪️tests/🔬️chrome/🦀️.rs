@@ -9,12 +9,12 @@ use ui_styling::appearance::AppearanceName;
 
 #[test]
 fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
-    use crate::tui::chrome::{WindowHit, WindowStackTabState};
-    use crate::tui::layout::WindowStackCorner;
-    use crate::tui::theme::Surface;
+    use semio_framework_ui_tui_frame::chrome::{WindowHit, WindowStackTabState};
+    use semio_framework_ui_tui_core::docking::WindowStackCorner;
+    use semio_framework_ui_tui_core::theme::Surface;
     use semio_framework_pack_json::{parse, JsonMemberPolicy};
     use tiny_skia::{Paint, Pixmap, Transform};
-    let fixture = parse(include_str!("../../🧫️fixtures/🖼️chrome-emphasis/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
+    let fixture = parse(include_str!("../🧫️fixtures/🖼️chrome-emphasis/🔣️.json"), JsonMemberPolicy::Reject).unwrap();
     let feature = include_str!("../🖼️chrome-emphasis/🥒️.feature");
     assert!(feature.starts_with("@capability-tui-chrome-emphasis"));
     let size = fixture.get("size").unwrap().as_array().unwrap();
@@ -76,12 +76,12 @@ fn chrome_emphasis_fixture_matches_independent_raster_outline_oracle() {
 
 #[test]
 fn chrome_ancestor_emphasis_follows_descendants_and_clears_stale_lineages() {
-    use crate::tui::chrome::shell;
-    use crate::tui::engine::Tui;
-    use crate::tui::event::{Event, MouseEvent, MouseKind};
-    use crate::tui::layout::{create_default_layout, Constraint, Dimension};
-    use crate::tui::scene::{Node, NodeContent};
-    use crate::tui::widget::{TabsState, WidgetState};
+    use semio_framework_ui_tui_frame::chrome::shell;
+    use semio_framework_ui_tui_engine::Tui;
+    use semio_framework_ui_tui_core::event::{Event, MouseEvent, MouseKind};
+    use semio_framework_ui_tui_frame::layout::{create_default_layout, Constraint, Dimension};
+    use semio_framework_ui_tui_frame::scene::{Node, NodeContent};
+    use semio_framework_ui_tui_widgets::widget::{TabsState, WidgetState};
     let theme = Theme::new(AppearanceName::Dark);
     let mut tui = Tui::new(Size { width: 80, height: 24 }, theme);
     let layout = create_default_layout(&["window".into()], "row", None, None);
@@ -179,7 +179,7 @@ fn chrome_compact_active_tab_owns_both_shared_border_cells() {
 
 #[test]
 fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
-    use crate::tui::chrome::WindowHit;
+    use semio_framework_ui_tui_frame::chrome::WindowHit;
     let theme = Theme::new(AppearanceName::Dark);
     for active in [0, 1, 2] {
         for hovered in [0, 1, 2] {
@@ -204,7 +204,7 @@ fn chrome_compact_hovered_inactive_tab_owns_non_active_shared_border_cells() {
 
 #[test]
 fn chrome_narrow_overflow_chips_keep_independent_border_roles() {
-    use crate::tui::chrome::WindowHit;
+    use semio_framework_ui_tui_frame::chrome::WindowHit;
     for width in [4, 18, 30, 44] {
         for active in [0, 5, 11] {
             let mut state = many(12);
@@ -251,7 +251,7 @@ fn chrome_narrow_overflow_chips_keep_independent_border_roles() {
 
 #[test]
 fn chrome_close_and_maximize_hover_keep_active_perimeter_and_emphasize_inactive_tabs() {
-    use crate::tui::chrome::WindowHit;
+    use semio_framework_ui_tui_frame::chrome::WindowHit;
     for focused in [false, true] {
         for active in [0, 1] {
             let mut state = WindowState::new("host").with_stack_tabs(vec!["first".into(), "second".into()], active);
@@ -515,7 +515,7 @@ fn the_footer_status_keeps_a_share_of_the_row_and_cut_hints_end_in_an_ellipsis()
 
 #[test]
 fn controls_and_status_are_drawn_from_the_glyph_set_and_keep_their_columns() {
-    use semio_framework_ui_tui_frame::layout::WindowStackCorner;
+    use semio_framework_ui_tui_core::docking::WindowStackCorner;
     use semio_framework_ui_tui_core::theme::{GlyphSet, Status};
     let mut state = WindowState::new("host").with_stack_tab_states(
         vec![

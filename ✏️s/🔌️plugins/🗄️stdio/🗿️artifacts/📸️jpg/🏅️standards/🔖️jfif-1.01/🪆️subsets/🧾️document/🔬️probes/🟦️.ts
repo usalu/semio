@@ -1,0 +1,171 @@
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+
+//#endregion 🔌️Adapters
+
+//#region 🧬️Contract
+/** 🔬️ The typed report every probe emits. The orchestrator compares `measurements`; it never computes them. */
+type ProbeReport = {
+  schema: "semio.repository-test.probe-report/v2";
+  probe: string;
+  probeVersion: string;
+  engine: { family: string; implementation: string; version: string };
+  status: "ok" | "failed" | "unsupported";
+  durationMs: number;
+  measurements: Record<string, unknown>;
+  diagnostics?: { severity: "info" | "warning" | "error"; message: string; detail?: string }[];
+};
+
+const ENGINE = { family: "image-rs", implementation: "jpeg-jfif-codec (image 0.25.10, zune-jpeg 0.5.15 backend)", version: "image@0.25.10" } as const;
+const PROBE_VERSION = "image@0.25.10";
+const CODEC_MANIFEST = join(import.meta.dir, "..", "🏭️generator", "🔁️codec", "📦️packages", "🦀️rust", "Cargo.toml");
+//#endregion 🧬️Contract
+
+//#region 📥️Model
+type OpaqueSegment = { present: boolean; size?: number; digest?: string };
+type JpgDoc = { dimensions: string; colorType: string; raster: { size: number; digest: string }; xmp: OpaqueSegment; exif: OpaqueSegment; iptc: OpaqueSegment; iccProfile: OpaqueSegment };
+//#endregion 📥️Model
+
+//#region 🔓️Read
+/** 📥️ Runs the standalone codec's `project` subcommand — every field it returns is ALREADY the
+ *  profile's own opaque-payload projection (size+digest, never raw bytes; see that binary's own
+ *  `project()` function), so nothing further happens to it here. */
+function readJpg(path: string): JpgDoc {
+  const result = spawnSync("cargo", ["run", "--quiet", "--offline", "--manifest-path", CODEC_MANIFEST, "--", "project", path], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`jpeg-jfif-codec project ${path} failed (exit ${result.status}): ${result.stderr}`);
+  return JSON.parse(result.stdout) as JpgDoc;
+}
+//#endregion 🔓️Read
+
+//#region ⚖️Compare
+/** ⚖️ Structural equality over the whole projection — every field is either a small typed value
+ *  (dimensions, colorType) or already an opaque size+digest pair, so a plain recursive diff is the
+ *  operative equality; nothing here is reordered or tolerance-adjusted. */
+function diffAt(path: string, expected: unknown, actual: unknown, diffs: string[]): void {
+  if (Array.isArray(expected) && Array.isArray(actual)) {
+    const len = Math.max(expected.length, actual.length);
+    for (let i = 0; i < len; i += 1) diffAt(`${path}[${i}]`, expected[i], actual[i], diffs);
+    return;
+  }
+  if (typeof expected === "object" && expected !== null && typeof actual === "object" && actual !== null && !Array.isArray(expected)) {
+    const keys = new Set([...Object.keys(expected as object), ...Object.keys(actual as object)]);
+    for (const key of keys) diffAt(`${path}.${key}`, (expected as Record<string, unknown>)[key], (actual as Record<string, unknown>)[key], diffs);
+    return;
+  }
+  if (JSON.stringify(expected) !== JSON.stringify(actual)) diffs.push(`${path}: ${JSON.stringify(expected)} ≠ ${JSON.stringify(actual)}`);
+}
+
+function compareDocs(expected: JpgDoc, actual: JpgDoc): { equal: boolean; diffCount: number; diffs: string[] } {
+  const diffs: string[] = [];
+  diffAt("$", expected, actual, diffs);
+  return { equal: diffs.length === 0, diffCount: diffs.length, diffs: diffs.slice(0, 50) };
+}
+//#endregion ⚖️Compare
+
+//#region 🔬️Probes
+function requireInputs(inputs: readonly string[], count: number, probe: string): void {
+  if (inputs.length < count) throw new Error(`${probe} requires ${count} --input path(s), got ${inputs.length}`);
+}
+
+type ProbeResult = { status: "ok" | "failed" | "unsupported"; measurements: Record<string, unknown>; diagnostics?: ProbeReport["diagnostics"] ; engine?: ProbeReport["engine"]; probeVersion?: string };
+
+const MARKER_ENGINE = { family: "pillow", implementation: "Pillow 11.3.0 JPEG marker reader (quantization tables, JFIF APP0)", version: "11.3.0" } as const;
+const MARKER_PROBE_VERSION = "pillow@11.3.0";
+
+/** 🐍️ Independently reads JFIF metadata and native quantization observations. */
+const MARKER_READER = String.raw`
+import io, json, sys
+from PIL import Image
+def project(path):
+    im = Image.open(path); im.load()
+    info = im.info
+    return {
+        "quantTables": {str(k): list(v) for k, v in (im.quantization or {}).items()},
+        "jfifVersion": list(info["jfif_version"]) if info.get("jfif_version") else None,
+        "jfifUnit": info.get("jfif_unit"),
+        "jfifDensity": list(info["jfif_density"]) if info.get("jfif_density") else None,
+        "size": list(im.size),
+        "mode": im.mode,
+    }
+paths = sys.argv[1:]
+if len(paths) == 1:
+    print(json.dumps(project(paths[0]), sort_keys=True))
+else:
+    a, b = project(paths[0]), project(paths[1])
+    print(json.dumps({"equal": a == b, "expected": a, "actual": b}, sort_keys=True))
+`;
+
+function markerRun(paths: readonly string[]): Record<string, unknown> {
+  const result = spawnSync("python3", ["-c", MARKER_READER, ...paths], { encoding: "utf8" });
+  if (result.status !== 0) throw new Error(`pillow marker reader failed: ${result.stderr}`);
+  return JSON.parse(result.stdout) as Record<string, unknown>;
+}
+
+const PROBES: Record<string, (inputs: readonly string[]) => Promise<ProbeResult>> = {
+  "jpg-marker-project": async (inputs) => {
+    requireInputs(inputs, 1, "jpg-marker-project");
+    return { status: "ok", engine: MARKER_ENGINE, probeVersion: MARKER_PROBE_VERSION, measurements: markerRun([inputs[0]!]) } as never;
+  },
+  "jpg-marker-compare": async (inputs) => {
+    requireInputs(inputs, 2, "jpg-marker-compare");
+    return { status: "ok", engine: MARKER_ENGINE, probeVersion: MARKER_PROBE_VERSION, measurements: markerRun([inputs[0]!, inputs[1]!]) } as never;
+  },
+
+  "jpg-import": async (inputs) => {
+    requireInputs(inputs, 1, "jpg-import");
+    const perInput = inputs.map((input) => {
+      try {
+        readJpg(input);
+        return { path: input, ok: true, error: undefined as string | undefined };
+      } catch (error) {
+        return { path: input, ok: false, error: String((error as Error).message ?? error) };
+      }
+    });
+    return { status: "ok", measurements: { bothImport: perInput.every((entry) => entry.ok), perInput } };
+  },
+  "jpg-project": async (inputs) => {
+    requireInputs(inputs, 1, "jpg-project");
+    const doc = readJpg(inputs[0]!);
+    return { status: "ok", measurements: { projection: doc } };
+  },
+  "jpg-compare": async (inputs) => {
+    requireInputs(inputs, 2, "jpg-compare");
+    const expected = readJpg(inputs[0]!);
+    const actual = readJpg(inputs[1]!);
+    const verdict = compareDocs(expected, actual);
+    return { status: "ok", measurements: { ...verdict, expected, actual } };
+  },
+};
+//#endregion 🔬️Probes
+
+//#region 🚀️Entry
+function parseArgv(argv: readonly string[]): { probe: string; inputs: string[] } {
+  const [probe = "", ...rest] = argv;
+  const inputs: string[] = [];
+  for (let i = 0; i < rest.length; i += 1) if (rest[i] === "--input") inputs.push(rest[i + 1] ?? "");
+  return { probe, inputs };
+}
+
+async function main(argv: readonly string[]): Promise<number> {
+  const { probe, inputs } = parseArgv(argv);
+  const started = Date.now();
+  const emit = (report: ProbeReport): number => {
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
+    return report.status === "failed" ? 1 : 0;
+  };
+  const budgetMs = Number(process.env.SEMIO_PROBE_TIMEOUT_MS ?? 60_000);
+  const watchdog = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`probe exceeded ${budgetMs} ms`)), budgetMs).unref?.());
+  const run = PROBES[probe];
+  if (!run) return emit({ schema: "semio.repository-test.probe-report/v2", probe: probe || "(none)", probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: 0, measurements: {}, diagnostics: [{ severity: "error", message: `unknown probe ${probe}`, detail: `known: ${Object.keys(PROBES).join(", ")}` }] });
+  try {
+    const result = await Promise.race([run(inputs), watchdog]);
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: (result as { probeVersion?: string }).probeVersion ?? PROBE_VERSION, engine: (result as { engine?: typeof ENGINE }).engine ?? ENGINE, status: result.status, durationMs: Date.now() - started, measurements: result.measurements, ...(result.diagnostics ? { diagnostics: result.diagnostics } : {}) });
+  } catch (error) {
+    return emit({ schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE, status: "failed", durationMs: Date.now() - started, measurements: {}, diagnostics: [{ severity: "error", message: String((error as Error).message ?? error) }] });
+  }
+}
+/** 🏃️ Program of the sibling router: the former top-level body of its `📜️script.ts`, kept verbatim. */
+export async function runScriptProgram(): Promise<void> {
+  
+  if (true) process.exit(await main(process.argv.slice(2)));
+}

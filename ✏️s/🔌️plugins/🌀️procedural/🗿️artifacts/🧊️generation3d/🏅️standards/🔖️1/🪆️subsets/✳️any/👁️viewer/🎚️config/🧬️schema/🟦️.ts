@@ -4,13 +4,13 @@
 
 /** 🧬️ Generation3dViewConfig */
 export interface Generation3dViewConfig {
-  /** @state config */
+  /** 🔭️ @state config */
   lodMode: string;
-  /** @state config */
+  /** 👁️ @state config */
   showMode: string;
-  /** @state config */
+  /** 👻️ @state config */
   previewCamera: Generation3dViewCamera;
-  /** @state config */
+  /** 💡️ @state config */
   sunJson: string;
   /** 🎨️ What this surface is looking at: absent = the opened document, `""` = the picker's
    * `No example` row, anything else = that bundled example.

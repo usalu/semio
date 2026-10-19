@@ -146,8 +146,8 @@ pub struct Wfc3dInferenceJob {
     pub(crate) child: Option<engine::job::WfcJob<engine::topology::GraphTopology>>,
     pub(crate) child_commit: Option<engine::job::WfcCommit>,
     pub(crate) assignments: BTreeMap<String, String>,
-    pub(crate) output: Option<semio_framework_job::RetainedJobPayloadWriter>,
-    pub(crate) rejected_output_page: Option<semio_framework_job::JobPayloadPageSource>,
+    pub(crate) output: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
+    pub(crate) rejected_output_page: Option<semio_framework_job_payload::JobPayloadPageSource>,
     pub(crate) output_started: bool,
     pub(crate) encoded_entries: usize,
     pub(crate) encode_total: usize,
@@ -157,5 +157,5 @@ pub struct Wfc3dInferenceJob {
     pub(crate) lent: Wfc3dInferenceJobLent,
     pub(crate) restore_done: bool,
     pub(crate) child_end: Option<InferenceChildEnd>,
-    pub(crate) output_payload: Option<semio_framework_job::RetainedJobPayload>,
+    pub(crate) output_payload: Option<semio_framework_job_payload::RetainedJobPayload>,
 }

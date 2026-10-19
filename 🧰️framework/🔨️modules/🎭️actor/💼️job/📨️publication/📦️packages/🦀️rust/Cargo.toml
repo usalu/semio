@@ -17,6 +17,7 @@ semio-framework-actor-vocabulary = { path = "../../../../📖️vocabulary/📦�
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { path = "../../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-async = { workspace = true }
 serde = { version = "1.0.228", features = ["derive"] }
 

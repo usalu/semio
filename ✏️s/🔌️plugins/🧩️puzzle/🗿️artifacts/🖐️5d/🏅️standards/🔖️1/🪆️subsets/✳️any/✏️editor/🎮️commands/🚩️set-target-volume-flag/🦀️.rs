@@ -1,4 +1,4 @@
-//! (`setTargetVolumeHidden`, `setTargetVolumeLocked`).
+//! 🎮️ (`setTargetVolumeHidden`, `setTargetVolumeLocked`).
 //! 🚩️ `set-target-volume-flag` command, and the two set-verbs an outliner target-volume row names
 
 use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;

@@ -29,6 +29,7 @@ semio-framework-diagnostic = { path = "../../../../../../⚠️diagnostic/📦�
 semio-framework-io-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 
 [dev-dependencies]

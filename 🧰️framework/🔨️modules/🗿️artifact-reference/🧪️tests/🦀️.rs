@@ -31,9 +31,9 @@ fn native_reference_text_extensions_preserve_literal_identity_and_control() {
     assert_eq!(expected.to_uri(),"shape-1!s.stdio.svg@1.1/*");
     assert_eq!(ArtifactRef::parse_uri(&expected.to_uri()).unwrap(),expected);
     assert_eq!(ArtifactDialect::parse_coordinate(&expected.dialect.to_coordinate()).unwrap(),expected.dialect);
-    let mut allow=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut allow);
+    let mut allow=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut allow);
     assert_eq!(ArtifactRef::parse_uri_controlled(&expected.to_uri(),&mut control).unwrap(),expected);
-    let mut deny=|_|false;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut deny);
+    let mut deny=|_|false;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(4096,&mut deny);
     assert!(ArtifactRef::parse_uri_controlled(&expected.to_uri(),&mut control).is_err());
 }
 

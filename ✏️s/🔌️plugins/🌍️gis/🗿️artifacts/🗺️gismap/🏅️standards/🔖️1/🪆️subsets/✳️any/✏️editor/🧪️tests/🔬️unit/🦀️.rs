@@ -159,7 +159,7 @@ pub mod context {
 }
 
 use crate::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp};
-use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
+use semio_framework_plugin::{ContextMenuRequest, PluginApp, VcsArtifactApp};
 
 #[test]
 fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
@@ -342,7 +342,7 @@ async fn drive_gis_map_live_load(app: &mut Gis2dTestApp, handle: semio_framework
             return last;
         }
         app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one GIS live maintenance turn");
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(8, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
         last = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("GIS live load advancement after maintenance");
         if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
             return last;
@@ -472,8 +472,6 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_gis2d_app();
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 1);
-    // 🧷️ The framework injects its own panel tabs on top of the app's three, so assert the app's
-    // own tabs are stitched in rather than pinning a total.
     for body_key in [document_panel::GIS2D_PLAY_BODY_ARTIFACT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }

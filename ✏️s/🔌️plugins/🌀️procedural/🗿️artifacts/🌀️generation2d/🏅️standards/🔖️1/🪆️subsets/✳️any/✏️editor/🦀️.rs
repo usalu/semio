@@ -241,16 +241,12 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(generations::definition())
         .window_kind_def(form::definition())
         .window_kind_def(generate_preview::definition())
-        // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
-        // injects its reserved actions; both modes reference it because both mount a preview that starts it.
         .tool(semio_s_artifact_procedural_2d_preview_eval::preview_eval_tool_definition())
         .default_layout(edit::layout())
         .named_layout(generate::layout())
         .panel_tab_def(document_panel::definition())
         .panel_tab_def(catalogue_panel::definition())
         .panel_tab_def(inspection_panel::definition())
-        // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
-        // 🗂️ Referenced by `Generation2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
         .action_with(categorized_action("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation, "selection"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
         .action_with(categorized_action("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation, "create"))
@@ -263,9 +259,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_destructive("removeGeneration")
         .mutation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
         .mutation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
-        // 👁️ View actions — exact-window viewport, app show-mode display toggle, and evaluation scratch
-        // (emit no operations). Selection/hover are the framework's `graph` interaction domain now
-        // (`.interaction(...)` below) — the six framework verbs auto-inject.
         .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
         .action_with(categorized_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View, "mode"))
         .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
@@ -314,7 +307,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
             ])
         }))
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
-        // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
             ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
                 ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
@@ -324,11 +316,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgOption::new("outputExport", LocalizedLabel::native("Export", "Export")),
             ]).default_value(&"inputSlider"),
         ])
-        // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-        // one domain over the flow-graph widget DAG, node/edge/handle granularities,
-        // `HierarchyProvider::Topology` (see `Generation2dPlayApp::interaction_topology` above) —
-        // transitive hover is the headline feature: hovering a Cluster group node highlights every
-        // widget nested in its tree.
         .interaction(InteractionDefinition {
             id: "graph".into(),
             label: LocalizedLabel::native("Graph", "Graph"),
@@ -350,14 +337,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_interactions(flow_window::GENERATION2D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("graph")])
         .window_kind_interactions(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, vec![InteractionRef::new("graph")])
         .window_kind_interactions(generate_preview::GENERATION2D_PLAY_WINDOW_GENERATE_PREVIEW, vec![InteractionRef::new("graph")])
-        // 📇️ Window-scoped action ownership — the generation2d twin of generation3d's own block
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END), asserted by
-        // `every_emitted_action_is_declared_on_its_window_kind`. The node-graph host's two verbs on the
-        // flow window, the canvas host's four pointer verbs on the two Canvas2d scene windows, the
-        // generation tree's four row verbs on the Generations window, the form's one change verb on the
-        // Form window. Everything else — `setShowMode`, `generate`, `addWidget`, `reorganize`,
-        // `setEvalOutputs`, the framework's history ids — is app-scoped, stays unowned, and is therefore
-        // copied onto every window by `build_definition`.
         .window_kind_action_refs(flow_window::GENERATION2D_PLAY_WINDOW_MAIN, vec!["nodeGraphEdit".into(), "nodeGraphViewport".into()])
         .window_kind_action_refs(edit_preview::GENERATION2D_PLAY_WINDOW_PREVIEW, vec!["canvasPointerDown".into(), "canvasPointerMove".into(), "canvasPointerUp".into(), "canvasWheel".into()])
         .window_kind_action_refs(generations::GENERATION2D_PLAY_WINDOW_GENERATIONS, vec!["addGeneration".into(), "selectGeneration".into(), "renameGeneration".into(), "removeGeneration".into()])
@@ -367,12 +346,6 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .keybinding("mod+shift+z", "redo")
         .config(Generation2dPlayApp::config_spec())
         .io(::semio_framework_async::poll::resolve_ready(generation2d_io()))
-        // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
-        // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
-        // `.workflow(...)` on this builder, so the old `"default"` app-level example registration and
-        // the no-op `.workflow("generation2d", …)` call are dropped here (not silently — reported in
-        // this packet's migration notes). The subset's own `📚️examples` facet is the modern,
-        // role-agnostic replacement surface for this.
         .action_describe("addGeneration", LocalizedLabel::native("Adds a new generation, a named set of input values for the 2D generator, to the generation list and selects it.", "Fügt der Generationsliste eine neue Generation hinzu, einen benannten Satz von Eingabewerten für den 2D-Generator, und wählt sie aus."))
         .action_describe("selectGeneration", LocalizedLabel::native("Selects the generation with the given id, whose input values the generator then evaluates and shows.", "Wählt die Generation mit der angegebenen Id aus, deren Eingabewerte der Generator dann auswertet und zeigt."))
         .action_describe("renameGeneration", LocalizedLabel::native("Renames one generation of the generation list.", "Benennt eine Generation der Generationsliste um."))

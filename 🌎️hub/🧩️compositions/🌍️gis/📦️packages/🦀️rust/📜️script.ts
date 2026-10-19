@@ -3,14 +3,10 @@ import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runRepositoryCommand, runCmd, devToolingEnv } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-/** 🌍️ GIS plugin package command router. */
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { strict as assert } from "node:assert";
-import Ajv from "ajv";
-import { runRepositoryCargoTests } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
@@ -19,6 +15,7 @@ import { MapCreateRegionGroupCheckScript, MapCreateRegionGroupNativeCheckScript 
 import { NativeCodecCheckScript, proveGisNativeCodecReceipts } from "../../🧪️tests/📇️native-codecs/🟦️.ts";
 import { proveGisControlledProposal } from "../../🧪️tests/💡️inference-control/🟦️.ts";
 import { InferenceDiscoveryOracleScript, InferenceDiscoveryCheckScript } from "../../🧪️tests/💡️inference-discovery/🟦️.ts";
+import { runInferenceTransportCheckScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🧾️ Validates the authored composition manifest and protocol commitments independently. */
 class NativeCodecOracleScript extends BundleScript {
@@ -36,7 +33,7 @@ class InstalledServiceSourceScript extends BundleScript {
     const source=resolve(tests,"🧱️io-boundary/🟦️.ts");
     const receivers=["🌉️component-cold-map-patch","💡️inference-control","📇️native-codecs"].map(name=>resolve(tests,name,"🟦️.ts"));
     const options={signal:this.invocation.control.signal};
-    await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,...receivers],this.repoRoot,"gis-installed-service-strict",TEST_LEVEL_BUDGET_MS.long,options);
+    await runOwnedCommand(process.execPath,[resolveTypescriptCompilerV1(this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,...receivers],this.repoRoot,"gis-installed-service-strict",TEST_LEVEL_BUDGET_MS.long,options);
     await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"gis-installed-service-source",TEST_LEVEL_BUDGET_MS.long,options);
   }
 }
@@ -67,23 +64,8 @@ class NativeCodecProjectionScript extends BundleScript {
 
 /** 🌍️ Validates the owner's closed transport contract and the installed production manifest. */
 class InferenceTransportCheckScript extends BundleScript {
-  run(): void {
-    const root = resolve(this.repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client");
-    const fixture = JSON.parse(readFileSync(resolve(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
-    const validators = new Map<string, ReturnType<Ajv["compile"]>>();
-    const ajv = new Ajv({ strict: false });
-    for (const vector of fixture.schemaVectors) {
-      let validate = validators.get(vector.schema);
-      if (!validate) {
-        validate = ajv.compile(JSON.parse(readFileSync(resolve(root, "🧬️schema", vector.schema), "utf8")));
-        validators.set(vector.schema, validate);
-      }
-      assert.equal(validate(vector.value), vector.valid, vector.name);
-    }
-    for (const law of ["inference_client::tests::production_manifest_installs_owner_transport_and_schema_vectors", "inference_client::tests::typed_owner_transport_preserves_proposal_binding_and_closed_geometry"]) {
-      runCmd("cargo", ["test", "--manifest-path", resolve(this.repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml"), "-p", "semio-s-artifact-gis-gismap", "--lib", "--", law, "--exact", "--nocapture"], { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() });
-    }
-    console.log("GIS document-http: Ajv schema parity, owner manifest injection, typed submit/events/approval and geometry binding passed");
+  async run(): Promise<void> {
+    await runInferenceTransportCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
@@ -103,4 +85,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("component-cold-map-patch-check", ComponentColdMapPatchCheckScript)
   .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript)
   .register("hub-edit-durability-check", HubEditDurabilityCheckScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

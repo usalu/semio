@@ -93,11 +93,6 @@ fn computers_manifest() -> JsonValue {
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
 pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
-    // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
-    // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
-    // artifact, one composite mutation + one inference (both dispatched by the host through
-    // the contributed-mutation/inference registries as bounded Cold job kinds at invocation
-    // time, not by running this extension's own actor).
     let bundle = bundle.mode(ExecutionMode::Declarative);
     let bundle = bundle.contributes_topic(
         "cad.computer",

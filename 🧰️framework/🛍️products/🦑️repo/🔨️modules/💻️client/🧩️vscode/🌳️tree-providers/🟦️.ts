@@ -15,18 +15,18 @@ import { fetchTreeWithArgs, getTreeRoot, treeNodeCommand, treeNodeContextValue, 
 
 // #region 🎩️Globals
 /**
- * filterProvider.current holds the data fields for a filterProvider.current record.
+ * 🔎️ filterProvider.current holds the data fields for a filterProvider.current record.
  **/
 export const filterProvider = ephemeralBox<FilterTreeDataProvider | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.filterProvider", undefined);
 /**
- * monorepoProvider.current holds the data fields for a monorepoProvider.current record.
+ * 🗂️ monorepoProvider.current holds the data fields for a monorepoProvider.current record.
  **/
 export const monorepoProvider = ephemeralBox<MonorepoTreeDataProvider | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.monorepoProvider", undefined);
 // #endregion 🎩️Globals
 
 // #region 🏬️URI Resolution
 /**
- * Builds CLI tree command arguments from the current filter provider state.
+ * 🏗️ Builds CLI tree command arguments from the current filter provider state.
  * Implementations MUST translate each filter toggle into the corresponding CLI flag.
  **/
 export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
@@ -85,7 +85,7 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
 // Providers MUST implement VS Code tree data providers for filter, monorepo, and sections views.
 
 /**
- * Tree item representing a filter option in the filter sidebar view.
+ * 🧪️ Tree item representing a filter option in the filter sidebar view.
  *Implementations MUST extend vscode.TreeItem and expose filter metadata.
  **/
 export class FilterTreeItem extends vscode.TreeItem {
@@ -103,7 +103,7 @@ export class FilterTreeItem extends vscode.TreeItem {
 }
 
 /**
- * Provides the tree data for the filter sidebar view with search and toggle state.
+ * 🧲️ Provides the tree data for the filter sidebar view with search and toggle state.
  *Implementations MUST implement vscode.TreeDataProvider and emit change events on toggle.
  **/
 export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTreeItem> {
@@ -290,7 +290,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
 }
 
 /**
- * Tree item representing a monorepo artifact in the sidebar tree.
+ * 📁️ Tree item representing a monorepo artifact in the sidebar tree.
  *Implementations MUST extend vscode.TreeItem and carry the original node data.
  **/
 export class MonorepoTreeItem extends vscode.TreeItem {
@@ -308,7 +308,7 @@ export class MonorepoTreeItem extends vscode.TreeItem {
 }
 
 /**
- * Converts a TreeNodeData to a VS Code MonorepoTreeItem for the sidebar.
+ * 🌲️ Converts a TreeNodeData to a VS Code MonorepoTreeItem for the sidebar.
  *Implementations MUST set label, description, tooltip, and command from node data.
  **/
 export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
@@ -328,7 +328,7 @@ export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
 }
 
 /**
- * Provides the tree data for the monorepo sidebar view using CLI tree output.
+ * 🧰️ Provides the tree data for the monorepo sidebar view using CLI tree output.
  *Implementations MUST implement vscode.TreeDataProvider and fetch data via CLI.
  **/
 export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<MonorepoTreeItem> {
@@ -363,7 +363,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
 }
 
 /**
- * SectionTreeItem holds the data fields for a SectionTreeItem record.
+ * ✂️ SectionTreeItem holds the data fields for a SectionTreeItem record.
  **/
 class SectionTreeItem extends vscode.TreeItem {
   constructor(
@@ -384,7 +384,7 @@ class SectionTreeItem extends vscode.TreeItem {
 }
 
 /**
- * Provides the tree data for the sections sidebar view of the active file.
+ * 🍰️ Provides the tree data for the sections sidebar view of the active file.
  *Implementations MUST refresh when the active editor changes or the document is edited.
  **/
 export class SectionsTreeDataProvider implements vscode.TreeDataProvider<SectionTreeItem> {
@@ -462,7 +462,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
 
 // #region 📜️Activation
 /**
- * loadAvailableFilterValues holds the data fields for a loadAvailableFilterValues record.
+ * 🏋️ loadAvailableFilterValues holds the data fields for a loadAvailableFilterValues record.
  **/
 export async function loadAvailableFilterValues(): Promise<void> {
   await updateBundleCache();

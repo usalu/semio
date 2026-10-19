@@ -1,4 +1,4 @@
-//! payload, the field vocabulary and the playback step are the ONE FEM implementation in the fem 2d crate
+//! 📦️ payload, the field vocabulary and the playback step are the ONE FEM implementation in the fem 2d crate
 //! ⏯️ Fem3d play app command — `result-animation`: the fem 3d results window as a [`FemPlaybackTransport`]. The
 //! (`semio_s_artifact_fem_2d_editor::editor::fem2d::commands::set_result_animation`).
 

@@ -111,7 +111,6 @@ describe("🤏️ world 3d host multi-touch", () => {
       host.dispatchEvent(pointer("pointermove", 1, 60, 60));
       host.dispatchEvent(pointer("pointermove", 2, 740, 560));
     });
-    // 🤏️ Nothing the host owns may dispatch while the orbit rig owns the gesture.
     expect(dispatched.slice(before).filter((action) => action !== "noteWorldNavigation")).toEqual([]);
   });
 

@@ -3,6 +3,7 @@ import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { createHash } from "node:crypto";
 import { basename, dirname } from "node:path";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
+import { pathBudgetFitsWithReserve } from "../📏️path-budget/🟦️.ts";
 import { canonicalSemanticDirectoryName } from "../📂️semantic-directory-kinds/🟦️.ts";
 import { fixedContractFilename } from "../🎯️taxonomy-path-matching/🟦️.ts";
 import { canonicalFilenameForKind, loadTaxonomy, semanticDirectoryKindId } from "../🔐️taxonomy-authority/🟦️.ts";
@@ -277,9 +278,9 @@ export function semanticProjectionCatalogProblems(registrations: readonly Semant
             if (destinationOwners.has(destinationKey)) problems.push(`${scenarioScope} collides at canonical pair root ${JSON.stringify(destination)}.`);
             destinationOwners.add(destinationKey);
           }
-          const implementationReserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.implementationDescendantContractId]?.pathBudgetReserve.bytes ?? taxonomy.collisionPolicy.maxPathBytes;
-          const fixtureReserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.fixtureDescendantContractId]?.pathBudgetReserve.bytes ?? taxonomy.collisionPolicy.maxPathBytes;
-          if (new TextEncoder().encode(implementation).length + implementationReserve > taxonomy.collisionPolicy.maxPathBytes || new TextEncoder().encode(fixture).length + fixtureReserve > taxonomy.collisionPolicy.maxPathBytes) problems.push(`${scenarioScope} exceeds maxPathBytes after a canonical pair descendant reserve.`);
+          const implementationReserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.implementationDescendantContractId]?.pathBudgetReserve.utf16Units ?? taxonomy.collisionPolicy.maxPathUtf16Units;
+          const fixtureReserve = taxonomy.semanticDescendantContracts[taxonomy.mutationCatalogProjection.fixtureDescendantContractId]?.pathBudgetReserve.utf16Units ?? taxonomy.collisionPolicy.maxPathUtf16Units;
+          if (!pathBudgetFitsWithReserve(implementation, implementationReserve, taxonomy.collisionPolicy) || !pathBudgetFitsWithReserve(fixture, fixtureReserve, taxonomy.collisionPolicy)) problems.push(`${scenarioScope} exceeds the path budget after a canonical pair descendant reserve.`);
         }
       }
     }

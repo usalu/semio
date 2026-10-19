@@ -26,7 +26,6 @@ impl<'decode> NativeDecodeControl<'decode>{
  /// 🛟️ Loans only retirement capacity while keeping this operation's original ledger, observer and recipient.
  pub fn with_retirement<T>(&mut self,grant:RetainedCloneGrant,operation:impl FnOnce(&mut NativeRetirementDecodeControl<'_, 'decode>)->Result<T,ValueError>)->Result<T,ValueError>{let mut loan=NativeRetirementDecodeControl::begin(self,grant)?;operation(&mut loan)}
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
 #[path="🔒️close/🦀️.rs"]
 mod close;

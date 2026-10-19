@@ -1,4 +1,4 @@
-//! Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🛡️boundary/🧪️tests/🛡️mutate-fem3d-1-boundary/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem3d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
+//! 🐑️ Duplicated (relative paths adjusted, the extra spec-vector-replay Outline dropped — its committed-fixture references only resolve from the real owning subset, which the escape guard blocks a ✳️any-owned case from reaching sideways into) from `../../../🛡️boundary/🧪️tests/🛡️mutate-fem3d-1-boundary/` by shard F4 (this ticket) to close `unregistered-mutation-vocabulary` at the `✳️any/🧬️schema/🧬️mutations` owner — same mechanism E3 already proved on `sequence`: reuse the already-manifested `fem3d-1-mutate` capability, no new v2 manifest entry or runtime-inventory coordinate. The dropped Outline's own replay evidence stays intact, undiminished, at the original subset-owned case above — this duplicate only needs to satisfy the coverage gate's mutate-<kind>/inverse-<kind> requirement.
 //! 🧊 `s.fem.fem3d` boundary mutation case — Rust SUBJECT adapter. Relocated out of the
 //! artifact-level `mutate-fem3d-1` case in ticket
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
@@ -59,11 +59,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-support" => Vector {
-            before: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🛡️boundary/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🎯️outcome/🔣️.json"),
         },
 
         "create-support" => Vector {

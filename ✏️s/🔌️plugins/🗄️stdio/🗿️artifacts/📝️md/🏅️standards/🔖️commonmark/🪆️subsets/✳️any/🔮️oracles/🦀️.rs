@@ -421,9 +421,6 @@ mod live {
             }
             NodeValue::ThematicBreak => Json::Object(vec![("kind".to_string(), Json::String("thematicBreak".to_string()))]),
             NodeValue::HtmlBlock(html) => Json::Object(vec![("kind".to_string(), Json::String("htmlBlock".to_string())), ("raw".to_string(), Json::String(html.literal.clone()))]),
-            // 🍃 Out-of-subset block kinds (GFM tables/footnotes/alerts/...) never arise —
-            // `Options::default()` never enables the extensions that produce them — but a
-            // defensive omission keeps this projection total rather than panicking if one did.
             _ => return None,
         })
     }
@@ -450,7 +447,6 @@ mod live {
             NodeValue::SoftBreak => Json::Object(vec![("kind".to_string(), Json::String("softBreak".to_string()))]),
             NodeValue::LineBreak => Json::Object(vec![("kind".to_string(), Json::String("hardBreak".to_string()))]),
             NodeValue::HtmlInline(raw) => Json::Object(vec![("kind".to_string(), Json::String("htmlInline".to_string())), ("raw".to_string(), Json::String(raw.clone()))]),
-            // 🍃 Out-of-subset inline kinds — see `project_block`'s own note; same reasoning.
             _ => return None,
         })
     }

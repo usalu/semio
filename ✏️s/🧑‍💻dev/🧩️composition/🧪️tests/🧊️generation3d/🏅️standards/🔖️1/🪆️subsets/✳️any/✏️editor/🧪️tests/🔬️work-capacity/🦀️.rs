@@ -36,9 +36,6 @@ async fn interaction_select_passes_the_reserved_preflight() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
     let node_id = context::snapshot(&app).host_snapshot.widgets.first().map(semio_s_artifact_procedural_3d_model::widget_id).expect("default fixture node").to_string();
-    // 🧯️ The reserved spawn-job the admission requests has to be DRIVEN before the selection exists —
-    // see `context::select_graph`. Settling a typed operation instead left this law reading a `None`
-    // selection and asserting nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     eprintln!("interactionSelect reserved work items={} effects={}", ArtifactRetainedWorkCapacity::for_invertible_items(1).work_items(), settled.requested_effects.len());

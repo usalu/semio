@@ -14,6 +14,9 @@ import (
 	"unicode/utf16"
 )
 
+// 🧭️FixtureOrigin is the directory of the module under test. The external sandbox `TestMain` assigns it from `sandbox.Origin`, because this package cannot import the sandbox without a cycle.
+var FixtureOrigin string
+
 func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
 	root := t.TempDir()
 	previous := GetRootDir()
@@ -349,7 +352,7 @@ func TestDotnetFormatterProjects(t *testing.T) {
 			Projects []string
 		}
 	}
-	data, err := os.ReadFile(filepath.Join("..", "..", "🧪️tests", "🧫️fixtures", "📡️dotnet-format-owners.json"))
+	data, err := os.ReadFile(filepath.Join(FixtureOrigin, "..", "..", "🧪️tests", "🧫️fixtures", "📡️dotnet-format-owners.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -377,7 +380,7 @@ func TestDotnetFormatterProjects(t *testing.T) {
 }
 
 func TestIdeConfigurationPaths(t *testing.T) {
-	data, err := os.ReadFile("../../../🎛️dashboard/🧪️tests/🧫️fixtures/🧭️authority/🔣️.json")
+	data, err := os.ReadFile(filepath.Join(FixtureOrigin, "..", "..", "..", "🎛️dashboard", "🧪️tests", "🧫️fixtures", "🧭️authority", "🔣️.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

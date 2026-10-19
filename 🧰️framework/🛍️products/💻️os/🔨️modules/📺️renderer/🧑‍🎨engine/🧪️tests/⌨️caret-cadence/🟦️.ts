@@ -1,7 +1,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { installTextEditorCaretCadenceV1, TEXT_EDITOR_CARET_BLINK_MS } from "../../🧱️elements/✏️TextEditor/⏱️caret-cadence/🟦️.ts";
-import { uiCaretCadenceFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { uiCaretCadenceFixture as fixture } from "@semio-tech/framework/ui/testing/fixtures";
 
 afterEach(() => {
   vi.useRealTimers();

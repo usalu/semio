@@ -157,19 +157,16 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioGraphBuilderConstruction {
         /// 🏗️ Starts a fresh, empty graph document.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self { snapshot: SemioGraphSnapshot::default() }
         }
         /// 🏗️ Appends one node, in insertion order (id-keyed set — order carries no display
         /// meaning, but insertion order is preserved for determinism).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
             self.snapshot.nodes.push(SemioGraphNode { id: GraphNodeId::new(id), kind: kind.into(), label: label.into(), position, width: 0.0, height: 0.0, ports, properties });
             self
         }
         /// 🏗️ Appends one edge, in insertion order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_edge(mut self, id: impl Into<String>, source: impl Into<String>, target: impl Into<String>, kind: impl Into<String>, label: impl Into<String>) -> Self {
             self.snapshot.edges.push(SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: kind.into(), label: label.into(), source_port: None, target_port: None, properties: Vec::new() });
             self

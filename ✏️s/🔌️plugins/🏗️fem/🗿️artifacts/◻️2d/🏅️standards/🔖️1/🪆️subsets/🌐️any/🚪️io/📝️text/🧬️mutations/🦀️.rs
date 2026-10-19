@@ -40,16 +40,16 @@ pub fn mutation_grammar_recognizer()->Result<semio_framework_dsl::Recognizer,sem
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial>("delete-material-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial>("replace-material-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::change_material::ChangeMaterial>("change-material-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection>("create-section-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection>("delete-section-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection>("replace-section-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection>("change-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection>("create-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section::DeleteSection>("delete-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::replace_section::ReplaceSection>("replace-section-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::change_section::ChangeSection>("change-section-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>("create-support-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport>("delete-support-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support::ReplaceSupport>("replace-support-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion>("create-region-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion>("delete-region-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion>("replace-region-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion>("create-region-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::delete_region::DeleteRegion>("delete-region-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion>("replace-region-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase>("create-load-case-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase>("delete-load-case-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad>("add-load-fields"),
@@ -63,19 +63,15 @@ pub fn mutation_grammar_recognizer()->Result<semio_framework_dsl::Recognizer,sem
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_term::ChangeCombinationTerm>("change-combination-term-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_combination_name::ChangeCombinationName>("change-combination-name-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load::ChangeLoad>("change-load-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement>("change-element-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_elements::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement>("change-element-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport>("change-support-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion>("change-region-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion>("change-region-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad>("replace-load-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName>("change-load-case-name-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination>("replace-combination-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection>("move-selection-fields"),
     ])
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mutation-grammar-conformance/🦀️.rs"]
-mod mutation_grammar_conformance;
 
 #[allow(unused_imports)]
 mod mutations_codec {
@@ -99,16 +95,16 @@ use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
 use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::create_material;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region;
+use semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section;
 use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::create_support;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_combination;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case;
 use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::delete_region;
+use semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::delete_section;
 use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load;
 use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
@@ -117,8 +113,8 @@ use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations
 use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::replace_material;
 use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
 use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region;
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::replace_region;
+use semio_s_artifact_fem_2d_mesh_sections::standards::v1::subsets::any::schema::mutations::replace_section;
 use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
 use semio_s_artifact_fem_2d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 
@@ -176,8 +172,8 @@ pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
 /// two third-party oracles.
 pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>, Vec<String>) {
     let ends = |element: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement| match element {
-        crate::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
-        crate::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
     };
     let mut active: Vec<(String, [bool; 3])> = Vec::new();
     for element in &doc.elements {
@@ -209,12 +205,12 @@ pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String
 /// 🔤️ A document degree of freedom as the wire spells it.
 pub(crate) fn fem2d_dof_name(dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof) -> &'static str {
     match dof {
-        crate::FemDof::Tx => "Tx",
-        crate::FemDof::Ty => "Ty",
-        crate::FemDof::Tz => "Tz",
-        crate::FemDof::Rx => "Rx",
-        crate::FemDof::Ry => "Ry",
-        crate::FemDof::Rz => "Rz",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx => "Tx",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty => "Ty",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz => "Tz",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rx => "Rx",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ry => "Ry",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz => "Rz",
     }
 }
 

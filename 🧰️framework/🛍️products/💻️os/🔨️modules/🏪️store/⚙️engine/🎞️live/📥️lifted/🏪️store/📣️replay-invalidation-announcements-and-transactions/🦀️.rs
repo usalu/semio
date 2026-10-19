@@ -1,6 +1,7 @@
 //! 📣️ Replay invalidation, announcements and transactions: the projection invalidation, the pending reports, the suffix replay, the announcement and admission of transitions, the append and the open transaction. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

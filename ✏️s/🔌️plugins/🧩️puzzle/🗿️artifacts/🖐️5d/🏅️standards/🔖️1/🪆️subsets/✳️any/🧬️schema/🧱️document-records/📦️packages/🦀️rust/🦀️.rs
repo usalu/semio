@@ -71,6 +71,8 @@ pub mod editor {
         }
         #[path = "."]
         pub mod config {
+            /// ⚖️ Published kind-weight dictionaries own first-party fixed pages across native admission and retirement.
+            pub type Puzzle5dKindWeights = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>;
             #[path = "../../../../✏️editor/🎚️config/🧬️schema/🦀️.rs"]
             pub mod schema;
         }

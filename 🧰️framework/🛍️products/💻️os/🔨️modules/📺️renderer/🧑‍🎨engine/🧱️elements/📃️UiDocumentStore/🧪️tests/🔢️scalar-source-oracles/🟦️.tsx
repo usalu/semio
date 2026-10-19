@@ -1,6 +1,6 @@
 /** 🔢 Resident scalar source oracles: the OwnedResidentScalarCloseModel law over the neutral declaration. */
 import { exactSchemaDefinitionV1, createTypedWireSupport, type TypedWireVitest, type TypedWireDependencies, type TypedWireSource } from "../🪛️typedwire-helpers/🟦️.tsx";
-import { loadResidentScalarDeclarationFixture, loadRetainedResidentScalarFixture, loadRetainedResidentReaderFixtureText, loadRetainedResidentPageFixtureText } from "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadResidentScalarDeclarationFixture, loadRetainedResidentScalarFixture, loadRetainedResidentReaderFixtureText, loadRetainedResidentPageFixtureText } from "@semio-tech/framework/ui/testing/fixtures";
 
 export async function registerScalarSourceOraclesTests(vitest: TypedWireVitest, dependencies: TypedWireDependencies, source: TypedWireSource): Promise<void> {
   const { describe, test } = vitest;

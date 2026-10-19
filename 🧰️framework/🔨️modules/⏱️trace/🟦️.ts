@@ -113,9 +113,7 @@ export function createHopTracer(ports: HopTracePorts = defaultHopTracePorts()): 
     if (ring.length > HOP_TRACE_RING_CAPACITY) ring.splice(0, ring.length - HOP_TRACE_RING_CAPACITY);
     try {
       ports.measure(`${HOP_TRACE_MEASURE_PREFIX}${stage}`, startMs, endMs, detail);
-    } catch {
-      /* 🛡️ A tracer is never the reason a hop fails: a host without User Timing keeps the ring. */
-    }
+    } catch {}
   };
   const open: HopTracer["open"] = (stage, detail) => {
     const startMs = ports.now();

@@ -81,9 +81,7 @@ export function windowTemplatePaletteTreeDragController(): TreeDragAndDropContro
         }
         const label = typeof sourceItem.label === "string" ? sourceItem.label : typeof sourceItem.label === "number" ? String(sourceItem.label) : "Window";
         beginWindowTemplateDrag({ payload, label });
-      } catch {
-        /* ignore */
-      }
+      } catch {}
     },
     onDragEnd: () => {
       if (windowTemplatePointerDragRef.active) {

@@ -17,12 +17,6 @@ async fn undo_redo_add_widget() {
 
     let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None, &::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer);
     let mut store = FlowStore::new::<::semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer>(envelope, semio_framework_os_kernel::os_spr::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await.expect("valid flow store fixture");
-    // 🔐️ `ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` refuses every
-    // `Apply` without one — `edit history insertion requires its exact mutation retirement factory`.
-    // The refusal then drops the replayed projection on the error path, so the FIRST thing this law
-    // saw was `ordered-map root must be explicitly retired before drop` from inside `apply_command`,
-    // never the validation that caused it. The flow host installs the same catalog on its own history
-    // store (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     semio_framework_os_kernel::os_store::install_funded_member_store_owners(&mut store,&semio_framework_artifact_flow_flow::io::binary::snapshot::FlowSnapshotPackProducer).expect("flow history owners");
     history_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: operations, transaction: None }, &mut identity).await).expect("apply add-widget operations");
     let applied = store.snapshot().expect("projection");

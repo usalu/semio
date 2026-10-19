@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { lusolve, sparse } from "mathjs";
-import fixture from "../../🧫️fixtures/📚️paged-ldlt/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/📚️paged-ldlt/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/📚️paged-ldlt/🔣️.json" with { type: "json" };
 
 export function pagedLdltSolutionOracle(row: typeof fixture.cases[number]): number[] {

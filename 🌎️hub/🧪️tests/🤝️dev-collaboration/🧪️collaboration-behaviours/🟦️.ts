@@ -29,7 +29,6 @@ export async function collabRunCollaborationBehaviours(opts: {
   const editor1 = collabTextEditor(opts.user1);
   const editor2 = collabTextEditor(opts.user2);
 
-  // STEP 11 — per-user undo
   try {
     spaceE2eAssert((await editor1.count()) > 0 && (await editor2.count()) > 0, "both humans need an open editor before per-user undo can mean anything");
     const mine = `u1-${Date.now() % 100_000}`;
@@ -56,7 +55,6 @@ export async function collabRunCollaborationBehaviours(opts: {
     opts.record(11, false, error instanceof Error ? error.message : String(error));
   }
 
-  // STEP 12 — a short connection loss that does not freeze the app
   try {
     const offlineMarker = `off-${Date.now() % 100_000}`;
     const context2 = opts.user2.context();
@@ -71,7 +69,6 @@ export async function collabRunCollaborationBehaviours(opts: {
     }
     const localLatencyMs = Date.now() - typedAt;
     spaceE2eAssert(localEcho.includes(offlineMarker), `user2's own editor did not echo ${JSON.stringify(offlineMarker)} while offline — the shell froze on the dead socket instead of staying local-first`);
-    // 🖱️ A second, independent interaction while still offline: a frozen page cannot answer this.
     const paneResponds = await opts.user2.locator('[id="s-presence-peers"]').count();
     spaceE2eAssert(paneResponds >= 0, "user2's shell stopped answering DOM queries while offline");
     await opts.user2.waitForTimeout(4_000);
@@ -88,7 +85,6 @@ export async function collabRunCollaborationBehaviours(opts: {
     opts.record(12, false, error instanceof Error ? error.message : String(error));
   }
 
-  // STEP 13 — two simultaneous writers converge
   try {
     const markerOne = `w1-${Date.now() % 100_000}`;
     const markerTwo = `w2-${Date.now() % 100_000}`;
@@ -108,14 +104,11 @@ export async function collabRunCollaborationBehaviours(opts: {
     opts.record(13, false, error instanceof Error ? error.message : String(error));
   }
 
-  // STEP 14 — in-canvas peer cursors on writer (open from steps 3-4) plus draw + puzzle3d when kinds exist
   try {
     const details: string[] = [];
-    // Writer: the document of steps 3–13, its peer marker is the caret.
     try {
       details.push(await collabAssertPeerCaretMoves({ mover: opts.user1, observer: opts.user2, label: "writer" }));
     } catch (error) {
-      // Re-open space artifact editors if step 6+ navigated away.
       if (opts.spaceId && opts.artifactId) {
         await collabReopenWriter({ user1: opts.user1, user2: opts.user2, spaceId: opts.spaceId, artifactId: opts.artifactId, purpose: "the caret leg" });
         details.push(await collabAssertPeerCaretMoves({ mover: opts.user1, observer: opts.user2, label: "writer" }));
@@ -133,7 +126,6 @@ export async function collabRunCollaborationBehaviours(opts: {
         const id = await collabCreateArtifact(opts.user1, `Collab ${label}`, kind);
         await collabOpenSpace(opts.user2, opts.spaceId!);
         await collabWaitForRow(opts.user2, "artifact", id, 30_000);
-        // 🚪️ The creation saga opens the new document for its creator; the peer opens it from the Space index.
         await opts.user1.locator(host).first().waitFor({ state: "attached", timeout: 300_000 });
         await collabRowAction(opts.user2, "artifact", id, "open");
         await opts.user2.locator(host).first().waitFor({ state: "attached", timeout: 300_000 });

@@ -1,6 +1,7 @@
 //! 📸️ Snapshot reads and retained replacements: the projection event, the derived snapshots and history previews, the snapshot reads and the retained replacement of roots, edit ids, checkpoints and the tail undo cache. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

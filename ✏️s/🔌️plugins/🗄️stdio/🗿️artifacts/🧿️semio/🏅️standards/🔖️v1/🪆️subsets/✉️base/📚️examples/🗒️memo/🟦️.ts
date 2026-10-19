@@ -1,2 +1,2 @@
-/** memo semio document */
+/** 🗄️ memo semio document */
 export const ID = 'memo';

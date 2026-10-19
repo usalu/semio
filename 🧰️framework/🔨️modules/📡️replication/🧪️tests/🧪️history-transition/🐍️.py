@@ -3,7 +3,7 @@
 Written from the wire grammar alone (`tag varint | variant fields in declaration order`), with its own BLAKE3
 (the reference algorithm, no library) for the trunk alternative id of a document and the content-addressed transition id
 `transition-{hex16(blake3(hlc.actor varint | hlc.physical_ms varint | hlc.logical varint | payload bytes))}` — the
-free-form actor string never enters the id. It generates the language-agnostic corpus `../../🔗️causal/🧫️fixtures/🧫️history-transition/🔣️.json` that the Rust codec
+free-form actor string never enters the id. It generates the language-agnostic corpus `../../🔗️causal/🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json` that the Rust codec
 (`the_language_agnostic_fixture_matches_the_codec_byte_for_byte`) and the TypeScript encoder + Ajv test
 (`../🧪️history-transition/🟦️.ts`) both check byte for byte.
 

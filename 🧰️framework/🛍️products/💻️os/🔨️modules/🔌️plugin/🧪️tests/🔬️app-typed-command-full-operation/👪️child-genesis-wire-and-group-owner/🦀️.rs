@@ -1,6 +1,7 @@
     /// 👪️ Child genesis, wire and group owner: the revision change between preparation turns, private child genesis, nested owner retirement and the one retained async group owner.
 
-    #[test]
+    use semio_framework_plugin_decl_emission::ChildEmit;
+#[test]
     fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
         let canonical_revision = [3; 32];
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);

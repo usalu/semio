@@ -1,7 +1,8 @@
 //! 🎟️ Original actor input and paid authorities remain in place across admitted turns.
 use semio_framework_actor_retained_turn::{RetainedTurnInput,OriginalActorTurnWork};
 use semio_framework_async::{CancelToken,CancelTokenRetirement,CancelTokenRetirementError};
-use semio_framework_job::{Generation,JobPayloadAuthority,OperationId,OriginalCallerSourceParent,OriginalJobDecodeOwner,OriginalTurnFailure,StepBudget,StepContext};
+use semio_framework_job::{Generation, OperationId, OriginalCallerSourceParent, OriginalJobDecodeOwner, OriginalTurnFailure, StepBudget, StepContext};
+use semio_framework_job_payload::{JobPayloadAuthority};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::mem::ManuallyDrop;
 

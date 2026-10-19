@@ -19,6 +19,7 @@ import { RepositoryUiScript } from "../../🎛️commands/🖼️repository-ui/�
 import { FixtureOwnershipTestScript } from "../../🎛️commands/🧱️fixture-ownership/🟦️.ts";
 import { GeneralExecutionOwnershipScript } from "../../🎛️commands/🗺️general-execution-ownership/🟦️.ts";
 
+import { resolveTypescriptCompilerV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length === 1 && segments[0] === "fixture-placement") {
@@ -59,7 +60,11 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "schema-reads"), budgetMs: TEST_LEVEL_BUDGET_MS.quick });
       return;
     }
-    if(segments[0]==="nx-owner-arguments-probe"){console.log("[DEBUG] ownerArgumentReceipt="+JSON.stringify({arguments:segments.slice(1),carrierPresent:process.env.SEMIO_OWNER_ARGUMENTS!==undefined}));return;}
+    if(segments.length===1&&segments[0]==="cargo-workspace-ownership"){await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🪆️ownership/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-workspace-ownership"),budgetMs:scriptInvocationBudget(this.invocation,TEST_LEVEL_BUDGET_MS.quick),signal:this.invocation.control.signal});return;}
+
+    if(segments.length===1&&segments[0]==="build-caller-birth"){await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"build-caller-birth"),budgetMs:scriptInvocationBudget(this.invocation,TEST_LEVEL_BUDGET_MS.quick),signal:this.invocation.control.signal});return;}
+
+    if(segments[0]==="nx-owner-arguments-probe"){return;}
     if(segments.length===1&&segments[0]==="nx-native-child-issuance"){await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-native-child-issuance"),budgetMs:TEST_LEVEL_BUDGET_MS.quick});return;}
 
     if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return;}
@@ -81,7 +86,7 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "artifact-io-ownership") {
-      if (segments.length !== 1) throw Error("Expected test artifact-io-ownership");
+      if (segments.length !== 1) throw new Error("Expected test artifact-io-ownership");
       for(const suite of ["../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"]){
         await runRepositoryTestCommand(process.execPath, ["test", suite], { cwd: this.root, env: repoTestArtifactEnvironment(this.repoRoot, "artifact-io-ownership"), budgetMs: 120_000 });
       }
@@ -93,13 +98,13 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "cargo-library-search-path") {
-      if(segments.length!==1)throw Error("Expected test cargo-library-search-path");
+      if(segments.length!==1)throw new Error("Expected test cargo-library-search-path");
       const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts");
       await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-library-search-path"),budgetMs:150000});
       return;
     }
     if (segments[0] === "build-discovery") {
-      if(segments.length!==1)throw Error("Expected test build-discovery");
+      if(segments.length!==1)throw new Error("Expected test build-discovery");
       const sources=["🕸️dependencies/🟦️typescript/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
       await runRepositoryTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"build-discovery"),budgetMs:420000});
       return;
@@ -108,8 +113,8 @@ class TestScript extends BundleScript {
       const revision = segments.length === 2 && segments[1] === "revision";
       const imports = segments.length === 2 && segments[1] === "imports";
       const facts = segments.length === 2 && segments[1] === "facts";
-      if (!revision && !imports && !facts && segments.length !== 1) throw Error("Expected test nx-project-inference [revision|imports|facts]");
-      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      if (!revision && !imports && !facts && segments.length !== 1) throw new Error("Expected test nx-project-inference [revision|imports|facts]");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
       if (revision) {
         const output = repoTestArtifactEnvironment(this.repoRoot, "nx-project-inference-revision").SEMIO_TEST_ARTIFACT_DIR!;
         mkdirSync(output, { recursive: true });
@@ -123,29 +128,29 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "rust-family-ownership") {
       const native = segments.length === 2 && segments[1] === "native";
-      if (!native && segments.length !== 1) throw Error("Expected test rust-family-ownership [native]");
-      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      if (!native && segments.length !== 1) throw new Error("Expected test rust-family-ownership [native]");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/🧪️tests", native ? "🦀️native/🟦️.ts" : "🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-family-ownership"), budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "rust-binding") {
       const native = segments.length === 2 && segments[1] === "native";
-      if (!native && segments.length !== 1) throw Error("Expected test rust-binding [native]");
-      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      if (!native && segments.length !== 1) throw new Error("Expected test rust-binding [native]");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/🧪️tests", native ? "🦀️native/🟦️.ts" : "🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, native ? "rust-binding-native" : "rust-binding"), budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "dependency-policy-bootstrap") {
-      if (segments.length !== 1) throw Error("Expected test dependency-policy-bootstrap");
-      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+      if (segments.length !== 1) throw new Error("Expected test dependency-policy-bootstrap");
+      if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🧪️tests/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "dependency-policy-bootstrap"), budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "native-owner-command-policy") {
-      if (segments.length !== 1) throw Error("Expected test native-owner-command-policy");
+      if (segments.length !== 1) throw new Error("Expected test native-owner-command-policy");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📋️owner-cmd-policy/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "native-owner-command-policy") });
       return;
@@ -207,19 +212,19 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "deferred-wake-ownership") {
-      if (segments.length !== 1) throw Error("Expected test deferred-wake-ownership");
+      if (segments.length !== 1) throw new Error("Expected test deferred-wake-ownership");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔔️deferred-wake-ownership/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "deferred-wake-ownership"), budgetMs: 15_000 });
       return;
     }
     if (segments[0] === "pool-use-ownership") {
-      if (segments.length !== 1) throw Error("Expected test pool-use-ownership");
+      if (segments.length !== 1) throw new Error("Expected test pool-use-ownership");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🔐️pool-use-ownership/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "pool-use-ownership"), budgetMs: 15_000 });
       return;
     }
     if (segments[0] === "rust-fixture-ownership") {
-      if (segments.length !== 1) throw Error("Expected test rust-fixture-ownership");
+      if (segments.length !== 1) throw new Error("Expected test rust-fixture-ownership");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🧫️fixture-ownership/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source, join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-fixture-ownership"), budgetMs: 15_000 });
       return;
@@ -243,7 +248,7 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test compute-constructor-owner");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🧩️compute-constructor/🧪️tests/🟦️.ts");
       const env = repoTestArtifactEnvironment(this.repoRoot, "compute-constructor-owner");
-      await runRepositoryTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,env,budgetMs:45_000});
+      await runRepositoryTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,env,budgetMs:45_000});
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env, budgetMs: 45_000 });
       return;
     }
@@ -251,7 +256,7 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test dependency-direction");
       const sources = ["🧪️tests/🧱️dependency-direction/🟦️.ts", "🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🟦️.ts", "🕸️dependencies/🧭️direction/🧪️tests/🧾️selection/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
       const env = repoTestArtifactEnvironment(this.repoRoot, "dependency-direction");
-      await runRepositoryTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...sources],{cwd:this.repoRoot,env,budgetMs:45_000});
+      await runRepositoryTestCommand(process.execPath,[resolveTypescriptCompilerV1(this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...sources],{cwd:this.repoRoot,env,budgetMs:45_000});
       await runRepositoryTestCommand(process.execPath, ["test", ...sources], { cwd: this.repoRoot, env, budgetMs: 45_000 });
       return;
     }
@@ -431,7 +436,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "dashboard-control") {
       if (segments.length !== 1) throw new Error("Expected test dashboard-control");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 180_000 });
+      await runRepositoryCommand(this.invocation, process.execPath, ["test", source, "--timeout", "330000"], this.repoRoot, "repository-dashboard-control", { version: 1, maximumElapsedMilliseconds: 360000, output: { maximumBytes: 67108864, maximumLines: 65536 } });
       return;
     }
     if (segments[0] === "lib-wiring-budget") {
@@ -664,7 +669,7 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "cargo-discovery-exclusions") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚧️cargo-discovery-exclusions/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source, join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts"), join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production.ts"), join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts"), ...segments.slice(1)], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
+      await runRepositoryTestCommand(process.execPath, ["test", source, join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts"), join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/production/🟦️.ts"), join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts"), ...segments.slice(1)], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.quick });
       return;
     }
     if (segments[0] === "nested-cargo-collision-authority") {
@@ -827,13 +832,13 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "cargo-native-owner-discovery") {
-      if(segments.length!==1)throw Error("Expected test cargo-native-owner-discovery");
+      if(segments.length!==1)throw new Error("Expected test cargo-native-owner-discovery");
       const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧭️native-discovery/🟦️.ts");
       await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-native-owner-discovery")});
       return;
     }
     if(segments[0]==="cargo-nextest-configuration"){
-      if(segments.length!==1)throw Error("Expected test cargo-nextest-configuration");
+      if(segments.length!==1)throw new Error("Expected test cargo-nextest-configuration");
       const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts");
       await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-nextest-configuration")});
       return;

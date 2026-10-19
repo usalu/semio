@@ -1,11 +1,11 @@
 //#region 🧬️OwnedReadSource
 import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from "react";
-import type { OwnedUiReadSource, OwnedUiReadSubscription, OwnedUiSceneReadSource, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📖️read-lease/🟦️.ts";
-import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
-import type { OwnedUiSceneDiagnostic } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts";
+import type { OwnedUiReadSource, OwnedUiReadSubscription, OwnedUiSceneReadSource, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "@semio-tech/framework/modules/ui/contract/retained/read-lease";
+import type { RetainedUiNodeRecord } from "@semio-tech/framework/modules/ui/contract/retained/wire/typed";
+import type { OwnedUiSceneDiagnostic } from "@semio-tech/framework/modules/ui/contract/retained/scene/binding";
 import type { NumericIndexGrant } from "@semio-tech/framework/value/ordered/numeric";
-import type { OwnedUiInstanceSurface } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import type { OwnedUiSurfaceView } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🖼️surface/🟦️.ts";
+import type { OwnedUiInstanceSurface } from "@semio-tech/framework/modules/ui/contract/retained/instance";
+import type { OwnedUiSurfaceView } from "@semio-tech/framework/modules/ui/contract/retained/surface";
 
 export type { OwnedUiReadSource, OwnedUiReadSubscription };
 //#endregion 🧬️OwnedReadSource

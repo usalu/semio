@@ -102,7 +102,7 @@ pub mod derived_construction {
     #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxXmlPart};
     use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance;
     #[cfg(test)] use semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::{STRICT_REL_BASE};
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxMutation;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_framework_diagnostic::Diagnostic;
@@ -124,7 +124,6 @@ use semio_framework_diagnostic::Severity;
 
     impl DocxStrictBuilderConstruction {
         /// ➕️ Appends a paragraph, re-serializing the strict-namespaced `word/document.xml` part.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             let mut document = self.snapshot.project_document().unwrap_or_default();
             document.body.push(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(paragraph));
@@ -133,13 +132,11 @@ use semio_framework_diagnostic::Severity;
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_text_paragraph(self, text: impl Into<String>) -> Self {
             self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_runs(self, runs: Vec<DocxRun>) -> Self {
             self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
@@ -200,7 +197,7 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxAnalyzer as DocxAnyAnalyzer;
     use semio_s_artifact_stdio_docx_base::standards::v_ecma_376::subsets::base::io::DocxParts;
-    #[cfg(test)] use crate::{standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart};
+    #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlPart;
  use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
 #[cfg(test)] use semio_framework_diagnostic::FaultCode;

@@ -8,7 +8,7 @@
 //! `ghost` is not a combination of this model, so the first guard refuses before the terms are resolved.
 
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation;
+use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem3d_mutation_cold;
 use semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation;
 
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
@@ -56,7 +56,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 /// so a refused request still has the undo step its kind emits whenever the target exists.
 #[test]
 fn inverse_has_the_declared_shape() {
-    let inverse = inverse_fem3d_mutation(&before(), &mutation()).expect("valid retained mutation inverse fixture");
+    let inverse = inverse_fem3d_mutation_cold(&before(), &mutation()).expect("valid retained mutation inverse fixture");
     for step in &inverse {
         assert!(matches!(step, Fem3dMutation::ReplaceCombination(_)), "replace-combination/no-such-combo-0c9c39: the inverse of replace-combination is a ReplaceCombination, got {step:?}");
     }

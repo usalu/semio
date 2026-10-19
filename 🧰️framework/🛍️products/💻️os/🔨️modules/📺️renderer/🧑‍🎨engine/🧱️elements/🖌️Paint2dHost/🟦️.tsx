@@ -250,8 +250,6 @@ function Paint2dCanvasSurface({
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
 
-  // 🎯️ Raster layers have no per-entity world position — only `canvasPoint` (camera-space world
-  // coordinates) is targetable here, not `entity`/`curve`.
   useEffect(() => {
     if (!windowInstanceId) return;
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
@@ -279,8 +277,6 @@ function Paint2dCanvasSurface({
     });
     return () => {
       cancelled = true;
-      // 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT: was never freed on unmount — the wasm-side
-      // session (and everything it retains) leaked for the rest of the document's lifetime.
       createdSession?.free();
     };
   }, []);
@@ -428,10 +424,6 @@ function Paint2dCanvasSurface({
       const id = focus.target?.id ?? null;
       session.syncInteraction(scene.selectionJson, id);
       session.renderFrame();
-      // 🕹️ Raster declares no bespoke `setHover` any more: layer hover/selection travel the
-      // framework-injected `interactionHover`/`interactionSelect` verbs of its `"layers"` domain
-      // (`layer` granularity) — the bespoke verbs were refused "undeclared-action" on every pointer
-      // move (ticket 26/09/05/RASTER-PLUGIN-END-TO-END, 2026-09-16).
       dispatch("interactionHover", world3dHoverActionArgs(PAINT2D_INTERACTION_DOMAIN, PAINT2D_LAYER_GRANULARITY, id));
     },
     onSelectTarget: (target, request) => {
@@ -478,9 +470,7 @@ function Paint2dCanvasSurface({
       try {
         const hits = JSON.parse(session.marqueeHitsJson(JSON.stringify({ points, crossing: coverage === "partial" }))) as string[];
         dispatch("interactionSelect", world3dSelectionActionArgs(PAINT2D_INTERACTION_DOMAIN, PAINT2D_LAYER_GRANULARITY, selectionMergeIds(mergeMode, parsePaint2dSelection(scene.selectionJson), hits), mergeMode));
-      } catch {
-        /* marquee hit test failed */
-      }
+      } catch {}
     },
     [dispatch, scene.selectionJson, selectionMethod],
   );
@@ -801,9 +791,7 @@ function Paint2dWasmCanvas({ sessionFactory, onSessionReady }: { readonly sessio
         observer.observe(container);
         observerRef.current = observer;
       })
-      .catch(() => {
-        /* attach failed — surfaced via session.gpuReady() polling in Paint2dCanvasSurface */
-      });
+      .catch(() => {});
     return () => {
       disposed = true;
       scheduler.dispose();

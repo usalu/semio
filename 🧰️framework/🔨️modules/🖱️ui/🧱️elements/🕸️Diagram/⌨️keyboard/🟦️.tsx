@@ -1,5 +1,5 @@
 import { useUiTranslation, resolveTranslationLabel } from "../../🏷️Label/🟦️.tsx";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 
 /** ♿️ The four directions arrow-key navigation walks a node graph in. */
 export type DiagramArrowDirection = "up" | "down" | "left" | "right";

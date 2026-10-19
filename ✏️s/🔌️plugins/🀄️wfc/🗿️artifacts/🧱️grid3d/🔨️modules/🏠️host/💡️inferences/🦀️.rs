@@ -125,8 +125,8 @@ pub struct Grid3dInferenceJob {
     pub(crate) child_commit: Option<engine::job::WfcCommit>,
     pub(crate) assignments: Vec<Grid3dAssignment>,
     pub(crate) satisfiable: bool,
-    pub(crate) output: Option<semio_framework_job::RetainedJobPayloadWriter>,
-    pub(crate) rejected_output_page: Option<semio_framework_job::JobPayloadPageSource>,
+    pub(crate) output: Option<semio_framework_job_payload::RetainedJobPayloadWriter>,
+    pub(crate) rejected_output_page: Option<semio_framework_job_payload::JobPayloadPageSource>,
     pub(crate) output_started: bool,
     pub(crate) encoded_entries: usize,
     pub(crate) encode_total: usize,
@@ -136,7 +136,7 @@ pub struct Grid3dInferenceJob {
     pub(crate) lent: Grid3dInferenceJobLent,
     pub(crate) restore_done: bool,
     pub(crate) child_end: Option<InferenceChildEnd>,
-    pub(crate) output_payload: Option<semio_framework_job::RetainedJobPayload>,
+    pub(crate) output_payload: Option<semio_framework_job_payload::RetainedJobPayload>,
 }
 
 impl Grid3dInferenceJob {
@@ -174,7 +174,7 @@ impl Grid3dInferenceJob {
             child_commit: None,
             assignments: Vec::new(),
             satisfiable: true,
-            output: Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput)),
+            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
             rejected_output_page: None,
             output_started: false,
             encoded_entries: 0,

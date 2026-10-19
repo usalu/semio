@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-3d-mesh-quality"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Pure mesh analysis: topology health, element quality and mass properties of a polygon soup"
+[lints]
+workspace = true
+[package.metadata.semio]
+role = "framework"
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+[lib]
+path = "../../🦀️.rs"
+[dependencies]
+semio-framework-3d-mesh-document = { path = "../../../📄️document/📦️packages/🦀️rust" }
+semio-framework-value.workspace = true
+semio-framework-value-derive.workspace = true

@@ -17,7 +17,7 @@ fn return_content_existing_dialect_presence_preserves_all_render_plane_fields() 
     let mut accepted = |_| true;
     let encoded = pack::record::intrinsic::encode_body(&value, &pack::record::EncodeOptions::default(), &mut semio_framework_value::NativeEncodeControl::new(16 * 1024 * 1024, &mut accepted)).unwrap();
     let mut accepted = |_| true;
-    let decoded = pack::record::intrinsic::decode_body(&encoded, &pack::record::DecodeOptions::default(), &mut semio_framework_value::NativeDecodeControl::new(16 * 1024 * 1024, &mut accepted)).unwrap();
+    let decoded = pack::record::intrinsic::decode_body(&encoded, &pack::record::DecodeOptions::default(), &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(16 * 1024 * 1024, &mut accepted)).unwrap();
     let recovered: PresenceUpdate = semio_framework_value::FromValue::from_value(decoded).unwrap();
     assert_eq!(serde_json::to_value(recovered).unwrap(), row["value"]);
     assert_eq!(update.node_key.as_bytes(), unhex(row["nodeKeyUtf8Hex"].as_str().unwrap()));

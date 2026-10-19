@@ -55,7 +55,7 @@ import { canonicalSurfaceId } from "../🔐️identity-binding/🟦️.ts";
 import { findDialectApp, SPACE_INDEX_DOCUMENT_ID } from "../🧾️space-artifact-creation/🟦️.ts";
 import { logUnlessRetiredV1, requiredHostPanelLeafId, tellSyncAttachFailureV1 } from "../🧱️built-node-stores/🟦️.ts";
 import type { ShellCoreAfterApplyHostEffects } from "../⚡️host-effects/🟦️.ts";
-import type { OpenDocumentSessionTarget, OpenDocumentSession } from "../🔒️identity-document-ports/🟦️.ts";
+import type { OpenDocumentSessionTarget, OpenDocumentSession } from "../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
 
 export type ShellCoreAfterShellUriAndDocuments = ShellCoreAfterApplyHostEffects & ReturnType<typeof useShellUriAndDocuments>;
 
@@ -82,12 +82,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
       const currentSession = sessionRef.current;
       if (!hostConfig || !currentSession || loadedPlugins.length === 0) return false;
       const path = uri.split("?")[0] ?? "/";
-      // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §5 — `/spaces/{id}/studio`
-      // (optionally `/instances/{id}`) opens the workflow studio (the canonical resolved host app,
-      // pre-existing behaviour every bare `/spaces/{id}` used to trigger). `parseShellRoute` (owned by
-      // `🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
-      // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
-      // its own existing route classification (and tests) stay exactly as they were.
       const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
       const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
       const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
@@ -105,10 +99,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
         return true;
       }
       const { spaceId, instanceId } = route;
-      // 📇️ §5 — a bare `/spaces/{id}` (no `/studio`, no `/instances/{id}` deep link) now opens the
-      // `s.space` artifact-index app (kind `s.space`, dialect `s.space.space@1/*`, §C4) instead of the
-      // studio, resolved by dialect/surface id off the SAME "s" plugin's own manifest so this activates
-      // the moment lane 2-B registers a real app for that dialect — no further change needed here.
       if (!studioMatch && !instanceId) {
         const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
         const spaceIndex = spaceIndexOf(hostPlugin?.manifest.topicContributions);
@@ -117,14 +107,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
           console.warn("[os-shell] applyShellUri: the host plugin names no space index app (os.space-index) — not loaded yet");
           return false;
         }
-        // 🔁️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-I — idempotency
-        // guard mirroring `studioChanged` below: without it, ANY re-render that mints a new
-        // `applyShellUri` identity (e.g. `switchToPluginApp` depending on `session`, which
-        // `openDocumentRef.current` below itself updates) re-fires this whole branch for the SAME
-        // already-open space, tearing the document's sync session down and reopening it in a tight
-        // loop — observed live as dozens of WS open/close cycles plus a `Maximum call stack size
-        // exceeded` inside the 30s STEP 2 budget (`🧪️4-i-collab-e2e-run3.txt`), never previously
-        // exercised because no earlier lane's fixes let a hard navigation to `/spaces/{id}` reach here.
         const spaceIndexAlreadyOpen = openSpaceIdRef.current === spaceId && currentSession.app.id === spaceApp.id;
         rememberOpenSpaceId(spaceId);
         openInstanceIdRef.current = null;
@@ -134,8 +116,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
         void openDocumentRef.current({ documentId: SPACE_INDEX_DOCUMENT_ID, schema: spaceIndex.documentSchema, spaceId }, undefined, { session: spaceSession, plugin: hostPlugin.handle }).catch(logUnlessRetiredV1("[os-shell] space index opening failed"));
         return true;
       }
-      // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
-      // race-navigate to `/spaces/demo` while `switchToPluginApp` is still awaiting.
       const studioChanged = openSpaceIdRef.current !== spaceId;
       rememberOpenSpaceId(spaceId);
       if (!hostAppId) throw new Error("required host app identity is unavailable");
@@ -165,9 +145,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
   );
   applyShellUriRef.current = applyShellUri;
 
-  /** 🗃️ Hands the landing app every document this device keeps that its current instance was not handed yet: each one's
-   * archive is read back from its own lane and applied as `applyLocalCatalogDocument` (a retained, idempotent catalog
-   * job), so a studio kept before a reload is listed — and opens — again. A lane that holds no archive is skipped. */
   useEffect(() => {
     const current = session;
     if (!current || !hostPlugin || current.pluginId !== hostPlugin.handle.pluginId || current.app.id !== landingAppId) return;
@@ -235,15 +212,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
       if (target?.expectedCatalogGenerationId !== undefined && hubBinding === undefined) return null;
       const creationMount = target?.expectedCatalogGenerationId === undefined ? null : createArtifactCreationCatalogMountV1(target.expectedCatalogGenerationId);
       const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
-      // 📇️ The space INDEX is the shell's projection of a space's DIRECTORY, not an artifact the hub
-      // stores: no hub data root in this repository has ever held a document descriptor for it, so
-      // `POST /spaces/{id}/documents/index/open-plan` answers 404 (`NotFound` from
-      // `get_document_descriptor`), `runDocumentOpeningAttemptV1`'s socket phase rejects before
-      // `attach` ever runs, and with it the scoped directory stream AND the artifact-creation catalog
-      // never open — which is why the artifact table renders its header and zero rows on every hub and
-      // why `createArtifact`'s kind chooser is empty (measured 2026-09-22, ticket 26/09/18 S12 §2.2).
-      // The hub BINDING stays: `scope`, the hub runtime key and the catalog/presence lanes are all
-      // keyed on it. Only the worker's own document open drops it.
       const spaceIndexDocument = ref.documentId === SPACE_INDEX_DOCUMENT_ID;
       const workerBindings = spaceIndexDocument ? resolvedBindings.filter((binding) => binding.kind !== "hub") : resolvedBindings;
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...scope });
@@ -310,8 +278,6 @@ export function useShellUriAndDocuments(core: ShellCoreAfterApplyHostEffects) {
         detach: () => retireDocumentAttachment(plugin, targetSession.instanceId, clientInstanceId),
         attach: async () => {
           if (hubBinding && scope) {
-            // 📇️ The space index is the space's directory projection, not a hub document: the hub has no document scope
-            // for it (a document-scoped stream answers 404), so it folds its space's directory lane instead.
             if (scope.documentId === SPACE_INDEX_DOCUMENT_ID) {
               spaceDirectoryHistoriesRef.current.set(runtimeKey, new SpaceDirectoryHistoryV1(scope.spaceId));
               worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-space-open", baseUrl: hubBinding.baseUrl, spaceId: scope.spaceId }) });

@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snaps
 fn real_world_wav() -> WavSnapshot {
     WavSnapshot {
         fmt: WavFmt { audio_format: 1, channels: 2, sample_rate: 44_100, byte_rate: 176_400, block_align: 4, bits_per_sample: 16, ext: None },
-        data: WavData::Pcm16(vec![0, 0, 16_384, -16_384, 32_767, -32_768]), // interleaved L/R, 3 frames
+        data: WavData::Pcm16(vec![0, 0, 16_384, -16_384, 32_767, -32_768]),
         ..WavSnapshot::default()
     }
 }

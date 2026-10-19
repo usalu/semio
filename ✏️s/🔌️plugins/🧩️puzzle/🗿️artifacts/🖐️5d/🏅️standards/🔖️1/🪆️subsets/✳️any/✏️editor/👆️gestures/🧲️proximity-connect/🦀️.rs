@@ -162,7 +162,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     self.grip_cursor = 0;
                     self.stage = Puzzle5dProximityConnectStage::Candidate;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-proximity-moved", "Finding moved grip", "Verschobener Griff wird gesucht"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-moved", "Finding moved grip", "Verschobener Griff wird gesucht"))
             }
             Puzzle5dProximityConnectStage::Candidate => {
                 let Some(part) = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.get(self.part_cursor)) else {
@@ -171,17 +171,17 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let Some(grip) = part.get("grips").and_then(Value::as_array).and_then(|grips| grips.get(self.grip_cursor)) else {
                     self.part_cursor += 1;
                     self.grip_cursor = 0;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
                 };
                 self.grip_cursor += 1;
                 if part.get("id").and_then(Value::as_str) == Some(part_id) {
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
                 }
-                let Some(peer_part_id) = part.get("id").and_then(Value::as_str) else { return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Skipping malformed part", "Fehlerhaftes Teil wird übersprungen")) };
-                let Some(peer_grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Skipping malformed grip", "Fehlerhafter Griff wird übersprungen")) };
+                let Some(peer_part_id) = part.get("id").and_then(Value::as_str) else { return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Skipping malformed part", "Fehlerhaftes Teil wird übersprungen")) };
+                let Some(peer_grip_id) = grip.get("id").and_then(Value::as_str) else { return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Skipping malformed grip", "Fehlerhafter Griff wird übersprungen")) };
                 let peer_id = puzzle5d_grip_full_id(peer_part_id, peer_grip_id);
                 if self.moved_id.as_deref() == Some(peer_id.as_str()) {
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
                 }
                 let moved = self.moved_position.ok_or_else(|| Fault::from("puzzle5d-proximity-position-owner"))?;
                 let peer = Self::world_position(part, grip);
@@ -190,13 +190,13 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let dy = moved[1] - peer[1];
                 let dz = moved[2] - peer[2];
                 if (dx * dx + dy * dy + dz * dz).sqrt() > radius {
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
                 }
                 self.candidate_id = Some(peer_id);
                 self.candidate_kind = Self::grip_kind(grip);
                 self.fastener_cursor = 0;
                 self.stage = Puzzle5dProximityConnectStage::Existing;
-                Ok(crate::puzzle_progress_step!("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Existing => {
                 if let Some(row) = projection.get("fasteners").and_then(Value::as_array).and_then(|fasteners| fasteners.get(self.fastener_cursor)) {
@@ -208,20 +208,20 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     if (source == peer && target == moved) || (source == moved && target == peer) {
                         self.clear_candidate();
                     }
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-existing", "Checking existing fastener", "Bestehende Verbindung wird geprüft"));
                 }
                 self.stage = Puzzle5dProximityConnectStage::Compatibility;
-                Ok(crate::puzzle_progress_step!("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Compatibility => {
                 let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
                 if rows.is_empty() || self.candidate_kind.is_none() || self.moved_kind.is_none() {
                     self.stage = Puzzle5dProximityConnectStage::Emit;
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-emit", "Connecting nearby grip", "Naher Griff wird verbunden"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-emit", "Connecting nearby grip", "Naher Griff wird verbunden"));
                 }
                 let Some(row) = rows.get(self.compatibility_cursor) else {
                     self.clear_candidate();
-                    return Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
+                    return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"));
                 };
                 self.compatibility_cursor += 1;
                 let source = row.get("source").and_then(Value::as_str).unwrap_or("");
@@ -232,7 +232,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 if (source == source_kind && target == target_kind) || (bidirectional && source == target_kind && target == source_kind) {
                     self.stage = Puzzle5dProximityConnectStage::Emit;
                 }
-                Ok(crate::puzzle_progress_step!("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-compatibility", "Checking kind compatibility", "Artkompatibilität wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Emit => {
                 if self.mutations.len() >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
@@ -246,7 +246,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
                 self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, arg("gap"), arg("shift"), arg("rise"), arg("rotation"), arg("turn"), arg("tilt"), arg("x"), arg("y"), None));
                 self.clear_candidate();
-                Ok(crate::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"))
+                Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"))
             }
             Puzzle5dProximityConnectStage::Complete => Err(Fault::from("puzzle5d-proximity-connect-complete-repolled")),
             Puzzle5dProximityConnectStage::Closing => Err(Fault::from("puzzle5d-proximity-connect-closing")),

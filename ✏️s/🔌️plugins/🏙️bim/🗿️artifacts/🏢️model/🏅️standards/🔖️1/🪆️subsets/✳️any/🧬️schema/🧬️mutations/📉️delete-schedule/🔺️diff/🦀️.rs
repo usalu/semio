@@ -1,4 +1,4 @@
-//! \u{1f53a}\uFE0F Diff constructor for \u00B6DeleteSchedule\u00B6: the schedule leaves in one sparse diff. Its rows and totals are inferred and nothing else refers to it, so nothing cascades.
+//! 🔺️ Diff constructor for \u00B6DeleteSchedule\u00B6: the schedule leaves in one sparse diff. Its rows and totals are inferred and nothing else refers to it, so nothing cascades.
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_schedule::DeleteSchedule;
 use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;

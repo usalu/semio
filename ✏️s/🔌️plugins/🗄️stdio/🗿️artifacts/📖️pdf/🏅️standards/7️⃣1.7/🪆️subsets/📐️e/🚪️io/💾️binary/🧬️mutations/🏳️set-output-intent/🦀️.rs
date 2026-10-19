@@ -1,4 +1,4 @@
-//! Direct binary identity for `set-output-intent`.
+//! 💾️ Direct binary identity for `set-output-intent`.
 
 pub const TAG: u8 = 8;
 pub const BINARY_TAG: u8 = TAG;

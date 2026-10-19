@@ -34,7 +34,7 @@ pub async fn assert_policy_matrix(rejects: impl AsyncFn(crate::MergePolicy, semi
 
 /// ✅️ LAW (1-D variant of [`assert_policy_matrix`]): a single real outcome (`mutation.diff(base)`,
 /// hence "1-D" — one `(op, base)` pair, not the synthetic 3×4 grid) must still agree with the
-/// frozen policy matrix at its own `worst_level()`: for every [`crate::os_spr::MergePolicy`],
+/// frozen policy matrix at its own `worst_level()`: for every [`crate::MergePolicy`],
 /// `policy.rejects(level)` and `outcome.is_applicable(policy)` must match
 /// `policy_matrix_expected_reject(policy, level)`/its negation, and an outcome with no messages
 /// (`worst_level() == None`) must never be rejected. Also asserts [`assert_fatal_never_applies`]
@@ -63,7 +63,7 @@ where
 
 //#region 🔖️Merge
 /// ✅️ LAW: two peers that independently insert the same closed `envelopes` set (in independently
-/// shuffled order) into a fresh [`crate::os_spr::MutationDag`] and then fold the drained batch
+/// shuffled order) into a fresh [`crate::MutationDag`] and then fold the drained batch
 /// through `fold` converge on the same state — `fold` is responsible for its own canonicalization
 /// (typically an HLC sort, mirroring `ingest_remote`'s own §C6 step 3) since
 /// `take_next_applied`'s own order is only causally valid, not canonical.
@@ -159,7 +159,7 @@ pub async fn assert_ledger_matches_replay(ledger: &std::collections::HashMap<Str
 
 //#region 🔖️Conflict
 /// ✅️ LAW (§C7): `decode(encode(conflict)) == conflict` through the `.spr` conflict ledger codec
-/// (`REC_CONFLICT`) — `encode`/`decode` are typically `crate::os_spr::history::encode_conflicts`/
+/// (`REC_CONFLICT`) — `encode`/`decode` are typically `crate::history::encode_conflicts`/
 /// `decode_conflicts` sliced to one entry.
 pub async fn assert_conflict_spr_round_trip(conflict: &crate::Conflict, encode: impl AsyncFn(&crate::Conflict) -> Vec<u8>, decode: impl AsyncFn(&[u8]) -> crate::Conflict) {
     let bytes = encode(conflict).await;
@@ -170,7 +170,7 @@ pub async fn assert_conflict_spr_round_trip(conflict: &crate::Conflict, encode: 
 
 //#region 🔖️Channel
 /// ✅️ LAW: a corpus round-trip sweep — `decode(encode(sample)) == sample` for every `sample` in
-/// `corpus`. Point `encode`/`decode` at `crate::os_spr::{encode,decode}_app_command` or
+/// `corpus`. Point `encode`/`decode` at `crate::{encode,decode}_app_command` or
 /// `_app_frame` to sweep the C8 new-frame corpus
 /// (`AppCommand::{SetMergePolicy,ResolveConflict,ReadConflicts}`,
 /// `AppFrame::{MergeReport,Conflicts}`) once 1-C lands those variants.

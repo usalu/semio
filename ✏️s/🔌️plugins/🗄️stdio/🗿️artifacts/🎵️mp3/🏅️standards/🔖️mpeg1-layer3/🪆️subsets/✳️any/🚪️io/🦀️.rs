@@ -138,7 +138,7 @@ pub fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, u
     let mpeg_version_id = (b1 >> 3) & 0x03;
     let layer = (b1 >> 1) & 0x03;
     if mpeg_version_id == 0x01 || layer == 0x00 {
-        return None; // reserved
+        return None;
     }
     let protection_bit = (b1 & 0x01) != 0;
     let bitrate_index = (b2 >> 4) & 0x0F;
@@ -155,10 +155,8 @@ pub fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader, u
     let sample_rate = crate::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index)?;
     let pad = if padding { 1u32 } else { 0 };
     let frame_size = if layer == 3 {
-        // Layer I: slots are 4 bytes.
         (12 * bitrate_bps / sample_rate + pad) * 4
     } else {
-        // Layer II/III: slots are 1 byte.
         144 * bitrate_bps / sample_rate + pad
     } as usize;
     if frame_size < 4 || pos + frame_size > bytes.len() {

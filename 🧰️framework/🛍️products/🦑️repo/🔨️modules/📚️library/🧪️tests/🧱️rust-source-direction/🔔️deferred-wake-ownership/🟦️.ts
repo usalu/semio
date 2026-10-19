@@ -61,7 +61,7 @@ test("general deferred wake and specific writer have closed separate current fix
   const neutralGroups = nativeGroups(lower, "runExactCargoLaws") as { laws: string[] }[];
   expect(neutralGroups.flatMap((group: { laws: string[] }) => group.laws)).toEqual([...fixture.neutralLaws]);
   for (const group of neutralGroups) expect(group).toMatchObject({ package: expect.stringMatching(/^semio-framework-async-(?:wasm-pool-)?tests$/u), target: { kind: "lib" } });
-  expect(nativeGroups(higherOwner, "runRepositoryExactCargoLaws")).toEqual([{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [...fixture.writerLaws] }]);
+  expect(nativeGroups(higherOwner, "runAdmittedExactCargoLawsV1")).toEqual([{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [...fixture.writerLaws] }]);
   expect(higher).toContain("writerDeferredWake.cases");
   expect(higher).toContain("writerDeferredWake.retryEpoch");
   expect(writer.runtimeMarkers.writer).toEqual([...fixture.writerMarkers]);

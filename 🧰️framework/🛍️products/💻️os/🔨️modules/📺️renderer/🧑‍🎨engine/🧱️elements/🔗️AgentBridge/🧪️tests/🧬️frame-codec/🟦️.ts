@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, useAgentBridge, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, encodeJsonPayload } from "../../🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "@semio-tech/framework/mcp/bridge";
-import { documentInferencePortFixtureUrl } from "../../../../../../🖥️shell/🧪️tests/🧫️fixtures/🟦️.ts";
+import { documentInferencePortFixtureUrl } from "@semio-tech/framework/os/modules/shell/testing/fixtures";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -56,8 +56,6 @@ describe("bridge frame codec (imported, not reimplemented) round-trips through e
  * actually returns. */
 function normalizeBigints<T>(value: T): T {
   if (typeof value !== "object" || value === null) return value;
-  // 🧭️ An array is not a `Record<string, unknown>`; it is normalized element-wise and returned before
-  // the keyed rewrites below, which only ever apply to an object.
   if (Array.isArray(value)) return (value as unknown[]).map((entry) => normalizeBigints(entry)) as T;
   const clone: Record<string, unknown> = { ...(value as Record<string, unknown>) };
   for (const key of ["revision", "baseRevision", "inReplyTo", "seq"]) {

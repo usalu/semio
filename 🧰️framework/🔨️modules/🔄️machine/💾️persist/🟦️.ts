@@ -15,9 +15,9 @@ export interface PersistedSnapshot {
 
 /** 💾 Why {@link restore} could not rebuild a {@link Snapshot}. */
 export type RestoreError =
-  /** No {@link Migration} bridges the persisted fingerprint to the current machine. */
+  /** 🔗️ No {@link Migration} bridges the persisted fingerprint to the current machine. */
   | { readonly kind: "fingerprintMismatch" }
-  /** A persisted stable id no longer exists in the current machine. */
+  /** 📸️ A persisted stable id no longer exists in the current machine. */
   | { readonly kind: "unknownStableId"; readonly stableId: string };
 
 /** 💾 Migrates a {@link PersistedSnapshot} captured under an older machine fingerprint. */

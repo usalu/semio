@@ -40,7 +40,7 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   const project = JSON.parse(readFileSync(join(directory, "../../📋️project.json"), "utf8"));
   assert.deepEqual(project.targets.build.dependsOn, ["prepare-release", ...pipeline.wasmTargets]);
   assert.equal(project.targets.prepare, undefined, "Only profile-qualified preparation targets exist");
-  assert.deepEqual(project.targets.build.outputs, ["{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/site"]);
+  assert.deepEqual(project.targets.build.outputs, ["{projectRoot}/.🧾️store/build.json"]);
   assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
   assert.deepEqual(project.targets["activate-prototype"]?.dependsOn, ["prepare-prototype", pipeline.development.activationTarget]);
   assert.deepEqual(project.targets["activate-prototype"]?.outputs, ["{projectRoot}/dist/♻️activation/prototype"], "Demonstrator union receipt must restore from the build cache");
@@ -72,10 +72,13 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   const { demonstratorRuntimeAssetSources } = await import(pathToFileURL(join(directory, "📦️assets/🟦️.ts")).href);
   for (const profile of pipeline.profiles) {
     const sources = demonstratorRuntimeAssetSources(workspace, profile);
-    assert.equal(sources.length, fixture.pluginIds.length + fixture.extensionIds.length + 3);
+    const components = sources.filter((row: any) => row.owner.endsWith(`:browser:${profile}`)), support = sources.filter((row: any) => !components.includes(row));
+    assert.equal(components.length, fixture.pluginIds.length + fixture.extensionIds.length);
+    assert.deepEqual(support.slice(0, 3).map((row: any) => row.owner), [`browser-support:${profile}:preview2`, `browser-support:${profile}:shard`, "infinite:fonts"]);
+    assert.ok(support.length > 3 && support.slice(3).every((row: any) => row.owner.startsWith("canvas:")), "Every source after the browser support is a staged canvas asset");
     assert.equal(new Set(sources.map((row: any) => row.root)).size, sources.length);
     assert.equal(sources.filter((row: any) => row.shimDirectory !== undefined).length, fixture.extensionIds.length);
-    for (const row of sources) assert.ok(row.owner === "infinite:fonts" || row.owner.includes(`:${profile}`), row.owner);
+    for (const row of sources) assert.ok(row.owner === "infinite:fonts" || row.owner.startsWith("canvas:") || row.owner.includes(`:${profile}`), row.owner);
     assert.equal(sources.some((row: any) => row.root.includes("/runtime/") || row.root.includes("🏪️store")), false);
   }
   const command = readFileSync(join(directory, "../..", pipeline.command), "utf8");

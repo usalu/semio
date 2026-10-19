@@ -1,4 +1,4 @@
-//! any fastener referencing the removed grip (full id `part_id:grip_id`).
+//! 🔩️ any fastener referencing the removed grip (full id `part_id:grip_id`).
 //! 🔺️ Sparse diff builder for `RemovePartGrip` — removes one grip from the owner part's `grips` and severs
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dFastenersDelta;

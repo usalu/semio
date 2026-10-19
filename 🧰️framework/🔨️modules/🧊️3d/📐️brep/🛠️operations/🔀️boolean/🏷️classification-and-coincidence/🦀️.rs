@@ -54,9 +54,6 @@ pub(super) fn sample_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, pe
         for k in 0..per_edge {
             let s = k as f64 / per_edge as f64;
             let mut p = pc.eval(t0 + (t1 - t0) * s);
-            // Unwrap continuously across coedges (matching `classification::loop_uv_polygon_sampled`'s
-            // own periodic handling) so a loop that grazes a periodic seam still yields a compact,
-            // consistently-signed UV bounding box instead of a bogus near-full-domain one.
             if surface.is_u_periodic() {
                 if let Some(pu) = prev_u {
                     p.x = unwrap_to(pu, p.x);
@@ -148,11 +145,6 @@ pub(super) fn local_point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol
                         }
                     }
                 }
-                // 🌀 The trim test must try the hit's UV at every period shift: a split piece of a
-                // periodic face keeps its own boundary polygon on whatever `2π` branch its imprint
-                // settled on (the piece ABOVE a seam-crossing circle on a cylinder), and a single
-                // canonically-wrapped probe missed it — every ray through a blind bore's upper
-                // lateral piece counted zero crossings and the bore's floor disc classified Outside.
                 if point_in_face_uv_periodic(body, face, Pnt2::new(h.u, h.v), tol) {
                     hits.push(h.t);
                 }

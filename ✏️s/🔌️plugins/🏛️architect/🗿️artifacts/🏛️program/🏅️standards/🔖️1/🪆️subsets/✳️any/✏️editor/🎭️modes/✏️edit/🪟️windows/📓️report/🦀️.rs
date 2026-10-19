@@ -38,8 +38,6 @@ pub fn definition() -> WindowKindDefinition {
         input_event_schema: None,
         output_schema: None,
         capabilities: Vec::new(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: authored reports are
-        // read-only document records in this surface, so it has no selectable entities.
         interactions: Vec::new(),
     }
 }

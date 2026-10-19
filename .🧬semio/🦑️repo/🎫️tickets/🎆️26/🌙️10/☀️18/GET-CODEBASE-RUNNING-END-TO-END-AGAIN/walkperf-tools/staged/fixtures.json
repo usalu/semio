@@ -1,0 +1,770 @@
+{
+ "version": 1,
+ "purpose": "dependency-generation-receipt-fixtures",
+ "rules": {
+  "opaque": [
+   "🗑️generated",
+   "🤖️generated",
+   "node_modules",
+   "target",
+   "dist",
+   "📤️dist",
+   "build",
+   "storybook-static",
+   "temp",
+   "coverage",
+   "__pycache__",
+   "🔌️plugin-modules",
+   "compose"
+  ],
+  "opaquePatterns": [
+   "^target(?:-[a-z0-9]+)*$"
+  ],
+  "walkRoots": [
+   "pkgs"
+  ]
+ },
+ "workspace": {
+  "files": {
+   "package.json": "{\"name\": \"fixture-root\", \"version\": \"0.0.0\", \"semio\": {\"workspace\": {\"schemaVersion\": 1, \"members\": [\"pkgs/*\"], \"owners\": []}}, \"workspaces\": [\"pkgs/a\", \"pkgs/b\", \"pkgs/🧩️widget\"]}",
+   "bun.lock": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{}}",
+   "pkgs/a/package.json": "{\"name\":\"a\",\"version\":\"1.0.0\",\"dependencies\":{\"dep\":\"^1.0.0\"}}",
+   "pkgs/a/src/index.ts": "export const a=1;\n",
+   "pkgs/b/package.json": "{\"name\":\"b\",\"version\":\"1.0.0\"}",
+   "pkgs/🧩️widget/package.json": "{\"name\":\"widget\",\"version\":\"1.0.0\"}",
+   "pkgs/🧩️widget/src/widget.ts": "export {};\n",
+   "store/j/g1/bindings.json": "{\"ready\":true}\n",
+   "store/j/g1/node_modules/dep/package.json": "{\"name\":\"dep\",\"version\":\"1.2.3\"}",
+   "store/j/g1/node_modules/dep/index.js": "module.exports=1;\n",
+   "store/j/g2/node_modules/other/package.json": "{\"name\":\"other\",\"version\":\"1.0.0\"}",
+   "impl/entry.ts": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n",
+   "impl/deep/fence.ts": "export const fence=(rules:unknown)=>rules;\nexport const later=()=>import(\"./later.ts\");\n",
+   "impl/deep/later.ts": "export const later=1;\n",
+   "impl/limit.cjs": "module.exports=Object.freeze({maximum:4});\n",
+   "impl/rules.json": "{\"limit\":4}\n",
+   "impl/🧬️schema/🔣️.json": "{\"type\":\"object\"}\n",
+   "impl/unrelated.ts": "export const unrelated=true;\n"
+  },
+  "links": {
+   "pkgs/a/node_modules": "@STORE@/j/g1/node_modules",
+   "pkgs/b/node_modules": "@STORE@/j/g2/node_modules",
+   "store/j/g1/node_modules/dep-link": "../../g2/node_modules/other"
+  },
+  "missing": [
+   "node_modules",
+   "bunfig.toml"
+  ],
+  "observed": {
+   "full": [
+    "store/j/g1/node_modules/dep/package.json"
+   ],
+   "anchors": [
+    "store/j/g1/node_modules/dep",
+    "store/j/g1/node_modules",
+    "store/j/g2/node_modules/other",
+    "store/j/g1"
+   ],
+   "links": [
+    "store/j/g1/node_modules/dep-link"
+   ],
+   "missing": [
+    "node_modules",
+    "pkgs/node_modules"
+   ]
+  },
+  "required": [
+   "."
+  ]
+ },
+ "progress": {
+  "directories": 4200
+ },
+ "cases": [
+  {
+   "name": "untouched tree matches",
+   "mutations": [],
+   "expect": "match"
+  },
+  {
+   "name": "directory touched without change matches",
+   "mutations": [
+    {
+     "op": "touch",
+     "path": "pkgs"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "irrelevant file added matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/readme.md",
+     "text": "notes"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "hidden directory added matches",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "pkgs/.cache"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "opaque directory added matches",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "pkgs/a/dist"
+    },
+    {
+     "op": "mkdir",
+     "path": "pkgs/b/target-debug"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "source file edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/index.ts",
+     "text": "export const a=2;\n"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "new package falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/z/package.json",
+     "text": "{\"name\":\"z\"}"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "removed package falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/b"
+    }
+   ],
+   "expect": "mismatch:manifest-changed"
+  },
+  {
+   "name": "package replaced by symlink falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/b"
+    },
+    {
+     "op": "symlink",
+     "path": "pkgs/b",
+     "target": "a"
+    }
+   ],
+   "expect": "mismatch:manifest-changed"
+  },
+  {
+   "name": "source directory removed falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/src"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "source directory replaced by symlink falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/src"
+    },
+    {
+     "op": "symlink",
+     "path": "pkgs/a/src",
+     "target": "../b"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "nested package manifest appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/src/package.json",
+     "text": "{\"name\":\"nested\"}"
+    }
+   ],
+   "expect": "mismatch:membership-changed"
+  },
+  {
+   "name": "member manifest edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/b/package.json",
+     "text": "{\"name\":\"b\",\"version\":\"2.0.0\"}"
+    }
+   ],
+   "expect": "mismatch:manifest-changed"
+  },
+  {
+   "name": "lock edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "bun.lock",
+     "text": "{\"lockfileVersion\":1,\"workspaces\":{},\"packages\":{\"x\":1}}"
+    }
+   ],
+   "expect": "mismatch:input-changed"
+  },
+  {
+   "name": "lock replaced by equal bytes falls back",
+   "mutations": [
+    {
+     "op": "replace",
+     "path": "bun.lock"
+    }
+   ],
+   "expect": "mismatch:input-changed"
+  },
+  {
+   "name": "bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:input-changed"
+  },
+  {
+   "name": "binding retargeted falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/node_modules"
+    },
+    {
+     "op": "symlink",
+     "path": "pkgs/a/node_modules",
+     "target": "@STORE@/j/g2/node_modules"
+    }
+   ],
+   "expect": "mismatch:binding-changed"
+  },
+  {
+   "name": "binding removed falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "pkgs/a/node_modules"
+    }
+   ],
+   "expect": "mismatch:binding-changed"
+  },
+  {
+   "name": "ready receipt edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/j/g1/bindings.json",
+     "text": "{\"ready\":false}\n"
+    }
+   ],
+   "expect": "mismatch:ready-changed"
+  },
+  {
+   "name": "provider manifest edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/j/g1/node_modules/dep/package.json",
+     "text": "{\"name\":\"dep\",\"version\":\"1.2.4\"}"
+    }
+   ],
+   "expect": "mismatch:provider-changed"
+  },
+  {
+   "name": "ambient fallback appears falls back",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": "node_modules"
+    }
+   ],
+   "expect": "mismatch:provider-changed"
+  },
+  {
+   "name": "provider link retargeted falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "store/j/g1/node_modules/dep-link"
+    },
+    {
+     "op": "symlink",
+     "path": "store/j/g1/node_modules/dep-link",
+     "target": "../../g2/node_modules/other"
+    }
+   ],
+   "expect": "mismatch:provider-changed"
+  },
+  {
+   "name": "evidence tampered falls back",
+   "mutations": [],
+   "expect": "mismatch:evidence-invalid",
+   "tamper": "frontier"
+  },
+  {
+   "name": "execution evidence tampered falls back",
+   "mutations": [],
+   "expect": "mismatch:evidence-invalid",
+   "tamper": "execution"
+  },
+  {
+   "name": "entry list changed falls back",
+   "mutations": [],
+   "expect": "mismatch:implementation-changed",
+   "port": "entries"
+  },
+  {
+   "name": "runtime changed falls back",
+   "mutations": [],
+   "expect": "mismatch:runtime-changed",
+   "port": "runtime"
+  },
+  {
+   "name": "open conditions fall back",
+   "mutations": [],
+   "expect": "mismatch:conditions-open",
+   "port": "conditions"
+  },
+  {
+   "name": "relist budget exceeded falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "pkgs/a/one.txt",
+     "text": "1"
+    },
+    {
+     "op": "write",
+     "path": "pkgs/b/two.txt",
+     "text": "2"
+    }
+   ],
+   "expect": "mismatch:membership-churn",
+   "relist": 1
+  },
+  {
+   "name": "inconsistent seal falls back",
+   "mutations": [],
+   "expect": "mismatch:sha-changed",
+   "reseal": "scopeReadSha256"
+  },
+  {
+   "name": "closure entry edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/entry.ts",
+     "text": "import {createRequire} from \"node:module\";\nimport {fence} from \"./deep/fence.ts\";\nimport rules from \"./rules.json\" with {type:\"json\"};\nexport const limit=createRequire(import.meta.url)(\"./limit.cjs\");\nexport const run=()=>fence(rules);\n// changed\n"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure transitive import edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/deep/fence.ts",
+     "text": "export const fence=(rules:unknown)=>({...rules as object});\nexport const later=()=>import(\"./later.ts\");\n"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure dynamic import target edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/deep/later.ts",
+     "text": "export const later=2;\n"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure commonjs asset edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/limit.cjs",
+     "text": "module.exports=Object.freeze({maximum:5});\n"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure json asset edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/rules.json",
+     "text": "{\"limit\":5}\n"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure module-owned schema edited falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/🧬️schema/🔣️.json",
+     "text": "{\"type\":\"array\"}\n"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure file removed falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "impl/deep/later.ts"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure file replaced by symlink falls back",
+   "mutations": [
+    {
+     "op": "remove",
+     "path": "impl/deep/later.ts"
+    },
+    {
+     "op": "symlink",
+     "path": "impl/deep/later.ts",
+     "target": "@STORE@/../impl/unrelated.ts"
+    }
+   ],
+   "expect": "mismatch:implementation-changed"
+  },
+  {
+   "name": "closure file rewritten with identical bytes matches",
+   "mutations": [
+    {
+     "op": "replace",
+     "path": "impl/deep/fence.ts"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "closure file touched without change matches",
+   "mutations": [
+    {
+     "op": "touch",
+     "path": "impl/rules.json"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "file outside the closure edited matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/unrelated.ts",
+     "text": "export const unrelated=false;\n"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "file added next to the closure matches",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "impl/deep/extra.ts",
+     "text": "export const extra=1;\n"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "closure evidence tampered falls back",
+   "mutations": [],
+   "expect": "mismatch:evidence-invalid",
+   "tamper": "closure"
+  },
+  {
+   "name": "bun revision changed falls back",
+   "mutations": [],
+   "expect": "mismatch:runtime-changed",
+   "port": "revision"
+  },
+  {
+   "name": "workspace npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".npmrc",
+     "text": "registry=https://registry.example.test/\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "home npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.npmrc",
+     "text": "//registry.example.test/:_authToken=x\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "home bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.bunfig.toml",
+     "text": "[install]\nregistry = \"https://registry.example.test/\"\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "xdg bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/xdg/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "home config bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.config/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "store home npmrc appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/bun-home/.npmrc",
+     "text": "x=1\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "store home bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/bun-home/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "store config bunfig appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": "store/bun-config/.bunfig.toml",
+     "text": "[install]\n"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "home npmrc appearing as a symlink falls back",
+   "mutations": [
+    {
+     "op": "mkdir",
+     "path": ".ambient/home"
+    },
+    {
+     "op": "write",
+     "path": ".ambient/target.txt",
+     "text": "a=1\n"
+    },
+    {
+     "op": "symlink",
+     "path": ".ambient/home/.npmrc",
+     "target": "@STORE@/../.ambient/target.txt"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "install cache directory variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "BUN_INSTALL_CACHE_DIR",
+     "text": "/elsewhere/cache"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "registry variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "NPM_CONFIG_REGISTRY",
+     "text": "https://registry.example.test/"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "lowercase registry variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "npm_config_registry",
+     "text": "https://registry.example.test/"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "bun install variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "BUN_INSTALL",
+     "text": "/elsewhere"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "proxy variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "HTTPS_PROXY",
+     "text": "http://proxy.example.test:3128"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "certificate variable set falls back",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "NODE_EXTRA_CA_CERTS",
+     "text": "/etc/ca.pem"
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  },
+  {
+   "name": "ignored user agent variable changed matches",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "NPM_CONFIG_USER_AGENT",
+     "text": "bun/9.9.9 elsewhere"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "unrelated variable changed matches",
+   "mutations": [
+    {
+     "op": "env",
+     "path": "PATH",
+     "text": "/opt/bin"
+    }
+   ],
+   "expect": "match"
+  },
+  {
+   "name": "empty home npmrc file appears falls back",
+   "mutations": [
+    {
+     "op": "write",
+     "path": ".ambient/home/.npmrc",
+     "text": ""
+    }
+   ],
+   "expect": "mismatch:configuration-changed"
+  }
+ ],
+ "implementation": {
+  "entries": [
+   "impl/entry.ts"
+  ]
+ },
+ "environment": {
+  "PATH": "/usr/bin",
+  "NPM_CONFIG_USER_AGENT": "bun/1.3.14 fixture",
+  "HOME_DIRECTORY": "unrelated"
+ },
+ "fences": [
+  "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+  "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+  "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/🔣️.json",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟦️.ts"
+ ],
+ "legacyImplementationFiles": [
+  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+  "🗂️workspaces/🟦️bun/🟨️.cjs",
+  "🗂️workspaces/🟦️bun/🧬️schema/🔣️.json",
+  "🗂️workspaces/📦️payload/🟨️.cjs",
+  "🗂️workspaces/🟨️.cjs",
+  "🗂️workspaces/🔣️policy.json"
+ ]
+}

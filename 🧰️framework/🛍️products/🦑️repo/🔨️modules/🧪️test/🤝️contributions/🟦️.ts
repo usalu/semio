@@ -107,8 +107,6 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
   } catch {
     return null;
   }
-  // 🧫️A fixture manifest's `files[].path` is relative to the CONTRIBUTION, so the directory is stamped
-  // in at read time. Resolving it later against the process cwd would silently read the wrong bytes.
   const manifestDir = dirname(manifestPath);
   const problems: string[] = contributionSchemaProblems(parsed);
   const mutationCatalogs = strictMutationCatalogs(parsed.mutationCatalogs, owner, manifestPath, problems, testTaxonomy(repoRoot));

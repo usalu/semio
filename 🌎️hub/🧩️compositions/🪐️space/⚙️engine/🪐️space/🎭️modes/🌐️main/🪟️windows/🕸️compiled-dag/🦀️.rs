@@ -40,8 +40,6 @@ pub async fn definition() -> WindowKindDefinition {
         options: WindowOptions { measures: Vec::new(), engagement: WindowEngagementSlot::Some(engagement) },
         actions: Vec::new(),
         utilities: Vec::new(),
-        // 🕹️ Read-only text projection of the SAME `graph` node graph the Workflow window edits — hosts
-        // the "graph" domain too (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         interactions: vec![InteractionRef::new(semio_hub_space_foundation::S_PLAY_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,

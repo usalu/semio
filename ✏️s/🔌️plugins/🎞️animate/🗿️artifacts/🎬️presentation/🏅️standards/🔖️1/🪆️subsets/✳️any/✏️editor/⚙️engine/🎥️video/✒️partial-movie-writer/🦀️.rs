@@ -215,10 +215,6 @@ impl SceneFileWriter {
             let mp4 = self.config.output_dir.join(format!("{}.mp4", self.file_stem));
             concatenated_frames = concat_raw_partials(&self.partial_paths, &mp4, self.config.width, self.config.height, (self.config.frame_rate.round() as u32).max(1))?;
             outputs.mp4 = Some(mp4);
-            // 🚧️ Audio muxing removed with the FFmpeg deletion: stdio's `Mp4Track` schema
-            // only models video-handler (`vide`) tracks (see that schema's own doc comment)
-            // — there is no honest way to mux `config.audio_track` into this container via
-            // stdio today. Reported as a stdio_gap (see `w5a--report.md`); not hand-rolled.
         }
         if self.formats.contains(&OutputFormat::Gif) {
             if let Some(gif_snapshot) = build_gif_snapshot(self.config.width, self.config.height, self.config.frame_rate, &concatenated_frames) {

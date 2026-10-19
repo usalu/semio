@@ -347,10 +347,6 @@ async fn selected_and_hovered_ids_are_marked_from_the_interaction_snapshot() {
     let wide: Vec<String> = (0..80).map(|index| format!("scope:1:4:node{}:n{index}", format!("n{index}").len())).collect();
     assert_eq!(marked_ids(&wide).len(), MARKED_IDS_LIMIT, "a wider selection marks its first page rather than refusing the render");
     let interaction = Fem2dInteractionSnapshot { selected_ids: wide, hovered_ids: Vec::new() };
-    // 🪟️ A fresh `TreeWindows` per render: the value carries the render's first-paint budget and its
-    // body-wide node ledger in `Cell`s, so reusing the one the render above already spent would ask
-    // this panel to build a whole tree out of an exhausted ledger — which is not what the host does
-    // (`render_body` builds one per body per render).
     let windows = TreeWindows::for_body(&view, BODY_KEY);
     render(&document, &interaction, english(), &windows).expect("an oversized selection never faults the panel");
 }

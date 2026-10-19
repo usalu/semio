@@ -1,6 +1,7 @@
 //! 📬️ Store owners batch fold and history: the one item publication batch fold, the event sourced history and the remaining owner operations over the owned stage. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

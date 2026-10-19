@@ -526,11 +526,6 @@ impl CollisionSpatialIndex {
                         mutation.cursor += 1;
                         if self.cells.get(&cell).is_none() {
                             let bucket = FixedOwnerSet::new();
-                            // 🧊️ The two owners the preflight cannot weigh: a cell's member bucket does
-                            // not exist yet, so its first sub-page is claimed HERE, and the cell map's
-                            // own next sub-page is claimed by this very insert. A guest that refuses
-                            // either hands back what it was given, and the mutation is refused rather
-                            // than pushed into an owner that cannot hold it.
                             if bucket.capacity() == 0 {
                                 return Self::reject_mutation(mutation);
                             }

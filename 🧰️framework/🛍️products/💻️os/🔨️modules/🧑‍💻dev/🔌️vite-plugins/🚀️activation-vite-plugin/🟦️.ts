@@ -1,13 +1,10 @@
 /** 🚀️ The plugin activation Vite plugin of the dev server. This shell is config-shaped: the receipt observation, freshness report and plugin rebuild runtime loads at server-configure time through one opaque dynamic import, so the dev server's native config parse and watch set stays small (see the config-graph fixture). */
 import type { ActivationReceipt } from "../../♻️activation/🟦️.ts";
 import type { ActivationServer } from "./🏭️runtime/🟦️.ts";
+import type { ActivationVitePluginOptions } from "./🧬️options/🟦️.ts";
 
 //#region 🔌️PluginActivationVitePlugin
-/** 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
-export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string; cratePath?: string }>;
 
-/** ⚙️ Where the activation plugin observes receipts, which modules it serves and which components it watches. */
-export type ActivationVitePluginOptions = { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly freshnessRoot?: string; readonly components: readonly ActivationComponentSpec[] };
 
 const loadRuntime = (): Promise<typeof import("./🏭️runtime/🟦️.ts")> => import(new URL("./🏭️runtime/🟦️.ts", import.meta.url).href);
 

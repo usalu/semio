@@ -93,7 +93,7 @@ pub fn random_walk_entropy_rate(edges: &[(u32, u32)], n_nodes: usize, weights: O
                 transition[i * n_nodes + j] = adjacency[i * n_nodes + j] / row_sum;
             }
         } else {
-            transition[i * n_nodes + i] = 1.0; // 🕸️ isolated node: absorbing self-loop
+            transition[i * n_nodes + i] = 1.0;
         }
         row_entropy_nats[i] = -transition[i * n_nodes..(i + 1) * n_nodes].iter().map(|&p| x_ln_x(p)).sum::<f64>();
     }

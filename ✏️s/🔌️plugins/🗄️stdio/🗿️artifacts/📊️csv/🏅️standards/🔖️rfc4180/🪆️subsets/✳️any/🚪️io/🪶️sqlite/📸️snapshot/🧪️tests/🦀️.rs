@@ -212,9 +212,9 @@ trait OriginalNativeRefusalReceipt{fn original_native_receipt(&self)->semio_fram
 impl OriginalNativeRefusalReceipt for semio_framework_value::ValueError{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.retained_progress()}}
 impl OriginalNativeRefusalReceipt for store::io_schema::IoError{fn original_native_receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.cause.retained_progress()}}
 macro_rules! original_native_caller{
- ($name:ident,$module:ident,$control:ident,$owner:ident,$recipient:ident,$allocation:ident,$progress:ident)=>{
-  fn $name<T,E:OriginalNativeRefusalReceipt>(law:&serde_json::Value,limits:SqliteDatabaseLimits,callback:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool,original_observer:&mut dyn FnMut(semio_framework_value::$module::$progress)->bool,original_continuation:impl FnOnce(&mut semio_framework_value::$control<'_>),operation:impl FnOnce(&mut SqliteSnapshotControl<'_>,&mut store::$owner<'_,'_>)->Result<T,E>)->Result<T,E>{
-   use semio_framework_value::$module::{$recipient,$allocation};
+ ($name:ident,$root:ident,$module:ident,$control:ident,$owner:ident,$recipient:ident,$allocation:ident,$progress:ident)=>{
+  fn $name<T,E:OriginalNativeRefusalReceipt>(law:&serde_json::Value,limits:SqliteDatabaseLimits,callback:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool,original_observer:&mut dyn FnMut($root::$module::$progress)->bool,original_continuation:impl FnOnce(&mut semio_framework_value::$control<'_>),operation:impl FnOnce(&mut SqliteSnapshotControl<'_>,&mut store::$owner<'_,'_>)->Result<T,E>)->Result<T,E>{
+   use $root::$module::{$recipient,$allocation};
    use std::sync::atomic::{AtomicUsize,Ordering};
    let grant=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["bodyGrant"].clone()).unwrap();let close=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["closeGrant"].clone()).unwrap();
    let accepted=AtomicUsize::new(0usize);let mut original_allocation=|request:$allocation|{assert_eq!(request.owned_bytes,accepted.load(Ordering::Relaxed));accepted.store(request.next_owned_bytes,Ordering::Relaxed);Ok(())};let mut recipient=$recipient::new();
@@ -226,8 +226,8 @@ macro_rules! original_native_caller{
   }
  };
 }
-original_native_caller!(with_original_decode,native_decoding,NativeDecodeControl,NativeSnapshotDecodeOwner,NativeDecodeRetirementRecipient,NativeDecodeAllocation,NativeDecodeProgress);
-original_native_caller!(with_original_encode,native_encoding,NativeEncodeControl,NativeSnapshotEncodeOwner,NativeEncodeRetirementRecipient,NativeEncodeAllocation,NativeEncodeProgress);
+original_native_caller!(with_original_decode, semio_framework_value_native_owned, native_decoding,NativeDecodeControl,NativeSnapshotDecodeOwner,NativeDecodeRetirementRecipient,NativeDecodeAllocation,NativeDecodeProgress);
+original_native_caller!(with_original_encode, semio_framework_value, native_encoding,NativeEncodeControl,NativeSnapshotEncodeOwner,NativeEncodeRetirementRecipient,NativeEncodeAllocation,NativeEncodeProgress);
 /** ♻️ Settles successful caller-owned native output under its separate authored close turns. */
 fn retire_original_output<T:semio_framework_value::retirement::RetireOwned>(source:T,law:&serde_json::Value){
  let close=serde_json::from_value::<semio_framework_value::RetainedCloneGrant>(law["closeGrant"].clone()).unwrap();let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap();
@@ -237,7 +237,8 @@ fn retire_original_output<T:semio_framework_value::retirement::RetireOwned>(sour
 #[test]
 fn sqlite_snapshot_csv_receiving_original_subset_validation_caller_continuation_keeps_canceled_typed_child(){
  use std::cell::Cell;
- use semio_framework_value::{ValueRefusalKind,native_decoding::NativeDecodeProgress};
+ use semio_framework_value::ValueRefusalKind;
+ use semio_framework_value_native_owned::native_decoding::NativeDecodeProgress;
  let law=native_caller_policy();let policy=&law["observerContinuation"];let binder:serde_json::Value=serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let text=binder["source"]["unit"].as_str().unwrap().repeat(binder["source"]["repeat"].as_u64().unwrap()as usize);assert_eq!(text.len(),policy["copyExtentBytes"].as_u64().unwrap()as usize);
  let source=CsvSnapshot{schema:text.clone(),has_header:true,records:vec![CsvRecord{fields:Vec::new()}]};let payload=csv_native_payload(&source,store::sqlite_snapshot::SnapshotEncoding::Text);let payload_pointer=match &payload{store::io_schema::IoPayload::Text(text)=>text.as_ptr(),_=>unreachable!()};let armed=Cell::new(false);let canceled=Cell::new(false);let observed_prefix=Cell::new(0usize);let observed_pointer=Cell::new(0usize);let observed_cause_pointer=Cell::new(0usize);let observed_cause_borrowed=Cell::new(false);let original_observations=Cell::new(0usize);let stop=policy["cancelAfterBytes"].as_u64().unwrap()as usize;
  let mut observer=|event:NativeDecodeProgress|{original_observations.set(original_observations.get()+1);if canceled.get(){return false}if armed.get()&&event.total==text.len()&&event.completed>=stop{canceled.set(true);return false}true};

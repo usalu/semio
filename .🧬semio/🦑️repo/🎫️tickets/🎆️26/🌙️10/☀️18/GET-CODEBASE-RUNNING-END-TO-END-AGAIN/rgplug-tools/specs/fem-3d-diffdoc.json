@@ -1,0 +1,16 @@
+{
+ "ws": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml",
+ "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document",
+ "name": "semio-s-artifact-fem-3d-diff-document",
+ "const": "FEM3D_DIFF_JSON_SCHEMA",
+ "emoji": "🧾️",
+ "doc": "The JSON Schema document of the `s.fem.fem3d` diff leaf, held by its own crate so the artifact declaration crate stays inside the source gate.",
+ "json_rel": "../🔣️.json",
+ "workspace_rel": "../../../../../../../../..",
+ "desc": "FEM 3d diff JSON Schema document",
+ "after": "semio-s-artifact-fem-3d-mesh",
+ "user_rs": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🦀️.rs",
+ "include_old": "include_str!(\"🧬️schema/🔺️diff/🔣️.json\")",
+ "user_manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+ "scope": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d"
+}

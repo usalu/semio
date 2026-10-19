@@ -24,8 +24,6 @@ async fn write_json_into(value: &JsonValue, out: &mut String) {
                 if i > 0 {
                     out.push(',');
                 }
-                // 🔀️ `Box::pin(..)` breaks `write_json_into`'s self-recursion (E0733) — see the
-                // matching note in `parse_json_array` (O1 de-dyn, math-dedyn).
                 Box::pin(write_json_into(item, out)).await;
             }
             out.push(']');
@@ -100,7 +98,6 @@ pub async fn utf8_status(bytes: &[u8]) -> Utf8Status {
     if bytes.is_empty() {
         return Utf8Status::Complete;
     }
-    // 📜️ Walk backward from the end to find the start of the last (possibly incomplete) codepoint.
     let mut start = bytes.len() - 1;
     let mut lead_len = None;
     for _ in 0..4 {

@@ -132,43 +132,36 @@ impl Canvas2dSceneLane {
     pub const ALL: [Self; 1] = [Self::ToolRunTrace];
 
     /// 🏷️ See [`CANVAS2D_SCENE_LANE_NAMES`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn name(self) -> &'static str {
         CANVAS2D_SCENE_LANE_NAMES[self as usize]
     }
 
     /// 🏷️ See [`CANVAS2D_SCENE_LANE_FIELDS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn field(self) -> &'static str {
         CANVAS2D_SCENE_LANE_FIELDS[self as usize]
     }
 
     /// 🪧️ See [`CANVAS2D_SCENE_LANE_BODY_KEYS`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn body_key(self) -> &'static str {
         CANVAS2D_SCENE_LANE_BODY_KEYS[self as usize]
     }
 
     /// 🏷️ See [`CANVAS2D_SCENE_LANE_OPTIONAL`].
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn optional(self) -> bool {
         CANVAS2D_SCENE_LANE_OPTIONAL[self as usize]
     }
 
     /// 🔎️ Resolves a carrier root key back to its lane.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_body_key(body_key: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
     }
 
     /// 🔎️ Resolves a lane wire name back to its lane.
-    // 🚫️async: E1 pure table lookup — see R9.
     pub fn from_name(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|lane| lane.name() == name)
     }
 
     /// 📤️ Removes this lane's payload from `scene`; `None` when the optional lane is unset.
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn take(self, scene: &mut Canvas2dScene) -> Option<String> {
         match self {
             Self::ToolRunTrace => scene.tool_run_trace.take(),
@@ -176,7 +169,6 @@ impl Canvas2dSceneLane {
     }
 
     /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`Canvas2dSceneLane::take`].
-    // 🚫️async: E6 sync payload construction — see this module's own header.
     pub fn put(self, scene: &mut Canvas2dScene, payload: String) {
         match self {
             Self::ToolRunTrace => scene.tool_run_trace = Some(payload),

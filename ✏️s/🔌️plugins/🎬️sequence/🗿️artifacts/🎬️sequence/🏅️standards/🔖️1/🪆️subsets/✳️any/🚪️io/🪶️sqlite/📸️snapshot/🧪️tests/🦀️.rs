@@ -11,7 +11,8 @@ fn sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer(){
 }
 
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
-use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
+use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,plugin_app_close_prelude::*};
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎬️ The real Sequence editor and viewer declaration closure.
  enum SqliteApps:PluginApp{

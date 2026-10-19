@@ -1,5 +1,6 @@
 //! 📦️ Portable paged carrier laws checked against independent Serde values.
 use super::*;
+use semio_framework_value_paged_list::list::PagedList;
 
 #[test]
 fn paged_native_serde_and_sequence_ownership_match_neutral_shapes() {

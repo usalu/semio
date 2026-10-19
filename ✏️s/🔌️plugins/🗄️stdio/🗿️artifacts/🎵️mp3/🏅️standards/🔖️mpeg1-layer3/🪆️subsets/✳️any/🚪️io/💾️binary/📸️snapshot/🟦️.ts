@@ -5,6 +5,6 @@ export interface Semio_mp3_snapshotEntry {
   value: string;
 }
 export interface Semio_mp3_snapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Semio_mp3_snapshotEntry[];
+  /** 💾️ @state artifact */ schema: string;
+  /** 🧱️ @state artifact */ entries: Semio_mp3_snapshotEntry[];
 }

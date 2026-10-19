@@ -170,7 +170,7 @@ impl semio_framework_dsl_record::DslField for Puzzle5dScale {
             Ok(semio_framework_dsl_record::FieldValue::List(values))
         })
     }
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.checkpoint()?;
         let semio_framework_dsl_record::FieldValue::List(items)=value else{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a 1- or 3-item List"))};
         if items.len()!=1&&items.len()!=3{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a 1- or 3-item List"))}

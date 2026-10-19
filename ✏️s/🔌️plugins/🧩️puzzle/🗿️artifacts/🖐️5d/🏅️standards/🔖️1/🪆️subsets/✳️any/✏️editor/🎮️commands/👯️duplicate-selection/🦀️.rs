@@ -1,8 +1,8 @@
 //! 👯️ `duplicate-selection` command.
-use crate::standards::v1::subsets::any::schema::mutations::create_part;
+use semio_s_artifact_puzzle_5d_mut_any_4::standards::v1::subsets::any::schema::mutations::create_part;
 
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
-use crate::editor::puzzle5d::entities::Puzzle5dFreshIds;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::Puzzle5dFreshIds;
 
 /// 📄️ Clones every selected part at a small flat+volume offset, one `create-part` per clone built from the typed base
 /// part. Aborts (emitting nothing at all) when the selection holds no parts — the pre-migration
@@ -11,7 +11,7 @@ use crate::editor::puzzle5d::entities::Puzzle5dFreshIds;
 /// limitation.
 pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     let ids = ctx.selected_part_ids();
-    let mut clones: Vec<crate::standards::v1::subsets::any::schema::document_records::Puzzle5dPart> = ctx
+    let mut clones: Vec<semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dPart> = ctx
         .snapshot
         .typed()
         .parts

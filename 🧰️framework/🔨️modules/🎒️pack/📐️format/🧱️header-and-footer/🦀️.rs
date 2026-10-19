@@ -52,10 +52,6 @@ pub struct Header {
 impl Header {
     /// ✍️ Serializes to the exact 32-byte wire form, computing `header_crc32` over
     /// bytes `0..20` and zeroing the 8 reserved bytes.
-    // 🧮️ Every helper this fn calls (`crc32c`, `PackSink::write_all`) is a first-party `async fn`
-    // one hop away in `semio-framework-replication`, which this packet does not own; R9 rule 3
-    // ("if every consumer can become async, make it async instead") applies, not R9 rule 2 — see
-    // 📓️terra-pack-finish-report.md §"pure-computation-made-async: the recipe".
     pub(super) async fn write_bytes(&self) -> [u8; HEADER_SIZE] {
         self.write_bytes_sync()
     }
@@ -128,8 +124,6 @@ pub struct Footer {
 impl Footer {
     /// ✍️ Serializes to the exact 84-byte wire form, computing `footer_crc32` over the
     /// preceding 80 bytes.
-    // 🧮️ Same R9-rule-3 reasoning as `Header::write_bytes` above — `crc32c` is a pure but
-    // externally-owned `async fn`, so this fn propagates `async` rather than fighting it.
     pub(super) async fn write_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(FOOTER_SIZE);
         buf.extend_from_slice(&FOOTER_MAGIC);

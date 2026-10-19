@@ -1,5 +1,5 @@
-use super::translate_selection::handle;
-use super::translate_selection::TranslateSelection;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::translate_selection::handle;
+use semio_s_artifact_fem_2d_editor::editor::fem2d::commands::gumball::translate_selection::TranslateSelection;
 use crate::context::close;
 use crate::context::dispatch;
 use crate::context::dispatch_rows;

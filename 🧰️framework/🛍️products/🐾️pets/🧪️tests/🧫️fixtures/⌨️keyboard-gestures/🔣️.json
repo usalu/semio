@@ -1,0 +1,20 @@
+{
+  "deeds": ["circle", "countercircle", "stroke", "shake"],
+  "vectors": [
+    { "species": "glow", "state": "bright", "deed": "circle", "trick": "wind-up", "after": "blazing" },
+    { "species": "glow", "state": "bright", "deed": "countercircle", "trick": "wind-down", "after": "dim" },
+    { "species": "glow", "state": "bright", "deed": "shake", "trick": null, "after": "dim" },
+    { "species": "mist", "state": "fluffy", "deed": "stroke", "trick": "puff", "after": "fluffy" },
+    { "species": "leaf", "state": "soaked", "deed": "circle", "trick": null, "after": "soaked" },
+    { "species": "wick", "state": "burning", "deed": "shake", "trick": null, "after": "snuffed" }
+  ],
+  "route": { "species": "glow", "state": "bright", "deeds": ["circle", "countercircle", "countercircle", "circle", "shake"], "states": ["blazing", "bright", "dim", "bright", "dim"] },
+  "blocked": [
+    { "footing": "air" },
+    { "footing": "hand" },
+    { "perch": null },
+    { "leaving": true },
+    { "partner": "mist" },
+    { "activity": "hop" }
+  ]
+}

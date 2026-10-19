@@ -1,6 +1,12 @@
 //! 🎬️ Action dispatch and effects of the instance time-travel turns: the dispatched and applied time-travel actions, the event reduction and the performed effects. See [`super`].
 
 use super::*;
+use semio_framework_ui_locale::Terminology;
+use semio_framework::Fault;
+use semio_framework::FaultOrigin;
+use semio_framework::FaultCode;
+use semio_framework::Effect;
+use semio_framework::InvocationResult;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// ⏪️ Host-driven routing of the reserved history-edit verbs (design §7): applied to the session now, never queued

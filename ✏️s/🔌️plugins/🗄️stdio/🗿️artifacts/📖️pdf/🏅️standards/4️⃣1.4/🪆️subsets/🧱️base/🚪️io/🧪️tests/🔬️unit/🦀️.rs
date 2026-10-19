@@ -26,10 +26,6 @@ async fn codec_retention_law_round_trips_every_page() {
             PageDoc { width: 612.0, height: 792.0, text: "Hello Semio".into() },
             PageDoc { width: 595.276, height: 841.89, text: "Zweite Seite (mit Klammern)".into() },
             PageDoc { width: 200.0, height: 300.0, text: String::new() },
-            // 🔤 Non-ASCII, and a `U+FFFD` — what `shown_text`'s lossy decode leaves behind for
-            // a glyph code with no Unicode reading, which the committed thesis carries on page 1.
-            // Writing a literal string through `byte as char` re-encoded every byte ≥ 0x80 as
-            // TWO bytes and broke exactly this round trip; the differential run caught it.
             PageDoc { width: 300.0, height: 400.0, text: "Grüße \u{fffd} 中文 — a\\b(c)d".into() },
         ],
     };

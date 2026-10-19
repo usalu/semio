@@ -24,15 +24,12 @@ impl Default for SemioAnimationArtifact {
 }
 
 impl SemioAnimationArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioAnimationSnapshot {
         SemioAnimationSnapshot { schema: self.schema.clone(), timelines: self.timelines.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioAnimationSnapshot) -> Self {
         Self { schema: snapshot.schema, timelines: snapshot.timelines }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioAnimationSnapshot) {
         self.schema = snapshot.schema;
         self.timelines = snapshot.timelines;

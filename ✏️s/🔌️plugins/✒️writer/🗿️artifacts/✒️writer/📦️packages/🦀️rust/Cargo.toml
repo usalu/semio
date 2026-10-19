@@ -46,7 +46,6 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework-graph-manifest.workspace = true
 semio-framework-job.workspace = true
 semio-framework-ui-contract.workspace = true
-semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }

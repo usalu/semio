@@ -211,7 +211,6 @@ fn a_cancelled_release_selects_nothing_and_leaves_no_gesture() {
     assert!(matches!(emit.ui_scope, UiDirtyScope::Partial { .. }), "the overlay is refreshed away");
     assert_eq!(gesture_for_window("w"), Fem2dCanvasGesture::default(), "no gesture survives a cancel");
 
-    // 🎯️ A cancel over a node in direct-select mode does not fall back to a pick either.
     let direct = addressed(FEM2D_UTILITY_SELECT_DIRECT);
     let n1 = find_node_2d(&doc.nodes, "n1").expect("n1");
     let (x, y) = fem2d_layer_to_canvas(&camera, screen_2d(n1.x, n1.y), CANVAS_WIDTH, CANVAS_HEIGHT);

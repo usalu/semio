@@ -21,7 +21,7 @@ import { ShardClient } from "@semio-tech/framework-actor/shard-client";
 import { type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client";
 import { encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
-import { OwnedUiInstance } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { OwnedUiInstance } from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 
 const SURFACES = ["window", "panel", "catalogue", "inspection", "measures", "artifact"] as const;

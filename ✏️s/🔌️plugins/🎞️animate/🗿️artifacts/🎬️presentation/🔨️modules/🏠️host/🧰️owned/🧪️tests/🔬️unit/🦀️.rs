@@ -17,9 +17,6 @@ use store::{os_store::test_support, os_store::store_schema::ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn presentation_deck_materializes() {
-    // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
-    // `reserve_edit_history_slot` then refuses every `Apply`
-    // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
@@ -34,9 +31,6 @@ async fn presentation_deck_materializes() {
 //#region 🔖️DocumentTextTests
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
-    // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
-    // `reserve_edit_history_slot` then refuses every `Apply`
-    // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {

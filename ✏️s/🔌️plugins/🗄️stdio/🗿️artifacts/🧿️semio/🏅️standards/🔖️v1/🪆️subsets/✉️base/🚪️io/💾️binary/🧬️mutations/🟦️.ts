@@ -5,6 +5,6 @@ export interface Semio_semio_mutationsEntry {
   value: string;
 }
 export interface Semio_semio_mutations {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ entries: Semio_semio_mutationsEntry[];
+  /** 🧱️ @state artifact */ schema: string;
+  /** 🔢️ @state artifact */ entries: Semio_semio_mutationsEntry[];
 }

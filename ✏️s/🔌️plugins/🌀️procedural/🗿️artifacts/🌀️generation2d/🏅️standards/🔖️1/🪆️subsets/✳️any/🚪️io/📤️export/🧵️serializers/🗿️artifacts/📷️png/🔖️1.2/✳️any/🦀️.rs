@@ -1,4 +1,4 @@
-//! generation2d → png — the page drawing (`generation2d_drawing`) written as an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own
+//! 🪄️ generation2d → png — the page drawing (`generation2d_drawing`) written as an anti-aliased PNG raster by `s.stdio.semio/v1/drawing`'s own
 //! export leaf, the one png writer every owner shares.
 //!
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no png import.

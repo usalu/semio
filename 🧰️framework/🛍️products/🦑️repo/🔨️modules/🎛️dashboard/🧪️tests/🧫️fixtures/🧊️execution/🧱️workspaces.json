@@ -1,0 +1,56 @@
+{
+  "package": "app",
+  "files": {
+    "Cargo.toml": "[workspace]\nmembers = [\"app\"]\n[workspace.dependencies]\nshared = { path = \"wrong\" }\n",
+    "Cargo.lock": "# owning binary lock\n",
+    "app/Cargo.toml": "[package]\nname = \"app\"\n[dependencies]\ncomponent = { path = \"../framework/component\" }\n",
+    "app/lib.rs": "pub fn app() {}\n",
+    "framework/Cargo.toml": "[workspace]\nmembers = [\"component\",\"shared\",\"target\"]\n[workspace.package]\nedition = \"2024\"\n[workspace.dependencies.shared]\npath = \"shared\"\n[workspace.dependencies.target]\npath = \"target\"\n",
+    "framework/Cargo.lock": "# independent workspace lock\n",
+    "framework/component/Cargo.toml": "[package]\nname = \"component\"\nworkspace = \"..\"\nedition.workspace = true\n[dependencies]\nshared.workspace = true\n[target.'cfg(unix)'.build-dependencies]\ntarget.workspace = true\n[dev-dependencies]\ntests = { path = \"../dev-only\" }\n",
+    "framework/component/lib.rs": "pub fn component() {}\n",
+    "framework/shared/Cargo.toml": "[package]\nname = \"shared\"\nworkspace = \"..\"\n",
+    "framework/shared/lib.rs": "pub fn shared() {}\n",
+    "framework/target/Cargo.toml": "[package]\nname = \"target\"\nworkspace = \"..\"\n",
+    "framework/target/lib.rs": "pub fn target() {}\n",
+    "framework/dev-only/Cargo.toml": "[package]\nname = \"tests\"\n",
+    "framework/dev-only/lib.rs": "pub fn tests() {}\n",
+    "framework/unrelated/lib.rs": "pub fn unrelated() {}\n",
+    "wrong/Cargo.toml": "[package]\nname = \"wrong\"\n",
+    "wrong/lib.rs": "pub fn wrong() {}\n"
+  },
+  "roots": ["app", "framework/component", "framework/shared", "framework/target"],
+  "manifests": ["Cargo.lock", "Cargo.toml", "framework/Cargo.toml"],
+  "selections": [
+    {
+      "name": "framework-owned binary",
+      "package": "framework/component",
+      "roots": ["framework/component", "framework/shared", "framework/target"],
+      "manifests": ["framework/Cargo.lock", "framework/Cargo.toml"],
+      "mutations": [
+        { "path": "framework/Cargo.lock", "stale": true },
+        { "path": "Cargo.lock", "stale": false },
+        { "path": "Cargo.toml", "stale": false },
+        { "path": "framework/Cargo.toml", "stale": true },
+        { "path": "framework/component/lib.rs", "stale": true },
+        { "path": "app/lib.rs", "stale": false }
+      ]
+    }
+  ],
+  "replacements": [
+    { "path": "framework/component/lib.rs", "from": "component", "to": "componenx", "stale": true },
+    { "path": "framework/Cargo.toml", "from": "2024", "to": "2021", "stale": true },
+    { "path": "framework/Cargo.lock", "from": "independent", "to": "independenx", "stale": false }
+  ],
+  "mutations": [
+    { "path": "Cargo.lock", "stale": true },
+    { "path": "framework/Cargo.toml", "stale": true },
+    { "path": "framework/component/lib.rs", "stale": true },
+    { "path": "framework/shared/lib.rs", "stale": true },
+    { "path": "framework/target/lib.rs", "stale": true },
+    { "path": "framework/Cargo.lock", "stale": false },
+    { "path": "framework/dev-only/lib.rs", "stale": false },
+    { "path": "framework/unrelated/lib.rs", "stale": false },
+    { "path": "wrong/lib.rs", "stale": false }
+  ]
+}

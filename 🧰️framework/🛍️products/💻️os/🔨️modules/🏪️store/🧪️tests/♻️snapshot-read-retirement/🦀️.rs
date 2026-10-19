@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value::testing::physical_test_close_grant;
 
 /// 🪙️ One funded admission of the next returned root, handed back whole as the retirement pump would receive it.
-fn take_one_returned(registry: &crate::os_store::SnapshotReadRegistryHandle) -> Option<Arc<u64>> {
+fn take_one_returned(registry: &SnapshotReadRegistryHandle) -> Option<Arc<u64>> {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
     registry.try_admit_one_returned::<u64, Arc<u64>>(grant, |root, _| Ok((root, Default::default()))).unwrap().0
 }
@@ -12,7 +12,7 @@ fn take_one_returned(registry: &crate::os_store::SnapshotReadRegistryHandle) -> 
 fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️snapshot-read-retirement/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
-        let registry = crate::os_store::SnapshotReadRegistryHandle::new();
+        let registry = SnapshotReadRegistryHandle::new();
         let issued = row["issued"].as_u64().unwrap() as usize;
         let mut leases: Vec<_> = (0..issued)
             .map(|index| {
@@ -21,7 +21,7 @@ fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
                 Some(SnapshotRead::new(owner, lease))
             })
             .collect();
-        registry.state_lock().try_lock().unwrap().set_cleanup_cursor(row["cursor"].as_u64().unwrap() as usize);
+        registry.state.try_lock().unwrap().cleanup_cursor = row["cursor"].as_u64().unwrap() as usize;
         for index in row["returned"].as_array().unwrap() {
             drop(leases[index.as_u64().unwrap() as usize].take());
         }

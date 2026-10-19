@@ -2,24 +2,15 @@
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 📣️ Runs the concrete composition's catalog publication and portable laws. */
-import { runVitest } from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { findWorkspaceRoot } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runVitest } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { publishTrustedStdioCatalogV1 } from "./✅️trusted-stdio-catalog/🟦️.ts";
-
-import { join } from "node:path";
+import { runTrustedCatalogPublishScript } from "./🟦️.ts";
 
 /** 🗄️ Publishes the first-party stdio native-codec catalog without claiming hub bundle admission. */
 class TrustedCatalogPublishScript extends BundleScript {
-  run(segments: string[]): void {
-    const option = (name: string): string | undefined => {
-      const index = segments.indexOf(name);
-      return index < 0 ? undefined : segments[index + 1];
-    };
-    const outDir = option("--out") ?? join(this.root, "🤖️generated");
-    const receipt = publishTrustedStdioCatalogV1({ outDir, repoRoot: findWorkspaceRoot() });
-    console.log(`trusted stdio catalog ${receipt.publication}: ${receipt.catalog.nativeCodecs.length} codecs, open=${receipt.catalog.openTargets[0]?.artifactKind}, hubBundle=${receipt.catalog.hubBundle}, component=${receipt.catalog.componentAdmission.status}, sha256=${receipt.catalogSha256} -> ${receipt.outPath}`);
+  async run(segments: string[]): Promise<void> {
+    await runTrustedCatalogPublishScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
@@ -31,4 +22,4 @@ class TestScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("publish", TrustedCatalogPublishScript).register("test", TestScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

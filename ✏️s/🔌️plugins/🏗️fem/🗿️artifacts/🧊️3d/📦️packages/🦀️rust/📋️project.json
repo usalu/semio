@@ -7,10 +7,32 @@
     "role:artifact",
     "family:fem"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎮️commands/🗂️remove-selection/🧪️tests/🔬️unit/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/🎞️results/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🔬️unit/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/🧪️tests/❄️cold/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/⛽️restore-funding/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎯️positive-spectrum/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️pencil/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🎼️shape/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📚️paged-ldlt/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧪️tests/🧮️triplet-csr/**/*",
+      "{workspaceRoot}/✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/**/*"
+    ]
+  },
   "targets": {
     "verify-fem3d-results-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem3d-results source"
@@ -27,7 +49,7 @@
     },
     "verify-fem3d-results-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem3d-results native"
@@ -50,7 +72,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
@@ -76,7 +98,7 @@
     },
     "verify-fem3d-transform-intent": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem3d-transform-intent native",
@@ -94,7 +116,7 @@
     },
     "verify-fem3d-transform-intent-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem3d-transform-intent source"
@@ -111,7 +133,7 @@
     },
     "verify-fem3d-numerical-child-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem3d-numerical-child-native",
@@ -128,7 +150,7 @@
     },
     "verify-fem3d-numerical-child-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem3d-numerical-child-source"
@@ -170,7 +192,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-material",
+            "verify",
+            "fem3d-material",
             "source"
           ]
         }
@@ -179,14 +202,15 @@
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-material source"
       },
-      "cache": false,
+      "cache": true,
       "executor": "repo:script"
     },
     "test-material-native": {
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-material",
+            "verify",
+            "fem3d-material",
             "native"
           ]
         }
@@ -195,7 +219,7 @@
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-material native"
       },
-      "cache": false,
+      "cache": true,
       "executor": "repo:script"
     }
   }

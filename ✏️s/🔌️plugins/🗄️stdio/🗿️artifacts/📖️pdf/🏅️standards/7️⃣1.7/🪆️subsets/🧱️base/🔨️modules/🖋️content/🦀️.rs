@@ -67,7 +67,6 @@ fn text_string(bytes: &[u8], font: Option<&FontCodec>) -> PdfTextString {
             }
         }
         None if bytes.iter().all(|byte| (0x20..=0x7E).contains(byte)) => {
-            // 🔤 No font to consult: printable ASCII is its own encoding in every simple font.
             return PdfTextString::Text { text: bytes.iter().map(|byte| *byte as char).collect() };
         }
         None => {}
@@ -303,7 +302,6 @@ pub fn parse_content(data: &[u8], fonts: &dyn FontTable,resources:&mut dyn crate
             "sh" => PdfOp::PaintShading { name: name(&operands, 0).unwrap_or_default() },
             "Do" => PdfOp::PaintXObject { name: name(&operands, 0).unwrap_or_default() },
             "BI" => {
-                // 🖼️ Key/value pairs up to `ID`, then the binary body up to `EI`.
                 let mut entries: Vec<PdfDictEntry> = Vec::new();
                 let mut key: Option<String> = None;
                 loop {

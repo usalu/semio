@@ -645,8 +645,6 @@ fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpo
     let line = CadEdgeCurve { kind: "line".into(), ..Default::default() };
     assert_eq!(edge_sample_points(&line, &ends, EDGE_SAMPLE_SEGMENTS), ends.to_vec(), "a straight edge IS its endpoints");
 
-    // 🔵️ A quarter arc about the origin: 32 segments ⇒ 33 samples, all on the unit circle, and the
-    // ends are the authored boundary vertices.
     let arc = CadEdgeCurve { kind: "arc".into(), center: Some([0.0, 0.0, 0.0]), ..Default::default() };
     let samples = edge_sample_points(&arc, &ends, EDGE_SAMPLE_SEGMENTS);
     assert_eq!(samples.len(), EDGE_SAMPLE_SEGMENTS + 1);
@@ -654,16 +652,12 @@ fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpo
     assert!(samples.first().is_some_and(|point| (point[0] - 1.0).abs() < 1e-9 && point[1].abs() < 1e-9));
     assert!(samples.last().is_some_and(|point| point[0].abs() < 1e-9 && (point[1] - 1.0).abs() < 1e-9));
 
-    // ⭕️ A circle is closed and raised to React's 64-segment floor however few were asked for.
     let circle = CadEdgeCurve { kind: "circle".into(), center: Some([0.0, 0.0, 0.0]), normal: Some([0.0, 0.0, 1.0]), radius: Some(2.0), ..Default::default() };
     let samples = edge_sample_points(&circle, &ends, 4);
     assert_eq!(samples.len(), CLOSED_CURVE_SAMPLE_SEGMENTS + 1);
-    // ⭕️ `sin(TAU)` is `-2.45e-16`, not `0`, in both hosts — the turn closes to float precision, and
-    // asserting bit equality here would only pin an artefact React's own polyline carries too.
     let (first, last) = (samples.first().copied().expect("first sample"), samples.last().copied().expect("last sample"));
     assert!([0, 1, 2].iter().all(|axis| (first[*axis] - last[*axis]).abs() < 1e-9), "a full turn closes on itself: {first:?} vs {last:?}");
 
-    // 🥚️ An ellipse takes the two radii on its own axes.
     let ellipse = CadEdgeCurve {
         kind: "ellipse".into(),
         center: Some([0.0, 0.0, 0.0]),
@@ -678,14 +672,12 @@ fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpo
     let max_x = samples.iter().map(|point| point[0]).fold(f64::MIN, f64::max);
     assert!((max_x - 3.0).abs() < 1e-9, "the major radius reaches 3, got {max_x}");
 
-    // 📈️ A nurbs curve passes through its first and last pole and keeps the interior ones company.
     let nurbs = CadEdgeCurve { kind: "nurbs".into(), poles: vec![[0.0, 0.0, 0.0], [1.0, 2.0, 0.0], [2.0, 0.0, 0.0]], degree: Some(2), ..Default::default() };
     let samples = edge_sample_points(&nurbs, &ends, EDGE_SAMPLE_SEGMENTS);
     assert!(samples.len() > 3, "a nurbs span tessellates, got {}", samples.len());
     assert_eq!(samples.first().copied(), Some([0.0, 0.0, 0.0]));
     assert_eq!(samples.last().copied(), Some([2.0, 0.0, 0.0]));
 
-    // 📍️ A producer-supplied polyline wins over every parametric family.
     let sampled = CadEdgeCurve { kind: "arc".into(), center: Some([0.0, 0.0, 0.0]), points: vec![[9.0, 9.0, 9.0], [8.0, 8.0, 8.0]], ..Default::default() };
     assert_eq!(edge_sample_points(&sampled, &ends, EDGE_SAMPLE_SEGMENTS), vec![[9.0, 9.0, 9.0], [8.0, 8.0, 8.0]]);
 }
@@ -695,9 +687,6 @@ fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpo
 #[test]
 fn a_curved_edges_pick_target_carries_its_tessellation() {
     let mut geometry = box_geometry();
-    // 🔵️ `e0` runs `v0 [0,0,0] → v1 [1,0,0]`, so the arc's centre sits on their perpendicular
-    // bisector — a centre ON one boundary vertex has radius 0 and is no arc at all
-    // (`arc_plane_frame` rightly refuses it and falls back to the chord).
     geometry.edges[0].curve = CadEdgeCurve { kind: "arc".into(), center: Some([0.5, -0.5, 0.0]), ..Default::default() };
     let buckets = geometry_buckets(&geometry);
     let points = buckets.entity_points(ModelEntityKind::Edge, "e0");

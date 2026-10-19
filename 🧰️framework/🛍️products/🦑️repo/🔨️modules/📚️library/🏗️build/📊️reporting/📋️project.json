@@ -1,11 +1,18 @@
 {
   "name": "repo-build-reports",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "tags": ["scope:repo", "language:typescript"],
   "targets": {
     "test": {
       "executor": "repo:script",
-      "cache": false,
-      "inputs": ["default", "^default"],
+      "cache": true,
+      "inputs": ["default", "^default", "testEnv"],
       "outputs": [],
       "options": {"command": "bun ./📜️script.ts test", "forwardAllArgs": false},
       "defaultConfiguration": "prototype",

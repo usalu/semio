@@ -154,11 +154,11 @@ impl semio_framework_dsl_record::DslField for WavData {
             record.insert(id,values)?;control.step()?;Ok(record.take())
         }))
     }
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(wav_invalid("WAV samples require a typed record"));};
         Self::from_record_controlled(record,control)
     }
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.step()?;
         if record.fields.len()>5{return Err(wav_invalid("WAV sample record contains excess fields"));}
         let Some(semio_framework_dsl_record::FieldValue::Enum(kind))=record.get(1)else{return Err(wav_invalid("WAV samples require a declared kind"));};
@@ -292,11 +292,11 @@ impl semio_framework_dsl_record::DslField for WavChunkRef {
             if let Self::Other(index)=self{record.insert(2,semio_framework_dsl_record::FieldValue::UInt(*index))?;control.step()?;}Ok(record.take())
         }))
     }
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(wav_invalid("WAV chunk reference requires a typed record"));};
         Self::from_record_controlled(record,control)
     }
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{
         control.step()?;
         if record.fields.len()>2||record.fields.keys().any(|id|![1,2].contains(id)){return Err(wav_invalid("WAV chunk reference contains an unknown field"));}
         let index=record.get(2).filter(|value|!matches!(value,semio_framework_dsl_record::FieldValue::Absent));

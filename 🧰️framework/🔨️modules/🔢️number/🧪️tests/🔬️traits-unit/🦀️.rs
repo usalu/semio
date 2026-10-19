@@ -14,9 +14,6 @@ mod tests {
 
     #[test]
     fn i64_from_i64_via_default_matches_identity_for_positive_and_negative() {
-        // exercise the default doubling-based from_i64 through a type that overrides it trivially,
-        // and separately validate the algorithm itself using f64 (which does NOT override from_i64
-        // meaningfully differently, so cross-check against a hand-rolled doubling loop instead).
         fn via_doubling(value: i64) -> i64 {
             <i64 as Ring>::from_i64(value)
         }

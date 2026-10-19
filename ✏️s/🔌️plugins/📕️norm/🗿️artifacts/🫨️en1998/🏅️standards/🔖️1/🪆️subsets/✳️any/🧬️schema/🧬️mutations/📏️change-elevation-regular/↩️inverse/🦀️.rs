@@ -1,4 +1,4 @@
-//! Inverse for `change-elevation-regular`.
+//! ↩️ Inverse for `change-elevation-regular`.
 use crate::change_elevation_regular::ChangeElevationRegular;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 

@@ -5,15 +5,43 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/**/*",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
     "test-presence": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
@@ -22,9 +50,14 @@
     },
     "test-ownership": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
@@ -33,9 +66,14 @@
     },
     "test-native": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
@@ -44,10 +82,15 @@
     },
     "test-original-receiving-source": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",
@@ -56,10 +99,15 @@
     },
     "test-original-receiving-native": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "dependsOn": [],
       "inputs": [
-        "default"
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain"
       ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust",

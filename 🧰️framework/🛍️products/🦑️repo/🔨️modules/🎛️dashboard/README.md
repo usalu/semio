@@ -10,22 +10,24 @@ argument vector to which the exact ready URL is appended.
 
 ## 🎛️ Developer Control Plane
 
-The dashboard is the only control plane for developers, editors and agents. Everything runnable is a
-registry command (below); the interactive view and the command line start commands the same way,
+The dashboard is the only control plane for human developers. Everything runnable is a
+registry command (below); the interactive view and its native command-line client start commands the same way,
 through the same workspace daemon, so a task started in one is the task the other shows. Choose **New Task**
 to select a declared command, fill its typed form and inspect the preview before starting.
 
-Start with `bun repo run @semio-tech/repo-dashboard-rs:run --output=stream` (the root script is the build runner bootstrap; it runs the installed native
-executable `semio`). Commands, typed parameters, arguments, environment, output, progress and
+Start with `bun run dashboard`; it builds and installs the native executable `semio` when needed.
+Commands, typed parameters, arguments, environment, output, progress and
 cancellation are controlled through the dashboard. No IDE workspace, solution, task, launch or IDE MCP configuration is generated or required.
 Headless agent client files are derived from registered dashboard declarations by
 `workspace:agents-write`. The first start builds and installs the executable once. Installation builds and
 publishes an immutable executable with visible progress and cancellation (`Ctrl+C`), and records beside it
-a digest of the sources it was built from: the names, sizes and modification times of the files below the
+a digest of the sources it was built from: names, filesystem identity, sizes and nanosecond timestamps below the
 dashboard module and the modules of every path dependency of its crate (tests, fixtures, build output and
-`node_modules` excluded), plus `Cargo.toml`, `Cargo.lock` and `rust-toolchain.toml`. Ordinary startup reads
-the small installation record, recomputes that digest (about 20 ms, no file is read) and starts the native
-executable directly, without provisioning tools, hashing the binary or computing a build graph. When the digest
+`node_modules` excluded), plus each dependency's exact Cargo workspace manifest, the selected binary's
+workspace `Cargo.lock`, and root `rust-toolchain.toml` and `.cargo/config.toml`. Inherited dependencies resolve through their actual
+workspace. Ordinary startup reads the small installation record and recomputes the digest from file metadata
+without reading source contents. It verifies and starts the immutable executable under the tooling and
+artifact reader leases; a current installation needs no compilation or build graph. When the digest
 differs, the start first rebuilds and reinstalls with the same visible progress and says why; a failed or
 cancelled rebuild stops the start instead of running an outdated executable, except for the verbs that only observe or
 end what already runs (`tasks`, `logs`, `stop`, `kill`, `open`, `daemon stop`, `daemon status`): a broken working
@@ -61,14 +63,19 @@ an owner target or typed dashboard declaration.
 | Serve and preview | `playground:s`, `os-hub:dev`, `workspace:dev-storybook` or `dev` plus the owner | Choose renderer/example/user slot when offered; wait for readiness, then choose **Open ready address** (`Ctrl+B u`). |
 | Inspect a failure | **Task overview** (`Ctrl+B h`) | Select the task to see its status, exit code and retained output. Restore a hidden output view with `Ctrl+B s`. |
 | Retry or cancel | Selected task menu | **Restart** (`Ctrl+B r`), **Stop** (`Ctrl+B c`) or **Kill** (`Ctrl+B k`) controls the task and descendants. Closing its view keeps it running. |
-| Debug interactively | `@semio-tech/repo-developer-tools:debug` | Check `debuggers` for installed tools, then select Node.js Inspector, Python Pdb, GDB or LLDB, a workspace program, working directory and literal program argument list. Toggle task input with `Ctrl+B t` to set breakpoints and step; stop or restart with the task menu. Node uses a fresh local inspector port. Windows GDB currently accepts ASCII target and working-directory paths; check LLDB installation for Unicode native targets. |
+| Set up native debugging | `@semio-tech/repo-developer-tools:setup-debugger` | **Set Up Native Debugger** verifies LLDB and its Python runtime before installing anything, then repairs the fixed host packages when required. |
+| Debug interactively | `@semio-tech/repo-developer-tools:debug` | Check `debuggers` for installed tools, then select Node.js Inspector, Python Pdb, GDB or LLDB, a workspace program, working directory and literal program argument list. Toggle task input with `Ctrl+B t` to set breakpoints and step; stop or restart with the task menu. Node uses a fresh local inspector port. Windows GDB currently accepts ASCII target and working-directory paths; use verified LLDB for Unicode native targets. |
 | Open code at a line | `@semio-tech/repo-developer-tools:open-source` | Fill in file, optional line and installed editor; edit the source, then return to the task controls. |
 | Inspect repository changes | `@semio-tech/repo-developer-tools:git-status`, `git-diff`, `git-history` | Choose path, change area or revision in the form; staged diffs take one base revision. |
 | Inspect a revision or line history | `@semio-tech/repo-developer-tools:git-show`, `@semio-tech/repo-developer-tools:git-blame` | For Show choose one revision, path and summary/patch view. For Blame choose file, optional revision, starting line and up to 500 lines. |
 | Manage tickets and goals | `repo` plus `ticket`, `goal`, `analyze`, `tree` or `statute` | Select the domain action, fill in its typed parameters and confirm any state-changing action. |
 | Start developer tools | `tool` plus `mcp`, `storybook`, or the tool name | Select the registered tool; readiness and process controls appear in its task. |
-| Run several targets | `tool:workspace/run-targets` | Select target names, project names or patterns, concurrency and cache. |
+| Run several targets | `tool:workspace/run-targets` | Select target names, project names or patterns, concurrency, cache and optional execution-plan preview. |
+| Run a command in projects | `tool:workspace/build-exec` | Select projects and the backend, enter the command words in **Arguments**; **Preview execution plan** prints the per-project plan and runs nothing. `bun-test`, `run-script` and `native-cargo` offer the same choice. |
+| Show or clear the build cache | `tool:workspace/build-cache-status`, `tool:workspace/build-cache-clear` | The backend axis selects Nx or Bazel; status reports directory, files and size, clear removes only that backend's task results. |
 | Run a scoped authored operation | `tool:workspace/run-script` | Search canonical script suggestions and inspect the selected owner and working directory; override the directory when the operation requires it. Put command words in **Arguments**. |
+
+Initial host provisioning installs the fixed native debugger packages. A healthy macOS LLDB needs no additional installation. Later Linux repair requires root or noninteractive `sudo`; machine-wide LLVM on Windows uses the elevated host bootstrap. Setup and debugging retain the dashboard task's output, cancellation and process time limit.
 
 The task overview and context menus offer these controls without memorizing keys.
 Settings (`Ctrl+B p`) changes language, appearance and bindings. English and
@@ -132,7 +139,7 @@ file and never hides a valid command):
   `env` states a relationship between members, for example the hub address a shell joins.
 - `parameters`: a `choice` (one effect per value), a `flag` or a `text`, with `env`, `buildFlags` (before
   `--`, ignored by commands that do not use the build runner) and `args` (after `--`). The global axes live on the root
-  project: `cache`, `test-level`, `dependencies`, `build-mode`, `nextest-output`, `cargo-jobs`,
+  project: `build-tool` (`SEMIO_BUILD_TOOL=nx|bazel`, offered on every verb that runs build tasks, `publish`, `prepare`, `deploy`, `activate` and `serve` included), `cache`, `test-level`, `dependencies`, `build-mode`, `nextest-output`, `cargo-jobs`,
   `build-budget`; `appliesTo.verbs` selects every command with that verb, tools included.
 - `tools`, `compounds` (`stop: "together"`), `groups` (`targets: [..]` over build project patterns).
 - Tokens `{workspace}`, `{port}` and `{<parameter id>}`; literal absolute paths and the runner variables
@@ -379,13 +386,15 @@ termination, singleton enforcement and reattachment: `bun repo run @semio-tech/r
 a new build is published, and the source digest that decides whether an installation is stale (the fixture names the
 files that must and must not change it): choose `@semio-tech/repo-dashboard-rs:test-execution` in New Task.
 
-After installing, set `SEMIO_TEST_CLI` to the printed native executable and run the dashboard
-test target with `--args='-- --include-ignored --nocapture'` to include native startup,
-attach/detach and launcher tests. The launcher test types a search into an actual pseudo-terminal,
-runs the selected command to its exit code and shuts the daemon down with `Ctrl+B Q`. `SEMIO_TEST_BUN` selects the repository-pinned Bun executable;
-`SEMIO_TEST_ARTIFACT_DIR` keeps temporary fixture workspaces in the ticket's generated directory.
-The native regression covers both a wrapper with redirected output and the actual Nx native
-command runner. The test bridge captures its process search path before Cargo adds test DLL paths.
+Choose **New Task** → `@semio-tech/repo-dashboard-rs:test-journeys` for native startup,
+attach/detach and launcher checks, or `@semio-tech/repo-dashboard-rs:test-smoke` for the build
+and service lifecycle. Their owner builds and selects the installed executable automatically.
+The launcher check types a search into an actual pseudo-terminal, runs the selected command
+to its exit code and shuts its isolated daemon down with `Ctrl+B Q`. The native regression
+covers a wrapper with redirected output and the actual Nx native command runner.
+`SEMIO_TEST_ARTIFACT_DIR` keeps temporary fixture workspaces in the ticket's generated directory;
+`SEMIO_TEST_CLI` and `SEMIO_TEST_BUN` are explicit fixture-investigation overrides.
+The test bridge captures its process search path before Cargo adds test DLL paths.
 
 Shared preference and launcher fixtures are checked by Rust, existing Ajv and independent
 JavaScript projections. Native first-frame timing is measured through an actual pseudo-terminal.

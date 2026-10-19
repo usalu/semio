@@ -1,4 +1,4 @@
-//! Direct binary identity for `insert-encryption-dictionary`.
+//! 💾️ Direct binary identity for `insert-encryption-dictionary`.
 
 pub const TAG: u8 = 0;
 pub const BINARY_TAG: u8 = TAG;

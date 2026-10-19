@@ -67,8 +67,6 @@
         let target_node_id = node_b.id.clone();
         let target_port_id = node_b.inputs.first().expect("node b input port").id.clone();
 
-        // 🏃️ Actor A deletes node B; actor B (unaware of the delete) concurrently wires a new edge
-        // to a port on node B — the classic delete/wire race `reconcile` must clean up post-merge.
         store_a.dispatch_apply(vec![workflow::WorkflowMutation::RemoveNode(workflow::RemoveNode { node_id: node_b_id.clone() })], &mut identity).expect("remove node b");
         store_b
             .dispatch_apply(vec![workflow::WorkflowMutation::ConnectPorts(workflow::ConnectPorts {

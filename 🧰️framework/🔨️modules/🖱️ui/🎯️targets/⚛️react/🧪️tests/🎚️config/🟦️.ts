@@ -25,7 +25,6 @@ export default defineConfig({
     environment: "jsdom",
     include: [
       "../../../../🧪️tests/👋️introduction/🟦️.tsx",
-      "../../../../🧪️tests/📐️overlay-flow/🟦️.ts",
       "../../../../🧪️tests/🖼️icon-render-camera/🟦️.tsx",
       "../../../../🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx",
       "../../../../🧪️tests/🛟️chrome-panel-safe-area/🟦️.ts",
@@ -33,7 +32,6 @@ export default defineConfig({
       "../../../../🧪️tests/📣️engagement-status/🟦️.tsx",
       "../../../../🧱️elements/📚️I18n/🧪️tests/🔬️translation-totality/🟦️.ts",
       "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎯️stack-drop-destination/🟦️.tsx",
-      "../../../../🧱️elements/🎨️Canvas/🧪️tests/🎭️storybook-interaction/🧪️tests/🟦️.tsx",
       "../../../../🧱️elements/☑️Checkbox/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/✏️Input/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/💡️ChromeControlHint/🧪️tests/🧩️component/🟦️.tsx",

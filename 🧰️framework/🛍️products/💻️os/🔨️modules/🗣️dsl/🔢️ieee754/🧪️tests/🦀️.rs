@@ -1,5 +1,5 @@
 //! 🔢️ Exact IEEE words across owned DSL, pack and field-width boundaries.
-use semio_framework_os_kernel::os_dsl::self;
+use semio_framework_os_kernel::os_dsl;
 use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;

@@ -7,7 +7,7 @@ where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> where M:crate::os_spr::ColdMutation<P> {
+    pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> where M:semio_framework_os_spr::ColdMutation<P> {
         self.last_retirement_progress = Default::default();
         let maximum_items = grant.maximum_items;
         let maximum_bytes = grant.maximum_copy_bytes;

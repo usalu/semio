@@ -100,7 +100,6 @@ describe("tree helpers", () => {
         expect(emptyMarkup).toContain('data-slot="input-root"');
         expect(emptyMarkup).toContain("opacity:0.6");
         expect(filledMarkup).toContain("opacity:1");
-        // outside Label (not in property value column) — no muted opacity
         expect(standaloneMarkup).not.toContain("opacity:0.6");
       });
   

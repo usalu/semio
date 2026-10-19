@@ -1,16 +1,17 @@
 /** 🔁️ The execution-target retry policy (`🏪️store/👷️worker/🔁️execution-target-retry/🔣️.json`) on its own: which answers are asked
- * again, how often, after which waits, and that a cancel ends the wait at once. The npm `retry` package's exponential schedule
- * (`retry.timeouts`, randomize off) is the independent oracle for every backoff delay. */
+ * again, how often, after which waits, and that a cancel ends the wait at once. The `cockatiel` package's exponential backoff
+ * (`ExponentialBackoff` with the no-jitter generator) is the independent oracle for every backoff delay. */
 import { describe, expect, it } from "vitest";
-import { createRequire } from "node:module";
+import { ExponentialBackoff, noJitterGenerator } from "cockatiel";
 import { EXECUTION_TARGET_RETRY_V1, executionTargetRetryDelayV1, executionTargetRetrySleepV1, executionTargetTransientStatusV1, requestExecutionTargetAssetV1 } from "../../🔨️modules/🏪️store/👷️worker/🔁️execution-target-retry/🟦️.ts";
 
-const retryOracle = createRequire(import.meta.url)("retry") as { timeouts(options: { retries: number; factor: number; minTimeout: number; maxTimeout: number; randomize: boolean }): number[] };
 const policy = EXECUTION_TARGET_RETRY_V1;
 
 describe("🔁️ execution-target retry policy", () => {
-  it("waits exactly the exponential schedule the retry package computes", () => {
-    const oracle = retryOracle.timeouts({ retries: 12, factor: policy.backoffFactor, minTimeout: policy.backoffInitialMs, maxTimeout: policy.backoffMaxMs, randomize: false });
+  it("waits exactly the exponential schedule the cockatiel package computes", () => {
+    expect(policy.backoffFactor).toBe(2);
+    let backoff = new ExponentialBackoff({ generator: noJitterGenerator, initialDelay: policy.backoffInitialMs, maxDelay: policy.backoffMaxMs }).next();
+    const oracle = Array.from({ length: 12 }, () => { const { duration } = backoff; backoff = backoff.next(undefined); return duration; });
     expect(Array.from({ length: 12 }, (_unused, index) => executionTargetRetryDelayV1(index + 1))).toEqual(oracle);
   });
 

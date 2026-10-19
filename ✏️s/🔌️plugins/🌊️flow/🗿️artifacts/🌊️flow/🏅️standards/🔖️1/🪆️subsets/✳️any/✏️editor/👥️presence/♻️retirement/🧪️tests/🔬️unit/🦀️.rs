@@ -8,10 +8,10 @@ use crate::editor::flow::presence::retirement::*;
 use semio_framework_plugin::{ArtifactApp,EditorApp,PluginLifecycleStep};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
-fn presence(value:&serde_json::Value)->FlowPresence{let text=value["unit"].as_str().unwrap().repeat(value["repeat"].as_u64().unwrap() as usize);FlowPresence{preview_off_node_ids:if text.is_empty(){vec![]}else{vec![text]},camera:crate::CameraJson{x:2.0,y:3.0,zoom:4.0}}}
+fn presence(value:&serde_json::Value)->FlowPresence{let text=value["unit"].as_str().unwrap().repeat(value["repeat"].as_u64().unwrap() as usize);FlowPresence{preview_off_node_ids:if text.is_empty(){vec![]}else{vec![text]},camera:semio_framework_artifact_flow_flow::CameraJson{x:2.0,y:3.0,zoom:4.0}}}
 fn original_grant(copy:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}}
 fn decode<T>(grant:RetainedCloneGrant,operation:impl FnOnce(&mut store::NativeSnapshotDecodeOwner<'_,'_>)->T)->T{
- let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut accepted=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(1<<20,&mut accepted);native.install_retirement_recipient(&mut recipient).unwrap();let mut original=store::NativeSnapshotDecodeOwner::new(&mut native,grant);let output=operation(&mut original);assert!(original.progress().fits(grant));drop(original);assert!(!native.has_retirement_owner());drop(native);assert!(!recipient.has_owner());output
+ let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut accepted=|_|true;let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1<<20,&mut accepted);native.install_retirement_recipient(&mut recipient).unwrap();let mut original=store::NativeSnapshotDecodeOwner::new(&mut native,grant);let output=operation(&mut original);assert!(original.progress().fits(grant));drop(original);assert!(!native.has_retirement_owner());drop(native);assert!(!recipient.has_owner());output
 }
 #[test]
 fn flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants(){

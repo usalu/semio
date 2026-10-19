@@ -106,7 +106,7 @@ pub fn decode_stl_binary(bytes: &[u8]) -> Result<StlSnapshot, String> {
             *v = read_vec3(bytes, off);
             off += 12;
         }
-        off += 2; // attribute byte count
+        off += 2;
         triangles.push(StlTriangle { normal, vertices });
     }
     Ok(StlSnapshot { schema: STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name, triangles })
@@ -144,18 +144,8 @@ pub fn encode_stl_binary(snap: &StlSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
     if bytes.len() >= 5 && &bytes[0..5] == b"solid" {
-        // A binary STL's 80-byte header can coincidentally start with "solid" too;
-        // disambiguate by checking whether the binary triangle-count framing actually
-        // matches the file length before trusting the ASCII path.
         if bytes.len() >= 84 {
             let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
-            // 🧨️ CHECKED, and it has to be: `count` is four arbitrary bytes of an ASCII file read as
-            // if they were a binary triangle count, so on `wasm32` — where `usize` is 32 bits —
-            // `count * 50` overflows and PANICS the guest on a perfectly ordinary `.stl`. Measured
-            // live: dropping a 209-byte ASCII STL on the generation3d editor trapped the actor with
-            // `attempt to multiply with overflow`, and the whole plugin instance died with it
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, io-surface lane). An overflow simply means
-            // the framing cannot describe this file, which is the ASCII answer.
             if count.checked_mul(50).and_then(|body| body.checked_add(84)) == Some(bytes.len()) {
                 return decode_stl_binary(bytes);
             }
@@ -189,10 +179,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_TXT || s.dialect == DEP_BINARY)

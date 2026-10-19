@@ -31,9 +31,7 @@ async function ensureKatexMathRenderer(): Promise<void> {
         return katex.default.renderToString(tex, { displayMode, throwOnError: false });
       },
     });
-  } catch {
-    /* fallback renderer stays active */
-  }
+  } catch {}
 }
 
 if (typeof window !== "undefined") void ensureKatexMathRenderer();

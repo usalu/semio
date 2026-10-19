@@ -1,9 +1,9 @@
-import type {TypedOperationDiagnosticFragment,TypedOperationToken} from "../🟦️.ts";
+import type {TypedOperationDiagnosticFragment,TypedOperationToken} from "../🔖️turn-result/🟦️.ts";
 import {decodeJsonSyntaxSegments,type JsonSyntaxControl,type JsonSyntaxNode} from "../../../🎒️pack/🔤️json/📥️decode/🟦️.ts";
-import {JsonMemberPolicy} from "../../../🎒️pack/🔤️json/🧩️members/🟦️.ts";
-import {decodeDiagnosticControlled,type Diagnostic} from "../../../⚠️diagnostic/🎛️controlled/🟦️.ts";
-import type {ValueRefusalCodecControl} from "../../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
-import type {IntrinsicValue,IntrinsicMember} from "../../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
+import {JsonMemberPolicy} from "@semio-tech/framework-pack-json-ts/members";
+import {decodeDiagnosticControlled,type Diagnostic} from "@semio-tech/framework-diagnostic-ts/controlled";
+import type {ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
+import type {IntrinsicValue,IntrinsicMember} from "@semio-tech/value-ts/schema/intrinsic";
 
 /** 🎟️ Syntax and ownership authority are supplied by the exact receiving command. */
 export interface OperationDiagnosticControl {readonly syntax:JsonSyntaxControl;readonly ownership:ValueRefusalCodecControl}

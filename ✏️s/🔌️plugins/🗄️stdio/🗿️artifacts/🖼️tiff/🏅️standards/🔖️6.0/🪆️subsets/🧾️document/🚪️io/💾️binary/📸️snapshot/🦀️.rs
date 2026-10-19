@@ -1,4 +1,4 @@
-//! tiff rep for stdio.tiff 📸️snapshot
+//! 🖼️ tiff rep for stdio.tiff 📸️snapshot
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");

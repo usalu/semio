@@ -39,7 +39,6 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
         },
       },
     }),
-    // 🔒️ A locked theme means no theme editing or saving, so the Settings branch omits that child tab.
     ...(getHost()?.locks.themeId
       ? []
       : [
@@ -68,9 +67,6 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
         },
       },
     }),
-    // 👁️✏️ `PanelTabKind::SettingsDefaultApps` (contract freeze §1/§5) — omitted entirely when the
-    // shell has no default-apps host wired up (e.g. an embedded shell that doesn't own OS commands),
-    // same "undefined getter → tab absent" idiom the theme lock branch above uses.
     ...(getDefaultAppsHost
       ? [
           singleTreeLeaf({
@@ -87,8 +83,6 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
           }),
         ]
       : []),
-    // ⚖️ `Conflicts` tab (contract freeze §C9) — omitted entirely when the shell has no conflicts
-    // host wired up, same "undefined getter → tab absent" idiom `getDefaultAppsHost` uses above.
     ...(getConflictsHost
       ? [
           singleTreeLeaf({

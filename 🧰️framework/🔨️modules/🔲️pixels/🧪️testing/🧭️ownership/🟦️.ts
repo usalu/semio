@@ -16,7 +16,7 @@ export function readPixelsTaskDescriptorV1(value: unknown): PixelsTaskDescriptor
     if (!Array.isArray(paths) || !paths.length || new Set(paths).size !== paths.length) throw Error(`Pixels task ${key} must be unique and nonempty`);
     for (const path of paths) {
       if (typeof path !== "string") throw Error(`Pixels task ${key} must contain paths`);
-      if (key === "inputs" && (path === "default" || path === "^default")) continue;
+      if (key === "inputs" && ["default", "^default", "testEnv", "reads"].includes(path)) continue;
       const root = key === "inputs" ? path.replace(/^\{workspaceRoot\}\//, "") : path;
       if (key === "inputs" && root === path) throw Error("Pixels task inputs must be workspace rooted");
       const prefix = "🧰️framework/🔨️modules/";

@@ -48,9 +48,6 @@ export function meshDataFromKind(kind: string): WorldMeshData {
   const data: WorldMeshData = {
     positions,
     normals: Array.from(geometry.getAttribute("normal").array as ArrayLike<number>),
-    // 🔺️ A non-indexed engine primitive (the polyhedra) still owes this record a triangle list: every
-    // downstream reader gates shaded rendering, face overlays and pick on `indices.length > 0`, and the
-    // Rust generator emits the same trivial sequential run for its own non-indexed triangles.
     indices: index ? Array.from(index.array as ArrayLike<number>) : Array.from({ length: positions.length / 3 }, (_unused, vertex) => vertex),
   };
   geometry.dispose();

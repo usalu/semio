@@ -46,7 +46,6 @@ pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, a
     let inverse = <EnergyModelMutation as protocol::ColdMutation<EnergyModelSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
-    // ↩️ Reversed, as the store replays an inverse (`ArtifactStore::replay_mutations`).
     for step in inverse.iter().rev() {
         let outcome = <EnergyModelMutation as protocol::ColdMutation<EnergyModelSnapshot>>::diff(step, &undone);
         undone = protocol::apply_diff_cold(outcome.diff(), &undone).map_err(|error| error.to_string())?;

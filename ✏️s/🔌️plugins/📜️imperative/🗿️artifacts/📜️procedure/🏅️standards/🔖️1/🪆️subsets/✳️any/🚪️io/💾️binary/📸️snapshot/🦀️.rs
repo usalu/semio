@@ -1,4 +1,4 @@
-//! binary rep for stdio.json 📸️snapshot
+//! 🧱️ binary rep for stdio.json 📸️snapshot
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
@@ -31,7 +31,7 @@ impl ProcedurePackRecord {
             Ok(record.take())
         }))
     }
-    pub(crate) fn into_snapshot_controlled(self, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ProcedureSnapshot, semio_framework_value::ValueError> {
+    pub(crate) fn into_snapshot_controlled(self, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ProcedureSnapshot, semio_framework_value::ValueError> {
         control.checkpoint()?;
         Ok(self.into_snapshot())
     }

@@ -33,7 +33,7 @@ pub trait OwnedSerializerJob: semio_framework_job::InteractiveJob {
 /// 📄️ Original formatter pages and contiguous output close through their genuine typed owners.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct OwnedSerializerOutput {
- pub pages:semio_framework_value::list::PagedList<Vec<u8>,{usize::MAX}>,
+ pub pages:semio_framework_value_persistent::list::PagedList<Vec<u8>,{usize::MAX}>,
  pub contiguous:Vec<u8>,
 }
 impl OwnedSerializerOutput {

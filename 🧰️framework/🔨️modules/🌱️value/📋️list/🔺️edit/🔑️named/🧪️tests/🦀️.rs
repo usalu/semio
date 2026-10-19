@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 use crate::{IndexedOutputCursor,IndexedOutputWork};
 struct Source{keys:[Vec<String>;4],indices:Vec<usize>}
@@ -23,7 +24,7 @@ fn pointers(source:&Source)->Vec<(*const u8,usize)>{source.keys.iter().flat_map(
 /// 🧪️ Original named coordinates, refusals and physical receipts match the neutral binary-identity corpus.
 #[test]
 fn named_edit_plan_matches_portable_keys_and_physical_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔑️named/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for law in fixture["cases"].as_array().unwrap(){
   let source=Source{keys:["base","removed","modified","added"].map(|name|law[name].as_array().unwrap().iter().map(|key|key.as_str().unwrap().to_owned()).collect()),indices:law["indices"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as usize).collect()};
   let original=pointers(&source);let(mut plan,heap)=crate::observe_retirement_allocations(||NamedEditPlan::new(source.shape()));assert_eq!(heap,(0,0));let mut born=0;let mut turns=0;

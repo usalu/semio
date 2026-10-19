@@ -298,7 +298,7 @@ fn forecast(v: &Block2dSnapshot, c: &mut SqliteSnapshotControl<'_>, phase: Sqlit
     c.checkpoint(phase, total, total)?;
     Ok(total)
 }
-fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: usize, native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(),ValueError> {
+fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: usize, native: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(),ValueError> {
     native
         .scoped_stage(|native| -> Result<(), ValueError> {
             let mut total = 5;

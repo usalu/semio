@@ -38,7 +38,7 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMem
             assert!(changed.iter().all(|changed| *changed) || changed.iter().all(|changed| !*changed), "all original child lanes share one visibility decision");
             if parent_touched { assert_eq!(app.stores.store.content_revision_now() != revision, changed[0], "original parent and every child flip together"); }
             if mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck {
-                let mut page = mounted.take_fixture_result_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
+                let mut page = mounted.take_fixture_result_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).unwrap();
                 let bytes = page.bytes().to_vec();
                 let token = page.token;
                 assert!(mounted.take_result_page().is_none());
@@ -47,8 +47,8 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMem
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, token);
                 if page.lane == TypedOperationResultLane::Child { child_page = true; assert!(mounted.owned_child_committed); assert_eq!(app.history.command_log.len(),command_count+1); assert_eq!(app.history.command_log.iter().next_back().unwrap().action_id,"compositeEdit"); }
                 let terminal = matches!(page.lane, TypedOperationResultLane::Terminal | TypedOperationResultLane::Fault);
-                let closed=crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);assert_eq!(closed,token);assert!(mounted.acknowledge_result_page(token).unwrap());
-mounted.close_fixture_original_page(crate::app_testing::artifact_app_laws::fixture_mounted_policy().close);
+                let closed=semio_framework_plugin_testing_laws::artifact_app_laws::close_fixture_result_page(&mut page,semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);assert_eq!(closed,token);assert!(mounted.acknowledge_result_page(token).unwrap());
+mounted.close_fixture_original_page(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close);
                 if terminal { break; }
             }
         }

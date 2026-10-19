@@ -68,17 +68,14 @@ mod native {
     }
 
     impl MonotonicClock {
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn new() -> Self {
             Self { origin: std::time::Instant::now() }
         }
 
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn now_seconds(&self) -> f64 {
             self.origin.elapsed().as_secs_f64()
         }
 
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn instant_at(&self, seconds: f64) -> std::time::Instant {
             self.origin + std::time::Duration::from_secs_f64(seconds.max(0.0))
         }
@@ -137,7 +134,6 @@ mod native {
     }
 
     impl<D: WindowDelegate> NativeHost<D> {
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn new(delegate: D) -> Self {
             Self {
                 window: None,
@@ -152,7 +148,6 @@ mod native {
             }
         }
 
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         fn normalize(&mut self, event: &winit::event::WindowEvent) -> Option<DispatchEvent> {
             use winit::event::{ElementState, TouchPhase, WindowEvent as E};
             match event {
@@ -197,7 +192,6 @@ mod native {
     }
 
     impl<D: WindowDelegate> winit::application::ApplicationHandler<WakeMessage> for NativeHost<D> {
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait; see this file's docstring.
         fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
             if self.window.is_none() {
                 let attributes = winit::window::Window::default_attributes().with_title("semio");
@@ -209,7 +203,6 @@ mod native {
             event_loop.set_control_flow(control_flow_for(self.delegate.scheduler_mut(), &self.clock));
         }
 
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait; see this file's docstring.
         fn window_event(&mut self, event_loop: &winit::event_loop::ActiveEventLoop, window_id: winit::window::WindowId, event: winit::event::WindowEvent) {
             if self.window.as_ref().map(|window| window.id()) != Some(window_id) {
                 return;
@@ -256,7 +249,6 @@ mod native {
             event_loop.set_control_flow(control_flow_for(self.delegate.scheduler_mut(), &self.clock));
         }
 
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait; see this file's docstring.
         fn about_to_wait(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
             let now = self.clock.now_seconds();
             if let Some(reason) = should_request_redraw(self.delegate.scheduler_mut(), now) {
@@ -268,7 +260,6 @@ mod native {
             event_loop.set_control_flow(control_flow_for(self.delegate.scheduler_mut(), &self.clock));
         }
 
-        // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait; see this file's docstring.
         fn user_event(&mut self, event_loop: &winit::event_loop::ActiveEventLoop, _event: WakeMessage) {
             event_loop.set_control_flow(control_flow_for(self.delegate.scheduler_mut(), &self.clock));
         }
@@ -285,7 +276,6 @@ mod native {
     pub struct WakeProxy(winit::event_loop::EventLoopProxy<WakeMessage>);
 
     impl WakeProxy {
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn wake(&self) {
             let _ = self.0.send_event(WakeMessage::Deadline);
         }
@@ -305,7 +295,6 @@ mod native {
             Ok(Self { event_loop: builder.build()? })
         }
 
-        // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         pub fn create_wake_proxy(&self) -> WakeProxy {
             WakeProxy(self.event_loop.create_proxy())
         }

@@ -148,7 +148,7 @@ fn the_wgpu_rotate_ring_publishes_one_rotate_record() {
     let mut host = infinite_canvas::BoardHost::default();
     host.scene.set_size(800, 600, 1.0);
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the ring fixture parses");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the ring fixture parses");
     set_selection_ids_silent(&mut host.scene, &mut host.focus, &mut host.outbox, &["node-a".to_string(), "node-b".to_string()]);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).expect("surface").board_host = Some(ManuallyDrop::new(host)));
     while board_drain_into_buffer(board_id) {}
@@ -198,7 +198,7 @@ fn install_click_board(board_id: &str) -> (f32, f32) {
     let mut host = infinite_canvas::BoardHost::default();
     host.scene.set_size(800, 600, 1.0);
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the click fixture parses");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);infinite_canvas::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&fixture,&mut control)}, "the click fixture parses");
     let at = host.scene.world_to_screen(canvas::Point::new(-40.0, 0.0));
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).expect("surface").board_host = Some(ManuallyDrop::new(host)));
     while board_drain_into_buffer(board_id) {}

@@ -71,7 +71,6 @@ pub struct RetainedStore {
 impl RetainedStore {
     /// 🌱️ Clears the touched-set ahead of a new frame's walk. Existing entries are left in place —
     /// they are proven live only by being touched again before [`Self::end_frame`] runs.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn begin_frame(&mut self) {
         self.touched.clear();
     }
@@ -79,7 +78,6 @@ impl RetainedStore {
     /// 🔍️ Returns `id`'s retained value, creating it from `init` on first sight, and marks `id`
     /// touched this frame. Panics if `id` was already used this frame at a different `T` — a retained
     /// slot's type is part of an element's identity contract and must not change frame to frame.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn get_or_insert_with<T: 'static>(&mut self, id: ElementId, init: impl FnOnce() -> T) -> &mut T {
         self.touched.insert(id);
         let boxed = self.entries.entry(id).or_insert_with(|| Box::new(init()) as Box<dyn Any>);
@@ -88,7 +86,6 @@ impl RetainedStore {
 
     /// 🧹️ Drops every entry whose id was not touched since the last [`Self::begin_frame`] — the
     /// element that owned it no longer exists in this frame's tree.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn end_frame(&mut self) {
         let touched = &self.touched;
         self.entries.retain(|id, _| touched.contains(id));
@@ -119,7 +116,6 @@ pub struct PrepaintCx<'a> {
 impl<'a> PrepaintCx<'a> {
     /// 🌱️ `parent: None` — the first [`Self::register`] call this frame becomes the tree's root (see
     /// [`crate::DispatchTree::insert`]).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(shared: SharedFrameCx<'a>, dispatch: &'a mut crate::DispatchTree, text: &'a mut crate::TextSystem) -> Self {
         Self { shared, dispatch, text, parent: None }
     }
@@ -130,7 +126,6 @@ impl<'a> PrepaintCx<'a> {
     /// directly, instead of a later pass reconstructing them from geometry. Returns the node's
     /// [`crate::FrameNodeId`] so a container can pass it to [`Self::with_children`] to parent its own
     /// children under it.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn register(&mut self, element: ElementId, flags: crate::DispatchFlags, listeners: crate::ListenerSet, hitbox: Option<Hitbox>) -> crate::FrameNodeId {
         self.dispatch.insert(self.parent, element, flags, listeners, hitbox)
     }
@@ -140,7 +135,6 @@ impl<'a> PrepaintCx<'a> {
     /// this around the take→recurse→put_back calls it makes into its children's own `prepaint`, so
     /// every [`Self::register`] a descendant performs during `body` is parented under `node` without
     /// that descendant ever being told its own parent id explicitly.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn with_children(&mut self, node: crate::FrameNodeId, body: impl FnOnce(&mut Self)) {
         let previous = self.parent.replace(node);
         body(self);
@@ -166,13 +160,10 @@ pub trait Element {
     type LayoutState: 'static;
     type PrepaintState: 'static;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn request_layout(&mut self, id: ElementId, cx: &mut crate::layout::LayoutCx<'_>) -> (crate::layout::LayoutNodeId, Self::LayoutState);
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn prepaint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, cx: &mut PrepaintCx<'_>) -> Self::PrepaintState;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn paint(&mut self, id: ElementId, bounds: Bounds, layout: &mut Self::LayoutState, prepaint: &mut Self::PrepaintState, cx: &mut PaintCx<'_>);
 }
 
@@ -233,12 +224,10 @@ pub struct AnyElement {
 }
 
 impl AnyElement {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new<E: Element + 'static>(element: E) -> Self {
         Self { element: Box::new(element), layout_state: None, prepaint_state: None, vtable: ElementVTable { request_layout: request_layout_erased::<E>, prepaint: prepaint_erased::<E>, paint: paint_erased::<E> } }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_layout(&mut self, id: ElementId, cx: &mut crate::layout::LayoutCx<'_>) -> crate::layout::LayoutNodeId {
         let (node, state) = (self.vtable.request_layout)(self.element.as_mut(), id, cx);
         self.layout_state = Some(state);
@@ -246,14 +235,12 @@ impl AnyElement {
         node
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn prepaint(&mut self, id: ElementId, bounds: Bounds, cx: &mut PrepaintCx<'_>) {
         let layout_state = self.layout_state.as_mut().expect("AnyElement::prepaint called before request_layout — phase order violated");
         let prepaint_state = (self.vtable.prepaint)(self.element.as_mut(), id, bounds, layout_state.as_mut(), cx);
         self.prepaint_state = Some(prepaint_state);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn paint(&mut self, id: ElementId, bounds: Bounds, cx: &mut PaintCx<'_>) {
         let layout_state = self.layout_state.as_mut().expect("AnyElement::paint called before request_layout — phase order violated");
         let prepaint_state = self.prepaint_state.as_mut().expect("AnyElement::paint called before prepaint — phase order violated");
@@ -273,7 +260,6 @@ impl FrameArena {
     /// ➕️ Pushes a freshly erased `element` and returns its index. Bump-allocation: append-only,
     /// O(1), no reuse of freed slots within a frame — the whole arena is cleared wholesale by
     /// [`Self::clear`] rather than individual slots being recycled mid-frame.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn alloc<E: Element + 'static>(&mut self, element: E) -> FrameArenaIndex {
         let index = FrameArenaIndex(self.slots.len());
         self.slots.push(Some(AnyElement::new(element)));
@@ -282,14 +268,12 @@ impl FrameArena {
 
     /// 📤️ Takes `index`'s element out, leaving the slot empty. Panics if `index` is already taken
     /// (a bug in the caller's own take/put_back nesting, never a legitimate state).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn take(&mut self, index: FrameArenaIndex) -> AnyElement {
         self.slots[index.0].take().expect("FrameArena::take: slot already taken — unbalanced take/put_back")
     }
 
     /// 📥️ Restores `element` to `index` after a `take`. Panics on a double put-back for the same
     /// reason `take` panics on a double take.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn put_back(&mut self, index: FrameArenaIndex, element: AnyElement) {
         let slot = &mut self.slots[index.0];
         assert!(slot.is_none(), "FrameArena::put_back: slot already occupied — unbalanced take/put_back");
@@ -299,7 +283,6 @@ impl FrameArena {
     /// 🧨️ Drops every element wholesale — called once [`crate::frame::FrameEngine::build_frame`]'s
     /// transaction has extracted everything the presented [`crate::frame::FrameSnapshot`] needs, so
     /// nothing outside this file ever observes an `AnyElement` surviving past its frame.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn clear(&mut self) {
         self.slots.clear();
     }

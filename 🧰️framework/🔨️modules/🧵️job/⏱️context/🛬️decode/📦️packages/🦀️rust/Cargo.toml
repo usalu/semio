@@ -24,5 +24,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 
 [dev-dependencies]

@@ -22,7 +22,6 @@ semio_framework_ui_locale::app_labels! {
         utility_params: native_en "Utility Params", native_de "Werkzeugparameter", reuse_en "Utility Params", reuse_de "Werkzeugparameter";
         window_main: native_en "Model", native_de "Modell", reuse_en "Model", reuse_de "Modell";
         window_uv: native_en "UV", native_de "UV", reuse_en "UV", reuse_de "UV";
-        // inspector field labels
         name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
         smooth_shading: native_en "Smooth Shading", native_de "Weiche Schattierung", reuse_en "Smooth Shading", reuse_de "Weiche Schattierung";
         selection: native_en "Selection", native_de "Auswahl", reuse_en "Selection", reuse_de "Auswahl";
@@ -42,7 +41,6 @@ semio_framework_ui_locale::app_labels! {
         brush_size: native_en "Brush Size", native_de "Pinselgröße", reuse_en "Brush Size", reuse_de "Pinselgröße";
         brush_opacity: native_en "Brush Opacity", native_de "Pinseldeckkraft", reuse_en "Brush Opacity", reuse_de "Pinseldeckkraft";
         brush_hardness: native_en "Brush Hardness", native_de "Pinselhärte", reuse_en "Brush Hardness", reuse_de "Pinselhärte";
-        // engagement + measures
         snap: native_en "Snap", native_de "Einrasten", reuse_en "Snap", reuse_de "Einrasten";
         smooth: native_en "Smooth", native_de "Glätten", reuse_en "Smooth", reuse_de "Glätten";
         show_edges: native_en "Show Edges", native_de "Kanten anzeigen", reuse_en "Show Edges", reuse_de "Kanten anzeigen";

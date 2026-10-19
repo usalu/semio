@@ -366,7 +366,12 @@
         "🧰️kit/🦀️.rs",
         "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
         "✍️artifact-editor/🦀️.rs",
-        "🚀️app-assembly/🦀️.rs"
+        "🚀️app-assembly/🦀️.rs",
+        "🍓️paste-job/🦀️.rs",
+        "🥦️import-job/🦀️.rs",
+        "🌽️command-variants/🦀️.rs",
+        "🍠️play-app/🦀️.rs",
+        "🥐️retained-command-works/🦀️.rs"
       ],
       "groups": [
         {

@@ -205,24 +205,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("wire fixtures", () => {
-      // 🎬️ Shared fixtures: the exact same bytes `store/sync/rs/lib.rs`'s
-      // `wire_fixtures_stay_byte_identical_across_rust_and_ts` test generates and verifies Rust-side
-      // (19 fixtures, one per `ClientFrame`/`ServerFrame` variant plus a `Bootstrap`/`ApplyOutcome`
-      // sub-variant each — see that test's doc). Decoding them here, then re-encoding the decoded
-      // value and diffing against the original bytes, proves the TS codec agrees with
-      // `protocol_wire`'s Rust codec byte-for-byte, not just shape-wise. `diff.payload`/
-      // `inverse.payload` are opaque `DemoOperation::encode_op()` bytes (W5) — this test only checks
-      // they're non-empty and format-tagged (`op_rt::OP_BINARY_FORMAT = 1`), not their semantic
-      // content (decoding a real op needs `DslVariants`, which this TS-only fallback has no twin of).
       it("decodes the Rust-generated binary wire fixtures byte-identically", async () => {
         const { readFileSync } = await import("node:fs");
         const { fileURLToPath } = await import("node:url");
         const { dirname, join } = await import("node:path");
-        // 📦️ Written by `wire_fixtures_stay_byte_identical_across_rust_and_ts` in
-        // `📡️wire/🦀️.rs`, which resolves them as `CARGO_MANIFEST_DIR/../../🧪️tests/🧫️fixtures/wire`
-        // — i.e. beside the os-kernel crate, not under the sync module. The old path here pointed at a
-        // pre-restructure location that no longer exists, so this cross-language byte-identity check had
-        // been silently ENOENT-ing instead of comparing anything.
         const fixturesDir = join(dirname(fileURLToPath(source.url)), "🧪️tests/🧫️fixtures/📡️wire");
   
         function loadClient(name: string) {
@@ -239,7 +225,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
         function assertOpBinaryPayload(payload: readonly number[]) {
           expect(payload.length).toBeGreaterThan(0);
-          expect(payload[0]).toBe(1); // dsl::op_rt::OP_BINARY_FORMAT
+          expect(payload[0]).toBe(1);
         }
   
         const legacyHello = new Uint8Array(readFileSync(join(fixturesDir, "🚫️legacy-client-hello-rejected", "💾️.bin")));
@@ -259,17 +245,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   
         const presence = loadClient("🙋️client-presence/💾️.bin");
         if (typeof presence.frame === "string" || !("Presence" in presence.frame)) throw new Error("expected a Presence frame");
-        // 👥️ The fixture's `peer` bytes ARE a real `encode_presence_peer` blob now (Rust writes
-        // `sample_presence_peer_with_interaction()`), so this decodes them with the TS twin and checks
-        // the fields survive the crossing — the strongest form of this assertion, and the one the old
-        // `JSON.parse` could never make. It read the blob as JSON and would have failed the moment the
-        // fixture became real; it never did, because the fixture path above pointed at a directory that
-        // no longer existed.
-        // 👥️ A REAL `encode_presence_peer` blob (Rust writes `sample_presence_peer_with_interaction()`,
-        // whose own doc says these fixtures exist "so the TS vitest twin exercises every `PresencePeer`
-        // v3 flag bit (§C7.1) with a realistic payload"). Decoding it here proves the scalar fields,
-        // the bit-5 interaction section, the color/surface/views/ui fields all cross the language
-        // boundary, and re-encoding proves it byte-for-byte.
         const peer = decodePresencePeer(new Uint8Array(presence.frame.Presence.peer), [0]);
         expect(peer.actor).toBe("actor-1");
         expect(peer.label).toBe("Ada");
@@ -341,9 +316,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   
         const serverPresence = loadServer("👥️server-presence/💾️.bin");
         if (typeof serverPresence.frame === "string" || !("Presence" in serverPresence.frame)) throw new Error("expected a Presence frame");
-        // 👥️ Two peers, deliberately mixed by the Rust fixture: a plain JSON blob and a real
-        // `encode_presence_peer` payload — so this asserts the frame carries opaque per-peer bytes
-        // through untouched, and that the real one still decodes into the same peer as above.
         expect(serverPresence.frame.Presence.peers).toHaveLength(2);
         expect(JSON.parse(new TextDecoder().decode(new Uint8Array(serverPresence.frame.Presence.peers[0]!)))).toEqual({ id: "a" });
         expect(decodePresencePeer(new Uint8Array(serverPresence.frame.Presence.peers[1]!), [0])).toEqual(peer);

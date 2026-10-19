@@ -11,7 +11,7 @@ import { actionArgRequiresChoice, effectiveActionArgs, invalidActionChoiceArgs, 
 import { dialogChoiceArgs, type DialogChoice, type DialogDefinition } from "../../../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 import { type ActionArgDef } from "../../../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useUiKeybindingsByControlId } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "../💬️Dialog/🟦️.tsx";

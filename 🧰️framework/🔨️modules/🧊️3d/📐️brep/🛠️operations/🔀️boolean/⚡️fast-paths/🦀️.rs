@@ -41,10 +41,6 @@ pub(super) fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId
         return match op {
             BooleanOp::Unite => Ok(Some(copy_solid(body, a, rec)?)),
             BooleanOp::Intersect => Ok(Some(copy_solid(body, b, rec)?)),
-            // 🕳️ A tool that only TOUCHES the target's boundary (a pocket flush with the top and both
-            // sides — process3d's lap joint) is not a void: its coplanar faces must be imprinted and
-            // merged by the general engine. Answering a void shell here read the notch as an enclosed
-            // cavity whose faces were wound outward, and the "cut" ADDED the tool's volume.
             BooleanOp::Cut if solid_strictly_inside(body, b, a, tol)? => {
                 let outer = detached_copy_of_outer_faces(body, a, rec)?;
                 let inner = detached_copy_of_outer_faces(body, b, rec)?;

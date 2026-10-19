@@ -1,6 +1,6 @@
 //! 🛬️ Adjacent GLTF input admission awaits the owning capability baseline.
 use super::*;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::RecordSpecProducer;
 
 /// 📥️ Decodes through a supplied actual schema and typed owner constructor with cumulative settlement.
@@ -8,7 +8,7 @@ pub(super) fn decode(payload:&store::io::IoPayload,spec:RecordSpecProducer,recon
  let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;let length=match payload{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"GLTF native input exceeds file byte limit"))}
  let snapshot=control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();
-    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 
   let result=(||->Result<GltfSnapshot,ValueError>{let spec=spec.decode(native)?;let record=match payload{
    store::io::IoPayload::Binary(bytes)=>{let body=store::semio_format::unwrap_binary_controlled(bytes,"stdio.gltf",store::semio_format::Component::Pack,1,native)?;store::pack_rt::decode_document_controlled(body,&spec,&store::PackDecodeOptions::default(),native).map_err(|error|pack_refusal(error,native))?.0},

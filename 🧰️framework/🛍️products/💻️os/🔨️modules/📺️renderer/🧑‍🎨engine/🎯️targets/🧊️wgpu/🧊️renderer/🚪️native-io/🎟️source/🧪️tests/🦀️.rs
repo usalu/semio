@@ -1,6 +1,8 @@
 //! 🧪️ Actual global native I/O uses the installed original launch owner, fixed slots and the real process worker pool.
 use super::*;
-use crate::{WorldAssetIoAuthority,WorldAssetRequestKind,WorldAssetResponsePage};
+use semio_framework_os_infinite_world_scene::WorldAssetIoAuthority;
+use semio_framework_os_infinite_world_scene::WorldAssetRequestKind;
+use semio_framework_os_infinite_world_scene::WorldAssetResponsePage;
 
 static SOURCE_LAWS:Mutex<()>=Mutex::new(());
 pub(super) fn fixture_guard()->std::sync::MutexGuard<'static,()>{let guard=SOURCE_LAWS.lock().unwrap();install_launch();guard}
@@ -23,7 +25,7 @@ fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact(){
 #[test]
 fn renderer_source_io_contiguous_keeps_one_original_startup_through_all_pages_and_compiler_borrow(){
  let _serial=SOURCE_LAWS.lock().unwrap();install_launch();let path=std::env::temp_dir().join(format!("semio-source-contiguous-{}",std::process::id()));
- for length in[0usize,16385,semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES+1,268435456]{
+ for length in[0usize,16385,semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES+1,268435456]{
   let data:Vec<u8>=(0..length).map(|index|(index%251)as u8).collect();std::fs::write(&path,&data).unwrap();let mut read=read_renderer_source_bytes(&path,268435456);let supplied=drive(&mut read).unwrap();assert_eq!(supplied.bytes(),data.as_slice());let source=supplied.source_identity();let handle=read.open.handle.as_ref().or(read.handle.as_ref());assert!(handle.is_none());let slot=SLOTS.iter().position(|slot|slot.node.lock().unwrap().as_ref().is_some_and(|node|node.bytes_identity==Some(source))).unwrap();let generation=SLOTS[slot].generation.load(Ordering::Acquire);
   wait_until(||with_node(slot,generation,|node|node.invocation.is_none()).unwrap_or(false));assert!(with_node(slot,generation,|node|!node.caller.original_loans_are_returned()&&node.contiguous_extent==Some(length as u64)).unwrap());assert!(!generation_closed(slot,generation));assert_eq!(semio_framework_hash::hash(supplied.bytes()),semio_framework_hash::hash(&data));
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(supplied));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));wait_until(||generation_closed(slot,generation));
@@ -67,11 +69,11 @@ fn generation_closed(slot:usize,generation:u64)->bool{SLOTS[slot].generation.loa
 #[test]
 fn renderer_source_io_global_world_keeps_original_source_until_late_return(){
  let _serial=SOURCE_LAWS.lock().unwrap();install_launch();let law:serde_json::Value=serde_json::from_str(include_str!("../🔣️.json")).unwrap();
- let path=std::env::temp_dir().join(format!("semio-source-world-{}",std::process::id()));let count=2*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES+7;let contents:Vec<u8>=(0..count).map(|index|(index%251)as u8).collect();std::fs::write(&path,&contents).unwrap();
+ let path=std::env::temp_dir().join(format!("semio-source-world-{}",std::process::id()));let count=2*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES+7;let contents:Vec<u8>=(0..count).map(|index|(index%251)as u8).collect();std::fs::write(&path,&contents).unwrap();
  let text=path.to_str().unwrap();let mut open=open_renderer_source_io(RendererIoPath::new([text,"",""]));let mut handle=drive(&mut open).unwrap();let index=handle.slot;let generation=handle.generation;
  let clock=with_node(index,generation,|node|node.caller.original_clock_binding()).unwrap();
  let mut authority=WorldAssetIoAuthority::default();authority.reserve(1,1,WorldAssetRequestKind::Glb,"original-global.glb",count).unwrap();let mut world=authority.take_next().unwrap();let mut source=None;
- for ordinal in [2usize,1,0]{let page={let mut next=handle.next_page();drive(&mut next).unwrap().unwrap()};assert_eq!(page.original_page_index(),ordinal);assert_eq!(*source.get_or_insert(page.source_identity()),page.source_identity());let pointer=page.bytes().as_ptr();let page=WorldAssetResponsePage::try_from_original(page).unwrap();assert_eq!(page.bytes().as_ptr(),pointer);assert_eq!(page.bytes(),&contents[ordinal*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES..((ordinal+1)*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).min(count)]);world.push_page_at(ordinal as u16,page).unwrap();}
+ for ordinal in [2usize,1,0]{let page={let mut next=handle.next_page();drive(&mut next).unwrap().unwrap()};assert_eq!(page.original_page_index(),ordinal);assert_eq!(*source.get_or_insert(page.source_identity()),page.source_identity());let pointer=page.bytes().as_ptr();let page=WorldAssetResponsePage::try_from_original(page).unwrap();assert_eq!(page.bytes().as_ptr(),pointer);assert_eq!(page.bytes(),&contents[ordinal*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES..((ordinal+1)*semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).min(count)]);world.push_page_at(ordinal as u16,page).unwrap();}
  assert!({let mut next=handle.next_page();drive(&mut next).unwrap().is_none()});world.seal().unwrap();drop(handle);
  wait_until(||with_node(index,generation,|node|node.invocation.as_ref().is_some_and(RendererOriginalIoNode::producer_is_empty)).unwrap_or(false));
  assert!(with_node(index,generation,|node|node.caller.original_clock_binding()==clock&&!node.caller.original_loans_are_returned()).unwrap());assert!(!generation_closed(index,generation));

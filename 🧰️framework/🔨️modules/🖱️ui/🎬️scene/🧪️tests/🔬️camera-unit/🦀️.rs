@@ -122,8 +122,6 @@ fn a_projection_frame_reads_reacts_cardinal_half_extent() {
     assert!((framed.zoom - 200.0 / (25.0 * WORLD_PROJECTION_FRAME_PADDING)).abs() < 1e-3, "📐️ React's own chunkkey number, to the digit: {}", framed.zoom);
     assert!((framed.distance - parallel.distance).abs() < 1e-6, "📐️ a parallel frame never dollies");
 
-    // 📐️ The divergence the cardinal rule exists to remove: a box seen down a corner. React frames
-    // it on the isotropic span; the projected screen extent of the same box is strictly smaller.
     let corner = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 1.0, yaw: 0.7, pitch: 0.6, ..OrbitController::default() };
     let (thin_min, thin_max) = ([-8.0_f32, -1.0, -1.0], [8.0_f32, 1.0, 1.0]);
     let isotropic = frame_projection_orbit_to_bounds(&corner, WorldProjectionOrientation::Free, false, thin_min, thin_max, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);

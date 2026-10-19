@@ -3,7 +3,7 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use super::super::{HistoryEdit,HistoryEdits,OriginalHistoryEdits,RetainedHistoryIdDecode};
 use crate::test_retirement::close_original;
 use protocol::{codec::{RetainedWireFieldDecode,RetainedWireByteSource},dictionary::RetainedSourceDictionary};
-use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeAllocation,NativeDecodeAllocationPort,NativeDecodeRetirementRecipient};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeAllocation, native_decoding::NativeDecodeAllocationPort, native_decoding::NativeDecodeRetirementRecipient};
 fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(operation)}
 fn close_original_large_index(original:HistoryEdits,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,maximum_retirement_turns:usize)->(usize,usize){
  let birth=semio_framework_value::owned_retirement_birth_bytes::<HistoryEdits>();assert!(birth<=g.maximum_capacity_bytes);control.charge(birth).unwrap();let(result,born,released)=observe(||semio_framework_value::admit_owned_retirement(original,g));let(mut owner,p)=result.map_err(|(error,_)|error).unwrap();assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));let(mut births,mut releases)=(born,released);

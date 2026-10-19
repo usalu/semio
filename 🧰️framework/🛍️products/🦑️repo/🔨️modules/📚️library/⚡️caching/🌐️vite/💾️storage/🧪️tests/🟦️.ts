@@ -10,7 +10,7 @@ import {withRepositoryCacheStoreV1} from "../../../💾️storage/🔒️enforce
 import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withViteStorageV1,viteStorageLayoutV1,viteWriterResourceV1,withViteArtifactV1} from "../🟦️.ts";
 import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../../../📦️artifacts/🟦️.ts";
-import {compilerStateResourceV1,withCompilerState} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts";
+import {compilerStateResourceV1,withCompilerState} from "@semio-tech/process/compiler-state";
 import {acquireResourceLease} from "@semio-tech/process/leases";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};

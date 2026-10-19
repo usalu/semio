@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { addWorkspaceMembers, hidingExcludePattern, insertBuildOwnerRows, syncBuildOwnerRows, patchCargoLock, patchRouterPackages, workspaceAdmissionProblems } from "../../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
+import { addWorkspaceMembers, hidingExcludePattern, patchCargoLock, patchRouterPackages, workspaceAdmissionProblems } from "../../../🏗️authoring/📦️crate-tree/📝️render/🟦️.ts";
+import { registerBuildOwnerRows, type ArtifactCratePlan } from "../../../🏗️authoring/📦️crate-tree/🟦️.ts";
 import { rewriteCrateAliases, siblingPathCrates } from "../../../🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts";
 import { sharedMountFiles } from "../../../🏗️authoring/📦️crate-tree/🔬️verify/🟦️.ts";
 
@@ -103,26 +104,21 @@ describe("artifact crate carve", () => {
     expect(rewriteCrateAliases("pub use demo_ext as control;\nuse crate as native;\nuse demo_ext::x;", "__c_self", modules)).toBe("pub use crate::__c_demo_ext as control;\nuse crate::__c_self as native;\nuse demo_ext::x;");
   });
 
-  test("registers carved crates as build-owner rows at their byte-order position and never twice", () => {
-    const raw = JSON.stringify({ version: 1, owners: [{ name: "@a/x", root: "x", manifest: "x/p.json", packages: [] }, { name: "demo-a", root: "a/📦️", manifest: "a/📦️/Cargo.toml", packages: [] }, { name: "demo-z", root: "z/📦️", manifest: "z/📦️/Cargo.toml", packages: [] }], catalogProviders: [] }, null, 2) + "\n";
-    const first = insertBuildOwnerRows(raw, [{ name: "demo-m", root: "m/📦️" }, { name: "demo-a", root: "a/📦️" }]);
-    expect(first.added).toEqual(["demo-m"]);
-    expect(JSON.parse(first.text).owners.map((owner: { name: string }) => owner.name)).toEqual(["@a/x", "demo-a", "demo-m", "demo-z"]);
-    expect(JSON.parse(first.text).owners[2].manifest).toBe("m/📦️/Cargo.toml");
-    expect(insertBuildOwnerRows(first.text, [{ name: "demo-m", root: "m/📦️" }]).added).toEqual([]);
-    expect(insertBuildOwnerRows(raw, []).text).toBe(raw);
-  });
-
-  test("renames the owner row of a crate that an earlier carve registered under another name and drops the rows of crates that are gone", () => {
-    const row = (name: string, root: string) => ({ name, root, manifest: `${root}/Cargo.toml`, packages: [] });
-    const raw = JSON.stringify({ version: 1, owners: [row("art-a", "p/a/x"), row("art-old-name", "p/a/b"), row("art-gone", "p/a/gone"), row("art-hand", "p/a/hand"), row("other-gone", "p/q/gone"), row("art-clash", "p/a/clash")] }, null, 2) + "\n";
-    const exists = (root: string): boolean => root === "p/a/hand";
-    const synced = syncBuildOwnerRows(raw, [{ name: "art-new-name", root: "p/a/b" }, { name: "art-c", root: "p/a/c" }, { name: "art-a", root: "p/a/clash" }], { artifactCrate: "art", artifactDir: "p/a", exists });
-    expect(synced.removed).toEqual([{ name: "art-a", root: "p/a/x" }, { name: "art-gone", root: "p/a/gone" }]);
-    expect(synced.renamed).toEqual(["art-new-name", "art-a"]);
-    expect(synced.added).toEqual(["art-c"]);
-    expect(JSON.parse(synced.text).owners.map((owner: { name: string; root: string }) => `${owner.name}@${owner.root}`)).toEqual(["art-c@p/a/c", "art-new-name@p/a/b", "art-hand@p/a/hand", "other-gone@p/q/gone", "art-a@p/a/clash"]);
-    expect(syncBuildOwnerRows(raw, [{ name: "art-new-name", root: "p/a/b" }], undefined, false).renamed).toEqual([]);
+  test("registers carved crates through the owner registry reconciler and lists what a restore needs", () => {
+    const root = mkdtempSync(join(tmpdir(), "carve-owners-"));
+    const write = (path: string, text: string): void => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
+    const row = (name: string, path: string) => ({ name, root: path, manifest: `${path}/Cargo.toml`, packages: [] });
+    try {
+      for (const [path, name] of [["p/a/x", "art-a"], ["p/a/b", "art-new-name"], ["p/a/c", "art-c"], ["p/a/hand", "art-hand"]]) write(`${path}/Cargo.toml`, `[package]\nname = "${name}"\nversion = "0.1.0"\n`);
+      write("📋️build-owners.json", JSON.stringify({ version: 1, owners: [row("art-a", "p/a/x"), row("art-old-name", "p/a/b"), row("art-gone", "p/a/gone"), row("other-gone", "p/q/gone")], catalogProviders: [] }, null, 2) + "\n");
+      const backup = join(root, "backup", "carve");
+      expect(registerBuildOwnerRows(root, { artifactDir: join(root, "p/a") } as ArtifactCratePlan, backup)).toEqual(["art-c", "art-hand"]);
+      const owners = JSON.parse(readFileSync(join(root, "📋️build-owners.json"), "utf8")).owners as { name: string; root: string }[];
+      expect(owners.map((owner) => `${owner.name}@${owner.root}`)).toEqual(["art-a@p/a/x", "art-c@p/a/c", "art-hand@p/a/hand", "art-new-name@p/a/b", "other-gone@p/q/gone"]);
+      expect(JSON.parse(readFileSync(`${backup}-owner-rows.json`, "utf8"))).toEqual(["art-c", "art-hand"]);
+      expect(JSON.parse(readFileSync(`${backup}-owner-rows-changed.json`, "utf8"))).toEqual({ renamed: [{ from: "art-old-name", to: "art-new-name" }], relocated: [], removed: [{ name: "art-gone", root: "p/a/gone", nativeRoots: [] }] });
+      expect(registerBuildOwnerRows(root, { artifactDir: join(root, "p/a") } as ArtifactCratePlan)).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
   test("drops the lock entries of crates an earlier carve produced and no workspace member has any more", () => {

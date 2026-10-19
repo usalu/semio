@@ -34,13 +34,10 @@ pub fn create_flow_app() -> AppDefinition {
         .panel_tab_def(document_panel::definition())
         .panel_tab_def(catalogue_panel::definition())
         .panel_tab_def(inspection_panel::definition())
-        // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
         .mutation("addWidget", LocalizedLabel::native("Add Widget", "Widget hinzufügen"))
         .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
         .action_destructive("removeWidget")
-        // 🌉️ COMPOSITE — plans create-widget then connect-widgets (ticket 26/08/16/…-COMPOSITE-MUTATIONS).
         .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
-        // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
         .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
         .action_destructive("deleteSelection")
         .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
@@ -51,13 +48,8 @@ pub fn create_flow_app() -> AppDefinition {
         .mutation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
         .mutation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
-        // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Mutation) })
         .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
-        // 👁️ Ephemeral view/config actions — mutate config, emit no document operations. Selection/
-        // hover verbs (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
-        // `nodeGraphHover`/`graphPointerDown`) are no longer declared here: framework-owned, injected
-        // via `.interaction(...)` below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         .action_with(ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), ActionKind::View, "hash"))
         .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera") })
@@ -72,7 +64,6 @@ pub fn create_flow_app() -> AppDefinition {
         .action_with(flow_internal_action("replaceImage", LocalizedLabel::native("Replace Image", "Bild ersetzen"), ActionKind::View).with_category("actions"))
         .action_with(flow_internal_action("setCatalogueSections", LocalizedLabel::native("Set Catalogue Sections", "Katalogabschnitte festlegen"), ActionKind::View))
         .action_with(flow_internal_action("toggleExtension", LocalizedLabel::native("Toggle Extension", "Erweiterung umschalten"), ActionKind::View))
-        // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
         .action_args("addWidget", vec![ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
             ActionArgOption::new("inputSlider", LocalizedLabel::native("Slider", "Schieberegler")),
             ActionArgOption::new("inputNote", LocalizedLabel::native("Note", "Notiz")),
@@ -141,22 +132,7 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("setContributions", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
-        // 🕹️ `mod+a`/`escape` are no longer declared here — the framework auto-injects `selectAll`/
-        // `clearSelection` (with these SAME keys) for every app with at least one `.interaction(...)`
-        // domain, see `interaction_action_definitions`.
         .keybinding("delete,backspace", "deleteSelection")
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "graph" domain — node/
-        // edge/handle granularities over the node-graph canvas. `HierarchyProvider::Topology` purely
-        // for `validate_state`'s pruning of deleted widget/synapse ids (see
-        // `FlowPlayApp::interaction_topology`'s doc comment) — the outer widget list has no real
-        // parent/child membership to walk (a `Widget::Cluster`'s own nested `tree` is a private,
-        // self-contained sub-graph, never exposed as top-level "graph" members), so — DIVERGING from
-        // this ticket's headline "flow" example, which describes transitive hover from group-node
-        // membership that the real snapshot model does not have — both hover and selection stay
-        // non-transitive here; a future wave adding real group-node containment to the top-level
-        // widget list should flip both flags. Multi-select via Pick (document tree rows; the node-
-        // graph canvas's own marquee/click wiring is a separate, framework-layer, unmigrated-this-wave
-        // renderer — see `flow_graph_selection_domains`'s doc comment) and Rectangle, all five merges.
         .interaction(InteractionDefinition {
             id: FLOW_INTERACTION_GRAPH.into(),
             label: LocalizedLabel::native("Graph", "Graph"),
@@ -176,15 +152,7 @@ pub fn create_flow_app() -> AppDefinition {
             },
         })
         .window_kind_interactions(FLOW_PLAY_WINDOW_MAIN, vec![InteractionRef::new(FLOW_INTERACTION_GRAPH)])
-        // 🎯️ Flow has no user-visible config defaults to expose, so `config_spec()` stays the trait
-        // default `ConfigSpec::empty()`; declaring it explicitly keeps the typed channel surface
-        // consistent with the sibling apps' convention.
         .config(FlowPlayApp::config_spec())
-        // 🚧️ `.example_source(crate::examples::art_flow_demo::source())` and `.workflow("flow",
-        // "Flow", "graph")` are DROPPED here, not ported: `EditorBuilder` has no such methods
-        // (contract §2.4's `App { definition, examples }` split — `.editor::<E>(def:
-        // AppDefinition)` only takes the definition, so `App.examples` has no carrier through this
-        // builder). See `📓️w2-p5-flow-notes.md` "SDK gaps" for the framework-level finding.
         .action_describe("addWidget", LocalizedLabel::native("Adds a new widget of the given kind (an input such as a slider or note, or an operator, optionally a specific neuron kind) to the flow canvas at x, y.", "Fügt der Flow-Fläche an x, y ein neues Widget der angegebenen Art hinzu (eine Eingabe wie Schieberegler oder Notiz oder einen Operator, optional eine bestimmte Neuronart)."))
         .action_describe("removeWidget", LocalizedLabel::native("Removes one widget by id from the flow graph together with every synapse attached to it.", "Entfernt ein Widget anhand seiner Id samt aller angeschlossenen Synapsen aus dem Flow-Graphen."))
         .action_describe("duplicateWidget", LocalizedLabel::native("Copies one widget by id into a new widget next to it, connected from the original, as one undoable edit; an unknown id is refused.", "Kopiert ein Widget anhand seiner Id in ein neues, vom Original aus verbundenes Widget daneben, als eine rückgängig machbare Änderung; eine unbekannte Id wird abgelehnt."))

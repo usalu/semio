@@ -10,7 +10,7 @@ fn original_frame_outcome_keeps_candidate_and_absent_payload_through_funded_desc
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧵️frame-job/📬️outcome/🔣️.json")).unwrap();
     let grant:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();
     assert_eq!(grant.maximum_copy_bytes,size_of::<Option<FrameDirectives>>());assert_eq!(grant.maximum_copy_bytes,size_of::<FrameDirectives>());
-    let mut caller=crate::fixture_original_turn::FixtureTurnV1::with_identity(grant,OperationId(71),Generation(3));
+    let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::with_identity(grant,OperationId(71),Generation(3));
     let mut job=FrameBuildJob::new(FrameBuildInputs{wheel_zoom_deadline_ms:1.0,now_ms:2.0});let mut receipts=Vec::new();
     for funded in [false,true]{
         let current=RetainedCloneGrant{maximum_items:usize::from(funded),..grant};

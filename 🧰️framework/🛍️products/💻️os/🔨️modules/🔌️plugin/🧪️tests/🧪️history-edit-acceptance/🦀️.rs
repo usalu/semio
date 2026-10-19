@@ -22,6 +22,9 @@ use semio_framework_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
+#[cfg(any(test, feature = "artifact-app-testing"))]
+#[doc(hidden)]
+pub use semio_framework_plugin_decl_surface::{ArtifactEditor as __ArtifactEditor, EditorApp as __EditorApp};
 #[cfg(test)]
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
@@ -122,8 +125,8 @@ macro_rules! history_edit_acceptance_law {
         #[test]
         fn history_edits_end_to_end() {
             let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
-            let examples = <$editor as $crate::ArtifactEditor>::examples();
-            let summary = $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_history_edits_end_to_end::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>(
+            let examples = <$editor as $crate::__ArtifactEditor>::examples();
+            let summary = $crate::block_on_acceptance($crate::assert_history_edits_end_to_end::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
                 $plugin, $manifest, &fixtures, &examples,
             ));
             ::std::println!("[history-edit-acceptance] {summary}");
@@ -134,7 +137,7 @@ macro_rules! history_edit_acceptance_law {
         fn history_edit_inputs_resolve() {
             let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
             let (leaves, withdraw_only) =
-                $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_input_schemas_resolve::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>($plugin, $manifest, &fixtures));
+                $crate::block_on_acceptance($crate::assert_input_schemas_resolve::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>($plugin, $manifest, &fixtures));
             ::std::println!("[history-edit-inputs] {}: {leaves} leaf payload schema(s) resolve, {withdraw_only} withdraw-only leaf(s) not judged", $plugin);
         }
 
@@ -142,8 +145,8 @@ macro_rules! history_edit_acceptance_law {
         #[test]
         fn conflict_history_edits_end_to_end() {
             let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
-            let examples = <$editor as $crate::ArtifactEditor>::examples();
-            let summary = $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_history_conflicts_resolve::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>(
+            let examples = <$editor as $crate::__ArtifactEditor>::examples();
+            let summary = $crate::block_on_acceptance($crate::assert_history_conflicts_resolve::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
                 $plugin, $manifest, &fixtures, &examples,
             ));
             ::std::println!("[history-edit-cascade] {summary}");
@@ -162,8 +165,8 @@ macro_rules! composed_reload_law {
         #[test]
         fn documents_reload_identically() {
             let fixtures = ::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join($fixtures);
-            let examples = <$editor as $crate::ArtifactEditor>::examples();
-            let summary = $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_documents_reload_identically::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>(
+            let examples = <$editor as $crate::__ArtifactEditor>::examples();
+            let summary = $crate::block_on_acceptance($crate::assert_documents_reload_identically::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
                 $plugin, $manifest, &fixtures, &examples,
             ));
             ::std::println!("[documents-reload] {}: {summary}", $plugin);
@@ -180,7 +183,7 @@ macro_rules! composed_child_history_law {
         /// 🍼️ LAW (design §12, §20.15): a child-lane mutation of this editor is edited in history end to end on its member store.
         #[test]
         fn child_history_edits_end_to_end() {
-            let summary = $crate::app::history_edit_acceptance::block_on_acceptance($crate::app::history_edit_acceptance::assert_child_history_edits_end_to_end::<$crate::EditorApp<$editor>, <$editor as $crate::ArtifactEditor>::Members>(
+            let summary = $crate::block_on_acceptance($crate::assert_child_history_edits_end_to_end::<$crate::__EditorApp<$editor>, <$editor as $crate::__ArtifactEditor>::Members>(
                 $plugin, $manifest, &$seed,
             ));
             ::std::println!("[child-history-edit] {summary}");

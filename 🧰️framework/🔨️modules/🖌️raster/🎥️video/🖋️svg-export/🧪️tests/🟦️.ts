@@ -30,8 +30,8 @@ test("SVG video requests match independent Ajv for every portable vector", async
 });
 
 test("actual Chromium frames encode through FFmpeg and preserve output on cancellation", async () => {
-  const root = process.env.SEMIO_TEST_ARTIFACTS_DIR;
-  if (!root) throw new Error("SVG video laws require caller-owned SEMIO_TEST_ARTIFACTS_DIR");
+  const root = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!root) throw new Error("SVG video laws require caller-owned SEMIO_TEST_ARTIFACT_DIR");
   mkdirSync(root, { recursive: true });
   const sandbox = mkdtempSync(join(root, "svg-video-"));
   try {

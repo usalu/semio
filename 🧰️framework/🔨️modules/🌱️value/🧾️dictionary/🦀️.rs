@@ -1,5 +1,6 @@
 //! 🧾️ Configured question values own their question identities and complete intrinsic state.
-use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[path="🪪️native-json/🦀️.rs"]mod literal;
 #[path="🌳️canonical/🦀️.rs"]mod canonical;
 #[cfg(test)]

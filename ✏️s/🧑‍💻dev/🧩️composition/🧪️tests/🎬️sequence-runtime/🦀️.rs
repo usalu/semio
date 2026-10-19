@@ -43,7 +43,7 @@ mod context {
     use semio_s_artifact_stdio_semio::SemioMembers;
     use semio_framework_plugin::artifact_app_laws::{settle_registered_typed_operation, close_registered_fixture_app};
 
-    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    /// 📚️ Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
     pub struct SequenceApp(pub(crate) VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>, pub(crate) semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     impl std::ops::Deref for SequenceApp {
         type Target = VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>;

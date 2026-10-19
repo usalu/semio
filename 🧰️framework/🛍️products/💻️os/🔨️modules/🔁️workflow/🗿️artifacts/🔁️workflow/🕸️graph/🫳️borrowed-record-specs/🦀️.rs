@@ -41,19 +41,19 @@ pub(super) const MEDIA_MULTIPLICITY_LABELS:&[(&str,u32)]=&[("one",0),("many",1)]
 /// 🚫️ Declared-schema refusal of the controlled Workflow lane, typed at its actual failure site.
 pub fn workflow_invalid(message:impl Into<String>)->semio_framework_value::ValueError{semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
-fn workflow_native_field<T:semio_framework_dsl_record::DslField>(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>{
+fn workflow_native_field<T:semio_framework_dsl_record::DslField>(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>{
  let value=record.get(id).unwrap_or(&semio_framework_dsl_record::FieldValue::Absent);let value=control.scoped_stage(|control|{control.begin_stage(0)?;T::from_value_controlled(value,control)})?;control.step()?;Ok(value)
 }
 
-fn workflow_native_optional_field<T:semio_framework_dsl_record::DslField>(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<T>,semio_framework_value::ValueError>{
+fn workflow_native_optional_field<T:semio_framework_dsl_record::DslField>(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Option<T>,semio_framework_value::ValueError>{
  match record.get(id){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>{control.step()?;Ok(None)},Some(_)=>workflow_native_field(record,id,control).map(Some)}
 }
 
-fn workflow_native_enum<T>(record:&semio_framework_dsl_record::RecordValue,id:u16,bind:fn(u32)->Result<T,String>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>{
+fn workflow_native_enum<T>(record:&semio_framework_dsl_record::RecordValue,id:u16,bind:fn(u32)->Result<T,String>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,semio_framework_value::ValueError>{
  control.step()?;match record.get(id){Some(semio_framework_dsl_record::FieldValue::Enum(ordinal))=>bind(*ordinal).map_err(workflow_invalid),_=>Err(workflow_invalid("expected declared workflow enum"))}
 }
 
-fn workflow_native_optional_enum(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<MediaForm>,semio_framework_value::ValueError>{
+fn workflow_native_optional_enum(record:&semio_framework_dsl_record::RecordValue,id:u16,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Option<MediaForm>,semio_framework_value::ValueError>{
  control.step()?;match record.get(id){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(None),Some(semio_framework_dsl_record::FieldValue::Enum(ordinal))=>media_form_from_ordinal(*ordinal).map(Some).map_err(workflow_invalid),_=>Err(workflow_invalid("expected optional workflow media form"))}
 }
 
@@ -75,7 +75,7 @@ pub(super) fn media_contract_to_record_controlled(value:&MediaContract,control:&
  match value.conversion{Some((from,to))=>{record.insert(6,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(from)))?;record.insert(7,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(to)))?;},None=>{record.insert(6,semio_framework_dsl_record::FieldValue::Absent)?;record.insert(7,semio_framework_dsl_record::FieldValue::Absent)?;}}control.step()?;control.step()?;Ok(record.take())})
 }
 
-pub(super) fn media_contract_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<MediaContract,semio_framework_value::ValueError>{
+pub(super) fn media_contract_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<MediaContract,semio_framework_value::ValueError>{
  control.scoped_stage(|control|{control.begin_stage(8)?;let kind_id=workflow_native_field(record,0,control)?;let class=workflow_native_enum(record,1,media_class_from_ordinal,control)?;let form=workflow_native_enum(record,2,media_form_from_ordinal,control)?;
  control.step()?;let kind=match record.get(3){Some(semio_framework_dsl_record::FieldValue::Text(value))=>value.as_str(),_=>return Err(workflow_invalid("expected workflow wire kind"))};let format_kind:Option<String>=workflow_native_optional_field(record,4,control)?;let schema:Option<String>=workflow_native_optional_field(record,5,control)?;
  let wire=match(kind,format_kind,schema){("binary",Some(format_kind),None)=>MediaWireFormat::Binary{format_kind},("document",None,Some(schema))=>MediaWireFormat::Document{schema},("intrinsic",None,Some(schema))=>MediaWireFormat::Intrinsic{schema},_=>return Err(workflow_invalid("invalid workflow wire fields"))};
@@ -86,7 +86,7 @@ pub(super) fn workflow_media_port_to_record_controlled(value:&WorkflowMediaPort,
  control.scoped_stage(|control|{control.begin_stage(9)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(9,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.spec.id,control)?;workflow_native_project(&mut record,2,&value.spec.label,control)?;record.insert(3,semio_framework_dsl_record::FieldValue::Enum(media_port_direction_ordinal(value.spec.direction)))?;control.step()?;record.insert(4,semio_framework_dsl_record::FieldValue::Enum(media_class_ordinal(value.spec.media_type.class)))?;control.step()?;record.insert(5,semio_framework_dsl_record::FieldValue::Enum(media_form_ordinal(value.spec.media_type.form)))?;control.step()?;workflow_native_project_optional(&mut record,6,&value.spec.kind_id,control)?;workflow_native_project(&mut record,7,&value.spec.required,control)?;record.insert(8,semio_framework_dsl_record::FieldValue::Enum(port_multiplicity_ordinal(value.spec.multiplicity)))?;control.step()?;Ok(record.take())})
 }
 
-pub(super) fn workflow_media_port_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<WorkflowMediaPort,semio_framework_value::ValueError>{
+pub(super) fn workflow_media_port_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<WorkflowMediaPort,semio_framework_value::ValueError>{
  control.scoped_stage(|control|{control.begin_stage(9)?;let id=workflow_native_field(record,0,control)?;let port_id=workflow_native_field(record,1,control)?;let label=workflow_native_field(record,2,control)?;let direction=workflow_native_enum(record,3,media_port_direction_from_ordinal,control)?;let class=workflow_native_enum(record,4,media_class_from_ordinal,control)?;let form=workflow_native_enum(record,5,media_form_from_ordinal,control)?;let kind_id=workflow_native_optional_field(record,6,control)?;let required=workflow_native_field(record,7,control)?;let multiplicity=workflow_native_enum(record,8,port_multiplicity_from_ordinal,control)?;Ok(WorkflowMediaPort{id,spec:MediaPortSpec{id:port_id,label,direction,media_type:MediaType{class,form},kind_id,required,multiplicity}})})
 }
 
@@ -94,7 +94,7 @@ pub(super) fn workflow_input_to_record_controlled(value:&WorkflowInput,control:&
  control.scoped_stage(|control|{control.begin_stage(5)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(5,control)?;workflow_native_project(&mut record,0,&value.id,control)?;workflow_native_project(&mut record,1,&value.kind_id,control)?;workflow_native_project(&mut record,2,&value.selector,control)?;workflow_native_project(&mut record,3,&value.required,control)?;record.insert(4,semio_framework_dsl_record::FieldValue::Enum(port_multiplicity_ordinal(value.multiplicity)))?;control.step()?;Ok(record.take())})
 }
 
-pub(super) fn workflow_input_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<WorkflowInput,semio_framework_value::ValueError>{
+pub(super) fn workflow_input_from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<WorkflowInput,semio_framework_value::ValueError>{
  control.scoped_stage(|control|{control.begin_stage(5)?;let id=workflow_native_field(record,0,control)?;let kind_id=workflow_native_field(record,1,control)?;let selector=workflow_native_field(record,2,control)?;let required=workflow_native_field(record,3,control)?;let multiplicity=workflow_native_enum(record,4,port_multiplicity_from_ordinal,control)?;Ok(WorkflowInput{id,kind_id,selector,required,multiplicity})})
 }
 //#endregion 🔖️MediaContractDsl

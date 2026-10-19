@@ -58,11 +58,6 @@ pub struct WindowLayoutStackNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub size: Option<f64>,
-    // ⚠️ `alias = "activeId"` is deliberately NOT mirrored into `#[value(...)]` — the
-    // first-party derive (`🌱️value/✨️derive`) has no `alias` attribute (see its module
-    // docstring's supported-attribute list) and an unrecognized key is a hard compile error.
-    // `ToValue`/`FromValue` round-trips on the canonical `activeWindowKindId` key only; the
-    // serde path keeps accepting the legacy `activeId` alias unchanged.
     #[serde(skip_serializing_if = "Option::is_none", alias = "activeId")]
     #[value(skip_serializing_if = "Option::is_none")]
     pub active_window_kind_id: Option<String>,

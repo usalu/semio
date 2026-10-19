@@ -23,8 +23,6 @@ fn version_of(path: &str) -> Result<&'static str, String> {
     let mut decoder = StreamingDecoder::new();
     let mut sink = gif::streaming_decoder::OutputBuffer::None;
     let mut offset = 0usize;
-    // 🔁️The header is the first thing the state machine consumes; a handful of updates settles it, and
-    // the loop is bounded so a malformed file cannot spin here.
     while offset < bytes.len().min(64) {
         let (consumed, _) = decoder.update(&bytes[offset..], &mut sink).map_err(|e| e.to_string())?;
         if consumed == 0 {
@@ -44,10 +42,6 @@ fn project(path: &str) -> Result<String, String> {
     options.set_color_output(gif::ColorOutput::Indexed);
     let mut decoder = options.read_info(file).map_err(|e| e.to_string())?;
 
-    // 📖️The VERSION comes from `gif`'s own header parser, not from us reading six bytes. The high-level
-    // `Decoder` does not expose it, so this uses the crate's documented low-level entry point
-    // (`gif::streaming_decoder::StreamingDecoder`, re-exported for exactly this kind of question) and
-    // drives it far enough to have parsed the header. Still the library's reading, not ours.
     let version = version_of(path)?;
     let width = decoder.width();
     let height = decoder.height();

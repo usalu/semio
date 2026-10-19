@@ -14,13 +14,24 @@ use protocol::Mutation;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 
-use rename_generation::RenameGeneration;
+use semio_s_artifact_procedural_3d_editor_commands::rename_generation::RenameGeneration;
 use update_camera::UpdateCamera;
 use update_synapse::UpdateSynapse;
 use update_widget::UpdateWidget;
 use semio_s_artifact_procedural_3d_mutations::generation3d_selection_removal;
 use semio_s_artifact_procedural_3d_mutations::generation3d_widget_removal;
 use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_document::change_schema;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::create_widget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::delete_widget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::delete_widget_position;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::move_widget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_document::update_camera;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_synapses::update_synapse;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::update_widget;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_synapses::connect_synapse;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mut_synapses::disconnect_synapse;
+#[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutation) -> semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead {
     let mut forward = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(projection.clone());

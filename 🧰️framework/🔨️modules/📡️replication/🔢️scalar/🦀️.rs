@@ -39,8 +39,6 @@ pub fn write_timestamp(out: &mut ByteWriter, raw: &str, prev_epoch_ms: Option<i6
             Some(epoch_ms)
         }
         None => {
-            // Tag 1 stores an unsigned varint; a pre-1970 timestamp with no prior delta base
-            // has no lossless absolute encoding here, so it falls back to raw text.
             write_raw_timestamp(out, raw);
             None
         }

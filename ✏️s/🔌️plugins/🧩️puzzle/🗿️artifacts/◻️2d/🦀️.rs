@@ -28,7 +28,7 @@ pub use semio_s_plugin_puzzle_retained as retained_command;
 
 #[cfg(test)]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
-    ("puzzle2d", "board.ports.directed.v1", editor::puzzle2d::PUZZLE2D_RETAINED_TOOL_IDS, fixture_text!("@fixtures/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
+    ("puzzle2d", "board.ports.directed.v1", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_RETAINED_TOOL_IDS, fixture_text!("@fixtures/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
 //#region 🔖️Document
@@ -511,10 +511,10 @@ pub mod editor {
 
         #[path = "."]
         pub mod panels {
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::catalogue;
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::artifact;
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::inspection;
-            pub use semio_s_artifact_puzzle_2d_retained::editor::puzzle2d::panels::settings;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::catalogue;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::artifact;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::inspection;
+            pub use semio_s_artifact_puzzle_2d_retained_panels::editor::puzzle2d::panels::settings;
         }
 
         #[path = "."]

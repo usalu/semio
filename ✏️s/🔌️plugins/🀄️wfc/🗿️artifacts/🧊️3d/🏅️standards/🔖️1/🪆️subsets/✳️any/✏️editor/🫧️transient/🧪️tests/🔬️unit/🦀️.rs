@@ -1,4 +1,4 @@
-//! ️ The app transient — the solve lane, and the law that abort does not invent a solve.
+//! 📱️ The app transient — the solve lane, and the law that abort does not invent a solve.
 
 use crate::editor::wfc3d::transient::{assigned_tile, solved_transient, SetSolve, Wfc3dAssignment, Wfc3dTransient, Wfc3dTransientMutation};
 

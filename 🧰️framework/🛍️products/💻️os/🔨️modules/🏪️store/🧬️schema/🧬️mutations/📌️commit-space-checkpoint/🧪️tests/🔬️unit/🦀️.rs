@@ -1,5 +1,5 @@
-use crate::os_spr::ColdMutationKind;
-use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
+use semio_framework_os_spr::ColdMutationKind;
+use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::*;
 use semio_framework_os_spr::{MutationKind, MutationLeaf};
 #[test]
@@ -11,7 +11,7 @@ fn metadata_and_diff_are_leaf_owned() {
 }
 
 fn checkpoint(id: &str) -> SpaceCheckpoint {
-    SpaceCheckpoint { id: id.into(), parent_id: None, message: id.into(), authors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(0, 1), members: Vec::new() }
+    SpaceCheckpoint { id: id.into(), parent_id: None, message: id.into(), authors: Vec::new(), timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(0, 1), members: Vec::new() }
 }
 
 /// ➕️ L3: appending, inserting first, in the middle and at the end of three checkpoints (and into an empty history) sums to the negative diff.
@@ -19,9 +19,9 @@ fn checkpoint(id: &str) -> SpaceCheckpoint {
 async fn inverse_diffs_sum_to_the_negative_diff() {
     let base = SpaceHistorySnapshot { checkpoints: vec![checkpoint("a"), checkpoint("b"), checkpoint("c")], ..Default::default() };
     for index in [None, Some(0), Some(1), Some(3)] {
-        crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint("n"), index }), &base).await;
+        semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint("n"), index }), &base).await;
     }
-    crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint("n"), index: None }), &SpaceHistorySnapshot::default()).await;
+    semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint("n"), index: None }), &SpaceHistorySnapshot::default()).await;
 }
 
 #[test]

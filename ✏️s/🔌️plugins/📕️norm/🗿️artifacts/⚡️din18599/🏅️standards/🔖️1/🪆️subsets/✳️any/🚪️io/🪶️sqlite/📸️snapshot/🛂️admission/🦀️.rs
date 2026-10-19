@@ -1,7 +1,7 @@
 //! ⚡️ Borrowed building, climate and actual child-reference cells before typed ownership.
 use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::{RecordValue as R,FieldValue as F};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_norm_contract::sqlite_native as n;
 use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn plant(root:&R)->Result<Option<&R>,ValueError>{let cooling=n::record(n::field(root,14)?)?;match n::field(cooling,0)?{F::Absent=>Ok(None),value=>n::record(value).map(Some)}}

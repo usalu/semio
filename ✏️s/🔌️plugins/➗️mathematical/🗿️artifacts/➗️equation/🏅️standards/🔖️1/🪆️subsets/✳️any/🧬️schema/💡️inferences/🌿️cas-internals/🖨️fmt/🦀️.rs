@@ -133,8 +133,6 @@ fn extract_negation(term: &Expr) -> (bool, Expr) {
 }
 
 fn write_mul(factors: &[Expr], out: &mut String) {
-    // Recover a/b: a Pow(base, negative-exponent) factor becomes the denominator, and a Rational
-    // numeric coefficient splits into a numerator/denominator pair rather than printing "1/2*x".
     let mut numer: Vec<Expr> = Vec::new();
     let mut denom: Vec<Expr> = Vec::new();
     for f in factors {

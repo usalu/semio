@@ -1,5 +1,5 @@
 import { TYPED_OPERATION_DIAGNOSTIC } from "../📬️typed-result/🟦️.ts";
-import type { Diagnostic as OwnedOperationDiagnostic } from "../../../../../../../../🔨️modules/⚠️diagnostic/🎛️controlled/🟦️.ts";
+import type { Diagnostic as OwnedOperationDiagnostic } from "@semio-tech/framework-diagnostic-ts/controlled";
 /** 📥️ Invocation reassembly: command inspection, `performInvocation`, `invocationFromFrames`, context-menu calls and the guest-ingress generation counter.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -184,9 +184,6 @@ export function invocationFromFrames(frames: readonly AppFrameValue[], leftover:
       const decodedHistoryPatch = decodePackWire(new Uint8Array(frame.Invocation.history_patch), "$.historyPatch");
       historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
     }
-    // 🧾️ Per-field, like every carrier above it: a reserved tool job's completion frame carries no
-    // mutations, and folding it wholesale blanked the admission's own (`wgpuInvocationFromFrames`,
-    // `🐚️plugin-bridge.ts`, states the same rule for the other target).
     if (frame.Invocation.mutations.length || frame.Invocation.inverse_group.length) ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame.Invocation));
   };
   for (const frame of frames) {

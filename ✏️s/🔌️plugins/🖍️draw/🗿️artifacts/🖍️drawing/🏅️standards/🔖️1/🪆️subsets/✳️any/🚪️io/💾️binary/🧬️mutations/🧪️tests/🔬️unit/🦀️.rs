@@ -18,7 +18,7 @@ async fn document_text_round_trips_a_store_with_an_applied_operation() {
     let initial = default_drawing_document("doc-text-test", None);
     let envelope = store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut doc_store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
+    doc_store.install_document_store_owners_exact(::semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
     let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
@@ -40,7 +40,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     let initial = default_drawing_document("doc-text-test", None);
     let envelope = store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut doc_store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
+    doc_store.install_document_store_owners_exact(::semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners().expect("funded bounded document owners"));
     let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
     doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");

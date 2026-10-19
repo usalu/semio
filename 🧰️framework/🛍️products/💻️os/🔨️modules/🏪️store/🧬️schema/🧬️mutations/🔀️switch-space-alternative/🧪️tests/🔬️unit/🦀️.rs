@@ -1,4 +1,4 @@
-use crate::os_spr::ColdMutationKind;
+use semio_framework_os_spr::ColdMutationKind;
 use super::*;
 use semio_framework_os_spr::{MutationKind, MutationLeaf};
 #[test]
@@ -19,7 +19,7 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
     for active in [None, Some("a".to_string())] {
         let base = SpaceHistorySnapshot { alternatives: vec![alternative("a"), alternative("b")], active_alternative_id: active, ..Default::default() };
         for target in ["a", "b"] {
-            crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: target.into() }), &base).await;
+            semio_framework_os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: target.into() }), &base).await;
         }
     }
 }

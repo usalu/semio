@@ -3,10 +3,6 @@
 use super::*;
 
 //#region 🔖️Contract
-pub(super) const SESSION_MAXIMUM_ITEMS: usize = SESSION_MAXIMUM_INPUT_ITEMS + MountedProcessOwnerCatalog::fixed().items() + MountedProcessOwnerCatalog::fixed().roots();
-
-pub(super) const SESSION_MAXIMUM_BYTES: usize = SESSION_MAXIMUM_INPUT_BYTES + MountedProcessOwnerCatalog::fixed().roots() * SESSION_OWNER_PAGE_BYTES;
-
 pub(super) fn bounded_string_capacities(owners: &[&String]) -> Result<usize, &'static [u8]> {
     owners.iter().try_fold(0usize, |total, owner| {
         if owner.capacity() > SESSION_MAXIMUM_STRING_BYTES {

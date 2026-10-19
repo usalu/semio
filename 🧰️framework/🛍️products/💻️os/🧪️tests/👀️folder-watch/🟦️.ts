@@ -13,10 +13,6 @@ export async function registerFolderWatchTests(vitest: Vitest, dependencies: Bac
   const { resetWorkerLaw } = workerLawFakesV1(vitest, dependencies, source);
   const { installStreamMuxEndpoint, openArtifact, artifactState, closeArtifact, SANITY_POLL_MIN_MS } = dependencies;
   //#region 🔖️OfflineResilienceTests
-  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone) findings 1/2/3/5: stream-primary folder
-  // watch (`backbone.folder` on the page's stream channel) with a suppressed sanity-poll fallback, abort-on-close,
-  // and the bounded lossless mutation outbox. No real sleeps — `vi.useFakeTimers()` drives every
-  // timer-dependent assertion, and every fetch/socket/stream is a controllable local fake.
   describe("backbone-worker offline resilience", () => {
 
     beforeEach(resetWorkerLaw);
@@ -48,8 +44,6 @@ export async function registerFolderWatchTests(vitest: Vitest, dependencies: Bac
     it("poll never overlaps itself: concurrent revalidateFolder() calls collapse into one coalesced follow-up", async () => {
       installStreamMuxEndpoint(new FakeStreamEndpoint());
       let fetchCalls = 0;
-      // 🚪️ Gated rather than immediately resolved — the whole point of this test is to fire more
-      // calls WHILE one is still in flight, so the fetch must stay pending until we say so.
       const gates: Array<() => void> = [];
       const originalFetch = globalThis.fetch;
       (globalThis as unknown as { fetch: unknown }).fetch = async () => {
@@ -61,22 +55,20 @@ export async function registerFolderWatchTests(vitest: Vitest, dependencies: Bac
       try {
         openArtifact(folderOnlyConfig("doc-overlap"));
         const state = artifactState("doc-overlap")!;
-        await flushMicrotasks(); // let watchFolder's bootstrap read actually START (not settle — it's gated).
+        await flushMicrotasks();
         expect(fetchCalls).toBe(1);
 
-        // 🥇️ Three callers race a revalidate while the bootstrap read is still stuck at its gate —
-        // `latestWins` must coalesce all three into exactly ONE queued follow-up, never three reruns.
         const call2 = state.revalidateFolder();
         const call3 = state.revalidateFolder();
         const call4 = state.revalidateFolder();
         await flushMicrotasks();
-        expect(fetchCalls).toBe(1); // nothing new launched synchronously — still just the bootstrap.
+        expect(fetchCalls).toBe(1);
 
-        gates.shift()!(); // let the bootstrap call resolve, which launches the coalesced follow-up.
+        gates.shift()!();
         await flushMicrotasks();
-        expect(fetchCalls).toBe(2); // exactly one follow-up — never a separate rerun per caller.
+        expect(fetchCalls).toBe(2);
 
-        gates.shift()!(); // let the follow-up resolve so call2/call3/call4 all settle.
+        gates.shift()!();
         await Promise.all([call2, call3, call4]);
         expect(fetchCalls).toBe(2);
       } finally {
@@ -165,7 +157,7 @@ export async function registerFolderWatchTests(vitest: Vitest, dependencies: Bac
       const originalFetch = globalThis.fetch;
       (globalThis as unknown as { fetch: unknown }).fetch = (_url: string, init?: RequestInit) => {
         capturedSignal = init?.signal ?? undefined;
-        return new Promise(() => {}); // never settles — only `closeArtifact` can end this.
+        return new Promise(() => {});
       };
       installStreamMuxEndpoint(null);
 

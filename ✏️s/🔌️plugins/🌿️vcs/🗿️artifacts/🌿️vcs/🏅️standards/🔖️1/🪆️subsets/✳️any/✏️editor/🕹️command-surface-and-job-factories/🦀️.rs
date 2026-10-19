@@ -81,7 +81,6 @@ fn vcs_resumable_contract() -> ToolExecutionContract {
 pub fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
         VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
-        // 🧵️ A batched move carries `samples.len()` pairs of f64 (design L4) — priced, never dropped.
         VcsCommand::CanvasPointerMove(payload) => payload.samples.len().checked_mul(2 * size_of::<f64>())?,
         VcsCommand::RenameVcs(payload) => payload.title.len(),
         VcsCommand::ChangeCounter(_) => 0,

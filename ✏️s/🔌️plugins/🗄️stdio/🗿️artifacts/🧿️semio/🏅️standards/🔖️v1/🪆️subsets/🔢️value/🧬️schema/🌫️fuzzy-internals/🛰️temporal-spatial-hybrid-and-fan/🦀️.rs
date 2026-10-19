@@ -12,13 +12,11 @@ pub struct TemporalEvaluator {
 }
 
 impl TemporalEvaluator {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn recently(&self, timestamp: f64) -> f64 {
         let dt = (self.now - timestamp).max(0.0);
         clamp01(1.0 - dt / self.recent_window.max(1e-6))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn frequently(&self, timestamps: &[f64]) -> f64 {
         let count = timestamps.iter().filter(|t| (self.now - **t).abs() <= self.frequent_window).count() as f64;
         clamp01(count / 5.0)
@@ -33,13 +31,11 @@ pub struct SpatialEvaluator {
 }
 
 impl SpatialEvaluator {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn near(&self, point: &[f64]) -> f64 {
         let dist2: f64 = self.anchor.iter().zip(point.iter()).map(|(a, p)| (a - p).powi(2)).sum();
         clamp01(1.0 - dist2.sqrt() / self.near_radius.max(1e-6))
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn slowly(&self, velocity: f64, max_speed: f64) -> f64 {
         clamp01(1.0 - velocity.abs() / max_speed.max(1e-6))
     }
@@ -78,7 +74,6 @@ pub struct FanController {
 }
 
 impl FanController {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_sensor_data(temps: &[f64], fan_speeds: &[f64]) -> FuzzyResult<Self> {
         let t_min = temps.iter().copied().fold(f64::INFINITY, f64::min);
         let t_max = temps.iter().copied().fold(f64::NEG_INFINITY, f64::max);
@@ -107,7 +102,6 @@ impl FanController {
         Ok(Self { temperature_var, speed_var, sensor_uncertainty, evolving })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn decide(&mut self, temperature: f64) -> FuzzyResult<(f64, Explanation)> {
         let (lo, hi) = self.sensor_uncertainty.grade_interval(temperature);
         let adjusted = 0.5 * (temperature + self.sensor_uncertainty.type_reduced_centroid(&[lo, temperature, hi]));

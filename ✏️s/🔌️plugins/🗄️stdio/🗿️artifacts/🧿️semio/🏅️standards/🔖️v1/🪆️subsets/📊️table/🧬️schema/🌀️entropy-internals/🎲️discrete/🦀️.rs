@@ -161,8 +161,6 @@ pub fn sharma_mittal_entropy(p: &[f64], alpha: f64, beta: f64) -> Result<f64, En
 /// defined for `kappa` in `(-1, 1) \ {0}`; the `kappa -> 0` limit is Shannon entropy in nats.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub fn kaniadakis_entropy(p: &[f64], kappa: f64) -> Result<f64, EntropyError> {
-    // 🔐️ `kappa.is_nan()` is explicit here (rather than relying on `!(kappa.abs() < 1.0)`'s
-    // NaN-through-negation behavior) so a NaN input is rejected exactly as before.
     if kappa.is_nan() || kappa.abs() >= 1.0 {
         return Err(EntropyError::InvalidConfig { field: "kappa", reason: "must satisfy |kappa| < 1" });
     }

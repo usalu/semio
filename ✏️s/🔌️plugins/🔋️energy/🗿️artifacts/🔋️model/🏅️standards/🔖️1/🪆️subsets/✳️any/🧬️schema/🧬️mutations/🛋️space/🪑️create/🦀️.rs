@@ -28,6 +28,7 @@ impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateSpace
 where
     Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateSpace> + From<crate::DeleteSpace>,
 {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "space", kind: "create-space", record: "CreatedSpace" };
 
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -49,7 +50,6 @@ where
 
 
 
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "space", kind: "create-space", record: "CreatedSpace" };
 
 
     fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

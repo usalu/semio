@@ -37,14 +37,10 @@ fn derive_real_world_fixture() {
     let mut out_path = repo_root.clone();
     out_path.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧫️fixtures/🖼️abbau-aufbau-masterarbeit-grundriss.tiff");
 
-    // IFD 0: the real 500 DPI scan, RGB8, via the registered `image` reference encoder.
     let photo = image::open(&jpeg_path).expect("open real JPEG scan").to_rgb8();
     assert_eq!((photo.width(), photo.height()), (2275, 2560), "source scan dimensions moved — re-check the ticket's own numbers");
     let ifd0 = ifd0_from_image_encoder(photo.clone());
 
-    // IFD 1: the real second page — genuine decoded+downsampled pixels of the rathaus PNG,
-    // decoded with the registered `png` reference decoder (independent of `image`, which has
-    // no PNG feature linked in this crate) then downsampled with `image`'s own generic resize.
     let png_bytes = std::fs::read(&png_path).expect("read real PNG floor plan");
     let mut png_reader = png::Decoder::new(std::io::Cursor::new(&png_bytes)).read_info().expect("png: read_info");
     let mut buf = vec![0u8; png_reader.output_buffer_size().unwrap_or(0)];
@@ -76,8 +72,6 @@ fn derive_real_world_fixture() {
     let doc = OracleDoc { little_endian: true, ifds: vec![ifd0, ifd1] };
     let bytes = write_tiff(&doc);
 
-    // Prove the spliced file is genuinely readable back — both by this module's own
-    // independent reader AND by the registered `image` decoder (IFD 0 only, its own scope).
     let reparsed = read_tiff(&bytes).expect("re-parse the derived multi-IFD fixture");
     assert_eq!(reparsed.ifds.len(), 2, "derived fixture must carry exactly two real IFDs");
     let (w, h, _) = decode_raster(&reparsed.ifds[0]).expect("decode IFD 0 raster");
@@ -88,10 +82,6 @@ fn derive_real_world_fixture() {
     std::fs::write(&out_path, &bytes).expect("write committed shared:// fixture");
     eprintln!("wrote {} ({} bytes)", out_path.display(), bytes.len());
 
-    // A SMALL real thumbnail (8x8, genuine decoded+downsampled rathaus pixels — not
-    // synthetic) reused inline as `insert-ifd`'s real embedded-IFD content in
-    // the feature file's Examples table: printed as hex here rather than committed, since it's
-    // small enough to live directly in the feature text (192 bytes = 384 hex chars).
     let tiny = image::imageops::thumbnail(&full, 8, 8);
     let tiny_rgb = image::DynamicImage::ImageRgba8(tiny).to_rgb8();
     let tiny_hex: String = tiny_rgb.as_raw().iter().map(|b| format!("{b:02x}")).collect();

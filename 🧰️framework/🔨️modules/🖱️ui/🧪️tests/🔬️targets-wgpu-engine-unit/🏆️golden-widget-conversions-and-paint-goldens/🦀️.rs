@@ -51,21 +51,11 @@ fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         }
         UiNode::Group(group) => WidgetNode::Group { id: group.id.clone(), label: group.label.to_string(), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
         UiNode::Tree(tree) => WidgetNode::Tree {
-            // 🧭️ Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
-            // full signal from `item.presence` — the tree-level id lists are gone, not re-derived.
             sections: tree.sections.iter().map(tree_section_to_widget).collect(),
             selected_ids: Vec::new(),
             highlighted_ids: Vec::new(),
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: `UiTreeNode.selectionChange`
-            // is deleted — selection now flows through `interactionSelect`/`interaction_domain`, not yet
-            // wired into this retained-mode engine.
             selection_change: None,
         },
-        // 🧩️ CLOSED by ticket 26/09/17 packet W15a (was: "`WidgetNode<E>` has no Image/
-        // ComponentScene/ExternalSlot/Progress variant at all", so all four collapsed to an empty
-        // placeholder `Text` and no two-pipeline comparison was possible). All five kinds now have a
-        // real arm in the kit, so this mapping is like-for-like and
-        // `every_ui_node_kind_has_a_widget_kit_arm_that_paints` asserts each one paints.
         UiNode::Progress(progress) => WidgetNode::Progress { id: progress.id.clone(), completed: progress.completed, total: progress.total },
         UiNode::Image(image) => WidgetNode::Image { id: image.id.clone(), src: image.src.clone(), alt: image.alt.clone().map(|alt| alt.to_string()) },
         UiNode::ComponentScene(scene) => WidgetNode::component_scene(scene),
@@ -153,8 +143,6 @@ fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
         default_open: item.default_open.unwrap_or(false),
         dimmed: item.dimmed.unwrap_or(false),
         event: item.action.clone(),
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W3a: `UiTreeItemNode.hoverAction`/
-        // `unhoverAction` are deleted — hover is now framework-owned per `UiTreeNode.interactionDomain`.
         hover_event: None,
         unhover_event: None,
         actions: item.actions.as_ref().map(|actions| actions.iter().map(tree_action_to_widget).collect()).unwrap_or_default(),
@@ -347,12 +335,6 @@ fn checkbox_checked_state_does_not_paint_a_selection_outline() {
 
 #[test]
 fn golden_toggle() {
-    // 🚫️ `presence.selected` is intentionally NOT exercised here: the shared `presence_overlay`
-    // now draws an outset accent ring for ANY selected element (see
-    // `selected_presence_draws_an_outset_ring_on_any_element`, below) — a deliberate new
-    // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
-    // against) never had, so a selected fixture would fail this equivalence check for the wrong
-    // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
     assert_equivalent(
         "Toggle",
         &leaf(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None })),

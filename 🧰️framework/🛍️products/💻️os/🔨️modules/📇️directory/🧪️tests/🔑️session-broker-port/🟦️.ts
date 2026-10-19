@@ -240,10 +240,6 @@ export async function registerSessionBrokerPortTests(vitest: Vitest, dependencie
         await failed.refresh();
         vitest.expect(equal({ refusal, accepted, refused, reads }, { refusal, accepted: [], refused: 1, reads: 1 + fixture.unavailableRetries })).toBe(true);
       }
-      // 🔁️ A failure the hub did not pronounce on keeps the session: the loop retries on the fixture's
-      // own backoff, reports the degraded window's two edges exactly once each, and the authority that
-      // was already observed is never retired. This is the law the live two-user run needed — the first
-      // shell used to be signed out for ever by one queued `me` while a second context booted.
       for (const transient of fixture.transientFailures) {
         const accepted: unknown[] = [];
         const degradedEdges: boolean[] = [];
@@ -278,8 +274,6 @@ export async function registerSessionBrokerPortTests(vitest: Vitest, dependencie
         vitest.expect(equal({ transient, refused, accepted: accepted.length, degradedEdges }, { transient, refused: 0, accepted: 2, degradedEdges: [true, false] })).toBe(true);
         riding.close();
       }
-      // ⌛️ Riding out a loss is bounded by the session's OWN deadline: once the last observed authority
-      // has expired there is nothing left to ride out, and the next transient failure retires it.
       {
         let refused = 0;
         let expired = false;

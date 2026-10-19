@@ -93,18 +93,6 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
                         ],
                         position: PptxTransform { x: 685800, y: 457200, cx: 7772400, cy: 2286000 },
                     },
-                    // 🩹 Deliberately no `<a:graphic/>` child here: an UNATTRIBUTED self-closing
-                    // element (real bytes `<a:graphic/>`, no space) would hit the SAME lexer
-                    // identifier-fusion property this file's own grammar documents for `p:nvPr`/
-                    // `p:grpSpPr`/etc (`"cNvGrpSpPr/"` fuses into ONE token) -- but the GENERIC
-                    // `x-elem` logical fallback (unlike this artifact's own TYPED shape
-                    // productions, which model every real fused case with an explicit literal
-                    // token) has no way to disambiguate "bare self-close" from "open tag, more
-                    // content follows" using only same-shape `LT x-name GT` lookahead -- a
-                    // genuine, documented limitation of the x-elem restatement (same one docx's
-                    // own snapshot grammar's `x-elem` inherits), not something this demo fixture
-                    // should paper over by accident. Keeping every attr non-empty here keeps the
-                    // conformance law honest without exercising that known gap.
                     PptxShape::Other {
                         node: semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "p:graphicFrame".into(), attrs: Vec::new(), children: vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "p:nvGraphicFramePr".into(), attrs: Vec::new(), children: vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr { name: "id".into(), value: "9".into() }, semio_s_artifact_stdio_xml::schema::snapshot::XmlAttr { name: "name".into(), value: "Table 1".into() }], children: Vec::new() }] }] },
                     },

@@ -39,7 +39,7 @@ fn targets_resolve_members_supports_and_loads_to_their_geometry() {
 /// 🧮️ Repeated opaque identities project once, retaining document order and a centroid independent of selection order.
 #[test]
 fn wide_selection_resolves_each_geometry_once_in_document_order() {
-    let vector: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️projection/🔣️.json")).unwrap();
+    let vector: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️projection/🔣️.json")).unwrap();
     let mut doc = Fem3dSnapshot::default();
     for index in 0..vector["nodeCount"].as_u64().unwrap() {
         doc.nodes.push(semio_s_fem_node::volumetric::FemNodeValue { id: format!("node:{index}"), x: index as f64, y: 0.0, z: 0.0 });

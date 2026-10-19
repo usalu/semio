@@ -7,7 +7,12 @@
 //! - A row of `/xmlParts` or `/opc/parts` inserts or removes a part (`set-part` at that position, `remove-part`); a part's content type or binary
 //!   payload is set through `set-part`.
 
-use super::*;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
+use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{docx_xml_address, insert_xml_node, opc_layer, remove_content_type, remove_part, remove_relationship, remove_xml_node, replace_xml_node, set_content_type, set_part, set_relationship, DocxMutation};
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+use semio_framework_value::ValueError;
 use semio_framework_value::{FromValue, ToValue};
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditError, SnapshotEditEvent};

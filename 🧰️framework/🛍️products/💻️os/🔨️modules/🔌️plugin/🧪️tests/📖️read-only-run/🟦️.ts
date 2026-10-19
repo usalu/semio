@@ -25,7 +25,6 @@ export function testToolRunReadOnlyRun(): void {
   assert.equal(fixture.schema, "framework.plugin.tool-run.v1");
   const expected = fixture.readOnlyRun;
 
-  // ▶️ Start, admit the job, run it, complete it — the ledger's own transitions, nothing invented.
   let slot: { run: bigint; generation: number; state: string } | null = null;
   const apply = (event: Parameters<typeof ToolRunMachine.apply>[1]) => {
     const outcome = ToolRunMachine.apply(slot as never, event as never);
@@ -38,22 +37,17 @@ export function testToolRunReadOnlyRun(): void {
   apply({ type: "jobComplete", run: 1n, generation: slot!.generation });
   assert.equal(slot!.state, "complete", "the job's completion lands the run in complete");
 
-  // 📖️ A read-only run does not stop there: the same driver turn finalizes it, because there is nothing
-  // a finalize could publish and nothing a user could review.
   const effect = apply({ type: "finalize", run: 1n, generation: slot!.generation });
   assert.equal(effect, "beginFinalize", "the finalize the driver applies for it is the ordinary one");
   assert.equal(slot!.state, expected.stateAfterJobCompletes, "and the state it leaves complete for is the fixture's");
   assert.notEqual(slot!.state, "complete", "a read-only run never parks in complete waiting for a finalize nobody owes it");
 
-  // ▶️ Once it publishes, the slot is free — which is the whole point: a start against a NON-terminal run
-  // is busy, so a finished read-only run that never left complete refuses every later start.
   apply({ type: "publicationComplete", run: 1n, generation: slot!.generation });
   assert.equal(slot!.state, "finalized", "publication finalizes it");
   const next = ToolRunMachine.apply(slot as never, { type: "start", run: 2n } as never);
   assert.ok(next.ok, "a finalized run never refuses the next start as busy");
   assert.equal(expected.startsAgainWithoutAnyFinalizeAction, true, "and no finalize ACTION was dispatched anywhere in this law");
 
-  // 🚧️ The counter-reading: the same run left in complete does refuse it, which is the defect this law pins.
   const parked = ToolRunMachine.apply({ run: 1n, generation: 0, state: "complete" } as never, { type: "start", run: 2n } as never);
   assert.equal(parked.ok, false, "a run parked in complete refuses the next start");
   assert.equal(parked.ok === false ? parked.rejection : "", "toolRun.busy", "and refuses it as busy");

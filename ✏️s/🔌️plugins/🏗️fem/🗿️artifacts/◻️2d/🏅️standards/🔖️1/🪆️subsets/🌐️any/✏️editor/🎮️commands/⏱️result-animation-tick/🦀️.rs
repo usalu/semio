@@ -1,4 +1,4 @@
-//! window's running clock and re-arms itself through `Effect::DispatchAction` while the transport
+//! 🪟️ window's running clock and re-arms itself through `Effect::DispatchAction` while the transport
 //! ⏱️ FEM play app command — `result-animation-tick`: one playback clock tick — advances the
 //! plays. ONE implementation for every FEM editor ([`result_animation_tick_step`] over a
 //! [`FemPlaybackTransport`]).

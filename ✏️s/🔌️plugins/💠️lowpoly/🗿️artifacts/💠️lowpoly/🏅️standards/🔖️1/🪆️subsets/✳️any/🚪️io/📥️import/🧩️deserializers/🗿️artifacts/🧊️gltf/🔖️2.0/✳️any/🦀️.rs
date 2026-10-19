@@ -1,4 +1,4 @@
-//! lowpoly <- gltf
+//! 🔺️ lowpoly <- gltf
 //!
 //! Geometry over the real `io::decode_glb` grammar: every mesh primitive with POSITION (+ optional indices) becomes one
 //!    lowpoly object; n-gons fan-triangulated on export are re-imported as triangles.

@@ -12,17 +12,14 @@ pub(super) enum XNode {
 }
 
 impl XNode {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) — see R9
     pub(super) fn child(&self, name: &str) -> Option<&XNode> {
         let XNode::Element { children, .. } = self else { return None };
         children.iter().find(|c| matches!(c, XNode::Element { name: n, .. } if n == name))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) — see R9
     pub(super) fn attr(&self, key: &str) -> Option<&str> {
         let XNode::Element { attrs, .. } = self else { return None };
         attrs.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) — see R9
     pub(super) fn children_named<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a XNode> {
         let empty: &[XNode] = &[];
         let items = match self {
@@ -31,7 +28,6 @@ impl XNode {
         };
         items.iter().filter(move |c| matches!(c, XNode::Element { name: n, .. } if n == name))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) — see R9
     pub(super) fn text(&self) -> String {
         match self {
             XNode::Text(t) => t.clone(),

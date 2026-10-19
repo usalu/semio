@@ -237,7 +237,6 @@ impl OpcContentTypes {
     /// 🔎️ Resolves the content type for `part_path` (no leading `/`): override by exact part
     /// name first, else default by extension. `None` when neither applies — the caller decides
     /// whether that is fatal.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resolve(&self, part_path: &str) -> Option<&str> {
         let part_name = format!("/{}", part_path.trim_start_matches('/'));
         if let Some((_, ct)) = self.overrides.iter().find(|(p, _)| *p == part_name) {
@@ -248,7 +247,6 @@ impl OpcContentTypes {
     }
 
     /// ✍️ Inserts or replaces the `Override` entry for `part_path`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_override(&mut self, part_path: &str, content_type: &str) {
         let part_name = format!("/{}", part_path.trim_start_matches('/'));
         if let Some(existing) = self.overrides.iter_mut().find(|(p, _)| *p == part_name) {
@@ -259,7 +257,6 @@ impl OpcContentTypes {
     }
 
     /// ✍️ Inserts or replaces the `Default` entry for `extension` (case-insensitive, no dot).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_default(&mut self, extension: &str, content_type: &str) {
         let ext = extension.to_ascii_lowercase();
         if let Some(existing) = self.defaults.iter_mut().find(|(e, _)| e.eq_ignore_ascii_case(&ext)) {
@@ -269,7 +266,6 @@ impl OpcContentTypes {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn to_xml(&self) -> XmlDocument {
         let mut children = Vec::with_capacity(self.defaults.len() + self.overrides.len());
         for (ext, ct) in &self.defaults {
@@ -287,7 +283,6 @@ impl OpcContentTypes {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn from_xml(doc: &XmlDocument) -> Result<Self, OpcError> {
         let root = doc.root.as_ref().ok_or(OpcError::MissingContentTypes)?;
         let XmlNode::Element { name, attrs: root_attrs, children } = root else {
@@ -508,25 +503,21 @@ pub struct OpcPackage {
 impl OpcPackage {
     /// 🌱️ An empty package (no parts, no content types, no relationships) — callers building a
     /// fresh document from scratch start here and add parts/relationships/content-types.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn empty() -> Self {
         Self::default()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn part(&self, path: &str) -> Option<&OpcPart> {
         let p = path.trim_start_matches('/');
         self.parts.iter().find(|part| part.path == p)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn part_bytes(&self, path: &str) -> Option<&[u8]> {
         self.part(path).map(|p| p.bytes.as_slice())
     }
 
     /// ✍️ Inserts or replaces a content part, keeping its `[Content_Types].xml` `Override` in
     /// sync in the same call — the two can never drift apart through this API.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_part(&mut self, path: &str, content_type: &str, bytes: Vec<u8>) {
         let p = path.trim_start_matches('/').to_string();
         self.content_types.set_override(&p, content_type);
@@ -538,13 +529,11 @@ impl OpcPackage {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn relationships_for(&self, owner: &str) -> &[OpcRelationship] {
         self.relationships.relationships(owner).map_or(&[][..], |v| v.as_slice())
     }
 
     /// ✍️ Appends one internal relationship under `owner` (`""` = package root).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn add_relationship(&mut self, owner: &str, id: &str, rel_type: &str, target: &str) {
         let relationship = OpcRelationship { id: id.into(), rel_type: rel_type.into(), target: target.into(), target_mode: OpcTargetMode::Internal };
         if let Some(values) = self.relationships.relationships_mut(owner) { values.push(relationship); }
@@ -561,7 +550,6 @@ impl OpcPackage {
 
     /// 🔎️ Follows a single relationship of `rel_type` owned by `owner`, resolving its target to
     /// an absolute part path. `None` when no such relationship exists.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn resolve_relationship(&self, owner: &str, rel_type: &str) -> Option<String> {
         let rel = self.relationships_for(owner).iter().find(|r| r.rel_type == rel_type)?;
         Some(resolve_relationship_target(owner, &rel.target))

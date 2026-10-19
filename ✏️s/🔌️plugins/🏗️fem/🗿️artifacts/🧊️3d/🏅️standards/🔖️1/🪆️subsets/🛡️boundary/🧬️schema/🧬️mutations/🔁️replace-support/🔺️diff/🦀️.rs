@@ -14,7 +14,7 @@ pub fn diff(payload: &ReplaceSupport, base: &Fem3dSnapshotValue) -> protocol::Mu
     if payload.new_support.id != payload.id {
         return target_mismatch("Support", &payload.id, &payload.new_support.id);
     }
-    if !crate::FemDof::canonical(&payload.new_support.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support restraints must be canonical.", [payload.id.clone()]); }
+    if !semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof::canonical(&payload.new_support.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support restraints must be canonical.", [payload.id.clone()]); }
     if existing == &payload.new_support {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Support \"{}\" already has that value.", payload.id));
     }

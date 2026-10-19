@@ -45,9 +45,6 @@ pub(super) fn admit_jack_envelope(app: &mut VcsArtifactApp<EditorApp<TrinityJack
 }
 
 pub(super) fn drive_jack_live_load(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
-    // 📏️ The runtime host pumps a document load with 32 KiB turns (`DOCUMENT_ARCHIVE_POLL_STEP_BYTES`);
-    // a 4 KiB envelope-page grant can never release the decode worker's 16 KiB job-payload pages
-    // (`JOB_PAYLOAD_PAGE_BYTES`), so the load spun on its own close step forever.
     for _ in 0..100_000 {
         app.maintenance_step(cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().maintenance).expect("one Jack live maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle,cx).expect("Jack live load advancement");

@@ -1,4 +1,4 @@
-//! touching one of this node's handles is severed too, re-`connect-handles`ed by the inverse).
+//! 🤝️ touching one of this node's handles is severed too, re-`connect-handles`ed by the inverse).
 //! 🗑 Puzzle2d mutation — `DeleteNode`: removes an id-keyed node (captures cascade — any edge
 
 use crate::standards::v1::subsets::any::schema::mutations::change_edge_visible::ChangeEdgeVisible;

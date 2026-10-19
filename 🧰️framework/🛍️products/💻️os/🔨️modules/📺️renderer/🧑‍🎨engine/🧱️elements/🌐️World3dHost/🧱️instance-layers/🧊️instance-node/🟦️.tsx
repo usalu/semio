@@ -262,11 +262,8 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
                   return;
                 }
                 if (!instancePickEnabled) return;
-                // 🧵️ Displayed edges (`showEdges`) are not pick targets unless edge granularity is armed: let the
-                // hit fall through to the face/instance under it instead of swallowing every click near a seam.
                 if (!targets.edge && !isCurveOnly) return;
                 event.stopPropagation();
-                // 🧵️ Centerline/curve objects are the model-definition instances — never decompose into edge components.
                 if (isCurveOnly && targets.mesh) {
                   onInstancePointerDown(instance.id, index, event);
                   return;
@@ -340,8 +337,6 @@ export const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               }}
               onPointerOut={() => { onInstancePointerMove(null); onComponentHover(null); }}
             >
-              {/* 📍️ Screen-space dots: a world-unit size (0.05) is sub-pixel on a six-unit mesh seen from
-                  thirty units away, so vertex mode showed nothing to hover or pick (lowpoly, 2026-09-18). */}
               <pointsMaterial color={isPointOnly ? style.lineColor : colors.edge} size={WORLD_VERTEX_DOT_PX} sizeAttenuation={false} />
             </points>
           ) : null}

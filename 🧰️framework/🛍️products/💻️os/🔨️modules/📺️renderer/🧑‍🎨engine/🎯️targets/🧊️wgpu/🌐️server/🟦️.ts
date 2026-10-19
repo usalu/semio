@@ -6,7 +6,7 @@ import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "@semio-tech/assets/resolver/dispatch";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "@semio-tech/plugin-registry/playground/assets/composition";
 import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
-import { packageAssetMounts } from "../../../../../../../../🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
+import { packageAssetMounts } from "@semio-tech/framework-kernel";
 import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
 import { repoCacheDirectory } from "@semio-tech/process/execution";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";

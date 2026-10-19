@@ -1,4 +1,4 @@
-//! ð¡ï¸ DIN 4108 play app â the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
+//! 🌡️ DIN 4108 play app â the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
 //! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
@@ -46,9 +46,9 @@ use semio_framework_plugin::app::Dialect;
 use semio_framework_2d_compute::EngineHandles;
 
 //#region ðï¸Constants
-/// ð·ï¸ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
+/// 🏷️ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
 pub const LABEL: &str = "DIN 4108";
-/// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
+/// 🆔️ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "din4108";
 /// 🆔️ Retained-command / UI action controller id.
 pub const CONTROLLER_ID: &str = "s.norm.din4108@1/*#editor";
@@ -57,7 +57,7 @@ pub const DOCUMENT_SCHEMA: &str = "semio.norm.din4108/v1";
 
 //#region ðï¸Commands
 semio_framework_plugin::app_commands! {
-    /// ð¯ï¸ `Din4108PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
+    /// 🎯️ `Din4108PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
     /// action `create_din4108_app` declares. Row order IS the binary variant ordinal (appending is safe,
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
     /// id and the kebab `#[dsl(key)]` wire keyword respectively â both copied verbatim off the
@@ -177,14 +177,14 @@ impl ArtifactEditor for Din4108PlayApp {
     }
 
     //#region ðï¸MediaPorts
-    /// ðï¸ `"report:out"`/`"artifact:out"` â see `crate::app_surface::export_media`, which all fifteen apps
+    /// 🎞️ `"report:out"`/`"artifact:out"` â see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, Din4108Snapshot>) -> Result<Media, MediaError> {
         semio_s_plugin_norm_app_surface::export_media::<Din4108Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
-    /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
+    /// 🎞️ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, Din4108Snapshot>) -> Result<Emit<Din4108Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         semio_s_plugin_norm_app_surface::import_media(port, media)
     }

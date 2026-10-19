@@ -94,18 +94,10 @@ pub async fn build_catalogue_tree(labels: &SStudioLabels, locale: Locale, window
         for segment in &doc_path {
             node = node.children.entry(segment.clone()).or_default();
         }
-        // 🗺️ `AppPaletteEntry.label` is a full locale×terminology `LocalizedLabel` now; the catalogue
-        // has no app-specific terminology axis of its own, so it always projects the `Native` cell at
-        // the Studio app's own active locale.
         let label = entry.label.resolve(Terminology::Native, locale).to_string();
         node.app = Some(CatalogueAppEntry { plugin_id: entry.plugin_id, app_id: entry.app_id, label, yields });
     }
     let mut roots: Vec<CatalogueRoot> = document.children.into_iter().map(|(segment, node)| CatalogueRoot { label: segment.clone(), segment, node }).collect();
-    // 🪹️ An app with an empty `breadcrumb` (`registration.breadcrumb == []`) has nowhere to
-    // descend to in the loop above, so its `.app` lands on the ROOT `document` node itself rather than
-    // inside `.children` — without this, it's silently dropped from the catalogue entirely. Surface it
-    // as its own top-level leaf, keyed by `app_id` (there's no document segment to key off) with its
-    // own registry label as the display text.
     if let Some(app) = document.app {
         roots.push(CatalogueRoot { segment: app.app_id.clone(), label: app.label.clone(), node: AppCatalogueNode { children: BTreeMap::new(), app: Some(app) } });
     }

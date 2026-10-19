@@ -5,6 +5,10 @@
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/**/*.rs",
       "{projectRoot}/**/*"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/🧩️component/📦️packages/🦀️rust/**/*"
     ]
   },
   "targets": {

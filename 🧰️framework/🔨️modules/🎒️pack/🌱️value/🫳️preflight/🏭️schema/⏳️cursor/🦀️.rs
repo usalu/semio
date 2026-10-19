@@ -1,8 +1,9 @@
 //! 🧵️ Canonical borrowed schema discovery and quotient hashing retain every work frontier.
 use super::{R,H,K};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,HeapSortCursor,HeapSortWork};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
+use semio_framework_value_edit::{sort::HeapSortCursor, sort::HeapSortWork};
 use std::{cmp::Ordering,mem::size_of};
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 type List<T> = PagedList<T,{usize::MAX}>;
 const SPAN:usize=256;
 #[derive(Clone,Copy)]
@@ -32,7 +33,7 @@ pub struct BorrowedSchemaHashCursor{
 }
 impl Default for BorrowedSchemaHashCursor{fn default()->Self{Self{records:List::empty(),frames:List::empty(),queue:List::empty(),variants:List::empty(),phase:Phase::Birth,root:None,node:0,field_stage:7,field_scan:0,field_sort:None,field:0,sort:Sort::default(),edge:None,hasher:List::empty(),token:0,offset:0,candidate:0,equal:0,equal_offset:0,count:0,previous:0,refine_stage:0,bfs_node:0,bfs_edge:0,pending_queue:None,digest:None}}}
 fn invariant(reason:&'static str)->ValueError{ValueError::literal(K::InvariantViolated,reason)}
-fn mapped<T>(result:Result<T,semio_framework_value::list::PagedListError>)->Result<T,ValueError>{result.map_err(|error|invariant(error.reason))}
+fn mapped<T>(result:Result<T,semio_framework_value_persistent::list::PagedListError>)->Result<T,ValueError>{result.map_err(|error|invariant(error.reason))}
 fn pushed<T>(result:Result<(),T>)->Result<(),ValueError>{result.map_err(|_|invariant("retained schema original reserved slot is absent"))}
 fn varint(mut value:u64)->([u8;10],usize){let mut bytes=[0;10];let mut n=0;loop{bytes[n]=(value&127)as u8;value>>=7;if value!=0{bytes[n]|=128}n+=1;if value==0{return(bytes,n)}}}
 fn scalar_tag(shape:H)->u8{match shape{H::Bool=>1,H::Int=>2,H::UInt=>3,H::Float=>4,H::Text=>5,H::Bytes64=>6,H::Enum(_)=>7,H::Tuple(_,_)=>8,H::List(_)=>9,H::Record(_)=>10,H::Block(_)=>11,H::Statements(_)=>12,H::Map(_)=>13,H::Value=>14,H::Table(_)=>15,H::Wire=>16,H::Quantity(_)=>17,H::Angle(_)=>18,H::Ref(_)=>19,H::Coord(_)=>20,H::Dir=>21,H::Dim(_)=>22,H::Range=>23,H::Count=>24,H::Expr=>25,H::Embed(_)=>26,H::EmbedFrom(_)=>27}}
@@ -187,8 +188,6 @@ impl BorrowedSchemaHashCursor{
   let(capacity,copy,depth)=self.demands()?;if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes<copy||grant.maximum_depth<depth{return Ok(Default::default())}
   let reserve=match self.owner(){Owner::Records=>Self::reserve(&mut self.records,grant)?,Owner::Tokens=>Self::reserve(&mut self.records.get_mut(self.node).unwrap().tokens,grant)?,Owner::Edges=>Self::reserve(&mut self.records.get_mut(self.node).unwrap().edges,grant)?,Owner::FieldOrder=>Self::reserve(&mut self.records.get_mut(self.node).unwrap().order,grant)?,Owner::Variants=>Self::reserve(&mut self.variants,grant)?,Owner::Frames=>Self::reserve(&mut self.frames,grant)?,Owner::Queue=>Self::reserve(&mut self.queue,grant)?,Owner::Hasher=>Self::reserve(&mut self.hasher,grant)?,Owner::None=>None};
   if let Some(progress)=reserve{
-   #[cfg(debug_assertions)]
-   if progress==RetainedCloneProgress::default(){eprintln!("[DEBUG] funded borrowed schema reservation idle phase={} owner={} quoted-copy={} quoted-cap={} quoted-depth={} grant={grant:?}",self.phase as u8,self.owner()as u8,copy,capacity,depth);}
    return Ok(BorrowedSchemaHashStep{progress,complete:false})
   }
   match self.phase{Phase::Birth|Phase::Build=>self.build(spec)?,Phase::InitialHash|Phase::FinalHash=>self.hash_turn()?,Phase::ClassifyBase|Phase::ClassifyRefined=>self.classify_turn(),Phase::CopyOld=>{let record=self.records.get_mut(self.node).unwrap();record.old=record.class;self.node+=1;if self.node==self.records.len(){self.node=0;self.phase=Phase::RefineHash;self.hasher.pop();}},Phase::RefineHash=>self.refine_turn(),Phase::BfsBirth|Phase::Bfs=>self.bfs_turn()?,_=>return Err(invariant("retained schema work frontier is invalid"))}

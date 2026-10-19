@@ -1,4 +1,4 @@
-import type { MutationEnvelope } from "@semio-tech/framework-replication";
+import type { MutationEnvelope } from "@semio-tech/framework/replication";
 import type { ShellDialogOriginV1 } from "../🟦️.ts";
 
 type TutorialDriveJobV1 = Readonly<{ owns: () => boolean; apply: (token: number) => Promise<void>; resolve: () => void; reject: (error: unknown) => void }>;

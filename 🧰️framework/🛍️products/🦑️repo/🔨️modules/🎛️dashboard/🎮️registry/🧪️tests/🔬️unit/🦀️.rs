@@ -3,8 +3,27 @@ use dashboard_registry::{graph_file, verb_of, verb_rank, CommandId, Facts, Graph
 use dashboard_repo_domain::{RepoAction, RepoImplementation};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use semio_framework_ui_locale::Locale;
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json");
+
+#[test]
+fn all_process_axes_cover_open_verbs_and_explicit_playgrounds_with_effectful_tools() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🎯️axes.json")).unwrap();
+    let project = |parameter: serde_json::Value, verb: &str| ProjectFacts { name: "workspace".into(), root: ".".into(), manifest: "📋️project.json".into(), dashboard: Some(serde_json::json!({"parameters":[parameter],"tools":[{"id":"subject","verb":verb,"command":["bun","--version"]}]})), targets: vec![TargetFacts { name: "subject".into(), dashboard: Some(serde_json::json!({"verb":verb})), ..Default::default() }] };
+    for (name, accepted) in [("accepted", true), ("rejected", false)] {
+        for scope in cases[name].as_array().unwrap() {
+            let facts = Facts { projects: vec![project(serde_json::json!({"id":"scope","kind":"text","appliesTo":scope,"valueEnv":"SCOPE_VALUE"}), "build")], ..Default::default() };
+            assert_eq!(Registry::build(Path::new("/workspace"), &facts).problems().is_empty(), accepted, "{scope}");
+        }
+    }
+    for row in cases["cases"].as_array().unwrap() {
+        let facts = Facts { projects: vec![project(row["parameter"].clone(), row["verb"].as_str().unwrap())], playgrounds: vec![PlaygroundFacts { variant: "scope".into(), plugin: "scope".into(), react: 7100, wgpu: 7101, ..Default::default() }], ..Default::default() };
+        let registry = Registry::build(Path::new("/workspace"), &facts);
+        let id = match row["command"].as_str().unwrap() { "tool" => "tool:workspace/subject", "playground" => "playground:scope", _ => "workspace:subject" };
+        assert_eq!(registry.parameters(registry.find(id).unwrap()).iter().any(|parameter| parameter.id == "scope"), row["expected"].as_bool().unwrap(), "{row}");
+    }
+}
 
 #[test]
 fn neutral_graph_publication_uses_declared_partition_and_preserves_charge_identity() {

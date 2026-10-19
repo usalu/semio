@@ -34,11 +34,6 @@ describe("control chrome", () => {
         expect(active.className).toContain("border-e");
         expect(active.className).toContain("!border-normal");
         expect(active.className).toContain("border-0");
-        // 🪜️ The payload plane sits BELOW every chip row, and it must say so in a way the browser
-        // actually honours: the `z-[1]`/`z-[2]` arbitrary Tailwind utilities this chrome used to carry are
-        // not emitted by the design system's stylesheet (measured `z-index: auto` on cap, plane and footer
-        // in a served boot), which let the plane — negative-margined UP over the cap row by design —
-        // swallow every cap-row press, the introduction tour's own Skip included (B49 §1).
         expect(body.style.zIndex).toBe("1");
         expect((container.querySelector('[data-slot="window-chrome-cap"]') as HTMLElement).style.zIndex).toBe("2");
       });
@@ -351,14 +346,11 @@ describe("control chrome", () => {
           anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [settingsLeaf], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
         };
   
-        // Untouched anchor/branch: identical arrangement reuses every object by reference.
         const untouchedSkeleton = dockSkeletonOf(defaultDock);
         const untouched = applyDockSkeleton(defaultDock, untouchedSkeleton);
         expect(untouched.anchors["top-left"][0]).toBe(workbenchBranch);
         expect(untouched.anchors["bottom-right"][0]).toBe(settingsLeaf);
   
-        // Moving `catalogue` to bottom-right (ahead of settings): dropped from workbench's children (appended-back
-        // logic doesn't apply since it's explicitly listed elsewhere), workbench still reuses `documentLeaf` by reference.
         const moved: DockSkeleton = {
           version: 3,
           anchors: {
@@ -382,7 +374,6 @@ describe("control chrome", () => {
         expect(afterMove.anchors["bottom-right"].map((tab) => tab.id)).toEqual(["catalogue", "settings"]);
         expect(afterMove.anchors["bottom-right"][0]).toBe(catalogueLeaf);
   
-        // Unknown id in the persisted skeleton is dropped; a default tab the skeleton never mentions is appended.
         const withUnknown: DockSkeleton = {
           version: 3,
           anchors: { "top-left": [{ id: "ghost-tab" }], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
@@ -392,7 +383,6 @@ describe("control chrome", () => {
         expect(afterUnknown.anchors["top-left"][0]).toBe(workbenchBranch);
         expect(afterUnknown.anchors["bottom-right"].map((tab) => tab.id)).toEqual(["settings"]);
   
-        // Kind mismatch: skeleton claims the leaf `settings` has branch `children` — ignored, falls back to the default leaf shape.
         const kindMismatch: DockSkeleton = {
           version: 3,
           anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [{ id: "settings", children: [{ id: "document" }] }], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
@@ -409,7 +399,6 @@ describe("control chrome", () => {
         const defaultDock: PanelDock = {
           anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
         };
-        // `document` moved out to bottom-right; `workbench` explicitly persisted with an empty children list.
         const emptiedWorkbench: DockSkeleton = {
           version: 3,
           anchors: {

@@ -25,15 +25,12 @@ impl Default for SemioTableArtifact {
 }
 
 impl SemioTableArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioTableSnapshot {
         SemioTableSnapshot { schema: self.schema.clone(), columns: self.columns.clone(), rows: self.rows.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioTableSnapshot) -> Self {
         Self { schema: snapshot.schema, columns: snapshot.columns, rows: snapshot.rows }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioTableSnapshot) {
         self.schema = snapshot.schema;
         self.columns = snapshot.columns;

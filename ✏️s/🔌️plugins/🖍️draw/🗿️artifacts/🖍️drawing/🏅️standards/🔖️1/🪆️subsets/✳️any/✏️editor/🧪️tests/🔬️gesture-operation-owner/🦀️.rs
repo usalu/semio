@@ -34,7 +34,6 @@ fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch(
         closing: false,
     };
     job.begin_close();
-    // 🧾️ A zero-item grant releases nothing (`ChildEmit::close_one` short-circuits on `maximum_items == 0`).
     assert_eq!(semio_framework_job::close_with_self_funded_context(grant(0, 1), |cx| job.close_step(cx)).expect("original fixture close turn"), released(0, 0));
     assert!(job.pending_completion_rejection.is_some());
     assert!(job.decoder.is_some());
@@ -56,7 +55,6 @@ fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch(
 
 fn decode_retained(expected: &'static str, wire: &[u8]) -> bool {
     let mut decoder = DrawingRetainedCommandDecoder::new(expected);
-    // 📄️ Fed as two pages so the page seam is exercised like the host's paged wire owner.
     let (head, tail) = wire.split_at(wire.len() / 2);
     decoder.feed_page(head) && decoder.feed_page(tail) && decoder.finish()
 }

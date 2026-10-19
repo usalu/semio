@@ -44,27 +44,6 @@ pub use semio_framework_value_factory::boxed::{FactoryBoxedValue,FactoryBoxedPub
 pub mod internals {
     pub use super::types::testkit as types;
 }
-#[path = "../../📶️sort/🦀️.rs"]
-pub mod sort;
-pub use sort::{HeapSortCursor, HeapSortFault, HeapSortWork};
-#[path="../../📋️list/🔺️edit/🦀️.rs"]
-pub mod indexed_edit;
-pub use indexed_edit::{IndexedEditShape,IndexedEditKind,IndexedEditEntry,IndexedEditFault,IndexedEditStep,IndexedEditPlan,IndexedOutputWork,IndexedOutputCursor};
-#[path="../../📋️list/🔺️edit/🚚️commit/🦀️.rs"]
-pub mod indexed_collection_commit;
-pub use indexed_collection_commit::IndexedCollectionCommit;
-#[path="../../📋️list/🪢️concat/🦀️.rs"]
-pub mod original_vector_concat;
-pub use original_vector_concat::OriginalVectorConcat;
-#[path="../../🔑️lookup/🦀️.rs"]
-pub mod exact_key_lookup;
-pub use exact_key_lookup::ExactKeyCursor;
-#[path="../../📋️list/🔺️edit/🔑️named/🦀️.rs"]
-pub mod named_edit;
-pub use named_edit::{NamedEditLane,NamedEditSource,NamedEditFault,NamedEditStep,NamedEditPlan,NamedRankedSource,VecRankedKeys,PersistentRankedKeys,NamedKeyIndexPreparation,AdmittedNamedKeyIndex,IndexedNamedSource,KeyPreservingPersistentSet,NamedPersistentRoot,NamedPersistentRootPreparation,NamedRecordKey,NamedPersistentRootReceiver};
-#[path="../../📋️list/🟰️equal/🦀️.rs"]
-pub mod slice_equality;
-pub use slice_equality::{RetainedEqualityElement,RetainedSliceEquality};
 #[path="../../📝️text/🚶️utf8/🦀️.rs"]
 pub mod retained_utf8;
 pub use retained_utf8::{RetainedUtf8Cursor,RetainedUtf8CursorStep,RetainedUtf8Buffer,RetainedUtf8Append};

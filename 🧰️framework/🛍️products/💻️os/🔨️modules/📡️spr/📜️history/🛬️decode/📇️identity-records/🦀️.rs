@@ -1,8 +1,9 @@
 //! 📇️ Original document, viewer and composition identities receive through paid typed field owners.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use super::{HistoryComposition,RetainedHistoryIdDecode};
 use protocol::{codec::{RetainedWireByteSource,OriginalWireSourceIdentity,HistoryReadLimits},dictionary::RetainedSourceDictionary};
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RetainedHistoryIdentityRecordKind{Document,Viewer,Composition}

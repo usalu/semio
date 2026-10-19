@@ -29,7 +29,7 @@ fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, act
 /// config selection to read even before this ticket; `ContextMenuSurfaceTarget.selection` is the
 /// framework's own sanctioned channel for it).
 #[derive(Default)]
-struct Puzzle3dContextSelection {
+pub struct Puzzle3dContextSelection {
     object_ids: Vec<String>,
     vortex_ids: Vec<String>,
     attraction_ids: Vec<String>,
@@ -58,7 +58,7 @@ impl Puzzle3dContextSelection {
     /// right-click on a vortex of the selected object opens the vortex's menu, not the object's. A hit
     /// inside the current selection changes nothing — the whole selection stays the menu's subject, so
     /// "Delete (3 objects)" never silently narrows to the one row under the cursor.
-    fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
+    pub fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
         let mut out = Self::default();
         let Some(surface) = surface else {
             return out;
@@ -69,7 +69,6 @@ impl Puzzle3dContextSelection {
                 bucket.extend(ids);
             }
         }
-        // 🎯️ Hosts list every target under the pointer, most specific first, and only that one is the subject.
         let mut hits = Self::default();
         if let Some(hit) = surface.hits.iter().find(|hit| hits.bucket(hit.domain.as_str()).is_some()) {
             hits.bucket(hit.domain.as_str()).into_iter().for_each(|bucket| bucket.push(hit.id.clone()));
@@ -93,7 +92,7 @@ impl Puzzle3dContextSelection {
     /// reference reaches a menu only through the framework-owned domain read. Per-granularity
     /// additive: whatever the surface DID supply keeps priority (a right-click on an unselected
     /// entity still targets what was clicked).
-    fn fill_from_interaction(&mut self, interaction: &Puzzle3dInteractionSnapshot) {
+    pub fn fill_from_interaction(&mut self, interaction: &Puzzle3dInteractionSnapshot) {
         if self.hit_subject {
             return;
         }
@@ -111,7 +110,7 @@ impl Puzzle3dContextSelection {
     }
 }
 
-fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, view_state: &semio_framework_plugin::ViewModel, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+pub fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, view_state: &semio_framework_plugin::ViewModel, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::Menu;
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.scene_snapshot.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);

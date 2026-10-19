@@ -16,7 +16,6 @@ pub struct SurfaceReconciler {
 impl SurfaceReconciler {
     /// 🌱️ A reconciler for `surface` with no retained state yet — the next reconcile necessarily emits a full
     /// `SetRoot` plus one `Upsert` per node.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(surface: ui_contract::SurfaceId) -> Self {
         Self::from_shadow(SurfaceShadow::new(surface))
     }

@@ -1,4 +1,4 @@
-//! Deserialize stdio.gif from stdio.binary.
+//! 📥️ Deserialize stdio.gif from stdio.binary.
 
 use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::STDIO_GIF_DOCUMENT_SCHEMA;

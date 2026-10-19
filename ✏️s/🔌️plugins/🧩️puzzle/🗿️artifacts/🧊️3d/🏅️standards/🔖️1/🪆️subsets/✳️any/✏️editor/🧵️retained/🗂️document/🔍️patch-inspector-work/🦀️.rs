@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
+use semio_s_artifact_puzzle_3d_editor_session::Puzzle3dEditor;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dPatchInspectorStage {

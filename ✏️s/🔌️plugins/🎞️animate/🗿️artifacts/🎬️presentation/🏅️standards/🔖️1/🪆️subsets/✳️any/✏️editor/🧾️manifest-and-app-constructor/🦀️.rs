@@ -30,7 +30,6 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .panel_tab_def(artifact::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
-            // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
             .mutation("seedGrid", LocalizedLabel::native("Seed Grid", "Raster erzeugen"))
             .mutation("addTile", LocalizedLabel::native("Add Tile", "Kachel hinzufügen"))
             .mutation("deleteTile", LocalizedLabel::native("Delete Tile", "Kachel löschen"))
@@ -47,26 +46,17 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_destructive("clearTiles")
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
-            // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
             .action_with(semio_framework_plugin::ActionDefinition::new("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"), ActionKind::Shell, "copy"))
             .action_with(semio_framework_plugin::ActionDefinition::new("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"), ActionKind::Shell, "download"))
-            // 👁️ Ephemeral view state — engagement draft, locale. Selection/hover are framework-owned
-            // now (see `.interaction(...)` below): interactionSelect/interactionHover/clearSelection/
-            // selectAll/setSelectionMode/setInteractionGranularity auto-inject, never declared here
-            // (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
             .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
             .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
-            // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
                 ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&2),
                 ActionArgDef::number("columns", LocalizedLabel::native("Columns", "Spalten")).required().default_value(&2),
             ])
-            // 🧱️ `setSource`/`setFrame` decode `#[dsl(block)]` payloads (`source`, `frame`) — the arg
-            // ids and the record shapes are the reducer's, so an agent reading the published input
-            // schema sends what `command_from_action` actually decodes.
             .action_args("setSource", vec![
                 ActionArgDef::object(
                     "source",
@@ -88,8 +78,6 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
                     .required()
                     .default_value(&"demo"),
             ])
-            // 🎛️ App-scope command — see `🎮️commands/🌱️seed-grid::reset_grid`'s doc comment for why this
-            // isn't `seedGrid`/`clearTiles`.
             .app_command("resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document", ActionKind::Mutation)
             .action_interactive_job("seedGrid", InteractiveJobClassification::Migrated)
             .action_interactive_job("addTile", InteractiveJobClassification::Migrated)
@@ -110,11 +98,6 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .action_interactive_job("copyPrompt", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::Migrated)
             .action_destructive("exportVideoFromDeck")
-            // 🕹️ The framework-owned "tiles" interaction domain (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
-            // tree (`.interaction_domain("tiles")`) and the tile-editor canvas's pick selection;
-            // auto-injects interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-            // setInteractionGranularity, replacing the deleted bespoke `setSelectedIds` view action.
             .interaction(InteractionDefinition {
                 id: PRESENTATION_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Tiles", "Kacheln"),
@@ -132,12 +115,6 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .window_kind_interactions(tile_editor::PRESENTATION_PLAY_WINDOW_MAIN, vec![InteractionRef::new(PRESENTATION_INTERACTION_DOMAIN)])
             .config(AnimatePresentationPlayApp::config_spec())
             .io(presentation_io())
-            // 🚧️ SDK GAP (contract §2.4): no `.example(...)`/`.workflow(...)` on `EditorBuilder` — the
-            // old `crate::examples::art_presentation_demo::source()` app-level example registration and the
-            // no-op `.workflow("animate", "Animate", "deck")` call are dropped here (not silently:
-            // reported in this packet's migration notes). The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::examples::...`, real content, pre-existing) is the modern,
-            // role-agnostic replacement surface for this.
             .action_describe("seedGrid", LocalizedLabel::native("Replaces every tile of the deck with a fresh grid of the given rows and columns cut from the source image; the previous tiles are discarded.", "Ersetzt alle Kacheln des Decks durch ein neues Raster mit den angegebenen Zeilen und Spalten aus dem Quellbild; die bisherigen Kacheln werden verworfen."))
             .action_describe("addTile", LocalizedLabel::native("Adds one new tile cropping the given region of the source image (a small square near the top left when none is given) and selects it.", "Fügt eine neue Kachel hinzu, die den angegebenen Bereich des Quellbilds ausschneidet (ohne Angabe ein kleines Quadrat oben links), und wählt sie aus."))
             .action_describe("deleteTile", LocalizedLabel::native("Deletes one tile by id from the deck; its crop and name are gone unless the edit is undone.", "Löscht eine Kachel anhand ihrer Id aus dem Deck; Zuschnitt und Name sind fort, sofern die Änderung nicht rückgängig gemacht wird."))

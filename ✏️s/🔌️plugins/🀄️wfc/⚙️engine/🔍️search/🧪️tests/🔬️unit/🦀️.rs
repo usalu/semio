@@ -148,8 +148,6 @@ fn fixed_pins_are_respected() {
 
 #[test]
 fn budget_exceeded_reports_partial_state() {
-    // A checkerboard path fully solves after a single decision (propagation alone forces
-    // every other node), so the budget must bite before any decision is even attempted.
     let (model, topo, _arcs) = checkerboard_topology(30);
     let config = SearchConfig { budget: Budget { max_observations: Some(0), ..Default::default() }, ..Default::default() };
     let outcome = solve(&model, &topo, &config, 1, None, &[]);
@@ -183,10 +181,6 @@ fn same_seed_is_fully_reproducible() {
 
 #[test]
 fn golden_replay_same_seed_reproduces_the_identical_decision_trace() {
-    // Determinism at the level of the final assignment (`same_seed_is_fully_reproducible`)
-    // is necessary but not sufficient — this checks the exact decision *sequence* two
-    // `DiagLevel::Decisions` solves recorded is byte-identical via `TraceReplay`, catching a
-    // divergence that happened to still land on the same final assignment by coincidence.
     use crate::diag::TraceReplay;
     let (model, topo, _arcs) = k_graph(4, 4);
     let config = SearchConfig { diag_level: DiagLevel::Decisions, ..Default::default() };
@@ -301,7 +295,7 @@ fn solve_all_finds_every_solution_and_proves_complete() {
     let config = SearchConfig::default();
     let (solutions, complete) = solve_all(&model, &topo, &config, 1, None, &[], 1000);
     assert!(complete);
-    assert_eq!(solutions.len(), 6); // 3! proper colorings of K3 with exactly 3 colors
+    assert_eq!(solutions.len(), 6);
     for sol in &solutions {
         assert!(oracle::check_assignment(&model, &sol.assignment, &arcs).is_ok());
     }
@@ -332,7 +326,7 @@ fn solve_all_respects_limit_and_reports_incomplete() {
 #[test]
 fn nogood_learning_still_proves_unsat_on_pigeonhole_instance() {
     use crate::nogood::NogoodConfig;
-    let (model, topo, _arcs) = k_graph(5, 4); // K5 needs 5 colors, only 4 available: unsat
+    let (model, topo, _arcs) = k_graph(5, 4);
     let config = SearchConfig { nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
     let outcome = solve(&model, &topo, &config, 1, None, &[]);
     match outcome {
@@ -346,9 +340,6 @@ fn nogood_learning_survives_restarts_and_still_proves_unsat() {
     use crate::nogood::NogoodConfig;
     let (model, topo, _arcs) = k_graph(5, 4);
     let config = SearchConfig { mode: SearchMode::RestartOnly, max_restarts: Some(20), restart_schedule: RestartSchedule::Fixed(10), nogood: NogoodConfig { enabled: true, ..Default::default() }, ..Default::default() };
-    // RestartOnly never proves unsat by itself (it just gives up) — this exercises nogoods
-    // persisting and being re-watched across every restart without ever panicking or
-    // corrupting the search, over many independent seeds.
     for seed in 0..10 {
         let outcome = solve(&model, &topo, &config, seed, None, &[]);
         assert!(matches!(outcome, SolveOutcome::Contradiction(_)), "seed {seed}: expected Contradiction, got {outcome:?}");
@@ -394,11 +385,6 @@ mod quick {
     #[test]
     fn random_instances_with_nogoods_enabled_still_match_oracle() {
         use crate::nogood::NogoodConfig;
-        // Same sweep as `random_instances_solved_or_proven_unsat_match_oracle`, but with
-        // nogood learning turned on — nogoods are supposed to be a purely redundant pruning
-        // layer (see 🦀️nogood.rs's module doc), so this must reach the exact same
-        // Solved-or-proven-Unsatisfiable verdict as the oracle on every trial, never a
-        // different one.
         let mut rng = Rng::from_seed(778);
         for trial in 0..100 {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;

@@ -20,10 +20,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_XML)
@@ -79,112 +75,90 @@ pub mod derived_construction {
     }
 
     impl PathBuilder {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self::default()
         }
         /// 🧩 Seeds the builder from an already-typed command list (used to reconstruct a path
         /// programmatically, e.g. from an analyzer's output, without re-parsing/re-stringifying it).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn from_commands(cmds: Vec<PathCommand>) -> Self {
             Self { cmds }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn move_to(mut self, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::MoveTo { x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn move_by(mut self, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::MoveTo { x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn line_to(mut self, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::LineTo { x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn line_by(mut self, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::LineTo { x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn horizontal_to(mut self, x: f64) -> Self {
             self.cmds.push(PathCommand::HorizontalLineTo { x, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn horizontal_by(mut self, dx: f64) -> Self {
             self.cmds.push(PathCommand::HorizontalLineTo { x: dx, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn vertical_to(mut self, y: f64) -> Self {
             self.cmds.push(PathCommand::VerticalLineTo { y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn vertical_by(mut self, dy: f64) -> Self {
             self.cmds.push(PathCommand::VerticalLineTo { y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn cubic_to(mut self, x1: f64, y1: f64, x2: f64, y2: f64, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn cubic_by(mut self, x1: f64, y1: f64, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn smooth_cubic_to(mut self, x2: f64, y2: f64, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn smooth_cubic_by(mut self, x2: f64, y2: f64, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::SmoothCurveTo { x2, y2, x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn quadratic_to(mut self, x1: f64, y1: f64, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn quadratic_by(mut self, x1: f64, y1: f64, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn smooth_quadratic_to(mut self, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn smooth_quadratic_by(mut self, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::SmoothQuadraticCurveTo { x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn arc_to(mut self, (rx, ry): (f64, f64), x_axis_rotation: f64, large_arc: bool, sweep: bool, x: f64, y: f64) -> Self {
             self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative: false });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn arc_by(mut self, (rx, ry): (f64, f64), x_axis_rotation: f64, large_arc: bool, sweep: bool, dx: f64, dy: f64) -> Self {
             self.cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x: dx, y: dy, relative: true });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn close(mut self) -> Self {
             self.cmds.push(PathCommand::ClosePath);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn build(self) -> Vec<PathCommand> {
             self.cmds
         }
@@ -201,21 +175,17 @@ pub mod derived_construction {
     }
 
     impl GradientStopSpec {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(offset: impl Into<String>) -> Self {
             Self { offset: offset.into(), color: None, opacity: None }
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_color(mut self, color: impl Into<String>) -> Self {
             self.color = Some(color.into());
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_opacity(mut self, opacity: impl Into<String>) -> Self {
             self.opacity = Some(opacity.into());
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn into_element(self) -> SvgElement {
             SvgElement::Stop { common: CommonAttrs::default(), offset: self.offset, stop_color: self.color, stop_opacity: self.opacity }
         }
@@ -232,75 +202,61 @@ pub mod derived_construction {
     }
 
     impl ElementBuilder {
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new() -> Self {
             Self::default()
         }
 
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Rect { common, x, y, width, height, rx: None, ry: None });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, (rx, ry): (f64, f64), common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Rect { common, x, y, width, height, rx: Some(rx), ry: Some(ry) });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Circle { common, cx, cy, r });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Ellipse { common, cx, cy, rx, ry });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Line { common, x1, y1, x2, y2 });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Polyline { common, points });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Polygon { common, points });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Path { common, d: path.build() });
             self
         }
         /// 🧬 Nests a `<g>` group: `build` receives a fresh `ElementBuilder` scoped to the group.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             let inner = build(ElementBuilder::new());
             self.children.push(SvgElement::Group { common, children: inner.children });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             let inner = build(ElementBuilder::new());
             self.children.push(SvgElement::Defs { common, children: inner.children });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Text { common, x, y, children: vec![SvgElement::TextNode(text.into())] });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
             self.children.push(SvgElement::Use { common, href: href.into(), x, y, width, height });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::LinearGradient {
                 common: CommonAttrs::default(),
@@ -313,7 +269,6 @@ pub mod derived_construction {
             });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, (fx, fy): (Option<f64>, Option<f64>), stops: Vec<GradientStopSpec>) -> Self {
             self.children.push(SvgElement::RadialGradient {
                 common: CommonAttrs::default(),
@@ -327,7 +282,6 @@ pub mod derived_construction {
             });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn build(self) -> Vec<SvgElement> {
             self.children
         }
@@ -352,88 +306,71 @@ pub mod derived_construction {
 
     impl SvgBuilderConstruction {
         //#region TypedConstructors
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_view_box(mut self, min_x: f64, min_y: f64, width: f64, height: f64) -> Self {
             self.view_box = Some(ViewBox { min_x, min_y, width, height });
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_dimensions(mut self, width: impl Into<String>, height: impl Into<String>) -> Self {
             self.width = Some(width.into());
             self.height = Some(height.into());
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_xmlns(mut self, xmlns: impl Into<String>) -> Self {
             self.xmlns = Some(xmlns.into());
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_rect(x, y, width, height, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, (rx, ry): (f64, f64), common: CommonAttrs) -> Self {
             self.elements = self.elements.add_rect_rounded(x, y, width, height, (rx, ry), common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_circle(cx, cy, r, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_ellipse(cx, cy, rx, ry, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_line(x1, y1, x2, y2, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_polyline(points, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_polygon(points, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_path(path, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             self.elements = self.elements.add_group(common, build);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
             self.elements = self.elements.add_defs(common, build);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_text(x, y, text, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
             self.elements = self.elements.add_use(href, x, y, width, height, common);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
             self.elements = self.elements.define_linear_gradient(id, x1, y1, x2, y2, stops);
             self
         }
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, (fx, fy): (Option<f64>, Option<f64>), stops: Vec<GradientStopSpec>) -> Self {
             self.elements = self.elements.define_radial_gradient(id, cx, cy, r, (fx, fy), stops);
             self
@@ -548,8 +485,6 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
                         Some(_) => semio_framework_plugin::io::Confidence::Low,
                         None => semio_framework_plugin::io::Confidence::Low,
                     },
-                    // 🚧️ Malformed XML: still `Low` rather than a hard rejection, since a truncated
-                    // real `.svg` file is a plausible source this artifact still owns.
                     Err(_) => semio_framework_plugin::io::Confidence::Low,
                 },
                 AnalyzeSource::Binary(_) => semio_framework_plugin::io::Confidence::Low,

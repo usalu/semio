@@ -1,2 +1,2 @@
-/** pipeline semio */
+/** 🌊️ pipeline semio */
 export const ID = 'pipeline';

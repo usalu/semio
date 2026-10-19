@@ -33,7 +33,6 @@ impl Default for SvgSnapshot {
 
 impl SvgSnapshot {
     /// 🧠️ Returns the lossless logical SVG state used by diff and mutation laws.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn semantic_projection(&self) -> Self {
         self.clone()
     }
@@ -102,13 +101,11 @@ pub struct Matrix2D {
 }
 
 impl Matrix2D {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn identity() -> Self {
         Self { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 }
     }
     /// ✖️ Composes `self ∘ other` (apply `other` first, then `self`) -- matches SVG's
     /// left-to-right `transform="A B"` list semantics, where the combined matrix is `A * B`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn multiply(&self, other: &Matrix2D) -> Matrix2D {
         Matrix2D {
             a: self.a * other.a + self.c * other.b,
@@ -160,7 +157,6 @@ pub enum TransformOp {
 }
 
 impl TransformOp {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_matrix(&self) -> Matrix2D {
         match *self {
             TransformOp::Matrix { a, b, c, d, e, f } => Matrix2D { a, b, c, d, e, f },
@@ -283,41 +279,33 @@ pub struct CommonAttrs {
 }
 
 impl CommonAttrs {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new() -> Self {
         Self::default()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_id(mut self, id: impl Into<String>) -> Self {
         self.id = Some(id.into());
         self
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_class(mut self, class: impl Into<String>) -> Self {
         self.class = Some(class.into());
         self
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_transform(mut self, ops: Vec<TransformOp>) -> Self {
         self.transform = Some(ops);
         self
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_fill(mut self, v: impl Into<String>) -> Self {
         self.presentation.fill = Some(v.into());
         self
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_stroke(mut self, v: impl Into<String>) -> Self {
         self.presentation.stroke = Some(v.into());
         self
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_stroke_width(mut self, v: impl Into<String>) -> Self {
         self.presentation.stroke_width = Some(v.into());
         self
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn with_opacity(mut self, v: impl Into<String>) -> Self {
         self.presentation.opacity = Some(v.into());
         self

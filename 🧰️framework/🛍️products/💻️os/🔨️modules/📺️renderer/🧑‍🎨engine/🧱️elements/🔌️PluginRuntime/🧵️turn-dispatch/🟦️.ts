@@ -4,16 +4,16 @@
  */
 
 // #region 🔌️Adapters
-import { type OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework-actor/shard-client/ui-patch";
-import { type ShardActorActivationLease, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput } from "@semio-tech/framework-actor/shard-client/activation";
-import { type ShardBudget, type ShardCommandIngressPage, type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
+import { type OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework/actor/shard-client/ui-patch";
+import { type ShardActorActivationLease, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput } from "@semio-tech/framework/actor/shard-client/activation";
+import { type ShardBudget, type ShardCommandIngressPage, type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 // #endregion 🔌️Adapters
 import type { ActorInstanceLifecycleReceipt } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import { type OwnedUiInstanceRetirement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { type OwnedUiInstanceRetirement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import { TurnScheduler, type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
 import { createCommandStallWatchV1, type CommandStallWatchV1 } from "../⏱️command-stall/🟦️.ts";
-import { TYPED_OPERATION_ACK_MAGIC } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { TYPED_OPERATION_ACK_MAGIC } from "@semio-tech/framework/actor/wire-turn";
 import { coerceTurnResult, type WireTurnResult } from "../🪝️wire-codec/🟦️.ts";
 import { typedOperationRoutersByActor } from "../📬️typed-result/🟦️.ts";
 import { DEFAULT_SHARD_BUDGET, getShardClient } from "../🛰️runtime-singletons/🟦️.ts";
@@ -304,7 +304,7 @@ export function submitPluginTurn(actorId: string, events: readonly ShardEventEnv
       const mapKey = `${actorId} ${turnKey}`;
       const pending = pendingCoalescedTurns.get(mapKey);
       if (pending) {
-        pending.events = events; // 🎯️ latest-wins: the mailbox still holds THIS SAME payload object.
+        pending.events = events;
         pending.waiters.push(waiter);
         return;
       }
@@ -352,9 +352,6 @@ export function teardownPluginActor(actorId: string): void {
   getThunkScheduler().teardownActor(`command-ingress:${actorId}`, (payload) => payload.reject(fault));
   typedOperationRoutersByActor.get(actorId)?.closeAll();
   typedOperationRoutersByActor.delete(actorId);
-  // 🪃️ The teardown marker is dropped on the next unthrottled continuation, not a timer: a hidden
-  // renderer clamps a zero-delay timer to ~1 s, which would keep a re-activated actor id looking
-  // like it was still tearing down for a whole second.
   hostContinuations.schedule(() => tearingDownPluginActors.delete(actorId), 0);
 }
 //#endregion 🔖️PluginTurnScheduler

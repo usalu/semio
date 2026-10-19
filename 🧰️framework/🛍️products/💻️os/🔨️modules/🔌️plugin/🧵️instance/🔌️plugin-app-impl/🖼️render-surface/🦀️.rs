@@ -16,7 +16,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if self.pending.pending_render_tree.is_none()&&self.pending.pending_render_tree_close.is_none()&&self.pending.pending_render_tree_ready{self.pending.pending_render_tree_identity=None;self.pending.pending_render_tree_ready=false;}
         if let Some(identity)=self.pending.pending_render_tree_identity.as_mut(){identity.validate(cx)?;}else{self.pending.pending_render_tree_identity=Some(OriginalRenderTreeIdentity::capture(cx)?);}
         if self.pending.pending_render_tree.is_some(){return Ok(self.pending.pending_render_tree_ready.then_some(()));}
-        let original_render_result:crate::OriginalRenderResult<()>=async {
+        let original_render_result:semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<()>=async {
         if let Some(section)=semio_framework::UiRefreshSection::from_body_key(body_key){
             let tree=semio_framework_plugin_reactor_app::original_render_section(self,section,view_state)?;
             self.pending.retain_pending_render_tree(tree);
@@ -241,7 +241,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let snapshot_read={let(_,snapshot,_,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;if A::mounted_job_prepare_snapshot_read(render_operation,snapshot.as_ref()){Some(self.stores.store.snapshot_read().map_err(|error|error.into_fault())?)}else{None}};
         let effects={
             let(_,snapshot,config,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;
-            let doc=crate::ArtifactPendingView::new(snapshot.as_ref(),&self.child_composition.child_content_root,render_operation,&self.stores.store.envelope().id,snapshot_read,self.tool_runs.poll_view_for(view.and_then(|view|view.window_id.as_deref())),self.tool_machines.provisional_generation(),&self.tools.instance_operation_owner);
+            let doc=semio_framework_plugin_decl_views::ArtifactPendingView::new(snapshot.as_ref(),&self.child_composition.child_content_root,render_operation,&self.stores.store.envelope().id,snapshot_read,self.tool_runs.poll_view_for(view.and_then(|view|view.window_id.as_deref())),self.tool_machines.provisional_generation(),&self.tools.instance_operation_owner);
             let cfg=ConfigView{snapshot:config.as_ref(),window:None};
             ArtifactApp::pending_effects(&self.tools.instance_operation_owner,&doc,&cfg,view).await
         };

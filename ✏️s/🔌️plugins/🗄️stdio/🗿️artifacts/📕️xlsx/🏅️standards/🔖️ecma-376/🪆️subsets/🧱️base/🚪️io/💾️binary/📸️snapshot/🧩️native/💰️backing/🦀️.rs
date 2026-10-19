@@ -1,7 +1,8 @@
 //! 💰️ XLSX complete literal native fields settle one persistent backing stage.
 use super::*;
 use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
-use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn retire(value: XlsxSnapshot) {
     value.retire_sqlite_snapshot();
 }
@@ -62,7 +63,7 @@ pub(in crate::standards::v_ecma_376::subsets::base::io) fn input(bytes: &[u8], b
     control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative, |remaining, checkpoint| {
         let native_before = native_control.owned_bytes();
         let result = native_control.scoped_maximum(match native_before.checked_add(remaining) { Some(maximum) => maximum, None => return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot allowance overflow")), 0) }, |native| {
-            native.scoped_observer(&mut |event: semio_framework_value::native_decoding::NativeDecodeProgress| checkpoint(event.completed, event.total), |native| {
+            native.scoped_observer(&mut |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| checkpoint(event.completed, event.total), |native| {
                 (|| {
                     let body = if binary {
                         store::semio_format::unwrap_binary_controlled(bytes, "stdio.xlsx", store::semio_format::Component::Pack, 1, native)?

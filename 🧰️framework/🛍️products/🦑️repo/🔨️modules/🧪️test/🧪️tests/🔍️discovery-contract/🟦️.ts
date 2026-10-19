@@ -75,7 +75,6 @@ describe("🔍️ discovery and contract", () => {
     expect(cases.some((entry) => entry.case === basename(HOST_PROTOCOL_PARITY_CASE_DIR))).toBe(true);
   });
 
-  // ⏱️ One fresh repository walk compared with the file's own discovery: the second walk the law needs, not three.
   test(
     "discovery is idempotent",
     () => {
@@ -306,7 +305,6 @@ describe("🧩️ open/closed", () => {
     const domain = join(repoRoot, testTaxonomy(repoRoot).testDomainPath);
     for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/🟦️.ts", "📡️protocol/🦀️.rs", "🏃️runner/🦀️.rs"]) {
       const content = readFileSync(join(domain, file), "utf8");
-      // 🧭️Which areas are implementations is taxonomy vocabulary; this test names none of them.
       for (const area of implementationAreas()) expect(content.includes(`${area}/`), `${file} names the implementation area ${area}`).toBe(false);
     }
   });

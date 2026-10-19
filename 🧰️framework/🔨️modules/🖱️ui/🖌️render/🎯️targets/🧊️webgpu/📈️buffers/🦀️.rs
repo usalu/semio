@@ -33,7 +33,6 @@ pub(crate) struct GrowBuffer {
 impl GrowBuffer {
     /// 📤️ Uploads `data`, growing the backing buffer first if needed. Returns `None` for empty data
     /// (nothing to bind, matching `draw.rs`'s own early return) rather than an empty-but-valid slice.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn upload<T: Pod>(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, data: &[T], usage: wgpu::BufferUsages, label: &str) -> Option<wgpu::BufferSlice<'_>> {
         if data.is_empty() {
             return None;
@@ -64,7 +63,6 @@ pub(crate) struct WorldGlobalsRing {
 }
 
 impl WorldGlobalsRing {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, initial_slots: u32) -> Self {
         let capacity_slots = initial_slots.max(1);
         let buffer = Self::make_buffer(device, capacity_slots);
@@ -72,12 +70,10 @@ impl WorldGlobalsRing {
         Self { buffer, bind_group, capacity_slots }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn make_buffer(device: &wgpu::Device, slots: u32) -> wgpu::Buffer {
         device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_globals_ring"), size: WORLD_GLOBALS_SLOT_SIZE * slots as u64, usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn make_bind_group(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, buffer: &wgpu::Buffer) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("world3d_bind_group"),
@@ -86,7 +82,6 @@ impl WorldGlobalsRing {
         })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn ensure_slots(&mut self, device: &wgpu::Device, layout: &wgpu::BindGroupLayout, slots: u32) {
         if slots <= self.capacity_slots {
             return;
@@ -96,19 +91,16 @@ impl WorldGlobalsRing {
         self.bind_group = Self::make_bind_group(device, layout, &self.buffer);
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn write_passes(&self, queue: &wgpu::Queue, passes: &[World3dGlobals]) {
         for (index, globals) in passes.iter().enumerate() {
             queue.write_buffer(&self.buffer, index as u64 * WORLD_GLOBALS_SLOT_SIZE, bytemuck::bytes_of(globals));
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn offset_for_slot(&self, slot: u32) -> u32 {
         slot * WORLD_GLOBALS_SLOT_SIZE as u32
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(crate) fn bind_group(&self) -> &wgpu::BindGroup {
         &self.bind_group
     }

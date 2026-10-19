@@ -46,6 +46,7 @@ semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/�
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+semio-framework-os-kernel = { workspace = true }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }

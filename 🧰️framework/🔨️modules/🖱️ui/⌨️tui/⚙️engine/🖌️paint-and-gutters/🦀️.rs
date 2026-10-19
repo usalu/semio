@@ -30,7 +30,7 @@ impl Tui {
         walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.root(), &mut self.back);
         walk(&self.scene, &self.theme, focus, &self.hovered_chrome, self.scene.overlay_root(), &mut self.back);
         if let Some(preview) = &self.dock_preview {
-            crate::tui::window::paint_window_tab_preview(&preview.window, &self.theme, preview.window_rect, &mut self.back);
+            semio_framework_ui_tui_frame::window::paint_window_tab_preview(&preview.window, &self.theme, preview.window_rect, &mut self.back);
         }
     }
 

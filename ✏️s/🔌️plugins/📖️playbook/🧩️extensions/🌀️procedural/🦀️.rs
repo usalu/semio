@@ -476,20 +476,10 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
                 Some(&[50.0, 50.0]),
                 Some(&["Params".into(), "Preview".into()]),
             )).await
-            // 🔧️ Whole-payload import/export of the block's solid geometry — legitimate coarse-grained
-            // operations for this non-collaborative render slot (not the deleted framework `setDocument`).
             .mutation(ACTION_EXPORT_SOLID, LocalizedLabel::native("Export Solid", "Volumenkörper exportieren")).await
             .mutation(ACTION_IMPORT_SOLID, LocalizedLabel::native("Import Solid", "Volumenkörper importieren")).await
-            // 📝️ Only the interchange `format` is a user-facing panel choice; the import `data` payload
-            // arrives through the host file-open callback, so it is deliberately not a declared arg.
             .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()]).await
             .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]).await
-            // 🧵️ Every declared action needs an explicit phase-8 disposition: `validate_interactive_job_classification`
-            // rejects the `Unclassified` default, `App::try_from_builder` turns that into a `PluginAssemblyError`, and
-            // the guest then ships the `assembly-failed` manifest stub — which made the whole `playbook` activation die
-            // in `materialize dev`'s descriptor probe. Both verbs now own `ModuleRetainedCommandJobFactory`, the
-            // bounded first-step tool factory `validate_ui_dispatch_classification` demands, so `Migrated` is the
-            // truthful disposition and the shell can dispatch them (ticket 26/09/18 S10).
             .action_describe("exportSolidGeometry", LocalizedLabel::native("Exports the block's preview geometry as STEP, OBJ, STL or GLB and stores the result in the block's parameters for the shell to read back; nothing is written to disk.", "Exportiert die Vorschaugeometrie des Bausteins als STEP, OBJ, STL oder GLB und legt das Ergebnis in den Parametern des Bausteins ab, damit die Shell es ausliest; auf die Festplatte wird nichts geschrieben.")).await
             .action_describe("importSolidGeometry", LocalizedLabel::native("Imports solid geometry in the given format (STEP or OBJ text, STL or GLB as base64) into the block and stores the replayable geometry source in its parameters.", "Importiert Volumengeometrie im angegebenen Format (STEP- oder OBJ-Text, STL oder GLB als Base64) in den Baustein und legt die wiederherstellbare Geometriequelle in seinen Parametern ab.")).await
             .action_interactive_job(ACTION_EXPORT_SOLID, InteractiveJobClassification::Migrated).await
@@ -508,11 +498,6 @@ pub fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAsse
         .label("Playbook Module Procedural")
         .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:playbook-module-procedural")
-        // 🔗️ `MODULE_APP_ID` binds this surface to the `s.playbook.procedural` artifact kind, whose
-        // canonical owner is `playbook`; `surface_dependency_breaches` refuses a manifest that
-        // contributes a foreign surface without naming that owner, and the refusal arrives as the
-        // `assembly-failed` stub that killed the whole `playbook` activation in `materialize dev`.
-        // The sibling `ExtensionBundle` already declared the same edge — the plugin bundle did not.
         .depends_on("playbook", semio_framework::tree_pin!())
         .foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA)
         .document_app::<ModuleApp>(::semio_framework_async::poll::resolve_ready(create_module_app())?)

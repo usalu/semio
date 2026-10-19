@@ -185,7 +185,6 @@ pub(super) fn check_operative_sheet(document: &Vdi3805Snapshot, product: &Catalo
     }
     out.push(b.build());
 
-    // Every generic attribute entry must carry a non-empty key; numeric Blatt keys must parse.
     for (ei, entry) in generic_entries.iter().enumerate() {
         let key_ok = !entry.key.is_empty();
         let mut kc = CheckResult::assess(
@@ -247,12 +246,11 @@ pub(super) fn check_operative_sheet(document: &Vdi3805Snapshot, product: &Catalo
         }
     }
 
-    // Domain validation for mandatory enum keys (not just presence) — Blatt code lists.
     for key in keys {
         let Some(codes) = code_list_for_key(sheet, key) else { continue };
         let raw = kv.get(*key).cloned().or_else(|| generic_entries.iter().find(|e| e.key.eq_ignore_ascii_case(key)).map(|e| e.value.clone())).unwrap_or_default();
         if raw.is_empty() {
-            continue; // presence Fail already emitted
+            continue;
         }
         let ord = codes.iter().position(|c| *c == raw.as_str()).map(|i| (i + 1) as f64).unwrap_or(0.0);
         let ok = ord > 0.0;

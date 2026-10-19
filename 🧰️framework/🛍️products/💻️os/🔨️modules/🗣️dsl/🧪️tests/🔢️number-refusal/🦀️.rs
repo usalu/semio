@@ -5,7 +5,7 @@ use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::Shape;
 use semio_framework_dsl_record::parse_exact_controlled;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[test]
 fn os_controlled_numeric_token_bounds_preserve_distinct_work_and_value_refusals() {

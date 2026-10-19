@@ -231,7 +231,6 @@ fn decode_data_uri(href: &str) -> Option<(String, Vec<u8>)> {
 /// convention for embedded `DrawNode::Image` bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn base64_decode(s: &str) -> Option<Vec<u8>> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn val(c: u8) -> Option<u8> {
         match c {
             b'A'..=b'Z' => Some(c - b'A'),
@@ -326,7 +325,7 @@ fn draw_node_from_svg(el: &SvgElement, styles: &mut Vec<DrawStyle>) -> Option<Dr
             let at = SemioPoint2 { x: attr_f64(attrs, "x"), y: attr_f64(attrs, "y") };
             Some(DrawNode::Image { at, width: attr_f64(attrs, "width"), height: attr_f64(attrs, "height"), mime, bytes })
         }
-        _ => None, // defs/gradients/stop/use/other Unknown — no DrawNode equivalent, documented drop.
+        _ => None,
     }
 }
 

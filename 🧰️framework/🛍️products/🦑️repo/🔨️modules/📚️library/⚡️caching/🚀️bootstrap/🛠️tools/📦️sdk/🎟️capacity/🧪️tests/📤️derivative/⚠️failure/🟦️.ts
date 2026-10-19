@@ -11,9 +11,9 @@ import{withNxSdkDerivativeProjectionV1,requireNxSdkDerivativeProjectionV1,copyNx
 import type{NxSdkDerivativeProjectionV1}from"../../../../📥️source/🔗️derivative/📋️projection/🟦️.ts";
 import{receiveScriptProcessInvocation}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withResourceLeases,resourceLeasePathV1}from"@semio-tech/process/leases";
-import{readPhysicalCargoSourceV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import{readPhysicalCargoSourceV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import{withRepositoryToolingStoreV1,type RepositoryToolingStoreV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import{readNativeCallerAuthorityV1}from"../../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import{readNativeCallerAuthorityV1}from"../../../../../../../../📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import{withManagedToolingProvisionV1}from"../../../../../🧹️retention/📥️physical/🟦️.ts";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 

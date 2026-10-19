@@ -164,8 +164,8 @@ pub struct FrameActionOwners {
     head: usize,
     pub len: usize,
     pub batch: Option<FrameActionBatchOwner>,
-    closing: Option<semio_framework_value::ControlledRetirement<(String, String, Option<semio_framework_value::DslValue>)>>,
-    closing_receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
+    closing: Option<semio_framework_value_retirement::retirement::controlled::ControlledRetirement<(String, String, Option<semio_framework_value::DslValue>)>>,
+    closing_receipt: Option<semio_framework_ui_action::ActionQueueReceipt>,
 }
 
 impl Default for FrameActionOwners {
@@ -337,7 +337,7 @@ impl FrameActionOwners {
         if self.closing.is_some() || self.closing_receipt.is_some() { return Err(action); }
         self.closing_receipt = action.receipt;
         let ActionDescriptor { controller_id, action, args } = action.descriptor;
-        self.closing = Some(semio_framework_value::ControlledRetirement::retain((controller_id, action, args)));
+        self.closing = Some(semio_framework_value_retirement::retirement::controlled::ControlledRetirement::retain((controller_id, action, args)));
         Ok(())
     }
 

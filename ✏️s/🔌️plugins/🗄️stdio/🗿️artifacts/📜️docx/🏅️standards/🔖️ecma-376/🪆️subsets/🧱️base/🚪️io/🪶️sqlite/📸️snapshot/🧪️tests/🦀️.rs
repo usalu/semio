@@ -12,7 +12,7 @@ fn profile_fixture(plan:&serde_json::Value)->DocxSnapshot{
  use semio_s_artifact_stdio_zip::opc::{OpcPackage,OpcRelationship,OpcTargetMode};
  let mut opc=OpcPackage::default();opc.relationships.replace_owner(String::new(),vec![OpcRelationship{id:"main".into(),rel_type:format!("{}/officeDocument",plan["relationshipBase"].as_str().unwrap()),target:"word/document.xml".into(),target_mode:OpcTargetMode::Internal}]);
  let opc=semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage::try_from_package(opc).unwrap();
- DocxSnapshot{schema:"literal owned schema".into(),opc,xml_parts:crate::schema::snapshot::DocxXmlParts::try_from_iter([DocxXmlPart{path:"word/document.xml".into(),content_type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml".into(),document:semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(plan["xml"].as_str().unwrap()).unwrap()).unwrap()}]).unwrap()}
+ DocxSnapshot{schema:"literal owned schema".into(),opc,xml_parts:semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxXmlParts::try_from_iter([DocxXmlPart{path:"word/document.xml".into(),content_type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml".into(),document:semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(plan["xml"].as_str().unwrap()).unwrap()).unwrap()}]).unwrap()}
 }
 #[test]
 fn sqlite_snapshot_docx_exact_profile_policies_use_typed_namespace_entities(){

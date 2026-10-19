@@ -1,4 +1,4 @@
-//! artifact tree).
+//! 🌳️ artifact tree).
 //! 🎵️ FEM 2D module engine — modal/buckling analysis bridge (pure FE algorithm, moved out of the
 
 use crate::fem2d_engine::meshing::build_nodes_and_elements;

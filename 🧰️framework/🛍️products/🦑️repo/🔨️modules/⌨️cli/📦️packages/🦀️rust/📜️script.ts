@@ -1,14 +1,10 @@
-#!/usr/bin/env bun
-import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { runDeclaredRustBuildV1, runRepositoryPublishedCargoExecutableV1, runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
+
+import { runDeclaredRustBuildV1, runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** ⚙️ Builds/tests the `semio-framework-repo-cli` crate and execs its `semio-repo` binary (owned build route for `repo/cli/rs`). */
-import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-
-import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { runRepoScript, runMcpScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 const crates = ["semio-framework-repo-cli-event-stream", "semio-framework-repo-cli-command-framework", "semio-framework-repo-cli-mcp-verb", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs", "semio-framework-repo-cli"];
 
@@ -31,9 +27,8 @@ class TestScript extends BundleScript {
  * 🧭️ Runs the repo command line: builds `semio-repo`, then execs it with the forwarded verb.
  */
 class RepoScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{
-    await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-cli-rs",this.root,this.invocation,[],"build-cli");
-    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),segments,this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:published-execution",0));
+  async run(segments:string[]): Promise<void> {
+    await runRepoScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 
@@ -42,9 +37,8 @@ class RepoScript extends BundleScript {
  * stdio with the profile taken from the first argument.
  */
 class McpScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{
-    await runDeclaredRustBuildV1(this.repoRoot,"@semio-tech/repo-cli-rs",this.root,this.invocation,[],"build-cli");
-    process.exitCode=await runRepositoryPublishedCargoExecutableV1(join(this.root,"Cargo.toml"),"semio-repo"+(process.platform==="win32"?".exe":""),["mcp",...segments],this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:published-execution",0));
+  async run(segments:string[]): Promise<void> {
+    await runMcpScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
 

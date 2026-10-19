@@ -1,4 +1,4 @@
-//! artifact tree).
+//! 🌳️ artifact tree).
 //! 🎵️ FEM 3D module engine — modal + linear buckling analyses (pure FE algorithm, moved out of the
 
 use crate::fem3d_engine::meshing;

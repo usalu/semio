@@ -36,16 +36,9 @@ export class ReservationActionDispatch {
     try {
       await this.awaitUiQuiescence();
       return await this.hub.lanes.enqueueTurn(async () => {
-        // 🩹️ Offers are acknowledged inside the turn that made them, so this is null at a turn boundary today; it is
-        // awaited (never refused) so the contract holds if an offer ever outlives its turn.
         if (this.session.pendingUiPatch !== null) await this.session.pendingUiPatch.settled;
         const fields = this.session.lease.fields();
         this.hub.backbone.assertDocumentOwnerCurrent();
-        // 🪞️ The mailbox sends one action at a time and stamps each at issue, so a queued click carries the revision
-        // on screen when it was made, which later acknowledged patches have since passed. Any revision this lifetime
-        // painted on the action's own surface (1 ..= its last acknowledged revision: the window an app command was issued
-        // in, the intent's window or panel body for a UI intent) is the user's; the guest judges an intent's geometry
-        // staleness itself (`DEFAULT_REVISION_TOLERANCE`).
         const intent = request.payload.kind === "ui-intent" ? browserActorUiIntentV1(request) : null,
           command = intent === null ? browserActorAppCommandV1(request, fields, this.session.windowKeys) : null;
         const painted = request.surfaceRevision >= 1 && request.surfaceRevision <= (this.session.renderedSurfaceRevisions.get(intent?.surfaceKey ?? command!.surfaceKey) ?? 0);

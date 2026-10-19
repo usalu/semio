@@ -1,7 +1,7 @@
 {
  "name":"@semio-tech/framework-record-projection","tags":["framework","value"],
  "targets":{
-  "verify-source":{"executor":"repo:script","cache":false,"options":{"cwd":"🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record","command":"bun ./📜️script.ts verify source"}},
-  "verify-native":{"executor":"repo:script","cache":false,"options":{"cwd":"🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record","command":"bun ./📜️script.ts verify native"}}
+  "verify-source":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"cwd":"🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record","command":"bun ./📜️script.ts verify source"}},
+  "verify-native":{"executor":"repo:script", "inputs": ["default", "^default"], "outputs": [],"cache":true,"options":{"cwd":"🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record","command":"bun ./📜️script.ts verify native"}}
  }
 }

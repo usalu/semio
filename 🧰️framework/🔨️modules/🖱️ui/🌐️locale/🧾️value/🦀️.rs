@@ -1,6 +1,7 @@
 //! 🌱️ Direct declared-axis codecs under the canonical neutral Value interface.
 use super::{Locale, Terminology};
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeDecodeControl, NativeEncodeControl};
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 macro_rules! axis_value {
     ($owner:ty) => {

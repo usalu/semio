@@ -73,9 +73,6 @@ fn build_pdf() -> Vec<u8> {
     let count = kids.len() as i64;
     document.objects.insert(pages_id, Object::Dictionary(dictionary! { "Type" => "Pages", "Kids" => kids, "Count" => count }));
 
-    // 🗂️ A referenced, `/Outlines`-shaped dictionary — a real `set-dict-entry`/`remove-dict-entry`
-    // target distinct from any page, mirroring the already-proven pattern against the committed
-    // bachelor-thesis document (its own `Outlines`/`Count` and `OpenAction`/`S` targets).
     let outlines_id = document.add_object(Object::Dictionary(dictionary! { "Type" => "Outlines", "Count" => 0 }));
 
     let catalog_id = document.add_object(dictionary! {

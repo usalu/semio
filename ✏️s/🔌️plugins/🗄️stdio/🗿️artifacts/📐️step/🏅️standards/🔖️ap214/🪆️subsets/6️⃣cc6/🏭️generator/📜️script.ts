@@ -208,11 +208,11 @@ async function brep(): Promise<Kernel> {
  * grow two families at once without touching the same file.
  */
 const RECIPES: readonly Recipe[] = [
-  ...(await import("./🧭️spatial-relationship/📜️script.ts")).RECIPES,
-  ...(await import("./🧩️shape-complexity/📜️script.ts")).RECIPES,
-  ...(await import("./🛡️robustness/📜️script.ts")).RECIPES,
-  ...(await import("./⚙️mechanical/📜️script.ts")).RECIPES,
-  ...(await import("./💥️failure/📜️script.ts")).RECIPES,
+  ...(await import("./🧭️spatial-relationship/🟦️.ts")).RECIPES,
+  ...(await import("./🧩️shape-complexity/🟦️.ts")).RECIPES,
+  ...(await import("./🛡️robustness/🟦️.ts")).RECIPES,
+  ...(await import("./⚙️mechanical/🟦️.ts")).RECIPES,
+  ...(await import("./💥️failure/🟦️.ts")).RECIPES,
 ];
 //#endregion 🧪️Corpus
 

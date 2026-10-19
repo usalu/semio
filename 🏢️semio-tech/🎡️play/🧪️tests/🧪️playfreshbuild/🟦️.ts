@@ -1,14 +1,13 @@
 import { playE2eInvocationPid } from "../../🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 
-/** 🧪️ Proves the fresh release contract against the language-neutral fixture, independent argument parser and a third-party JSONC parser: one build invocation, no nested build invocation, every component produced by the release build driver in a cold generation. */
+/** 🧪️ Proves the fresh release contract against the language-neutral fixture, independent argument parser and the dashboard registry declarations: one build invocation, no nested build invocation, every component produced by the release build driver in a cold generation. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { playFreshBuildEnvironment: () => Readonly<Record<string, string>>; playFreshBuildArgs: (resources: { cpus: number; memoryBytes: number }) => readonly string[]; playFreshParallel: (resources: { cpus: number; memoryBytes: number }) => number; PLAY_FRESH_BUILD_TARGET: string }): Promise<void> {
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
-  const require = createRequire(import.meta.url), parse = require("yargs-parser"), jsonc = require("jsonc-parser");
+  const require = createRequire(import.meta.url), parse = require("yargs-parser");
   const repository = new URL("../../../../", import.meta.url), read = (path: string): string => readFileSync(new URL(path, repository), "utf8");
-  const protocolEnvironment = JSON.parse(read(fixture.environmentProtocol)).definitions.Protocol.const.environment;
   const { describe, expect, it } = vitest;
   describe("fresh Play release", () => {
     it("is one uncached release driver task whose jobs bundle before any component links and assemble pages after every module", () => {
@@ -26,7 +25,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("refuses stale catalog owners in the release gate instead of rewriting the catalog during a build", () => {
       const ts = require("typescript");
-      const text = readFileSync(new URL("../../🔨️modules/📦️site/📜️script.ts", import.meta.url), "utf8"), source = ts.createSourceFile("script.ts", text, ts.ScriptTarget.Latest, true);
+      const text = readFileSync(new URL("../../🔨️modules/📦️site/🟦️.ts", import.meta.url), "utf8"), source = ts.createSourceFile("script.ts", text, ts.ScriptTarget.Latest, true);
       const calls: any[] = [];
       const visit = (node: any): void => { if (ts.isCallExpression(node)) calls.push(node); ts.forEachChild(node, visit); };
       visit(source);
@@ -37,12 +36,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("is exactly one selected-backend invocation of the complete release graph", () => {
       const resources = { cpus: fixture.buildMachine.cpus, memoryBytes: fixture.buildMachine.memoryGiB * 1024 ** 3 }, args = dependencies.playFreshBuildArgs(resources);
-      for (const file of fixture.launch.files) {
-        const entries = jsonc.parse(read(file)).configurations.filter((entry: any) => entry.name === fixture.launch.name);
-        expect(entries, file).toHaveLength(1);
-        expect(entries[0].command, file).toBe(`${fixture.launch.runner} ${args.join(" ")}`);
-        expect(entries[0].env, file).toEqual({ ...dependencies.playFreshBuildEnvironment(), ...protocolEnvironment });
-      }
+      for (const file of fixture.retiredLaunchFiles) expect(existsSync(new URL(file, repository)), file).toBe(false);
+      const dashboard = fixture.dashboard, registry = JSON.parse(read(dashboard.registryProject)).metadata.semio.dashboard, choice = (parameters: any[], id: string, value: string) => parameters.find((parameter: any) => parameter.id === id).values.find((known: any) => known.id === value);
+      const ship = choice(registry.parameters, dashboard.ship.buildMode, dashboard.ship.buildModeValue), skipAll = choice(registry.parameters, dashboard.ship.cache, dashboard.ship.cacheValue);
+      const generation = choice(JSON.parse(read(dashboard.playBuildProject)).targets[fixture.release.target].metadata.semio.dashboard.parameters, dashboard.parameter, dashboard.value);
+      expect(skipAll.buildFlags).toEqual(args.filter(argument => argument.startsWith("--skip-")));
+      expect(ship.buildFlags).toEqual(skipAll.buildFlags);
+      expect({ ...ship.env, ...generation.env }).toEqual(Object.fromEntries(Object.entries(dependencies.playFreshBuildEnvironment()).filter(([name]) => name !== "SEMIO_BUILD_TERMINAL")));
       const parsed = parse(args, { boolean: ["skip-cache", "skip-remote-cache"] });
       expect(parsed._).toEqual(["run", fixture.target]);
       expect(dependencies.PLAY_FRESH_BUILD_TARGET).toBe(fixture.target);
@@ -53,7 +53,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(parsed.excludeTaskDependencies).toBeUndefined();
       const project = JSON.parse(readFileSync(new URL("../../📋️project.json", import.meta.url), "utf8"));
       expect(Object.values(project.targets).filter((target: any) => / nx(?:\.js)? (?:run|run-many) /u.test(String(target.options?.command ?? "")))).toEqual([]);
-      expect(readFileSync(new URL("../../🔨️modules/📦️site/📜️script.ts", import.meta.url), "utf8").includes("runOwnedNxInvocationV1"), "the site script never starts a nested backend invocation").toBe(false);
+      expect(["📜️script.ts", "🟦️.ts"].some((name) => readFileSync(new URL(`../../🔨️modules/📦️site/${name}`, import.meta.url), "utf8").includes("runOwnedNxInvocationV1")), "the site script never starts a nested backend invocation").toBe(false);
     });
     it("selects a cold release driver generation and bypasses cache reads", () => {
       expect(dependencies.playFreshBuildEnvironment()).toEqual(fixture.environment);
@@ -84,11 +84,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(ts.isObjectLiteralExpression(options), caller).toBe(true);
         expect(options.properties.map((property: any) => property.name.getText(source)).filter((name: string) => fixture.driver.ownerArguments.includes(name)).sort(), caller).toEqual([...fixture.driver.ownerArguments].sort());
       }
-      for (const file of fixture.launch.files) {
-        const entries = jsonc.parse(read(file)).configurations.filter((entry: any) => entry.name === fixture.driver.freshLaunch);
-        expect(entries, file).toHaveLength(1);
-        expect(entries[0].env, file).toEqual({ [fixture.driver.generationEnvironment]: "fresh", ...protocolEnvironment });
-      }
+      const generation = JSON.parse(read("📋️project.json")).targets[fixture.driver.target].metadata.semio.dashboard.parameters.find((parameter: any) => parameter.id === fixture.dashboard.parameter).values.find((value: any) => value.id === fixture.dashboard.value);
+      expect(generation.env).toEqual({ [fixture.driver.generationEnvironment]: "fresh" });
     });
     it("bounds parallel build tasks by cores and by memory", () => {
       for (const row of fixture.parallelRows) {

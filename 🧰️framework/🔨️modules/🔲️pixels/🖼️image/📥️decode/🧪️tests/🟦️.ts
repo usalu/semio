@@ -18,7 +18,7 @@ for(const row of cases)test(row.name,async()=>{
  const data=row.input.data,comma=data.indexOf(","),referenceUrl=data.slice(0,comma).toLowerCase()+data.slice(comma),bytes=data.slice(0,5).toLowerCase()==="data:"?Buffer.from(await(await fetch(referenceUrl)).arrayBuffer()):Buffer.from(data,"base64");
  const reference=PNG.sync.read(bytes,{skipRescale:bytes[24]===16}),pixels=reference.depth===16?Array.from(reference.data as unknown as Uint16Array,v=>v>>>8):Array.from(reference.data);
  const visible=(v:number[])=>v.map((n,i)=>i%4<3&&row.expected.pixels[i-i%4+3]===0?0:n);
- expect(visible(pixels)).toEqual(visible(row.expected.pixels));
+ expect(visible(pixels)).toEqual(visible(row.expected.pixels as number[]));
 });
 for(const row of invalid)test("refuse "+row.name,()=>{
  let job:ImageDecodeJob|undefined;expect(()=>{job=create(row.input);finish(job,7);}).toThrow();

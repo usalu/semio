@@ -1,7 +1,7 @@
 /** 🎫 The shell says what it holds, plus gizmo, virtual file system, replay refusal and locale source. */
 import { readUiPreferences } from "../../🧱️elements/🎚️UiPreferences/🟦️.ts";
 import explicitLocaleFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/⏳️compute-locale.json";
-import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "@semio-tech/framework/ui/testing/fixtures";
 import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "@semio-tech/ui-react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -31,7 +31,7 @@ describe("🎫️ the shell says what it holds", () => {
     const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../..");
     const nodeGraph = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"));
     const manifest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts"), "utf8");
-    const { nodeGraphActions } = await import("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts");
+    const { nodeGraphActions } = await import("@semio-tech/framework/modules/ui/scene/node-graph");
 
     const reserved = /export const CLEAR_SELECTION_ACTION_ID = "([^"]+)";/u.exec(manifest)?.[1];
     expect(reserved, "the framework declares the reserved clear verb").toBe("clearSelection");
@@ -63,7 +63,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("the shell history projection keeps the active alternative across delta patches and replaces it on a snapshot", async () => {
-    const { shellHistoryProjectionAfterPatchV1, EMPTY_SHELL_HISTORY_PROJECTION_V1 } = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
+    const { shellHistoryProjectionAfterPatchV1, EMPTY_SHELL_HISTORY_PROJECTION_V1 } = await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts");
     const fixture = (await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🧪️tests/🧫️fixtures/🔀️history-alternatives/🔣️.json")).default;
     let projection = EMPTY_SHELL_HISTORY_PROJECTION_V1;
     for (const row of fixture.cases) {
@@ -74,9 +74,6 @@ describe("🎫️ the shell says what it holds", () => {
 
   it("the shell publishes the framework history cursor undo and redo are decided by, in the locale it is showing", async () => {
     const { shellHistoryCursorDomV1, SHELL_HISTORY_DOM_LABELS } = await import("../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts");
-    // 🌐️ A history row carries the whole locale matrix, exactly as Rust `LocalizedLabel` serialises
-    // it — the projection resolves it, so the SAME ledger publishes German labels for a German shell
-    // with no re-read of the guest's history. Ticket 26/09/18 slice U3.
     const bilingual = (en: string, de: string) => ({ native: { en, de }, reuse: { en, de } }) as const;
     const entry = (seq: number, en: string, de: string) => [seq, { seq, label: bilingual(en, de), actionId: `action-${seq}`, kind: "app", timestamp: "0" }] as const;
     const english = { terminology: "native", locale: "en" } as const;
@@ -199,8 +196,6 @@ describe("🎫️ the shell says what it holds", () => {
       const dragData = "dragData" in row ? row.dragData : undefined;
       const roles = deriveTreeDragRoles({ draggable: row.draggable, dragData }, false);
       expect(roles).toEqual(row.role ? [row.role] : []);
-      // 🧭️ Annotated, not inferred: the two fixture rows differ in which id lists are empty, so the
-      // imported JSON types one `labelStarts`/`visibleHandles` as `never[]` and `.includes(id)` refuses.
       const driverCases: readonly { readonly id: string; readonly drag: string; readonly visibleHandles: readonly string[]; readonly labelStarts: readonly string[]; readonly handleStarts: readonly string[] }[] = treeDragHandleFixture.drivers;
       for (const driverCase of driverCases) {
         const driver = driverCase.drag === "surface" ? COMPACT_UI_DRIVER : DEFAULT_UI_DRIVER;

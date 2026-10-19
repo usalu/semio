@@ -1,4 +1,4 @@
-//! lowpoly <- obj
+//! 🔺️ lowpoly <- obj
 //!
 //! Geometry over the real `engine::decode_obj` grammar (never a second bespoke parser): any OBJ
 //! (Blender, etc.) becomes real lowpoly objects — one per `o`

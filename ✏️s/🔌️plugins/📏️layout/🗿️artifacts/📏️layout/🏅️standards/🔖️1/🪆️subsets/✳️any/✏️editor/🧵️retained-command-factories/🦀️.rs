@@ -60,8 +60,6 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("layout-window-work-terminal"));
         }
-        // 🪟️ Window-lane verbs need the addressed Blueprint window; the document-lane verbs
-        // (`addFrame`/`patchPage`/…) and the host-only pointer gestures dispatch without one.
         let window_config_snapshot = input.context.and_then(|context| context.window_config.as_ref());
         let window = input.context.and_then(|context| context.view_state.as_ref());
         let addressed_window = || window.ok_or_else(|| Fault::from("layout-window-view-required"));

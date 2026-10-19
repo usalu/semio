@@ -60,18 +60,13 @@ impl Ac4Engine {
             });
         }
 
-        // The same (node, pattern) pair can be discovered independently via more than one
-        // incoming arc slot (each slot's own zero count triggers its own push); deduplicate before
-        // treating this as a worklist — a duplicate entry would otherwise make `propagate` decrement
-        // that removal's downstream support counters twice, over-pruning patterns that still had
-        // support after the *single* real removal.
         initially_unsupported.sort_unstable_by_key(|&(n, p)| (n.get(), p.get()));
         initially_unsupported.dedup();
 
         let mut engine = Self { counts, pattern_count };
         for &(u, a) in &initially_unsupported {
             if !domains.get(u).bits().get(a) {
-                continue; // already removed as a cascading consequence of an earlier entry below
+                continue;
             }
             if let RestrictResult::Wipeout = domains.get_mut(u).remove(a, model.weights()) {
                 metrics.removals += 1;

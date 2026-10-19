@@ -57,9 +57,6 @@ pub fn handle(payload: &AddFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
             stroke: None,
         },
     };
-    // 🕹️ Used to also `SetSelection { ids: vec![frame_id] }`; selecting the just-created frame is
-    // framework-owned now — ask the host to redispatch `interactionSelect` instead (ticket
-    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     Ok(Emit {
         artifact_mutations: vec![LayoutMutation::CreateFrame(CreateFrame { page_id, frame, index: Some(index), layer_id: Some(layer_id) })],
         effects: vec![crate::layout_select_effect(std::slice::from_ref(&frame_id), "replace")],

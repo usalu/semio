@@ -1,4 +1,4 @@
-//! `introduce-geometry-object` — insert into geometry.objects.
+//! ➕️ `introduce-geometry-object` — insert into geometry.objects.
 
 use semio_s_artifact_norm_iso16757_model::part_2::GeometryObject;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

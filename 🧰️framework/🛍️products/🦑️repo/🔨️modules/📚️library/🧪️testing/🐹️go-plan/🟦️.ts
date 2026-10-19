@@ -27,6 +27,7 @@ export type CanonicalGoLayout = Readonly<{
 }>;
 
 const GO_LANGUAGE_DIRECTORY = "🐹️go";
+const GO_HOST_ADAPTER_PACKAGE = "adapter";
 
 /** 🔣️Resolves Go compiler-input layout names from the repository taxonomy. */
 function canonicalGoLayout(): CanonicalGoLayout {
@@ -104,6 +105,7 @@ function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): C
           if (!existsSync(source)) continue;
           const info = lstatSync(source);
           if (!info.isFile() || info.isSymbolicLink()) continue;
+          if (goPackageClause(readFileSync(source, "utf8")) === GO_HOST_ADAPTER_PACKAGE) continue;
           map(directory, source, true);
         }
         continue;

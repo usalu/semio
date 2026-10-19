@@ -67,9 +67,9 @@ fn mask_excludes_inactive_voxels() {
     b.add_pattern(1.0);
     let rels = declare_stencil_relations_3d(&mut b, &Stencil3d::Face6).unwrap();
     let mut mask = vec![true; 27];
-    mask[13] = false; // center of 3x3x3
+    mask[13] = false;
     let topo = Grid3dTopology::new(3, 3, 3, &Stencil3d::Face6, rels, Boundary::Open, Boundary::Open, Boundary::Open, Some(mask)).unwrap();
-    let neighbor = topo.node_at(1, 1, 0).unwrap(); // directly below center
+    let neighbor = topo.node_at(1, 1, 0).unwrap();
     let mut out = Vec::new();
     topo.for_each_out_arc(neighbor, |m, _| out.push(m));
     assert!(!out.contains(&topo.node_at(1, 1, 1).unwrap()));

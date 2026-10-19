@@ -6,7 +6,9 @@ use crate::standards::v1::subsets::any::schema::preparation::literal_id_inverse:
 use semio_framework_value::paged::PagedUtf8;
 
 #[cfg(test)]
-use semio_framework_value::{list::PagedList, ValueError, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::{ValueError, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+#[cfg(test)]
+use semio_framework_value_persistent::list::PagedList;
 #[cfg(test)]
 use std::mem::size_of;
 

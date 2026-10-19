@@ -5,7 +5,7 @@ use semio_framework_os_flow_contract::{FlowHostSnapshot,OrderedMap,Widget,Widget
 use semio_framework_os_playbook_contract::{FormGeneration,GenerationPlayState};
 use semio_framework_os_kernel as store;
 use semio_framework_value::{FromValue,ToValue,ValueError,ValueRefusalKind};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::NativeEncodeControl;
 fn project_value<T:semio_framework_dsl_record::DslField>(value:&T,c:&mut NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{c.scoped_stage(|c|{c.begin_stage(0)?;value.to_value_controlled(c)})}
 fn project_optional_text(value:&Option<String>,c:&mut NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{match value{Some(value)=>project_value(value,c),None=>Ok(semio_framework_dsl_record::FieldValue::Absent)}}
@@ -67,7 +67,7 @@ fn decode_record_native<K:GenerationNative>(construct:impl FnOnce(&semio_framewo
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   
   let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(value)=>value,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+    let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(value)=>value,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {native.scoped_observer(&mut |event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 
   let result=(||{let spec=K::spec_producer().decode(native)?;let(record,_)=pack::record::decode_document_controlled(body,&spec,&store::PackDecodeOptions::default(),native).map_err(pack_error)?;construct(&record,native)})();
   result

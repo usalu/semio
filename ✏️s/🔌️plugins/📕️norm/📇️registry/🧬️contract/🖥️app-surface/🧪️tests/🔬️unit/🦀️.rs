@@ -196,7 +196,6 @@ fn a_closed_report_section_stamps_its_total_and_materialises_no_rows() {
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the row id.
 #[test]
 fn a_host_window_materialises_exactly_its_report_slice() {
-    // Flat list is [part-header, check-0, ...]; offset counts flat rows so offset 100 → check_index 99.
     let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_REPORT_SECTION_ID.into(), open: Some(true), offset: 100, rows: 10 }]);
     assert!(json.contains("\"offset\":100"), "the section reports its offset: {json}");
     for check_index in 99..109 {
@@ -554,7 +553,6 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
 
     let combined = format!("{inputs}\n{inspection}\n{unknown}");
     for english in ["Unknown body:", "Id", "null", "Model", "Report"] {
-        // Node ids may embed english tokens (e.g. `.id`); only reject chrome payloads / port labels.
         match english {
             "Id" => assert!(inspection.contains("Kennung") && !inspection.contains("\"Id\""), "{inspection}"),
             "null" => assert!(inputs.contains("leer") && !inputs.contains("\"null\""), "{inputs}"),
@@ -690,7 +688,6 @@ fn catalogue_table_headers_and_clause_localize_en_and_de() {
     assert!(en.contains("EN DEMO") || en.contains("3.1"), "clause label missing: {en}");
     assert!(de.contains("Demo-Festigkeitsklassen"), "{de}");
     assert!(de.contains("EN DEMO") || de.contains("3.1"), "clause label missing: {de}");
-    // Collapsed by default — open to assert column headers.
     const BODY: &str = "norm.mock.catalogue";
     let view = ViewModel {
         tree_windows: vec![TreeWindowRequest {

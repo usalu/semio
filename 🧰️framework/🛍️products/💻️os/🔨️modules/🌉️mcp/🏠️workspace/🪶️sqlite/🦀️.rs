@@ -22,7 +22,7 @@ impl NumberWord{pub fn text(&self)->&str{std::str::from_utf8(&self.bytes[..self.
 impl std::fmt::Write for NumberWord{fn write_str(&mut self,text:&str)->std::fmt::Result{let end=self.length.checked_add(text.len()).filter(|end|*end<=self.bytes.len()).ok_or(std::fmt::Error)?;self.bytes[self.length..end].copy_from_slice(text.as_bytes());self.length=end;Ok(())}}
 
 pub(crate) fn number_text(number:Number)->Result<NumberWord,ValueError>{
- use std::fmt::Write as _;let mut word=NumberWord{bytes:[0;32],length:0};match number{Number::UInt(value)=>write!(&mut word,"{value}"),Number::Int(value)=>write!(&mut word,"{value}"),Number::Float(value)if value.is_finite()=>semio_framework_pack_json::write_float_to(value,&mut word),_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Probe number is not finite"))}.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe numeric word exceeded bounded scalar storage"))?;Ok(word)
+ use std::fmt::Write as _;let mut word=NumberWord{bytes:[0;32],length:0};match number{Number::UInt(value)=>write!(&mut word,"{value}"),Number::Int(value)=>write!(&mut word,"{value}"),Number::Float(value)if value.is_finite()=>semio_framework_pack_json_float::write_float_to(value,&mut word),_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Probe number is not finite"))}.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe numeric word exceeded bounded scalar storage"))?;Ok(word)
 }
 
 pub(crate) fn number_value<P:semantic::Port>(text:&str,scanner:&mut Option<semio_framework_pack_json::JsonNumberCursor>,port:&mut P)->Result<DslValue,ValueError>{
@@ -61,7 +61,7 @@ impl store::os_store::serialization::ArtifactSqliteSnapshotHost for ProbeSnapsho
   if text.len()>control.limits().max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe input exceeds original file byte ceiling"))}
   let before=owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||invalid("Probe native allocation ceiling overflow"))?;
   let mut refused=None;
-  let mut observer=|event:semio_framework_value::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
+  let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
   let result=owner.scoped_native(maximum,&mut observer,|owner|<Self as store::ArtifactPackReceiving>::receive_pack(text.as_bytes(),owner));
   drop(observer);
   control.admit_native_allocation_bytes(owner.native().owned_bytes().checked_sub(before).ok_or_else(||invalid("Probe original allocation receipt regressed"))?)?;

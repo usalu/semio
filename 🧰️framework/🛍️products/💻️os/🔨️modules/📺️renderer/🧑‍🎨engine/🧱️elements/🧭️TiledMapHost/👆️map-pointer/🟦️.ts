@@ -84,8 +84,6 @@ export function useMapPointer(core: MapCore2) {
         userAdjustedCameraRef.current = true;
         canvas.setPointerCapture?.(event.pointerId);
         rendererRef.current?.session.pointerDownScreen(point.x, point.y, 1);
-        // 🪶️ Keeps the demand scheduler rendering continuously for the duration of the pan gesture —
-        // see `MapRenderer.beginContinuousInteraction`'s docstring.
         rendererRef.current?.beginContinuousInteraction("pan");
       }
     };

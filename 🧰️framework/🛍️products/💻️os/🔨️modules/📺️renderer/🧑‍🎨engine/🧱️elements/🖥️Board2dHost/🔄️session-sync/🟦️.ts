@@ -14,9 +14,7 @@ export function applyToSession(session: Board2dWasmSession | null, action: (sess
   if (!session) return;
   try {
     action(session);
-  } catch {
-    /* session not ready */
-  }
+  } catch {}
 }
 
 /** 🔗️ Forwards what an open time-travel draft references (`Board2dScene.highlightedIdsJson`) to the board session — `[]`
@@ -98,9 +96,7 @@ export function pushBoardLiveMirrorMutations(scope: BoardPeerScope, controllerId
       if (positionsJson) peer.session.setNodePositionsJson?.(positionsJson);
       if (selectionJson) peer.session.setSelectionIdsJsonSilent?.(selectionJson);
       if (preselectJson) peer.session.setPreselectStateJsonSilent?.(preselectJson);
-    } catch {
-      /* peer session not ready */
-    }
+    } catch {}
   }
 }
 
@@ -108,9 +104,7 @@ export function notifyBoardPeersGestureEnded(scope: BoardPeerScope, controllerId
   for (const peer of board2dPeers(scope, controllerId, surfaceId)) {
     try {
       peer.onPeerGestureEnded(flushed);
-    } catch {
-      /* peer session not ready */
-    }
+    } catch {}
   }
 }
 
@@ -123,9 +117,7 @@ export function pushBoardDropPreview(scope: BoardPeerScope, controllerId: string
       if (previewJson) peer.session.setDropPreviewJson?.(previewJson);
       else peer.session.clearDropPreview?.();
       peer.session.renderFrame?.();
-    } catch {
-      /* peer session not ready */
-    }
+    } catch {}
   }
 }
 //#endregion PeerSync

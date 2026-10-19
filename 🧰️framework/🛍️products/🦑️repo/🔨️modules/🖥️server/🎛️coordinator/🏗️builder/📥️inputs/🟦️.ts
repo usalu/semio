@@ -1,9 +1,9 @@
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {configuredSourceInputsV1,type ConfiguredSourceInputsV1} from "../../../../📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts";
+import {configuredSourceInputsV1,type ConfiguredSourceInputsV1} from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {withBuildFileMembershipV1} from "../../../../📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withBuildFileMembershipV1} from "../../../../📚️library/📦️packages/🟦️typescript/🏗️build/📥️inputs/📂️membership/🟦️.ts";
 import policy from "./🔣️policy.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 /** 🗂️ Receives a complete actual coordinator Source closure while route membership and dependency custody remain current. */

@@ -37,7 +37,7 @@ impl ToValue for TextError {
     }
 }
 impl FromValue for TextError {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_text_error(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_text_error(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
@@ -105,7 +105,7 @@ impl ToValue for FaultCode {
     }
 }
 impl FromValue for FaultCode {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_code(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_code(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
@@ -158,7 +158,7 @@ impl ToValue for Severity {
     }
 }
 impl FromValue for Severity {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_severity(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_severity(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
@@ -234,9 +234,9 @@ impl ToValue for ExpectedSet {
     }
 }
 impl FromValue for ExpectedSet {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_expected(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_expected(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
-    fn default_value_controlled(c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { c.checkpoint()?; Ok(Self::default()) }
+    fn default_value_controlled(c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { c.checkpoint()?; Ok(Self::default()) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
@@ -308,7 +308,7 @@ impl ToValue for Diagnostic {
     }
 }
 impl FromValue for Diagnostic {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_diagnostic(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_diagnostic(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
@@ -403,7 +403,7 @@ impl ToValue for FaultSource {
  fn to_value(&self)->DslValue{DslValue::Object([("offset",self.offset),("byte",self.byte.map(u64::from)),("depth",self.depth)].into_iter().filter_map(|(key,value)|value.map(|value|(key.into(),value.to_value()))).collect())}
 }
 impl FromValue for FaultSource {
- fn from_value_controlled(value:&DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::decode_source(value,c)}
+ fn from_value_controlled(value:&DslValue,c:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{controlled::decode_source(value,c)}
  fn from_value(value:DslValue)->Result<Self,ValueError>{
   let DslValue::Object(fields)=value else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"expected closed Fault.source object"))};let mut result=Self::default();let mut seen=0u8;
   for(name,value)in fields{let(index,slot)=match name.as_str(){"offset"=>(0,&mut result.offset),"depth"=>(2,&mut result.depth),"byte"=>{if seen&2!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"duplicate Fault.source scalar"))}seen|=2;result.byte=Some(value.as_u64().and_then(|value|u8::try_from(value).ok()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"Fault.source byte exceeds u8"))?);continue},_=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unknown Fault.source scalar"))};if seen&(1<<index)!=0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"duplicate Fault.source scalar"))}seen|=1<<index;*slot=Some(value.as_u64().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"expected exact unsigned Fault.source scalar"))?);}
@@ -449,7 +449,7 @@ impl ToValue for FaultOrigin {
     }
 }
 impl FromValue for FaultOrigin {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_origin(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_origin(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
@@ -489,9 +489,9 @@ impl ToValue for FaultScope {
     }
 }
 impl FromValue for FaultScope {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_scope(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_scope(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
-    fn default_value_controlled(c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { c.checkpoint()?; Ok(Self::default()) }
+    fn default_value_controlled(c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { c.checkpoint()?; Ok(Self::default()) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
@@ -527,7 +527,7 @@ impl ToValue for FaultCause {
     }
 }
 impl FromValue for FaultCause {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_cause(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_cause(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
@@ -584,7 +584,7 @@ impl ToValue for FaultParams {
     }
 }
 impl FromValue for FaultParams {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_params(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_params(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Object(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected an object for FaultParams")) };
@@ -599,7 +599,7 @@ impl FromValue for FaultParams {
     }
 }
 impl FromValue for Fault {
-    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_fault(value, c) }
+    fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_fault(value, c) }
     fn retire_decoded(self) { controlled::retire(self); }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {

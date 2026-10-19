@@ -235,12 +235,12 @@ pub enum RouterEffectJobOutcome {
 }
 
 fn copy_router_effect_payload(payload: &RetainedJobPayload) -> Result<Vec<u8>, String> {
-    if payload.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES {
-        return Err(format!("router effect payload exceeds {} bytes", semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES));
+    if payload.len() > semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES {
+        return Err(format!("router effect payload exceeds {} bytes", semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES));
     }
     let mut bytes = Vec::with_capacity(payload.len());
     let mut reader = payload.reader();
-    while let Some(page) = reader.read_page(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+    while let Some(page) = reader.read_page(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) {
         bytes.extend_from_slice(page);
     }
     if !reader.terminal_is_empty() {

@@ -772,7 +772,7 @@ impl semio_framework_dsl_record::DslField for PropertyValue {
             other => Err(format!("expected Value, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         match value {
             semio_framework_dsl_record::FieldValue::Value(value) => <Self as semio_framework_value::FromValue>::from_value_controlled(value, control),
             _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an intrinsic Value field")),

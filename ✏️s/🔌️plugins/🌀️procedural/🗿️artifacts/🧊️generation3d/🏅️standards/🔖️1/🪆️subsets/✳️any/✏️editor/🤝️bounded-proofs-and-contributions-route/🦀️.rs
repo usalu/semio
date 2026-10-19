@@ -130,9 +130,6 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         };
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: None };
-        // 🪟️ An install that moved the registry owes the windows the SHELL says are attached an
-        // evaluation — the same trusted `ViewModel` roster `pending_effects` starts the run off, never a
-        // window this route invents (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
         let _ = (&doc, &cfg);
         let mut emit = Emit::default();

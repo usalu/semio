@@ -56,8 +56,6 @@ async fn glb_total_length_header_matches_actual_bytes_across_alignments() {
     for json_len in [0usize, 1, 2, 3, 4, 5, 61] {
         for bin_len in [0usize, 1, 2, 3, 4, 5, 100] {
             let mut document = doc_with_buffer(bin_len);
-            // pad the json body itself out to `json_len` extra bytes via an "extras" string so
-            // encode_glb's real JSON serialization (not a synthetic buffer) varies in length.
             if json_len > 0 {
                 document.extras = Some(GltfJson::String("x".repeat(json_len)));
             }
@@ -207,8 +205,8 @@ async fn decode_accessor_applies_sparse_substitution_over_zero_base() {
         ..GltfDocument::default()
     };
     let mut buffers_bytes = vec![0u8; 16];
-    buffers_bytes[0] = 1; // sparse index 0 -> element 1
-    buffers_bytes[1] = 3; // sparse index 1 -> element 3
+    buffers_bytes[0] = 1;
+    buffers_bytes[1] = 3;
     buffers_bytes[8..12].copy_from_slice(&9.5f32.to_le_bytes());
     buffers_bytes[12..16].copy_from_slice(&7.5f32.to_le_bytes());
     let buffers = vec![buffers_bytes];
@@ -285,8 +283,6 @@ async fn glb_round_trip_preserves_json_and_bin_semantically() {
     let pos_original = decode_accessor(&original.document, &original.buffers, 0).unwrap();
     let pos_decoded = decode_accessor(&decoded.document, &decoded.buffers, 0).unwrap();
     assert_eq!(pos_original.components, pos_decoded.components);
-    // decode -> encode -> decode a second time: semantic equality must hold (not necessarily
-    // byte-identical serialization, since key ordering / whitespace may legitimately differ).
     let reencoded = encode_glb(&decoded).expect("re-encode");
     let redecoded = decode_glb(&reencoded).expect("re-decode");
     assert_eq!(redecoded.buffers, decoded.buffers);

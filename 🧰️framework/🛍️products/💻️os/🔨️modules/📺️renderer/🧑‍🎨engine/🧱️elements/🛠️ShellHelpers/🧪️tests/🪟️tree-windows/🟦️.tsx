@@ -19,7 +19,7 @@ import {
   type TreeWindowHostV1
 } from "../../🌳️tree-windows/🟦️.tsx";
 import { createTreeWindowReporterV1 } from "../../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
-import reportsFixture from "../../../../🧪️tests/🧫️fixtures/🪟️body-window-reports/🔣️.json";
+import reportsFixture from "@semio-tech/framework/os/modules/renderer/engine/testing/fixtures/body-window-reports.json";
 import Ajv2020 from "ajv/dist/2020";
 // #endregion 🔌️Adapters
 
@@ -122,7 +122,6 @@ describe("🪟️ tree window scheduler", () => {
     expect(refreshed).toEqual(["outliner"]);
     expect(timers.pending()).toBe(1);
     timers.fire();
-    // 🪟️ One refresh for the whole gesture, carrying the LAST offset the scroll settled on.
     expect(refreshed).toEqual(["outliner", "outliner"]);
     expect(scheduler.viewStateFields().treeWindows).toEqual([{ bodyKey: "outliner", nodeKey: "outliner.objects", open: true, offset: 96, rows: 40 }]);
     expect(scheduler.viewStateFields().treeViewportRows).toBe(32);
@@ -152,7 +151,6 @@ describe("🪟️ tree window scheduler", () => {
     scheduler.settled("outliner");
     expect(refreshed).toEqual(["outliner", "outliner"]);
     expect(scheduler.viewStateFields().treeWindows?.map((request) => request.nodeKey)).toEqual(["a", "b", "c"]);
-    // 🪟️ A container the observer has not measured asks for one viewport of rows, never zero.
     expect(scheduler.viewStateFields().treeWindows?.every((request) => request.rows === TREE_WINDOW_DEFAULT_ROWS)).toBe(true);
     scheduler.settled("outliner");
     expect(refreshed).toEqual(["outliner", "outliner"]);
@@ -179,7 +177,6 @@ describe("🪟️ tree window scheduler", () => {
     timers.fire();
 
     expect(scheduler.viewStateFields().treeWindows).toEqual([
-      // 🪟️ A measured container is a rendered container: the host records it open without being told.
       { bodyKey: "outliner", nodeKey: "just-opened", open: true, offset: 0, rows: 20 },
       { bodyKey: "outliner", nodeKey: "on-screen", open: true, offset: 40, rows: 26 },
       { bodyKey: "outliner", nodeKey: "scrolled-past", open: true, offset: 96, rows: 0 },
@@ -208,13 +205,10 @@ describe("🪟️ tree window scheduler", () => {
     timers.fire();
 
     expect(scheduler.viewStateFields().treeWindows?.map((request) => [request.nodeKey, request.rows])).toEqual([
-      // 🪟️ The open flag outlives the measurement on purpose — a fold the reader chose must survive a
-      // branch closing over it — but the container asks for nothing until it is in the body again.
       ["new-doc.a", 20],
       ["old-doc.a", 0],
     ]);
 
-    // 🪟️ …and an explicit re-open is a request for rows again, whatever the observer last measured.
     scheduler.setOpen("outliner", "old-doc.a", false);
     scheduler.setOpen("outliner", "old-doc.a", true);
     expect(scheduler.viewStateFields().treeWindows?.find((request) => request.nodeKey === "old-doc.a")?.rows).toBe(20);
@@ -260,7 +254,6 @@ describe("🪟️ tree window scheduler", () => {
 
       expect(fields.treeWindows?.map((request) => request.nodeKey)).toEqual(["fine"]);
       expect(() => parseResolvedPluginViewState({ locale: "en", terminology: "native", ...fields })).not.toThrow();
-      // 🧯️ Loud, and once per body + path.
       scheduler.viewStateFields();
       expect(messages.filter((message) => message.includes("[tree-window] unsendable path")).length).toBe(2);
     } finally {
@@ -292,8 +285,6 @@ describe("🪟️ panel body tree window context", () => {
     expect(sectionState(shown.container)).toBe("open");
     expect(shown.container.textContent).toContain("Seed Left");
     cleanup();
-    // 🪟️ The author's `defaultOpen: true` is unchanged — only the host's map says otherwise, and the
-    // host wins. This is the expansion that has to survive the next body refresh.
     const closed = uiNodeToTreePanelConfig(outlinerBody(), () => {}, "outliner", hostFor({ "outliner.objects": false }, sink));
     const hidden = render(createElement(Fragment, null, closed.emptyState));
     expect(hidden.container.textContent).toContain("Objects");
@@ -307,8 +298,6 @@ describe("🪟️ panel body tree window context", () => {
     const row = rendered.container.querySelector('[data-slot="tree-section-row"]');
     expect(row).toBeTruthy();
     fireEvent.click(row as Element);
-    // 🔑️ `🌳️Tree` routes one fold through its provider twice under the role-prefixed state id
-    // `tree-section-panel:outliner/outliner.objects`; every report arrives re-keyed on the authored key.
     expect(sink.opens.length).toBeGreaterThan(0);
     expect(new Set(sink.opens.map((entry) => JSON.stringify(entry)))).toEqual(new Set([JSON.stringify(["outliner", "outliner.objects", false])]));
   });
@@ -330,7 +319,6 @@ describe("🪟️ panel body tree window context", () => {
     const config = uiNodeToTreePanelConfig(body, () => {}, "outliner", hostFor(closedLeft, sink));
     const rendered = render(createElement(Fragment, null, config.emptyState));
 
-    // 🪟️ A closed group renders no branch content at all, so its window path is simply not in the DOM.
     const paths = Array.from(rendered.container.querySelectorAll("[data-tree-window-path]")).map((element) => element.getAttribute("data-tree-window-path"));
     expect(paths).toEqual(["left", "right", `right${TREE_WINDOW_PATH_SEPARATOR}shared`]);
     expect(rendered.container.textContent).not.toContain("left child");
@@ -338,9 +326,7 @@ describe("🪟️ panel body tree window context", () => {
 
     const groups = rendered.container.querySelectorAll('[data-tree-row-kind="group"]');
     expect(groups.length).toBe(2);
-    // 🖱️ A group row folds from its chevron; the row shell itself carries the selection handler.
     fireEvent.click((groups[1] as Element).querySelector("button") as Element);
-    // 🔑️ …and the fold comes back under the RIGHT branch's path, never the bare shared key.
     expect(new Set(sink.opens.map((entry) => entry[1]))).toEqual(new Set([`right${TREE_WINDOW_PATH_SEPARATOR}shared`]));
   });
 

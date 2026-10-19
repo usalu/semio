@@ -64,6 +64,7 @@ semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owne
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-time-travel = { workspace = true }
 semio-framework-tool-run = { workspace = true }
+semio-framework-tool-run-tick-wire = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
@@ -73,6 +74,9 @@ semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/�
 semio_framework_ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+semio-framework-replication = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-framework-os-store-testing-doubles = { path = "../../../../../🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 

@@ -1,0 +1,84 @@
+import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import { resolve } from "node:path";
+import { runCmd } from "@semio-tech/framework/process/execution";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
+
+const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
+type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "window-transient" | "child" | "host-only";
+type AppAuthority = { owner: string; toolIdsConstant: string; source: string; routes: { id: string; lanes: Lane[] }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
+type Fixture = { schema: string; apps: AppAuthority[] };
+const ANCHORS = [
+  "ToolExecutionContract::bounded_first_step",
+  "semio_framework_plugin::bounded_first_step_tool_proofs!",
+  "factory_type:",
+  "build_artifact_store_one_item_preparation_factory",
+  "register_tool_job_factories",
+  "build_tool_job",
+  "request.operation != request.authority.operation()",
+  "request.generation != request.authority.generation()",
+  "request.base_revision != request.authority.base_revision()",
+  "authority.prepare_one_item",
+  "fn cancel(&mut self)",
+  "fn begin_close(&mut self)",
+  "base.return_to_registry()",
+  "fn terminal_is_empty(&self)",
+  "LocalizedLabel::native",
+  "SelectionMode::Multiple",
+  ".default_layout(edit_mode::layout())",
+];
+const exact = (left: string[], right: string[]): boolean => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
+function appOracle(app: AppAuthority, source: string): boolean {
+  const ids = [...source.match(new RegExp(`${app.toolIdsConstant}: &\\[&str\\] = &\\[([^\\]]*)\\]`, "s"))?.[1]?.matchAll(/"([^"]+)"/g) ?? []].map((match) => match[1]!);
+  const contracts = [...source.matchAll(/ArtifactToolPublicationContract \{ tool_id: "([^"]+)", lanes: &\[([^\]]*)\] \}/g)].map((match) => `${match[1]}:${[...match[2]!.matchAll(/ArtifactToolPublicationLane::(\w+)/g)].map((lane) => lane[1]).sort().join("+")}`);
+  const classifications = [...source.matchAll(/\.action_interactive_job\("([^"]+)", InteractiveJobClassification::Migrated\)/g)].map((match) => match[1]!);
+  const expected = app.routes.map(({ id }) => id);
+  return Object.values(app.laws).every(Boolean)
+    && app.ui.locales.join(",") === "en,de" && app.ui.accessibleLabels && app.ui.customizableUi
+    && exact(ids, expected) && exact(contracts, app.routes.map(({ id, lanes }) => `${id}:${[...lanes].map(variant).sort().join("+")}`)) && exact(classifications, expected)
+    && ANCHORS.every((anchor) => source.includes(anchor));
+}
+function oracle(fixture: Fixture, sources: Map<string, string>): boolean {
+  return fixture.schema === "semio.app.publication-authority.v1" && fixture.apps.length > 0 && fixture.apps.every((app) => appOracle(app, sources.get(app.owner) ?? ""));
+}
+function hostileSources(app: AppAuthority, source: string): string[] {
+  const last = app.routes[app.routes.length - 1]!;
+  const second = app.routes[Math.min(1, app.routes.length - 1)]!;
+  return [
+    source.replace(`ArtifactToolPublicationContract { tool_id: "${last.id}", lanes: &[${last.lanes.map((lane) => `ArtifactToolPublicationLane::${variant(lane)}`).join(", ")}] },`, ""),
+    source.replaceAll("request.base_revision != request.authority.base_revision()", ""),
+    source.replace(`.action_interactive_job("${second.id}", InteractiveJobClassification::Migrated)`, ""),
+  ];
+}
+
+/** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
+export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
+  const cases = [
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🧩️suite/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️nakagin-capsule/🧪️tests/🧩️example/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️hexagonal-cut-concrete-forest-left/🧪️tests/🧩️example/🟦️.ts",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/➡️hexagonal-cut-concrete-forest/🧪️tests/🧩️example/🟦️.ts",
+  ];
+  runCmd(process.execPath, ["test", ...cases.map(path => resolve(context.repoRoot, path))]);
+  const plugin = resolve(context.root, "../..");
+  const authority = resolve(plugin, "🧪️tests/🧫️fixtures/🧪️publication-authority");
+  const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
+  const sources = new Map<string, string>();
+  for (const app of fixture.apps) sources.set(app.owner, readModuleTreeSource(resolve(plugin, app.source)));
+  if (!oracle(fixture, sources)) throw new Error("Block publication-authority oracle rejected production");
+  let hostile = 0;
+  for (const app of fixture.apps) {
+    for (const candidate of hostileSources(app, sources.get(app.owner)!)) {
+      hostile += 1;
+      if (candidate === sources.get(app.owner)) throw new Error(`Block hostile mutation for ${app.owner} did not change its source`);
+      if (appOracle(app, candidate)) throw new Error(`Block oracle accepted a hostile source mutation for ${app.owner}`);
+    }
+    const hostileFixture: Fixture = { ...fixture, apps: fixture.apps.map((entry) => (entry.owner === app.owner ? { ...entry, routes: entry.routes.slice(1) } : entry)) };
+    hostile += 1;
+    if (oracle(hostileFixture, sources)) throw new Error(`Block accepted a hostile fixture mutation for ${app.owner}`);
+  }
+  console.error(`validated Block publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; oracle=owned; hostile=${hostile}`);
+}

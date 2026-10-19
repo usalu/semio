@@ -1,4 +1,4 @@
-//! model -> epJSON
+//! 🧾️ model -> epJSON
 //!
 //! ⚡️ REAL codec, not a bridge: a hand-written EnergyPlus 25.2 `epJSON` writer over
 //! [`pack::json`], with no third-party translator in the path. Every document it emits validates

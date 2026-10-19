@@ -7,9 +7,9 @@ export interface LowpolyBounds {
 }
 
 export interface LowpolyInference {
-  /** @derived */
+  /** 📦️ @derived */
   objectCount: number;
-  /** @derived */
+  /** 🔲️ @derived */
   bounds: LowpolyBounds | null;
 }
 

@@ -1,4 +1,4 @@
-//! the owner object. An absent object or an absent vortex is `mutation.target-missing`; a replacement that
+//! 👪️ the owner object. An absent object or an absent vortex is `mutation.target-missing`; a replacement that
 //! 🔺️ Sparse diff builder for `ReplaceObjectVortex` — patches the presentation fields of one vortex inside
 //! keeps every field is the `mutation.no-op` warning. A replacement keeps the addressed vortex's id.
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

@@ -15,21 +15,22 @@ import Ajv from "ajv";
 import { sha256 } from "@noble/hashes/sha2.js";
 import picomatch from "picomatch";
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, realpathSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { afterEach, describe, expect, it } from "vitest";
+import {testCoursePreflightAlignmentV1} from "../🩺️preflight/🟦️.ts";
 import { TEACHING_WORKSPACE } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import { writeAssetArtifacts } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🟦️.ts";
-import publication from "../../../../../🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🧫️fixtures/🔣️.json" with { type: "json" };
+import publication from "../../../../../🧰️framework/🔨️modules/🖼️assets/🏗️builder/📦️publication/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
 import courseContract from "../../🧫️fixtures/📚️course/🔣️.json" with { type: "json" };
 import dockerContext from "../../🧫️fixtures/🐳️context/🔣️.json" with { type: "json" };
 import { courseImageContent } from "../../🚀️deploy/📦️image/🟦️.ts";
 import bundleCases from "../../🧫️fixtures/🚛️bundle/🔣️.json" with { type: "json" };
-import { stackBundleImages, stackBundlePlan } from "../../🚀️deploy/🟦️.ts";
+import { stackBundleImages, stackBundlePlan } from "../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
 import { COURSE_DEPLOY_CLEANUP_MS, deploymentInterruption } from "../../🚀️deploy/🟦️.ts";
 import cancellation from "../../🧫️fixtures/🛑️cancellation/🔣️.json" with { type: "json" };
 import { getEventListeners } from "node:events";
@@ -37,7 +38,10 @@ import architectureCourse from "../../🔣️.json" with { type: "json" };
 import readiness from "../../🧫️fixtures/🚀️readiness/🔣️.json" with { type: "json" };
 import sitePublication from "../../🧫️fixtures/🌐️publication/🔣️.json" with { type: "json" };
 import schema from "../../🚀️deploy/🧬️schema/🔣️.json" with { type: "json" };
-import { COURSE_BUNDLE_DIRECTORY, COURSE_BUNDLE_IMAGE, COURSE_IMAGE_HEALTHCHECK, COURSE_IMAGE_USER, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_ORIGIN, COURSE_STACK_CERTIFICATES, COURSE_STACK_FILES, caddySizeBytes, courseReleaseBuildPlan, deployCheckSteps, deploymentDrift, hostZone, releaseProctorOrigin, siteArtifactProblems, siteDocumentProblems, stageCourseSiteArtifact, stackBundleEnvironment, stackBundleReadme, stackRequestBodyLimit } from "../../🚀️deploy/🟦️.ts";
+import { COURSE_BUNDLE_DIRECTORY, COURSE_BUNDLE_IMAGE, COURSE_IMAGE_HEALTHCHECK, COURSE_IMAGE_USER, COURSE_PAGES_DIRECTORY, COURSE_PROCTOR_ORIGIN, COURSE_SITE_BUDGET, COURSE_SITE_HEADERS, COURSE_SITE_ORIGIN, COURSE_STACK_CERTIFICATES, COURSE_STACK_FILES, caddySizeBytes, deploymentDrift, hostZone, stackRequestBodyLimit } from "../../🚀️deploy/🟦️.ts";
+import { courseReleaseBuildPlan, releaseProctorOrigin, siteArtifactProblems, siteDocumentProblems, stageCourseSiteArtifact } from "../../🚀️deploy/🌐️site/🟦️.ts";
+import { stackBundleEnvironment, stackBundleReadme } from "../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
+import { deployCheckSteps } from "../../🚀️deploy/⚖️readiness/🟦️.ts";
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = resolve(site, "../../..");
@@ -53,7 +57,7 @@ const workflow = parse(readFileSync(join(repoRoot, ".github/workflows/architectu
 const scratch: string[] = [];
 
 for (const row of publication.cases) it(`publishes ${row.id} assets without rewriting unchanged files`, () => {
-  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "nx", "asset-publication") : join(tmpdir(), "asset-publication");
+  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated", "nx", "asset-publication") : join(realpathSync(tmpdir()), "asset-publication");
   mkdirSync(parent, { recursive: true });
   const root = mkdtempSync(join(parent, "run-"));
   scratch.push(root);
@@ -67,7 +71,7 @@ for (const row of publication.cases) it(`publishes ${row.id} assets without rewr
 
 /** 📂️ A throw-away directory holding `files` (relative path → content). */
 function tree(files: Record<string, string | Uint8Array>): string {
-  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : tmpdir();
+  const parent = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : realpathSync(tmpdir());
   mkdirSync(parent, { recursive: true });
   const root = mkdtempSync(join(parent, "course-deploy-"));
   scratch.push(root);
@@ -108,6 +112,7 @@ afterEach(() => {
 });
 
 describe("architecture course deployment", () => {
+  it("aligns generic host admission with CI and the distinct course image runtime contract",testCoursePreflightAlignmentV1);
   it("retains parent cancellation until release and closes its local lifetime like native AbortController", () => {
     expect(COURSE_DEPLOY_CLEANUP_MS).toBe(cancellation.cleanupTimeoutMilliseconds);
     const validate = new Ajv({ strict: true }).compile({ type: "object", additionalProperties: false, required: ["initial", "during", "released"], properties: { initial: { type: "boolean" }, during: { type: "boolean" }, released: { const: true } } });
@@ -398,6 +403,34 @@ describe("architecture course deployment", () => {
       expect(staged.services.caddy).toEqual({ ...compose.services.caddy, ...bundleCases.proxy });
       expect(staged.services.proctor).toEqual(compose.services.proctor);
       for (const image of plan.images) expect(stackBundleReadme(row.tag, images[1], plan.caddy)).toContain(image);
+    }
+    for (const row of bundleCases.updates) {
+      const guide = stackBundleReadme(row.tag, compose.services.caddy!.image, bundleCases.proxy.image);
+      expect(guide).toContain("Update an existing stack from this bundle:");
+      expect(guide).toContain("In the existing .env, set this image tag and keep every other override:");
+      expect(guide).toContain(row.setting);
+      expect(guide).not.toContain(`PROCTOR_TAG=${row.currentTag}`);
+      const selected = /^PROCTOR_TAG=(.+)$/mu.exec(stackBundleEnvironment(row.tag))![1]!;
+      expect(parse(stackBundlePlan(row.tag, read("compose.yaml")).compose).services.proctor.image.replace("${PROCTOR_TAG:-latest}", selected)).toBe(row.image);
+      const runbook = readFileSync(join(site, "README.md"), "utf8");
+      expect(runbook).toContain("set `PROCTOR_TAG` in the retained `.env` to the exact value from the new bundle's `.env`");
+      expect(runbook).toContain("Keep the other overrides and `certificates/`");
+      const update = runbook.slice(runbook.indexOf("### Update"), runbook.indexOf("### Rollback"));
+      expect(update).toContain("set `PROCTOR_TAG` in the retained `.env` to the exact value from the new bundle's `.env`");
+      expect(update).toContain("Keep the other overrides and `certificates/`");
+    }
+    for (const row of bundleCases.registryUpdates) {
+      const selected = { ...row.retained, PROCTOR_TAG: row.selectedTag };
+      expect({ ...selected, PROCTOR_TAG: row.retained.PROCTOR_TAG }).toEqual(row.retained);
+      expect(compose.services.proctor!.image.replace("${PROCTOR_TAG:-latest}", selected.PROCTOR_TAG)).toBe(row.image);
+      const runbook = readFileSync(join(site, "README.md"), "utf8");
+      const registry = runbook.slice(runbook.indexOf("### Update"), runbook.indexOf("The backup comes first:"));
+      expect(registry).toContain("set `PROCTOR_TAG` in the retained `.env` to the intended release tag");
+      expect(registry).toContain("Keep every other override");
+      expect(registry).toContain('image=$(docker compose config --images proctor)');
+      expect(registry).toContain('container=$(docker create "$image")');
+      expect(registry.indexOf("proctor backup")).toBeLessThan(registry.indexOf("set `PROCTOR_TAG`"));
+      expect(registry).not.toContain(`docker create ${deployment.proctor.image}:latest`);
     }
     for (const row of bundleCases.invalid) {
       const changed = "replace" in row ? read("compose.yaml").replace(row.replace!, row.with!) : read("compose.yaml") + row.append;

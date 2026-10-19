@@ -414,9 +414,6 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
     let req =
         semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".to_string(), semio_framework_pack_json::Value::from("brep.prim3d.box")),("retained".into(),geometry_test_retained()), ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)), ("nodeHash".to_string(), semio_framework_pack_json::Value::from(1_i64))]));
-    // ⏱️ `evaluate` answers the BUDGET envelope, not a bare out dictionary — a primitive finishes
-    // inside its first round trip, so this one is `done` with its output inside
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️extension-evaluate-budget-2026-09-12.md`).
     let envelope = semio_framework_pack_json::parse_bytes(&extension_invoke("evaluate", req.as_bytes()).await.unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(true));
     let out = semio_framework_pack_json::parse(envelope.get("outputJson").and_then(semio_framework_pack_json::Value::as_str).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

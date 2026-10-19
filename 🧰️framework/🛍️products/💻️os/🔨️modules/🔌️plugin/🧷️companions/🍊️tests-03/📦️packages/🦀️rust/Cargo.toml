@@ -55,6 +55,7 @@ semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/�
 semio_framework_ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
 

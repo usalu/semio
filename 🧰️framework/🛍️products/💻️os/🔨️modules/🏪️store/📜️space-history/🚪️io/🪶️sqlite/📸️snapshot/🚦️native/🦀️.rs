@@ -6,7 +6,8 @@ use semio_framework_dsl_record::NativeSchemaControl;
 use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::Shape;
-use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 fn spec<C: NativeSchemaControl>(c: &mut C) -> Result<RecordSpec, ValueError> {
     let mut fields = c.allocate_vec(1)?;
     fields.push(semio_framework_dsl_record::producer::field(1, "value", semio_framework_dsl_record::Shape::Value, c)?);
@@ -273,7 +274,7 @@ pub fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payload:&se
     let before=native_owner.native().owned_bytes();
     let maximum=before.checked_add(control.reconstruction_remaining_bytes()?.min(control.allocation_remaining_bytes())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native reconstruction allowance overflow"))?;
     let mut refused=None;
-    let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
+    let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
     let result=native_owner.scoped_native(maximum,&mut progress,|owner|owner.receive::<(Option<RecordSpec>,Option<semio_framework_dsl_record::RecordValue>,Option<DslValue>,Option<T>),T>(|intermediate,native,body|{
         *intermediate=Some((None,None,None,None));
         let (schema,record,value,output)=intermediate.as_mut().unwrap();

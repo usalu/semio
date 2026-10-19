@@ -3,15 +3,15 @@ import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/sc
 import { parseRasterLayerNode, type RasterLayerNode } from "../🟦️.ts";
 
 export interface RasterSnapshot {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🆔️ @state artifact */
   id: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers: RasterLayerNode[];
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets: Record<string, ArtifactChild>;
 }
 

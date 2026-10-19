@@ -130,9 +130,6 @@ export function testGeneration3dDocumentIoSurface(): void {
   const representations = stdioRepresentations(`${here}/../../../../../../../../../../🗄️stdio/🗿️artifacts`);
   assert.ok(representations.size > 0, "the stdio artifacts' own definitions were found on disk");
 
-  // 📤️ Every export row's file facts come from its OWNING artifact, and its download envelope
-  // follows from them — the filename is the artifact kind plus that artifact's own extension, and a
-  // format is base64'd exactly when its owner calls itself binary.
   for (const row of fixture.exportFormats) {
     const representation = representations.get(row.kindId ?? "");
     assert.ok(representation, `${row.id}: its owning stdio artifact publishes ${row.kindId ?? "<no kind id>"}`);
@@ -140,19 +137,16 @@ export function testGeneration3dDocumentIoSurface(): void {
     assert.equal(representation.mimes[0], row.mime, `${row.id}: MIME`);
     assert.equal(representation.is_binary, row.binary, `${row.id}: binary claim`);
     assert.equal(row.filename, `generation3d${row.extension}`, `${row.id}: download filename`);
-    // 🗣️ English first, German second, and no row may exist in one language only.
     assert.ok(row.labelEn && row.labelEn.length > 0, `${row.id}: English label`);
     assert.ok(row.labelDe && row.labelDe.length > 0, `${row.id}: German label`);
   }
   assert.equal(new Set(fixture.exportFormats.map((row) => row.id)).size, fixture.exportFormats.length, "no export id is offered twice");
 
-  // 📥️ Every declared import dialect is offered, each exactly once.
   const offered = fixture.importFormats.map((row) => row.id);
   assert.equal(new Set(offered).size, offered.length, "no import id is offered twice");
   assert.equal(fixture.acceptFilter, offered.map((id) => fixture.importFormats.find((row) => row.id === id)!.extension).join(","), "the accept filter is every importable extension in roster order");
   for (const row of fixture.importFormats) assert.ok(row.extension.startsWith("."), `${row.id}: an accept entry is an extension`);
 
-  // 🎬️ Both surfaces really OFFER the verbs — the finding this lane closed was that neither did.
   const editorIds = fixture.editorActions.map((row) => row.id);
   assert.deepEqual(editorIds, ["importDocumentRequest", "exportDocument", "importDocument"], "the editor offers the picker, the export and the import sink");
   assert.deepEqual(fixture.viewerActions.map((row) => row.id), ["exportDocument"], "a viewer exports and never imports");
@@ -161,8 +155,6 @@ export function testGeneration3dDocumentIoSurface(): void {
     assert.notEqual(row.labelEn, row.labelDe, `${row.id}: a German label that equals the English one is an untranslated row`);
     if (row.inPalette) assert.ok(row.chord, `${row.id}: a palette verb is reachable by keyboard too`);
   }
-  // 🔒️ A viewer may export because an export writes no store lane; it may not import because an
-  // import replaces the document.
   assert.deepEqual(fixture.publicationLanes.viewer, { exportDocument: ["HostOnly"] });
   assert.deepEqual(fixture.publicationLanes.editor.importDocument, ["Artifact", "Config"]);
   assert.deepEqual(fixture.publicationLanes.editor.exportDocument, ["HostOnly"]);
@@ -179,11 +171,9 @@ export function testGeneration3dDocumentIoSurface(): void {
   assert.equal(documentFixture.documentContinuation.importContinuation.snapshotParity, "all-semantic-fields");
   assert.equal(documentFixture.documentContinuation.importContinuation.rawSourceCopies, 0);
 
-  // 📏️ An import refuses by size only, with one stable code: the framework hands the whole picked file.
   assert.deepEqual(Object.keys(fixture.faultCodes), ["capacity"], "the import's one refusal is its size budget");
   assert.match(fixture.faultCodes.capacity ?? "", /^generation3d-import-/u, "the capacity code is this artifact's own");
 
-  // 📦️ Every shape a shell can answer a pick with decodes to the same bytes.
   for (const row of fixture.dataUrl.cases) assert.equal(decodePayload(row.payload), row.bytes, `${row.id}: decoded payload`);
 
   console.log(

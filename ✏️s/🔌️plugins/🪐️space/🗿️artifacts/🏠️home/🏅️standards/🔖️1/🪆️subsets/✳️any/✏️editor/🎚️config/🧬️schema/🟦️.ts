@@ -1,6 +1,6 @@
 /** 🧬️ HomeConfig */
 export interface HomeConfig {
-  /** @state config */
+  /** ➖️ @state config */
   retiredLocalStudioIds: string[];
 }
 

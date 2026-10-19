@@ -10,10 +10,11 @@
 import { describe, expect, it } from "vitest";
 import ts from "typescript";
 import panelHostingSource from "../../🧱️elements/🏛️ShellHost/📋️panel-hosting/🟦️.tsx?raw";
-import shellActionsSource from "../../🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts?raw";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import documentTransferTabsSource from "../../🧱️elements/🏛️ShellHost/📤️document-transfer-tabs/🟦️.tsx?raw";
 
-const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/*/🟦️.ts", "../../🧱️elements/🏛️ShellHost/*/🟦️.tsx"], { query: "?raw", import: "default", eager: true })).join("\n");
+const shellActionsSource = readModuleTreeSource(new URL("../../🧱️elements/🏛️ShellHost/🖱️shell-actions/🟦️.ts", import.meta.url));
+const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws
@@ -46,7 +47,7 @@ describe("actor window actions", () => {
   });
 
   it("forwards a funnelled action of an actor-bound session to its verified browser actor", () => {
-    const funnel = shellActionsSource.slice(shellActionsSource.indexOf("const onAction = useCallback("), shellActionsSource.indexOf("const onActionStable = useCallback("));
+    const funnel = shellActionsSource.slice(shellActionsSource.indexOf("const onAction = useCallback("));
     expect(funnel.length).toBeGreaterThan(0);
     expect(funnel).toContain("directBrowserActor = directBrowserActorForSession(targetSession);");
     expect(funnel).toMatch(/if \(directBrowserActor !== null\) \{[\s\S]*?await dispatchDirectBrowserActorCommand\(\s*directBrowserActor,/u);

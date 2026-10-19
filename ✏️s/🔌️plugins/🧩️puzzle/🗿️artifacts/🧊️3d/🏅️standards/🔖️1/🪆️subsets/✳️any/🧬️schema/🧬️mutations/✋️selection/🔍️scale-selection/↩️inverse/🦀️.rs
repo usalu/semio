@@ -1,4 +1,4 @@
-//! (exact, never a reciprocal factor that would accumulate float error). Nothing scaled ⇒ `Vec::new()`.
+//! 🎯️ (exact, never a reciprocal factor that would accumulate float error). Nothing scaled ⇒ `Vec::new()`.
 //! ↩️ Inverse for `ScaleSelection` — the absolute setters restoring every BASE scale the scaling changes
 use super::mutation::ScaleSelection;
 use {semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject, semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::ScaleTargetVolume};

@@ -1,6 +1,11 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::*;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+#[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+#[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
+#[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueNode;
+#[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_semio_value_model::schema::diff::SemioValueTreeDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {

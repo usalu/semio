@@ -142,7 +142,8 @@ pub fn quiz_issues(quiz: &Quiz) -> Vec<ValidationIssue> {
             };
             let known: BTreeSet<&str> = ids.into_iter().collect();
             let mut used = BTreeSet::new();
-            if pool.seconds == 0 || pool.seconds > 3600 { issues.push(format!("{base}/pool/seconds"), IssueCode::ValueInvalid); }
+            if pool.seconds == 0 { issues.push(format!("{base}/pool/seconds"), IssueCode::BelowMinimum); }
+            else if pool.seconds > 3600 { issues.push(format!("{base}/pool/seconds"), IssueCode::ValueInvalid); }
             issues.at_least(format!("{base}/pool/slots"), pool.slots.len(), 2, IssueCode::ItemsTooFew);
             for (slot, entries) in pool.slots.iter().enumerate() {
                 issues.at_least(format!("{base}/pool/slots/{slot}"), entries.len(), 2, IssueCode::ItemsTooFew);

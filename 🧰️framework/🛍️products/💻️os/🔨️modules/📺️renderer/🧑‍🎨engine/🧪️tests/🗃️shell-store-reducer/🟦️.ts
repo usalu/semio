@@ -11,8 +11,8 @@ import { tutorialInteractionSelectionActions } from "../../🧱️elements/🏛�
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
-import { interactionSchema } from "../../../../../../../🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🟦️.ts";
-import type { InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
+import { interactionSchema } from "@semio-tech/framework/interaction/testing/fixtures";
+import type { InteractionState } from "@semio-tech/framework/interaction";
 import type { TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
@@ -109,15 +109,11 @@ describe("shell store reducer", () => {
   });
 
   it("keeps the shell state's identity when a dispatch changes nothing, so a same-value refresh fan-out never re-renders the shell", () => {
-    // 🪞️ One guest refresh fans out eight dispatches whose values are identity-preserved upstream
-    // (`mergeRecordPreservingIdentity`); the reducer used to spread a fresh state anyway, and every
-    // hover echo reconciled the whole shell tree.
     const state = baseState();
     expect(shellReducer(state, { type: "SET_SEARCH_OPEN", value: state.overlays.searchOpen })).toBe(state);
     expect(shellReducer(state, { type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID", value: (current) => current })).toBe(state);
     expect(shellReducer(state, { type: "SET_PANEL_BODY_STORE_BY_KEY", value: (current) => current })).toBe(state);
     expect(shellReducer(state, { type: "SET_APP_LABELS_OVERLAY", value: (current) => current })).toBe(state);
-    // ✏️ A real change still produces a new state and a new slice — and only that slice.
     const opened = shellReducer(state, { type: "SET_SEARCH_OPEN", value: !state.overlays.searchOpen });
     expect(opened).not.toBe(state);
     expect(opened.overlays).not.toBe(state.overlays);
@@ -316,7 +312,6 @@ describe("shell store reducer", () => {
     const folded = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false });
     expect(folded.actionPane.foldedByWindowId).toEqual({ w1: false });
     expect(folded.layout).toBe(state.layout);
-    // no-operation fold keeps the whole slice referentially stable
     expect(shellReducer(folded, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false }).actionPane).toBe(folded.actionPane);
 
     const expanded = shellReducer(folded, { type: "SET_ACTION_PANE_EXPANDED", windowId: "w1", value: "extrude" });
@@ -331,7 +326,6 @@ describe("shell store reducer", () => {
 
     const reset = shellReducer(stagedMore, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" });
     expect(reset.actionPane.stagedArgsByKey["w1:extrude"]).toBeUndefined();
-    // reset keeps the panel expanded
     expect(reset.actionPane.expandedByWindowId["w1"]).toBe("extrude");
     expect(shellReducer(reset, { type: "RESET_ACTION_ARGS", windowId: "w1", actionId: "extrude" }).actionPane).toBe(reset.actionPane);
 

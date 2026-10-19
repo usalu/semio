@@ -111,7 +111,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links")),
             ]).required()])
-            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
             .action_describe("addObject", LocalizedLabel::native("Adds a new geometric object to the CAD model.", "Fügt dem CAD-Modell ein neues geometrisches Objekt hinzu."))
             .action_use_when("addObject", vec!["add a box".into(), "create an object".into(), "place a solid in the model".into()])
             .action_describe("patchObject", LocalizedLabel::native("Sets one named property of one CAD object — its name, material, dimensions or placement.", "Setzt eine benannte Eigenschaft eines CAD-Objekts — Name, Material, Abmessungen oder Platzierung."))
@@ -142,13 +141,11 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the sun's compass direction, in degrees.", "Legt die Himmelsrichtung der Sonne in Grad fest."))
             .action_describe("setSunElevation", LocalizedLabel::native("Sets the sun's height above the horizon, in degrees.", "Legt die Höhe der Sonne über dem Horizont in Grad fest."))
             .action_describe("setSunIntensity", LocalizedLabel::native("Sets how bright the scene's sun light is.", "Legt fest, wie hell das Sonnenlicht der Szene ist."))
-            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
             .action_destructive("deleteObject")
             .action_destructive("setActiveExample")
             .action_destructive("saveCurrent")
             .action_destructive("saveSelected")
             .action_destructive("saveInPlay")
-            // 🖱️ Raw input plumbing — the 3D viewport and the engagement bar feed these, agents never do.
             .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             .action_audience("engagementPossibleSelect", semio_framework_plugin::CapabilityAudience::Input)
@@ -164,13 +161,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_utilities(building::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(energy::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(structure_classic::WINDOW_KIND_ID, cad_dislocate_utility_refs())
-            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the single mesh
-            // object/vertex/edge/face interaction domain, shared by all four World3d panes — the
-            // framework auto-injects `interactionSelect`/`interactionHover`/`clearSelection`/
-            // `selectAll`/`setSelectionMode`/`setInteractionGranularity` for it; this app never
-            // declares those verbs itself. `HierarchyProvider::Flat`: a component id (vertex/edge/
-            // face) is only ever meaningful within its owning object, not a tree the framework can
-            // walk itself — `transitive` therefore stays false (requires `hierarchy != Flat`).
             .interaction(cad_interaction_definition())
             .window_kind_interactions(shape::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
             .window_kind_interactions(building::WINDOW_KIND_ID, vec![semio_framework_plugin::InteractionRef::new(CAD_INTERACTION_DOMAIN)])
@@ -179,10 +169,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document::definition())
             .panel_tab_def(catalogue::definition())
             .panel_tab_def(inspection::definition())
-            // 🎯️ Typed channel + port surface (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2) — `cad_io()` is
-            // this same `3d.cad`/Brep information's single source of truth, reused here rather than
-            // duplicated; `config_spec()` stays empty (cad has no sticky-default settings analogous to
-            // shooting's format defaults — every `CadConfig` field is session view-state, not a setting).
             .config(CadPlayApp::config_spec())
             .io(cad_io())
             .action_interactive_job("addObject", InteractiveJobClassification::Migrated)
@@ -223,13 +209,6 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("saveInPlay", InteractiveJobClassification::Migrated)
             .action_interactive_job("saveCurrent", InteractiveJobClassification::Migrated)
             .action_interactive_job("loadRawRequest", InteractiveJobClassification::Migrated)
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`Viewer`/`.editor::<E>(def: AppDefinition)`
-            // take a bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old
-            // `CAD_EXAMPLE_FOREST_LEFT` app-level example registration and the no-op `.workflow("cad",
-            // …)` call are dropped here (not silently: reported in the packet's migration report).
-            // The subset's own `📚️examples/🎬️demo` facet (`crate::examples::...`,
-            // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
             .build_definition()
 }
 //#endregion 🔖️Manifest

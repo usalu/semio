@@ -163,12 +163,12 @@ pub enum Block {
     },
     Footer(usize),
     Chain(Prim),
-    /// P2-M2 item 1.
+    /// 🔂️ P2-M2 item 1.
     Repeat {
         name: String,
         dispatch: RepeatDispatch,
     },
-    /// P2-M2 item 5a: scan BACKWARD from EOF for `magic`'s exact byte pattern (ZIP's EOCD, whose
+    /// 🔎️ P2-M2 item 5a: scan BACKWARD from EOF for `magic`'s exact byte pattern (ZIP's EOCD, whose
     /// preceding comment field is 0-65535 bytes — its start is unknowable except by finding the
     /// EOCD itself first), jump `pos` directly to the match, then walk `fields` forward from there.
     BackwardScan {
@@ -176,7 +176,7 @@ pub enum Block {
         magic: Vec<u8>,
         fields: Vec<Field>,
     },
-    /// P2-M2 item 5b: jump `pos` to the ABSOLUTE offset held in `offset_field` (decoded by an
+    /// 🦘️ P2-M2 item 5b: jump `pos` to the ABSOLUTE offset held in `offset_field` (decoded by an
     /// earlier block — ZIP's EOCD `cd_offset`), then walk `fields` forward from there. A genuine,
     /// deliberate exception to "position only increases" — see `walk_protocol`'s `jumped` handling.
     JumpTo {
@@ -203,7 +203,7 @@ pub enum Prim {
     I64,
     F32,
     F64,
-    /// P2-M2 item 2: ALWAYS big-endian regardless of the walker's runtime endian mode (png/jpg/
+    /// 🐘️ P2-M2 item 2: ALWAYS big-endian regardless of the walker's runtime endian mode (png/jpg/
     /// deflate's trailer/ply's BE variant/pdf 1.7's xref rows — formats with a static, author-time-
     /// known byte order). Distinct from plain `U16`/`U32`/... which obey the walker's current mode
     /// (LE by default, flippable at runtime by a `Prim::Endian` field — P2-M2 item 6).
@@ -222,11 +222,11 @@ pub enum Prim {
     Array(Box<Prim>, Count),
     Ref(String),
     Tag,
-    /// P2-M2 item 1c: scan forward past every `prefix` byte, then take the next byte as the
+    /// 🏷️ P2-M2 item 1c: scan forward past every `prefix` byte, then take the next byte as the
     /// discriminator — JPG's marker-prefix scan (`0xFF` fill bytes before a real marker code),
     /// distinct from a fixed-position tag read.
     MarkerScan(u8),
-    /// P2-M2 item 6: TIFF-style runtime-selected endianness. Reads `key.len()` bytes (all keys
+    /// 🖼️ P2-M2 item 6: TIFF-style runtime-selected endianness. Reads `key.len()` bytes (all keys
     /// must share one width — TIFF's `II`/`MM` are both 2), matches against the declared
     /// `(key, is_big_endian)` table, and MUTATES the walker's endian mode for every subsequent
     /// plain (non-`Be`-suffixed) `Prim` read for the REMAINDER of the walk. A walker-state mutation,

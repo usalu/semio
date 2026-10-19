@@ -328,7 +328,6 @@ pub fn constraint_point3(values: &[f64], role: &str) -> Result<[f64; 3], String>
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode, data: &mut DwgBitWriter, strings: &mut DwgBitWriter, handles: &mut DwgBitWriter) -> Result<(), String> {
     use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn core(data: &mut DwgBitWriter, node: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore) -> Result<(), String> {
         if node.id < 0 || node.connected_node_ids.len() > 10_000 {
             return Err("constraint node ID or connection count is invalid".into());
@@ -340,7 +339,6 @@ pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_o
         }
         Ok(())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn geometric(data: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint) -> Result<(), String> {
         if !value.active {
             return Err("AC1024 geometric constraint must be active".into());
@@ -350,14 +348,12 @@ pub fn encode_r2010_constraint_node(node: &semio_s_artifact_stdio_dwg_snapshot_o
         data.write_b(value.implied);
         Ok(())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn geometry(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry) -> Result<(), String> {
         core(data, &value.node)?;
         handles.write_handle(4, value.geometry_dependency_handle.unwrap_or_default());
         data.write_bl(value.geometry_node_id);
         Ok(())
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn explicit(data: &mut DwgBitWriter, handles: &mut DwgBitWriter, value: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint) -> Result<(), String> {
         geometric(data, &value.geometric)?;
         if value.value_dependency_handle == 0 || value.dimension_dependency_handle == 0 {

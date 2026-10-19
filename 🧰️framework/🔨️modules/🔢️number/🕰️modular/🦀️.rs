@@ -107,14 +107,12 @@ pub fn sqrt_mod(a: u64, p: u64) -> Option<u64> {
     if p % 4 == 3 {
         return Some(mod_pow(a, (p + 1) / 4, p));
     }
-    // General Tonelli-Shanks: write p - 1 = q * 2^s with q odd.
     let mut q = p - 1;
     let mut s = 0u32;
     while q.is_multiple_of(2) {
         q /= 2;
         s += 1;
     }
-    // Find a quadratic non-residue z.
     let mut z = 2u64;
     while is_quadratic_residue(z, p) {
         z += 1;
@@ -133,7 +131,7 @@ pub fn sqrt_mod(a: u64, p: u64) -> Option<u64> {
             temp = mod_mul(temp, temp, p);
             i += 1;
             if i == m {
-                return None; // should not happen if `a` really is a residue
+                return None;
             }
         }
         let b = mod_pow(c, 1u64 << (m - i - 1), p);
@@ -261,7 +259,6 @@ impl Ring for ModInt {
     fn add(&self, rhs: &Self) -> Self {
         let (a, b, m) = self.unify(*rhs);
         if m == 0 {
-            // 🧮️ Both unbound: defer reduction, so combine the signed bit patterns with wrapping add.
             Self { value: a.wrapping_add(b), modulus: 0 }
         } else {
             Self { value: mod_add(a, b, m), modulus: m }
@@ -269,7 +266,6 @@ impl Ring for ModInt {
     }
     fn neg(&self) -> Self {
         if self.modulus == 0 {
-            // 🧮️ Unbound: negate the signed `i64` bit pattern (see `reduce_unbound`), not the raw `u64`.
             Self { value: self.value.wrapping_neg(), modulus: 0 }
         } else if self.value == 0 {
             *self
@@ -280,7 +276,6 @@ impl Ring for ModInt {
     fn mul(&self, rhs: &Self) -> Self {
         let (a, b, m) = self.unify(*rhs);
         if m == 0 {
-            // 🧮️ Both unbound: defer reduction, so combine the signed bit patterns with wrapping mul.
             Self { value: a.wrapping_mul(b), modulus: 0 }
         } else {
             Self { value: mod_mul(a, b, m), modulus: m }

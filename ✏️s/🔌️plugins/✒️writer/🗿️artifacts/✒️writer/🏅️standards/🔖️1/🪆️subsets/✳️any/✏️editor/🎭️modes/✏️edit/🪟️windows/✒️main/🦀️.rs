@@ -46,9 +46,6 @@ pub fn definition() -> WindowKindDefinition {
         options: WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
-        // 🕹️ Populated post-hoc by `create_writer_app`'s `.window_kind_interactions(..)` call — a
-        // bare literal `WindowKindDefinition` (not built via `AppBuilder::window_kind_def`) has no
-        // other way to reach the manifest's `InteractionRef`s.
         interactions: Vec::new(),
         params_schema: None,
         artifact_snapshot_schema: None,
@@ -82,12 +79,6 @@ pub fn render(document: &WriterSnapshot, config: &WriterMainWindowConfig, transi
     let placeholders_json = is_jack.then(|| serde_json::to_string(&jack_editor_placeholders(&text, cursor)).unwrap_or_else(|_| "[]".into()));
     let newline_gates_json = is_jack.then(|| serde_json::to_string(&jack_newline_gate_offsets(&text)).unwrap_or_else(|_| "[]".into()));
 
-    // 🕹️ Tree-row/editor hover cross-highlighting DISSOLVED (ticket
-    // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the `ast` domain's hover now lives in the
-    // framework's own `InteractionState`/presence broadcast, outside Writer window state — `render` has no
-    // `InteractionView` (only `handle`/`copy_fragment`/`cut_operations` do), so this scene no longer
-    // computes a server-side `hoverJson`; the client renders `ast` hover highlights itself from live
-    // interaction/presence state.
     let hover_json: Option<String> = None;
 
     let caret_symbol = if is_jack && selection.start == selection.end { jack_symbol_at_offset(&text, selection.start) } else { None };

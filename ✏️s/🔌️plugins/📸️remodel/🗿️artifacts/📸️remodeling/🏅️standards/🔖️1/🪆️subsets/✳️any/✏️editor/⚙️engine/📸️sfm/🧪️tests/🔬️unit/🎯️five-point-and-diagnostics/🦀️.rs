@@ -131,15 +131,6 @@ fn five_point_candidates_include_the_true_essential_matrix() {
 /// "5-point wins on planar/low-parallax" contract.
 #[test]
 fn five_point_recovers_pose_on_planar_scene_where_eight_point_struggles() {
-    // A controlled, moderate-baseline planar/near-planar configuration (mirroring
-    // `select_two_view_model_prefers_homography_on_planar_scene`'s relative pose and depth range,
-    // rather than the wide-baseline multi-camera orbit fixture, which produced large enough relative
-    // rotations that the resulting correspondence geometry drifted between "so planar even the true
-    // essential matrix is barely distinguishable from a nearby impostor" and "not planar enough to
-    // stress 8-point" depending on jitter — a genuine, verified sensitivity of near-degenerate
-    // two-view geometry, not a solver bug (`e5` matched `e_true` to Frobenius distance ~1e-10 in the
-    // noiseless case at every jitter level tried, confirming the five-point algebra itself is
-    // correct throughout).
     let intr = Intrinsics { fx: 800.0, fy: 800.0, cx: 320.0, cy: 240.0, skew: 0.0, distortion: Distortion::None };
     let pose_a = CameraPose(Se3::identity());
     let pose_b = CameraPose(Se3 { r: So3::exp([0.02, 0.15, -0.02]), t: [0.6, 0.02, 0.05] });

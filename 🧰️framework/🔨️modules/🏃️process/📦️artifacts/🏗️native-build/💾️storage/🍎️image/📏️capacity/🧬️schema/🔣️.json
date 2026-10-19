@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "containerFixedBytes": 40960,
+        "largeContainerThresholdBytes": 2147483648,
+        "largeContainerReserveBytes": 209715200,
+        "metadataFixedBytes": 1048576,
+        "metadataDivisor": 256
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imageBytes",
+        "filesystemBytes",
+        "usedAtEmptyBytes"
+      ],
+      "properties": {
+        "imageBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "usedAtEmptyBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "measured",
+        "usable"
+      ],
+      "properties": {
+        "measured": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        },
+        "usable": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "imageBytes",
+              "usableBytes"
+            ],
+            "properties": {
+              "imageBytes": {
+                "type": "integer"
+              },
+              "usableBytes": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

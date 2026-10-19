@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const { dirname, isAbsolute, join, relative, resolve } = require("node:path");
-const { ownsPayloadPlan } = require("../📦️payload/🟨️.cjs");
+const { ownsPayload } = require("../📦️payload/🟨️.cjs");
 const { createHash } = require("node:crypto");
 const limits = Object.freeze({ ...require("./🧬️schema/🔣️.json").$defs.PhysicalLimits.const });
 const slash = (path) => path.replaceAll("\\", "/");
@@ -126,7 +126,7 @@ function* packagesPlan(owner, scope) {
     let retained = true;
     for (let parent = dirname(candidate.absDir); parent !== owner.root && parent !== dirname(parent); parent = dirname(parent)) {
       const parentOwner = byDirectory.get(parent);
-      if (parentOwner) { retained = !(yield* ownsPayloadPlan(parentOwner, candidate)); break; }
+      if (parentOwner) { retained = !ownsPayload(parentOwner, candidate); break; }
     }
     if (retained) selected.push(candidate.relDir);
   }

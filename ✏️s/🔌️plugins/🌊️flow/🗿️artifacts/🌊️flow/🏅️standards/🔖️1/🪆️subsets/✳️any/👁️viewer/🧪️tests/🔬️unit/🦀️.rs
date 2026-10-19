@@ -37,7 +37,8 @@ use semio_framework_plugin::ViewEmit;
 #[allow(unused_imports)]
 use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::flow::*;
-use semio_framework_plugin::{__semio_dispatch_PluginApp, plugin_app_close_prelude::*};
+use semio_framework_plugin::{plugin_app_close_prelude::*};
+use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 
 semio_framework_dispatch_macros::dyn_enum_close! {
     enum FlowViewerTestApps: semio_framework_plugin::PluginApp {

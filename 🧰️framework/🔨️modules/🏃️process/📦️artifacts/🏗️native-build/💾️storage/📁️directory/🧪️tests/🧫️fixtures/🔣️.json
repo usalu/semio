@@ -1,0 +1,598 @@
+{
+  "version": 1,
+  "admission": [
+    {
+      "id": "empty-request-within-both",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 0,
+        "requestBytes": 33554432
+      },
+      "accepted": true,
+      "remainingBytes": 1048576
+    },
+    {
+      "id": "used-boundary",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 1000,
+        "usedBytes": 33554431,
+        "requestBytes": 1
+      },
+      "accepted": true,
+      "remainingBytes": 1048576
+    },
+    {
+      "id": "measured-payload-headroom",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 33554431,
+        "requestBytes": 2
+      },
+      "accepted": true,
+      "remainingBytes": 1048575
+    },
+    {
+      "id": "reserved-over",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 34603000,
+        "usedBytes": 0,
+        "requestBytes": 9
+      },
+      "accepted": false
+    },
+    {
+      "id": "reserved-boundary",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 34603000,
+        "usedBytes": 0,
+        "requestBytes": 8
+      },
+      "accepted": true,
+      "remainingBytes": 0
+    },
+    {
+      "id": "measured-commit-within",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 33554432,
+        "requestBytes": 0
+      },
+      "accepted": true,
+      "remainingBytes": 1048576
+    },
+    {
+      "id": "measured-metadata-headroom",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 33554433,
+        "requestBytes": 0
+      },
+      "accepted": true,
+      "remainingBytes": 1048575
+    },
+    {
+      "id": "physical-boundary",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 1048576,
+        "requestBytes": 33554432
+      },
+      "accepted": true,
+      "remainingBytes": 0
+    },
+    {
+      "id": "physical-over",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 1048577,
+        "requestBytes": 33554432
+      },
+      "accepted": false
+    },
+    {
+      "id": "payload-request-over",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 0,
+        "requestBytes": 33554433
+      },
+      "accepted": false
+    },
+    {
+      "id": "measured-commit-physical-boundary",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 34603008,
+        "requestBytes": 0
+      },
+      "accepted": true,
+      "remainingBytes": 0
+    },
+    {
+      "id": "measured-commit-physical-over",
+      "value": {
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 34603008,
+        "reservedBytes": 0,
+        "usedBytes": 34603009,
+        "requestBytes": 0
+      },
+      "accepted": false
+    },
+    {
+      "id": "actual-fresh-publication-store-metadata",
+      "value": {
+        "filesystemBytes": 2146435072,
+        "maximumPhysicalBytes": 2147483648,
+        "reservedBytes": 0,
+        "usedBytes": 4096,
+        "requestBytes": 2146435072
+      },
+      "accepted": true,
+      "remainingBytes": 1044480
+    }
+  ],
+  "malformed": [
+    {
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "reservedBytes": 0,
+      "usedBytes": 0
+    },
+    {
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "reservedBytes": -1,
+      "usedBytes": 0,
+      "requestBytes": 1
+    },
+    {
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "reservedBytes": 0,
+      "usedBytes": 0,
+      "requestBytes": 1,
+      "ambient": true
+    },
+    {
+      "filesystemBytes": "33554432",
+      "maximumPhysicalBytes": 34603008,
+      "reservedBytes": 0,
+      "usedBytes": 0,
+      "requestBytes": 1
+    }
+  ],
+  "anchors": [
+    {
+      "id": "canonical",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "underlying": {
+        "dev": "16777234",
+        "ino": "12345",
+        "mode": 16877
+      },
+      "valid": true
+    },
+    {
+      "id": "too-small",
+      "filesystemBytes": 1048576,
+      "maximumPhysicalBytes": 34603008,
+      "underlying": {
+        "dev": "16777234",
+        "ino": "12345",
+        "mode": 16877
+      },
+      "valid": false
+    },
+    {
+      "id": "zero-inode",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "underlying": {
+        "dev": "16777234",
+        "ino": "0",
+        "mode": 16877
+      },
+      "valid": false
+    },
+    {
+      "id": "numeric-device",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "underlying": {
+        "dev": 3,
+        "ino": "5",
+        "mode": 16877
+      },
+      "valid": false
+    }
+  ],
+  "ports": [
+    {
+      "id": "honest",
+      "effect": "swap",
+      "unsupportedOn": []
+    },
+    {
+      "id": "invalid-argument",
+      "effect": "status",
+      "status": -1,
+      "errno": 22,
+      "unsupportedOn": [
+        "linux",
+        "darwin"
+      ]
+    },
+    {
+      "id": "no-syscall",
+      "effect": "status",
+      "status": -1,
+      "errno": 38,
+      "unsupportedOn": [
+        "linux"
+      ]
+    },
+    {
+      "id": "operation-not-supported-linux",
+      "effect": "status",
+      "status": -1,
+      "errno": 95,
+      "unsupportedOn": [
+        "linux"
+      ]
+    },
+    {
+      "id": "operation-not-supported-darwin",
+      "effect": "status",
+      "status": -1,
+      "errno": 45,
+      "unsupportedOn": [
+        "darwin"
+      ]
+    },
+    {
+      "id": "no-permission",
+      "effect": "status",
+      "status": -1,
+      "errno": 13,
+      "unsupportedOn": []
+    },
+    {
+      "id": "lying-success",
+      "effect": "nothing",
+      "unsupportedOn": []
+    }
+  ],
+  "usage": {
+    "files": [
+      [
+        "a",
+        1
+      ],
+      [
+        "dir/b",
+        5000
+      ],
+      [
+        "dir/sub/c",
+        100000
+      ],
+      [
+        "empty",
+        0
+      ]
+    ],
+    "directories": [
+      "dir",
+      "dir/sub",
+      "void"
+    ]
+  },
+  "children": {
+    "attached": [
+      "ns1/native",
+      "ns2/native"
+    ],
+    "inactive": [
+      "ns3/native"
+    ],
+    "tooDeep": [
+      "a/b/c"
+    ],
+    "plain": [
+      "ns4/data"
+    ]
+  },
+  "meter": [
+    {
+      "id": "many-small-writes-cross-the-cap",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 40,
+          "reserve": 1048576,
+          "write": 1048576
+        }
+      ],
+      "refusedAtReserve": 34
+    },
+    {
+      "id": "tiny-writes-below-the-old-sixteen-mib-gate",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 70,
+          "reserve": 524288,
+          "write": 524288
+        }
+      ],
+      "refusedAtReserve": 67
+    },
+    {
+      "id": "honest-writes-within-the-cap",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 32,
+          "reserve": 1048576,
+          "write": 1048576
+        }
+      ],
+      "refusedAtReserve": null
+    },
+    {
+      "id": "freed-space-is-reclaimed-by-the-next-measurement",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 30,
+          "reserve": 1048576,
+          "write": 1048576
+        },
+        {
+          "repeat": 1,
+          "reserve": 0,
+          "write": 0,
+          "free": true
+        },
+        {
+          "repeat": 30,
+          "reserve": 1048576,
+          "write": 1048576
+        }
+      ],
+      "refusedAtReserve": null
+    },
+    {
+      "id": "estimate-over-the-cap-is-confirmed-by-measurement-before-refusal",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 1,
+          "reserve": 32505856,
+          "write": 32505856
+        },
+        {
+          "repeat": 1,
+          "reserve": 1048576,
+          "write": 1048576
+        },
+        {
+          "repeat": 1,
+          "reserve": 0,
+          "write": 0,
+          "free": true
+        },
+        {
+          "repeat": 1,
+          "reserve": 1048576,
+          "write": 1048576
+        }
+      ],
+      "refusedAtReserve": null
+    },
+    {
+      "id": "one-reserve-above-the-remaining-capacity",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 1,
+          "reserve": 33554433,
+          "write": 0
+        }
+      ],
+      "refusedAtReserve": 1
+    },
+    {
+      "id": "one-large-write-under-a-small-reservation",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 1,
+          "reserve": 1048576,
+          "write": 67108864,
+          "commit": true
+        }
+      ],
+      "refusedAtCommit": 1
+    },
+    {
+      "id": "commit-of-an-honest-write",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 1,
+          "reserve": 1048576,
+          "write": 1048576,
+          "commit": true
+        }
+      ],
+      "refusedAtCommit": null
+    },
+    {
+      "id": "growth-after-commit-is-found-by-the-timed-recheck",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "steps": [
+        {
+          "repeat": 1,
+          "reserve": 1048576,
+          "write": 1048576,
+          "commit": true
+        },
+        {
+          "repeat": 1,
+          "reserve": 0,
+          "write": 67108864,
+          "recheck": true,
+          "advanceMilliseconds": 2000
+        }
+      ],
+      "refusedAtRecheck": 1
+    }
+  ],
+  "meterMalformed": [
+    {
+      "mode": "reserve"
+    },
+    {
+      "mode": "other",
+      "requestBytes": 1
+    },
+    {
+      "mode": "reserve",
+      "requestBytes": -1
+    },
+    {
+      "mode": "reserve",
+      "requestBytes": 1,
+      "extra": true
+    },
+    "reserve"
+  ],
+  "meterLifecycle": [
+    {
+      "id": "fresh-metadata-and-entitlement-commit-recheck",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "initialBytes": 4096,
+      "steps": [
+        {
+          "mode": "reserve",
+          "bytes": 33554432,
+          "accepted": true
+        },
+        {
+          "mode": "write",
+          "bytes": 2097152
+        },
+        {
+          "mode": "commit",
+          "bytes": 0,
+          "accepted": true
+        },
+        {
+          "mode": "recheck",
+          "bytes": 0,
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "id": "warm-recovered-content-needs-no-new-entitlement",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "initialBytes": 2097152,
+      "steps": [
+        {
+          "mode": "reopen"
+        },
+        {
+          "mode": "recheck",
+          "bytes": 0,
+          "accepted": true
+        },
+        {
+          "mode": "reserve",
+          "bytes": 33554432,
+          "accepted": false
+        }
+      ]
+    },
+    {
+      "id": "physical-growth-after-reset-still-refused",
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "initialBytes": 4096,
+      "steps": [
+        {
+          "mode": "reserve",
+          "bytes": 33554432,
+          "accepted": true
+        },
+        {
+          "mode": "commit",
+          "bytes": 0,
+          "accepted": true
+        },
+        {
+          "mode": "write",
+          "bytes": 34603008
+        },
+        {
+          "mode": "reopen"
+        },
+        {
+          "mode": "recheck",
+          "bytes": 0,
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "journalCapacity": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008,
+    "requests": [
+      33554432,
+      1048576,
+      1
+    ],
+    "accepted": [
+      true,
+      true,
+      false
+    ]
+  }
+}

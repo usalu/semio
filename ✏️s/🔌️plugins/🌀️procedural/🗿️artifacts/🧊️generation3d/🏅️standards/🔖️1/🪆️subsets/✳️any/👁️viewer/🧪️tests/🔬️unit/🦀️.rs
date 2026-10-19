@@ -43,8 +43,6 @@ fn no_viewer_tool_publishes_on_the_artifact_lane() {
         .chain(<Generation3dViewContributionsJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .chain(<Generation3dViewExampleJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
         .chain(<Generation3dViewFlowEvalJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
-        // 📤️ The io route is in this law deliberately: `exportDocument` is the one io direction a
-        // viewer may own, and the reason it may is that it publishes on NO store lane at all.
         .chain(<Generation3dViewDocumentIoJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter())
     {
         assert!(!contract.lanes.is_empty(), "{} declares no publication lane", contract.tool_id);

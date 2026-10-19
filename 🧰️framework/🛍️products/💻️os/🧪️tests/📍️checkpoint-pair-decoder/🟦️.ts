@@ -10,12 +10,6 @@ export async function registerCheckpointPairDecoderTests(vitest: Vitest, depende
   const { resetWorkerLaw } = workerLawFakesV1(vitest, dependencies, source);
   describe("canonical checkpoint pair", () => {
     beforeEach(resetWorkerLaw);
-    // 🪢️ The hub's `active-checkpoint/pair` body is the ONLY transport that seeds a cold browser
-    // client: no hub code path produces `Bootstrap.ArtifactBootstrap`, so the socket's `Welcome`
-    // never carries a pair (measured on a live hub: `Welcome.bootstrap = None`, ticket 26/09/18 C7).
-    // These laws pin the decoder to the hub's own framing — `u32be length | payload` frames, a
-    // selection header, strictly ordered pack-then-SPR records at contiguous offsets, a `Complete`
-    // terminal — and to the GENESIS baseline every newly created document's first checkpoint has.
     const frame = (payload: readonly number[]): number[] => [(payload.length >>> 24) & 0xff, (payload.length >>> 16) & 0xff, (payload.length >>> 8) & 0xff, payload.length & 0xff, ...payload];
     const u32 = (value: number): number[] => [(value >>> 24) & 0xff, (value >>> 16) & 0xff, (value >>> 8) & 0xff, value & 0xff];
     const u64 = (value: number): number[] => [0, 0, 0, 0, ...u32(value)];
@@ -80,8 +74,6 @@ export async function registerCheckpointPairDecoderTests(vitest: Vitest, depende
       ];
       for (const [code, input] of refusals) expect(() => decodeCanonicalCheckpointPairV1(input)).toThrow(code);
       const reordered = await body();
-      // 🔀️ The first data record's part byte flipped to SPR: the decoder must refuse a body whose
-      // records do not run pack-then-SPR at contiguous offsets, rather than silently mis-splitting.
       const headerLength = (reordered[0]! << 24) + (reordered[1]! << 16) + (reordered[2]! << 8) + reordered[3]!;
       reordered[4 + headerLength + 4 + 1] = 2;
       expect(() => decodeCanonicalCheckpointPairV1(reordered)).toThrow("canonical-checkpoint-pair.record-part");

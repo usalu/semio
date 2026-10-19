@@ -4,8 +4,8 @@
 import type { SemioMesh, SemioMaterial, SemioTexture } from "./📸️snapshot/🟦️";
 
 export interface SemioMeshArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ meshes: SemioMesh[];
-  /** @state artifact */ materials: SemioMaterial[];
-  /** @state artifact */ textures: SemioTexture[];
+  /** 🕸️ @state artifact */ schema: string;
+  /** 🔺️ @state artifact */ meshes: SemioMesh[];
+  /** 🧱️ @state artifact */ materials: SemioMaterial[];
+  /** 🎨️ @state artifact */ textures: SemioTexture[];
 }

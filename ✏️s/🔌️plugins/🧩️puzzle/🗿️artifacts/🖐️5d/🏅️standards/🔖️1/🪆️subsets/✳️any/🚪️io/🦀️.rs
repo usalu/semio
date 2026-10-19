@@ -1,4 +1,4 @@
-//! (called once from this file's own `io_registry::register()`), not per-leaf register().
+//! 📨️ (called once from this file's own `io_registry::register()`), not per-leaf register().
 //! 🚪️ IO s.puzzle5d (1/✳️any) — registration now flows through 🎹️composer::register
 pub(crate) use semio_s_artifact_puzzle_5d_diff::standards::v1::subsets::any::io::puzzle5d_json;
 

@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-diff-surfaces"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio pdf viewer surface schema mounts of the diff"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

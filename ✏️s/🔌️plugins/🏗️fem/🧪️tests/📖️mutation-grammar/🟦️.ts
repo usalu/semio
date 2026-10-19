@@ -1,4 +1,4 @@
-import {readFileSync,readdirSync} from "node:fs";
+import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {describe,it,expect} from "vitest";
@@ -18,9 +18,9 @@ describe("FEM exact mutation grammar vocabulary",()=>{
   for(const dimension of ["◻️2d","🧊️3d"]){
     it(`${dimension} carries every variant and verifies geometry-selection snapshots with RFC6902`,()=>{
       const subsets=resolve(owner,`🗿️artifacts/${dimension}/🏅️standards/🔖️1/🪆️subsets`);const generator=resolve(subsets,"🌐️any/🏭️generator");const routes=readFileSync(resolve(generator,"📜️script.ts"),"utf8").split("const CARRIER_FIXTURES = {")[1]!.split("} as const;")[0]!;const routeKinds=[...routes.matchAll(/^  "([a-z-]+)":/gm)].map(row=>row[1]!);expect(routeKinds).toHaveLength(39);
-      const rust=readFileSync(resolve(generator,"🧩️json/🦀️.rs"),"utf8").split("pub const KINDS:")[1]!.split("];",1)[0]!;const rustKinds=[...rust.matchAll(/"([a-z-]+)"/g)].map(row=>row[1]!);expect(new Set(rustKinds)).toEqual(new Set(routeKinds));
+      const rust=readFileSync(resolve(generator,"🧩️json/🦀️.rs"),"utf8").split("pub const KINDS:")[1]!.split("];",1)[0]!;const rustKinds=[...rust.matchAll(/"([a-z-]+)"/g)].map(row=>row[1]!);expect(new Set(rustKinds)).toEqual(new Set(routeKinds));const routePaths=Object.fromEntries([...routes.matchAll(/^  "([a-z-]+)": \{ subset: "[a-z]+", path: "([^"]+)"/gm)].map(row=>[row[1]!,row[2]!]));const rustRoutes=readFileSync(resolve(generator,"🧩️json/🏗️generate/🦀️.rs"),"utf8");const rustPaths=Object.fromEntries([...rustRoutes.matchAll(/"([a-z-]+)" => Some\("([^"]+)"\)/g)].map(row=>[row[1]!,row[2]!]));expect(rustPaths).toEqual(routePaths);for(const path of Object.values(routePaths)){expect(path).toContain("/🧪️tests/🧫️fixtures/");for(const name of ["⏮️before.json","⏭️after.json"])expect(existsSync(resolve(subsets,path,name))).toBe(true);}
       const three=dimension==="🧊️3d";const entity=three?"solid":"region";const scenarios=[[`${three?"🧊️":"🗺️"}create-${entity}`],[`🚫️delete-${entity}`],[`🔄️replace-${entity}`],["🧭️move-selection"]];
-      for(const[scenario]of scenarios){const root=resolve(subsets,`🕸️mesh/🧫️fixtures/${scenario}`);const before=read(resolve(root,"⏮️before.json"));const after=read(resolve(root,"⏭️after.json"));const oracle=read(resolve(root,"🩹️oracle.json"));expect(applyPatch(structuredClone(before),oracle,true,false).newDocument).toEqual(after);expect(after).not.toEqual(before);}
+      for(const[scenario]of scenarios){const root=resolve(subsets,`🕸️mesh/🧪️tests/🧫️fixtures/${scenario}`);const before=read(resolve(root,"⏮️before.json"));const after=read(resolve(root,"⏭️after.json"));const oracle=read(resolve(root,"🩹️oracle.json"));expect(applyPatch(structuredClone(before),oracle,true,false).newDocument).toEqual(after);expect(after).not.toEqual(before);}
       console.log(`[DEBUG] ${dimension} all39 carrier routes and four authored geometry/selection snapshots equal independent RFC6902 output`);
     });
 

@@ -1,4 +1,4 @@
-//! publication — what one mounted session runs per document revision.
+//! 📰️ publication — what one mounted session runs per document revision.
 //! 🎞️ The FEM3D page visual job: its admission contract, staged mesh/solve pipeline and paged world-snapshot
 
 use semio_s_fem_analyses_assembly::AssemblyCsrBuild;

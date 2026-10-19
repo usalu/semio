@@ -517,17 +517,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 }
 
 // 🎯️ W6 kernel unification: this crate's own `mutation_envelope_from_edit` (whole-edit-per-
-// envelope, JSON payload) is DELETED — `flush_outbound` now calls `crate::os_spr::
-// mutation_envelope_from_edit` directly (one `crate::os_spr::MutationEnvelope` per forward op,
+// envelope, JSON payload) is DELETED — `flush_outbound` now calls `semio_framework_os_spr::
+// mutation_envelope_from_edit` directly (one `semio_framework_os_spr::MutationEnvelope` per forward op,
 // `OpBinary`-encoded payloads — W5's frozen-contract signature). `hash_bytes`'s import above this
 // region stays needed elsewhere in this file (`replay_mutations`'s `payload_hash`, unaffected).
 
-/// 📦️ Recovers a single-op `Edit` from one causal wire envelope. `crate::os_spr::causal::
+/// 📦️ Recovers a single-op `Edit` from one causal wire envelope. `semio_framework_os_spr::causal::
 /// MutationEnvelope` carries exactly one op per envelope (W5's binary reshape) — the receiving-
-/// side half of the per-op fan-out `crate::os_spr::mutation_envelope_from_edit` performs when sending
+/// side half of the per-op fan-out `semio_framework_os_spr::mutation_envelope_from_edit` performs when sending
 /// (see `flush_outbound`). `sequence_number`/`started_at` are placeholders `ingest_envelope`
 /// overwrites (mirroring the local-edit convention: `self.edit_sequence += 1` then `now_iso()`).
-/// `undo_policy` defaults to `ExactBaseOnly` — not a lossy conversion: `crate::os_spr::causal::
+/// `undo_policy` defaults to `ExactBaseOnly` — not a lossy conversion: `semio_framework_os_spr::causal::
 /// MutationEnvelope` carries no undo_policy at all (only the local `Edit`/`MutationMeta` shape
 /// does), and a remote edit is always foreign, so this field is never consulted for it anyway
 /// (`edit_is_local` gates undo eligibility on authorship, not `undo_policy`).
@@ -574,9 +574,9 @@ pub use semio_framework_os_store_projection::retire_replayed_projection;
 /// (measured 2026-09-20).
 /// Holding the intermediate here makes the retirement STRUCTURAL — a fold that grows a new early
 /// return cannot silently miss it, and no technology has to override anything extra to be safe.
-pub struct ReplayProjection<P, Mutation>
+pub struct ColdReplayProjection<P, Mutation>
 where
-    Mutation: crate::os_spr::ColdMutation<P>,
+    Mutation: semio_framework_os_spr::ColdMutation<P>,
 {
     pub projection: Option<P>,
     technology: PhantomData<fn() -> Mutation>,
@@ -584,7 +584,7 @@ where
 
 impl<P, Mutation> ColdReplayProjection<P, Mutation>
 where
-    Mutation: crate::os_spr::ColdMutation<P>,
+    Mutation: semio_framework_os_spr::ColdMutation<P>,
 {
     /// 🌱️ Takes ownership of a fold's base projection.
     pub fn new(projection: P) -> Self {
@@ -597,7 +597,7 @@ where
     /// ▶️ Installs the next projection and retires the one it displaces.
     pub fn advance(&mut self, next: P) {
         let displaced = self.projection.replace(next).expect("a live replay projection is present until it is handed out");
-        <Mutation::ReferenceDiff as crate::os_spr::MutationDiff<P>>::retire_projection(displaced);
+        <Mutation::ReferenceDiff as semio_framework_os_spr::MutationDiff<P>>::retire_projection(displaced);
     }
 
     /// 🎁️ Hands the finished projection to the caller, who owns its retirement from here on.
@@ -608,7 +608,7 @@ where
 
 impl<P, Mutation> std::ops::Deref for ColdReplayProjection<P, Mutation>
 where
-    Mutation: crate::os_spr::ColdMutation<P>,
+    Mutation: semio_framework_os_spr::ColdMutation<P>,
 {
     type Target = P;
     fn deref(&self) -> &P {
@@ -618,11 +618,11 @@ where
 
 impl<P, Mutation> Drop for ColdReplayProjection<P, Mutation>
 where
-    Mutation: crate::os_spr::ColdMutation<P>,
+    Mutation: semio_framework_os_spr::ColdMutation<P>,
 {
     fn drop(&mut self) {
         if let Some(projection) = self.projection.take() {
-            <Mutation::ReferenceDiff as crate::os_spr::MutationDiff<P>>::retire_projection(projection);
+            <Mutation::ReferenceDiff as semio_framework_os_spr::MutationDiff<P>>::retire_projection(projection);
         }
     }
 }
@@ -630,7 +630,7 @@ where
 pub use semio_framework_os_store_command::{retire_scratch_operations, retire_scratch_edits, retire_supersede_inputs};
 
 /// 🧮️ Folds an envelope's complete event log — its edits and its history transitions — into
-/// the history projection (`crate::os_spr::fold_history`). Quarantined edits (every edit owning an
+/// the history projection (`semio_framework_os_spr::fold_history`). Quarantined edits (every edit owning an
 /// operation of a quarantined conflict that was not accepted) stay inactive.
 pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
 where
@@ -697,7 +697,7 @@ pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp
 
 impl<P, Mutation> ColdFoldProjection<P, Mutation> for ColdReplayProjection<P, Mutation>
 where
-    Mutation: crate::os_spr::ColdMutation<P>,
+    Mutation: semio_framework_os_spr::ColdMutation<P>,
 {
     fn fold_operation(&mut self, operation: &Mutation, op_index: u32) {
         let _ = super::replay::fold_operation_into::<P, Mutation>(self.projection_mut(), operation, op_index);

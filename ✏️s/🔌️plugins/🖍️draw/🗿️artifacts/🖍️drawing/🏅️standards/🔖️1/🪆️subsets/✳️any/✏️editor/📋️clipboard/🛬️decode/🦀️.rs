@@ -1,6 +1,8 @@
 //! 🛬️ Fragment hydration moves bounded records and admits one authored leaf or text chunk per turn.
 use super::*;
-use semio_framework_value::{DslValue,FromValue,RetireOwned,ValueError,ValueRefusalKind,NativeDecodeControl,list::PagedList};
+use semio_framework_value::{DslValue, FromValue, RetireOwned, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_persistent::list::PagedList;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Invalid drawing clipboard record / Ungültiger Zeichnungsdatensatz in der Zwischenablage")}
 #[derive(RetireOwned)]
 enum Kind{Layer,Retired,Text(&'static str),Segments,Points,Stops,Dash,References,Children,Samples(String)}

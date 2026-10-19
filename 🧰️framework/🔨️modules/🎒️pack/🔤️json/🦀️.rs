@@ -68,9 +68,7 @@ pub use parser_and_grammar_cursor::*;
 mod text_writer;
 pub use text_writer::*;
 
-#[path = "🎯️float-writer/🦀️.rs"]
-mod float_writer;
-pub use float_writer::*;
+use semio_framework_pack_json_float::{write_float_to, ScalarText};
 
 #[path = "🎛️controlled-and-borrowed-bridge/🦀️.rs"]
 mod controlled_and_borrowed_bridge;
@@ -94,9 +92,6 @@ use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant
 
 //#region 🔖️ToFromValueBridge
 
-#[path = "🛫️encode/🫳️borrowed/🦀️.rs"]
-mod borrowed_source_sink;
-pub use borrowed_source_sink::write_json_source_into;
 
 //#endregion 🔖️ToFromValueBridge
 

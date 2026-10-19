@@ -33,7 +33,6 @@ pub struct ScissorRect {
 }
 
 impl ScissorRect {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn from_rect(rect: LayoutRect) -> Self {
         let x = rect.x.max(0.0).floor() as u32;
         let y = rect.y.max(0.0).floor() as u32;
@@ -42,7 +41,6 @@ impl ScissorRect {
         Self { x, y, w: x2.saturating_sub(x), h: y2.saturating_sub(y) }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn intersect(&self, other: &Self) -> Self {
         let x0 = self.x.max(other.x);
         let y0 = self.y.max(other.y);
@@ -59,19 +57,16 @@ pub struct ClipRegion {
 }
 
 impl ClipRegion {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn from_rects(rects: &[LayoutRect]) -> Self {
         let scissors = rects.iter().map(|rect| ScissorRect::from_rect(*rect)).filter(|rect| rect.w > 0 && rect.h > 0).collect();
         Self { scissors }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn intersect(&self, other: &Self) -> Self {
         let scissors = self.scissors.iter().flat_map(|left| other.scissors.iter().map(move |right| left.intersect(right))).filter(|rect| rect.w > 0 && rect.h > 0).collect();
         Self { scissors }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
         let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
         self.scissors.iter().map(|clip| clip.intersect(&viewport)).map(|clip| scissor.map_or(clip, |parent| clip.intersect(&parent))).filter(|clip| clip.w > 0 && clip.h > 0).collect()
@@ -113,52 +108,43 @@ pub struct QuadInstance {
 }
 
 impl QuadInstance {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn solid(rect: [f32; 4], color: [f32; 4]) -> Self {
         Self { rect, color, params: [0.0, 0.0, KIND_SOLID, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn rounded(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32, border_color: [f32; 4]) -> Self {
         Self { rect, color, params: [radius, border, KIND_ROUNDED, border_color[3]], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// 🌀️ Clockwise spinning + pulsing loading ring; the sweep/pulse phase is a shader-side function
     /// of elapsed seconds, so a packet carrying this kind must set `has_animated_primitives`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn loading_border(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32) -> Self {
         Self { rect, color, params: [radius, border, KIND_LOADING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring — animated, see `loading_border`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn waiting_border(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32) -> Self {
         Self { rect, color, params: [radius, border, KIND_WAITING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// ✅️ Solid, static at-bounds ring — no animation, unlike `loading_border`/`waiting_border`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn finished_border(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32) -> Self {
         Self { rect, color, params: [radius, border, KIND_FINISHED_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
     /// 💫️ Raised-cosine breathing pulse ring — animated, see `loading_border`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn introducing_border(rect: [f32; 4], color: [f32; 4], radius: f32, border: f32) -> Self {
         Self { rect, color, params: [radius, border, KIND_INTRODUCING_BORDER, 0.0], uv_rect: [0.0, 0.0, 1.0, 1.0] }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn glyph(rect: [f32; 4], color: [f32; 4], uv_rect: [f32; 4]) -> Self {
         Self { rect, color, params: [0.0, 0.0, KIND_GLYPH, 0.0], uv_rect }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn textured(rect: [f32; 4], uv_rect: [f32; 4], color: [f32; 4]) -> Self {
         Self { rect, color, params: [0.0, 0.0, KIND_TEXTURED, 0.0], uv_rect }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn raster(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
         Self { rect, color: [1.0, 1.0, 1.0, alpha], params: [0.0, 0.0, KIND_RASTER, 0.0], uv_rect }
     }
@@ -215,7 +201,6 @@ pub struct GlassInstance {
 }
 
 impl From<GlassRegion> for GlassInstance {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(region: GlassRegion) -> Self {
         Self { rect: region.rect, tint: region.tint, params: [region.radius, region.alpha, region.blur_px, region.saturate] }
     }

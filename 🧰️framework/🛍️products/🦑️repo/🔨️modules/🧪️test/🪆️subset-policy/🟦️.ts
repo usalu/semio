@@ -51,9 +51,7 @@ export function declaredSubsets(repoRoot: string): ReadonlyMap<string, readonly 
       try {
         const parsed = JSON.parse(readFileSync(manifest, "utf8")) as { artifact?: string; standard?: string; subsets?: Record<string, unknown> };
         if (typeof parsed.artifact === "string") found.set(`${parsed.artifact}@${parsed.standard ?? ""}`, Object.keys(parsed.subsets ?? {}));
-      } catch {
-        /* 🧭️A malformed subsets component is the taxonomy phase's finding, not this one's. */
-      }
+      } catch {}
       break;
     }
     return "skip";
@@ -85,9 +83,7 @@ export function declaredSubsetPolicies(repoRoot: string): ReadonlyMap<string, st
       try {
         const parsed = JSON.parse(readFileSync(manifestPath, "utf8")) as { artifact?: string; standard?: string; subsetPolicy?: string };
         if (typeof parsed.artifact === "string" && typeof parsed.subsetPolicy === "string") found.set(`${parsed.artifact}@${parsed.standard ?? ""}`, parsed.subsetPolicy);
-      } catch {
-        /* 🧭️Reported by the taxonomy phase. */
-      }
+      } catch {}
       break;
     }
     return "skip";

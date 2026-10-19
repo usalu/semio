@@ -139,6 +139,7 @@
     },
     {
       "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "specifier": "@semio-tech/schema-validator-ts",
       "directoryName": "✅️validator",
       "parentKindId": "schema",
       "kindId": "validator",

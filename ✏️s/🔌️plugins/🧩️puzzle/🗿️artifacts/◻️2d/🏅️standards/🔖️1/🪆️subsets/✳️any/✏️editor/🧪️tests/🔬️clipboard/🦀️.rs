@@ -1,4 +1,4 @@
-//! cut as one history edit, and the locked refusal.
+//! 🚚️ cut as one history edit, and the locked refusal.
 //! 📋️ Laws for the `Puzzle2dClipboardJob` route: the copy→paste round trip on both shipped examples,
 
 use crate::editor::puzzle2d::snapshot::{PUZZLE2D_BOARD_SNAPSHOT_SCHEMA, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};

@@ -14,7 +14,6 @@ const WORKSPACE_ROOT = dirname(fileURLToPath(import.meta.url));
 /** 💤️ Loads verification lanes only when the verification command is selected. */
 async function loadRootVerifyScript() {
   const { VerifyScript } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts");
-  const { semioMemberStoreProducerSourceSelfTests } = await import("./✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📥️source/🧪️tests/🟦️.ts");
   const { toolJobArtifactEnvelopeRejectionTransferSelfTests } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts");
   const { toolJobLiveFixedReplaySelfTests } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts");
   const { toolJobFixedOperationRegistrySelfTests } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-fixed-operation-registry/🟦️.ts");
@@ -51,7 +50,6 @@ async function loadRootVerifyScript() {
   const { dependencyJsLockParitySelfTests } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-js-lock-parity/🟦️.ts");
   const { dependencyTruthSelfTests } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts");
   const selfTestLanes: SelfTestLanes = {
-    semioMemberStoreProducerSourceSelfTests,
     toolJobArtifactEnvelopeRejectionTransferSelfTests,
     toolJobLiveFixedReplaySelfTests,
     toolJobFixedOperationRegistrySelfTests,
@@ -134,7 +132,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .registerLazy("test", async () => class extends Script {
     async run(segments: string[]): Promise<void> {
       if (segments[0] === "entrypoint") {
-        if (segments.length !== 1) throw Error("Expected test entrypoint without additional arguments");
+        if (segments.length !== 1) throw new Error("Expected test entrypoint without additional arguments");
         const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
         const { scriptInvocationBudget } = await import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
         await runOwnedCommand(process.execPath, ["test", "./🧪️tests/🧭️entrypoint/🟦️.ts"], this.repoRoot, "workspace:command-startup", scriptInvocationBudget(this.invocation, 120_000), { signal: this.invocation.control.signal });
@@ -148,7 +146,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .registerLazy("stdio", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗄️stdio/🟦️.ts")).StdioScript)
   .registerLazy("build", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")).BuildScript)
   .registerLazy("release", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts")).ReleaseScript)
-  .registerLazy("cpp", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts")).CppScript)
+  .registerLazy("cpp", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🟦️.ts")).CppScript)
   .registerLazy("publish", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts")).PublishScript)
   .registerLazy("clean", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts")).CleanScript)
   .registerLazy("micro-commit", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/🟦️.ts")).MicroCommitScript)

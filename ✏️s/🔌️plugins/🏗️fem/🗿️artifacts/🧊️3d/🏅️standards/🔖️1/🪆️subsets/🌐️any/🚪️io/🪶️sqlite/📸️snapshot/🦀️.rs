@@ -1,7 +1,7 @@
 //! 🏗️ Complete dimensional finite-element entities and exact binary64 words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use crate::standards::v1::subsets::any::schema::structure::FemAxis;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemDof;

@@ -28,10 +28,8 @@ use crate::results::{Results, RunMetadata, SizingTables, SummaryRow, SummaryTabl
 use crate::site::WeatherRecord;
 use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
-use semio_framework_job::{
-    allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId,
-    OriginalTurnFailure, StepBudget, StepContext,
-};
+use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RevisionId, OriginalTurnFailure, StepBudget, StepContext};
+use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

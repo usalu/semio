@@ -1,6 +1,7 @@
 //! ⏳️ Deferred reprojection and supersede reports: the deferred remote and local replays, the reprojection drive, the pending adoption, the replay reports and the merge report absorption. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

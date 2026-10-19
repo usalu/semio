@@ -2,7 +2,7 @@ import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../
 import {resourceLeasePathV1} from "@semio-tech/process/leases";
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {test,expect,spyOn} from "bun:test";
-import * as leases from "../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import * as leases from "@semio-tech/process/leases";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {createHash} from "node:crypto";
@@ -10,7 +10,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,lstatSync,statfsSync,ex
 import {join} from "node:path";
 import {scriptInvocationEnvironment,receiveScriptProcessInvocation} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import {openNativeImageStorageV1,retireNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {repositoryLeaseDirectoryV1} from "../../../📥️opening/🟦️.ts";
 import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
 import schema from "../🧬️schema/🔣️.json";

@@ -105,7 +105,8 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_pack_json::{json, Value};
 #[cfg(test)] use semio_framework_2d_compute::EngineHandles;
-use semio_s_artifact_puzzle_2d_unit_tests::{editor::puzzle2d::snapshot::Puzzle2dCommand, editor::puzzle2d::engine::board_host::puzzle_board_host};
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::Puzzle2dCommand;
+use semio_s_artifact_puzzle_2d_board_host::editor::puzzle2d::engine::board_host::puzzle_board_host;
 //#region 🔖️Constants
 //#endregion 🔖️Constants
 //#region 🔖️Scene

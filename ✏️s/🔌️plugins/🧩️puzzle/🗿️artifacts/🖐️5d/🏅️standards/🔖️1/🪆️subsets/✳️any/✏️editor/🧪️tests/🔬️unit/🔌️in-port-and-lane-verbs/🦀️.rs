@@ -80,11 +80,6 @@ async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_cata
     assert!(!result.mutations.is_empty(), "importing a non-empty fragment must emit real operations");
     let next_projection = projection_of(&app);
 
-    // 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM W4d: `next_projection`'s raw
-    // `kindCatalogs` key is now the composed `{childId,target}` handle, not the embedded
-    // `{parts:[...],...}` shape a JSON pointer could probe directly — reassemble the full
-    // `Puzzle5dKindCatalogs` through the typed snapshot + `kind_catalogs_of` accessor instead
-    // (same pattern `sourcing`'s `stock_of` established for its own composed catalog field).
     let next_snapshot: Puzzle5dSnapshot = semio_framework_pack_json::from_json_str(&next_projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("next_projection deserializes as Puzzle5dSnapshot");
     let catalogs = crate::standards::v1::subsets::any::schema::kind_catalogs::kind_catalogs_of(&next_snapshot.kind_catalogs, &next_snapshot.kind_catalogs_extra).expect("parts catalog present");
     let capsule = catalogs.parts.iter().find(|entry| entry.id == "capsule").expect("the imported part kind must appear in kindCatalogs.parts");
@@ -217,7 +212,6 @@ fn window_and_config_lane_verbs_are_registered_migrated_retained_tools() {
     for tool_id in MIGRATED_CONFIG_LANE_VERBS {
         assert_eq!(declared_lanes(tool_id), &[ArtifactToolPublicationLane::Config], "{tool_id} publishes the shared app config alone");
     }
-    // 🗡️ The pre-5A1 vocabulary must be gone everywhere, aliases included.
     assert!(!production.contains("setObjectKindWeight") && !production.contains("setVortexKindWeight"), "the object/vortex weight verb ids are renamed to the 5d part/grip vocabulary");
 }
 

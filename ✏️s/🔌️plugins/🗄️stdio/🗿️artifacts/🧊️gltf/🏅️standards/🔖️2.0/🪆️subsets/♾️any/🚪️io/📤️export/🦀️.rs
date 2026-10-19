@@ -87,9 +87,6 @@ pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
     let embed_bin = document.buffers.first().is_some_and(|b| b.uri.is_none());
     let bin: Option<&[u8]> = if embed_bin { snapshot.buffers.first().map(|v| v.as_slice()) } else { None };
 
-    // A buffer embedded via the BIN chunk must NOT carry a `byteLength` mismatch with what we're
-    // actually about to embed -- keep it truthful if the caller mutated `buffers` without
-    // updating `document.buffers[0].byteLength`.
     if let (true, Some(bin_bytes)) = (embed_bin, bin) {
         if let Some(buf0) = document.buffers.get_mut(0) {
             buf0.byte_length = bin_bytes.len();
@@ -102,7 +99,7 @@ pub fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     out.extend_from_slice(GLB_MAGIC);
     out.extend_from_slice(&GLB_VERSION.to_le_bytes());
-    out.extend_from_slice(&[0u8; 4]); // total length patched below
+    out.extend_from_slice(&[0u8; 4]);
     out.extend_from_slice(&(json_padded_len as u32).to_le_bytes());
     out.extend_from_slice(CHUNK_TYPE_JSON);
     out.extend_from_slice(&json);

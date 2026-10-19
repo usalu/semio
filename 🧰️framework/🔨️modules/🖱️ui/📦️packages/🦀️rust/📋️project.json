@@ -19,18 +19,42 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "sharedGlobals"
+    ],
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/**/*"
+    ],
+    "nativeTestSources": [
+      "default",
+      "reads"
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
     ]
   },
   "targets": {
     "check-command-types": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
-        "sharedGlobals",
         "default",
+        "^default",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
         "{workspaceRoot}/tsconfig.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧪️testing/**/*",
@@ -44,12 +68,16 @@
     },
     "test-command-dispatch": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
-        "sharedGlobals",
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️native-command/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧭️native-command/**/*",
@@ -67,11 +95,18 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
@@ -81,11 +116,18 @@
     },
     "test-wgpu-engine": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test wgpu-engine"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
@@ -95,6 +137,14 @@
     },
     "check-wgpu-engine-wasm": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check wgpu-engine wasm"
@@ -102,6 +152,14 @@
     },
     "check-wasm": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check wasm"
@@ -109,6 +167,7 @@
     },
     "generate": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"
@@ -116,6 +175,13 @@
     },
     "preview-generated": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -124,6 +190,7 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
@@ -138,12 +205,16 @@
     },
     "test-control-commit": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
-        "sharedGlobals",
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎚️ring-press/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️ring-press/**/*",
@@ -159,12 +230,16 @@
     },
     "test-physical-close": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
-        "sharedGlobals",
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️prepared-close/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📦️prepared-close/**/*"
@@ -176,10 +251,15 @@
     },
     "test-physical-close-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/**/*"
@@ -191,11 +271,15 @@
     },
     "test-mounted-admission": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
-        "sharedGlobals",
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/**/*"
       ],
       "outputs": [],
@@ -206,11 +290,15 @@
     },
     "test-mounted-admission-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "inputs": [
-        "sharedGlobals",
         "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/**/*"
       ],
       "outputs": [],
@@ -221,11 +309,18 @@
     },
     "test-original-presented-source-native": {
       "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test original-presented-source-native"
       },
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "production",
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
@@ -235,10 +330,15 @@
     },
     "test-crate-boundaries": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "dependsOn": [],
       "outputs": [],
       "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
         "sharedGlobals",
         "{workspaceRoot}/📋️build-owners.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json",
@@ -264,16 +364,30 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test crate-boundaries"
-      }
+      },
+      "metadata": {"semio": {"execution": {"version": 1, "kind": "source"}, "dashboard": {
+        "title": {"en": "Verify UI Crate Boundaries", "de": "UI-Crate-Grenzen Prüfen"},
+        "description": {"en": "Verify shared UI contracts, crate ownership and TUI test dispatch.", "de": "Gemeinsame UI-Verträge, Crate-Zuständigkeit und TUI-Testauswahl prüfen."}
+      }}}
     },
     "test-tui": {
       "executor": "repo:script",
-      "cache": false,
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test tui"
       },
-      "inputs": ["default", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/⌨️tui/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"]
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "cargoToolchain",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/⌨️tui/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"
+      ]
     }
   }
 }

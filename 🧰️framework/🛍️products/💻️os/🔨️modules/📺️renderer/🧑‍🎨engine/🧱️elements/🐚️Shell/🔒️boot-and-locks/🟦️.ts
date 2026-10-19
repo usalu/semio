@@ -150,14 +150,10 @@ export function clearDurableShellStorage(): void {
     for (const key of keys) {
       if (prefixes.some((prefix) => key === prefix || key.startsWith(prefix))) localStorage.removeItem(key);
     }
-  } catch {
-    /* ignore */
-  }
+  } catch {}
   try {
     window.sessionStorage.removeItem(PRESENCE_CLIENT_STORAGE_KEY);
-  } catch {
-    /* ignore */
-  }
+  } catch {}
 }
 
 /** 🎛️ Stable empty-defaults reference so an omitted `defaults` prop never busts memo dependency arrays. */

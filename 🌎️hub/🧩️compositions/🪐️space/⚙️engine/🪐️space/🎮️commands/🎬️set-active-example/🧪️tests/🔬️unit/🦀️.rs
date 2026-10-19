@@ -80,8 +80,6 @@ async fn open_studio_loads_ephemeral_created_studio() {
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
-    // 🪪️ Minting a studio needs the host session identity that owns it — `create_studio::handle` is
-    // the identity-less entry point and now always refuses (`s.home.session-identity-required`).
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     let create = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity, &mut authoring).expect("handle");
     let space_id = create
@@ -113,7 +111,6 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
-    // 🪪️ See `open_studio_loads_ephemeral_created_studio`: the identity-less entry point refuses.
     let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     let emit = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity, &mut authoring).expect("handle");
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");
@@ -137,11 +134,6 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let studio_doc = ArtifactView::new(&empty, &history);
     let studio_config = SpaceConfig::default();
     let studio_cfg = ConfigView { snapshot: &studio_config, window: None };
-    // 🕹️ `OpenSpace` isn't one of `SpaceApp::handle`'s interaction-aware bypass rows, so it's safe
-    // to exercise via `SpaceCommand::dispatch` directly (the `app_commands!`-generated 3-arg path
-    // — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) rather than through
-    // `SpaceApp::handle`, which now needs a real `InteractionView` only a full `VcsArtifactApp`
-    // dispatch can provide.
     let open = SpaceCommand::OpenSpace(semio_hub_space_commands_media::open_space::OpenSpace { space_id: space_id.to_string() }).dispatch(&studio_doc, &studio_cfg).expect("handle");
     assert!(open.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "openSpace must load the created studio");
     assert!(!open.effects.iter().any(|effect| matches!(effect, Effect::Navigate { .. })));

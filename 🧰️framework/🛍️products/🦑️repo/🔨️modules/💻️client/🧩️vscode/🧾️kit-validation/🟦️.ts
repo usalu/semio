@@ -26,7 +26,7 @@ function validateKit(_kit: unknown): { problems: Problem[] } {
 
 // #region 🗺️File Analysis & Diagnostics
 /**
- * isKitDocument holds the data fields for a isKitDocument record.
+ * 🧰️ isKitDocument holds the data fields for a isKitDocument record.
  **/
 export function isKitDocument(document: vscode.TextDocument): boolean {
   if (document.languageId !== COMPOSE_KIT_LANGUAGE) return false;
@@ -35,7 +35,7 @@ export function isKitDocument(document: vscode.TextDocument): boolean {
 }
 
 /**
- * validateKitDocument holds the data fields for a validateKitDocument record.
+ * 🧪️ validateKitDocument holds the data fields for a validateKitDocument record.
  **/
 export function validateKitDocument(document: vscode.TextDocument): void {
   if (!isKitDocument(document)) return;

@@ -8,7 +8,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `ArtifactRef` uris. Registering a member is the runtime's job; DECLARING it on the parent
 /// snapshot is the app's, and only a declared member is admitted back by `ChildRestoreProjection`
 /// when the parent document is reloaded.
-impl crate::os_spr::ColdMutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
+impl semio_framework_os_command::ColdMutationKind<TestSnapshot, TestMutation> for SetSlotChildren {
     fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
         MutationOutcome::new(TestDiff { count: None, label: None, slot: Some(self.children.clone()) })
     }

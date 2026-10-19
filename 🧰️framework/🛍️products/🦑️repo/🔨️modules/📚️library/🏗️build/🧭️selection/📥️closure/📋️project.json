@@ -1,5 +1,12 @@
 {
   "name": "repo-task-closure",
+  "namedInputs": {
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
   "tags": [
     "scope:repo",
     "language:typescript"
@@ -7,10 +14,11 @@
   "targets": {
     "test": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "inputs": [
         "default",
-        "^default"
+        "^default",
+        "testEnv"
       ],
       "outputs": [],
       "options": {

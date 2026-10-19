@@ -8,7 +8,7 @@ export interface FlowTopology {
 }
 
 export interface FlowInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: FlowTopology;
 }
 

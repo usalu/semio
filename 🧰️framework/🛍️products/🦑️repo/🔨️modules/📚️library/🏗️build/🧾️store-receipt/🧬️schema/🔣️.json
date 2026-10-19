@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Store Receipt",
+  "description": "🧾️ Tool-independent proof that a task published content into a content-addressed store. A task declares the receipt as its only restorable output (`{projectRoot}/.🧾️store/{target}.json`); the store content itself is never restored by a cache. After a cache hit the receipt is verified against the store and a hit whose content is missing or changed is a miss. File digest: lowercase hex SHA-256 of the bytes. Directory digest: lowercase hex SHA-256 of the UTF-8 text made of `<relative path>\\n<size>\\n<file digest>\\n` for every regular file below the directory, sorted by the byte order of the relative POSIX path; a directory holds regular files and directories only.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "directory": ".🧾️store",
+        "extension": ".json",
+        "environment": "SEMIO_TASK_RECEIPT",
+        "projectRootToken": "{projectRoot}",
+        "maximumEntries": 4096,
+        "maximumLinks": 16,
+        "maximumReceiptBytes": 4194304,
+        "maximumPathLength": 224
+      }
+    },
+    "Target": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind", "bytes", "files", "sha256"],
+      "if": { "properties": { "kind": { "const": "file" } } },
+      "then": { "properties": { "files": { "const": 1 } } },
+      "properties": {
+        "path": {
+          "description": "Workspace-relative POSIX path of the store content.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 224,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*/$)[^\\\\\\u0000-\\u001f\\u007f]+$"
+        },
+        "kind": { "enum": ["file", "directory"] },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "files": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "Link": {
+      "description": "A symbolic link the task bound to published content: `path` must be a symbolic link that resolves to `target`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "target"],
+      "properties": {
+        "path": { "$ref": "#/definitions/Entry/properties/path" },
+        "target": { "$ref": "#/definitions/Entry/properties/path" }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "project", "target", "entries", "links"],
+      "properties": {
+        "version": { "const": 1 },
+        "project": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "target": { "$ref": "#/definitions/Target" },
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/Entry" }
+        },
+        "links": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/Link" }
+        }
+      }
+    },
+    "Finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "reason"],
+      "properties": {
+        "path": { "type": "string" },
+        "reason": { "enum": ["absent", "kind", "size", "digest", "unreadable", "link"] }
+      }
+    },
+    "Verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "findings"],
+      "properties": {
+        "state": { "enum": ["valid", "invalid", "unwritten", "malformed"] },
+        "findings": { "type": "array", "items": { "$ref": "#/definitions/Finding" } }
+      }
+    },
+    "Repair": {
+      "description": "🔧️ The one Nx child launch beside its declared launches: `nx run <project:target[:configuration]>` followed by exactly these arguments re-executes a single task uncached and replaces its cache entry.",
+      "type": "object",
+      "const": {
+        "command": "run",
+        "arguments": ["--skip-nx-cache", "--excludeTaskDependencies"],
+        "task": "^[^\\s:]+:[A-Za-z0-9][A-Za-z0-9._-]*(?::[A-Za-z0-9][A-Za-z0-9._-]*)?$"
+      }
+    }
+  }
+}

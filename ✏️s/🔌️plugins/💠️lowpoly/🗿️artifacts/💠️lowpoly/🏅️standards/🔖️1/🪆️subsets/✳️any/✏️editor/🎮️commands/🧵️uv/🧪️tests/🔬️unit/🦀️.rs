@@ -8,8 +8,6 @@ use semio_s_artifact_lowpoly_lowpoly_editor::LowpolyCommand;
 async fn unwrap_active_resyncs_mesh_json() {
     let mut a = app().await;
     dispatch(&mut a, LowpolyCommand::UnwrapActive(semio_s_artifact_lowpoly_lowpoly_commands::uv::unwrap_active::UnwrapActive {})).await;
-    // unwrap is idempotent-ish on an already-unwrapped mesh, so just assert it runs without error and
-    // keeps the object count stable.
     assert_eq!(a.snapshot().expect("projection").objects.len(), 1);
 }
 

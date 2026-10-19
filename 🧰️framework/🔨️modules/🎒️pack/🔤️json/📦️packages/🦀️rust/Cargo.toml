@@ -22,4 +22,12 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-pack-json-float = { path = "../../🎯️float-writer/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value-factory = { path = "../../../../🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

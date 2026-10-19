@@ -5,7 +5,8 @@ pub mod owned;
 
 use crate::DrawingLayerNode;
 use crate::snapshot::DrawingSnapshot;
-use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value::{paged::PagedUtf8, ValueError, ValueRefusalKind};
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 use std::mem::size_of;
 

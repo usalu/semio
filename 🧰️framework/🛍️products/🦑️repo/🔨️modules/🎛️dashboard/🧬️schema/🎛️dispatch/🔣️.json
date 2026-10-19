@@ -4,22 +4,371 @@
   "title": "🎛️ Dashboard Test Dispatch",
   "type": "object",
   "additionalProperties": false,
-  "required": ["cases"],
+  "required": [
+    "cases",
+    "windows",
+    "unit",
+    "unitManifests",
+    "unitWorkspace",
+    "borrowedObservations",
+    "valueNativeRoutes"
+  ],
   "properties": {
+    "windows": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "packages",
+          "manifests",
+          "extraArgs",
+          "workspace"
+        ],
+        "properties": {
+          "packages": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "manifests": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "extraArgs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "workspace": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
     "cases": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["segments", "executableCalls", "owned", "battle", "installed", "native"],
+        "required": [
+          "segments",
+          "executableCalls",
+          "owned",
+          "battle",
+          "installed",
+          "native",
+          "authorityCustody",
+          "ownedCalls",
+          "installedCalls",
+          "events"
+        ],
         "properties": {
-          "segments": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-          "executableCalls": { "type": "integer", "minimum": 1, "maximum": 2 },
-          "owned": { "type": "boolean" },
-          "battle": { "type": ["string", "null"] },
-          "installed": { "type": "boolean" },
-          "native": { "type": "boolean" }
+          "segments": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+              "type": "string"
+            }
+          },
+          "executableCalls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "owned": {
+            "type": "boolean"
+          },
+          "battle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "installed": {
+            "type": "boolean"
+          },
+          "native": {
+            "type": "boolean"
+          },
+          "authorityCustody": {
+            "const": true
+          },
+          "ownedCalls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "installedCalls": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "events": {
+            "type": "array",
+            "minItems": 5,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "unit": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "unitManifests": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "unitWorkspace": {
+      "const": "."
+    },
+    "borrowedObservations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "manifest",
+        "workspace",
+        "library",
+        "law",
+        "lawSource",
+        "cases",
+        "rejected",
+        "script",
+        "control"
+      ],
+      "properties": {
+        "package": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "workspace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "library": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "law": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "lawSource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "args",
+              "native",
+              "buildBudgetMs"
+            ],
+            "properties": {
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "native": {
+                "type": "boolean"
+              },
+              "buildBudgetMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "rejected": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "control": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "valueNativeRoutes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "script",
+        "removedHelper",
+        "cases",
+        "routes"
+      ],
+      "properties": {
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "removedHelper": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "argument",
+              "buildBudgetMs"
+            ],
+            "properties": {
+              "argument": {
+                "enum": [
+                  "source",
+                  "native"
+                ]
+              },
+              "buildBudgetMs": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "routes": {
+          "type": "array",
+          "minItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "class",
+              "control",
+              "groups"
+            ],
+            "properties": {
+              "class": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "control": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groups": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "package",
+                    "manifest",
+                    "library",
+                    "laws",
+                    "lawSources"
+                  ],
+                  "properties": {
+                    "package": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "manifest": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "library": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "laws": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "lawSources": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }

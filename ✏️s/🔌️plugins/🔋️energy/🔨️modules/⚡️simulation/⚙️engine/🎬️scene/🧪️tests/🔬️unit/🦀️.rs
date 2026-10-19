@@ -245,8 +245,6 @@ fn a_zone_of_six_box_faces_draws_one_closed_translucent_unpickable_hull() {
     assert_eq!(volume["label"].as_str(), Some("Living"), "the zone volume is labelled by its zone");
     assert_eq!(volume["objectKind"].as_str(), Some(ENERGY_SCENE_OBJECT_KIND_ZONE));
     assert_eq!(volume["meshId"].as_str(), Some("energy-zone-1"));
-    // 🚫️ The ONE lane that is both "translucent" and "invisible to a raycast" — without it the hull
-    // would swallow every pick of the walls inside it.
     assert_eq!(volume["disabled"].as_bool(), Some(true), "a zone volume must never occlude the pick of a wall: {instances_json}");
     for row in &rows[..6] {
         assert!(row["disabled"].as_bool().is_none(), "an envelope surface stays pickable: {row}");
@@ -266,8 +264,6 @@ fn a_zone_of_six_box_faces_draws_one_closed_translucent_unpickable_hull() {
 fn the_box_hull_encloses_exactly_the_zone_volume_the_engine_integrates() {
     let model = Model { zones: vec![zone(1, "Living")], surfaces: box_zone_surfaces(1, 40, [4.0, 3.0, 2.5]), ..Model::default() };
     let triangles = convex_hull_triangles(&zone_hull_points(&model, EntityId(1))).expect("a box encloses a volume");
-    // 🧮️ Divergence-theorem volume of the drawn shell, against the engine's own pyramid sum over the
-    // authored faces: the hull IS the zone for a rectangular room, so the two must agree exactly.
     let drawn = triangles
         .iter()
         .map(|triangle| {
@@ -290,7 +286,6 @@ fn an_empty_or_flat_zone_draws_no_volume_at_all() {
     assert_eq!(instances_json, "[]");
     assert!(zone_hull_points(&empty, EntityId(9)).is_empty());
 
-    // 📐️ One floor only: four coplanar corners enclose nothing, so no zero-thickness shell is emitted.
     let mut flat = Model { zones: vec![zone(9, "Slab")], surfaces: vec![quad(40, SurfaceClass::Floor)], ..Model::default() };
     flat.surfaces[0].zone_id = EntityId(9);
     let (_, flat_instances) = energy_model_scene_parts(&flat, &EnergySceneStyle::default());
@@ -307,8 +302,6 @@ fn the_hull_refuses_degenerate_clouds_and_survives_interior_and_duplicate_points
     assert!(convex_hull_triangles(&[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]]).is_none(), "coplanar points enclose nothing");
     assert!(convex_hull_triangles(&[[0.0, 0.0, f64::NAN], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]).is_none(), "a non-finite corner is refused, never rendered");
 
-    // 🧊️ A unit cube's eight corners, each authored twice (shared between faces), plus one point in
-    // the middle that the hull must swallow: still exactly 12 triangles.
     let mut cloud: Vec<[f64; 3]> = Vec::new();
     for corner in 0..8 {
         let point = [f64::from(corner & 1), f64::from((corner >> 1) & 1), f64::from((corner >> 2) & 1)];
@@ -340,8 +333,6 @@ fn a_selected_zone_volume_still_publishes_the_selected_flag() {
 #[test]
 fn an_authored_five_vertex_window_renders_as_authored() {
     let host = quad(1, SurfaceClass::ExteriorWall);
-    // 🏠️ A gabled five-corner window on the south wall (the host quad spans x 0..4, z 0..2.5 at y=0),
-    // authored in the host's own plane so only the 5 mm lift moves it.
     let authored = vec![[1.0, 0.0, 0.5], [3.0, 0.0, 0.5], [3.0, 0.0, 1.6], [2.0, 0.0, 2.1], [1.0, 0.0, 1.6]];
     let model = Model { surfaces: vec![host], fenestrations: vec![authored_window(50, 1, authored.clone())], ..Model::default() };
 

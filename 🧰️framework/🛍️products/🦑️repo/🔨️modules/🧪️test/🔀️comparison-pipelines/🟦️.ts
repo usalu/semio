@@ -50,8 +50,6 @@ export type PipelineVerdict = Readonly<{
  */
 export function evaluateStageAssertions(stageIndex: number, stage: ComparisonStage, report: ProbeReport, effectiveOptional?: boolean): AssertionVerdict[] {
   const verdicts: AssertionVerdict[] = [];
-  // 🚫️The caller decides whether `optional` actually applies, because only it knows the probe's
-  // qualification. Called without that context this stays conservative and honours the raw mark.
   const optional = effectiveOptional ?? stage.optional === true;
   if (report.status !== "ok") {
     verdicts.push({ stage: stageIndex, probe: stage.probe, key: "status", expected: "ok", actual: report.status, ok: false, optional, reason: `probe reported ${report.status}` });
@@ -59,9 +57,6 @@ export function evaluateStageAssertions(stageIndex: number, stage: ComparisonSta
   }
   for (const [key, expected] of Object.entries(stage.assertions ?? {})) {
     const bound = key.endsWith("Max") ? "max" : key.endsWith("Min") ? "min" : key.endsWith("Equal") ? "equal" : "value";
-    // 🔑️The EXACT key wins over the suffix-stripped one. A probe may legitimately name its own
-    // measurement `connectedComponentsEqual`, and stripping unconditionally looked up
-    // `connectedComponents`, found nothing, and failed a stage whose measurement was right there.
     const strippedKey = bound === "value" ? key : key.slice(0, -{ max: 3, min: 3, equal: 5 }[bound]!);
     const measurementKey = Object.hasOwn(report.measurements, key) ? key : strippedKey;
     const actual = report.measurements[measurementKey];
@@ -96,12 +91,6 @@ export function evaluatePipeline(pipeline: ComparisonPipeline, reports: Readonly
     const probe = probes.get(stage.probe);
     if (probe === undefined) missingProbes.push(stage.probe);
     else if (!isQualifiedProbe(probe)) unqualifiedStages.push(stage.probe);
-    // 🚫️`optional` EXCUSES ONLY WHAT IT WAS FOR: a stage whose probe is registered and not yet
-    // qualified. It was a free boolean, so a stage using a fully QUALIFIED probe could be marked
-    // optional and that probe's own `status: "failed"` was then silently excused — a qualifying
-    // reference reporting failure while the pipeline read `equal: true`, which is the sharpest
-    // possible violation of what this protocol claims. An UNREGISTERED probe cannot excuse anything
-    // either, or deleting a registration would become a way to switch a gate off.
     const excusable = probe !== undefined && !isQualifiedProbe(probe);
     if (stage.optional === true && !excusable) overclaimedOptional.push(stage.probe);
     const effectiveOptional = stage.optional === true && excusable;
@@ -112,8 +101,6 @@ export function evaluatePipeline(pipeline: ComparisonPipeline, reports: Readonly
     }
     verdicts.push(...evaluateStageAssertions(index, stage, report, effectiveOptional));
   }
-  // 🚫️A stage whose probe is not registered at all cannot be evaluated, so the pipeline is not equal —
-  // `missingProbes` was computed and then ignored, which made an unrunnable pipeline read as passing.
   const equal = missingProbes.length === 0 && verdicts.every((verdict) => verdict.ok || verdict.optional);
   return { pipeline: pipeline.id, equal, verdicts, missingProbes, unqualifiedStages, overclaimedOptional };
 }

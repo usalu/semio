@@ -1,4 +1,4 @@
-//! program -> xlsx — one worksheet per program table, header row 1 and one row per record from column A; stdio's minimal
+//! 🗓️ program -> xlsx — one worksheet per program table, header row 1 and one row per record from column A; stdio's minimal
 //! package builder turns the workbook into the authoritative OPC XML parts (`build_minimal_xlsx`).
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 pub use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;

@@ -668,4 +668,127 @@
     "OptionalLedger": "c51f4436ba05952d4db3a3380c38b42706911ea8bd3265005caeac3575f54557",
     "InferenceDataset": "477f73f937aed0f6a951b14f1ea96502f1f5fba50c4de983b830a71c118bb0e1"
   }
+,
+  "graphWriterLeaseCases": [
+    {
+      "id": "warm-lease-infrastructure",
+      "failAt": "none",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": null,
+      "expectedClosed": true,
+      "expectedAcquired": true
+    },
+    {
+      "id": "partition-open-fails",
+      "failAt": "open",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "open",
+      "expectedClosed": false,
+      "expectedAcquired": false
+    },
+    {
+      "id": "initial-custody-refusal",
+      "failAt": "recheck",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "recheck",
+      "expectedClosed": true,
+      "expectedAcquired": false
+    },
+    {
+      "id": "queue-admission-refusal",
+      "failAt": "acquire",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "acquire",
+      "expectedClosed": true,
+      "expectedAcquired": false
+    },
+    {
+      "id": "cancel-queue-admission",
+      "failAt": "cancel",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "cancel",
+      "expectedClosed": true,
+      "expectedAcquired": false
+    },
+    {
+      "id": "graph-store-refusal",
+      "failAt": "graph",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "graph",
+      "expectedClosed": true,
+      "expectedAcquired": true
+    },
+    {
+      "id": "body-primary-survives-cleanup",
+      "failAt": "body",
+      "releaseFails": true,
+      "closeFails": true,
+      "usedBytes": 4435968,
+      "expectedFailure": "body",
+      "expectedClosed": true,
+      "expectedAcquired": true
+    },
+    {
+      "id": "lease-release-fails",
+      "failAt": "none",
+      "releaseFails": true,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "release",
+      "expectedClosed": true,
+      "expectedAcquired": true
+    },
+    {
+      "id": "partition-close-fails",
+      "failAt": "none",
+      "releaseFails": false,
+      "closeFails": true,
+      "usedBytes": 4435968,
+      "expectedFailure": "close",
+      "expectedClosed": true,
+      "expectedAcquired": true
+    },
+    {
+      "id": "actual-physical-overrun-refused",
+      "failAt": "none",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 67108865,
+      "expectedFailure": "capacity",
+      "expectedClosed": true,
+      "expectedAcquired": false
+    },
+    {
+      "id": "undefined-body-primary-survives-cleanup",
+      "failAt": "body-undefined",
+      "releaseFails": true,
+      "closeFails": true,
+      "usedBytes": 4435968,
+      "expectedFailure": "body-undefined",
+      "expectedClosed": true,
+      "expectedAcquired": true
+    },
+    {
+      "id": "cancel-body-drains-lease-before-partition",
+      "failAt": "cancel-body",
+      "releaseFails": false,
+      "closeFails": false,
+      "usedBytes": 4435968,
+      "expectedFailure": "cancel-body",
+      "expectedClosed": true,
+      "expectedAcquired": true
+    }
+  ]
 }

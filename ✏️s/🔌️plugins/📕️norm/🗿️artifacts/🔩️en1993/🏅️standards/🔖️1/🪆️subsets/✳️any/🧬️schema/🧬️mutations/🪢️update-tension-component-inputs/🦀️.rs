@@ -1,4 +1,4 @@
-//! `upsert-tension-component` — upsert a `TensionComponent` by id into `tension_components`.
+//! 🧬️ `upsert-tension-component` — upsert a `TensionComponent` by id into `tension_components`.
 
 use semio_s_artifact_norm_en1993_model::{TensionComponent, En1993Snapshot};
 

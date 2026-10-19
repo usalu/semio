@@ -1,0 +1,430 @@
+[
+ {
+  "kind": "ghost",
+  "from": "L/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+  "to": "L/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+  "touched": [
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts",
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts",
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🧹️cleanup/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "module-script",
+  "from": "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+  "to": "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🟦️.ts",
+  "referencers": 6,
+  "touched": [
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧪️tests/🟦️.ts",
+   "L/🏗️build/📜️script.ts",
+   "L/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json",
+   "L/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+   "L/🏗️build/🧪️tests/🎟️phase/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "module-script",
+  "from": "L/🏗️build/🔧️tools/🏗️bazel/📜️script.ts",
+  "to": "L/🏗️build/🔧️tools/🏗️bazel/🟦️.ts",
+  "referencers": 21,
+  "touched": [
+   "L/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/📋️callers.json",
+   "L/🏗️build/📜️script.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/⚙️operations/🧪️tests/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🔣️.json",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️actions/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️control/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️delegation/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️fingerprint/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️framing/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️inventory/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📦️snapshot/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/🟦️.ts",
+   "L/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts",
+   "L/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts",
+   "L/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+   "L/🧪️tests/🔧️build-surfaces/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 0,
+  "sourceReaders": [
+   "L/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/📦️artifacts/👓️reading/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/📦️artifacts/👓️reading/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 1,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "emit-declarations"
+  ],
+  "repointed": 3,
+  "sourceReaders": [
+   "L/⚡️caching/📦️artifacts/💾️storage/🧪️tests/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🔏️inputs/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🔏️inputs/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 2,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 2,
+  "sourceReaders": [
+   "L/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "compile"
+  ],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 3,
+  "sourceReaders": [
+   "L/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🚦️ci/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🚦️ci/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/⚡️caching/🦀️cargo/📦️units/📜️script.ts",
+  "result": "lifted",
+  "module": "L/⚡️caching/🦀️cargo/📦️units/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 3,
+  "sourceReaders": [
+   "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
+   "L/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts",
+   "L/⚡️caching/🦀️cargo/📦️units/📥️inputs/🔏️snapshot/🧪️tests/🟦️.ts",
+   "L/⚡️caching/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts"
+  ]
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏃️process/🦀️cargo/🏃️execution/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "execute"
+  ],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/📥️inputs/🔒️lock/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🏗️build/📥️inputs/🔒️lock/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "digest"
+  ],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🏗️build/📥️inputs/🧮️digest/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🏗️build/📥️inputs/🧮️digest/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "digest",
+   "source"
+  ],
+  "repointed": 1,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🔍️discovery/📋️policy/⏯️tool-run/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🔍️discovery/📋️policy/⏯️tool-run/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "run"
+  ],
+  "repointed": 1,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🔍️discovery/🕸️runtime/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🔍️discovery/🕸️runtime/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "run"
+  ],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🗂️workspaces/🦀️cargo/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🗂️workspaces/🦀️cargo/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/🔬️script-commands/🟦️.ts",
+  "merged": false,
+  "commands": [
+   "capture-program",
+   "resolve-program"
+  ],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "lift",
+  "script": "L/📦️packages/🟦️typescript/📜️script.ts",
+  "result": "lifted",
+  "module": "L/🧪️tests/🔬️typescript-package-commands/🟦️.ts",
+  "merged": false,
+  "commands": [],
+  "repointed": 0,
+  "sourceReaders": []
+ },
+ {
+  "kind": "in-place",
+  "script": "L/🧪️tests/🐹️executable-owners/📜️script.ts",
+  "result": "edited"
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/🧪️tests/🟦️.ts (1 references)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts (1 spawn sites)",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts (1 references)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/📦️child/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts (2 references)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/📥️purpose/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts (2 spawn sites)",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🔣️.json (7 command literals)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts (1 spawn sites)",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🌱️birth/🟦️.ts (2 references)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/🟦️.ts (1 spawn sites)"
+  ]
+ },
+ {
+  "kind": "child",
+  "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/📜️script.ts",
+  "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/📦️child/🟦️.ts",
+  "touched": [
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/🟦️.ts (1 spawn sites)"
+  ]
+ }
+]

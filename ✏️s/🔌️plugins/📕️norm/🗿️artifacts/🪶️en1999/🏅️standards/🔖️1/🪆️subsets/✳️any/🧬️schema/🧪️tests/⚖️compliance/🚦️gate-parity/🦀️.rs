@@ -62,7 +62,6 @@ fn gate_parity_every_fail_remedy_clears_status() {
                     || set_u64_at_path(&mut tree, path, opt.parse().unwrap_or(0)).is_ok()
                     || set_number_at_path(&mut tree, path, opt.parse().unwrap_or(0.0)).is_ok()
             } else {
-                // Prefer u64 for discrete counts (bolts.rows / boltsPerRow) like apply_remedy_edit.
                 let rounded = remedy.required.value.round();
                 let as_u64 = rounded >= 0.0 && (remedy.required.value - rounded).abs() < 1e-9;
                 if as_u64 {

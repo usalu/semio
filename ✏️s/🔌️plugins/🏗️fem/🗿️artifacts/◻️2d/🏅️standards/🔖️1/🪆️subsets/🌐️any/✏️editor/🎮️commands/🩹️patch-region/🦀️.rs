@@ -1,6 +1,6 @@
 //! 🩹️ Fem2d play app command — `patch-region`: one-field edit of a meshed region (`name`, `thickness`, `meshSize`, `materialId`) → `ChangeRegion`.
 
-use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionPatch;
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::ArtifactView;

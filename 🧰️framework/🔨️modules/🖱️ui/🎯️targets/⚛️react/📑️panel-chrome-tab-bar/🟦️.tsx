@@ -2,7 +2,7 @@ import { type PanelTabSelectionOptions, usePanelTabSelection, PanelTabBar } from
 import { type Anchor, flowFromAnchor } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
 import * as React from "react";
 import { usePanelDockContext } from "../../../🔨️modules/🧲️panel-dock/🟦️.tsx";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 import { LevelProvider } from "../../../🧱️elements/🌈️Surface/🟦️.tsx";
 import { GhostRegionShell } from "../../../🧱️elements/👻️PanelGhost/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -11,11 +11,11 @@ import { WindowChrome } from "../../../🧱️elements/🗂️WindowChrome/🟦�
 
 //#region 🎛️PanelChromeTabBar
 
-/** @emoji 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
+/** 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
 export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
   readonly anchor: Anchor;
   readonly className?: string;
-  /** @emoji 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
+  /** 🗜️ Icon-only chips — see `PanelTabBarProps.compactLabels`. */
   readonly compactLabels?: boolean;
 }
 
@@ -90,7 +90,7 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
 
 //#endregion 🎛️PanelChromeTabBar
 
-/** @emoji 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
+/** 📐️ Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
   readonly templateColumns: string;
   readonly activeCol: number;
@@ -101,7 +101,7 @@ export interface ModeDockChromeGrid {
   readonly tabCol: (tabIndex: number) => number;
 }
 
-/** @emoji 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
+/** 📐️ Computes {@link ModeDockChromeGrid} column indices for a tab stack. */
 export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: string }[], activeId: string | undefined): ModeDockChromeGrid {
   const activeTabIndex = Math.max(
     0,

@@ -50,7 +50,7 @@ pub(super) fn normalize3(a: Vec3f64) -> Vec3f64 {
     (a.0 / l, a.1 / l, a.2 / l)
 }
 
-/// Least-parallel-world-axis projection basis for a plane with the given unit normal.
+/// 🔲️ Least-parallel-world-axis projection basis for a plane with the given unit normal.
 pub(super) fn plane_basis(normal: Vec3f64) -> (Vec3f64, Vec3f64) {
     let (nx, ny, nz) = normal;
     let reference: Vec3f64 = if nx.abs() < ny.abs() && nx.abs() < nz.abs() {
@@ -78,7 +78,7 @@ pub(super) fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: 
     !(has_neg && has_pos)
 }
 
-/// Triangulates a planar polygon that may contain holes. Holes are bridged into the outer loop with a
+/// 🗃️ Triangulates a planar polygon that may contain holes. Holes are bridged into the outer loop with a
 /// keyhole (doubled bridge edge) then ear-clipped, so the result covers only the solid region.
 pub(super) fn triangulate_indexed_polygon_with_holes(positions: &[[f32; 3]], outer: &[u32], holes: &[Vec<u32>]) -> Vec<[u32; 3]> {
     if holes.is_empty() {
@@ -121,7 +121,7 @@ fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f32; 3]]
     best.map(|(_, hi, oi, hpi)| (hi, oi, hpi))
 }
 
-/// Deterministic ear-clipping triangulation of a simple polygon (convex or concave), given ordered 3D corner
+/// 🕸️ Deterministic ear-clipping triangulation of a simple polygon (convex or concave), given ordered 3D corner
 /// positions. Falls back to a fan (previous behavior) whenever the polygon is degenerate (zero-area / collinear)
 /// or clipping stalls, so it never returns fewer than `n - 2` triangles or panics.
 pub fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {

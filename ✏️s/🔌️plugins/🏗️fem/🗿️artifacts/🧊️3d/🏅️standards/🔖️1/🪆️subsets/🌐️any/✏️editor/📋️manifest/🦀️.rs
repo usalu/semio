@@ -106,9 +106,6 @@ pub fn create_fem3d_app() -> AppDefinition {
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
             .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
-            // 🧵️ All 18 rows are owned by `Fem3dRetainedCommandJobFactory` — this set must stay exactly
-            // equal to `FEM3D_RETAINED_TOOL_IDS`, or `AppActionRegistry::tool_job_registration` faults the
-            // whole app with `interactive-job.catalog-incomplete`.
             .action_interactive_job("addNode", InteractiveJobClassification::Migrated)
             .action_interactive_job("addBar", InteractiveJobClassification::Migrated)
             .action_interactive_job("addFrame", InteractiveJobClassification::Migrated)
@@ -127,7 +124,6 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setResultDisplay", InteractiveJobClassification::Migrated)
-            // 🩹️ Inspector field edits — one bounded edit per dispatch on one entity.
             .action_with(fem3d_patch_action("patchNode", LocalizedLabel::native("Patch Node", "Knoten ändern")))
             .action_with(fem3d_patch_action("patchElement", LocalizedLabel::native("Patch Element", "Element ändern")))
             .action_with(fem3d_patch_action("patchMaterial", LocalizedLabel::native("Patch Material", "Material ändern")))
@@ -137,7 +133,6 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_with(fem3d_patch_action("patchLoad", LocalizedLabel::native("Patch Load", "Last ändern")))
             .action_with(fem3d_patch_action("patchLoadCase", LocalizedLabel::native("Patch Load Case", "Lastfall ändern")))
             .action_with(fem3d_patch_action("patchCombination", LocalizedLabel::native("Patch Combination", "Kombination ändern")))
-            // ⏯️ Deformation playback — results-window view state, self re-armed through `DispatchAction`.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setResultAnimation", LocalizedLabel::native("Set Result Animation", "Ergebnisanimation festlegen"), semio_framework_plugin::ActionKind::View, "play") })
             .action_args("setResultAnimation", vec![
                 ActionArgDef::slider("phase", LocalizedLabel::native("Phase", "Phase"), 0.0, 1.0),
@@ -153,8 +148,6 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("resultAnimationTick", LocalizedLabel::native("Result Animation Tick", "Ergebnisanimation Takt"), semio_framework_plugin::ActionKind::View, "timer") })
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("focusEntity", LocalizedLabel::native("Focus Entity", "Element fokussieren"), semio_framework_plugin::ActionKind::View, "focus") })
             .action_args("focusEntity", vec![ActionArgDef::text("id", LocalizedLabel::native("Entity", "Element")).required()])
-            // 🧭️ The host gumball's steps — a one-shot is one edit; a streamed drag (`phase` stream/commit/abort) is ONE
-            // tool transaction, previewed while open and committed as one edit on release.
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .action_args("translateSelection", vec![
                 ActionArgDef::number("dx", LocalizedLabel::native("Dx", "Dx")).required(),
@@ -195,12 +188,8 @@ pub fn create_fem3d_app() -> AppDefinition {
             .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("setTransformGumballFlag", InteractiveJobClassification::Migrated)
-            // 🧰️ The transform utility arms the host's world gumball on the model window; picking and
-            // marquee are the host's own select lane and need no utility.
             .utility(UtilityDefinition { group: Some("Transform".into()), category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new(FEM3D_UTILITY_TRANSFORM, LocalizedLabel::native("Transform", "Transformieren"), "move-3d") })
             .window_kind_utilities(window_model::FEM3D_WINDOW_MODEL, vec![FEM3D_UTILITY_TRANSFORM.into()])
-            // 🕹️ Framework-owned hover/selection: one domain over every document entity kind, bound to
-            // both World3d windows; interactionSelect/interactionHover/clearSelection/selectAll auto-inject.
             .interaction(fem3d_interaction_definition())
             .window_kind_interactions(window_model::FEM3D_WINDOW_MODEL, vec![InteractionRef::new(FEM3D_INTERACTION_DOMAIN)])
             .window_kind_interactions(window_results::FEM3D_WINDOW_RESULTS, vec![InteractionRef::new(FEM3D_INTERACTION_DOMAIN)])
@@ -212,8 +201,6 @@ pub fn create_fem3d_app() -> AppDefinition {
             .keybinding("delete", "removeSelection")
             .keybinding("backspace", "removeSelection")
             .keybinding("space", "setResultAnimation")
-            // 🎯️ Typed channel surface — `config_spec()`/`fem3d_io()` are this same information's single
-            // source of truth, reused here rather than duplicated.
             .config(Fem3dPlayApp::config_spec())
             .io(fem3d_io())
             .action_describe("addNode", LocalizedLabel::native("Adds a node at x, y, z to the 3D structural model; elements, supports and loads attach to nodes.", "Fügt dem 3D-Tragwerksmodell einen Knoten an x, y, z hinzu; Elemente, Lager und Lasten hängen an Knoten."))

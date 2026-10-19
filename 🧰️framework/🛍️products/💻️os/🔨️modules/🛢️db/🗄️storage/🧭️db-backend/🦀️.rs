@@ -132,9 +132,6 @@ impl DbBackend {
             Self::Sqlite(s) => s.capabilities().await,
             Self::Postgres(s) => s.capabilities().await,
             Self::Neo4j(s) => s.capabilities().await,
-            // 🔀️ `FaultStorage::capabilities` calls back through `self.inner: DbBackend`
-            // (fault-storage tests), so this arm is mutually recursive with this very fn — `Box::pin`
-            // breaks the otherwise-infinitely-sized future (E0733).
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.capabilities()).await,
         }

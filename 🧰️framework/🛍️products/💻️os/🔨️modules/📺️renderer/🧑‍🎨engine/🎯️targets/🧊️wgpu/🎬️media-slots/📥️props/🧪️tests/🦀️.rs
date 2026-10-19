@@ -1,7 +1,8 @@
 //! 🧪️ The actual grammar retains accepted source, native cause and output under one finite original caller until complete paid closure.
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,NativeDecodeContinuation,RetireOwned};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetireOwned};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn clock()->Option<u64>{Some(1000)}
 fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}

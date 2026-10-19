@@ -17,7 +17,6 @@ impl WindowMetrics {
     /// 📏️ The logical (DPI-independent) size a layout pass actually consumes. `(0.0, 0.0)` for a
     /// degenerate `scale_factor` rather than dividing by zero — mirrors [`PhysicalSize::is_zero`]'s
     /// own "park, don't error" convention.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn logical_size(&self) -> (f32, f32) {
         if self.scale_factor <= 0.0 {
             return (0.0, 0.0);
@@ -106,18 +105,18 @@ pub struct NativeClipboardJob {
     closing: bool,
     completed: bool,
     cancelled: bool,
-    fault: semio_framework_job::RetainedPayloadBuilder,
+    fault: semio_framework_job_payload::RetainedPayloadBuilder,
     fault_cursor: usize,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl NativeClipboardJob {
     pub fn read() -> Self {
-        Self { operation: std::mem::ManuallyDrop::new(Some(NativeClipboardOperation::Read)), closing: false, completed:false, cancelled:false, fault:semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault), fault_cursor:0 }
+        Self { operation: std::mem::ManuallyDrop::new(Some(NativeClipboardOperation::Read)), closing: false, completed:false, cancelled:false, fault:semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::Fault), fault_cursor:0 }
     }
 
     pub fn write(text: String) -> Self {
-        Self { operation: std::mem::ManuallyDrop::new(Some(NativeClipboardOperation::Write(text))), closing: false, completed:false, cancelled:false, fault:semio_framework_job::RetainedPayloadBuilder::new(semio_framework_job::JobPayloadStream::Fault), fault_cursor:0 }
+        Self { operation: std::mem::ManuallyDrop::new(Some(NativeClipboardOperation::Write(text))), closing: false, completed:false, cancelled:false, fault:semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::Fault), fault_cursor:0 }
     }
 
     pub fn read_candidate<'a>(outcome: &semio_framework_job::JobOutcomeView<'a>) -> Option<&'a str> {

@@ -10,8 +10,6 @@ pub fn create_remodeling_app() -> AppDefinition {
     Editor::builder(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT)
             .document(["semio", "remodeling"])
             .artifact_kind(semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::artifact_kind())
-            // 🔌️ `photos:in`/`mesh:out` — `2d.image`/`3d.mesh` are declared by `shooting`/`lowpoly`
-            // respectively (reused here, not redeclared).
             .media_input(remodeling_photos_in_port())
             .media_output(remodeling_mesh_out_port())
             .icon_id("remodeling-app")
@@ -22,9 +20,6 @@ pub fn create_remodeling_app() -> AppDefinition {
             .window_kind_def(model::windows::model::definition())
             .window_kind_def(capture::windows::frames::definition())
             .window_kind_def(analyze::windows::report::definition())
-            // 🕹️ The "assets" interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM)
-            // replaces the deleted `RemodelingSelection` config field — both windows that carry the "select"
-            // utility (`remodeling-main`'s World3d viewport, `remodeling-frames`' Canvas2d frame view) declare it.
             .interaction(InteractionDefinition {
                 id: "assets".into(),
                 label: LocalizedLabel::native("Assets", "Assets"),
@@ -53,10 +48,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .panel_tab_def(calibration_panel::definition())
             .panel_tab_def(tracks::definition())
             .panel_tab_def(quality::definition())
-            // 🏗️ The reconstruction tool: a framework ToolRun, started, paused, stepped, aborted and finalized
-            // only through the reserved tool-run actions.
             .tool(model::tools::reconstruction::definition())
-            // 📥️ Ingestion.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell, "hard-drive") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell, "hard-drive") })
@@ -75,7 +67,6 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_args("removeStream", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required()])
             .mutation("setStreamSync", LocalizedLabel::native("Set Stream Sync", "Stream-Synchronisation festlegen"))
             .action_args("setStreamSync", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(), ActionArgDef::number("syncOffsetMs", LocalizedLabel::native("Sync Offset (ms)", "Sync-Versatz (ms)")).default_value(&0)])
-            // 🎯️ Calibration / GCPs.
             .mutation("editCalibration", LocalizedLabel::native("Edit Calibration", "Kalibrierung bearbeiten"))
             .action_args("editCalibration", vec![
                 ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).required(),
@@ -112,7 +103,6 @@ pub fn create_remodeling_app() -> AppDefinition {
                 ActionArgDef::number("pixelX", LocalizedLabel::native("Pixel X", "Pixel X")).required(),
                 ActionArgDef::number("pixelY", LocalizedLabel::native("Pixel Y", "Pixel Y")).required(),
             ])
-            // ⚙️ 8 param-group setters, one per `ReconstructionParams` sub-struct.
             .mutation("setIngestParams", LocalizedLabel::native("Set Ingest Params", "Ingest-Parameter festlegen"))
             .action_args("setIngestParams", vec![
                 ActionArgDef::number("frameSampleStride", LocalizedLabel::native("Frame Sample Stride", "Frame-Abtastschrittweite")).default_value(&5),
@@ -184,7 +174,6 @@ pub fn create_remodeling_app() -> AppDefinition {
                 ActionArgDef::slider("dtmFilterRadiusM", LocalizedLabel::native("DTM Filter Radius (m)", "DGM-Filterradius (m)"), 0.1, 10.0).default_value(&2.0),
                 ActionArgDef::number("orthoMaxPx", LocalizedLabel::native("Ortho Max (px)", "Ortho Max. (px)")).default_value(&4096),
             ])
-            // 🧹️ Clear/reset.
             .mutation("resetPlaceholderMesh", LocalizedLabel::native("Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"))
             .mutation("clearSparse", LocalizedLabel::native("Clear Sparse Cloud", "Dünne Punktwolke löschen"))
             .action_destructive("clearSparse")
@@ -198,23 +187,15 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_destructive("clearGeoProducts")
             .mutation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
             .action_destructive("clearResult")
-            // 👁️ View-only runtime actions.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setFrameCursor", LocalizedLabel::native("Set Frame Cursor", "Frame-Cursor festlegen"), ActionKind::View) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setReportTable", LocalizedLabel::native("Set Report Table", "Berichtstabelle festlegen"), ActionKind::View) })
-            // 📤️ Export.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("exportQcReport", LocalizedLabel::native("Export QC Report", "QC-Bericht exportieren"), ActionKind::Shell) })
-            // 🧰️ Utility groups — an exclusive per-window set (active utility is host-owned); which
-            // window exposes which is declared by that window's own `definition()`.
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer-2") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", LocalizedLabel::native("Sculpt", "Formen"), "paintbrush") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", LocalizedLabel::native("Measure", "Messen"), "scaling") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", LocalizedLabel::native("Place GCP", "Passpunkt setzen"), "crosshair") })
-            // 👁️ Internal (non-palette) view actions the panels/windows dispatch — declared so they are
-            // real `ActionDefinition`s the classification gate and the tool-proof catalog can both see.
-            // 🎬️ Example picker — one option per `crate::editor::remodeling::examples::REMODELING_EXAMPLES`
-            // entry, so appending an example there is the only edit a new example needs.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation, "panel-left") })
             .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![ActionArgDef::select(
@@ -223,14 +204,6 @@ pub fn create_remodeling_app() -> AppDefinition {
                 semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::REMODELING_EXAMPLES.iter().map(|example| ActionArgOption::new(example.id, semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::example_label(example))).collect(),
             )
             .default_value(&semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID)])
-            // 🧵️ Phase-8 dispositions. Every declared row is `Migrated`: each is backed by the
-            // exact-owner `RemodelingRetainedCommandJobFactory` proof in `🧵️RetainedCommands` and by the
-            // document/config one-item store preparations in `📬️StorePreparation`, so UI dispatch (which
-            // rejects anything that is not `Migrated`) and the release-blocking
-            // `validate_interactive_job_classification` gate both admit it. The framework demands set
-            // EQUALITY here: `validate_tool_job_rows` computes `expected = TOOL_JOB_IDS ∩ migrated` and
-            // faults `interactive-job.catalog-incomplete` unless it equals the proof set.
-            //
             .action_interactive_job("importFrames", InteractiveJobClassification::Migrated)
             .action_interactive_job("importFramePayload", InteractiveJobClassification::Migrated)
             .action_interactive_job("importVideo", InteractiveJobClassification::Migrated)
@@ -269,17 +242,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_interactive_job("exportQcReport", InteractiveJobClassification::Migrated)
             .action_destructive("exportQcReport")
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            // 🎯️ Typed channel surface — `io()` is this same information's single source of truth,
-            // reused here rather than duplicated.
             .io(remodeling_io())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so the old default-example
-            // registration (`default_remodeling_scene().print_dsl()` fed to `.example("default", …)`)
-            // and the no-op `.workflow("remodeling", …)` call are dropped here (not silently: reported
-            // in this packet's migration notes). The subset's own `📚️examples/🎬️demo` facet
-            // (`crate::examples::…`, real content, pre-existing) is the modern,
-            // role-agnostic replacement surface for this.
             .action_describe("importFrames", LocalizedLabel::native("Opens the host's file picker for PNG or JPEG images and videos; every chosen file is imported as frames for the reconstruction.", "Öffnet die Dateiauswahl des Hosts für PNG- oder JPEG-Bilder und Videos; jede gewählte Datei wird als Einzelbilder für die Rekonstruktion importiert."))
             .action_describe("importFramePayload", LocalizedLabel::native("Adds one image (name and data-URL payload) as a frame; the first image of a batch starts a new image-sequence stream, later ones join it.", "Fügt ein Bild (Name und Data-URL-Inhalt) als Einzelbild hinzu; das erste Bild eines Stapels beginnt einen neuen Bildsequenz-Stream, weitere schließen sich an."))
             .action_describe("importVideo", LocalizedLabel::native("Opens the host's video picker; the chosen video is sampled into frames according to the ingest parameters (stride, frame limit, downscaling).", "Öffnet die Videoauswahl des Hosts; das gewählte Video wird gemäß den Ingest-Parametern (Schrittweite, Bildgrenze, Verkleinerung) in Einzelbilder zerlegt."))

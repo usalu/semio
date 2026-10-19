@@ -66,8 +66,6 @@ async fn catalogue_flags_a_violated_max_rule_and_not_a_satisfied_one() {
         }],
     };
     let labels = semio_s_artifact_process_process3d_kit::editor::process3d::terminology::process3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    // 🚚️ Read through the retiring PROJECTION, never `serde_json::to_string` on a `BuiltNode`: a built
-    // node's `BuiltChildren` only serialises through the retained page transport.
     let node = render(&fixture, "[]", labels, &semio_framework_plugin::TreeWindows::unhosted()).expect("catalogue renders");
     let rendered = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("catalogue projection");
     assert!(rendered.contains("process3d-catalogue.saw.shallowCrosscut"), "expected the violated capability item: {rendered}");

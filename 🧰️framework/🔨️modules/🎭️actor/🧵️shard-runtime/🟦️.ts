@@ -103,9 +103,6 @@ export function createPooledActorRuntime(options: {
   readonly heartbeatTimeoutMs?: ShardClientOptions["heartbeatTimeoutMs"];
 }): PooledActorRuntime {
   const shardClient = new ShardClient(buildShardClientOptions(options));
-  // 🚑️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): before that packet, neither
-  // `checkHeartbeats` nor `pollHeartbeatSab` had a production caller anywhere in the repo — a wedged
-  // shard went undetected forever. Self-ticks at `startWatchdog`'s own default cadence.
   shardClient.startWatchdog();
   return { shardClient };
 }

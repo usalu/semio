@@ -1,17 +1,17 @@
 
 
 export interface Puzzle2dSnapshot {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 📷️ @state artifact */
   camera: Puzzle2dCamera;
-  /** @state artifact */
+  /** 🔘️ @state artifact */
   nodes: Puzzle2dNode[];
-  /** @state artifact */
+  /** 🔗️ @state artifact */
   edges: Puzzle2dEdge[];
-  /** @state artifact */
+  /** 🗾️ @state artifact */
   targetRegions: Puzzle2dTargetRegion[];
-  /** @state artifact */
+  /** 🏷️ @state artifact */
   meta: Puzzle2dMeta;
 }
 

@@ -2,7 +2,8 @@
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, HtmlNode, HtmlAttr, RawTextKind};
 use crate::standards::v5::subsets::any::io::text::snapshot::{is_name_byte};
 use crate::standards::v5::subsets::any::io::text::snapshot::{is_void_element};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
 fn add(value:usize,amount:usize)->Result<usize,ValueError>{value.checked_add(amount).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native size overflow"))}
 fn grow_decode<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let count=values.capacity().max(1);control.charge(count.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native collection overflow"))?)?;values.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"HTML native allocation failed"))?;}Ok(())}

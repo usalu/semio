@@ -44,7 +44,6 @@ export function nxBuildEngineInputsV1(){
    phase=performance.now();const references=nxBuildEngineReferencesV1(source);parseMilliseconds+=performance.now()-phase;phase=performance.now();
    for(const reference of references)if(reference.kind==="module")admit(path,reference.specifier);else if(reference.kind==="file-url"){const target=resolve(dirname(path),reference.specifier);if(!existsSync(target)||!lstatSync(target).isDirectory())admit(path,reference.specifier);}resolutionMilliseconds+=performance.now()-phase;
   }
-  if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1")console.log("[DEBUG] Nx engine Source closure "+JSON.stringify({files:files.size,loadMilliseconds,parseMilliseconds,resolutionMilliseconds,totalMilliseconds:performance.now()-started}));
   engineAuthority={files:[...files].map(path=>"{workspaceRoot}/"+relative(root,path).replaceAll("\\","/")).sort(),packages:[...packages].sort()};
  }
  return [...engineAuthority.files,{externalDependencies:[...engineAuthority.packages]},{runtime:"node --version"},{runtime:"bun --version"}];

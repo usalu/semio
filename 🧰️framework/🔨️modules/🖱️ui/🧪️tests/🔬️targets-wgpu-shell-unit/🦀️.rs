@@ -21,7 +21,6 @@ fn set_window_layout_with_one_window_produces_the_expected_retained_tree_shape()
     shell.set_window_layout(single_window_layout("app.viewport"));
 
     let root = shell.tree().root.expect("expected a root node");
-    // shell.root -> tab-group Stack -> one Button window leaf = 3 nodes.
     assert_eq!(count_nodes(shell.tree(), root), 3);
     let tab_group = shell.tree().children(root).next().expect("expected a tab-group child");
     assert!(shell.tree().node(tab_group).unwrap().flags.contains(NodeFlags::CLIPS_CHILDREN));

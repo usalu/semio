@@ -23,7 +23,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-server = { path = "../../../../📦️packages/🦀️rust", features = ["conformance", "testkit"] }
+semio-framework-server = { path = "../../../../📦️packages/🦀️rust", features = ["conformance"] }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true }

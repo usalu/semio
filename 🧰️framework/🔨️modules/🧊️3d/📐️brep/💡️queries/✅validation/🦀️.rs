@@ -22,7 +22,7 @@ use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::{Body, ReachSet};
 use semio_framework_3d_brep_vector::Pnt3;
 
-type ValidationFindings = semio_framework_value::value::list::PagedList<ValidationIssue,{usize::MAX}>;
+type ValidationFindings = semio_framework_value_persistent::list::PagedList<ValidationIssue,{usize::MAX}>;
 trait ValidationIssueSink { fn push_issue(&mut self, issue:ValidationIssue); }
 impl ValidationIssueSink for Vec<ValidationIssue> { fn push_issue(&mut self, issue:ValidationIssue){self.push(issue);} }
 impl ValidationIssueSink for ValidationFindings { fn push_issue(&mut self, issue:ValidationIssue){self.push(issue);} }
@@ -126,12 +126,6 @@ fn check_shell_closure_and_orientation(body: &Body, issues: &mut impl Validation
     for (shell_id, shell) in body.shells.iter() {
         let mut edge_uses: std::collections::HashMap<EdgeId, Vec<bool>> = std::collections::HashMap::new();
         for &face in &shell.faces {
-            // A coedge's own `forward` is stated in its SURFACE's natural sense; the face's
-            // outward normal is that sense only when `flipped` is false. Two faces of a coherently
-            // oriented shell traverse their shared edge oppositely as SEEN FROM OUTSIDE, so the
-            // flag to compare is `forward XOR flipped` — comparing the raw flags reported every
-            // boolean `Cut` as `orientation-inconsistent`, since a cut flips the tool's faces to
-            // face into the cavity and their rings quite correctly stay put.
             let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
             for coedge_id in body.face_coedges(face) {
                 if let Some(co) = body.coedges.get(coedge_id) {
@@ -381,7 +375,6 @@ pub enum BodyValidationPhase {
 
 impl BodyValidationPhase {
     /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn tag(self) -> &'static str {
         match self {
             Self::CollectingTopology => "collectingTopology",
@@ -470,7 +463,7 @@ pub struct BodyValidationJob {
     source_body:usize,
     phase: BodyValidationPhase,
     issues: ValidationFindings,
-    shells: semio_framework_value::value::list::PagedList<ShellVolumeUnit,{usize::MAX}>,
+    shells: semio_framework_value_persistent::list::PagedList<ShellVolumeUnit,{usize::MAX}>,
     shell_cursor: usize,
     shell_face_cursor: usize,
     edges: Vec<EdgeId>,
@@ -723,19 +716,16 @@ impl BodyValidationJob {
     }
 
     /// ✅ True once every unit has run and [`Self::into_issues`] is final.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn is_complete(&self) -> bool {
         matches!(self.phase, BodyValidationPhase::Complete)
     }
 
     /// 🩺️ Every finding so far. Only final once [`Self::is_complete`] answers true.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn into_issues(self) -> Vec<ValidationIssue> {
         self.issues.into_iter().collect()
     }
 
     /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`validate_body`] is.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn run_to_completion(mut self, body: &Body) -> Vec<ValidationIssue> {
         while !self.is_complete() {
             self.step(body, usize::MAX);
@@ -745,7 +735,6 @@ impl BodyValidationJob {
 
     /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
     /// performs no work.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn step(&mut self, body: &Body, budget: usize) -> BodyValidationProgress {
         let mut spent = 0usize;
         while spent < budget && !self.is_complete() {
@@ -814,7 +803,6 @@ impl BodyValidationJob {
         self.progress()
     }
 
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn cheap(&mut self, body: &Body, check: fn(&Body, &mut ValidationFindings), next: BodyValidationPhase) {
         check(body, &mut self.issues);
         self.phase = next;
@@ -822,7 +810,6 @@ impl BodyValidationJob {
 
     /// ⚖️ Emits the orientation verdicts once every shell's per-face sum is complete, in the exact
     /// solid-then-void order the whole-body check produced.
-    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     fn emit_orientation_issues(&mut self) {
         let mut index = 0usize;
         while index < self.shells.len() {

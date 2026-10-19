@@ -208,12 +208,6 @@ impl ArtifactEditor for Block3dPlayApp {
             "patchRepresentation" => {
                 Ok(Block3dCommand::PatchRepresentation(patch_representation::PatchRepresentation { id: str_field("id").unwrap_or_default(), field: str_field("field").unwrap_or_default(), value: str_field("value").unwrap_or_default() }))
             }
-            // 🩹️ Forward-fix, not a preserved behavior: pre-migration `command_from_action` had NO arm
-            // for the manifest-declared `setCamera` view action at all (fell through to the reserved-
-            // action error) — a real gap, the `Block3dCommand::SetCamera` variant was only reachable via
-            // direct `dispatch_typed`/binary `OpBinary`. `assert_declared_actions_bridge_to_commands`
-            // requires every declared action to bridge, so this parses the camera pose from
-            // `{position,target,zoom}` args the same shape `BlockCamera3d` serializes to.
             "setCamera" => Ok(Block3dCommand::SetCamera(set_camera::SetCamera {
                 camera: BlockCamera3d {
                     position: f64_vec3_field(args, "position").unwrap_or([0.0, 0.0, 0.0]),
@@ -320,10 +314,6 @@ impl ArtifactEditor for Block3dPlayApp {
     /// export for every other port (`"artifact:out"`).
     fn export_media(port: &str, doc: &ArtifactView<'_, Block3dSnapshot>) -> Result<Media, MediaError> {
         if port != "catalog:out" {
-            // 🌉️ Reimplements `ArtifactEditor::export_media`'s default `"artifact:out"` behavior
-            // verbatim — overriding the trait method forfeits the ability to delegate back to its
-            // own default body, so the whole-document pack export is duplicated here rather than
-            // left unreachable for this surface.
             if port != "artifact:out" {
                 return Err(MediaError::NotImplemented);
             }

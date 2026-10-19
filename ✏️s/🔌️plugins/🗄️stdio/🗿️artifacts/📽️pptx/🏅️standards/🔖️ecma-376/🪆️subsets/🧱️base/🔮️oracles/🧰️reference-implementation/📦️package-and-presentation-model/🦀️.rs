@@ -12,7 +12,6 @@ pub(super) struct Package {
 }
 
 impl Package {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) — see R9
     pub(super) fn xml(&self, path: &str) -> Result<XNode, String> {
         parse_document(self.parts.get(path).ok_or_else(|| format!("OPC part missing: {path}"))?)
     }

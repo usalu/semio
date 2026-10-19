@@ -7,16 +7,16 @@ export interface Block2dPresentation{shape:string|null;radius:Binary64|null;widt
 export interface Block2dHandleKind{id:string;name:string;label:string;color:string;defaultWireKind:string}
 export interface Block2dHandleTemplate{id:string;handleKind:string;angle:Binary64;radius:Binary64}
 export interface Block2dSnapshot{
- /** @state artifact */ schema:string;
- /** @state artifact */ nodeKind:shared.BlockKindIdentity;
- /** @state artifact */ presentation:Block2dPresentation;
- /** @state artifact */ handleKinds:Block2dHandleKind[];
- /** @state artifact */ handles:Block2dHandleTemplate[];
- /** @state artifact */ compatibility:shared.BlockCompatibilityRule[];
- /** @state artifact */ attributes:shared.BlockAttribute[];
- /** @state artifact */ authors:shared.BlockAuthor[];
- /** @state artifact */ camera2d:shared.BlockCamera2d;
- /** @state artifact */ meta:shared.BlockMeta;
+ /** 📐️ @state artifact */ schema:string;
+ /** 📍️ @state artifact */ nodeKind:shared.BlockKindIdentity;
+ /** 📜️ @state artifact */ presentation:Block2dPresentation;
+ /** 🤚️ @state artifact */ handleKinds:Block2dHandleKind[];
+ /** 🪝️ @state artifact */ handles:Block2dHandleTemplate[];
+ /** 🔌️ @state artifact */ compatibility:shared.BlockCompatibilityRule[];
+ /** 🏷️ @state artifact */ attributes:shared.BlockAttribute[];
+ /** ✍️ @state artifact */ authors:shared.BlockAuthor[];
+ /** 📷️ @state artifact */ camera2d:shared.BlockCamera2d;
+ /** 📇️ @state artifact */ meta:shared.BlockMeta;
 }
 /** 🔵️ Admit actual optional presentation fields without numeric alternatives. */
 export function parseBlock2dPresentation(v:unknown):Block2dPresentation{const r=p.row(v);return{shape:p.optional(r.shape,p.text),radius:p.optional(r.radius,p.word),width:p.optional(r.width,p.word),height:p.optional(r.height,p.word),color:p.optional(r.color,p.text),iconKind:p.optional(r.iconKind,p.text)}}

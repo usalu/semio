@@ -1,0 +1,61 @@
+# Private Debian OS Provisioning And Original Preflight
+
+## Authorized Scope And Bounds
+
+Parent authorized a reversible private OS-provisioning step to supply actual cc, pkg-config and Docker CLI, plus Compose. The original limits were 512 MiB compressed input and 1 GiB temporary footprint. After the full authenticated package plan measured a 1,126,388,431-byte conservative temporary peak, parent explicitly raised only that cap to 1.25 GiB (1,342,177,280 bytes), retaining the 512 MiB compressed cap, ten minutes, two CPU cores, 768 MiB container memory and 256 processes. No repository dependency installation, compiler invocation, Store allocation, project build or publication is authorized by this probe.
+
+Host space was checked first: the checkout volume reported 194,905,024 KiB available (about 185.9 GiB). This does not reserve physical space for Docker.raw. Docker engine 29.5.3 was running; the already authenticated pinned Debian 12 amd64 image was reused. No Docker/VMM settings, shared Source, Mac cache/leases or unrelated images/containers are changed.
+
+The source-independent setup creates one private Debian container, transfers only the previously verified official Bun executable, installs finite authenticated OS packages, reads Docker/Compose version information through the genuine daemon socket mounted read-only, and removes its container at terminal. The only socket commands are read-only version queries. A successful setup may retain this worker's explicitly labeled local OS snapshot image, with identity and size recorded, so concurrent Source edits cannot force repeated package installation. No Source files enter that OS artifact.
+
+The reusable repository OS tooling found here is the broad `.devcontainer/Dockerfile` image recipe, which installs build-essential and pkg-config among many other tools. No suitable source-only managed OS package leaf was found before dependency preparation. This task therefore uses explicitly authorized private OS provisioning. Installing a compiler executable is separate from executing a project compiler; this probe executes no project compiler.
+
+## Authentication And Budget Enforcement
+
+The Debian base's official repositories and pinned archive keyring authenticate apt release/package metadata. Insecure and unauthenticated repositories are explicitly refused. Exact versions, archive byte counts, installed-size counts and SHA-256 hashes of every planned package are projected before downloading packages, and every selected package is passed to apt with its explicit version.
+
+The minimal first phase installs ca-certificates and its authenticated dependencies. The second phase uses the [official Docker Debian repository instructions](https://docs.docker.com/engine/install/debian/) to fetch Docker's signing key over verified HTTPS and bind it with Signed-By to Docker's signed bookworm/amd64/stable metadata. It installs CLI and Compose plugin only, without a Docker daemon package. Candidate versions and package hashes are selected from authenticated metadata and then pinned for the actual install; no convenience installer is used.
+
+The budget includes prior retained inputs, a reserved private captured Source/Bun view, actual apt list bytes, exact planned archive bytes, cumulative installed-size estimates, a second installed copy reserved for OS snapshotting, and an additional 128 MiB overhead allowance. Metadata bytes are conservatively multiplied by four in the compressed-input bound. Each package phase refuses an exceeded budget before its package download. Runtime counters record actual apt list/archive footprints. Before local snapshot commit, actual container writable size is checked again with a two-copy allowance. All generated command output stays under the ticket's generated directory; the retained recipe is the existing ticket `📜️script.ts` and input metadata is `2026-10-19-builder-os-input.json`.
+
+## Concurrent Source And Independent Setup
+
+The first fresh Source capture encountered an in-progress shared edit: build/operations imported a missing Bazel operations module. Required Source checks were retained and that capture stopped before any container or package work. The source-independent OS setup then proceeded separately. The real module subsequently appeared; a fresh original-entry Source probe will capture it only after the OS artifact is ready, using the existing verified streaming closure and module-owned schema rules. Earlier snapshot evidence remains in `2026-10-19-builder.md`; no current-checkout compilation proof follows from an OS snapshot or preflight result.
+
+## Actual Runtime Outcome
+
+The first source-independent OS provisioning command authenticated the official Debian metadata and installed only the small certificate phase. Docker repository metadata then validated against primary signing key `9DC858229FC7DD38854AE2D88D81803C0EBFCD88` and signing subkey `D3306A018370199E527AE7997EA0A9C3F273FCD8`, with trusted VALIDSIG and gpgv status 0. Exact full package plans projected 75,390,116 archive bytes, 269,828,096 installed-size bytes and 20,019,339 actual apt metadata bytes. The conservative compressed bound was 337,309,456 bytes; the two-copy temporary bound was 1,126,388,431 bytes. The unchanged budget check refused that peak before main tool downloads. Its original generated log is `🗑️generated/2026-10-19-builder-os-provision.log`; its container was removed.
+
+A fallback without optional Compose had begun only its certificate phase when parent raised the temporary cap and requested Compose remain included. Only that worker-owned container was stopped, before main tool installation, and its log is retained as `🗑️generated/2026-10-19-builder-os-provision-2.log`. The full plan then restarted under the explicit 1.25 GiB cap; its independent original log is `🗑️generated/2026-10-19-builder-os-provision-3.log`. No main-tool or Source success is claimed before its terminal result.
+
+The third provisioning attempt completed with exit 0. Actual package queries confirmed GCC `4:12.2.0-3`, pkg-config `1.8.1-1`, Docker CLI `5:29.9.1-1~debian.12~bookworm` and Compose plugin `5.6.0-1~debian.12~bookworm`. The CLI reported linux/amd64 and successfully negotiated API 1.54 with the actual Docker Desktop 4.77.0 / engine 29.5.3 / linux arm64 daemon through the read-only socket mount. Compose printed version v5.6.0. No Docker daemon package or project compiler was executed. All 34 exact authenticated package records, signed Docker key hash and phase bounds are retained as input metadata in `2026-10-19-builder-os-packages.json`.
+
+Actual apt lists peaked at 20,019,339 bytes; actual cached apt archives were zero after apt's normal cleanup. Only this private guest's apt lists/archives and transferred Bun binary were removed before snapshotting. The actual container writable size then measured 255,569,920 bytes and total root filesystem 340,889,600 bytes. Its actual two-copy snapshot check was 1,002,462,624 bytes including the pre-reserved base and 128 MiB overhead, below the revised 1,342,177,280-byte cap. The installed-size plan's earlier 1,126,388,431-byte peak remained the larger conservative bound and also fit.
+
+The source-free OS artifact completed at `2026-10-19T12:27:51.426Z`. Its worker-owned local tag is `semio-course-preflight-os:sol-20261019`, exact immutable image ID is `sha256:04ed9880ecae29f4b9954f72f498b2da9b3b58e4fc4b482d193b64e4a38118e0`, and Docker's compressed image accounting reports 125,189,144 bytes. The input recipe records expanded root and writable sizes separately rather than treating compressed size as physical runtime backing. The OS container was removed; only this explicitly authorized local OS image remains. It is an environment input with zero Source files, not a course artifact or remote publication.
+
+A fresh verified Source probe is now using that exact image ID with networking disabled. It retains the read-only genuine daemon socket mount, verifies the actual Source archive/digests and invokes the unchanged original preflight entry. The source probe's conservative temporary bound counts two copies of the actual expanded OS root, not merely Docker's compressed image-size field. Its terminal result follows below; no compiler/Store/dependency command is issued.
+
+## Original Current Preflight: Terminal Success
+
+The first Source attempt on the prepared image reached the real CLI but rejected the prior `preflight --scope @teaching/architecture-course` syntax. Concurrent authored infrastructure work had replaced owner-scoped preflight with a bare generic `preflight` API. That actual refusal and subsequent host Source divergence are retained in `🗑️generated/2026-10-19-builder-os-preflight.log`; no old authority or policy was relabeled. Source inspection confirmed the new branch still returns before Store opening and performs only bounded temporary directory exchange/case probes. No Store allocation or project compiler is involved in those probes.
+
+Using the new authored bare syntax, the original `bun repo preflight` completed with exit 0. Its actual console reported `repository:build` / `repo` loading and running, `preflight` running then complete, and `repo` complete. The verified guest printed Debian 12, linux/x64, Bun 1.4.2 and 820,019,523,584 available guest filesystem bytes. The source snapshot timestamp was `2026-10-19T12:30:25.275Z`, with 932 Source files / 7,373,177 bytes; all 934 archive entries including Bun and manifest passed local verification, and guest Source hashes passed before original entry.
+
+The captured new generic policy required a supported architecture, at least 8 GiB available, actual cc and pkg-config, atomic directory exchange and a case-sensitive filesystem. Its unchanged actual implementation passed these checks under the translated x64 process. It no longer checks Debian version, course-specific architecture, Docker tools, loop capabilities or runtime ABI. This successful result is generic early preflight proof for the captured private view, not owner-scoped course readiness or a compiler/release result. Actual Docker CLI/Compose daemon access was separately confirmed in the source-free provisioning step above.
+
+The later host hash check detected a concurrently edited `process/artifacts/native-build/storage/platform/contract/🟦️.ts`. That divergence is explicitly retained as `sourceRechecked: false` with its path in the terminal record, rather than dropping the check or claiming a current-checkout result. The private guest used the captured verified bytes throughout. No dependencies/compiler/Store/build/publication ran. The container was removed; all execution sessions are terminal; the source-free OS image remains for authorized reuse.
+
+The final Source probe's conservative compressed-input bound was 337,395,620 bytes and temporary bound 1,038,970,420 bytes, both below the revised limits. The prior two small certificate/metadata attempts can additionally be bounded at 167,441,272 input bytes together, giving 504,836,892 bytes including them, still below 536,870,912. These are deliberately conservative bounds, not a false claim of exact wire-byte metering. Actual package archive sizes, metadata footprint and image/container sizes are reported separately. Guest available space remains distinct from outer physical Docker.raw reservation and no large allocation was tested.
+
+Final original logs: `🗑️generated/2026-10-19-builder-os-preflight-2.log` and `🗑️generated/2026-10-19-builder-stream-terminal.json`. Retained input SHA-256 identities at this handoff are:
+
+| Input | SHA-256 |
+| --- | --- |
+| `📜️script.ts` | `01bc64e94037ad1d785d928f3785aa90c014f5373e8c3bdbeec4ed12fce5c46d` |
+| `2026-10-19-builder-stream-manifest.json` | `21ae6a3c48ba18d33c994c456337c3290e41e9388e2d84321c09e7455c50a8e2` |
+| `2026-10-19-builder-stream-input.json` | `779e8b9d199edb9ea73ad469097ab2f4fdc13663941baac6db56b64e8ca41fde` |
+| `2026-10-19-builder-os-input.json` | `e3b4b4895d52dfbb7ac4c504d06eb97b9a2671ade6f9f9f8f7e97389f542de23` |
+| `2026-10-19-builder-os-packages.json` | `8567c64025f85d3e42298b5404251ccc51921264454a53be296feeff223af1cd` |
+
+Current course API/documentation/ABI mismatches requiring follow-up are recorded in `2026-10-19-course-preflight-alignment.md`.

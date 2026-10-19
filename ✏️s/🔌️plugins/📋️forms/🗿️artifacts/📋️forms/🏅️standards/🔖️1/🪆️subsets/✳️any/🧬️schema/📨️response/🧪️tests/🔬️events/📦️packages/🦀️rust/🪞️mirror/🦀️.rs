@@ -83,16 +83,16 @@ pub mod standards {
                         pub mod serializers {
                             #[path = "."]
                             pub mod artifacts {
-                                pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::csv;
+                                pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::csv;
                                 #[path = "."]
                                 pub mod xlsx {
-                                    pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::*;
+                                    pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::*;
                                     #[path = "."]
                                     pub mod v_ecma_376 {
-                                        pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::*;
+                                        pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::*;
                                         #[path = "."]
                                         pub mod any {
-                                            pub use semio_s_artifact_forms_forms_diff::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::any::*;
+                                            pub use semio_s_artifact_forms_forms_archive_codecs::standards::v1::subsets::any::io::export::serializers::artifacts::xlsx::v_ecma_376::any::*;
                                             #[cfg(test)]
                                             #[path = "../../../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📕️xlsx/🔖️ecma-376/✳️any/🧪️tests/🔬️unit/🦀️.rs"]
                                             pub mod tests;

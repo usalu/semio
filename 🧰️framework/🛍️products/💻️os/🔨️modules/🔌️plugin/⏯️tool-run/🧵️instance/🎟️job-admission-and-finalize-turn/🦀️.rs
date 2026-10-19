@@ -1,6 +1,7 @@
 //! 🎟️ Job admission and finalize turn of the instance tool run turns: the job admission, fault, step and completion, the revalidation completion and the finalize turn. See [`super`].
 
 use super::*;
+use semio_framework::Fault;
 
 impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> ToolRunCtx<'ctx, A, M, X> {
     pub(super) async fn admit_tool_run_job(&mut self) -> Result<(), Fault> {
@@ -40,7 +41,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let (run,generation)=(entry.slot.run,entry.slot.generation);let single=entry.slot.state==ToolRunState::Paused;
         let Some(job)=entry.job.as_mut()else{return Ok(())};
         if job.cancel.is_none(){if let Some((cancel,progress))=semio_framework_job::CancelToken::admit_root(grant).map_err(FaultFrom::into_fault)?{job.cancel=Some(cancel);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
-        if job.authority.is_none(){if let Some((authority,progress))=semio_framework_job::JobPayloadAuthority::admit(job.operation,job.generation,grant).map_err(FaultFrom::into_fault)?{job.authority=Some(authority);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
+        if job.authority.is_none(){if let Some((authority,progress))=semio_framework_job_payload::JobPayloadAuthority::admit(job.operation,job.generation,grant).map_err(FaultFrom::into_fault)?{job.authority=Some(authority);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
         if job.original_failure.is_some(){return Ok(())}
         if let Some(descriptor)=job.outcome.as_mut(){
             if job.outcome_received{if !descriptor.is_acknowledged(){let step=descriptor.acknowledge(grant);self.tool_runs.retain_original_receipt(grant,step.progress())?;return Ok(())}drop(job.outcome.take());job.outcome_received=false;self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(())}
@@ -119,7 +120,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     }
 
     /// 🏁️ Finalize (§2.7.4): freshness refold on the head, optional revalidate job, one outbound batched `Edit`.
-    pub(super)  async fn finalize_tool_run_turn(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    pub(super)  async fn finalize_tool_run_turn(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
         let store_generation = self.stores.store.generation();
         let member_generation = self.shared().tool_run_member_generation();
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");

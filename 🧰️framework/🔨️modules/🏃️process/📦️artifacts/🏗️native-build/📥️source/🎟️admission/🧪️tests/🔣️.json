@@ -16,5 +16,35 @@
         "second"
       ]
     }
-  ]
+  ],
+  "progress": {
+    "readCheckpoint": 8,
+    "cases": [
+      {
+        "id": "single-unit",
+        "units": 1,
+        "embedded": []
+      },
+      {
+        "id": "bounded-read-checkpoints",
+        "units": 2,
+        "embedded": [
+          "a",
+          "bb",
+          "ccc",
+          "dddd",
+          "eeeee",
+          "ffffff",
+          "ggggggg",
+          "hhhhhhhh",
+          "iiiiiiiii"
+        ]
+      }
+    ],
+    "phases": [
+      "cfg",
+      "read",
+      "complete"
+    ]
+  }
 }

@@ -1,13 +1,23 @@
 //! 👥️ The presence roster and the presence rooms with their settings, readers and admission.
 
-use super::*;
+use semio_framework_async::ShardedMap;
+use semio_framework_server_contract::{PresenceEntry, PresenceFrame};
+use semio_framework_server_throttle::ClientKey;
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::hash::{BuildHasher, Hasher};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex as StdMutex};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::sync::watch;
+use tokio::time::Instant;
 
 //#region 🔖️Presence
 /// 🎨️ One actor's held palette slot in a scope, ref-counted across that actor's concurrently open
 /// sockets so a second window never steals a third colour.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ColourLease {
-    pub(super) index: u8,
+    pub index: u8,
     refs: u32,
 }
 
@@ -37,7 +47,7 @@ pub struct PresenceSession {
 #[derive(Default)]
 pub struct Presence {
     colours: ShardedMap<String, ScopeColours>,
-    pub(super) sessions: ShardedMap<(String, String), PresenceSession>,
+    pub sessions: ShardedMap<(String, String), PresenceSession>,
 }
 
 impl Presence {
@@ -223,7 +233,6 @@ pub type OriginAdmission = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 
 /// 🧍️ One member of a presence room: its session and its entry as every reader is sent it.
 #[derive(Debug)]
-#[doc(hidden)]
 pub struct Member {
     pub session: String,
     pub wire: Box<str>,
@@ -240,7 +249,6 @@ pub struct Member {
 /// ([`Room::next_changed`]), which is what lets every reader go round a room of any size at the
 /// cost of what it is sent.
 #[derive(Debug)]
-#[doc(hidden)]
 pub struct Room {
     pub seats: Vec<Option<Member>>,
     pub changed: Vec<u64>,
@@ -364,7 +372,6 @@ pub const SHARE_EPOCH: Duration = Duration::from_millis(250);
 /// and what the next deal goes by: the bytes it drew since the last deal, the rate measured up to
 /// that deal, and whether a page was refused it since the last deal or during the one before.
 #[derive(Debug)]
-#[doc(hidden)]
 pub struct Share {
     pub readers: usize,
     equal: i128,
@@ -393,7 +400,6 @@ pub struct Share {
 /// than its split waits by itself, however many sockets it reads through. Over any stretch the
 /// rooms send the budget, half a second's worth and at most one page per reader more.
 #[derive(Debug)]
-#[doc(hidden)]
 pub struct Outflow {
     pub per_second: u64,
     level: i128,
@@ -501,9 +507,9 @@ impl Outflow {
 /// session's newest entry only and queues nothing for anybody — a socket reads it through its own
 /// [`RoomReader`]. A room lives while it has a member or a reader.
 pub struct PresenceRooms {
-    pub(super) rooms: ShardedMap<String, Room>,
-    pub(super) departures_kept: usize,
-    pub(super) outflow: Option<StdMutex<Outflow>>,
+    pub rooms: ShardedMap<String, Room>,
+    pub departures_kept: usize,
+    pub outflow: Option<StdMutex<Outflow>>,
 }
 
 impl Default for PresenceRooms {
@@ -599,7 +605,7 @@ impl PresenceRooms {
 }
 
 /// 🧾️ `entry` as every reader is sent it.
-pub(super) fn wire(entry: &PresenceEntry) -> Option<Box<str>> {
+pub fn wire(entry: &PresenceEntry) -> Option<Box<str>> {
     serde_json::to_string(entry).ok().map(String::into_boxed_str)
 }
 
@@ -609,7 +615,7 @@ fn quoted(text: &str) -> String {
 }
 
 /// 🔗️ Append one JSON value to a comma-joined list.
-pub(super) fn join(list: &mut String, value: &str) {
+pub fn join(list: &mut String, value: &str) {
     if !list.is_empty() {
         list.push(',');
     }
@@ -625,16 +631,16 @@ pub(super) fn join(list: &mut String, value: &str) {
 /// A room's departures are remembered up to [`PresenceSettings::departures_kept`]; a reader that
 /// missed one that was forgotten starts over with a page that replaces what its client held.
 pub struct RoomReader {
-    pub(super) rooms: Arc<PresenceRooms>,
-    pub(super) lane: String,
+    pub rooms: Arc<PresenceRooms>,
+    pub lane: String,
     lead: Option<String>,
-    pub(super) client: ClientKey,
+    pub client: ClientKey,
     changes: watch::Receiver<u64>,
-    pub(super) seen: u64,
-    pub(super) target: u64,
-    pub(super) resume: usize,
+    pub seen: u64,
+    pub target: u64,
+    pub resume: usize,
     departures: u64,
-    pub(super) fresh: bool,
+    pub fresh: bool,
     behind: bool,
 }
 
@@ -782,8 +788,8 @@ impl Page {
 #[derive(Clone, Copy, Debug)]
 pub struct StateBudget {
     window: Instant,
-    pub(super) spent: u32,
-    pub(super) limit: u32,
+    pub spent: u32,
+    pub limit: u32,
 }
 
 impl StateBudget {
@@ -841,3 +847,7 @@ pub fn presence_session_id() -> String {
     format!("{:016x}{:016x}", half(0x7072_6573_656e_6365), half(0x7365_7373_696f_6e73))
 }
 //#endregion 🔖️PresenceRoom
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

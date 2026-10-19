@@ -5,7 +5,7 @@ fn generous() -> DenseSolveBudget { DenseSolveBudget { items:1, copy_bytes:64, d
 
 #[test]
 fn retained_dense_matches_portable_oracle_with_exact_resume_and_refusal() {
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
   let mut matrix:Vec<f64>=case["matrix"].as_array().unwrap().iter().map(|x|x.as_f64().unwrap()).collect();
   let mut rhs:Vec<f64>=case["rhs"].as_array().unwrap().iter().map(|x|x.as_f64().unwrap()).collect();

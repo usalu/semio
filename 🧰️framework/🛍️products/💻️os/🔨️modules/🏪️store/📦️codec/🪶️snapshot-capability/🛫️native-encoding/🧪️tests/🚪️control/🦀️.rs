@@ -4,7 +4,7 @@ use semio_framework_value::native_encoding::{NativeEncodeRetirementRecipient,Nat
 use semio_framework_dsl_record::{RecordSpec,RecordLayout,FieldSpec,Shape,FieldValue,NativeSchemaControl,RecordFields};
 fn ordinary()->RecordSpec{RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Text)])}
 fn schema<C:NativeSchemaControl>(native:&mut C)->Result<RecordSpec,ValueError>{let mut fields=native.allocate_vec(1)?;fields.push(semio_framework_dsl_record::producer::field(1,"value",Shape::Text,native)?);semio_framework_dsl_record::producer::record(None,RecordLayout::Lines,fields,native)}
-fn decode_schema(native:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RecordSpec,ValueError>{schema(native)}
+fn decode_schema(native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RecordSpec,ValueError>{schema(native)}
 fn encode_schema(native:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{schema(native)}
 #[test]
 fn original_record_helper_preserves_grant_output_and_pending_retirement(){

@@ -1,7 +1,8 @@
 import { expect, test } from "vitest";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🕹️interaction.json";
-import { buildFem3dSceneNode, fem3dStoryStateFor, fem3dStructuralInstances, reduceFem3dStoryAction } from "../../🟦️.ts";
+import { buildFem3dSceneNode, fem3dStructuralInstances } from "../../🎞️scenes/🟦️.ts";
+import { fem3dStoryStateFor, reduceFem3dStoryAction } from "../../🔁️story-reducers/🟦️.ts";
 
 test("story interaction echoes native entity targets through hover and mixed selection", () => {
   let state = fem3dStoryStateFor("demo", "de-DE");

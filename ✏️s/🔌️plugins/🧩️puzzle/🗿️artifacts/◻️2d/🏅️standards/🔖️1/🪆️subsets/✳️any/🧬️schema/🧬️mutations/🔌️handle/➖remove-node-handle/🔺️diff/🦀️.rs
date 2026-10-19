@@ -1,4 +1,4 @@
-//! severs any edge referencing the removed handle.
+//! ✂️ severs any edge referencing the removed handle.
 //! 🔺️ Sparse diff builder for `RemoveNodeHandle` — removes one handle from the owner node's `🐙️handles` and
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dEdgesDelta;

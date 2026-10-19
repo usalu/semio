@@ -1,4 +1,4 @@
-//! ️ `change-roof-assumed-sk`.
+//! 🧬️ `change-roof-assumed-sk`.
 
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 

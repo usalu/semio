@@ -10,7 +10,9 @@ use crate::standards::v1::subsets::any::schema::preparation::native_preparation_
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::delete_node_preparation::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
 #[allow(unused_imports)]
-use semio_framework_value::{ValueRefusalKind, list::PagedList, list::PagedListEditCursor, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef, retained_clone::paged::PagedUtf8BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdGrant, retained_clone::ordered_map::BoundedOrdProgress, retained_clone::ordered_map::BoundedOrdStep};
+use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedCloneBinding, retained_clone::RetainedFieldCursor, retained_clone::RetainedCloneCursor, retained_clone::RetainedCloneRef, retained_clone::paged::PagedUtf8BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdCursor, retained_clone::ordered_map::BoundedOrdGrant, retained_clone::ordered_map::BoundedOrdProgress, retained_clone::ordered_map::BoundedOrdStep};
+#[allow(unused_imports)]
+use semio_framework_value_persistent::{list::PagedList, list::PagedListEditCursor};
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
 #[allow(unused_imports)]
@@ -54,8 +56,8 @@ fn retire(snapshot: Puzzle2dSnapshot) {
 #[test]
 fn history_edit_puzzle2d_native_delete_candidate_preserves_first_ids_refusal_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dDeleteNodeCandidateCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
-    let extra: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟢️node/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
+    let extra: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🟢️node/🗑️delete-node/🎮️prepare/📸️candidate/🔣️.json")).unwrap();
     let full: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap();match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let mut count = 0;

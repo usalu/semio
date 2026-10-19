@@ -7,6 +7,7 @@ use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_to_text};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
+#[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
 
 async fn sample_document() -> DocxDocument {
     DocxDocument {
@@ -58,7 +59,6 @@ async fn tables_and_styles_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn decode_resolves_real_hand_built_package_with_formatting() {
-    // Hand-built OOXML: correct Content_Types/.rels/part structure, not just "a zip with xml".
     let mut opc = OpcPackage::empty();
     opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
@@ -135,10 +135,8 @@ async fn decode_rejects_missing_main_document_relationship() {
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip() {
     let original = build_minimal_docx(sample_document_with_table_and_styles().await);
-    // Analyzer: real decode of the encoded bytes.
     let bytes = encode_docx(&original).expect("encode");
     let analyzed = decode_docx(&bytes).expect("decode");
-    // Builder: reconstruct an equivalent document from the analyzed parts.
     let analyzed_document = analyzed.project_document().expect("project analyzed document");
     let rebuilt = build_minimal_docx(analyzed_document.clone());
     let rebuilt_bytes = encode_docx(&rebuilt).expect("encode rebuilt");
@@ -155,8 +153,10 @@ async fn analyzer_builder_round_trip() {
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
+    #[cfg(test)] use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxSnapshot;
     use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::*;
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, mutations, snapshot};
+    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::{mutations, snapshot};
+    use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff;
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -165,11 +165,11 @@ mod conformance_laws {
     /// message).
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
-        for (label, text) in [("snapshot grammar", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+        for (label, text) in [("snapshot grammar", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
-        for (label, text) in [("snapshot protocol", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+        for (label, text) in [("snapshot protocol", semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
     }
@@ -199,7 +199,7 @@ mod conformance_laws {
     /// for every representative `DocxDiff` (`diff::demo_diff_cases()`).
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
@@ -224,7 +224,7 @@ mod conformance_laws {
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
@@ -262,7 +262,7 @@ mod conformance_laws {
 
 #[test]
 fn save_preserves_relationship_selected_part_paths_and_clears_the_last_style() {
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
+    use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxBlockPath;
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, remove_style, set_run_text, DocxMutation};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE}}};
     use semio_s_artifact_stdio_zip::opc::REL_TYPE_OFFICE_DOCUMENT;
@@ -476,7 +476,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
 
 #[test]
 fn malformed_authored_authority_is_refused_atomically() {
-    use semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
+    use semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
     use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_part, DocxMutation};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
@@ -515,7 +515,7 @@ fn malformed_authored_authority_is_refused_atomically() {
         assert!(encode_docx(&candidate).is_err());
     }
 
-    let diff = DocxDiff { xml_parts: Some(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta::modification(&valid.xml_parts[0].path, semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff { content_type: Some("application/xml".into()), document: None })), ..Default::default() };
+    let diff = DocxDiff { xml_parts: Some(semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartsDelta::modification(&valid.xml_parts[0].path, semio_s_artifact_stdio_docx_base_diff::standards::v_ecma_376::subsets::base::schema::diff::DocxXmlPartDiff { content_type: Some("application/xml".into()), document: None })), ..Default::default() };
     assert!(protocol::apply_diff(&diff, &valid).is_err(), "invalid candidate diff must be refused");
     let mut source = valid.clone();
     let drifting = valid.xml_parts[0].clone();

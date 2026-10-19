@@ -59,8 +59,6 @@ describe("gis map inference bridge — neutral fixture and closed wire shapes", 
     const hub = JSON.parse(readFileSync(resolve(repoRoot, authority), "utf8")) as { $defs: Record<string, { $ref?: string; pattern?: string; properties?: Record<string, { $ref?: string }> }> };
     const { $schema, ...mirror } = approvalRequestSchema as { $schema: string; properties: Record<string, { pattern?: string }> };
     expect($schema).toBe("http://json-schema.org/draft-07/schema#");
-    // 🔗️ hub names the two hex patterns; the mirror inlines them — same value space, checked here
-    // against hub's own named definitions rather than against a second copy of the literals.
     expect(mirror.properties.jobId!.pattern).toBe(hub.$defs[hub.$defs.InferenceApprovalRequestV1!.properties!.jobId.$ref!.slice("#/$defs/".length)]!.pattern);
     expect(mirror.properties.proposalHash!.pattern).toBe(hub.$defs[hub.$defs.InferenceApprovalRequestV1!.properties!.proposalHash.$ref!.slice("#/$defs/".length)]!.pattern);
   });

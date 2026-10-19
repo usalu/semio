@@ -257,11 +257,6 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         let contract = BLOCK3D_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).unwrap_or_else(|| panic!("tool {tool_id} declares a publication contract"));
         assert!(!contract.lanes.is_empty(), "tool {tool_id} declares a nonempty publication lane set");
     }
-    // 🪟️ App-level actions are no longer CLONED onto every window kind (that made a package
-    // descriptor grow as `apps × window kinds × actions`): `semio_framework::window_kind_actions`
-    // resolves the window's own roster plus every unclaimed app-level action at read time, and it is
-    // that resolved roster — not the raw `WindowKindDefinition::actions` field — which decides what a
-    // window can dispatch.
     let definition = create_block3d_app();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
     assert_eq!(serde_json::to_value(&definition.breadcrumb).unwrap(), fixture["document"]);
@@ -533,16 +528,8 @@ async fn set_active_example_loads_capsule_fixture() {
     let mut app = new_app().await;
     crate::unit_tests::context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
     let projection = app.snapshot().expect("snapshot");
-    // 🪪️ The object kind's ID is this DOCUMENT's identity, and no mutation in the family can change it
-    // (there is no `change-object-kind-id`; the same holds for block5d's `part_kind.id`) — an example
-    // load carries the kind's authored NAME and its whole catalogue, never a new identity. The
-    // document therefore keeps the id it booted with while every authored field becomes the capsule's.
     assert_eq!(projection.object_kind.name, "Capsule J");
     assert_eq!(projection.object_kind.id, semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot().object_kind.id, "an example load never re-identifies the document");
-    // 🥽️ One representation, not two: the former `"1:500"` row named `/mesh/capsule_J.1to500.glb`,
-    // which no mesh delivery catalog ships, so `resolveMeshAsset` threw the instant the example
-    // loaded. There is no 1:500 `.glb` anywhere in the repo (only a Rhino `.3dm` source), so the
-    // row was removed from the fixture rather than repointed at an unrelated mesh.
     assert_eq!(projection.representations.len(), 1);
     assert_eq!(projection.representations[0].mesh_url.as_deref(), Some("/mesh/🧊️capsule_J.glb"));
 }
@@ -554,9 +541,6 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let before = kinds(&mut app);
     crate::unit_tests::context::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
     assert_eq!(kinds(&mut app), before + 1);
-    // 🕰️ `undo`/`redo` are framework-RESERVED verbs: `handle_action` only ADMITS them, and the history
-    // verb settles on the following turns — an unsettled admission left the ledger exactly where it
-    // was, so this law used to read the pre-undo document back.
     crate::unit_tests::context::settle_history_verb(&mut app, "undo").await;
     assert_eq!(kinds(&mut app), before);
     crate::unit_tests::context::settle_history_verb(&mut app, "redo").await;
@@ -583,9 +567,6 @@ async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
         MediaPayload::Structured { schema, json } => {
             assert_eq!(schema, "kit.catalog");
             let value: serde_json::Value = serde_json::from_str(&json).expect("valid json");
-            // 🪪️ The exported catalog row IS the live document's object kind: its authored name is the
-            // capsule's, its id is the document's own identity (no mutation re-identifies a document —
-            // see `set_active_example_loads_capsule_fixture`).
             assert_eq!(value["objectKinds"][0]["name"], "Capsule J");
             assert_eq!(value["objectKinds"][0]["id"].as_str(), Some(app.snapshot().expect("snapshot").object_kind.id.as_str()));
         }

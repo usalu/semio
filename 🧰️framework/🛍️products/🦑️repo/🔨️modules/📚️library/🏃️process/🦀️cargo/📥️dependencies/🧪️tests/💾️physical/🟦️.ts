@@ -3,7 +3,7 @@ import {mkdirSync,writeFileSync,rmSync,lstatSync} from "node:fs";
 import {join} from "node:path";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import {captureOwnedCommandV1} from "@semio-tech/process/execution";
-import {withNativeImageStorageV1} from "./../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
+import {withNativeImageStorageV1} from "@semio-tech/process/artifacts/native-build/storage/image";
 import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {runCargoTestsV1,type CargoTestPolicyV1} from "@semio-tech/process/cargo-test";
 import {withRepositoryCargoInputsV1} from "../../🟦️.ts";

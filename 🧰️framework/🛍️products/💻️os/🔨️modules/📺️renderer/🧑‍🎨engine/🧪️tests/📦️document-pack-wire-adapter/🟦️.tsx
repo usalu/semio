@@ -231,8 +231,6 @@ export async function registerDocumentPackWireAdapterTests(vitest: PluginRuntime
         const handle = await adaptPluginHandle("b-plugin", fakeLease);
         const instanceId = await handle.createApp("app-b");
   
-        // 📦️ documentPack() is null until the underlying AppChannelClient has observed a document —
-        // this adapter only ever surfaces the CACHE, it never issues a document round trip itself.
         expect(handle.documentPack(instanceId)).toBeNull();
   
         const prepareOutcome = await handle.transactionPrepare(instanceId, "txn-1", { form: "owner", mutationId: "s.b#mutate", payload: new Uint8Array([1]) });

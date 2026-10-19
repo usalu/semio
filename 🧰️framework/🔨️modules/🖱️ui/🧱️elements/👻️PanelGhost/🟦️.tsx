@@ -1,7 +1,7 @@
 /** 👻 Owns the panel ghost and interaction command contexts that drag surfaces, trees and layouts share. */
 import * as React from "react";
 import { type MergeMode } from "../../../🕹️interaction/🟦️.ts";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { createDOMEventBinding } from "../../🔨️modules/👂️dom-event-binding/🟦️.ts";
 import { useLevel } from "../🌈️Surface/🟦️.tsx";
 import { markGhostTreeInteraction, resolveHoverRow } from "../🌳️Tree/🧭️hover-path/🟦️.ts";
@@ -29,7 +29,7 @@ export function interactionMergeFromModifiers(modifiers: { readonly shiftKey?: b
 
 const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
 
-/** @emoji 👻️ Global ghost session API (begin/end while dragging or editing). */
+/** 👻️ Global ghost session API (begin/end while dragging or editing). */
 export interface PanelGhostValue {
   readonly active: boolean;
   readonly begin: (target: EventTarget | null) => void;
@@ -38,7 +38,7 @@ export interface PanelGhostValue {
 
 const PanelGhostContext = reactHostPort.createContext<PanelGhostValue | undefined>(undefined);
 
-/** @emoji 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
+/** 👻️ Returns the global ghost controller when inside {@link GhostProvider}. */
 export const usePanelGhost = (): PanelGhostValue | undefined => reactHostPort.useContext(PanelGhostContext);
 
 export interface InteractionCommands {
@@ -65,7 +65,7 @@ function findGhostRegionAncestor(target: Element): Element | null {
   return null;
 }
 
-/** @emoji 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
+/** 📐️ Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
 function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   const slotted = target.closest("[data-slot]");
@@ -74,7 +74,7 @@ function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
   return slot === "pane-resize-handle" || slot === "panel-resize-handle" || slot === "resizable-handle" || slot === "resizable-corner" || slot.startsWith("window-measures-resize");
 }
 
-/** @emoji 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
+/** 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
 export function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   if (isChromeResizeHandleTarget(target)) return false;
@@ -179,7 +179,7 @@ function useGhostController(): GhostController {
   return reactHostPort.useMemo(() => ({ active, begin, end, commands, activeInteraction }), [active, activeInteraction, begin, commands, end]);
 }
 
-/** @emoji 👻️ Mounts global ghost detection and interaction context for layout + panels. */
+/** 👻️ Mounts global ghost detection and interaction context for layout + panels. */
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ghost = useGhostController();
   reactHostPort.useEffect(() => {
@@ -198,13 +198,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
-  /** @emoji 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
+  /** 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
   clickThroughWhenGhost?: boolean;
-  /** @emoji 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
+  /** 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
   sessionGhost?: boolean;
 }
 
-/** @emoji 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
+/** 👻️ Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
 export const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, sessionGhost = true, ...props }, ref) {
   const ghost = usePanelGhost();
   const ghostActive = Boolean(sessionGhost && ghost?.active);
@@ -226,7 +226,7 @@ interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-/** @emoji 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
+/** 👻️ Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
 export const PanelGhostRoot = reactHostPort.forwardRef<HTMLDivElement, PanelGhostRootProps>(function PanelGhostRoot({ children, className, style, ...props }, ref) {
   const level = useLevel();
   return (

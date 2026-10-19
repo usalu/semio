@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "parseCases": [
+    {
+      "raw": null,
+      "expected": 0
+    },
+    {
+      "raw": "",
+      "expected": 0
+    },
+    {
+      "raw": " ",
+      "expected": 0
+    },
+    {
+      "raw": "﻿ 1200 \n",
+      "expected": 1200
+    },
+    {
+      "raw": "12e2",
+      "expected": 1200
+    },
+    {
+      "raw": "0x10",
+      "expected": 16
+    },
+    {
+      "raw": "0b11",
+      "expected": 3
+    },
+    {
+      "raw": "0o10",
+      "expected": 8
+    },
+    {
+      "raw": "+0",
+      "expected": 0
+    },
+    {
+      "raw": "-0",
+      "expected": 0
+    },
+    {
+      "raw": "0",
+      "expected": 0
+    },
+    {
+      "raw": "1.0",
+      "expected": 1
+    },
+    {
+      "raw": "9007199254740991",
+      "expected": 9007199254740991
+    },
+    {
+      "raw": "1.5",
+      "expected": null
+    },
+    {
+      "raw": "-1",
+      "expected": null
+    },
+    {
+      "raw": "Infinity",
+      "expected": null
+    },
+    {
+      "raw": "NaN",
+      "expected": null
+    },
+    {
+      "raw": "9007199254740992",
+      "expected": null
+    },
+    {
+      "raw": "1_000",
+      "expected": null
+    },
+    {
+      "raw": "+0x10",
+      "expected": null
+    },
+    {
+      "raw": "0b2",
+      "expected": null
+    },
+    {
+      "raw": "",
+      "expected": null
+    }
+  ],
+  "expirationCases": [
+    {
+      "milliseconds": 0,
+      "elapsed": 100000,
+      "expired": false
+    },
+    {
+      "milliseconds": 100,
+      "elapsed": 99,
+      "expired": false
+    },
+    {
+      "milliseconds": 100,
+      "elapsed": 100,
+      "expired": true
+    },
+    {
+      "milliseconds": 100,
+      "elapsed": 101,
+      "expired": true
+    },
+    {
+      "milliseconds": 9007199254740991,
+      "elapsed": 1,
+      "expired": false
+    },
+    {
+      "milliseconds": 9007199254740991,
+      "elapsed": 9007199254740991,
+      "expired": true
+    }
+  ],
+  "continuations": [
+    {
+      "kind": "poll",
+      "elapsed": 20,
+      "expired": false
+    },
+    {
+      "kind": "output",
+      "elapsed": 40,
+      "expired": false
+    },
+    {
+      "kind": "readiness",
+      "elapsed": 60,
+      "expired": false
+    },
+    {
+      "kind": "reconnect",
+      "elapsed": 80,
+      "expired": false
+    },
+    {
+      "kind": "poll",
+      "elapsed": 100,
+      "expired": true
+    }
+  ]
+}

@@ -114,7 +114,6 @@ use semio_framework_diagnostic::Severity;
     impl XlsxTransitionalBuilderConstruction {
         /// ➕️ The recommended entry point: builds a minimal package from `workbook` via the shared
         /// ecma-376 engine, then stamps it explicitly Transitional.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(workbook: XlsxWorkbook) -> Self {
             Self { snapshot: stamp_transitional_namespace(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(workbook)) }
         }

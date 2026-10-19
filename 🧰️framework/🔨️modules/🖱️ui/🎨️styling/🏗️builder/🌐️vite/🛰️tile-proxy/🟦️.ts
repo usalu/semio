@@ -7,7 +7,7 @@ import type { OwnedBuildMiddleware, OwnedBuildPlugin } from "../../../../🎯️
 import { existsSync, mkdirSync, cpSync } from "node:fs";
 import { serveFileWithValidatorsV1 } from "../📤️file-serving/🟦️.ts";
 
-/** @emoji 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
+/** 🧩️ Extension implied by a resolved tile URL template's tail (`.png`, `.pbf`, …), `"bin"` if absent. */
 function tileProxyExtFromTemplate(template: string): string {
   const clean = template.split(/[?#]/, 1)[0] ?? template;
   const ext = clean.split(".").pop();
@@ -42,7 +42,7 @@ async function boundedTileProxyBytes(response: Response, maximum: number): Promi
   return output;
 }
 
-/** @emoji 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
+/** 🧭️ Resolves a `tile-proxy` spec's `upstream` to a concrete `{z}/{x}/{y}` URL template: used
  * directly when it already contains `{z}`, otherwise treated as a TileJSON endpoint and resolved
  * (cached, 7-day TTL) for the owner-authored request headers. */
 async function resolveTileProxyUrlTemplate(upstream: string, userAgent: string, signal: AbortSignal): Promise<string> {
@@ -91,7 +91,7 @@ async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z:
   return { ok: true, ext };
 }
 
-/** @emoji 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
+/** 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
  * (and caching) from the declared upstream on a miss. */
 export function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: AssetDeliveryModeV1, userAgent: string): OwnedBuildMiddleware {
   const prefix = route.endsWith("/") ? route : `${route}/`;
@@ -147,7 +147,7 @@ export function createTileProxyMiddleware(route: string, cacheRoot: string, upst
   };
 }
 
-/** @emoji 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
+/** 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
  * owner-authored route and request coordinates into the neutral transport. */
 export function tileProxyVitePlugin(repoRoot: string, spec: TileProxyAssetSpecV1, mode: AssetDeliveryModeV1 = "fetch"): OwnedBuildPlugin[] {
   const admitted = parseTileProxyAssetSpecV1(spec);

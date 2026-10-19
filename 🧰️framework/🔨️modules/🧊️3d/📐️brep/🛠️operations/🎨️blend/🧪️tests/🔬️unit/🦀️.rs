@@ -41,10 +41,6 @@ fn euler_characteristic(body: &Body, solid: SolidId) -> i64 {
 /// χ = 2, and an outward-oriented shell.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_well_formed(body: &Body, solid: SolidId) {
-    // 🩺️ Advisory `warning-` codes are excluded by the validator's own contract, and a rounded
-    // solid produces one legitimately: a corner patch meets each of its three planar neighbours at
-    // exactly one point, their shared VERTEX, which the self-intersection probe's edge-adjacency
-    // test does not recognise as adjacency.
     let issues: Vec<_> = validate_body(body).into_iter().filter(|issue| !issue.code.starts_with("warning-")).collect();
     assert!(issues.is_empty(), "validate_body reported {} error(s), first: {}:{}:{}", issues.len(), issues[0].entity, issues[0].code, issues[0].message);
     assert_eq!(euler_characteristic(body, solid), 2, "a blended solid must stay a topological sphere");
@@ -78,8 +74,6 @@ async fn fillet_all_box_edges_matches_rounded_box_closed_form() {
     assert_eq!(edges.len(), 12);
     let out = fillet_edges(&mut body, solid, &edges, r, &mut rec).unwrap();
     assert_well_formed(&body, out);
-    // 🧊 Minkowski sum of the inner box `a × b × c` with a ball of radius `r` (Steiner): the inner
-    // box, six slabs, twelve quarter-cylinders and eight sphere octants.
     let (a, b, c) = (bw - 2.0 * r, bd - 2.0 * r, bh - 2.0 * r);
     let volume = a * b * c + 2.0 * r * (a * b + b * c + c * a) + PI * r * r * (a + b + c) + (4.0 / 3.0) * PI * r * r * r;
     let area = 2.0 * (a * b + b * c + c * a) + 2.0 * PI * r * (a + b + c) + 4.0 * PI * r * r;
@@ -116,9 +110,6 @@ async fn chamfer_all_box_edges_matches_closed_form() {
     let out = chamfer_edges(&mut body, solid, &edges, d, d, &mut rec).unwrap();
     assert_well_formed(&body, out);
     assert_eq!(body.solid_faces(out).len(), 26, "6 planes + 12 cut planes + 8 corner triangles");
-    // 🧊 Twelve triangular prisms of section `d²/2` over the full edges, minus the `3d³/4` each
-    // corner triples-counts, plus the `d³/12` its own corner plane takes beyond them (verified
-    // independently by Monte-Carlo integration of the half-space intersection).
     let v = solid_volume(&body, out, 1e-5).unwrap();
     let closed_form = a * b * c - 2.0 * d * d * (a + b + c) + (16.0 / 3.0) * d * d * d;
     assert!((v - closed_form).abs() < 1e-6 * closed_form, "v={v} expected={closed_form}");
@@ -136,16 +127,11 @@ async fn fillet_cylinder_cap_matches_pappus_closed_form() {
         .find(|&&f| matches!(body.surfaces.get(body.faces.get(f).unwrap().surface).unwrap(), Surface::Plane { frame } if (frame.origin.z - h).abs() < 1e-9))
         .unwrap();
     let edge = body.face_coedges(top).into_iter().map(|c| body.coedges.get(c).unwrap().edge).next().unwrap();
-    // 📏 The integrator polygonises a full circular boundary, so it under-measures ANY cylinder by
-    // a chord-tolerance-proportional bias; the untouched input solid (which this surgery leaves
-    // intact) measures that bias directly and the blended result must not exceed it.
     let bare = solid_volume(&body, solid, CIRCULAR_TOL).unwrap();
     let bias = (bare - PI * big_r * big_r * h).abs();
     let out = fillet_edges(&mut body, solid, &[edge], r, &mut rec).unwrap();
     assert_well_formed(&body, out);
     assert_eq!(body.solid_faces(out).len(), 4, "lateral + torus band + both caps");
-    // 🍩 Pappus on the removed meridian section: the `r × r` corner square minus its quarter disc,
-    // each revolved about the cylinder's own axis at its own centroid radius.
     let removed = 2.0 * PI * (r * r * (big_r - 0.5 * r) - (PI * r * r / 4.0) * (big_r - r + 4.0 * r / (3.0 * PI)));
     let closed_form = PI * big_r * big_r * h - removed;
     let v = solid_volume(&body, out, CIRCULAR_TOL).unwrap();
@@ -170,8 +156,6 @@ async fn chamfer_cylinder_cap_matches_pappus_closed_form() {
     let out = chamfer_edges(&mut body, solid, &[edge], d, d, &mut rec).unwrap();
     assert_well_formed(&body, out);
     assert_eq!(body.solid_faces(out).len(), 4, "lateral + cone frustum + both caps");
-    // 🔻 Pappus again, now on the removed right triangle of legs `d` — the cut face is an exact
-    // cone frustum, so the section is straight-sided.
     let removed = 2.0 * PI * (0.5 * d * d) * (big_r - d / 3.0);
     let closed_form = PI * big_r * big_r * h - removed;
     let v = solid_volume(&body, out, CIRCULAR_TOL).unwrap();

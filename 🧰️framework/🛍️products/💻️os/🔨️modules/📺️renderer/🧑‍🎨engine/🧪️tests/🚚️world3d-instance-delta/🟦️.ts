@@ -33,12 +33,8 @@ describe("🚚️ world-3d instance delta lane", () => {
       expect(advanced.revision).toBe(scenario.expect.revision);
       expect(advanced.records.map((record) => record.id)).toEqual(scenario.expect.ids);
       expect(advanced.records.map((record) => record.position)).toEqual(scenario.expect.positions);
-      // 🪪️ Object identity is the whole point of the in-place path: a record the delta did not name must
-      // be the SAME object the consumer already held, and a fallback must have re-parsed everything.
       const reused = advanced.records.filter((record) => previous?.records.includes(record)).map((record) => record.id);
       expect(reused).toEqual(scenario.expect.reusedIds);
-      // 🪪️ Identity is only ever kept for a record whose value did not change: on the in-place path the delta did not
-      // name it, on a fallback its re-parsed authoritative record serializes identically.
       const authoritative = new Map((JSON.parse(scenario.instancesJson) as WorldInstanceRecord[]).map((record) => [record.id, record]));
       for (const record of advanced.records.filter((candidate) => previous?.records.includes(candidate))) expect(record).toEqual(authoritative.get(record.id));
       if (scenario.expect.applied) expect(reused.length).toBeGreaterThan(0);

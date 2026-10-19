@@ -1,6 +1,7 @@
 //! 🎟️ Icon paint cache of the board engine: the cached icon bodies, tokens, slots, registry, lease and the retirement of the cache. See [`super`].
 
 use super::*;
+use std::hash::{Hash, Hasher};
 
 pub enum CachedIconBody {
     Vector(Scene),

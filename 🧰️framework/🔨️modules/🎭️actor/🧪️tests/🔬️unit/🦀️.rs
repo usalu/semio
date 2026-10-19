@@ -237,10 +237,6 @@ mod quick {
     async fn interactive_actor_avoids_a_shard_saturated_by_cpu_bound_actors() {
         let mut kernel = Kernel::new(ShardKind::Native, 3, 0, 64).await;
         let background_package = PackageId("cpu-hog".into());
-        // 🔢️ 6 Background actors round-robin 2-per-shard across 3 shards under plain least-loaded
-        // `pin` (proven deterministic by `pin_spreads_actors_of_one_plugin_across_the_pool`'s own
-        // reasoning) — read each one's ACTUAL shard back via `actor_record` rather than assuming
-        // the exact order, so this test stays correct even if that internal tie-break ever changes.
         let mut by_shard: std::collections::BTreeMap<u16, Vec<ActorId>> = std::collections::BTreeMap::new();
         for ordinal in 0..6u32 {
             let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
@@ -249,10 +245,6 @@ mod quick {
         }
         assert_eq!(by_shard.len(), 3, "expected all 3 shards to receive background actors: {by_shard:?}");
 
-        // 🔥️ Drive every actor on shards OTHER than the last one over its own Background budget's
-        // wall_ms ceiling for 2 turns (SATURATION_MIN_TURNS) — crossing `is_saturating`'s
-        // threshold. The last shard's actors are left untouched (default `ActorMetrics`, zero
-        // turns), making it the one and only "clean" shard.
         let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
         let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
         let hot_turn = TurnResult {
@@ -464,10 +456,6 @@ mod quick {
     //#region 🔖️SchedulerFairness
     #[semio_framework_async_macros::async_test]
     async fn drr_fairness_plugin_with_50_actors_does_not_starve_plugin_with_1() {
-        // 🧪️ Both plugins are given abundant backlog up front (nobody runs dry mid-test), so the
-        // measured split reflects level-1 DRR's PLUGIN-level fairness, not which plugin happened
-        // to have offered work left when the other ran out. Without level 1, `s.busy` (50 actors)
-        // would swamp `s.quiet` (1 actor) roughly 50:1 — see design §Scheduler.
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let busy_package = PackageId("s.busy".into());
         let quiet_package = PackageId("s.quiet".into());
@@ -833,8 +821,6 @@ mod quick {
         assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Trapped));
         assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active), "the parent must be completely untouched by its extension's trap");
 
-        // Push the SAME extension past the quarantine threshold — still must not reach the parent,
-        // because this test gave the extension its own PackageId (distinct from the parent's).
         for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
             let faulted = TurnResult {
             retained_receipt: supplied_retained_turn().return_original(Default::default(), 0).unwrap(),

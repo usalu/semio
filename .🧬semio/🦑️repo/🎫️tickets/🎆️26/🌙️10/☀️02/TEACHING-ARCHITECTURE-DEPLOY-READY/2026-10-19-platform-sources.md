@@ -1,0 +1,7 @@
+# Local Linux Builder Platform Sources
+
+Primary-source lookup on 2026-10-19 supports investigating a genuine container route rather than rejecting it solely from the Mac host architecture. Apple documents execution of x86_64 Linux binaries within ARM Linux virtual machines. It distinguishes that binary translation from booting an Intel Linux distribution. This establishes platform capability, not repository compiler admission. [Apple virtualization documentation](https://developer.apple.com/documentation/virtualization/running-intel-binaries-in-linux-vms)
+
+Docker documents that its Mac Linux storage lives in a disk-image file whose configured maximum and actual host consumption differ. A guest free-space reading alone therefore does not prove physical backing for the repository's finite stores. The current source capacity checks and actual host/device facts still govern. No Docker pruning, image resizing, global settings changes or storage allocation was performed for this lookup. [Docker Mac storage FAQ](https://docs.docker.com/desktop/troubleshoot-and-support/faqs/macfaqs/)
+
+Docker's current documentation says its own VMM does not support Rosetta and amd64 emulation there is slow. This is version-sensitive documentation; the installed Docker Desktop4.77 configuration must be observed directly before applying that statement to this host. No VMM change is authorized by this research. [Docker virtual-machine manager documentation](https://docs.docker.com/desktop/features/vmm/)

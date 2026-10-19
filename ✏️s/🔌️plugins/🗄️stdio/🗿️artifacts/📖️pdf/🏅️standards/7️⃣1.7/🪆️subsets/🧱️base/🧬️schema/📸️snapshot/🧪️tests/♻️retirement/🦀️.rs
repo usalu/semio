@@ -1,7 +1,7 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfAction, PdfColorSpace, PdfDate, PdfDictEntry, PdfFormField, PdfFormFieldKind, PdfFunction, PdfObject, PdfOutlineItem};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{DslValue, FromValue, ToValue};
-use semio_framework_value::native_decoding::{NativeDecodeControl, NativeDecodeProgress};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 use semio_framework_value::native_encoding::{NativeEncodeControl, NativeEncodeProgress};
 
 fn exponential() -> PdfFunction {

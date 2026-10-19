@@ -4,7 +4,7 @@
     /// own wire, so the decoder necessarily precedes its admission. What the clause has always stood
     /// for — no generically constructed command reaches the reducer without the complete pipeline —
     /// is asserted directly, as the order decoder → gate → reducer entry.
-    #[test]
+#[test]
     fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
         let source = [module_source("🧵️retained-command/🔄️full-operation/🦀️.rs"), module_source("👷️job/🛬️lifted/🔄️full-operation/🦀️.rs"), instance_source()].concat();
         let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
@@ -88,7 +88,7 @@
         assert!(reactor.contains("take_typed_operation_effect"));
         assert!(reactor.contains("take_typed_operation_event"));
         assert!(reactor.contains("take_typed_operation_ui_scope"));
-        let receiving=include_str!("../../../⚛️reactor/🏃️runtime/📮️publication/🦀️.rs");
+        let receiving=semio_framework_test_fixtures::fixture_text!("../../../../⚛️reactor/🏃️runtime/📮️publication/🦀️.rs");
         assert!(receiving.contains("ResultPageWireReceiver"));
         assert!(receiving.contains("cx.consume_retained(p)"));
         assert!(!reactor.contains("page.renderer_exchange_bytes()"));

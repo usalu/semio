@@ -2,24 +2,22 @@ import { type FetchTimeoutResponse, fetchWithTimeout } from "@semio-tech/framewo
 import type { PersistenceBinding } from "../../../../🟦️";
 import type { FolderCanonicalBootstrapMirrorOwner } from "./🏷️mirror-owner/🟦️.ts";
 import type { WireArtifactBootstrap } from "@semio-tech/framework-replication";
-import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES } from "../../../../🟦️";
+import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes, DEV_STREAM_ROUTES } from "../../../../🟦️";
 import type { StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
-import { FOLDER_ENDPOINT_PATH, FOLDER_FETCH_TIMEOUT_MS, SANITY_POLL_MAX_MS, SANITY_POLL_MIN_MS } from "../⚙️constants/🟦️.ts";
+import { FOLDER_FETCH_TIMEOUT_MS, SANITY_POLL_MAX_MS, SANITY_POLL_MIN_MS } from "../⚙️constants/🟦️.ts";
 import { type ArtifactState, emitEvent } from "../🧾️document-state/🟦️.ts";
 import { executionTargetHex, ownedArrayBuffer } from "../📥️execution-target-read/🟦️.ts";
-import { folderCanonicalBootstrapMirrorHeaders, folderCanonicalBootstrapMirrorUrl, retireFolderCanonicalBootstrapMirror } from "../🌉️wire-bridge/🟦️.ts";
+import { folderCanonicalBootstrapMirrorHeaders, folderCanonicalBootstrapMirrorUrl } from "../🌉️wire-bridge/🟦️.ts";
 import { setStatus } from "../🎭️actor-lifecycle/🟦️.ts";
+import { seedConfigFacet } from "../🗂️config-lane/🟦️.ts";
 import { equalByteArrays } from "../📮️hub-outbox/🟦️.ts";
+import { folderEnvelopeUrl } from "./✍️write/🟦️.ts";
 
 /** 🌉️ `fetchWithTimeout` only declares the structural subset every OTHER call site in this file
  * needs (`ok`/`status`/`headers.get`/`json`/`text`) so its own module never requires the ambient
  * `Response` type — the folder/blob reads here are the only callers that also need raw bytes, so
  * that one extra method is added locally instead of widening the shared interface for everyone. */
 export type BinaryFetchTimeoutResponse = FetchTimeoutResponse & { arrayBuffer(): Promise<ArrayBuffer> };
-
-function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, documentId: string): string {
-  return `${FOLDER_ENDPOINT_PATH}?uri=${encodeURIComponent(`folder://${binding.path}`)}&documentId=${encodeURIComponent(documentId)}`;
-}
 
 export async function reserveFolderCanonicalBootstrapMirror(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, bootstrap: WireArtifactBootstrap): Promise<FolderCanonicalBootstrapMirrorOwner> {
   const identity = { binding, documentId: state.config.documentId };
@@ -70,13 +68,6 @@ export async function publishFolderCanonicalBootstrapMirror(state: ArtifactState
   if (!response.ok) throw new Error(`folder canonical bootstrap publish failed (${response.status})`);
 }
 
-export async function retireCurrentFolderCanonicalBootstrapMirror(state: ArtifactState): Promise<void> {
-  const owner = state.canonicalFolderMirror;
-  if (!owner) return;
-  if (!(await retireFolderCanonicalBootstrapMirror(owner))) throw new Error("folder canonical bootstrap retirement failed");
-  if (state.canonicalFolderMirror === owner) state.canonicalFolderMirror = null;
-}
-
 /** 📥️ One folder read — always routed through {@link ArtifactState.revalidateFolder}'s
  * `latestWins` wrapper by every caller (SSE wake, sanity-poll tick, `externalChanged`), never
  * called directly, so it can never overlap itself (finding 1). Aborts with the document
@@ -112,7 +103,7 @@ return;
     setStatus(state, { persisted: true });
       if (!echo || state.facetValue === undefined) seedConfigFacet(state, archive);
 } catch (error) {
-    if (state.docAbort.signal.aborted) return; // 🛑 closed mid-flight — not a real failure.
+    if (state.docAbort.signal.aborted) return;
     console.error("[backbone-worker] folder poll failed", state.config.documentId, error);
   }
 }
@@ -169,21 +160,4 @@ export function watchFolder(state: ArtifactState, binding: Extract<PersistenceBi
     },
     { signal: state.docAbort.signal },
   );
-}
-
-export async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, archive: readonly number[]): Promise<void> {
-  await retireCurrentFolderCanonicalBootstrapMirror(state);
-  const bytes = Uint8Array.from(archive);
-  if (bytes.length > DOCUMENT_ARCHIVE_MAXIMUM_BYTES) throw new Error("document archive exceeds its fixed byte authority");
-  decodeDocumentArchiveBytes(bytes);
-  if (state.folderArchive !== null && equalByteArrays(state.folderArchive, bytes)) return;
-  const response = await fetchWithTimeout(
-    folderEnvelopeUrl(binding, state.config.documentId),
-    { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: bytes },
-    { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
-  );
-  if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
-  state.folderArchive = bytes;
-  state.folderBootstrapped = true;
-  setStatus(state, { persisted: true });
 }

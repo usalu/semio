@@ -4,7 +4,8 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::{DRAWING_BOUNDED_PAYLOAD_SCHEMA, DRAWING_PATH_PUBLICATION_CONTRACTS, DRAWING_PATH_TOOL_IDS, DrawingCommand, DrawingPlayApp, DrawingWindowCommandWork};
 #[allow(unused_imports)] #[cfg(test)] use semio_s_artifact_draw_drawing_editor_commands::edit_path;
 #[allow(unused_imports)] use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
-#[allow(unused_imports)] use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
+#[allow(unused_imports)] use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ValueError};
+#[allow(unused_imports)] use semio_framework_value_persistent::list::PagedList;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_editor::path_job::*;
 

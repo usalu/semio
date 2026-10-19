@@ -1,10 +1,10 @@
-//! Puzzle3d mutation — `CreateReference`: brings a new id-keyed reference into existence.
+//! 🧩️ Puzzle3d mutation — `CreateReference`: brings a new id-keyed reference into existence.
 use crate::delete_reference::mutation::DeleteReference;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dReference, semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot};
 
 //#region 🔖️Mutation
-/// `create-reference` payload — full initial payload at an optional FINAL-state `index` (`None` appends). A
+/// ➕️ `create-reference` payload — full initial payload at an optional FINAL-state `index` (`None` appends). A
 /// duplicate `reference.id` is a no-op.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]

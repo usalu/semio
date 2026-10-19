@@ -1,4 +1,4 @@
-//! process3d <- json
+//! ⚙️ process3d <- json
 use semio_s_artifact_process_process3d_model::snapshot::Process3dSnapshot;
 use semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA;
 use semio_s_artifact_stdio_json::JsonSnapshot;

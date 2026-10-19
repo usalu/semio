@@ -76,7 +76,8 @@ pub(super) fn nested_snapshot() -> DrawingSnapshot {
 
 pub(super) fn document_over_byte_bound_snapshot() -> DrawingSnapshot {
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-    use semio_framework_value::{list::PagedList, paged::PagedUtf8};
+    use semio_framework_value::paged::PagedUtf8;
+    use semio_framework_value_persistent::list::PagedList;
     let (mut snapshot, allocation) = observe(|| semio_s_artifact_draw_drawing_model::default_drawing_document("drawing-document-plus-one", None));
     assert!(!allocation.overflowed);
     let base = allocation.requested_bytes.checked_sub(allocation.released_bytes).unwrap();
@@ -337,7 +338,7 @@ pub(super) fn rich_child(layer: &mut DrawingLayerNode, index: usize) -> &mut Dra
     group.children.get_mut(index).expect("rich Drawing fixture child")
 }
 
-pub(super) fn duplicate_assignments(document:&DrawingSnapshot,target:&DrawingNativeText)->semio_framework_value::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>{
+pub(super) fn duplicate_assignments(document:&DrawingSnapshot,target:&DrawingNativeText)->semio_framework_value_persistent::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>{
  let node=semio_s_artifact_draw_drawing_model::find_drawing_layer(document,target).expect("authored duplicate source exists");let mut callback=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut callback);
  semio_s_artifact_draw_drawing_io::text::identity::clone::admit_clone_identities(node," copy",&mut control).expect("fixture duplicate identity admission")
 }

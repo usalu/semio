@@ -28,12 +28,6 @@ pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_fram
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
-pub use catalogue_panel::SEQUENCE_PLAY_BODY_CATALOGUE;
-pub use compiled::SEQUENCE_PLAY_BODY_COMPILED;
-pub use document_panel::SEQUENCE_PLAY_BODY_ARTIFACT;
-pub use inspection_panel::SEQUENCE_PLAY_BODY_INSPECTOR;
-pub use main::SEQUENCE_PLAY_BODY_MAIN;
-pub use script::SEQUENCE_PLAY_BODY_SCRIPT;
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "steps" interaction domain — one
 /// granularity ("step"), `HierarchyProvider::Topology` from each step's own `SlotRef.owner`
 /// control-flow nesting (see `SequencePlayApp::interaction_topology`). Ids are the steps' own raw
@@ -91,6 +85,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 
 /// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
 pub use semio_framework_plugin::ui_node_list;
+use crate::mirror::viewer::sequence::modes::view::windows::main;
 
 //#endregion 🔖️Constants
 

@@ -32,7 +32,9 @@ fn borrowed_json_source_sink_keeps_caller_prefix_policy_and_original_words(){
 
 #[test]
 fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
-    use semio_framework_value::{NativeDecodeControl,ValueRefusalKind,list::PagedList};
+    use semio_framework_value::ValueRefusalKind;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+    use semio_framework_value_persistent::list::PagedList;
     let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🫳️read-source.json")).unwrap();
     let text=fixture["source"].as_str().unwrap();
     let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
@@ -70,7 +72,9 @@ fn retained_json_borrowed_source_uses_original_pages_utf8_and_refusal_owner(){
 
 #[test]
 fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tree_mirror(){
-    use semio_framework_value::{DslValue,Number,NativeDecodeControl,list::PagedList};
+    use semio_framework_value::{DslValue, Number};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+    use semio_framework_value_persistent::list::PagedList;
     let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🫳️read-source.json")).unwrap();
     let text=fixture["source"].as_str().unwrap();let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
     let mut accepted=|_|true;let mut control=NativeDecodeControl::new(131072,&mut accepted);
@@ -96,7 +100,9 @@ fn retained_json_direct_semantic_source_moves_admitted_original_cells_without_tr
 
 #[test]
 fn retained_json_borrowed_source_honors_complete_caller_extent_depth_and_paid_allocation(){
-    use semio_framework_value::{DslValue,NativeDecodeControl,ValueRefusalKind,list::PagedList};
+    use semio_framework_value::{DslValue, ValueRefusalKind};
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+    use semio_framework_value_persistent::list::PagedList;
     let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🫳️read-limits.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){
         let text=row["source"].as_str().unwrap();let source=PagedList::<u8,16384>::try_from_iter(text.bytes()).unwrap();
@@ -121,7 +127,9 @@ fn retained_json_borrowed_source_honors_complete_caller_extent_depth_and_paid_al
 
 #[test]
 fn retained_json_cursor_owns_exact_borrowed_source_view(){
-    use semio_framework_value::{DslValue,NativeDecodeControl,list::PagedList};
+    use semio_framework_value::DslValue;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+    use semio_framework_value_persistent::list::PagedList;
     #[derive(Clone,Copy)]
     struct OriginalView<'source>{owner:&'source PagedList<u8,16384>,start:usize,length:usize}
     impl JsonReadSource for OriginalView<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{(index<self.length).then(||self.owner.get(self.start+index).copied()).flatten()}}
@@ -157,7 +165,8 @@ fn close_borrowed_json<S:JsonReadSource+Copy,V:JsonParsedValue>(cursor:JsonSourc
 
 #[test]
 fn borrowed_json_retirement_admission_preserves_original_source_on_refusal(){
-    use semio_framework_value::{NativeDecodeControl,retained_clone::RetainedCloneGrant};
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     let law:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🎟️borrowed-retirement/🔣️.json")).unwrap();
     let source=law["source"].as_str().unwrap();
     for row in law["cases"].as_array().unwrap(){
@@ -204,7 +213,7 @@ fn original_json_normal_frontiers_preserve_actual_independent_receipts(){
     let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
     for text in law["sources"].as_array().unwrap(){
         let text=text.as_str().unwrap();let pointer=text.as_ptr();let expected:serde_json::Value=serde_json::from_str(text).unwrap();
-        let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let mut total=RetainedCloneProgress::default();let mut turns=0;
+        let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted);let mut total=RetainedCloneProgress::default();let mut turns=0;
         let parsed=loop{
             turns+=1;assert!(turns<100000);let before=(parser.position(),parser.phase(),control.owned_bytes());
             let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||parser.step(text,1,&mut control,zero));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((parser.position(),parser.phase(),control.owned_bytes()),before);assert_eq!(parser.normal_step_progress(),Default::default());
@@ -216,7 +225,7 @@ fn original_json_normal_frontiers_preserve_actual_independent_receipts(){
             if let Some(value)=result.unwrap(){break value;}
         };
         assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&parsed)).unwrap(),expected);assert!(total.retained_capacity_bytes>0);retire_original_json(parser,3,100000);
-        let mut projection=JsonValueProjection::new(parsed);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);let mut turns=0;
+        let mut projection=JsonValueProjection::new(parsed);let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut accepted);let mut turns=0;
         let projected=loop{
             turns+=1;assert!(turns<100000);let before=(projection.phase(),control.owned_bytes());let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||projection.step(1,32,&mut control,zero));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((projection.phase(),control.owned_bytes()),before);
             let demand=projection.normal_step_demands().unwrap();for short in [if demand.capacity_bytes>0{Some(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant})}else{None},if demand.release_bytes>0{Some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant})}else{None},if demand.copy_bytes>0{Some(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant})}else{None}].into_iter().flatten(){let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||projection.step(1,32,&mut control,short));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));assert_eq!((projection.phase(),control.owned_bytes()),before);}

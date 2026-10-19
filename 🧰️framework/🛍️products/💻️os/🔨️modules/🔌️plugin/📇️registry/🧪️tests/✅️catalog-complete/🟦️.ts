@@ -10,8 +10,8 @@ import { registryModuleDirectories, readGeneratedCatalogProjection } from "../..
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cargoTargetDirectory } from "@semio-tech/process/execution";
 import { APP_CHANNEL_VERSION, encodePackValue } from "@semio-tech/framework-os";
-import { validateDescriptorEmissionInputV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { validateDescriptorEmissionInputV1, remainingDescriptorEmissionBudgetMs } from "@semio-tech/framework-plugin/describe/descriptor-emission";
+import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
 import { auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage } from "../../✅️catalog-verification/📚️navbar-example-audits/🟦️.ts";
 import { auditPluginCatalogSources } from "../../✅️catalog-verification/🔎️source-audit/🟦️.ts";
@@ -24,7 +24,7 @@ import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../�
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { examplesForApp, normalizeManifestExamples } from "@semio-tech/framework";
 import type { PluginManifest } from "@semio-tech/framework";
-import { identityInstallationSchemaUrl } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
+import { identityInstallationSchemaUrl } from "@semio-tech/framework/identity/testing/fixtures";
 
 const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {

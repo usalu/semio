@@ -231,6 +231,12 @@ mood) and `show` (to a partner) — and only in the states its `from` names; it 
 without cues (`[—]`) is played only when the chemistry asks for it. Gear brings what a pet can do to get somewhere:
 `climb` (walls), `ladder`, `grapple` (a hook on a line) and `parachute`; the two floaters and venty own none.
 
+The settings also offer explicit keyboard buttons for clockwise and counterclockwise circles, strokes and shakes,
+beside hello, click tricks, petting and tossing. They use the hand's existing handlers, so state restrictions,
+gesture effects and stage permissions agree. Directions are chosen directly rather than depending on a generic
+trick counter. A shake changes state, particles and mood immediately without a clip. Autonomous and chemistry-only
+tricks keep their own eligibility rules.
+
 | Pet | Gear | States (resting first; lasts → then) | Tricks [cues] (from; → to) |
 |---|---|---|---|
 | sunny | — | `shining`, `blazing` 30 s → `shining`, `dim` 60 s → `shining`, `sunset` 45 s → `dim` | `corona` [click, whim], `prominence` [click, shake, show], `high-noon` [circle] and `sundown` [countercircle] along sunset/dim/shining/blazing, `rainbow` [—] (shining, blazing) |
@@ -406,10 +412,12 @@ What the shape of a reaction cannot say, and what stands in for it:
 ## Adding a state, a trick or a reaction
 
 - **State.** Add it to `states` of the species, after the resting state, with an English and a German `name`, and give
-  it what shows it: a `tint` (colours that keep 3:1 against both pages), an overlay `clip` that keys only the bones and
+  it what shows it: a `tint` that visibly distinguishes it in the outlined decorative body, an overlay `clip` that keys only the bones and
   channels the state changes (the idle loop keeps breathing on the others) and maybe an `emitter`. Make it reachable —
   a trick's `to`, a rung of a circling trick's `from`, a `then` of another state or a reaction — and let it come back:
   `lasts` and `then`, or a trick that leaves it. Add it to the table above.
+  Review the whole depiction on both gallery backgrounds, including outline and eyes; individual body tints do not
+  all reach 3:1 against both backgrounds, and the data checks do not certify rendered contrast conformance.
 - **Trick.** Add the clip (once, 0.8 to 3 s, starting and ending on rest values) to `clips` and the trick to `tricks`
   with its `cues`, the states it is on offer in (`from`), where it leaves the pet (`to`) and the mood it leaves; the
   first two `click` tricks are the second and third click of a streak. A circling trick without `to` steps along the
@@ -444,4 +452,6 @@ the switch holds on every device.
 | Suite | What |
 |---|---|
 | `../📚️course/🧪️tests/🐾️pet-cast/🟦️.ts` (vitest) | AJV and owned schema validation of all 39 species and the assembled menagerie; static imports equal documents; quiz and topic grounds exist; exact fixture topic and question casts; home includes every species; bilingual concept names, distinct silhouettes and animated details; unique canopy paths for every species; bonds, reachable states, tricks, hand and gear clips; R01–R69 except R06 and G1, G3–G6; bounded, executable chemistry in every scene |
-| `../📚️course/🧪️tests/🐕️pet-walk/🟦️.ts` (Playwright, end-to-end gate, project `pets`) | pets appear on the home screen, hidden from assistive technology, never a hit target of their own and standing on what the cards show; a click says hello, the next asks for a trick, the ones after it for a purr; a pet picked up hangs in the hand and, let go high, opens its authored custom parachute, glides and lands; circling the pointer round a pet on a quiz's page changes its state; during a lively minute in which pets are dragged over each other and thrown no two bodies overlap on any frame; a card under a falling pet still receives its click; the play group of the settings (hello, trick, pet, toss) and the footer switch work by keyboard; the cast follows the learner into a quiz's page and run; `still` gives motionless pets and `off` removes them; a device that asks for reduced motion gives still pets that answer no hand until the learner chooses, and calm pets the learner chose walk (at the test tempo); forced colours show none; a phone shows at most two small ones; no console error, failed request or policy violation. Mischief on lifted copies and the routes of the gear wait for the stage (`fixme`) |
+| `../📚️course/🧪️tests/🐕️pet-walk/🟦️.ts` (Playwright, end-to-end gate, project `pets`) | authored browser regressions for decorative placement, click escalation, hanging and parachutes, pointer circles, collision avoidance, controls beneath pets, all eight keyboard deeds and focus retention |
+| `../📚️course/🧪️tests/🐕️pet-walk/🧭️cast-and-choices/🟦️.ts` | authored browser regressions for context casts, liveliness, still/off, reduced motion and forced colours |
+| `../📚️course/🧪️tests/🐕️pet-walk/🪜️mischief-ladder-and-phone/🟦️.ts` | authored browser regressions for lifted copies and immediate reclamation, ladder and grapple routes, and phone placement |

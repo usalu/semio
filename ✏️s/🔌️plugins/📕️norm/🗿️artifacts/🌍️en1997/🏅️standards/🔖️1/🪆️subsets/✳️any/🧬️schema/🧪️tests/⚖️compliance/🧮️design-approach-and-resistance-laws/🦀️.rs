@@ -216,7 +216,6 @@ fn remedy_law_pile_length_clears_compression() {
     }
     let before = check_project(&doc);
     let fail = before.failing().find(|c| c.id.contains("compression")).expect("pile compression fail");
-    // Prefer length; if length alone under-corrects (base term), also apply count.
     let length_remedy = fail.remedies.iter().find(|r| r.applicable && r.target.path.contains("length"));
     let count_remedy = fail.remedies.iter().find(|r| r.applicable && r.target.path.contains("count"));
     if let Some(r) = length_remedy {

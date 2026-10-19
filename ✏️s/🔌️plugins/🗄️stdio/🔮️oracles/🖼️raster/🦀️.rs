@@ -246,8 +246,6 @@ pub fn oracle_create_image(spec: &RasterSpec, format: &str) -> Result<Vec<u8>, S
     let buffer = image::RgbaImage::from_raw(spec.width, spec.height, spec.rgba.clone()).ok_or("raster spec does not fill width * height * 4 bytes")?;
     let mut out = std::io::Cursor::new(Vec::new());
     match format {
-        // 🧭️BMP and JPEG have no alpha channel, so the reference encoder is given RGB — the
-        // projection compares what a conforming reader recovers, not a channel the format cannot carry.
         "bmp" => image::DynamicImage::ImageRgba8(buffer).to_rgb8().write_to(&mut out, image::ImageFormat::Bmp).map_err(|error| format!("bmp encode: {}", error))?,
         "jpg" => image::DynamicImage::ImageRgba8(buffer).to_rgb8().write_to(&mut out, image::ImageFormat::Jpeg).map_err(|error| format!("jpeg encode: {}", error))?,
         "tiff" => buffer.write_to(&mut out, image::ImageFormat::Tiff).map_err(|error| format!("tiff encode: {}", error))?,

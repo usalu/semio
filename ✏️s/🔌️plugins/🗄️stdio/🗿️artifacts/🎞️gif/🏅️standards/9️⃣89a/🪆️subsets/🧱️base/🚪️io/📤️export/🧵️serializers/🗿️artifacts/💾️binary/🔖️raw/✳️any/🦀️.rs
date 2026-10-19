@@ -1,4 +1,4 @@
-//! Serialize stdio.gif to stdio.binary.
+//! 📤️ Serialize stdio.gif to stdio.binary.
 
 use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};

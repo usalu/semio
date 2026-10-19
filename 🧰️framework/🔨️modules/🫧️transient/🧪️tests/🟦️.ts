@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv/dist/2020.js";
 import { createRequire } from "node:module";
 
-type ReferenceCache<K, V> = { has(key: K): boolean; get(key: K): V | undefined; set(key: K, value: V): void; reset(): void };
-const LRUCache = createRequire(import.meta.url)("lru-cache") as new<K, V>(options: { max: number }) => ReferenceCache<K, V>;
+type ReferenceCache<K, V> = { has(key: K): boolean; get(key: K): V | undefined; set(key: K, value: V): void; clear(): void };
+const { LRUCache } = createRequire(import.meta.url)("lru-cache") as { LRUCache: new<K, V>(options: { max: number }) => ReferenceCache<K, V> };
 import { build } from "esbuild";
 import { TransientStore, ephemeralBox } from "../🟦️.ts";
 
@@ -40,7 +40,7 @@ class ReferenceStore implements Store {
     if (!this.weakMaps.has(key)) this.weakMaps.set(key, new WeakMap());
     return this.weakMaps.get(key)! as WeakMap<K, V>;
   }
-  reset(): void { this.boxes.reset(); this.maps.reset(); this.sets.reset(); this.weakMaps.reset(); }
+  reset(): void { this.boxes.clear(); this.maps.clear(); this.sets.clear(); this.weakMaps.clear(); }
 }
 
 function observe(id: string, provider: Provider): unknown {

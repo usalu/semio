@@ -580,7 +580,6 @@ describe("Tree windowed containers", () => {
     expect(Array.from(section.querySelectorAll(":scope > [data-tree-window-row]")).map((row) => row.getAttribute("data-tree-window-row"))).toEqual(["20", "21"]);
     const nested = container.querySelector('[data-slot="tree-item-content"]') as HTMLDivElement;
     expect(Array.from(nested.querySelectorAll(":scope > [data-tree-window-row]")).map((row) => row.getAttribute("data-tree-window-row"))).toEqual(["4"]);
-    // 🎯️ An UNWINDOWED container's rows carry no index — they are never measured as a window's rows.
     expect(container.querySelectorAll('[data-slot="tree-window-spacer"][data-tree-window-row]')).toHaveLength(0);
   });
 
@@ -612,8 +611,6 @@ describe("Tree windowed containers", () => {
   /** 🔑️ A window is addressed by its PATH, because its node key is also the pick target id and two
    * containers under different parents legitimately share one (📓️f2-sdk-body-node-ledger.md §10). */
   it("stamps a window path that nests, and leaves a top-level container's path equal to its key", () => {
-    // 🚧️ PRINTABLE (U+241F), never the control character it depicts: a window path crosses the wasm boundary
-    // inside `PluginViewState.treeWindows`, and `parseResolvedPluginViewState` refuses `[\u0000-\u001f\u007f]`.
     expect(TREE_WINDOW_PATH_SEPARATOR).toBe("\u241f");
     expect(/[\u0000-\u001f\u007f]/u.test(TREE_WINDOW_PATH_SEPARATOR)).toBe(false);
     expect(Array.from(TREE_WINDOW_PATH_SEPARATOR).length).toBe(1);
@@ -638,7 +635,6 @@ describe("Tree windowed containers", () => {
       "right",
       `right${TREE_WINDOW_PATH_SEPARATOR}shared`,
     ]);
-    // 🎯️ The authored key — the pick target id — is untouched, and the two "shared" containers keep it.
     expect(windowed.map((element) => element.getAttribute("data-tree-window-key"))).toEqual(["left", "shared", "right", "shared"]);
   });
 
@@ -688,14 +684,12 @@ describe("treeWindowRequestsForViewport", () => {
   });
 
   it("asks from the first visible row less the overscan when only the container's top is cut off", () => {
-    // Container starts 100px (5 rows) above the viewport top; 200px (10 rows) of it are on screen.
     const requests = treeWindowRequestsForViewport([measure({ top: -5 * rowHeight })], 0, 10 * rowHeight, 2);
 
     expect(requests).toEqual([{ key: "entries", offset: 3, rows: 14 }]);
   });
 
   it("centres a long container's window on the visible run", () => {
-    // 50 rows of a 1000-row container are on screen, starting at row 100.
     const requests = treeWindowRequestsForViewport([measure({ top: 0 })], 100 * rowHeight, 50 * rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
 
     expect(requests).toEqual([{ key: "entries", offset: 100 - TREE_WINDOW_OVERSCAN_ROWS, rows: 50 + 2 * TREE_WINDOW_OVERSCAN_ROWS }]);
@@ -708,7 +702,6 @@ describe("treeWindowRequestsForViewport", () => {
   });
 
   it("clamps one request to the built-children ceiling", () => {
-    // 300 rows of a 500-row container on screen at once — more than one built child list can carry.
     const requests = treeWindowRequestsForViewport([measure({ total: 500, height: 500 * rowHeight })], 200 * rowHeight, 300 * rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
 
     expect(requests).toEqual([{ key: "entries", offset: 200 - TREE_WINDOW_OVERSCAN_ROWS, rows: TREE_WINDOW_ROWS_MAX }]);
@@ -725,7 +718,6 @@ describe("treeWindowRequestsForViewport", () => {
    * under it — and the window that follows evicts the subtree the reader just opened. The rows' own measured
    * tops are the only thing that answers this, and the spacers keep the uniform pitch they are built from. */
   it("reads the row under the viewport off the rows' real tops, not off a uniform pitch", () => {
-    // 20 rows of 1000, rows 0..2 plain, row 3 an open nested group 16 rows tall, rows 4..19 plain again.
     const rows = [] as { index: number; top: number }[];
     let top = 0;
     for (let index = 0; index < 20; index += 1) {
@@ -733,13 +725,9 @@ describe("treeWindowRequestsForViewport", () => {
       top += (index === 3 ? 16 : 1) * rowHeight;
     }
     const nested = measure({ total: 1000, offset: 0, length: 20, height: (top + 980 * rowHeight), rows });
-    // The viewport sits 20 row-heights down — past the tall row 3, at this container's own row 5.
     const requests = treeWindowRequestsForViewport([nested], 20 * rowHeight, 4 * rowHeight, TREE_WINDOW_OVERSCAN_ROWS);
 
-    // 🎯️ The viewport covers this container's own rows 5…8, so its window still starts at row 0.
     expect(requests).toEqual([{ key: "entries", offset: 0, rows: 20 }]);
-    // 🎯️ The flat rule reads the same pixels as rows 20…23 and answers a window that materialises NONE of
-    // what is on screen — the expanded row 3 among it.
     expect(treeWindowRequestsForViewport([{ ...nested, rows: undefined }], 20 * rowHeight, 4 * rowHeight, TREE_WINDOW_OVERSCAN_ROWS)).toEqual([{ key: "entries", offset: 12, rows: 20 }]);
   });
 
@@ -768,9 +756,6 @@ describe("capTreeWindowRequests", () => {
   });
 
   it("shrinks the overscan uniformly before any container loses a row the viewport shows", () => {
-    // 4 containers × (20 visible + 2 × 8 overscan) + 4 container nodes = 148 — over budget. The rule gives
-    // overscan back uniformly until the body fits, so every container keeps its whole visible run and they
-    // all land on the SAME overscan. (Derived from the budget, which is jointly owned with the SDK ledger.)
     const keys = ["a", "b", "c", "d"];
     const overscan = Math.max(0, Math.min(TREE_WINDOW_OVERSCAN_ROWS, Math.floor((Math.floor((TREE_WINDOW_BODY_NODE_BUDGET - keys.length) / keys.length) - 20) / 2)));
     expect(overscan).toBeLessThan(TREE_WINDOW_OVERSCAN_ROWS);
@@ -782,7 +767,6 @@ describe("capTreeWindowRequests", () => {
   });
 
   it("trims the container furthest from the viewport centre once there is no overscan left to give", () => {
-    // Zero overscan still costs 3 + 50 + 40 + 30 = 123; everything over budget comes off the FURTHEST one.
     const requests = [
       { key: "far", offset: 0, rows: 50 },
       { key: "mid", offset: 0, rows: 40 },
@@ -801,8 +785,6 @@ describe("capTreeWindowRequests", () => {
   });
 
   it("degrades the furthest container to a spacer-only window rather than dropping it off the wire", () => {
-    // 🧯️ A container the host stops asking for rows is still IN the body and still costs its own node, so it
-    // stays in the answer at `rows: 0` — dropping it would only hand the guest back its own default window.
     const requests = ["far", "mid", "near"].map((key) => ({ key, offset: 0, rows: 3 }));
     const capped = capTreeWindowRequests(requests, visible([
       ["far", metrics({ total: 9, visibleRows: 3, firstVisibleRow: 0, distancePx: 900 })],
@@ -830,8 +812,6 @@ describe("capTreeWindowRequests", () => {
   });
 
   it("holds the ceiling for a whole measured body of twelve open containers", () => {
-    // The fem3d House shape: a dozen open windowed containers of a few rows each, all on screen at once,
-    // costing 156 nodes between them — more than one guest body can present.
     const containers: TreeWindowContainerMeasure[] = Array.from({ length: 12 }, (_, index) => ({ key: `c${index}`, rowExtent: "standard", total: 12, offset: 0, length: 12, top: index * 12 * rowHeight, height: 12 * rowHeight }));
     const viewportHeight = 12 * 12 * rowHeight;
     const uncapped = treeWindowRequestsForViewport(containers, 0, viewportHeight, TREE_WINDOW_OVERSCAN_ROWS);
@@ -839,7 +819,6 @@ describe("capTreeWindowRequests", () => {
 
     expect(nodeCost(uncapped)).toBe(156);
     expect(nodeCost(capped)).toBe(TREE_WINDOW_BODY_NODE_BUDGET);
-    // 🎯️ The rows come off the far ends of the body, never off the containers around the viewport centre.
     expect(capped.find((request) => request.key === "c5")?.rows).toBe(12);
     expect(capped.find((request) => request.key === "c6")?.rows).toBe(12);
     for (const request of capped) expect(request.offset + request.rows).toBeLessThanOrEqual(12);

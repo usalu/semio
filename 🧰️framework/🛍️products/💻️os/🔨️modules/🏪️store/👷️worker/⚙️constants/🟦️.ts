@@ -60,7 +60,7 @@ export async function reconnectForever(signal: AbortSignal, attempt: () => Promi
     try {
       await retryWithJitteredBackoff(attempt, { minMs, maxMs, signal });
     } catch {
-      return; // 🛑 only reachable via abort — `attempt` never lets a real failure escape the retry loop above.
+      return;
     }
   }
 }

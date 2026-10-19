@@ -1,5 +1,5 @@
 import * as React from "react";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { isElementId, childElementId, elementIdSegment } from "../../🆔️ElementId/🟦️.tsx";
 import { useIdLabel, useControlAccessibleLabel } from "../../🏷️Label/🟦️.tsx";
 import { TreeContext, TreeAlignedRow, treeInspectorInnerRowClassName, treeHeaderMainClassName, PropertyValueColumnContext, treeHeaderRowClassName } from "../📏️row-alignment/🟦️.tsx";
@@ -195,8 +195,6 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 
   if (layoutKind === "property") {
     const PropertyFoldChevron = treeFoldChevronIcon(direction, inline, open);
-    // 🌳️ Header-only hover `group` — nested children must be siblings, not descendants, otherwise
-    // parent `group-hover` fill lights up every nested vortex/distribution row at once.
     const propertyHeader = (
       <div
         data-dim

@@ -10,6 +10,9 @@ use semio_framework_plugin_reactor_wit_bridge::wit_bridge::poll;
 use semio_framework_job::{OriginalTurnFailure, close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework::Effect;
+use semio_framework_plugin_reactor_turn::CommandIngressOwner;
+use semio_framework_plugin_reactor_turn::RetainedExtensionInvocation;
 
 #[test]
 fn original_guest_failure_debit_failed_ingress_retiring_lane_returns_same_three_causes_after_paid_close(){

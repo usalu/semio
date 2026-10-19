@@ -1,8 +1,9 @@
 //! 🛂️ Original transition payload grammar is verified cooperatively without hydrating a duplicate semantic owner.
-use semio_framework_value::native_decoding::NativeDecodeCloseControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl;
 use protocol::codec::HistoryReadLimits;
 use pack::format::RetainedUtf8Cursor;
-use semio_framework_value::{NativeDecodeControl,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Debug)]
 pub struct RetainedHistoryTransitionPayloadValidationReceipt{original:(usize,usize),owner:(u64,Option<u64>)}
 impl RetainedHistoryTransitionPayloadValidationReceipt{pub fn validates_original(&self,bytes:&[u8],control:&dyn NativeDecodeCloseControl)->bool{self.original==(bytes.as_ptr()as usize,bytes.len())&&self.owner==(control.ledger_identity(),control.retirement_recipient_identity())}}

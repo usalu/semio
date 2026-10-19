@@ -1,5 +1,6 @@
 //! 🛬️ Original Job decoder custody preserves its consuming ledger and exact recipient between caller turns.
-use semio_framework_value::{NativeDecodeControl,NativeDecodeProgress,NativeDecodeRetirementRecipient,ErasedSnapshotRetirement,ValueError,ValueRefusalKind,RetirementDemand,native_decoding::{NativeDecodeConstructionRecipient,NativeDetachedRetirementDecodeContinuation},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ErasedSnapshotRetirement, ValueError, ValueRefusalKind, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress, native_decoding::NativeDecodeRetirementRecipient, native_decoding::NativeDecodeConstructionRecipient, native_decoding::NativeDetachedRetirementDecodeContinuation};
 use std::mem::size_of;
 /// 🧳️ One job owns the same decoder continuation and original retirement recipient until terminal closure.
 pub struct OriginalJobDecodeOwner{receipt:Option<NativeDetachedRetirementDecodeContinuation>,recipient:NativeDecodeRetirementRecipient,closing:bool}
@@ -13,7 +14,7 @@ impl OriginalJobDecodeOwner{
   let mut outcome=None;let result=continuation.decode(callback,|control|{control.admit_turn_capacity(grant.maximum_capacity_bytes)?;control.checkpoint()?;outcome=Some(control.with_construction_recipient(construction,operation));Ok(())});let(detached,_)=continuation.detach();self.receipt=Some(detached);result.map_err(E::from)?;outcome.ok_or_else(||E::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Job receiving did not visit its semantic producer")))?
  }
  /// ♻️ Loans only retirement charging for already born custody under the original grant, deadline and observer.
- pub fn retire<T>(&mut self,grant:RetainedCloneGrant,callback:&mut dyn FnMut(NativeDecodeProgress)->bool,deadline:&mut dyn FnMut()->bool,operation:impl FnOnce(&mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
+ pub fn retire<T>(&mut self,grant:RetainedCloneGrant,callback:&mut dyn FnMut(NativeDecodeProgress)->bool,deadline:&mut dyn FnMut()->bool,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
   if !deadline(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Job retirement deadline reached"));}if grant.maximum_items==0||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Job retirement requires its original caller turn"));}
   let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Job retirement requires its existing decoder receipt"))?;let mut continuation=match receipt.bind(&mut self.recipient){Ok(bound)=>bound,Err((error,receipt))=>{self.receipt=Some(receipt);return Err(error);}};
   let result=continuation.retire(grant,callback,operation);let(detached,_)=continuation.detach();self.receipt=Some(detached);result

@@ -38,7 +38,7 @@ impl PluginInstanceHandle {
     /// 🧵️ Starts one cold job in the fixed mounted registry. Each host poll admits at most one
     /// relay or close opportunity; the pool never owns an internal run-to-completion chain.
     async fn run_job_on_worker(&self, kind: &str, input: Vec<u8>, cancel: semio_framework_async::CancelToken) -> Result<Vec<u8>, PluginHostError> {
-        if input.len() > semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES {
+        if input.len() > semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES {
             return Err(PluginHostError::Plugin(format!("{kind} input exceeds the retained operation byte limit")));
         }
         if let Some(detail) = self.instance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).admission_fault() {

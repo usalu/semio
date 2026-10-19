@@ -177,7 +177,6 @@ pub mod part_1_1 {
         let sigma_cp_mpa = if a_c_mm2 > 0.0 { (n_ed / 1000.0) / a_c_mm2 * 1000.0 } else { 0.0 };
         let sigma_cp_mpa = sigma_cp_mpa.clamp(0.0, 0.2 * f_ck_mpa);
         let p = na_de::AnnexParams::for_choice(annex);
-        // EN 1992-1-1: C_Rd,c = 0.18/γ_c; DE-NA: C_Rd,c = 0.15/γ_c
         let c_rd_c = match annex {
             AnnexChoice::De => 0.15 / p.gamma_c,
             AnnexChoice::En => 0.18 / p.gamma_c,
@@ -200,7 +199,7 @@ pub mod part_1_1 {
         let f_ck_mpa = f_ck_pa / 1.0e6;
         let nu1 = 0.6 * (1.0 - f_ck_mpa / 250.0);
         let alpha_cw = 1.0;
-        let sin_cos = cot_theta / (1.0 + cot_theta * cot_theta); // = cot/(1+cot²) = cos·sin / sin² * sin... wait: sinθ cosθ = cotθ/(1+cot²θ)
+        let sin_cos = cot_theta / (1.0 + cot_theta * cot_theta);
         alpha_cw * b * z * nu1 * f_cd * sin_cos
     }
 
@@ -223,7 +222,7 @@ pub mod part_1_1 {
     pub fn punching_v_rd_max_pa(v_rd_c_pa: f64, annex: AnnexChoice) -> f64 {
         match annex {
             AnnexChoice::De => 1.4 * v_rd_c_pa,
-            AnnexChoice::En => 2.0 * v_rd_c_pa, // conservative stand-in for 0.5 ν f_cd path
+            AnnexChoice::En => 2.0 * v_rd_c_pa,
         }
     }
 
@@ -235,7 +234,7 @@ pub mod part_1_1 {
         let a_k = (b - t_eff) * (h - t_eff);
         let f_ck_mpa = f_ck_pa / 1.0e6;
         let nu = 0.6 * (1.0 - f_ck_mpa / 250.0);
-        2.0 * a_k * t_eff * nu * f_cd * 0.5 // with cotθ≈1
+        2.0 * a_k * t_eff * nu * f_cd * 0.5
     }
 
     /// 🪟 Crack width w_k [m] — Eq. 7.8 with ε_sm − ε_cm from 7.9.
@@ -243,14 +242,13 @@ pub mod part_1_1 {
         if e_s_pa <= 0.0 || rho_p_eff <= 0.0 {
             return 0.0;
         }
-        let alpha_e = e_s_pa / (22.0e9); // rough E_cm
+        let alpha_e = e_s_pa / (22.0e9);
         let eps = (sigma_s_pa - 0.4 * f_ct_eff_pa / rho_p_eff * (1.0 + alpha_e * rho_p_eff)).max(0.6 * sigma_s_pa) / e_s_pa;
         s_r_max * eps
     }
 
     /// 📉 Basic l/d limit Table 7.4N.
     pub fn basic_ld_limit(support: SupportCondition, rho: f64, rho_prime: f64) -> f64 {
-        // EN 1992-1-1 §7.4.2 Table 7.4N — K factors; DE-NA adopts same K.
         let k = match support {
             SupportCondition::SimplySupported => 1.0,
             SupportCondition::Continuous | SupportCondition::Fixed => 1.5,
@@ -564,7 +562,6 @@ pub mod part_2 {
     }
 
     pub fn fatigue_limit_pa() -> f64 {
-        // Δσ_Rsk = 162.5 MPa, γ_S,fat = 1.15
         162.5e6 / 1.15
     }
 }

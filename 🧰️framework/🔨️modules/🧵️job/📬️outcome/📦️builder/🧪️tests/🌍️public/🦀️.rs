@@ -1,6 +1,10 @@
 //! 🧪️ Original in-place payload bindings, pages and ledger conserve actual heap through every frontier.
 use semio_framework_job::*;
 use semio_framework_value::RetirementDemand;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::RetainedJobPayload;
 #[global_allocator]
 static ORIGINAL_PAYLOAD_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}

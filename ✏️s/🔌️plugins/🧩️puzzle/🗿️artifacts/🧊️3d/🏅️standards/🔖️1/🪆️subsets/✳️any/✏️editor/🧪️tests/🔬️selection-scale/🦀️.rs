@@ -33,7 +33,7 @@ async fn a_pick_by_id_on_the_flagship_document_persists_and_reaches_inspection()
     let ids: Vec<String> = selected.get("ids").and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
     assert!(ids.contains(&victim), "the world lane of a {objects}-object document must carry the picked id; got {ids:?}");
 
-    let inspection = render_panel_body(&mut app, inspection::BODY_KEY, Some(main::WINDOW_KIND_ID)).await;
+    let inspection = render_panel_body(&mut app, inspection::BODY_KEY, Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await;
     assert!(mentions(&inspection, &victim), "Inspection must name the object a pick just selected on a {objects}-object document");
 }
 
@@ -51,7 +51,7 @@ async fn a_pick_by_id_on_the_flagship_document_persists_and_reaches_inspection()
 /// reading a stale world lane in the browser can rule this hop out without a wasm build.
 #[semio_framework_async_macros::async_test]
 async fn a_pick_reaches_the_world_body_of_every_window_instance_the_host_refreshes() {
-    const WINDOW_INSTANCES: [&str; 3] = [main::WINDOW_KIND_ID, "puzzle3d-main-top", "puzzle3d-main-perspective"];
+    const WINDOW_INSTANCES: [&str; 3] = [semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "puzzle3d-main-top", "puzzle3d-main-perspective"];
     let mut app = app().await;
     for example in ["concrete-forest", PUZZLE3D_EXAMPLE_NAKAGIN] {
         if example == PUZZLE3D_EXAMPLE_NAKAGIN {
@@ -126,7 +126,7 @@ async fn the_flagship_outliner_panel_body_windows_its_object_rows() {
     let objects = object_count(&app);
     assert!(objects >= 100, "the law needs the large document; got {objects} objects");
     let first = first_object_id(&app);
-    let body = render_panel_body(&mut app, artifact::BODY_KEY, Some(main::WINDOW_KIND_ID)).await;
+    let body = render_panel_body(&mut app, artifact::BODY_KEY, Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await;
     let rows = mentions(&body, &first);
     let paged = mentions(&body, ".objects.more");
     let stamped = stamps_window_total(&body, objects as u64);

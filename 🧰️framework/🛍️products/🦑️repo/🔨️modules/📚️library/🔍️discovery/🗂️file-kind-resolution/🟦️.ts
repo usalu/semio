@@ -164,12 +164,13 @@ export async function taxonomyImplementationFilesystemFindings(repoRoot: string,
       const path = relativePath ? `${relativePath}/${entry.name}` : entry.name;
       if (taxonomyRelativePathIsExcluded(path, taxonomy)) continue;
       if (entry.isDirectory()) {
-        if (ignored(path)) continue;
+        if (ignored(path) || options.admitted?.(path, "directory") === false) continue;
         paths.push({ path, nodeKind: "directory" });
         pathsVisited += 1;
         await progress("walk");
         await walk(join(absolute, entry.name), path);
       } else if (entry.isFile()) {
+        if (options.admitted?.(path, "file") === false) continue;
         paths.push({ path, nodeKind: "file" });
         pathsVisited += 1;
         await progress("walk");

@@ -10,6 +10,18 @@ use crate::draft::index_of;
 use semio_framework_pets_character::behavior::MODE_LIMITS;
 use semio_framework_pets_contract::schema::{Activity, Actor, Menagerie, PetMode, Stage, Ticks, TICKS_PER_SECOND};
 use std::borrow::Borrow;
+use semio_framework_pets_contract::schema::Footing;
+use semio_framework_pets_contract::schema::PressPhase;
+use semio_framework_pets_contract::schema::Facing;
+use semio_framework_pets_contract::schema::Gear;
+use semio_framework_pets_contract::schema::Gait;
+use semio_framework_pets_contract::schema::Mood;
+use semio_framework_pets_character::feeling::Sighting;
+use semio_framework_pets_contract::schema::Pitch;
+use semio_framework_pets_contract::schema::Perch;
+use semio_framework_pets_contract::schema::Slug;
+use semio_framework_pets_contract::schema::Fixture;
+use semio_framework_pets_contract::schema::Species;
 
 //#region 🔖️Constants
 const WARMUP: Ticks = 1280;
@@ -17,12 +29,12 @@ const WARMUP: Ticks = 1280;
 
 //#region 🔖️Schedule
 /// 🙌️ Whether an actor can be drawn into an encounter: standing idle and whole on a perch, without a partner, not leaving.
-pub(crate) fn sociable(actor: &Actor, tick: Ticks) -> bool {
+pub fn sociable(actor: &Actor, tick: Ticks) -> bool {
     actor.activity == Activity::Idle && actor.partner.is_none() && !actor.leaving && actor.opacity == 1.0 && actor.footing == Footing::Perch && !circled(&actor.hover, tick)
 }
 
 /// 📅️ The first whole second at or after tick `from` on which the stage may draw a pair, or −1 while it may not: the mode has encounters, it is not a quiet time, nobody has a partner, at least two actors are sociable, and the warm-up (20 s before the first encounter) or the gap of the mode since the last change of a rapport has passed.
-pub(crate) fn pairing_tick<A: Borrow<Actor>>(stage: &Stage, actors: &[A], from: Ticks) -> Ticks {
+pub fn pairing_tick<A: Borrow<Actor>>(stage: &Stage, actors: &[A], from: Ticks) -> Ticks {
     let limits = MODE_LIMITS[stage.mode];
     if limits.encounter_gap == 0 || stage.quiet {
         return -1;
@@ -46,7 +58,7 @@ pub(crate) fn pairing_tick<A: Borrow<Actor>>(stage: &Stage, actors: &[A], from: 
 }
 
 /// 🚏️ The first whole second at or after tick `from` on which a species that is wanted but not on stage may arrive, or −1 while nobody waits, no perch exists or the stage is still (a still stage lets them arrive with its events).
-pub(crate) fn arrival_tick<A: Borrow<Actor>>(menagerie: &Menagerie, stage: &Stage, actors: &[A], from: Ticks) -> Ticks {
+pub fn arrival_tick<A: Borrow<Actor>>(menagerie: &Menagerie, stage: &Stage, actors: &[A], from: Ticks) -> Ticks {
     if stage.mode == PetMode::Still || stage.perches.is_empty() {
         return -1;
     }
@@ -201,7 +213,3 @@ pub(crate) fn prank_tick(menagerie: &Menagerie, stage: &Stage, from: Ticks) -> T
     if pusher.is_none_or(|pusher| pusher.leaving || pusher.activity != Activity::Push) && age < LIFT_RETURNS { from } else { lift.since + LIFT_TICKS }
 }
 //#endregion 🔖️Mischief
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

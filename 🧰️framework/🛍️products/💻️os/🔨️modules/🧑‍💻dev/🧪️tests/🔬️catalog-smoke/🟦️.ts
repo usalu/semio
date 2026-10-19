@@ -218,9 +218,6 @@ async function runCatalogSmokeVerify(baseUrl: string, opts: { readonly outDir: s
     page.on("request", (request) => {
       if (phaseMs.firstModule === null && request.resourceType() === "script") phaseMs.firstModule = Date.now() - navigationStarted;
     });
-    // 🚦️`commit` and not `load`: the unbundled dev module graph legitimately never fires `load` on a busy
-    // machine (observed: `goto` timing out at 300 s against a shell that was booting fine), so the beacon
-    // poll below owns the deadline and a slow boot is reported, never thrown.
     await page.goto(baseUrl, { waitUntil: "commit", timeout: opts.timeoutMs });
     phaseMs.commit = Date.now() - navigationStarted;
     console.log(`[catalog-smoke] document committed after ${phaseMs.commit} ms`);

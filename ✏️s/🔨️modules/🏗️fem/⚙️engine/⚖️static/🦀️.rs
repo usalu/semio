@@ -1,4 +1,4 @@
-//! linear-static solve `Ku = F` with reactions and per-element recovery. `semio-s-fem-analyses` is the sparse
+//! ➗️ linear-static solve `Ku = F` with reactions and per-element recovery. `semio-s-fem-analyses` is the sparse
 //! ⚖️ Linear static analysis: the closed first-party element set, the assembled structural `Model` and its dense
 //! multi-case pipeline for larger models.
 

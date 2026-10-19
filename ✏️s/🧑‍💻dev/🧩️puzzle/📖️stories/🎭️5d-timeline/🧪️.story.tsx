@@ -174,7 +174,6 @@ function reduceStoryPuzzle5dAction(state: StoryPuzzle5dState, action: string, ar
       return { fixture, runtime: { ...runtime, hoveredId: typeof objectId === "string" ? objectId : null } };
     }
     case "setCamera":
-      // 📷️ Orbit-drag camera updates are kept live by `World3dHost`'s own Three.js controls; the fixture's persisted `camera3d` is intentionally left untouched so re-scrubbing the timeline doesn't jump the view.
       return state;
     default:
       return state;
@@ -187,7 +186,6 @@ function buildStoryWorld3dNode(fixture: StoryPuzzle5dFixture, runtime: StoryPuzz
   const revealed = fixture.parts.slice(0, runtime.revealCount);
   const selectedIds = new Set(runtime.selectedIds);
 
-  // 📦️ No mesh `url`/`data` on purpose — see `../3d/World.stories.tsx`'s header docstring (no `mesh-collection` route for this scope, and the GLBs don't exist on disk either).
   const meshes = revealed.map((part) => ({ id: part.id }));
   const instances = revealed.map((part) => ({
     id: part.id,

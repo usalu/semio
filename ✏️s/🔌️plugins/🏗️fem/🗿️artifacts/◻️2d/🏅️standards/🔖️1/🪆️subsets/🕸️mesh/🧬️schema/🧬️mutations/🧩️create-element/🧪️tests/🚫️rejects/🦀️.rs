@@ -13,7 +13,7 @@
 //! 🚫️ `create-element` is the only `create-` verb in this vocabulary that validates FOUR references; the `start` node is checked first, so `n42` is the address the diagnostic carries even though the element is otherwise well formed.
 
 use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::inverse_fem2d_mutation_cold;
 use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
@@ -64,7 +64,7 @@ fn the_refusal_is_the_declared_diagnostic() {
 fn inverse_of_the_refused_mutation() {
     let base = before();
     let operation = mutation();
-    let inverse = inverse_fem2d_mutation(&base, &operation).expect("aggregate inverse admission");
+    let inverse = inverse_fem2d_mutation_cold(&base, &operation).expect("aggregate inverse admission");
     assert!(inverse.is_empty(), "refused mutations cannot publish inverse candidates: {inverse:?}");
     let mut snapshot = base.clone();
     apply_fem2d_mutation(&mut snapshot, &operation).expect("unchanged forward outcome");

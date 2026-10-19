@@ -195,7 +195,7 @@ impl FillRevalidateJob {
         let tick = ToolRunTick { identity: self.identity, sequence: self.sequence, progress: Some(progress), steps: std::mem::take(&mut self.steps), trace, append_ops, append_entities, retract_to, payload: None,payload_update:None };
         self.sequence += 1;
         match tick.encode().ok() {
-            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
+            Some(bytes) if bytes.len() <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes.to_vec()),
             Some(_) => JobTurn::Fault(b"fill-revalidate-tick-page".to_vec()),
             None => JobTurn::Fault(b"fill-revalidate-tick-encode".to_vec()),
         }

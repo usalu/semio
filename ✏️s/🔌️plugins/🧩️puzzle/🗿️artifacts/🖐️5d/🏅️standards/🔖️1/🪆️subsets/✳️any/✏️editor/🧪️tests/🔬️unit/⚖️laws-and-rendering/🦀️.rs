@@ -146,11 +146,6 @@ fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_conf
         "addressed_config(view, window_after)",
         "addressed_transient(view, transient_after)",
     ] {
-        // 🧨️ EVERY occurrence, not the first: `context.and_then(|context| context.window_config.as_ref())` and
-        // `config_from_snapshot(window_config_snapshot)` each appear THREE times in the source
-        // (one per window-owning work struct), so `replacen(.., 1)` left two behind and
-        // `window_owner_routes_are_exact` still found the marker — the negative fixture could not bite
-        // and the law proved nothing about those two boundaries.
         assert!(!window_owner_routes_are_exact(&source.replace(marker, "route-removed")), "missing exact window-owner boundary was falsely accepted: {marker}");
     }
     let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetCamera2d");
@@ -226,8 +221,6 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
         "addressed_transient(view, transient_after)",
         "EphemeralEmit { window_transient, ..Default::default() }",
     ] {
-        // 🧨️ EVERY occurrence — see `window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_config_leaks`:
-        // a marker that appears more than once survives `replacen(.., 1)` and the detector still finds it.
         assert!(!engagement_submit_route_is_cursorized(&source.replace(marker, "route-removed")), "missing engagement submit marker was falsely accepted: {marker}");
     }
     let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetEngagementInput");

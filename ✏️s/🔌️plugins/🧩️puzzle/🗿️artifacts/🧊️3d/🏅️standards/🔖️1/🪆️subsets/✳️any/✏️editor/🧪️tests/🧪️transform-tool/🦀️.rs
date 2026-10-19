@@ -1,14 +1,20 @@
-//! attractions) as ONE committed `ToolTransaction` under a deterministic ref, a gesture that moves nothing leaves
+//! 🧲️ attractions) as ONE committed `ToolTransaction` under a deterministic ref, a gesture that moves nothing leaves
 //! 🛠️ Laws of the transform tool machine alone: a gesture record yields its parametric leaf (and a drop's
 //! zero trace, and every host payload states the RELATIVE motion from its own start pose.
 
 use super::*;
 use semio_s_artifact_puzzle_3d_mutations::apply_puzzle3d_mutation;
 use semio_framework_tool_machine::ToolMachineRunner;
+use semio_s_artifact_puzzle_3d_editor_transform::{puzzle3d_transform_tool_commit, transform_tool, TransformToolHost, TransformToolRequest};
 use semio_framework_tool_machine::ToolStep;
 use {semio_s_artifact_puzzle_3d_model::quat_from_axis_angle, semio_s_artifact_puzzle_3d_model::quat_mul};
 
 use {semio_s_artifact_puzzle_3d_model::Puzzle3dObject, semio_s_artifact_puzzle_3d_model::Puzzle3dTargetVolume, semio_s_artifact_puzzle_3d_model::Puzzle3dVortex};
+#[cfg(test)] use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionRecord;
+#[cfg(test)] use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dSelectionMotion;
+#[cfg(test)] use semio_s_artifact_puzzle_3d_editor_transform::Puzzle3dRelocateScan;
+#[cfg(test)] use std::sync::Arc;
+#[cfg(test)] use semio_framework_tool_machine::GesturePhase;
 
 /// 🧱️ Two objects facing each other along x — `a` locked-free with vortex `a:v` at +x, `b` with vortex `b:v` at -x —
 /// a locked `pin`, and one target volume.
@@ -98,7 +104,7 @@ fn the_transform_tool_is_a_one_state_statechart_that_commits_per_event() {
     let record = Puzzle3dSelectionRecord::new(["a".to_string()], Puzzle3dSelectionMotion::Scale { factors: [2.0, 2.0, 2.0] });
     let mut runner = ToolMachineRunner::<transform_tool::TransformTool, TransformToolHost>::start(format!("{PUZZLE3D_EDITOR_APP_ID}#scaleSelection"), protocol::ActorId("seed".into()), TransformToolContext, TransformToolHost).expect("the tool starts at rest");
     for tick in 0..2u64 {
-        let step = runner.send(transform_tool::Event::Records(TransformToolRequest { base: Arc::new(base.clone()), records: vec![record.clone()] }), clock(tick)).expect("an event is admitted");
+        let step = runner.send(semio_framework::kernel::Event::Records(TransformToolRequest { base: Arc::new(base.clone()), records: vec![record.clone()] }), clock(tick)).expect("an event is admitted");
         assert!(matches!(step, ToolStep::Committed(..)), "every release is its own committed transaction: {step:?}");
         assert!(runner.at_rest() && runner.transaction().is_none_or(|transaction| transaction.state() != semio_framework_tool_machine::ToolTransactionState::Open), "nothing stays open between gestures");
     }

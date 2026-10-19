@@ -34,3 +34,4 @@ serde_json = { workspace = true, features = ["float_roundtrip"], optional = true
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true, features = ["float_roundtrip"] }
+semio-framework-course = { workspace = true }

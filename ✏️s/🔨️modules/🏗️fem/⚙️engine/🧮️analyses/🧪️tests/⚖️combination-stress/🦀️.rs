@@ -30,7 +30,7 @@ fn close(actual: f64, expected: f64, id: &str) {
 /// ⚖️ Portable vectors require equivalent stresses from the combined tensor, including reversed factors.
 #[test]
 fn combination_stress_matches_portable_tensor_invariants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️combination-stress/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⚖️combination-stress/🔣️.json")).unwrap();
     for vector in fixture["cases"].as_array().unwrap() {
         let id = vector["id"].as_str().unwrap();
         let kind = vector["kind"].as_str().unwrap();

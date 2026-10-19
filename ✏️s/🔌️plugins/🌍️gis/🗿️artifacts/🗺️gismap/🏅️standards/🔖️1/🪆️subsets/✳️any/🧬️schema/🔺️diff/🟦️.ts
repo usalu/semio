@@ -5,14 +5,14 @@ import { parseGisMapFeaturePatch, type GisMapFeaturePatch } from "../📍️feat
 export type { GisMapArtifact, GisMapFeature } from "../🟦️.ts";
 export type { GisMapFeaturePatch } from "../📍️feature/🟦️.ts";
 export interface GisMapDiff {
-  /** @state artifact */ positions: GisMapFeaturesDelta | null;
-  /** @state artifact */ routes: GisMapFeaturesDelta | null;
-  /** @state artifact */ regions: GisMapFeaturesDelta | null;
+  /** 📍️ @state artifact */ positions: GisMapFeaturesDelta | null;
+  /** 📈️ @state artifact */ routes: GisMapFeaturesDelta | null;
+  /** 🗾️ @state artifact */ regions: GisMapFeaturesDelta | null;
 }
 export interface GisMapFeatureRemoval { id: string; index: number; }
 export interface GisMapFeatureInsertion { index: number; row: GisMapFeature; }
 export interface GisMapFeatureRelocation { id: string; from: number; to: number; }
-/** Positional delta: `removed` rows carry their base index, `inserted` rows their after index, `moved` rows both; no order list. */
+/** 🗺️ Positional delta: `removed` rows carry their base index, `inserted` rows their after index, `moved` rows both; no order list. */
 export interface GisMapFeaturesDelta { removed: GisMapFeatureRemoval[]; inserted: GisMapFeatureInsertion[]; moved: GisMapFeatureRelocation[]; modified: GisMapFeatureModification[]; }
 export interface GisMapFeatureModification { id: string; patch: GisMapFeaturePatch; }
 

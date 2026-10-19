@@ -64,7 +64,6 @@ pub struct SurfaceDerivatives {
 }
 
 impl Surface {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn domain(&self) -> ((f64, f64), (f64, f64)) {
         match self {
             Surface::Plane { .. } => ((f64::NEG_INFINITY, f64::INFINITY), (f64::NEG_INFINITY, f64::INFINITY)),
@@ -75,15 +74,12 @@ impl Surface {
             Surface::Nurbs { u_knots, v_knots, .. } => (u_knots.domain(), v_knots.domain()),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_u_periodic(&self) -> bool {
         matches!(self, Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_v_periodic(&self) -> bool {
         matches!(self, Surface::Torus { .. })
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval(&self, u: f64, v: f64) -> Pnt3 {
         match self {
             Surface::Plane { frame } => frame.to_world(Pnt3::new(u, v, 0.0)),
@@ -104,7 +100,6 @@ impl Surface {
     /// [`Surface::Nurbs`] uses the exact rational `RatSurfaceDerivs` recurrence
     /// ([`surface_derivatives_rational`]) — safe for tight Newton iteration, unlike the
     /// finite-difference stand-in this used to be.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn derivatives(&self, u: f64, v: f64) -> SurfaceDerivatives {
         match self {
             Surface::Plane { frame } => SurfaceDerivatives { point: self.eval(u, v), du: frame.x, dv: frame.y, duu: Vec3::ZERO, duv: Vec3::ZERO, dvv: Vec3::ZERO },
@@ -150,7 +145,6 @@ impl Surface {
     }
     /// 🗺️ Unit surface normal `du × dv` (falls back to `None` at a singular point, e.g. a sphere
     /// pole or a cone apex, where `du` degenerates to zero).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn normal(&self, u: f64, v: f64) -> Option<Vec3> {
         let d = self.derivatives(u, v);
         d.du.cross(d.dv).normalized()
@@ -165,7 +159,6 @@ impl Surface {
     /// degenerate (UV boundary polygons, tessellation's pole fan) needs the scale-free test, since
     /// a missed pole makes the two `u` branches meeting there collapse onto one and the face
     /// measures zero area.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_degenerate_uv(&self, u: f64, v: f64) -> bool {
         let d = self.derivatives(u, v);
         let (du, dv) = (d.du.norm(), d.dv.norm());
@@ -174,7 +167,6 @@ impl Surface {
     }
     /// 🗺️ Gaussian curvature `K = (LN - M²) / (EG - F²)` and mean curvature `H = (EN - 2FM + GL) /
     /// (2(EG - F²))`, from the first fundamental form `(E, F, G)` and second `(L, M, N)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn curvature(&self, u: f64, v: f64) -> Option<(f64, f64)> {
         let d = self.derivatives(u, v);
         let n = d.du.cross(d.dv).normalized()?;
@@ -194,13 +186,11 @@ impl Surface {
     }
     /// 🗺️ Principal curvatures `(κ1, κ2)` derived from Gaussian `K` and mean `H` curvature via
     /// `κ = H ± √(H² - K)`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn principal_curvatures(&self, u: f64, v: f64) -> Option<(f64, f64)> {
         let (gaussian, mean) = self.curvature(u, v)?;
         let disc = (mean * mean - gaussian).max(0.0).sqrt();
         Some((mean + disc, mean - disc))
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_planar(&self) -> bool {
         matches!(self, Surface::Plane { .. })
     }
@@ -369,7 +359,6 @@ impl Surface {
     /// uniformly, `half_angle` invariant); under a non-similarity map they convert to the exact
     /// NURBS surface of revolution ([`revolve_to_nurbs`]) already expressed in `map`'s image.
     /// `Nurbs` always just transforms its control points (rational weights are affine-invariant).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn transformed(&self, map: &Affine3) -> Surface {
         match self {
             Surface::Plane { frame } => {
@@ -394,22 +383,12 @@ impl Surface {
                 None => {
                     let knots = KnotVector::new(vec![0.0, 0.0, PRACTICAL_UNBOUNDED_EXTENT, PRACTICAL_UNBOUNDED_EXTENT], 1, 2).unwrap();
                     let profile = [(0.0, 0.0), (PRACTICAL_UNBOUNDED_EXTENT * half_angle.tan(), PRACTICAL_UNBOUNDED_EXTENT)];
-                    // 🧭️ The cone's radius grows unboundedly with `v` (`r(v) = v·tan(half_angle)`), so the
-                    // u-sweep's positional error at any given `v` is exactly `v·tan(half_angle)·angular_error`
-                    // (the `v`-degree-1 blend between the apex, r=0, and the far profile point is affine, so
-                    // it scales the u-error by the SAME `r(v)` a direct construction at that `v` would use —
-                    // verified numerically). Sizing the refinement off `half_angle.tan()` (r at v=1, not the
-                    // impractical `PRACTICAL_UNBOUNDED_EXTENT` edge) keeps span count sane while still giving
-                    // sub-`1e-6` error out to `v` in the hundreds — ample for any query in the surface's own
-                    // "practical" domain.
                     revolve_to_nurbs(frame, map, knots, &profile, &[1.0, 1.0], half_angle.tan())
                 }
             },
             Surface::Sphere { frame, radius } => match map.is_similarity() {
                 Some((_, scale, _)) => Surface::Sphere { frame: frame.transformed(map, scale), radius: radius * scale },
                 None => {
-                    // 🧭️ Both directions are angle-parametrized (`u` AND `v`), so both need
-                    // [`refined_max_span`], not just the shared `u`-sweep inside `revolve_to_nurbs`.
                     let (knots, profile, weights) = circular_profile_with_span((0.0, 0.0), *radius, (-std::f64::consts::FRAC_PI_2, std::f64::consts::FRAC_PI_2), refined_max_span(*radius));
                     revolve_to_nurbs(frame, map, knots, &profile, &weights, *radius)
                 }
@@ -449,7 +428,6 @@ impl Surface {
     /// per-arm derivations below) and exact for [`Surface::Nurbs`] via the standard isoparametric
     /// curve-extraction formula (fixed-direction basis functions folded into new, real control
     /// points on the other direction's own knot vector — no new knots, no approximation).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn isocurve(&self, dir: IsoDirection, at: f64) -> Curve3 {
         match self {
             Surface::Plane { frame } => match dir {
@@ -590,13 +568,6 @@ fn fit_pcurve(surface: &Surface, curve: &Curve3, domain: (f64, f64), tol: f64) -
         let params = parameterize(&uv_pts, ParamMethod::Centripetal);
         if let Some(fitted3) = interpolate_curve(&uv_pts, 3, ParamMethod::Centripetal, None, false) {
             let pcurve = nurbs3_to_curve2(&fitted3);
-            // 🐛 A SINGLE midpoint per inter-sample interval under-resolves the actual worst-case
-            // deviation: it can converge (report `max_dev <= tol`) while a DIFFERENT point inside
-            // the same interval — not the exact midpoint — is still off by 10-40× `tol` (confirmed:
-            // this loop used to report a converged `6e-5` at `n_samples=128` while a point at
-            // `s=0.1` was independently measured `0.0024` from the true curve). 4 evenly-spaced
-            // interior probes per interval catch that without assuming any particular worst-point
-            // location.
             let mut max_dev = 0.0f64;
             for (i, w) in ts.windows(2).enumerate() {
                 for k in 1..=4 {
@@ -679,7 +650,6 @@ fn seam_crossings(surface: &Surface, curve: &Curve3, domain: (f64, f64)) -> Vec<
 impl Surface {
     /// 🎯️ Evaluates a p-curve at its own parameter `t`, mapping through `surface.eval` — the
     /// trivial half of the p-curve contract; [`Surface::project_curve`] is the fitting half.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn eval_pcurve(&self, pcurve: &Curve2, t: f64) -> Pnt3 {
         let uv = pcurve.eval(t);
         self.eval(uv.x, uv.y)
@@ -697,7 +667,6 @@ impl Surface {
     /// periodic seam, returning only its first piece — callers that need every piece (e.g. a
     /// seam-crossing trim edge that must become several coedges) should call
     /// [`Surface::project_curve_pieces`] directly.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn project_curve(&self, curve: &Curve3, domain: (f64, f64), tol: f64) -> Curve2 {
         if let Some(shortcut) = analytic_pcurve_shortcut(self, curve) {
             return shortcut;
@@ -707,7 +676,6 @@ impl Surface {
 
     /// 🎯️ [`Surface::project_curve`], but split at every periodic-seam crossing so each returned
     /// piece stays within one seam-free stretch of `self`'s parameter domain.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn project_curve_pieces(&self, curve: &Curve3, domain: (f64, f64), tol: f64) -> Vec<Curve2> {
         if !self.is_u_periodic() && !self.is_v_periodic() {
             return vec![fit_pcurve(self, curve, domain, tol)];

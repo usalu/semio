@@ -200,8 +200,6 @@ export function WorldProjectionContentFrame(props: {
     if (size.width < 1 || size.height < 1) return;
     if (framedBoundsKeyRef.current === boundsKey) return;
     framedBoundsKeyRef.current = boundsKey;
-    // 📷️ Read the live store camera — render-time `useThree(s => s.camera)` is still the Canvas default
-    // PerspectiveCamera while sibling `OrthographicCamera makeDefault` runs in an earlier layout effect.
     const { camera, controls: rawControls } = getThree();
     const controls = rawControls as { target: Vector3; update?: () => void } | null;
     const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
@@ -265,9 +263,6 @@ export function PaintTexturedMesh({
   useSyncExternalStore(useCallback(listener=>{appearance?.listeners.add(listener);return ()=>appearance?.listeners.delete(listener);},[appearance]),()=>`${appearance?.pending ?? 0}:${appearance?.fault ?? ""}:${appearance?.closed ?? false}`,()=>"0::false");
   useEffect(()=>{if(!appearance)return;const listener=()=>invalidate();appearance.listeners.add(listener);return ()=>{appearance.listeners.delete(listener);};},[appearance,invalidate]);
   const authored=appearance && !appearance.closed && (styleKind === "neutral" || styleKind === "disabled");
-  // Per-vertex colours (energy class swatches, FEM contours) multiply against the material `color` in
-  // three.js — white lets them show through in the neutral/disabled styles only. Selected/hovered paint
-  // must match url-backed meshes (puzzle 3d, cad): solid token fill + emissive, not a guest-side bake.
   const hasVertexColors = geometry.hasAttribute("color");
   const heatmap = geometry.userData.world3dHeatmap === true && styleKind !== "provisional" && styleKind !== "celebrated";
   const preserveVertexColors = hasVertexColors && (styleKind === "neutral" || styleKind === "disabled" || heatmap);

@@ -30,8 +30,6 @@ describe("flow node-graph interaction publication", () => {
 
   it("costs the plugin ONE hop for a click that selects and ZERO for the same click repeated", () => {
     const ledger = createNodeGraphInteractionLedger();
-    // 🖱️ One pointer-up reaches the ledger twice — the pick hook and the surface's own handler read
-    // the same session state and both ask to publish it.
     const clickOn = (nodeIds: readonly string[]) => [ledger.publishSelection({ nodeIds }), ledger.publishSelection({ nodeIds })].filter(Boolean).length;
     expect(clickOn(["a"])).toBe(1);
     expect(clickOn(["a"])).toBe(0);
@@ -69,8 +67,6 @@ describe("flow node-graph interaction publication", () => {
   it("publishes again after the plugin moved the mark under the surface", () => {
     const ledger = createNodeGraphInteractionLedger();
     expect(ledger.publishSelection({ nodeIds: ["a"] })).toBe(true);
-    // 🧾️ A keyboard `selectAll` in the plugin arrives on the next scene; the board then answers its
-    // own single pick, which is a REAL change against what the plugin now holds.
     ledger.adoptSelection({ nodeIds: ["a", "b", "c"] });
     expect(ledger.publishSelection({ nodeIds: ["a"] })).toBe(true);
   });

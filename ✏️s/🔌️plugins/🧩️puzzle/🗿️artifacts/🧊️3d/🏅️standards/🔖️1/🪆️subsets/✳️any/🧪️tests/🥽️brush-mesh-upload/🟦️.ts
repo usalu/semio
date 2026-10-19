@@ -27,12 +27,6 @@ function decodeBrushMeshPage(page: { readonly positionsB64?: string; readonly in
 }
 
 describe("puzzle3d brush mesh paged upload", () => {
-  // 🚪️ `registerBrushMesh` is an APP-declared action, so a world-3d guest that never declared it drops
-  // every announcement as `undeclared-action` and the upload run can never settle. `🎥️shooting` paints
-  // GLB-backed meshes and declares no such action: its boot journalled 12 dropped dispatches and 12
-  // console errors before this gate (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice B3d,
-  // `🗑️generated/b3d-shooting-console.txt`). A guest that OWNS the lane publishes its install counter
-  // as `interactionJson.meshResidency`, so the counter's presence is the opt-in.
   it("announces brush meshes only to a guest that published a mesh residency", () => {
     const meshes = [{ url: "/test/a.glb" }, { url: "/test/b.glb" }, { url: "/test/a.glb" }, {}];
     expect(puzzle3dAnnounceableBrushMeshUrls(undefined, meshes)).toEqual([]);
@@ -89,12 +83,6 @@ describe("puzzle3d brush mesh paged upload", () => {
     expect(registry.holds(url, digest)).toBe(false);
   });
 
-  // 🚚️ Wave W-H: the host's claim about what the guest holds is scoped to the guest instantiation that
-  // justified it. A restored actor's mesh store is empty (it is deliberately not part of any checkpoint),
-  // and the only evidence the host ever gets is `interactionJson.meshResidency` falling. Before this the
-  // claim lived in a page-lifetime `Map`, so every window activation after a restart re-announced seven
-  // identities by id alone, every one was refused into a notice nothing read, and the brush utility kept
-  // no collision geometry until a full browser reload.
   it("re-pages every mesh instead of re-announcing when the guest restarted", () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
@@ -118,19 +106,6 @@ describe("puzzle3d brush mesh paged upload", () => {
     expect(registry.holds(urls[1]!, digest)).toBe(false);
   });
 
-  // 🚚️ Wave W-H, rewritten by wave B48: a guest that refuses an id-only announcement publishes the
-  // identity on the world body (`meshReuploadUrls`) and republishes it until the bytes land, so the
-  // claim has to be BOUNDED — re-driving on every republish is an upload storm, not a recovery.
-  //
-  // 🐛️ The bound used to be "once per publishing residency value", and `meshResidency` is the guest's
-  // own install counter, which every accepted announcement in the tab increments
-  // (`derive_brush_mesh`/`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`). So the brake was
-  // moved by the very traffic it suppressed: one standing request re-opened the gate on each unit of
-  // progress, each claim deleted the paged entry and forced the next announcement onto the full
-  // 72-command page path. Browser-measured at wasm #58 on the 180-object Nakagin document: 123 of 285
-  // console lines were `registerBrushMesh`, seq 22 → 124 over 306 s, still arriving 8 minutes after the
-  // example switch (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5, wave B48 §1.2). The bound is now
-  // per guest INSTANTIATION, which is the only fact the guest's accepted work cannot move.
   it("claims a guest re-upload request a bounded number of times per guest instantiation", () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
@@ -153,11 +128,6 @@ describe("puzzle3d brush mesh paged upload", () => {
     expect(registry.size).toBe(0);
   });
 
-  // 🪢️ Wave B22: the transfer is content-addressed. Every `dist/mesh/*.glb` in this repo is the same
-  // 771 728-byte capsule, so a scene placing several object kinds paged byte-identical geometry once per
-  // mesh id — browser-measured 2026-09-12 on wasm #47 as 202 `registerBrushMesh` commands for one example
-  // switch. A digest already resident under ANY id is announced instead, and the guest aliases its own
-  // derived page onto the new id (`adopt_brush_mesh_by_digest`, `✏️editor/⏳️precompute/🦀️.rs`).
   it("knows a digest this guest holds under another id, so the bytes cross once per geometry", () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
@@ -173,10 +143,6 @@ describe("puzzle3d brush mesh paged upload", () => {
     expect(registry.holdsDigest(digest)).toBe(false);
   });
 
-  // 🪢️ An alias is a claim about a SIBLING's bytes, never proof of its own, and a guest that refuses one
-  // must be handed the bytes next time. Without both halves an id whose alias was refused would be
-  // re-announced by digest forever — the guest asks for the bytes, the host answers with the same alias —
-  // and the brush utility would keep no collision body for it at all.
   it("never re-aliases an identity the guest refused, and never chains one alias off another", () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);
@@ -208,10 +174,6 @@ describe("puzzle3d brush mesh paged upload", () => {
     expect(puzzle3dBrushMeshQueueStep(queue, () => false)).toEqual({ kind: "idle" });
   });
 
-  // ⏳️ Wave B22: the run is back-pressured, so exactly ONE command is outstanding at a time. The macrotask
-  // drain it replaces queued every page of every mesh into the actor's one command queue inside a couple
-  // of hundred milliseconds — browser-measured 2026-09-12, 202 pages enqueued in 21 s, 40 settled over the
-  // next 420 s, and one user click that landed mid-run waited 44.3 s behind 15 pages.
   it("keeps exactly one mesh command outstanding and confirms only on a run's last page", async () => {
     const example = brushMeshUploadFixture.example;
     const digest = puzzle3dBrushMeshDigest(example.positions, example.indices);

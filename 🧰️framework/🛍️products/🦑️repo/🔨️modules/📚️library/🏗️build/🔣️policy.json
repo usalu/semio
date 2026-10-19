@@ -80,7 +80,8 @@
     "dotnet": [
       "{projectRoot}/**/*.cs",
       "{projectRoot}/**/*.csproj",
-      "{workspaceRoot}/Monorepo.sln"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"
     ],
     "nativeSources": [
       "production"

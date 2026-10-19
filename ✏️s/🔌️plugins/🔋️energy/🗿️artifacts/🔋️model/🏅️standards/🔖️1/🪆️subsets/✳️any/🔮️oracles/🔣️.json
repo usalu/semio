@@ -1904,21 +1904,6 @@
           ]
         },
         {
-          "mutationId": "change-infiltration-temperature-term-coefficient",
-          "sourceMutationDirectoryName": "🅱️change-infiltration-temperature-term-coefficient",
-          "mutationDirectoryName": "🅱️change-infiltration-temperature-term-coefficient",
-          "scenarios": [
-            {
-              "id": "change-infiltration-temperature-term-coefficient-applies",
-              "directoryName": "✅️applies"
-            },
-            {
-              "id": "change-infiltration-temperature-term-coefficient-refuses",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
           "mutationId": "change-infiltration-velocity-term-coefficient",
           "sourceMutationDirectoryName": "🆎️change-velocity-term-coefficient",
           "mutationDirectoryName": "🆎️change-velocity-term-coefficient",
@@ -1929,21 +1914,6 @@
             },
             {
               "id": "change-infiltration-velocity-term-coefficient-refuses",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-infiltration-velocity-squared-term-coefficient",
-          "sourceMutationDirectoryName": "🆑️change-infiltration-velocity-squared-term-coefficient",
-          "mutationDirectoryName": "🆑️change-infiltration-velocity-squared-term-coefficient",
-          "scenarios": [
-            {
-              "id": "change-infiltration-velocity-squared-term-coefficient-applies",
-              "directoryName": "✅️applies"
-            },
-            {
-              "id": "change-infiltration-velocity-squared-term-coefficient-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
@@ -2019,36 +1989,6 @@
             },
             {
               "id": "change-mechanical-ventilation-design-flow-refuses",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-mechanical-ventilation-fan-total-efficiency",
-          "sourceMutationDirectoryName": "💠️change-mechanical-ventilation-fan-total-efficiency",
-          "mutationDirectoryName": "💠️change-mechanical-ventilation-fan-total-efficiency",
-          "scenarios": [
-            {
-              "id": "change-mechanical-ventilation-fan-total-efficiency-applies",
-              "directoryName": "✅️applies"
-            },
-            {
-              "id": "change-mechanical-ventilation-fan-total-efficiency-refuses",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-mechanical-ventilation-fan-delta-pressure",
-          "sourceMutationDirectoryName": "🎈️change-mechanical-ventilation-fan-delta-pressure",
-          "mutationDirectoryName": "🎈️change-mechanical-ventilation-fan-delta-pressure",
-          "scenarios": [
-            {
-              "id": "change-mechanical-ventilation-fan-delta-pressure-applies",
-              "directoryName": "✅️applies"
-            },
-            {
-              "id": "change-mechanical-ventilation-fan-delta-pressure-refuses",
               "directoryName": "⛔️refuses"
             }
           ]
@@ -2279,21 +2219,6 @@
           ]
         },
         {
-          "mutationId": "change-humidistat-humidifying-setpoint-schedule",
-          "sourceMutationDirectoryName": "☔️change-humidistat-humidifying-setpoint-schedule",
-          "mutationDirectoryName": "☔️change-humidistat-humidifying-setpoint-schedule",
-          "scenarios": [
-            {
-              "id": "change-humidistat-humidifying-setpoint-schedule-repoints-humidifying",
-              "directoryName": "✅️repoints"
-            },
-            {
-              "id": "change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
           "mutationId": "change-humidistat-dehumidifying-setpoint-schedule",
           "sourceMutationDirectoryName": "🏝️change-dehumidifying-setpoint-schedule",
           "mutationDirectoryName": "🏝️change-dehumidifying-setpoint-schedule",
@@ -2439,36 +2364,6 @@
             },
             {
               "id": "change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-ideal-loads-system-outdoor-air-per-person",
-          "sourceMutationDirectoryName": "🧍️change-ideal-loads-system-outdoor-air-per-person",
-          "mutationDirectoryName": "🧍️change-ideal-loads-system-outdoor-air-per-person",
-          "scenarios": [
-            {
-              "id": "change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head",
-              "directoryName": "✅️ventilates"
-            },
-            {
-              "id": "change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative",
-              "directoryName": "⛔️refuses"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-ideal-loads-system-outdoor-air-per-area",
-          "sourceMutationDirectoryName": "🔳️change-ideal-loads-system-outdoor-air-per-area",
-          "mutationDirectoryName": "🔳️change-ideal-loads-system-outdoor-air-per-area",
-          "scenarios": [
-            {
-              "id": "change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area",
-              "directoryName": "✅️ventilates"
-            },
-            {
-              "id": "change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative",
               "directoryName": "⛔️refuses"
             }
           ]

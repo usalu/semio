@@ -1,0 +1,141 @@
+{
+  "defaults": [
+    "authored",
+    "two words"
+  ],
+  "caller": [
+    "caller",
+    "literal$()",
+    "",
+    "é",
+    "quote'"
+  ],
+  "cases": [
+    {
+      "name": "Command Enables Disabled Target Forwarding",
+      "forwardAllArgs": false,
+      "commands": [
+        {
+          "command": "bun ./📦️child/🟦️.ts",
+          "forwardAllArgs": true
+        }
+      ],
+      "expected": [
+        [
+          "authored",
+          "two words",
+          "caller",
+          "literal$()",
+          "",
+          "é",
+          "quote'"
+        ]
+      ]
+    },
+    {
+      "name": "Command Disables Enabled Target Forwarding",
+      "forwardAllArgs": true,
+      "commands": [
+        {
+          "command": "bun ./📦️child/🟦️.ts",
+          "forwardAllArgs": false
+        },
+        "bun ./📦️child/🟦️.ts"
+      ],
+      "expected": [
+        [],
+        [
+          "authored",
+          "two words",
+          "caller",
+          "literal$()",
+          "",
+          "é",
+          "quote'"
+        ]
+      ]
+    },
+    {
+      "name": "Mixed Commands Override Disabled Target",
+      "forwardAllArgs": false,
+      "commands": [
+        "bun ./📦️child/🟦️.ts",
+        {
+          "command": "bun ./📦️child/🟦️.ts",
+          "forwardAllArgs": true
+        }
+      ],
+      "expected": [
+        [],
+        [
+          "authored",
+          "two words",
+          "caller",
+          "literal$()",
+          "",
+          "é",
+          "quote'"
+        ]
+      ]
+    },
+    {
+      "name": "Both Levels Disable Forwarding",
+      "forwardAllArgs": false,
+      "commands": [
+        {
+          "command": "bun ./📦️child/🟦️.ts",
+          "forwardAllArgs": false
+        }
+      ],
+      "expected": [
+        []
+      ]
+    },
+    {
+      "name": "Omitted Target Flag Forwards Literal Arguments",
+      "forwardAllArgs": null,
+      "commands": [
+        "bun ./📦️child/🟦️.ts"
+      ],
+      "expected": [
+        [
+          "authored",
+          "two words",
+          "caller",
+          "literal$()",
+          "",
+          "é",
+          "quote'"
+        ]
+      ]
+    }
+  ],
+  "literal": [
+    "{workspaceRoot}",
+    "{projectRoot}",
+    "{projectName}",
+    "{options.missing}",
+    "two words",
+    "",
+    "quote'",
+    "é",
+    "literal$()"
+  ],
+  "bailCases": [
+    {
+      "expected": [
+        "--keep_going"
+      ]
+    },
+    {
+      "bail": false,
+      "expected": [
+        "--keep_going"
+      ]
+    },
+    {
+      "bail": true,
+      "expected": []
+    }
+  ]
+}

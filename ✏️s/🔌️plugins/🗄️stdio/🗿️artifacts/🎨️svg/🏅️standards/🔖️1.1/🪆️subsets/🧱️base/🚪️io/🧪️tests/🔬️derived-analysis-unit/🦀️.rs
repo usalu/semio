@@ -44,7 +44,6 @@ mod tests {
         };
         assert_eq!(group_children.len(), 3);
 
-        // Round trip through the real text codec confirms the built document is well-formed SVG.
         let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
         let reparsed = <SvgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&text).expect("reparse");
         let retyped = svg_document_to_typed(&crate::standards::v1_1::subsets::base::io::text::snapshot::attributes::native_svg_document(&reparsed.doc)).expect("retyped");
@@ -61,8 +60,6 @@ mod tests {
     /// builder-constructible: it exists purely as a lossless parse escape hatch).
     #[semio_framework_async_macros::async_test]
     async fn analyzer_to_builder_round_trip() {
-        // 🚧️ `r##"..."##`: the fixture's `stop-color="#ff0000"` contains the literal sequence
-        // `"#`, which would otherwise close a single-hash raw string early.
         let source_text = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
       <defs>
         <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
@@ -81,18 +78,13 @@ mod tests {
         assert!(analysis.diagnostics.is_empty(), "diagnostics: {:?}", analysis.diagnostics);
         let original_typed = analysis.parts.typed.expect("typed parts present");
 
-        // 🧵 The fixture is pretty-printed, so raw children include whitespace-only text nodes
-        // between elements (preserved losslessly by design) -- filter those before indexing.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn elements_only(v: &[SvgElement]) -> Vec<SvgElement> {
             v.iter().filter(|c| !matches!(c, SvgElement::TextNode(_))).cloned().collect()
         }
         /// 🧹 Strips whitespace-only text nodes recursively, so structural comparison between a
         /// parsed (pretty-printed, whitespace-bearing) document and a builder-reconstructed one
         /// (which never emits layout whitespace) is apples-to-apples.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         fn strip_whitespace(el: &SvgElement) -> SvgElement {
-            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             fn strip_all(children: &[SvgElement]) -> Vec<SvgElement> {
                 elements_only(children).iter().map(strip_whitespace).collect()
             }
@@ -190,8 +182,6 @@ mod tests {
                 inner
             }),
             SvgElement::Use { common, href, x, y, width, height } => eb.add_use(href.clone(), *x, *y, *width, *height, common.clone()),
-            // 🚪 Text/Unknown/raw-node variants aren't part of this round trip's fixture (see the
-            // test's doc comment); left as identity so the match stays exhaustive and honest.
             _ => eb,
         }
     }

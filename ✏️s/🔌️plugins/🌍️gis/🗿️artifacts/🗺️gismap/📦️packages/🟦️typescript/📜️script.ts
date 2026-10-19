@@ -577,7 +577,7 @@ class ColdDocumentPairBrowserCheckScript extends BundleScript {
 class InferenceBridgeCheckScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const mode=segments[0]??"--source";
-    if(segments.length>1||!["--source","--process"].includes(mode))throw Error("inference-bridge-check [--source|--process]");
+    if(segments.length>1||!["--source","--process"].includes(mode))throw new Error("inference-bridge-check [--source|--process]");
     const {proveMcpInferenceBridgeFixture}=await import("../../💡️inference/🌉️mcp/🧪️tests/🔬️oracle/🟦️.ts");
     const report=proveMcpInferenceBridgeFixture(this.repoRoot);
     console.log(`gis-mcp-inference-bridge: ${JSON.stringify(report)}`);
@@ -587,9 +587,9 @@ class InferenceBridgeCheckScript extends BundleScript {
 
 class TileCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.some(arg => arg !== "--native")) throw Error("tiles-check accepts only --native");
+    if (args.some(arg => arg !== "--native")) throw new Error("tiles-check accepts only --native");
     const root = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (!root) throw Error("tiles-check requires a ticket artifact directory");
+    if (!root) throw new Error("tiles-check requires a ticket artifact directory");
     const { proveGisMapTilesV1 } = await import("../../🗺️tiles/🧪️tests/🟦️.ts");
     console.log(`gis-map-tiles: laws=${await proveGisMapTilesV1(root)} passed`);
     if (args.includes("--native")) {
@@ -601,7 +601,7 @@ class TileCheckScript extends BundleScript {
 
 class TilePrefetchScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("tiles-prefetch uses its owner-authored default bounds and providers");
+    if (args.length) throw new Error("tiles-prefetch uses its owner-authored default bounds and providers");
     const { prefetchMapTiles } = await import("../../🗺️tiles/🟦️.ts");
     const cancellation = new AbortController();
     const cancel = () => cancellation.abort();
@@ -619,7 +619,7 @@ class OwnedVerifyScript extends BundleScript {
       await runOwnedCommand(process.execPath, ["test", resolve(this.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️hub/🧪️tests/🔣️transport/🟦️.ts")], this.repoRoot, "owned-physical-codecs", 120_000);
       return;
     }
-    throw Error("verify physical-codecs");
+    throw new Error("verify physical-codecs");
   }
 }
 
@@ -627,7 +627,7 @@ const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyS
 if(["build","check","test"].includes(process.argv[2]??"")){
  const{runArtifactTypeScriptPackageMain}=await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts");
  await runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gismap-js",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts","🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🌐️hub/🧪️tests/🔣️transport/🟦️.ts"]});
-}else await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"inference-check"}) }));
+}else await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "inference-check" }));
 
 
 

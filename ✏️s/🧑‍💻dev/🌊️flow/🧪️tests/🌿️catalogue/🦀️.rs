@@ -120,9 +120,6 @@ fn a_renamed_output_keeps_the_display_name_it_always_had() {
 
 #[test]
 fn fixture_kind_infos_json_covers_every_first_party_extension() {
-    // 🧊️ Untyped JSON on purpose: deserializing into `NeuronKindInfo` (= `neural::OperatorInfo`)
-    // reconstructs real cold-tracked `Dictionary` values inside `ChannelSpec::default` and panics
-    // on drop outside a cold boundary — plain `serde_json::Value` sidesteps that entirely.
     let catalogue: serde_json::Value = serde_json::from_str(&fixture_kind_infos_json()).expect("neuron kind infos json");
     let ids: Vec<&str> = catalogue.as_array().expect("neuron kind infos array").iter().filter_map(|item| item["id"].as_str()).collect();
     for prefix in ["brep.", "bim.", "dictionary.", "draw.", "list.", "logic.", "math.", "core.", "text."] {
@@ -147,9 +144,6 @@ fn app_catalogue_carries_every_operator_and_palette_section() {
 #[test]
 fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-    // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
-    // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
   "camera": { "x": 140, "y": -60, "zoom": 2.2 },
@@ -237,9 +231,6 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
 #[test]
 fn rectangle_extrude_fixture_evaluates_solid_output() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-    // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
-    // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
   "camera": { "x": 140, "y": -60, "zoom": 2.2 },
@@ -313,9 +304,6 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
 
 #[test]
 fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
-    // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`pack::snapshot::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
-    // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
   "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
@@ -357,8 +345,6 @@ fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
     let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
     assert!(handle.len() == 64 && handle.bytes().all(|byte| byte.is_ascii_hexdigit()), "a solid handle is the kernel's Blake3 content digest: {handle}");
-    // 🧊️ The solid lives in the kernel of the extension that minted it (a packaged extension links its own copy of
-    // this crate), so its mesh is asked of that extension's own operator through the registry the evaluation used.
     let geometry = Dictionary::with_schema("geometry").insert("handle", NeuralValue::Atom(Atom::String(handle.into()))).insert("kind", NeuralValue::Atom(Atom::String("solid".into())));
     let input = Dictionary::new().insert("geometry", NeuralValue::Dictionary(geometry)).insert("deflection", NeuralValue::Dictionary(Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(0.05)))));
     let exported = flow_operator_registry().dispatch("brep.io.exportStl", &input).expect("the evaluated solid is live in its extension's kernel");

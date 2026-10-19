@@ -5,7 +5,7 @@ import type {ManagedToolingPublisherV1} from "../../../🧹️retention/📥️p
 import {randomBytes} from "node:crypto";
 import {join} from "node:path";
 import {writeFile,rm,mkdir} from "node:fs/promises";
-import {prepareBun} from "../../../🟦️bun/📜️script.ts";
+import {prepareBun} from "../../../🟦️bun/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {readPhysicalCargoSourceV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";

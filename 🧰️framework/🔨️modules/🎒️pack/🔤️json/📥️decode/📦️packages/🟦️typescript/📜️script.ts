@@ -8,7 +8,7 @@ import { runOwnedCommand } from "../../../../../🏃️process/📦️packages/�
 /** 🔣️ Checks controlled lossless JSON syntax and explicit member selection. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("Expected test");
+    if (args.length) throw new Error("Expected test");
     await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🟦️.ts")], this.root, "pack:json:decode", 30000);
   }
 }

@@ -10,7 +10,7 @@ pub(super) fn push_uls_str_geo<A: NationalAnnex>(report: &mut CheckReport, annex
     let rd = member.rd_str;
     let path = member_path(document, &member.id, "rdStr");
     let subject = SubjectRef::new(&member.id, &path, member_label(member));
-    for (rule, ed, section) in [("6.10a", ed_a, "6.10a"), ("6.10b", ed_b, "6.10b"), ("6.10", ed_610, "6.10")] { // governing 6.10 = max(6.10a,6.10b) per DIN EN 1990/NA NDP A1.3.1(4)
+    for (rule, ed, section) in [("6.10a", ed_a, "6.10a"), ("6.10b", ed_b, "6.10b"), ("6.10", ed_610, "6.10")] {
         let id = format!("en1990.str.{}.{}.{leading}", member.id, rule);
         let mut builder = CheckResult::assess(id, if is_bridge(&document.structure_kind) { "EN 1990 STR A2.4(B)" } else { "EN 1990 STR A1.2(B)" }, ClauseId::new("EN 1990", "§6.4", section), subject.clone(), str_title(section))
             .utilization(q_force(ed), q_force(rd))
@@ -177,7 +177,7 @@ pub(super) fn push_uls_geo<A: NationalAnnex>(report: &mut CheckReport, annex: &A
     let rd = member.rd_geo;
     let path = member_path(document, &member.id, "rdGeo");
     let subject = SubjectRef::new(&member.id, &path, member_label(member));
-    for (rule, ed, section) in [("6.10a", ed_a, "6.10a"), ("6.10b", ed_b, "6.10b"), ("6.10", ed_610, "6.10")] { // governing 6.10 = max(6.10a,6.10b) per DIN EN 1990/NA NDP A1.3.1(4)
+    for (rule, ed, section) in [("6.10a", ed_a, "6.10a"), ("6.10b", ed_b, "6.10b"), ("6.10", ed_610, "6.10")] {
         let id = format!("en1990.geo.{}.{}.{leading}", member.id, rule);
         let mut builder = CheckResult::assess(
             id,

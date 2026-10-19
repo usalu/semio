@@ -106,11 +106,9 @@ fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Press)), "a plain press must not immediately start a drag");
 
-    // Small move under the promotion threshold: still just a Press.
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 6.0, y: 6.0, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Press)));
 
-    // Move past the threshold and over the drop target: promotes to Drag and finds the target.
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Drag)));
     assert_eq!(router.drag_session().and_then(|drag| drag.drop_target), Some(target));
@@ -180,8 +178,6 @@ fn scroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis() 
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
-    // A bare `Stack` is a `hit_test`-transparent pass-through container (see 🔖️HitTest's
-    // `is_plain_container`) — the thumb needs to be a real leaf to be hit-testable itself.
     let thumb = leaf(&mut tree, Some(root), 1, separator_ui(), (190.0, 0.0, 10.0, 40.0));
     let mut router = EventRouter::new("main");
     router.register_scroll_thumb(thumb, root, ScrollAxis::Vertical);

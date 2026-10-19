@@ -24,8 +24,6 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
   const resolvedTitle = title ?? selectTargetLabel;
-  // 🐚️ Falls back to `document.body` outside any shell — inside one, portals into that shell's own
-  // overlay layer instead so this menu never visually escapes into another mounted shell's stacking context.
   const shellScope = useShellScopeOptional();
 
   React.useEffect(() => {

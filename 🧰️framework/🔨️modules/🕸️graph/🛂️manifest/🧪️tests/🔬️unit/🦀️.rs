@@ -38,9 +38,6 @@ fn validator_rejects_unknown_node_kind() {
 #[test]
 fn property_value_dsl_field_round_trips_nested_array_and_object() {
     block_on_test(async {
-        // 🌳️ Nested case: an Object containing an Array containing an Object — proves the
-        // `dsl_core::DslField` bridge (via `dsl_core::DslValue`) recurses correctly at every depth, not just
-        // for a flat value.
         let mut inner_obj = PropertyBag::new();
         inner_obj.insert("flag".to_string(), PropertyValue::Bool(true));
         inner_obj.insert("label".to_string(), PropertyValue::String("leaf".to_string()));

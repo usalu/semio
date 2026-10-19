@@ -96,11 +96,6 @@ pub(super) fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>,
             from_value_stmts.push(quote!{let #local=None;});
             continue;
         }
-        // A `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` scalar field's Shape is resolved at
-        // spec-build time via `dsl::__rt::unit_for_derive` — same lazy-per-call pattern every other
-        // `fn() -> RecordSpec`-backed Shape in this engine already uses, so an unknown unit symbol
-        // surfaces as a panic the first time the generated spec runs (caught by that app's own
-        // RecordSpec-law tests), never silently.
         let quantity_shape_override: Option<proc_macro2::TokenStream> = if let Some(symbol) = unit {
             Some(quote! { ::semio_framework_dsl_record::Shape::Quantity(::semio_framework_dsl_record::__rt::unit_for_derive(#symbol)) })
         } else if let Some(symbol) = angle {
@@ -134,12 +129,6 @@ pub(super) fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>,
             quote! {}
         };
 
-        // `DslField::shape`/`DslVariants::variants` are E4 (sync, fn-pointer transitivity — see
-        // R9), so `shape_expr` never needs `.await`. `DslField::to_value`/`from_value` and
-        // `DslVariants::to_named_record`/`from_named_record` stay `async`, so every value-level
-        // call below is `.await`ed; a `Vec`/`Map` field can't `.await` per-element inside
-        // `Iterator::map` (R10 residue shape 1), so those go through a sequential loop instead of
-        // `.map().collect()`.
         let (shape_expr, to_value_expr, from_value_expr): (proc_macro2::TokenStream, proc_macro2::TokenStream, proc_macro2::TokenStream) = match kind {
             FieldKind::Scalar => (
                 quantity_shape_override.clone().unwrap_or_else(|| quote! { <#elem_ty as ::semio_framework_dsl_record::DslField>::shape() }),
@@ -189,9 +178,6 @@ pub(super) fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>,
                     }
                 },
             ),
-            // Same `to_value`/`from_value` as `VecList` (both produce `FieldValue::List(Record)`)
-            // — only the `Shape` differs (`Table` vs `List(Record)`), which is what makes the
-            // printer emit compact SoA instead of verbose AoS for this field.
             FieldKind::VecTable(inner) => (
                 quote! { ::semio_framework_dsl_record::Shape::Table(<#inner>::__dsl_spec_producer()) },
                 quote! {
@@ -332,16 +318,6 @@ pub(super) fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>,
             ),
         };
 
-        // `#[dsl(block)]` on a field whose own `FieldKind` doesn't already imply `{ }` wrapping
-        // (`VecBlockStatements` does that itself) — generically wraps whatever shape the match
-        // above produced, e.g. turning a nested `#[derive(DslRecord)]` scalar field into a bare
-        // `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
-        //
-        // `FieldValue::Absent` (an `Option<T>` field's `None`) is deliberately NOT wrapped: an
-        // empty `stroke { }` would reparse as "a record whose every field is absent", not "no
-        // record at all" — `StrokeStyle`'s own non-optional fields would then fail with "expected
-        // a 4-item Tuple, found Absent" instead of the field itself just being omitted, exactly
-        // like an ordinary (non-block) optional field already is.
         let (shape_expr, to_value_expr, from_value_expr) = if *block {
             (
                 quote! { ::semio_framework_dsl_record::Shape::Block(Box::new(#shape_expr)) },

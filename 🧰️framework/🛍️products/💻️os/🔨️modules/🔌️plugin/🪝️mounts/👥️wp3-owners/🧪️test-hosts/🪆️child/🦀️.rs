@@ -69,6 +69,7 @@ use semio_framework_plugin_time_travel as time_travel;
 
 #[doc(hidden)]
 pub mod child_unit_2 {
+    use semio_framework_os_store_testing_doubles::store;
     use semio_framework::ActionKind;
     use semio_framework_plugin_decl_app::ArtifactApp;
     use semio_framework_plugin_command::CommandLogAppend;

@@ -24,6 +24,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]

@@ -3,11 +3,11 @@
 
 use semio_framework_pack_json::Value;
 use semio_framework_plugin::{ActionMeta, EditorApp, Fault, InteractionTarget, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowMeasure, artifact_app_laws};
-use crate::editor::puzzle5d::entities::{PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_WINDOWS};
-use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
-use crate::editor::puzzle5d::{create_puzzle5d_app, Puzzle5dPlayApp};
-use crate::editor::puzzle5d::modes::edit;
-use crate::editor::puzzle5d::interaction::{Puzzle5dCommand};
+use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::entities::{PUZZLE5D_INTERACTION_DOMAIN, PUZZLE5D_PLAY_WINDOWS};
+use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
+use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::{create_puzzle5d_app, Puzzle5dPlayApp};
+use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::modes::edit;
+use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::interaction::{Puzzle5dCommand};
 
 /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
 /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -175,13 +175,6 @@ fn settle(app: &mut Puzzle5dTestApp, result: Result<InvocationResult, Fault>, id
         }
         app.maintain(semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         block_on(app.0.advance_typed_operation_publication(identity, app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")))?;
-        // 📄️ EVERY presented page and EVERY completion per turn, never one:
-        // `has_pending_typed_operations` counts the outboxes and the mounted operations but NOT a
-        // page already presented and waiting for its ACK, so a turn that leaves a second page — or
-        // the terminal completion that CARRIES THE HISTORY PATCH — queued can be the very turn this
-        // loop exits on, and the caller then reads a result with no committed edits at all. The
-        // framework's own `settle_registered_typed_operation` drains both in inner loops for exactly
-        // this reason, and `◻️2d`'s harness was corrected the same way.
         drain_settled(app, &mut result, &mut fault)?;
     }
     Err(Fault::from("puzzle5d test operation did not settle"))
@@ -193,10 +186,6 @@ fn settle(app: &mut Puzzle5dTestApp, result: Result<InvocationResult, Fault>, id
 /// `(action, args, window_id)` triple every pre-migration test already passed.
 pub fn dispatch(app: &mut Puzzle5dTestApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
     let action_meta = action_meta(action, args, window_id);
-    // 🕰️ Framework-reserved verbs (undo/redo/checkpoint/…/the six interaction verbs) stay on
-    // `handle_action` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM added
-    // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
-    // setInteractionGranularity to this reserved set.
     if matches!(
         action,
         "undo"

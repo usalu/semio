@@ -132,7 +132,7 @@ describe("🌗️ contrast and states", () => {
   }
 
   it("paints a name label in the ink of its slot, in the appearance the document shows", () => {
-    const peers: readonly PeerCursor[] = [2, 8, 14].map((colour) => ({ session: `s-${colour}`, tag: `0000000${colour % 10}`, label: `Learner ${colour}`, colour, cursor: { anchor: "home:learner", x: 0.5, y: 0.5 }, focus: undefined, drag: undefined }));
+    const peers: readonly PeerCursor[] = [2, 8, 14].map((colour) => ({ session: `s-${colour}`, tag: `0000000${colour % 10}`, label: `Learner ${colour}`, colour, place: { screen: "home" }, home: undefined, cursor: { anchor: "home:learner", x: 0.5, y: 0.5 }, focus: undefined, drag: undefined }));
     render(<PresenceOverlay view={{ ...EMPTY_PRESENCE_VIEW, peers }} show />);
     for (const peer of peers) {
       const holder = document.querySelector<HTMLElement>(`[data-tag="${peer.tag}"]`)!.parentElement!;

@@ -49,7 +49,7 @@ async fn world_selection_json_carries_the_host_field_names_per_granularity() {
     assert_eq!(selection.get("targetVolumeIds").and_then(Value::as_array).map(Vec::len), Some(0));
     assert!(selection.get("vortexIds").is_none(), "the host's WorldSelectionRecord has no vortexIds field");
 
-    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [0.0, 0.0, 0.0] })), Some(main::WINDOW_KIND_ID)).await.expect("addTargetVolume");
+    dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [0.0, 0.0, 0.0] })), Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)).await.expect("addTargetVolume");
     let volume_id = projection_of(&app).get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.last().cloned()).and_then(|volume| volume.get("id").and_then(Value::as_str).map(str::to_string)).expect("target volume id");
     select_id(&mut app, PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume_id).await.expect("select target volume");
     let selection = selection_of(&render_composite(&mut app).await);
@@ -270,9 +270,6 @@ async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_not
     let mut app = app().await;
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
-    // 🌱️ The seed gesture SELECTS what it adds (`add_object_kind_selects_the_object_it_adds`), so the
-    // empty precondition this law is about has to be established explicitly — otherwise every arm below
-    // measures a live selection and refuses nothing (wave B36).
     dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear the seed gesture's own selection");
     let objects_before = projection_of(&app).get("objects").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
     for action in ["duplicateSelection", "deleteSelection", "selectSameKindSelection"] {
@@ -283,9 +280,6 @@ async fn selection_scoped_commands_with_no_selection_refuse_with_exactly_one_not
         assert!(result.mutations.is_empty(), "{action} refused, so it must emit no document mutation: {:?}", result.mutations);
         assert!(!matches!(result.ui_scope, UiDirtyScope::Full), "{action} painted nothing, so it must not force a full refresh");
     }
-    // 🧲️ The three gumball verbs run the transform tool (`Puzzle3dTransformWork`), whose whole outcome
-    // (notice, scope) lives on the completion lane that `context::settle` drains into `InvocationResult`: a
-    // gesture addressing nothing refuses with one notice and paints nothing.
     for (action, args) in [
         ("translateSelection", json!({ "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
         ("rotateSelection", json!({ "ax": 0.0, "ay": 0.0, "az": 1.0, "angle": 1.0 })),
@@ -362,7 +356,7 @@ async fn delete_selection_shrinks_the_world_census_and_drops_the_deleted_id() {
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("first object");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("second object");
-    let census_before = instance_count(&render_window(&mut app, main::WINDOW_KIND_ID).await);
+    let census_before = instance_count(&render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await);
     assert_eq!(census_before, 2, "two added objects must both be in the rendered world census");
     let object_id = first_object_id(&app);
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
@@ -375,8 +369,6 @@ async fn delete_selection_shrinks_the_world_census_and_drops_the_deleted_id() {
     assert!(!selection.ids.contains(&object_id), "the deleted id must be gone from the selection, else a second Delete is a silent no-op: {:?}", selection.ids);
     let (again, settled_again) = dispatch_reporting(&mut app, "deleteSelection", None, None).await;
     again.expect("second deleteSelection");
-    // 🧾️ A Mutation that emits nothing still logs one row (`edit_id: None`), on THIS settle — the same
-    // empty-emit row `dispatch_emit` files under "Without Operations". What must not happen is an edit.
     let again_rows = history_row_labels(&settled_again);
     assert_eq!(history_rows(&settled_again), 1, "a delete with nothing selected logs the command and no edit: {again_rows:?}");
     assert!(again_rows.iter().all(|row| row.contains("deleteSelection") && row.contains("applied=false") && row.contains("ops=0")), "{again_rows:?}");

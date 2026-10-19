@@ -1,14 +1,14 @@
 /** 🧬️ Process3dPresence */
 export interface Process3dPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   engagementInput: string;
-  /** @state presence */
+  /** 📷️ @state presence */
   cameraPosition: number[];
-  /** @state presence */
+  /** 🎥️ @state presence */
   cameraTarget: number[];
-  /** @state presence */
+  /** 📸️ @state presence */
   cameraFov: number;
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeUtilityId: string;
 }
 

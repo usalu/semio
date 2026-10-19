@@ -40,11 +40,6 @@ async fn real_world_gltf() -> GltfSnapshot {
     let trans_bv = b.add_buffer_view(trans_buf, 0, 24, None, None);
     let trans_acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Vec3, 2).with_buffer_view(trans_bv, 0));
 
-    // CubicSpline weights: 2 keyframes * 2 morph targets * 3 (in/value/out) = 12 floats.
-    // Values chosen exactly f32-representable (0.25/0.5/0.75/0.125) so the f32-widened-to-f64
-    // decode compares bit-exact against plain f64 literals below -- glTF's own accessor
-    // component type IS real IEEE-754 single precision, a genuine boundary this test isolates
-    // from (see the reverse serializer's own doc comment on this same precision fact).
     let mut weight_bytes = Vec::new();
     let weight_floats: [f32; 12] = [0.0, 0.0, 0.25, 0.5, 0.0, 0.0, 0.0, 0.0, 0.75, 0.125, 0.0, 0.0];
     for f in weight_floats {
@@ -90,7 +85,7 @@ async fn deserialize_maps_linear_translation_channel_with_named_node() {
 async fn deserialize_strips_cubic_spline_tangents_keeping_only_the_real_value_third() {
     let anim = ::semio_framework_async::poll::resolve_ready(SemioAnimationFromGltf::deserialize(&real_world_gltf().await)).expect("deserialize");
     let ch = &anim.timelines[0].channels[1];
-    assert_eq!(ch.target.node, "node#1"); // unnamed node -> synthesized name
+    assert_eq!(ch.target.node, "node#1");
     assert_eq!(ch.interpolation, AnimInterpolation::CubicSpline);
     assert_eq!(ch.keyframes.len(), 2);
     assert_eq!(ch.keyframes[0].value, AnimValue::Weights { values: vec![0.25, 0.5] });

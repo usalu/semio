@@ -54,6 +54,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true }
 semio-s-artifact-writer-writer-schema = { path = "../../../📦️packages/🦀️rust" }
 semio-s-artifact-writer-writer-tests = { path = "../../../🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-snapshot = { path = "../../../../../../../../../../../🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

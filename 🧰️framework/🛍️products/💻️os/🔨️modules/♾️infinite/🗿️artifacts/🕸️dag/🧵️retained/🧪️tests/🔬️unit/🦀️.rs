@@ -2,6 +2,9 @@
 use super::*;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress}};
 use crate::sqlite_snapshot_tests::property_allocation::heap;
+use semio_framework_os_infinite_directed_presentation::DagNodeKind;
+use semio_framework_os_infinite_directed_presentation::IoPortSpec;
+use semio_framework_os_infinite_directed_presentation::EdgeRouteStyle;
 
 fn close(owner:Box<dyn ErasedSnapshotRetirement>,copy:usize,born:usize,original:usize){
  let mut slot=Some(owner);let mut allocated=born;let mut released=0;
@@ -55,9 +58,9 @@ fn mutation(index:u64)->DagMutation{
   7=>DagMutation::ChangeNodeAbbreviation(ChangeNodeAbbreviation{id:text(),new_abbreviation:text()}),
   8=>DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind{id:text(),new_operator_kind:Some(text())}),
   9=>DagMutation::ReplaceNodeKind(ReplaceNodeKind{id:text(),new_kind:DagNodeKind::Note{text:text(),output:IoPortSpec::default()}}),
-  10=>DagMutation::ReplaceNodeProperties(ReplaceNodeProperties{id:text(),new_properties:graph::manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::Object(semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::String(text()))])))])}),
+  10=>DagMutation::ReplaceNodeProperties(ReplaceNodeProperties{id:text(),new_properties:semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::Object(semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::String(text()))])))])}),
   11=>DagMutation::ReorderNodes(ReorderNodes{order:vec![text(),String::with_capacity(128),text()]}),
-  12=>DagMutation::ConnectNodes(ConnectNodes{id:text(),source:text(),target:text(),route_style:EdgeRouteStyle::SharpSz,properties:graph::manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::Number(f64::NAN))]),index:u64::MAX}),
+  12=>DagMutation::ConnectNodes(ConnectNodes{id:text(),source:text(),target:text(),route_style:EdgeRouteStyle::SharpSz,properties:semio_framework_graph_manifest::PropertyBag::from([(text(),semio_framework_graph_manifest::PropertyValue::Number(f64::NAN))]),index:u64::MAX}),
   13=>DagMutation::DisconnectNodes(DisconnectNodes{id:text()}),
   _=>unreachable!(),
  }

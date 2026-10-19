@@ -34,10 +34,6 @@ impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
 //#region 🔖️Identified
 /// 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
 pub trait Identified<TId> {
-    // 🚫️async: E1 pure accessor — every real caller is a std `Iterator`/`Vec` closure
-    // (`retain`/`position`/`find`), `FnMut(&T) -> bool` signature fixed outside this repo and
-    // cannot be async — see R9, R10 residue shape #1. Two of the three known implementors
-    // (🌊️flow/🌿️vcs, ♾️infinite/…/dag) already converged on sync independently.
     fn id(&self) -> &TId;
 }
 

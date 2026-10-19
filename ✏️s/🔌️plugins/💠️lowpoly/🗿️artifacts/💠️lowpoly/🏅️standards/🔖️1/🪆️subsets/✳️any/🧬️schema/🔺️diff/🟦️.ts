@@ -6,9 +6,9 @@ import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 import { parseLowpolyObject, parseLowpolyPaintLayer, type LowpolyObject, type LowpolyPaintLayer } from "../🟦️.ts";
 
 export interface LowpolyDiff {
-  /** @state artifact */
+  /** 🔄️ @state artifact */
   schema?: string | null;
-  /** @state artifact */
+  /** 🔺️ @state artifact */
   objects?: LowpolyObjectsDelta | null;
 }
 

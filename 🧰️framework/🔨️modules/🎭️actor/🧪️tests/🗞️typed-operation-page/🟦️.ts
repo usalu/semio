@@ -103,7 +103,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    // 🧯️ The defect itself: the page must never reach an `AppFrame` decoder.
     it("never hands a typed-operation page or ack to the app-frame decoder", () => {
       const token = fixture.shellMessageStream.token;
       const page = shellMessage(token.receiver, encodePage(token, fixture.terminalTag, "{}"));

@@ -21,7 +21,7 @@ fn is_live(shell: &ShellState) -> bool {
 #[cfg(not(target_arch = "wasm32"))]
 fn frame_pump(shell: &mut ShellState) -> usize {
     let advanced = semio_framework_os_renderer_wgpu_host_base::pump_renderer_io_sessions(1);
-    let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    let _ = semio_framework_job_worker::pump_worker_job_retirements(1, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
     drive(PointerCtx::of(&mut shell).pump_sync_events());
     shell.sync.request_presence_preview(&mut shell.chrome);
     if shell.chrome.chrome_present.maintenance.presence_requested {

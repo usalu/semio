@@ -83,7 +83,6 @@ pub(super) enum Placement {
 }
 
 impl Placement {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn affine(&self) -> Affine3 {
         match self {
             Placement::Translate { offset } => Affine3::translation(*offset),
@@ -134,17 +133,7 @@ pub(super) fn translate_lateral(curve: &Curve3, range: (f64, f64), offset: Vec3)
             let p0 = *origin + *dir * range.0;
             let dir_hat = dir.normalized().ok_or_else(|| KernelError::InvalidInput("extrude: degenerate (zero-length) profile edge".into()))?;
             let normal = dir_hat.cross(offset).normalized();
-            // 🧮 `x` MUST be the profile edge's own direction, not an arbitrary vector merely ⟂
-            // `normal` (`Frame3::from_normal`'s `any_orthogonal()` pick, the prior bug here): the
-            // caller's `bottom_pc`/`top_pc`/rail p-curves assume the whole profile edge traces a
-            // straight line in this plane's own (u, v) — true only when `frame.x ∥ dir` (then
-            // `frame.y ⟂ dir` follows from orthonormality, putting the entire edge at `v = 0`).
             let frame = normal.and_then(|n| Frame3::from_x_z(p0, dir_hat, n)).ok_or_else(|| KernelError::InvalidInput("extrude: profile edge is parallel to the extrude direction".into()))?;
-            // 🧮 `u_domain` is the ACTUAL local-x span from `range.0` to `range.1` (`= |dir|·Δt`,
-            // not `range` itself unless `dir` happens to be unit — `sweep_machinery::build_prism` now derives
-            // its `bottom_pc`/`top_pc` slope from this pair instead of assuming `u = t`), and
-            // `v_top` is `offset`'s real displacement along `frame.y` (not a hardcoded `0.0`, which
-            // collapsed the top rail onto the bottom one).
             let u1 = dir.norm() * (range.1 - range.0);
             Ok(LateralSurface { surface: Surface::Plane { frame }, u_domain: (0.0, u1), v_bottom: 0.0, v_top: offset.dot(frame.y) })
         }
@@ -225,7 +214,6 @@ pub(super) struct PrismBuilder {
 
 impl PrismBuilder {
     /// 🧮 How many lateral faces a prism over `face` has: one per coedge of every loop.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn lateral_count(body: &Body, face: FaceId) -> usize {
         body.face_loops(face).into_iter().map(|lp| body.loop_coedges(lp).len()).sum()
     }

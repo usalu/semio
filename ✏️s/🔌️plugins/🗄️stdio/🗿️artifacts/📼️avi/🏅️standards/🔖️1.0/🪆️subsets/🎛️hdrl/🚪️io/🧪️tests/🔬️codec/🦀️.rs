@@ -144,10 +144,6 @@ async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
 
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_round_trips_the_real_fixture_byte_identically() {
-    // 🧪️ This fixture is simple enough (single stream, no untyped `hdrl` auxiliary fields
-    // beyond what `AviMainHeader`/`AviStreamHeader`/`AviStreamFormat` fully type) that this
-    // engine achieves LITERAL byte-for-byte round-tripping, not just documented-normal-form —
-    // the strongest form of codec_retention_law.
     let snap = decode_avi(REAL_EXAMPLE_AVI).expect("decode");
     let re_encoded = encode_avi(&snap);
     assert_eq!(re_encoded, REAL_EXAMPLE_AVI, "decode(bytes) -> encode(..) must reproduce the real fixture byte-for-byte");

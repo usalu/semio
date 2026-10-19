@@ -41,8 +41,6 @@ async fn insert_then_remove_sheet_apply_and_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn remove_sheet_inverse_restores_removed_sheet() {
-    // 🎯️ The inverse is `InsertSheet` at the removed sheet's own position, so the removed worksheet part, its relationship, its content-type entry and
-    // its workbook entry all come back exactly where they were.
     let base = fixture();
     let remove = XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name: "Sheet2".into() });
     let mut after = base.clone();
@@ -214,7 +212,6 @@ fn cell_value(snapshot: &XlsxSnapshot, row: u32, col: u32) -> Option<XlsxCellVal
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law() {
-    // Modify + remove: the later remove wins; the absorbed delta is one worksheet-part edit.
     {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
@@ -228,7 +225,6 @@ async fn absorb_law() {
         assert_eq!(cell_value(&result, 1, 1), Some(XlsxCellValue::Number(2.0)), "the untouched neighbour survives");
     }
 
-    // Two edits on distinct cells: both survive (two independent edits never clobber each other).
     {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
@@ -241,7 +237,6 @@ async fn absorb_law() {
         assert_eq!((cell_value(&result, 1, 0), cell_value(&result, 1, 1)), (Some(XlsxCellValue::InlineString("f".into())), Some(XlsxCellValue::InlineString("g".into()))), "both cell edits must survive absorb");
     }
 
-    // Two edits of the same cell: the later value lands, still as one worksheet-part edit.
     {
         let base = two_cell_base();
         let sheet = address(&base, "Sheet1", 1, 0).part_path;
@@ -253,7 +248,6 @@ async fn absorb_law() {
         assert_eq!(cell_value(&protocol::apply_diff(&absorbed, &base).unwrap(), 1, 0), Some(XlsxCellValue::InlineString("patched".into())));
     }
 
-    // Associativity over a triple.
     {
         let base = two_cell_base();
         let d1 = Mutation::diff(&set_cell_at(&base, "Sheet1", 1, 0, XlsxCellValue::Number(10.0)), &base);

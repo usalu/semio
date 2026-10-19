@@ -58,8 +58,6 @@ pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> 
             fin_depth_m: payload.fin_depth_m,
             fin_offset_m: payload.fin_offset_m,
             glazing_construction_id: payload.glazing_construction_id,
-            // 🔶️ A freshly created aperture starts on the derived rectangle; a caller that wants a
-            // polygon follows with `replace-fenestration-vertices` (which the delete inverse replays).
             vertices_m: Vec::new(),
         }), ..Default::default() }))
 }

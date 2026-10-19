@@ -23,7 +23,7 @@ import {
   waitingBorderElementClass
 } from "@semio-tech/ui-react";
 import { type ActionDescriptor, type ContinuousGestureLane, continuousPressIdentity, createContinuousGestureLane } from "@semio-tech/framework";
-import { uiAccessibilityValueV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
+import { uiAccessibilityValueV1 } from "@semio-tech/framework/modules/ui/contract/presentation/accessibility";
 import { interpLabel } from "../🧷️interpreter-context/🟦️.ts";
 import { resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
 

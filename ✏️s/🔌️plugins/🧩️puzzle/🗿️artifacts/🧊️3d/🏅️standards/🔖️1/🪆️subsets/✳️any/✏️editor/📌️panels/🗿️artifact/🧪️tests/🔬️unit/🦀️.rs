@@ -184,7 +184,6 @@ fn a_closed_container_stamps_its_total_and_materialises_no_child() {
     assert_eq!(window_of(section), (40, 0), "a closed section still reports everything it owns: {section}");
     assert!(child_keys(section).is_empty(), "and materialises none of it: {section}");
 
-    // 🧾️ An object row is closed by AUTHOR default, so its vortices cost one stamp and no row at all.
     let open = hosted(vec![request(&section_key("objects"), Some(true), 0, 4)]);
     let tree = tree_of(&panel(&scene_snapshot, &open));
     let row = node_at(&tree, "object-0").expect("the first object row");
@@ -204,7 +203,6 @@ fn a_tree_window_request_materialises_exactly_its_slice() {
     let expected: Vec<String> = (120..126).map(|index| format!("object-{index}")).collect();
     assert_eq!(child_keys(section), expected, "exactly entries [120, 126) are built: {section}");
 
-    // 🪺️ A nested group scrolls the same way, independently of its parent.
     let nested = hosted(vec![request(&section_key("objects"), Some(true), 0, 2), request(&nested_key("objects", "object-1"), Some(true), 2, 2)]);
     let tree = tree_of(&panel(&scene_snapshot, &nested));
     let row = node_at(&tree, "object-1").expect("the second object row");
@@ -253,7 +251,6 @@ fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
         assert!(row["bindings"].as_array().is_none_or(|bindings| bindings.is_empty()), "a pick row authors no activation binding of its own: {row}");
     }
 
-    // 🙈️ Row actions are NOT pick bindings — hide/lock survive the migration on every row that had them.
     for key in ["object-0", "reference-1", "volume-1"] {
         let row = node_at(&tree, key).expect("the flagged row");
         assert_eq!(row["component"]["rowActions"].as_array().map(Vec::len), Some(2), "row {key} keeps its hide/lock row actions: {row}");
@@ -319,14 +316,12 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     }
     assert!(scene_snapshot.objects.len() > ui::UI_DOCUMENT_NODES, "one container must hold more than the whole node arena: {}", scene_snapshot.objects.len());
 
-    // 🪟️ Everything the host could possibly have open at once, each asking for far more than fits.
     let mut requests = vec![
         request(&section_key("objects"), Some(true), 0, 512),
         request(&section_key("references"), Some(true), 0, 512),
         request(&section_key("target-volumes"), Some(true), 0, 512),
         request(&section_key("attractions"), Some(true), 0, 512),
     ];
-    // 🔑️ A nested container is addressed by its window PATH: the objects section, then the object row.
     requests.extend((0..24).map(|index| request(&nested_key("objects", &format!("object-{index}")), Some(true), 0, 512)));
     let json = panel(&scene_snapshot, &hosted(requests));
     let tree = tree_of(&json);
@@ -344,7 +339,6 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     let records = node_records(&tree);
     assert!(records <= ui::UI_DOCUMENT_NODES, "the whole open document must reconcile inside one surface arena, spent {records} of {}", ui::UI_DOCUMENT_NODES);
 
-    // 🔑️ One body, one key per node: a duplicate would make a host window request ambiguous.
     let mut keys = Vec::new();
     node_keys(&tree, &mut keys);
     let mut unique = keys.clone();

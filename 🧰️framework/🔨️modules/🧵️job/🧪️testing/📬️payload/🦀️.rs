@@ -1,5 +1,7 @@
 //! 🧫️ Real admitted payload fixtures retain one original caller stock and all physical receipts.
 use semio_framework_job::*;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 fn clock()->Option<u64>{Some(1000)}
 const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:64};
 pub const SOURCE:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:16384,maximum_release_bytes:1048576,maximum_depth:64};

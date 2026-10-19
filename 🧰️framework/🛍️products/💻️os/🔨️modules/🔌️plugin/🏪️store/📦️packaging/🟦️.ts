@@ -3,10 +3,10 @@ import {type CompilerAdmissionControl} from "@semio-tech/process/compiler-capaci
 import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
 import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
 import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
-import {buildComponentClosureV1} from "../../🏗️build/🧩️driver-stages/🟦️.ts";
-import {componentStageTargetV1} from "../../🖨️describe/🧩️component-stage/🟦️.ts";
-import {withComponentModelV1} from "../../📦️model/👓️reading/🟦️.ts";
-import {readArtifactBytesV1} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import {buildComponentClosureV1} from "@semio-tech/framework-plugin/build/driver-stages";
+import {componentStageTargetV1} from "@semio-tech/framework-plugin/describe/component-stage";
+import {withComponentModelV1} from "@semio-tech/framework-plugin/model/reading";
+import {readArtifactBytesV1} from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
 import {packExtensionPackage,type ExtensionPackageManifestRecord} from "../📥️installation/🟦️.ts";
 import {extensionPackageRequestV1} from "./📋️contract/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

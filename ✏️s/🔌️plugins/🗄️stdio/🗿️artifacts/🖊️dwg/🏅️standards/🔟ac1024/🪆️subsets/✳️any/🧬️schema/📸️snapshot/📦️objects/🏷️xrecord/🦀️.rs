@@ -73,8 +73,8 @@ impl semio_framework_dsl_record::DslField for DwgXRecordValue {
         };record.insert(payload_id,payload)?;control.step()?;record.insert(0,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Int(i64::from(group_code)))?;control.step()?;
         Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
     })}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD value requires a record"))};Self::from_record_controlled(record,control)}
-    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD value requires a record"))};Self::from_record_controlled(record,control)}
+    fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{
         control.begin_stage(record.fields.len())?;let kind=match record.get(0){Some(semio_framework_dsl_record::FieldValue::Enum(kind))=>*kind,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD kind missing"))};
         let payload_id=match kind{0=>2,1=>3,2=>4,3..=6=>5,7=>6,8=>7,9|10=>8,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD kind unknown"))};
         for(id,value)in &record.fields{if *id!=0&&*id!=1&&*id!=payload_id&&!matches!(value,semio_framework_dsl_record::FieldValue::Absent){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRECORD has an unowned field"))}control.step()?;}
@@ -231,7 +231,6 @@ impl semio_framework_dsl_record::DslField for DwgXRecordValue {
     }
 }
 impl DwgXRecordValue {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn group_code(&self) -> i16 {
         match self {
             Self::String { group_code, .. }
@@ -248,7 +247,6 @@ impl DwgXRecordValue {
         }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn validate(&self) -> Result<(), String> {
         let code = self.group_code();
         let valid = match self {

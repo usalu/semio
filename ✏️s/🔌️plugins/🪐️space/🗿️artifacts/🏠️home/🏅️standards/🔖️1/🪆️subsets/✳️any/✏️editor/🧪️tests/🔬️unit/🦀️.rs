@@ -72,9 +72,6 @@ fn every_migrated_home_route_has_an_exact_scalar_boundary() {
     for zero in [HomeCommand::GoHome(go_home::GoHome {}), HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})] {
         assert_eq!(home_retained_extent(&zero, &snapshot, &interaction), Some(1), "{} carries no scalar payload", zero.command_id());
     }
-    // 📏️ The one route judged against the RETAINED WIRE budget instead of the scalar one: a sealed
-    // directory page is a `HostOnly` machine payload the hub already bounds with `hasMore`, and a
-    // 4 KiB cap would refuse an ordinary page of a dozen spaces (ticket 26/09/18 S4).
     let page = |bytes: usize| HomeCommand::ApplyDirectoryEventPage(apply_directory_event_page::ApplyDirectoryEventPage { page_json: scalar(bytes) });
     assert_eq!(home_retained_extent(&page(HOME_RETAINED_SCALAR_BYTES + 1), &snapshot, &interaction), Some(1), "a page beyond the scalar cap is still admitted");
     assert_eq!(home_retained_extent(&page(HOME_RETAINED_RAW_BYTES), &snapshot, &interaction), Some(1), "the exact retained wire budget is admitted");
@@ -115,10 +112,6 @@ async fn home_declares_create_space_action() {
 
 #[semio_framework_async_macros::async_test]
 async fn space_document_persists_through_backbone_port() {
-    // 🕳️ `parse_demo_space_document()` yields a `workflow::WorkflowSnapshot` (the demo fixture's own
-    // artifact content), not a `space::SpaceSnapshot`-backed catalog entry
-    // `seed_os_space_catalog_if_empty` expects. This test exercises the space-manifest persistence
-    // path specifically, so it mints its own manifest instead.
     let port = Arc::new(OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     let projection = empty_space_snapshot("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
     let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);

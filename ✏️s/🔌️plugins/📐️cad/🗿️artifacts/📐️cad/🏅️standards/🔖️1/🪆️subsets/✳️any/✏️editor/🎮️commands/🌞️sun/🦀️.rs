@@ -41,7 +41,6 @@ pub mod set_sun_azimuth {
     pub fn handle(payload: &SetSunAzimuth, _doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut config = window_config::current(cfg);
         let mut sun = cad_sun_config_to_world(&config.sun);
-        // 🌉️ `apply_world3d_sun_action` (framework `🔌️plugin/🦀️.rs`) takes `Option<&dsl::os_pack::json::Value>` — a genuine framework boundary, bridged once here from a `DslValue` built the normal way.
         let args_value = semio_framework_pack_json::from_dsl_value(&DslValue::object([("value".to_string(), DslValue::float(payload.value))]));
         apply_world3d_sun_action(&mut sun, "setSunAzimuth", Some(&args_value));
         config.sun = cad_sun_config_from_world(&sun);

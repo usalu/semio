@@ -8,7 +8,7 @@ export interface BinaryExtent {
 }
 
 export interface BinaryInference {
-  /** @derived */
+  /** 📏️ @derived */
   extent: BinaryExtent;
 }
 

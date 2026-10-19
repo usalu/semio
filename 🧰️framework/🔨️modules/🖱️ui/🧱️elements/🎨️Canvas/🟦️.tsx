@@ -7,41 +7,32 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import * as ResizablePrimitive from "react-resizable-panels";
-// 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
-// reactHostPort.createContext/.forwardRef at module top level, which requires a non-circular import (see
-// 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../🔽️Select/🟦️.tsx";
-import type { ResizableJoinCornerSpec } from "../↔️Resizable/🟦️.tsx";
 import { Navbar, type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
 import { shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
 import { chromeStatusBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
-import { useLabel, resolveTranslationLabel, useUiTranslation } from "../🏷️Label/🟦️.tsx";
-import { useShellKeydown, useShellScopeOptional, NULL_SHELL_ROOT_REF } from "../🐚️ShellScope/🟦️.tsx";
-import { isSurfaceActiveBackgroundPointer, useSurface, LevelProvider, setSurfaceActiveRoot } from "../🌈️Surface/🟦️.tsx";
+import { useLabel } from "../🏷️Label/🟦️.tsx";
+import { useSurface, LevelProvider } from "../🌈️Surface/🟦️.tsx";
 import { type UiStatus } from "@semio-tech/ui-styling";
-import type { WindowLayoutAxisNode, WindowLayoutNode, WindowLayoutStackNode, WindowStackCorner } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
-import { focusActiveSearchInput, routeWindowSearchEscape, routeWindowSearchKeydown, routeWindowSearchSpace } from "../🔍️WindowSearch/🟦️.tsx";
+import type { WindowLayoutNode } from "../../🔨️modules/🗺️window-layout/🟦️.ts";
 import type { ControlIcon } from "../🔣️Icons/🟦️.tsx";
-import { useControlKeybinding } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { ButtonGroup, ButtonGroupItem } from "../🔳️ButtonGroup/🟦️.tsx";
-import { COMPOSE_WINDOW_TEMPLATE_MIME, MODE_TEMPLATE_PREVIEW_WINDOW_ID, type ModeCanvasDropTarget, type ModeWindowDescriptor, type WindowTemplateDropPayload, cancelWindowTemplatePointerDrag, endWindowTemplateDrag, readActiveWindowTemplateDragSession, windowTemplatePointerDragRef } from "./🪟️template-drag/🟦️.ts";
-import { type ModeLayoutPath, collapseLayout, mapLayoutStacks, modeCollectWindowIds, removeWindowFromLayout, resolveModeLayout, resolveStackPathForWindowId, setActiveWindowInLayout } from "./🗺️layout/🟦️.ts";
-import { type ModeDragState, type ModeDropZone, type ModePendingDrag, type ModeStackDropTargets, applyModeDrop, computeModeDropZone, computeModeSplitPreviewInBody, modeDockDragInsertTabs, modeDockOutLayout, resolveModeTabInsertPreview } from "./🎯️drop/🟦️.ts";
-import { WINDOW_STACK_CORNERS, applyAxisSizes, safePanelGroupSetLayout } from "./📐️corners/🟦️.ts";
-import { applyAxisGroupLayoutDelta, modeAxisGroupLayout, readModeAxisKind, readModeAxisPixelSize, resolveJoinCornerPeerCrossAxes, resolveJoinCornerResizeDeltas } from "./🔗️join-corners/🟦️.ts";
-import { ModeDockContext, type ModeDockContextValue, ModeDockStack, type ModeRenderContext, renderModeDockNode } from "./⚓️dock/🟦️.tsx";
+import { type ModeCanvasDropTarget, type ModeWindowDescriptor, type WindowTemplateDropPayload } from "./🪟️template-drag/🟦️.ts";
+import { computeModeSplitPreviewInBody } from "./🎯️drop/🟦️.ts";
 import { MODE_DRAG_CURSOR_OFFSET_X, MODE_DRAG_CURSOR_OFFSET_Y, ModeDockDragPreview } from "./🧲️drag-preview/🟦️.tsx";
+import { useModeLayoutState } from "./🧭️mode-layout-state-and-sync/🟦️.tsx";
+import { useModeDragEffectsAndAxisCallbacks, useModeWindowCallbacks } from "./🖱️mode-drag-and-window-callbacks/🟦️.tsx";
+import { useModeShortcutsAndContexts, useModeTemplateDropAndPreview } from "./📥️mode-template-drop-and-contexts/🟦️.tsx";
+
 // #endregion 🔌️Adapters
 // #region ⚙️Canvas
 
 /**
- * Container component for canvas window layout.
+ * 🌐️ Container component for canvas window layout.
  **/
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?: UiStatus }> = ({ children, id, status = "idle" }) => {
   const parent = useSurface();
@@ -57,14 +48,14 @@ export const Canvas: React.FC<{ children: React.ReactNode; id?: string; status?:
 };
 
 /**
- * Layout component arranging windows horizontally.
+ * ↔️ Layout component arranging windows horizontally.
  **/
 export const HorizontalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <div className="flex flex-row h-full w-full gap-[var(--padding-standard)]">{children}</div>;
 };
 
 /**
- * Layout component arranging windows vertically.
+ * ↕️ Layout component arranging windows vertically.
  **/
 export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <div className="flex flex-col h-full w-full gap-[var(--padding-standard)]">{children}</div>;
@@ -91,583 +82,13 @@ export interface ModeProps {
 export const MODE_CANVAS_INSET_CLASS = "p-[var(--panel-inset)]";
 
 //#endregion 🧭️ModeRender
-
 /** 🪟️ Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
 const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, onWindowOpenInNewWindow, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
-  // 🐚️ Gates the active-window search-routing keydown listener below to this shell — absent outside a `ShellScopeProvider` (tests), where it simply stays inert.
-  const shellScope = useShellScopeOptional();
-  // 🐚️ Resolves via the nearest `I18nextProvider` (this shell's own instance), not the shared `uiI18n` singleton.
-  const { t: modeT } = useUiTranslation();
-  const parentSurface = useSurface();
-  const modeBodyFillClass = shellFloorFillClass(parentSurface);
-  const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
-  const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
-  const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
-  const layoutGeometryKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null, (key, value) => key === "title" ? undefined : value), [layout]);
-  const initialLayout = reactHostPort.useMemo(() => resolveModeLayout(windows, layout), [layout, windows]);
-  const [layoutState, setLayoutState] = reactHostPort.useState<WindowLayoutNode>(() => initialLayout);
-  const [maximizedStackPath, setMaximizedStackPath] = reactHostPort.useState<ModeLayoutPath | null>(null);
-  const [dragState, setDragState] = reactHostPort.useState<ModeDragState | null>(null);
-  const [templateDrag, setTemplateDrag] = reactHostPort.useState<{ readonly label: string; readonly x: number; readonly y: number } | null>(null);
-  const [pendingDrag, setPendingDrag] = reactHostPort.useState<ModePendingDrag | null>(null);
-  const [dropZone, setDropZone] = reactHostPort.useState<ModeDropZone | null>(null);
-  const dropZoneRef = reactHostPort.useRef<ModeDropZone | null>(null);
-  const modeBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const axisGroupRefsRef = reactHostPort.useRef(new Map<ModeLayoutPath, ResizablePrimitive.GroupImperativeHandle>());
-  const axisGroupElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, HTMLDivElement>());
-  const stackDropElementsRef = reactHostPort.useRef(new Map<ModeLayoutPath, { corners: Partial<Record<WindowStackCorner, HTMLElement | null>>; body: HTMLElement | null }>());
-  const layoutStateRef = reactHostPort.useRef(layoutState);
-  const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
-  const layoutKeyRef = reactHostPort.useRef(layoutKey);
-  const layoutGeometryKeyRef = reactHostPort.useRef(layoutGeometryKey);
-  const windowsKeyRef = reactHostPort.useRef(windowsKey);
-  layoutStateRef.current = layoutState;
-
-  // 🚧️ `onLayoutChange` is for user-driven layout mutations (drag/resize/close/activate) only.
-  // Prop-derived states — the mount initializer and every prop resync — must never echo back:
-  // during a session switch the windows prop changes before the layout prop, so the resync
-  // reconciles against a stale layout and would write a pruned (possibly empty) layout into the
-  // host's state, clobbering the layout the host is about to seed.
-  const propDerivedLayoutJsonRef = reactHostPort.useRef(JSON.stringify(initialLayout));
-  reactHostPort.useEffect(() => {
-    if (JSON.stringify(layoutState) === propDerivedLayoutJsonRef.current) return;
-    onLayoutChange?.(layoutState);
-  }, [layoutState, onLayoutChange]);
-
-  reactHostPort.useEffect(() => {
-    const layoutChanged = layoutKeyRef.current !== layoutKey;
-    const geometryChanged = layoutGeometryKeyRef.current !== layoutGeometryKey;
-    const windowsChanged = windowsKeyRef.current !== windowsKey;
-    if (!layoutChanged && !windowsChanged) return;
-    layoutKeyRef.current = layoutKey;
-    layoutGeometryKeyRef.current = layoutGeometryKey;
-    windowsKeyRef.current = windowsKey;
-    const resolved = resolveModeLayout(windows, layout);
-    propDerivedLayoutJsonRef.current = JSON.stringify(resolved);
-    setLayoutState(resolved);
-    if (geometryChanged || windowsChanged) setMaximizedStackPath(null);
-  }, [layout, layoutKey, layoutGeometryKey, windows, windowsKey]);
-
-  reactHostPort.useEffect(() => {
-    if (!activeWindowId) return;
-    setLayoutState((prev) => setActiveWindowInLayout(prev, activeWindowId));
-  }, [activeWindowId]);
-
-  useShellKeydown(
-    shellScope?.rootRef ?? NULL_SHELL_ROOT_REF,
-    (event) => {
-      if (!activeWindowId) return;
-      const search = windowsById.get(activeWindowId)?.search;
-      if (!search?.input) return;
-      if (
-        routeWindowSearchEscape(search, event, {
-          chromeVisible: true,
-          actionActive: true,
-        })
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (routeWindowSearchSpace(search, event)) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-      if (!routeWindowSearchKeydown(search, event)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      queueMicrotask(() => focusActiveSearchInput());
-    },
-    [activeWindowId, windowsById, windowsKey],
-  );
-
-  const registerStackDropTargets = reactHostPort.useCallback((path: ModeLayoutPath, corner: WindowStackCorner, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => {
-    if (!tabBarElement && !bodyElement) {
-      const prev = stackDropElementsRef.current.get(path);
-      if (!prev) return;
-      const corners = { ...prev.corners, [corner]: null };
-      const hasCorner = WINDOW_STACK_CORNERS.some((entry) => corners[entry]);
-      if (!hasCorner) {
-        stackDropElementsRef.current.delete(path);
-        return;
-      }
-      stackDropElementsRef.current.set(path, { corners, body: prev.body });
-      return;
-    }
-    const prev = stackDropElementsRef.current.get(path) ?? { corners: {}, body: null };
-    stackDropElementsRef.current.set(path, {
-      corners: { ...prev.corners, [corner]: tabBarElement ?? prev.corners[corner] ?? null },
-      body: bodyElement ?? prev.body,
-    });
-  }, []);
-
-  const activateWindow = reactHostPort.useCallback(
-    (windowId: string) => {
-      if (activeWindowId === windowId) return;
-      setLayoutState((prev) => setActiveWindowInLayout(prev, windowId));
-      onActiveWindowChange?.(windowId);
-    },
-    [activeWindowId, onActiveWindowChange],
-  );
-
-  const deactivateActiveWindow = reactHostPort.useCallback(() => {
-    setSurfaceActiveRoot(null);
-    if (activeWindowId === null) return;
-    onActiveWindowChange?.(null);
-  }, [activeWindowId, onActiveWindowChange]);
-
-  const handleCanvasBackgroundPointerDown = reactHostPort.useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (isSurfaceActiveBackgroundPointer(event)) {
-        deactivateActiveWindow();
-        return;
-      }
-      if (!(event.target instanceof HTMLElement)) return;
-      if (event.target.closest('[data-slot="mode-dock-stack"]')) return;
-      if (event.target !== event.currentTarget && event.target.dataset.slot !== "resizable-panel") return;
-      deactivateActiveWindow();
-    },
-    [deactivateActiveWindow],
-  );
-
-  const closeWindow = reactHostPort.useCallback(
-    (windowId: string) => {
-      onWindowClose?.(windowId);
-      setLayoutState((prev) => {
-        const next = collapseLayout(removeWindowFromLayout(prev, windowId)) ?? { kind: "stack", children: [] };
-        const remaining = modeCollectWindowIds(next);
-        if (activeWindowId === windowId) onActiveWindowChange?.(remaining[0] ?? null);
-        return next;
-      });
-    },
-    [activeWindowId, onActiveWindowChange, onWindowClose],
-  );
-
-  const toggleMaximize = reactHostPort.useCallback((stackPath: ModeLayoutPath) => {
-    setMaximizedStackPath((prev) => (prev === stackPath ? null : stackPath));
-  }, []);
-
-  const refreshDropZone = reactHostPort.useCallback((clientX: number, clientY: number) => {
-    const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
-    stackDropElementsRef.current.forEach((elements, path) => {
-      const corners: ModeStackDropTargets["corners"] = {};
-      for (const corner of WINDOW_STACK_CORNERS) {
-        const element = elements.corners[corner];
-        if (!element) continue;
-        corners[corner] = { rect: element.getBoundingClientRect(), element };
-      }
-      targets.set(path, {
-        corners,
-        body: elements.body?.getBoundingClientRect() ?? null,
-      });
-    });
-    const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
-    const zone = computeModeDropZone(clientX, clientY, targets, modeRect);
-    dropZoneRef.current = zone;
-    setDropZone(zone);
-  }, []);
-
-  const finishDrag = reactHostPort.useCallback(
-    (drag: ModeDragState, zone: ModeDropZone | null) => {
-      if (!zone) return;
-      setLayoutState((prev) => applyModeDrop(prev, drag, zone));
-      activateWindow(drag.windowId);
-    },
-    [activateWindow],
-  );
-
-  const clearPendingDrag = reactHostPort.useCallback((pointerId: number) => {
-    setPendingDrag((prev) => (prev?.pointerId === pointerId ? null : prev));
-  }, []);
-
-  const startTabDrag = reactHostPort.useCallback((windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => {
-    if (event.button !== 0) return;
-    setPendingDrag({
-      dragKind: "tab",
-      windowId,
-      stackPath,
-      tabIndex,
-      pointerId: event.pointerId,
-      ghostLabel: label,
-      startX: event.clientX,
-      startY: event.clientY,
-    });
-  }, []);
-
-  reactHostPort.useEffect(() => {
-    if (!pendingDrag && !dragState) return;
-    const handleMove = (event: PointerEvent) => {
-      const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
-      if (activePointerId === undefined || event.pointerId !== activePointerId) return;
-      if (pendingDrag && !dragState) {
-        const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY);
-        if (distance < 6) return;
-        dragLayoutSnapshotRef.current = layoutStateRef.current;
-        setDragState({
-          dragKind: pendingDrag.dragKind,
-          windowId: pendingDrag.windowId,
-          stackPath: pendingDrag.stackPath,
-          tabIndex: pendingDrag.tabIndex,
-          pointerId: pendingDrag.pointerId,
-          ghostLabel: pendingDrag.ghostLabel,
-          x: event.clientX,
-          y: event.clientY,
-        });
-        setPendingDrag(null);
-        refreshDropZone(event.clientX, event.clientY);
-        return;
-      }
-      if (!dragState) return;
-      setDragState((prev) => (prev ? { ...prev, x: event.clientX, y: event.clientY } : prev));
-      refreshDropZone(event.clientX, event.clientY);
-    };
-    const handleUp = (event: PointerEvent) => {
-      const activePointerId = dragState?.pointerId ?? pendingDrag?.pointerId;
-      if (activePointerId === undefined || event.pointerId !== activePointerId) return;
-      if (dragState) finishDrag(dragState, dropZoneRef.current);
-      dragLayoutSnapshotRef.current = null;
-      setDragState(null);
-      setPendingDrag(null);
-      dropZoneRef.current = null;
-      setDropZone(null);
-    };
-    document.addEventListener("pointermove", handleMove);
-    document.addEventListener("pointerup", handleUp);
-    return () => {
-      document.removeEventListener("pointermove", handleMove);
-      document.removeEventListener("pointerup", handleUp);
-    };
-  }, [pendingDrag, dragState, finishDrag, refreshDropZone]);
-
-  reactHostPort.useEffect(() => {
-    if (!dragState) return;
-    const cancelDrag = () => {
-      if (dragLayoutSnapshotRef.current) setLayoutState(dragLayoutSnapshotRef.current);
-      dragLayoutSnapshotRef.current = null;
-      setDragState(null);
-      setPendingDrag(null);
-      dropZoneRef.current = null;
-      setDropZone(null);
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      cancelDrag();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dragState]);
-
-  const onAxisLayoutChanged = reactHostPort.useCallback((axisPath: ModeLayoutPath, sizes: Record<string, number>) => {
-    setLayoutState((prev) => applyAxisSizes(prev, axisPath, sizes));
-  }, []);
-
-  const registerAxisGroup = reactHostPort.useCallback((axisPath: ModeLayoutPath, group: ResizablePrimitive.GroupImperativeHandle | null) => {
-    if (group) axisGroupRefsRef.current.set(axisPath, group);
-    else axisGroupRefsRef.current.delete(axisPath);
-  }, []);
-
-  const registerAxisElement = reactHostPort.useCallback((axisPath: ModeLayoutPath, element: HTMLDivElement | null) => {
-    if (element) axisGroupElementsRef.current.set(axisPath, element);
-    else axisGroupElementsRef.current.delete(axisPath);
-  }, []);
-
-  const onJoinCornerResize = reactHostPort.useCallback((spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number) => {
-    const current = layoutStateRef.current;
-    const mainKind = readModeAxisKind(current, spec.mainAxisPath);
-    const crossKind = readModeAxisKind(current, spec.crossAxisPath);
-    const mainGroup = axisGroupRefsRef.current.get(spec.mainAxisPath);
-    const crossGroup = axisGroupRefsRef.current.get(spec.crossAxisPath);
-    if (!mainKind || !crossKind || !mainGroup || !crossGroup) return;
-    const peers = resolveJoinCornerPeerCrossAxes(current, spec);
-    const deltas = resolveJoinCornerResizeDeltas(
-      spec.parentKind,
-      deltaXPx,
-      deltaYPx,
-      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.mainAxisPath), mainKind),
-      readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.crossAxisPath), crossKind),
-    );
-    const liveMainLayout = mainGroup.getLayout();
-    const currentMainLayout = Object.keys(liveMainLayout).length > 0 ? liveMainLayout : modeAxisGroupLayout(current, spec.mainAxisPath);
-    const mainLayout = applyAxisGroupLayoutDelta(currentMainLayout, spec.mainAxisPath, spec.mainSeparatorIndex, deltas.mainDeltaPct);
-    safePanelGroupSetLayout(mainGroup, mainLayout);
-    const peerLayouts: { path: ModeLayoutPath; layout: Record<string, number> }[] = [];
-    for (const peer of peers) {
-      const peerGroup = axisGroupRefsRef.current.get(peer.path);
-      if (!peerGroup) continue;
-      const livePeerLayout = peerGroup.getLayout();
-      const currentPeerLayout = Object.keys(livePeerLayout).length > 0 ? livePeerLayout : modeAxisGroupLayout(current, peer.path);
-      const peerLayout = applyAxisGroupLayoutDelta(currentPeerLayout, peer.path, peer.separatorIndex, deltas.crossDeltaPct);
-      safePanelGroupSetLayout(peerGroup, peerLayout);
-      peerLayouts.push({ path: peer.path, layout: peerLayout });
-    }
-    setLayoutState((prev) => peerLayouts.reduce((next, peer) => applyAxisSizes(next, peer.path, peer.layout), applyAxisSizes(prev, spec.mainAxisPath, mainLayout)));
-  }, []);
-
-  const clearTemplateDragPreview = reactHostPort.useCallback(() => {
-    setTemplateDrag(null);
-    dropZoneRef.current = null;
-    setDropZone(null);
-  }, []);
-
-  reactHostPort.useEffect(() => {
-    if (!templateDrag) return;
-    const onDragEnd = () => {
-      endWindowTemplateDrag();
-      clearTemplateDragPreview();
-    };
-    document.addEventListener("dragend", onDragEnd);
-    return () => document.removeEventListener("dragend", onDragEnd);
-  }, [templateDrag, clearTemplateDragPreview]);
-
-  const resolveTemplateDropZone = reactHostPort.useCallback((clientX: number, clientY: number): ModeDropZone | null => {
-    const targets = new Map<ModeLayoutPath, ModeStackDropTargets>();
-    stackDropElementsRef.current.forEach((elements, path) => {
-      const corners: ModeStackDropTargets["corners"] = {};
-      for (const corner of WINDOW_STACK_CORNERS) {
-        const element = elements.corners[corner];
-        if (!element) continue;
-        corners[corner] = { rect: element.getBoundingClientRect(), element };
-      }
-      targets.set(path, {
-        corners,
-        body: elements.body?.getBoundingClientRect() ?? null,
-      });
-    });
-    const modeRect = modeBodyRef.current?.getBoundingClientRect() ?? null;
-    return computeModeDropZone(clientX, clientY, targets, modeRect);
-  }, []);
-
-  const completeExternalTemplateDrop = reactHostPort.useCallback(
-    (clientX: number, clientY: number, payload: WindowTemplateDropPayload): boolean => {
-      if (!onTemplateDrop || typeof payload.windowKindId !== "string") {
-        return false;
-      }
-      const zone = resolveTemplateDropZone(clientX, clientY);
-      if (!zone) {
-        return false;
-      }
-      endWindowTemplateDrag();
-      windowTemplatePointerDragRef.active = false;
-      clearTemplateDragPreview();
-      onTemplateDrop(payload, zone);
-      return true;
-    },
-    [clearTemplateDragPreview, onTemplateDrop, resolveTemplateDropZone],
-  );
-
-  const handleExternalTemplateDragOver = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (!onTemplateDrop || !event.dataTransfer.types.includes(COMPOSE_WINDOW_TEMPLATE_MIME)) return;
-      const session = readActiveWindowTemplateDragSession();
-      if (!session) return;
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-      setTemplateDrag({ label: session.label, x: event.clientX, y: event.clientY });
-      refreshDropZone(event.clientX, event.clientY);
-    },
-    [onTemplateDrop, refreshDropZone],
-  );
-
-  const handleExternalTemplateDrop = reactHostPort.useCallback(
-    (event: React.DragEvent<HTMLDivElement>) => {
-      if (!onTemplateDrop) return;
-      const raw = event.dataTransfer.getData(COMPOSE_WINDOW_TEMPLATE_MIME);
-      if (!raw) return;
-      event.preventDefault();
-      let payload: WindowTemplateDropPayload;
-      try {
-        payload = JSON.parse(raw) as WindowTemplateDropPayload;
-      } catch {
-        return;
-      }
-      completeExternalTemplateDrop(event.clientX, event.clientY, payload);
-    },
-    [completeExternalTemplateDrop, onTemplateDrop],
-  );
-
-  reactHostPort.useEffect(() => {
-    if (!onTemplateDrop) return;
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!windowTemplatePointerDragRef.active) return;
-      const session = readActiveWindowTemplateDragSession();
-      if (!session) return;
-      setTemplateDrag({ label: session.label, x: event.clientX, y: event.clientY });
-      refreshDropZone(event.clientX, event.clientY);
-    };
-    const handlePointerUp = (event: PointerEvent) => {
-      if (!windowTemplatePointerDragRef.active) return;
-      const session = readActiveWindowTemplateDragSession();
-      if (!session) {
-        windowTemplatePointerDragRef.active = false;
-        clearTemplateDragPreview();
-        return;
-      }
-      const modeRect = modeBodyRef.current?.getBoundingClientRect();
-      if (!modeRect || event.clientX < modeRect.left || event.clientX > modeRect.right || event.clientY < modeRect.top || event.clientY > modeRect.bottom) {
-        cancelWindowTemplatePointerDrag();
-        clearTemplateDragPreview();
-        return;
-      }
-      if (!completeExternalTemplateDrop(event.clientX, event.clientY, session.payload)) {
-        cancelWindowTemplatePointerDrag();
-        clearTemplateDragPreview();
-      }
-    };
-    window.addEventListener("pointermove", handlePointerMove, true);
-    window.addEventListener("pointerup", handlePointerUp, true);
-    window.addEventListener("pointercancel", handlePointerUp, true);
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove, true);
-      window.removeEventListener("pointerup", handlePointerUp, true);
-      window.removeEventListener("pointercancel", handlePointerUp, true);
-    };
-  }, [clearTemplateDragPreview, completeExternalTemplateDrop, onTemplateDrop, refreshDropZone]);
-
-  const templatePreviewDrag = reactHostPort.useMemo((): ModeDragState | null => {
-    if (!templateDrag) return null;
-    return {
-      dragKind: "tab",
-      windowId: MODE_TEMPLATE_PREVIEW_WINDOW_ID,
-      stackPath: "",
-      tabIndex: -1,
-      pointerId: -1,
-      ghostLabel: templateDrag.label,
-      x: templateDrag.x,
-      y: templateDrag.y,
-    };
-  }, [templateDrag]);
-
-  const previewDragState = dragState ?? templatePreviewDrag;
-
-  const draggedPreviewTitle = previewDragState ? (windowsById.get(previewDragState.windowId)?.title ?? previewDragState.ghostLabel) : "";
-  const draggedPreviewIconId = previewDragState ? windowsById.get(previewDragState.windowId)?.iconId : undefined;
-  const tabInsertPreview = resolveModeTabInsertPreview(previewDragState, dropZone);
-  const draggedInsertTabs = reactHostPort.useMemo<ModeDockContextValue["draggedInsertTabs"]>(() => {
-    if (templateDrag) return [{ id: MODE_TEMPLATE_PREVIEW_WINDOW_ID, title: templateDrag.label, iconId: "app-window" }];
-    if (!dragState) return [];
-    return modeDockDragInsertTabs(
-      layoutState,
-      dragState,
-      (windowId) => windowsById.get(windowId)?.title ?? windowId,
-      (windowId) => windowsById.get(windowId)?.iconId ?? "app-window",
-    );
-  }, [dragState, layoutState, templateDrag, windowsById]);
-
-  const noopDrag = reactHostPort.useCallback(() => {}, []);
-  const canMaximize = modeCollectWindowIds(layoutState).length > 1;
-
-  reactHostPort.useEffect(() => {
-    if (canMaximize || maximizedStackPath === null) return;
-    setMaximizedStackPath(null);
-  }, [canMaximize, maximizedStackPath]);
-
-  const openWindowInNewWindow = reactHostPort.useCallback(
-    (windowId: string) => {
-      onWindowOpenInNewWindow?.(windowId);
-    },
-    [onWindowOpenInNewWindow],
-  );
-
-  useControlKeybinding(
-    "ui.window.close",
-    () => {
-      if (!activeWindowId) return;
-      closeWindow(activeWindowId);
-    },
-    { enabled: Boolean(activeWindowId) },
-    [activeWindowId, closeWindow],
-  );
-
-  useControlKeybinding(
-    "ui.window.focus",
-    () => {
-      if (!activeWindowId) return;
-      const stackPath = resolveStackPathForWindowId(layoutState, activeWindowId);
-      if (stackPath === null) return;
-      toggleMaximize(stackPath);
-    },
-    { enabled: Boolean(activeWindowId) && canMaximize },
-    [activeWindowId, canMaximize, layoutState, toggleMaximize],
-  );
-
-  useControlKeybinding(
-    "ui.window.newWindow",
-    () => {
-      if (!activeWindowId) return;
-      openWindowInNewWindow(activeWindowId);
-    },
-    { enabled: Boolean(activeWindowId) && Boolean(onWindowOpenInNewWindow) },
-    [activeWindowId, onWindowOpenInNewWindow, openWindowInNewWindow],
-  );
-
-  const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
-    () => ({
-      dragState: previewDragState,
-      tabInsertPreview,
-      draggedInsertTabs,
-      registerStackDropTargets,
-      startTabDrag: mobile ? noopDrag : startTabDrag,
-      clearPendingDrag,
-      closeWindow,
-      activateWindow,
-      deactivateActiveWindow,
-      maximizedStackPath,
-      canMaximize,
-      toggleMaximize,
-    }),
-    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, deactivateActiveWindow, maximizedStackPath, canMaximize, toggleMaximize],
-  );
-
-  const renderContext = reactHostPort.useMemo<ModeRenderContext>(
-    () => ({ windowsById, activeWindowId, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement }),
-    [windowsById, activeWindowId, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement],
-  );
-
-  const dockOutLayout = reactHostPort.useMemo(() => (dragState ? modeDockOutLayout(layoutState, dragState) : layoutState), [layoutState, dragState]);
-
-  const maximizedStack =
-    maximizedStackPath !== null
-      ? (() => {
-          let found: WindowLayoutStackNode | null = null;
-          mapLayoutStacks(dockOutLayout, (stack, path) => {
-            if (path === maximizedStackPath) found = stack;
-            return stack;
-          });
-          return found;
-        })()
-      : null;
-
-  const orderedWindowIds = modeCollectWindowIds(dockOutLayout);
-  const hasWindows = orderedWindowIds.length > 0;
-  const emptyShellNotice = resolveTranslationLabel(modeT("ui.display.emptyShell"));
-
-  /** 📱️ Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, utility bar, measures, engagement) as desktop. */
-  const mobileFlatStack: WindowLayoutStackNode | null = mobile
-    ? {
-        kind: "stack",
-        children: orderedWindowIds.map((id) => ({ kind: "window", id })),
-        activeId: (activeWindowId && orderedWindowIds.includes(activeWindowId) ? activeWindowId : orderedWindowIds[0]) ?? undefined,
-      }
-    : null;
-
-  const body =
-    children ??
-    (mobile ? (
-      mobileFlatStack && mobileFlatStack.children.length > 0 ? (
-        <ModeDockContext.Provider value={dockContext}>
-          <ModeDockStack stackPath="" node={mobileFlatStack} windowsById={windowsById} activeWindowId={activeWindowId} mobile />
-        </ModeDockContext.Provider>
-      ) : null
-    ) : maximizedStack ? (
-      <ModeDockContext.Provider value={dockContext}>
-        <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
-      </ModeDockContext.Provider>
-    ) : (
-      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout as WindowLayoutAxisNode | WindowLayoutStackNode, "", renderContext)}</ModeDockContext.Provider>
-    ));
-
+  const { stackDropElementsRef, setLayoutState, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag, pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag, windowsById, dropZone, layoutState, maximizedStackPath, modeT, modeBodyFillClass } = useModeLayoutState({ windows, layout, onLayoutChange, activeWindowId });
+  const { refreshDropZone, finishDrag, closeWindow, toggleMaximize, registerStackDropTargets, startTabDrag, clearPendingDrag, activateWindow, deactivateActiveWindow, handleCanvasBackgroundPointerDown } = useModeWindowCallbacks({ stackDropElementsRef, activeWindowId, setLayoutState, onActiveWindowChange, onWindowClose, setMaximizedStackPath, modeBodyRef, dropZoneRef, setDropZone, setPendingDrag });
+  const { clearTemplateDragPreview, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement } = useModeDragEffectsAndAxisCallbacks({ pendingDrag, dragState, dragLayoutSnapshotRef, layoutStateRef, setDragState, setPendingDrag, refreshDropZone, finishDrag, dropZoneRef, setDropZone, setLayoutState, axisGroupRefsRef, axisGroupElementsRef, setTemplateDrag, templateDrag });
+  const { canMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, noopDrag, handleExternalTemplateDragOver, handleExternalTemplateDrop, draggedPreviewTitle, draggedPreviewIconId } = useModeTemplateDropAndPreview({ stackDropElementsRef, modeBodyRef, onTemplateDrop, clearTemplateDragPreview, setTemplateDrag, refreshDropZone, templateDrag, dragState, windowsById, dropZone, layoutState });
+  const { hasWindows, emptyShellNotice, body } = useModeShortcutsAndContexts({ canMaximize, maximizedStackPath, setMaximizedStackPath, onWindowOpenInNewWindow, activeWindowId, closeWindow, layoutState, toggleMaximize, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, mobile, noopDrag, startTabDrag, clearPendingDrag, activateWindow, deactivateActiveWindow, windowsById, onAxisLayoutChanged, onJoinCornerResize, registerAxisGroup, registerAxisElement, dragState, modeT, children });
   return (
     <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
       <LevelProvider level="base">
@@ -798,7 +219,6 @@ const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, chil
 export { App };
 
 // #endregion 🧭️App
-
 
 /** 🖥️ App descriptor rendered inside {@link Ui}. */
 export interface UiAppDescriptor {

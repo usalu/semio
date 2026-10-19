@@ -1,6 +1,7 @@
 //! 🎞️ Event sourced history reprojection: the remote transition adoption, the reprojection, the live prefix state, the replayed projection adoption, the convergence checkpoints and the prefix snapshot ring. See [`super`].
 
 use super::*;
+use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone

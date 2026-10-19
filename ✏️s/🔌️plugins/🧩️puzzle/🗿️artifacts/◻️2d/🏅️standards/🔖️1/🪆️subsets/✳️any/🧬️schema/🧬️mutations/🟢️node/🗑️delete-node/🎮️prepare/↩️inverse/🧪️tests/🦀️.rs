@@ -2,7 +2,8 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::DeleteNode;
 use crate::standards::v1::subsets::any::schema::{records::Puzzle2dNode, records::Puzzle2dEdge, mutations::Puzzle2dMutation};
-use semio_framework_value::{ValueError, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedClone, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneStep};
+use semio_framework_value::{ValueError, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedClone, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneStep};
+use semio_framework_value_persistent::list::PagedList;
 use std::mem::size_of;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
@@ -20,7 +21,7 @@ use crate::standards::v1::subsets::any::schema::preparation::delete_node_prepara
 use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
 use crate::standards::v1::subsets::any::schema::{empty_puzzle2d_snapshot,mutations::{delete_node,inverse_puzzle2d_mutation}};
-use semio_framework_test_fixtures::fixture_text;
+use semio_framework_test_fixtures::repo_text;
 
 fn grant(turn:usize)->RetainedCloneGrant {match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096,64), 1 => RetainedCloneGrant::one_payload_turn(4096,64), _ => RetainedCloneGrant::one_release_turn(4096,64) }}
 fn observed(grant:RetainedCloneGrant,action:impl FnOnce()->Result<RetainedCloneStep,ValueError>)->RetainedCloneStep {
@@ -54,7 +55,7 @@ fn retire(inverse:PagedList<Puzzle2dMutation,{usize::MAX}>) {
 fn history_edit_puzzle2d_owned_delete_inverse_preserves_exact_cascade_and_granted_cancellation() {
     assert!(size_of::<Puzzle2dDeleteNodeInverseCursor>()<=4096);
     assert!(size_of::<<Puzzle2dEdge as RetainedClone>::Cursor>()<=4096);
-    let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus:serde_json::Value=serde_json::from_str(repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🟢️node/🗑️delete-node/🎮️prepare/🔣️.json")).unwrap();
     let text=|value:&serde_json::Value|{let value=value.as_str().unwrap();match value.strip_prefix("$large:"){Some(suffix)=>PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}",corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))),None=>value.into()}};
     let mut source=test_source_custody::admit();
     let mut mutation=test_source_custody::admit();
@@ -105,8 +106,8 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
     macro_rules! vector {
         ($kind:literal, $case:literal) => {
             (
-                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
+                repo_text!(concat!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
+                repo_text!(concat!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
             )
         };
     }

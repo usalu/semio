@@ -29,7 +29,7 @@ fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqlit
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::NativeEncodeControl;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 

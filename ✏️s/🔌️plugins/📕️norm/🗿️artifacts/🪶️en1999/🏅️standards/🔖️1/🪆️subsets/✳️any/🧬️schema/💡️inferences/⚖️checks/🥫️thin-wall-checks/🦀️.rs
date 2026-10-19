@@ -88,7 +88,6 @@ pub(super) fn check_cold_formed(sheet: &ColdFormedSheet, material: &AluminiumMat
             "q_k senken, damit Blechbiegung erfüllt ist.",
         ));
         let t_req = if alloy.f_o_pa > 0.0 {
-            // W_el ∝ t² → scale thickness by sqrt(u)
             sheet.thickness * (m_ed.abs() / m_rd).sqrt() * 1.05
         } else { sheet.thickness };
         remedies_m.push(Remedy::at_least(
@@ -117,7 +116,6 @@ pub(super) fn check_cold_formed(sheet: &ColdFormedSheet, material: &AluminiumMat
         remedies_m,
     ));
 
-    // Axial (EN 1999-1-4 §6.1) — effective width + HAZ on welded sheets.
     let a_eff = b_eff * sheet.thickness * (if sheet.welded { alloy.rho_o_haz.min(alloy.rho_u_haz) } else { 1.0 });
     let n_rd = a_eff * alloy.f_o_pa / params.gamma_m1;
     let mut rem_n = Vec::new();
@@ -155,9 +153,8 @@ pub(super) fn check_cold_formed(sheet: &ColdFormedSheet, material: &AluminiumMat
         rem_n,
     ));
 
-    // Web crippling / support reaction from span UDL proxy: R = 2 M_Ed / span
     let r_ed = if sheet.span > 0.0 { 2.0 * m_ed.abs() / sheet.span } else { 0.0 };
-    let r_rd = 0.5 * sheet.thickness * sheet.thickness * alloy.f_o_pa / params.gamma_m1; // simplified
+    let r_rd = 0.5 * sheet.thickness * sheet.thickness * alloy.f_o_pa / params.gamma_m1;
     let mut rem_r = Vec::new();
     if r_ed > r_rd && r_rd > 0.0 {
         rem_r.push(Remedy::at_least(
@@ -189,7 +186,6 @@ pub(super) fn check_cold_formed(sheet: &ColdFormedSheet, material: &AluminiumMat
         rem_r,
     ));
 
-    // Interaction N–M
     let a_v = sheet.thickness * sheet.width;
     let v_rd = a_v * alloy.f_o_pa / (params.gamma_m1 * 3.0f64.sqrt());
     let mut remedies_v = Vec::new();
@@ -220,7 +216,6 @@ pub(super) fn check_cold_formed(sheet: &ColdFormedSheet, material: &AluminiumMat
     let u_i = if n_rd > 0.0 && m_rd > 0.0 { n_ed.abs()/n_rd + m_ed.abs()/m_rd } else { 0.0 };
     let mut rem_nm = Vec::new();
     if u_i > 1.0 {
-        // Scale both N and M characteristic leaves by 1/u so sequential (or either path set) lands ≤ 1.
         let n_lim = n_ed.abs() / u_i * 0.99;
         let m_lim = m_ed.abs() / u_i * 0.99;
         rem_nm.extend(scale_action_leaf_remedies(

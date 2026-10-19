@@ -1,4 +1,4 @@
-import { admitPluginCatalogV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+import { admitPluginCatalogV1 } from "@semio-tech/plugin-registry/catalog";
 import type { FrameworkOsBootOptions, FrameworkOsBootExecution } from "@semio-tech/framework-renderer-react";
 import { mountSDevInventoryV1, type SDevMountV1, type SDevOperationV1 } from "../🧩️service-composition/🟦️.ts";
 

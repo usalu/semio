@@ -1,4 +1,4 @@
-//! lowpoly -> dwg
+//! 🔺️ lowpoly -> dwg
 //!
 //! Real DWG export: mesh vertices/faces (world space, fan-triangulated) go through
 //! `mesh_to_dwg_drawing` -> `DwgSnapshot::from_drawing` -> `encode_dwg` (AC1024).

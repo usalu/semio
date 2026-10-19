@@ -1,6 +1,7 @@
 //! 📜️ Complete DOCX literal schema, ordered OPC metadata and typed XML fields.
 use semio_framework_value::{ValueError, ValueRefusalKind};
-#[cfg(test)] use semio_framework_value::{NativeEncodeControl, NativeDecodeControl};
+#[cfg(test)] use semio_framework_value::NativeEncodeControl;
+#[cfg(test)] use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::DecodedValue;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{docx_xml_parts_from_iter_controlled,DocxSnapshot,DocxXmlPart};
 use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,SqliteDatabaseLimits},io_schema::IoPayload};

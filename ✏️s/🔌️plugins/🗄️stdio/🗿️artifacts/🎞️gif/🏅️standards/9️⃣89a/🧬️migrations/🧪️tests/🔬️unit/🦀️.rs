@@ -28,10 +28,10 @@ fn real_87a_snapshot() -> Gif87aSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_rgba_2x2() -> Vec<u8> {
     vec![
-        255, 0, 0, 255, // top-left: opaque red
-        0, 255, 0, 255, // top-right: opaque green
-        0, 0, 255, 255, // bottom-left: opaque blue
-        255, 255, 0, 255, // bottom-right: opaque yellow
+        255, 0, 0, 255,
+        0, 255, 0, 255,
+        0, 0, 255, 255,
+        255, 255, 0, 255,
     ]
 }
 
@@ -62,8 +62,6 @@ async fn migrate_87a_to_89a_preserves_indices_in_a_single_frame() {
 
 #[semio_framework_async_macros::async_test]
 async fn migrate_87a_to_89a_round_trips_through_real_89a_codec() {
-    // 🔁️ Not just the in-memory struct — the migrated snapshot must also be a real, valid 89a
-    // document: encode it with the real 89a encoder and decode it back.
     let snapshot_87a = real_87a_snapshot();
     let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
 

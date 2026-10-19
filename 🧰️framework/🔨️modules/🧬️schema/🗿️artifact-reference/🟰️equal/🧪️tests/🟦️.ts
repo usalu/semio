@@ -2,7 +2,7 @@ import {test,expect}from"bun:test";
 import {Database}from"bun:sqlite";
 import {semioSchemaAjvV1}from"../../../🔮️oracles/✅️validator/🟦️.ts";
 import {RetainedTypedEquality,type Node,type Demand,type Grant}from"../../../../🌱️value/🌳️tree/🟰️equal/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";import fixture from"../🧫️fixtures/🔣️.json";
+import schema from"../🧬️schema/🔣️.json";import fixture from"./🧫️fixtures/🔣️.json";
 const text=new TextEncoder();const names=["artifactId","artifactKind","standard","subset"];
 function fields(value:typeof fixture.cases[number]["left"]){return[value.artifactId,value.dialect.artifactKind,value.dialect.standard,value.dialect.subset].map(value=>text.encode(value));}
 function node(value:typeof fixture.cases[number]["left"]):Node{return{kind:"record",fields:fields(value).map((value,index)=>({name:text.encode(names[index]!),value:{kind:"text",value}}))};}

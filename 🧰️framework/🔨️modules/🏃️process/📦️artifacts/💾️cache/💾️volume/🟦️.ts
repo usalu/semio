@@ -15,7 +15,7 @@ import{withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1,re
 import{readNativeStorageReservationPolicyV1,requireNativeStorageReservationV1,acquireNativeStorageV1,recoverNativeStorageReservationV1,observeNativeStorageStateV1,type NativeStorageReservationV1}from"../../🏗️native-build/💾️storage/🟦️.ts";
 import type{NativeStoragePolicyV1,NativeStorageAllocationV1}from"../../🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import{withNativePlatformFundedChildStorageV1,withNativePlatformChildStorageV1,retireNativePlatformFundedChildStorageV1,requireNativePlatformImageV1,withNativePlatformImageOperationV1,type NativeImageStorageV1}from"../../🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
-import{readNativeImageRetirementFileV1}from"../../🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
+import { readNativeImageRetirementFileV1 } from "../../🏗️native-build/💾️storage/📄️retirement-file/🟦️.ts";
 import{readNativeArtifactCacheParentPolicyV1,readNativeArtifactCachePolicyV1,artifactCacheErrorsV1,type NativeArtifactCachePolicyV1}from"../⚙️policy/🟦️.ts";
 import{nativeArtifactCacheModelV1,type NativeArtifactCacheCatalogV1,type NativeArtifactCacheSlotV1}from"../📋️model/🟦️.ts";
 import{nativeArtifactCacheLayoutV1,nativeArtifactCacheProducerLayoutV1}from"../📍️layout/🟦️.ts";

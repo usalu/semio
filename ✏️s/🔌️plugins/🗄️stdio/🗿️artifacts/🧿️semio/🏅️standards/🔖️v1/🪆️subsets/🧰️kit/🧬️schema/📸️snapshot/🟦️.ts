@@ -12,13 +12,13 @@ export interface SemioKitConnection { id: string; connectingPieceId: string; con
 export interface SemioKitDesign { id: string; name: string; pieces: SemioKitPiece[]; connections: SemioKitConnection[] }
 
 export interface SemioKitSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ types: SemioKitType[];
-  /** @state artifact */ designs: SemioKitDesign[];
-  /** @state artifact @child kind=s.stdio.semio many */ objects: ArtifactChild[];
-  /** @state artifact @child kind=s.stdio.semio many */ models: ArtifactChild[];
-  /** @state artifact @child kind=s.stdio.semio */ properties?: ArtifactChild;
-  /** @state artifact @link_slot roles=representation many */ representations: ArtifactLink[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 🧱️ @state artifact */ types: SemioKitType[];
+  /** 🎨️ @state artifact */ designs: SemioKitDesign[];
+  /** 📦️ @state artifact @child kind=s.stdio.semio many */ objects: ArtifactChild[];
+  /** 🧩️ @state artifact @child kind=s.stdio.semio many */ models: ArtifactChild[];
+  /** 🎛️ @state artifact @child kind=s.stdio.semio */ properties?: ArtifactChild;
+  /** 🔬️ @state artifact @link_slot roles=representation many */ representations: ArtifactLink[];
 }
 
 function stringField(row: Record<string, unknown>, field: string, at: string): string {

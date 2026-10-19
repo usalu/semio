@@ -1,4 +1,4 @@
-//! schema `🧬️schema/🔣️selection-time-travel/🔣️.json`), driven through the store's time-travel reads: every recorded
+//! 📡️ schema `🧬️schema/🔣️selection-time-travel/🔣️.json`), driven through the store's time-travel reads: every recorded
 //! ⏪️ The language-agnostic time-travel corpus of the puzzle 5d selection leaves (board and world) (`🧫️fixtures/🧫️selection-time-travel/🔣️.json`,
 //! gesture is ONE edit carrying its `TransactionRef`; editing one gesture's inputs — its offset, angle, factors or
 //! targets — previews as the state right before it plus the draft with nothing downstream applied, its Report replay

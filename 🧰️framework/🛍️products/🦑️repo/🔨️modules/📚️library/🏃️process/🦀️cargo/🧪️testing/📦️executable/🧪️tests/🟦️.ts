@@ -1,4 +1,4 @@
-import "./🌿️.ts";
+import "./🌿️/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {join,resolve,relative} from "node:path";

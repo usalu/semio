@@ -1,5 +1,5 @@
 //! 🔗️ Bounded ordinal and literal cell construction for explicitly named space entities.
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_io_sqlite_snapshot::SqliteRow;
 use semio_framework_io_sqlite_snapshot::SqliteTable;
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -11,8 +11,8 @@ pub fn reconstruct<T>(control: &mut semio_framework_io_sqlite_snapshot::SqliteSn
     let maximum = control.reconstruction_remaining_bytes()?;
     let mut owned = 0;
     let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining,checkpoint,allocation| {
-        let mut progress = |event: semio_framework_value::native_decoding::NativeDecodeProgress| checkpoint(event.completed,event.total);
-        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
+        let mut progress = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| checkpoint(event.completed,event.total);
+        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(maximum.min(remaining),&mut progress,&mut native_allocation);
         let result = operation(&mut native);
         owned = native.owned_bytes();
         (result,owned)
@@ -162,7 +162,7 @@ fn sqlite_snapshot_space_fields_nested_controls_preserve_refusal_authority() {
             rows: vec![SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(owner), SqliteValue::Integer(0), SqliteValue::Text(corpus["label"].as_str().unwrap().into())] }],
         };
         let mut accepted = |_| !case["cancel"].as_bool().unwrap();
-        let mut control = semio_framework_value::NativeDecodeControl::new(case["maximumBytes"].as_u64().unwrap() as usize, &mut accepted);
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(case["maximumBytes"].as_u64().unwrap() as usize, &mut accepted);
         let result = ordered(&table, parent, 4, &mut control);
         match case["expectedKind"].as_str() {
             Some(kind) => {

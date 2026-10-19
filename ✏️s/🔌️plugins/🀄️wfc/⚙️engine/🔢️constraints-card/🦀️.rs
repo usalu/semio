@@ -55,15 +55,11 @@ impl Constraint for CardinalityConstraint {
         let selected = self.selector.as_pattern_set(&self.model);
         let scoped_nodes: Vec<NodeId> = (0..adjacency.node_count()).map(NodeId::from_index).filter(|&n| self.scope.contains(n, adjacency)).collect();
 
-        // How many scoped nodes could still take a selected pattern, and how many are already
-        // forced to (their domain is a selected-pattern-only singleton)?
         let possible = scoped_nodes.iter().filter(|&&n| domains.get(n).bits().intersects(&selected)).count() as u32;
         let required = scoped_nodes.iter().filter(|&&n| domains.get(n).bits().is_subset_of(&selected)).count() as u32;
 
         let mut out = Vec::new();
         if self.max < required {
-            // Already over-required with no way to satisfy `max` — signal via an emptied domain
-            // on the first scoped node so the caller's normal wipeout handling takes over.
             if let Some(&n) = scoped_nodes.first() {
                 out.push((n, PatternSet::new_empty(self.model.pattern_count())));
             }
@@ -76,7 +72,6 @@ impl Constraint for CardinalityConstraint {
             return Ok(out);
         }
         if possible == self.min && self.min > required {
-            // Every possible-but-not-yet-required node must take the selected pattern to reach `min`.
             for &n in &scoped_nodes {
                 let bits = domains.get(n).bits();
                 if bits.intersects(&selected) && !bits.is_subset_of(&selected) {
@@ -85,7 +80,6 @@ impl Constraint for CardinalityConstraint {
             }
         }
         if self.max == required {
-            // No further scoped node may take the selected pattern.
             let mut not_selected = selected.clone();
             not_selected.clear_all();
             for i in 0..self.model.pattern_count() {

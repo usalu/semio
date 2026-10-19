@@ -3,7 +3,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::MoveNode;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use semio_framework_value::{ValueError, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use semio_framework_value::{ValueError, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
+use semio_framework_value_persistent::list::PagedList;
 use std::mem::size_of;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
@@ -15,7 +16,7 @@ use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedClone, ret
 use std::{mem::ManuallyDrop, ops::Deref, ops::DerefMut};
 use crate::standards::v1::subsets::any::schema::preparation::move_node_preparation::inverse::*;
 use crate::standards::v1::subsets::any::schema::testkit as test_source_custody;
-use semio_framework_test_fixtures::fixture_text;
+use semio_framework_test_fixtures::repo_text;
 
 fn grant(turn: usize) -> RetainedCloneGrant { match turn % 3 { 0 => RetainedCloneGrant::one_capacity_turn(4096, 64), 1 => RetainedCloneGrant::one_payload_turn(4096, 64), _ => RetainedCloneGrant::one_release_turn(4096, 64) } }
 
@@ -54,7 +55,7 @@ fn retire(inverse: PagedList<Puzzle2dMutation, {usize::MAX}>) {
 #[test]
 fn history_edit_puzzle2d_owned_move_inverse_preserves_literal_ids_and_controlled_cancellation() {
     assert!(size_of::<Puzzle2dMoveNodeInverseCursor>() <= 4096);
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍move-node/🎮️prepare/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(repo_text!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/🧭️pose/📍move-node/🎮️prepare/🔣️.json")).unwrap();
     let text = |value: &serde_json::Value| { let value = value.as_str().unwrap(); match value.strip_prefix("$large:") { Some(suffix) => PagedUtf8::<{usize::MAX}>::from(format!("{}{suffix}", corpus["control"]["largePrefix"].as_str().unwrap().repeat(corpus["control"]["largeRepeats"].as_u64().unwrap() as usize))), None => value.into() } };
     let scalar = |value: &serde_json::Value| match value.as_str() { Some("nan") => f64::NAN, Some("positive-infinity") => f64::INFINITY, None => value.as_f64().unwrap(), _ => panic!("unknown authored scalar") };
     for case in corpus["cases"].as_array().unwrap() {
@@ -112,8 +113,8 @@ async fn the_prepared_family_inverse_sums_to_the_negative_diff() {
     macro_rules! vector {
         ($kind:literal, $case:literal) => {
             (
-                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../../../../../🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
+                repo_text!(concat!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/📸️snapshot/⬅️before/🔣️.json")),
+                repo_text!(concat!("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/", $kind, "/", $case, "/🦠️mutation/🔣️.json")),
             )
         };
     }

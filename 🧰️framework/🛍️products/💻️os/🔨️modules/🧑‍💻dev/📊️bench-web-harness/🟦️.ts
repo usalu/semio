@@ -144,9 +144,6 @@ export async function runBenchWebBudgets(input: BenchWebInput): Promise<BenchWeb
   const rows: BenchWebRawRow[] = [];
   const mainWorkers: ShardWorkerLike[] = [];
   const t0 = performance.now();
-  // 🚫️ exclusiveShardCount:0 — this proof activates the WHOLE pool as round-robin so "distinct shards
-  // used" measures all K, matching the budget-3 wording ("shards==K") rather than K minus the ≤2 shards
-  // `ShardClient`'s default reserves for `leaseExclusive`, which this bench never calls.
   const residentLedger = new OwnedResidentLedger({ bytes: 33554432, slots: 262144, owners: 262144, control: { bytes: 65536, slots: 1024, owners: 1024 } });
   const client = new ShardClient({ originalWorkStock: fixtureOriginalWorkStock(), residentLedger, shardCount: input.shardCount, exclusiveShardCount: 0, createWorker: () => createStubWorker(mainWorkers) });
 
@@ -249,7 +246,7 @@ export async function runBenchWebBudgets(input: BenchWebInput): Promise<BenchWeb
   //#region 8️⃣ Capability revocation
   const capActorId = "bench-capability-actor";
   const requiredCapability = "scale-fixture.io.example";
-  await client.activate(capActorId, "stub://ok", [], STUB_BUDGET); // 🚫️ deliberately NO caps granted — see file header's honesty note
+  await client.activate(capActorId, "stub://ok", [], STUB_BUDGET);
   const denialResult = (await client.turn(capActorId, [{ kind: "app-command", payload: { requireCapability: requiredCapability } }], STUB_BUDGET)) as { denied?: boolean };
   const stillAlive = client.shardIndexFor(capActorId) !== undefined;
   rows.push({ id: 8, ok: denialResult.denied === true && stillAlive, measured: { denied: denialResult.denied === true, actorAlive: stillAlive }, note: "PARTIAL: ShardClient has no dedicated revoke-mid-life wire message — this activates an actor WITHOUT the capability up front (standing in for 'revoked') and confirms the stub denies the effect while the actor stays registered. Not a genuine runtime-revocation-of-a-live-grant round trip." });

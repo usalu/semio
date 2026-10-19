@@ -1,6 +1,7 @@
 //! 🧮️ Canonical expression bytes retain only paged traversal metadata and borrow the original AST each turn.
 use super::super::{ExprValue,ExprOp};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,list::PagedList,paged_text::TextReadView};
+use semio_framework_value::{ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, paged_text::TextReadView};
+use semio_framework_value_persistent::list::PagedList;
 /// 🌿️ One original node lends its scalar, name and child count without constructing a formula mirror.
 #[derive(Clone,Copy)]
 pub enum BorrowedExpressionView<'a>{Number(f64),Name(TextReadView<'a>),Negate,Binary(ExprOp),Call(TextReadView<'a>,usize)}
@@ -8,7 +9,7 @@ pub enum BorrowedExpressionView<'a>{Number(f64),Name(TextReadView<'a>),Negate,Bi
 pub trait BorrowedExpressionSource{fn expression_view(&self,path:&[usize])->Result<BorrowedExpressionView<'_>,ValueError>;fn expression_identity(&self)->usize{self as*const Self as*const()as usize}}
 impl BorrowedExpressionSource for ExprValue{fn expression_view(&self,path:&[usize])->Result<BorrowedExpressionView<'_>,ValueError>{let mut node=self;for ordinal in path{node=match(node,*ordinal){(Self::Neg(child),0)=>child,(Self::Binary(_,left,_),0)=>left,(Self::Binary(_,_,right),1)=>right,(Self::Call(_,children),index)=>children.get(index).ok_or_else(invalid)?,_=>return Err(invalid())};}Ok(match node{Self::Num(value)=>BorrowedExpressionView::Number(*value),Self::Var(name)=>BorrowedExpressionView::Name(TextReadView::from_str(name)),Self::Neg(_)=>BorrowedExpressionView::Negate,Self::Binary(op,_,_)=>BorrowedExpressionView::Binary(*op),Self::Call(name,children)=>BorrowedExpressionView::Call(TextReadView::from_str(name),children.len())})}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original expression traversal changed")}
-fn paged(error:semio_framework_value::list::PagedListError)->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason)}
+fn paged(error:semio_framework_value_persistent::list::PagedListError)->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason)}
 #[derive(Clone,Copy,Default)]
 struct Frame{phase:u8,minimum:u8,bracket:bool,quoted:bool,ordinal:usize,offset:usize,index:usize}
 /// 🎟️ One admitted source, traversal or output event keeps its original physical receipt.

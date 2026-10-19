@@ -171,7 +171,7 @@ function historyCheckpointAccessibleName(column: HistoryColumn): string {
 }
 
 /**
- * SVG ancestor-graph history table: swimlane guides, elbow connectors between forked checkpoints,
+ * 📜️ SVG ancestor-graph history table: swimlane guides, elbow connectors between forked checkpoints,
  * commit nodes, per-row author avatars and alternative-name label chips.
  **/
 export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, className, laneWidth, onSelectCheckpoint }) => {

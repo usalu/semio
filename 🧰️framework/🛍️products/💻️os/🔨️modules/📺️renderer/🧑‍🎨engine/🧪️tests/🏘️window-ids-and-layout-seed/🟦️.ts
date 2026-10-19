@@ -45,18 +45,12 @@ describe("per-window element ids", () => {
   ];
   const measuresMarkup = (windowId: string): string => renderToStaticMarkup(windowMeasuresChrome(authoredMeasures(), undefined, windowId, () => undefined).measures as ReactElement);
 
-  // 🪪️ Wave B41: `framework.worldOrbit.projection` was a HARDCODED id on a pane rendered once per world
-  // surface, and a world surface is mounted once per open window instance — so the two-pane default layout
-  // put the pane root and both of `Pane`'s derived fold-control ids in the document TWICE, and every row of
-  // the projection switch tree with them. Two surfaces must share no DOM id at all.
   it("renders two world surfaces with no duplicate DOM id", () => {
     mountUnfoldedPane("puzzle3d-main-top");
     const top = mountedDomIds();
     mountUnfoldedPane("puzzle3d-main-perspective");
     const all = mountedDomIds();
     const perspective = all.filter((id) => !top.includes(id));
-    // 🌲️ Unfolded, each pane carries its root, its fold toggle, its close control and every projection
-    // switch row — the whole id surface the folded rail used to hide.
     expect(top.length).toBeGreaterThan(8);
     expect(perspective.length).toBe(top.length);
     expect(duplicates(all)).toEqual([]);
@@ -78,8 +72,6 @@ describe("per-window element ids", () => {
     cleanup();
   });
 
-  // 🌲️ The pure half of the same invariant, so a regression is reported by the id builder and not only by
-  // a mounted pane: every projection-switch row id is a child of the pane that owns it.
   it("qualifies every projection switch row id by its owning pane", () => {
     const templates = createWorldProjectionTemplates({ controllerId: "projection-switch" });
     const rows = (paneId: string): string[] => {
@@ -94,9 +86,6 @@ describe("per-window element ids", () => {
     expect(top.every((id) => id.startsWith(`${world3dProjectionPaneElementId("puzzle3d-main-top")}.`) && isElementId(id))).toBe(true);
   });
 
-  // 🪪️ The same defect on the measures rail: a window kind's measure tree is authored ONCE for the kind
-  // (puzzle3d passes the literal `"puzzle3d"` prefix to `world3d_projection_measures`) and rendered once
-  // per instance, so the authored ids collided as soon as a second rail was unfolded.
   it("renders two windows' measures rails with no duplicate DOM id and keeps the authored id as the tail", () => {
     const top = domIds(measuresMarkup("puzzle3d-main-top"));
     const perspective = domIds(measuresMarkup("puzzle3d-main-perspective"));
@@ -109,9 +98,6 @@ describe("per-window element ids", () => {
     }
   });
 
-  // 🎓️ Qualification must not reach the AUTHORED tree: `windowMeasureTreeContainsId` (which decides whose
-  // window an introduction anchor belongs to) and the program's own `activeUtilityId` routing both speak
-  // the authored id, so the qualifier is a pure projection that leaves its input untouched.
   it("qualifies ids without mutating the authored measure tree or any other field", () => {
     const authored = authoredMeasures();
     const qualified = qualifyWindowMeasureIds(authored, "puzzle3d-main-top");
@@ -215,8 +201,6 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       "native",
       "en",
     );
-    // 🪟️ A refresh that only knows the bare kind id would leave Top/Perspective as "Fehlendes Fenster".
-    // Live extras must be in the fetch list: base kind + each default-layout instance.
     const windowInstances = [{ id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" }, ...seed.extraInstances.map((entry) => ({ id: entry.id, bodyKey: "puzzle3d.play.composite" }))];
     const request = buildUiRefreshRequest({ kind: "full" }, windowInstances, [], {}, new Map());
     expect(request?.windows?.map((window) => window.key)).toEqual(["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"]);

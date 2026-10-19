@@ -36,6 +36,7 @@ semio-framework-os-store-initialization-runtime = { path = "../../../../../🏗�
 semio-framework-os-store-snapshot-clone = { path = "../../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-doubles = { path = "../../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-fixtures = { path = "../../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-prelude = { path = "../../../../../🧪️testing/🧭️prelude/📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack = { workspace = true }

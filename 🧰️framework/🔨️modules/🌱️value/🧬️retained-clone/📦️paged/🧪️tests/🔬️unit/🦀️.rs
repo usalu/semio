@@ -1,10 +1,11 @@
 use crate::retained_clone::FixtureSourceBirth;
 use super::*;
 use crate::{DslValue, FromValue, ToValue, ErasedSnapshotRetirement, retained_clone::RetainedCloneSource, retirement::controlled::ControlledRetirement};
+use semio_framework_value::RetainedCloneRef;
 
 #[test]
 fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners() {
-    use crate::list::PagedListEditCursor;
+    use semio_framework_value_paged_list::list::PagedListEditCursor;
     let law: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     assert!(std::mem::size_of::<PagedListEditCursor>() <= law["bodyBytes"].as_u64().unwrap() as usize);
     for row in law["listEdits"].as_array().unwrap() {
@@ -42,7 +43,7 @@ fn paged_native_ordered_list_edits_move_one_slot_and_preserve_cancelled_owners()
 
 #[test]
 fn paged_native_utf8_append_has_real_turns_and_exact_partial_cancellation() {
-    use crate::value::observe_retirement_allocations;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations;
     let law: serde_json::Value = serde_json::from_str(crate::text("📦️paged/🧪️tests/🧫️fixtures/🎮️native-owner/🔣️.json")).unwrap();
     let close = &law["appendClose"];
     let budget = close["maximumBytes"].as_u64().unwrap() as usize;
@@ -210,14 +211,14 @@ fn paged_octets_copy_and_retire_by_credited_bytes_under_single_item_grants() {
         preparation_turns += 1;
         assert!(preparation_turns < maximum_turns);
         let turn = RetainedCloneGrant { maximum_capacity_bytes: retirement.next_capacity_byte_demand(grant.maximum_copy_bytes).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap(), ..grant };
-        let (step, heap) = crate::value::observe_retirement_allocations(|| retirement.step(turn).unwrap());
+        let (step, heap) = semio_framework_value_testing_allocator::observe_retirement_allocations(|| retirement.step(turn).unwrap());
         assert!(step.progress().fits(turn));
         assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }
     let demand = retirement.next_release_byte_demand().unwrap();
     assert!(demand > release_grant.maximum_release_bytes);
     for _ in 0..3 {
-        let (step, heap) = crate::value::observe_retirement_allocations(|| retirement.step(release_grant).expect("paged octet whole physical grant remains pending"));
+        let (step, heap) = semio_framework_value_testing_allocator::observe_retirement_allocations(|| retirement.step(release_grant).expect("paged octet whole physical grant remains pending"));
         assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!(heap, (0, 0));
         assert_eq!(retirement.next_release_byte_demand().unwrap(), demand);
@@ -371,7 +372,7 @@ fn paged_native_combined_grants_and_identifier_order_follow_neutral_law() {
         assert!(!comparator.begin_close());
         assert_eq!(comparator.close_step(Default::default()).unwrap(), RetainedCloneStep::Progress(Default::default()));
         assert_eq!(usize::from(comparator.left.is_some())+usize::from(comparator.right.is_some()),close_law["bindings"].as_u64().unwrap()as usize);
-        for _ in 0..100000{if comparator.terminal_is_empty(){break;}let grant=close_grant(&comparator,close_law["maximumItems"].as_u64().unwrap()as usize);let(step,heap)=crate::value::observe_retirement_allocations(||comparator.close_step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(left.borrow().get().to_string_owner(),format!("{prefix}{}",row["left"].as_str().unwrap()));}
+        for _ in 0..100000{if comparator.terminal_is_empty(){break;}let grant=close_grant(&comparator,close_law["maximumItems"].as_u64().unwrap()as usize);let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||comparator.close_step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(left.borrow().get().to_string_owner(),format!("{prefix}{}",row["left"].as_str().unwrap()));}
         assert!(comparator.terminal_is_empty());
         assert!(comparator.compare(left.borrow(), right.borrow(), BoundedOrdGrant { maximum_items: 1, maximum_bytes: 7 },physical).is_err());
         let mut cursor = PagedUtf8::<{usize::MAX}>::retained_clone_cursor();
@@ -415,7 +416,7 @@ fn handwritten_denials(grant:RetainedCloneGrant,demand:crate::RetirementDemand)-
 }
 
 fn handwritten_frontier<T:RetainedClone+serde::Serialize>(row:&serde_json::Value,body:usize,maximum:usize,cancel:Option<usize>,build:&impl Fn(&serde_json::Value)->T)->usize{
-    use crate::value::observe_retirement_allocations as observe;
+    use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
     let(value,heap)=observe(||build(&row["value"]));
     let(mut born,mut freed)=heap;
     let expected=serde_json::to_value(&value).unwrap();
@@ -477,7 +478,7 @@ fn handwritten_frontier<T:RetainedClone+serde::Serialize>(row:&serde_json::Value
 
 #[test]
 fn handwritten_retained_clone_demands_close_every_original_prefix_with_funded_owner_movement(){
-    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔮️demands/🔣️.json")).unwrap();
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔮️demands/🔣️.json")).unwrap();
     let schema:serde_json::Value=serde_json::from_str(include_str!("../../🧬️schema/🔮️demands/🔣️.json")).unwrap();
     let mut oracle=std::process::Command::new("bun").args(["-e",r#"import Ajv from "ajv/dist/2020";const {schema,law}=JSON.parse(await Bun.stdin.text());const validate=new Ajv({strict:true}).compile(schema);if(!validate(law)||validate({...law,deniedAxes:[]}))throw Error(JSON.stringify(validate.errors));console.log(JSON.stringify(law.cases.map(row=>{const value=structuredClone(row.value);return row.kind==="bytes"?Array.from(Uint8Array.from(value)):row.kind==="text"?new TextDecoder().decode(new TextEncoder().encode(value)):value;})));"#]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();
     use std::io::Write;

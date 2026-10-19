@@ -20,10 +20,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY)
@@ -268,7 +264,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     let mut loop_count: Option<u16> = None;
     let mut comments: Vec<String> = Vec::new();
     let mut app_extensions: Vec<GifAppExtension> = Vec::new();
-    let mut pending_gce: Option<(u8, bool, bool, u16, u8)> = None; // (disposal_bits, user_input, transparent_flag, delay_cs, transparent_index)
+    let mut pending_gce: Option<(u8, bool, bool, u16, u8)> = None;
     let mut frames: Vec<GifFrame> = Vec::new();
 
     loop {
@@ -334,7 +330,7 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                             app_extensions.push(GifAppExtension { identifier, auth_code, data: body[11..].to_vec() });
                         }
                     }
-                    _ => {} // unrecognized extension label: unmodeled by design (real spec labels are exhausted above)
+                    _ => {}
                 }
             }
             0x2C => {
@@ -548,48 +544,40 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl GifBuilderConstruction {
         /// 🏗️ Starts a fresh 89a document at the given logical screen size.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(width: u32, height: u32) -> Self {
             Self { snapshot: GifSnapshot { width, height, ..GifSnapshot::default() }, diagnostics: Vec::new() }
         }
         /// 🏗️ Appends one animation frame, in order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_frame(mut self, frame: GifFrame) -> Self {
             self.snapshot.frames.push(frame);
             self
         }
         /// 🏗️ Sets the NETSCAPE2.0 loop count (`None` = no loop extension, plays once).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_loop_count(mut self, loop_count: Option<u16>) -> Self {
             self.snapshot.loop_count = loop_count;
             self
         }
         /// 🏗️ Sets the Global Color Table.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_global_color_table(mut self, gct: Option<GifColorTable>) -> Self {
             self.snapshot.gct = gct;
             self
         }
         /// 🏗️ Sets the logical screen's background color index.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_background_color_index(mut self, index: u8) -> Self {
             self.snapshot.background_color_index = index;
             self
         }
         /// 🏗️ Sets the logical screen's pixel aspect ratio byte.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_pixel_aspect_ratio(mut self, ratio: u8) -> Self {
             self.snapshot.pixel_aspect_ratio = ratio;
             self
         }
         /// 🏗️ Appends one comment extension.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_comment(mut self, text: String) -> Self {
             self.snapshot.comments.push(text);
             self
         }
         /// 🏗️ Appends one non-NETSCAPE application extension verbatim.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_app_extension(mut self, extension: GifAppExtension) -> Self {
             self.snapshot.app_extensions.push(extension);
             self

@@ -59,13 +59,9 @@ export function testToolRunActionArgCarriers(): void {
     console.log(`toolRun actionArgCarriers ${row.id} carrier=${row.carrier} read=${read ?? "-"}`);
   }
 
-  // 🪪️ The carrier the finalize really travels in must be one the law admits — otherwise the end-to-end
-  // reading proves nothing about the shape the shell actually sends.
   const finalizeRow = rows.find((row) => row.carrier === finalizeCarrier && row.reads !== null);
   assert.ok(finalizeRow, `the declared finalize carrier ${finalizeCarrier} must be a carrier that names an identity`);
 
-  // 🔢️ Every carrier of the same exact integer is the same identity — the property the whole law exists
-  // for, stated without reference to any row's own expectation.
   assert.equal(readIdentityArg(3), readIdentityArg("3"), "an integer and its decimal text name the same identity");
   assert.equal(readIdentityArg(3.0), readIdentityArg(3), "a float that is an exact integer names that integer");
   assert.equal(readIdentityArg(2.5), null, "a fractional number names no identity");

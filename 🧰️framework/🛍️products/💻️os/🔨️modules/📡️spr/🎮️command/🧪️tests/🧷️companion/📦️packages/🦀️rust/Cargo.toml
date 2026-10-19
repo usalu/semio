@@ -41,3 +41,4 @@ dsl_derive = { path = "../../../../../../🗣️dsl/✨️derive/📦️packages
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-os-spr = { path = "../../../../../📦️packages/🦀️rust" }

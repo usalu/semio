@@ -1,2 +1,2 @@
-/** walk semio */
+/** 🎬️ walk semio */
 export const ID = 'walk';

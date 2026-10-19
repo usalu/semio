@@ -180,7 +180,7 @@
           "enum": [
             "🏗️build/🕸️graph/🟦️.ts",
             "🏗️build/📥️caller/🟦️.ts",
-            "🟨️.mjs"
+            "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs"
           ]
         },
         "method": {

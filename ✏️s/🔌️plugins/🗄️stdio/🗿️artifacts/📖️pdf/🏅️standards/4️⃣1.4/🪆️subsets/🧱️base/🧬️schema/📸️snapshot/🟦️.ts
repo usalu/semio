@@ -8,8 +8,8 @@ export interface PageDoc {
   text: string;
 }
 export interface PdfSnapshot {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ pages: PageDoc[];
+  /** 📜️ @state artifact */ schema: string;
+  /** 📃️ @state artifact */ pages: PageDoc[];
 }
 
 //#region 🚪️Parsers

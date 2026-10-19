@@ -275,7 +275,7 @@ fn current_member_source_constructor_is_not_invoked_under_denied_axes() {
 fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() {
     struct TerminalPreparation<const N: usize>([u8; N]);
     impl<const N: usize> ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for TerminalPreparation<N> {
-        fn advance(&mut self, _: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> { Ok(ArtifactStoreOneItemPreparationStep::Blocked) }
+        fn advance(&mut self, _: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> { Ok(ArtifactStoreOneItemPreparationStep::Blocked) }
         fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint { Default::default() }
         fn prepared(&self) -> Option<&ArtifactEphemeralOneItemPrepared<DemoSnapshot>> { None }
         fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<DemoSnapshot>> { None }

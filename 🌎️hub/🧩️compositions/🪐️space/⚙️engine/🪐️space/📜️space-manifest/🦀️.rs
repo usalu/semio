@@ -56,9 +56,6 @@ pub async fn create_space_app() -> App {
         .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen")).await
         .action_audience("compiledDagEngagementSubmit", semio_framework_plugin::CapabilityAudience::Input).await
         .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten")).await
-        // 🕹️ Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
-        // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
-        // `selectAll`/`setSelectionMode`/`setInteractionGranularity`) auto-inject.
         .action_with(ActionDefinition::new("setActivePanelTab", LocalizedLabel::native("Set Active Panel Tab", "Aktiven Panel-Tab festlegen"), ActionKind::View, "panel-left")).await
         .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"), ActionKind::View, "camera")).await
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat")).await
@@ -122,7 +119,6 @@ pub async fn create_space_app() -> App {
         .action_interactive_job("goHome", InteractiveJobClassification::Migrated).await
         .action_interactive_job("navigateVirtualFileSystemNode", InteractiveJobClassification::Migrated).await
         .action_interactive_job("setAppRegistrations", InteractiveJobClassification::Migrated).await
-        // 📝️ Staged argument form for parameter creation (spawnApp stays context-driven; exportMedia requires an explicit artifact document).
         .action_args("exportMedia", vec![
             ActionArgDef::text("nodeId", LocalizedLabel::native("App Instance", "App-Instanz")),
             ActionArgDef::text("format", LocalizedLabel::native("Format", "Format")),
@@ -137,11 +133,6 @@ pub async fn create_space_app() -> App {
                 ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
             ]).default_value(&"numeric"),
         ]).await
-        // 📇️ Per-window action scoping — the Workflow (NodeGraph) window owns all graph/instance/
-        // parameter editing plus the per-instance media import/export; the Media VFS
-        // (VirtualFileSystem) window only navigates the media file tree; the read-only Compiled DAG
-        // window only drives its own engagement. Navigation, panel-tab, presence, example and generic
-        // node-graph view actions stay unscoped orphans and appear on every window.
         .window_kind_action_refs(semio_hub_space_foundation::S_PLAY_WINDOW_WORKFLOW, vec![
             "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
             "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
@@ -158,12 +149,7 @@ pub async fn create_space_app() -> App {
         .window_kind_action_refs(compiled_dag::S_PLAY_WINDOW_COMPILED_DAG, vec![
             "compiledDagEngagementSubmit".into(), "compiledDagEngagementInput".into(),
         ]).await
-        // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
-        // one domain over the workflow node graph, "instance"/"media-node" granularities (a node IS
         // the app instance now — see the kernel `🔁️workflow` crate's `🔖️InstanceIdentity` doc),
-        // `HierarchyProvider::Topology` (see `SpaceApp::interaction_topology` above) — the node graph
-        // itself is flat (no parent/child structure), so the topology exists purely so a deleted
-        // node's id auto-prunes out of `graph`'s selection.
         .interaction(InteractionDefinition {
             id: S_PLAY_INTERACTION_DOMAIN.into(),
             label: LocalizedLabel::native("Graph", "Graph"),
@@ -225,18 +211,9 @@ pub async fn create_space_app() -> App {
     let app = App { definition, examples: Vec::new() };
     let mut app = app.workflow("s", "S Studio", "studio").await;
     for (id, label) in S_STUDIO_EXAMPLES {
-        // 🚧️ `OsWorkflowArtifactDocument` (= `BackboneDocument<WorkflowSnapshot, WorkflowMutation>`)
-        // is deeply framework-owned (`ArtifactVcs`/`ArtifactCursor`/`Edit`/`Conflict`/...) and still
-        // only derives `Serialize`, not `ToValue` — bridging the whole envelope is out of this
-        // ticket's plugin-slice scope (tracked with the in-flight `BackboneDocument: ToValue`
-        // framework work). The example payload only ever needed the bare `WorkflowSnapshot` anyway
-        // (`parse_demo_space_document`'s own doc: "the fixture holds only the `WorkflowSnapshot`
-        // payload"), which already derives `ToValue` — read the immutable genesis snapshot.
         let document = parse_demo_space_document().await;
         let document_value = semio_framework_value::ToValue::to_value(document.vcs.genesis.facts().snapshot());
         let json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&document_value));
-        // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
-        // source, so it is genuine runtime data here, not compile-checked native copy.
         app = app.example(*id, LocalizedLabel::data(*label), json, "file-text").await;
     }
     app

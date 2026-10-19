@@ -94,8 +94,8 @@ impl EditorSession {
         if bytes.len()>maximum_input_bytes as usize { return Err(JsValue::from_str("Editor scene exceeds caller input limit")); }
         let mut options=scene::DecodeOptions::default();options.preserve_unknown=false;
         options.limits.max_file_len=u64::from(maximum_input_bytes);options.limits.max_total_alloc=u64::from(maximum_owned_bytes);
-        let mut report=|step:semio_framework_value::native_decoding::NativeDecodeProgress|progress.call3(&JsValue::NULL,&JsValue::from_f64(step.completed as f64),&JsValue::from_f64(step.total as f64),&JsValue::from_f64(step.owned_bytes as f64)).ok().and_then(|value|value.as_bool())==Some(true);
-        let mut control=semio_framework_value::NativeDecodeControl::new(maximum_owned_bytes as usize,&mut report);
+        let mut report=|step:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress.call3(&JsValue::NULL,&JsValue::from_f64(step.completed as f64),&JsValue::from_f64(step.total as f64),&JsValue::from_f64(step.owned_bytes as f64)).ok().and_then(|value|value.as_bool())==Some(true);
+        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum_owned_bytes as usize,&mut report);
         let decoded=scene::decode(bytes,format,&options,&mut control).map_err(|error|JsValue::from_str(&error.to_string()))?;
         control.checkpoint().map_err(|error|JsValue::from_str(&error.to_string()))?;
         self.state.borrow_mut().host.synchronize_scene(decoded);Ok(())

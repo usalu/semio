@@ -29,6 +29,7 @@ semio-framework-pets-clearance = { path = "../../🔨️modules/🚧️clearance
 semio-framework-pets-traversal = { path = "../../🔨️modules/🧭️traversal/📦️packages/🦀️rust" }
 semio-framework-pets-interaction = { path = "../../🔨️modules/🖱️interaction/📦️packages/🦀️rust" }
 semio-framework-pets-character = { path = "../../🔨️modules/🎭️character/📦️packages/🦀️rust" }
+semio-framework-pets-staging-draft = { path = "../../🔨️modules/📝️draft/📦️packages/🦀️rust" }
 semio-framework-pets-staging = { path = "../../🔨️modules/🎬️staging/📦️packages/🦀️rust" }
 # 🎯️ `float_roundtrip`: without it serde_json reads a long decimal one unit in the last place off (measured:
 # 0.9421396472025663 came back as 0.9421396472025664), while JSON.parse and Python round correctly. The subject

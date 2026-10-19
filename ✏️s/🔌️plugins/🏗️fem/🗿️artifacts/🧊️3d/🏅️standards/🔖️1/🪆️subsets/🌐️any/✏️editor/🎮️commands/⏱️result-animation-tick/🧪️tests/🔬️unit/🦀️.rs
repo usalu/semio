@@ -12,7 +12,7 @@ use semio_s_artifact_fem_3d_editor::editor::fem3d::commands::set_result_animatio
 use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results;
 use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_fem_app_surface::ANIMATION_TICK_SECONDS;
-use semio_s_artifact_fem_3d_editor_results_window::editor::fem3d::modes::edit::windows::results::transient::FemPlaybackClock;
+use semio_s_artifact_fem_2d_results_state::transient::FemPlaybackClock;
 use crate::context::close;
 use crate::context::dispatch;
 use crate::context::fem3d_app;
@@ -46,7 +46,7 @@ async fn published(app: &mut Fem3dApp) -> FemResultsAnimation {
 /// 🫧️ The running clock of the addressed results window, read back off its own transient partition.
 fn clock(app: &mut Fem3dApp) -> Option<FemPlaybackClock> {
     let snapshot = app.window_transient_snapshot(&results_view()).expect("capture results window transient");
-    results::transient::captured_clock::<results::transient::Fem3dResultsWindowTransientOwner>(snapshot.as_ref(), WINDOW)
+    semio_s_artifact_fem_2d_results_state::transient::captured_clock::<results::transient::Fem3dResultsWindowTransientOwner>(snapshot.as_ref(), WINDOW)
 }
 
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin

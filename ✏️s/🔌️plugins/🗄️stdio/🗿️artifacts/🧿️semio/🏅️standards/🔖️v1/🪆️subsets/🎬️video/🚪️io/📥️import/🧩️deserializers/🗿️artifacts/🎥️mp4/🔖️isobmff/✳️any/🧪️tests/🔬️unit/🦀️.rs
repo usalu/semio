@@ -35,10 +35,9 @@ async fn deserialize_maps_real_track_metadata_and_derives_pts_from_duration_plus
     assert_eq!(stream.height, 1080);
     assert_eq!(stream.rate, SemioRational { num: 30, den: 1 });
     assert_eq!(stream.samples.len(), 3);
-    // dts: 0, 1, 2 -- pts = dts + cts_offset
     assert_eq!(stream.samples[0].pts, 0);
-    assert_eq!(stream.samples[1].pts, 2); // dts=1, cts_offset=1
-    assert_eq!(stream.samples[2].pts, 2); // dts=2, cts_offset=0
+    assert_eq!(stream.samples[1].pts, 2);
+    assert_eq!(stream.samples[2].pts, 2);
     assert!(stream.samples[0].key);
     assert!(!stream.samples[1].key);
     assert_eq!(stream.samples[2].data, vec![0xDD, 0xEE, 0xFF]);

@@ -115,8 +115,10 @@ export class DevScript extends Script {
    * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private async runMcpOs(extra: string[]): Promise<void> {
-    const { ensureMcpBinary } = await import("@semio-tech/framework-os-mcp");
-    runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], { cwd: this.root, ...daemonBudgetOpts() });
+    const { ensureMcpBinary, mcpBinaryIsStaged, serveWarmMcpStdio } = await import("@semio-tech/framework-os-mcp");
+    const options = { cwd: this.root, ...daemonBudgetOpts() };
+    if (mcpBinaryIsStaged(this.root)) return runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], options);
+    process.exit(await serveWarmMcpStdio(this.root, extra, { ...process.env, ...options.env }));
   }
 
   private runMcpStdioRepo(slugs: string[]): void {

@@ -18,9 +18,9 @@ export interface JackFlatPosition {
 }
 
 export interface JackInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: JackTopology;
-  /** @derived */
+  /** ⬜️ @derived */
   flatPosition: JackFlatPosition;
 }
 

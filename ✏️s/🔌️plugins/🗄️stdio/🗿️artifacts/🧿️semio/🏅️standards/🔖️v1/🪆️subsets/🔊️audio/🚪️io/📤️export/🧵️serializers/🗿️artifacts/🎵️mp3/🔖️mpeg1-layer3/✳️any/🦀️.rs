@@ -27,10 +27,6 @@ impl ArtifactSerializer for SemioAudioToMp3 {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         if from.channels.iter().all(|c| c.samples.is_empty()) {
-            // 📦️ A snapshot with no real sample content (e.g. one THIS bridge's own deserializer
-            // just produced from an mp3 source) has nothing an encoder would need to invent --
-            // honestly round-trips to an empty-frame container instead of erroring, since no
-            // fabrication is required to represent "no audio content".
             return Ok(Mp3Snapshot { schema: "stdio.mp3".into(), id3v2: None, frames: Vec::new(), id3v1: None });
         }
         Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "audio→mp3 export requires encoding real f32 PCM samples into compressed MPEG Layer III \

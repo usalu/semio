@@ -4,6 +4,9 @@ use crate::precompute::PrecomputedModel;
 #[path = "../../../⚡️electrical/🧪️tests/🔆️pv-plane/🦀️.rs"]
 mod solar_pv;
 use crate::schedule::ScheduleId;
+use semio_s_plugin_energy_engine_model::ZoneEquipmentType;
+use semio_s_plugin_energy_engine_model::SurfaceClass;
+use semio_s_plugin_energy_engine_model::FaultType;
 
 #[test]
 fn initialize_creates_zone_states() {
@@ -144,7 +147,7 @@ fn advance_timestep_applies_fault_severity_to_ideal_loads() {
 
 #[test]
 fn retained_thermal_free_constrained_and_partial_delivery_match_independent_balance() {
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🌡️thermal/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌡️thermal/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
   let model=crate::model::test_model_single_zone();let mut pre=PrecomputedModel::build(&model,60,60);let zone_id=pre.zone_order[0];
   pre.enclosures.get_mut(&zone_id).unwrap().faces.truncate(1);

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json",
   "schema": "semio.course/v1",
   "id": "proctor-fixture",
   "title": { "en": "Proctor fixture", "de": "Proctor-Testkurs" },

@@ -1,6 +1,7 @@
 //! 🔁️ Concrete physical ownership under one caller-controlled SQLite transfer.
 use super::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteSnapshotProgress,SQLITE_SNAPSHOT_APPLICATION_ID,SQLITE_SNAPSHOT_USER_VERSION,Token,Column,Definition};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind,native_encoding::NativeEncodeProgress,native_decoding::NativeDecodeProgress};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind, native_encoding::NativeEncodeProgress};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn overflow(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,message)}
@@ -50,7 +51,7 @@ fn read_varint(bytes:&[u8],offset:&mut usize)->Result<u64>{let mut value=0;for i
 fn field_length(code:u64)->Result<usize>{usize::try_from(match code{0|8|9=>0,1..=4=>code,5=>6,6|7=>8,10|11=>return Err(invalid("SQLite reserved serial")),_ =>(code-12)/2}).map_err(|_|overflow("SQLite record field overflow"))}
 fn decode_record(bytes:&[u8],maximum_columns:usize,maximum_value_bytes:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteValue>>{
  control.allocation_stage(SqliteSnapshotPhase::ReadPages,|remaining,progress,allocation|{
-  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=(||->Result<Vec<SqliteValue>>{
    native.begin_stage(bytes.len())?;let mut cursor=0;let header=usize::try_from(read_varint(bytes,&mut cursor)?).map_err(|_|overflow("SQLite header length"))?;if header<cursor||header>bytes.len(){return Err(invalid("SQLite record header boundary"))}let start=cursor;let mut count=0usize;
    while cursor<header{read_varint(&bytes[..header],&mut cursor)?;count=sum(count,1)?;if count>maximum_columns{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"SQLite record columns exceed limit"))}native.step()?;}
@@ -66,7 +67,7 @@ fn decode_record(bytes:&[u8],maximum_columns:usize,maximum_value_bytes:usize,con
 
 fn lex(sql:&str,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<Token>>{
  control.allocation_stage(phase,|remaining,progress,allocation|{
-  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+  let mut callback=|event:NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
   let result=(||->Result<Vec<Token>>{
    let bytes=sql.as_bytes();let mut at=0usize;let mut tokens=Vec::new();native.begin_stage(bytes.len())?;
    while at<bytes.len(){

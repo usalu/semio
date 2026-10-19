@@ -12,7 +12,7 @@ use super::*;
 #[value(rename_all = "camelCase")]
 pub struct IoFidelityDeclaration {
     pub class: IoFidelityClass,
-    /// Field paths dropped under Lossy codecs; must be empty for stronger classes.
+    /// ➖️ Field paths dropped under Lossy codecs; must be empty for stronger classes.
     pub drops: Vec<String>,
 }
 

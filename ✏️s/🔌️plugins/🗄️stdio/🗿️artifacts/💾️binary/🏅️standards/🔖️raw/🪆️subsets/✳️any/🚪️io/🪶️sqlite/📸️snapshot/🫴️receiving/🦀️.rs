@@ -1,7 +1,8 @@
 //! 🫴️ Original typed Binary fields before native schema or octet backing is born.
 use super::BinarySnapshot;
 use semio_framework_os_kernel::NativeSnapshotBodyWallet;
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,retained_clone::RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedCloneGrant, retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[derive(Clone,Copy)]
 pub(super)enum Carrier<'a>{Raw(&'a[u8]),Hex(&'a str)}
 fn overflow()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"Binary original receiving extent overflow")}

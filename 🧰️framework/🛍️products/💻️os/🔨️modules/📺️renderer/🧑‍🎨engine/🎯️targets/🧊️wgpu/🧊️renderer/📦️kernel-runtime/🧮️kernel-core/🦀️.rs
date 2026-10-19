@@ -307,9 +307,9 @@ pub const TURN_BUDGET: TurnBudget = TurnBudget { fuel: 50_000_000, deadline_ms: 
 /// 🎟️ The retained grant one job-replay-log step is funded with: the pages, copy, capacity and release of one operation's state and output payloads (the declared actor bridge grant), shared by the pool and the retained-state recovery close.
 pub const JOB_REPLAY_STEP_GRANT: RetainedCloneGrant = RetainedCloneGrant {
     maximum_items: semio_framework_actor::JOB_REPLAY_PROCESS_PAGE_CAPACITY,
-    maximum_copy_bytes: 2 * semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES,
-    maximum_capacity_bytes: 2 * semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES,
-    maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_OPERATION_BYTES,
+    maximum_copy_bytes: 2 * semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES,
+    maximum_capacity_bytes: 2 * semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES,
+    maximum_release_bytes: 2 * semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES,
     maximum_depth: 64,
 };
 
@@ -444,7 +444,7 @@ pub fn extension_index() -> &'static ExtensionIndex {
 /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
 /// plugin's own directory" convention — kept as a small local helper rather than importing that
 /// module's version, which is embedded inside its own `find`-style closure, not a reusable fn.
-pub async fn find_wasm_artifact(dir:&std::path::Path)->Result<Option<semio_framework_os_services::OriginalSuppliedNativePath>,crate::RendererSourceIoError>{crate::find_renderer_wasm_path(dir).await}
+pub async fn find_wasm_artifact(dir:&std::path::Path)->Result<Option<semio_framework_os_services_native_io::OriginalSuppliedNativePath>,crate::RendererSourceIoError>{crate::find_renderer_wasm_path(dir).await}
 //#endregion 🔖️ExtensionIndex
 
 //#region 🔖️Requests/Outcomes

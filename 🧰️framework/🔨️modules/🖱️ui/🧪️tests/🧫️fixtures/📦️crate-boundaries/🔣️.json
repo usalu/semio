@@ -801,6 +801,7 @@
       "dependencies": [
         "semio-framework-replication",
         "semio-framework-pack-json",
+        "semio-framework-pack-json-source-sink",
         "semio-framework-ui-scene-doc",
         "semio-framework-ui-scene-pack",
         "serde"
@@ -926,5 +927,76 @@
         "taffy"
       ]
     }
-  ]
+  ],
+  "tuiTest": {
+    "packages": [
+      {
+        "name": "semio-framework-ui-tui-core",
+        "manifest": "⌨️tui/🧱️cell-model/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-vt",
+        "manifest": "⌨️tui/📟️vt/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-terminal",
+        "manifest": "⌨️tui/📺️terminal/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-widgets",
+        "manifest": "⌨️tui/🧩️widgets/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-frame",
+        "manifest": "⌨️tui/🏛️frame/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-engine",
+        "manifest": "⌨️tui/⚙️engine/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-host",
+        "manifest": "⌨️tui/🏃️host/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-unit-laws",
+        "manifest": "⌨️tui/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-vt-laws",
+        "manifest": "⌨️tui/📟️vt/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
+      },
+      {
+        "name": "semio-framework-ui-tui-laws",
+        "manifest": "⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml"
+      }
+    ],
+    "features": "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native",
+    "cases": [
+      {
+        "args": [],
+        "forwarded": []
+      },
+      {
+        "args": [
+          "quick",
+          "--lib"
+        ],
+        "forwarded": [
+          "--lib"
+        ]
+      },
+      {
+        "args": [
+          "long",
+          "-E",
+          "test(shared_docking_contract_matches_neutral_vectors_without_frame_dependency)"
+        ],
+        "forwarded": [
+          "-E",
+          "test(shared_docking_contract_matches_neutral_vectors_without_frame_dependency)"
+        ]
+      }
+    ]
+  }
 }

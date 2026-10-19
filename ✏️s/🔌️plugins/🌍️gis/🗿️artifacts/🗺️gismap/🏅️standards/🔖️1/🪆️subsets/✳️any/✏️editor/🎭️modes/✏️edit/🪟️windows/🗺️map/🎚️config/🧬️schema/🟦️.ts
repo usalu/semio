@@ -1,19 +1,19 @@
 //#region 🧬️Configuration
 /** 🧬️ MapWindowConfig */
 export interface MapWindowConfig {
-  /** @state config */
+  /** 🥞️ @state config */
   layerVisibility: Record<string, boolean>;
-  /** @state config */
+  /** 📷️ @state config */
   cameraJson: string;
-  /** @state config */
+  /** 🌐️ @state config */
   renderMode: string;
-  /** @state config */
+  /** 📚️ @state config */
   vectorStyle: string;
-  /** @state config */
+  /** 🔭️ @state config */
   lodMode: string;
-  /** @state config */
+  /** 🧅️ @state config */
   layerStrokeScale: Record<string, number>;
-  /** @state config */
+  /** ⚙️ @state config */
 }
 
 export type MapWindowConfigMutation =

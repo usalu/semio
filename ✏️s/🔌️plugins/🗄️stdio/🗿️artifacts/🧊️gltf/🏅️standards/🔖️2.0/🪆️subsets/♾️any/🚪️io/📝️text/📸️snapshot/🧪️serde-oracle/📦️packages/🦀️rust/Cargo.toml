@@ -28,6 +28,7 @@ semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-gltf-exports-graphql = { workspace = true }
 semio-s-artifact-stdio-gltf-exports-json = { workspace = true }

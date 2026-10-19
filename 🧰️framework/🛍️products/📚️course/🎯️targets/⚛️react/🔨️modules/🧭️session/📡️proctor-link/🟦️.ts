@@ -41,6 +41,7 @@ export class ProctorLink {
    * a connection shortage and the proctor counts as unreachable until it answers anything again, so the next command
    * does not wait for it once more. */
   async patient<T>(call: (signal: AbortSignal) => Promise<T>, signal: AbortSignal): Promise<T> {
+    signal.throwIfAborted();
     const waiting = new AbortController();
     const cancel = (): void => waiting.abort(signal.reason);
     const spent = setTimeout(() => {

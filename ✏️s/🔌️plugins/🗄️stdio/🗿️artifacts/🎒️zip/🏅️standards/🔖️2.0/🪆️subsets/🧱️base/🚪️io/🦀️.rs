@@ -21,10 +21,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY || s.dialect == DEP_DEFLATE)
@@ -133,7 +129,6 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl ZipBuilderConstruction {
         /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             let mut entry = ZipEntry { name: name.into(), data, ..Default::default() };
             entry.metadata.compression_method = 0;
@@ -144,21 +139,18 @@ pub mod derived_construction {
         }
 
         /// ➕️ Adds a logical member; native compression is deterministic serializer policy.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
             self.snapshot.entries.push(ZipEntry { name: name.into(), data, ..Default::default() });
             self
         }
 
         /// ➕️ Adds a fully-specified member (metadata-faithful construction path).
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_entry(mut self, entry: ZipEntry) -> Self {
             self.snapshot.entries.push(entry);
             self
         }
 
         /// 💬️ Sets the archive-level (EOCD) comment.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_comment(mut self, comment: impl Into<String>) -> Self {
             self.snapshot.comment = comment.into();
             self
@@ -189,10 +181,6 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            // 🕵️ Real sniff: inspects the argument's bytes (magic + a well-formed EOCD), never a
-            // constant. `AnalyzeSource::Text` is the hex-envelope DSL form, not raw container bytes,
-            // so it can't be magic-sniffed the same way — treated as low confidence here (the DSL
-            // envelope preamble, not this sniff, is what actually recognizes it).
             use crate::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {

@@ -41,7 +41,6 @@ fn scan_unsafe_integers(value: &JsonValue, out: &mut Vec<Diagnostic>) {
             }
             Ok(_) => {}
             Err(_) => {
-                // Too large even for i128 -- definitely exceeds the much smaller 2^53-1 bound.
                 out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} is far larger than ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")));
             }
         },

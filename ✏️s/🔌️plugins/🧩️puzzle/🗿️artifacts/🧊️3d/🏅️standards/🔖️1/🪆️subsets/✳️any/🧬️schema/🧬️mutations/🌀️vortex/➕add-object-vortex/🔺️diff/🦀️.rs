@@ -1,4 +1,4 @@
-//! No-op when the vortex id already exists on that object.
+//! 🧬️ No-op when the vortex id already exists on that object.
 //! 🔺️ Sparse diff builder for `AddObjectVortex` — adds one vortex to the owner object's `vortices`.
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dObjectPatch;

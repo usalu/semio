@@ -6,7 +6,7 @@ struct FaultingEphemeralTask {
 }
 
 impl ArtifactEphemeralPreparationTask<DemoSnapshot, DemoMutation> for FaultingEphemeralTask {
-    fn advance(&mut self, _: &DemoSnapshot, _: &mut Option<DemoMutation>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactEphemeralPreparationTaskStep<DemoSnapshot>, ValueError> {
+    fn advance(&mut self, _: &DemoSnapshot, _: &mut Option<DemoMutation>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactEphemeralPreparationTaskStep<DemoSnapshot>, ValueError> {
         if !self.invalid_receipt {
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"injected construction failure"));
         }

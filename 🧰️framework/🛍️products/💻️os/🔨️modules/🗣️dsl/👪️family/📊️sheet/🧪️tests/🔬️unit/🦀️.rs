@@ -32,8 +32,6 @@ async fn division_by_zero_is_diagnosed() {
 
 #[semio_framework_async_macros::async_test]
 async fn parses_and_prints_a_trace_line() {
-    // `semio_framework_dsl_record::print_expr`'s canonical form spaces every binary operator (`1.35 * G`, not
-    // `1.35*G`) — parse accepts either spacing; only the printed/canonical form is fixed.
     let trace = parse_trace_text("uls = 1.35*G + 1.5*Q -> 210").await.expect("parse_trace_text");
     assert_eq!(trace.name, "uls");
     assert_eq!(trace.value, 210.0);

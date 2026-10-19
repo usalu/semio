@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Label, useIdLabel } from "../../🏷️Label/🟦️.tsx";
-import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
 import { TreeContext, TreeRowAlignmentContext, TreeAlignedRow, detailPanelHeaderLineCenterPx, detailPanelIndentPx, detailPanelIndentLen, detailPanelPropertyRowClassName, detailPanelPropertyControlClassName } from "../📏️row-alignment/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import type { TreeHeaderAction } from "../⚡️actions/🟦️.tsx";
@@ -10,7 +10,7 @@ import { TreeContent } from "../🌲️branch/🟦️.tsx";
 import type { TreeDataItem } from "../📋️data/🟦️.ts";
 
 /**
- * Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
+ * 🌳️ Leaf form row combining TreeItem and TreeContent into [Indent][Label][Control].
  * When a label resolves (via id or explicit label prop), delegates to TreeItem for the standard header row.
  * When no label resolves, wraps children in TreeAlignedRow so controls always get proper gutter alignment
  * and tree guide lines regardless of whether the child control uses showLabel.
@@ -33,7 +33,7 @@ export const TreeRow: React.FC<{
   children: React.ReactNode;
   className?: string;
   id?: string;
-  /** When set (including explicit `null`), overrides useLabel(id) for the row title. Use `null` for content-only rows. */
+  /** 🏷️ When set (including explicit `null`), overrides useLabel(id) for the row title. Use `null` for content-only rows. */
   label?: React.ReactNode;
   onClick?: (event: React.MouseEvent) => void;
   onDoubleClick?: (event: React.MouseEvent) => void;
@@ -82,7 +82,7 @@ export const TreeRow: React.FC<{
 };
 
 /**
- * Informational text row spanning the full control column width.
+ * 🛠️ Informational text row spanning the full control column width.
  * When `propertyAligned` is true and inside a tree, renders content in the
  * value-column of the shared property-row grid (same layout as Label).
  **/

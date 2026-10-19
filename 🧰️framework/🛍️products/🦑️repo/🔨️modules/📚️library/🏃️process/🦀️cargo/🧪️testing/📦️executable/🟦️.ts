@@ -9,7 +9,7 @@ import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompil
 import {runOwnedCommand} from "@semio-tech/process/execution";
 import {readBuildMode,buildModePolicy} from "@semio-tech/process/build-mode";
 import {acquireCargoBuildLeaseV1} from "@semio-tech/process/native-build";
-import {admitCargoSelectionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {admitCargoSelectionV1} from "@semio-tech/process/artifacts/native-build/source/admission";
 import {pinExecutableArtifact} from "@semio-tech/process/artifact-publication";
 import {withResourceLeases,checkResourceLeaseControl} from "@semio-tech/process/leases";
 import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";

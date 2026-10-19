@@ -67,8 +67,6 @@ fn a_per_frame_read_moves_the_exact_owner_because_an_alias_credit_runs_out() {
 
     let mut lease = published_lease();
 
-    // ✅️ The rule: lend the ONE owner for the step and take it back. The same read repeats without
-    // bound because it mints no alias at all.
     let reads = law["ownerMove"]["reads"].as_u64().expect("owner-move reads");
     let mut owner = Some(lease);
     for read in 0..reads {
@@ -79,12 +77,10 @@ fn a_per_frame_read_moves_the_exact_owner_because_an_alias_credit_runs_out() {
     assert_eq!(law["ownerMove"]["refusals"].as_u64(), Some(0), "an owner move mints no alias and therefore never refuses");
     lease = owner.take().expect("the owner comes back from its last loan");
 
-    // ♻️ A retired alias hands its credit straight back and never retires the published owner.
     let mut returned = lease.try_alias().expect("first alias");
     assert!(returned.close_read_step_with_grant(1, 4096).expect("alias retirement is exact").complete, "releasing a non-final alias completes in one step");
     assert!(lease.root_identity().is_some(), "the published owner outlives every alias it lent");
 
-    // 🩸️ The defect, reproduced on the SAME owner: alias per read and drop it instead of moving it.
     let mut aliases = Vec::new();
     for read in 1..=admitted {
         aliases.push(lease.try_alias().unwrap_or_else(|_| panic!("read {read} of {admitted} must still be admitted")));

@@ -34,9 +34,6 @@ export function resolveTestInputs(repoRoot: string, discovered: DiscoveredCase, 
   const taxonomy = testTaxonomy(repoRoot);
   for (const uri of uris) {
     const [scheme, name] = uri.split("://") as [string, string];
-    // 🧬️A `schema://` reference is a CONTRACT reference, not a file in this case's fixture directory:
-    // it resolves through the derived catalog, so a fixture names the export it is an example of and
-    // can never acquire a contract by having one placed next to it.
     if (scheme === "schema") {
       const { resolved, diagnostics: found } = resolveSchemaExport(repoRoot, uri);
       diagnostics.push(...found);

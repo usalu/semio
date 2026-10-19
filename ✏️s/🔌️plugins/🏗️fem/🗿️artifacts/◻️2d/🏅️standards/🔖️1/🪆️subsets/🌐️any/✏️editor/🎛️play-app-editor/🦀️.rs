@@ -259,7 +259,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
                 let id = doc.operation().and_then(|operation| operation.entity_id("r", "regions")).map_err(|fault| MediaError::Payload(port.into(), format!("{fault:?}")))?;
                 let region = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
-                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))
+                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -283,7 +283,6 @@ impl ArtifactEditor for Fem2dPlayApp {
         let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
         let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
         let list = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect::<Vec<_>>());
-        // 🧵️ `samples: [[x, y], …]` — every well-formed 2-number pair in order; malformed entries are skipped.
         let point_list = |key: &str| {
             args.and_then(|value| value.get(key))
                 .and_then(semio_framework_value::DslValue::as_array)
@@ -298,8 +297,6 @@ impl ArtifactEditor for Fem2dPlayApp {
                 })
                 .unwrap_or_default()
         };
-        // 🩹️ A control's `Trigger::Change` value arrives typed (number for sliders/number inputs,
-        // bool for toggles, text for selects/inputs); every patch command carries it as text.
         let scalar_text = |key: &str| {
             args.and_then(|value| value.get(key)).and_then(|value| match value {
                 semio_framework_value::DslValue::String(text) => Some(text.clone()),
@@ -445,8 +442,6 @@ impl ArtifactEditor for Fem2dPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            // 🗑️ The delete keybinding dispatches `removeSelection` without ids: the live framework-owned
-            // `"fem2d"` selection is what gets removed.
             Fem2dCommand::RemoveSelection(payload) if payload.ids.is_empty() => remove_selection::handle(&remove_selection::RemoveSelection { ids: interaction.selection(FEM2D_INTERACTION_DOMAIN).ids.clone() }, doc, cfg),
             Fem2dCommand::TranslateSelection(payload) => {
                 let payload = if payload.ids.is_empty() {

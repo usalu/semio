@@ -6,7 +6,7 @@ export interface SemioKind {
 }
 
 export interface SemioInference {
-  /** @derived */
+  /** 🚦️ @derived */
   kind: SemioKind;
 }
 

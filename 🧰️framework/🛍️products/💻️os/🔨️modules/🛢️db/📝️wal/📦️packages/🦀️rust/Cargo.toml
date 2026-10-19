@@ -49,3 +49,4 @@ semio-framework-os-kernel-db-wal-log = { path = "../../🧾️log/📦️package
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["durable-group-testing", "mutation-testing"] }
+semio-framework-pack-source = { path = "../../../../../../../🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust" }

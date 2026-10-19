@@ -1,8 +1,8 @@
 import type { TutorialCameraKeyframe, TutorialCameraState, TutorialDefinition, TutorialUiSnapshot, TutorialUiChange, TutorialEvent, TutorialDocumentEvent } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
-import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../../../🧱️elements/🔌️Ports/⚛️react/🟦️.ts";
 
 //#region 🎬️TutorialEngine
-/** @emoji ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
+/** ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
 export function formatTutorialTime(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -10,7 +10,7 @@ export function formatTutorialTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** @emoji ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
+/** ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
 export function tutorialCuesBetween<T extends { readonly at: number; readonly durationMs: number }>(cues: readonly T[], atMs: number): readonly T[] {
   return cues.filter((cue) => atMs >= cue.at && atMs < cue.at + cue.durationMs);
 }
@@ -23,7 +23,7 @@ function tutorialLerp3(a: readonly [number, number, number], b: readonly [number
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
-/** @emoji 🎥️ TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖️TutorialEngine`. */
+/** 🎥️ TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖️TutorialEngine`. */
 export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: TutorialCameraKeyframe, atMs: number): TutorialCameraState {
   const span = Math.max(next.at - prev.at, 1);
   const raw = Math.min(1, Math.max(0, (atMs - prev.at) / span));
@@ -45,7 +45,7 @@ export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: Tu
   return t < 0.5 ? prevCamera : nextCamera;
 }
 
-/** @emoji 🎥️ TS port of Rust `tutorial_camera_at`. */
+/** 🎥️ TS port of Rust `tutorial_camera_at`. */
 export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs: number): TutorialCameraState | undefined {
   const keyframes = [...def.base.cameras, ...def.tracks.camera].filter((keyframe) => keyframe.windowId === windowId);
   const first = keyframes[0];
@@ -59,7 +59,7 @@ export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs
   return keyframes.at(-1)?.camera;
 }
 
-/** @emoji 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
+/** 🩹️ TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
 export function applyTutorialUiChange(state: TutorialUiSnapshot, change: TutorialUiChange): TutorialUiSnapshot {
   switch (change.kind) {
     case "activeMode":
@@ -104,7 +104,7 @@ export function applyTutorialUiChange(state: TutorialUiSnapshot, change: Tutoria
   }
 }
 
-/** @emoji 🧮️ TS port of Rust `compose_tutorial_ui`. */
+/** 🧮️ TS port of Rust `compose_tutorial_ui`. */
 export function composeTutorialUi(def: TutorialDefinition, atMs: number): TutorialUiSnapshot {
   let state = def.base.ui;
   let deltas: TutorialUiChange[] = [];
@@ -121,7 +121,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
   return state;
 }
 
-/** @emoji ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
+/** ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
@@ -129,7 +129,7 @@ export type TutorialSlice = {
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
-/** @emoji ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
+/** ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
  * backward: newest→oldest so `Edit.backwards` unwind in the right order). Never spans a
  * `TutorialUiSample::Snapshot` boundary correctly on its own — a seek/scrub must call
  * {@link composeTutorialUi} wholesale instead, exactly like the Rust doc comment warns. */
@@ -153,7 +153,7 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   return { forward, events, document, uiChanges };
 }
 
-/** @emoji ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
+/** ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
 export function validateTutorial(def: TutorialDefinition): string | null {
   const sortedByAt = <T,>(label: string, items: readonly T[], at: (item: T) => number): string | null => {
     let last: number | null = null;
@@ -196,13 +196,13 @@ export function validateTutorial(def: TutorialDefinition): string | null {
 }
 //#endregion 🎬️TutorialEngine
 
-/** @emoji ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
+/** ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
 export type TutorialClockPort = {
   readonly getTimeMs: () => number;
   readonly subscribe: (callback: () => void) => () => void;
 };
 
-/** @emoji ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
+/** ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
 export type TutorialClock = TutorialClockPort & {
   readonly play: () => void;
   readonly pause: () => void;
@@ -214,7 +214,7 @@ export type TutorialClock = TutorialClockPort & {
   readonly dispose: () => void;
 };
 
-/** @emoji ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
+/** ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
 export function createTutorialClock(durationMs: number): TutorialClock {
   let tMs = 0;
   let rate = 1;
@@ -281,7 +281,7 @@ export function createTutorialClock(durationMs: number): TutorialClock {
   };
 }
 
-/** @emoji ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
+/** ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
 export function useTutorialClock(clock: TutorialClockPort): number {
   return reactHostPort.useSyncExternalStore(clock.subscribe, clock.getTimeMs, clock.getTimeMs);
 }

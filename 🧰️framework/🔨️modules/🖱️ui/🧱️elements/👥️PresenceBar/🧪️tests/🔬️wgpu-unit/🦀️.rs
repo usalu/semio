@@ -7,8 +7,8 @@ fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow
 #[semio_framework_async_macros::async_test]
 async fn presence_color_wraps_after_twelve_with_lightness_then_saturation_shift() {
     let base = presence_color(0, PresenceAppearance::Light);
-    let cycle_one = presence_color(12, PresenceAppearance::Light); // k=1: same hue, lighter (odd k)
-    let cycle_two = presence_color(24, PresenceAppearance::Light); // k=2: same hue, desaturated, lightness back to base
+    let cycle_one = presence_color(12, PresenceAppearance::Light);
+    let cycle_two = presence_color(24, PresenceAppearance::Light);
     assert_eq!(base.h, cycle_one.h);
     assert_eq!(base.h, cycle_two.h);
     assert_eq!(base.s, cycle_one.s, "k=1 stays under the k>=2 desaturation threshold");
@@ -50,7 +50,6 @@ async fn build_presence_bar_collapses_past_max_into_one_overflow_node() {
     }
     let node = build_presence_bar("s-presence-peers", &peers, Some(5), Locale::En);
     let UiNode::Stack(root) = node else { panic!("expected a Stack root") };
-    // 5 visible peers + 1 overflow node.
     assert_eq!(root.children.len(), 6);
     let UiNode::Stack(overflow) = root.children.last().unwrap() else { panic!("expected overflow Stack") };
     assert_eq!(overflow.id.as_deref(), Some("peer:overflow"));

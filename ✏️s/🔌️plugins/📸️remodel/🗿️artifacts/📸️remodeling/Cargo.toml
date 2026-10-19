@@ -101,7 +101,6 @@ path = "../../../../../🧰️framework/🔨️modules/⏯️tool-run/📦️pac
 [workspace.dependencies.semio-s-artifact-stdio-avi]
 path = "../../../🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust"
 
-
 [workspace.dependencies.semio-s-artifact-stdio-gltf-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-jpg]
@@ -235,8 +234,12 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/�
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
 
 [workspace.dependencies.semio-s-artifact-remodel-remodeling-algebra]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/➕️algebra-internals/📦️packages/🦀️rust"

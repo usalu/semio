@@ -1,4 +1,4 @@
-//! Serialize stdio.png to stdio.binary.
+//! 📤️ Serialize stdio.png to stdio.binary.
 
 use crate::PngSnapshot;
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};

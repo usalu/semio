@@ -1,6 +1,7 @@
 //! 👁️ One immutable original history source owns the backing until every controlled fold alias closes.
 use super::{HistoryLog, RetainedHistoryFold};
-use semio_framework_value::{NativeDecodeControl, RetirementDemand, ValueError, ValueRefusalKind, native_decoding::{NativeConstructionStepOutcome, NativeConstructionStepResult, NativeDecodeCloseControl, OriginalReceivingPrimary}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::shared::{SharedControlledRetirement, arc_bytes}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::shared::{SharedControlledRetirement, arc_bytes}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeConstructionStepOutcome, native_decoding::NativeConstructionStepResult, native_decoding::NativeDecodeCloseControl, native_decoding::OriginalReceivingPrimary};
 use std::{mem::{ManuallyDrop, size_of}, sync::Arc};
 
 pub struct OriginalHistorySource {

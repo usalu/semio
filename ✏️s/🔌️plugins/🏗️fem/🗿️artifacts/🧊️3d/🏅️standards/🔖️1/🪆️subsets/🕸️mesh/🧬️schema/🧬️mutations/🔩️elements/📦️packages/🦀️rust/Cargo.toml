@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-fem-3d-mesh-elements"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d element change mutations"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
+semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-fem-node = { path = "../../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-s-artifact-fem-3d-mutations = { workspace = true }
+serde_json = { workspace = true }

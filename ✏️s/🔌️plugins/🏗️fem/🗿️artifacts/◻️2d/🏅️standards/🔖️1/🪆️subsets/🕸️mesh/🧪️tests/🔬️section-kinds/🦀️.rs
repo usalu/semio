@@ -1,6 +1,7 @@
 //! 🔬️ Integration tests of the `s.fem.fem2d` section mutation kinds against the committed fixtures, the dispatch enum and the central apply.
 
 extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as vcs;
 
 #[path = "../../🧬️schema/🧬️mutations/📐️create-section/🧪️tests/⚗️denies-zero-area-58b5ca/🦀️.rs"]
 mod create_section_refuses_an_ipe_100_profile_whose_area_was_left_at_zero;
@@ -30,3 +31,5 @@ mod replace_section_stiffens_ipe200_with_a_reinforced_profile;
 mod replace_section_thickens_the_chs_brace_wall_to_five_millimetres;
 #[path = "../../🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🪪️denies-rename-1d02dd/🦀️.rs"]
 mod replace_section_refuses_to_rename_the_roof_beam_profile_through_a_replace_section;
+#[path = "../../🧬️schema/🧬️mutations/🩹️change-section/🧪️tests/🔬️unit/🦀️.rs"]
+mod change_section_field_intent;

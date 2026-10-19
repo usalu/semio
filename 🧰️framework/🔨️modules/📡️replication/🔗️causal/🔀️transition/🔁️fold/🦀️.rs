@@ -96,6 +96,30 @@ impl HistoryFoldControl {
 
 impl Default for HistoryFoldControl { fn default() -> Self { Self::new() } }
 
+/// 🪴️ Original text membership of a [`HistoryFoldSet`] spends fold pulses, so the control crate owns the operations.
+pub trait HistoryFoldSetText {
+    fn insert_original_text(&mut self,key:String,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>>;
+    fn contains_original_text(&self,key:&str,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>>;
+}
+impl HistoryFoldSetText for HistoryFoldSet<String> {
+    fn insert_original_text(&mut self,key:String,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>>{control.get_or_insert_text(&mut self.0,key,())}
+    async fn contains_original_text(&self,key:&str,control:&HistoryFoldControl)->Result<bool,semio_framework_replication_error::ProtocolError>{Ok(control.get_text(&self.0,key).await?.is_some())}
+}
+
+/// 🔢️ Original scalar membership of a [`HistoryFoldSet`] spends fold pulses, so the control crate owns the operations.
+pub trait HistoryFoldSetCopy<K:Copy+Ord+RetireOwned> {
+    fn insert_original_copy(&mut self,key:K,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>>;
+    fn contains_original_copy(&self,key:&K,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>> where K:Sync;
+    fn remove_original_copy(&mut self,key:&K,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>> where K:Sync;
+    fn pop_first_original_copy(&mut self,control:&HistoryFoldControl)->impl Future<Output=Result<Option<K>,semio_framework_replication_error::ProtocolError>>;
+}
+impl<K:Copy+Ord+RetireOwned> HistoryFoldSetCopy<K> for HistoryFoldSet<K> {
+    fn insert_original_copy(&mut self,key:K,control:&HistoryFoldControl)->impl Future<Output=Result<bool,semio_framework_replication_error::ProtocolError>>{control.get_or_insert_copy(&mut self.0,key,())}
+    async fn contains_original_copy(&self,key:&K,control:&HistoryFoldControl)->Result<bool,semio_framework_replication_error::ProtocolError> where K:Sync{Ok(control.get_copy(&self.0,key).await?.is_some())}
+    async fn remove_original_copy(&mut self,key:&K,control:&HistoryFoldControl)->Result<bool,semio_framework_replication_error::ProtocolError> where K:Sync{Ok(control.remove_copy(&mut self.0,key).await?.is_some())}
+    async fn pop_first_original_copy(&mut self,control:&HistoryFoldControl)->Result<Option<K>,semio_framework_replication_error::ProtocolError>{let row=control.pop_first(&mut self.0).await?;let key=row.as_ref().map(|(key,())|*key);drop(row);Ok(key)}
+}
+
 pub struct SharedActorAdmission {original:Option<HistoryFoldOwned<String>>,control:HistoryFoldControl,capacity:usize}
 impl SharedActorAdmission{const COPY_BYTES:usize=size_of::<String>()+size_of::<semio_framework_value::SharedUtf8>();}
 impl Future for SharedActorAdmission {
@@ -272,8 +296,8 @@ impl<T:RetireOwned> ErasedSnapshotRetirement for HistoryFoldJob<'_,T>{
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.capacity_bytes),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}if !self.control.empty(){return Ok(self.control.demands(copy)?.capacity_bytes);}if self.future.is_some(){return Ok(self.control.0.pending_retirement_birth.load(Ordering::Relaxed));}Ok(if self.control.0.cancelled.load(Ordering::Acquire)&&matches!(self.result,Some(Ok(_))){owned_retirement_birth_bytes::<T>()}else{0})}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0), |result| match result { Err(error) => semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes), Ok(_) => Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result")) });}if !self.control.empty(){return Ok(self.control.demands(0)?.release_bytes);}if let Some(future)=self.future.as_ref(){return Ok(size_of_val(future.as_ref().get_ref()));}if self.control.0.cancelled.load(Ordering::Acquire){if let Some(result)=self.result.as_ref(){return match result{Ok(_)=>Ok(0),Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.release_bytes)};}}let queue=self.control.0.retirements.lock();if queue.capacity()!=0{return Ok(queue.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>());}drop(queue);if self.waker.is_some(){return Ok(size_of::<[usize;2]>());}Ok(self.control_frame_bytes())}
     fn next_depth_demand(&self)->Result<usize,ValueError>{if self.control_closed{return self.result.as_ref().map_or(Ok(0),|result|match result{Err(error)=>semio_framework_replication_error::protocol_cause_retirement_demand(error).map(|demand|demand.depth),Ok(_)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"closed fold retained successful result"))});}let depth=if self.control.empty(){0}else{self.control.demands(0)?.depth};depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"fold nested retirement depth overflow"))}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.request_cancel();let step=self.cleanup_one(grant,true)?;if self.control_closed&&matches!(step,RetainedCloneStep::Complete(_)){self.terminal=true;}semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"fold job closure")}
-    fn terminal_is_empty(&self)->bool{self.terminal&&self.original_output.is_none()&&self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none()}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.request_cancel();let step=self.cleanup_one(grant,true)?;if self.control_closed&&matches!(step,RetainedCloneStep::Complete(_)){self.terminal=true;}semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"fold job closure")}
+    pub fn terminal_is_empty(&self)->bool{self.terminal&&self.original_output.is_none()&&self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none()}
 }
 impl<T: RetireOwned> Drop for HistoryFoldJob<'_, T> { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "history fold job released before exact handoff or retirement"); } }
 

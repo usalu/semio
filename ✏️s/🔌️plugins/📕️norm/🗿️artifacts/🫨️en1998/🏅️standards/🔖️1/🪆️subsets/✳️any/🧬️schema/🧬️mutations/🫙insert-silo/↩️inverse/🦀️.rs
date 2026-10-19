@@ -1,4 +1,4 @@
-//! Inverse for `insert-silo`.
+//! ↩️ Inverse for `insert-silo`.
 use crate::insert_silo::InsertSilo;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::remove_silo;

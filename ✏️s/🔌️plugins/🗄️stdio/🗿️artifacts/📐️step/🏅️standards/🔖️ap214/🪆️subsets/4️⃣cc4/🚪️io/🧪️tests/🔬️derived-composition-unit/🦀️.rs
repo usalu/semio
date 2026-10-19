@@ -27,8 +27,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn subset_validator_recheck_flags_missing_file_schema_on_the_raw_wire_payload() {
-        // Unlike `compose`, `validate` never runs `ensure_file_schema` -- a wire payload that
-        // skipped this subset's own composer genuinely lacks the injection.
         let bytes = clean_bytes();
         let diagnostics = StepCc4Validator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.iter().any(|d| d.code.0 == crate::standards::v_ap214::subsets::cc4::io::CODE_FILE_SCHEMA), "got {diagnostics:?}");

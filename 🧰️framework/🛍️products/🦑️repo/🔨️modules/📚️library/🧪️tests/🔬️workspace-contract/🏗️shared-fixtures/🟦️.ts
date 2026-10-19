@@ -67,7 +67,7 @@ export type ArtifactProjectionGoldenEntry = Readonly<{
   sourceFileCount: number;
   destinationDirectoryCount: number;
   destinationNodeCount: number;
-  maxPathBytes: number;
+  maxPathUtf16Units: number;
   mappingDigest: string;
   mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[];
   modelCatalog?: Readonly<{

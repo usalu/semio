@@ -125,10 +125,6 @@ impl<'a> Puzzle3dKindMeshIndex<'a> {
         let rows = meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get("objects")).and_then(semio_framework_value::DslValue::as_array).unwrap_or_default();
         let mut by_kind = HashMap::with_capacity(rows.len());
         for entry in rows {
-            // 🐛️ Imported rows are normalized to `representations` (`puzzle3d_normalize_object_kind_row` drops
-            // `meshUrl`), so reading `meshUrl` alone dropped every kind no placed object renders: the fill's
-            // mesh lane had no body for it and each of its candidates was rejected `mesh-unavailable`. Same
-            // order as `resolve_object_kind_mesh_url`, so the lane key IS the key a candidate looks up.
             let url = entry.get("representations").and_then(semio_framework_value::DslValue::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(semio_framework_value::DslValue::as_str)).map(str::trim).find(|url| !url.is_empty());
             let (Some(id), Some(url)) = (entry.get("id").and_then(semio_framework_value::DslValue::as_str), url.or_else(|| entry.get("meshUrl").and_then(semio_framework_value::DslValue::as_str))) else {
                 continue;

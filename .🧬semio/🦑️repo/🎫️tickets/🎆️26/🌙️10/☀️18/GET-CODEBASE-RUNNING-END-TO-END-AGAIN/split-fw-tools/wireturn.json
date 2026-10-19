@@ -1,0 +1,101 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/split-fw-tools/orig/wire-turn.ts",
+ "origDir": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/",
+ "ignore": [
+  [
+   1,
+   15
+  ],
+  [
+   26,
+   26
+  ]
+ ],
+ "parts": [
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+   "header": "@range:1-13",
+   "importRegion": true,
+   "importComments": [],
+   "ranges": [
+    [
+     449,
+     577
+    ],
+    [
+     882,
+     987
+    ],
+    [
+     989,
+     1016
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts",
+   "importRegion": true,
+   "header": "// #region 🧲️Header\n/** 🔖️ The raw bytes, the `turn-result` shape and the typed-operation pages of one turn: coercing the opaque `unknown` result, the shell frames and messages it carries, its routed `send-message` effects, its status tag, and the page and acknowledgement codec — the magics, the lanes, the diagnostic fragments and the drain of typed-operation turns. */\n// #endregion 🧲️Header",
+   "ranges": [
+    [
+     28,
+     384
+    ],
+    [
+     578,
+     589
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🩹️retained-ui-patch/🟦️.ts",
+   "importRegion": true,
+   "header": "// #region 🧲️Header\n/** 🩹️ Retained-mode `UiPatch` ops decoded from the wire and applied onto a kept tree. */\n// #endregion 🧲️Header",
+   "ranges": [
+    [
+     386,
+     447
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🚚️more-work-drive/🟦️.ts",
+   "importRegion": true,
+   "header": "// #region 🧲️Header\n/** 🚚️ The more-work drive of a shard turn: what a result carries, when it may be dropped and how many steps a grant affords. */\n// #endregion 🧲️Header",
+   "ranges": [
+    [
+     591,
+     727
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/📥️inbound-request/🟦️.ts",
+   "importRegion": true,
+   "header": "// #region 🧲️Header\n/** 📥️ The drive of one inbound request over its turns, bounded by the turn budget. */\n// #endregion 🧲️Header",
+   "ranges": [
+    [
+     729,
+     799
+    ]
+   ]
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
+   "importRegion": true,
+   "header": "// #region 🧲️Header\n/** 🧵️ The spawned-job drive: a `spawn-job` recovered off the boundary and pumped step by step until the kernel's rule completes it. */\n// #endregion 🧲️Header",
+   "importComments": [
+    [
+     18,
+     22
+    ]
+   ],
+   "ranges": [
+    [
+     801,
+     881
+    ]
+   ]
+  }
+ ]
+}

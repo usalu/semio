@@ -86,9 +86,6 @@ fn space_bounded_reduce(
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("s.space.retained.route"), "the bounded Space reducer rejects document, registry, payload, and graph routes"));
     }
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
-    // 🕹️ `openInstance` with no explicit node and `deleteSelection` read the live `graph` selection,
-    // which the macro-generated 3-arg `dispatch` cannot see — the retained path reads it off the same
-    // `InteractionState` `SpaceApp::handle` passes to their `apply`.
     let selected = || interaction.selection.get(S_PLAY_INTERACTION_DOMAIN).map_or_else(Vec::new, |selection| selection.ids.clone());
     if let SpaceCommand::OpenInstance(payload) = command {
         return Ok(semio_hub_space_operations::resolve_future(semio_hub_space_commands_authoring::open_instance::open_with_selection(payload, &doc, config, &selected())));
@@ -145,7 +142,7 @@ impl semio_framework::ToolJobFactory for SpaceCommandJobFactory {
         space_bounded_contract()
     }
 
-    semio_framework_plugin::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -479,14 +476,7 @@ impl ArtifactApp for SpaceApp {
             S_PLAY_CATALOGUE_BODY_KEY => crate::panels::catalogue::build_catalogue_tree(labels, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_CATALOGUE_BODY_KEY))
                 .await
                 .map(semio_framework_plugin::built_to_component_tree),
-            // 🧬️ `parameters`/`inspection` are now ported to the contract `BuiltNode` DSL (SEMANTIC-
-            // UI-CONTRACT-AND-RENDERER-FAMILY, 26/08/20) — both `render` fns are U1-sync (the contract
-            // builder's own sync-only ruling), so no `.await` here, only the `map` bridge into `ComponentTree`.
             S_PLAY_PARAMETERS_BODY_KEY => crate::panels::parameters::render(projection, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_PARAMETERS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
-            // 🕹️ `render` carries no `InteractionView` (ArtifactApp's breaking pass only added it to
-            // `handle`/`copy_fragment`/`cut_operations` — see ticket 26/08/14's w3b-summary.md) — the
-            // inspector degrades to its "no selection" default until a future wave threads interaction
-            // into render. Flagged as a discovered framework gap, not worked around here.
             S_PLAY_INSPECTOR_BODY_KEY => crate::panels::inspection::render(projection, &[], labels, &semio_framework_plugin::TreeWindows::for_body(view_state, S_PLAY_INSPECTOR_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }

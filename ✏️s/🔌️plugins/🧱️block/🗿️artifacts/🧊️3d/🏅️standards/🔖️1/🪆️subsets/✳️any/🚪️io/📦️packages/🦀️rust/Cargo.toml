@@ -24,6 +24,7 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-block-3d-diff = { workspace = true }
 semio-s-artifact-block-3d-io-read = { workspace = true }

@@ -5,12 +5,6 @@ import type { ShardClientSettlementTestKit } from "../🧰️settlement-test-kit
 export function registerJobWireTests(kit: ShardClientSettlementTestKit): void {
   const { activateActor, describe, expect, harness, it } = kit;
   describe("ShardClient job wire", () => {
-    // 💼️ Ticket 26/09/02/PUZZLE-3D-END-TO-END W-J. Nothing in production ever called these three
-    // methods, so their declared shapes had drifted from what the shard worker actually needs: `job`
-    // and `budget.fuel` are WIT `u64`s (a `number` is rejected by the guest's own lowering),
-    // `step-job` answers the `{status, …}` union this module declares (the worker normalizes jco's
-    // `{tag, val}` variant into it), and `cancel-job` had no worker route at all — it was posted
-    // without a `requestId` and would have hit the worker's `default: throw`.
     it("carries u64 job identities as bigint and settles start, step and cancel against the worker", async () => {
       const { client, workers } = harness(1);
       await activateActor(client, workers, "a");

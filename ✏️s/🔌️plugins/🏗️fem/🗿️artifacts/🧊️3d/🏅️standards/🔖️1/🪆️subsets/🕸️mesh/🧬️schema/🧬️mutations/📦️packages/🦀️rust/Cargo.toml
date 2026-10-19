@@ -4,7 +4,7 @@ name = "semio-s-artifact-fem-3d-mesh"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "FEM 3d section and solid mutations and the selection move"
+description = "FEM 3d node changes and the selection move"
 
 [package.metadata.semio]
 role = "library"
@@ -25,7 +25,8 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-fem-3d-mesh-topology = { workspace = true }
 semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-mesh-solids = { workspace = true }
 
 [dev-dependencies]
-serde_json = { workspace = true }
 semio-s-artifact-fem-3d-mutations = { workspace = true }
+serde_json = { workspace = true }

@@ -1,7 +1,7 @@
 //! 🛠️ The proctor end to end, the operator: the built binary probes, backs up while serving and restores elsewhere, erases one learner on request and prunes the registrations nobody played under.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️course/🔣️.json — the course played
+//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 
@@ -132,7 +132,7 @@ fn the_operator_erases_one_learner_on_request_and_its_handle_is_free_again() {
 pub(super) fn registrations(data: &Path) -> u64 {
     let data = data.to_string_lossy().into_owned();
     tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("runtime").block_on(async move {
-        let course = Arc::new(load_course(&fixtures().join("📚️course/🔣️.json")).expect("fixture course"));
+        let course = Arc::new(load_course(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture course"));
         let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, course, development(), PresenceSettings::default()).await.expect("assembled");
         proctor.prepare().await.expect("prepared");
         proctor.reconcile().await.expect("reconciled");

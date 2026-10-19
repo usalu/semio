@@ -35,6 +35,7 @@ semio-s-artifact-puzzle-3d-mutations-reference = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-selection = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-volume = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
+serde_json = { workspace = true }
 
 [[test]]
 name = "store"

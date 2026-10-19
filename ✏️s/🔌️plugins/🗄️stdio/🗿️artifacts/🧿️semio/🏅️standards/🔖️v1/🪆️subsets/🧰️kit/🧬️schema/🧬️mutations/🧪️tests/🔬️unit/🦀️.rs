@@ -55,12 +55,6 @@ fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKit
     for back in backwards.iter().rev() {
         restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
-    // 🔧️ `objects`/`models`/`representations` are documented as id/role-keyed SETS with no
-    // user-meaningful display order (same precedent `🕸️graph`'s W2fix established for
-    // `nodes`/`edges` — a cascading create-on-undo always APPENDS, which can legitimately land
-    // a restored entry at a different POSITION than it started at without the SET itself being
-    // wrong). Compare order-insensitively for those three fields; everything else compares
-    // exactly.
     let mut restored_objects = restored.objects.clone();
     let mut base_objects = base.objects.clone();
     restored_objects.sort_by(|a, b| a.child_id.cmp(&b.child_id));
@@ -116,8 +110,6 @@ async fn create_delete_model_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_properties_round_trips() {
-    // `properties` is a singleton child and the demo kit already carries one, so the create runs
-    // against the same kit with that slot cleared (an occupied slot is a FATAL duplicate).
     let base = fixture();
     assert!(base.properties.is_some(), "the demo kit carries a properties child");
     let create = SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "props-99".into(), target: ref_of("value", "props-99") });

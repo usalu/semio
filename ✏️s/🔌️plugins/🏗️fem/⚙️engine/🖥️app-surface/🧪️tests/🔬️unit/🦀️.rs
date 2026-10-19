@@ -9,7 +9,7 @@ fn hex_to_rgb01_parses_pure_colors() {
 
 #[test]
 fn hex_to_rgb01_obeys_the_shared_color_input_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧫️color-input/🔣️.json"))).expect("shared color input corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🧫️color-input/🔣️.json"))).expect("shared color input corpus");
     for row in corpus["parse"].as_array().expect("color rows") {
         let rgb = row["expected"].as_array().map(|channels| (channels[0].as_f64().unwrap(), channels[1].as_f64().unwrap(), channels[2].as_f64().unwrap())).unwrap_or_default();
         assert_eq!(hex_to_rgb01(row["text"].as_str().unwrap()), rgb, "{}", row["case"]);

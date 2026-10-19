@@ -334,7 +334,7 @@ impl Puzzle2dFillRunJob {
         self.writer.progress(progress);
         let bytes = self.writer.finish()?.encode().ok();
         Some(match bytes {
-            Some(bytes) if bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes),
+            Some(bytes) if bytes.len() <= semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES => JobTurn::Preview(bytes),
             Some(_) => fill_run_fault("puzzle2d-fill-run-tick-bytes"),
             None => fill_run_fault("puzzle2d-fill-run-tick-encode"),
         })

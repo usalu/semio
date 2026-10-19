@@ -127,37 +127,37 @@ pub use semio_s_artifact_puzzle_5d_mut_any_5::standards::v1::subsets::any::schem
                                 }
                                 #[path = "."]
                                 pub mod replace_part_2d_geometry {
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::diff;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::inverse;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::*;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::diff;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::inverse;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::replace_part_2d_geometry::*;
 
                                 }
                                 #[path = "."]
                                 pub mod edit_part_2d_text {
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::diff;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::inverse;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::*;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::diff;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::inverse;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::edit_part_2d_text::*;
 
                                 }
                                 #[path = "."]
                                 pub mod change_part_2d_icon {
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::diff;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::inverse;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::*;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::diff;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::inverse;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_icon::*;
 
                                 }
                                 #[path = "."]
                                 pub mod change_part_2d_hidden {
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::diff;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::inverse;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::*;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::diff;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::inverse;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_hidden::*;
 
                                 }
                                 #[path = "."]
                                 pub mod change_part_2d_locked {
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::diff;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::inverse;
-                                    pub use semio_s_artifact_puzzle_5d_mut_any::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::*;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::diff;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::inverse;
+                                    pub use semio_s_artifact_puzzle_5d_mut_any_part2d::standards::v1::subsets::any::schema::mutations::change_part_2d_locked::*;
 
                                 }
                                 #[path = "."]
@@ -487,41 +487,41 @@ pub use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::*;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::apply_sun;
             pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::commands::cycle_brush_candidate;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::target_brush_suggestions;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::open_vortex_suggestions;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::close_vortex_suggestions;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::open_vortex_suggestions;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::close_vortex_suggestions;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::hover_suggestion;
             pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::commands::accept_suggestion;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::delete_selection;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::duplicate_selection;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::engagement_abort;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::engagement_control_select;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::engagement_input;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::engagement_repeat_last;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::delete_selection;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::duplicate_selection;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::engagement_abort;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::engagement_control_select;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::engagement_input;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::engagement_repeat_last;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::engagement_submit;
             pub use semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::commands::proximity_connect;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::register_brush_mesh;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::register_brush_mesh;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::rotate_selection;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::scale_selection;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::select_same_kind;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_brush_placement_contact_tolerance;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::select_same_kind;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_brush_placement_contact_tolerance;
             pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::commands::set_camera;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_camera_2d;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_camera_3d;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_camera_2d;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_camera_3d;
             pub use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::set_fill_count;
             pub use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::commands::export_snapshot;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::import_snapshot;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::open_import_snapshot;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::open_add_part_dialog;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_grid_factor;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_grid_snap_enabled;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_grid_spacing;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_grid_visible;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_grip_direction;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_grip_show;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_lod_automatic;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_lod_depth_variable;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_lod_manual;
-            pub use semio_s_artifact_puzzle_5d_store_preparation::editor::puzzle5d::commands::set_projection;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::import_snapshot;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::open_import_snapshot;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::open_add_part_dialog;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_grid_factor;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_grid_snap_enabled;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_grid_spacing;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_grid_visible;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_grip_direction;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_grip_show;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_lod_automatic;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_lod_depth_variable;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_lod_manual;
+            pub use semio_s_artifact_puzzle_5d_store_preparation_commands::editor::puzzle5d::commands::set_projection;
             pub use semio_s_artifact_puzzle_5d_mut_any_7::editor::puzzle5d::commands::set_selectable_kind;
             pub use semio_s_artifact_puzzle_5d_mut_any_7::editor::puzzle5d::commands::set_transform_gumball_flag;
             pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::commands::set_kind_weight;
@@ -542,10 +542,10 @@ pub use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::*;
 
         #[path = "."]
         pub mod panels {
-            pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::panels::catalogue;
-            pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::panels::artifact;
-            pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::panels::inspection;
-            pub use semio_s_artifact_puzzle_5d_dispatch::editor::puzzle5d::panels::settings;
+            pub use semio_s_artifact_puzzle_5d_dispatch_panels::editor::puzzle5d::panels::catalogue;
+            pub use semio_s_artifact_puzzle_5d_dispatch_panels::editor::puzzle5d::panels::artifact;
+            pub use semio_s_artifact_puzzle_5d_dispatch_panels::editor::puzzle5d::panels::inspection;
+            pub use semio_s_artifact_puzzle_5d_dispatch_panels::editor::puzzle5d::panels::settings;
         }
 
         #[path = "."]

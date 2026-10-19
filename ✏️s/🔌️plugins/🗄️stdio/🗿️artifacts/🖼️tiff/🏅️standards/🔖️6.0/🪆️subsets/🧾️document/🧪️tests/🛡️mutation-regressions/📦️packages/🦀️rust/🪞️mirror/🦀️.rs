@@ -107,7 +107,7 @@ pub mod editor {
         #[path = "../../../../../../🧱️baseline/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
-        pub use semio_s_artifact_stdio_tiff_snapshot::editor::tiff_baseline::edit_rules;
+        pub use semio_s_artifact_stdio_tiff_snapshot_surfaces::editor::tiff_baseline::edit_rules;
         #[path = "."]
         pub mod modes {
             #[path = "."]

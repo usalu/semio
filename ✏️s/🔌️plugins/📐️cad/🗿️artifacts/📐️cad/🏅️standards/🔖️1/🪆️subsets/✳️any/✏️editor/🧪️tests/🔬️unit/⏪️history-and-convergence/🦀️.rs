@@ -1,13 +1,11 @@
 //! ⏪️ History, convergence and object child lane tests of the CAD editor unit tests: undo and redo, the backbone convergence and the rendered instance lane. See [`super`].
 
 use super::*;
+#[cfg(test)] use semio_s_artifact_cad_cad_modes as edit;
 
 //#region 🔖️History
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_added_node_through_generic_helper() {
-    // 🧪️ Parent-lane undo/redo through the generic
-    // `assert_undo_redo_round_trip` test context helper (distinct from `undo_redo_round_trips_added_node_through_wrapper`
-    // below, which drives the manual add/undo/redo dance) against the real `AddNode` command.
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").nodes.len();
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
@@ -33,11 +31,6 @@ async fn undo_redo_round_trips_added_node_through_wrapper() {
 
 #[semio_framework_async_macros::async_test]
 async fn coalesced_translate_drag_is_a_single_undo_step() {
-    // 🎯️ The law holds for an id no pane owns: `translateSelection` resolves the addressed objects
-    // out of their pane's materialization and emits nothing when there are none, so three coalesced
-    // ticks against a stranger id leave the document exactly where it started. The seam's real
-    // behaviour is proved against the demo document by
-    // `translate_selection_moves_the_object_and_the_rendered_instance`.
     let mut app = new_app().await;
     let before = semio_framework_pack_json::to_json_string(&app.snapshot().expect("snapshot"));
     for _ in 0..3 {
@@ -57,22 +50,12 @@ async fn coalesced_translate_drag_is_a_single_undo_step() {
 /// `setDocument` snapshots.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    // 🪆️ `PatchObject` is real again (2026-09-16), but it re-mints the addressed pane's composed
-    // model child from that child's in-process materialization — which `default_document()` has
-    // none of, and which no backbone frame carries either. `RenameNode` is a parent-document
-    // mutation with no such dependency, so it is what this convergence law rides on.
     let mut base = default_document();
     base.nodes = vec![CadNode { id: "node-a".into(), label: "A".into(), kind: "solid".into() }, CadNode { id: "node-b".into(), label: "B".into(), kind: "solid".into() }];
     let node_a = base.nodes[0].id.clone();
     let node_b = base.nodes[1].id.clone();
     let base_envelope = store::os_store::document_materialize::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let base_files = store::os_store::text_format::print_document_pack(&base_envelope).await.expect("print document pack");
-    // 🧹️ `base_envelope` is a CANDIDATE that no store ever adopts — it only exists to print the pack
-    // both instances load. `ArtifactEnvelope`'s terminal shell asserts in `Drop` that its owners were
-    // detached first, so letting the candidate fall out of scope aborts the test process with
-    // "terminal shell reached Drop before its app-owned bounded retirement authority detached every
-    // nested owner". `retire_unadopted` is the exact protocol for this case: it pops the fixed vcs
-    // ledgers tail-first, each of which carries its own terminal-empty witness.
     base_envelope.retire_unadopted();
 
     let mut instance_a = new_app().await;
@@ -83,16 +66,12 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
-    // A renames node A.
     instance_a.0.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a renames node a");
     settle(&mut instance_a).await;
 
-    // B renames node B — a disjoint edit that must survive alongside A's.
     instance_b.0.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b renames node b");
     settle(&mut instance_b).await;
 
-    // 🔀️ Each replica folds the other's events, then a neutral history command commits over
-    // everything it holds — each under its OWN actor, which is what the merge distinguishes them by.
     instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
     instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     for (instance, actor) in [(&mut instance_a, "actor-a"), (&mut instance_b, "actor-b")] {

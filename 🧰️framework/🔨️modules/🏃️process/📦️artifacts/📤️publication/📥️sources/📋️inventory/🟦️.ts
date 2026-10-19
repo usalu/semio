@@ -1,5 +1,5 @@
 import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 export type ArtifactSourceInventoryV1=Readonly<{files:number;directories:number;entries:number;maximumDepth:number;parents:readonly string[]}>;
 /** 📏️ Validates finite inventory arithmetic as data without supplying filesystem authority. */
 export function admitsArtifactSourceInventoryV1(value:unknown):boolean{if(validateJsonSchemaSubset(schema.definitions.InventoryCounts,value).length)return false;const row=value as{files:number;directories:number;maximumDepth:number};return row.files+row.directories+1<=schema.properties.maximumEntries.const;}

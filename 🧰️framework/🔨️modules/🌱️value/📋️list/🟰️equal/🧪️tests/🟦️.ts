@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/🔣️.json";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import {RetainedSliceEquality} from "../🟦️.ts";
 const byte={byteWidth:1,inlineEqual:(left:number,right:number)=>left===right};
 

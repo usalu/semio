@@ -1,4 +1,4 @@
-//! (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory
+//! 🎫️ (ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING). Directory
 //! 💡️ Puzzle5d inference schema — the fourth schema family alongside snapshot/diff/mutations
 //! shape mirrors puzzle3d's own `💡️inferences/` (this artifact's exemplar): this file is the
 //! family-root assembly (never mod's/includes the slug dirs directly — `🦀️.rs` is the sole

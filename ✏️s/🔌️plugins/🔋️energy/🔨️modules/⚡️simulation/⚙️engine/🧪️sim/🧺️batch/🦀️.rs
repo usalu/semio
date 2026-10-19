@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::{RetainedCloneStep,ValueRefusalKind};
 #[derive(Clone,Copy,PartialEq,Eq)]
-struct Source{operation:semio_framework_job::OperationId,generation:Generation,payload:semio_framework_job::OriginalPayloadSourceIdentity,clock:Option<u64>,clock_source:usize,deadline:u64}
+struct Source{operation:semio_framework_job::OperationId,generation:Generation,payload:semio_framework_job_payload::OriginalPayloadSourceIdentity,clock:Option<u64>,clock_source:usize,deadline:u64}
 impl Source{fn borrow(cx:&StepContext<'_>)->Self{Self{operation:cx.operation(),generation:cx.generation(),payload:cx.payload_authority_identity(),clock:cx.original_clock_binding(),clock_source:cx.clock_source()as usize,deadline:cx.original_absolute_deadline_us()}}}
 /// 🫴️ Adopts an existing numerical job; its caller remains the source of every later work and retirement opportunity.
 pub struct EnergyBatchRun{job:EnergyJob,source:Source,preview:Option<EnergyWirePacket>,checkpoint:Option<EnergyWireLease>,commit:Option<EnergyWireLease>,fault:Option<EnergyWireLease>,terminal:Option<EnergyRun>,closing:bool}

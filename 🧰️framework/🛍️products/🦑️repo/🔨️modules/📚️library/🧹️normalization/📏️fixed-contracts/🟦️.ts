@@ -5,6 +5,8 @@ import { splitLeadingEmoji, emojiFold, utf8Compare } from "../🛣️path/🟦�
 import { sha256 } from "../📁️input/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { classifyPackageSource, classifyPackageSourceDisposition } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { packageImplementationAdmitted } from "../../🔍️discovery/🧱️package-implementation-admission/🟦️.ts";
+import { fixedContractFilename } from "../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
 import { implementationLeafBasenameFinding, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
 import { basename, dirname } from "node:path";
@@ -133,12 +135,24 @@ function configurableContract(path: string, taxonomy: LoadedTaxonomy, packageInf
   return rows.length === 1 ? requireTaxonomyValue(rows[0],"rows[0]") : null;
 }
 
-export function classifyPackageRole(path: string, kindId: string | null, fixedId: string | undefined, content: string | null, taxonomy: LoadedTaxonomy): TaxonomyPackageRole {
+/** 🧱️ Whether the schema admits implementation at this package file: it sits in a nested build unit of its package rule. `unitHasFile` answers whether a repo path exists as a file. */
+export function packageImplementationAdmittedAt(path: string, kindId: string | null, taxonomy: LoadedTaxonomy, unitHasFile: (path: string) => boolean): boolean {
+  const location = packageLocation(path, taxonomy);
+  if (!location?.rule) return false;
+  return packageImplementationAdmitted(location.rule.implementationAdmission, {
+    relativePath: path.slice(location.packageRoot.length + 1),
+    kindId,
+    directoryHasFile: (name) => unitHasFile(`${dirname(path)}/${name}`),
+    manifestFilename: (contractId) => { const contract = taxonomy.schema.fixedFilenameContracts[contractId]; return contract ? fixedContractFilename(contract) : null; },
+  });
+}
+
+export function classifyPackageRole(path: string, kindId: string | null, fixedId: string | undefined, content: string | null, taxonomy: LoadedTaxonomy, admitted = false): TaxonomyPackageRole {
   const location = packageLocation(path, taxonomy);
   if (!location) return "not-package";
   const configurable = configurableContract(path, taxonomy, location);
   if (!location.rule || !location.ecosystemId) return "unresolved";
-  if (kindId && !location.rule.allowedFileKindIds.includes(kindId)) return "implementation";
+  if (kindId && !location.rule.allowedFileKindIds.includes(kindId)) return admitted ? "admitted-implementation" : "implementation";
   const contractId = fixedId ?? configurable?.[0];
   const disposition = contractId ? taxonomy.schema.packageSourceDispositions[contractId] : undefined;
   const sourceKind = kindId ? taxonomy.schema.fileKinds[kindId]?.role === "source" : false;
@@ -149,6 +163,7 @@ export function classifyPackageRole(path: string, kindId: string | null, fixedId
   const dispositionRole = disposition ? classifyPackageSourceDisposition(content, disposition, grammar) : undefined;
   const role = dispositionRole === "tool-metadata" ? dispositionRole : classifyPackageSource(content, grammar).role;
   if (role === "tool-metadata") return "configuration";
+  if (role === "implementation" && admitted) return "admitted-implementation";
   return grammar.allowedRoles.includes(role as PackageGlueGrammar["allowedRoles"][number]) ? role : role === "implementation" ? "implementation" : "unresolved";
 }
 

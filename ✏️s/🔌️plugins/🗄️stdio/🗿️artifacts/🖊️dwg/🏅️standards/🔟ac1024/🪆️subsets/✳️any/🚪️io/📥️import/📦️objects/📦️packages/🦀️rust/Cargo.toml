@@ -17,6 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-os-kernel = { workspace = true }
+semio-s-artifact-stdio-dwg-read-objects-dynamic-blocks = { workspace = true }
 semio-s-artifact-stdio-dwg-read-records = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }

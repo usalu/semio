@@ -36,7 +36,6 @@ struct RecordingTransport {
     calls: Arc<Mutex<u32>>,
 }
 impl HttpTransport for RecordingTransport {
-    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
         *self.calls.lock().unwrap() += 1;
         Ok(HttpResponse { status: 200, headers: Vec::new(), body: request.body })
@@ -49,7 +48,6 @@ async fn sample_request() -> HttpRequest {
 
 struct BlockingTransport(Mutex<std::sync::mpsc::Receiver<()>>);
 impl HttpTransport for BlockingTransport {
-    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
         self.0.lock().unwrap().recv().ok();
         Ok(HttpResponse { status: 200, headers: Vec::new(), body: request.body })
@@ -254,7 +252,6 @@ impl HttpBody for LocalSocketBody {
         self.cancellation.clone()
     }
 
-    // 🚫️async: E6 dyn-compat — see the `HttpBody` trait's tag.
     fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
         let stream = self.stream.clone();
         let compute = self.compute.clone();
@@ -310,7 +307,6 @@ struct LocalSocketTransport {
     read_probe: Option<Arc<LocalSocketReadProbe>>,
 }
 impl AsyncHttpTransport for LocalSocketTransport {
-    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn begin(&self, ctx: &OperationContext, _request: HttpRequest) -> HttpTransportStart {
         let addr = self.addr;
         let compute = self.compute.clone();

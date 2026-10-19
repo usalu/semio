@@ -6,6 +6,7 @@ use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionInvokeStep;
 
 struct OriginalResourceCloseProbe{pub failure:Option<semio_framework_job::OriginalTurnFailure>,pub closed:bool}
 impl ExtensionResourceOwner for OriginalResourceCloseProbe{

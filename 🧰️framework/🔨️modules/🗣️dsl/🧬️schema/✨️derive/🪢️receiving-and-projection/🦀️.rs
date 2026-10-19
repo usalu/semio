@@ -69,8 +69,6 @@ pub(super) fn emit_projection(input: DeriveInput, spec: syn::Ident, to: syn::Ide
     let expanded = quote! {
         #borrowed
         impl #name {
-            // 🚫️async: E1 pure accessor consumed by the same `spec_exprs` shape `DslRecord`'s
-            // `__dsl_spec` uses — E4-transitively sync, see R9.
             pub fn #spec() -> ::semio_framework_dsl_record::RecordSpec {
                 ::semio_framework_dsl_record::RecordSpec::new_owned(#keyword_expr, #layout_expr, vec![ #(#spec_exprs),* ])
             }

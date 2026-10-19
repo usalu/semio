@@ -264,9 +264,6 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Leinwand-Mausrad"))
             .action_audience("canvasWheel", semio_framework_plugin::CapabilityAudience::Input)
-            // 📚️ The playground navbar dispatches `setActiveExample` for its fixture combobox on
-            // boot; without an app-level declaration the shell drops it before dispatch and the
-            // example picker never renders at all.
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
@@ -286,12 +283,6 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(edit::layout())
-            // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the "history" interaction
-            // domain — one granularity ("commit"), `HierarchyProvider::Flat` (see `VCS_INTERACTION_HISTORY`'s
-            // doc comment for why this is entity selection, not navigation, and why it is Flat). Multi-select
-            // via Pick (tree rows) only — no canvas/marquee surface exists for checkpoints — all five merges
-            // since the document tree is a plain ordered list (shift-range over the seeded history reads
-            // naturally). Replaces the deleted bespoke `setSelection` action/config field/command.
             .interaction(InteractionDefinition {
                 id: VCS_INTERACTION_HISTORY.into(),
                 label: LocalizedLabel::native("History", "Verlauf"),
@@ -307,16 +298,7 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(history::VCS_PLAY_WINDOW_HISTORY, vec![InteractionRef::new(VCS_INTERACTION_HISTORY)])
-            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
-            // this app has no user-visible sticky defaults, so `config_spec()` stays the trait default
-            // `ConfigSpec::empty()`; declared anyway for parity with every other converted app.
             .config(VcsPlayApp::config_spec())
-            // 🚧️ SDK GAP (contract §2.4): `Editor::builder`/`.editor::<E>(def: AppDefinition)` take a
-            // bare `AppDefinition`, not the old `App { definition, examples }` — there is no
-            // `.example(...)`/`.workflow(...)` on this builder, so this app never had either call to
-            // port (the old `create_vcs_app` had none), noted here anyway for parity with the other W2
-            // packets' identical gap note. The subset's own `📚️examples/🎬️demo-session` facet (real
-            // content, moved intact) is the modern, role-agnostic replacement surface for this.
             .action_describe("incrementCounter", LocalizedLabel::native("Adds one to the demo document's counter.", "Erhöht den Zähler des Demodokuments um eins."))
             .action_describe("renameVcs", LocalizedLabel::native("Sets the demo document's title.", "Setzt den Titel des Demodokuments."))
             .action_describe("changeCounter", LocalizedLabel::native("Sets the demo document's counter to an integer.", "Setzt den Zähler des Demodokuments auf eine ganze Zahl."))

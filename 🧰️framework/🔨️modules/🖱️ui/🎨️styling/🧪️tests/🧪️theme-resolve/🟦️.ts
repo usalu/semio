@@ -159,7 +159,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(contrastRatio("#ffffff", "#000000")).toBeCloseTo(21, 6);
       expect(contrastRatio("#000000", "#ffffff")).toBeCloseTo(21, 6);
       expect(contrastRatio("#7b827d", "#7b827d")).toBeCloseTo(1, 10);
-      // 🔬️ WebAIM publishes 4.54:1 for #767676 on white — the canonical AA boundary example.
       expect(contrastRatio("#767676", "#ffffff")).toBeGreaterThanOrEqual(4.5);
       expect(contrastRatio("#777777", "#ffffff")).toBeLessThan(4.6);
     });

@@ -1,5 +1,10 @@
 {
   "name": "@semio-tech/framework-store-native-semantic",
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*"
+    ]
+  },
   "tags": [
     "framework",
     "store"
@@ -7,7 +12,13 @@
   "targets": {
     "verify-source": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native",
         "command": "bun ./📜️script.ts verify source"
@@ -15,7 +26,13 @@
     },
     "verify-native": {
       "executor": "repo:script",
-      "cache": false,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native",
         "command": "bun ./📜️script.ts verify native"

@@ -1,4 +1,4 @@
-//! members, meshed solids, supports, loads) as a `World3d` scene bound to the framework-owned
+//! 👤️ members, meshed solids, supports, loads) as a `World3d` scene bound to the framework-owned
 //! 🧱️ FEM 3D app — the `edit` mode's Model window: renders the undeformed structure (nodes, bar/frame
 //! `fem3d` interaction domain, so the host's own raycast picks, marquee and transform gumball act
 //! on document entities. fem3d's manifest declares this window with the scalar `.window_kind(..)`
@@ -41,9 +41,9 @@ pub fn render(doc: &Fem3dSnapshot, camera: &semio_framework_os_kernel::Viewport3
 /// displacement, no stress) and carries the generation-qualified `live_visual` page lease on
 /// `scene.snapshot` for a host that pages it — a host that only draws `meshes_json`/`instances_json`
 /// (the React world today) still shows the model as it is edited.
-pub fn render_with_progress(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, visual: Option<&crate::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_with_progress(doc: &Fem3dSnapshot, window: &Fem3dModelWindowConfig, interaction: &Fem3dInteractionSnapshot, transform_armed: bool, visual: Option<&semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let mut scene = model_scene(doc, window, interaction, transform_armed)?;
-    scene.snapshot = visual.map(crate::live_visual::Fem3dPageVisualLease::snapshot);
+    scene.snapshot = visual.map(semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dPageVisualLease::snapshot);
     semio_s_fem_app_surface::world_3d_surface(FEM3D_BODY_MODEL, &scene)
 }
 

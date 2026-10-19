@@ -49,6 +49,7 @@ export interface TaxonomyImplementationCensusOptions {
   readonly signal?: AbortSignal;
   readonly onProgress?: (progress: TaxonomyImplementationCensusProgress) => void;
   readonly yieldEvery?: number;
+  readonly admitted?: (path: string, nodeKind: "directory" | "file") => boolean;
 }
 
 /** 📐️ Validates Draft-07 keyword shapes without imposing names on a schema's physical file. */

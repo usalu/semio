@@ -8,7 +8,7 @@ export interface SemioFlowTopology {
 }
 
 export interface SemioFlowInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: SemioFlowTopology;
 }
 

@@ -39,7 +39,7 @@ class BuildScript extends Script {
     const [variant, renderer, profile] = args;
     if (args.length !== 3 || !variant || renderer !== "react" || (profile !== "prototype" && profile !== "release") || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("build <variant> react <prototype|release>");
     const workspace = findWorkspaceRoot(), root = resolve(import.meta.dir, "..");
-    const catalog = JSON.parse(readFileSync(join(process.env.SEMIO_PLUGIN_CATALOG ?? (()=>{throw Error("Distribution requires a supplied catalog root");})(), "🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
+    const catalog = JSON.parse(readFileSync(join(process.env.SEMIO_PLUGIN_CATALOG ?? (()=>{throw new Error("Distribution requires a supplied catalog root");})(), "🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
     const playground = catalog.find((row) => row.variant === variant);
     const contribution = playground ? loadDevContribution(workspace, playground) : undefined;
     if (!playground) throw new Error(`Unknown production playground: ${variant}`);
@@ -60,9 +60,9 @@ class BuildScript extends Script {
 /** 🧵️ Receives one carried Original and owns its actual finite distribution compiler scope. */
 class CompileScript extends Script {
  async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("compile accepts no free path or configuration arguments");
+  if(args.length)throw new Error("compile accepts no free path or configuration arguments");
   const{compileDistributionProductV1}=await import("./🏗️compiler/🟦️.ts"),receipt=await compileDistributionProductV1(this.repoRoot,this.invocation),text=JSON.stringify(receipt),{readNativeCallerAuthorityV1}=await import("../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts");
-  if(Buffer.byteLength(text)>readNativeCallerAuthorityV1(this.invocation.capabilities).transport.maximumBytes)throw Error("Original distribution receipt transport exceeded");await writeOwnedCommandOutputV1(process.stdout,text,scriptCompilerAdmissionControlV1(this.invocation,"vite:distribution-receipt",0));
+  if(Buffer.byteLength(text)>readNativeCallerAuthorityV1(this.invocation.capabilities).transport.maximumBytes)throw new Error("Original distribution receipt transport exceeded");await writeOwnedCommandOutputV1(process.stdout,text,scriptCompilerAdmissionControlV1(this.invocation,"vite:distribution-receipt",0));
  }
 }
 

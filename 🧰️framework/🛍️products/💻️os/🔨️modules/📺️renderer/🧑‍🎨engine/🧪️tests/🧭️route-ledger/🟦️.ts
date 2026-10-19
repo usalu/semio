@@ -12,7 +12,7 @@ import corpus from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️f
 import shellUriDocumentsSource from "../../🧱️elements/🏛️ShellHost/🗄️shell-uri-documents/🟦️.ts?raw";
 import shellCoreStateSource from "../../🧱️elements/🏛️ShellHost/🧩️shell-core-state/🟦️.ts?raw";
 
-const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/*/🟦️.ts", "../../🧱️elements/🏛️ShellHost/*/🟦️.tsx"], { query: "?raw", import: "default", eager: true })).join("\n");
+const shellTreeSource = Object.values(import.meta.glob<string>(["../../🧱️elements/🏛️ShellHost/🟦️.tsx", "../../🧱️elements/🏛️ShellHost/**/🟦️.ts", "../../🧱️elements/🏛️ShellHost/**/🟦️.tsx", "!../../🧱️elements/🏛️ShellHost/🧪️tests/**"], { query: "?raw", import: "default", eager: true })).join("\n");
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws

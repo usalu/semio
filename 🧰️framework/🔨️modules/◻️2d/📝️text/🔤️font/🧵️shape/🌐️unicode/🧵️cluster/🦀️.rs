@@ -1,7 +1,8 @@
 //! 🧶️ Original paged scalars and admitted Unicode16 resolve bounded extended grapheme boundaries.
 use super::{UnicodeLayout,UnicodeProperty,UnicodePropertyCursor,normalize::NormalizedScalar};
 use semio_framework_2d_text_font::{FontProgress,reserve_slot};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct UnicodeCluster{pub start:usize,pub end:usize}
 semio_framework_value::artifact_retire_leaf!(UnicodeCluster);

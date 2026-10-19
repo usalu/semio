@@ -12,6 +12,11 @@
   "targets": {
     "source-check": {
       "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧹️fixture-sweep/Cargo.lock"
+      ],
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",

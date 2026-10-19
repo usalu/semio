@@ -103,6 +103,12 @@ const install=async(directory:string)=>{
  installations.add(job);
  try{return await job;}finally{installations.delete(job);}
 };
+test("generated payload namespace remains one Bun workspace before birth and after output removal",async()=>{
+ const root=independentRoot("payload-"),fixture=JSON.parse(readFileSync(new URL("../../../🧪️tests/🧫️fixtures/🧱️workspace-publication-source/🔣️.json",import.meta.url),"utf8")),row=fixture.payloadCases.find((row:any)=>row.name==="private-generated-pkg-manifest-without-output");
+ put(root,"package.json",scope("payload-workspace",["owner/**"]));for(const manifest of row.manifests)put(root,manifest.directory+"/package.json",manifest.document);
+ const expected=glob.sync("owner/**/package.json",{cwd:root,onlyFiles:true,followSymbolicLinks:false}).filter(path=>!path.startsWith(row.resolutions[0].payload+"/")).map(path=>path.replace(/\/package.json$/u,""));
+ for(const present of[false,true,false]){const file=join(root,"owner/pkg/runtime.js");if(present)writeFileSync(file,"export const value = 1;\n");else rmSync(file,{force:true});const report=await ownership.publishBunWorkspaceOwnership(root,{kind:"all"},{signal:cancellation.signal,advance:async()=>{}});expect(report.packages).toEqual(expected);expect(JSON.parse(readFileSync(join(root,"package.json"),"utf8")).workspaces).toEqual(expected);}
+});
 test("portable Bun source declaration admits the same closed vectors as Ajv",()=>{for(const row of corpus.accepted){expect(validate(row)).toBe(true);expect(parseBunWorkspaceDeclaration(row)).toEqual(row);}for(const row of corpus.rejected){expect(validate(row)).toBe(false);expect(()=>parseBunWorkspaceDeclaration(row)).toThrow();}});
 for(const row of corpus.removal)for(const directory of [".",...(row.removed.includes("specific")?[]:["specific"]),...(row.removed.includes("product")?[]:["product"])])test(`native Bun selected scope survives removal ${JSON.stringify(row.removed)} and refuses invalid retained consumers in ${directory}`,async()=>{const root=independentRoot("bun-owner-removal-");put(root,"package.json",scope("workspace",["framework/**"],["*/package.json"]));put(root,"framework/kernel/package.json",{name:"neutral-kernel",version:"1.0.0"});
  if(!row.removed.includes("specific")){put(root,"specific/package.json",scope("specific-workspace",["../framework/**","models/**"]));put(root,"specific/models/domain/package.json",{name:"specific-model",version:"1.0.0",dependencies:{"neutral-kernel":"workspace:*"}});mkdirSync(join(root,"specific/models/ghost"),{recursive:true});}

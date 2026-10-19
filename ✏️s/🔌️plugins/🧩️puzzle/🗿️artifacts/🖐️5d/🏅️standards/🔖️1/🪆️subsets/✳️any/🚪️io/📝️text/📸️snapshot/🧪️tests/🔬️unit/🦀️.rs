@@ -6,13 +6,13 @@ use crate::Puzzle5dFastener;
 use crate::Puzzle5dGrip;
 use crate::Puzzle5dGrip2d;
 use crate::Puzzle5dGrip3d;
-use crate::Puzzle5dKindCompatibility;
-use crate::Puzzle5dMeta;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dKindCompatibility;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dMeta;
 use crate::Puzzle5dPart;
 use crate::Puzzle5dPart2d;
 use crate::Puzzle5dPart3d;
 use crate::Puzzle5dPartAnchor;
-use crate::Puzzle5dScale;
+use semio_s_artifact_puzzle_5d_document_records::standards::v1::subsets::any::schema::document_records::Puzzle5dScale;
 
 #[test]
 fn puzzle5d_projection_dsl_round_trips() {
@@ -25,8 +25,6 @@ fn puzzle5d_projection_dsl_round_trips() {
         anchor: Puzzle5dPartAnchor::Fixed,
         part_kind: Some("Hexagonal Cut Concrete Forest Left".into()),
         part_2d: Puzzle5dPart2d { x: 230.7, y: 93.5, shape: Some("circle".into()), radius: Some(20.0), width: None, height: None, text: Some("Hexagonal Cut Concrete Forest Left".into()), icon_kind: None, hidden: None, locked: None },
-        // 📏️ Vec3 (per-axis) case of `Puzzle5dScale`, exercised alongside the Uniform case
-        // below so both `Shape::Tuple(_, None)` arities round-trip through this test.
         part_3d: Puzzle5dPart3d {
             origin: [0.0, 0.0, 0.0],
             mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()),
@@ -46,7 +44,6 @@ fn puzzle5d_projection_dsl_round_trips() {
         anchor: Puzzle5dPartAnchor::Fixed,
         part_kind: Some("Hexagonal Cut Concrete Forest Right".into()),
         part_2d: Puzzle5dPart2d::default(),
-        // 📏️ Uniform case of `Puzzle5dScale` — a bare number scaling all three axes alike.
         part_3d: Puzzle5dPart3d { origin: [6.0, 0.0, 0.0], mesh_url: None, orientation: None, scale: Some(Puzzle5dScale::Uniform(1.25)), label: None },
         grips: vec![Puzzle5dGrip {
             id: "v0".into(),
@@ -95,9 +92,6 @@ fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
     for (name, dsl_text) in [("forest", PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT), ("tower", PUZZLE5D_NAKAGIN_EXAMPLE_TEXT)] {
         let projection = parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{name} example fixture parses as dsl: {error}"));
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
-        // 🚧️ `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: same
-        // `pack/value/rs` table-column bug as `puzzle5d_projection_dsl_round_trips` above
-        // (this fixture's `parts` rows have the identical shape).
     }
 }
 

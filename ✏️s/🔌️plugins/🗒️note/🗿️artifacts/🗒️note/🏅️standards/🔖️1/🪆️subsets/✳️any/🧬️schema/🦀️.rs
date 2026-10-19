@@ -364,10 +364,6 @@ pub fn remove_block_from_tree(blocks: &mut Vec<NoteBlockNode>, target_id: &str) 
 
 pub fn reid_block_tree(owner: &mut NoteIdOwner, block: &mut NoteBlockNode, rename_top: bool) {
     let kind = block_kind(block).to_string();
-    // 🧬️ A duplicated Text block must never keep its source's composed `content` child handle — two
-    // distinct block ids sharing one content-addressed child slot would violate the "a child slot is
-    // owned by exactly one parent" invariant composition assumes. Copy the source record's durable
-    // paragraphs before the id changes, then remint them under the new id assigned below.
     let recovered_paragraphs = if let NoteBlockNode::Text { content, .. } = &*block { Some(crate::note_block_text(content)) } else { None };
     match block {
         NoteBlockNode::Text { id, name, .. } | NoteBlockNode::Image { id, name, .. } | NoteBlockNode::Table { id, name, .. } | NoteBlockNode::Math { id, name, .. } | NoteBlockNode::Ink { id, name, .. } | NoteBlockNode::Group { id, name, .. } => {

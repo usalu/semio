@@ -34,17 +34,14 @@ impl InvalidationReason {
     pub const SURFACE: Self = Self(1 << 8);
     pub const ACCESSIBILITY: Self = Self(1 << 9);
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn is_empty(self) -> bool {
         self.0 == 0
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn contains(self, other: Self) -> bool {
         self.0 & other.0 == other.0
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn insert(&mut self, other: Self) {
         self.0 |= other.0;
     }
@@ -52,7 +49,6 @@ impl InvalidationReason {
 
 impl std::ops::BitOr for InvalidationReason {
     type Output = Self;
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn bitor(self, rhs: Self) -> Self {
         Self(self.0 | rhs.0)
     }
@@ -92,20 +88,17 @@ pub struct FrameScheduler {
 }
 
 impl FrameScheduler {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self { dirty: InvalidationReason::NONE, deadlines: Vec::new(), keyed_deadlines: std::collections::BTreeMap::new(), visible: true }
     }
 
     /// 🚩️ Marks the window dirty for `reason`, effective the next [`Self::should_render`] call.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn invalidate(&mut self, reason: InvalidationReason) {
         self.dirty.insert(reason);
     }
 
     /// ⏰️ Schedules a future wake. Multiple deadlines may be pending at once (e.g. a caret blink and
     /// a camera-settle debounce running concurrently); each fires independently at its own `due` time.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn request_deadline(&mut self, due: f64, reason: InvalidationReason) {
         self.deadlines.push(Deadline { due, reason });
     }
@@ -121,19 +114,16 @@ impl FrameScheduler {
 
     /// 👁️ A hidden window still tracks deadlines (see [`Self::should_render`]'s doc) but never
     /// renders while hidden — set by whatever host code owns the window's OS-level visibility state.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn set_visible(&mut self, visible: bool) {
         self.visible = visible;
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_visible(&self) -> bool {
         self.visible
     }
 
     /// ⏰️ The soonest still-pending deadline, if any — a caller (the OS event loop) uses this to size
     /// its next `WaitUntil`, independent of whether the window is currently visible.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn next_deadline(&self) -> Option<Deadline> {
         self.deadlines.iter().chain(self.keyed_deadlines.values()).copied().min_by(|a, b| a.due.total_cmp(&b.due))
     }
@@ -143,7 +133,6 @@ impl FrameScheduler {
     /// becomes visible again), then returns the accumulated mask and clears it — but only if the
     /// window is visible and the mask is non-empty. A hidden window, or a window with nothing dirty,
     /// gets `None`: this is the single method that makes an idle window cost zero frames.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn should_render(&mut self, now: f64) -> Option<InvalidationReason> {
         self.keyed_deadlines.retain(|_, deadline| {
             if deadline.due <= now {

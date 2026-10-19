@@ -1,4 +1,4 @@
-//! playback transport for the addressed results window.
+//! ▶️ playback transport for the addressed results window.
 //! 📊️ Fem2d play app panel — `results`: the results source/mode controls and the deformation
 //!
 //! Every control is tagged with the `windowId` it speaks for (the puzzle3d Settings panel's rule), so

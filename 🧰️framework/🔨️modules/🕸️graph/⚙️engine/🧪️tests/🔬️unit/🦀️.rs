@@ -14,8 +14,6 @@ fn value_round_trip_matches_serde_shape() {
         assert_eq!(round_tripped, value);
     }
 
-    // Zero-field marker types have no `PartialEq` (pre-existing), so their round-trip is just
-    // "decodes without error and re-encodes identically" rather than `check`'s equality form.
     for encoded in [semio_framework_value::ToValue::to_value(&Directed), semio_framework_value::ToValue::to_value(&Undirected), semio_framework_value::ToValue::to_value(&Normal), semio_framework_value::ToValue::to_value(&Ported), semio_framework_value::ToValue::to_value(&UnitWeight)] {
         assert_eq!(encoded, semio_framework_value::DslValue::Null);
     }
@@ -29,9 +27,6 @@ fn value_round_trip_matches_serde_shape() {
     check(GraphError::NodeNotFound(7));
     check(GraphError::NotImplementedForKind { algorithm: "planarity".to_string(), kind: "multigraph".to_string() });
     check(Node { id: 1, center: Point::new(1.5, -2.5), radius: 3.0, width: 4.0, height: 5.0, shape: NodeShape::Rectangle, draggable: true, kind: Some("box".to_string()), label: None, properties: PropertyBag::new() });
-    // 🔤️ `value_types` is the port's declared value-schema set (empty = undeclared, still connectable);
-    // it joined `Handle` after this round-trip law was written and left the crate's own test target
-    // un-compilable, which hides every law in this file.
     check(Handle { angle: 0.5, id: 9, node_id: 1, radius: 2.0, role: HandleRole::Source, kind: None, value_types: Vec::new(), properties: PropertyBag::new() });
 
     let mut storage: Storage<Ported, Directed> = Storage::default();
@@ -446,7 +441,7 @@ fn edge_subgraph_view_nodes_are_exactly_edge_endpoints() {
         let a = g.add_node();
         let b = g.add_node();
         let c = g.add_node();
-        g.add_node(); // isolated node d, never referenced by an edge
+        g.add_node();
         let e_ab = g.add_edge(a, b);
         g.add_edge(b, c);
         let view = EdgeSubgraphView::new(&g, [e_ab]);
@@ -841,8 +836,6 @@ mod quick {
             for _ in 0..20 {
                 let mut g = ND::new();
                 let n = 3 + (xorshift(&mut seed) % 8) as usize;
-                // 🔀️ Rewritten from `.map(..)` — `add_node` is async and cannot be called inside
-                // the sync closure that used to build `nodes` (R10 residue shape #1).
                 let mut nodes: Vec<NodeId> = Vec::with_capacity(n);
                 for _ in 0..n {
                     nodes.push(g.add_node());

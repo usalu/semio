@@ -7,10 +7,10 @@ import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedP
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 describe("playground static sites", () => {
-  test("PLAYGROUND_PORTS keeps storybook, projektetage and the architecture quiz on distinct reserved dev ports", () => {
+  test("PLAYGROUND_PORTS keeps storybook, projektetage and the architecture course on distinct reserved dev ports", () => {
     expect(playgroundDevPort("storybook")).toBe(6010);
     expect(playgroundDevPort("projektetage")).toBe(6050);
-    expect(playgroundDevPort("architecture-quiz")).toBe(6061);
+    expect(playgroundDevPort("architecture-course")).toBe(6061);
     expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
   });
 

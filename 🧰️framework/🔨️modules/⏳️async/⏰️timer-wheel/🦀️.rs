@@ -12,8 +12,6 @@ use std::task::{Context, Poll, Waker};
 /// once due, and whether it has already fired (checked by [`TimerSleep::poll`] on a spurious
 /// re-poll before the waker's task actually runs again).
 struct TimerRegistration {
-    // 🔕 dead_code: kept for future debugging/introspection (e.g. listing pending deadlines); the
-    // heap already carries `deadline_ms` for ordering, so this field is never read today.
     #[allow(dead_code)]
     pub(super) deadline_ms: u64,
     pub(super) waker: Option<Waker>,

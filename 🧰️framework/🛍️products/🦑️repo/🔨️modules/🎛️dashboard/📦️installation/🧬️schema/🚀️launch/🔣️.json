@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "🚀️ Dashboard Lazy Installation Launch Vectors",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "args",
+      "mode",
+      "installed",
+      "stale",
+      "stalenessChecks",
+      "rebuilds",
+      "outcome",
+      "exitCode",
+      "originalBudget",
+      "preparationBudget"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "args": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "mode": {
+        "enum": [
+          "prototype",
+          "release"
+        ]
+      },
+      "installed": {
+        "type": "boolean"
+      },
+      "stale": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "stalenessChecks": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "rebuilds": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "outcome": {
+        "enum": [
+          "complete",
+          "rebuild-refused",
+          "rebuild-cancelled",
+          "launch-cancelled"
+        ]
+      },
+      "exitCode": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "originalBudget": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "preparationBudget": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "definitions": {
+    "BootstrapCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "args",
+          "direct",
+          "descendants"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "direct": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "descendants": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

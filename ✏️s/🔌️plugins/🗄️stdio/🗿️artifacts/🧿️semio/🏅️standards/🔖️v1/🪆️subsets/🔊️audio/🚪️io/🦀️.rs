@@ -189,30 +189,25 @@ pub mod derived_construction {
     //#region 🔖️TypedConstructors
     impl SemioAudioBuilderConstruction {
         /// 🏗️ Starts a fresh document at the given sample rate/format.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn new(sample_rate: u32, format: SemioAudioFormat) -> Self {
             Self { snapshot: SemioAudioSnapshot { sample_rate, format, ..SemioAudioSnapshot::default() } }
         }
         /// 🏗️ Appends one channel's decoded samples, in channel order.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_channel(mut self, channel: SemioAudioChannel) -> Self {
             self.snapshot.channels.push(channel);
             self
         }
         /// 🏗️ Appends one metadata key/value pair.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_tag(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
             self.snapshot.tags.push(SemioAudioTag { key: key.into(), value: value.into() });
             self
         }
         /// 🏗️ Sets the sample rate.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_sample_rate(mut self, sample_rate: u32) -> Self {
             self.snapshot.sample_rate = sample_rate;
             self
         }
         /// 🏗️ Sets the original-encoding sample format.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_format(mut self, format: SemioAudioFormat) -> Self {
             self.snapshot.format = format;
             self

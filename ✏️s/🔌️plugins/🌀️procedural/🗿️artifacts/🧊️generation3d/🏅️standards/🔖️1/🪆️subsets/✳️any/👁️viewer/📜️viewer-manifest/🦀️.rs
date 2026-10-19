@@ -42,8 +42,6 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(view::GENERATION3D_VIEW_MODE_VIEW)
         .window_kind_def(preview::definition())
         .default_layout(view::layout())
-        // 👁️ Ephemeral view actions — the only kind a read-only surface may declare. Every one is
-        // config-only; none reaches the document.
         .action_with(ActionDefinition::new("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View, "eye"))
         .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
         .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
@@ -51,11 +49,6 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
         .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
         .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
-        // 🎨️ The navbar example picker's verb. `ActionKind::View`, not `Mutation` like the sibling
-        // surface's: loading an example into a READ-ONLY surface writes this surface's config, never
-        // the document — and `ShellHost` refuses a `mutation`-kind action on a viewer session outright
-        // (`🏛️ShellHost/🟦️.tsx`'s read-only gate), so a `Mutation` row here would show the picker and
-        // then silently swallow every pick.
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::View, "panel-left"))
         .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
         .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
@@ -66,19 +59,12 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_args("setActiveExample", vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), generation3d_view_example_options()).required()])
-        // 📤️ The reader's own io verb. `ActionKind::View` for the same reason `setActiveExample` is:
-        // `ShellHost` refuses a `Mutation`-kind action on a viewer session outright, and an export
-        // really does mutate nothing — it hands the shell a `DownloadMediaExport` and returns.
         .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"), ActionKind::View, "download"))
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
         .action_destructive("exportDocument")
         .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")
-        // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
-        // injects its reserved actions, referenced by no mode because the preview surface starts it.
         .tool(preview_eval::preview_eval_tool_definition())
-        // 🧩️ Not a view action: a hidden host COMMAND, because the host pushes it and no user ever
-        // invokes it. It publishes nothing at all, not even the config lane the seven above write.
         .command({
             let mut definition = semio_framework_plugin::CommandDefinition {
                 in_palette: false,
@@ -91,20 +77,11 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
             definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
             definition
         })
-        // ⏱️ The runtime evaluation chain — three hidden host COMMANDS, never user actions: the app
-        // self-dispatches them through `Effect::DispatchAction`, and `reactor::extension_response_args`
-        // addresses the two resolves. A command the manifest does not declare is dropped by
-        // `ShellHost`'s own `declaredAction` gate before `plugin.handleAction` is ever called, so an
-        // undeclared tick would stall the whole chain silently
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         .command(generation3d_view_runtime_command("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), &["windowId", "windowKindId"]))
         .command(generation3d_view_runtime_command("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung auflösen"), &["windowId", "windowKindId", "nodeHash", "output"]))
         .command(generation3d_view_runtime_command("flowTessellateResolve", LocalizedLabel::native("Resolve Tessellation", "Tessellierung auflösen"), &["windowId", "windowKindId", "nodeHash", "output"]))
         .command(generation3d_view_runtime_command("flowEvalRelease", LocalizedLabel::native("Release Preview Kernel Work", "Vorschau-Kernelarbeit freigeben"), &["windowId", "windowKindId"]))
         .command(generation3d_view_runtime_command("flowTessellateCancelResolve", LocalizedLabel::native("Resolve Preview Cancellation", "Vorschauabbruch aufnehmen"), &["windowId", "windowKindId", "output", "ok"]))
-        // 🕹️ First-class hover/selection over the same flow-graph widget DAG the sibling surface
-        // declares — read-only, but a viewer still hovers, selects and inspects. Selection stays
-        // `broadcast: true` so a co-viewer sees what this one is looking at.
         .interaction(InteractionDefinition {
             id: "graph".into(),
             label: LocalizedLabel::native("Graph", "Graph"),
@@ -124,14 +101,6 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
             },
         })
         .window_kind_interactions(preview::WINDOW_KIND_ID, vec![InteractionRef::new("graph")])
-        // 📇️ Window-scoped action ownership (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). This viewer has
-        // exactly one window, and that window's own chrome dispatches every verb it declares —
-        // `setShowMode`/`setLodMode` and the sun group from `preview_window_measures`, `setCamera`
-        // from the world host's viewport gesture. Stopping the evaluation is the framework's
-        // `toolRunAbort`, injected with the `previewEval` run. Declaring them explicitly is what keeps
-        // `WindowKindDefinition.actions` a statement about this window rather than a copy of the app list
-        // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`). Asserted by
-        // `every_emitted_action_is_declared_on_the_preview_window_kind`.
         .window_kind_action_refs(preview::WINDOW_KIND_ID, vec![
             "setShowMode".into(),
             "setLodMode".into(),

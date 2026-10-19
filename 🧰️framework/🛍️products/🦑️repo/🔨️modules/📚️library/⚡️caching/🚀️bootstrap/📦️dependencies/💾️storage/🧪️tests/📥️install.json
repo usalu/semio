@@ -2005,5 +2005,22 @@
       "mode": "sink-failure",
       "reported": false
     }
+  ],
+  "cacheLinkRefusals":[
+    {"id":"eperm-link","status":1,"signal":null,"stderr":"bun install v1.3.14\nEPERM: Operation not permitted: failed to link package: safe-buffer@5.1.2 (link)\nEPERM: Operation not permitted: failed to link package: safe-buffer@5.1.2 (link)\n","expected":"cache-link-refused"},
+    {"id":"eperm-link-after-noise","status":1,"signal":null,"stderr":"warn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nwarn: x\nEPERM: Operation not permitted: failed to link package: safe-buffer@5.1.2 (link)\n","expected":"cache-link-refused"},
+    {"id":"success-with-warning","status":0,"signal":null,"stderr":"EPERM: Operation not permitted: failed to link package: safe-buffer@5.1.2 (link)\n","expected":"other"},
+    {"id":"frozen-lock","status":1,"signal":null,"stderr":"error: lockfile had changes, but lockfile is frozen\n","expected":"other"},
+    {"id":"enospc","status":1,"signal":null,"stderr":"ENOSPC: no space left on device: failed to link package: nx@23.2.0 (link)\n","expected":"other"},
+    {"id":"eperm-other-operation","status":1,"signal":null,"stderr":"EPERM: Operation not permitted: failed to open file\n","expected":"other"},
+    {"id":"signal","status":null,"signal":"SIGTERM","stderr":"EPERM: Operation not permitted: failed to link package: safe-buffer@5.1.2 (link)\n","expected":"cache-link-refused"}
+  ],
+  "obsoleteGenerations":[
+    {"id":"all-live","names":["aaaaaaaaaaaaaaaaaaaa","bbbbbbbbbbbbbbbbbbbb"],"current":["aaaaaaaaaaaaaaaaaaaa"],"targets":["/r/.cache/b/d/m/j/bbbbbbbbbbbbbbbbbbbb/w/1/node_modules"],"expected":[]},
+    {"id":"retire-unreferenced","names":["ffffffffffffffffffff","aaaaaaaaaaaaaaaaaaaa","bbbbbbbbbbbbbbbbbbbb","dddddddddddddddddddd"],"current":["aaaaaaaaaaaaaaaaaaaa"],"targets":["/r/.cache/b/d/m/j/bbbbbbbbbbbbbbbbbbbb/node_modules"],"expected":["dddddddddddddddddddd","ffffffffffffffffffff"]},
+    {"id":"ignore-foreign-names","names":["README","tmp","aaaaaaaaaaaaaaaaaaaa","AAAAAAAAAAAAAAAAAAAA","aaaaaaaaaaaaaaaaaaa"],"current":[],"targets":[],"expected":["aaaaaaaaaaaaaaaaaaaa"]},
+    {"id":"windows-target","names":["aaaaaaaaaaaaaaaaaaaa","bbbbbbbbbbbbbbbbbbbb"],"current":[],"targets":["C:\\r\\.cache\\b\\d\\m\\j\\aaaaaaaaaaaaaaaaaaaa\\w\\1"],"expected":["bbbbbbbbbbbbbbbbbbbb"]},
+    {"id":"prefix-substring-not-reference","names":["aaaaaaaaaaaaaaaaaaaa"],"current":[],"targets":["/r/x/jj/aaaaaaaaaaaaaaaaaaaa/w","/r/xj/aaaaaaaaaaaaaaaaaaaa"],"expected":["aaaaaaaaaaaaaaaaaaaa"]},
+    {"id":"empty","names":[],"current":[],"targets":[],"expected":[]}
   ]
 }

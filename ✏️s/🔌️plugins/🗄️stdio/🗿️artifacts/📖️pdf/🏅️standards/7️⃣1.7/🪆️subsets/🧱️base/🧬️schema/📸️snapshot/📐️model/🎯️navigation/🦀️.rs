@@ -83,11 +83,9 @@ fn retire_pdf_action(value: PdfAction) {
 }
 
 impl PdfAction {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn uri(uri: impl Into<String>) -> Self {
         Self { kind: PdfActionKind::Uri { uri: uri.into(), is_map: false }, next: Vec::new() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn go_to(page: u32) -> Self {
         Self { kind: PdfActionKind::GoTo { destination: PdfDestination::Page { page, fit: PdfDestinationFit::Fit } }, next: Vec::new() }
     }
@@ -128,7 +126,6 @@ fn retire_pdf_outline_item(value: PdfOutlineItem) {
 }
 
 impl PdfOutlineItem {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_page(title: impl Into<String>, page: u32) -> Self {
         Self { title: title.into(), destination: Some(PdfDestination::Page { page, fit: PdfDestinationFit::Fit }), action: None, color: None, italic: false, bold: false, open: false, children: Vec::new(), extra: Vec::new() }
     }
@@ -170,7 +167,6 @@ pub struct PdfPageLabelRange {
 }
 
 impl PdfPageLabelRange {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn one() -> u32 {
         1
     }

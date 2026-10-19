@@ -6,7 +6,7 @@ import {runOwnedCommand} from "@semio-tech/framework/process/execution";
 /** 🧭️ Runs the complete Repository ToolRun policy contract under the original caller control. */
 export class ToolRunPolicySourceScript extends BundleScript {
   async run(args:string[]):Promise<void> {
-    if(args.length)throw Error("Expected test-tool-run-policy-source with no arguments");
+    if(args.length)throw new Error("Expected test-tool-run-policy-source with no arguments");
     const source=resolve(import.meta.dir,"../../🧪️tests/🧪️interactivity-tool-run-policy/🟦️.ts");
     const options={signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,"test-tool-run-policy-source","running")};
     await advanceScriptInvocation(this.invocation,"test-tool-run-policy-source","running");

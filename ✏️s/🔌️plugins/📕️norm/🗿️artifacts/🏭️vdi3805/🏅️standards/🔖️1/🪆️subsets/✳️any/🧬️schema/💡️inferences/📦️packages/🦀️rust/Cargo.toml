@@ -23,6 +23,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-vdi3805-checks = { workspace = true }
 semio-s-artifact-norm-vdi3805-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

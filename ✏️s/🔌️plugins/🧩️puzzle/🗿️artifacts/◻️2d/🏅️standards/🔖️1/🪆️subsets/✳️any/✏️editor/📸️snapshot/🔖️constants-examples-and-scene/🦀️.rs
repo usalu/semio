@@ -1,6 +1,7 @@
 //! 🔖️ Constants, examples and scene: the controller and granularity constants, the shipped example json, the scene and interaction snapshot and the selection writes. See [`super`].
 
 use super::*;
+use std::collections::HashSet;
 
 pub const PUZZLE2D_PLAY_CONTROLLER_ID: &str = "puzzle2d-play";
 

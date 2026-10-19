@@ -1,6 +1,7 @@
 //! 🫳️ Canonical JSON octets borrow original ranked source fields and retain caller output on refusal.
-use super::{JsonWriteSource,JsonWriteNode,ScalarText,write_float_to,MAX_DEPTH,ValueError,ValueRefusalKind};
-use semio_framework_value::NativeEncodeControl;
+use semio_framework_pack_json::{JsonWriteSource,JsonWriteNode,MAX_DEPTH};
+use semio_framework_pack_json_float::{ScalarText,write_float_to};
+use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use std::fmt::Write;
 
 struct Sink<'output,F>{pub output:&'output mut F,pub maximum:u64,pub completed:u64,pub maximum_items:u64}

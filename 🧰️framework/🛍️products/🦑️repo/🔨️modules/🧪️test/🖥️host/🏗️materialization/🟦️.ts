@@ -26,8 +26,6 @@ export function rustHostExecutableFromCargo(stdout: string): string | null {
 
 export function hostDirFor(repoRoot: string, discovered: DiscoveredCase, role: TestRole, implementation: Implementation): string {
   const dir = join(testCacheDir(repoRoot, "hosts"), `${discovered.projectName}-${role}-${implementation}`);
-  // 🧾️ A generated host is deletable state, so it carries the same ownership marker as every other
-  // output root — an unmarked directory is never removed by `clean test`.
   markOutputDir(repoRoot, dir, { testId: `${discovered.owner}::${discovered.case}`, cacheKey: `${role}:${implementation}` });
   markRunComplete(dir);
   return dir;
@@ -79,11 +77,6 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
   const sut = rustSubjectPackage(repoRoot, discovered.owner);
   const subjectPackages = sut === null ? [] : subjectHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, "rust").filter((entry) => entry.package !== sut.name);
   const declared = contributedOraclePackages(repoRoot, discovered, "rust");
-  // 🦀️A Cargo dependency is linked by path or it is not linked at all; a crates.io coordinate would
-  // be an unreviewed third-party dependency of the generated host, which is what the local-crate
-  // rule exists to prevent.
-  // 🧩️Two ancestors may contribute the same crate (a plugin root and one of its subsets); Cargo accepts
-  // one key per package, so identical contributions merge and a divergent path is a problem.
   const merged = new Map<string, OracleHostPackage>();
   const problems = declared.filter((entry) => entry.path === undefined).map((entry) => `${discovered.caseDir}: rust oracle host package ${entry.package} declares no path — a Rust host links contributed crates by path`);
   for (const entry of declared.filter((candidate) => candidate.path !== undefined)) {
@@ -109,15 +102,9 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
       'name = "host"',
       'path = "src/main.rs"',
       "",
-      // 🔮️The subject crate is OPTIONAL and reached only through the `sut` feature. §5.3 of the
-      // frozen plan requires the oracle-only test to pass WITHOUT invoking the local implementation,
-      // so the oracle role must not link — or even compile — the subject. An adapter therefore gates
-      // its subject half with `#[cfg(feature = "sut")]`, and this crate turns that feature on for
-      // the subject role only.
       ...(sut === null ? [] : ["[features]", `sut = [${[sut.name, ...subjectPackages.map((entry) => entry.package)].map((name) => JSON.stringify(`dep:${name}`)).join(", ")}]`, ""]),
       "[dependencies]",
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, REPO_TEST_RUST_PACKAGE_REL))} }`,
-      // 🧩️Whatever the owner contributed, exactly as the owner declared it.
       ...oraclePackages.map(
         (entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path!))} }`,
       ),
@@ -256,9 +243,6 @@ export function provisionPythonInterpreter(repoRoot: string, base: string, decla
     return { interpreter: base, problems };
   }
   writeFileSync(join(ownSites[0]!, "semio-base-interpreter.pth"), baseSites.map((site) => `import site; site.addsitedir(${JSON.stringify(site)})\n`).join(""));
-  // 🔎️Importable AND at the declared version. Checking only importability would let a declared pin
-  // be silently satisfied by whatever the machine happened to have, which is the same as not
-  // declaring one.
   const present = (entry: { spec: string; module: string; package: string; version?: string }): boolean => {
     const probe = runProbe(interpreter, ["-c", `import ${entry.module}, importlib.metadata as meta; print(meta.version(${JSON.stringify(entry.package)}))`], { cwd: repoRoot, env: repositoryTestArtifactEnvironmentV1(repoRoot), budgetMs: testLevelBudgetMs("quick") });
     return (probe.status ?? 1) === 0 && (entry.version === undefined || probe.stdout.trim() === entry.version);
@@ -289,8 +273,6 @@ export function materializePythonHost(repoRoot: string, discovered: DiscoveredCa
   const dir = hostDirFor(repoRoot, discovered, role, "python");
   const declared = contributedOraclePackages(repoRoot, discovered, "python");
   const { interpreter, problems } = provisionPythonInterpreter(repoRoot, oracleHostPython(repoRoot), declared);
-  // 🧩️A contributed package that DOES carry a path is in-repo source, reached the way Python reaches
-  // any source tree: on the import path, never installed.
   const localPaths = declared.filter((entry) => entry.path !== undefined).map((entry) => join(repoRoot, entry.path!));
   return {
     command: interpreter,
@@ -335,8 +317,6 @@ export function resolvesFromRepoRoot(repoRoot: string, specifier: string): boole
     createRequire(join(repoRoot, "package.json")).resolve(specifier);
     return true;
   } catch {
-    // 🧭️A package whose manifest declares no resolvable entry point still counts as present; the
-    // adapter may be reaching a subpath export the root resolver alone cannot answer for.
     return existsSync(join(repoRoot, "node_modules", ...specifier.split("/"), "package.json"));
   }
 }

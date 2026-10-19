@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "image": "semio-course-preflight-os:sol-ready-20261019",
+  "imageId": "sha256:8f5852254c08a5941feea6ceb0610dbc5f66063702cfeb7f9a4edb76997e9a9b",
+  "baseImage": "sha256:7bafa7e94d9bdf474fe7dac822dcc027bd938fe0bd08d54a59f0bef5c28e31ea",
+  "imageBytes": 333151468,
+  "containerWritableBytes": 79527936,
+  "containerRootBytes": 939573248,
+  "sourceFiles": 0,
+  "completedAt": "2026-10-19T12:54:00.975Z",
+  "budget": {
+    "inputBytes": 698817248,
+    "temporaryBytes": 2560950176
+  },
+  "actual": {
+    "node": {
+      "version": "24.15.0",
+      "platform": "linux",
+      "architecture": "x64"
+    },
+    "bun": {
+      "version": "1.4.2",
+      "platform": "linux",
+      "architecture": "x64"
+    },
+    "git": "git version 2.39.5",
+    "compose": "Docker Compose version v5.6.0",
+    "tools": {
+      "git": "/usr/bin/git",
+      "make": "/usr/bin/make",
+      "g++": "/usr/bin/g++",
+      "curl": "/usr/bin/curl",
+      "cc": "/usr/bin/cc",
+      "pkg-config": "/usr/bin/pkg-config",
+      "docker": "/usr/bin/docker",
+      "dockerd": "/usr/bin/dockerd",
+      "containerd": "/usr/bin/containerd",
+      "iptables": "/usr/sbin/iptables",
+      "node": "/usr/local/bin/node",
+      "bun": "/usr/local/bin/bun"
+    },
+    "daemonProcesses": []
+  },
+  "packageInputs": [
+    "2026-10-19-builder-os-packages.json",
+    "2026-10-19-builder-os-tools-packages.json",
+    "2026-10-19-builder-os-builder-packages.json"
+  ],
+  "bunSha256": "a83d263767d839e4d2649ca8e35d07159c7afc99afdc96d731ced29e056dda0c"
+}

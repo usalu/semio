@@ -17,7 +17,9 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
 semio-s-fem-algebra = { workspace = true }
 semio-s-fem-sparse = { workspace = true }
 semio-s-fem-sparse-ldlt = { workspace = true }

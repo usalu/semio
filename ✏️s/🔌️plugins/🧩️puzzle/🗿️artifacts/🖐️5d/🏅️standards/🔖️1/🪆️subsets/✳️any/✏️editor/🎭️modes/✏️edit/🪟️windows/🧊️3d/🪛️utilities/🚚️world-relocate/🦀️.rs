@@ -1,4 +1,4 @@
-//! grip that lands within the proximity radius. Bound only by the 3D world window (the flat board has
+//! 🤚️ grip that lands within the proximity radius. Bound only by the 3D world window (the flat board has
 //! 🚚️ 3D-window utility — Relocate: drags one part to a new world origin and auto-fastens it to every
 //! no world origin to drag).
 

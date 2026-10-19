@@ -419,18 +419,18 @@ pub enum SupportType {
 #[value(rename_all = "camelCase")]
 pub struct CharacteristicAction {
     pub id: String,
-    /// permanent | imposed | snow | wind | accidental
+    /// 📌️ permanent | imposed | snow | wind | accidental
     pub kind: String,
-    /// Imposed category A–H when kind=imposed; else empty.
+    /// 🚦️ Imposed category A–H when kind=imposed; else empty.
     pub category: String,
-    /// permanent | long | medium | short | instantaneous (DIN EN 1995-1-1/NA Table NA.1)
+    /// 🏋️ permanent | long | medium | short | instantaneous (DIN EN 1995-1-1/NA Table NA.1)
     pub load_duration: String,
-    /// Line load q_k (N/m) along span — used with support type when analysed forces are zero.
+    /// 🔤️ Line load q_k (N/m) along span — used with support type when analysed forces are zero.
     pub q_line_n_per_m: f64,
-    /// Point load F_k (N) at critical location.
+    /// 🔘️ Point load F_k (N) at critical location.
     #[dsl(unit = "N")]
     pub f_point_n: f64,
-    /// Externally analysed characteristic internals (used when both load intensities are 0).
+    /// 🧷️ Externally analysed characteristic internals (used when both load intensities are 0).
     pub m_k_nm: f64,
     #[dsl(unit = "N")]
     pub v_k_n: f64,
@@ -491,25 +491,25 @@ pub struct TimberMember {
     #[dsl(unit = "m")]
     pub notch_distance_m: f64,
     pub m_crit_nm: f64,
-    /// Linear mass for vibration (kg/m) — joist/girder.
+    /// 🧲️ Linear mass for vibration (kg/m) — joist/girder.
     pub mass_kg_per_m: f64,
-    /// Area mass for floor panels (kg/m²).
+    /// 🔋️ Area mass for floor panels (kg/m²).
     pub mass_kg_per_m2: f64,
-    /// Modal damping ratio ξ (—).
+    /// 💬️ Modal damping ratio ξ (—).
     pub damping_xi: f64,
     #[dsl(unit = "s")]
     pub fire_duration_s: f64,
-    /// EN 1995-2 Annex A — observed cycles per year N_obs.
+    /// 🌉️ EN 1995-2 Annex A — observed cycles per year N_obs.
     pub bridge_n_obs: f64,
-    /// Design working life t_L (years) for fatigue.
+    /// 🔌️ Design working life t_L (years) for fatigue.
     pub bridge_t_l_years: f64,
-    /// Fatigue exponent β (Annex A).
+    /// 🎁️ Fatigue exponent β (Annex A).
     pub bridge_beta: f64,
-    /// Wohler intercept a (Annex A.2).
+    /// 🪞️ Wohler intercept a (Annex A.2).
     pub bridge_a: f64,
-    /// Wohler slope b (Annex A.2).
+    /// 🧥️ Wohler slope b (Annex A.2).
     pub bridge_b: f64,
-    /// Pedestrian crowd density for Annex B (1/m²).
+    /// 📑️ Pedestrian crowd density for Annex B (1/m²).
     pub bridge_crowd_per_m2: f64,
     #[dsl(table)]
     pub actions: Vec<CharacteristicAction>,

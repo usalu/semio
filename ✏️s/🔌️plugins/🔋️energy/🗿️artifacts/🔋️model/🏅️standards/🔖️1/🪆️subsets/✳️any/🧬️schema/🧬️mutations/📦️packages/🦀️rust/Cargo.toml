@@ -49,6 +49,7 @@ semio-s-artifact-energy-model-mut-outdoor-air = { workspace = true }
 semio-s-artifact-energy-model-mut-people-gain = { workspace = true }
 semio-s-artifact-energy-model-mut-plant-loop = { workspace = true }
 semio-s-artifact-energy-model-mut-pv-system = { workspace = true }
+semio-s-artifact-energy-model-mut-pv-system-performance = { workspace = true }
 semio-s-artifact-energy-model-mut-refrigeration = { workspace = true }
 semio-s-artifact-energy-model-mut-room-air = { workspace = true }
 semio-s-artifact-energy-model-mut-run = { workspace = true }
@@ -68,6 +69,7 @@ semio-s-artifact-energy-model-mut-ventilation = { workspace = true }
 semio-s-artifact-energy-model-mut-water-system = { workspace = true }
 semio-s-artifact-energy-model-mut-week-schedule = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer-optics = { workspace = true }
 semio-s-artifact-energy-model-mut-year-schedule = { workspace = true }
 semio-s-artifact-energy-model-mut-zone = { workspace = true }
 semio-s-artifact-energy-model-mut-zone-equipment = { workspace = true }
@@ -77,3 +79,4 @@ semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-engine-model = { path = "../../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+serde_json = { workspace = true }

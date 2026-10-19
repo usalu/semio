@@ -50,7 +50,6 @@ fn solves_macro_then_every_child() {
 
 #[test]
 fn reports_macro_unsatisfiable_without_attempting_children() {
-    // K5 with only 4 colors: unsatisfiable regardless of any child model.
     let mut b = ModelBuilder::new();
     let patterns: Vec<_> = (0..4).map(|_| b.add_pattern(1.0)).collect();
     let ne = b.add_relation("ne");

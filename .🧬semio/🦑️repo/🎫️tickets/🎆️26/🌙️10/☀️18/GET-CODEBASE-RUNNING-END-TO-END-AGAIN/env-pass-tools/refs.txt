@@ -1,0 +1,209 @@
+## 🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🧪️tests/🟦️.ts :: 📥️material/🧪️tests
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🌀️control-plane/🟦️.ts :: 🧪️tests/🌀️control-plane
+    ('🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packag', 's);     process.env.SEMIO_TEST_PATH ??= process.env.PATH;     await this.bun([join(this.root,"../../🧪️tests/🌀️control-plane/🟦️.ts")],')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts :: 🧪️tests/🧊️execution
+    ('🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packag', 'n");       await mkdir(artifacts, { recursive: true });       await this.bun([join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],')
+## ⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts :: 💾️storage/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ow new Error("Expected test bazel-storage-runtime");await (await import("../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime')
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'join(this.root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physica')
+## ⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts :: 📏️capacity/🧪️tests
+## ⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts :: 🧪️tests/🕸️units
+    ('⚡️caching/📜️script.ts', 'oot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts")]:')
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts :: 🧪️tests/📥️phase
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🟦️.ts :: 🏪️store/🧪️tests
+    ('🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/📜️script.ts', 'r {   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixture')
+    ('🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script', 'ead", "🧪️supersede-law"].map((oracle) => join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests", oracle,')
+    ('📦️packages/🟦️typescript/📜️script.ts', '/🔨️modules/🎒️pack/🌱️value/🧪️tests/🚦️refusals/🟦️.ts",         "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔗️backbon')
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts :: 🧪️tests/🏗️native-build
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'ducts/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts"),r')
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical.ts :: 🧪️tests/📐️layout/🍎️physical.ts
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts :: 📏️headroom/🧪️tests
+    ('🏗️build/📥️inputs/💾️storage/📜️script.ts', ',"🧪️tests/📒️ledger.ts"),join(this.root,"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts")],')
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts :: 🕸️graph/🧪️tests
+    ('⚡️caching/📜️script.ts', ':"💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts","graph-bounded":"💾️storage/🔒️enforcement/📦️budget/🕸️graph/🧪️tests/🟦️.ts","b')
+## ⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts :: 🧪️tests/📥️parent
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'oRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"));')
+## ⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts :: 🧪️tests/🎛️operation
+## ⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts :: 🧪️tests/📥️purpose/📜️script.ts
+## ⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts :: 📦️graph/🧪️tests
+## ⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts :: 📦️outputs/🧪️tests
+    ('⚡️caching/📜️script.ts', 'r-environment":"🧪️tests/🌍️caller-environment/🟦️.ts","toolkit-outputs":"💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts","t')
+## ⚡️caching/📥️inference/🧪️tests/🔍️imports/🟦️.ts :: 🧪️tests/🔍️imports
+## ⚡️caching/📦️artifacts/🏗️native-build/📥️published/🧪️tests/🟦️.ts :: 📥️published/🧪️tests
+## ⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts :: 🧪️tests/📥️physical
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physical/🟦️.ts"),"')
+## ⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts :: 🧪️tests/📬️test-body
+## ⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image.ts :: 🔒️bounded/🧪️tests/🍎️image.ts
+    ('⚡️caching/📜️script.ts', 'repository-exact":"../🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts","nx-bounded-image":"📦️artifacts/🔒️bounded/🧪️tests/🍎️image.ts","nx-boun')
+## ⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts :: 🔒️bounded/🧪️tests
+    ('⚡️caching/📜️script.ts', 'repository-exact":"../🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts","nx-bounded-image":"📦️artifacts/🔒️bounded/🧪️tests/🍎️image.t')
+## ⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts :: 🧪️tests/🧭️commands
+    ('📦️packages/🟦️typescript/📜️script.ts', 'await runRepositoryTestCommand(process.execPath, ["test", "../../⚡️caching/📦️artifacts/🟦️typescript/🧪️tests/🧭️commands/🟦️.ts"], ')
+## ⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts :: 🚦️service/🧪️tests
+## ⚡️caching/🕸️graph/🏇️waiter/🧪️tests/🟦️.ts :: 🏇️waiter/🧪️tests
+    ('⚡️caching/📜️script.ts', 'on,this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),phaseControl,join(SCRIPT_ROOT,"🕸️graph/🏇️waiter/🧪️tests/🟦️.ts"));')
+## ⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts :: 📤️publication/🧪️tests
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'nal});return;     }     if(segments[0]==="artifact-publication"){await (await import("./📦️artifacts/📤️publication/🧪️tests/🟦️.ts")).')
+    ('⚡️caching/📜️script.ts', 's","toolkit-retention":"🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts","graph-publication":"🕸️graph/📤️publication/🧪️tests/🟦️.ts","i')
+## ⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts :: 📥️scope/🧪️tests
+## ⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts :: 🔏️seal/🧪️tests
+    ('⚡️caching/📜️script.ts', 'hrow new Error("Expected test graph-seal");await this.runBunTests(["test",join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🧪️tests/🟦️.ts")],')
+## ⚡️caching/🚀️bootstrap/📥️admission/💾️storage/🧪️tests/🟦️.ts :: 💾️storage/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ow new Error("Expected test bazel-storage-runtime");await (await import("../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime')
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'join(this.root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physica')
+## ⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts :: 🧪️tests/👓️reading
+## ⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts :: 💾️storage/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ow new Error("Expected test bazel-storage-runtime");await (await import("../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime')
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'join(this.root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physica')
+## ⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts :: 🧪️tests/📥️native-caller
+    ('📦️packages/🟦️typescript/📜️script.ts', 'ot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts")],')
+## ⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts :: 📤️arguments/🧪️tests
+    ('📦️packages/🟦️typescript/📜️script.ts', '(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-')
+## ⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/🧪️tests/🟦️.ts :: 📥️purpose/🧪️tests
+## ⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts :: 🧪️tests/📬️task-child
+    ('⚡️caching/📜️script.ts', 'tion/🧪️tests/🟦️.ts","import-edges":"🧪️tests/🔗️import-edges","task-child":"🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-child/🟦️.ts","t')
+## ⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts :: 📥️use/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ublication/🧪️tests/🟦️.ts","import-edges":"🧪️tests/🔗️import-edges","task-child":"🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📬️task-ch')
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts :: 📤️derivative/⚠️failure
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts :: 🧪️tests/📤️derivative
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts :: 🎟️capacity/🧪️tests
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },       "compiler-capacity": { source: "🏗️build/🎟️capacity/🧪️tests/🟦️.ts", b')
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts :: 📥️snapshot/🧪️tests
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts :: 📤️copy/🧪️tests
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️.ts :: 🔗️derivative/🧪️tests/🛂️.ts
+## ⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts :: 🔗️derivative/🧪️tests
+## ⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts :: 🛠️tools/🧪️tests
+## ⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts :: 📏️headroom/🧪️tests
+    ('🏗️build/📥️inputs/💾️storage/📜️script.ts', ',"🧪️tests/📒️ledger.ts"),join(this.root,"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts")],')
+## ⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts :: 📥️physical/🧪️tests
+## ⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts :: 📦️generation/🧪️tests
+## ⚡️caching/🦀️cargo/📦️units/📋️plan/🧪️tests/🔗️binding/🟦️.ts :: 🧪️tests/🔗️binding
+## ⚡️caching/🦀️cargo/📦️units/📋️plan/🧪️tests/🟦️.ts :: 📋️plan/🧪️tests
+## ⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts :: 📦️units/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ounded/🧪️tests/🍎️image.ts","nx-bounded":"📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts","rust-units":"🦀️cargo/📦️units/🧪️tests/🟦️.ts","c')
+## ⚡️caching/🧪️tests/🌍️caller-environment/🟦️.ts :: 🧪️tests/🌍️caller-environment
+    ('⚡️caching/📜️script.ts', 'tifacts/🔒️bounded/🧪️tests/🟦️.ts","rust-units":"🦀️cargo/📦️units/🧪️tests/🟦️.ts","caller-environment":"🧪️tests/🌍️caller-environment/🟦️.ts","t')
+## ⚡️caching/🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts :: 🎮️playground-preparation/🧪️tests
+    ('⚡️caching/📜️script.ts', 'rror("Expected test playground-preparation-source");       const source=join(SCRIPT_ROOT,"🧪️tests/🎮️playground-preparation/🧪️tests/🟦️.ts"),b')
+## ⚡️caching/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts :: 📦️native-dependencies/🧪️tests
+## ⚡️caching/🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts :: 🏛️graph/🔑️authority
+    ('⚡️caching/📜️script.ts', 'ests/🔗️import-edges/📁️paths/🟦️.ts","🧪️tests/🔗️import-edges/🔁️context/🟦️.ts","🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts"].m')
+## ⚡️caching/🧪️tests/🔗️import-edges/📁️paths/🟦️.ts :: 🔗️import-edges/📁️paths
+    ('⚡️caching/📜️script.ts', 'dV1(process.execPath,["test",...(selected==="import-edges"?["🧪️tests/🔗️import-edges/🟦️.ts","🧪️tests/🔗️import-edges/📁️paths/🟦️.ts","🧪')
+## ⚡️caching/🧪️tests/🔗️import-edges/🔁️context/🟦️.ts :: 🔗️import-edges/🔁️context
+    ('⚡️caching/📜️script.ts', 'ed==="import-edges"?["🧪️tests/🔗️import-edges/🟦️.ts","🧪️tests/🔗️import-edges/📁️paths/🟦️.ts","🧪️tests/🔗️import-edges/🔁️context/🟦️.ts","🧪')
+## ⚡️caching/🧪️tests/🗃️compiler-state/🟦️.ts :: 🧪️tests/🗃️compiler-state
+## ⚡️caching/🧹️pruning/⏱️continuation/🧪️tests/🟦️.ts :: ⏱️continuation/🧪️tests
+    ('⚡️caching/📜️script.ts', '      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,phaseControl,join(owner,"⏱️continuation/🧪️tests/🟦️.ts"));')
+## ⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts :: 📜️history/🧪️tests
+## ⚡️caching/🧹️pruning/🔒️incremental/🧪️tests/🟦️.ts :: 🔒️incremental/🧪️tests
+    ('⚡️caching/📜️script.ts', '      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,phaseControl,join(owner,"🔒️incremental/🧪️tests/🟦️.ts"));')
+## ⚡️caching/🧹️pruning/🔒️store/🧪️tests/🟦️.ts :: 🔒️store/🧪️tests
+    ('⚡️caching/📜️script.ts', '      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,phaseControl,join(owner,"🔒️store/🧪️tests/🟦️.ts"));')
+## ⚡️caching/🧹️pruning/🧪️tests/⏱️recency/🟦️.ts :: 🧪️tests/⏱️recency
+## 🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts :: 🧪️tests/📥️original-control
+    ('📦️packages/🟦️typescript/📜️script.ts', 'tion/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "')
+    ('🗂️workspaces/🦀️cargo/📜️script.ts', 'cepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"🧪️tests/📥️original-control/🟦️.ts"),j')
+## 🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts :: 🎛️owned-execution/🧪️tests
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 't/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },       "owned-execution": { source: "🎛️owned-execution/🧪️tests/🟦️.ts", b')
+    ('📦️packages/🟦️typescript/📜️script.ts', '📥️capture/📥️invocation/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts", "')
+## 🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts :: 🎯️exact/🧪️tests/🍎️image.ts
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'solve(this.root,"🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"),resolve(this.root,"🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts"));     i')
+    ('⚡️caching/📜️script.ts', 'rage":"../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/🟦️.ts","repository-exact":"../🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts","nx-boun')
+## 🏃️process/🦀️cargo/🏭️inventory/🧪️tests/🟦️.ts :: 🏭️inventory/🧪️tests
+    ('📦️packages/🟦️typescript/📜️script.ts', 'modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🟦️.ts",         "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🟦️.ts",  ')
+## 🏃️process/🦀️cargo/📥️dependencies/🧪️tests/📥️consumption/🟦️.ts :: 🧪️tests/📥️consumption
+## 🏃️process/🦀️cargo/📥️dependencies/🧪️tests/🟦️.ts :: 📥️dependencies/🧪️tests
+## 🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts :: 🚪️launcher/🧪️tests
+    ('⚡️caching/📜️script.ts', '"💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🧪️tests/🟦️.ts","cargo-launcher":"../🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts","r')
+## 🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🟦️.ts :: 📦️executable/🧪️tests
+## 🏗️build/🏃️execution/🧪️tests/🟦️.ts :: 🏃️execution/🧪️tests
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', '.root,"🧪️testing/🦀️cargo/🎯️exact/🛠️preparation/🧪️tests/🟦️.ts"),resolve(this.root,"🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"),r')
+    ('🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packag', 'onPolicy(process.env);await runOwnedCommand(process.execPath,["test",resolve(import.meta.dir,"../../🏃️execution/🧪️tests/🟦️.ts")],')
+    ('⚡️caching/📜️script.ts', 'pository-exact"?[join(SCRIPT_ROOT,inferenceTests[selected]!),join(SCRIPT_ROOT,"../🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts")]:')
+## 🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts :: 🧪️tests/⚡️incremental
+    ('📦️packages/🟦️typescript/📜️script.ts', 'pendencies/🟦️typescript/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts"].m')
+## 🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts :: 🧪️tests/📦️projects
+    ('⚡️caching/📜️script.ts', 'oolkit-use":"🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts","project-admission":"../🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts","i')
+## 🏗️build/📊️reporting/🧪️tests/🟦️.ts :: 📊️reporting/🧪️tests
+## 🏗️build/📖️storybook/💾️storage/🧪️tests/🟦️.ts :: 💾️storage/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ow new Error("Expected test bazel-storage-runtime");await (await import("../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime')
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'join(this.root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physica')
+## 🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts :: 🧪️tests/📥️birth
+## 🏗️build/📥️inputs/🎯️selected/📦️snapshot/🧪️tests/🟦️.ts :: 📦️snapshot/🧪️tests
+## 🏗️build/📥️inputs/🎯️selected/🧪️tests/🟦️.ts :: 🎯️selected/🧪️tests
+## 🏗️build/📥️inputs/💾️storage/🧪️tests/🎛️phase/🟦️.ts :: 🧪️tests/🎛️phase
+## 🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger.ts :: 💾️storage/🧪️tests/📒️ledger.ts
+## 🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts :: 💾️storage/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ow new Error("Expected test bazel-storage-runtime");await (await import("../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime')
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'join(this.root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physica')
+## 🏗️build/📥️inputs/📂️membership/🧪️tests/🟦️.ts :: 📂️membership/🧪️tests
+## 🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts :: 🏗️bazel/🧪️tests
+    ('🏗️build/📜️script.ts', '️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";  import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/')
+## 🏗️build/🚀️bootstrap/📦️parsers/🧪️tests/🟦️.ts :: 📦️parsers/🧪️tests
+## 🏗️build/🧪️tests/🎟️phase/🟦️.ts :: 🧪️tests/🎟️phase
+## 🏗️build/🧪️tests/🏗️native/🟦️.ts :: 🧪️tests/🏗️native
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'aged/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },       "cargo-profile-policy": {source:"🏗️build/🧪️tests/🏗️native/🟦️.ts",bu')
+    ('📦️packages/🟦️typescript/📜️script.ts', 's.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts")],')
+## 🏗️build/🧪️tests/🕸️graph/🔄️candidate/🟦️.ts :: 🕸️graph/🔄️candidate
+## 🏗️build/🧪️tests/🕸️graph/🟦️.ts :: 🧪️tests/🕸️graph
+    ('🏗️build/📜️script.ts', 'mand(process.execPath, ["test", resolve(import.meta.dir, "🧪️tests/🟦️.ts"), resolve(import.meta.dir,"🧪️tests/🕸️graph/🟦️.ts"),r')
+## 🏗️build/🧪️tests/🟦️.ts :: 🏗️build/🧪️tests
+    ('✏️s/🧑\u200d💻dev/📜️script.ts', 'ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts"),r')
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'tests/❄️cold/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },       "managed-build-mode": { source: "🏗️build/🧪️tests/🏗️managed')
+    ('📦️packages/🟦️typescript/📜️script.ts', 'd(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/')
+## 🏗️build/🧭️invocation/🧪️tests/🟦️.ts :: 🧭️invocation/🧪️tests
+## 🏗️build/🧭️selection/📥️closure/🧪️tests/🟦️.ts :: 📥️closure/🧪️tests
+## 🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts :: 📤️schema-registry/🧪️tests
+## 🔍️discovery/🕸️runtime/🟦️.ts :: 🔍️discovery/🕸️runtime
+    ('⚡️caching/📜️script.ts', '"){if(args.length!==1)throw new Error("Expected one verifier storage proof");await(await import("../🔍️discovery/🕸️runtime/🔎️verific')
+    ('🏗️build/📜️script.ts', 't/🟦️.ts");       const source = args[0] === "runtime-build-producer" ? resolve(import.meta.dir, "../🔍️discovery/🕸️runtime/🧪️tests/🏗')
+    ('📦️packages/🟦️typescript/📜️script.ts', 'd(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬')
+## 🔍️discovery/🕸️runtime/🧪️tests/🏗️build-producer/🟦️.ts :: 🧪️tests/🏗️build-producer
+    ('🏗️build/📜️script.ts', ' source = args[0] === "runtime-build-producer" ? resolve(import.meta.dir, "../🔍️discovery/🕸️runtime/🧪️tests/🏗️build-producer/🟦️.ts") :')
+## 🕸️dependencies/🟦️typescript/⚙️configured/🧪️tests/🟦️.ts :: ⚙️configured/🧪️tests
+## 🕸️dependencies/🟦️typescript/🧪️tests/🟦️.ts :: 🟦️typescript/🧪️tests
+    ('✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typ', 'iter",{suites:["🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/')
+    ('✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️ty', ' runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gisterrain",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/')
+    ('✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typesc', 't runArtifactTypeScriptPackageMain(import.meta.dir,"@semio-tech/gis-gismap-js",{suites:["📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/')
+## 🗂️workspaces/🦀️cargo/🏃️command/🧪️tests/🟦️.ts :: 🏃️command/🧪️tests
+## 🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts :: 🔁️replan/🧪️tests
+## 🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts :: 🧪️tests/📥️original-control
+    ('📦️packages/🟦️typescript/📜️script.ts', 'tion/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "')
+    ('🗂️workspaces/🦀️cargo/📜️script.ts', 'cepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"🧪️tests/📥️original-control/🟦️.ts"),j')
+## 🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts :: 🧪️tests/🏎️nextest-configuration
+    ('📦️packages/🟦️typescript/📜️script.ts', ' source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts"); ')
+## 🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts :: 🧪️tests/📥️original-control
+    ('📦️packages/🟦️typescript/📜️script.ts', 'tion/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "')
+    ('🗂️workspaces/🦀️cargo/📜️script.ts', 'cepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"🧪️tests/📥️original-control/🟦️.ts"),j')
+## 🗂️workspaces/🦀️cargo/🧪️tests/🕰️queued-preparation/🟦️.ts :: 🧪️tests/🕰️queued-preparation
+    ('🗂️workspaces/🦀️cargo/📜️script.ts', 'o overrides");     await runRepositoryCommand(this.invocation,"bun",["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")],')
+## 🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts :: 🦀️cargo/🧪️tests
+    ('🧰️framework/🔨️modules/🏃️process/📜️script.ts', 'se/🧪️tests/🟦️.ts",budgetMs:TEST_LEVEL_BUDGET_MS.quick},       "cargo-profile": { source: "🧪️testing/🦀️cargo/🧪️tests/🟦️.ts", b')
+    ('📦️packages/🟦️typescript/📜️script.ts', 'd-execution/🧪️tests/📤️stream/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️prepara')
+## 🧪️tests/⚡️production-cache-input-boundary/🟦️.ts :: 🧪️tests/⚡️production-cache-input-boundary
+    ('⚡️caching/📜️script.ts', 'est native-input-vocabulary");       await this.runBunTests(["test",join(SCRIPT_ROOT,"../🧪️tests/⚡️production-cache-input-boundary/🟦️.ts")],')
+    ('📦️packages/🟦️typescript/📜️script.ts', '🧪️tests/🚷️discovery-boundaries/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts","🧰')
+## 🧪️tests/⚡️workspace-negation-closure/🟦️.ts :: 🧪️tests/⚡️workspace-negation-closure
+## 🧪️tests/🔄️transaction-v2/🟦️.ts :: 🧪️tests/🔄️transaction-v2
+## 🧪️tests/🔧️build-surfaces/🟦️.ts :: 🧪️tests/🔧️build-surfaces
+    ('📦️packages/🟦️typescript/📜️script.ts', 'd(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts")],')
+## 🧪️tests/🧱️locale-law-ownership/🟦️.ts :: 🧪️tests/🧱️locale-law-ownership
+    ('📦️packages/🟦️typescript/📜️script.ts', 'd(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️locale-law-ownership/🟦️.ts")],')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎟️admission/🧪️tests/🟦️.ts :: 🎟️admission/🧪️tests
+    ('🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script', ' === "input-admission") {         const { testInputAdmissionFixture } = await import("../../📥️input/🎟️admission/🧪️tests/🔬️input-a')
+    ('🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️', 'retained-command/🧪️tests/♻️raw-allocation-close/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🎟️admission/🧪️tests/🟦️.ts"),r')
+    ('⚡️caching/📜️script.ts', 'ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/🟦️.ts")]:')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts :: 🧪️tests/🔌️nx
+    ('🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinat', 'ution]");await runBudgetedTestCommand(process.execPath,["test",join(this.root,args[0]==="nx-cache"?"🧪️tests/🔌️nx/🟦️.ts":ar')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🟦️.ts :: 💾️storage/🧪️tests
+    ('⚡️caching/📜️script.ts', 'ow new Error("Expected test bazel-storage-runtime");await (await import("../🏗️build/🔧️tools/🏗️bazel/💾️storage/🧪️tests/📥️runtime')
+    ('⚡️caching/📦️artifacts/👓️reading/📜️script.ts', 'join(this.root,"🧪️tests/🟦️.ts"),join(this.root,"🧪️tests/🔒️scope/🟦️.ts")],["test",join(this.root,"../💾️storage/🧪️tests/📥️physica')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts :: 🔌️nx/🧪️tests
+    ('🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinat', 'ed test [nx]");await runBudgetedTestCommand(process.execPath,["test",join(this.root,args[0]==="nx"?"🔌️nx/🧪️tests/🟦️.ts":"🧪')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts :: 📥️inputs/🧪️tests
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/⚖️comparison-profiles/🟦️.ts :: 🧪️tests/⚖️comparison-profiles
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔮️oracle-governance/🟦️.ts :: 🧪️tests/🔮️oracle-governance
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts :: 🧪️tests/🚷️discovery-boundaries
+    ('📦️packages/🟦️typescript/📜️script.ts', '️modules/🧪️test/🧪️tests/🧭️fixture-resolution/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts","🧰')
+## 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧾️artifact-root-source/🟦️.ts :: 🧪️tests/🧾️artifact-root-source

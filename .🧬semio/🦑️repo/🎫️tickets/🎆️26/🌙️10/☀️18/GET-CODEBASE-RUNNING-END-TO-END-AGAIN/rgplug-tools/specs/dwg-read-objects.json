@@ -1,0 +1,43 @@
+{
+ "ws": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.toml",
+ "old_name": "semio-s-artifact-stdio-dwg-read-objects",
+ "old_pkg": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/📦️packages/🦀️rust",
+ "parent_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/🦀️.rs",
+ "chain": [
+  "standards",
+  "v_ac1024",
+  "subsets",
+  "any",
+  "io",
+  "import",
+  "objects"
+ ],
+ "chain_full": [
+  "standards",
+  "v_ac1024",
+  "subsets",
+  "any",
+  "io",
+  "import",
+  "objects"
+ ],
+ "modules": [
+  "blocks",
+  "associativity"
+ ],
+ "new": {
+  "name": "semio-s-artifact-stdio-dwg-read-objects-dynamic-blocks",
+  "dir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/🎛️dynamic-blocks",
+  "emoji": "🎛️",
+  "doc": "`stdio.dwg` reader objects: the dynamic-block and associative-constraint object decoders.",
+  "desc": "Stdio dwg reader: dynamic-block and associativity object decoders",
+  "extern": [
+   "extern crate semio_framework_os_kernel as store;"
+  ]
+ },
+ "subtree": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "rewrite_prefixes": [
+  "crate::standards::v_ac1024::subsets::any::io::import::objects"
+ ],
+ "script": null
+}

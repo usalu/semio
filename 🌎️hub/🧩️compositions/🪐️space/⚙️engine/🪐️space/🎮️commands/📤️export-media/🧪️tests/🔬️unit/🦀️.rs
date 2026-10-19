@@ -39,14 +39,6 @@ async fn export_media_emits_download_effect_and_import_requests_file_open() {
     semio_framework_os::workflow::register_os_media_export_handler_kind("2d.drawing", DWG_FORMAT_ID, |_doc| {
         Ok(semio_framework_os::OsMediaExportResult { data: base64_codec::base64_standard_encode(b"space-home-io-test"), mime_type: "image/vnd.dwg".into(), file_name: "draw.dwg".into(), encoding: Some("base64".into()) })
     });
-    // 🚪️ Ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave IO1:
-    // `register_dwg_import_handler` is deleted (see host `🦀️.rs`'s `media_export_raster`
-    // module) -- it was a thin, always-`"dwg"` wrapper over `register_os_media_import_handler_kind`
-    // (which stays; it is a domain-neutral format-agnostic primitive, not one of this wave's five
-    // targeted functions). This test's `"2d.drawing"` kind is a synthetic test-only stand-in for
-    // the real `🖍️draw` artifact (never a registered `ArtifactKindSpec`), so it has no real
-    // `ComposerEntry` to migrate to -- inlined here rather than deleted, since the test below
-    // exercises `SpaceCommand::ImportMedia`'s effect-producing behaviour, not the DWG bridge itself.
     semio_framework_os::workflow::register_os_media_import_handler_kind("2d.drawing", DWG_FORMAT_ID, |bytes| {
         if bytes != b"space-home-io-test" {
             return Err("unexpected neutral carrier bytes".into());

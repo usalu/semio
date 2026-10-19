@@ -79,9 +79,6 @@ fn execute_with_where_filters_the_projected_bindings() {
 #[test]
 fn execute_with_property_item_keeps_its_source_var_resolvable() {
     block_on_test(async {
-        // 🔭️ `ReturnItem` carries no alias, so `WITH a.name` keeps the whole `a` entity in
-        // scope (there is no other way for a later `a.name` to still resolve) — see
-        // `project_binding`'s doc comment for the reasoning.
         let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation) WITH a.name RETURN a.name").unwrap();
         assert_eq!(result.rows, vec![vec![PropertyValue::String("A".to_string())]]);
@@ -100,9 +97,6 @@ fn execute_unwind_over_a_property_expression_producing_a_list() {
 #[test]
 fn execute_unwind_over_an_already_bound_list_value() {
     block_on_test(async {
-        // 🌀️ Chained UNWIND: the outer unwind's per-row `row` binding lives in `values` (not
-        // a graph property), so the inner `UNWIND row AS cell` exercises the `Var`-sourced
-        // (rather than `Property`-sourced) list-expression path.
         let graph = BoardQueryableGraph::from_host_snapshot_json(list_property_fixture(), None).unwrap();
         let result = run_query(&graph, "MATCH (a:computation) UNWIND a.matrix AS row UNWIND row AS cell RETURN cell").unwrap();
         assert_eq!(result.rows, vec![vec![PropertyValue::Number(1.0)], vec![PropertyValue::Number(2.0)], vec![PropertyValue::Number(3.0)], vec![PropertyValue::Number(4.0)]]);

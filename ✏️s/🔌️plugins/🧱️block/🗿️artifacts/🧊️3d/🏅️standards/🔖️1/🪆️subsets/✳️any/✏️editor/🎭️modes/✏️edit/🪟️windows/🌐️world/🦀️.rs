@@ -70,14 +70,7 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
     let mut scene = World3dScene::base(world_camera_json(definition, config), world_meshes_json(definition, &visible), world_instances_json(definition, &visible, &view), world_selection_json(config));
     scene.vortices_json = Some(world_vortices_json(definition, config, &visible, &view, brush_preview));
     scene.interaction_json = Some(world_interaction_json(active_utility));
-    // 🎯️ Frame the document once per document IDENTITY (`block3d_world_fit_revision`): the authored
-    // `camera3d` alone leaves a representation mesh that reaches away from the rim ring outside the
-    // frustum — the curated concrete-forest example showed vortex markers and no geometry at all.
     scene.fit_json = Some(world3d_fit_json(semio_s_artifact_block_3d_model::block3d_world_fit_revision(definition), semio_s_artifact_block_3d_model::BLOCK3D_FIT_PADDING, None));
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired to `BLOCK3D_INTERACTION_VORTEX`
-    // here — this shared scene builder's granularity vocabulary for a plain whole-object pick vs.
-    // this app's own vortex/grip picking is not yet verified; left unbound (OS `world` domain
-    // fallback) pending that check, flagged as outstanding.
     scene.domain_id = None;
     semio_framework_plugin::scene_surface(BLOCK3D_PLAY_SURFACE_ID, ContractSurfaceKind::World3d, &scene)
 }

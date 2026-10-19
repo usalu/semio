@@ -22,7 +22,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/🪃️continuation/**/*"
       ],
       "outputs": [
-        "{projectRoot}/dist"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript",

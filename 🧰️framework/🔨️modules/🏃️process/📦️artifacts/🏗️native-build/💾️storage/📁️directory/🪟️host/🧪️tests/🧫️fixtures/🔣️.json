@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "windowsPaths": [
+    {
+      "id": "drive",
+      "path": "C:\\semio\\cache\\b\\o\\m",
+      "extended": "\\\\?\\C:\\semio\\cache\\b\\o\\m"
+    },
+    {
+      "id": "drive-lowercase",
+      "path": "d:\\x",
+      "extended": "\\\\?\\d:\\x"
+    },
+    {
+      "id": "drive-root",
+      "path": "C:\\",
+      "extended": "\\\\?\\C:\\"
+    },
+    {
+      "id": "unc",
+      "path": "\\\\server\\share\\a\\b",
+      "extended": "\\\\?\\UNC\\server\\share\\a\\b"
+    },
+    {
+      "id": "already-extended",
+      "path": "\\\\?\\C:\\a\\b",
+      "extended": "\\\\?\\C:\\a\\b"
+    },
+    {
+      "id": "unicode",
+      "path": "C:\\ünï\\コード",
+      "extended": "\\\\?\\C:\\ünï\\コード"
+    }
+  ],
+  "windowsRefusedPaths": [
+    "relative\\a",
+    "C:relative",
+    "C:\\a\\..\\b",
+    "C:\\a\\.\\b",
+    "C:/a/b",
+    "C:\\a\\b\\\\c",
+    "C:\\a<b",
+    "\\\\?\\relative",
+    "\\\\?\\C:\\a\\..\\b",
+    "",
+    "C:\\a\u0000b"
+  ],
+  "caseStatuses": [
+    {
+      "id": "ok",
+      "status": 0,
+      "refusal": null
+    },
+    {
+      "id": "directory-not-empty",
+      "status": 3221225729,
+      "refusal": "caseNotEmpty"
+    },
+    {
+      "id": "not-supported-needs-feature",
+      "status": 3221225659,
+      "refusal": "caseFeature"
+    },
+    {
+      "id": "invalid-info-class",
+      "status": 3221225475,
+      "refusal": "caseBuild"
+    },
+    {
+      "id": "invalid-parameter",
+      "status": 3221225485,
+      "refusal": "caseBuild"
+    },
+    {
+      "id": "access-denied",
+      "status": 3221225506,
+      "refusal": "caseAccess"
+    },
+    {
+      "id": "unknown",
+      "status": 3221225486,
+      "refusal": "generic"
+    }
+  ],
+  "registry": [
+    {
+      "id": "enabled",
+      "status": 0,
+      "size": 4,
+      "data": 1,
+      "result": true
+    },
+    {
+      "id": "disabled",
+      "status": 0,
+      "size": 4,
+      "data": 0,
+      "result": false
+    },
+    {
+      "id": "absent",
+      "status": 2,
+      "size": 4,
+      "data": 0,
+      "result": false
+    },
+    {
+      "id": "failure",
+      "status": 5,
+      "size": 4,
+      "data": 0,
+      "result": "refuse"
+    },
+    {
+      "id": "short",
+      "status": 0,
+      "size": 2,
+      "data": 1,
+      "result": "refuse"
+    }
+  ]
+}

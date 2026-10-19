@@ -1,4 +1,4 @@
-//! Diff for `change-beam-stud-count`.
+//! 🔺️ Diff for `change-beam-stud-count`.
 use crate::change_beam_stud_count::ChangeBeamStudCount;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch};

@@ -1,0 +1,183 @@
+{
+ "cycles": [
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/⌨️keybindings/🟦️.ts",
+   "before": "../../../🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "after": "@semio-tech/framework/ui/targets/react"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+   "before": "../../../🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "after": "@semio-tech/framework/ui/targets/react"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
+   "before": "../📡️replication/🧾️wire/🪪️scoped-identity/🟦️.ts",
+   "after": "@semio-tech/framework-replication"
+  }
+ ],
+ "uiBoundary": [
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/⌨️keybindings/🟦️.ts",
+   "before": "../../../🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "after": "@semio-tech/framework/ui/targets/react",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/⌨️keybindings/🟦️.ts",
+   "before": "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx",
+   "after": "@semio-tech/framework/modules/ui/modules/control-keybinding-context",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+   "before": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+   "before": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+   "before": "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx",
+   "after": "@semio-tech/framework/modules/ui/modules/control-keybinding-context",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎞️tutorial-engine/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎬️introduction-demo/🟦️.tsx",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+   "before": "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+   "before": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📐️introduction-geometry/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🐳️dock-skeleton/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts",
+   "after": "@semio-tech/framework/modules/ui/modules/keybinding-text-interpretation",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx",
+   "after": "@semio-tech/framework/modules/ui/modules/control-keybinding-context",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🆔️element-identity/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🧱️elements/🔌️Ports/🟦️",
+   "after": "@semio-tech/framework/modules/ui/elements/Ports/interactive-jobs",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../🧱️elements/🖱️ContextMenu/🎨️item-render/🟦️.tsx",
+   "after": "@semio-tech/framework/modules/ui/elements/ContextMenu/item-render",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+   "before": "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔑️chrome-prefs/🟦️.ts",
+   "before": "../../../🔨️modules/🗄️storage-port/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+   "before": "../../../🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "after": "@semio-tech/framework/ui/targets/react",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+   "before": "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx",
+   "after": "@semio-tech/framework/modules/ui/modules/control-keybinding-context",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+   "before": "../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx",
+   "after": "@semio-tech/framework/modules/ui/modules/control-keybinding-context",
+   "reason": "rule:ui-no-framework-packages"
+  },
+  {
+   "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧭️introduction-resolve/🟦️.ts",
+   "before": "../../../../🎓️onboarding/🏷️declaration/🟦️.ts",
+   "after": "@semio-tech/framework",
+   "reason": "rule:ui-no-framework-packages"
+  }
+ ]
+}

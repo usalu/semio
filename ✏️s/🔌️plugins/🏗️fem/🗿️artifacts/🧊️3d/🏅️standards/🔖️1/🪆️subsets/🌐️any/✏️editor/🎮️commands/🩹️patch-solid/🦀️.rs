@@ -1,7 +1,7 @@
-//! `layers`, `meshSize`, `materialId`, `axis`) → `ChangeSolid`.
+//! 🎮️ `layers`, `meshSize`, `materialId`, `axis`) → `ChangeSolid`.
 //! 🩹️ Fem3d play app command — `patch-solid`: one-field edit of a solid (`name`, `baseZ`, `height`,
 
-use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid;
+use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dSolidPatch;
 use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;

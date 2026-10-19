@@ -640,18 +640,18 @@ impl RowPatch<FemSupport> for Fem2dSupportPatch {
         self.ty = later.ty.or_else(|| self.ty.take());
         self.rz = later.rz.or_else(|| self.rz.take());
     }
-    fn inverse(&self, row: &FemSupport) -> Self { Self { node_id: self.node_id.as_ref().map(|_| row.node_id.clone()), fixed: self.fixed.as_ref().map(|_| row.fixed.clone()), tx: self.tx.map(|_| row.fixed.contains(&crate::FemDof::Tx)), ty: self.ty.map(|_| row.fixed.contains(&crate::FemDof::Ty)), rz: self.rz.map(|_| row.fixed.contains(&crate::FemDof::Rz)) } }
+    fn inverse(&self, row: &FemSupport) -> Self { Self { node_id: self.node_id.as_ref().map(|_| row.node_id.clone()), fixed: self.fixed.as_ref().map(|_| row.fixed.clone()), tx: self.tx.map(|_| row.fixed.contains(&crate::standards::v1::subsets::any::schema::structure::FemDof::Tx)), ty: self.ty.map(|_| row.fixed.contains(&crate::standards::v1::subsets::any::schema::structure::FemDof::Ty)), rz: self.rz.map(|_| row.fixed.contains(&crate::standards::v1::subsets::any::schema::structure::FemDof::Rz)) } }
     fn is_empty(&self) -> bool { self.node_id.is_none() && self.fixed.is_none() && self.tx.is_none() && self.ty.is_none() && self.rz.is_none() }
 }
 impl Fem2dSupportPatch {
     /// 🛂️ Whole sets and membership setters are disjoint authored modes.
-    pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| crate::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.rz.is_none()) }
+    pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| crate::standards::v1::subsets::any::schema::structure::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.rz.is_none()) }
     fn memberships(&self, base: &[crate::standards::v1::subsets::any::schema::structure::FemDof]) -> Vec<crate::standards::v1::subsets::any::schema::structure::FemDof> {
         let mut fixed = self.fixed.as_deref().unwrap_or(base).to_vec();
-        if let Some(value) = self.tx { fixed.retain(|entry| *entry != crate::FemDof::Tx); if value { fixed.push(crate::FemDof::Tx); } }
-        if let Some(value) = self.ty { fixed.retain(|entry| *entry != crate::FemDof::Ty); if value { fixed.push(crate::FemDof::Ty); } }
-        if let Some(value) = self.rz { fixed.retain(|entry| *entry != crate::FemDof::Rz); if value { fixed.push(crate::FemDof::Rz); } }
-        crate::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
+        if let Some(value) = self.tx { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Tx); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Tx); } }
+        if let Some(value) = self.ty { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Ty); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Ty); } }
+        if let Some(value) = self.rz { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Rz); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Rz); } }
+        crate::standards::v1::subsets::any::schema::structure::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
     }
     /// 🔁️ A replacement authors the node and whole restraint set.
     pub fn replacement(row: &FemSupport) -> Self { Self { node_id: Some(row.node_id.clone()), fixed: Some(row.fixed.clone()), ..Default::default() } }

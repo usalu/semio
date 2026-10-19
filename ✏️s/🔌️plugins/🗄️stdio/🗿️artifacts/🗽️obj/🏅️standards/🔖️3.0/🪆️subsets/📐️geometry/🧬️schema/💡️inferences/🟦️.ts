@@ -9,7 +9,7 @@ export interface ObjBounds {
 }
 
 export interface ObjInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: ObjBounds;
 }
 

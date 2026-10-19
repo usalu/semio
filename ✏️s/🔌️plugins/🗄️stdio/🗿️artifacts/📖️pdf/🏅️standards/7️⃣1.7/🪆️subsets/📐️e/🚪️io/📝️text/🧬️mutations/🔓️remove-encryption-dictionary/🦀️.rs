@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-encryption-dictionary`.
+//! 🆔️ Direct text identity for `remove-encryption-dictionary`.
 
 pub const OPCODE: &str = "remove-encryption-dictionary";
 pub const TEXT_OPCODE: &str = OPCODE;

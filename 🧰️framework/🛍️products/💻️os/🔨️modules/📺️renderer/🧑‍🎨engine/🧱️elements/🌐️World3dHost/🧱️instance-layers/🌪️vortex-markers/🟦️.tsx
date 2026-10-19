@@ -119,8 +119,6 @@ export function WorldVortexMarkers({
             onHover(null);
           },
           onPointerDown: (event: { stopPropagation: () => void; button?: number; clientX: number; clientY: number; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-            // 🖱️ Ignore right/middle — otherwise opening a context/suggestion menu arms connect-drag
-            // and the portaled menu click never delivers host pointer-up to cancel it.
             if (event.button != null && event.button !== 0) return;
             event.stopPropagation();
             if (resolveVortexPointerDownIntent(brushMode, selectionMode) === "select") {

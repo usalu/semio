@@ -35,15 +35,12 @@ impl Default for WavArtifact {
 }
 
 impl WavArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> WavSnapshot {
         WavSnapshot { schema: self.schema.clone(), fmt: self.fmt.clone(), data: self.data.clone(), fmt_pad_byte: self.fmt_pad_byte, data_pad_byte: self.data_pad_byte, other_chunks: self.other_chunks.clone(), chunk_order: self.chunk_order.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: WavSnapshot) -> Self {
         Self { schema: snapshot.schema, fmt: snapshot.fmt, data: snapshot.data, fmt_pad_byte: snapshot.fmt_pad_byte, data_pad_byte: snapshot.data_pad_byte, other_chunks: snapshot.other_chunks, chunk_order: snapshot.chunk_order }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: WavSnapshot) {
         self.schema = snapshot.schema;
         self.fmt = snapshot.fmt;

@@ -1,4 +1,4 @@
-//! every `FemSolid` footprint into `Tet4` elements — extruded along the solid's own `FemAxis`, with the
+//! 👣️ every `FemSolid` footprint into `Tet4` elements — extruded along the solid's own `FemAxis`, with the
 //! 🧩️ FEM 3D module engine — solid meshing (pure FE algorithm, moved out of the artifact tree). Meshes
 //! nodes of every solid merged into ONE node set so touching solids share their interface nodes — and
 //! translates document loads (incl. `FemLoad::Area`, a pressure on a solid's upward-facing surface)

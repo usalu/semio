@@ -89,7 +89,6 @@ fn quat_to_rotation_columns(q: &SemioQuaternion) -> [[f64; 3]; 3] {
 //#region 🔖️IdAlloc
 struct IdAlloc(u64);
 impl IdAlloc {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn next(&mut self) -> u64 {
         self.0 += 1;
         self.0
@@ -165,7 +164,6 @@ fn element_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, placemen
             vec![
                 Part21Value::Str(guid.to_string()),
                 Part21Value::Ref(owner_id),
-                // 🕳️ `SemioModelElement` has no `name` field — always empty (documented above).
                 Part21Value::Str(String::new()),
                 Part21Value::Unset,
                 Part21Value::Unset,

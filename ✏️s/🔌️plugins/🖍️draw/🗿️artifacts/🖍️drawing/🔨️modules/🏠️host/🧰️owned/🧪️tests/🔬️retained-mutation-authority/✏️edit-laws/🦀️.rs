@@ -6,8 +6,8 @@ use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json")).unwrap();
-    let before: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["before"].clone()).unwrap();
-    let after: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["after"].clone()).unwrap();
+    let before: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["before"].clone()).unwrap();
+    let after: semio_framework_value_persistent::list::PagedList<PathSegment, {usize::MAX}> = serde_json::from_value(fixture["after"].clone()).unwrap();
     let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before);
     semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).opacity = 0.4;
     let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).clone();

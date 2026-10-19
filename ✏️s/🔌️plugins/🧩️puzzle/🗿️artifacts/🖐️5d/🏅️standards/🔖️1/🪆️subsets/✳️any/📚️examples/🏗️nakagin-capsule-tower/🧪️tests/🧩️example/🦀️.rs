@@ -1,4 +1,4 @@
-//! ️tests for example `🏗️nakagin-capsule-tower`.
+//! 🧪️tests for example `🏗️nakagin-capsule-tower`.
 
 use semio_framework_test_fixtures::{fixture_bytes, fixture_text};
 

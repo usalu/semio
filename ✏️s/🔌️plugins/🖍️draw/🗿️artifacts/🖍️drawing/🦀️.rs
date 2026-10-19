@@ -124,12 +124,6 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 
     IoDeclaration {
         native: NativeCodecs {
-            // 🎯️ `LanguagePair { text: None, binary: None }` for every facet: a documented,
-            // deliberate scope-narrowing matching every other subset already on the new tree
-            // (stdio binary/txt, sequence) — `NativeCodecs`'s own doc calls this a legal, supported
-            // shape. The underlying `ArtifactDsl`/`ArtifactPack`/`OpText`/`OpBinary` codecs these
-            // would point at are unchanged, independently implemented (see `📸️snapshot/`,
-            // `🧬️mutations/` siblings), and independently tested either way.
             snapshot: LanguagePair { text: None, binary: None },
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },

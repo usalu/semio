@@ -5,12 +5,33 @@
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/**/*",
-      "{projectRoot}/**/*"
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ],
+    "cargoToolchain": [
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
     ]
   },
   "targets": {
     "test-source": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source"
@@ -18,6 +39,14 @@
     },
     "test": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -25,6 +54,14 @@
     },
     "test-original-entities": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-entities"
@@ -32,6 +69,14 @@
     },
     "test-original-payload": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-payload"
@@ -39,6 +84,14 @@
     },
     "test-original-progress": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-progress"
@@ -46,6 +99,13 @@
     },
     "check": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
@@ -53,6 +113,14 @@
     },
     "test-original-progress-receiving": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-progress-receiving"
@@ -60,6 +128,14 @@
     },
     "test-original-receiving-limits": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-receiving-limits"
@@ -67,6 +143,14 @@
     },
     "test-original-identity-receiving": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-identity-receiving"
@@ -74,6 +158,14 @@
     },
     "test-original-step-receiving": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-step-receiving"
@@ -81,6 +173,14 @@
     },
     "test-original-native-tick": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-native-tick"
@@ -88,6 +188,14 @@
     },
     "test-original-entity-column": {
       "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "cargoToolchain"
+      ],
+      "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-original-entity-column"

@@ -1,4 +1,4 @@
-//! `📓️terra-fleet-trinity-recipe-report.md`), mounts subset `any`. `mimes`/`extensions`: no real MIME
+//! 🏔️ `📓️terra-fleet-trinity-recipe-report.md`), mounts subset `any`. `mimes`/`extensions`: no real MIME
 //! 🏅️ Standard root — `standard() -> StandardDeclaration` (`terra-fleet-trinity-recipe` recipe,
 //! registration exists for `s.puzzle2d` outside the old `ArtifactDefinition`'s capability rows
 //! (`definition()`, kept — debt D1) — that channel only ever claimed a codec id

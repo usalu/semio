@@ -4,7 +4,7 @@ use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldValue;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_diagnostic::TextError;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value::{FromValue,ToValue};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding};

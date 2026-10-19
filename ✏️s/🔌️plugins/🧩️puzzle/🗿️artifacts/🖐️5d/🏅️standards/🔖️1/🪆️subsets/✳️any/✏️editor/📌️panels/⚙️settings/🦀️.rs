@@ -1,4 +1,4 @@
-//! the placement contact tolerance, the auto-connect proximity radius, the broad-phase chunk size and
+//! 📍️ the placement contact tolerance, the auto-connect proximity radius, the broad-phase chunk size and
 //! ⚙️ Puzzle 5d play app panel — the app-wide settings: the fill count, the brush suggestion offset,
 //! the two grid scalars. Unlike the window-instance chrome in `🎭️modes/✏️edit/🪟️windows/*/☑️options/*`,
 //! these are settings a user tunes once for the session rather than per pane.
@@ -6,11 +6,11 @@
 //! 🪟️ Every stepper still tags the window instance the panel resolves to (the render's own, else the
 //! focused pane, else the first live pane) — and none when the host mounts no pane at all, since an
 //! empty `windowId` is refused as an unknown window instance while the commands never need one.
-use crate::editor::puzzle5d::interaction::ui_label;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::ui_label;
 
-use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
-use crate::editor::puzzle5d::view::Puzzle5dScene;
-use crate::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::terminology::Puzzle5dLabels;
+use semio_s_artifact_puzzle_5d_tests::editor::puzzle5d::view::Puzzle5dScene;
+use semio_s_artifact_puzzle_5d_mut_any_8::editor::puzzle5d::entities::PUZZLE5D_PLAY_CONTROLLER_ID;
 use semio_framework_plugin::plugin_app_close_prelude::ActionBinding;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;

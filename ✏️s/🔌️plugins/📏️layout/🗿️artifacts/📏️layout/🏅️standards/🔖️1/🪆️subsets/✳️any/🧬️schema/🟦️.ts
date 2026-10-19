@@ -31,20 +31,20 @@ export type LayoutDrawingContent = object;
 export const LAYOUT_BACKGROUND_DRAWING = embeddedChildSlotV1<LayoutDrawingContent>("layout.background-drawing");
 export interface LayoutDrawingChild { handle: ArtifactChild; content: LayoutDrawingContent }
 export interface LayoutArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ name: string;
-  /** @state artifact */ grid: GridSettings;
-  /** @state artifact */ paragraphStyles: ParagraphStyle[];
-  /** @state artifact */ characterStyles: CharacterStyle[];
-  /** @state artifact */ stories: TextStory[];
-  /** @state artifact */ links: ImageLink[];
-  /** @state artifact */ parentPages: ParentPage[];
-  /** @state artifact */ spreads: Spread[];
-  /** @state artifact */ pages: Page[];
-  /** @state artifact */ printTarget: string | null;
-  /** @state artifact */ dataFields?: QuestionDictionary;
-  /** @state artifact @child kind=s.stdio.semio */ backgroundDrawing?: LayoutDrawingChild;
-  /** @state artifact @link_slot roles=model */ referencedModel?: ArtifactLink;
+  /** 📐️ @state artifact */ schema: string;
+  /** 🏷️ @state artifact */ name: string;
+  /** 🔳️ @state artifact */ grid: GridSettings;
+  /** 📑️ @state artifact */ paragraphStyles: ParagraphStyle[];
+  /** 🔡️ @state artifact */ characterStyles: CharacterStyle[];
+  /** 📖️ @state artifact */ stories: TextStory[];
+  /** 🔗️ @state artifact */ links: ImageLink[];
+  /** 👪️ @state artifact */ parentPages: ParentPage[];
+  /** 📰️ @state artifact */ spreads: Spread[];
+  /** 📄️ @state artifact */ pages: Page[];
+  /** 🖨️ @state artifact */ printTarget: string | null;
+  /** 🌾️ @state artifact */ dataFields?: QuestionDictionary;
+  /** 🪣️ @state artifact @child kind=s.stdio.semio */ backgroundDrawing?: LayoutDrawingChild;
+  /** 📎️ @state artifact @link_slot roles=model */ referencedModel?: ArtifactLink;
 }
 export interface LayoutDropPreviewState { kind: string; x: number; y: number }
 export interface LayoutStringList { values: string[] }

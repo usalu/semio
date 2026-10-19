@@ -17,7 +17,6 @@ pub struct OraclePage {
 }
 
 impl OraclePage {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn to_json(&self) -> Json {
         Json::Object(vec![("width".to_string(), Json::Number(self.width)), ("height".to_string(), Json::Number(self.height)), ("text".to_string(), Json::String(self.text.clone()))])
     }

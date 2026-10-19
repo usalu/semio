@@ -1,7 +1,8 @@
 //! 📦️ Worker-owned render preparation and UI-authorized presentation contract.
 
 use semio_framework_ui_draw_contract::{DrawLayer, DrawList, ScissorRect};
-use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, RetainedPayloadBuilder, StepContext};
+use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
+use semio_framework_job_payload::{JobPayloadStream, RetainedPayloadBuilder};
 use std::mem::size_of;
 use semio_framework_ui_prepared_staging::retirement::*;
 use std::rc::Rc;

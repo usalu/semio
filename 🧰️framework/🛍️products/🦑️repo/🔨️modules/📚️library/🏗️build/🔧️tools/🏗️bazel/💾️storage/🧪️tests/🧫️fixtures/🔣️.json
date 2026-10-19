@@ -12,6 +12,56 @@
     {"name": "workspace", "partition": "products", "suffix": "bazel/workspaces"},
     {"name": "outputs", "partition": "products", "suffix": "bazel/outputs"},
     {"name": "actions", "partition": "products", "suffix": "bazel/actions"},
+    {"name": "server", "partition": "products", "suffix": "bazel/outputs/server"},
     {"name": "temporary", "partition": "products", "suffix": "tmp"}
-  ]
+  ],
+  "cache": {
+    "productsMaximumLogicalBytes": 25768755200,
+    "diskCacheMaximumBytes": 10307502080,
+    "serverIdleSeconds": 120,
+    "bazelrc": [
+      "build --experimental_disk_cache_gc_idle_delay=10s",
+      "build --experimental_disk_cache_gc_max_age=30d",
+      "build --repo_contents_cache_gc_max_age=3d",
+      "build --remote_cache_compression",
+      "build --remote_timeout=30s",
+      "build --remote_retries=3"
+    ],
+    "workspaces": [
+      {"workspace": "/bounded/products/bazel/workspaces/a1", "sha256Prefix": "060b59b17e73eee6"},
+      {"workspace": "/bounded/products/bazel/workspaces/b2", "sha256Prefix": "4b16157afa2ef650"}
+    ],
+    "accepted": [
+      {"name": "default is disk only", "environment": {}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false},
+      {"name": "empty values are unset", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": ""}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false},
+      {"name": "remote is read only by default", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpcs://cache.example.test:443"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=grpcs://cache.example.test:443", "--noremote_upload_local_results"], "remote": true},
+      {"name": "upload and credential helper are explicit", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "http://127.0.0.1:9090", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": "true", "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": "/opt/tools/helper"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=http://127.0.0.1:9090", "--remote_upload_local_results", "--credential_helper=/opt/tools/helper"], "remote": true},
+      {"name": "unix socket endpoint", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "unix:/run/cache.sock", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": "false"}, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--remote_cache=unix:/run/cache.sock", "--noremote_upload_local_results"], "remote": true},
+      {"name": "skip remote cache drops the endpoint", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test"}, "skipRemoteCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080"], "remote": false},
+      {"name": "skip cache refuses cached results", "environment": {}, "skipCache": true, "command": ["--disk_cache={actions}", "--experimental_disk_cache_gc_max_size=10307502080", "--noremote_accept_cached"], "remote": false}
+    ],
+    "refused": [
+      {"name": "endpoint without scheme", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "cache.example.test:443"}},
+      {"name": "endpoint with foreign scheme", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "ftp://cache.example.test"}},
+      {"name": "endpoint with whitespace", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test --remote_executor=grpc://evil"}},
+      {"name": "upload is not boolean", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test", "SEMIO_BAZEL_REMOTE_CACHE_UPLOAD": "yes"}},
+      {"name": "credential helper is a relative path", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test", "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": "tools/helper"}},
+      {"name": "credential helper looks like a flag", "environment": {"SEMIO_BAZEL_REMOTE_CACHE": "grpc://cache.example.test", "SEMIO_BAZEL_REMOTE_CACHE_CREDENTIAL_HELPER": "--evil"}}
+    ]
+  },
+  "hostPaths": [
+    {"name": "ascii checkout on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
+    {"name": "ascii with space on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/my repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/my repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/my repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
+    {"name": "emoji install on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/🧰️repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "accent install on macOS", "platform": "darwin", "layout": {"install": "/Users/Jürgen/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "CJK install on macOS", "platform": "darwin", "layout": {"install": "/Users/日本語/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "emoji output base on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/🧰️repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/🧰️repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "emoji server base alone on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/🧰️server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "leading-dot emoji ticket tree output base on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.🧬semio/🦑️repo/🎫️tickets/🗑️generated/ob", "server": "/Users/dev/repo/.🧬semio/🦑️repo/🎫️tickets/🗑️generated/ob/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "accent server base on macOS", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/Jürgen/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": false},
+    {"name": "emoji workspace on macOS is fine", "platform": "darwin", "layout": {"install": "/Users/dev/repo/.cache/b/t/m/bazel/install", "outputs": "/Users/dev/repo/.cache/b/p/m/bazel/outputs", "server": "/Users/dev/repo/.cache/b/p/m/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces/🧰️w"}, "accepted": true},
+    {"name": "emoji install and output base on Linux", "platform": "linux", "layout": {"install": "/home/dev/🧰️repo/.cache/b/t/bazel/install", "outputs": "/home/dev/🧰️repo/.cache/b/p/bazel/outputs", "server": "/home/dev/🧰️repo/.cache/b/p/bazel/outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true},
+    {"name": "accent output base on Windows", "platform": "win32", "layout": {"install": "C:\\Users\\Jürgen\\repo\\.cache\\b\\t\\bazel\\install", "outputs": "C:\\Users\\Jürgen\\repo\\.cache\\b\\p\\bazel\\outputs", "server": "C:\\Users\\Jürgen\\repo\\.cache\\b\\p\\bazel\\outputs/server", "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces"}, "accepted": true}
+  ],
+  "sandbox": {"forbiddenRcFlags": ["spawn_strategy", "strategy", "genrule_strategy", "sandbox_base", "sandbox_add_mount_pair", "sandbox_writable_path", "ignore_unsupported_sandboxing", "incompatible_sandbox_hermetic_tmp", "experimental_sandbox_async_tree_delete_idle_threads"], "expectedRunner": "darwin-sandbox", "roots": {"tools": "/Users/dev/repo/.cache/b/t/m", "dependencies": "/Users/dev/repo/.cache/b/d/m", "products": "/Users/dev/repo/.cache/b/p/m"}, "workspace": "/Users/dev/repo/.cache/b/p/m/bazel/workspaces/0123456789abcdef"}
 }

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn mounted_geometric_cells_match_independent_quadrature_and_tensor_contraction() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌀️geometric-cells/🔣️.json")).expect("geometric corpus");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌀️geometric-cells/🔣️.json")).expect("geometric corpus");
     let tolerance = fixture["tolerance"].as_f64().unwrap();
     let mut cells = 0;
     for case in fixture["cases"].as_array().unwrap() {

@@ -225,7 +225,6 @@ fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, origin_
             positions.push(local_x as f32);
             positions.push(local_y as f32);
             positions.push(elevation as f32);
-            // Vertical hypsometric-ramp texture: u is unused (constant), v is normalized elevation.
             let normalized_elevation = ((heights[(row * n + col) as usize] - min_elev) / (max_elev - min_elev)).clamp(0.0, 1.0);
             uvs.push(0.5);
             uvs.push(normalized_elevation);

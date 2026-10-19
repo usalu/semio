@@ -1,2 +1,2 @@
-/** demo deflate */
+/** 🎬️ demo deflate */
 export const ID = 'demo';

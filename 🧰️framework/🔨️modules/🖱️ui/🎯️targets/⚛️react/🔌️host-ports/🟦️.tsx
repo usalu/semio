@@ -10,7 +10,7 @@ import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import * as React from "react";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 
-/** @emoji 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
+/** 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
   readonly canvas: typeof ThreeCanvas;
   readonly drei: { OrbitControls: typeof OrbitControls; Grid: typeof Grid };
@@ -20,7 +20,7 @@ export interface ThreeHostPort {
 // goes through the imported setReactHostPort() setter, since an ES import binding can't be assigned to
 // directly.
 
-/** @emoji 🔌️ Default R3F host port wired to fiber/drei adapters. */
+/** 🔌️ Default R3F host port wired to fiber/drei adapters. */
 export let threeHostPort: ThreeHostPort = {
   canvas: sceneHostPort.fiber.canvas,
   drei: { OrbitControls: sceneHostPort.drei.OrbitControls, Grid: sceneHostPort.drei.Grid },
@@ -31,7 +31,7 @@ const defaultFlowHostPort = flowHostPort;
 const defaultThreeHostPort = threeHostPort;
 const defaultSceneHostPort = sceneHostPort;
 
-/** @emoji 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
+/** 🔌️ Overrides for {@link configureHostPorts}; an omitted/`undefined` key is left untouched (whatever port is currently installed keeps running). */
 export type HostPortOverrides = Partial<{
   readonly react: ReactHostPort;
   readonly flow: FlowHostPort;
@@ -40,7 +40,7 @@ export type HostPortOverrides = Partial<{
   readonly iconRender: IconRenderPort;
 }>;
 
-/** @emoji 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
+/** 🔌️ Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
  * so this is the only way to inject a test double or alternate adapter (e.g. Storybook's `withRenderer`
  * decorator) before a story renders. Ports are page-global (one React per page), so a merge — only the
  * keys you pass are touched, everything else keeps whatever is currently installed — is required rather
@@ -68,7 +68,7 @@ const ICON_RENDER_GLB_CACHE = ephemeralMap<string, Promise<THREE.Group>>("framew
 const ICON_RENDER_MESH_OUTLINE_USER_DATA_KEY = "semio.iconRender.meshOutline";
 const ICON_RENDER_EDGE_GEOMETRY_CACHE = new WeakMap<THREE.BufferGeometry, THREE.EdgesGeometry>();
 
-/** @emoji 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
+/** 🌫️ Empty/`transparent` lets the host surface show through — mirrors world-3d environment JSON. */
 export function isTransparentIconBackground(background?: string): boolean {
   return !background || background === "transparent";
 }
@@ -99,7 +99,7 @@ function applyIconMeshEdgeBorders(root: THREE.Object3D, borderColor: string): vo
   }
 }
 
-/** @emoji ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
+/** ☀️ Sun position on a sphere from azimuth/elevation degrees, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system. */
 export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg: number, distance = 120): [number, number, number] {
   const az = (azimuthDeg * Math.PI) / 180;
   const el = (elevationDeg * Math.PI) / 180;
@@ -172,12 +172,12 @@ function buildIconScene(request: IconRenderRequest, model: THREE.Group): THREE.S
   return scene;
 }
 
-/** @emoji 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
+/** 📷️ Whether an icon shot uses parallel projection — mirrors world-3d `camera.projection`. */
 export function iconRenderCameraIsOrthographic(camera: IconRenderCamera): boolean {
   return camera.projection === "orthographic";
 }
 
-/** @emoji 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
+/** 📷️ Orthographic zoom for a drei/R3F pixel frustum (`left = -width/2`, …) — twin of `worldProjectionOrthoZoom`. */
 export function iconRenderOrthoZoomForRadius(radius: number, width: number, height: number, padding = 1.25): number {
   const padded = Math.max(radius * Math.max(padding, 1), 0.5);
   const zoomX = width * 0.5 / padded;
@@ -185,7 +185,7 @@ export function iconRenderOrthoZoomForRadius(radius: number, width: number, heig
   return Math.max(Math.min(zoomX, zoomY), 1e-3);
 }
 
-/** @emoji 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
+/** 📷️ Perspective eye distance so a bounding sphere fits the shot frustum — twin of `world3dFrameDistanceForRadius`. */
 export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: number, aspect: number, padding = 1.25): number {
   const vertical = Math.min(Math.max(((fovDeg * Math.PI) / 180) * 0.5, 0.02), 1.5);
   const horizontal = Math.min(Math.max(Math.atan(Math.tan(vertical) * Math.max(aspect, 0.05)), 0.02), 1.5);
@@ -193,7 +193,7 @@ export function iconRenderPerspectiveDistanceForRadius(radius: number, fovDeg: n
   return Math.max((Math.max(radius, 1e-4) / Math.sin(half)) * Math.max(padding, 1), 0.5);
 }
 
-/** @emoji 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
+/** 🎯️ `request.camera`, or — with `request.fit` enabled — the same viewing direction re-targeted at
  * the model's bounding-sphere centre and backed off so the sphere fills the frame (`padding` ≥ 1). */
 export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Object3D): IconRenderCamera {
   const camera = request.camera;
@@ -219,7 +219,7 @@ export function iconRenderCameraPose(request: IconRenderRequest, model: THREE.Ob
   return { ...camera, position: [target[0] + direction.x * distance, target[1] + direction.y * distance, target[2] + direction.z * distance], target, zoom: camera.zoom };
 }
 
-/** @emoji 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
+/** 📷️ Builds the three.js camera for an icon shot — perspective or orthographic to match the scene lane. */
 export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCamera = request.camera): THREE.Camera {
   const up = pose.up ?? [0, 0, 1];
   if (iconRenderCameraIsOrthographic(pose)) {
@@ -240,7 +240,7 @@ export function buildIconCamera(request: IconRenderRequest, pose: IconRenderCame
   return camera;
 }
 
-/** @emoji 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
+/** 🧼️ Strips three.js SVGRenderer's default opaque clear color when the shot background is transparent. */
 export function finalizeIconSvgMarkup(svgMarkup: string, options: { readonly background?: string }): string {
   if (!isTransparentIconBackground(options.background)) return svgMarkup;
   return svgMarkup.replace(/\sstyle="background-color:[^"]*"/gi, "");
@@ -271,7 +271,7 @@ async function renderIconPng(scene: THREE.Scene, camera: THREE.Camera, width: nu
   return { dataUrl };
 }
 
-/** @emoji ⭕️ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
+/** ⭕️ Clips rendered SVG markup to an axis-aligned ellipse inscribed in the shot bounds. */
 export function clipIconSvgMarkupToEllipse(svgMarkup: string, width: number, height: number): string {
   const clipId = "semio-icon-ellipse-clip";
   if (svgMarkup.includes(`id="${clipId}"`)) return svgMarkup;
@@ -340,7 +340,7 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
   return { dataUrl };
 }
 
-/** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
+/** 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
 export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
@@ -353,7 +353,7 @@ export let iconRenderPort: IconRenderPort = {
 
 const defaultIconRenderPort = iconRenderPort;
 
-/** @emoji 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
+/** 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
 export function iconShotFrameStyle(width: number, height: number): React.CSSProperties {
   const landscape = width >= height;
   return {
@@ -365,12 +365,12 @@ export function iconShotFrameStyle(width: number, height: number): React.CSSProp
   };
 }
 
-/** @emoji 🖼️ Frame mask class for an icon shot shape. */
+/** 🖼️ Frame mask class for an icon shot shape. */
 export function iconShotFrameClass(shape: IconRenderShape): string {
   return shape === "ellipse" ? "rounded-[50%]" : "rounded-none";
 }
 
-/** @emoji 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
+/** 🖼️ Centered shot frame overlay with shape mask and W×H badge. */
 export function IconShotFrame({
   width,
   height,

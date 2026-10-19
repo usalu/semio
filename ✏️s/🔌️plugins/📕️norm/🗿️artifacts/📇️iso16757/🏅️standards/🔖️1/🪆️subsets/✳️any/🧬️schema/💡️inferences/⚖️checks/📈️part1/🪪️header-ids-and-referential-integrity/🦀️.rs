@@ -68,7 +68,6 @@ pub(super) fn check_header(catalogue: &Catalogue, required: &[String], report: &
         ));
     }
 
-    // Part 1 §5.1 — catalogue lifecycle + dictionary reference must be populated for exchange.
     let status = catalogue.metadata.lifecycle.status.trim();
     let revision = catalogue.metadata.lifecycle.revision.trim();
     let allowed_status = semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_1::LIFECYCLE_STATUSES;
@@ -185,7 +184,6 @@ pub(super) fn check_header(catalogue: &Catalogue, required: &[String], report: &
         ));
     }
 
-    // Part 1 §3.1 — catalogue id is scoped under the manufacturer id.
     let cat_id = catalogue.id.0.trim();
     let mfg_id = catalogue.manufacturer.id.trim();
     if !mfg_id.is_empty() && !cat_id.is_empty() {

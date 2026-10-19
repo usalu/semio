@@ -4,8 +4,10 @@
 
 use crate::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, Counter, CounterMutation};
-use protocol::{Mutation, MutationLeaf, SemanticMutation};
-use crate::{DslValue, ToValue};
+use protocol::{Mutation, MutationLeaf};
+use semio_framework_os_command::SemanticMutation;
+use crate::{ToValue};
+use semio_framework_os_kernel::DslValue;
 use super::{mutation_fixture_ops, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures};
 use semio_framework_test_fixtures::fixture_path;
 
@@ -88,10 +90,10 @@ impl crate::ColdMutation<Counter> for Unpublished {
 }
 
 impl SemanticMutation<Counter> for Unpublished {
-    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+    fn kinds() -> &'static [semio_framework_os_command::SemanticDescriptor] {
         <CounterMutation as SemanticMutation<Counter>>::kinds()
     }
-    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+    fn semantics(&self) -> &'static semio_framework_os_command::SemanticDescriptor {
         self.op.semantics()
     }
     fn label(&self) -> crate::LocalizedLabel {

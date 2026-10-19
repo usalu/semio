@@ -31,7 +31,6 @@ async fn extrude_selected_face_grows_mesh_and_undo_restores() {
 
 #[semio_framework_async_macros::async_test]
 async fn extrude_reads_staged_arg_distance_into_the_operation() {
-    // 🧪️ Arg-form action: the staged `extrudeDistance` (not the config backing store) drives the edit.
     let mut small = app_with_registry().await;
     let mut large = app_with_registry().await;
     let object_id = small.snapshot().expect("projection").objects[0].id.clone();

@@ -28,6 +28,8 @@ use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework_tool_machine::{ToolStep, TypingFold, TypingInput};
+use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolMachineRuntime;
+use semio_framework_tool_machine::ToolAbortReason;
 
 #[doc(hidden)]
 pub fn committed(count: i32, label: &str) -> Arc<TestSnapshot> {

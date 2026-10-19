@@ -1,4 +1,4 @@
-//! rewriting <- json
+//! ✍️ rewriting <- json
 use crate::standards::v1::subsets::any::schema::snapshot::RewritingSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};

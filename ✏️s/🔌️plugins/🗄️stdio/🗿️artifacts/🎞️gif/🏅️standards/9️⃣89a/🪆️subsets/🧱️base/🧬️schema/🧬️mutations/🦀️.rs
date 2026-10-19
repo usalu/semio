@@ -156,11 +156,6 @@ pub const KINDS: &[&str] = &[
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_mutation_cases() -> Vec<GifMutation> {
-    // 🧭️ Deliberately a small, hand-built snapshot — NOT
-    // `engine::demo_gif_snapshot()` (the real, 800×800/54-frame `dancing.gif` fixture used by
-    // the snapshot-facet conformance laws): embedding that full fixture in every case
-    // op-text payload is unnecessarily large for exercising the mutations grammar's own
-    // shape, which this compact snapshot already covers field-for-field.
     let base = GifSnapshot {
         schema: crate::standards::v89a::subsets::any::schema::snapshot::STDIO_GIF89A_DOCUMENT_SCHEMA.into(),
         width: 2,

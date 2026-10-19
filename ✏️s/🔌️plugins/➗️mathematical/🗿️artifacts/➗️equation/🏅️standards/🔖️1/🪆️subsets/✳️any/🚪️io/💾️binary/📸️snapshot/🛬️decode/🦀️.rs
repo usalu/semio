@@ -1,7 +1,7 @@
 //! 🛬️ Bounded literal Equation record binding and iterative owned expression construction.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 struct Nodes(Vec<EquationNode>);
 impl Drop for Nodes{fn drop(&mut self){for node in self.0.drain(..){retire_node(node);}}}

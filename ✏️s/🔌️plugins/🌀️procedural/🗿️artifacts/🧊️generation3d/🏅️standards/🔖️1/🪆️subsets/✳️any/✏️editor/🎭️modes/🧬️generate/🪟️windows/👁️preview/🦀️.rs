@@ -98,11 +98,6 @@ pub fn render(
     let eval_json = preview_eval_text.unwrap_or_default();
     let marks = PreviewInteractionMarks { components: Default::default(), ..marks.clone() };
     let (payload, preview_status) = match generation_by_id(generation, selected_id) {
-        // 🧹️ `generation_host_snapshot_for` CLONES the document host_snapshot, so the patched copy owns its own
-        // `layout` ordered-map root and must be retired before it leaves scope — a bare drop aborts the
-        // plugin actor with `ordered-map root must be explicitly retired before drop`. Reachable only
-        // once a generation is selected, which is why no earlier render test ever hit it
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         Some(_) => {
             let gen_fixture = generation_host_snapshot_for(host_snapshot, generation, selected_id);
             let payload = preview_payload(eval_json, &gen_fixture, cfg, Some(session), &marks);

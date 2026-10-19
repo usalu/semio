@@ -11,7 +11,7 @@ import { closeSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, rea
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
 import { repoCacheDirectory, runCmd, orchestratorBudgetOpts } from "@semio-tech/process/execution";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "@semio-tech/repo-lib/cargo";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { readStableBuildFile } from "@semio-tech/repo-lib/build";
 import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -502,9 +502,6 @@ async function proveHeadlessStdioImports(invocation:ScriptInvocation,repoRoot:st
   if (stdio.length !== 1 || JSON.stringify([...stdio[0].features].sort()) !== JSON.stringify([...fixture.features].sort())) throw new Error("headless Stdio build did not report the exact catalog-only feature closure");
   const libraries = stdio[0].filenames.filter((path: unknown) => typeof path === "string" && path.endsWith(".rmeta")) as string[];
   if (libraries.length !== 1) throw new Error("headless Stdio build did not report one full metadata artifact");
-  // 🕸️ Every compiler-artifact record (not only Stdio's own) carries the rmeta/rlib/proc-macro-dylib the linker
-  // closure needs; the new build-dir layout scatters them across per-unit-hash directories, so the JSON messages
-  // are the only reliable source of truth. https://doc.rust-lang.org/cargo/reference/unstable.html#build-dir
   const dependencyArtifacts = new Set<string>();
   for (const row of records) {
     const filenames = Array.isArray(row.filenames) ? row.filenames : [];
@@ -551,7 +548,7 @@ async function proveHeadlessStdioImports(invocation:ScriptInvocation,repoRoot:st
   console.log(`headless Stdio imports: features=${fixture.features.join(",")} cases=${fixture.cases.length}; evidence=${runRoot}; private-metadata-capture=1; native metadata only, no guest execution claim`);
 }
 
-async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Awaited<ReturnType<typeof runRepositoryExactCargoLaws>>[number]): Promise<void> {
+async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Awaited<ReturnType<typeof runAdmittedExactCargoLawsV1>>[number]): Promise<void> {
   const law = receipt.laws.findIndex((name) => name.endsWith("native_catalog_commitment_covers_all_definition_semantics_and_codec_authorities"));
   if (law < 0) throw new Error("native Stdio commitment law receipt is absent");
   const output = join(receipt.artifactDir, `law-${law}.stdout`);
@@ -576,7 +573,7 @@ export class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     await proveNativeOpenableCatalogProviderFixture(this.repoRoot);
     if (segments.includes("--oracle-only")) return;
     const stdioOnly = segments.includes("--stdio-only");
-    const options: Parameters<typeof runRepositoryExactCargoLaws>[0] = { control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...exactCargoStageEnvironments(), groups: [
+    const options: Parameters<typeof runAdmittedExactCargoLawsV1>[0] = { control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...exactCargoStageEnvironments(), groups: [
         {
           package: "semio-hub-stdio",
           target: { kind: "test", name: "native_openable_provider" },
@@ -604,11 +601,11 @@ export class NativeOpenableCatalogProviderCheckScript extends BundleScript {
       } };
     const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package.startsWith("semio-hub-stdio")) : options.groups;
     if (!integration) throw new Error("native Stdio integration target is absent");
-    const receipts = [...(await runRepositoryExactCargoLaws({...options,groups:[integration],consume:outputs=>withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:0},async task=>{
+    const receipts = [...(await runAdmittedExactCargoLawsV1({...options,groups:[integration],consume:outputs=>withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:0},async task=>{
       await proveNativeStdioCommitmentSchema(this.repoRoot,task.receipt);
       await proveHeadlessStdioImports(this.invocation,this.repoRoot,task);
     })}))];
-    receipts.push(...await runRepositoryExactCargoLaws({ ...options, groups: remaining }));
+    receipts.push(...await runAdmittedExactCargoLawsV1({ ...options, groups: remaining }));
     for (const receipt of receipts) console.log(`native-openable-provider-receipt: ${JSON.stringify(receipt)}`);
     console.log(`native-openable-catalog-provider-laws: passed=${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)}`);
     console.log(stdioOnly
@@ -625,7 +622,7 @@ export class NativeCatalogSelectionCheckScript extends BundleScript {
     await proveTrustedCompiledDependenciesFixture(this.repoRoot);
     runCmd("bun", ["repo", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...exactCargoStageEnvironments(), groups: [
         {
           package: "semio-hub-trusted-catalog-laws",
           target: { kind: "lib" },

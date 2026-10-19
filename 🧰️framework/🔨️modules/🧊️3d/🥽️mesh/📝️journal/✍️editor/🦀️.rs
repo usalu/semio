@@ -10,7 +10,7 @@
 //! ✍️ A field setter states a row only when the gesture changes that field, so a gesture that leaves a vertex or a halfedge where it
 //! is states nothing about it.
 
-use super::super::Vec3;
+use semio_framework_3d_mesh_document::Vec3;
 use super::{same_face, same_halfedge, same_vertex, FaceId, HalfEdge, Links, MeshFace, MeshKernelError, MeshOverlay, MeshResult, MeshVertex, VertexId};
 use std::collections::BTreeSet;
 
@@ -18,11 +18,11 @@ use std::collections::BTreeSet;
 /// 🗑️ What [`MeshOverlay::finish`] does with vertices that no face references any more.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Orphans {
-    /// Leave every vertex in place.
+    /// 📦️ Leave every vertex in place.
     Keep,
-    /// Remove the vertices the gesture's removed or replaced faces left without a face.
+    /// 🆕️ Remove the vertices the gesture's removed or replaced faces left without a face.
     Newly,
-    /// Remove every vertex no face references.
+    /// ✂️ Remove every vertex no face references.
     All,
 }
 

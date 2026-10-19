@@ -37,7 +37,6 @@
     "./builder/vite/site-html": "./🏗️builder/🌐️vite/🌐️site-html/🟦️.ts",
     "./builder/vite/assets": "./🏗️builder/🌐️vite/🗃️assets/🟦️.ts",
     "./builder/vite/status-serve": "./🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts",
-    "./builder/python/inventory": "./🏗️builder/🐍️python/📋️inventory/🟦️.ts",
     "./builder/python/provider": "./🏗️builder/🐍️python/🔌️provider/🟦️.ts",
     "./builder/python/schema.json": "./🏗️builder/🐍️python/🧬️schema/🔣️json/🟦️.ts"
   },

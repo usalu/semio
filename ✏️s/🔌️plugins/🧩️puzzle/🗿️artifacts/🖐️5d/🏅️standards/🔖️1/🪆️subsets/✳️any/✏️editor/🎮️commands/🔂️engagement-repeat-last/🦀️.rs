@@ -1,8 +1,8 @@
 //! 🔂️ `engagement-repeat-last` command.
 
-use crate::editor::puzzle5d::commands::set_fill_count;
-use crate::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
-use crate::editor::puzzle5d::interaction::Puzzle5dActionCtx;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::commands::set_fill_count;
+use semio_s_artifact_puzzle_5d_catalog::editor::puzzle5d::modes::edit::tools::fill as fill_tool;
+use semio_s_artifact_puzzle_5d_interaction::editor::puzzle5d::interaction::Puzzle5dActionCtx;
 
 /// 🔂️ Repeating `fill` asks for one more part: the count is shared configuration, so a live fill run is
 /// reconfigured by the framework driver and CONTINUES its deterministic sequence (`Resume`) instead of

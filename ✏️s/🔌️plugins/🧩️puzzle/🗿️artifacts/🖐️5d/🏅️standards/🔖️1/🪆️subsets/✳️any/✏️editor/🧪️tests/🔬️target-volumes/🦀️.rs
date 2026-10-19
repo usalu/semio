@@ -1,4 +1,4 @@
-//! 5d editor used to lack entirely. Every law drives the REAL app through the same typed-command
+//! ⌨️ 5d editor used to lack entirely. Every law drives the REAL app through the same typed-command
 //! 🧊️ Laws for the target-volume family and the Volume Brush — the one fill-adjacent 3d feature the
 //! channel the shell uses, so a verb that is registered but unreachable fails here.
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;

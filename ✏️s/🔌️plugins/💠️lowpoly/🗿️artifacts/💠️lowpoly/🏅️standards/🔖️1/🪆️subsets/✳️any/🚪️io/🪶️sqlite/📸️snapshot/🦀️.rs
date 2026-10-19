@@ -3,7 +3,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::snapshot::LowpolySnapshot;
 use crate::{snapshot::LowpolyObject, snapshot::LowpolyTransform, snapshot::LowpolyPaintLayer};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell,FloatColumn,FloatRow}}};
-use semio_framework_value::{DecodedValue,FromValue,NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{DecodedValue, FromValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 #[path="🕸️mesh/🛫️projection/🦀️.rs"]mod mesh_projection;
 #[path="🕸️mesh/🔍️rows/🦀️.rs"]mod rows;
 #[path="🕸️mesh/🛬️reconstruction/🦀️.rs"]mod mesh_reconstruction;
@@ -40,6 +41,6 @@ impl ArtifactSqliteSnapshotHost for LowpolySnapshot{
 impl pack::snapshot::ArtifactSqliteSnapshot for LowpolySnapshot {
 const SQLITE_SCHEMA:&'static str=concat!(include_str!("🗄️.sql"),"\n",include_str!("🕸️mesh/🗄️.sql"));
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut writer=RowWriter::new(Self::SQLITE_SCHEMA,control)?;write(self,&mut writer)?;writer.finish()}
-fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,Self::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|allowance,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(allowance,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())})?}
+fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;store::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,Self::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|allowance,progress,allocation|{let mut callback=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(allowance,&mut callback,&mut native_allocation);let result=reconstruct(database,&mut native);(result,native.owned_bytes())})?}
 }
 

@@ -88,7 +88,7 @@ struct GifDoc {
     height: u16,
     global_palette: Vec<u8>,
     bg_color_index: u8,
-    /// `None` = no NETSCAPE2.0 loop extension; `Some(0)` = loop forever; `Some(n)` = `n` more times.
+    /// 🔁️ `None` = no NETSCAPE2.0 loop extension; `Some(0)` = loop forever; `Some(n)` = `n` more times.
     loop_count: Option<u16>,
     frames: Vec<FrameDoc>,
 }

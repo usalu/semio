@@ -198,7 +198,6 @@ export function toolJobLatestWinsSelfTests(): number {
   if (JSON.stringify(childCloseFixture.children.map((child: { id: string }) => child.id).reverse()) !== JSON.stringify(childCloseFixture.expectedRetirementOrder)) throw new Error("retained child close LIFO oracle diverged");
   if (childCloseFixture.children.some((child: { slot: string; childId: string; value: string }) => [child.slot, child.childId, child.value].some(value => Buffer.byteLength(value, "utf8") <= value.length))) throw new Error("retained child close fixture lost its multibyte scalar oracle");
   const childMain = [source, ...["📜️declaration/📨️emission/🦀️.rs", "📜️declaration/👷️job/🎯️completion-and-owned-context/🦀️.rs"].map((file) => readFileSync(join(base, file), "utf8"))].join("\n");
-  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
   const completionHandbackExact = (text: string): boolean => {
     const owner = text.indexOf("impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A>");
     const start = owner < 0 ? -1 : text.indexOf("fn step", owner);
@@ -218,7 +217,7 @@ export function toolJobLatestWinsSelfTests(): number {
     const demand = start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body.replace(/\s+/gu, "") ?? "";
     return demand.includes("emit.child_close_demands(copy)?") && demand.includes('demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"retained rejected emitted child depth overflow"))?;returnOk(demand);'.replace(/\s+/gu, ""));
   };
-  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
+  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
     && main.includes("pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault>")
     && rawCloseBlock(retained)?.body.split("emit.close_child_one(child)").length === 3
     && retained.includes("InteractiveJobCloseStep::Pending{progress}")

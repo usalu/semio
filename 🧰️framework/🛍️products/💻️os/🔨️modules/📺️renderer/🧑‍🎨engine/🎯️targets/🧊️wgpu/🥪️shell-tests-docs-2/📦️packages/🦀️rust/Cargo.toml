@@ -109,3 +109,4 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
 semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job-payload = { workspace = true }

@@ -90,30 +90,6 @@
               "type": "boolean"
             }
           }
-        },
-        "windowsSystem": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "windows",
-            "system"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "windows": {
-              "type": "string",
-              "minLength": 2,
-              "maxLength": 256
-            },
-            "system": {
-              "type": "string",
-              "minLength": 3,
-              "maxLength": 256
-            }
-          }
         }
       }
     },

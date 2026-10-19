@@ -8,7 +8,7 @@ import{spyOn}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{captureOwnedCommandV1}from"@semio-tech/process/execution";
-import{readPhysicalCargoSourceV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
+import{readPhysicalCargoSourceV1}from"@semio-tech/process/artifacts/native-build/source/admission/read";
 import readSchema from"@semio-tech/process/artifacts/native-build/source/admission/read/schema.json";
 import cases from"./🔣️.json";
 import{readRustUnitSourceClosureV1}from"../🟦️.ts";

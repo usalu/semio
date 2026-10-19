@@ -5,7 +5,7 @@ import { operationDiagnosticFanouts, type PluginOperationDiagnostic } from "../�
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { mediaTransportPort } from "../../../🎬️media/📡️channel/🟦️.ts";
+import { mediaTransportPort } from "@semio-tech/framework/os/modules/renderer/engine/media/channel";
 import { type Effect, type HistoryPatch, type InvocationResponse } from "@semio-tech/framework";
 import {
   decodePackValue
@@ -163,21 +163,8 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (channels.get(instanceId) === channel) channels.delete(instanceId);
     },
     takeSegmentedDownloadChunk: (instanceId, operationId) => handle.takeSegmentedDownloadChunk(instanceId, operationId),
-    // 🪦️ `async` on purpose, all three of them: `requireChannel` REFUSES a retired instance, and a
-    // synchronous throw from a method the caller only ever `.catch`es escapes past that `.catch`
-    // entirely — out of `ShellHost`'s `onAction` and into React's nearest error boundary, which tears
-    // the surface down. Measured on the served 16:57 guest: a role switch destroyed instance 1, the
-    // node-graph surface dispatched one more action at it, and the typed retirement arrived as
-    // `[TRACE] shell fault surface-node-graph` instead of the drop the ledger had already earned
-    // (`🗑️generated/host-refresh/served-journey/console.txt`, +147.5 s). A refusal is a rejection.
     handleAction: async (instanceId, actionJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState, dispatch),
     handleCommand: async (instanceId, commandJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState, dispatch),
-    // 🚧️ H1-react — window-body refresh needs the ActivationRegistry/ShardClient `Event::SurfaceVisible`
-    // path this bare adapter has no access to (only the raw `enqueue`/`outcomes` `handle`, no actorId);
-    // `loadPluginModule` overrides this field with the real implementation right after calling this
-    // function. A caller that constructs `adaptPluginHandle` directly (every inline test in this file)
-    // gets an honest empty result rather than a throw — `AppCommand::RefreshUi`/`SectionProbe` no
-    // longer exist on the wire regardless (channel v12), so there is no fallback command to send here.
     refreshUi: async () => ({}),
     contextMenu: async (instanceId, request, viewState) => performContextMenu(requireChannel(instanceId), request, viewState),
     readHistory: async (instanceId) => readHistoryWithBoundedRetryV1(requireChannel(instanceId), instanceId),
@@ -223,9 +210,6 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     ephemeralSnapshot: async (instanceId) => requireChannel(instanceId).ephemeral(),
-    // 👥️ Contract-freeze §C7.6 — the ONLY plugin ingress for peers. `AppChannelClient.pushPresence`
-    // encodes each `ArtifactPresencePeer` and sends the `AppCommand::Presence` frame; a plain `Done`
-    // reply, nothing further decoded here.
     pushPresence: async (instanceId, ownColor, peers) => {
       await requireChannel(instanceId).pushPresence(ownColor, peers);
     },
@@ -347,9 +331,6 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
         bound.dispose();
       };
     },
-    // 🎞️ Operation progress changed what a refresh renders, so it counts as guest ingress: a refresh pass submitted before
-    // the turn that produced it — a drain poll, or a refresh turn that advanced the operation — must not answer the progress
-    // refresh it asks for, or the lane drops every later frame of a running tool run, its last one included.
     subscribeOperationProgress: (instanceId, listener) =>
       requireChannel(instanceId).onOperationProgress((progress) => {
         noteGuestIngressV1(instanceId);

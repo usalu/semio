@@ -27,9 +27,9 @@ export type SlideShapesDiff = IndexedTripleDiff<SlideShapeDiff, SlideShape>;
 export interface SlideMasterDiff { shapes?: SlideShapesDiff; }
 export interface SlideLayoutDiff { masterId?: string; shapes?: SlideShapesDiff; }
 export interface SlideDiff {
-  /** the slide's own identity at this index, when it changes */
+  /** 📽️ the slide's own identity at this index, when it changes */
   id?: string;
-  /** tri-state: absent = unchanged, null = cleared, string = set */
+  /** 📐️ tri-state: absent = unchanged, null = cleared, string = set */
   layoutId?: string | null;
   shapes?: SlideShapesDiff;
   notes?: DocBlocksDiff;

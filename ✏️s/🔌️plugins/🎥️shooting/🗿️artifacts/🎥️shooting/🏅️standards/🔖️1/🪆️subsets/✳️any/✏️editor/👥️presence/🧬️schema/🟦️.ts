@@ -1,10 +1,10 @@
 /** 🧬️ ShootingPresence */
 export interface ShootingPresence {
-  /** @state presence */
+  /** 🛰️ @state presence */
   selectedShotIds: string[];
-  /** @state presence */
+  /** 📷️ @state presence */
   camera: ShootingCamera;
-  /** @state presence */
+  /** 🟢️ @state presence */
   activeUtilityId: string;
 }
 

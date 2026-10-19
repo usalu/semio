@@ -36,17 +36,13 @@ function countTree(abs: string): { files: number; bytes: number } {
         files += 1;
         try {
           bytes += statSync(full).size;
-        } catch {
-          /* raced away */
-        }
+        } catch {}
       }
     }
   };
   try {
     walk(abs);
-  } catch {
-    /* raced away */
-  }
+  } catch {}
   return { files, bytes };
 }
 
@@ -76,9 +72,7 @@ export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?
       let real = abs;
       try {
         real = realpathSync(abs);
-      } catch {
-        /* keep the unresolved path so the guard below rejects it */
-      }
+      } catch {}
       const marker = readOutputMarker(repoRoot, abs);
       if (!resolve(real).startsWith(root + sep) || marker === null) {
         skippedUnmarked.push(relative(repoRoot, abs).split(sep).join("/"));
@@ -88,9 +82,6 @@ export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?
       const isIncomplete = !existsSync(join(abs, "🏁️done"));
       const { files, bytes } = countTree(abs);
       const rel = relative(repoRoot, abs).split(sep).join("/");
-      // 📏️`--over` prunes by size alone. A case that reads a real-world artifact copies it into every
-      // work directory it runs in, so the cache grows with the size of the evidence rather than with
-      // the number of tests, and a selective sweep is the only one worth running by then.
       const isOversized = opts.over !== undefined && bytes > opts.over;
       const selective = opts.stale === true || opts.over !== undefined;
       if (selective && !isStale && !isIncomplete && !isOversized) {
@@ -151,9 +142,7 @@ function directorySize(abs: string): { bytes: number; files: number } {
       try {
         bytes += statSync(full).size;
         files += 1;
-      } catch {
-        /* 🧭️Raced with another agent's atomic publish; it is not ours to account for. */
-      }
+      } catch {}
     }
   }
   return { bytes, files };
@@ -217,10 +206,6 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
   const nowMs = opts.nowMs ?? Date.now();
   const cacheRoot = resolve(testCacheRoot(repoRoot));
   if (!existsSync(cacheRoot)) return { dry, candidates: [], removed: [], markedBlobs: 0, sweptBlobs: 0, reclaimedBytes: 0 };
-  // 🚫️Both sides are RESOLVED before they are compared. Comparing a resolved path against an
-  // unresolved literal rejected every legitimate cache root on a platform where the repository itself
-  // sits behind a symlink — `/var` → `/private/var` on macOS is the ordinary case, not the attack —
-  // while still letting a cache root that is symlinked OUT of the repository through unexamined.
   const resolvedCacheRoot = realpathSync(cacheRoot);
   const resolvedMetaRoot = realpathSync(testCacheRoot(repoRoot));
   if (resolvedCacheRoot !== resolvedMetaRoot && !resolvedCacheRoot.startsWith(resolvedMetaRoot + sep)) {

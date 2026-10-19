@@ -1,4 +1,4 @@
-//! artifact-level `mutate-fem3d-1` case in ticket
+//! 📶️ artifact-level `mutate-fem3d-1` case in ticket
 //! 🧊 `s.fem.fem3d` boundary mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.
@@ -58,11 +58,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-support" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/🩹️changes/🎯️outcome/🔣️.json"),
         },
 
         "create-support" => Vector {
@@ -102,11 +102,11 @@ fn canonical(text: &str) -> Json {
 fn hall_vector_of(kind: &str) -> Vector {
     match kind {
         "change-support" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/📌️toggles/🎯️outcome/🔣️.json"),
         },
 
         "replace-support" => Vector {
@@ -143,27 +143,27 @@ const REJECT_VECTORS: &[&str] = &["change-support-invalid", "change-support-miss
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
         "change-support-invalid" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⚗️invalid/🎯️outcome/🔣️.json"),
         },
 
         "change-support-missing" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⛔️missing/🎯️outcome/🔣️.json"),
         },
 
         "change-support-same" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🎯️outcome/🔣️.json"),
+            before: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🔺️diff/🔣️.json"),
+            outcome: include_str!("../🧫️fixtures/🧬️mutations/🩹️change-support/⏸️same/🎯️outcome/🔣️.json"),
         },
 
         "same-support-bff8b3" => Vector {

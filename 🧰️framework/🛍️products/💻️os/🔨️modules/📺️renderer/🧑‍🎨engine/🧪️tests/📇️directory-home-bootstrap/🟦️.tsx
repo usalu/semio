@@ -229,17 +229,13 @@ describe("retained visible Home directory bootstrap", () => {
       receiptSha256: page.receiptSha256,
       throughSeqInclusive: page.throughSeqInclusive,
     });
-    // 🧾️ The admitting reply has already resolved here — its `{ operationId, generation }` handle is
-    // NOT a receipt, so nothing may be acknowledged yet. Reading it as one is the whole defect.
     await flush();
     expect(calls.filter((call) => call.startsWith("action:applyDirectoryEventPage:"))).toHaveLength(1);
     expect(posts).toEqual([]);
-    // 🏁️ The subscription opened BEFORE the dispatch, or a completion racing the reply is lost.
     expect(calls.indexOf("subscribe:41")).toBeLessThan(calls.findIndex((call) => call.startsWith("action:applyDirectoryEventPage:")));
     expect(JSON.parse(calls.find((call) => call.startsWith("action:applyDirectoryEventPage:"))!.split(":").slice(2).join(":"))).toMatchObject({ address: { actionId: "applyDirectoryEventPage" }, arguments: { pageJson: page.canonicalJson } });
     expect(viewStates).toHaveLength(1);
     expect(viewStates[0]?.sessionIdentity).toEqual({ userId: "user-a", displayName: "Ada Author" });
-    // 🧾️ A completion for ANOTHER operation on the same instance settles nothing.
     home.publish({ operation: ADMISSION_OPERATION + 1n, terminalOutput: fixture.receipt });
     await flush();
     expect(posts).toEqual([]);
@@ -286,8 +282,6 @@ describe("retained visible Home directory bootstrap", () => {
     expect(transient.abort.signal.aborted).toBe(false);
     expect(transientCalls).not.toContain("destroy");
 
-    // 🚫️ A page the guest REFUSES is permanent for this page: re-offering it is the retry storm
-    // S4 measured (31 `event-page?after=0` in a 60 s window), and the code is what the notice shows.
     const refusedPosts: BackboneWorkerRequest[] = [];
     const refusedCalls: string[] = [];
     const refused = await ownerFor(handle({ calls: refusedCalls, refuse: fault("s.home.directory-event-page-invalid", false) }).plugin, refusedPosts);

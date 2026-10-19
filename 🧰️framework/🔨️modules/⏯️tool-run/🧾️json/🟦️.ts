@@ -3,6 +3,7 @@
 import { ToolRunCodecError, type ToolRunIdentity } from "../🟦️.ts";
 import type { ToolRunEvent, ToolRunSlot } from "../🚦️lifecycle/🟦️.ts";
 import type { ToolRunProgress, ToolRunStep } from "../📊️progress/🟦️.ts";
+import { validateTickPayload } from "../🔤️codec/🟦️.ts";
 import type { ToolRunTraceDelta, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject } from "../🗄️trace-store/🟦️.ts";
 import type { ToolRunTick } from "../🎞️tick/🟦️.ts";
 

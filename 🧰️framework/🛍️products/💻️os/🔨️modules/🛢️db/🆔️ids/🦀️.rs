@@ -60,7 +60,6 @@ impl GenerationId {
     pub const INITIAL: GenerationId = GenerationId(0);
 
     /// ⏭️ The next generation after a supervised restart.
-    // 🚫️async: E1 pure accessor, only consumed by sync `#[test] fn` assertions — see R9
     pub fn next(self) -> GenerationId {
         GenerationId(self.0 + 1)
     }

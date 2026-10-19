@@ -9,10 +9,12 @@ members = [
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/🎛️dynamic-blocks/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/🧱️records/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧿️entity-codecs/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🪜️drawing-2/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
@@ -132,6 +134,9 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/�
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-dwg-editor]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
 
@@ -169,6 +174,9 @@ path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸�
 [workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-objects]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-entities]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧿️entity-codecs/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-drawing]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
 
@@ -195,6 +203,9 @@ path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️im
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-read-objects]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-read-objects-dynamic-blocks]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/🎛️dynamic-blocks/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-write]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"

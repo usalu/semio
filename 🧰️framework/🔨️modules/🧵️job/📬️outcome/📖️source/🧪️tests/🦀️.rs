@@ -1,5 +1,8 @@
 //! 🧪️ Paid native pages expose immutable bytes through the same original header and ledger authority.
 use semio_framework_job::*;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::JobPayloadAuthority;
+#[cfg(test)] use semio_framework_job_payload::payload_builder::RetainedPayloadBuilder;
+#[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 #[global_allocator]
 static ORIGINAL_SOURCE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn now()->Option<u64>{Some(1)}

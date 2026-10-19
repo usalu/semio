@@ -1,0 +1,64 @@
+{
+ "source": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/split-fw-tools/orig/presence-client.tsx",
+ "parts": [
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🧰️presence-client-kit/🟦️.tsx",
+   "kit": true,
+   "ranges": [
+    [
+     59,
+     221
+    ],
+    [
+     223,
+     227
+    ]
+   ],
+   "header": "/** 🧰️ Shared kit of the presence-client suites (`🚪️presence-room`, `🧭️presence-places-and-rooms`, `🖱️pointer-and-focus`, `🪟️presence-screens`): the sockets the test plays the proctor for, and the course, roster and snapshot fixtures. The suites together check shared presence in the web client (design §15–§17).\n *\n * @see ../🧫️fixtures/📡️presence-client/🔣️.json\n * @see ../../🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx\n */"
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🚪️presence-room/🟦️.tsx",
+   "kitImport": "../🧰️presence-client-kit/🟦️.tsx",
+   "ranges": [
+    [
+     229,
+     426
+    ]
+   ],
+   "header": "/** 🚪️ The presence room in the web client (design §15): joining with the presence subprotocol, rendering its batches, leaving, throttling the frames it sends — with `lodash`'s `throttle` (leading and trailing edge) as the third-party oracle — rejoining after a lost socket and watching other rooms read-only.\n *\n * @see ../🧰️presence-client-kit/🟦️.tsx — the sockets and fixtures\n * @see ../🧫️fixtures/📡️presence-client/🔣️.json\n * @see ../../🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx\n */"
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🧭️presence-places-and-rooms/🟦️.tsx",
+   "kitImport": "../🧰️presence-client-kit/🟦️.tsx",
+   "ranges": [
+    [
+     428,
+     621
+    ]
+   ],
+   "header": "/** 🧭️ The places and rooms of presence (design §16): the rooms a place joins (home watching every page behind the cards and every thinking room), the pointer and keyboard focus it shares there, the drafts it shares at most twice a second — with `lodash`'s `throttle` as the third-party oracle — and the item a learner drags; the place and watch vectors are shared JSON.\n *\n * @see ../🧰️presence-client-kit/🟦️.tsx — the sockets and fixtures\n * @see ../🧫️fixtures/📡️presence-client/🔣️.json\n * @see ../../🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx\n */"
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🖱️pointer-and-focus/🟦️.tsx",
+   "kitImport": "../🧰️presence-client-kit/🟦️.tsx",
+   "ranges": [
+    [
+     623,
+     731
+    ]
+   ],
+   "header": "/** 🖱️ The pointer, keyboard focus and drag the client shares (design §16) — measured on the nearest anchor, an item or a card, also while pressed, and over every viewport gap, with `lodash`'s `clamp` as the third-party oracle of the cursor's fraction; the cursor vectors are shared JSON.\n *\n * @see ../🧰️presence-client-kit/🟦️.tsx — the sockets and fixtures\n * @see ../🧫️fixtures/📡️presence-client/🔣️.json\n * @see ../../🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx\n */"
+  },
+  {
+   "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📚️course/🧪️tests/🪟️presence-screens/🟦️.tsx",
+   "kitImport": "../🧰️presence-client-kit/🟦️.tsx",
+   "ranges": [
+    [
+     733,
+     1051
+    ]
+   ],
+   "header": "/** 🪟️ How the screens show the others (design §17): card activity, cursors and focus frames on their anchors, name labels and colours, the learner card, the quiz cards and the leaderboard, inside the pages behind the cards too; the activity vectors are shared JSON.\n *\n * @see ../🧰️presence-client-kit/🟦️.tsx — the sockets and fixtures\n * @see ../🧫️fixtures/📡️presence-client/🔣️.json\n * @see ../../🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx\n */"
+  }
+ ]
+}

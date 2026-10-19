@@ -28,13 +28,13 @@ export interface ObjNormalModified { index: number; diff: ObjNormalDiff; }
 export interface ObjNormalAdded { index: number; normal: { x: Binary64; y: Binary64; z: Binary64 }; }
 export interface ObjNormalsDiff { removed: number[]; modified: ObjNormalModified[]; added: ObjNormalAdded[]; }
 
-/** `vertices` is a whole-vec-replace weak leaf (a face's own v/vt/vn reference list). */
+/** 🧊️ `vertices` is a whole-vec-replace weak leaf (a face's own v/vt/vn reference list). */
 export interface ObjFaceDiff { vertices?: ObjFaceVertex[]; }
 export interface ObjFaceModified { index: number; diff: ObjFaceDiff; }
 export interface ObjFaceAdded { index: number; face: { vertices: ObjFaceVertex[] }; }
 export interface ObjFacesDiff { removed: number[]; modified: ObjFaceModified[]; added: ObjFaceAdded[]; }
 
-/** `faces` is a whole-list-replace weak value (membership set) on both groups and objects. */
+/** 🕸️ `faces` is a whole-list-replace weak value (membership set) on both groups and objects. */
 export interface ObjGroupDiff { faces?: bigint[]; }
 export interface ObjGroupModified { name: string; diff: ObjGroupDiff; }
 export interface ObjGroupAdded { index: number; group: ObjGroup; }
@@ -51,7 +51,7 @@ export interface ObjDiff {
   faces?: ObjFacesDiff;
   groups?: ObjGroupsDiff;
   objects?: ObjObjectsDiff;
-  /** tri-state: absent = unchanged, null = cleared, string = set */
+  /** 🫥️ tri-state: absent = unchanged, null = cleared, string = set */
   mtllib?: string | null;
   usemtl?: ObjUsemtlRange[];
   smoothingGroups?: ObjSmoothingRange[];

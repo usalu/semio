@@ -104,7 +104,20 @@ pub fn tool_error_shape() -> serde_json::Value {
     })
 }
 
-/// 🧯️ Widens one tool's `outputSchema` to `anyOf [its success shape, the typed tool error]`. The
+/// 📦️ The wrapper `structuredContent` takes when a tool's data is an array or a scalar: MCP requires
+/// `structuredContent` to be a JSON object, so `CallToolResult::wire_structured_content` wraps such data as
+/// `{"result": <value>}`. Every widened `outputSchema` admits it, so a wrapped result still validates.
+pub fn tool_result_wrapper_shape() -> serde_json::Value {
+    serde_json::json!({
+        "type": "object",
+        "description": "Array or scalar tool data wrapped as an object: the data is the value of `result`.",
+        "properties": { "result": {} },
+        "required": ["result"],
+        "additionalProperties": false,
+    })
+}
+
+/// 🧯️ Widens one tool's `outputSchema` to `anyOf [its success shape, the typed tool error, the result wrapper]`. The
 /// official MCP SDK validates `structuredContent` against `outputSchema` on EVERY result, `isError`
 /// ones included (`@modelcontextprotocol/sdk` 1.30.0 `Client.callTool`, measured 2026-09-26: an
 /// `APPROVAL_REQUIRED` from `action_invoke` became a thrown `-32602 … must have required property
@@ -121,7 +134,7 @@ pub fn admit_tool_errors(output_schema: &mut serde_json::Value) {
     let success = serde_json::Value::Object(std::mem::take(map));
     map.extend(root);
     map.insert("type".to_string(), serde_json::json!("object"));
-    map.insert("anyOf".to_string(), serde_json::json!([success, error]));
+    map.insert("anyOf".to_string(), serde_json::json!([success, error, tool_result_wrapper_shape()]));
 }
 
 //#endregion 🔖️ToolErrors

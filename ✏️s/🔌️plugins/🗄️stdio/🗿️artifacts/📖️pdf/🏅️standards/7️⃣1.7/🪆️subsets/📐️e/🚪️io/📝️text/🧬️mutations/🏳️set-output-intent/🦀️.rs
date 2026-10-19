@@ -1,4 +1,4 @@
-//! Direct text identity for `set-output-intent`.
+//! 🆔️ Direct text identity for `set-output-intent`.
 
 pub const OPCODE: &str = "set-output-intent";
 pub const TEXT_OPCODE: &str = OPCODE;

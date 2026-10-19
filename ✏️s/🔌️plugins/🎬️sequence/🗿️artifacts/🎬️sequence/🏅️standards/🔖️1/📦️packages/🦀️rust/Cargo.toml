@@ -50,6 +50,7 @@ semio-framework-schema-registry = { path = "../../../../../../../../../🧰️fr
 semio-framework-schema-state = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-sequence-sequence-editor = { path = "../../🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust" }
 semio-s-artifact-sequence-sequence-inferences = { path = "../../🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
@@ -61,6 +62,8 @@ semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
+json = "0.12"
+semio-framework-job-payload = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 
 [features]
 testkit = ["semio-s-artifact-sequence-sequence-schema/testkit", "semio-s-artifact-sequence-sequence-editor/testkit", "semio-s-artifact-sequence-sequence-inferences/testkit", "semio-s-artifact-sequence-sequence-tests/testkit"]

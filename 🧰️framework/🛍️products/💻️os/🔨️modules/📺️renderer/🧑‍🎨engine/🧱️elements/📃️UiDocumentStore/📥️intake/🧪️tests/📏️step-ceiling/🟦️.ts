@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { retainedUiIntakeStepCeiling, RETAINED_UI_INTAKE_STEPS_PER_NODE, RETAINED_UI_INTAKE_SLICE_STEPS } from "../../🟦️.ts";
-import { loadUiRetainedIntakeFixture } from "../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadUiRetainedIntakeFixture } from "@semio-tech/framework/ui/testing/fixtures";
 
 describe("paged scene-lane intake ceiling", () => {
   it("credits every node a document's first publication has to mint", () => {

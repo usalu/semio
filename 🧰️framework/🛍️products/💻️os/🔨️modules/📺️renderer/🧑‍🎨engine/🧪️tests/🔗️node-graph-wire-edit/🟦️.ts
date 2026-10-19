@@ -96,10 +96,6 @@ describe("node graph wire edit", () => {
   });
 
   it("holds the pointer for the whole gesture, so a drag that leaves the canvas still releases on it", () => {
-    // 🩸️ Measured on 6018: a press on a port entered `InteractionMode::DrawEdge` and the release,
-    // landing over the outline tree beside the canvas, never reached `pointer_up_screen` at all — the
-    // wire stayed in flight and the gesture made no edit. Cutting a wire means dragging it AWAY, so
-    // the gesture that most needs to leave the canvas was the one that could never finish.
     const source = readFileSync(nodeGraphSource, "utf8");
     const pressAt = source.indexOf("issueFlowGestureStep(session.pointerDownScreen(");
     const releaseAt = source.indexOf("issueFlowGestureStep(session.pointerUpScreen(");
@@ -110,8 +106,6 @@ describe("node graph wire edit", () => {
   });
 
   it("spells a removal the way the guest reads it, in both renderers", () => {
-    // 🩸️ The wgpu renderer wrote `edgeId` — the engine's private numbering's name — while the guest's
-    // `disconnect` reads `synapseId`: a well-formed command silently dropped.
     const guest = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🔨️modules/🛠️tool-machine/🦀️.rs"));
     const guestDisconnect = guest.slice(guest.indexOf('"disconnect" =>'));
     const guestField = /closed\(&\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
@@ -137,16 +131,8 @@ describe("node graph wire edit", () => {
   });
 
   it("asks the path discriminator on every phase, the way React drives pointer_*_screen on every phase", () => {
-    // 🩸️ The half no Rust law can reach: the wgpu renderer decides per PHASE which of the host's two
-    // pointer entries to use. Asking only on press let a plain hover across a port fall through to
-    // the bounded path, which faults — measured on 6118 as
-    // `wgpu-shell graph move fault surface=procedural-main fault=Structure`, after which the frame
-    // loop published nothing further.
     const canvas = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
     const asks = [...canvas.matchAll(/node_graph_gesture_is_screen_path\(surface_id, ([^)]*\)?)\)/gu)].map((match) => match[1]);
-    // 🖐️ Three PHASE questions — down, move, up — each asked about the point the pointer is at, plus
-    // the one the screen-path dispatcher asks with no point at all: "is a gesture already in flight?",
-    // which is what tells a plain hover (which can edit nothing) from a move inside a live wire draw.
     expect(asks.filter((argument) => argument === "Some((sx, sy)")).toHaveLength(3);
     expect(asks.filter((argument) => argument === "None")).toHaveLength(1);
     expect(law.rules.everyPhaseOverAnUnsupportedHit).toContain("EVERY phase");

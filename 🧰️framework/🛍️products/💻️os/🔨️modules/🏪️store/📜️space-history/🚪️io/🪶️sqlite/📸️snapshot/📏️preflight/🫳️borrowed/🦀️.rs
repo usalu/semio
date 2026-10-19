@@ -78,7 +78,7 @@ fn spec()->R{const FIELDS:&[F]=&[F::new(1,"value",H::Value)];R{keyword:None,layo
 pub(super) fn measure(value:&SpaceHistorySnapshot,encoding:SnapshotEncoding,maximum:usize,control:&mut NativeEncodeControl<'_>)->Result<usize,ValueError>{
  let source=Source(value);
  match encoding{
-  SnapshotEncoding::Text=>usize::try_from(semio_framework_pack_json::write_json_source_into(&source,maximum as u64,64,u64::MAX,&mut |_:&[u8],_:&mut NativeEncodeControl<'_>|Ok::<_,ValueError>(()),control)?).map_err(|_|ValueError::new(K::WorkLimit,"history wire byte count exceeds address space")),
+  SnapshotEncoding::Text=>usize::try_from(semio_framework_pack_json_source_sink::write_json_source_into(&source,maximum as u64,64,u64::MAX,&mut |_:&[u8],_:&mut NativeEncodeControl<'_>|Ok::<_,ValueError>(()),control)?).map_err(|_|ValueError::new(K::WorkLimit,"history wire byte count exceeds address space")),
   SnapshotEncoding::Binary=>{let mut options=pack::record::EncodeOptions::default();options.limits.max_file_len=maximum as u64;pack::record::measure_document_borrowed(&source,&spec(),&options,control)},
  }
 }

@@ -554,7 +554,7 @@ pub mod part_1_1 {
         std::f64::consts::PI.powi(2) * e * i / (l_cr * l_cr)
     }
 
-    /// �フレーション Torsional buckling: N_cr,T ≈ G·I_t / i_0² + … simplified for open sections.
+    /// 🏗️フレーション Torsional buckling: N_cr,T ≈ G·I_t / i_0² + … simplified for open sections.
     pub fn torsional_lambda_bar(a: f64, i_t: f64, i_y: f64, i_z: f64, l_cr_t: f64, f_o_pa: f64) -> f64 {
         if a <= 0.0 || l_cr_t <= 0.0 { return 0.0; }
         let g = na_de::E_PA / (2.0 * (1.0 + na_de::NU));
@@ -654,7 +654,7 @@ pub mod part_1_2 {
 
 pub mod part_1_3 {
     use crate::*;
-    /// N_C = 2e6 (Δσ_C reference), N_D = 5e6 (knee), N_L = 1e8 (cut-off).
+    /// 📎️ N_C = 2e6 (Δσ_C reference), N_D = 5e6 (knee), N_L = 1e8 (cut-off).
     pub const N_C: f64 = 2.0e6;
     pub const N_D: f64 = 5.0e6;
     pub const N_L: f64 = 1.0e8;

@@ -14,7 +14,7 @@ pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshotValue) -> protocol::Mut
     if !base.nodes.iter().any(|node| node.id == payload.support.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.support.node_id), [payload.support.node_id.clone()]);
     }
-    if !crate::FemDof::canonical(&payload.support.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support restraints must be canonical.", [payload.support.id.clone()]); }
+    if !semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof::canonical(&payload.support.fixed) { return protocol::MutationOutcome::fatal("mutation.invariant", "Support restraints must be canonical.", [payload.support.id.clone()]); }
     if payload.index.is_some_and(|at| at > base.supports.len()) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), base.supports.len()), [&payload.support.id.to_string()]);
     }

@@ -45,8 +45,6 @@ fn the_generation_3d_flow_window_paints_a_scene_that_survives_encoding() {
     assert!(!commands.is_empty(), "the generation3d flow window painted nothing to encode");
     assert_eq!(encoded["truncated"], Value::Bool(false), "the live node-graph scene must fit the draw-list ceiling");
     assert!(bytes < protocol::FLOW_MAX_REQUEST_BYTES, "the encoded draw list ({bytes} bytes) must fit one ABI reply body");
-    // 📏️ Measured on this exact fixture at 966x814: 47 commands / 22 593 bytes — two orders of
-    // magnitude under the ABI reply body, which is what makes carrying the picture itself viable.
     assert!(bytes < 64 * 1024, "the live node-graph draw list grew past its measured envelope ({bytes} bytes)");
     let tags: Vec<&str> = commands.iter().filter_map(|command| command[0].as_str()).collect();
     assert!(tags.contains(&"f"), "a node graph must fill something");
@@ -192,8 +190,6 @@ fn without_a_gpu_adapter_the_frame_replays_a_list_that_covers_the_node_layout() 
     let ink = ink.expect("the draw list carried no drawable coordinates at all");
     assert!(ink.2 - ink.0 > f64::from(width) * 0.5 && ink.3 - ink.1 > f64::from(height) * 0.5, "the replayable picture {ink:?} covers less than half a {width}x{height} viewport");
 
-    // 🎯️ Every node the host reports as on screen must have something drawn at its own screen rect:
-    // that is what makes this a CAMERA law and not just a "the list is long" law.
     let widgets = frame["hostDocument"]["widgets"].as_array().expect("widgets").clone();
     let mut covered = 0_usize;
     for widget in &widgets {
@@ -249,7 +245,6 @@ fn the_generation_3d_document_camera_does_not_frame_its_own_graph_and_loses_to_t
     assert!(fitted, "the opening camera kept a stored camera that shows {stored_coverage} of the graph");
     assert!((host.dag.camera_content_coverage() - 1.0).abs() < 1e-6, "after the fit the whole graph must be on screen");
 
-    // 🎯️ Not "a number came out right": every widget the host can place has to land inside the pane.
     let mut on_screen = 0_usize;
     for widget in host.host_snapshot.widgets.iter() {
         let id = semio_framework_artifact_flow_flow::widget_id_for(widget).to_string();
@@ -294,9 +289,6 @@ fn a_graph_that_left_the_view_refits_and_one_that_did_not_is_left_alone() {
 fn every_captioned_zoom_band_names_the_node_instead_of_abbreviating_it() {
     let mut host = generation_3d_flow_host();
     host.set_viewport(483, 814, 1.0);
-    // 🔡️ Exactly what the plugin publishes for a kind its catalogue does not carry
-    // (`document_operator_records` in `🧊️generation3d/…/🪟️windows/🕸️flow/🦀️.rs`): the name is the
-    // last kind segment and the abbreviation is its first letter.
     let records: Vec<semio_framework_ui_declaration::ui::NodeGraphOperatorRecord> = ["brep.curve.polygon", "math.vector", "brep.solid.extrude"]
         .into_iter()
         .map(|kind| {
@@ -337,8 +329,6 @@ fn every_captioned_zoom_band_names_the_node_instead_of_abbreviating_it() {
         for title in &titles {
             assert!(title.chars().count() > 1, "at zoom {zoom} (lod {lod}) the caption {title:?} is a single glyph — the abbreviation tier is back");
         }
-        // 🔤️ `normalize_node_display` title-cases what the operator record carries, so the live
-        // captions read `Extrude`/`Vector`/`Polygon` — never the `E`/`V`/`P` the abbreviation is.
         assert!(titles.contains(&"Extrude"), "at zoom {zoom} (lod {lod}) the extrude node is captioned {titles:?} instead of its name");
         assert!(titles.contains(&"Vector") && titles.contains(&"Polygon"), "at zoom {zoom} (lod {lod}) the captions are {titles:?}");
     }

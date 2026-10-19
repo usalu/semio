@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import { Matrix3, Vector3 } from "three";
 import { applyPatch } from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { encodeResultSourceIdentity, decodeResultSourceIdentity } from "../🟦️.ts";
 
 /** 🧫️ Independent schema, UTF-8, JSON Patch and matrix oracles preserve typed result sources. */

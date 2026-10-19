@@ -200,10 +200,6 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetPreviewCamera { camera: next.preview_camera.clone() }),
             Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetShowMode { value: next.show_mode.clone() }),
         ];
-        // 🪟️ A view command that changes what the evaluation reads — the viewed example or the LOD
-        // deflection — owes the windows the SHELL says are attached a fresh evaluation and carries the
-        // run start that debt needs. A camera, sun or shading move changes nothing the evaluation reads
-        // and owes nothing: starting a run per orbit drag would be pure hop overhead.
         if next.active_example_id != input.config.active_example_id || next.tolerance().to_bits() != input.config.tolerance().to_bits() {
             let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
             let viewed = Generation3dViewedDocument::resolve(input.snapshot, &next);

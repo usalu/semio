@@ -14,9 +14,9 @@ pub struct StandardFontMetrics {
     pub fixed_pitch: bool,
     pub bold: bool,
     pub symbolic: bool,
-    /// Glyph name → advance width, sorted by name for binary search.
+    /// ↔️ Glyph name → advance width, sorted by name for binary search.
     pub widths: &'static [(&'static str, u16)],
-    /// Built-in encoding: character code → glyph name (Symbol/ZapfDingbats only carry their own).
+    /// 📤️ Built-in encoding: character code → glyph name (Symbol/ZapfDingbats only carry their own).
     pub builtin_encoding: &'static [(u8, &'static str)],
 }
 

@@ -1,6 +1,7 @@
 //! 🖼️ Rendered scene and manifest tests of the CAD editor unit tests: the world scene per pane, the utility, the manifest stitching and the reference verbs. See [`super`].
 
 use super::*;
+#[cfg(test)] use semio_s_artifact_cad_cad_modes as edit;
 
 //#region 🔖️Render
 #[semio_framework_async_macros::async_test]
@@ -57,14 +58,9 @@ async fn app_definition_declares_one_window_scoped_dislocate_utility() {
     let definition = create_cad_app();
     let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
     assert_eq!(utility_ids, vec![CAD_DISLOCATE_UTILITY_ID]);
-    // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
-    // cad must NOT also declare it as an Mutation.
     let set_active_utility = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
     assert_eq!(set_active_utility.kind, ActionKind::View);
-    // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
-    // passive `allows_actions_while_active` view utilities.
     assert!(definition.utilities.iter().all(|utility| !utility.allows_actions_while_active));
-    // 🧭️ Every world-3d pane owns its own Dislocate utility activation.
     for window in &definition.window_kinds {
         let refs: Vec<&str> = window.utilities.iter().map(|utility_ref| utility_ref.as_str()).collect();
         assert_eq!(refs, vec![CAD_DISLOCATE_UTILITY_ID], "window {} utilities", window.id);
@@ -87,7 +83,6 @@ async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
     let modes: Vec<&str> = definition.modes.iter().map(|mode| mode.id.as_str()).collect();
     assert_eq!(modes, vec![edit::CAD_PLAY_MODE_EDIT]);
     assert_eq!(definition.default_mode_id, edit::CAD_PLAY_MODE_EDIT);
-    // 🕰️ The framework appends its own history tab after the app-declared ones.
     let panels: Vec<(&str, Option<&str>)> = definition.panel_tabs.iter().map(|tab| (tab.id(), tab.body_key.as_deref())).take(3).collect();
     assert_eq!(
         panels,

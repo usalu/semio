@@ -1,4 +1,4 @@
-//! kind-catalog bundle (`objects`/`vortices`/`cables`/`attractions` catalogs together, one
+//! 📇️ kind-catalog bundle (`objects`/`vortices`/`cables`/`attractions` catalogs together, one
 //! 📚 Puzzle3d mutation — `ReplaceKindCatalogs`: whole-value swap of the scene_snapshot-carried typed
 //! manifest-import gesture).
 use semio_s_artifact_puzzle_3d_diff::Puzzle3dDiff;

@@ -152,7 +152,6 @@ pub struct NodeBase {
 }
 
 impl NodeBase {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn with_layout(layout: crate::LayoutSpec) -> Self {
         Self {
             id: None,
@@ -169,13 +168,11 @@ impl NodeBase {
     }
 
     /// 🍃️ A terminal node's own base — [`crate::LayoutSpec::Leaf`], the crate's own default.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn leaf() -> Self {
         Self::with_layout(crate::LayoutSpec::default())
     }
 
     /// 📚️ A children-arranging node's own base — [`crate::LayoutSpec::Stack`] along `axis`.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub(super) fn stack(axis: crate::Axis) -> Self {
         Self::with_layout(crate::LayoutSpec::Stack(crate::StackLayout { axis, ..Default::default() }))
     }

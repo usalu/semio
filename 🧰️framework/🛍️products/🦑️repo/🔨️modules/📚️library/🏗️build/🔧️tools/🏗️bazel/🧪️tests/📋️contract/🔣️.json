@@ -41,7 +41,7 @@
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
       "definition": "Command",
       "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🎛️command/🧬️schema/🔣️.json",
-      "sha256": "1ca805bab46a7fe7743f739312851634e3238f7ad3047b6b9bccb01a722f8969"
+      "sha256": "2bb5b0acd8ff9a63031370b3d16abc0bef5cba55bf6f17c058f8e14c71f7f7dd"
     },
     {
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
@@ -53,7 +53,7 @@
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
       "definition": "MaterializedPaths",
       "removed": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/📥️paths.json",
-      "sha256": "e22a05b7c9ea08d8bc9dbf323e46b787c8820d308e5dd4b7dd93bf03dde8a217"
+      "sha256": "aa754355b28abc984546644fc54bdd137a5ff1e1989d47d2c5f7c6f42fe8d231"
     },
     {
       "component": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
@@ -71,7 +71,7 @@
       "component": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧬️schema/🔣️.json",
       "definition": "StorageLayout",
       "removed": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🧬️schema/🔣️.json",
-      "sha256": "cdf17d14aa1ebba30eaff67889406e1c97dc1accce9f1df7cb8de6f0ba63964a"
+      "sha256": "e26909ffc36cc4bf690bc0a6449e14cbe6f57b97b5cadaf8bcbe02b4e1aee59e"
     }
   ],
   "vectors": [
@@ -215,6 +215,7 @@
         "workspace": "/owned/workspace",
         "outputs": "/owned/outputs",
         "actions": "/owned/actions",
+        "server": "/owned/server",
         "temporary": "/owned/temporary"
       },
       "admit": true
@@ -230,6 +231,7 @@
         "workspace": "/owned/workspace",
         "outputs": "/owned/outputs",
         "actions": "/owned/actions",
+        "server": "/owned/server",
         "temporary": "/owned/temporary",
         "foreign": true
       },

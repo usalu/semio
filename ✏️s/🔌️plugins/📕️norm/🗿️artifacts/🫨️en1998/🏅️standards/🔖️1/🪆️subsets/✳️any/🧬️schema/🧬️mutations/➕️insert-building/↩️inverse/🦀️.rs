@@ -1,4 +1,4 @@
-//! Inverse for `insert-building`.
+//! ↩️ Inverse for `insert-building`.
 use crate::insert_building::InsertBuilding;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::remove_building;

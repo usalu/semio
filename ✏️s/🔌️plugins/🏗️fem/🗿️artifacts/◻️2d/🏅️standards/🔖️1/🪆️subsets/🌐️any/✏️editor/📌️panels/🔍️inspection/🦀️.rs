@@ -1,4 +1,4 @@
-//! framework-owned `"fem2d"` selection resolves to (a node, element, material, section, support,
+//! 📦️ framework-owned `"fem2d"` selection resolves to (a node, element, material, section, support,
 //! 🔍️ Fem2d play app panel — the inspection panel: real editable controls for whatever the
 //! region, load, load case or combination), or the document summary when nothing is selected.
 //!

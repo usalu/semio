@@ -11,9 +11,9 @@ export interface CurationListDelta<T, P> { removed?: CurationListRemoval[]; inse
 export type CurationStockExtraDelta = CurationListDelta<ObjectKindExtra, CurationObjectKindExtraPatchEntry>;
 export type CurationCuratedDelta = CurationListDelta<CuratedItem, CurationCuratedPatchEntry>;
 export interface CurationDiff {
-  /** @state artifact @child kind=s.stdio.semio */ catalog?: ArtifactChild | null;
-  /** @state artifact */ stockExtra?: CurationStockExtraDelta | null;
-  /** @state artifact */ curated?: CurationCuratedDelta | null;
+  /** 📇️ @state artifact @child kind=s.stdio.semio */ catalog?: ArtifactChild | null;
+  /** 📦️ @state artifact */ stockExtra?: CurationStockExtraDelta | null;
+  /** 🏛️ @state artifact */ curated?: CurationCuratedDelta | null;
 }
 /** 🩹 Admits an exact curated quantity patch. */
 export function parseCurationCuratedPatchEntry(value: unknown, at = "$"): CurationCuratedPatchEntry {

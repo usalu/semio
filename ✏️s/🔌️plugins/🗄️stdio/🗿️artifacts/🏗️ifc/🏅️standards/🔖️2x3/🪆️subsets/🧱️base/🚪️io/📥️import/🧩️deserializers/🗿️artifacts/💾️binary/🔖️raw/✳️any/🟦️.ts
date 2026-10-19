@@ -1,2 +1,2 @@
-/** Deserialize stdio.ifc.2x3 from stdio.binary (meta). */
+/** 📥️ Deserialize stdio.ifc.2x3 from stdio.binary (meta). */
 export {};

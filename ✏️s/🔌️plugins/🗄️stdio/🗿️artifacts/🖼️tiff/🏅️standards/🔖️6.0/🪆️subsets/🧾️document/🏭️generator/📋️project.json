@@ -2,40 +2,50 @@
   "name": "@semio-tech/fixture-generator-stdio-tiff-6-0-document",
   "targets": {
     "🏭️generator": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🏭️generator-manifests": {
+      "executor": "repo:script",
       "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
         "command": "bun ./📜️script.ts manifests",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🧪️test": {
-      "cache": false,
+      "executor": "repo:script",
+      "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🧪️test-oracle": {
-      "cache": false,
+      "executor": "repo:script",
+      "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
         "command": "bun ./📜️script.ts test-oracle",
         "forwardAllArgs": true
       },
       "outputs": []
     },
     "🧪️test-conformance-oracle": {
-      "cache": false,
+      "executor": "repo:script",
+      "cache": true,
       "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🏭️generator",
         "command": "bun ./📜️script.ts test-conformance-oracle",
         "forwardAllArgs": true
       },

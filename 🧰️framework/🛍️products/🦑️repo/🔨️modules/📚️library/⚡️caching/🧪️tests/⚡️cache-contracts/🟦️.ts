@@ -357,7 +357,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
     const bootstrap = vectors.bootstrap, dotnet = contracts.find((project) => project.name === bootstrap.dotnetProject);
     assert.ok(dotnet, "The current .NET support library needs an Nx owner");
-    assert.deepEqual(dotnet!.targets.build.outputs, ["{projectRoot}/dist/build"]);
+    assert.deepEqual(dotnet!.targets.build.outputs, ["{projectRoot}/.🧾️store/build.json"]);
     assert.ok(dotnet!.targets.build.dependsOn.includes("deps"));
     assert.equal(dotnet!.targets.deps.cache, false);
     assert.ok(workspace.targets["deps-dotnet"].dependsOn.includes(`${bootstrap.dotnetProject}:deps`));

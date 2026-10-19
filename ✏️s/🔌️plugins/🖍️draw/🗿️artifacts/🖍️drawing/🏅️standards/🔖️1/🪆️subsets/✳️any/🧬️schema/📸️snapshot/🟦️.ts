@@ -12,17 +12,17 @@ import {
 } from "../🟦️.ts";
 
 export interface DrawingSnapshot {
-  /** @state artifact */
+  /** 📐️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🆔️ @state artifact */
   id: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers: DrawingLayerNode[];
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets: Record<string, DrawingImageAsset>;
-  /** @state artifact */
+  /** 🖼️ @state artifact */
   artboard?: DrawingArtboard;
 }
 

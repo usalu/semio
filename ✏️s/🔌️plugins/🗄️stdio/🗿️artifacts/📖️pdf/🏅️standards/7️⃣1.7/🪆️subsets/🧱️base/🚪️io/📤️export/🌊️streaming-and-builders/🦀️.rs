@@ -23,7 +23,6 @@ impl DocumentStream {
     /// 🏁 Lowers the document-level lanes of `snapshot` (its `pages` are ignored — they arrive
     /// through [`DocumentStream::page`]) for `expected_pages` pages and returns the header +
     /// resource bytes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn begin(snapshot: &PdfSnapshot, expected_pages: usize, options: EncodeOptions) -> PResult<(Self, Vec<u8>)> {
         let (lowered, pages_ref, page_refs, root_resources) = lower_document_headless(snapshot, expected_pages, options.lower.clone())?;
         let mut write = options.write.clone();
@@ -45,7 +44,6 @@ impl DocumentStream {
     }
 
     /// 📄 Appends the next page; returns its bytes (page object, content stream, annotations).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn page(&mut self, page: &PdfPage) -> PResult<Vec<u8>> {
         let index = self.written_pages;
         let page_ref = match self.page_refs.get(index) {
@@ -69,7 +67,6 @@ impl DocumentStream {
     }
 
     /// 🏁 Writes the page tree, catalog and cross-reference section; returns the closing bytes.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn finish(mut self) -> PResult<Vec<u8>> {
         let mut out = Vec::new();
         let kids: Vec<PdfObject> = self.page_refs.iter().take(self.written_pages).map(|r| PdfObject::Ref(*r)).collect();
@@ -105,19 +102,16 @@ pub struct PdfTextLayout<'a> {
     pub codec: FontCodec,
 }
 impl<'a> PdfTextLayout<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(font: &'a PdfFont, size: f64,resources:&dyn foreign_artifacts::PdfArtifactResourcePort) -> PResult<Self> {
         Ok(Self { font, size, leading: size * 1.2, codec: FontCodec::new(font,resources)? })
     }
 
     /// 📏 Width of `text` at this size in user space (`None` when the font cannot show it).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn width(&self, text: &str) -> Option<f64> {
         self.codec.text_width(text).map(|width| width * self.size / 1000.0)
     }
 
     /// 📏 Ascent of the face at this size (AFM/descriptor metrics, else 0.8 em).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn ascent(&self) -> f64 {
         let ascent = match &self.font.kind {
             PdfFontKind::Type1 { descriptor: Some(d), .. } | PdfFontKind::TrueType { descriptor: Some(d), .. } => d.ascent,
@@ -129,7 +123,6 @@ impl<'a> PdfTextLayout<'a> {
 
     /// 🔤 Breaks `text` into lines no wider than `max_width` (paragraphs split on `\n`; a word
     /// wider than the line is split by characters).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn wrap(&self, text: &str, max_width: f64) -> Vec<String> {
         let mut lines = Vec::new();
         for paragraph in text.split('\n') {
@@ -160,7 +153,6 @@ impl<'a> PdfTextLayout<'a> {
 
     /// 🖋️ Operators showing `lines` from `(x, top)` downwards (the first baseline sits one ascent
     /// below `top`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn show_lines(&self, lines: &[String], x: f64, top: f64) -> Vec<PdfOp> {
         let mut ops = vec![PdfOp::BeginText, PdfOp::SetFont { name: self.font.id.clone(), size: self.size }, PdfOp::SetLeading { leading: self.leading }, PdfOp::MoveText { tx: x, ty: top - self.ascent() }];
         for (index, line) in lines.iter().enumerate() {
@@ -177,7 +169,6 @@ impl<'a> PdfTextLayout<'a> {
 
     /// 🖋️ Wraps and shows `text` inside the rectangle `[x, top - height, x + width, top]`,
     /// dropping lines that do not fit; returns the operators and how many lines fit.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn show_paragraph(&self, text: &str, x: f64, top: f64, width: f64, height: f64) -> (Vec<PdfOp>, usize) {
         let lines = self.wrap(text, width);
         let fitting = ((height - self.ascent()) / self.leading).floor().max(0.0) as usize + 1;

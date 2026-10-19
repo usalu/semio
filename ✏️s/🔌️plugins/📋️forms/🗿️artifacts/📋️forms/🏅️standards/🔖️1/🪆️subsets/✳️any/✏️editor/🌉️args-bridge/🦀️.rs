@@ -115,8 +115,6 @@ pub fn command_from_action(action: &str, args: Option<&semio_framework_value::Ds
         "addVectorField" => FormsCommand::AddVectorField(decode(action, plain())?),
         "removeVectorField" => FormsCommand::RemoveVectorField(decode(action, plain())?),
         "moveBlock" => {
-            // 🧱️ The block-list host sends `{blockId, fromStepId, toStepId, index}`; `position` is
-            // only consulted when `index` is absent, so it defaults to "after".
             let mut folded = fold(args, &[("block_id", "question_id")], &[]);
             if let semio_framework_value::DslValue::Object(entries) = &mut folded {
                 if !entries.iter().any(|(key, _)| key == "position") {

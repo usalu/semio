@@ -2,6 +2,12 @@
   "ownerRoot": "♻️mit-bestand/🧺️demonstrator",
   "viteConfig": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🐚️shell/🟦️.ts",
   "browserEntry": "♻️mit-bestand/🧺️demonstrator/🐚️shell/🟦️.ts",
+  "browserSessionFactories": [
+    {
+      "module": "@semio-tech/puzzle-2d",
+      "engine": "./🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust"
+    }
+  ],
   "localHub": {
     "owner": {
       "program": "bun",

@@ -3,9 +3,9 @@ import { parseOpcPackage, parsePptxXmlPart } from "./📸️snapshot/🟦️.ts"
 import { parsePptxSnapshot } from './📸️snapshot/🟦️.ts';
 import type { OpcPackage, PptxXmlPart } from './📸️snapshot/🟦️.ts';
 export interface PptxArtifact {
-  /** @state artifact */ schema: string;
-  /** @state artifact */ opc: OpcPackage;
-  /** @state artifact */ xmlParts: PptxXmlPart[];
+  /** 📐️ @state artifact */ schema: string;
+  /** 📦️ @state artifact */ opc: OpcPackage;
+  /** 🧾️ @state artifact */ xmlParts: PptxXmlPart[];
 }
 
 //#region 🚪️Parsers

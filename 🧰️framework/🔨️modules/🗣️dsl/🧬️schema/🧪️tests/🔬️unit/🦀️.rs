@@ -139,7 +139,6 @@ async fn expr_parses_with_correct_precedence() {
 
 #[semio_framework_async_macros::async_test]
 async fn expr_right_nested_addition_round_trips_through_parens() {
-    // a+(b+c) is structurally distinct from (a+b)+c; canonical print must keep the parens.
     let spec = formula_spec();
     let value = parse("combine c value=(a+(b+c))", &spec, &ParseOptions::default()).expect("parse");
     let printed = print(&value, &spec, JoinMode::Document);
@@ -156,9 +155,6 @@ async fn expr_supports_unary_minus_and_function_calls() {
 
 #[semio_framework_async_macros::async_test]
 async fn expr_glued_negative_number_after_operand_canonicalizes_to_spaced_subtraction() {
-    // Hand-written "10-2" (no space) hits the lexer's negative-number-literal rule, not a bare
-    // Minus token; the Expr parser must still interpret it as subtraction, and re-print it with
-    // real spacing so the ambiguity never reappears in canonical output.
     let spec = formula_spec();
     let value = parse("combine c value=(10-2)", &spec, &ParseOptions::default()).expect("parse");
     let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
@@ -237,13 +233,10 @@ async fn range_without_step_round_trips_with_two_elements() {
 #[semio_framework_async_macros::async_test]
 async fn coord_dir_dim_range_count_reject_wrong_arity_or_form() {
     let spec = placement_spec();
-    // Coord declared as 3 components; only 2 given.
     let err = parse("object col-a material=s355 position=@1.35,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
     assert!(err.message.contains("coordinate") || err.message.contains("expected"), "{err}");
-    // Dim declared as 3 components; only one number, no glued 'x' suffix at all.
     let err2 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
     assert!(err2.message.contains("dimension"), "{err2}");
-    // Count without the 'x' prefix is not a valid count literal.
     let err3 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=24", &spec, &ParseOptions::default()).unwrap_err();
     assert!(err3.message.contains("count"), "{err3}");
 }
@@ -453,35 +446,30 @@ fn tags_map_spec() -> RecordSpec {
 
 #[semio_framework_async_macros::async_test]
 async fn glue_removes_the_key_equals_space_for_every_composite_shape() {
-    // List
     let spec = geometry_spec();
     let value = parse("vertex 1,2,3 tags=[a b c]", &spec, &ParseOptions::default()).expect("parse list");
     let printed = print(&value, &spec, JoinMode::Document);
     assert!(printed.contains("tags=[ a b c ]"), "List field must glue key= directly onto '[': {printed}");
     assert!(!printed.contains("tags= ["), "must never leave a stray space after 'key=': {printed}");
 
-    // Value (dynamic)
     let spec = value_spec();
     let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse value");
     let printed = print(&value, &spec, JoinMode::Document);
     assert!(printed.contains("data={"), "Value field must glue key= directly onto '{{': {printed}");
     assert!(!printed.contains("data= {"), "must never leave a stray space before the glued brace: {printed}");
 
-    // Map
     let spec = tags_map_spec();
     let value = parse("meta props={a=\"x\" b=\"y\"}", &spec, &ParseOptions::default()).expect("parse map");
     let printed = print(&value, &spec, JoinMode::Document);
     assert!(printed.contains("props={"), "Map field must glue key= directly onto '{{': {printed}");
     assert_round_trip("meta props={a=\"x\" b=\"y\"}", &spec);
 
-    // Record (nested, un-blocked — prints inline without its own keyword)
     let spec = marker_spec();
     let value = parse("marker at=x=1 y=2", &spec, &ParseOptions::default()).expect("parse record");
     let printed = print(&value, &spec, JoinMode::Document);
     assert!(printed.contains("at=x=1"), "Record field must glue key= directly onto its first field: {printed}");
     assert!(!printed.contains("at= x=1"), "must never leave a stray space before a nested record: {printed}");
 
-    // Wire (keyed, not positional)
     let spec = edge_keyed_wire_spec();
     let value = parse("edge2 link=a->b", &spec, &ParseOptions::default()).expect("parse wire");
     let printed = print(&value, &spec, JoinMode::Document);
@@ -566,7 +554,6 @@ async fn table_document_and_inline_renders_agree() {
 
 #[semio_framework_async_macros::async_test]
 async fn table_rejects_non_self_delimiting_column_shapes_at_spec_build_time() {
-    // 🚫️async: E4 fn-pointer slot — stored bare as `fn() -> RecordSpec` via `Shape::Table` below
     fn unbounded_tuple_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "vals", Shape::Tuple(Box::new(Shape::Float), None))])
     }
@@ -626,9 +613,6 @@ fn duplicate_type_table_doc_spec() -> RecordSpec {
 #[semio_framework_async_macros::async_test]
 async fn table_row_with_two_columns_of_the_same_record_type_does_not_cross_contaminate() {
     let spec = duplicate_type_table_doc_spec();
-    // `area`'s `target` is left absent (never printed) while `volume`'s `target=4` is present
-    // right after it — the exact shape of the reported corruption, since both columns share
-    // the identical field name.
     let text = "doc rows [id:TEXT area:REC volume:REC] { r1 {actual=3} {target=4 actual=1} }";
     assert_round_trip(text, &spec);
     assert_document_inline_agree(text, &spec);
@@ -656,9 +640,6 @@ async fn canonicalization_is_idempotent() {
 
 #[semio_framework_async_macros::async_test]
 async fn deeply_nested_blocks_hit_the_depth_limit_as_a_diagnostic() {
-    // `group_spec()` (primitive 4, above) is already genuinely self-referential, so it needs no
-    // pre-unrolling to exercise real depth this many levels deep — `parse` only ever expands one
-    // level of its lazy `Statements` fn pointer at a time, following the actual input text.
     let levels = 20;
     let spec = group_spec();
     let mut nested = String::from("group root");
@@ -745,7 +726,8 @@ fn retained_record_writer_intrinsic_containers_sort_resume_and_retire_the_same_s
 
 #[test]
 fn retained_record_writer_nested_blocks_and_statements_keep_one_physical_owner() {
-    use semio_framework_value::{NativeEncodeControl,NativeDecodeControl};
+    use semio_framework_value::NativeEncodeControl;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     fn row()->RecordSpec{RecordSpec::new(Some("widget"),RecordLayout::Inline,vec![FieldSpec::new(0,"id",Shape::Text).positional(0),FieldSpec::new(1,"label",Shape::Text),FieldSpec::new(2,"value",Shape::Value)])}
     fn row_encode(control:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{let mut fields=control.allocate_vec(3)?;fields.push(crate::producer::field(0,"id",Shape::Text,control)?.positional(0));fields.push(crate::producer::field(1,"label",Shape::Text,control)?);fields.push(crate::producer::field(2,"value",Shape::Value,control)?);crate::producer::record(Some("widget"),RecordLayout::Inline,fields,control)}
     fn row_decode(_: &mut NativeDecodeControl<'_>)->Result<RecordSpec,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"encoding fixture"))}
@@ -760,7 +742,8 @@ fn retained_record_writer_nested_blocks_and_statements_keep_one_physical_owner()
 
 #[test]
 fn retained_declared_table_streams_columns_and_rows_under_one_source_owner() {
-    use semio_framework_value::{NativeEncodeControl,NativeDecodeControl};
+    use semio_framework_value::NativeEncodeControl;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     fn row()->RecordSpec{RecordSpec::new(Some("ignored-row-keyword"),RecordLayout::Inline,vec![FieldSpec::new(0,"id",Shape::Text),FieldSpec::new(1,"cost",Shape::Float),FieldSpec::new(2,"label",Shape::Text).optional(),FieldSpec::new(3,"value",Shape::Value)])}
     fn encode(control:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{let mut fields=control.allocate_vec(4)?;for (id,key,shape) in [(0,"id",Shape::Text),(1,"cost",Shape::Float),(2,"label",Shape::Text),(3,"value",Shape::Value)]{let field=crate::producer::field(id,key,shape,control)?;fields.push(if key=="label"{field.optional()}else{field});}crate::producer::record(Some("ignored-row-keyword"),RecordLayout::Inline,fields,control)}
     fn decode(_: &mut NativeDecodeControl<'_>)->Result<RecordSpec,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"encoding fixture"))}
@@ -772,7 +755,8 @@ fn retained_declared_table_streams_columns_and_rows_under_one_source_owner() {
 
 #[test]
 fn retained_declared_containers_keep_list_map_record_and_tuple_payloads() {
-    use semio_framework_value::{NativeEncodeControl,NativeDecodeControl};
+    use semio_framework_value::NativeEncodeControl;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     fn row()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"label",Shape::Text),FieldSpec::new(1,"value",Shape::Value)])}
     fn encode(control:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{let mut fields=control.allocate_vec(2)?;fields.push(crate::producer::field(0,"label",Shape::Text,control)?);fields.push(crate::producer::field(1,"value",Shape::Value,control)?);crate::producer::record(None,RecordLayout::Inline,fields,control)}
     fn decode(_: &mut NativeDecodeControl<'_>)->Result<RecordSpec,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"encoding fixture"))}
@@ -793,7 +777,8 @@ fn retained_declared_wire_streams_glued_endpoints_labels_and_properties() {
 
 #[test]
 fn retained_declared_record_depth_matches_the_existing_physical_limit() {
-    use semio_framework_value::{NativeEncodeControl,NativeDecodeControl};
+    use semio_framework_value::NativeEncodeControl;
+    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     fn producer()->RecordSpecProducer{RecordSpecProducer{ordinary:spec,encoding:encode,decoding:decode}}
     fn spec()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"child",Shape::Record(producer()))])}
     fn encode(control:&mut NativeEncodeControl<'_>)->Result<RecordSpec,ValueError>{let mut fields=control.allocate_vec(1)?;fields.push(crate::producer::field(0,"child",Shape::Record(producer()),control)?);crate::producer::record(None,RecordLayout::Inline,fields,control)}

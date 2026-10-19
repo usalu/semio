@@ -29,7 +29,7 @@ fn undo_to_partial_mark_restores_only_later_entries() {
     trail.record_removed(NodeId(0), PatternId(1));
 
     trail.undo_to(mark, &mut domains, &w);
-    assert_eq!(domains.get(NodeId(0)).cardinality(), 2); // pattern 1 restored, pattern 0 still gone
+    assert_eq!(domains.get(NodeId(0)).cardinality(), 2);
     assert!(!domains.get(NodeId(0)).bits().get(PatternId(0)));
     assert!(domains.get(NodeId(0)).bits().get(PatternId(1)));
 }

@@ -21,7 +21,7 @@ export interface GumballConfig {
   readonly scaleAxes?: boolean;
   readonly scalePlanes?: boolean;
   readonly scaleUniform?: boolean;
-  /** When set, only the planar subset for this drafting plane is shown (e.g. Top → `xy`). */
+  /** 🔲️ When set, only the planar subset for this drafting plane is shown (e.g. Top → `xy`). */
   readonly plane?: GumballPlaneId;
   readonly translationSnap?: number;
   readonly rotationSnap?: number;

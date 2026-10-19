@@ -114,8 +114,6 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
                 "id": "remodeling-sparse",
                 "positionsB64": base64_codec::base64_standard_encode(sparse.points.to_f32_vec_from(&scene.durable_artifacts).iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<_>>()),
                 "colorsB64": sparse.colors.as_ref().map(|colors| base64_codec::base64_standard_encode(&colors.0)),
-                // 📏️ Screen pixels: the reconstruction is normalised to unit RMS radius, where an
-                // attenuated (world-unit) size drew each point larger than the object.
                 "size": 3.0,
                 "sizeAttenuation": false,
             }));

@@ -224,6 +224,10 @@
             {
               "id": "removes-the-text-frame-and-its-layer-membership",
               "directoryName": "🚫️removes"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -235,6 +239,10 @@
             {
               "id": "removes-link-2",
               "directoryName": "🔗️removes-link-2"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -246,6 +254,10 @@
             {
               "id": "removes-page-2",
               "directoryName": "🚫️removes-page-2"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -257,6 +269,10 @@
             {
               "id": "removes-story-2",
               "directoryName": "🚫️removes-story-2"
+            },
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         },
@@ -312,6 +328,10 @@
             {
               "id": "moves-page-1-behind-page-2",
               "directoryName": "🔀️moves"
+            },
+            {
+              "id": "moves-a-middle-row",
+              "directoryName": "📍️moves-a-middle-row"
             }
           ]
         },
@@ -367,6 +387,22 @@
             {
               "id": "drags-both-frames",
               "directoryName": "✋️drags-both-frames"
+            },
+            {
+              "id": "keeps-a-zero-offset",
+              "directoryName": "⏸️keeps-a-zero-offset"
+            },
+            {
+              "id": "skips",
+              "directoryName": "⚠️skips"
+            },
+            {
+              "id": "refuses",
+              "directoryName": "🔁️refuses"
+            },
+            {
+              "id": "rejects",
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -378,6 +414,26 @@
             {
               "id": "orbits-both-frames-a-quarter-turn",
               "directoryName": "🔃️orbits"
+            },
+            {
+              "id": "keeps-a-zero-angle",
+              "directoryName": "⏸️keeps-a-zero-angle"
+            },
+            {
+              "id": "skips",
+              "directoryName": "⚠️skips"
+            },
+            {
+              "id": "turns",
+              "directoryName": "🌀️turns"
+            },
+            {
+              "id": "refuses",
+              "directoryName": "🔁️refuses"
+            },
+            {
+              "id": "rejects",
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -389,6 +445,59 @@
             {
               "id": "doubles-both-frames-about-their-centroid",
               "directoryName": "🗜️doubles"
+            },
+            {
+              "id": "stretches",
+              "directoryName": "↔️stretches"
+            },
+            {
+              "id": "keeps-unit-factors",
+              "directoryName": "⏸️keeps-unit-factors"
+            },
+            {
+              "id": "skips",
+              "directoryName": "⚠️skips"
+            },
+            {
+              "id": "rejects",
+              "directoryName": "🚫️rejects"
+            },
+            {
+              "id": "refuses",
+              "directoryName": "🫓️refuses"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-grid",
+          "sourceMutationDirectoryName": "📐update-grid",
+          "mutationDirectoryName": "📐update-grid",
+          "scenarios": [
+            {
+              "id": "sets",
+              "directoryName": "📐️sets"
+            }
+          ]
+        },
+        {
+          "mutationId": "set-frame-flags",
+          "sourceMutationDirectoryName": "🔒set-frame-flags",
+          "mutationDirectoryName": "🔒set-frame-flags",
+          "scenarios": [
+            {
+              "id": "locks-frame-1",
+              "directoryName": "🔒️locks-frame-1"
+            }
+          ]
+        },
+        {
+          "mutationId": "delete-character-style",
+          "sourceMutationDirectoryName": "🗑️delete-character-style",
+          "mutationDirectoryName": "🗑️delete-character-style",
+          "scenarios": [
+            {
+              "id": "removes-a-middle-row",
+              "directoryName": "📍️removes-a-middle-row"
             }
           ]
         }

@@ -97,12 +97,10 @@ function buildBrepEntityMaps(brepSolid: ValidSolid, context: { readonly solidRef
   try {
     brepFaces = getFaces(brepSolid);
   } catch {
-    /* empty */
   }
   try {
     brepEdges = getEdges(brepSolid);
   } catch {
-    /* empty */
   }
 
   const unmatchedFaces = [...brepFaces];
@@ -188,7 +186,6 @@ function collectFaceInfos(brepSolid: ValidSolid, maps: BrepEntityMaps, solidRef:
         normal,
       });
     } catch {
-      /* skip degenerate face */
     }
   }
   return infos;
@@ -210,7 +207,6 @@ function collectEdgeInfos(brepSolid: ValidSolid, maps: BrepEntityMaps, solidRef:
         length: curveLength(edge),
       });
     } catch {
-      /* skip degenerate edge */
     }
   }
   return infos;

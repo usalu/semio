@@ -278,7 +278,7 @@ fn a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_
     target.kind = semio_framework_ui_declaration::ui::SurfaceKind::World3d;
     let request = ComponentSurfaceCloseRequest { token: ComponentSurfaceCloseToken(1), owner: target, engine_token: None };
     let mut close = ComponentSurfaceCloseOwner::new(request);
-    let mut original = crate::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
+    let mut original = crate::os_host::fixtures::fixture_original_turn::FixtureTurnV1::new(crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT);
     original.turn(|cx| close.close_asset_world_step(&runtime,cx)).expect("same original component cleanup");
     let phase_while_checked_out = format!("{:?}", close.phase);
     let (a_live_while_checked_out, b_unchanged_while_a_closes) = {
@@ -595,7 +595,7 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
         .lock()
         .expect("local page handback owner")
         .as_ref()
-        .map(|handoff| (handoff.fetch.as_ref().expect("local page request owner").owner().received_bytes(), handoff.payload.as_ref().map_or(0, semio_framework_job::RetainedJobPayload::len), handoff.seal))
+        .map(|handoff| (handoff.fetch.as_ref().expect("local page request owner").owner().received_bytes(), handoff.payload.as_ref().map_or(0, semio_framework_job_payload::RetainedJobPayload::len), handoff.seal))
         .unwrap_or((0, 0, false));
     *runtime.0.native_asset_page_barrier.lock().expect("clear local page test barrier") = None;
     let mut page_retirement_turns = 0usize;

@@ -1,6 +1,6 @@
 //! 📦️ Operation octets with independently admitted and returned physical backing.
 
-use semio_framework_value::list::{PagedList, PagedListRefusalKind};
+use semio_framework_value_persistent::{list::PagedList, list::PagedListRefusalKind};
 use semio_framework_value::ValueRefusalKind;
 use std::mem::ManuallyDrop;
 

@@ -1,2 +1,2 @@
-/** equation import json */
+/** ➗️ equation import json */
 export function register(): void {}

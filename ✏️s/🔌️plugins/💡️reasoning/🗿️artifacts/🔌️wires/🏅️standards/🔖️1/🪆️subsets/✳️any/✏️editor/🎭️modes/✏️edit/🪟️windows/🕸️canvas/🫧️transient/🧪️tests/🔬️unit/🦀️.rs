@@ -346,7 +346,6 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
 
-        // 🧵️ Three separate moves ...
         gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left, scope.cx()).await?;
         for [x, y] in [[12.0, 22.0], [14.0, 26.0], [16.0, 28.0]] {
             gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x, y, samples: Vec::new() }), &left, scope.cx()).await?;
@@ -355,7 +354,6 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
         if (one_per_event.drag_last_x, one_per_event.drag_last_y) != (16.0, 28.0) {
             return Err(format!("separate moves did not land on the last move: {one_per_event:?}"));
         }
-        // 🚫️ ... then a cancelled release: the drag is cleared, nothing moves, nothing publishes.
         let receipt = gesture(&mut app, WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: true }), &left, scope.cx()).await?;
         if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact) {
             return Err("a cancelled release published a durable move".into());
@@ -369,14 +367,12 @@ async fn wires_batched_move_lands_on_its_last_sample_and_a_cancel_moves_nothing(
             return Err(format!("a cancelled release moved the node: {:?}", crate::schema::node_position(&node)));
         }
 
-        // 🧵️ ... and the same three samples as ONE batch reproduce the separate-move preview exactly.
         gesture(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &left, scope.cx()).await?;
         gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: vec![[12.0, 22.0], [14.0, 26.0], [16.0, 28.0]] }), &left, scope.cx()).await?;
         let one_batch = preview(&mut app, &left)?;
         if one_batch != one_per_event {
             return Err(format!("one batch of three samples differs from three moves: {one_batch:?} != {one_per_event:?}"));
         }
-        // 🎯️ The batch's LAST sample wins over the trailing x/y when they disagree.
         gesture(&mut app, WiresCommand::CanvasPointerMove(CanvasPointerMove { x: 16.0, y: 28.0, samples: vec![[30.0, 40.0], [18.0, 24.0]] }), &left, scope.cx()).await?;
         let last_wins = preview(&mut app, &left)?;
         if (last_wins.drag_last_x, last_wins.drag_last_y) != (18.0, 24.0) {

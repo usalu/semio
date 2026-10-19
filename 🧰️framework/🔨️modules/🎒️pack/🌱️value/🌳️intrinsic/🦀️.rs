@@ -1,6 +1,7 @@
 //! 🎞️ Canonical one-field intrinsic Pack documents and exact terminal record bodies.
 use super::{EncodeOptions,DecodeOptions,PackRefusal};
-use semio_framework_value::{DslValue,NativeEncodeControl,NativeDecodeControl,ValueRefusalKind};
+use semio_framework_value::{DslValue, NativeEncodeControl, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_dsl_record::{NativeSchemaControl,RecordSpec,RecordLayout,Shape,FieldValue};
 
 const FIELD_ID:u16=1;

@@ -204,7 +204,8 @@ fn skip_with_default_path_uses_that_path_not_type_default() {
 /// `expand_from_value`'s call sites, not just the impl header, since the struct below only compiles
 /// at all if every one of them resolves under this non-default path.
 mod value_root {
-    pub use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
+    pub use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
+    pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 }
 
 #[derive(Debug, Clone, PartialEq, ToValue, FromValue)]

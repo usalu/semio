@@ -32,8 +32,6 @@ fn defaults_and_ranges_follow_the_schema_source_of_record() {
     for (field, spec) in schema["properties"].as_object().unwrap() {
         assert_eq!(defaults[field], spec["default"], "default of {field}");
         let mut probe = defaults.clone();
-        // 🎚️ A numeric field is probed one past its maximum; an enumerated string field (`resultField`)
-        // is probed with a value outside its `enum`, which is the same "outside the schema" question.
         probe[field] = match spec["maximum"].as_u64() {
             Some(maximum) => (maximum + 1).into(),
             None => {

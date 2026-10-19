@@ -12,8 +12,7 @@ use semio_framework_ui_tui_engine::Tui;
 use semio_framework_ui_tui_core::geometry::Size;
 use semio_framework_ui_tui_core::theme::Theme;
 
-#[path = "🚀️launcher/🦀️.rs"]
-pub mod launcher;
+use dashboard_launcher as launcher;
 
 #[path = "🪟️windows/🦀️.rs"]
 mod windows;

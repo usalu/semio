@@ -71,9 +71,6 @@ mod tests {
     fn aicc_approaches_aic_for_large_n() {
         let ln_l = -50.0;
         let k = 3;
-        // 🔬️ the AICc correction term is 2k(k+1)/(n-k-1); it only vanishes as n -> infinity, so
-        // "approaches AIC" needs n large enough to push it below the tolerance, not n=1e6 (which
-        // still leaves a ~2.4e-5 correction).
         let n = 100_000_000;
         let a = aic(ln_l, k);
         let ac = aicc(ln_l, k, n).unwrap();
@@ -93,11 +90,9 @@ mod tests {
 
     #[test]
     fn bic_penalizes_more_than_aic_when_ln_n_exceeds_two() {
-        // 🔐️ BIC's penalty is k*ln(n) vs AIC's 2*k; ln(n) > 2 (n > e^2 ~= 7.39) means BIC > AIC
-        // for the same ln_L and k, since both share the -2*ln_L term.
         let ln_l = -50.0;
         let k = 4;
-        let n = 100; // ln(100) ~= 4.6 > 2
+        let n = 100;
         assert!((n as f64).ln() > 2.0);
         assert!(bic(ln_l, k, n) > aic(ln_l, k));
     }
@@ -114,8 +109,6 @@ mod tests {
 
     #[test]
     fn fisher_information_matches_gaussian_closed_form() {
-        // 🔐️ log_lik(theta) = -0.5 * sum((x_i - theta)^2) / sigma^2 has exact Fisher information
-        // n / sigma^2 for the mean parameter, independent of the sample itself.
         let sigma: f64 = 2.0;
         let xs: Vec<f64> = vec![1.0, 2.5, -0.7, 3.3, 0.1, 4.2, -1.1, 2.0];
         let n = xs.len();

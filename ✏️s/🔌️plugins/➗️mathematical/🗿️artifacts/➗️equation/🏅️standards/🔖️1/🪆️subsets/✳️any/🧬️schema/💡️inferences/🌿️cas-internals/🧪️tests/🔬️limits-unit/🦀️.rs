@@ -18,7 +18,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn polynomial_ratio_at_removable_singularity() {
-        // (x^2 - 1)/(x - 1) -> 2 as x -> 1
         let x = Expr::symbol("x");
         let num = Expr::pow(x.clone(), Expr::integer(2)) - Expr::integer(1);
         let den = x.clone() - Expr::integer(1);
@@ -28,7 +27,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn limit_at_infinity_of_rational_function() {
-        // (2x + 1)/(x + 3) -> 2 as x -> oo
         let x = Expr::symbol("x");
         let num = Expr::integer(2) * x.clone() + Expr::integer(1);
         let den = x.clone() + Expr::integer(3);
@@ -38,7 +36,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn one_plus_one_over_n_to_the_n_via_lhopital_on_log_form() {
-        // A simpler but still classic L'Hopital case: lim x->0 (1 - cos(x))/x^2 = 1/2
         let x = Expr::symbol("x");
         let num = Expr::integer(1) - Expr::func(FnKind::Cos, vec![x.clone()]);
         let den = Expr::pow(x.clone(), Expr::integer(2));

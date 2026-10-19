@@ -1,13 +1,13 @@
-//! build and the one-shot assembled system with its load-case right-hand sides.
+//! 🏗️ build and the one-shot assembled system with its load-case right-hand sides.
 //! 🧩️ Deterministic sparse stiffness assembly: the bounded construction, the checkpointed assembly job, the CSR
 
-use replication::value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_job::OriginalTurnFailure;
 use semio_framework_job::InteractiveJob;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeBorrow;
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 use semio_framework_job::Operation;
 use semio_framework_job::RetainedCloneGrant;
 use semio_framework_job::RetainedCloneProgress;

@@ -402,10 +402,6 @@ pub(crate) fn render(
     time_seconds: f32,
 ) -> Result<FrameStats, BackendError> {
     validate_known_resources(resources, packet)?;
-    // 🖼️ `packet.viewport` is deliberately *logical*-pixel (see `ui_render::backend::PhysicalSize`'s
-    // own docstring) — the geometry inside `packet.quad_instances` etc. was already dpr-snapped to
-    // physical pixels by `Scene::finish`, so the screen-size uniform and every scissor/viewport call
-    // here must use the caller's known *physical* surface size, never `packet.viewport` directly.
     let width = physical_width.max(1.0);
     let height = physical_height.max(1.0);
     pipelines.update_globals(queue, width, height, time_seconds);

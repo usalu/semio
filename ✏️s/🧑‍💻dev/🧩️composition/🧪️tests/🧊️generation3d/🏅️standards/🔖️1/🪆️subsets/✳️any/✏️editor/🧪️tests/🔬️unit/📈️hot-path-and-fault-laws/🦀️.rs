@@ -106,10 +106,6 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
     let mean_cycle_us = budget.total_turn_us / turns;
     let mean_step_us = budget.steps.total_us / budget.steps.steps.max(1);
     let mut best_step_us = budget.steps.best_us;
-    // ⏱️ One boot runs only a handful of ticks, too few for its minimum to escape a loaded scheduler
-    // (load 26–41 on ten cores stretched a 7 ms tick to 10–37 ms of wall time), so further fresh boots are
-    // measured until one tick lands under the ceiling or `HEX_BOOT_ATTEMPTS` boots were spent. A tick whose
-    // own cost exceeds the ceiling misses on every boot; a descheduled one does not.
     const HEX_BOOT_ATTEMPTS: usize = 8;
     for _ in 1..HEX_BOOT_ATTEMPTS {
         if best_step_us < semio_framework_job::INTERACTIVE_STEP_CEILING_US {
@@ -136,13 +132,6 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
 
     assert!(budget.meshes >= 1, "the extruded column must reach the preview");
     assert!(budget.steps.steps >= turns, "the flag-gated evaluation-step clock must have measured every tick, got {} for {turns} turns", budget.steps.steps);
-    // ⏱️ The contract is `INTERACTIVE_STEP_CEILING_US`, asserted on the CHEAPEST measured tick over up to
-    // `HEX_BOOT_ATTEMPTS` boots. This
-    // suite runs on developer machines that are simultaneously compiling the rest of the repo, and
-    // scheduler noise only ever ADDS wall time — so the minimum is the machine's real capability and
-    // the mean/worst are the machine's current load. Measured on an unoptimized build: best 7 226 us,
-    // worst 7 828 us idle; the same code measured 26 239 / 35 901 us before this ticket's fixes, so
-    // a reintroduction of any of them fails here even under load. All four numbers print above.
     assert!(
         best_step_us < semio_framework_job::INTERACTIVE_STEP_CEILING_US,
         "the cheapest evaluation tick must fit the {}us interactive ceiling, best was {best_step_us}us (mean {mean_step_us}us, worst {}us) over {} ticks",
@@ -150,18 +139,11 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
         budget.steps.worst_us,
         budget.steps.steps
     );
-    // 🦶️ The `previewEval` run dispatches a hop only when a window owes one, so no hop is idle: every
-    // tick after the first pays exactly one settled extension answer. The self-re-arming chain this
-    // replaced spent most of its ticks re-publishing an unchanged evaluation, which is why the gate
-    // used to be asserted to halve publications; with no idle hop left, a tick publishes at most once.
     assert!(
         turns <= budget.round_trips as u64 + 1,
         "the run may dispatch no idle hop: {turns} ticks for {} extension answers",
         budget.round_trips
     );
-    // 🪟️ The publication gate decides per PUBLICATION TARGET (`FlowEvalSession::eval_publication_for`):
-    // each attached preview window owns its own retained bytes, so every tick is considered once per
-    // attached preview and publishes at most once per preview.
     let previews = view.window_instances.iter().filter(|window| window.window_kind_id == semio_s_artifact_procedural_3d_mode_edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW).count() as u64;
     assert!(
         budget.ledger.published <= budget.ledger.considered && budget.ledger.considered == budget.steps.steps * previews,
@@ -170,14 +152,6 @@ async fn hex_column_boot_stays_inside_the_interactive_turn_budget() {
         budget.ledger.considered,
         budget.steps.steps
     );
-    // ⏱️ The ceiling asserted above is only ENFORCEABLE while the dag walk carries a wall-clock
-    // deadline. `FLOW_EVAL_TICK_STEP_BUDGET` counts NODES, and this seven-node fixture is three
-    // orders of magnitude under it — a single expensive operator would blow the 8 ms contract
-    // without ever reaching the node cap, which is exactly how one browser reactor turn ran for
-    // 3.5-18.4 s (`📓️audit-guest-tick-cost-2026-09-12.md` §1.3). The reactor itself cannot help:
-    // `run_until_deadline` checks its deadline BETWEEN task steps, never inside one, and this tick
-    // is a plain synchronous `fn`. So the preemption point has to live inside the walk, and this
-    // law asserts it is armed rather than merely declared.
     assert!(
         semio_framework_os_flow::FLOW_EVAL_TICK_ELAPSED_CEILING_US < semio_framework_job::INTERACTIVE_STEP_CEILING_US,
         "the dag walk must yield strictly before the interactive contract expires, leaving the rest of the turn its own room: {}us against {}us",
@@ -299,7 +273,6 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
                 let status: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
                 rows.push((answer["name"].as_str().expect("name").to_string(), answer["phase"].as_str().expect("phase").to_string(), answer["publishesFault"].as_bool().expect("publishesFault"), status));
             }
-            // 🧩️ The install clears the retained fault before any later tick settles.
             let resolve = semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve {
                 window_id: "window:procedural-preview".to_string(),
                 window_kind_id: "procedural-preview".to_string(),

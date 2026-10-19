@@ -131,8 +131,6 @@ export function vizGeneratedFiles(): readonly { readonly path: string; readonly 
   const files: { path: string; content: string }[] = [
     { path: "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog.sty", content: renderVizCatalogStylesheet(catalog) },
     { path: "🧰️framework/🛍️products/📓️print/🖋️latex/semio-viz-catalog-labels.sty", content: renderVizCatalogLabels(catalog) },
-    // 📖 The machine-readable twin of 🔓️viz-api.tex: packages, public commands, kernel key blocks
-    // and the schema's family vocabularies, so a consumer reads the API without parsing LaTeX.
     { path: "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json", content: `${JSON.stringify({ _comment: GENERATED_NOTE, ...vizApiReference() }, null, 2)}\n` },
   ];
   const bySection = new Map<string, { group: LocalizedText; leafId: string; slug: string }[]>();

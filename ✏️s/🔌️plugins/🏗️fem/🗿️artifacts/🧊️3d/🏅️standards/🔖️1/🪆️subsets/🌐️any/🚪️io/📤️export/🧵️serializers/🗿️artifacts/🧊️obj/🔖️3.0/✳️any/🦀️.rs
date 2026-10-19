@@ -1,4 +1,4 @@
-//! and REAL geometry: every `FemSolid` outline is triangulated, extruded by its own real
+//! 🟢️ and REAL geometry: every `FemSolid` outline is triangulated, extruded by its own real
 //! 🚪️ fem3d → obj — foreign `Serializer<Fem3dSnapshot>` on the framework's `io_mechanism` channel,
 //! `height` (offset by `base_z`), split into tets and reduced to its outward boundary faces — a
 //! `SemioMeshSnapshot` (`semio_s_artifact_fem_3d_engine::fem3d_engine::meshing::build_semio_mesh_snapshot`, the same kernel the

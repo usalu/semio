@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import Ajv2020 from "ajv/dist/2020";
 import {Database} from "bun:sqlite";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {ExactKeyCursor,type ExactKeyGrant} from "../🟦️.ts";
 

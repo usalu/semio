@@ -92,20 +92,11 @@ async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
 
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_round_trips_the_real_fixture_snapshot_exactly() {
-    // 🧪️ Strongest provable claim within this codec's documented normal-form scope (see this
-    // module's doc comment): decode -> encode -> re-decode reproduces the EXACT same
-    // snapshot — every sample's bytes/duration/cts_offset/sync flag, every track field, ftyp,
-    // and every named logical field survives through a real mux/demux cycle on
-    // real, non-synthetic, 1441-frame H.264 data.
     let snap = decode_mp4(REAL_LOGO_MP4).expect("decode");
     let re_encoded = encode_mp4(&snap);
     let round_tripped = decode_mp4(&re_encoded).expect("re-decode the round-tripped bytes");
     assert_eq!(round_tripped, snap, "decode(encode(decode(real_fixture))) must equal decode(real_fixture)");
 
-    // 🧪️ Sample PAYLOAD bytes (the actual codec substance) are byte-exact against the ORIGINAL
-    // file bytes too, not just self-consistent with our own re-encode — every sample's `data`
-    // must appear verbatim somewhere in the source file (proof the bytes were genuinely read
-    // from `mdat`, never fabricated).
     for sample in &snap.tracks[0].samples[..50.min(snap.tracks[0].samples.len())] {
         assert!(REAL_LOGO_MP4.windows(sample.data.len().max(1)).any(|w| w == sample.data.as_slice()), "sample data must be a verbatim slice of the real source file");
     }

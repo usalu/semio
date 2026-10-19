@@ -26,6 +26,7 @@ semio-s-artifact-block-3d-model = { workspace = true }
 semio-s-artifact-block-3d-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-kit = { workspace = true }
 semio-s-plugin-block = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

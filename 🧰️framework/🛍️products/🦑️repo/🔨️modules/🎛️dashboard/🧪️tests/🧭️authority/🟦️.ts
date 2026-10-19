@@ -1,7 +1,9 @@
 import "../🔎️source-discovery/🟦️.ts";
 import "../🧭️journeys/🧩️sources/🟦️.ts";
-import "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️.ts";
+import "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🧪️tests/🌿️/🟦️.ts";
 import "../🎛️dispatch/🟦️.ts";
+import "../🧊️execution/🚀️launch/🟦️.ts";
+import "../🧊️execution/🛠️bootstrap/🟦️.ts";
 import "../♻️reuse/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020";

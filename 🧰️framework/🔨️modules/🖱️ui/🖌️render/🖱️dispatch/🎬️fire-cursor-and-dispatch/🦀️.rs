@@ -8,7 +8,6 @@ impl Dispatcher {
     /// 🎬️ Fires `id`'s binding for `trigger`, if any — building the [`UiIntent`] from the node's own
     /// [`ListenerSet`] addressing. `None` if there's no such binding, or if the listener's own captured
     /// revision is already stale against the tree it's being resolved in (see [`is_stale`]).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn fire(&mut self, tree: &DispatchTree, id: FrameNodeId, trigger: Trigger, input: Option<UiValue>) -> Option<UiIntent> {
         let node = tree.node(id)?;
         let binding = node.listeners.binding_for(trigger)?;
@@ -39,7 +38,6 @@ impl Dispatcher {
     /// [`ListenerSet::revision`] is always in sync with the tree that produced it, never with how long
     /// ago the capture began. This is the ticket's "a stale interaction is rejected rather than
     /// misapplied" — see the `stale_captured_activate_is_rejected...` test.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn fire_captured(&mut self, tree: &DispatchTree, id: FrameNodeId, entry: CaptureEntry, trigger: Trigger, input: Option<UiValue>) -> Option<UiIntent> {
         if is_stale(entry.revision, tree.revision()) {
             return None;
@@ -49,7 +47,6 @@ impl Dispatcher {
     //#endregion 🎬️FireApi
 
     //#region 🖱️CursorApi
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn cursor_for(&self, tree: &DispatchTree, target: Option<FrameNodeId>) -> CursorRequest {
         if self.drag.is_some() {
             return CursorRequest::Grabbing;
@@ -72,7 +69,6 @@ impl Dispatcher {
     /// if captured, else [`hit_test`]), updates interaction state, and returns the resulting
     /// [`DispatchOutcome`]. Always called against the *presented* [`DispatchTree`] — see this file's
     /// module docstring.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn dispatch(&mut self, tree: &DispatchTree, event: &DispatchEvent) -> DispatchOutcome {
         let Some(root) = tree.root() else { return DispatchOutcome::default() };
         let mut outcome = DispatchOutcome::default();
@@ -269,7 +265,6 @@ impl Dispatcher {
         outcome
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resolve_target(&self, tree: &DispatchTree, root: FrameNodeId, pointer: PointerId, x: f32, y: f32) -> Option<FrameNodeId> {
         match self.capture.get(&pointer) {
             Some(entry) => tree.element_node(entry.element),
@@ -281,7 +276,6 @@ impl Dispatcher {
     /// node from the hit target up to the root observes [`Dispatcher::is_hovered`], not just the leaf,
     /// so an ancestor layout container still reads as hovered for a host's reveal-on-hover styling.
     /// Returns whether anything changed.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn update_hover(&mut self, tree: &DispatchTree, target: Option<FrameNodeId>) -> bool {
         let target_element = target.and_then(|id| tree.node(id)).map(|node| node.element);
         if self.hovered == target_element {

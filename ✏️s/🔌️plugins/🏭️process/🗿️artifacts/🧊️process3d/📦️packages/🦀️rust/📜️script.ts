@@ -1,25 +1,15 @@
 #!/usr/bin/env bun
 /** 📦️ process process3d Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runRepositoryTestCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { readdirSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
+import { runSourceCheckScript, familyPackages } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🛂️ Check the actual persisted Source model and its owning consumers. */
 class SourceCheckScript extends BundleScript {
-  run(): void {
-    const roots: string[] = [];
-    const visit = (dir: string): void => {
-      for (const item of readdirSync(dir, { withFileTypes: true })) {
-        const path = resolve(dir, item.name);
-        if (item.isDirectory()) visit(path);
-        else if (item.name.endsWith(".ts")) roots.push(path);
-      }
-    };
-    visit(resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema"));
-    runCmd(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", ...roots], { cwd: this.repoRoot });
+  async run(): Promise<void> {
+    await runSourceCheckScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 /** 🪵️ Validate neutral timber replay with the independent Manifold geometry oracle. */
@@ -29,6 +19,5 @@ class ReplaySourceScript extends BundleScript {
     await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
   }
 }
-const familyRoot = resolve(import.meta.dir, "../..");
-const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-process-process3d", { packages: familyPackages, commands: { "check-snapshot-sqlite-source": SourceCheckScript, "test-replay-source": ReplaySourceScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+const router = new ScriptRouter(import.meta.dir).register("check-snapshot-sqlite-source", SourceCheckScript).register("test-replay-source", ReplaySourceScript);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-process-process3d", { packages: familyPackages, commands: router, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

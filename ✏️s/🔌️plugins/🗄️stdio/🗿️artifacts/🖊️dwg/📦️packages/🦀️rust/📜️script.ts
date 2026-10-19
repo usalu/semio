@@ -1,33 +1,22 @@
-#!/usr/bin/env bun
-/** 📦️ Runs DWG artifact laws and its owned controlled metadata contract. */
-import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runControlledMetadataTest, runGrammarShapeTest, familyPackages } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🎛️ Preserves default artifact testing and owns the explicit metadata subcommand. */
 class ControlledMetadataTest extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const mode = args.shift();
-    if (args.length || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Expected test controlled-metadata [source|native]");
-    if (mode !== "native") await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🎛️metadata/🟦️.ts")], this.repoRoot, "dwg:controlled-metadata:source", 15_000);
-    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-dwg-snapshot", this.repoRoot, ["--lib", "dwg_controlled_metadata_"], this.invocation);
+    await runControlledMetadataTest({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
 /** 🏗️ Validates zero-field record grammar with independent portable and native recognizers. */
 class GrammarShapeTest extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const mode = args.shift();
-    if (args.length || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Expected test grammar-shape [source|native]");
-    if (mode !== "native") await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🏗️grammar/🟦️.ts")], this.repoRoot, "dwg:grammar-shape:source", 15_000);
-    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-dwg-snapshot", this.repoRoot, ["--lib", "dwg_grammar_shape_"], this.invocation);
+    await runGrammarShapeTest({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, args);
   }
 }
-/** 📦️ Every Cargo package the DWG artifact is cut into: the members of its own workspace. */
-const familyRoot = resolve(import.meta.dir, "../..");
-const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-dwg", { packages: familyPackages, testCommands: { "controlled-metadata": ControlledMetadataTest, "grammar-shape": GrammarShapeTest }, snapshotSqliteTests: [
+const testRouter = new ScriptRouter(import.meta.dir).register("controlled-metadata", ControlledMetadataTest).register("grammar-shape", GrammarShapeTest);
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-dwg", { packages: familyPackages, testCommands: testRouter, snapshotSqliteTests: [
   "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
   "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/📦️public/🟦️.ts",
   "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔢️numbers/🟦️.ts",

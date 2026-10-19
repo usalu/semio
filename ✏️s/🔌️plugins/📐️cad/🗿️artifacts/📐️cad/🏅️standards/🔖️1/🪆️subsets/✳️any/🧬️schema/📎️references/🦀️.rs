@@ -1,7 +1,8 @@
 //! 📎️ Literal reference ownership shared by the persistent CAD document and snapshot.
 use crate::snapshot::CadReferenceList;
 use semio_framework_dsl_record::{DslField, FieldValue, NativeSchemaControl, Shape};
-use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
+use semio_framework_value::{DslValue, FromValue, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use std::cmp::Ordering;
 

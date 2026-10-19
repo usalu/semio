@@ -8,7 +8,8 @@ import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️pa
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { writeGeneratedFileIfChanged } from "../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
-import { checkStylingArtifacts, generateStylingArtifacts, previewStylingArtifacts } from "../../📽️projection/🟦️.ts";
+import { checkStylingArtifacts, generateStylingArtifacts } from "../../📽️projection/🟦️.ts";
+import { runPreviewGeneratedScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {
@@ -18,8 +19,8 @@ class GenerateScript extends BundleScript {
 }
 
 class PreviewGeneratedScript extends BundleScript {
-  run(): void {
-    process.stdout.write(previewStylingArtifacts(this.repoRoot));
+  async run(): Promise<void> {
+    await runPreviewGeneratedScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation });
   }
 }
 
@@ -45,7 +46,7 @@ class TestScript extends BundleScript {
 
 class VerificationContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-verification-contract accepts no arguments");
+    if (segments.length) throw new Error("test-verification-contract accepts no arguments");
     const { proveStylingVerificationContractV1, proveIndependentStylingVerificationContractV1 } = await import("../../🛡️verification/🧪️tests/🟦️.ts");
     await proveIndependentStylingVerificationContractV1();
     console.log(`styling-verification-contract: ${proveStylingVerificationContractV1()} vectors passed`);
@@ -54,7 +55,7 @@ class VerificationContractScript extends BundleScript {
 
 class RelativeSizingContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-relative-sizing accepts no arguments");
+    if (segments.length) throw new Error("test-relative-sizing accepts no arguments");
     const { proveRelativeStylingSizesV1 } = await import("../../🛡️verification/🧪️tests/📏️relative-sizing/🟦️.ts");
     console.log("styling-relative-sizing: " + await proveRelativeStylingSizesV1() + " native assertions passed");
   }
@@ -63,7 +64,7 @@ class RelativeSizingContractScript extends BundleScript {
 /** 🎭️ Executes authored color primitive and customization laws in the native browser. */
 class ColorPrimitivesContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("test-color-primitives accepts no arguments");
+    if (segments.length) throw new Error("test-color-primitives accepts no arguments");
     const { proveStylingColorPrimitivesV1 } = await import("../../🛡️verification/🧪️tests/🎭️color-primitives/🟦️.ts");
     console.log("styling-color-primitives: " + await proveStylingColorPrimitivesV1() + " native assertions passed");
   }

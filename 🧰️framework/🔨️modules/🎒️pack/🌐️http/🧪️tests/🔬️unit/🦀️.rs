@@ -84,9 +84,6 @@ fn etag_is_forwarded_as_if_range_on_the_next_fetch_for_revalidation() {
     let (runtime, pool) = retry_runtime();
     let source = HttpPackSource::new("https://example.test/doc.pack".to_string(), transport, runtime);
 
-    // Sequential (not concurrent) reads: each completes and its coalescing group is
-    // finalized before the next begins, so these must land as two separate physical fetches
-    // rather than being coalesced by the internal `ReadScheduler`.
     semio_framework_async::block_on(source.read_at(0, 8)).unwrap();
     semio_framework_async::block_on(source.read_at(8, 8)).unwrap();
 

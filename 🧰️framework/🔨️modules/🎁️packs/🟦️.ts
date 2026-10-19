@@ -394,7 +394,7 @@ export function encodePackValue(value: unknown): Uint8Array<ArrayBuffer> {
     writeVarintU64(out, bytes.length);
     packPushBytes(out, bytes);
   }
-  writeVarintU64(out, 1); // field_count
+  writeVarintU64(out, 1);
   writeVarintU64(out, JSON_BRIDGE_FIELD_ID);
   out.push(PACK_TAG_VALUE);
   packEncodeValue(value, symbolIndex, out);

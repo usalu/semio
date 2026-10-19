@@ -50,8 +50,6 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn top_of_ladder_has_no_representation_that_can_exceed_it() {
-        // CC6 is the top rung -- every real *_SHAPE_REPRESENTATION subtype classifies at <= 6, so
-        // there is no honest "above" fixture; this documents that invariant rather than fabricating one.
         assert_eq!(MAX_RUNG, 6);
     }
 }

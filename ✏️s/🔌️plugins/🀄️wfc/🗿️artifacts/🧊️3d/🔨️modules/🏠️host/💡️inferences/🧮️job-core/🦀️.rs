@@ -37,7 +37,7 @@ impl Wfc3dInferenceJob {
             child: None,
             child_commit: None,
             assignments: BTreeMap::new(),
-            output: Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput)),
+            output: Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput)),
             rejected_output_page: None,
             output_started: false,
             encoded_entries: 0,

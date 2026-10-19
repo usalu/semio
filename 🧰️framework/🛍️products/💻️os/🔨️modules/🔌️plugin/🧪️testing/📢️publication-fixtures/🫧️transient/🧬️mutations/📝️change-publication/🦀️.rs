@@ -68,7 +68,7 @@ impl MutationKind<PublicationTransient, PublicationTransientMutation> for Change
     }
 }
 
-impl crate::os_spr::ColdMutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
+impl semio_framework_os_command::ColdMutationKind<PublicationTransient, PublicationTransientMutation> for ChangePublicationTransient {
     fn diff(&self, _base: &PublicationTransient) -> MutationOutcome<crate::publication_fixture::transient::PublicationTransientDiff> {
         MutationOutcome::new(crate::publication_fixture::transient::PublicationTransientDiff { revision: Some(self.revision) })
     }

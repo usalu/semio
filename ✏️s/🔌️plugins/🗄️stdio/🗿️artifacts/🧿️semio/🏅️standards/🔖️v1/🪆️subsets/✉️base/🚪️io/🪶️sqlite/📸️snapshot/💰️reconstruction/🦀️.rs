@@ -1,7 +1,7 @@
 //! ✉️ Original envelope and selected child share the real caller ledger and retained recipient.
 use super::*;
 use store::sqlite_snapshot::{artifact::reconstruct_text_into,transfer::{SchemaValidationStorage,validate_database_into}};
-use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioSnapshot>,validation:SchemaValidationStorage,child:NativeDecodeRetirementRecipient}
 fn empty()->Prefix{Prefix{snapshot:None,validation:SchemaValidationStorage::empty(),child:NativeDecodeRetirementRecipient::new()}}

@@ -5,17 +5,17 @@ import {parseFillRule,type FillRule} from "./🎨️fill/🌀️rule/🟦️.ts"
 /** 🧬️ Drawing artifact schema — every field with its state class. */
 
 export interface DrawingArtifact {
-  /** @state artifact */
+  /** 📜️ @state artifact */
   schema: string;
-  /** @state artifact */
+  /** 🆔️ @state artifact */
   id: string;
-  /** @state artifact */
+  /** 📛️ @state artifact */
   title?: string;
-  /** @state artifact */
+  /** 🥞️ @state artifact */
   layers: DrawingLayerNode[];
-  /** @state artifact */
+  /** 🎞️ @state artifact */
   assets: Record<string, DrawingImageAsset>;
-  /** @state artifact */
+  /** 🗒️ @state artifact */
   artboard?: DrawingArtboard;
 }
 

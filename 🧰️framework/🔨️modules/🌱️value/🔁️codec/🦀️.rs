@@ -151,7 +151,8 @@ pub fn edit_through_value<T: ToValue + FromValue>(target: &mut T, path: &[&str],
     Ok(())
 }
 
-fn path_index(segment: &str, length: usize, insert: bool) -> Result<usize, ValueError> {
+/// 🧭️ Resolves one path segment to a collection index for owners of other crates.
+pub fn path_index(segment: &str, length: usize, insert: bool) -> Result<usize, ValueError> {
     if insert && segment == "-" {
         return Ok(length);
     }
@@ -424,3 +425,6 @@ pub(crate) mod controlled_tests;
 #[cfg(test)]
 #[path="🧪️tests/🛫️controlled/🦀️.rs"]
 mod controlled_encoding_tests;
+
+/// 📦️ Encodes an exact-size sequence of values under the caller's native control.
+pub fn controlled_sequence<'a,T:ToValue+'a>(items:impl ExactSizeIterator<Item=&'a T>,control:&mut NativeEncodeControl<'_>)->Result<DslValue,ValueError>{encoding::sequence(items,control)}

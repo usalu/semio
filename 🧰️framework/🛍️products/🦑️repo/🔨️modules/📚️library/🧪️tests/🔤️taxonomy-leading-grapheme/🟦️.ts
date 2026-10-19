@@ -160,7 +160,7 @@ test("registers leading grapheme through its closed canonical route", async () =
   expect(join(repoRoot, registration.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[registration.target]).toBeDefined();
-  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
+  expect(project.targets[registration.target]).toMatchObject({ executor: "repo:script", options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
   const path = join(packageRoot, "📜️script.ts"), syntax = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);

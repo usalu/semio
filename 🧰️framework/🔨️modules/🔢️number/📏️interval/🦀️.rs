@@ -35,8 +35,6 @@ impl Interval {
         }
         let mut lo = approx;
         let mut hi = approx;
-        // Widen outward until both bounds are certified to contain r; converges in a handful of ulps
-        // since to_f64 is already within ~1 ulp of the true value.
         for _ in 0..4 {
             if Self::f64_le_rational(lo, r) {
                 break;

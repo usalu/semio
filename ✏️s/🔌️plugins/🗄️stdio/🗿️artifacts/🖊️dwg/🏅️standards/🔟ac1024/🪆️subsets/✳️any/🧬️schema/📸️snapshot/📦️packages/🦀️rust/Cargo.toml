@@ -27,13 +27,16 @@ semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { workspace = true }
 semio-framework-schema-state = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg-geometry = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
 semio-s-artifact-stdio-dwg-sqlite-drawing = { workspace = true }
+semio-s-artifact-stdio-dwg-sqlite-entities = { workspace = true }
 semio-s-artifact-stdio-dwg-sqlite-objects = { workspace = true }
+semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

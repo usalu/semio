@@ -3,7 +3,8 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabaseLimits,os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
+use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{serde_json::from_value(value.clone()).unwrap()}
@@ -20,7 +21,7 @@ macro_rules! original{
   }
  };
 }
-original!(decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,SqliteDatabase);
+original!(decode,NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,SqliteDatabase);
 original!(encode,NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,TxtSnapshot);
 #[test]
 fn txt_original_receiving_complete_rows_preserve_literal_empty_unicode_and_surrogate_semantics(){
@@ -53,7 +54,7 @@ fn txt_original_receiving_sql_cancellation_keeps_original_cause_and_same_native_
    for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){break}let(step,heap)=observe(||native.close_retirement_recipient(grant(&law["closeGrant"])).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}assert!(!native.has_retirement_owner());assert_eq!(born,freed);
   };
  }
- direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
+ direction!(NativeDecodeControl,NativeSnapshotDecodeOwner,semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>|source.to_sqlite_database_receiving(sql,owner));
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,semio_framework_value::native_encoding::NativeEncodeRetirementRecipient,|sql:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>|TxtSnapshot::from_sqlite_database_receiving(&input,sql,owner));
 }
 #[test]

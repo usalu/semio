@@ -1,7 +1,8 @@
 //! 🛬️ Original wire pages construct native Tick fields under the caller's physical recipient.
 use super::*;
 use pack::{PackLimits,record::{RetainedRecordBodyCursor,RetainedRecordBodyToken,RetainedValueToken as Token,RetainedValueRole as Role,RetainedValueContainer as Container}};
-use semio_framework_value::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of};
 
 /// 📄️ The caller reborrows the same producer pages without transferring or flattening them.
@@ -64,7 +65,7 @@ impl ToolRunTickNativeCursor{
   let mut demand=self.parser.as_mut().unwrap().record_storage_admission_demands().map_err(pack_error)?;if demand.capacity_bytes==0{demand.copy_bytes=size_of::<Option<Token>>()+3*size_of::<usize>()+size_of::<bool>();}demand.depth=demand.depth.max(1);Ok(demand)
  }
  /// ⏱️ Reborrows the exact same source, decoder ledger, cancellation observer and construction recipient.
- pub fn advance(&mut self,source:&dyn OriginalTickWireSource,control:&mut NativeDecodeControl<'_>)->Result<RetainedCloneStep,semio_framework_value::native_decoding::NativeConstructionStepFailure<ValueError>>{
+ pub fn advance(&mut self,source:&dyn OriginalTickWireSource,control:&mut NativeDecodeControl<'_>)->Result<RetainedCloneStep,semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>>{
   if self.source!=(source.identity(),source.byte_len()){return Err(malformed("native Tick requires the same original wire pages").into())}if self.closing{return Err(malformed("native Tick receive after close").into())}if self.complete{return Ok(RetainedCloneStep::Complete(Default::default()))}
   let demand=self.next_demands()?;control.receive_construction_step(demand,|control,grant|self.advance_admitted(source,control,grant,demand))
  }

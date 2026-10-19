@@ -20,7 +20,7 @@ impl MutationKind<i64, CounterMutation> for AddCounter {
 
 }
 
-impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddCounter {
+impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::new(CounterDiff::delta(self.delta))
     }
@@ -48,9 +48,3 @@ impl OpText for AddCounter {
     }
 }
 //#endregion 📜️Text
-
-//#region 🧪️Contract
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Contract

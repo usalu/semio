@@ -105,7 +105,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if !state.complete{state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
         if state.producer_request.is_some(){
             let mut candidate=None;let result=A::build_tool_job(&mut state.producer_request,&mut candidate,cx);
-            if let Some(job)=candidate{state.producer=Some(crate::tool_jobs::OriginalPreviewDrive::new(job,state.config,cx));}
+            if let Some(job)=candidate{state.producer=Some(semio_framework_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));}
             match result{Err(failure)=>{state.closing=true;return Err(failure)},Ok(true)if state.producer.is_none()=>{state.closing=true;return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview producer completed without its job").into())},_=>{}}
             return Ok(None);
         }

@@ -24,7 +24,8 @@ use semio_framework_dsl::*;
 
 
 use semio_framework_dsl_record::*;
-use semio_framework_value::{DslValue,FromValue,ToValue,Number,ValueError,NativeDecodeControl,NativeEncodeControl};
+use semio_framework_value::{DslValue, FromValue, ToValue, Number, ValueError, NativeEncodeControl};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 pub use dsl_derive::{diff_binary,diff_text,DslArtifact,MutationLeaf,Mutations};
 
 
@@ -223,7 +224,7 @@ pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjec
     /// 📥️ Holds the actual decoded variant and canonical scratch until caller settlement.
     pub type RetainedDecodedOperation<T:DslVariants> = semio_framework_os_pack::record::BorrowedProjectedPackOperation<semio_framework_os_pack::record::OwnedVariantPackSource<T>>;
 
-    fn decode_with_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_framework_os_pack::ByteSpan<'_>,index_of:impl Fn(u64,&[(String,super::RecordSpecProducer)])->Result<usize,ProtocolError>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>,reencode:impl FnOnce(&mut RetainedDecodedOperation<T>,&EncodeOptions,&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>)->Result<(),ProtocolError>{
+    fn decode_with_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_framework_os_pack::ByteSpan<'_>,index_of:impl Fn(u64,&[(String,super::RecordSpecProducer)])->Result<usize,ProtocolError>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>,reencode:impl FnOnce(&mut RetainedDecodedOperation<T>,&EncodeOptions,&mut dyn protocol::io::binary::operation_bytes::OperationByteOutput,&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ProtocolError>)->Result<(),ProtocolError>{
         if retained.is_some(){return Err(semio_framework_os_pack::PackRefusal::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical decoded operation owner is not empty")).into())}
         decoding.checkpoint().map_err(semio_framework_os_pack::PackRefusal::from)?;
         if source.len()as u64>options.limits.max_file_len{return Err(semio_framework_os_pack::PackRefusal::LimitExceeded{kind:semio_framework_value::ValueRefusalKind::OwnershipLimit,limit:"operation source byte length"}.into());}
@@ -246,7 +247,7 @@ pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjec
     }
 
     /// 🧾️ Decodes the same admitted source and compares its complete canonical tagged wire without a second byte owner.
-    pub fn decode_tagged_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(protocol:&str,source:semio_framework_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
+    pub fn decode_tagged_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(protocol:&str,source:semio_framework_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
         decode_with_span(source,|tag,variants|{
             let kind=protocol_record::kind(protocol,tag).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("📡️.protocol.semio declares no record with tag {tag}")})?;
             variants.iter().position(|(keyword,_)|keyword==kind).ok_or_else(||ProtocolError::Malformed{what:"op tag",offset:1,detail:format!("record '{kind}' names no variant")})
@@ -254,7 +255,7 @@ pub fn encode_op_into<T:semio_framework_dsl_record::native_encoding::FieldProjec
     }
 
     /// 🎞️ Decodes a borrowed operation and checks exact ordinal canonical bytes with caller controls.
-    pub fn decode_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_framework_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
+    pub fn decode_op_span<T:DslVariants+semio_framework_dsl_record::BorrowedDslVariants>(source:semio_framework_os_pack::ByteSpan<'_>,options:&DecodeOptions,canonical_options:&EncodeOptions,decoding:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,encoding:&mut semio_framework_value::NativeEncodeControl<'_>,retained:&mut Option<RetainedDecodedOperation<T>>)->Result<(),ProtocolError>{
         decode_with_span(source,|ordinal,variants|{
             let index=usize::try_from(ordinal).map_err(|_|ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} exceeds the native index range")})?;
             if index<variants.len(){Ok(index)}else{Err(ProtocolError::Malformed{what:"op variant",offset:1,detail:format!("ordinal {ordinal} out of range for {} declared variants",variants.len())})}
@@ -335,9 +336,9 @@ use semio_framework_value::ToValue;
     /// 🧭️ Where the aggregate's `ToValue` tree names its variant.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum VariantTag {
-        /// `#[value(tag = "…")]`, camelCase variant names, with or without `content`.
+        /// 🧮️ `#[value(tag = "…")]`, camelCase variant names, with or without `content`.
         Field(&'static str),
-        /// Externally tagged, PascalCase variant names: `{"Variant": payload}`.
+        /// 🔗️ Externally tagged, PascalCase variant names: `{"Variant": payload}`.
         Key,
     }
 

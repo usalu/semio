@@ -1,7 +1,7 @@
 /** 🧬️ Generation2dConfig */
 export interface Generation2dConfig {
-  /** @state config */
+  /** 👁️ @state config */
   showMode: string;
-  /** @state config */
+  /** 👉️ @state config */
   selectedGenerationId?: string;
 }

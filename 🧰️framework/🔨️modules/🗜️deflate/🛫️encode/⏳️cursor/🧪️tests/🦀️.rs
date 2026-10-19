@@ -53,7 +53,7 @@ fn encode(raw: &[u8], reject: bool) -> Vec<u8> {
 /// 🔮️ Exact portable streams and long matching windows agree with ordinary output and system zlib.
 #[test]
 fn deflate_controlled_retained_exact_oracles_and_grants() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     assert!(size_of::<RetainedDeflateEncoder>() <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize);
     let mut inputs = Vec::new();
     for vector in fixture["vectors"].as_array().unwrap() {
@@ -79,7 +79,7 @@ fn deflate_controlled_retained_exact_oracles_and_grants() {
 /// 🍂️ Every retained cancellation phase closes original heap pages under exact release grants.
 #[test]
 fn deflate_controlled_retained_cancellation_frontiers() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let raw = b"aaaaabaaaaaab".repeat(40);
     for phase in fixture["cancellationPhases"].as_array().unwrap() {
         let mut cursor = RetainedDeflateEncoder::default();

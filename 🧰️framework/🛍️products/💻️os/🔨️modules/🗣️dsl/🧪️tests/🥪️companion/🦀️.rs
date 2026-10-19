@@ -15,7 +15,8 @@ use semio_framework_dsl::*;
 use semio_framework_dsl_record::*;
 use semio_framework_dsl_record_derive::{DslEnum, DslRecord, DslScalar};
 use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
-use semio_framework_value::{DslValue, FromValue, Number, NativeDecodeControl, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value::{DslValue, FromValue, Number, NativeEncodeControl, ToValue, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 pub use semio_framework_os_dsl::*;
 

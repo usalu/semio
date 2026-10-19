@@ -9,7 +9,7 @@ import { testLevelBudgetMs } from "../../🏃️process/📦️packages/🟦️t
 /** 🎓️ Runs the neutral introduction corpus and strict owned-interface checks. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw Error("Expected test");
+    if (segments.length) throw new Error("Expected test");
     await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "🧪️tests/🔬️unit/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
     await runBudgetedTestCommand(process.execPath, ["x", "tsc", "--noEmit", "--incremental", "false", "-p", resolve(this.root, "tsconfig.json")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs(), env: process.env, throwOnFailure: true });
   }

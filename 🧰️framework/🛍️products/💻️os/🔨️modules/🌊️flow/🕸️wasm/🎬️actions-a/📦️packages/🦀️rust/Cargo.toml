@@ -26,6 +26,7 @@ semio-framework-os-flow-wasm-domain = { path = "../../../🧩️domain-adapter/�
 semio-framework-os-flow-host-core = { path = "../../../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-abi = { path = "../../../../../../../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }

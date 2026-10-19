@@ -132,7 +132,7 @@ fn parses_escapes_and_unicode() {
     assert_eq!(parse(r#""hi\nthere""#, crate::JsonMemberPolicy::Replace).unwrap().as_str().unwrap(), "hi\nthere");
     assert_eq!(parse(r#""café""#, crate::JsonMemberPolicy::Replace).unwrap().as_str().unwrap(), "café");
     assert_eq!(parse(r#""😀""#, crate::JsonMemberPolicy::Replace).unwrap().as_str().unwrap(), "😀");
-    assert_eq!(parse("\"café\"", crate::JsonMemberPolicy::Replace).unwrap().as_str().unwrap(), "café"); // raw UTF-8 passthrough
+    assert_eq!(parse("\"café\"", crate::JsonMemberPolicy::Replace).unwrap().as_str().unwrap(), "café");
 }
 
 #[test]
@@ -170,7 +170,7 @@ fn duplicate_object_keys_keep_first_position_last_value() {
     let object = value.as_object().unwrap();
     assert_eq!(object.len(), 2);
     assert_eq!(object.get("a").unwrap().as_u64(), Some(3));
-    assert_eq!(object.iter().next().unwrap().0, "a"); // first occurrence's position kept
+    assert_eq!(object.iter().next().unwrap().0, "a");
 }
 
 #[test]

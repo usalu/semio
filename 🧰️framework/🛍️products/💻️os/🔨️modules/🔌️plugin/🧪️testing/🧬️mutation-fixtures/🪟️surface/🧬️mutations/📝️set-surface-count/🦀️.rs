@@ -48,7 +48,7 @@ impl MutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     }
 }
 
-impl crate::os_spr::ColdMutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
+impl semio_framework_os_command::ColdMutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     fn diff(&self, _: &SurfaceSnapshot) -> MutationOutcome<SurfaceDiff> {
         MutationOutcome::new(SurfaceDiff { count: Some(self.value) })
     }

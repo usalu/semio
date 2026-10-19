@@ -92,9 +92,6 @@ export function schemaResolutionDiagnostics(repoRoot: string, under = ""): Schem
   const found: SchemaDiagnostic[] = [...diagnostics];
   const selected = (scope: SchemaCatalogScope): boolean => under.length === 0 || scope.path === under || scope.path.startsWith(`${under}/`);
   const normative = normativeSchemaFormat(repoRoot);
-  // 🪪️Every normative document of a scope declares its own `$id` — a facet child keeps the scope
-  // path and varies only the facet filename — and a reference may address any of them. Indexing the
-  // module root alone would report a legal `<facet $id>#/$defs/<Export>` as unresolved.
   const scopeOfId = new Map<string, string>();
   for (const [id, scope] of Object.entries(catalog.scopes)) {
     for (const file of scopeNormativeDocuments(scope, normative)) {
@@ -103,8 +100,6 @@ export function schemaResolutionDiagnostics(repoRoot: string, under = ""): Schem
     }
   }
   for (const [id, scope] of Object.entries(catalog.scopes)) {
-    // 📏️The `$id` index above is built over EVERY scope even under a filter: a subtree's refs
-    // point out of it, and an index narrowed to the filter would report every one of them unresolved.
     if (!selected(scope)) continue;
     found.push(...schemaExportCompletenessDiagnostics(repoRoot, id, scope));
     for (const file of scopeNormativeDocuments(scope, normative)) {

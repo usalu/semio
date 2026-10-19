@@ -190,8 +190,6 @@ pub enum CodecRepresentation {
 pub struct CancellationToken(std::sync::Arc<std::sync::atomic::AtomicBool>);
 
 impl CancellationToken {
-    // 🚫️async: E1 pure accessor consumed by external-trait impls (`Default::default` on
-    // `DecodePolicy`/`EncodePolicy`, whose signature is fixed by the `Default` trait) — see R9.
     /// 🌱️ Creates an active cancellation token.
     pub fn new() -> Self {
         Self::default()

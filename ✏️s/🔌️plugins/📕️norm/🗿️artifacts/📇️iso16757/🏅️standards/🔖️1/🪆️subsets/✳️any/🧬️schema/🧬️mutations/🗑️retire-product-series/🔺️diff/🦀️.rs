@@ -1,4 +1,4 @@
-//! Diff for `retire-product-series`.
+//! 🔄️ Diff for `retire-product-series`.
 
 use crate::retire_product_series::mutation::RetireProductSeries;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;

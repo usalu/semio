@@ -15,8 +15,6 @@ fn compute_dirty_set_is_empty_for_unchanged_snapshots() {
 
 #[test]
 fn compute_dirty_set_propagates_only_to_descendants_of_changed_leaf() {
-    // Two independent branches: a -> b, c -> d. Changing `a`'s params should dirty `a` and
-    // `b` (its descendant), but never touch `c`/`d` (a disjoint branch).
     let make_tree = |a_value: f64| Tree {
         neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(a_value)), Neuron::with_kind("b", "double", Dictionary::new()), Neuron::with_kind("c", "echo", number_dictionary(9.0)), Neuron::with_kind("d", "double", Dictionary::new())],
         synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }, Synapse { id: "s2".into(), from: "c".into(), to: "d".into(), from_port: "x".into(), to_port: "number".into() }],
@@ -32,8 +30,6 @@ fn compute_dirty_set_propagates_only_to_descendants_of_changed_leaf() {
 
 #[test]
 fn compute_dirty_set_marks_surviving_dependents_of_removed_neuron() {
-    // a -> b -> c. Removing `b` and rewiring `a` directly into `c` must dirty `c`, since it
-    // otherwise wouldn't be discovered as changed by iterating the *current* tree alone.
     let before = Tree {
         neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(1.0)), Neuron::with_kind("b", "double", Dictionary::new()), Neuron::with_kind("c", "double", Dictionary::new())],
         synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }, Synapse { id: "s2".into(), from: "b".into(), to: "c".into(), from_port: "x".into(), to_port: "number".into() }],

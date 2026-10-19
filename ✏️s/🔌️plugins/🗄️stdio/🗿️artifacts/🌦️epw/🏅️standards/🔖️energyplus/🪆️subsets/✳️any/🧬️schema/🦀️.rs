@@ -43,7 +43,6 @@ impl Default for EpwArtifact {
 }
 
 impl EpwArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> EpwSnapshot {
         EpwSnapshot {
             schema: self.schema.clone(),
@@ -58,7 +57,6 @@ impl EpwArtifact {
             records: self.records.clone(),
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: EpwSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
@@ -73,7 +71,6 @@ impl EpwArtifact {
             records: snapshot.records,
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: EpwSnapshot) {
         self.schema = snapshot.schema;
         self.location = snapshot.location;

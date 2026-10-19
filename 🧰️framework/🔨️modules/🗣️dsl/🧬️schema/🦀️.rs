@@ -20,7 +20,8 @@ use std::collections::{HashSet};
 #[cfg(test)] use std::collections::{HashMap};
 use crate::notation as dsl_notation;
 pub use semio_framework_dsl_notation as notation;
-use semio_framework_value::{DslValue,NativeDecodeControl,NativeEncodeControl,Number};
+use semio_framework_value::{DslValue, NativeEncodeControl, Number};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 
 #[path = "🛬️decoding/🦀️.rs"]

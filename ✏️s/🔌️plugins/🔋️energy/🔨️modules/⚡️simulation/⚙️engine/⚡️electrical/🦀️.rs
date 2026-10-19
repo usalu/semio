@@ -41,7 +41,7 @@ pub struct PvSystem {
     pub temperature_coefficient: f64,
     pub faiman_heat_loss_constant_w_m2k: f64,
     pub faiman_heat_loss_wind_w_s_m3k: f64,
-    pub mounting: crate::model::PhotovoltaicMounting,
+    pub mounting: semio_s_plugin_energy_engine_model::PhotovoltaicMounting,
     pub tilt_deg: f64,
     pub azimuth_deg: f64,
 }
@@ -56,7 +56,7 @@ impl PvSystem {
     /// 🌡️ Sandia cell temperature from module temperature and the authored mounting.
     /// [Sandia cell gradient](https://pvlib-python.readthedocs.io/en/stable/reference/generated/pvlib.temperature.sapm_cell.html).
     pub fn cell_temperature_c(&self, irradiance_w_m2: f64, air_temperature_c: f64, wind_speed_m_s: f64) -> f64 {
-        let gradient = match self.mounting { crate::model::PhotovoltaicMounting::OpenRack => 3.0, crate::model::PhotovoltaicMounting::CloseRoof => 1.0, crate::model::PhotovoltaicMounting::InsulatedBack => 0.0 };
+        let gradient = match self.mounting { semio_s_plugin_energy_engine_model::PhotovoltaicMounting::OpenRack => 3.0, semio_s_plugin_energy_engine_model::PhotovoltaicMounting::CloseRoof => 1.0, semio_s_plugin_energy_engine_model::PhotovoltaicMounting::InsulatedBack => 0.0 };
         self.module_temperature_c(irradiance_w_m2, air_temperature_c, wind_speed_m_s) + irradiance_w_m2.max(0.0) * gradient / 1000.0
     }
 
@@ -72,7 +72,7 @@ impl PvSystem {
     }
 
     /// 🌤️ Preserves the shared sky's beam, diffuse and ground split on the authored collector plane.
-    pub fn incident_irradiance(&self,sky:&crate::solar::SkyState)->crate::solar::IncidentSolar {
+    pub fn incident_irradiance(&self,sky:&semio_s_plugin_energy_engine_solar::SkyState)->semio_s_plugin_energy_engine_solar::IncidentSolar {
         let(tilt,azimuth)=(deg_to_rad(self.tilt_deg),deg_to_rad(self.azimuth_deg));
         sky.incident([tilt.sin()*azimuth.sin(),tilt.sin()*azimuth.cos(),tilt.cos()],1.0,1.0,1.0)
     }

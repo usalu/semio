@@ -18,9 +18,8 @@ use crate::model::Model;
 use crate::precompute::PrecomputedModel;
 use crate::site::WeatherRecord;
 use crate::units::Unit;
-use semio_framework_job::{
-    InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, StepContext,
-};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
+use semio_framework_job_payload::{RetainedJobPayload};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

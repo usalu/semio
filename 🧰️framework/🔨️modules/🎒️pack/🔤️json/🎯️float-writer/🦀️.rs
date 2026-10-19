@@ -1,13 +1,14 @@
 //! 🎯️ Float writer: the scalar text sink, the f64 and f32 spellings and the exact-arithmetic digit generator. See [`super`].
 
-use super::*;
+use std::cmp::Ordering;
+use std::fmt;
 
 //#region 🔖️Writer
-pub(super) struct ScalarText { pub bytes: [u8; 128], pub length: usize }
+pub struct ScalarText { pub bytes: [u8; 128], pub length: usize }
 
 impl ScalarText {
-    pub(super) fn new() -> Self { Self { bytes: [0; 128], length: 0 } }
-    pub(super) fn text(&self) -> &str { std::str::from_utf8(&self.bytes[..self.length]).expect("formatted scalar UTF-8") }
+    pub fn new() -> Self { Self { bytes: [0; 128], length: 0 } }
+    pub fn text(&self) -> &str { std::str::from_utf8(&self.bytes[..self.length]).expect("formatted scalar UTF-8") }
 }
 
 impl fmt::Write for ScalarText {
@@ -101,7 +102,7 @@ fn write_decimal_digits(negative: bool, digits: &[u8], exponent: i32, fixed: std
 /// a fixed-size scalar buffer, not a document.
 pub fn format_f64(value: f64) -> String {
     let mut out = String::new();
-    write_float(value, &mut out);
+    let _ = write_float_to(value, &mut out);
     out
 }
 //#endregion 🔖️Writer

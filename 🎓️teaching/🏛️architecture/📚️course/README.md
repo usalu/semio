@@ -47,24 +47,72 @@ leaderboard sums those. Every badge of this course but `completionist` asks for 
 
 ## Develop
 
-Start `bun run dashboard`, choose **New Task** (`Ctrl+B n`), and search for `architecture-course` plus the operation.
-Select the owning `@teaching/architecture-course` target and complete its parameter form. Its sixteen registered targets
-include preflight and CI browser preparation; CI uses the same targets. Once a server reports readiness, choose
-**Open ready address** (`Ctrl+B u`) from its task.
+Every command of this site is a target of the project `@teaching/architecture-course` (manifest `📦️packages/🟦️typescript/📋️project.json`, router `📦️packages/🟦️typescript/📜️script.ts`). The neutral build entry runs it: `bun repo [--tool=nx|bazel] run @teaching/architecture-course:<target>[:<configuration>] [-- <arguments>]`. Nx with Bun is the default; Bazel executes the same graph with `--tool=bazel` (or `SEMIO_BUILD_TOOL=bazel`). Bazel on macOS needs an ASCII checkout path. The [build chapter](../../../🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run) documents both implementations, the cache rules and the recovery steps; never call `nx`, `bazel`, raw `cargo` or `rustc` yourself.
 
-| Managed command id | What it does | Port |
+The dashboard is the developer command surface: start `bun run dashboard`, choose **New Task** (`Ctrl+B n`), and search for `architecture-course` plus the operation. Select the owning `@teaching/architecture-course` target and complete its parameter form. The id of the dashboard command is the `<project>:<target>` id used below, and the global `build-tool` axis of the form selects Nx or Bazel for the same task. Its sixteen registered targets include preflight and CI browser preparation; CI uses the same targets. Once a server reports readiness, choose **Open ready address** (`Ctrl+B u`) from its task.
+
+### Prerequisites
+
+| Need | How | Needed by |
 |---|---|---|
-| `@teaching/architecture-course:dev` | backend and frontend together; parameters `steady=true` (a flag: sets `TEACHING_ARCHITECTURE_COURSE_WATCH=off`, so neither the site nor the proctor follows source edits) and `stack=beside` (a second, independent stack beside the first) | `8791` and `6061`; `beside`: `8793` and `6063` |
-| `@teaching/architecture-course:dev-site` | the site alone | `6061` (`TEACHING_ARCHITECTURE_COURSE_PORT`) |
-| `@teaching/architecture-course:test` | the tests | |
-| `@teaching/architecture-course:typecheck` | the entry, the Vite configuration, the stack, the deploy verbs, the end-to-end gate and every test and spec against the compiler; it first regenerates the git-ignored bindings its sources read | |
-| `@teaching/architecture-course:test-e2e` | the end-to-end gate | fresh OS-selected loopback ports |
-| `@teaching/architecture-course:check` | `proctor check` on the course | |
+| Pinned build tools | `bun repo tools setup nx` (Bazel: `bun repo tools setup bazel`, both: `all`; `bun repo run workspace:setup` includes it) | every target |
+| Dependencies | `bun repo dependencies sync --all`; after any `package.json` edit run `bun repo dependencies lock --all` first, and never a plain `bun install` | every target |
+| Host check | `bun repo preflight`; the target `@teaching/architecture-course:preflight` runs the same generic check (the Linux rules are under *Compiler runner* in [Deploy](#deploy)) | before the cache partitions are created |
+| Rust for the proctor | no unmanaged installation: the toolchain of `rust-toolchain.toml` and `bun repo cargo --store=shared`, never raw `cargo`; a first proctor build takes minutes | `dev`, `check`, `test-e2e` (unless `--proctor <executable>` names one), `docker-image-build` |
+| Chromium for Playwright | `test-e2e` installs the revision the installed `playwright-core` names into `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright` when it is missing, which is a download; `bun repo run workspace:deps-browsers` does that ahead. On Debian CI, `ci-browser-prepare` adds the system libraries (`playwright install-deps chromium`, noninteractive `sudo`) | `test-e2e`, `deploy-check` |
+| Docker daemon | a running Docker Engine | `docker-image-build`, `docker-image-check`, `docker-image-publish`, `docker-stack-check`, `docker-stack-bundle`, `deploy-check` |
+| Native Linux x64 | `docker-image-build` refuses every other host (`🚀️deploy/🐳️docker-image/🟦️.ts`); the release path therefore runs on the Debian 12 x64 runner of the workflow (*Compiler runner* in [Deploy](#deploy)) | `docker-image-build`, and `docker-image-publish`, `deploy-check` after it |
+| Release mode | `publish`, `docker-image-build`, `docker-image-publish`, `deploy-check` and the `rehearsal` topology need the original build mode `release`: add `--configuration=release` (or the suffix `:release`, or `SEMIO_BUILD_MODE=release`); the dashboard form supplies it as the required build mode | release path only |
 
-Choose `@teaching/architecture-course:dev` for the stack on port 6061. To inspect a steady second stack,
-enable `steady` and choose `stack=beside` in its dashboard parameter form; it uses port 6063.
+### Commands
 
-The beside stack keeps its proctor data in `.🧬semio/🎓️teaching/proctor-beside`, so the two stacks never share a store.
+All targets live in the project `@teaching/architecture-course` and run `bun ./📜️script.ts <target>` in `📦️packages/🟦️typescript`. `assets` and `tokens` below are the dependencies `@semio-tech/assets:build` and `@semio-tech/ui-styling-tokens:generate`, which the tool runs first.
+
+| Command (`bun repo run …`) | What it does | Runs after | Cache | Port |
+|---|---|---|---|---|
+| `@teaching/architecture-course:dev` | the proctor and the site together ([below](#one-command-for-backend-and-frontend)); parameters `steady=true` (a flag: sets `TEACHING_ARCHITECTURE_COURSE_WATCH=off`, so neither the site nor the proctor follows source edits) and `stack=beside` (a second, independent stack beside the first, with its data in `.🧬semio/🎓️teaching/proctor-beside`) | assets, tokens | never (continuous) | `8791` and `6061`; `beside`: `8793` and `6063` |
+| `@teaching/architecture-course:dev-site` | the site alone; it proxies the gateway routes to whatever proctor answers on `PROCTOR_PORT` | assets, tokens | never (continuous) | `6061` (`TEACHING_ARCHITECTURE_COURSE_PORT`) |
+| `@teaching/architecture-course:build` | the production site for the proctor named by `PROCTOR_URL` (else the production proctor) | assets, tokens | never | |
+| `@teaching/architecture-course:publish` | stages the CDN artifact at `dist/release/pages/course` (release mode) | assets, tokens | never | |
+| `@teaching/architecture-course:test` | the tests; the level is an argument (`-- quick` is the default, `long` and `exhaustive` go deeper) | | yes | |
+| `@teaching/architecture-course:typecheck` | the entry, the Vite configuration, the stack, the deploy verbs, the end-to-end gate and every test and spec against the compiler | the generated bindings it reads (`@semio-tech/framework-rs:generate`, `ui-contract-rs:generate`, `ui-rs:generate`, `framework-actor-rs:typegen`), assets, tokens | yes | |
+| `@teaching/architecture-course:check` | `proctor check` on the course and every quiz it names | | never | |
+| `@teaching/architecture-course:test-e2e` | the end-to-end gate ([below](#end-to-end-gate)) | assets, tokens | never | fresh OS-selected loopback ports |
+| `@teaching/architecture-course:preflight`, `ci-browser-prepare` | generic host check; Chromium's Debian system packages | | never | |
+| `@teaching/architecture-course:docker-image-build`, `docker-image-check`, `docker-image-publish`, `docker-stack-check`, `docker-stack-bundle` | the proctor image and its stack ([Proof of concept by hand](#proof-of-concept-by-hand), [Deploy](#deploy)); `docker-stack-check` takes `tag`, `http-port` (`18080`), `https-port` (`18443`) and `keep`, `docker-stack-bundle` takes `tag` and `out` | | never | |
+| `@teaching/architecture-course:deploy-check` | the [readiness gate](#readiness-gate) | assets, tokens, `typecheck` | never | |
+
+A target is cached only when its manifest says `cache: true` and declares explicit inputs: `test` and `typecheck`. Everything else always reruns, under Nx and under Bazel alike, because it serves until stopped, drives a browser or Docker, or publishes into a store or a directory the tool does not own. Under Bazel a cached target is an action with its declared inputs and outputs and uses Bazel's action cache; a target whose manifest does not allow replay is executed every time. The proctor's own `build` and `test` are cached too (`bun repo run @teaching/proctor:build`, [proctor README](../../🛂️proctor/README.md)).
+
+### The chain
+
+```bash
+bun repo tools setup all                                                     # once per host
+bun repo dependencies sync --all                                             # once per checkout and after every lockfile change
+bun repo run @teaching/architecture-course:typecheck                         # cached
+bun repo run @teaching/architecture-course:test                              # cached; add -- long for the deeper level
+bun repo run @teaching/architecture-course:dev                               # proctor 8791 and site 6061, until stopped
+bun repo run workspace:deps-browsers                                         # optional: Chromium ahead of the first gate
+bun repo run @teaching/architecture-course:test-e2e -- --topology dev --     # the dev topology on fresh ports
+bun repo run @teaching/architecture-course:test-e2e --configuration=release  # both topologies; the rehearsal needs release
+bun repo --tool=bazel run @teaching/architecture-course:test                 # the same graph under Bazel
+bun repo run @teaching/architecture-course:deploy-check --configuration=release   # Linux x64 with Docker: the release gate
+```
+
+The dashboard registry (`metadata.semio.dashboard` of `📦️packages/🟦️typescript/📋️project.json`, validated against the schema `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json`) holds what the forms and the daemon know about these targets:
+
+| Entry | Content |
+|---|---|
+| readiness | `dev` and `dev-site` report ready on port `6061` (`TEACHING_ARCHITECTURE_COURSE_PORT`) |
+| compound `course-with-proctor` | verb `dev`, stops together: `@teaching/proctor:dev`, then `@teaching/architecture-course:dev` (dashboard id `compound:@teaching/architecture-course/course-with-proctor`) |
+| parameter `execution-mode` | `release` by default (`SEMIO_BUILD_MODE=release`) on `publish`, `test-e2e`, `docker-image-build`, `docker-image-publish` and `deploy-check` |
+| parameters of `test-e2e` | `topology` (`both`, `dev`, `rehearsal`), `serial`, `keep`, `proctor`, `grep`, `project`, `headed`, `workers`; Playwright words go in **Arguments** |
+| parameters of `dev` | `steady`, `stack=beside` |
+| global axes | `build-tool` (Nx or Bazel), `cache` (use, skip local, skip all) and `build-mode`, offered on every verb that runs build tasks ([Command registry](../../../🧰️framework/🛍️products/🦑️repo/README.md#-command-registry)) |
+
+Not yet verified: no run of this chain under either tool is recorded for this documentation. The target names, dependencies, ports, cache flags and registry entries above are read from the manifest, the router and the sources on 2026-10-20. On 2026-10-19 the Rust proctor did not compile on the working tree (the framework value crates were being refactored), so `dev`, `check`, `test-e2e` and the image path stayed unrun; `test` and `typecheck` need no proctor. The GitHub workflow `build-system.yml` runs `@teaching/architecture-course:test` under both tools and has not run yet.
+
+Choose `@teaching/architecture-course:dev` for the stack on port 6061. To inspect a steady second stack, enable `steady` and choose `stack=beside` in its dashboard parameter form; it uses port 6063. The beside stack keeps its proctor data in `.🧬semio/🎓️teaching/proctor-beside`, so the two stacks never share a store.
 
 ### One command for backend and frontend
 
@@ -93,7 +141,7 @@ The beside stack keeps its proctor data in `.🧬semio/🎓️teaching/proctor-b
 5. Select the stack's dashboard task and choose **Stop** (`Ctrl+B c`) to cancel the original invocation and stop both and every process they started. If the site exits, the
    proctor is stopped as well.
 
-The dev server and Playwright workers run on the configured Node runtime; Bun installs packages and runs Nx tasks.
+The dev server and Playwright workers run on the configured Node runtime; Bun installs packages and `bun repo` runs the tasks (Nx by default, Bazel with `--tool=bazel`; see the [build chapter](../../../🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run)).
 The dev site bakes no proctor origin and proxies `/instance`, `/commands`, `/queries`, `/actors` (WebSocket event streams
 included) and `/scopes` to `http://127.0.0.1:${PROCTOR_PORT:-8791}`, so the browser talks to one origin in dev. A proctor
 that goes away while a socket is proxied never takes the dev server along, also under Bun 1.3, whose sockets lack the
@@ -122,7 +170,8 @@ controls configure Playwright; additional Playwright options go in **Arguments**
 | Set `proctor` | diagnose an absolute or workspace-relative executable path; this does not prove production of the checkout's native artifact |
 
 For automation, course options precede an explicit `--` forwarding boundary, for example
-`--topology dev -- --grep "leaderboard"`. The dashboard inserts that boundary before its Playwright fields and
+`--topology dev -- --grep "leaderboard"`; on the command line everything after the first `--` of `bun repo` reaches the gate, so the whole call is
+`bun repo run @teaching/architecture-course:test-e2e -- --topology dev -- --grep "leaderboard"`. The dashboard inserts that boundary before its Playwright fields and
 Arguments. Words after it remain unchanged, including `dev`, `rehearsal` and option-looking filter values.
 
 The release document's Content-Security-Policy is part of the rehearsal: its `connect-src` names the baked proctor origin,
@@ -227,7 +276,9 @@ the site and the complete proctor stack:
 
 Image compilation uses the registered canonical Linux compiler environment, with the original invocation, source,
 network and bounded native storage policies enforced. Its producer must be ABI-compatible with the pinned Debian 12
-runtime. The command compiles a release proctor, validates the checkout course, then retains its immutable artifact
+runtime. The public image command requires an actual Linux x64 process and a genuine release ELF64 producer;
+the runtime context checks the ELF architecture against that producer. The command compiles a release proctor,
+validates the checkout course, then retains its immutable artifact
 reader while passing a finite runtime-only tar context to Docker on stdin. That context contains the executable,
 exactly the course and its referenced quizzes, Compose/Caddy files and an empty owned data directory. No repository
 source tree or compiler enters the image recipe. A final JSON-form `proctor check` runs inside the nonroot runtime,
@@ -284,8 +335,10 @@ The bundle was run on 2026-10-02 as the machine runs it (`docker load`, `docker 
 `https://architektur-und-technologie.de` was granted and one from a foreign origin was not. `docker-stack-check`
 proves the supplied certificate: it mints one for `localhost` with another CA, puts it into `certificates/` and sees
 Caddy serve exactly that one. Everything under [Deploy](#deploy) from *Update* on applies to this stack as it is; for an
-update, stage a new bundle, take a backup, then repeat steps 1 and 3 in the same directory (your `.env` and
-`certificates/` stay when you copy only the new `proctor-image.tar`, `compose.yaml` and `Caddyfile`).
+update, stage a new bundle and take a backup. Copy the new `proctor-image.tar`, `compose.yaml` and `Caddyfile` into
+that same directory, then set `PROCTOR_TAG` in the retained `.env` to the exact value from the new bundle's `.env`.
+Keep the other overrides and `certificates/`, then repeat steps 1, 3 and 4. Loading an archive alone does not change
+the image tag selected by the retained `.env`.
 
 ## Deploy
 
@@ -383,28 +436,25 @@ outside the campus network do not reach the proctor, and Let's Encrypt cannot is
    once with a token that has `read:packages`.)
 
 **Compiler runner.** Set repository Actions variable `ARCHITECTURE_COURSE_RUNNER` to the label of an actual dedicated
-Debian 12 x64 runner. The shared `check` gate and both compiler jobs use it; Pages deployment uses a standard runner.
-The invoking process needs effective `CAP_SYS_ADMIN`, writable `/dev/loop-control` and visible writable unused loop block
-devices, plus working ext4 loop mounts. Noninteractive `sudo` must be available to the runner user. The workflow invokes
-every managed command through `sudo env` while preserving the setup actions' pinned `PATH`, actual `HOME` and original
-`SEMIO_BUILD_MODE=release`. Elevating a separate setup step does not give the compiler process those capabilities.
-A container must already expose the necessary capabilities/devices and permit the mount API; `sudo` cannot restore a
-capability removed from its bounding set.
+Debian 12 x64 runner for the current `linux/amd64` release. The shared `check` gate and both compiler jobs use it;
+Pages deployment uses a standard runner. This baseline matches the pinned Debian 12 runtime; the image producer's
+native Linux x64 guard, ELF64 checks and final runtime `proctor check` validate the actual architecture, loader and
+course content. Docker Engine 25 or newer and Compose plugin 2.24 or newer must be available for the operator gates.
+Noninteractive `sudo` must be available for CI's Chromium system-package preparation. The workflow invokes its
+managed commands through `sudo env`, preserving the setup actions' pinned `PATH`, actual `HOME` and original
+`SEMIO_BUILD_MODE=release` across dependency preparation and compilation.
 
-Before any store opens, the dashboard target `@teaching/architecture-course:preflight` checks the owner's authored requirements:
-Debian 12, x64, the actual process capability bit, writable loop-control, at least seven visible writable unused loop
-devices, and at least 72 GiB available at the checkout filesystem. It also requires `fallocate`, `mkfs.ext4`, `mount`,
-`umount`, `losetup`, `cc`, `pkg-config` and `docker` on the preserved path, with a working Docker daemon and Compose plugin
-for the operator gates. Its managed target is `@teaching/architecture-course:preflight`.
-Seven loops are an early minimum; nested bounded stores can require more, and the existing backend still checks every
-actual allocation/mount and its exact kernel backing identity. Preflight observations do not bypass those checks.
+Before any store opens, bare `bun repo preflight` runs generic host preflight for the whole workspace. On Linux it
+admits x64 or arm64, requires at least 8 GiB available on the filesystem that will hold the cache, finds actual `cc`
+and `pkg-config`, and proves atomic directory exchange and a case-sensitive filesystem with bounded scratch probes.
+The dashboard target `@teaching/architecture-course:preflight` invokes that same generic check. Course architecture
+and pinned-runtime ABI validation belong to the image producer and runtime check described above.
 
-Use a dedicated ephemeral runner with physical backing for the original invocation's admitted fixed stores and
-dependency storage. The authored 72 GiB free threshold is checked before every job; a persistent runner needs this
-free space in addition to its existing images. Each bounded store still needs its own actual capacity admission.
-A thin VM's reported filesystem space does not establish free physical backing capacity. Docker Desktop on a nearly
-full host volume cannot safely provide this ledger. Ordinary hosted Ubuntu runners also lack the necessary capacity
-and do not match the Debian 12 runtime ABI.
+Use a dedicated ephemeral runner with physical headroom for the original invocation's admitted partitions and
+dependency storage. The generic free-space threshold is an early minimum; each bounded partition still enforces
+its own actual capacity admission and physical usage. A persistent runner also needs headroom for existing images.
+A thin VM's reported filesystem space does not establish free physical backing capacity. Keep sufficient free bytes
+on the actual host volume as well as the guest filesystem; the final image check establishes runtime ABI compatibility.
 
 After preflight the workflow uses `bun repo dependencies sync --all` for the authored lockfiles and owned dependency
 storage. Native compilation provisions the sealed toolchain selected by `rust-toolchain.toml` through the existing
@@ -473,24 +523,34 @@ On the host, in `~/architecture-course`, after a workflow run pushed a new image
 ```sh
 docker compose exec -T proctor proctor backup - > "proctor-before-update-$(date +%Y-%m-%dT%H%M%S).sqlite"
 docker compose images proctor
+```
+
+Then set `PROCTOR_TAG` in the retained `.env` to the intended release tag printed by the workflow.
+Keep every other override. The following commands resolve that same selected image for the pull, stack extraction and start:
+
+```sh
 docker compose pull proctor   # ⚠️ needs the registry
-container=$(docker create ghcr.io/usalu/architecture-course-proctor:latest) && docker cp "$container:/srv/course/deploy/." . && docker rm --volumes "$container"
+image=$(docker compose config --images proctor)
+container=$(docker create "$image") && docker cp "$container:/srv/course/deploy/." . && docker rm --volumes "$container"
 docker compose up --detach --wait
 ```
 
 The backup comes first: it is the only way back across a release that changed what the events mean. `docker compose images`
-shows the image that was running, the third and fourth lines fetch the new image and its stack files, and `up` replaces
-only what changed. The volumes stay. Without the registry, copy `proctor-image.tar`, `compose.yaml` and the `Caddyfile`
-of a new bundle (`docker-stack-bundle`) into the directory and run `docker load --input proctor-image.tar` in place of
-those two lines: `up` replaces the proctor because its tag now names another image. While the proctor container is replaced, Caddy holds requests for up to 20 seconds
-instead of failing them, and the site keeps unsent answers in its outbox. At boot the proctor validates the course,
+shows the image that was running. `pull` fetches the selected release, the temporary container supplies its stack files,
+and `up` replaces only what changed. The volumes stay. Without the registry, copy `proctor-image.tar`, `compose.yaml` and the `Caddyfile`
+of a new bundle (`docker-stack-bundle`) into the directory. Before `up`,
+set `PROCTOR_TAG` in the retained `.env` to the exact value from the new bundle's `.env`.
+Keep the other overrides and `certificates/`, and run `docker load --input proctor-image.tar` in place of the two fetch
+lines. Then `up` selects the bundled release, including when its tag differs from the previous release. While the proctor
+container is replaced, Caddy holds requests for up to 20 seconds instead of failing them, and the site keeps unsent
+answers in its outbox. At boot the proctor validates the course,
 refolds its read models when the course or the projector changed (the health check waits up to five minutes for that)
 and then listens. A quiz whose file changed gets a new revision: an open run on the old revision can no longer record
 answers (`course-revised`) and is voided when it is submitted or started again; submitted results, badges and the
 leaderboard stay. Run the workflow's `site` job for a new client; the two parts are independent.
 
-`docker compose up --detach` alone never updates anything (`pull_policy: missing`); it only starts what is stopped — which
-is what to run after a host reboot found the stack down.
+`docker compose up --detach` does not fetch a newer registry image (`pull_policy: missing`); it uses the selected image
+already loaded on the host. Run it after a host reboot found the stack down.
 
 ### Rollback
 
@@ -634,8 +694,88 @@ the flag) only removes the containers and keeps both.
   a visitor holding the old document for those minutes may ask for an asset the new deployment no longer has; a reload
   fixes it. The staged `dist/release/pages/course` also runs on CDNs that honour `_headers` (Cloudflare Pages, Netlify): there
   hashed assets are immutable, documents are revalidated, and every response forbids framing.
-- The current image producer and workflow require Debian 12 x64 and publish `linux/amd64`. The authored preflight and
-  image producer reject an ARM64 worker; there is currently no admitted ARM64 image build route.
+- The current public image command requires native Linux x64 and publishes `linux/amd64`; the configured compiler
+  runner uses Debian 12 x64 for the pinned runtime ABI. Generic host preflight also admits ARM64. The lower-level image
+  context validates the actual producer's matching ELF machine, while the public course image command retains its x64 guard.
 - With an `AAAA` record, check once that the proctor sees real client addresses over IPv6 (Docker's userland proxy can
   replace them with the bridge gateway, which would put every IPv6 learner into one rate-limit bucket):
   `docker compose logs proctor` after a request made with `curl -6`.
+
+## 🇩🇪️ Deutsch
+
+Dieses Kapitel ist die deutsche Fassung des Entwickler-Teils (*Develop*) dieser Datei. Die Betriebsanleitung für den Docker-Host und die Veröffentlichung (*Proof of concept by hand*, *Deploy* und alles darunter) steht ausführlich nur auf Englisch oben; hier folgt, was Entwicklerinnen und Entwickler dafür wissen müssen.
+
+### Entwickeln
+
+Jeder Befehl dieser Seite ist ein Target des Projekts `@teaching/architecture-course` (Manifest `📦️packages/🟦️typescript/📋️project.json`, Router `📦️packages/🟦️typescript/📜️script.ts`) und läuft über den werkzeugneutralen Build-Einstieg: `bun repo [--tool=nx|bazel] run @teaching/architecture-course:<target>[:<configuration>] [-- <Argumente>]`. Nx mit Bun ist der Standard; Bazel führt denselben Graphen mit `--tool=bazel` (oder `SEMIO_BUILD_TOOL=bazel`) aus. Bazel braucht unter macOS einen ASCII-Checkout-Pfad. Das [Build-Kapitel](../../../🧰️framework/🛍️products/🦑️repo/README.md#-deutsch) beschreibt beide Implementierungen, die Cache-Regeln und die Wiederherstellung; rufe weder `nx`, `bazel`, rohes `cargo` noch `rustc` selbst auf.
+
+Die Kommandooberfläche ist das Dashboard: Starte `bun run dashboard`, wähle **New Task** (`Ctrl+B n`) und suche nach `architecture-course` und der Operation. Wähle das Target `@teaching/architecture-course:…` und fülle das Parameterformular aus. Die Dashboard-Befehls-ID ist die unten verwendete ID `<Projekt>:<Target>`; die globale Achse `build-tool` im Formular wählt Nx oder Bazel für dieselbe Aufgabe. Die sechzehn registrierten Targets umfassen `preflight` und `ci-browser-prepare`; die CI nutzt dieselben Targets. Meldet ein Server Bereitschaft, öffnet **Open ready address** (`Ctrl+B u`) im Task-Menü die Adresse.
+
+### Voraussetzungen
+
+| Bedarf | Wie | Benötigt von |
+|---|---|---|
+| Gepinnte Build-Werkzeuge | `bun repo tools setup nx` (Bazel: `bun repo tools setup bazel`, beide: `all`; `bun repo run workspace:setup` enthält es) | jedes Target |
+| Abhängigkeiten | `bun repo dependencies sync --all`; nach jeder Änderung einer `package.json` zuerst `bun repo dependencies lock --all`, nie ein einfaches `bun install` | jedes Target |
+| Host-Prüfung | `bun repo preflight`; das Target `@teaching/architecture-course:preflight` führt dieselbe allgemeine Prüfung aus (die Linux-Regeln stehen unter *Compiler runner* in *Deploy*, englisch) | vor dem Anlegen der Cache-Partitionen |
+| Rust für den Proctor | keine selbst verwaltete Installation: die Toolchain aus `rust-toolchain.toml` und `bun repo cargo --store=shared`, nie rohes `cargo`; der erste Proctor-Build dauert Minuten | `dev`, `check`, `test-e2e` (außer `--proctor <Programmdatei>` nennt einen), `docker-image-build` |
+| Chromium für Playwright | `test-e2e` installiert die Revision, die das installierte `playwright-core` nennt, nach `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright`, wenn sie fehlt (ein Download); `bun repo run workspace:deps-browsers` erledigt das vorab. Auf Debian-CI ergänzt `ci-browser-prepare` die Systembibliotheken (`playwright install-deps chromium`, nichtinteraktives `sudo`) | `test-e2e`, `deploy-check` |
+| Docker-Daemon | ein laufender Docker Engine | `docker-image-build`, `docker-image-check`, `docker-image-publish`, `docker-stack-check`, `docker-stack-bundle`, `deploy-check` |
+| Natives Linux x64 | `docker-image-build` lehnt jeden anderen Host ab (`🚀️deploy/🐳️docker-image/🟦️.ts`); der Release-Pfad läuft deshalb auf dem Debian-12-x64-Runner des Workflows | `docker-image-build` und danach `docker-image-publish`, `deploy-check` |
+| Release-Modus | `publish`, `docker-image-build`, `docker-image-publish`, `deploy-check` und die Topologie `rehearsal` verlangen den ursprünglichen Build-Modus `release`: `--configuration=release` (oder das Suffix `:release`, oder `SEMIO_BUILD_MODE=release`) angeben; das Dashboard-Formular setzt ihn als erforderlichen Build-Modus | nur der Release-Pfad |
+
+### Befehle
+
+Alle Targets gehören zum Projekt `@teaching/architecture-course` und führen `bun ./📜️script.ts <target>` in `📦️packages/🟦️typescript` aus. `assets` und `tokens` sind die Abhängigkeiten `@semio-tech/assets:build` und `@semio-tech/ui-styling-tokens:generate`, die das Werkzeug zuerst ausführt.
+
+| Befehl (`bun repo run …`) | Was er tut | Läuft nach | Cache | Port |
+|---|---|---|---|---|
+| `@teaching/architecture-course:dev` | Proctor und Seite zusammen in einem Terminal; Parameter `steady=true` (Schalter: setzt `TEACHING_ARCHITECTURE_COURSE_WATCH=off`, sodass weder Seite noch Proctor Quelländerungen folgen) und `stack=beside` (ein zweiter, unabhängiger Stack daneben, seine Daten in `.🧬semio/🎓️teaching/proctor-beside`) | assets, tokens | nie (dauerhaft) | `8791` und `6061`; `beside`: `8793` und `6063` |
+| `@teaching/architecture-course:dev-site` | nur die Seite; sie leitet die Gateway-Routen an den Proctor weiter, der auf `PROCTOR_PORT` antwortet | assets, tokens | nie (dauerhaft) | `6061` (`TEACHING_ARCHITECTURE_COURSE_PORT`) |
+| `@teaching/architecture-course:build` | die Produktionsseite für den Proctor aus `PROCTOR_URL` (sonst der Produktions-Proctor) | assets, tokens | nie | |
+| `@teaching/architecture-course:publish` | legt das CDN-Artefakt unter `dist/release/pages/course` bereit (Release-Modus) | assets, tokens | nie | |
+| `@teaching/architecture-course:test` | die Tests; die Stufe ist ein Argument (`-- quick` ist der Standard, `long` und `exhaustive` gehen tiefer) | | ja | |
+| `@teaching/architecture-course:typecheck` | Einstieg, Vite-Konfiguration, Stack, Deploy-Verben, Ende-zu-Ende-Prüfung sowie jeder Test und jede Spec gegen den Compiler | die gelesenen generierten Bindungen (`@semio-tech/framework-rs:generate`, `ui-contract-rs:generate`, `ui-rs:generate`, `framework-actor-rs:typegen`), assets, tokens | ja | |
+| `@teaching/architecture-course:check` | `proctor check` auf dem Kurs und jedem genannten Quiz | | nie | |
+| `@teaching/architecture-course:test-e2e` | die Ende-zu-Ende-Prüfung (unten) | assets, tokens | nie | frische, vom Betriebssystem gewählte Loopback-Ports |
+| `@teaching/architecture-course:preflight`, `ci-browser-prepare` | allgemeine Host-Prüfung; Chromiums Debian-Systempakete | | nie | |
+| `@teaching/architecture-course:docker-image-build`, `docker-image-check`, `docker-image-publish`, `docker-stack-check`, `docker-stack-bundle` | das Proctor-Image und sein Stack; `docker-stack-check` nimmt `tag`, `http-port` (`18080`), `https-port` (`18443`) und `keep`, `docker-stack-bundle` nimmt `tag` und `out` | | nie | |
+| `@teaching/architecture-course:deploy-check` | das Bereitschaftstor (*Readiness gate*, englisch oben) | assets, tokens, `typecheck` | nie | |
+
+Ein Target ist nur gecacht, wenn sein Manifest `cache: true` sagt und ausdrückliche Eingaben deklariert: `test` und `typecheck`. Alles andere läuft immer neu, unter Nx wie unter Bazel, weil es bis zum Stoppen bedient, einen Browser oder Docker steuert oder in einen Store oder ein Verzeichnis schreibt, das dem Werkzeug nicht gehört. Unter Bazel ist ein gecachtes Target eine Aktion mit ihren deklarierten Ein- und Ausgaben und nutzt Bazels Aktions-Cache; ein Target, dessen Manifest keine Wiedergabe erlaubt, wird jedes Mal ausgeführt. Auch `build` und `test` des Proctors sind gecacht (`bun repo run @teaching/proctor:build`, [Proctor-README](../../🛂️proctor/README.md)).
+
+### Die Kette
+
+```bash
+bun repo tools setup all                                                     # einmal je Host
+bun repo dependencies sync --all                                             # einmal je Checkout und nach jeder Lockfile-Änderung
+bun repo run @teaching/architecture-course:typecheck                         # gecacht
+bun repo run @teaching/architecture-course:test                              # gecacht; mit -- long die tiefere Stufe
+bun repo run @teaching/architecture-course:dev                               # Proctor 8791 und Seite 6061, bis zum Stoppen
+bun repo run workspace:deps-browsers                                         # optional: Chromium vor der ersten Prüfung
+bun repo run @teaching/architecture-course:test-e2e -- --topology dev --     # die Dev-Topologie auf frischen Ports
+bun repo run @teaching/architecture-course:test-e2e --configuration=release  # beide Topologien; die Generalprobe braucht release
+bun repo --tool=bazel run @teaching/architecture-course:test                 # derselbe Graph unter Bazel
+bun repo run @teaching/architecture-course:deploy-check --configuration=release   # Linux x64 mit Docker: das Release-Tor
+```
+
+Das Dashboard-Register (`metadata.semio.dashboard` in `📦️packages/🟦️typescript/📋️project.json`, gegen das Schema `🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json` geprüft) enthält, was Formulare und Daemon über diese Targets wissen:
+
+| Eintrag | Inhalt |
+|---|---|
+| Bereitschaft | `dev` und `dev-site` melden sich auf Port `6061` (`TEACHING_ARCHITECTURE_COURSE_PORT`) bereit |
+| Verbund `course-with-proctor` | Verb `dev`, gemeinsam gestoppt: `@teaching/proctor:dev`, dann `@teaching/architecture-course:dev` (Dashboard-ID `compound:@teaching/architecture-course/course-with-proctor`) |
+| Parameter `execution-mode` | standardmäßig `release` (`SEMIO_BUILD_MODE=release`) bei `publish`, `test-e2e`, `docker-image-build`, `docker-image-publish` und `deploy-check` |
+| Parameter von `test-e2e` | `topology` (`both`, `dev`, `rehearsal`), `serial`, `keep`, `proctor`, `grep`, `project`, `headed`, `workers`; Playwright-Wörter kommen in **Arguments** |
+| Parameter von `dev` | `steady`, `stack=beside` |
+| globale Achsen | `build-tool` (Nx oder Bazel), `cache` (nutzen, lokal überspringen, alles überspringen) und `build-mode`, angeboten bei jedem Verb, das Build-Tasks ausführt (siehe [Befehlsregister](../../../🧰️framework/🛍️products/🦑️repo/README.md#-deutsch)) |
+
+### Ende-zu-Ende-Prüfung
+
+`test-e2e` startet Wegwerf-Stacks und steuert die echte Seite mit Playwright in Chromium; Dev-Ports und Dev-Daten bleiben unberührt. Die Topologie `dev` nutzt den Dev-Server der Seite und einen Proctor im Entwicklungsmodus, jeweils auf einem frischen Loopback-Port; `rehearsal` prüft den Release-Build als statische Dateien gegen einen Proctor im Produktionsmodus, der genau den Ursprung dieser Seite zulässt. Standardmäßig laufen beide nebeneinander (`--serial` nacheinander), jeweils mit einem Playwright-Worker. Optionen des Kurses stehen vor dem ausdrücklichen `--`, Playwright-Argumente danach, zum Beispiel `--topology dev -- --grep "leaderboard"`. Ein fehlgeschlagener Lauf behält sein Verzeichnis unter `.🧬semio/🎓️teaching/architecture-course-e2e/<Lauf>/` (Logs, Traces, Screenshots) und gibt den Pfad aus. Ausführlich: *End-to-end gate* oben.
+
+### Veröffentlichen
+
+Der Release-Pfad ist `publish` (Seite), `docker-image-build`, `docker-image-check`, `docker-stack-check`, `docker-stack-bundle` und `docker-image-publish` (Proctor), zusammengefasst im Tor `deploy-check`. Er braucht den Release-Modus, einen laufenden Docker-Daemon und für das Image einen nativen Linux-x64-Host; der Workflow `.github/workflows/architecture-course.yml` nutzt dafür den Runner der Repository-Variable `ARCHITECTURE_COURSE_RUNNER`. Schritte, Rollback, Backup und Betrieb des Docker-Hosts beschreibt der englische Teil ab *Proof of concept by hand*.
+
+Nicht verifiziert: Für diese Dokumentation ist kein Lauf dieser Kette unter einem der beiden Werkzeuge aufgezeichnet. Targetnamen, Abhängigkeiten, Ports, Cache-Flags und Registereinträge sind am 2026-10-20 aus Manifest, Router und Quellen gelesen. Am 2026-10-19 ließ sich der Rust-Proctor auf dem Arbeitsstand nicht kompilieren (die Value-Crates des Frameworks wurden umgebaut); `dev`, `check`, `test-e2e` und der Image-Pfad blieben deshalb ungeprüft, `test` und `typecheck` brauchen keinen Proctor. Der GitHub-Workflow `build-system.yml` führt `@teaching/architecture-course:test` unter beiden Werkzeugen aus und ist noch nie gelaufen.

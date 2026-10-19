@@ -11,14 +11,15 @@ import { mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativ
 import { mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/👥️mutation-owner-rules/🟦️.ts";
 import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { basename, dirname } from "node:path";
+import { pathBudgetCodes, pathBudgetFitsWithReserve, pathBudgetStatement, pathUtf16Units, type PathBudgetPolicy } from "../../🔍️discovery/📏️path-budget/🟦️.ts";
+import { mutationFixturesDeclaredByFeature } from "../../🔍️discovery/🥒️mutation-fixture-coverage/🟦️.ts";
 import { type SemanticKindDescendantContract, type TaxonomyCapturedSourceRead, type TaxonomyInventoryEntry, type TaxonomyViolation, WINDOWS_RESERVED, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { absolutePath, isExcluded, violation } from "../🏷️file-kind-matching/🟦️.ts";
 import type { CandidatePath, MutableInventoryEntry } from "../📸️repository-capture/🟦️.ts";
 
 /** 🪟️ Evaluates checkout-hostile path strings without materializing filesystem nodes. */
-export function taxonomyPlatformPathViolationCodes(path: string, maxPathBytes = 240): readonly string[] {
-  const rows: string[] = [];
-  if (Buffer.byteLength(path, "utf8") > maxPathBytes) rows.push("path-too-long");
+export function taxonomyPlatformPathViolationCodes(path: string, policy: PathBudgetPolicy): readonly string[] {
+  const rows: string[] = [...pathBudgetCodes(path, policy)];
   for (const segment of path.replaceAll("\\", "/").split("/")) {
     if (WINDOWS_RESERVED.test(segment)) rows.push("windows-reserved-name");
     if (/[. ]$/u.test(segment)) rows.push("trailing-dot-or-space");
@@ -28,7 +29,7 @@ export function taxonomyPlatformPathViolationCodes(path: string, maxPathBytes = 
 
 export function pathPolicyViolations(path: string, taxonomy: LoadedTaxonomy): readonly TaxonomyViolation[] {
   const rows: TaxonomyViolation[] = [];
-  if (Buffer.byteLength(path, "utf8") > taxonomy.schema.collisionPolicy.maxPathBytes) rows.push(violation("path-too-long", path, `Path exceeds ${taxonomy.schema.collisionPolicy.maxPathBytes} UTF-8 bytes`));
+  for (const code of pathBudgetCodes(path, taxonomy.schema.collisionPolicy)) rows.push(violation(code, path, code === "path-too-long" ? `Path has ${pathUtf16Units(path)} UTF-16 units; the budget is ${taxonomy.schema.collisionPolicy.maxPathUtf16Units}` : `A path component exceeds ${taxonomy.schema.collisionPolicy.maxComponentUtf8Bytes} UTF-8 bytes`));
   for (const segment of path.split("/")) {
     if (taxonomy.schema.collisionPolicy.rejectWindowsReservedNames && WINDOWS_RESERVED.test(segment)) rows.push(violation("windows-reserved-name", path, `Path segment is Windows-reserved: ${segment}`));
     if (taxonomy.schema.collisionPolicy.rejectTrailingDotsAndSpaces && /[. ]$/.test(segment)) rows.push(violation("trailing-dot-or-space", path, `Path segment ends with a dot or space: ${segment}`));
@@ -258,6 +259,10 @@ function projectionSourceAt(
       captures.set(segment.capture, splitLeadingEmoji(sourceName).rest);
       continue;
     }
+    if ((segment.capture === "standardVersion" || segment.capture === "subsetId") && kinds.get(currentPath) !== segment.kindId && taxonomy.discoverySchema.subsetDirectoryOverrides?.[dirname(currentPath)] === undefined && splitLeadingEmoji(sourceName).emoji !== "" && pathEmojiStatuteFindings([{ path: sourceName, nodeKind: "directory" }], taxonomy.discoverySchema.pathEmojiPolicy.genericEmojiIdentities).length === 0 && new RegExp(requireTaxonomyValue(taxonomy.schema.semanticDirectoryKinds[segment.kindId],"directory kind").slugPattern, "u").test(splitLeadingEmoji(sourceName).rest)) {
+      captures.set(segment.capture, splitLeadingEmoji(sourceName).rest);
+      continue;
+    }
     const contextualUnprefixed = segment.capture === "scenarioId" && !splitLeadingEmoji(sourceName).emoji && new RegExp(requireTaxonomyValue(taxonomy.schema.semanticDirectoryKinds[segment.kindId],"directory kind").slugPattern, "u").test(sourceName);
     if (kinds.get(currentPath) !== segment.kindId && !contextualUnprefixed) return null;
     const overriddenSubset = segment.capture === "subsetId" && taxonomy.discoverySchema.subsetDirectoryOverrides?.[dirname(currentPath)] !== undefined;
@@ -399,7 +404,40 @@ function canonicalProjectedMutationOwner(name: string, identity: string, subsetR
   return owner && basename(owner) === name ? owner : null;
 }
 
-function projectionBundleProblem(source: MutationProjectionSource, entries: ReadonlyMap<string, MutableInventoryEntry>, kinds: ReadonlyMap<string, string>, contract: SemanticKindDescendantContract, taxonomy: LoadedTaxonomy): string | null {
+/** 🥒️ Whether a committed fixture bundle is covered without a per-case implementation: its subset ships the fixture runner that discovers every case at run time, or an exhaustive mutation case declares the bundle in a feature step. Both sources are the `mutationCatalogProjection.fixtureCoverage` schema. */
+function fixtureCoverageOf(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): (fixtureDirectory: string) => boolean {
+  const coverage = taxonomy.schema.mutationCatalogProjection.fixtureCoverage, discovery = taxonomy.discoverySchema;
+  const fixtureMarker = `/${discovery.testsDirName}/${discovery.testFixturesDirName}/${discovery.schemaScopeOwnerLevels.mutationsFacetDirName}/`;
+  const featureKind = requireTaxonomyValue(discovery.fileKinds[coverage.exhaustiveCase.featureFileKindId], "exhaustive case feature file kind");
+  const featureName = `${featureKind.emoji}${featureKind.extensionChains[0]}`.normalize("NFC");
+  const policy = { stepUriPrefix: coverage.exhaustiveCase.stepUriPrefix, bundleFacetDirectoryNames: coverage.exhaustiveCase.bundleFacetDirectoryNames };
+  const subsets = new Map<string, Readonly<{ runner: boolean; declared: ReadonlySet<string> }>>();
+  const subsetCoverage = (subsetRoot: string): Readonly<{ runner: boolean; declared: ReadonlySet<string> }> => {
+    const cached = subsets.get(subsetRoot);
+    if (cached) return cached;
+    const runner = entries.get(`${subsetRoot}/${coverage.fixtureRunner.relativePath}`)?.nodeKind === "file", declared = new Set<string>();
+    const testsRoot = `${subsetRoot}/${discovery.testsDirName}`;
+    for (const entry of entrySubtree(entries, testsRoot)) {
+      if (entry.nodeKind !== "file" || basename(entry.sourcePath).normalize("NFC") !== featureName || entry.sourcePath.startsWith(`${testsRoot}/${discovery.testFixturesDirName}/`)) continue;
+      try {
+        for (const bundle of mutationFixturesDeclaredByFeature(readFileSync(absolutePath(repoRoot, entry.sourcePath), "utf8"), policy)) declared.add(bundle);
+      } catch {
+        continue;
+      }
+    }
+    const found = { runner, declared };
+    subsets.set(subsetRoot, found);
+    return found;
+  };
+  return (fixtureDirectory) => {
+    const at = fixtureDirectory.indexOf(fixtureMarker);
+    if (at < 0) return false;
+    const found = subsetCoverage(fixtureDirectory.slice(0, at));
+    return found.runner || found.declared.has(fixtureDirectory.slice(at + fixtureMarker.length).replaceAll("\uFE0F", "").normalize("NFC"));
+  };
+}
+
+function projectionBundleProblem(source: Pick<MutationProjectionSource, "scenarioRoot">, entries: ReadonlyMap<string, MutableInventoryEntry>, kinds: ReadonlyMap<string, string>, contract: SemanticKindDescendantContract, taxonomy: LoadedTaxonomy): string | null {
   const root = entries.get(source.scenarioRoot);
   if (!root) return "scenario root is absent";
   const actual = entrySubtree(entries, source.scenarioRoot);
@@ -428,7 +466,7 @@ function projectionBundleProblem(source: MutationProjectionSource, entries: Read
 
 function setProjectedPath(entry: MutableInventoryEntry, destination: string, taxonomy: LoadedTaxonomy, authority: "exact-descendant" | "parent-rebase" = "exact-descendant"): void {
   entry.normalizedPath = destination.normalize("NFC");
-  const superseded = new Set(["path-too-long", "windows-reserved-name", "trailing-dot-or-space", ...(authority === "exact-descendant" ? ["directory-kind-ambiguous", "directory-kind-unresolved", "file-kind-ambiguous", "file-kind-unresolved", "semantic-stem-ambiguous", "semantic-stem-unresolved"] : [])]);
+  const superseded = new Set(["path-too-long", "path-component-too-long", "windows-reserved-name", "trailing-dot-or-space", ...(authority === "exact-descendant" ? ["directory-kind-ambiguous", "directory-kind-unresolved", "file-kind-ambiguous", "file-kind-unresolved", "semantic-stem-ambiguous", "semantic-stem-unresolved"] : [])]);
   entry.violations = [...entry.violations.filter((row) => !superseded.has(row.code)), ...pathPolicyViolations(entry.normalizedPath, taxonomy)];
 }
 
@@ -439,7 +477,7 @@ export function normalizeMutationCasePairs(
   kinds: ReadonlyMap<string, string>,
   taxonomy: LoadedTaxonomy,
 ): void {
-  const ids = taxonomy.schema.mutationCatalogProjection;
+  const ids = taxonomy.schema.mutationCatalogProjection, covered = fixtureCoverageOf(repoRoot, entries, taxonomy);
   const implementationContract = mutationDescendantContract(taxonomy, "implementation");
   const fixtureContract = mutationDescendantContract(taxonomy, "fixture");
   const sources = [...entries.values()].filter((entry) => entry.nodeKind === "directory").map((entry) => projectionSourceAt(entry.sourcePath, scope, entries, kinds, taxonomy)).filter((entry): entry is MutationProjectionSource => entry !== null).sort((left, right) => left.scenarioRoot.localeCompare(right.scenarioRoot));
@@ -509,8 +547,8 @@ export function normalizeMutationCasePairs(
           continue;
         }
         consumed.add(vectorKey);
-        if (Buffer.byteLength(implementationRoot, "utf8") + implementationContract.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes || Buffer.byteLength(fixtureRoot, "utf8") + fixtureContract.pathBudgetReserve.bytes > taxonomy.schema.collisionPolicy.maxPathBytes) {
-          entries.get(source.scenarioRoot)?.violations.push(violation("mutation-pair-path-budget", source.scenarioRoot, `Canonical mutation pair plus reserved descendant suffix exceeds ${taxonomy.schema.collisionPolicy.maxPathBytes} bytes`));
+        if (!pathBudgetFitsWithReserve(implementationRoot, implementationContract.pathBudgetReserve.utf16Units, taxonomy.schema.collisionPolicy) || !pathBudgetFitsWithReserve(fixtureRoot, fixtureContract.pathBudgetReserve.utf16Units, taxonomy.schema.collisionPolicy)) {
+          entries.get(source.scenarioRoot)?.violations.push(violation("mutation-pair-path-budget", source.scenarioRoot, `Canonical mutation pair plus reserved descendant suffix exceeds ${pathBudgetStatement(taxonomy.schema.collisionPolicy)}`));
           continue;
         }
         const root = entries.get(source.scenarioRoot)!;
@@ -544,6 +582,19 @@ export function normalizeMutationCasePairs(
         }
       }
     }
+    const fixtureBase = `${subsetRoot}/🧪️tests/🧫️fixtures/🧬️mutations`;
+    let physicalFixtures: Map<string, string> | undefined;
+    for (const vector of catalog.vectors) {
+      const key = `${vector.mutationId}\u0000${vector.sourceMutationDirectoryName}\u0000${vector.scenarioId}`;
+      if (consumed.has(key)) continue;
+      physicalFixtures ??= new Map(entrySubtree(entries, fixtureBase).filter((entry) => entry.nodeKind === "directory").map((entry) => [entry.sourcePath.replaceAll("\uFE0F", "").normalize("NFC"), entry.sourcePath]));
+      const owner = canonicalProjectedMutationOwner(vector.mutationDirectoryName, vector.mutationId, subsetRoot, taxonomy);
+      const found = [owner, vector.sourceMutationDirectoryName].filter((name): name is string => name !== null).map((name) => physicalFixtures!.get(`${fixtureBase}/${name}/${vector.scenarioDirectoryName}`.replaceAll("\uFE0F", "").normalize("NFC"))).find((path): path is string => path !== undefined);
+      if (found === undefined || !covered(found)) continue;
+      const problem = projectionBundleProblem({ scenarioRoot: found }, entries, kinds, fixtureContract, taxonomy);
+      if (problem) entries.get(found)?.violations.push(violation("mutation-fixture-invalid", found, problem));
+      else consumed.add(key);
+    }
     for (const vector of catalog.vectors) {
       const key = `${vector.mutationId}\u0000${vector.sourceMutationDirectoryName}\u0000${vector.scenarioId}`;
       if (!consumed.has(key) && vector.catalogPath) entries.get(vector.catalogPath)?.violations.push(violation("projection-catalog-unrealized", vector.catalogPath, `Registered vector ${key.replaceAll("\u0000", "/")} has no physical bundle`));
@@ -552,13 +603,13 @@ export function normalizeMutationCasePairs(
 }
 
 export function validateMutationCasePairs(
-  _repoRoot: string,
+  repoRoot: string,
   scope: string | undefined,
   entries: Map<string, MutableInventoryEntry>,
   _kinds: ReadonlyMap<string, string>,
   taxonomy: LoadedTaxonomy,
 ): void {
-  const expected = new Set<string>();
+  const expected = new Set<string>(), covered = fixtureCoverageOf(repoRoot, entries, taxonomy);
   const implementations = [...entries.values()].filter((entry) => entry.nodeKind === "directory").map((entry) => projectionSourceAt(entry.sourcePath, scope, entries, _kinds, taxonomy)).filter((entry): entry is MutationProjectionSource => entry !== null);
   for (const source of implementations) {
     const ownerRelativePath = source.mutationRoot.slice(`${source.subsetRoot}/🧬️schema/🧬️mutations/`.length);
@@ -568,6 +619,6 @@ export function validateMutationCasePairs(
     if (entry.nodeKind !== "directory") continue;
     if (/\/🧪️tests\/🪆️[^/]+\/[^/]+\/🧪️[^/]+$/u.test(entry.sourcePath)) entry.violations.push(violation("mutation-projected-storage-forbidden", entry.sourcePath, "Mutation cases must use the subset-owned canonical implementation and fixture roots"));
     const looksLikeFixtureScenario = entry.sourcePath.includes("/🧪️tests/🧫️fixtures/🧬️mutations/") && entries.has(`${entry.sourcePath}/🦠️mutation`) && entries.has(`${entry.sourcePath}/📸️snapshot`) && entries.has(`${entry.sourcePath}/🔺️diff`) && entries.has(`${entry.sourcePath}/🎯️outcome`);
-    if (looksLikeFixtureScenario && !expected.has(entry.sourcePath)) entry.violations.push(violation("mutation-fixture-unpaired", entry.sourcePath, "Fixture bundle has no canonical implementation case"));
+    if (looksLikeFixtureScenario && !expected.has(entry.sourcePath) && !covered(entry.sourcePath)) entry.violations.push(violation("mutation-fixture-unpaired", entry.sourcePath, "Fixture bundle has no canonical implementation case"));
   }
 }

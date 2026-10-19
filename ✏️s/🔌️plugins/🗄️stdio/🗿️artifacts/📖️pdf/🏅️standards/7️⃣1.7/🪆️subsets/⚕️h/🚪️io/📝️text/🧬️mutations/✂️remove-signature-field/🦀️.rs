@@ -1,4 +1,4 @@
-//! Direct text identity for `remove-signature-field`.
+//! 🆔️ Direct text identity for `remove-signature-field`.
 
 pub const OPCODE: &str = "remove-signature-field";
 pub const TEXT_OPCODE: &str = OPCODE;

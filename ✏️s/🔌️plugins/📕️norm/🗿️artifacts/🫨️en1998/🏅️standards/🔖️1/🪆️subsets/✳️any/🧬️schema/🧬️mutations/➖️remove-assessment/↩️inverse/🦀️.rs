@@ -1,4 +1,4 @@
-//! Inverse for `remove-assessment`.
+//! ↩️ Inverse for `remove-assessment`.
 use crate::remove_assessment::RemoveAssessment;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::insert_assessment;

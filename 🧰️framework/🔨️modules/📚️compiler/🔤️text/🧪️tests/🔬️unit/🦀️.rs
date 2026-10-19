@@ -61,7 +61,6 @@ fn math_stretch_variants_exist_for_parenthesis_on_the_math_font() {
     let paren = font.glyph_index('(').expect("Libertinus Math must cover '('");
     let variants = math_stretch_variants(&font, paren, true);
     assert!(!variants.is_empty(), "Libertinus Math should declare vertical stretch variants for '('");
-    // The font orders variants smallest-first; every later one must be at least as large.
     for pair in variants.windows(2) {
         assert!(pair[1].advance >= pair[0].advance, "variants must be non-decreasing: {variants:?}");
     }
@@ -71,7 +70,6 @@ fn math_stretch_variants_exist_for_parenthesis_on_the_math_font() {
 fn glyph_raster_image_extracts_a_png_from_the_emoji_font() {
     let font_bytes = crate::world::tests::test_fonts().emoji;
     let font = Font::from_bytes(font_bytes, 0).expect("parse Noto Color Emoji subset");
-    // U+1F680 ROCKET must be present — the subset was curated for exactly this kind of usage.
     let id = font.glyph_index('🚀').expect("emoji subset must cover the rocket emoji");
     let raster = glyph_raster_image(&font, id, 96).expect("CBDT glyph must yield a raster image");
     assert!(!raster.data.is_empty());

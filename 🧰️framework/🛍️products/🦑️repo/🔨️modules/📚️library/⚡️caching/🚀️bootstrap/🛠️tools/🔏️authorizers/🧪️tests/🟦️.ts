@@ -43,7 +43,7 @@ test("release authorizer compiler consumes exact funded snapshot bytes in actual
 },180000);
 
 import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1,readNxAuthorizerSnapshotV1} from "../📦️snapshot/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import {withRepositoryCacheStoreV1} from "../../../../../📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 test("captured authorizer bytes survive later Source edits and match independent esbuild and Node",async()=>{
  const workspace=process.cwd(),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original artifact root required");const root=await mkdtemp(join(artifacts,"as-"));
  try{for(const[path,bytes]of Object.entries(fixture.files))await writeFile(join(root,path),bytes);await withBuildTestInvocationV1(original=>withRepositoryCacheStoreV1(workspace,"tools",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async(store,storePhase)=>{

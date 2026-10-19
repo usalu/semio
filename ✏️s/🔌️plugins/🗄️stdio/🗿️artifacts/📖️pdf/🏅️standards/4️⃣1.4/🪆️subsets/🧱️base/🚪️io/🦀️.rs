@@ -55,10 +55,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_BINARY || s.dialect == DEP_DEFLATE)
@@ -204,9 +200,6 @@ fn read_classic_xref(data: &[u8], start: usize) -> Option<Xref> {
         }
         let at_keyword = skip_ws(data, section_start);
         if data.get(at_keyword..at_keyword + 4) != Some(b"xref") {
-            // 📄️ A `startxref` that does not point at a table is a 1.5+ cross-reference stream or
-            // a damaged file; either way this standard's reader hands over to the rescan rather
-            // than inventing a reading of bytes it does not model.
             return None;
         }
         let mut cursor = at_keyword + 4;
@@ -280,7 +273,6 @@ fn build_index(data: &[u8]) -> Xref {
             let mut trailer = rescued_trailer(data);
             let offsets = brute_force_offsets(data);
             if !trailer.iter().any(|entry| entry.key == "Root") {
-                // 🔍️ No usable trailer either: the catalog is found by its own `/Type /Catalog`.
                 let catalog = offsets.iter().find(|(_, offset)| parse_indirect_at(data, **offset).is_some_and(|(_, value)| value.dict_get("Type").and_then(|value| value.as_name()) == Some("Catalog"))).map(|(number, _)| *number);
                 if let Some(number) = catalog {
                     trailer.push(PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(ObjRef { num: number, gen: 0 }) });
@@ -301,12 +293,10 @@ struct Resolver<'a> {
 }
 
 impl<'a> Resolver<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn new(data: &'a [u8], offsets: HashMap<u32, usize>) -> Self {
         Self { data, offsets, cache: HashMap::new() }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn resolve(&mut self, number: u32) -> Option<PdfObject> {
         if let Some(hit) = self.cache.get(&number) {
             return hit.clone();
@@ -350,8 +340,6 @@ fn shown_text(content: &[u8]) -> String {
             continue;
         }
         if is_delim(byte) {
-            // 🧹 A stray closing delimiter (`]`, `>`, `)`) from a malformed stream: step over it
-            // rather than looping forever on it.
             lexer.pos = at + 1;
             continue;
         }

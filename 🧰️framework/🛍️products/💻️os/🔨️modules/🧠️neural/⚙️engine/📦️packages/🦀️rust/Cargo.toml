@@ -20,6 +20,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-os-kernel-neural-engine-model = { path = "../../🧱️model/📦️packages/🦀️rust" }
 semio-framework-os-kernel-neural-engine-registry = { path = "../../📔️registry/📦️packages/🦀️rust" }

@@ -1,7 +1,8 @@
 //! 📥️ Budgeted PNG reconstruction with private RGBA publication.
 use super::{RasterImage,Ihdr,parse_ihdr,samples_per_pixel,packed_row_bytes,bpp_bytes,ADAM7,adam7_pass_dims,pixel_to_rgba,paeth,crc32_update};
 use semio_framework_deflate::{Inflater,InflateOutcome};
-use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},value::list::PagedList};
+use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value_persistent::list::PagedList;
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
 pub struct PngDecodeInput{pub data:Vec<u8>,pub max_pixels:usize,pub max_bytes:usize,pub max_chunks:usize}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]

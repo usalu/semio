@@ -135,8 +135,6 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 Ok(())
             }.await;
             if let Err(error) = &outcome { eprintln!("[TRACE] Sequence exact-window runtime failure before close: {error}"); }
-            // 🔚 `SequenceApp` is the registered fixture GUARD now — it walks the framework close loop
-            // on drop, so closing it a second time by hand would fault the already-terminal store.
             drop(app);
             outcome.expect("Sequence exact-window runtime law");
         }))

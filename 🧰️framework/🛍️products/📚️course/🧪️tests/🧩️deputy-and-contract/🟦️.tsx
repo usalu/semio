@@ -4,6 +4,8 @@
  * @see ../../🎯️targets/⚛️react/🟦️.tsx — the client under test
  */
 import { type ReactElement } from "react";
+import cancellation from "../../🧫️fixtures/🛑️cancellation/🔣️.json";
+import { ProctorLink } from "../../🎯️targets/⚛️react/🔨️modules/🧭️session/📡️proctor-link/🟦️.ts";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -13,6 +15,45 @@ import { AGREEMENT_RECHECK_MS, Deputy, ProctorClient, ProctorUnavailable, COURSE
 import { QUIZ, COURSE, FakeProctor, sloppyAnswer, TIMING, app, dismissWalkthrough, openQuizGrid, startedRun, MATERIAL, deputisedOn, perfectAnswer, playedRun, WHOLE_RUN } from "../🧰️learner-journey-kit/🟦️.tsx";
 
 describe("🫡️ the deputy while the proctor is away", () => {
+  it("never admits an already cancelled request into its patience window", async () => {
+    const proctor = new FakeProctor();
+    const link = new ProctorLink(new ProctorClient(() => proctor.transport, COURSE.id), TIMING, 1000, Date.now);
+    const operation = vi.fn(async () => "committed");
+    const controller = new AbortController();
+    const reason = new Error("the learner cancelled");
+    controller.abort(reason);
+    await expect(link.patient(operation, controller.signal)).rejects.toBe(reason);
+    expect(operation).toHaveBeenCalledTimes(cancellation.admission.operationCalls);
+  });
+
+  for (const scenario of cancellation.scenarios) {
+    it(`keeps the run and persisted answers when ${scenario.command} is cancelled ${scenario.cancelAt} while offline`, async () => {
+      const proctor = new FakeProctor();
+      proctor.away = true;
+      const area = memoryStorageOrigin().tab();
+      const session = deputisedOn(proctor, area);
+      try {
+        const { run, tasks } = await startedRun(session);
+        session.answer(run, tasks[0]!.id, perfectAnswer(tasks[0]!));
+        const before = session.outbox.queued();
+        const persisted = Object.fromEntries(area.keys().map(key => [key, area.get(key)]));
+        const controller = new AbortController();
+        const reason = new Error("the learner cancelled");
+        if (scenario.cancelAt === "before") controller.abort(reason);
+        const operation = scenario.command === "start-run"
+          ? session.startRun(QUIZ.id, "expert", controller.signal)
+          : session.submit(run, controller.signal, phase => { if (phase.phase === scenario.cancelAt) controller.abort(reason); });
+        await expect(operation).rejects.toBe(reason);
+        expect(session.getSnapshot().state.runs[run]?.status).toBe(scenario.runStatus);
+        expect(session.outbox.queued()).toHaveLength(before.length + scenario.addedCommands);
+        expect(session.outbox.queued()).toEqual(before);
+        expect(Object.fromEntries(area.keys().map(key => [key, area.get(key)]))).toEqual(persisted);
+      } finally {
+        session.stop();
+      }
+    });
+  }
+
   it("registers, plays and scores a first visit on the device, keeps it over a reload and hands it to the proctor once it answers", { timeout: 30_000 }, async () => {
     const proctor = new FakeProctor();
     proctor.away = true;

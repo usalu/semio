@@ -1,5 +1,5 @@
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use crate::schema::snapshot::PngColorType;
 use crate::standards::v1_2::subsets::any::io::{PNG_SIGNATURE, write_chunk, read_chunks, samples_per_pixel, packed_row_bytes, ADAM7, adam7_pass_dims, chunk_addresses, write_native_sample};
 use crate::standards::v1_2::subsets::any::io::*;
@@ -95,7 +95,7 @@ fn independent_native_samples(bytes: &[u8]) -> (png::ColorType, png::BitDepth, V
 }
 
 fn non_idat_chunks(bytes: &[u8]) -> Vec<([u8; 4], Vec<u8>)> {
-    read_chunks(bytes,&mut semio_framework_value::NativeDecodeControl::new(1024*1024,&mut |_|true)).unwrap_or_else(|_|panic!("raw fixture chunk admission")).into_iter().filter(|(kind, _)| *kind != *b"IDAT").map(|(kind, data)| (kind, data.to_vec())).collect()
+    read_chunks(bytes,&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1024*1024,&mut |_|true)).unwrap_or_else(|_|panic!("raw fixture chunk admission")).into_iter().filter(|(kind, _)| *kind != *b"IDAT").map(|(kind, data)| (kind, data.to_vec())).collect()
 }
 
 fn fixture_cases() -> [(&'static str, &'static [u8], (u32, u32, u8, PngColorType, bool)); 5] {

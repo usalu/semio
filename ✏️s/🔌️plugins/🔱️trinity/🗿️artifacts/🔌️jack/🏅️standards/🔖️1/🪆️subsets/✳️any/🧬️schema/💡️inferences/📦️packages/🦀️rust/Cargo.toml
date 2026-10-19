@@ -48,6 +48,7 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-trinity-jack-model = { path = "../../../../../../../../🔨️modules/⚠️errors/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-jack-graph-manifest-tests = { path = "../../../../../../../../🛂️manifest/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

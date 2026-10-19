@@ -160,7 +160,7 @@ async fn gumball_flags_are_model_window_config() {
     close(&mut app);
 }
 
-/// 🛠️ LAW — the World3d live-consumer API end to end (`🌐️World3dHost/🧫️fixtures/🛠️gumball-live-protocol.json`): every
+/// 🛠️ LAW — the World3d live-consumer API end to end (`🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json`): every
 /// verb dispatch the host owes for a scripted gesture, decoded from its wire args exactly as the host sends them (the
 /// targets swapped for one fem3d node), publishes exactly the fixture's guest edits and moves the node by its offset — a
 /// streamed gesture is ONE edit, an aborted one leaves zero trace, a gesture that never moved publishes nothing.

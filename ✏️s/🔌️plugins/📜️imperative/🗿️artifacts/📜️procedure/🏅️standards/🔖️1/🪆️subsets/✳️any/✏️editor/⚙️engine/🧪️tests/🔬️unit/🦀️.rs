@@ -36,8 +36,6 @@ async fn host_runs_the_demo_program() {
     let result = host.run();
     assert_eq!(result.effects.len(), 2);
     assert!(result.effects.iter().all(|entry| entry.error.is_none()));
-    // 🧊️ The default program's steps carry non-empty `params`, so the run result owns live
-    // dictionaries (`scope`, every row's `input`/`output`) and must be retired, never dropped.
     neural_engine::ColdRetire::retire_cold(result);
 }
 

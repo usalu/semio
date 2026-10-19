@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 import { sparse } from "mathjs";
-import fixture from "../../🧫️fixtures/🎼️pencil/🔣️.json" with { type: "json" };
+import fixture from "../🧫️fixtures/🎼️pencil/🔣️.json" with { type: "json" };
 import schema from "../../🧬️schema/🎼️pencil/🔣️.json" with { type: "json" };
 type SparseJson = { ptr: number[]; index: number[]; values: number[] };
 

@@ -65,16 +65,12 @@ export function flowExtensionManifestAdmissionSelfTests(): number {
     checks += 2;
   }
 
-  // 🧬️ The one row the contribution fold's own metadata probe cannot catch: its id/name/version
-  // read perfectly, so only the FULL manifest decode stands between a broken contributor and a
-  // registry that silently holds none of its operators.
   const metadataOnly = fixture.rows.find((row) => row.id === "metadata-only");
   assert.ok(metadataOnly && !metadataOnly.accepted, "the fixture owns the metadata-readable row");
   const metadata = JSON.parse(metadataOnly.manifestJson);
   for (const key of ["id", "name", "version"]) assert.equal(typeof metadata[key], "string", `metadata key ${key} must still read`);
   checks += 4;
 
-  // 🪪️ The registration surface itself: Result-returning, typed, bilingual, and no silent return.
   const source = readFileSync(fileURLToPath(REGISTRY_SOURCE_URL), "utf8");
   const loud = (value: string) =>
     value.includes("fn register_contributed_manifest(registry: &mut neural::Registry, plugin_id: &str, manifest_json: &str) -> Result<(), FlowExtensionManifestRejection>")

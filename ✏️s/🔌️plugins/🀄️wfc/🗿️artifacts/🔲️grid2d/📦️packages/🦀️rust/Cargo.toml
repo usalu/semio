@@ -41,6 +41,7 @@ semio-framework-action-bus = { path = "../../../../../../../🧰️framework/�
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-tool-run = { workspace = true }

@@ -180,12 +180,16 @@
       ]
     },
     "Deed": {
-      "description": "What a learner can ask of a pet without a pointer: a hello, a trick, petting it or tossing it.",
+      "description": "What a learner can ask of a pet without a pointer: a hello, a click trick, petting, tossing, circling in either direction, stroking or shaking. Explicit gesture deeds use the same state and mood rules as the hand and require a free pet on its perch.",
       "enum": [
         "hello",
         "trick",
         "pet",
-        "toss"
+        "toss",
+        "circle",
+        "countercircle",
+        "stroke",
+        "shake"
       ]
     },
     "Pointer": {

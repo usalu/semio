@@ -5,14 +5,14 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, wr
 import { open } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {runTool} from "../../📦️dependencies/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import binaryenSchema from "./🧬️schema/🔣️.json";
 const binaryenManifest=binaryenSchema.definitions.Release.const;
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import {repositoryCachePartitionRootV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
@@ -78,7 +78,7 @@ export function preparedBinaryen(workspace: string): string {
 
 /** 📥️ Acquires one pinned optimizer in an isolated directory and publishes it atomically. */
 export async function prepareBinaryen(workspace: string, store:RepositoryToolingStoreV1): Promise<string> {
-  requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw Error("Original declared Binaryen tools partition required");const signal=store.control.signal;signal.throwIfAborted();
+  requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw new Error("Original declared Binaryen tools partition required");const signal=store.control.signal;signal.throwIfAborted();
   const row = binaryenDistribution(), directory = requireNativeStoragePathV1(store.root,binaryenDirectory(workspace)), parent = dirname(directory);
   regularDirectory(parent); mkdirSync(parent, { recursive: true });
   return withResourceLeases({ directory: join(workspace, ".cache/b/l/m/data"), signal,control:store.control, resources: [{ resource: binaryenIdentity(), mode: "exclusive" }] }, async () => {

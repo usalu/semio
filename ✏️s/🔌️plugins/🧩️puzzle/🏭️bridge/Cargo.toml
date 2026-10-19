@@ -21,3 +21,5 @@ pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️
 semio-s-artifact-puzzle-2d = { path = "../🗿️artifacts/◻️2d/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d = { path = "../🗿️artifacts/🧊️3d/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-5d = { path = "../🗿️artifacts/🖐️5d/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-3d-model = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-3d-mutations = { path = "../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

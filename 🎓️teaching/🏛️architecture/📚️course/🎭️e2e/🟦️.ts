@@ -40,7 +40,7 @@ import { withViteArtifactV1 } from "../../../../🧰️framework/🛍️products
 import { ticketOutput } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🎫️output/🟦️.ts";
 import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { LAUNCHER_SIGNALS, PROCTOR_DEV_COURSE, buildProctor, launchProctor, proctorReady, type ProctorArtifact, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
-import { siteArtifactProblems } from "../🚀️deploy/🟦️.ts";
+import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
 import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
 import { runTopologySessionsV1 } from "./🔒️sessions/🟦️.ts";

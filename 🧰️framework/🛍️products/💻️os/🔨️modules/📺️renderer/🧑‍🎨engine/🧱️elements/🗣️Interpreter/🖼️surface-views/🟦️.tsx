@@ -126,8 +126,6 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
 
 export function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  // 🚚️ EVERY scene kind that publishes lanes comes through `PagedSurfaceView`, which puts them back;
-  // the membership test is {@link SURFACE_KIND_SCENE_LANES} itself, never a list repeated here.
   const body = surfaceKindSceneLanes(component.kind) ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
   return (
     <SurfaceAccessibilityShell record={record} context={context}>

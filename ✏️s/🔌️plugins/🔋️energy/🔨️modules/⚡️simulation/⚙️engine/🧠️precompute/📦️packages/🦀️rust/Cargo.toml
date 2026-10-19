@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-math-dense = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-energy-engine-envelope = { workspace = true }
 semio-s-plugin-energy-engine-fenestration = { workspace = true }
@@ -29,6 +30,8 @@ semio-s-plugin-energy-engine-units = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-bestest = { path = "../../../🏛️bestest/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
+serde_json = { workspace = true }

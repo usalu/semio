@@ -70,13 +70,13 @@ impl DrawingSemanticDigestCredit {
         Ok(())
     }
 
-    pub fn source_vec<T, const N: usize>(&mut self, value: &semio_framework_value::list::PagedList<T, N>) -> Result<(), &'static str> {
+    pub fn source_vec<T, const N: usize>(&mut self, value: &semio_framework_value_persistent::list::PagedList<T, N>) -> Result<(), &'static str> {
         let items = 1usize.checked_add(value.capacity()).ok_or("drawing-store.mutation-source-owner-item-overflow")?;
         let bytes = value.allocated_bytes().checked_add(size_of_val(value)).ok_or("drawing-store.mutation-source-owner-byte-overflow")?;
         self.add_source_owner(items, bytes)
     }
 
-    pub fn derived_vec<T, const N: usize>(&mut self, value: &semio_framework_value::list::PagedList<T, N>) -> Result<(), &'static str> {
+    pub fn derived_vec<T, const N: usize>(&mut self, value: &semio_framework_value_persistent::list::PagedList<T, N>) -> Result<(), &'static str> {
         let bytes = value.len().checked_mul(size_of::<T>()).ok_or("drawing-store.mutation-derived-owner-byte-overflow")?;
         let pages = bytes.checked_add(DRAWING_MUTATION_RETAINED_PAGE_BYTES - 1).ok_or("drawing-store.mutation-derived-owner-byte-overflow")? / DRAWING_MUTATION_RETAINED_PAGE_BYTES;
         self.add_derived_owner(pages.max(1), 0)

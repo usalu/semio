@@ -259,7 +259,6 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
     return 1;
   };
   const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
-  // 🧭️ Upper corners keep prominent heads; lower corners match negative-axis ends — less relevant under-views.
   const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: Extract<ProjectionGizmoHit, { type: "corner" }>; readonly prominent?: boolean }[] = [
     { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, prominent: true },
     { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, prominent: true },
@@ -428,8 +427,6 @@ export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps)
       morphRef.current.eased = 1;
       morphRef.current.holding = true;
     }
-    // Zoom/FOV fields are synced without `updateProjectionMatrix()` — that would rebuild the matrix from the camera's
-    // stale left/right/top/bottom/aspect fields and stomp the pinned morph goal above.
     const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom?: number; fov?: number };
     if (zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) {
       zoomable.zoom = anim.to.zoom;

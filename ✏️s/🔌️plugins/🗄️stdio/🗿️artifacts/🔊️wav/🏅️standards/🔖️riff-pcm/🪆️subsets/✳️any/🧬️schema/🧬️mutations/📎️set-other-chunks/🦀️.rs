@@ -15,7 +15,6 @@ pub struct SetOtherChunks {
 
 impl SetOtherChunks {
     /// 🔺️ The sparse diff this payload asks of `base`: the new list, and the stated chunk order — else the base order reconciled with the list — where they differ.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn wanted(&self, base: &WavSnapshot) -> WavDiff {
         let mut diff = diff_set_other_chunks(base, self.chunks.clone());
         if let Some(order) = &self.chunk_order {

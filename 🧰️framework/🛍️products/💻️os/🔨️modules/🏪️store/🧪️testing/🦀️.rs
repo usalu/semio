@@ -14,8 +14,7 @@ pub mod timestamped;
 #[path = "🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs"]
 pub mod validated;
 
-#[path = "🧭️prelude/🦀️.rs"]
-pub mod prelude;
+use semio_framework_os_store_testing_prelude as prelude;
 
 #[path = "🧮️snapshot/🦀️.rs"]
 mod snapshot;

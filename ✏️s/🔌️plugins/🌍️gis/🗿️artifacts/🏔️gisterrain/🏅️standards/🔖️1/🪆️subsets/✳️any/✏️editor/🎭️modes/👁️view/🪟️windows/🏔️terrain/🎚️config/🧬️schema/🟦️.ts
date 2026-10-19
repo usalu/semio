@@ -2,7 +2,7 @@ import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 
 /** 🧬️ GisTerrainWindowConfig */
 export interface GisTerrainWindowConfig {
-  /** @state config @owner window */
+  /** 📷️ @state config @owner window */
   cameraJson: string;
 }
 

@@ -1,4 +1,6 @@
 use semio_s_artifact_procedural_3d_editor::*;
+#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+#[cfg(test)] use semio_framework_plugin::component::ArtifactEditor;
 
 #[test]
 fn generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight() {

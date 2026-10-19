@@ -307,6 +307,31 @@
         "count": 501
       },
       "accepted": false
+    },
+    {
+      "name": "native-setup-fixed-profile",
+      "request": {
+        "command": "setup-debugger",
+        "profile": "lldb"
+      },
+      "accepted": true
+    },
+    {
+      "name": "native-setup-no-arbitrary-package",
+      "request": {
+        "command": "setup-debugger",
+        "profile": "lldb",
+        "package": "arbitrary"
+      },
+      "accepted": false
+    },
+    {
+      "name": "native-setup-no-gdb-install",
+      "request": {
+        "command": "setup-debugger",
+        "profile": "gdb"
+      },
+      "accepted": false
     }
   ],
   "runtimeCases": [
@@ -842,6 +867,25 @@
       "eval": "arbitrary"
     }
   ],
+  "lldbRuntime": {
+    "request": {
+      "command": "debug",
+      "profile": "lldb",
+      "program": "app/debug-native-lldb",
+      "arguments": [
+        "value with spaces"
+      ]
+    },
+    "input": "breakpoint set --name main\nrun\nexpression -- argc\nexpression -- argv[1]\nexpression -- 6*7\ncontinue\nquit\n",
+    "patterns": [
+      "stop reason = breakpoint",
+      "\\(int\\) \\$0 = 2",
+      "\\$1 = [^\\r\\n]*\"value with spaces\"",
+      "\\(int\\) \\$2 = 42",
+      "DEBUGGER_FIXTURE_OK",
+      "exited with status = 0"
+    ]
+  },
   "debugPrograms": {
     "node": "console.log(\"DEBUGGER_FIXTURE_OK\");\n",
     "python": "import sys,json\nprint(\"DEBUGGER_ARGV:\"+json.dumps(sys.argv[1:]))\nprint(\"DEBUGGER_FIXTURE_OK\")\n",
@@ -907,6 +951,284 @@
           "program": "lldb",
           "installed": false
         }
+      ]
+    }
+  ],
+  "nativeSetupCases": [
+    {
+      "name": "devcontainer-root",
+      "platform": "linux",
+      "manager": "apt-get",
+      "privilege": "root",
+      "environment": {},
+      "expected": [
+        {
+          "id": "lldb",
+          "command": "apt-get",
+          "args": [
+            "update",
+            "-qq"
+          ],
+          "environment": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        },
+        {
+          "id": "lldb",
+          "command": "apt-get",
+          "args": [
+            "install",
+            "-y",
+            "--no-install-recommends",
+            "lldb"
+          ],
+          "environment": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "linux-sudo",
+      "platform": "linux",
+      "manager": "apt-get",
+      "privilege": "sudo",
+      "environment": {},
+      "expected": [
+        {
+          "id": "privilege",
+          "command": "sudo",
+          "args": [
+            "-n",
+            "true"
+          ]
+        },
+        {
+          "id": "lldb",
+          "command": "sudo",
+          "args": [
+            "-n",
+            "env",
+            "DEBIAN_FRONTEND=noninteractive",
+            "apt-get",
+            "update",
+            "-qq"
+          ],
+          "environment": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        },
+        {
+          "id": "lldb",
+          "command": "sudo",
+          "args": [
+            "-n",
+            "env",
+            "DEBIAN_FRONTEND=noninteractive",
+            "apt-get",
+            "install",
+            "-y",
+            "--no-install-recommends",
+            "lldb"
+          ],
+          "environment": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        }
+      ]
+    },
+    {
+      "name": "linux-dnf",
+      "platform": "linux",
+      "manager": "dnf",
+      "privilege": "root",
+      "environment": {},
+      "expected": [
+        {
+          "id": "lldb",
+          "command": "dnf",
+          "args": [
+            "install",
+            "-y",
+            "lldb"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "linux-pacman",
+      "platform": "linux",
+      "manager": "pacman",
+      "privilege": "root",
+      "environment": {},
+      "expected": [
+        {
+          "id": "lldb",
+          "command": "pacman",
+          "args": [
+            "-Sy",
+            "--needed",
+            "--noconfirm",
+            "lldb"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "linux-zypper",
+      "platform": "linux",
+      "manager": "zypper",
+      "privilege": "root",
+      "environment": {},
+      "expected": [
+        {
+          "id": "lldb",
+          "command": "zypper",
+          "args": [
+            "--non-interactive",
+            "install",
+            "--no-recommends",
+            "lldb",
+            "python3-lldb"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mac-brew",
+      "platform": "darwin",
+      "manager": "brew",
+      "privilege": "none",
+      "environment": {},
+      "expected": [
+        {
+          "id": "lldb",
+          "command": "brew",
+          "args": [
+            "install",
+            "lldb"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "windows-winget",
+      "platform": "win32",
+      "manager": "winget",
+      "privilege": "none",
+      "environment": {
+        "ProgramFiles": "C:\\Program Files",
+        "LOCALAPPDATA": "C:\\Users\\Dev\\AppData\\Local",
+        "PATH": "C:\\Windows\\System32"
+      },
+      "expected": [
+        {
+          "id": "python",
+          "command": "winget",
+          "args": [
+            "install",
+            "--exact",
+            "--id",
+            "Python.Python.3.11",
+            "--version",
+            "3.11.9",
+            "--scope",
+            "user",
+            "--location",
+            "C:\\Users\\Dev\\AppData\\Local\\semio\\Python\\3.11.9",
+            "--override",
+            "/quiet TargetDir=\"C:\\Users\\Dev\\AppData\\Local\\semio\\Python\\3.11.9\" InstallAllUsers=0 PrependPath=0 AssociateFiles=0 Include_launcher=0 InstallLauncherAllUsers=0 Include_test=0",
+            "--accept-package-agreements",
+            "--accept-source-agreements",
+            "--disable-interactivity",
+            "--silent",
+            "--force"
+          ]
+        },
+        {
+          "id": "lldb",
+          "command": "winget",
+          "args": [
+            "install",
+            "--exact",
+            "--id",
+            "LLVM.LLVM",
+            "--version",
+            "22.1.8",
+            "--scope",
+            "machine",
+            "--location",
+            "C:\\Program Files\\semio\\LLVM\\22.1.8",
+            "--accept-package-agreements",
+            "--accept-source-agreements",
+            "--disable-interactivity",
+            "--silent",
+            "--force"
+          ]
+        }
+      ]
+    }
+  ],
+  "nativeSetupRefusals": [
+    {
+      "platform": "linux",
+      "manager": "apt-get",
+      "privilege": "none",
+      "environment": {}
+    },
+    {
+      "platform": "linux",
+      "manager": "sh",
+      "privilege": "root",
+      "environment": {}
+    },
+    {
+      "platform": "darwin",
+      "manager": "apt-get",
+      "privilege": "root",
+      "environment": {}
+    },
+    {
+      "platform": "freebsd",
+      "manager": "pkg",
+      "privilege": "root",
+      "environment": {}
+    },
+    {
+      "platform": "win32",
+      "manager": "winget",
+      "privilege": "none",
+      "environment": {
+        "ProgramFiles": "relative",
+        "LOCALAPPDATA": "C:\\Users\\Dev\\AppData\\Local"
+      }
+    },
+    {
+      "platform": "win32",
+      "manager": "winget",
+      "privilege": "none",
+      "environment": {
+        "ProgramFiles": "C:\\Program Files",
+        "LOCALAPPDATA": "C:\\Users\\\"injection"
+      }
+    }
+  ],
+  "nativeSetupLifecycleCases": [
+    {
+      "name": "windows-runtime-repair",
+      "host": "windows-winget",
+      "readyAfter": "python",
+      "expectedInstallIds": [
+        "python"
+      ]
+    },
+    {
+      "name": "linux-full-repair",
+      "host": "devcontainer-root",
+      "readyAfter": "lldb",
+      "expectedInstallIds": [
+        "lldb",
+        "lldb"
       ]
     }
   ]

@@ -20,9 +20,9 @@ use semio_framework_job::JobOutcomeKind;
 
 use semio_framework_job::JobOutcomeView;
 
-use semio_framework_job::JobPayloadStream;
+use semio_framework_job_payload::JobPayloadStream;
 
-use semio_framework_job::RetainedPayloadBuilder;
+use semio_framework_job_payload::RetainedPayloadBuilder;
 
 use semio_framework_job::StepContext;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
@@ -294,7 +294,7 @@ impl BrowserCaller {
     pub fn admit(turn_grant: RetainedCloneGrant) -> Result<Self, ValueError> {
         let refused = |kind, message: &'static str| ValueError::literal(kind, message);
         let (cancel, root) = semio_framework_job::CancelToken::admit_root(turn_grant)?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller cancellation root is not funded"))?;
-        let (authority, ledger) = semio_framework_job::JobPayloadAuthority::admit(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), Self::remaining(turn_grant, root)?)?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller payload authority is not funded"))?;
+        let (authority, ledger) = semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), Self::remaining(turn_grant, root)?)?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller payload authority is not funded"))?;
         let (parent, _) = semio_framework_job::OriginalCallerSourceParent::admit(authority, cancel, Self::remaining(turn_grant, root.checked_add(ledger)?)?).map_err(|(error, authority, cancel)| {
             std::mem::forget((authority, cancel));
             error
@@ -416,7 +416,7 @@ pub mod testing {
         fn drop(&mut self) { assert!(self.caller.is_none() || std::thread::panicking(), "original Puzzle fixture must close every source root"); }
     }
 
-    fn payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
+    fn payload_bytes(payload: &semio_framework_job_payload::RetainedJobPayload) -> Vec<u8> {
         (0..payload.page_count()).flat_map(|index| payload.page(index).unwrap_or_default().to_vec()).collect()
     }
 

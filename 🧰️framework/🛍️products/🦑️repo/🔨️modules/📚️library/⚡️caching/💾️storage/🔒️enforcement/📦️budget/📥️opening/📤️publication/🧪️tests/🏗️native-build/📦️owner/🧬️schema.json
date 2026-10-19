@@ -9,12 +9,7 @@
     "commands",
     "reads",
     "dispatches",
-    "windowsMetadata",
-    "windowsCandidates",
     "observerChecks",
-    "windowsDirectoryBase",
-    "windowsDirectoryCases",
-    "windowsReadBindingCases",
     "retainedInactiveCases",
     "retainedInactiveLifecycleCases",
     "retainedInactiveTerminalCases"
@@ -255,75 +250,6 @@
         }
       }
     },
-    "windowsMetadata": {
-      "type": "array",
-      "minItems": 8,
-      "maxItems": 8,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "action",
-          "fault",
-          "admit"
-        ],
-        "properties": {
-          "action": {
-            "enum": [
-              "pending",
-              "published",
-              "settled"
-            ]
-          },
-          "fault": {
-            "enum": [
-              "none",
-              "order",
-              "cancel",
-              "receipt",
-              "undefined",
-              "frozen"
-            ]
-          },
-          "admit": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
-    "windowsCandidates": {
-      "type": "array",
-      "minItems": 8,
-      "maxItems": 8,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "initialState",
-          "fault",
-          "admit"
-        ],
-        "properties": {
-          "initialState": {
-            "enum": [
-              "mounted",
-              "inactive"
-            ]
-          },
-          "fault": {
-            "enum": [
-              "none",
-              "pending",
-              "published",
-              "settled"
-            ]
-          },
-          "admit": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
     "observerChecks": {
       "type": "array",
       "minItems": 20,
@@ -374,86 +300,6 @@
           },
           "stats": {
             "const": 18
-          }
-        }
-      }
-    },
-    "windowsDirectoryBase": {
-      "type": "object"
-    },
-    "windowsDirectoryCases": {
-      "type": "array",
-      "minItems": 12,
-      "maxItems": 12,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "mutation",
-          "admit"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "mutation": {
-            "enum": [
-              "none",
-              "high-half",
-              "mode",
-              "numeric",
-              "short",
-              "uppercase",
-              "leading-zero",
-              "bad-volume",
-              "extra",
-              "accessor",
-              "proxy",
-              "proto"
-            ]
-          },
-          "admit": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
-    "windowsReadBindingCases": {
-      "type": "array",
-      "minItems": 13,
-      "maxItems": 13,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "mutation",
-          "admit"
-        ],
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "mutation": {
-            "enum": [
-              "none",
-              "root-only",
-              "journals-only",
-              "unknown",
-              "duplicate",
-              "missing-name",
-              "extra-name",
-              "root-getter",
-              "root-proxy",
-              "name-getter",
-              "names-proxy",
-              "binding-proxy",
-              "proto"
-            ]
-          },
-          "admit": {
-            "type": "boolean"
           }
         }
       }

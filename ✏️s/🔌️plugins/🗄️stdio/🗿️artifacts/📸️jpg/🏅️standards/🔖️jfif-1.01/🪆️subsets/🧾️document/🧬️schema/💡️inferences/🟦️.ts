@@ -9,7 +9,7 @@ export interface JpgDimensions {
 }
 
 export interface JpgInference {
-  /** @derived */
+  /** 📏️ @derived */
   dimensions: JpgDimensions;
 }
 

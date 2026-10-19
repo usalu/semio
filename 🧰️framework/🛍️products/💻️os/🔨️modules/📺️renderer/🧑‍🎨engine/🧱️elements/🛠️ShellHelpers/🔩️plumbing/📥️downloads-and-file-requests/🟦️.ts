@@ -1,6 +1,6 @@
 /** 📥️ Shell plumbing, downloads and file requests: the media-export and data-url downloads, the backbone file and folder path requests, the file open and selection requests and the bounded blob reads. */
-import { mediaExportBytes } from "../../../../../../../../../🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts";
-import { wireMediaExportEncoding } from "@semio-tech/framework-actor/wire-turn";
+import { mediaExportBytes } from "@semio-tech/framework";
+import { wireMediaExportEncoding } from "@semio-tech/framework/actor/wire-turn";
 import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../../../📤️SegmentedDownload/🟦️.ts";
 
 //#region ShellHelpers
@@ -25,8 +25,6 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
 /** 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
 export function downloadMediaExportBytes(filename: string, mimeType: string, bytes: Uint8Array): void {
   if (typeof document === "undefined") return;
-  // 🧭️ `slice()` because a `Uint8Array` may be backed by a `SharedArrayBuffer`, which is not a
-  // `BlobPart`; it answers a fresh `Uint8Array<ArrayBuffer>`, and `Blob` copies its parts anyway.
   const blob = new Blob([bytes.slice()], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

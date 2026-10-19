@@ -79,17 +79,14 @@ pub struct DxfStylesDiff {
 }
 
 impl DxfStylesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply(&self, base: &[DxfStyle]) -> Vec<DxfStyle> {
         let modified: Vec<(String, DxfStyleDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfStyle)> = self.added.iter().map(|a| (a.index, a.style.clone())).collect();
         named_apply(base, &self.removed, &modified, &added)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &[DxfStyle]) -> Option<Self> {
         let modified: Vec<(String, <DxfStyle as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfStyle)> = self.added.iter().map(|a| (a.index, a.style.clone())).collect();
@@ -101,7 +98,6 @@ impl DxfStylesDiff {
             Some(d)
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfStyleDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfStyle)> = d1.added.into_iter().map(|a| (a.index, a.style)).collect();
@@ -195,17 +191,14 @@ pub struct DxfLinetypesDiff {
 }
 
 impl DxfLinetypesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply(&self, base: &[DxfLinetype]) -> Vec<DxfLinetype> {
         let modified: Vec<(String, DxfLinetypeDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLinetype)> = self.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
         named_apply(base, &self.removed, &modified, &added)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &[DxfLinetype]) -> Option<Self> {
         let modified: Vec<(String, <DxfLinetype as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLinetype)> = self.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
@@ -217,7 +210,6 @@ impl DxfLinetypesDiff {
             Some(d)
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn absorb(d1: Self, d2: Self) -> Option<Self> {
         let d1m: Vec<(String, DxfLinetypeDiff)> = d1.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d1a: Vec<(usize, DxfLinetype)> = d1.added.into_iter().map(|a| (a.index, a.linetype)).collect();
@@ -249,11 +241,9 @@ pub struct DxfTablesDiff {
 }
 
 impl DxfTablesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.layers.as_ref().is_none_or(DxfLayersDiff::is_empty) && self.styles.as_ref().is_none_or(DxfStylesDiff::is_empty) && self.linetypes.as_ref().is_none_or(DxfLinetypesDiff::is_empty)
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn apply(&self, base: &DxfTables) -> DxfTables {
         DxfTables {
             layers: match &self.layers {
@@ -270,7 +260,6 @@ impl DxfTablesDiff {
             },
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn inverse(&self, base: &DxfTables) -> Option<Self> {
         let d = Self {
             layers: self.layers.as_ref().and_then(|layers| layers.inverse(&base.layers)),
@@ -283,7 +272,6 @@ impl DxfTablesDiff {
             Some(d)
         }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn absorb(a: Self, b: Self) -> Option<Self> {
         let layers = match (a.layers, b.layers) {
             (None, None) => None,

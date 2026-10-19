@@ -144,8 +144,6 @@ async fn kind_name_covers_every_frozen_kind_byte() {
 async fn parse_commit_fields_matches_a_real_commit_frame() {
     let (_path, bytes) = build_history_file("commit_fields", 1, false).await;
     let mut cursor = semio_framework_os_spr::FrameCursor::new(&bytes, HEADER_SIZE).await;
-    // 🚫️async: R10 shape 1 — `next_frame` is async but `Iterator::from_fn`'s closure is sync;
-    // rewritten as a plain loop so it can be awaited.
     let commit_frame = loop {
         let frame = cursor.next_frame().await.unwrap().unwrap();
         if frame.kind == REC_COMMIT {
@@ -155,10 +153,6 @@ async fn parse_commit_fields_matches_a_real_commit_frame() {
     let fields = parse_commit_fields(commit_frame.payload().await).await.unwrap();
     assert_eq!(fields.commit_seq, 1);
     assert_eq!(fields.prev_commit_offset, 0);
-    // 🎯️ `HistoryAppender::begin` writes a `REC_STR_DICT` delta (doc_id + schema interned)
-    // then `REC_DOC` immediately (pending, not yet committed); one `append_edit` then flushes
-    // another `REC_STR_DICT` delta (edit id + actor interned) before its own `REC_EDIT` — so
-    // the first `commit()` covers 4 pending records, not 1.
     assert_eq!(fields.record_count, 4);
 }
 
@@ -196,14 +190,6 @@ async fn cli_verify_ok_at_every_level_on_a_clean_file() {
 
 #[semio_framework_async_macros::async_test]
 async fn cli_verify_rejects_file_with_corrupted_header() {
-    // 🎯️ Design note: this family's read path (`HistoryReader::open` -> `crate::os_spr::format::
-    // recover`) is deliberately self-healing for interior corruption — any tampered frame's
-    // own CRC-32C fails during `recover`'s forward scan, which simply EXCLUDES it (and
-    // everything after) from the trusted prefix rather than erroring, so `verify` reports
-    // `OK` on whatever shorter trusted prefix remains (this is the append-only format's
-    // intended torn-tail tolerance, not a gap in this CLI). The one corruption class that IS
-    // guaranteed unrecoverable at every `VerificationLevel` is a corrupted 32-byte header
-    // (bad magic), since there is no earlier trusted state to fall back to at all.
     let (path, mut bytes) = build_history_file("verify_bad_header", 2, false).await;
     bytes[0] ^= 0xFF;
     std::fs::write(&path, &bytes).unwrap();
@@ -284,8 +270,6 @@ async fn cli_compile_rejects_malformed_ops_text() {
 //#region 🔖️Diff
 #[semio_framework_async_macros::async_test]
 async fn cli_diff_reports_identical_and_divergent_files() {
-    // `diff_b` has fewer edits than `diff_a` — a genuine divergence (only-in-a for the tail),
-    // not just a differently-named copy of the same content.
     let (path_a, _) = build_history_file("diff_a", 3, false).await;
     let (path_b, _) = build_history_file("diff_b", 2, false).await;
     let path_a_str = path_a.to_string_lossy().to_string();

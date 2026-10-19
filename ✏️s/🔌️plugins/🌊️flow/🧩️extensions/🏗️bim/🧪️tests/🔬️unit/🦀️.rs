@@ -165,8 +165,6 @@ async fn extension_bundle_extends_flow_and_evaluates() {
     let input_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
     let req =
         semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("operatorId".to_string(), semio_framework_pack_json::Value::from("bim.element.wall")), ("inputJson".to_string(), semio_framework_pack_json::Value::from(input_json)), ("nodeHash".to_string(), semio_framework_pack_json::Value::from(1_i64))]));
-    // ⏱️ `evaluate` answers the BUDGET envelope; a wall element offers no resumable job, so it
-    // finishes inside its first round trip (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     let out_bytes = extension_invoke("evaluate", req.as_bytes()).await.unwrap();
     let envelope = semio_framework_pack_json::parse_bytes(&out_bytes, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool), Some(true));

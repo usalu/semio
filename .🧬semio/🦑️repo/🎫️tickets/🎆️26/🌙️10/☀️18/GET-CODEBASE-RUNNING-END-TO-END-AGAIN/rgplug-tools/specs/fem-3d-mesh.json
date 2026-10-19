@@ -1,0 +1,39 @@
+{
+ "ws": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml",
+ "old_name": "semio-s-artifact-fem-3d-mesh",
+ "old_pkg": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+ "old_root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs",
+ "subtree": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
+ "old_emoji": "🕸️",
+ "old_doc": "`s.fem.fem3d` mesh mutations of node and element changes and the selection move.",
+ "old_desc": "FEM 3d node and element changes and the selection move",
+ "script": null,
+ "new": [
+  {
+   "name": "semio-s-artifact-fem-3d-mesh-sections",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🪚️sections",
+   "emoji": "🪚️",
+   "doc": "`s.fem.fem3d` mesh mutations of sections (create, delete, replace, change).",
+   "desc": "FEM 3d section mutations",
+   "move": [
+    "create_section",
+    "delete_section",
+    "replace_section",
+    "change_section"
+   ]
+  },
+  {
+   "name": "semio-s-artifact-fem-3d-mesh-solids",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧱️solids",
+   "emoji": "🧱️",
+   "doc": "`s.fem.fem3d` mesh mutations of solids (create, delete, replace, change).",
+   "desc": "FEM 3d solid mutations",
+   "move": [
+    "create_solid",
+    "delete_solid",
+    "replace_solid",
+    "change_solid"
+   ]
+  }
+ ]
+}

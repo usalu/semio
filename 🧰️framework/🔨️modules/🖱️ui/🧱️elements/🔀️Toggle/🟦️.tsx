@@ -13,7 +13,7 @@ import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { chromeControlGroupClass, chromeControlGroupSiblingDividerClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { ToggleGroup } from "../🎛️ToggleGroup/🟦️.tsx";
-import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
+import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { Action } from "../⚡️ActionGroup/🟦️.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️.tsx";
 import { ChromeControlHint } from "../💡️ChromeControlHint/🟦️.tsx";
@@ -27,7 +27,7 @@ import { renderControlIcon, ChevronDownIcon, type ControlIcon } from "../🔣️
 // Consumers MUST handle onPressedChange events.
 
 /**
- * Configuration interface for a single toggle option with value and label.
+ * 🔘️ Configuration interface for a single toggle option with value and label.
  **/
 export interface ToggleItem<T extends string> {
   value: T;
@@ -46,7 +46,7 @@ interface ToggleButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonEl
 }
 
 /**
- * ToggleStandardProps holds the data fields for a ToggleStandardProps record.
+ * 🎚️ ToggleStandardProps holds the data fields for a ToggleStandardProps record.
  **/
 interface ToggleStandardProps extends ToggleButtonProps, ElementProps {
   kind?: "default" | "icon" | "single";
@@ -57,7 +57,7 @@ interface ToggleStandardProps extends ToggleButtonProps, ElementProps {
 }
 
 /**
- * ToggleWithActionProps holds the data fields for a ToggleWithActionProps record.
+ * ✅️ ToggleWithActionProps holds the data fields for a ToggleWithActionProps record.
  **/
 interface ToggleWithActionProps extends ToggleButtonProps, ElementProps {
   kind: "withAction";
@@ -70,7 +70,7 @@ interface ToggleWithActionProps extends ToggleButtonProps, ElementProps {
 }
 
 /**
- * ToggleDropdownProps holds the data fields for a ToggleDropdownProps record.
+ * ☑️ ToggleDropdownProps holds the data fields for a ToggleDropdownProps record.
  **/
 interface ToggleDropdownProps<T extends string> extends ToggleButtonProps, ElementProps {
   kind: "dropdown";
@@ -219,7 +219,7 @@ function ToggleStandardButton({
 // #endregion 🟢️PressedButton
 
 /**
- * Toggle holds the data fields for a Toggle record.
+ * 🔛️ Toggle holds the data fields for a Toggle record.
  **/
 function Toggle<T extends string = string>(props: ToggleProps<T>) {
   if ("kind" in props && props.kind === "withAction") {

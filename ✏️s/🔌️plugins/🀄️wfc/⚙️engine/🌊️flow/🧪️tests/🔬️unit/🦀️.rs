@@ -22,7 +22,7 @@ fn line_adjacency(n: usize) -> AdjacencyView {
     AdjacencyView::new(neighbors, vec![RegionId(0); n])
 }
 
-/// A 2-wide, 3-long ladder: two parallel floor corridors from node0/node1 (side by side) to
+/// 🤝️ A 2-wide, 3-long ladder: two parallel floor corridors from node0/node1 (side by side) to
 /// node4/node5, letting up to 2 edge-disjoint paths exist when everything is floor.
 fn ladder_adjacency() -> AdjacencyView {
     let edges = [(0, 2), (2, 4), (1, 3), (3, 5)];

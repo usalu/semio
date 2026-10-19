@@ -86,7 +86,6 @@ async fn single_generation_round_trips_through_pack_public_api() {
 
     let bytes = build_generation(&descriptor, &pages, None).await.unwrap();
 
-    // 🔬️ A real `pack::PackFile`, unrelated to this crate's own reader, must accept the bytes.
     let file = pack::PackFile::open_manifest(bytes.as_slice(), &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Full).await.unwrap();
     assert_eq!(file.chunk_count(), 2);
     assert_eq!(file.manifest().unwrap().schema_name, "");
@@ -103,7 +102,7 @@ async fn single_generation_round_trips_through_pack_public_api() {
 #[semio_framework_async_macros::async_test]
 async fn build_generation_rejects_new_pages_mismatched_with_descriptor() {
     let pages = vec![page(b"a").await];
-    let descriptor = sample_descriptor(0, None).await; // descriptor.new_pages left empty
+    let descriptor = sample_descriptor(0, None).await;
     assert!(matches!(build_generation(&descriptor, &pages, None).await, Err(DbError::InvalidArgument(_))));
 }
 
@@ -120,7 +119,6 @@ async fn footer_chain_flag_and_prev_offset_are_genuine_pack_wire_data() {
     gen1_descriptor.new_pages = child_pages.iter().map(|p| p.hash).collect();
     let gen1_bytes = build_generation(&gen1_descriptor, &child_pages, Some(parent_footer_position)).await.unwrap();
 
-    // 🔬️ Read gen1's footer via `pack`'s own public superblock API, not this crate's helpers.
     let superblock = pack::PackFile::open_superblock(gen1_bytes.as_slice(), &pack::PackLimits::default()).await.unwrap();
     let footer = superblock.superblock().footer;
     assert_eq!(footer.required_flags & pack::REQUIRED_FOOTER_CHAIN, pack::REQUIRED_FOOTER_CHAIN);
@@ -160,15 +158,12 @@ async fn two_generation_incremental_chain_resolves_inherited_pages() {
     assert_eq!(ancestor.descriptor, gen0_descriptor);
     assert!(ancestor.parent_footer_offset().await.is_none());
 
-    // ✅️ New-in-gen1 page resolves directly from gen1's own chunk table.
     let changed = read_page(&combined, &latest, gen1_pages[0].hash).await.unwrap();
     assert_eq!(changed, b"changed-page");
 
-    // ✅️ Unchanged page (not listed in gen1) resolves by walking to gen0.
     let inherited = read_page(&combined, &latest, gen0_pages[1].hash).await.unwrap();
     assert_eq!(inherited, b"stable-page");
 
-    // ❌️ A hash present in neither generation reports NotFound, not a panic.
     assert!(matches!(read_page(&combined, &latest, ContentHash([0xEE; 32])).await, Err(DbError::NotFound(_))));
 }
 
@@ -330,19 +325,14 @@ async fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
 
     db_actor::block_on(SnapshotLease::renew(&storage, &document, "actor-a", fence, 1_000, 500)).unwrap();
 
-    // ❌️ A second holder can't acquire while actor-a's lease is still unexpired.
     assert!(matches!(db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500)), Err(DbError::Conflict(_))));
 
     db_actor::block_on(SnapshotLease::release(&storage, &document, "actor-a", fence)).unwrap();
     assert!(db_actor::block_on(SnapshotLease::current(&storage, &document, 500)).unwrap().is_none());
 
-    // ✅️ Now free, actor-b can acquire fresh (an explicit release clears the record entirely,
-    // per `LeaseStorage::acquire`'s own doc — only a hand-off from an EXPIRED-but-still-present
-    // lease bumps the epoch fence, exercised next).
     let after_release = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500)).unwrap();
     assert_eq!(after_release, EpochFence::INITIAL);
 
-    // ✅️ A hand-off from an unreleased but time-expired lease DOES bump the fence.
     let expired_handoff = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-c", 1_000, 1_600)).unwrap();
     assert_eq!(expired_handoff, after_release.next());
 }

@@ -1,6 +1,6 @@
 //! 📋️ Clipboard metadata claims actual paged backing and bounded keys before constructing candidates.
 use super::*;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 #[derive(RetireOwned)]
 pub struct Table<T:RetireAuthority>{entries:PagedList<(String,T,bool),MAX_NODES>,live:usize,admitted:usize,pending_key:Option<String>,pending_value:Option<T>}
 impl<T:RetireAuthority> Table<T>{

@@ -1,4 +1,4 @@
-//! Diff for `change-structure-kind`.
+//! 🔺️ Diff for `change-structure-kind`.
 use crate::change_structure_kind::ChangeStructureKind;
 use semio_s_artifact_norm_en1994_diff::En1994Diff;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;

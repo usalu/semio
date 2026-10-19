@@ -1,11 +1,11 @@
-//! engine snaps node drags and brush placements onto. Per window instance (`Puzzle2dWindowConfig`).
+//! ⚙️ engine snaps node drags and brush placements onto. Per window instance (`Puzzle2dWindowConfig`).
 //! 🌐️ Edit-mode window option — the grid group: the snap toggle and the grid factor slider the board
 
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::puzzle2d_action;
 use semio_framework_plugin::WindowMeasure;
-use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
+use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub const PUZZLE2D_GRID_FACTOR_MIN: f64 = 0.25;
 pub const PUZZLE2D_GRID_FACTOR_MAX: f64 = 8.0;

@@ -2,15 +2,26 @@ import Ajv from "ajv";
 import { mod } from "mathjs";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { CHALLENGES, DEFAULT_LIMITS, decideLearner, emptyLearnerState, evolveLearner, runSeed, quizIssues, sheetOf, type Course, type Event, type Quiz } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CHALLENGES, DEFAULT_LIMITS, decideLearner, emptyLearnerState, evolveLearner, runSeed, quizIssues, sheetOf, type Course, type Event, type Quiz, type ValidationIssue } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const quiz = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧺️balanced-pools/🔣️.json", import.meta.url), "utf8")) as Quiz;
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
+const timing = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧺️balanced-pools/🩺️validation.json", import.meta.url), "utf8")) as readonly { id: string; seconds: number; issues: readonly ValidationIssue[]; keyword: string | null }[];
 
 /** 🌀️ Selections corroborated by NumPy's MT19937 and the independent Fisher–Yates oracle. */
 const expected = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🧺️balanced-pools/🧾️expected.json", import.meta.url), "utf8")) as readonly { seed: number; items: string[] }[];
 
 describe("balanced pools", () => {
+  for (const vector of timing) it(`reports the shared pooled timing boundary: ${vector.id}`, () => {
+    const pool = { ...quiz.tasks[0]!.pool!, seconds: vector.seconds };
+    const document = { ...quiz, tasks: [{ ...quiz.tasks[0]!, pool }] };
+    expect(quizIssues(document)).toEqual(vector.issues);
+    const ajv = new Ajv({ strict: false });
+    ajv.addSchema(schema);
+    expect(ajv.validate(schema.$id + "#/$defs/QuestionPool", pool)).toBe(vector.issues.length === 0);
+    expect((ajv.errors ?? []).map(({ instancePath, keyword }) => ({ instancePath, keyword }))).toEqual(vector.keyword === null ? [] : [{ instancePath: "/seconds", keyword: vector.keyword }]);
+  });
+
   it("persists the advancing attempt across voided runs and event replay", () => {
     const learner = "a".repeat(32);
     const course: Course = { schema: "semio.course/v1", id: "test", title: { en: "Test", de: "Test" }, introduction: { title: { en: "Test", de: "Test" }, paragraphs: [{ en: "Test", de: "Test" }] }, quizzes: ["quiz.json"], badges: [] };

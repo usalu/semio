@@ -102,7 +102,7 @@ export async function testNxBuildModes(workspace: string, output: string|undefin
   for (const entry of locked.packages) dependencyGraph.setNode(cargoLockIdentity(entry));
   for (const entry of locked.packages) for (const dependency of entry.dependencies ?? []) {
     const [name, version] = dependency.split(" "), target = locked.packages.find((candidate: any) => candidate.name === name && (version === undefined || candidate.version === version));
-    dependencyGraph.setEdge(cargoLockIdentity(entry), cargoLockIdentity(target));
+    dependencyGraph.setEdge(cargoLockIdentity(entry), cargoLockIdentity(target!));
   }
   const independent = graphlib.alg.preorder(dependencyGraph, [cargoLockIdentity(locked.packages[0])]).sort();
   assert.deepEqual(projection.packages.map(cargoLockIdentity), independent, "Cargo lock scope must match independent graphlib reachability");

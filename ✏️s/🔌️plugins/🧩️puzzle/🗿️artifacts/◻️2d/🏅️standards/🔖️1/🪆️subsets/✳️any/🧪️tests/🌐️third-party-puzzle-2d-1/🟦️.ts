@@ -227,9 +227,6 @@ function applyTopology(graph: Graph, vector: Vector): boolean {
         graph.replaceNodeAttributes(old, { ...handle });
         return true;
       }
-      // 🔁️graphology's core has no vertex relabel, so a re-identified port is expressed as the
-      // wires it carried, a `dropNode`, and the same wires re-attached. The Python half, whose
-      // library DOES have `relabel_nodes`, is what adjudicates that carry-over independently.
       const owner = graph.source(graph.inEdges(old).find((edge) => graph.getEdgeAttribute(edge, "rel") === "owns")!);
       const wires = graph.edges(old).filter((edge) => graph.getEdgeAttribute(edge, "rel") === "wire").map((edge) => ({ key: edge, source: graph.source(edge), target: graph.target(edge), attributes: graph.getEdgeAttributes(edge) }));
       graph.dropNode(old);
@@ -239,8 +236,6 @@ function applyTopology(graph: Graph, vector: Vector): boolean {
       return true;
     }
     case "connect-handles":
-      // 🫥️A JSON carrier writes no member for an absent optional, so a null argument becomes an
-      // absent attribute rather than a null one. That is a carrier fact, not a verb rule.
       graph.addDirectedEdgeWithKey(`wire:${payload.id}`, `handle:${payload.source}`, `handle:${payload.target}`, { rel: "wire", ...Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== null)) });
       return true;
     case "disconnect-handles":
@@ -288,8 +283,6 @@ function relationGraph(document: Json): Graph {
   for (const record of ((document.meta.kindCompatibility ?? []) as Json[])) {
     graph.mergeNode(record.source as string);
     graph.mergeNode(record.target as string);
-    // 🔑️Keyed by the ordered pair, so the comparison below is over the relation and never over
-    // graphology's auto-generated edge identifiers.
     graph.mergeEdgeWithKey(`pair:${record.source}→${record.target}`, record.source as string, record.target as string, Object.fromEntries(COMPATIBILITY_ATTRS.filter((key) => key in record).map((key) => [key, record[key]])));
   }
   return graph;
@@ -315,8 +308,6 @@ function kindCompatibility(ctx: AdapterContext): AdapterOutcome {
         before.mergeEdgeWithKey(`pair:${payload.source}→${payload.target}`, payload.source as string, payload.target as string, Object.fromEntries(COMPATIBILITY_ATTRS.filter((key) => key in payload).map((key) => [key, payload[key]])));
       } else if (vector.kind === "disconnect-kind-compatibility" && payload.source !== undefined) {
         if (before.hasEdge(payload.source as string, payload.target as string)) before.dropEdge(payload.source as string, payload.target as string);
-        // 🏷️A kind label exists in this relation only while some pair still names it, so the vertex
-        // set is derived from the edge set by graphology's own degree bookkeeping.
         for (const vertex of before.filterNodes((candidate) => before.degree(candidate) === 0)) before.dropNode(vertex);
       }
       if (canonical(before) !== canonical(after)) failures.push(`${vector.id}: the compatibility relation graphology computed does not equal the committed after-snapshot's relation`);
@@ -344,14 +335,10 @@ function payloadSchemas(ctx: AdapterContext): AdapterOutcome {
       continue;
     }
     checks += 1;
-    // 🧱️Schema-first: the payloads the subject refuses as a Fatal `mutation.invariant` are exactly the ones
-    // their own leaf schema forbids, so the validator must reject those and only those.
     const errors = validator.validate(vector.mutation, vector.schema).errors;
     if (vector.outcome?.code === "mutation.invariant") {
       if (errors.length === 0) failures.push(`${vector.id}: the committed outcome is a mutation.invariant refusal, yet jsonschema accepts the payload — the schema does not forbid what the subject refuses`);
     } else for (const error of errors) failures.push(`${vector.id}: jsonschema rejects the committed payload at ${error.property} — ${error.message}`);
-    // 🧪️A validator that accepts everything would accept the payload too. The probe proves the
-    // opposite by handing it a member the schema does not declare.
     if (vector.schema.additionalProperties === false) {
       checks += 1;
       if (validator.validate({ ...(vector.mutation as Record<string, Json>), semioThirdPartyOracleProbe: true }, vector.schema).valid) failures.push(`${vector.id}: the leaf schema declares additionalProperties false yet jsonschema accepted an undeclared member`);
@@ -433,9 +420,6 @@ function diffReproduction(ctx: AdapterContext): AdapterOutcome {
     if (vector.before === null || vector.after === null) continue;
     const patch = compare(vector.before, vector.after);
     let checks = 1;
-    // 🔁️Equality is asked of the library itself — an empty patch between the reproduction and the
-    // committed after-snapshot — because `ordered-json-v1` holds array order significant and key
-    // order never, which a string comparison would get wrong.
     if (compare(applyPatch(deepClone(vector.before), patch).newDocument, vector.after).length > 0) failures.push(`${vector.id}: applying the RFC 6902 patch fast-json-patch derived does not reproduce the committed after-snapshot`);
     checks += 1;
     if (!movesDocument(vector) && patch.length > 0) failures.push(`${vector.id}: the committed outcome is ${JSON.stringify(vector.outcome)} yet fast-json-patch derived ${patch.length} op(s)`);

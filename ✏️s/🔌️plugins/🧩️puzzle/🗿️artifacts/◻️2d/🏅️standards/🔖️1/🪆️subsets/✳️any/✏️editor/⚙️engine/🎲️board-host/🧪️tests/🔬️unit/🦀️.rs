@@ -8,10 +8,10 @@ use crate::editor::puzzle2d::engine::handle_position_on_circle;
 use crate::editor::puzzle2d::engine::BoardElementStyleKind;
 use crate::editor::puzzle2d::engine::BoardHost;
 use crate::editor::puzzle2d::engine::Interaction;
-use crate::editor::puzzle2d::engine::NodeDescriptor;
+use semio_framework_os_infinite::board::NodeDescriptor;
 use crate::editor::puzzle2d::engine::WireDescriptor;
 use semio_framework_pack_json::json;
-use crate::board_set_camera;
+use semio_framework_os_infinite::board_set_camera;
 use semio_framework_test_fixtures::fixture_text;
 
 include!("🧾️manifest-descriptor-sync-and-style-laws/🦀️.rs");

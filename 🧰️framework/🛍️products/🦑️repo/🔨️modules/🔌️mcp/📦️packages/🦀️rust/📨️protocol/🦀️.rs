@@ -219,15 +219,28 @@ pub struct Tool {
     pub title: String,
     pub description: String,
     pub input_schema: Schema,
+    pub output_schema: Option<Schema>,
 }
 
 impl Tool {
+    /// 📤️ The one `outputSchema` every repository tool declares (`$defs.ToolOutput` of the module schema): object data as is, array or scalar data wrapped as `{"result": <value>}`.
+    pub fn result_output_schema() -> Schema {
+        Schema {
+            kind: "object".to_string(),
+            description: "Object data as is; array or scalar data wrapped as result.".to_string(),
+            properties: BTreeMap::from([("result".to_string(), Schema { description: "Array or scalar data of the tool.".to_string(), ..Schema::default() })]),
+            additional_properties: Some(true),
+            ..Schema::default()
+        }
+    }
+
     pub(super) fn json(&self) -> J {
         J::object(vec![
             ("name", Some(J::Str(self.name.clone()))),
             ("title", (!self.title.is_empty()).then(|| J::Str(self.title.clone()))),
             ("description", (!self.description.is_empty()).then(|| J::Str(self.description.clone()))),
             ("inputSchema", Some(self.input_schema.json())),
+            ("outputSchema", self.output_schema.as_ref().map(Schema::json)),
         ])
     }
 }
@@ -346,19 +359,30 @@ impl Content {
     }
 }
 
-/// 🧰️ What a tool handler returns.
+/// 🧰️ What a tool handler returns. `structuredContent` reaches the wire only as a JSON object: null is omitted, object data is kept, array or scalar data is wrapped as `{"result": <value>}` when the tool declares an `outputSchema` and omitted otherwise.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CallToolResult {
     pub content: Vec<Content>,
     pub structured_content: Option<String>,
     pub is_error: bool,
+    pub output_schema_declared: bool,
 }
 
 impl CallToolResult {
+    fn wire_structured_content(&self) -> Option<String> {
+        let raw = self.structured_content.as_deref()?.trim();
+        match raw.as_bytes().first()? {
+            b'{' => Some(raw.to_string()),
+            _ if raw == "null" => None,
+            _ if self.output_schema_declared => Some(format!("{{\"result\":{raw}}}")),
+            _ => None,
+        }
+    }
+
     pub(super) fn json(&self) -> J {
         J::object(vec![
             ("content", Some(J::Arr(self.content.iter().map(Content::json).collect()))),
-            ("structuredContent", self.structured_content.as_ref().map(|raw| J::Raw(raw.clone()))),
+            ("structuredContent", self.wire_structured_content().map(J::Raw)),
             ("isError", self.is_error.then_some(J::Bool(true))),
         ])
     }

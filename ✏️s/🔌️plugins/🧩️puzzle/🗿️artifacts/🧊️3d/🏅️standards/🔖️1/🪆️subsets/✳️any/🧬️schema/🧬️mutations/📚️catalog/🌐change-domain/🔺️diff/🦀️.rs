@@ -4,8 +4,6 @@ use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
-    // 🌐️ `domain` is a document-root singleton field (not a catalog member addressed by id), so
-    // there is no missing-target case — only the no-op check applies.
     if payload.new_domain == base.domain {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Domain is already \"{}\".", payload.new_domain));
     }

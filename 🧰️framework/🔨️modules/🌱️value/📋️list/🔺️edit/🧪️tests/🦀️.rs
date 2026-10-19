@@ -1,3 +1,4 @@
+use semio_framework_test_fixtures::fixture_text;
 use super::*;
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1024*1024,maximum_release_bytes:1024*1024,maximum_depth:32}}
 fn array(law:&serde_json::Value,key:&str)->Vec<usize>{law[key].as_array().unwrap().iter().map(|n|n.as_u64().unwrap()as usize).collect()}
@@ -15,7 +16,7 @@ fn close(plan:&mut IndexedEditPlan)->(usize,usize){
 /// 🧪️ Actual coordinate owners obey the neutral strict triple corpus and physical retirement receipts.
 #[test]
 fn indexed_edit_plan_matches_portable_coordinates_and_original_custody(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for law in fixture["cases"].as_array().unwrap(){
   let removed=array(law,"removed");let modified=array(law,"modified");let added=array(law,"added");let pointers=(removed.as_ptr(),modified.as_ptr(),added.as_ptr());
   let shape=IndexedEditShape{base_len:law["base"].as_u64().unwrap()as usize,removed:removed.len(),modified:modified.len(),added:added.len()};

@@ -2,7 +2,8 @@
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::{DeflateSnapshot,DeflateLevelHint};
 use crate::store;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding};
-use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_deflate::{Inflater,InflateOutcome,RetainedInflateCloseStep,DeflateEncodeControl,DeflateEncodeProgress};
 fn inflate_refusal(error:semio_framework_deflate::DeflateError,scope:&str)->ValueError{use semio_framework_deflate::DeflateError;let kind=match error{DeflateError::OutputLimitExceeded=>ValueRefusalKind::OwnershipLimit,DeflateError::BadBlockType|DeflateError::BadStoredLength|DeflateError::BadHuffmanCode|DeflateError::BadDistance|DeflateError::UnexpectedEnd=>ValueRefusalKind::InvalidValue};ValueError::new(kind,format!("{scope} refusal: {error:?}"))}
 struct History(Inflater);
@@ -27,7 +28,7 @@ fn inflate_pass(history:&mut History,raw:&[u8],mut output:Option<&mut Vec<u8>>,m
 pub(crate) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<DeflateSnapshot,ValueError>{
  let limits=control.limits();let maximum_value_output=crate::standards::v_rfc1950::subsets::any::io::sqlite::snapshot::native_payload_capacity(limits)?;let length=match payload{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Deflate native input exceeds file limit"))}
  control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{let native_before=native_control.owned_bytes();
-    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
+    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
 let result=(||->Result<DeflateSnapshot,ValueError>{let owned;
  let bytes=match payload{
   store::io_schema::IoPayload::Binary(bytes)=>store::semio_format::unwrap_binary_controlled(bytes,"stdio.deflate",store::semio_format::Component::Pack,1,native)?,

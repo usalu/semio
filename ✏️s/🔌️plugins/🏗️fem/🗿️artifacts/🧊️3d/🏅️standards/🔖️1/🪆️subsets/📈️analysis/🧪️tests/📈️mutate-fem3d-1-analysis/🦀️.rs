@@ -1,4 +1,4 @@
-//! artifact-level `mutate-fem3d-1` case in ticket
+//! 📶️ artifact-level `mutate-fem3d-1` case in ticket
 //! 🧊 `s.fem.fem3d` analysis mutation case — Rust SUBJECT adapter. Relocated out of the
 //! `26/09/02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION` so
 //! this subset's own kinds have a subset-owned test.

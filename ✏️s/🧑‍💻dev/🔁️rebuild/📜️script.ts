@@ -21,7 +21,7 @@ class SGuestCheckScript extends BundleScript {
 /** 📋️ Observes the complete validated deployment plan without building components. */
 class SPlanCheckScript extends BundleScript {
   run(args: string[]): void {
-    if (args.length) throw Error("plan-check accepts no arguments");
+    if (args.length) throw new Error("plan-check accepts no arguments");
     printRebuildPlanV1(readSRebuildPlanV1());
   }
 }
@@ -29,7 +29,7 @@ class SPlanCheckScript extends BundleScript {
 /** 🧪️ Verifies concrete owner composition against independent Ajv admission. */
 class SRebuildTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw Error("test accepts no arguments");
+    if (args.length) throw new Error("test accepts no arguments");
     await runOwnedCommand(process.execPath, ["test", "./🧪️tests/🟦️.ts"], this.root, "s-rebuild-contract", scriptInvocationBudget(this.invocation, 120000), { signal: this.invocation.control.signal });
   }
 }

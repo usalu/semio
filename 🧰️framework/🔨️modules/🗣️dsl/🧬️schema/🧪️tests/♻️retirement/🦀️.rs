@@ -1,7 +1,8 @@
 //! ♻️ The neutral finite Record owner corpus agrees with actual allocator receipts.
 use semio_framework_dsl_record::{ExprOp,ExprValue,FieldSpec,FieldValue,JoinMode,RecordFields,RecordLayout,RecordSpec,RecordSpecProducer,RecordValue,RetainedRecordWriter,Shape,WireEdgeLabel,WireNode,WireValue};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-use semio_framework_value::{DslValue,NativeDecodeControl,NativeEncodeControl,retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{DslValue, NativeEncodeControl, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[global_allocator]
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

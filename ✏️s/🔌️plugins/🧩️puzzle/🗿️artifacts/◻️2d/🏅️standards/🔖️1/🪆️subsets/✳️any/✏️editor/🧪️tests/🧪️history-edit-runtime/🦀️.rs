@@ -1,4 +1,4 @@
-//! (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7, §16). They are driven by the language-agnostic corpus
+//! 🎫️ (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §4, §7, §16). They are driven by the language-agnostic corpus
 //! ⏪️ Runtime acceptance laws of non-destructive history editing, with puzzle 2d as the witness of the generic runtime
 //! `🧫️fixtures/🧫️history-edit-runtime/🔣️.json`; the Python oracle beside this file re-folds every named head of it.
 //!

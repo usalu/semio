@@ -374,13 +374,11 @@ pub fn step_snapshot_to_part21(header: &StepHeader, entities: &[StepEntity]) -> 
 impl StepSnapshot {
     /// 🔁️ Materializes the shared generic Part-21 graph on demand — never stored, always derived
     /// from the typed `header`/`entities` fields.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_part21_document(&self) -> Part21Document {
         step_snapshot_to_part21(&self.header, &self.entities)
     }
     /// 🔁️ Builds a `StepSnapshot` from a generic Part-21 graph (e.g. one built by
     /// `engine::brep::brep_mesh_to_part21` or hand-assembled in a test).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_part21_document(doc: &Part21Document) -> Self {
         let (header, entities) = step_snapshot_from_part21(doc);
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities }

@@ -1,8 +1,8 @@
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
-import { semioSchemaAjvV1 } from "../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 const source=readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"),vectors=JSON.parse(source),schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));
 /** 🧮️ Portable five-axis admission law is checked independently by SQLite rather than native authority emulation. */
 test("original factory schema and each physical-axis decision agree with independent SQLite",()=>{

@@ -39,19 +39,14 @@ export async function registerShardLossAndBootTests(vitest: PluginRuntimeVitest,
         rememberInstanceForRecovery({ pluginId: "procedural", instanceId: 1, actorId: "procedural#1", release: () => released.push("procedural#1") });
         rememberInstanceForRecovery({ pluginId: "other", instanceId: 4, actorId: "other#4", release: () => released.push("other#4") });
         try {
-          // 🪪️ `flow-extension-brep#request` is an extension's REQUEST actor: it owns no app instance,
-          // so it is restored and contributes nothing to announce.
           handlePluginShardLost(0, ["procedural#1", "flow-extension-brep#request"]);
           expect(released).toEqual(["procedural#1"]);
           expect(announced).toHaveLength(1);
           expect(announced[0]?.shardIndex).toBe(0);
           expect(announced[0]?.lost).toEqual([{ pluginId: "procedural", instanceId: 1, actorId: "procedural#1" }]);
-          // 🧹️ Retiring is idempotent: a second loss of the same actor announces nothing, because the
-          // instance is already gone.
           handlePluginShardLost(0, ["procedural#1"]);
           expect(released).toEqual(["procedural#1"]);
           expect(announced).toHaveLength(1);
-          // 🧹️ An instance that closed normally is forgotten, so its later shard loss is silent too.
           forgetInstanceForRecovery("other#4");
           handlePluginShardLost(1, ["other#4"]);
           expect(released).toEqual(["procedural#1"]);
@@ -222,7 +217,7 @@ export async function registerShardLossAndBootTests(vitest: PluginRuntimeVitest,
         const started: string[] = [];
         const loadModule = (pluginId: string): Promise<PluginWasmHandle> => {
           started.push(pluginId);
-          if (pluginId === "a") controller.abort(); // 🎯️ abort while level 0 ("a") is already in flight.
+          if (pluginId === "a") controller.abort();
           return Promise.resolve(fakeHandle(pluginId, [], []));
         };
         const entries: PluginRegistryEntry[] = [
@@ -230,7 +225,6 @@ export async function registerShardLossAndBootTests(vitest: PluginRuntimeVitest,
           { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [{ pluginId: "a" }] },
         ];
         const result = await loadPluginModulesInDependencyOrder(entries, { loadModule, signal: controller.signal });
-        // "a" (already in flight when abort fired) settles normally; "b" (level 1, not yet started) never starts.
         expect(started).toEqual(["a"]);
         expect(result.handles.map((handle) => handle.pluginId)).toEqual(["a"]);
         expect(result.loadFailures.some((failure) => failure.pluginId === "b")).toBe(true);

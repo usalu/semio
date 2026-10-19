@@ -180,12 +180,10 @@ pub struct PdfInfoDiff {
 }
 
 impl PdfInfoDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self == &PdfInfoDiff::default()
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &PdfInfo) -> PdfInfo {
         let mut next = base.clone();
         apply_tri(&mut next.title, &self.title);
@@ -204,7 +202,6 @@ impl PdfInfoDiff {
     }
 
     /// ↩️ The negative patch: every field this one names is set back to what `base` holds.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &PdfInfo) -> Self {
         Self {
             title: self.title.as_ref().map(|_| PdfSet::from_option(&base.title)),
@@ -221,7 +218,6 @@ impl PdfInfoDiff {
     }
 
     /// ➕️ Sequential coalesce: a later write of a field wins.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn absorb(&mut self, other: Self) {
         macro_rules! later {
             ($($field:ident),*) => {
@@ -263,7 +259,6 @@ pub struct PdfPagesDiff {
 }
 
 impl PdfPagesDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub(super) fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }

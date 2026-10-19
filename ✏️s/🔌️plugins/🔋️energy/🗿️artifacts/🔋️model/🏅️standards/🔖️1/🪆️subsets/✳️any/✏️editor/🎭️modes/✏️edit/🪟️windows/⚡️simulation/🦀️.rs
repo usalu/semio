@@ -91,11 +91,6 @@ pub fn definition() -> WindowKindDefinition {
         surface_kind: SurfaceKind::BlockList,
         icon_id: "activity".into(),
         options: WindowOptions::default(),
-        // 🔍️ DELIBERATELY EMPTY. These three verbs are declared APP-level in
-        // `semio_s_artifact_energy_model_editor_edit::window_shared_action_definitions`, because an action listed on a
-        // window kind becomes that window's ALONE (`build_definition`'s `explicitly_owned_action_ids`)
-        // and the inspector's result-field select — and the `mod+shift+*` keybindings — dispatch in
-        // whatever window happens to be active.
         actions: Vec::new(),
         utilities: Vec::new(),
         interactions: Vec::new(),

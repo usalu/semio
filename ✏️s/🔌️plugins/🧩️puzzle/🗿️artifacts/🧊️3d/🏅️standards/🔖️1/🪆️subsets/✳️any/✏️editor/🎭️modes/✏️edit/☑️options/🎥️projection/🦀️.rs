@@ -1,4 +1,4 @@
-//! the cardinal/free orientation and its parameters), delegated wholesale to the framework's shared
+//! 📐️ the cardinal/free orientation and its parameters), delegated wholesale to the framework's shared
 //! 🎥️ Edit-mode window option — the world projection picker (orthographic/one-two-three-point plus
 //! `world3d_projection_measures` builder. Shared by every window instance of the one puzzle3d window
 //! kind; each instance keeps its own `Puzzle3dCamera::projection` (see `🦀️config.rs`).

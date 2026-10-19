@@ -325,7 +325,6 @@ fn binomial_sample_mean_within_band() {
 fn multinomial_pmf_matches_hand_computation() {
     let m = Multinomial::new(4, vec![0.2, 0.3, 0.5]).unwrap();
     let counts = [1u64, 1, 2];
-    // 4! / (1! 1! 2!) * 0.2^1 * 0.3^1 * 0.5^2 = 12 * 0.2 * 0.3 * 0.25 = 0.18
     let expected = 0.18;
     assert!((m.pmf(&counts) - expected).abs() < 1e-9, "pmf={}", m.pmf(&counts));
 }

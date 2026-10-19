@@ -79,7 +79,6 @@ pub struct GltfDiff {
 }
 
 impl GltfDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.asset.as_ref().is_none_or(GltfAssetDiff::is_empty)
             && self.scene.is_none()

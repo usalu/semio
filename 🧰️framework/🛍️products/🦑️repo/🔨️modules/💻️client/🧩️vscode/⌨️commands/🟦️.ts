@@ -14,7 +14,7 @@ import { filterProvider, type FilterTreeDataProvider, loadAvailableFilterValues,
 
 // #region 📜️Activation
 /**
- * registerCommands holds the data fields for a registerCommands record.
+ * 🎮️ registerCommands holds the data fields for a registerCommands record.
  **/
 export function registerCommands(context: vscode.ExtensionContext): void {
   const registered = new Set<string>();

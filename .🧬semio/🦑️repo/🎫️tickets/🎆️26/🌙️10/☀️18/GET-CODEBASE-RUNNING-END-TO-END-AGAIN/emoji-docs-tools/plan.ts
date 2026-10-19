@@ -1,0 +1,144 @@
+import { blocksOf, LEAD, type Block } from "./docs.ts";
+import { choose, declName, dress, norm } from "./pick.ts";
+import { readdirSync } from "node:fs";
+import { dirname, basename, extname } from "node:path";
+
+const root = "/Users/ueli/Documents/semio";
+const GEN = /(@generated|Generated (by|from)|DO NOT EDIT|do not edit|auto-?generated)/;
+const CP1252: Record<number, number> = { 0x20ac: 0x80, 0x201a: 0x82, 0x0192: 0x83, 0x201e: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02c6: 0x88, 0x2030: 0x89, 0x0160: 0x8a, 0x2039: 0x8b, 0x0152: 0x8c, 0x017d: 0x8e, 0x2018: 0x91, 0x2019: 0x92, 0x201c: 0x93, 0x201d: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02dc: 0x98, 0x2122: 0x99, 0x0161: 0x9a, 0x203a: 0x9b, 0x0153: 0x9c, 0x017e: 0x9e, 0x0178: 0x9f };
+
+export type Edit = { at: number; remove: number; insert: string; line: number; emoji: string; how: string; kind: string; head: string; name: string };
+
+export function demojibake(first: string): { len: number; text: string } | undefined {
+  const m = first.match(/^[\u00c2-\u00f4][\u0080-\u00ff\u0152\u0153\u0160\u0161\u0178\u017d\u017e\u0192\u02c6\u02dc\u2013\u2014\u2018-\u201e\u2020-\u2022\u2026\u2030\u2039\u203a\u20ac\u2122]*/);
+  if (!m) return undefined;
+  const bytes: number[] = [];
+  for (const ch of m[0]) { const c = ch.codePointAt(0)!; if (c <= 0xff) bytes.push(c); else if (CP1252[c] !== undefined) bytes.push(CP1252[c]); else return undefined; }
+  for (let cut = bytes.length; cut >= 3; cut--) {
+    try {
+      const out = new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes.slice(0, cut)));
+      if (LEAD.test(out)) return { len: cut, text: out };
+    } catch {}
+  }
+  return undefined;
+}
+
+const moduleCache = new Map<string, Set<string>>();
+export function moduleUsedOf(dir: string, self: string): Set<string> {
+  const key = dir + "|" + self;
+  const hit = moduleCache.get(key);
+  if (hit) return hit;
+  const set = new Set<string>();
+  try {
+    for (const f of readdirSync(`${root}/${dir}`)) {
+      if (!/\.(rs|ts|tsx|mjs|js)$/.test(f) || `${dir}/${f}` === self) continue;
+      try {
+        const t = require("node:fs").readFileSync(`${root}/${dir}/${f}`, "utf8");
+        if (t.length > 400000) continue;
+        for (const b of blocksOf(f, t)) if (b.startEmoji) set.add(norm(b.startEmoji));
+      } catch {}
+    }
+  } catch {}
+  moduleCache.set(dir + "|" + self, set);
+  return set;
+}
+
+function dirLabel(path: string): string {
+  const parts = path.split("/");
+  const segs = parts.slice(0, -1).slice(-2);
+  const last = parts[parts.length - 1];
+  const stem = basename(last, extname(last));
+  return [...segs, stem].map((s) => s.replace(/^[^\p{L}\p{N}]+/u, "").replace(/[^\p{L}\p{N}]+/gu, " ")).join(" ");
+}
+
+export function planFile(path: string, text: string, opts: { skipGenerated: boolean } = { skipGenerated: true }): { edits: Edit[]; skipped: Record<string, number>; generated: boolean } {
+  const skipped: Record<string, number> = {};
+  const head12 = text.split("\n", 12).join("\n");
+  if (opts.skipGenerated && GEN.test(head12)) {
+    const bl = blocksOf(path, text).filter((b) => !b.startEmoji);
+    if (bl.length) skipped.generated = bl.length;
+    return { edits: [], skipped, generated: bl.length > 0 };
+  }
+  const blocks = blocksOf(path, text);
+  const used = new Set<string>();
+  for (const b of blocks) if (b.startEmoji) used.add(norm(b.startEmoji));
+  for (const b of blocks) { const m = b.first.match(/^@emoji\s+(\p{Extended_Pictographic}[️]?)/u); if (m) used.add(norm(m[1])); }
+  const dir = dirname(path);
+  const mod = () => moduleUsedOf(dir, path);
+  const label = dirLabel(path);
+  const edits: Edit[] = [];
+  for (const b of blocks) {
+    if (b.startEmoji) continue;
+    const first = b.first;
+    const base = { line: b.line, head: b.head.slice(0, 100) };
+    const name = declName(b.decl);
+    const moduleLevel = b.kind === "rs" ? b.decl.startsWith("use ") || b.decl === "" || b.line <= 3 || /^(?:use|mod|import|\}|pub\s+use)\b/.test(b.decl) : b.line <= 3 || /^import\b/.test(b.decl);
+    const pickFor = (tag: string, h: string) => choose({ name, head: h, moduleDir: label, moduleLevel, tag }, used, mod());
+    if (/^@emoji(\s|$)/.test(first)) {
+      const rest = first.slice(6).trim();
+      if (!rest) { skipped.emojiTagEmpty = (skipped.emojiTagEmpty ?? 0) + 1; continue; }
+      const absorbed = LEAD.test(rest);
+      const sp = b.pad === "after" ? 0 : 0;
+      const at = b.insertAt;
+      if (text.slice(at, at + 7) !== "@emoji ") { skipped.emojiTagLayout = (skipped.emojiTagLayout ?? 0) + 1; continue; }
+      if (absorbed) { edits.push({ ...base, at, remove: 7, insert: "", emoji: "", how: "retag", kind: b.kind, name }); void sp; continue; }
+      const p = pickFor("", rest);
+      used.add(p.emoji);
+      edits.push({ ...base, at, remove: 7, insert: dress(p.emoji) + " ", emoji: p.emoji, how: "retag+" + p.how, kind: b.kind, name });
+      continue;
+    }
+    const tagM = first.match(/^@(\w+)/);
+    if (tagM) {
+      if (!["state", "derived", "module"].includes(tagM[1])) { skipped["tag@" + tagM[1]] = (skipped["tag@" + tagM[1]] ?? 0) + 1; continue; }
+    } else if (b.skip) { skipped[b.skip] = (skipped[b.skip] ?? 0) + 1; continue; }
+    const moji = demojibake(first);
+    if (moji) {
+      const rel = text.indexOf(first.slice(0, 8), b.insertAt - 1);
+      void rel;
+      const at = b.insertAt;
+      if (text.slice(at, at + moji.len) !== first.slice(0, moji.len)) { skipped.mojibakeLayout = (skipped.mojibakeLayout ?? 0) + 1; continue; }
+      const fixed = moji.text.match(LEAD)![0];
+      used.add(norm(fixed));
+      edits.push({ ...base, at, remove: moji.len, insert: fixed, emoji: fixed, how: "demojibake", kind: b.kind, name });
+      continue;
+    }
+    const esc = first.match(/^(?:\\u\{[0-9a-fA-F]+\}|\\u[0-9a-fA-F]{4}|\uFE0F)+/);
+    if (esc) {
+      let decoded = "";
+      try {
+        decoded = esc[0].replace(/\\u\{([0-9a-fA-F]+)\}/g, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+      } catch {}
+      const lead = decoded.match(LEAD);
+      const at = b.insertAt;
+      if (lead && text.slice(at, at + esc[0].length) === esc[0]) {
+        used.add(norm(lead[0]));
+        edits.push({ ...base, at, remove: esc[0].length, insert: dress(lead[0]), emoji: lead[0], how: "unescape", kind: b.kind, name });
+        continue;
+      }
+    }
+    const corrupt = first.match(/^[️�-‍]+/);
+    if (corrupt) {
+      const at = b.insertAt;
+      if (text.slice(at, at + corrupt[0].length) === corrupt[0]) {
+        const p = pickFor("", first.slice(corrupt[0].length));
+        used.add(p.emoji);
+        edits.push({ ...base, at, remove: corrupt[0].length, insert: dress(p.emoji), emoji: p.emoji, how: "repair+" + p.how, kind: b.kind, name });
+        continue;
+      }
+    }
+    if (/^[^\x00-\x7f]/u.test(first) && !/^[À-ÿ]/.test(first) && /^.[️]?(\s|$)/u.test(first)) { skipped.symbolLed = (skipped.symbolLed ?? 0) + 1; continue; }
+    if (/^[^\x00-\x7f]/u.test(first) && /^[\p{S}\p{So}\p{Sm}]/u.test(first) && !LEAD.test(first)) { skipped.symbolLed = (skipped.symbolLed ?? 0) + 1; continue; }
+    const p = pickFor(tagM ? tagM[0] : "", tagM ? "" : first);
+    used.add(p.emoji);
+    const em = dress(p.emoji);
+    edits.push({ ...base, at: b.insertAt, remove: 0, insert: b.pad === "both" ? ` ${em} ` : `${em} `, emoji: p.emoji, how: p.how, kind: b.kind, name });
+  }
+  return { edits, skipped, generated: false };
+}
+
+export function applyEdits(text: string, edits: Edit[]): string {
+  const sorted = [...edits].sort((a, b) => b.at - a.at);
+  let out = text;
+  for (const e of sorted) out = out.slice(0, e.at) + e.insert + out.slice(e.at + e.remove);
+  return out;
+}

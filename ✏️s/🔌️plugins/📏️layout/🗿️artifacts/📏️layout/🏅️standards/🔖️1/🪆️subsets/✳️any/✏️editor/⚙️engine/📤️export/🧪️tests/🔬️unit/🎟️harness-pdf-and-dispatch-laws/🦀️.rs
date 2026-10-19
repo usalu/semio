@@ -102,7 +102,6 @@ fn pdf_export_carries_every_page_with_the_embedded_font_and_shaped_glyphs() {
     assert_eq!(all.filename, "Demo.pdf");
     assert_eq!(all.mime_type, "application/pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
-    // 🔬️ `SEMIO_LAYOUT_PDF_DUMP=<path>` hands the bytes to an external reader (the ticket's `🐍️validate-pdf.py`).
     if let Ok(path) = std::env::var("SEMIO_LAYOUT_PDF_DUMP") {
         std::fs::write(path, &bytes).expect("pdf dump");
     }
@@ -188,7 +187,6 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         bus.register(LayoutExportJobFactory::new("layout-retained-test")).expect("retained factory registration");
         assert!(bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES + 1).is_err());
         let (admission, mut input) = bus.begin_exact_wire("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES).expect("maximum extent before encoding");
-        // 🔐️ The wire is the command's `OpBinary` encoding, exactly as the host sends it.
         let command = match raw_verb {
             "exportSvg" => semio_s_artifact_layout_layout_editor::LayoutCommand::ExportSvg(semio_s_artifact_layout_layout_editor_commands::export_svg::ExportSvg { page_id: None }),
             "exportPdf" => semio_s_artifact_layout_layout_editor::LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }),

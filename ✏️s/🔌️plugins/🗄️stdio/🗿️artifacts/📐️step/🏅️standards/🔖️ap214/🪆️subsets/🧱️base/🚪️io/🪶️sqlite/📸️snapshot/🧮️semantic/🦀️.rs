@@ -2,7 +2,7 @@
 const TABLES:[(&str,usize);12]=[("step_aggregate_element",4),("step_argument",5),("step_author",4),("step_complex_type",4),("step_description",4),("step_document",3),("step_entity",5),("step_header",7),("step_organization",4),("step_schema_identifier",4),("step_typed_value",4),("step_value",10)];
 use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R};
-use semio_framework_value::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Part21 native role or exclusive forest differs from its authored fields")}
 fn sum(left:usize,right:usize)->Result<usize>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Part21 semantic extent overflow"))}

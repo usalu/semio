@@ -2,7 +2,8 @@
 use super::{RetainedDiffFragment,RetainedDiffOwner,RetainedDiffPreflightAdvance,RetainedDiffPreflightStep,retained_diff_birth_demand,begin_retained_diff,preflight_retained_diff,commit_retained_diff};
 use super::super::{binding_demand,retained_mutation_demand_fits};
 use super::super::super::{ApplyCapability,MutationMessage};
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,OriginalVectorConcat,snapshot_projection::{SnapshotProjection,ProjectionField},retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneSource,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, snapshot_projection::{SnapshotProjection, ProjectionField}, retained_clone::{RetainedCloneRef, RetainedCloneBinding, RetainedCloneSource, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value_persistent::original_vector_concat::OriginalVectorConcat;
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"ordered retained diff lost its original sequence frontier")}
 /// 🧳️ One sparse edit stays direct; longer sequences own every typed intermediate and diagnostic.
@@ -45,7 +46,7 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
    _=>return Err(invalid()),
   };Self::nested(demand)
  }
- pub fn preflight(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
+ pub fn preflight(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
   let demand=self.preflight_demand(diffs,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}
   let child_grant=Self::child_grant(grant);let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   match self.phase{

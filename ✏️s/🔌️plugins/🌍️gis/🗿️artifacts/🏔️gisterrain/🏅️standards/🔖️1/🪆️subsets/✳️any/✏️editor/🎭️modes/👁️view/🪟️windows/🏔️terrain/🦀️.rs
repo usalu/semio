@@ -83,17 +83,8 @@ pub fn render(document: &GisTerrainSnapshot, cfg: config::GisTerrainWindowConfig
         cfg.camera_json,
         "[]".into(),
         instances_json(&descriptor),
-        // 🕹️ Pin selection now lives in the framework-owned "features" interaction domain (ticket
-        // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM). `ArtifactEditor::render` carries no
-        // `InteractionView` (a known SDK gap — see `w3c-summary.md`'s flagged `⚙️EngineCanvas`/
-        // `MapHost::sync_interaction` follow-up), so this scene payload can no longer embed a live
-        // selection; every not-yet-migrated `world3d_selection_json` call site in this repo already
-        // passes an empty selection for the same reason.
         world3d_selection_json("rectangle", &[], None),
     );
-    // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): this window binds the "features"
-    // domain (see `create_gis3d_app`'s `.window_kind_interactions`) — a plain pick/hover on this
-    // surface targets its single `"pin"` granularity, not the OS's own bare `world` board domain.
     scene.domain_id = Some("features".into());
     scene.domain_granularity_id = Some("pin".into());
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));

@@ -29,8 +29,8 @@ async fn deserialize_exposes_real_sample_timing_as_a_step_scalar_channel() {
     assert_eq!(ch.target.node, "track-1");
     assert_eq!(ch.interpolation, AnimInterpolation::Step);
     assert_eq!(ch.keyframes.len(), 2);
-    assert_eq!(ch.keyframes[0].t, 0.0); // dts=0 / timescale 30
-    assert_eq!(ch.keyframes[1].t, 1.0); // dts=30 / timescale 30 = 1s
+    assert_eq!(ch.keyframes[0].t, 0.0);
+    assert_eq!(ch.keyframes[1].t, 1.0);
     assert_eq!(ch.keyframes[0].value, AnimValue::Scalar { value: 0.0 });
     assert_eq!(ch.keyframes[1].value, AnimValue::Scalar { value: 1.0 });
 }

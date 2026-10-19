@@ -28,7 +28,7 @@ impl ContentRequestKeyCursor{
  pub fn key(&self)->Option<ContentRequestKey>{self.key}
 }
 
-struct ConsumerText{original:String,length:usize,verified:bool,complete:bool,retiring:bool,comparison:crate::ExactKeyCursor}
+struct ConsumerText{original:String,length:usize,verified:bool,complete:bool,retiring:bool,comparison:crate::exact_key_lookup::ExactKeyCursor}
 
 /// 📏️ Original text preparation quotes every independent work currency before custody changes.
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
@@ -55,7 +55,7 @@ pub struct RequestSelectorStep{pub key:Option<ContentRequestKey>,pub progress:Re
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum RequestLookupOutcome{Searching,Matched,Missing}
 #[derive(Clone,Copy)]
-struct SourceLookup{version:RequestSourceVersion,cursor:crate::ExactKeyCursor}
+struct SourceLookup{version:RequestSourceVersion,cursor:crate::exact_key_lookup::ExactKeyCursor}
 /// 🧾️ Original request-source lookup charges each comparison chunk and retains no copied identifiers.
 #[derive(Clone,Copy,Debug)]
 pub struct RequestLookupStep{pub position:usize,pub outcome:RequestLookupOutcome,pub progress:RetainedCloneProgress}
@@ -110,12 +110,12 @@ impl<K:Copy+Eq,W:Copy+Eq,const R:usize,const C:usize> FixedRequestOwners<K,W,R,C
   let mut text=None;let mut step=Self::prepare_text(&mut text,original,grant)?;step.progress.copied_bytes=demand.copy_bytes;let Some(owner)=self.owners.claim((scope,key))else{return Err("request-owner-capacity");};let index=owner.index();self.keys[index]=Some((scope,key));self.request_names[index]=text;Ok(step)
  }
  fn validate_text(scope:u32,original:&str)->Result<(),&'static str>{if scope==0||original.is_empty()||original.len()>65_536{Err("request-original-identity-limit")}else{Ok(())}}
- fn text_demand(text:Option<&ConsumerText>,length:usize)->RequestTextDemand{match text{None=>RequestTextDemand{items:1,capacity_bytes:length,depth:1,..Default::default()},Some(text)=>RequestTextDemand{items:1,copy_bytes:if text.complete{crate::ExactKeyCursor::fixed_copy_bytes()+2}else{4.min(length.saturating_sub(text.original.len()))},depth:1,..Default::default()}}}
+ fn text_demand(text:Option<&ConsumerText>,length:usize)->RequestTextDemand{match text{None=>RequestTextDemand{items:1,capacity_bytes:length,depth:1,..Default::default()},Some(text)=>RequestTextDemand{items:1,copy_bytes:if text.complete{crate::exact_key_lookup::ExactKeyCursor::fixed_copy_bytes()+2}else{4.min(length.saturating_sub(text.original.len()))},depth:1,..Default::default()}}}
  fn prepare_text(target:&mut Option<ConsumerText>,original:&str,grant:RetainedCloneGrant)->Result<RequestTextStep,&'static str>{
   let demand=Self::text_demand(target.as_ref(),original.len());if !demand.admits(grant){return Ok(Default::default());}
-  let Some(text)=target.as_mut()else{let mut stored=String::new();stored.try_reserve_exact(original.len()).map_err(|_|"request-original-allocation")?;let bytes=stored.capacity();*target=Some(ConsumerText{original:stored,length:original.len(),verified:false,complete:false,retiring:false,comparison:crate::ExactKeyCursor::new()});return Ok(RequestTextStep{fault:None,ready:false,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}});};
+  let Some(text)=target.as_mut()else{let mut stored=String::new();stored.try_reserve_exact(original.len()).map_err(|_|"request-original-allocation")?;let bytes=stored.capacity();*target=Some(ConsumerText{original:stored,length:original.len(),verified:false,complete:false,retiring:false,comparison:crate::exact_key_lookup::ExactKeyCursor::new()});return Ok(RequestTextStep{fault:None,ready:false,progress:RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}});};
   if text.retiring||text.length!=original.len(){return Err("request-original-selector-collision");}
-  if text.complete{if text.verified{text.comparison=crate::ExactKeyCursor::new();}let step=text.comparison.advance(text.original.as_bytes(),Some(original.as_bytes()),grant).map_err(|_|"request-original-comparison-invariant")?;if text.comparison.next_index()!=0{return Ok(RequestTextStep{fault:Some("request-original-selector-collision"),ready:false,progress:step.progress()});}text.verified=text.comparison.found()==Some(0);return Ok(RequestTextStep{fault:None,ready:text.verified,progress:step.progress()});}
+  if text.complete{if text.verified{text.comparison=crate::exact_key_lookup::ExactKeyCursor::new();}let step=text.comparison.advance(text.original.as_bytes(),Some(original.as_bytes()),grant).map_err(|_|"request-original-comparison-invariant")?;if text.comparison.next_index()!=0{return Ok(RequestTextStep{fault:Some("request-original-selector-collision"),ready:false,progress:step.progress()});}text.verified=text.comparison.found()==Some(0);return Ok(RequestTextStep{fault:None,ready:text.verified,progress:step.progress()});}
   let start=text.original.len();let mut end=original.len().min(start.saturating_add(grant.maximum_copy_bytes));while end>start&&!original.is_char_boundary(end){end-=1;}if end==start{return Ok(Default::default());}text.original.push_str(&original[start..end]);text.complete=end==original.len();text.verified=text.complete;Ok(RequestTextStep{fault:None,ready:text.complete,progress:RetainedCloneProgress{copied_items:1,copied_bytes:end-start,..Default::default()}})
  }
  /// 📐️ The next original source turn can be admitted without mutating custody.
@@ -126,10 +126,10 @@ impl<K:Copy+Eq,W:Copy+Eq,const R:usize,const C:usize> FixedRequestOwners<K,W,R,C
  pub fn request_name(&self,owner:FixedKeySlot)->Option<&str>{self.key(owner)?;self.request_names[owner.index()].as_ref().filter(|text|text.complete).map(|text|text.original.as_str())}
  /// 🧭️ A new original source revision cannot reuse a prior snapshot's numerical position.
  pub fn source_lookup(&self,owner:FixedKeySlot,version:RequestSourceVersion)->Option<(usize,RequestLookupOutcome)>{self.key(owner)?;let lookup=self.lookups[owner.index()]?;(lookup.version==version).then_some((lookup.cursor.next_index(),Self::lookup_outcome(lookup.cursor)))}
- fn lookup_outcome(cursor:crate::ExactKeyCursor)->RequestLookupOutcome{if !cursor.ready(){RequestLookupOutcome::Searching}else if cursor.found().is_some(){RequestLookupOutcome::Matched}else{RequestLookupOutcome::Missing}}
+ fn lookup_outcome(cursor:crate::exact_key_lookup::ExactKeyCursor)->RequestLookupOutcome{if !cursor.ready(){RequestLookupOutcome::Searching}else if cursor.found().is_some(){RequestLookupOutcome::Matched}else{RequestLookupOutcome::Missing}}
  /// 🔬️ The shared exact-key primitive advances against one original snapshot candidate under its manager's version.
  pub fn source_lookup_step(&mut self,owner:FixedKeySlot,version:RequestSourceVersion,candidate:Option<&str>,grant:RetainedCloneGrant)->Result<RequestLookupStep,&'static str>{
-  self.key(owner).ok_or("request-lookup-owner-missing")?;let previous=self.lookups[owner.index()];if previous.is_none_or(|lookup|lookup.version!=version){let bytes=std::mem::size_of::<SourceLookup>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(RequestLookupStep{position:0,outcome:RequestLookupOutcome::Searching,progress:Default::default()});}self.lookups[owner.index()]=Some(SourceLookup{version,cursor:crate::ExactKeyCursor::new()});return Ok(RequestLookupStep{position:0,outcome:RequestLookupOutcome::Searching,progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}});}
+  self.key(owner).ok_or("request-lookup-owner-missing")?;let previous=self.lookups[owner.index()];if previous.is_none_or(|lookup|lookup.version!=version){let bytes=std::mem::size_of::<SourceLookup>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(RequestLookupStep{position:0,outcome:RequestLookupOutcome::Searching,progress:Default::default()});}self.lookups[owner.index()]=Some(SourceLookup{version,cursor:crate::exact_key_lookup::ExactKeyCursor::new()});return Ok(RequestLookupStep{position:0,outcome:RequestLookupOutcome::Searching,progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}});}
   let original=self.request_names[owner.index()].as_ref().filter(|text|text.complete).ok_or("request-original-preparation-pending")?.original.as_bytes();let lookup=self.lookups[owner.index()].as_mut().unwrap();let step=lookup.cursor.advance(original,candidate.map(str::as_bytes),grant).map_err(|_|"request-source-lookup-invariant")?;Ok(RequestLookupStep{position:lookup.cursor.next_index(),outcome:Self::lookup_outcome(lookup.cursor),progress:step.progress()})
  }
  /// ♻️ The original source allocation and selector closure are quoted independently.

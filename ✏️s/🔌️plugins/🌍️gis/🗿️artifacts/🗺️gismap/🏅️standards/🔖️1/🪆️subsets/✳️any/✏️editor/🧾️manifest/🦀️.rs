@@ -65,9 +65,6 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Verfolgen"])
             .artifact_kind(artifact_kind())
-            // 🔌️ Typed workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) — same
-            // constructor fns `gis2d_io()` embeds, so `AppIo.all_ports()` and these declarations can
-            // never drift apart. `map:out`'s `2d.map` kind is declared above; `features:in` pins no kind.
             .media_input(gis2d_features_in_port())
             .media_output(gis2d_map_out_port())
             .icon_id("gis2d")
@@ -78,13 +75,6 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 🕹️ The framework-owned "features" interaction domain (ticket
-            // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document tree's
-            // layer selection (granularity "layer") and the map's feature pick/marquee selection
-            // (granularity "feature"); auto-injects interactionSelect/interactionHover/clearSelection/
-            // selectAll/setSelectionMode/setInteractionGranularity, replacing every deleted bespoke
-            // setSelection/setFeatureSelection/setHover/setSelectionMethod/setSelectionMode/
-            // clearSelection/selectAll action below.
             .interaction(InteractionDefinition {
                 id: "features".into(),
                 label: LocalizedLabel::native("Features", "Objekte"),
@@ -103,26 +93,16 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
                 },
             })
             .window_kind_interactions(map::GIS2D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
-            // ✏️ Mutation actions — flow through the document store with true inverses. `setActiveExample`
-            // replaces document content by diffing every collection into batched create/delete/
-            // replace-data operations (never a whole-document snapshot swap — that vocabulary is
-            // retired by the taxonomy), so it is a Mutation, not a View action.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             .action_destructive("setActiveExample")
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
             .mutation("patchRoute", LocalizedLabel::native("Patch Route", "Route aktualisieren"))
-            // 🗺️ Per-feature editing vocabulary — the map editor's own add / move / rename / delete,
-            // each fully argument-staged so the Actions rail can dispatch it, and each routed through
-            // the collection's authored create/replace-data/delete leaves, so undo and redo are the
-            // leaves' own inverses rather than a bespoke history.
             .mutation("addFeature", LocalizedLabel::native("Add Feature", "Objekt hinzufügen"))
             .mutation("moveFeature", LocalizedLabel::native("Move Feature", "Objekt verschieben"))
             .mutation("renameFeature", LocalizedLabel::native("Rename Feature", "Objekt umbenennen"))
             .mutation("deleteFeature", LocalizedLabel::native("Delete Feature", "Objekt löschen"))
             .action_destructive("deleteFeature")
-            // 👁️ View actions — mutate ephemeral config state (camera, render config, layer
-            // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
             .action_with(ActionDefinition { category: Some("view".into()), ..ActionDefinition::bounded_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View) })
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
@@ -131,11 +111,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
             .action_with(ActionDefinition { category: Some("view".into()), ..ActionDefinition::bounded_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View) })
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
-            // 🌐️ Shell action — opens the picked feature's source URL through the host.
             .action_with(ActionDefinition { category: Some("open".into()), ..ActionDefinition::new("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell, "hard-drive") })
-            // 💡️ Shell action — asks the host to open its own ephemeral inference port and offer a
-            // reviewable bounds region. It never writes the document; only the hub's server-stamped
-            // approval command can.
             .action_with(ActionDefinition { category: Some("inference".into()), ..ActionDefinition::bounded_catalog("proposeBoundsRegion", LocalizedLabel::native("Propose Bounds Region", "Begrenzungsregion vorschlagen"), ActionKind::Shell) })
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchPositions", InteractiveJobClassification::Migrated)
@@ -155,8 +131,6 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setLayerStrokeScale", InteractiveJobClassification::Migrated)
             .action_interactive_job("openSource", InteractiveJobClassification::Migrated)
             .action_interactive_job("proposeBoundsRegion", InteractiveJobClassification::Migrated)
-            // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
-            // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
             ])
@@ -204,10 +178,6 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .io(gis2d_io())
-            // 🚧️ SDK GAP (contract §2.4): `EditorBuilder::build_definition` has no `.example(...)`/
-            // `.workflow(...)`. The subset's own `📚️examples/*` facets are the replacement surface —
-            // `example::example_catalogue()` reads them, and the `setActiveExample` arg options above
-            // are projected from it, so the palette and `set_active_example` can never drift apart.
             .interactive_jobs(InteractiveJobClassification::Migrated)
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole map with one of the plugin's bundled map examples, by example id.", "Ersetzt die gesamte Karte durch eines der mitgelieferten Kartenbeispiele, anhand der Beispiel-Id."))
             .action_describe("patchPositions", LocalizedLabel::native("Replaces the coordinates of the map's features from a JSON position list, writing only the positions that change.", "Ersetzt die Koordinaten der Kartenobjekte aus einer JSON-Positionsliste und schreibt nur die sich ändernden Positionen."))

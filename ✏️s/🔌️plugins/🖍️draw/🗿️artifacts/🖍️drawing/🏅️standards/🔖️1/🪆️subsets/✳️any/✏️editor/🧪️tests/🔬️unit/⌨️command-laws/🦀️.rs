@@ -66,8 +66,6 @@ async fn drawing_command_op_text_round_trips_every_variant() {
     for command in every_command() {
         store::os_store::test_support::assert_op_line_round_trip(&command);
     }
-    // The `None`-field variant missing from `every_command` (kept distinct from its `Some`
-    // counterpart above, matching the pre-migration wire-baseline capture).
     store::os_store::test_support::assert_op_line_round_trip(&DrawingCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
 }
 

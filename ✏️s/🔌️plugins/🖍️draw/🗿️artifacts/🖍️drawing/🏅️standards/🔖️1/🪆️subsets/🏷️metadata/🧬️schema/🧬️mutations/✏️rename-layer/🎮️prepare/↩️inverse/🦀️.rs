@@ -4,7 +4,8 @@ use super::owned::{DrawingOwnedRenamePlan, DrawingOwnedRenamePreparationCursor, 
 use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer;
 use crate::DrawingMutation;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
-use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection}};
+use semio_framework_value::{ValueError, ValueRefusalKind, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection}};
+use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct DrawingRenameInverseCursor { state: ManuallyDrop<DrawingRenameInverseState> }

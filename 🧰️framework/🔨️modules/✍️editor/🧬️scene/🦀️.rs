@@ -1,6 +1,7 @@
 //! 🎬️ Typed Editor updates use one declared General intrinsic frame and owned projection.
 use super::{ByteRangeJson, DiagnosticJson, EditorError, EditorErrorKind, EditorSettingsJson, PlaceholderJson, SelectableSpanJson, SemanticTokenJson};
-use semio_framework_value::{FromValue, NativeDecodeControl};
+use semio_framework_value::FromValue;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_derive::ToValue;
 pub use pack::intrinsic::IntrinsicFormat;
 pub use pack::record::DecodeOptions;

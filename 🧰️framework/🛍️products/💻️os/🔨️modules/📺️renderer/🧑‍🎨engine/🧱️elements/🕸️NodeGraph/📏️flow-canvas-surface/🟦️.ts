@@ -38,8 +38,6 @@ export function useFlowCanvasSurface(core: FlowCoreAfterFlowOverlayAndRender) {
     if (!retired?.presentsOnGpu) return;
     attachedSurfaceRef.current = null;
     surfaceReadyRef.current = false;
-    // 🚪️ `"cancelled"`, not `"device-lost"`: the latter parks the surface as recoverable and keeps it
-    // occupying the session's single slot, so the successor's `attachSurface` would be refused.
     if (session) observeFlowTask(session, "surfaceStatus:unpresentable", session.surfaceStatus({ surface: retired.surface, surfaceGeneration: retired.surfaceGeneration, status: "cancelled" }));
     setCanvasGeneration((generation) => generation + 1);
   }, [surfaceId]);

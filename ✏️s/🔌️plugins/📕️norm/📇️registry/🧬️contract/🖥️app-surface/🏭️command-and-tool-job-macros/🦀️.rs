@@ -22,14 +22,6 @@
 /// `set_snapshot`) resolve at the CALL site, which every norm editor already imports.
 #[macro_export]
 macro_rules! norm_command_from_action {
-    // 📝️ The `text` shape. Thirteen norm editors declare `ReplaceSnapshot { snapshot: XSnapshot }`
-    // and decode the shell's camelCase JSON into it; `⚖️en1990` and `⚡️din18599` declare
-    // `ReplaceSnapshot { text: String }` instead, because their snapshot types stopped implementing
-    // `dsl::DslField` when `q_k`/`climate` became composed `ArtifactChild<S>` slots, so their payload
-    // carries the artifact's own `.en1990`/`.din18599` DSL text on one op-text line. The ARGUMENT is
-    // the same for all fifteen: `snapshot`, the document's camelCase JSON the manifest declares, decoded
-    // here with `$decode` and re-printed as the document's own escaped DSL text. This arm MUST precede
-    // the `$decode:path` arm — `text` would otherwise match `$decode:path` and expand into the wrong body.
     ($command:ident, text, $decode:path) => {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command,
         /// for the two editors whose `setSnapshot` payload carries DSL TEXT rather than a decoded

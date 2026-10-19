@@ -3,10 +3,10 @@ import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1}from"../�
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
-import {availableParallelism,constants,totalmem} from "node:os";
+import {availableParallelism,constants} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1,runOwnedCommand,OwnedCommandFailure,type OwnedCommandCaptureV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -14,7 +14,7 @@ import type {BuildMode} from "../../../../../../../🔨️modules/🏃️process
 import {withCompilerCapacityConsumptionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
 import {cargoArtifactArgumentsV1,cargoConfigurationArgumentsV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoRequestedProfileV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
-import {ADMISSION_POLICY_V1,buildSchedulerV1,readUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
+import {ADMISSION_POLICY_V1,admissionMemoryBytesV1,admissionMemoryShareV1,buildSchedulerV1,readUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
 import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
 import {memoryCountersV1,startTelemetrySamplerV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
@@ -116,8 +116,8 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
   type Execution=Readonly<{kind:"capture";result:OwnedCommandCaptureV1}>|Readonly<{kind:"stream";status:number}>;
   const execute=async(command:readonly string[],env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl):Promise<Execution>=>{
    const remaining=checkResourceLeaseControl(control);mark("child","begin");
-   if(options.output==="capture"){const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,env),output:options.limits});mark("child",result.status===0&&result.signal===null?"end":"error");return Object.freeze({kind:"capture",result});}
-   let status:number;try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptInvocationEnvironment(invocation,env),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}if(status===0)mark("child","end");return Object.freeze({kind:"stream",status});
+   if(options.output==="capture"){const result=await captureOwnedCommandResultV1("cargo",command,cwd,{control,env:scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined}),output:options.limits});mark("child",result.status===0&&result.signal===null?"end":"error");return Object.freeze({kind:"capture",result});}
+   let status:number;try{await runOwnedCommand("cargo",[...command],cwd,label,remaining===null?0:Math.floor(remaining),{env:scriptResourceProcessEnvironmentV1(control,scriptInvocationEnvironment(invocation,{...env,SEMIO_SCRIPT_POLICY:undefined})),signal:control.signal,onProgress:line=>{process.stderr.write(line+"\n");}});status=0;}catch(error){mark("child","error");if(!(error instanceof OwnedCommandFailure))throw error;status=error.outcome.status??128+(constants.signals[error.outcome.signal as keyof typeof constants.signals]??0);}if(status===0)mark("child","end");return Object.freeze({kind:"stream",status});
   };
   const consumeExecution=(execution:Execution,env:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,beforeConsume:(()=>void)|undefined,generatedFile:string|undefined):Promise<number|T>=>withRequestedIssuedResourceControlV1(control,0,async control=>{
    checkResourceLeaseControl(control);await store.storage.recheck();const success=execution.kind==="capture"?execution.result.status===0&&execution.result.signal===null:execution.status===0;if(success)beforeConsume?.();
@@ -133,7 +133,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
      const scheduler=(await buildSchedulerV1({cwd:workspace,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,environment:store.environment,control:cpuControl,storage:store.storage,sourceBoundary:store.sourceBoundary})).get("semio-build-scheduler")!,tokens=capacity.parallelism;mark("scheduler","ready");
      const history=await readUnitHistoryV1(unitHistoryPathV1(join(store.root,"components"))),jobserverDirectory=join(store.environment.TMPDIR!,policy.jobserverDirectoryPrefix+randomBytes(6).toString("hex")),jobserver=await createJobserverV1({version:1,tokens,style:defaultJobserverStyleV1()},jobserverDirectory);let jobserverFailed=false,jobserverFailure:unknown;
      try{
-      const broker=await startAdmissionBrokerV1({physicalBytes:ADMISSION_POLICY_V1.reserveBytes+Math.floor((totalmem()-ADMISSION_POLICY_V1.reserveBytes)*tokens/availableParallelism()),history});let previous:Readonly<{atMs:number;bytes:number}>|undefined,sampler:ReturnType<typeof startTelemetrySamplerV1>|undefined;let executionFailed=false,executionFailure:unknown;
+      const broker=await startAdmissionBrokerV1({physicalBytes:admissionMemoryShareV1(admissionMemoryBytesV1(),tokens,availableParallelism()),history});let previous:Readonly<{atMs:number;bytes:number}>|undefined,sampler:ReturnType<typeof startTelemetrySamplerV1>|undefined;let executionFailed=false,executionFailure:unknown;
       try{
       sampler=startTelemetrySamplerV1(cpuControl,async sampleControl=>{const counters=await memoryCountersV1(sampleControl),atMs=Date.now(),rate=previous&&counters.swappedOutBytes!==null?Math.max(0,(counters.swappedOutBytes-previous.bytes)*1000/Math.max(1,atMs-previous.atMs)):null;if(counters.swappedOutBytes!==null)previous={atMs,bytes:counters.swappedOutBytes};broker.observe({nonRustcBytes:0,swapOutBytesPerSecond:rate});},policy.swapSampleMilliseconds);
 

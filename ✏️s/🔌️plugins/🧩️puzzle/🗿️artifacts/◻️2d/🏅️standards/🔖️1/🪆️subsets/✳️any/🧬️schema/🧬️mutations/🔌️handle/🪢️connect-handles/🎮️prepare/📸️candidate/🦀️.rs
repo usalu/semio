@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::any::schema::mutations::ConnectHandles;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
 use super::edge::Puzzle2dConnectEdgeCursor;
-use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedListEditCursor, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value_persistent::list::PagedListEditCursor;
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dPreparationChild;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 

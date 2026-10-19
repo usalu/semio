@@ -2,7 +2,7 @@ const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 const emptyCatalogRows: PluginCatalogRowsV1 = { version: 1, targets: [], hosts: [], playgrounds: [] };
-import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
+import { shouldStartIntroduction } from "@semio-tech/framework/modules/ui/introduction";
 import bootLifecycle from "../🧫️fixtures/⏳️boot-lifecycle/🔣️.json";
 // @vitest-environment jsdom
 

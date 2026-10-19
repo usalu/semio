@@ -11,7 +11,9 @@ members = [
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪟️surfaces/📦️packages/🦀️rust",
   "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🪟️surfaces/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/♿️ua/🚪️io/💾️binary/🧬️mutations/🗑️remove-mark-info/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/📐️e/🧬️schema/🧬️mutations/🧽️remove-output-intent/🧪️tests/🔬️unit/📦️packages/🦀️rust",
@@ -159,3 +161,8 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+[workspace.dependencies.semio-s-artifact-stdio-pdf-snapshot-surfaces]
+path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🪟️surfaces/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pdf-diff-surfaces]
+path = "🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🪟️surfaces/📦️packages/🦀️rust"

@@ -40,7 +40,7 @@ async function storedNotice(device: Device): Promise<readonly string[]> {
 }
 
 /** 🔤️ What the screen in front words: the names of its actions, its headings, labels and column heads, in order. What
- * no language changes (numbers, symbols, the names of the languages themselves) is left out. The same four pet deeds
+ * no language changes (numbers, symbols, the names of the languages themselves) is left out. The same eight pet deeds
  * repeated for every member of the moving cast are read once. */
 async function wording(device: Device): Promise<readonly string[]> {
   const texts = await device.page.locator("#course-main, header, footer").evaluateAll((roots) =>

@@ -35,9 +35,9 @@ import {
   type PluginContextMenuRequest,
   type PluginContextMenuSurfaceTarget
 } from "@semio-tech/framework";
-import { openSurfaceContextMenu, useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
-import { parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
-import { createGraphSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { openSurfaceContextMenu, useMapContextMenuSpecs, useShellContextMenuFallback, type SurfaceContextMenuResult } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu";
+import { parseSelectionDomainsFromSession, selectionGroupsFromDomains, WindowInstanceIdContext } from "@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract";
+import { createGraphSession } from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
 import {
   DEFAULT_NODE_GRAPH_VIEWPORT,
   type FrameworkGraphSession,
@@ -120,24 +120,18 @@ export function WasmGraphSurface({
         dimmedIds: [],
         highlightIds: sceneRef.current.highlighted ?? [],
       });
-    } catch {
-      /* gpu not ready */
-    }
+    } catch {}
     setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
     setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.() ?? "rectangle"));
     try {
       const nextSliderJson = session.sliderOverlayStateJson();
       setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
-    } catch {
-      /* session not ready */
-    }
+    } catch {}
     setOverlaySize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
     try {
       container.setAttribute("data-viewport-camera-json", JSON.stringify(session.viewport()));
       container.setAttribute("data-session-selection-json", session.selectedNodeIdsJson());
-    } catch {
-      /* session not ready */
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -167,9 +161,7 @@ export function WasmGraphSurface({
       syncOptionalGraphCanvasTheme(sessionRef.current);
       try {
         sessionRef.current?.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      } catch {}
       paintOverlays();
     },
     true,
@@ -237,9 +229,7 @@ export function WasmGraphSurface({
       publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered);
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
-    } catch {
-      /* session not ready */
-    }
+    } catch {}
     paintOverlays();
   }, [dispatch, paintOverlays]);
 
@@ -308,9 +298,7 @@ export function WasmGraphSurface({
       try {
         const hovered = session.hoveredNodeId();
         publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, channel?.portId);
-      } catch {
-        /* session not ready */
-      }
+      } catch {}
       session.renderFrame();
       paintOverlays();
     },

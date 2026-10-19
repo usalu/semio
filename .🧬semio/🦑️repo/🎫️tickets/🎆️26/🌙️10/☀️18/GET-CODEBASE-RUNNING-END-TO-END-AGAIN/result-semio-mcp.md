@@ -1,0 +1,32 @@
+# Result semio-mcp (2026-10-19)
+
+## Root causes
+1. `semio` (CONNECTION_CLOSED): `.mcp.json` runs `bun ./📜️script.ts dev mcp stdio os …`, which called `ensureMcpBinary`: no staged `semio-os-mcp` exists (`🦀️rust/dist` absent), so the launcher ran `spawnSync bun repo run @semio-tech/framework-os-mcp-rs:build` (a cargo build, minutes to hours) BEFORE answering `initialize`. The client's connect timeout fired and the connection closed. Reproduced with `semio-mcp-tools/drive.ts`: `FAIL Error: timeout initialize`; stderr (`🗑️generated/semio-mcp-semio.log`, pre-fix run overwritten) showed "staging binary (no staged binary) … initialize waits for this stage". No stdout pollution, no crash, no protocol-version problem. (My reproduction briefly started that build; I killed it at once. No cargo ran afterwards.)
+2. `repo` (structuredContent null): Go `repositoryResult` does `json.Marshal(result.Data)`; a failing tool has nil `Data` so the bytes are `null`, and `json.RawMessage` with `omitempty` still emits `null`. Reproduced on the existing binary: `ticket_close` of a missing ticket returned `"structuredContent":null,"isError":true`. The `semio` Rust gateway had the same defect (`json!({"structuredContent": Option::None})` emits null).
+
+## Changes
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🚪️gateway/🟦️.ts` (new): `WarmMcpGateway` state machine + `serveWarmMcpGateway`. Answers `initialize`/`ping`/list methods at once (serverInfo `semio`, `listChanged` capabilities), queues other requests, stages in the background, then handshakes with the real binary under id `semio-gateway-initialize`, replays the queue, sends `list_changed` notifications and relays; staging failure answers requests with -32603; SIGINT/SIGTERM/SIGHUP and client EOF abort staging.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts`: `stageMcpBinaryAsync`, `mcpBinaryIsStaged`, `serveWarmMcpStdio`; shared `mcpStagingEnvironment`; stale "initialize waits" wording removed (941 lines).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🛠️dev/🟦️.ts`: `runMcpOs` execs the binary when staged (unchanged fast path), otherwise serves the warm gateway.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📡️stdio/🚪️gateway/🧪️tests/🔣️.json` + `🟦️.ts` (new): language-agnostic corpus (replies + 3 journeys) replayed by bun; cross-checked against the MCP SDK Zod schemas (`InitializeResultSchema`, `ListToolsResultSchema`, `JSONRPCErrorSchema`); real-stdio test with a fake peer.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧭️protocol/🎯️mcp-server/🦀️.rs`: `structuredContent` only inserted when it is a JSON object. Test assertion added in `📣️notify/🧪️tests/🔬️quick/🦀️.rs`.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️protocol/🐹️.go`: `CallToolResult.MarshalJSON` (content always an array; `structuredContent` omitted unless a JSON object).
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📨️protocol/🦀️.rs`: same rule in the Rust twin (`json()` filter).
+- Shared fixture `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/🧪️tests/🧫️fixtures/🧱️tool-result-shape.json` (9 vectors), read by Go (`🧪️tests/🤝️protocol-contract/🐹️.go`: `TestToolResultShapeContract`) and Rust (`🧪️tests/🔬️unit/🦀️.rs`: `tool_result_shape_matches_shared_contract`).
+- Unrelated compile/test breakage on the path fixed so the module builds and tests: `⌨️cli/📦️packages/🐹️go/🩺️analyze/🐹️.go` (`workspace.RootDir` -> `GetRootDir()`), `💻️client/🔌️mcp/🧩️component/🐹️.go` (missing import; `workspace.BindWorkingDirectory`), protocol-contract tests (two stale fixture paths -> `repositoryContractFixture`; `LookupRootDir` instead of panicking `GetRootDir`), progress-replay "deep" payload changed from nested array to nested object (arrays are now omitted before the nesting bound; same nesting depth).
+- Tools: `semio-mcp-tools/drive.ts` (JSON-RPC stdio driver: initialize, initialized, tools/list, optional tools/call), `semio-mcp-tools/gooverlay.ts` (canonical Go overlay test/build without nx).
+
+## Verification
+- Before: `bun semio-mcp-tools/drive.ts semio …` -> `FAIL Error: timeout initialize` (120 s). `drive.ts repo … ticket_close` -> `structuredContent: NULL (invalid)`.
+- `go test` via `gooverlay.ts test` (full module, hermetic-root-guard excluded, see open items): `ok github.com/usalu/semio/repo/mcp`; `TestToolResultShapeContract` 9/9 vectors pass.
+- `gooverlay.ts build` -> fresh repo binary; `REPO_MCP_BIN=<it> drive.ts repo … ticket_close`: initialize, tools/list (6 tools) and tools/call all valid, `structuredContent: omitted`, `isError:true`, 0 stdout pollution.
+- `bun test ./…/📡️stdio/🚪️gateway/🧪️tests/🟦️.ts`: 14 pass, 0 fail (incl. real-stdio splice and abort-on-client-EOF).
+- Real `.mcp.json` command via `drive.ts semio` with a PATH shim replacing only `bun repo run …` (to avoid a cargo build): initialize answered in about 1.5 s (`serverInfo semio`), tools/list empty list, SIGTERM exits 143 and the staging child is gone. 
+- `bun build --target=bun 📜️script.ts`: 2474 modules, OK.
+- `bun test` on `🧪️resolvemcpbinarypath`: 18 pass, 1 fail (`SEMIO_SCRIPT_PROVIDERS` env missing in a bare `bun test`; unrelated to this change).
+- NOT run: any cargo build/test (Rust edits in os `mcp-server/🦀️.rs`, `notify` test, repo-mcp Rust twin and its unit test are unverified); a real `semio-os-mcp` binary was never started, so the splice to the real server is covered only by the fake-peer test; `bun repo run repo-mcp:test` (nx path timed out at 550 s under load 60-70; replaced by `gooverlay.ts`).
+
+## Open items
+- The cached repo MCP binary (`.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo`) is still the Oct-18 build: run `bun repo run repo-mcp:build` (coordinator) and restart the session for the `repo` fix to take effect. The `semio` server will then connect, but its tools stay empty until `bun repo run @semio-tech/framework-os-mcp-rs:build` has succeeded (cargo, coordinator-serialized); the gateway kicks it off by itself on first connect.
+- `🧪️tests/🛡️hermetic-root-guard/🐹️.go` imports `github.com/usalu/semio/repo/client`, which is not in the mcp `go.mod`, so the whole module test package fails to build under `repo-mcp:test`; and it forbids `SetRootDir`/`GetRootDir`, which `TestRepositoryReopenPromptContract` uses. Peer-owned, left as is.
+- Arrays/scalars returned by repo tools as structured data are now dropped (text content still carries the output); if structured lists are wanted, wrap them in an object in `repositoryResult`.

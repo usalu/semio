@@ -135,11 +135,6 @@ impl<'a> Evaluator<'a> {
                 outputs.insert(neuron_id.clone(), input.merge(&neuron.params)).retire_cold();
                 continue;
             }
-            // 🚧️ A budget-exhausted cache miss (cluster or operator) stops the walk here; this
-            // neuron and everything from `order[index..]` becomes `remaining`. Exhaustion is either
-            // the dispatch count or the wall-clock deadline — see [`EvalStepBudget`]. Clusters have
-            // no single cache key of their own (their inner neurons are cached individually), so a
-            // cluster is conservatively always charged as a miss.
             if let Some(sub_tree) = neuron.tree.as_deref() {
                 if budget.exhausted(spent) {
                     stopped_at = index;
@@ -163,10 +158,6 @@ impl<'a> Evaluator<'a> {
             } else {
                 match dispatch(&neuron.kind, &merged) {
                     Err(EvalError::PendingExtension { extension_id, operator_id, node_hash }) => {
-                        // 🌊️ The wave gathers rather than returns: this neuron's answer has to come
-                        // from its plugin, but every LATER neuron that does not depend on it can
-                        // still be walked in this same call, so its own request rides the same round
-                        // trip instead of costing a whole further hop.
                         pending_extensions.push(PendingExtensionEval { neuron_id: neuron_id.clone(), extension_id, operator_id, node_hash, input_json: if source_required(node_hash) {semio_framework_pack_json::to_json_string(&*merged)}else{String::new()} });
                         parked.insert(neuron_id.clone());
                         spent += 1;
@@ -322,9 +313,6 @@ impl<'a> Evaluator<'a> {
         cache: &NeuralCache,
     ) -> Result<Dictionary, EvalError> {
         let sub_seeds = ColdOwner::new(seed_input_boundaries(sub_tree, parent_input));
-        // 🧩️ Nested cluster subtrees are evaluated atomically (v1 limitation): any change inside
-        // re-evaluates the whole cluster rather than propagating dirtiness within it. Never stale,
-        // just not maximally incremental for nested clusters.
         let sub_channels = ColdOwner::new(self.evaluate_channels_cached(sub_tree, &sub_seeds, operator_infos, dispatch, cache, &HashSet::new(), None)?);
         collect_output_boundaries(sub_tree, &sub_channels)
     }

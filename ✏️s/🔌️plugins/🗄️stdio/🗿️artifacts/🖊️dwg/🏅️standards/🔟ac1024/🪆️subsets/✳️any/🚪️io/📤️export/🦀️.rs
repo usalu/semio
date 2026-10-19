@@ -331,9 +331,6 @@ pub fn encode_dwg(snapshot: &DwgSnapshot) -> Result<Vec<u8>, DwgExportError> {
     if let Some((_, message)) = unwritable_version(snapshot) {
         return Err(DwgExportError::InvalidVersion(message));
     }
-    // 🫙️ The empty document is written as the preamble and nothing else — the inverse of the read
-    // above, and the only representation an R2004 container HAS for a snapshot that carries no
-    // Header, no Classes and no object sections to build one from.
     let bytes = if is_preamble_only_document(snapshot) { encode_preamble_only_document(snapshot) } else { encode_r2004_snapshot(snapshot).map_err(DwgExportError::Writer)? };
     validate_export_header(&bytes, snapshot)?;
     Ok(bytes)

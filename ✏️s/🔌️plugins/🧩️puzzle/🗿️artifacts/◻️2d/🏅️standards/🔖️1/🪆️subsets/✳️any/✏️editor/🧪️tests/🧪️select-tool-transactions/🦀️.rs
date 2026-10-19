@@ -1,4 +1,4 @@
-//! edit, one history row stamped with its `TransactionRef`, one parametric leaf carrying the literal targets and
+//! 📝️ edit, one history row stamped with its `TransactionRef`, one parametric leaf carrying the literal targets and
 //! 🛠️ Laws for the select tool's ONE promise: one logical selection operation is one `ToolTransaction` — one
 //! parameters — and a cancelled gesture leaves zero trace. The board laws drive the REAL engine: press, move and
 //! release on a host painted from the app's own snapshot, the release batch filtered exactly as both coalescers
@@ -162,7 +162,7 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
 pub(crate) fn painted_host_of(snapshot: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
     host.scene.set_size(800, 600, 1.0);
-    assert!({let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)}, "the engine paints the document");
+    assert!({let mut accepted=|_|true;let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024*1024,&mut accepted);semio_framework_os_infinite::board::io::text::snapshot_assembly::load_board_snapshot_json(&mut host.scene, &mut host.focus, &mut host.style, &mut host.outbox,&snapshot.to_string(),&mut control)}, "the engine paints the document");
     set_camera_silent(&mut host.scene, &mut host.outbox, 0.0, 0.0, 1.0);
     set_transform_flags(&mut host.scene, &mut host.gestures, true, false);
     let _ = drain_board_events_json(&mut host);
@@ -191,7 +191,7 @@ pub(crate) fn release(host: &mut BoardHost, x: f64, y: f64) {
 }
 
 pub(crate) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
-    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(&rows.to_vec()) })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
+    dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": semio_framework_pack_json::to_json_string(&rows.to_vec()) })), Some(semio_s_artifact_puzzle_2d_inferences::viewer::puzzle2d::modes::view::windows::board::WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
 fn node_at(app: &Puzzle2dApp, id: &str) -> (f64, f64) {

@@ -16,16 +16,21 @@
 //! @see ../../🧬️schema/🦀️.rs — owned events, stage and frame
 
 use crate::clock::pass;
-use crate::attention::{grasp, tossed, touched_at, unhovered};
+use semio_framework_pets_staging_draft::attention::{grasp, tossed, touched_at, unhovered};
 use crate::sociability::{clicked, played};
 use crate::choice::reclaimed;
-use crate::locomotion::unlifted;
-use crate::draft::{draft_of, sealed, Draft};
+use semio_framework_pets_staging_draft::locomotion::unlifted;
+use semio_framework_pets_staging_draft::draft::{draft_of, sealed, Draft};
 use crate::population::{summon, survey, tune};
 use semio_framework_pets_contract::schema::{Menagerie, Over, PetMode, Point, Stage, StageEvent};
 use semio_framework_pets_interaction::gesture::{no_shaking, IDLE};
 
 pub use crate::projection::frame_of;
+use semio_framework_pets_interaction::gesture::PressSignal;
+use semio_framework_pets_interaction::gesture::PressInput;
+use semio_framework_pets_interaction::gesture::Guards;
+use semio_framework_pets_contract::schema::PressPhase;
+use semio_framework_pets_contract::schema::Deed;
 
 //#region 🔖️Stage
 /// 🏟️ An empty stage for a seed: tick 0, mode `calm`, not quiet, nothing surveyed, nobody summoned, nothing permitted (the shell's `permitted` grants play and mischief), no press, no ladder, no lift.

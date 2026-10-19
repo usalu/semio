@@ -1,4 +1,4 @@
-//! `Vec::new()`.
+//! 🔁️ `Vec::new()`.
 //! ↩️ Inverse for `ReplaceObjectVortex` — restores the BASE vortex payload. Missing target ⇒
 use super::mutation::ReplaceObjectVortex;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;

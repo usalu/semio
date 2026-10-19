@@ -1,4 +1,4 @@
-//! (`🕹️interaction/🧭️gumball`): one dispatch without a `phase` is ONE tool transaction; a host streaming a gesture
+//! 📡️ (`🕹️interaction/🧭️gumball`): one dispatch without a `phase` is ONE tool transaction; a host streaming a gesture
 //! 🧭️ Fem2d transform gumball commands — translate, rotate and scale the selection through the gumball TOOL
 //! sends `phase: "stream"` ticks that accumulate in the window's ONE open transaction (previewed by every window,
 //! never history) until `phase: "commit"` commits the net `move-selection` leaf as one edit or `phase: "abort"`

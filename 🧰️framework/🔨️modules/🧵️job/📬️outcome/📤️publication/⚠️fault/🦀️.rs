@@ -1,6 +1,7 @@
 //! 📤️ Canonical faults stream from their original typed owner into separately funded publication pages.
 use semio_framework_diagnostic::{Fault,FaultWireCursor};
-use semio_framework_job::{Generation,OperationId,StepContext,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,JobPayloadStream,RetainedJobPayload,RetainedPayloadBuilder};
+use semio_framework_job::{Generation, OperationId, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
+use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::mem::MaybeUninit;

@@ -255,13 +255,6 @@ fn a_live_evaluation_publishes_non_idle_frames_with_a_monotone_ratio_and_an_offe
     assert!(session.sync(&host), "the default demo graph has pending nodes, so a chain is armed");
     session.note_window_tick_outcome("preview-1", true);
 
-    // ⛓️ The hop ladder the run job actually drives, sampled at every boundary a preview window
-    // publishes at: arm the hop, park its `evaluate`/`tessellate` request, fold the answer, arm the
-    // next. ONE tick chain spans many round trips — a budgeted operator answers `done: false`
-    // several times for the same node before it produces anything — and the measured 6118 chain for
-    // `sphere-cut-with-torus` is exactly that shape: five round trips, one settle
-    // (`📓️wgpu-progress-visibility-2026-09-14.md`). Every one of these boundaries is a status the
-    // surface published, and every one of them used to read `idle`.
     let mut frames = Vec::new();
     for round in 0..minimum {
         session.arm_window_tick("preview-1");

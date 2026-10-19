@@ -11,7 +11,7 @@ import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";
 // Consumers MUST specify a valid kind prop.
 
 /**
- * Props interface for the Aside callout component.
+ * 🏷️ Props interface for the Aside callout component.
  **/
 export interface AsideProps {
   kind?: "note" | "tip" | "caution" | "danger";
@@ -20,7 +20,7 @@ export interface AsideProps {
 }
 
 /**
- * iconMap holds the data fields for a iconMap record.
+ * 🖼️ iconMap holds the data fields for a iconMap record.
  **/
 const iconMap = {
   note: InfoIcon,
@@ -30,7 +30,7 @@ const iconMap = {
 };
 
 /**
- * colorMap holds the data fields for a colorMap record.
+ * 🎨️ colorMap holds the data fields for a colorMap record.
  **/
 const colorMap = {
   note: "border-info-border bg-info-bg text-info-foreground",
@@ -40,7 +40,7 @@ const colorMap = {
 };
 
 /**
- * Callout component rendering note, tip, caution, or danger boxes.
+ * 🔌️ Callout component rendering note, tip, caution, or danger boxes.
  **/
 export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) => {
   const Icon = iconMap[kind];
@@ -65,7 +65,7 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // Consumers MUST choose an appropriate size for the context.
 
 /**
- * Props interface for the Spinner component.
+ * ⏳️ Props interface for the Spinner component.
  **/
 export interface SpinnerProps {
   size?: "small" | "medium" | "large";
@@ -73,7 +73,7 @@ export interface SpinnerProps {
 }
 
 /**
- * Animated SVG loading spinner.
+ * ⌛️ Animated SVG loading spinner.
  **/
 export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "" }) => {
   const sizeClass = size === "small" ? "size-small" : size === "large" ? "size-large" : "size-medium";
@@ -93,7 +93,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 
 type OwnedRouteTarget = { kind: "internal"; href: string };
 
-/** @emoji 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
+/** 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
 export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   if (typeof href !== "string" || href.length === 0 || /[\s\u0000-\u001f\u007f\\]/u.test(href)) return null;
   if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) return null;
@@ -105,7 +105,7 @@ export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   return { kind: "internal", href };
 }
 
-/** @emoji 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
+/** 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
 export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boolean } {
   if (typeof window === "undefined" || typeof window.history?.pushState !== "function" || typeof window.PopStateEvent !== "function") return { navigated: false };
   let event: PopStateEvent;
@@ -119,7 +119,7 @@ export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boole
   return { navigated: true };
 }
 
-/** @emoji 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
+/** 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
 export function RouteLink({ href, target, download, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
@@ -138,7 +138,7 @@ export function RouteLink({ href, target, download, onClick, ...props }: React.A
 // Consumers MUST provide a title for the error.
 
 /**
- * Props interface for the NotFound component.
+ * 🎛️ Props interface for the NotFound component.
  **/
 export interface NotFoundProps {
   title: string;
@@ -149,7 +149,7 @@ export interface NotFoundProps {
 }
 
 /**
- * Not-found placeholder page with navigation link.
+ * 👻️ Not-found placeholder page with navigation link.
  **/
 export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
   const goBackLabel = useLabel("ui.nav.back");

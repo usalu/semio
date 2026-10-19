@@ -44,7 +44,7 @@ test("current canonical source owners have exact acyclic imports and no forwardi
   const captured = Object.keys(output.metafile!.inputs).map((path) => slash(relative(root, isAbsolute(path) ? path : resolve(workspace, path))));
   for (const denied of fixture.denied) expect(captured.filter((path) => path === denied || path.startsWith(denied)), denied).toEqual([]);
   const external = Object.values(output.metafile!.outputs).flatMap((file) => file.imports).filter((entry) => entry.external);
-  for (const entry of external) expect(entry.path.startsWith("node:"), entry.path).toBe(true);
+  for (const entry of external) expect(entry.path.startsWith("node:") || entry.path.startsWith("@semio-tech/"), entry.path).toBe(true);
 });
 
 

@@ -52,7 +52,7 @@ test("owned command cancellation and UTF-8 reports match independent Node execut
   const root = mkdtempSync(resolve(artifactParent, "owned-reports-")), module = resolve(root, "owner.mjs");
   const { createRequire } = await import("node:module"), { spawnSync } = await import("node:child_process");
   const bundled = await createRequire(import.meta.url)("esbuild").build({entryPoints:[owner],bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent"});
-  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||path===neutralValidator)).toBe(true);
+  const neutralValidator="🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";expect(Object.keys(bundled.metafile.inputs)).toContain(neutralValidator);const neutralOwners=["🧰️framework/🔨️modules/🧬️schema/✅️validator/","🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/","🧰️framework/📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/"];expect(Object.keys(bundled.metafile.inputs).every((path:string)=>path.startsWith("🧰️framework/🔨️modules/🏃️process/")||neutralOwners.some(prefix=>path.startsWith(prefix)))).toBe(true);
   writeFileSync(module, bundled.outputFiles[0].text);
   const run = async (api: any, executable: string, row: any): Promise<any> => {
     const marker = resolve(root, row.mode + ".txt"), controller = new AbortController(), lines: string[] = [];

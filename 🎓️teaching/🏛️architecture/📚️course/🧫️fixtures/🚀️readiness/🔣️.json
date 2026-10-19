@@ -10,21 +10,24 @@
     "siteCondition": "${{ inputs.site && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
     "proctorCondition": "${{ inputs.proctor && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}",
     "commands": [
-      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight --scope @teaching/architecture-course",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo dependencies sync --all",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:test",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:typecheck",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:ci-browser-prepare",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:test-e2e -- --topology rehearsal --"
     ],
-    "consumers": ["site", "proctor"],
+    "consumers": [
+      "site",
+      "proctor"
+    ],
     "siteCommands": [
-      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight --scope @teaching/architecture-course",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo dependencies sync --all",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:publish --configuration=release"
     ],
     "proctorSteps": [
-      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight --scope @teaching/architecture-course",
+      "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo preflight",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo dependencies sync --all",
       "sudo --non-interactive env \"PATH=$PATH\" \"HOME=$HOME\" \"SEMIO_BUILD_MODE=$SEMIO_BUILD_MODE\" CI=true bun repo run @teaching/architecture-course:docker-image-build",
       "docker/login-action",
@@ -32,5 +35,52 @@
     ],
     "imageBuildTarget": "docker-image-build",
     "imagePublishTarget": "docker-image-publish"
+  },
+  "preflight": {
+    "arguments": [
+      "preflight"
+    ],
+    "linux": {
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "minimumAvailableBytes": 8589934592,
+      "tools": [
+        "cc",
+        "pkg-config"
+      ],
+      "exchange": true
+    },
+    "step": "Check generic host tools, capacity and filesystem support before allocation",
+    "documentation": [
+      "generic host preflight",
+      "8 GiB",
+      "atomic directory exchange",
+      "case-sensitive",
+      "Debian 12 x64",
+      "ELF64",
+      "linux/amd64",
+      "proctor check"
+    ],
+    "obsolete": [
+      "CAP_SYS_ADMIN",
+      "/dev/loop-control",
+      "72 GiB",
+      "seven visible writable unused",
+      "working ext4 loop mounts"
+    ],
+    "imageGuards": [
+      "process.platform !== \"linux\" || process.arch !== \"x64\"",
+      "executable.mode !== \"release\"",
+      "header[4] !== 2",
+      "header[5] !== 1",
+      "header.readUInt16LE(18) !== machine"
+    ],
+    "runtimeCheck": [
+      "/usr/local/bin/proctor",
+      "check",
+      "/srv/course/content/🏛️architecture/📚️course/🔣️.json"
+    ]
   }
 }

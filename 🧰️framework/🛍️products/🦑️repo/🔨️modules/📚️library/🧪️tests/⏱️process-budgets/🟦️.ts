@@ -16,9 +16,11 @@ const probePath = fileURLToPath(new URL("../../🏃️process/🔍️probe/🟦�
 const cargoTestsPath = fileURLToPath(new URL("../../🏃️process/🦀️cargo/🎟️admission/🟦️.ts", import.meta.url));
 const commandPath = fileURLToPath(new URL("../../🧪️testing/🎛️repository-command/🟦️.ts", import.meta.url));
 const workspacesPath = fileURLToPath(new URL("../../🗂️workspaces/🟦️.ts", import.meta.url));
-/** 🧵️ The Execa 1.x completion oracle, typed at its CommonJS boundary. */
-type ExecaOracle = (file: string, args: readonly string[], options: { readonly env?: NodeJS.ProcessEnv; readonly timeout?: number; readonly reject?: boolean }) => Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }>;
-const execa: ExecaOracle = createRequire(import.meta.url)("execa");
+/** 🧵️ The Execa completion oracle, adapted from its ESM named export to the exit-code vocabulary of the laws. */
+type ExecaOptions = { readonly env?: NodeJS.ProcessEnv; readonly timeout?: number; readonly reject?: boolean };
+type ExecaOracle = (file: string, args: readonly string[], options: ExecaOptions) => Promise<{ readonly code: number | null; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }>;
+const { execa: completion } = createRequire(import.meta.url)("execa") as { readonly execa: (file: string, args: readonly string[], options: ExecaOptions) => Promise<{ readonly exitCode?: number; readonly stdout: string; readonly stderr: string; readonly timedOut: boolean }> };
+const execa: ExecaOracle = async (file, args, options) => { const { exitCode, stdout, stderr, timedOut } = await completion(file, args, options); return { code: exitCode ?? null, stdout, stderr, timedOut }; };
 const budgetKeys = ["SEMIO_BUILD_BUDGET_MS", "SEMIO_CMD_BUDGET_MS", "SEMIO_ORCHESTRATOR_BUDGET_MS", "SEMIO_DAEMON_BUDGET_MS"];
 
 test("artifact test routes select no Cargo feature (law L2)",async()=>{
@@ -191,7 +193,7 @@ test("process budgets bind nested native workspace profiles to the repository co
 test("process native profiles belong to each physical Cargo workspace",async()=>{
   const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
   const {getWorkspaceRoot}=await import(workspacesPath);const root=getWorkspaceRoot();
-  const toml=createRequire(import.meta.url)("toml") as {parse:(source:string)=>any};
+  const toml=createRequire(import.meta.url)("@iarna/toml") as {parse:(source:string)=>any};
   const{discoverCargoWorkspaces,cargoWorkspaceMembers}=await import("../../🗂️workspaces/🦀️cargo/🟦️.ts");
   const scopes=discoverCargoWorkspaces(root);
   for(const row of corpus.workspaces){const source=readFileSync(join(root,row.directory,corpus.configPath),"utf8");const config=Bun.TOML.parse(source) as {profile:Record<string,{overrides?:readonly {filter:string}[];"slow-timeout":{period:string;"terminate-after":number}}>};expect(config).toEqual(toml.parse(source));expect(config.profile.quick.overrides?.length??0).toBe(row.overrideCount);for(const[level,period]of Object.entries(corpus.periods)){if(typeof period!=="string")throw Error("Portable native profile period must be text");expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});}const members=cargoWorkspaceMembers(root,scopes.find(scope=>scope.directory===row.directory)!);for(const entry of config.profile.quick.overrides??[]){const name=/^package\(([a-z0-9-]+)\)$/.exec(entry.filter)?.[1];expect(name).toBeDefined();expect(members.some(member=>member.name===name)).toBe(true);}}

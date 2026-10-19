@@ -4,9 +4,16 @@ import type { DocumentServiceWorkerHostV1, DocumentServiceDriverContextV1 } from
 import type { InstalledServiceDriverV1 } from "@semio-tech/framework/inference/service";
 import { documentRuntimeKeyV1 } from "../../../../🟦️";
 import { documentServiceRequestV1, admitDocumentServiceResponseV1 } from "@semio-tech/framework/inference/service/io";
-import { artifactScope, artifactState, documentServices, post } from "../🧾️document-state/🟦️.ts";
+import { type ArtifactState, artifactScope, artifactState, documentServices, emitEvent, post } from "../🧾️document-state/🟦️.ts";
 import { bytesHex, captureBrowserSessionOperationFence, directorySessionEpoch, hubSessionFetch, sameBrowserSessionOperationFence } from "../🔐️hub-session/🟦️.ts";
 import { SOCKET_GRANT_REQUEST_TIMEOUT_MS } from "../⚙️constants/🟦️.ts";
+import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-lane";
+import { LOCAL_CATALOG_CONFIG_SCHEMA, applyIdentityDiff, applyLocalCatalogDiff, decodeIdentityDiff, decodeIdentityValue, decodeLocalCatalogDiff, decodeLocalCatalogValue } from "@semio-tech/framework/config/mutations";
+import type { MutationEnvelope } from "@semio-tech/framework-replication";
+import { decodeDocumentArchiveBytes, decodePackValue, encodeDocumentArchiveBytes, encodePackValue, localCommandRejectionV1, type PackValue } from "../../../../🟦️";
+import { folderBinding, setStatus } from "../🎭️actor-lifecycle/🟦️.ts";
+import { writeFolder } from "../📁️folder/✍️write/🟦️.ts";
+import { rejectLocally, releaseDocumentBackboneOwnership } from "../📮️hub-outbox/🟦️.ts";
 
 //#region 🔖️ConfigLane
 /** 🎚️ Canonical `documentId`/`schema` for the OS-wide `os.config.opening` facet (contract freeze
@@ -97,4 +104,93 @@ export function reconcileDocumentServiceContributionsV1(services: readonly Reado
     if (!wanted.has(key)) { contribution.retire?.(); contribution.retire = null; }
     else if (contribution.retire === null) contribution.retire = activateDocumentServiceWorkerV1(contribution.owner, contribution.serviceId, contribution.factory);
   }
+}
+
+export type ConfigFacetV1 = Readonly<{
+  schema: string;
+  initial: unknown;
+  decodeValue: (payload: unknown) => unknown;
+  decodeDiff: (payload: unknown) => unknown;
+  apply: (base: unknown, diff: unknown) => unknown;
+}>;
+
+/** 🎚️ The facets the store folds, keyed by their schema (which is also their document id). */
+export const CONFIG_FACETS: ReadonlyMap<string, ConfigFacetV1> = new Map<string, ConfigFacetV1>([
+  [IDENTITY_CONFIG_SCHEMA, { schema: IDENTITY_CONFIG_SCHEMA, initial: null, decodeValue: decodeIdentityValue, decodeDiff: decodeIdentityDiff, apply: (base, diff) => applyIdentityDiff(base as Parameters<typeof applyIdentityDiff>[0], diff as Parameters<typeof applyIdentityDiff>[1]) }],
+  [LOCAL_CATALOG_CONFIG_SCHEMA, { schema: LOCAL_CATALOG_CONFIG_SCHEMA, initial: { documents: [] }, decodeValue: decodeLocalCatalogValue, decodeDiff: decodeLocalCatalogDiff, apply: (base, diff) => applyLocalCatalogDiff(base as Parameters<typeof applyLocalCatalogDiff>[0], diff as Parameters<typeof applyLocalCatalogDiff>[1]) }],
+]);
+
+/** 🗃️ A facet's persisted form: its whole value as the archive's pack value, no history log. */
+export function configFacetArchiveV1(value: unknown): Uint8Array {
+  return encodeDocumentArchiveBytes({ parent_pack: Array.from(encodePackValue(value as PackValue)), parent_spr: [], members: [] });
+}
+
+/** 🗃️ The value a facet archive holds, or `undefined` when the archive is not one of this facet. */
+function decodeConfigFacetArchive(facet: ConfigFacetV1, archive: Uint8Array): unknown {
+  try {
+    return facet.decodeValue(decodePackValue(new Uint8Array(decodeDocumentArchiveBytes(archive).parent_pack)));
+  } catch {
+    return undefined;
+  }
+}
+
+/** 🧮️ Folds the diffs of `envelopes` onto `base`, in order, through the facet's applier. `null` when one is not a diff of this facet. */
+function foldConfigFacetEnvelopes(facet: ConfigFacetV1, base: unknown, envelopes: readonly MutationEnvelope[]): { readonly value: unknown } | null {
+  let value = base;
+  for (const envelope of envelopes) {
+    const diff = facet.decodeDiff(envelope.diff.payload);
+    if (diff === undefined) return null;
+    value = facet.apply(value, diff);
+  }
+  return { value };
+}
+
+/** 🎚️ Seeds a facet document from what its folder holds (`archive`), or from the facet's empty value when the folder holds none,
+ * then folds the envelopes that waited for that first answer. */
+export function seedConfigFacet(state: ArtifactState, archive: Uint8Array | null): void {
+  const facet = CONFIG_FACETS.get(state.config.schema);
+  if (facet === undefined) return;
+  const held = archive === null ? undefined : decodeConfigFacetArchive(facet, archive);
+  if (held !== undefined) state.facetValue = held;
+  else if (state.facetValue === undefined) state.facetValue = facet.initial;
+  const waiting = state.facetBacklog;
+  state.facetBacklog = [];
+  if (waiting.length > 0) foldConfigFacet(state, waiting);
+}
+
+/** 🎚️ The store's fold of locally admitted facet envelopes: each diff applies through the facet's central twin onto the held
+ * value, the resulting archive is persisted to the facet's folder, and every client of the document is handed that archive as
+ * the new projection. Envelopes that arrive before the folder's first answer wait for it. */
+export function foldConfigFacet(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  const facet = CONFIG_FACETS.get(state.config.schema);
+  if (facet === undefined) return;
+  const folder = folderBinding(state.config);
+  if (folder !== null && !state.folderBootstrapped) {
+    state.facetBacklog.push(...envelopes);
+    return;
+  }
+  const folded = foldConfigFacetEnvelopes(facet, state.facetValue === undefined ? facet.initial : state.facetValue, envelopes);
+  if (folded === null) {
+    rejectLocally(state, localCommandRejectionV1("local.backbone-malformed", "a config facet envelope must carry the facet's sparse diff", { envelopes: envelopes.length }));
+    return;
+  }
+  state.facetValue = folded.value;
+  const archive = configFacetArchiveV1(folded.value);
+  if (folder !== null) {
+    void writeFolder(state, folder, Array.from(archive)).then(() => {
+      releaseDocumentBackboneOwnership(state, state.pendingMutations);
+      state.pendingMutations = [];
+      setStatus(state, { pendingMutations: 0 });
+    }, (error) => console.error("[backbone-worker] folder write failed", state.config.documentId, error));
+  }
+  emitEvent(state, { kind: "documentArchiveReplaced", archive: Array.from(archive) });
+}
+
+/** 🎚️ Folds the envelopes another tab's store admitted (they arrive on the document's channel) into the held value. That tab
+ * persisted them; this one only keeps its own projection current and tells its clients. */
+export function foldRemoteConfigFacet(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  const facet = CONFIG_FACETS.get(state.config.schema);
+  if (facet === undefined) return;
+  const folded = foldConfigFacetEnvelopes(facet, state.facetValue === undefined ? facet.initial : state.facetValue, envelopes);
+  if (folded !== null) state.facetValue = folded.value;
 }

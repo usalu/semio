@@ -1,4 +1,4 @@
-//! `✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx`'s `🔖️Flatten` region, ported rule for rule.
+//! 🗾️ `✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx`'s `🔖️Flatten` region, ported rule for rule.
 //! 📐️ The 5D flatten solver — the Rust twin of the React target
 //!
 //! That 638-line file is the whole 5D visualisation layer React has: a pure geometry module (no JSX,

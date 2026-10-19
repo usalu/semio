@@ -1,6 +1,7 @@
 //! 🧪️ The actual native output cursor keeps the original nonempty media body through paid wire and snapshot closure.
 use super::*;
-use semio_framework_job::{StepBudget,OperationId,Generation,JobPayloadAuthority,OriginalCallerSourceParent};
+use semio_framework_job::{StepBudget, OperationId, Generation, OriginalCallerSourceParent};
+use semio_framework_job_payload::{JobPayloadAuthority};
 use semio_framework_async::CancelToken;
 use crate::render_snapshot::{RenderSnapshot,RenderSnapshotSink};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;

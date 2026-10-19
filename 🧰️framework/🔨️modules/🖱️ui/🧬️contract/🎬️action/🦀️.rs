@@ -22,21 +22,18 @@ pub struct ActionId {
 
 impl ActionId {
     /// 🏭️ `const fn`-friendly constructor — every field already owned, no allocation happens inside.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(scope: UiText, name: UiText, version: u16) -> Self {
         Self { scope, name, version }
     }
 
     /// 🏭️ Version-1 convenience constructor — the common case; the plugin fleet will write thousands
     /// of these from `&str`/`String` call sites the old `ActionFactory::action` already used.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn try_v1(scope: impl AsRef<str>, name: impl AsRef<str>) -> Option<Self> {
         Some(Self { scope: UiText::try_from_str(scope.as_ref())?, name: UiText::try_from_str(name.as_ref())?, version: 1 })
     }
 }
 
 impl fmt::Display for ActionId {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}@{}", self.scope, self.name, self.version)
     }

@@ -100,17 +100,17 @@ async fn sqlite_snapshot_semio_graph_complete_actual_typed_public_io_limits(){
 /// 🧾️ Replaces only the first exact hexadecimal coordinate inside the original authored Graph wire.
 fn graph_hex_float_body(hex:&str)->String{
  let text=match semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| fixture().encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(){store::io::IoPayload::Text(text)=>text,_=>panic!("Graph text owner produced binary")};
- let mut accept=|_|true;let mut native=semio_framework_value::native_decoding::NativeDecodeControl::new(SqliteDatabaseLimits::default().max_allocation_bytes,&mut accept);
+ let mut accept=|_|true;let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(SqliteDatabaseLimits::default().max_allocation_bytes,&mut accept);
  let body=store::semio_format::split_text_preamble_controlled(&text,semio_s_artifact_stdio_semio_graph::schema::snapshot::STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native).unwrap();
  let mut start=body.find("nodes=[[").unwrap()+"nodes=[[".len();for _ in 0..3{start+=body[start..].find(',').unwrap()+1;}let end=start+body[start..].find(',').unwrap();format!("{}{}{}",&body[..start],hex,&body[end..])
 }
 /// 🎛️ Calls the actual Graph document producer with the original caller allocation and progress authority.
 fn graph_hex_float_decode(body:&str,limits:SqliteDatabaseLimits)->Result<SemioGraphSnapshot,ValueError>{
- use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeProgress};
+ use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
  let mut callback=|_|true;let mut outer=SqliteSnapshotControl::new(&mut callback,limits);
  outer.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint,allocation|{
-  let mut callback=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
-  let recipient:&mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient=Box::leak(Box::new(semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new()));native.install_retirement_recipient(recipient).unwrap();
+  let mut callback=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+  let recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient=Box::leak(Box::new(semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new()));native.install_retirement_recipient(recipient).unwrap();
   let result=semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace::decode(&mut native,semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::empty,|output,native|semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::document_into(output,body,native,limits));(result,native.owned_bytes())
  }).unwrap()
 }

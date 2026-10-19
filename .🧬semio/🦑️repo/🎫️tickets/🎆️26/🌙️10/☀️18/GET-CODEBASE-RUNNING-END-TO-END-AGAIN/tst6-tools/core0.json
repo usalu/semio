@@ -1,0 +1,134 @@
+{
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"tst4:DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/👓️reading/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧱️command-source/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬️decoder-absence/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/📥️original-control/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⏱️process-budgets/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✂️node-native-typescript/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT",
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️tool-configuration-ownership/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts": [
+"tst3a:MISSING-DEP/EXPORT"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎮️registry/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️cli/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🏋️load/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/💨️smoke/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧭️journeys/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts": [
+"tst3a:NEEDS-DASHBOARD-INSTALL"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/❄️frozen-markdown-coordinates/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️exact-cargo-laws/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️incremental-targets/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-scenario-identities/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧭️fixture-placement/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧰️framework-root-source-topology/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️framework-source-topology/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/🛍️products/🦑️repo/🧪️tests/⚙️transaction-process-ownership/🟦️.ts": [
+"tst4:DEPS-OR-INFLIGHT-MOVE"
+],
+"🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🎒️pack/🔤️json/🧪️tests/🚮️absence/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🧪️tests/🚮️absence/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🌗️contrast/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🚪️command/🧪️tests/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🧪️tests/🟦️.ts": [
+"tst3c:MISSING-DEP"
+],
+"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+],
+"✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts": [
+"tst5:NO-DIST/retry"
+]
+}

@@ -13,7 +13,7 @@
 //! no `DslField` impl of its own.
 
 use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::self;
+use semio_s_artifact_stdio_semio_base::schema::triples;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
@@ -214,11 +214,9 @@ pub struct SemioAudioChannelDiff {
 }
 
 impl SemioAudioChannelDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.samples.is_none()
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply_row(&self, base: &SemioAudioChannel) -> SemioAudioChannel {
         let mut next = base.clone();
         if let Some(v) = &self.samples {
@@ -226,11 +224,9 @@ impl SemioAudioChannelDiff {
         }
         next
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn inverse(&self, base: &SemioAudioChannel) -> Self {
         Self { samples: self.samples.as_ref().map(|_| base.samples.clone()) }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
         if other.samples.is_some() {
             self.samples = other.samples;
@@ -290,7 +286,6 @@ pub struct SemioAudioDiff {
 }
 
 impl SemioAudioDiff {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
         self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().is_none_or(indexed_is_empty) && self.tags.as_ref().is_none_or(indexed_is_empty)
     }

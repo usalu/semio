@@ -217,9 +217,6 @@ async fn cmd_inspect(rest: &[String], context: &control::CommandContext) -> i32 
         }
     };
     let limits = semio_framework_os_pack::PackLimits::default();
-    // 🔁️ `recover` is `async fn` now, so it must resolve exactly once (R10 residue shape 2) — its
-    // `Result` is borrowed in the `Ok` arm below and consumed in the `Err` arm, which is fine for a
-    // plain value but not for a `Future` that a second `.await` would try to re-drive.
     let recovery = semio_framework_os_pack::recover(&source, &limits).await;
     match semio_framework_os_pack::PackFile::open_manifest(source, &limits, semio_framework_os_pack::VerificationLevel::Standard).await {
         Ok(pack_file) => {

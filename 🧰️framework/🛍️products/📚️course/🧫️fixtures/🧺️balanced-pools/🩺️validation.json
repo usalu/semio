@@ -1,0 +1,7 @@
+[
+  { "id": "below-minimum", "seconds": 0, "issues": [{ "path": "/tasks/0/pool/seconds", "code": "below-minimum" }], "keyword": "minimum" },
+  { "id": "minimum", "seconds": 1, "issues": [], "keyword": null },
+  { "id": "authored", "seconds": 300, "issues": [], "keyword": null },
+  { "id": "maximum", "seconds": 3600, "issues": [], "keyword": null },
+  { "id": "above-maximum", "seconds": 3601, "issues": [{ "path": "/tasks/0/pool/seconds", "code": "value-invalid" }], "keyword": "maximum" }
+]

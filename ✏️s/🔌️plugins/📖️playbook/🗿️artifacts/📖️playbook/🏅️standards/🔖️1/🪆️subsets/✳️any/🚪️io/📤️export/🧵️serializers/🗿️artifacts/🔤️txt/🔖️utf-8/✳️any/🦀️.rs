@@ -1,4 +1,4 @@
-//! playbook -> txt
+//! 📖️ playbook -> txt
 use crate::PlaybookSnapshot;
 pub fn register() {}
 pub fn serialize_bytes(snapshot: &PlaybookSnapshot) -> Result<Vec<u8>, String> {

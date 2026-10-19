@@ -289,7 +289,7 @@ describe("🐾️ pet companions", () => {
       expect([...PET_DEEDS]).toEqual([...DEEDS]);
       expect(Object.keys(PET_DEED_LABELS)).toEqual([...PET_DEEDS]);
       expect(Object.keys(PET_DEED_SAID)).toEqual([...PET_DEEDS]);
-      const words = { en: ["Hello", "Trick", "Pet", "Toss"], de: ["Hallo", "Kunststück", "Streicheln", "Hochwerfen"] };
+      const words = { en: ["Hello", "Trick", "Pet", "Toss", "Circle clockwise", "Circle counterclockwise", "Stroke", "Shake"], de: ["Hallo", "Kunststück", "Streicheln", "Hochwerfen", "Im Uhrzeigersinn kreisen", "Gegen den Uhrzeigersinn kreisen", "Streichen", "Schütteln"] };
       for (const locale of COURSE_LOCALES) expect(PET_DEEDS.map((deed) => courseText(locale)(PET_DEED_LABELS[deed]))).toEqual(words[locale]);
       expect(words.en.filter((word) => words.de.includes(word))).toEqual([]);
       expect(petPlayers(MENAGERIE, ["windy", "ghost", "sunny"], "de")).toEqual([
@@ -334,6 +334,15 @@ describe("🐾️ pet companions", () => {
         expect([played.at(-1), status.textContent]).toEqual(["windy pet", said[locale].pet]);
         await user.click(within(sunny!).getAllByRole("button")[3]!);
         expect([played.at(-1), status.textContent]).toEqual(["sunny toss", said[locale].toss]);
+        for (const deed of ["circle", "countercircle", "stroke", "shake"] as const) {
+          const button = within(windy!).getByRole("button", { name: courseText(locale)(PET_DEED_LABELS[deed]) });
+          button.focus();
+          await user.keyboard("{Enter}");
+          await user.keyboard(" ");
+          expect(document.activeElement).toBe(button);
+          expect(played.slice(-2)).toEqual([`windy ${deed}`, `windy ${deed}`]);
+          expect(status.textContent).toBe(courseText(locale)(PET_DEED_SAID[deed], { name: said[locale].names[1]! }));
+        }
         unmount();
       }
     });

@@ -27,7 +27,7 @@ impl Census{
    V::Object(members)=>{self.scalar("object",0)?;self.edges(members.len())?;for(name,_)in members{self.bytes(name.len())?}Ok(())}
   }
  }
- pub(super) fn node(&mut self,node:&Node,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),ValueError>{
+ pub(super) fn node(&mut self,node:&Node,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),ValueError>{
   match &node.kind{
    Kind::Null=>self.scalar("null",0),
    Kind::Boolean=>self.scalar("boolean",8),

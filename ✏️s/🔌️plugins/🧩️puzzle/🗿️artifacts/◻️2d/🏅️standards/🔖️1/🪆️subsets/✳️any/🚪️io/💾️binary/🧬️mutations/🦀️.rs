@@ -1,4 +1,4 @@
-//! `Puzzle2dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
+//! 🧱️ `Puzzle2dMutation`'s binary wire form, plus the `ArtifactEnvelope`/`ArtifactStore` aliases every
 //! 📡️ Puzzle 2d artifact — the state-patch-representation codec: `encode_op`/`decode_op` for
 //! puzzle-2d host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
@@ -49,7 +49,6 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::Puzzle2dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
@@ -137,7 +136,6 @@ mod native_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::inverse_puzzle2d_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::Puzzle2dPlaySnapshot;
 pub use mutations_codec::*;
 
 impl OpBinary for Puzzle2dMutation {

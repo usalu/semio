@@ -80,9 +80,6 @@ impl ArtifactHandle {
     /// satisfies the request (`DbError::Unavailable` if not — a true wait-for-frontier primitive
     /// would need a `ArtifactMessage` variant `db_artifact`'s mailbox doesn't expose yet).
     /// `Historical`/`Speculative`/`PreviewAugmented` are `DbError::Unimplemented` — see module doc.
-    // 🔒️ `consistency`'s by-value signature is the frozen contract API
-    // (`ArtifactHandle::query(&self, query: Query, consistency: Consistency)`, contract.md's
-    // "Stable API" block) — not changeable even though this revision's body only borrows it.
     #[allow(clippy::needless_pass_by_value)]
     pub async fn query(&self, query: Query, consistency: Consistency) -> Result<QueryStream, DbError> {
         engine_query_maintenance_step()?;

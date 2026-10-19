@@ -56,7 +56,7 @@ pub struct TransferTask<P, M> {
 }
 
 impl<P, M> crate::ephemeral_preparation::ArtifactEphemeralPreparationTask<P, M> for TransferTask<P, M> {
-    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
+    fn advance(&mut self, _: &P, mutation: &mut Option<M>, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<crate::ephemeral_preparation::ArtifactEphemeralPreparationTaskStep<P>, semio_framework_value::ValueError> {
         let capacity=semio_framework_value::shared_retirement_allocation_bytes::<P>();
         let copy=size_of::<P>()+size_of::<M>();
         if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_copy_bytes < copy {

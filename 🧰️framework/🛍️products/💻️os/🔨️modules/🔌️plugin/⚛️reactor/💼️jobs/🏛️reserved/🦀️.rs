@@ -64,7 +64,7 @@ pub fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, p
         let mut cx = StepContext::new(operation, generation, StepBudget::new(WORK_UNITS_EXECUTE, u64::MAX, grant), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
         let mut decode_callback = |_| true;
         let mut encode_callback = |_| true;
-        let mut decode = semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
+        let mut decode = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(grant.maximum_capacity_bytes, &mut decode_callback);
         let mut encode = semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes, &mut encode_callback);
         let mut original = IoRunControl::new(&mut decode, &mut encode, grant);
         let mut snapshot_callback = |_| true;

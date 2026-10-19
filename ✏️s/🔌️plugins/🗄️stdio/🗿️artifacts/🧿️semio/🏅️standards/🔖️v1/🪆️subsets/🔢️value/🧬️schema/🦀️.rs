@@ -23,15 +23,12 @@ impl Default for SemioValueArtifact {
 }
 
 impl SemioValueArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: self.schema.clone(), root: self.root.clone(), nodes: self.nodes.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioValueSnapshot) -> Self {
         Self { schema: snapshot.schema, root: snapshot.root, nodes: snapshot.nodes }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioValueSnapshot) {
         self.schema = snapshot.schema;
         self.root = snapshot.root;

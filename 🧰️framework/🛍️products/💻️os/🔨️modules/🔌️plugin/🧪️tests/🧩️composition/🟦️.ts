@@ -4,7 +4,7 @@ import { testOwnedChildEmissionRefusalOracle } from "./📨️emission/🟦️.t
 import { testDeclaredChildProjectionOracle } from "./🔎️projection/🟦️.ts";
 import { createRequire } from "node:module";
 import vectors from "../🧫️fixtures/🧩️composition/🔣️.json" with { type: "json" };
-import archiveVectors from "../../../../🧪️tests/🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json" with { type: "json" };
+import archiveVectors from "@semio-tech/framework-os/testing/fixtures/channel/document-archive.json";
 
 
 const graphlib = createRequire(import.meta.url)("graphlib");

@@ -13,14 +13,14 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[dsl(keyword = "rotate-layers")]
 pub struct RotateLayers {
-    pub targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
+    pub targets: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
     pub pivot_x: f64,
     pub pivot_y: f64,
     pub angle: f64,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rotate_layers<Op: From<RotateLayers>>(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, angle: f64) -> Op {
+pub fn rotate_layers<Op: From<RotateLayers>>(targets: semio_framework_value_persistent::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, angle: f64) -> Op {
     Op::from(RotateLayers { targets, pivot_x, pivot_y, angle })
 }
 

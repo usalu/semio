@@ -4,8 +4,9 @@ use flow_extension_sdk::geometry::{GeometryStep,GeometryWorkFailure,GeometryWork
 use semio_framework_job::{StepContext,OriginalDomainProjection,OriginalDomainFailure,OriginalDomainView as View};
 use semio_framework_pack_json::{ArtifactCanonicalJsonTree as Tree,ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text,JsonGrammarCursor,JsonMemberPolicy,Value};
 use pack::record::{OwnedProjectedPackWireCursor,BorrowedProjectedPackFailure};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,NativeDecodeControl};
-use semio_framework_value::native_decoding::NativeDecodeContinuation;
+use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::{Mutex,TryLockError};
 

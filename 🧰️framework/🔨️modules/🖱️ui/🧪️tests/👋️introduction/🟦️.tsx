@@ -6,11 +6,11 @@ import { describe, expect, it, vi } from "vitest";
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { type IntroductionDefinition } from "@semio-tech/framework";
-import { initUiLocaleSync } from "../../🎯️targets/⚛️react/🌐️i18n/🟦️.ts";
+import { initUiLocaleSync } from "@semio-tech/ui-react/i18n";
 import { registerIntroductionSurfaceResolver as publicRegisterIntroductionSurfaceResolver } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/👋️introduction.ts";
 import { Vector2 } from "three";
-import fixture from "../../🧫️fixtures/👋️introduction/🔣️.json";
-import { UIIntroduction, ndcToViewportPoint, registerIntroductionSurfaceResolver, resolveIntroductionPoint, splitIntroductionBodyParagraphs } from "../../🎯️targets/⚛️react/👋️introduction/🟦️.tsx";
+import fixture from "../🧫️fixtures/👋️introduction/🔣️.json";
+import { UIIntroduction, ndcToViewportPoint, registerIntroductionSurfaceResolver, resolveIntroductionPoint, splitIntroductionBodyParagraphs } from "@semio-tech/ui-react/introduction";
 
 describe("independent introduction contract", () => {
   it("keeps its complete UI source graph independent of scene, diagram and reference renderers", () => {

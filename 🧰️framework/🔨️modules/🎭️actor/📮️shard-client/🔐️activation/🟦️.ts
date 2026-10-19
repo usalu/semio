@@ -1,8 +1,8 @@
 import { OwnedResidentLedger, type ResidentStep, type ResidentGrant, type OwnedResidentAdmission, type OwnedResidentRecord } from "@semio-tech/value-ts/resident";
-import { uiResidentMetadataEnvelope } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts";
+import { uiResidentMetadataEnvelope } from "@semio-tech/framework/modules/ui/contract/retained/resident/metadata";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { type ActorInstanceOpenRequest, type ActorInstanceLifetime, type ActorInstanceLifecycleReceipt, type ActorInstanceCloseRequest, actorInstanceLifetimeEquals } from "../../🚪️lifetime/🟦️.ts";
-import { OwnedUiInstanceRetirement, OwnedUiInstance, OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { OwnedUiInstanceRetirement, OwnedUiInstance, OwnedUiPatchAcknowledgement } from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import type { OriginalOperationAdmission } from "../../🎟️retained-turn/🟦️.ts";
 import type { ActorReturnResult, ActorReturnPageReceipt, ActorReturnOrigin, ActorReturnIdentity } from "../../📤️return/🟦️.ts";
 import type { ActorBytePage } from "../../📃️page/🟦️.ts";

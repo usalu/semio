@@ -21,9 +21,6 @@ export async function registerShellComponents7Tests(vitest: Tests1Vitest, depend
     function TestShellRoot({ children }: { readonly children: () => React.ReactNode }): React.ReactElement {
       const [scope] = reactHostPort.useState(() => createShellScope({ storage: createMemoryStoragePort(), initialLocale: "en" }));
       const [, bump] = reactHostPort.useState(0);
-      // 🐚️ Memoized: an inline (re-created every render) ref callback makes React detach+reattach the
-      // ref on every commit (identity changed → old callback fires with `null`, new one fires with the
-      // node), and since each call bumps state, that becomes an infinite render loop.
       const setRoot = reactHostPort.useCallback(
         (node: HTMLDivElement | null) => {
           scope.rootRef.current = node;
@@ -255,8 +252,6 @@ describe("Shell components", () => {
       expect(submitted).toEqual(["5"]);
       expect(repeated).toEqual([]);
       unmount();
-      // ␣️ Idle with a typed line the program tokenizes itself (`move 50 25`): Space belongs in the
-      // text, so the field never consumes it and nothing is submitted.
       render(<Harness sessionActive={false} />);
       const idle = await screen.findByPlaceholderText("Action");
       fireEvent.change(idle, { target: { value: "move" } });

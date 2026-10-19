@@ -6,7 +6,8 @@ use crate::standards::v1::subsets::any::schema::references::{close, invalid};
 use crate::standards::v1::subsets::any::schema::references::frontiers as semantic_frontiers;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::frontiers;
 use semio_framework_diagnostic::{TextError, TextSpan};
-use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, validate_sqlite_database_schema_controlled, artifact::{Projection, Cell, FloatColumn, insert_ieee754, read_binary64, ieee754_is_null}}};
 
 const NUMBERS: &[FloatColumn] = &[FloatColumn::Binary64(6), FloatColumn::Binary64(7), FloatColumn::Binary64(8), FloatColumn::Binary64(10), FloatColumn::Binary64(11), FloatColumn::Binary64(12), FloatColumn::Binary64(13), FloatColumn::Binary64(14), FloatColumn::Binary64(15), FloatColumn::Binary64(18)];
@@ -164,8 +165,8 @@ fn restore(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -
     validate_sqlite_database_schema_controlled(database, <CadSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA, control)?;
     control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
     control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, callback,allocation|{
-        let mut progress = |event: semio_framework_value::native_decoding::NativeDecodeProgress| callback(event.completed, event.total);
-        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
+        let mut progress = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| callback(event.completed, event.total);
+        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
         let result = reconstruct(database, &mut native);
         (result, native.owned_bytes())
     })?

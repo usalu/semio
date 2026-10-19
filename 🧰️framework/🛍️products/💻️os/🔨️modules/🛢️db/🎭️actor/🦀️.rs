@@ -962,13 +962,7 @@ impl<A: Actor> Supervisor<A> {
                     slots[index] = self.spawn_slot(Some(mailbox));
                 }
             }
-            SupervisionDecision::Escalate => {
-                // 🚧️ Extension seam: this crate has no parent-supervisor concept of its own —
-                // the caller (typically `db_engine`'s catalog actor) owns what "escalate" means
-                // at the top of its tree (e.g. mark the document unavailable, alert an operator).
-                // Children are left exactly as they terminated; nothing here is a stub, the
-                // decision itself *is* the real, complete signal this crate is responsible for.
-            }
+            SupervisionDecision::Escalate => {}
         }
         Some(decision)
     }

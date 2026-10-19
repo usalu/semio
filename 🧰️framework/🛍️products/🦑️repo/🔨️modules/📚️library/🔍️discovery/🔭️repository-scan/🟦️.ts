@@ -9,6 +9,7 @@ import { type RegistryCatalogInputView, type RegistryCatalogOwnerIndex, gitlinkB
 import { exactContractFilename, fixedContractFilename } from "../🎯️taxonomy-path-matching/🟦️.ts";
 import { projectionByteCompare } from "../🧱️path-projection-contracts/🟦️.ts";
 import { semanticPackageGenerationAuthority } from "../🎁️package-projection/🟦️.ts";
+import { packageImplementationAdmitted } from "../🧱️package-implementation-admission/🟦️.ts";
 import { fileKindIdForSourcePath, loadCatalogTaxonomy, loadTaxonomy, pathIsExcluded, semanticDirectoryKindId } from "../🔐️taxonomy-authority/🟦️.ts";
 
 /** 🏗️ Renders only new generated leaves, excluding authored mappings and their source splices. */
@@ -201,6 +202,8 @@ export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { reado
           : dispositionRole === "unresolved" && generalDecision.role !== "implementation"
             ? { role: dispositionRole, evidence: `fixed/configurable ${disposition!.validator} validator rejected the source body` }
             : generalDecision;
+        const admitted = decision.role === "implementation" && packageImplementationAdmitted(rule.implementationAdmission, { relativePath: relative(packageRoot, path).split("\\").join("/"), kindId, directoryHasFile: (name) => existsSync(join(dirname(path), name)), manifestFilename: (contractId) => { const contract = taxonomy.fixedFilenameContracts[contractId]; return contract ? fixedContractFilename(contract) : null; } });
+        if (admitted) continue;
         if (decision.role === "implementation") addPackageProblem(owner, path, "package-implementation", `contains authored implementation inside a package boundary: ${decision.evidence}.`);
         else if (decision.role !== "tool-metadata" && (decision.role === "unresolved" || !sourceGrammar.allowedRoles.includes(decision.role))) addPackageProblem(owner, path, "package-role-unresolved", `has uncertain or disallowed package role ${JSON.stringify(decision.role)}: ${decision.evidence}.`);
       }

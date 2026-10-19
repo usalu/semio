@@ -8,10 +8,10 @@ import type{LowpolyMeshAttribute,LowpolyMeshState}from"../🕸️mesh/🟦️.ts
 import type { ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 import type { LowpolyObject, LowpolyPaintLayer } from "../🟦️.ts";
 
-/** One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`. */
+/** 🖼️ One contiguous run of RGBA bytes written into a paint-layer pixel buffer at `offset`. */
 export interface PixelRun {
   offset: number;
-  /** base64-encoded RGBA bytes */
+  /** 💾️ base64-encoded RGBA bytes */
   bytes: string;
 }
 

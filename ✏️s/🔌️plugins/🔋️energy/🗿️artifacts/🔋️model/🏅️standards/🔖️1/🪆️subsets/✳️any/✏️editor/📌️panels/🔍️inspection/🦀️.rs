@@ -281,8 +281,6 @@ fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyR
             &id,
         ),
     )?;
-    // 🚧️ EDITABLE, not a report: picking a partner is the only way to make a surface interzone, and
-    // it is the control the boundary select cannot be (review finding 2).
     let partners = partner_options(model, surface);
     if !partners.is_empty() {
         let held = surface.outside_boundary_condition.interzone_partner().map(energy_target_id).unwrap_or_default();
@@ -684,8 +682,6 @@ pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteracti
     let Ok(raw) = id.parse::<u32>() else { return summary(model, config, locale) };
     let entity = crate::model::EntityId(raw);
     let mut builder = PanelTreeBuilder::new(ROOT)?;
-    // 🔢️ One text row per selected id, windowed — the form below belongs to the FIRST resolvable one,
-    // which is the id every viewport pick leaves at the head of the selection.
     if interaction.selected_ids.len() > 1 {
         let title = format!("{} {}", interaction.selected_ids.len(), say(locale, "selected", "ausgewählt"));
         builder = builder.window_section(windows, &format!("{ROOT}.selection"), Some(ui_label(&title)?), true, &interaction.selected_ids, |selected| tree_item(format!("{ROOT}.selection.{selected}"), selected.clone()))?;

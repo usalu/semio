@@ -51,10 +51,6 @@ fn number_json(value: f64) -> semio_framework_pack_json::Value {
 /// exercised (neither the containment shortcut nor the axis-box shortcut applies) and the result
 /// is known-good topology rather than an accidental validation failure.
 async fn bored_box_operands(registry: &Registry) -> (neural_engine::ColdOwner<Dictionary>, neural_engine::ColdOwner<Dictionary>) {
-    // 🧹️ Every neural `Dictionary` this helper owns crosses a cold boundary — `dispatch_cold`
-    // retires the input it is handed and answers inside a `ColdOwner` — and the two OUT
-    // dictionaries are RETURNED rather than dropped here: a dictionary that is the last owner of
-    // its own pairs panics on drop by design.
     let box_prim = registry
         .dispatch_cold(
             "brep.prim3d.box",
@@ -124,7 +120,6 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
     let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_bee_f00_u64;
-    // ⌛️ One microsecond: every step overruns it, so the round trip yields after exactly one unit.
     let request = cut_request_json(&a, &b, node_hash, 1, 1);
     let mut round_trips = 0usize;
     let mut previous_done = 0_u64;
@@ -162,8 +157,6 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
 
     retire_operands(a, b, box_out, cylinder_out);
 
-    // ♾️ The same cut, unbudgeted, over fresh operands in a fresh kernel — the stepped path IS the
-    // algorithm, so the two answers must agree on everything but the minted handle id.
     reset_test_kernel().await;
     let control_registry = BudgetRegistry::new(geometry_session());
     let (box_out, cylinder_out) = bored_box_operands(&control_registry).await;
@@ -200,8 +193,6 @@ async fn a_cancel_between_round_trips_retires_the_parked_evaluation() {
     assert!(flow_extension_sdk::evaluation_progress(&registry,"brep.bool.cut", node_hash).is_some(), "a yielded evaluation is parked under its own node hash");
     assert!(flow_extension_sdk::cancel_evaluation(&registry,"brep.bool.cut", node_hash), "the cancel retires exactly that job");
     assert!(!flow_extension_sdk::cancel_evaluation(&registry,"brep.bool.cut", node_hash), "a second cancel is a no-op, not a fault");
-    // 🔁 The chain re-emits the identical request; the extension no longer holds the job, so it
-    // admits a fresh one — the cancel stopped the WORK, it did not poison the node.
     let resumed = semio_framework_pack_json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("envelope json");
     assert!(resumed.get("phase").and_then(semio_framework_pack_json::Value::as_str).is_some(), "the resumed round trip still answers an envelope");
     assert_eq!(flow_extension_sdk::cancel_all_evaluations(&registry), 1, "the whole-registry cancel retires the job the resumed round trip parked");

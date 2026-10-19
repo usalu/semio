@@ -1,4 +1,4 @@
-//! changes (exact, never a negated angle that would accumulate float error). Nothing turned ⇒ `Vec::new()`.
+//! 🎯️ changes (exact, never a negated angle that would accumulate float error). Nothing turned ⇒ `Vec::new()`.
 //! ↩️ Inverse for `RotateSelection` — the absolute setters restoring every BASE orientation the turn
 use super::mutation::RotateSelection;
 use {semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::MoveObject, semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::RotateObject, semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::RotateTargetVolume, semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::ScaleObject};

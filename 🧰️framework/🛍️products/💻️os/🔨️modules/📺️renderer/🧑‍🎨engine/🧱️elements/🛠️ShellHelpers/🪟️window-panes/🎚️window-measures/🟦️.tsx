@@ -223,9 +223,6 @@ export function windowMeasuresChrome(
   const partitioned = partitionWindowMeasures(measures ?? [], activeUtilityId);
   const general = qualifyWindowMeasureIds(partitioned.general, windowId);
   const utilityOptions = qualifyWindowMeasureIds(partitioned.utilityOptions, windowId);
-  // 🪟️ Stamps this chrome's owning `windowId` onto every measure action, mirroring `tagSetActiveUtilityWindow`
-  // for the utility bar — the generic `onAction` dispatch path reads it back out to target the plugin call's
-  // `view_state.windowId`, so a grid/LOD/selection toggle only ever mutates ITS OWN window's options.
   const taggedOnAction = (action: ActionDescriptor) => onAction({ ...action, args: { ...(action.args as object | undefined), windowId } });
   return {
     measures: windowMeasuresOverlay(general, taggedOnAction),

@@ -41,6 +41,7 @@ extern crate semio_s_artifact_energy_model_mut_outdoor_air as outdoor_air_mutati
 extern crate semio_s_artifact_energy_model_mut_people_gain as people_gain_mutations;
 extern crate semio_s_artifact_energy_model_mut_plant_loop as plant_loop_mutations;
 extern crate semio_s_artifact_energy_model_mut_pv_system as pv_system_mutations;
+extern crate semio_s_artifact_energy_model_mut_pv_system_performance as pv_system_performance_mutations;
 extern crate semio_s_artifact_energy_model_mut_refrigeration as refrigeration_mutations;
 extern crate semio_s_artifact_energy_model_mut_room_air as room_air_mutations;
 extern crate semio_s_artifact_energy_model_mut_run as run_mutations;
@@ -61,6 +62,7 @@ extern crate semio_s_artifact_energy_model_mut_ventilation as ventilation_mutati
 extern crate semio_s_artifact_energy_model_mut_water_system as water_system_mutations;
 extern crate semio_s_artifact_energy_model_mut_week_schedule as week_schedule_mutations;
 extern crate semio_s_artifact_energy_model_mut_window_layer as window_layer_mutations;
+extern crate semio_s_artifact_energy_model_mut_window_layer_optics as window_layer_optics_mutations;
 extern crate semio_s_artifact_energy_model_mut_year_schedule as year_schedule_mutations;
 extern crate semio_s_artifact_energy_model_mut_zone_equipment as zone_equipment_mutations;
 extern crate semio_s_artifact_energy_model_mut_zone as zone_mutations;
@@ -289,12 +291,12 @@ pub enum EnergyModelMutation {
     RemoveElectricalLoadCenterBattery(crate::load_center_mutations::RemoveElectricalLoadCenterBattery),
     CreatePvSystem(crate::pv_system_mutations::CreatePvSystem),
     DeletePvSystem(crate::pv_system_mutations::DeletePvSystem),
-    ChangePvSystemDcCapacity(crate::pv_system_mutations::ChangePvSystemDcCapacity),
+    ChangePvSystemDcCapacity(crate::pv_system_performance_mutations::ChangePvSystemDcCapacity),
     ChangePvSystemArea(crate::pv_system_mutations::ChangePvSystemArea),
     ChangePvSystemTilt(crate::pv_system_mutations::ChangePvSystemTilt),
     ChangePvSystemAzimuth(crate::pv_system_mutations::ChangePvSystemAzimuth),
-    ChangePvSystemModuleEfficiency(crate::pv_system_mutations::ChangePvSystemModuleEfficiency),
-    ChangePvSystemInverterEfficiency(crate::pv_system_mutations::ChangePvSystemInverterEfficiency),
+    ChangePvSystemModuleEfficiency(crate::pv_system_performance_mutations::ChangePvSystemModuleEfficiency),
+    ChangePvSystemInverterEfficiency(crate::pv_system_performance_mutations::ChangePvSystemInverterEfficiency),
     CreateBattery(crate::battery_mutations::CreateBattery),
     DeleteBattery(crate::battery_mutations::DeleteBattery),
     ChangeBatteryCapacity(crate::battery_mutations::ChangeBatteryCapacity),
@@ -367,22 +369,22 @@ pub enum EnergyModelMutation {
     ReplaceFenestrationVertices(crate::fenestration_mutations::ReplaceFenestrationVertices),
     ChangeGlazingMaterialThickness(crate::window_layer_mutations::ChangeGlazingMaterialThickness),
     ChangeGlazingMaterialConductivity(crate::window_layer_mutations::ChangeGlazingMaterialConductivity),
-    ChangeGlazingMaterialSolarTransmittance(crate::window_layer_mutations::ChangeGlazingMaterialSolarTransmittance),
-    ChangeGlazingMaterialVisibleTransmittance(crate::window_layer_mutations::ChangeGlazingMaterialVisibleTransmittance),
-    ChangeGlazingMaterialInfraredEmissivity(crate::window_layer_mutations::ChangeGlazingMaterialInfraredEmissivity),
+    ChangeGlazingMaterialSolarTransmittance(crate::window_layer_optics_mutations::ChangeGlazingMaterialSolarTransmittance),
+    ChangeGlazingMaterialVisibleTransmittance(crate::window_layer_optics_mutations::ChangeGlazingMaterialVisibleTransmittance),
+    ChangeGlazingMaterialInfraredEmissivity(crate::window_layer_optics_mutations::ChangeGlazingMaterialInfraredEmissivity),
     RenameGlazingMaterial(crate::window_layer_mutations::RenameGlazingMaterial),
     ChangeGasMaterialThickness(crate::window_layer_mutations::ChangeGasMaterialThickness),
     ChangeGasMaterialGas(crate::window_layer_mutations::ChangeGasMaterialGas),
     RenameGasMaterial(crate::window_layer_mutations::RenameGasMaterial),
     ChangeMaterialRoughness(crate::finish_mutations::ChangeMaterialRoughness),
-    ChangeGlazingMaterialSolarReflectanceFront(crate::window_layer_mutations::ChangeGlazingMaterialSolarReflectanceFront),
-    ChangeGlazingMaterialSolarReflectanceBack(crate::window_layer_mutations::ChangeGlazingMaterialSolarReflectanceBack),
-    ChangeGlazingMaterialVisibleReflectanceFront(crate::window_layer_mutations::ChangeGlazingMaterialVisibleReflectanceFront),
-    ChangeGlazingMaterialVisibleReflectanceBack(crate::window_layer_mutations::ChangeGlazingMaterialVisibleReflectanceBack),
-    ChangeGlazingMaterialInfraredTransmittance(crate::window_layer_mutations::ChangeGlazingMaterialInfraredTransmittance),
-    ChangePvSystemTemperatureCoefficient(crate::pv_system_mutations::ChangePvSystemTemperatureCoefficient),
-    ChangePvSystemFaimanHeatLossConstant(crate::pv_system_mutations::ChangePvSystemFaimanHeatLossConstant),
-    ChangePvSystemFaimanHeatLossWind(crate::pv_system_mutations::ChangePvSystemFaimanHeatLossWind),
+    ChangeGlazingMaterialSolarReflectanceFront(crate::window_layer_optics_mutations::ChangeGlazingMaterialSolarReflectanceFront),
+    ChangeGlazingMaterialSolarReflectanceBack(crate::window_layer_optics_mutations::ChangeGlazingMaterialSolarReflectanceBack),
+    ChangeGlazingMaterialVisibleReflectanceFront(crate::window_layer_optics_mutations::ChangeGlazingMaterialVisibleReflectanceFront),
+    ChangeGlazingMaterialVisibleReflectanceBack(crate::window_layer_optics_mutations::ChangeGlazingMaterialVisibleReflectanceBack),
+    ChangeGlazingMaterialInfraredTransmittance(crate::window_layer_optics_mutations::ChangeGlazingMaterialInfraredTransmittance),
+    ChangePvSystemTemperatureCoefficient(crate::pv_system_performance_mutations::ChangePvSystemTemperatureCoefficient),
+    ChangePvSystemFaimanHeatLossConstant(crate::pv_system_performance_mutations::ChangePvSystemFaimanHeatLossConstant),
+    ChangePvSystemFaimanHeatLossWind(crate::pv_system_performance_mutations::ChangePvSystemFaimanHeatLossWind),
     ChangePvSystemMounting(crate::pv_system_mutations::ChangePvSystemMounting),
 }
 

@@ -183,6 +183,9 @@ where
 #[cfg(test)]
 #[path = "🧪️tests/🧪️outcome-code/🦀️.rs"]
 mod outcome_code_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧳️native-contract/🧪️tests/🦀️.rs"]
+mod native_diff_contract_tests;
 
 mod owned_retirement {
     use super::*;

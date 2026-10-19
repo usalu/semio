@@ -14,7 +14,6 @@ export async function registerIntroductiondemoarcpointAndMoreTests(vitest: Tests
       expect(introductionDemoArcPoint(from, to, 0)).toEqual(from);
       expect(introductionDemoArcPoint(from, to, 1)).toEqual(to);
       const mid = introductionDemoArcPoint(from, to, 0.5);
-      // 🎬️ The straight-line midpoint is (50, 0) — an orbit arc must bulge perpendicular (off the x-axis).
       expect(mid.x).toBeCloseTo(50, 5);
       expect(Math.abs(mid.y)).toBeGreaterThan(5);
     });
@@ -45,8 +44,6 @@ export async function registerIntroductiondemoarcpointAndMoreTests(vitest: Tests
         expect(probe()).toBe("false");
         expect(getByTestId("idle-probe").getAttribute("data-last")).toBe("10,20");
 
-        // 🎬️ Same coordinates as the last move: ignored, so the idle timer set by the move above must NOT
-        // have been restarted — advancing exactly the threshold from that move flips idle back to true.
         fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 10, clientY: 20 }));
         expect(probe()).toBe("false");
         act(() => {

@@ -9,7 +9,7 @@ export interface PlaygroundTopology {
 }
 
 export interface PlaygroundInference {
-  /** @derived */
+  /** 🕸️ @derived */
   topology: PlaygroundTopology;
 }
 

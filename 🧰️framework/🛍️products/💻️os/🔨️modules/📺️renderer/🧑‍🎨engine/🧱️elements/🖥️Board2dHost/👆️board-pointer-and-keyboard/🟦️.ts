@@ -124,7 +124,6 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       session.pointerCancelScreen();
       endBoardPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
       pendingCameraDispatchRef.current = null;
-      // ↩️ A cancelled gesture publishes nothing; its restore frames still mirror into the sibling panes.
       drainIntoBuffer();
       pendingEventRowsRef.current = [];
       boardStatusRef.current.pendingEvents = 0;
@@ -205,9 +204,7 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
           const flushed = settleGestureEnd(session);
           try {
             session.renderFrame();
-          } catch {
-            /* gpu not ready */
-          }
+          } catch {}
           dispatchBufferedEvents();
           notifyBoardPeersGestureEnded(peerScope, node.controllerId, node.surfaceId, flushed);
         }
@@ -218,12 +215,6 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [peerScope, dispatch, dispatchBufferedEvents, node.controllerId, node.surfaceId, scene?.interactive, scene?.selectionJson, settleGestureEnd]);
 
-  // 🔁️ `tab` walks the open slot's candidates forward, `shift+tab` back — the same two chords the app
-  // binds to `cycleBrushCandidate`/`cycleBrushCandidateBack`. This listener runs in the CAPTURE phase so
-  // its `preventDefault` reaches the shell's keybinding dispatcher (which bails on `defaultPrevented`)
-  // BEFORE it fires: the slot must advance exactly one step, not two. The local engine cycles first so
-  // the ghost moves this frame, and the flushed `brushCandidates` row carries the new index to the guest.
-  // It is armed by the armed brush OR by an open popup, which is why the picker is reachable without the tool.
   useEffect(() => {
     if (!scene?.interactive) return undefined;
     const armed = scene.activeUtility === "brush";
@@ -235,9 +226,7 @@ export function useBoardPointerAndKeyboard(core: BoardCore3) {
       session.brushCycleCandidate?.(!event.shiftKey);
       try {
         session.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
+      } catch {}
       flushBoardEvents();
     };
     window.addEventListener("keydown", onTabCapture, true);

@@ -110,9 +110,6 @@ fn retained_context(transient: LowpolyTransient, transient_generation: u64) -> s
 fn retained_route_partition_and_publication_are_exact() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
 
-    // 🎯️ The generated command schema is the one count every other table must match — 46 since
-    // 2026-09-08 (`setActiveUtility` became framework-owned, `loadDocumentJson` became
-    // `replaceSnapshotJson`); the literal 47 these assertions carried was never re-run.
     let declared = LowpolyCommand::TOOL_JOB_IDS.len();
     let all = every_command();
     let mut partition = LOWPOLY_MIGRATED_TOOL_IDS.to_vec();
@@ -268,8 +265,6 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
         for _attempt in 0..INTERACTIVE_TURN_ATTEMPTS {
             let mut work = LowpolyRetainedCommandWork::new(tool_id, disposition, operation.operation_id, operation.generation, operation.canonical_base_revision, context.identity_digest());
             let mut slowest = std::time::Duration::ZERO;
-            // 🔊️ Nothing is selected here, so a selection-bound mesh edit REFUSES (`no faces selected`) —
-            // a refusal is a turn like any other and must respect the same ceiling.
             let mut refused = false;
             loop {
                 let started = std::time::Instant::now();
@@ -288,8 +283,6 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
                     Ok(ArtifactCommandWorkStep::Complete(_) | ArtifactCommandWorkStep::CompleteWithEphemeral { .. }) => break,
                     Ok(_) => {}
                     Err(fault) => {
-                        // 🗿️ `deleteSelection` on the one-object box refuses "keeps at least one object" — that
-                        // is its empty-selection answer at object granularity.
                         assert!(fault.message.contains("selected") || fault.message.contains("selection") || fault.message.contains("at least one object"), "{tool_id} refused for a reason other than the empty selection: {fault:?}");
                         refused = true;
                         break;

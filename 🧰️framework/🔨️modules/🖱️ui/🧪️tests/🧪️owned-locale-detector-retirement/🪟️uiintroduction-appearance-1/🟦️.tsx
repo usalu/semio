@@ -24,9 +24,6 @@ describe("UIIntroduction appearance", () => {
       expect(onDismiss).toHaveBeenCalledWith(false);
     });
 
-    // 🪜️ D2 regression: the title chip, close cell, body, and footer chips of one introduction step
-    // are all `data-level="dialog"` and must render the exact same fill without piecewise borders —
-    // the WindowChrome silhouette owns their one continuous outline.
     it("renders title, close, body, and footer chips as one borderless dialog-level glass silhouette", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },

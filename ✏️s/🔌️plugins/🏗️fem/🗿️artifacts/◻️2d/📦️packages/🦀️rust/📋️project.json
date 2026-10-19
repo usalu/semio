@@ -7,10 +7,22 @@
     "role:artifact",
     "family:fem"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🕹️interaction/🧪️tests/🔬️unit/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🪟️window-config-contract/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/🧫️fixtures/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🏗️structure/🎟️fixed-dofs/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🧬️schema/**/*"
+    ]
+  },
   "targets": {
     "verify-fem2d-numerical-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem2d-invariants numerical"
@@ -27,7 +39,7 @@
     },
     "verify-fem2d-mounted-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem2d-invariants mounted"
@@ -44,7 +56,7 @@
     },
     "verify-fem2d-invariants": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem2d-invariants native"
@@ -61,7 +73,7 @@
     },
     "verify-fem2d-invariants-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem2d-invariants source"
@@ -84,7 +96,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
@@ -134,7 +146,7 @@
     },
     "verify-fem2d-presence-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify fem2d-invariants presence"
@@ -153,7 +165,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-material",
+            "verify",
+            "fem2d-material",
             "source"
           ]
         }
@@ -162,14 +175,15 @@
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-material source"
       },
-      "cache": false,
+      "cache": true,
       "executor": "repo:script"
     },
     "test-material-native": {
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "test-material",
+            "verify",
+            "fem2d-material",
             "native"
           ]
         }
@@ -178,12 +192,12 @@
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-material native"
       },
-      "cache": false,
+      "cache": true,
       "executor": "repo:script"
     },
     "test-fixed-dofs-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-fixed-dofs source"
@@ -199,7 +213,7 @@
     },
     "test-fixed-dofs-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-fixed-dofs native"

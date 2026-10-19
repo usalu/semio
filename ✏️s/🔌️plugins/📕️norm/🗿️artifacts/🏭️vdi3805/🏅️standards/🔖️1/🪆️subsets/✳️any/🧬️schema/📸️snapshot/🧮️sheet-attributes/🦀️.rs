@@ -249,7 +249,7 @@ impl semio_framework_dsl_record::DslField for SheetAttributes {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Value)}
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{<Self as semio_framework_value::ToValue>::to_value_controlled(self,control).map(semio_framework_dsl_record::FieldValue::Value)}
 
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self,semio_framework_value::ValueError> {
         match value {
             semio_framework_dsl_record::FieldValue::Value(value) => sheet_attributes_controlled(value, control),
             _ => Err(vdi3805_invalid("expected VDI3805 sheet attribute value")),
@@ -276,7 +276,7 @@ fn vdi3805_invalid(message: impl Into<String>) -> semio_framework_value::ValueEr
     semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)
 }
 
-pub fn sheet_attribute_object<'a>(value: &'a semio_framework_value::DslValue, allowed: &[&str], control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<&'a [(String, semio_framework_value::DslValue)],semio_framework_value::ValueError> {
+pub fn sheet_attribute_object<'a>(value: &'a semio_framework_value::DslValue, allowed: &[&str], control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<&'a [(String, semio_framework_value::DslValue)],semio_framework_value::ValueError> {
     let semio_framework_value::DslValue::Object(fields) = value else { return Err(vdi3805_invalid("expected VDI3805 attribute object")); };
     if fields.len() > allowed.len() { return Err(vdi3805_invalid("VDI3805 attribute object has excess fields")); }
     for (position, (key, _)) in fields.iter().enumerate() {

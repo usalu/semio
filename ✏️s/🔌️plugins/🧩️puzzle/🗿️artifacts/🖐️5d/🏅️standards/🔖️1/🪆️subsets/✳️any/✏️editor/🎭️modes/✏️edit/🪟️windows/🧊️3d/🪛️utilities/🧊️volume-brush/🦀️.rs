@@ -1,4 +1,4 @@
-//! where the Fill tool may place. Its Utility Options are the voxel width/depth/height steppers that
+//! 🪣️ where the Fill tool may place. Its Utility Options are the voxel width/depth/height steppers that
 //! 🧊️ 3D-window utility — Volume Brush: Alt+click paints grid-snapped target volumes that constrain
 //! size each painted volume (in grid-spacing units). Bound only by the 3D world window — a target
 //! volume is a pose-space box, and the flat board paints its projection rather than painting it.

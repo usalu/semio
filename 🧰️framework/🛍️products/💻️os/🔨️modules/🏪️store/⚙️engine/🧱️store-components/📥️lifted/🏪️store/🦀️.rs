@@ -46,7 +46,7 @@ use crate::lifted_document_materialize::uncommitted_edit_ids;
 use semio_framework_os_store_text_io::text_format::print_document_pack;
 use semio_framework_os_store_text_io::text_format::mutation_ids;
 use semio_framework_os_store_ledger::{ArtifactEditMessageLedger, fold_envelope_history, fold_event_log};
-use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ID_BYTES, ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY, ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, ReplayProjection, StackMirrorDirt, edit_timestamp, envelope_viewer_head, operation_semantic_kind, retire_replayed_projection, retire_scratch_operations};
+use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ID_BYTES, ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY, ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, ColdReplayProjection, StackMirrorDirt, edit_timestamp, envelope_viewer_head, operation_semantic_kind, retire_replayed_projection, retire_scratch_operations};
 #[cfg(test)]
 use semio_framework_os_store_ledger::hot_path_census;
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::{ArtifactStoreBatchAdmissionRejected, ArtifactStoreBatchPublication};

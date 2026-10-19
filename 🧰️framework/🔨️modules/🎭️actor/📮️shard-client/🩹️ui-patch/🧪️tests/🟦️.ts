@@ -1,7 +1,7 @@
 /** 🩹️ The actor binds the UI host patch seam when its ui-patch module loads, and the UI instance then refuses a forged patch source. */
 import {expect,test} from "vitest";
 import "../🟦️.ts";
-import {OwnedUiInstance} from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import {OwnedUiInstance} from "@semio-tech/framework/modules/ui/contract/retained/instance";
 import {uiPatchAuthority} from "../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts";
 
 const lifetime={activationGeneration:1n,instanceId:1,guestLifetime:1n},activation={actorId:"seam-actor",activationGeneration:1n,assertActive(){}};

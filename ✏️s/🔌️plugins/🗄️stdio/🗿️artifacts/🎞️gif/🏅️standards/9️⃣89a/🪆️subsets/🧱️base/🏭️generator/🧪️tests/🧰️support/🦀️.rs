@@ -24,7 +24,6 @@ fn main() {
 fn build_gif() -> Vec<u8> {
     const W: u16 = 4;
     const H: u16 = 4;
-    // 🎨️ Global colour table: 8 flat RGB triples (red, green, blue, yellow, cyan, magenta, black, white).
     let global_palette: &[u8] = &[255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0, 0, 255, 255, 255, 0, 255, 0, 0, 0, 255, 255, 255];
 
     let mut out = Vec::new();
@@ -37,16 +36,12 @@ fn build_gif() -> Vec<u8> {
         app_header[8..11].copy_from_slice(b"1.0");
         encoder.write_raw_extension(gif::AnyExtension(0xFF), &[&app_header[..], &[7u8, 0, 0]]).expect("application extension");
 
-        // 🖼️ Frame 0: uses the global palette, indices 0..15 checkerboard-ish, no transparency,
-        // disposal "keep" (do not dispose).
         let frame0_indices: Vec<u8> = (0..16u8).map(|i| i % 4).collect();
         let mut frame0 = gif::Frame::from_indexed_pixels(W, H, frame0_indices, None);
         frame0.delay = 50;
         frame0.dispose = gif::DisposalMethod::Keep;
         encoder.write_frame(&frame0).expect("frame 0");
 
-        // 🖼️ Frame 1: its OWN local palette (distinct from the global one), disposal "restore to
-        // background", transparent index 3.
         let frame1_indices: Vec<u8> = vec![0, 1, 2, 3, 1, 2, 3, 0, 2, 3, 0, 1, 3, 0, 1, 2];
         let local_palette: Vec<u8> = vec![10, 10, 10, 90, 90, 90, 170, 170, 170, 250, 250, 250];
         let mut frame1 = gif::Frame::from_indexed_pixels(W, H, frame1_indices, Some(3));
@@ -56,7 +51,6 @@ fn build_gif() -> Vec<u8> {
         frame1.transparent = Some(3);
         encoder.write_frame(&frame1).expect("frame 1");
 
-        // 🖼️ Frame 2: interlaced, global palette, disposal "restore to previous".
         let frame2_indices: Vec<u8> = (0..16u8).rev().map(|i| i % 4).collect();
         let mut frame2 = gif::Frame::from_indexed_pixels(W, H, frame2_indices, None);
         frame2.delay = 100;

@@ -67,14 +67,12 @@ pub struct PhysicalSize {
 impl PhysicalSize {
     pub const ZERO: Self = Self { width: 0, height: 0 };
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn new(width: u32, height: u32) -> Self {
         Self { width, height }
     }
 
     /// 🕳️ True when either dimension is zero — the "parked" condition every backend must survive
     /// without erroring (see [`GraphicsBackend::resize`]).
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub const fn is_zero(&self) -> bool {
         self.width == 0 || self.height == 0
     }
@@ -275,36 +273,27 @@ pub struct ReadbackImage {
 ///   clipping decisions of its own — `Scene::finish` already made every one of those decisions, which
 ///   is precisely what lets four independent backends agree pixel-for-pixel.
 pub trait GraphicsBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn name(&self) -> &'static str;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError>;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ResourceOp]) -> Result<(), BackendError>;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, time_seconds: f32) -> Result<RenderReport, BackendError>;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn device_status(&self) -> DeviceStatus;
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError>;
 
     /// 🧪️ Forces the next [`Self::device_status`] to report `Lost`, for the cross-backend
     /// conformance suite to exercise recovery without waiting on a real GPU fault.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn debug_force_device_loss(&mut self);
 
     /// 🧪️ Reads back the last presented frame for pixel comparison across backends.
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError>;
 }
 
@@ -347,12 +336,10 @@ impl NullBackend {
     /// 🕳️ Plain sync constructor — unlike a real backend's `async fn new(window) -> Result<Self,
     /// BackendError>` (device/adapter construction is the one async exception this trait's
     /// invariants call out), there is no device here to await.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
         Self::default()
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn validate_known_resources(&self, packet: &RenderPacket) -> Result<(), BackendError> {
         for batch in &packet.batches {
             if let Some(texture) = batch.texture {
@@ -380,12 +367,10 @@ impl NullBackend {
 }
 
 impl GraphicsBackend for NullBackend {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn name(&self) -> &'static str {
         "null"
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn capabilities(&self) -> DeviceCapabilities {
         DeviceCapabilities {
             max_texture_dimension: 8192,
@@ -399,14 +384,12 @@ impl GraphicsBackend for NullBackend {
         }
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn resize(&mut self, size: PhysicalSize, dpr: f32) -> Result<(), BackendError> {
         self.size = size;
         self.dpr = dpr;
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn apply_resources(&mut self, ops: &[ResourceOp]) -> Result<(), BackendError> {
         for op in ops {
             match op {
@@ -430,7 +413,6 @@ impl GraphicsBackend for NullBackend {
         Ok(())
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn render(&mut self, packet: &RenderPacket, _time_seconds: f32) -> Result<RenderReport, BackendError> {
         if let DeviceStatus::Lost(reason) = self.status {
             return Err(BackendError::DeviceLost(reason));
@@ -444,12 +426,10 @@ impl GraphicsBackend for NullBackend {
         Ok(RenderReport::Presented { stats })
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn device_status(&self) -> DeviceStatus {
         self.status
     }
 
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn recover(&mut self) -> Result<RecoveredResources, BackendError> {
         #[cfg(feature = "backend-testing")]
         let recovered = self.pending_recovery.take().unwrap_or_default();
@@ -460,7 +440,6 @@ impl GraphicsBackend for NullBackend {
     }
 
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn debug_force_device_loss(&mut self) {
         let lost_textures: Vec<TextureId> = self.known_textures.drain().collect();
         let lost_meshes: Vec<MeshId> = self.known_meshes.drain().collect();
@@ -470,7 +449,6 @@ impl GraphicsBackend for NullBackend {
     }
 
     #[cfg(feature = "backend-testing")]
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn read_back(&mut self) -> Result<ReadbackImage, BackendError> {
         if self.size.is_zero() {
             return Err(BackendError::ZeroSizeSurface);

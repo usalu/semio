@@ -23,9 +23,9 @@ pub(crate)fn admit_values(snapshot:&SemioTableSnapshot,phase:SqliteSnapshotPhase
 /// 🏛️ Checks the exact authored layout before native ownership.
 pub(crate)fn admit_layout(limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
 /// 📦️ Counts actual binary primitive cells before typed construction.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
+pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📃️ Counts actual document primitive cells before typed construction.
-pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
+pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 /// 📊️ Visits independent declarations and every cell without imposing a rectangular shape.
 pub fn visit_rows(snapshot:&SemioTableSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_table_document",1,&[Cell::Text(&snapshot.schema)])?;

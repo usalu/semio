@@ -51,9 +51,6 @@ fn apply_resources_before_render_succeeds_and_an_unapplied_id_errors_cleanly() {
     backend.resize(PhysicalSize::new(100, 100), 1.0).expect("resize");
     let mut registry = ResourceRegistry::default();
 
-    // 🖼️ Drawing only *interns* a texture — `push_raster_quad` references it by id. Getting the
-    // pixels to the device is a separate request, which is what makes a raster quad cheap to emit
-    // every frame; so the upload has to be asked for explicitly before the backend can honour it.
     registry.request_texture_upload("known", 4, 4, vec![0; 64]);
     let mut applied_builder = SceneBuilder::default();
     applied_builder.push_raster_quad(&mut registry, "known", [0.0, 0.0, 10.0, 10.0], [0.0, 0.0, 1.0, 1.0], 1.0);

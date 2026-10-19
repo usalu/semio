@@ -48,11 +48,11 @@ pub fn artifact_envelope_owned_schema() -> OwnedSchemaRecordSpec {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ArtifactEnvelopeFieldDecodeStep {
-    /// The exact token remains owned by the field authority and must be offered again.
+    /// ⏳️ The exact token remains owned by the field authority and must be offered again.
     Pending,
-    /// The exact token was consumed, but the enclosing field still owns later tokens.
+    /// 🆔️ The exact token was consumed, but the enclosing field still owns later tokens.
     TokenComplete,
-    /// The exact token and its enclosing field were both completed.
+    /// 🌐️ The exact token and its enclosing field were both completed.
     FieldComplete,
     RecordComplete,
 }

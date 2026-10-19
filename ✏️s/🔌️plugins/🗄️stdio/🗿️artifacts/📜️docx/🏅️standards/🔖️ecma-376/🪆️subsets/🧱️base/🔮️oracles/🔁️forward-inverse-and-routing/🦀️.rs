@@ -186,15 +186,6 @@ fn inverse_spec(base: &WPackage, kind: &str, params: &Json) -> Result<Vec<Json>,
             let style = params.get("style").cloned().unwrap_or(Json::Null);
             spec("remove-style", obj(vec![("id", Json::String(style.str("id")))]))
         }
-        // ↩️ `remove-style` is invertible only for the LAST style, and that is a property of the
-        // vocabulary rather than of this oracle: `DocxMutation::InsertStyle` carries only a
-        // `style` and appends (`../🧬️schema/🧬️mutations/🦀️.rs:181` → `diff_insert_style`),
-        // so no declared kind can put a style back at an INTERIOR position. Removing `Title`
-        // from this fixture's `[Normal, Title, Heading1, Heading2, Heading3, Code, TableCell]`
-        // and appending it again leaves `Heading1` where `Title` was — which is exactly what the
-        // case's inverse law caught. Refusing outright is the honest answer; returning an undo
-        // that does not undo is not. The production `inverse()` at that file's line 227 has the
-        // same gap and answers `InsertStyle` regardless.
         "remove-style" => {
             let id = params.str("id");
             match base.styles.iter().position(|style| style.id == id) {

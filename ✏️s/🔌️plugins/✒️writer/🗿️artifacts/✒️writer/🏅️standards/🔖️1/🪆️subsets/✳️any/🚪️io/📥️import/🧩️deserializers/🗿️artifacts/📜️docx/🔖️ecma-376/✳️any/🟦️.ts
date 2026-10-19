@@ -1,2 +1,2 @@
-/** writer import docx */
+/** 📂️ writer import docx */
 export function register(): void {}

@@ -316,8 +316,6 @@ impl Topology for Grid2dTopology {
             let ry = resolve_coord(y as i32 - dy, self.height, self.boundary_y);
             if let (Some(sx), Some(sy)) = (rx, ry) {
                 if self.is_active(sx, sy) {
-                    // Slot = target's node index * offset count + offset index; a fixed dense id
-                    // per (target, offset) pair regardless of which candidate source resolved it.
                     f(NodeId::from_index(sy * self.width + sx), self.relations[i], n.index() * self.offsets.len() + i);
                 }
             }

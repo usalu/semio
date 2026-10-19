@@ -121,7 +121,6 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
       counts[backpressure.lane] -= 1;
       counts[incomingLane] += 1;
     }
-    // "coalesced" replaces in place (no count change); "rejected" never entered the mailbox.
   }
   //#endregion 📨️Enqueue
 

@@ -132,7 +132,7 @@ export function modelDefinitionInteractionRegistry(): InteractionRegistry {
 }
 
 const COMPILED_INTERACTION_BY_ID = ephemeralMap<string, InteractionSpec>("s.plugins.cad.modules.core.component.ts.COMPILED_INTERACTION_BY_ID");
-/** Clears the derived interaction compile cache when model-definition assets change. */
+/** 🧬️ Clears the derived interaction compile cache when model-definition assets change. */
 onModelDefinitionAssetsChanged(() => COMPILED_INTERACTION_BY_ID.clear());
 
 /** 📚️ Loads a model-definition interaction by stable `id` (compiled once per id for stable React runtime identity). */

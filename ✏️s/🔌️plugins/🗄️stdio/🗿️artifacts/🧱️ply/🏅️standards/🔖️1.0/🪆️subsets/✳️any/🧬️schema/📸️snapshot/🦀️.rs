@@ -56,7 +56,6 @@ pub enum PlyProperty {
 
 impl PlyProperty {
     /// 🏷️ The property's declared name, regardless of shape.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn name(&self) -> &str {
         match self {
             PlyProperty::Scalar { name, .. } => name,

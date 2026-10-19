@@ -1,4 +1,4 @@
-//! Direct text identity for `insert-javascript-action`.
+//! 🆔️ Direct text identity for `insert-javascript-action`.
 
 pub const OPCODE: &str = "insert-javascript-action";
 pub const TEXT_OPCODE: &str = OPCODE;

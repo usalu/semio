@@ -33,9 +33,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.fem.fem2d.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.fem.fem2d.schema.artifact", "schema", "s.fem.fem2d", &[("schema", "s.fem.fem2d")], None),
         ("s.fem.fem2d.inference.artifact", "inference", "s.fem.fem2d.inference", &[("schema", "s.fem.fem2d.inference")], None),
-        // 🚪️ One composer claim per dialect `🚪️io/🦀️.rs::io()` registers on the io mechanism: the
-        // native `s.fem.fem2d@1/*` plus the six stdio carriers (txt/json/csv/md both ways, stl/obj
-        // export), the same shape `🗒️note` and `🧱️block` claim.
         ("s.fem.fem2d.composer.fem2d", "composer", "s.fem.fem2d@1/*", &[("dialect", "s.fem.fem2d@1/*")], None),
         ("s.fem.fem2d.composer.csv", "composer", "s.stdio.csv@rfc4180/*", &[("dialect", "s.stdio.csv@rfc4180/*")], None),
         ("s.fem.fem2d.composer.json", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
@@ -47,9 +44,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.fem.fem2d.grammar.diff", "grammar", "fem.fem2d.diff", &[("grammar", "fem.fem2d.diff")], None),
         ("s.fem.fem2d.grammar.pack", "grammar", "fem2d.pack", &[("grammar", "fem2d.pack")], None),
         ("s.fem.fem2d.grammar.spr", "grammar", "fem2d.spr", &[("grammar", "fem2d.spr")], None),
-        // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Fem2dPlayApp>>()` derives its
-        // codec claim from `Fem2dPlayApp::DOCUMENT_SCHEMA` (= `FEM_2D_SCHEMA`, `🦀️.rs`),
-        // which is `"fem.2d"`, not `"fem.fem2d"`.
         ("s.fem.fem2d.codec.document.v1", "codec", "fem.2d:fem2d", &[("codec", "fem.2d"), ("codec-extension", "6:fem.2d:fem2d")], None),
         ("s.fem.fem2d.localization.en", "localization", "Finite element model 2D", &[], Some(("en", "Finite element model 2D"))),
         ("s.fem.fem2d.localization.de", "localization", "Finite-Elemente-Modell 2D", &[], Some(("de", "Finite-Elemente-Modell 2D"))),

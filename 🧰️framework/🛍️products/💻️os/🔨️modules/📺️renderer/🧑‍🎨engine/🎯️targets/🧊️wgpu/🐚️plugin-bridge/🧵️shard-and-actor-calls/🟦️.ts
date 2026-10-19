@@ -5,7 +5,7 @@ import { type OriginalBootstrapResponse, RemoteOriginalBootstrapOwner } from "@s
 import { ShardClient } from "@semio-tech/framework-actor/shard-client";
 import { rendererResidentLedger } from "@semio-tech/framework-canvas-ts/renderer-resident";
 import type { ShardCommandIngressPage, ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
-import { coerceTurnResult, type WireTurnResult } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { coerceTurnResult, type WireTurnResult } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🔖️turn-result/🟦️.ts";
 
 // #endregion 🔌️Imports
 
@@ -113,11 +113,6 @@ export function getShardClient(): ShardClient {
     createWorker: (shardIndex: number) => new MainThreadShardWorker(shardIndex),
     residentLedger: rendererResidentLedger(),
     originalWorkStock: frameOriginalWorkOwner(),
-    // [TRACE] temporary watchdog widening — measures whether the edit-mode `procedural.play.main`
-    // render turn is a HANG or a long-but-finite build. On THIS target the shard is a
-    // `MainThreadShardWorker`, so a compute-bound guest turn blocks the very progress ticker the
-    // 5 s ladder reads and the whole isolate logs nothing for the turn's duration (measured: 19 202 ms
-    // of complete console silence, ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     heartbeatTimeoutMs: 180_000,
     onActorTrap: (actorId, message) => undefined,
     onShardLost: (shardIndex, actorIds) => {
@@ -249,8 +244,6 @@ export function serializeWgpuActorCall<T>(actorId: string, work: () => Promise<T
     }
     const owner = queue;
     const start = (): void => {
-      // 🧵️ `work` starts on a microtask, exactly as the retired `previousSettled.then(work)` chain did,
-      // and a fault never wedges the queue: settle first, then pump the next pending call.
       void Promise.resolve().then(work).then(resolve, reject).finally(() => {
         owner.running = false;
         pumpWgpuActorCalls(actorId, owner);

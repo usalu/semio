@@ -7,7 +7,7 @@ export function requireTaxonomyValue<T>(value:T|undefined,context:string):T{if(v
 
 export type TaxonomySeverity = "warning" | "error";
 
-export type TaxonomyPackageRole = "configuration" | "declaration" | "registration" | "bootstrap" | "thin-delegation" | "implementation" | "unresolved" | "not-package";
+export type TaxonomyPackageRole = "configuration" | "declaration" | "registration" | "bootstrap" | "thin-delegation" | "implementation" | "admitted-implementation" | "unresolved" | "not-package";
 
 export type TaxonomyReferenceAdapter = "rust" | "typescript" | "go" | "python" | "dotnet" | "native" | "json" | "jsonc" | "toml" | "yaml" | "xml" | "markdown" | "gherkin";
 

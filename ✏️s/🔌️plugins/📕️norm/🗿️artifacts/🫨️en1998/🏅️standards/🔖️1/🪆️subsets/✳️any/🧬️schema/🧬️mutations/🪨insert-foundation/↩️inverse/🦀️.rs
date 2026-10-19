@@ -1,4 +1,4 @@
-//! Inverse for `insert-foundation`.
+//! ↩️ Inverse for `insert-foundation`.
 use crate::insert_foundation::InsertFoundation;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 use crate::remove_foundation;

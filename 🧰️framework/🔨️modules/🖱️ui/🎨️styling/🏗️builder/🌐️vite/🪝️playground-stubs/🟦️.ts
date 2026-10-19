@@ -102,9 +102,7 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
   let manifest: { exports?: Record<string, string | { import?: string; default?: string }>; module?: string; main?: string } | undefined;
   try {
     manifest = JSON.parse(readFileSync(resolve(pkgRoot, "package.json"), "utf8"));
-  } catch {
-    /* package.json may be absent for a half-linked workspace package */
-  }
+  } catch {}
   const pushExportTarget = (key: string) => {
     const exp = manifest?.exports?.[key];
     const target = typeof exp === "string" ? exp : (exp?.import ?? exp?.default);
@@ -146,9 +144,6 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string,delivery:FlowWa
         if(flowName!=="flow_core.js")throw Error("Closed Flow package subpath required");
         return delivery.kind==="source"?`${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`:join(delivery.root,"flow_core.js");
       }
-      // 🗂️ A module the browser requests directly arrives as Vite's own `/@fs/<absolute path>` URL, not
-      // as the specifier the importer wrote. Testing that URL for existence always fails, which used to
-      // hand back the "wasm pkg not built" stub for a pkg that is sitting right there on disk.
       const fsId = cleanId.startsWith(FS_URL_PREFIX) ? cleanId.slice(FS_URL_PREFIX.length - 1) : cleanId;
       const isWasmPkg = cleanId.includes("/pkg/") || cleanId.endsWith(".wasm") || cleanId === "@semio-tech/flow-core" || cleanId === "@semio-tech/flow-core/pkg/flow_core.js" || cleanId === "@semio-tech/flow-core/flow_core.js";
       if (!isWasmPkg) return undefined;

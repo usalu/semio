@@ -103,9 +103,6 @@ pub mod io_registry {
             return builder.build().map_err(|diagnostics| ComposeError { message: "FlowComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == FLOW_JSON_BRIDGE_DIALECT) {
-            // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
-            // is the universal bridge dialect every domain artifact already imports from.
             let text = match &source.payload {
                 IoPayload::Text(t) => t.clone(),
                 IoPayload::Binary(b) => String::from_utf8_lossy(b).into_owned(),
@@ -143,7 +140,7 @@ pub mod text {
     pub use semio_s_artifact_flow_flow_tests::standards::v1::subsets::any::io::text::*;
     pub use semio_s_artifact_flow_flow_diff::standards::v1::subsets::any::io::text::diff;
     pub use semio_s_artifact_flow_flow_inferences::standards::v1::subsets::any::io::text::inferences;
-    pub use semio_s_artifact_flow_flow_mutations::standards::v1::subsets::any::io::text::mutations;
+    pub use crate::standards::v1::subsets::any::io::text::mutations;
 }
 
 

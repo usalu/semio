@@ -12,7 +12,7 @@ export interface Fem2dBounds {
 }
 
 export interface Fem2dInference {
-  /** @derived */
+  /** 📦️ @derived */
   bounds: Fem2dBounds;
 }
 

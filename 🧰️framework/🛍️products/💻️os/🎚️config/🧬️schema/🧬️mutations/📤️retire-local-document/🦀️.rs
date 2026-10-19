@@ -38,7 +38,7 @@ impl MutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocum
     }
 }
 
-impl crate::os_spr::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
+impl semio_framework_os_command::ColdMutationKind<LocalCatalog, LocalCatalogConfigMutation> for RetireLocalDocument {
     fn diff(&self, base: &LocalCatalog) -> MutationOutcome<LocalCatalogDiff> {
         if !base.documents.iter().any(|entry| entry.document_id == self.document_id) {
             return MutationOutcome::new(LocalCatalogDiff::default()).warning("mutation.no-op", format!("\"{}\" is not listed in the local catalog.", self.document_id));

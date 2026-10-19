@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,FloatColumn,read_binary64,ieee754_is_null}}};
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value::paged::PagedUtf8;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
@@ -18,7 +18,7 @@ const EDGE:&[FloatColumn]=&[FloatColumn::Binary64(7),FloatColumn::Binary64(8),Fl
 const REGION:&[FloatColumn]=&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7)];
 const TEMPLATE:&[FloatColumn]=&[FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(12)];
 fn optional_text(value:&Option<PagedUtf8<{usize::MAX}>>)->Cell<'_>{value.as_ref().map_or(Cell::Null,|value|Cell::PagedText(value))}
-fn allocate_collection<T>(length:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PagedList<T,{usize::MAX}>,ValueError>{
+fn allocate_collection<T>(length:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedList<T,{usize::MAX}>,ValueError>{
  let mut output=PagedList::new();while let Some(bytes)=output.next_capacity_allocation_bytes(length)?{control.checkpoint()?;control.charge(bytes)?;let progress=output.reserve_capacity_one(length,bytes).map_err(|error|ValueError::from(error.refusal()))?;if !progress.progressed{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Puzzle paged collection admission did not progress"))}}Ok(output)
 }
 fn optional_real(value:Option<f64>)->Cell<'static>{value.map_or(Cell::Null,Cell::Real)}
@@ -30,7 +30,7 @@ fn flag(row:&SqliteRow,index:usize)->Result<bool,ValueError>{match row.integer(i
 fn restore_optional_flag(row:&SqliteRow,index:usize)->Result<Option<bool>,ValueError>{if matches!(row.values.get(index),Some(SqliteValue::Null)){Ok(None)}else{flag(row,index).map(Some)}}
 fn restore_optional_i32(row:&SqliteRow,index:usize)->Result<Option<i32>,ValueError>{if matches!(row.values.get(index),Some(SqliteValue::Null)){Ok(None)}else{Ok(Some(i32::try_from(row.integer(index)?).map_err(|e|invalid(e.to_string()))?))}}
 fn restore_optional_real(row:&SqliteRow,index:usize,columns:&[FloatColumn])->Result<Option<f64>,ValueError>{if ieee754_is_null(row,index,columns)?{Ok(None)}else{read_binary64(row,index,columns).map(Some)}}
-fn restore_optional_text(row:&SqliteRow,index:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Option<PagedUtf8<{usize::MAX}>>,ValueError>{match row.values.get(index){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>PagedUtf8::try_from_str_controlled(value,control).map(Some),_=>Err(invalid("Puzzle 2D optional TEXT has another storage class"))}}
+fn restore_optional_text(row:&SqliteRow,index:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Option<PagedUtf8<{usize::MAX}>>,ValueError>{match row.values.get(index){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>PagedUtf8::try_from_str_controlled(value,control).map(Some),_=>Err(invalid("Puzzle 2D optional TEXT has another storage class"))}}
 fn specificity(value:Puzzle2dCompatSpecificity)->&'static str{match value{Puzzle2dCompatSpecificity::General=>"general",Puzzle2dCompatSpecificity::Node=>"node",Puzzle2dCompatSpecificity::Edge=>"edge",Puzzle2dCompatSpecificity::Handle=>"handle",Puzzle2dCompatSpecificity::Wire=>"wire",Puzzle2dCompatSpecificity::Vortex=>"vortex"}}
 fn restore_specificity(value:&str)->Result<Puzzle2dCompatSpecificity,ValueError>{match value{"general"=>Ok(Puzzle2dCompatSpecificity::General),"node"=>Ok(Puzzle2dCompatSpecificity::Node),"edge"=>Ok(Puzzle2dCompatSpecificity::Edge),"handle"=>Ok(Puzzle2dCompatSpecificity::Handle),"wire"=>Ok(Puzzle2dCompatSpecificity::Wire),"vortex"=>Ok(Puzzle2dCompatSpecificity::Vortex),_=>Err(invalid("Puzzle 2D compatibility specificity is undeclared"))}}
 fn workload(snapshot:&Puzzle2dSnapshot,checkpoint:&mut impl FnMut(usize)->Result<(),ValueError>)->Result<usize,ValueError>{
@@ -41,12 +41,12 @@ fn workload(snapshot:&Puzzle2dSnapshot,checkpoint:&mut impl FnMut(usize)->Result
 }
 struct Members<'a>{groups:BTreeMap<i64,BTreeMap<usize,&'a SqliteRow>>}
 impl<'a> Members<'a>{
- fn new(rows:&'a[SqliteRow],columns:usize,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{
+ fn new(rows:&'a[SqliteRow],columns:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{
   control.charge(rows.len().checked_mul(384).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle 2D lookup byte overflow"))?)?;control.begin_stage(rows.len())?;let mut identities=BTreeSet::new();let mut groups:BTreeMap<i64,BTreeMap<usize,&'a SqliteRow>>=BTreeMap::new();
   for row in rows{control.step()?;identity(row,columns)?;let parent=row.integer(1)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|e|invalid(e.to_string()))?;if parent<=0||!identities.insert(row.rowid)||groups.entry(parent).or_default().insert(ordinal,row).is_some(){return Err(invalid("Puzzle 2D repeats surrogate identity or owner ordinal"))}}
   control.checkpoint()?;Ok(Self{groups})
  }
- fn take(&mut self,parent:i64,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
+ fn take(&mut self,parent:i64,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
   let Some(rows)=self.groups.remove(&parent)else{return Ok(Vec::new())};let mut output=control.allocate_vec::<&SqliteRow>(rows.len())?;control.begin_stage(rows.len())?;for(ordinal,(actual,row))in rows.into_iter().enumerate(){control.step()?;if ordinal!=actual{return Err(invalid("Puzzle 2D collection ordinals are not dense"))}output.push(row)}control.checkpoint()?;Ok(output)
  }
  fn finish(&self)->Result<(),ValueError>{if self.groups.is_empty(){Ok(())}else{Err(invalid("Puzzle 2D has unmatched owned entities"))}}
@@ -101,7 +101,7 @@ pub fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotCon
  validate_sqlite_database_schema(database,<Puzzle2dSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,control.limits())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
  let documents=&database.table("puzzle2d_document")?.rows;let cameras=&database.table("puzzle2d_camera")?.rows;let metas=&database.table("puzzle2d_meta")?.rows;let catalog_rows=&database.table("puzzle2d_kind_catalogs")?.rows;
  if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||cameras.len()!=1||metas.len()!=1||catalog_rows.len()>1{return Err(invalid("Puzzle 2D requires one complete board, camera and metadata with at most one catalog"))}identity(&cameras[0],11)?;identity(&metas[0],3)?;if cameras[0].integer(1)?!=1||metas[0].integer(1)?!=1{return Err(invalid("Puzzle 2D singleton has another board owner"))}for row in catalog_rows{identity(row,2)?;if row.integer(1)?!=metas[0].rowid{return Err(invalid("Puzzle 2D catalog has another metadata owner"))}}
- let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value::NativeDecodeControl::new(maximum,&mut progress);
+ let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut progress);
  native.charge(size_of::<Puzzle2dSnapshot>().checked_add(additional).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle authority allocation overflow"))?)?;
  let mut nodes=Members::new(&database.table("puzzle2d_node")?.rows,30,&mut native)?;let mut handles=Members::new(&database.table("puzzle2d_handle")?.rows,18,&mut native)?;let mut edges=Members::new(&database.table("puzzle2d_edge")?.rows,35,&mut native)?;let mut regions=Members::new(&database.table("puzzle2d_target_region")?.rows,19,&mut native)?;let mut compatibility=Members::new(&database.table("puzzle2d_kind_compatibility")?.rows,8,&mut native)?;
  let mut kinds=Members::new(&database.table("puzzle2d_catalog_node_kind")?.rows,11,&mut native)?;let mut bases=Members::new(&database.table("puzzle2d_base_kind")?.rows,4,&mut native)?;let mut representations=Members::new(&database.table("puzzle2d_representation")?.rows,9,&mut native)?;let mut tags=Members::new(&database.table("puzzle2d_representation_tag")?.rows,4,&mut native)?;let mut templates=Members::new(&database.table("puzzle2d_handle_template")?.rows,19,&mut native)?;let mut attributes=Members::new(&database.table("puzzle2d_attribute")?.rows,7,&mut native)?;let mut authors=Members::new(&database.table("puzzle2d_author")?.rows,8,&mut native)?;

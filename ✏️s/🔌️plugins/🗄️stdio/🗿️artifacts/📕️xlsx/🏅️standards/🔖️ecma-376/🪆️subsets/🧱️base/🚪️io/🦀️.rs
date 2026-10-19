@@ -20,10 +20,6 @@ pub mod derived_composition {
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            // 🌱 Every listed read dialect's payload is raw text/bytes that this artifact's own
-            // analyzer already round-trips through `store::Document{Dsl,Pack}` -- including bytes
-            // claiming a dependency's dialect, since (for a single-standard DAG-adjacent dependency
-            // like binary) that payload IS the same byte/text shape `analyze` already accepts.
             let native: Vec<AnalyzeSource<'_>> = sources
                 .iter()
                 .filter(|s| s.dialect == DIALECT || s.dialect == DEP_ZIP)
@@ -119,7 +115,6 @@ pub mod derived_construction {
     /// auto-assigning `(row, col)` coordinates left-to-right (`col` 0-based).
     impl XlsxBuilderConstruction {
         /// ➕️ Appends a new (initially empty) sheet and makes it the active sheet for `add_row`.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_sheet(mut self, name: impl Into<String>) -> Self {
             let mut workbook = self.snapshot.project_workbook().unwrap_or_default();
             workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
@@ -129,7 +124,6 @@ pub mod derived_construction {
 
         /// ➕️ Appends a row of values to the active sheet (the most recently added one), assigning
         /// `(row: index, col: 0..)` coordinates left-to-right.
-        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_row(mut self, index: u32, values: Vec<XlsxCellValue>) -> Self {
             let mut workbook = self.snapshot.project_workbook().unwrap_or_default();
             if let Some(sheet) = workbook.sheets.last_mut() {
@@ -164,8 +158,6 @@ pub mod derived_analysis {
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
         fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
-            // `xl/` — disambiguates from docx/pptx, which share the same zip magic and OPC shape.
             match source {
                 AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_xlsx_bytes(bytes) => semio_framework_plugin::io::Confidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => semio_framework_plugin::io::Confidence::Low,

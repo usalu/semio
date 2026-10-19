@@ -1,6 +1,7 @@
 //! 📥️ Owned typed binding advances one admitted source frontier and retains every unfinished destination.
 use crate::{FieldValue,RecordValue};
-use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::ManuallyDrop;
 
 /// 🧩️ Every owned field supplies an allocation-free receiver constructor.

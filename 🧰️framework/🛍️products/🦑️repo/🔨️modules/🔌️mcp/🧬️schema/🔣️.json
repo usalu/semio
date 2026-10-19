@@ -139,8 +139,15 @@
         "name": { "type": "string", "enum": ["ticket_open", "ticket_close", "ticket_reopen", "goal_open", "goal_close", "goal_reopen"] },
         "title": { "type": "string" },
         "description": { "type": "string" },
-        "inputSchema": { "type": "object" }
+        "inputSchema": { "type": "object" },
+        "outputSchema": { "$ref": "#/$defs/ToolOutput" }
       }
+    },
+    "ToolOutput": {
+      "description": "📤️ The one `outputSchema` every repository tool declares. `structuredContent` is always a JSON object: object data is returned as is, array or scalar data is wrapped as `{\"result\": <value>}`, null is omitted. A tool without an `outputSchema` omits non-object data.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": { "result": { "description": "Array or scalar data of the tool." } }
     },
     "TicketOpenArguments": {
       "description": "🎫️ CLOSED. `plan_id` exists only in the cursor, copilot, claude and codex profiles; `spec_id` only in the kiro profile.",

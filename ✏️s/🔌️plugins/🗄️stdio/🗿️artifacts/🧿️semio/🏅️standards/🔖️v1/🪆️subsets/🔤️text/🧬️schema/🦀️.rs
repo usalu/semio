@@ -22,15 +22,12 @@ impl Default for SemioTextArtifact {
 }
 
 impl SemioTextArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioTextSnapshot {
         SemioTextSnapshot { schema: self.schema.clone(), runs: self.runs.clone() }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_snapshot(snapshot: SemioTextSnapshot) -> Self {
         Self { schema: snapshot.schema, runs: snapshot.runs }
     }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn set_snapshot(&mut self, snapshot: SemioTextSnapshot) {
         self.schema = snapshot.schema;
         self.runs = snapshot.runs;

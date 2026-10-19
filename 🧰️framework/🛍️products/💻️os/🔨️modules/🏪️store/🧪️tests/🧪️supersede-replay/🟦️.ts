@@ -92,7 +92,7 @@ test("cold history fixtures declare finite caller identity admission", () => {
   finally { database.close(); }
   const source = readModuleTreeSource(new URL("./🦀️.rs", import.meta.url));
   expect(source).toContain("EntityIdentityAuthority");expect(source).toContain(">::new(FIXTURE_IDENTITY_BYTE_CEILING,");
-  expect(source).toContain("const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES");
+  expect(source).toContain("const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES");
 });
 
 test("🎟️ semantic preparation validates independent physical currencies", () => {
@@ -105,7 +105,8 @@ test("🎟️ semantic preparation validates independent physical currencies", (
   const source = readFileSync(new URL("../../🔁️replay/🎮️operation/🦀️.rs", import.meta.url), "utf8");
   expect(source).toContain("Pending(RetainedCloneProgress)");
   expect(source).toContain("progress.fits(grant.retained_grant())");
-  for (const lane of ["copy", "capacity", "release", "depth"]) expect(source).toContain(`next_advance_${lane}_demand`);
+  expect(source).toContain("fn advance_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;");
+  expect(source).toContain("pub fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>");
 });
 
 test("📨️ selected diagnostic copy belongs to the neutral message owner", () => {

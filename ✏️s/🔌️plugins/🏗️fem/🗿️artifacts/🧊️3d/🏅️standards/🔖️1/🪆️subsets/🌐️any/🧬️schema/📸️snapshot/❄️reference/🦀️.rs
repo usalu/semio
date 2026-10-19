@@ -1,5 +1,5 @@
 //! ❄️ Explicit synchronous FEM snapshot values own canonical authoring and reference algebra.
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
@@ -46,7 +46,7 @@ pub struct Fem3dSnapshotValue {
 }
 impl Fem3dSnapshotValue {
  /// 🛂️ Explicit reference decoding validates plain authoring identities under its original decoder control.
- pub fn validate_interaction_identities_controlled(&self,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{super::identity_admission::validate_typed(self,control)}
+ pub fn validate_interaction_identities_controlled(&self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{super::identity_admission::validate_typed(self,control)}
     pub fn validate_interaction_identities(&self) -> Result<(), semio_framework_value::ValueError> {
         let invalid = || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "FEM3d identity is empty, repeated in its namespace, or exceeds shared scoped identity bounds");
         let rows = self.nodes.iter().map(|row| ("node", row.id.as_str()))

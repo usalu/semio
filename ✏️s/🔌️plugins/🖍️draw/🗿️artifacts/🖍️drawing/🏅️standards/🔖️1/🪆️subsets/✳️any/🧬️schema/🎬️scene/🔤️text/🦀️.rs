@@ -3,7 +3,8 @@ use semio_s_artifact_draw_drawing_model::PathSegment;
 use crate::preparation::{DocumentScenePlan, DocumentSceneContent, DocumentSceneError};
 use semio_framework_2d::text::font::{FontOutlineLimits,AdmittedFont,StaticFontBytes,catalog::FontCatalogAdmissionJob,run::{FontOutlineRun,FontOutlineRunCursor,FontRunStyle}};
 use semio_framework_2d::text::font::shape::unicode::{UnicodeDataAdmissionJob,AdmittedUnicode,UNICODE_BYTES};
-use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
+use semio_framework_value_persistent::list::PagedList;
 fn invalid(message:impl Into<String>)->DocumentSceneError{DocumentSceneError::Invalid(message.into())}
 #[derive(semio_framework_value::RetireOwned)]
 struct Owners{unicode_admission:Option<UnicodeDataAdmissionJob<StaticFontBytes>>,unicode:Option<AdmittedUnicode<StaticFontBytes>>,plan:Option<DocumentScenePlan>,catalog:[Option<FontCatalogAdmissionJob>;4],fonts:[Vec<AdmittedFont<StaticFontBytes>>;4],run:Option<FontOutlineRunCursor>,completed_runs:PagedList<FontOutlineRunCursor,{usize::MAX}>,outputs:PagedList<FontOutlineRun,{usize::MAX}>,geometry:Vec<PathSegment>,failure:Option<DocumentSceneError>}

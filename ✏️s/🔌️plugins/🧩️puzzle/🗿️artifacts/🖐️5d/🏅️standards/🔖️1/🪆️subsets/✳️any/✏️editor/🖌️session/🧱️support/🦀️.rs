@@ -15,7 +15,7 @@ pub fn puzzle5d_preflight_reserved_wire(raw: Vec<u8>, maximum_bytes: usize) -> R
 
 pub fn puzzle5d_job_fault(detail: impl AsRef<str>) -> crate::puzzle_job::JobTurn {
     let bytes = detail.as_ref().as_bytes();
-    crate::puzzle_job::JobTurn::Fault(bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)].to_vec())
+    crate::puzzle_job::JobTurn::Fault(bytes[..bytes.len().min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)].to_vec())
 }
 
 pub fn puzzle5d_job_checkpoint(stage: u8, cursor: usize, progress: u64) -> crate::puzzle_job::JobTurn {

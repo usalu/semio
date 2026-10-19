@@ -128,8 +128,6 @@ mod tests {
             let snapshot = PdfSnapshot { objects, ..PdfSnapshot::default() };
             let diagnostics = check_pdf_a_conformance(&snapshot);
             assert!(diagnostics.iter().any(|d| d.code.0 == CODE_EMBEDDED_FILE_AFRELATIONSHIP && d.severity == Severity::Error), "got {diagnostics:?}");
-            // No genuine part-3 signal (missing /AFRelationship is exactly the violation), so the
-            // level detector must not credit this document with Part 3.
             assert_eq!(detect_pdfa_level(&snapshot), Some(PdfALevel::L2b));
         }
 

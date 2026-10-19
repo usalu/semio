@@ -1,7 +1,7 @@
 /** 🧪️ Pending attempt cancellation matches Node's timer oracle and observes either late settlement. */
 import { setTimeout as delay } from "node:timers/promises";
 import { expect, it } from "vitest";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { retryWithJitteredBackoff } from "../🟦️.ts";
 
 for (const settlement of fixture.cases) it(`cancels before late ${settlement}`, async () => {

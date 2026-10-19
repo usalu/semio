@@ -1,7 +1,7 @@
 //! 🧬️ Fem3d diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
 use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoad;
@@ -648,21 +648,21 @@ impl RowPatch<FemSupport> for Fem3dSupportPatch {
         self.ry = later.ry.or_else(|| self.ry.take());
         self.rz = later.rz.or_else(|| self.rz.take());
     }
-    fn inverse(&self, row: &FemSupport) -> Self { Self { node_id: self.node_id.as_ref().map(|_| row.node_id.clone()), fixed: self.fixed.as_ref().map(|_| row.fixed.clone()), tx: self.tx.map(|_| row.fixed.contains(&crate::FemDof::Tx)), ty: self.ty.map(|_| row.fixed.contains(&crate::FemDof::Ty)), tz: self.tz.map(|_| row.fixed.contains(&crate::FemDof::Tz)), rx: self.rx.map(|_| row.fixed.contains(&crate::FemDof::Rx)), ry: self.ry.map(|_| row.fixed.contains(&crate::FemDof::Ry)), rz: self.rz.map(|_| row.fixed.contains(&crate::FemDof::Rz)) } }
+    fn inverse(&self, row: &FemSupport) -> Self { Self { node_id: self.node_id.as_ref().map(|_| row.node_id.clone()), fixed: self.fixed.as_ref().map(|_| row.fixed.clone()), tx: self.tx.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx)), ty: self.ty.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty)), tz: self.tz.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz)), rx: self.rx.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rx)), ry: self.ry.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ry)), rz: self.rz.map(|_| row.fixed.contains(&semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz)) } }
     fn is_empty(&self) -> bool { self.node_id.is_none() && self.fixed.is_none() && self.tx.is_none() && self.ty.is_none() && self.tz.is_none() && self.rx.is_none() && self.ry.is_none() && self.rz.is_none() }
 }
 impl Fem3dSupportPatch {
     /// 🛂️ Whole sets and membership setters are disjoint authored modes.
-    pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| crate::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.tz.is_none() && self.rx.is_none() && self.ry.is_none() && self.rz.is_none()) }
+    pub fn valid(&self) -> bool { self.fixed.as_ref().is_none_or(|fixed| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::canonical(fixed) && self.tx.is_none() && self.ty.is_none() && self.tz.is_none() && self.rx.is_none() && self.ry.is_none() && self.rz.is_none()) }
     fn memberships(&self, base: &[crate::standards::v1::subsets::any::schema::structure::FemDof]) -> Vec<crate::standards::v1::subsets::any::schema::structure::FemDof> {
         let mut fixed = self.fixed.as_deref().unwrap_or(base).to_vec();
-        if let Some(value) = self.tx { fixed.retain(|entry| *entry != crate::FemDof::Tx); if value { fixed.push(crate::FemDof::Tx); } }
-        if let Some(value) = self.ty { fixed.retain(|entry| *entry != crate::FemDof::Ty); if value { fixed.push(crate::FemDof::Ty); } }
-        if let Some(value) = self.tz { fixed.retain(|entry| *entry != crate::FemDof::Tz); if value { fixed.push(crate::FemDof::Tz); } }
-        if let Some(value) = self.rx { fixed.retain(|entry| *entry != crate::FemDof::Rx); if value { fixed.push(crate::FemDof::Rx); } }
-        if let Some(value) = self.ry { fixed.retain(|entry| *entry != crate::FemDof::Ry); if value { fixed.push(crate::FemDof::Ry); } }
-        if let Some(value) = self.rz { fixed.retain(|entry| *entry != crate::FemDof::Rz); if value { fixed.push(crate::FemDof::Rz); } }
-        crate::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
+        if let Some(value) = self.tx { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx); } }
+        if let Some(value) = self.ty { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty); } }
+        if let Some(value) = self.tz { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz); } }
+        if let Some(value) = self.rx { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rx); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rx); } }
+        if let Some(value) = self.ry { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ry); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ry); } }
+        if let Some(value) = self.rz { fixed.retain(|entry| *entry != semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz); if value { fixed.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz); } }
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
     }
     /// 🔁️ A replacement authors the node and whole restraint set.
     pub fn replacement(row: &FemSupport) -> Self { Self { node_id: Some(row.node_id.clone()), fixed: Some(row.fixed.clone()), ..Default::default() } }

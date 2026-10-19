@@ -64,14 +64,12 @@ struct BrepBuilder<'a> {
 }
 
 impl<'a> BrepBuilder<'a> {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn point(&self, id: u64) -> Option<[f64; 3]> {
         let args = self.doc.instance(id)?.entity("CARTESIAN_POINT")?;
         let coords = args.get(1)?.as_list()?;
         Some([coords.first()?.as_real()?, coords.get(1)?.as_real()?, coords.get(2)?.as_real()?])
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn vertex_point(&mut self, id: u64) -> Option<usize> {
         if let Some(&idx) = self.vertex_of.get(&id) {
             return Some(idx);
@@ -86,7 +84,6 @@ impl<'a> BrepBuilder<'a> {
     }
 
     /// ➡️ `(start_vertex_idx, end_vertex_idx)` honoring `ORIENTED_EDGE.orientation`.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn oriented_edge_endpoints(&mut self, oriented_edge_id: u64) -> Option<(usize, usize)> {
         let args = self.doc.instance(oriented_edge_id)?.entity("ORIENTED_EDGE")?;
         let edge_ref = args.get(3)?.as_ref_id()?;
@@ -106,7 +103,6 @@ impl<'a> BrepBuilder<'a> {
         Some(if orientation { (start, end) } else { (end, start) })
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn edge_loop(&mut self, edge_loop_id: u64) -> Option<Vec<usize>> {
         let args = self.doc.instance(edge_loop_id)?.entity("EDGE_LOOP")?;
         let edges = args.get(1)?.as_list()?.to_vec();
@@ -119,7 +115,6 @@ impl<'a> BrepBuilder<'a> {
         Some(indices)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn face_bound_loop(&mut self, bound_id: u64) -> Option<Vec<usize>> {
         let inst = self.doc.instance(bound_id)?;
         let (bound_type, args) = inst.primary()?;
@@ -135,7 +130,6 @@ impl<'a> BrepBuilder<'a> {
         Some(indices)
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn advanced_face(&mut self, face_id: u64) -> Option<BrepFace> {
         let args = self.doc.instance(face_id)?.entity("ADVANCED_FACE")?;
         let bounds = args.get(1)?.as_list()?.to_vec();

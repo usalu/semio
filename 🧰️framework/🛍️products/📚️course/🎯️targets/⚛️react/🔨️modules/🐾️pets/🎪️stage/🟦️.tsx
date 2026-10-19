@@ -68,19 +68,19 @@ export function petNames(menagerie: Menagerie, species: readonly Slug[], locale:
 //#endregion 🎬️Scene
 
 //#region 🎾️Play
-/** 🎾️ What a learner can ask a pet on stage for without a pointer — a hello, a trick, a stroke, a toss into the air —
+/** 🎾️ What a learner can ask a pet on stage for without a pointer — a hello, a trick, petting, a toss and explicit gestures —
  * in the order the settings offer them: the stage's own deeds. */
-export const PET_DEEDS = ["hello", "trick", "pet", "toss"] as const satisfies readonly Deed[];
+export const PET_DEEDS = ["hello", "trick", "pet", "toss", "circle", "countercircle", "stroke", "shake"] as const satisfies readonly Deed[];
 
 /** 🕹️ One of {@link PET_DEEDS}. */
 export type PetDeed = (typeof PET_DEEDS)[number];
 
 /** 🏷️ The button of every {@link PetDeed} beside the name of a pet in "Play with the pets". */
-export const PET_DEED_LABELS: { readonly [D in PetDeed]: CourseLabelKey } = { hello: "course.preferences.petsHello", trick: "course.preferences.petsTrick", pet: "course.preferences.petsPet", toss: "course.preferences.petsToss" };
+export const PET_DEED_LABELS: { readonly [D in PetDeed]: CourseLabelKey } = { hello: "course.preferences.petsHello", trick: "course.preferences.petsTrick", pet: "course.preferences.petsPet", toss: "course.preferences.petsToss", circle: "course.preferences.petsCircle", countercircle: "course.preferences.petsCountercircle", stroke: "course.preferences.petsStroke", shake: "course.preferences.petsShake" };
 
 /** 📣️ What the status line of "Play with the pets" says once the learner asked a pet for a {@link PetDeed} — what was
  * asked, never what the pet then does or what the pets do by themselves (`{{name}}` is the pet). */
-export const PET_DEED_SAID: { readonly [D in PetDeed]: CourseLabelKey } = { hello: "course.preferences.petsHelloSaid", trick: "course.preferences.petsTrickSaid", pet: "course.preferences.petsPetSaid", toss: "course.preferences.petsTossSaid" };
+export const PET_DEED_SAID: { readonly [D in PetDeed]: CourseLabelKey } = { hello: "course.preferences.petsHelloSaid", trick: "course.preferences.petsTrickSaid", pet: "course.preferences.petsPetSaid", toss: "course.preferences.petsTossSaid", circle: "course.preferences.petsCircleSaid", countercircle: "course.preferences.petsCountercircleSaid", stroke: "course.preferences.petsStrokeSaid", shake: "course.preferences.petsShakeSaid" };
 
 /** 🐕️ A pet on stage: its species and its display name in the learner's language. */
 export interface PetPlayer {
@@ -213,7 +213,7 @@ export function CoursePetLayer(props: { readonly pets: StagedPets }): ReactEleme
 //#region 🤹️Playground
 /** 🤹️ "Play with the pets", a row of the settings (`row`, with its name in `name`: the settings' own classes) that plays
  * with the pets on stage without a pointer (WCAG 2.1.1 keyboard, 2.5.1 pointer gestures, 2.5.7 dragging movements): one
- * group per pet, named by the pet, with a button for each deed — a hello, a trick, a stroke, a toss — and one polite
+ * group per pet, named by the pet, with a button for each deed, including explicit gesture choices, and one polite
  * status line that says what the learner just asked for, and only that: nothing the pets do by themselves is spoken.
  * Focus stays on the pressed button. The names are a column, so every pet's buttons start at the same place and wrap
  * beside its name. */
@@ -226,9 +226,9 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
       <span className={props.name} aria-hidden="true">
         {text("course.preferences.petsPlayWith")}
       </span>
-      <div role="group" aria-label={text("course.preferences.petsPlayWith")} className="grid min-w-0 grid-cols-[max-content_minmax(0,1fr)] items-center gap-single" data-pets-play="">
+      <div role="group" aria-label={text("course.preferences.petsPlayWith")} className="grid min-w-0 grid-cols-1 items-center gap-single sm:grid-cols-[max-content_minmax(0,1fr)]" data-pets-play="">
         {playing.players.map((player) => (
-          <div key={player.species} role="group" aria-labelledby={`${scope}-${player.species}`} className="col-span-2 grid grid-cols-subgrid items-center" data-pets-player={player.species}>
+          <div key={player.species} role="group" aria-labelledby={`${scope}-${player.species}`} className="col-span-full grid grid-cols-subgrid items-center" data-pets-player={player.species}>
             <span id={`${scope}-${player.species}`} className="text-sm font-semibold">
               {player.name}
             </span>
@@ -247,7 +247,7 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
             </span>
           </div>
         ))}
-        <p role="status" aria-live="polite" aria-atomic="true" className="col-span-2 m-0 text-xs text-muted-foreground">
+        <p role="status" aria-live="polite" aria-atomic="true" className="col-span-full m-0 text-xs text-muted-foreground">
           {announcement.message === "" ? null : <span key={announcement.serial}>{announcement.message}</span>}
         </p>
       </div>

@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_value::{ErasedSnapshotRetirement,retirement::controlled::ControlledRetirement,native_decoding::NativeDecodeRetirementRecipient,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+use semio_framework_value::{ErasedSnapshotRetirement, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use crate::test_allocation::observe_backing;
 use std::cell::Cell;
 

@@ -2,7 +2,7 @@
 
 use crate::{standards::v_ecma_376::subsets::base::{schema::{refusal::{DocxError},vocabulary::{REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES}}}};
 use framework_schema::ArtifactSchema;
-use semio_framework_value::list::PagedList;
+use semio_framework_value_persistent::list::PagedList;
 use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, ownership::{retire_xml_document, retire_xml_document_with_frontier}, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
@@ -72,7 +72,6 @@ pub struct DocxParagraph {
 }
 
 impl DocxParagraph {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn text(text: impl Into<String>) -> Self {
         Self { runs: vec![DocxRun { text: text.into(), ..Default::default() }], style: None, extra_paragraph_properties: Vec::new() }
     }
@@ -126,7 +125,6 @@ pub enum DocxBlock {
 }
 
 impl DocxBlock {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn paragraph(text: impl Into<String>) -> Self {
         Self::Paragraph(DocxParagraph::text(text))
     }
@@ -184,7 +182,7 @@ impl DocxXmlPart {
         path: String,
         content_type: String,
         document: XmlDocument,
-        control: &mut semio_framework_value::NativeDecodeControl<'_>,
+        control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,
     ) -> Result<Self, semio_framework_value::ValueError> {
         let mut source=RetiringXmlDocument(Some(document));
         let retained=RetainedXmlDocument::try_from_document_controlled(source.0.as_ref().expect("owned DOCX XML source"),control)?;
@@ -211,7 +209,7 @@ impl DocxXmlPart {
 
 pub fn docx_xml_parts_from_iter_controlled(
     values: impl IntoIterator<Item = DocxXmlPart>,
-    control: &mut semio_framework_value::NativeDecodeControl<'_>,
+    control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,
 ) -> Result<DocxXmlParts, semio_framework_value::ValueError> {
     let mut output = DocxXmlParts::default();
     for value in values {
@@ -267,7 +265,6 @@ impl Default for DocxSnapshot {
 
 impl DocxSnapshot {
     /// 🏗️ Builds a snapshot from non-XML OPC state plus authoritative logical XML parts.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn from_parts(mut opc: OpcPackage, mut xml_parts: Vec<DocxXmlPart>) -> Result<Self, semio_framework_value::ValueError> {
         opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
         xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
@@ -275,14 +272,12 @@ impl DocxSnapshot {
     }
 
     /// 📄️ Finds one authoritative logical XML part by normalized OPC path.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn xml_part(&self, path: &str) -> Option<&DocxXmlPart> {
         let key = path.trim_start_matches('/');
         self.xml_parts.iter().find(|part| part.path == key)
     }
 
     /// 📄️ Finds one mutable authoritative logical XML part by normalized OPC path.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn xml_part_mut(&mut self, path: &str) -> Option<&mut DocxXmlPart> {
         let key = path.trim_start_matches('/');
         self.xml_parts.iter_mut().find(|part| part.path == key)

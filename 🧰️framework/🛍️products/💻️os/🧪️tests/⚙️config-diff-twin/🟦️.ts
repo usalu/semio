@@ -25,7 +25,7 @@ import {
   type LocalCatalogConfigMutation,
   type LocalCatalogDiff,
   type LocalDocument,
-} from "@semio-tech/framework/config/schema/mutations";
+} from "@semio-tech/framework/config/mutations";
 import {
   absorbIdentityDiff,
   absorbLocalCatalogDiff,
@@ -37,15 +37,15 @@ import {
   decodeLocalCatalogValue,
   inverseIdentityDiff,
   inverseLocalCatalogDiff,
-} from "@semio-tech/framework/config/schema/mutations";
+} from "@semio-tech/framework/config/mutations";
 
-const MUTATIONS = new URL("../../🎚️config/🧬️schema/🧬️mutations/", import.meta.url);
+const MUTATIONS = new URL("../../🎚️config/🧪️tests/🧫️fixtures/🧬️mutations/", import.meta.url);
 const read = <T>(directory: string, ...segments: string[]): T => JSON.parse(readFileSync(new URL(`${directory}/${segments.join("/")}/🔣️.json`, MUTATIONS), "utf8")) as T;
 const vector = <T, M>(leaf: string, scenario: string) => ({
-  before: read<T>(`${leaf}/🧫️fixtures/${scenario}`, "📸️snapshot", "⬅️before"),
-  mutation: read<M>(`${leaf}/🧫️fixtures/${scenario}`, "🦠️mutation"),
-  diff: read<unknown>(`${leaf}/🧫️fixtures/${scenario}`, "🔺️diff"),
-  after: read<T>(`${leaf}/🧫️fixtures/${scenario}`, "📸️snapshot", "➡️after"),
+  before: read<T>(`${leaf}/${scenario}`, "📸️snapshot", "⬅️before"),
+  mutation: read<M>(`${leaf}/${scenario}`, "🦠️mutation"),
+  diff: read<unknown>(`${leaf}/${scenario}`, "🔺️diff"),
+  after: read<T>(`${leaf}/${scenario}`, "📸️snapshot", "➡️after"),
 });
 
 const CATALOG_VECTORS = {

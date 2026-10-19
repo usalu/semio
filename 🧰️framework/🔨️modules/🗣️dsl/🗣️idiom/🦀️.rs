@@ -9,18 +9,12 @@ pub trait DslIdiom {
     const LANG: &'static str;
     type Ast: Clone + PartialEq + Send + Sync;
 
-    // 🚫️async: E4 fn-pointer slot — every method here is coerced into `IdiomHooks`'s plain `fn`
-    // fields (`canonicalize`/`classify`/`complete`) in `hooks_for` below; an `fn` item's
-    // pointer type is unnameable, so this whole trait must stay sync. See R2 E4.
     fn parse(text: &str) -> Result<Self::Ast, TextError>;
     /// LAW: `Self::parse(&Self::print(ast)) == Ok(ast)` for every `ast` the idiom can produce —
     /// the idiom's own round-trip law, the direct analogue of this engine's `parse ∘ print = id`
     /// for `RecordSpec` grammars.
-    // 🚫️async: E4 fn-pointer slot — see `parse` above
     fn print(ast: &Self::Ast) -> String;
-    // 🚫️async: E4 fn-pointer slot — see `parse` above
     fn classify(text: &str) -> Vec<(TokenClass, TextSpan)>;
-    // 🚫️async: E4 fn-pointer slot — see `parse` above
     fn complete(_text: &str, _offset: usize) -> Vec<CompletionItem> {
         Vec::new()
     }
@@ -123,13 +117,11 @@ pub struct LanguageSpec {
 
 impl LanguageSpec {
     /// 📝 Whether this role is a text grammar surface (dsl/op/diff/config/embed).
-    // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
     pub fn is_text_role(self) -> bool {
         matches!(self.role, LanguageRole::Document | LanguageRole::Config | LanguageRole::Ops | LanguageRole::Embedded | LanguageRole::Diff)
     }
 
     /// 📡️ Whether this role is a binary protocol surface (pack/spr).
-    // 🚫️async: E1 pure accessor — trivial enum match, no suspension point — see R9
     pub fn is_binary_role(self) -> bool {
         matches!(self.role, LanguageRole::Pack | LanguageRole::Spr)
     }

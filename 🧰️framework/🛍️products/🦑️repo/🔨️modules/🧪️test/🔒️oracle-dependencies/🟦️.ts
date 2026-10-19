@@ -152,8 +152,6 @@ export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegis
     if (name.length === 0) return;
     const id = `${ecosystem}:${name}`;
     const previous = found.get(id);
-    // 🔒️Production wins over test: one production declaration makes the package production-reachable
-    // however many test-owned files also declare it.
     const isProduction = production || (previous?.production ?? false);
     const kinds: ClassifiedDependency["kinds"] = isProduction ? ["production-runtime"] : registered.has(name) || probePackages.has(name) ? ["test-oracle"] : ["test-runner"];
     found.set(id, {
@@ -187,19 +185,10 @@ export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegis
           const parsed = JSON.parse(source) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
           for (const [dependency, version] of Object.entries(parsed.dependencies ?? {})) if (!version.startsWith("workspace:") && !version.startsWith("file:") && !version.startsWith("link:")) record("js", dependency, version, filePath, production);
           for (const [dependency, version] of Object.entries(parsed.devDependencies ?? {})) if (!version.startsWith("workspace:") && !version.startsWith("file:") && !version.startsWith("link:")) record("js", dependency, version, filePath, false);
-        } catch {
-          /* 🧭️A malformed package.json is somebody else's gate to report. */
-        }
+        } catch {}
         continue;
       }
       if (name.name === "Cargo.toml") {
-        // 🦀️Only registry crates count. THREE things are not external distributions and each was
-        // being counted as one: a `path = "…"` dependency is in-repository source; a
-        // `{ workspace = true }` dependency resolves through the root manifest, which declares the
-        // repository's own crates by path; and the keys of a `[[bench]]`/`[[bin]]` table are not
-        // dependencies at all — a `^\[([^\]]+)\]$` heading match cannot match `[[bench]]`, so the
-        // section silently stayed on `dependencies` and `harness`, `name` and `path` were reported as
-        // crates. Any line opening a bracket now resets the section.
         let section = "";
         for (const line of source.split(/\r?\n/)) {
           const trimmed = line.trim();
@@ -240,9 +229,6 @@ export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegis
         continue;
       }
       if (name.name === "pyproject.toml") {
-        // 🐍️ONLY the `dependencies = [ … ]` array. Reading every `key = value` line reported
-        // `name`, `version`, `requires-python` and `package` as production dependencies — a parser
-        // that finds four packages in a file declaring none is worse than no parser.
         let inArray = false;
         for (const line of source.split(/\r?\n/)) {
           const trimmed = line.trim();

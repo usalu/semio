@@ -92,15 +92,6 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control-binding", "fixed UI inspector admission failed"))?
             .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.control", "fixed UI inspector admission failed"))?;
-        // 🪪️ The editable control rides as the CHILD OF A TREE ROW, not as a bare `field` beside the
-        // rows. A panel section keeps only `treeItem` children (`collectTreeItems`,
-        // `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx`);
-        // a row's NON-`treeItem` children are what the renderer mounts as that row's inline controls
-        // (`collectTreeItemControls`, same file). Authored as a sibling `field`, the one editable
-        // control this panel owns was dropped on the way to the DOM: the panel painted `Id: height`
-        // and `Range: 0..10` with no number input at all, so a slider parameter could not be edited
-        // from the inspector (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `🐍️react-gap-probe.mjs`
-        // step `inspection-edit`).
         let row = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(labels.value_field.as_str())?)
             .try_id(&format!("{prefix}.value"))
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.field-id", "fixed UI inspector admission failed"))?

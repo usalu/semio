@@ -106,7 +106,6 @@ pub enum GltfAccessorType {
 }
 
 impl GltfComponentType {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn byte_size(self) -> usize {
         match self {
             Self::Byte | Self::UnsignedByte => 1,
@@ -117,7 +116,6 @@ impl GltfComponentType {
 }
 
 impl GltfAccessorType {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn components(self) -> usize {
         match self {
             Self::Scalar => 1,

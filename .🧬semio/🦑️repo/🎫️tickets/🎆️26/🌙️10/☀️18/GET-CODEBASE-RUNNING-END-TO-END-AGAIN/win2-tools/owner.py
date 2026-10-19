@@ -1,0 +1,38 @@
+import sys,re
+f=sys.argv[1]
+s=open(f,encoding="utf-8").read()
+def sub(old,new,count=1):
+    global s
+    n=s.count(old)
+    if n!=count: raise SystemExit(f"expected {count} of {old[:100]!r}, found {n}")
+    s=s.replace(old,new)
+def rsub(pat,new,count=1):
+    global s
+    found=re.findall(pat,s,re.S)
+    if len(found)!=count: raise SystemExit(f"expected {count} of /{pat[:100]}/, found {len(found)}")
+    s=re.sub(pat,lambda m:new,s,flags=re.S)
+rsub(r'import\{nativeFixedPublicationMetadataCommandV1[^\n]*\n','')
+rsub(r'import\{captureNativeFixedPublicationSystemV1,nativeFixedPublicationCommandV1,[^\n]*\n','import{nativeFixedPublicationCommandV1,observeNativeFixedPublicationV1,createNativeFixedPublicationReceiptV1,type NativeFixedPublicationReceiptV1}from"../🧱️fixed/🟦️.ts";\n')
+sub('interface PublicationScope{metadataReceipt?:NativeFixedPublicationMetadataReceiptV1;readonly system:NativeFixedPublicationSystemV1|undefined;readonly options','interface PublicationScope{readonly options')
+sub('live:boolean;dispatches:number;metadataCommands:number;bodyCommands:number;','live:boolean;dispatches:number;bodyCommands:number;')
+sub('for(const name of["fixed.dmg","fixed.dir","fixed.vhd","image.json"','for(const name of["fixed.dmg","fixed.dir","image.json"')
+sub(',proof:ResourceLeaseWriterProofV1,system:NativeFixedPublicationSystemV1|undefined):NativeImagePublicationV1{',',proof:ResourceLeaseWriterProofV1):NativeImagePublicationV1{')
+sub('scopes.set(token,{options,request,body,enrollment,proof,resource,system,parents:','scopes.set(token,{options,request,body,enrollment,proof,resource,parents:')
+sub('live:true,dispatches:0,metadataCommands:0,bodyCommands:0,','live:true,dispatches:0,bodyCommands:0,')
+sub('process.platform==="darwin"?"fixed.dmg":process.platform==="win32"?"fixed.vhd":"fixed.dir"','process.platform==="darwin"?"fixed.dmg":"fixed.dir"')
+sub('(process.platform==="win32"?requireNativeImagePublicationV1(state.token).metadataReceipt?.slotDevice!==row.dev.toString()||requireNativeImagePublicationV1(state.token).metadataReceipt?.slotInode!==row.ino.toString():(row.mode&511n)!==BigInt(namespace.mode))','!modeMatches(row.mode,namespace.mode)')
+sub('||(row.mode&511n)!==BigInt(namespace.mode))throw','||!modeMatches(row.mode,namespace.mode))throw',2)
+sub('(created.mode&511n)!==BigInt(namespace.fileMode)','!modeMatches(created.mode,namespace.fileMode)')
+sub('mode:Number(file.mode&511n),bytes:Number(file.size)}','mode:process.platform==="win32"?namespace.fileMode:Number(file.mode&511n),bytes:Number(file.size)}')
+sub('const slot=Object.freeze({...metadataSchema.definitions.Slot.const}),','const modeMatches=(actual:bigint,expected:number)=>process.platform==="win32"||(actual&511n)===BigInt(expected),slot=Object.freeze({...metadataSchema.definitions.Slot.const}),')
+rsub(r'/\*\* 🪟️ Owns one exact metadata child, stdin publication[^\n]*\nasync function capturePublicationMetadataCommand\(.*?\n','')
+rsub(r'if\(process\.platform==="win32"\)\{const metadata=await capturePublicationMetadataCommand\(token,"pending",null\);.*?scope\.pendingDurable=true;return handle;\}','')
+rsub(r'if\(process\.platform==="win32"\)\{await capturePublicationMetadataCommand\(state\.token,"published",bytes\.toString\("utf8"\)\);.*?await staged\(\);check\(\);return receipt;\}','')
+rsub(r'if\(process\.platform==="win32"\)\{await capturePublicationMetadataCommand\(state\.token,"settled",null\);checkBacking\(state\.token\);state\.live=false;return;\}','')
+sub('kind:"image"|"metadata"|"service",action:string):void{','kind:"image"|"service",action:string):void{')
+sub('scope.dispatches++;if(kind==="image")scope.bodyCommands++;else if(kind==="metadata")scope.metadataCommands++;scope.pending=true;}','scope.dispatches++;if(kind==="image")scope.bodyCommands++;scope.pending=true;}')
+sub('scope.request.initialState,scope.system,scope.initialMapping)','scope.request.initialState)',2)
+sub('if(process.platform==="win32"&&(!Number.isInteger(constants.O_NOFOLLOW)||constants.O_NOFOLLOW===0))throw Error("Actual Windows nofollow descriptor support required before publication effects");const system=captureNativeFixedPublicationSystemV1(options.control);','',2)
+sub('acceptNativeImagePublicationV1(options,request,body,enrollment,proof,system)','acceptNativeImagePublicationV1(options,request,body,enrollment,proof)',2)
+open(f,"w",encoding="utf-8").write(s)
+print("ok")

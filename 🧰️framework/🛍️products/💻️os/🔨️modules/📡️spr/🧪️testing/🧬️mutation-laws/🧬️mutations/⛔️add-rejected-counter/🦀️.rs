@@ -18,7 +18,7 @@ impl MutationKind<i64, CounterMutation> for AddRejectedCounter {
 
 }
 
-impl crate::os_spr::ColdMutationKind<i64, CounterMutation> for AddRejectedCounter {
+impl semio_framework_os_spr::ColdMutationKind<i64, CounterMutation> for AddRejectedCounter {
     fn diff(&self, _base: &i64) -> MutationOutcome<CounterDiff> {
         MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
     }
@@ -48,9 +48,3 @@ impl OpText for AddRejectedCounter {
     }
 }
 //#endregion 📜️Text
-
-//#region 🧪️Contract
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Contract

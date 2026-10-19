@@ -10,10 +10,6 @@ use semio_s_artifact_layout_layout_editor::LayoutCommand;
 async fn add_frame_action_appends_rect() {
     let mut app = layout_app().await;
     let before = app.snapshot().expect("projection").pages[0].frames.len();
-    // 🧾️ A MOUNTED app publishes through its retained typed operation, which `dispatch` settles — so
-    // neither `result.mutations` nor `result.history_patch` carries the edit (fleet brief v2, stale-test
-    // bucket 3). The SETTLED document is the committed record, and one dispatch appending exactly one
-    // frame is what this law was always about.
     dispatch(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None })).await;
     assert_eq!(app.snapshot().expect("projection").pages[0].frames.len(), before + 1);
 }
@@ -30,7 +26,6 @@ async fn patch_page_supports_margins_and_columns() {
     let mut app = layout_app().await;
     for (field, value) in [("marginTop", 60.0), ("marginRight", 40.0), ("marginBottom", 60.0), ("marginLeft", 40.0), ("columnsGutter", 18.0)] {
         dispatch(&mut app, LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: field.into(), value: value.to_string() })).await;
-        // 🧾️ Mounted: read the SETTLED page, not `result.mutations` (bucket 3).
         let page = app.snapshot().expect("projection").pages.into_iter().find(|page| page.id == "page-1").expect("page-1");
         let applied = match field {
             "marginTop" => page.margins.top,
@@ -54,7 +49,6 @@ async fn patch_frame_supports_rect_fill_and_stroke() {
     dispatch(&mut app, LayoutCommand::AddFrame(AddFrame { kind: "rect".into(), x: None, y: None })).await;
     let frame_id = format!("frame-{}", before + 1);
     dispatch(&mut app, LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: frame_id.clone(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() })).await;
-    // 🧾️ Mounted: the settled frame is the record, not `result.mutations` (bucket 3).
     let doc = app.snapshot().expect("projection");
     let frame = doc.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
     let Frame::Rect { fill, .. } = frame else { panic!("expected rect frame") };

@@ -5,7 +5,8 @@ use super::{Puzzle2dCreateNodeDisposition, Puzzle2dCreateNodePlan, Puzzle2dCreat
 use crate::standards::v1::subsets::any::schema::mutations::CreateNode;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dNode;
-use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedListEditCursor, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value::{ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneBinding, RetainedFieldCursor, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
+use semio_framework_value_persistent::list::PagedListEditCursor;
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 
 pub struct Puzzle2dCreateNodeCandidate { pub plan: Puzzle2dCreateNodePlan, pub snapshot: Option<Puzzle2dSnapshot> }

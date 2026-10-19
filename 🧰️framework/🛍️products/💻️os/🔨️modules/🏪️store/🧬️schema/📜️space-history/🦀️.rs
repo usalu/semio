@@ -142,7 +142,7 @@ impl SpaceHistoryStep {
                 }
                 let at = index.map_or(Some(next.checkpoints.len()), |index| usize::try_from(index).ok().filter(|at| *at <= next.checkpoints.len()));
                 let Some(at) = at else {
-                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.invalid-add-index", format!("checkpoint {} is inserted past the end", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
+                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.invalid-add-index", format!("checkpoint {} is inserted past the end", checkpoint.id)).at(["checkpoints", checkpoint.id.as_str()]));
                 };
                 next.checkpoints.insert(at, checkpoint.clone());
             }
@@ -151,7 +151,7 @@ impl SpaceHistoryStep {
                     return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.missing-target", format!("checkpoint {checkpoint_id} does not exist")).at(["checkpoints", checkpoint_id.as_str()]));
                 };
                 if u64::try_from(at) != Ok(*index) {
-                    return Err(crate::os_spr::MutationApplyError::new("mutation.apply.order-mismatch", format!("checkpoint {checkpoint_id} is not at index {index}")).at(["checkpoints", checkpoint_id.as_str()]));
+                    return Err(semio_framework_os_spr::MutationApplyError::new("mutation.apply.order-mismatch", format!("checkpoint {checkpoint_id} is not at index {index}")).at(["checkpoints", checkpoint_id.as_str()]));
                 }
                 next.checkpoints.remove(at);
             }
@@ -191,7 +191,7 @@ impl semio_framework_os_spr::DiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryD
 
 impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
-        let mut prepared =  crate::os_spr::PreparedField::new(snapshot.clone(), <Self as crate::os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
+        let mut prepared =  semio_framework_os_spr::PreparedField::new(snapshot.clone(), <Self as semio_framework_os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
         let mut next = prepared.value_mut();
         for step in &self.steps {
             step.step_into(&mut next)?;
@@ -210,8 +210,8 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
         }
     }
 
-    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<()> {
-        let mut prepared = crate::os_spr::PreparedField::new(snapshot.clone(), <Self as crate::os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
+    fn apply(&self, snapshot: &mut SpaceHistorySnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<()> {
+        let mut prepared = semio_framework_os_spr::PreparedField::new(snapshot.clone(), <Self as semio_framework_os_spr::MutationDiff<SpaceHistorySnapshot>>::retire_projection, _capability);
         let mut next = prepared.value_mut();
         for step in &self.steps {
             step.step_into(&mut next)?;
@@ -222,15 +222,12 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
 
 }
 
-impl crate::os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
+impl semio_framework_os_spr::ColdDiffAlgebra<SpaceHistorySnapshot> for SpaceHistoryDiff {
     fn is_empty(&self) -> bool {
         self.steps.is_empty()
     }
 }
 
-impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
-
-}
 
 impl DiffRegions for SpaceHistoryDiff {
     fn touches(&self) -> TouchedPaths {

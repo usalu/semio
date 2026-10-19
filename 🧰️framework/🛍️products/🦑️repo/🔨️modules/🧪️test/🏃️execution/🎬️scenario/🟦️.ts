@@ -23,8 +23,6 @@ export async function executeOne(repoRoot: string, discovered: DiscoveredCase, l
   if (plan.scenarios.length === 0) return { results: [], problems };
   rmSync(plan.resultsPath, { force: true });
   const host = materializeHost(repoRoot, discovered, role, implementation, planPath, plan.resultsPath);
-  // 🧩️A host that could not be provisioned has not run, and an unprovisioned host must never look
-  // like a case with nothing to do — the declaration is reported before anything is executed.
   if (host.problems.length > 0) return { results: [], problems: [...problems, ...host.problems] };
   let command = host.command;
   const capture=(command:string,args:readonly string[],budgetMs:number)=>withRequestedIssuedResourceControlV1(phaseControl,budgetMs,control=>withIssuedResourceOperationV1(control,()=>captureOwnedCommandResultV1(command,args,host.cwd,{control,env:scriptInvocationEnvironment(invocation,repositoryTestArtifactEnvironmentV1(repoRoot,host.env)),output:{maximumBytes:16777216,maximumLines:65536}})));
@@ -46,9 +44,6 @@ export async function executeOne(repoRoot: string, discovered: DiscoveredCase, l
     problems.push(`${discovered.caseDir}: ${implementation} ${role} host exited ${probe.status} without emitting results`);
     if (probe.stderr.trim() !== "") problems.push(probe.stderr.trimEnd());
   }
-  // 🏁️Both generated directories are marked, not just the results one. An unmarked work directory
-  // reads as permanently interrupted, and `clean test --stale` would then delete the work directory
-  // of a run that is still executing in a parallel session.
   markRunComplete(plan.workDir);
   markRunComplete(plan.outputDir);
   return { results, problems: [...problems, ...readProblems.map((problem) => `${discovered.caseDir}: ${problem}`)] };

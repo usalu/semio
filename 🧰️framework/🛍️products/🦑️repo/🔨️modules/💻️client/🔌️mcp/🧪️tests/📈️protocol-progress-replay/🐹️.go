@@ -76,7 +76,7 @@ func TestG2OwnedErrorsAndStructuralOutputBounds(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := server.RegisterTool(Tool{Name: "deep", InputSchema: Schema{Type: "object"}}, func(context.Context, CallToolParams, ProgressReporter) (CallToolResult, error) {
-		return CallToolResult{StructuredContent: json.RawMessage(`[[[[[[0]]]]]]`)}, nil
+		return CallToolResult{StructuredContent: json.RawMessage(`{"a":{"a":{"a":{"a":{"a":{"a":0}}}}}}`)}, nil
 	}); err != nil {
 		t.Fatal(err)
 	}

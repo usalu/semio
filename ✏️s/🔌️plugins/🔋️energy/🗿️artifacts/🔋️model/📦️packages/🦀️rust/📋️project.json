@@ -7,10 +7,29 @@
     "role:artifact",
     "family:energy"
   ],
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🧪️tests/🔆️pv-plane/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🧪️tests/🌡️thermal/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/📅️chronology/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🔲️enclosure/⚡️exchange/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️close/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🧺️batch/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/**/*.{ts,tsx,json,semio,wit,sql}",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪪️capability/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/📮️publication/🧪️tests/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw/🧪️tests/🔬️unit/**/*"
+    ]
+  },
   "targets": {
     "verify-solar-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify solar-source",
@@ -19,7 +38,7 @@
     },
     "verify-solar-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify solar-native",
@@ -34,7 +53,7 @@
         "^production"
       ],
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/.🧾️store/build.json"
       ],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
@@ -60,7 +79,7 @@
     },
     "test-bestest-regenerate": {
       "executor": "repo:script",
-      "cache": true,
+      "cache": false,
       "outputs": [
         "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures",
         "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets"
@@ -135,7 +154,7 @@
     },
     "test-optical-field-intent-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test --lib optical_field_tests --no-fail-fast",
@@ -144,7 +163,7 @@
     },
     "test-optical-inspector-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test --lib glazing_and_gas --no-fail-fast",
@@ -153,7 +172,7 @@
     },
     "test-document-history-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test --lib energy_document_history --no-fail-fast",
@@ -166,7 +185,7 @@
         "command": "bun ./📜️script.ts verify-thermal source",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
-      "cache": false
+      "cache": true
     },
     "verify-thermal-native": {
       "executor": "repo:script",
@@ -174,7 +193,7 @@
         "command": "bun ./📜️script.ts verify-thermal native",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
-      "cache": false
+      "cache": true
     },
     "lock": {
       "executor": "repo:script",
@@ -186,7 +205,7 @@
     },
     "verify-publication-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-publication source"
@@ -194,7 +213,7 @@
     },
     "verify-publication-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-publication native"
@@ -202,7 +221,7 @@
     },
     "verify-weather-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-weather source"
@@ -210,7 +229,7 @@
     },
     "verify-weather-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-weather native"
@@ -222,7 +241,7 @@
         "command": "bun ./📜️script.ts verify-enclosure source",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
-      "cache": false
+      "cache": true
     },
     "verify-enclosure-native": {
       "executor": "repo:script",
@@ -230,10 +249,10 @@
         "command": "bun ./📜️script.ts verify-enclosure native",
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust"
       },
-      "cache": false
+      "cache": true
     },
     "verify-results-native": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts verify-results native",
@@ -241,7 +260,7 @@
       }
     },
     "verify-results-source": {
-      "cache": false,
+      "cache": true,
       "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts verify-results source",
@@ -250,7 +269,7 @@
     },
     "verify-batch-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-batch source",
@@ -259,7 +278,7 @@
     },
     "verify-batch-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify-batch native",

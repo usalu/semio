@@ -34,7 +34,7 @@ import {
 } from "@semio-tech/framework/packs";
 import { type BuiltNode } from "@semio-tech/framework";
 import { publishGuestPresenceV1, type GuestPresenceMarkV1 } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
+import { type ShardEventEnvelope } from "@semio-tech/framework/actor/shard-client/wire";
 import { decodeActorUiPatchReceipt } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import {
   coerceWireBytes,

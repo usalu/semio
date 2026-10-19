@@ -112,6 +112,7 @@ members = [
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/🍃️leaves/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/📦️packages/🦀️rust",
@@ -248,7 +249,6 @@ path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/�
 [workspace.dependencies.semio-framework-3d-brep-offset]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust"
 
-
 [workspace.dependencies.semio-framework-3d-brep-queries]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
 
@@ -299,6 +299,7 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️pack
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
 
 [workspace.dependencies.semio-s-artifact-stdio-avi]
 path = "../📼️avi/📦️packages/🦀️rust"
@@ -459,6 +460,12 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/�
 
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-native-owned]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-persistent]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-base]
 path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
@@ -719,6 +726,9 @@ path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/�
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-value-mutations]
 path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-mutation-leaves]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/🍃️leaves/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
 path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"

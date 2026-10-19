@@ -9,8 +9,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 import { GRAPH_WHEEL_ZOOM_NOTCH, graphPinchWheelPlan } from "../../🟦️.tsx";
 
 /** 🗂️ The repo root, walked up from the runner's cwd (`import.meta.url` is a vite `/@fs` URL here). */

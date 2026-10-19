@@ -87,9 +87,6 @@ export async function verifyPrintPipelineQuick(context:PrintPipelineVerification
   assert.deepEqual(parseVizTaxonomyLeaves(taxonomy), oracle);
   assert.deepEqual(printTemplatePdfNames("🧾️template/📋️report/📋️report.tex"), { light: "📋️report.pdf", dark: "📋️report-dark.pdf" });
 
-  // 🎓 The dissertation kind is only a kind if all three parts agree: the class
-  // branches on type=phd, the appendix level resolves to chapter like the other
-  // chapter-sectioned kind, and semio-phd.sty owns the title page command.
   const classSource = readFileSync(join(latexRoot, "semio.cls"), "utf8");
   assert.match(classSource, /\{ phd \} \{ \\LoadClass\[twoside=true,open=right,cleardoublepage=empty\]\{scrreprt\} \}/);
   assert.match(classSource, /\\RequirePackage\{semio-phd\}/);

@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "affected": [
+    { "name": "default adds the HEAD base", "args": ["affected", "--targets=build"], "nx": ["affected", "--targets=build", "--base=HEAD"] },
+    { "name": "uncommitted stays", "args": ["affected", "--targets=build", "--uncommitted"], "nx": ["affected", "--targets=build", "--uncommitted"] },
+    { "name": "untracked stays", "args": ["affected", "--targets=build", "--untracked"], "nx": ["affected", "--targets=build", "--untracked"] },
+    { "name": "both change classes become the HEAD base", "args": ["affected", "--targets=build", "--uncommitted", "--untracked"], "nx": ["affected", "--targets=build", "--base=HEAD"] },
+    { "name": "explicit base", "args": ["affected", "--targets=build", "--base=main"], "nx": ["affected", "--targets=build", "--base=main"] },
+    { "name": "base and head", "args": ["affected", "--targets=build", "--head=topic", "--base=main"], "nx": ["affected", "--targets=build", "--base=main", "--head=topic"] },
+    { "name": "head alone gets the HEAD base", "args": ["affected", "--targets=build", "--head=topic"], "nx": ["affected", "--targets=build", "--base=HEAD", "--head=topic"] },
+    { "name": "explicit files win", "args": ["affected", "--targets=build", "--files=a.ts,b.ts", "--uncommitted"], "nx": ["affected", "--targets=build", "--files=a.ts,b.ts"] },
+    { "name": "all is run-many", "args": ["affected", "--targets=build", "--all", "--base=main"], "nx": ["run-many", "--targets=build"] },
+    { "name": "false boolean is absent", "args": ["affected", "--targets=build", "--uncommitted=false"], "nx": ["affected", "--targets=build", "--base=HEAD"] },
+    { "name": "task arguments stay literal", "args": ["affected", "--targets=build", "--", "--base=x", "--all"], "nx": ["affected", "--targets=build", "--base=HEAD", "--", "--base=x", "--all"] },
+    { "name": "spaced values and portable aliases", "args": ["affected", "--targets", "build", "--untracked", "--skip-cache"], "nx": ["affected", "--targets", "build", "--skip-nx-cache", "--untracked"] },
+    { "name": "other operations are unchanged", "args": ["run-many", "--targets=build"], "nx": ["run-many", "--targets=build"] }
+  ],
+  "affectedRefused": [
+    ["affected", "--targets=build", "--projects=app"],
+    ["affected", "--targets=build", "-p", "app"]
+  ],
+  "cache": [
+    { "name": "status needs no Nx process", "args": ["cache", "status"], "nx": null },
+    { "name": "clear resets only the cache", "args": ["cache", "clear"], "nx": ["reset", "--onlyCache"] }
+  ],
+  "planning": [
+    { "name": "dry-run is the Nx graph on stdout", "args": ["run", "app:build", "--dry-run"], "nx": ["run", "app:build", "--graph=stdout"] },
+    { "name": "dry-run false plans nothing", "args": ["run", "app:build", "--dry-run=false"], "nx": ["run", "app:build"] },
+    { "name": "bare graph is the same as dry-run", "args": ["run-many", "--targets=build", "--graph"], "nx": ["run-many", "--targets=build", "--graph=stdout"] },
+    { "name": "graph true is the same as dry-run", "args": ["run", "app:build", "--graph=true"], "nx": ["run", "app:build", "--graph=stdout"] },
+    { "name": "graph false plans nothing", "args": ["run", "app:build", "--graph=false"], "nx": ["run", "app:build"] },
+    { "name": "graph with a file keeps the file", "args": ["run", "app:build", "--graph=plan.json"], "nx": ["run", "app:build", "--graph=plan.json"] },
+    { "name": "graph with a spaced file keeps the file", "args": ["run", "app:build", "--graph", "plan.json"], "nx": ["run", "app:build", "--graph=plan.json"] },
+    { "name": "graph followed by another flag is stdout", "args": ["run-many", "--graph", "--targets=build"], "nx": ["run-many", "--graph=stdout", "--targets=build"] },
+    { "name": "task arguments stay literal", "args": ["run", "app:build", "--", "--graph", "--dry-run"], "nx": ["run", "app:build", "--", "--graph", "--dry-run"] }
+  ],
+  "exec": [
+    { "name": "the command is wrapped to export the neutral names", "args": ["exec", "--projects=a", "--", "echo", "hi"], "nx": ["exec", "--projects=a", "--", "<wrapper>", "echo", "hi"] },
+    { "name": "no command stays untouched for Nx to refuse", "args": ["exec", "--projects=a", "--"], "nx": ["exec", "--projects=a", "--"] },
+    { "name": "no separator stays untouched for Nx to refuse", "args": ["exec", "--projects=a"], "nx": ["exec", "--projects=a"] }
+  ],
+  "git": {
+    "files": { "a.txt": "a1\n", "b.txt": "b1\n", "nx.json": "{}\n" },
+    "second": { "a.txt": "a2\n", "c.txt": "c1\n" },
+    "worktree": { "b.txt": "b2\n" },
+    "untracked": { "d.txt": "d1\n" },
+    "scenarios": [
+      { "name": "default", "args": ["affected", "--targets=build"], "files": ["b.txt", "d.txt"] },
+      { "name": "uncommitted", "args": ["affected", "--targets=build", "--uncommitted"], "files": ["b.txt"] },
+      { "name": "untracked", "args": ["affected", "--targets=build", "--untracked"], "files": ["d.txt"] },
+      { "name": "both", "args": ["affected", "--targets=build", "--uncommitted", "--untracked"], "files": ["b.txt", "d.txt"] },
+      { "name": "base only", "args": ["affected", "--targets=build", "--base=HEAD~1"], "files": ["a.txt", "b.txt", "c.txt", "d.txt"] },
+      { "name": "base and head", "args": ["affected", "--targets=build", "--base=HEAD~1", "--head=HEAD"], "files": ["a.txt", "c.txt"] },
+      { "name": "explicit files", "args": ["affected", "--targets=build", "--files=x.txt,y.txt"], "files": ["x.txt", "y.txt"] }
+    ]
+  },
+  "cacheTree": { "files": { "one.bin": 5, "nested/two.bin": 7, "nested/deep/three.bin": 11 }, "entries": 3, "bytes": 23 },
+  "yargsOptions": {
+    "affected": ["base", "head", "files", "uncommitted", "untracked", "targets", "exclude"],
+    "reset": ["onlyCache"]
+  }
+}

@@ -30,6 +30,7 @@ semio-framework-ui-scene-pass = { path = "../../../../../🎬️scene/📐️mat
 semio-framework-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-framework-ui-prepared-staging = { path = "../../📤️staging/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-payload = { path = "../../../../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 
 ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract", optional = true }

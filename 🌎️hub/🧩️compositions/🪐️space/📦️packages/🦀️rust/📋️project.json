@@ -38,15 +38,29 @@
     },
     "snapshot-owner-census-source": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census source"},
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/🧪️tests/🧫️fixtures/🪶️snapshot-owner-census/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ]
     },
     "snapshot-owner-census-native": {
       "executor": "repo:script",
-      "cache": false,
+      "cache": true,
       "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census native"},
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/🧪️tests/🧫️fixtures/🪶️snapshot-owner-census/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"
+      ]
     },
     "interactive-job-catalog-check": {
       "executor": "repo:script",
@@ -108,7 +122,9 @@
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": [],
+      "cache": true
     },
     "persistence-data-class-check": {
       "executor": "repo:script",

@@ -20,7 +20,7 @@ pub struct SuggestionSpec { pub source: SuggestionSource, #[serde(skip_serializi
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct AppliesTo { pub(super) verbs: Option<Vec<String>>, pub(super) playground: Option<bool> }
+struct AppliesTo { pub(super) all: Option<bool>, pub(super) verbs: Option<Vec<String>>, pub(super) playground: Option<bool> }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

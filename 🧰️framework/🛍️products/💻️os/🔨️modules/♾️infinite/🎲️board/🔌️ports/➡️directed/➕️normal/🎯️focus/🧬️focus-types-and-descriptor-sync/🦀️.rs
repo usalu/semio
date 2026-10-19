@@ -18,7 +18,7 @@ pub struct BoardFocusState {
     /// 💠️ Externally driven highlight ids (e.g. cross-panel variable binding); below hover, above neutral.
     pub highlighted_ids: BTreeSet<String>,
     pub interaction: Interaction,
-    /// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
+    /// 👉️ Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
     pub selection_screen_preview: Option<Vec<Point>>,
     /// ↔ True when area-select drag is crossing (right-to-left); drives dashed preview stroke.
     pub selection_preview_crossing: bool,

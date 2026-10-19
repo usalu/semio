@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "current-source-approval",
+  "sourcePath": ".devcontainer/README.md",
+  "policy": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/🏠️owner-projection-policy/🔣️.json",
+    "sha256": "82d188a512e0051d2a9435715cd62d851911081b07294f81f64c287fe88e8333"
+  },
+  "baseline": {
+    "commit": "101a6b4ea83acc82d6fbdc0607e6ae5d876825ae",
+    "blob": "bef162d2bd2970294ae0a16469b0250f5f41a030",
+    "preimage": {
+      "sha256": "97d64e93c8f387fa765c389cda2d14984777e61ea5cf6c90755dcfc4b1b28298",
+      "mode": "0644",
+      "size": 14260
+    }
+  },
+  "currentPreimage": {
+    "sha256": "fe75b9b2e68113edc39a0473b540831cce671bca3e2b202d6e72fc673074faab",
+    "size": 9625,
+    "mode": "0644"
+  }
+}

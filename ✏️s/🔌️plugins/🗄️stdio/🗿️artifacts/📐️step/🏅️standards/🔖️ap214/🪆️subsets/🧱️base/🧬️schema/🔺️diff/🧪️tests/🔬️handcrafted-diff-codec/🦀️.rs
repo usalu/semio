@@ -35,8 +35,6 @@ async fn diff_codec_text_binary_roundtrip_law() {
     b.header.file_name.originating_system = "changed".into();
     b.entities[0].name = "RENAMED_POINT".into();
     b.entities[0].args.push(StepValue::Aggregate(vec![StepValue::Integer(1), StepValue::Integer(2)]));
-    // Exercises `StepEntityDiff.complex: Option<Vec<StepComplexType>>` directly on a MODIFIED
-    // entity (not just a freshly-added one) so `enc_entity_diff`'s `complex` field is `Some`.
     b.entities[0].complex.push(StepComplexType { name: "EXTRA_TYPE".into(), args: vec![StepValue::Real(1.5), StepValue::String("hi".into())] });
     b.entities.remove(1);
     b.entities.push(entity(3, "ADDED_WITH_COMPLEX", vec![StepValue::Unset]));

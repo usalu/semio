@@ -1,4 +1,4 @@
-//! `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
+//! 📦️ `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe —
 //! 🪆️ Subset root for `s.fem.fem2d@1/*` (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`,
 //! `📓️terra-fleet-trinity-recipe-report.md`). Exports `subset() -> SubsetDeclaration`, assembling the
 //! `🧬️schema`/`🚪️io`/`👁️viewer`/`✏️editor`/`📚️examples` children — the editor and viewer come from
@@ -88,7 +88,7 @@ pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::
             rust: "",
             typescript: "",
             graphql: "",
-            json_schema: include_str!("🧬️schema/🔺️diff/🔣️.json"),
+            json_schema: semio_s_artifact_fem_2d_diff_document::FEM2D_DIFF_JSON_SCHEMA,
             proto: "",
         },
         mutations: ::semio_framework_schema_registry::FacetLeaves {

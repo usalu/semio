@@ -158,9 +158,6 @@ pub(crate) fn enc_mp3_frame(f: &Mp3Frame) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_mp3_frame(s: &str) -> Result<Mp3Frame, String> {
     let inner = strip_brackets(s)?;
-    // 🧭️ The header is itself a bracketed 12-field group, so at depth-0 it is ONE token (same
-    // nesting trick `decode_option` relies on) — split at depth 0 gives exactly
-    // `["[12 header fields]", "<payload-hex>"]`, 2 top-level tokens, never 13.
     let parts = split_top_level(inner, ',');
     if parts.len() != 2 {
         return Err(format!("mp3 frame: expected header+payload=2 top-level fields, got {}", parts.len()));

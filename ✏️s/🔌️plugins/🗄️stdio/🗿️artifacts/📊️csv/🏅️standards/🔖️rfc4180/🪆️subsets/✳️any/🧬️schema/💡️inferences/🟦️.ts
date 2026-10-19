@@ -7,7 +7,7 @@ export interface CsvOutline {
 }
 
 export interface CsvInference {
-  /** @derived */
+  /** 🖼️ @derived */
   outline: CsvOutline;
 }
 

@@ -24,7 +24,6 @@ pub struct RegularityConfig {
 impl RegularityConfig {
     /// 🔁️ Validates `m >= 1` (a zero-length template is not a meaningful embedding). `r` is
     /// resolved later, once data is available, via [`resolve_tolerance`].
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(m: usize, r: Tolerance) -> Result<Self, EntropyError> {
         if m < 1 {
             return Err(EntropyError::InvalidConfig { field: "m", reason: "embedding dimension must be at least 1" });

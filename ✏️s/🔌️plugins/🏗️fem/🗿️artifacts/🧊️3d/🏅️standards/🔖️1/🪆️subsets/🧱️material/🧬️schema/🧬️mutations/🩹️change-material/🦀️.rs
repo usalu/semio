@@ -37,7 +37,3 @@ impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for ChangeMaterial w
         super::inverse::inverse(self, base)
     }
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
